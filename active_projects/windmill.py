@@ -390,14 +390,14 @@ class USProcess(IntroduceIMO):
                 n_questions=25,
                 time_string="75 minutes",
                 hours=1.25,
-                n_students=100000,
+                n_students=250000,
             ),
             self.get_test(
                 ["American ", "Invitational ", "Math ", "Exam"],
                 n_questions=15,
                 time_string="3 hours",
                 hours=3,
-                n_students=3500,
+                n_students=12000,
             ),
             self.get_test(
                 ["U", "S", "A ", "Math ", "Olympiad"],
@@ -767,7 +767,7 @@ class WindmillScene(Scene):
         "dot_config": {
             "fill_color": LIGHT_GREY,
             "radius": 0.05,
-            "background_stroke_width": 1,
+            "background_stroke_width": 2,
             "background_stroke_color": BLACK,
         },
         "windmill_style": {
@@ -776,11 +776,12 @@ class WindmillScene(Scene):
             "background_stroke_width": 3,
             "background_stroke_color": BLACK,
         },
-        "windmill_length": FRAME_WIDTH + FRAME_HEIGHT,
+        "windmill_length": 2 * FRAME_WIDTH,
         "windmill_rotation_speed": 0.25,
         # "windmill_rotation_speed": 0.5,
         # "hit_sound": "pen_click.wav",
         "hit_sound": "pen_click.wav",
+        "leave_shadows": False,
     }
 
     def get_random_point_set(self, n_points=11, width=6, height=6):
@@ -821,6 +822,15 @@ class WindmillScene(Scene):
         pivot_dot = Dot(color=YELLOW)
         pivot_dot.add_updater(lambda d: d.move_to(windmill.pivot))
         return pivot_dot
+
+    def start_leaving_shadows(self):
+        self.leave_shadows = True
+        self.add(self.get_windmill_shadows())
+
+    def get_windmill_shadows(self):
+        if not hasattr(self, "windmill_shadows"):
+            self.windmill_shadows = VGroup()
+        return self.windmill_shadows
 
     def next_pivot_and_angle(self, windmill):
         curr_angle = windmill.get_angle()
@@ -878,11 +888,21 @@ class WindmillScene(Scene):
         )
 
         if change_pivot_at_end:
-            windmill.pivot = new_pivot
-            self.add_sound(self.hit_sound)
+            self.handle_pivot_change(windmill, new_pivot)
 
         # Return animations to play
         return [self.get_hit_flash(new_pivot)], run_time
+
+    def handle_pivot_change(self, windmill, new_pivot):
+        windmill.pivot = new_pivot
+        self.add_sound(self.hit_sound)
+        if self.leave_shadows:
+            new_shadow = windmill.copy()
+            new_shadow.fade(0.5)
+            new_shadow.set_stroke(width=1)
+            new_shadow.clear_updaters()
+            shadows = self.get_windmill_shadows()
+            shadows.add(new_shadow)
 
     def let_windmill_run(self, windmill, time):
         # start_time = self.get_time()
@@ -909,14 +929,17 @@ class WindmillScene(Scene):
         dot_product = np.dot(perp, dot.get_center() - windmill.pivot)
         if dot_product > 0:
             dot.set_color(color1)
-        elif dot_product < 0:
-            dot.set_color(color2)
+        # elif dot_product < 0:
         else:
-            dot.set_color(WHITE)
+            dot.set_color(color2)
+        # else:
+        #     dot.set_color(WHITE)
 
         dot.set_stroke(
-            interpolate_color(dot.get_fill_color(), WHITE, 0.5),
-            width=1,
+            # interpolate_color(dot.get_fill_color(), WHITE, 0.5),
+            WHITE,
+            width=2,
+            background=True
         )
 
     def get_hit_flash(self, point):
@@ -957,6 +980,46 @@ class WindmillScene(Scene):
         if (not counter.is_pivot) and counter.will_be_pivot:
             counter.increment_value()
         counter.is_pivot = counter.will_be_pivot
+
+    def get_orientation_arrows(self, windmill, n_tips=20):
+        tips = VGroup(*[
+            ArrowTip(start_angle=0)
+            for x in range(n_tips)
+        ])
+        tips.stretch(0.75, 1)
+        tips.scale(0.5)
+
+        tips.rotate(windmill.get_angle())
+        tips.match_color(windmill)
+        tips.set_stroke(BLACK, 1, background=True)
+        for tip, a in zip(tips, np.linspace(0, 1, n_tips)):
+            tip.shift(
+                windmill.point_from_proportion(a) - tip.points[0]
+            )
+        return tips
+
+    def get_left_right_colorings(self, windmill, opacity=0.3):
+        rects = VGroup(VMobject(), VMobject())
+        rects.const_opacity = opacity
+
+        def update_regions(rects):
+            p0, p1 = windmill.get_start_and_end()
+            v = p1 - p0
+            vl = rotate_vector(v, 90 * DEGREES)
+            vr = rotate_vector(v, -90 * DEGREES)
+            p2 = p1 + vl
+            p3 = p0 + vl
+            p4 = p1 + vr
+            p5 = p0 + vr
+            rects[0].set_points_as_corners([p0, p1, p2, p3])
+            rects[1].set_points_as_corners([p0, p1, p4, p5])
+            rects.set_stroke(width=0)
+            rects[0].set_fill(BLUE, rects.const_opacity)
+            rects[1].set_fill(GREY_BROWN, rects.const_opacity)
+            return rects
+
+        rects.add_updater(update_regions)
+        return rects
 
 
 class IntroduceWindmill(WindmillScene):
@@ -1304,5 +1367,946 @@ class TryOutSimplestExamples(WindmillScene):
 
 
 class FearedCase(WindmillScene):
+    CONFIG = {
+        "n_points": 25,
+        "windmill_rotation_speed": TAU / 8,
+    }
+
+    def construct(self):
+        points = self.get_random_point_set(self.n_points)
+        sorted_points = sorted(list(points), key=lambda p: p[1])
+
+        dots = self.get_dots(points)
+        windmill = self.get_windmill(
+            points,
+            sorted_points[self.n_points // 2],
+            angle=0,
+        )
+        pivot_dot = self.get_pivot_dot(windmill)
+        # self.add_dot_color_updater(dots, windmill)
+        counters = self.get_pivot_counters(
+            windmill,
+            counter_height=0.15,
+            buff=0.1
+        )
+
+        self.add(windmill)
+        self.add(dots)
+        self.add(pivot_dot)
+        self.add(counters)
+
+        self.let_windmill_run(windmill, 32)
+        windmill.pivot = sorted_points[0]
+        self.let_windmill_run(windmill, 32)
+
+
+class WhereItStartsItEnds(WindmillScene):
+    CONFIG = {
+        "n_points": 11,
+        "windmill_rotation_speed": TAU / 8,
+        "random_seed": 1,
+        "points_shift_val": 2 * LEFT,
+    }
+
+    def construct(self):
+        self.show_stays_in_middle()
+        self.ask_about_proof()
+
+    def show_stays_in_middle(self):
+        points = self.get_random_point_set(self.n_points)
+        points += self.points_shift_val
+        sorted_points = sorted(list(points), key=lambda p: p[1])
+        dots = self.get_dots(points)
+
+        windmill = self.get_windmill(
+            points,
+            sorted_points[self.n_points // 2],
+            angle=0
+        )
+        pivot_dot = self.get_pivot_dot(windmill)
+
+        sf = 1.25
+        start_words = TextMobject("Starts in the ", "``middle''")
+        start_words.scale(sf)
+        start_words.next_to(windmill, UP, MED_SMALL_BUFF)
+        start_words.to_edge(RIGHT)
+        end_words = TextMobject("Stays in the ", "``middle''")
+        end_words.scale(sf)
+        end_words.next_to(windmill, DOWN, MED_SMALL_BUFF)
+        end_words.to_edge(RIGHT)
+        start_words.match_x(end_words)
+
+        self.add(dots)
+        self.play(
+            ShowCreation(windmill),
+            GrowFromCenter(pivot_dot),
+            FadeInFrom(start_words, LEFT),
+        )
+        self.wait()
+        self.start_leaving_shadows()
+        self.add(windmill, dots, pivot_dot)
+        half_time = PI / windmill.rot_speed
+        self.let_windmill_run(windmill, time=half_time)
+        self.play(FadeInFrom(end_words, UP))
+        self.wait()
+        self.let_windmill_run(windmill, time=half_time)
+        self.wait()
+
+        self.start_words = start_words
+        self.end_words = end_words
+        self.windmill = windmill
+        self.dots = dots
+        self.pivot_dot = pivot_dot
+
+    def ask_about_proof(self):
+        sf = 1.25
+        middle_rects = self.get_middle_rects()
+        middle_words = TextMobject("Can you formalize this?")
+        middle_words.scale(sf)
+        middle_words.next_to(middle_rects, DOWN, MED_LARGE_BUFF)
+        middle_words.to_edge(RIGHT)
+        middle_words.match_color(middle_rects)
+
+        proof_words = TextMobject("Can you prove this?")
+        proof_words.next_to(
+            self.end_words.get_left(),
+            DL,
+            buff=2,
+        )
+        proof_words.shift(RIGHT)
+        proof_words.scale(sf)
+        proof_arrow = Arrow(
+            proof_words.get_top(),
+            self.end_words.get_corner(DL),
+            buff=SMALL_BUFF,
+        )
+        proof_words2 = TextMobject("Then prove the result?")
+        proof_words2.scale(sf)
+        proof_words2.next_to(middle_words, DOWN, MED_LARGE_BUFF)
+        proof_words2.to_edge(RIGHT)
+        VGroup(proof_words, proof_words2, proof_arrow).set_color(YELLOW)
+
+        self.play(
+            Write(proof_words),
+            GrowArrow(proof_arrow),
+            run_time=1,
+        )
+        self.wait()
+        self.play(
+            FadeOut(proof_arrow),
+            FadeOut(proof_words),
+            LaggedStartMap(ShowCreation, middle_rects),
+            Write(middle_words),
+        )
+        self.wait()
+        self.play(FadeInFrom(proof_words2, UP))
+        self.wait()
+        self.let_windmill_run(self.windmill, time=10)
+
+    def get_middle_rects(self):
+        middle_rects = VGroup(*[
+            SurroundingRectangle(words[1])
+            for words in [
+                self.start_words,
+                self.end_words
+            ]
+        ])
+        middle_rects.set_color(TEAL)
+        return middle_rects
+
+
+class AltWhereItStartsItEnds(WhereItStartsItEnds):
+    CONFIG = {
+        "n_points": 9,
+        "random_seed": 3,
+    }
+
+
+class FormalizeMiddle(WhereItStartsItEnds):
+    CONFIG = {
+        "random_seed": 2,
+        "points_shift_val": 3 * LEFT,
+    }
+
+    def construct(self):
+        self.show_stays_in_middle()
+        self.problem_solving_tip()
+        self.define_colors()
+        self.mention_odd_case()
+        self.ask_about_numbers()
+
+    def problem_solving_tip(self):
+        mid_words = VGroup(
+            self.start_words,
+            self.end_words,
+        )
+        mid_words.save_state()
+
+        sf = 1.25
+        pst = TextMobject("Problem-solving tip:")
+        pst.scale(sf)
+        underline = Line(LEFT, RIGHT)
+        underline.match_width(pst)
+        underline.move_to(pst.get_bottom())
+        pst.add(underline)
+        pst.to_corner(UR)
+        # pst.set_color(YELLOW)
+
+        steps = VGroup(
+            TextMobject("Vague idea"),
+            TextMobject("Put numbers to it"),
+            TextMobject("Ask about those numbers"),
+        )
+        steps.scale(sf)
+        steps.arrange(DOWN, buff=LARGE_BUFF)
+        steps.next_to(pst, DOWN, buff=MED_LARGE_BUFF)
+        steps.shift_onto_screen()
+        pst.match_x(steps)
+
+        colors = color_gradient([BLUE, YELLOW], 3)
+        for step, color in zip(steps, colors):
+            step.set_color(color)
+
+        arrows = VGroup()
+        for s1, s2 in zip(steps, steps[1:]):
+            arrow = Arrow(s1.get_bottom(), s2.get_top(), buff=SMALL_BUFF)
+            arrows.add(arrow)
+
+        self.play(Write(pst), run_time=1)
+        self.wait()
+        self.play(
+            mid_words.scale, 0.75,
+            mid_words.set_opacity, 0.25,
+            mid_words.to_corner, DL,
+            FadeInFromDown(steps[0]),
+        )
+        self.wait()
+        for arrow, step in zip(arrows, steps[1:]):
+            self.play(
+                FadeInFrom(step, UP),
+                GrowArrow(arrow),
+            )
+            self.wait()
+
+        steps.generate_target()
+        steps.target.scale(0.75)
+        steps.target.arrange(DOWN, buff=0.2)
+        steps.target.to_corner(UR)
+
+        self.play(
+            FadeOut(pst),
+            MoveToTarget(steps),
+            Restore(mid_words),
+            FadeOut(arrows)
+        )
+        self.wait()
+
+        self.tip_words = steps
+        self.mid_words = mid_words
+
+    def define_colors(self):
+        windmill = self.windmill
+        mid_words = self.mid_words
+        tip_words = self.tip_words
+        shadows = self.windmill_shadows
+        self.leave_shadows = False
+
+        full_time = TAU / windmill.rot_speed
+
+        self.play(FadeOut(shadows))
+        self.add(windmill, tip_words, mid_words, self.dots, self.pivot_dot)
+        self.let_windmill_run(windmill, time=full_time / 4)
+        windmill.rotate(PI)
+        self.wait()
+
+        # Show regions
+        rects = self.get_left_right_colorings(windmill)
+        rects.suspend_updating()
+        rects.save_state()
+        rects.stretch(0, 0, about_point=windmill.get_center())
+
+        counters = VGroup(Integer(0), Integer(0))
+        counters.scale(2)
+        counters[0].set_stroke(BLUE, 3, background=True)
+        counters[1].set_stroke(GREY_BROWN, 3, background=True)
+
+        new_dots = self.dots.copy()
+        new_dots.set_color(WHITE)
+        for dot in new_dots:
+            dot.scale(1.25)
+        new_dots.sort(lambda p: p[0])
+        k = self.n_points // 2
+        dot_sets = VGroup(new_dots[:k], new_dots[-k:])
+
+        label_sets = VGroup()
+        for dot_set, direction in zip(dot_sets, [LEFT, RIGHT]):
+            label_set = VGroup()
+            for i, dot in zip(it.count(1), dot_set):
+                label = Integer(i)
+                label.set_height(0.15)
+                label.next_to(dot, direction, SMALL_BUFF)
+                label_set.add(label)
+            label_sets.add(label_set)
+
+        for counter, dot_set in zip(counters, dot_sets):
+            counter.move_to(dot_set)
+            counter.to_edge(UP)
+
+        self.add(rects, *self.get_mobjects())
+        self.play(
+            Restore(rects),
+            FadeIn(counters),
+        )
+        for counter, dot_set, label_set in zip(counters, dot_sets, label_sets):
+            self.play(
+                ShowIncreasingSubsets(dot_set),
+                ShowIncreasingSubsets(label_set),
+                ChangingDecimal(counter, lambda a: len(dot_set)),
+                rate_func=linear,
+            )
+            self.wait()
+        self.wait()
+
+        self.remove(self.dots)
+        self.dots = new_dots
+
+        # Show orientation
+        tips = self.get_orientation_arrows(windmill)
+
+        self.play(ShowCreation(tips))
+        windmill.add(tips)
+        self.wait()
+
+        self.add_dot_color_updater(new_dots, windmill)
+
+        for rect in rects:
+            self.play(rect.set_opacity, 1)
+            self.play(rect.set_opacity, rects.const_opacity)
+        self.wait()
+        self.play(
+            counters.space_out_submobjects, 0.8,
+            counters.next_to, mid_words, DOWN, LARGE_BUFF,
+            FadeOut(label_sets),
+        )
+        eq = TexMobject("=")
+        eq.scale(2)
+        eq.move_to(counters)
+        self.play(FadeIn(eq))
+        self.wait()
+
+        self.counters = counters
+        self.colored_regions = rects
+        rects.resume_updating()
+
+    def mention_odd_case(self):
+        dots = self.dots
+        counters = self.counters
+
+        sf = 1.0
+        words = TextMobject(
+            "Assume odd \\# points"
+        )
+        words.scale(sf)
+        words.to_corner(UL)
+        example = VGroup(
+            TextMobject("Example:"),
+            Integer(0)
+        )
+        example.arrange(RIGHT)
+        example.scale(sf)
+        example.next_to(words, DOWN)
+        example.align_to(words, LEFT)
+
+        k = self.n_points // 2
+        dot_rects = VGroup()
+        for i, dot in zip(it.count(1), dots):
+            dot_rect = SurroundingRectangle(dot)
+            dot_rect.match_color(dot)
+            dot_rects.add(dot_rect)
+
+        self.play(FadeInFrom(words, DOWN))
+        self.wait()
+
+        self.play(
+            ShowCreationThenFadeAround(dots[k]),
+            self.pivot_dot.set_color, WHITE,
+        )
+
+        self.play(FadeInFrom(example, UP))
+        self.play(
+            ShowIncreasingSubsets(dot_rects),
+            ChangingDecimal(
+                example[1],
+                lambda a: len(dot_rects)
+            ),
+            rate_func=linear
+        )
+        self.wait()
+
+        self.remove(dot_rects)
+        self.play(
+            ShowCreationThenFadeOut(dot_rects[:k]),
+            ShowCreationThenFadeOut(
+                SurroundingRectangle(counters[0], color=BLUE)
+            ),
+        )
+        self.play(
+            ShowCreationThenFadeOut(dot_rects[-k:]),
+            ShowCreationThenFadeOut(
+                SurroundingRectangle(counters[1], color=GREY_BROWN)
+            ),
+        )
+        self.wait()
+        self.play(
+            FadeOut(words),
+            FadeOut(example),
+        )
+
+    def ask_about_numbers(self):
+        self.windmill.rot_speed *= 0.5
+        self.let_windmill_run(self.windmill, 20)
+
+
+class SecondColoringExample(WindmillScene):
+    CONFIG = {
+        "run_time": 30,
+        "n_points": 9,
+    }
+
+    def construct(self):
+        points = self.get_random_point_set(self.n_points)
+        points += RIGHT
+        sorted_points = sorted(list(points), key=lambda p: p[0])
+
+        dots = self.get_dots(points)
+        windmill = self.get_windmill(
+            points,
+            pivot=sorted_points[self.n_points // 2],
+            angle=PI / 2
+        )
+        pivot_dot = self.get_pivot_dot(windmill)
+        pivot_dot.set_color(WHITE)
+        rects = self.get_left_right_colorings(windmill)
+        self.add_dot_color_updater(dots, windmill)
+
+        counts = VGroup(
+            TextMobject("\\# Blues = 4"),
+            TextMobject("\\# Browns = 4"),
+        )
+        counts.arrange(DOWN, aligned_edge=LEFT, buff=MED_LARGE_BUFF)
+        counts.to_corner(UL)
+        counts[0].set_color(interpolate_color(BLUE, WHITE, 0.25))
+        counts[1].set_color(interpolate_color(GREY_BROWN, WHITE, 0.5))
+        counts[0].set_stroke(BLACK, 5, background=True)
+        counts[1].set_stroke(BLACK, 5, background=True)
+
+        const_words = TextMobject("Stay constant$\\dots$why?")
+        const_words.next_to(counts, RIGHT, buff=1.5, aligned_edge=UP)
+        arrows = VGroup(*[
+            Arrow(
+                const_words.get_left(),
+                count.get_right(),
+                buff=SMALL_BUFF,
+                max_tip_length_to_length_ratio=0.15,
+                max_stroke_width_to_length_ratio=3,
+            )
+            for count in counts
+        ])
+
+        self.add(rects, windmill, dots, pivot_dot)
+        self.add(counts, const_words, arrows)
+
+        self.let_windmill_run(windmill, time=self.run_time)
+
+
+class TalkThroughPivotChange(WindmillScene):
+    CONFIG = {
+        "windmill_rotation_speed": 0.2,
+    }
+
+    def construct(self):
+        self.setup_windmill()
+        self.ask_about_pivot_change()
+        self.show_above_and_below()
+        self.change_pivot()
+
+    def setup_windmill(self):
+        points = self.points = np.array([
+            DR, UR, UL, DL, 0.5 * LEFT
+        ])
+        points *= 3
+        self.dots = self.get_dots(points)
+        self.windmill = self.get_windmill(points, points[-1])
+        self.pivot_dot = self.get_pivot_dot(self.windmill)
+        self.pivot_dot.set_color(WHITE)
+        self.add_dot_color_updater(self.dots, self.windmill)
+        self.rects = self.get_left_right_colorings(self.windmill)
+
+        self.add(
+            self.rects,
+            self.windmill,
+            self.dots,
+            self.pivot_dot,
+        )
+
+    def ask_about_pivot_change(self):
+        windmill = self.windmill
+
+        new_pivot, angle = self.next_pivot_and_angle(windmill)
+        words = TextMobject("Think about\\\\pivot change")
+        words.next_to(new_pivot, UP, buff=2)
+        words.to_edge(LEFT)
+        arrow = Arrow(words.get_bottom(), new_pivot, buff=0.2)
+
+        self.play(
+            Rotate(
+                windmill, -0.9 * angle,
+                run_time=3,
+                rate_func=linear
+            ),
+            Write(words, run_time=1),
+            ShowCreation(arrow),
+        )
+        self.wait()
+
+        self.question = words
+        self.question_arrow = arrow
+
+    def show_above_and_below(self):
+        windmill = self.windmill
+        vect = normalize(windmill.get_vector())
+        angle = windmill.get_angle()
+        tips = self.get_orientation_arrows(windmill)
+        top_half = Line(windmill.get_center(), windmill.get_end())
+        low_half = Line(windmill.get_center(), windmill.get_start())
+        top_half.set_stroke(YELLOW, 3)
+        low_half.set_stroke(PINK, 3)
+        halves = VGroup(top_half, low_half)
+
+        top_words = TextMobject("Above pivot")
+        low_words = TextMobject("Below pivot")
+        all_words = VGroup(top_words, low_words)
+        for words, half in zip(all_words, halves):
+            words.next_to(ORIGIN, DOWN)
+            words.rotate(angle, about_point=ORIGIN)
+            words.shift(half.point_from_proportion(0.15))
+            words.match_color(half)
+
+        self.play(ShowCreation(tips))
+        self.wait()
+        self.add(top_half, tips)
+        self.play(
+            ShowCreationThenFadeOut(top_half),
+            FadeInFrom(top_words, -vect),
+        )
+        self.add(low_half, tips)
+        self.play(
+            ShowCreationThenFadeOut(low_half),
+            FadeInFrom(low_words, vect),
+        )
+        self.wait()
+
+        windmill.add(tips)
+        self.above_below_words = all_words
+
+    def change_pivot(self):
+        windmill = self.windmill
+        dots = self.dots
+        arrow = self.question_arrow
+
+        blue_rect = SurroundingRectangle(dots[3])
+        blue_rect.set_color(BLUE)
+        new_pivot_word = TextMobject("New pivot")
+        new_pivot_word.next_to(blue_rect, LEFT)
+        old_pivot_word = TextMobject("Old pivot")
+        old_pivot = windmill.pivot
+        old_pivot_word.next_to(
+            old_pivot, LEFT,
+            buff=SMALL_BUFF + MED_SMALL_BUFF
+        )
+
+        self.play(
+            FadeOut(self.above_below_words),
+            ReplacementTransform(
+                self.question,
+                new_pivot_word,
+            ),
+            ReplacementTransform(arrow, blue_rect),
+        )
+        self.wait()
+        anims, time = self.rotate_to_next_pivot(windmill)
+        self.play(
+            *anims,
+            Rotate(
+                windmill,
+                angle=-windmill.rot_speed,
+                rate_func=linear,
+            )
+        )
+        self.wait()
+        self.play(
+            TransformFromCopy(new_pivot_word, old_pivot_word),
+            blue_rect.move_to, old_pivot,
+        )
+        self.wait(2)
+
+        # Hit new point
+        brown_rect = SurroundingRectangle(dots[1])
+        brown_rect.set_color(GREY_BROWN)
+
+        self.play(TransformFromCopy(blue_rect, brown_rect))
+        self.play(
+            blue_rect.move_to, windmill.pivot,
+            blue_rect.set_color, GREY_BROWN,
+            old_pivot_word.move_to, new_pivot_word,
+            FadeOutAndShift(new_pivot_word, DL)
+        )
+        self.let_windmill_run(windmill, 1)
+        self.wait()
+        self.play(
+            FadeOut(old_pivot_word),
+            FadeOut(blue_rect),
+            FadeOut(brown_rect),
+        )
+        self.let_windmill_run(windmill, 20)
+
+
+class InsightNumber1(Scene):
+    def construct(self):
+        words = TextMobject(
+            "Key insight 1: ",
+            "\\# Points on either side is constant"
+        )
+        words[0].set_color(YELLOW)
+        words.set_width(FRAME_WIDTH - 1)
+        self.play(FadeInFromDown(words))
+        self.wait()
+
+
+class Rotate180Argument(WindmillScene):
+    CONFIG = {
+        "n_points": 21,
+        "random_seed": 3,
+    }
+
+    def construct(self):
+        self.setup_windmill()
+        self.add_total_rotation_label()
+        self.rotate_180()
+        self.show_parallel_lines()
+        self.rotate_180()
+        self.rotate_180()
+
+    def setup_windmill(self):
+        n = self.n_points
+        points = self.get_random_point_set(n)
+        points[:, 0] *= 1.5
+        points += RIGHT
+        points = sorted(points, key=lambda p: p[0])
+        mid_point = points[n // 2]
+        points[n // 2 - 1] += 0.2 * LEFT
+        self.points = points
+
+        self.dots = self.get_dots(points)
+        self.windmill = self.get_windmill(points, mid_point)
+        self.pivot_dot = self.get_pivot_dot(self.windmill)
+        self.pivot_dot.set_color(WHITE)
+        self.add_dot_color_updater(self.dots, self.windmill)
+        self.rects = self.get_left_right_colorings(self.windmill)
+
+        p_label = TexMobject("P_0")
+        p_label.next_to(mid_point, RIGHT, SMALL_BUFF)
+        self.p_label = p_label
+
+        self.add(
+            self.rects,
+            self.windmill,
+            self.dots,
+            self.pivot_dot,
+            self.p_label,
+        )
+
+    def add_total_rotation_label(self):
+        windmill = self.windmill
+
+        words = TextMobject("Total rotation:")
+        counter = Integer(0, unit="^\\circ")
+        title = VGroup(words, counter)
+        title.arrange(RIGHT)
+        title.to_corner(UL)
+        rot_arrow = Vector(UP)
+        rot_arrow.set_color(RED)
+        rot_arrow.next_to(title, DOWN)
+        circle = Circle()
+        circle.replace(rot_arrow, dim_to_match=1)
+        circle.set_stroke(WHITE, 1)
+
+        rot_arrow.add_updater(
+            lambda m: m.set_angle(windmill.get_angle())
+        )
+        rot_arrow.add_updater(
+            lambda m: m.move_to(circle)
+        )
+
+        def update_count(c):
+            new_val = 90 - windmill.get_angle() * 360 / TAU
+            while abs(new_val - c.get_value()) > 90:
+                new_val += 360
+            c.set_value(new_val)
+
+        counter.add_updater(update_count)
+
+        rect = SurroundingRectangle(
+            VGroup(title, circle),
+            buff=MED_LARGE_BUFF,
+        )
+        rect.set_fill(BLACK, 0.8)
+        rect.set_stroke(WHITE, 1)
+        title.shift(MED_SMALL_BUFF * LEFT)
+
+        self.rotation_label = VGroup(
+            rect, words, counter, circle, rot_arrow
+        )
+
+        self.add(self.rotation_label)
+
+    def rotate_180(self):
+        windmill = self.windmill
+        self.let_windmill_run(
+            windmill,
+            PI / windmill.rot_speed,
+        )
+        self.wait()
+
+    def show_parallel_lines(self):
+        points = self.points
+        rotation_label = self.rotation_label
+        dots = self.dots
+        windmill = self.windmill
+
+        lines = VGroup()
+        for point in points:
+            line = Line(DOWN, UP)
+            line.set_height(2 * FRAME_HEIGHT)
+            line.set_stroke(RED, 1, opacity=0.5)
+            line.move_to(point)
+            lines.add(line)
+        lines.shuffle()
+
+        self.add(lines, dots, rotation_label)
+        self.play(
+            ShowCreation(lines, lag_ratio=0.5, run_time=3)
+        )
+        self.wait()
+
+        self.rects.suspend_updating()
+        for rect in self.rects:
+            self.play(
+                rect.set_opacity, 0,
+                rate_func=there_and_back,
+                run_time=2
+            )
+        self.rects.resume_updating()
+        self.wait()
+
+        pivot_tracker = VectorizedPoint(windmill.pivot)
+        pivot_tracker.save_state()
+
+        def update_pivot(w):
+            w.pivot = pivot_tracker.get_center()
+        windmill.add_updater(update_pivot)
+
+        for x in range(4):
+            point = random.choice(points)
+            self.play(
+                pivot_tracker.move_to, point
+            )
+            self.wait()
+        self.play(Restore(pivot_tracker))
+        self.play(FadeOut(lines))
+        windmill.remove_updater(update_pivot)
+        self.wait()
+
+
+class EvenCase(Rotate180Argument):
+    CONFIG = {
+        "n_points": 10,
+        "dot_config": {"radius": 0.075},
+    }
+
+    def construct(self):
+        self.ask_about_even_number()
+        self.choose_halfway_point()
+
+        self.add_total_rotation_label()
+        self.rotate_180()
+        self.rotate_180()
+        self.show_parallel_lines()
+        self.rotate_180()
+        self.rotate_180()
+
+    def ask_about_even_number(self):
+        n = self.n_points
+        points = self.get_random_point_set(n)
+        points[:, 0] *= 2
+        points += DOWN
+        points = sorted(points, key=lambda p: p[0])
+        dots = self.get_dots(points)
+
+        windmill = self.get_windmill(points, points[3])
+        region_rects = self.rects = self.get_left_right_colorings(windmill)
+        pivot_dot = self.get_pivot_dot(windmill)
+        pivot_dot.set_color(WHITE)
+
+        dot_rects = VGroup(*map(SurroundingRectangle, dots))
+
+        question = TextMobject("What about an even number?")
+        # question.to_corner(UL)
+        question.to_edge(UP)
+        counter_label = TextMobject("\\# Points", ":")
+        counter = Integer(0)
+        counter_group = VGroup(counter_label, counter)
+        counter_group.arrange(RIGHT)
+        counter.align_to(counter_label[1], DOWN)
+        counter_group.next_to(question, DOWN, MED_LARGE_BUFF)
+        counter_group.set_color(YELLOW)
+        # counter_group.align_to(question, LEFT)
+
+        self.add(question, counter_label)
+        self.add(windmill, dots, pivot_dot)
+
+        self.add_dot_color_updater(dots, windmill)
+        self.add(region_rects, question, counter_group, windmill, dots, pivot_dot)
+
+        self.play(
+            ShowIncreasingSubsets(dot_rects),
+            ChangingDecimal(counter, lambda a: len(dot_rects)),
+            rate_func=linear
+        )
+        self.play(FadeOut(dot_rects))
+        self.wait()
+
+        # region_rects.suspend_updating()
+        # self.play(
+        #     FadeIn(region_rects),
+        #     FadeOut(dot_rects),
+        # )
+        # region_rects.resume_updating()
+        # self.wait()
+
+        # Count by color
+        blue_rects = dot_rects[:3]
+        blue_rects.set_color(BLUE)
+        brown_rects = dot_rects[4:]
+        brown_rects.set_color(GREY_BROWN)
+        pivot_rect = dot_rects[3]
+        pivot_rect.set_color(GREY_BROWN)
+
+        blues_label = TextMobject("\\# Blues", ":")
+        blues_counter = Integer(len(blue_rects))
+        blues_group = VGroup(blues_label, blues_counter)
+        blues_group.set_color(BLUE)
+        browns_label = TextMobject("\\# Browns", ":")
+        browns_counter = Integer(len(brown_rects))
+        browns_group = VGroup(browns_label, browns_counter)
+        browns_group.set_color(interpolate_color(GREY_BROWN, WHITE, 0.5))
+        groups = VGroup(blues_group, browns_group)
+        for group in groups:
+            group.arrange(RIGHT)
+            group[-1].align_to(group[0][-1], DOWN)
+        groups.arrange(DOWN, aligned_edge=LEFT)
+        groups.next_to(counter_group, DOWN, aligned_edge=LEFT)
+
+        self.play(
+            FadeInFrom(blues_group, UP),
+            ShowCreation(blue_rects),
+        )
+        self.play(
+            FadeInFrom(browns_group, UP),
+            ShowCreation(brown_rects),
+        )
+        self.wait()
+
+        # Pivot counts as brown
+        pivot_words = TextMobject("Pivot counts as brown")
+        arrow = Vector(LEFT)
+        arrow.next_to(pivot_dot, RIGHT, SMALL_BUFF)
+        pivot_words.next_to(arrow, RIGHT, SMALL_BUFF)
+
+        self.play(
+            FadeInFrom(pivot_words, LEFT),
+            ShowCreation(arrow),
+        )
+        self.play(
+            ShowCreation(pivot_rect),
+            ChangeDecimalToValue(browns_counter, len(brown_rects) + 1),
+            FadeOut(pivot_dot),
+        )
+        self.wait()
+        self.play(
+            FadeOut(dot_rects),
+            FadeOut(pivot_words),
+            FadeOut(arrow),
+        )
+        self.wait()
+
+        blues_counter.add_updater(
+            lambda c: c.set_value(len(list(filter(
+                lambda d: d.get_fill_color() == Color(BLUE),
+                dots
+            ))))
+        )
+        browns_counter.add_updater(
+            lambda c: c.set_value(len(list(filter(
+                lambda d: d.get_fill_color() == Color(GREY_BROWN),
+                dots
+            ))))
+        )
+
+        self.windmill = windmill
+        self.dots = dots
+        self.points = points
+        self.question = question
+        self.counter_group = VGroup(
+            counter_group,
+            blues_group,
+            browns_group,
+        )
+
+    def choose_halfway_point(self):
+        windmill = self.windmill
+        points = self.points
+        n = self.n_points
+
+        p_label = TexMobject("P_0")
+        p_label.next_to(points[n // 2], RIGHT, SMALL_BUFF)
+
+        pivot_tracker = VectorizedPoint(windmill.pivot)
+
+        def update_pivot(w):
+            w.pivot = pivot_tracker.get_center()
+
+        windmill.add_updater(update_pivot)
+
+        self.play(
+            pivot_tracker.move_to, points[n // 2],
+            run_time=2
+        )
+        self.play(FadeInFrom(p_label, LEFT))
+        self.wait()
+        windmill.remove_updater(update_pivot)
+
+    def add_total_rotation_label(self):
+        super().add_total_rotation_label()
+        self.rotation_label.scale(0.8, about_edge=UL)
+
+        self.play(
+            FadeOut(self.question),
+            FadeIn(self.rotation_label),
+            self.counter_group.to_edge, UP,
+        )
+
+
+class NewSceneName(Scene):
     def construct(self):
         pass
