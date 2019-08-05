@@ -74,7 +74,7 @@ python3 -m manim example_scenes.py SquareToCircle -pl
 ### Using Docker
 Since it's a bit tricky to get all the dependencies set up just right, there is a Dockerfile and Compose file provided in this repo as well as [a premade image on Docker Hub](https://hub.docker.com/r/eulertour/manim/tags/). The Dockerfile contains instructions on how to build a manim image, while the Compose file contains instructions on how to run the image.
 
-The prebuilt container image has manin repository included.
+The prebuilt container image has manim repository included.
 `INPUT_PATH` is where the container looks for scene files. You must set the `INPUT_PATH`
 environment variable to the absolute path containing your scene file and the
 `OUTPUT_PATH` environment variable to the directory where you want media to be written.
