@@ -23,7 +23,7 @@ class Text(SVGMobject):
     Params:
     -------
     text ::
-    a str, the space(' ') in front or back and '\\n' and '\\t' will be ignored
+    a str, the space(' ') in front or back and '\\t' will be ignored(when there is only one line)
     
     Params(optional):
     -----------------
@@ -53,10 +53,7 @@ class Text(SVGMobject):
     
     stroke_color ::
     the same as color
-    
-    storke_opacity ::
-    a float
-    
+
     t2c (text2color) ::
     a dict like {'text':color} or Accurate mode
     
@@ -209,7 +206,7 @@ class Text(SVGMobject):
         ignores = [
             'color', 't2c', 
             'fill_color', 'fill_opacity', 
-            'stroke_color', 'storke_opacity'
+            'stroke_color'
         ]
         for ignore in ignores:
             if kwargs.__contains__(ignore):
