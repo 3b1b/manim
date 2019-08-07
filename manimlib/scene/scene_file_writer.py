@@ -3,7 +3,6 @@ from pydub import AudioSegment
 import shutil
 import subprocess
 import os
-import platform
 import _thread as thread
 from time import sleep
 import datetime
@@ -352,10 +351,7 @@ class SceneFileWriter(object):
             ]
             subprocess.call(commands)
             shutil.move(temp_file_path, movie_file_path)
-            if platform.system()=="Windows":
-                os.remove(sound_file_path)
-            else:
-                subprocess.call(["rm", sound_file_path])
+            os.remove(sound_file_path)
 
         self.print_file_ready_message(movie_file_path)
 
