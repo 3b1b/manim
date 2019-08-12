@@ -1,8 +1,8 @@
-import cairo
-import copy
-import hashlib
 import re
 import os
+import copy
+import hashlib
+import cairo
 import manimlib.constants as consts
 from manimlib.constants import *
 from manimlib.mobject.svg.svg_mobject import SVGMobject
@@ -21,10 +21,10 @@ class TextSetting(object):
 
 class Text(SVGMobject):
     CONFIG = {
-        #Mobject
-        'color': WHITE,
+        # Mobject
+        'color': consts.WHITE,
         'height': None,
-        #Text
+        # Text
         'font': '',
         'gradient': None,
         'lsh': -1,
@@ -46,7 +46,7 @@ class Text(SVGMobject):
 
         file_name = self.text2svg()
         SVGMobject.__init__(self, file_name, **config)
-        
+
         if self.t2c:
             self.set_color_by_t2c()
         if self.gradient:
@@ -54,9 +54,9 @@ class Text(SVGMobject):
         if self.t2g:
             self.set_color_by_t2g()
 
-        #anti-aliasing
-        self.scale(0.1)        
-        
+        # anti-aliasing
+        self.scale(0.1)
+
     def find_indexes(self, word):
         m = re.match(r'\[([0-9\-]{0,}):([0-9\-]{0,})\]', word)
         if m:
@@ -133,10 +133,10 @@ class Text(SVGMobject):
                     for start, end in self.find_indexes(word):
                         fsw[i] = x
                         settings.append(TextSetting(start, end, *fsw))
-        
-        #Set All text settings(default font slant weight)
+
+        # Set All text settings(default font slant weight)
         fsw = [self.font, self.slant, self.weight]
-        settings.sort(key = lambda setting: setting.start)
+        settings.sort(key=lambda setting: setting.start)
         temp_settings = settings.copy()
         start = 0
         for setting in settings:
@@ -145,8 +145,8 @@ class Text(SVGMobject):
             start = setting.end
         if start != len(self.text):
             temp_settings.append(TextSetting(start, len(self.text), *fsw))
-        settings = sorted(temp_settings, key = lambda setting: setting.start)                
-        
+        settings = sorted(temp_settings, key=lambda setting: setting.start)
+
         if re.search(r'\n', self.text):
             line_num = 0
             for start, end in self.find_indexes('\n'):
@@ -160,9 +160,9 @@ class Text(SVGMobject):
                         new_setting.start = end
                         new_setting.line_num = line_num
                         settings.append(new_setting)
-                        settings.sort(key = lambda setting: setting.start)
+                        settings.sort(key=lambda setting: setting.start)
                         break
-        
+
         for setting in settings:
             if setting.line_num == -1:
                 setting.line_num = 0
@@ -170,7 +170,7 @@ class Text(SVGMobject):
         return settings
 
     def text2svg(self):
-        #anti-aliasing
+        # anti-aliasing
         size = self.size * 10
         lsh = self.lsh * 10
 
@@ -182,7 +182,7 @@ class Text(SVGMobject):
         file_name = os.path.join(dir_name, hash_name)+'.svg'
         if os.path.exists(file_name):
             return file_name
-            
+
         surface = cairo.SVGSurface(file_name, 600, 400)
         context = cairo.Context(surface)
         context.set_font_size(size)
@@ -201,7 +201,7 @@ class Text(SVGMobject):
             if setting.line_num != last_line_num:
                 offset_x = 0
                 last_line_num = setting.line_num
-            context.move_to(START_X+offset_x, START_Y + lsh*setting.line_num)
+            context.move_to(START_X + offset_x, START_Y + lsh*setting.line_num)
             context.show_text(text)
             offset_x += context.text_extents(text)[4]
 
