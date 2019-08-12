@@ -19,6 +19,7 @@ class CheckSVG(Scene):
     "stroke_color": None,
     "stroke_opacity":1,
     "stroke_width": 3,
+    "number_type":"Font",
     "sheen_factor":None,
     "sheen_direction":None,
     "gradient_color":False,
@@ -45,7 +46,10 @@ class CheckSVG(Scene):
     }
     def construct(self):
         if self.svg_type=="svg":
-            pre_imagen=SVGMobject("%s"%self.file)
+            try:
+                pre_imagen=SVGMobject("%s"%self.file)
+            except:
+                pre_imagen=self.custom_object()
         elif self.svg_type=="text":
             pre_imagen=self.import_text()
         else:
@@ -141,8 +145,11 @@ class CheckSVG(Scene):
         c=0
         for j in range(len(text)):
             permission_print=True
-            element = TexMobject("%d" %c,color=color,
+            if self.number_type=="TextMobject":
+                element = TexMobject("%d" %c,color=color,
                 background_stroke_width=self.background_stroke_width)
+            else:
+                element = FontText("%d" %c).set_color(color)
             element.scale(inverse_scale)
             element.next_to(text[j],direction,buff=buff)
             for w in exception:
@@ -198,10 +205,14 @@ class CheckSVGPoints(CheckSVGNumbers):
                     next_color=next(cycle_colors)
                     punto=Dot(color=next_color,radius=self.point_radius)
                     punto.move_to(point)
-                    number_point=Text("%d"%count,
+                    if self.number_type=="TextMobject":
+                        number_point=Text("%d"%count,
                         color=punto.get_color(),
                         background_stroke_width=self.shadow_point_number
                         )
+                    else:
+                        number_point=FontText("%d"%count)
+                        number_point.match_color(punto)
                     number_point.set_height(self.size_points_numbers)\
                                 .next_to(punto,
                                     self.number_point_direction,
@@ -230,10 +241,11 @@ class CheckSVGPoints(CheckSVGNumbers):
         c=0
         for j in range(len(text)):
             permission_print=True
-            element = TexMobject(
-                "%d:%d"%(c,len(text.points)),
-                color=color,
+            if self.number_type=="TextMobject":
+                element = TexMobject("%d:%d"%(c,len(text.points)),color=color,
                 background_stroke_width=self.background_stroke_width)
+            else:
+                element = FontText("%d:%d"%(c,len(text.points))).set_color(color)
             element.scale(inverse_scale)
             element.next_to(text[j],direction,buff=buff)
             for w in exception:
@@ -256,6 +268,7 @@ class ExportCSV(Scene):
     "csv_desfase":[],
     "cvs_sobrantes":0,
     "remove": [],
+    "number_type":"FontText",
     "stroke_color":WHITE,
     "stroke_width": 3,
     "numbers_scale":0.5,
@@ -461,7 +474,11 @@ class ExportCSVPairs(Scene):
         c=0
         for j in range(len(text)):
             permission_print=True
-            element = TexMobject("%d" %c,color=color)
+            if self.number_type=="TextMobject":
+                element = TexMobject("%d" %c,color=color,
+                background_stroke_width=self.background_stroke_width)
+            else:
+                element = FontText("%d" %c).set_color(color)
             element.scale(inverse_scale)
             element.next_to(text[j],direction,buff=buff)
             for w in exception:
