@@ -49,51 +49,42 @@ class Patreon(VGroup):
         self.add(circ1,circ2,rect)
 
 
-class Patron(VGroup):
-    def __init__(self,width,height,separacion=0.2,color=GREEN,agregar_base=False,direccion="R",grosor=1,stroke_width=2,**kwargs):
-        digest_config(self, kwargs)
-        VGroup.__init__(self, **kwargs)
+class RectanglePattern(VGroup):
+    CONFIG={
+        "space":0.2,
+        "color":RED,
+        "add_rectangle":False,
+        "rectangle_color":WHITE,
+        "rectangle_width":4
+    }
+    def __init__(self,width,height=None,stroke_width=2,**kwargs):
+        super().__init__(**kwargs)
+        if height==None:
+            height=width
         W=width
         H=height
-        b=separacion
+        b=self.space
+        n=1
         if H>=W:
-            n=0
-            while n*b<W:
-                x_i=W/2-n*b
-                x_f=W/2
-                pat=FunctionGraph(lambda x : x-W/2+n*b-H/2, 
-                                    color = color,
+            while -H/2+n*b<H/2+W:
+                if -H/2+n*b<-H/2+W:
+                    x_i=W/2-n*b
+                    x_f=W/2
+                if -H/2+W<=(-H)/2+n*b and (-H)/2+n*b<=H/2:
+                    x_i=-W/2
+                    x_f=W/2
+                if H/2<=(-H)/2+n*b and (-H)/2+n*b<H/2+W:
+                    x_i=-W/2
+                    x_f=H+W/2-n*b
+                pat=FunctionGraph(lambda x : x-W/2-H/2+n*b, 
+                                    color = self.color,
                                     stroke_width = stroke_width,
                                     x_min = x_i,
                                     x_max = x_f
                                     )
                 self.add(pat)
-                n=n+1
-            n=0
-            while n*b<=H-W:
-                x_f=W/2
-                x_i=-W/2
-                pat=FunctionGraph(lambda x : x-x_i+n*b-H/2, 
-                                    color = color,
-                                    stroke_width = stroke_width,
-                                    x_min = x_i,
-                                    x_max = x_f
-                                    )
-                self.add(pat)
-                n=n+1
-            while n*b-H/2<H/2:
-                x_f=H-n*b+x_i
-                x_i=-W/2
-                pat=FunctionGraph(lambda x : x-x_i+n*b-H/2, 
-                                    color = color,
-                                    stroke_width = stroke_width,
-                                    x_min = x_i,
-                                    x_max = x_f
-                                    )
-                self.add(pat)
-                n=n+1
+                n+=1
         else:
-            n=0
             while n*b-H/2<W+H/2:
                 if n*b-H/2<H/2:
                     x_i=W/2-n*b
@@ -105,69 +96,61 @@ class Patron(VGroup):
                     x_i=-W/2
                     x_f=H+W/2-n*b
                 pat=FunctionGraph(lambda x : x-W/2+n*b-H/2, 
-                                    color = color,
+                                    color = self.color,
                                     stroke_width = stroke_width,
                                     x_min = x_i,
                                     x_max = x_f
                                     )
                 self.add(pat)
-                n=n+1
-        if agregar_base==True:
-            if direccion=="L":
-                orientacion=LEFT
-            elif direccion=="R":
-                orientacion=RIGHT
-            elif direccion=="U":
-                orientacion=UP
-            elif direccion=="D":
-                orientacion=DOWN
-            if direccion=="L" or direccion=="R":
-                grosor=Rectangle(height=H,width=grosor).set_fill(color,1).set_stroke(None,0)
-                grosor.shift(orientacion*W/2-orientacion*grosor.get_width()/2)
-            else:
-                grosor=Rectangle(height=grosor,width=W).set_fill(color,1).set_stroke(None,0)
-                grosor.shift(orientacion*H/2-orientacion*grosor.get_height()/2)
-            self.add(grosor)
+                n+=1
+        if self.add_rectangle:
+            self.add(
+                Rectangle(
+                    width=width,
+                    height=height,
+                    color=self.rectangle_color,
+                    stroke_width=self.rectangle_width
+                )
+            )
 
 class MeasureDistance(VGroup):
     CONFIG = {
         "color":RED_B,
         "buff":0.3,
-        "laterales":0.3,
-        "invertir":True,
+        "lateral":0.3,
+        "invert":False,
         "dashed_segment_length":0.09,
         "dashed":True,
-        "con_flechas":True,
-        "ang_flechas":30*DEGREES,
-        "tam_flechas":0.2,
-        "stroke":2.4
+        "ang_arrows":30*DEGREES,
+        "size_arrows":0.2,
+        "stroke":2.4,
     }
-    def __init__(self,objeto,**kwargs):
+    def __init__(self,mob,**kwargs):
         VGroup.__init__(self,**kwargs)
         if self.dashed==True:
-            medicion=DashedLine(ORIGIN,objeto.get_length()*RIGHT,dashed_segment_length=self.dashed_segment_length).set_color(self.color)
+            medicion=DashedLine(ORIGIN,mob.get_length()*RIGHT,dashed_segment_length=self.dashed_segment_length).set_color(self.color)
         else:
-            medicion=Line(ORIGIN,objeto.get_length()*RIGHT)
+            medicion=Line(ORIGIN,mob.get_length()*RIGHT)
 
         medicion.set_stroke(None,self.stroke)
 
-        pre_medicion=Line(ORIGIN,self.laterales*RIGHT).rotate(PI/2).set_stroke(None,self.stroke)
+        pre_medicion=Line(ORIGIN,self.lateral*RIGHT).rotate(PI/2).set_stroke(None,self.stroke)
         pos_medicion=pre_medicion.copy()
 
         pre_medicion.move_to(medicion.get_start())
         pos_medicion.move_to(medicion.get_end())
 
-        angulo=objeto.get_angle()
+        angulo=mob.get_angle()
         matriz_rotacion=rotation_matrix(PI/2,OUT)
-        vector_unitario=objeto.get_unit_vector()
+        vector_unitario=mob.get_unit_vector()
         direccion=np.matmul(matriz_rotacion,vector_unitario)
         self.direccion=direccion
 
         self.add(medicion,pre_medicion,pos_medicion)
         self.rotate(angulo)
-        self.move_to(objeto)
+        self.move_to(mob)
 
-        if self.invertir==True:
+        if self.invert==True:
             self.shift(-direccion*self.buff)
         else:
             self.shift(direccion*self.buff)
@@ -180,57 +163,57 @@ class MeasureDistance(VGroup):
         vector_unitario=linea_referencia.get_unit_vector()
 
         punto_final1=self[0][-1].get_end()
-        punto_inicial1=punto_final1-vector_unitario*self.tam_flechas
+        punto_inicial1=punto_final1-vector_unitario*self.size_arrows
 
         punto_inicial2=self[0][0].get_start()
-        punto_final2=punto_inicial2+vector_unitario*self.tam_flechas
+        punto_final2=punto_inicial2+vector_unitario*self.size_arrows
 
         lin1_1=Line(punto_inicial1,punto_final1).set_color(self[0].get_color()).set_stroke(None,self.stroke)
         lin1_2=lin1_1.copy()
         lin2_1=Line(punto_inicial2,punto_final2).set_color(self[0].get_color()).set_stroke(None,self.stroke)
         lin2_2=lin2_1.copy()
 
-        lin1_1.rotate(self.ang_flechas,about_point=punto_final1,about_edge=punto_final1)
-        lin1_2.rotate(-self.ang_flechas,about_point=punto_final1,about_edge=punto_final1)
+        lin1_1.rotate(self.ang_arrows,about_point=punto_final1,about_edge=punto_final1)
+        lin1_2.rotate(-self.ang_arrows,about_point=punto_final1,about_edge=punto_final1)
 
-        lin2_1.rotate(self.ang_flechas,about_point=punto_inicial2,about_edge=punto_inicial2)
-        lin2_2.rotate(-self.ang_flechas,about_point=punto_inicial2,about_edge=punto_inicial2)
+        lin2_1.rotate(self.ang_arrows,about_point=punto_inicial2,about_edge=punto_inicial2)
+        lin2_2.rotate(-self.ang_arrows,about_point=punto_inicial2,about_edge=punto_inicial2)
 
 
         return self.add(lin1_1,lin1_2,lin2_1,lin2_2)
 
-    def add_tex(self,texto,escala=1,buff=0.1,**moreargs):
+    def add_tex(self,text,scale=1,buff=-1,**moreargs):
         linea_referencia=Line(self[0][0].get_start(),self[0][-1].get_end())
-        texto=TexMobject(texto,**moreargs)
+        texto=TexMobject(text,**moreargs)
         ancho=texto.get_height()/2
-        texto.rotate(linea_referencia.get_angle()).scale(escala).move_to(self)
+        texto.rotate(linea_referencia.get_angle()).scale(scale).move_to(self)
         texto.shift(self.direccion*(buff+1)*ancho)
         return self.add(texto)
 
-    def add_text(self,text,escala=1,buff=0.1,**moreargs):
+    def add_text(self,text,scale=1,buff=0.1,**moreargs):
         linea_referencia=Line(self[0][0].get_start(),self[0][-1].get_end())
         texto=TextMobject(text,**moreargs)
         ancho=texto.get_height()/2
-        texto.rotate(linea_referencia.get_angle()).scale(escala).move_to(self)
+        texto.rotate(linea_referencia.get_angle()).scale(scale).move_to(self)
         texto.shift(self.direccion*(buff+1)*ancho)
         return self.add(texto)
 
-    def add_size(self,texto,escala=1,buff=0.1,**moreargs):
+    def add_size(self,text,scale=1,buff=0.1,**moreargs):
         linea_referencia=Line(self[0][0].get_start(),self[0][-1].get_end())
-        texto=TextMobject(texto,**moreargs)
+        texto=TextMobject(text,**moreargs)
         ancho=texto.get_height()/2
         texto.rotate(linea_referencia.get_angle())
         texto.shift(self.direccion*(buff+1)*ancho)
         return self.add(texto)
 
-    def add_letter(self,texto,escala=1,buff=0.1,**moreargs):
+    def add_letter(self,text,scale=1,buff=0.1,**moreargs):
         linea_referencia=Line(self[0][0].get_start(),self[0][-1].get_end())
-        texto=TexMobject(texto,**moreargs).scale(escala).move_to(self)
+        texto=TexMobject(text,**moreargs).scale(scale).move_to(self)
         ancho=texto.get_height()/2
         texto.shift(self.direccion*(buff+1)*ancho)
         return self.add(texto)
 
-    def get_text(self, text,escala=1,buff=0.1,invert_dir=False,invert_texto=False,elim_rot=False,**moreargs):
+    def get_text(self, text,scale=1,buff=0.1,invert_dir=False,invert_texto=False,remove_rot=False,**moreargs):
         linea_referencia=Line(self[0][0].get_start(),self[0][-1].get_end())
         texto=TextMobject(text,**moreargs)
         ancho=texto.get_height()/2
@@ -238,10 +221,10 @@ class MeasureDistance(VGroup):
             inv=PI
         else:
             inv=0
-        if elim_rot:
-            texto.scale(escala).move_to(self)
+        if remove_rot:
+            texto.scale(scale).move_to(self)
         else:
-            texto.rotate(linea_referencia.get_angle()).scale(escala).move_to(self)
+            texto.rotate(linea_referencia.get_angle()).scale(scale).move_to(self)
             texto.rotate(inv)
         if invert_dir:
             inv=-1
@@ -250,18 +233,18 @@ class MeasureDistance(VGroup):
         texto.shift(self.direccion*(buff+1)*ancho*inv)
         return texto
 
-    def get_tex(self, tex,escala=1,buff=0.1,invert_dir=False,invert_texto=False,elim_rot=False,**moreargs):
+    def get_tex(self, tex,scale=1,buff=1,invert_dir=False,invert_texto=False,remove_rot=True,**moreargs):
         linea_referencia=Line(self[0][0].get_start(),self[0][-1].get_end())
-        texto=TexMobject(texto,**moreargs)
+        texto=TexMobject(tex,**moreargs)
         ancho=texto.get_height()/2
         if invert_texto:
             inv=PI
         else:
             inv=0
-        if elim_rot:
-            texto.scale(escala).move_to(self)
+        if remove_rot:
+            texto.scale(scale).move_to(self)
         else:
-            texto.rotate(linea_referencia.get_angle()).scale(escala).move_to(self)
+            texto.rotate(linea_referencia.get_angle()).scale(scale).move_to(self)
             texto.rotate(inv)
         if invert_dir:
             inv=-1
@@ -269,7 +252,6 @@ class MeasureDistance(VGroup):
             inv=1
         texto.shift(self.direccion*(buff+1)*ancho)
         return texto
-
 
 
 class Grid(VMobject):
