@@ -50,9 +50,9 @@ class SVGMobject(VMobject):
         if self.file_name is None:
             raise Exception("Must specify file for SVGMobject")
         possible_paths = [
-            os.path.join(SVG_IMAGE_DIR, self.file_name),
-            os.path.join(SVG_IMAGE_DIR, self.file_name + ".svg"),
-            os.path.join(SVG_IMAGE_DIR, self.file_name + ".xdv"),
+            os.path.join(os.path.join("assets", "svg_images"), self.file_name),
+            os.path.join(os.path.join("assets", "svg_images"), self.file_name + ".svg"),
+            os.path.join(os.path.join("assets", "svg_images"), self.file_name + ".xdv"),
             self.file_name,
         ]
         for path in possible_paths:
@@ -81,7 +81,7 @@ class SVGMobject(VMobject):
             self.update_ref_to_element(element)
         elif element.tagName == 'style':
             pass  # TODO, handle style
-        elif element.tagName in ['g', 'svg']:
+        elif element.tagName in ['g', 'svg', 'symbol']:
             result += it.chain(*[
                 self.get_mobjects_from(child)
                 for child in element.childNodes
@@ -284,12 +284,33 @@ class SVGMobject(VMobject):
             pass
         # TODO, ...
 
+    def flatten(self, input_list):
+        output_list = []
+        while True:
+            if input_list == []:
+                break
+            for index, i in enumerate(input_list):
+                if type(i)== list:
+                    input_list = i + input_list[index+1:]
+                    break
+                else:
+                    output_list.append(i)
+                    input_list.pop(index)
+                    break
+        return output_list
+
+    def get_all_childNodes_have_id(self, element):
+        all_childNodes_have_id = []
+        if not isinstance(element, minidom.Element):
+            return
+        if element.hasAttribute('id'):
+            return element
+        for e in element.childNodes:
+            all_childNodes_have_id.append(self.get_all_childNodes_have_id(e))
+        return self.flatten([e for e in all_childNodes_have_id if e])
+
     def update_ref_to_element(self, defs):
-        new_refs = dict([
-            (element.getAttribute('id'), element)
-            for element in defs.childNodes
-            if isinstance(element, minidom.Element) and element.hasAttribute('id')
-        ])
+        new_refs = dict([(e.getAttribute('id'), e) for e in self.get_all_childNodes_have_id(defs)])
         self.ref_to_element.update(new_refs)
 
     def move_into_position(self):
@@ -414,6 +435,3 @@ class VMobjectFromSVGPathstring(VMobject):
 
     def get_original_path_string(self):
         return self.path_string
-
-#------------------------------------------------------------
-#------------------------------------------------------------
