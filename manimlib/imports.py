@@ -103,14 +103,14 @@ from manimlib.utils.space_ops import *
 from manimlib.utils.strings import *
 
 # Non manim libraries that are also nice to have without thinking
-from manimlib.scene.music_scene import *
-from manimlib.scene.plot_scene import *
-from manimlib.scene.tools_scene import *
 from manimlib.for_tb_videos.svg_objects import *
 from manimlib.for_tb_videos.chat import *
 from manimlib.for_tb_videos.image_objects import *
 from manimlib.for_tb_videos.tb_objects import *
 from manimlib.for_tb_videos.tb_animations import *
+from manimlib.scene.music_scene import *
+from manimlib.scene.plot_scene import *
+from manimlib.scene.tools_scene import *
 from projects.ext.end_video import RedesEspanhol,RedesIngles
 
 
