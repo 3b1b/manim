@@ -52,15 +52,20 @@ def initialize_directories(config):
         if folder != "" and not os.path.exists(folder):
             os.makedirs(folder)
 
-DEFAULT_FONT = ''
-DEFAULT_LSH = 1
-DEFAULT_SIZE = 1
 NOT_SETTING_FONT_MSG='''
 Warning:
-You haven't set DEFAULT_FONT.
+You haven't set font.
 If you are not using English, this may cause text rendering problem.
-You can change the DEFAULT_FONT in manimlib\\constans.py or Text('your text', font='your font').
+You set font like:
+text = Text('your text', font='your font')
+or:
+class MyText(Text):
+    CONFIG = {
+        'font': 'My Font'
+    }
 '''
+START_X = 30
+START_Y = 20
 NORMAL = 'NORMAL'
 ITALIC = 'ITALIC'
 OBLIQUE = 'OBLIQUE'
