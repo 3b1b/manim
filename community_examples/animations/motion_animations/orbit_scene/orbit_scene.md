@@ -24,4 +24,4 @@ class OrbitScene(Scene):
 
 Result:
 
-<p align="center"><img src ="/community_examples/new_mobjects/screen_grid/CoordScreen.png" /></p>
+<p align="center"><img src ="/community_examples/animations/motion_animations/orbit_scene/OrbitScene.gif" /></p>
