@@ -1124,6 +1124,10 @@ class Mobject(Container):
             caller_name = sys._getframe(1).f_code.co_name
             raise Exception(message.format(caller_name))
 
+    # TB methods
+    def arrange_list_to_left(self,buff=MED_SMALL_BUFF):
+        return self.arrange(DOWN,aligned_edge=LEFT,buff=buff)
+
 
 class Group(Mobject):
     def __init__(self, *mobjects, **kwargs):

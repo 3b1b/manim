@@ -17,7 +17,6 @@ class TypeWriterScene(Scene):
         KeyBoard(self,texto,lag=0.1)
         self.wait()
 
-<<<<<<< HEAD
 class TimeTest(Scene):
 	def print_time(self):
 		print("Time:",round(self.time))
@@ -41,7 +40,7 @@ class TimeTest(Scene):
 		self.wait()
 		# 8 seconds
 		self.print_time()
-=======
+
 class NewOwnAnimations(Scene):
     def construct(self):
         text1=Formula("x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}")[0]
@@ -118,12 +117,66 @@ class PatternExample(Scene):
 class MeasureObject(Scene):
     def construct(self):
         square=Square()
-
         measure_line=Line(square.get_corner(DL),square.get_corner(UL))
-
         measure=MeasureDistance(measure_line).add_tips()
-
         measure_tex=measure.get_tex("x")
-
         self.add(square,measure,measure_tex)
->>>>>>> 9ec521bf2e9bea65ee6f9ac07ea1d87b505f5449
+
+class ScreenGridScene(Scene):
+    def construct(self):
+        screen_grid=ScreenGrid()
+        self.add(screen_grid)
+
+class ArrangeScene(Scene):
+    def construct(self):
+        dots=VGroup(*[Dot() for _ in range(4)])
+        dots.arrange_list_to_left()
+        self.add(dots)
+
+class ArrangeScene2(Scene):
+    def construct(self):
+        dots=VGroup(
+            FontText("a"),
+            FontText("b"),
+            FontText("."),
+            FontText("X"),
+            FontText("y"),
+            )
+        dots.arrange_in_grid(len(dots),1)
+        self.add(dots)
+
+class ArrangeScene3(Scene):
+    def construct(self):
+        dots=VGroup(
+            FontText("a"),
+            FontText("b"),
+            FontText("."),
+            FontText("X"),
+            FontText("y"),
+            )
+        dots.arrange_in_grid(len(dots),1)
+        self.add(dots)
+
+class BackgroundScene(Scene):
+    def construct(self):
+        f1=FontText("Daniel Alexander")
+        f2=FontText("Vázquez Zaldivar")
+        f3=FontText("Es el mejor")
+
+        fs=VGroup(f1,f2,f3)#.arrange_list_to_left(2)
+        max_height=0
+        for f in fs:
+            f_w=f.get_height()
+            max_height=max(f_w,max_height)
+        background_rectangle=Rectangle(height=max_height)
+        new_fs=VGroup()
+        for f in fs:
+            br=background_rectangle.copy()
+            br.stretch_to_fit_width(f.get_width())
+            br.move_to(f)
+            f.shift(DOWN*(max_height-f.get_height())/2)
+            new_fs.add(VGroup(f,br))
+        new_fs.arrange_list_to_left()
+        #for f in new_fs:
+        #    f.remove(f[1])
+        self.add(new_fs)

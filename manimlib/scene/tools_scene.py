@@ -355,7 +355,8 @@ class ExportCSV(Scene):
         c=0
         for j in range(len(text)):
             permission_print=True
-            element = TexMobject("%d" %c,color=color)
+            element = FontText("%d" %c)
+            element.set_color(color)
             element.scale(inverse_scale)
             element.next_to(text[j],direction,buff=buff)
             for w in exception:
@@ -371,7 +372,7 @@ class ExportCSV(Scene):
     def return_elements(self,formula,adds):
         for i in adds:
             self.add_foreground_mobjects(formula[i].set_color(self.color_element),
-                TexMobject("%d"%i,color=self.color_element,background_stroke_width=0)\
+                FontText("%d"%i,color=self.color_element)\
                 .scale(self.numbers_scale)\
                 .next_to(formula[i],self.direction_numbers,buff=self.space_between_numbers)
                 )
@@ -558,7 +559,7 @@ class ExportCSVPairs(Scene):
     def return_elements(self,formula,adds):
         for i in adds:
             self.add_foreground_mobjects(formula[i].set_color(self.color_element),
-                TexMobject("%d"%i,color=self.color_element,background_stroke_width=0)\
+                FontText("%d"%i,color=self.color_element)\
                 .scale(self.numbers_scale)\
                 .next_to(formula[i],self.direction_numbers,buff=self.space_between_numbers)
                 )

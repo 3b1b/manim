@@ -78,9 +78,6 @@ class Patreon(VGroup):
 
         self.add(circ1,circ2,rect)
 
-
-<<<<<<< HEAD
-
 class Patron(VGroup):
     CONFIG={
         "spaces":0.2,
@@ -158,11 +155,6 @@ class PatternFromProportion(VGroup):
         for x,y in zip(pre_coords,post_coords):
             self.add(Line(x,y))
 
-
-
-
-
-
 class RectanglePattern(VGroup):
     CONFIG={
         "space":0.2,
@@ -177,22 +169,6 @@ class RectanglePattern(VGroup):
             height=width
         W=width
         H=height
-=======
-class RectanglePattern(VGroup):
-    CONFIG={
-        "space":0.2,
-        "color":RED,
-        "add_rectangle":False,
-        "rectangle_color":WHITE,
-        "rectangle_width":4
-    }
-    def __init__(self,width,height=None,stroke_width=2,**kwargs):
-        super().__init__(**kwargs)
-        if height==None:
-            height=width
-        W=width
-        H=height
->>>>>>> 9ec521bf2e9bea65ee6f9ac07ea1d87b505f5449
         b=self.space
         n=1
         if H>=W:
@@ -242,11 +218,7 @@ class RectanglePattern(VGroup):
                     stroke_width=self.rectangle_width
                 )
             )
-<<<<<<< HEAD
-                
-        
-=======
->>>>>>> 9ec521bf2e9bea65ee6f9ac07ea1d87b505f5449
+
 
 class MeasureDistance(VGroup):
     CONFIG = {
@@ -427,7 +399,7 @@ class ScreenGrid(VGroup):
         "axis_stroke":2,
         "show_points":False,
         "point_radius":0,
-        "labels_scale":0.5,
+        "labels_scale":0.3,
         "labels_buff":0,
         "number_decimals":2
     }
@@ -470,7 +442,7 @@ class ScreenGrid(VGroup):
                     ubicacion=v_i+orientacion*division*i
                     punto=Dot(ubicacion,radius=self.point_radius)
                     coord=round(punto.get_center()[coordenada],self.number_decimals)
-                    leyenda=TextMobject("%s"%coord).scale(self.labels_scale)
+                    leyenda=FontText("%s"%coord).scale(self.labels_scale)
                     leyenda.next_to(punto,direcciones_buff,buff=self.labels_buff)
                     puntos.add(punto)
                     leyendas.add(leyenda)
