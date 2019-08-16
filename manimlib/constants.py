@@ -38,7 +38,7 @@ def initialize_directories(config):
                 "directory were both passed"
             )
 
-    TEX_DIR = config["tex_dir"] or os.path.join(MEDIA_DIR, "texs")
+    TEX_DIR = config["tex_dir"] or os.path.join(MEDIA_DIR, "Tex")
     TEXT_DIR = os.path.join(MEDIA_DIR, "texts")
     if not video_path_specified:
         VIDEO_DIR = os.path.join(MEDIA_DIR, "videos")
