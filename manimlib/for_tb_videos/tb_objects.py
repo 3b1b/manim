@@ -1,5 +1,35 @@
 from manimlib.imports import *
 
+class Coord:
+    def __init__(self,x,y):
+        self.x=x
+        self.y=y
+        self.coord=np.array([x,y,0])
+
+    def get_coord(self):
+        return self.coord
+
+    def get_x(self):
+        return self.x
+
+    def get_y(self):
+        return self.y
+
+class Rate:
+    def __init__(self,init_val,increment=None):
+        self.val=init_val
+        if increment==None:
+            self.increment=init_val
+
+    def increment_value(self):
+        self.val+=self.increment
+
+    def get_value(self):
+        return self.val
+
+    def set_value(self,val):
+        self.val=val
+
 class Caja(VMobject):
     def __init__(self,ancho=3,alto=2,tapas=0.95,grosor_tapas=11,stroke_color="#D2B48C",fill_color="#cdab7e",**kwargs):
         digest_config(self, kwargs)
@@ -49,51 +79,125 @@ class Patreon(VGroup):
         self.add(circ1,circ2,rect)
 
 
+
 class Patron(VGroup):
-    def __init__(self,width,height,separacion=0.2,color=GREEN,agregar_base=False,direccion="R",grosor=1,stroke_width=2,**kwargs):
-        digest_config(self, kwargs)
+    CONFIG={
+        "spaces":0.2,
+        "color":GREEN,
+        "add_base":False,
+        "base_stroke":5,
+        "stroke":1
+    }
+    def __init__(self,width,height,slope=1,**kwargs):
         VGroup.__init__(self, **kwargs)
+        #Constants
         W=width
         H=height
-        b=separacion
+        def func(x,m=1,tx=0,ty=0):
+            return m*(x-tx)+ty
+        def return_x(tx,ty,m,y,space):
+            return ((y-ty-space)/m)+tx
+        start_point=Coord(W/2,-H/2)
+        first_domain=Coord(W/2,H/2)
+
+        # Start
+        rate=Rate(self.spaces)
+        def func1(x):
+            return func(x,slope,start_point.get_x(),start_point.get_y())
+        while start_point.get_y()+rate.get_value()<=first_domain.get_y():
+            xmin=return_x(
+                start_point.get_x(),
+                start_point.get_y(),
+                slope,
+                start_point.get_y(),
+                rate.get_value()
+                )
+            xmax=start_point.get_x()
+            line=FunctionGraph(
+                    lambda x: func1(x)+rate.get_value(),
+                    x_min=xmin,
+                    x_max=xmax
+                )
+            self.add(line)
+            rate.increment_value()
+
+class PatternFromProportion(VGroup):
+    CONFIG={
+        "color":RED,
+        "start_proportion_at":0,
+        "step_pattern":0.01,
+        "add_rectangle":False
+    }
+    def __init__(self,width,height=None,**kwargs):
+        super().__init__(**kwargs)
+        if height==None:
+            height=width
+        rectangle=Rectangle(width=width,height=height)
+
+        middle_proportion=self.start_proportion_at%1
+        start_proportion=(self.start_proportion_at-0.5)%1
+        end_proportion=(self.start_proportion_at+0.5)%1
+
+        update_proportion=middle_proportion
+        pre_coords=[]
+        while update_proportion<end_proportion:
+            dot=Dot().move_to(rectangle.point_from_proportion(update_proportion))
+            pre_coords.append(dot.get_center())
+            self.add(dot)
+            update_proportion+=self.step_pattern
+
+        update_proportion=middle_proportion
+        post_coords=[]
+        while update_proportion>start_proportion:
+            dot=Dot().move_to(rectangle.point_from_proportion(update_proportion))
+            post_coords.append(dot.get_center())
+            self.add(dot)
+            update_proportion-=self.step_pattern
+
+        for x,y in zip(pre_coords,post_coords):
+            self.add(Line(x,y))
+
+
+
+
+
+
+class RectanglePattern(VGroup):
+    CONFIG={
+        "space":0.2,
+        "color":RED,
+        "add_rectangle":False,
+        "rectangle_color":WHITE,
+        "rectangle_width":4
+    }
+    def __init__(self,width,height=None,stroke_width=2,**kwargs):
+        super().__init__(**kwargs)
+        if height==None:
+            height=width
+        W=width
+        H=height
+        b=self.space
+        n=1
         if H>=W:
-            n=0
-            while n*b<W:
-                x_i=W/2-n*b
-                x_f=W/2
-                pat=FunctionGraph(lambda x : x-W/2+n*b-H/2, 
-                                    color = color,
+            while -H/2+n*b<H/2+W:
+                if -H/2+n*b<-H/2+W:
+                    x_i=W/2-n*b
+                    x_f=W/2
+                if -H/2+W<=(-H)/2+n*b and (-H)/2+n*b<=H/2:
+                    x_i=-W/2
+                    x_f=W/2
+                if H/2<=(-H)/2+n*b and (-H)/2+n*b<H/2+W:
+                    x_i=-W/2
+                    x_f=H+W/2-n*b
+                pat=FunctionGraph(lambda x : x-W/2-H/2+n*b, 
+                                    color = self.color,
                                     stroke_width = stroke_width,
                                     x_min = x_i,
                                     x_max = x_f
                                     )
                 self.add(pat)
-                n=n+1
-            n=0
-            while n*b<=H-W:
-                x_f=W/2
-                x_i=-W/2
-                pat=FunctionGraph(lambda x : x-x_i+n*b-H/2, 
-                                    color = color,
-                                    stroke_width = stroke_width,
-                                    x_min = x_i,
-                                    x_max = x_f
-                                    )
-                self.add(pat)
-                n=n+1
-            while n*b-H/2<H/2:
-                x_f=H-n*b+x_i
-                x_i=-W/2
-                pat=FunctionGraph(lambda x : x-x_i+n*b-H/2, 
-                                    color = color,
-                                    stroke_width = stroke_width,
-                                    x_min = x_i,
-                                    x_max = x_f
-                                    )
-                self.add(pat)
-                n=n+1
+                n+=1
         else:
-            n=0
             while n*b-H/2<W+H/2:
                 if n*b-H/2<H/2:
                     x_i=W/2-n*b
@@ -105,29 +209,24 @@ class Patron(VGroup):
                     x_i=-W/2
                     x_f=H+W/2-n*b
                 pat=FunctionGraph(lambda x : x-W/2+n*b-H/2, 
-                                    color = color,
+                                    color = self.color,
                                     stroke_width = stroke_width,
                                     x_min = x_i,
                                     x_max = x_f
                                     )
                 self.add(pat)
-                n=n+1
-        if agregar_base==True:
-            if direccion=="L":
-                orientacion=LEFT
-            elif direccion=="R":
-                orientacion=RIGHT
-            elif direccion=="U":
-                orientacion=UP
-            elif direccion=="D":
-                orientacion=DOWN
-            if direccion=="L" or direccion=="R":
-                grosor=Rectangle(height=H,width=grosor).set_fill(color,1).set_stroke(None,0)
-                grosor.shift(orientacion*W/2-orientacion*grosor.get_width()/2)
-            else:
-                grosor=Rectangle(height=grosor,width=W).set_fill(color,1).set_stroke(None,0)
-                grosor.shift(orientacion*H/2-orientacion*grosor.get_height()/2)
-            self.add(grosor)
+                n+=1
+        if self.add_rectangle:
+            self.add(
+                Rectangle(
+                    width=width,
+                    height=height,
+                    color=self.rectangle_color,
+                    stroke_width=self.rectangle_width
+                )
+            )
+                
+        
 
 class MeasureDistance(VGroup):
     CONFIG = {
