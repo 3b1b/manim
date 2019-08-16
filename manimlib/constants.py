@@ -28,12 +28,13 @@ SOUND_DIR = os.path.join("media","sounds")
 THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 FILE_DIR = os.path.join(os.getenv("FILE_DIR", default="."), "files")
 TEX_DIR = os.path.join(FILE_DIR, "Tex")
+TEXT_DIR = os.path.join(FILE_DIR, "Text")
 # These two may be depricated now.
 MOBJECT_DIR = os.path.join(FILE_DIR, "mobjects")
 IMAGE_MOBJECT_DIR = os.path.join(MOBJECT_DIR, "image")
 
 for folder in [FILE_DIR, RASTER_IMAGE_DIR, SVG_IMAGE_DIR, VIDEO_DIR,
-               TEX_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR,SOUND_DIR]:
+               TEX_DIR, MOBJECT_DIR, IMAGE_MOBJECT_DIR,SOUND_DIR,TEXT_DIR]:
     if not os.path.exists(folder):
         os.makedirs(folder)
 
@@ -146,6 +147,25 @@ INVALID_NUMBER_MESSAGE = "Fine then, if you don't want to give a valid number I'
 NO_SCENE_MESSAGE = """
    There are no scenes inside that module
 """
+
+NOT_SETTING_FONT_MSG='''
+Warning:
+You haven't set font.
+If you are not using English, this may cause text rendering problem.
+You set font like:
+text = Text('your text', font='your font')
+or:
+class MyText(Text):
+    CONFIG = {
+        'font': 'My Font'
+    }
+'''
+START_X_FONT = 30
+START_Y_FONT = 20
+NORMAL_FONT = 'NORMAL'
+ITALIC_FONT = 'ITALIC'
+OBLIQUE_FONT = 'OBLIQUE'
+BOLD_FONT = 'BOLD'
 
 # There might be other configuration than pixel shape later...
 PRODUCTION_QUALITY_CAMERA_CONFIG = {

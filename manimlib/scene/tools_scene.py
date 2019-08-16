@@ -19,6 +19,7 @@ class CheckSVG(Scene):
     "stroke_color": None,
     "stroke_opacity":1,
     "stroke_width": 3,
+    "number_type":"Font",
     "sheen_factor":None,
     "sheen_direction":None,
     "gradient_color":False,
@@ -45,7 +46,10 @@ class CheckSVG(Scene):
     }
     def construct(self):
         if self.svg_type=="svg":
-            pre_imagen=SVGMobject("%s"%self.file)
+            try:
+                pre_imagen=SVGMobject("%s"%self.file)
+            except:
+                pre_imagen=self.custom_object()
         elif self.svg_type=="text":
             pre_imagen=self.import_text()
         else:
@@ -141,8 +145,11 @@ class CheckSVG(Scene):
         c=0
         for j in range(len(text)):
             permission_print=True
-            element = TexMobject("%d" %c,color=color,
+            if self.number_type=="TextMobject":
+                element = TexMobject("%d" %c,color=color,
                 background_stroke_width=self.background_stroke_width)
+            else:
+                element = FontText("%d" %c).set_color(color)
             element.scale(inverse_scale)
             element.next_to(text[j],direction,buff=buff)
             for w in exception:
@@ -198,10 +205,14 @@ class CheckSVGPoints(CheckSVGNumbers):
                     next_color=next(cycle_colors)
                     punto=Dot(color=next_color,radius=self.point_radius)
                     punto.move_to(point)
-                    number_point=Text("%d"%count,
+                    if self.number_type=="TextMobject":
+                        number_point=Text("%d"%count,
                         color=punto.get_color(),
                         background_stroke_width=self.shadow_point_number
                         )
+                    else:
+                        number_point=FontText("%d"%count)
+                        number_point.match_color(punto)
                     number_point.set_height(self.size_points_numbers)\
                                 .next_to(punto,
                                     self.number_point_direction,
@@ -230,10 +241,11 @@ class CheckSVGPoints(CheckSVGNumbers):
         c=0
         for j in range(len(text)):
             permission_print=True
-            element = TexMobject(
-                "%d:%d"%(c,len(text.points)),
-                color=color,
+            if self.number_type=="TextMobject":
+                element = TexMobject("%d:%d"%(c,len(text.points)),color=color,
                 background_stroke_width=self.background_stroke_width)
+            else:
+                element = FontText("%d:%d"%(c,len(text.points))).set_color(color)
             element.scale(inverse_scale)
             element.next_to(text[j],direction,buff=buff)
             for w in exception:
@@ -256,6 +268,7 @@ class ExportCSV(Scene):
     "csv_desfase":[],
     "cvs_sobrantes":0,
     "remove": [],
+    "number_type":"FontText",
     "stroke_color":WHITE,
     "stroke_width": 3,
     "numbers_scale":0.5,
@@ -461,7 +474,11 @@ class ExportCSVPairs(Scene):
         c=0
         for j in range(len(text)):
             permission_print=True
-            element = TexMobject("%d" %c,color=color)
+            if self.number_type=="TextMobject":
+                element = TexMobject("%d" %c,color=color,
+                background_stroke_width=self.background_stroke_width)
+            else:
+                element = FontText("%d" %c).set_color(color)
             element.scale(inverse_scale)
             element.next_to(text[j],direction,buff=buff)
             for w in exception:
@@ -586,7 +603,7 @@ class EscenaContenido2(Scene):
             self.bloques[i].shift(LEFT*(FRAME_X_RADIUS+self.bloques[i].get_width()/2)*np.sin(PI/2+i*PI))
         for i in range(len(self.bloques)):
             self.Oldplay(
-                *[Escribe(self.contenido,run_time=5)for w in range(1)for w in range(1) if i==0],
+                *[Escribe(self.contenido,run_time=5)for w in range(1) if i==0],
                 OldReplacementTransform(self.bloques[i],self.bloques_estatica[i]),run_time=tiempo
                 )
 
@@ -628,13 +645,18 @@ class EscenaContenido(Scene):
     "distancia_entre_bloques":0.3,
     "distancia_entre_temas":0.25,
     "tiempo_espera":2,
-    "escala":1
+    "titulo":"Contenido",
+    "font_titulo":"\\it",
+    "escala":1,
+    "color_texto":WHITE,
+    "mover_contenido":[0,0,0],
+    "salida":False,
     }
     def tema(self,texto,**kwargs):
-        return Text("\\begin{flushleft}\\it %s \\end{flushleft}"%texto,color=color,**kwargs)
+        return Text("\\begin{flushleft}%s %s \\end{flushleft}"%(self.font_titulo,texto),color=self.color_texto,**kwargs)
 
     def subtema(self,texto,**kwargs):
-        return Text("\\begin{flushleft} %s \\end{flushleft}"%texto,color=color,**kwargs)
+        return Text("\\begin{flushleft} %s \\end{flushleft}"%texto,color=self.color_texto,**kwargs)
 
     def setup(self):
         self.contenido=[]  
@@ -644,7 +666,7 @@ class EscenaContenido(Scene):
         self.convertidor_bloques()
         self.aparicion_contenido(self.tiempo)
         self.wait(self.tiempo_espera)
-        self.salida_contenido()
+        self.salida_contenido(self.salida)
 
     def convertidor_bloques(self):
         bloque=VGroup()
@@ -661,8 +683,7 @@ class EscenaContenido(Scene):
                     bloque.add(self.subtema(self.contenido[c]))
                 c=c+1
                 tem=tem+1
-            if c<pasos-1:
-                c=c+1
+            c=c+1
             self.bloques.add(bloque)
             if c==pasos:
                 break
@@ -680,15 +701,19 @@ class EscenaContenido(Scene):
             aligned_edge=LEFT
         )
         self.bloques.scale(self.escala)
-        self.titulo=Text("\\sc Contenido",color=TT_TEXTO).scale(2).to_edge(UR)
+        self.titulo=Text("\\sc %s"%self.titulo,color=TT_TEXTO).scale(2).to_edge(UR)
         self.under_line=underline(self.titulo)
+        self.bloques.shift(self.mover_contenido)
         self.bloques_estatica=self.bloques.copy().shift(LEFT*self.desplazamiento)
+        camara_frame=Rectangle(width=FRAME_WIDTH,height=FRAME_HEIGHT)
         for i in range(len(self.bloques)):
-            self.bloques[i].shift(LEFT*(FRAME_X_RADIUS+self.bloques[i].get_width()/2)*np.sin(PI/2+i*PI))
+            y_coord=self.bloques[i].get_center()[1]
+            self.bloques[i].next_to(camara_frame,LEFT*np.sin(PI/2+i*PI))
+            self.bloques[i].move_to([self.bloques[i].get_center()[0],y_coord,0])
         for i in range(len(self.bloques)):
             self.Oldplay(
-                *[Escribe(self.titulo,rate_func=linear)for w in range(1)for w in range(1) if i==0],
-                OldGrowFromCenter(self.under_line),
+                *[Escribe(self.titulo,rate_func=linear)for w in range(1) if i==0],
+                *[OldGrowFromCenter(self.under_line)for w in range(1) if i==0],
                 OldReplacementTransform(self.bloques[i],self.bloques_estatica[i]),run_time=tiempo
                 )
 
@@ -701,7 +726,7 @@ class EscenaContenido(Scene):
         )
         bloque[1:].shift(RIGHT)
         indices=VGroup()
-        indices.add(Text("%d"%num,color=M_TEXTO_VERDE))
+        indices.add(Text("%d."%num,color=M_TEXTO_VERDE))
         for i in range(len(bloque)-1):
             indices.add(Text("%d.%s"%(num,i+1),color=M_TEXTO_VERDE))
         for i in range(len(bloque)):
@@ -717,8 +742,12 @@ class EscenaContenido(Scene):
 
         return bloque_final
 
-    def salida_contenido(self):
-        self.play(
-            self.titulo.shift,UP*5,
-            self.bloques.shift,DOWN*10,
-            self.bloques_estatica.shift,DOWN*10)
+    def salida_contenido(self,salida):
+        if salida:
+            self.play(
+                self.titulo.shift,UP*5,
+                self.bloques.shift,DOWN*10,
+                self.bloques_estatica.shift,DOWN*10,
+                self.under_line.shift,UP*5,)
+        else:
+            pass

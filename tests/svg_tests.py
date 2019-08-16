@@ -44,3 +44,11 @@ class Conversacion(Scene):
         self.wait(2)
         #self.play(FadeOut(conversation.dialog[:]))
         self.wait()
+
+class TestSVG(CheckSVG):
+    CONFIG={
+        "show_numbers":True
+    }
+    def custom_object(self):
+        image=VGroup(*[Dot() for i in range(7)]).arrange(RIGHT)
+        return image
