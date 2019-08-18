@@ -34,6 +34,7 @@ class Mobject(Container):
         "name": None,
         "dim": 3,
         "target": None,
+        "use_deepcopy": True,
     }
 
     def __init__(self, **kwargs):
@@ -114,9 +115,9 @@ class Mobject(Container):
         )
 
     def copy(self):
-        # TODO, either justify reason for shallow copy, or
-        # remove this redundancy everywhere
-        # return self.deepcopy()
+
+        if self.use_deepcopy:
+            return self.deepcopy()
 
         copy_mobject = copy.copy(self)
         copy_mobject.points = np.array(self.points)
