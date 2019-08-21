@@ -93,7 +93,7 @@ You can replace `example.scenes.py` with any relative path from your `INPUT_PATH
 
 <img src=./manim_docker_diagram.png/>
 
-After running the output will say files ready at `/tmp/output/`, which refers to path inside the container. Your OUTPUT_PATH is bind mounted to this `/tmp/output` so any changes made by the container to `/tmp/output` will be mirrored on your OUTPUT_PATH. `/media/` will be created in `OUTPUT_PATH`.
+After running the output will say files ready at `/tmp/output/`, which refers to path inside the container. Your OUTPUT_PATH is bind mounted to this `/tmp/output` so any changes made by the container to `/tmp/output` will be mirrored on your OUTPUT_PATH. `/videos/` will be created in `OUTPUT_PATH`.
 
 `-p` won't work as manim would look for video player in the container system, which it does not have.
 
