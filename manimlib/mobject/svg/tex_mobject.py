@@ -180,8 +180,11 @@ class TexMobject(SingleStringTexMobject):
                 # part of the whole TexMobject to be a VectorizedPoint
                 # positioned in the right part of the TexMobject
                 sub_tex_mob.submobjects = [VectorizedPoint()]
-                last_submob_index = min(curr_index, len(self.submobjects) - 1)
-                sub_tex_mob.move_to(self.submobjects[last_submob_index], RIGHT)
+                if len(self.submobjects) != 0:
+                    last_submob_index = min(curr_index, len(self.submobjects) - 1)
+                    sub_tex_mob.move_to(self.submobjects[last_submob_index], RIGHT)
+                else:
+                    sub_tex_mob.move_to(self.center())
             else:
                 sub_tex_mob.submobjects = self.submobjects[curr_index:new_index]
             new_submobjects.append(sub_tex_mob)
