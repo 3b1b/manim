@@ -2760,7 +2760,7 @@ class Thumbnail(AlternateAreaUnderCurve):
     CONFIG = {
         "x_axis_label" : "",
         "y_axis_label" : "",
-        "graph_origin" : 2.4*DOWN + 3*LEFT,
+        "graph_origin" : 2.4 * DOWN + 3 * LEFT,
     }
     def construct(self):
         self.setup_axes()
@@ -2775,8 +2775,8 @@ class Thumbnail(AlternateAreaUnderCurve):
             start_color = BLUE_E,
         )
         words = TextMobject("""
-            Essence of
-            calculus
+            Could \\emph{you} invent
+            calculus?
         """)
         words.set_width(9)
         words.to_edge(UP)
