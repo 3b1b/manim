@@ -5,6 +5,7 @@ MEDIA_DIR = ""
 VIDEO_DIR = ""
 VIDEO_OUTPUT_DIR = ""
 TEX_DIR = ""
+TEXT_DIR = ""
 
 
 def initialize_directories(config):
@@ -12,6 +13,7 @@ def initialize_directories(config):
     global VIDEO_DIR
     global VIDEO_OUTPUT_DIR
     global TEX_DIR
+    global TEXT_DIR
 
     video_path_specified = config["video_dir"] or config["video_output_dir"]
 
@@ -37,6 +39,7 @@ def initialize_directories(config):
             )
 
     TEX_DIR = config["tex_dir"] or os.path.join(MEDIA_DIR, "Tex")
+    TEXT_DIR = os.path.join(MEDIA_DIR, "texts")
     if not video_path_specified:
         VIDEO_DIR = os.path.join(MEDIA_DIR, "videos")
         VIDEO_OUTPUT_DIR = os.path.join(MEDIA_DIR, "videos")
@@ -45,10 +48,28 @@ def initialize_directories(config):
     else:
         VIDEO_DIR = config["video_dir"]
 
-    for folder in [VIDEO_DIR, VIDEO_OUTPUT_DIR, TEX_DIR]:
+    for folder in [VIDEO_DIR, VIDEO_OUTPUT_DIR, TEX_DIR, TEXT_DIR]:
         if folder != "" and not os.path.exists(folder):
             os.makedirs(folder)
 
+NOT_SETTING_FONT_MSG='''
+Warning:
+You haven't set font.
+If you are not using English, this may cause text rendering problem.
+You set font like:
+text = Text('your text', font='your font')
+or:
+class MyText(Text):
+    CONFIG = {
+        'font': 'My Font'
+    }
+'''
+START_X = 30
+START_Y = 20
+NORMAL = 'NORMAL'
+ITALIC = 'ITALIC'
+OBLIQUE = 'OBLIQUE'
+BOLD = 'BOLD'
 
 TEX_USE_CTEX = False
 TEX_TEXT_TO_REPLACE = "YourTextHere"
