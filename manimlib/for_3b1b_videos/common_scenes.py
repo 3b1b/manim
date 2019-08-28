@@ -154,7 +154,8 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         "randomize_order": True,
         "capitalize": True,
         "name_y_spacing": 0.7,
-        "thanks_words": "Funded by the community, with special thanks to:",
+        # "thanks_words": "Funded by the community, with special thanks to:",
+        "thanks_words": "Early access, name in credits and more at 3b1b.org/support",
     }
 
     def construct(self):
