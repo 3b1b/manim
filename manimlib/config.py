@@ -103,6 +103,10 @@ def parse_cli():
             help="Background color",
         )
         parser.add_argument(
+            "--frame_rate",
+            help="Frames per second",
+        )
+        parser.add_argument(
             "--sound",
             action="store_true",
             help="Play a success/failure sound",
@@ -267,6 +271,14 @@ def get_camera_configuration(args):
         except AttributeError as err:
             print("Please use a valid color")
             print(err)
+            sys.exit(2)
+
+    if args.frame_rate:
+        int_frame_rate = int(args.frame_rate)
+        if int_frame_rate > 0:
+            camera_config["frame_rate"] = int_frame_rate
+        else:
+            print("Please provide a positive frame rate")
             sys.exit(2)
 
     # If rendering a transparent image/move, make sure the
