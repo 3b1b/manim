@@ -372,7 +372,7 @@ class FourierOfPiSymbol(FourierCirclesScene):
         return path
 
 
-class FourierOfName(FourierOfPiSymbol):
+class FourierOfName(FourierOfPiSymbol, MovingCameraScene):
     CONFIG = {
         "n_vectors": 100,
         "name_color": WHITE,
@@ -389,6 +389,9 @@ class FourierOfName(FourierOfPiSymbol):
         name.set_width(max_width)
         if name.get_height() > max_height:
             name.set_height(max_height)
+
+        frame = self.camera.frame
+        frame.save_state()
 
         vectors = VGroup(VectorizedPoint())
         circles = VGroup(VectorizedPoint())
@@ -416,6 +419,8 @@ class FourierOfName(FourierOfPiSymbol):
                 self.play(
                     Transform(vectors, static_vectors, remover=True),
                     Transform(circles, static_circles, remover=True),
+                    frame.set_height, 1.5 * name.get_height(),
+                    frame.move_to, path,
                 )
 
                 self.add(new_vectors, new_circles)
@@ -431,7 +436,9 @@ class FourierOfName(FourierOfPiSymbol):
                 vectors = static_vectors
                 circles = static_circles
         self.play(
-            FadeOut(vectors)
+            FadeOut(vectors),
+            Restore(frame),
+            run_time=2
         )
         self.wait(3)
 
