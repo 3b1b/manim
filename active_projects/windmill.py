@@ -12,6 +12,7 @@ class IntroduceIMO(Scene):
         "random_seed": 6,
         "year": 2019,
         "n_flag_rows": 10,
+        "reorganize_students": True,
     }
 
     def construct(self):
@@ -76,10 +77,10 @@ class IntroduceIMO(Scene):
             n_rows=self.n_flag_rows,
             buff=SMALL_BUFF,
         )
-        student_groups.target[-9:].align_to(student_groups.target[0], LEFT)
+        # student_groups.target[-9:].align_to(student_groups.target[0], LEFT)
         student_groups.target.match_height(flags)
         student_groups.target.match_y(flags)
-        student_groups.target.to_edge(RIGHT, buff=1)
+        student_groups.target.to_edge(RIGHT, buff=0.25)
 
         self.play(LaggedStart(
             *[
@@ -92,12 +93,13 @@ class IntroduceIMO(Scene):
             lag_ratio=0.2,
         ))
         self.wait()
-        self.play(
-            MoveToTarget(student_groups),
-            flags.space_out_submobjects, 0.8,
-            flags.to_edge, LEFT, MED_SMALL_BUFF,
-        )
-        self.wait()
+        if self.reorganize_students:
+            self.play(
+                MoveToTarget(student_groups),
+                flags.space_out_submobjects, 0.75,
+                flags.to_edge, LEFT, MED_SMALL_BUFF,
+            )
+            self.wait()
 
         self.student_groups = student_groups
 
@@ -180,6 +182,7 @@ class IntroduceIMO(Scene):
         else:
             color = random_bright_color()
         dots.set_color(color)
+        dots.set_stroke(WHITE, 1, background=True)
 
         return dots
 
@@ -262,6 +265,37 @@ class IntroduceIMO(Scene):
         return images
 
 
+class ShowTinyTao(IntroduceIMO):
+    CONFIG = {
+        "reorganize_students": False,
+    }
+
+    def construct(self):
+        self.force_skipping()
+        self.add_title()
+        self.show_flags()
+        self.show_students()
+        self.revert_to_original_skipping_status()
+
+        image = ImageMobject("TerryTaoIMO")
+        label = TextMobject("Terence Tao at 12")
+        label.match_width(image)
+        label.next_to(image, DOWN, SMALL_BUFF)
+        image.add(label)
+
+        ausie = self.flags[17]
+        image.replace(ausie)
+        image.set_opacity(0)
+
+        self.play(image.set_opacity, 1)
+        self.play(
+            image.set_height, 5,
+            image.to_corner, DR, {"buff": MED_SMALL_BUFF},
+        )
+        self.wait()
+        self.play(FadeOut(image))
+
+
 class FootnoteToIMOIntro(Scene):
     def construct(self):
         words = TextMobject("$^*$Based on data from 2019 test")
@@ -294,7 +328,7 @@ class ShowTest(Scene):
             day_labels.add(label[0])
             hour_labels.add(label[1])
 
-        # Problem desciptions
+        # Problem descriptions
         problem_rects = self.get_problem_rects(test.target[0])
         proof_words = VGroup()
         for rect in problem_rects:
@@ -314,11 +348,15 @@ class ShowTest(Scene):
 
         scores = VGroup()
         for word in proof_words:
-            score = VGroup(TexMobject("/"), Integer(0))
+            score = VGroup(Integer(0), TexMobject("/"), Integer(7))
             score.arrange(RIGHT, buff=SMALL_BUFF)
             score.scale(2)
-            score.next_to(word, RIGHT, buff=1.5)
+            score.move_to(word)
+            score.to_edge(RIGHT)
             scores.add(score)
+            score[0].add_updater(lambda m: m.set_color(
+                interpolate_color(RED, GREEN, m.get_value() / 7)
+            ))
 
         # Introduce test
         self.play(
@@ -361,9 +399,9 @@ class ShowTest(Scene):
         self.play(FadeIn(scores))
         self.play(
             LaggedStart(*[
-                ChangeDecimalToValue(score[1], 7)
+                ChangeDecimalToValue(score[0], 7)
                 for score in scores
-            ], lag_ratio=0, rate_func=rush_into)
+            ], lag_ratio=0.2, rate_func=rush_into)
         )
         self.wait()
 
@@ -403,7 +441,7 @@ class ShowTest(Scene):
         return rects
 
 
-class USProcess(IntroduceIMO):
+class USProcessAlt(IntroduceIMO):
     CONFIG = {
     }
 
@@ -457,6 +495,7 @@ class USProcess(IntroduceIMO):
             )
         )
         amc, aime, usamo, mop = tests
+        arrows = VGroup()
 
         amc.to_corner(UR)
         top_point = amc.get_top()
@@ -464,6 +503,7 @@ class USProcess(IntroduceIMO):
         last_arrow.to_corner(DL)
         next_anims = []
 
+        self.force_skipping()
         for test in tests:
             test.move_to(top_point, UP)
             test.shift_onto_screen()
@@ -504,7 +544,21 @@ class USProcess(IntroduceIMO):
             last_arrow = Vector(0.5 * RIGHT)
             last_arrow.set_color(WHITE)
             last_arrow.next_to(test.target, RIGHT, SMALL_BUFF)
+            arrows.add(last_arrow)
         self.play(*next_anims)
+
+        self.revert_to_original_skipping_status()
+        self.play(
+            LaggedStartMap(
+                FadeInFrom, tests,
+                lambda m: (m, LEFT),
+            ),
+            LaggedStartMap(
+                GrowArrow, arrows[:-1]
+            ),
+            lag_ratio=0.4,
+        )
+        self.wait()
 
         self.tests = tests
 
@@ -533,8 +587,8 @@ class USProcess(IntroduceIMO):
             student.move_to(tests[-1])
             student.fade(1)
 
-        self.play(FadeInFromDown(group))
         self.play(
+            FadeInFromDown(group),
             LaggedStartMap(
                 Restore, students,
                 run_time=3,
@@ -787,37 +841,38 @@ class Describe2011IMO(IntroduceIMO):
         ])
         lines.set_stroke(TEAL, 2)
 
-        morty = Mortimer()
-        morty.flip()
-        morty.to_corner(DL)
-        morty.look_at(numbers)
+        randy = Randolph()
+        randy.to_corner(DL)
+        randy.look_at(numbers)
+
+        words = VGroup(*[
+            TextMobject("Prime").next_to(line, DOWN)
+            for line in reversed(lines)
+        ])
+        words.match_color(lines)
 
         self.add(full_rect, numbers)
         self.play(
             FadeIn(full_rect),
-            morty.change, "sassy",
-            VFadeIn(morty),
+            randy.change, "sassy",
+            VFadeIn(randy),
         )
         self.play(
             ShowCreation(lines),
-            morty.change, "pondering",
+            randy.change, "pondering",
         )
-        self.play(Blink(morty))
+        self.play(Blink(randy))
         self.play(
-            PiCreatureBubbleIntroduction(
-                morty,
-                "${1 \\over \\ln(101)}"
-                "{1 \\over \\ln(563)}"
-                "{1 \\over \\ln(2011)}$",
-                bubble_class=ThoughtBubble,
-                target_mode="thinking",
-            )
+            randy.change, "thinking",
+            LaggedStart(*[
+                FadeInFrom(word, UP)
+                for word in words
+            ], run_time=3, lag_ratio=0.5)
         )
-        self.play(Blink(morty))
+        self.play(Blink(randy))
         self.play(
-            FadeOut(morty),
-            FadeOut(morty.bubble),
-            FadeOut(morty.bubble.content),
+            FadeOut(randy),
+            FadeOut(words),
         )
         self.play(FadeOut(full_rect), FadeOut(lines))
 
@@ -1071,7 +1126,7 @@ class AskWhatsOnTest(ShowTest, MovingCameraScene):
         self.wait()
         self.play(
             FadeIn(big_rect),
-            MoveToTarget(frame, run_time=3),
+            MoveToTarget(frame, run_time=6),
         )
         self.wait()
 
@@ -2909,6 +2964,7 @@ class Rotate180Argument(WindmillScene):
 
     def rotate_180(self):
         windmill = self.windmill
+        self.add(self.pivot_dot)
         self.let_windmill_run(
             windmill,
             PI / windmill.rot_speed,
@@ -2963,6 +3019,12 @@ class Rotate180Argument(WindmillScene):
         self.play(FadeOut(lines))
         windmill.remove_updater(update_pivot)
         self.wait()
+
+
+class Rotate180ArgumentFast(Rotate180Argument):
+    CONFIG = {
+        "windmill_rotation_speed": 0.5,
+    }
 
 
 class EvenCase(Rotate180Argument):
@@ -3144,6 +3206,613 @@ class EvenCase(Rotate180Argument):
         )
 
 
+class TwoTakeaways(TeacherStudentsScene):
+    def construct(self):
+        title = TextMobject("Two takeaways")
+        title.scale(2)
+        title.to_edge(UP)
+
+        line = Line()
+        line.match_width(title)
+        line.next_to(title, DOWN, SMALL_BUFF)
+
+        items = VGroup(*[
+            TextMobject("1) Social"),
+            TextMobject("2) Mathematical"),
+        ])
+        items.scale(1.5)
+        items.arrange(DOWN, buff=MED_LARGE_BUFF, aligned_edge=LEFT)
+        items.next_to(line, DOWN, buff=MED_LARGE_BUFF)
+
+        self.play(
+            ShowCreation(line),
+            GrowFromPoint(title, self.hold_up_spot),
+            self.teacher.change, "raise_right_hand",
+        )
+        self.change_all_student_modes("pondering")
+        self.wait()
+        for item in items:
+            self.play(FadeInFrom(item, LEFT))
+            item.big = item.copy()
+            item.small = item.copy()
+            item.big.scale(1.5, about_edge=LEFT)
+            item.big.set_color(BLUE)
+            item.small.scale(0.75, about_edge=LEFT)
+            item.small.fade(0.5)
+        self.play(self.teacher.change, "happy")
+        self.wait()
+        for i, j in [(0, 1), (1, 0)]:
+            self.play(
+                items[i].become, items[i].big,
+                items[j].become, items[j].small,
+            )
+            self.wait()
+
+
+class EasyToFoolYourself(PiCreatureScene):
+    CONFIG = {
+        "default_pi_creature_kwargs": {
+            "color": GREY_BROWN,
+        }
+    }
+
+    def construct(self):
+        morty = self.pi_creature
+        morty.to_corner(DL)
+
+        bubble = ThoughtBubble()
+        for i, part in enumerate(bubble):
+            part.shift(2 * i * SMALL_BUFF * DOWN)
+        bubble.pin_to(morty)
+
+        fool_word = TextMobject("Fool")
+        fool_word.scale(1.5)
+        fool_arrow = Vector(LEFT)
+        fool_arrow.next_to(morty, RIGHT, buff=0)
+        fool_word.next_to(fool_arrow, RIGHT)
+
+        self.add(morty)
+        self.play(
+            ShowCreation(bubble),
+            morty.change, "pondering",
+        )
+        self.play(
+            bubble[3].set_fill, GREEN_SCREEN, 0.5,
+        )
+        self.wait()
+        self.play(morty.change, "thinking")
+        self.play(
+            FadeInFrom(fool_word, LEFT),
+            ShowCreation(fool_arrow),
+        )
+        self.wait()
+        self.pi_creature_says(
+            "Isn't it\\\\obvious?",
+            target_mode="maybe",
+            added_anims=[FadeOut(bubble)]
+        )
+        self.wait(4)
+
+        #
+        words = TextMobject("No it's not!")
+        words.scale(1.5)
+        words.set_color(RED)
+        words.next_to(morty.bubble, RIGHT, LARGE_BUFF)
+        words.match_y(morty.bubble.content)
+
+        self.play(
+            FadeInFromLarge(words),
+            morty.change, "guilty",
+        )
+        self.wait()
+
+        # for i, part in enumerate(bubble):
+        #     self.add(Integer(i).move_to(part))
+
+
+class FailureToEmpathize(PiCreatureScene):
+    def construct(self):
+        randy, morty = self.pi_creatures
+
+        # What a mess...
+        big_bubble = ThoughtBubble(height=4, width=5)
+        big_bubble.scale(1.75)
+        big_bubble.flip(UR)
+        for part in big_bubble:
+            part.rotate(90 * DEGREES)
+        big_bubble[:3].rotate(-30 * DEGREES)
+        for i, part in enumerate(big_bubble[:3]):
+            part.rotate(30 * DEGREES)
+            part.shift((3 - i) * SMALL_BUFF * DOWN)
+        big_bubble[0].shift(MED_SMALL_BUFF * RIGHT)
+        big_bubble[:3].next_to(big_bubble[3], LEFT)
+        big_bubble[:3].shift(0.3 * DOWN)
+        big_bubble.set_fill(DARKER_GREY)
+        big_bubble.to_corner(UR)
+
+        equation = TexMobject(
+            "\\sum_{k=1}^n (2k - 1) = n^2"
+        )
+        self.pi_creature_thinks(
+            randy, equation,
+            target_mode="confused",
+            look_at_arg=equation,
+        )
+        randy_group = VGroup(
+            randy, randy.bubble,
+            randy.bubble.content
+        )
+        self.wait()
+        self.play(
+            DrawBorderThenFill(big_bubble),
+            morty.change, "confused",
+            randy_group.scale, 0.5,
+            randy_group.move_to, big_bubble.get_bubble_center(),
+            randy_group.shift, 0.5 * DOWN + RIGHT,
+        )
+        self.wait()
+        self.play(morty.change, "maybe")
+        self.wait(2)
+
+        # Zoom out
+        morty_group = VGroup(morty, big_bubble)
+        ap = 5 * RIGHT + 2.5 * UP
+        self.add(morty_group, randy_group)
+        self.play(
+            morty_group.scale, 2, {"about_point": ap},
+            morty_group.fade, 1,
+            randy_group.scale, 2, {"about_point": ap},
+            run_time=2
+        )
+        self.wait()
+
+    def create_pi_creatures(self):
+        randy = Randolph()
+        morty = Mortimer()
+        randy.flip().to_corner(DR)
+        morty.flip().to_corner(DL)
+
+        return (randy, morty)
+
+
+class DifficultyEstimateVsReality(Scene):
+    def construct(self):
+        axes = Axes(
+            x_min=-1,
+            x_max=10,
+            x_axis_config={
+                "include_tip": False,
+            },
+            y_min=-1,
+            y_max=5,
+        )
+        axes.set_height(FRAME_HEIGHT - 1)
+        axes.center()
+        axes.x_axis.tick_marks.set_opacity(0)
+
+        y_label = TextMobject("Average score")
+        y_label.scale(1.25)
+        y_label.rotate(90 * DEGREES)
+        y_label.next_to(axes.y_axis, LEFT, SMALL_BUFF)
+        y_label.shift(UP)
+
+        estimated = [1.8, 2.6, 3, 4, 5]
+        actual = [1.5, 0.5, 1, 1.2, 1.8]
+
+        colors = [GREEN, RED]
+        estimated_color, actual_color = colors
+
+        estimated_bars = VGroup()
+        actual_bars = VGroup()
+        bar_pairs = VGroup()
+
+        width = 0.25
+        for a, e in zip(actual, estimated):
+            bars = VGroup(
+                Rectangle(width=width, height=e),
+                Rectangle(width=width, height=a),
+            )
+            bars.set_stroke(width=1)
+            bars[0].set_fill(estimated_color, 0.75)
+            bars[1].set_fill(actual_color, 0.75)
+            bars.arrange(RIGHT, buff=0, aligned_edge=DOWN)
+            bar_pairs.add(bars)
+            estimated_bars.add(bars[0])
+            actual_bars.add(bars[1])
+
+        bar_pairs.arrange(RIGHT, buff=1.5, aligned_edge=DOWN)
+        bar_pairs.move_to(axes.c2p(5, 0), DOWN)
+        for bp in bar_pairs:
+            for bar in bp:
+                bar.save_state()
+                bar.stretch(0, 1, about_edge=DOWN)
+
+        x_labels = VGroup(*[
+            TextMobject("Q{}".format(i)).next_to(bp, DOWN)
+            for i, bp in zip(it.count(1), bar_pairs)
+        ])
+
+        data_labels = VGroup(
+            TextMobject("Estimated average"),
+            TextMobject("Actual average"),
+        )
+        data_labels.arrange(DOWN, buff=MED_LARGE_BUFF, aligned_edge=LEFT)
+        data_labels.to_edge(UP)
+        for color, label in zip(colors, data_labels):
+            square = Square()
+            square.set_height(0.5)
+            square.set_fill(color, 0.75)
+            square.set_stroke(WHITE, 1)
+            square.next_to(label, LEFT, SMALL_BUFF)
+            label.add(square)
+
+        self.play(Write(axes))
+        self.play(Write(y_label))
+
+        self.play(
+            LaggedStartMap(
+                FadeInFrom, x_labels,
+                lambda m: (m, UP),
+                run_time=2,
+            ),
+            LaggedStartMap(
+                Restore,
+                estimated_bars,
+                run_time=3,
+            ),
+            FadeIn(data_labels[0]),
+        )
+        self.wait()
+        self.play(
+            LaggedStartMap(
+                Restore,
+                actual_bars,
+                run_time=3,
+            ),
+            FadeIn(data_labels[1]),
+        )
+        self.wait()
+
+
+class KeepInMindWhenTeaching(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "I don't know\\\\what you know!",
+            target_mode="pleading"
+        )
+        self.wait(2)
+        self.play(
+            PiCreatureSays(
+                self.students[0], "We know",
+                target_mode="hooray",
+            ),
+            self.students[1].change, "happy",
+            self.students[2].change, "happy",
+        )
+        self.wait(2)
+
+
+class VastSpaceOfConsiderations(Scene):
+    def construct(self):
+        considerations = VGroup(*[
+            TextMobject(phrase)
+            for phrase in [
+                "Define ``outer'' points",
+                "Convex hulls",
+                "Linear equations",
+                "Sort points by when they're hit",
+                "Sort points by some kind of angle?",
+                "How does this permute the $n \\choose 2$ lines through pairs?",
+                "Some points are hit more than others, can we quantify this?",
+            ]
+        ])
+        considerations.arrange(DOWN, buff=MED_LARGE_BUFF, aligned_edge=LEFT)
+        considerations.to_edge(LEFT)
+
+        self.play(LaggedStart(*[
+            FadeInFrom(mob, UP)
+            for mob in considerations
+        ], run_time=3, lag_ratio=0.2))
+
+
+class WhatStaysConstantWrapper(Scene):
+    CONFIG = {
+        "camera_config": {
+            "background_color": DARKER_GREY
+        }
+    }
+
+    def construct(self):
+        rect = ScreenRectangle()
+        rect.set_height(6)
+        rect.set_stroke(WHITE, 2)
+        rect.set_fill(BLACK, 1)
+        title1 = TextMobject("What stays constant?")
+        title2 = TextMobject("Find an ", "``invariant''")
+        title2[1].set_color(YELLOW)
+        for title in [title1, title2]:
+            title.scale(2)
+            title.to_edge(UP)
+        rect.next_to(title1, DOWN)
+
+        self.add(rect)
+        self.play(FadeInFromDown(title1))
+        self.wait()
+        self.play(
+            FadeOutAndShift(title1, UP),
+            FadeInFromDown(title2),
+        )
+        self.wait()
+
+
+class CountHoles(Scene):
+    def construct(self):
+        labels = VGroup(
+            TextMobject("Genus ", "0"),
+            TextMobject("Genus ", "1"),
+            TextMobject("Genus ", "2"),
+        )
+
+        labels.scale(2)
+        labels.arrange(RIGHT, buff=1.5)
+        labels.move_to(2 * DOWN)
+
+        equation = TexMobject("y^2 = x^3 + ax + b")
+        equation.scale(1.5)
+        equation.shift(UP)
+        equation.to_edge(LEFT)
+        # arrow = TexMobject("\\approx").scale(2)
+        arrow = Vector(2 * RIGHT)
+        arrow.next_to(equation, RIGHT)
+
+        equation_text = TextMobject("Some other problem")
+        equation_text.next_to(equation, DOWN, MED_LARGE_BUFF)
+        equation_text.match_width(equation)
+        equation_text.set_color(YELLOW)
+
+        self.play(LaggedStartMap(
+            FadeInFromDown, labels,
+            lag_ratio=0.5,
+        ))
+        self.wait()
+        self.play(
+            labels[1].shift, 4 * RIGHT,
+            FadeOut(labels[0::2]),
+        )
+        self.play(
+            FadeInFrom(equation, RIGHT),
+            GrowArrow(arrow),
+        )
+        self.play(FadeInFrom(equation_text, UP))
+        self.wait()
+
+
+class LorenzTransform(Scene):
+    def construct(self):
+        grid = NumberPlane(
+            # faded_line_ratio=0,
+            # y_axis_config={
+            #     "y_min": -10,
+            #     "y_max": 10,
+            # }
+        )
+        grid.scale(2)
+        back_grid = grid.copy()
+        back_grid.set_stroke(GREY, 0.5)
+        # back_grid.set_opacity(0.5)
+
+        c_lines = VGroup(Line(DL, UR), Line(DR, UL))
+        c_lines.scale(FRAME_HEIGHT)
+        c_lines.set_stroke(YELLOW, 3)
+
+        equation = TexMobject(
+            "d\\tau^2 = dt^2 - dx^2"
+        )
+        equation.scale(1.7)
+        equation.to_corner(UL, buff=MED_SMALL_BUFF)
+        equation.shift(2.75 * DOWN)
+        equation.set_stroke(BLACK, 5, background=True)
+
+        self.add(back_grid, grid, c_lines)
+        self.add(equation)
+        beta = 0.4
+        self.play(
+            grid.apply_matrix, np.array([
+                [1, beta],
+                [beta, 1],
+            ]) / (1 - beta**2),
+            run_time=2
+        )
+        self.wait()
+
+
+class OnceACleverDiscovery(Scene):
+    def construct(self):
+        energy = TextMobject("energy")
+        rect = SurroundingRectangle(energy)
+        words = TextMobject("Once a clever discovery")
+        vect = Vector(DR)
+        vect.next_to(rect.get_top(), UL, SMALL_BUFF)
+        words.next_to(vect.get_start(), UP)
+        words.set_color(YELLOW)
+        vect.set_color(YELLOW)
+
+        self.play(
+            ShowCreation(vect),
+            ShowCreation(rect),
+        )
+        self.play(FadeInFromDown(words))
+        self.wait()
+
+
+class TerryTaoQuote(Scene):
+    def construct(self):
+        image = ImageMobject("TerryTao")
+        image.set_height(4)
+        name = TextMobject("Terence Tao")
+        name.scale(1.5)
+        name.next_to(image, DOWN, buff=0.2)
+        tao = Group(image, name)
+        tao.to_corner(DL, buff=MED_SMALL_BUFF)
+
+        tiny_tao = ImageMobject("TerryTaoIMO")
+        tiny_tao.match_height(image)
+        tiny_tao.next_to(image, RIGHT, LARGE_BUFF)
+
+        quote = self.get_quote()
+
+        self.play(
+            FadeInFromDown(image),
+            Write(name),
+        )
+        self.wait()
+        self.play(
+            FadeInFrom(tiny_tao, LEFT)
+        )
+        self.wait()
+        self.play(FadeOut(tiny_tao))
+
+        #
+        self.play(
+            FadeIn(
+                quote,
+                lag_ratio=0.05,
+                run_time=5,
+                rate_func=bezier([0, 0, 1, 1])
+            )
+        )
+        self.wait()
+        story_line = Line()
+        story_line.match_width(quote.story_part)
+        story_line.next_to(quote.story_part, DOWN, buff=0)
+        story_line.set_color(TEAL),
+        self.play(
+            quote.story_part.set_color, TEAL,
+            ShowCreation(story_line),
+            lag_ratio=0.2,
+        )
+        self.wait()
+
+    def get_quote(self):
+        story_words = "fables, stories, and anecdotes"
+        quote = TextMobject(
+            """
+            \\Large
+            ``Mathematical problems, or puzzles, are important to real mathematics
+            (like solving real-life problems), just as fables, stories, and anecdotes
+            are important to the young in understanding real life.''\\\\
+            """,
+            alignment="",
+            arg_separator=" ",
+            substrings_to_isolate=[story_words]
+        )
+        quote.story_part = quote.get_part_by_tex(story_words)
+        quote.set_width(FRAME_WIDTH - 2.5)
+        quote.to_edge(UP)
+
+        return quote
+
+
+class WindmillFairyTale(Scene):
+    def construct(self):
+        paths = SVGMobject(file_name="windmill_fairytale")
+
+        paths.set_height(FRAME_HEIGHT - 1)
+        paths.set_stroke(width=0)
+        paths.set_fill([LIGHT_GREY, WHITE])
+
+        for path in paths:
+            path.reverse_points()
+
+        self.play(Write(paths[0], run_time=3))
+        self.wait()
+        self.play(
+            LaggedStart(
+                FadeInFrom(paths[1], RIGHT),
+                FadeInFrom(paths[2], RIGHT),
+                lag_ratio=0.2,
+                run_time=3,
+            )
+        )
+
+
+class SolveAProblemOneDay(SpiritOfIMO, PiCreatureScene):
+    def construct(self):
+        randy = self.pi_creature
+        light_bulb = Lightbulb()
+        light_bulb.base = light_bulb[:3]
+        light_bulb.light = light_bulb[3:]
+        light_bulb.set_height(1)
+        light_bulb.next_to(randy, UP, MED_LARGE_BUFF)
+
+        light = self.get_light(light_bulb.get_center())
+
+        bubble = ThoughtBubble()
+        bubble.pin_to(randy)
+
+        you = TextMobject("You")
+        you.scale(1.5)
+        arrow = Vector(LEFT)
+        arrow.next_to(randy, RIGHT)
+        you.next_to(arrow)
+
+        self.play(
+            ShowCreation(bubble),
+            randy.change, "pondering",
+        )
+        self.play(
+            FadeInFrom(you, LEFT),
+            GrowArrow(arrow)
+        )
+        self.wait(2)
+        self.play(
+            FadeInFromDown(light_bulb),
+            randy.change, "hooray",
+        )
+        self.play(
+            LaggedStartMap(
+                VFadeInThenOut, light,
+                run_time=2
+            ),
+            randy.change, "thinking", light,
+        )
+        self.wait(2)
+
+
+class QuixoteReference(Scene):
+    def construct(self):
+        rect = FullScreenFadeRectangle()
+        rect.set_fill([DARK_GREY, GREY])
+
+        windmill = SVGMobject("windmill")
+        windmill.set_fill([GREY_BROWN, WHITE], 1)
+        windmill.set_stroke(width=0)
+        windmill.set_height(6)
+        windmill.to_edge(RIGHT)
+        # windmill.to_edge(DOWN, buff=0)
+
+        quixote = SVGMobject("quixote")
+        quixote.flip()
+        quixote.set_height(4)
+        quixote.to_edge(LEFT)
+        quixote.set_stroke(BLACK, width=0)
+        quixote.set_fill(BLACK, 1)
+        quixote.align_to(windmill, DOWN)
+
+        self.add(rect)
+        # self.add(windmill)
+        self.play(LaggedStart(
+            DrawBorderThenFill(windmill),
+            DrawBorderThenFill(
+                quixote,
+                stroke_width=1,
+            ),
+            lag_ratio=0.4,
+            run_time=3
+        ))
+        self.wait()
+
+
 class WindmillEndScreen(PatreonEndScreen):
     CONFIG = {
         "specific_patrons": [
@@ -3314,6 +3983,7 @@ class Thumbnail(WindmillScene):
             "stroke_width": 1,
         },
         "random_seed": 7,
+        "animate": False,
     }
 
     def construct(self):
@@ -3321,7 +3991,7 @@ class Thumbnail(WindmillScene):
         points[:, 0] *= 1.7
         points += 0.5 * LEFT
 
-        points[1] += DR + 0.5 * DOWN
+        points[1] = ORIGIN
         points[10] += LEFT
         points[6] += 3 * RIGHT
 
@@ -3330,7 +4000,7 @@ class Thumbnail(WindmillScene):
             angle=45 * DEGREES,
         )
         dots = self.get_dots(points)
-        rects = self.get_left_right_colorings(windmill)
+        # rects = self.get_left_right_colorings(windmill)
         pivot_dot = self.get_pivot_dot(windmill)
         pivot_dot.scale(2)
         pivot_dot.set_color(WHITE)
@@ -3353,13 +4023,33 @@ class Thumbnail(WindmillScene):
         arcs.move_to(windmill.pivot)
         arcs.set_color([LIGHT_GREY, WHITE])
 
-        self.add(rects[0], windmill, dots, pivot_dot)
+        polygon1 = Polygon(
+            (FRAME_HEIGHT * UP + FRAME_WIDTH * LEFT) / 2,
+            (FRAME_HEIGHT * UP + FRAME_HEIGHT * RIGHT) / 2,
+            (FRAME_HEIGHT * DOWN + FRAME_HEIGHT * LEFT) / 2,
+            (FRAME_HEIGHT * DOWN + FRAME_WIDTH * LEFT) / 2,
+        )
+        polygon1.set_color([BLUE, DARKER_GREY])
+        polygon1.set_fill(opacity=0.5)
+        polygon2 = Polygon(
+            (FRAME_HEIGHT * UP + FRAME_WIDTH * RIGHT) / 2,
+            (FRAME_HEIGHT * UP + FRAME_HEIGHT * RIGHT) / 2,
+            (FRAME_HEIGHT * DOWN + FRAME_HEIGHT * LEFT) / 2,
+            (FRAME_HEIGHT * DOWN + FRAME_WIDTH * RIGHT) / 2,
+        )
+        polygon2.set_sheen_direction(DR)
+        polygon2.set_color([GREY_BROWN, BLACK])
+        polygon2.set_fill(opacity=1)
+
+        self.add(polygon1, polygon2)
+        # self.add(rects[0])
+        self.add(windmill, dots, pivot_dot)
         self.add(arcs)
         self.add(flash.mobject)
         self.add_dot_color_updater(dots, windmill, color2=WHITE)
 
         words = TextMobject("Next\\\\", "pivot")
-        words2 = TextMobject("Next ", "next\\\\", "pivot", alignment="")
+        words2 = TextMobject("Next\\\\", "next\\\\", "pivot", alignment="")
         words.scale(2)
         words2.scale(2)
         # words.next_to(windmill.pivot, RIGHT)
@@ -3371,12 +4061,56 @@ class Thumbnail(WindmillScene):
         arrow.set_color(YELLOW)
         arrow2 = Arrow(words2[-1].get_right(), new_pivot2, buff=0.6)
         arrow2.match_style(arrow)
+        arrow.rotate(
+            arrow2.get_angle() + PI - arrow.get_angle(),
+            about_point=new_pivot,
+        )
 
         self.add(words, arrow)
         self.add(words2, arrow2)
 
         # for i, dot in enumerate(dots):
         #     self.add(Integer(i).move_to(dot))
+
+        if self.animate:
+            sorted_dots = VGroup(*dots)
+            sorted_dots.sort(lambda p: np.dot(p, DR))
+
+            self.play(
+                polygon1.shift, FRAME_WIDTH * LEFT,
+                polygon2.shift, FRAME_WIDTH * RIGHT,
+                LaggedStart(*[
+                    ApplyMethod(mob.scale, 0)
+                    for mob in [sorted_dots[6], *flash.mobject, windmill, pivot_dot]
+                ]),
+                LaggedStart(*[
+                    ApplyMethod(dot.to_edge, LEFT, {"buff": -1})
+                    for dot in sorted_dots[:6]
+                ]),
+                LaggedStart(*[
+                    ApplyMethod(dot.to_edge, RIGHT, {"buff": -1})
+                    for dot in sorted_dots[7:]
+                ]),
+                LaggedStart(*[
+                    FadeOutAndShift(word, RIGHT)
+                    for word in words
+                ]),
+                LaggedStart(*[
+                    FadeOutAndShift(word, LEFT)
+                    for word in words2
+                ]),
+                LaggedStartMap(
+                    Uncreate,
+                    VGroup(arrow, arrow2, *arcs),
+                ),
+                run_time=3,
+            )
+
+
+class ThumbanailAnimated(Thumbnail):
+    CONFIG = {
+        "animate": True,
+    }
 
 
 class Thumbnail2(Scene):
