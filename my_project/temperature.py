@@ -1,10 +1,6 @@
 from big_ol_pile_of_manim_imports import *
-import numbers
 
 OUTPUT_DIRECTORY = "temperature"
-
-k_B = 1.38064852e-23
-k_B_tex = TexMobject("1.38064852\\times10^{-23} \\frac{m^2 kg}{s^2 K}")
 
 internal_energy_of_all_particles = TexMobject("U=\\frac{3}{2}N k_B T")
 energy_of_a_single_particle = TexMobject("E=\\frac{U}{N}")
@@ -13,7 +9,6 @@ kinetic_energy = TexMobject("E_k=\\frac{1}{2} m v^2")
 velocity_of_particle = TexMobject("\\frac{1}{2} m v^2 = \\frac{3}{2} k_B T")
 velocity_of_particle_extracted = TexMobject("v = \\sqrt{\\frac{3 k_B T}{m}}")
 velocity_of_particle_extracted_as_func_of_T = TexMobject("v = \\sqrt{\\frac{3 k_B}{m}}\\cdot\\sqrt{T}")
-
 
 def color(hot=0):
 	cold_color = [0x58, 0xC4, 0xDD]
@@ -33,42 +28,32 @@ def color(hot=0):
 MAX_HOT = MIN_COLD = 100
 MIN_HOT = MAX_COLD = 0
 
-class Dot(Circle):
-    CONFIG = {
-        "radius": DEFAULT_DOT_RADIUS,
-        "stroke_width": 0,
-        "fill_opacity": 1.0,
-        "color": WHITE
-    }
+class TestParticles(Scene):
+	def construct(self):
+		self.wait(0.2)
+		p1D = self.add_particle(Particle1D(
+			point=ORIGIN,
+			velocity=1,
+			movement_radius=0.5,
+			axis=1,
+		).set_color(YELLOW))
+		self.wait(8)
+		return
 
-    def __init__(self, point=ORIGIN, **kwargs):
-        Circle.__init__(self, arc_center=point, **kwargs)
+		p2D = self.add_particle(Particle2D(
+			point=2.5*UP,
+			velocity=3,
+			movement_radius=0.3,
+		).set_color(RED))
+		self.wait(8)
 
-class Particle(Dot):
-	def __init__(self, point=ORIGIN, velocity=1, mass=1, allowed_movement=1, **kwargs):
-		self.velocity = velocity
-		self.mass = mass
-		self.allowed_movement = allowed_movement
-		self.initial_position = point
-		super().__init__(point, **kwargs)
-
-	def __repr__(self):
-		return f"Particle, v={self.velocity}, m={self.mass}"
-
-	def colide(self, other):
-		m1 = self.mass
-		m2 = other.mass
-		v1 = self.velocity
-		v2 = other.velocity
-
-		v1_new = v1 * (m1-m2)/(m1+m2) + v2 * (2*m2) / (m1+m2)
-		v2_new = v1 * (2*m1)/(m1+m2) + v2 * (m2-m1) / (m1+m2)
-		return v1_new, v2_new
-
-	def update_position(self, dt):
-		if abs(self.get_center()[0] - self.initial_position[0]) >= self.allowed_movement:
-			self.velocity *= -1
-		self.shift(self.velocity * dt * RIGHT)
+	def add_particle(self, p, write=False):
+		radius = p.create_radius()
+		self.add(radius, p)
+		if write:
+			self.play(Write(p))
+		p.add_updater(p.__class__.back_and_forth)
+		return p
 
 class IntroduceTemperature(Scene):
 	CONFIG = {
