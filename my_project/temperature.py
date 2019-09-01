@@ -2,14 +2,6 @@ from big_ol_pile_of_manim_imports import *
 
 OUTPUT_DIRECTORY = "temperature"
 
-internal_energy_of_all_particles = TexMobject("U=\\frac{3}{2}N k_B T")
-energy_of_a_single_particle = TexMobject("E=\\frac{U}{N}")
-energy_of_a_single_particle_2 = TexMobject("E=\\frac{3}{2} k_B T")
-kinetic_energy = TexMobject("E_k=\\frac{1}{2} m v^2")
-velocity_of_particle = TexMobject("\\frac{1}{2} m v^2 = \\frac{3}{2} k_B T")
-velocity_of_particle_extracted = TexMobject("v = \\sqrt{\\frac{3 k_B T}{m}}")
-velocity_of_particle_extracted_as_func_of_T = TexMobject("v = \\sqrt{\\frac{3 k_B}{m}}\\cdot\\sqrt{T}")
-
 def color(hot=0):
 	cold_color = [0x58, 0xC4, 0xDD]
 	hot_color = [0xff, 0x00, 0x00]
