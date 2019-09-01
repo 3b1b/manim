@@ -3,18 +3,6 @@ import numbers
 
 OUTPUT_DIRECTORY = "temperature"
 
-k_B = 1.38064852e-23
-k_B_tex = TexMobject("1.38064852\\times10^{-23} \\frac{m^2 kg}{s^2 K}")
-
-internal_energy_of_all_particles = TexMobject("U=\\frac{3}{2}N k_B T")
-energy_of_a_single_particle = TexMobject("E=\\frac{U}{N}")
-energy_of_a_single_particle_2 = TexMobject("E=\\frac{3}{2} k_B T")
-kinetic_energy = TexMobject("E_k=\\frac{1}{2} m v^2")
-velocity_of_particle = TexMobject("\\frac{1}{2} m v^2 = \\frac{3}{2} k_B T")
-velocity_of_particle_extracted = TexMobject("v = \\sqrt{\\frac{3 k_B T}{m}}")
-velocity_of_particle_extracted_as_func_of_T = TexMobject("v = \\sqrt{\\frac{3 k_B}{m}}\\cdot\\sqrt{T}")
-
-
 def color(hot=0):
 	cold_color = [0x58, 0xC4, 0xDD]
 	hot_color = [0xff, 0x00, 0x00]
@@ -32,17 +20,6 @@ def color(hot=0):
 	return '#' + ''.join("%02X"%int(i) for i in color)
 MAX_HOT = MIN_COLD = 100
 MIN_HOT = MAX_COLD = 0
-
-class Dot(Circle):
-    CONFIG = {
-        "radius": DEFAULT_DOT_RADIUS,
-        "stroke_width": 0,
-        "fill_opacity": 1.0,
-        "color": WHITE
-    }
-
-    def __init__(self, point=ORIGIN, **kwargs):
-        Circle.__init__(self, arc_center=point, **kwargs)
 
 class Particle(Dot):
 	def __init__(self, point=ORIGIN, velocity=1, mass=1, allowed_movement=1, **kwargs):
@@ -76,7 +53,7 @@ class IntroduceTemperature(Scene):
 			# initial parameters
 			"dots_location": (2*LEFT + i*UP for i in range(-2,3)),
 			"color": color(MAX_HOT),
-			"velocity": 10,
+			"velocity": 1,
 			"mass": 3,
 
 		},
@@ -89,11 +66,13 @@ class IntroduceTemperature(Scene):
 
 		},
 		# how far from the original position does the particle move
-		"travel_radius": 1
+		"travel_radius": 0.2,
 		
 	}
 
 	def construct(self):
+		self.add_plane(1)
+
 		hot_matter  = []
 		for location in self.material_A["dots_location"]:
 			p = Particle(location, self.material_A["velocity"], self.material_A["mass"])
@@ -115,6 +94,15 @@ class IntroduceTemperature(Scene):
 		self.wait(8)
 
 
+	def add_plane(self, animate=False, **kwargs):
+		plane = NumberPlane(**kwargs)
+		if animate:
+			self.play(ShowCreation(plane, lag_ratio=0.5))
+		self.add(plane)
+		return plane
+
+	def update_position(self, dt):
+		pass
 
 class Playground(Scene):
 	CONFIG = {
