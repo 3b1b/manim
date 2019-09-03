@@ -174,26 +174,48 @@ class Particle1D(Particle):
 
 class Particle2D(Particle):
 	CONFIG = {
+		"location_list": [], # list of np.array((x,y,0)) to which the particle will move.
+		# the list has to be unique, since the movement is stateless
+		# thus, the next item is determined by getting the index of the current item
+		# the list will be relative to self.initial_position
 	}
 	def __init__(self, point=ORIGIN, **kwargs):
 		super().__init__(point=point, **kwargs)
 
 		# initialize for later use
-		self.new_location = self.get_center()
+		self.new_location = None
 	
-	def _is_near(self, location):
-		center = np.around(self.get_center(), 3)
+	def _is_near(self, location, other_location=None):
+		if other_location is not None:
+			other = np.around(other_location, 3)
+		else:
+			other = np.around(self.get_center(), 3)
 		loc = np.around(location, 3)
-		return all(center == loc)
+		return all(other == loc)
+
+	def _get_next_location(self):
+		if self.location_list:
+			if self.new_location is None:
+				new_index = 0
+			elif all(self.new_location == self.initial_position):
+				new_index = 0
+			else:
+				index = 0
+				while not self._is_near(self.initial_position+self.location_list[index], self.new_location):
+					index += 1
+				new_index = (index + 1) % len(self.location_list)
+
+			return self.initial_position + self.location_list[new_index]
+		else:
+			x, y = polar_to_cartesian(
+				r     = np.random.random() * self.movement_radius,
+				theta = np.random.random() * TAU,
+			)
+			return self.initial_position + x*RIGHT + y*UP
 
 	def _get_direction(self):
-		if self._is_near(self.new_location):
-			# pick new location
-			x, y = polar_to_cartesian(
-				r     = random.random() * self.movement_radius,
-				theta = random.random() * TAU,
-			)
-			self.new_location = self.initial_position + x*RIGHT + y*UP
+		if self.new_location is None or self._is_near(self.new_location):
+			self.new_location = self._get_next_location()
 
 		return self.new_location - self.get_center()
 
