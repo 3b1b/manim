@@ -5,6 +5,7 @@ MEDIA_DIR = ""
 VIDEO_DIR = ""
 VIDEO_OUTPUT_DIR = ""
 TEX_DIR = ""
+FILE_DIR = r"C:\manim-assets"
 
 
 def initialize_directories(config):

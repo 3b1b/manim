@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 
 from PIL import Image
@@ -52,7 +54,12 @@ class ImageMobject(AbstractImageMobject):
     def __init__(self, filename_or_array, **kwargs):
         digest_config(self, kwargs)
         if isinstance(filename_or_array, str):
-            path = get_full_raster_image_path(filename_or_array)
+            try:
+                path = get_full_raster_image_path(filename_or_array)
+            except IOError:
+                warnings.warn(f"No image {filename_or_array}, falling back to default")
+                path = os.path.join(FILE_DIR, "default_image.png")
+
             image = Image.open(path).convert(self.image_mode)
             self.pixel_array = np.array(image)
         else:
