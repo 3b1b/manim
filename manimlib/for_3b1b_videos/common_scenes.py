@@ -259,11 +259,15 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         self.wait(wait_time)
 
     def modify_patron_name(self, name):
-        if name.lower() == "RedAgent14".lower():
-            return "Brian Shepetofsky"
-        elif name.lower() == "DeathByShrimp".lower():
-            return "Henry Bresnahan"
-
+        modification_map = {
+            "RedAgent14": "Brian Shepetofsky",
+            "DeathByShrimp": "Henry Bresnahan",
+            "akostrikov": "Aleksandr Kostrikov",
+            "Jacob Baxter": "Will Fleshman",
+        }
+        for n1, n2 in modification_map.items():
+            if name.lower() == n1.lower():
+                return n2
         return name
 
 
