@@ -298,7 +298,7 @@ class SVGMobject(VMobject):
         if not isinstance(element, minidom.Element):
             return
         if element.hasAttribute('id'):
-            return element
+            return [element]
         for e in element.childNodes:
             all_childNodes_have_id.append(self.get_all_childNodes_have_id(e))
         return self.flatten([e for e in all_childNodes_have_id if e])
@@ -371,11 +371,11 @@ class VMobjectFromSVGPathstring(VMobject):
             new_points = new_points[1:]
             command = "L"
 
-            # Treat everything as relative line-to until empty
             for p in new_points:
-                # Treat as relative
-                p[0] += self.points[-1, 0]
-                p[1] += self.points[-1, 1]
+                if isLower:
+                    # Treat everything as relative line-to until empty
+                    p[0] += self.points[-1, 0]
+                    p[1] += self.points[-1, 1]
                 self.add_line_to(p)
             return
 
