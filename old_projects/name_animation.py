@@ -88,7 +88,9 @@ class NameAnimationScene(Scene):
         return self.animated_name.replace(" ", "") + "Animation"
 
 
-names = []
+names = [
+    "Happy 18th Birthday\\\\Pranavi Hiremath!"
+]
 
 if __name__ == "__main__":
     for name in names:
