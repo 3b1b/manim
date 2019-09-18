@@ -806,6 +806,11 @@ class ShowSeveralRoundsQuickly(ShowSeveralRounds):
         pass  # Handled elsewhere
 
 
+class ShowSeveralRoundsVeryQuickly(ShowSeveralRoundsQuickly):
+    def construct(self):
+        pass
+
+
 class ShowUniformDistribution(HyperdartScene):
     CONFIG = {
         "dart_sound": "dart_high",
@@ -882,9 +887,34 @@ class ExpectedScoreEqualsQMark(Scene):
 
 
 class ScoreHistogram(Scene):
+    CONFIG = {
+        "axes_config": {
+            ""
+        }
+    }
+
     def construct(self):
+        self.add_axes()
+        self.add_score_label()
+        self.setup_histogram()
+        self.show_many_runs()
+
+    def add_axes(self):
+        axes = Axes(**self.axes_config)
+
+    def add_score_label(self):
         pass
 
+    def setup_histogram(self):
+        pass
+
+    def show_many_runs(self):
+        pass
+
+
     #
+    def add_one_run(self, animate=True):
+        pass
+
     def get_random_score(self):
         pass
