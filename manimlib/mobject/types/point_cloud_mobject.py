@@ -50,6 +50,15 @@ class PMobject(Mobject):
         self.color = color
         return self
 
+    def get_stroke_width(self):
+        return self.stroke_width
+
+    def set_stroke_width(self, width, family=True):
+        mobs = self.family_members_with_points() if family else [self]
+        for mob in mobs:
+            mob.stroke_width = width
+        return self
+
     # def set_color_by_gradient(self, start_color, end_color):
     def set_color_by_gradient(self, *colors):
         self.rgbas = np.array(list(map(
@@ -158,6 +167,12 @@ class PMobject(Mobject):
         self.rgbas = interpolate(
             mobject1.rgbas, mobject2.rgbas, alpha
         )
+        self.set_stroke_width(interpolate(
+            mobject1.get_stroke_width(),
+            mobject2.get_stroke_width(),
+            alpha,
+        ))
+        return self
 
     def pointwise_become_partial(self, mobject, a, b):
         lower_index, upper_index = [
