@@ -1,7 +1,10 @@
 from manimlib.imports import *
+import json
 
 
 OUTPUT_DIRECTORY = "spirals"
+INV_113_MOD_710 = 377  # Inverse of 113 mode 710
+INV_7_MOD_44 = 19
 
 
 def generate_prime_list(*args):
@@ -25,58 +28,133 @@ def generate_prime_list(*args):
     return result
 
 
-class SpiralScene(Scene):
+def get_gcd(x, y):
+    while y > 0:
+        x, y = y, x % y
+    return x
+
+
+def read_in_primes(max_N=None):
+    with open(os.path.join("assets", "primes.json")) as fp:
+        primes = np.array(json.load(fp))
+    if max_N:
+        return primes[primes <= max_N]
+    return primes
+
+
+class SpiralScene(MovingCameraScene):
     CONFIG = {
         "axes_config": {
             "number_line_config": {
                 "stroke_width": 1.5,
             }
-        }
+        },
+        "default_dot_color": TEAL,
+        "p_spiral_width": 6,
     }
 
     def setup(self):
+        super().setup()
         self.axes = Axes(**self.axes_config)
         self.add(self.axes)
 
-    def get_dots_in_spiral(self, sequence, axes=None, dot_radius=None):
+    def get_v_spiral(self, sequence, axes=None, data_point_width=None):
         if axes is None:
             axes = self.axes
-        if dot_radius is None:
+        if data_point_width is None:
             unit = get_norm(axes.c2p(1, 0) - axes.c2p(0, 0)),
-            dot_radius = max(
-                0.1 / (-np.log10(unit) + 1),
-                0.01,
+            data_point_width = max(
+                0.2 / (-np.log10(unit) + 1),
+                0.02,
             )
 
         return VGroup(*[
-            Dot(
-                self.get_polar_point(n, n, axes),
-                radius=dot_radius,
-                fill_color=TEAL,
-            )
+            Square(
+                side_length=data_point_width,
+                fill_color=self.default_dot_color,
+                fill_opacity=1,
+                stroke_width=0,
+            ).move_to(self.get_polar_point(n, n, axes))
             for n in sequence
         ])
 
-    def get_polar_point(self, r, theta, axes):
+    def get_p_spiral(self, sequence, axes=None):
+        if axes is None:
+            axes = self.axes
+        result = PMobject(
+            color=self.default_dot_color,
+            stroke_width=self.p_spiral_width,
+        )
+        result.add_points([
+            self.get_polar_point(n, n, axes)
+            for n in sequence
+        ])
+        return result
+
+    def get_prime_v_spiral(self, max_N, **kwargs):
+        primes = read_in_primes(max_N)
+        return self.get_v_spiral(primes, **kwargs)
+
+    def get_prime_p_spiral(self, max_N, **kwargs):
+        primes = read_in_primes(max_N)
+        return self.get_p_spiral(primes, **kwargs)
+
+    def get_polar_point(self, r, theta, axes=None):
+        if axes is None:
+            axes = self.axes
         return axes.c2p(r * np.cos(theta), r * np.sin(theta))
 
-    def set_scale(self, scale, exceptions=None, run_time=3):
-        axes = self.axes
-        if exceptions is None:
-            exceptions = []
+    def set_scale(self, scale,
+                  axes=None,
+                  spiral=None,
+                  to_shrink=None,
+                  min_data_point_width=0.05,
+                  target_p_spiral_width=None,
+                  run_time=3):
+        if axes is None:
+            axes = self.axes
+        sf = self.get_scale_factor(scale, axes)
 
-        unit = get_norm(axes.c2p(1, 0) - axes.c2p(0, 0))
-        sf = unit / scale
+        anims = []
+        for mob in [axes, spiral, to_shrink]:
+            if mob is None:
+                continue
+            mob.generate_target()
+            mob.target.scale(sf, about_point=ORIGIN)
+            if mob is spiral:
+                if isinstance(mob, VMobject):
+                    old_width = mob[0].get_width()
+                    for submob in mob.target:
+                        submob.set_width(max(
+                            old_width * sf,
+                            min_data_point_width,
+                        ))
+                elif isinstance(mob, PMobject):
+                    if target_p_spiral_width is not None:
+                        mob.target.set_stroke_width(target_p_spiral_width)
+            anims.append(MoveToTarget(mob))
 
-        self.remove(*exceptions)
-        self.play(*[
-            ApplyMethod(
-                mob.scale, sf,
-                about_point=ORIGIN,
+        if run_time == 0:
+            for anim in anims:
+                anim.begin()
+                anim.update(1)
+                anim.finish()
+        else:
+            self.play(
+                *anims,
                 run_time=run_time,
+                rate_func=lambda t: interpolate(
+                    smooth(t),
+                    smooth(t)**(sf**(0.5)),
+                    t,
+                )
             )
-            for mob in self.get_top_level_mobjects()
-        ])
+
+    def get_scale_factor(self, target_scale, axes=None):
+        if axes is None:
+            axes = self.axes
+        unit = get_norm(axes.c2p(1, 0) - axes.c2p(0, 0))
+        return 1 / (target_scale * unit)
 
 
 # Scenes
@@ -101,7 +179,9 @@ class RefresherOnPolarCoordinates(MovingCameraScene):
         plane = NumberPlane()
         plane.add_coordinates()
 
-        x, y = 3, 2
+        x = 3 * np.cos(PI / 6)
+        y = 3 * np.sin(PI / 6)
+
         point = plane.c2p(x, y)
         xp = plane.c2p(x, 0)
         origin = plane.c2p(0, 0)
@@ -114,7 +194,7 @@ class RefresherOnPolarCoordinates(MovingCameraScene):
 
         dot = Dot(point)
 
-        coord_label = self.get_coord_label(x, y, x_color, y_color)
+        coord_label = self.get_coord_label(0, 0, x_color, y_color)
         x_coord = coord_label.x_coord
         y_coord = coord_label.y_coord
 
@@ -251,6 +331,7 @@ class RefresherOnPolarCoordinates(MovingCameraScene):
             ChangeDecimalToValue(degree_label, theta_value / DEGREES),
         )
         self.play(
+            degree_label.scale, 0.9,
             degree_label.move_to, theta_coord,
             FadeInFromDown(theta_label),
         )
@@ -371,14 +452,24 @@ class RefresherOnPolarCoordinates(MovingCameraScene):
         self.wait()
 
         # And now 3
-        self.play(theta_tracker.set_value, 3)
         self.play(
-            Transform(arc, self.get_arc(3)),
+            theta_tracker.set_value, 3,
             Rotate(r_line, angle=1, about_point=ORIGIN),
         )
         self.wait()
         self.play(
             r_line.scale, 3 / 2, {"about_point": ORIGIN}
+        )
+        self.wait()
+
+        # Finally 4
+        self.play(
+            theta_tracker.set_value, 4,
+            Rotate(r_line, angle=1, about_point=ORIGIN),
+        )
+        self.wait()
+        self.play(
+            r_line.scale, 4 / 3, {"about_point": ORIGIN}
         )
         self.wait()
 
@@ -466,7 +557,9 @@ class RefresherOnPolarCoordinates(MovingCameraScene):
                         include_background_rectangle=True,
                         **decimal_kwargs):
         x_coord = DecimalNumber(x, **decimal_kwargs)
+        x_coord.set_color(x_color)
         y_coord = DecimalNumber(y, **decimal_kwargs)
+        y_coord.set_color(y_color)
 
         coord_label = VGroup(
             TexMobject("("), x_coord,
@@ -496,33 +589,253 @@ class RefresherOnPolarCoordinates(MovingCameraScene):
         )
 
 
-class SpiralSceneTest(SpiralScene):
+class IntroducePrimePatterns(SpiralScene):
+    CONFIG = {
+        "small_n_primes": 25000,
+        "big_n_primes": 1000000,
+        "axes_config": {
+            "x_min": -25,
+            "x_max": 25,
+            "y_min": -25,
+            "y_max": 25,
+        },
+        "spiral_scale": 3e3,
+        "ray_scale": 1e5,
+    }
+
     def construct(self):
-        N = 1 * 10**4
-        axes = self.axes
+        self.slowly_zoom_out()
+        self.show_clumps_of_four()
 
-        primes = generate_prime_list(N)
-        prime_dots = self.get_dots_in_spiral(primes)
+    def slowly_zoom_out(self):
+        zoom_time = 8
 
-        scale_factor = TAU / N
+        prime_spiral = self.get_prime_p_spiral(self.small_n_primes)
+        prime_spiral.set_stroke_width(25)
+        self.add(prime_spiral)
 
-        axes.generate_target(use_deepcopy=True)
-        axes.target.scale(scale_factor, about_point=ORIGIN)
-        prime_dots.target = self.get_dots_in_spiral(primes, axes.target)
-
-        self.add(prime_dots)
+        self.set_scale(3, spiral=prime_spiral)
         self.wait()
-        self.set_scale(0.1)
-
-        # self.add(ParametricFunction(
-        #     lambda t: axes.c2p(t * np.cos(t), t * np.sin(t)),
-        #     t_min=0,
-        #     t_max=30,
-        # ))
-
-        return
-
-        ap_dots = self.get_dots_in_spiral(range(0, N, 666))
-        ap_dots.set_color(YELLOW)
-        self.play(ShowIncreasingSubsets(ap_dots))
+        self.set_scale(
+            self.spiral_scale,
+            spiral=prime_spiral,
+            target_p_spiral_width=8,
+            run_time=zoom_time,
+        )
         self.wait()
+
+        self.remove(prime_spiral)
+        prime_spiral = self.get_prime_p_spiral(self.big_n_primes)
+        prime_spiral.set_stroke_width(8)
+        self.set_scale(
+            self.ray_scale,
+            spiral=prime_spiral,
+            target_p_spiral_width=4,
+            run_time=zoom_time,
+        )
+        self.wait()
+
+    def show_clumps_of_four(self):
+        line_groups = VGroup()
+        for n in range(71):
+            group = VGroup()
+            for k in [-3, -1, 1, 3]:
+                r = ((10 * n + k) * INV_113_MOD_710) % 710
+                group.add(self.get_arithmetic_sequence_line(
+                    710, r, self.big_n_primes
+                ))
+            line_groups.add(group)
+
+        line_groups.set_stroke(YELLOW, 2, opacity=0.5)
+
+        self.play(ShowCreation(line_groups[0]))
+        for g1, g2 in zip(line_groups, line_groups[1:5]):
+            self.play(
+                FadeOut(g1),
+                ShowCreation(g2)
+            )
+
+        self.play(
+            FadeOut(line_groups[4]),
+            LaggedStartMap(
+                VFadeInThenOut,
+                line_groups[4:],
+                lag_ratio=0.5,
+                run_time=5,
+            )
+        )
+        self.wait()
+
+    def get_arithmetic_sequence_line(self, N, r, max_val, skip_factor=5):
+        line = VMobject()
+        line.set_points_smoothly([
+            self.get_polar_point(x, x)
+            for x in range(r, max_val, skip_factor * N)
+        ])
+        return line
+
+
+class AskWhat(TeacherStudentsScene):
+    def construct(self):
+        screen = self.screen
+        self.student_says(
+            "I'm sory,\\\\what?!?",
+            target_mode="angry",
+            look_at_arg=screen,
+            student_index=2,
+            added_anims=[
+                self.teacher.change, "happy", screen,
+                self.students[0].change, "confused", screen,
+                self.students[1].change, "confused", screen,
+            ]
+        )
+        self.wait(3)
+
+
+class CountSpirals(IntroducePrimePatterns):
+    CONFIG = {
+        "count_sound": "pen_click.wav",
+    }
+
+    def construct(self):
+        prime_spiral = self.get_prime_p_spiral(self.small_n_primes)
+
+        self.add(prime_spiral)
+        self.set_scale(
+            self.spiral_scale,
+            spiral=prime_spiral,
+            run_time=0,
+        )
+
+        spiral_lines = self.get_all_primative_arithmetic_lines(
+            44, self.small_n_primes, INV_7_MOD_44,
+        )
+        spiral_lines.set_stroke(YELLOW, 2, opacity=0.5)
+
+        counts = VGroup()
+        for n, spiral in zip(it.count(1), spiral_lines):
+            count = Integer(n)
+            count.move_to(spiral.point_from_proportion(0.25))
+            counts.add(count)
+
+        run_time = 3
+        self.play(
+            ShowIncreasingSubsets(spiral_lines),
+            ShowSubmobjectsOneByOne(counts),
+            run_time=run_time,
+            rate_func=linear,
+        )
+        self.add_count_clicks(len(spiral_lines), run_time)
+        self.play(
+            counts[-1].scale, 3,
+            counts[-1].set_stroke, BLACK, 5, {"background": True},
+        )
+        self.wait()
+
+    def get_all_primative_arithmetic_lines(self, N, max_val, mult_factor):
+        lines = VGroup()
+        for r in range(1, N):
+            if get_gcd(N, r) == 1:
+                lines.add(
+                    self.get_arithmetic_sequence_line(N, (mult_factor * r) % N, max_val)
+                )
+        return lines
+
+    def add_count_clicks(self, N, time, rate_func=linear):
+        alphas = np.arange(0, 1, 1 / N)
+        if rate_func is linear:
+            delays = time * alphas
+        else:
+            delays = time * np.array([
+                binary_search(
+                    rate_func,
+                    alpha,
+                    0,
+                    1,
+                )
+                for alpha in alphas
+            ])
+        for delay in delays:
+            self.add_sound(
+                self.count_sound,
+                time_offset=-delay,
+                gain=-15,
+            )
+
+
+class CountRays(CountSpirals):
+    def construct(self):
+        prime_spiral = self.get_prime_p_spiral(self.big_n_primes)
+
+        self.add(prime_spiral)
+        self.set_scale(
+            self.ray_scale,
+            spiral=prime_spiral,
+            run_time=0,
+        )
+
+        spiral_lines = self.get_all_primative_arithmetic_lines(
+            710, self.big_n_primes, INV_113_MOD_710,
+        )
+        spiral_lines.set_stroke(YELLOW, 2, opacity=0.5)
+
+        counts = VGroup()
+        for n, spiral in zip(it.count(1), spiral_lines):
+            count = Integer(n)
+            count.move_to(spiral.point_from_proportion(0.25))
+            counts.add(count)
+
+        run_time = 6
+        self.play(
+            ShowIncreasingSubsets(spiral_lines),
+            ShowSubmobjectsOneByOne(counts),
+            run_time=run_time,
+            rate_func=smooth,
+        )
+        self.add_count_clicks(len(spiral_lines), run_time, rate_func=smooth)
+        self.play(
+            counts[-1].scale, 3,
+            counts[-1].set_stroke, BLACK, 5, {"background": True},
+        )
+        self.wait()
+        self.play(FadeOut(spiral_lines))
+        self.wait()
+
+
+class AskAboutRelationToPrimes(TeacherStudentsScene):
+    def construct(self):
+        numbers = TextMobject("20, 280")
+        arrow = Arrow(LEFT, RIGHT)
+        primes = TextMobject("2, 3, 5, 7, 11, \\dots")
+        q_marks = TextMobject("???")
+        q_marks.set_color(YELLOW)
+
+        group = VGroup(numbers, arrow, primes)
+        group.arrange(RIGHT)
+        q_marks.next_to(arrow, UP)
+        group.add(q_marks)
+        group.scale(1.5)
+        group.next_to(self.pi_creatures, UP, LARGE_BUFF)
+
+        self.play(
+            self.get_student_changes(
+                *3 * ["maybe"],
+                look_at_arg=numbers,
+            ),
+            self.teacher.change, "maybe", numbers,
+            ShowCreation(arrow),
+            FadeInFrom(numbers, RIGHT)
+        )
+        self.play(
+            FadeInFrom(primes, LEFT),
+        )
+        self.play(
+            LaggedStartMap(FadeInFromDown, q_marks[0]),
+            Blink(self.teacher)
+        )
+        self.wait(3)
+
+
+class ZoomOutOnPrimesWithNumbers(IntroducePrimePatterns):
+    def construct(self):
+        pass
