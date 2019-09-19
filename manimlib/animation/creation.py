@@ -1,5 +1,6 @@
 from manimlib.animation.animation import Animation
 from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.mobject.mobject import Group
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import linear
@@ -132,4 +133,20 @@ class ShowIncreasingSubsets(Animation):
     def interpolate_mobject(self, alpha):
         n_submobs = len(self.all_submobs)
         index = int(self.int_func(alpha * n_submobs))
+        self.update_submobject_list(index)
+
+    def update_submobject_list(self, index):
         self.mobject.submobjects = self.all_submobs[:index]
+
+
+class ShowSubmobjectsOneByOne(ShowIncreasingSubsets):
+    def __init__(self, group, **kwargs):
+        new_group = Group(*group)
+        super().__init__(new_group, **kwargs)
+
+    def update_submobject_list(self, index):
+        # N = len(self.all_submobs)
+        if index == 0:
+            self.mobject.submobjects = []
+        else:
+            self.mobject.submobjects = self.all_submobs[index - 1]
