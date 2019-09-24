@@ -1,6 +1,10 @@
 import os
 import hashlib
 
+from pathlib import Path
+
+from manimlib.constants import TEX_TEXT_TO_REPLACE
+from manimlib.constants import TEX_USE_CTEX
 import manimlib.constants as consts
 
 
@@ -22,7 +26,7 @@ def generate_tex_file(expression, tex_template, source_type):
         output = tex_template.get_text_for_text_mode(expression)
     elif source_type == "tex":
         output = tex_template.get_text_for_tex_mode(expression)
-        
+
     result = os.path.join(
         consts.TEX_DIR,
         tex_hash(output)
@@ -33,14 +37,18 @@ def generate_tex_file(expression, tex_template, source_type):
             outfile.write(output)
     return result
 
-def tex_to_dvi(tex_file, use_ctex = False):
-    result = tex_file.replace(".tex", ".dvi" if not use_ctex else ".xdv")
+
+def tex_to_dvi(tex_file):
+    result = tex_file.replace(".tex", ".dvi" if not TEX_USE_CTEX else ".xdv")
+    result = Path(result).as_posix()
+    tex_file = Path(tex_file).as_posix()
+    tex_dir = Path(consts.TEX_DIR).as_posix()
     if not os.path.exists(result):
         commands = [
             "latex",
             "-interaction=batchmode",
             "-halt-on-error",
-            "-output-directory=\"{}\"".format(consts.TEX_DIR),
+            "-output-directory=\"{}\"".format(tex_dir),
             "\"{}\"".format(tex_file),
             ">",
             os.devnull
@@ -49,7 +57,7 @@ def tex_to_dvi(tex_file, use_ctex = False):
             "-no-pdf",
             "-interaction=batchmode",
             "-halt-on-error",
-            "-output-directory=\"{}\"".format(consts.TEX_DIR),
+            "-output-directory=\"{}\"".format(tex_dir),
             "\"{}\"".format(tex_file),
             ">",
             os.devnull
@@ -71,7 +79,9 @@ def dvi_to_svg(dvi_file, use_ctex=False, regen_if_exists=False):
     Returns a list of PIL Image objects for these images sorted as they
     where in the dvi
     """
-    result = dvi_file.replace(".dvi" if not use_ctex else ".xdv", ".svg")
+    result = dvi_file.replace(".dvi" if not TEX_USE_CTEX else ".xdv", ".svg")
+    result = Path(result).as_posix()
+    dvi_file = Path(dvi_file).as_posix()
     if not os.path.exists(result):
         commands = [
             "dvisvgm",
