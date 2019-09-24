@@ -353,6 +353,81 @@ class CollideToGas(Scene):
 		for m in self.mobjects:
 			m.resume_updating()
 
+class IntroduceGasParticles(Scene):
+	CONFIG = {
+		"random_seed": 2,
+		"particles_config": [
+			{
+				"color": color(100),
+				"point":           ORIGIN + 2*LEFT + 2*UP,
+				"velocity":        3,
+				"movement_radius": 2,
+			},
+			{
+				"color": color(100),
+				"point":           ORIGIN + 2*RIGHT + 2*UP,
+				"velocity":        3,
+				"movement_radius": 2,
+			},
+			{
+				"color": color(50),
+				"point":           ORIGIN + 2*LEFT + 2*DOWN,
+				"velocity":        1,
+				"movement_radius": 1,
+			},
+			{
+				"color": color(50),
+				"point":           ORIGIN + 2*RIGHT + 2*DOWN,
+				"velocity":        1,
+				"movement_radius": 1,
+			},
+			{
+				"color": color(0),
+				"point":           ORIGIN,
+				"velocity":        0.4,
+				"movement_radius": 0.5,
+			},
+		]
+	}
+	def construct(self):
+		self.wait(0.2)
+
+		# add random particles
+		self.particles = [
+			self.initiate_particle(**config)
+			for config in self.particles_config
+		]
+		self.radiuses = [
+			p.create_radius()
+			for p in self.particles
+		]
+		self.add(*self.radiuses, *self.particles)
+		self.play(
+			*[
+				Write(radius)
+				for radius in self.radiuses
+			]
+		)
+
+		self.resume_updating()
+		self.wait(6)
+
+	def initiate_particle(self, color=None, **kwargs):
+		p = Particle2D(**kwargs)
+		if color:
+			p.set_color(color)
+		p.add_updater(p.__class__.random_walk)
+		p.suspend_updating()
+		return p
+
+	def suspend_updating(self):
+		for m in self.mobjects:
+			m.suspend_updating()
+
+	def resume_updating(self):
+		for m in self.mobjects:
+			m.resume_updating()
+
 
 class TestParticles(Scene):
 	def construct(self):
@@ -463,27 +538,168 @@ class Playground(Scene):
 		self.wait(3)
 
 
+"""
+create class MovingParticle
+create methos MoveByForce to be an updater
 
+"""
+
+class ShootParticles(Scene):
+	CONFIG = {
+		"q": 1,
+		"E": UP,
+		"B": np.array((0., 0., 1)),
+
+		"particles": [
+			# (v, color, )
+			# (0.6, BLUE_A),
+			# (2  , RED_A),
+			# (1.3, RED_B),
+			(1  , YELLOW),
+			# (0.2, BLUE_B),
+			# (1.6, RED_C),
+		],
+
+		"laser_tip_position": 3*LEFT,
+		"laser_base_width"  : 4,
+		"laser_height"      : 1,
+		"laser_color"       : WHITE,
+		"wall_position"     : 5*RIGHT,
+		"wall_width"        : 0.2,
+		"wall_opening"      : 0.25,
+	}
+	def construct(self):
+		self.wait(0.2)
+		self.initiate_stage()
+		for v, color in self.particles:
+			self.shoot_single(v=v, color=color)
+			self.wait()
+		self.wait(8)
+		self.wait(8)
+
+	def initiate_stage(self):
+		"""
+		display laser
+		display laser text
+		display wall
+		display wall text
+		display E & B
+		"""
+		# laser
+		laser_base_center = self.laser_tip_position + (1/np.cos(np.pi/6))  *LEFT + self.laser_base_width/2*LEFT
+		laser_base_center += 0.1 * RIGHT
+		laser_base = Rectangle(
+			width =self.laser_base_width,
+			height=self.laser_height,
+			color=self.laser_color,
+		).move_to(laser_base_center)
+		laser_base.set_fill(opacity=1)
+
+		laser_tip_center = self.laser_tip_position + (1/np.cos(np.pi/6))/2*LEFT
+		laser_tip = Triangle(
+			start_angle = np.pi/3,
+			color=self.laser_color,
+		).flip().set_height(self.laser_height).move_to(laser_tip_center)
+		laser_tip.set_fill(opacity=1)
+
+		laser_text = TextMobject("Laser")
+		laser_text.next_to(laser_base, UP, buff = 0)
+		laser_text.shift(0.2*UP + 0.5*RIGHT)
+
+		wall_top = Line(
+			start=self.wall_position + self.wall_opening/2*UP,
+			end  =self.wall_position + 10*UP,
+		)
+		wall_bottom = Line(
+			start=self.wall_position + self.wall_opening/2*DOWN,
+			end  =self.wall_position + 10*DOWN,
+		)
+
+		self.add(laser_base, laser_tip, laser_text, wall_top, wall_bottom)
+
+	def shoot_single(self, v, color):
+		self.suspend_updating()
+		self.add_single(v=v, color=color)
+		self.resume_updating()
+
+	def add_single(self, v, color):
+		p = ChargedParticle(
+			q=self.q,
+			E=self.E,
+			B=self.B,
+			velocity=RIGHT * v,
+			point=self.laser_tip_position,
+		)
+		p.set_color(color)
+		p.color = color
+		self.add(p)
+		self.play(Write(p))
+
+		p.init_force_arrow()
+		p.force_arrow.set_color(color)
+		self.add(p.force_arrow)
+		self.play(Write(p.force_arrow))
+
+		p.add_updater(p.__class__.walk_by_force)
+		p.add_updater(p.__class__.update_force_arrow)
+		self.add_trajectory(p, color)
+
+		wall_x = self.wall_position[0]
+		wall_y = self.wall_opening / 2
+		def interact_with_wall(particle, dt):
+			if particle.get_x() >= wall_x:
+				if abs(particle.get_y()) >= wall_y:
+					particle.suspend_updating()
+				else:
+					particle.E = 0*UP
+					particle.E = np.array((0., 0., 4))
+		p.add_updater(interact_with_wall)
+
+		return p
+
+	def add_trajectory(self, p, color):
+		def update_trajectory(traj, dt):
+			new_point = traj.p.get_center()
+			if get_norm(new_point - traj.points[-1]) > 0.01:
+				traj.add_smooth_curve_to(new_point)
+
+		traj = VMobject()
+		traj.set_color(color)
+		traj.p = p
+		# traj.start_new_path(p.point)
+		traj.start_new_path(p.get_center())
+		traj.set_stroke(p.color, 1, opacity=0.75)
+		traj.add_updater(update_trajectory)
+		self.add(traj, p)
+
+
+	def suspend_updating(self):
+		for m in self.mobjects:
+			m.suspend_updating()
+
+	def resume_updating(self):
+		for m in self.mobjects:
+			m.resume_updating()
 
 
 
 class IntroduceVectorField(Scene):
 	CONFIG = {
-        "coordinate_plane_config": {
-            "y_line_frequency": PI / 2,
-            # "x_line_frequency": PI / 2,
-            "x_line_frequency": 1,
-            "y_axis_config": {
-                # "unit_size": 1.75,
-                "unit_size": 1,
-            },
-            "y_max": 4,
-            "faded_line_ratio": 4,
-            "background_line_style": {
-                "stroke_width": 1,
-            },
-        },
-        "initial_grid_wait_time": 15,
+		"coordinate_plane_config": {
+			"y_line_frequency": PI / 2,
+			# "x_line_frequency": PI / 2,
+			"x_line_frequency": 1,
+			"y_axis_config": {
+				# "unit_size": 1.75,
+				"unit_size": 1,
+			},
+			"y_max": 4,
+			"faded_line_ratio": 4,
+			"background_line_style": {
+				"stroke_width": 1,
+			},
+		},
+		"initial_grid_wait_time": 15,
 		"vector_field_config": {
 			"max_magnitude": 3,
 			# "delta_x": 2,
@@ -554,33 +770,33 @@ class IntroduceVectorField(Scene):
 
 
 class ShowFlow(IntroduceVectorField):
-    CONFIG = {
-        "coordinate_plane_config": {
-            "x_axis_config": {
-                "unit_size": 0.8,
-            },
-            "x_max": 9,
-            "x_min": -9,
-        },
-        "flow_time": 20,
-    }
+	CONFIG = {
+		"coordinate_plane_config": {
+			"x_axis_config": {
+				"unit_size": 0.8,
+			},
+			"x_max": 9,
+			"x_min": -9,
+		},
+		"flow_time": 20,
+	}
 
-    def construct(self):
-        self.initialize_plane()
-        self.initialize_vector_field()
-        plane = self.plane
-        field = self.vector_field
-        self.add(plane, field)
+	def construct(self):
+		self.initialize_plane()
+		self.initialize_vector_field()
+		plane = self.plane
+		field = self.vector_field
+		self.add(plane, field)
 
-        stream_lines = StreamLines(
-            field.func,
-            delta_x=1,
-            delta_y=1,
-        )
-        animated_stream_lines = AnimatedStreamLines(
-            stream_lines,
-            line_anim_class=ShowPassingFlashWithThinningStrokeWidth,
-        )
+		stream_lines = StreamLines(
+			field.func,
+			delta_x=1,
+			delta_y=1,
+		)
+		animated_stream_lines = AnimatedStreamLines(
+			stream_lines,
+			line_anim_class=ShowPassingFlashWithThinningStrokeWidth,
+		)
 
-        self.add(animated_stream_lines)
-        self.wait(self.flow_time)
+		self.add(animated_stream_lines)
+		self.wait(self.flow_time)

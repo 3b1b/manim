@@ -2,7 +2,7 @@ import numpy as np
 import random
 
 from manimlib.constants import *
-from manimlib.mobject.geometry import Dot, Line, Circle
+from manimlib.mobject.geometry import Dot, Line, Circle, Arrow
 from manimlib.utils.space_ops import get_norm
 from manimlib.mobject.svg.tex_mobject import TexMobject
 
@@ -25,7 +25,7 @@ def almost_same_point(a, b):
 
 class Particle(Dot):
 	CONFIG = {
-		"velocity": 1, # m/s
+		"velocity": RIGHT, # m/s
 		"mass": 1, # kg
 		
 		"movement_radius": 1,
@@ -35,15 +35,15 @@ class Particle(Dot):
 		super().__init__(point, **kwargs)
 
 	def __repr__(self):
-		return f"Particle, v={self.velocity}, m={self.mass}"
+		return f"Particle, v={self.v}, m={self.mass}"
 
 	# shortcuts for ease of use
 	@property
 	def v(self):
-		return self.velocity
+		return get_norm(self.velocity)
 	@v.setter
 	def v(self, v):
-		self.velocity = v
+		self.velocity *= v / get_norm(self.velocity)
 
 	@property
 	def m(self):
@@ -88,8 +88,8 @@ class Particle(Dot):
 		v2_new = v1 * (2*m1)/(m1+m2) + v2 * (m2-m1) / (m1+m2)
 
 		if edit:
-			self.velocity = v1_new
-			other.velocity = v2_new
+			self.v = v1_new
+			other.v = v2_new
 
 		return v1_new, v2_new
 
@@ -247,3 +247,68 @@ class Particle2D(Particle):
 			arc_center=self.initial_position,
 			radius=self.movement_radius
 		)
+
+
+class ChargedParticle(Particle):
+	CONFIG = {
+		"q": 1,
+		"E": UP,
+		"B": np.array((0., 0., 1)),
+	}
+	def get_force(self):
+		# import pdb; pdb.set_trace()
+		return self.q * (self.E + np.cross(self.velocity, self.B))
+
+	@property
+	def F(self):
+		return get_norm(self.get_force())
+
+	# non relative vertion! F=m*dv/dt
+	def walk_by_force(self, dt):
+		"""
+		increase velocity as if acceleration is constant
+		increase position as if velocity     is constant
+		"""
+		dv = dt * self.get_force() / self.m
+		self.velocity += dv
+
+		dx = dt * self.velocity
+		self.shift(dx)
+		print(f"dv={dv} ; dx={dx} ; {self.get_force()}")
+
+	def init_force_arrow(self):
+		# import pdb; pdb.set_trace()
+		c = self.get_center()
+		f = self.get_force()
+		self.force_arrow = Arrow(
+			start=c,
+			end=c + f,
+		)
+		if all(f == 0):
+			return
+		self.force_arrow.put_start_and_end_on(
+			# start=c,
+			start=self.force_arrow.start,
+			# end=c + f,
+			end=self.force_arrow.end,
+		)
+
+	def update_force_arrow(self):
+		c = self.get_center()
+		f = self.get_force()
+		if all(f == 0):
+			return
+		try:
+			self.force_arrow.put_start_and_end_on(
+				start=c,
+				end=c + f,
+			)
+		except:
+			# import pdb; pdb.set_trace()
+			print(self.F, f)
+			self.force_arrow = Arrow(
+				start=c,
+				end=c + f,
+			)
+		# print(f"force={self.get_force()} ; F={self.F} ; v={self.v}")
+		# print(f"vB={np.cross(self.velocity, self.B)} ; start={self.force_arrow.get_start()} ; end={self.force_arrow.get_end()}")
