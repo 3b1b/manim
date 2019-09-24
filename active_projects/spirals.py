@@ -1,5 +1,6 @@
 from manimlib.imports import *
 import json
+import numbers
 
 
 OUTPUT_DIRECTORY = "spirals"
@@ -35,11 +36,19 @@ def get_gcd(x, y):
 
 
 def read_in_primes(max_N=None):
-    with open(os.path.join("assets", "primes.json")) as fp:
+    if max_N is None:
+        max_N = int(1e7)
+
+    if max_N < 1e5:
+        file = "primes_1e5.json"
+    elif max_N < 1e6:
+        file = "primes_1e5.json"
+    else:
+        file = "primes_1e7.json"
+
+    with open(os.path.join("assets", file)) as fp:
         primes = np.array(json.load(fp))
-    if max_N:
-        return primes[primes <= max_N]
-    return primes
+    return primes[primes <= max_N]
 
 
 class SpiralScene(MovingCameraScene):
@@ -58,19 +67,19 @@ class SpiralScene(MovingCameraScene):
         self.axes = Axes(**self.axes_config)
         self.add(self.axes)
 
-    def get_v_spiral(self, sequence, axes=None, data_point_width=None):
+    def get_v_spiral(self, sequence, axes=None, box_width=None):
         if axes is None:
             axes = self.axes
-        if data_point_width is None:
+        if box_width is None:
             unit = get_norm(axes.c2p(1, 0) - axes.c2p(0, 0)),
-            data_point_width = max(
+            box_width = max(
                 0.2 / (-np.log10(unit) + 1),
                 0.02,
             )
 
         return VGroup(*[
             Square(
-                side_length=data_point_width,
+                side_length=box_width,
                 fill_color=self.default_dot_color,
                 fill_opacity=1,
                 stroke_width=0,
@@ -108,7 +117,7 @@ class SpiralScene(MovingCameraScene):
                   axes=None,
                   spiral=None,
                   to_shrink=None,
-                  min_data_point_width=0.05,
+                  min_box_width=0.05,
                   target_p_spiral_width=None,
                   run_time=3):
         if axes is None:
@@ -127,7 +136,7 @@ class SpiralScene(MovingCameraScene):
                     for submob in mob.target:
                         submob.set_width(max(
                             old_width * sf,
-                            min_data_point_width,
+                            min_box_width,
                         ))
                 elif isinstance(mob, PMobject):
                     if target_p_spiral_width is not None:
@@ -155,6 +164,23 @@ class SpiralScene(MovingCameraScene):
             axes = self.axes
         unit = get_norm(axes.c2p(1, 0) - axes.c2p(0, 0))
         return 1 / (target_scale * unit)
+
+    def get_labels(self, sequence, scale_func=np.sqrt):
+        labels = VGroup()
+        for n in sequence:
+            label = Integer(n)
+            label.set_stroke(width=0, background=True)
+            label.scale(scale_func(n))
+            label.next_to(
+                self.get_polar_point(n, n), UP,
+                buff=0.5 * label.get_height(),
+            )
+            labels.add(label)
+        return labels
+
+    def get_prime_labels(self, max_N):
+        primes = read_in_primes(max_N)
+        return self.get_labels(primes)
 
 
 # Scenes
@@ -556,9 +582,18 @@ class RefresherOnPolarCoordinates(MovingCameraScene):
                         y_color=WHITE,
                         include_background_rectangle=True,
                         **decimal_kwargs):
-        x_coord = DecimalNumber(x, **decimal_kwargs)
+        coords = VGroup()
+        for n in x, y:
+            if isinstance(n, numbers.Number):
+                coord = DecimalNumber(n, **decimal_kwargs)
+            elif isinstance(n, str):
+                coord = TexMobject(n)
+            else:
+                raise Exception("Invalid type")
+            coords.add(coord)
+
+        x_coord, y_coord = coords
         x_coord.set_color(x_color)
-        y_coord = DecimalNumber(y, **decimal_kwargs)
         y_coord.set_color(y_color)
 
         coord_label = VGroup(
@@ -587,6 +622,48 @@ class RefresherOnPolarCoordinates(MovingCameraScene):
             radius=r,
             stroke_color=color,
         )
+
+
+class ReplacePolarCoordinatesWithPrimes(RefresherOnPolarCoordinates):
+    def construct(self):
+        coords, p_coords = [
+            self.get_coord_label(
+                *pair,
+                x_color=self.r_color,
+                y_color=self.theta_color,
+            ).scale(2)
+            for pair in [("r", "\\theta"), ("p", "p")]
+        ]
+        p_coords.x_coord.set_color(LIGHT_GREY)
+        p_coords.y_coord.set_color(LIGHT_GREY)
+
+        some_prime = TextMobject("Some prime")
+        some_prime.scale(1.5)
+        some_prime.next_to(p_coords, UP, buff=1.5)
+        arrows = VGroup(*[
+            Arrow(
+                some_prime.get_bottom(), coord.get_top(),
+                stroke_width=5,
+                tip_length=0.4
+            )
+            for coord in [p_coords.x_coord, p_coords.y_coord]
+        ])
+
+        equals = TexMobject("=")
+        equals.next_to(p_coords, LEFT)
+
+        self.add(coords)
+        self.wait()
+        self.play(
+            coords.next_to, equals, LEFT,
+            FadeIn(equals),
+            FadeIn(p_coords),
+        )
+        self.play(
+            FadeInFromDown(some_prime),
+            ShowCreation(arrows),
+        )
+        self.wait()
 
 
 class IntroducePrimePatterns(SpiralScene):
@@ -747,14 +824,10 @@ class CountSpirals(IntroducePrimePatterns):
             delays = time * alphas
         else:
             delays = time * np.array([
-                binary_search(
-                    rate_func,
-                    alpha,
-                    0,
-                    1,
-                )
+                binary_search(rate_func, alpha, 0, 1)
                 for alpha in alphas
             ])
+
         for delay in delays:
             self.add_sound(
                 self.count_sound,
@@ -837,5 +910,1057 @@ class AskAboutRelationToPrimes(TeacherStudentsScene):
 
 
 class ZoomOutOnPrimesWithNumbers(IntroducePrimePatterns):
+    CONFIG = {
+        "n_labeled_primes": 1000,
+        "big_n_primes": int(5e6),
+        "thicknesses": [8, 3, 2],
+        "thicker_target": False,
+    }
+
+    def construct(self):
+        zoom_time = 20
+
+        prime_spiral = self.get_prime_p_spiral(self.big_n_primes)
+        prime_spiral.set_stroke_width(25)
+
+        prime_labels = self.get_prime_labels(self.n_labeled_primes)
+
+        self.add(prime_spiral)
+        self.add(prime_labels)
+
+        scales = [self.spiral_scale, self.ray_scale, 5e5]
+        thicknesses = self.thicknesses
+
+        for scale, tp in zip(scales, thicknesses):
+            kwargs = {
+                "spiral": prime_spiral,
+                "to_shrink": prime_labels,
+                "run_time": zoom_time,
+                "target_p_spiral_width": tp,
+            }
+            if self.thicker_target:
+                kwargs["target_p_spiral_width"] += 1
+            self.set_scale(scale, **kwargs)
+            prime_spiral.set_stroke_width(tp)
+            self.wait()
+            self.remove(prime_labels)
+
+
+class ThickZoomOutOnPrimesWithNumbers(ZoomOutOnPrimesWithNumbers):
+    CONFIG = {
+        # The only purpose of this scene is for overlay
+        # with the last one to smooth things out.
+        "thicker_target": True,
+    }
+
+
+class ShowSpiralsForWholeNumbers(CountSpirals):
+    CONFIG = {
+        "max_prime": 10000,
+        "scale_44": 1e3,
+        "scale_6": 10,
+        "n_labels": 100,
+        "axes_config": {
+            "x_min": -50,
+            "x_max": 50,
+            "y_min": -50,
+            "y_max": 50,
+        },
+    }
+
+    def construct(self):
+        self.zoom_out_with_whole_numbers()
+        self.count_44_spirals()
+        self.zoom_back_in_to_6()
+
+    def zoom_out_with_whole_numbers(self):
+        wholes = self.get_p_spiral(range(self.max_prime))
+        primes = self.get_prime_p_spiral(self.max_prime)
+
+        wholes.set_color(YELLOW)
+        wholes.set_stroke_width(20)
+        primes.set_stroke_width(20)
+        spiral = PGroup(wholes, primes)
+
+        labels = self.get_labels(range(1, self.n_labels))
+
+        self.add(spiral, labels)
+        self.set_scale(
+            self.scale_44,
+            spiral=spiral,
+            to_shrink=labels,
+            target_p_spiral_width=6,
+            run_time=10,
+        )
+        self.wait(2)
+
+        self.spiral = spiral
+        self.labels = labels
+
+    def count_44_spirals(self):
+        curr_spiral = self.spiral
+
+        new_spirals = PGroup(*[
+            self.get_p_spiral(range(
+                (INV_7_MOD_44 * k) % 44, self.max_prime, 44
+            ))
+            for k in range(44)
+        ])
+        new_spirals.set_color(YELLOW)
+
+        counts = VGroup()
+        for n, spiral in zip(it.count(1), new_spirals):
+            count = Integer(n)
+            count.scale(2)
+            count.move_to(spiral.points[50])
+            counts.add(count)
+
+        self.remove(curr_spiral)
+        run_time = 3
+        self.play(
+            ShowIncreasingSubsets(new_spirals),
+            ShowSubmobjectsOneByOne(counts),
+            run_time=run_time,
+            rate_func=linear,
+        )
+        self.add_count_clicks(44, run_time)
+        self.play(
+            counts[-1].scale, 2, {"about_edge": DL},
+            counts[-1].set_stroke, BLACK, 5, {"background": True},
+        )
+        self.wait()
+        self.play(
+            FadeOut(counts[-1]),
+            FadeOut(new_spirals),
+            FadeIn(curr_spiral),
+        )
+
+    def zoom_back_in_to_6(self):
+        spiral = self.spiral
+
+        self.rescale_labels(self.labels)
+        self.set_scale(
+            self.scale_6,
+            spiral=spiral,
+            to_shrink=self.labels,
+            target_p_spiral_width=15,
+            run_time=6,
+        )
+        self.wait()
+
+    def rescale_labels(self, labels):
+        for i, label in zip(it.count(1), labels):
+            height = label.get_height()
+            label.set_height(
+                3 * height / (i**0.25),
+                about_point=label.get_bottom() + 0.5 * label.get_height() * DOWN,
+            )
+
+
+class ExplainSixSpirals(ShowSpiralsForWholeNumbers):
+    CONFIG = {
+        "max_N": 150,
+    }
+
+    def construct(self):
+        self.add_spirals_and_labels()
+        self.comment_on_arms()
+        self.talk_though_multiples_of_six()
+        self.limit_to_primes()
+
+    def add_spirals_and_labels(self):
+        max_N = self.max_N
+
+        spiral = self.get_v_spiral(range(max_N))
+        primes = generate_prime_list(max_N)
+        spiral.set_color(YELLOW)
+        for n, box in enumerate(spiral):
+            if n in primes:
+                box.set_color(TEAL)
+
+        labels = self.get_labels(range(max_N))
+
+        self.add(spiral, labels)
+        self.set_scale(
+            spiral=spiral,
+            scale=self.scale_6,
+            to_shrink=labels,
+            min_box_width=0.08,
+            run_time=0,
+        )
+        self.rescale_labels(labels)
+
+        self.spiral = spiral
+        self.labels = labels
+
+    def comment_on_arms(self):
+        labels = self.labels
+        spiral = self.spiral
+
+        label_groups = VGroup(*[labels[k::6] for k in range(6)])
+        spiral_groups = VGroup(*[spiral[k::6] for k in range(6)])
+        six_groups = VGroup(*[
+            VGroup(sg, lg)
+            for sg, lg in zip(spiral_groups, label_groups)
+        ])
+        rect_groups = VGroup(*[
+            VGroup(*[
+                SurroundingRectangle(label, stroke_width=2, buff=0.05)
+                for label in group
+            ])
+            for group in label_groups
+        ])
+
+        formula = VGroup(
+            *TexMobject("6k", "+"),
+            Integer(1)
+        )
+        formula.arrange(RIGHT, buff=SMALL_BUFF)
+        formula.scale(2)
+        formula.set_color(YELLOW)
+        formula.to_corner(UL)
+        formula_rect = SurroundingRectangle(formula, buff=MED_LARGE_BUFF - SMALL_BUFF)
+        formula_rect.set_fill(DARK_GREY, opacity=1)
+        formula_rect.set_stroke(WHITE, 1)
+
+        # 6k
+        self.add(six_groups, formula_rect)
+        self.play(
+            LaggedStartMap(ShowCreation, rect_groups[0]),
+            FadeInFromDown(formula_rect),
+            FadeInFromDown(formula[0]),
+            *[
+                ApplyMethod(group.set_opacity, 0.25)
+                for group in six_groups[1:]
+            ],
+            run_time=2
+        )
+        self.play(
+            LaggedStartMap(
+                FadeOut, rect_groups[0],
+                run_time=1,
+            ),
+        )
+        self.wait()
+
+        # 6k + 1
+        self.play(
+            six_groups[0].set_opacity, 0.25,
+            six_groups[1].set_opacity, 1,
+            FadeIn(formula[1:]),
+        )
+        self.wait(2)
+
+        # 6k + m
+        for m in [2, 3, 4, 5]:
+            self.play(
+                six_groups[m - 1].set_opacity, 0.25,
+                six_groups[m].set_opacity, 1,
+                ChangeDecimalToValue(formula[2], m),
+            )
+            self.wait()
+        self.play(
+            six_groups[5].set_opacity, 0.25,
+            six_groups[0].set_opacity, 1,
+            formula[1:].set_opacity, 0,
+        )
+        self.wait()
+
+        self.six_groups = six_groups
+        self.formula = VGroup(formula_rect, *formula)
+
+    def talk_though_multiples_of_six(self):
+        spiral = self.spiral
+        labels = self.labels
+        formula = self.formula
+
+        # Zoom in
+        self.add(spiral, labels, formula)
+        self.set_scale(
+            4.5,
+            spiral=spiral,
+            to_shrink=labels,
+            run_time=2,
+        )
+        self.wait()
+
+        boxes = VGroup(*[
+            VGroup(b.copy(), l.copy())
+            for b, l in zip(spiral, labels)
+        ])
+        boxes.set_opacity(1)
+
+        lines = VGroup(*[
+            Line(ORIGIN, box[0].get_center())
+            for box in boxes
+        ])
+        lines.set_stroke(LIGHT_GREY, width=2)
+
+        arcs = self.get_arcs(range(31))
+
+        trash = VGroup()
+
+        def show_steps(start, stop, added_anims=None, run_time=2):
+            if added_anims is None:
+                added_anims = []
+            self.play(
+                *[
+                    ShowSubmobjectsOneByOne(group[start:stop + 1])
+                    for group in [arcs, boxes, lines]
+                ],
+                *added_anims,
+                rate_func=linear,
+                run_time=run_time,
+            )
+            self.add_count_clicks(N=6, time=run_time)
+            trash.add(VGroup(arcs[stop], boxes[stop], lines[stop]))
+
+        # Writing next to the 6
+        six = boxes[6][1]
+        rhs = TexMobject(
+            "\\text{radians}",
+            "\\approx",
+            "2\\pi",
+            "\\text{ radians}"
+        )
+        rhs.next_to(six, RIGHT, 2 * SMALL_BUFF, aligned_edge=DOWN)
+        rhs.add_background_rectangle()
+        tau_value = TexMobject("{:.8}\\dots".format(TAU))
+        tau_value.next_to(rhs[3], UP, aligned_edge=LEFT)
+
+        # Animations
+        show_steps(0, 6, run_time=3)
+        self.wait()
+        self.play(FadeIn(rhs))
+        self.wait()
+        self.play(FadeInFromDown(tau_value))
+        self.wait(2)
+
+        show_steps(6, 12)
+        self.wait()
+
+        show_steps(12, 18)
+        self.wait()
+
+        # Zoom out
+        frame = self.camera_frame
+        frame.add(formula)
+        show_steps(18, 24, added_anims=[frame.scale, 2.5])
+        self.wait()
+        show_steps(24, 30)
+        self.wait(2)
+
+        self.play(
+            FadeOut(trash),
+            FadeOut(rhs),
+            FadeOut(tau_value),
+            spiral.set_opacity, 1,
+            labels.set_opacity, 1,
+            formula[1].set_opacity, 0,
+        )
+
+    def limit_to_primes(self):
+        formula = self.formula
+        formula_rect, six_k, plus, m_sym = formula
+        spiral = self.spiral
+        labels = self.labels
+        six_groups = self.six_groups
+        frame = self.camera_frame
+
+        boxes = VGroup(*[
+            VGroup(b, l)
+            for b, l in zip(spiral, labels)
+        ])
+        prime_numbers = read_in_primes(self.max_N)
+        primes = VGroup()
+        non_primes = VGroup()
+        for n, box in enumerate(boxes):
+            if n in prime_numbers:
+                primes.add(box)
+            else:
+                non_primes.add(box)
+
+        prime_label = TextMobject("Primes")
+        prime_label.set_color(TEAL)
+        prime_label.match_width(VGroup(six_k, m_sym))
+        prime_label.move_to(six_k, LEFT)
+
+        # Show just primes
+        self.add(primes, non_primes, formula)
+        self.play(
+            FadeIn(prime_label),
+            non_primes.set_opacity, 0.25,
+        )
+        frame.add(prime_label)
+        self.play(
+            frame.scale, 1.5,
+            run_time=2,
+        )
+        self.wait(2)
+
+        cross_groups = VGroup()
+        for group in six_groups:
+            group.save_state()
+            boxes, labels = group
+            cross_group = VGroup()
+            for label in labels:
+                cross_group.add(Cross(label))
+            cross_groups.add(cross_group)
+        cross_groups.set_stroke(width=3)
+        cross_groups[2].remove(cross_groups[2][0])
+        cross_groups[3].remove(cross_groups[3][0])
+
+        # Show multiples of 6
+        for r in [0, 2, 4, 3]:
+            arm = six_groups[r]
+            crosses = cross_groups[r]
+            self.add(arm, frame)
+
+            anims = [arm.set_opacity, 1]
+            if r == 0:
+                anims += [
+                    prime_label.set_opacity, 0,
+                    six_k.set_opacity, 1
+                ]
+            elif r == 2:
+                m_sym.set_value(2)
+                anims += [
+                    plus.set_opacity, 1,
+                    m_sym.set_opacity, 1,
+                ]
+            else:
+                anims.append(ChangeDecimalToValue(m_sym, r))
+            self.play(*anims)
+            self.add(*crosses, frame)
+            self.play(
+                LaggedStartMap(ShowCreation, crosses),
+            )
+            self.wait()
+
+        # Fade forbidden groups
+        to_fade = VGroup(*[
+            VGroup(six_groups[r], cross_groups[r])
+            for r in (0, 2, 3, 4)
+        ])
+        self.add(to_fade, frame)
+        self.play(
+            to_fade.set_opacity, 0.25,
+            VGroup(six_k, plus, m_sym).set_opacity, 0,
+            prime_label.set_opacity, 1,
+        )
+        self.wait()
+
+    #
+    def arc_func(self, t):
+        r = 0.25 + 0.02 * t
+        return r * np.array([np.cos(t), np.sin(t), 0])
+
+    def get_arc(self, n):
+        if n == 0:
+            return VectorizedPoint()
+        return ParametricFunction(
+            self.arc_func,
+            t_min=0,
+            t_max=n,
+            step_size=0.1,
+            stroke_width=2,
+            stroke_color=PINK,
+        )
+
+    def get_arcs(self, sequence):
+        return VGroup(*map(self.get_arc, sequence))
+
+
+class IntroduceResidueClassTerminology(Scene):
+    def construct(self):
+        self.add_title()
+        self.add_sequences()
+        self.add_terms()
+        self.highlight_example()
+        self.simple_english()
+
+    def add_title(self):
+        title = TextMobject("Overly-fancy terminology")
+        title.scale(1.5)
+        title.to_edge(UP, buff=MED_SMALL_BUFF)
+        underline = Line().match_width(title)
+        underline.next_to(title, DOWN, SMALL_BUFF)
+        title.add(underline)
+        self.add(title)
+
+        self.title = title
+        self.underline = underline
+
+    def add_sequences(self):
+        sequences = VGroup()
+        n_terms = 7
+
+        for r in range(6):
+            sequence = VGroup(*[
+                Integer(6 * k + r)
+                for k in range(n_terms)
+            ])
+            sequence.arrange(RIGHT, buff=0.4)
+            sequences.add(sequence)
+
+        sequences.arrange(DOWN, buff=0.7, aligned_edge=LEFT)
+        for sequence in sequences:
+            for s1, s2 in zip(sequence[:n_terms], sequences[-1]):
+                s1.align_to(s2, RIGHT)
+            commas = VGroup()
+            for num in sequence[:-1]:
+                comma = TextMobject(",")
+                comma.next_to(num.get_corner(DR), RIGHT, SMALL_BUFF)
+                commas.add(comma)
+            dots = TexMobject("\\dots")
+            dots.next_to(sequence.get_corner(DR), RIGHT, SMALL_BUFF)
+            sequence.numbers = VGroup(*sequence)
+            sequence.commas = commas
+            sequence.dots = dots
+
+            sequence.add(*commas)
+            sequence.add(dots)
+            sequence.sort(lambda p: p[0])
+
+        labels = VGroup(*[
+            TexMobject("6k + {}:".format(r))
+            for r in range(6)
+        ])
+        labels.set_color(YELLOW)
+        for label, sequence in zip(labels, sequences):
+            label.next_to(sequence, LEFT, MED_LARGE_BUFF)
+
+        group = VGroup(sequences, labels)
+        group.to_edge(LEFT).to_edge(DOWN, buff=MED_LARGE_BUFF)
+
+        self.add(labels)
+        self.play(LaggedStart(*[
+            LaggedStartMap(
+                FadeInFrom, sequence,
+                lambda m: (m, LEFT),
+            )
+            for sequence in sequences
+        ], lag_ratio=0.3))
+        self.wait()
+
+        self.sequences = sequences
+        self.sequence_labels = labels
+
+    def add_terms(self):
+        sequences = self.sequences
+
+        terms = TextMobject(
+            "``", "Residue\\\\",
+            "classes\\\\",
+            "mod ", "6''"
+        )
+        terms.scale(1.5)
+        terms.set_color(YELLOW)
+        terms.to_edge(RIGHT)
+
+        res_brace = Brace(terms.get_part_by_tex("Residue"), UP)
+        remainder = TextMobject("Remainder")
+        remainder.next_to(res_brace, UP, SMALL_BUFF)
+
+        mod_brace = Brace(terms.get_part_by_tex("mod"), DOWN)
+        mod_def = TextMobject(
+            "``where the thing\\\\you divide by is''"
+        )
+        mod_def.next_to(mod_brace, DOWN, SMALL_BUFF)
+
+        arrows = VGroup(*[
+            Arrow(terms.get_left(), sequence.get_right())
+            for sequence in sequences
+        ])
+        arrows.set_color(YELLOW)
+
+        self.play(
+            FadeIn(terms),
+            LaggedStartMap(ShowCreation, arrows),
+        )
+        self.wait()
+        self.play(
+            GrowFromCenter(res_brace),
+            FadeInFromDown(remainder),
+        )
+        self.wait()
+        self.play(GrowFromCenter(mod_brace))
+        self.play(Write(mod_def))
+        self.wait()
+
+        self.terminology = VGroup(
+            terms,
+            res_brace, remainder,
+            mod_brace, mod_def,
+            arrows
+        )
+
+    def highlight_example(self):
+        sequences = self.sequences
+        labels = self.sequence_labels
+
+        r = 2
+        k = 2
+        sequence = sequences[r]
+        label = labels[r]
+        r_tex = label[0][3]
+        n_rects = VGroup(*[
+            SurroundingRectangle(num)
+            for num in sequence.numbers
+        ])
+        r_rect = SurroundingRectangle(r_tex)
+        n_rects.set_color(RED)
+        r_rect.set_color(RED)
+
+        n_rect = n_rects.submobjects.pop(k)
+
+        self.play(ShowCreation(n_rect))
+        self.wait()
+        self.play(
+            TransformFromCopy(n_rect, r_rect, path_arc=30 * DEGREES)
+        )
+        self.wait()
+        self.play(ShowCreation(n_rects))
+        self.wait()
+        self.play(
+            ShowCreationThenFadeOut(
+                self.underline.copy().set_color(PINK),
+            )
+        )
+
+    def simple_english(self):
+        terminology = self.terminology
+        sequences = self.sequences
+
+        randy = Randolph()
+        randy.set_height(2)
+        randy.flip()
+        randy.to_corner(DR)
+
+        new_phrase = TextMobject("Everything 2 above\\\\a multiple of 6")
+        new_phrase.scale(1.2)
+        new_phrase.set_color(RED_B)
+        new_phrase.next_to(sequences[2])
+
+        self.play(
+            FadeOut(terminology),
+            FadeIn(new_phrase),
+            VFadeIn(randy),
+            randy.change, "sassy"
+        )
+        self.wait()
+        self.play(randy.change, "angry")
+        for x in range(2):
+            self.play(Blink(randy))
+            self.wait()
+        self.play(
+            FadeOut(new_phrase),
+            FadeIn(terminology),
+            FadeOutAndShift(randy, DOWN)
+        )
+        self.wait()
+
+
+class Explain44Spirals(ExplainSixSpirals):
+    CONFIG = {
+        "max_N": 3000,
+        "initial_scale": 10,
+        "zoom_factor_1": 7,
+        "zoom_factor_2": 3,
+    }
+
+    def construct(self):
+        self.add_spirals_and_labels()
+        self.show_44_steps()
+        self.show_top_right_arithmetic()
+        self.show_pi_approx_arithmetic()
+        self.count_by_44()
+
+    def add_spirals_and_labels(self):
+        max_N = self.max_N
+
+        wholes = self.get_p_spiral(range(max_N))
+        primes = self.get_prime_p_spiral(max_N)
+        wholes.set_color(YELLOW)
+        spiral = PGroup(wholes, primes)
+
+        labels = self.get_labels(range(80))
+
+        self.add(spiral, labels)
+        self.set_scale(
+            spiral=spiral,
+            scale=self.initial_scale,
+            to_shrink=labels,
+            target_p_spiral_width=10,
+            run_time=0,
+        )
+        self.rescale_labels(labels)
+
+        self.spiral = spiral
+        self.labels = labels
+
+    def show_44_steps(self):
+        labels = self.labels
+
+        ns = range(45)
+        points = [self.get_polar_point(n, n) for n in ns]
+        lines = VGroup(*[
+            Line(ORIGIN, point)
+            for point in points
+        ])
+        lines.set_stroke(WHITE, 2)
+        arcs = self.get_arcs(ns)
+
+        opaque_labels = labels.copy()
+        labels.set_opacity(0.25)
+
+        trash = VGroup()
+
+        def show_steps(start, stop, added_anims=None, run_time=2):
+            if added_anims is None:
+                added_anims = []
+
+            def rate_func(t):
+                return smooth(t, 2)
+
+            self.play(
+                *[
+                    ShowSubmobjectsOneByOne(group[start:stop + 1])
+                    for group in [arcs, opaque_labels, lines]
+                ],
+                *added_anims,
+                rate_func=rate_func,
+                run_time=run_time,
+            )
+            self.add_count_clicks(
+                N=(stop - start), time=run_time,
+                rate_func=rate_func
+            )
+            trash.add(arcs[stop], opaque_labels[stop], lines[stop])
+
+        show_steps(0, 6)
+        self.wait()
+        show_steps(6, 44, added_anims=[FadeOut(trash)], run_time=4)
+        self.wait()
+
+        self.spiral_group = trash[-3:]
+
+    def show_top_right_arithmetic(self):
+        labels = self.labels
+        ff = labels[44].copy()
+        ff.generate_target()
+
+        radians = TextMobject("radians")
+        ff.target.scale(1.5)
+        ff.target.set_opacity(1)
+
+        unit_conversion = TexMobject(
+            "/\\,", "\\left(", "2\\pi",
+            "{\\text{radians}", "\\over", "\\text{rotations}}",
+            "\\right)"
+        )
+        unit_conversion[1:].scale(0.7, about_edge=LEFT)
+
+        top_line = VGroup(ff.target, radians, unit_conversion)
+        top_line.arrange(RIGHT)
+        ff.target.align_to(radians, DOWN)
+        top_line.to_corner(UR, buff=0.4)
+
+        next_line = TexMobject(
+            "=", "44", "/", "2\\pi",
+            "\\text{ rotations}"
+        )
+        next_line.next_to(top_line, DOWN, MED_LARGE_BUFF, aligned_edge=LEFT)
+
+        brace = Brace(next_line[1:4], DOWN, buff=SMALL_BUFF)
+        value = DecimalNumber(44 / TAU, num_decimal_places=8, show_ellipsis=True)
+        value.next_to(brace, DOWN)
+
+        rect = SurroundingRectangle(VGroup(top_line, value), buff=MED_SMALL_BUFF)
+        rect.set_stroke(WHITE, 2)
+        rect.set_fill(DARKER_GREY, 0.9)
+
+        self.play(MoveToTarget(ff))
+        top_line.add(ff)
+        self.play(FadeInFrom(radians, LEFT))
+        self.wait()
+        self.add(rect, top_line, unit_conversion)
+        self.play(
+            FadeIn(rect),
+            FadeIn(unit_conversion),
+        )
+        self.wait()
+        self.play(
+            TransformFromCopy(ff, next_line.get_part_by_tex("44")),
+            FadeIn(next_line.get_part_by_tex("=")),
+            TransformFromCopy(
+                unit_conversion.get_part_by_tex("/"),
+                next_line.get_part_by_tex("/"),
+            ),
+            TransformFromCopy(
+                unit_conversion.get_part_by_tex("rotations"),
+                next_line.get_part_by_tex("rotations"),
+            ),
+            TransformFromCopy(
+                unit_conversion.get_part_by_tex("2\\pi"),
+                next_line.get_part_by_tex("2\\pi"),
+            ),
+        )
+        self.wait()
+        self.play(
+            GrowFromCenter(brace),
+            Write(value),
+        )
+        self.wait()
+
+        self.right_arithmetic = VGroup(
+            rect, top_line, next_line,
+            brace, value
+        )
+
+    def show_pi_approx_arithmetic(self):
+        ra = self.right_arithmetic
+        ra_rect, ra_l1, ra_l2, ra_brace, ra_value = ra
+
+        lines = VGroup(
+            TexMobject("{44", "\\over", "2\\pi}", "\\approx", "7"),
+            TexMobject("\\Leftrightarrow"),
+            TexMobject("{44", "\\over", "7}", "\\approx", "2\\pi"),
+            TexMobject("{22", "\\over", "7}", "\\approx", "\\pi"),
+        )
+        lines.arrange(RIGHT, buff=MED_SMALL_BUFF)
+        lines.to_corner(UL)
+        lines[3].move_to(lines[2], LEFT)
+
+        rect = SurroundingRectangle(lines, buff=MED_LARGE_BUFF)
+        rect.match_style(ra_rect)
+
+        self.play(
+            FadeIn(rect),
+            LaggedStart(
+                TransformFromCopy(ra_l2[1:4], lines[0][:3]),
+                FadeIn(lines[0].get_part_by_tex("approx")),
+                TransformFromCopy(ra_value[0], lines[0].get_part_by_tex("7")),
+                run_time=2,
+            )
+        )
+        self.wait()
+        l0_copy = lines[0].copy()
+        self.play(
+            l0_copy.move_to, lines[2],
+            Write(lines[1]),
+        )
+        self.play(
+            LaggedStart(*[
+                ReplacementTransform(
+                    l0_copy.get_part_by_tex(tex),
+                    lines[2].get_part_by_tex(tex),
+                    path_arc=60 * DEGREES,
+                )
+                for tex in ["44", "\\over", "7", "approx", "2\\pi"]
+            ], lag_ratio=0.1, run_time=2),
+        )
+        self.wait()
+        self.play(Transform(lines[2], lines[3]))
+        self.wait()
+
+        left_arithmetic = VGroup(rect, lines[:3])
+        self.play(
+            LaggedStart(
+                FadeOut(self.spiral_group[0]),
+                FadeOut(left_arithmetic),
+                FadeOut(self.right_arithmetic),
+            )
+        )
+
+    def count_by_44(self):
+        ff_label, ff_line = self.spiral_group[1:]
+        faded_labels = self.labels
+        frame = self.camera_frame
+
+        n_values = 100
+        mod = 44
+        values = range(mod, n_values * mod, mod)
+        points = [
+            self.get_polar_point(n, n)
+            for n in values
+        ]
+
+        p2l_tracker = ValueTracker(
+            get_norm(ff_label.get_bottom() - points[0])
+        )
+        get_p2l = p2l_tracker.get_value
+        l_height_ratio_tracker = ValueTracker(
+            ff_label.get_height() / frame.get_height()
+        )
+        get_l_height_ratio = l_height_ratio_tracker.get_value
+
+        n_labels = 10
+        labels = VGroup(*[Integer(n) for n in values[:n_labels]])
+        for label, point in zip(labels, points):
+            label.point = point
+            label.add_updater(
+                lambda l: l.set_height(
+                    frame.get_height() * get_l_height_ratio()
+                )
+            )
+            label.add_updater(
+                lambda l: l.move_to(
+                    l.point + get_p2l() * UP,
+                    DOWN,
+                )
+            )
+        labels.set_stroke(BLACK, 2, background=True)
+
+        lines = VGroup(ff_line)
+        for p1, p2 in zip(points, points[1:]):
+            lines.add(Line(p1, p2))
+        lines.match_style(ff_line)
+
+        self.remove(self.spiral_group)
+        self.remove(faded_labels[44])
+        self.play(
+            frame.scale, self.zoom_factor_1,
+            p2l_tracker.set_value, 1,
+            l_height_ratio_tracker.set_value, 0.025,
+            FadeOut(
+                ff_label,
+                rate_func=squish_rate_func(smooth, 0, 1 / 8),
+            ),
+            LaggedStart(
+                *2 * [Animation(Group())],  # Weird and dumb
+                *map(FadeIn, labels),
+                lag_ratio=0.5,
+            ),
+            LaggedStart(
+                *2 * [Animation(Group())],
+                *map(ShowCreation, lines[:len(labels)]),
+                lag_ratio=1,
+            ),
+            run_time=8,
+        )
+        self.play(
+            frame.scale, self.zoom_factor_2,
+            l_height_ratio_tracker.set_value, 0.01,
+            ShowCreation(lines[len(labels):]),
+            run_time=8,
+        )
+
+        self.ff_spiral_lines = lines
+        self.ff_spiral_labels = labels
+
+    #
+    def arc_func(self, t):
+        r = 0.1 * t
+        return r * np.array([np.cos(t), np.sin(t), 0])
+
+
+class Label44Spirals(Explain44Spirals):
+    def construct(self):
+        self.setup_spirals()
+        self.enumerate_spirals()
+
+    def setup_spirals(self):
+        max_N = self.max_N
+        mod = 44
+        primes = read_in_primes(max_N)
+        spirals = VGroup()
+        for r in range(mod):
+            ns = range(r, max_N, mod)
+            spiral = self.get_v_spiral(ns, box_width=1)
+            for box, n in zip(spiral, ns):
+                if n in primes:
+                    box.set_color(TEAL)
+                else:
+                    box.set_color(YELLOW)
+            spirals.add(spiral)
+
+        self.add(spirals)
+        scale = np.prod([
+            self.initial_scale,
+            self.zoom_factor_1,
+            self.zoom_factor_2,
+        ])
+        self.set_scale(
+            spiral=VGroup(*it.chain(*spirals)),
+            scale=scale,
+            run_time=0
+        )
+
+        self.spirals = spirals
+
+    def enumerate_spirals(self):
+        spirals = self.spirals
+        labels = self.get_spiral_arm_labels(spirals)
+
+        self.play(
+            spirals[1:].set_opacity, 0.25,
+            FadeIn(labels[0]),
+        )
+        self.wait()
+
+        for n in range(10):
+            arc = Arc(
+                start_angle=n + 0.2,
+                angle=0.9,
+                radius=1.5,
+            )
+            arc.add_tip()
+            mid_point = arc.point_from_proportion(0.5)
+            r_label = TextMobject("1 radian")
+            # r_label.rotate(
+            #     angle_of_vector(arc.get_end() - arc.get_start()) - PI
+
+            # )
+            r_label.next_to(mid_point, normalize(mid_point))
+
+            self.play(
+                ShowCreation(arc),
+                FadeIn(r_label),
+                spirals[n + 1].set_opacity, 1,
+                TransformFromCopy(labels[n], labels[n + 1])
+            )
+            self.play(
+                FadeOut(arc),
+                FadeOut(r_label),
+                spirals[n].set_opacity, 0.25,
+                FadeOut(labels[n]),
+            )
+
+    #
+    def get_spiral_arm_labels(self, spirals, index=15):
+        mod = 44
+        labels = VGroup(*[
+            VGroup(
+                *TexMobject("44k", "+"),
+                Integer(n)
+            ).arrange(RIGHT, buff=SMALL_BUFF)
+            for n in range(mod)
+        ])
+        labels[0][1:].set_opacity(0)
+        labels.scale(1.5)
+        labels.set_color(YELLOW)
+
+        for label, spiral in zip(labels, spirals):
+            box = spiral[index]
+            vect = rotate_vector(box.get_center(), 90 * DEGREES)
+            label.next_to(box, normalize(vect), SMALL_BUFF)
+        labels[0].shift(UR + 1.25 * RIGHT)
+        return labels
+
+
+class ResidueClassMod44Label(Scene):
+    def construct(self):
+        text = TextMobject(
+            "``Residue class mod 44''"
+        )
+        text.scale(2)
+        text.to_corner(UL)
+
+        self.play(Write(text))
+        self.wait()
+
+
+class EliminateNonPrimativeResidueClassesOf44(Label44Spirals):
     def construct(self):
         pass
