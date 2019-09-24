@@ -221,6 +221,14 @@ class Mobject2D(PMobject):
         Mobject.__init__(self, **kwargs)
 
 
+class PGroup(PMobject):
+    def __init__(self, *pmobs, **kwargs):
+        if not all([isinstance(m, PMobject) for m in pmobs]):
+            raise Exception("All submobjects must be of type PMobject")
+        super().__init__(**kwargs)
+        self.add(*pmobs)
+
+
 class PointCloudDot(Mobject1D):
     CONFIG = {
         "radius": 0.075,
