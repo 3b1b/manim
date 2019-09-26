@@ -42,7 +42,7 @@ def read_in_primes(max_N=None):
     if max_N < 1e5:
         file = "primes_1e5.json"
     elif max_N < 1e6:
-        file = "primes_1e5.json"
+        file = "primes_1e6.json"
     else:
         file = "primes_1e7.json"
 
@@ -119,9 +119,12 @@ class SpiralScene(MovingCameraScene):
                   to_shrink=None,
                   min_box_width=0.05,
                   target_p_spiral_width=None,
+                  added_anims=[],
                   run_time=3):
         if axes is None:
             axes = self.axes
+        if added_anims is None:
+            added_anims = []
         sf = self.get_scale_factor(scale, axes)
 
         anims = []
@@ -142,6 +145,7 @@ class SpiralScene(MovingCameraScene):
                     if target_p_spiral_width is not None:
                         mob.target.set_stroke_width(target_p_spiral_width)
             anims.append(MoveToTarget(mob))
+        anims += added_anims
 
         if run_time == 0:
             for anim in anims:
@@ -1567,6 +1571,7 @@ class Explain44Spirals(ExplainSixSpirals):
         "initial_scale": 10,
         "zoom_factor_1": 7,
         "zoom_factor_2": 3,
+        "n_labels": 80,
     }
 
     def construct(self):
@@ -1584,7 +1589,7 @@ class Explain44Spirals(ExplainSixSpirals):
         wholes.set_color(YELLOW)
         spiral = PGroup(wholes, primes)
 
-        labels = self.get_labels(range(80))
+        labels = self.get_labels(range(self.n_labels))
 
         self.add(spiral, labels)
         self.set_scale(
@@ -1869,6 +1874,7 @@ class Label44Spirals(Explain44Spirals):
             ns = range(r, max_N, mod)
             spiral = self.get_v_spiral(ns, box_width=1)
             for box, n in zip(spiral, ns):
+                box.n = n
                 if n in primes:
                     box.set_color(TEAL)
                 else:
@@ -1962,5 +1968,555 @@ class ResidueClassMod44Label(Scene):
 
 
 class EliminateNonPrimativeResidueClassesOf44(Label44Spirals):
+    CONFIG = {
+        "max_N": 7000,
+    }
+
     def construct(self):
+        self.setup_spirals()
+        self.eliminate_classes()
+        self.zoom_out()
+        self.filter_to_primes()
+
+    def eliminate_classes(self):
+        spirals = self.spirals
+        labels = self.get_spiral_arm_labels(spirals)
+
+        # Eliminate factors of 2
+        self.play(
+            spirals[1:].set_opacity, 0.5,
+            FadeIn(labels[0]),
+        )
+        self.wait()
+        self.play(
+            FadeOut(spirals[0]),
+            FadeOut(labels[0]),
+        )
+        for n in range(2, 8, 2):
+            self.play(
+                FadeIn(labels[n]),
+                spirals[n].set_opacity, 1,
+            )
+            self.play(FadeOut(VGroup(labels[n], spirals[n])))
+
+        words = TextMobject("All even numbers")
+        words.scale(1.5)
+        words.to_corner(UL)
+        self.play(
+            LaggedStart(*[
+                ApplyMethod(spiral.set_opacity, 1)
+                for spiral in spirals[8::2]
+            ], lag_ratio=0.01),
+            FadeIn(words),
+        )
+        self.play(
+            FadeOut(words),
+            FadeOut(spirals[8::2])
+        )
+        self.wait()
+
+        # Eliminate factors of 11
+        for k in [11, 33]:
+            self.play(
+                spirals[k].set_opacity, 1,
+                FadeIn(labels[k])
+            )
+            self.wait()
+            self.play(
+                FadeOut(spirals[k]),
+                FadeOut(labels[k]),
+            )
+
+        admissible_spirals = VGroup(*[
+            spiral
+            for n, spiral in enumerate(spirals)
+            if n % 2 != 0 and n % 11 != 0
+
+        ])
+
+        self.play(admissible_spirals.set_opacity, 1)
+
+        self.admissible_spirals = admissible_spirals
+
+    def zoom_out(self):
+        frame = self.camera_frame
+        admissible_spirals = self.admissible_spirals
+        admissible_spirals.generate_target()
+        for spiral in admissible_spirals.target:
+            for box in spiral:
+                box.scale(3)
+
+        self.play(
+            frame.scale, 4,
+            MoveToTarget(admissible_spirals),
+            run_time=3,
+        )
+
+    def filter_to_primes(self):
+        admissible_spirals = self.admissible_spirals
+        frame = self.camera_frame
+        primes = read_in_primes(self.max_N)
+
+        to_fade = VGroup(*[
+            box
+            for spiral in admissible_spirals
+            for box in spiral
+            if box.n not in primes
+        ])
+        words = TextMobject("Just the primes")
+        words.set_height(0.1 * frame.get_height())
+        words.next_to(frame.get_corner(UL), DR, LARGE_BUFF)
+
+        self.play(
+            LaggedStartMap(FadeOut, to_fade, lag_ratio=2 / len(to_fade)),
+            FadeIn(words),
+        )
+        self.wait()
+
+
+class TwoUnrelatedFacts(Scene):
+    def construct(self):
+        self.add_title()
+        self.show_columns()
+
+    def add_title(self):
+        title = TextMobject("Two (unrelated) bits of number theory")
+        title.set_width(FRAME_WIDTH - 1)
+        title.to_edge(UP)
+        h_line = Line()
+        h_line.match_width(title)
+        h_line.next_to(title, DOWN, SMALL_BUFF)
+        h_line.set_stroke(LIGHT_GREY)
+
+        self.play(
+            FadeIn(title),
+            ShowCreation(h_line),
+        )
+
+        self.h_line = h_line
+
+    def show_columns(self):
+        h_line = self.h_line
+        v_line = Line(
+            h_line.get_center() + MED_SMALL_BUFF * DOWN,
+            FRAME_HEIGHT * DOWN / 2,
+        )
+        v_line.match_style(h_line)
+
+        approx = TexMobject(
+            "{44 \\over 7} \\approx 2\\pi"
+        )
+        approx.scale(1.5)
+        approx.next_to(
+            h_line.point_from_proportion(0.25),
+            DOWN, MED_LARGE_BUFF,
+        )
+
+        mod = 44
+        n_terms = 9
+        residue_classes = VGroup()
+        prime_numbers = read_in_primes(1000)
+        primes = VGroup()
+        non_primes = VGroup()
+        for r in range(mod):
+            if r <= 11 or r == 43:
+                row = VGroup()
+                for n in range(r, r + n_terms * mod, mod):
+                    elem = Integer(n)
+                    comma = TexMobject(",")
+                    comma.next_to(
+                        elem.get_corner(DR),
+                        RIGHT, SMALL_BUFF
+                    )
+                    elem.add(comma)
+                    row.add(elem)
+                    if n in prime_numbers:
+                        primes.add(elem)
+                    else:
+                        non_primes.add(elem)
+                row.arrange(RIGHT, buff=0.3)
+                dots = TexMobject("\\dots")
+                dots.next_to(row.get_corner(DR), RIGHT, SMALL_BUFF)
+                dots.shift(SMALL_BUFF * UP)
+                row.add(dots)
+                row.r = r
+            if r == 12:
+                row = TexMobject("\\vdots")
+            residue_classes.add(row)
+
+        residue_classes.arrange(DOWN)
+        residue_classes[-2].align_to(residue_classes, LEFT)
+        residue_classes[-2].shift(MED_SMALL_BUFF * RIGHT)
+        residue_classes.set_height(6)
+        residue_classes.next_to(ORIGIN, RIGHT)
+        residue_classes.to_edge(DOWN, buff=MED_SMALL_BUFF)
+
+        def get_line(row):
+            return Line(
+                row.get_left(), row.get_right(),
+                stroke_color=RED,
+                stroke_width=4,
+            )
+
+        even_lines = VGroup(*[
+            get_line(row)
+            for row in residue_classes[:12:2]
+        ])
+        eleven_line = get_line(residue_classes[11])
+        eleven_line.set_color(PINK)
+        for line in [even_lines[1], eleven_line]:
+            line.scale(0.93, about_edge=RIGHT)
+
+        self.play(ShowCreation(v_line))
+        self.wait()
+        self.play(FadeInFrom(approx, DOWN))
+        self.wait()
+        self.play(FadeIn(residue_classes))
+        self.wait()
+        self.play(
+            LaggedStartMap(ShowCreation, even_lines),
+        )
+        self.wait()
+        self.play(ShowCreation(eleven_line))
+        self.wait()
+        self.play(
+            primes.set_color, TEAL,
+            non_primes.set_opacity, 0.25,
+            even_lines.set_opacity, 0.25,
+            eleven_line.set_opacity, 0.25,
+        )
+        self.wait()
+
+
+class ExplainRays(Explain44Spirals):
+    CONFIG = {
+        "max_N": int(5e5),
+        "axes_config": {
+            "x_min": -1000,
+            "x_max": 1000,
+            "y_min": -1000,
+            "y_max": 1000,
+            "number_line_config": {
+                "tick_frequency": 50,
+            },
+        },
+    }
+
+    def construct(self):
+        self.add_spirals_and_labels()
+        self.show_710th_point()
+        self.show_arithmetic()
+        self.zoom_and_count()
+
+    def show_710th_point(self):
+        spiral = self.spiral
+        axes = self.axes
+        labels = self.labels
+
+        scale_factor = 12
+
+        fade_rect = FullScreenFadeRectangle()
+        fade_rect.scale(scale_factor)
+
+        new_ns = list(range(711))
+        bright_boxes = self.get_v_spiral(new_ns)
+        bright_boxes.set_color(YELLOW)
+        for n, box in enumerate(bright_boxes):
+            box.set_height(0.02 * np.sqrt(n))
+
+        big_labels = self.get_labels(new_ns)
+
+        index_tracker = ValueTracker(44)
+
+        labeled_box = VGroup(Square(), Integer(0))
+
+        def update_labeled_box(mob):
+            index = int(index_tracker.get_value())
+            labeled_box[0].become(bright_boxes[index])
+            labeled_box[1].become(big_labels[index])
+
+        labeled_box.add_updater(update_labeled_box)
+
+        self.set_scale(
+            scale=120,
+            spiral=spiral,
+            to_shrink=labels,
+        )
+
+        box_710 = self.get_v_spiral([710])[0]
+        box_710.scale(2)
+        box_710.set_color(YELLOW)
+        label_710 = Integer(710)
+        label_710.scale(1.5)
+        label_710.next_to(box_710, UP)
+
+        arrow = Arrow(
+            ORIGIN, DOWN,
+            stroke_width=6,
+            max_tip_length_to_length_ratio=0.35,
+            max_stroke_width_to_length_ratio=10,
+            tip_length=0.35
+        )
+        arrow.match_color(box_710)
+        arrow.next_to(box_710, UP, SMALL_BUFF)
+        label_710.next_to(arrow, UP, SMALL_BUFF)
+
+        self.add(spiral, fade_rect, axes, labels)
+        self.play(
+            FadeIn(fade_rect),
+            FadeOut(labels),
+            FadeInFromLarge(box_710),
+            FadeInFrom(label_710, DOWN),
+            ShowCreation(arrow),
+        )
+        self.wait()
+
+        self.fade_rect = fade_rect
+        self.box_710 = box_710
+        self.label_710 = label_710
+        self.arrow = arrow
+
+    def show_arithmetic(self):
+        label_710 = self.label_710
+
+        equation = TexMobject(
+            "710", "\\text{ radians}", "=",
+            "(710 / 2\\pi)", "\\text{ rotations}",
+        )
+        equation.to_corner(UL)
+        frac = equation.get_part_by_tex("710 / 2\\pi")
+        brace = Brace(frac, DOWN, buff=SMALL_BUFF)
+        value = TextMobject("{:.15}".format(710 / TAU))
+        value.next_to(brace, DOWN, SMALL_BUFF)
+        values = VGroup(*[
+            value[0][:n].deepcopy().next_to(brace, DOWN, SMALL_BUFF)
+            for n in [3, *range(5, 13)]
+        ])
+
+        group = VGroup(equation, brace, value)
+        rect = SurroundingRectangle(group, buff=MED_SMALL_BUFF)
+        rect.set_stroke(WHITE, 2)
+        rect.set_fill(DARK_GREY, 1)
+
+        approx = TexMobject(
+            "{710", "\\over", "113}",
+            "\\approx", "2\\pi",
+        )
+        approx.next_to(rect, DOWN)
+        approx.align_to(equation, LEFT)
+
+        approx2 = TexMobject(
+            "{355", "\\over", "113}",
+            "\\approx", "\\pi",
+        )
+        approx2.next_to(approx, RIGHT, LARGE_BUFF)
+
+        self.play(
+            FadeIn(rect),
+            TransformFromCopy(label_710, equation[0]),
+            FadeIn(equation[1:3]),
+        )
+        self.play(
+            FadeInFrom(equation[3:], LEFT)
+        )
+        self.play(GrowFromCenter(brace))
+        self.play(
+            ShowSubmobjectsOneByOne(values),
+            run_time=3,
+            rate_func=linear,
+        )
+        self.wait()
+        self.play(
+            rect.stretch, 2, 1, {"about_edge": UP},
+            LaggedStart(
+                TransformFromCopy(  # 710
+                    equation[3][1:4],
+                    approx[0],
+                ),
+                FadeIn(approx[1][0]),
+                TransformFromCopy(  # 113
+                    values[-1][:3],
+                    approx[2],
+                ),
+                FadeIn(approx[3]),
+                TransformFromCopy(  # 2pi
+                    equation[3][5:7],
+                    approx[4],
+                ),
+                run_time=2,
+            )
+        )
+        self.wait()
+        self.play(
+            TransformFromCopy(approx, approx2),
+        )
+        self.wait()
+        self.play(
+            FadeOut(VGroup(
+                rect, equation, brace, values[-1],
+                approx, approx2
+            )),
+            self.fade_rect.set_opacity, 0.25,
+        )
+
+    def zoom_and_count(self):
+        label = self.label_710
+        arrow = self.arrow
+        box = self.box_710
+        axes = self.axes
+        spiral = self.spiral
+
+        times = TexMobject("\\times")
+        times.next_to(label, LEFT, SMALL_BUFF)
+        k_label = Integer(1)
+        k_label.match_height(label)
+        k_label.set_color(YELLOW)
+        k_label.next_to(times, LEFT)
+
+        boxes = VGroup(*[box.copy() for x in range(150)])
+        box_height_tracker = ValueTracker(box.get_height())
+
+        def get_k():
+            max_x = axes.x_axis.p2n(label.get_center())
+            return max(1, int(max_x / 710))
+
+        def get_k_point(k):
+            return self.get_polar_point(710 * k, 710 * k)
+
+        def update_arrow(arrow):
+            point = get_k_point(get_k())
+            arrow.put_start_and_end_on(
+                label.get_bottom() + SMALL_BUFF * DOWN,
+                point + SMALL_BUFF * UP
+            )
+
+        def get_unit():
+            return get_norm(axes.c2p(1, 0) - axes.c2p(0, 0))
+
+        def update_boxes(boxes):
+            box_height = box_height_tracker.get_value()
+            for k, box in enumerate(boxes):
+                box.set_height(box_height)
+                box.move_to(get_k_point(k))
+
+        arrow.add_updater(update_arrow)
+        boxes.add_updater(update_boxes)
+        k_label.add_updater(
+            lambda d: d.set_value(get_k()).next_to(
+                times, LEFT, SMALL_BUFF
+            )
+        )
+
+        self.remove(box)
+        self.add(times, k_label, boxes)
+        self.set_scale(
+            scale=10000,
+            spiral=self.spiral,
+            run_time=8,
+            target_p_spiral_width=2,
+            added_anims=[
+                box_height_tracker.set_value, 0.035,
+            ]
+        )
+        self.wait()
+
+        # Show other residue classes
+        new_label = TexMobject(
+            "710", "k", "+",
+            tex_to_color_map={"k": YELLOW}
+        )
+        new_label.match_height(label)
+        new_label.next_to(boxes, UP, SMALL_BUFF)
+        new_label.to_edge(RIGHT)
+        new_label[2].set_opacity(0)
+
+        r_label = Integer(1)
+        r_label.match_height(new_label)
+        r_label.set_opacity(0)
+        r_label.add_updater(
+            lambda m: m.next_to(new_label, RIGHT, SMALL_BUFF)
+        )
+
+        k_label.clear_updaters()
+        self.play(
+            FadeOut(times),
+            ReplacementTransform(label, new_label[0]),
+            ReplacementTransform(k_label, new_label[1]),
+            FadeOut(arrow)
+        )
+
+        boxes.clear_updaters()
+        for r in range(1, 12):
+            if r in [3, 6]:
+                vect = UR
+            else:
+                vect = RIGHT
+            point = rotate_vector(boxes[40].get_center(), 1)
+            new_boxes = boxes.copy()
+            new_boxes.rotate(1, about_point=ORIGIN)
+            for box in new_boxes:
+                box.rotate(-1)
+            self.play(
+                FadeOut(boxes),
+                LaggedStartMap(FadeIn, new_boxes, lag_ratio=0.01),
+                new_label.set_opacity, 1,
+                new_label.next_to, point, vect,
+                r_label.set_opacity, 1,
+                ChangeDecimalToValue(r_label, r),
+                run_time=1,
+            )
+            self.remove(boxes)
+            boxes = new_boxes
+            self.add(boxes)
+            self.wait()
+
+        # Show just the primes
+        self.play(
+            FadeOut(boxes),
+            FadeOut(new_label),
+            FadeOut(r_label),
+            FadeOut(self.fade_rect)
+        )
+        self.set_scale(
+            30000,
+            spiral=spiral,
+            run_time=4,
+        )
+        self.wait()
+        self.remove(spiral)
+        self.add(spiral[1])
+        self.wait()
+
+
+class CompareTauToApprox(Scene):
+    def construct(self):
+        eqs = VGroup(
+            TexMobject("2\\pi", "=", "{:.10}\\dots".format(TAU)),
+            TexMobject("\\frac{710}{113}", "=", "{:.10}\\dots".format(710 / 113)),
+        )
+        eqs.arrange(DOWN, buff=LARGE_BUFF)
+        eqs[1].shift((eqs[0][2].get_left()[0] - eqs[1][2].get_left()[0]) * RIGHT)
+
+        eqs.generate_target()
+        for eq in eqs.target:
+            eq[2][:8].set_color(GREEN)
+
+        self.play(LaggedStart(
+            FadeInFrom(eqs[0], DOWN),
+            FadeInFrom(eqs[1], UP),
+        ))
+        self.play(MoveToTarget(eqs))
+        self.wait()
+
+
+class ShowClassesOfPrimeRays(SpiralScene):
+    def construct(self):
+        self.setup_rays()
+        self.show_classes()
+
+    def setup_rays(self):
         pass
+
+    def show_classes(self):
+        pass
+
