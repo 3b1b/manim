@@ -78,6 +78,14 @@ class Particle(Dot):
 		return (self.gamma - 1) * self.m * SPEED_OF_LIGHT**2
 	
 
+	def get_force(self):
+		raise NotImplemented()
+
+	@property
+	def F(self):
+		return get_norm(self.get_force())
+
+
 	def colide_classical(self, other, edit=True):
 		m1 = self.m
 		m2 = other.m
@@ -95,6 +103,23 @@ class Particle(Dot):
 
 	def colide_quantom(self, other, edit=True):
 		pass
+
+	# updaters
+	def random_walk(self, dt):
+		raise NotImplemented()
+
+	# non relative vertion! F=m*dv/dt
+	def walk_by_force(self, dt):
+		"""
+		increase velocity as if acceleration is constant
+		increase position as if velocity     is constant
+		"""
+		dv = dt * self.get_force() / self.m
+		self.velocity += dv
+
+		dx = dt * self.velocity
+		self.shift(dx)
+
 
 class Particle1D(Particle):
 	CONFIG = {
@@ -248,7 +273,7 @@ class Particle2D(Particle):
 			radius=self.movement_radius
 		)
 
-
+# can ingerit from Particle2D, but there's no need
 class ChargedParticle(Particle):
 	CONFIG = {
 		"q": 1,
@@ -257,24 +282,10 @@ class ChargedParticle(Particle):
 	}
 	def get_force(self):
 		# import pdb; pdb.set_trace()
-		return self.q * (self.E + np.cross(self.velocity, self.B))
-
-	@property
-	def F(self):
-		return get_norm(self.get_force())
-
-	# non relative vertion! F=m*dv/dt
-	def walk_by_force(self, dt):
-		"""
-		increase velocity as if acceleration is constant
-		increase position as if velocity     is constant
-		"""
-		dv = dt * self.get_force() / self.m
-		self.velocity += dv
-
-		dx = dt * self.velocity
-		self.shift(dx)
-		print(f"dv={dv} ; dx={dx} ; {self.get_force()}")
+		force = self.q * (self.E + np.cross(self.velocity, self.B))
+		if get_norm(force) == 0.5:
+			force *= 1.002
+		return force
 
 	def init_force_arrow(self):
 		# import pdb; pdb.set_trace()
@@ -305,7 +316,6 @@ class ChargedParticle(Particle):
 			)
 		except:
 			# import pdb; pdb.set_trace()
-			print(self.F, f)
 			self.force_arrow = Arrow(
 				start=c,
 				end=c + f,

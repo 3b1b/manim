@@ -429,33 +429,6 @@ class IntroduceGasParticles(Scene):
 			m.resume_updating()
 
 
-class TestParticles(Scene):
-	def construct(self):
-		self.wait(0.2)
-		p1D = self.add_particle(Particle1D(
-			point=ORIGIN,
-			velocity=1,
-			movement_radius=0.5,
-			axis=1,
-		).set_color(YELLOW))
-		self.wait(8)
-		return
-
-		p2D = self.add_particle(Particle2D(
-			point=2.5*UP,
-			velocity=3,
-			movement_radius=0.3,
-		).set_color(RED))
-		self.wait(8)
-
-	def add_particle(self, p, write=False):
-		radius = p.create_radius()
-		self.add(radius, p)
-		if write:
-			self.play(Write(p))
-		p.add_updater(p.__class__.back_and_forth)
-		return p
-
 class IntroduceTemperature(Scene):
 	CONFIG = {
 		"material_A": {
@@ -513,29 +486,6 @@ class IntroduceTemperature(Scene):
 	def update_position(self, dt):
 		pass
 
-class Playground(Scene):
-	CONFIG = {
-		"color_hot": RED_A,
-		"color_cold": BLUE_A,
-	}
-	def construct(self):
-		hot_matter  = [Dot(i)  for i in range(-2,3)]
-		# list(map(lambda d:d.set_color(self.color_hot), hot_matter))
-		hot_matter[0].set_color(color(100))
-		hot_matter[1].set_color(color(100 - 10))
-		hot_matter[2].set_color(color(100 - 20))
-		hot_matter[3].set_color(color(100 - 30))
-		hot_matter[4].set_color(color(100 - 40))
-
-		cold_matter = [Dot(i*UP + 2*RIGHT) for i in range(-2,3)]
-		# list(map(lambda d:d.set_color(self.color_cold), cold_matter))
-		cold_matter[0].set_color(color(0))
-		cold_matter[1].set_color(color(0 + 10))
-		cold_matter[2].set_color(color(0 + 20))
-		cold_matter[3].set_color(color(0 + 30))
-		cold_matter[4].set_color(color(0 + 40))
-		self.add(*hot_matter, *cold_matter)
-		self.wait(3)
 
 
 """
@@ -547,17 +497,19 @@ create methos MoveByForce to be an updater
 class ShootParticles(Scene):
 	CONFIG = {
 		"q": 1,
-		"E": UP,
-		"B": np.array((0., 0., 1)),
+		"E": Y_AXIS,
+		"B": Z_AXIS,
 
 		"particles": [
-			# (v, color, )
-			# (0.6, BLUE_A),
-			# (2  , RED_A),
-			# (1.3, RED_B),
-			(1  , YELLOW),
-			# (0.2, BLUE_B),
-			# (1.6, RED_C),
+			# (v, color, mass)
+			(1.3, RED_C   , 1),
+			(1  , YELLOW_E, 1.6),
+			(0.6, BLUE_D  , 1),
+			(2  , RED_E   , 1),
+			(1  , YELLOW_D, 0.8),
+			(0.2, BLUE_E  , 1),
+			(1  , YELLOW_C, 0.4),
+			(1.6, RED_D   , 1),
 		],
 
 		"laser_tip_position": 3*LEFT,
@@ -567,15 +519,20 @@ class ShootParticles(Scene):
 		"wall_position"     : 5*RIGHT,
 		"wall_width"        : 0.2,
 		"wall_opening"      : 0.25,
+
+		"run_time": 16,
+
+		"draw"          : False,
+		"shoot_together": True,
+		"show_force_1"  : True,
+		"show_force_2"  : True,
 	}
 	def construct(self):
 		self.wait(0.2)
 		self.initiate_stage()
-		for v, color in self.particles:
-			self.shoot_single(v=v, color=color)
-			self.wait()
-		self.wait(8)
-		self.wait(8)
+		for v, color, mass in self.particles:
+			self.shoot_single(color=color, mass=mass, velocity=v*RIGHT)
+		self.wait(self.run_time)
 
 	def initiate_stage(self):
 		"""
@@ -602,7 +559,7 @@ class ShootParticles(Scene):
 		).flip().set_height(self.laser_height).move_to(laser_tip_center)
 		laser_tip.set_fill(opacity=1)
 
-		laser_text = TextMobject("Laser")
+		laser_text = TextMobject("particle gun")
 		laser_text.next_to(laser_base, UP, buff = 0)
 		laser_text.shift(0.2*UP + 0.5*RIGHT)
 
@@ -615,44 +572,90 @@ class ShootParticles(Scene):
 			end  =self.wall_position + 10*DOWN,
 		)
 
-		self.add(laser_base, laser_tip, laser_text, wall_top, wall_bottom)
+		E_left  = TexMobject("\\vec{E}=1\\hat{y}")
+		B_left  = TexMobject("\\vec{B}=1\\hat{z}")
+		E_right = TexMobject("\\vec{E}=0\\hat{y}")
+		B_right = TexMobject("\\vec{B}=1\\hat{z}")
 
-	def shoot_single(self, v, color):
-		self.suspend_updating()
-		self.add_single(v=v, color=color)
-		self.resume_updating()
+		E_left.next_to (wall_top, LEFT )
+		E_left.shift(1.5*DOWN)
+		B_left.next_to (E_left  , DOWN , buff=0.1)
 
-	def add_single(self, v, color):
+		E_right.next_to(wall_top, RIGHT)
+		E_right.shift(1.5*DOWN)
+		B_right.next_to(E_right , DOWN , buff=0.1)
+
+		self.add(
+			laser_base, laser_tip, laser_text,
+			wall_top, wall_bottom,
+			E_left, B_left, E_right, B_right,
+		)
+
+	def shoot_single(self, color, *args, **kwargs):
+		if self.draw:
+			self.suspend_updating()
+		self.add_single(color=color, *args, **kwargs)
+		if self.draw:
+			self.resume_updating()
+		if not self.shoot_together:
+			self.wait()
+
+	def add_single(self, color, *args, **kwargs):
+		# initiate particle
 		p = ChargedParticle(
 			q=self.q,
 			E=self.E,
 			B=self.B,
-			velocity=RIGHT * v,
 			point=self.laser_tip_position,
+			*args,
+			**kwargs
 		)
 		p.set_color(color)
 		p.color = color
+		# show particle
 		self.add(p)
-		self.play(Write(p))
+		if self.draw:
+			self.play(Write(p))
 
-		p.init_force_arrow()
-		p.force_arrow.set_color(color)
-		self.add(p.force_arrow)
-		self.play(Write(p.force_arrow))
+		# initiate force arrow
+		if self.show_force_1:
+			p.init_force_arrow()
+			p.force_arrow.set_color(color)
+			self.add(p.force_arrow)
+			if self.draw:
+				self.play(Write(p.force_arrow))
 
+		# add updaters
 		p.add_updater(p.__class__.walk_by_force)
-		p.add_updater(p.__class__.update_force_arrow)
+		if self.show_force_1:
+			p.add_updater(p.__class__.update_force_arrow)
 		self.add_trajectory(p, color)
 
+		# add wall related updaters
 		wall_x = self.wall_position[0]
 		wall_y = self.wall_opening / 2
+		# an updater to stop particles who collide with the wall
+		# and, for the particle that passes through - change its dynamics into magnetic field only
 		def interact_with_wall(particle, dt):
+			# particles will come from the left
 			if particle.get_x() >= wall_x:
 				if abs(particle.get_y()) >= wall_y:
 					particle.suspend_updating()
 				else:
 					particle.E = 0*UP
-					particle.E = np.array((0., 0., 4))
+					# particle.E = np.array((0., 0., 4))
+					particle.remove_updater(interact_with_wall)
+					particle.add_updater(interact_with_wall_2)
+
+					if self.show_force_2:
+						particle.init_force_arrow()
+						particle.force_arrow.set_color(particle.color)
+						self.add(particle.force_arrow)
+						particle.add_updater(particle.__class__.update_force_arrow)
+		def interact_with_wall_2(particle, dt):
+			# particles will come from the right
+			if particle.get_x() <= wall_x:
+				particle.suspend_updating()
 		p.add_updater(interact_with_wall)
 
 		return p
@@ -681,7 +684,161 @@ class ShootParticles(Scene):
 		for m in self.mobjects:
 			m.resume_updating()
 
+class ShootParticles_OneByOne(ShootParticles):
+	CONFIG = {
+		"draw"          : True,
+		"shoot_together": False,
+		"run_time": 9,
+	}
+class ShootParticles_OneByOne_Quick(ShootParticles):
+	CONFIG = {
+		"draw"          : False,
+		"shoot_together": False,
+		"run_time": 9,
+	}
+class ShootParticles_Together(ShootParticles):
+	CONFIG = {
+		"draw"          : False,
+		"shoot_together": True,
+		"run_time": 15,
+	}
+class ShootParticles_Together_Full(ShootParticles):
+	CONFIG = {
+		"draw"          : False,
+		"shoot_together": True,
 
+		"wall_opening"      : 0.2,
+		"particles": [
+			# (v, color, mass)
+			(1.1, RED_C   , 1),
+			(1.2, RED_C   , 1),
+			(1.3, RED_C   , 1),
+			(1.4, RED_C   , 1),
+			(1.5, RED_C   , 1),
+			(1.6, RED_C   , 1),
+			(1.7, RED_C   , 1),
+			(1.8, RED_C   , 1),
+			(1.9, RED_C   , 1),
+			(2.0, RED_C   , 1),
+
+			(1  , YELLOW_E, 0.2),
+			(1  , YELLOW_E, 0.4),
+			(1  , YELLOW_E, 0.6),
+			(1  , YELLOW_E, 0.8),
+			(1  , YELLOW_E, 1.0),
+			(1  , YELLOW_E, 1.2),
+			(1  , YELLOW_E, 1.4),
+			(1  , YELLOW_E, 1.6),
+			(1  , YELLOW_E, 1.8),
+
+			(0.1, BLUE_C  , 1),
+			(0.2, BLUE_C  , 1),
+			(0.3, BLUE_C  , 1),
+			(0.4, BLUE_C  , 1),
+			(0.5, BLUE_C  , 1),
+			(0.6, BLUE_C  , 1),
+			(0.7, BLUE_C  , 1),
+			(0.8, BLUE_C  , 1),
+			(0.9, BLUE_C  , 1),
+		],
+	}
+class ShootParticles_Together_VeryFull(ShootParticles):
+	CONFIG = {
+		"draw"          : False,
+		"shoot_together": True,
+
+		"wall_opening"      : 0.2,
+		"particles": [
+			# (v, color, mass)
+			(1.1, RED_C   , 1),
+			(1.2, RED_C   , 1),
+			(1.3, RED_C   , 1),
+			(1.4, RED_C   , 1),
+			(1.5, RED_C   , 1),
+			(1.6, RED_C   , 1),
+			(1.7, RED_C   , 1),
+			(1.8, RED_C   , 1),
+			(1.9, RED_C   , 1),
+			(2.0, RED_C   , 1),
+			(2.1, RED_C   , 1),
+			(2.2, RED_C   , 1),
+			(2.3, RED_C   , 1),
+			(2.4, RED_C   , 1),
+			(2.5, RED_C   , 1),
+			(2.6, RED_C   , 1),
+			(2.7, RED_C   , 1),
+			(2.8, RED_C   , 1),
+			(2.9, RED_C   , 1),
+			(3.0, RED_C   , 1),
+
+			(1  , YELLOW_E, 0.2),
+			(1  , YELLOW_E, 0.4),
+			(1  , YELLOW_E, 0.6),
+			(1  , YELLOW_E, 0.8),
+			(1  , YELLOW_E, 1.0),
+			(1  , YELLOW_E, 1.2),
+			(1  , YELLOW_E, 1.4),
+			(1  , YELLOW_E, 1.6),
+			(1  , YELLOW_E, 1.8),
+
+			(0.1, BLUE_C  , 1),
+			(0.2, BLUE_C  , 1),
+			(0.3, BLUE_C  , 1),
+			(0.4, BLUE_C  , 1),
+			(0.5, BLUE_C  , 1),
+			(0.6, BLUE_C  , 1),
+			(0.7, BLUE_C  , 1),
+			(0.8, BLUE_C  , 1),
+			(0.9, BLUE_C  , 1),
+		],
+	}
+class ShootParticles_Together_Full_NoForce2(ShootParticles_Together_Full):
+	CONFIG = {
+		"show_force_2"    : False,
+	}
+class ShootParticles_Together_Full_NoForce(ShootParticles_Together_Full):
+	CONFIG = {
+		"show_force_1"    : False,
+		"show_force_2"    : False,
+	}
+class ShootParticles_Together_VeryFull_NoForce(ShootParticles_Together_VeryFull):
+	CONFIG = {
+		"show_force_1"    : False,
+		"show_force_2"    : False,
+	}
+class ShootParticles_Extruder(ShootParticles):
+	CONFIG = {
+		"draw"          : False,
+		"shoot_together": True,
+		"show_force_1"    : False,
+		"show_force_2"    : False,
+
+		"wall_opening"      : 0.25,
+		"particles": [
+			# (v, color, mass)
+			(1.6, RED_E   , 1),
+			(1.1, RED_C   , 1),
+
+			(1  , YELLOW_E, 0.4),
+			(1  , YELLOW_E, 0.8),
+			(1  , YELLOW_C, 1),
+			(1  , YELLOW_E, 1.6),
+
+			(0.95, BLUE_C  , 1),
+			(0.4 , BLUE_E  , 1),
+		],
+	}
+class ShootParticles_test(ShootParticles):
+	CONFIG = {
+		"draw"          : False,
+		"shoot_together": True,
+		"show_force_1"    : False,
+		"show_force_2"    : False,
+
+		"wall_opening"      : 0.25,
+		"particles": [
+		],
+	}
 
 class IntroduceVectorField(Scene):
 	CONFIG = {
