@@ -138,3 +138,22 @@ class Algebra_test(Scene):
 		self.wait(3)
 		return
 
+
+
+class LorentzForce(Scene):
+	def construct(self):
+		equation = TexMobject(
+			*("F = q ( E + v \\times B )".split())
+		)
+		equation.set_height(1.6)
+
+		equation.set_color_by_tex("E", BLUE)
+		equation.set_color_by_tex("B", RED)
+		equation.set_color_by_tex("v", GREEN)
+
+		self.play(
+			Write(equation),
+		)
+
+		self.wait(3)
+		return

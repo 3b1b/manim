@@ -26,6 +26,84 @@ def polar_to_3_array(r, theta=None):
 	x,y = polar_to_cartesian(r, theta)
 	return np.array((x, y, 0))
 
+# 
+# post 2
+# 
+class IntroduceGasParticles(Scene):
+	CONFIG = {
+		"random_seed": 2,
+		"particles_config": [
+			{
+				"color": color(100),
+				"point":           ORIGIN + 2*LEFT + 2*UP,
+				"velocity":        3,
+				"movement_radius": 2,
+			},
+			{
+				"color": color(100),
+				"point":           ORIGIN + 2*RIGHT + 2*UP,
+				"velocity":        3,
+				"movement_radius": 2,
+			},
+			{
+				"color": color(50),
+				"point":           ORIGIN + 2*LEFT + 2*DOWN,
+				"velocity":        1,
+				"movement_radius": 1,
+			},
+			{
+				"color": color(50),
+				"point":           ORIGIN + 2*RIGHT + 2*DOWN,
+				"velocity":        1,
+				"movement_radius": 1,
+			},
+			{
+				"color": color(0),
+				"point":           ORIGIN,
+				"velocity":        0.4,
+				"movement_radius": 0.5,
+			},
+		]
+	}
+	def construct(self):
+		self.wait(0.2)
+
+		# add random particles
+		self.particles = [
+			self.initiate_particle(**config)
+			for config in self.particles_config
+		]
+		self.radiuses = [
+			p.create_radius()
+			for p in self.particles
+		]
+		self.add(*self.radiuses, *self.particles)
+		self.play(
+			*[
+				Write(radius)
+				for radius in self.radiuses
+			]
+		)
+
+		self.resume_updating()
+		self.wait(6)
+
+	def initiate_particle(self, color=None, **kwargs):
+		p = Particle2D(**kwargs)
+		if color:
+			p.set_color(color)
+		p.add_updater(p.__class__.random_walk)
+		p.suspend_updating()
+		return p
+
+	def suspend_updating(self):
+		for m in self.mobjects:
+			m.suspend_updating()
+
+	def resume_updating(self):
+		for m in self.mobjects:
+			m.resume_updating()
+
 class CollideToGas(Scene):
 	CONFIG = {
 		"random_seed": 2,
@@ -352,6 +430,7 @@ class CollideToGas(Scene):
 			m.resume_updating()
 
 
+
 class MeltIce(Scene):
 	CONFIG = {
 		"crystal_config": {
@@ -497,7 +576,6 @@ class MeltIce(Scene):
 		# line_velocity /= 0.7
 		pass
 
-
 class Ice(Scene):
 	CONFIG = {
 		"crystal_config": {
@@ -529,120 +607,359 @@ class Ice(Scene):
 		self.wait(12)
 
 
+# 
+# post 1
+# 
+class ShootParticles(Scene):
+	CONFIG = {
+		"q": 1,
+		"E": Y_AXIS,
+		"B": Z_AXIS,
 
-class TestParticles(Scene):
+		"particles": [
+			# (v, color, mass)
+			(1.3, RED_C   , 1),
+			(1  , YELLOW_E, 1.6),
+			(0.6, BLUE_D  , 1),
+			(2  , RED_E   , 1),
+			(1  , YELLOW_D, 0.8),
+			(0.2, BLUE_E  , 1),
+			(1  , YELLOW_C, 0.4),
+			(1.6, RED_D   , 1),
+		],
+
+		"laser_tip_position": 3*LEFT,
+		"laser_base_width"  : 4,
+		"laser_height"      : 1,
+		"laser_color"       : WHITE,
+		"wall_position"     : 5*RIGHT,
+		"wall_width"        : 0.2,
+		"wall_opening"      : 0.25,
+
+		"run_time": 16,
+
+		"draw"          : False,
+		"shoot_together": True,
+		"show_force_1"  : True,
+		"show_force_2"  : True,
+	}
 	def construct(self):
 		self.wait(0.2)
-		p1D = self.add_particle(Particle1D(
-			point=ORIGIN,
-			velocity=1,
-			movement_radius=0.5,
-			axis=1,
-		).set_color(YELLOW))
-		self.wait(8)
-		return
+		self.initiate_stage()
+		for v, color, mass in self.particles:
+			self.shoot_single(color=color, mass=mass, velocity=v*RIGHT)
+		self.wait(self.run_time)
 
-		p2D = self.add_particle(Particle2D(
-			point=2.5*UP,
-			velocity=3,
-			movement_radius=0.3,
-		).set_color(RED))
-		self.wait(8)
+	def initiate_stage(self):
+		"""
+		display laser
+		display laser text
+		display wall
+		display wall text
+		display E & B
+		"""
+		# laser
+		laser_base_center = self.laser_tip_position + (1/np.cos(np.pi/6))  *LEFT + self.laser_base_width/2*LEFT
+		laser_base_center += 0.1 * RIGHT
+		laser_base = Rectangle(
+			width =self.laser_base_width,
+			height=self.laser_height,
+			color=self.laser_color,
+		).move_to(laser_base_center)
+		laser_base.set_fill(opacity=1)
 
-	def add_particle(self, p, write=False):
-		radius = p.create_radius()
-		self.add(radius, p)
-		if write:
+		laser_tip_center = self.laser_tip_position + (1/np.cos(np.pi/6))/2*LEFT
+		laser_tip = Triangle(
+			start_angle = np.pi/3,
+			color=self.laser_color,
+		).flip().set_height(self.laser_height).move_to(laser_tip_center)
+		laser_tip.set_fill(opacity=1)
+
+		laser_text = TextMobject("particle gun")
+		laser_text.next_to(laser_base, UP, buff = 0)
+		laser_text.shift(0.2*UP + 0.5*RIGHT)
+
+		wall_top = Line(
+			start=self.wall_position + self.wall_opening/2*UP,
+			end  =self.wall_position + 10*UP,
+		)
+		wall_bottom = Line(
+			start=self.wall_position + self.wall_opening/2*DOWN,
+			end  =self.wall_position + 10*DOWN,
+		)
+
+		E_left  = TexMobject("\\vec{E}=1\\hat{y}")
+		B_left  = TexMobject("\\vec{B}=1\\hat{z}")
+		E_right = TexMobject("\\vec{E}=0\\hat{y}")
+		B_right = TexMobject("\\vec{B}=1\\hat{z}")
+
+		E_left.next_to (wall_top, LEFT )
+		E_left.shift(1.5*DOWN)
+		B_left.next_to (E_left  , DOWN , buff=0.1)
+
+		E_right.next_to(wall_top, RIGHT)
+		E_right.shift(1.5*DOWN)
+		B_right.next_to(E_right , DOWN , buff=0.1)
+
+		self.add(
+			laser_base, laser_tip, laser_text,
+			wall_top, wall_bottom,
+			E_left, B_left, E_right, B_right,
+		)
+
+	def shoot_single(self, color, *args, **kwargs):
+		if self.draw:
+			self.suspend_updating()
+		self.add_single(color=color, *args, **kwargs)
+		if self.draw:
+			self.resume_updating()
+		if not self.shoot_together:
+			self.wait()
+
+	def add_single(self, color, *args, **kwargs):
+		# initiate particle
+		p = ChargedParticle(
+			q=self.q,
+			E=self.E,
+			B=self.B,
+			point=self.laser_tip_position,
+			*args,
+			**kwargs
+		)
+		p.set_color(color)
+		p.color = color
+		# show particle
+		self.add(p)
+		if self.draw:
 			self.play(Write(p))
-		p.add_updater(p.__class__.back_and_forth)
+
+		# initiate force arrow
+		if self.show_force_1:
+			p.init_force_arrow()
+			p.force_arrow.set_color(color)
+			self.add(p.force_arrow)
+			if self.draw:
+				self.play(Write(p.force_arrow))
+
+		# add updaters
+		p.add_updater(p.__class__.walk_by_force)
+		if self.show_force_1:
+			p.add_updater(p.__class__.update_force_arrow)
+		self.add_trajectory(p, color)
+
+		# add wall related updaters
+		wall_x = self.wall_position[0]
+		wall_y = self.wall_opening / 2
+		# an updater to stop particles who collide with the wall
+		# and, for the particle that passes through - change its dynamics into magnetic field only
+		def interact_with_wall(particle, dt):
+			# particles will come from the left
+			if particle.get_x() >= wall_x:
+				if abs(particle.get_y()) >= wall_y:
+					particle.suspend_updating()
+				else:
+					particle.E = 0*UP
+					# particle.E = np.array((0., 0., 4))
+					particle.remove_updater(interact_with_wall)
+					particle.add_updater(interact_with_wall_2)
+
+					if self.show_force_2:
+						particle.init_force_arrow()
+						particle.force_arrow.set_color(particle.color)
+						self.add(particle.force_arrow)
+						particle.add_updater(particle.__class__.update_force_arrow)
+		def interact_with_wall_2(particle, dt):
+			# particles will come from the right
+			if particle.get_x() <= wall_x:
+				particle.suspend_updating()
+		p.add_updater(interact_with_wall)
+
 		return p
 
-class IntroduceTemperature(Scene):
+	def add_trajectory(self, p, color):
+		def update_trajectory(traj, dt):
+			new_point = traj.p.get_center()
+			if get_norm(new_point - traj.points[-1]) > 0.01:
+				traj.add_smooth_curve_to(new_point)
+
+		traj = VMobject()
+		traj.set_color(color)
+		traj.p = p
+		# traj.start_new_path(p.point)
+		traj.start_new_path(p.get_center())
+		traj.set_stroke(p.color, 1, opacity=0.75)
+		traj.add_updater(update_trajectory)
+		self.add(traj, p)
+
+
+	def suspend_updating(self):
+		for m in self.mobjects:
+			m.suspend_updating()
+
+	def resume_updating(self):
+		for m in self.mobjects:
+			m.resume_updating()
+
+class ShootParticles_OneByOne(ShootParticles):
 	CONFIG = {
-		"material_A": {
-			# initial parameters
-			"dots_location": (2*LEFT + i*UP for i in range(-2,3)),
-			"color": color(MAX_HOT),
-			"velocity": 1,
-			"mass": 3,
+		"draw"          : True,
+		"shoot_together": False,
+		"run_time": 9,
+	}
+class ShootParticles_OneByOne_Quick(ShootParticles):
+	CONFIG = {
+		"draw"          : False,
+		"shoot_together": False,
+		"run_time": 9,
+	}
+class ShootParticles_Together(ShootParticles):
+	CONFIG = {
+		"draw"          : False,
+		"shoot_together": True,
+		"run_time": 15,
+	}
+class ShootParticles_Together_Full(ShootParticles):
+	CONFIG = {
+		"draw"          : False,
+		"shoot_together": True,
 
-		},
-		"material_B": {
-			# initial parameters
-			"dots_location": (2*RIGHT + i*UP for i in range(-2,3)),
-			"color": color(MAX_COLD),
-			"velocity": 1,
-			"mass": 3,
+		"wall_opening"      : 0.2,
+		"particles": [
+			# (v, color, mass)
+			(1.1, RED_C   , 1),
+			(1.2, RED_C   , 1),
+			(1.3, RED_C   , 1),
+			(1.4, RED_C   , 1),
+			(1.5, RED_C   , 1),
+			(1.6, RED_C   , 1),
+			(1.7, RED_C   , 1),
+			(1.8, RED_C   , 1),
+			(1.9, RED_C   , 1),
+			(2.0, RED_C   , 1),
 
-		},
-		# how far from the original position does the particle move
-		"travel_radius": 0.2,
-		
+			(1  , YELLOW_E, 0.2),
+			(1  , YELLOW_E, 0.4),
+			(1  , YELLOW_E, 0.6),
+			(1  , YELLOW_E, 0.8),
+			(1  , YELLOW_E, 1.0),
+			(1  , YELLOW_E, 1.2),
+			(1  , YELLOW_E, 1.4),
+			(1  , YELLOW_E, 1.6),
+			(1  , YELLOW_E, 1.8),
+
+			(0.1, BLUE_C  , 1),
+			(0.2, BLUE_C  , 1),
+			(0.3, BLUE_C  , 1),
+			(0.4, BLUE_C  , 1),
+			(0.5, BLUE_C  , 1),
+			(0.6, BLUE_C  , 1),
+			(0.7, BLUE_C  , 1),
+			(0.8, BLUE_C  , 1),
+			(0.9, BLUE_C  , 1),
+		],
+	}
+class ShootParticles_Together_VeryFull(ShootParticles):
+	CONFIG = {
+		"draw"          : False,
+		"shoot_together": True,
+
+		"wall_opening"      : 0.2,
+		"particles": [
+			# (v, color, mass)
+			(1.1, RED_C   , 1),
+			(1.2, RED_C   , 1),
+			(1.3, RED_C   , 1),
+			(1.4, RED_C   , 1),
+			(1.5, RED_C   , 1),
+			(1.6, RED_C   , 1),
+			(1.7, RED_C   , 1),
+			(1.8, RED_C   , 1),
+			(1.9, RED_C   , 1),
+			(2.0, RED_C   , 1),
+			(2.1, RED_C   , 1),
+			(2.2, RED_C   , 1),
+			(2.3, RED_C   , 1),
+			(2.4, RED_C   , 1),
+			(2.5, RED_C   , 1),
+			(2.6, RED_C   , 1),
+			(2.7, RED_C   , 1),
+			(2.8, RED_C   , 1),
+			(2.9, RED_C   , 1),
+			(3.0, RED_C   , 1),
+
+			(1  , YELLOW_E, 0.2),
+			(1  , YELLOW_E, 0.4),
+			(1  , YELLOW_E, 0.6),
+			(1  , YELLOW_E, 0.8),
+			(1  , YELLOW_E, 1.0),
+			(1  , YELLOW_E, 1.2),
+			(1  , YELLOW_E, 1.4),
+			(1  , YELLOW_E, 1.6),
+			(1  , YELLOW_E, 1.8),
+
+			(0.1, BLUE_C  , 1),
+			(0.2, BLUE_C  , 1),
+			(0.3, BLUE_C  , 1),
+			(0.4, BLUE_C  , 1),
+			(0.5, BLUE_C  , 1),
+			(0.6, BLUE_C  , 1),
+			(0.7, BLUE_C  , 1),
+			(0.8, BLUE_C  , 1),
+			(0.9, BLUE_C  , 1),
+		],
+	}
+class ShootParticles_Together_Full_NoForce2(ShootParticles_Together_Full):
+	CONFIG = {
+		"show_force_2"    : False,
+	}
+class ShootParticles_Together_Full_NoForce(ShootParticles_Together_Full):
+	CONFIG = {
+		"show_force_1"    : False,
+		"show_force_2"    : False,
+	}
+class ShootParticles_Together_VeryFull_NoForce(ShootParticles_Together_VeryFull):
+	CONFIG = {
+		"show_force_1"    : False,
+		"show_force_2"    : False,
+	}
+class ShootParticles_Extruder(ShootParticles):
+	CONFIG = {
+		"draw"          : False,
+		"shoot_together": True,
+		"show_force_1"    : False,
+		"show_force_2"    : False,
+
+		"wall_opening"      : 0.25,
+		"particles": [
+			# (v, color, mass)
+			(1.6, RED_E   , 1),
+			(1.1, RED_C   , 1),
+
+			(1  , YELLOW_E, 0.4),
+			(1  , YELLOW_E, 0.8),
+			(1  , YELLOW_C, 1),
+			(1  , YELLOW_E, 1.6),
+
+			(0.95, BLUE_C  , 1),
+			(0.4 , BLUE_E  , 1),
+		],
+	}
+class ShootParticles_test(ShootParticles):
+	CONFIG = {
+		"draw"          : False,
+		"shoot_together": True,
+		"show_force_1"    : False,
+		"show_force_2"    : False,
+
+		"wall_opening"      : 0.25,
+		"particles": [
+		],
 	}
 
-	def construct(self):
-		self.add_plane(1)
 
-		hot_matter  = []
-		for location in self.material_A["dots_location"]:
-			p = Particle(location, self.material_A["velocity"], self.material_A["mass"])
-			p.set_color(self.material_A["color"])
-			p.add_updater(p.__class__.update_position)
-			hot_matter.append(p)
-
-		cold_matter  = []
-		for location in self.material_B["dots_location"]:
-			p = Particle(location, self.material_B["velocity"], self.material_B["mass"])
-			p.set_color(self.material_B["color"])
-			p.add_updater(p.__class__.update_position)
-			cold_matter.append(p)
-
-		self.min_velocity = min(self.material_A["velocity"], self.material_B["velocity"])
-		self.max_velocity = max(self.material_A["velocity"], self.material_B["velocity"])
-
-		self.add(*hot_matter, *cold_matter)
-		self.wait(8)
-
-
-	def add_plane(self, animate=False, **kwargs):
-		plane = NumberPlane(**kwargs)
-		if animate:
-			self.play(ShowCreation(plane, lag_ratio=0.5))
-		self.add(plane)
-		return plane
-
-	def update_position(self, dt):
-		pass
-
-class Playground(Scene):
-	CONFIG = {
-		"color_hot": RED_A,
-		"color_cold": BLUE_A,
-	}
-	def construct(self):
-		hot_matter  = [Dot(i)  for i in range(-2,3)]
-		# list(map(lambda d:d.set_color(self.color_hot), hot_matter))
-		hot_matter[0].set_color(color(100))
-		hot_matter[1].set_color(color(100 - 10))
-		hot_matter[2].set_color(color(100 - 20))
-		hot_matter[3].set_color(color(100 - 30))
-		hot_matter[4].set_color(color(100 - 40))
-
-		cold_matter = [Dot(i*UP + 2*RIGHT) for i in range(-2,3)]
-		# list(map(lambda d:d.set_color(self.color_cold), cold_matter))
-		cold_matter[0].set_color(color(0))
-		cold_matter[1].set_color(color(0 + 10))
-		cold_matter[2].set_color(color(0 + 20))
-		cold_matter[3].set_color(color(0 + 30))
-		cold_matter[4].set_color(color(0 + 40))
-		self.add(*hot_matter, *cold_matter)
-		self.wait(3)
-
-
-
-
-
-
+# 
+# playground
+# 
 class IntroduceVectorField(Scene):
 	CONFIG = {
 		"coordinate_plane_config": {
@@ -727,7 +1044,6 @@ class IntroduceVectorField(Scene):
 			np.sign(y),
 			0,
 		])
-
 
 class ShowFlow(IntroduceVectorField):
 	CONFIG = {

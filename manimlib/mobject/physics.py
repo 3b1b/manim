@@ -3,8 +3,8 @@ import random
 from collections import defaultdict
 
 from manimlib.constants import *
-from manimlib.mobject.geometry import Dot, Line, Circle
 from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.mobject.geometry import Dot, Line, Circle, Arrow
 from manimlib.utils.space_ops import get_norm
 from manimlib.mobject.svg.tex_mobject import TexMobject
 from manimlib.animation.creation import Write
@@ -28,7 +28,7 @@ def almost_same_point(a, b):
 
 class Particle(Dot):
 	CONFIG = {
-		"velocity": 1, # m/s
+		"velocity": RIGHT, # m/s
 		"mass": 1, # kg
 		
 		"movement_radius": 1,
@@ -38,15 +38,15 @@ class Particle(Dot):
 		super().__init__(point, **kwargs)
 
 	def __repr__(self):
-		return f"Particle, v={self.velocity}, m={self.mass}"
+		return f"Particle, v={self.v}, m={self.mass}"
 
 	# shortcuts for ease of use
 	@property
 	def v(self):
-		return self.velocity
+		return get_norm(self.velocity)
 	@v.setter
 	def v(self, v):
-		self.velocity = v
+		self.velocity *= v / get_norm(self.velocity)
 
 	@property
 	def m(self):
@@ -81,6 +81,14 @@ class Particle(Dot):
 		return (self.gamma - 1) * self.m * SPEED_OF_LIGHT**2
 	
 
+	def get_force(self):
+		raise NotImplemented()
+
+	@property
+	def F(self):
+		return get_norm(self.get_force())
+
+
 	def colide_classical(self, other, edit=True):
 		m1 = self.m
 		m2 = other.m
@@ -91,13 +99,30 @@ class Particle(Dot):
 		v2_new = v1 * (2*m1)/(m1+m2) + v2 * (m2-m1) / (m1+m2)
 
 		if edit:
-			self.velocity = v1_new
-			other.velocity = v2_new
+			self.v = v1_new
+			other.v = v2_new
 
 		return v1_new, v2_new
 
 	def colide_quantom(self, other, edit=True):
 		pass
+
+	# updaters
+	def random_walk(self, dt):
+		raise NotImplemented()
+
+	# non relative vertion! F=m*dv/dt
+	def walk_by_force(self, dt):
+		"""
+		increase velocity as if acceleration is constant
+		increase position as if velocity     is constant
+		"""
+		dv = dt * self.get_force() / self.m
+		self.velocity += dv
+
+		dx = dt * self.velocity
+		self.shift(dx)
+
 
 class Particle1D(Particle):
 	CONFIG = {
@@ -255,14 +280,55 @@ class Particle2D(Particle):
 
 
 
+# can ingerit from Particle2D, but there's no need
+class ChargedParticle(Particle):
+	CONFIG = {
+		"q": 1,
+		"E": UP,
+		"B": np.array((0., 0., 1)),
+	}
+	def get_force(self):
+		# import pdb; pdb.set_trace()
+		force = self.q * (self.E + np.cross(self.velocity, self.B))
+		if get_norm(force) == 0.5:
+			force *= 1.002
+		return force
 
-# class VGroup(VMobject):
-#     def __init__(self, *vmobjects, **kwargs):
-#         if not all([isinstance(m, VMobject) for m in vmobjects]):
-#             raise Exception("All submobjects must be of type VMobject")
-#         VMobject.__init__(self, **kwargs)
-#         self.add(*vmobjects)
+	def init_force_arrow(self):
+		# import pdb; pdb.set_trace()
+		c = self.get_center()
+		f = self.get_force()
+		self.force_arrow = Arrow(
+			start=c,
+			end=c + f,
+		)
+		if all(f == 0):
+			return
+		self.force_arrow.put_start_and_end_on(
+			# start=c,
+			start=self.force_arrow.start,
+			# end=c + f,
+			end=self.force_arrow.end,
+		)
 
+	def update_force_arrow(self):
+		c = self.get_center()
+		f = self.get_force()
+		if all(f == 0):
+			return
+		try:
+			self.force_arrow.put_start_and_end_on(
+				start=c,
+				end=c + f,
+			)
+		except:
+			# import pdb; pdb.set_trace()
+			self.force_arrow = Arrow(
+				start=c,
+				end=c + f,
+			)
+		# print(f"force={self.get_force()} ; F={self.F} ; v={self.v}")
+		# print(f"vB={np.cross(self.velocity, self.B)} ; start={self.force_arrow.get_start()} ; end={self.force_arrow.get_end()}")
 
 
 class Crystal(VGroup):
