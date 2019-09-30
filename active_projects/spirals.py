@@ -8,6 +8,15 @@ INV_113_MOD_710 = 377  # Inverse of 113 mode 710
 INV_7_MOD_44 = 19
 
 
+def is_prime(n):
+    if n < 2:
+        return False
+    for k in range(2, int(np.sqrt(n)) + 1):
+        if n % k == 0:
+            return False
+    return True
+
+
 def generate_prime_list(*args):
     if len(args) == 1:
         start, stop = 2, args[0]
@@ -17,15 +26,10 @@ def generate_prime_list(*args):
     else:
         raise TypeError("generate_prime_list takes 1 or 2 arguments")
 
-    result = []
-    for n in range(start, stop):
-        include = True
-        for k in range(2, int(np.sqrt(n)) + 1):
-            if n % k == 0:
-                include = False
-                break
-        if include:
-            result.append(n)
+    result = [
+        n for n in range(start, stop)
+        if is_prime(n)
+    ]
     return result
 
 
@@ -188,6 +192,77 @@ class SpiralScene(MovingCameraScene):
 
 
 # Scenes
+
+class MathExchange(ExternallyAnimatedScene):
+    pass
+
+
+class PrimesAndPi(Scene):
+    def construct(self):
+        self.show_primes()
+        self.show_rational_approximations()
+
+    def show_primes(self):
+        n_rows = 10
+        n_cols = 10
+        matrix = IntegerMatrix([
+            [n_cols * x + y for y in range(n_cols)]
+            for x in range(n_rows)
+        ])
+        numbers = matrix.get_entries()
+        primes = VGroup(*filter(
+            lambda m: is_prime(m.get_value()),
+            numbers,
+        ))
+        non_primes = VGroup(*filter(
+            lambda m: not is_prime(m.get_value()),
+            numbers
+        ))
+
+        self.add(numbers)
+
+        self.play(
+            LaggedStart(*[
+                ApplyFunction(
+                    lambda m: m.set_color(YELLOW).scale(1.2),
+                    prime
+                )
+                for prime in primes
+            ]),
+            non_primes.set_opacity, 0.25,
+            run_time=2,
+        )
+        self.wait()
+
+        self.numbers = numbers
+
+    def show_rational_approximations(self):
+        numbers = self.numbers
+
+        approxs = TexMobject(
+            "{22 \\over 7} &=", "{:.12}\\dots\\\\".format(22 / 7),
+            "{355 \\over 113} &=", "{:.12}\\dots\\\\".format(355 / 113),
+            "\\pi &=", "{:.12}\\dots\\\\".format(PI),
+        )
+        approxs[:2].shift(MED_LARGE_BUFF * UP)
+        approxs[-2:].shift(MED_LARGE_BUFF * DOWN)
+        approxs[-2:].set_color(YELLOW)
+        approxs[1][:4].set_color(YELLOW)
+        approxs[3][:8].set_color(YELLOW)
+        approxs.scale(1.5)
+
+        randy = Randolph(color=YELLOW, height=1)
+        randy.move_to(approxs[-2][0], RIGHT)
+        approxs[-2][0].set_opacity(0)
+
+        self.play(
+            LaggedStartMap(FadeOutAndShiftDown, numbers),
+            LaggedStartMap(FadeIn, approxs),
+            FadeIn(randy)
+        )
+        self.play(Blink(randy))
+        self.play(randy.change, "pondering", UR)
+        self.wait()
 
 
 class RefresherOnPolarCoordinates(MovingCameraScene):
@@ -391,12 +466,15 @@ class RefresherOnPolarCoordinates(MovingCameraScene):
         r_line.add_updater(
             lambda l: l.put_start_and_end_on(ORIGIN, dot.get_center())
         )
+        theta_tracker = ValueTracker(0)
+        theta_tracker.add_updater(
+            lambda m: m.set_value(r_line.get_angle() % TAU)
+        )
+        self.add(theta_tracker)
         arc.add_updater(
-            lambda m: m.become(Arc(
-                angle=(r_line.get_angle() % TAU),
-                color=theta_color,
-                radius=1,
-            ))
+            lambda m: m.become(
+                self.get_arc(theta_tracker.get_value())
+            )
         )
 
         self.add(coord_label)
@@ -408,16 +486,25 @@ class RefresherOnPolarCoordinates(MovingCameraScene):
             self.wait()
         self.play(
             FadeOut(coord_label),
-            FadeOut(r_line),
-            FadeOut(arc),
             FadeOut(r_label),
             FadeOut(theta_label),
             FadeOut(radians_word),
+            FadeOut(r_line),
+            FadeOut(arc),
             FadeOut(dot),
         )
 
+        self.dot = dot
+        self.r_line = r_line
+        self.arc = arc
+        self.theta_tracker = theta_tracker
+
     def show_all_nn_tuples(self):
-        self.remove(self.dot)
+        dot = self.dot
+        arc = self.arc
+        r_line = self.r_line
+        theta_tracker = self.theta_tracker
+
         primes = generate_prime_list(20)
         non_primes = list(range(1, 20))
         for prime in primes:
@@ -446,11 +533,15 @@ class RefresherOnPolarCoordinates(MovingCameraScene):
 
         # Talk about 1
         one = np_points[0]
-        r_line = Line(ORIGIN, one.dot.get_center())
-        r_line.set_color(self.r_color)
+        dot.move_to(self.get_polar_point(1, 1))
+        self.add(dot)
+        theta_tracker.clear_updaters()
+        theta_tracker.set_value(1)
+        # r_line = Line(ORIGIN, one.dot.get_center())
+        # r_line.set_color(self.r_color)
         # pre_arc = Line(RIGHT, UR, color=self.r_color)
-        theta_tracker = ValueTracker(1)
-        arc = always_redraw(lambda: self.get_arc(theta_tracker.get_value()))
+        # theta_tracker = ValueTracker(1)
+        # arc = always_redraw(lambda: self.get_arc(theta_tracker.get_value()))
 
         one_rect = SurroundingRectangle(one)
         one_r_rect = SurroundingRectangle(one.label[1])
@@ -467,43 +558,37 @@ class RefresherOnPolarCoordinates(MovingCameraScene):
         # self.play(TransformFromCopy(r_line, pre_arc))
         # self.add(pre_arc, one)
         self.play(
-            TransformFromCopy(r_line, arc),
+            ReplacementTransform(
+                Line(*r_line.get_start_and_end()), arc
+            ),
             ReplacementTransform(one_r_rect, one_theta_rect)
         )
         self.add(arc, one, one_theta_rect)
         self.play(FadeOut(one_theta_rect))
         self.wait()
 
-        # Talk about 2
-        self.play(theta_tracker.set_value, 2)
-        self.wait()
-        self.play(Rotate(r_line, angle=1, about_point=ORIGIN))
-        self.play(r_line.scale, 2, {'about_point': ORIGIN})
-        self.wait()
-
-        # And now 3
-        self.play(
-            theta_tracker.set_value, 3,
-            Rotate(r_line, angle=1, about_point=ORIGIN),
-        )
-        self.wait()
-        self.play(
-            r_line.scale, 3 / 2, {"about_point": ORIGIN}
-        )
-        self.wait()
-
-        # Finally 4
-        self.play(
-            theta_tracker.set_value, 4,
-            Rotate(r_line, angle=1, about_point=ORIGIN),
-        )
-        self.wait()
-        self.play(
-            r_line.scale, 4 / 3, {"about_point": ORIGIN}
-        )
-        self.wait()
+        # Talk about 2, 3 then 4
+        for n in [2, 3, 4]:
+            self.play(
+                Rotate(dot, 1, about_point=ORIGIN),
+                theta_tracker.set_value, n,
+            )
+            self.wait()
+            self.play(dot.move_to, self.get_polar_point(n, n))
+            self.wait()
 
         # Zoom out and show spiral
+        big_anim = Succession(*3 * [Animation(Mobject())], *it.chain(*[
+            [
+                AnimationGroup(
+                    Rotate(dot, 1, about_point=ORIGIN),
+                    ApplyMethod(theta_tracker.set_value, n),
+                ),
+                ApplyMethod(dot.move_to, self.get_polar_point(n, n))
+            ]
+            for n in [5, 6, 7, 8, 9]
+        ]))
+
         spiral = ParametricFunction(
             lambda t: self.get_polar_point(t, t),
             t_min=0,
@@ -511,7 +596,7 @@ class RefresherOnPolarCoordinates(MovingCameraScene):
             stroke_width=1.5,
         )
 
-        self.add(spiral, pp_points, np_points)
+        # self.add(spiral, pp_points, np_points)
 
         self.polar_grid.generate_target()
         for mob in self.polar_grid:
@@ -519,18 +604,24 @@ class RefresherOnPolarCoordinates(MovingCameraScene):
                 mob.set_stroke(width=1)
 
         self.play(
-            ApplyMethod(
-                frame.scale, 3,
-                run_time=5,
-                rate_func=lambda t: smooth(t, 2)
-            ),
+            frame.scale, 3,
+            big_anim,
+            run_time=10,
+        )
+        self.play(
+            # ApplyMethod(
+            #     frame.scale, 1.5,
+            #     run_time=2,
+            #     rate_func=lambda t: smooth(t, 2)
+            # ),
             ShowCreation(
                 spiral,
-                run_time=6,
+                run_time=4,
             ),
             FadeOut(r_line),
             FadeOut(arc),
-            MoveToTarget(self.polar_grid)
+            FadeOut(dot),
+            # MoveToTarget(self.polar_grid)
         )
         self.wait()
 
@@ -621,11 +712,19 @@ class RefresherOnPolarCoordinates(MovingCameraScene):
     def get_arc(self, theta, r=1, color=None):
         if color is None:
             color = self.theta_color
-        return Arc(
-            angle=theta,
-            radius=r,
-            stroke_color=color,
+        return ParametricFunction(
+            lambda t: self.get_polar_point(1 + 0.025 * t, t),
+            t_min=0,
+            t_max=theta,
+            dt=0.25,
+            color=color,
+            stroke_width=3,
         )
+        # return Arc(
+        #     angle=theta,
+        #     radius=r,
+        #     stroke_color=color,
+        # )
 
 
 class ReplacePolarCoordinatesWithPrimes(RefresherOnPolarCoordinates):
@@ -887,7 +986,7 @@ class AskAboutRelationToPrimes(TeacherStudentsScene):
         q_marks = TextMobject("???")
         q_marks.set_color(YELLOW)
 
-        group = VGroup(numbers, arrow, primes)
+        group = VGroup(primes, arrow, numbers)
         group.arrange(RIGHT)
         q_marks.next_to(arrow, UP)
         group.add(q_marks)
@@ -956,6 +1055,94 @@ class ThickZoomOutOnPrimesWithNumbers(ZoomOutOnPrimesWithNumbers):
         # with the last one to smooth things out.
         "thicker_target": True,
     }
+
+
+class HighlightGapsInSpirals(IntroducePrimePatterns):
+    def construct(self):
+        self.setup_spiral()
+
+        max_n_tracker = ValueTracker(0)
+        get_max_n = max_n_tracker.get_value
+        gaps = always_redraw(lambda: VGroup(*[
+            self.get_highlighted_gap(n - 1, n + 1, get_max_n())
+            for n in [11, 33]
+        ]))
+
+        self.add(gaps)
+        self.play(max_n_tracker.set_value, 25000, run_time=5)
+        gaps.clear_updaters()
+        self.play(FadeOut(gaps))
+
+    def setup_spiral(self):
+        p_spiral = self.get_p_spiral(read_in_primes(self.small_n_primes))
+        self.add(p_spiral)
+        self.set_scale(
+            scale=self.spiral_scale,
+            spiral=p_spiral,
+            target_p_spiral_width=5,
+            run_time=0,
+        )
+
+    def get_highlighted_gap(self, n1, n2, max_n):
+        l1, l2 = [
+            [
+                self.get_polar_point(k, k)
+                for k in range(INV_7_MOD_44 * n, int(max_n), 5 * 44)
+            ]
+            for n in (n1, n2)
+        ]
+
+        if len(l1) == 0 or len(l2) == 0:
+            return VectorizedPoint()
+
+        result = VMobject()
+        result.set_points_as_corners(
+            [*l1, *reversed(l2)]
+        )
+        result.make_smooth()
+
+        result.set_stroke(GREY, width=0)
+        result.set_fill(DARK_GREY, 1)
+
+        return result
+
+
+class ImagineYouFoundIt(TeacherStudentsScene):
+    def construct(self):
+        you = self.students[1]
+        others = VGroup(
+            self.students[0],
+            self.students[2],
+            self.teacher,
+        )
+        bubble = you.get_bubble(direction=LEFT)
+
+        you_label = TextMobject("You")
+        arrow = Vector(DOWN)
+        arrow.next_to(you, UP)
+        you_label.next_to(arrow, UP)
+
+        self.play(
+            you.change, "hesitant", you_label,
+            FadeInFromDown(you_label),
+            GrowArrow(arrow),
+            others.set_opacity, 0.25,
+        )
+        self.play(Blink(you))
+        self.play(
+            ShowCreation(bubble),
+            FadeOut(you_label),
+            FadeOut(arrow),
+            you.change, "pondering",
+        )
+        self.play(you.look_at, bubble.get_corner(UR))
+        self.play(Blink(you))
+        self.wait(3)
+        self.play(you.change, "hooray")
+        self.play(Blink(you))
+        self.wait(2)
+        self.play(you.change, "sassy", bubble.get_top())
+        self.wait(3)
 
 
 class ShowSpiralsForWholeNumbers(CountSpirals):
@@ -1059,6 +1246,50 @@ class ShowSpiralsForWholeNumbers(CountSpirals):
                 3 * height / (i**0.25),
                 about_point=label.get_bottom() + 0.5 * label.get_height() * DOWN,
             )
+
+
+class SeparateIntoTwoQuestions(Scene):
+    def construct(self):
+        top_q = TextMobject("Why do", " primes", " cause", " spirals", "?")
+        top_q.scale(2)
+        top_q.to_edge(UP)
+
+        q1 = TextMobject("Where do the\\\\", "spirals", " come from?")
+        q2 = TextMobject("What happens when\\\\", "filtering to", " primes", "?")
+        for q in q1, q2:
+            q.scale(1.3)
+            q.next_to(top_q, DOWN, LARGE_BUFF)
+        q1.to_edge(LEFT)
+        q1.set_color(YELLOW)
+        q2.to_edge(RIGHT)
+        q2.set_color(TEAL)
+
+        v_line = DashedLine(
+            top_q.get_bottom() + MED_SMALL_BUFF * DOWN,
+            FRAME_HEIGHT * DOWN / 2,
+        )
+
+        self.add(top_q)
+        self.wait()
+
+        for q, text in [(q1, "spirals"), (q2, "primes")]:
+            self.play(
+                top_q.get_part_by_tex(text).set_color, q.get_color(),
+                TransformFromCopy(
+                    top_q.get_part_by_tex(text),
+                    q.get_part_by_tex(text),
+                ),
+                LaggedStartMap(
+                    FadeIn,
+                    filter(
+                        lambda m: m is not q.get_part_by_tex(text),
+                        q,
+                    )
+                ),
+            )
+        self.wait()
+        self.play(ShowCreation(v_line))
+        self.wait()
 
 
 class ExplainSixSpirals(ShowSpiralsForWholeNumbers):
@@ -2510,13 +2741,200 @@ class CompareTauToApprox(Scene):
 
 
 class ShowClassesOfPrimeRays(SpiralScene):
+    CONFIG = {
+        "max_N": int(1e6),
+        "scale": 1e5
+    }
+
     def construct(self):
         self.setup_rays()
         self.show_classes()
 
     def setup_rays(self):
-        pass
+        spiral = self.get_prime_p_spiral(self.max_N)
+        self.add(spiral)
+        self.set_scale(
+            scale=self.scale,
+            spiral=spiral,
+            target_p_spiral_width=3,
+            run_time=0
+        )
 
     def show_classes(self):
-        pass
+        max_N = self.max_N
+        mod = 710
+        primes = read_in_primes(max_N)
 
+        rect = FullScreenFadeRectangle()
+        rect.set_opacity(0)
+        self.add(rect)
+
+        last_ray = PMobject()
+        last_label = VGroup(*[VectorizedPoint() for x in range(3)])
+        for i in range(40):
+            if get_gcd(i, mod) != 1:
+                continue
+
+            r = (INV_113_MOD_710 * i) % mod
+
+            sequence = filter(
+                lambda x: x in primes,
+                range(r, max_N, mod)
+            )
+            ray = self.get_v_spiral(sequence, box_width=0.03)
+            ray.set_color(GREEN)
+            ray.set_opacity(0.9)
+
+            label = VGroup(
+                *TexMobject("710k", "+"),
+                Integer(r)
+            )
+            label.arrange(RIGHT, buff=SMALL_BUFF)
+            label.next_to(ray[100], UL, SMALL_BUFF)
+
+            label[2].save_state()
+            label[2].set_opacity(0)
+            label[2].move_to(last_label, RIGHT)
+
+            self.play(
+                rect.set_opacity, 0.5,
+                ShowCreation(ray),
+                LaggedStartMap(FadeOut, last_ray),
+                ReplacementTransform(last_label[:2], label[:2]),
+                Restore(label[2]),
+                last_label[2].move_to, label[2].saved_state,
+                last_label[2].set_opacity, 0,
+            )
+            self.remove(last_label)
+            self.add(label)
+            self.wait()
+
+            last_ray = ray
+            last_label = label
+
+
+class ShowFactorsOf710(Scene):
+    def construct(self):
+        equation = TexMobject(
+            "710", "=",
+            "71", "\\cdot",
+            "5", "\\cdot",
+            "2",
+        )
+        equation.scale(1.5)
+        equation.to_corner(UL)
+        ten = TexMobject("10")
+        ten.match_height(equation)
+        ten.move_to(equation.get_part_by_tex("5"), LEFT)
+
+        self.add(equation[0])
+        self.wait()
+        self.play(
+            TransformFromCopy(
+                equation[0][:2],
+                equation[2],
+            ),
+            FadeIn(equation[1]),
+            FadeIn(equation[3]),
+            TransformFromCopy(
+                equation[0][2:],
+                ten,
+            )
+        )
+        self.wait()
+        self.remove(ten)
+        self.play(*[
+            TransformFromCopy(ten, mob)
+            for mob in equation[4:]
+        ])
+        self.wait()
+
+        # Circle factors
+        colors = [RED, BLUE, PINK]
+        for factor, color in zip(equation[:-6:-2], colors):
+            rect = SurroundingRectangle(factor)
+            rect.set_color(color)
+            self.play(ShowCreation(rect))
+            self.wait()
+            self.play(FadeOut(rect))
+
+
+class LookAtRemainderMod710(Scene):
+    def construct(self):
+        t2c = {
+            "n": YELLOW,
+            "r": GREEN
+        }
+        equation = TexMobject(
+            "n", "=", "710", "\\cdot", "q", "+", "r",
+            tex_to_color_map=t2c,
+        )
+        equation.scale(1.5)
+
+        n_arrow = Vector(UP).next_to(equation.get_part_by_tex("n"), DOWN)
+        r_arrow = Vector(UP).next_to(equation.get_part_by_tex("r"), DOWN)
+        n_arrow.set_color(t2c["n"])
+        r_arrow.set_color(t2c["r"])
+
+        n_label = TextMobject("Some\\\\number")
+        r_label = TextMobject("Remainder")
+        VGroup(n_label, r_label).scale(1.5)
+        n_label.next_to(n_arrow, DOWN)
+        n_label.match_color(n_arrow)
+        r_label.next_to(r_arrow, DOWN)
+        r_label.match_color(r_arrow)
+
+        self.add(equation)
+        self.play(
+            FadeInFrom(n_label, UP),
+            ShowCreation(n_arrow),
+        )
+        self.wait()
+        self.play(
+            FadeInFrom(r_label, DOWN),
+            ShowCreation(r_arrow),
+        )
+        self.wait()
+
+
+class EliminateNonPrimative710Residues(ShowClassesOfPrimeRays):
+    def construct(self):
+        self.setup_rays()
+        self.eliminate_classes()
+
+    def setup_rays(self):
+        mod = 710
+        rays = PGroup(*[
+            self.get_p_spiral(range(r, self.max_N, mod))
+            for r in range(mod)
+        ])
+        rays.set_color(YELLOW)
+        self.add(rays)
+        self.set_scale(
+            scale=self.scale,
+            spiral=rays,
+            target_p_spiral_width=1,
+            run_time=0,
+        )
+        self.wait()
+
+        self.rays = rays
+
+    def eliminate_classes(self):
+        rays = self.rays
+        rect = FullScreenFadeRectangle()
+        rect.set_opacity(0)
+
+        mod = 710
+        mult2 = PGroup(*[rays[i] for i in range(0, mod, 2)])
+        mult5 = PGroup(*[rays[i] for i in range(0, mod, 5) if i % 2 != 0])
+        mult71 = PGroup(*[rays[i] for i in range(0, mod, 71) if (i % 2 != 0 and i % 5 != 0)])
+        groups = Group(mult2, mult5, mult71)
+        colors = [RED, BLUE, PINK]
+
+        for group, color in zip(groups, colors):
+            group.set_stroke_width(2)
+            self.add(rect, group)
+            self.wait()
+            self.remove(rect, group)
+            self.wait()
