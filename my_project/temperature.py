@@ -783,6 +783,17 @@ class ShootParticles_test(ShootParticles):
 
 
 # 
+# post 3
+# 
+class Box(object):
+	CONFIG = {
+	}
+	def construct(self):
+		self.wait(0.2)
+		c = Crystal()
+		
+
+# 
 # playground
 # 
 class IntroduceVectorField(Scene):
