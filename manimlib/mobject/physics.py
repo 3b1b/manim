@@ -1,10 +1,13 @@
 import numpy as np
 import random
+from collections import defaultdict
 
 from manimlib.constants import *
+from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.geometry import Dot, Line, Circle, Arrow
 from manimlib.utils.space_ops import get_norm
 from manimlib.mobject.svg.tex_mobject import TexMobject
+from manimlib.animation.creation import Write
 
 
 k_B = 1.38064852e-23
@@ -192,10 +195,11 @@ class Particle1D(Particle):
 	def create_radius(self):
 		movement_radius_vector = np.array((0., 0., 0.))
 		movement_radius_vector[self.axis] = self.movement_radius
-		return Line(
+		self.radius_mobject = Line(
 			start = self.initial_position + movement_radius_vector,
 			end   = self.initial_position - movement_radius_vector,
 		)
+		return self.radius_mobject
 
 class Particle2D(Particle):
 	CONFIG = {
@@ -268,10 +272,13 @@ class Particle2D(Particle):
 			allowed_movement = self._move_toward_new_location(allowed_movement)
 
 	def create_radius(self):
-		return Circle(
+		self.radius_mobject = Circle(
 			arc_center=self.initial_position,
 			radius=self.movement_radius
 		)
+		return self.radius_mobject
+
+
 
 # can ingerit from Particle2D, but there's no need
 class ChargedParticle(Particle):
@@ -322,3 +329,87 @@ class ChargedParticle(Particle):
 			)
 		# print(f"force={self.get_force()} ; F={self.F} ; v={self.v}")
 		# print(f"vB={np.cross(self.velocity, self.B)} ; start={self.force_arrow.get_start()} ; end={self.force_arrow.get_end()}")
+
+
+class Crystal(VGroup):
+	CONFIG = {
+		"theta": 45*DEGREES,
+		"x_min": -10,
+		"x_max":  10,
+		"y_min": -10,
+		"y_max":  10,
+
+		"distance_between_particles": None, # defaults to particle_config.movement_radius
+
+
+		"particle_config": {
+			"movement_radius": 0.5,
+		},
+	}
+	def __init__(self, **kwargs):
+		super().__init__(**kwargs)
+		
+		particles = []
+		for point in self._generate_positions():
+			p = Particle2D(
+				point=point,
+				**self.particle_config,
+			)
+			p.add_updater(p.__class__.random_walk)
+			p.suspend_updating()
+			particles.append(p)
+
+		self.particles = VGroup(*particles)
+		self.add(self.particles)
+
+
+	def _generate_positions(self):
+		radius = self.distance_between_particles or self.particle_config["movement_radius"]
+		# e for effective
+		grid_1_x_min = self.x_min + radius
+		grid_1_x_max = self.x_max - radius
+		grid_1_y_min = self.y_min + radius
+		grid_1_y_max = self.y_max - radius
+
+		step_x = 4 * radius * np.cos(self.theta)
+		step_y = 4 * radius * np.sin(self.theta)
+
+		for x in np.arange(grid_1_x_min, grid_1_x_max+step_x, step_x):
+			for y in np.arange(grid_1_y_min, grid_1_y_max+step_y, step_y):
+				if y > grid_1_y_max or x > grid_1_x_max:
+					continue
+				yield np.array((x, y, 0.))
+
+
+		grid_2_x_min = grid_1_x_min + 0.5 * step_x
+		grid_2_x_max = grid_1_x_max
+		grid_2_y_min = grid_1_y_min + 0.5 * step_y
+		grid_2_y_max = grid_1_y_max
+
+		for x in np.arange(grid_2_x_min, grid_2_x_max+step_x, step_x):
+			for y in np.arange(grid_2_y_min, grid_2_y_max+step_y, step_y):
+				if y > grid_2_y_max or x > grid_2_x_max:
+					continue
+				yield np.array((x, y, 0.))
+
+	def get_particles_by_height(self):
+		particles = defaultdict(list)
+		for p in self.particles:
+			height = np.around(p.initial_position[1], 2)
+			particles[height].append(p)
+		return particles
+
+	def write_simultaneously(self):
+		"""
+		usage:
+		self.play(*crystal.write_simultaneously())
+		"""
+		return [Write(p) for p in self.particles]
+
+	def write_radius_simultaneously(self):
+		"""
+		usage:
+		self.play(*crystal.write_radius_simultaneously())
+		"""
+		return [Write(p.create_radius()) for p in self.particles]
+	

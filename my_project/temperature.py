@@ -29,6 +29,81 @@ def polar_to_3_array(r, theta=None):
 # 
 # post 2
 # 
+class IntroduceGasParticles(Scene):
+	CONFIG = {
+		"random_seed": 2,
+		"particles_config": [
+			{
+				"color": color(100),
+				"point":           ORIGIN + 2*LEFT + 2*UP,
+				"velocity":        3,
+				"movement_radius": 2,
+			},
+			{
+				"color": color(100),
+				"point":           ORIGIN + 2*RIGHT + 2*UP,
+				"velocity":        3,
+				"movement_radius": 2,
+			},
+			{
+				"color": color(50),
+				"point":           ORIGIN + 2*LEFT + 2*DOWN,
+				"velocity":        1,
+				"movement_radius": 1,
+			},
+			{
+				"color": color(50),
+				"point":           ORIGIN + 2*RIGHT + 2*DOWN,
+				"velocity":        1,
+				"movement_radius": 1,
+			},
+			{
+				"color": color(0),
+				"point":           ORIGIN,
+				"velocity":        0.4,
+				"movement_radius": 0.5,
+			},
+		]
+	}
+	def construct(self):
+		self.wait(0.2)
+
+		# add random particles
+		self.particles = [
+			self.initiate_particle(**config)
+			for config in self.particles_config
+		]
+		self.radiuses = [
+			p.create_radius()
+			for p in self.particles
+		]
+		self.add(*self.radiuses, *self.particles)
+		self.play(
+			*[
+				Write(radius)
+				for radius in self.radiuses
+			]
+		)
+
+		self.resume_updating()
+		self.wait(6)
+
+	def initiate_particle(self, color=None, **kwargs):
+		p = Particle2D(**kwargs)
+		if color:
+			p.set_color(color)
+		p.add_updater(p.__class__.random_walk)
+		p.suspend_updating()
+		return p
+
+	def suspend_updating(self):
+		for m in self.mobjects:
+			m.suspend_updating()
+
+	def resume_updating(self):
+		for m in self.mobjects:
+			m.resume_updating()
+
 class CollideToGas(Scene):
 	CONFIG = {
 		"random_seed": 2,
@@ -222,7 +297,6 @@ class CollideToGas(Scene):
 				]
 			},
 		}
-		
 	}
 	def construct(self):
 		self.wait(0.2)
@@ -245,7 +319,6 @@ class CollideToGas(Scene):
 		self.add(*self.stage_A_particles)
 
 		self.wait(2)
-
 		self.run_stage("stage_A")
 		self.mark_stage("stage_A")
 
@@ -356,80 +429,182 @@ class CollideToGas(Scene):
 		for m in self.mobjects:
 			m.resume_updating()
 
-class IntroduceGasParticles(Scene):
+
+
+class MeltIce(Scene):
 	CONFIG = {
-		"random_seed": 2,
-		"particles_config": [
-			{
-				"color": color(100),
-				"point":           ORIGIN + 2*LEFT + 2*UP,
-				"velocity":        3,
-				"movement_radius": 2,
+		"crystal_config": {
+			"theta": 45*DEGREES,
+			"distance_between_particles": 0.4,
+			"y_max": 0,
+
+			"particle_config": {
+				"movement_radius": 0.3,
+				"velocity": 0.1,
 			},
-			{
-				"color": color(100),
-				"point":           ORIGIN + 2*RIGHT + 2*UP,
-				"velocity":        3,
-				"movement_radius": 2,
-			},
-			{
-				"color": color(50),
-				"point":           ORIGIN + 2*LEFT + 2*DOWN,
-				"velocity":        1,
-				"movement_radius": 1,
-			},
-			{
-				"color": color(50),
-				"point":           ORIGIN + 2*RIGHT + 2*DOWN,
-				"velocity":        1,
-				"movement_radius": 1,
-			},
-			{
-				"color": color(0),
-				"point":           ORIGIN,
-				"velocity":        0.4,
-				"movement_radius": 0.5,
-			},
-		]
+		},
+
+		"line_height": 0,
+		"squash_factor": 0.7,
+		"amount_of_steps": 4,
 	}
 	def construct(self):
 		self.wait(0.2)
 
-		# add random particles
-		self.particles = [
-			self.initiate_particle(**config)
-			for config in self.particles_config
-		]
-		self.radiuses = [
-			p.create_radius()
-			for p in self.particles
-		]
-		self.add(*self.radiuses, *self.particles)
-		self.play(
-			*[
-				Write(radius)
-				for radius in self.radiuses
-			]
+		line = Line(
+			start= self.camera.get_frame_width()*LEFT + self.line_height*UP,
+			end  =-self.camera.get_frame_width()*LEFT + self.line_height*UP,
 		)
+		self.add(line)
+		self.play(Write(line))
 
-		self.resume_updating()
-		self.wait(6)
+		crystal = Crystal(**self.crystal_config)
+		crystal.set_color(BLUE)
+		self.add(crystal)
 
-	def initiate_particle(self, color=None, **kwargs):
-		p = Particle2D(**kwargs)
-		if color:
-			p.set_color(color)
-		p.add_updater(p.__class__.random_walk)
-		p.suspend_updating()
-		return p
+		self.play(*crystal.write_simultaneously(), suspend_mobject_updating=False)
+		self.play(*crystal.write_radius_simultaneously())
 
-	def suspend_updating(self):
-		for m in self.mobjects:
-			m.suspend_updating()
+		self.particles_by_height = particles_by_height = crystal.get_particles_by_height()
+		self.heights = heights = list(particles_by_height.keys())
+		heights.sort(reverse=True)
 
-	def resume_updating(self):
-		for m in self.mobjects:
-			m.resume_updating()
+		crystal.resume_updating()
+		self.wait(3)
+
+		for n in range(self.amount_of_steps):
+			crystal.suspend_updating()
+			self._step_n(n+1)
+			crystal.resume_updating()
+			self.wait(3)
+
+		self.wait(3)
+
+	def squash(self):
+		"""
+		lower line at line_velocity
+		if line is at heighest particle layer - start squashing the layers
+
+		squash:
+			step 1:
+				for the top layer:
+					reduce movement_radius by a factor of 0.7
+					move initial_position accordingly
+					move line accordingly
+					increase the velocity by a factor of 1/0.7
+					increase particles color
+				total movement:
+					(1 - 0.7) * step_x
+			step_2:
+				for the first 2 layers:
+					same as step 1
+					now, the top layer will have its movement radius reduced
+					  (from the original) by a factor of 0.7^2
+					and the velocity higher by a factor of 0.7^2
+				total movement:
+					from layer 1: (0.7 - 0.7^2) * step_x
+					from layer 2: (1   - 0.7  ) * step_x
+
+			line speed ~~ 0.7^step
+			layer_n radius = movement_radius * 0.7^(step - n)
+				n is layer number, zero based
+				step-n >= 0
+			layer_n velocity = velocity * 1 / radius_factor
+		"""
+		pass
+
+	def _step_n(self, n):
+		factor = self.squash_factor
+		color_per_step = MAX_HOT / (self.amount_of_steps)
+		radius = self.crystal_config["distance_between_particles"] or self.crystal_config["particle_config"]["movement_radius"]
+
+		for i in range(n):
+			# calculate layer color
+			layer_color = color_per_step * (n - i)
+			if layer_color < MIN_HOT:
+				layer_color = MIN_HOT
+			layer_color = color(layer_color)
+
+			layer_y_change = 0
+			for j in range(i+1, n):
+				# j is the layer
+				l = n - j
+				print(f"    n={n}, i={i}, j={j}, l={l}, addition={factor**(l-1) - factor**(l)}")
+				layer_y_change += factor**(l-1) - factor**(l)
+			print(f"step {n}: layer {i+1} is moved by {layer_y_change}")
+			layer_y_change *= radius
+
+			# squash layer i
+			for p in self.particles_by_height[self.heights[i]]:
+				# set new initial position
+				old_initial_y = p.initial_position[1]
+				old_radius = p.movement_radius
+				new_radius = old_radius * factor
+				new_initial_y = old_initial_y - old_radius + new_radius
+				new_initial_y -= layer_y_change
+				p.initial_position[1] = new_initial_y
+				# update velocity
+				p.velocity /= 0.7
+				# update radius
+				p.movement_radius *= 0.7
+
+				# update surrounding circle
+				# circle.stretch(factor, dim, **kwargs)
+				p.radius_mobject.stretch(0.7, 1)
+				p.radius_mobject.shift((new_radius - old_radius) * UP)
+				p.radius_mobject.shift(layer_y_change * DOWN)
+
+				p.set_color(layer_color)
+
+				"""
+				save each parameter as initial_state and final_state
+					initial_y_position
+					velocity
+					movement_radius
+					radius_mobject.stretch amount
+					radius_mobject.shift amount
+					color
+				they all grow linearly
+				set run_time = factor^(-n)
+				then play by amount
+					where amount = dt / run_time
+
+				plus, add line movement
+				"""
+
+
+		# line_velocity /= 0.7
+		pass
+
+class Ice(Scene):
+	CONFIG = {
+		"crystal_config": {
+			"theta": 45*DEGREES,
+			"distance_between_particles": 0.3,
+			"x_max":  1,
+			"x_min": -1,
+			"y_max":  1,
+			"y_min": -1,
+
+			"particle_config": {
+				"movement_radius": 0.05,
+				"velocity": 0.1,
+			},
+		},
+	}
+	def construct(self):
+		self.wait(0.2)
+
+		crystal = Crystal(**self.crystal_config)
+		crystal.set_color("#A5F2F3")
+		self.add(crystal)
+
+		self.play(*crystal.write_simultaneously(), suspend_mobject_updating=False)
+		# self.play(*crystal.write_radius_simultaneously())
+
+		self.wait(1.5)
+		crystal.resume_updating()
+		self.wait(12)
 
 
 # 
