@@ -193,6 +193,64 @@ class SpiralScene(MovingCameraScene):
 
 # Scenes
 
+class AltTitle(Scene):
+    def construct(self):
+        title_text = """
+            How pretty but pointless patterns\\\\
+            in polar plots of primes\\\\
+            prompt pretty important ponderings\\\\
+            on properties of those primes.
+        """
+        words = [w + " " for w in title_text.split(" ") if w]
+        title = TextMobject(*words)
+        title.set_width(FRAME_WIDTH - 1)
+
+        title[2:5].set_color(TEAL)
+        title[12:15].set_color(YELLOW)
+        title.set_stroke(BLACK, 5, background=True)
+
+        image = ImageMobject("PrimeSpiral")
+        image.set_height(FRAME_HEIGHT)
+        rect = FullScreenFadeRectangle(fill_opacity=0.25)
+
+        self.add(image, rect)
+
+        for word in title:
+            self.play(
+                FadeIn(
+                    word, run_time=0.05 * len(word),
+                    lag_ratio=0.4,
+                )
+            )
+        self.wait()
+
+
+class HoldUpMathExchange(TeacherStudentsScene):
+    def construct(self):
+        title = TextMobject("Mathematics Stack Exchange")
+        title.scale(1.5)
+        title.to_edge(UP)
+
+        self.add(title)
+        self.play(self.teacher.change, "raise_right_hand", ORIGIN),
+        self.change_all_student_modes("thinking", look_at_arg=ORIGIN)
+        self.wait(3)
+        self.change_all_student_modes("confused", look_at_arg=ORIGIN)
+        self.wait(3)
+
+
+class MathExchangeNames(Scene):
+    def construct(self):
+        names = VGroup(
+            TextMobject("dwymark"),
+            TextMobject("Greg Martin"),
+        )
+        names.arrange(DOWN, buff=1)
+        for name in names:
+            self.play(FadeInFrom(name, RIGHT))
+            self.wait()
+
+
 class MathExchange(ExternallyAnimatedScene):
     pass
 
@@ -224,7 +282,7 @@ class PrimesAndPi(Scene):
         self.play(
             LaggedStart(*[
                 ApplyFunction(
-                    lambda m: m.set_color(YELLOW).scale(1.2),
+                    lambda m: m.set_color(TEAL).scale(1.2),
                     prime
                 )
                 for prime in primes
@@ -727,6 +785,22 @@ class RefresherOnPolarCoordinates(MovingCameraScene):
         # )
 
 
+class IntroducePolarPlot(RefresherOnPolarCoordinates):
+    def construct(self):
+        self.plane = NumberPlane()
+        grid = self.get_polar_grid()
+        title = TextMobject("Polar coordinates")
+        title.scale(3)
+        title.set_stroke(BLACK, 10, background=True)
+        title.to_edge(UP)
+
+        self.add(grid, title)
+        self.play(
+            ShowCreation(grid, lag_ratio=0.1),
+            run_time=3,
+        )
+
+
 class ReplacePolarCoordinatesWithPrimes(RefresherOnPolarCoordinates):
     def construct(self):
         coords, p_coords = [
@@ -742,10 +816,10 @@ class ReplacePolarCoordinatesWithPrimes(RefresherOnPolarCoordinates):
 
         some_prime = TextMobject("Some prime")
         some_prime.scale(1.5)
-        some_prime.next_to(p_coords, UP, buff=1.5)
+        some_prime.next_to(p_coords.get_left(), DOWN, buff=1.5)
         arrows = VGroup(*[
             Arrow(
-                some_prime.get_bottom(), coord.get_top(),
+                some_prime.get_top(), coord.get_bottom(),
                 stroke_width=5,
                 tip_length=0.4
             )
@@ -859,7 +933,7 @@ class AskWhat(TeacherStudentsScene):
     def construct(self):
         screen = self.screen
         self.student_says(
-            "I'm sory,\\\\what?!?",
+            "I'm sorry,\\\\what?!?",
             target_mode="angry",
             look_at_arg=screen,
             student_index=2,
@@ -1079,7 +1153,7 @@ class HighlightGapsInSpirals(IntroducePrimePatterns):
         self.set_scale(
             scale=self.spiral_scale,
             spiral=p_spiral,
-            target_p_spiral_width=5,
+            target_p_spiral_width=8,
             run_time=0,
         )
 
@@ -1107,6 +1181,58 @@ class HighlightGapsInSpirals(IntroducePrimePatterns):
         return result
 
 
+class QuestionIsMisleading(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Whoa, is this some\\\\divine hidden structure\\\\in the primes?",
+            target_mode="surprised",
+            student_index=0,
+            added_anims=[
+                self.students[1].change, "pondering",
+                self.students[2].change, "pondering",
+            ]
+        )
+        self.wait(2)
+
+        self.students[0].bubble = None
+        self.teacher_says(
+            "Er...not exactly",
+            bubble_kwargs={"width": 3, "height": 2},
+            target_mode="guilty"
+        )
+        self.wait(3)
+
+
+class JustPrimesLabel(Scene):
+    def construct(self):
+        text = TextMobject("Just the primes")
+        text.scale(2)
+        text.to_corner(UL)
+        self.play(Write(text))
+        self.wait(3)
+        self.play(FadeOutAndShift(text, DOWN))
+
+
+class DirichletComingUp(Scene):
+    def construct(self):
+        image = ImageMobject("Dirichlet")
+        image.set_height(3)
+        words = TextMobject(
+            "Coming up: \\\\", "Dirichlet's theorem",
+            alignment="",
+        )
+        words.set_color_by_tex("Dirichlet's", YELLOW)
+        words.scale(1.5)
+        words.next_to(image, RIGHT)
+        Group(words, image).center()
+
+        self.play(
+            FadeInFrom(image, RIGHT),
+            FadeInFrom(words, LEFT),
+        )
+        self.wait()
+
+
 class ImagineYouFoundIt(TeacherStudentsScene):
     def construct(self):
         you = self.students[1]
@@ -1116,6 +1242,7 @@ class ImagineYouFoundIt(TeacherStudentsScene):
             self.teacher,
         )
         bubble = you.get_bubble(direction=LEFT)
+        bubble[-1].set_fill(GREEN_SCREEN, 1)
 
         you_label = TextMobject("You")
         arrow = Vector(DOWN)
@@ -1130,19 +1257,19 @@ class ImagineYouFoundIt(TeacherStudentsScene):
         )
         self.play(Blink(you))
         self.play(
-            ShowCreation(bubble),
+            FadeIn(bubble),
             FadeOut(you_label),
             FadeOut(arrow),
             you.change, "pondering",
         )
         self.play(you.look_at, bubble.get_corner(UR))
         self.play(Blink(you))
-        self.wait(3)
+        self.wait()
         self.play(you.change, "hooray")
         self.play(Blink(you))
-        self.wait(2)
+        self.wait()
         self.play(you.change, "sassy", bubble.get_top())
-        self.wait(3)
+        self.wait(6)
 
 
 class ShowSpiralsForWholeNumbers(CountSpirals):
@@ -1246,6 +1373,18 @@ class ShowSpiralsForWholeNumbers(CountSpirals):
                 3 * height / (i**0.25),
                 about_point=label.get_bottom() + 0.5 * label.get_height() * DOWN,
             )
+
+
+class PrimeSpiralsAtScale1000(SpiralScene):
+    def construct(self):
+        spiral = self.get_prime_p_spiral(10000)
+        self.add(spiral)
+        self.set_scale(
+            scale=1000,
+            spiral=spiral,
+            target_p_spiral_width=15,
+            run_time=0,
+        )
 
 
 class SeparateIntoTwoQuestions(Scene):
@@ -1615,11 +1754,30 @@ class IntroduceResidueClassTerminology(Scene):
         self.simple_english()
 
     def add_title(self):
-        title = TextMobject("Overly-fancy terminology")
+        title = TextMobject("Overly-fancy ", "terminology")
         title.scale(1.5)
         title.to_edge(UP, buff=MED_SMALL_BUFF)
         underline = Line().match_width(title)
         underline.next_to(title, DOWN, SMALL_BUFF)
+
+        pre_title = TextMobject("Terminology")
+        pre_title.replace(title, dim_to_match=1)
+
+        self.play(FadeInFromDown(pre_title))
+        self.wait()
+        title[0].set_color(BLUE)
+        underline.set_color(BLUE)
+        self.play(
+            ReplacementTransform(pre_title[0], title[1]),
+            FadeInFrom(title[0], RIGHT),
+            GrowFromCenter(underline)
+        )
+        self.play(
+            title[0].set_color, WHITE,
+            underline.set_color, WHITE,
+        )
+        self.wait()
+
         title.add(underline)
         self.add(title)
 
@@ -1793,6 +1951,63 @@ class IntroduceResidueClassTerminology(Scene):
             FadeIn(terminology),
             FadeOutAndShift(randy, DOWN)
         )
+        self.wait()
+
+
+class SimpleLongDivision(MovingCameraScene):
+    CONFIG = {
+        "camera_config": {
+            "background_color": DARKER_GREY
+        }
+    }
+
+    def construct(self):
+        divisor = Integer(6)
+        num = Integer(20)
+        quotient = Integer(num.get_value() // divisor.get_value())
+        to_subtract = Integer(-1 * quotient.get_value() * divisor.get_value())
+        remainder = Integer(num.get_value() + to_subtract.get_value())
+
+        div_sym = VMobject()
+        div_sym.set_points_as_corners([0.2 * UP, UP, UP + 3 * RIGHT])
+
+        divisor.next_to(div_sym, LEFT, MED_SMALL_BUFF)
+        num.next_to(divisor, RIGHT, MED_LARGE_BUFF)
+        to_subtract.next_to(num, DOWN, buff=MED_LARGE_BUFF, aligned_edge=RIGHT)
+        h_line = Line(LEFT, RIGHT)
+        h_line.next_to(to_subtract, DOWN, buff=MED_SMALL_BUFF)
+        remainder.next_to(to_subtract, DOWN, buff=MED_LARGE_BUFF, aligned_edge=RIGHT)
+        quotient.next_to(num, UP, buff=MED_LARGE_BUFF, aligned_edge=RIGHT)
+
+        remainder_rect = SurroundingRectangle(remainder)
+        remainder_rect.set_color(RED)
+
+        frame = self.camera_frame
+        frame.scale(0.7, about_point=ORIGIN)
+
+        divisor.set_color(YELLOW)
+        num.set_color(RED)
+
+        self.add(divisor)
+        self.add(div_sym)
+        self.add(num)
+        self.play(FadeInFromDown(quotient))
+        self.play(
+            TransformFromCopy(divisor, to_subtract.copy()),
+            TransformFromCopy(quotient, to_subtract),
+        )
+        self.play(ShowCreation(h_line))
+        self.play(Write(remainder))
+        self.play(ShowCreation(remainder_rect))
+        self.wait()
+        self.play(FadeOut(remainder_rect))
+
+
+class ZoomOutWords(Scene):
+    def construct(self):
+        words = TextMobject("Zoom out!")
+        words.scale(3)
+        self.play(FadeInFromLarge(words))
         self.wait()
 
 
@@ -2305,6 +2520,247 @@ class EliminateNonPrimativeResidueClassesOf44(Label44Spirals):
         self.wait()
 
 
+class IntroduceTotientJargon(TeacherStudentsScene):
+    def construct(self):
+        self.add_title()
+        self.eliminate_non_coprimes()
+
+    def add_title(self):
+        self.teacher_says(
+            "More jargon!",
+            target_mode="hooray",
+        )
+        self.change_all_student_modes("erm")
+        words = self.teacher.bubble.content
+
+        words.generate_target()
+        words.target.scale(1.5)
+        words.target.center().to_edge(UP, buff=MED_SMALL_BUFF)
+        words.target.set_color(BLUE)
+        underline = Line(LEFT, RIGHT)
+        underline.match_width(words.target)
+        underline.next_to(words.target, DOWN, SMALL_BUFF)
+        underline.scale(1.2)
+
+        self.play(
+            MoveToTarget(words),
+            FadeOut(self.teacher.bubble),
+            LaggedStart(*[
+                FadeOutAndShift(pi, 4 * DOWN)
+                for pi in self.pi_creatures
+            ]),
+            ShowCreation(underline)
+        )
+
+    def eliminate_non_coprimes(self):
+        number_grid = VGroup(*[
+            VGroup(*[
+                Integer(n) for n in range(11 * k, 11 * (k + 1))
+            ]).arrange(DOWN)
+            for k in range(4)
+        ]).arrange(RIGHT, buff=1)
+        numbers = VGroup(*it.chain(*number_grid))
+        numbers.set_height(6)
+        numbers.move_to(4 * LEFT)
+        numbers.to_edge(DOWN)
+
+        evens = VGroup(*filter(
+            lambda nm: nm.get_value() % 2 == 0,
+            numbers
+        ))
+        div11 = VGroup(*filter(
+            lambda nm: nm.get_value() % 11 == 0,
+            numbers
+        ))
+        coprimes = VGroup(*filter(
+            lambda nm: nm not in evens and nm not in div11,
+            numbers
+        ))
+
+        words = TextMobject(
+            "Which ones ", "don't\\\\",
+            "share any factors\\\\",
+            "with ", "44",
+            alignment=""
+        )
+        words.scale(1.5)
+        words.next_to(ORIGIN, RIGHT)
+
+        ff = words.get_part_by_tex("44")
+        ff.set_color(YELLOW)
+        ff.generate_target()
+
+        # Show coprimes
+        self.play(
+            ShowIncreasingSubsets(numbers, run_time=3),
+            FadeInFrom(words, LEFT)
+        )
+        self.wait()
+        for group in evens, div11:
+            rects = VGroup(*[
+                SurroundingRectangle(number, color=RED)
+                for number in group
+            ])
+            self.play(LaggedStartMap(ShowCreation, rects, run_time=1))
+            self.play(
+                LaggedStart(*[
+                    ApplyMethod(number.set_opacity, 0.2)
+                    for number in group
+                ]),
+                LaggedStartMap(FadeOut, rects),
+                run_time=1
+            )
+            self.wait()
+
+        # Rearrange words
+        dsf = words[1:3]
+        dsf.generate_target()
+        dsf.target.arrange(RIGHT)
+        dsf.target[0].align_to(dsf.target[1][0], DOWN)
+
+        example = numbers[35].copy()
+        example.generate_target()
+        example.target.match_height(ff)
+        num_pair = VGroup(
+            ff.target,
+            TextMobject("and").scale(1.5),
+            example.target,
+        )
+        num_pair.arrange(RIGHT)
+        num_pair.move_to(words.get_top(), DOWN)
+        dsf.target.next_to(num_pair, DOWN, MED_LARGE_BUFF)
+
+        phrase1 = TextMobject("are ", "``relatively prime''")
+        phrase2 = TextMobject("are ", "``coprime''")
+        for phrase in phrase1, phrase2:
+            phrase.scale(1.5)
+            phrase.move_to(dsf.target)
+            phrase[1].set_color(BLUE)
+            phrase.arrow = TexMobject("\\Updownarrow")
+            phrase.arrow.scale(1.5)
+            phrase.arrow.next_to(phrase, DOWN, 2 * SMALL_BUFF)
+            phrase.rect = SurroundingRectangle(phrase[1])
+            phrase.rect.set_stroke(BLUE)
+
+        self.play(
+            FadeOut(words[0]),
+            FadeOut(words[3]),
+            MoveToTarget(dsf),
+            MoveToTarget(ff),
+            GrowFromCenter(num_pair[1]),
+        )
+        self.play(
+            MoveToTarget(example, path_arc=30 * DEGREES),
+        )
+        self.wait()
+        self.play(
+            dsf.next_to, phrase1.arrow, DOWN, SMALL_BUFF,
+            GrowFromEdge(phrase1.arrow, UP),
+            GrowFromCenter(phrase1),
+            ShowCreation(phrase1.rect)
+        )
+        self.play(FadeOut(phrase1.rect))
+        self.wait()
+        self.play(
+            VGroup(dsf, phrase1, phrase1.arrow).next_to,
+            phrase2.arrow, DOWN, SMALL_BUFF,
+            GrowFromEdge(phrase2.arrow, UP),
+            GrowFromCenter(phrase2),
+            ShowCreation(phrase2.rect)
+        )
+        self.play(FadeOut(phrase2.rect))
+        self.wait()
+
+        # Count through coprimes
+        coprime_rects = VGroup(*map(SurroundingRectangle, coprimes))
+        coprime_rects.set_stroke(BLUE, 2)
+        example_anim = UpdateFromFunc(
+            example, lambda m: m.set_value(coprimes[len(coprime_rects) - 1].get_value())
+        )
+        self.play(
+            ShowIncreasingSubsets(coprime_rects, int_func=np.ceil),
+            example_anim,
+            run_time=3,
+            rate_func=linear,
+        )
+        self.wait()
+
+        # Show totient function
+        words_to_keep = VGroup(ff, num_pair[1], example, phrase2)
+        to_fade = VGroup(phrase2.arrow, phrase1, phrase1.arrow, dsf)
+
+        totient = TexMobject("\\phi", "(", "44", ")", "=", "20")
+        totient.set_color_by_tex("44", YELLOW)
+        totient.scale(1.5)
+        totient.move_to(num_pair, UP)
+        phi = totient.get_part_by_tex("phi")
+        rhs = Integer(20)
+        rhs.replace(totient[-1], dim_to_match=1)
+        totient.submobjects[-1] = rhs
+
+        self.play(
+            words_to_keep.to_edge, DOWN,
+            MaintainPositionRelativeTo(to_fade, words_to_keep),
+            VFadeOut(to_fade),
+        )
+        self.play(FadeIn(totient))
+        self.wait()
+
+        # Label totient
+        brace = Brace(phi, DOWN)
+        etf = TextMobject("Euler's totient function")
+        etf.next_to(brace, DOWN)
+        etf.shift(RIGHT)
+
+        self.play(
+            GrowFromCenter(brace),
+            FadeInFrom(etf, UP)
+        )
+        self.wait()
+        self.play(
+            ShowIncreasingSubsets(coprime_rects),
+            UpdateFromFunc(
+                rhs, lambda m: m.set_value(len(coprime_rects)),
+            ),
+            example_anim,
+            rate_func=linear,
+            run_time=3,
+        )
+        self.wait()
+
+        # Show totatives
+        totient_group = VGroup(totient, brace, etf)
+        for cp, rect in zip(coprimes, coprime_rects):
+            cp.add(rect)
+
+        self.play(
+            coprimes.arrange, RIGHT, {"buff": SMALL_BUFF},
+            coprimes.set_width, FRAME_WIDTH - 1,
+            coprimes.move_to, 2 * UP,
+            FadeOut(evens),
+            FadeOut(div11[1::2]),
+            FadeOutAndShiftDown(words_to_keep),
+            totient_group.center,
+            totient_group.to_edge, DOWN,
+        )
+
+        totatives = TextMobject("``Totatives''")
+        totatives.scale(2)
+        totatives.set_color(BLUE)
+        totatives.move_to(ORIGIN)
+        arrows = VGroup(*[
+            Arrow(totatives.get_top(), coprime.get_bottom())
+            for coprime in coprimes
+        ])
+        arrows.set_color(WHITE)
+
+        self.play(
+            FadeIn(totatives),
+            LaggedStartMap(VFadeInThenOut, arrows, run_time=4, lag_ratio=0.05)
+        )
+        self.wait(2)
+
+
 class TwoUnrelatedFacts(Scene):
     def construct(self):
         self.add_title()
@@ -2730,13 +3186,33 @@ class CompareTauToApprox(Scene):
 
         eqs.generate_target()
         for eq in eqs.target:
-            eq[2][:8].set_color(GREEN)
+            eq[2][:8].set_color(RED)
+            eq.set_stroke(BLACK, 8, background=True)
 
         self.play(LaggedStart(
             FadeInFrom(eqs[0], DOWN),
             FadeInFrom(eqs[1], UP),
         ))
         self.play(MoveToTarget(eqs))
+        self.wait()
+
+
+class RecommendedMathologerVideo(Scene):
+    def construct(self):
+        full_rect = FullScreenFadeRectangle()
+        full_rect.set_fill(DARK_GREY, 1)
+        self.add(full_rect)
+
+        title = TextMobject("Recommended Mathologer video")
+        title.set_width(FRAME_WIDTH - 1)
+        title.to_edge(UP)
+        screen_rect = SurroundingRectangle(ScreenRectangle(height=5.9), buff=SMALL_BUFF)
+        screen_rect.next_to(title, DOWN)
+        screen_rect.set_fill(BLACK, 1)
+        screen_rect.set_stroke(WHITE, 3)
+
+        self.add(screen_rect)
+        self.play(Write(title))
         self.wait()
 
 
@@ -2866,7 +3342,7 @@ class LookAtRemainderMod710(Scene):
             "r": GREEN
         }
         equation = TexMobject(
-            "n", "=", "710", "\\cdot", "q", "+", "r",
+            "n", "=", "710", "k", "+", "r",
             tex_to_color_map=t2c,
         )
         equation.scale(1.5)
@@ -2898,6 +3374,11 @@ class LookAtRemainderMod710(Scene):
 
 
 class EliminateNonPrimative710Residues(ShowClassesOfPrimeRays):
+    CONFIG = {
+        "max_N": int(5e5),
+        "scale": 5e4,
+    }
+
     def construct(self):
         self.setup_rays()
         self.eliminate_classes()
@@ -2916,7 +3397,6 @@ class EliminateNonPrimative710Residues(ShowClassesOfPrimeRays):
             target_p_spiral_width=1,
             run_time=0,
         )
-        self.wait()
 
         self.rays = rays
 
@@ -2925,16 +3405,118 @@ class EliminateNonPrimative710Residues(ShowClassesOfPrimeRays):
         rect = FullScreenFadeRectangle()
         rect.set_opacity(0)
 
+        for r, ray in enumerate(rays):
+            ray.r = r
+
         mod = 710
-        mult2 = PGroup(*[rays[i] for i in range(0, mod, 2)])
+        odds = PGroup(*[rays[i] for i in range(1, mod, 2)])
         mult5 = PGroup(*[rays[i] for i in range(0, mod, 5) if i % 2 != 0])
         mult71 = PGroup(*[rays[i] for i in range(0, mod, 71) if (i % 2 != 0 and i % 5 != 0)])
-        groups = Group(mult2, mult5, mult71)
         colors = [RED, BLUE, PINK]
 
-        for group, color in zip(groups, colors):
-            group.set_stroke_width(2)
-            self.add(rect, group)
+        pre_label, r_label = label = VGroup(
+            TexMobject("710k + "),
+            Integer(100)
+        )
+        label.scale(1.5)
+        label.arrange(RIGHT, buff=SMALL_BUFF)
+        label.set_stroke(BLACK, 5, background=True, family=True)
+        label.next_to(ORIGIN, DOWN)
+
+        r_label.group = odds
+        r_label.add_updater(
+            lambda m: m.set_value(m.group[-1].r if len(m.group) > 0 else 1),
+        )
+
+        self.remove(rays)
+        # Odds
+        odds.set_stroke_width(3)
+        self.add(odds, label)
+        self.play(
+            ShowIncreasingSubsets(odds, int_func=np.ceil),
+            run_time=10,
+        )
+        self.play(FadeOut(label))
+        self.remove(odds)
+        self.add(*odds)
+        self.wait()
+
+        # Multiples of 5 then 71
+        for i, group in [(1, mult5), (2, mult71)]:
+            group_copy = group.copy()
+            group_copy.set_color(colors[i])
+            group_copy.set_stroke_width(4)
+            r_label.group = group_copy
+            self.add(group_copy, label)
+            self.play(
+                ShowIncreasingSubsets(group_copy, int_func=np.ceil, run_time=10),
+            )
+            self.play(FadeOut(label))
             self.wait()
-            self.remove(rect, group)
+            self.remove(group_copy, *group)
             self.wait()
+
+
+class Show280Computation(Scene):
+    def construct(self):
+        equation = TexMobject(
+            "\\phi(710) = ",
+            "710",
+            "\\left({1 \\over 2}\\right)",
+            "\\left({4 \\over 5}\\right)",
+            "\\left({70 \\over 71}\\right)",
+            "=",
+            "280",
+        )
+        equation.set_width(FRAME_WIDTH - 1)
+        equation.move_to(UP)
+        words = VGroup(
+            TextMobject("Filter out\\\\evens"),
+            TextMobject("Filter out\\\\multiples of 5"),
+            TextMobject("Filter out\\\\multiples of 71"),
+        )
+        vects = [DOWN, UP, DOWN]
+        colors = [RED, BLUE, LIGHT_PINK]
+        for part, word, vect, color in zip(equation[2:5], words, vects, colors):
+            brace = Brace(part, vect)
+            brace.stretch(0.8, 0)
+            word.brace = brace
+            word.next_to(brace, vect)
+            part.set_color(color)
+            word.set_color(color)
+            word.set_stroke(BLACK, 5, background=True)
+        equation.set_stroke(BLACK, 5, background=True)
+
+        rect = FullScreenFadeRectangle(fill_opacity=0.9)
+        self.play(
+            FadeIn(rect),
+            FadeInFromDown(equation),
+        )
+        self.wait()
+        for word in words:
+            self.play(
+                FadeIn(word),
+                GrowFromCenter(word.brace),
+            )
+            self.wait()
+
+
+class TeacherHoldUp(TeacherStudentsScene):
+    def construct(self):
+        self.change_all_student_modes(
+            "pondering", look_at_arg=2 * UP,
+            added_anims=[
+                self.teacher.change, "raise_right_hand"
+            ]
+        )
+        self.wait(4)
+
+
+class DiscussPrimesMod10(Scene):
+    def construct(self):
+        pass
+
+
+class BucketPrimesByLastDigit(Scene):
+    def construct(self):
+        pass
