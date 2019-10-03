@@ -1,4 +1,5 @@
 from manimlib.animation.animation import Animation
+from manimlib.animation.composition import Succession
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.mobject import Group
 from manimlib.utils.bezier import integer_interpolate
@@ -8,6 +9,7 @@ from manimlib.utils.rate_functions import double_smooth
 from manimlib.utils.rate_functions import smooth
 
 import numpy as np
+import itertools as it
 
 
 class ShowPartial(Animation):
@@ -150,3 +152,25 @@ class ShowSubmobjectsOneByOne(ShowIncreasingSubsets):
             self.mobject.submobjects = []
         else:
             self.mobject.submobjects = self.all_submobs[index - 1]
+
+
+# TODO, this is broken...
+class AddTextWordByWord(Succession):
+    CONFIG = {
+        # If given a value for run_time, it will
+        # override the time_per_char
+        "run_time": None,
+        "time_per_char": 0.06,
+    }
+
+    def __init__(self, text_mobject, **kwargs):
+        digest_config(self, kwargs)
+        tpc = self.time_per_char
+        anims = it.chain(*[
+            [
+                ShowIncreasingSubsets(word, run_time=tpc * len(word)),
+                Animation(word, run_time=0.005 * len(word)**1.5),
+            ]
+            for word in text_mobject
+        ])
+        super().__init__(*anims, **kwargs)
