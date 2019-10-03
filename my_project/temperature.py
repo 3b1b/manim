@@ -436,29 +436,52 @@ class MeltIce(Scene):
 		"crystal_config": {
 			"theta": 45*DEGREES,
 			"distance_between_particles": 0.4,
-			"y_max": 0,
+			"y_max":  0,
+			"y_min": -5,
+			"x_max":  3,
+			"x_min": -3,
 
 			"particle_config": {
 				"movement_radius": 0.3,
 				"velocity": 0.1,
 			},
 		},
+		"line_velocity": 1*DOWN,
+		"line_initial_position": 3*UP,
 
-		"line_height": 0,
 		"squash_factor": 0.7,
 		"amount_of_steps": 4,
+		"max_hot_color": MAX_HOT,
+
+		"run_time": 15,
 	}
 	def construct(self):
 		self.wait(0.2)
 
-		line = Line(
-			start= self.camera.get_frame_width()*LEFT + self.line_height*UP,
-			end  =-self.camera.get_frame_width()*LEFT + self.line_height*UP,
-		)
-		self.add(line)
-		self.play(Write(line))
+		self.introduce_objects()
 
-		crystal = Crystal(**self.crystal_config)
+		# self._dummy_step_init()
+		self._init_step_n(0)
+
+		self.wait(0.2)
+
+		self.add_all_updaters()
+		
+		self.crystal.resume_updating()
+		self.line.resume_updating()
+		self.wait(self.run_time)
+
+	def introduce_objects(self):
+		self.line = line = Line(
+			start= self.camera.get_frame_width()*LEFT,
+			end  =-self.camera.get_frame_width()*LEFT,
+		)
+		line.move_to(self.line_initial_position)
+		self.add(line)
+		# self.play(Write(line))
+
+		# self.crystal = crystal = Crystal(1, **self.crystal_config)
+		self.crystal = crystal = Crystal(**self.crystal_config)
 		crystal.set_color(BLUE)
 		self.add(crystal)
 
@@ -467,114 +490,282 @@ class MeltIce(Scene):
 
 		self.particles_by_height = particles_by_height = crystal.get_particles_by_height()
 		self.heights = heights = list(particles_by_height.keys())
+		# heighest first
 		heights.sort(reverse=True)
 
-		crystal.resume_updating()
-		self.wait(3)
+		for h in range(len(heights)):
+			for p in particles_by_height[heights[h]]:
+				p.layer_index = h
 
-		for n in range(self.amount_of_steps):
-			crystal.suspend_updating()
-			self._step_n(n+1)
-			crystal.resume_updating()
-			self.wait(3)
+		self.line.is_done = False
+		for p in self.crystal.particles:
+			# this will get initialized later to True, only for relevant particles
+			p.is_done = True
 
-		self.wait(3)
-
-	def squash(self):
+	def _step_color(self, step, layer):
 		"""
-		lower line at line_velocity
-		if line is at heighest particle layer - start squashing the layers
-
-		squash:
-			step 1:
-				for the top layer:
-					reduce movement_radius by a factor of 0.7
-					move initial_position accordingly
-					move line accordingly
-					increase the velocity by a factor of 1/0.7
-					increase particles color
-				total movement:
-					(1 - 0.7) * step_x
-			step_2:
-				for the first 2 layers:
-					same as step 1
-					now, the top layer will have its movement radius reduced
-					  (from the original) by a factor of 0.7^2
-					and the velocity higher by a factor of 0.7^2
-				total movement:
-					from layer 1: (0.7 - 0.7^2) * step_x
-					from layer 2: (1   - 0.7  ) * step_x
-
-			line speed ~~ 0.7^step
-			layer_n radius = movement_radius * 0.7^(step - n)
-				n is layer number, zero based
-				step-n >= 0
-			layer_n velocity = velocity * 1 / radius_factor
+		step  is int, one-based
+		layer is int, zero-based
 		"""
-		pass
+		if step is None:
+			step = self.amount_of_steps
 
-	def _step_n(self, n):
+		layer_color = self.max_hot_color * (step - layer) / (self.amount_of_steps)
+
+		if layer_color < MIN_HOT:
+			print("[!] layer_color got smaller than MIN_HOT")
+			layer_color = MIN_HOT
+
+		return color(layer_color)
+
+	def _step_total_layer_change(self, step, layer):
 		factor = self.squash_factor
-		color_per_step = MAX_HOT / (self.amount_of_steps)
-		radius = self.crystal_config["distance_between_particles"] or self.crystal_config["particle_config"]["movement_radius"]
+
+		f = lambda s: factor**(s-1) - factor**(s)
+
+		layer_y_change = f(step - layer)
+
+		for heigher_layer in range(layer+1, step):
+			layer_y_change += f(step - heigher_layer)
+
+		layer_y_change *= self.current_step_config["L"]
+		return layer_y_change
+
+	def _init_step_n(self, n):
+		initial_height_between_layers = self.crystal_config["distance_between_particles"] or self.crystal_config["particle_config"]["movement_radius"]
+
+		self.current_step_config = {
+			"n": n,
+			"layers_initial_y": [],
+			"layers_final_y": [],
+			"layers_total_y_change": [],
+			"layers_velocity": [],
+
+			"line_total_change": None,
+			"line_initial_y": None,
+			"line_final_y": None,
+			"line_velocity": self.line_velocity * self.squash_factor**n,
+
+			"L": initial_height_between_layers,
+		}
 
 		for i in range(n):
-			# calculate layer color
-			layer_color = color_per_step * (n - i)
-			if layer_color < MIN_HOT:
-				layer_color = MIN_HOT
-			layer_color = color(layer_color)
+			total_y_change = self._step_total_layer_change(n, i)
+			p = self.particles_by_height[self.heights[i]][0]
+			initial_y = p.initial_position[1]
+			final_y = initial_y - total_y_change
 
-			layer_y_change = 0
-			for j in range(i+1, n):
-				# j is the layer
-				l = n - j
-				print(f"    n={n}, i={i}, j={j}, l={l}, addition={factor**(l-1) - factor**(l)}")
-				layer_y_change += factor**(l-1) - factor**(l)
-			print(f"step {n}: layer {i+1} is moved by {layer_y_change}")
-			layer_y_change *= radius
+			velocity = self.current_step_config["line_velocity"] * self.squash_factor**i
 
-			# squash layer i
+			self.current_step_config["layers_final_y"       ].append(self._round(final_y       ) )
+			self.current_step_config["layers_initial_y"     ].append(self._round(initial_y     ) )
+			self.current_step_config["layers_total_y_change"].append(self._round(total_y_change) )
+			self.current_step_config["layers_velocity"      ].append(self._round(velocity      ) )
+
 			for p in self.particles_by_height[self.heights[i]]:
-				# set new initial position
-				old_initial_y = p.initial_position[1]
-				old_radius = p.movement_radius
-				new_radius = old_radius * factor
-				new_initial_y = old_initial_y - old_radius + new_radius
-				new_initial_y -= layer_y_change
-				p.initial_position[1] = new_initial_y
-				# update velocity
-				p.velocity /= 0.7
-				# update radius
-				p.movement_radius *= 0.7
+				p.is_done = False
 
-				# update surrounding circle
-				# circle.stretch(factor, dim, **kwargs)
-				p.radius_mobject.stretch(0.7, 1)
-				p.radius_mobject.shift((new_radius - old_radius) * UP)
-				p.radius_mobject.shift(layer_y_change * DOWN)
+		self.line.is_done = False
+		line_initial_y    = self.line.get_y()
 
-				p.set_color(layer_color)
+		# one of the top layer particles
+		p = self.particles_by_height[self.heights[0]][0]
+		if n == 0:
+			line_final_y  = p.initial_position[1] + p.movement_radius
+		else:
+			line_final_y  = self.current_step_config["layers_final_y"][0] + p.movement_radius
 
-				"""
-				save each parameter as initial_state and final_state
-					initial_y_position
-					velocity
-					movement_radius
-					radius_mobject.stretch amount
-					radius_mobject.shift amount
-					color
-				they all grow linearly
-				set run_time = factor^(-n)
-				then play by amount
-					where amount = dt / run_time
+		line_total_change = line_initial_y - line_final_y
+		# if n is not 0, this should be equal to
+		# self.current_step_config["line_total_change"] = self._step_total_layer_change(n, 0)
 
-				plus, add line movement
-				"""
+		self.current_step_config["line_initial_y"   ] = self._round(line_initial_y   )
+		self.current_step_config["line_final_y"     ] = self._round(line_final_y     )
+		self.current_step_config["line_total_change"] = self._round(line_total_change)
+		self.current_step_config["line_velocity"    ] = self._round(self.current_step_config["line_velocity"])
+
+	def add_all_updaters(self):
+
+		def particle_updater(particle, dt):
+			c = self.current_step_config
+			i = particle.layer_index
+
+			if particle.is_done:
+				if c['n'] is None:
+					particle.remove_updater(particle_updater)
+				return
+
+			# if c['n'] is None or i < self.current_step_config['n']:
+			if i < self.current_step_config['n']:
+				allowed_movement_vector = c["layers_velocity"][i] * dt
+
+				# velocity is a vector poiting down
+				particle.initial_position += allowed_movement_vector
+
+				# check if the particle has passed what's allowed in this step
+				if particle.initial_position[1] <= c["layers_final_y"][i]:
+					# set it exactly equal to this step's last position
+					particle.initial_position[1] = c["layers_final_y"][i]
+
+					self.squash_particle(particle)
+
+					self._move_to_y(particle.radius_mobject, c["layers_final_y"][i])
+					particle.is_done = True
+					particle.set_color(self._step_color(c['n'], i))
+				else:
+					particle.radius_mobject.shift(allowed_movement_vector)
+					particle.shift(allowed_movement_vector)
+					particle.new_location += allowed_movement_vector
+
+		def line_updater(line, dt):
+			c = self.current_step_config
+
+			if line.is_done:
+				if all(p.is_done for p in self.crystal.particles):
+					if c['n'] < self.amount_of_steps:
+						self._init_step_n(c['n'] + 1)
+					else:
+						c['n'] = None
+						line.remove_updater(line_updater)
+				# ???
+				return
+
+			# velocity is a vector poiting down
+			allowed_movement_vector = c["line_velocity"] * dt
+			allowed_movement = get_norm(allowed_movement_vector)
+
+			possible_movement = line.get_y() - c["line_final_y"]
+
+			if allowed_movement >= possible_movement:
+				self._move_to_y(line, c["line_final_y"])
+				line.is_done = True
+			else:
+				line.shift(allowed_movement_vector)
+
+		self.line.add_updater(line_updater)
+
+		for i in range(self.amount_of_steps):
+			for p in self.particles_by_height[self.heights[i]]:
+				p.add_updater(particle_updater)
 
 
-		# line_velocity /= 0.7
-		pass
+	def _round(self, f):
+		return np.around(f, 3)
+
+	@staticmethod
+	def _move_to_y(mobject, y):
+		end_location = mobject.get_center().copy()
+		end_location[1] = y
+		mobject.move_to(end_location)
+
+	def squash_particle(self, p):
+		factor = self.squash_factor
+		r = p.movement_radius
+
+		# faster
+		p.v /= factor
+		# smaller area of movement
+		p.movement_radius *= factor
+
+		# squash its radius
+		p.radius_mobject.stretch(factor, 1)
+
+		center_shift = r*factor - r
+		p.radius_mobject.shift(center_shift * UP)
+
+
+class MeltIce_For_Tests(MeltIce):
+	CONFIG = {
+		"crystal_config": {
+			"theta": 45*DEGREES,
+			"distance_between_particles": 0.4,
+			"y_max":  0,
+			"y_min": -5,
+			"x_max":  3,
+			"x_min": -3,
+
+			"particle_config": {
+				"movement_radius": 0.3,
+				"velocity": 0.1,
+			},
+		},
+		"line_velocity": 1*DOWN,
+		"line_initial_position": 3*UP,
+
+		"squash_factor": 0.7,
+		"amount_of_steps": 4,
+	}
+class MeltIce_Wide_Slow(MeltIce):
+	CONFIG = {
+		"crystal_config": {
+			"theta": 45*DEGREES,
+			"distance_between_particles": 0.4,
+			"y_max":  0,
+			"y_min": -5,
+			"x_max":  5,
+			"x_min": -5,
+
+			"particle_config": {
+				"movement_radius": 0.3,
+				"velocity": 0.15,
+			},
+		},
+		"line_velocity": 1*DOWN,
+		"line_initial_position": 2*UP,
+
+		"squash_factor": 0.7,
+		"amount_of_steps": 3,
+		"max_hot_color": MAX_HOT * 3/5,
+
+		"run_time": 10,
+	}
+class MeltIce_Wide_Fast(MeltIce):
+	CONFIG = {
+		"crystal_config": {
+			"theta": 45*DEGREES,
+			"distance_between_particles": 0.4,
+			"y_max":  0,
+			"y_min": -5,
+			"x_max":  5,
+			"x_min": -5,
+
+			"particle_config": {
+				"movement_radius": 0.3,
+				"velocity": 0.15,
+			},
+		},
+		"line_velocity": 2*DOWN,
+		"line_initial_position": 2*UP,
+
+		"squash_factor": 0.7,
+		"amount_of_steps": 4,
+
+		"run_time": 7,
+	}
+class MeltIce_Narrow_Slow(MeltIce):
+	CONFIG = {
+		"crystal_config": {
+			"theta": 45*DEGREES,
+			"distance_between_particles": 0.4,
+			"y_max":  0,
+			"y_min": -5,
+			"x_max":  3,
+			"x_min": -3,
+
+			"particle_config": {
+				"movement_radius": 0.3,
+				"velocity": 0.15,
+			},
+		},
+		"line_velocity": 1*DOWN,
+		"line_initial_position": 1*UP,
+
+		"squash_factor": 0.7,
+		"amount_of_steps": 5,
+
+		"run_time": 12.5,
+	}
+
 
 class Ice(Scene):
 	CONFIG = {
@@ -591,21 +782,73 @@ class Ice(Scene):
 				"velocity": 0.1,
 			},
 		},
+		"crystal_color": "#A5F2F3",
+		"show_radius": False,
 	}
 	def construct(self):
 		self.wait(0.2)
 
 		crystal = Crystal(**self.crystal_config)
-		crystal.set_color("#A5F2F3")
+		crystal.set_color(self.crystal_color)
 		self.add(crystal)
 
 		self.play(*crystal.write_simultaneously(), suspend_mobject_updating=False)
-		# self.play(*crystal.write_radius_simultaneously())
+		if self.show_radius:
+			self.play(*crystal.write_radius_simultaneously())
 
 		self.wait(1.5)
 		crystal.resume_updating()
 		self.wait(12)
 
+class Ice_ExampleSmall(Ice):
+	CONFIG = {
+		"crystal_config": {
+			"theta": 45*DEGREES,
+			"distance_between_particles": 0.3,
+			"x_max":  1,
+			"x_min": -1,
+			"y_max":  1,
+			"y_min": -1,
+
+			"particle_config": {
+				"movement_radius": 0.05,
+				"velocity": 0.1,
+			},
+		},
+	}
+class Ice_Examplelarge1(Ice):
+	CONFIG = {
+		"crystal_config": {
+			"theta": 45*DEGREES,
+			"distance_between_particles": 0.2,
+			"x_max":  4,
+			"x_min": -4,
+			"y_max":  4,
+			"y_min": -4,
+
+			"particle_config": {
+				"movement_radius": 0.05,
+				"velocity": 0.1,
+			},
+		},
+	}
+class Ice_Examplelarge2(Ice):
+	CONFIG = {
+		"crystal_config": {
+			"theta": 45*DEGREES,
+			"distance_between_particles": 0.15,
+			"x_max":  3,
+			"x_min": -3,
+			"y_max":  3,
+			"y_min": -3,
+
+			"particle_config": {
+				"movement_radius": 0.05,
+				"velocity": 0.2,
+			},
+		},
+		# "show_radius": True,
+	}
 
 # 
 # post 1
