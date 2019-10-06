@@ -43,10 +43,16 @@ class Particle(Dot):
 	# shortcuts for ease of use
 	@property
 	def v(self):
-		return get_norm(self.velocity)
+		try:
+			return get_norm(self.velocity)
+		except:
+			return self.velocity
 	@v.setter
 	def v(self, v):
-		self.velocity *= v / get_norm(self.velocity)
+		try:
+			self.velocity *= v / get_norm(self.velocity)
+		except:
+			self.velocity = v
 
 	@property
 	def m(self):
@@ -87,6 +93,14 @@ class Particle(Dot):
 	@property
 	def F(self):
 		return get_norm(self.get_force())
+
+	@property
+	def Temperature(self):
+		return self.m * self.v**2 / 3
+	@Temperature.setter
+	def Temperature(self, Temperature):
+		self.v = np.sign(self.v) * np.sqrt(3*Temperature/self.m)
+	
 
 
 	def colide_classical(self, other, edit=True):
@@ -207,13 +221,20 @@ class Particle2D(Particle):
 		# the list has to be unique, since the movement is stateless
 		# thus, the next item is determined by getting the index of the current item
 		# the list will be relative to self.initial_position
+
+		# initialize for later use in move_1D
+		"_limit_min" : None,
+		"_limit_max" : None,
+		"_axis"      : 0, # x
 	}
 	def __init__(self, point=ORIGIN, **kwargs):
 		super().__init__(point=point, **kwargs)
 
-		# initialize for later use
-		self.new_location = None
+		# initialize for later use in random_walk
+		self._new_location = None
+		
 	
+	# random walk helpers
 	def _is_near(self, location, other_location=None):
 		if other_location is not None:
 			other = np.around(other_location, 3)
@@ -224,13 +245,13 @@ class Particle2D(Particle):
 
 	def _get_next_location(self):
 		if self.location_list:
-			if self.new_location is None:
+			if self._new_location is None:
 				new_index = 0
-			elif all(self.new_location == self.initial_position):
+			elif all(self._new_location == self.initial_position):
 				new_index = 0
 			else:
 				index = 0
-				while not self._is_near(self.initial_position+self.location_list[index], self.new_location):
+				while not self._is_near(self.initial_position+self.location_list[index], self._new_location):
 					index += 1
 				new_index = (index + 1) % len(self.location_list)
 
@@ -243,10 +264,10 @@ class Particle2D(Particle):
 			return self.initial_position + x*RIGHT + y*UP
 
 	def _get_direction(self):
-		if self.new_location is None or self._is_near(self.new_location):
-			self.new_location = self._get_next_location()
+		if self._new_location is None or self._is_near(self._new_location):
+			self._new_location = self._get_next_location()
 
-		return self.new_location - self.get_center()
+		return self._new_location - self.get_center()
 
 	def _move_toward_new_location(self, allowed_movement):
 		direction = self._get_direction()
@@ -257,7 +278,7 @@ class Particle2D(Particle):
 			self.shift(direction * fraction_of_movement)
 			return 0
 		else:
-			self.move_to(self.new_location)
+			self.move_to(self._new_location)
 			return allowed_movement - length
 			return np.around(allowed_movement - length, 3)
 
@@ -270,6 +291,37 @@ class Particle2D(Particle):
 				raise Exception("allowed_movement was exceeded. aborting.")
 
 			allowed_movement = self._move_toward_new_location(allowed_movement)
+
+	def _move_toward_new_location_1D(self, allowed_movement):
+		direction = np.array((0., 0., 0.))
+		direction[self._axis] = 1
+		if self.v >= 0:
+			possible_movement = self._limit_max - self.get_center()[self._axis]
+			limit = self._limit_max
+		else:
+			direction *= -1
+			possible_movement = self.get_center()[self._axis] - self._limit_min
+			limit = self._limit_min
+
+		if possible_movement >= allowed_movement:
+			self.shift(direction * allowed_movement)
+			return 0
+		else:
+			end_location = self.get_center().copy()
+			end_location[self._axis] = limit
+			self.move_to(end_location)
+			self.v *= -1
+			return np.around(allowed_movement - possible_movement, 3)
+
+	def move_1D(self, dt):
+		# I expect self.velocity to have 2 zeros. i.e. motion along only one axis
+		allowed_movement = abs(self.v * dt)
+		while allowed_movement:
+			if allowed_movement < 0:
+				raise Exception("allowed_movement was exceeded. aborting.")
+
+			allowed_movement = self._move_toward_new_location_1D(allowed_movement)
+
 
 	def create_radius(self):
 		self.radius_mobject = Circle(
@@ -346,7 +398,7 @@ class Crystal(VGroup):
 			"movement_radius": 0.5,
 		},
 	}
-	def __init__(self, **kwargs):
+	def __init__(self, updater="random_walk", **kwargs):
 		super().__init__(**kwargs)
 		
 		particles = []
@@ -355,8 +407,9 @@ class Crystal(VGroup):
 				point=point,
 				**self.particle_config,
 			)
-			p.add_updater(p.__class__.random_walk)
-			p.suspend_updating()
+			if updater:
+				p.add_updater( getattr(p.__class__, updater) )
+				p.suspend_updating()
 			particles.append(p)
 
 		self.particles = VGroup(*particles)
@@ -398,6 +451,17 @@ class Crystal(VGroup):
 			height = np.around(p.initial_position[1], 2)
 			particles[height].append(p)
 		return particles
+
+	def get_random_portion(self, n=0.5):
+		indexes = list(range(len(self.particles)))
+		res = []
+
+		for _ in range(int(len(self.particles) * n)):
+			index = random.randrange(len(indexes))
+			res.append(self.particles[indexes[index]])
+			del indexes[index]
+
+		return res
 
 	def write_simultaneously(self):
 		"""

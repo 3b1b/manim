@@ -960,13 +960,204 @@ class ShootParticles_test(ShootParticles):
 # 
 # post 3
 # 
-class Box(object):
+class Box(Scene):
 	CONFIG = {
+		"box_length": 7.5,
+		"crystal_config": {
+			"theta": 45*DEGREES,
+			"distance_between_particles": 0.3,
+			"updater": "move_1D",
+
+			"particle_config": {
+				"velocity": 1,
+			},
+		},
+		"crystal_color": "#A5F2F3",
 	}
 	def construct(self):
 		self.wait(0.2)
-		c = Crystal()
+
+		box = Square(side_length=self.box_length)
+		self.add(box)
+		self.play(Write(box))
+
+		crystal_limits_config = {
+			"x_max":  self.box_length/2,
+			"x_min": -self.box_length/2,
+			"y_max":  self.box_length/2,
+			"y_min": -self.box_length/2,
+		}
+		self.crystal_config["particle_config"]["_limit_min"] = -self.box_length/2
+		self.crystal_config["particle_config"]["_limit_max"] =  self.box_length/2
+		crystal = Crystal(**self.crystal_config, **crystal_limits_config)
+		crystal.set_color(self.crystal_color)
+		self.add(crystal)
+
+		for p in crystal.get_random_portion(0.5):
+			p.velocity *= -1
+			p.set_color(RED)
+
+		self.play(*crystal.write_simultaneously(), suspend_mobject_updating=False)
+
+		self.wait(1.5)
+		crystal.resume_updating()
+		self.wait(20)
+
+class Box_Large(Box):
+	CONFIG = {
+		"box_length": 7.5,
+		"crystal_config": {
+			"theta": 45*DEGREES,
+			"distance_between_particles": 0.5,
+			"updater": "move_1D",
+
+			"particle_config": {
+				"velocity": 1,
+			},
+		},
+	}
+class Box_Large_Dense(Box):
+	CONFIG = {
+		"box_length": 7.5,
+		"crystal_config": {
+			"theta": 45*DEGREES,
+			"distance_between_particles": 0.3,
+			"updater": "move_1D",
+
+			"particle_config": {
+				"velocity": 1,
+			},
+		},
+	}
+class Box_Large_VeryDense(Box):
+	CONFIG = {
+		"box_length": 7.5,
+		"crystal_config": {
+			"theta": 45*DEGREES,
+			"distance_between_particles": 0.2,
+			"updater": "move_1D",
+
+			"particle_config": {
+				"velocity": 1,
+			},
+		},
+	}
+class Box_Large_Light(Box):
+	CONFIG = {
+		"box_length": 7.5,
+		"crystal_config": {
+			"theta": 45*DEGREES,
+			"distance_between_particles": 0.8,
+			"updater": "move_1D",
+
+			"particle_config": {
+				"velocity": 1,
+			},
+		},
+	}
+class Box_Large_Dense_Fast(Box):
+	CONFIG = {
+		"box_length": 7.5,
+		"crystal_config": {
+			"theta": 45*DEGREES,
+			"distance_between_particles": 0.3,
+			"updater": "move_1D",
+
+			"particle_config": {
+				"velocity": 2,
+			},
+		},
+	}
+class Box_Small(Box):
+	CONFIG = {
+		"box_length": 5,
+		"crystal_config": {
+			"theta": 45*DEGREES,
+			"distance_between_particles": 0.4,
+			"updater": "move_1D",
+
+			"particle_config": {
+				"velocity": 1,
+			},
+		},
+	}
+
+class RaiseTemperature(Scene):
+	CONFIG = {
+		"box_length": 1,
+		"crystal_config": {
+			"theta": 45*DEGREES,
+			"distance_between_particles": 0.3,
+			"updater": "move_1D",
+		},
+		"crystal_color": "#A5F2F3",
+
+		"initial_temperature": 1/3,
+		"temperature_increase_rate": 1/3 * 0.05,
+	}
+	def construct(self):
+		self.wait(0.2)
+
+		box = Square(side_length=self.box_length)
+		self.add(box)
+		self.play(Write(box))
+
+		crystal_config = {
+			"x_max":  self.box_length/2,
+			"x_min": -self.box_length/2,
+			"y_max":  self.box_length/2,
+			"y_min": -self.box_length/2,
+		}
+		particle_config = {
+			"_limit_min": -self.box_length/2,
+			"_limit_max":  self.box_length/2,
+			"velocity": 1.,
+		}
+		self.crystal_config["particle_config"] = particle_config
+		crystal = Crystal(**self.crystal_config, **crystal_config)
+		crystal.set_color(self.crystal_color)
+		self.add(crystal)
+
+		for p in crystal.get_random_portion(0.5):
+			p.velocity *= -1
+			p.set_color(RED)
+
+		def increase_temperature(particle, dt):
+			if not dt:
+				return
+			particle.Temperature += self.temperature_increase_rate
+
+		for p in crystal.particles:
+			p.Temperature = self.initial_temperature
+			p.add_updater(increase_temperature)
+
+		self.play(*crystal.write_simultaneously(), suspend_mobject_updating=False)
+
+		temperature_tex = TexMobject("T=", np.around(self.initial_temperature, 3))
+		temperature_tex.to_corner(DL)
+
+		self.current_temperature = self.initial_temperature
+		def update_temperature_tex(tex, dt):
+			if not dt:
+				return
+
+			import pdb; pdb.set_trace()
+			self.current_temperature += self.temperature_increase_rate
+			new_tex = TexMobject(str(np.around(self.current_temperature, 3)))
+			print(self.current_temperature)
+			self.play(
+				ReplacementTransform( tex[1], new_tex ),
+			)
+
+		temperature_tex.add_updater(update_temperature_tex)
+
+		self.add(temperature_tex)
+		self.play(Write(temperature_tex))
 		
+		self.wait(1.5)
+		crystal.resume_updating()
+		self.wait(20)
+	
 
 # 
 # playground
