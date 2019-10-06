@@ -63,6 +63,8 @@ class Matrix(VMobject):
         "element_to_mobject": TexMobject,
         "element_to_mobject_config": {},
         "element_alignment_corner": DR,
+        "left_bracket": "\\big[",
+        "right_bracket": "\\big]",
     }
 
     def __init__(self, matrix, **kwargs):
@@ -76,7 +78,7 @@ class Matrix(VMobject):
         self.organize_mob_matrix(mob_matrix)
         self.elements = VGroup(*mob_matrix.flatten())
         self.add(self.elements)
-        self.add_brackets()
+        self.add_brackets(self.left_bracket,self.right_bracket)
         self.center()
         self.mob_matrix = mob_matrix
         if self.add_background_rectangles_to_entries:
@@ -100,8 +102,8 @@ class Matrix(VMobject):
                 )
         return self
 
-    def add_brackets(self):
-        bracket_pair = TexMobject("\\big[", "\\big]")
+    def add_brackets(self, left, right):
+        bracket_pair = TexMobject(left, right)
         bracket_pair.scale(2)
         bracket_pair.stretch_to_fit_height(
             self.get_height() + 2 * self.bracket_v_buff
