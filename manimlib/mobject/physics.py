@@ -38,7 +38,8 @@ class Particle(Dot):
 		super().__init__(point, **kwargs)
 
 	def __repr__(self):
-		return f"Particle, v={self.v}, m={self.mass}"
+		v = np.around(self.v, 3)
+		return f"<Particle, v={v}, m={self.mass}>"
 
 	# shortcuts for ease of use
 	@property
@@ -398,7 +399,7 @@ class Crystal(VGroup):
 			"movement_radius": 0.5,
 		},
 	}
-	def __init__(self, updater="random_walk", **kwargs):
+	def __init__(self, max_amount_of_particles=None, updater="random_walk", **kwargs):
 		super().__init__(**kwargs)
 		
 		particles = []
@@ -411,6 +412,9 @@ class Crystal(VGroup):
 				p.add_updater( getattr(p.__class__, updater) )
 				p.suspend_updating()
 			particles.append(p)
+
+			if max_amount_of_particles and len(particles) == max_amount_of_particles:
+				break
 
 		self.particles = VGroup(*particles)
 		self.add(self.particles)
