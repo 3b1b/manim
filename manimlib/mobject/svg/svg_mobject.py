@@ -294,11 +294,12 @@ class SVGMobject(VMobject):
         return output_list
 
     def get_all_childNodes_have_id(self, element):
-        all_childNodes_have_id = []
         if not isinstance(element, minidom.Element):
             return
         if element.hasAttribute('id'):
-            return element
+            return [element]
+
+        all_childNodes_have_id = []
         for e in element.childNodes:
             all_childNodes_have_id.append(self.get_all_childNodes_have_id(e))
         return self.flatten([e for e in all_childNodes_have_id if e])
