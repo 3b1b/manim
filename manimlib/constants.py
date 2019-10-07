@@ -6,6 +6,10 @@ VIDEO_DIR = ""
 VIDEO_OUTPUT_DIR = ""
 TEX_DIR = ""
 TEXT_DIR = ""
+TEMPLATE_TEXT_FILE_BODY = ""
+TEMPLATE_TEX_FILE_BODY = ""
+TEX_USE_CTEX = False
+TEX_TEXT_TO_REPLACE = ""
 
 
 def initialize_directories(config):
@@ -52,6 +56,38 @@ def initialize_directories(config):
         if folder != "" and not os.path.exists(folder):
             os.makedirs(folder)
 
+
+def initialize_tex(filename):
+    global TEMPLATE_TEXT_FILE_BODY
+    global TEMPLATE_TEX_FILE_BODY
+    global TEX_TEXT_TO_REPLACE
+    global TEX_USE_CTEX
+    TEX_USE_CTEX = False
+    TEX_TEXT_TO_REPLACE = "YourTextHere"
+    default_template = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "tex_template.tex" if not TEX_USE_CTEX else "ctex_template.tex"
+    )
+    if not filename:
+        # no custom template given, silently use default 
+        filename = default_template
+    elif not os.access(filename, os.R_OK):
+        # custom template not available, fallback to default
+        print(
+            f"Custom TeX template {filename} not found or not readable. "
+            "Falling back to the default template."
+        )
+        filename = default_template
+
+    with open(filename, "r") as infile:
+        TEMPLATE_TEXT_FILE_BODY = infile.read()
+
+    TEMPLATE_TEX_FILE_BODY = TEMPLATE_TEXT_FILE_BODY.replace(
+        TEX_TEXT_TO_REPLACE,
+        "\\begin{align*}\n" + TEX_TEXT_TO_REPLACE + "\n\\end{align*}",
+    )
+
+
 NOT_SETTING_FONT_MSG='''
 Warning:
 You haven't set font.
@@ -70,19 +106,6 @@ NORMAL = 'NORMAL'
 ITALIC = 'ITALIC'
 OBLIQUE = 'OBLIQUE'
 BOLD = 'BOLD'
-
-TEX_USE_CTEX = False
-TEX_TEXT_TO_REPLACE = "YourTextHere"
-TEMPLATE_TEX_FILE = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    "tex_template.tex" if not TEX_USE_CTEX else "ctex_template.tex"
-)
-with open(TEMPLATE_TEX_FILE, "r") as infile:
-    TEMPLATE_TEXT_FILE_BODY = infile.read()
-    TEMPLATE_TEX_FILE_BODY = TEMPLATE_TEXT_FILE_BODY.replace(
-        TEX_TEXT_TO_REPLACE,
-        "\\begin{align*}\n" + TEX_TEXT_TO_REPLACE + "\n\\end{align*}",
-    )
 
 HELP_MESSAGE = """
    Usage:

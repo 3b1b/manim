@@ -15,12 +15,21 @@ def tex_hash(expression, template_tex_file_body):
 
 
 def tex_to_svg_file(expression, template_tex_file_body):
-    tex_file = generate_tex_file(expression, template_tex_file_body)
+    tex_file = generate_tex_file(expression, template_tex_file_body, "tex")
     dvi_file = tex_to_dvi(tex_file)
     return dvi_to_svg(dvi_file)
 
+def text_to_svg_file(expression, template_tex_file_body):
+    tex_file = generate_tex_file(expression, template_tex_file_body, "text")
+    dvi_file = tex_to_dvi(tex_file)
+    return dvi_to_svg(dvi_file)
 
-def generate_tex_file(expression, template_tex_file_body):
+def generate_tex_file(expression, template_tex_file_body, source_type):
+    if source_type == "text":
+        template_tex_file_body = consts.TEMPLATE_TEXT_FILE_BODY
+    elif source_type == "tex":
+        template_tex_file_body = consts.TEMPLATE_TEX_FILE_BODY
+        
     result = os.path.join(
         consts.TEX_DIR,
         tex_hash(expression, template_tex_file_body)
@@ -30,7 +39,7 @@ def generate_tex_file(expression, template_tex_file_body):
             "".join(expression), result
         ))
         new_body = template_tex_file_body.replace(
-            TEX_TEXT_TO_REPLACE, expression
+            consts.TEX_TEXT_TO_REPLACE, expression
         )
         with open(result, "w", encoding="utf-8") as outfile:
             outfile.write(new_body)

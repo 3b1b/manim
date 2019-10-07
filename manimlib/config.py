@@ -129,6 +129,10 @@ def parse_cli():
             "--tex_dir",
             help="directory to write tex",
         )
+        parser.add_argument(
+            "--tex_template",
+            help="Specify a custom TeX template file",
+        )
 
         # For live streaming
         module_location.add_argument(
@@ -214,6 +218,7 @@ def get_configuration(args):
         "video_dir": args.video_dir,
         "video_output_dir": args.video_output_dir,
         "tex_dir": args.tex_dir,
+        "tex_template": args.tex_template,
     }
 
     # Camera configuration
