@@ -1,16 +1,13 @@
 import numpy as np
 import os
+from manimlib.utils.tex import *
 
 MEDIA_DIR = ""
 VIDEO_DIR = ""
 VIDEO_OUTPUT_DIR = ""
 TEX_DIR = ""
 TEXT_DIR = ""
-TEMPLATE_TEXT_FILE_BODY = ""
-TEMPLATE_TEX_FILE_BODY = ""
-TEX_USE_CTEX = False
-TEX_TEXT_TO_REPLACE = ""
-
+TEX_TEMPLATE = None
 
 def initialize_directories(config):
     global MEDIA_DIR
@@ -56,36 +53,25 @@ def initialize_directories(config):
         if folder != "" and not os.path.exists(folder):
             os.makedirs(folder)
 
+def register_tex_template(tpl):
+    global TEX_TEMPLATE
+    TEX_TEMPLATE = tpl
 
 def initialize_tex(filename):
-    global TEMPLATE_TEXT_FILE_BODY
-    global TEMPLATE_TEX_FILE_BODY
-    global TEX_TEXT_TO_REPLACE
-    global TEX_USE_CTEX
-    TEX_USE_CTEX = False
-    TEX_TEXT_TO_REPLACE = "YourTextHere"
-    default_template = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        "tex_template.tex" if not TEX_USE_CTEX else "ctex_template.tex"
-    )
-    if not filename:
-        # no custom template given, silently use default 
-        filename = default_template
-    elif not os.access(filename, os.R_OK):
+    global TEX_TEMPLATE
+    if filename and not os.access(filename, os.R_OK):
         # custom template not available, fallback to default
         print(
             f"Custom TeX template {filename} not found or not readable. "
             "Falling back to the default template."
         )
-        filename = default_template
-
-    with open(filename, "r") as infile:
-        TEMPLATE_TEXT_FILE_BODY = infile.read()
-
-    TEMPLATE_TEX_FILE_BODY = TEMPLATE_TEXT_FILE_BODY.replace(
-        TEX_TEXT_TO_REPLACE,
-        "\\begin{align*}\n" + TEX_TEXT_TO_REPLACE + "\n\\end{align*}",
-    )
+        filename = ""
+    if filename:
+        # still having a filename -> use the file
+        TEX_TEMPLATE = TeXTemplateFromFile(filename=filename)
+    else:
+        # use the default template
+        TEX_TEMPLATE = TeXTemplate()
 
 
 NOT_SETTING_FONT_MSG='''

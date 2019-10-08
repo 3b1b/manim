@@ -1,53 +1,40 @@
 import os
 import hashlib
 
-from manimlib.constants import TEX_TEXT_TO_REPLACE
-from manimlib.constants import TEX_USE_CTEX
 import manimlib.constants as consts
 
 
-def tex_hash(expression, template_tex_file_body):
-    id_str = str(expression + template_tex_file_body)
+def tex_hash(expression):
+    id_str = str(expression)
     hasher = hashlib.sha256()
     hasher.update(id_str.encode())
     # Truncating at 16 bytes for cleanliness
     return hasher.hexdigest()[:16]
 
+def tex_to_svg_file(expression, source_type):
+    tex_template = consts.TEX_TEMPLATE
+    tex_file = generate_tex_file(expression, tex_template, source_type)
+    dvi_file = tex_to_dvi(tex_file, tex_template.use_ctex)
+    return dvi_to_svg(dvi_file, use_ctex=tex_template.use_ctex)
 
-def tex_to_svg_file(expression, template_tex_file_body):
-    tex_file = generate_tex_file(expression, template_tex_file_body, "tex")
-    dvi_file = tex_to_dvi(tex_file)
-    return dvi_to_svg(dvi_file)
-
-def text_to_svg_file(expression, template_tex_file_body):
-    tex_file = generate_tex_file(expression, template_tex_file_body, "text")
-    dvi_file = tex_to_dvi(tex_file)
-    return dvi_to_svg(dvi_file)
-
-def generate_tex_file(expression, template_tex_file_body, source_type):
+def generate_tex_file(expression, tex_template, source_type):
     if source_type == "text":
-        template_tex_file_body = consts.TEMPLATE_TEXT_FILE_BODY
+        output = tex_template.get_text_for_text_mode(expression)
     elif source_type == "tex":
-        template_tex_file_body = consts.TEMPLATE_TEX_FILE_BODY
+        output = tex_template.get_text_for_tex_mode(expression)
         
     result = os.path.join(
         consts.TEX_DIR,
-        tex_hash(expression, template_tex_file_body)
+        tex_hash(output)
     ) + ".tex"
     if not os.path.exists(result):
-        print("Writing \"%s\" to %s" % (
-            "".join(expression), result
-        ))
-        new_body = template_tex_file_body.replace(
-            consts.TEX_TEXT_TO_REPLACE, expression
-        )
+        print(f"Writing '{expression}' to {result}")
         with open(result, "w", encoding="utf-8") as outfile:
-            outfile.write(new_body)
+            outfile.write(output)
     return result
 
-
-def tex_to_dvi(tex_file):
-    result = tex_file.replace(".tex", ".dvi" if not TEX_USE_CTEX else ".xdv")
+def tex_to_dvi(tex_file, use_ctex = False):
+    result = tex_file.replace(".tex", ".dvi" if not use_ctex else ".xdv")
     if not os.path.exists(result):
         commands = [
             "latex",
@@ -57,7 +44,7 @@ def tex_to_dvi(tex_file):
             "\"{}\"".format(tex_file),
             ">",
             os.devnull
-        ] if not TEX_USE_CTEX else [
+        ] if not use_ctex else [
             "xelatex",
             "-no-pdf",
             "-interaction=batchmode",
@@ -71,20 +58,20 @@ def tex_to_dvi(tex_file):
         if exit_code != 0:
             log_file = tex_file.replace(".tex", ".log")
             raise Exception(
-                ("Latex error converting to dvi. " if not TEX_USE_CTEX
-                else "Xelatex error converting to xdv. ") +
+                ("LaTeX error converting to dvi. " if not use_ctex
+                else "XeLaTeX error converting to xdv. ") +
                 "See log output above or the log file: %s" % log_file)
     return result
 
 
-def dvi_to_svg(dvi_file, regen_if_exists=False):
+def dvi_to_svg(dvi_file, use_ctex=False, regen_if_exists=False):
     """
     Converts a dvi, which potentially has multiple slides, into a
     directory full of enumerated pngs corresponding with these slides.
     Returns a list of PIL Image objects for these images sorted as they
     where in the dvi
     """
-    result = dvi_file.replace(".dvi" if not TEX_USE_CTEX else ".xdv", ".svg")
+    result = dvi_file.replace(".dvi" if not use_ctex else ".xdv", ".svg")
     if not os.path.exists(result):
         commands = [
             "dvisvgm",
