@@ -202,8 +202,6 @@ class TipableVMobject(VMobject):
         return get_norm(start - end)
 
 
-
-
 class Arc(TipableVMobject):
     CONFIG = {
         "radius": 1.0,
