@@ -1224,6 +1224,7 @@ class DirichletComingUp(Scene):
         words.set_color_by_tex("Dirichlet's", YELLOW)
         words.scale(1.5)
         words.next_to(image, RIGHT)
+        words.set_stroke(BLACK, 8, background=True)
         Group(words, image).center()
 
         self.play(
@@ -1428,6 +1429,17 @@ class SeparateIntoTwoQuestions(Scene):
             )
         self.wait()
         self.play(ShowCreation(v_line))
+        self.wait()
+
+
+class TopQuestionCross(Scene):
+    def construct(self):
+        top_q = TextMobject("Why do", " primes", " cause", " spirals", "?")
+        top_q.scale(2)
+        top_q.to_edge(UP)
+        cross = Cross(top_q)
+
+        self.play(ShowCreation(cross))
         self.wait()
 
 
@@ -1893,7 +1905,7 @@ class IntroduceResidueClassTerminology(Scene):
         labels = self.sequence_labels
 
         r = 2
-        k = 2
+        k = 3
         sequence = sequences[r]
         label = labels[r]
         r_tex = label[0][3]
@@ -1952,6 +1964,7 @@ class IntroduceResidueClassTerminology(Scene):
             FadeOutAndShift(randy, DOWN)
         )
         self.wait()
+        self.wait(6)
 
 
 class SimpleLongDivision(MovingCameraScene):
@@ -2362,9 +2375,10 @@ class Label44Spirals(Explain44Spirals):
             r_label = TextMobject("1 radian")
             # r_label.rotate(
             #     angle_of_vector(arc.get_end() - arc.get_start()) - PI
-
             # )
             r_label.next_to(mid_point, normalize(mid_point))
+            if n > 2:
+                r_label.set_opacity(0)
 
             self.play(
                 ShowCreation(arc),
@@ -3487,10 +3501,18 @@ class Show280Computation(Scene):
             word.set_stroke(BLACK, 5, background=True)
         equation.set_stroke(BLACK, 5, background=True)
 
+        etf_label = TextMobject("Euler's totient function")
+        etf_label.to_corner(UL)
+        arrow = Arrow(etf_label.get_bottom(), equation[0][0].get_top())
+        equation[0][0].set_color(YELLOW)
+        etf_label.set_color(YELLOW)
+
         rect = FullScreenFadeRectangle(fill_opacity=0.9)
         self.play(
             FadeIn(rect),
             FadeInFromDown(equation),
+            FadeIn(etf_label),
+            GrowArrow(arrow),
         )
         self.wait()
         for word in words:
@@ -3509,14 +3531,1396 @@ class TeacherHoldUp(TeacherStudentsScene):
                 self.teacher.change, "raise_right_hand"
             ]
         )
-        self.wait(4)
+        self.wait(8)
 
 
 class DiscussPrimesMod10(Scene):
     def construct(self):
-        pass
+        labels = VGroup(*[
+            TextMobject(str(n), " mod 10:")
+            for n in range(10)
+        ])
+        labels.arrange(DOWN, buff=0.35, aligned_edge=LEFT)
+        labels.to_edge(LEFT)
+        # digits = VGroup(*[l[0] for l in labels])
+        labels.set_submobject_colors_by_gradient(YELLOW, BLUE)
+
+        sequences = VGroup(*[
+            VGroup(*[
+                Integer(n).shift((n // 10) * RIGHT)
+                for n in range(r, 100 + r, 10)
+            ])
+            for r in range(10)
+        ])
+        for sequence, label in zip(sequences, labels):
+            sequence.next_to(label, RIGHT, buff=MED_LARGE_BUFF)
+            for item in sequence:
+                if item is sequence[-1]:
+                    punc = TexMobject("\\dots")
+                else:
+                    punc = TextMobject(",")
+                punc.next_to(item.get_corner(DR), RIGHT, SMALL_BUFF)
+                item.add(punc)
+
+        # Introduce everything
+        self.play(LaggedStart(*[
+            FadeInFrom(label, UP)
+            for label in labels
+        ]))
+        self.wait()
+        self.play(
+            LaggedStart(*[
+                LaggedStart(*[
+                    FadeInFrom(item, LEFT)
+                    for item in sequence
+                ])
+                for sequence in sequences
+            ])
+        )
+        self.wait()
+
+        # Highlight 0's then 1's
+        for sequence in sequences[:2]:
+            lds = VGroup(*[item[-2] for item in sequence])
+            rects = VGroup(*[
+                SurroundingRectangle(ld, buff=0.05)
+                for ld in lds
+            ])
+            rects.set_color(YELLOW)
+            self.play(
+                LaggedStartMap(
+                    ShowCreationThenFadeOut, rects
+                )
+            )
+            self.wait()
+
+        # Eliminate certain residues
+        two = sequences[2][0]
+        five = sequences[5][0]
+        evens = VGroup(*it.chain(*sequences[::2]))
+        evens.remove(two)
+        div5 = sequences[5][1:]
+        prime_numbers = read_in_primes(100)
+
+        primes = VGroup(*[
+            item
+            for seq in sequences
+            for item in seq
+            if int(item.get_value()) in prime_numbers
+        ])
+        non_primes = VGroup(*[
+            item
+            for seq in sequences
+            for item in seq
+            if reduce(op.and_, [
+                int(item.get_value()) not in prime_numbers,
+                item.get_value() % 2 != 0,
+                item.get_value() % 5 != 0,
+            ])
+        ])
+
+        for prime, group in [(two, evens), (five, div5)]:
+            self.play(ShowCreationThenFadeAround(prime))
+            self.play(LaggedStart(*[
+                ApplyMethod(item.set_opacity, 0.2)
+                for item in group
+            ]))
+            self.wait()
+
+        # Highlight primes
+        self.play(
+            LaggedStart(*[
+                ApplyFunction(
+                    lambda m: m.scale(1.2).set_color(TEAL),
+                    prime
+                )
+                for prime in primes
+            ]),
+            LaggedStart(*[
+                ApplyFunction(
+                    lambda m: m.scale(0.8).set_opacity(0.8),
+                    non_prime
+                )
+                for non_prime in non_primes
+            ]),
+        )
+        self.wait()
+
+        # Highlight coprime residue classes
+        rects = VGroup(*[
+            SurroundingRectangle(VGroup(labels[r], sequences[r]))
+            for r in [1, 3, 7, 9]
+        ])
+        for rect in rects:
+            rect.reverse_points()
+
+        fade_rect = FullScreenFadeRectangle()
+        fade_rect.scale(1.1)
+        new_fade_rect = fade_rect.copy()
+        fade_rect.append_vectorized_mobject(rects[0])
+        for rect in rects:
+            new_fade_rect.append_vectorized_mobject(rect)
+
+        self.play(DrawBorderThenFill(fade_rect))
+        self.wait()
+        self.play(
+            FadeOut(fade_rect),
+            FadeIn(new_fade_rect),
+        )
+        self.wait()
 
 
 class BucketPrimesByLastDigit(Scene):
+    CONFIG = {
+        "bar_colors": [YELLOW, BLUE],
+        "mod": 10,
+        "max_n": 10000,
+        "n_to_animate": 20,
+        "n_to_show": 1000,
+        "x_label_scale_factor": 1,
+        "x_axis_label": "Last digit",
+        "bar_width": 0.5,
+    }
+
     def construct(self):
+        self.add_axes()
+        self.add_bars()
+        self.bucket_primes()
+
+    def add_axes(self):
+        mod = self.mod
+
+        axes = Axes(
+            x_min=0,
+            x_max=mod + 0.5,
+            x_axis_config={
+                "unit_size": 10 / mod,
+                "include_tip": False,
+            },
+            y_min=0,
+            y_max=100,
+            y_axis_config={
+                "unit_size": 0.055,
+                "tick_frequency": 12.5,
+                "include_tip": False,
+            },
+        )
+
+        x_labels = VGroup()
+        for x in range(mod):
+            digit = Integer(x)
+            digit.scale(self.x_label_scale_factor)
+            digit.next_to(axes.x_axis.n2p(x + 1), DOWN, MED_SMALL_BUFF)
+            x_labels.add(digit)
+        self.modify_x_labels(x_labels)
+        x_labels.set_submobject_colors_by_gradient(*self.bar_colors)
+        axes.add(x_labels)
+        axes.x_labels = x_labels
+
+        y_labels = VGroup()
+        for y in range(25, 125, 25):
+            label = Integer(y, unit="\\%")
+            label.next_to(axes.y_axis.n2p(y), LEFT, MED_SMALL_BUFF)
+            y_labels.add(label)
+        axes.add(y_labels)
+
+        x_axis_label = TextMobject(self.x_axis_label)
+        x_axis_label.next_to(axes.x_axis.get_end(), RIGHT, buff=MED_LARGE_BUFF)
+        axes.add(x_axis_label)
+
+        y_axis_label = TextMobject("Proportion")
+        y_axis_label.next_to(axes.y_axis.get_end(), UP, buff=MED_LARGE_BUFF)
+        # y_axis_label.set_color(self.bar_colors[0])
+        axes.add(y_axis_label)
+
+        axes.center()
+        axes.set_width(FRAME_WIDTH - 1)
+        axes.to_edge(DOWN)
+
+        self.axes = axes
+        self.add(axes)
+
+    def add_bars(self):
+        axes = self.axes
+        mod = self.mod
+
+        count_trackers = Group(*[
+            ValueTracker(0)
+            for x in range(mod)
+        ])
+
+        bars = VGroup()
+        for x in range(mod):
+            bar = Rectangle(
+                height=1,
+                width=self.bar_width,
+                fill_opacity=1,
+            )
+            bar.bottom = axes.x_axis.n2p(x + 1)
+            bars.add(bar)
+        bars.set_submobject_colors_by_gradient(*self.bar_colors)
+        bars.set_stroke(WHITE, 1)
+
+        def update_bars(bars):
+            values = [ct.get_value() for ct in count_trackers]
+            total = sum(values)
+            if total == 0:
+                props = [0 for x in range(mod)]
+            elif total < 1:
+                props = values
+            else:
+                props = [value / total for value in values]
+
+            for bar, prop in zip(bars, props):
+                bar.set_height(
+                    max(
+                        1e-5,
+                        100 * prop * axes.y_axis.unit_size,
+                    ),
+                    stretch=True
+                )
+                # bar.set_height(1)
+                bar.move_to(bar.bottom, DOWN)
+
+        bars.add_updater(update_bars)
+
+        self.add(count_trackers)
+        self.add(bars)
+
+        self.bars = bars
+        self.count_trackers = count_trackers
+
+    def bucket_primes(self):
+        bars = self.bars
+        count_trackers = self.count_trackers
+
+        max_n = self.max_n
+        n_to_animate = self.n_to_animate
+        n_to_show = self.n_to_show
+        mod = self.mod
+
+        primes = VGroup(*[
+            Integer(prime).scale(2).to_edge(UP, buff=LARGE_BUFF)
+            for prime in read_in_primes(max_n)
+        ])
+
+        arrow = Arrow(ORIGIN, DOWN)
+        x_labels = self.axes.x_labels
+        rects = VGroup(*map(SurroundingRectangle, x_labels))
+        rects.set_color(RED)
+
+        self.play(FadeIn(primes[0]))
+        for i, p, np in zip(it.count(), primes[:n_to_show], primes[1:]):
+            d = int(p.get_value()) % mod
+            self.add(rects[d])
+            if i < n_to_animate:
+                self.play(
+                    p.scale, 0.5,
+                    p.move_to, bars[d].get_top(),
+                    p.set_opacity, 0,
+                    FadeIn(np),
+                    count_trackers[d].increment_value, 1,
+                )
+                self.remove(p)
+            else:
+                arrow.next_to(bars[d], UP)
+                self.add(arrow)
+                self.add(p)
+                count_trackers[d].increment_value(1)
+                self.wait(0.1)
+                self.remove(p)
+            self.remove(rects[d])
+
+    #
+    def modify_x_labels(self, labels):
         pass
+
+
+class PhraseDirichletsTheoremFor10(TeacherStudentsScene):
+    def construct(self):
+        expression = TexMobject(
+            "\\lim_{x \\to \\infty}",
+            "\\left(",
+            "{\\text{\\# of primes $p$ where $p \\le x$} \\text{ and $p \\equiv 1$ mod 10}",
+            "\\over",
+            "\\text{\\# of primes $p$ where $p \\le x$}}",
+            "\\right)",
+            "=",
+            "\\frac{1}{4}",
+        )
+        lim, lp, num, over, denom, rp, eq, fourth = expression
+        expression.shift(UP)
+
+        denom.save_state()
+        denom.move_to(self.hold_up_spot, DOWN)
+        denom.shift_onto_screen()
+
+        num[len(denom):].set_color(YELLOW)
+
+        x_example = VGroup(
+            TextMobject("Think, for example, $x = $"),
+            Integer(int(1e6)),
+        )
+        x_example.arrange(RIGHT)
+        x_example.scale(1.5)
+        x_example.to_edge(UP)
+
+        #
+        teacher = self.teacher
+        students = self.students
+        self.play(
+            FadeInFromDown(denom),
+            teacher.change, "raise_right_hand",
+            self.get_student_changes(*["pondering"] * 3),
+        )
+        self.wait()
+        self.play(FadeInFromDown(x_example))
+        self.wait()
+        self.play(
+            Restore(denom),
+            teacher.change, "thinking",
+        )
+        self.play(
+            TransformFromCopy(denom, num[:len(denom)]),
+            Write(over),
+        )
+        self.play(
+            Write(num[len(denom):]),
+            students[0].change, "confused",
+            students[2].change, "erm",
+        )
+        self.wait(2)
+        self.play(
+            Write(lp),
+            Write(rp),
+            Write(eq),
+        )
+        self.play(FadeInFrom(fourth, LEFT))
+        self.play(FadeInFrom(lim, RIGHT))
+        self.play(
+            ChangeDecimalToValue(
+                x_example[1], int(1e7),
+                run_time=8,
+                rate_func=linear,
+            ),
+            VFadeOut(x_example, run_time=8),
+            self.get_student_changes(*["thinking"] * 3),
+            Blink(
+                teacher,
+                run_time=4,
+                rate_func=squish_rate_func(there_and_back, 0.65, 0.7)
+            ),
+        )
+
+
+class InsertNewResidueClasses(Scene):
+    def construct(self):
+        nums = VGroup(*map(Integer, [3, 7, 9]))
+        colors = [GREEN, TEAL, BLUE]
+        for num, color in zip(nums, colors):
+            num.set_color(color)
+            num.add_background_rectangle(buff=SMALL_BUFF, opacity=1)
+            self.play(FadeInFrom(num, UP))
+            self.wait()
+
+
+class BucketPrimesBy44(BucketPrimesByLastDigit):
+    CONFIG = {
+        "mod": 44,
+        "n_to_animate": 5,
+        "x_label_scale_factor": 0.5,
+        "x_axis_label": "r mod 44",
+        "bar_width": 0.1,
+    }
+
+    def modify_x_labels(self, labels):
+        labels[::2].set_opacity(0)
+
+
+class BucketPrimesBy9(BucketPrimesByLastDigit):
+    CONFIG = {
+        "mod": 9,
+        "n_to_animate": 5,
+        "x_label_scale_factor": 1,
+        "x_axis_label": "r mod 9",
+        "bar_width": 1,
+    }
+
+    def modify_x_labels(self, labels):
+        pass
+
+
+class DirichletIn1837(MovingCameraScene):
+    def construct(self):
+        # Add timeline
+        dates = list(range(1780, 2030, 10))
+        timeline = NumberLine(
+            x_min=1700,
+            x_max=2020,
+            tick_frequency=1,
+            numbers_with_elongated_ticks=dates,
+            unit_size=0.2,
+            stroke_color=GREY,
+            stroke_width=2,
+        )
+        timeline.add_numbers(
+            *dates,
+            number_config={"group_with_commas": False},
+        )
+        timeline.numbers.shift(SMALL_BUFF * DOWN)
+        timeline.to_edge(RIGHT)
+
+        # Special dates
+        d_arrow, rh_arrow, pnt_arrow = arrows = VGroup(*[
+            Vector(DOWN).next_to(timeline.n2p(date), UP)
+            for date in [1837, 1859, 1896]
+        ])
+        d_label, rh_label, pnt_label = labels = VGroup(*[
+            TextMobject(text).next_to(arrow, UP)
+            for arrow, text in zip(arrows, [
+                "Dirichlet's\\\\theorem\\\\1837",
+                "Riemann\\\\hypothesis\\\\1859",
+                "Prime number\\\\theorem\\\\1896",
+            ])
+        ])
+
+        # Back in time
+        frame = self.camera_frame
+        self.add(timeline, arrows, labels)
+        self.play(
+            frame.move_to, timeline.n2p(1837),
+            run_time=4,
+        )
+        self.wait()
+
+        # Show picture
+        image = ImageMobject("Dirichlet")
+        image.set_height(3)
+        image.next_to(d_label, LEFT)
+        self.play(FadeInFrom(image, RIGHT))
+        self.wait()
+
+        # Flash
+        self.play(
+            Flash(
+                d_label.get_center(),
+                num_lines=12,
+                line_length=0.25,
+                flash_radius=1.5,
+                line_stroke_width=3,
+                lag_ratio=0.05,
+            )
+        )
+        self.wait()
+
+        # Transition title
+        title, underline = self.get_title_and_underline()
+        n = len(title[0])
+        self.play(
+            ReplacementTransform(d_label[0][:n], title[0][:n]),
+            FadeOut(d_label[0][n:]),
+            LaggedStartMap(
+                FadeOutAndShiftDown, Group(
+                    image, d_arrow,
+                    rh_label, rh_arrow,
+                    pnt_label, pnt_arrow,
+                    *timeline,
+                )
+            ),
+        )
+        self.play(ShowCreation(underline))
+        self.wait()
+
+    def get_title_and_underline(self):
+        frame = self.camera_frame
+        title = TextMobject("Dirichlet's theorem")
+        title.scale(1.5)
+        title.next_to(frame.get_top(), DOWN, buff=MED_LARGE_BUFF)
+        underline = Line()
+        underline.match_width(title)
+        underline.next_to(title, DOWN, SMALL_BUFF)
+        return title, underline
+
+
+class PhraseDirichletsTheorem(DirichletIn1837):
+    def construct(self):
+        self.add(*self.get_title_and_underline())
+
+        # Copy-pasted, which isn't great
+        expression = TexMobject(
+            "\\lim_{x \\to \\infty}",
+            "\\left(",
+            "{\\text{\\# of primes $p$ where $p \\le x$} \\text{ and $p \\equiv 1$ mod 10}",
+            "\\over",
+            "\\text{\\# of primes $p$ where $p \\le x$}}",
+            "\\right)",
+            "=",
+            "\\frac{1}{4}",
+        )
+        lim, lp, num, over, denom, rp, eq, fourth = expression
+        expression.shift(1.5 * UP)
+        expression.to_edge(LEFT, MED_SMALL_BUFF)
+        num[len(denom):].set_color(YELLOW)
+        #
+
+        # Terms and labels
+        ten = num[-2:]
+        one = num[-6]
+        four = fourth[-1]
+
+        N = TexMobject("N")
+        r = TexMobject("r")
+        one_over_phi_N = TexMobject("1", "\\over", "\\phi(", "N", ")")
+
+        N.set_color(MAROON_B)
+        r.set_color(BLUE)
+        one_over_phi_N.set_color_by_tex("N", N.get_color())
+
+        N.move_to(ten, DL)
+        r.move_to(one, DOWN)
+        one_over_phi_N.move_to(fourth, LEFT)
+
+        N_label = TextMobject("$N$", " is any number")
+        N_label.set_color_by_tex("N", N.get_color())
+        N_label.next_to(expression, DOWN, LARGE_BUFF)
+
+        r_label = TextMobject("$r$", " is coprime to ", "$N$")
+        r_label[0].set_color(r.get_color())
+        r_label[2].set_color(N.get_color())
+        r_label.next_to(N_label, DOWN, MED_LARGE_BUFF)
+
+        phi_N_label = TexMobject(
+            "\\phi({10}) = ",
+            "\\#\\{1, 3, 7, 9\\} = 4",
+            tex_to_color_map={
+                "{10}": N.get_color(),
+            }
+        )
+        phi_N_label[-1][2:9:2].set_color(r.get_color())
+        phi_N_label.next_to(r_label, DOWN, MED_LARGE_BUFF)
+        #
+
+        self.play(
+            LaggedStart(*[
+                FadeIn(denom),
+                ShowCreation(over),
+                FadeIn(num),
+                Write(VGroup(lp, rp)),
+                FadeIn(lim),
+                Write(VGroup(eq, fourth)),
+            ]),
+            run_time=3,
+            lag_ratio=0.7,
+        )
+        self.wait()
+        for mob in denom, num:
+            self.play(ShowCreationThenFadeAround(mob))
+            self.wait()
+        self.play(
+            FadeInFrom(r, DOWN),
+            FadeOutAndShift(one, UP),
+        )
+        self.play(
+            FadeInFrom(N, DOWN),
+            FadeOutAndShift(ten, UP),
+        )
+        self.wait()
+        self.play(
+            TransformFromCopy(N, N_label[0]),
+            FadeIn(N_label[1:], DOWN)
+        )
+        self.wait()
+        self.play(
+            FadeIn(r_label[1:-1], DOWN),
+            TransformFromCopy(r, r_label[0]),
+        )
+        self.play(
+            TransformFromCopy(N_label[0], r_label[-1]),
+        )
+        self.wait()
+
+        self.play(
+            ShowCreationThenFadeAround(fourth),
+        )
+        self.play(
+            FadeInFrom(one_over_phi_N[2:], LEFT),
+            FadeOutAndShift(four, RIGHT),
+            ReplacementTransform(fourth[0], one_over_phi_N[0][0]),
+            ReplacementTransform(fourth[1], one_over_phi_N[1][0]),
+        )
+        self.play(
+            FadeInFrom(phi_N_label, DOWN)
+        )
+        self.wait()
+
+        # Fancier version
+        new_expression = TexMobject(
+            "\\lim_{x \\to \\infty}",
+            "\\left(",
+            "{\\pi(x; {N}, {r})",
+            "\\over",
+            "\\pi(x)}",
+            "\\right)",
+            "=",
+            "\\frac{1}{\\phi({N})}",
+            tex_to_color_map={
+                "{N}": N.get_color(),
+                "{r}": r.get_color(),
+                "\\pi": WHITE,
+            }
+        )
+        pis = new_expression.get_parts_by_tex("\\pi")
+
+        randy = Randolph(height=2)
+        randy.next_to(new_expression, LEFT, buff=LARGE_BUFF)
+        randy.shift(0.75 * DOWN)
+
+        new_expression.next_to(expression, DOWN, LARGE_BUFF)
+        ne_rect = SurroundingRectangle(new_expression, color=BLUE)
+
+        label_group = VGroup(N_label, r_label)
+        label_group.generate_target()
+        label_group.target.arrange(RIGHT, buff=LARGE_BUFF)
+        label_group.target.next_to(new_expression, DOWN, buff=LARGE_BUFF)
+
+        self.play(
+            FadeIn(randy),
+        )
+        self.play(
+            randy.change, "hooray", expression
+        )
+        self.play(Blink(randy))
+        self.wait()
+        self.play(
+            FadeIn(new_expression),
+            MoveToTarget(label_group),
+            phi_N_label.to_edge, DOWN, MED_LARGE_BUFF,
+            randy.change, "horrified", new_expression,
+        )
+        self.play(ShowCreation(ne_rect))
+        self.play(randy.change, "confused")
+        self.play(Blink(randy))
+        self.wait()
+        self.play(
+            LaggedStartMap(
+                ShowCreationThenFadeAround, pis,
+            ),
+            randy.change, "angry", new_expression
+        )
+        self.wait()
+        self.play(Blink(randy))
+        self.wait()
+
+
+class MoreModestDirichlet(Scene):
+    def construct(self):
+        ed = TextMobject(
+            "Each (coprime) residue class ",
+            "is equally dense with ",
+            "primes."
+        )
+        inf = TextMobject(
+            "Each (coprime) residue class ",
+            "has infinitely many ",
+            "primes."
+        )
+        ed[1].set_color(BLUE)
+        inf[1].set_color(GREEN)
+
+        for mob in [*ed, *inf]:
+            mob.save_state()
+
+        cross = Cross(ed[1])
+        c_group = VGroup(ed[1], cross)
+
+        self.add(ed)
+        self.wait()
+        self.play(ShowCreation(cross))
+        self.play(
+            c_group.shift, DOWN,
+            c_group.set_opacity, 0.5,
+            ReplacementTransform(ed[::2], inf[::2]),
+            FadeIn(inf[1])
+        )
+        self.wait()
+        self.remove(*inf)
+        self.play(
+            inf[1].shift, UP,
+            Restore(ed[0]),
+            Restore(ed[1]),
+            Restore(ed[2]),
+            FadeOut(cross),
+        )
+        self.wait()
+
+
+class TalkAboutProof(TeacherStudentsScene):
+    def construct(self):
+        teacher = self.teacher
+        students = self.students
+
+        # Ask question
+        self.student_says(
+            "So how'd he\\\\prove it?",
+            student_index=0,
+        )
+        bubble = students[0].bubble
+        students[0].bubble = None
+        self.play(
+            teacher.change, "hesitant",
+            students[1].change, "happy",
+            students[2].change, "happy",
+        )
+        self.wait()
+        self.teacher_says(
+            "...er...it's a\\\\bit complicated",
+            target_mode="guilty",
+        )
+        self.change_all_student_modes(
+            "tired",
+            look_at_arg=teacher.bubble,
+            lag_ratio=0.1,
+        )
+        self.play(
+            FadeOut(bubble),
+            FadeOut(bubble.content),
+        )
+        self.wait(3)
+
+        # Bring up complex analysis
+        ca = TextMobject("Complex ", "Analysis")
+        ca.move_to(self.hold_up_spot, DOWN)
+
+        self.play(
+            teacher.change, "raise_right_hand",
+            FadeInFromDown(ca),
+            FadeOut(teacher.bubble),
+            FadeOut(teacher.bubble.content),
+            self.get_student_changes(*["pondering"] * 3),
+        )
+        self.wait()
+        self.play(
+            ca.scale, 2,
+            ca.center,
+            ca.to_edge, UP,
+            teacher.change, "happy",
+        )
+        self.play(ca[1].set_color, GREEN)
+        self.wait(2)
+        self.play(ca[0].set_color, YELLOW)
+        self.wait(2)
+        self.change_all_student_modes(
+            "confused", look_at_arg=ca,
+        )
+        self.wait(4)
+
+
+class HighlightTwinPrimes(Scene):
+    def construct(self):
+        self.add_paper_titles()
+        self.show_twin_primes()
+
+    def add_paper_titles(self):
+        gpy = TextMobject(
+            "Goldston, Pintz, Yildirim\\\\",
+            "2005",
+        )
+        zhang = TextMobject("Zhang\\\\2014")
+
+        gpy.move_to(FRAME_WIDTH * LEFT / 4)
+        gpy.to_edge(UP)
+        zhang.move_to(FRAME_WIDTH * RIGHT / 4)
+        zhang.to_edge(UP)
+
+        self.play(LaggedStartMap(
+            FadeInFromDown, VGroup(gpy, zhang),
+            lag_ratio=0.3,
+        ))
+
+    def show_twin_primes(self):
+        max_x = 300
+        line = NumberLine(
+            x_min=0,
+            x_max=max_x,
+            unit_size=0.5,
+            numbers_with_elongated_ticks=range(10, max_x, 10),
+        )
+        line.move_to(2.5 * DOWN + 7 * LEFT, LEFT)
+        line.add_numbers(*range(10, max_x, 10))
+
+        primes = read_in_primes(max_x)
+        prime_mobs = VGroup(*[
+            Integer(p).next_to(line.n2p(p), UP)
+            for p in primes
+        ])
+        dots = VGroup(*[Dot(line.n2p(p)) for p in primes])
+
+        arcs = VGroup()
+        for pm, npm in zip(prime_mobs, prime_mobs[1:]):
+            p = pm.get_value()
+            np = npm.get_value()
+            if np - p == 2:
+                angle = 30 * DEGREES
+                arc = Arc(
+                    start_angle=angle,
+                    angle=PI - 2 * angle,
+                    color=RED,
+                )
+                arc.set_width(
+                    get_norm(npm.get_center() - pm.get_center())
+                )
+                arc.next_to(VGroup(pm, npm), UP, SMALL_BUFF)
+                arcs.add(arc)
+
+        dots.set_color(TEAL)
+        prime_mobs.set_color(TEAL)
+
+        line.add(dots)
+
+        self.play(
+            FadeIn(line, lag_ratio=0.9),
+            LaggedStartMap(FadeInFromDown, prime_mobs),
+            run_time=2,
+        )
+        line.add(prime_mobs)
+        self.wait()
+
+        self.play(FadeIn(arcs))
+        self.play(
+            line.shift, 100 * LEFT,
+            arcs.shift, 100 * LEFT,
+            run_time=20,
+            rate_func=lambda t: smooth(t, 5)
+        )
+        self.wait()
+
+
+class RandomToImportant(PiCreatureScene):
+    CONFIG = {
+        "default_pi_creature_kwargs": {
+            "color": GREY_BROWN,
+        },
+        "camera_config": {
+            "background_color": DARKER_GREY,
+        }
+    }
+
+    def construct(self):
+        morty = self.pi_creature
+        morty.center().to_edge(DOWN)
+
+        left_comment = TextMobject("Arbitrary question")
+        left_comment.to_edge(UP)
+        left_comment.shift(3.5 * LEFT)
+
+        right_comment = TextMobject("Deep fact")
+        right_comment.to_edge(UP)
+        right_comment.shift(3.5 * RIGHT)
+
+        arrow = Arrow(
+            left_comment.get_right(),
+            right_comment.get_left(),
+            buff=0.5,
+        )
+
+        self.play(
+            morty.change, "raise_left_hand", left_comment,
+            FadeInFromDown(left_comment)
+        )
+        self.wait(2)
+        self.play(
+            morty.change, "raise_right_hand", right_comment,
+            FadeInFromDown(right_comment)
+        )
+        self.play(
+            ShowCreation(arrow),
+            morty.look_at, right_comment,
+        )
+        self.wait(2)
+
+
+class RandomWalkOfTopics(Scene):
+    CONFIG = {
+        "n_dots": 30,
+        "n_edge_range": [2, 4],
+        "super_dot_n_edges": 20,
+        "isolated_threashold": 0.5,
+    }
+
+    def construct(self):
+        self.setup_network()
+        self.define_important()
+        self.perform_walk()
+
+    def setup_network(self):
+        n_dots = self.n_dots
+        dots = VGroup()
+
+        while len(dots) < n_dots:
+            point = np.random.uniform(-1, 1, size=3)
+            point[2] = 0
+            point[0] *= 7
+            point[1] *= 3
+            isolated = True
+            for dot in dots:
+                if get_norm(dot.get_center() - point) < self.isolated_threashold:
+                    isolated = False
+            if not isolated:
+                continue
+            dot = Dot(point)
+            dot.edges = VGroup()
+            dot.neighbors = VGroup()
+            dots.add(dot)
+        super_dot = dots[len(dots) // 2]
+
+        all_edges = VGroup()
+
+        def add_edge(d1, d2):
+            if d1 is d2:
+                return
+            edge = Line(
+                d1.get_center(), d2.get_center(),
+                buff=d1.get_width() / 2
+            )
+            d1.edges.add(edge)
+            d2.edges.add(edge)
+            d1.neighbors.add(d2)
+            d2.neighbors.add(d1)
+            all_edges.add(edge)
+
+        for dot in dots:
+            # others = list(dots[i + 1:])
+            others = [d for d in dots if d is not dot]
+            others.sort(key=lambda d: get_norm(d.get_center() - dot.get_center()))
+            n_edges = np.random.randint(*self.n_edge_range)
+            for other in others[:n_edges]:
+                if dot in other.neighbors:
+                    continue
+                add_edge(dot, other)
+
+        for dot in dots:
+            if len(super_dot.neighbors) > self.super_dot_n_edges:
+                break
+            elif dot in super_dot.neighbors:
+                continue
+            add_edge(super_dot, dot)
+
+        dots.sort(lambda p: p[0])
+
+        all_edges.set_stroke(WHITE, 2)
+        dots.set_fill(LIGHT_GREY, 1)
+
+        VGroup(dots, all_edges).to_edge(DOWN, buff=MED_SMALL_BUFF)
+
+        self.dots = dots
+        self.edges = all_edges
+        self.super_dot = super_dot
+
+    def define_important(self):
+        sd = self.super_dot
+        dots = self.dots
+        edges = self.edges
+
+        sd.set_color(RED)
+        for mob in [*dots, *edges]:
+            mob.save_state()
+            mob.set_opacity(0)
+
+        sd.set_opacity(1)
+        sd.edges.set_opacity(1)
+        sd.neighbors.set_opacity(1)
+
+        # angles = np.arange(0, TAU, TAU / len(sd.neighbors))
+        # center = 0.5 * DOWN
+        # sd.move_to(center)
+        # for dot, edge, angle in zip(sd.neighbors, sd.edges, angles):
+        #     dot.move_to(center + rotate_vector(2.5 * RIGHT, angle))
+        #     if edge.get_length() > 0:
+        #         edge.put_start_and_end_on(
+        #             sd.get_center(),
+        #             dot.get_center()
+        #         )
+        #     rad = dot.get_width() / 2
+        #     llen = edge.get_length()
+        #     edge.scale((llen - 2 * rad) / llen)
+
+        title = VGroup(
+            TextMobject("Important"),
+            TexMobject("\\Leftrightarrow"),
+            TextMobject("Many connections"),
+        )
+        title.scale(1.5)
+        title.arrange(RIGHT, buff=MED_LARGE_BUFF)
+        title.to_edge(UP)
+
+        arrow_words = TextMobject("(in my view)")
+        arrow_words.set_width(2 * title[1].get_width())
+        arrow_words.next_to(title[1], UP, SMALL_BUFF)
+
+        title[0].save_state()
+        title[0].set_x(0)
+
+        self.add(title[0])
+        self.play(
+            FadeInFromLarge(sd),
+            title[0].set_color, RED,
+        )
+        title[0].saved_state.set_color(RED)
+        self.play(
+            Restore(title[0]),
+            GrowFromCenter(title[1]),
+            FadeIn(arrow_words),
+            FadeInFrom(title[2], LEFT),
+            LaggedStartMap(
+                ShowCreation, sd.edges,
+                run_time=3,
+            ),
+            LaggedStartMap(
+                GrowFromPoint, sd.neighbors,
+                lambda m: (m, sd.get_center()),
+                run_time=3,
+            ),
+        )
+        self.wait()
+        self.play(*map(Restore, [*dots, *edges]))
+        self.wait()
+
+    def perform_walk(self):
+        # dots = self.dots
+        # edges = self.edges
+        sd = self.super_dot
+
+        path = VGroup(sd)
+        random.seed(1)
+        for x in range(3):
+            new_choice = None
+            while new_choice is None or new_choice in path:
+                new_choice = random.choice(path[0].neighbors)
+            path.add_to_back(new_choice)
+
+        for d1, d2 in zip(path, path[1:]):
+            self.play(Flash(d1.get_center()))
+            self.play(
+                ShowCreationThenDestruction(
+                    Line(
+                        d1.get_center(),
+                        d2.get_center(),
+                        color=YELLOW,
+                    )
+                )
+            )
+
+        self.play(Flash(sd))
+        self.play(LaggedStart(*[
+            ApplyMethod(
+                edge.set_stroke, YELLOW, 5,
+                rate_func=there_and_back,
+            )
+            for edge in sd.edges
+        ]))
+        self.wait()
+
+
+class DeadEnds(RandomWalkOfTopics):
+    CONFIG = {
+        "n_dots": 20,
+        "n_edge_range": [2, 4],
+        "super_dot_n_edges": 2,
+        "random_seed": 1,
+    }
+
+    def construct(self):
+        self.setup_network()
+        dots = self.dots
+        edges = self.edges
+
+        self.add(dots, edges)
+
+        VGroup(
+            edges[3],
+            edges[4],
+            edges[7],
+            edges[10],
+            edges[12],
+            edges[15],
+            edges[27],
+            edges[30],
+            edges[33],
+        ).set_opacity(0)
+
+        # for i, edge in enumerate(edges):
+        #     self.add(Integer(i).move_to(edge))
+
+
+class Rediscovery(Scene):
+    def construct(self):
+        randy = Randolph()
+        randy.to_edge(DOWN)
+        randy.shift(2 * RIGHT)
+
+        lightbulb = Lightbulb()
+        lightbulb.set_stroke(width=4)
+        lightbulb.scale(1.5)
+        lightbulb.next_to(randy, UP)
+
+        rings = self.get_rings(
+            lightbulb.get_center(),
+            max_radius=10.0,
+            delta_r=0.1,
+        )
+
+        bubble = ThoughtBubble()
+        bubble.pin_to(randy)
+        # bubble[-1].set_fill(GREEN_SCREEN, 0.5)
+        self.play(
+            randy.change, "pondering",
+            ShowCreation(bubble),
+            FadeInFromDown(lightbulb),
+        )
+        self.add(rings, bubble)
+        self.play(
+            randy.change, "thinking",
+            LaggedStartMap(
+                VFadeInThenOut,
+                rings,
+                lag_ratio=0.002,
+                run_time=3,
+            )
+        )
+        self.wait(4)
+
+    def get_rings(self, center, max_radius, delta_r):
+        radii = np.arange(0, max_radius, delta_r)
+        rings = VGroup(*[
+            Annulus(
+                inner_radius=r1,
+                outer_radius=r2,
+                fill_opacity=0.75 * (1 - fdiv(r1, max_radius)),
+                fill_color=YELLOW
+            )
+            for r1, r2 in zip(radii, radii[1:])
+        ])
+        rings.move_to(center)
+        return rings
+
+
+class BePlayful(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "So be playful!",
+            target_mode="hooray",
+        )
+        self.change_student_modes("thinking", "hooray", "happy")
+        self.wait(3)
+
+
+class SpiralsPatronThanks(PatreonEndScreen):
+    CONFIG = {
+        "specific_patrons": [
+            "Juan Benet",
+            "Kurt Dicus",
+            "Vassili Philippov",
+            "Burt Humburg",
+            "Matt Russell",
+            "Scott Gray",
+            "soekul",
+            "Tihan Seale",
+            "D. Sivakumar",
+            "Ali Yahya",
+            "Arthur Zey",
+            "dave nicponski",
+            "Joseph Kelly",
+            "Kaustuv DeBiswas",
+            "kkm",
+            "Lambda AI Hardware",
+            "Lukas Biewald",
+            "Mark Heising",
+            "Nicholas Cahill",
+            "Peter Mcinerney",
+            "Quantopian",
+            "Scott Walter, Ph.D.",
+            "Tauba Auerbach",
+            "Yana Chernobilsky",
+            "Yu Jun",
+            "Jordan Scales",
+            "Lukas -krtek.net- Novy",
+            "Andrew Weir",
+            "Britt Selvitelle",
+            "Britton Finley",
+            "David Gow",
+            "J",
+            "Jonathan Wilson",
+            "Joseph John Cox",
+            "Magnus Dahlström",
+            "Mattéo Delabre",
+            "Randy C. Will",
+            "Ryan Atallah",
+            "Luc Ritchie",
+            "1stViewMaths",
+            "Aidan Shenkman",
+            "Alex Mijalis",
+            "Alexis Olson",
+            "Andreas Benjamin Brössel",
+            "Andrew Busey",
+            "Andrew R. Whalley",
+            "Ankalagon",
+            "Anthony Turvey",
+            "Antoine Bruguier",
+            "Antonio Juarez",
+            "Arjun Chakroborty",
+            "Art Ianuzzi",
+            "Austin Goodman",
+            "Avi Finkel",
+            "Awoo",
+            "Azeem Ansar",
+            "AZsorcerer",
+            "Barry Fam",
+            "Bernd Sing",
+            "Boris Veselinovich",
+            "Bradley Pirtle",
+            "Brian Staroselsky",
+            "Calvin Lin",
+            "Charles Southerland",
+            "Charlie N",
+            "Chris Connett",
+            "Christian Kaiser",
+            "Clark Gaebel",
+            "Danger Dai",
+            "Daniel Herrera C",
+            "Daniel Pang",
+            "Dave B",
+            "Dave Kester",
+            "David B. Hill",
+            "David Clark",
+            "DeathByShrimp",
+            "Delton Ding",
+            "Dominik Wagner",
+            "eaglle",
+            "emptymachine",
+            "Eric Younge",
+            "Ero Carrera",
+            "Eryq Ouithaqueue",
+            "Federico Lebron",
+            "Fernando Via Canel",
+            "Frank R. Brown, Jr.",
+            "Giovanni Filippi",
+            "Hal Hildebrand",
+            "Hause Lin",
+            "Hitoshi Yamauchi",
+            "Ivan Sorokin",
+            "j eduardo perez",
+            "Jacob Baxter",
+            "Jacob Harmon",
+            "Jacob Hartmann",
+            "Jacob Magnuson",
+            "Jameel Syed",
+            "James Stevenson",
+            "Jason Hise",
+            "Jeff Linse",
+            "Jeff Straathof",
+            "John C. Vesey",
+            "John Griffith",
+            "John Haley",
+            "John V Wertheim",
+            "Jonathan Eppele",
+            "Josh Kinnear",
+            "Joshua Claeys",
+            "Kai-Siang Ang",
+            "Kanan Gill",
+            "Kartik Cating-Subramanian",
+            "L0j1k",
+            "Lee Redden",
+            "Linh Tran",
+            "Ludwig Schubert",
+            "Magister Mugit",
+            "Mark B Bahu",
+            "Mark Mann",
+            "Martin Price",
+            "Mathias Jansson",
+            "Matt Langford",
+            "Matt Roveto",
+            "Matthew Bouchard",
+            "Matthew Cocke",
+            "Michael Faust",
+            "Michael Hardel",
+            "Michele Donadoni",
+            "Mirik Gogri",
+            "Mustafa Mahdi",
+            "Márton Vaitkus",
+            "Nero Li",
+            "Nikita Lesnikov",
+            "Omar Zrien",
+            "Owen Campbell-Moore",
+            "Patrick Lucas",
+            "Pedro Igor Salomão Budib",
+            "Peter Ehrnstrom",
+            "RedAgent14",
+            "rehmi post",
+            "Rex Godby",
+            "Richard Barthel",
+            "Ripta Pasay",
+            "Rish Kundalia",
+            "Roman Sergeychik",
+            "Roobie",
+            "Ryan Williams",
+            "Sebastian Garcia",
+            "Solara570",
+            "Steven Siddals",
+            "Stevie Metke",
+            "Suthen Thomas",
+            "Tal Einav",
+            "Ted Suzman",
+            "The Responsible One",
+            "Thomas Tarler",
+            "Tianyu Ge",
+            "Tom Fleming",
+            "Tyler VanValkenburg",
+            "Valeriy Skobelev",
+            "Veritasium",
+            "Vinicius Reis",
+            "Xuanji Li",
+            "Yavor Ivanov",
+            "YinYangBalance.Asia",
+        ]
+    }
+
+
+class Thumbnail(SpiralScene):
+    CONFIG = {
+        "max_N": 8000,
+        "just_show": True,
+    }
+
+    def construct(self):
+        self.add_dots()
+        if not self.just_show:
+            pass
+
+    def add_dots(self):
+        self.set_scale(scale=1e3)
+
+        p_spiral = self.get_prime_p_spiral(self.max_N)
+        dots = VGroup(*[
+            Dot(
+                point,
+                radius=interpolate(0.01, 0.07, min(0.5 * get_norm(point), 1)),
+                fill_color=TEAL,
+                # fill_opacity=interpolate(0.5, 1, min(get_norm(point), 1))
+            )
+            for point in p_spiral.points
+        ])
+        dots.set_fill([TEAL_E, TEAL_A])
+        dots.set_stroke(BLACK, 1)
+
+        label = VGroup(
+            TextMobject("$(p, p)$ for all primes $p$, in polar"),
+        )
+        label.scale(2)
+        label.set_stroke(BLACK, 10, background=True)
+        label.add_background_rectangle()
+        label.to_corner(DL)
+
+        self.add(dots)
+        self.add(label)
+
+        self.dots = dots
