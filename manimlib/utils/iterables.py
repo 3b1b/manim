@@ -30,7 +30,7 @@ def list_difference_update(l1, l2):
 
 
 def all_elements_are_instances(iterable, Class):
-    return all([isinstance(e, Class) for e in iterable])
+    return all(isinstance(e, Class) for e in iterable)
 
 
 def adjacent_n_tuples(objects, n):

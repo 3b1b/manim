@@ -238,7 +238,7 @@ class RadarPulse(ContinualAnimation):
             ps.update_mobject(dt)
 
     def is_finished(self):
-        return all([ps.is_finished() for ps in self.pulse_singletons])
+        return all(ps.is_finished() for ps in self.pulse_singletons)
 
 class MultipleFlashes(Succession):
     CONFIG = {

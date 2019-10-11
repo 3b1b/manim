@@ -2,11 +2,7 @@ from manimlib.imports import *
 from random import *
 
 def text_range(start,stop,step): # a range as a list of strings
-    numbers = np.arange(start,stop,step)
-    labels = []
-    for x in numbers:
-        labels.append(str(x))
-    return labels
+    return [str(x) for x in np.arange(start,stop,step)]
 
 
 class Histogram(VMobject):
@@ -82,10 +78,7 @@ class Histogram(VMobject):
             self.remove(submob)
 
         def empty_string_array(n):
-            arr = []
-            for i in range(n):
-                arr.append("")
-            return arr
+            return ["" for _ in range(n)]
 
         def num_arr_to_string_arr(arr): # converts number array to string array
             ret_arr = []

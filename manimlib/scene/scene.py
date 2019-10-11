@@ -150,10 +150,10 @@ class Scene(Container):
             mobject.update(dt)
 
     def should_update_mobjects(self):
-        return self.always_update_mobjects or any([
+        return self.always_update_mobjects or any(
             mob.has_time_based_updater()
             for mob in self.get_mobject_family_members()
-        ])
+        )
 
     ###
 
