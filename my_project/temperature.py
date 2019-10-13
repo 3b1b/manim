@@ -1327,24 +1327,55 @@ class Box_Small(Box):
 
 class RaiseTemperature(Scene):
 	CONFIG = {
-		"box_length": 1,
+		"box_length": 7.5,
 		"crystal_config": {
 			"theta": 45*DEGREES,
-			"distance_between_particles": 0.3,
+			"distance_between_particles": 0.5,
 			"updater": "move_1D",
 		},
 		"crystal_color": "#A5F2F3",
 
 		"initial_temperature": 1/3,
-		"temperature_increase_rate": 1/3 * 0.05,
+		# "temperature_increase_rate": 1/3 * 0.05,
+		# "temperature_increase_rate": 1/3 * 0.2,
+		"temperature_increase_rate": 8/90,
+
+		"wait_time": 1,
+		"iterations": 30,
 	}
 	def construct(self):
 		self.wait(0.2)
 
-		box = Square(side_length=self.box_length)
+		self.add_box()
+		self.add_crystal()
+
+		# self.temperature = self.add_updating_value("T=", self.initial_temperature, DL, RIGHT)
+		self.temperature = self.add_updating_value("T=", self.initial_temperature, DL)
+
+		initial_velocity = self.T_to_v(self.initial_temperature)
+		# self.velocity = self.add_updating_value("v=", initial_velocity, DR, LEFT)
+		self.velocity = self.add_updating_value("v=", initial_velocity, DR)
+		
+		# # debug
+		# def print_p(p, dt):
+		# 	print(f"v={p.v:.3f}  \tT={p.Temperature:.3f}")
+		# self.crystal.particles[0].add_updater(print_p)
+		# # debug
+
+		self.crystal.resume_updating()
+
+		for _ in range(self.iterations):
+			self.update_temperature()
+			self.wait(self.wait_time)
+
+		self.wait(1.5)
+	
+	def add_box(self):
+		self.box = box = Square(side_length=self.box_length)
 		self.add(box)
 		self.play(Write(box))
 
+	def add_crystal(self):
 		crystal_config = {
 			"x_max":  self.box_length/2,
 			"x_min": -self.box_length/2,
@@ -1357,7 +1388,7 @@ class RaiseTemperature(Scene):
 			"velocity": 1.,
 		}
 		self.crystal_config["particle_config"] = particle_config
-		crystal = Crystal(**self.crystal_config, **crystal_config)
+		self.crystal = crystal = Crystal(**self.crystal_config, **crystal_config)
 		crystal.set_color(self.crystal_color)
 		self.add(crystal)
 
@@ -1365,42 +1396,47 @@ class RaiseTemperature(Scene):
 			p.velocity *= -1
 			p.set_color(RED)
 
-		def increase_temperature(particle, dt):
-			if not dt:
-				return
-			particle.Temperature += self.temperature_increase_rate
-
 		for p in crystal.particles:
 			p.Temperature = self.initial_temperature
-			p.add_updater(increase_temperature)
 
 		self.play(*crystal.write_simultaneously(), suspend_mobject_updating=False)
 
-		temperature_tex = TexMobject("T=", np.around(self.initial_temperature, 3))
-		temperature_tex.to_corner(DL)
+	def add_updating_value(self, text, value, position, shift=None):
+		updater_text = TextMobject(text)
 
-		self.current_temperature = self.initial_temperature
-		def update_temperature_tex(tex, dt):
-			if not dt:
-				return
+		updater = DecimalNumber(value, num_decimal_places=4)
+		updater.next_to(
+			updater_text[-1], RIGHT,
+			aligned_edge=DOWN,
+		)
 
-			import pdb; pdb.set_trace()
-			self.current_temperature += self.temperature_increase_rate
-			new_tex = TexMobject(str(np.around(self.current_temperature, 3)))
-			print(self.current_temperature)
-			self.play(
-				ReplacementTransform( tex[1], new_tex ),
-			)
+		updater_group = VGroup(
+			updater_text,
+			updater,
+		)
 
-		temperature_tex.add_updater(update_temperature_tex)
+		updater_group.to_corner(position)
+		if shift:
+			updater_group.shift(shift)
 
-		self.add(temperature_tex)
-		self.play(Write(temperature_tex))
-		
-		self.wait(1.5)
-		crystal.resume_updating()
-		self.wait(20)
-	
+		self.add(updater_group)
+		self.play(Write(updater_group))
+
+		return updater
+
+	def update_temperature(self):
+		self.temperature.increment_value(self.temperature_increase_rate)
+
+		self.velocity.set_value(self.T_to_v(self.temperature.get_value()))
+
+		for p in self.crystal.particles:
+			p.Temperature = self.temperature.get_value()
+
+	@staticmethod
+	def T_to_v(T):
+		m = 1 # this is the default value, and I did not change it in this simulation
+		return np.sqrt(3*T/m)
+
 
 # 
 # playground

@@ -132,6 +132,10 @@ class DecimalNumber(VMobject):
     def get_value(self):
         return self.number
 
+    def increment_value(self, d_value):
+        self.set_value(self.get_value() + d_value)
+
+
 
 class Integer(DecimalNumber):
     CONFIG = {
