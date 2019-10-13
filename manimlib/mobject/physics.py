@@ -10,11 +10,19 @@ from manimlib.mobject.svg.tex_mobject import TexMobject
 from manimlib.animation.creation import Write
 
 
+# physical constants.
+# the TexMobjects are commented our so that it won't compile them when this file is being used
+
 k_B = 1.38064852e-23
-k_B_tex = TexMobject("1.38064852\\times10^{-23} \\frac{m^2 kg}{s^2 K}")
+# k_B_tex = TexMobject("1.38064852\\times10^{-23} \\frac{m^2 kg}{s^2 K}")
 
 SPEED_OF_LIGHT = 299_792_458 # m/s
-SPEED_OF_LIGHT_tex = TexMobject("3\\times10^8 \\frac{m}{s}")
+# SPEED_OF_LIGHT_tex = TexMobject("3\\times10^8 \\frac{m}{s}")
+
+
+#
+# UTILS
+#
 
 def polar_to_cartesian(r, theta):
 	return r*np.cos(theta), r*np.sin(theta)
@@ -26,11 +34,17 @@ def almost_equal(x, y):
 def almost_same_point(a, b):
 	return all(np.around(a, 3) == np.around(b, 3))
 
+#
+# Physical mobjects
+#
 class Particle(Dot):
+	# by concention, full word (such as velocity, force) is for the vector, while single letter (v, F) is for the scalar
 	CONFIG = {
+		# velocity can be either a vector or a scalar
 		"velocity": RIGHT, # m/s
 		"mass": 1, # kg
 
+		# the distance in which the particle can move, as measured from the initial_position
 		"movement_radius": 1,
 	}
 	def __init__(self, point=ORIGIN, **kwargs):
@@ -39,14 +53,14 @@ class Particle(Dot):
 
 	def __repr__(self):
 		v = np.around(self.v, 3)
-		return f"<Particle, v={v}, m={self.mass}>"
+		return f"<Particle, v={v}, m={self.mass} at 0x{hex(id(self))}>"
 
 	# shortcuts for ease of use
 	@property
 	def v(self):
-		try:
+		try: # assuming velocity is a vector
 			return get_norm(self.velocity)
-		except:
+		except: # else, it is a scalar
 			return self.velocity
 	@v.setter
 	def v(self, v):
@@ -82,9 +96,9 @@ class Particle(Dot):
 		self.beta = np.sqrt(1 - gamma**(-2))
 
 
-	def energy_classical(self):
+	def get_kinetic_energy_classical(self):
 		return 0.5 * self.m * self.v**2
-	def energy_relativistic(self):
+	def get_kinetic_energy_relativistic(self):
 		return (self.gamma - 1) * self.m * SPEED_OF_LIGHT**2
 
 
@@ -101,7 +115,8 @@ class Particle(Dot):
 	@Temperature.setter
 	def Temperature(self, Temperature):
 		self.v = np.sign(self.v) * np.sqrt(3*Temperature/self.m)
-
+	# shortcut
+	T = Temperature
 
 
 	def colide_classical(self, other, edit=True):
@@ -119,18 +134,19 @@ class Particle(Dot):
 
 		return v1_new, v2_new
 
-	def colide_quantom(self, other, edit=True):
-		pass
+	def colide_quantum(self, other, edit=True):
+		raise NotImplemented()
 
 	# updaters
 	def random_walk(self, dt):
 		raise NotImplemented()
 
-	# non relative vertion! F=m*dv/dt
 	def walk_by_force(self, dt):
 		"""
 		increase velocity as if acceleration is constant
 		increase position as if velocity     is constant
+
+		non relative version! F=m*dv/dt
 		"""
 		dv = dt * self.get_force() / self.m
 		self.velocity += dv
@@ -206,7 +222,7 @@ class Particle1D(Particle):
 				self.shift(direction)
 				allowed_movement -= length
 
-
+	# radius is a mobject used for visual display of the allowed movement, usually used with random_walk
 	def create_radius(self):
 		movement_radius_vector = np.array((0., 0., 0.))
 		movement_radius_vector[self.axis] = self.movement_radius
@@ -293,6 +309,7 @@ class Particle2D(Particle):
 
 			allowed_movement = self._move_toward_new_location(allowed_movement)
 
+	# move_1D helpers
 	def _move_toward_new_location_1D(self, allowed_movement):
 		direction = np.array((0., 0., 0.))
 		direction[self._axis] = 1
@@ -314,6 +331,7 @@ class Particle2D(Particle):
 			self.v *= -1
 			return np.around(allowed_movement - possible_movement, 3)
 
+	# move_1D is implimented in particle2D since Crystal uses 2D particles
 	def move_1D(self, dt):
 		# I expect self.velocity to have 2 zeros. i.e. motion along only one axis
 		allowed_movement = abs(self.v * dt)
@@ -324,6 +342,7 @@ class Particle2D(Particle):
 			allowed_movement = self._move_toward_new_location_1D(allowed_movement)
 
 
+	# radius is a mobject used for visual display of the allowed movement, usually used with random_walk
 	def create_radius(self):
 		self.radius_mobject = Circle(
 			arc_center=self.initial_position,
@@ -333,16 +352,17 @@ class Particle2D(Particle):
 
 
 
-# can ingerit from Particle2D, but there's no need
+# can inherit from Particle2D, but there's no need
 class ChargedParticle(Particle):
 	CONFIG = {
 		"q": 1,
 		"E": UP,
-		"B": np.array((0., 0., 1)),
+		"B": OUT,
 	}
 	def get_force(self):
-		# import pdb; pdb.set_trace()
 		force = self.q * (self.E + np.cross(self.velocity, self.B))
+		# there's a bug whenever the force exactly equals 0.5
+		# the force arrow will become of size 0, and will raise an exception
 		if get_norm(force) == 0.5:
 			force *= 1.002
 		return force
@@ -375,13 +395,10 @@ class ChargedParticle(Particle):
 				end=c + f,
 			)
 		except:
-			# import pdb; pdb.set_trace()
 			self.force_arrow = Arrow(
 				start=c,
 				end=c + f,
 			)
-		# print(f"force={self.get_force()} ; F={self.F} ; v={self.v}")
-		# print(f"vB={np.cross(self.velocity, self.B)} ; start={self.force_arrow.get_start()} ; end={self.force_arrow.get_end()}")
 
 
 class Crystal(VGroup):
@@ -398,8 +415,11 @@ class Crystal(VGroup):
 		"particle_config": {
 			"movement_radius": 0.5,
 		},
+
+		"updater": "random_walk",
+		"max_amount_of_particles": None,
 	}
-	def __init__(self, max_amount_of_particles=None, updater="random_walk", **kwargs):
+	def __init__(self, , **kwargs):
 		super().__init__(**kwargs)
 
 		particles = []
@@ -408,12 +428,12 @@ class Crystal(VGroup):
 				point=point,
 				**self.particle_config,
 			)
-			if updater:
-				p.add_updater( getattr(p.__class__, updater) )
+			if self.updater:
+				p.add_updater( getattr(p.__class__, self.updater) )
 				p.suspend_updating()
 			particles.append(p)
 
-			if max_amount_of_particles and len(particles) == max_amount_of_particles:
+			if self.max_amount_of_particles and len(particles) == self.max_amount_of_particles:
 				break
 
 		self.particles = VGroup(*particles)

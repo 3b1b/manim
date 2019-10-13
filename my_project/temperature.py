@@ -1325,7 +1325,7 @@ class Box_Small(Box):
 		},
 	}
 
-class RaiseTemperature(Scene):
+class RaiseTemperature1(Scene):
 	CONFIG = {
 		"box_length": 7.5,
 		"crystal_config": {
@@ -1433,8 +1433,8 @@ class RaiseTemperature(Scene):
 			p.Temperature = self.temperature.get_value()
 
 	@staticmethod
-	def T_to_v(T):
-		m = 1 # this is the default value, and I did not change it in this simulation
+	def T_to_v(T, m=1):
+		# m=1 is the default value, and I did not change it in this simulation
 		return np.sqrt(3*T/m)
 
 
