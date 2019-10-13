@@ -30,7 +30,7 @@ class Particle(Dot):
 	CONFIG = {
 		"velocity": RIGHT, # m/s
 		"mass": 1, # kg
-		
+
 		"movement_radius": 1,
 	}
 	def __init__(self, point=ORIGIN, **kwargs):
@@ -62,9 +62,9 @@ class Particle(Dot):
 	def m(self, m):
 		self.mass = m
 
-	# 
+	#
 	# special relativity
-	# 
+	#
 	@property
 	def beta(self):
 		return self.v / SPEED_OF_LIGHT
@@ -86,7 +86,7 @@ class Particle(Dot):
 		return 0.5 * self.m * self.v**2
 	def energy_relativistic(self):
 		return (self.gamma - 1) * self.m * SPEED_OF_LIGHT**2
-	
+
 
 	def get_force(self):
 		raise NotImplemented()
@@ -101,7 +101,7 @@ class Particle(Dot):
 	@Temperature.setter
 	def Temperature(self, Temperature):
 		self.v = np.sign(self.v) * np.sqrt(3*Temperature/self.m)
-	
+
 
 
 	def colide_classical(self, other, edit=True):
@@ -233,8 +233,8 @@ class Particle2D(Particle):
 
 		# initialize for later use in random_walk
 		self._new_location = None
-		
-	
+
+
 	# random walk helpers
 	def _is_near(self, location, other_location=None):
 		if other_location is not None:
@@ -401,7 +401,7 @@ class Crystal(VGroup):
 	}
 	def __init__(self, max_amount_of_particles=None, updater="random_walk", **kwargs):
 		super().__init__(**kwargs)
-		
+
 		particles = []
 		for point in self._generate_positions():
 			p = Particle2D(
@@ -480,4 +480,3 @@ class Crystal(VGroup):
 		self.play(*crystal.write_radius_simultaneously())
 		"""
 		return [Write(p.create_radius()) for p in self.particles]
-	

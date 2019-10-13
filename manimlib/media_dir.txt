@@ -1,1 +1,1 @@
-/home/me/Sources/Python/manim/media
+media
