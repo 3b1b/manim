@@ -35,7 +35,7 @@ in manim directory.
 
 .. note::
 
-  The flag ``-p`` plays the rendered video with default video player.
+  The flag ``-p`` plays the rendered video with the default video player.
 
   Other frequently used flags are:
 
@@ -88,7 +88,7 @@ the :class:`~scene.scene.Scene` at this point.
 ``flip()`` ``rotate()`` ``set_fill()`` apply various modifications to the mobjects before animating
 them.  The call to :meth:`~mobject.mobject.Mobject.flip` flips the
 :class:`~mobject.geometry.Square` across the RIGHT vector.  This is equivalent
-to a refection across the x-axis.
+to a reflection across the x-axis.
 
 The call to :meth:`~mobject.mobject.Mobject.rotate` rotates the
 :class:`~mobject.geometry.Square` 3/8ths of a full rotation counterclockwise.
