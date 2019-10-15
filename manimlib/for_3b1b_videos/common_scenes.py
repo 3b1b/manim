@@ -154,8 +154,7 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         "randomize_order": True,
         "capitalize": True,
         "name_y_spacing": 0.7,
-        # "thanks_words": "Funded by the community, with special thanks to:",
-        "thanks_words": "Early access, name in credits and more at 3b1b.org/support",
+        "thanks_words": "My thanks to all the patrons among you",
     }
 
     def construct(self):
@@ -245,7 +244,7 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         columns.next_to(underline, DOWN, buff=2)
 
         columns.generate_target()
-        columns.target.to_edge(DOWN, buff=2)
+        columns.target.to_edge(DOWN, buff=4)
         vect = columns.target.get_center() - columns.get_center()
         distance = get_norm(vect)
         wait_time = 20
@@ -259,11 +258,15 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         self.wait(wait_time)
 
     def modify_patron_name(self, name):
-        if name.lower() == "RedAgent14".lower():
-            return "Brian Shepetofsky"
-        elif name.lower() == "DeathByShrimp".lower():
-            return "Henry Bresnahan"
-
+        modification_map = {
+            "RedAgent14": "Brian Shepetofsky",
+            "DeathByShrimp": "Henry Bresnahan",
+            "akostrikov": "Aleksandr Kostrikov",
+            "Jacob Baxter": "Will Fleshman",
+        }
+        for n1, n2 in modification_map.items():
+            if name.lower() == n1.lower():
+                return n2
         return name
 
 
