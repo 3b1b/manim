@@ -11,7 +11,7 @@ Manim is an animation engine for explanatory math videos. It's used to create pr
 ## Installation
 Manim runs on python 3.7. You can install it from PyPI via pip
 
-```sh
+```bash
 pip3 install manimlib
 ```
 
@@ -29,7 +29,7 @@ For more options, take a look at the “Using manim“ sections further below.
 
 If you want to hack on manimlib itself, clone this repository and in that directory execute:
 
-```sh
+```bash
 # Install python requirements
 python3 -m pip install -r requirements.txt
 
@@ -40,7 +40,7 @@ python3 ./manim.py example_scenes.py SquareToCircle -pl
 ### Directly (Windows)
 1. [Install FFmpeg](https://www.wikihow.com/Install-FFmpeg-on-Windows).
 2. Install Cairo. Download the wheel from https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo. For most users, ``pycairo‑1.18.0‑cp37‑cp37m‑win32.whl`` will do fine.
-    ```sh
+    ```bash
     pip3 install C:\path\to\wheel\pycairo‑1.18.0‑cp37‑cp37m‑win32.whl
     ```
 3. Install a LaTeX distribution. [MiKTeX](https://miktex.org/download) is recommended.
@@ -48,7 +48,7 @@ python3 ./manim.py example_scenes.py SquareToCircle -pl
 4. [Install SoX](https://sourceforge.net/projects/sox/files/sox/).
 
 5. Install the remaining Python packages. Make sure that ``pycairo==1.17.1`` is changed to ``pycairo==1.18.0`` in requirements.txt.
-    ```sh
+    ```bash
     git clone https://github.com/3b1b/manim.git
     cd manim
     pip3 install -r requirements.txt
@@ -65,7 +65,7 @@ python3 ./manim.py example_scenes.py SquareToCircle -pl
 
 ### Using `virtualenv` and `virtualenvwrapper`
 After installing `virtualenv` and `virtualenvwrapper`
-```sh
+```bash
 git clone https://github.com/3b1b/manim.git
 mkvirtualenv -a manim -r requirements.txt manim
 python3 -m manim example_scenes.py SquareToCircle -pl
@@ -82,7 +82,7 @@ environment variable to the absolute path containing your scene file and the
 1. [Install Docker](https://docs.docker.com)
 2. [Install Docker Compose](https://docs.docker.com/compose/install/)
 3. Render an animation
-```sh
+```bash
 INPUT_PATH=/path/to/dir/containing/source/code \
 OUTPUT_PATH=/path/to/output/ \
 docker-compose run manim example_scenes.py SquareToCircle -l
@@ -102,7 +102,7 @@ Note that the image doesn't have any development tools installed and can't previ
 
 ## Using manim
 Try running the following:
-```sh
+```bash
 python3 -m manim example_scenes.py SquareToCircle -pl
 ```
 The `-p` flag in the command above is for previewing, meaning the video file will automatically open when it is done rendering. The `-l` flag is for a faster rendering at a lower quality.
@@ -128,7 +128,7 @@ Todd Zimmerman put together a [tutorial](https://talkingphysics.wordpress.com/20
 ### Live Streaming
 To live stream your animations, simply run manim with the `--livestream` option.
 
-```sh
+```bash
 > python -m manim --livestream
 Writing to media/videos/scene/scene/1080p30/LiveStreamTemp.mp4
 
