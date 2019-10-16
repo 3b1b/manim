@@ -847,6 +847,7 @@ class Compass(VGroup):
 
 class Semibreve(SVGMobject):
     CONFIG = {
+        "file_name": "music_symbols/semibreve",
         "stroke_width": 0,
         "stroke_opacity": 0,
         "fill_opacity": 1,
@@ -855,12 +856,14 @@ class Semibreve(SVGMobject):
     }
     def __init__(self, context=None, **kwargs):
         digest_config(self, kwargs)
-        self.file_name = "music_symbols/semibreve"
         self.ensure_valid_file()
         VMobject.__init__(self, **kwargs)
         self.move_into_position()
         if context != None:
             self.valid_context(context)
+        else:
+            self.context = None
+        self.set_note_properties()
 
     def move_to_note(self,note,context = None):
         if context != None:
@@ -898,18 +901,76 @@ class Semibreve(SVGMobject):
         note_position = context.get_proportion(self.proportion) + UP*context.get_space_note(self.note)
         self.move_to(note_position)
         self.context = context
+
+    def set_note_properties(self):
+        pass
         
+class Minim(Semibreve):
+    CONFIG = {
+        "file_name": "music_symbols/minim",
+        "include_point": True,
+        "include_base_line":False,
+    }
+    def set_alphas(self):
+        self.body_width = self.note_head.get_width()
+        self.alpha_bodywidth_baseline = 0.686664
+        self.alpha_bodywidth_halfwidth = 3.069032
+        # vector of half
+        self.unit_vector_head_half = np.array([9.30474096e-01,3.66357690e-01,0])
+        self.length_vector_head_half = 0.6458049564279308
+        self.alpha_length_vector_head_half = self.body_width / self.length_vector_head_half
+        # base line width
+        self.base_line_width = self.body_width / self.alpha_bodywidth_baseline
+        # stem position
+        self.unit_vector_head_stem = np.array([-3.26004674e-01,-9.45368157e-01,0])
+        self.length_vector_head_stem = 0.915117752732528
+        self.alpha_length_vector_head_stem = self.body_width / self.length_vector_head_stem
 
+    def set_note_properties(self):
+        self.stem = self[2]
+        self.remove(self[1])
+        self.note_head = self[0]
+        self.note_head.set_stroke(None,0)
+        stem_line = Line(self.note_head.get_center(),self.stem.get_center())
+        print(stem_line.get_unit_vector())
+        print(stem_line.get_length())
+        # context
+        if self.context != None:
+            self.stroke_line = self.context.stroke
+        else:
+            self.stroke_line = 5
+        self.stem.set_stroke(WHITE,self.stroke_line,1)
+        # alphas 
+        self.set_alphas()
+        if self.include_point:
+            self.half = Circle(color=self.get_color(),fill_opacity=1,stroke_opacity=0)
+            self.set_half_properties()
+            #self.half_radius = self.
+        if self.include_base_line or (abs(self.note%2) == 0 and abs(self.note) > 4):
+            self.base_line = Line().set_width(self.base_line_width)
+            self.set_base_line_properties()
 
+    def set_half_properties(self):
+        self.half.set_width(self.body_width / self.alpha_bodywidth_halfwidth)
+        self.length_vector = self.body_width / self.alpha_length_vector_head_half
+        self.vector = self.length_vector * self.unit_vector_head_half
+        self.half.move_to(self.note_head.get_center() + self.vector)
+        self.add(self.half)
+
+    def set_base_line_properties(self):
+        self.base_line.set_stroke(None,self.stroke_line,1)
+        self.base_line.move_to(self.note_head)
+        self.add(self.base_line)
 
 
 class G_system(VGroup):
     CONFIG = {
         "start_proportion":0.08,
-        "reference_index":2
+        "reference_index":2,
+        "stroke":3
     }
-    def __init__(self,width=FRAME_WIDTH*3/4,height=0.7,left_buff=0.2,stroke=3):
-        group = SVGMobject("music_symbols/g_clef",stroke_width=stroke,stroke_opacity=1)
+    def __init__(self,width=FRAME_WIDTH*3/4,height=0.7,left_buff=0.2):
+        group = SVGMobject("music_symbols/g_clef",stroke_width=self.stroke,stroke_opacity=1)
         g = group[5]
         pentagram = group[:5]
         for i in range(1,len(pentagram)):
