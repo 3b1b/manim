@@ -121,7 +121,7 @@ class Conversation:
 		if bubble.answer_bubble:
 			self.scene.add_sound("efectos_sonido/send_message")
 		else:
-			self.scene.add_sound("efectos_sonido/notification1",gain=-10)
+			self.scene.add_sound("efectos_sonido/notification1",gain=-20)
 		
 		self.scene.play(Transform(self.dialog, dialog_target, rate_func = bezier([0, 0, 0.5, 1]),run_time=0.3),
 		                Transform(bubble, bubble_target, rate_func = bezier([0, 0, 0.5, 1]),run_time=0.3),

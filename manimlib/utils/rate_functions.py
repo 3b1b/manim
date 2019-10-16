@@ -111,3 +111,9 @@ def custom_time(t,partitions,start,end,func):
 
 def Custom(partitions,start,end,func=smooth):
     return lambda t: custom_time(t,partitions,start,end,func)
+
+def there_and_back_linear(t):
+    if t < 0.5:
+        return linear(t*2)
+    else:
+        return linear(1-(t-0.5)*2)

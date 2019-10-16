@@ -389,3 +389,18 @@ def set_custom_quality(height,fps):
     ]
     for v_property,v_value in video_parameters:
         CUSTOM_QUALITY_CAMERA_CONFIG[v_property]=v_value
+
+def return_tex_file(tex_template):
+    return os.path.join(
+        THIS_DIR,"tex_files", tex_template if not TEX_USE_CTEX
+        else "ctex_template.tex"
+        )
+
+def return_tex_template(width,template_file="tex_template.tex"):
+    tex_template = return_tex_file(template_file)
+    with open(tex_template, "r") as infile:
+        PRE_JUSTIFY_TEXT = infile.read()
+        JUSTIFY_TEXT = PRE_JUSTIFY_TEXT.replace(
+        TEX_TEXT_TO_REPLACE,
+        "\\begin{tabular}{p{%s cm}}"%width + TEX_TEXT_TO_REPLACE + "\\end{tabular}")
+        return JUSTIFY_TEXT

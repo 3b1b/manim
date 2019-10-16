@@ -871,6 +871,51 @@ class VGroup(VMobject):
         VMobject.__init__(self, **kwargs)
         self.add(*vmobjects)
 
+    def get_rows(self,message="",print_console=False):
+        pre_index = []
+        pos_index = []
+        row_parameter = max([*[self[i].get_height() for i in range(len(self))]])
+        if print_console:
+            print(message,row_parameter)
+        start = 0
+        for i in range(len(self)-1):
+            distance_row_between = abs(self[i+1].get_y()-self[i].get_y())
+            if distance_row_between > row_parameter:
+                pre_index.append(start)
+                pos_index.append(i)
+                start = i
+        pre_index.append(pos_index[-1]+1)
+        pos_index.append(len(self)-1)
+        if print_console:
+            print(message,pre_index)
+        return [self[pre:pos+1] for pre,pos in zip(pre_index,pos_index)]
+
+    def get_words(self,*index):
+        pre_index = []
+        pos_index = []
+        row_parameter = max([self[i].get_height() for i in range(len(self))])
+        word_parameter = max([self[i].get_width() for i in range(len(self))])
+        #print(word_parameter)
+        start = 0
+        for i in range(len(self)-1):
+            distance_letter_between = abs(self[i+1].get_x()-self[i].get_x())
+            distance_row_between = abs(self[i+1].get_y()-self[i].get_y())
+            if distance_letter_between > word_parameter:
+                pre_index.append(start)
+                pos_index.append(i)
+                start = i+1
+        #print(pre_index)
+        pre_index.append(pos_index[-1]+1)
+        pos_index.append(len(self)-1)
+        all_words = VGroup(*[self[pre:pos+1] for pre,pos in zip(pre_index,pos_index)])
+        words = VGroup()
+        for word in index:
+            words.add(all_words[word])
+        if len(index)==0:
+            return all_words
+        else:
+            return words
+
 
 class VectorizedPoint(VMobject):
     CONFIG = {

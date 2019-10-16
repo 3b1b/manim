@@ -109,3 +109,6 @@ def get_shaded_rgb(rgb, point, unit_normal_vect, light_source):
     result = rgb + factor
     clip_in_place(rgb + factor, 0, 1)
     return result
+
+def HSL(hue,saturation=1,lightness=0.5):
+    return Color(hsl=(hue,saturation,lightness))

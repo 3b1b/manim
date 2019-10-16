@@ -1,4 +1,4 @@
-from big_ol_pile_of_manim_imports import *
+from manimlib.imports import *
 
 # python -m manim ejemplos_animaciones_nuevas_tb.py
 
@@ -466,3 +466,298 @@ class Escala2(MusicalScene2):
 
         self.play(self.teclado_3octavas.shift,LEFT*3,rate_func=there_and_back,run_time=3)
         self.play(self.teclado_3octavas.shift,RIGHT*3,rate_func=there_and_back,run_time=3)
+
+class ZoomedSceneExample(ZoomedScene):
+    CONFIG = {
+        "zoom_factor": 0.5,
+        "zoomed_display_height": 1,
+        "zoomed_display_width": 6,
+        "image_frame_stroke_width": 20,
+        "zoomed_camera_config": {
+            "default_frame_stroke_width": 3,
+        },
+    }
+
+    def construct(self):
+        # Set objects
+        dot = Dot().shift(UL*2)
+        frame_rate = self.camera.frame_rate
+        image=NumberPlane()
+
+        frame_text=TextMobject("Frame",color=PURPLE).scale(1.4)
+        zoomed_camera_text=TextMobject("Zommed camera",color=RED).scale(1.4)
+
+        self.add(image,dot)
+
+        # Set camera
+        zoomed_camera = self.zoomed_camera
+        zoomed_camera.cairo_line_width_multiple = 0.05
+        zoomed_display = self.zoomed_display
+        frame = zoomed_camera.frame
+        zoomed_display_frame = zoomed_display.display_frame
+
+        frame.move_to(dot)
+        frame.set_color(PURPLE)
+
+        zoomed_display_frame.set_color(RED)
+        zoomed_display.shift(DOWN)
+
+        # brackground zoomed_display
+        zd_rect = BackgroundRectangle(
+            zoomed_display,
+            fill_opacity=0,
+            buff=MED_SMALL_BUFF,
+        )
+
+        self.add_foreground_mobject(zd_rect)
+
+        # animation of unfold camera
+        unfold_camera = UpdateFromFunc(
+            zd_rect,
+            lambda rect: rect.replace(zoomed_display)
+        )
+
+        frame_text.next_to(frame,DOWN)
+
+        self.play(
+            ShowCreation(frame),
+            FadeInFromDown(frame_text)
+        )
+
+        # Activate zooming
+        self.activate_zooming()
+
+        self.play(
+            # You have to add this line
+            self.get_zoomed_display_pop_out_animation(),
+            unfold_camera
+        )
+
+        zoomed_camera_text.next_to(zoomed_display_frame,DOWN)
+        self.play(FadeInFromDown(zoomed_camera_text))
+
+        # Scale in     x   y  z
+        scale_factor=[0.5,1.5,0]
+        self.change_cairo(0.07)
+
+
+        # Resize the frame and zoomed camera
+        self.play(
+            frame.scale,                scale_factor,
+            zoomed_display.scale,       scale_factor,
+            FadeOut(zoomed_camera_text),
+            FadeOut(frame_text)
+        )
+
+        # Resize the frame
+        self.play(
+            frame.scale,3,
+            frame.shift,2.5*DOWN
+        )
+
+        # Resize zoomed camera
+        self.play(
+            ScaleInPlace(zoomed_display,2)
+        )
+
+
+        self.wait()
+
+        self.change_cairo(0.3)
+
+        self.play(
+            self.get_zoomed_display_pop_out_animation(),
+            unfold_camera,
+            # -------> Inverse
+            rate_func=lambda t: smooth(1-t),
+        )
+        
+
+        self.play(
+            Uncreate(zoomed_display_frame),
+            FadeOut(frame),
+            FadeOut(zoomed_display)
+        )
+        self.wait()
+
+    def change_cairo(self,val_end):
+        frame_rate = self.camera.frame_rate
+        start_cairo = self.zoomed_camera.cairo_line_width_multiple
+        d_cairo = val_end
+        ds = abs(start_cairo - d_cairo) / frame_rate
+        print(start_cairo)
+        print(abs(start_cairo - d_cairo))
+
+        for i in range(frame_rate):
+            if start_cairo>d_cairo:
+                self.zoomed_camera.cairo_line_width_multiple -= ds
+            else:
+                self.zoomed_camera.cairo_line_width_multiple += ds
+            self.wait(1/frame_rate)
+
+        print(self.zoomed_camera.cairo_line_width_multiple)
+
+class CompassScene(Scene):
+    def construct(self):
+        #self.show_compass()
+        #self.simple_animation()
+        self.test_animation_1()
+        
+    def show_compass(self):
+        compas = Compas()
+        self.add(compas)
+        
+    def simple_animation(self):
+        arc = PI*2
+        compass = Compass()
+        compass2 = Compass(gap=3,stroke_material=0.4)
+        dot = Dot(radius=0.05)
+
+        self.play(GrowFromCenter(dot))
+        self.add_foreground_mobject(compass)
+
+        self.play(FadeInFrom(compass,UP))
+        self.play(
+            *compass.Rotate(arc,needle="B",arc_color=BLUE),
+            run_time=3
+            )
+        self.play(OpenCompass(compass,3))
+        self.play(
+            *compass.Rotate(PI/2),
+            run_time=3
+            )
+        print(compass.get_angle())
+        self.play(
+            *compass2.Rotate(PI,needle="B"),
+            run_time=3
+            )
+        self.play(compass.draws[0].set_color,PINK)
+        #self.play(compass.draws[1].set_color,YELLOW)
+        #self.play(compass.draws[2].set_color,PURPLE)
+        self.wait()
+
+    def test_animation_1(self):
+        compass = Compass(gap=1.5)
+        compass.shift(LEFT*(2.5/2))
+        title = Text("Bisection").to_edge(UP)
+        angle = 0.7*PI/4
+        self.play(Write(title))
+        self.play(title.fade,0.5)
+        self.play(ShowCreation(Line(LEFT*2.5/2,RIGHT*2.5/2)))
+        self.play(FadeInFrom(compass,UP))
+        self.add_foreground_mobject(compass)
+
+        self.write_segment(compass,angle)
+        self.write_segment(compass,-angle)
+        self.play(PositionCompass(compass,0))
+        self.play(compass.shift,RIGHT*(2.5-1.5))
+        self.write_segment(compass,angle,needle="B")
+        self.write_segment(compass,-angle,needle="B")
+        self.play(PositionCompass(compass,0,needle="B"))
+        self.play(FadeOut(compass))
+
+        self.wait()
+
+    def write_segment(self,compass,angulo,arco=20*DEGREES,needle="A"):
+        if needle=="A":
+            target_angle=angulo-arco/2
+        if needle=="B":
+            target_angle=angulo+arco/2
+        self.play(PositionCompass(compass,target_angle,needle=needle))
+        self.play(*compass.Rotate(arco,needle=needle),run_time=1)
+
+class Lines(Scene):
+    def construct(self):
+        dot = Dot(color=RED)
+        lines_group = VGroup(Line(LEFT,RIGHT))
+        def update_lines(mob):
+            new_line = Line(dot.get_center()+LEFT,dot.get_center()+RIGHT)
+            new_mob = mob.copy()
+            new_mob.add(new_line)
+            mob.become(new_mob)
+
+        self.add(dot,lines_group)
+        self.add_foreground_mobjects(dot)
+        self.play(
+                dot.shift,UP*2,
+                UpdateFromFunc(lines_group,update_lines)
+                )
+        self.wait()
+
+class Test2(Scene):
+    def construct(self):
+        text = FunText(r"Alexander").scale(3)
+        draw = FreehandRectangle(text,margin=0.2,partitions=30,color=RED,fill_opacity=0.3)
+        self.play(DrawBorderThenFill(draw),FadeInFromEdges(text[0]))
+        self.wait()
+
+class Test3(Scene):
+    def construct(self):
+        text = FunText(r"Alexander").scale(3)
+        draw = FreehandRectangle(text,margin=0.2,partitions=30,color=RED,fill_opacity=0.3)
+        self.play(DrawBorderThenFill(draw),FadeInFromDirections(text[0]))
+        self.wait()
+
+class Test4(Scene):
+    def construct(self):
+        text = FunText(r"Alexander").scale(3)
+        draw = FreehandRectangle(text,margin=0.2,partitions=30,color=RED,fill_opacity=0.3)
+        self.play(DrawBorderThenFill(draw),FadeInFromRandom(text[0]))
+        self.wait()
+
+class Test5(Scene):
+    def construct(self):
+        text = FunText(r"Alexander").scale(3)
+        draw = FreehandRectangle(text,margin=0.2,partitions=30,color=RED,fill_opacity=0.3)
+        self.play(LagAnim(DrawBorderThenFill,text[0]))
+        self.Oldplay(Escribe(text[0]))
+        self.wait()
+
+class Zig(Scene):
+    def construct(self):
+        path = TextMobject("Hola mundo a todos").scale(2)
+        draw = ZigZag(path,color=RED,stroke_width=10)
+        self.add(path)
+        self.play(ShowCreation(draw,run_time=1,rate_func=linear))
+        self.wait()
+
+class JustifyScene(Scene):
+    def construct(self):
+        text = TextJustify(r"""\ECFAugie
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+            """,j_width=6,tex_template="tex_template_fonts.tex").scale(0.5)
+        self.add(text)
+
+class TestTime(Scene):
+    def construct(self):
+        c = Circle()
+        s = Square()
+        l = Line(DOWN,UP)
+        time = DecimalNumber(self.time).add_updater(lambda m: m.set_value(self.time))
+        time.to_corner(DL)
+        self.add(time)
+        self.play(
+            # 6 partitions, that is (total_time = 4):
+            # ShowCreation starts at t=0 and end t=(2/6)*total_time=1.333s
+            ShowCreation(c,  rate_func=Custom(6,0,2)),
+            # FadeIn starts at t=1.3333s and end t=(4/6)*total_time=2.6666s
+            FadeIn(s,        rate_func=Custom(6,2,4)),
+            # GrowFromCenter starts at t=2.6666s and end t=(6/6)*total_time=4s
+            GrowFromCenter(l,rate_func=Custom(6,4,6)),
+            run_time=4 # <- total_time
+            )
+        self.wait()
+
+class TestRow(Scene):
+    def construct(self):
+        text = TextJustify(r"""\ECFAugie
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam
+            """,j_width=6,tex_template="tex_template_fonts.tex").scale(0.5)
+        rows = text.get_rows()
+        words = text.get_words()
+        rows[-1].fade(1)
+        colors = it.cycle([RED,BLUE,GREEN,TEAL,GOLD])
+        for word in words:
+            word.set_color(next(colors))
+        rows[2].get_words()[1].set_color(PURPLE)
+        self.add(text)

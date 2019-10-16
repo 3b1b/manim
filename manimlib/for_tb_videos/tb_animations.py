@@ -252,3 +252,86 @@ def mueve_seleccion(self,rectg,objeto,**kwargs):
     coord_y=objeto.get_center()[1]
     rectg.target.move_to(np.array([coord_x,coord_y,0]))
     self.play(MoveToTarget(rectg),**kwargs)
+
+class PositionCompass(Animation):
+    CONFIG = {
+        "suspend_mobject_updating": False,
+    }
+    def __init__(self, compass, angle,needle="A",**kwargs):
+        self.update_function = compass.move_compass_to(angle,needle)
+        self.mobject = compass
+        super().__init__(compass, **kwargs)
+
+    def interpolate_mobject(self, alpha):
+        self.update_function(self.mobject,alpha)
+
+class FadeInFromEdges(LaggedStart):
+    def __init__(self, text , **kwargs):
+        digest_config(self, kwargs)
+        animations = self.return_all_animations(text)
+        self.animations = animations
+        if self.group is None:
+            self.group = Group(*remove_list_redundancies(
+                [anim.mobject for anim in animations]
+            ))
+        Animation.__init__(self, self.group, **kwargs)
+
+    def return_all_animations(self,text):
+        def get_vector_from(obj,point=ORIGIN,dist=2):
+            vect=obj.get_center()-point
+            return vect*dist
+        return [FadeInFromPoint(obj,point=get_vector_from(obj,dist=1.4))for obj in text]
+
+class FadeInFromDirections(LaggedStart):
+    CONFIG = {
+        "directions":[DL,DOWN,DR,RIGHT,UR,UP,UL,LEFT],
+        "magnitude":1
+    }
+    def __init__(self, text , **kwargs):
+        digest_config(self, kwargs)
+        self.reverse_directions=it.cycle(list(reversed(self.directions)))
+        animations = self.return_all_animations(text)
+        self.animations = animations
+        if self.group is None:
+            self.group = Group(*remove_list_redundancies(
+                [anim.mobject for anim in animations]
+            ))
+        Animation.__init__(self, self.group, **kwargs)
+
+    def return_all_animations(self,text):
+        return [FadeInFromPoint(obj,point=obj.get_center()+d*self.magnitude)
+                for obj,d in zip(text,self.reverse_directions)]
+
+class FadeInFromRandom(LaggedStart):
+    CONFIG = {
+        "directions":[DL,DOWN,DR,RIGHT,UR,UP,UL,LEFT],
+        "magnitude":0.5
+    }
+    def __init__(self, text , **kwargs):
+        digest_config(self, kwargs)
+        animations = self.return_all_animations(text)
+        self.animations = animations
+        if self.group is None:
+            self.group = Group(*remove_list_redundancies(
+                [anim.mobject for anim in animations]
+            ))
+        Animation.__init__(self, self.group, **kwargs)
+
+    def return_all_animations(self,text):
+        return [FadeInFromPoint(obj,point=random.choice(self.directions)*self.magnitude)
+                for obj in text]
+
+class LagAnim(LaggedStart):
+    def __init__(self,Function,text,anim_kwargs={},**kwargs):
+        digest_config(self, kwargs)
+        animations = self.return_all_animations(Function,text,anim_kwargs)
+        self.animations = animations
+        if self.group is None:
+            self.group = Group(*remove_list_redundancies(
+                [anim.mobject for anim in animations]
+            ))
+        Animation.__init__(self, self.group, **kwargs)
+
+    def return_all_animations(self,Function,text,anim_kwargs):
+        return [Function(t,**anim_kwargs)
+                for t in text]

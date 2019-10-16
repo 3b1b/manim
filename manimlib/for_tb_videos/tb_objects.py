@@ -615,3 +615,232 @@ class underline(Line):
     def __init__(self,texto,buff=0.07,**kwargs):
         Line.__init__(self,texto.get_corner(DL),texto.get_corner(DR),**kwargs)
         self.shift(DOWN*buff)
+
+class FreehandDraw(VMobject):
+    CONFIG = {
+        "sign":1,
+        "close":False,
+        "dx_random":7,
+        "length":0.06
+    }
+    def __init__(self,path,partitions,**kwargs):
+        VMobject.__init__(self,**kwargs)
+        coords = []
+        for p in range(int(partitions)+1):
+            coord_i = path.point_from_proportion((p*0.989/partitions)%1)
+            coord_f = path.point_from_proportion((p*0.989/partitions+0.001)%1)
+            reference_line = Line(coord_i, coord_f).rotate(self.sign*PI/2, about_point=coord_i)
+            normal_unit_vector = reference_line.get_unit_vector()
+            static_vector = normal_unit_vector*self.length
+            random_dx = random.randint(0,self.dx_random)
+            random_normal_vector = random_dx * normal_unit_vector / 100
+            point_coord = coord_i + random_normal_vector + static_vector
+            coords.append(point_coord)
+        if self.close:
+            coords.append(coords[0])
+        self.set_points_smoothly(coords)
+
+class FreehandRectangle(VMobject):
+    CONFIG = {
+        "margin":0.7,
+        "partitions":120,
+    }
+    def __init__(self,texmob,**kwargs):
+        VMobject.__init__(self,**kwargs)
+        rect = Rectangle(
+            width  = texmob.get_width() + self.margin,
+            height = texmob.get_height() + self.margin
+            )
+        rect.move_to(texmob)
+        w = rect.get_width()  
+        h = rect.get_height()
+        alpha = w / h
+        hp = np.ceil(self.partitions / (2 * (alpha + 1)))
+        wp = np.ceil(alpha * hp)
+        sides = VGroup(*[
+            Line(rect.get_corner(c1),rect.get_corner(c2))
+            for c1,c2 in zip([UL,UR,DR,DL],[UR,DR,DL,UL])
+            ])
+        total_points = []
+        for side,p in zip(sides,[wp,hp,wp,hp]):
+            path = FreehandDraw(side,p).points
+            for point in path:
+                total_points.append(point)
+        total_points.append(total_points[0])
+        self.set_points_smoothly(total_points)
+
+class ZigZag(VMobject):
+    CONFIG = {
+        "margin":0.4,
+        "sign":1
+    }
+    def __init__(self,path,partitions=10,**kwargs):
+        VMobject.__init__(self,**kwargs)
+        rect = Rectangle(
+            width  = path.get_width() + self.margin,
+            height = path.get_height() + self.margin
+            )
+        rect.move_to(path)
+        w = rect.get_width()  
+        h = rect.get_height()
+        alpha = w / h
+        hp = int(np.ceil(partitions / (2 * (alpha + 1))))
+        wp = int(np.ceil(alpha * hp))
+        sides = VGroup(*[
+            Line(rect.get_corner(c1),rect.get_corner(c2))
+            for c1,c2 in zip([UL,UR,DR,DL],[UR,DR,DL,UL])
+            ])
+        total_points = []
+        for side,points in zip(sides,[wp,hp,wp,hp]):
+            for p in range(points):
+                total_points.append(side.point_from_proportion(p/points))
+        total_points.append(total_points[0])
+        middle = int(np.floor(len(total_points)/2))
+        draw_points = []
+        for p in range(2,middle):
+            draw_points.append(total_points[-p*self.sign])
+            draw_points.append(total_points[p*self.sign])
+        self.set_points_smoothly(draw_points)
+
+class RotaCompass(Rotating):
+    CONFIG = {
+        "rate_func": smooth,
+        "run_time": 2
+    }
+
+class Compass(VGroup):
+    CONFIG = {
+        "height": 2.5,
+        "stroke_material": 0.7,
+        "needle_height": 0.1,
+        "hinge_radius_1": 0.06,
+        "hinge_width": 0.3,
+        "hinge_height": 0.7,
+        "hinge_support_width": 0.1,
+        "hinge_support_height": 0.3,
+        "stroke_factor_up": 0.6,
+        "stroke_factor_down": 1.4
+    }
+    def __init__(self,start=ORIGIN,gap=1.5,**kwargs):
+        digest_config(self,kwargs)
+        super().__init__()
+        self.start = start
+        self.gap = gap
+        needle_a,needle_b = self.set_needles()
+        body = self.set_body()
+        hinge = self.set_hinge()
+        self.draws=VGroup()
+        self.needle_a,self.needle_b = needle_a,needle_b
+        self.angle = self.get_angle()
+        self.add(body,hinge,needle_a,needle_b)
+        self.body=body
+        self.hinge=hinge
+        # Points of compass
+    def set_points_compass(self):
+        start = self.start
+        gap = self.gap
+        needle_start_a = start
+        needle_end_a = start+UP*self.needle_height
+        p3 = start+RIGHT*gap/2+UP*self.height
+        p2 = start+RIGHT*gap+UP*self.needle_height
+        p1 = start+p3+UP*self.stroke_material
+        needle_start_b = p2
+        needle_end_b = needle_start_b+DOWN*self.needle_height
+        hinge_coord = (p1-p3)/3+p3
+        return needle_start_a,needle_end_a,p3,p2,p1,needle_start_b,needle_end_b,hinge_coord 
+        # needles
+    def set_needles(self):
+        needle_start_a,needle_end_a,p3,p2,p1,needle_start_b,needle_end_b,hinge_coord=self.set_points_compass()
+        needle_a = Line(needle_start_a,needle_end_a,buff=0,stroke_width=2)
+        needle_b = Line(needle_start_b,needle_end_b,buff=0,stroke_width=2)
+        needle_a.set_color(color=[WHITE,WHITE])
+        needle_b.set_color(color=[WHITE,WHITE])
+        return needle_a,needle_b
+        # body
+    def set_body(self):
+        needle_start_a,needle_end_a,p3,p2,p1,needle_start_b,needle_end_b,hinge_coord=self.set_points_compass()
+        body = Polygon(needle_end_a,p1,p2,p3).set_fill(BLUE,1)
+        body.set_color(color=[interpolate_color(GRAY,BLACK,0.5),GRAY,interpolate_color(GRAY,BLACK,0.5)])
+        body.set_sheen_direction(UP)
+        return body
+        # hinge
+    def set_hinge(self):
+        needle_start_a,needle_end_a,p3,p2,p1,needle_start_b,needle_end_b,hinge_coord=self.set_points_compass()
+        hinge_rectangle = Rectangle(width=self.hinge_width,height=self.hinge_height,fill_opacity=1)
+        h_p1 = hinge_rectangle.get_corner(DL)
+        h_p2 = hinge_rectangle.get_corner(UL)
+        h_p3 = h_p2+RIGHT*(self.hinge_width-self.hinge_support_width)/2
+        h_p4 = h_p3 + UP*self.hinge_support_height
+        h_p5 = h_p4 + RIGHT*self.hinge_support_width
+        h_p6 = h_p5 + DOWN*self.hinge_support_height
+        h_p7 = hinge_rectangle.get_corner(UR)
+        h_p8 = hinge_rectangle.get_corner(DR)
+        hinge_support = Polygon(h_p1,h_p2,h_p3,h_p4,h_p5,h_p6,h_p7,h_p8,fill_opacity=1)
+        hinge_support.set_color(color=[ORANGE,RED])
+        hinge_support.set_sheen_direction(UP)
+        hinge = VGroup(
+            hinge_support,
+            Dot(radius=self.hinge_radius_1*1.2,color=interpolate_color(GRAY,BLACK,0.5)),
+            Dot(radius=self.hinge_radius_1,color=GRAY),
+            )
+        hinge.move_to(hinge_coord)
+        return hinge
+
+    def get_needle_a_coord(self):
+        return self.needle_a.get_start()
+
+    def get_needle_b_coord(self):
+        return self.needle_b.get_end()
+
+    def get_angle(self):
+        line_reference = Line(
+                self.needle_a.get_start(),
+                self.needle_b.get_end()
+            )
+        return line_reference.get_angle()
+
+    def Rotate(self,angle,needle="A",arc_color=RED,arc_start=None,draw=True,**anim_kwargs):
+        if arc_start== None:
+            arc_start = self.get_angle()
+        if needle == "A":
+            point = self.get_needle_a_coord()
+            start_angle = 0 + arc_start
+        if needle == "B":
+            point = self.get_needle_b_coord()
+            start_angle = PI + arc_start
+            angle=-angle
+        rotate_compass = RotaCompass(self,radians=angle,about_point=point,**anim_kwargs)
+        arc = Arc(angle=angle,radius=self.gap,arc_center=point,start_angle=start_angle,color=arc_color)
+        if draw:
+            draw = ShowCreation(arc,**anim_kwargs)
+            self.draws.add(arc)
+            return [rotate_compass,draw]
+        else:
+            return [rotate_compass]
+
+    def set_angle(self,angle,needle="A"):
+        start_angle = self.get_angle()
+        if needle=="A":
+            point = self.get_needle_a_coord()
+            self.rotate(-start_angle,about_point=point)
+            self.rotate(angle,about_point=point)
+        if needle=="B":
+            point = self.get_needle_b_coord()
+            self.rotate(start_angle,about_point=point)
+            self.rotate(-angle,about_point=point)
+
+    def move_compass_to(self,angle,needle="A"):
+        start_angle = self.get_angle()
+        self.starting_mobject=self.deepcopy()
+        if needle=="A":
+            point = self.get_needle_a_coord()
+            def update_compass(mob,alpha):
+                mob.become(mob.starting_mobject)
+                mob.rotate(alpha*(angle-start_angle),about_point=point)
+            return update_compass
+        if needle=="B":
+            point = self.get_needle_b_coord()
+            def update_compass(mob,alpha):
+                mob.become(mob.starting_mobject)
+                mob.rotate(alpha*(angle-start_angle),about_point=point)
+            return update_compass
