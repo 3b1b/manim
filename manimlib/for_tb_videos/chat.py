@@ -15,7 +15,8 @@ class ChatBubble(VMobject):
 	"text_color":WHITE,
 	"answer_message_t":False,
 	"response_message_t":False,
-	"type_text":"Tex"
+	"type_text":"Tex",
+	"font_text":"Arial",
     }
 	def __init__(self, text, answer_bubble = False, border = 0.3,**kwargs):
 		VMobject.__init__(self, **kwargs)
@@ -36,17 +37,19 @@ class ChatBubble(VMobject):
 		else:
 			self.bubble.set_fill(self.background_chat_color, opacity = self.background_chat_opacity)
 		if self.type_text == "Tex":
-			self.text = TextMobject(text,alignment="\\flushright",color=self.text_color)
+			self.text = Text(text,alignment="\\flushleft",color=self.text_color)
+
 		else:
-			self.text = FontText(text,font="Times",color=self.text_color)
+			self.text = FontText(text,font=self.font_text,color=self.text_color)
+			self.text.set_height(0.3621)
 		#print(self.text.get_tex_string())
 		self.tip_h = self.bubble.points[16,1] - self.bubble.points[20,1]
 		self.text.move_to(self.bubble.get_corner(LEFT+DOWN)+np.array([border,self.tip_h+border,0]), aligned_edge = LEFT+DOWN)
 		size_shift = self.text.get_corner(UP+RIGHT) - self.bubble.get_corner(UP+RIGHT) + border
 		shift_w = size_shift[0]
 		shift_h = size_shift[1]
-		print(shift_w)
-		print(shift_h)
+		if shift_w < -3.9: shift_w = -3.9
+		if shift_h < -0.5: shift_h = -0.5
 		for p in self.bubble.points[26:]: p[0] += shift_w
 		for p in self.bubble.points[35:]: p[1] += shift_h
 		for p in self.bubble.points[:5]: p[1] += shift_h
@@ -85,8 +88,8 @@ class Conversation:
 		self.scene = scene
 		self.dialog = VGroup()
 		self.next_answer = start_answer
-		self.ad=answer_message,
-		self.rd=response_message,
+		self.ad=answer_message
+		self.rd=response_message
 
 	def add_bubble(self, text, answer_bubble = True,**kwargs):
 		#ChatBubble.__init__(self, text,**kwargs)
@@ -111,12 +114,15 @@ class Conversation:
 		#bubble.set_fill(bubble[0].get_color())
 		bubble_target = bubble.copy()
 		bubble.scale([1, 0, 1], about_point = np.array([0, -4.0, 0]))
-
 		def dialog_rate_func(t):
 		    bubble_rate = rush_from(t)
 		    bubble_rel_pos = (bubble_rate - 1) * height / shift + 1
 		    return np.exp(bubble_rel_pos-1)
-
+		if bubble.answer_bubble:
+			self.scene.add_sound("efectos_sonido/send_message")
+		else:
+			self.scene.add_sound("efectos_sonido/notification1",gain=-10)
+		
 		self.scene.play(Transform(self.dialog, dialog_target, rate_func = bezier([0, 0, 0.5, 1]),run_time=0.3),
 		                Transform(bubble, bubble_target, rate_func = bezier([0, 0, 0.5, 1]),run_time=0.3),
 		                )
