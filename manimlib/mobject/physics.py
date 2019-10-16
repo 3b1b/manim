@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from manimlib.constants import *
 from manimlib.mobject.geometry import Arc, Arrow, Circle, DashedLine, Dot, Line
-from manimlib.mobject.types.vectorized_mobject import VGroup, VectorizedPoint
+from manimlib.mobject.types.vectorized_mobject import VGroup, VMobject, VectorizedPoint
 from manimlib.mobject.svg.tex_mobject import TexMobject
 from manimlib.utils.space_ops import get_norm
 from manimlib.mobject.mobject_update_utils import always_redraw
@@ -746,7 +746,7 @@ class DoublePendulum(VGroup):
 		"include_velocity_vector": False,
 		"n_steps_per_frame": 100,
 		"add_1st_trajectory": False,
-		"add_2nd_trajectory": False,
+		"add_2nd_trajectory": True,
 	}
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
@@ -1001,8 +1001,13 @@ class DoublePendulum(VGroup):
 
 			theta1 += omega1 * d_dt
 			theta2 += omega2 * d_dt
+			delta_theta = theta1 - theta2
 			omega1 += omega_1_dot * d_dt
 			omega2 += omega_2_dot * d_dt
+			
+			if False: # use for debug
+				print(f"t1={theta1:.3f} t2={theta2:.3f} o1={omega1:.3f} o2={omega2:.3f} od1={omega_1_dot:.3f} od2={omega_2_dot:.3f}")
+				self.display_energy()
 		self.set_theta1(theta1)
 		self.set_theta2(theta2)
 		self.set_omega1(omega1)
