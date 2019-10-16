@@ -3,10 +3,11 @@ import random
 from collections import defaultdict
 
 from manimlib.constants import *
-from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.mobject.geometry import Dot, Line, Circle, Arrow
-from manimlib.utils.space_ops import get_norm
+from manimlib.mobject.geometry import Arc, Arrow, Circle, DashedLine, Dot, Line
+from manimlib.mobject.types.vectorized_mobject import VGroup, VectorizedPoint
 from manimlib.mobject.svg.tex_mobject import TexMobject
+from manimlib.utils.space_ops import get_norm
+from manimlib.mobject.mobject_update_utils import always_redraw
 from manimlib.animation.creation import Write
 
 
@@ -419,7 +420,7 @@ class Crystal(VGroup):
 		"updater": "random_walk",
 		"max_amount_of_particles": None,
 	}
-	def __init__(self, , **kwargs):
+	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 
 		particles = []
