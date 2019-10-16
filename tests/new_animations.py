@@ -759,5 +759,7 @@ class TestRow(Scene):
         colors = it.cycle([RED,BLUE,GREEN,TEAL,GOLD])
         for word in words:
             word.set_color(next(colors))
-        rows[2].get_words()[1].set_color(PURPLE)
+        rows[2].get_words(-1).set_color(PURPLE)
+        rows[0].get_words().set_color(YELLOW)
+        rows[3].get_words()[1:].set_color(PINK)
         self.add(text)
