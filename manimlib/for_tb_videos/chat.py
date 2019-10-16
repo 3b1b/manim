@@ -15,6 +15,7 @@ class ChatBubble(VMobject):
 	"text_color":WHITE,
 	"answer_message_t":False,
 	"response_message_t":False,
+	"type_text":"Tex"
     }
 	def __init__(self, text, answer_bubble = False, border = 0.3,**kwargs):
 		VMobject.__init__(self, **kwargs)
@@ -34,16 +35,21 @@ class ChatBubble(VMobject):
 			else: self.bubble.set_fill(self.response_color,opacity = self.background_chat_opacity)
 		else:
 			self.bubble.set_fill(self.background_chat_color, opacity = self.background_chat_opacity)
-
-		self.text = TextMobject(text, alignment="\\raggedright\\hsize = 0.7\\hsize",color=self.text_color)
+		if self.type_text == "Tex":
+			self.text = TextMobject(text,alignment="\\flushright",color=self.text_color)
+		else:
+			self.text = FontText(text,font="Times",color=self.text_color)
 		#print(self.text.get_tex_string())
 		self.tip_h = self.bubble.points[16,1] - self.bubble.points[20,1]
 		self.text.move_to(self.bubble.get_corner(LEFT+DOWN)+np.array([border,self.tip_h+border,0]), aligned_edge = LEFT+DOWN)
 		size_shift = self.text.get_corner(UP+RIGHT) - self.bubble.get_corner(UP+RIGHT) + border
-		shift_w = size_shift[0];print("[%f]"%(self.tip_h))
-		shift_h = size_shift[1];print(*size_shift)
+		shift_w = size_shift[0]
+		shift_h = size_shift[1]
+		print(shift_w)
+		print(shift_h)
 		for p in self.bubble.points[26:]: p[0] += shift_w
-		#for p in self.bubble.points[-10:16]: p[1] += shift_h
+		for p in self.bubble.points[35:]: p[1] += shift_h
+		for p in self.bubble.points[:5]: p[1] += shift_h
 		#for p in self.bubble.points[-36:13]: p[1] += shift_h
 		self.add(self.bubble, self.text)
 
