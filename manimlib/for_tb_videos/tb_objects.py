@@ -844,3 +844,166 @@ class Compass(VGroup):
                 mob.become(mob.starting_mobject)
                 mob.rotate(alpha*(angle-start_angle),about_point=point)
             return update_compass
+
+class Semibreve(SVGMobject):
+    CONFIG = {
+        "stroke_width": 0,
+        "stroke_opacity": 0,
+        "fill_opacity": 1,
+        "proportion":0.5,
+        "note":0
+    }
+    def __init__(self, context=None, **kwargs):
+        digest_config(self, kwargs)
+        self.file_name = "music_symbols/semibreve"
+        self.ensure_valid_file()
+        VMobject.__init__(self, **kwargs)
+        self.move_into_position()
+        if context != None:
+            self.valid_context(context)
+
+    def move_to_note(self,note,context = None):
+        if context != None:
+            self.set_context(context)
+            note_position = UP*context.get_space_note(note)
+            self.move_to(note_position)
+        else:
+            note_position = UP*self.context.get_space_note(note)
+            self.shift(note_position)
+
+    def move_to_proportion(self,proportion,context = None):
+        if context != None:
+            self.set_context(context)
+            note_position = context.get_proportion(proportion)
+            self.move_to(note_position)
+        else:
+            note_position = self.context.get_proportion(proportion)
+            self.shift([note_position[0],0,0])
+
+    def put_at(self,proportion,note,context = None):
+        if context == None:
+            note_position = self.context.get_proportion(proportion) + UP*self.context.get_space_note(note)
+            self.move_to(note_position)
+        else:
+            note_position = context.get_proportion(proportion) + UP*context.get_space_note(note)
+            self.move_to(note_position)
+            self.context = context
+
+    def set_context(self,context):
+        self.context = context
+        self.valid_context(context)
+
+    def valid_context(self,context):
+        self.set_height(context.get_space_between_lines())
+        note_position = context.get_proportion(self.proportion) + UP*context.get_space_note(self.note)
+        self.move_to(note_position)
+        self.context = context
+        
+
+
+
+
+class G_system(VGroup):
+    CONFIG = {
+        "start_proportion":0.08,
+        "reference_index":2
+    }
+    def __init__(self,width=FRAME_WIDTH*3/4,height=0.7,left_buff=0.2,stroke=3):
+        group = SVGMobject("music_symbols/g_clef",stroke_width=stroke,stroke_opacity=1)
+        g = group[5]
+        pentagram = group[:5]
+        for i in range(1,len(pentagram)):
+            pentagram[i].points[-1][0] = pentagram[0].points[-1][0]
+        distance_between_g_and_pentagram = g.get_y() - pentagram.get_y()
+        g_height = g.get_height()
+        pentagram_height = pentagram.get_height()
+        alpha = g_height / pentagram_height
+        beta = alpha / distance_between_g_and_pentagram
+        g.set_stroke(None,0)
+        pentagram.set_width(width)
+        pentagram.set_height(height,stretch=True)
+        def g_updater(mob):
+             mob.set_height(alpha*pentagram.get_height())
+             mob.move_to(pentagram.get_left()+UP*alpha/beta+RIGHT*(mob.get_width()/2))
+             mob.shift(RIGHT*mob.get_width()*left_buff)
+        g.add_updater(g_updater)
+        VGroup.__init__(self)
+        self.add(g,pentagram)
+        self.alpha = alpha
+        self.beta = beta
+        self.db_gp = distance_between_g_and_pentagram
+        self.clef = g
+        self.pentagram = pentagram
+        self.reference_line = pentagram[self.reference_index]
+
+    def get_space_between_lines(self):
+        return abs(self.pentagram[1].get_y()-self.pentagram[2].get_y())
+
+    def get_proportion(self,proportion):
+        return self.reference_line.point_from_proportion(proportion)
+
+    def get_space_note(self,position):
+        return self.get_space_between_lines()*position/2
+
+
+
+
+class F_system(G_system):
+    def __init__(self,width=FRAME_WIDTH*3/4,height=0.7,left_buff=0.2,stroke=3):
+        group = SVGMobject("music_symbols/f_clef",stroke_width=stroke,stroke_opacity=1)
+        g = group[5]
+        pentagram = group[:5]
+        for i in range(1,len(pentagram)):
+            pentagram[i].points[-1][0] = pentagram[0].points[-1][0]
+        distance_between_lines = pentagram[2].get_y()-pentagram[3].get_y()
+        distance_between_g_and_pentagram = g.get_y() - pentagram.get_y()
+        g_height = g.get_height()
+        pentagram_height = pentagram.get_height()
+        alpha = g_height / pentagram_height
+        beta = alpha / distance_between_g_and_pentagram
+        g.set_stroke(None,0)
+        pentagram.set_width(width)
+        pentagram.set_height(height,stretch=True)
+        def g_updater(mob):
+             mob.set_height(alpha*pentagram.get_height())
+             mob.move_to(pentagram.get_left()+UP*alpha/beta+RIGHT*(mob.get_width()/2))
+             mob.shift(RIGHT*mob.get_width()*left_buff+DOWN*distance_between_lines/3)
+        g.add_updater(g_updater)
+        g.update()
+        VGroup.__init__(self)
+        self.add(g,pentagram)
+        self.alpha = alpha
+        self.beta = beta
+        self.db_gp = distance_between_g_and_pentagram
+        self.dbl = distance_between_lines
+        self.clef = g
+        self.pentagram = pentagram
+        self.reference_line = pentagram[self.reference_index]
+
+class C_system(G_system):
+    def __init__(self,width=FRAME_WIDTH*3/4,height=0.7,left_buff=0.2,stroke=3):
+        group = SVGMobject("music_symbols/c_clef",stroke_width=stroke,stroke_opacity=1)
+        g = group[5]
+        pentagram = group[:5]
+        for i in range(1,len(pentagram)):
+            pentagram[i].points[-1][0] = pentagram[0].points[-1][0]
+        distance_between_g_and_pentagram = g.get_y() - pentagram.get_y()
+        g_height = g.get_height()
+        pentagram_height = pentagram.get_height()
+        alpha = g_height / pentagram_height
+        g.set_stroke(None,0)
+        pentagram.set_width(width)
+        pentagram.set_height(height,stretch=True)
+        def g_updater(mob):
+             mob.set_height(alpha*pentagram.get_height())
+             mob.move_to(pentagram.get_left()+RIGHT*(mob.get_width()/2))
+             mob.shift(RIGHT*mob.get_width()*0.47/2)
+        g.add_updater(g_updater)
+        g.update()
+        VGroup.__init__(self)
+        self.add(g,pentagram)
+        self.alpha = alpha
+        self.db_gp = distance_between_g_and_pentagram
+        self.clef = g
+        self.pentagram = pentagram
+        self.reference_line = pentagram[self.reference_index]

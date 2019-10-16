@@ -410,3 +410,32 @@ class Blink(ApplyMethod):
 
     def __init__(self, pi_creature, **kwargs):
         ApplyMethod.__init__(self, pi_creature.blink, **kwargs)
+
+class RemoveBubble(AnimationGroup):
+    CONFIG = {
+        "target_mode": "plain",
+        "look_at_arg": None,
+        "remover": True,
+    }
+
+    def __init__(self, omega_creature, **kwargs):
+        assert hasattr(omega_creature, "bubble")
+        digest_config(self, kwargs, locals())
+
+        omega_creature.generate_target()
+        omega_creature.target.change_mode(self.target_mode)
+        if self.look_at_arg is not None:
+            omega_creature.target.look_at(self.look_at_arg)
+
+        AnimationGroup.__init__(
+            self,
+            MoveToTarget(omega_creature),
+            FadeOut(omega_creature.bubble),
+            FadeOut(omega_creature.bubble.content),
+        )
+
+    def clean_up(self, surrounding_scene=None):
+        AnimationGroup.clean_up(self, surrounding_scene)
+        self.omega_creature.bubble = None
+        if surrounding_scene is not None:
+            surrounding_scene.add(self.omega_creature)
