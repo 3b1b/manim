@@ -92,3 +92,22 @@ def exponential_decay(t, half_life=0.1):
     # The half-life should be rather small to minimize
     # the cut-off error at the end
     return 1 - np.exp(-t / half_life)
+
+
+def custom_time(t,partitions,start,end,func):
+    duration = end - start
+    fragment_time = 1 / partitions
+    start_time = start * fragment_time
+    end_time = end * fragment_time
+    duration_time = duration * fragment_time
+    def fix_time(x):
+        return (x - start_time) / duration_time
+    if t < start_time: 
+        return 0
+    elif start_time <= t and t <= end_time:
+        return func(fix_time(t))
+    else:
+        return 1
+
+def Custom(partitions,start,end,func=smooth):
+    return lambda t: custom_time(t,partitions,start,end,func)
