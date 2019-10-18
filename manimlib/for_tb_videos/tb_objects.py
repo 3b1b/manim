@@ -905,7 +905,7 @@ class Semibreve(SVGMobject):
     def set_note_properties(self):
         pass
         
-class Minim(Semibreve):
+class Minimx(Semibreve):
     CONFIG = {
         "file_name": "music_symbols/minim",
         "include_point": True,
