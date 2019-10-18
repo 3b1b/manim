@@ -1009,7 +1009,6 @@ def get_update_relative_stem(main,relative,length_over_dim=0):
     alpha_length = main.get_width() / line_main_relative.get_length()
     unit_vector = line_main_relative.get_unit_vector()
     alpha_stroke = main.get_width()/relative.stroke_width
-    print(alpha_stroke)
     def update_relative(mob):
         width = mob.body.get_width() / alpha_width
         mob.stem.set_stroke(None,mob.body.get_width()/alpha_stroke)
@@ -1020,7 +1019,6 @@ def get_update_relative_stem(main,relative,length_over_dim=0):
     return update_relative
 
 
-
 class Minim(VGroup):
     CONFIG = {
         "minim_kwargs":{"stroke_width": 0, "stroke_opacity":1,"fill_opacity": 1},
@@ -1028,17 +1026,16 @@ class Minim(VGroup):
         "add_stem":True,
         "stem_direction":DOWN
     }
-    def __init__(self,note=0,context = None,**kwargs):
+    def __init__(self,note=0,context=None,proportion=0.2,reference_line=0,**kwargs):
         super().__init__(**kwargs)
         self.body = SVGMobject("music_symbols/minim",**self.minim_kwargs)[0]
         self.add(self.body)
         if context != None:
             self.context = context
             self.note = note
-            self.context.set_note_at(self,note)
+            self.context.set_note_at(self,note,proportion,reference_line)
         if self.add_stem:
             self.sign = self.stem_direction[1]
-            print(self.sign)
             self.add(self.set_stem())
             self.add_updater(self.stem_updater())
 
@@ -1055,7 +1052,6 @@ class Minim(VGroup):
         self.stem.update(0)
         new_self = VGroup(body,self.stem.copy())
         self.become(new_self)
-        self.context.reference_lines.set_color(RED)
 
     def move_random(self,t=1):
         self[0].shift(LEFT)
@@ -1074,14 +1070,34 @@ class Minim(VGroup):
         self.stem = stem
         return stem 
 
+    def set_note(self,note,proportion=None,reference_line=0,context=None):
+        self.valid_context(context)
+        if proportion != None:
+            x_coord = self.context.get_proportion_line(proportion,reference_line)[0]
+        else:
+            x_coord = self.get_x()
+        x_distance = x_coord - self.get_x()
+        y_distance = abs(self.body.get_y()-self.context.reference_lines[reference_line].get_y())
+        note_distance = self.context.get_space_between_lines()/2
+        note_self = np.round(y_distance/note_distance)
+        self.shift(UP*self.context.get_space_between_lines()*(note-note_self)/2+x_distance*RIGHT)
+
+class Chord(VGroup):
+    def set_notes(self,notes,proportion=None,reference_line=0):
+        context = self[0].context
+        for pre,pos in zip(self,notes):
+            pre.set_note(pos,proportion,reference_line,context)
+
 class MusicTest(Scene):
     def construct(self):
-        pentagram = Pentagram().shift(DOWN*2)
-        minim = Minim(1,pentagram)
-        self.add(pentagram,minim)
-        minim.put_note_at(3,0.3)
-        self.wait()
-        self.play(minim.move_random,1)
-        self.play(minim.put_note_at,0,0.3)
-        self.wait()
-        #self.wait(2)
+        pentagram = Pentagram(width=5,height=1.4)
+        chord = Chord(
+                    Minim(0,pentagram,0.3),
+                    Minim(3,pentagram,0.3)
+                )
+        self.add(pentagram,chord)
+        self.play(chord.set_notes,[-3,0])
+        #minim.put_note_at(0,0.3)
+        #self.wait()
+        #self.play(minim.set_note,2)
+        self.wait(2)
