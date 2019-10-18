@@ -836,6 +836,12 @@ ALPHA_LENGTH_STEM = 0.41596100500179733
 ALPHA_LENGTH_VECTOR_STEM = 0.7190178571802391
 UNIT_VECTOR_STEM = np.array([-3.26004674e-01,-9.45368157e-01,0])
 ALPHA_STROKE_STEM = 0.11963381920678877
+ALPHA_ADDITIONAL_LINE = 0.686664
+ALPHA_PENTAGRAM_ADDITIONAL_LINE = 0.5437653622504716
+ALPHA_BEMOL_SCALE = 1.4461098901098903
+UNIT_VECTOR_BEMOL = np.array([-9.11981280e-01,4.10231818e-01,0])
+ALPHA_BEMOL_LENGTH_VECTOR = 0.8946186251034574
+
 
 class GetAlphas(Scene):
     def construct(self):
@@ -879,6 +885,18 @@ ERROR_NUMBER_CLEFS ="""
 
 """
 
+def sign(x):
+    if x>=0: return 1
+    else: return -1
+
+class AdditionalLineNote(VMobject):
+    def __init__(self,note,**kwargs):
+        super().__init__(**kwargs)
+        line_height = note.get_width() / ALPHA_ADDITIONAL_LINE
+        self.set_points_as_corners([ORIGIN,RIGHT*line_height])
+        self.move_to(note.body)
+        self.set_stroke(None,note.get_width() / ALPHA_STROKE_STEM)
+
 class Pentagram(VGroup):
     CONFIG = {
         "num_pentagrams": 0,
@@ -917,6 +935,7 @@ class Pentagram(VGroup):
         self.clefs_group = VGroup()
         self.reference_lines = VGroup()
         self.reference_numbers = VGroup()
+        self.additional_lines = VGroup()
         if self.num_pentagrams == 0 and self.clefs != None:
             self.num_pentagrams = len(self.clefs)
         if self.num_pentagrams == 0 and self.clefs == None:
@@ -930,7 +949,7 @@ class Pentagram(VGroup):
             self.set_clefs()
         if self.show_reference:
             self.set_reference_system()
-        self.add(self.pentagrams,self.clefs_group,self.reference_numbers)
+        self.add(self.pentagrams,self.clefs_group,self.reference_numbers,self.additional_lines)
 
     def set_pentagrams(self):
         for _ in range(self.num_pentagrams):
@@ -975,7 +994,7 @@ class Pentagram(VGroup):
         return self.get_space_between_lines()*position/2
 
     def set_note_at(self,mob,note = 0,proportion = 0.2,reference_line = 0):
-        mob.set_width(self.get_space_between_lines())
+        mob.set_height(self.get_space_between_lines()*mob.fix_size_factor)
         mob.move_to(self.get_proportion_line(proportion,reference_line))
         mob.shift(UP*self.get_space_note(note))
 
@@ -986,6 +1005,25 @@ class Pentagram(VGroup):
                 number.set_height(self.get_space_between_lines()*0.8)
                 number.next_to(pentagram[n],LEFT,buff=0.1)
                 self.reference_numbers.add(number)
+
+    def add_additional_line(self,nivel=2,proportion=0.2,pentagram=0,fade=0):
+        note_space = self.get_space_between_lines()
+        if nivel == 0:
+            raise ValueError("nivel must be != 0")
+        length_line = note_space / ALPHA_PENTAGRAM_ADDITIONAL_LINE
+        additional_line = Line(ORIGIN,RIGHT*length_line)
+        reference_dot = Dot()
+        reference_dot.next_to(self.pentagrams[pentagram],UP*sign(nivel),buff=0)
+        x_coord = self.get_proportion_line(proportion,pentagram)[0]
+        group_lines = VGroup()
+        for i in range(abs(nivel)):
+            line = additional_line.copy()
+            line.next_to(self.pentagrams[pentagram],UP*sign(nivel),buff = (note_space * (i + 1)))
+            line.move_to([x_coord,line.get_y(),0])
+            group_lines.add(line)
+        group_lines.fade(fade)
+        self.additional_lines.add(group_lines)
+
 
 def get_update_relative(main,relative,length_over_dim=0):
     alpha_width = main.get_width()/relative.length_over_dim(length_over_dim)
@@ -1018,18 +1056,37 @@ def get_update_relative_stem(main,relative,length_over_dim=0):
         mob.stem.move_to(mob.body.get_center()+vector*int(-mob.sign))
     return update_relative
 
+def return_alpha_values(main,relative,length_over_dim=0):
+    alpha_width = main.get_width()/relative.length_over_dim(length_over_dim)
+    line_main_relative = Line(main.get_center(),relative.get_center())
+    alpha_length = main.get_width() / line_main_relative.get_length()
+    unit_vector = line_main_relative.get_unit_vector()
+    return alpha_width,alpha_length,unit_vector
+
+def get_update_relative_alteration(main,relative,length_over_dim=0):
+    alpha_width,alpha_length,unit_vector = return_alpha_values(main,relative,length_over_dim)
+    def update_relative(mob):
+        width = mob.body.get_width() / alpha_width
+        mob.alteration.rescale_to_fit(width,length_over_dim)
+        length = mob.body.get_width() / alpha_length
+        vector = unit_vector * length
+        mob.alteration.move_to(mob.body.get_center()+vector)
+    return update_relative
 
 class Minim(VGroup):
     CONFIG = {
-        "minim_kwargs":{"stroke_width": 0, "stroke_opacity":1,"fill_opacity": 1},
+        "body_kwargs":{"stroke_width": 0, "stroke_opacity":1,"fill_opacity": 1},
         "stem_kwargs":{"stroke_width": 5.5, "stroke_opacity":1,"fill_opacity": 0},
         "add_stem":True,
-        "stem_direction":DOWN
+        "stem_direction":DOWN,
+        "type_note":"minim",
+        "fix_size_factor":1,
     }
     def __init__(self,note=0,context=None,proportion=0.2,reference_line=0,**kwargs):
         super().__init__(**kwargs)
-        self.body = SVGMobject("music_symbols/minim",**self.minim_kwargs)[0]
+        self.set_type_note()
         self.add(self.body)
+        self.set_custom_properties()
         if context != None:
             self.context = context
             self.note = note
@@ -1042,20 +1099,11 @@ class Minim(VGroup):
     def stem_updater(self):
         return get_update_relative_stem(self.body,self.stem,1)
 
+    def alteration_updater(self):
+        return get_update_relative_alteration(self.body,self.alteration,0)
 
-    def put_note_at(self,note = 0,proportion = 0.2,reference_line = 0,context=None):
-        self.valid_context(context)
-        body = self.body.copy()
-        body.set_width(self.context.get_space_between_lines())
-        body.move_to(self.context.get_proportion_line(proportion,reference_line))
-        body.shift(UP*self.context.get_space_note(note))
-        self.stem.update(0)
-        new_self = VGroup(body,self.stem.copy())
-        self.become(new_self)
-
-    def move_random(self,t=1):
-        self[0].shift(LEFT)
-        self.update()
+    def set_type_note(self):
+        self.body = SVGMobject(f"music_symbols/{self.type_note}",**self.body_kwargs)[0]
 
     def valid_context(self,context):
         if context != None:
@@ -1068,36 +1116,138 @@ class Minim(VGroup):
         stem.move_to(self.body.get_center()+vector_stem)
         stem.set_stroke(None,self.body.get_width()/ALPHA_STROKE_STEM)
         self.stem = stem
-        return stem 
+        return stem
+
+    def add_alteration(self,alteration="bemol"):
+        alteration = SVGMobject(f"music_symbols/{alteration}",**self.body_kwargs)[0]
+        width = self.body.get_width() / ALPHA_BEMOL_SCALE
+        alteration.set_width(width)
+        vector_lenght_alteration = self.body.get_width()/ALPHA_BEMOL_LENGTH_VECTOR
+        vector_alteration = UNIT_VECTOR_BEMOL*vector_lenght_alteration
+        alteration.move_to(self.body.get_center()+vector_alteration)
+        self.alteration = alteration
+        self.add(alteration)
+        self.add_updater(self.alteration_updater())
 
     def set_note(self,note,proportion=None,reference_line=0,context=None):
         self.valid_context(context)
         if proportion != None:
-            x_coord = self.context.get_proportion_line(proportion,reference_line)[0]
+            try:
+                alteration_width = abs(self.body.get_left() - self.alteration.get_left())
+            except:
+                alteration_width = 0
+            x_coord = self.context.get_proportion_line(proportion,reference_line)[0] - alteration_width/2
         else:
             x_coord = self.get_x()
         x_distance = x_coord - self.get_x()
+        y_distance = self.body.get_y()-self.context.reference_lines[reference_line].get_y()
+        note_distance = self.context.get_space_between_lines()/2
+        note_self = np.round(y_distance/note_distance)
+        if note != None:
+            self.shift(UP*self.context.get_space_between_lines()*(note-note_self)/2+x_distance*RIGHT)
+
+    def get_note(self,reference_line=0):
         y_distance = abs(self.body.get_y()-self.context.reference_lines[reference_line].get_y())
         note_distance = self.context.get_space_between_lines()/2
         note_self = np.round(y_distance/note_distance)
-        self.shift(UP*self.context.get_space_between_lines()*(note-note_self)/2+x_distance*RIGHT)
+        return note_self
+
+    def set_custom_properties(self):
+        pass
 
 class Chord(VGroup):
-    def set_notes(self,notes,proportion=None,reference_line=0):
-        context = self[0].context
+    def set_notes(self,notes,proportion=None,reference_line=0,context=None):
+        if context == None:
+            context = self[0].context
         for pre,pos in zip(self,notes):
             pre.set_note(pos,proportion,reference_line,context)
 
+    def set_proportion(self,proportion,reference_line=0,context=None):
+        if context == None:
+            context = self[0].context
+        for note in self:
+            note.set_note(None,proportion,reference_line,context)
+
+class Crotchet(Minim):
+    CONFIG = {
+        "type_note":"crotchet"
+    }
+
+class Semibreve(Minim):
+    CONFIG = {
+        "type_note":"semibreve",
+        "add_stem":False,
+    }
+
 class MusicTest(Scene):
     def construct(self):
-        pentagram = Pentagram(width=5,height=1.4)
+        pentagram = Pentagram(height=2)
+        note = Crotchet(6,pentagram)
+        note2 = Minim(-7,pentagram,stem_direction=UP)
+        note2.add_alteration("natural")
+        al = AdditionalLineNote(note)
+        self.add(pentagram,note,al,note2)
+        alpha_additiona_line = pentagram.get_space_between_lines() / al.get_width()
+        pentagram.add_additional_line(-3,fade=1)
+        pentagram.add_additional_line(2,0.5,fade=1)
+        pentagram.additional_lines.set_stroke(opacity=0.5)
+        #minim.put_note_at(0,0.3)
+        #self.wait()
+        note2.alteration.fade(0.5)
+        self.play(note2.set_note,7,0.5)
+        self.wait()
+
+class MusicTest2(Scene):
+    def construct(self):
+        pentagram = Pentagram(width=7,height=1.4)
+        minim = Minim(0,pentagram)
+        print(minim.get_note())
+        sign = -1
+        minim.set_note(sign*3)
+        print(minim.get_note())
+        minim.set_note(sign*2)
+        print(minim.get_note())
+        minim.set_note(sign*5)
+        print(minim.get_note())
+        minim.set_note(sign*0)
+        print(minim.get_note())
+
+class MusicTest2(Scene):
+    def construct(self):
+        pentagram = Pentagram(height=2)
         chord = Chord(
-                    Minim(0,pentagram,0.3),
-                    Minim(3,pentagram,0.3)
+                    Crotchet(0,pentagram),
+                    Semibreve(3,pentagram,stem_direction=UP)
                 )
+        chord.set_proportion(0.3)
+
         self.add(pentagram,chord)
-        self.play(chord.set_notes,[-3,0])
+        self.play(
+            chord.set_notes,[-2,0],0.4,
+            chord.set_color,RED
+            )
+        self.play(
+            chord.set_notes,[-1,4],0.6,
+            chord.set_color,ORANGE
+            )
+        self.play(
+            chord.set_notes,[1,1],0.8,
+            chord.set_color,TEAL
+            )
+        self.wait(2)
         #minim.put_note_at(0,0.3)
         #self.wait()
         #self.play(minim.set_note,2)
-        self.wait(2)
+
+class AlterationAlphas(Scene):
+    def construct(self):
+        bemol,body,stem = SVGMobject("music_symbols/bemol")
+        self.add(bemol,body)
+        reference_line = Line(body.get_center(),bemol.get_center())
+        length = reference_line.get_length()
+        ALPHA_BEMOL_SCALE = body.get_width() / bemol.get_width()
+        UNIT_VECTOR_BEMOL = reference_line.get_unit_vector()
+        ALPHA_BEMOL_LENGTH_VECTOR = body.get_width() / length
+        print("ALPHA_BEMOL_SCALE: ",ALPHA_BEMOL_SCALE)
+        print("UNIT_VECTOR_BEMOL: ",UNIT_VECTOR_BEMOL)
+        print("ALPHA_BEMOL_LENGTH_VECTOR: ",ALPHA_BEMOL_LENGTH_VECTOR)
