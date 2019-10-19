@@ -885,6 +885,30 @@ ERROR_NUMBER_CLEFS ="""
 
 """
 
+ALPHAS = {
+    "stem":{
+        "width":16.00022333751562,
+        "heigth":0.36623730881369715,
+        "unit_vector":np.array([ 3.15654676e-01,  9.48874136e-01, 0]),
+        "vector_length":0.6966207908464077,
+    },
+    "bemol":{
+        'width': 1.9047617482816004, 
+        'vector_length': 1.1188564231965377, 
+        'unit_vector': np.array([-9.58018319e-01,  2.86706992e-01, 0]), 
+    },
+    "sharp":{
+        'width': 1.7777778087577196,
+        'vector_length': 1.103450979190911,
+        'unit_vector': np.array([-1.0000000e+00,  1.9213607e-16, 0]),
+    },
+    "natural":{
+        'width': 2.5396825839395993,
+        'vector_length': 1.1034510746729629,
+        'unit_vector': np.array([-1.00000000e+00, -8.65304011e-08, 0]),
+    }
+}
+
 def sign(x):
     if x>=0: return 1
     else: return -1
@@ -1041,19 +1065,20 @@ def get_update_relative(main,relative,length_over_dim=0):
 
     return update_relative
 
-def get_update_relative_stem(main,relative,length_over_dim=0):
-    alpha_width = main.get_width()/relative.length_over_dim(length_over_dim)
-    line_main_relative = Line(main.get_center(),relative.get_center())
-    alpha_length = main.get_width() / line_main_relative.get_length()
+def get_update_relative_stem(self,main,relative):
+    alpha_width = self.note_parts[main].get_width()/self.note_parts[relative].get_width()
+    line_main_relative = Line(
+        self.note_parts[main].get_center(),
+        self.note_parts[relative].get_center()
+    )
+    alpha_length = self.note_parts[main].get_width() / line_main_relative.get_length()
     unit_vector = line_main_relative.get_unit_vector()
-    alpha_stroke = main.get_width()/relative.stroke_width
     def update_relative(mob):
-        width = mob.body.get_width() / alpha_width
-        mob.stem.set_stroke(None,mob.body.get_width()/alpha_stroke)
-        mob.stem.rescale_to_fit(width,length_over_dim)
-        length = mob.body.get_width() / alpha_length
+        width = mob.note_parts[main].get_width() / alpha_width
+        mob.note_parts[relative].set_width(width)
+        length = mob.note_parts[main].get_width() / alpha_length
         vector = unit_vector * length
-        mob.stem.move_to(mob.body.get_center()+vector*int(-mob.sign))
+        mob.note_parts[relative].move_to(mob.note_parts[main].get_center()+vector*int(-mob.sign))
     return update_relative
 
 def return_alpha_values(main,relative,length_over_dim=0):
@@ -1087,6 +1112,7 @@ class Minim(VGroup):
         self.set_type_note()
         self.add(self.body)
         self.set_custom_properties()
+        self.note_parts = {"body":self.body}
         if context != None:
             self.context = context
             self.note = note
@@ -1097,25 +1123,31 @@ class Minim(VGroup):
             self.add_updater(self.stem_updater())
 
     def stem_updater(self):
-        return get_update_relative_stem(self.body,self.stem,1)
+        return get_update_relative_stem(self,"body","stem")
 
     def alteration_updater(self):
         return get_update_relative_alteration(self.body,self.alteration,0)
 
     def set_type_note(self):
-        self.body = SVGMobject(f"music_symbols/{self.type_note}",**self.body_kwargs)[0]
+        if self.type_note != "semibreve":
+            index = 1
+        else:
+            index = 0
+        self.body = SVGMobject(f"music_symbols/{self.type_note}",**self.body_kwargs)[index]
 
     def valid_context(self,context):
         if context != None:
             self.context = context
 
     def set_stem(self):
-        stem = Line(ORIGIN,UP*self.body.get_width()/ALPHA_LENGTH_STEM,**self.stem_kwargs)
-        vector_lenght_stem = self.body.get_width()/ALPHA_LENGTH_VECTOR_STEM
-        vector_stem = UNIT_VECTOR_STEM*vector_lenght_stem
+        stem = SVGMobject(f"music_symbols/{self.type_note}",**self.body_kwargs)[1]
+        main_width = self.body.get_width()
+        stem.set_width(main_width / ALPHAS["stem"]["width"])
+        vector_lenght_stem = main_width/ ALPHAS["stem"]["vector_length"]
+        vector_stem = vector_lenght_stem * ALPHAS["stem"]["unit_vector"]
         stem.move_to(self.body.get_center()+vector_stem)
-        stem.set_stroke(None,self.body.get_width()/ALPHA_STROKE_STEM)
         self.stem = stem
+        self.note_parts["stem"] = stem
         return stem
 
     def add_alteration(self,alteration="bemol"):
@@ -1184,7 +1216,7 @@ class MusicTest(Scene):
         pentagram = Pentagram(height=2)
         note = Crotchet(6,pentagram)
         note2 = Minim(-7,pentagram,stem_direction=UP)
-        note2.add_alteration("natural")
+        note2.add_alteration("bemol")
         al = AdditionalLineNote(note)
         self.add(pentagram,note,al,note2)
         alpha_additiona_line = pentagram.get_space_between_lines() / al.get_width()
@@ -1217,7 +1249,7 @@ class MusicTest2(Scene):
         pentagram = Pentagram(height=2)
         chord = Chord(
                     Crotchet(0,pentagram),
-                    Semibreve(3,pentagram,stem_direction=UP)
+                    Minim(3,pentagram)
                 )
         chord.set_proportion(0.3)
 
@@ -1241,7 +1273,7 @@ class MusicTest2(Scene):
 
 class AlterationAlphas(Scene):
     def construct(self):
-        bemol,body,stem = SVGMobject("music_symbols/bemol")
+        bemol,body,stem = SVGMobject("music_symbols/bemol_extra")
         self.add(bemol,body)
         reference_line = Line(body.get_center(),bemol.get_center())
         length = reference_line.get_length()
@@ -1251,3 +1283,111 @@ class AlterationAlphas(Scene):
         print("ALPHA_BEMOL_SCALE: ",ALPHA_BEMOL_SCALE)
         print("UNIT_VECTOR_BEMOL: ",UNIT_VECTOR_BEMOL)
         print("ALPHA_BEMOL_LENGTH_VECTOR: ",ALPHA_BEMOL_LENGTH_VECTOR)
+
+class AlterationObjects(Scene):
+    def construct(self):
+        flat = FormulaFull("\\flat")
+        natural = FormulaFull("\\natural")
+        sharp = FormulaFull("\\sharp")
+        self.add(flat)
+
+class BemolAlphas(Scene):
+    def construct(self):
+        self.bemol = MusicTeX(r"""
+        \hsize=120mm
+        \parindent 2pt
+        \nostartrule
+        \NOTes\qu{_e}\en
+        """,stroke_width=0,stroke_opacity=0)
+
+        self.bemol.symbol = self.bemol[0][0]
+        self.bemol.stem = self.bemol[0][1]
+        self.bemol.body = self.bemol[0][2]
+
+        self.sharp = MusicTeX(r"""
+        \hsize=120mm
+        \parindent 2pt
+        \nostartrule
+        \NOTes\qu{^e}\en
+        """,stroke_width=0,stroke_opacity=0)
+
+        self.sharp.symbol = self.sharp[0][0]
+        self.sharp.stem = self.sharp[0][1]
+        self.sharp.body = self.sharp[0][2]
+
+        self.natural = MusicTeX(r"""
+        \hsize=120mm
+        \parindent 2pt
+        \nostartrule
+        \NOTes\qu{=e}\en
+        """,stroke_width=0,stroke_opacity=0)
+
+        self.natural.symbol = self.natural[0][0]
+        self.natural.stem = self.natural[0][1]
+        self.natural.body = self.natural[0][2]
+
+        self.notes = VGroup(self.bemol,self.sharp,self.natural).arrange(RIGHT)
+        self.add(self.notes)
+
+        self.get_alphas(self.natural)
+
+    def get_alphas(self,object):
+        body_width = object.body.get_width()
+        stem_width = object.stem.get_width()
+        stem_height = object.stem.get_height()
+        symbol_width = object.symbol.get_width()
+        reference_line_symbol = Line(
+            object.body.get_center(),
+            object.symbol.get_center(),
+            buff=0
+            )
+        reference_line_stem = Line(
+            object.body.get_center(),
+            object.stem.get_center()
+        )
+        unit_vector_symbol = reference_line_symbol.get_unit_vector()
+        unit_vector_stem = reference_line_stem.get_unit_vector()
+        vector_length_symbol = reference_line_symbol.get_length()
+        vector_length_stem = reference_line_stem.get_length()
+
+        ALPHAS = {
+            "alpha_width_symbol":body_width/symbol_width,
+            "alpha_width_stem":body_width/stem_width,
+            "alpha_height_stem":body_width/stem_height,
+            "alpha_vector_length_symbol":body_width/vector_length_symbol,
+            "alpha_vector_length_stem":body_width/vector_length_stem,
+            "unit_vector_symbol":unit_vector_symbol,
+            "unit_vector_stem":unit_vector_stem,
+        }
+
+        print(ALPHAS)
+
+class GetNotes(Scene):
+    def construct(self):
+        kwargs = {
+            "stroke_width":0,
+            "stroke_opacity":0,
+            "fill_opacity":1
+        }
+        crotchet = self.natural = MusicTeX(r"""
+        \hsize=120mm
+        \parindent 2pt
+        \nostartrule
+        \NOTes\qa{e}\en
+        """,**kwargs)
+
+        minim = MusicTeX(r"""
+        \hsize=120mm
+        \parindent 2pt
+        \nostartrule
+        \NOTes\ha{e}\en
+        """,**kwargs)
+
+        semibreve = MusicTeX(r"""
+        \hsize=120mm
+        \parindent 2pt
+        \nostartrule
+        \NOTes\wh{e}\en
+        """,**kwargs)
+
+        self.add(crotchet)
