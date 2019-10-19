@@ -824,399 +824,12 @@ class RelativeScene2(Scene):
 def me():
     print("Me ejecuto")
 
-ALPHA_HEIGHT_G_CLEF = 0.5743147103253643
-ALPHA_HEIGHT_F_CLEF = 1.2929782931297076
-ALPHA_DOWN_G_CLEF = -57.673398215985706
-ALPHA_DOWN_F_CLEF = -8.176884884446107
-ALPHA_HEIGHT_STEM  = 0.41596100500179733
-ALPHA_WIDTH_HALF_DOT = 3.0644336712207947
-ALPHA_LENGTH_VECTOR_HALF_DOT = 1.018861808179335
-UNIT_VECTOR_HALF_DOT = np.array([9.30474096e-01,3.66357690e-01,0])
-ALPHA_LENGTH_STEM = 0.41596100500179733
-ALPHA_LENGTH_VECTOR_STEM = 0.7190178571802391
-UNIT_VECTOR_STEM = np.array([-3.26004674e-01,-9.45368157e-01,0])
-ALPHA_STROKE_STEM = 0.11963381920678877
-ALPHA_ADDITIONAL_LINE = 0.686664
-ALPHA_PENTAGRAM_ADDITIONAL_LINE = 0.5437653622504716
-ALPHA_BEMOL_SCALE = 1.4461098901098903
-UNIT_VECTOR_BEMOL = np.array([-9.11981280e-01,4.10231818e-01,0])
-ALPHA_BEMOL_LENGTH_VECTOR = 0.8946186251034574
-
-
-class GetAlphas(Scene):
-    def construct(self):
-        minim_kwargs = {"stroke_width": 0, "stroke_opacity":1,"fill_opacity": 1}
-        stem_kwargs = {"stroke_width": 5.5, "stroke_opacity":1,"fill_opacity": 0}
-        minim = SVGMobject("music_symbols/minim",**minim_kwargs)
-        body = minim[0]
-        dot = minim[1].set_color(RED)
-        stem2 = minim[2].set_stroke(RED,5.5)
-        half_dot = Dot()
-        #stem = Line(ORIGIN,UP*body.get_width()/ALPHA_LENGTH_STEM,**stem_kwargs)
-        #vector_lenght_stem = body.get_width()/ALPHA_LENGTH_VECTOR_STEM
-        #vector_stem = UNIT_VECTOR_STEM*vector_lenght_stem
-        #stem.move_to(body.get_center()+vector_stem)
-        #half_dot.set_width(body.get_width()/ALPHA_WIDTH_HALF_DOT)
-        #vector_lenght_half_dot = body.get_width()/ALPHA_LENGTH_VECTOR_HALF_DOT
-        #vector_half_dot = UNIT_VECTOR_HALF_DOT*vector_lenght_half_dot
-        #half_dot.move_to(body.get_center()+vector_half_dot)
-        #alpha_length_stem, alpha_length_vector_stem, unit_vector_stem = self.return_vector_width_alphas(body,stem,1) 
-        #print("alpha_length_stem: ",alpha_length_stem)
-        #print("alpha_length_vector_stem: ",alpha_length_vector_stem)
-        #print("unit_vector_stem", unit_vector_stem)
-        #print("alpha_down: ",alpha_down)
-        #print("dy",(pentagram.get_y() - g_clef.get_y()) )
-        self.add(body,half_dot,stem2)
-
-    def return_vector_width_alphas(self,main,reference,length_over_dim=0):
-        line = Line(main.get_center(),reference.get_center())
-        unit_vector = line.get_unit_vector()
-        length = line.get_length()
-        alpha_length_vector = main.get_width() / length
-        alpha_dimension = main.get_width() / reference.length_over_dim(length_over_dim)
-        return [alpha_dimension,alpha_length_vector,unit_vector]
-
-
-ERROR_NUMBER_CLEFS ="""
-
------------------------------------
-           #clefs > #pentagrams
------------------------------------
-
-"""
-
-ALPHAS = {
-    "stem":{
-        "width":16.00022333751562,
-        "heigth":0.36623730881369715,
-        "unit_vector":np.array([ 3.15654676e-01,  9.48874136e-01, 0]),
-        "vector_length":0.6966207908464077,
-    },
-    "bemol":{
-        'width': 1.9047617482816004, 
-        'vector_length': 1.1188564231965377, 
-        'unit_vector': np.array([-9.58018319e-01,  2.86706992e-01, 0]), 
-    },
-    "sharp":{
-        'width': 1.7777778087577196,
-        'vector_length': 1.103450979190911,
-        'unit_vector': np.array([-1.0000000e+00,  1.9213607e-16, 0]),
-    },
-    "natural":{
-        'width': 2.5396825839395993,
-        'vector_length': 1.1034510746729629,
-        'unit_vector': np.array([-1.00000000e+00, -8.65304011e-08, 0]),
-    }
-}
-
-def sign(x):
-    if x>=0: return 1
-    else: return -1
-
-class AdditionalLineNote(VMobject):
-    def __init__(self,note,**kwargs):
-        super().__init__(**kwargs)
-        line_height = note.get_width() / ALPHA_ADDITIONAL_LINE
-        self.set_points_as_corners([ORIGIN,RIGHT*line_height])
-        self.move_to(note.body)
-        self.set_stroke(None,note.get_width() / ALPHA_STROKE_STEM)
-
-class Pentagram(VGroup):
-    CONFIG = {
-        "num_pentagrams": 0,
-        "height":1,
-        "width":FRAME_WIDTH - 2,
-        "clefs":None,
-        "arrange_config":{
-            "direction":DOWN, "buff": 1    
-        },
-        "pentagram_config":{
-            "stroke_width":4,
-            "stroke_opacity":1,
-            "fill_opacity":0
-        },
-        "clef_config":{
-            "stroke_width":0,
-            "stroke_opacity":0,
-            "fill_opacity":1
-        },
-        "left_buff":0.14,
-        "reference":2,
-        "show_reference":False,
-    }
-    def __init__(self,**kwargs):
-        super().__init__(**kwargs)
-        self.pentagram = SVGMobject("music_symbols/c_clef",**self.pentagram_config)[:5]
-        # Fix lines
-        for i in range(1,len(self.pentagram)):
-            self.pentagram[i].points[-1][0] = self.pentagram[0].points[-1][0]
-        self.c_clef = SVGMobject("music_symbols/c_clef",**self.clef_config)[5]
-        self.g_clef = SVGMobject("music_symbols/g_clef",**self.clef_config)[5]
-        self.f_clef = SVGMobject("music_symbols/f_clef",**self.clef_config)[5]
-        self.pentagram.set_width(self.width,stretch=True)
-        self.pentagram.set_height(self.height,stretch=True)
-        self.pentagrams = VGroup()
-        self.clefs_group = VGroup()
-        self.reference_lines = VGroup()
-        self.reference_numbers = VGroup()
-        self.additional_lines = VGroup()
-        if self.num_pentagrams == 0 and self.clefs != None:
-            self.num_pentagrams = len(self.clefs)
-        if self.num_pentagrams == 0 and self.clefs == None:
-            self.num_pentagrams = 1
-            self.clefs = ["g_clef"]
-        self.set_pentagrams()
-        if self.clefs != None:
-            self.set_clefs()
-        if self.num_pentagrams == 2 and self.clefs == None:
-            self.clefs = ["g_clef","f_clef"]
-            self.set_clefs()
-        if self.show_reference:
-            self.set_reference_system()
-        self.add(self.pentagrams,self.clefs_group,self.reference_numbers,self.additional_lines)
-
-    def set_pentagrams(self):
-        for _ in range(self.num_pentagrams):
-            pentagram = self.pentagram.copy()
-            self.pentagrams.add(pentagram)
-            self.reference_lines.add(pentagram[self.reference])
-        self.pentagrams.arrange(**self.arrange_config)
-
-
-    def set_clefs(self):
-        count = 0
-        try:
-            for c in self.clefs:
-                if c == "c_clef":
-                    clef = self.c_clef.copy()
-                    clef.set_height(self.height)
-                    clef.next_to(self.pentagrams[count].get_left(),RIGHT,buff=self.left_buff)
-                    self.clefs_group.add(clef)
-                elif c == "g_clef":
-                    clef = self.g_clef.copy()
-                    clef.set_height(self.height / ALPHA_HEIGHT_G_CLEF)
-                    clef.next_to(self.pentagrams[count].get_left(),RIGHT,buff=self.left_buff)
-                    clef.shift(DOWN*(self.height/ALPHA_DOWN_G_CLEF))
-                    self.clefs_group.add(clef)
-                elif c == "f_clef":
-                    clef = self.f_clef.copy()
-                    clef.set_height(self.height / ALPHA_HEIGHT_F_CLEF)
-                    clef.next_to(self.pentagrams[count].get_left(),RIGHT,buff=self.left_buff)
-                    clef.shift(DOWN*(self.height/ALPHA_DOWN_F_CLEF))
-                    self.clefs_group.add(clef)
-                count += 1
-        except:
-            print(ERROR_NUMBER_CLEFS)
-
-    def get_space_between_lines(self):
-        return abs(self.pentagram[1].get_y()-self.pentagram[2].get_y())
-
-    def get_proportion_line(self,proportion,reference_line):
-        return self.reference_lines[reference_line].point_from_proportion(proportion)
-
-    def get_space_note(self,position):
-        return self.get_space_between_lines()*position/2
-
-    def set_note_at(self,mob,note = 0,proportion = 0.2,reference_line = 0):
-        mob.set_height(self.get_space_between_lines()*mob.fix_size_factor)
-        mob.move_to(self.get_proportion_line(proportion,reference_line))
-        mob.shift(UP*self.get_space_note(note))
-
-    def set_reference_system(self):
-        for pentagram in self.pentagrams:
-            for n in range(5):
-                number = FontText(f"{-n+2}")
-                number.set_height(self.get_space_between_lines()*0.8)
-                number.next_to(pentagram[n],LEFT,buff=0.1)
-                self.reference_numbers.add(number)
-
-    def add_additional_line(self,nivel=2,proportion=0.2,pentagram=0,fade=0):
-        note_space = self.get_space_between_lines()
-        if nivel == 0:
-            raise ValueError("nivel must be != 0")
-        length_line = note_space / ALPHA_PENTAGRAM_ADDITIONAL_LINE
-        additional_line = Line(ORIGIN,RIGHT*length_line)
-        reference_dot = Dot()
-        reference_dot.next_to(self.pentagrams[pentagram],UP*sign(nivel),buff=0)
-        x_coord = self.get_proportion_line(proportion,pentagram)[0]
-        group_lines = VGroup()
-        for i in range(abs(nivel)):
-            line = additional_line.copy()
-            line.next_to(self.pentagrams[pentagram],UP*sign(nivel),buff = (note_space * (i + 1)))
-            line.move_to([x_coord,line.get_y(),0])
-            group_lines.add(line)
-        group_lines.fade(fade)
-        self.additional_lines.add(group_lines)
-
-
-def get_update_relative(main,relative,length_over_dim=0):
-    alpha_width = main.get_width()/relative.length_over_dim(length_over_dim)
-    line_main_relative = Line(main.get_center(),relative.get_center())
-    alpha_length = main.get_width() / line_main_relative.get_length()
-    unit_vector = line_main_relative.get_unit_vector()
-
-    def update_relative(mob):
-        width = main.get_width() / alpha_width
-        mob.rescale_to_fit(width,length_over_dim)
-        length = main.get_width() / alpha_length
-        vector = unit_vector * length
-        mob.move_to(main.get_center()+vector)
-        return mob
-
-    return update_relative
-
-def get_update_relative_stem(self,main,relative):
-    alpha_width = self.note_parts[main].get_width()/self.note_parts[relative].get_width()
-    line_main_relative = Line(
-        self.note_parts[main].get_center(),
-        self.note_parts[relative].get_center()
-    )
-    alpha_length = self.note_parts[main].get_width() / line_main_relative.get_length()
-    unit_vector = line_main_relative.get_unit_vector()
-    def update_relative(mob):
-        width = mob.note_parts[main].get_width() / alpha_width
-        mob.note_parts[relative].set_width(width)
-        length = mob.note_parts[main].get_width() / alpha_length
-        vector = unit_vector * length
-        mob.note_parts[relative].move_to(mob.note_parts[main].get_center()+vector*int(-mob.sign))
-    return update_relative
-
-def return_alpha_values(main,relative,length_over_dim=0):
-    alpha_width = main.get_width()/relative.length_over_dim(length_over_dim)
-    line_main_relative = Line(main.get_center(),relative.get_center())
-    alpha_length = main.get_width() / line_main_relative.get_length()
-    unit_vector = line_main_relative.get_unit_vector()
-    return alpha_width,alpha_length,unit_vector
-
-def get_update_relative_alteration(main,relative,length_over_dim=0):
-    alpha_width,alpha_length,unit_vector = return_alpha_values(main,relative,length_over_dim)
-    def update_relative(mob):
-        width = mob.body.get_width() / alpha_width
-        mob.alteration.rescale_to_fit(width,length_over_dim)
-        length = mob.body.get_width() / alpha_length
-        vector = unit_vector * length
-        mob.alteration.move_to(mob.body.get_center()+vector)
-    return update_relative
-
-class Minim(VGroup):
-    CONFIG = {
-        "body_kwargs":{"stroke_width": 0, "stroke_opacity":1,"fill_opacity": 1},
-        "stem_kwargs":{"stroke_width": 5.5, "stroke_opacity":1,"fill_opacity": 0},
-        "add_stem":True,
-        "stem_direction":DOWN,
-        "type_note":"minim",
-        "fix_size_factor":1,
-    }
-    def __init__(self,note=0,context=None,proportion=0.2,reference_line=0,**kwargs):
-        super().__init__(**kwargs)
-        self.set_type_note()
-        self.add(self.body)
-        self.set_custom_properties()
-        self.note_parts = {"body":self.body}
-        if context != None:
-            self.context = context
-            self.note = note
-            self.context.set_note_at(self,note,proportion,reference_line)
-        if self.add_stem:
-            self.sign = self.stem_direction[1]
-            self.add(self.set_stem())
-            self.add_updater(self.stem_updater())
-
-    def stem_updater(self):
-        return get_update_relative_stem(self,"body","stem")
-
-    def alteration_updater(self):
-        return get_update_relative_alteration(self.body,self.alteration,0)
-
-    def set_type_note(self):
-        if self.type_note != "semibreve":
-            index = 1
-        else:
-            index = 0
-        self.body = SVGMobject(f"music_symbols/{self.type_note}",**self.body_kwargs)[index]
-
-    def valid_context(self,context):
-        if context != None:
-            self.context = context
-
-    def set_stem(self):
-        stem = SVGMobject(f"music_symbols/{self.type_note}",**self.body_kwargs)[1]
-        main_width = self.body.get_width()
-        stem.set_width(main_width / ALPHAS["stem"]["width"])
-        vector_lenght_stem = main_width/ ALPHAS["stem"]["vector_length"]
-        vector_stem = vector_lenght_stem * ALPHAS["stem"]["unit_vector"]
-        stem.move_to(self.body.get_center()+vector_stem)
-        self.stem = stem
-        self.note_parts["stem"] = stem
-        return stem
-
-    def add_alteration(self,alteration="bemol"):
-        alteration = SVGMobject(f"music_symbols/{alteration}",**self.body_kwargs)[0]
-        width = self.body.get_width() / ALPHA_BEMOL_SCALE
-        alteration.set_width(width)
-        vector_lenght_alteration = self.body.get_width()/ALPHA_BEMOL_LENGTH_VECTOR
-        vector_alteration = UNIT_VECTOR_BEMOL*vector_lenght_alteration
-        alteration.move_to(self.body.get_center()+vector_alteration)
-        self.alteration = alteration
-        self.add(alteration)
-        self.add_updater(self.alteration_updater())
-
-    def set_note(self,note,proportion=None,reference_line=0,context=None):
-        self.valid_context(context)
-        if proportion != None:
-            try:
-                alteration_width = abs(self.body.get_left() - self.alteration.get_left())
-            except:
-                alteration_width = 0
-            x_coord = self.context.get_proportion_line(proportion,reference_line)[0] - alteration_width/2
-        else:
-            x_coord = self.get_x()
-        x_distance = x_coord - self.get_x()
-        y_distance = self.body.get_y()-self.context.reference_lines[reference_line].get_y()
-        note_distance = self.context.get_space_between_lines()/2
-        note_self = np.round(y_distance/note_distance)
-        if note != None:
-            self.shift(UP*self.context.get_space_between_lines()*(note-note_self)/2+x_distance*RIGHT)
-
-    def get_note(self,reference_line=0):
-        y_distance = abs(self.body.get_y()-self.context.reference_lines[reference_line].get_y())
-        note_distance = self.context.get_space_between_lines()/2
-        note_self = np.round(y_distance/note_distance)
-        return note_self
-
-    def set_custom_properties(self):
-        pass
-
-class Chord(VGroup):
-    def set_notes(self,notes,proportion=None,reference_line=0,context=None):
-        if context == None:
-            context = self[0].context
-        for pre,pos in zip(self,notes):
-            pre.set_note(pos,proportion,reference_line,context)
-
-    def set_proportion(self,proportion,reference_line=0,context=None):
-        if context == None:
-            context = self[0].context
-        for note in self:
-            note.set_note(None,proportion,reference_line,context)
-
-class Crotchet(Minim):
-    CONFIG = {
-        "type_note":"crotchet"
-    }
-
-class Semibreve(Minim):
-    CONFIG = {
-        "type_note":"semibreve",
-        "add_stem":False,
-    }
 
 class MusicTest(Scene):
     def construct(self):
         pentagram = Pentagram(height=2)
         note = Crotchet(6,pentagram)
         note2 = Minim(-7,pentagram,stem_direction=UP)
-        note2.add_alteration("bemol")
         al = AdditionalLineNote(note)
         self.add(pentagram,note,al,note2)
         alpha_additiona_line = pentagram.get_space_between_lines() / al.get_width()
@@ -1225,11 +838,12 @@ class MusicTest(Scene):
         pentagram.additional_lines.set_stroke(opacity=0.5)
         #minim.put_note_at(0,0.3)
         #self.wait()
+        note2.add_alteration("sharp")
         note2.alteration.fade(0.5)
         self.play(note2.set_note,7,0.5)
         self.wait()
 
-class MusicTest2(Scene):
+class MusicTest3(Scene):
     def construct(self):
         pentagram = Pentagram(width=7,height=1.4)
         minim = Minim(0,pentagram)
@@ -1246,14 +860,17 @@ class MusicTest2(Scene):
 
 class MusicTest2(Scene):
     def construct(self):
-        pentagram = Pentagram(height=2)
+        pentagram = Pentagram(height=1)
+        pentagram.add_key_signature("sharp",2)
         chord = Chord(
-                    Crotchet(0,pentagram),
-                    Minim(3,pentagram)
+                    Minim(0,pentagram,"bemol"),
+                    Minim(3,pentagram,"sharp",stem_direction=UP)
                 )
         chord.set_proportion(0.3)
-
+        chord[0].add_alteration("sharp")
         self.add(pentagram,chord)
+        self.play(chord[0].alteration.set_color,RED)
+        self.wait()
         self.play(
             chord.set_notes,[-2,0],0.4,
             chord.set_color,RED
@@ -1270,6 +887,34 @@ class MusicTest2(Scene):
         #minim.put_note_at(0,0.3)
         #self.wait()
         #self.play(minim.set_note,2)
+
+class MusicTest4(Scene):
+    def construct(self):
+        pentagram = Pentagram(height=2)
+        chord = Chord(
+                    Minim(0,pentagram,"bemol"),
+                    Minim(3,pentagram,"sharp",stem_direction=UP)
+                )
+        chord.set_proportion(0.3)
+
+        self.add(pentagram,chord)
+        chord[0].clear_updaters()
+        self.play(chord[0].alteration.shift,RIGHT*2)
+        chord[0].resume_updaters()
+        self.wait()
+        self.play(
+            chord.set_notes,[-2,0],0.4,
+            chord.set_color,RED
+            )
+        self.play(
+            chord.set_notes,[-1,4],0.6,
+            chord.set_color,ORANGE
+            )
+        self.play(
+            chord.set_notes,[1,1],0.8,
+            chord.set_color,TEAL
+            )
+        self.wait(2)
 
 class AlterationAlphas(Scene):
     def construct(self):
@@ -1350,7 +995,7 @@ class BemolAlphas(Scene):
         vector_length_symbol = reference_line_symbol.get_length()
         vector_length_stem = reference_line_stem.get_length()
 
-        ALPHAS = {
+        alphas = {
             "alpha_width_symbol":body_width/symbol_width,
             "alpha_width_stem":body_width/stem_width,
             "alpha_height_stem":body_width/stem_height,
@@ -1360,7 +1005,7 @@ class BemolAlphas(Scene):
             "unit_vector_stem":unit_vector_stem,
         }
 
-        print(ALPHAS)
+        print(alphas)
 
 class GetNotes(Scene):
     def construct(self):
@@ -1391,3 +1036,64 @@ class GetNotes(Scene):
         """,**kwargs)
 
         self.add(crotchet)
+
+class Alteraciones(Scene):
+    def construct(self):
+        alteraciones_sostenidos = MusicTeX(r"""
+            \hsize=100mm
+            \generalsignature{7}
+            \startpiece\bigaccid
+            """)
+        alteraciones_bemoles = MusicTeX(r"""
+            \hsize=100mm
+            \generalsignature{-7}
+            \startpiece\bigaccid
+            """)
+        alteraciones = VGroup(alteraciones_bemoles,alteraciones_sostenidos).arrange(DOWN)
+        self.add(alteraciones)
+
+class GetAlteraciones(Scene):
+    def construct(self):
+        sostenidos = SVGMobject("music_symbols/key_signature_sharp")
+        bemoles = SVGMobject("music_symbols/key_signature_bemol")
+        lineas_sostenidos = sostenidos[:5].set_color(RED)
+        alteraciones_sostenidos = sostenidos[7:].set_color(GREEN)
+        lineas_bemoles = bemoles[:5].set_color(RED)
+        alteraciones_bemoles = bemoles[7:].set_color(GREEN)
+
+        alpha_width_kss = lineas_sostenidos.get_height() / alteraciones_sostenidos.get_width()
+        alpha_width_ksb = lineas_bemoles.get_height() / alteraciones_bemoles.get_width()
+
+        dy_kss = alteraciones_sostenidos.get_y()-lineas_sostenidos.get_y()
+        dy_kss_alpha = alteraciones_sostenidos.get_width() / dy_kss
+
+        dy_ksb = alteraciones_bemoles.get_y()-lineas_bemoles.get_y()
+        dy_ksb_alpha = alteraciones_bemoles.get_width() / dy_ksb
+
+        alphas = {
+            "kss": {
+                "width":alpha_width_kss,
+                "dy": dy_kss_alpha
+            },
+            "ksb": {
+                "width":alpha_width_ksb,
+                "dy": dy_ksb_alpha
+            }
+        }
+
+        group = VGroup(sostenidos,bemoles).arrange(DOWN)
+        group.shift(RIGHT)
+        self.add(group)
+        print(alphas)
+
+class ArmaduraSostenido(CheckSVG):
+    CONFIG = {
+        "file":"music_symbols/key_signature_sharp",
+        "show_numbers":True
+    }
+
+class ArmaduraBemol(CheckSVG):
+    CONFIG = {
+        "file":"music_symbols/key_signature_bemol",
+        "show_numbers":True
+    }

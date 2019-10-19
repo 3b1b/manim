@@ -109,6 +109,7 @@ from manimlib.for_tb_videos.chat import *
 from manimlib.for_tb_videos.image_objects import *
 from manimlib.for_tb_videos.tb_objects import *
 from manimlib.for_tb_videos.tb_animations import *
+from manimlib.for_tb_videos.music_objects import *
 from manimlib.scene.music_scene import *
 from manimlib.scene.plot_scene import *
 from manimlib.scene.tools_scene import *
