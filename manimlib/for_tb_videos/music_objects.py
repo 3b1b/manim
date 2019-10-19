@@ -34,7 +34,7 @@ ALPHAS = {
     },
     'ks_sharp': {
         'width': 0.5862067384103721,
-        'dy': 6.932270571400658,
+        'dy': 4,
     },
     'ks_bemol': {
         'width': 0.5923343343242982,
@@ -115,6 +115,8 @@ class Pentagram(VGroup):
         "left_buff":0.14,
         "reference":2,
         "show_reference":False,
+        "bars":[],
+        "partitions":20,
     }
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
@@ -132,20 +134,25 @@ class Pentagram(VGroup):
         self.reference_lines = VGroup()
         self.reference_numbers = VGroup()
         self.additional_lines = VGroup()
+        self.bars_group = VGroup()
+        self.key_signatures = VGroup()
+        self.tempo = VGroup()
         if self.num_pentagrams == 0 and self.clefs != None:
             self.num_pentagrams = len(self.clefs)
         if self.num_pentagrams == 0 and self.clefs == None:
             self.num_pentagrams = 1
-            self.clefs = ["g_clef"]
+            self.clefs = "g"
         self.set_pentagrams()
         if self.clefs != None:
             self.set_clefs()
         if self.num_pentagrams == 2 and self.clefs == None:
-            self.clefs = ["g_clef","f_clef"]
+            self.clefs = "gf"
             self.set_clefs()
         if self.show_reference:
             self.set_reference_system()
-        self.add(self.pentagrams,self.clefs_group,self.reference_numbers,self.additional_lines)
+        for bar in self.bars:
+            self.add_bar(bar)
+        self.add(self.pentagrams,self.clefs_group,self.reference_numbers,self.additional_lines,self.bars_group,self.key_signatures,self.tempo)
 
     def set_pentagrams(self):
         for _ in range(self.num_pentagrams):
@@ -154,23 +161,35 @@ class Pentagram(VGroup):
             self.reference_lines.add(pentagram[self.reference])
         self.pentagrams.arrange(**self.arrange_config)
 
+    def add_bar(self,bar):
+        reference_up = self.pentagrams[0][0]
+        reference_down = self.pentagrams[-1][-1]
+
+        proportion = 1 / self.partitions
+        line = Line(
+            reference_up.point_from_proportion(proportion * bar),
+            reference_down.point_from_proportion(proportion * bar),
+            **self.pentagram_config
+            )
+        self.bars_group.add(line)
+
 
     def set_clefs(self):
         count = 0
         try:
             for c in self.clefs:
-                if c == "c_clef":
+                if c == "c":
                     clef = self.c_clef.copy()
                     clef.set_height(self.height)
                     clef.next_to(self.pentagrams[count].get_left(),RIGHT,buff=self.left_buff)
                     self.clefs_group.add(clef)
-                elif c == "g_clef":
+                elif c == "g":
                     clef = self.g_clef.copy()
                     clef.set_height(self.height / ALPHA_HEIGHT_G_CLEF)
                     clef.next_to(self.pentagrams[count].get_left(),RIGHT,buff=self.left_buff)
                     clef.shift(DOWN*(self.height/ALPHA_DOWN_G_CLEF))
                     self.clefs_group.add(clef)
-                elif c == "f_clef":
+                elif c == "f":
                     clef = self.f_clef.copy()
                     clef.set_height(self.height / ALPHA_HEIGHT_F_CLEF)
                     clef.next_to(self.pentagrams[count].get_left(),RIGHT,buff=self.left_buff)
@@ -221,15 +240,58 @@ class Pentagram(VGroup):
         self.additional_lines.add(group_lines)
 
     def add_key_signature(self,type="sharp",n=7,reference_line=0,buff=0.1):
-        pre_key_signature = SVGMobject(f"music_symbols/key_signature_{type}")[7:]
-        main_width = self.pentagram.get_height()
-        pre_key_signature.set_width(main_width/ALPHAS[f"ks_{type}"]["width"])
-        pre_key_signature.next_to(self.clefs_group[reference_line],RIGHT,buff=buff)
-        pre_key_signature.match_y(self.pentagram)
-        pre_key_signature.shift(UP*main_width/ALPHAS[f"ks_{type}"]["dy"])
-        key_signature = pre_key_signature[:n]
-        self.add(key_signature)
+        for pentagram,clef in zip(self.pentagrams,self.clefs_group):
+            pre_key_signature = SVGMobject(f"music_symbols/key_signature_{type}")[7:]
+            main_width = self.pentagram.get_height()
+            pre_key_signature.set_width(main_width/ALPHAS[f"ks_{type}"]["width"])
+            pre_key_signature.next_to(clef,RIGHT,buff=buff)
+            pre_key_signature.match_y(pentagram)
+            pre_key_signature.shift(UP*main_width/ALPHAS[f"ks_{type}"]["dy"])
+            if clef.get_height() < self.pentagrams[0].get_height():
+                pre_key_signature.shift(DOWN*self.get_space_between_lines())
+            key_signature = pre_key_signature[:n]
+            self.key_signatures.add(key_signature)
+        for i in range(len(self.key_signatures)):
+            if i <= len(self.key_signatures) - 1 and i > 0:
+                ks_pos = self.key_signatures[i]
+                ks_pre = self.key_signatures[i-1]
+                if ks_pos.get_x() > ks_pre.get_x():
+                    ks_pre.match_x(ks_pos)
 
+
+
+    def add_reference_of_proportion(self,number_width=0.2,buff=0.5,tick_height=0.4,index=0,direction=DOWN):
+        partition = 1 / self.partitions
+        reference_line = Line(
+                self.pentagrams.get_corner(direction+LEFT),
+                self.pentagrams.get_corner(direction+RIGHT),
+            )
+        reference_line.shift(direction*buff)
+        reference_group = VGroup(reference_line)
+
+        tick = Line(ORIGIN,UP*tick_height)
+        for i in range(self.partitions+1):
+            tick_position = reference_line.point_from_proportion(i * partition)
+            new_tick = tick.move_to(tick_position).copy()
+            number = FontText(f"{i}").set_height(number_width)
+            number.next_to(new_tick,DOWN,buff=0.1)
+            reference_group.add(new_tick,number)
+
+        self.ticks = reference_group
+
+    def add_tempo(self,num=4,den=None,proportion=0.2):
+        if den == None:
+            den = num
+        num_mob = TexMobject("\\mathbf{%s}"%num)
+        den_mob = TexMobject("\\mathbf{%s}"%den)
+        tempo = VGroup(num_mob,den_mob)
+        tempo.arrange(DOWN,buff=0)
+        tempo.match_height(self.pentagrams[0])
+        for pentagram in self.pentagrams:
+            position = pentagram[2].point_from_proportion(proportion)
+            tempo_copy = tempo.copy()
+            tempo_copy.move_to(position)
+            self.tempo.add(tempo_copy)
 
 
 class Minim(VGroup):
@@ -240,13 +302,16 @@ class Minim(VGroup):
         "stem_direction":DOWN,
         "type_note":"minim",
         "fix_size_factor":1,
+        "alteration_buff":0,
     }
     def __init__(self,note=0,context=None,alteration=None,proportion=0.2,reference_line=0,**kwargs):
         super().__init__(**kwargs)
         self.set_type_note()
         self.add(self.body)
         self.set_custom_properties()
+        self.reference_line = reference_line
         self.note_parts = {"body":self.body}
+        self.principal = VGroup(self.body)
         if context != None:
             self.context = context
             self.note = note
@@ -254,6 +319,7 @@ class Minim(VGroup):
         if self.add_stem:
             self.sign = self.stem_direction[1]
             self.stem = self.set_symbol("stem")
+            self.principal.add(self.stem)
             self.add(self.stem)
             self.add_updater(get_update_relative_note_part(self,"body","stem"))
         if alteration != None:
@@ -291,12 +357,13 @@ class Minim(VGroup):
         vector_lenght_stem = main_width/ ALPHAS[symbol]["vector_length"]
         vector_stem = vector_lenght_stem * ALPHAS[symbol]["unit_vector"]
         symbol_object.move_to(self.body.get_center()+vector_stem)
-        self.note_parts[symbol] = symbol_object
         if symbol != "stem":
+            symbol_object.shift(RIGHT*self.alteration_buff)
             self.note_parts["alteration"] = symbol_object
+        self.note_parts[symbol] = symbol_object
         return self.note_parts[symbol]
 
-    def set_note(self,note,proportion=None,reference_line=0,context=None):
+    def set_note(self,note,proportion=None,reference_line=None,context=None):
         self.valid_context(context)
         if proportion != None:
             try:
@@ -306,6 +373,8 @@ class Minim(VGroup):
             x_coord = self.context.get_proportion_line(proportion,reference_line)[0] - alteration_width/2
         else:
             x_coord = self.get_x()
+        if reference_line == None:
+            reference_line = self.reference_line
         x_distance = x_coord - self.get_x()
         y_distance = self.body.get_y()-self.context.reference_lines[reference_line].get_y()
         note_distance = self.context.get_space_between_lines()/2
@@ -330,18 +399,24 @@ class Minim(VGroup):
         pass
 
 
-class Chord(VGroup):
-    def set_notes(self,notes,proportion=None,reference_line=0,context=None):
+class ChordMobject(VGroup):
+    def set_notes(self,notes,proportion=None,reference_lines=None,context=None):
         if context == None:
             context = self[0].context
-        for pre,pos in zip(self,notes):
-            pre.set_note(pos,proportion,reference_line,context)
+        if reference_lines != None:
+            for pre,pos,rl in zip(self,notes,reference_lines):
+                pre.set_note(pos,proportion,rl,context)
+        else:
+            for pre,pos in zip(self,notes):
+                pre.set_note(pos,proportion,pre.reference_line,context)
+
 
     def set_proportion(self,proportion,reference_line=0,context=None):
         if context == None:
             context = self[0].context
         for note in self:
             note.set_note(None,proportion,reference_line,context)
+
 
 class Crotchet(Minim):
     CONFIG = {
@@ -353,3 +428,165 @@ class Semibreve(Minim):
         "type_note":"semibreve",
         "add_stem":False,
     }
+
+class WhiteKeySVG(SVGMobject):
+    CONFIG={
+        "file_name":"music_symbols/tecla_blanca"
+    }
+
+class BlackKeySVG(SVGMobject):
+    CONFIG={
+        "file_name":"music_symbols/tecla_negra"
+    }
+
+KEY_DICTIONARY = {"C":0,"Cs":1,"Db":1,"D":2,"Ds":3,"Eb":3,"E":4,"F":5,"Fs":6,"Gb":6,"G":7,"Gs":8,"Ab":8,"A":9,"As":10,"Bb":10,"B":11}
+
+KEY_PROGRETION = ["C","Cs","Db","D","Ds","Eb","E","F","Fs","Gb","G","Gs","Ab","A","As","Bb","B"]
+KEY_PROGRETION_IT = it.cycle(KEY_PROGRETION)
+
+KEYBOARD_PROPORTION = 1.32
+
+class Keyboard(VGroup):
+    CONFIG={
+        "prop": 1.32,
+        "position": ORIGIN,
+        "keyboard_kwargs": {
+            "stroke_width": 1,
+            "stroke_opacity":1,
+            "stroke_color":BLACK
+        },
+        "origin_C": ORIGIN,
+    }
+    def __init__(self,octaves=4,key_type="keyboard",**kwargs):
+        super().__init__(**kwargs)
+        self.octaves = octaves
+        self.key_type = key_type
+        if key_type == "keyboard":
+            keyboard = self.get_keyboard(octaves,**self.keyboard_kwargs)
+            self.add(*keyboard)
+            self.set_keyboard_keys()
+            self.move_to(self.origin_C)
+        self.number_keys = self.get_number_keys()
+        self.black_keys = self.get_black_keys()
+        self.initial_octaves = self.get_initial_octaves()
+
+    def get_keyboard(self,octaves=4,**keyboard_kwargs):
+        keyboard = VGroup()
+        octave = self.get_octave(**keyboard_kwargs)
+        for _ in range(octaves):
+            if len(keyboard) == 0:
+                keyboard.add(*octave.copy())
+            else:
+                pre_keyboard = octave.copy()
+                pre_keyboard.next_to(keyboard,RIGHT,buff=0)
+                keyboard.add(*pre_keyboard)
+
+        keyboard.move_to(ORIGIN)
+        return keyboard
+
+    def get_black_keys(self):
+        black_keys = VGroup()
+        for key in self:
+            if key.get_y() > self.get_y():
+                black_keys.add(key)
+        return black_keys
+
+    def get_octave(self,**keyboard_kwargs):
+        white_keys = VGroup(*[WhiteKeySVG(**keyboard_kwargs) for _ in range(7)]).arrange(RIGHT,buff=0)
+        black_keys = VGroup()
+        for i in [0,1,3,4,5]:
+            black_key = BlackKeySVG().set_color(BLACK)
+            black_key.scale(KEYBOARD_PROPORTION/white_keys[i].get_height())
+            black_key.next_to(white_keys[i].get_top(),DOWN,buff=0)
+            black_key.set_x(white_keys[i].get_right()[0])
+            black_keys.add(black_key)
+        octave = VGroup()
+        sequence = ["D","D","N","D","D","D","N"]
+        b = 0;w = 0
+        for seq in sequence:
+            if seq == "D":
+                octave.add(white_keys[w])
+                octave.add(black_keys[b])
+                b += 1
+            elif seq == "N":
+                octave.add(white_keys[w])
+            w += 1
+        return octave
+
+    def get_number_keys(self):
+        numbers = VGroup()
+        for i in range(len(self)):
+            number = FontText(f"{i}")
+            number.set_height(0.2)
+            number.next_to(self[i],DOWN,buff=0.1)
+            numbers.add(number)
+        return numbers
+
+    def set_piano_keys(self):
+        octavas=7
+        self.k = {}
+        self.k["C"]  = [3+12*n for n in range(octavas)]
+        self.k["Cs"] = [3+1+12*n for n in range(octavas)]
+        self.k["Db"] = [3+1+12*n for n in range(octavas)]
+        self.k["D"]  = [3+2+12*n for n in range(octavas)]
+        self.k["Ds"] = [3+3+12*n for n in range(octavas)]
+        self.k["Eb"] = [3+3+12*n for n in range(octavas)]
+        self.k["E"]  = [3+4+12*n for n in range(octavas)]
+        self.k["F"]  = [3+5+12*n for n in range(octavas)]
+        self.k["Fs"] = [3+6+12*n for n in range(octavas)]
+        self.k["Gb"] = [3+6+12*n for n in range(octavas)]
+        self.k["G"]  = [3+7+12*n for n in range(octavas)]
+        self.k["Gs"] = [3+8+12*n for n in range(octavas)]
+        self.k["Ab"] = [3+8+12*n for n in range(octavas)]
+        self.k["A"]  = [0,*[3+9+12*n for n in range(octavas)]]
+        self.k["As"] = [1,*[3+10+12*n for n in range(octavas)]]
+        self.k["Bb"] = [1,*[3+10+12*n for n in range(octavas)]]
+        self.k["B"]  = [2,*[3+11+12*n for n in range(octavas)]]
+
+    def set_keyboard_keys(self):
+        octavas = self.octaves
+        self.k = {}
+        self.key = {}
+        keys = KEY_PROGRETION
+        count = 0
+        for key,i in zip(keys,range(len(keys))):
+            if key[-1] == "b":
+                self.k[key] = self.k[f"{keys[i-1][0]}s"]
+            else:
+                self.k[key]  = [count+12*n for n in range(octavas)]
+            if i < len(keys)-1 and len(keys[i])+len(keys[i+1])<4:
+                count += 1
+
+        for key in keys:
+            self.key[key] = VGroup(*[self[self.k[key][k]] for k in range(octavas)])
+
+    def get_initial_octaves(self):
+        numbers = VGroup()
+        for i in range(int(len(self)/12)):
+            number = FontText(f"{i}")
+            number.set_height(0.2)
+            number.next_to(self[i*12],DOWN,buff=0.1)
+            numbers.add(number)
+        numbers.set_color(RED)
+        return numbers
+
+    def get_chord(self,reference=1,*keys,**remark_kwargs):
+        reference_item = self.get_key_octave(keys[0],reference)
+        reference_octave = self.get_octave_by_item(reference_item)
+        chord = VGroup()
+        total_keys = len(keys)
+        for key,i in zip(keys,range(total_keys)):
+            mob_key = self.key[key][reference_octave]
+            chord.add(mob_key)
+            if i < total_keys-1:
+                if KEY_DICTIONARY[keys[i]] > KEY_DICTIONARY[keys[i+1]]:
+                    reference_octave +=1
+        return chord
+            
+
+    def get_key_octave(self,key,reference):
+        return self.k[key][reference]
+        #print(item_key)
+
+    def get_octave_by_item(self,item):
+        return int(item/12)

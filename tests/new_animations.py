@@ -862,7 +862,7 @@ class MusicTest2(Scene):
     def construct(self):
         pentagram = Pentagram(height=1)
         pentagram.add_key_signature("sharp",2)
-        chord = Chord(
+        chord = ChordMobject(
                     Minim(0,pentagram,"bemol"),
                     Minim(3,pentagram,"sharp",stem_direction=UP)
                 )
@@ -891,7 +891,7 @@ class MusicTest2(Scene):
 class MusicTest4(Scene):
     def construct(self):
         pentagram = Pentagram(height=2)
-        chord = Chord(
+        chord = ChordMobject(
                     Minim(0,pentagram,"bemol"),
                     Minim(3,pentagram,"sharp",stem_direction=UP)
                 )

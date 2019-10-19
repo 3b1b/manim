@@ -90,18 +90,6 @@ class MusicalScene(Scene):
         self.definir_cifrado()
         self.definir_cambios_notas()
 
-        self.colores=[self.color_bajo,self.color_tenor,self.color_contra,self.color_soprano]
-        self.cambios_colores_teclas=[]
-        for t in range(len(self.teclas)):
-            self.cambios_colores_teclas.append(list(zip(self.teclas[t],self.colores)))
-
-        self.definir_colores()
-
-        for i_p,color in self.colores_notas:
-            for i in i_p:
-                self.partitura[i].set_color(color)
-
-
 
     def definir_teclado(self,octavas,prop,opac,pos=ORIGIN):
         teclado=VGroup()
@@ -160,15 +148,15 @@ class MusicalScene(Scene):
 
     def definir_notas_piano(self):
         octavas=7
-        do=[*[3+12*n for n in range(octavas)]]
-        do_s=[*[3+1+12*n for n in range(octavas)]]
-        re=[*[3+2+12*n for n in range(octavas)]]
-        re_s=[*[3+3+12*n for n in range(octavas)]]
-        mi=[*[3+4+12*n for n in range(octavas)]]
-        fa=[*[3+5+12*n for n in range(octavas)]]
-        fa_s=[*[3+6+12*n for n in range(octavas)]]
-        sol=[*[3+7+12*n for n in range(octavas)]]
-        sol_s=[*[3+8+12*n for n in range(octavas)]]
+        do=[3+12*n for n in range(octavas)]
+        do_s=[3+1+12*n for n in range(octavas)]
+        re=[3+2+12*n for n in range(octavas)]
+        re_s=[3+3+12*n for n in range(octavas)]
+        mi=[3+4+12*n for n in range(octavas)]
+        fa=[3+5+12*n for n in range(octavas)]
+        fa_s=[3+6+12*n for n in range(octavas)]
+        sol=[3+7+12*n for n in range(octavas)]
+        sol_s=[3+8+12*n for n in range(octavas)]
         la=[0,*[3+9+12*n for n in range(octavas)]]
         la_s=[1,*[3+10+12*n for n in range(octavas)]]
         si=[2,*[3+11+12*n for n in range(octavas)]]
