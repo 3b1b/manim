@@ -38,6 +38,9 @@ class PianoTest(Scene):
             note1_2.set_note,4,
             note2_2.set_note,4,
             )
+        vi = VerticalInterval(note1_2,note2_2,"2+")
+        hv = HorizontalInterval(note1_1,note1_2,"5\\rm J")
+        self.play(ShowInterval(vi),ShowInterval(hv))
         self.wait()
 
 
@@ -75,3 +78,26 @@ class MusicNumbers(Scene):
         \nostartrule
         \NOTes\qu{_e}\en
         """,stroke_width=0,stroke_opacity=0)
+
+class Ligadura(Scene):
+    def construct(self):
+        dot1 = Dot()
+        dot2 = Dot().shift(UL*2)
+        reference_line = Line(dot1.get_center(),dot2.get_center())
+        reference_line.rotate(PI/2)
+        normal_vector = reference_line.get_unit_vector()
+        ligadura_kwargs = {"stroke_width":0,"fill_opacity":1}
+        buff1 = 0.3
+        buff2 = buff1*1.2
+        ligadura = VMobject(**ligadura_kwargs)
+        top1 = reference_line.get_center()+normal_vector*buff1
+        top2 = reference_line.get_center()+normal_vector*buff2
+
+        ligadura.set_points_smoothly([
+            dot1.get_center(),
+            top1,
+            dot2.get_center(),
+            top2,
+            dot1.get_center()
+            ])
+        self.add(ligadura)

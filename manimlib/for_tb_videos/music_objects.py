@@ -586,7 +586,94 @@ class Keyboard(VGroup):
 
     def get_key_octave(self,key,reference):
         return self.k[key][reference]
-        #print(item_key)
 
     def get_octave_by_item(self,item):
         return int(item/12)
+
+class VerticalInterval(VGroup):
+    CONFIG = {
+        "text_color":WHITE,
+        "text_height":0.23,
+        "text_buff":0.2,
+        "rectangle_opacity":0.8,
+        "rectangle_color":TEAL,
+        "rectangle_buff":0.1,
+        "color":TEAL,
+    }
+    def __init__(self,note1,note2,interval=None,direction=RIGHT,buff=0.2,**kwargs):
+        super().__init__(**kwargs)
+        reference_line = Line(note1.body.get_center(),note2.body.get_center())
+        body = Parentheses(reference_line,direction,buff=buff)
+        body.set_color(self.color)
+        self.direction = direction
+        self.body = body
+        self.add(body)
+        if interval != None:
+            self.add_text(interval)
+
+    def add_text(self,interval):
+        text = TexMobject(f"{interval}",color=self.text_color)
+        text.set_height(self.text_height).next_to(self.body,self.direction,buff=self.text_buff)
+        text.add_background_rectangle(
+            opacity=self.rectangle_opacity,
+            color=self.rectangle_color,
+            buff=self.rectangle_buff
+        )
+        self.text = text 
+        self.add(text)
+
+class HorizontalInterval(VGroup):
+    CONFIG = {
+        "text_color":WHITE,
+        "text_height":0.23,
+        "text_buff":None,
+        "rectangle_opacity":0.8,
+        "rectangle_color":None,
+        "rectangle_buff":0.1,
+        "color":ORANGE,
+    }
+    def __init__(self,note1,note2,interval=None,direction=UP,buff=0.2,**kwargs):
+        super().__init__(**kwargs)
+        if self.rectangle_color == None:
+            self.rectangle_color = self.color
+        reference_line = Line(note1.body.get_center(),note2.body.get_center())
+        body = Arrow(note1.body.get_right(),note2.body.get_left(),buff=buff)
+        unit_vector = body.get_unit_vector()
+        sign_ = sign(unit_vector[1]) * body.get_height()
+        if self.text_buff == None:
+            self.buff = sign_
+        else:
+            self.buff = self.text_buff*sign(sign_)
+        self.vector_buff = np.array([0,self.buff,0])
+        body.set_color(self.color)
+        self.direction = direction
+        self.body = body
+        self.add(body)
+        if interval != None:
+            self.add_text(interval)
+
+    def add_text(self,interval):
+        text = TexMobject(f"{interval}",color=self.text_color)
+        text.set_height(self.text_height).move_to(self.body.get_center()+self.vector_buff)
+        text.add_background_rectangle(
+            opacity=self.rectangle_opacity,
+            color=self.rectangle_color,
+            buff=self.rectangle_buff
+        )
+        self.text = text 
+        self.add(text)
+
+class ShowInterval(LaggedStart):
+    def __init__(self, interval, **kwargs):
+        type_interterval = interval.__class__.__name__
+        if type_interterval == "VerticalInterval":
+            if len(interval) > 1:
+                mobs = [FadeInFromDown(interval[0],interval.direction),FadeInFromDown(interval[1:],-interval.direction)]
+            else:
+                mobs = [FadeInFromDown(interval,interval.direction)]
+        if type_interterval == "HorizontalInterval":
+            if len(interval) > 1:
+                mobs = [GrowArrow(interval[0]),FadeInFromDown(interval[1:])]
+            else:
+                mobs = [GrowArrow(interval)]
+        super().__init__(*mobs, **kwargs)
