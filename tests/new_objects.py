@@ -25,7 +25,7 @@ class PianoTest(Scene):
         note1_2 = Crotchet(0,pentagram,reference_line=0,alteration="natural",proportion=0.4)
         note2_1 = Crotchet(2,pentagram,reference_line=1,alteration="natural")
         note2_2 = Crotchet(0,pentagram,reference_line=1,proportion=0.4)
-        pentagram.add_reference_of_proportion()
+        pentagram.add_ticks()
         self.add(pentagram.ticks,note1_1,note2_1)
 
         self.play(
@@ -101,3 +101,30 @@ class Ligadura(Scene):
             dot1.get_center()
             ])
         self.add(ligadura)
+
+class MusicTest1(Scene):
+    def construct(self):
+        pentagram = Pentagram(height=0.8,clefs="gfc")
+        pentagram.add_key_signature("sharp",2)
+        pentagram.add_ticks(buff=0.7)
+        pentagram.add_tempo(3,4,proportion=3.5/30)
+
+        chord = Chord(
+                [-4,0,4],pentagram,
+                alterations=[None,"bemol","sharp"],
+                stems_directions=[DOWN,UP,UP],
+                reference_lines=[0,1,1],
+                alterations_buff=[0,0.2,0.3]
+            )
+        note = Minim(2,pentagram,"sharp",0.7,stem_direction=UP)
+
+        self.add(pentagram,chord,note,pentagram.ticks)
+
+        self.play(
+            chord.set_notes,[-2,0,3],0.4,[0,0,0],
+            chord.set_color,RED
+            )
+        pentagram.add_chord_name(chord,"I")
+
+
+        self.wait()

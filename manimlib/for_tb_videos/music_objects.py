@@ -10,6 +10,26 @@ ERROR_NUMBER_CLEFS ="""
 
 """
 
+CLEF_CONFIG = {"stroke_width":0,"stroke_opacity":0,"fill_opacity":1}
+
+ALPHA_HEIGHT_G_CLEF = 0.5743147103253643
+ALPHA_HEIGHT_F_CLEF = 1.2929782931297076
+ALPHA_DOWN_G_CLEF = -57.673398215985706
+ALPHA_DOWN_F_CLEF = -8.176884884446107
+ALPHA_HEIGHT_STEM  = 0.41596100500179733
+ALPHA_WIDTH_HALF_DOT = 3.0644336712207947
+ALPHA_LENGTH_VECTOR_HALF_DOT = 1.018861808179335
+UNIT_VECTOR_HALF_DOT = np.array([9.30474096e-01,3.66357690e-01,0])
+ALPHA_LENGTH_STEM = 0.41596100500179733
+ALPHA_LENGTH_VECTOR_STEM = 0.7190178571802391
+UNIT_VECTOR_STEM = np.array([-3.26004674e-01,-9.45368157e-01,0])
+ALPHA_STROKE_STEM = 0.11963381920678877
+ALPHA_ADDITIONAL_LINE = 0.686664
+ALPHA_PENTAGRAM_ADDITIONAL_LINE = 0.5437653622504716
+ALPHA_BEMOL_SCALE = 1.4461098901098903
+UNIT_VECTOR_BEMOL = np.array([-9.11981280e-01,4.10231818e-01,0])
+ALPHA_BEMOL_LENGTH_VECTOR = 0.8946186251034574
+
 ALPHAS = {
     "stem":{
         "width":16.00022333751562,
@@ -39,26 +59,32 @@ ALPHAS = {
     'ks_bemol': {
         'width': 0.5923343343242982,
         'dy': 9,
+    },
+    "clefs":{
+        "c":{
+            "symbol": SVGMobject("music_symbols/c_clef",**CLEF_CONFIG)[5],
+            "height":1,
+        },
+        "g":{
+            "symbol": SVGMobject("music_symbols/g_clef",**CLEF_CONFIG)[5],
+            "height":ALPHA_HEIGHT_G_CLEF,
+            "down":ALPHA_DOWN_G_CLEF,
+        },
+        "f":{
+            "symbol": SVGMobject("music_symbols/f_clef",**CLEF_CONFIG)[5],
+            "height":ALPHA_HEIGHT_F_CLEF,
+            "down":ALPHA_DOWN_F_CLEF,
+        },
     }
 }
 
-ALPHA_HEIGHT_G_CLEF = 0.5743147103253643
-ALPHA_HEIGHT_F_CLEF = 1.2929782931297076
-ALPHA_DOWN_G_CLEF = -57.673398215985706
-ALPHA_DOWN_F_CLEF = -8.176884884446107
-ALPHA_HEIGHT_STEM  = 0.41596100500179733
-ALPHA_WIDTH_HALF_DOT = 3.0644336712207947
-ALPHA_LENGTH_VECTOR_HALF_DOT = 1.018861808179335
-UNIT_VECTOR_HALF_DOT = np.array([9.30474096e-01,3.66357690e-01,0])
-ALPHA_LENGTH_STEM = 0.41596100500179733
-ALPHA_LENGTH_VECTOR_STEM = 0.7190178571802391
-UNIT_VECTOR_STEM = np.array([-3.26004674e-01,-9.45368157e-01,0])
-ALPHA_STROKE_STEM = 0.11963381920678877
-ALPHA_ADDITIONAL_LINE = 0.686664
-ALPHA_PENTAGRAM_ADDITIONAL_LINE = 0.5437653622504716
-ALPHA_BEMOL_SCALE = 1.4461098901098903
-UNIT_VECTOR_BEMOL = np.array([-9.11981280e-01,4.10231818e-01,0])
-ALPHA_BEMOL_LENGTH_VECTOR = 0.8946186251034574
+KEY_DICTIONARY = {"C":0,"Cs":1,"Db":1,"D":2,"Ds":3,"Eb":3,"E":4,"F":5,"Fs":6,"Gb":6,"G":7,"Gs":8,"Ab":8,"A":9,"As":10,"Bb":10,"B":11}
+
+KEY_PROGRETION = ["C","Cs","Db","D","Ds","Eb","E","F","Fs","Gb","G","Gs","Ab","A","As","Bb","B"]
+KEY_PROGRETION_IT = it.cycle(KEY_PROGRETION)
+
+KEYBOARD_PROPORTION = 1.32
+
 
 def sign(x):
     if x>=0: return 1
@@ -102,21 +128,17 @@ class Pentagram(VGroup):
         "arrange_config":{
             "direction":DOWN, "buff": 1    
         },
+        "clef_config":{},
         "pentagram_config":{
-            "stroke_width":4,
+            "stroke_width":2,
             "stroke_opacity":1,
             "fill_opacity":0
         },
-        "clef_config":{
-            "stroke_width":0,
-            "stroke_opacity":0,
-            "fill_opacity":1
-        },
-        "left_buff":0.14,
+        "left_buff":0.08,
         "reference":2,
         "show_reference":False,
         "bars":[],
-        "partitions":20,
+        "partitions":30,
     }
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
@@ -124,9 +146,6 @@ class Pentagram(VGroup):
         # Fix lines
         for i in range(1,len(self.pentagram)):
             self.pentagram[i].points[-1][0] = self.pentagram[0].points[-1][0]
-        self.c_clef = SVGMobject("music_symbols/c_clef",**self.clef_config)[5]
-        self.g_clef = SVGMobject("music_symbols/g_clef",**self.clef_config)[5]
-        self.f_clef = SVGMobject("music_symbols/f_clef",**self.clef_config)[5]
         self.pentagram.set_width(self.width,stretch=True)
         self.pentagram.set_height(self.height,stretch=True)
         self.pentagrams = VGroup()
@@ -135,6 +154,7 @@ class Pentagram(VGroup):
         self.reference_numbers = VGroup()
         self.additional_lines = VGroup()
         self.bars_group = VGroup()
+        self.choord_names = VGroup()
         self.key_signatures = VGroup()
         self.tempo = VGroup()
         if self.num_pentagrams == 0 and self.clefs != None:
@@ -152,7 +172,17 @@ class Pentagram(VGroup):
             self.set_reference_system()
         for bar in self.bars:
             self.add_bar(bar)
-        self.add(self.pentagrams,self.clefs_group,self.reference_numbers,self.additional_lines,self.bars_group,self.key_signatures,self.tempo)
+        self.add(
+            self.pentagrams,
+            self.clefs_group,
+            self.reference_numbers,
+            self.additional_lines,
+            self.bars_group,
+            self.key_signatures,
+            self.tempo,
+            self.choord_names
+        )
+
 
     def set_pentagrams(self):
         for _ in range(self.num_pentagrams):
@@ -178,23 +208,13 @@ class Pentagram(VGroup):
         count = 0
         try:
             for c in self.clefs:
-                if c == "c":
-                    clef = self.c_clef.copy()
-                    clef.set_height(self.height)
-                    clef.next_to(self.pentagrams[count].get_left(),RIGHT,buff=self.left_buff)
-                    self.clefs_group.add(clef)
-                elif c == "g":
-                    clef = self.g_clef.copy()
-                    clef.set_height(self.height / ALPHA_HEIGHT_G_CLEF)
-                    clef.next_to(self.pentagrams[count].get_left(),RIGHT,buff=self.left_buff)
-                    clef.shift(DOWN*(self.height/ALPHA_DOWN_G_CLEF))
-                    self.clefs_group.add(clef)
-                elif c == "f":
-                    clef = self.f_clef.copy()
-                    clef.set_height(self.height / ALPHA_HEIGHT_F_CLEF)
-                    clef.next_to(self.pentagrams[count].get_left(),RIGHT,buff=self.left_buff)
-                    clef.shift(DOWN*(self.height/ALPHA_DOWN_F_CLEF))
-                    self.clefs_group.add(clef)
+                clef = ALPHAS["clefs"][c]["symbol"].copy()
+                clef.set_style(**self.clef_config)
+                clef.set_height(self.height / ALPHAS["clefs"][c]["height"])
+                clef.next_to(self.pentagrams[count].get_left(),RIGHT,buff=self.left_buff)
+                if c != "c":
+                    clef.shift(DOWN*(self.height / ALPHAS["clefs"][c]["down"]))
+                self.clefs_group.add(clef)
                 count += 1
         except:
             print(ERROR_NUMBER_CLEFS)
@@ -247,7 +267,10 @@ class Pentagram(VGroup):
             pre_key_signature.next_to(clef,RIGHT,buff=buff)
             pre_key_signature.match_y(pentagram)
             pre_key_signature.shift(UP*main_width/ALPHAS[f"ks_{type}"]["dy"])
-            if clef.get_height() < self.pentagrams[0].get_height():
+            dh = clef.get_height() - self.pentagrams[0].get_height() #<
+            if abs(dh)<0.1:
+                pre_key_signature.shift(DOWN*self.get_space_between_lines()/2)
+            elif dh < -0.1:
                 pre_key_signature.shift(DOWN*self.get_space_between_lines())
             key_signature = pre_key_signature[:n]
             self.key_signatures.add(key_signature)
@@ -260,8 +283,9 @@ class Pentagram(VGroup):
 
 
 
-    def add_reference_of_proportion(self,number_width=0.2,buff=0.5,tick_height=0.4,index=0,direction=DOWN):
+    def add_ticks(self,number_width=0.2,buff=0.5,tick_height=0.4,index=0):
         partition = 1 / self.partitions
+        direction = UP*sign(buff)
         reference_line = Line(
                 self.pentagrams.get_corner(direction+LEFT),
                 self.pentagrams.get_corner(direction+RIGHT),
@@ -274,7 +298,7 @@ class Pentagram(VGroup):
             tick_position = reference_line.point_from_proportion(i * partition)
             new_tick = tick.move_to(tick_position).copy()
             number = FontText(f"{i}").set_height(number_width)
-            number.next_to(new_tick,DOWN,buff=0.1)
+            number.next_to(new_tick,direction,buff=0.1)
             reference_group.add(new_tick,number)
 
         self.ticks = reference_group
@@ -292,6 +316,23 @@ class Pentagram(VGroup):
             tempo_copy = tempo.copy()
             tempo_copy.move_to(position)
             self.tempo.add(tempo_copy)
+
+
+    def return_chord_name(self,mob,note,buff=0.6,note_height=0.4,**tex_kwargs):
+        tex = TexMobject(f"\\rm {note}",**tex_kwargs).set_height(note_height)
+        dot = Dot()
+        dot.set_height(self.get_space_between_lines())
+        line = Line(DOWN,UP)
+        line.next_to(mob,RIGHT,buff=0)
+        dot.next_to(line,LEFT,buff=0)
+        coord_x = dot.get_x()
+        coord_y = self.pentagrams[-1][-1].get_y() - buff
+        tex.move_to([coord_x,coord_y,0])
+        return tex
+
+    def add_chord_name(self,mob,note,**tex_kwargs):
+        tex = self.return_chord_name(mob,note,**tex_kwargs)
+        self.choord_names.add(tex)
 
 
 class Minim(VGroup):
@@ -358,7 +399,7 @@ class Minim(VGroup):
         vector_stem = vector_lenght_stem * ALPHAS[symbol]["unit_vector"]
         symbol_object.move_to(self.body.get_center()+vector_stem)
         if symbol != "stem":
-            symbol_object.shift(RIGHT*self.alteration_buff)
+            symbol_object.shift(LEFT*self.alteration_buff)
             self.note_parts["alteration"] = symbol_object
         self.note_parts[symbol] = symbol_object
         return self.note_parts[symbol]
@@ -438,13 +479,6 @@ class BlackKeySVG(SVGMobject):
     CONFIG={
         "file_name":"music_symbols/tecla_negra"
     }
-
-KEY_DICTIONARY = {"C":0,"Cs":1,"Db":1,"D":2,"Ds":3,"Eb":3,"E":4,"F":5,"Fs":6,"Gb":6,"G":7,"Gs":8,"Ab":8,"A":9,"As":10,"Bb":10,"B":11}
-
-KEY_PROGRETION = ["C","Cs","Db","D","Ds","Eb","E","F","Fs","Gb","G","Gs","Ab","A","As","Bb","B"]
-KEY_PROGRETION_IT = it.cycle(KEY_PROGRETION)
-
-KEYBOARD_PROPORTION = 1.32
 
 class Keyboard(VGroup):
     CONFIG={
@@ -677,3 +711,85 @@ class ShowInterval(LaggedStart):
             else:
                 mobs = [GrowArrow(interval)]
         super().__init__(*mobs, **kwargs)
+
+
+def Chord(notes,
+          context,
+          note_type="minim",
+          proportion=0.3,
+          reference_lines=None,
+          alterations=None,
+          add_stems = True,
+          stems_directions = None,
+          alterations_buff = None,
+          **note_config):
+
+    chord = ChordMobject()
+    len_notes = range(len(notes))
+
+    if alterations == None:
+        alterations = [None for _ in len_notes]
+    if reference_lines == None:
+        reference_lines = [0 for _ in len_notes]
+    else:
+        try:
+            n_items = len(reference_lines)
+        except:
+            reference_lines = [reference_lines for _ in len_notes]
+    try:
+        if add_stems and stems_directions == None:
+            stems_directions = [UP for _ in len_notes]
+    except:
+        if type(stems_directions)!="list":
+            direction = stems_directions[1]
+            if add_stems and direction == 1:
+                stems_directions = [UP for _ in len_notes]
+            if add_stems and direction == -1:
+                stems_directions = [DOWN for _ in len_notes]
+    if alterations_buff == None:
+        alterations_buff = [0 for _ in len_notes]
+
+    config = zip(notes,reference_lines,alterations,stems_directions,alterations_buff)
+
+    for note,reference_line,alteration,stems_direction,alteration_buff in config:
+        #TODO change this to kwargs
+        if note_type == "minim":
+            c = Minim(
+                    note,
+                    context,
+                    alteration,
+                    proportion,
+                    reference_line,
+                    add_stem=add_stems,
+                    stem_direction=stems_direction,
+                    alteration_buff=alteration_buff,
+                    **note_config
+                )
+            chord.add(c)
+        if note_type == "crotchet":
+            c = Crotchet(
+                    note,
+                    context,
+                    alteration,
+                    proportion,
+                    reference_line,
+                    add_stem=add_stems,
+                    stem_direction=stems_direction,
+                    alteration_buff=alteration_buff,
+                    **note_config
+                )
+            chord.add(c)
+        if note_type == "semibreve":
+            c = Semibreve(
+                    note,
+                    context,
+                    alteration,
+                    proportion,
+                    reference_line,
+                    add_stem=False,
+                    stem_direction=stems_direction,
+                    alteration_buff=alteration_buff,
+                    **note_config
+                )
+            chord.add(c)
+    return chord
