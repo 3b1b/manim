@@ -241,19 +241,19 @@ class Pentagram(VGroup):
                 number.next_to(pentagram[n],LEFT,buff=0.1)
                 self.reference_numbers.add(number)
 
-    def add_additional_line(self,nivel=2,proportion=0.2,pentagram=0,fade=0):
+    def add_additional_line(self,nivel=2,proportion=0.2,reference_line=0,fade=0):
         note_space = self.get_space_between_lines()
         if nivel == 0:
             raise ValueError("nivel must be != 0")
         length_line = note_space / ALPHA_PENTAGRAM_ADDITIONAL_LINE
         additional_line = Line(ORIGIN,RIGHT*length_line)
         reference_dot = Dot()
-        reference_dot.next_to(self.pentagrams[pentagram],UP*sign(nivel),buff=0)
-        x_coord = self.get_proportion_line(proportion,pentagram)[0]
+        reference_dot.next_to(self.pentagrams[reference_line],UP*sign(nivel),buff=0)
+        x_coord = self.get_proportion_line(proportion,reference_line)[0]
         group_lines = VGroup()
         for i in range(abs(nivel)):
             line = additional_line.copy()
-            line.next_to(self.pentagrams[pentagram],UP*sign(nivel),buff = (note_space * (i + 1)))
+            line.next_to(self.pentagrams[reference_line],UP*sign(nivel),buff = (note_space * (i + 1)))
             line.move_to([x_coord,line.get_y(),0])
             group_lines.add(line)
         group_lines.fade(fade)
@@ -283,14 +283,14 @@ class Pentagram(VGroup):
 
 
 
-    def add_ticks(self,number_width=0.2,buff=0.5,tick_height=0.4,index=0):
+    def add_ticks(self,number_width=0.2,buff=0.5,tick_height=0.4):
         partition = 1 / self.partitions
         direction = UP*sign(buff)
         reference_line = Line(
                 self.pentagrams.get_corner(direction+LEFT),
                 self.pentagrams.get_corner(direction+RIGHT),
             )
-        reference_line.shift(direction*buff)
+        reference_line.shift(direction*abs(buff))
         reference_group = VGroup(reference_line)
 
         tick = Line(ORIGIN,UP*tick_height)
@@ -480,6 +480,10 @@ class BlackKeySVG(SVGMobject):
         "file_name":"music_symbols/tecla_negra"
     }
 
+def is_black_key(keyboard,chord):
+    return filter(lambda x: abs(x.get_y()-keyboard.get_y())>(keyboard.get_height()/8),[*chord])
+
+
 class Keyboard(VGroup):
     CONFIG={
         "prop": 1.32,
@@ -490,10 +494,12 @@ class Keyboard(VGroup):
             "stroke_color":BLACK
         },
         "origin_C": ORIGIN,
+        "chord_colors":[RED_D,TEAL_D,PURPLE_D,BLUE_D]
     }
     def __init__(self,octaves=4,key_type="keyboard",**kwargs):
         super().__init__(**kwargs)
         self.octaves = octaves
+        self.chord_colors_cycle = it.cycle(self.chord_colors)
         self.key_type = key_type
         if key_type == "keyboard":
             keyboard = self.get_keyboard(octaves,**self.keyboard_kwargs)
@@ -605,16 +611,21 @@ class Keyboard(VGroup):
         return numbers
 
     def get_chord(self,reference=1,*keys,**remark_kwargs):
-        reference_item = self.get_key_octave(keys[0],reference)
+        reference_item = self.get_key_octave(keys[0][:-1],reference)
         reference_octave = self.get_octave_by_item(reference_item)
         chord = VGroup()
         total_keys = len(keys)
-        for key,i in zip(keys,range(total_keys)):
-            mob_key = self.key[key][reference_octave]
+        for pre_key,i in zip(keys,range(total_keys)):
+            key = pre_key[:-1]
+            octave_increment = int(pre_key[-1])
+            reference_octave +=octave_increment
+            mob_key = self.key[key][reference_octave].copy()
             chord.add(mob_key)
             if i < total_keys-1:
-                if KEY_DICTIONARY[keys[i]] > KEY_DICTIONARY[keys[i+1]]:
+                if KEY_DICTIONARY[keys[i][:-1]] > KEY_DICTIONARY[keys[i+1][:-1]]:
                     reference_octave +=1
+        for c in chord:
+            c.set_color(next(self.chord_colors_cycle))
         return chord
             
 
@@ -714,9 +725,9 @@ class ShowInterval(LaggedStart):
 
 
 def Chord(notes,
-          context,
-          note_type="minim",
           proportion=0.3,
+          context=None,
+          note_type="minim",
           reference_lines=None,
           alterations=None,
           add_stems = True,
