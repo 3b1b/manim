@@ -45,16 +45,7 @@ class CheckSVG(Scene):
     "background_stroke_width":0
     }
     def construct(self):
-        if self.svg_type=="svg":
-            try:
-                pre_imagen=SVGMobject("%s"%self.file)
-            except:
-                pre_imagen=self.custom_object()
-        elif self.svg_type=="text":
-            pre_imagen=self.import_text()
-        else:
-            pre_imagen=self.custom_object()
-
+        pre_imagen = self.get_svg()
         if self.get_cero:
             self.imagen=pre_imagen[0]
         else:
@@ -116,6 +107,18 @@ class CheckSVG(Scene):
 
         self.wait(self.wait_time)
         self.return_elements(self.imagen,self.show_elements)
+
+    def get_svg(self):
+        if self.svg_type=="svg":
+            try:
+                pre_imagen=SVGMobject("%s"%self.file)
+            except:
+                pre_imagen=self.custom_object()
+        elif self.svg_type=="text":
+            pre_imagen=self.import_text()
+        else:
+            pre_imagen=self.custom_object()
+        return pre_imagen
 
     def import_text(self):
         return self.text
@@ -752,3 +755,26 @@ class EscenaContenido(Scene):
                 self.under_line.shift,UP*5,)
         else:
             pass
+
+class CheckScore(CheckSVG):
+    CONFIG = {
+        "show_numbers":True,
+        "numbers_scale":0.12,
+        "color_numbers":HSL(0),
+        "stroke_width":0,
+        "color_line":TEAL,
+        "direction_numbers":LEFT
+    }
+    def get_svg(self):
+        return SVGMobject(f"scores/{self.file}")
+
+    def personalize_image(self):
+        for path in self.imagen:
+            height = path.get_height()
+            width = path.get_width()
+            if height < 0.001 or width < 0.001:
+                path.set_stroke(width=2)
+                path.set_color(self.color_line)
+
+        self.show_blocks()
+
