@@ -6,6 +6,11 @@ from manimlib.constants import TEX_DIR
 from manimlib.constants import TEX_TEXT_TO_REPLACE
 from manimlib.constants import TEX_USE_CTEX
 
+CURRENT_OS = platform.system()
+
+if CURRENT_OS=="Darwin":
+    from manimlib.local_config import SYSTEM_OPTIONS
+    libgs_version = SYSTEM_OPTIONS["libgs"]
 
 def tex_hash(expression, template_tex_file_body):
     id_str = str(expression + template_tex_file_body)
@@ -78,7 +83,6 @@ def dvi_to_svg(dvi_file, regen_if_exists=False):
     """
     result = dvi_file.replace(".dvi" if not TEX_USE_CTEX else ".xdv", ".svg")
     if not os.path.exists(result):
-        current_os = platform.system()
         commands = [
             "dvisvgm",
             dvi_file,
@@ -88,9 +92,9 @@ def dvi_to_svg(dvi_file, regen_if_exists=False):
             "-o",
             result,
         ]
-        if current_os=="Darwin":
+        if CURRENT_OS=="Darwin":
             commands+=[
-                "--libgs='/usr/local/Cellar/ghostscript/9.26_1/lib/libgs.dylib'" 
+                f"--libgs='/usr/local/Cellar/ghostscript/{libgs_version}/lib/libgs.dylib'" 
             ]
         commands+=[
                 ">",
