@@ -13,3 +13,4 @@ media/Tex
 media/video
 tests/local_test.py
 *.pyc
+manimlib/local_config.py

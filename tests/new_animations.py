@@ -185,7 +185,7 @@ class Titulo(Scene):
                 \\node[pencildraw,draw] {\\sc Derivada};
             \\end{tikzpicture} 
               """
-        tit=TikzMobject(tikz,stroke_width=2,fill_opacity=.1).scale(3)
+        tit=TextFull(tikz,stroke_width=2,fill_opacity=.1).scale(3)
         tit[1:].set_stroke(None,0).set_fill(WHITE,1)
         self.play(Write(tit),run_time=3)
         self.wait()
