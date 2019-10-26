@@ -742,6 +742,8 @@ class DoublePendulum(VGroup):
 			"stroke_color": WHITE,
 			"stroke_width": 2,
 		},
+		"traj_max_length": 0, # 0 is infinite
+
 		"include_theta_label": False,
 		"include_velocity_vector": False,
 		"n_steps_per_frame": 100,
@@ -922,6 +924,10 @@ class DoublePendulum(VGroup):
 			new_point = traj.weight.get_center()
 			if get_norm(new_point - traj.points[-1]) > 0.01:
 				traj.add_smooth_curve_to(new_point)
+
+			traj.set_points(traj.points[-self.traj_max_length:])
+			# if self.traj_max_length and len(traj.points) > self.traj_max_length:
+			# 	traj.set_points(traj.points[-self.traj_max_length:])
 
 		traj = VMobject()
 		traj.set_color(color or weight.get_color())
