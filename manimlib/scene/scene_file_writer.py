@@ -230,16 +230,16 @@ class SceneFileWriter(object):
             '-pix_fmt', 'rgba',
             '-r', str(fps),  # frames per second
             '-i', '-',  # The imput comes from a pipe
-            '-c:v', 'h264_nvenc',
             '-an',  # Tells FFMPEG not to expect any audio
             '-loglevel', 'error',
         ]
+        # TODO, the test for a transparent background should not be based on
+        # the file extension.
         if self.movie_file_extension == ".mov":
-            # This is if the background of the exported video
-            # should be transparent.
+            # This is if the background of the exported
+            # video should be transparent.
             command += [
                 '-vcodec', 'qtrle',
-                # '-vcodec', 'png',
             ]
         else:
             command += [
