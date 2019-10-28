@@ -34,7 +34,7 @@ class SVGMobject(VMobject):
         # Must be filled in in a subclass, or when called
         "file_name": None,
         "unpack_groups": True,  # if False, creates a hierarchy of VGroups
-        "stroke_width": 0,
+        "stroke_width": DEFAULT_STROKE_WIDTH,
         "fill_opacity": 1.0,
         # "fill_color" : LIGHT_GREY,
     }
