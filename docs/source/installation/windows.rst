@@ -54,7 +54,7 @@ Install manim python dependencies with ``pip install -r requirement.txt``
 Test the installation
 ---------------------
 
-Type in ``python -m manim -h`` and if nothing went wrong during the installtion process you should see the help text.
+Type in ``python -m manim -h`` and if nothing went wrong during the installation process you should see the help text.
 
 Use ``python -m manim example_scenes.py SquareToCircle -pl`` to render the example scene and the file should play after rendering. The movie file should be
 in ``media/videos/example_scenes/480p15``
