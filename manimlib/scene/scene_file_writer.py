@@ -172,17 +172,17 @@ class SceneFileWriter(object):
 
     # Writers
     def begin_animation(self, allow_write=False):
-        if self.write_to_movie and allow_write:
-            self.open_movie_pipe()
         if self.livestreaming:
             self.stream_lock = False
+        elif self.write_to_movie and allow_write:
+            self.open_movie_pipe()
 
     def end_animation(self, allow_write=False):
-        if self.write_to_movie and allow_write:
-            self.close_movie_pipe()
         if self.livestreaming:
             self.stream_lock = True
             thread.start_new_thread(self.idle_stream, ())
+        elif self.write_to_movie and allow_write:
+            self.close_movie_pipe()
 
     def write_frame(self, frame):
         if self.write_to_movie:
@@ -196,10 +196,10 @@ class SceneFileWriter(object):
     def idle_stream(self):
         while self.stream_lock:
             a = datetime.datetime.now()
-            self.update_frame()
+            self.scene.update_frame()
             n_frames = 1
-            frame = self.get_frame()
-            self.add_frames(*[frame] * n_frames)
+            frame = self.scene.get_frame()
+            self.scene.add_frames(*[frame] * n_frames)
             b = datetime.datetime.now()
             time_diff = (b - a).total_seconds()
             frame_duration = 1 / self.scene.camera.frame_rate
@@ -216,7 +216,7 @@ class SceneFileWriter(object):
             self.save_final_image(self.scene.get_image())
 
     def open_movie_pipe(self):
-        file_path = self.get_next_partial_movie_path()
+        file_path = self.get_next_partial_movie_path() if not self.livestreaming else self.movie_file_path
         temp_file_path = os.path.splitext(file_path)[0] + '_temp' + self.movie_file_extension
 
         self.partial_movie_file_path = file_path

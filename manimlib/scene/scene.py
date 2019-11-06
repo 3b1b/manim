@@ -53,6 +53,10 @@ class Scene(Container):
             self.construct()
         except EndSceneEarlyException:
             pass
+
+        if self.file_writer.livestreaming:
+            return
+
         self.tear_down()
         self.file_writer.finish()
         self.print_end_message()

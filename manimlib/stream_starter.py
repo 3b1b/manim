@@ -15,12 +15,13 @@ def start_livestream(to_twitch=False, twitch_key=None):
             "show_file_in_finder": False,
             # By default, write to file
             "file_writer_config": {
-                "write_to_movie": False,
+                "write_to_movie": True,
                 "save_pngs": False,
                 "movie_file_extension": ".mp4",
                 "to_twitch": to_twitch,
                 "twitch_key": twitch_key,
                 "livestreaming": True,
+                "output_directory": "livestream"
             },
             "show_last_frame": False,
             # If -t is passed in (for transparent), this will be RGBA
