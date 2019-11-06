@@ -610,7 +610,7 @@ class Keyboard(VGroup):
         numbers.set_color(RED)
         return numbers
 
-    def get_chord(self,reference=1,*keys,**remark_kwargs):
+    def get_chord(self,reference=1,*keys):
         reference_item = self.get_key_octave(keys[0][:-1],reference)
         reference_octave = self.get_octave_by_item(reference_item)
         chord = VGroup()
@@ -627,7 +627,26 @@ class Keyboard(VGroup):
         for c in chord:
             c.set_color(next(self.chord_colors_cycle))
         return chord
-            
+    
+    def get_chord_with_figures(self,reference,*keys,**figure_config):
+        chord = self.get_chord(reference,*keys)
+        figure = figure_config["figure"]
+        figure_kwargs = figure_config.copy()
+        figure_kwargs.pop("figure")
+        figures = VGroup(*[
+            figure(**figure_kwargs).set_width(c.get_width()*0.8)\
+            .next_to(c.get_bottom(),UP,buff=c.get_width()*0.8/2)\
+            .match_color(c).set_fill(opacity=1)
+            for c in chord
+            ])
+        for figure in figures: figure.set_stroke(None,0)
+
+        return figures
+
+    def get_chord_with_circles(self,reference=1,*keys,**figure_config):
+        figure_config["figure"] = Circle
+        return self.get_chord_with_figures(reference,*keys,**figure_config)
+
 
     def get_key_octave(self,key,reference):
         return self.k[key][reference]

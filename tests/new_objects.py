@@ -209,18 +209,20 @@ class FinalTest(Scene):
         keyboard.to_edge(DOWN,buff=0.3)
         # Send the black keys to front
         self.add(keyboard)
-        self.add_foreground_mobject(keyboard.black_keys)
         # Show keyboard
+        self.add_foreground_mobject(keyboard.black_keys)
         self.play(
             LaggedStart(*[GrowFromPoint(key,key.get_bottom())for key in keyboard]),
             run_time=2
             )
+        self.remove_foreground_mobjects(keyboard.black_keys)
+        self.bring_to_front(keyboard.black_keys)
         # Set chords of the keyboard
         keyboard_chords = VGroup(
-                keyboard.get_chord(1,"C0","G0","E0","C0"),
-                keyboard.get_chord(0,"F0","A1","F0","C0"),
-                keyboard.get_chord(0,"G0","G1","D0","B0"),
-                keyboard.get_chord(0,"C0","G1","E0","C0"),
+                keyboard.get_chord_with_circles(1,"C0","G0","E0","C0"),
+                keyboard.get_chord_with_circles(0,"F0","A1","F0","C0"),
+                keyboard.get_chord_with_circles(0,"G0","G1","D0","B0"),
+                keyboard.get_chord_with_circles(0,"Cs0","G1","E0","C0"),
             )
         # chords kwargs of pentagram
         pentagram_chords_kwargs = {
@@ -251,7 +253,7 @@ class FinalTest(Scene):
                 key.set_color(next(chord_colors))
 
         self.play(
-            *[LaggedStartMap(GrowFromCenter,line) for line in pentagram.pentagrams],
+            *[LaggedStartMap(GrowFromCenter,line,lag_ratio=0) for line in pentagram.pentagrams],
             Write(pentagram.clefs_group),
             FadeInFromDown(pentagram.tempo),
         )
