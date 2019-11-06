@@ -44,14 +44,22 @@ class SceneFileWriter(object):
         self.init_output_directories()
         self.init_audio()
 
+        if self.write_to_movie and self.livestreaming:
+            self.open_movie_pipe()
+
+    def __del__(self):
+        if self.write_to_movie and self.livestreaming:
+            self.close_movie_pipe()
+
     # Output directories and files
     def init_output_directories(self):
+        module_directory = self.output_directory or self.get_default_module_directory()
         scene_name = self.file_name or self.get_default_scene_name()
         if self.save_last_frame:
             if consts.VIDEO_DIR != "":
                 image_dir = guarantee_existence(os.path.join(
                     consts.VIDEO_DIR,
-                    self.output_directory or self.get_default_module_directory(),
+                    module_directory,
                     "images",
                 ))
             else:
@@ -67,7 +75,7 @@ class SceneFileWriter(object):
             if consts.VIDEO_DIR != "":
                 movie_dir = guarantee_existence(os.path.join(
                     consts.VIDEO_DIR,
-                    self.output_directory or self.get_default_module_directory(),
+                    module_directory,
                     self.get_resolution_directory(),
                 ))
             else:
@@ -121,9 +129,6 @@ class SceneFileWriter(object):
             )
         )
         return result
-
-    def get_movie_file_path(self):
-        return self.movie_file_path
 
     # Sound
     def init_audio(self):
@@ -304,7 +309,6 @@ class SceneFileWriter(object):
                     pf_path = pf_path.replace('\\', '/')
                 fp.write("file \'{}\'\n".format(pf_path))
 
-        movie_file_path = self.get_movie_file_path()
         commands = [
             FFMPEG_BIN,
             '-y',  # overwrite output file if it exists
@@ -313,7 +317,7 @@ class SceneFileWriter(object):
             '-i', file_list,
             '-loglevel', 'error',
             '-c', 'copy',
-            movie_file_path
+            self.movie_file_path
         ]
         if not self.includes_sound:
             commands.insert(-1, '-an')
@@ -322,7 +326,7 @@ class SceneFileWriter(object):
         combine_process.wait()
 
         if self.includes_sound:
-            sound_file_path = movie_file_path.replace(
+            sound_file_path = self.movie_file_path.replace(
                 self.movie_file_extension, ".wav"
             )
             # Makes sure sound file length will match video file
@@ -331,10 +335,10 @@ class SceneFileWriter(object):
                 sound_file_path,
                 bitrate='312k',
             )
-            temp_file_path = movie_file_path.replace(".", "_temp.")
+            temp_file_path = self.movie_file_path.replace(".", "_temp.")
             commands = [
                 "ffmpeg",
-                "-i", movie_file_path,
+                "-i", self.movie_file_path,
                 "-i", sound_file_path,
                 '-y',  # overwrite output file if it exists
                 "-c:v", "copy",
@@ -349,10 +353,10 @@ class SceneFileWriter(object):
                 temp_file_path,
             ]
             subprocess.call(commands)
-            shutil.move(temp_file_path, movie_file_path)
+            shutil.move(temp_file_path, self.movie_file_path)
             subprocess.call(["rm", sound_file_path])
 
-        self.print_file_ready_message(movie_file_path)
+        self.print_file_ready_message(self.movie_file_path)
 
     def print_file_ready_message(self, file_path):
         print("\nFile ready at {}\n".format(file_path))

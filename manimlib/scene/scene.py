@@ -463,9 +463,6 @@ class Scene(Container):
         self.progress_through_animations(animations)
         self.finish_animations(animations)
 
-    def idle_stream(self):
-        self.file_writer.idle_stream()
-
     def clean_up_animations(self, *animations):
         for animation in animations:
             animation.clean_up_from_scene(self)
