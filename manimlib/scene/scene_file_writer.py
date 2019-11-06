@@ -46,13 +46,12 @@ class SceneFileWriter(object):
 
     # Output directories and files
     def init_output_directories(self):
-        module_directory = self.output_directory or self.get_default_module_directory()
         scene_name = self.file_name or self.get_default_scene_name()
         if self.save_last_frame:
             if consts.VIDEO_DIR != "":
                 image_dir = guarantee_existence(os.path.join(
                     consts.VIDEO_DIR,
-                    module_directory,
+                    self.output_directory or self.get_default_module_directory(),
                     "images",
                 ))
             else:
@@ -68,7 +67,7 @@ class SceneFileWriter(object):
             if consts.VIDEO_DIR != "":
                 movie_dir = guarantee_existence(os.path.join(
                     consts.VIDEO_DIR,
-                    module_directory,
+                    self.output_directory or self.get_default_module_directory(),
                     self.get_resolution_directory(),
                 ))
             else:
