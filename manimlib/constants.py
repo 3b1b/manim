@@ -15,11 +15,11 @@ def initialize_directories(config):
     global TEX_DIR
     global TEXT_DIR
 
-    video_path_specified = config["video_dir"] or config["video_output_dir"]
+    video_path_specified = config.get("video_dir") or config.get("video_output_dir")
 
-    if not (video_path_specified and config["tex_dir"]):
-        if config["media_dir"]:
-            MEDIA_DIR = config["media_dir"]
+    if not (video_path_specified and config.get("tex_dir")):
+        if config.get("media_dir"):
+            MEDIA_DIR = config.get("media_dir")
         else:
             MEDIA_DIR = os.path.join(
                 os.path.expanduser('~'),
@@ -32,21 +32,21 @@ def initialize_directories(config):
             "this behavior with the --media_dir flag."
         )
     else:
-        if config["media_dir"]:
+        if config.get("media_dir"):
             print(
                 "Ignoring --media_dir, since both --tex_dir and a video "
                 "directory were both passed"
             )
 
-    TEX_DIR = config["tex_dir"] or os.path.join(MEDIA_DIR, "Tex")
+    TEX_DIR = config.get("tex_dir") or os.path.join(MEDIA_DIR, "Tex")
     TEXT_DIR = os.path.join(MEDIA_DIR, "texts")
     if not video_path_specified:
         VIDEO_DIR = os.path.join(MEDIA_DIR, "videos")
         VIDEO_OUTPUT_DIR = os.path.join(MEDIA_DIR, "videos")
-    elif config["video_output_dir"]:
-        VIDEO_OUTPUT_DIR = config["video_output_dir"]
+    elif config.get("video_output_dir"):
+        VIDEO_OUTPUT_DIR = config.get("video_output_dir")
     else:
-        VIDEO_DIR = config["video_dir"]
+        VIDEO_DIR = config.get("video_dir")
 
     for folder in [VIDEO_DIR, VIDEO_OUTPUT_DIR, TEX_DIR, TEXT_DIR]:
         if folder != "" and not os.path.exists(folder):
