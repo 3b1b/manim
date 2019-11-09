@@ -1019,3 +1019,82 @@ class DoublePendulum(VGroup):
 		self.set_omega1(omega1)
 		self.set_omega2(omega2)
 
+
+class WaveParticle(Dot):
+	CONFIG = {
+		"omega": 1,
+		"phase": 0,
+		"amplitude": 1,
+
+		"direction": UP,
+	}
+	def __init__(self, point=ORIGIN, **kwargs):
+		super().__init__(point, **kwargs)
+
+		self.t = 0
+
+		# point states the initial point, than I add the phase
+		self.shift(self.direction * self.amplitude * np.sin(self.omega*self.t + self.phase))
+
+	def wave(self, dt):
+		self.t += dt
+
+		# position is sin, velocity is cos
+		v = self.amplitude * self.omega * np.cos(self.omega*self.t + self.phase)
+		self.shift(self.direction * v * dt)
+
+class Wave(VGroup):
+	CONFIG = {
+		"omega": 1,
+		# "phase": 0,
+		"amplitude": 1,
+
+		"direction": UP,
+
+		"n": 20, # there will be 2n+1 particles
+		"space_seperation": 0.25*RIGHT,
+		"phase_seperation": 10*DEGREES,
+
+		"visible_color": WHITE,
+		"hidden_color": BLACK,
+	}
+	def __init__(self, center=ORIGIN, center_phase=0, **kwargs):
+		super().__init__(**kwargs)
+
+		self.center = center
+		self.center_phase = center_phase
+		particles = [
+			WaveParticle(
+				point    = self.center       + i*self.space_seperation,
+				omega    = self.omega,
+				phase    = self.center_phase + i*self.phase_seperation,
+				amplitude= self.amplitude,
+			).set_color(self.hidden_color)
+			for i in range(-self.n, self.n+1)
+		]
+
+		for p in particles:
+			p.add_updater(p.__class__.wave)
+			p.suspend_updating()
+
+		self.particles = VGroup(*particles)
+		self.add(self.particles)
+
+	def get_bars(self):
+		# dot.radius
+		self.bar_top = Line(
+			self.amplitude*UP   + self.n*self.space_seperation,
+			self.amplitude*UP   - self.n*self.space_seperation
+		)
+		self.bar_bot = Line(
+			self.amplitude*DOWN + self.n*self.space_seperation,
+			self.amplitude*DOWN - self.n*self.space_seperation
+		)
+		return self.bar_bot, self.bar_top
+
+	def color_particles_from_center(self):
+		for i in range(self.n):
+			self.particles[self.n-i-1].set_color(self.visible_color)
+			self.particles[self.n+i+1].set_color(self.visible_color)
+			yield i
+
