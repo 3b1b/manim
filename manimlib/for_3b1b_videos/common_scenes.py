@@ -74,7 +74,7 @@ class OpeningQuote(Scene):
             if self.quote_arg_separator == " ":
                 quote[0].shift(0.2 * RIGHT)
                 quote[-1].shift(0.2 * LEFT)
-        for term, color in self.highlighted_quote_terms:
+        for term, color in self.highlighted_quote_terms.items():
             quote.set_color_by_tex(term, color)
         quote.to_edge(UP, buff=self.top_buff)
         if quote.get_width() > max_width:

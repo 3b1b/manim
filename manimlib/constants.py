@@ -23,7 +23,7 @@ def initialize_directories(config):
         else:
             MEDIA_DIR = os.path.join(
                 os.path.expanduser('~'),
-                "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
+                "Python/ManimEnv/GeneratedMedia/"
             )
         if not os.path.isdir(MEDIA_DIR):
             MEDIA_DIR = "./media"
@@ -197,6 +197,7 @@ FFMPEG_BIN = "ffmpeg"
 
 # Colors
 COLOR_MAP = {
+    "REP_GREEN": "#00C099",
     "DARK_BLUE": "#236B8E",
     "DARK_BROWN": "#8B4513",
     "LIGHT_BROWN": "#CD853F",
