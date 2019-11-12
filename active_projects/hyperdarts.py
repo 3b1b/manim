@@ -2,6 +2,7 @@ from manimlib.imports import *
 
 
 OUTPUT_DIRECTORY = "hyperdarts"
+BROWN_PAPER = "#958166"
 
 
 class HyperdartScene(Scene):
@@ -137,8 +138,14 @@ class HyperdartScene(Scene):
     def get_all_hit_lines(self, point, circle=None):
         h_line = self.get_hit_distance_line(point, circle)
         chord = self.get_chord(point, circle)
-        radii = self.get_radii_to_chord(chord, circle)
-        return VGroup(h_line, chord, radii)
+        # radii = self.get_radii_to_chord(chord, circle)
+
+        elbow = Elbow(width=0.15)
+        elbow.set_stroke(WHITE, 2)
+        elbow.rotate(h_line.get_angle() - PI, about_point=ORIGIN)
+        elbow.shift(point)
+
+        return VGroup(h_line, chord, elbow)
 
     def get_dart(self, length=1.5):
         dart = SVGMobject(file_name="dart")
@@ -150,6 +157,7 @@ class HyperdartScene(Scene):
         dart.set_fill(GREY)
         dart.set_sheen(2, UL)
         dart.set_stroke(BLACK, 0.5, background=True)
+        dart.set_stroke(width=0)
         return dart
 
     # New circle
@@ -277,21 +285,23 @@ class HyperdartScene(Scene):
         assert(pace in ["slow", "fast"])
 
         lines = self.get_all_hit_lines(point, self.circle)
-        h_line, chord, radii = lines
+        h_line, chord, elbow = lines
 
+        # Note, note animating radii anymore...does that mess anything up?
         if pace == "slow":
             self.play(
                 ShowCreation(h_line),
                 GrowFromCenter(chord),
             )
-            self.play(*map(ShowCreation, radii))
+            self.play(ShowCreation(elbow))
         elif pace == "fast":
             self.play(
                 ShowCreation(h_line),
                 GrowFromCenter(chord),
-                *map(ShowCreation, radii),
+                ShowCreation(elbow),
                 run_time=0.5
             )
+        # return VGroup(h_line, chord)
         return lines
 
     def show_circle_shrink(self, chord, pace="slow", shadow_opacity=None):
@@ -438,12 +448,459 @@ class Dartboard(VGroup):
         bullseyes[0].set_color(GREEN_E)
         bullseyes[1].set_color(RED_E)
 
+        self.bullseye = bullseyes[1]
         self.add(*segments, *bullseyes)
         self.scale(self.radius)
 
 
-# Problem statement
+# Scenes to overlay on Numerphile
 
+class TableOfContents(Scene):
+    def construct(self):
+        rect = FullScreenFadeRectangle(opacity=0.75)
+        self.add(rect)
+
+        parts = VGroup(
+            TextMobject("The game"),
+            TextMobject("The puzzle"),
+            TextMobject("The micropuzzles"),
+            TextMobject("The answer"),
+        )
+
+        parts.scale(1.5)
+        parts.arrange(DOWN, buff=LARGE_BUFF, aligned_edge=LEFT)
+        parts.to_edge(LEFT, buff=2)
+
+        parts.set_opacity(0.5)
+        self.add(parts)
+
+        for part in parts:
+            dot = Dot()
+            dot.next_to(part, LEFT, SMALL_BUFF)
+            dot.match_style(part)
+            self.add(dot)
+
+        last_part = VMobject()
+        last_part.save_state()
+
+        for part in parts:
+            part.save_state()
+            self.play(
+                part.scale, 1.5, {"about_edge": LEFT},
+                part.set_opacity, 1,
+                Restore(last_part)
+            )
+            self.wait()
+            last_part = part
+
+
+class ShowGiantBullseye(HyperdartScene):
+    def construct(self):
+        square = self.square
+        circle = self.circle
+
+        self.remove(square, circle)
+        board = Dartboard()
+        board.replace(circle)
+        bullseye = board.bullseye
+        bullseye_border = bullseye.copy()
+        bullseye_border.set_fill(opacity=0)
+        bullseye_border.set_stroke(YELLOW, 3)
+
+        self.add(board)
+
+        # Label
+        label = TextMobject("``", "Bullseye", "''")
+        label.scale(1.5)
+        label.next_to(square, LEFT, aligned_edge=UP)
+        label.set_color(RED)
+        arrow = Arrow(
+            label.get_bottom(),
+            bullseye.get_corner(DR)
+        )
+
+        self.play(
+            FadeInFromDown(label[1]),
+            ShowCreation(arrow),
+        )
+        self.play(
+            bullseye.match_width, board,
+            ApplyMethod(
+                arrow.scale, 0.4,
+                {"about_point": arrow.get_start()}
+            ),
+            run_time=2,
+        )
+        self.play(Write(label[::2]))
+        self.wait()
+
+
+class ShowExampleHit(HyperdartScene):
+    def construct(self):
+        square = self.square
+        circle = self.circle
+        circle.set_fill(BROWN_PAPER, opacity=0.95)
+        old_board = VGroup(square, circle)
+        self.remove(square)
+
+        board = Dartboard()
+        board.replace(old_board)
+        self.add(board, circle)
+
+        # Show hit
+        point = 0.75 * UP
+        dart, dot = self.show_hit_with_dart(point)
+
+        # Draw lines (with labels)
+        lines = self.get_all_hit_lines(point)
+        h_line, chord, elbow = lines
+        h_label = TexMobject("h")
+        h_label.next_to(h_line, LEFT, SMALL_BUFF)
+
+        chord_word = TextMobject("Chord")
+        chord_word.next_to(chord.get_center(), UR, SMALL_BUFF)
+
+        self.add(h_line, dot)
+        self.play(ShowCreation(h_line))
+        self.play(Write(h_label))
+        self.wait()
+        self.play(
+            ShowCreation(chord),
+            ShowCreation(elbow),
+            Write(chord_word, run_time=1)
+        )
+        self.wait()
+
+        # Show shrinkage
+        chord_copy = chord.copy()
+        chord_copy.move_to(ORIGIN)
+        new_circle = circle.copy()
+        new_circle.set_fill(RED, 1)
+        new_circle.match_width(chord_copy)
+        new_circle.move_to(ORIGIN)
+
+        new_diam_word = TextMobject("New diameter")
+        new_diam_word.next_to(chord_copy, DOWN, SMALL_BUFF)
+
+        outline = VGroup(
+            Arc(start_angle=0, angle=PI),
+            Arc(start_angle=PI, angle=PI),
+        )
+        outline.set_stroke(YELLOW, 3)
+        outline.set_fill(opacity=0)
+        outline.replace(new_circle)
+
+        self.play(
+            circle.set_color, DARK_GREY,
+            TransformFromCopy(chord, chord_copy),
+            FadeInFrom(new_diam_word, UP)
+        )
+        self.play(
+            Rotate(chord_copy, PI),
+            ShowCreation(outline, lag_ratio=0),
+        )
+        self.play()
+
+        # Show variable hit_point
+        self.remove(lines)
+        point_tracker = VectorizedPoint(point)
+        self.remove(lines, *lines)
+        lines = always_redraw(
+            lambda: self.get_all_hit_lines(point_tracker.get_location())
+        )
+        dot.add_updater(lambda m: m.move_to(point_tracker))
+        dart.add_updater(lambda m: m.move_to(point_tracker, DR))
+        chord_copy.add_updater(
+            lambda m: m.match_width(lines[1]).move_to(ORIGIN)
+        )
+        new_circle.add_updater(lambda m: m.match_width(chord_copy).move_to(ORIGIN))
+        h_label.add_updater(lambda m: m.next_to(lines[0], LEFT, SMALL_BUFF))
+
+        chord_word.add_updater(lambda m: m.next_to(lines[1].get_center(), UR, SMALL_BUFF))
+        ndw_width = new_diam_word.get_width()
+        new_diam_word.add_updater(
+            lambda m: m.set_width(
+                min(ndw_width, chord_copy.get_width())
+            ).next_to(chord_copy, DOWN, SMALL_BUFF)
+        )
+
+        self.add(new_circle, chord_copy, lines, h_label, dart, dot, chord_word, new_diam_word)
+        self.play(
+            FadeOut(outline),
+            FadeIn(new_circle)
+        )
+        self.wait()
+
+        self.play(
+            point_tracker.shift, 2.1 * UP,
+            run_time=9,
+            rate_func=there_and_back_with_pause,
+        )
+
+
+class QuicklyAnimatedShrinking(HyperdartScene):
+    def construct(self):
+        # square = self.square
+        # circle = self.circle
+
+        for x in range(5):
+            point = self.get_random_point()
+            while not self.is_inside(point):
+                point = self.get_random_point()
+            self.show_full_hit_process(point, pace="fast")
+        # self.show_game_over()
+
+
+class GameOver(HyperdartScene):
+    def construct(self):
+        self.clear()
+        self.show_game_over()
+
+
+class SquareAroundTheDartBoard(HyperdartScene):
+    def construct(self):
+        square = self.square
+        circle = self.circle
+        VGroup(square, circle).to_edge(DOWN, MED_SMALL_BUFF)
+        self.clear()
+        board = Dartboard()
+        board.replace(square)
+
+        title = TextMobject("Square around the dart board")
+        title.scale(1.5)
+        title.next_to(square, UP, MED_LARGE_BUFF)
+
+        self.add(board)
+        self.play(FadeInFromDown(title))
+        self.add(square, board)
+        self.play(DrawBorderThenFill(square, run_time=2))
+        self.wait()
+
+
+class ContrastDistributions(HyperdartScene):
+    def construct(self):
+        square = self.square
+        circle = self.circle
+        board = Dartboard()
+        board.replace(circle)
+
+        group = VGroup(square, circle, board)
+        group.to_edge(LEFT)
+        group.scale(0.8, about_edge=DOWN)
+
+        group_copy = group.copy()
+        square_copy, circle_copy, board_copy = group_copy
+        group_copy.set_x(-group.get_center()[0])
+
+        v_line = DashedLine(FRAME_HEIGHT * UP / 2, FRAME_HEIGHT * DOWN / 2)
+
+        left_label = TextMobject("Our distribution\\\\(uniform in the square)")
+        left_label.match_x(group)
+        left_label.to_edge(UP)
+        right_label = TextMobject("More realistic distribution")
+        right_label.match_x(group_copy)
+        right_label.to_edge(UP)
+
+        n_points = 2000
+        left_points = self.get_random_points(n_points)
+        right_points = np.random.multivariate_normal(
+            mean=board_copy.get_center(),
+            cov=0.6 * np.identity(3),
+            size=n_points
+        )
+
+        left_dots, right_dots = [
+            VGroup(*[
+                Dot(p, radius=0.02) for p in points
+            ])
+            for points in [left_points, right_points]
+        ]
+
+        left_rect = FullScreenFadeRectangle(opacity=0.75)
+        left_rect.stretch(0.49, 0, about_edge=LEFT)
+        right_rect = left_rect.copy()
+        right_rect.to_edge(RIGHT, buff=0)
+
+        self.add(group, board_copy)
+        self.add(left_label, right_label)
+        self.add(v_line)
+        self.add(left_rect)
+
+        self.play(
+            LaggedStartMap(FadeInFromLarge, right_dots),
+            run_time=5
+        )
+        self.wait()
+        self.play(
+            FadeOut(left_rect),
+            FadeIn(right_rect),
+        )
+        self.play(
+            LaggedStartMap(FadeInFromLarge, left_dots),
+            run_time=5
+        )
+        self.wait()
+
+
+class ChooseXThenYUniformly(Scene):
+    def construct(self):
+        # Setup
+        unit_size = 3
+        axes = Axes(
+            x_min=-1.25,
+            x_max=1.25,
+            y_min=-1.25,
+            y_max=1.25,
+            number_line_config={
+                "tick_frequency": 0.25,
+                "unit_size": unit_size,
+            },
+        )
+        numbers = [-1, -0.5, 0.5, 1]
+        num_config = {
+            "num_decimal_places": 1,
+            "background_stroke_width": 3,
+        }
+        axes.x_axis.add_numbers(
+            *numbers,
+            number_config=num_config,
+        )
+        axes.y_axis.add_numbers(
+            *numbers,
+            number_config=num_config,
+            direction=LEFT,
+        )
+
+        circle = Circle(radius=unit_size)
+        circle.set_stroke(WHITE, 0)
+        circle.set_fill(RED, 0.7)
+
+        square = Square()
+        square.replace(circle)
+        square.set_stroke(LIGHT_GREY, 1)
+        square = DashedVMobject(square, num_dashes=101)
+
+        self.add(square, circle)
+        self.add(axes)
+
+        # x and y stuff
+        x_tracker = ValueTracker(-1)
+        y_tracker = ValueTracker(-1)
+
+        get_x = x_tracker.get_value
+        get_y = y_tracker.get_value
+
+        x_tip = ArrowTip(start_angle=PI / 2, color=BLUE)
+        y_tip = ArrowTip(start_angle=0, color=YELLOW)
+        for tip in [x_tip, y_tip]:
+            tip.scale(0.5)
+        x_tip.add_updater(lambda m: m.move_to(axes.c2p(get_x(), 0), UP))
+        y_tip.add_updater(lambda m: m.move_to(axes.c2p(0, get_y()), RIGHT))
+
+        x_eq = VGroup(TexMobject("x = "), DecimalNumber(0))
+        x_eq.arrange(RIGHT, SMALL_BUFF)
+        x_eq[1].match_y(x_eq[0][0][1])
+        x_eq[1].add_updater(lambda m: m.set_value(get_x()))
+        x_eq.match_color(x_tip)
+
+        y_eq = VGroup(TexMobject("y = "), DecimalNumber(0))
+        y_eq.arrange(RIGHT, SMALL_BUFF)
+        y_eq[1].match_y(y_eq[0][0][1])
+        y_eq[1].add_updater(lambda m: m.set_value(get_y()))
+        y_eq.match_color(y_tip)
+
+        eqs = VGroup(x_eq, y_eq)
+        eqs.arrange(DOWN, buff=MED_LARGE_BUFF)
+        eqs.to_edge(UR)
+
+        self.add(x_tip)
+        self.add(x_eq)
+
+        # Choose x
+        self.play(
+            x_tracker.set_value, 1,
+            run_time=2,
+        )
+        self.play(
+            x_tracker.set_value, np.random.random(),
+            run_time=1,
+        )
+
+        # Choose y
+        self.play(
+            FadeIn(y_tip),
+            FadeIn(y_eq),
+        )
+        self.play(
+            y_tracker.set_value, 1,
+            run_time=2,
+        )
+        self.play(
+            y_tracker.set_value, np.random.random(),
+            run_time=1,
+        )
+
+        point = axes.c2p(get_x(), get_y())
+        dot = Dot(point)
+        x_line = DashedLine(axes.c2p(0, get_y()), point)
+        y_line = DashedLine(axes.c2p(get_x(), 0), point)
+        lines = VGroup(x_line, y_line)
+        lines.set_stroke(WHITE, 2)
+
+        self.play(*map(ShowCreation, lines))
+        self.play(DrawBorderThenFill(dot))
+        self.wait()
+
+        points = [
+            axes.c2p(*np.random.uniform(-1, 1, size=2))
+            for n in range(2000)
+        ]
+        dots = VGroup(*[
+            Dot(point, radius=0.02)
+            for point in points
+        ])
+        self.play(
+            LaggedStartMap(FadeInFromLarge, dots),
+            run_time=3,
+        )
+        self.wait()
+
+
+class ShowDistributionOfScores(Scene):
+    CONFIG = {
+        "axes_config": {
+            ""
+        }
+    }
+
+    def construct(self):
+        self.add_axes()
+        self.add_score_label()
+        self.setup_histogram()
+        self.show_many_runs()
+
+    def add_axes(self):
+        axes = Axes(**self.axes_config)
+
+    def add_score_label(self):
+        pass
+
+    def setup_histogram(self):
+        pass
+
+    def show_many_runs(self):
+        pass
+
+
+    #
+    def add_one_run(self, animate=True):
+        pass
+
+    def get_random_score(self):
+        pass
+
+
+# Old scenes, before decision to collaborate with numberphile
 class IntroduceGame(HyperdartScene):
     CONFIG = {
         "random_seed": 0,
@@ -885,36 +1342,3 @@ class ExpectedScoreEqualsQMark(Scene):
         self.play(FadeInFrom(aka, UP))
         self.wait()
 
-
-class ScoreHistogram(Scene):
-    CONFIG = {
-        "axes_config": {
-            ""
-        }
-    }
-
-    def construct(self):
-        self.add_axes()
-        self.add_score_label()
-        self.setup_histogram()
-        self.show_many_runs()
-
-    def add_axes(self):
-        axes = Axes(**self.axes_config)
-
-    def add_score_label(self):
-        pass
-
-    def setup_histogram(self):
-        pass
-
-    def show_many_runs(self):
-        pass
-
-
-    #
-    def add_one_run(self, animate=True):
-        pass
-
-    def get_random_score(self):
-        pass
