@@ -23,7 +23,7 @@ def initialize_directories(config):
         else:
             MEDIA_DIR = os.path.join(
                 os.path.expanduser('~'),
-                "Python/ManimEnv/GeneratedMedia/"
+                "Python/ManimEnv/GeneratedMedia"
             )
         if not os.path.isdir(MEDIA_DIR):
             MEDIA_DIR = "./media"
