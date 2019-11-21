@@ -189,7 +189,6 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
     def scroll_through_patrons(self):
         logo_box = Square(side_length=2.5)
         logo_box.to_corner(DOWN + LEFT, buff=MED_LARGE_BUFF)
-        total_width = FRAME_X_RADIUS - logo_box.get_right()[0]
 
         black_rect = Rectangle(
             fill_color=BLACK,
@@ -213,10 +212,11 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         underline.next_to(thanks, DOWN, SMALL_BUFF)
         thanks.add(underline)
 
-        changed_patron_names = map(
+        changed_patron_names = list(map(
             self.modify_patron_name,
             self.specific_patrons,
-        )
+        ))
+        changed_patron_names.sort()
         patrons = VGroup(*map(
             TextMobject,
             changed_patron_names,
