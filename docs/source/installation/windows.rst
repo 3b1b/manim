@@ -49,7 +49,7 @@ the repository page with ``Clone or download`` button and unzip it.
 
 Open the commandline within the manim directory with ``Shift + Right click`` on an empty space in the folder and select ``open command window here``
 
-Install manim python dependencies with ``pip install -r requirement.txt``
+Install manim python dependencies with ``pip install -r requirements.txt``
 
 Test the installation
 ---------------------
