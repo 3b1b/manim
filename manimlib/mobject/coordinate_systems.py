@@ -338,10 +338,18 @@ class NumberPlane(Axes):
             np.arange(0, axis2.x_max, step),
             np.arange(0, axis2.x_min, -step),
         )
+
+        # Shift background lines if axis is asymmetrical
+        shift = (np.abs(axis1.x_max) - np.abs(axis1.x_min))/2
+        shift_point = axis1.number_to_point(shift)
+
         for inputs in ranges:
             for k, x in enumerate(inputs):
                 new_line = line.copy()
-                new_line.move_to(axis2.number_to_point(x))
+                position = axis2.number_to_point(x)
+                new_line.move_to(position)
+                new_line.shift(shift_point)
+
                 if k % (1 + ratio) == 0:
                     lines1.add(new_line)
                 else:
@@ -388,15 +396,9 @@ class ComplexPlane(NumberPlane):
         number = complex(number)
         return self.coords_to_point(number.real, number.imag)
 
-    def n2p(self, number):
-        return self.number_to_point(number)
-
     def point_to_number(self, point):
         x, y = self.point_to_coords(point)
         return complex(x, y)
-
-    def p2n(self, point):
-        return self.point_to_number(point)
 
     def get_default_coordinate_values(self):
         x_numbers = self.get_x_axis().default_numbers_to_display()
