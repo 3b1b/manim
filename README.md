@@ -2,16 +2,16 @@
 
 This is my personal version that I use to make my projects. It has some modifications and additions, the codes of my projects are in the folders "projects".
 
-Due to the modifications I made, you will not be able to compile my projects in the original version of Manim, so I recommend that you use this version if you want to compile them. I have a course in both Spanish and English that may be of interest to people who want to learn from scratch (even without knowledge of LaTeX and / or Python).
+Due to the modifications I made, you will not be able to compile my projects in the original version of Manim, so I recommend that you use this version if you want to compile them. I have a course in both [Spanish](https://github.com/Elteoremadebeethoven/AnimacionesConManim) and [English](https://github.com/Elteoremadebeethoven/AnimationsWithManim) that may be of interest to people who want to learn from scratch (even without knowledge of LaTeX and / or Python).
 
 The main modifications that this version of Manim has are:
-* Configuration to write texts in Spanish (try with `utf8` or `latin1` in "tex_template.tex")
+* Configuration to write texts in Spanish.
 * New predefined colors.
-* New objects: Brackets and custom brackets (similar to Brace) and so on.
+* New objects: Brackets and custom brackets (like `Brace`).
 * New LaTeX packages added: Sources, chemistry symbols, music, etcetera.
-* SVG images that I use in my videos.
-* Export svg with `-i`.
-* Export with custom fps with `-kx FPS`.
+* [SVG images](https://github.com/Elteoremadebeethoven/Manim-TB/tree/master/media/svg_images) that I use in my videos.
+* Export GIF with `-i`.
+* Export with custom *fps* with `-kx FPS`.
 * Activate mp4 in high definition using ```--hd```.
 
 # Indications.
@@ -19,17 +19,26 @@ You probably have to install `pydub` and `pyreadline`, install it using pip.
 
 ## Installing emerald fonts in Linux and MacOS
 
-If you use Mac or GNU / Linux, you will probably have problems with TeX formulas because I use the emerald packet, so I recommend that you install them with the following instructions (it works the same for GNU / Linux and Mac, you need to have installed wget):
+If you use Mac or GNU / Linux, you will probably have problems with TeX formulas because I use the [emerald](https://github.com/Elteoremadebeethoven/Manim-TB/blob/master/manimlib/tex_files/tex_template_fonts.tex#L28) package, so I recommend that you install them with the following instructions (it works the same for GNU / Linux and Mac, you need to have installed wget):
 ```
-mkdir -p `kpsewhich --var-value = TEXMFHOME`
-cd `kpsewhich --var-value = TEXMFHOME`
+#  find which directory contains the tex fonts 
+mkdir -p `kpsewhich --var-value=TEXMFHOME`
+cd `kpsewhich --var-value=TEXMFHOME`
+
+#  download emerald.zip to directory
+#  not necessary to use wget, would download manually
 wget http://mirror.ctan.org/fonts/emerald.zip
+
+#  unzip, move to correct folders, and remove zip file
 unzip emerald.zip
-cp -r emerald /. . && rm -rf emerald /
+cp -r emerald/. . && rm -rf emerald/
 rm emerald.zip
-updmap --enable Map emerald.map -user
+
+#  next two lines update tex
+updmap --enable Map emerald.map
 texhash
 ```
+Source [here](http://www.deanbodenham.com/learn/beamer-installing-emerald.html).
 
 ## Enable the use of Tikz in MacOS
 
