@@ -34,6 +34,7 @@ class Mobject(Container):
         "name": None,
         "dim": 3,
         "target": None,
+        "plot_depth": 0,
     }
 
     def __init__(self, **kwargs):
