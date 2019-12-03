@@ -207,6 +207,8 @@ class Camera(object):
             method = Mobject.family_members_with_points
         else:
             method = Mobject.get_family
+        
+        mobjects.sort(key = lambda m : m.plot_depth)
         return remove_list_redundancies(list(
             it.chain(*[method(m) for m in mobjects])
         ))
