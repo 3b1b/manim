@@ -9,12 +9,23 @@ TEXT_DIR = ""
 
 
 def initialize_directories(config):
+    """ Creates directories for media, videos, Tex, and text.
+        If no video directory is specified, or the tex directory does not exist, the media directory is set from the config.
+        If an empty media directory is specified, chooses the default media folder for Dropbox projects. If the media folder
+        is not a directory, defaults to ./media. 
+        If a non-empty tex directory is specified, sets the tex directory to that, otherwise, defaults to creating a
+        Tex sub-directory in the media directory.
+        The text directory is automatically created as a sub directory "texts" in the media directory.
+        If the video directory or video output directory are specified, sets VIDEO_DIR and VIDEO_OUTPUT_DIR to the specified
+        directories automatically. Otherwise, creates a sub-directory "videos" in the media folder.
+        """
     global MEDIA_DIR
     global VIDEO_DIR
     global VIDEO_OUTPUT_DIR
     global TEX_DIR
     global TEXT_DIR
 
+    # Python by default parses "" as False - if the directory passed is an empty string, we choose the default option.
     video_path_specified = config["video_dir"] or config["video_output_dir"]
 
     if not (video_path_specified and config["tex_dir"]):
@@ -54,9 +65,9 @@ def initialize_directories(config):
 
 NOT_SETTING_FONT_MSG='''
 Warning:
-You haven't set font.
-If you are not using English, this may cause text rendering problem.
-You set font like:
+You have not set a font.
+If you are not using English, this may cause text rendering problems.
+You can set the font with:
 text = Text('your text', font='your font')
 or:
 class MyText(Text):
@@ -93,21 +104,25 @@ HELP_MESSAGE = """
    -o <file_name> write to a different file_name
    -l use low quality
    -m use medium quality
-   -a run and save every scene in the script, or all args for the given scene
+   -a run and save every scene in the script, or use all args for the given scene
    -q don't print progress
    -f when writing to a movie file, export the frames in png sequence
    -t use transperency when exporting images
-   -n specify the number of the animation to start from
+   -n specify the animation to start from. This is 0 indexed - eg. the first animation is 0.
    -r specify a resolution
    -c specify a background color
 """
+
 SCENE_NOT_FOUND_MESSAGE = """
-   {} is not in the script
+   {} was not found in the script
 """
+
 CHOOSE_NUMBER_MESSAGE = """
-Choose number corresponding to desired scene/arguments.
+Choose the number corresponding to the desired scene/arguments. These should be zero indexed.
+(eg. the first animation is 0, the second is 1...)
 (Use comma separated list for multiple entries)
 Choice(s): """
+
 INVALID_NUMBER_MESSAGE = "Fine then, if you don't want to give a valid number I'll just quit"
 
 NO_SCENE_MESSAGE = """
