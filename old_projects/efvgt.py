@@ -90,13 +90,14 @@ def get_confetti_animations(num_confetti_squares):
 class Anniversary(TeacherStudentsScene):
     CONFIG = {
         "num_confetti_squares" : 50,
+        "message": "2 year Anniversary!",
     }
     def construct(self):
         self.celebrate()
         self.complain()
 
     def celebrate(self):
-        title = TextMobject("2 year Anniversary!")
+        title = TextMobject(self.message)
         title.scale(1.5)
         title.to_edge(UP)
 
@@ -111,6 +112,7 @@ class Anniversary(TeacherStudentsScene):
         formula = TexMobject("e^{\\pi i} = -1")
         formula.move_to(first_video)
         first_video.add(formula)
+        first_video.fade(1)
 
         hats = self.get_party_hats()
         confetti_spirils = get_confetti_animations(
