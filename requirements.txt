@@ -10,3 +10,4 @@ pycairo==1.17.1; sys_platform == 'linux'
 pycairo>=1.18.1; sys_platform == 'win32'
 pydub==0.23.0
 pyreadline==2.1; sys_platform == 'win32'
+pymunk==5.6.0
