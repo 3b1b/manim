@@ -26,12 +26,12 @@ class TriangleModuliSpace(Scene):
         )
 
     def construct(self):
-        # self.show_meaning_of_similar()
+        self.show_meaning_of_similar()
         self.show_xy_rule()
 
     def show_meaning_of_similar(self):
         # Setup titles
-        title = TextMobject("Space", " of all ", "trianlges")
+        title = TextMobject("Space", " of all ", "triangles")
         title.scale(1.5)
         title.to_edge(UP)
 
@@ -904,3 +904,25 @@ class TriangleModuliSpace(Scene):
 
     def get_triangle_y(self, triangle):
         return self.get_triangle_xy(triangle)[1]
+
+
+class Credits(Scene):
+    def construct(self):
+        items = VGroup(
+            TextMobject("Written by\\\\Jayadev Athreya"),
+            TextMobject("Illustrated and Narrated by\\\\Grant Sanderson"),
+            TextMobject(
+                "3Blue1Brown\\\\",
+                "\\copyright {} Copyright 2019\\\\",
+                "www.3blue1brown.com\\\\",
+            ),
+        )
+        items.arrange(DOWN, buff=LARGE_BUFF)
+
+        items[-1].set_color(LIGHT_GREY)
+        items[-1].scale(0.8, about_edge=UP)
+        items[-1].to_edge(DOWN)
+
+        self.add(items[-1])
+        self.play(LaggedStartMap(FadeInFromDown, items[:-1]))
+        self.wait()
