@@ -78,6 +78,9 @@ class SingleStringTexMobject(SVGMobject):
         if tex == "":
             tex = "\\quad"
 
+        # To keep files from starting with a line break
+        tex = tex.replace("\\\\", "\\quad\\\\")
+
         # Handle imbalanced \left and \right
         num_lefts, num_rights = [
             len([
