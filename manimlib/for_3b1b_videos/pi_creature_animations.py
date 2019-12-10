@@ -1,7 +1,7 @@
 from manimlib.animation.animation import Animation
 from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.fading import FadeOut
-from manimlib.animation.creation import ShowCreation
+from manimlib.animation.creation import DrawBorderThenFill
 from manimlib.animation.creation import Write
 from manimlib.animation.transform import ApplyMethod
 from manimlib.animation.transform import MoveToTarget
@@ -28,7 +28,7 @@ class PiCreatureBubbleIntroduction(AnimationGroup):
         "target_mode": "speaking",
         "bubble_class": SpeechBubble,
         "change_mode_kwargs": {},
-        "bubble_creation_class": ShowCreation,
+        "bubble_creation_class": DrawBorderThenFill,
         "bubble_creation_kwargs": {},
         "bubble_kwargs": {},
         "content_introduction_class": Write,
