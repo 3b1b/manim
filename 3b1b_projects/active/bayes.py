@@ -70,6 +70,7 @@ class BayesDiagram(VGroup):
         "evidence_color2": EVIDENCE_COLOR2,
         "not_evidence_color1": NOT_EVIDENCE_COLOR1,
         "not_evidence_color2": NOT_EVIDENCE_COLOR2,
+        "prior_rect_direction": DOWN,
     }
 
     def __init__(self, prior, likelihood, antilikelihood, **kwargs):
@@ -120,23 +121,92 @@ class BayesDiagram(VGroup):
         self.square.set_opacity(0)
         self.hypothesis_split.set_opacity(0)
 
-    def generate_braces(self, buff=SMALL_BUFF):
-        kw = {"buff": buff}
-        self.h_brace = Brace(self.h_rect, DOWN, **kw)
-        self.nh_brace = Brace(self.nh_rect, DOWN, **kw)
-        self.he_brace = Brace(self.he_rect, LEFT, **kw)
-        self.hne_brace = Brace(self.hne_rect, LEFT, **kw)
-        self.nhe_brace = Brace(self.nhe_rect, RIGHT, **kw)
-        self.nhne_brace = Brace(self.nhne_rect, RIGHT, **kw)
+    def add_brace_attrs(self, buff=SMALL_BUFF):
+        braces = self.braces = self.create_braces(buff)
+        self.braces_buff = buff
+        attrs = [
+            "h_brace",
+            "nh_brace",
+            "he_brace",
+            "hne_brace",
+            "nhe_brace",
+            "nhne_brace",
+        ]
+        for brace, attr in zip(braces, attrs):
+            setattr(self, attr, brace)
+        return self
 
-        self.braces = VGroup(
-            self.h_brace,
-            self.nh_brace,
-            self.he_brace,
-            self.hne_brace,
-            self.nhe_brace,
-            self.nhne_brace,
+    def create_braces(self, buff=SMALL_BUFF):
+        kw = {"buff": buff}
+        return VGroup(
+            Brace(self.h_rect, self.prior_rect_direction, **kw),
+            Brace(self.nh_rect, self.prior_rect_direction, **kw),
+            Brace(self.he_rect, LEFT, **kw),
+            Brace(self.hne_rect, LEFT, **kw),
+            Brace(self.nhe_rect, RIGHT, **kw),
+            Brace(self.nhne_rect, RIGHT, **kw),
         )
+
+    def refresh_braces(self):
+        if hasattr(self, "braces"):
+            self.braces.become(
+                self.create_braces(self.braces_buff)
+            )
+        return self
+
+    def set_prior(self, new_prior):
+        p = new_prior
+        q = 1 - p
+        full_width = self.square.get_width()
+
+        left_rects = [self.h_rect, self.he_rect, self.hne_rect]
+        right_rects = [self.nh_rect, self.nhe_rect, self.nhne_rect]
+
+        for group, vect, value in [(left_rects, LEFT, p), (right_rects, RIGHT, q)]:
+            for rect in group:
+                rect.set_width(
+                    value * full_width,
+                    stretch=True,
+                    about_edge=vect,
+                )
+
+        self.refresh_braces()
+        return self
+
+    def general_set_likelihood(self, new_likelihood, low_rect, high_rect):
+        height = self.square.get_height()
+
+        low_rect.set_height(
+            new_likelihood * height,
+            stretch=True,
+            about_edge=DOWN,
+        )
+        high_rect.set_height(
+            (1 - new_likelihood) * height,
+            stretch=True,
+            about_edge=UP,
+        )
+        self.refresh_braces()
+        return self
+
+    def set_likelihood(self, new_likelihood):
+        self.general_set_likelihood(
+            new_likelihood,
+            self.he_rect,
+            self.hne_rect,
+        )
+        return self
+
+    def set_antilikelihood(self, new_antilikelihood):
+        self.general_set_likelihood(
+            new_antilikelihood,
+            self.nhe_rect,
+            self.nhne_rect,
+        )
+        return self
+
+    def copy(self):
+        return self.deepcopy()
 
 
 class ProbabilityBar(VGroup):
@@ -1722,7 +1792,7 @@ class HeartOfBayesTheorem(Scene):
         diagram.set_height(3)
         diagram.move_to(5 * LEFT + DOWN)
 
-        diagram.generate_braces()
+        diagram.add_brace_attrs()
         braces = VGroup(diagram.h_brace, diagram.nh_brace)
         diagram.add(*braces)
         icons = VGroup(LibrarianIcon(), FarmerIcon())
@@ -1812,10 +1882,12 @@ class WhenDoesBayesApply(DescriptionOfSteve):
         # Show icons
         self.play(FadeInFromDown(all_words[0]))
         self.play(
-            FadeInFrom(hypothesis_icon[0], DOWN),
-            Write(hypothesis_icon[1]),
-            FadeInFrom(hypothesis_icon[2], UP),
-            run_time=1,
+            LaggedStart(
+                FadeInFrom(hypothesis_icon[0], DOWN),
+                Write(hypothesis_icon[1]),
+                FadeInFrom(hypothesis_icon[2], UP),
+                run_time=1,
+            )
         )
         self.wait()
 
@@ -1859,6 +1931,13 @@ class WhenDoesBayesApply(DescriptionOfSteve):
         self.play(FadeOut(rects))
         self.wait()
 
+        self.remove(prob)
+        everything = Group(*self.get_mobjects())
+        self.play(
+            LaggedStartMap(FadeOut, everything, run_time=2),
+            prob.copy().to_corner, UR,
+        )
+
     def get_hypothesis_icon(self):
         group = VGroup(
             Steve().set_height(1.5),
@@ -1877,3 +1956,238 @@ class WhenDoesBayesApply(DescriptionOfSteve):
         rect.set_stroke(WHITE, 2)
         result.add(rect)
         return result
+
+
+class CreateFormulaFromDiagram(Scene):
+    def construct(self):
+        t2c = {
+            "P": WHITE,
+            "H": HYPOTHESIS_COLOR,
+            "E": EVIDENCE_COLOR1,
+            "\\neg": RED,
+        }
+
+        # Add posterior
+        posterior = TexMobject("P(H|E)", tex_to_color_map=t2c)
+        posterior.to_corner(UR)
+        posterior_words = TextMobject("Goal: ")
+        posterior_words.next_to(posterior, LEFT, aligned_edge=UP)
+        self.add(posterior)
+        self.add(posterior_words)
+
+        # Show prior
+        diagram = self.get_diagram()
+
+        prior_label = TexMobject("P(H)", tex_to_color_map=t2c)
+        prior_label.add_updater(
+            lambda m: m.next_to(diagram.h_brace, UP, SMALL_BUFF)
+        )
+
+        prior_example = TexMobject("= 1 / 21")
+        prior_example.add_updater(
+            lambda m: m.next_to(prior_label, RIGHT).shift(0.03 * UP)
+
+        )
+        # example_words = TextMobject("In our example")
+        # example_words.next_to(prior_example[0][1:], UP, buff=SMALL_BUFF, aligned_edge=LEFT)
+        # prior_example.add(example_words)
+
+        prior_arrow = Vector(0.7 * RIGHT)
+        prior_arrow.next_to(prior_label, LEFT, SMALL_BUFF)
+        prior_word = TextMobject("``Prior''")
+        prior_word.next_to(prior_arrow, LEFT, SMALL_BUFF)
+        prior_word.align_to(prior_label[0], DOWN)
+        prior_word.set_color(HYPOTHESIS_COLOR)
+
+        self.add(diagram)
+        self.play(ShowIncreasingSubsets(diagram.people, run_time=2))
+        self.wait()
+        self.play(
+            diagram.hypothesis_split.set_opacity, 1,
+            FadeIn(diagram.h_brace),
+            FadeInFromDown(prior_label),
+        )
+        self.wait()
+        self.play(FadeIn(prior_example))
+        self.play(
+            LaggedStartMap(
+                Indicate, diagram.people[::10],
+                color=BLUE,
+            )
+        )
+        self.wait()
+        self.play(
+            FadeInFrom(prior_word, RIGHT),
+            GrowArrow(prior_arrow)
+        )
+        self.wait()
+
+        # First likelihood split
+        like_label = TexMobject("P(E|H)", tex_to_color_map=t2c)
+        like_label.add_updater(
+            lambda m: m.next_to(diagram.he_brace, LEFT)
+        )
+
+        like_example = TexMobject("= 0.4")
+        like_example.add_updater(
+            lambda m: m.next_to(like_label, DOWN)
+        )
+
+        like_word = TextMobject("``Likelihood''")
+        like_word.next_to(like_label, UP, LARGE_BUFF, aligned_edge=RIGHT)
+        like_arrow = Arrow(
+            like_word.get_bottom(),
+            like_label.get_top(),
+            buff=0.2,
+        )
+
+        limit_arrow = Vector(0.5 * UP)
+        limit_arrow.next_to(like_label.get_part_by_tex("|"), UP, SMALL_BUFF)
+        limit_arrow.set_stroke(WHITE, 4)
+        limit_word = TextMobject("Limit\\\\your\\\\view")
+        limit_word.next_to(limit_arrow, UP)
+
+        self.play(
+            diagram.he_rect.set_opacity, 1,
+            diagram.hne_rect.set_opacity, 1,
+            GrowFromCenter(diagram.he_brace),
+            FadeInFrom(like_label, RIGHT),
+            FadeInFrom(like_example, RIGHT),
+        )
+        self.wait()
+        self.play(
+            ShowCreationThenFadeAround(
+                like_label.get_part_by_tex("E"),
+                surrounding_rectangle_config={
+                    "color": EVIDENCE_COLOR1
+                }
+            ),
+        )
+        self.play(WiggleOutThenIn(like_label.get_part_by_tex("|")))
+        self.play(
+            ShowCreationThenFadeAround(
+                like_label.get_part_by_tex("H")
+            ),
+        )
+        self.wait()
+        self.play(
+            diagram.people[10:].set_opacity, 0.2,
+            diagram.nh_rect.set_opacity, 0.2,
+            FadeInFrom(limit_word, DOWN),
+            GrowArrow(limit_arrow),
+            rate_func=there_and_back_with_pause,
+            run_time=6,
+        )
+        self.wait()
+        self.play(
+            Write(like_word, run_time=1),
+            GrowArrow(like_arrow),
+        )
+        self.wait()
+
+        # Show anti-likelihood
+        anti_label = TexMobject("P(E| \\neg H)", tex_to_color_map=t2c)
+        anti_label.add_updater(
+            lambda m: m.next_to(diagram.nhe_brace, RIGHT)
+        )
+
+        anti_example = TexMobject("= 0.1")
+        anti_example.add_updater(
+            lambda m: m.next_to(anti_label, RIGHT).align_to(anti_label[0], DOWN)
+        )
+
+        neg_sym = anti_label.get_part_by_tex("\\neg").copy()
+        neg_sym.generate_target()
+        neg_sym.target.scale(2.5)
+        not_word = TextMobject("means ``not''")
+        neg_group = VGroup(neg_sym.target, not_word)
+        neg_group.arrange(RIGHT)
+        neg_group.next_to(anti_label, UP, LARGE_BUFF)
+        neg_group.to_edge(RIGHT, buff=MED_SMALL_BUFF)
+
+        diagram.nhe_rect.set_opacity(1)
+        diagram.nhe_rect.save_state()
+        diagram.nhe_rect.become(diagram.nh_rect)
+        self.play(
+            Restore(diagram.nhe_rect),
+            GrowFromCenter(diagram.nhe_brace),
+            FadeInFrom(anti_label, LEFT),
+            FadeInFrom(anti_example, LEFT),
+        )
+        diagram.nhne_rect.set_opacity(1)
+        self.wait()
+        self.play(
+            ShowCreationThenFadeAround(
+                anti_label[2],
+                surrounding_rectangle_config={"color": EVIDENCE_COLOR1},
+            )
+        )
+        self.play(
+            ShowCreationThenFadeAround(
+                anti_label[4:6],
+                surrounding_rectangle_config={"color": RED},
+            )
+        )
+        self.wait()
+        self.play(
+            MoveToTarget(neg_sym),
+            FadeIn(not_word)
+        )
+        self.wait()
+        self.play(
+            FadeOut(not_word),
+            Transform(neg_sym, anti_label.get_part_by_tex("\\neg"))
+        )
+        self.remove(neg_sym)
+
+        # Recall final answer
+
+        diagram.add(
+            diagram.h_brace,
+            diagram.he_brace,
+            diagram.nhe_brace,
+        )
+        self.play(
+            diagram.scale, 0.7, {"about_edge": DL},
+            diagram.refresh_braces,
+            MaintainPositionRelativeTo(
+                VGroup(like_word, like_arrow),
+                like_label,
+            ),
+            MaintainPositionRelativeTo(
+                VGroup(prior_word, prior_arrow),
+                prior_label,
+            ),
+        )
+
+    def get_diagram(self):
+        diagram = BayesDiagram(
+            prior=1 / 21,
+            likelihood=0.4,
+            antilikelihood=0.1,
+            not_evidence_color1=GREY,
+            not_evidence_color2=DARK_GREY,
+            prior_rect_direction=UP,
+        )
+        diagram.set_height(5.5)
+        diagram.set_width(6, stretch=True)
+        diagram.move_to(0.5 * DOWN)
+        diagram.add_brace_attrs()
+
+        diagram.evidence_split.set_opacity(0)
+        diagram.hypothesis_split.set_opacity(0)
+        diagram.nh_rect.set_fill(DARK_GREY)
+
+        people = VGroup(*[Person() for x in range(210)])
+        people.set_color(interpolate_color(LIGHT_GREY, WHITE, 0.5))
+        people.arrange_in_grid(n_cols=21)
+        people.set_width(diagram.get_width() - SMALL_BUFF)
+        people.set_height(diagram.get_height() - SMALL_BUFF, stretch=True)
+        people.move_to(diagram)
+        people[10:].set_color(GREEN_D)
+        people.set_stroke(BLACK, 2, background=True)
+
+        diagram.add(people)
+        diagram.people = people
+
+        return diagram
