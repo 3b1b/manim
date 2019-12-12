@@ -78,6 +78,10 @@ class SingleStringTexMobject(SVGMobject):
         if tex == "":
             tex = "\\quad"
 
+        # To keep files from starting with a line break
+        if tex.startswith("\\\\"):
+            tex = tex.replace("\\\\", "\\quad\\\\")
+
         # Handle imbalanced \left and \right
         num_lefts, num_rights = [
             len([
@@ -171,8 +175,10 @@ class TexMobject(SingleStringTexMobject):
         """
         new_submobjects = []
         curr_index = 0
+        config = dict(self.CONFIG)
+        config["alignment"] = ""
         for tex_string in self.tex_strings:
-            sub_tex_mob = SingleStringTexMobject(tex_string, **self.CONFIG)
+            sub_tex_mob = SingleStringTexMobject(tex_string, **config)
             num_submobs = len(sub_tex_mob.submobjects)
             new_index = curr_index + num_submobs
             if num_submobs == 0:

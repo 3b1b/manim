@@ -543,6 +543,8 @@ class Scene(Container):
             self.file_writer.write_frame(frame)
 
     def add_sound(self, sound_file, time_offset=0, gain=None, **kwargs):
+        if self.skip_animations:
+            return
         time = self.get_time() + time_offset
         self.file_writer.add_sound(sound_file, time, gain, **kwargs)
 

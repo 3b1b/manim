@@ -254,6 +254,9 @@ class TeacherStudentsScene(PiCreatureScene):
         "student_scale_factor": 0.8,
         "seconds_to_blink": 2,
         "screen_height": 3,
+        "camera_config": {
+            "background_color": DARKER_GREY,
+        },
     }
 
     def setup(self):

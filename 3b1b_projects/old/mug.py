@@ -41,8 +41,9 @@ class HappyHolidays(TeacherStudentsScene):
             hat.flip()
             vect = LEFT
         hat.set_fill(RED_D)
-        hat[0].remove(hat[0][1])
-        hat[0].set_fill("#EEE")
+        hat.set_stroke(width=0)
+        hat[0].points = hat[0].points[8 * 4:]
+        hat[0].set_fill("#DDDDDD")
         hat[2].set_fill(WHITE)
         hat.add(hat[0])
         hat.next_to(pi.body, UP, buff = SMALL_BUFF)

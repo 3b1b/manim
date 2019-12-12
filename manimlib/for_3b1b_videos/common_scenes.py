@@ -154,7 +154,7 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         "randomize_order": True,
         "capitalize": True,
         "name_y_spacing": 0.7,
-        "thanks_words": "Funded by the community, with special thanks to:",
+        "thanks_words": "My thanks to all the patrons among you",
     }
 
     def construct(self):
@@ -189,7 +189,6 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
     def scroll_through_patrons(self):
         logo_box = Square(side_length=2.5)
         logo_box.to_corner(DOWN + LEFT, buff=MED_LARGE_BUFF)
-        total_width = FRAME_X_RADIUS - logo_box.get_right()[0]
 
         black_rect = Rectangle(
             fill_color=BLACK,
@@ -213,10 +212,11 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         underline.next_to(thanks, DOWN, SMALL_BUFF)
         thanks.add(underline)
 
-        changed_patron_names = map(
+        changed_patron_names = list(map(
             self.modify_patron_name,
             self.specific_patrons,
-        )
+        ))
+        changed_patron_names.sort()
         patrons = VGroup(*map(
             TextMobject,
             changed_patron_names,
@@ -244,7 +244,7 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         columns.next_to(underline, DOWN, buff=2)
 
         columns.generate_target()
-        columns.target.to_edge(DOWN, buff=2)
+        columns.target.to_edge(DOWN, buff=4)
         vect = columns.target.get_center() - columns.get_center()
         distance = get_norm(vect)
         wait_time = 20
@@ -258,11 +258,15 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         self.wait(wait_time)
 
     def modify_patron_name(self, name):
-        if name.lower() == "RedAgent14".lower():
-            return "Brian Shepetofsky"
-        elif name.lower() == "DeathByShrimp".lower():
-            return "Henry Bresnahan"
-
+        modification_map = {
+            "RedAgent14": "Brian Shepetofsky",
+            "DeathByShrimp": "Henry Bresnahan",
+            "akostrikov": "Aleksandr Kostrikov",
+            "Jacob Baxter": "Will Fleshman",
+        }
+        for n1, n2 in modification_map.items():
+            if name.lower() == n1.lower():
+                return n2
         return name
 
 
