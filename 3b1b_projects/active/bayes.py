@@ -5,9 +5,9 @@ OUTPUT_DIRECTORY = "bayes"
 HYPOTHESIS_COLOR = YELLOW
 NOT_HYPOTHESIS_COLOR = GREY
 EVIDENCE_COLOR1 = BLUE_C
-EVIDENCE_COLOR2 = BLUE_D
-NOT_EVIDENCE_COLOR1 = RED
-NOT_EVIDENCE_COLOR2 = RED_E
+EVIDENCE_COLOR2 = BLUE_E
+NOT_EVIDENCE_COLOR1 = GREY
+NOT_EVIDENCE_COLOR2 = DARK_GREY
 # NOT_EVIDENCE_COLOR1 = PURPLE
 # NOT_EVIDENCE_COLOR2 = PURPLE_D
 
@@ -22,7 +22,7 @@ def get_bayes_formula(expand_denominator=False):
     }
     substrings_to_isolate = ["P", "\\over", "=", "\\cdot", "+"]
 
-    tex = "P({H} | {E}) = {P({H}) \\cdot P({E} | {H}) \\over "
+    tex = "P({H} | {E}) = {P({H}) P({E} | {H}) \\over "
     if expand_denominator:
         tex += "P({H}) \\cdot P({E} | {H}) + P({\\neg H}) \\cdot P({E} | {\\neg H})}"
     else:
@@ -329,6 +329,7 @@ class Steve(SVGMobject):
         "stroke_width": 0,
         "height": 3,
         "include_name": True,
+        "name": "Steve"
     }
 
     def __init__(self, **kwargs):
@@ -337,10 +338,17 @@ class Steve(SVGMobject):
             self.add_name()
 
     def add_name(self):
-        self.name = TextMobject("Steve")
+        self.name = TextMobject(self.name)
         self.name.match_width(self)
         self.name.next_to(self, DOWN, SMALL_BUFF)
         self.add(self.name)
+
+
+class Linda(Steve):
+    CONFIG = {
+        "file_name": "linda",
+        "name": "Linda"
+    }
 
 
 class LibrarianIcon(SVGMobject):
@@ -478,11 +486,10 @@ class IntroduceFormula(Scene):
 
         # Likelihood
         lhs_copy = formula[:6].copy()
-        likelihood = formula[13:19]
+        likelihood = formula[12:18]
         run_time = 1
         self.play(
             lhs_copy.next_to, likelihood, UP,
-            DrawBorderThenFill(formula.get_part_by_tex("\\cdot")),
             run_time=run_time,
         )
         self.play(
@@ -500,7 +507,7 @@ class IntroduceFormula(Scene):
             ShowCreation(formula.get_part_by_tex("\\over")),
             TransformFromCopy(
                 get_formula_slice(0, 1, 4, 5),
-                get_formula_slice(20, 21, 22, 23),
+                get_formula_slice(19, 20, 21, 22),
             ),
         )
         self.wait()
@@ -977,7 +984,8 @@ class IntroduceKahnemanAndTversky(DescriptionOfSteve, MovingCameraScene):
         )
         bar.scale(0.5)
         bar.next_to(randy, RIGHT, buff=0.75)
-        bar.update()
+        bar.UpdateFromAlphaFunc(
+        ())
 
         self.play(
             LaggedStartMap(MoveToTarget, images),
@@ -1659,19 +1667,21 @@ class HeartOfBayesTheorem(Scene):
         title.to_edge(UP)
 
         # Bayes diagrams
-        prior_tracker = ValueTracker(0.1)
-        likelihood_tracker = ValueTracker(0.4)
-        antilikelihood_tracker = ValueTracker(0.1)
-        diagram = always_redraw(
-            lambda: self.get_diagram(
-                prior_tracker.get_value(),
-                likelihood_tracker.get_value(),
-                antilikelihood_tracker.get_value(),
-            )
+        # prior_tracker = ValueTracker(0.1)
+        # likelihood_tracker = ValueTracker(0.4)
+        # antilikelihood_tracker = ValueTracker(0.1)
+        diagram = self.get_diagram(
+            prior=0.1, likelihood=0.4, antilikelihood=0.1,
+            # prior_tracker.get_value(),
+            # likelihood_tracker.get_value(),
+            # antilikelihood_tracker.get_value(),
         )
-        restricted_diagram = always_redraw(
-            lambda: self.get_restricted_diagram(diagram)
-        )
+        diagram.nh_rect.set_fill(GREEN_E)
+        diagram.hypothesis_split.set_opacity(1)
+        diagram.evidence_split.set_opacity(0)
+        restricted_diagram = self.get_restricted_diagram(diagram)
+        diagram_copy = diagram.copy()
+        diagram_copy.move_to(restricted_diagram)
 
         diagrams = VGroup(diagram, restricted_diagram)
 
@@ -1693,7 +1703,7 @@ class HeartOfBayesTheorem(Scene):
 
         # Final fraction written geometrically
         fraction = always_redraw(
-            lambda: self.get_geometric_fraction(diagram)
+            lambda: self.get_geometric_fraction(restricted_diagram)
         )
         frac_box = always_redraw(lambda: DashedVMobject(
             SurroundingRectangle(
@@ -1726,10 +1736,13 @@ class HeartOfBayesTheorem(Scene):
             FadeInFromDown(label1),
         )
         self.play(
-            TransformFromCopy(diagram, restricted_diagram),
+            TransformFromCopy(diagram, diagram_copy),
             TransformFromCopy(label1[0], label2[0]),
         )
-        self.play(Restore(label2))
+        self.play(
+            Restore(label2),
+            ReplacementTransform(diagram_copy, restricted_diagram)
+        )
         self.wait()
 
         self.play(
@@ -1760,9 +1773,21 @@ class HeartOfBayesTheorem(Scene):
 
         # Mess with some numbers
         updaters.resume_updating()
-        self.play(prior_tracker.set_value, 0.4, run_time=2)
-        self.play(antilikelihood_tracker.set_value, 0.3, run_time=2)
-        self.play(likelihood_tracker.set_value, 0.6, run_time=2)
+        self.play(*[
+            ApplyMethod(d.set_prior, 0.4, run_time=2)
+            for d in diagrams
+        ])
+        self.play(*[
+            ApplyMethod(d.set_likelihood, 0.3, run_time=2)
+            for d in diagrams
+        ])
+        self.play(*[
+            ApplyMethod(d.set_antilikelihood, 0.6, run_time=2)
+            for d in diagrams
+        ])
+        # self.play(prior_tracker.set_value, 0.4, run_time=2)
+        # self.play(antilikelihood_tracker.set_value, 0.3, run_time=2)
+        # self.play(likelihood_tracker.set_value, 0.6, run_time=2)
         self.wait()
         updaters.suspend_updating()
 
@@ -1799,13 +1824,16 @@ class HeartOfBayesTheorem(Scene):
         icons[0].set_color(YELLOW_D)
         for icon, brace in zip(icons, braces):
             icon.set_height(0.5)
-            icon.next_to(brace, DOWN, SMALL_BUFF)
+            icon.brace = brace
+            icon.add_updater(lambda m: m.next_to(m.brace, DOWN, SMALL_BUFF))
             diagram.add(icon)
         return diagram
 
     def get_restricted_diagram(self, diagram):
         restricted_diagram = diagram.deepcopy()
         restricted_diagram.set_x(0)
+        restricted_diagram.hypothesis_split.set_opacity(0)
+        restricted_diagram.evidence_split.set_opacity(1)
         restricted_diagram.hne_rect.set_opacity(0.1)
         restricted_diagram.nhne_rect.set_opacity(0.1)
         return restricted_diagram
@@ -1959,13 +1987,25 @@ class WhenDoesBayesApply(DescriptionOfSteve):
 
 
 class CreateFormulaFromDiagram(Scene):
-    def construct(self):
-        t2c = {
+    CONFIG = {
+        "tex_to_color_map": {
             "P": WHITE,
             "H": HYPOTHESIS_COLOR,
             "E": EVIDENCE_COLOR1,
             "\\neg": RED,
-        }
+        },
+        "bayes_diagram_config": {
+            "prior": 1 / 21,
+            "likelihood": 0.4,
+            "antilikelihood": 0.1,
+            "not_evidence_color1": GREY,
+            "not_evidence_color2": DARK_GREY,
+            "prior_rect_direction": UP,
+        },
+    }
+
+    def construct(self):
+        t2c = self.tex_to_color_map
 
         # Add posterior
         posterior = TexMobject("P(H|E)", tex_to_color_map=t2c)
@@ -2021,20 +2061,27 @@ class CreateFormulaFromDiagram(Scene):
             GrowArrow(prior_arrow)
         )
         self.wait()
+        prior_group = VGroup(
+            prior_word, prior_arrow,
+            prior_label, prior_example,
+            diagram.h_brace,
+        )
 
         # First likelihood split
-        like_label = TexMobject("P(E|H)", tex_to_color_map=t2c)
-        like_label.add_updater(
-            lambda m: m.next_to(diagram.he_brace, LEFT)
-        )
-
         like_example = TexMobject("= 0.4")
         like_example.add_updater(
-            lambda m: m.next_to(like_label, DOWN)
+            lambda m: m.next_to(diagram.he_brace, LEFT)
         )
+        like_example.update()
+
+        like_label = TexMobject("P(E|H)", tex_to_color_map=t2c)
+        like_label.add_updater(
+            lambda m: m.next_to(like_example, LEFT)
+        )
+        like_label.update()
 
         like_word = TextMobject("``Likelihood''")
-        like_word.next_to(like_label, UP, LARGE_BUFF, aligned_edge=RIGHT)
+        like_word.next_to(like_label, UP, buff=LARGE_BUFF, aligned_edge=LEFT)
         like_arrow = Arrow(
             like_word.get_bottom(),
             like_label.get_top(),
@@ -2047,9 +2094,21 @@ class CreateFormulaFromDiagram(Scene):
         limit_word = TextMobject("Limit\\\\your\\\\view")
         limit_word.next_to(limit_arrow, UP)
 
+        hne_people = diagram.people[:6]
+        he_people = diagram.people[6:10]
+        nhe_people = diagram.people[19::10]
+        nhne_people = diagram.people[10:]
+        nhne_people.remove(*nhe_people)
+
+        for group in [hne_people, nhne_people]:
+            group.generate_target()
+            group.target.set_opacity(0.25)
+            group.target.set_stroke(BLACK, 0, background=True)
+
         self.play(
             diagram.he_rect.set_opacity, 1,
             diagram.hne_rect.set_opacity, 1,
+            MoveToTarget(hne_people),
             GrowFromCenter(diagram.he_brace),
             FadeInFrom(like_label, RIGHT),
             FadeInFrom(like_example, RIGHT),
@@ -2099,7 +2158,8 @@ class CreateFormulaFromDiagram(Scene):
         neg_sym = anti_label.get_part_by_tex("\\neg").copy()
         neg_sym.generate_target()
         neg_sym.target.scale(2.5)
-        not_word = TextMobject("means ``not''")
+        not_word = TextMobject("means ", "``not''")
+        not_word[1].set_color(RED)
         neg_group = VGroup(neg_sym.target, not_word)
         neg_group.arrange(RIGHT)
         neg_group.next_to(anti_label, UP, LARGE_BUFF)
@@ -2111,6 +2171,7 @@ class CreateFormulaFromDiagram(Scene):
         self.play(
             Restore(diagram.nhe_rect),
             GrowFromCenter(diagram.nhe_brace),
+            MoveToTarget(nhne_people),
             FadeInFrom(anti_label, LEFT),
             FadeInFrom(anti_example, LEFT),
         )
@@ -2140,7 +2201,48 @@ class CreateFormulaFromDiagram(Scene):
         )
         self.remove(neg_sym)
 
-        # Recall final answer
+        # Recall final answer, geometrically
+        he_group = VGroup(diagram.he_rect, he_people)
+        nhe_group = VGroup(diagram.nhe_rect, nhe_people)
+
+        denom = VGroup(
+            he_group.copy(),
+            TexMobject("+"),
+            nhe_group.copy(),
+        )
+        denom.arrange(RIGHT)
+        answer = VGroup(
+            he_group.copy(),
+            Underline(denom, stroke_width=2),
+            denom,
+        )
+        answer.arrange(DOWN)
+        answer.scale(0.5)
+        answer.to_edge(UP, MED_SMALL_BUFF)
+        answer.shift(LEFT)
+
+        equals = TexMobject("=")
+        posterior.generate_target()
+
+        post_group = VGroup(posterior.target, equals, answer)
+        post_group.arrange(RIGHT)
+        post_group.to_corner(UL)
+
+        post_word = TextMobject("``Posterior''")
+        post_word.set_color(YELLOW)
+        post_word.to_corner(UL, buff=MED_SMALL_BUFF)
+
+        post_arrow = Arrow(
+            post_word.get_bottom(),
+            posterior.target[1].get_top(),
+            buff=0.2,
+        )
+        post_arrow.set_stroke(WHITE, 5)
+
+        dividing_line = DashedLine(ORIGIN, FRAME_WIDTH * RIGHT)
+        dividing_line.set_stroke(WHITE, 1)
+        dividing_line.next_to(answer, DOWN)
+        dividing_line.set_x(0)
 
         diagram.add(
             diagram.h_brace,
@@ -2148,7 +2250,8 @@ class CreateFormulaFromDiagram(Scene):
             diagram.nhe_brace,
         )
         self.play(
-            diagram.scale, 0.7, {"about_edge": DL},
+            ShowCreation(dividing_line),
+            diagram.scale, 0.5, {"about_edge": DL},
             diagram.refresh_braces,
             MaintainPositionRelativeTo(
                 VGroup(like_word, like_arrow),
@@ -2158,19 +2261,163 @@ class CreateFormulaFromDiagram(Scene):
                 VGroup(prior_word, prior_arrow),
                 prior_label,
             ),
+            MoveToTarget(posterior),
+            ReplacementTransform(posterior_words, equals),
+        )
+        self.wait()
+        self.play(TransformFromCopy(he_group, answer[0]))
+        self.play(ShowCreation(answer[1]))
+        self.play(LaggedStart(
+            TransformFromCopy(he_group, answer[2][0]),
+            GrowFromCenter(answer[2][1]),
+            TransformFromCopy(nhe_group, answer[2][2]),
+        ))
+        self.wait()
+        self.play(
+            GrowArrow(post_arrow),
+            FadeInFrom(post_word, RIGHT),
+        )
+        self.wait()
+
+        # Write final answer, as a formula
+        formula = TexMobject(
+            "=", "{P(H) P(E | H)", "\\over",
+            "P(H) P(E | H) + P(\\neg H) P(E | \\neg H)}",
+            tex_to_color_map=t2c
+        )
+        formula.scale(0.9)
+        formula.next_to(answer, RIGHT)
+
+        h_rect = Rectangle(  # Highlighting rectangle
+            stroke_color=YELLOW,
+            stroke_width=3,
+            fill_color=YELLOW,
+            fill_opacity=0.25,
+        )
+        h_rect.replace(diagram.square, stretch=True)
+
+        s_rect = SurroundingRectangle(answer[0])
+
+        diagram.refresh_braces()
+        nh_group = VGroup(
+            diagram.nh_brace,
+            TexMobject("P(\\neg H)", tex_to_color_map=t2c),
+            TexMobject("= 20 / 21"),
+        )
+        nh_group[1].next_to(nh_group[0], UP, SMALL_BUFF)
+        nh_group[2].next_to(nh_group[1], RIGHT, SMALL_BUFF)
+
+        self.play(
+            Write(formula.get_part_by_tex("=")),
+            Write(formula.get_part_by_tex("\\over")),
+            run_time=1
+        )
+        self.play(ShowCreation(s_rect))
+        self.wait()
+        self.play(
+            h_rect.replace, diagram.h_rect, {"stretch": True},
+        )
+        self.play(
+            TransformFromCopy(prior_label, formula[2:6]),
+        )
+        self.play(
+            h_rect.replace, diagram.he_rect, {"stretch": True}
+        )
+        self.play(
+            TransformFromCopy(like_label, formula[6:12]),
+        )
+        self.wait()
+
+        self.play(
+            s_rect.move_to, answer[2][0],
+            TransformFromCopy(formula[2:12], formula[13:23])
+        )
+        self.wait()
+
+        self.play(
+            FadeOut(h_rect),
+            s_rect.become, SurroundingRectangle(answer[2][2]),
+            FadeOut(prior_group),
+            FadeIn(nh_group),
+        )
+        self.wait()
+        h_rect.replace(diagram.square, stretch=True)
+        self.play(
+            h_rect.replace, diagram.nh_rect, {"stretch": True}
+        )
+        self.play(
+            TransformFromCopy(nh_group[1], formula[23:28]),
+        )
+        self.play(
+            h_rect.replace, diagram.nhe_rect, {"stretch": True},
+        )
+        self.play(
+            TransformFromCopy(anti_label, formula[28:])
+        )
+        self.wait()
+        self.play(
+            FadeOut(nh_group),
+            FadeOut(s_rect),
+            FadeOut(h_rect),
+            FadeIn(prior_group),
         )
 
-    def get_diagram(self):
-        diagram = BayesDiagram(
-            prior=1 / 21,
-            likelihood=0.4,
-            antilikelihood=0.1,
-            not_evidence_color1=GREY,
-            not_evidence_color2=DARK_GREY,
-            prior_rect_direction=UP,
+        # Show confusion
+        randy = Randolph()
+        randy.flip()
+        randy.next_to(dividing_line, DOWN)
+        randy.to_edge(RIGHT)
+
+        prior_rect = SurroundingRectangle(prior_word)
+        post_rect = SurroundingRectangle(post_word)
+        VGroup(prior_rect, post_rect).set_stroke(WHITE, 2)
+
+        self.play(FadeIn(randy))
+        self.play(randy.change, "confused", formula)
+        self.play(Blink(randy))
+        self.play(randy.change, "horrified", formula)
+        self.play(randy.look_at, diagram)
+        self.play(Blink(randy))
+        self.play(randy.look_at, formula)
+        self.play(randy.change, "tired")
+        self.wait(2)
+        self.play(
+            randy.change, "pondering", prior_label,
+            ShowCreation(prior_rect)
         )
+        self.play(Blink(randy))
+        self.play(
+            ReplacementTransform(prior_rect, post_rect),
+            randy.look_at, post_rect,
+        )
+        self.play(randy.change, "thinking")
+        self.play(FadeOut(post_rect))
+        self.play(Blink(randy))
+        self.wait()
+        self.play(randy.look_at, formula)
+        self.play(Blink(randy))
+        self.wait()
+
+        # Transition to next scene
+        to_move = VGroup(posterior, formula)
+        self.remove(to_move, *to_move, *to_move[1])
+        to_move.generate_target()
+        to_move.target[1].scale(1 / 0.9)
+        to_move.target.arrange(RIGHT)
+        to_move.target.to_corner(UL)
+
+        everything = Group(*self.get_mobjects())
+
+        self.play(
+            LaggedStartMap(FadeOutAndShiftDown, everything),
+            MoveToTarget(to_move, rate_func=squish_rate_func(smooth, 0.5, 1)),
+            run_time=2,
+        )
+
+    def get_diagram(self, include_people=True):
+        diagram = BayesDiagram(**self.bayes_diagram_config)
         diagram.set_height(5.5)
-        diagram.set_width(6, stretch=True)
+        diagram.set_width(5.5, stretch=True)
         diagram.move_to(0.5 * DOWN)
         diagram.add_brace_attrs()
 
@@ -2178,16 +2425,686 @@ class CreateFormulaFromDiagram(Scene):
         diagram.hypothesis_split.set_opacity(0)
         diagram.nh_rect.set_fill(DARK_GREY)
 
-        people = VGroup(*[Person() for x in range(210)])
-        people.set_color(interpolate_color(LIGHT_GREY, WHITE, 0.5))
-        people.arrange_in_grid(n_cols=21)
-        people.set_width(diagram.get_width() - SMALL_BUFF)
-        people.set_height(diagram.get_height() - SMALL_BUFF, stretch=True)
-        people.move_to(diagram)
-        people[10:].set_color(GREEN_D)
-        people.set_stroke(BLACK, 2, background=True)
+        if include_people:
+            people = VGroup(*[Person() for x in range(210)])
+            people.set_color(interpolate_color(LIGHT_GREY, WHITE, 0.5))
+            people.arrange_in_grid(n_cols=21)
+            people.set_width(diagram.get_width() - SMALL_BUFF)
+            people.set_height(diagram.get_height() - SMALL_BUFF, stretch=True)
+            people.move_to(diagram)
+            people[10:].set_color(GREEN_D)
+            people.set_stroke(BLACK, 2, background=True)
 
-        diagram.add(people)
-        diagram.people = people
+            diagram.add(people)
+            diagram.people = people
 
         return diagram
+
+
+class DiscussFormulaAndAreaModel(CreateFormulaFromDiagram):
+    CONFIG = {
+        "bayes_diagram_config": {
+            "prior_rect_direction": DOWN,
+        },
+    }
+
+    def construct(self):
+        # Show smaller denominator
+        t2c = self.tex_to_color_map
+        formula = TexMobject(
+            "P(H | E)", "=",
+            "{P(H) P(E | H)", "\\over",
+            "P(H) P(E | H) + P(\\neg H) P(E | \\neg H)}",
+            tex_to_color_map=t2c
+        )
+        equals = formula.get_part_by_tex("=")
+        equals_index = formula.index_of_part(equals)
+        lhs = formula[:equals_index]
+        rhs = formula[equals_index + 1:]
+        lhs.next_to(equals, LEFT)
+        formula.to_corner(UL)
+
+        alt_rhs = TexMobject(
+            "{P(H)P(E|H)", "\\over", "P(E)}",
+            "=",
+            tex_to_color_map=t2c,
+        )
+        alt_rhs.next_to(equals, RIGHT, SMALL_BUFF)
+
+        s_rect = SurroundingRectangle(rhs[12:], color=BLUE)
+
+        self.add(formula)
+        self.wait()
+        self.play(ShowCreation(s_rect))
+        self.add(alt_rhs, s_rect)
+        self.play(
+            VGroup(rhs, s_rect).next_to, alt_rhs, RIGHT, SMALL_BUFF,
+            GrowFromCenter(alt_rhs),
+        )
+        self.play(
+            s_rect.become,
+            SurroundingRectangle(alt_rhs[12:-1], color=BLUE)
+        )
+        self.wait()
+
+        # Bring in diagram
+        diagram = self.get_diagram(include_people=False)
+        diagram.evidence_split.set_opacity(1)
+        diagram.set_height(3)
+        diagram.set_prior(0.1)
+
+        diagram.refresh_braces()
+        diagram.add(
+            diagram.h_brace,
+            diagram.he_brace,
+            diagram.nhe_brace,
+        )
+
+        h_label, he_label, nhe_label = labels = [
+            TexMobject(tex, tex_to_color_map=t2c)
+            for tex in ["P(H)", "P(E|H)", "P(E|\\neg H)"]
+        ]
+        h_label.add_updater(lambda m: m.next_to(diagram.h_brace, DOWN))
+        he_label.add_updater(lambda m: m.next_to(diagram.he_brace, LEFT))
+        nhe_label.add_updater(lambda m: m.next_to(diagram.nhe_brace, RIGHT))
+        diagram.add(*labels)
+
+        diagram.to_corner(DL)
+
+        he_rect_copy = diagram.he_rect.copy()
+        nhe_rect_copy = diagram.nhe_rect.copy()
+
+        self.play(
+            FadeIn(diagram),
+            # FadeOut(s_rect),
+            ReplacementTransform(
+                VGroup(s_rect, s_rect.copy()),
+                VGroup(he_rect_copy, nhe_rect_copy),
+            ),
+        )
+        self.wait()
+        self.play(LaggedStart(
+            ApplyMethod(he_rect_copy.next_to, rhs[12:22], DOWN),
+            ApplyMethod(nhe_rect_copy.next_to, rhs[23:], DOWN),
+            lag_ratio=0.7,
+            run_time=1.5
+        ))
+        self.wait()
+        self.play(FadeOut(VGroup(he_rect_copy, nhe_rect_copy)))
+
+        # Tell what to memorize
+        big_rect = SurroundingRectangle(formula)
+        big_rect.set_stroke(WHITE, 2)
+        big_rect.set_fill(BLACK, 0)
+
+        words1 = TextMobject("Don't memorize\\\\this")
+        words2 = TextMobject("Remember\\\\this")
+        for words in words1, words2:
+            words.scale(1.5)
+            words.to_edge(RIGHT)
+
+        arrow1 = Arrow(words1.get_corner(UL), big_rect.get_bottom())
+        arrow2 = Arrow(words2.get_left(), diagram.square.get_right())
+
+        self.play(
+            FadeIn(words1),
+            ShowCreation(arrow1),
+            ShowCreation(big_rect)
+        )
+        self.wait()
+        self.play(
+            ReplacementTransform(arrow1, arrow2),
+            FadeOut(words1),
+            FadeIn(words2),
+            big_rect.set_stroke, WHITE, 0,
+            big_rect.set_fill, BLACK, 0.7,
+        )
+        self.wait()
+
+        # Talk about diagram slices
+        to_fade = VGroup(
+            diagram.evidence_split,
+            diagram.he_brace,
+            diagram.nhe_brace,
+            he_label, nhe_label,
+        )
+        to_fade.save_state()
+
+        h_part = VGroup(
+            diagram.hypothesis_split,
+            diagram.h_brace,
+            h_label,
+        )
+        people = self.get_diagram().people
+        people.set_width(diagram.square.get_width() - 0.05)
+        people.move_to(diagram.square)
+
+        sides = VGroup(
+            DashedLine(
+                diagram.square.get_corner(UL),
+                diagram.square.get_corner(UR),
+            ),
+            DashedLine(
+                diagram.square.get_corner(UL),
+                diagram.square.get_corner(DL),
+            ),
+        )
+        sides.set_stroke(YELLOW, 4)
+        ones = VGroup(
+            TexMobject("1").next_to(diagram.square, UP),
+            TexMobject("1").next_to(diagram.square, LEFT),
+        )
+
+        self.play(
+            to_fade.set_opacity, 0,
+            h_part.set_opacity, 0,
+            diagram.square.set_opacity, 1,
+            ShowIncreasingSubsets(people),
+        )
+        self.play(FadeOut(people))
+        self.play(
+            LaggedStartMap(ShowCreation, sides, lag_ratio=0.8),
+            LaggedStartMap(FadeIn, ones, lag_ratio=0.8),
+        )
+        self.wait()
+
+        self.play(
+            h_part.set_opacity, 1,
+        )
+        diagram.square.set_opacity(0)
+        self.wait()
+        self.play(
+            FadeOut(sides),
+            FadeOut(ones),
+        )
+        self.wait()
+        VGroup(
+            to_fade[1:],
+            to_fade[0][::2],
+        ).stretch(0, 1, about_edge=DOWN)
+        self.play(
+            Restore(to_fade),
+            diagram.hypothesis_split.set_opacity, 0,
+        )
+        self.wait()
+
+        # Add posterior bar
+        post_bar = always_redraw(
+            lambda: self.get_posterior_bar(
+                diagram.he_rect,
+                diagram.nhe_rect,
+            )
+        )
+        post_label = TexMobject("P(H|E)", tex_to_color_map=t2c)
+        post_label.add_updater(lambda m: m.next_to(post_bar.brace, DOWN))
+
+        self.play(
+            FadeOut(words2),
+            FadeOut(arrow2),
+            TransformFromCopy(
+                diagram.he_rect, post_bar.rects[0],
+            ),
+            TransformFromCopy(
+                diagram.nhe_rect, post_bar.rects[1],
+            ),
+            FadeIn(post_bar.brace),
+            FadeIn(post_label),
+        )
+        self.add(post_bar)
+        self.wait()
+
+        self.play(
+            diagram.set_likelihood, 0.8,
+            rate_func=there_and_back,
+            run_time=4,
+        )
+        self.wait()
+        self.play(diagram.set_antilikelihood, 0.4)
+        self.wait()
+        self.play(
+            diagram.set_likelihood, 0.8,
+            diagram.set_antilikelihood, 0.05,
+        )
+        self.wait()
+        self.play(
+            diagram.set_likelihood, 0.4,
+            diagram.set_antilikelihood, 0.1,
+        )
+        self.wait()
+
+        self.play(
+            big_rect.set_width, rhs.get_width() + 0.7,
+            {"about_edge": RIGHT, "stretch": True},
+        )
+        self.wait()
+
+        # Terms from formula to sides in diagram
+        hs_rect = SurroundingRectangle(alt_rhs[:5], buff=0.05)
+        hes_rect = SurroundingRectangle(alt_rhs[5:11], buff=0.05)
+        hs_rect.set_stroke(YELLOW, 3)
+        hes_rect.set_stroke(BLUE, 3)
+
+        self.play(ShowCreation(hs_rect))
+        self.play(ShowCreation(hes_rect))
+        self.wait()
+        self.play(hs_rect.move_to, h_label)
+        self.play(hes_rect.move_to, he_label)
+        self.wait()
+        self.play(FadeOut(VGroup(hs_rect, hes_rect)))
+
+    def get_posterior_bar(self, he_rect, nhe_rect):
+        he_height = he_rect.get_height()
+        he_width = he_rect.get_width()
+        nhe_height = nhe_rect.get_height()
+        nhe_width = nhe_rect.get_width()
+
+        total_width = he_width + nhe_width
+        he_area = he_width * he_height
+        nhe_area = nhe_width * nhe_height
+
+        posterior = he_area / (he_area + nhe_area)
+
+        new_he_width = posterior * total_width
+        new_he_height = he_area / new_he_width
+        new_nhe_width = (1 - posterior) * total_width
+        new_nhe_height = nhe_area / new_nhe_width
+
+        new_he_rect = Rectangle(
+            width=new_he_width,
+            height=new_he_height,
+        ).match_style(he_rect)
+        new_nhe_rect = Rectangle(
+            width=new_nhe_width,
+            height=new_nhe_height,
+        ).match_style(nhe_rect)
+
+        rects = VGroup(new_he_rect, new_nhe_rect)
+        rects.arrange(RIGHT, buff=0)
+
+        brace = Brace(
+            new_he_rect, DOWN,
+            buff=SMALL_BUFF,
+            min_num_quads=2,
+        )
+        result = VGroup(rects, brace)
+        result.rects = rects
+        result.brace = brace
+
+        # Put positioning elsewhere?
+        result.to_edge(RIGHT)
+        return result
+
+
+class UsesOfBayesTheorem(Scene):
+    def construct(self):
+        formula = get_bayes_formula()
+        formula.to_corner(UL)
+        rhs = formula[7:]
+
+        bubble = ThoughtBubble(direction=RIGHT)
+        bubble.set_fill(opacity=0)
+        arrow = Vector(RIGHT)
+        arrow.next_to(formula, RIGHT, MED_LARGE_BUFF)
+        bubble.set_height(2)
+        bubble.next_to(arrow, RIGHT, MED_LARGE_BUFF)
+        bubble.align_to(formula, UP)
+        bar = ProbabilityBar(
+            0.1,
+            percentage_background_stroke_width=1,
+            include_braces=False,
+        )
+        bar.set_width(0.8 * bubble[-1].get_width())
+        bar.move_to(bubble.get_bubble_center())
+
+        scientist = SVGMobject(file_name="scientist")
+        programmer = SVGMobject(file_name="programmer")
+        randy = Randolph().flip()
+
+        people = VGroup(scientist, programmer, randy)
+        people.set_stroke(width=0)
+        for person in people:
+            person.set_height(2.5)
+            if person is not randy:
+                person.set_fill(GREY)
+                person.set_sheen(0.5, UL)
+
+        people.arrange(RIGHT, buff=2.5)
+        # programmer.shift(0.5 * RIGHT)
+        people.to_edge(DOWN, buff=LARGE_BUFF)
+
+        self.add(formula)
+        self.wait()
+        self.play(GrowArrow(arrow))
+        self.play(ShowCreation(bubble), FadeIn(bar))
+        self.play(bar.p_tracker.set_value, 0.8)
+        self.wait()
+
+        # Add people
+        for person in [scientist, programmer]:
+            self.play(FadeInFrom(person, DOWN))
+            rhs_copy = rhs.copy()
+            rhs_copy.add_to_back(
+                SurroundingRectangle(
+                    rhs_copy,
+                    fill_color=BLACK,
+                    fill_opacity=0.8,
+                    stroke_color=WHITE,
+                    stroke_width=2,
+                )
+            )
+            rhs_copy.generate_target()
+            rhs_copy[0].set_stroke(width=0)
+            rhs_copy.target.scale(0.5)
+            rhs_copy.target.move_to(person.get_corner(DR))
+            self.add(rhs_copy, formula)
+            self.play(MoveToTarget(rhs_copy))
+            self.wait()
+            person.add(rhs_copy)
+
+        self.play(FadeInFromDown(randy))
+        self.play(randy.change, "pondering")
+        self.play(Blink(randy))
+        bubble_group = VGroup(bubble, bar)
+        self.play(
+            bubble_group.scale, 1.4,
+            bubble_group.move_to, randy.get_corner(UL), DR,
+            randy.look_at, bubble,
+            FadeOut(arrow),
+        )
+        self.wait()
+        self.play(Blink(randy))
+        self.play(bar.p_tracker.set_value, 0.3, run_time=3)
+        self.play(randy.change, "thinking")
+        self.play(Blink(randy))
+        self.wait()
+
+        self.play(LaggedStartMap(
+            FadeOutAndShift,
+            VGroup(*people, bubble_group),
+            lambda m: (m, DOWN),
+            lag_ratio=0.15,
+        ))
+
+
+class AskAboutWhenProbabilityIsIntuitive(TeacherStudentsScene):
+    def construct(self):
+        words = TextMobject("What makes probability\\\\more intuitive?")
+        words.move_to(self.hold_up_spot, DOWN)
+        words.shift_onto_screen()
+        self.play(
+            self.teacher.change, "raise_right_hand",
+            FadeInFrom(words, DOWN),
+            self.get_student_changes("erm", "pondering", "confused")
+        )
+        self.wait(2)
+        self.play(
+            words.scale, 2,
+            words.center,
+            words.to_edge, UP,
+            self.teacher.change, "pondering", 3 * UP,
+            self.get_student_changes(
+                "pondering", "thinking", "thinking",
+                look_at_arg=3 * UP,
+            )
+        )
+        self.wait(2)
+
+
+class IntroduceLinda(DescriptionOfSteve):
+    def construct(self):
+        # Kahneman and Tversky
+        images = self.get_images()
+
+        self.play(
+            LaggedStartMap(
+                FadeInFrom, images,
+                lambda m: (m, LEFT),
+                lag_ratio=0.3,
+                run_time=3,
+            )
+        )
+        self.wait()
+
+        # Add steve
+        steve = Steve()
+        steve.set_height(3)
+        steve.move_to(2 * RIGHT)
+        steve.to_edge(DOWN, buff=LARGE_BUFF)
+        steve_words = self.get_description()
+        steve_words.scale(0.8)
+        steve_words.next_to(steve, UP, LARGE_BUFF)
+
+        self.play(LaggedStart(
+            FadeInFrom(steve, LEFT),
+            FadeInFrom(steve_words, LEFT),
+        ))
+        self.wait()
+
+        # Replace with Linda
+        linda = Linda()
+        linda_words = self.get_linda_description()
+        linda_words.scale(0.8)
+        linda.replace(steve)
+        linda_words.move_to(steve_words)
+
+        self.play(
+            LaggedStart(
+                FadeOutAndShift(steve_words, 2 * RIGHT),
+                FadeOutAndShift(steve, 2 * RIGHT),
+                FadeInFrom(linda, 2 * LEFT),
+                lag_ratio=0.15,
+            )
+        )
+        self.wait()
+
+        self.play(
+            FadeIn(linda_words),
+            lag_ratio=0.1,
+            run_time=6,
+            rate_func=linear,
+        )
+        self.wait()
+
+        # Ask question
+        options = VGroup(
+            TextMobject("1) Linda is a bank teller."),
+            TextMobject(
+                "2) Linda is a bank teller and is active\\\\",
+                "\\phantom{2)} in the feminist movement.",
+                alignment="",
+            ),
+        )
+        options.arrange(DOWN, buff=LARGE_BUFF, aligned_edge=LEFT)
+        options.to_edge(DOWN, buff=LARGE_BUFF)
+
+        self.play(
+            linda.match_height, linda_words,
+            linda.next_to, linda_words, LEFT, LARGE_BUFF,
+            LaggedStartMap(
+                FadeOutAndShift, images,
+                lambda m: (m, 2 * LEFT),
+            )
+        )
+        for option in options:
+            self.play(FadeIn(option, lag_ratio=0.1, run_time=2))
+            self.wait()
+
+        # Show result
+        rect = SurroundingRectangle(options[1], color=RED)
+        options.generate_target()
+        rect.generate_target()
+        VGroup(options.target, rect.target).to_edge(LEFT)
+
+        result = VGroup(
+            Integer(85, unit="\\%"),
+            TextMobject("chose this!")
+        )
+        result.arrange(RIGHT)
+        result.scale(1.25)
+        result.set_color(RED)
+        result.move_to(rect)
+        result.to_edge(RIGHT)
+        result.shift(2 * UP)
+        arrow = Arrow(result.get_bottom(), rect.target.get_corner(UR))
+
+        self.play(
+            MoveToTarget(options),
+            MoveToTarget(rect),
+            VFadeIn(rect),
+            FadeInFrom(result, LEFT),
+            GrowArrow(arrow)
+        )
+        self.wait()
+
+        # Show subsets
+        fb_words = TextMobject("Active feminist\\\\bank tellers")
+        fb_words.scale(0.5)
+        fb_words.set_stroke(BLACK, 0, background=True)
+        fb_set = Circle()
+        fb_set.flip(RIGHT)
+        fb_set.rotate(3 * TAU / 8)
+        fb_set.set_stroke(WHITE, 1)
+        fb_set.set_fill(YELLOW, 0.5)
+        fb_set.replace(fb_words, stretch=True)
+        fb_set.scale(1.2)
+        fb_set.stretch(1.4, 1)
+        fb_group = VGroup(fb_set, fb_words)
+        fb_group.move_to(linda_words, RIGHT)
+
+        b_set = fb_set.copy()
+        b_set.set_fill(BLUE)
+        b_set.scale(3, about_edge=RIGHT)
+        b_set.stretch(1.5, 1)
+        b_set.to_corner(UR)
+        b_words = TextMobject("Bank\\\\tellers")
+        b_words.next_to(b_set.get_left(), RIGHT, LARGE_BUFF)
+
+        self.play(
+            FadeOut(linda_words),
+            TransformFromCopy(rect, fb_set),
+            ReplacementTransform(
+                VectorizedPoint(rect.get_center()),
+                fb_words,
+            ),
+        )
+        self.add(fb_set, fb_words)
+        self.wait()
+        self.add(b_set, fb_set, fb_words)
+        self.play(
+            DrawBorderThenFill(b_set),
+            TransformFromCopy(
+                options[0][0][10:], b_words[0]
+            ),
+        )
+        sets_group = VGroup(b_set, b_words, fb_set, fb_words)
+        self.add(sets_group)
+        self.wait()
+
+        # Reduce 85
+        number = result[0]
+
+        self.play(
+            LaggedStart(
+                FadeOut(arrow),
+                FadeOut(result[1]),
+                FadeOut(rect),
+                FadeOut(options[0]),
+                FadeOut(options[1]),
+            ),
+            number.scale, 1.5,
+            number.move_to, DOWN,
+        )
+        self.play(
+            ChangeDecimalToValue(number, 0),
+            UpdateFromAlphaFunc(
+                number,
+                lambda m, a: m.set_color(interpolate_color(
+                    RED, GREEN, a,
+                ))
+            ),
+            run_time=2,
+        )
+        self.wait()
+
+        self.play(
+            FadeOut(number),
+            FadeOut(sets_group),
+            FadeIn(linda_words),
+        )
+
+        # New options
+        words = TextMobject("100 people fit this description.  How many are:")
+        words.set_color(BLUE_B)
+        kw = {"tex_to_color_map": {"\\underline{\\qquad}": WHITE}}
+        new_options = VGroup(
+            TextMobject("1) Bank tellers? \\underline{\\qquad} of 100", **kw),
+            TextMobject(
+                "2) Bank tellers and active in the",
+                " feminist movement?? \\underline{\\qquad} of 100",
+                **kw
+            ),
+        )
+        new_options.scale(0.9)
+        new_options.arrange(DOWN, aligned_edge=LEFT, buff=MED_LARGE_BUFF)
+        new_options.to_edge(DOWN, buff=LARGE_BUFF)
+
+        words.next_to(new_options, UP, LARGE_BUFF)
+
+        self.play(
+            FadeIn(words, lag_ratio=0.1, rate_func=linear)
+        )
+        self.wait()
+        for option in new_options:
+            self.play(FadeIn(option))
+            self.wait()
+
+        example_numbers = VGroup(Integer(8), Integer(5))
+        for exn, option in zip(example_numbers, new_options):
+            line = option.get_part_by_tex("underline")
+            exn.scale(1.1)
+            exn.next_to(line, UP, buff=0.05)
+            exn.set_color(YELLOW)
+            self.play(Write(exn))
+        self.wait()
+
+    def get_images(self):
+        images = Group(
+            ImageMobject("kahneman"),
+            ImageMobject("tversky"),
+        )
+        images.set_height(3.5)
+        images.arrange(DOWN, buff=0.5)
+        images.to_edge(LEFT, buff=MED_LARGE_BUFF)
+
+        names = VGroup(
+            TextMobject("Kahneman", alignment=""),
+            TextMobject("Tversky", alignment=""),
+        )
+        for name, image in zip(names, images):
+            name.next_to(image, DOWN)
+            image.name = name
+            image.add(name)
+        images.arrange(DOWN, buff=1, aligned_edge=LEFT)
+        images.set_height(FRAME_HEIGHT - 1)
+        images.to_edge(LEFT)
+        return images
+
+    def get_linda_description(self):
+        result = TextMobject(
+            "Linda is 31 years old, single, outspoken, and\\\\",
+            "very bright. She majored in philosophy. As a \\\\",
+            "student, she was deeply concerned with issues\\\\",
+            "of discrimination and social justice, and also\\\\",
+            "participated in anti-nuclear demonstrations.\\\\",
+            alignment="",
+            tex_to_color_map={
+                "deeply concerned with issues": YELLOW,
+                "of discrimination": YELLOW,
+            }
+        )
+        return result
+
+
+class AlternatePhrasings(Scene):
+    def construct(self):
+        pass
