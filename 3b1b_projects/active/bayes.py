@@ -1,5 +1,7 @@
 from manimlib.imports import *
 
+import scipy.integrate
+
 OUTPUT_DIRECTORY = "bayes"
 
 HYPOTHESIS_COLOR = YELLOW
@@ -220,10 +222,10 @@ class ProbabilityBar(VGroup):
             "stroke_color": WHITE,
             "fill_opacity": 1,
         },
-        "include_braces": True,
+        "include_braces": False,
         "brace_direction": UP,
         "include_percentages": True,
-        "percentage_background_stroke_width": 5,
+        "percentage_background_stroke_width": 2,
     }
 
     def __init__(self, p=0.5, **kwargs):
@@ -444,6 +446,7 @@ class Test(Scene):
 class IntroduceFormula(Scene):
     def construct(self):
         formula = get_bayes_formula()
+        formula.save_state()
         formula.set_width(FRAME_WIDTH - 1)
 
         def get_formula_slice(*indices):
@@ -482,7 +485,6 @@ class IntroduceFormula(Scene):
                 get_formula_slice(8, 9, 10, 11),
             ),
         )
-        self.wait()
 
         # Likelihood
         lhs_copy = formula[:6].copy()
@@ -500,7 +502,6 @@ class IntroduceFormula(Scene):
             lhs_copy.move_to, likelihood,
             run_time=run_time,
         )
-        self.wait()
 
         # Evidence
         self.play(
@@ -511,6 +512,17 @@ class IntroduceFormula(Scene):
             ),
         )
         self.wait()
+
+        self.clear()
+        self.play(
+            formula.restore,
+            formula.scale, 1.5,
+            formula.to_edge, UP,
+            FadeOut(VGroup(
+                hyp_arrow, hyp_label,
+                evid_arrow, evid_label,
+            ))
+        )
 
 
 class StateGoal(PiCreatureScene):
@@ -817,7 +829,11 @@ class DescriptionOfSteve(Scene):
         self.wait()
 
     def compare_probabilities(self):
-        bar = ProbabilityBar(0.5, width=10)
+        bar = ProbabilityBar(
+            0.5, width=10,
+            include_braces=True,
+            percentage_background_stroke_width=2,
+        )
         icons = VGroup(
             LibrarianIcon(),
             FarmerIcon(),
@@ -984,8 +1000,7 @@ class IntroduceKahnemanAndTversky(DescriptionOfSteve, MovingCameraScene):
         )
         bar.scale(0.5)
         bar.next_to(randy, RIGHT, buff=0.75)
-        bar.UpdateFromAlphaFunc(
-        ())
+        bar.update()
 
         self.play(
             LaggedStartMap(MoveToTarget, images),
@@ -2831,6 +2846,16 @@ class AskAboutWhenProbabilityIsIntuitive(TeacherStudentsScene):
         words = TextMobject("What makes probability\\\\more intuitive?")
         words.move_to(self.hold_up_spot, DOWN)
         words.shift_onto_screen()
+
+        self.play(
+            self.teacher.change, "speaking",
+            self.get_student_changes(
+                "pondering", "sassy", "happy",
+                look_at_arg=self.screen,
+            )
+        )
+        self.wait(2)
+
         self.play(
             self.teacher.change, "raise_right_hand",
             FadeInFrom(words, DOWN),
@@ -2847,7 +2872,7 @@ class AskAboutWhenProbabilityIsIntuitive(TeacherStudentsScene):
                 look_at_arg=3 * UP,
             )
         )
-        self.wait(2)
+        self.wait(6)
 
 
 class IntroduceLinda(DescriptionOfSteve):
@@ -3040,7 +3065,7 @@ class IntroduceLinda(DescriptionOfSteve):
             TextMobject("1) Bank tellers? \\underline{\\qquad} of 100", **kw),
             TextMobject(
                 "2) Bank tellers and active in the",
-                " feminist movement?? \\underline{\\qquad} of 100",
+                " feminist movement? \\underline{\\qquad} of 100",
                 **kw
             ),
         )
@@ -3105,6 +3130,650 @@ class IntroduceLinda(DescriptionOfSteve):
         return result
 
 
-class AlternatePhrasings(Scene):
+class LindaDescription(IntroduceLinda):
     def construct(self):
-        pass
+        words = self.get_linda_description()
+        words.set_color(WHITE)
+
+        highlighted_part = VGroup(
+            *words.get_part_by_tex("deeply"),
+            *words.get_part_by_tex("discrimination"),
+        )
+
+        self.add(words)
+        self.play(
+            FadeIn(words),
+            run_time=3,
+            lag_ratio=0.01,
+            rate_func=linear,
+        )
+        self.wait(1)
+        self.play(
+            highlighted_part.set_color, YELLOW,
+            lag_ratio=0.1,
+            run_time=2
+        )
+        self.wait()
+
+
+class AlternatePhrasings(PiCreatureScene):
+    CONFIG = {
+        "camera_config": {
+            "background_color": DARKER_GREY,
+        }
+    }
+
+    def construct(self):
+        randy = self.pi_creature
+
+        phrases = VGroup(
+            TextMobject("40 out of 100"),
+            TexMobject("40\\%"),
+            TexMobject("0.4"),
+            TextMobject("What's more likely$\\dots$"),
+        )
+        for phrase in phrases:
+            phrase.scale(1.5)
+            phrase.next_to(randy, RIGHT, buff=LARGE_BUFF)
+            phrase.align_to(randy, UP)
+
+        def push_down(phrase):
+            phrase.scale(0.8, about_edge=LEFT)
+            phrase.shift(1 * DOWN)
+            phrase.set_opacity(0.5)
+            return phrase
+
+        bubble = randy.get_bubble()
+        content_width = 4.5
+
+        people = VGroup(*[Person() for x in range(100)])
+        people.arrange_in_grid(n_cols=20)
+        people.set_width(content_width)
+        people.move_to(bubble.get_bubble_center())
+        people.shift(SMALL_BUFF * UP)
+        people[:40].set_color(YELLOW)
+
+        bar = ProbabilityBar(0.9999)
+        bar.set_width(content_width)
+        bar.move_to(people)
+
+        steve = Steve()
+        steve.set_height(1)
+        steve_words = TextMobject("seems bookish...")
+        steve_words.next_to(steve, RIGHT, MED_LARGE_BUFF)
+        steve.add(steve_words)
+
+        linda = Linda()
+        linda.set_height(1)
+        linda_words = TextMobject("seems activist...")
+        linda_words.next_to(linda, RIGHT, MED_LARGE_BUFF)
+        linda.add(linda_words)
+
+        stereotypes = VGroup(steve, linda)
+        stereotypes.arrange(DOWN, buff=MED_SMALL_BUFF, aligned_edge=LEFT)
+        stereotypes.move_to(people)
+
+        self.play(
+            FadeInFrom(phrases[0], UP),
+            randy.change, "pondering",
+        )
+        self.play(
+            DrawBorderThenFill(bubble, lag_ratio=0.1),
+            FadeIn(people, lag_ratio=0.1),
+            randy.change, "thinking", people,
+        )
+        self.wait()
+        self.play(
+            FadeInFrom(phrases[1], UP),
+            randy.change, "confused", phrases[1],
+            FadeOut(people),
+            ApplyFunction(push_down, phrases[0]),
+            FadeIn(bar),
+        )
+        self.play(bar.p_tracker.set_value, 0.4)
+        bar.clear_updaters()
+        self.play(
+            FadeInFrom(phrases[2], UP),
+            ApplyFunction(push_down, phrases[:2]),
+            FadeOut(bar.percentages),
+            randy.change, "guilty",
+        )
+        self.wait()
+        bar.remove(bar.percentages)
+        self.play(
+            FadeInFrom(phrases[3], UP),
+            ApplyFunction(push_down, phrases[:3]),
+            FadeOut(bar),
+            FadeIn(stereotypes),
+            randy.change, "shruggie", stereotypes,
+        )
+        self.wait(6)
+
+
+class WhenDiscreteChunksArentSoClean(Scene):
+    def construct(self):
+        squares = VGroup(*[Square() for x in range(100)])
+        squares.arrange_in_grid(n_cols=10, buff=0)
+        squares.set_stroke(WHITE, 1)
+        squares.set_fill(DARKER_GREY, 1)
+        squares.set_height(6)
+        squares.to_edge(DOWN)
+
+        target_p = 0.3612
+
+        rain, sun = icon_templates = VGroup(
+            SVGMobject("rain_cloud"),
+            SVGMobject("sunny"),
+        )
+        for icon in icon_templates:
+            icon.set_width(0.6 * squares[0].get_width())
+            icon.set_stroke(width=0)
+            icon.set_sheen(0.5, UL)
+        rain.set_color(BLUE_E)
+        sun.set_color(YELLOW)
+
+        partial_rects = VGroup()
+        icons = VGroup()
+        q_marks = VGroup()
+        for i, square in enumerate(squares):
+            icon = rain.copy() if i < 40 else sun.copy()
+            icon.move_to(square)
+            icons.add(icon)
+
+            partial_rect = square.copy()
+            partial_rect.set_stroke(width=0)
+            partial_rect.scale(0.95)
+            partial_rect.stretch(
+                0.4,
+                0,
+                about_edge=RIGHT
+            )
+            partial_rects.add(partial_rect)
+
+            q_mark = TexMobject("?")
+            q_mark.replace(partial_rect, dim_to_match=0)
+            q_mark.scale(0.8)
+            q_marks.add(q_mark)
+
+        p_label = VGroup(
+            TexMobject("P", "(", "\\text{Rain}", ")", "="),
+            DecimalNumber(40, unit="\\%", num_decimal_places=2)
+        )
+        percentage = p_label[1]
+        p_label.arrange(RIGHT)
+        p_label.to_edge(UP)
+        p_label[0].set_color_by_tex("Rain", BLUE)
+        percentage.align_to(p_label[0][0], DOWN)
+
+        alt_percentage = Integer(0, unit="\\%")
+        alt_percentage.move_to(percentage, LEFT)
+
+        self.add(squares)
+        self.add(p_label[0])
+        self.play(
+            ChangeDecimalToValue(alt_percentage, 40),
+            ShowIncreasingSubsets(icons[:40])
+        )
+        self.play(FadeIn(icons[40:]))
+        self.wait()
+        self.remove(alt_percentage)
+        self.add(percentage)
+        self.play(
+            ChangeDecimalToValue(percentage, 100 * target_p),
+            FadeIn(partial_rects[30:40]),
+            FadeIn(q_marks[30:40], lag_ratio=0.3)
+        )
+        self.wait(2)
+
+        l_rect = Rectangle(fill_color=BLUE_D)
+        r_rect = Rectangle(fill_color=LIGHT_GREY)
+        rects = VGroup(l_rect, r_rect)
+        for rect, p in (l_rect, target_p), (r_rect, 1 - target_p):
+            rect.set_height(squares.get_height())
+            rect.set_width(p * squares.get_width(), stretch=True)
+            rect.set_stroke(WHITE, 2)
+            rect.set_fill(opacity=1)
+        rects.arrange(RIGHT, buff=0)
+        rects.move_to(squares)
+
+        brace = Brace(l_rect, UP, buff=SMALL_BUFF)
+
+        sun = icons[40].copy()
+        rain = icons[0].copy()
+        for mob, rect in [(rain, l_rect), (sun, r_rect)]:
+            mob.generate_target()
+            mob.target.set_stroke(BLACK, 3, background=True)
+            mob.target.set_height(1)
+            mob.target.move_to(rect)
+        self.play(
+            FadeIn(rects),
+            MoveToTarget(rain),
+            MoveToTarget(sun),
+            GrowFromCenter(brace),
+            p_label.shift,
+            brace.get_top() + MED_SMALL_BUFF * UP -
+            percentage.get_bottom(),
+        )
+        self.wait()
+
+        # With updaters
+        full_width = rects.get_width()
+        rain.add_updater(lambda m: m.move_to(l_rect))
+        sun.add_updater(lambda m: m.move_to(r_rect))
+        r_rect.add_updater(lambda m: m.set_width(
+            full_width - l_rect.get_width(),
+            about_edge=RIGHT,
+            stretch=True,
+        ))
+        brace.add_updater(lambda m: m.match_width(l_rect, stretch=True))
+        brace.add_updater(lambda m: m.next_to(l_rect, UP, SMALL_BUFF))
+        percentage.add_updater(lambda m: m.set_value(
+            100 * l_rect.get_width() / full_width,
+        ))
+        percentage.add_updater(lambda m: m.next_to(brace, UP, MED_SMALL_BUFF))
+
+        self.play(
+            MaintainPositionRelativeTo(p_label[0], percentage),
+            l_rect.stretch, 2, 0, {"about_edge": LEFT},
+            run_time=8,
+            rate_func=there_and_back,
+        )
+
+
+class RandomnessVsProportions(Scene):
+    def construct(self):
+        prob_word = TextMobject("Probability")
+        unc_word = TextMobject("Uncertainty")
+        prop_word = TextMobject("Proportions")
+        words = VGroup(prop_word, prob_word, unc_word)
+        words.arrange(RIGHT, buff=LARGE_BUFF)
+        words.set_width(FRAME_WIDTH - 1)
+        words.to_edge(UP)
+        arrows = VGroup()
+        for w1, w2 in zip(words, words[1:]):
+            arrow = TexMobject("\\rightarrow")
+            arrow.move_to(midpoint(w1.get_right(), w2.get_left()))
+            arrows.add(arrow)
+
+        random_dice = self.get_random_dice()
+        random_dice.next_to(unc_word, DOWN, LARGE_BUFF)
+
+        diagram = self.get_dice_diagram()
+        diagram.next_to(prop_word, DOWN, LARGE_BUFF)
+        diagram.shift_onto_screen()
+
+        grid = diagram[0]
+        border = grid[0][0].copy()
+        border.set_stroke(BLACK, 3)
+        border.set_fill(WHITE, opacity=0.2)
+        border.scale(1.02)
+
+        def update_border(border):
+            r1, r2 = random_dice
+            i = len(r1[1]) - 1
+            j = len(r2[1]) - 1
+            border.move_to(diagram[0][i][j])
+        border.add_updater(update_border)
+
+        example = VGroup(
+            TextMobject("P(X = 5)", tex_to_color_map={"5": YELLOW}),
+            Line(LEFT, RIGHT)
+        )
+        example.arrange(RIGHT)
+        example.next_to(grid, RIGHT, LARGE_BUFF)
+        example.align_to(random_dice, RIGHT)
+        example.shift(0.5 * DOWN)
+        grid_copy = grid.copy()
+        five_part = VGroup(*[
+            square
+            for i, row in enumerate(grid_copy)
+            for j, square in enumerate(row)
+            if i + j == 3
+        ])
+
+        self.play(FadeInFromDown(prob_word))
+        self.play(
+            FadeInFrom(unc_word, LEFT),
+            Write(arrows[1]),
+        )
+        self.add(random_dice)
+        self.wait(9)
+        self.play(
+            FadeInFrom(prop_word, RIGHT),
+            Write(arrows[0])
+        )
+        self.play(FadeIn(diagram))
+        self.add(border)
+        self.wait(2)
+
+        self.play(FadeIn(example))
+        self.add(grid_copy, diagram[1])
+        self.play(
+            grid_copy.set_width, 0.8 * example[1].get_width(),
+            grid_copy.next_to, example[1], DOWN,
+        )
+        self.play(five_part.copy().next_to, example[1], UP)
+        self.wait(6)
+
+    def get_die_faces(self):
+        dot = Dot()
+        dot.set_width(0.15)
+        dot.set_color(BLUE_B)
+
+        square = Square()
+        square.round_corners(0.25)
+        square.set_stroke(WHITE, 2)
+        square.set_fill(DARKER_GREY, 1)
+        square.set_width(0.6)
+
+        edge_groups = [
+            (ORIGIN,),
+            (UL, DR),
+            (UL, ORIGIN, DR),
+            (UL, UR, DL, DR),
+            (UL, UR, ORIGIN, DL, DR),
+            (UL, UR, LEFT, RIGHT, DL, DR),
+        ]
+
+        arrangements = VGroup(*[
+            VGroup(*[
+                dot.copy().move_to(square.get_critical_point(ec))
+                for ec in edge_group
+            ])
+            for edge_group in edge_groups
+        ])
+        square.set_width(1)
+
+        faces = VGroup(*[
+            VGroup(square.copy(), arrangement)
+            for arrangement in arrangements
+        ])
+        faces.arrange(RIGHT)
+
+        return faces
+
+    def get_random_dice(self):
+        faces = list(self.get_die_faces())
+
+        def get_random_pair():
+            result = VGroup(*random.sample(faces, 2)).copy()
+            result.arrange(RIGHT)
+            for mob in result:
+                mob.shift(random.random() * RIGHT * MED_SMALL_BUFF)
+                mob.shift(random.random() * UP * MED_SMALL_BUFF)
+            return result
+
+        result = VGroup(*get_random_pair())
+        result.time = 0
+        result.iter_count = 0
+
+        def update_result(group, dt):
+            group.time += dt
+            group.iter_count += 1
+            if int(group.time) % 3 == 2:
+                group.set_stroke(YELLOW)
+                return group
+            elif result.iter_count % 3 != 0:
+                return group
+            else:
+                pair = get_random_pair()
+                pair.move_to(group)
+                group.submobjects = [*pair]
+
+        result.add_updater(update_result)
+        result.update()
+        return result
+
+    def get_dice_diagram(self):
+        grid = VGroup(*[
+            VGroup(*[
+                Square() for x in range(6)
+            ]).arrange(RIGHT, buff=0)
+            for y in range(6)
+        ]).arrange(DOWN, buff=0)
+        grid.set_stroke(WHITE, 1)
+        grid.set_height(5)
+
+        colors = color_gradient([RED, YELLOW, GREEN, BLUE], 11)
+
+        numbers = VGroup()
+        for i, row in enumerate(grid):
+            for j, square in enumerate(row):
+                num = Integer(i + j + 2)
+                num.set_height(square.get_height() - MED_LARGE_BUFF)
+                num.move_to(square)
+                # num.set_stroke(BLACK, 2, background=True)
+                num.set_fill(DARK_GREY)
+                square.set_fill(colors[i + j], 0.9)
+                numbers.add(num)
+
+        faces = VGroup()
+        face_templates = self.get_die_faces()
+        face_templates.scale(0.5)
+        for face, row in zip(face_templates, grid):
+            face.next_to(row, LEFT, MED_SMALL_BUFF)
+            faces.add(face)
+        for face, square in zip(faces.copy(), grid[0]):
+            face.next_to(square, UP, MED_SMALL_BUFF)
+            faces.add(face)
+
+        result = VGroup(grid, numbers, faces)
+        return result
+
+
+class JustRandomDice(RandomnessVsProportions):
+    def construct(self):
+        random_dice = self.get_random_dice()
+        random_dice.center()
+
+        self.add(random_dice)
+        self.wait(60)
+
+
+class BayesTheoremOnProportions(Scene):
+    def construct(self):
+        # Place on top of visuals from "HeartOfBayes"
+        formula = get_bayes_formula()
+        formula.scale(1.5)
+
+        title = TextMobject("Bayes' theorem")
+        title.scale(2)
+        title.next_to(formula, UP, LARGE_BUFF)
+        group = VGroup(formula, title)
+
+        equals = TexMobject("=")
+        equals.next_to(formula, RIGHT)
+        h_line = Line(LEFT, RIGHT)
+        h_line.set_width(4)
+        h_line.next_to(equals, RIGHT)
+        h_line.set_stroke(WHITE, 3)
+
+        self.add(group)
+        self.wait()
+        self.play(
+            group.to_edge, LEFT,
+            MaintainPositionRelativeTo(equals, group),
+            VFadeIn(equals),
+            MaintainPositionRelativeTo(h_line, group),
+            VFadeIn(h_line),
+        )
+
+        # People
+        people = VGroup(*[Person() for x in range(7)])
+        people.arrange(RIGHT)
+        people.match_width(h_line)
+        people.next_to(h_line, DOWN)
+        people.set_color(BLUE_E)
+        people[:3].set_color(GREEN)
+        num_people = people[:3].copy()
+
+        self.play(FadeIn(people, lag_ratio=0.1))
+        self.play(num_people.next_to, h_line, UP)
+        self.wait(0.5)
+
+        # Diagrams
+        diagram = BayesDiagram(0.25, 0.5, 0.2)
+        diagram.set_width(0.7 * h_line.get_width())
+        diagram.next_to(h_line, DOWN)
+        diagram.hne_rect.set_fill(opacity=0.1)
+        diagram.nhne_rect.set_fill(opacity=0.1)
+        num_diagram = diagram.deepcopy()
+        num_diagram.next_to(h_line, UP)
+        num_diagram.nhe_rect.set_fill(opacity=0.1)
+        low_diagram_rects = VGroup(diagram.he_rect, diagram.nhe_rect)
+        top_diagram_rects = VGroup(num_diagram.he_rect)
+
+        self.play(
+            FadeOut(people),
+            FadeOut(num_people),
+            FadeIn(diagram),
+            FadeIn(num_diagram),
+        )
+        self.wait()
+
+        # Circle each part
+        E_part = VGroup(formula[4], *formula[19:]).copy()
+        H_part = VGroup(formula[2], *formula[8:18]).copy()
+
+        E_arrow = Vector(UP, color=BLUE)
+        E_arrow.next_to(E_part[0], DOWN)
+        E_words = TextMobject(
+            "...among cases where\\\\$E$ is True",
+            tex_to_color_map={"$E$": BLUE},
+        )
+        E_words.next_to(E_arrow, DOWN)
+        H_arrow = Vector(DOWN, color=YELLOW)
+        H_arrow.next_to(H_part[0], UP)
+        H_words = TextMobject(
+            "How often is\\\\$H$ True...",
+            tex_to_color_map={"$H$": YELLOW},
+        )
+        H_words.next_to(H_arrow, UP)
+
+        denom_rect = SurroundingRectangle(E_part[1:], color=BLUE)
+        numer_rect = SurroundingRectangle(H_part[1:], color=YELLOW)
+
+        self.play(
+            formula.set_opacity, 0.5,
+            ApplyMethod(
+                E_part.set_stroke, YELLOW, 3, {"background": True},
+                rate_func=there_and_back,
+            ),
+            FadeIn(denom_rect),
+            ShowCreation(E_arrow),
+            FadeInFrom(E_words, UP),
+            low_diagram_rects.set_stroke, TEAL, 3,
+        )
+        self.wait()
+        self.play(
+            FadeOut(E_part),
+            FadeIn(H_part),
+            FadeOut(denom_rect),
+            FadeIn(numer_rect),
+            ShowCreation(H_arrow),
+            FadeInFrom(H_words, DOWN),
+            FadeOutAndShift(title, UP),
+            low_diagram_rects.set_stroke, WHITE, 1,
+            top_diagram_rects.set_stroke, YELLOW, 3,
+        )
+        self.wait()
+
+
+class GlimpseOfNextVideo(GraphScene):
+    CONFIG = {
+        "x_axis_label": "",
+        "y_axis_label": "",
+        "x_min": 0,
+        "x_max": 15,
+        "x_axis_width": 12,
+        "y_min": 0,
+        "y_max": 1.0,
+        "y_axis_height": 6,
+        "y_tick_frequency": 0.125,
+    }
+
+    def construct(self):
+        self.setup_axes()
+        self.y_axis.add_numbers(
+            0.25, 0.5, 0.75, 1,
+            number_config={
+                "num_decimal_places": 2,
+            },
+            direction=LEFT,
+        )
+        self.x_axis.add_numbers(*range(1, 15),)
+
+        def f1(x):
+            return (x**3 / 6) * np.exp(-x)
+
+        def f2(x):
+            return f1(x) * np.exp(-0.5 * x)
+            # return f1(x) * (x**5 / 120) * np.exp(-x)
+
+        pe = scipy.integrate.quad(f2, 0, 20)[0]
+
+        graph1 = self.get_graph(f1)
+        graph2 = self.get_graph(f2)
+
+        rects1 = self.get_riemann_rectangles(graph1, dx=0.2)
+        rects2 = self.get_riemann_rectangles(graph2, dx=0.2)
+
+        rects1.set_color(YELLOW_D)
+        rects2.set_color(BLUE)
+        for rects in rects1, rects2:
+            rects.set_stroke(WHITE, 1)
+
+        rects1.save_state()
+        rects1.stretch(0, 1, about_edge=DOWN)
+
+        formula = TexMobject(
+            "P(H) P(E|H) \\over P(E)",
+            tex_to_color_map={
+                "H": HYPOTHESIS_COLOR,
+                "E": EVIDENCE_COLOR1,
+            },
+            substrings_to_isolate=list("P(|)")
+        )
+
+        self.play(
+            FadeInFromDown(formula[:4]),
+            Restore(rects1, lag_ratio=0.05, run_time=2)
+        )
+        self.wait()
+        self.add(rects1.copy().set_opacity(0.4))
+        self.play(
+            FadeInFromDown(formula[4:10]),
+            Transform(rects1, rects2),
+        )
+        self.play(
+            rects1.stretch, 1 / pe, 1, {"about_edge": DOWN},
+            Write(formula[10:], run_time=1)
+        )
+        self.wait()
+
+
+class ComingUp(Scene):
+    CONFIG = {
+        "camera_config": {"background_color": DARK_GREY}
+    }
+
+    def construct(self):
+        rect = ScreenRectangle()
+        rect.set_height(6)
+        rect.set_fill(BLACK, 1)
+        rect.set_stroke(WHITE, 2)
+
+        words = TextMobject("Later...")
+        words.scale(2)
+        words.to_edge(UP)
+        rect.next_to(words, DOWN)
+
+        self.add(rect)
+        self.play(FadeIn(words))
+        self.wait()
+
+
+class QuestionSteveConclusion(Scene):
+    def construct(self):
+        steve = Steve()
+        self.add(steve)
