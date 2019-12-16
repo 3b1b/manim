@@ -12,6 +12,8 @@ class ParametricFunction(VMobject):
         "dt": 1e-8,
         # TODO, be smarter about figuring these out?
         "discontinuities": [],
+        "tol_point": 1e5,
+        "tol_del_mult": 1e-2
     }
 
     def __init__(self, function=None, **kwargs):
@@ -52,42 +54,67 @@ class ParametricFunction(VMobject):
         the tolerance then that point is considered a discontinuity.
         This treats infinite discontinuities.
     
-    tol_del_mult is the tolerance level for the change between two points.
-        If the change of the x's or y's are greater than the tolerance
-        times the step size, that point is considered a discontinuity.
+    tol_del_mult is a bit more complicated.
+        A function is continuous if for any specified change in the
+        function you can find a change in the input that gives rise
+        to a change in the function less than the specified change.
+        To test if the function is continuous, we test if the change
+        in the function at different resolutions for changes in x
+        get smaller as the change gets smaller, or if the changes
+        become constant. If they get smaller, the function is 
+        continuous at the point, if they level off then it is
+        discontinuous.
         This treats break discontinuities.
     """
-    def get_discontinuities(self, tol_point=1e5, tol_del_mult=50):
+    
+    def point_is_finite(self, point):
+        x,y = point[:2]
+        mag = np.sqrt(x**2 + y**2)
+        return mag <= self.tol_point
+    
+    def get_discontinuities(self):
         disconts = []
         for t in np.arange(self.t_min-2*self.step_size, self.t_max+2*self.step_size, self.step_size):
             p1 = self.function(t)
             x1,y1 = p1[:2]
-
-            if np.abs(x1)>tol_point or np.abs(y1)>tol_point:
+            if not self.point_is_finite(p1):
                 disconts.append(t)
                 continue
 
-            ss = self.get_step_size(t)
-            p2 = self.function(t+ss)
-            x2,y2 = p2[:2]
-
-            if np.abs((x2-x1)/x2)>tol_del_mult*ss or np.abs((y2-y1)/y2)>tol_del_mult*ss:
-                disconts.append(t)
-                continue
+            ##TODO: Add break discontinuity functionality
+            ss1 = self.get_step_size(t)
+            ss2 = ss1/2
+            ss3 = ss1/10
+            
+            t2 = t + ss1
+            t3 = t + ss2
+            t4 = t + ss3
+            
+            p2 = self.function(t2)
+            p3 = self.function(t3)
+            p4 = self.function(t4)
+            
+            def calc_delta_mag(p1, p2):
+              delta = p2-p1
+              return np.sqrt(delta.dot(delta))
+            
+            d1 = calc_delta_mag(p1,p2)
+            d2 = calc_delta_mag(p1,p3)
+            d3 = calc_delta_mag(p1,p4)
+            #Seeing delta at different resulotions
+            
+            if np.abs(d2-d1)<self.tol_del_mult*ss2 or np.abs(d3-d1)<self.tol_del_mult*ss3:
+              disconts.append(t)
+            
         return disconts
 
     def generate_points(self):
         t_min, t_max = self.t_min, self.t_max
         dt = self.dt
-
+        
         self.discontinuities = self.get_discontinuities()
-        discontinuities = filter(
-            lambda t: t_min <= t <= t_max,
-            self.discontinuities
-        )
-
-        discontinuities = np.array(list(discontinuities))
-
+        discontinuities = np.array(list(self.discontinuities))
+        
         boundary_times = [
             self.t_min, self.t_max,
             *(discontinuities - dt),
@@ -98,11 +125,12 @@ class ParametricFunction(VMobject):
             t_range = list(np.arange(t1, t2, self.get_step_size(t1)))
             if t_range[-1] != t2:
                 t_range.append(t2)
-            points = np.array([self.function(t) for t in t_range])
-            valid_indices = np.apply_along_axis(
-                np.all, 1, np.isfinite(points)
-            )
-            points = points[valid_indices]
+            points_l = []
+            for t in t_range:
+                point = self.function(t)
+                if self.point_is_finite(point):
+                    points_l.append(point)
+            points = np.array(points_l)
             if len(points) > 0:
                 self.start_new_path(points[0])
                 self.add_points_as_corners(points[1:])
