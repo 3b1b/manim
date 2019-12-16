@@ -19,6 +19,7 @@ class ParametricFunction(VMobject):
         self.function = function or self.function
         VMobject.__init__(self, **kwargs)
 
+
     def get_function(self):
         return self.function
 
@@ -46,15 +47,48 @@ class ParametricFunction(VMobject):
         else:
             return self.step_size
 
+    """
+    tol_point is the tolerance level for the coordinates of points.
+        If either the x coordinate or y coordinate are greater than
+        the tolerance then that point is considered a discontinuity.
+        This treats infinite discontinuities.
+    
+    tol_del_mult is the tolerance level for the change between two points.
+        If the change of the x's or y's are greater than the tolerance
+        times the step size, that point is considered a discontinuity.
+        This treats break discontinuities.
+    """
+    def get_discontinuities(self, tol_point=1e5, tol_del_mult=50):
+        disconts = []
+        for t in np.arange(self.t_min-2*self.step_size, self.t_max+2*self.step_size, self.step_size):
+            p1 = self.function(t)
+            x1,y1 = p1[:2]
+
+            if np.abs(x1)>tol_point or np.abs(y1)>tol_point:
+                disconts.append(t)
+                continue
+
+            ss = self.get_step_size(t)
+            p2 = self.function(t+ss)
+            x2,y2 = p2[:2]
+
+            if np.abs((x2-x1)/x2)>tol_del_mult*ss or np.abs((y2-y1)/y2)>tol_del_mult*ss:
+                disconts.append(t)
+                continue
+        return disconts
+
     def generate_points(self):
         t_min, t_max = self.t_min, self.t_max
         dt = self.dt
 
+        self.discontinuities = self.get_discontinuities()
         discontinuities = filter(
             lambda t: t_min <= t <= t_max,
             self.discontinuities
         )
+
         discontinuities = np.array(list(discontinuities))
+
         boundary_times = [
             self.t_min, self.t_max,
             *(discontinuities - dt),
@@ -62,6 +96,7 @@ class ParametricFunction(VMobject):
         ]
         boundary_times.sort()
         for t1, t2 in zip(boundary_times[0::2], boundary_times[1::2]):
+            print(f"{t1} {t2}")
             t_range = list(np.arange(t1, t2, self.get_step_size(t1)))
             if t_range[-1] != t2:
                 t_range.append(t2)
