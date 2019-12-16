@@ -19,7 +19,6 @@ class ParametricFunction(VMobject):
         self.function = function or self.function
         VMobject.__init__(self, **kwargs)
 
-
     def get_function(self):
         return self.function
 
@@ -96,7 +95,6 @@ class ParametricFunction(VMobject):
         ]
         boundary_times.sort()
         for t1, t2 in zip(boundary_times[0::2], boundary_times[1::2]):
-            print(f"{t1} {t2}")
             t_range = list(np.arange(t1, t2, self.get_step_size(t1)))
             if t_range[-1] != t2:
                 t_range.append(t2)
