@@ -7,7 +7,7 @@ def print_family(mobject, n_tabs=0):
     """For debugging purposes"""
     print("\t" * n_tabs, mobject, id(mobject))
     for submob in mobject.submobjects:
-        submob.print_family(n_tabs + 1)
+        print_family(submob, n_tabs + 1)
 
 
 def get_submobject_index_labels(mobject, label_height=0.15):
