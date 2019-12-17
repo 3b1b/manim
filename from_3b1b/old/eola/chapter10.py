@@ -1,8 +1,8 @@
 from manimlib.imports import *
-from old_projects.eola.chapter1 import plane_wave_homotopy
-from old_projects.eola.chapter3 import ColumnsToBasisVectors
-from old_projects.eola.chapter5 import get_det_text
-from old_projects.eola.chapter9 import get_small_bubble
+from from_3b1b.old.eola.chapter1 import plane_wave_homotopy
+from from_3b1b.old.eola.chapter3 import ColumnsToBasisVectors
+from from_3b1b.old.eola.chapter5 import get_det_text
+from from_3b1b.old.eola.chapter9 import get_small_bubble
 
 
 class OpeningQuote(Scene):

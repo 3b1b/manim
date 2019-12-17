@@ -1,7 +1,7 @@
 from manimlib.imports import *
-from old_projects.clacks.question import Block
-from old_projects.clacks.question import Wall
-from old_projects.clacks.question import ClackFlashes
+from from_3b1b.old.clacks.question import Block
+from from_3b1b.old.clacks.question import Wall
+from from_3b1b.old.clacks.question import ClackFlashes
 
 
 class PositionPhaseSpaceScene(Scene):

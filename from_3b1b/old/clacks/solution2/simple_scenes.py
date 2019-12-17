@@ -1,7 +1,7 @@
 from manimlib.imports import *
-from old_projects.lost_lecture import ShowWord
-from old_projects.clacks.solution2.mirror_scenes import ReflectWorldThroughMirrorNew
-from old_projects.clacks.question import Thumbnail
+from from_3b1b.old.lost_lecture import ShowWord
+from from_3b1b.old.clacks.solution2.mirror_scenes import ReflectWorldThroughMirrorNew
+from from_3b1b.old.clacks.question import Thumbnail
 
 
 class WrapperScene(Scene):

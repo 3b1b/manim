@@ -1,5 +1,5 @@
 from manimlib.imports import *
-from old_projects.brachistochrone.curves import *
+from from_3b1b.old.brachistochrone.curves import *
 
 class RollAlongVector(Animation):
     CONFIG = {

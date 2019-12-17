@@ -1,5 +1,5 @@
 from manimlib.imports import *
-from old_projects.eola.chapter9 import Jennifer, You
+from from_3b1b.old.eola.chapter9 import Jennifer, You
 
 class Chapter0(LinearTransformationScene):
     CONFIG = {

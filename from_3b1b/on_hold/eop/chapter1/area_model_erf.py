@@ -1,6 +1,6 @@
 
 from manimlib.imports import *
-from old_projects.eoc.chapter8 import *
+from from_3b1b.old.eoc.chapter8 import *
 
 import scipy.special
 

@@ -1,9 +1,9 @@
 from manimlib.imports import *
-from old_projects.div_curl import PureAirfoilFlow
-from old_projects.div_curl import move_submobjects_along_vector_field
-from old_projects.div_curl import move_points_along_vector_field
-from old_projects.div_curl import four_swirls_function
-from old_projects.lost_lecture import ShowWord
+from from_3b1b.old.div_curl import PureAirfoilFlow
+from from_3b1b.old.div_curl import move_submobjects_along_vector_field
+from from_3b1b.old.div_curl import move_points_along_vector_field
+from from_3b1b.old.div_curl import four_swirls_function
+from from_3b1b.old.lost_lecture import ShowWord
 
 
 class CreationDestructionMobject(VMobject):

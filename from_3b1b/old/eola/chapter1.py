@@ -1,5 +1,5 @@
 from manimlib.imports import *
-from old_projects.eola.chapter0 import UpcomingSeriesOfVidoes
+from from_3b1b.old.eola.chapter0 import UpcomingSeriesOfVidoes
 
 import random
 

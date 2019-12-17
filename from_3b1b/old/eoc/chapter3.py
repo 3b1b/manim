@@ -1,5 +1,5 @@
 from manimlib.imports import *
-from old_projects.eoc.chapter2 import DISTANCE_COLOR, TIME_COLOR, \
+from from_3b1b.old.eoc.chapter2 import DISTANCE_COLOR, TIME_COLOR, \
     VELOCITY_COLOR, Car, MoveCar
 
 OUTPUT_COLOR = DISTANCE_COLOR

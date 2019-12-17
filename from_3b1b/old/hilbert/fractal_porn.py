@@ -1,5 +1,5 @@
 from manimlib.imports import *
-from old_projects.hilbert.curves import *
+from from_3b1b.old.hilbert.curves import *
 
 class Intro(TransformOverIncreasingOrders):
     @staticmethod

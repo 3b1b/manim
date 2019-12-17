@@ -1,10 +1,10 @@
-from old_projects.clacks import question
-from old_projects.clacks.solution2 import block_collision_scenes
-from old_projects.clacks.solution2 import mirror_scenes
-from old_projects.clacks.solution2 import pi_creature_scenes
-from old_projects.clacks.solution2 import position_phase_space
-from old_projects.clacks.solution2 import simple_scenes
-from old_projects.clacks.solution2 import wordy_scenes
+from from_3b1b.old.clacks import question
+from from_3b1b.old.clacks.solution2 import block_collision_scenes
+from from_3b1b.old.clacks.solution2 import mirror_scenes
+from from_3b1b.old.clacks.solution2 import pi_creature_scenes
+from from_3b1b.old.clacks.solution2 import position_phase_space
+from from_3b1b.old.clacks.solution2 import simple_scenes
+from from_3b1b.old.clacks.solution2 import wordy_scenes
 
 OUTPUT_DIRECTORY = "clacks/solution2"
 SCENES_IN_ORDER = [

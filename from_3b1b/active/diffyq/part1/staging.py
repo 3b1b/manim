@@ -3,8 +3,8 @@ from active_projects.diffyq.part1.shared_constructs import *
 from active_projects.diffyq.part1.pendulum import Pendulum
 from active_projects.diffyq.part1.pendulum import ThetaVsTAxes
 from active_projects.diffyq.part1.phase_space import IntroduceVectorField
-from old_projects.div_curl import PhaseSpaceOfPopulationModel
-from old_projects.div_curl import ShowTwoPopulations
+from from_3b1b.old.div_curl import PhaseSpaceOfPopulationModel
+from from_3b1b.old.div_curl import ShowTwoPopulations
 
 
 # Scenes
