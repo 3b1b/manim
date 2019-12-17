@@ -81,7 +81,6 @@ class ParametricFunction(VMobject):
                 disconts.append(t)
                 continue
 
-            ##TODO: Add break discontinuity functionality
             ss1 = self.get_step_size(t)
             ss2 = ss1/2
             ss3 = ss1/10
