@@ -1,5 +1,5 @@
 from manimlib.imports import *
-from old_projects.sphere_area import *
+from from_3b1b.old.sphere_area import *
 
 
 class MadAtMathologer(PiCreatureScene):

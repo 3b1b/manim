@@ -1,5 +1,5 @@
 from manimlib.imports import *
-from old_projects.clacks.question import BlocksAndWallExample
+from from_3b1b.old.clacks.question import BlocksAndWallExample
 
 
 class PreviousTwoVideos(BlocksAndWallExample):

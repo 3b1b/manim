@@ -2,7 +2,7 @@
 
 import scipy
 from manimlib.imports import *
-from old_projects.fourier import *
+from from_3b1b.old.fourier import *
 
 import warnings
 warnings.warn("""

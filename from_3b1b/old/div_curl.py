@@ -4217,7 +4217,7 @@ class BroughtToYouBy(PiCreatureScene):
 
         spiral = Line(0.5 * RIGHT, 0.5 * RIGHT + 70 * UP)
         spiral.insert_n_curves(1000)
-        from old_projects.zeta import zeta
+        from from_3b1b.old.zeta import zeta
         spiral.apply_complex_function(zeta)
         step = 0.1
         spiral = VGroup(*[

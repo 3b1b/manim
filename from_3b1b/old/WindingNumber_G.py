@@ -2,8 +2,8 @@
 
 from manimlib.imports import *
 
-from old_projects.uncertainty import Flash
-from old_projects.WindingNumber import *
+from from_3b1b.old.uncertainty import Flash
+from from_3b1b.old.WindingNumber import *
 
 
 # Warning, this file uses ContinualChangingDecimal,

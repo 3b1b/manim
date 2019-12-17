@@ -3,7 +3,7 @@ import itertools as it
 
 from manimlib.imports import *
 
-from old_projects.brachistochrone.curves import Cycloid
+from from_3b1b.old.brachistochrone.curves import Cycloid
 
 class MultilayeredGlass(PhotonScene, ZoomedScene):
     CONFIG = {

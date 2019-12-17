@@ -2,8 +2,8 @@ import numpy as np
 import itertools as it
 
 from manimlib.imports import *
-from old_projects.brachistochrone.light import PhotonScene
-from old_projects.brachistochrone.curves import *
+from from_3b1b.old.brachistochrone.light import PhotonScene
+from from_3b1b.old.brachistochrone.curves import *
 
 
 class MultilayeredScene(Scene):

@@ -1,5 +1,5 @@
 from manimlib.imports import *
-from old_projects.eoc.chapter2 import Car, MoveCar
+from from_3b1b.old.eoc.chapter2 import Car, MoveCar
 
 class CircleScene(PiCreatureScene):
     CONFIG = {

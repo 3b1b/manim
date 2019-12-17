@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from manimlib.imports import *
-from old_projects.efvgt import ConfettiSpiril
+from from_3b1b.old.efvgt import ConfettiSpiril
 
 #revert_to_original_skipping_status
 

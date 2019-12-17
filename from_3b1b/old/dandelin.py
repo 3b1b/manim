@@ -1,7 +1,7 @@
 from manimlib.imports import *
 
-from old_projects.lost_lecture import Orbiting
-from old_projects.lost_lecture import ShowWord
+from from_3b1b.old.lost_lecture import Orbiting
+from from_3b1b.old.lost_lecture import ShowWord
 
 
 class LogoGeneration(LogoGenerationTemplate):

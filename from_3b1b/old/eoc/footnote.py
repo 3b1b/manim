@@ -2,8 +2,8 @@ import scipy
 import math
 
 from manimlib.imports import *
-from old_projects.eoc.chapter1 import Car, MoveCar
-from old_projects.eoc.chapter10 import derivative
+from from_3b1b.old.eoc.chapter1 import Car, MoveCar
+from from_3b1b.old.eoc.chapter10 import derivative
 
 #revert_to_original_skipping_status
 

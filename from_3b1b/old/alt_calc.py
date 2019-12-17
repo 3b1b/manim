@@ -746,7 +746,7 @@ class StartingCalc101(PiCreatureScene):
     def get_aha_image(self):
         creature = self.pi_creature.copy()
         creature.change_mode("hooray")
-        from old_projects.eoc.chapter3 import NudgeSideLengthOfCube
+        from from_3b1b.old.eoc.chapter3 import NudgeSideLengthOfCube
         scene = NudgeSideLengthOfCube(
             end_at_animation_number=7,
             skip_animations=True

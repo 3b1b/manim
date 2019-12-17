@@ -1,7 +1,7 @@
 from manimlib.imports import *
-from old_projects.lost_lecture import GeometryProofLand
-from old_projects.quaternions import SpecialThreeDScene
-from old_projects.uncertainty import Flash
+from from_3b1b.old.lost_lecture import GeometryProofLand
+from from_3b1b.old.quaternions import SpecialThreeDScene
+from from_3b1b.old.uncertainty import Flash
 
 
 class Introduction(TeacherStudentsScene):
