@@ -158,16 +158,11 @@ class GraphScene(Scene):
         if x_max is None:
             x_max = self.x_max
 
-        def parameterized_function(alpha):
-            x = interpolate(x_min, x_max, alpha)
-            y = func(x)
-            if not np.isfinite(y):
-                y = self.y_max
-            return self.coords_to_point(x, y)
-
         graph = ParametricFunction(
-            parameterized_function,
+            lambda x: np.array([x, func(x), 0]),
             color=color,
+            t_min=x_min,
+            t_max=x_max,
             **kwargs
         )
         graph.underlying_function = func
