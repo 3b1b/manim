@@ -2,6 +2,7 @@ import inspect
 import random
 import warnings
 import platform
+from time import sleep
 
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
@@ -402,9 +403,15 @@ class Scene(Container):
         def wrapper(self, *args, **kwargs):
             self.update_skipping_status()
             allow_write = not self.skip_animations
-            self.file_writer.begin_animation(allow_write)
-            func(self, *args, **kwargs)
-            self.file_writer.end_animation(allow_write)
+            while True:
+                try:
+                    self.file_writer.begin_animation(allow_write)
+                    func(self, *args, **kwargs)
+                    self.file_writer.end_animation(allow_write)
+                    break
+                except:
+                    self.file_writer.writing_process.wait(1)
+                    sleep(1)
             self.num_plays += 1
         return wrapper
 
