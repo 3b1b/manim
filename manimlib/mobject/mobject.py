@@ -272,7 +272,7 @@ class Mobject(Container):
         return self
 
     def apply_function(self, function, **kwargs):
-        # Default to applying matrix about the origin, not mobjects center
+        # Default to applying function about the origin, not mobjects center
         if len(kwargs) == 0:
             kwargs["about_point"] = ORIGIN
         self.apply_points_function_about_point(
