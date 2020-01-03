@@ -91,7 +91,7 @@ them.  The call to :meth:`~mobject.mobject.Mobject.flip` flips the
 to a refection across the x-axis.
 
 The call to :meth:`~mobject.mobject.Mobject.rotate` rotates the
-:class:`~mobject.geometry.Square` 3/8ths of a full rotation counterclockwise.
+:class:`~mobject.geometry.Square` 3/8ths of a full rotation clockwise.
 
 The call to :meth:`~mobject.mobject.Mobject.set_fill` sets
 the fill color for the :class:`~mobject.geometry.Circle` to pink, and its opacity to 0.5.
