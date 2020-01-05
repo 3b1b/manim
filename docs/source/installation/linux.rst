@@ -22,7 +22,7 @@ OR Install manim via the git repository with venv::
     $ cd manim
     $ python3 -m venv ./
     $ source bin/activate
-    $ pip3 install -r requirement.txt
+    $ pip3 install -r requirements.txt
 
 To use manim in virtual environment you need to activate the environment with
 the ``activate`` binary by doing ``source bin/activate``, to exit use the ``deactivate`` command.
