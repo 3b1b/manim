@@ -1204,6 +1204,8 @@ class CircleDiagramFromSlidingBlocks(Scene):
             "fill_color": GREEN,
             "fill_opacity": 0.3,
         },
+        "show_dot": True,
+        "show_vector": False,
     }
 
     def construct(self):
@@ -1211,6 +1213,9 @@ class CircleDiagramFromSlidingBlocks(Scene):
             show_flash_animations=False,
             write_to_movie=False,
             wait_time=0,
+            file_writer_config={
+                "output_directory": ".",
+            }
         )
         blocks = sliding_blocks_scene.blocks
         times = [pair[1] for pair in blocks.clack_data]
@@ -1229,7 +1234,17 @@ class CircleDiagramFromSlidingBlocks(Scene):
         dot = Dot(color=RED, radius=0.06)
         dot.move_to(lines[0].get_start())
 
-        self.add(end_zone, axes, circle, dot)
+        vector = Vector(lines[0].get_start())
+        vector.set_color(RED)
+        vector.add_updater(lambda v: v.put_start_and_end_on(
+            ORIGIN, dot.get_center()
+        ))
+        vector.set_stroke(BLACK, 2, background=True)
+
+        dot.set_opacity(int(self.show_dot))
+        vector.set_opacity(int(self.show_vector))
+
+        self.add(end_zone, axes, circle, dot, vector)
 
         last_time = 0
         for time, line in zip(times, lines):
@@ -1238,7 +1253,7 @@ class CircleDiagramFromSlidingBlocks(Scene):
             self.wait(time - last_time)
             last_time = time
             dot.move_to(line.get_end())
-            self.add(line, dot)
+            self.add(line, dot, vector)
         self.wait()
 
     def get_circle(self):
