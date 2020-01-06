@@ -80,6 +80,6 @@ class Underline(Line):
     }
 
     def __init__(self, mobject, **kwargs):
-        super().__init__(LEFT, RIGHT)
+        super().__init__(LEFT, RIGHT, **kwargs)
         self.match_width(mobject)
         self.next_to(mobject, DOWN, buff=self.buff)

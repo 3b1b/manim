@@ -153,8 +153,8 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         "run_time": 20,
         "randomize_order": True,
         "capitalize": True,
-        "name_y_spacing": 0.7,
-        "thanks_words": "My thanks to all the patrons among you",
+        "name_y_spacing": 0.6,
+        "thanks_words": "Find value in this? Join me in thanking these patrons:",
     }
 
     def construct(self):
@@ -229,19 +229,21 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
             VGroup(*patrons[i::self.n_patron_columns])
             for i in range(self.n_patron_columns)
         ])
-        for column in columns:
+        column_x_spacing = 0.5 + max([c.get_width() for c in columns])
+
+        for i, column in enumerate(columns):
             for n, name in enumerate(column):
                 name.shift(n * self.name_y_spacing * DOWN)
-        columns.arrange(
-            RIGHT, buff=LARGE_BUFF,
-            aligned_edge=UP,
-        )
+                name.align_to(ORIGIN, LEFT)
+            column.move_to(i * column_x_spacing * RIGHT, UL)
+        columns.center()
+
         max_width = FRAME_WIDTH - 1
         if columns.get_width() > max_width:
             columns.set_width(max_width)
         underline.match_width(columns)
         # thanks.to_edge(RIGHT, buff=MED_SMALL_BUFF)
-        columns.next_to(underline, DOWN, buff=2)
+        columns.next_to(underline, DOWN, buff=4)
 
         columns.generate_target()
         columns.target.to_edge(DOWN, buff=4)
@@ -374,7 +376,7 @@ class Banner(Scene):
 
     def get_probabalistic_message(self):
         return TextMobject(
-            "New video every", "Sunday",
+            "New video every ", "Sunday ",
             "(with probability 0.3)",
             tex_to_color_map={"Sunday": YELLOW},
         )
