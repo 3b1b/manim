@@ -376,7 +376,7 @@ class Banner(Scene):
 
     def get_probabalistic_message(self):
         return TextMobject(
-            "New video every", "Sunday",
+            "New video every ", "Sunday ",
             "(with probability 0.3)",
             tex_to_color_map={"Sunday": YELLOW},
         )
