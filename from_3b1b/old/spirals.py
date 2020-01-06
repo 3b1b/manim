@@ -4926,6 +4926,6 @@ class Thumbnail(SpiralScene):
         label.to_corner(DL, MED_LARGE_BUFF)
 
         self.add(dots)
-        self.add(label)
+        # self.add(label)
 
         self.dots = dots

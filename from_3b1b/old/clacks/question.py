@@ -325,8 +325,8 @@ class BlocksAndWallScene(Scene):
         counter_mob = Integer(self.n_clacks)
         counter_mob.next_to(
             counter_label[-1], RIGHT,
-            aligned_edge=DOWN,
         )
+        counter_mob.align_to(counter_label[-1][-1], DOWN)
         counter_group = VGroup(
             counter_label,
             counter_mob,
@@ -747,7 +747,7 @@ class BlocksAndWallExampleMass1e2(BlocksAndWallExample):
                 "velocity": -0.6,
             }
         },
-        "wait_time": 25,
+        "wait_time": 35,
     }
 
 
