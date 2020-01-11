@@ -15,6 +15,7 @@ ben_cairo_test.py
 .vs
 *.xml
 *.iml
+addons
 media
 manim.sublime-project
 manim.sublime-workspace
