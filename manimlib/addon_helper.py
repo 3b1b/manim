@@ -77,13 +77,13 @@ def run_on_render_ready():
         if 'on_render_ready' in dir(addon.Main):
             addon.Main.on_render_ready()
 
-def get_video_dir(i = 0):
+def get_video_dir(n = 0):
     video = os.path.abspath(manimlib.constants.VIDEO_DIR)
     return os.path.normpath(video)
 
-def get_exported_video(config):
+def get_exported_video(config, n = 0):
     return config['file_writer_config']['file_name'] or os.path.join(
-        get_video_dir(), config['module'].__name__, config['scene_names'][0], str(config['camera_config']['pixel_height']) + 'p' + str(config['camera_config']['frame_rate']), config['scene_names'][0] + config['file_writer_config']['movie_file_extension']
+        get_video_dir(), config['module'].__name__, config['scene_names'][n], str(config['camera_config']['pixel_height']) + 'p' + str(config['camera_config']['frame_rate']), config['scene_names'][n] + config['file_writer_config']['movie_file_extension']
     )
 
 def log_line(text):
