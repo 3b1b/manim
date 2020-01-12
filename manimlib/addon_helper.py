@@ -67,15 +67,15 @@ def pass_config_to_addons(config):
         if 'set_config' in dir(addon.Main):
             addon.Main.set_config(config)
 
-def run_on_rendered():
+def run_on_rendered(scene_classes):
     for addon in Addons:
         if 'on_rendered' in dir(addon.Main):
-            addon.Main.on_rendered()
+            addon.Main.on_rendered(scene_classes)
 
-def run_on_render_ready():
+def run_on_render_ready(scene_classes):
     for addon in Addons:
         if 'on_render_ready' in dir(addon.Main):
-            addon.Main.on_render_ready()
+            addon.Main.on_render_ready(scene_classes)
 
 def get_video_dir(n = 0):
     video = os.path.abspath(manimlib.constants.VIDEO_DIR)

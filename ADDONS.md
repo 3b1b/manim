@@ -12,9 +12,9 @@ YoshiAsk's [GitHub repo](https://github.com/yoshiask/manim-addon-samples) will h
 In order to build an add-on, it is important to understand how add-ons work. When Manim is run, it searches every sub-folder in *addons*for Python modules. If the module contains a class named ``Main`` and a function called ``loaded``, then the ``loaded`` function is run. If it returns ``true``, then the add-on is deemed valid.
 
 ### File structure
-An add-on's structure must follow a few rules in order to run properly. 
+An add-on's structure must follow a few rules in order to run properly.
 
- - The main Python module must be in the add-on's root directory (e.g. ``manim/addons/test-addon/test-addon.py``). 
+ - The main Python module must be in the add-on's root directory (e.g. ``manim/addons/test-addon/test-addon.py``).
  - The main module must contain a class named ``Main``. This class will house the primary functionality of the add-on, including events (see *Events*).
  - ``Main`` must contain a function called ``loaded`` that returns ``true``. If either of these conditions is not fulfilled, then the add-on is not deemed valid and is not run.
 
@@ -24,12 +24,12 @@ It is suggested that all add-ons also implement the following:
 
 ### Events
 The current add-on API is event-based. Functions marked with a ``*`` must be included in every add-on's ``Main`` class.
-|Event Name| Description |
-|--|--|
+| Event Name | Description |
+| -- | -- |
 | ``loaded()``* | Fired when the add-on is being loaded. |
 | ``set_config(config)`` | Fired when Manim has parsed the command line arguments and generated the config. |
-| ``on_rendered()`` | Fired when a scene is done rendering. |
-| ``on_render_ready()`` | Fired just before a scene has started rendering. |
+| ``on_rendered(scene_classes)`` | Fired when a scene is done rendering. |
+| ``on_render_ready(scene_classes)`` | Fired just before a scene has started rendering. |
 
 ### Command-line arguments
 Add-ons can also add command line arguments. This is done by adding ``parser_args()`` to ``Main``.  This function should return a list containing the flags to add. Manim's default flags follow the same format and can be found in ``manimlib.config.parse_cli()``.
@@ -66,7 +66,7 @@ Add-ons can always write to their own files, but they also have access to the pu
 ### Video directories
 > This functionality is likely to change in future API versions.
 
-Sometimes, it can be helpful for an add-on to know where the video renders are being saved. 
+Sometimes, it can be helpful for an add-on to know where the video renders are being saved.
 ``manimlib.addon_helper.get_exported_video(config, n)`` returns the video path for the *n*th scene rendered.
 
 ``manimlib.addon_helper.get_video_dir()`` returns the absolute and normalized video folder (from ``manimlib.constants.VIDEO_DIR``).
