@@ -46,7 +46,7 @@ class AnimatedBoundary(VGroup):
         draw_alpha = self.draw_rate_func(alpha)
         fade_alpha = self.fade_rate_func(alpha)
 
-        if self.back_and_forth and int(time) % 1 == 0:
+        if self.back_and_forth and int(time) % 2 == 1:
             bounds = (1 - draw_alpha, 1)
         else:
             bounds = (0, draw_alpha)

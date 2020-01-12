@@ -6,12 +6,15 @@ VIDEO_DIR = ""
 VIDEO_OUTPUT_DIR = ""
 TEX_DIR = ""
 ADDON_DIR = os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir), "addons")
+TEXT_DIR = ""
+
 
 def initialize_directories(config):
     global MEDIA_DIR
     global VIDEO_DIR
     global VIDEO_OUTPUT_DIR
     global TEX_DIR
+    global TEXT_DIR
     global ADDON_DIR
 
     configured_video_path = config["video_dir"] or config["video_output_dir"]
@@ -21,6 +24,18 @@ def initialize_directories(config):
             os.path.expanduser('~'),
             "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
         )
+    global TEXT_DIR
+
+    video_path_specified = config["video_dir"] or config["video_output_dir"]
+
+    if not (video_path_specified and config["tex_dir"]):
+        if config["media_dir"]:
+            MEDIA_DIR = config["media_dir"]
+        else:
+            MEDIA_DIR = os.path.join(
+                os.path.expanduser('~'),
+                "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
+            )
         if not os.path.isdir(MEDIA_DIR):
             MEDIA_DIR = "./media"
         print(
@@ -33,12 +48,33 @@ def initialize_directories(config):
             "directory were passed"
         )
 
-    VIDEO_DIR = configured_video_path or os.path.join(MEDIA_DIR, "videos")
+    VIDEO_DIR = config["video_dir"] or os.path.join(MEDIA_DIR, "videos")
+    VIDEO_OUTPUT_DIR = config["video_output_dir"] or os.path.join(MEDIA_DIR, "videos")
     TEX_DIR = config["tex_dir"] or os.path.join(MEDIA_DIR, "Tex")
+    TEXT_DIR = os.path.join(MEDIA_DIR, "texts")
 
-    for folder in [VIDEO_DIR, VIDEO_OUTPUT_DIR, TEX_DIR, ADDON_DIR]:
+    for folder in [VIDEO_DIR, VIDEO_OUTPUT_DIR, TEX_DIR, TEXT_DIR, ADDON_DIR]:
         if folder != "" and not os.path.exists(folder):
             os.makedirs(folder)
+
+NOT_SETTING_FONT_MSG='''
+Warning:
+You haven't set font.
+If you are not using English, this may cause text rendering problem.
+You set font like:
+text = Text('your text', font='your font')
+or:
+class MyText(Text):
+    CONFIG = {
+        'font': 'My Font'
+    }
+'''
+START_X = 30
+START_Y = 20
+NORMAL = 'NORMAL'
+ITALIC = 'ITALIC'
+OBLIQUE = 'OBLIQUE'
+BOLD = 'BOLD'
 
 TEX_USE_CTEX = False
 TEX_TEXT_TO_REPLACE = "YourTextHere"
@@ -221,6 +257,7 @@ COLOR_MAP = {
     "DARKER_GRAY": "#222222",
     "GREY_BROWN": "#736357",
     "PINK": "#D147BD",
+    "LIGHT_PINK": "#DC75CD",
     "GREEN_SCREEN": "#00FF00",
     "ORANGE": "#FF862F",
 }

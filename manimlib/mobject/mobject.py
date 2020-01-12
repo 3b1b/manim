@@ -971,12 +971,6 @@ class Mobject(Container):
                 submob.shuffle(recursive=True)
         random.shuffle(self.submobjects)
 
-    def print_family(self, n_tabs=0):
-        """For debugging purposes"""
-        print("\t" * n_tabs, self, id(self))
-        for submob in self.submobjects:
-            submob.print_family(n_tabs + 1)
-
     # Just here to keep from breaking old scenes.
     def arrange_submobjects(self, *args, **kwargs):
         return self.arrange(*args, **kwargs)

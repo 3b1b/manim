@@ -3,8 +3,8 @@ import random
 
 from manimlib.animation.transform import ReplacementTransform
 from manimlib.animation.transform import Transform
+from manimlib.animation.transform import ApplyMethod
 from manimlib.animation.composition import LaggedStart
-from manimlib.animation.update import UpdateFromAlphaFunc
 from manimlib.constants import *
 from manimlib.for_3b1b_videos.pi_creature import Mortimer
 from manimlib.for_3b1b_videos.pi_creature import PiCreature
@@ -12,12 +12,12 @@ from manimlib.for_3b1b_videos.pi_creature import Randolph
 from manimlib.for_3b1b_videos.pi_creature_animations import Blink
 from manimlib.for_3b1b_videos.pi_creature_animations import PiCreatureBubbleIntroduction
 from manimlib.for_3b1b_videos.pi_creature_animations import RemovePiCreatureBubble
+from manimlib.mobject.mobject import Group
 from manimlib.mobject.frame import ScreenRectangle
 from manimlib.mobject.svg.drawings import SpeechBubble
 from manimlib.mobject.svg.drawings import ThoughtBubble
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.scene.scene import Scene
-from manimlib.utils.bezier import interpolate
 from manimlib.utils.rate_functions import squish_rate_func
 from manimlib.utils.rate_functions import there_and_back
 from manimlib.utils.space_ops import get_norm
@@ -154,6 +154,8 @@ class PiCreatureScene(Scene):
         first mobject being animated with each .play call
         """
         animations = Scene.compile_play_args_to_animation_list(self, *args, **kwargs)
+        anim_mobjects = Group(*[a.mobject for a in animations])
+        all_movers = anim_mobjects.get_family()
         if not self.any_pi_creatures_on_screen():
             return animations
 
@@ -169,19 +171,12 @@ class PiCreatureScene(Scene):
         # is being animated
         first_anim = non_pi_creature_anims[0]
         main_mobject = first_anim.mobject
-        animations += [
-            UpdateFromAlphaFunc(
-                pi_creature,
-                lambda p, a: p.look_at(
-                    interpolate(
-                        p.get_look_at_spot(),
-                        main_mobject.get_center(),
-                        a,
-                    )
-                ),
-            )
-            for pi_creature in pi_creatures
-        ]
+        for pi_creature in pi_creatures:
+            if pi_creature not in all_movers:
+                animations.append(ApplyMethod(
+                    pi_creature.look_at,
+                    main_mobject,
+                ))
         return animations
 
     def blink(self):
@@ -259,6 +254,9 @@ class TeacherStudentsScene(PiCreatureScene):
         "student_scale_factor": 0.8,
         "seconds_to_blink": 2,
         "screen_height": 3,
+        "camera_config": {
+            "background_color": DARKER_GREY,
+        },
     }
 
     def setup(self):

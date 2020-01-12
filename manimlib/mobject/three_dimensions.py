@@ -33,6 +33,7 @@ class ParametricSurface(VGroup):
 
     def __init__(self, func, **kwargs):
         VGroup.__init__(self, **kwargs)
+        self.func = func
         self.setup_in_uv_space()
         self.apply_function(lambda p: func(p[0], p[1]))
         if self.should_make_jagged:

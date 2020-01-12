@@ -230,7 +230,10 @@ class ApplyFunction(Transform):
         super().__init__(mobject, **kwargs)
 
     def create_target(self):
-        return self.function(self.mobject.copy())
+        target = self.function(self.mobject.copy())
+        if not isinstance(target, Mobject):
+            raise Exception("Functions passed to ApplyFunction must return object of type Mobject")
+        return target
 
 
 class ApplyMatrix(ApplyPointwiseFunction):
