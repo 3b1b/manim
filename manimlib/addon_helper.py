@@ -5,7 +5,7 @@ import manimlib.constants
 import manimlib.config
 
 
-Addons = []
+addons = []
 addons_read = False
 movie_paths = []
 
@@ -13,7 +13,7 @@ def load_parser_args(parser):
     # Adds every addon's new cmd flags to the parser
     if addons_read == False:
         read_addons()
-    for addon in Addons:
+    for addon in addons:
         # Check if parser_args() exists in the module. If so, add it to the current parser
         if 'parser_args' in dir(addon.Main):
             new_args = addon.Main.parser_args()
@@ -26,18 +26,18 @@ def load_parser_args(parser):
     return parser
 
 def read_addons(remove_last_line=False):
-    global Addons
+    global addons
     global addons_read
     global movie_paths
     # Read each Python file in the addons directory
     for filename in glob.glob(os.path.join(manimlib.constants.ADDON_DIR, "*", "*.py")):
-        # Open the file and add the module to Addons[]
+        # Open the file and add the module to addons[]
         with open(filename, 'r') as content_file:
             addon = import_addon(filename)
-            Addons.append(addon)
+            addons.append(addon)
     addons_read = True
     addon_names = []
-    for addon in Addons:
+    for addon in addons:
         if 'loaded' in dir(addon.Main):
             if addon.Main.loaded():
                 try:
@@ -45,14 +45,14 @@ def read_addons(remove_last_line=False):
                 except:
                     addon_names.append(str(addon.__name__).rsplit(".", 1)[1])
             else:
-                Addons.remove(addon)
+                addons.remove(addon)
     if remove_last_line:  print("                             ")
     else: print("\n")
     print_string = "Loaded addons: "
     loaded_addons_string = print_string + '%s' % ', '.join(map(str, addon_names))
     if loaded_addons_string == print_string: print("No addons loaded")
     else: print(print_string + '%s' % ', '.join(map(str, addon_names)) + "\n")
-    return Addons
+    return addons
 
 def import_addon(filename):
     import importlib.util
@@ -63,17 +63,17 @@ def import_addon(filename):
     return module
 
 def pass_config_to_addons(config):
-    for addon in Addons:
+    for addon in addons:
         if 'set_config' in dir(addon.Main):
             addon.Main.set_config(config)
 
 def run_on_rendered(scene_classes):
-    for addon in Addons:
+    for addon in addons:
         if 'on_rendered' in dir(addon.Main):
             addon.Main.on_rendered(scene_classes)
 
 def run_on_render_ready(scene_classes):
-    for addon in Addons:
+    for addon in addons:
         if 'on_render_ready' in dir(addon.Main):
             addon.Main.on_render_ready(scene_classes)
 
@@ -94,7 +94,7 @@ def log_text(text):
         the_file.write(text.__str__())
 
 def print_addon_info():
-    for addon in Addons:
+    for addon in addons:
         info = addon.Main.addon_info()
         print(info['name'] + " v." + info['version'] + " by " + info['author'])
         print("   " + info['desc'])
