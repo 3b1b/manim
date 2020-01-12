@@ -9,55 +9,59 @@
 YoshiAsk's [GitHub repo](https://github.com/yoshiask/manim-addon-samples) will house a few add-on samples, all of which are under the MIT License.
 
 ## From scratch
-In order to build an add-on, it is important to understand how add-ons work. When Manim is run, it searches every sub-folder in *addons*for Python modules. If the module contains a class named ``Main`` and a function called ``loaded``, then the ``loaded`` function is run. If it returns ``true``, then the add-on is deemed valid.
+In order to build an add-on, it is important to understand how add-ons work. When Manim is run, it searches every sub-folder in *addons*for Python modules. If the module contains a class named ``Addon`` and a function called ``loaded``, then the ``loaded`` function is run. If it returns ``true``, then the add-on is deemed valid.
 
 ### File structure
 An add-on's structure must follow a few rules in order to run properly.
 
- - The main Python module must be in the add-on's root directory (e.g. ``manim/addons/test-addon/test-addon.py``).
- - The main module must contain a class named ``Main``. This class will house the primary functionality of the add-on, including events (see *Events*).
- - ``Main`` must contain a function called ``loaded`` that returns ``true``. If either of these conditions is not fulfilled, then the add-on is not deemed valid and is not run.
+ - The main Python module must be in the add-on's root directory (e.g. ``manim/addons/test_addon/test_addon.py``).
+ - The main module must contain a class named ``Addon``. This class will house the primary functionality of the add-on, including events (see *Events*).
+ - ``Addon`` must contain a function called ``loaded`` that returns ``true``. If either of these conditions is not fulfilled, then the add-on is not deemed valid and is not run.
 
 It is suggested that all add-ons also implement the following:
-- ``addon_info()``: See *Addon info*
-- ``__str__()``: Return the name of the add-on
+- ``addon_info(self)``: See *Addon info*
+- ``__str__(self)``: Return the name of the add-on
 
 ### Events
-The current add-on API is event-based. Functions marked with a ``*`` must be included in every add-on's ``Main`` class.
+The current add-on API is event-based. Functions marked with a ``*`` must be included in every add-on's ``Addon`` class.
 | Event Name | Description |
 | -- | -- |
-| ``loaded()``* | Fired when the add-on is being loaded. |
-| ``set_config(config)`` | Fired when Manim has parsed the command line arguments and generated the config. |
-| ``on_rendered(scene_classes)`` | Fired when a scene is done rendering. |
-| ``on_render_ready(scene_classes)`` | Fired just before a scene has started rendering. |
+| ``loaded(self)``* | Fired when the add-on is being loaded. |
+| ``set_config(self, config)`` | Fired when Manim has parsed the command line arguments and generated the config. |
+| ``on_rendered(self, scene_classes)`` | Fired when a scene is done rendering. |
+| ``on_render_ready(self, scene_classes)`` | Fired just before a scene has started rendering. |
 
 ### Command-line arguments
-Add-ons can also add command line arguments. This is done by adding ``parser_args()`` to ``Main``.  This function should return a list containing the flags to add. Manim's default flags follow the same format and can be found in ``manimlib.config.parse_cli()``.
+Add-ons can also add command line arguments. This is done by adding ``cli_args(self)`` to ``Addon``.  This function should return a list containing the flags to add. Manim's default flags follow the same format and can be found in ``manimlib.config.parse_cli()``.
 
-    def parser_args():
-		return [
-			{
-				'flag': "--hello_world",
-				'action': "store_true",
-				'help': "[{0}] Prints 'Hello World' when loaded".format("test-addon")
-			},
-			{
-				'flag': "--foobar",
-				'action': "store_true",
-				'help': "[{0}] Prints 'foobar' when rendering is completed".format("test-addon")
-			}
-		]
+```python
+def cli_args(self):
+	return [
+		{
+			"flag": "--hello_world",
+			"action": "store_true",
+			"help": f"[{test_addon}] Prints 'Hello World' when loaded"
+		},
+		{
+			"flag": "--foobar",
+			"action": "store_true",
+			"help": f"[{test_addon}] Prints 'foobar' when rendering is completed"
+		}
+	]
+```
 
 ### Add-on info
-The ``manim addon-info`` command prints the information of all loaded add-ons. Add-ons can define info by adding ``addon_info()`` to ``Main``.
+The ``manim addon-info`` command prints the information of all loaded add-ons. Add-ons can define info by adding ``addon_info(self)`` to ``Addon``.
 
-    def addon_info():
-		return {
-			'author': "Jane Doe",
-			'name': "test_addon",
-			'version' : "1.0.3.1",
-			'desc': "Adds a couple of command line flags for testing"
-		}
+```python
+def addon_info(self):
+	return {
+		"author": "Jane Doe",
+		"name": "test_addon",
+		"version" : "1.0.3.1",
+		"desc": "Adds a couple of command line flags for testing"
+	}
+```
 
 ### Logging
 Add-ons can always write to their own files, but they also have access to the public add-on log (``/manim/addons/addon_log.txt``). ``manimlib.addon_helper.log_text(text)`` will append the given text to the add-on log, while ``log_line(text)`` will append the text and a new line.

@@ -4,7 +4,6 @@ import importlib
 import manimlib.constants
 import manimlib.config
 
-
 addons = []
 addons_read = False
 movie_paths = []
@@ -14,9 +13,9 @@ def load_parser_args(parser):
     if addons_read == False:
         read_addons()
     for addon in addons:
-        # Check if parser_args() exists in the module. If so, add it to the current parser
-        if 'parser_args' in dir(addon.Main):
-            new_args = addon.Main.parser_args()
+        # Check if CLI_ARGS exists in the module. If so, add it to the current parser
+        if 'cli_args' in dir(addon):
+            new_args = addon.cli_args()
             for arg in new_args:
                 parser.add_argument(
                     arg['flag'],
@@ -33,16 +32,16 @@ def read_addons(remove_last_line=False):
     for filename in glob.glob(os.path.join(manimlib.constants.ADDON_DIR, "*", "*.py")):
         # Open the file and add the module to addons[]
         addon = import_addon(filename)
-        addons.append(addon)
+        addons.append(addon.Addon())
     addons_read = True
     addon_names = []
     for addon in addons:
-        if 'loaded' in dir(addon.Main):
-            if addon.Main.loaded():
+        if 'loaded' in dir(addon):
+            if addon.loaded():
                 try:
-                    addon_names.append(addon.Main.addon_info()['name'])
+                    addon_names.append(addon.addon_info()['name'])
                 except:
-                    addon_names.append(str(addon.__name__).rsplit(".", 1)[1])
+                    addon_names.append(str(addon).rsplit(".", 1)[1])
             else:
                 addons.remove(addon)
     if remove_last_line:  print("                             ")
@@ -63,18 +62,18 @@ def import_addon(filename):
 
 def pass_config_to_addons(config):
     for addon in addons:
-        if 'set_config' in dir(addon.Main):
-            addon.Main.set_config(config)
+        if 'set_config' in dir(addon):
+            addon.set_config(config)
 
 def run_on_rendered(scene_classes):
     for addon in addons:
-        if 'on_rendered' in dir(addon.Main):
-            addon.Main.on_rendered(scene_classes)
+        if 'on_rendered' in dir(addon):
+            addon.on_rendered(scene_classes)
 
 def run_on_render_ready(scene_classes):
     for addon in addons:
-        if 'on_render_ready' in dir(addon.Main):
-            addon.Main.on_render_ready(scene_classes)
+        if 'on_render_ready' in dir(addon):
+            addon.on_render_ready(scene_classes)
 
 def get_video_dir(n = 0):
     video = os.path.abspath(manimlib.constants.VIDEO_DIR)
@@ -94,6 +93,6 @@ def log_text(text):
 
 def print_addon_info():
     for addon in addons:
-        info = addon.Main.addon_info()
+        info = addon.addon_info()
         print(info['name'] + " v." + info['version'] + " by " + info['author'])
         print("   " + info['desc'])
