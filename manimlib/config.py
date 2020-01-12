@@ -6,7 +6,7 @@ import sys
 import types
 
 import manimlib.constants
-import manimlib.addon_helper
+import manimlib.addon_loader
 
 
 def parse_cli():
@@ -149,7 +149,7 @@ def parse_cli():
         )
 
         # Now that the built-in arguments have been loaded, include the additional flags from the addons
-        parser = manimlib.addon_helper.load_parser_args(parser)
+        parser = manimlib.addon_loader.load_parser_args(parser)
 
         args = parser.parse_args()
 
