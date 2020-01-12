@@ -372,18 +372,18 @@ class FourierOfPiSymbol(FourierCirclesScene):
         return path
 
 
-class FourierOfName(FourierOfPiSymbol, MovingCameraScene):
+class FourierOfTexPaths(FourierOfPiSymbol, MovingCameraScene):
     CONFIG = {
         "n_vectors": 100,
         "name_color": WHITE,
-        "name_text": "Abc",
+        "animated_name": "Abc",
         "time_per_symbol": 5,
         "slow_factor": 1 / 5,
         "parametric_function_step_size": 0.01,
     }
 
     def construct(self):
-        name = TextMobject(self.name_text)
+        name = TextMobject(self.animated_name)
         max_width = FRAME_WIDTH - 2
         max_height = FRAME_HEIGHT - 2
         name.set_width(max_width)
