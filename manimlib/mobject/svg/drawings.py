@@ -708,9 +708,10 @@ class Logo(VMobject):
             endpoint=False,
         )
         radii[:2] = radii[1::-1]  # Swap first two
-        radii[-1] = interpolate(
-            radii[-1], self.pupil_radius, 0.25
-        )
+        if self.n_spike_layers > 2:
+            radii[-1] = interpolate(
+                radii[-1], self.pupil_radius, 0.25
+            )
 
         for radius in radii:
             tip_angle = self.spike_angle
