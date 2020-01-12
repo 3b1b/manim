@@ -32,9 +32,8 @@ def read_addons(remove_last_line=False):
     # Read each Python file in the addons directory
     for filename in glob.glob(os.path.join(manimlib.constants.ADDON_DIR, "*", "*.py")):
         # Open the file and add the module to addons[]
-        with open(filename, 'r') as content_file:
-            addon = import_addon(filename)
-            addons.append(addon)
+        addon = import_addon(filename)
+        addons.append(addon)
     addons_read = True
     addon_names = []
     for addon in addons:
