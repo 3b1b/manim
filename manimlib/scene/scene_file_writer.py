@@ -34,6 +34,7 @@ class SceneFileWriter(object):
         # Previous output_file_name
         # TODO, address this in extract_scene et. al.
         "file_name": None,
+        "input_file_path": "",  # ??
         "output_directory": None,
     }
 
