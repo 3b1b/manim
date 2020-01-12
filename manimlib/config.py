@@ -148,12 +148,22 @@ def parse_cli():
             help="Stream key for twitch",
         )
 
+        # Addons
+        parser.add_argument(
+            "--addon_info",
+            action="store_true",
+            help="Outputs information about available add-ons"
+        )
+
         # Now that the built-in arguments have been loaded, include the additional flags from the addons
         parser = manimlib.addon_loader.load_parser_args(parser)
 
         args = parser.parse_args()
 
-        if args.file is None and not args.livestream:
+        if args.addon_info:
+            manimlib.addon_loader.print_addon_info()
+            sys.exit(0)
+        elif args.file is None and not args.livestream:
             parser.print_help()
             sys.exit(2)
         if args.to_twitch and not args.livestream:
