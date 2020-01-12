@@ -100,6 +100,10 @@ def parse_cli():
             help="Resolution, passed as \"height,width\"",
         )
         parser.add_argument(
+            "--frame_rate",
+            help="Frame rate"
+        )
+        parser.add_argument(
             "-c", "--color",
             help="Background color",
         )
@@ -275,6 +279,11 @@ def get_camera_configuration(args):
         camera_config.update({
             "pixel_height": height,
             "pixel_width": width,
+        })
+
+    if args.frame_rate:
+        camera_config.update({
+            "frame_rate": int(args.frame_rate)
         })
 
     if args.color:
