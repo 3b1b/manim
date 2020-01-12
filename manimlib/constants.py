@@ -13,18 +13,16 @@ def initialize_directories(config):
     global VIDEO_OUTPUT_DIR
     global TEX_DIR
     global ADDON_DIR
-    
-    video_path_specified = config["video_dir"] or config["video_output_dir"]
-    
-    if not (video_path_specified and config["tex_dir"]):
+
+    configured_video_path = config["video_dir"] or config["video_output_dir"]
+
+    if not (configured_video_path and config["tex_dir"]):
         MEDIA_DIR = config["media_dir"] or os.path.join(
             os.path.expanduser('~'),
             "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
         )
-        
         if not os.path.isdir(MEDIA_DIR):
             MEDIA_DIR = "./media"
-
         print(
             f"Media will be written to {MEDIA_DIR + os.sep}. You can change "
             "this behavior with the --media_dir flag."
@@ -35,13 +33,7 @@ def initialize_directories(config):
             "directory were passed"
         )
 
-    if not video_path_specified:
-        VIDEO_DIR = os.path.join(MEDIA_DIR, "videos")
-    elif config["video_output_dir"]:
-        VIDEO_OUTPUT_DIR = config["video_output_dir"]
-    else:
-        VIDEO_DIR = config["video_dir"]
-
+    VIDEO_DIR = configured_video_path or os.path.join(MEDIA_DIR, "videos")
     TEX_DIR = config["tex_dir"] or os.path.join(MEDIA_DIR, "Tex")
 
     for folder in [VIDEO_DIR, VIDEO_OUTPUT_DIR, TEX_DIR, ADDON_DIR]:
