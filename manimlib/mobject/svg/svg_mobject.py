@@ -34,7 +34,7 @@ class SVGMobject(VMobject):
         # Must be filled in in a subclass, or when called
         "file_name": None,
         "unpack_groups": True,  # if False, creates a hierarchy of VGroups
-        "stroke_width": 0,
+        "stroke_width": DEFAULT_STROKE_WIDTH,
         "fill_opacity": 1.0,
         # "fill_color" : LIGHT_GREY,
     }
@@ -81,7 +81,7 @@ class SVGMobject(VMobject):
             self.update_ref_to_element(element)
         elif element.tagName == 'style':
             pass  # TODO, handle style
-        elif element.tagName in ['g', 'svg']:
+        elif element.tagName in ['g', 'svg', 'symbol']:
             result += it.chain(*[
                 self.get_mobjects_from(child)
                 for child in element.childNodes
@@ -284,12 +284,27 @@ class SVGMobject(VMobject):
             pass
         # TODO, ...
 
+    def flatten(self, input_list):
+        output_list = []
+        for i in input_list:
+            if isinstance(i, list):
+                output_list.extend(self.flatten(i))
+            else:
+                output_list.append(i)
+        return output_list
+
+    def get_all_childNodes_have_id(self, element):
+        all_childNodes_have_id = []
+        if not isinstance(element, minidom.Element):
+            return
+        if element.hasAttribute('id'):
+            return [element]
+        for e in element.childNodes:
+            all_childNodes_have_id.append(self.get_all_childNodes_have_id(e))
+        return self.flatten([e for e in all_childNodes_have_id if e])
+
     def update_ref_to_element(self, defs):
-        new_refs = dict([
-            (element.getAttribute('id'), element)
-            for element in defs.childNodes
-            if isinstance(element, minidom.Element) and element.hasAttribute('id')
-        ])
+        new_refs = dict([(e.getAttribute('id'), e) for e in self.get_all_childNodes_have_id(defs)])
         self.ref_to_element.update(new_refs)
 
     def move_into_position(self):
@@ -356,11 +371,11 @@ class VMobjectFromSVGPathstring(VMobject):
             new_points = new_points[1:]
             command = "L"
 
-            # Treat everything as relative line-to until empty
             for p in new_points:
-                # Treat as relative
-                p[0] += self.points[-1, 0]
-                p[1] += self.points[-1, 1]
+                if isLower:
+                    # Treat everything as relative line-to until empty
+                    p[0] += self.points[-1, 0]
+                    p[1] += self.points[-1, 1]
                 self.add_line_to(p)
             return
 

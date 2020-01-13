@@ -78,6 +78,10 @@ class SingleStringTexMobject(SVGMobject):
         if tex == "":
             tex = "\\quad"
 
+        # To keep files from starting with a line break
+        if tex.startswith("\\\\"):
+            tex = tex.replace("\\\\", "\\quad\\\\")
+
         # Handle imbalanced \left and \right
         num_lefts, num_rights = [
             len([
@@ -157,7 +161,8 @@ class TexMobject(SingleStringTexMobject):
         split_list = split_string_list_to_isolate_substrings(
             tex_strings, *substrings_to_isolate
         )
-        split_list = [str(x).strip() for x in split_list]
+        if self.arg_separator == ' ':
+            split_list = [str(x).strip() for x in split_list]
         #split_list = list(map(str.strip, split_list))
         split_list = [s for s in split_list if s != '']
         return split_list
@@ -170,8 +175,10 @@ class TexMobject(SingleStringTexMobject):
         """
         new_submobjects = []
         curr_index = 0
+        config = dict(self.CONFIG)
+        config["alignment"] = ""
         for tex_string in self.tex_strings:
-            sub_tex_mob = SingleStringTexMobject(tex_string, **self.CONFIG)
+            sub_tex_mob = SingleStringTexMobject(tex_string, **config)
             num_submobs = len(sub_tex_mob.submobjects)
             new_index = curr_index + num_submobs
             if num_submobs == 0:
@@ -242,6 +249,7 @@ class TextMobject(TexMobject):
     CONFIG = {
         "template_tex_file_body": TEMPLATE_TEXT_FILE_BODY,
         "alignment": "\\centering",
+        "arg_separator": "",
     }
 
 

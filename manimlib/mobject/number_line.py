@@ -136,7 +136,10 @@ class NumberLine(Line):
     def default_numbers_to_display(self):
         if self.numbers_to_show is not None:
             return self.numbers_to_show
-        numbers = np.arange(int(self.leftmost_tick), int(self.x_max))
+        numbers = np.arange(
+            np.floor(self.leftmost_tick),
+            np.ceil(self.x_max),
+        )
         if self.exclude_zero_from_default_numbers:
             numbers = numbers[numbers != 0]
         return numbers

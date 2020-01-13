@@ -6,7 +6,7 @@ import sys
 import types
 
 import manimlib.constants
-import manimlib.addon_helper
+import manimlib.addon_loader
 
 
 def parse_cli():
@@ -100,6 +100,10 @@ def parse_cli():
             help="Resolution, passed as \"height,width\"",
         )
         parser.add_argument(
+            "--frame_rate",
+            help="Frame rate"
+        )
+        parser.add_argument(
             "-c", "--color",
             help="Background color",
         )
@@ -148,12 +152,22 @@ def parse_cli():
             help="Stream key for twitch",
         )
 
+        # Addons
+        parser.add_argument(
+            "--addon_info",
+            action="store_true",
+            help="Outputs information about available add-ons"
+        )
+
         # Now that the built-in arguments have been loaded, include the additional flags from the addons
-        parser = manimlib.addon_helper.load_parser_args(parser)
+        parser = manimlib.addon_loader.load_parser_args(parser)
 
         args = parser.parse_args()
 
-        if args.file is None and not args.livestream:
+        if args.addon_info:
+            manimlib.addon_loader.print_addon_info()
+            sys.exit(0)
+        elif args.file is None and not args.livestream:
             parser.print_help()
             sys.exit(2)
         if args.to_twitch and not args.livestream:
@@ -265,6 +279,11 @@ def get_camera_configuration(args):
         camera_config.update({
             "pixel_height": height,
             "pixel_width": width,
+        })
+
+    if args.frame_rate:
+        camera_config.update({
+            "frame_rate": int(args.frame_rate)
         })
 
     if args.color:

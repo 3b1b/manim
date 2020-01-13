@@ -202,8 +202,6 @@ class TipableVMobject(VMobject):
         return get_norm(start - end)
 
 
-
-
 class Arc(TipableVMobject):
     CONFIG = {
         "radius": 1.0,
@@ -494,7 +492,7 @@ class Line(TipableVMobject):
             self.start = start
             self.end = end
             self.generate_points()
-        super().put_start_and_end_on(start, end)
+        return super().put_start_and_end_on(start, end)
 
     def get_vector(self):
         return self.get_end() - self.get_start()
@@ -619,7 +617,6 @@ class Arrow(Line):
         "max_tip_length_to_length_ratio": 0.25,
         "max_stroke_width_to_length_ratio": 5,
         "preserve_tip_size_when_scaling": True,
-        "rectangular_stem_width": 0.05,
     }
 
     def __init__(self, *args, **kwargs):

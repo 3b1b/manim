@@ -1,6 +1,7 @@
 import inspect
 import random
 import warnings
+import platform
 
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
@@ -304,6 +305,7 @@ class Scene(Container):
         time_progression = ProgressDisplay(
             times, total=n_iterations,
             leave=self.leave_progress_bars,
+            ascii=False if platform.system() != 'Windows' else True
         )
         return time_progression
 
@@ -541,6 +543,8 @@ class Scene(Container):
             self.file_writer.write_frame(frame)
 
     def add_sound(self, sound_file, time_offset=0, gain=None, **kwargs):
+        if self.skip_animations:
+            return
         time = self.get_time() + time_offset
         self.file_writer.add_sound(sound_file, time, gain, **kwargs)
 

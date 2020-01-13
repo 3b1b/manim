@@ -64,6 +64,8 @@ def is_child_scene(obj, module):
         return False
     if obj == Scene:
         return False
+    if not obj.__module__.startswith(module.__name__):
+        return False
     return True
 
 
@@ -114,20 +116,23 @@ def get_scenes_to_render(scene_classes, config):
             )
     if result:
         return result
-    return prompt_user_for_choice(scene_classes)
+    return [scene_classes[0]] if len(scene_classes) == 1 else prompt_user_for_choice(scene_classes)
 
 
 def get_scene_classes_from_module(module):
-    return [
-        member[1]
-        for member in inspect.getmembers(
-            module,
-            lambda x: is_child_scene(x, module)
-        )
-    ]
+    if hasattr(module, "SCENES_IN_ORDER"):
+        return module.SCENES_IN_ORDER
+    else:
+        return [
+            member[1]
+            for member in inspect.getmembers(
+                module,
+                lambda x: is_child_scene(x, module)
+            )
+        ]
 
 
-def main(config):
+def main(config={}):
     module = config["module"]
     all_scene_classes = get_scene_classes_from_module(module)
     scene_classes_to_render = get_scenes_to_render(all_scene_classes, config)
@@ -147,12 +152,13 @@ def main(config):
     for SceneClass in scene_classes_to_render:
         try:
             # Before we start rendering, fire the on_render_ready() function in each addon
-            manimlib.addon_helper.run_on_render_ready()
-            
+            manimlib.addon_loader.run_on_render_ready(scene_classes_to_render)
+
             # By invoking, this renders the full scene
             scene = SceneClass(**scene_kwargs)
+
             # By this point, the scene is done rendering, so fire the on_render() function in each addon
-            manimlib.addon_helper.run_on_rendered()
+            manimlib.addon_loader.run_on_rendered(scene_classes_to_render)
 
             open_file_if_needed(scene.file_writer, **config)
             if config["sound"]:
