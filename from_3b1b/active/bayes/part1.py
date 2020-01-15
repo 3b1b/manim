@@ -1697,7 +1697,7 @@ class ReasonByRepresentativeSample(CorrectViewOfFarmersAndLibrarians):
                 "unit_size": 0.07,
                 "tick_frequency": 10,
             },
-            number_line_config={
+            axis_config={
                 "include_tip": False,
             },
         )

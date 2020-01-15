@@ -2925,7 +2925,7 @@ class PhaseSpaceOfPopulationModel(ShowTwoPopulations, PiCreatureScene, MovingCam
             y_min=0,
             y_max=55,
             y_axis_config={"unit_size": 0.09},
-            number_line_config={
+            axis_config={
                 "tick_frequency": 10,
             },
         )

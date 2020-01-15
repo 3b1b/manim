@@ -1458,7 +1458,7 @@ class JustifyHeightSquish(MovingCameraScene):
 
     def recreate_cross_section(self):
         axes = Axes(
-            number_line_config={
+            axis_config={
                 "unit_size": 2,
             }
         )

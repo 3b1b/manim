@@ -401,7 +401,7 @@ class TriangleModuliSpace(Scene):
             x_max=1.5,
             y_min=-0.25,
             y_max=1.5,
-            number_line_config={
+            axis_config={
                 "tick_frequency": 0.25,
                 "unit_size": 3,
             }
