@@ -290,7 +290,7 @@ class LinearTransformationScene(VectorScene):
             "axis_config": {
                 "stroke_color": LIGHT_GREY,
             },
-            "number_line_config": {
+            "axis_config": {
                 "color": GREY,
             },
             "background_line_style": {

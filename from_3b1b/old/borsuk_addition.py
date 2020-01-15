@@ -807,7 +807,7 @@ class FunctionGOutputSpace(FunctionGInputSpace):
             x_max=2.5,
             y_min=-2.5,
             y_max=2.5,
-            number_line_config={'unit_size': 1.5}
+            axis_config={'unit_size': 1.5}
         )
         for axis in axes:
             numbers = list(range(-2, 3))

@@ -778,7 +778,7 @@ class ChooseXThenYUniformly(Scene):
             x_max=1.25,
             y_min=-1.25,
             y_max=1.25,
-            number_line_config={
+            axis_config={
                 "tick_frequency": 0.25,
                 "unit_size": unit_size,
             },
@@ -1527,7 +1527,7 @@ class TwoDPlusTwoDEqualsFourD(HyperdartScene):
             x_max=1.25,
             y_min=-1.25,
             y_max=1.25,
-            number_line_config={
+            axis_config={
                 "unit_size": unit_size,
                 "tick_frequency": 0.5,
                 "include_tip": False,

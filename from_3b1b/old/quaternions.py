@@ -3812,7 +3812,7 @@ class FelixViewOfProjection(TwoDStereographicProjection):
 
     def add_axes(self):
         axes = Axes(
-            number_line_config={
+            axis_config={
                 "unit_size": 2,
                 "color": WHITE,
             }
@@ -4336,7 +4336,7 @@ class IntroduceQuaternions(Scene):
 class SimpleImaginaryQuaternionAxes(SpecialThreeDScene):
     def construct(self):
         self.three_d_axes_config.update({
-            "number_line_config": {"unit_size": 2},
+            "axis_config": {"unit_size": 2},
             "x_min": -2,
             "x_max": 2,
             "y_min": -2,
