@@ -31,7 +31,6 @@ class MappingCamera(Camera):
                 mobject.insert_n_curves(self.min_num_curves)
         Camera.capture_mobjects(
             self, mobject_copies,
-            include_submobjects=False,
             excluded_mobjects=None,
         )
 

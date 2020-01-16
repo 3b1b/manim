@@ -1,6 +1,7 @@
 from manimlib.camera.moving_camera import MovingCamera
 from manimlib.scene.scene import Scene
 from manimlib.utils.iterables import list_update
+from manimlib.utils.family_ops import extract_mobject_family_members
 
 
 class MovingCameraScene(Scene):
@@ -18,7 +19,7 @@ class MovingCameraScene(Scene):
 
     def get_moving_mobjects(self, *animations):
         moving_mobjects = Scene.get_moving_mobjects(self, *animations)
-        all_moving_mobjects = self.camera.extract_mobject_family_members(
+        all_moving_mobjects = extract_mobject_family_members(
             moving_mobjects
         )
         movement_indicators = self.camera.get_mobjects_indicating_movement()

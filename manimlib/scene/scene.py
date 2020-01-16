@@ -113,27 +113,29 @@ class Scene(Container):
     def reset_camera(self):
         self.camera.reset()
 
-    def capture_mobjects_in_camera(self, mobjects, **kwargs):
-        self.camera.capture_mobjects(mobjects, **kwargs)
+    def capture_mobjects_in_camera(self, mobjects, excluded_mobjects=None):
+        self.camera.capture_mobjects(mobjects, excluded_mobjects=excluded_mobjects)
 
     def update_frame(
             self,
             mobjects=None,
             background=None,
-            include_submobjects=True,
-            ignore_skipping=True,
-            **kwargs):
+            ignore_skipping=False,
+            excluded_mobjects=None):
         if self.skip_animations and not ignore_skipping:
             return
+        # Default to displaying everything in self.mobjects
         if mobjects is None:
             mobjects = self.mobjects
+
         if background is not None:
             self.set_camera_pixel_array(background)
         else:
             self.reset_camera()
 
-        kwargs["include_submobjects"] = include_submobjects
-        self.capture_mobjects_in_camera(mobjects, **kwargs)
+        self.capture_mobjects_in_camera(
+            mobjects, excluded_mobjects=excluded_mobjects,
+        )
 
     def freeze_background(self):
         self.update_frame()

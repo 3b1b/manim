@@ -198,17 +198,13 @@ class Camera(object):
         return self
 
     ###
-    def get_mobjects_to_display(
-            self, mobjects,
-            include_submobjects=True,
-            excluded_mobjects=None):
-        if include_submobjects:
-            mobjects = extract_mobject_family_members(
-                mobjects, only_those_with_points=True,
-            )
-            if excluded_mobjects:
-                all_excluded = extract_mobject_family_members(excluded_mobjects)
-                mobjects = list_difference_update(mobjects, all_excluded)
+    def get_mobjects_to_display(self, mobjects, excluded_mobjects=None):
+        mobjects = extract_mobject_family_members(
+            mobjects, only_those_with_points=True,
+        )
+        if excluded_mobjects:
+            all_excluded = extract_mobject_family_members(excluded_mobjects)
+            mobjects = list_difference_update(mobjects, all_excluded)
         return mobjects
 
     def is_in_frame(self, mobject):
