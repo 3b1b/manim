@@ -19,7 +19,7 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.images import get_full_raster_image_path
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.iterables import list_difference_update
-from manimlib.utils.iterables import remove_list_redundancies
+from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import get_norm
@@ -170,6 +170,7 @@ class Camera(object):
             pixel_array, convert_from_floats)
 
     # TODO, this should live in utils, not as a method of Camera
+    # Also, this should be implement with a shader
     def make_background_from_func(self, coords_to_colors_func):
         """
         Sets background by using coords_to_colors_func to determine each pixel's color. Each input
@@ -196,33 +197,17 @@ class Camera(object):
         self.set_pixel_array(self.background)
         return self
 
-    ####
-
-    # TODO, it's weird that this is part of camera.
-    # Clearly it should live elsewhere.
-    def extract_mobject_family_members(
-            self, mobjects,
-            only_those_with_points=False):
-        if only_those_with_points:
-            method = Mobject.family_members_with_points
-        else:
-            method = Mobject.get_family
-        return remove_list_redundancies(list(
-            it.chain(*[method(m) for m in mobjects])
-        ))
-
+    ###
     def get_mobjects_to_display(
             self, mobjects,
             include_submobjects=True,
             excluded_mobjects=None):
         if include_submobjects:
-            mobjects = self.extract_mobject_family_members(
+            mobjects = extract_mobject_family_members(
                 mobjects, only_those_with_points=True,
             )
             if excluded_mobjects:
-                all_excluded = self.extract_mobject_family_members(
-                    excluded_mobjects
-                )
+                all_excluded = extract_mobject_family_members(excluded_mobjects)
                 mobjects = list_difference_update(mobjects, all_excluded)
         return mobjects
 

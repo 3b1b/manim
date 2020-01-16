@@ -15,7 +15,8 @@ from manimlib.container.container import Container
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.svg.tex_mobject import TextMobject
 from manimlib.scene.scene_file_writer import SceneFileWriter
-from manimlib.utils.iterables import list_update
+from manimlib.utils.family_ops import extract_mobject_family_members
+from manimlib.utils.family_ops import restructure_list_to_exclude_certain_family_members
 
 
 class Scene(Container):
@@ -175,15 +176,15 @@ class Scene(Container):
         return list(filter(is_top_level, mobjects))
 
     def get_mobject_family_members(self):
-        return self.camera.extract_mobject_family_members(self.mobjects)
+        return extract_mobject_family_members(self.mobjects)
 
-    def add(self, *mobjects):
+    def add(self, *new_mobjects):
         """
         Mobjects will be displayed, from background to
         foreground in the order with which they are added.
         """
-        self.restructure_mobjects(to_remove=mobjects)
-        self.mobjects += mobjects
+        self.remove(*new_mobjects)
+        self.mobjects += new_mobjects
         return self
 
     def add_mobjects_among(self, values):
@@ -198,36 +199,11 @@ class Scene(Container):
         ))
         return self
 
-    def remove(self, *mobjects):
-        self.restructure_mobjects(mobjects, extract_families=False)
+    def remove(self, *mobjects_to_remove):
+        self.mobjects = restructure_list_to_exclude_certain_family_members(
+            self.mobjects, mobjects_to_remove
+        )
         return self
-
-    def restructure_mobjects(self, to_remove, extract_families=True):
-        """
-        In cases where the scene contains a group, e.g. Group(m1, m2, m3), but one
-        of its submobjects is removed, e.g. scene.remove(m1), the list of mobjects
-        will be editing to contain other submobjects, but not m1, e.g. it will now
-        insert m2 and m3 to where the group once was.
-        """
-        if extract_families:
-            to_remove = self.camera.extract_mobject_family_members(to_remove)
-        self.mobjects = self.get_restructured_mobject_list(self.mobjects, to_remove)
-        return self
-
-    def get_restructured_mobject_list(self, mobjects, to_remove):
-        new_mobjects = []
-
-        def add_safe_mobjects_from_list(list_to_examine, set_to_remove):
-            for mob in list_to_examine:
-                if mob in set_to_remove:
-                    continue
-                intersect = set_to_remove.intersection(mob.get_family())
-                if intersect:
-                    add_safe_mobjects_from_list(mob.submobjects, intersect)
-                else:
-                    new_mobjects.append(mob)
-        add_safe_mobjects_from_list(mobjects, set(to_remove))
-        return new_mobjects
 
     def bring_to_front(self, *mobjects):
         self.add(*mobjects)

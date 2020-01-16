@@ -904,7 +904,6 @@ class Mobject(Container):
         return self
 
     # Family matters
-
     def __getitem__(self, value):
         self_list = self.split()
         if isinstance(value, slice):
