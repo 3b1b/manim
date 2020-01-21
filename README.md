@@ -140,7 +140,7 @@ them to manim.play(), e.g.
 ```
 
 It is also possible to stream directly to Twitch. To do that simply pass
-`--livestream` and `--to-twitch to manim` and specify the stream key with
+`--livestream` and `--to-twitch` to manim and specify the stream key with
 `--with-key`. Then when you follow the above example the stream will directly
 start on your Twitch channel (with no audio support).
 
