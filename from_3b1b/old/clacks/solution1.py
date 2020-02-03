@@ -633,7 +633,7 @@ class IntroduceVelocityPhaseSpace(AskAboutFindingNewVelocities):
                 "x_min": -3.5,
                 "x_max": 4,
             },
-            "number_line_config": {
+            "axis_config": {
                 "unit_size": 0.7,
             },
         },
@@ -2612,7 +2612,7 @@ class UnitCircleIntuition(Scene):
     def draw_unit_circle(self):
         unit_size = 2.5
         axes = Axes(
-            number_line_config={"unit_size": unit_size},
+            axis_config={"unit_size": unit_size},
             x_min=-2.5, x_max=2.5,
             y_min=-1.5, y_max=1.5,
         )

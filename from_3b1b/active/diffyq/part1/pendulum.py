@@ -254,7 +254,7 @@ class ThetaVsTAxes(Axes):
             "tick_frequency": PI / 8,
             "unit_size": 1.5,
         },
-        "number_line_config": {
+        "axis_config": {
             "color": "#EEEEEE",
             "stroke_width": 2,
             "include_tip": False,
@@ -371,7 +371,7 @@ class IntroducePendulum(PiCreatureScene, MovingCameraScene):
                 "tip_length": 0.3,
             },
             "x_max": 12,
-            "number_line_config": {
+            "axis_config": {
                 "stroke_width": 2,
             }
         },
@@ -750,7 +750,7 @@ class LowAnglePendulum(Scene):
                 "number_scale_val": 0.5,
             },
             "x_max": 25,
-            "number_line_config": {
+            "axis_config": {
                 "tip_length": 0.3,
                 "stroke_width": 2,
             }
@@ -837,7 +837,7 @@ class MediumAnglePendulum(LowAnglePendulum):
             "y_axis_config": {"unit_size": 0.75},
             "y_max": PI / 2,
             "y_min": -PI / 2,
-            "number_line_config": {
+            "axis_config": {
                 "tip_length": 0.3,
                 "stroke_width": 2,
             }
@@ -867,7 +867,7 @@ class HighAnglePendulum(LowAnglePendulum):
             "y_axis_config": {"unit_size": 0.5},
             "y_max": PI,
             "y_min": -PI,
-            "number_line_config": {
+            "axis_config": {
                 "tip_length": 0.3,
                 "stroke_width": 2,
             }
@@ -888,7 +888,7 @@ class VeryLowAnglePendulum(LowAnglePendulum):
             "y_axis_config": {"unit_size": 2},
             "y_max": PI / 4,
             "y_min": -PI / 4,
-            "number_line_config": {
+            "axis_config": {
                 "tip_length": 0.3,
                 "stroke_width": 2,
             }
