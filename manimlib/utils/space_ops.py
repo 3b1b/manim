@@ -121,6 +121,7 @@ def z_to_vector(vector):
     return np.dot(rotation_about_z(theta), phi_down)
 
 
+# TODO, this is redundant with below
 def angle_between(v1, v2):
     return np.arccos(np.dot(
         v1 / get_norm(v1),
