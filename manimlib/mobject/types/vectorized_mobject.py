@@ -1,5 +1,6 @@
 import itertools as it
 import sys
+from mapbox_earcut import triangulate_float32 as earcut
 
 from colour import Color
 
@@ -57,8 +58,17 @@ class VMobject(Mobject):
         # This is within a pixel
         # TODO, do we care about accounting for
         # varying zoom levels?
-        "tolerance_for_point_equality": 1e-6,
+        "tolerance_for_point_equality": 1e-8,
         "n_points_per_cubic_curve": 4,
+        # For shaders
+        "stroke_vert_shader_file": "quadratic_bezier_stroke_vert.glsl",
+        "stroke_geom_shader_file": "quadratic_bezier_stroke_geom.glsl",
+        "stroke_frag_shader_file": "quadratic_bezier_stroke_frag.glsl",
+        "fill_vert_shader_file": "quadratic_bezier_fill_vert.glsl",
+        "fill_geom_shader_file": "quadratic_bezier_fill_geom.glsl",
+        "fill_frag_shader_file": "quadratic_bezier_fill_frag.glsl",
+        # Could also be Bevel, Miter, Round
+        "joint_type": "auto",
     }
 
     def get_group_class(self):
@@ -400,6 +410,7 @@ class VMobject(Mobject):
         return self
 
     def get_points(self):
+        # TODO, shouldn't points always be a numpy array anyway?
         return np.array(self.points)
 
     def set_anchors_and_handles(self, anchors1, handles1, handles2, anchors2):
@@ -863,6 +874,150 @@ class VMobject(Mobject):
         vmob = self.copy()
         vmob.pointwise_become_partial(self, a, b)
         return vmob
+
+    # For shaders
+    def get_shader_info_list(self):
+        result = []
+        if self.get_fill_opacity() > 0:
+            result.append({
+                "data": self.get_fill_shader_data(),
+                "vert": self.fill_vert_shader_file,
+                "geom": self.fill_geom_shader_file,
+                "frag": self.fill_frag_shader_file,
+            })
+        if self.get_stroke_width() > 0 and self.get_stroke_opacity() > 0:
+            result.append({
+                "data": self.get_stroke_shader_data(),
+                "vert": self.stroke_vert_shader_file,
+                "geom": self.stroke_geom_shader_file,
+                "frag": self.stroke_frag_shader_file,
+            })
+        return result
+
+    def get_stroke_shader_data(self):
+        dtype = [
+            ("point", np.float32, (2,)),  # Should be 3 eventually
+            ("prev_point", np.float32, (2,)),  # Should be 3 eventually
+            ("next_point", np.float32, (2,)),  # Should be 3 eventually
+            ("stroke_width", np.float32, (1,)),  # Should be 3 eventually
+            ("color", np.float32, (4,)),
+            ("joint_type", np.float32, (1,)),
+        ]
+        joint_type_to_code = {
+            "auto": 0,
+            "round": 1,
+            "bevel": 2,
+            "miter": 3,
+        }
+        # TODO!
+        # points = get_quadratic_approximation_of_cubic(*self.get_anchors_and_handles())[:, :2]
+        points = self.points[np.arange(len(self.points)) % 4 != 2][:, :2]
+
+        data = np.zeros(len(points), dtype=dtype)
+        data['point'] = points
+        data['prev_point'][:3] = points[-3:]
+        data['prev_point'][3:] = points[:-3]
+        data['next_point'][:-3] = points[3:]
+        data['next_point'][-3:] = points[:3]
+        data['stroke_width'] = self.stroke_width
+        data['color'] = self.get_stroke_rgbas()
+        data['joint_type'] = joint_type_to_code[self.joint_type]
+        return data
+
+    def get_triangulation(self):
+        # Figure out how to triangulate the interior of the vmob,
+        # and pass the appropriate attributes to each triangle vertex
+        # First triangles come directly from the points
+
+        # TODO, this does not work for compound paths that aren't inside each other
+
+        # TODO
+        # points = get_quadratic_approximation_of_cubic(*vmob.get_anchors_and_handles())[:, :2]
+        points = self.points[np.arange(len(self.points)) % 4 != 2][:, :2]
+
+        b0s = points[0::3]
+        b1s = points[1::3]
+        b2s = points[2::3]
+        v01s = b1s - b0s
+        v12s = b2s - b1s
+
+        # TODO, account fo 3d
+        crosses = v01s[:, 0] * v12s[:, 1] - v01s[:, 1] * v12s[:, 0]
+        orientations = np.ones(crosses.size)
+        orientations[crosses <= 0] = -1
+
+        atol = 1e-10
+        end_of_loop = np.zeros(orientations.shape, dtype=bool)
+        end_of_loop[:-1] = (np.abs(b2s[:-1] - b0s[1:]) > atol).any(1)
+        end_of_loop[-1] = True
+        end_of_first_loop = np.argmax(end_of_loop)
+
+        # dots = np.multiply(v01s, v12s).sum(1)
+        # for vs in v01s, v12s:
+        #     norms = np.apply_along_axis(np.linalg.norm, 1, vs)
+        #     norms[norms == 0] = 1
+        #     dots /= norms
+        # angles = orientations * np.arccos(dots)
+        # if sum(angles[:end_of_first_loop]) < 0:  # Check of the full self goes clockwise or counterclockwise
+        #     orientations *= -1
+
+        # WARNING, it's known that this won't always produce the right orientation,
+        # but it's almost always right, and avoids operations adding to runtime
+        if sum(orientations[:end_of_first_loop]) < 0:
+            orientations *= -1
+
+        # These are the vertices to which we'll apply a polygon triangulation
+        indices = np.arange(len(points), dtype=int)
+        concave_parts = indices[np.repeat(orientations, 3) < 0]
+        inner_vert_indices = np.array([
+            *indices[::3],
+            *concave_parts[1::3],
+            *indices[2::3][end_of_loop],
+        ])
+        inner_vert_indices.sort()
+        rings = np.arange(1, len(inner_vert_indices) + 1)[inner_vert_indices % 3 == 2]
+
+        # Triangulate
+        inner_verts = points[inner_vert_indices]
+        inner_tri_indices = inner_vert_indices[earcut(inner_verts, rings)]
+
+        # This is slightly faster than using np.append
+        tri_indices = np.zeros(len(indices) + len(inner_tri_indices), dtype=int)
+        tri_indices[:len(indices)] = indices
+        tri_indices[len(indices):] = inner_tri_indices
+
+        fill_type_to_code = {
+            "inside": 0,
+            "outside": 1,
+            "all": 2,
+        }
+        fill_types = np.ones((len(tri_indices), 1))
+        fill_types[:len(points)] = fill_type_to_code["inside"]
+        fill_types[concave_parts] = fill_type_to_code["outside"]
+        fill_types[len(points):] = fill_type_to_code["all"]
+
+        return tri_indices, fill_types
+
+    def get_fill_shader_data(self):
+        dtype = [
+            ('point', np.float32, (2,)),  # Should be 3 eventually
+            ('color', np.float32, (4,)),
+            ('fill_type', np.float32, (1,)),
+        ]
+
+        # TODO
+        # points = get_quadratic_approximation_of_cubic(*vmob.get_anchors_and_handles())[:, :2]
+        points = self.points[np.arange(len(self.points)) % 4 != 2][:, :2]
+
+        # TODO, potentially cache triangulation
+        tri_indices, fill_types = self.get_triangulation()
+
+        data = np.zeros(len(tri_indices), dtype=dtype)
+        data["point"] = points[tri_indices]
+        rgbas = self.get_fill_rgbas()
+        data["color"] = rgbas  # TODO, best way to enable multiple colors?
+        data["fill_type"] = fill_types
+        return data
 
 
 class VGroup(VMobject):
