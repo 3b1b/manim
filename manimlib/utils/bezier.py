@@ -2,6 +2,7 @@ from scipy import linalg
 import numpy as np
 
 from manimlib.utils.simple_functions import choose
+from manimlib.utils.space_ops import find_intersection
 
 CLOSED_THRESHOLD = 0.001
 
@@ -159,3 +160,38 @@ def diag_to_matrix(l_and_u, diag):
 
 def is_closed(points):
     return np.allclose(points[0], points[-1])
+
+
+# Given 4 control points for a cubic bezier curve (or arrays of such)
+# return control points for 2 quadratics (or 2n quadratics) approximating them.
+def get_quadratic_approximation_of_cubic(a0, h0, h1, a1):
+    a0 = np.array(a0, ndmin=2)
+    h0 = np.array(h0, ndmin=2)
+    h1 = np.array(h1, ndmin=2)
+    a1 = np.array(a1, ndmin=2)
+    mid = (a0 + 3 * h0 + 3 * h1 + a1) / 8
+    # Tangent vectors at the start, middle and end.
+    T0 = h0 - a0
+    Tm = 3 * (-a0 - h0 + h1 + a1) / 4
+    T1 = a1 - h1
+
+    # Intersection between tangent lines at end points and tangent in the middle
+    i0 = find_intersection(a0, T0, mid, Tm)
+    i1 = find_intersection(a1, T1, mid, Tm)
+
+    m, n = np.shape(a0)
+    result = np.zeros((6 * m, n))
+    result[0::6] = a0
+    result[1::6] = i0
+    result[2::6] = mid
+    result[3::6] = mid
+    result[4::6] = i1
+    result[5::6] = a1
+    return result
+
+
+def get_smooth_quadratic_bezier_path_through(points):
+    h0, h1 = get_smooth_handle_points(points)
+    a0 = points[:-1]
+    a1 = points[1:]
+    return get_quadratic_approximation_of_cubic(a0, h0, h1, a1)
