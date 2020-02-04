@@ -4,9 +4,7 @@ from manimlib.utils.bezier import interpolate
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import color_to_rgba
 from manimlib.utils.color import rgba_to_color
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import stretch_array_to_length
-from manimlib.utils.space_ops import get_norm
 
 
 class PMobject(Mobject):
@@ -185,68 +183,12 @@ class PMobject(Mobject):
             setattr(self, attr, partial_array)
 
 
-# TODO, Make the two implementations bellow non-redundant
-class Mobject1D(PMobject):
-    CONFIG = {
-        "density": DEFAULT_POINT_DENSITY_1D,
-    }
-
-    def __init__(self, **kwargs):
-        digest_config(self, kwargs)
-        self.epsilon = 1.0 / self.density
-        Mobject.__init__(self, **kwargs)
-
-    def add_line(self, start, end, color=None):
-        start, end = list(map(np.array, [start, end]))
-        length = get_norm(end - start)
-        if length == 0:
-            points = [start]
-        else:
-            epsilon = self.epsilon / length
-            points = [
-                interpolate(start, end, t)
-                for t in np.arange(0, 1, epsilon)
-            ]
-        self.add_points(points, color=color)
-
-
-class Mobject2D(PMobject):
-    CONFIG = {
-        "density": DEFAULT_POINT_DENSITY_2D,
-    }
-
-    def __init__(self, **kwargs):
-        digest_config(self, kwargs)
-        self.epsilon = 1.0 / self.density
-        Mobject.__init__(self, **kwargs)
-
-
 class PGroup(PMobject):
     def __init__(self, *pmobs, **kwargs):
         if not all([isinstance(m, PMobject) for m in pmobs]):
             raise Exception("All submobjects must be of type PMobject")
         super().__init__(**kwargs)
         self.add(*pmobs)
-
-
-class PointCloudDot(Mobject1D):
-    CONFIG = {
-        "radius": 0.075,
-        "stroke_width": 2,
-        "density": DEFAULT_POINT_DENSITY_1D,
-        "color": YELLOW,
-    }
-
-    def __init__(self, center=ORIGIN, **kwargs):
-        Mobject1D.__init__(self, **kwargs)
-        self.shift(center)
-
-    def generate_points(self):
-        self.add_points([
-            r * (np.cos(theta) * RIGHT + np.sin(theta) * UP)
-            for r in np.arange(0, self.radius, self.epsilon)
-            for theta in np.arange(0, 2 * np.pi, self.epsilon / r)
-        ])
 
 
 class Point(PMobject):
