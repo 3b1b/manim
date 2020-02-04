@@ -34,7 +34,7 @@ class SceneFileWriter(object):
         # Previous output_file_name
         # TODO, address this in extract_scene et. al.
         "file_name": None,
-        "input_file_path": "",  # ??
+        "input_file_path": "",
         "output_directory": None,
     }
 
@@ -171,37 +171,19 @@ class SceneFileWriter(object):
     def begin_animation(self, allow_write=False):
         if self.write_to_movie and allow_write:
             self.open_movie_pipe()
-        if self.livestreaming:
-            self.stream_lock = False
 
     def end_animation(self, allow_write=False):
         if self.write_to_movie and allow_write:
             self.close_movie_pipe()
-        if self.livestreaming:
-            self.stream_lock = True
-            thread.start_new_thread(self.idle_stream, ())
 
-    def write_frame(self, frame):
+    def write_frame(self, raw_bytes):
         if self.write_to_movie:
-            self.writing_process.stdin.write(frame.tostring())
+            self.writing_process.stdin.write(raw_bytes)
 
     def save_final_image(self, image):
         file_path = self.get_image_file_path()
         image.save(file_path)
         self.print_file_ready_message(file_path)
-
-    def idle_stream(self):
-        while self.stream_lock:
-            a = datetime.datetime.now()
-            self.update_frame()
-            n_frames = 1
-            frame = self.get_frame()
-            self.add_frames(*[frame] * n_frames)
-            b = datetime.datetime.now()
-            time_diff = (b - a).total_seconds()
-            frame_duration = 1 / self.scene.camera.frame_rate
-            if time_diff < frame_duration:
-                sleep(frame_duration - time_diff)
 
     def finish(self):
         if self.write_to_movie:
@@ -231,6 +213,7 @@ class SceneFileWriter(object):
             '-pix_fmt', 'rgba',
             '-r', str(fps),  # frames per second
             '-i', '-',  # The imput comes from a pipe
+            '-vf', 'vflip',
             '-an',  # Tells FFMPEG not to expect any audio
             '-loglevel', 'error',
         ]
@@ -247,22 +230,12 @@ class SceneFileWriter(object):
                 '-vcodec', 'libx264',
                 '-pix_fmt', 'yuv420p',
             ]
-        if self.livestreaming:
-            if self.to_twitch:
-                command += ['-f', 'flv']
-                command += ['rtmp://live.twitch.tv/app/' + self.twitch_key]
-            else:
-                command += ['-f', 'mpegts']
-                command += [STREAMING_PROTOCOL + '://' + STREAMING_IP + ':' + STREAMING_PORT]
-        else:
-            command += [temp_file_path]
+        command += [temp_file_path]
         self.writing_process = subprocess.Popen(command, stdin=subprocess.PIPE)
 
     def close_movie_pipe(self):
         self.writing_process.stdin.close()
         self.writing_process.wait()
-        if self.livestreaming:
-            return True
         shutil.move(
             self.temp_partial_movie_file_path,
             self.partial_movie_file_path,
