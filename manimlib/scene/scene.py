@@ -7,13 +7,11 @@ from tqdm import tqdm as ProgressDisplay
 import numpy as np
 
 from manimlib.animation.animation import Animation
-from manimlib.animation.creation import Write
-from manimlib.animation.transform import MoveToTarget, ApplyMethod
+from manimlib.animation.transform import MoveToTarget
 from manimlib.camera.camera import Camera
 from manimlib.constants import *
 from manimlib.container.container import Container
 from manimlib.mobject.mobject import Mobject
-from manimlib.mobject.svg.tex_mobject import TextMobject
 from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import restructure_list_to_exclude_certain_family_members
@@ -21,7 +19,7 @@ from manimlib.utils.family_ops import restructure_list_to_exclude_certain_family
 
 class Scene(Container):
     CONFIG = {
-        "camera_class": Camera,
+        "camera_class": Camera,  # TODO, there should be only one camera
         "camera_config": {},
         "file_writer_config": {},
         "skip_animations": False,
@@ -35,9 +33,7 @@ class Scene(Container):
     def __init__(self, **kwargs):
         Container.__init__(self, **kwargs)
         self.camera = self.camera_class(**self.camera_config)
-        self.file_writer = SceneFileWriter(
-            self, **self.file_writer_config,
-        )
+        self.file_writer = SceneFileWriter(self, **self.file_writer_config)
 
         self.mobjects = []
         self.num_plays = 0
@@ -64,11 +60,11 @@ class Scene(Container):
         """
         pass
 
-    def tear_down(self):
-        pass
-
     def construct(self):
         pass  # To be implemented in subclasses
+
+    def tear_down(self):
+        pass
 
     def __str__(self):
         return self.__class__.__name__
@@ -98,49 +94,25 @@ class Scene(Container):
     def set_camera(self, camera):
         self.camera = camera
 
-    def get_frame(self):
-        return np.array(self.camera.get_pixel_array())
-
     def get_image(self):
         return self.camera.get_image()
 
-    def set_camera_pixel_array(self, pixel_array):
-        self.camera.set_pixel_array(pixel_array)
-
-    def set_camera_background(self, background):
-        self.camera.set_background(background)
-
-    def reset_camera(self):
-        self.camera.reset()
-
-    def capture_mobjects_in_camera(self, mobjects, excluded_mobjects=None):
-        self.camera.capture_mobjects(mobjects, excluded_mobjects=excluded_mobjects)
-
-    def update_frame(
-            self,
-            mobjects=None,
-            background=None,
-            ignore_skipping=False,
-            excluded_mobjects=None):
+    def update_frame(self, mobjects=None, ignore_skipping=False, excluded_mobjects=None):
         if self.skip_animations and not ignore_skipping:
             return
-        # Default to displaying everything in self.mobjects
         if mobjects is None:
             mobjects = self.mobjects
 
-        if background is not None:
-            self.set_camera_pixel_array(background)
-        else:
-            self.reset_camera()
+        self.camera.clear()
+        self.camera.capture_mobjects(mobjects, excluded_mobjects=excluded_mobjects)
 
-        self.capture_mobjects_in_camera(
-            mobjects, excluded_mobjects=excluded_mobjects,
-        )
+    def write_frame(self):
+        self.increment_time(1.0 / self.camera.frame_rate)
+        if self.skip_animations:
+            return
+        data = self.camera.get_raw_fbo_data()
+        self.file_writer.write_frame(data)
 
-    def freeze_background(self):
-        self.update_frame()
-        self.set_camera(Camera(self.get_frame()))
-        self.clear()
     ###
 
     def update_mobjects(self, dt):
@@ -234,9 +206,9 @@ class Scene(Container):
         animation_mobjects = [anim.mobject for anim in animations]
         mobjects = self.get_mobject_family_members()
         for i, mob in enumerate(mobjects):
-            animated = (mob in animation_mobjects)
-            updated = (len(mob.get_family_updaters()) > 0)
-            if animated or updated:
+            is_animated = (mob in animation_mobjects)
+            is_updated = (len(mob.get_family_updaters()) > 0)
+            if is_animated or is_updated:
                 return mobjects[i:]
         return []
 
@@ -369,7 +341,7 @@ class Scene(Container):
         # have to be rendered every frame
         moving_mobjects = self.get_moving_mobjects(*animations)
         self.update_frame(excluded_mobjects=moving_mobjects)
-        static_image = self.get_frame()
+        self.camera.lock_state_as_background()
         last_t = 0
         for t in self.get_animation_time_progression(animations):
             dt = t - last_t
@@ -379,8 +351,9 @@ class Scene(Container):
                 alpha = t / animation.run_time
                 animation.interpolate(alpha)
             self.update_mobjects(dt)
-            self.update_frame(moving_mobjects, static_image)
-            self.add_frames(self.get_frame())
+            self.update_frame(moving_mobjects)
+            self.write_frame()
+        self.camera.unlock_background()
 
     def finish_animations(self, animations):
         for animation in animations:
@@ -442,7 +415,7 @@ class Scene(Container):
         self.update_mobjects(dt=0)  # Any problems with this?
         if self.should_update_mobjects():
             time_progression = self.get_wait_time_progression(duration, stop_condition)
-            # TODO, be smart about setting a static image
+            # TODO, be smart about locking the camera background
             # the same way Scene.play does
             last_t = 0
             for t in time_progression:
@@ -450,7 +423,7 @@ class Scene(Container):
                 last_t = t
                 self.update_mobjects(dt)
                 self.update_frame()
-                self.add_frames(self.get_frame())
+                self.write_frame()
                 if stop_condition is not None and stop_condition():
                     time_progression.close()
                     break
@@ -461,8 +434,8 @@ class Scene(Container):
             self.update_frame()
             dt = 1 / self.camera.frame_rate
             n_frames = int(duration / dt)
-            frame = self.get_frame()
-            self.add_frames(*[frame] * n_frames)
+            for n in range(n_frames):
+                self.write_frame()
         return self
 
     def wait_until(self, stop_condition, max_time=60):
@@ -478,34 +451,15 @@ class Scene(Container):
             self.skip_animations = self.original_skipping_status
         return self
 
-    def add_frames(self, *frames):
-        dt = 1 / self.camera.frame_rate
-        self.increment_time(len(frames) * dt)
-        if self.skip_animations:
-            return
-        for frame in frames:
-            self.file_writer.write_frame(frame)
-
     def add_sound(self, sound_file, time_offset=0, gain=None, **kwargs):
         if self.skip_animations:
             return
         time = self.get_time() + time_offset
         self.file_writer.add_sound(sound_file, time, gain, **kwargs)
 
-    def show_frame(self):
+    def show(self):
         self.update_frame(ignore_skipping=True)
         self.get_image().show()
-
-    # TODO, this doesn't belong in Scene, but should be
-    # part of some more specialized subclass optimized
-    # for livestreaming
-    def tex(self, latex):
-        eq = TextMobject(latex)
-        anims = []
-        anims.append(Write(eq))
-        for mobject in self.mobjects:
-            anims.append(ApplyMethod(mobject.shift, 2 * UP))
-        self.play(*anims)
 
 
 class EndSceneEarlyException(Exception):
