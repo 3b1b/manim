@@ -265,6 +265,7 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
             "DeathByShrimp": "Henry Bresnahan",
             "akostrikov": "Aleksandr Kostrikov",
             "Jacob Baxter": "Will Fleshman",
+            "Sansword Huang": "SansWord@TW",
         }
         for n1, n2 in modification_map.items():
             if name.lower() == n1.lower():
