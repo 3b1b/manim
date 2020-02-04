@@ -231,6 +231,35 @@ def line_intersection(line1, line2):
     return np.array([x, y, 0])
 
 
+def find_intersection(p0, v0, p1, v1, threshold=1e-5):
+    """
+    Return the intersection of a line passing through p0 in direction v0
+    with one passing through p1 in direction v1.  (Or array of intersections
+    from arrays of such points/directions).
+    For 3d values, it returns the point on the ray p0 + v0 * t closest to the
+    ray p1 + v1 * t
+    """
+    p0 = np.array(p0, ndmin=2)
+    v0 = np.array(v0, ndmin=2)
+    p1 = np.array(p1, ndmin=2)
+    v1 = np.array(v1, ndmin=2)
+    m, n = np.shape(p0)
+    assert(n in [2, 3])
+
+    numer = np.cross(v1, p1 - p0)
+    denom = np.cross(v1, v0)
+    if n == 3:
+        d = len(np.shape(numer))
+        new_numer = np.multiply(numer, numer).sum(d - 1)
+        new_denom = np.multiply(denom, numer).sum(d - 1)
+        numer, denom = new_numer, new_denom
+
+    denom[abs(denom) < threshold] = np.inf  # So that ratio goes to 0 there
+    ratio = numer / denom
+    ratio = np.repeat(ratio, n).reshape((m, n))
+    return p0 + ratio * v0
+
+
 def get_winding_number(points):
     total_angle = 0
     for p1, p2 in adjacent_pairs(points):
