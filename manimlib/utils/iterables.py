@@ -56,9 +56,8 @@ def batch_by_property(items, property_func):
 
     def add_batch_prop_pair(batch):
         if len(batch) > 0:
-            batch_prop_pairs.append(
-                (batch, property_func(batch[0]))
-            )
+            prop = property_func(batch[0])
+            batch_prop_pairs.append((batch, prop))
     curr_batch = []
     curr_prop = None
     for item in items:
@@ -113,6 +112,21 @@ def make_even_by_cycling(iterable_1, iterable_2):
 
 def remove_nones(sequence):
     return [x for x in sequence if x]
+
+
+def join_structured_arrays(*arrays):
+    assert(len(arrays) > 0)
+
+    result = np.zeros(
+        sum([len(arr) for arr in arrays]),
+        dtype=arrays[0].dtype
+    )
+    lh = 0
+    for array in arrays:
+        rh = lh + len(array)
+        result[lh:rh] = array
+        lh = rh
+    return result
 
 
 # Note this is redundant with it.chain
