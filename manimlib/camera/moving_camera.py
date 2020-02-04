@@ -8,18 +8,7 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import digest_config
 
 
-# TODO, think about how to incorporate perspective
-class CameraFrame(VGroup):
-    CONFIG = {
-        "width": FRAME_WIDTH,
-        "height": FRAME_HEIGHT,
-        "center": ORIGIN,
-    }
-
-    def __init__(self, **kwargs):
-        pass
-
-
+# Depricated?
 class MovingCamera(Camera):
     """
     Stays in line with the height, width and position of it's 'frame', which is a Rectangle
