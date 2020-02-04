@@ -84,6 +84,12 @@ with open(TEMPLATE_TEX_FILE, "r") as infile:
         "\\begin{align*}\n" + TEX_TEXT_TO_REPLACE + "\n\\end{align*}",
     )
 
+
+SHADER_DIR = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)),
+    "shaders"
+)
+
 HELP_MESSAGE = """
    Usage:
    python extract_scene.py <module> [<scene name>]
@@ -143,10 +149,8 @@ DEFAULT_PIXEL_HEIGHT = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_height"]
 DEFAULT_PIXEL_WIDTH = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_width"]
 DEFAULT_FRAME_RATE = 60
 
-DEFAULT_POINT_DENSITY_2D = 25
-DEFAULT_POINT_DENSITY_1D = 250
-
 DEFAULT_STROKE_WIDTH = 4
+ANTI_ALIAS_WIDTH = 0.01
 
 FRAME_HEIGHT = 8.0
 FRAME_WIDTH = FRAME_HEIGHT * DEFAULT_PIXEL_WIDTH / DEFAULT_PIXEL_HEIGHT
