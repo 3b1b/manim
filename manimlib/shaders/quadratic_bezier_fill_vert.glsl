@@ -1,6 +1,6 @@
 #version 330
 
-in vec2 point;
+in vec3 point;
 in vec4 color;
 in float fill_type;
 
@@ -10,7 +10,7 @@ out float v_fill_type;
 
 
 void main(){
-    bp = point;
+    bp = point.xy;  // TODO
     v_color = color;
     v_fill_type = fill_type;
 }
