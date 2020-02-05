@@ -72,27 +72,36 @@ def batch_by_property(items, property_func):
     return batch_prop_pairs
 
 
-def tuplify(obj):
+def listify(obj):
     if isinstance(obj, str):
-        return (obj,)
+        return [obj]
     try:
-        return tuple(obj)
+        return list(obj)
     except TypeError:
-        return (obj,)
+        return [obj]
 
 
 def stretch_array_to_length(nparray, length):
     curr_len = len(nparray)
     if curr_len > length:
-        raise Warning(
-            "Trying to stretch array to a length shorter than its own")
-    indices = np.arange(length) / float(length)
-    indices *= curr_len
-    return nparray[indices.astype('int')]
+        raise Warning("Trying to stretch array to a length shorter than its own")
+    indices = np.arange(0, curr_len, curr_len / length).astype(int)
+    return nparray[indices]
+
+
+def stretch_array_to_length_with_interpolation(nparray, length):
+    curr_len = len(nparray)
+    cont_indices = np.linspace(0, curr_len - 1, length)
+    return np.array([
+        (1 - a) * nparray[lh] + a * nparray[rh]
+        for ci in cont_indices
+        for lh, rh, a in [(int(ci), int(np.ceil(ci)), ci % 1)]
+    ])
 
 
 def make_even(iterable_1, iterable_2):
-    list_1, list_2 = list(iterable_1), list(iterable_2)
+    list_1 = list(iterable_1)
+    list_2 = list(iterable_2)
     length = max(len(list_1), len(list_2))
     return (
         [list_1[(n * len(list_1)) // length] for n in range(length)],
