@@ -35,7 +35,7 @@ def rgba_to_color(rgba):
 
 
 def rgb_to_hex(rgb):
-    return "#" + "".join('%02x' % int(255 * x) for x in rgb)
+    return "#" + "".join(hex(int(255 * x))[2:] for x in rgb)
 
 
 def hex_to_rgb(hex_code):
