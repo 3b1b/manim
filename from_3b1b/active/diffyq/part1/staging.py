@@ -130,12 +130,12 @@ class TourOfDifferentialEquations(MovingCameraScene):
         n = len(thumbnails)
         thumbnails.set_height(1.5)
 
-        line = self.line = CubicBezier([
+        line = self.line = CubicBezier(
             [-5, 3, 0],
             [3, 3, 0],
             [-3, -3, 0],
             [5, -3, 0],
-        ])
+        )
         line.shift(MED_SMALL_BUFF * LEFT)
         for thumbnail, a in zip(thumbnails, np.linspace(0, 1, n)):
             thumbnail.move_to(line.point_from_proportion(a))
