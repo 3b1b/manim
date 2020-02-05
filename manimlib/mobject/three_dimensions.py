@@ -2,7 +2,7 @@ from manimlib.constants import *
 from manimlib.mobject.geometry import Square
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.iterables import tuplify
+from manimlib.utils.iterables import listify
 from manimlib.utils.space_ops import z_to_vector
 
 ##############
@@ -40,7 +40,7 @@ class ParametricSurface(VGroup):
             self.make_jagged()
 
     def get_u_values_and_v_values(self):
-        res = tuplify(self.resolution)
+        res = listify(self.resolution)
         if len(res) == 1:
             u_res = v_res = res[0]
         else:

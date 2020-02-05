@@ -7,7 +7,7 @@ from manimlib.mobject.svg.tex_mobject import TexMobject
 from manimlib.mobject.svg.tex_mobject import TextMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.color import color_gradient
-from manimlib.utils.iterables import tuplify
+from manimlib.utils.iterables import listify
 
 EPSILON = 0.0001
 
@@ -37,7 +37,7 @@ class SampleSpace(Rectangle):
         self.label = label
 
     def complete_p_list(self, p_list):
-        new_p_list = list(tuplify(p_list))
+        new_p_list = listify(p_list)
         remainder = 1.0 - sum(new_p_list)
         if abs(remainder) > EPSILON:
             new_p_list.append(remainder)
