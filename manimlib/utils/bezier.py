@@ -2,6 +2,7 @@ from scipy import linalg
 import numpy as np
 
 from manimlib.utils.simple_functions import choose
+from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.space_ops import find_intersection
 
 CLOSED_THRESHOLD = 0.001
@@ -169,13 +170,51 @@ def get_quadratic_approximation_of_cubic(a0, h0, h1, a1):
     h0 = np.array(h0, ndmin=2)
     h1 = np.array(h1, ndmin=2)
     a1 = np.array(a1, ndmin=2)
-    mid = (a0 + 3 * h0 + 3 * h1 + a1) / 8
-    # Tangent vectors at the start, middle and end.
+    # Tangent vectors at the start and end.
     T0 = h0 - a0
-    Tm = 3 * (-a0 - h0 + h1 + a1) / 4
     T1 = a1 - h1
 
-    # Intersection between tangent lines at end points and tangent in the middle
+    # Search for inflection points.  If none are found, use the
+    # midpoint as a cut point.
+    # Based on http://www.caffeineowl.com/graphics/2d/vectorial/cubic-inflexion.html
+    has_infl = np.ones(len(a0), dtype=bool)
+
+    p = h0 - a0
+    q = h1 - 2 * h0 + a0
+    r = a1 - 3 * h1 + 3 * h0 - a0
+
+    def cross2d(v, w):
+        return v[:, 0] * w[:, 1] - v[:, 1] * w[:, 0]
+
+    a = cross2d(q, r)
+    b = cross2d(p, r)
+    c = cross2d(p, q)
+
+    disc = b * b - 4 * a * c
+    has_infl &= (disc > 0)
+    sqrt_disc = np.sqrt(abs(disc))
+    ti_min = fdiv(-b + sqrt_disc, 2 * a, zero_over_zero_value=0)
+    ti_max = fdiv(-b - sqrt_disc, 2 * a, zero_over_zero_value=0)
+    ti_min_in_range = (0 < ti_min) & (ti_min < 1)
+    ti_max_in_range = (0 < ti_max) & (ti_max < 1)
+
+    # Choose a value of t which is starts as 0.5,
+    # but is updated to one of the inflection points
+    # if they lie between 0 and 1
+
+    t_mid = 0.5 * np.ones(len(a0))
+    t_mid[ti_min_in_range] = ti_min
+    t_mid[ti_max_in_range] = ti_max
+
+    m, n = a0.shape
+    t_mid = t_mid.repeat(n).reshape((m, n))
+
+    # Compute bezier point and tangent at the chosen value of t
+    mid = bezier([a0, h0, h1, a1])(t_mid)
+    Tm = bezier([h0 - a0, h1 - h0, a1 - h1])(t_mid)
+
+    # Intersection between tangent lines at end points
+    # and tangent in the middle
     i0 = find_intersection(a0, T0, mid, Tm)
     i1 = find_intersection(a1, T1, mid, Tm)
 
