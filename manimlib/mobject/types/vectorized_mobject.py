@@ -396,12 +396,12 @@ class VMobject(Mobject):
         else:
             self.append_points(quadratic_approx)
 
-    def add_quadratic_bezier_curve_to(handle, anchor):
+    def add_quadratic_bezier_curve_to(self, handle, anchor):
         self.throw_error_if_no_points()
         if self.has_new_path_started():
-            self.append_points([handle, anchors])
+            self.append_points([handle, anchor])
         else:
-            self.append_points([self.points[-1], handle, anchors])
+            self.append_points([self.points[-1], handle, anchor])
 
     def add_line_to(self, point):
         nppc = self.n_points_per_curve
@@ -414,40 +414,28 @@ class VMobject(Mobject):
         self.append_points(points)
         return self
 
-    def add_smooth_curve_to(self, *points):
-        """
-        If two points are passed in, the first is intepretted
-        as a handle, the second as an anchor
-        """
-        if len(points) == 1:
-            handle = None
-            anchor = points[0]
-        elif len(points) == 2:
-            handle, anchor = points
-        else:
-            name = sys._getframe(0).f_code.co_name
-            raise Exception(f"Only call {name} with 1 or 2 points")
-
+    def add_smooth_curve_to(self, point):
         if self.has_new_path_started():
             self.add_line_to(anchor)
         else:
             self.throw_error_if_no_points()
-            if handle is None:
-                has_h, last_a = self.points[-2:]
-                last_tangent = normalize(last_a - has_h)
-                from_last = (anchor - last_a)
-                theta = angle_between_vectors(from_last, last_tangent)
-                cos_theta = max(np.cos(theta), 0.1)
-                dist = get_norm(from_last) / cos_theta / 2
-                handle = last_a + dist * last_tangent
-            self.append_points([last_a, handle, anchor])
+            new_handle = self.get_reflection_of_last_handle()
+            self.add_quadratic_bezier_curve_to(new_handle, point)
         return self
+
+    def add_smooth_cubic_curve_to(self, handle, point):
+        self.throw_error_if_no_points()
+        new_handle = self.get_reflection_of_last_handle()
+        self.add_cubic_bezier_curve_to(new_handle, handle, point)
 
     def has_new_path_started(self):
         return len(self.points) % self.n_points_per_curve == 1
 
     def get_last_point(self):
         return self.points[-1]
+
+    def get_reflection_of_last_handle(self):
+        return 2 * self.points[-1] - self.points[-2]
 
     def is_closed(self):
         return self.consider_points_equals(
