@@ -57,18 +57,18 @@ class PiCreature(SVGMobject):
         try:
             svg_file = os.path.join(
                 PI_CREATURE_DIR,
-                "%s_%s.svg" % (self.file_name_prefix, mode)
+                f"{self.file_name_prefix}_{mode}.svg"
             )
             SVGMobject.__init__(self, file_name=svg_file, **kwargs)
         except Exception:
-            warnings.warn("No %s design with mode %s" %
-                          (self.file_name_prefix, mode))
-            # TODO, this needs to change to a different, better directory
+            warnings.warn(f"No {self.file_name_prefix} design with mode {mode}")
             svg_file = os.path.join(
-                FILE_DIR,
+                os.path.dirname(os.path.realpath(__file__)),
+                os.pardir,
+                "files",
                 "PiCreatures_plain.svg",
             )
-            SVGMobject.__init__(self, mode="plain", file_name=svg_file, **kwargs)
+            SVGMobject.__init__(self, file_name=svg_file, **kwargs)
 
         if self.flip_at_start:
             self.flip()
