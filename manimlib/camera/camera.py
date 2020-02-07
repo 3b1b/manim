@@ -13,7 +13,6 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.iterables import list_difference_update
-from manimlib.utils.iterables import join_structured_arrays
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.simple_functions import fdiv
 
@@ -221,9 +220,10 @@ class Camera(object):
         # but can we somehow use z-buffering to better effect here?
         batches = batch_by_property(shader_infos, self.get_shader_id)
         for info_group, sid in batches:
-            data = join_structured_arrays(*[info["data"] for info in info_group])
             shader = self.get_shader(sid)
-            self.render_from_shader(shader, data)
+            data = np.hstack([info["data"] for info in info_group])
+            render_primative = info_group[0]["render_primative"]
+            self.render_from_shader(shader, data, render_primative)
 
     # Shader stuff
     def init_shaders(self):
@@ -280,10 +280,10 @@ class Camera(object):
         shader['aspect_ratio'].value = fw / fh
         shader['anti_alias_width'].value = ANTI_ALIAS_WIDTH
 
-    def render_from_shader(self, shader, data):
+    def render_from_shader(self, shader, data, render_primative):
         vbo = shader.ctx.buffer(data.tobytes())
         vao = shader.ctx.simple_vertex_array(shader, vbo, *data.dtype.names)
-        vao.render(moderngl.TRIANGLES)  # TODO, allow different render types
+        vao.render(render_primative)
 
 
 def get_vmob_shader(ctx, type):
