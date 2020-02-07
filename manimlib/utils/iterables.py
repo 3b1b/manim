@@ -123,21 +123,6 @@ def remove_nones(sequence):
     return [x for x in sequence if x]
 
 
-def join_structured_arrays(*arrays):
-    assert(len(arrays) > 0)
-
-    result = np.zeros(
-        sum([len(arr) for arr in arrays]),
-        dtype=arrays[0].dtype
-    )
-    lh = 0
-    for array in arrays:
-        rh = lh + len(array)
-        result[lh:rh] = array
-        lh = rh
-    return result
-
-
 # Note this is redundant with it.chain
 
 
