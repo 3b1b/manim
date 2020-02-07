@@ -387,7 +387,7 @@ class VMobjectFromSVGPathstring(VMobject):
             "Q": (self.add_quadratic_bezier_curve_to, 2),
             "T": (self.add_smooth_curve_to, 1),
             "A": (self.add_quadratic_bezier_curve_to, 2),  # TODO
-            "Z": (lambda: self.add_line_to(self.points[0]), 0),
+            "Z": (lambda: None, 0),
         }
 
     def get_original_path_string(self):
