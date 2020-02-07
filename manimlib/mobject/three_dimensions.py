@@ -8,6 +8,9 @@ from manimlib.utils.space_ops import z_to_vector
 ##############
 
 
+# TODO, replace these with a special 3d type, not VMobject
+
+
 class ThreeDVMobject(VMobject):
     CONFIG = {
         "shade_in_3d": True,

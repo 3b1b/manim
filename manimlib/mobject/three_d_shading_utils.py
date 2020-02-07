@@ -4,6 +4,8 @@ from manimlib.constants import ORIGIN
 from manimlib.utils.space_ops import get_unit_normal
 
 
+# TODO, these ideas should be deprecated
+
 def get_3d_vmob_gradient_start_and_end_points(vmob):
     return (
         get_3d_vmob_start_corner(vmob),
