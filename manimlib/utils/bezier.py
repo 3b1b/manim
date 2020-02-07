@@ -193,8 +193,17 @@ def get_quadratic_approximation_of_cubic(a0, h0, h1, a1):
     disc = b * b - 4 * a * c
     has_infl &= (disc > 0)
     sqrt_disc = np.sqrt(abs(disc))
-    ti_min = fdiv(-b + sqrt_disc, 2 * a, zero_over_zero_value=0)
-    ti_max = fdiv(-b - sqrt_disc, 2 * a, zero_over_zero_value=0)
+    # print(a, b, c, sqrt_disc)
+    settings = np.seterr(all='ignore')
+    ti_min, ti_max = [
+        np.true_divide(
+            -b + sgn * sqrt_disc, 2 * a,
+            out=(-c / b),
+            where=(a != 0),
+        )
+        for sgn in [-1, +1]
+    ]
+    np.seterr(**settings)
     ti_min_in_range = (0 < ti_min) & (ti_min < 1)
     ti_max_in_range = (0 < ti_max) & (ti_max < 1)
 
@@ -203,8 +212,8 @@ def get_quadratic_approximation_of_cubic(a0, h0, h1, a1):
     # if they lie between 0 and 1
 
     t_mid = 0.5 * np.ones(len(a0))
-    t_mid[ti_min_in_range] = ti_min
-    t_mid[ti_max_in_range] = ti_max
+    t_mid[ti_min_in_range] = ti_min[ti_min_in_range]
+    t_mid[ti_max_in_range] = ti_max[ti_max_in_range]
 
     m, n = a0.shape
     t_mid = t_mid.repeat(n).reshape((m, n))
