@@ -9,7 +9,8 @@ uniform float anti_alias_width;
 
 in vec2 bp[3];
 in vec4 v_color[3];
-in float v_fill_type[3];
+in float v_fill_all[3];
+in float v_orientation[3];
 
 out vec4 color;
 out float fill_type;
@@ -75,7 +76,7 @@ void emit_simple_triangle(){
 }
 
 
-void emit_pentagon(vec2 bp0, vec2 bp1, vec2 bp2, float in_or_out){
+void emit_pentagon(vec2 bp0, vec2 bp1, vec2 bp2, float orientation){
     // Tangent vectors
     vec2 t01 = normalize(bp1 - bp0);
     vec2 t12 = normalize(bp2 - bp1);
@@ -85,14 +86,22 @@ void emit_pentagon(vec2 bp0, vec2 bp1, vec2 bp2, float in_or_out){
     // Inside and right turn -> rot left -> +1
     // Outside and right turn -> rot right -> -1
     float c_orient = (cross(t01, t12) > 0) ? 1 : -1;
-    float orient = in_or_out * c_orient;
+    c_orient *= orientation;
+
+    bool fill_in = (c_orient > 0);
+    fill_type = fill_in ? FILL_INSIDE : FILL_OUTSIDE;
+
+    // float orient = in_or_out * c_orient;
 
     // Normal vectors
-    vec2 n01 = -orient * vec2(-t01.y, t01.x);
-    vec2 n12 = -orient * vec2(-t12.y, t12.x);
+    // Rotate tangent vector 90-degrees clockwise
+    // if the curve is positively oriented, otherwise
+    // rotate it 90-degrees counterclockwise
+    vec2 n01 = orientation * vec2(t01.y, -t01.x);
+    vec2 n12 = orientation * vec2(t12.y, -t12.x);
 
-    float aaw = 1 * anti_alias_width;
-    vec2 nudge1 = (fill_type == FILL_OUTSIDE) ? vec2(0) : 0.5 * aaw * (n01 + n12);
+    float aaw = anti_alias_width;
+    vec2 nudge1 = fill_in ? 0.5 * aaw * (n01 + n12) : vec2(0);
     vec2 corners[5] = vec2[5](
         bp0 + aaw * n01,
         bp0,
@@ -102,7 +111,7 @@ void emit_pentagon(vec2 bp0, vec2 bp1, vec2 bp2, float in_or_out){
     );
 
     int coords_index_map[5] = int[5](0, 1, 2, 3, 4);
-    if(in_or_out < 0) coords_index_map = int[5](1, 0, 2, 4, 3);
+    if(!fill_in) coords_index_map = int[5](1, 0, 2, 4, 3);
         
     mat3 xy_to_uv = get_xy_to_uv(bp0, bp1);
     mat3 xy_to_wz = get_xy_to_wz(bp0, bp1, bp2);
@@ -115,10 +124,9 @@ void emit_pentagon(vec2 bp0, vec2 bp1, vec2 bp2, float in_or_out){
         wz_coords = (xy_to_wz * vec3(corner, 1)).xy;
         // I haven't a clue why an index map doesn't work just
         // as well here, but for some reason it doesn't.
-        if(i < 2) color = v_color[0];
+        if(i < 2)       color = v_color[0];
         else if(i == 2) color = v_color[1];
-        else color = v_color[2];
-        // color = v_color[1];
+        else            color = v_color[2];
         set_gl_Position(corner);
         EmitVertex();
     }
@@ -127,14 +135,16 @@ void emit_pentagon(vec2 bp0, vec2 bp1, vec2 bp2, float in_or_out){
 
 
 void main(){
-    fill_type = v_fill_type[0];
+    float fill_all = v_fill_all[0];
 
-    if(fill_type == FILL_ALL){
+    if(fill_all == 1){
+        fill_type = FILL_ALL;
         emit_simple_triangle();
     }else{
         vec2 new_bp[3];
         int n = get_reduced_control_points(bp[0], bp[1], bp[2], new_bp);
         bezier_degree = float(n);
+        float orientation = v_orientation[0];
 
         vec2 bp0, bp1, bp2;
         if(n == 0){
@@ -150,8 +160,7 @@ void main(){
             bp2 = new_bp[2];
         }
 
-        float orient = (fill_type == FILL_INSIDE) ? 1 : -1;
-        emit_pentagon(bp0, bp1, bp2, orient);
+        emit_pentagon(bp0, bp1, bp2, orientation);
     }
 }
 
