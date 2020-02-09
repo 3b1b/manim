@@ -284,7 +284,7 @@ class NumberPlane(Axes):
     }
 
     def __init__(self, **kwargs):
-        super.__init__(**kwargs)
+        super().__init__(**kwargs)
         self.init_background_lines()
 
     def init_background_lines(self):
