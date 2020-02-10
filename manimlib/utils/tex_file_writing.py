@@ -42,8 +42,9 @@ def tex_to_dvi(tex_file):
     if not os.path.exists(result):
         commands = [
             "latex",
-            "-interaction=batchmode",
-            "-halt-on-error",
+            "-synctex=1",
+            "-interaction=nonstopmode",
+            "-file-line-error",
             "-output-directory=\"{}\"".format(consts.TEX_DIR),
             "\"{}\"".format(tex_file),
             ">",
