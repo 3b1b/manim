@@ -324,6 +324,8 @@ class VMobjectFromSVGPathstring(VMobject):
         for command, coord_string in self.get_commands_and_coord_strings():
             new_points = self.string_to_points(command, coord_string)
             self.handle_command(command, new_points)
+        # For a healthy triangulation later
+        self.subdivide_sharp_curves()
         # SVG treats y-coordinate differently
         self.stretch(-1, 1, about_point=ORIGIN)
 
@@ -337,7 +339,8 @@ class VMobjectFromSVGPathstring(VMobject):
         )
 
     def handle_command(self, command, new_points):
-        if command.islower():  # Treat it as a relative command
+        if command.islower():
+            # Treat it as a relative command
             new_points += self.relative_point
 
         func, n_points = self.command_to_function(command)
@@ -347,7 +350,8 @@ class VMobjectFromSVGPathstring(VMobject):
         # Recursively handle the rest of the points
         if len(leftover_points) > 0:
             if command.upper() == "M":
-                command = "l"  # Treat following points as relative line coordinates
+                # Treat following points as relative line coordinates
+                command = "l"
             self.handle_command(command, leftover_points)
         else:
             # Command is over, reset for future relative commands
