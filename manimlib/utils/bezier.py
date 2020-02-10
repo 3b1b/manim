@@ -2,7 +2,6 @@ from scipy import linalg
 import numpy as np
 
 from manimlib.utils.simple_functions import choose
-from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.space_ops import find_intersection
 
 CLOSED_THRESHOLD = 0.001
