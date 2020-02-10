@@ -1,7 +1,5 @@
 import itertools as it
-import sys
-from mapbox_earcut import triangulate_float32 as earcut
-import numbers
+import moderngl
 
 from colour import Color
 
@@ -20,7 +18,10 @@ from manimlib.utils.iterables import make_even
 from manimlib.utils.iterables import stretch_array_to_length
 from manimlib.utils.iterables import stretch_array_to_length_with_interpolation
 from manimlib.utils.iterables import listify
+from manimlib.utils.space_ops import cross2d
 from manimlib.utils.space_ops import get_norm
+from manimlib.utils.space_ops import angle_between_vectors
+from manimlib.utils.space_ops import earclip_triangulation
 
 
 class VMobject(Mobject):
@@ -54,6 +55,7 @@ class VMobject(Mobject):
         "fill_frag_shader_file": "quadratic_bezier_fill_frag.glsl",
         # Could also be Bevel, Miter, Round
         "joint_type": "auto",
+        "render_primative": moderngl.TRIANGLES,
     }
 
     def get_group_class(self):
@@ -331,7 +333,7 @@ class VMobject(Mobject):
                 submob.z_index_group = self
         return self
 
-    def stretch_style_for_points(self, array):
+    def stretched_style_array_matching_points(self, array):
         new_len = self.get_num_points()
         long_arr = stretch_array_to_length_with_interpolation(
             array, 1 + 2 * (new_len // 3)
@@ -371,11 +373,11 @@ class VMobject(Mobject):
         # TODO, check that number new points is a multiple of 4?
         # or else that if len(self.points) % 4 == 1, then
         # len(new_points) % 4 == 3?
-        self.points = np.append(self.points, new_points, axis=0)
+        self.points = np.vstack([self.points, new_points])
         return self
 
     def start_new_path(self, point):
-        # TODO, make sure that len(self.points) % 3 == 0?
+        assert(len(self.points) % self.n_points_per_curve == 0)
         self.append_points([point])
         return self
 
@@ -437,10 +439,36 @@ class VMobject(Mobject):
     def get_reflection_of_last_handle(self):
         return 2 * self.points[-1] - self.points[-2]
 
+    def close_path(self):
+        if not self.is_closed():
+            self.add_line_to(self.get_subpaths()[-1][0])
+
     def is_closed(self):
         return self.consider_points_equals(
             self.points[0], self.points[-1]
         )
+
+    def subdivide_sharp_curves(self, angle_threshold=30 * DEGREES, family=True):
+        if family:
+            vmobs = self.family_members_with_points()
+        else:
+            vmobs = [self] if self.has_points() else []
+
+        for vmob in vmobs:
+            new_points = []
+            for tup in vmob.get_bezier_tuples():
+                angle = angle_between_vectors(tup[1] - tup[0], tup[2] - tup[1])
+                if angle > angle_threshold:
+                    n = int(np.ceil(angle / angle_threshold))
+                    alphas = np.linspace(0, 1, n + 1)
+                    new_points.extend([
+                        partial_bezier_points(tup, a1, a2)
+                        for a1, a2 in zip(alphas, alphas[1:])
+                    ])
+                else:
+                    new_points.append(tup)
+            vmob.points = np.vstack(new_points)
+        return self
 
     def add_points_as_corners(self, points):
         for point in points:
@@ -468,11 +496,7 @@ class VMobject(Mobject):
             subpaths = submob.get_subpaths()
             submob.clear_points()
             for subpath in subpaths:
-                anchors = np.append(
-                    subpath[::nppc],
-                    subpath[-1:],
-                    0
-                )
+                anchors = np.vstack([subpath[::nppc], subpath[-1:]])
                 if mode == "smooth":
                     h1, h2 = get_smooth_handle_points(anchors)
                     new_subpath = get_quadratic_approximation_of_cubic(
@@ -519,7 +543,7 @@ class VMobject(Mobject):
             atol=self.tolerance_for_point_equality
         )
 
-    # Information about line
+    # Information about the curve
     def get_bezier_tuples_from_points(self, points):
         nppc = self.n_points_per_curve
         remainder = len(points) % nppc
@@ -643,8 +667,8 @@ class VMobject(Mobject):
             diff2 = max(0, (len(sp1) - len(sp2)) // nppc)
             sp1 = self.insert_n_curves_to_point_list(diff1, sp1)
             sp2 = self.insert_n_curves_to_point_list(diff2, sp2)
-            new_path1 = np.append(new_path1, sp1, axis=0)
-            new_path2 = np.append(new_path2, sp2, axis=0)
+            new_path1 = np.vstack([new_path1, sp1])
+            new_path2 = np.vstack([new_path2, sp2])
         self.set_points(new_path1)
         vmobject.set_points(new_path2)
         return self
@@ -690,11 +714,10 @@ class VMobject(Mobject):
             # smaller quadratic curves
             alphas = np.linspace(0, 1, sf + 1)
             for a1, a2 in zip(alphas, alphas[1:]):
-                new_points = np.append(
+                new_points = np.vstack([
                     new_points,
                     partial_bezier_points(group, a1, a2),
-                    axis=0
-                )
+                ])
         return new_points
 
     def align_rgbas(self, vmobject):
@@ -782,6 +805,7 @@ class VMobject(Mobject):
                 "vert": self.fill_vert_shader_file,
                 "geom": self.fill_geom_shader_file,
                 "frag": self.fill_frag_shader_file,
+                "render_primative": self.render_primative,
             })
         if self.get_stroke_width() > 0 and self.get_stroke_opacity() > 0:
             result.append({
@@ -789,6 +813,7 @@ class VMobject(Mobject):
                 "vert": self.stroke_vert_shader_file,
                 "geom": self.stroke_geom_shader_file,
                 "frag": self.stroke_frag_shader_file,
+                "render_primative": self.render_primative,
             })
         if len(result) == 2 and self.draw_stroke_behind_fill:
             return [result[1], result[0]]
@@ -813,11 +838,11 @@ class VMobject(Mobject):
 
         rgbas = self.get_stroke_rgbas()
         if len(rgbas) > 1:
-            rgbas = self.stretch_style_for_points(rgbas)
+            rgbas = self.stretched_style_array_matching_points(rgbas)
 
         stroke_width = self.stroke_width
         if len(stroke_width) > 1:
-            stroke_width = self.stretch_style_for_points(stroke_width)
+            stroke_width = self.stretched_style_array_matching_points(stroke_width)
 
         data = np.zeros(len(points), dtype=dtype)
         data['point'] = points
@@ -831,11 +856,9 @@ class VMobject(Mobject):
         return data
 
     def get_triangulation(self):
-        # Figure out how to triangulate the interior of the vmob,
-        # and pass the appropriate attributes to each triangle vertex
+        # Figure out how to triangulate the interior to know
+        # how to send the points as to the vertex shader.
         # First triangles come directly from the points
-
-        # TODO, this does not work for compound paths that aren't inside each other
 
         points = self.points
         indices = np.arange(len(points), dtype=int)
@@ -846,96 +869,66 @@ class VMobject(Mobject):
         v01s = b1s - b0s
         v12s = b2s - b1s
 
-        def cross(a, b):
-            return a[:, 0] * b[:, 1] - a[:, 1] * b[:, 0]
-
         # TODO, account fo 3d
-        crosses = cross(v01s, v12s)
-        orientations = np.ones(crosses.size)
-        orientations[crosses <= 0] = -1
+        crosses = cross2d(v01s, v12s)
+        orientations = np.sign(crosses)
 
         atol = self.tolerance_for_point_equality
         end_of_loop = np.zeros(orientations.shape, dtype=bool)
         end_of_loop[:-1] = (np.abs(b2s[:-1] - b0s[1:]) > atol).any(1)
         end_of_loop[-1] = True
-        end_of_loop_indices = np.argwhere(end_of_loop).flatten()
 
-        # Add up (x1 + x2)*(y1 - y2) for all edges (x1, y1), (x2, y2)
-        signed_area_terms = (b0s[:, 0] - b2s[:, 0]) * (b0s[:, 1] + b2s[:, 1])
-
-        loop_orientations = np.array([
-            signed_area_terms[i:j].sum()
-            for i, j in zip([0, *end_of_loop_indices], end_of_loop_indices)
-        ])
+        # Add up (x1 + x2)*(y2 - y1) for all edges (x1, y1), (x2, y2)
+        signed_area_terms = (b0s[:, 0] + b2s[:, 0]) * (b2s[:, 1] - b0s[:, 1])
         # Total signed area determines orientation
-        total_orientation = np.sign(loop_orientations.sum())
+        total_orientation = np.sign(signed_area_terms.sum())
         orientations *= total_orientation
-        loop_orientations *= total_orientation
         concave_parts = orientations < 0
 
         # These are the vertices to which we'll apply a polygon triangulation
-        inner_vert_indices = np.array([
-            *indices[0::3],
-            *indices[1::3][concave_parts],
-            *indices[2::3][end_of_loop],
+        inner_vert_indices = np.hstack([
+            indices[0::3],
+            indices[1::3][concave_parts],
+            indices[2::3][end_of_loop],
         ])
         inner_vert_indices.sort()
         rings = np.arange(1, len(inner_vert_indices) + 1)[inner_vert_indices % 3 == 2]
 
         # Triangulate
-        # Group together each positive loop with all the negatives following it
-        inner_verts = points[inner_vert_indices, :2]
-        # inner_tri_indices = []
-        # positive_loops = indices[:len(rings)][loop_orientations > 0]
-        # last_end = 0
-        # for i, j in zip(positive_loops, [*positive_loops[1:], len(rings)]):
-        #     print(i, j, rings, last_end)
-        #     triangulation = earcut(inner_verts[last_end:rings[j - 1]], rings[i:j] - last_end)
-        #     new_tri_indices = inner_vert_indices[triangulation]
-        #     inner_tri_indices += list(new_tri_indices)
-        #     last_end = rings[j - 1]
+        inner_verts = points[inner_vert_indices]
+        inner_tri_indices = inner_vert_indices[
+            earclip_triangulation(inner_verts, rings, total_orientation)
+        ]
 
-        inner_tri_indices = inner_vert_indices[earcut(inner_verts, rings)]
-
-        # This is faster than using np.append
-        tri_indices = np.zeros(len(indices) + len(inner_tri_indices), dtype=int)
-        tri_indices[:len(indices)] = indices
-        tri_indices[len(indices):] = inner_tri_indices
-
-        fill_type_to_code = {
-            "inside": 0,
-            "outside": 1,
-            "all": 2,
-        }
-        fill_types = np.ones((len(tri_indices), 1))
-        fill_types[:len(points)] = fill_type_to_code["inside"]
-        fill_types[:len(points)][np.repeat(concave_parts, 3)] = fill_type_to_code["outside"]
-        fill_types[len(points):] = fill_type_to_code["all"]
-
-        return tri_indices, fill_types
+        tri_indices = np.hstack([indices, inner_tri_indices])
+        return tri_indices, total_orientation
 
     def get_fill_shader_data(self):
         dtype = [
             ('point', np.float32, (3,)),
             ('color', np.float32, (4,)),
-            ('fill_type', np.float32, (1,)),
+            ('fill_all', np.float32, (1,)),
+            ('orientation', np.float32, (1,)),
         ]
 
         points = self.points
 
         # TODO, potentially cache triangulation
-        tri_indices, fill_types = self.get_triangulation()
+        tri_indices, orientation = self.get_triangulation()
 
         rgbas = self.get_fill_rgbas()  # TODO, best way to enable multiple colors?
-        # rgbas = self.stretch_style_for_points(rgbas)
-        # rgbas = rgbas[tri_indices]
-        # rgbas = np.random.random(data["color"].shape)
 
         data = np.zeros(len(tri_indices), dtype=dtype)
         data["point"] = points[tri_indices]
         data["color"] = rgbas
-        data["fill_type"] = fill_types
+        # Assume the triangulation is such that the first n_points points
+        # are on the boundary, and the rest are in the interior
+        data["fill_all"][:len(points)] = 0
+        data["fill_all"][len(points):] = 1
+        data["orientation"] = orientation
+
         return data
+
 
 
 class VGroup(VMobject):
