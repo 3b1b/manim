@@ -83,9 +83,13 @@ def parse_cli():
             help="Write all the scenes from a file",
         ),
         parser.add_argument(
-            "-o", "--file_name",
-            help="Specify the name of the output file, if"
-                 "it should be different from the scene class name",
+            "-o", "--open",
+            action="store_true",
+            help="Automatically open the saved file once its done",
+        )
+        parser.add_argument(
+            "--file_name",
+            help="Name for the movie or image file",
         )
         parser.add_argument(
             "-n", "--start_at_animation_number",
@@ -101,11 +105,6 @@ def parse_cli():
         parser.add_argument(
             "-c", "--color",
             help="Background color",
-        )
-        parser.add_argument(
-            "--sound",
-            action="store_true",
-            help="Play a success/failure sound",
         )
         parser.add_argument(
             "--leave_progress_bars",
@@ -185,7 +184,7 @@ def get_configuration(args):
     module = get_module(args.file)
     file_writer_config = {
         # By default, write to file
-        "write_to_movie": args.write_to_movie or not args.save_last_frame,
+        "write_to_movie": args.write_to_movie or args.open or args.show_file_in_finder,
         "save_last_frame": args.save_last_frame,
         "save_pngs": args.save_pngs,
         "save_as_gif": args.save_as_gif,
@@ -194,21 +193,21 @@ def get_configuration(args):
         "movie_file_extension": ".mov" if args.transparent else ".mp4",
         "file_name": args.file_name,
         "input_file_path": args.file,
+        "open_file_upon_completion": args.open,
+        "show_file_location_upon_completion": args.show_file_in_finder,
+        "quiet": args.quiet,
     }
     if hasattr(module, "OUTPUT_DIRECTORY"):
         file_writer_config["output_directory"] = module.OUTPUT_DIRECTORY
     config = {
         "module": module,
         "scene_names": args.scene_names,
-        "open_video_upon_completion": args.preview,
-        "show_file_in_finder": args.show_file_in_finder,
+        "preview": args.preview,
         "file_writer_config": file_writer_config,
         "quiet": args.quiet or args.write_all,
-        "ignore_waits": args.preview,
         "write_all": args.write_all,
         "start_at_animation_number": args.start_at_animation_number,
         "end_at_animation_number": None,
-        "sound": args.sound,
         "leave_progress_bars": args.leave_progress_bars,
         "media_dir": args.media_dir,
         "video_dir": args.video_dir,
@@ -218,6 +217,12 @@ def get_configuration(args):
 
     # Camera configuration
     config["camera_config"] = get_camera_configuration(args)
+    config["window_config"] = {
+        "size": (
+            config["camera_config"]["pixel_width"],
+            config["camera_config"]["pixel_height"],
+        )
+    }
 
     # Arguments related to skipping
     stan = config["start_at_animation_number"]
