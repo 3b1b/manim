@@ -42,6 +42,7 @@ class Animation(object):
         # played.  As much initialization as possible,
         # especially any mobject copying, should live in
         # this method
+        self.mobject.prepare_for_animation()
         self.starting_mobject = self.create_starting_mobject()
         if self.suspend_mobject_updating:
             # All calls to self.mobject's internal updaters
@@ -55,6 +56,7 @@ class Animation(object):
 
     def finish(self):
         self.interpolate(1)
+        self.mobject.cleanup_from_animation()
         if self.suspend_mobject_updating:
             self.mobject.resume_updating()
 
