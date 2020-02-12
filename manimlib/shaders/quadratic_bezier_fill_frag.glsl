@@ -39,7 +39,7 @@ bool is_inside_curve(){
 
 float sdf(){
     if(is_inside_curve()) return -1;
-    return min_dist_to_curve(uv_coords, uv_b2, bezier_degree, true);
+    return min_dist_to_curve(uv_coords, uv_b2, bezier_degree, false);
 }
 
 
