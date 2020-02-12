@@ -685,44 +685,37 @@ class VMobject(Mobject):
         new_points = self.insert_n_curves_to_point_list(n, self.get_points())
         self.set_points(new_points)
 
-        if new_path_point is not None:
+        if new_path_point:
             self.append_points([new_path_point])
         return self
 
     def insert_n_curves_to_point_list(self, n, points):
+        nppc = self.n_points_per_curve
         if len(points) == 1:
-            nppc = self.n_points_per_curve
             return np.repeat(points, nppc * n, 0)
-        bezier_groups = self.get_bezier_tuples_from_points(points)
-        curr_num = len(bezier_groups)
-        target_num = curr_num + n
-        # This is an array with values ranging from 0
-        # up to curr_num,  with repeats such that
-        # it's total length is target_num.  For example,
-        # with curr_num = 10, target_num = 15, this would
-        # be [0, 0, 1, 2, 2, 3, 4, 4, 5, 6, 6, 7, 8, 8, 9]
-        repeat_indices = (np.arange(target_num) * curr_num) // target_num
 
-        # If the nth term of this list is k, it means
-        # that the nth curve of our path should be split
-        # into k pieces.  In the above example, this would
-        # be [2, 1, 2, 1, 2, 1, 2, 1, 2, 1]
-        split_factors = [
-            sum(repeat_indices == i)
-            for i in range(curr_num)
-        ]
-        new_points = np.zeros((0, self.dim))
-        for group, sf in zip(bezier_groups, split_factors):
+        bezier_groups = self.get_bezier_tuples_from_points(points)
+        norms = np.array([
+            get_norm(bg[nppc - 1] - bg[0])
+            for bg in bezier_groups
+        ])
+        # Insertions per curve
+        ipc = np.round(n * norms / sum(norms)).astype(int)
+        diff = n - sum(ipc)
+        for x in range(diff):
+            ipc[np.argmin(ipc)] += 1
+        for x in range(-diff):
+            ipc[np.argmax(ipc)] -= 1
+
+        new_points = []
+        for group, n_inserts in zip(bezier_groups, ipc):
             # What was once a single quadratic curve defined
-            # by "group" will now be broken into sf
+            # by "group" will now be broken into n_inserts + 1
             # smaller quadratic curves
-            alphas = np.linspace(0, 1, sf + 1)
+            alphas = np.linspace(0, 1, n_inserts + 2)
             for a1, a2 in zip(alphas, alphas[1:]):
-                new_points = np.vstack([
-                    new_points,
-                    partial_bezier_points(group, a1, a2),
-                ])
-        return new_points
+                new_points += partial_bezier_points(group, a1, a2)
+        return np.vstack(new_points)
 
     def align_rgbas(self, vmobject):
         attrs = ["fill_rgbas", "stroke_rgbas"]
@@ -799,13 +792,6 @@ class VMobject(Mobject):
         vmob = self.copy()
         vmob.pointwise_become_partial(self, a, b)
         return vmob
-
-    def prepare_for_animation(self):
-        if self.get_fill_opacity() > 0:
-            self.lock_triangulation()
-
-    def cleanup_from_animation(self):
-        self.unlock_triangulation()
 
     # For shaders
     def get_shader_info_list(self):
