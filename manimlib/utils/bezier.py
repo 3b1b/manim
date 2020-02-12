@@ -17,9 +17,9 @@ def bezier(points):
 
 def partial_bezier_points(points, a, b):
     """
-    Given an array of points which define
+    Given an list of points which define
     a bezier curve, and two numbers 0<=a<b<=1,
-    return an array of the same size, which
+    return an list of the same size, which
     describes the portion of the original bezier
     curve on the interval [a, b].
 
@@ -28,15 +28,15 @@ def partial_bezier_points(points, a, b):
     if a == 1:
         return [points[-1]] * len(points)
 
-    a_to_1 = np.array([
+    a_to_1 = [
         bezier(points[i:])(a)
         for i in range(len(points))
-    ])
+    ]
     end_prop = (b - a) / (1. - a)
-    return np.array([
+    return [
         bezier(a_to_1[:i + 1])(end_prop)
         for i in range(len(points))
-    ])
+    ]
 
 
 # Linear interpolation variants
