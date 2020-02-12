@@ -6,6 +6,7 @@ layout (triangle_strip, max_vertices = 5) out;
 uniform float scale;
 uniform float aspect_ratio;
 uniform float anti_alias_width;
+uniform vec3 frame_center;
 
 in vec2 bp[3];
 in vec4 v_color[3];
@@ -62,6 +63,7 @@ mat3 get_xy_to_wz(vec2 b0, vec2 b1, vec2 b2){
 void set_gl_Position(vec2 p){
     vec2 result = p / scale;
     result.x /= aspect_ratio;
+    result -= frame_center.xy;
     gl_Position = vec4(result, 0.0, 1.0);
 }
 

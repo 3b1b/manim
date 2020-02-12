@@ -6,6 +6,7 @@ layout (triangle_strip, max_vertices = 5) out;
 uniform float scale;
 uniform float aspect_ratio;
 uniform float anti_alias_width;
+uniform vec3 frame_center;
 
 in vec2 bp[3];
 in vec2 prev_bp[3];
@@ -266,6 +267,7 @@ void set_previous_and_next(vec2 controls[3], int degree){
 void set_gl_Position(vec2 p){
     vec2 result = p / scale;
     result.x /= aspect_ratio;
+    result -= frame_center.xy;
     gl_Position = vec4(result, 0.0, 1.0);
 }
 
