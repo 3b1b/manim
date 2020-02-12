@@ -123,21 +123,10 @@ def z_to_vector(vector):
     return np.dot(rotation_about_z(theta), phi_down)
 
 
-# TODO, this is redundant with below
-def angle_between(v1, v2):
-    return np.arccos(np.dot(
-        v1 / get_norm(v1),
-        v2 / get_norm(v2)
-    ))
-
-
 def angle_of_vector(vector):
     """
     Returns polar coordinate theta when vector is project on xy plane
     """
-    z = complex(*vector[:2])
-    if z == 0:
-        return 0
     return np.angle(complex(*vector[:2]))
 
 
@@ -146,10 +135,8 @@ def angle_between_vectors(v1, v2):
     Returns the angle between two 3D vectors.
     This angle will always be btw 0 and pi
     """
-    return np.arccos(fdiv(
-        np.dot(v1, v2),
-        get_norm(v1) * get_norm(v2)
-    ))
+    diff = (angle_of_vector(v2) - angle_of_vector(v1)) % TAU
+    return min(diff, TAU - diff)
 
 
 def project_along_vector(point, vector):
@@ -304,6 +291,7 @@ def norm_squared(v):
     return sum(v * v)
 
 
+# TODO, fails for polygons drawn over themselves
 def earclip_triangulation(verts, rings):
     n = len(verts)
     # Establish where loop indices should be connected
@@ -336,9 +324,8 @@ def earclip_triangulation(verts, rings):
     # Find an ordering of indices walking around the polygon
     indices = []
     i = 0
-    starting = True
-    while (i != 0 or starting):
-        starting = False
+    for x in range(n + len(rings) - 1):
+        # starting = False
         if i in loop_connections:
             j = loop_connections[i]
             indices.extend([i, j])
@@ -346,6 +333,8 @@ def earclip_triangulation(verts, rings):
         else:
             indices.append(i)
             i = after[i]
+        if i == 0:
+            break
 
     meta_indices = earcut(verts[indices, :2], [len(indices)])
     return [indices[mi] for mi in meta_indices]
