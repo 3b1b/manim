@@ -1,17 +1,13 @@
 import numpy as np
 from pydub import AudioSegment
 import shutil
-import subprocess
+import subprocess as sp
 import os
-import _thread as thread
-from time import sleep
-import datetime
+import sys
+import platform
 
 import manimlib.constants as consts
 from manimlib.constants import FFMPEG_BIN
-from manimlib.constants import STREAMING_IP
-from manimlib.constants import STREAMING_PORT
-from manimlib.constants import STREAMING_PROTOCOL
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.file_ops import guarantee_existence
 from manimlib.utils.file_ops import add_extension_if_not_present
@@ -28,20 +24,19 @@ class SceneFileWriter(object):
         "save_last_frame": False,
         "movie_file_extension": ".mp4",
         "gif_file_extension": ".gif",
-        "livestreaming": False,
-        "to_twitch": False,
-        "twitch_key": None,
         # Previous output_file_name
         # TODO, address this in extract_scene et. al.
         "file_name": None,
         "input_file_path": "",
         "output_directory": None,
+        "open_file_upon_completion": False,
+        "show_file_location_upon_completion": False,
+        "quiet": False,
     }
 
     def __init__(self, scene, **kwargs):
         digest_config(self, kwargs)
         self.scene = scene
-        self.stream_lock = False
         self.init_output_directories()
         self.init_audio()
 
@@ -168,16 +163,17 @@ class SceneFileWriter(object):
         self.add_audio_segment(new_segment, time, **kwargs)
 
     # Writers
-    def begin_animation(self, allow_write=False):
-        if self.write_to_movie and allow_write:
+    def begin_animation(self):
+        if self.write_to_movie:
             self.open_movie_pipe()
 
-    def end_animation(self, allow_write=False):
-        if self.write_to_movie and allow_write:
+    def end_animation(self):
+        if self.write_to_movie:
             self.close_movie_pipe()
 
-    def write_frame(self, raw_bytes):
+    def write_frame(self, camera):
         if self.write_to_movie:
+            raw_bytes = camera.get_raw_fbo_data()
             self.writing_process.stdin.write(raw_bytes)
 
     def save_final_image(self, image):
@@ -193,6 +189,8 @@ class SceneFileWriter(object):
         if self.save_last_frame:
             self.scene.update_frame(ignore_skipping=True)
             self.save_final_image(self.scene.get_image())
+        if self.should_open_file():
+            self.open_file()
 
     def open_movie_pipe(self):
         file_path = self.get_next_partial_movie_path()
@@ -231,7 +229,7 @@ class SceneFileWriter(object):
                 '-pix_fmt', 'yuv420p',
             ]
         command += [temp_file_path]
-        self.writing_process = subprocess.Popen(command, stdin=subprocess.PIPE)
+        self.writing_process = sp.Popen(command, stdin=sp.PIPE)
 
     def close_movie_pipe(self):
         self.writing_process.stdin.close()
@@ -293,7 +291,7 @@ class SceneFileWriter(object):
         if not self.includes_sound:
             commands.insert(-1, '-an')
 
-        combine_process = subprocess.Popen(commands)
+        combine_process = sp.Popen(commands)
         combine_process.wait()
 
         if self.includes_sound:
@@ -323,7 +321,7 @@ class SceneFileWriter(object):
                 # "-shortest",
                 temp_file_path,
             ]
-            subprocess.call(commands)
+            sp.call(commands)
             shutil.move(temp_file_path, movie_file_path)
             os.remove(sound_file_path)
 
@@ -331,3 +329,47 @@ class SceneFileWriter(object):
 
     def print_file_ready_message(self, file_path):
         print("\nFile ready at {}\n".format(file_path))
+
+    def should_open_file(self):
+        return any([
+            self.show_file_location_upon_completion,
+            self.open_file_upon_completion,
+        ])
+
+    def open_file(self):
+        if self.quiet:
+            curr_stdout = sys.stdout
+            sys.stdout = open(os.devnull, "w")
+
+        current_os = platform.system()
+        file_paths = []
+
+        if self.save_last_frame:
+            file_paths.append(self.get_image_file_path())
+        if self.write_to_movie:
+            file_paths.append(self.get_movie_file_path())
+
+        for file_path in file_paths:
+            if current_os == "Windows":
+                os.startfile(file_path)
+            else:
+                commands = []
+                if current_os == "Linux":
+                    commands.append("xdg-open")
+                elif current_os.startswith("CYGWIN"):
+                    commands.append("cygstart")
+                else:  # Assume macOS
+                    commands.append("open")
+
+                if self.show_file_location_upon_completion:
+                    commands.append("-R")
+
+                commands.append(file_path)
+
+                FNULL = open(os.devnull, 'w')
+                sp.call(commands, stdout=FNULL, stderr=sp.STDOUT)
+                FNULL.close()
+
+        if self.quiet:
+            sys.stdout.close()
+            sys.stdout = curr_stdout
