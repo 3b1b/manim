@@ -141,7 +141,7 @@ class BrickRowScene(PiCreatureScene):
 
         half_merged_row = row.copy()
         half_merged_row.subdiv_level += 1
-        half_merged_row.generate_points()
+        half_merged_row.init_points()
         half_merged_row.move_to(row)
 
         self.play(FadeIn(half_merged_row))
@@ -191,7 +191,7 @@ class BrickRowScene(PiCreatureScene):
 
         merged_row = row.copy()
         merged_row.coloring_level += 1
-        merged_row.generate_points()
+        merged_row.init_points()
         merged_row.move_to(row)
 
         self.play(FadeIn(merged_row))

@@ -20,7 +20,7 @@ class PiCreatureCoin(VMobject):
         "fill_opacity": 0.7,
     }
 
-    def generate_points(self):
+    def init_points(self):
         outer_rect = Rectangle(
             width = self.diameter,
             height = self.thickness,

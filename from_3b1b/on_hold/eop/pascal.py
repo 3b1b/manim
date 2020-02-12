@@ -69,7 +69,7 @@ class BuildNewPascalRow(Transform):
 
         new_pt = mobject.copy()
         new_pt.nrows += 1
-        new_pt.generate_points()
+        new_pt.init_points()
         # align with original (copy got centered on screen)
         c1 = new_pt.coords_to_mobs[0][0].get_center()
         c2 = mobject.coords_to_mobs[0][0].get_center()
@@ -117,7 +117,7 @@ class SimplePascal(Scene):
         new_pt.height = new_pt.nrows * cell_height
         new_pt.width = new_pt.nrows * cell_width
 
-        new_pt.generate_points()
+        new_pt.init_points()
         # align with original (copy got centered on screen)
         c1 = new_pt.coords_to_mobs[0][0].get_center()
         c2 = old_pt.coords_to_mobs[0][0].get_center()

@@ -377,6 +377,7 @@ class BlocksAndWallScene(Scene):
         return self
 
     def tear_down(self):
+        super().tear_down()
         if self.include_sound:
             self.add_clack_sounds(self.clack_data)
 

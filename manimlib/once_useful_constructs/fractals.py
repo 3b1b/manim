@@ -84,7 +84,7 @@ class SelfSimilarFractal(VMobject):
         VMobject.init_colors(self)
         self.set_color_by_gradient(*self.colors)
 
-    def generate_points(self):
+    def init_points(self):
         order_n_self = self.get_order_n_self(self.order)
         if self.order == 0:
             self.submobjects = [order_n_self]
@@ -210,7 +210,7 @@ class PiCreatureFractal(VMobject):
             pi.set_color(color)
             pi.set_stroke(color, width=0)
 
-    def generate_points(self):
+    def init_points(self):
         random.seed(self.random_seed)
         modes = get_all_pi_creature_modes()
         seed = PiCreature(mode=self.start_mode)
@@ -315,7 +315,7 @@ class FractalCurve(VMobject):
         },
     }
 
-    def generate_points(self):
+    def init_points(self):
         points = self.get_anchor_points()
         self.set_points_as_corners(points)
         if not self.monochromatic:

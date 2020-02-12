@@ -24,6 +24,7 @@ from manimlib.utils.space_ops import rotation_matrix
 
 
 # TODO: Explain array_attrs
+# TODO: Incorporate shader defaults
 
 class Mobject(Container):
     """
@@ -45,7 +46,7 @@ class Mobject(Container):
         self.updaters = []
         self.updating_suspended = False
         self.reset_points()
-        self.generate_points()
+        self.init_points()  # TODO, rename this to "init_points?"
         self.init_colors()
 
     def __str__(self):
@@ -58,7 +59,7 @@ class Mobject(Container):
         # For subclasses
         pass
 
-    def generate_points(self):
+    def init_points(self):
         # Typically implemented in subclass, unless purposefully left blank
         pass
 
@@ -1110,6 +1111,12 @@ class Mobject(Container):
             sm1.points = np.array(sm2.points)
             sm1.interpolate_color(sm1, sm2, 1)
         return self
+
+    def prepare_for_animation(self):
+        pass
+
+    def cleanup_from_animation(self):
+        pass
 
     # Errors
     def throw_error_if_no_points(self):

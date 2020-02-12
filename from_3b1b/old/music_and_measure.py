@@ -61,7 +61,7 @@ def zero_to_one_interval():
     return interval
 
 class LeftParen(Mobject):
-    def generate_points(self):
+    def init_points(self):
         self.add(TexMobject("("))
         self.center()    
 
@@ -69,7 +69,7 @@ class LeftParen(Mobject):
         return Mobject.get_center(self) + 0.04*LEFT
 
 class RightParen(Mobject):
-    def generate_points(self):
+    def init_points(self):
         self.add(TexMobject(")"))
         self.center()
 
@@ -478,7 +478,7 @@ class PlaySimpleRatio(Scene):
         self.play(string1, string2)
 
 class LongSine(Mobject1D):
-    def generate_points(self):
+    def init_points(self):
         self.add_points([
             (x, np.sin(2*np.pi*x), 0)
             for x in np.arange(0, 100, self.epsilon/10)

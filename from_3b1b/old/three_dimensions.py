@@ -11,7 +11,7 @@ class Stars(Mobject1D):
         "radius"          : FRAME_X_RADIUS,
         "num_points"      : 1000,
     }
-    def generate_points(self):
+    def init_points(self):
         radii, phis, thetas = [
             scalar*np.random.random(self.num_points)
             for scalar in [self.radius, np.pi, 2*np.pi]
@@ -26,7 +26,7 @@ class Stars(Mobject1D):
         ])
 
 class CubeWithFaces(Mobject2D):
-    def generate_points(self):
+    def init_points(self):
         self.add_points([
             sgn * np.array(coords)
             for x in np.arange(-1, 1, self.epsilon)
@@ -41,7 +41,7 @@ class CubeWithFaces(Mobject2D):
         return np.array([1 if abs(x) == 1 else 0 for x in coords])
 
 class Cube(Mobject1D):
-    def generate_points(self):
+    def init_points(self):
         self.add_points([
             ([a, b, c][p[0]], [a, b, c][p[1]], [a, b, c][p[2]])
             for p in [(0, 1, 2), (2, 0, 1), (1, 2, 0)]
@@ -51,7 +51,7 @@ class Cube(Mobject1D):
         self.set_color(YELLOW)
 
 class Octohedron(Mobject1D):
-    def generate_points(self):
+    def init_points(self):
         x = np.array([1, 0, 0])
         y = np.array([0, 1, 0])
         z = np.array([0, 0, 1])
@@ -68,7 +68,7 @@ class Octohedron(Mobject1D):
         self.set_color(MAROON_D)
 
 class Dodecahedron(Mobject1D):
-    def generate_points(self):
+    def init_points(self):
         phi = (1 + np.sqrt(5)) / 2
         x = np.array([1, 0, 0])
         y = np.array([0, 1, 0])
@@ -95,7 +95,7 @@ class Dodecahedron(Mobject1D):
         self.set_color(GREEN)
 
 class Sphere(Mobject2D):
-    def generate_points(self):
+    def init_points(self):
         self.add_points([
             (
                 np.sin(phi) * np.cos(theta),

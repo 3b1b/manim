@@ -58,6 +58,10 @@ class VMobject(Mobject):
         "render_primative": moderngl.TRIANGLES,
     }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.triangulation_locked = False
+
     def get_group_class(self):
         return VGroup
 
@@ -796,6 +800,13 @@ class VMobject(Mobject):
         vmob.pointwise_become_partial(self, a, b)
         return vmob
 
+    def prepare_for_animation(self):
+        if self.get_fill_opacity() > 0:
+            self.lock_triangulation()
+
+    def cleanup_from_animation(self):
+        self.unlock_triangulation()
+
     # For shaders
     def get_shader_info_list(self):
         result = []
@@ -855,10 +866,39 @@ class VMobject(Mobject):
         data['joint_type'] = joint_type_to_code[self.joint_type]
         return data
 
-    def get_triangulation(self):
+    def lock_triangulation(self):
+        for sm in self.family_members_with_points():
+            sm.triangulation_locked = False
+            sm.saved_triangulation = sm.get_triangulation()
+            sm.triangulation_locked = True
+        return self
+
+    def unlock_triangulation(self):
+        for sm in self.family_members_with_points():
+            sm.triangulation_locked = False
+
+    def get_signed_polygonal_area(self):
+        nppc = self.n_points_per_curve
+        p0 = self.points[0::nppc]
+        p1 = self.points[nppc - 1::nppc]
+        # Add up (x1 + x2)*(y2 - y1) for all edges (x1, y1), (x2, y2)
+        return sum((p0[:, 0] + p1[:, 0]) * (p1[:, 1] - p0[:, 1]))
+
+    def get_orientation(self):
+        return np.sign(self.get_signed_polygonal_area())
+
+    def get_triangulation(self, orientation=None):
         # Figure out how to triangulate the interior to know
         # how to send the points as to the vertex shader.
         # First triangles come directly from the points
+        if orientation is None:
+            orientation = self.get_orientation()
+
+        if self.triangulation_locked:
+            return self.saved_triangulation
+
+        if self.has_no_points():
+            return []
 
         points = self.points
         indices = np.arange(len(points), dtype=int)
@@ -869,21 +909,17 @@ class VMobject(Mobject):
         v01s = b1s - b0s
         v12s = b2s - b1s
 
-        # TODO, account fo 3d
+        # TODO, account for 3d
         crosses = cross2d(v01s, v12s)
-        orientations = np.sign(crosses)
+        convexities = orientation * np.sign(crosses)
 
         atol = self.tolerance_for_point_equality
-        end_of_loop = np.zeros(orientations.shape, dtype=bool)
+        end_of_loop = np.zeros(len(b0s), dtype=bool)
         end_of_loop[:-1] = (np.abs(b2s[:-1] - b0s[1:]) > atol).any(1)
         end_of_loop[-1] = True
 
-        # Add up (x1 + x2)*(y2 - y1) for all edges (x1, y1), (x2, y2)
-        signed_area_terms = (b0s[:, 0] + b2s[:, 0]) * (b2s[:, 1] - b0s[:, 1])
-        # Total signed area determines orientation
-        total_orientation = np.sign(signed_area_terms.sum())
-        orientations *= total_orientation
-        concave_parts = orientations < 0
+        convexities *= orientation
+        concave_parts = convexities < 0
 
         # These are the vertices to which we'll apply a polygon triangulation
         inner_vert_indices = np.hstack([
@@ -897,11 +933,11 @@ class VMobject(Mobject):
         # Triangulate
         inner_verts = points[inner_vert_indices]
         inner_tri_indices = inner_vert_indices[
-            earclip_triangulation(inner_verts, rings, total_orientation)
+            earclip_triangulation(inner_verts, rings)
         ]
 
         tri_indices = np.hstack([indices, inner_tri_indices])
-        return tri_indices, total_orientation
+        return tri_indices
 
     def get_fill_shader_data(self):
         dtype = [
@@ -913,10 +949,11 @@ class VMobject(Mobject):
 
         points = self.points
 
-        # TODO, potentially cache triangulation
-        tri_indices, orientation = self.get_triangulation()
+        orientation = self.get_orientation()
+        tri_indices = self.get_triangulation(orientation)
 
-        rgbas = self.get_fill_rgbas()  # TODO, best way to enable multiple colors?
+        # TODO, best way to enable multiple colors?
+        rgbas = self.get_fill_rgbas()
 
         data = np.zeros(len(tri_indices), dtype=dtype)
         data["point"] = points[tri_indices]
@@ -928,7 +965,6 @@ class VMobject(Mobject):
         data["orientation"] = orientation
 
         return data
-
 
 
 class VGroup(VMobject):

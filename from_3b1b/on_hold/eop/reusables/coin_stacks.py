@@ -10,7 +10,7 @@ class CoinStack(VGroup):
         "face": FlatCoin,
     }
 
-    def generate_points(self):
+    def init_points(self):
         for n in range(self.size):
             coin = self.face(thickness = self.coin_thickness)
             coin.shift(n * self.coin_thickness * UP)
@@ -55,7 +55,7 @@ class TallyStack(VGroup):
         self.anchor = anchor
         VGroup.__init__(self,**kwargs)
 
-    def generate_points(self):
+    def init_points(self):
         stack1 = HeadsStack(size = self.nb_heads, coin_thickness = self.coin_thickness)
         stack2 = TailsStack(size = self.nb_tails, coin_thickness = self.coin_thickness)
         stack1.next_to(self.anchor, LEFT, buff = 0.5 * SMALL_BUFF)

@@ -72,7 +72,7 @@ class TOP(VMobject):
         digest_config(self, kwargs, locals())
         VMobject.__init__(self, **kwargs)
 
-    def generate_points(self):
+    def init_points(self):
         vertices = [
             self.radius*rotate_vector(RIGHT, 7*np.pi/6 - i*2*np.pi/3)
             for i in range(3)

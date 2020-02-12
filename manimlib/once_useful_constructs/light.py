@@ -103,7 +103,7 @@ class AmbientLight(VMobject):
         "radius": 5.0
     }
 
-    def generate_points(self):
+    def init_points(self):
         # in theory, this method is only called once, right?
         # so removing submobs shd not be necessary
         #
@@ -181,7 +181,7 @@ class Spotlight(VMobject):
     def get_source_point(self):
         return self.source_point.get_location()
 
-    def generate_points(self):
+    def init_points(self):
         self.submobjects = []
 
         self.add(self.source_point)
@@ -346,7 +346,7 @@ class LightSource(VMobject):
         "camera_mob": None
     }
 
-    def generate_points(self):
+    def init_points(self):
 
         self.add(self.source_point)
 

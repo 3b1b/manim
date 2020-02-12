@@ -91,7 +91,7 @@ class Speedometer(VMobject):
         "needle_color": YELLOW,
     }
 
-    def generate_points(self):
+    def init_points(self):
         start_angle = np.pi / 2 + self.arc_angle / 2
         end_angle = np.pi / 2 - self.arc_angle / 2
         self.add(Arc(
@@ -866,7 +866,7 @@ class PlayingCard(VGroup):
     def __init__(self, key=None, **kwargs):
         VGroup.__init__(self, key=key, **kwargs)
 
-    def generate_points(self):
+    def init_points(self):
         self.add(Rectangle(
             height=self.height,
             width=self.height / self.height_to_width,

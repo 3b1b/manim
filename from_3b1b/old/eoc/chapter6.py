@@ -560,7 +560,7 @@ class Ladder(VMobject):
         "width" : 1,
         "n_rungs" : 7,
     }
-    def generate_points(self):
+    def init_points(self):
         left_line, right_line = [
             Line(ORIGIN, self.height*UP).shift(self.width*vect/2.0)
             for vect in (LEFT, RIGHT)

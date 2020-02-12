@@ -1605,7 +1605,7 @@ class HasItsLimitations(Scene):
 
         curved_arrow = Arc(0, color = MAROON_E)
         curved_arrow.set_bound_angles(np.pi, 0)
-        curved_arrow.generate_points()
+        curved_arrow.init_points()
         curved_arrow.add_tip()
         curved_arrow.move_arc_center_to(base_point + RIGHT)
         # Could do something smoother, with arrowhead moving along partial arc?
@@ -1629,7 +1629,7 @@ class HasItsLimitations(Scene):
         
         new_curved_arrow = Arc(0).match_style(curved_arrow)
         new_curved_arrow.set_bound_angles(np.pi * 3/4, 0)
-        new_curved_arrow.generate_points()
+        new_curved_arrow.init_points()
         new_curved_arrow.add_tip()
 
         input_diff = input_dot.get_center() - curved_arrow.points[0]

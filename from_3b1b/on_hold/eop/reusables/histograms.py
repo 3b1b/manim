@@ -75,7 +75,7 @@ class Histogram(VMobject):
 
 
 
-    def generate_points(self):
+    def init_points(self):
 
         self.process_values()
         for submob in self.submobjects:
@@ -130,7 +130,7 @@ class Histogram(VMobject):
             )
             if bar.height == 0:
                 bar.height = 0.01
-                bar.generate_points()
+                bar.init_points()
 
             t = float(x - self.x_min)/(self.x_max - self.x_min)
             bar_color = interpolate_color(
@@ -273,7 +273,7 @@ class FlashThroughHistogram(Animation):
         cell = self.cell_for_index(i,j)
         self.prototype_cell.width = cell.get_width()
         self.prototype_cell.height = cell.get_height()
-        self.prototype_cell.generate_points()
+        self.prototype_cell.init_points()
         self.prototype_cell.move_to(cell.get_center())
 
         if t == 1:

@@ -99,7 +99,7 @@ class AngleUpdater(ContinualAnimation):
             start = self.spotlight.start_angle(),
             stop = self.spotlight.stop_angle()
         )
-        new_arc.generate_points()
+        new_arc.init_points()
         new_arc.move_arc_center_to(self.spotlight.get_source_point())
         self.angle_arc.points = new_arc.points
         self.angle_arc.add_tip(tip_length = ARC_TIP_LENGTH,
@@ -120,7 +120,7 @@ class LightIndicator(VMobject):
         "light_source": None
     }
 
-    def generate_points(self):
+    def init_points(self):
         self.background = Circle(color=BLACK, radius = self.radius)
         self.background.set_fill(opacity=1.0)
         self.foreground = Circle(color=self.color, radius = self.radius)
@@ -997,7 +997,7 @@ class MorphIntoSunScene(PiCreatureScene):
         #self.sun.move_source_to(sun_position)
         #self.sun.set_radius(120)
 
-        self.sun.spotlight.generate_points()
+        self.sun.spotlight.init_points()
 
         self.wait()
 
@@ -1295,7 +1295,7 @@ class ScreenShapingScene(ThreeDScene):
 
         self.slanted_brightness_rect = self.brightness_rect.copy()
         self.slanted_brightness_rect.width *= 2
-        self.slanted_brightness_rect.generate_points()
+        self.slanted_brightness_rect.init_points()
         self.slanted_brightness_rect.set_fill(opacity = 0.25)
 
         self.slanted_screen = Line(lower_slanted_screen_point,upper_slanted_screen_point,

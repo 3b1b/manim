@@ -158,7 +158,7 @@ class LeviSolution(CycloidScene):
     def construct(self):
         CycloidScene.construct(self)
         self.add(self.ceiling)
-        self.generate_points()
+        self.init_points()
         methods = [
             self.draw_cycloid,
             self.roll_into_position,
@@ -176,7 +176,7 @@ class LeviSolution(CycloidScene):
             self.wait()
 
 
-    def generate_points(self):
+    def init_points(self):
         index = int(self.cycloid_fraction*self.cycloid.get_num_points())
         p_point = self.cycloid.points[index]
         p_dot = Dot(p_point)

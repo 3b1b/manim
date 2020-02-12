@@ -20,7 +20,7 @@ class BrickRow(VMobject):
         VMobject.__init__(self, **kwargs)
 
 
-    def generate_points(self):
+    def init_points(self):
 
         self.submobjects = []
         self.rects = self.get_rects_for_level(self.coloring_level)

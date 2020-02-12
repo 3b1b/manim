@@ -62,7 +62,7 @@ class SVGMobject(VMobject):
                 return
         raise IOError(f"No file matching {file_name} in image directory")
 
-    def generate_points(self):
+    def init_points(self):
         doc = minidom.parse(self.file_path)
         self.ref_to_element = {}
 
@@ -319,7 +319,7 @@ class VMobjectFromSVGPathstring(VMobject):
         digest_locals(self)
         VMobject.__init__(self, **kwargs)
 
-    def generate_points(self):
+    def init_points(self):
         self.relative_point = ORIGIN
         for command, coord_string in self.get_commands_and_coord_strings():
             new_points = self.string_to_points(command, coord_string)

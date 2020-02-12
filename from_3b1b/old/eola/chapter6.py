@@ -154,7 +154,7 @@ class StockLine(VMobject):
         "num_points" : 15,
         "step_range" : 2
     }
-    def generate_points(self):
+    def init_points(self):
         points = [ORIGIN]
         for x in range(self.num_points):
             step_size = self.step_range*(random.random() - 0.5)

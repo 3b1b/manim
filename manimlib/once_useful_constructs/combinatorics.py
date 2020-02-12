@@ -100,7 +100,7 @@ class GeneralizedPascalsTriangle(VMobject):
         "submob_class": combinationMobject,
     }
 
-    def generate_points(self):
+    def init_points(self):
         self.cell_height = float(self.height) / self.nrows
         self.cell_width = float(self.width) / self.nrows
         self.bottom_left = (self.cell_width * self.nrows / 2.0) * LEFT + \

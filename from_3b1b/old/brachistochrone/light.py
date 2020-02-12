@@ -17,8 +17,8 @@ class Lens(Arc):
         digest_config(self, kwargs)
         Arc.__init__(self, self.angle, **kwargs)
 
-    def generate_points(self):
-        Arc.generate_points(self)
+    def init_points(self):
+        Arc.init_points(self)
         self.rotate(-np.pi/4)
         self.shift(-self.get_left())
         self.add_points(self.copy().rotate(np.pi).points)
@@ -566,7 +566,7 @@ class Spring(Line):
         "color" : GREY
     }
 
-    def generate_points(self):
+    def init_points(self):
         ## self.start, self.end
         length = get_norm(self.end-self.start)
         angle = angle_of_vector(self.end-self.start)

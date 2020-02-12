@@ -254,7 +254,7 @@ class HyperCube(VMobject):
         "color2" : BLUE_D, 
         "dims" : 4,
     }
-    def generate_points(self):
+    def init_points(self):
         corners = np.array(list(map(np.array, it.product(*[(-1, 1)]*self.dims))))
         def project(four_d_array):
             result = four_d_array[:3]

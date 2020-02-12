@@ -1,7 +1,6 @@
 from time import sleep
 import code
 import os
-import readline
 import subprocess
 
 from manimlib.scene.scene import Scene
@@ -10,7 +9,6 @@ import manimlib.constants
 
 def start_livestream(to_twitch=False, twitch_key=None):
     class Manim():
-
         def __new__(cls):
             kwargs = {
                 "scene_name": manimlib.constants.LIVE_STREAM_NAME,

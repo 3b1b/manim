@@ -664,7 +664,7 @@ class Quadrant(VMobject):
         "density" : 50,
         "density_exp" : 2.0,
     }
-    def generate_points(self):
+    def init_points(self):
         points = [r*RIGHT for r in np.arange(0, self.radius, 1./self.density)]
         points += [
             self.radius*(np.cos(theta)*RIGHT + np.sin(theta)*UP)

@@ -71,7 +71,7 @@ class AngleUpdater(ContinualAnimation):
             start = self.spotlight.start_angle(),
             stop = self.spotlight.stop_angle()
         )
-        new_arc.generate_points()
+        new_arc.init_points()
         new_arc.move_arc_center_to(self.spotlight.get_source_point())
         self.angle_arc.points = new_arc.points
         self.angle_arc.add_tip(
@@ -92,7 +92,7 @@ class LightIndicator(Mobject):
         "light_source": None
     }
 
-    def generate_points(self):
+    def init_points(self):
         self.background = Circle(color=BLACK, radius = self.radius)
         self.background.set_fill(opacity = 1.0)
         self.foreground = Circle(color=self.color, radius = self.radius)

@@ -212,7 +212,7 @@ class Arc(TipableVMobject):
         self.angle = angle
         VMobject.__init__(self, **kwargs)
 
-    def generate_points(self):
+    def init_points(self):
         self.set_pre_positioned_points()
         self.scale(self.radius, about_point=ORIGIN)
         self.shift(self.arc_center)
@@ -348,7 +348,7 @@ class AnnularSector(Arc):
         "color": WHITE,
     }
 
-    def generate_points(self):
+    def init_points(self):
         inner_arc, outer_arc = [
             Arc(
                 start_angle=self.start_angle,
@@ -382,7 +382,7 @@ class Annulus(Circle):
         "mark_paths_closed": False,
     }
 
-    def generate_points(self):
+    def init_points(self):
         self.radius = self.outer_radius
         outer_circle = Circle(radius=self.outer_radius)
         inner_circle = Circle(radius=self.inner_radius)
@@ -404,7 +404,7 @@ class Line(TipableVMobject):
         self.set_start_and_end_attrs(start, end)
         VMobject.__init__(self, **kwargs)
 
-    def generate_points(self):
+    def init_points(self):
         if self.path_arc:
             arc = ArcBetweenPoints(
                 self.start, self.end,
@@ -417,7 +417,7 @@ class Line(TipableVMobject):
 
     def set_path_arc(self, new_value):
         self.path_arc = new_value
-        self.generate_points()
+        self.init_points()
 
     def account_for_buff(self):
         if self.buff == 0:
@@ -464,7 +464,7 @@ class Line(TipableVMobject):
             # these attrs?
             self.start = start
             self.end = end
-            self.generate_points()
+            self.init_points()
         return super().put_start_and_end_on(start, end)
 
     def get_vector(self):

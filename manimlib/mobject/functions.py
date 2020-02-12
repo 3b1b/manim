@@ -10,7 +10,7 @@ class ParametricFunction(VMobject):
         "t_max": 1,
         "step_size": 0.01,  # Use "auto" (lowercase) for automatic step size
         "dt": 1e-8,
-        # TODO, be smarter about figuring these out?
+        # TODO, automatically figure out discontinuities
         "discontinuities": [],
     }
 
@@ -46,7 +46,7 @@ class ParametricFunction(VMobject):
         else:
             return self.step_size
 
-    def generate_points(self):
+    def init_points(self):
         t_min, t_max = self.t_min, self.t_max
         dt = self.dt
 

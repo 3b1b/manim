@@ -17,7 +17,7 @@ class RowOfDice(VGroup):
         "direction": RIGHT,
     }
 
-    def generate_points(self):
+    def init_points(self):
         for value in self.values:
             new_die = DieFace(value)
             new_die.submobjects[0].set_fill(opacity = 0)

@@ -10,7 +10,7 @@ class Jewel(VMobject):
         "num_equator_points" : 5,
         "sun_vect" : OUT+LEFT+UP,
     }
-    def generate_points(self):
+    def init_points(self):
         for vect in OUT, IN:
             compass_vects = list(compass_directions(self.num_equator_points))
             if vect is IN:
@@ -46,7 +46,7 @@ class Necklace(VMobject):
         random.shuffle(result)
         return result
 
-    def generate_points(self):
+    def init_points(self):
         jewels = VGroup(*[
             Jewel(color = color)
             for color in self.colors
