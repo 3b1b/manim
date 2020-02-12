@@ -171,14 +171,14 @@ int get_corners(vec2 controls[3], int degree, out vec2 corners[5]){
     // make sure corners forms a convex hull around the curve.
     if(cross(v10, v12) > 0){
         bool change_c0 = (
-            has_prev == 0 &&
+            // has_prev == 0 &&
             dot(v21, v20) > 0 &&
             should_motify_corner(c0, v01, c2, c3, v21, buff0)
         );
         if(change_c0) c0 = p0 + p2_perp * buff0;
 
         bool change_c3 = (
-            has_next == 0 &&
+            // has_next == 0 &&
             dot(v01, v02) > 0 &&
             should_motify_corner(c3, v21, c1, c0, v01, buff2)
         );
@@ -189,14 +189,14 @@ int get_corners(vec2 controls[3], int degree, out vec2 corners[5]){
         corners = vec2[5](c1, c0, i12, c3, c2);
     }else{
         bool change_c1 = (
-            has_prev == 0 &&
+            // has_prev == 0 &&
             dot(v21, v20) > 0 &&
             should_motify_corner(c1, v01, c3, c2, v21, buff0)
         );
         if(change_c1) c1 = p0 - p2_perp * buff0;
 
         bool change_c2 = (
-            has_next == 0 &&
+            // has_next == 0 &&
             dot(v01, v02) > 0 &&
             should_motify_corner(c2, v21, c0, c1, v01, buff2)
         );
