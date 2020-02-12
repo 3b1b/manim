@@ -1,14 +1,15 @@
 from manimlib.constants import *
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
-import math
+from manimlib.utils.space_ops import get_norm
 
 
 class ParametricFunction(VMobject):
     CONFIG = {
         "t_min": 0,
         "t_max": 1,
-        "step_size": 0.01,  # Use "auto" (lowercase) for automatic step size
+        "step_size": 0.2,
+        "min_samples": 8,
         "dt": 1e-8,
         # TODO, automatically figure out discontinuities
         "discontinuities": [],
@@ -24,27 +25,6 @@ class ParametricFunction(VMobject):
 
     def get_point_from_function(self, t):
         return self.function(t)
-
-    def get_step_size(self, t=None):
-        if self.step_size == "auto":
-            """
-            for x between -1 to 1, return 0.01
-            else, return log10(x) (rounded)
-            e.g.: 10.5 -> 0.1 ; 1040 -> 10
-            """
-            if t == 0:
-                scale = 0
-            else:
-                scale = math.log10(abs(t))
-                if scale < 0:
-                    scale = 0
-
-                scale = math.floor(scale)
-
-            scale -= 2
-            return math.pow(10, scale)
-        else:
-            return self.step_size
 
     def init_points(self):
         t_min, t_max = self.t_min, self.t_max
@@ -62,13 +42,19 @@ class ParametricFunction(VMobject):
         ]
         boundary_times.sort()
         for t1, t2 in zip(boundary_times[0::2], boundary_times[1::2]):
-            t_range = list(np.arange(t1, t2, self.get_step_size(t1)))
-            if t_range[-1] != t2:
-                t_range.append(t2)
-            points = np.array([self.function(t) for t in t_range])
-            valid_indices = np.apply_along_axis(
-                np.all, 1, np.isfinite(points)
-            )
+            # Get an initial sample of points
+            t_range = list(np.linspace(t1, t2, self.min_samples + 1))
+            samples = [self.function(t) for t in t_range]
+
+            # Take more samples based on the distances between them
+            norms = [get_norm(p2 - p1) for p1, p2 in zip(samples, samples[1:])]
+            full_t_range = [t1]
+            for s1, s2, norm in zip(t_range, t_range[1:], norms):
+                n_inserts = int(norm / self.step_size)
+                full_t_range += list(np.linspace(s1, s2, n_inserts + 1)[1:])
+
+            points = np.array([self.function(t) for t in full_t_range])
+            valid_indices = np.apply_along_axis(np.all, 1, np.isfinite(points))
             points = points[valid_indices]
             if len(points) > 0:
                 self.start_new_path(points[0])
