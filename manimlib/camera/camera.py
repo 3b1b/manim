@@ -26,11 +26,12 @@ class CameraFrame(Mobject):
         "center": ORIGIN,
     }
 
-    def generate_points(self):
+    def init_points(self):
         self.points = np.array([UL, UR, DR, DL])
         self.set_width(self.width, stretch=True)
         self.set_height(self.height, stretch=True)
         self.move_to(self.center)
+        self.save_state()
 
 
 class Camera(object):
@@ -43,7 +44,7 @@ class Camera(object):
         },
         "pixel_height": DEFAULT_PIXEL_HEIGHT,
         "pixel_width": DEFAULT_PIXEL_WIDTH,
-        "frame_rate": DEFAULT_FRAME_RATE,
+        "frame_rate": DEFAULT_FRAME_RATE,  # TODO, move this elsewhere
         # Note: frame height and width will be resized to match
         # the pixel aspect ratio
         "background_color": BLACK,
@@ -55,37 +56,37 @@ class Camera(object):
         "n_channels": 4,
         "pixel_array_dtype": 'uint8',
         "line_width_multiple": 0.01,
-        "background_fbo": None,
+        "window": None,
     }
 
-    def __init__(self, background=None, **kwargs):
+    def __init__(self, **kwargs):
         digest_config(self, kwargs, locals())
+        self.background_fbo = None
         self.rgb_max_val = np.iinfo(self.pixel_array_dtype).max
         self.init_frame()
         self.init_context()
-        self.init_frame_buffer()
         self.init_shaders()
 
     def init_frame(self):
         self.frame = CameraFrame(**self.frame_config)
 
     def init_context(self):
-        # TODO, context with a window?
-        ctx = moderngl.create_standalone_context()
-        ctx.enable(moderngl.BLEND)
-        ctx.blend_func = (
+        if self.window is not None:
+            self.ctx = self.window.ctx
+            self.fbo = self.window.ctx.detect_framebuffer()
+        else:
+            self.ctx = moderngl.create_standalone_context()
+            self.fbo = self.get_fbo()
+            self.fbo.use()
+            # self.clear()
+
+        self.ctx.enable(moderngl.BLEND)
+        self.ctx.blend_func = (
             moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA,
             moderngl.ONE, moderngl.ONE
         )
-        self.ctx = ctx
 
     # Methods associated with the frame buffer
-    def init_frame_buffer(self):
-        # TODO, account for live window
-        self.fbo = self.get_fbo()
-        self.fbo.use()
-        self.clear()
-
     def get_fbo(self):
         return self.ctx.simple_framebuffer(self.get_pixel_shape())
 
@@ -109,24 +110,28 @@ class Camera(object):
         self.set_frame_width(frame_width)
 
     def clear(self):
-        if self.background_fbo:
-            self.ctx.copy_framebuffer(self.fbo, self.background_fbo)
-        else:
-            rgba = (*Color(self.background_color).get_rgb(), self.background_opacity)
-            self.fbo.clear(*rgba)
+        if self.window:
+            self.window.clear()
+
+        rgba = (*Color(self.background_color).get_rgb(), self.background_opacity)
+        self.fbo.clear(*rgba)
 
     def lock_state_as_background(self):
-        self.background_fbo = self.get_fbo()
-        self.ctx.copy_framebuffer(self.background_fbo, self.fbo)
+        # TODO, somehow do this by creating a Texture
+        # and adding it to the queue like an image mobject
+        pass
 
     def unlock_background(self):
+        pass  # TODO
         self.background_fbo = None
 
-    def reset_pixel_shape(self, new_height, new_width):
+    def reset_pixel_shape(self, new_width, new_height):
         self.pixel_width = new_width
         self.pixel_height = new_height
+
         self.fbo.release()
         self.init_frame_buffer()
+        self.refresh_shader_uniforms()
 
     # Various ways to read from the fbo
     def get_raw_fbo_data(self, dtype='f1'):
@@ -173,6 +178,9 @@ class Camera(object):
     def get_frame_width(self):
         return self.frame.get_width()
 
+    def get_frame_shape(self):
+        return (self.get_frame_width(), self.get_frame_height())
+
     def get_frame_center(self):
         return self.frame.get_center()
 
@@ -184,6 +192,21 @@ class Camera(object):
 
     def set_frame_center(self, center):
         self.frame.move_to(center)
+
+    def pixel_coords_to_space_coords(self, px, py, relative=False):
+        pw, ph = self.get_pixel_shape()
+        fw, fh = self.get_frame_shape()
+        fc = self.get_frame_center()
+        if relative:
+            return 2 * np.array([px / pw, py / ph, 0])
+        else:
+            # Only scale wrt one axis
+            scale = fh / ph
+            return np.array([
+                scale * (px - pw / 2) - fc[0],
+                scale * (py - py / 2) - fc[0],
+                -fc[2] / 2,
+            ])
 
     # TODO, account for 3d
     def is_in_frame(self, mobject):
@@ -225,7 +248,10 @@ class Camera(object):
             render_primative = info_group[0]["render_primative"]
             self.render_from_shader(shader, data, render_primative)
 
-    # Shader stuff
+        if self.window:
+            self.window.swap_buffers()
+
+    # Shaders
     def init_shaders(self):
         self.id_to_shader = {}
 
@@ -271,52 +297,23 @@ class Camera(object):
         return result
 
     def set_shader_uniforms(self, shader):
-        # TODO, think about how uniforms come from mobjects
-        # as well.
-        fw = self.get_frame_width()
+        # TODO, think about how uniforms come from mobjects as well.
         fh = self.get_frame_height()
+        fc = self.get_frame_center()
+        pw, ph = self.get_pixel_shape()
 
-        shader['scale'].value = fh / 2
-        shader['aspect_ratio'].value = fw / fh
+        shader['scale'].value = fh / 2  # Scale based on frame size
+        shader['aspect_ratio'].value = (pw / ph)  # AR based on pixel shape
         shader['anti_alias_width'].value = ANTI_ALIAS_WIDTH
+        shader['frame_center'].value = tuple(fc)
+
+    def refresh_shader_uniforms(self):
+        for sid, shader in self.id_to_shader.items():
+            self.set_shader_uniforms(shader)
 
     def render_from_shader(self, shader, data, render_primative):
-        vbo = shader.ctx.buffer(data.tobytes())
-        vao = shader.ctx.simple_vertex_array(shader, vbo, *data.dtype.names)
+        if len(data) == 0:
+            return
+        vbo = self.ctx.buffer(data.tobytes())
+        vao = self.ctx.simple_vertex_array(shader, vbo, *data.dtype.names)
         vao.render(render_primative)
-
-
-def get_vmob_shader(ctx, type):
-    vert_file = f"quadratic_bezier_{type}_vert.glsl"
-    geom_file = f"quadratic_bezier_{type}_geom.glsl"
-    frag_file = f"quadratic_bezier_{type}_frag.glsl"
-
-    shader = ctx.program(
-        vertex_shader=get_code_from_file(vert_file),
-        geometry_shader=get_code_from_file(geom_file),
-        fragment_shader=get_code_from_file(frag_file),
-    )
-    set_shader_uniforms(shader)
-    return shader
-
-
-def get_stroke_shader(ctx):
-    return get_vmob_shader(ctx, "stroke")
-
-
-def get_fill_shader(ctx):
-    return get_vmob_shader(ctx, "fill")
-
-
-def render_vmob_stroke(shader, vmobs):
-    assert(len(vmobs) > 0)
-    data_arrays = [vmob.get_stroke_shader_data() for vmob in vmobs]
-    data = join_arrays(*data_arrays)
-    send_data_to_shader(shader, data)
-
-
-def render_vmob_fill(shader, vmobs):
-    assert(len(vmobs) > 0)
-    data_arrays = [vmob.get_fill_shader_data() for vmob in vmobs]
-    data = join_arrays(*data_arrays)
-    send_data_to_shader(shader, data)

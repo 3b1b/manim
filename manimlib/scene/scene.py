@@ -5,6 +5,7 @@ import platform
 
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
+import time
 
 from manimlib.animation.animation import Animation
 from manimlib.animation.transform import MoveToTarget
@@ -15,11 +16,13 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import restructure_list_to_exclude_certain_family_members
+from manimlib.window import Window
 
 
 class Scene(Container):
     CONFIG = {
-        "camera_class": Camera,  # TODO, there should be only one camera
+        "window_config": {},
+        "camera_class": Camera,
         "camera_config": {},
         "file_writer_config": {},
         "skip_animations": False,
@@ -28,29 +31,37 @@ class Scene(Container):
         "start_at_animation_number": None,
         "end_at_animation_number": None,
         "leave_progress_bars": False,
+        "preview": True,
     }
 
     def __init__(self, **kwargs):
         Container.__init__(self, **kwargs)
+        if self.preview:
+            self.window = Window(self, **self.window_config)
+            self.camera_config["window"] = self.window
+
         self.camera = self.camera_class(**self.camera_config)
         self.file_writer = SceneFileWriter(self, **self.file_writer_config)
-
         self.mobjects = []
         self.num_plays = 0
         self.time = 0
         self.original_skipping_status = self.skip_animations
+        self.time_of_last_frame = time.time()
         if self.random_seed is not None:
             random.seed(self.random_seed)
             np.random.seed(self.random_seed)
 
+    def run(self):
         self.setup()
         try:
             self.construct()
         except EndSceneEarlyException:
             pass
         self.tear_down()
-        self.file_writer.finish()
-        self.print_end_message()
+
+        # Is this what we want?
+        if self.preview:
+            self.update_until_closed()
 
     def setup(self):
         """
@@ -61,10 +72,20 @@ class Scene(Container):
         pass
 
     def construct(self):
-        pass  # To be implemented in subclasses
+        # To be implemented in subclasses
+        pass
 
     def tear_down(self):
-        pass
+        self.file_writer.finish()
+        self.print_end_message()
+
+    def update_until_closed(self):
+        while not self.window.is_closing:
+            now = time.time()
+            self.update_frame()
+            time.sleep(
+                max(1 / 30 - (time.time() - now), 0)
+            )
 
     def __str__(self):
         return self.__class__.__name__
@@ -91,9 +112,6 @@ class Scene(Container):
         return [getattr(self, key) for key in keys]
 
     # Only these methods should touch the camera
-    def set_camera(self, camera):
-        self.camera = camera
-
     def get_image(self):
         return self.camera.get_image()
 
@@ -103,15 +121,23 @@ class Scene(Container):
         if mobjects is None:
             mobjects = self.mobjects
 
+        ## REMOVE, this is just temporary while camera.lock_background doesn't work
+        mobjects = self.mobjects
+        ##
+
         self.camera.clear()
         self.camera.capture_mobjects(mobjects, excluded_mobjects=excluded_mobjects)
 
-    def write_frame(self):
-        self.increment_time(1.0 / self.camera.frame_rate)
-        if self.skip_animations:
-            return
-        data = self.camera.get_raw_fbo_data()
-        self.file_writer.write_frame(data)
+    def emit_frame(self, dt):
+        self.increment_time(dt)
+        if not self.skip_animations:
+            self.file_writer.write_frame(self.camera)
+
+        if self.preview:
+            min_time_between_frames = 1 / self.camera.frame_rate
+            time_since_last = time.time() - self.time_of_last_frame
+            time.sleep(max(0, min_time_between_frames - time_since_last))
+            self.time_of_last_frame = time.time()
 
     ###
 
@@ -238,7 +264,7 @@ class Scene(Container):
         ]))
         return time_progression
 
-    def compile_play_args_to_animation_list(self, *args, **kwargs):
+    def anims_from_play_args(self, *args, **kwargs):
         """
         Each arg can either be an animation, or a mobject method
         followed by that methods arguments (and potentially follow
@@ -314,13 +340,16 @@ class Scene(Container):
                 self.skip_animations = True
                 raise EndSceneEarlyException()
 
+    # Methods associated with running animations
     def handle_play_like_call(func):
         def wrapper(self, *args, **kwargs):
             self.update_skipping_status()
             allow_write = not self.skip_animations
-            self.file_writer.begin_animation(allow_write)
+            if allow_write:
+                self.file_writer.begin_animation()
             func(self, *args, **kwargs)
-            self.file_writer.end_animation(allow_write)
+            if allow_write:
+                self.file_writer.end_animation()
             self.num_plays += 1
         return wrapper
 
@@ -352,7 +381,7 @@ class Scene(Container):
                 animation.interpolate(alpha)
             self.update_mobjects(dt)
             self.update_frame(moving_mobjects)
-            self.write_frame()
+            self.emit_frame(dt)
         self.camera.unlock_background()
 
     def finish_animations(self, animations):
@@ -373,15 +402,10 @@ class Scene(Container):
         if len(args) == 0:
             warnings.warn("Called Scene.play with no animations")
             return
-        animations = self.compile_play_args_to_animation_list(
-            *args, **kwargs
-        )
+        animations = self.anims_from_play_args(*args, **kwargs)
         self.begin_animations(animations)
         self.progress_through_animations(animations)
         self.finish_animations(animations)
-
-    def idle_stream(self):
-        self.file_writer.idle_stream()
 
     def clean_up_animations(self, *animations):
         for animation in animations:
@@ -423,7 +447,7 @@ class Scene(Container):
                 last_t = t
                 self.update_mobjects(dt)
                 self.update_frame()
-                self.write_frame()
+                self.emit_frame(dt)
                 if stop_condition is not None and stop_condition():
                     time_progression.close()
                     break
@@ -435,7 +459,7 @@ class Scene(Container):
             dt = 1 / self.camera.frame_rate
             n_frames = int(duration / dt)
             for n in range(n_frames):
-                self.write_frame()
+                self.emit_frame(dt)
         return self
 
     def wait_until(self, stop_condition, max_time=60):
@@ -460,6 +484,44 @@ class Scene(Container):
     def show(self):
         self.update_frame(ignore_skipping=True)
         self.get_image().show()
+
+    # Event handling
+    def on_mouse_motion(self, point, d_point):
+        pass
+
+    def on_mouse_drag(self, point, d_point, buttons, modifiers):
+        self.camera.frame.shift(-d_point)
+        self.camera.refresh_shader_uniforms()
+
+    def on_mouse_press(self, point, button, mods):
+        pass
+
+    def on_mouse_release(self, point, button, mods):
+        pass
+
+    def on_mouse_scroll(self, point, offset):
+        self.camera.frame.scale(1 + np.arctan(offset[1]))
+        self.camera.refresh_shader_uniforms()
+
+    def on_key_release(self, symbol, modifiers):
+        pass
+
+    def on_key_press(self, symbol, modifiers):
+        if chr(symbol) == "r":
+            self.camera.frame.restore()
+            self.camera.refresh_shader_uniforms()
+
+    def on_resize(self, width: int, height: int):
+        self.camera.reset_pixel_shape(width, height)
+
+    def on_show(self):
+        pass
+
+    def on_hide(self):
+        pass
+
+    def on_close(self):
+        pass
 
 
 class EndSceneEarlyException(Exception):
