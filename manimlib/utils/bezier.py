@@ -203,8 +203,8 @@ def get_quadratic_approximation_of_cubic(a0, h0, h1, a1):
         for sgn in [-1, +1]
     ]
     np.seterr(**settings)
-    ti_min_in_range = (0 < ti_min) & (ti_min < 1)
-    ti_max_in_range = (0 < ti_max) & (ti_max < 1)
+    ti_min_in_range = has_infl & (0 < ti_min) & (ti_min < 1)
+    ti_max_in_range = has_infl & (0 < ti_max) & (ti_max < 1)
 
     # Choose a value of t which is starts as 0.5,
     # but is updated to one of the inflection points
