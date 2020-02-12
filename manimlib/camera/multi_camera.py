@@ -29,8 +29,8 @@ class MultiCamera(MovingCamera):
                 imfc.camera.frame.get_width(),
             )
             imfc.camera.reset_pixel_shape(
-                int(pixel_height * imfc.get_height() / self.get_frame_height()),
                 int(pixel_width * imfc.get_width() / self.get_frame_width()),
+                int(pixel_height * imfc.get_height() / self.get_frame_height()),
             )
 
     def reset(self):

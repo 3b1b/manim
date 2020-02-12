@@ -103,7 +103,7 @@ class SplitScreenCamera(OldMultiCamera):
         half_width = self.get_pixel_width() / 2
         for camera in [self.left_camera, self.right_camera]:
             # TODO: Round up on one if width is odd
-            camera.reset_pixel_shape(camera.get_pixel_height(), half_width)
+            camera.reset_pixel_shape(half_width, camera.get_pixel_height())
 
         OldMultiCamera.__init__(
             self,
