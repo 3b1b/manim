@@ -27,7 +27,7 @@ class PMobject(Mobject):
         if not isinstance(points, np.ndarray):
             points = np.array(points)
         num_new_points = len(points)
-        self.points = np.append(self.points, points, axis=0)
+        self.points = np.vstack([self.points, points])
         if rgbas is None:
             color = Color(color) if color else self.color
             rgbas = np.repeat(
@@ -37,7 +37,7 @@ class PMobject(Mobject):
             )
         elif len(rgbas) != len(points):
             raise Exception("points and rgbas must have same shape")
-        self.rgbas = np.append(self.rgbas, rgbas, axis=0)
+        self.rgbas = np.vstack([self.rgbas, rgbas])
         return self
 
     def set_color(self, color=YELLOW_C, family=True):

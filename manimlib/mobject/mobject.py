@@ -346,10 +346,7 @@ class Mobject(Container):
         This can make transition animations nicer
         """
         def repeat_array(array):
-            return reduce(
-                lambda a1, a2: np.append(a1, a2, axis=0),
-                [array] * count
-            )
+            return np.vstack([array] * count)
         for mob in self.family_members_with_points():
             mob.apply_over_attr_arrays(repeat_array)
         return self

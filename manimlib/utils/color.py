@@ -58,7 +58,7 @@ def color_to_int_rgb(color):
 
 def color_to_int_rgba(color, opacity=1.0):
     alpha = int(255 * opacity)
-    return np.append(color_to_int_rgb(color), alpha)
+    return np.array([*color_to_int_rgb(color), alpha])
 
 
 def color_gradient(reference_colors, length_of_output):

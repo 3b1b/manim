@@ -31,10 +31,10 @@ def quaternion_mult(q1, q2):
 
 
 def quaternion_from_angle_axis(angle, axis):
-    return np.append(
+    return np.hstack([
         np.cos(angle / 2),
         np.sin(angle / 2) * normalize(axis)
-    )
+    ])
 
 
 def angle_axis_from_quaternion(quaternion):
@@ -65,7 +65,7 @@ def rotate_vector(vector, angle, axis=OUT):
         quat_inv = quaternion_conjugate(quat)
         product = reduce(
             quaternion_mult,
-            [quat, np.append(0, vector), quat_inv]
+            [quat, np.hstack([0, vector]), quat_inv]
         )
         return product[1:]
     else:

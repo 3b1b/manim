@@ -653,7 +653,7 @@ class Vector(Arrow):
 
     def __init__(self, direction=RIGHT, **kwargs):
         if len(direction) == 2:
-            direction = np.append(np.array(direction), 0)
+            direction = np.hstack([direction, 0])
         Arrow.__init__(self, ORIGIN, direction, **kwargs)
 
 
