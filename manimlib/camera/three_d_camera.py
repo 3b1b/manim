@@ -41,9 +41,9 @@ class ThreeDCamera(Camera):
         self.fixed_in_frame_mobjects = set()
         self.reset_rotation_matrix()
 
-    def capture_mobjects(self, mobjects, **kwargs):
+    def capture(self, *mobjects, **kwargs):
         self.reset_rotation_matrix()
-        Camera.capture_mobjects(self, mobjects, **kwargs)
+        Camera.capture(self, *mobjects, **kwargs)
 
     def get_value_trackers(self):
         return [

@@ -16,6 +16,7 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import restructure_list_to_exclude_certain_family_members
+from manimlib.utils.iterables import list_difference_update
 from manimlib.window import Window
 
 
@@ -45,6 +46,7 @@ class Scene(Container):
         self.camera = self.camera_class(**self.camera_config)
         self.file_writer = SceneFileWriter(self, **self.file_writer_config)
         self.mobjects = []
+        self.displayed_mobjects = []
         self.num_plays = 0
         self.time = 0
         self.original_skipping_status = self.skip_animations
@@ -120,20 +122,14 @@ class Scene(Container):
     def get_image(self):
         return self.camera.get_image()
 
-    def update_frame(self, mobjects=None, ignore_skipping=False, excluded_mobjects=None):
+    def update_frame(self, ignore_skipping=False):
         if self.skip_animations and not ignore_skipping:
             return
-        if mobjects is None:
-            mobjects = self.mobjects
-
-        ## REMOVE, this is just temporary while camera.lock_background doesn't work
-        mobjects = self.mobjects
-        ##
 
         if self.window:
             self.window.clear()
         self.camera.clear()
-        self.camera.capture_mobjects(mobjects, excluded_mobjects=excluded_mobjects)
+        self.camera.capture(*self.displayed_mobjects)
         if self.window:
             self.window.swap_buffers()
 
@@ -168,6 +164,11 @@ class Scene(Container):
         self.time += d_time
 
     ###
+    def recompute_displayed_mobjects(self):
+        self.displayed_mobjects = extract_mobject_family_members(
+            self.mobjects,
+            only_those_with_points=True,
+        )
 
     def get_top_level_mobjects(self):
         # Return only those which are not in the family
@@ -193,6 +194,7 @@ class Scene(Container):
         """
         self.remove(*new_mobjects)
         self.mobjects += new_mobjects
+        self.recompute_displayed_mobjects()
         return self
 
     def add_mobjects_among(self, values):
@@ -211,6 +213,7 @@ class Scene(Container):
         self.mobjects = restructure_list_to_exclude_certain_family_members(
             self.mobjects, mobjects_to_remove
         )
+        self.recompute_displayed_mobjects()
         return self
 
     def bring_to_front(self, *mobjects):
@@ -220,10 +223,12 @@ class Scene(Container):
     def bring_to_back(self, *mobjects):
         self.remove(*mobjects)
         self.mobjects = list(mobjects) + self.mobjects
+        self.recompute_displayed_mobjects()
         return self
 
     def clear(self):
         self.mobjects = []
+        self.recompute_displayed_mobjects()
         return self
 
     def get_mobjects(self):
@@ -376,9 +381,7 @@ class Scene(Container):
     def progress_through_animations(self, animations):
         # Paint all non-moving objects onto the screen, so they don't
         # have to be rendered every frame
-        moving_mobjects = self.get_moving_mobjects(*animations)
-        self.update_frame(excluded_mobjects=moving_mobjects)
-        self.camera.lock_state_as_background()
+        # moving_mobjects = self.get_moving_mobjects(*animations)
         last_t = 0
         for t in self.get_animation_time_progression(animations):
             dt = t - last_t
@@ -388,9 +391,8 @@ class Scene(Container):
                 alpha = t / animation.run_time
                 animation.interpolate(alpha)
             self.update_mobjects(dt)
-            self.update_frame(moving_mobjects)
+            self.update_frame()
             self.emit_frame(dt)
-        self.camera.unlock_background()
 
     def finish_animations(self, animations):
         for animation in animations:
@@ -447,8 +449,6 @@ class Scene(Container):
         self.update_mobjects(dt=0)  # Any problems with this?
         if self.should_update_mobjects():
             time_progression = self.get_wait_time_progression(duration, stop_condition)
-            # TODO, be smart about locking the camera background
-            # the same way Scene.play does
             last_t = 0
             for t in time_progression:
                 dt = t - last_t

@@ -9,6 +9,7 @@ from manimlib.utils.config_ops import digest_config
 # map their centers but remain otherwise undistorted (useful for labels, etc.)
 
 
+# TODO, this class is deprecated
 class MappingCamera(Camera):
     CONFIG = {
         "mapping_func": lambda p: p,

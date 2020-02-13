@@ -12,8 +12,6 @@ from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import batch_by_property
-from manimlib.utils.iterables import list_difference_update
-from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.simple_functions import fdiv
 
 
@@ -83,6 +81,7 @@ class Camera(object):
             moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA,
             moderngl.ONE, moderngl.ONE
         )
+        self.background_fbo = None
 
     # Methods associated with the frame buffer
     def get_fbo(self):
@@ -112,14 +111,6 @@ class Camera(object):
     def clear(self):
         rgba = (*Color(self.background_color).get_rgb(), self.background_opacity)
         self.fbo.clear(*rgba)
-
-    def lock_state_as_background(self):
-        # TODO, somehow do this by creating a Texture
-        # and adding it to the queue like an image mobject
-        pass
-
-    def unlock_background(self):
-        pass  # TODO
 
     def reset_pixel_shape(self, new_width, new_height):
         self.pixel_width = new_width
@@ -208,6 +199,7 @@ class Camera(object):
             ])
 
     # TODO, account for 3d
+    # Also, move this to CameraFrame?
     def is_in_frame(self, mobject):
         fc = self.get_frame_center()
         fh = self.get_frame_height()
@@ -220,20 +212,7 @@ class Camera(object):
         ])
 
     # Rendering
-    def get_mobjects_to_display(self, mobjects, excluded_mobjects=None):
-        mobjects = extract_mobject_family_members(
-            mobjects, only_those_with_points=True,
-        )
-        if excluded_mobjects:
-            all_excluded = extract_mobject_family_members(excluded_mobjects)
-            mobjects = list_difference_update(mobjects, all_excluded)
-        return mobjects
-
-    def capture_mobject(self, mobject, **kwargs):
-        return self.capture_mobjects([mobject], **kwargs)
-
-    def capture_mobjects(self, mobjects, **kwargs):
-        mobjects = self.get_mobjects_to_display(mobjects, **kwargs)
+    def capture(self, *mobjects, **kwargs):
         shader_infos = list(it.chain(*[
             mob.get_shader_info_list()
             for mob in mobjects
