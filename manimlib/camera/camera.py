@@ -86,7 +86,9 @@ class Camera(object):
 
     # Methods associated with the frame buffer
     def get_fbo(self):
-        return self.ctx.simple_framebuffer(self.get_pixel_shape())
+        return self.ctx.simple_framebuffer(
+            (self.pixel_width, self.pixel_height)
+        )
 
     def resize_frame_shape(self, fixed_dimension=0):
         """
