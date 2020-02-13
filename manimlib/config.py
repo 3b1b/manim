@@ -28,12 +28,12 @@ def parse_cli():
             help="Automatically open the saved file once its done",
         ),
         parser.add_argument(
-            "-w", "--write_to_movie",
+            "-w", "--write_file",
             action="store_true",
             help="Render the scene as a movie file",
         ),
         parser.add_argument(
-            "-s", "--save_last_frame",
+            "-s", "--skip_animations",
             action="store_true",
             help="Save the last frame",
         ),
@@ -182,10 +182,17 @@ def get_module(file_name):
 
 def get_configuration(args):
     module = get_module(args.file)
+
+    write_file = any([
+        args.write_file,
+        args.open,
+        args.show_file_in_finder,
+    ])
+
     file_writer_config = {
         # By default, write to file
-        "write_to_movie": args.write_to_movie or args.open or args.show_file_in_finder,
-        "save_last_frame": args.save_last_frame,
+        "write_to_movie": not args.skip_animations and write_file,
+        "save_last_frame": args.skip_animations and write_file,
         "save_pngs": args.save_pngs,
         "save_as_gif": args.save_as_gif,
         # If -t is passed in (for transparent), this will be RGBA
@@ -199,6 +206,12 @@ def get_configuration(args):
     }
     if hasattr(module, "OUTPUT_DIRECTORY"):
         file_writer_config["output_directory"] = module.OUTPUT_DIRECTORY
+
+    # If preview wasn't set, but there is no filewriting, preview anyway
+    # so that the user sees something
+    if not (args.preview or write_file):
+        args.preview = True
+
     config = {
         "module": module,
         "scene_names": args.scene_names,
@@ -235,8 +248,8 @@ def get_configuration(args):
             config["start_at_animation_number"] = int(stan)
 
     config["skip_animations"] = any([
-        file_writer_config["save_last_frame"],
-        config["start_at_animation_number"],
+        args.skip_animations,
+        args.start_at_animation_number,
     ])
     return config
 
@@ -249,7 +262,9 @@ def get_camera_configuration(args):
         camera_config.update(manimlib.constants.MEDIUM_QUALITY_CAMERA_CONFIG)
     elif args.high_quality:
         camera_config.update(manimlib.constants.HIGH_QUALITY_CAMERA_CONFIG)
-    else:
+    elif args.preview:  # Without a quality specified, preview at medium quality
+        camera_config.update(manimlib.constants.MEDIUM_QUALITY_CAMERA_CONFIG)
+    else:  # Without anything specified, render to production quality
         camera_config.update(manimlib.constants.PRODUCTION_QUALITY_CAMERA_CONFIG)
 
     # If the resolution was passed in via -r
