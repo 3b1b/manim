@@ -1132,7 +1132,7 @@ class Mobject(Container):
     def init_shader_data(self):
         self.shader_data = np.zeros(len(self.points), dtype=self.shader_dtype)
 
-    def get_shader_data_array(self, size, name="shader_data"):
+    def get_blank_shader_data_array(self, size, name="shader_data"):
         # If possible, try to populate an existing array, rather
         # than recreating it each frame
         arr = getattr(self, name)

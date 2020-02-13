@@ -42,7 +42,7 @@ class ImageMobject(Mobject):
         self.set_opacity(self.opacity)
 
     def get_shader_data(self):
-        data = self.get_shader_data_array(len(self.points))
+        data = self.get_blank_shader_data_array(len(self.points))
         data["point"] = self.points
         data["im_coords"] = self.im_coords
         data["opacity"] = self.opacity

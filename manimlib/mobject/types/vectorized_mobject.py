@@ -849,7 +849,7 @@ class VMobject(Mobject):
         if len(stroke_width) > 1:
             stroke_width = self.stretched_style_array_matching_points(stroke_width)
 
-        data = self.get_shader_data_array(len(self.points), "stroke_data")
+        data = self.get_blank_shader_data_array(len(self.points), "stroke_data")
         data['point'] = self.points
         data['prev_point'][:3] = self.points[-3:]
         data['prev_point'][3:] = self.points[:-3]
@@ -945,7 +945,7 @@ class VMobject(Mobject):
         # TODO, best way to enable multiple colors?
         rgbas = self.get_fill_rgbas()[:1]
 
-        data = self.get_shader_data_array(len(tri_indices), "fill_data")
+        data = self.get_blank_shader_data_array(len(tri_indices), "fill_data")
         data["point"] = points[tri_indices]
         data["color"] = rgbas
         # Assume the triangulation is such that the first n_points points
