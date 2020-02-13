@@ -51,8 +51,9 @@ class Mobject(Container):
             self.name = self.__class__.__name__
         self.updaters = []
         self.updating_suspended = False
+
         self.reset_points()
-        self.init_points()  # TODO, rename this to "init_points?"
+        self.init_points()
         self.init_colors()
 
     def __str__(self):
@@ -237,9 +238,9 @@ class Mobject(Container):
 
     def shift(self, *vectors):
         total_vector = reduce(op.add, vectors)
-        for mob in self.family_members_with_points():
-            mob.points = mob.points.astype('float')
-            mob.points += total_vector
+        for mob in self.get_family():
+            if len(mob.points) > 0:
+                mob.points += total_vector
         return self
 
     def scale(self, scale_factor, **kwargs):
@@ -702,17 +703,17 @@ class Mobject(Container):
         ]
 
     def get_merged_array(self, array_attr):
-        result = getattr(self, array_attr)
-        for submob in self.submobjects:
-            result = np.append(
-                result, submob.get_merged_array(array_attr),
-                axis=0
-            )
-            submob.get_merged_array(array_attr)
-        return result
+        return np.vstack([
+            getattr(sm, array_attr)
+            for sm in self.family_members_with_points()
+        ])
 
     def get_all_points(self):
-        return self.get_merged_array("points")
+        arrays = [sm.points for sm in self.family_members_with_points()]
+        if arrays:
+            return np.vstack(arrays)
+        else:
+            return np.zeros((0, self.dim))
 
     # Getters
 
@@ -734,20 +735,22 @@ class Mobject(Container):
             return np.max(values)
 
     def get_bounding_box_point(self, direction):
-        """
-        Picture a box bounding the mobject.  Such a box has
-        9 'critical points': 4 corners, 4 edge center, the
-        center.  This returns one of them.
-        """
         result = np.zeros(self.dim)
+        bb = self.get_bounding_box()
+        result[direction < 0] = bb[0, direction < 0]
+        result[direction == 0] = bb[1, direction == 0]
+        result[direction > 0] = bb[2, direction > 0]
+        return result
+
+    def get_bounding_box(self):
         all_points = self.get_points_defining_boundary()
         if len(all_points) == 0:
-            return result
-        for dim in range(self.dim):
-            result[dim] = self.get_extremum_along_dim(
-                all_points, dim=dim, key=direction[dim]
-            )
-        return result
+            return np.zeros((3, self.dim))
+        else:
+            # Lower left and upper right corners
+            dl = np.apply_along_axis(np.min, 0, all_points)
+            ur = np.apply_along_axis(np.max, 0, all_points)
+            return np.array([dl, (dl + ur) / 2, ur])
 
     # Pseudonyms for more general get_bounding_box_point method
 
