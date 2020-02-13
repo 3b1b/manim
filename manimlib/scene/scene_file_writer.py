@@ -200,14 +200,13 @@ class SceneFileWriter(object):
         self.temp_partial_movie_file_path = temp_file_path
 
         fps = self.scene.camera.frame_rate
-        height = self.scene.camera.get_pixel_height()
-        width = self.scene.camera.get_pixel_width()
+        width, height = self.scene.camera.get_pixel_shape()
 
         command = [
             FFMPEG_BIN,
             '-y',  # overwrite output file if it exists
             '-f', 'rawvideo',
-            '-s', '%dx%d' % (width, height),  # size of one frame
+            '-s', f'{width}x{height}',  # size of one frame
             '-pix_fmt', 'rgba',
             '-r', str(fps),  # frames per second
             '-i', '-',  # The imput comes from a pipe
