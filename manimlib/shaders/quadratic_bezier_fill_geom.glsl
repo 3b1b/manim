@@ -36,6 +36,7 @@ const float SQRT5 = 2.236068;
 // so to share functionality between this and others, the caller
 // replaces this line with the contents of named file
 #INSERT quadratic_bezier_geometry_functions.glsl
+#INSERT set_gl_Position.glsl
 
 
 mat3 get_xy_to_wz(vec2 b0, vec2 b1, vec2 b2){
@@ -60,18 +61,11 @@ mat3 get_xy_to_wz(vec2 b0, vec2 b1, vec2 b2){
     return transform * shift;
 }
 
-void set_gl_Position(vec2 p){
-    vec2 result = p / scale;
-    result.x /= aspect_ratio;
-    result -= frame_center.xy;
-    gl_Position = vec4(result, 0.0, 1.0);
-}
-
 
 void emit_simple_triangle(){
     for(int i = 0; i < 3; i++){
         color = v_color[i];
-        set_gl_Position(bp[i]);
+        set_gl_Position(vec3(bp[i], 0));
         EmitVertex();
     }
     EndPrimitive();
@@ -129,7 +123,7 @@ void emit_pentagon(vec2 bp0, vec2 bp1, vec2 bp2, float orientation){
         if(i < 2)       color = v_color[0];
         else if(i == 2) color = v_color[1];
         else            color = v_color[2];
-        set_gl_Position(corner);
+        set_gl_Position(vec3(corner, 0));
         EmitVertex();
     }
     EndPrimitive();

@@ -43,6 +43,7 @@ const float MITER_JOINT = 3;
 // so to share functionality between this and others, the caller
 // replaces this line with the contents of named file
 #INSERT quadratic_bezier_geometry_functions.glsl
+#INSERT set_gl_Position.glsl
 
 
 float angle_between_vectors(vec2 v1, vec2 v2){
@@ -264,14 +265,6 @@ void set_previous_and_next(vec2 controls[3], int degree){
 }
 
 
-void set_gl_Position(vec2 p){
-    vec2 result = p / scale;
-    result.x /= aspect_ratio;
-    result -= frame_center.xy;
-    gl_Position = vec4(result, 0.0, 1.0);
-}
-
-
 void main() {
     vec2 controls[3];
     int degree = get_reduced_control_points(bp[0], bp[1], bp[2], controls);
@@ -311,7 +304,7 @@ void main() {
         uv_stroke_width = stroke_widths[i] / scale_factor;
         color = stroke_colors[i];
 
-        set_gl_Position(corner);
+        set_gl_Position(vec3(corner, 0));
         EmitVertex();
     }
     EndPrimitive();
