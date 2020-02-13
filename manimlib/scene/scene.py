@@ -38,7 +38,9 @@ class Scene(Container):
         Container.__init__(self, **kwargs)
         if self.preview:
             self.window = Window(self, **self.window_config)
-            self.camera_config["window"] = self.window
+            self.camera_config["ctx"] = self.window.ctx
+        else:
+            self.window = None
 
         self.camera = self.camera_class(**self.camera_config)
         self.file_writer = SceneFileWriter(self, **self.file_writer_config)
@@ -59,10 +61,6 @@ class Scene(Container):
             pass
         self.tear_down()
 
-        # Is this what we want?
-        if self.preview:
-            self.update_until_closed()
-
     def setup(self):
         """
         This is meant to be implement by any scenes which
@@ -76,22 +74,29 @@ class Scene(Container):
         pass
 
     def tear_down(self):
+        self.skip_animations = False
+        if self.file_writer.save_last_frame:
+            self.update_frame()
+
         self.file_writer.finish()
         self.print_end_message()
 
-    def update_until_closed(self):
+        if self.window:
+            self.interact()
+
+    def interact(self):
+        # If there is a window, enter a loop
+        # which updates the frame while under
+        # the hood calling the pyglet event loop
         while not self.window.is_closing:
-            now = time.time()
             self.update_frame()
-            time.sleep(
-                max(1 / 30 - (time.time() - now), 0)
-            )
+        self.window.destroy()
 
     def __str__(self):
         return self.__class__.__name__
 
     def print_end_message(self):
-        print("Played {} animations".format(self.num_plays))
+        print(f"Played {self.num_plays} animations")
 
     def set_variables_as_attrs(self, *objects, **newly_named_objects):
         """
@@ -125,19 +130,22 @@ class Scene(Container):
         mobjects = self.mobjects
         ##
 
+        if self.window:
+            self.window.clear()
         self.camera.clear()
         self.camera.capture_mobjects(mobjects, excluded_mobjects=excluded_mobjects)
+        if self.window:
+            self.window.swap_buffers()
 
     def emit_frame(self, dt):
         self.increment_time(dt)
         if not self.skip_animations:
             self.file_writer.write_frame(self.camera)
 
-        if self.preview:
-            min_time_between_frames = 1 / self.camera.frame_rate
-            time_since_last = time.time() - self.time_of_last_frame
-            time.sleep(max(0, min_time_between_frames - time_since_last))
-            self.time_of_last_frame = time.time()
+        if self.window:
+            frame_duration = 1 / self.camera.frame_rate
+            t, dt = self.window.timer.next_frame()
+            time.sleep(np.clip(0, frame_duration - dt, frame_duration))
 
     ###
 
@@ -344,12 +352,12 @@ class Scene(Container):
     def handle_play_like_call(func):
         def wrapper(self, *args, **kwargs):
             self.update_skipping_status()
-            allow_write = not self.skip_animations
-            if allow_write:
+            if not self.skip_animations:
                 self.file_writer.begin_animation()
-            func(self, *args, **kwargs)
-            if allow_write:
+                func(self, *args, **kwargs)
                 self.file_writer.end_animation()
+            else:
+                func(self, *args, **kwargs)
             self.num_plays += 1
         return wrapper
 
@@ -500,7 +508,10 @@ class Scene(Container):
         pass
 
     def on_mouse_scroll(self, point, offset):
-        self.camera.frame.scale(1 + np.arctan(offset[1]))
+        self.camera.frame.scale(
+            1 + np.arctan(3 * offset[1]),
+            about_point=point,
+        )
         self.camera.refresh_shader_uniforms()
 
     def on_key_release(self, symbol, modifiers):
