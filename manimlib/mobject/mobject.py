@@ -5,6 +5,7 @@ import operator as op
 import os
 import random
 import sys
+import moderngl
 
 from colour import Color
 import numpy as np
@@ -34,7 +35,12 @@ class Mobject(Container):
         "color": WHITE,
         "name": None,
         "dim": 3,
-        "target": None,
+        # For shaders
+        "vert_shader_file": "",
+        "geom_shader_file": "",
+        "frag_shader_file": "",
+        "render_primative": moderngl.TRIANGLE_STRIP,
+        "texture_path": "",
     }
 
     def __init__(self, **kwargs):
@@ -1116,6 +1122,26 @@ class Mobject(Container):
         pass
 
     def cleanup_from_animation(self):
+        pass
+
+    # For shaders
+
+    def get_shader_info_list(self):
+        return [self.get_shader_info()]
+
+    def get_shader_info(self):
+        return {
+            "data": self.get_shader_data(),
+            "vert": self.vert_shader_file,
+            "geom": self.geom_shader_file,
+            "frag": self.frag_shader_file,
+            "render_primative": self.render_primative,
+            "texture_path": self.texture_path,
+        }
+
+    def get_shader_data(self):
+        # To be implemented by subclasses
+        # Must return a structured numpy array
         pass
 
     # Errors
