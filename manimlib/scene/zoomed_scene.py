@@ -2,7 +2,6 @@ from manimlib.animation.transform import ApplyMethod
 from manimlib.camera.moving_camera import MovingCamera
 from manimlib.camera.multi_camera import MultiCamera
 from manimlib.constants import *
-from manimlib.mobject.types.image_mobject import ImageMobjectFromCamera
 from manimlib.scene.moving_camera_scene import MovingCameraScene
 from manimlib.utils.simple_functions import fdiv
 
@@ -10,6 +9,7 @@ from manimlib.utils.simple_functions import fdiv
 # break, as it was restructured.
 
 
+# TODO, this scene no longer works
 class ZoomedScene(MovingCameraScene):
     CONFIG = {
         "camera_class": MultiCamera,
