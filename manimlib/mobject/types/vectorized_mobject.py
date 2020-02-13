@@ -57,10 +57,21 @@ class VMobject(Mobject):
         "joint_type": "auto",
         "render_primative": moderngl.TRIANGLES,
         "triangulation_locked": False,
+        "fill_dtype": [
+            ('point', np.float32, (3,)),
+            ('color', np.float32, (4,)),
+            ('fill_all', np.float32, (1,)),
+            ('orientation', np.float32, (1,)),
+        ],
+        "stroke_dtype": [
+            ("point", np.float32, (3,)),
+            ("prev_point", np.float32, (3,)),
+            ("next_point", np.float32, (3,)),
+            ("stroke_width", np.float32, (1,)),
+            ("color", np.float32, (4,)),
+            ("joint_type", np.float32, (1,)),
+        ]
     }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
     def get_group_class(self):
         return VGroup
@@ -794,6 +805,10 @@ class VMobject(Mobject):
         return vmob
 
     # For shaders
+    def init_shader_data(self):
+        self.fill_data = np.zeros(len(self.points), dtype=self.fill_dtype)
+        self.stroke_data = np.zeros(len(self.points), dtype=self.stroke_dtype)
+
     def get_shader_info_list(self):
         result = []
         if self.get_fill_opacity() > 0:
@@ -819,21 +834,12 @@ class VMobject(Mobject):
         return result
 
     def get_stroke_shader_data(self):
-        dtype = [
-            ("point", np.float32, (3,)),
-            ("prev_point", np.float32, (3,)),
-            ("next_point", np.float32, (3,)),
-            ("stroke_width", np.float32, (1,)),
-            ("color", np.float32, (4,)),
-            ("joint_type", np.float32, (1,)),
-        ]
         joint_type_to_code = {
             "auto": 0,
             "round": 1,
             "bevel": 2,
             "miter": 3,
         }
-        points = self.points
 
         rgbas = self.get_stroke_rgbas()
         if len(rgbas) > 1:
@@ -843,12 +849,12 @@ class VMobject(Mobject):
         if len(stroke_width) > 1:
             stroke_width = self.stretched_style_array_matching_points(stroke_width)
 
-        data = np.zeros(len(points), dtype=dtype)
-        data['point'] = points
-        data['prev_point'][:3] = points[-3:]
-        data['prev_point'][3:] = points[:-3]
-        data['next_point'][:-3] = points[3:]
-        data['next_point'][-3:] = points[:3]
+        data = self.get_shader_data_array(len(self.points), "stroke_data")
+        data['point'] = self.points
+        data['prev_point'][:3] = self.points[-3:]
+        data['prev_point'][3:] = self.points[:-3]
+        data['next_point'][:-3] = self.points[3:]
+        data['next_point'][-3:] = self.points[:3]
         data['stroke_width'][:, 0] = stroke_width
         data['color'] = rgbas
         data['joint_type'] = joint_type_to_code[self.joint_type]
@@ -858,6 +864,7 @@ class VMobject(Mobject):
         for sm in self.family_members_with_points():
             sm.triangulation_locked = False
             sm.saved_triangulation = sm.get_triangulation()
+            sm.saved_orientation = sm.get_orientation()
             sm.triangulation_locked = True
         return self
 
@@ -873,6 +880,8 @@ class VMobject(Mobject):
         return sum((p0[:, 0] + p1[:, 0]) * (p1[:, 1] - p0[:, 1]))
 
     def get_orientation(self):
+        if self.triangulation_locked:
+            return self.saved_orientation
         return np.sign(self.get_signed_polygonal_area())
 
     def get_triangulation(self, orientation=None):
@@ -928,22 +937,15 @@ class VMobject(Mobject):
         return tri_indices
 
     def get_fill_shader_data(self):
-        dtype = [
-            ('point', np.float32, (3,)),
-            ('color', np.float32, (4,)),
-            ('fill_all', np.float32, (1,)),
-            ('orientation', np.float32, (1,)),
-        ]
-
         points = self.points
 
         orientation = self.get_orientation()
         tri_indices = self.get_triangulation(orientation)
 
         # TODO, best way to enable multiple colors?
-        rgbas = self.get_fill_rgbas()
+        rgbas = self.get_fill_rgbas()[:1]
 
-        data = np.zeros(len(tri_indices), dtype=dtype)
+        data = self.get_shader_data_array(len(tri_indices), "fill_data")
         data["point"] = points[tri_indices]
         data["color"] = rgbas
         # Assume the triangulation is such that the first n_points points

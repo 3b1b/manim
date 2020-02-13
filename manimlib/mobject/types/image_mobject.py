@@ -15,6 +15,11 @@ class ImageMobject(Mobject):
         "opacity": 1,
         "vert_shader_file": "image_vert.glsl",
         "frag_shader_file": "image_frag.glsl",
+        "shader_dtype": [
+            ('point', np.float32, (3,)),
+            ('im_coords', np.float32, (2,)),
+            ('opacity', np.float32, (1,)),
+        ]
     }
 
     def __init__(self, filename, **kwargs):
@@ -37,17 +42,10 @@ class ImageMobject(Mobject):
         self.set_opacity(self.opacity)
 
     def get_shader_data(self):
-        dtype = [
-            ('point', np.float32, (3,)),
-            ('im_coords', np.float32, (2,)),
-            ('opacity', np.float32, (1,)),
-        ]
-
-        data = np.zeros(len(self.points), dtype=dtype)
+        data = self.get_shader_data_array(len(self.points))
         data["point"] = self.points
         data["im_coords"] = self.im_coords
         data["opacity"] = self.opacity
-
         return data
 
     def set_opacity(self, alpha, family=True):

@@ -41,6 +41,9 @@ class Mobject(Container):
         "frag_shader_file": "",
         "render_primative": moderngl.TRIANGLE_STRIP,
         "texture_path": "",
+        "shader_dtype": [
+            ('point', np.float32, (3,)),
+        ]
     }
 
     def __init__(self, **kwargs):
@@ -55,6 +58,7 @@ class Mobject(Container):
         self.reset_points()
         self.init_points()
         self.init_colors()
+        self.init_shader_data()
 
     def __str__(self):
         return str(self.name)
@@ -110,7 +114,7 @@ class Mobject(Container):
         if camera is None:
             from manimlib.camera.camera import Camera
             camera = Camera()
-        camera.capture_mobject(self)
+        camera.capture(self)
         return camera.get_image()
 
     def show(self, camera=None):
@@ -1125,6 +1129,18 @@ class Mobject(Container):
         pass
 
     # For shaders
+    def init_shader_data(self):
+        self.shader_data = np.zeros(len(self.points), dtype=self.shader_dtype)
+
+    def get_shader_data_array(self, size, name="shader_data"):
+        # If possible, try to populate an existing array, rather
+        # than recreating it each frame
+        arr = getattr(self, name)
+        if arr.size != size:
+            new_arr = np.resize(arr, size)
+            setattr(self, name, new_arr)
+            return new_arr
+        return arr
 
     def get_shader_info_list(self):
         return [self.get_shader_info()]
