@@ -1,4 +1,3 @@
-import warnings
 import numpy as np
 
 from manimlib.constants import *
@@ -13,7 +12,6 @@ from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import angle_between_vectors
 from manimlib.utils.space_ops import compass_directions
-from manimlib.utils.space_ops import line_intersection
 from manimlib.utils.space_ops import find_intersection
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import normalize
@@ -317,6 +315,7 @@ class Dot(Circle):
 
     def __init__(self, point=ORIGIN, **kwargs):
         Circle.__init__(self, arc_center=point, **kwargs)
+        self.lock_triangulation()
 
 
 class SmallDot(Dot):

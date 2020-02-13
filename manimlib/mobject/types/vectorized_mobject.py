@@ -56,11 +56,11 @@ class VMobject(Mobject):
         # Could also be Bevel, Miter, Round
         "joint_type": "auto",
         "render_primative": moderngl.TRIANGLES,
+        "triangulation_locked": False,
     }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.triangulation_locked = False
 
     def get_group_class(self):
         return VGroup
