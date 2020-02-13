@@ -803,6 +803,7 @@ class VMobject(Mobject):
                 "geom": self.fill_geom_shader_file,
                 "frag": self.fill_frag_shader_file,
                 "render_primative": self.render_primative,
+                "texture_path": self.texture_path,
             })
         if self.get_stroke_width() > 0 and self.get_stroke_opacity() > 0:
             result.append({
@@ -811,6 +812,7 @@ class VMobject(Mobject):
                 "geom": self.stroke_geom_shader_file,
                 "frag": self.stroke_frag_shader_file,
                 "render_primative": self.render_primative,
+                "texture_path": self.texture_path,
             })
         if len(result) == 2 and self.draw_stroke_behind_fill:
             return [result[1], result[0]]

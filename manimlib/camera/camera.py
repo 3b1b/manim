@@ -56,29 +56,27 @@ class Camera(object):
         "n_channels": 4,
         "pixel_array_dtype": 'uint8',
         "line_width_multiple": 0.01,
-        "window": None,
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, ctx=None, **kwargs):
         digest_config(self, kwargs, locals())
-        self.background_fbo = None
         self.rgb_max_val = np.iinfo(self.pixel_array_dtype).max
         self.init_frame()
-        self.init_context()
+        self.init_context(ctx)
         self.init_shaders()
+        self.init_textures()
 
     def init_frame(self):
         self.frame = CameraFrame(**self.frame_config)
 
-    def init_context(self):
-        if self.window is not None:
-            self.ctx = self.window.ctx
-            self.fbo = self.window.ctx.detect_framebuffer()
+    def init_context(self, ctx=None):
+        if ctx is not None:
+            self.ctx = ctx
+            self.fbo = self.ctx.detect_framebuffer()
         else:
             self.ctx = moderngl.create_standalone_context()
             self.fbo = self.get_fbo()
             self.fbo.use()
-            # self.clear()
 
         self.ctx.enable(moderngl.BLEND)
         self.ctx.blend_func = (
@@ -110,9 +108,6 @@ class Camera(object):
         self.set_frame_width(frame_width)
 
     def clear(self):
-        if self.window:
-            self.window.clear()
-
         rgba = (*Color(self.background_color).get_rgb(), self.background_opacity)
         self.fbo.clear(*rgba)
 
@@ -123,23 +118,24 @@ class Camera(object):
 
     def unlock_background(self):
         pass  # TODO
-        self.background_fbo = None
 
     def reset_pixel_shape(self, new_width, new_height):
         self.pixel_width = new_width
         self.pixel_height = new_height
-
-        self.fbo.release()
-        self.init_frame_buffer()
         self.refresh_shader_uniforms()
 
     # Various ways to read from the fbo
     def get_raw_fbo_data(self, dtype='f1'):
-        return self.fbo.read(components=self.n_channels, dtype=dtype)
+        return self.fbo.read(
+            viewport=self.fbo.viewport,
+            components=self.n_channels,
+            dtype=dtype,
+        )
 
     def get_image(self, pixel_array=None):
         return Image.frombytes(
-            'RGBA', self.fbo.size,
+            'RGBA',
+            self.get_pixel_shape(),
             self.get_raw_fbo_data(),
             'raw', 'RGBA', 0, -1
         )
@@ -163,7 +159,8 @@ class Camera(object):
 
     # Getting camera attributes
     def get_pixel_shape(self):
-        return (self.pixel_width, self.pixel_height)
+        return self.fbo.viewport[2:4]
+        # return (self.pixel_width, self.pixel_height)
 
     def get_pixel_width(self):
         return self.get_pixel_shape()[0]
@@ -248,28 +245,36 @@ class Camera(object):
             render_primative = info_group[0]["render_primative"]
             self.render_from_shader(shader, data, render_primative)
 
-        if self.window:
-            self.window.swap_buffers()
-
     # Shaders
     def init_shaders(self):
-        self.id_to_shader = {}
+        # Initialize with the null id going to None
+        self.id_to_shader = {"": None}
 
     def get_shader_id(self, shader_info):
         # A unique id for a shader based on the names of the files holding its code
-        return "|".join([
-            shader_info.get(key, "")
-            for key in ["vert", "geom", "frag"]
-        ])
+        vert, geom, frag, text = [
+            shader_info.get(key, "") or ""
+            for key in ["vert", "geom", "frag", "texture_path"]
+        ]
+        if not vert or not frag:
+            # Not an actual shader
+            return ""
+        return "|".join([vert, geom, frag, text])
 
     def get_shader(self, sid):
         if sid not in self.id_to_shader:
-            vert, geom, frag = sid.split("|")
+            vert, geom, frag, text = sid.split("|")
             shader = self.ctx.program(
                 vertex_shader=self.get_shader_code_from_file(vert),
                 geometry_shader=self.get_shader_code_from_file(geom),
                 fragment_shader=self.get_shader_code_from_file(frag),
             )
+            if text:
+                # TODO, this currently assumes that the uniform Sampler2D
+                # is named Texture
+                tid = self.get_texture_id(text)
+                shader["Texture"].value = tid
+
             self.set_shader_uniforms(shader)
             self.id_to_shader[sid] = shader
         return self.id_to_shader[sid]
@@ -297,23 +302,49 @@ class Camera(object):
         return result
 
     def set_shader_uniforms(self, shader):
+        if shader is None:
+            return
         # TODO, think about how uniforms come from mobjects as well.
         fh = self.get_frame_height()
         fc = self.get_frame_center()
         pw, ph = self.get_pixel_shape()
 
-        shader['scale'].value = fh / 2  # Scale based on frame size
-        shader['aspect_ratio'].value = (pw / ph)  # AR based on pixel shape
-        shader['anti_alias_width'].value = ANTI_ALIAS_WIDTH
-        shader['frame_center'].value = tuple(fc)
+        mapping = {
+            'scale': fh / 2,  # Scale based on frame size
+            'aspect_ratio': (pw / ph),  # AR based on pixel shape
+            'anti_alias_width': ANTI_ALIAS_WIDTH,
+            'frame_center': tuple(fc),
+        }
+        for key, value in mapping.items():
+            try:
+                shader[key].value = value
+            except KeyError:
+                pass
 
     def refresh_shader_uniforms(self):
         for sid, shader in self.id_to_shader.items():
             self.set_shader_uniforms(shader)
 
     def render_from_shader(self, shader, data, render_primative):
-        if len(data) == 0:
+        if data is None or shader is None or len(data) == 0:
             return
         vbo = self.ctx.buffer(data.tobytes())
         vao = self.ctx.simple_vertex_array(shader, vbo, *data.dtype.names)
         vao.render(render_primative)
+
+    def init_textures(self):
+        self.path_to_texture_id = {}
+
+    def get_texture_id(self, path):
+        if path not in self.path_to_texture_id:
+            # A way to increase tid's sequentially
+            tid = len(self.path_to_texture_id)
+            im = Image.open(path)
+            texture = self.ctx.texture(
+                size=im.size,
+                components=len(im.getbands()),
+                data=im.tobytes(),
+            )
+            texture.use(location=tid)
+            self.path_to_texture_id[path] = tid
+        return self.path_to_texture_id[path]
