@@ -361,7 +361,7 @@ class Mobject(Container):
         if about_point is None:
             if about_edge is None:
                 about_edge = ORIGIN
-            about_point = self.get_critical_point(about_edge)
+            about_point = self.get_bounding_box_point(about_edge)
         for mob in self.family_members_with_points():
             mob.points -= about_point
             mob.points = func(mob.points)
@@ -396,7 +396,7 @@ class Mobject(Container):
         corner in the 2d plane.
         """
         target_point = np.sign(direction) * (FRAME_X_RADIUS, FRAME_Y_RADIUS, 0)
-        point_to_align = self.get_critical_point(direction)
+        point_to_align = self.get_bounding_box_point(direction)
         shift_val = target_point - point_to_align - buff * np.array(direction)
         shift_val = shift_val * abs(np.sign(direction))
         self.shift(shift_val)
@@ -422,7 +422,7 @@ class Mobject(Container):
                 target_aligner = mob[index_of_submobject_to_align]
             else:
                 target_aligner = mob
-            target_point = target_aligner.get_critical_point(
+            target_point = target_aligner.get_bounding_box_point(
                 aligned_edge + direction
             )
         else:
@@ -433,7 +433,7 @@ class Mobject(Container):
             aligner = self[index_of_submobject_to_align]
         else:
             aligner = self
-        point_to_align = aligner.get_critical_point(aligned_edge - direction)
+        point_to_align = aligner.get_bounding_box_point(aligned_edge - direction)
         self.shift((target_point - point_to_align +
                     buff * direction) * coor_mask)
         return self
@@ -520,10 +520,10 @@ class Mobject(Container):
     def move_to(self, point_or_mobject, aligned_edge=ORIGIN,
                 coor_mask=np.array([1, 1, 1])):
         if isinstance(point_or_mobject, Mobject):
-            target = point_or_mobject.get_critical_point(aligned_edge)
+            target = point_or_mobject.get_bounding_box_point(aligned_edge)
         else:
             target = point_or_mobject
-        point_to_align = self.get_critical_point(aligned_edge)
+        point_to_align = self.get_bounding_box_point(aligned_edge)
         self.shift((target - point_to_align) * coor_mask)
         return self
 
@@ -733,7 +733,7 @@ class Mobject(Container):
         else:
             return np.max(values)
 
-    def get_critical_point(self, direction):
+    def get_bounding_box_point(self, direction):
         """
         Picture a box bounding the mobject.  Such a box has
         9 'critical points': 4 corners, 4 edge center, the
@@ -749,16 +749,16 @@ class Mobject(Container):
             )
         return result
 
-    # Pseudonyms for more general get_critical_point method
+    # Pseudonyms for more general get_bounding_box_point method
 
     def get_edge_center(self, direction):
-        return self.get_critical_point(direction)
+        return self.get_bounding_box_point(direction)
 
     def get_corner(self, direction):
-        return self.get_critical_point(direction)
+        return self.get_bounding_box_point(direction)
 
     def get_center(self):
-        return self.get_critical_point(np.zeros(self.dim))
+        return self.get_bounding_box_point(np.zeros(self.dim))
 
     def get_center_of_mass(self):
         return np.apply_along_axis(np.mean, 0, self.get_all_points())
@@ -901,7 +901,7 @@ class Mobject(Container):
         the center of mob2
         """
         if isinstance(mobject_or_point, Mobject):
-            point = mobject_or_point.get_critical_point(direction)
+            point = mobject_or_point.get_bounding_box_point(direction)
         else:
             point = mobject_or_point
 

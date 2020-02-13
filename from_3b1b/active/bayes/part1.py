@@ -3905,7 +3905,7 @@ class RandomnessVsProportions(Scene):
 
         arrangements = VGroup(*[
             VGroup(*[
-                dot.copy().move_to(square.get_critical_point(ec))
+                dot.copy().move_to(square.get_bounding_box_point(ec))
                 for ec in edge_group
             ])
             for edge_group in edge_groups

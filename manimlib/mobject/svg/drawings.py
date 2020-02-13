@@ -467,7 +467,7 @@ class Bubble(SVGMobject):
         can_flip = not self.direction_was_specified
         if want_to_flip and can_flip:
             self.flip()
-        boundary_point = mobject.get_critical_point(UP - self.direction)
+        boundary_point = mobject.get_bounding_box_point(UP - self.direction)
         vector_from_center = 1.0 * (boundary_point - mob_center)
         self.move_tip_to(mob_center + vector_from_center)
         return self

@@ -841,7 +841,7 @@ class Test(Scene):
         arcs = VGroup(arc1, arc2)
         for arc, vect in zip(arcs, [DOWN+RIGHT, RIGHT]):
             arc_copy = arc.copy()
-            point = domino1.get_critical_point(vect)
+            point = domino1.get_bounding_box_point(vect)
             arc_copy.add_line_to([point])
             arc_copy.set_stroke(width = 0)
             arc_copy.set_fill(

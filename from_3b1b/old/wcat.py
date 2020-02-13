@@ -1280,7 +1280,7 @@ class EndpointsGluedTogether(ClosedLoopScene):
 
         self.loop = line
         dots = VGroup(*[
-            Dot(line.get_critical_point(vect))
+            Dot(line.get_bounding_box_point(vect))
             for vect in (LEFT, RIGHT)
         ])
         dots.set_color(BLUE)
