@@ -710,8 +710,12 @@ class VMobject(Mobject):
             get_norm(bg[nppc - 1] - bg[0])
             for bg in bezier_groups
         ])
-        # Insertions per curve
-        ipc = np.round(n * norms / sum(norms)).astype(int)
+        total_norm = sum(norms)
+        # Calculate insertions per curve (ipc)
+        if total_norm < 1e-6:
+            ipc = [n] + [0] * (len(bezier_groups) - 1)
+        else:
+            ipc = np.round(n * norms / sum(norms)).astype(int)
         diff = n - sum(ipc)
         for x in range(diff):
             ipc[np.argmin(ipc)] += 1
