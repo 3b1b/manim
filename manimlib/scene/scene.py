@@ -7,9 +7,11 @@ from tqdm import tqdm as ProgressDisplay
 import numpy as np
 import itertools as it
 import time
+from IPython.terminal.embed import InteractiveShellEmbed
 
 from manimlib.animation.animation import Animation
 from manimlib.animation.transform import MoveToTarget
+from manimlib.mobject.mobject import Point
 from manimlib.camera.camera import Camera
 from manimlib.constants import *
 from manimlib.container.container import Container
@@ -51,6 +53,10 @@ class Scene(Container):
         self.skip_time = 0
         self.original_skipping_status = self.skip_animations
         self.time_of_last_frame = time.time()
+
+        self.mouse_point = Point()
+        self.mouse_drag_point = Point()
+
         if self.random_seed is not None:
             random.seed(self.random_seed)
             np.random.seed(self.random_seed)
@@ -76,13 +82,9 @@ class Scene(Container):
         pass
 
     def tear_down(self):
-        self.skip_animations = False
-        if self.file_writer.save_last_frame:
-            self.update_frame()
-
+        self.stop_skipping()
         self.file_writer.finish()
         self.print_end_message()
-
         if self.window:
             self.interact()
 
@@ -91,9 +93,21 @@ class Scene(Container):
         # which updates the frame while under
         # the hood calling the pyglet event loop
         while not self.window.is_closing:
-            # t, dt = self.window.timer.next_frame()
+            self.time = self.window.timer.time
             self.update_frame()
         self.window.destroy()
+
+    def embed(self):
+        self.stop_skipping()
+        self.update_frame()
+
+        caller_locals = inspect.currentframe().f_back.f_locals
+        caller_module = inspect.getmodule(inspect.stack()[1][0])
+        shell = InteractiveShellEmbed()
+        shell(
+            local_ns=caller_locals,
+            module=caller_module,
+        )
 
     def __str__(self):
         return self.__class__.__name__
@@ -126,6 +140,7 @@ class Scene(Container):
 
     def update_frame(self, dt=0, ignore_skipping=False):
         self.increment_time(dt)
+        self.update_mobjects(dt)  # Should skip?
         if self.skip_animations and not ignore_skipping:
             return
 
@@ -155,8 +170,8 @@ class Scene(Container):
 
     def should_update_mobjects(self):
         return self.always_update_mobjects or any([
-            mob.has_time_based_updater()
-            for mob in self.get_mobject_family_members()
+            len(mob.get_family_updaters()) > 0
+            for mob in self.mobjects
         ])
 
     ###
@@ -347,12 +362,15 @@ class Scene(Container):
     def update_skipping_status(self):
         if self.start_at_animation_number is not None:
             if self.num_plays == self.start_at_animation_number:
-                self.skip_animations = False
-                self.skip_time += self.time
+                self.stop_skipping()
         if self.end_at_animation_number is not None:
             if self.num_plays >= self.end_at_animation_number:
-                self.skip_animations = True
                 raise EndSceneEarlyException()
+
+    def stop_skipping(self):
+        if self.skip_animations:
+            self.skip_animations = False
+            self.skip_time += self.time
 
     # Methods associated with running animations
     def handle_play_like_call(func):
@@ -391,7 +409,6 @@ class Scene(Container):
                 animation.update_mobjects(dt)
                 alpha = t / animation.run_time
                 animation.interpolate(alpha)
-            self.update_mobjects(dt)
             self.update_frame(dt)
             self.emit_frame()
 
@@ -454,7 +471,6 @@ class Scene(Container):
             for t in time_progression:
                 dt = t - last_t
                 last_t = t
-                self.update_mobjects(dt)
                 self.update_frame(dt)
                 self.emit_frame()
                 if stop_condition is not None and stop_condition():
@@ -495,11 +511,10 @@ class Scene(Container):
 
     # Event handling
     def on_mouse_motion(self, point, d_point):
-        pass
+        self.mouse_point.move_to(point)
 
     def on_mouse_drag(self, point, d_point, buttons, modifiers):
-        self.camera.frame.shift(-d_point)
-        self.camera.refresh_shader_uniforms()
+        self.mouse_drag_point.move_to(point)
 
     def on_mouse_press(self, point, button, mods):
         pass
