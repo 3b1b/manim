@@ -41,6 +41,7 @@ class Mobject(Container):
         "frag_shader_file": "",
         "render_primative": moderngl.TRIANGLE_STRIP,
         "texture_path": "",
+        # Must match in attributes of vert shader
         "shader_dtype": [
             ('point', np.float32, (3,)),
         ]
@@ -111,14 +112,13 @@ class Mobject(Container):
     # Displaying
 
     def get_image(self, camera=None):
-        if camera is None:
-            from manimlib.camera.camera import Camera
-            camera = Camera()
+        # TODO, this doesn't...you know, seem to actually work
+        camera.clear()
         camera.capture(self)
         return camera.get_image()
 
-    def show(self, camera=None):
-        self.get_image(camera=camera).show()
+    def show(self, camera):
+        self.get_image(camera).show()
 
     def save_image(self, name=None):
         self.get_image().save(
