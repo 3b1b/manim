@@ -184,7 +184,7 @@ class Camera(object):
         self.frame.move_to(center)
 
     def pixel_coords_to_space_coords(self, px, py, relative=False):
-        pw, ph = self.get_pixel_shape()
+        pw, ph = self.fbo.size
         fw, fh = self.get_frame_shape()
         fc = self.get_frame_center()
         if relative:
@@ -192,11 +192,7 @@ class Camera(object):
         else:
             # Only scale wrt one axis
             scale = fh / ph
-            return np.array([
-                scale * (px - pw / 2) - fc[0],
-                scale * (py - py / 2) - fc[0],
-                -fc[2] / 2,
-            ])
+            return fc + scale * np.array([(px - pw / 2), (py - ph / 2), 0])
 
     # TODO, account for 3d
     # Also, move this to CameraFrame?
@@ -293,7 +289,7 @@ class Camera(object):
         mapping = {
             'scale': fh / 2,  # Scale based on frame size
             'aspect_ratio': (pw / ph),  # AR based on pixel shape
-            'anti_alias_width': ANTI_ALIAS_WIDTH,
+            'anti_alias_width': ANTI_ALIAS_WIDTH_OVER_FRAME_HEIGHT * fh,
             'frame_center': tuple(fc),
         }
         for key, value in mapping.items():

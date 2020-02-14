@@ -43,7 +43,7 @@ class Window(PygletWindow):
         super().on_mouse_drag(x, y, dx, dy, buttons, modifiers)
         point = self.pixel_coords_to_space_coords(x, y)
         d_point = self.pixel_coords_to_space_coords(dx, dy, relative=True)
-        self.scene.on_mouse_drag(point, d_point, buttons, modifiers)  # Do a conversion?
+        self.scene.on_mouse_drag(point, d_point, buttons, modifiers)
 
     def on_mouse_press(self, x: int, y: int, button, mods):
         super().on_mouse_press(x, y, button, mods)
