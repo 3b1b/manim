@@ -1175,3 +1175,29 @@ class Group(Mobject):
             raise Exception("All submobjects must be of type Mobject")
         Mobject.__init__(self, **kwargs)
         self.add(*mobjects)
+
+
+class Point(Mobject):
+    CONFIG = {
+        "artificial_width": 1e-6,
+        "artificial_height": 1e-6,
+    }
+
+    def __init__(self, location=ORIGIN, **kwargs):
+        Mobject.__init__(self, **kwargs)
+        self.set_location(location)
+
+    def get_width(self):
+        return self.artificial_width
+
+    def get_height(self):
+        return self.artificial_height
+
+    def get_location(self):
+        return np.array(self.points[0])
+
+    def get_bounding_box_point(self, *args, **kwargs):
+        return self.get_location()
+
+    def set_location(self, new_loc):
+        self.points = np.array(new_loc, ndmin=2)
