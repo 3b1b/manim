@@ -5,6 +5,7 @@ from colour import Color
 
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
+from manimlib.mobject.mobject import Point
 from manimlib.mobject.three_d_utils import get_3d_vmob_gradient_start_and_end_points
 from manimlib.utils.bezier import bezier
 from manimlib.utils.bezier import get_smooth_handle_points
@@ -969,7 +970,7 @@ class VGroup(VMobject):
         self.add(*vmobjects)
 
 
-class VectorizedPoint(VMobject):
+class VectorizedPoint(VMobject, Point):
     CONFIG = {
         "color": BLACK,
         "fill_opacity": 0,
@@ -981,18 +982,6 @@ class VectorizedPoint(VMobject):
     def __init__(self, location=ORIGIN, **kwargs):
         VMobject.__init__(self, **kwargs)
         self.set_points(np.array([location]))
-
-    def get_width(self):
-        return self.artificial_width
-
-    def get_height(self):
-        return self.artificial_height
-
-    def get_location(self):
-        return np.array(self.points[0])
-
-    def set_location(self, new_loc):
-        self.set_points(np.array(new_loc, ndmin=2))
 
 
 class CurvesAsSubmobjects(VGroup):
