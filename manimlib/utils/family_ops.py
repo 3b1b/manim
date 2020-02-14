@@ -1,13 +1,13 @@
-from manimlib.utils.iterables import remove_list_redundancies
 import itertools as it
 
 
 def extract_mobject_family_members(mobject_list, only_those_with_points=False):
-    result = remove_list_redundancies(list(
-        it.chain(*[m.get_family() for m in mobject_list])
-    ))
+    result = list(it.chain(*[
+        mob.get_family()
+        for mob in mobject_list
+    ]))
     if only_those_with_points:
-        result = [m for m in result if m.has_points()]
+        result = [mob for mob in result if mob.has_points()]
     return result
 
 
