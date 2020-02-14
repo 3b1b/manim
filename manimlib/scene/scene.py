@@ -5,6 +5,7 @@ import platform
 
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
+import itertools as it
 import time
 
 from manimlib.animation.animation import Animation
@@ -16,7 +17,6 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import restructure_list_to_exclude_certain_family_members
-from manimlib.utils.iterables import list_difference_update
 from manimlib.window import Window
 
 
@@ -46,9 +46,9 @@ class Scene(Container):
         self.camera = self.camera_class(**self.camera_config)
         self.file_writer = SceneFileWriter(self, **self.file_writer_config)
         self.mobjects = []
-        self.displayed_mobjects = []
         self.num_plays = 0
         self.time = 0
+        self.skip_time = 0
         self.original_skipping_status = self.skip_animations
         self.time_of_last_frame = time.time()
         if self.random_seed is not None:
@@ -91,6 +91,7 @@ class Scene(Container):
         # which updates the frame while under
         # the hood calling the pyglet event loop
         while not self.window.is_closing:
+            # t, dt = self.window.timer.next_frame()
             self.update_frame()
         self.window.destroy()
 
@@ -100,6 +101,7 @@ class Scene(Container):
     def print_end_message(self):
         print(f"Played {self.num_plays} animations")
 
+    # TODO, remove this
     def set_variables_as_attrs(self, *objects, **newly_named_objects):
         """
         This method is slightly hacky, making it a little easier
@@ -122,26 +124,28 @@ class Scene(Container):
     def get_image(self):
         return self.camera.get_image()
 
-    def update_frame(self, ignore_skipping=False):
+    def update_frame(self, dt=0, ignore_skipping=False):
+        self.increment_time(dt)
         if self.skip_animations and not ignore_skipping:
             return
 
         if self.window:
             self.window.clear()
         self.camera.clear()
-        self.camera.capture(*self.displayed_mobjects)
+        self.camera.capture(*self.get_displayed_mobjects())
+
         if self.window:
             self.window.swap_buffers()
+            win_time, win_dt = self.window.timer.next_frame()
+            while (self.time - self.skip_time - win_time) > 0:
+                self.window.clear()
+                self.camera.capture(*self.get_displayed_mobjects())
+                self.window.swap_buffers()
+                win_time, win_dt = self.window.timer.next_frame()
 
-    def emit_frame(self, dt):
-        self.increment_time(dt)
+    def emit_frame(self):
         if not self.skip_animations:
             self.file_writer.write_frame(self.camera)
-
-        if self.window:
-            frame_duration = 1 / self.camera.frame_rate
-            t, dt = self.window.timer.next_frame()
-            time.sleep(np.clip(0, frame_duration - dt, frame_duration))
 
     ###
 
@@ -160,15 +164,15 @@ class Scene(Container):
     def get_time(self):
         return self.time
 
-    def increment_time(self, d_time):
-        self.time += d_time
+    def increment_time(self, dt):
+        self.time += dt
 
     ###
-    def recompute_displayed_mobjects(self):
-        self.displayed_mobjects = extract_mobject_family_members(
-            self.mobjects,
-            only_those_with_points=True,
-        )
+    def get_displayed_mobjects(self):
+        return it.chain(*[
+            mob.family_members_with_points()
+            for mob in self.mobjects
+        ])
 
     def get_top_level_mobjects(self):
         # Return only those which are not in the family
@@ -194,7 +198,6 @@ class Scene(Container):
         """
         self.remove(*new_mobjects)
         self.mobjects += new_mobjects
-        self.recompute_displayed_mobjects()
         return self
 
     def add_mobjects_among(self, values):
@@ -213,7 +216,6 @@ class Scene(Container):
         self.mobjects = restructure_list_to_exclude_certain_family_members(
             self.mobjects, mobjects_to_remove
         )
-        self.recompute_displayed_mobjects()
         return self
 
     def bring_to_front(self, *mobjects):
@@ -223,12 +225,10 @@ class Scene(Container):
     def bring_to_back(self, *mobjects):
         self.remove(*mobjects)
         self.mobjects = list(mobjects) + self.mobjects
-        self.recompute_displayed_mobjects()
         return self
 
     def clear(self):
         self.mobjects = []
-        self.recompute_displayed_mobjects()
         return self
 
     def get_mobjects(self):
@@ -345,10 +345,11 @@ class Scene(Container):
         return animations
 
     def update_skipping_status(self):
-        if self.start_at_animation_number:
+        if self.start_at_animation_number is not None:
             if self.num_plays == self.start_at_animation_number:
                 self.skip_animations = False
-        if self.end_at_animation_number:
+                self.skip_time += self.time
+        if self.end_at_animation_number is not None:
             if self.num_plays >= self.end_at_animation_number:
                 self.skip_animations = True
                 raise EndSceneEarlyException()
@@ -391,8 +392,8 @@ class Scene(Container):
                 alpha = t / animation.run_time
                 animation.interpolate(alpha)
             self.update_mobjects(dt)
-            self.update_frame()
-            self.emit_frame(dt)
+            self.update_frame(dt)
+            self.emit_frame()
 
     def finish_animations(self, animations):
         for animation in animations:
@@ -454,8 +455,8 @@ class Scene(Container):
                 dt = t - last_t
                 last_t = t
                 self.update_mobjects(dt)
-                self.update_frame()
-                self.emit_frame(dt)
+                self.update_frame(dt)
+                self.emit_frame()
                 if stop_condition is not None and stop_condition():
                     time_progression.close()
                     break
@@ -463,11 +464,10 @@ class Scene(Container):
             # Do nothing
             return self
         else:
-            self.update_frame()
-            dt = 1 / self.camera.frame_rate
-            n_frames = int(duration / dt)
+            self.update_frame(duration)
+            n_frames = int(duration * self.camera.frame_rate)
             for n in range(n_frames):
-                self.emit_frame(dt)
+                self.emit_frame()
         return self
 
     def wait_until(self, stop_condition, max_time=60):
@@ -508,10 +508,9 @@ class Scene(Container):
         pass
 
     def on_mouse_scroll(self, point, offset):
-        self.camera.frame.scale(
-            1 + np.arctan(3 * offset[1]),
-            about_point=point,
-        )
+        frame = self.camera.frame
+        factor = 1 + np.arctan(10 * offset[1])
+        frame.scale(factor, about_point=point)
         self.camera.refresh_shader_uniforms()
 
     def on_key_release(self, symbol, modifiers):
