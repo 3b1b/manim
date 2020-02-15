@@ -14,6 +14,7 @@ from manimlib.for_3b1b_videos.pi_creature_animations import PiCreatureBubbleIntr
 from manimlib.for_3b1b_videos.pi_creature_animations import RemovePiCreatureBubble
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.frame import ScreenRectangle
+from manimlib.mobject.frame import FullScreenFadeRectangle
 from manimlib.mobject.svg.drawings import SpeechBubble
 from manimlib.mobject.svg.drawings import ThoughtBubble
 from manimlib.mobject.types.vectorized_mobject import VGroup
@@ -86,9 +87,7 @@ class PiCreatureScene(Scene):
         added_anims = kwargs.pop("added_anims", [])
 
         anims = []
-        on_screen_mobjects = self.camera.extract_mobject_family_members(
-            self.get_mobjects()
-        )
+        on_screen_mobjects = self.get_displayed_mobjects()
 
         def has_bubble(pi):
             return hasattr(pi, "bubble") and \
@@ -254,12 +253,14 @@ class TeacherStudentsScene(PiCreatureScene):
         "student_scale_factor": 0.8,
         "seconds_to_blink": 2,
         "screen_height": 3,
-        "camera_config": {
-            "background_color": DARKER_GREY,
-        },
     }
 
     def setup(self):
+        self.background = FullScreenFadeRectangle(
+            fill_color=GREEN,
+            fill_opacity=1,
+        )
+        self.add(self.background)
         PiCreatureScene.setup(self)
         self.screen = ScreenRectangle(height=self.screen_height)
         self.screen.to_corner(UP + LEFT)
