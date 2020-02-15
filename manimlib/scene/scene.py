@@ -8,6 +8,7 @@ import numpy as np
 import itertools as it
 import time
 from IPython.terminal.embed import InteractiveShellEmbed
+from traitlets.config.loader import Config
 
 from manimlib.animation.animation import Animation
 from manimlib.animation.transform import MoveToTarget
@@ -54,8 +55,11 @@ class Scene(Container):
         self.original_skipping_status = self.skip_animations
         self.time_of_last_frame = time.time()
 
+        # Items associated with interaction
         self.mouse_point = Point()
         self.mouse_drag_point = Point()
+        self.zoom_on_scroll = False
+        self.quit_interaction = False
 
         if self.random_seed is not None:
             random.seed(self.random_seed)
@@ -92,22 +96,23 @@ class Scene(Container):
         # If there is a window, enter a loop
         # which updates the frame while under
         # the hood calling the pyglet event loop
-        while not self.window.is_closing:
+        self.quit_interaction = False
+        while not self.window.is_closing and not self.quit_interaction:
             self.time = self.window.timer.time
             self.update_frame()
-        self.window.destroy()
+        if self.window.is_closing:
+            self.window.destroy()
 
     def embed(self):
         self.stop_skipping()
         self.update_frame()
 
-        caller_locals = inspect.currentframe().f_back.f_locals
-        caller_module = inspect.getmodule(inspect.stack()[1][0])
         shell = InteractiveShellEmbed()
-        shell(
-            local_ns=caller_locals,
-            module=caller_module,
-        )
+        # Have the frame update after each command
+        shell.events.register('post_run_cell', lambda *a, **kw: self.update_frame())
+        # Stack depth of 2 means the shell will use
+        # the namespace of the caller, not this method
+        shell(stack_depth=2)
 
     def __str__(self):
         return self.__class__.__name__
@@ -524,17 +529,25 @@ class Scene(Container):
 
     def on_mouse_scroll(self, point, offset):
         frame = self.camera.frame
-        factor = 1 + np.arctan(10 * offset[1])
-        frame.scale(factor, about_point=point)
+        if self.zoom_on_scroll:
+            factor = 1 + np.arctan(10 * offset[1])
+            frame.scale(factor, about_point=point)
+        else:
+            frame.shift(-30 * offset)
         self.camera.refresh_shader_uniforms()
 
     def on_key_release(self, symbol, modifiers):
-        pass
+        if chr(symbol) == "z":
+            self.zoom_on_scroll = False
 
     def on_key_press(self, symbol, modifiers):
         if chr(symbol) == "r":
             self.camera.frame.restore()
             self.camera.refresh_shader_uniforms()
+        elif chr(symbol) == "z":
+            self.zoom_on_scroll = True
+        elif chr(symbol) == "q":
+            self.quit_interaction = True
 
     def on_resize(self, width: int, height: int):
         self.camera.reset_pixel_shape(width, height)
