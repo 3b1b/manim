@@ -867,7 +867,7 @@ class VMobject(Mobject):
         return data
 
     def lock_triangulation(self):
-        for sm in self.family_members_with_points():
+        for sm in self.get_family():
             sm.triangulation_locked = False
             sm.saved_triangulation = sm.get_triangulation()
             sm.saved_orientation = sm.get_orientation()
@@ -888,6 +888,8 @@ class VMobject(Mobject):
     def get_orientation(self):
         if self.triangulation_locked:
             return self.saved_orientation
+        if self.has_no_points():
+            return 0
         return np.sign(self.get_signed_polygonal_area())
 
     def get_triangulation(self, orientation=None):
