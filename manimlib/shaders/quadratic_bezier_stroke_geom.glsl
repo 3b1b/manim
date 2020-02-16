@@ -8,9 +8,9 @@ uniform float aspect_ratio;
 uniform float anti_alias_width;
 uniform vec3 frame_center;
 
-in vec2 bp[3];
-in vec2 prev_bp[3];
-in vec2 next_bp[3];
+in vec3 bp[3];
+in vec3 prev_bp[3];
+in vec3 next_bp[3];
 
 in vec4 v_color[3];
 in float v_stroke_width[3];
@@ -43,7 +43,7 @@ const float MITER_JOINT = 3;
 // so to share functionality between this and others, the caller
 // replaces this line with the contents of named file
 #INSERT quadratic_bezier_geometry_functions.glsl
-#INSERT set_gl_Position.glsl
+#INSERT scale_and_shift_point_for_frame.glsl
 
 
 float angle_between_vectors(vec2 v1, vec2 v2){
@@ -250,7 +250,7 @@ void set_previous_and_next(vec2 controls[3], int degree){
         vec2 tangent = controls[1] - controls[0];
         set_adjascent_info(
             controls[0], tangent, degree, 1, 1,
-            vec2[3](prev_bp[0], prev_bp[1], prev_bp[2]),
+            vec2[3](prev_bp[0].xy, prev_bp[1].xy, prev_bp[2].xy),
             has_prev, bevel_start, angle_from_prev
         );
     }
@@ -258,7 +258,7 @@ void set_previous_and_next(vec2 controls[3], int degree){
         vec2 tangent = controls[degree - 1] - controls[degree];
         set_adjascent_info(
             controls[degree], tangent, degree, 0, -1,
-            vec2[3](next_bp[0], next_bp[1], next_bp[2]),
+            vec2[3](next_bp[0].xy, next_bp[1].xy, next_bp[2].xy),
             has_next, bevel_end, angle_to_next
         );
     }
@@ -267,7 +267,7 @@ void set_previous_and_next(vec2 controls[3], int degree){
 
 void main() {
     vec2 controls[3];
-    int degree = get_reduced_control_points(bp[0], bp[1], bp[2], controls);
+    int degree = get_reduced_control_points(bp[0].xy, bp[1].xy, bp[2].xy, controls);
     bezier_degree = float(degree);
 
     // Null curve or linear with higher index than needed
@@ -279,7 +279,7 @@ void main() {
     mat3 xy_to_uv = get_xy_to_uv(controls[0], controls[1]);
     float scale_factor = length(controls[1] - controls[0]);
     uv_anti_alias_width = anti_alias_width / scale_factor;
-    uv_b2 = (xy_to_uv * vec3(bp[2], 1.0)).xy;
+    uv_b2 = (xy_to_uv * vec3(controls[degree], 1.0)).xy;
 
     // Corners of a bounding region around curve
     vec2 corners[5];
@@ -288,12 +288,14 @@ void main() {
     // Get style info aligned to the corners
     float stroke_widths[5];
     vec4 stroke_colors[5];
+    float z_values[5];
     int index_map[5];
     if(n_corners == 4) index_map = int[5](0, 0, 2, 2, 2);
     else index_map = int[5](0, 0, 1, 2, 2);
     for(int i = 0; i < 5; i++){
         stroke_widths[i] = v_stroke_width[index_map[i]];
         stroke_colors[i] = v_color[index_map[i]];
+        z_values[i] = bp[index_map[i]].z;  // TODO, seems clunky
     }
 
     // Emit each corner
@@ -304,7 +306,10 @@ void main() {
         uv_stroke_width = stroke_widths[i] / scale_factor;
         color = stroke_colors[i];
 
-        set_gl_Position(vec3(corner, 0));
+        gl_Position = vec4(
+            scale_and_shift_point_for_frame(vec3(corner, z_values[i])),
+            1.0
+        );
         EmitVertex();
     }
     EndPrimitive();

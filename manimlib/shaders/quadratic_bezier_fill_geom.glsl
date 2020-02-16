@@ -8,7 +8,7 @@ uniform float aspect_ratio;
 uniform float anti_alias_width;
 uniform vec3 frame_center;
 
-in vec2 bp[3];
+in vec3 bp[3];
 in vec4 v_color[3];
 in float v_fill_all[3];
 in float v_orientation[3];
@@ -36,7 +36,7 @@ const float SQRT5 = 2.236068;
 // so to share functionality between this and others, the caller
 // replaces this line with the contents of named file
 #INSERT quadratic_bezier_geometry_functions.glsl
-#INSERT set_gl_Position.glsl
+#INSERT scale_and_shift_point_for_frame.glsl
 
 
 mat3 get_xy_to_wz(vec2 b0, vec2 b1, vec2 b2){
@@ -65,7 +65,10 @@ mat3 get_xy_to_wz(vec2 b0, vec2 b1, vec2 b2){
 void emit_simple_triangle(){
     for(int i = 0; i < 3; i++){
         color = v_color[i];
-        set_gl_Position(vec3(bp[i], 0));
+        gl_Position = vec4(
+            scale_and_shift_point_for_frame(bp[i]),
+            1.0
+        );
         EmitVertex();
     }
     EndPrimitive();
@@ -118,12 +121,25 @@ void emit_pentagon(vec2 bp0, vec2 bp1, vec2 bp2, float orientation){
         vec2 corner = corners[coords_index_map[i]];
         uv_coords = (xy_to_uv * vec3(corner, 1)).xy;
         wz_coords = (xy_to_wz * vec3(corner, 1)).xy;
+        float z;
         // I haven't a clue why an index map doesn't work just
         // as well here, but for some reason it doesn't.
-        if(i < 2)       color = v_color[0];
-        else if(i == 2) color = v_color[1];
-        else            color = v_color[2];
-        set_gl_Position(vec3(corner, 0));
+        if(i < 2){
+            color = v_color[0];
+            z = bp[0].z;
+        }
+        else if(i == 2){
+            color = v_color[1];
+            z = bp[1].z;
+        }
+        else{
+            color = v_color[2];
+            z = bp[2].z;
+        }
+        gl_Position = vec4(
+            scale_and_shift_point_for_frame(vec3(corner, z)),
+            1.0
+        );
         EmitVertex();
     }
     EndPrimitive();
@@ -138,7 +154,7 @@ void main(){
         emit_simple_triangle();
     }else{
         vec2 new_bp[3];
-        int n = get_reduced_control_points(bp[0], bp[1], bp[2], new_bp);
+        int n = get_reduced_control_points(bp[0].xy, bp[1].xy, bp[2].xy, new_bp);
         bezier_degree = float(n);
         float orientation = v_orientation[0];
 

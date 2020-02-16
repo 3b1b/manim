@@ -14,10 +14,16 @@ out vec2 v_im_coords;
 out float v_opacity;
 
 // Analog of import for manim only
-#INSERT set_gl_Position.glsl
+#INSERT rotate_point_for_frame.glsl
+#INSERT scale_and_shift_point_for_frame.glsl
 
 void main(){
     v_im_coords = im_coords;
     v_opacity = opacity;
-    set_gl_Position(point);
+    gl_Position = vec4(
+        rotate_point_for_frame(
+            scale_and_shift_point_for_frame(point)
+        ),
+        1.0
+    );
 }
