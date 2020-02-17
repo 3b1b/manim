@@ -23,6 +23,7 @@ from manimlib.utils.space_ops import cross2d
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import angle_between_vectors
 from manimlib.utils.space_ops import earclip_triangulation
+from manimlib.utils.shaders import get_shader_info
 
 
 class VMobject(Mobject):
@@ -368,6 +369,7 @@ class VMobject(Mobject):
     # Points
     def set_points(self, points):
         self.points = np.array(points)
+        self.refresh_triangulation()
         return self
 
     def get_points(self):
@@ -525,6 +527,7 @@ class VMobject(Mobject):
                         anchors[:-1], anchors[1:], 0.5
                     )
                 submob.append_points(new_subpath)
+            submob.refresh_triangulation()
         return self
 
     def make_smooth(self):
@@ -700,6 +703,7 @@ class VMobject(Mobject):
 
         if new_path_point:
             self.append_points([new_path_point])
+        self.refresh_triangulation()
         return self
 
     def insert_n_curves_to_point_list(self, n, points):
@@ -772,6 +776,8 @@ class VMobject(Mobject):
             if alpha == 1.0:
                 setattr(self, attr, getattr(mobject2, attr))
 
+    # TODO, somehow do this using stroke_width changes
+    # so as to not have to change the point list
     def pointwise_become_partial(self, vmobject, a, b):
         assert(isinstance(vmobject, VMobject))
         # Partial curve includes three portions:
@@ -803,6 +809,7 @@ class VMobject(Mobject):
             self.append_points(partial_bezier_points(
                 bezier_tuple[upper_index], 0, upper_residue
             ))
+        self.refresh_triangulation()
         return self
 
     def get_subcurve(self, a, b):
@@ -816,27 +823,50 @@ class VMobject(Mobject):
         self.stroke_data = np.zeros(len(self.points), dtype=self.stroke_dtype)
 
     def get_shader_info_list(self):
+        stroke_info = get_shader_info(
+            vert_file=self.stroke_vert_shader_file,
+            geom_file=self.stroke_geom_shader_file,
+            frag_file=self.stroke_frag_shader_file,
+            texture_path=self.texture_path,
+            render_primative=self.render_primative,
+        )
+        fill_info = get_shader_info(
+            vert_file=self.fill_vert_shader_file,
+            geom_file=self.fill_geom_shader_file,
+            frag_file=self.fill_frag_shader_file,
+            texture_path=self.texture_path,
+            render_primative=self.render_primative,
+        )
+
+        back_stroke_data = []
+        stroke_data = []
+        fill_data = []
+        for submob in self.family_members_with_points():
+            stroke_width = submob.get_stroke_width()
+            stroke_opacity = submob.get_stroke_opacity()
+            fill_opacity = submob.get_fill_opacity()
+
+            if fill_opacity > 0:
+                fill_data.append(submob.get_fill_shader_data())
+
+            if stroke_width > 0 and stroke_opacity > 0:
+                if submob.draw_stroke_behind_fill:
+                    data = back_stroke_data
+                else:
+                    data = stroke_data
+                data.append(submob.get_stroke_shader_data())
+
         result = []
-        if self.get_fill_opacity() > 0:
-            result.append({
-                "data": self.get_fill_shader_data(),
-                "vert": self.fill_vert_shader_file,
-                "geom": self.fill_geom_shader_file,
-                "frag": self.fill_frag_shader_file,
-                "render_primative": self.render_primative,
-                "texture_path": self.texture_path,
-            })
-        if self.get_stroke_width() > 0 and self.get_stroke_opacity() > 0:
-            result.append({
-                "data": self.get_stroke_shader_data(),
-                "vert": self.stroke_vert_shader_file,
-                "geom": self.stroke_geom_shader_file,
-                "frag": self.stroke_frag_shader_file,
-                "render_primative": self.render_primative,
-                "texture_path": self.texture_path,
-            })
-        if len(result) == 2 and self.draw_stroke_behind_fill:
-            return [result[1], result[0]]
+        if back_stroke_data:
+            back_stroke_info = dict(stroke_info)  # Copy
+            back_stroke_info["data"] = np.hstack(back_stroke_data)
+            result.append(back_stroke_info)
+        if fill_data:
+            fill_info["data"] = np.hstack(fill_data)
+            result.append(fill_info)
+        if stroke_data:
+            stroke_info["data"] = np.hstack(stroke_data)
+            result.append(stroke_info)
         return result
 
     def get_stroke_shader_data(self):
@@ -877,6 +907,10 @@ class VMobject(Mobject):
     def unlock_triangulation(self):
         for sm in self.family_members_with_points():
             sm.triangulation_locked = False
+
+    def refresh_triangulation(self):
+        if self.triangulation_locked:
+            self.lock_triangulation()
 
     def get_signed_polygonal_area(self):
         nppc = self.n_points_per_curve

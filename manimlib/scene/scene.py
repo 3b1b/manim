@@ -120,7 +120,6 @@ class Scene(Container):
     def print_end_message(self):
         print(f"Played {self.num_plays} animations")
 
-    # TODO, remove this
     def set_variables_as_attrs(self, *objects, **newly_named_objects):
         """
         This method is slightly hacky, making it a little easier
@@ -145,21 +144,21 @@ class Scene(Container):
 
     def update_frame(self, dt=0, ignore_skipping=False):
         self.increment_time(dt)
-        self.update_mobjects(dt)  # Should skip?
+        self.update_mobjects(dt)
         if self.skip_animations and not ignore_skipping:
             return
 
         if self.window:
             self.window.clear()
         self.camera.clear()
-        self.camera.capture(*self.get_displayed_mobjects())
+        self.camera.capture(*self.mobjects)
 
         if self.window:
             self.window.swap_buffers()
             win_time, win_dt = self.window.timer.next_frame()
             while (self.time - self.skip_time - win_time) > 0:
                 self.window.clear()
-                self.camera.capture(*self.get_displayed_mobjects())
+                self.camera.capture(*self.mobjects)
                 self.window.swap_buffers()
                 win_time, win_dt = self.window.timer.next_frame()
 
@@ -188,12 +187,6 @@ class Scene(Container):
         self.time += dt
 
     ###
-    def get_displayed_mobjects(self):
-        return it.chain(*[
-            mob.family_members_with_points()
-            for mob in self.mobjects
-        ])
-
     def get_top_level_mobjects(self):
         # Return only those which are not in the family
         # of another mobject from the scene
@@ -278,7 +271,8 @@ class Scene(Container):
             step = 1 / self.camera.frame_rate
             times = np.arange(0, run_time, step)
         time_progression = ProgressDisplay(
-            times, total=n_iterations,
+            times,
+            total=n_iterations,
             leave=self.leave_progress_bars,
             ascii=False if platform.system() != 'Windows' else True
         )
@@ -291,9 +285,8 @@ class Scene(Container):
         run_time = self.get_run_time(animations)
         time_progression = self.get_time_progression(run_time)
         time_progression.set_description("".join([
-            "Animation {}: ".format(self.num_plays),
-            str(animations[0]),
-            (", etc." if len(animations) > 1 else ""),
+            f"Animation {self.num_plays}: {animations[0]}",
+            ", etc." if len(animations) > 1 else "",
         ]))
         return time_progression
 
@@ -403,9 +396,6 @@ class Scene(Container):
                 curr_mobjects += mob.get_family()
 
     def progress_through_animations(self, animations):
-        # Paint all non-moving objects onto the screen, so they don't
-        # have to be rendered every frame
-        # moving_mobjects = self.get_moving_mobjects(*animations)
         last_t = 0
         for t in self.get_animation_time_progression(animations):
             dt = t - last_t

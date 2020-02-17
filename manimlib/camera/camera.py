@@ -13,6 +13,9 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.simple_functions import fdiv
+from manimlib.utils.shaders import shader_info_to_id
+from manimlib.utils.shaders import shader_id_to_info
+from manimlib.utils.shaders import get_shader_code_from_file
 
 
 # TODO, think about how to incorporate perspective,
@@ -209,17 +212,18 @@ class Camera(object):
 
     # Rendering
     def capture(self, *mobjects, **kwargs):
-        shader_infos = list(it.chain(*[
+        shader_infos = it.chain(*[
             mob.get_shader_info_list()
             for mob in mobjects
-        ]))
+        ])
         # TODO, batching works well when the mobjects are already organized,
         # but can we somehow use z-buffering to better effect here?
-        batches = batch_by_property(shader_infos, self.get_shader_id)
+        batches = batch_by_property(shader_infos, shader_info_to_id)
+
         for info_group, sid in batches:
             shader = self.get_shader(sid)
             data = np.hstack([info["data"] for info in info_group])
-            render_primative = info_group[0]["render_primative"]
+            render_primative = int(info_group[0]["render_primative"])
             self.render_from_shader(shader, data, render_primative)
 
     # Shaders
@@ -227,56 +231,23 @@ class Camera(object):
         # Initialize with the null id going to None
         self.id_to_shader = {"": None}
 
-    def get_shader_id(self, shader_info):
-        # A unique id for a shader based on the names of the files holding its code
-        vert, geom, frag, text = [
-            shader_info.get(key, "") or ""
-            for key in ["vert", "geom", "frag", "texture_path"]
-        ]
-        if not vert or not frag:
-            # Not an actual shader
-            return ""
-        return "|".join([vert, geom, frag, text])
-
     def get_shader(self, sid):
         if sid not in self.id_to_shader:
-            vert, geom, frag, text = sid.split("|")
+            info = shader_id_to_info(sid)
             shader = self.ctx.program(
-                vertex_shader=self.get_shader_code_from_file(vert),
-                geometry_shader=self.get_shader_code_from_file(geom),
-                fragment_shader=self.get_shader_code_from_file(frag),
+                vertex_shader=get_shader_code_from_file(info["vert"]),
+                geometry_shader=get_shader_code_from_file(info["geom"]),
+                fragment_shader=get_shader_code_from_file(info["frag"]),
             )
-            if text:
+            if info["texture_path"]:
                 # TODO, this currently assumes that the uniform Sampler2D
                 # is named Texture
-                tid = self.get_texture_id(text)
+                tid = self.get_texture_id(info["texture_path"])
                 shader["Texture"].value = tid
 
             self.set_shader_uniforms(shader)
             self.id_to_shader[sid] = shader
         return self.id_to_shader[sid]
-
-    def get_shader_code_from_file(self, filename):
-        if len(filename) == 0:
-            return None
-
-        filepath = os.path.join(SHADER_DIR, filename)
-        if not os.path.exists(filepath):
-            warnings.warn(f"No file at {file_path}")
-            return
-
-        with open(filepath, "r") as f:
-            result = f.read()
-
-        # To share functionality between shaders, some functions are read in
-        # from other files an inserted into the relevant strings before
-        # passing to ctx.program for compiling
-        # Replace "#INSERT " lines with relevant code
-        insertions = re.findall(r"^#INSERT .*\.glsl$", result, flags=re.MULTILINE)
-        for line in insertions:
-            inserted_code = self.get_shader_code_from_file(line.replace("#INSERT ", ""))
-            result = result.replace(line, inserted_code)
-        return result
 
     def set_shader_uniforms(self, shader):
         if shader is None:
