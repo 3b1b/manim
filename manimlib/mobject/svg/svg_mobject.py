@@ -328,6 +328,8 @@ class VMobjectFromSVGPathstring(VMobject):
         self.subdivide_sharp_curves()
         # SVG treats y-coordinate differently
         self.stretch(-1, 1, about_point=ORIGIN)
+        # For faster rendering
+        self.lock_triangulation()
 
     def get_commands_and_coord_strings(self):
         all_commands = list(self.get_command_to_function_map().keys())

@@ -457,6 +457,7 @@ class Bubble(SVGMobject):
 
     def flip(self, axis=UP):
         Mobject.flip(self, axis=axis)
+        self.refresh_triangulation()
         if abs(axis[1]) > 0:
             self.direction = -np.array(self.direction)
         return self

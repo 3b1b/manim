@@ -48,8 +48,6 @@ class SingleStringTexMobject(SVGMobject):
             self.scale(TEX_MOB_SCALE_FACTOR)
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
-        # For faster rendering
-        self.lock_triangulation()
 
     def get_modified_expression(self, tex_string):
         result = self.alignment + " " + tex_string
