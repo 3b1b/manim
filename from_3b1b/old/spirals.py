@@ -58,7 +58,7 @@ def read_in_primes(max_N=None):
 class SpiralScene(MovingCameraScene):
     CONFIG = {
         "axes_config": {
-            "number_line_config": {
+            "axis_config": {
                 "stroke_width": 1.5,
             }
         },
@@ -2897,7 +2897,7 @@ class ExplainRays(Explain44Spirals):
             "x_max": 1000,
             "y_min": -1000,
             "y_max": 1000,
-            "number_line_config": {
+            "axis_config": {
                 "tick_frequency": 50,
             },
         },

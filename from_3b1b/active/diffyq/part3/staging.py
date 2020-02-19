@@ -234,7 +234,7 @@ class FourierSeriesIllustraiton(Scene):
     CONFIG = {
         "n_range": range(1, 31, 2),
         "axes_config": {
-            "number_line_config": {
+            "axis_config": {
                 "include_tip": False,
             },
             "x_axis_config": {

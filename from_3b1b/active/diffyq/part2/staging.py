@@ -235,7 +235,7 @@ class BlackScholes(AltBrownianMotion):
             x_max=20,
             y_min=0,
             y_max=10,
-            number_line_config={
+            axis_config={
                 "unit_size": 0.5,
             },
         )

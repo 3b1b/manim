@@ -109,7 +109,7 @@ class SpecialThreeDScene(ThreeDScene):
         },
         "three_d_axes_config": {
             "num_axis_pieces": 1,
-            "number_line_config": {
+            "axis_config": {
                 "unit_size": 2,
                 "tick_frequency": 1,
                 "numbers_with_elongated_ticks": [0, 1, 2],

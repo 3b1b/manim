@@ -190,7 +190,7 @@ class AddingPureFrequencies(PiCreatureScene):
         axes = Axes(
             y_min = -2, y_max = 2,
             x_min = 0, x_max = 10,
-            number_line_config = {"include_tip" : False},
+            axis_config = {"include_tip" : False},
         )
         axes.stretch_to_fit_height(2)
         axes.to_corner(UP+LEFT)
@@ -807,7 +807,7 @@ class FourierMachineScene(Scene):
             "y_unit_size" : 1,
         },
         "frequency_axes_config" : {
-            "number_line_config" : {
+            "axis_config" : {
                 "color" : TEAL,
             },
             "x_min" : 0,
@@ -3906,7 +3906,7 @@ class BoundsAtInfinity(SummarizeFormula):
             x_max = 140,
             y_min = -2, 
             y_max = 2,
-            number_line_config = {
+            axis_config = {
                 "include_tip" : False,
             },
         )

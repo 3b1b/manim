@@ -888,7 +888,7 @@ class PiComputingAlgorithmsAxes(Scene):
             y_min=0,
             x_max=9,
             y_max=5,
-            number_line_config={
+            axis_config={
                 "tick_frequency": 100,
                 "numbers_with_elongated_ticks": [],
             }
