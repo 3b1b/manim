@@ -7,6 +7,7 @@ from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import remove_list_redundancies
 from manimlib.utils.rate_functions import linear
+from manimlib.utils.simple_functions import clip
 
 
 DEFAULT_LAGGED_START_LAG_RATIO = 0.05
@@ -98,7 +99,7 @@ class AnimationGroup(Animation):
             if anim_time == 0:
                 sub_alpha = 0
             else:
-                sub_alpha = np.clip(
+                sub_alpha = clip(
                     (time - start_time) / anim_time,
                     0, 1
                 )
@@ -159,4 +160,4 @@ class LaggedStartMap(LaggedStart):
             AnimationClass(*args, **anim_kwargs)
             for args in args_list
         ]
-        super().__init__(*animations, **kwargs)
+        super().__init__(*animations, group=mobject, **kwargs)
