@@ -9,6 +9,7 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import adjacent_n_tuples
 from manimlib.utils.iterables import adjacent_pairs
 from manimlib.utils.simple_functions import fdiv
+from manimlib.utils.simple_functions import clip
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import angle_between_vectors
 from manimlib.utils.space_ops import compass_directions
@@ -548,8 +549,8 @@ class TangentLine(Line):
     def __init__(self, vmob, alpha, **kwargs):
         digest_config(self, kwargs)
         da = self.d_alpha
-        a1 = np.clip(alpha - da, 0, 1)
-        a2 = np.clip(alpha + da, 0, 1)
+        a1 = clip(alpha - da, 0, 1)
+        a2 = clip(alpha + da, 0, 1)
         super().__init__(
             vmob.point_from_proportion(a1),
             vmob.point_from_proportion(a2),
