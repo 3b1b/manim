@@ -45,6 +45,14 @@ def get_parameters(function):
 # but for now, we just allow the option to handle indeterminate 0/0.
 
 
+def clip(a, min_a, max_a):
+    if a < min_a:
+        return min_a
+    elif a > max_a:
+        return max_a
+    return a
+
+
 def clip_in_place(array, min_val=None, max_val=None):
     if max_val is not None:
         array[array > max_val] = max_val
