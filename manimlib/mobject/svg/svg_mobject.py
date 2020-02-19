@@ -2,10 +2,17 @@ import itertools as it
 import re
 import string
 import warnings
+import os
+import hashlib
 
 from xml.dom import minidom
 
-from manimlib.constants import *
+from manimlib.constants import DEFAULT_STROKE_WIDTH
+from manimlib.constants import ORIGIN, UP, DOWN, LEFT, RIGHT
+from manimlib.constants import BLACK
+from manimlib.constants import WHITE
+import manimlib.constants as consts
+
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import RoundedRectangle
@@ -13,7 +20,6 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.color import *
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.config_ops import digest_locals
 
 
 def string_to_numbers(num_string):
@@ -222,13 +228,14 @@ class SVGMobject(VMobject):
         return mob
 
     def handle_transforms(self, element, mobject):
+        # TODO, this could use some cleaning...
         x, y = 0, 0
         try:
             x = self.attribute_to_float(element.getAttribute('x'))
             # Flip y
             y = -self.attribute_to_float(element.getAttribute('y'))
-            mobject.shift(x * RIGHT + y * UP)
-        except:
+            mobject.shift([x, y, 0])
+        except Exception:
             pass
 
         transform = element.getAttribute('transform')
@@ -320,15 +327,31 @@ class VMobjectFromSVGPathstring(VMobject):
         VMobject.__init__(self, **kwargs)
 
     def init_points(self):
-        self.relative_point = ORIGIN
-        for command, coord_string in self.get_commands_and_coord_strings():
-            new_points = self.string_to_points(command, coord_string)
-            self.handle_command(command, new_points)
-        # For a healthy triangulation later
-        self.subdivide_sharp_curves()
-        # SVG treats y-coordinate differently
-        self.stretch(-1, 1, about_point=ORIGIN)
-        # For faster rendering
+        # TODO, move this caching operation
+        # higher up to Mobject somehow.
+        hasher = hashlib.sha256()
+        hasher.update(self.path_string.encode())
+        path_hash = hasher.hexdigest()[:16]
+
+        filepath = os.path.join(
+            consts.MOBJECT_POINTS_DIR,
+            f"{path_hash}.npy"
+        )
+
+        if os.path.exists(filepath):
+            self.points = np.load(filepath)
+        else:
+            self.relative_point = np.array(ORIGIN)
+            for command, coord_string in self.get_commands_and_coord_strings():
+                new_points = self.string_to_points(command, coord_string)
+                self.handle_command(command, new_points)
+            # For a healthy triangulation later
+            self.subdivide_sharp_curves()
+            # SVG treats y-coordinate differently
+            self.stretch(-1, 1, about_point=ORIGIN)
+            # Save to a file for future use
+            np.save(filepath, self.points)
+        # Faster rendering
         self.lock_triangulation()
 
     def get_commands_and_coord_strings(self):
@@ -354,6 +377,9 @@ class VMobjectFromSVGPathstring(VMobject):
             if command.upper() == "M":
                 # Treat following points as relative line coordinates
                 command = "l"
+            if command.islower():
+                leftover_points -= self.relative_point
+                self.relative_point = self.points[-1]
             self.handle_command(command, leftover_points)
         else:
             # Command is over, reset for future relative commands
