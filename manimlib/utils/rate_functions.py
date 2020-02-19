@@ -2,6 +2,7 @@ import numpy as np
 
 from manimlib.utils.bezier import bezier
 from manimlib.utils.simple_functions import sigmoid
+from manimlib.utils.simple_functions import clip
 
 
 def linear(t):
@@ -10,7 +11,7 @@ def linear(t):
 
 def smooth(t, inflection=10.0):
     error = sigmoid(-inflection / 2)
-    return np.clip(
+    return clip(
         (sigmoid(inflection * (t - 0.5)) - error) / (1 - 2 * error),
         0, 1,
     )
