@@ -240,6 +240,9 @@ class Mobject(Container):
         return self
 
     # Transforming operations
+    def set_points(self, points):
+        self.points = np.array(points)
+        return self
 
     def apply_to_family(self, func):
         for mob in self.family_members_with_points():
@@ -941,9 +944,13 @@ class Mobject(Container):
         return result + self.submobjects
 
     def get_family(self):
-        sub_families = list(map(Mobject.get_family, self.submobjects))
-        all_mobjects = [self] + list(it.chain(*sub_families))
-        return remove_list_redundancies(all_mobjects)
+        return [
+            self,
+            *it.chain(*[
+                sm.get_family()
+                for sm in self.submobjects
+            ])
+        ]
 
     def family_members_with_points(self):
         return [m for m in self.get_family() if m.get_num_points() > 0]
@@ -1093,9 +1100,7 @@ class Mobject(Container):
         Turns self into an interpolation between mobject1
         and mobject2.
         """
-        self.points = path_func(
-            mobject1.points, mobject2.points, alpha
-        )
+        self.points = path_func(mobject1.points, mobject2.points, alpha)
         self.interpolate_color(mobject1, mobject2, alpha)
         return self
 
@@ -1116,14 +1121,14 @@ class Mobject(Container):
     def pointwise_become_partial(self, mobject, a, b):
         pass  # To implement in subclass
 
-    def become(self, mobject, copy_submobjects=True):
+    def become(self, mobject):
         """
         Edit points, colors and submobjects to be idential
         to another mobject
         """
         self.align_data(mobject)
         for sm1, sm2 in zip(self.get_family(), mobject.get_family()):
-            sm1.points = np.array(sm2.points)
+            sm1.set_points(sm2.points)
             sm1.interpolate_color(sm1, sm2, 1)
         return self
 
