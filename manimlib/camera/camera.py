@@ -1,7 +1,6 @@
 from functools import reduce
 import operator as op
 import moderngl
-import re
 from colour import Color
 
 from PIL import Image
@@ -273,13 +272,6 @@ class Camera(object):
         for sid, shader in self.id_to_shader.items():
             self.set_shader_uniforms(shader)
 
-    def render_from_shader(self, shader, data, render_primative):
-        if data is None or shader is None or len(data) == 0:
-            return
-        vbo = self.ctx.buffer(data.tobytes())
-        vao = self.ctx.simple_vertex_array(shader, vbo, *data.dtype.names)
-        vao.render(render_primative)
-
     def init_textures(self):
         self.path_to_texture_id = {}
 
@@ -296,3 +288,10 @@ class Camera(object):
             texture.use(location=tid)
             self.path_to_texture_id[path] = tid
         return self.path_to_texture_id[path]
+
+    def render_from_shader(self, shader, data, render_primative):
+        if data is None or shader is None or len(data) == 0:
+            return
+        vbo = self.ctx.buffer(data.tobytes())
+        vao = self.ctx.simple_vertex_array(shader, vbo, *data.dtype.names)
+        vao.render(render_primative)
