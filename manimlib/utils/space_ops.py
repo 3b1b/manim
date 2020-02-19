@@ -1,5 +1,3 @@
-from functools import reduce
-
 import numpy as np
 import itertools as it
 from mapbox_earcut import triangulate_float32 as earcut
@@ -19,28 +17,33 @@ def get_norm(vect):
 # TODO, implement quaternion type
 
 
-def quaternion_mult(q1, q2):
-    w1, x1, y1, z1 = q1
-    w2, x2, y2, z2 = q2
-    return np.array([
-        w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
-        w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
-        w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2,
-        w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2,
-    ])
+def quaternion_mult(*quats):
+    if len(quats) == 0:
+        return [1, 0, 0, 0]
+    result = quats[0]
+    for next_quat in quats[1:]:
+        w1, x1, y1, z1 = result
+        w2, x2, y2, z2 = next_quat
+        result = [
+            w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
+            w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
+            w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2,
+            w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2,
+        ]
+    return result
 
 
 def quaternion_from_angle_axis(angle, axis):
-    return np.hstack([
+    return [
         np.cos(angle / 2),
-        np.sin(angle / 2) * normalize(axis)
-    ])
+        *(np.sin(angle / 2) * normalize(axis))
+    ]
 
 
 def angle_axis_from_quaternion(quaternion):
     axis = normalize(
         quaternion[1:],
-        fall_back=np.array([1, 0, 0])
+        fall_back=[1, 0, 0]
     )
     angle = 2 * np.arccos(quaternion[0])
     if angle > TAU / 2:
@@ -49,8 +52,9 @@ def angle_axis_from_quaternion(quaternion):
 
 
 def quaternion_conjugate(quaternion):
-    result = np.array(quaternion)
-    result[1:] *= -1
+    result = list(quaternion)
+    for i in range(1, len(result)):
+        result[i] *= -1
     return result
 
 
@@ -63,10 +67,7 @@ def rotate_vector(vector, angle, axis=OUT):
         # Use quaternions...because why not
         quat = quaternion_from_angle_axis(angle, axis)
         quat_inv = quaternion_conjugate(quat)
-        product = reduce(
-            quaternion_mult,
-            [quat, np.hstack([0, vector]), quat_inv]
-        )
+        product = quaternion_mult(quat, [0, *vector], quat_inv)
         return product[1:]
     else:
         raise Exception("vector must be of dimension 2 or 3")
@@ -78,14 +79,35 @@ def thick_diagonal(dim, thickness=2):
     return (np.abs(row_indices - col_indices) < thickness).astype('uint8')
 
 
+def rotation_matrix_transpose(angle, axis):
+    if axis[0] == 0 and axis[1] == 0:
+        # axis = [0, 0, z] case is common enough it's worth
+        # having a shortcut to save operations
+        sgn = 1 if axis[2] > 0 else -1
+        ca = np.cos(angle)
+        sa = np.sin(angle)
+        return [
+            [ca, sgn * sa, 0],
+            [-sgn * sa, ca, 0],
+            [0, 0, 1],
+        ]
+    quat = quaternion_from_angle_axis(angle, axis)
+    quat_inv = quaternion_conjugate(quat)
+    return [
+        quaternion_mult(quat, [0, *basis], quat_inv)[1:]
+        for basis in [
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1],
+        ]
+    ]
+
+
 def rotation_matrix(angle, axis):
     """
     Rotation in R^3 about a specified axis of rotation.
     """
-    about_z = rotation_about_z(angle)
-    z_to_axis = z_to_vector(axis)
-    axis_to_z = np.linalg.inv(z_to_axis)
-    return reduce(np.dot, [z_to_axis, about_z, axis_to_z])
+    return np.transpose(rotation_matrix_transpose(angle, axis))
 
 
 def rotation_about_z(angle):
