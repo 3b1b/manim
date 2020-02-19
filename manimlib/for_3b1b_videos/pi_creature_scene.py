@@ -87,7 +87,7 @@ class PiCreatureScene(Scene):
         added_anims = kwargs.pop("added_anims", [])
 
         anims = []
-        on_screen_mobjects = self.get_displayed_mobjects()
+        on_screen_mobjects = self.get_mobject_family_members()
 
         def has_bubble(pi):
             return hasattr(pi, "bubble") and \
@@ -250,6 +250,7 @@ class TeacherStudentsScene(PiCreatureScene):
     CONFIG = {
         "student_colors": [BLUE_D, BLUE_E, BLUE_C],
         "teacher_color": GREY_BROWN,
+        "background_color": DARKER_GREY,
         "student_scale_factor": 0.8,
         "seconds_to_blink": 2,
         "screen_height": 3,
@@ -257,7 +258,7 @@ class TeacherStudentsScene(PiCreatureScene):
 
     def setup(self):
         self.background = FullScreenFadeRectangle(
-            fill_color=GREEN,
+            fill_color=self.background_color,
             fill_opacity=1,
         )
         self.add(self.background)
