@@ -5,10 +5,8 @@ import platform
 
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
-import itertools as it
 import time
 from IPython.terminal.embed import InteractiveShellEmbed
-from traitlets.config.loader import Config
 
 from manimlib.animation.animation import Animation
 from manimlib.animation.transform import MoveToTarget
@@ -43,6 +41,8 @@ class Scene(Container):
         if self.preview:
             self.window = Window(self, **self.window_config)
             self.camera_config["ctx"] = self.window.ctx
+            self.virtual_animation_start_time = 0
+            self.real_animation_start_time = time.time()
         else:
             self.window = None
 
@@ -98,7 +98,6 @@ class Scene(Container):
         # the hood calling the pyglet event loop
         self.quit_interaction = False
         while not self.window.is_closing and not self.quit_interaction:
-            self.time = self.window.timer.time
             self.update_frame()
         if self.window.is_closing:
             self.window.destroy()
@@ -155,12 +154,12 @@ class Scene(Container):
 
         if self.window:
             self.window.swap_buffers()
-            win_time, win_dt = self.window.timer.next_frame()
-            while (self.time - self.skip_time - win_time) > 0:
-                self.window.clear()
-                self.camera.capture(*self.mobjects)
-                self.window.swap_buffers()
-                win_time, win_dt = self.window.timer.next_frame()
+            # win_time, win_dt = self.window.timer.next_frame()
+            # while (self.time - self.skip_time - win_time) > 0:
+            vt = self.time - self.virtual_animation_start_time
+            rt = time.time() - self.real_animation_start_time
+            if rt < vt:
+                self.update_frame(0)
 
     def emit_frame(self):
         if not self.skip_animations:
@@ -374,12 +373,19 @@ class Scene(Container):
     def handle_play_like_call(func):
         def wrapper(self, *args, **kwargs):
             self.update_skipping_status()
-            if not self.skip_animations:
+            should_write = not self.skip_animations
+            if should_write:
                 self.file_writer.begin_animation()
-                func(self, *args, **kwargs)
+
+            if self.window:
+                self.real_animation_start_time = time.time()
+                self.virtual_animation_start_time = self.time
+
+            func(self, *args, **kwargs)
+
+            if should_write:
                 self.file_writer.end_animation()
-            else:
-                func(self, *args, **kwargs)
+
             self.num_plays += 1
         return wrapper
 
