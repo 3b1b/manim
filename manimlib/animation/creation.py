@@ -89,11 +89,10 @@ class DrawBorderThenFill(Animation):
     def interpolate_submobject(self, submob, start, outline, alpha):
         index, subalpha = integer_interpolate(0, 2, alpha)
         if index == 0:
-            submob.pointwise_become_partial(
-                outline, 0, subalpha
-            )
+            submob.pointwise_become_partial(outline, 0, subalpha)
             submob.match_style(outline)
         else:
+            submob.pointwise_become_partial(outline, 0, 1)
             submob.interpolate(outline, start, subalpha)
 
 
