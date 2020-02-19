@@ -1,5 +1,5 @@
 import itertools as it
-import string
+from colour import Color
 
 from manimlib.animation.animation import Animation
 from manimlib.animation.rotation import Rotating
@@ -25,6 +25,7 @@ from manimlib.utils.rate_functions import linear
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import complex_to_R3
 from manimlib.utils.space_ops import rotate_vector
+from manimlib.utils.space_ops import center_of_mass
 
 
 class Lightbulb(SVGMobject):
@@ -858,16 +859,16 @@ class PlayingCard(VGroup):
         "card_height_to_symbol_height": 7,
         "card_width_to_corner_num_width": 10,
         "card_height_to_corner_num_height": 10,
-        "color": LIGHT_GREY,
+        "color": GREY_A,
         "turned_over": False,
         "possible_suits": ["hearts", "diamonds", "spades", "clubs"],
         "possible_values": list(map(str, list(range(2, 11)))) + ["J", "Q", "K", "A"],
     }
 
     def __init__(self, key=None, **kwargs):
-        VGroup.__init__(self, key=key, **kwargs)
+        VGroup.__init__(self, **kwargs)
 
-    def init_points(self):
+        self.key = key
         self.add(Rectangle(
             height=self.height,
             width=self.height / self.height_to_width,
@@ -897,7 +898,7 @@ class PlayingCard(VGroup):
                 value = self.key[:-1]
             else:
                 value = random.choice(self.possible_values)
-        value = string.upper(str(value))
+        value = str(value).upper()
         if value == "1":
             value = "A"
         if value not in self.possible_values:
@@ -911,7 +912,7 @@ class PlayingCard(VGroup):
         }
         try:
             self.numerical_value = int(value)
-        except:
+        except Exception:
             self.numerical_value = face_card_to_value[value]
         return value
 
@@ -920,9 +921,9 @@ class PlayingCard(VGroup):
         if suit is None:
             if self.key is not None:
                 suit = dict([
-                    (string.upper(s[0]), s)
+                    (s[0].upper(), s)
                     for s in self.possible_suits
-                ])[string.upper(self.key[-1])]
+                ])[self.key[-1].upper()]
             else:
                 suit = random.choice(self.possible_suits)
         if suit not in self.possible_suits:
@@ -995,7 +996,7 @@ class PlayingCard(VGroup):
         return design
 
     def get_face_card_design(self, value, symbol):
-        from for_3b1b_videos.pi_creature import PiCreature
+        from manimlib.for_3b1b_videos.pi_creature import PiCreature
         sub_rect = Rectangle(
             stroke_color=BLACK,
             fill_opacity=0,
@@ -1006,6 +1007,8 @@ class PlayingCard(VGroup):
 
         # pi_color = average_color(symbol.get_color(), GREY)
         pi_color = symbol.get_color()
+        if Color(pi_color) == Color(BLACK):
+            pi_color = GREY_D
         pi_mode = {
             "J": "plain",
             "Q": "thinking",
