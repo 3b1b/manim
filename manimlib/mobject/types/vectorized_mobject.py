@@ -368,7 +368,7 @@ class VMobject(Mobject):
 
     # Points
     def set_points(self, points):
-        self.points = np.array(points)
+        super().set_points(points)
         self.refresh_triangulation()
         return self
 
@@ -694,16 +694,13 @@ class VMobject(Mobject):
         return self
 
     def insert_n_curves(self, n):
-        new_path_point = None
-        if self.has_new_path_started():
-            new_path_point = self.get_last_point()
-
         new_points = self.insert_n_curves_to_point_list(n, self.get_points())
-        self.set_points(new_points)
 
-        if new_path_point:
-            self.append_points([new_path_point])
-        self.refresh_triangulation()
+        # TODO, this should happen in insert_n_curves_to_point_list
+        if self.has_new_path_started():
+            new_points = np.vstack([new_points, self.get_last_point()])
+
+        self.set_points(new_points)
         return self
 
     def insert_n_curves_to_point_list(self, n, points):
@@ -763,18 +760,13 @@ class VMobject(Mobject):
             "fill_rgbas",
             "stroke_rgbas",
             "stroke_width",
-            "sheen_direction",
-            "sheen_factor",
+            # "sheen_direction",
+            # "sheen_factor",
         ]
         for attr in attrs:
-            setattr(self, attr, interpolate(
-                getattr(mobject1, attr),
-                getattr(mobject2, attr),
-                alpha
-            ))
-            # TODO, is this needed?
-            if alpha == 1.0:
-                setattr(self, attr, getattr(mobject2, attr))
+            m1a = getattr(mobject1, attr)
+            m2a = getattr(mobject2, attr)
+            setattr(self, attr, interpolate(m1a, m2a, alpha))
 
     # TODO, somehow do this using stroke_width changes
     # so as to not have to change the point list
@@ -936,7 +928,7 @@ class VMobject(Mobject):
         if self.triangulation_locked:
             return self.saved_triangulation
 
-        if self.has_no_points():
+        if len(self.points) <= 1:
             return []
 
         points = self.points
