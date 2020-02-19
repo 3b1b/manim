@@ -74,6 +74,7 @@ class PiCreature(SVGMobject):
             self.flip()
         if self.start_corner is not None:
             self.to_corner(self.start_corner)
+        self.unlock_triangulation()
 
     def align_data(self, mobject):
         # This ensures that after a transform into a different mode,
