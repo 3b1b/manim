@@ -6,6 +6,7 @@ VIDEO_DIR = ""
 VIDEO_OUTPUT_DIR = ""
 TEX_DIR = ""
 TEXT_DIR = ""
+MOBJECT_POINTS_DIR = ""
 
 
 def initialize_directories(config):
@@ -14,6 +15,7 @@ def initialize_directories(config):
     global VIDEO_OUTPUT_DIR
     global TEX_DIR
     global TEXT_DIR
+    global MOBJECT_POINTS_DIR
 
     video_path_specified = config["video_dir"] or config["video_output_dir"]
 
@@ -40,6 +42,7 @@ def initialize_directories(config):
 
     TEX_DIR = config["tex_dir"] or os.path.join(MEDIA_DIR, "Tex")
     TEXT_DIR = os.path.join(MEDIA_DIR, "texts")
+    MOBJECT_POINTS_DIR = os.path.join(MEDIA_DIR, "mobject_points")
     if not video_path_specified:
         VIDEO_DIR = os.path.join(MEDIA_DIR, "videos")
         VIDEO_OUTPUT_DIR = os.path.join(MEDIA_DIR, "videos")
@@ -48,11 +51,12 @@ def initialize_directories(config):
     else:
         VIDEO_DIR = config["video_dir"]
 
-    for folder in [VIDEO_DIR, VIDEO_OUTPUT_DIR, TEX_DIR, TEXT_DIR]:
+    for folder in [VIDEO_DIR, VIDEO_OUTPUT_DIR, TEX_DIR, TEXT_DIR, MOBJECT_POINTS_DIR]:
         if folder != "" and not os.path.exists(folder):
             os.makedirs(folder)
 
-NOT_SETTING_FONT_MSG='''
+
+NOT_SETTING_FONT_MSG = '''
 Warning:
 You haven't set font.
 If you are not using English, this may cause text rendering problem.
@@ -246,6 +250,12 @@ COLOR_MAP = {
     "PURPLE_A": "#CAA3E8",
     "WHITE": "#FFFFFF",
     "BLACK": "#000000",
+    "GREY_A": "#DDDDDD",
+    "GREY_B": "#BBBBBB",
+    "GREY_C": "#888888",
+    "GREY_D": "#444444",
+    "GREY_E": "#222222",
+    # TODO, remove these greys
     "LIGHT_GRAY": "#BBBBBB",
     "LIGHT_GREY": "#BBBBBB",
     "GRAY": "#888888",
