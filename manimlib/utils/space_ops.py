@@ -82,13 +82,13 @@ def thick_diagonal(dim, thickness=2):
 def rotation_matrix_transpose(angle, axis):
     if axis[0] == 0 and axis[1] == 0:
         # axis = [0, 0, z] case is common enough it's worth
-        # having a shortcut to save operations
+        # having a shortcut
         sgn = 1 if axis[2] > 0 else -1
-        ca = np.cos(angle)
-        sa = np.sin(angle)
+        cos_a = np.cos(angle)
+        sin_a = np.sin(angle) * sgn
         return [
-            [ca, sgn * sa, 0],
-            [-sgn * sa, ca, 0],
+            [cos_a, sin_a, 0],
+            [-sin_a, cos_a, 0],
             [0, 0, 1],
         ]
     quat = quaternion_from_angle_axis(angle, axis)
