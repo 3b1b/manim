@@ -48,6 +48,7 @@ class VMobject(Mobject):
         # varying zoom levels?
         "tolerance_for_point_equality": 1e-8,
         "n_points_per_curve": 3,
+        "long_lines": False,
         # For shaders
         "stroke_vert_shader_file": "quadratic_bezier_stroke_vert.glsl",
         "stroke_geom_shader_file": "quadratic_bezier_stroke_geom.glsl",
@@ -425,11 +426,22 @@ class VMobject(Mobject):
             self.append_points([self.points[-1], handle, anchor])
 
     def add_line_to(self, point):
-        nppc = self.n_points_per_curve
-        points = [
-            interpolate(self.points[-1], point, a)
-            for a in np.linspace(0, 1, nppc)
-        ]
+        end = self.points[-1]
+        alphas = np.linspace(0, 1, self.n_points_per_curve)
+        if self.long_lines:
+            halfway = interpolate(end, point, 0.5)
+            points = [
+                interpolate(end, halfway, a)
+                for a in alphas
+            ] + [
+                interpolate(halfway, point, a)
+                for a in alphas
+            ]
+        else:
+            points = [
+                interpolate(end, point, a)
+                for a in alphas
+            ]
         if self.has_new_path_started():
             points = points[1:]
         self.append_points(points)
@@ -651,7 +663,7 @@ class VMobject(Mobject):
     # Alignment
     def align_points(self, vmobject):
         self.align_rgbas(vmobject)
-        if self.get_num_points() == vmobject.get_num_points():
+        if self.has_no_points() and vmobject.has_no_points():
             return
 
         for mob in self, vmobject:
@@ -662,15 +674,15 @@ class VMobject(Mobject):
             # If there's only one point, turn it into
             # a null curve
             if mob.has_new_path_started():
-                mob.add_line_to(mob.get_last_point())
+                mob.add_line_to(mob.points[0])
 
         # Figure out what the subpaths are, and align
         subpaths1 = self.get_subpaths()
         subpaths2 = vmobject.get_subpaths()
         n_subpaths = max(len(subpaths1), len(subpaths2))
         # Start building new ones
-        new_path1 = np.zeros((0, self.dim))
-        new_path2 = np.zeros((0, self.dim))
+        new_subpaths1 = []
+        new_subpaths2 = []
 
         nppc = self.n_points_per_curve
 
@@ -687,10 +699,10 @@ class VMobject(Mobject):
             diff2 = max(0, (len(sp1) - len(sp2)) // nppc)
             sp1 = self.insert_n_curves_to_point_list(diff1, sp1)
             sp2 = self.insert_n_curves_to_point_list(diff2, sp2)
-            new_path1 = np.vstack([new_path1, sp1])
-            new_path2 = np.vstack([new_path2, sp2])
-        self.set_points(new_path1)
-        vmobject.set_points(new_path2)
+            new_subpaths1.append(sp1)
+            new_subpaths2.append(sp2)
+        self.set_points(np.vstack(new_subpaths1))
+        vmobject.set_points(np.vstack(new_subpaths2))
         return self
 
     def insert_n_curves(self, n):
@@ -719,6 +731,7 @@ class VMobject(Mobject):
             ipc = [n] + [0] * (len(bezier_groups) - 1)
         else:
             ipc = np.round(n * norms / sum(norms)).astype(int)
+
         diff = n - sum(ipc)
         for x in range(diff):
             ipc[np.argmin(ipc)] += 1
@@ -942,7 +955,6 @@ class VMobject(Mobject):
         end_of_loop[:-1] = (np.abs(b2s[:-1] - b0s[1:]) > atol).any(1)
         end_of_loop[-1] = True
 
-        convexities *= orientation
         concave_parts = convexities < 0
 
         # These are the vertices to which we'll apply a polygon triangulation
