@@ -759,8 +759,8 @@ class Mobject(Container):
             return np.zeros((3, self.dim))
         else:
             # Lower left and upper right corners
-            dl = np.apply_along_axis(np.min, 0, all_points)
-            ur = np.apply_along_axis(np.max, 0, all_points)
+            dl = all_points.min(0)
+            ur = all_points.max(0)
             return np.array([dl, (dl + ur) / 2, ur])
 
     # Pseudonyms for more general get_bounding_box_point method
