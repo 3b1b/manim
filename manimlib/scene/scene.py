@@ -250,20 +250,6 @@ class Scene(Container):
     def get_mobject_copies(self):
         return [m.copy() for m in self.mobjects]
 
-    def get_moving_mobjects(self, *animations):
-        # Go through mobjects from start to end, and
-        # as soon as there's one that needs updating of
-        # some kind per frame, return the list from that
-        # point forward.
-        animation_mobjects = [anim.mobject for anim in animations]
-        mobjects = self.get_mobject_family_members()
-        for i, mob in enumerate(mobjects):
-            is_animated = (mob in animation_mobjects)
-            is_updated = (len(mob.get_family_updaters()) > 0)
-            if is_animated or is_updated:
-                return mobjects[i:]
-        return []
-
     def get_time_progression(self, run_time, n_iterations=None, override_skip_animations=False):
         if self.skip_animations and not override_skip_animations:
             times = [run_time]
@@ -438,7 +424,6 @@ class Scene(Container):
             anim.mobject for anim in animations
         ]
         if self.skip_animations:
-            # TODO, run this call in for each animation?
             self.update_mobjects(self.get_run_time(animations))
         else:
             self.update_mobjects(0)
