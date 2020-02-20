@@ -390,7 +390,7 @@ class Scene(Container):
             self.num_plays += 1
         return wrapper
 
-    def lock_static_mobjects(self, animations):
+    def lock_static_mobject_data(self, *animations):
         movers = list(it.chain(*[
             anim.mobject.get_family()
             for anim in animations
@@ -401,6 +401,10 @@ class Scene(Container):
             if mobject.get_family_updaters():
                 continue
             mobject.lock_shader_data()
+
+    def unlock_mobject_data(self):
+        for mobject in self.mobjects:
+            mobject.unlock_shader_data()
 
     def begin_animations(self, animations):
         curr_mobjects = self.get_mobject_family_members()
@@ -433,8 +437,6 @@ class Scene(Container):
         self.mobjects_from_last_animation = [
             anim.mobject for anim in animations
         ]
-        for mobject in self.mobjects:
-            mobject.unlock_shader_data()
         if self.skip_animations:
             # TODO, run this call in for each animation?
             self.update_mobjects(self.get_run_time(animations))
@@ -447,10 +449,11 @@ class Scene(Container):
             warnings.warn("Called Scene.play with no animations")
             return
         animations = self.anims_from_play_args(*args, **kwargs)
-        self.lock_static_mobjects(animations)
+        self.lock_static_mobject_data(*animations)
         self.begin_animations(animations)
         self.progress_through_animations(animations)
         self.finish_animations(animations)
+        self.unlock_mobject_data()
 
     def clean_up_animations(self, *animations):
         for animation in animations:
@@ -483,6 +486,7 @@ class Scene(Container):
     def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
         self.update_mobjects(dt=0)  # Any problems with this?
         if self.should_update_mobjects():
+            self.lock_static_mobject_data()
             time_progression = self.get_wait_time_progression(duration, stop_condition)
             last_t = 0
             for t in time_progression:
@@ -493,6 +497,7 @@ class Scene(Container):
                 if stop_condition is not None and stop_condition():
                     time_progression.close()
                     break
+            self.unlock_mobject_data()
         elif self.skip_animations:
             # Do nothing
             return self
