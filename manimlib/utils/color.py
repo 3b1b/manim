@@ -84,8 +84,7 @@ def interpolate_color(color1, color2, alpha):
 
 def average_color(*colors):
     rgbs = np.array(list(map(color_to_rgb, colors)))
-    mean_rgb = np.apply_along_axis(np.mean, 0, rgbs)
-    return rgb_to_color(mean_rgb)
+    return rgb_to_color(rgbs.mean(0))
 
 
 def random_bright_color():

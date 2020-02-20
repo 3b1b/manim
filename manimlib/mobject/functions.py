@@ -54,7 +54,7 @@ class ParametricFunction(VMobject):
                 full_t_range += list(np.linspace(s1, s2, n_inserts + 1)[1:])
 
             points = np.array([self.function(t) for t in full_t_range])
-            valid_indices = np.apply_along_axis(np.all, 1, np.isfinite(points))
+            valid_indices = np.isfinite(points).all(1)
             points = points[valid_indices]
             if len(points) > 0:
                 self.start_new_path(points[0])

@@ -298,7 +298,7 @@ class Mobject(Container):
         if len(kwargs) == 0:
             kwargs["about_point"] = ORIGIN
         self.apply_points_function_about_point(
-            lambda points: np.apply_along_axis(function, 1, points),
+            lambda points: np.array([function(p) for p in points]),
             **kwargs
         )
         return self
@@ -775,7 +775,7 @@ class Mobject(Container):
         return self.get_bounding_box_point(np.zeros(self.dim))
 
     def get_center_of_mass(self):
-        return np.apply_along_axis(np.mean, 0, self.get_all_points())
+        return self.get_all_points().mean(0)
 
     def get_boundary_point(self, direction):
         all_points = self.get_points_defining_boundary()

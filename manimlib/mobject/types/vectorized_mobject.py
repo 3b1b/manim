@@ -645,8 +645,8 @@ class VMobject(Mobject):
             for a in np.linspace(0, 1, n_sample_points)
         ])
         diffs = points[1:] - points[:-1]
-        norms = np.apply_along_axis(get_norm, 1, diffs)
-        return np.sum(norms)
+        norms = np.array([get_norm(d) for d in diffs])
+        return norms.sum()
 
     # Alignment
     def align_points(self, vmobject):
