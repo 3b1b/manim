@@ -17,12 +17,11 @@ from manimlib.utils.color import color_gradient
 from manimlib.utils.color import interpolate_color
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.iterables import list_update
-from manimlib.utils.iterables import remove_list_redundancies
 from manimlib.utils.paths import straight_path
 from manimlib.utils.simple_functions import get_parameters
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import get_norm
-from manimlib.utils.space_ops import rotation_matrix
+from manimlib.utils.space_ops import rotation_matrix_transpose
 from manimlib.utils.shaders import get_shader_info
 from manimlib.utils.shaders import shader_info_to_id
 from manimlib.utils.shaders import shader_id_to_info
@@ -100,6 +99,7 @@ class Mobject(Container):
         return self
 
     def get_array_attrs(self):
+        # May be more for other Mobject types
         return ["points"]
 
     def digest_mobject_attrs(self):
@@ -253,8 +253,7 @@ class Mobject(Container):
     def shift(self, *vectors):
         total_vector = reduce(op.add, vectors)
         for mob in self.get_family():
-            if len(mob.points) > 0:
-                mob.points += total_vector
+            mob.points += total_vector
         return self
 
     def scale(self, scale_factor, **kwargs):
@@ -268,7 +267,8 @@ class Mobject(Container):
         respect to that point.
         """
         self.apply_points_function_about_point(
-            lambda points: scale_factor * points, **kwargs
+            lambda points: scale_factor * points,
+            **kwargs
         )
         return self
 
@@ -276,9 +276,9 @@ class Mobject(Container):
         return self.rotate(angle, axis, about_point=ORIGIN)
 
     def rotate(self, angle, axis=OUT, **kwargs):
-        rot_matrix = rotation_matrix(angle, axis)
+        rot_matrix_T = rotation_matrix_transpose(angle, axis)
         self.apply_points_function_about_point(
-            lambda points: np.dot(points, rot_matrix.T),
+            lambda points: np.dot(points, rot_matrix_T),
             **kwargs
         )
         return self
@@ -350,19 +350,15 @@ class Mobject(Container):
 
     def reverse_points(self):
         for mob in self.family_members_with_points():
-            mob.apply_over_attr_arrays(
-                lambda arr: np.array(list(reversed(arr)))
-            )
+            mob.apply_over_attr_arrays(lambda arr: arr[::-1])
         return self
 
     def repeat(self, count):
         """
         This can make transition animations nicer
         """
-        def repeat_array(array):
-            return np.vstack([array] * count)
         for mob in self.family_members_with_points():
-            mob.apply_over_attr_arrays(repeat_array)
+            mob.apply_over_attr_arrays(lambda arr: np.vstack([arr] * count))
         return self
 
     # In place operations.
@@ -374,9 +370,9 @@ class Mobject(Container):
             if about_edge is None:
                 about_edge = ORIGIN
             about_point = self.get_bounding_box_point(about_edge)
-        for mob in self.family_members_with_points():
+        for mob in self.get_family():
             mob.points -= about_point
-            mob.points = func(mob.points)
+            mob.points[:] = func(mob.points)
             mob.points += about_point
         return self
 
@@ -392,9 +388,8 @@ class Mobject(Container):
         # Redundant with default behavior of scale now.
         return self.scale(scale_factor, about_point=point)
 
-    def pose_at_angle(self, **kwargs):
-        self.rotate(TAU / 14, RIGHT + UP, **kwargs)
-        return self
+    def pose_at_angle(self, angle=TAU / 14, axis=UR, **kwargs):
+        return self.rotate(angle, axis, **kwargs)
 
     # Positioning methods
 
@@ -698,33 +693,22 @@ class Mobject(Container):
 
     ##
 
-    def reduce_across_dimension(self, points_func, reduce_func, dim):
-        points = self.get_all_points()
-        if points is None or len(points) == 0:
-            # Note, this default means things like empty VGroups
-            # will appear to have a center at [0, 0, 0]
-            return 0
-        values = points_func(points[:, dim])
-        return reduce_func(values)
-
-    def nonempty_submobjects(self):
-        return [
-            submob for submob in self.submobjects
-            if len(submob.submobjects) != 0 or len(submob.points) != 0
-        ]
-
     def get_merged_array(self, array_attr):
-        return np.vstack([
-            getattr(sm, array_attr)
-            for sm in self.family_members_with_points()
-        ])
+        if self.submobjects:
+            return np.vstack([
+                getattr(sm, array_attr)
+                for sm in self.get_family()
+            ])
+        else:
+            return getattr(self, array_attr)
 
     def get_all_points(self):
-        arrays = [sm.points for sm in self.family_members_with_points()]
-        if arrays:
-            return np.vstack(arrays)
+        if self.submobjects:
+            return np.vstack([
+                sm.points for sm in self.get_family()
+            ])
         else:
-            return np.zeros((0, self.dim))
+            return self.points
 
     # Getters
 
@@ -733,17 +717,6 @@ class Mobject(Container):
 
     def get_num_points(self):
         return len(self.points)
-
-    def get_extremum_along_dim(self, points=None, dim=0, key=0):
-        if points is None:
-            points = self.get_points_defining_boundary()
-        values = points[:, dim]
-        if key < 0:
-            return np.min(values)
-        elif key == 0:
-            return (np.min(values) + np.max(values)) / 2
-        else:
-            return np.max(values)
 
     def get_bounding_box_point(self, direction):
         result = np.zeros(self.dim)
@@ -759,9 +732,10 @@ class Mobject(Container):
             return np.zeros((3, self.dim))
         else:
             # Lower left and upper right corners
-            dl = all_points.min(0)
-            ur = all_points.max(0)
-            return np.array([dl, (dl + ur) / 2, ur])
+            mins = all_points.min(0)
+            maxs = all_points.max(0)
+            mids = (mins + maxs) / 2
+            return np.array([mins, mids, maxs])
 
     # Pseudonyms for more general get_bounding_box_point method
 
@@ -801,10 +775,8 @@ class Mobject(Container):
         return self.get_edge_center(IN)
 
     def length_over_dim(self, dim):
-        return (
-            self.reduce_across_dimension(np.max, np.max, dim) -
-            self.reduce_across_dimension(np.min, np.min, dim)
-        )
+        bb = self.get_bounding_box()
+        return (bb[2] - bb[0])[dim]
 
     def get_width(self):
         return self.length_over_dim(0)
@@ -819,9 +791,7 @@ class Mobject(Container):
         """
         Meant to generalize get_x, get_y, get_z
         """
-        return self.get_extremum_along_dim(
-            dim=dim, key=direction[dim]
-        )
+        return self.get_bounding_box_point(direction)[dim]
 
     def get_x(self, direction=ORIGIN):
         return self.get_coord(0, direction)
@@ -946,13 +916,8 @@ class Mobject(Container):
         return result + self.submobjects
 
     def get_family(self):
-        return [
-            self,
-            *it.chain(*[
-                sm.get_family()
-                for sm in self.submobjects
-            ])
-        ]
+        sub_families = [sm.get_family() for sm in self.submobjects]
+        return [self, *it.chain(*sub_families)]
 
     def family_members_with_points(self):
         return [m for m in self.get_family() if m.get_num_points() > 0]
@@ -1013,14 +978,6 @@ class Mobject(Container):
         # Recurse
         for m1, m2 in zip(self.submobjects, mobject.submobjects):
             m1.align_data(m2)
-
-    def get_point_mobject(self, center=None):
-        """
-        The simplest mobject to be transformed to or from self.
-        Should by a point of the appropriate type
-        """
-        message = "get_point_mobject not implemented for {}"
-        raise Exception(message.format(self.__class__.__name__))
 
     def align_points(self, mobject):
         count1 = self.get_num_points()
@@ -1102,7 +1059,7 @@ class Mobject(Container):
         Turns self into an interpolation between mobject1
         and mobject2.
         """
-        self.points = path_func(mobject1.points, mobject2.points, alpha)
+        self.points[:] = path_func(mobject1.points, mobject2.points, alpha)
         self.interpolate_color(mobject1, mobject2, alpha)
         return self
 
@@ -1261,4 +1218,4 @@ class Point(Mobject):
         return self.get_location()
 
     def set_location(self, new_loc):
-        self.points = np.array(new_loc, ndmin=2)
+        self.points[:] = np.array(new_loc, ndmin=2)
