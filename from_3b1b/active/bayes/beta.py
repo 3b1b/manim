@@ -85,24 +85,127 @@ class BarChartTest(Scene):
 
 class Thumbnail(Scene):
     def construct(self):
+        p1 = "$96\\%$"
+        p2 = "$93\\%$"
+        n1 = "50"
+        n2 = "200"
         t2c = {
-            "95\\%": BLUE,
-            "92\\%": YELLOW,
-            "50": BLUE_C,
-            "200": YELLOW,
+            p1: BLUE,
+            p2: YELLOW,
+            n1: BLUE_C,
+            n2: YELLOW,
         }
         kw = {"tex_to_color_map": t2c}
         text = VGroup(
-            TextMobject("95\\% with 50 reviews", **kw),
+            TextMobject(f"{p1} with {n1} reviews", **kw),
             TextMobject("vs.", **kw),
-            TextMobject("92\\% with 200 reviews", **kw),
+            TextMobject(f"{p2} with {n2} reviews", **kw),
         )
+        fix_percent(text[0].get_part_by_tex(p1)[-1])
+        fix_percent(text[2].get_part_by_tex(p2)[-1])
         text.scale(2)
         text.arrange(DOWN, buff=LARGE_BUFF)
         text.set_width(FRAME_WIDTH - 1)
         self.add(text)
 
-        self.embed()
+
+class ShowThreeCases(Scene):
+    def construct(self):
+        titles = self.get_titles()
+        reviews = self.get_reviews(titles)
+
+        # Introduce everything
+        self.play(LaggedStartMap(
+            FadeInFrom, titles,
+            lambda m: (m, DOWN),
+            lag_ratio=0.2
+        ))
+        self.play(LaggedStart(*[
+            LaggedStartMap(
+                FadeInFromLarge, review,
+                lag_ratio=0.1
+            )
+            for review in reviews
+        ], lag_ratio=0.1))
+        self.wait()
+
+        self.play(ShowCreationThenFadeAround(reviews[2]))
+        self.wait()
+
+        # Suspicious of 100%
+        randy = Randolph(mode="sassy")
+        randy.flip()
+        randy.set_height(2)
+        randy.next_to(
+            reviews[0], RIGHT, LARGE_BUFF,
+            aligned_edge=UP,
+        )
+        randy.look_at(reviews[0])
+        self.play(FadeInFromDown(randy))
+        self.play(Blink(randy))
+        self.wait()
+        self.play(FadeOut(randy))
+
+        # Low number means it could be a fluke.
+
+        # self.embed()
+
+    def get_titles(self):
+        titles = VGroup(
+            TextMobject(
+                "$100\\%$ \\\\",
+                "10 reviews"
+            ),
+            TextMobject(
+                "$96\\%$ \\\\",
+                "50 reviews"
+            ),
+            TextMobject(
+                "$93\\%$ \\\\",
+                "200 reviews"
+            ),
+        )
+        colors = [PINK, BLUE, YELLOW]
+        for title, color in zip(titles, colors):
+            fix_percent(title[0][-1])
+            title[0].set_color(color)
+
+        titles.scale(1.25)
+        titles.arrange(DOWN, buff=1.5)
+        titles.to_corner(UL)
+        return titles
+
+    def get_reviews(self, titles):
+        return VGroup(
+            self.get_plusses_and_minuses(
+                titles[0], 5, 2, 0,
+            ),
+            self.get_plusses_and_minuses(
+                titles[1], 5, 10, 2,
+            ),
+            self.get_plusses_and_minuses(
+                titles[2], 8, 25, 14,
+            ),
+        )
+
+    def get_plusses_and_minuses(self, title, n_rows, n_cols, n_minus):
+        check = TexMobject("\\checkmark", color=GREEN)
+        cross = TexMobject("\\times", color=RED)
+        checks = VGroup(*[
+            check.copy() for x in range(n_rows * n_cols)
+        ])
+        checks.arrange_in_grid(n_rows=n_rows, n_cols=n_cols)
+        checks.scale(0.5)
+        # if checks.get_height() > title.get_height():
+        #     checks.match_height(title)
+        checks.next_to(title, RIGHT, LARGE_BUFF)
+
+        for check in random.sample(list(checks), n_minus):
+            mob = cross.copy()
+            mob.replace(check, dim_to_match=0)
+            check.become(mob)
+
+        return checks
 
 
 class AskAboutUnknownProbabilities(Scene):

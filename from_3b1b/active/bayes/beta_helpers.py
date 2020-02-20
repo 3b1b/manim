@@ -3,6 +3,18 @@ from manimlib.imports import *
 
 # Images of randomness
 
+def fix_percent(sym):
+    # Really need to make this unneeded...
+    new_sym = sym.copy()
+    n = 222
+    p1 = sym.points[:n]
+    p2 = sym.points[n:]
+    sym.points = p1
+    new_sym.points = p2
+    sym.add(new_sym)
+    sym.lock_triangulation()
+
+
 def get_random_process(choices, shuffle_time=2, total_time=4, change_rate=0.05,
                        h_buff=0.05, v_buff=0.05):
     content = choices[0]
