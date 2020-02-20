@@ -60,6 +60,8 @@ class Mobject(Container):
             self.name = self.__class__.__name__
         self.updaters = []
         self.updating_suspended = False
+        self.vbo = None
+        self.shader_data_is_locked = False
 
         self.reset_points()
         self.init_points()
@@ -1152,6 +1154,14 @@ class Mobject(Container):
             return new_arr
         return arr
 
+    def lock_shader_data(self):
+        self.shader_data_is_locked = False
+        self.saved_shader_info_list = self.get_shader_info_list()
+        self.shader_data_is_locked = True
+
+    def unlock_shader_data(self):
+        self.shader_data_is_locked = False
+
     def get_shader_info_list(self):
         shader_infos = it.chain(
             [self.get_shader_info()],
@@ -1184,6 +1194,32 @@ class Mobject(Container):
         # Typically to be implemented by subclasses
         # Must return a structured numpy array
         return self.shader_data
+
+    def get_vbo(self, ctx, data):
+        d_bytes = data.tobytes()
+        if self.vbo is None or self.vbo.size != len(d_bytes):
+            self.vbo = ctx.buffer(d_bytes)
+        else:
+            self.vbo.write(d_bytes)
+        return self.vbo
+
+    def render(self, camera):
+        if self.shader_data_is_locked:
+            info_list = self.saved_shader_info_list
+        else:
+            info_list = self.get_shader_info_list()
+
+        for shader_info in info_list:
+            data = shader_info["data"]
+            if data is None or len(data) == 0:
+                continue
+            shader = camera.get_shader(shader_info)
+            if shader is None:
+                continue
+            render_primative = int(shader_info["render_primative"])
+            vbo = self.get_vbo(camera.ctx, data)
+            vao = camera.ctx.simple_vertex_array(shader, vbo, *data.dtype.names)
+            vao.render(render_primative)
 
     # Errors
     def throw_error_if_no_points(self):

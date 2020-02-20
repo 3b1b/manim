@@ -2,6 +2,7 @@ import inspect
 import random
 import warnings
 import platform
+import itertools as it
 
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
@@ -389,6 +390,18 @@ class Scene(Container):
             self.num_plays += 1
         return wrapper
 
+    def lock_static_mobjects(self, animations):
+        movers = list(it.chain(*[
+            anim.mobject.get_family()
+            for anim in animations
+        ]))
+        for mobject in self.mobjects:
+            if mobject in movers:
+                continue
+            if mobject.get_family_updaters():
+                continue
+            mobject.lock_shader_data()
+
     def begin_animations(self, animations):
         curr_mobjects = self.get_mobject_family_members()
         for animation in animations:
@@ -420,6 +433,8 @@ class Scene(Container):
         self.mobjects_from_last_animation = [
             anim.mobject for anim in animations
         ]
+        for mobject in self.mobjects:
+            mobject.unlock_shader_data()
         if self.skip_animations:
             # TODO, run this call in for each animation?
             self.update_mobjects(self.get_run_time(animations))
@@ -432,6 +447,7 @@ class Scene(Container):
             warnings.warn("Called Scene.play with no animations")
             return
         animations = self.anims_from_play_args(*args, **kwargs)
+        self.lock_static_mobjects(animations)
         self.begin_animations(animations)
         self.progress_through_animations(animations)
         self.finish_animations(animations)

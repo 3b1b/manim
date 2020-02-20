@@ -211,26 +211,16 @@ class Camera(object):
 
     # Rendering
     def capture(self, *mobjects, **kwargs):
-        shader_infos = it.chain(*[
-            mob.get_shader_info_list()
-            for mob in mobjects
-        ])
-        # TODO, batching works well when the mobjects are already organized,
-        # but can we somehow use z-buffering to better effect here?
-        batches = batch_by_property(shader_infos, shader_info_to_id)
-
-        for info_group, sid in batches:
-            shader = self.get_shader(sid)
-            data = np.hstack([info["data"] for info in info_group])
-            render_primative = int(info_group[0]["render_primative"])
-            self.render_from_shader(shader, data, render_primative)
+        for mobject in mobjects:
+            mobject.render(camera=self)
 
     # Shaders
     def init_shaders(self):
         # Initialize with the null id going to None
         self.id_to_shader = {"": None}
 
-    def get_shader(self, sid):
+    def get_shader(self, shader_info):
+        sid = shader_info_to_id(shader_info)
         if sid not in self.id_to_shader:
             info = shader_id_to_info(sid)
             shader = self.ctx.program(
@@ -288,10 +278,3 @@ class Camera(object):
             texture.use(location=tid)
             self.path_to_texture_id[path] = tid
         return self.path_to_texture_id[path]
-
-    def render_from_shader(self, shader, data, render_primative):
-        if data is None or shader is None or len(data) == 0:
-            return
-        vbo = self.ctx.buffer(data.tobytes())
-        vao = self.ctx.simple_vertex_array(shader, vbo, *data.dtype.names)
-        vao.render(render_primative)
