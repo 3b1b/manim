@@ -156,11 +156,6 @@ class PMobject(Mobject):
             )
         )
 
-    def get_point_mobject(self, center=None):
-        if center is None:
-            center = self.get_center()
-        return Point(center)
-
     def interpolate_color(self, mobject1, mobject2, alpha):
         self.rgbas = interpolate(
             mobject1.rgbas, mobject2.rgbas, alpha

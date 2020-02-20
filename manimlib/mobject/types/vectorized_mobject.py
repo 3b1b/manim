@@ -748,13 +748,6 @@ class VMobject(Mobject):
                 setattr(self, attr, new_a1)
         return self
 
-    def get_point_mobject(self, center=None):
-        if center is None:
-            center = self.get_center()
-        point = VectorizedPoint(center)
-        point.match_style(self)
-        return point
-
     def interpolate_color(self, mobject1, mobject2, alpha):
         attrs = [
             "fill_rgbas",
