@@ -370,7 +370,7 @@ class Mobject(Container):
             if about_edge is None:
                 about_edge = ORIGIN
             about_point = self.get_bounding_box_point(about_edge)
-        for mob in self.get_family():
+        for mob in self.family_members_with_points():
             mob.points -= about_point
             mob.points[:] = func(mob.points)
             mob.points += about_point
@@ -1013,7 +1013,7 @@ class Mobject(Container):
         return self
 
     def push_self_into_submobjects(self):
-        copy = self.copy()
+        copy = self.deepcopy()
         copy.submobjects = []
         self.reset_points()
         self.add(copy)
@@ -1027,7 +1027,7 @@ class Mobject(Container):
         if curr == 0:
             # If empty, simply add n point mobjects
             self.submobjects = [
-                self.get_point_mobject()
+                self.copy().scale(0)
                 for k in range(n)
             ]
             return
@@ -1037,16 +1037,14 @@ class Mobject(Container):
         # with VMobject.insert_n_curves
         repeat_indices = (np.arange(target) * curr) // target
         split_factors = [
-            sum(repeat_indices == i)
+            (repeat_indices == i).sum()
             for i in range(curr)
         ]
         new_submobs = []
         for submob, sf in zip(self.submobjects, split_factors):
             new_submobs.append(submob)
             for k in range(1, sf):
-                new_submobs.append(
-                    submob.copy().fade(1)
-                )
+                new_submobs.append(submob.copy().fade(1))
         self.submobjects = new_submobs
         return self
 
@@ -1173,10 +1171,9 @@ class Mobject(Container):
             shader = camera.get_shader(shader_info)
             if shader is None:
                 continue
-            render_primative = int(shader_info["render_primative"])
             vbo = self.get_vbo(camera.ctx, data)
             vao = camera.ctx.simple_vertex_array(shader, vbo, *data.dtype.names)
-            vao.render(render_primative)
+            vao.render(int(shader_info["render_primative"]))
 
     # Errors
     def throw_error_if_no_points(self):
@@ -1218,4 +1215,4 @@ class Point(Mobject):
         return self.get_location()
 
     def set_location(self, new_loc):
-        self.points[:] = np.array(new_loc, ndmin=2)
+        self.points = np.array(new_loc, ndmin=2)
