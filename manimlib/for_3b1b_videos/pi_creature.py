@@ -149,9 +149,7 @@ class PiCreature(SVGMobject):
         return self
 
     def change_mode(self, mode):
-        new_self = self.__class__(
-            mode=mode,
-        )
+        new_self = self.__class__(mode=mode)
         new_self.match_style(self)
         new_self.match_height(self)
         if self.is_flipped() != new_self.is_flipped():
@@ -211,10 +209,11 @@ class PiCreature(SVGMobject):
 
     def blink(self):
         eye_parts = self.eye_parts
-        eye_bottom_y = eye_parts.get_bottom()[1]
-        eye_parts.apply_function(
-            lambda p: [p[0], eye_bottom_y, p[2]]
-        )
+        eye_bottom_y = eye_parts.get_y(DOWN)
+
+        for eye_part in eye_parts:
+            eye_part.points[:, 1] = eye_bottom_y
+
         return self
 
     def to_corner(self, vect=None, **kwargs):

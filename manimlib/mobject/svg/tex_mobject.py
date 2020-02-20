@@ -16,10 +16,9 @@ TEX_MOB_SCALE_FACTOR = 0.05
 
 
 class TexSymbol(VMobjectFromSVGPathstring):
-    """
-    Purely a renaming of VMobjectFromSVGPathstring
-    """
-    pass
+    CONFIG = {
+        "subdivide_sharp_curves": True,
+    }
 
 
 class SingleStringTexMobject(SVGMobject):
