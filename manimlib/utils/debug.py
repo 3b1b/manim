@@ -1,3 +1,5 @@
+import time
+
 from manimlib.constants import BLACK
 from manimlib.mobject.numbers import Integer
 from manimlib.mobject.types.vectorized_mobject import VGroup
@@ -19,3 +21,9 @@ def get_submobject_index_labels(mobject, label_height=0.15):
         label.set_stroke(BLACK, 5, background=True)
         labels.add(label)
     return labels
+
+
+def get_runtime(func):
+    now = time.time()
+    func()
+    return time.time() - now
