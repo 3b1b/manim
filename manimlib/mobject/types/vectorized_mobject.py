@@ -543,6 +543,7 @@ class VMobject(Mobject):
         return self
 
     def make_smooth(self):
+        # TODO, Change this to not rely on a cubic-to-quadratic conversion
         return self.change_anchor_mode("smooth")
 
     def make_jagged(self):
@@ -825,6 +826,9 @@ class VMobject(Mobject):
         self.stroke_data = np.zeros(len(self.points), dtype=self.stroke_dtype)
 
     def get_shader_info_list(self):
+        if self.shader_data_is_locked:
+            return self.saved_shader_info_list
+
         stroke_info = get_shader_info(
             vert_file=self.stroke_vert_shader_file,
             geom_file=self.stroke_geom_shader_file,
