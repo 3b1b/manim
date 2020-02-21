@@ -663,7 +663,7 @@ class VMobject(Mobject):
     # Alignment
     def align_points(self, vmobject):
         self.align_rgbas(vmobject)
-        if self.has_no_points() and vmobject.has_no_points():
+        if len(self.points) == len(vmobject.points):
             return
 
         for mob in self, vmobject:

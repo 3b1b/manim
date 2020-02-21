@@ -59,7 +59,6 @@ class Mobject(Container):
             self.name = self.__class__.__name__
         self.updaters = []
         self.updating_suspended = False
-        self.vbo = None
         self.shader_data_is_locked = False
 
         self.reset_points()
@@ -1150,14 +1149,6 @@ class Mobject(Container):
         # Must return a structured numpy array
         return self.shader_data
 
-    def get_vbo(self, ctx, data):
-        d_bytes = data.tobytes()
-        if self.vbo is None or self.vbo.size != len(d_bytes):
-            self.vbo = ctx.buffer(d_bytes)
-        else:
-            self.vbo.write(d_bytes)
-        return self.vbo
-
     def render(self, camera):
         if self.shader_data_is_locked:
             info_list = self.saved_shader_info_list
@@ -1171,7 +1162,7 @@ class Mobject(Container):
             shader = camera.get_shader(shader_info)
             if shader is None:
                 continue
-            vbo = self.get_vbo(camera.ctx, data)
+            vbo = camera.ctx.buffer(data.tobytes())
             vao = camera.ctx.simple_vertex_array(shader, vbo, *data.dtype.names)
             vao.render(int(shader_info["render_primative"]))
 
