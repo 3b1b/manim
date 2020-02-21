@@ -1,4 +1,5 @@
 import numpy as np
+import math
 import itertools as it
 from mapbox_earcut import triangulate_float32 as earcut
 
@@ -35,8 +36,8 @@ def quaternion_mult(*quats):
 
 def quaternion_from_angle_axis(angle, axis):
     return [
-        np.cos(angle / 2),
-        *(np.sin(angle / 2) * normalize(axis))
+        math.cos(angle / 2),
+        *(math.sin(angle / 2) * normalize(axis))
     ]
 
 
@@ -84,8 +85,8 @@ def rotation_matrix_transpose(angle, axis):
         # axis = [0, 0, z] case is common enough it's worth
         # having a shortcut
         sgn = 1 if axis[2] > 0 else -1
-        cos_a = np.cos(angle)
-        sin_a = np.sin(angle) * sgn
+        cos_a = math.cos(angle)
+        sin_a = math.sin(angle) * sgn
         return [
             [cos_a, sin_a, 0],
             [-sin_a, cos_a, 0],
@@ -112,8 +113,8 @@ def rotation_matrix(angle, axis):
 
 def rotation_about_z(angle):
     return [
-        [np.cos(angle), -np.sin(angle), 0],
-        [np.sin(angle), np.cos(angle), 0],
+        [math.cos(angle), -math.sin(angle), 0],
+        [math.sin(angle), math.cos(angle), 0],
         [0, 0, 1]
     ]
 
@@ -137,9 +138,9 @@ def z_to_vector(vector):
     else:
         theta = 0
     phi_down = np.array([
-        [np.cos(phi), 0, np.sin(phi)],
+        [math.cos(phi), 0, math.sin(phi)],
         [0, 1, 0],
-        [-np.sin(phi), 0, np.cos(phi)]
+        [-math.sin(phi), 0, math.cos(phi)]
     ])
     return np.dot(rotation_about_z(theta), phi_down)
 
@@ -169,11 +170,10 @@ def normalize(vect, fall_back=None):
     norm = get_norm(vect)
     if norm > 0:
         return np.array(vect) / norm
+    elif fall_back is not None:
+        return fall_back
     else:
-        if fall_back is not None:
-            return fall_back
-        else:
-            return np.zeros(len(vect))
+        return np.zeros(len(vect))
 
 
 def cross(v1, v2):
