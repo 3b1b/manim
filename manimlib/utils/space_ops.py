@@ -319,18 +319,21 @@ def earclip_triangulation(verts, rings):
     loop_connections = dict()
     for e0, e1 in zip(rings, rings[1:]):
         temp_i = e0
-        # Find j closest to temp_i
+        # Find closet point in the first ring (j) to
+        # the first index of this ring (i)
         norms = np.array([
             [j, norm_squared(verts[temp_i] - verts[j])]
-            for j in it.chain(range(0, e0), range(e1, n))
+            for j in range(0, rings[0])
+            if j not in loop_connections
         ])
-        j = int(norms[np.argmin(norms[:, 1])][0])
+        j = int(norms[norms[:, 1].argmin()][0])
         # Find i closest to this j
         norms = np.array([
             [i, norm_squared(verts[i] - verts[j])]
             for i in range(e0, e1)
+            if i not in loop_connections
         ])
-        i = int(norms[np.argmin(norms[:, 1])][0])
+        i = int(norms[norms[:, 1].argmin()][0])
 
         loop_connections[i] = j
         loop_connections[j] = i
