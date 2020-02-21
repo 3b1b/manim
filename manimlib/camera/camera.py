@@ -211,8 +211,30 @@ class Camera(object):
 
     # Rendering
     def capture(self, *mobjects, **kwargs):
-        for mobject in mobjects:
-            mobject.render(camera=self)
+        shader_infos = it.chain(*[
+            mob.get_shader_info_list()
+            for mob in mobjects
+        ])
+        batches = batch_by_property(shader_infos, shader_info_to_id)
+
+        for info_group, sid in batches:
+            if len(info_group) == 1:
+                data = info_group[0]["data"]
+            else:
+                data = np.hstack([info["data"] for info in info_group])
+
+            shader = self.get_shader(info_group[0])
+            render_primative = int(info_group[0]["render_primative"])
+            self.render(shader, data, render_primative)
+
+    def render(self, shader, data, render_primative):
+        if data is None or len(data) == 0:
+            return
+        if shader is None:
+            return
+        vbo = self.ctx.buffer(data.tobytes())
+        vao = self.ctx.simple_vertex_array(shader, vbo, *data.dtype.names)
+        vao.render(render_primative)
 
     # Shaders
     def init_shaders(self):

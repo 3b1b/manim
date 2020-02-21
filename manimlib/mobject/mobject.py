@@ -1135,6 +1135,9 @@ class Mobject(Container):
         self.shader_data_is_locked = False
 
     def get_shader_info_list(self):
+        if self.shader_data_is_locked:
+            return self.saved_shader_info_list
+
         shader_infos = it.chain(
             [self.get_shader_info()],
             *[
@@ -1166,23 +1169,6 @@ class Mobject(Container):
         # Typically to be implemented by subclasses
         # Must return a structured numpy array
         return self.shader_data
-
-    def render(self, camera):
-        if self.shader_data_is_locked:
-            info_list = self.saved_shader_info_list
-        else:
-            info_list = self.get_shader_info_list()
-
-        for shader_info in info_list:
-            data = shader_info["data"]
-            if data is None or len(data) == 0:
-                continue
-            shader = camera.get_shader(shader_info)
-            if shader is None:
-                continue
-            vbo = camera.ctx.buffer(data.tobytes())
-            vao = camera.ctx.simple_vertex_array(shader, vbo, *data.dtype.names)
-            vao.render(int(shader_info["render_primative"]))
 
     # Errors
     def throw_error_if_no_points(self):
