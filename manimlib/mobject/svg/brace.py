@@ -97,7 +97,7 @@ class BraceLabel(VMobject):
             self.label.scale(self.label_scale)
 
         self.brace.put_at_tip(self.label)
-        self.submobjects = [self.brace, self.label]
+        self.set_submobjects([self.brace, self.label])
 
     def creation_anim(self, label_anim=FadeIn, brace_anim=GrowFromCenter):
         return AnimationGroup(brace_anim(self.brace), label_anim(self.label))
@@ -128,7 +128,7 @@ class BraceLabel(VMobject):
         copy_mobject = copy.copy(self)
         copy_mobject.brace = self.brace.copy()
         copy_mobject.label = self.label.copy()
-        copy_mobject.submobjects = [copy_mobject.brace, copy_mobject.label]
+        copy_mobject.set_submobjects([copy_mobject.brace, copy_mobject.label])
 
         return copy_mobject
 

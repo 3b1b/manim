@@ -54,6 +54,8 @@ class Mobject(Container):
     def __init__(self, **kwargs):
         Container.__init__(self, **kwargs)
         self.submobjects = []
+        self.parents = []
+        self.family = [self]
         self.color = Color(self.color)
         if self.name is None:
             self.name = self.__class__.__name__
@@ -80,21 +82,64 @@ class Mobject(Container):
         # Typically implemented in subclass, unless purposefully left blank
         pass
 
+    # Family matters
+    def __getitem__(self, value):
+        self_list = self.split()
+        if isinstance(value, slice):
+            GroupClass = self.get_group_class()
+            return GroupClass(*self_list.__getitem__(value))
+        return self_list.__getitem__(value)
+
+    def __iter__(self):
+        return iter(self.split())
+
+    def __len__(self):
+        return len(self.split())
+
+    def split(self):
+        result = [self] if len(self.points) > 0 else []
+        return result + self.submobjects
+
+    def assemble_family(self):
+        sub_families = [sm.get_family() for sm in self.submobjects]
+        self.family = [self, *it.chain(*sub_families)]
+        for parent in self.parents:
+            parent.assemble_family()
+        return self
+
+    def get_family(self):
+        return self.family
+
+    def family_members_with_points(self):
+        return [m for m in self.get_family() if m.get_num_points() > 0]
+
     def add(self, *mobjects):
         if self in mobjects:
             raise Exception("Mobject cannot contain self")
-        self.submobjects = list_update(self.submobjects, mobjects)
-        return self
-
-    def add_to_back(self, *mobjects):
-        self.remove(*mobjects)
-        self.submobjects = list(mobjects) + self.submobjects
+        for mobject in mobjects:
+            if mobject not in self.submobjects:
+                self.submobjects.append(mobject)
+            if self not in mobject.parents:
+                mobject.parents.append(self)
+        self.assemble_family()
         return self
 
     def remove(self, *mobjects):
         for mobject in mobjects:
             if mobject in self.submobjects:
                 self.submobjects.remove(mobject)
+            if self in mobject.parents:
+                mobject.parents.remove(self)
+        self.assemble_family()
+        return self
+
+    def add_to_back(self, *mobjects):
+        self.set_submobjects(list_update(mobjects, self.sub_mobjects))
+        return self
+
+    def set_submobjects(self, submobject_list):
+        self.remove(*self.submobjects)
+        self.add(*submobject_list)
         return self
 
     def get_array_attrs(self):
@@ -107,7 +152,7 @@ class Mobject(Container):
         in the submobjects list.
         """
         mobject_attrs = [x for x in list(self.__dict__.values()) if isinstance(x, Mobject)]
-        self.submobjects = list_update(self.submobjects, mobject_attrs)
+        self.set_submobjects(list_update(self.submobjects, mobject_attrs))
         return self
 
     def apply_over_attr_arrays(self, func):
@@ -138,10 +183,12 @@ class Mobject(Container):
 
         copy_mobject = copy.copy(self)
         copy_mobject.points = np.array(self.points)
-        copy_mobject.submobjects = [
-            submob.copy() for submob in self.submobjects
-        ]
+        copy_mobject.parents = []
+        copy_mobject.submobjects = []
+        copy_mobject.add(*[sm.copy() for sm in self.submobjects])
         copy_mobject.updaters = list(self.updaters)
+
+        # Make sure any mobject or numpy array attributes are copied
         family = self.get_family()
         for attr, value in list(self.__dict__.items()):
             if isinstance(value, Mobject) and value in family and value is not self:
@@ -817,7 +864,7 @@ class Mobject(Container):
 
     def get_pieces(self, n_pieces):
         template = self.copy()
-        template.submobjects = []
+        template.set_submobjects([])
         alphas = np.linspace(0, 1, n_pieces + 1)
         return Group(*[
             template.copy().pointwise_become_partial(
@@ -893,34 +940,10 @@ class Mobject(Container):
                 self.set_coord(point[dim], dim, direction)
         return self
 
-    # Family matters
-    def __getitem__(self, value):
-        self_list = self.split()
-        if isinstance(value, slice):
-            GroupClass = self.get_group_class()
-            return GroupClass(*self_list.__getitem__(value))
-        return self_list.__getitem__(value)
-
-    def __iter__(self):
-        return iter(self.split())
-
-    def __len__(self):
-        return len(self.split())
-
     def get_group_class(self):
         return Group
 
-    def split(self):
-        result = [self] if len(self.points) > 0 else []
-        return result + self.submobjects
-
-    def get_family(self):
-        sub_families = [sm.get_family() for sm in self.submobjects]
-        return [self, *it.chain(*sub_families)]
-
-    def family_members_with_points(self):
-        return [m for m in self.get_family() if m.get_num_points() > 0]
-
+    # Submobject organization
     def arrange(self, direction=RIGHT, center=True, **kwargs):
         for m1, m2 in zip(self.submobjects, self.submobjects[1:]):
             m2.next_to(m1, direction, **kwargs)
@@ -971,12 +994,10 @@ class Mobject(Container):
 
     # Alignment
     def align_data(self, mobject):
-        self.null_point_align(mobject)
+        self.null_point_align(mobject)  # Needed?
         self.align_submobjects(mobject)
-        self.align_points(mobject)
-        # Recurse
-        for m1, m2 in zip(self.submobjects, mobject.submobjects):
-            m1.align_data(m2)
+        for mob1, mob2 in zip(self.get_family(), mobject.get_family()):
+            mob1.align_points(mob2)
 
     def align_points(self, mobject):
         count1 = self.get_num_points()
@@ -997,6 +1018,9 @@ class Mobject(Container):
         n2 = len(mob2.submobjects)
         mob1.add_n_more_submobjects(max(0, n2 - n1))
         mob2.add_n_more_submobjects(max(0, n1 - n2))
+        # Recurse
+        for sm1, sm2 in zip(mob1.submobjects, mob2.submobjects):
+            sm1.align_submobjects(sm2)
         return self
 
     def null_point_align(self, mobject):
@@ -1013,7 +1037,7 @@ class Mobject(Container):
 
     def push_self_into_submobjects(self):
         copy = self.deepcopy()
-        copy.submobjects = []
+        copy.submobjects.set_submobjects([])
         self.reset_points()
         self.add(copy)
         return self
@@ -1025,15 +1049,12 @@ class Mobject(Container):
         curr = len(self.submobjects)
         if curr == 0:
             # If empty, simply add n point mobjects
-            self.submobjects = [
+            self.set_submobjects([
                 self.copy().scale(0)
                 for k in range(n)
-            ]
+            ])
             return
-
         target = curr + n
-        # TODO, factor this out to utils so as to reuse
-        # with VMobject.insert_n_curves
         repeat_indices = (np.arange(target) * curr) // target
         split_factors = [
             (repeat_indices == i).sum()
@@ -1044,11 +1065,8 @@ class Mobject(Container):
             new_submobs.append(submob)
             for k in range(1, sf):
                 new_submobs.append(submob.copy().fade(1))
-        self.submobjects = new_submobs
+        self.set_submobjects(new_submobs)
         return self
-
-    def repeat_submobject(self, submob):
-        return submob.copy()
 
     def interpolate(self, mobject1, mobject2,
                     alpha, path_func=straight_path):
@@ -1082,7 +1100,7 @@ class Mobject(Container):
         Edit points, colors and submobjects to be idential
         to another mobject
         """
-        self.align_data(mobject)
+        self.align_submobjects(mobject)
         for sm1, sm2 in zip(self.get_family(), mobject.get_family()):
             sm1.set_points(sm2.points)
             sm1.interpolate_color(sm1, sm2, 1)

@@ -67,9 +67,9 @@ class SwitchOff(LaggedStartMap):
         if (not isinstance(light, AmbientLight) and not isinstance(light, Spotlight)):
             raise Exception(
                 "Only AmbientLights and Spotlights can be switched off")
-        light.submobjects = light.submobjects[::-1]
+        light.set_submobjects(light.submobjects[::-1])
         LaggedStartMap.__init__(self, FadeOut, light, **kwargs)
-        light.submobjects = light.submobjects[::-1]
+        light.set_submobjects(light.submobjects[::-1])
 
 
 class Lighthouse(SVGMobject):
@@ -182,7 +182,7 @@ class Spotlight(VMobject):
         return self.source_point.get_location()
 
     def init_points(self):
-        self.submobjects = []
+        self.set_submobjects([])
 
         self.add(self.source_point)
 
@@ -493,7 +493,7 @@ class LightSource(VMobject):
         )
         new_ambient_light.apply_matrix(self.rotation_matrix())
         new_ambient_light.move_source_to(self.get_source_point())
-        self.ambient_light.submobjects = new_ambient_light.submobjects
+        self.ambient_light.set_submobjects(new_ambient_light.submobjects)
 
     def get_source_point(self):
         return self.source_point.get_location()

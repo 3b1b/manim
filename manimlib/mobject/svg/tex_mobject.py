@@ -184,14 +184,14 @@ class TexMobject(SingleStringTexMobject):
                 # For cases like empty tex_strings, we want the corresponing
                 # part of the whole TexMobject to be a VectorizedPoint
                 # positioned in the right part of the TexMobject
-                sub_tex_mob.submobjects = [VectorizedPoint()]
+                sub_tex_mob.set_submobjects([VectorizedPoint()])
                 last_submob_index = min(curr_index, len(self.submobjects) - 1)
                 sub_tex_mob.move_to(self.submobjects[last_submob_index], RIGHT)
             else:
-                sub_tex_mob.submobjects = self.submobjects[curr_index:new_index]
+                sub_tex_mob.set_submobjects(self.submobjects[curr_index:new_index])
             new_submobjects.append(sub_tex_mob)
             curr_index = new_index
-        self.submobjects = new_submobjects
+        self.set_submobjects(new_submobjects)
         return self
 
     def get_parts_by_tex(self, tex, substring=True, case_sensitive=True):

@@ -122,7 +122,7 @@ class DecimalNumber(VMobject):
         new_decimal.match_style(self)
 
         old_family = self.get_family()
-        self.submobjects = new_decimal.submobjects
+        self.set_submobjects(new_decimal.submobjects)
         for mob in old_family:
             # Dumb hack...due to how scene handles families
             # of animated mobjects

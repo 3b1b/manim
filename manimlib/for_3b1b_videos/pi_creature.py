@@ -74,7 +74,6 @@ class PiCreature(SVGMobject):
             self.flip()
         if self.start_corner is not None:
             self.to_corner(self.start_corner)
-        self.unlock_triangulation()
 
     def align_data(self, mobject):
         # This ensures that after a transform into a different mode,
@@ -260,10 +259,16 @@ class PiCreature(SVGMobject):
             for alpha_range in (self.right_arm_range, self.left_arm_range)
         ])
 
+    def prepare_for_animation(self):
+        self.unlock_triangulation()
+
+    def cleanup_from_animation(self):
+        self.lock_triangulation()
+
 
 def get_all_pi_creature_modes():
     result = []
-    prefix = "%s_" % PiCreature.CONFIG["file_name_prefix"]
+    prefix = PiCreature.CONFIG["file_name_prefix"] + "_"
     suffix = ".svg"
     for file in os.listdir(PI_CREATURE_DIR):
         if file.startswith(prefix) and file.endswith(suffix):

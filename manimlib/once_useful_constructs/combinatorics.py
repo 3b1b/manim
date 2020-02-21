@@ -153,7 +153,7 @@ class GeneralizedPascalsTriangle(VMobject):
     def fill_with_n_choose_k(self):
         if not hasattr(self, "coords_to_n_choose_k"):
             self.generate_n_choose_k_mobs()
-        self.submobjects = []
+        self.set_submobjects([])
         self.add(*[
             self.coords_to_n_choose_k[n][k]
             for n, k in self.coords

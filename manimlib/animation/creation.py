@@ -137,7 +137,7 @@ class ShowIncreasingSubsets(Animation):
         self.update_submobject_list(index)
 
     def update_submobject_list(self, index):
-        self.mobject.submobjects = self.all_submobs[:index]
+        self.mobject.set_submobjects(self.all_submobs[:index])
 
 
 class ShowSubmobjectsOneByOne(ShowIncreasingSubsets):
@@ -152,9 +152,9 @@ class ShowSubmobjectsOneByOne(ShowIncreasingSubsets):
     def update_submobject_list(self, index):
         # N = len(self.all_submobs)
         if index == 0:
-            self.mobject.submobjects = []
+            self.mobject.set_submobjects([])
         else:
-            self.mobject.submobjects = self.all_submobs[index - 1]
+            self.mobject.set_submobjects(self.all_submobs[index - 1])
 
 
 # TODO, this is broken...

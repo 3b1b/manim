@@ -62,11 +62,11 @@ def fractalification_iteration(vmobject, dimension=1.05, num_inserted_anchors_ra
             new_anchors += [p1] + inserted_points
         new_anchors.append(original_anchors[-1])
         vmobject.set_points_as_corners(new_anchors)
-    vmobject.submobjects = [
+    vmobject.set_submobjects([
         fractalification_iteration(
             submob, dimension, num_inserted_anchors_range)
         for submob in vmobject.submobjects
-    ]
+    ])
     return vmobject
 
 
@@ -87,9 +87,9 @@ class SelfSimilarFractal(VMobject):
     def init_points(self):
         order_n_self = self.get_order_n_self(self.order)
         if self.order == 0:
-            self.submobjects = [order_n_self]
+            self.set_submobjects([order_n_self])
         else:
-            self.submobjects = order_n_self.submobjects
+            self.set_submobjects(order_n_self.submobjects)
         return self
 
     def get_order_n_self(self, order):

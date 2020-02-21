@@ -137,7 +137,7 @@ class PMobject(Mobject):
         arrays = list(map(self.get_merged_array, attrs))
         for attr, array in zip(attrs, arrays):
             setattr(self, attr, array)
-        self.submobjects = []
+        self.set_submobjects([])
         return self
 
     def get_color(self):

@@ -393,16 +393,16 @@ class Scene(Container):
             mobject.unlock_shader_data()
 
     def begin_animations(self, animations):
-        curr_mobjects = self.get_mobject_family_members()
         for animation in animations:
-            # Begin animation
             animation.begin()
             # Anything animated that's not already in the
-            # scene gets added to the scene
+            # scene gets added to the scene.  Note, for
+            # animated mobjects that are in the family of
+            # those on screen, this can result in a restructuring
+            # of the scene.mobjects list, which is usually desired.
             mob = animation.mobject
-            if mob not in curr_mobjects:
+            if mob not in self.mobjects:
                 self.add(mob)
-                curr_mobjects += mob.get_family()
 
     def progress_through_animations(self, animations):
         last_t = 0

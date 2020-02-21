@@ -568,6 +568,10 @@ class VMobject(Mobject):
             self.make_smooth()
         return self
 
+    def flip(self):
+        super().flip()
+        self.refresh_triangulation()
+
     #
     def consider_points_equals(self, p0, p1):
         return np.allclose(
