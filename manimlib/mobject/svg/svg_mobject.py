@@ -324,7 +324,7 @@ class SVGMobject(VMobject):
 class VMobjectFromSVGPathstring(VMobject):
     CONFIG = {
         "long_lines": True,
-        "subdivide_sharp_curves": False,
+        "should_subdivide_sharp_curves": False,
     }
 
     def __init__(self, path_string, **kwargs):
@@ -350,7 +350,7 @@ class VMobjectFromSVGPathstring(VMobject):
             for command, coord_string in self.get_commands_and_coord_strings():
                 new_points = self.string_to_points(command, coord_string)
                 self.handle_command(command, new_points)
-            if self.subdivide_sharp_curves:
+            if self.should_subdivide_sharp_curves:
                 # For a healthy triangulation later
                 self.subdivide_sharp_curves()
             # SVG treats y-coordinate differently
