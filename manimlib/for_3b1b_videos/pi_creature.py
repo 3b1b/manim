@@ -132,8 +132,8 @@ class PiCreature(SVGMobject):
             new_pupil.move_to(pupil)
             pupil.become(new_pupil)
             dot.shift(
-                new_pupil.get_boundary_point(UL) -
-                dot.get_boundary_point(UL)
+                new_pupil.point_from_proportion(3 / 8) -
+                dot.point_from_proportion(3 / 8)
             )
             pupil.add(dot)
 
