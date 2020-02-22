@@ -22,6 +22,7 @@ def restructure_list_to_exclude_certain_family_members(mobject_list, to_remove):
     for the list of mobject_list to be edited to contain other submobjects, but not m1.
     """
     new_list = []
+    to_remove = extract_mobject_family_members(to_remove)
 
     def add_safe_mobjects_from_list(list_to_examine, set_to_remove):
         for mob in list_to_examine:
