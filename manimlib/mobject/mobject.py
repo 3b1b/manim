@@ -137,6 +137,14 @@ class Mobject(Container):
         self.set_submobjects(list_update(mobjects, self.sub_mobjects))
         return self
 
+    def replace_submobject(self, index, new_submob):
+        old_submob = self.submobjects[index]
+        if self in old_submob.parents:
+            old_submob.parents.remove(self)
+        self.submobjects[index] = new_submob
+        self.assemble_family()
+        return self
+
     def set_submobjects(self, submobject_list):
         self.remove(*self.submobjects)
         self.add(*submobject_list)
@@ -1037,7 +1045,7 @@ class Mobject(Container):
 
     def push_self_into_submobjects(self):
         copy = self.deepcopy()
-        copy.submobjects.set_submobjects([])
+        copy.set_submobjects([])
         self.reset_points()
         self.add(copy)
         return self
