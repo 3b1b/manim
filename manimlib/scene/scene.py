@@ -35,6 +35,7 @@ class Scene(Container):
         "end_at_animation_number": None,
         "leave_progress_bars": False,
         "preview": True,
+        "linger_after_completion": True,
     }
 
     def __init__(self, **kwargs):
@@ -62,6 +63,7 @@ class Scene(Container):
         self.zoom_on_scroll = False
         self.quit_interaction = False
 
+        # Much nice to work with deterministic scenes
         if self.random_seed is not None:
             random.seed(self.random_seed)
             np.random.seed(self.random_seed)
@@ -83,14 +85,14 @@ class Scene(Container):
         pass
 
     def construct(self):
+        # Where all the animation happens
         # To be implemented in subclasses
         pass
 
     def tear_down(self):
         self.stop_skipping()
         self.file_writer.finish()
-        self.print_end_message()
-        if self.window:
+        if self.window and self.linger_after_completion:
             self.interact()
 
     def interact(self):
@@ -105,6 +107,7 @@ class Scene(Container):
 
     def embed(self):
         self.stop_skipping()
+        self.linger_after_completion = False
         self.update_frame()
 
         shell = InteractiveShellEmbed()
@@ -116,27 +119,6 @@ class Scene(Container):
 
     def __str__(self):
         return self.__class__.__name__
-
-    def print_end_message(self):
-        print(f"Played {self.num_plays} animations")
-
-    def set_variables_as_attrs(self, *objects, **newly_named_objects):
-        """
-        This method is slightly hacky, making it a little easier
-        for certain methods (typically subroutines of construct)
-        to share local variables.
-        """
-        caller_locals = inspect.currentframe().f_back.f_locals
-        for key, value in list(caller_locals.items()):
-            for o in objects:
-                if value is o:
-                    setattr(self, key, value)
-        for key, value in list(newly_named_objects.items()):
-            setattr(self, key, value)
-        return self
-
-    def get_attrs(self, *keys):
-        return [getattr(self, key) for key in keys]
 
     # Only these methods should touch the camera
     def get_image(self):
@@ -515,6 +497,25 @@ class Scene(Container):
     def show(self):
         self.update_frame(ignore_skipping=True)
         self.get_image().show()
+
+    # Helpers for interactive development
+    def save_state(self):
+        self.saved_state = {
+            "mobjects": self.mobjects,
+            "mobject_states": [
+                mob.copy()
+                for mob in self.mobjects
+            ],
+        }
+
+    def restore(self):
+        if not hasattr(self, "saved_state"):
+            raise Exception("Trying to restore scene without having saved")
+        mobjects = self.saved_state["mobjects"]
+        states = self.saved_state["mobject_states"]
+        for mob, state in zip(mobjects, states):
+            mob.become(state)
+        self.mobjects = mobjects
 
     # Event handling
     def on_mouse_motion(self, point, d_point):
