@@ -783,36 +783,41 @@ class VMobject(Mobject):
     # so as to not have to change the point list
     def pointwise_become_partial(self, vmobject, a, b):
         assert(isinstance(vmobject, VMobject))
-        # Partial curve includes three portions:
-        # - A middle section, which matches the curve exactly
-        # - A start, which is some ending portion of an inner quadratic
-        # - An end, which is the starting portion of a later inner quadratic
+        assert(len(self.points) >= len(vmobject.points))
         if a <= 0 and b >= 1:
-            self.set_points(vmobject.points)
+            self.points[:] = vmobject.points
             return self
         bezier_tuple = vmobject.get_bezier_tuples()
         num_curves = len(bezier_tuple)
 
+        # Partial curve includes three portions:
+        # - A middle section, which matches the curve exactly
+        # - A start, which is some ending portion of an inner quadratic
+        # - An end, which is the starting portion of a later inner quadratic
+
         lower_index, lower_residue = integer_interpolate(0, num_curves, a)
         upper_index, upper_residue = integer_interpolate(0, num_curves, b)
 
-        self.clear_points()
+        new_point_list = []
         if num_curves == 0:
+            self.points[:] = 0
             return self
         if lower_index == upper_index:
-            self.append_points(partial_bezier_points(
+            new_point_list.append(partial_bezier_points(
                 bezier_tuple[lower_index], lower_residue, upper_residue
             ))
         else:
-            self.append_points(partial_bezier_points(
+            new_point_list.append(partial_bezier_points(
                 bezier_tuple[lower_index], lower_residue, 1
             ))
             for tup in bezier_tuple[lower_index + 1:upper_index]:
-                self.append_points(tup)
-            self.append_points(partial_bezier_points(
+                new_point_list.append(tup)
+            new_point_list.append(partial_bezier_points(
                 bezier_tuple[upper_index], 0, upper_residue
             ))
-        self.refresh_triangulation()
+        new_points = np.vstack(new_point_list)
+        self.points[:len(new_points)] = new_points
+        self.points[len(new_points):] = new_points[-1]
         return self
 
     def get_subcurve(self, a, b):
