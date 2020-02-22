@@ -6,7 +6,8 @@ from manimlib.imports import *
 def fix_percent(sym):
     # Really need to make this unneeded...
     new_sym = sym.copy()
-    n = 222
+    path_lengths = [len(path) for path in sym.get_subpaths()]
+    n = sum(path_lengths[:2])
     p1 = sym.points[:n]
     p2 = sym.points[n:]
     sym.points = p1
@@ -118,3 +119,55 @@ def get_random_card(height=1, **kwargs):
     cards = DeckOfCards()
     cards.set_height(height)
     return get_random_process(cards, **kwargs)
+
+
+def get_prob_positive_experience_label():
+    label = TexMobject(
+        "P", "(", "00000", ")",
+    )
+
+    pe = TextMobject("Positive\\\\experience")
+    pe.set_color(GREEN)
+    pe.replace(label[2], dim_to_match=0)
+    label.replace_submobject(2, pe)
+    VGroup(label[1], label[3]).match_height(
+        pe, stretch=True, about_edge=DOWN,
+    )
+    return label
+
+
+def get_beta_dist_axes(y_max=20, y_unit=2, **kwargs):
+    config = {
+        "x_min": 0,
+        "x_max": 1,
+        "x_axis_config": {
+            "unit_size": 0.1,
+            "tick_frequency": 0.1,
+            "include_tip": False,
+        },
+        "y_min": 0,
+        "y_max": y_max,
+        "y_axis_config": {
+            "unit_size": 1,
+            "tick_frequency": y_unit,
+            "include_tip": False,
+        },
+    }
+    result = Axes(**config)
+    origin = result.c2p(0, 0)
+    kw = {
+        "about_point": origin,
+        "stretch": True,
+    }
+    result.x_axis.set_width(11, **kw)
+    result.y_axis.set_height(6, **kw)
+
+    x_vals = np.arange(0, 1, 0.2) + 0.2
+    result.x_axis.add_numbers(
+        *x_vals,
+        number_config={"num_decimal_places": 1}
+    )
+
+    result.to_corner(DR, LARGE_BUFF)
+
+    return result

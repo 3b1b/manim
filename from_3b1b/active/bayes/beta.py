@@ -1,6 +1,8 @@
 from manimlib.imports import *
 from from_3b1b.active.bayes.beta_helpers import *
 
+import scipy.stats
+
 OUTPUT_DIRECTORY = "bayes/beta"
 
 
@@ -113,6 +115,8 @@ class ShowThreeCases(Scene):
     def construct(self):
         titles = self.get_titles()
         reviews = self.get_reviews(titles)
+        for review in reviews:
+            review.match_x(reviews[2])
 
         # Introduce everything
         self.play(LaggedStartMap(
@@ -127,13 +131,14 @@ class ShowThreeCases(Scene):
             )
             for review in reviews
         ], lag_ratio=0.1))
+        self.add(reviews)
         self.wait()
 
         self.play(ShowCreationThenFadeAround(reviews[2]))
         self.wait()
 
         # Suspicious of 100%
-        randy = Randolph(mode="sassy")
+        randy = Randolph()
         randy.flip()
         randy.set_height(2)
         randy.next_to(
@@ -141,14 +146,120 @@ class ShowThreeCases(Scene):
             aligned_edge=UP,
         )
         randy.look_at(reviews[0])
-        self.play(FadeInFromDown(randy))
+        self.play(FadeIn(randy))
+        self.play(randy.change, "sassy")
         self.play(Blink(randy))
         self.wait()
         self.play(FadeOut(randy))
 
         # Low number means it could be a fluke.
+        review = reviews[0]
 
-        # self.embed()
+        review.generate_target()
+        review.target.scale(2)
+        review.target.arrange(RIGHT)
+        review.target.move_to(review)
+
+        self.play(MoveToTarget(review))
+
+        alt_negs = [1, 2, 1, 0]
+        alt_reviews = VGroup()
+        for k in alt_negs:
+            alt_reviews.add(self.get_plusses_and_minuses(titles[0], 1, 10, k))
+        for ar in alt_reviews:
+            for m1, m2 in zip(ar, review):
+                m1.replace(m2)
+
+        alt_percents = VGroup(*[
+            TexMobject(str(10 * (10 - k)) + "\\%")
+            for k in alt_negs
+        ])
+        hundo = titles[0][0]
+        for ap in alt_percents:
+            fix_percent(ap.family_members_with_points()[-1])
+            ap.match_style(hundo)
+            ap.match_height(hundo)
+            ap.move_to(hundo, RIGHT)
+
+        last_review = review
+        last_percent = hundo
+        for ar, ap in zip(alt_reviews, alt_percents):
+            self.play(
+                FadeInFrom(ar, 0.5 * DOWN, lag_ratio=0.2),
+                FadeOut(last_review),
+                FadeInFrom(ap, 0.5 * DOWN),
+                FadeOutAndShift(last_percent, 0.5 * UP),
+                run_time=1.5
+            )
+            last_review = ar
+            last_percent = ap
+        self.remove(last_review, last_percent)
+        self.add(titles, *reviews)
+
+        # How do you think about the tradeoff?
+        p1 = titles[1][0]
+        p2 = titles[2][0]
+        nums = VGroup(p1, p2)
+        lower_reviews = reviews[1:]
+        lower_reviews.generate_target()
+        lower_reviews.target.arrange(LEFT, buff=1.5)
+        lower_reviews.target.center()
+        nums.generate_target()
+        for nt, review in zip(nums.target, lower_reviews.target):
+            nt.next_to(review, UP, MED_LARGE_BUFF)
+
+        nums.target[0].match_y(nums.target[1])
+
+        self.clear()
+        self.play(
+            MoveToTarget(lower_reviews),
+            MoveToTarget(nums),
+            FadeOut(titles[1][1:]),
+            FadeOut(titles[2][1:]),
+            FadeOut(titles[0]),
+            FadeOut(reviews[0]),
+            run_time=2,
+        )
+
+        greater_than = TexMobject(">")
+        greater_than.scale(2)
+        greater_than.move_to(midpoint(
+            reviews[2].get_right(),
+            reviews[1].get_left(),
+        ))
+        less_than = greater_than.copy().flip()
+        less_than.match_height(nums[0][0])
+        less_than.match_y(nums, DOWN)
+
+        nums.generate_target()
+        nums.target[1].next_to(less_than, LEFT, MED_LARGE_BUFF)
+        nums.target[0].next_to(less_than, RIGHT, MED_LARGE_BUFF)
+
+        squares = VGroup(*[
+            SurroundingRectangle(
+                submob, buff=0.01,
+                stroke_color=LIGHT_GREY,
+                stroke_width=1,
+            )
+            for submob in reviews[2]
+        ])
+        squares.shuffle()
+        self.play(
+            LaggedStartMap(
+                ShowCreationThenFadeOut, squares,
+                lag_ratio=0.5 / len(squares),
+                run_time=3,
+            ),
+            Write(greater_than),
+        )
+        self.wait()
+        self.play(
+            MoveToTarget(nums),
+            TransformFromCopy(
+                greater_than, less_than,
+            )
+        )
+        self.wait()
 
     def get_titles(self):
         titles = VGroup(
@@ -206,6 +317,369 @@ class ShowThreeCases(Scene):
             check.become(mob)
 
         return checks
+
+
+class WhatsTheModel(Scene):
+    def construct(self):
+        self.add_questions()
+        self.introduce_buyer_and_seller()
+
+        for x in range(3):
+            self.play(*self.experience_animations(self.seller, self.buyer))
+        self.wait()
+
+        self.add_probability_label()
+        self.bring_up_goal()
+
+    def add_questions(self):
+        questions = VGroup(
+            TextMobject("What's the model?"),
+            TextMobject("What are you optimizing?"),
+        )
+        for question, vect in zip(questions, [LEFT, RIGHT]):
+            question.move_to(vect * FRAME_WIDTH / 4)
+        questions.arrange(DOWN, buff=LARGE_BUFF)
+        questions.scale(1.5)
+
+        # Intro questions
+        self.play(FadeInFrom(questions[0]))
+        self.play(FadeInFrom(questions[1], UP))
+        self.wait()
+        questions[1].save_state()
+
+        self.questions = questions
+
+    def introduce_buyer_and_seller(self):
+        questions = self.questions
+
+        seller = Randolph(mode="coin_flip_1")
+        seller.to_edge(LEFT)
+        seller.label = TextMobject("Seller")
+
+        buyer = Mortimer()
+        buyer.to_edge(RIGHT)
+        buyer.label = TextMobject("Buyer")
+
+        VGroup(buyer, seller).shift(DOWN)
+
+        labels = VGroup()
+        for pi in seller, buyer:
+            pi.set_height(2)
+            pi.label.scale(1.5)
+            pi.label.next_to(pi, DOWN, MED_LARGE_BUFF)
+            labels.add(pi.label)
+
+        self.play(
+            LaggedStartMap(
+                FadeInFromDown, VGroup(seller, buyer, *labels),
+                lag_ratio=0.2
+            ),
+            questions[0].to_edge, UP,
+            questions[1].set_opacity, 0.5,
+            questions[1].scale, 0.25,
+            questions[1].to_corner, UR,
+        )
+        self.wait()
+
+        self.buyer = buyer
+        self.seller = seller
+
+    def add_probability_label(self):
+        seller = self.seller
+        buyer = self.buyer
+
+        label = get_prob_positive_experience_label()
+        label.add(TexMobject("=").next_to(label, RIGHT))
+        rhs = DecimalNumber(0.75)
+        rhs.next_to(label, RIGHT)
+        rhs.align_to(label[0], DOWN)
+        label.add(rhs)
+        label.scale(1.5)
+        label.next_to(seller, UP, MED_LARGE_BUFF, aligned_edge=LEFT)
+
+        rhs.set_color(YELLOW)
+        brace = Brace(rhs, UP)
+        success_rate = brace.get_text("Success rate")[0]
+        s_sym = brace.get_tex("s").scale(1.5, about_edge=DOWN)
+        success_rate.match_color(rhs)
+        s_sym.match_color(rhs)
+
+        self.add(label)
+
+        self.play(
+            GrowFromCenter(brace),
+            FadeInFrom(success_rate, 0.5 * DOWN)
+        )
+        self.wait()
+        self.play(
+            TransformFromCopy(success_rate[0], s_sym),
+            FadeOutAndShift(success_rate, 0.1 * RIGHT, lag_ratio=0.1),
+        )
+        for x in range(2):
+            self.play(*self.experience_animations(seller, buyer, arc=30 * DEGREES))
+        self.wait()
+
+        grey_box = SurroundingRectangle(rhs, buff=SMALL_BUFF)
+        grey_box.set_stroke(GREY_E, 0.5)
+        grey_box.set_fill(GREY_D)
+        lil_q_marks = TexMobject("???")
+        lil_q_marks.scale(0.5)
+        lil_q_marks.next_to(buyer, UP)
+
+        self.play(
+            FadeOutAndShift(rhs, 0.5 * DOWN),
+            FadeInFrom(grey_box, 0.5 * UP),
+            FadeInFrom(lil_q_marks, DOWN),
+            buyer.change, "confused", grey_box,
+        )
+        rhs.set_opacity(0)
+        for x in range(2):
+            self.play(*self.experience_animations(seller, buyer, arc=30 * DEGREES))
+        self.play(buyer.change, "confused", lil_q_marks)
+        self.play(Blink(buyer))
+
+        self.prob_group = VGroup(
+            label, grey_box, brace, s_sym,
+        )
+        self.buyer_q_marks = lil_q_marks
+
+    def bring_up_goal(self):
+        prob_group = self.prob_group
+        questions = self.questions
+        questions.generate_target()
+        questions.target[1].replace(questions[0], dim_to_match=1)
+        questions.target[1].match_style(questions[0])
+        questions.target[0].replace(questions[1], dim_to_match=1)
+        questions.target[0].match_style(questions[1])
+
+        prob_group.generate_target()
+        prob_group.target.scale(0.5)
+        prob_group.target.next_to(self.seller, RIGHT)
+
+        self.play(
+            FadeOut(self.buyer_q_marks),
+            self.buyer.change, "pondering", questions[0],
+            self.seller.change, "pondering", questions[0],
+            MoveToTarget(prob_group),
+            MoveToTarget(questions),
+        )
+        self.play(self.seller.change, "coin_flip_1")
+        for x in range(3):
+            self.play(*self.experience_animations(self.seller, self.buyer))
+        self.wait()
+
+    #
+    def experience_animations(self, seller, buyer, arc=-30 * DEGREES):
+        positive = (random.random() < 0.75)
+        words = TextMobject(
+            "Positive\\\\experience"
+            if positive else
+            "Negative\\\\experience"
+        )
+        words.set_color(GREEN if positive else RED)
+        if positive:
+            new_mode = random.choice([
+                "hooray",
+                "happy",
+            ])
+        else:
+            new_mode = random.choice([
+                "tired",
+                "angry",
+                "sad",
+            ])
+
+        words.move_to(seller.get_corner(UR))
+        result = [
+            ApplyMethod(
+                words.move_to, buyer.get_corner(UL),
+                path_arc=arc,
+                run_time=2
+            ),
+            VFadeInThenOut(words, run_time=2),
+            ApplyMethod(
+                buyer.change, new_mode, seller.eyes,
+                run_time=2,
+                rate_func=squish_rate_func(smooth, 0.5, 1),
+            ),
+            ApplyMethod(
+                seller.change, "coin_flip_2", buyer.eyes,
+                rate_func=there_and_back,
+            ),
+        ]
+        return result
+
+
+class IsSellerOne100(Scene):
+    def construct(self):
+        self.add_review()
+        self.show_probability()
+        self.show_random_numbers()
+
+    def add_review(self):
+        reviews = VGroup(*[TexMobject("\\checkmark") for x in range(10)])
+        reviews.arrange(RIGHT)
+        reviews.scale(2)
+        reviews.set_color(GREEN)
+        reviews.next_to(ORIGIN, UP)
+
+        blanks = VGroup(*[
+            Line(LEFT, RIGHT).match_width(rev).next_to(rev, DOWN, SMALL_BUFF)
+            for rev in reviews
+        ])
+        blanks.shift(0.25 * reviews[0].get_width() * LEFT)
+
+        label = TextMobject(
+            " out of ",
+        )
+        tens = VGroup(*[Integer(10) for x in range(2)])
+        tens[0].next_to(label, LEFT)
+        tens[1].next_to(label, RIGHT)
+        tens.set_color(GREEN)
+        label.add(tens)
+        label.scale(2)
+        label.next_to(reviews, DOWN, LARGE_BUFF)
+
+        self.add(label)
+        self.add(blanks)
+        tens[0].to_count = reviews
+        self.play(
+            ShowIncreasingSubsets(reviews, int_func=np.ceil),
+            UpdateFromAlphaFunc(
+                tens[0],
+                lambda m, a: m.set_color(
+                    interpolate_color(RED, GREEN, a)
+                ).set_value(len(m.to_count))
+            ),
+            run_time=2,
+            rate_func=bezier([0, 0, 1, 1]),
+        )
+        self.wait()
+
+        self.review_group = VGroup(reviews, blanks, label)
+
+    def show_probability(self):
+        review_group = self.review_group
+
+        prob_label = get_prob_positive_experience_label()
+        prob_label.add(TexMobject("=").next_to(prob_label, RIGHT))
+        rhs = DecimalNumber(1)
+        rhs.next_to(prob_label, RIGHT)
+        rhs.set_color(YELLOW)
+        prob_label.add(rhs)
+        prob_label.scale(2)
+        prob_label.to_corner(UL)
+
+        q_mark = TexMobject("?")
+        q_mark.set_color(YELLOW)
+        q_mark.match_height(rhs)
+        q_mark.reference = rhs
+        q_mark.add_updater(lambda m: m.next_to(m.reference, RIGHT))
+
+        rhs_rect = SurroundingRectangle(rhs, buff=0.2)
+        rhs_rect.set_color(RED)
+
+        not_necessarily = TextMobject("Not necessarily!")
+        not_necessarily.set_color(RED)
+        not_necessarily.scale(1.5)
+        not_necessarily.next_to(prob_label, DOWN, 1.5)
+        arrow = Arrow(
+            not_necessarily.get_top(),
+            rhs_rect.get_corner(DL),
+            buff=MED_SMALL_BUFF,
+        )
+        arrow.set_color(RED)
+
+        rhs.set_value(0)
+        self.play(
+            ChangeDecimalToValue(rhs, 1),
+            UpdateFromAlphaFunc(
+                prob_label,
+                lambda m, a: m.set_opacity(a),
+            ),
+            FadeIn(q_mark),
+        )
+        self.wait()
+        self.play(
+            ShowCreation(rhs_rect),
+            Write(not_necessarily),
+            ShowCreation(arrow),
+            review_group.to_edge, DOWN,
+            run_time=1,
+        )
+        self.wait()
+        self.play(
+            ChangeDecimalToValue(rhs, 0.95),
+            FadeOut(rhs_rect),
+            FadeOut(arrow),
+            FadeOut(not_necessarily),
+        )
+        self.wait()
+
+        self.prob_label_group = VGroup(
+            prob_label, rhs, q_mark,
+        )
+
+    def show_random_numbers(self):
+        prob_label_group = self.prob_label_group
+
+        random.seed(2)
+        rows = VGroup(*[
+            VGroup(*[
+                Integer(
+                    random.randint(0, 99)
+                ).move_to(0.85 * x * RIGHT)
+                for x in range(10)
+            ])
+            for y in range(10 * 2)
+        ])
+        rows.arrange_in_grid(n_cols=2, buff=MED_LARGE_BUFF)
+        rows[:10].shift(LEFT)
+        rows.set_height(5.5)
+        rows.center().to_edge(DOWN)
+
+        lt_95 = VGroup(*[
+            mob
+            for row in rows
+            for mob in row
+            if mob.get_value() < 95
+        ])
+
+        row_rects = VGroup(*[
+            SurroundingRectangle(row)
+            for row in rows
+            if all([m.get_value() < 95 for m in row])
+        ])
+        row_rects.set_stroke(YELLOW, 1)
+
+        self.play(
+            LaggedStartMap(
+                ShowIncreasingSubsets, rows,
+                run_time=3,
+                lag_ratio=0.25,
+            ),
+            FadeOutAndShift(self.review_group, DOWN),
+            prob_label_group.set_height, 0.75,
+            prob_label_group.to_corner, UL,
+        )
+        self.wait()
+        self.play(
+            lt_95.set_color, BLUE,
+            lt_95.set_stroke, GREEN, 1, {"background": True},
+        )
+        self.wait()
+        self.play(LaggedStartMap(ShowCreation, row_rects))
+        self.wait()
+
+
+class LookAtAllPossibleSuccessRates(Scene):
+    def construct(self):
+        axes = get_beta_dist_axes()
+
+        # Add a seller
+        # Point out y ais
+
+        self.embed()
 
 
 class AskAboutUnknownProbabilities(Scene):
