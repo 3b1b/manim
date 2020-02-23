@@ -106,6 +106,10 @@ class Scene(Container):
             self.window.destroy()
 
     def embed(self):
+        if not self.preview:
+            # If the scene is just being
+            # written, ignore embed calls
+            return
         self.stop_skipping()
         self.linger_after_completion = False
         self.update_frame()
