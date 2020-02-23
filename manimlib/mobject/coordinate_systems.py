@@ -108,21 +108,18 @@ class CoordinateSystem():
         return graph
 
     def input_to_graph_point(self, x, graph):
-        if hasattr(graph, "underlying_function"):
-            return self.coords_to_point(x, graph.underlying_function(x))
+        alpha = binary_search(
+            function=lambda a: self.x_axis.p2n(
+                graph.point_from_proportion(a)
+            ),
+            target=x,
+            lower_bound=self.x_min,
+            upper_bound=self.x_max,
+        )
+        if alpha is not None:
+            return graph.point_from_proportion(alpha)
         else:
-            alpha = binary_search(
-                function=lambda a: self.point_to_coords(
-                    graph.point_from_proportion(a)
-                )[0],
-                target=x,
-                lower_bound=self.x_min,
-                upper_bound=self.x_max,
-            )
-            if alpha is not None:
-                return graph.point_from_proportion(alpha)
-            else:
-                return None
+            return None
 
 
 class Axes(VGroup, CoordinateSystem):
