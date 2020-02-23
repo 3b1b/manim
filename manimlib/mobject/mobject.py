@@ -134,7 +134,7 @@ class Mobject(Container):
         return self
 
     def add_to_back(self, *mobjects):
-        self.set_submobjects(list_update(mobjects, self.sub_mobjects))
+        self.set_submobjects(list_update(mobjects, self.submobjects))
         return self
 
     def replace_submobject(self, index, new_submob):
