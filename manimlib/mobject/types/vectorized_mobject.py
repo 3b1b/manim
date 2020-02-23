@@ -129,6 +129,11 @@ class VMobject(Mobject):
         return self
 
     def set_fill(self, color=None, opacity=None, family=True):
+        # Assume that if it was opacity 0, and set_fill
+        # is called, the intent is for it to now be 1.
+        if opacity is None:
+            opacity = 1
+
         if family:
             for sm in self.submobjects:
                 sm.set_fill(color, opacity, family)
