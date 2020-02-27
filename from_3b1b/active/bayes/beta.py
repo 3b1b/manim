@@ -1097,6 +1097,7 @@ class ComingUpWrapper(Scene):
 class PreviewBeta(Scene):
     def construct(self):
         axes = get_beta_dist_axes(label_y=True)
+        axes.y_axis.remove(axes.y_axis.numbers)
         marks = get_plusses_and_minuses(p=0.75)
         marks.next_to(axes.y_axis.get_top(), DR, buff=0.75)
 
@@ -1409,6 +1410,7 @@ class SimulationsOf50Reviews(Scene):
             "height": 5,
             "bar_colors": [BLUE],
         },
+        "random_seed": 1,
     }
 
     def construct(self):
@@ -1456,7 +1458,8 @@ class SimulationsOf50Reviews(Scene):
                 for i in range(len(data)):
                     data[i] += (counts == i).sum()
             histogram.bars.become(histogram.get_bars(data))
-            histogram.bars[48].set_color(YELLOW)
+            histogram.bars.set_fill(GREY_C)
+            histogram.bars[48].set_fill(GREEN)
             arrow.next_to(histogram.bars[num_positive], UP, SMALL_BUFF)
 
         self.add(arrow, total_data_label)
@@ -1508,8 +1511,8 @@ class SimulationsOf50Reviews(Scene):
         histogram.to_edge(DOWN)
         return histogram
 
-    def get_row(self):
-        row = get_random_checks_and_crosses(50, self.s)
+    def get_row(self, n=50):
+        row = get_random_checks_and_crosses(n, self.s)
         row.to_edge(UP)
         return row
 
@@ -1534,33 +1537,24 @@ class ShowBinomialFormula(SimulationsOf50Reviews):
     }
 
     def construct(self):
+        # Add histogram
         dist = scipy.stats.binom(50, self.s)
         data = np.array([
             dist.pmf(x)
             for x in range(0, 51)
         ])
         histogram = self.get_histogram(data)
-        histogram.bars[48].set_color(YELLOW)
+        histogram.bars.set_fill(GREY_C)
+        histogram.bars[48].set_fill(GREEN)
         self.add(histogram)
 
         row = self.get_row()
-        count = self.get_count(row)
-        self.add(row, count)
+        self.add(row)
 
         # Formula
         prob_label = get_prob_review_label(48, 2)
         eq = TexMobject("=")
-        formula = TexMobject(
-            "{50 \\choose 48}",
-            "(0.95)", "^{48}",
-            "(1 - 0.95)", "^{2}",
-        )
-        formula[0][-3:-1].set_color(GREEN)
-        formula[2].set_color(GREEN)
-        formula.set_color_by_tex_to_color_map({
-            "2": RED,
-            "0.95": YELLOW,
-        })
+        formula = get_binomial_formula(50, 48, self.s)
 
         equation = VGroup(
             prob_label,
@@ -1591,6 +1585,841 @@ class ShowBinomialFormula(SimulationsOf50Reviews):
         )
         self.wait()
 
-        # Talk through n choose k term
+        self.explain_n_choose_k(row, formula)
 
+        # Circle formula parts
+        rect1 = SurroundingRectangle(formula[4:8])
+        rect2 = SurroundingRectangle(formula[8:])
+        rect1.set_stroke(GREEN, 2)
+        rect2.set_stroke(RED, 2)
+
+        for rect in rect1, rect2:
+            self.play(ShowCreation(rect))
+            self.wait()
+            self.play(FadeOut(rect))
+
+        # Show numerical answer
+        eq2 = TexMobject("=")
+        value = DecimalNumber(dist.pmf(48), num_decimal_places=5)
+        rhs = VGroup(eq2, value)
+        rhs.arrange(RIGHT)
+        rhs.match_y(eq)
+        rhs.to_edge(RIGHT, buff=MED_SMALL_BUFF)
+        self.play(
+            FadeInFrom(value, LEFT),
+            FadeIn(eq2),
+            equation.next_to, eq2, LEFT,
+        )
+        self.wait()
+
+        # Show alternate values of k
+        n = 50
+        for k in it.chain(range(47, 42, -1), range(43, 51), [49, 48]):
+            new_prob_label = get_prob_review_label(k, n - k)
+            new_prob_label.replace(prob_label)
+            prob_label.become(new_prob_label)
+            new_formula = get_binomial_formula(n, k, self.s)
+            new_formula.replace(formula)
+            formula.set_submobjects(new_formula)
+
+            value.set_value(dist.pmf(k))
+            histogram.bars.set_fill(LIGHT_GREY)
+            histogram.bars[k].set_fill(GREEN)
+            arrow.next_to(histogram.bars[k], UP, SMALL_BUFF)
+
+            new_row = get_checks_and_crosses((n - k) * [False] + k * [True])
+            new_row.replace(row)
+            row.become(new_row)
+            self.wait(0.5)
+
+        # Name it as the Binomial distribution
+        long_equation = VGroup(prob_label, eq, formula, eq2, value)
+        bin_name = TextMobject("Binomial", " Distribution")
+        bin_name.scale(1.5)
+        bin_name.next_to(histogram, UP, MED_LARGE_BUFF)
+
+        underline = Underline(bin_name[0])
+        underline.set_stroke(PINK, 2)
+        nck_rect = SurroundingRectangle(formula[:4])
+        nck_rect.set_stroke(PINK, 2)
+
+        self.play(
+            long_equation.next_to, self.slots, DOWN, MED_LARGE_BUFF,
+            long_equation.to_edge, RIGHT,
+            FadeInFrom(bin_name, DOWN),
+        )
+        self.wait()
+        self.play(ShowCreationThenDestruction(underline))
+        self.wait()
+        bools = [True] * 50
+        bools[random.randint(0, 49)] = False
+        bools[random.randint(0, 49)] = False
+        row.become(get_checks_and_crosses(bools).replace(row))
+        self.play(ShowIncreasingSubsets(row, run_time=4))
+        self.wait()
+
+        # Show likelihood and posterior labels
+        likelihood_label = TexMobject(
+            "P(",
+            "\\text{data}", "\\,|\\,",
+            "\\text{success rate}",
+            ")",
+        )
+        posterior_label = TexMobject(
+            "P(",
+            "\\text{success rate}",
+            "\\,|\\,",
+            "\\text{data}",
+            ")",
+        )
+        for label in (likelihood_label, posterior_label):
+            label.set_color_by_tex_to_color_map({
+                "data": GREEN,
+                "success": YELLOW,
+            })
+
+        likelihood_label.next_to(
+            prob_label, DOWN, LARGE_BUFF, aligned_edge=LEFT
+        )
+
+        right_arrow = Vector(RIGHT)
+        right_arrow.next_to(likelihood_label, RIGHT)
+        ra_label = TextMobject("But we want")
+        ra_label.match_width(right_arrow)
+        ra_label.next_to(right_arrow, UP, SMALL_BUFF)
+        posterior_label.next_to(right_arrow, RIGHT)
+
+        self.play(
+            FadeInFrom(likelihood_label, UP),
+            bin_name.set_height, 0.4,
+            bin_name.set_y, histogram.axes.c2p(0, .25)[1]
+        )
+        self.wait()
+        self.play(
+            GrowArrow(right_arrow),
+            FadeInFrom(ra_label, 0.5 * LEFT),
+        )
+        anims = []
+        for i, j in enumerate([0, 3, 2, 1, 4]):
+            anims.append(
+                TransformFromCopy(
+                    likelihood_label[i],
+                    posterior_label[j],
+                    path_arc=-45 * DEGREES,
+                    run_time=2,
+                )
+            )
+        self.play(*anims)
+        self.add(posterior_label)
+        self.wait()
+
+        # Prepare for new plot
+        histogram.add(bin_name)
+        always(arrow.next_to, histogram.bars[48], UP, SMALL_BUFF)
+        self.play(
+            FadeOut(likelihood_label),
+            FadeOut(posterior_label),
+            FadeOut(right_arrow),
+            FadeOut(ra_label),
+            FadeOutAndShift(row, UP),
+            FadeOutAndShift(self.slots, UP),
+            histogram.scale, 0.7,
+            histogram.to_edge, UP,
+            arrow.scale, 0.5,
+            arrow.set_stroke, None, 4,
+            long_equation.center,
+            run_time=1.5,
+        )
+
+        # x_labels = histogram.axes.x_labels
+        # underline = Underline(x_labels)
+        # underline.set_stroke(GREEN, 3)
+        # self.play(
+        #     LaggedStartMap(
+        #         ApplyFunction, x_labels,
+        #         lambda mob: (
+        #             lambda m: m.scale(1.5).set_color(GREEN),
+        #             mob,
+        #         ),
+        #         rate_func=there_and_back,
+        #     ),
+        #     ShowCreationThenDestruction(underline),
+        # )
+        # num_checks = TexMobject("\\# " + CMARK_TEX)
+        # num_checks.set_color(GREEN)
+        # num_checks.next_to(
+        #     x_labels, RIGHT,
+        #     MED_LARGE_BUFF,
+        #     aligned_edge=DOWN,
+        # )
+        # self.play(Write(num_checks))
+        # self.wait()
+
+        low_axes = get_beta_dist_axes(y_max=0.3, y_unit=0.1, label_y=False)
+        low_axes.y_axis.set_height(
+            2,
+            about_point=low_axes.c2p(0, 0),
+            stretch=True,
+        )
+        low_axes.to_edge(DOWN)
+        low_axes.x_axis.numbers.set_color(YELLOW)
+        y_label_copies = histogram.axes.y_labels.copy()
+        y_label_copies.set_height(0.6 * low_axes.get_height())
+        y_label_copies.next_to(low_axes, LEFT, 0, aligned_edge=UP)
+        y_label_copies.shift(SMALL_BUFF * UP)
+        low_axes.y_axis.add(y_label_copies)
+        low_axes.y_axis.set_opacity(0)
+
+        # Show alternate values of s
+        s_tracker = ValueTracker(self.s)
+
+        s_tip = ArrowTip(start_angle=-90 * DEGREES)
+        s_tip.set_color(YELLOW)
+        s_tip.axis = low_axes.x_axis
+        s_tip.st = s_tracker
+        s_tip.add_updater(
+            lambda m: m.next_to(m.axis.n2p(m.st.get_value()), UP, buff=0)
+        )
+
+        pl_decimal = DecimalNumber(self.s)
+        pl_decimal.set_color(YELLOW)
+        pl_decimal.replace(prob_label[-2][2:])
+        prob_label[-2][2:].set_opacity(0)
+
+        s_label = VGroup(prob_label[-2][:2], pl_decimal).copy()
+        sl_rect = SurroundingRectangle(s_label)
+        sl_rect.set_stroke(YELLOW, 2)
+
+        self.add(pl_decimal)
+        self.play(
+            ShowCreation(sl_rect),
+            Write(low_axes),
+        )
+        self.play(
+            s_label.next_to, s_tip, UP, 0.2, ORIGIN, s_label[1],
+            ReplacementTransform(sl_rect, s_tip)
+        )
+        always(s_label.next_to, s_tip, UP, 0.2, ORIGIN, s_label[1])
+
+        decimals = VGroup(pl_decimal, s_label[1], formula[5], formula[9])
+        decimals.s_tracker = s_tracker
+
+        histogram.s_tracker = s_tracker
+        histogram.n = n
+        histogram.rhs_value = value
+
+        def update_decimals(decs):
+            for dec in decs:
+                dec.set_value(decs.s_tracker.get_value())
+
+        def update_histogram(hist):
+            new_dist = scipy.stats.binom(hist.n, hist.s_tracker.get_value())
+            new_data = np.array([
+                new_dist.pmf(x)
+                for x in range(0, 51)
+            ])
+            new_bars = hist.get_bars(new_data)
+            new_bars.match_style(hist.bars)
+            hist.bars.become(new_bars)
+            hist.rhs_value.set_value(new_dist.pmf(48))
+
+        self.add(histogram)
+        self.add(decimals)
+        for s in [0.95, 0.5, 0.99, 0.9]:
+            self.play(
+                s_tracker.set_value, s,
+                UpdateFromFunc(decimals, update_decimals),
+                UpdateFromFunc(histogram, update_histogram),
+                UpdateFromFunc(value, lambda m: m),
+                UpdateFromFunc(s_label, lambda m: m.update),
+                run_time=5,
+            )
+            self.wait()
+
+        # Plot
+        def func(x):
+            return scipy.stats.binom(50, x).pmf(48) + 1e-5
+        graph = low_axes.get_graph(func, step_size=0.05)
+        graph.set_stroke(BLUE, 3)
+
+        v_line = Line(DOWN, UP)
+        v_line.axes = low_axes
+        v_line.st = s_tracker
+        v_line.graph = graph
+        v_line.add_updater(
+            lambda m: m.put_start_and_end_on(
+                m.axes.c2p(m.st.get_value(), 0),
+                m.axes.input_to_graph_point(
+                    m.st.get_value(),
+                    m.graph,
+                ),
+            )
+        )
+        v_line.set_stroke(GREEN, 2)
+        dot = Dot()
+        dot.line = v_line
+        dot.set_height(0.05)
+        dot.add_updater(lambda m: m.move_to(m.line.get_end()))
+
+        self.play(
+            ApplyMethod(
+                histogram.bars[48].stretch, 2, 1, {"about_edge": DOWN},
+                rate_func=there_and_back,
+                run_time=2,
+            ),
+        )
+        self.wait()
+        self.play(low_axes.y_axis.set_opacity, 1)
+        self.play(
+            FadeIn(graph),
+            FadeIn(v_line),
+            FadeIn(dot),
+            FadeOut(s_label),
+            FadeOut(s_tip),
+        )
+
+        self.add(histogram)
+        decimals.remove(decimals[1])
+        for s in [0.9, 0.96, 1, 0.8, 0.96]:
+            self.play(
+                s_tracker.set_value, s,
+                UpdateFromFunc(decimals, update_decimals),
+                UpdateFromFunc(histogram, update_histogram),
+                UpdateFromFunc(value, lambda m: m),
+                run_time=5,
+            )
+            self.wait()
+
+    def explain_n_choose_k(self, row, formula):
+        row.add_updater(lambda m: m)
+
+        brace = Brace(formula[:4], UP, buff=SMALL_BUFF)
+        words = brace.get_text("``50 choose 48''")
+
+        slots = self.slots = VGroup()
+        for sym in row:
+            line = Underline(sym)
+            line.scale(0.9)
+            slots.add(line)
+
+        formula[1].counted = slots
+        k_rect = SurroundingRectangle(formula[2])
+        k_rect.set_stroke(GREEN, 2)
+
+        checks = VGroup()
+        for sym in row:
+            if sym.positive:
+                checks.add(sym)
+
+        self.play(
+            GrowFromCenter(brace),
+            FadeInFromDown(words),
+        )
+        self.wait()
+        self.play(FadeOut(words))
+        formula.save_state()
+        self.play(
+            ShowIncreasingSubsets(slots),
+            UpdateFromFunc(
+                formula[1],
+                lambda m: m.set_value(len(m.counted))
+            ),
+            run_time=2,
+        )
+        formula.restore()
+        self.add(formula)
+        self.wait()
+        self.play(
+            LaggedStartMap(
+                ApplyMethod, checks,
+                lambda m: (m.shift, 0.3 * DOWN),
+                rate_func=there_and_back,
+                lag_ratio=0.05,
+            ),
+            ShowCreationThenFadeOut(k_rect),
+            run_time=2,
+        )
+        self.remove(checks)
+        self.add(row)
+        self.wait()
+
+        # Example orderings
+        row_target = VGroup()
+        for sym in row:
+            sym.generate_target()
+            row_target.add(sym.target)
+
+        row_target.sort(submob_func=lambda m: -int(m.positive))
+        row_target.arrange(
+            RIGHT, buff=get_norm(row[0].get_right() - row[1].get_left())
+        )
+        row_target.move_to(row)
+        self.play(
+            LaggedStartMap(
+                MoveToTarget, row,
+                path_arc=30 * DEGREES,
+                lag_ratio=0,
+            ),
+        )
+        self.wait()
+        row.sort()
+        self.play(Swap(*row[-3:-1]))
+        self.add(row)
+        self.wait()
+
+        # All orderings
+        nck_count = Integer(2)
+        nck_count.next_to(brace, UP)
+        nck_top = nck_count.get_top()
+        always(nck_count.move_to, nck_top, UP)
+
+        combs = list(it.combinations(range(50), 48))
+        bool_lists = [
+            [i in comb for i in range(50)]
+            for comb in combs
+        ]
+        row.counter = nck_count
+        row.bool_lists = bool_lists
+
+        def update_row(r):
+            i = r.counter.get_value() - 1
+            new_row = get_checks_and_crosses(r.bool_lists[i])
+            new_row.replace(r, dim_to_match=0)
+            r.set_submobjects(new_row)
+
+        row.add_updater(update_row)
+        self.add(row)
+        self.play(
+            ChangeDecimalToValue(nck_count, choose(50, 48)),
+            run_time=10,
+        )
+        row.clear_updaters()
+        self.wait()
+        self.play(
+            FadeOut(nck_count),
+            FadeOut(brace),
+        )
+
+
+class WriteLikelihoodFunction(Scene):
+    def construct(self):
+        formula = TexMobject(
+            "f({s}) = (\\text{const.})",
+            "{s}^{\\#" + CMARK_TEX + "}",
+            "(1 - {s})^{\\#" + XMARK_TEX, "}",
+            tex_to_color_map={
+                "{s}": YELLOW,
+                "\\#" + CMARK_TEX: GREEN,
+                "\\#" + XMARK_TEX: RED,
+            }
+        )
+        formula.scale(2)
+
+        rect1 = SurroundingRectangle(formula[3:6])
+        rect2 = SurroundingRectangle(formula[6:])
+
+        self.play(FadeInFromDown(formula))
+        self.wait()
+        self.play(ShowCreationThenFadeOut(rect1))
+        self.wait()
+        self.play(ShowCreationThenFadeOut(rect2))
+        self.wait()
+
+        self.add(formula)
         self.embed()
+
+
+class LikelihoodGraphFor10of10(ShowBinomialFormula):
+    CONFIG = {
+        "histogram_config": {
+            "x_label_freq": 2,
+            "y_axis_numbers_to_show": range(25, 125, 25),
+            "y_max": 1,
+            "y_tick_freq": 0.25,
+            "height": 2,
+            "bar_colors": [BLUE],
+        },
+    }
+
+    def construct(self):
+        # Add histogram
+        dist = scipy.stats.binom(10, self.s)
+        data = np.array([
+            dist.pmf(x)
+            for x in range(0, 11)
+        ])
+        histogram = self.get_histogram(data)
+        histogram.bars.set_fill(GREY_C)
+        histogram.bars[10].set_fill(GREEN)
+        histogram.to_edge(UP)
+
+        x_label = TexMobject("\\#" + CMARK_TEX)
+        x_label.set_color(GREEN)
+        x_label.next_to(histogram.axes.x_axis.get_end(), RIGHT)
+        histogram.add(x_label)
+        self.add(histogram)
+
+        # Add formula
+        prob_label = get_prob_review_label(10, 0)
+        eq = TexMobject("=")
+        formula = get_binomial_formula(10, 10, self.s)
+        eq2 = TexMobject("=")
+        value = DecimalNumber(dist.pmf(10), num_decimal_places=2)
+
+        equation = VGroup(prob_label, eq, formula, eq2, value)
+        equation.arrange(RIGHT)
+        equation.next_to(histogram, DOWN, MED_LARGE_BUFF)
+
+        arrow = Vector(DOWN)
+        arrow.next_to(histogram.bars[10], UP, SMALL_BUFF)
+
+        self.add(equation)
+        self.add(arrow)
+
+        # Add lower axes
+        low_axes = get_beta_dist_axes(y_max=1, y_unit=0.25, label_y=False)
+        low_axes.y_axis.set_height(
+            2,
+            about_point=low_axes.c2p(0, 0),
+            stretch=True,
+        )
+        low_axes.to_edge(DOWN)
+        low_axes.x_axis.numbers.set_color(YELLOW)
+        y_label_copies = histogram.axes.y_labels.copy()
+        y_label_copies.set_height(0.7 * low_axes.get_height())
+        y_label_copies.next_to(low_axes, LEFT, 0, aligned_edge=UP)
+        y_label_copies.shift(SMALL_BUFF * UP)
+        low_axes.y_axis.add(y_label_copies)
+
+        self.add(low_axes)
+
+        # Add lower plot
+        s_tracker = ValueTracker(self.s)
+
+        def func(x):
+            return x**10
+        graph = low_axes.get_graph(func, step_size=0.05)
+        graph.set_stroke(BLUE, 3)
+
+        v_line = Line(DOWN, UP)
+        v_line.axes = low_axes
+        v_line.st = s_tracker
+        v_line.graph = graph
+        v_line.add_updater(
+            lambda m: m.put_start_and_end_on(
+                m.axes.c2p(m.st.get_value(), 0),
+                m.axes.input_to_graph_point(
+                    m.st.get_value(),
+                    m.graph,
+                ),
+            )
+        )
+        v_line.set_stroke(GREEN, 2)
+        dot = Dot()
+        dot.line = v_line
+        dot.set_height(0.05)
+        dot.add_updater(lambda m: m.move_to(m.line.get_end()))
+
+        self.add(graph, v_line, dot)
+
+        # Show simpler formula
+        brace = Brace(formula, DOWN, buff=SMALL_BUFF)
+        simpler_formula = TexMobject("s", "^{10}")
+        simpler_formula.set_color_by_tex("s", YELLOW)
+        simpler_formula.set_color_by_tex("10", GREEN)
+        simpler_formula.next_to(brace, DOWN)
+
+        rects = VGroup(
+            BackgroundRectangle(formula[:4]),
+            BackgroundRectangle(formula[8:]),
+        )
+        rects.set_opacity(0.75)
+
+        self.wait()
+        self.play(FadeIn(rects))
+        self.play(
+            GrowFromCenter(brace),
+            FadeInFrom(simpler_formula, UP)
+        )
+        self.wait()
+
+        # Show various values of s
+        pl_decimal = DecimalNumber(self.s)
+        pl_decimal.set_color(YELLOW)
+        pl_decimal.replace(prob_label[-2][2:])
+        prob_label[-2][2:].set_opacity(0)
+
+        decimals = VGroup(pl_decimal, formula[5], formula[9])
+        decimals.s_tracker = s_tracker
+
+        histogram.s_tracker = s_tracker
+        histogram.n = 10
+        histogram.rhs_value = value
+
+        def update_decimals(decs):
+            for dec in decs:
+                dec.set_value(decs.s_tracker.get_value())
+
+        def update_histogram(hist):
+            new_dist = scipy.stats.binom(hist.n, hist.s_tracker.get_value())
+            new_data = np.array([
+                new_dist.pmf(x)
+                for x in range(0, 11)
+            ])
+            new_bars = hist.get_bars(new_data)
+            new_bars.match_style(hist.bars)
+            hist.bars.become(new_bars)
+            hist.rhs_value.set_value(new_dist.pmf(10))
+
+        self.add(histogram)
+        self.add(decimals, rects)
+        always(arrow.next_to, histogram.bars[10], UP, SMALL_BUFF)
+        for s in [0.8, 1]:
+            self.play(
+                s_tracker.set_value, s,
+                UpdateFromFunc(decimals, update_decimals),
+                UpdateFromFunc(histogram, update_histogram),
+                UpdateFromFunc(value, lambda m: m),
+                run_time=5,
+            )
+            self.wait()
+
+
+class StateNeedForBayesRule(TeacherStudentsScene):
+    def construct(self):
+        axes = get_beta_dist_axes(y_max=1, y_unit=0.25, label_y=False)
+        axes.y_axis.set_height(
+            2,
+            about_point=axes.c2p(0, 0),
+            stretch=True,
+        )
+        axes.set_width(5)
+        graph = axes.get_graph(lambda x: x**10)
+        graph.set_stroke(BLUE, 3)
+        alt_graph = graph.copy()
+        alt_graph.add_line_to(axes.c2p(1, 0))
+        alt_graph.add_line_to(axes.c2p(0, 0))
+        alt_graph.set_stroke(width=0)
+        alt_graph.set_fill(BLUE_E, 1)
+
+        plot = VGroup(axes, alt_graph, graph)
+
+        student0, student1, student2 = self.students
+        plot.next_to(student2.get_corner(UL), UP, MED_LARGE_BUFF)
+        plot.shift(LEFT)
+
+        v_lines = VGroup(
+            DashedLine(axes.c2p(0.8, 0), axes.c2p(0.8, 1)),
+            DashedLine(axes.c2p(1, 0), axes.c2p(1, 1)),
+        )
+        v_lines.set_stroke(YELLOW, 2)
+
+        self.play(
+            LaggedStart(
+                ApplyMethod(student0.change, "pondering", plot),
+                ApplyMethod(student1.change, "pondering", plot),
+                ApplyMethod(student2.change, "raise_left_hand", plot),
+            ),
+            FadeInFrom(plot, DOWN),
+            run_time=1.5
+        )
+        self.play(*map(ShowCreation, v_lines))
+        self.play(
+            self.teacher.change, "tease",
+            *[
+                ApplyMethod(
+                    v_line.move_to,
+                    axes.c2p(0.9, 0),
+                    DOWN,
+                )
+                for v_line in v_lines
+            ]
+        )
+        self.change_student_modes(
+            "thinking", "thinking", "pondering",
+            look_at_arg=v_lines,
+        )
+        self.wait(3)
+
+        self.teacher_says(
+            "First we need\\\\Bayes' rule",
+            added_anims=[
+                FadeOutAndShift(plot, LEFT),
+                FadeOutAndShift(v_lines, LEFT),
+                self.get_student_changes(
+                    "pondering", "thinking", "pondering",
+                    look_at_arg=self.teacher.eyes,
+                )
+            ]
+        )
+        self.change_all_student_modes("hooray")
+        self.wait(2)
+
+
+class ShowBayesRule(Scene):
+    def construct(self):
+        hyp = "\\text{Hypothesis}"
+        data = "\\text{Data}"
+        bayes = TexMobject(
+            f"P({hyp} \\,|\\, {data})", "=", "{",
+            f"P({data} \\,|\\, {hyp})", f"P({hyp})",
+            "\\over", f"P({data})",
+            tex_to_color_map={
+                hyp: YELLOW,
+                data: GREEN,
+            }
+        )
+
+        title = TextMobject("Bayes' rule")
+        title.scale(2)
+        title.to_edge(UP)
+
+        self.add(title)
+        self.add(*bayes[:5])
+        self.wait()
+        self.play(
+            *[
+                TransformFromCopy(bayes[i], bayes[j], path_arc=30 * DEGREES)
+                for i, j in [
+                    (0, 7),
+                    (1, 10),
+                    (2, 9),
+                    (3, 8),
+                    (4, 11),
+                ]
+            ],
+            FadeIn(bayes[5]),
+            run_time=1.5
+        )
+        self.wait()
+        self.play(
+            *[
+                TransformFromCopy(bayes[i], bayes[j], path_arc=30 * DEGREES)
+                for i, j in [
+                    (0, 12),
+                    (1, 13),
+                    (4, 14),
+                    (0, 16),
+                    (3, 17),
+                    (4, 18),
+                ]
+            ],
+            FadeIn(bayes[15]),
+            run_time=1.5
+        )
+        self.add(bayes)
+        self.wait()
+
+        hyp_word = bayes.get_part_by_tex(hyp)
+        example_hyp = TextMobject(
+            "For example,\\\\",
+            "$0.9 < s < 0.99$",
+        )
+        example_hyp[1].set_color(YELLOW)
+        example_hyp.next_to(bayes[5], DOWN, buff=1.5)
+        arrow = Arrow(
+            hyp_word.get_bottom(),
+            example_hyp.get_corner(UL),
+        )
+
+        self.play(
+            GrowArrow(arrow),
+            FadeInFromPoint(example_hyp, hyp_word.get_center()),
+        )
+        self.wait()
+
+
+class ShowInfiniteDivision(Scene):
+    def construct(self):
+        axes = get_beta_dist_axes()
+
+        p_label = TexMobject(
+            "P(s \\,|\\, \\text{data})",
+            tex_to_color_map={
+                "s": YELLOW,
+                "\\text{data}": GREEN,
+            }
+        )
+        p_label.scale(1.5)
+        p_label.to_edge(UP, LARGE_BUFF)
+
+        s_part = p_label.get_part_by_tex("s").copy()
+        x_line = Line(axes.c2p(0, 0), axes.c2p(1, 0))
+        x_line.set_stroke(YELLOW, 3)
+
+        arrow = Vector(DOWN)
+        arrow.next_to(s_part, DOWN, SMALL_BUFF)
+        value = DecimalNumber(0, num_decimal_places=4)
+        value.set_color(YELLOW)
+        value.next_to(arrow, DOWN)
+
+        self.add(axes)
+        self.add(p_label)
+        self.play(
+            s_part.next_to, x_line.get_start(), UR, SMALL_BUFF,
+            GrowArrow(arrow),
+            FadeInFromPoint(value, s_part.get_center()),
+        )
+
+        s_part.tracked = x_line
+        value.tracked = x_line
+        value.x_axis = axes.x_axis
+        self.play(
+            ShowCreation(x_line),
+            UpdateFromFunc(
+                s_part,
+                lambda m: m.next_to(m.tracked.get_end(), UR, SMALL_BUFF)
+            ),
+            UpdateFromFunc(
+                value,
+                lambda m: m.set_value(
+                    m.x_axis.p2n(m.tracked.get_end())
+                )
+            ),
+            run_time=3,
+        )
+        self.wait()
+        self.play(
+            FadeOut(arrow),
+            FadeOut(value),
+        )
+
+        arrows = VGroup()
+        arrow_template = Vector(DOWN)
+        arrow_template.lock_triangulation()
+
+        def get_arrow(s, denom):
+            arrow = arrow_template.copy()
+            arrow.set_height(4 / denom)
+            arrow.move_to(axes.c2p(s, 0), DOWN)
+            arrow.set_color(interpolate_color(
+                GREY_A, GREY_C, random.random()
+            ))
+            return arrow
+
+        for k in range(2, 50):
+            for n in range(1, k):
+                if np.gcd(n, k) != 1:
+                    continue
+                s = n / k
+                arrows.add(get_arrow(s, k))
+        for k in range(50, 1000):
+            arrows.add(get_arrow(1 / k, k))
+            arrows.add(get_arrow(1 - 1 / k, k))
+
+        kw = {
+            "lag_ratio": 100 / len(arrows),
+            "run_time": 10,
+            "rate_func": lambda t: t**2,
+        }
+        # self.play(FadeIn(arrows, **kw))
+        self.play(LaggedStartMap(GrowArrow, arrows, **kw))
+        self.play(LaggedStartMap(
+            ApplyMethod, arrows,
+            lambda m: (m.scale, 0, {"about_edge": DOWN}),
+            **kw
+        ))
+        self.remove(arrows)
+        self.wait()
+
+        # self.embed()

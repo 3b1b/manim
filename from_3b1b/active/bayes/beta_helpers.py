@@ -109,8 +109,10 @@ class Histogram(Group):
         bars = VGroup()
         for x, prop in enumerate(portions):
             bar = Rectangle()
-            bar.set_width(self.width / len(data))
-            bar.set_height(self.height * prop / self.y_max, stretch=True)
+            width = get_norm(self.axes.c2p(1, 0) - self.axes.c2p(0, 0))
+            height = get_norm(self.axes.c2p(0, 1) - self.axes.c2p(0, 0))
+            bar.set_width(width)
+            bar.set_height(height * prop, stretch=True)
             bar.move_to(self.axes.c2p(x, 0), DL)
             bars.add(bar)
 
@@ -359,7 +361,7 @@ def get_plusses_and_minuses(n_rows=15, n_cols=20, p=0.95):
             mob.set_color(GREEN)
             mob.is_plus = True
         else:
-            mob = TexMobject("\\cross")
+            mob = TexMobject(XMARK_TEX)
             mob.set_color(RED)
             mob.is_plus = False
         mob.set_width(1)
@@ -380,7 +382,7 @@ def get_checks_and_crosses(bools, width=12):
             mob = TexMobject(XMARK_TEX)
             mob.set_color(RED)
         mob.positive = positive
-        mob.set_height(0.5)
+        mob.set_width(0.5)
         result.add(mob)
     result.arrange(RIGHT, buff=MED_SMALL_BUFF)
     result.set_width(width)
@@ -441,3 +443,59 @@ def get_prob_review_label(n_positive, n_negative, s=0.95):
         "0.95": YELLOW,
     })
     return label
+
+
+def get_binomial_formula(n, k, p):
+    n_mob = Integer(n, color=WHITE)
+    k_mob = Integer(k, color=GREEN)
+    nmk_mob = Integer(n - k, color=RED)
+    p_mob = DecimalNumber(p, color=YELLOW)
+
+    n_str = "N" * len(n_mob)
+    k_str = "K" * len(k_mob)
+    p_str = "P" * len(k_mob)
+    nmk_str = "M" * len(nmk_mob)
+
+    formula = TexMobject(
+        "\\left(",
+        "{" + n_str,
+        "\\over",
+        k_str + "}",
+        "\\right)",
+        "(", p_str, ")",
+        "^{" + k_str + "}",
+        "(1 - ", p_str, ")",
+        "^{" + nmk_str + "}",
+    )
+    parens = VGroup(formula[0], formula[4])
+    parens.space_out_submobjects(0.7)
+    formula.remove(formula.get_part_by_tex("\\over"))
+    pairs = (
+        (n_mob, n_str),
+        (k_mob, k_str),
+        (nmk_mob, nmk_str),
+        (p_mob, p_str),
+    )
+    for mob, tex in pairs:
+        parts = formula.get_parts_by_tex(tex)
+        for part in parts:
+            mob_copy = mob.copy()
+            i = formula.index_of_part_by_tex(tex)
+            mob_copy.match_height(part)
+            mob_copy.move_to(part, DOWN)
+            formula.replace_submobject(i, mob_copy)
+
+    terms = VGroup(
+        formula[:4],
+        formula[4:7],
+        formula[7],
+        formula[8:11],
+        formula[11],
+    )
+    ys = [term.get_y() for term in terms]
+    terms.arrange(RIGHT, buff=SMALL_BUFF)
+    terms[0].shift(SMALL_BUFF * LEFT)
+    for term, y in zip(terms, ys):
+        term.set_y(y)
+
+    return formula
