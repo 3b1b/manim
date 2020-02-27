@@ -643,8 +643,8 @@ class Arrow(Line):
         return self
 
     # TODO, should this be the default for everything?
-    def copy(self):
-        return self.deepcopy()
+    # def copy(self):
+    #     return self.deepcopy()
 
 
 class Vector(Arrow):
