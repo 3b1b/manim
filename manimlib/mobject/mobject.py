@@ -189,9 +189,12 @@ class Mobject(Container):
         # remove this redundancy everywhere
         # return self.deepcopy()
 
+        parents = self.parents
+        self.parents = []
         copy_mobject = copy.copy(self)
+        self.parents = parents
+
         copy_mobject.points = np.array(self.points)
-        copy_mobject.parents = []
         copy_mobject.submobjects = []
         copy_mobject.add(*[sm.copy() for sm in self.submobjects])
         copy_mobject.updaters = list(self.updaters)
@@ -206,7 +209,10 @@ class Mobject(Container):
         return copy_mobject
 
     def deepcopy(self):
+        parents = self.parents
+        self.parents = []
         return copy.deepcopy(self)
+        self.parents = parents
 
     def generate_target(self, use_deepcopy=False):
         self.target = None  # Prevent exponential explosion
