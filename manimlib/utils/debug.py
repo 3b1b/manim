@@ -12,7 +12,7 @@ def print_family(mobject, n_tabs=0):
         print_family(submob, n_tabs + 1)
 
 
-def get_submobject_index_labels(mobject, label_height=0.15):
+def index_labels(mobject, label_height=0.15):
     labels = VGroup()
     for n, submob in enumerate(mobject):
         label = Integer(n)
