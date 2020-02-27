@@ -430,7 +430,7 @@ class Bubble(SVGMobject):
             raise Exception("Must invoke Bubble subclass")
         try:
             SVGMobject.__init__(self, **kwargs)
-        except IOError as err:
+        except IOError:
             self.file_name = os.path.join(FILE_DIR, self.file_name)
             SVGMobject.__init__(self, **kwargs)
         self.center()
@@ -440,6 +440,7 @@ class Bubble(SVGMobject):
             self.flip()
         self.direction_was_specified = ("direction" in kwargs)
         self.content = Mobject()
+        self.refresh_triangulation()
 
     def get_tip(self):
         # TODO, find a better way
