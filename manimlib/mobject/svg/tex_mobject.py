@@ -204,7 +204,11 @@ class TexMobject(SingleStringTexMobject):
             else:
                 return tex1 == tex2
 
-        return VGroup(*[m for m in self.submobjects if test(tex, m.get_tex_string())])
+        return VGroup(*[
+            m
+            for m in self.submobjects
+            if isinstance(m, SingleStringTexMobject) and test(tex, m.get_tex_string())
+        ])
 
     def get_part_by_tex(self, tex, **kwargs):
         all_parts = self.get_parts_by_tex(tex, **kwargs)
