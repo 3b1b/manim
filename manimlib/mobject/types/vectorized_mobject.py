@@ -912,12 +912,13 @@ class VMobject(Mobject):
         data['joint_type'] = joint_type_to_code[self.joint_type]
         return data
 
-    def lock_triangulation(self):
-        for sm in self.get_family():
-            sm.triangulation_locked = False
-            sm.saved_triangulation = sm.get_triangulation()
-            sm.saved_orientation = sm.get_orientation()
-            sm.triangulation_locked = True
+    def lock_triangulation(self, family=True):
+        mobs = self.get_family() if family else [self]
+        for mob in mobs:
+            mob.triangulation_locked = False
+            mob.saved_triangulation = mob.get_triangulation()
+            mob.saved_orientation = mob.get_orientation()
+            mob.triangulation_locked = True
         return self
 
     def unlock_triangulation(self):
@@ -925,8 +926,9 @@ class VMobject(Mobject):
             sm.triangulation_locked = False
 
     def refresh_triangulation(self):
-        if self.triangulation_locked:
-            self.lock_triangulation()
+        for sm in self.get_family():
+            if sm.triangulation_locked:
+                sm.lock_triangulation(family=False)
 
     def get_signed_polygonal_area(self):
         nppc = self.n_points_per_curve
