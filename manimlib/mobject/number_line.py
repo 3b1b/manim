@@ -14,6 +14,7 @@ from manimlib.utils.space_ops import normalize
 class NumberLine(Line):
     CONFIG = {
         "color": LIGHT_GREY,
+        "stroke_width": 2,
         "x_min": -FRAME_X_RADIUS,
         "x_max": FRAME_X_RADIUS,
         "unit_size": 1,
