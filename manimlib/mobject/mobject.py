@@ -211,8 +211,9 @@ class Mobject(Container):
     def deepcopy(self):
         parents = self.parents
         self.parents = []
-        return copy.deepcopy(self)
+        result = copy.deepcopy(self)
         self.parents = parents
+        return result
 
     def generate_target(self, use_deepcopy=False):
         self.target = None  # Prevent exponential explosion
