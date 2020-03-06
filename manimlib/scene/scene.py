@@ -541,7 +541,6 @@ class Scene(Container):
             frame.scale(factor, about_point=point)
         else:
             frame.shift(-30 * offset)
-        self.camera.refresh_shader_uniforms()
 
     def on_key_release(self, symbol, modifiers):
         if chr(symbol) == "z":
@@ -550,7 +549,6 @@ class Scene(Container):
     def on_key_press(self, symbol, modifiers):
         if chr(symbol) == "r":
             self.camera.frame.restore()
-            self.camera.refresh_shader_uniforms()
         elif chr(symbol) == "z":
             self.zoom_on_scroll = True
         elif chr(symbol) == "q":
