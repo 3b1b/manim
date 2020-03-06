@@ -1730,6 +1730,7 @@ class ShowBinomialFormula(SimulationsOf50Reviews):
             long_equation.center,
             run_time=1.5,
         )
+        self.add(arrow)
 
         # x_labels = histogram.axes.x_labels
         # underline = Underline(x_labels)
@@ -1823,6 +1824,22 @@ class ShowBinomialFormula(SimulationsOf50Reviews):
             hist.bars.become(new_bars)
             hist.rhs_value.set_value(new_dist.pmf(48))
 
+        bar_copy = histogram.bars[48].copy()
+        value.initial_config["num_decimal_places"] = 2
+        value.set_value(value.get_value())
+        bar_copy.next_to(value, RIGHT, aligned_edge=DOWN)
+        bar_copy.add_updater(
+            lambda m: m.set_height(
+                max(
+                    histogram.bars[48].get_height() * 0.75,
+                    1e-6,
+                ),
+                stretch=True,
+                about_edge=DOWN,
+            )
+        )
+        self.add(bar_copy)
+
         self.add(histogram)
         self.add(decimals)
         for s in [0.95, 0.5, 0.99, 0.9]:
@@ -1872,10 +1889,12 @@ class ShowBinomialFormula(SimulationsOf50Reviews):
         self.play(low_axes.y_axis.set_opacity, 1)
         self.play(
             FadeIn(graph),
-            FadeIn(v_line),
-            FadeIn(dot),
             FadeOut(s_label),
             FadeOut(s_tip),
+        )
+        self.play(
+            TransformFromCopy(histogram.bars[48], v_line),
+            FadeIn(dot),
         )
 
         self.add(histogram)
@@ -1901,6 +1920,8 @@ class ShowBinomialFormula(SimulationsOf50Reviews):
             line = Underline(sym)
             line.scale(0.9)
             slots.add(line)
+        for slot in slots:
+            slot.match_y(slots[0])
 
         formula[1].counted = slots
         k_rect = SurroundingRectangle(formula[2])
@@ -2316,22 +2337,56 @@ class ShowBayesRule(Scene):
             "$0.9 < s < 0.99$",
         )
         example_hyp[1].set_color(YELLOW)
-        example_hyp.next_to(bayes[5], DOWN, buff=1.5)
-        arrow = Arrow(
+        example_hyp.next_to(hyp_word, DOWN, buff=1.5)
+
+        data_word = bayes.get_part_by_tex(data)
+        example_data = TexMobject(
+            "48\\,", CMARK_TEX,
+            "\\,2\\,", XMARK_TEX,
+        )
+        example_data.set_color_by_tex(CMARK_TEX, GREEN)
+        example_data.set_color_by_tex(XMARK_TEX, RED)
+        example_data.scale(1.5)
+        example_data.next_to(example_hyp, RIGHT, buff=1.5)
+
+        hyp_arrow = Arrow(
             hyp_word.get_bottom(),
-            example_hyp.get_corner(UL),
+            example_hyp.get_top(),
+        )
+        data_arrow = Arrow(
+            data_word.get_bottom(),
+            example_data.get_top(),
         )
 
         self.play(
-            GrowArrow(arrow),
+            GrowArrow(hyp_arrow),
             FadeInFromPoint(example_hyp, hyp_word.get_center()),
+        )
+        self.wait()
+        self.play(
+            GrowArrow(data_arrow),
+            FadeInFromPoint(example_data, data_word.get_center()),
         )
         self.wait()
 
 
-class ShowInfiniteDivision(Scene):
+class VisualizeBayesRule(Scene):
     def construct(self):
-        axes = get_beta_dist_axes()
+        self.show_continuum()
+        self.show_arrows()
+        self.show_discrete_probabilities()
+        self.show_bayes_formula()
+        self.parallel_universes()
+        self.update_from_data()
+
+    def show_continuum(self):
+        axes = get_beta_dist_axes(y_max=1, y_unit=0.1)
+        axes.y_axis.add_numbers(
+            *np.arange(0.2, 1.2, 0.2),
+            number_config={
+                "num_decimal_places": 1,
+            }
+        )
 
         p_label = TexMobject(
             "P(s \\,|\\, \\text{data})",
@@ -2384,6 +2439,15 @@ class ShowInfiniteDivision(Scene):
             FadeOut(value),
         )
 
+        self.p_label = p_label
+        self.s_part = s_part
+        self.value = value
+        self.x_line = x_line
+        self.axes = axes
+
+    def show_arrows(self):
+        axes = self.axes
+
         arrows = VGroup()
         arrow_template = Vector(DOWN)
         arrow_template.lock_triangulation()
@@ -2408,12 +2472,16 @@ class ShowInfiniteDivision(Scene):
             arrows.add(get_arrow(1 - 1 / k, k))
 
         kw = {
-            "lag_ratio": 100 / len(arrows),
-            "run_time": 10,
-            "rate_func": lambda t: t**2,
+            "lag_ratio": 0.5,
+            "run_time": 5,
+            "rate_func": lambda t: t**4,
         }
-        # self.play(FadeIn(arrows, **kw))
-        self.play(LaggedStartMap(GrowArrow, arrows, **kw))
+        arrows.save_state()
+        for arrow in arrows:
+            arrow.stretch(0, 0)
+            arrow.set_stroke(width=0)
+            arrow.set_opacity(0)
+        self.play(Restore(arrows, **kw))
         self.play(LaggedStartMap(
             ApplyMethod, arrows,
             lambda m: (m.scale, 0, {"about_edge": DOWN}),
@@ -2422,4 +2490,902 @@ class ShowInfiniteDivision(Scene):
         self.remove(arrows)
         self.wait()
 
-        # self.embed()
+    def show_discrete_probabilities(self):
+        axes = self.axes
+
+        x_lines = VGroup()
+        dx = 0.01
+        for x in np.arange(0, 1, dx):
+            line = Line(
+                axes.c2p(x, 0),
+                axes.c2p(x + dx, 0),
+            )
+            line.set_stroke(BLUE, 3)
+            line.generate_target()
+            line.target.rotate(
+                90 * DEGREES,
+                about_point=line.get_start()
+            )
+            x_lines.add(line)
+
+        self.add(x_lines)
+        self.play(
+            FadeOut(self.x_line),
+            LaggedStartMap(
+                MoveToTarget, x_lines,
+            )
+        )
+
+        label = Integer(0)
+        label.set_height(0.5)
+        label.next_to(self.p_label[1], DOWN, LARGE_BUFF)
+        unit = TexMobject("\\%")
+        unit.match_height(label)
+        fix_percent(unit.family_members_with_points()[0])
+        always(unit.next_to, label, RIGHT, SMALL_BUFF)
+
+        arrow = Arrow()
+        arrow.max_stroke_width_to_length_ratio = 1
+        arrow.axes = axes
+        arrow.label = label
+        arrow.add_updater(lambda m: m.put_start_and_end_on(
+            m.label.get_bottom() + MED_SMALL_BUFF * DOWN,
+            m.axes.c2p(0.01 * m.label.get_value(), 0.03),
+        ))
+
+        self.add(label, unit, arrow)
+        self.play(
+            ChangeDecimalToValue(label, 99),
+            run_time=5,
+        )
+        self.wait()
+        self.play(*map(FadeOut, [label, unit, arrow]))
+
+        # Show prior label
+        p_label = self.p_label
+        given_data = p_label[2:4]
+        prior_label = TexMobject("P(s)", tex_to_color_map={"s": YELLOW})
+        prior_label.match_height(p_label)
+        prior_label.move_to(p_label, DOWN, LARGE_BUFF)
+
+        p_label.save_state()
+        self.play(
+            given_data.scale, 0.5,
+            given_data.set_opacity, 0.5,
+            given_data.to_corner, UR,
+            Transform(p_label[:2], prior_label[:2]),
+            Transform(p_label[-1], prior_label[-1]),
+        )
+        self.wait()
+
+        # Zoom in on the y-values
+        new_ticks = VGroup()
+        new_labels = VGroup()
+        dy = 0.01
+        for y in np.arange(dy, 5 * dy, dy):
+            height = get_norm(axes.c2p(0, dy) - axes.c2p(0, 0))
+            tick = axes.y_axis.get_tick(y, SMALL_BUFF)
+            label = DecimalNumber(y)
+            label.match_height(axes.y_axis.numbers[0])
+            always(label.next_to, tick, LEFT, SMALL_BUFF)
+
+            new_ticks.add(tick)
+            new_labels.add(label)
+
+        for num in axes.y_axis.numbers:
+            height = num.get_height()
+            always(num.set_height, height, stretch=True)
+
+        bars = VGroup()
+        dx = 0.01
+        origin = axes.c2p(0, 0)
+        for x in np.arange(0, 1, dx):
+            rect = Rectangle(
+                width=get_norm(axes.c2p(dx, 0) - origin),
+                height=get_norm(axes.c2p(0, dy) - origin),
+            )
+            rect.x = x
+            rect.set_stroke(BLUE, 1)
+            rect.set_fill(BLUE, 0.5)
+            rect.move_to(axes.c2p(x, 0), DL)
+            bars.add(rect)
+
+        stretch_group = VGroup(
+            axes.y_axis,
+            bars,
+            new_ticks,
+            x_lines,
+        )
+        x_lines.set_height(
+            bars.get_height(),
+            about_edge=DOWN,
+            stretch=True,
+        )
+
+        self.play(
+            stretch_group.stretch, 25, 1, {"about_point": axes.c2p(0, 0)},
+            VFadeIn(bars),
+            VFadeIn(new_ticks),
+            VFadeIn(new_labels),
+            VFadeOut(x_lines),
+            run_time=4,
+        )
+
+        highlighted_bars = bars.copy()
+        highlighted_bars.set_color(YELLOW)
+        self.play(
+            LaggedStartMap(
+                FadeIn, highlighted_bars,
+                lag_ratio=0.5,
+                rate_func=there_and_back,
+            ),
+            ShowCreationThenFadeAround(new_labels[0]),
+            run_time=3,
+        )
+        self.remove(highlighted_bars)
+
+        # Nmae as prior
+        prior_name = TextMobject("Prior", " distribution")
+        prior_name.set_height(0.6)
+        prior_name.next_to(prior_label, DOWN, LARGE_BUFF)
+
+        self.play(FadeInFromDown(prior_name))
+        self.wait()
+
+        # Show alternate distribution
+        bars.save_state()
+        for a, b in [(5, 2), (1, 6)]:
+            dist = scipy.stats.beta(a, b)
+            for bar, saved in zip(bars, bars.saved_state):
+                bar.target = saved.copy()
+                height = get_norm(axes.c2p(0.1 * dist.pdf(bar.x)) - axes.c2p(0, 0))
+                bar.target.set_height(height, about_edge=DOWN, stretch=True)
+
+            self.play(LaggedStartMap(MoveToTarget, bars, lag_ratio=0.00))
+            self.wait()
+        self.play(Restore(bars))
+        self.wait()
+
+        uniform_name = TextMobject("Uniform")
+        uniform_name.match_height(prior_name)
+        uniform_name.move_to(prior_name, DL)
+        uniform_name.shift(RIGHT)
+        uniform_name.set_y(bars.get_top()[1] + MED_SMALL_BUFF, DOWN)
+        self.play(
+            prior_name[0].next_to, uniform_name, RIGHT, MED_SMALL_BUFF, DOWN,
+            FadeOutAndShift(prior_name[1], RIGHT),
+            FadeInFrom(uniform_name, LEFT)
+        )
+        self.wait()
+
+        self.bars = bars
+        self.uniform_label = VGroup(uniform_name, prior_name[0])
+
+    def show_bayes_formula(self):
+        uniform_label = self.uniform_label
+        p_label = self.p_label
+        bars = self.bars
+
+        prior_label = VGroup(
+            p_label[0].deepcopy(),
+            p_label[1].deepcopy(),
+            p_label[4].deepcopy(),
+        )
+        eq = TexMobject("=")
+        likelihood_label = TexMobject(
+            "P(", "\\text{data}", "|", "s", ")",
+        )
+        likelihood_label.set_color_by_tex("data", GREEN)
+        likelihood_label.set_color_by_tex("s", YELLOW)
+        over = Line(LEFT, RIGHT)
+        p_data_label = TextMobject("P(", "\\text{data}", ")")
+        p_data_label.set_color_by_tex("data", GREEN)
+
+        for mob in [eq, likelihood_label, over, p_data_label]:
+            mob.scale(1.5)
+            mob.set_opacity(0.1)
+
+        eq.move_to(prior_label, LEFT)
+        over.set_width(
+            prior_label.get_width() +
+            likelihood_label.get_width() +
+            MED_SMALL_BUFF
+        )
+        over.next_to(eq, RIGHT, MED_SMALL_BUFF)
+        p_data_label.next_to(over, DOWN, MED_SMALL_BUFF)
+        likelihood_label.next_to(over, UP, MED_SMALL_BUFF, RIGHT)
+
+        self.play(
+            p_label.restore,
+            p_label.next_to, eq, LEFT, MED_SMALL_BUFF,
+            prior_label.next_to, over, UP, MED_SMALL_BUFF, LEFT,
+            FadeIn(eq),
+            FadeIn(likelihood_label),
+            FadeIn(over),
+            FadeIn(p_data_label),
+            FadeOut(uniform_label),
+        )
+
+        # Show new distribution
+        post_bars = bars.copy()
+        total_prob = 0
+        for bar, p in zip(post_bars, np.arange(0, 1, 0.01)):
+            prob = scipy.stats.binom(50, p).pmf(48)
+            bar.stretch(prob, 1, about_edge=DOWN)
+            total_prob += 0.01 * prob
+        post_bars.stretch(1 / total_prob, 1, about_edge=DOWN)
+        post_bars.stretch(0.25, 1, about_edge=DOWN)  # Lie to fit on screen...
+        post_bars.set_color(MAROON_D)
+        post_bars.set_fill(opacity=0.8)
+
+        brace = Brace(p_label, DOWN)
+        post_word = brace.get_text("Posterior")
+        post_word.scale(1.25, about_edge=UP)
+        post_word.set_color(MAROON_D)
+
+        self.play(
+            ReplacementTransform(
+                bars.copy().set_opacity(0),
+                post_bars,
+            ),
+            GrowFromCenter(brace),
+            FadeInFrom(post_word, 0.25 * UP)
+        )
+        self.wait()
+        self.play(
+            eq.set_opacity, 1,
+            likelihood_label.set_opacity, 1,
+        )
+        self.wait()
+
+        data = get_check_count_label(48, 2)
+        data.scale(1.5)
+        data.next_to(likelihood_label, DOWN, buff=2, aligned_edge=LEFT)
+        data_arrow = Arrow(
+            likelihood_label[1].get_bottom(),
+            data.get_top()
+        )
+        data_arrow.set_color(GREEN)
+
+        self.play(
+            GrowArrow(data_arrow),
+            GrowFromPoint(data, data_arrow.get_start()),
+        )
+        self.wait()
+        self.play(FadeOut(data_arrow))
+        self.play(
+            over.set_opacity, 1,
+            p_data_label.set_opacity, 1,
+        )
+        self.wait()
+
+        self.play(
+            FadeOut(brace),
+            FadeOut(post_word),
+            FadeOut(post_bars),
+            FadeOut(data),
+            p_label.set_opacity, 0.1,
+            eq.set_opacity, 0.1,
+            likelihood_label.set_opacity, 0.1,
+            over.set_opacity, 0.1,
+            p_data_label.set_opacity, 0.1,
+        )
+
+        self.bayes = VGroup(
+            p_label, eq,
+            prior_label, likelihood_label,
+            over, p_data_label
+        )
+        self.data = data
+
+    def parallel_universes(self):
+        bars = self.bars
+
+        cols = VGroup()
+        squares = VGroup()
+        sample_colors = color_gradient(
+            [GREEN_C, GREEN_D, GREEN_E],
+            100
+        )
+        for bar in bars:
+            n_rows = 12
+            col = VGroup()
+            for x in range(n_rows):
+                square = Rectangle(
+                    width=bar.get_width(),
+                    height=bar.get_height() / n_rows,
+                )
+                square.set_stroke(width=0)
+                square.set_fill(opacity=1)
+                square.set_color(random.choice(sample_colors))
+                col.add(square)
+                squares.add(square)
+            col.arrange(DOWN, buff=0)
+            col.move_to(bar)
+            cols.add(col)
+        squares.shuffle()
+
+        self.play(
+            LaggedStartMap(
+                VFadeInThenOut, squares,
+                lag_ratio=0.005,
+                run_time=3
+            )
+        )
+        self.remove(squares)
+        squares.set_opacity(1)
+        self.wait()
+
+        example_col = cols[95]
+
+        self.play(
+            bars.set_opacity, 0.25,
+            FadeIn(example_col, lag_ratio=0.1),
+        )
+        self.wait()
+
+        dist = scipy.stats.binom(50, 0.95)
+        for x in range(12):
+            square = random.choice(example_col).copy()
+            square.set_fill(opacity=0)
+            square.set_stroke(YELLOW, 2)
+            self.add(square)
+            nc = dist.ppf(random.random())
+            data = get_check_count_label(nc, 50 - nc)
+            data.next_to(example_col, UP)
+
+            self.add(square, data)
+            self.wait(0.5)
+            self.remove(square, data)
+        self.wait()
+
+        self.data.set_opacity(1)
+        self.play(
+            FadeIn(self.data),
+            FadeOut(example_col),
+            self.bayes[3].set_opacity, 1,
+        )
+        self.wait()
+
+    def update_from_data(self):
+        bars = self.bars
+        data = self.data
+        bayes = self.bayes
+
+        new_bars = bars.copy()
+        new_bars.set_stroke(opacity=1)
+        new_bars.set_fill(opacity=0.8)
+        for bar, p in zip(new_bars, np.arange(0, 1, 0.01)):
+            dist = scipy.stats.binom(50, p)
+            scalar = dist.pmf(48)
+            bar.stretch(scalar, 1, about_edge=DOWN)
+
+        self.play(
+            ReplacementTransform(
+                bars.copy().set_opacity(0),
+                new_bars
+            ),
+            bars.set_fill, {"opacity": 0.1},
+            bars.set_stroke, {"opacity": 0.1},
+            run_time=2,
+        )
+
+        # Show example bar
+        bar95 = VGroup(
+            bars[95].copy(),
+            new_bars[95].copy()
+        )
+        bar95.save_state()
+        bar95.generate_target()
+        bar95.target.scale(2)
+        bar95.target.next_to(bar95, UP, LARGE_BUFF)
+        bar95.target.set_stroke(BLUE, 3)
+
+        ex_label = TexMobject("s", "=", "0.95")
+        ex_label.set_color(YELLOW)
+        ex_label.next_to(bar95.target, DOWN, submobject_to_align=ex_label[-1])
+
+        highlight = SurroundingRectangle(bar95, buff=0)
+        highlight.set_stroke(YELLOW, 2)
+
+        self.play(FadeIn(highlight))
+        self.play(
+            MoveToTarget(bar95),
+            FadeInFromDown(ex_label),
+            data.shift, LEFT,
+        )
+        self.wait()
+
+        side_brace = Brace(bar95[1], RIGHT, buff=SMALL_BUFF)
+        side_label = side_brace.get_text("0.26", buff=SMALL_BUFF)
+        self.play(
+            GrowFromCenter(side_brace),
+            FadeIn(side_label)
+        )
+        self.wait()
+        self.play(
+            FadeOut(side_brace),
+            FadeOut(side_label),
+            FadeOut(ex_label),
+        )
+        self.play(
+            bar95.restore,
+            bar95.set_opacity, 0,
+        )
+
+        for bar in bars[94:80:-1]:
+            highlight.move_to(bar)
+            self.wait(0.5)
+        self.play(FadeOut(highlight))
+        self.wait()
+
+        # Emphasize formula terms
+        tops = VGroup()
+        for bar, new_bar in zip(bars, new_bars):
+            top = Line(bar.get_corner(UL), bar.get_corner(UR))
+            top.set_stroke(YELLOW, 2)
+            top.generate_target()
+            top.target.move_to(new_bar, UP)
+            tops.add(top)
+
+        rect = SurroundingRectangle(bayes[2])
+        rect.set_stroke(YELLOW, 1)
+        rect.target = SurroundingRectangle(bayes[3])
+        rect.target.match_style(rect)
+        self.play(
+            ShowCreation(rect),
+            ShowCreation(tops),
+        )
+        self.wait()
+        self.play(
+            LaggedStartMap(
+                MoveToTarget, tops,
+                run_time=2,
+                lag_ratio=0.02,
+            ),
+            MoveToTarget(rect),
+        )
+        self.play(FadeOut(tops))
+        self.wait()
+
+        # Show alternate priors
+        axes = self.axes
+        bar_groups = VGroup()
+        for bar, new_bar in zip(bars, new_bars):
+            bar_groups.add(VGroup(bar, new_bar))
+
+        bar_groups.save_state()
+        for a, b in [(5, 2), (7, 1)]:
+            dist = scipy.stats.beta(a, b)
+            for bar, saved in zip(bar_groups, bar_groups.saved_state):
+                bar.target = saved.copy()
+                height = get_norm(axes.c2p(0.1 * dist.pdf(bar[0].x)) - axes.c2p(0, 0))
+                height = max(height, 1e-6)
+                bar.target.set_height(height, about_edge=DOWN, stretch=True)
+
+            self.play(LaggedStartMap(MoveToTarget, bar_groups, lag_ratio=0))
+            self.wait()
+        self.play(Restore(bar_groups))
+        self.wait()
+
+        # Rescale
+        ex_p_label = TexMobject(
+            "P(s = 0.95 | 00000000) = ",
+            tex_to_color_map={
+                "s = 0.95": YELLOW,
+                "00000000": WHITE,
+            }
+        )
+        ex_p_label.scale(1.5)
+        ex_p_label.next_to(bars, UP, LARGE_BUFF)
+        ex_p_label.align_to(bayes, LEFT)
+        template = ex_p_label.get_part_by_tex("00000000")
+        template.set_opacity(0)
+
+        highlight = SurroundingRectangle(new_bars[95], buff=0)
+        highlight.set_stroke(YELLOW, 1)
+
+        self.remove(data)
+        self.play(
+            FadeIn(ex_p_label),
+            VFadeOut(data[0]),
+            data[1:].move_to, template,
+            FadeIn(highlight)
+        )
+        self.wait()
+
+        numer = new_bars[95].copy()
+        numer.set_stroke(YELLOW, 1)
+        denom = new_bars[80:].copy()
+        h_line = Line(LEFT, RIGHT)
+        h_line.set_width(3)
+        h_line.set_stroke(width=2)
+        h_line.next_to(ex_p_label, RIGHT)
+
+        self.play(
+            numer.next_to, h_line, UP,
+            denom.next_to, h_line, DOWN,
+            ShowCreation(h_line),
+        )
+        self.wait()
+        self.play(
+            denom.space_out_submobjects,
+            rate_func=there_and_back
+        )
+        self.play(
+            bayes[4].set_opacity, 1,
+            bayes[5].set_opacity, 1,
+            FadeOut(rect),
+        )
+        self.wait()
+
+        # Rescale
+        self.play(
+            FadeOut(highlight),
+            FadeOut(ex_p_label),
+            FadeOut(data),
+            FadeOut(h_line),
+            FadeOut(numer),
+            FadeOut(denom),
+            bayes.set_opacity, 1,
+        )
+
+        new_bars.unlock_shader_data()
+        self.remove(new_bars, *new_bars)
+        self.play(
+            new_bars.set_height, 5, {"about_edge": DOWN, "stretch": True},
+            new_bars.set_color, MAROON_D,
+        )
+        self.wait()
+
+
+class UniverseOf95Percent(WhatsTheModel):
+    CONFIG = {"s": 0.95}
+
+    def construct(self):
+        self.introduce_buyer_and_seller()
+        for m, v in [(self.seller, RIGHT), (self.buyer, LEFT)]:
+            m.shift(v)
+            m.label.shift(v)
+
+        pis = VGroup(self.seller, self.buyer)
+        label = get_prob_positive_experience_label(True, True)
+        label[-1].set_value(self.s)
+        label.set_height(1)
+        label.next_to(pis, UP, LARGE_BUFF)
+        self.add(label)
+
+        for x in range(4):
+            self.play(*self.experience_animations(
+                self.seller, self.buyer, arc=30 * DEGREES, p=self.s
+            ))
+
+        self.embed()
+
+
+class UniverseOf50Percent(UniverseOf95Percent):
+    CONFIG = {"s": 0.5}
+
+
+class OpenAndCloseAsideOnPdfs(Scene):
+    def construct(self):
+        labels = VGroup(
+            TextMobject("$\\langle$", "Aside on", " pdfs", "$\\rangle$"),
+            TextMobject("$\\langle$/", "Aside on", " pdfs", "$\\rangle$"),
+        )
+        labels.set_width(FRAME_WIDTH / 2)
+        for label in labels:
+            label.set_color_by_tex("pdfs", YELLOW)
+
+        self.play(FadeInFromDown(labels[0]))
+        self.wait()
+        self.play(Transform(*labels))
+        self.wait()
+
+
+class TryAssigningProbabilitiesToSpecificValues(Scene):
+    def construct(self):
+        # To get "P(s = 95.9999%) ="" type labels
+        def get_p_label(value):
+            result = TexMobject(
+                "P(", "{s}", "=", value, "\\%", ")",
+            )
+            fix_percent(result.get_part_by_tex("\\%")[0])
+            result.set_color_by_tex("{s}", YELLOW)
+            return result
+
+        labels = VGroup(
+            get_p_label("95.0000000"),
+            get_p_label("94.9999999"),
+            get_p_label("94.9314159"),
+            get_p_label("94.9271828"),
+            get_p_label("94.9466920"),
+            get_p_label("94.9161803"),
+        )
+        labels.arrange(DOWN, buff=0.35, aligned_edge=LEFT)
+
+        q_marks = VGroup()
+        gt_zero = VGroup()
+        eq_zero = VGroup()
+        for label in labels:
+            qm = TexMobject("=", "\\,???")
+            qm.next_to(label, RIGHT)
+            qm[1].set_color(TEAL)
+            q_marks.add(qm)
+
+            gt = TexMobject("> 0")
+            gt.next_to(label, RIGHT)
+            gt_zero.add(gt)
+
+            eqz = TexMobject("= 0")
+            eqz.next_to(label, RIGHT)
+            eq_zero.add(eqz)
+
+        v_dots = TexMobject("\\vdots")
+        v_dots.next_to(q_marks[-1][0], DOWN, MED_LARGE_BUFF)
+
+        # Animations
+        self.play(FadeInFromDown(labels[0]))
+        self.play(FadeInFrom(q_marks[0], LEFT))
+        self.wait()
+        self.play(*[
+            TransformFromCopy(m1, m2)
+            for m1, m2 in [
+                (q_marks[0], q_marks[1]),
+                (labels[0][:3], labels[1][:3]),
+                (labels[0][5], labels[1][5]),
+            ]
+        ])
+        self.play(ShowIncreasingSubsets(
+            labels[1][3],
+            run_time=3,
+            int_func=np.ceil,
+            rate_func=linear,
+        ))
+        self.add(labels[1])
+        self.wait()
+        self.play(
+            LaggedStartMap(
+                FadeInFrom, labels[2:],
+                lambda m: (m, UP),
+            ),
+            LaggedStartMap(
+                FadeInFrom, q_marks[2:],
+                lambda m: (m, UP),
+            ),
+            Write(v_dots, rate_func=squish_rate_func(smooth, 0.5, 1))
+        )
+        self.add(labels, q_marks)
+        self.wait()
+
+        q_marks.unlock_triangulation()
+        self.play(
+            ReplacementTransform(q_marks, gt_zero, lag_ratio=0.05),
+            run_time=2,
+        )
+        self.wait()
+
+        # Show sum
+        group = VGroup(labels, gt_zero, v_dots)
+        sum_label = TexMobject(
+            "\\sum_{s}", "P(", "{s}", ")", "=",
+            tex_to_color_map={"{s}": YELLOW},
+        )
+        # sum_label.set_color_by_tex("{s}", YELLOW)
+        sum_label[0].set_color(WHITE)
+        sum_label.scale(1.75)
+        sum_label.next_to(ORIGIN, RIGHT, buff=1)
+
+        self.play(group.next_to, ORIGIN, LEFT)
+        self.play(Write(sum_label))
+
+        infty = TexMobject("\\infty")
+        zero = TexMobject("0")
+        for mob in [infty, zero]:
+            mob.scale(2)
+            mob.next_to(sum_label[-1], RIGHT)
+        zero.set_color(RED)
+
+        self.play(Write(infty))
+        self.wait()
+
+        # If equal to zero
+        eq_zero.move_to(gt_zero)
+        eq_zero.set_color(RED)
+        gt_zero.unlock_triangulation()
+        self.play(
+            ReplacementTransform(gt_zero, eq_zero),
+            lag_ratio=0.05,
+            run_time=2,
+            path_arc=30 * DEGREES,
+        )
+        self.wait()
+        self.play(
+            FadeInFrom(zero, DOWN),
+            FadeOutAndShift(infty, UP),
+        )
+        self.wait()
+
+
+class ShowLimitToPdf(Scene):
+    def construct(self):
+        # Init
+        axes = self.get_axes()
+        dist = scipy.stats.beta(4, 2)
+        bars = self.get_bars(axes, dist, 0.05)
+
+        axis_prob_label = TextMobject("Probability")
+        axis_prob_label.next_to(axes.y_axis, UP)
+        axis_prob_label.to_edge(LEFT)
+
+        self.add(axes)
+        self.add(axis_prob_label)
+
+        # From individual to ranges
+        kw = {"tex_to_color_map": {"s": YELLOW}}
+        eq_label = TexMobject("P(s = 0.8)", **kw)
+        ineq_label = TexMobject("P(0.8 < s < 0.85)", **kw)
+
+        arrows = VGroup(Vector(DOWN), Vector(DOWN))
+        for arrow, x in zip(arrows, [0.8, 0.85]):
+            arrow.move_to(axes.c2p(x, 0), DOWN)
+        brace = Brace(
+            Line(arrows[0].get_start(), arrows[1].get_start()),
+            UP, buff=SMALL_BUFF
+        )
+        eq_label.next_to(arrows[0], UP)
+        ineq_label.next_to(brace, UP)
+
+        self.play(
+            FadeInFrom(eq_label, 0.2 * DOWN),
+            GrowArrow(arrows[0]),
+        )
+        self.wait()
+        vect = eq_label.get_center() - ineq_label.get_center()
+        self.play(
+            FadeOutAndShift(eq_label, -vect),
+            FadeInFrom(ineq_label, vect),
+            TransformFromCopy(*arrows),
+            GrowFromPoint(brace, brace.get_left()),
+        )
+        self.wait()
+
+        arrows[0].generate_target()
+        arrows[0].target.next_to(bars[16], UP, SMALL_BUFF)
+
+        for bar in bars:
+            bar.save_state()
+            bar.stretch(0, 1, about_edge=DOWN)
+
+        kw = {
+            "run_time": 2,
+            "rate_func": squish_rate_func(smooth, 0.3, 0.9),
+        }
+        self.play(
+            MoveToTarget(arrows[0], **kw),
+            ApplyMethod(ineq_label.next_to, arrows[0].target, UP, **kw),
+            FadeOut(arrows[1]),
+            FadeOut(brace),
+            LaggedStartMap(Restore, bars, run_time=2, lag_ratio=0.025),
+        )
+        self.wait()
+
+        # Focus on area, not height
+        lines = VGroup()
+        new_bars = VGroup()
+        for bar in bars:
+            line = Line(
+                bar.get_corner(DL),
+                bar.get_corner(DR),
+            )
+            line.set_stroke(YELLOW, 0)
+            line.generate_target()
+            line.target.set_stroke(YELLOW, 3)
+            line.target.move_to(bar.get_top())
+            lines.add(line)
+
+            new_bar = bar.copy()
+            new_bar.match_style(line)
+            new_bar.set_fill(YELLOW, 0.5)
+            new_bar.generate_target()
+            new_bar.stretch(0, 1, about_edge=UP)
+            new_bars.add(new_bar)
+
+        prob_label = TextMobject(
+            "Height",
+            "$\\rightarrow$",
+            "Probability",
+        )
+        prob_label.space_out_submobjects(1.1)
+        prob_label.next_to(bars, UP, MED_LARGE_BUFF)
+        height_word = prob_label[0]
+        height_cross = Cross(height_word)
+        area_word = TextMobject("Area")
+        area_word.move_to(height_word, UR)
+        area_word.set_color(YELLOW)
+
+        self.play(
+            LaggedStartMap(
+                MoveToTarget, lines,
+                lag_ratio=0.01,
+            ),
+            FadeInFromDown(prob_label),
+        )
+        self.add(height_word)
+        self.play(
+            ShowCreation(height_cross),
+            FadeOutAndShift(axis_prob_label, LEFT)
+        )
+        self.wait()
+        self.play(
+            FadeOutAndShift(height_word, UP),
+            FadeOutAndShift(height_cross, UP),
+            FadeInFromDown(area_word),
+        )
+        self.play(
+            FadeOut(lines),
+            LaggedStartMap(
+                MoveToTarget, new_bars,
+                lag_ratio=0.01,
+            )
+        )
+        self.play(
+            FadeOut(new_bars),
+            area_word.set_color, BLUE,
+        )
+
+        prob_label = VGroup(area_word, *prob_label[1:])
+        self.add(prob_label)
+
+        self.embed()
+
+    def get_axes(self):
+        axes = Axes(
+            x_min=0,
+            x_max=1,
+            x_axis_config={
+                "tick_frequency": 0.05,
+                "unit_size": 12,
+                "include_tip": False,
+            },
+            y_min=0,
+            y_max=4,
+            y_axis_config={
+                "tick_frequency": 1,
+                "unit_size": 1.25,
+                "include_tip": False,
+            }
+        )
+        axes.center()
+
+        s_label = TexMobject("s")
+        s_label.set_color(YELLOW)
+        s_label.next_to(axes.x_axis, RIGHT)
+        axes.x_axis.add(s_label)
+        axes.x_axis.s_label = s_label
+
+        axes.x_axis.add_numbers(
+            *np.arange(0.2, 1.2, 0.2),
+            number_config={"num_decimal_places": 1}
+        )
+        return axes
+
+    def get_bars(self, axes, dist, step_size):
+        bars = VGroup()
+        for x in np.arange(0, 1, step_size):
+            bar = Rectangle()
+            bar.set_stroke(BLUE, 2)
+            bar.set_fill(BLUE, 0.5)
+            h_line = Line(
+                axes.c2p(x, 0),
+                axes.c2p(x + step_size, 0),
+            )
+            v_line = Line(
+                axes.c2p(0, 0),
+                axes.c2p(0, dist.pdf(x)),
+            )
+            bar.match_width(h_line, stretch=True)
+            bar.match_height(v_line, stretch=True)
+            bar.move_to(h_line, DOWN)
+            bars.add(bar)
+        return bars

@@ -308,7 +308,7 @@ def get_beta_dist_axes(y_max=20, y_unit=2, label_y=False, **kwargs):
 
     if label_y:
         result.y_axis.add_numbers(
-            *range(y_unit, y_max, y_unit)
+            *np.arange(y_unit, y_max, y_unit)
         )
         label = TextMobject("Probability density")
         label.scale(0.5)
@@ -316,6 +316,7 @@ def get_beta_dist_axes(y_max=20, y_unit=2, label_y=False, **kwargs):
         label.next_to(result.y_axis, UP, SMALL_BUFF)
         label.align_to(result.y_axis.numbers, LEFT)
         result.add(label)
+        result.y_axis_label = label
 
     result.to_corner(DR, LARGE_BUFF)
 
@@ -499,3 +500,22 @@ def get_binomial_formula(n, k, p):
         term.set_y(y)
 
     return formula
+
+
+def get_check_count_label(nc, nx, include_rect=True):
+    result = VGroup(
+        Integer(nc),
+        TexMobject(CMARK_TEX, color=GREEN),
+        Integer(nx),
+        TexMobject(XMARK_TEX, color=RED),
+    )
+    result.arrange(RIGHT, buff=SMALL_BUFF)
+    result[2:].shift(SMALL_BUFF * RIGHT)
+
+    if include_rect:
+        rect = SurroundingRectangle(result)
+        rect.set_stroke(WHITE, 1)
+        rect.set_fill(GREY_E, 1)
+        result.add_to_back(rect)
+
+    return result
