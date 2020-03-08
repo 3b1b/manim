@@ -3297,7 +3297,7 @@ class ShowLimitToPdf(Scene):
             "Probability",
         )
         prob_label.space_out_submobjects(1.1)
-        prob_label.next_to(bars, UP, MED_LARGE_BUFF)
+        prob_label.next_to(bars[10], UL, LARGE_BUFF)
         height_word = prob_label[0]
         height_cross = Cross(height_word)
         area_word = TextMobject("Area")
