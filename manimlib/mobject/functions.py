@@ -21,12 +21,14 @@ class ImplicitFunction(VMobject):
         "res": 50
     }
 
-    def __init__(self, function=None, **kwargs):
+    def __init__(self, function=None, to_coord=lambda t: t, **kwargs):
         """
         :param function: Function of k and y to graph isocontour f(x,y)=0
         """
         digest_config(self, kwargs)
         self.function = function
+
+        self.coord_func = to_coord
 
         VMobject.__init__(self, **kwargs)
 
@@ -232,16 +234,20 @@ class ImplicitFunction(VMobject):
             epta = np.array(eptt)
             contours[sptt] = try_rem(contours[sptt], eptt)
             contours = {k: try_rem(arr, sptt) for k, arr in contours.items()}
-            self.start_new_path(spta)
+            sptac = self.coord_func(spta)
+            self.start_new_path(sptac)
+            eptac = self.coord_func(epta)
             cur_pt = epta
+            cur_ptc = eptac
             pts = []
             while cur_pt is not None:
-                pts.append(cur_pt)
+                pts.append(cur_ptc)
                 cur_ptt = tuple(cur_pt)
                 if len(contours[cur_ptt])>0:
                     next_ptt = contours[cur_ptt][0]
                     next_pt = np.array(next_ptt)
                     cur_pt = next_pt
+                    cur_ptc = self.coord_func(cur_pt)
                     contours[cur_ptt] = try_rem(contours[cur_ptt], next_ptt)
                     contours = {k: try_rem(arr, cur_ptt) for k, arr in contours.items()}
                 else:
