@@ -48,6 +48,12 @@ CASE_DATA = [
     14901,
     17865,
     21395,
+    # 25404,
+    # 29256,
+    # 33627,
+    # 38170,
+    # 45421,
+    # 53873,
 ]
 SICKLY_GREEN = "#9BBD37"
 
@@ -345,17 +351,48 @@ class Thumbnail(IntroducePlot):
         self.add(axes)
 
         dots = VGroup()
+        data = CASE_DATA
+        data.append(25398)
         for day, nc in zip(it.count(1), CASE_DATA):
             dot = Dot()
-            dot.set_height(0.075)
+            dot.set_height(0.2)
             dot.x = day
             dot.y = nc
             dot.axes = axes
             dot.add_updater(lambda d: d.move_to(d.axes.c2p(d.x, d.y)))
             dots.add(dot)
         dots.set_color(YELLOW)
+        dots.set_submobject_colors_by_gradient(BLUE, GREEN, RED)
 
         self.add(dots)
+
+        title = TextMobject("COVID-19")
+        title.set_height(1)
+        title.set_color(RED)
+        title.to_edge(UP, buff=LARGE_BUFF)
+
+        subtitle = TextMobject("and exponential growth")
+        subtitle.match_width(title)
+        subtitle.next_to(title, DOWN)
+
+        # self.add(title)
+        # self.add(subtitle)
+
+        title = TextMobject("How is ", "COVID-19\\\\", "currently growing?")
+        title[1].set_color(RED)
+        title.set_height(2.5)
+        title.to_edge(UP, buff=LARGE_BUFF)
+        self.add(title)
+
+        # self.remove(words)
+        # words = TextMobject("Exponential growth")
+        # words.move_to(ORIGIN, DL)
+        # words.apply_function(
+        #     lambda p: [
+        #         p[0], p[1] + np.exp(0.2 * p[0]), p[2]
+        #     ]
+        # )
+        # self.add(words)
 
         self.embed()
 
@@ -1270,7 +1307,7 @@ class SARSvs1918(Scene):
 
         n_cases_labels = VGroup(
             TextMobject("8,096 cases"),
-            TextMobject("1.9 billion cases"),
+            TextMobject("$\\sim$513{,}000{,}000 cases"),
         )
 
         for n_cases_label, title in zip(n_cases_labels, titles):
@@ -1285,8 +1322,6 @@ class SARSvs1918(Scene):
             )
             self.play(FadeInFrom(label, UP))
             self.wait()
-
-        self.embed()
 
 
 class ViralSpreadModelWithShuffling(ViralSpreadModel):
@@ -1746,8 +1781,8 @@ class SubtltyOfGrowthFactorShift(Scene):
             line = Line(LEFT, RIGHT)
             line.match_width(c2)
             line.set_stroke(WHITE, 2)
-            numer = c1.deepcopy()
-            denom = c2.deepcopy()
+            numer = c2.deepcopy()
+            denom = c1.deepcopy()
             frac = VGroup(numer, line, denom)
             frac.arrange(DOWN, buff=SMALL_BUFF)
             frac.scale(0.7)
@@ -1806,7 +1841,7 @@ class SubtltyOfGrowthFactorShift(Scene):
 
         self.play(
             ChangeDecimalToValue(gf_labels[-1][-1], alt_gf),
-            ChangeDecimalToValue(gf_labels[-1][0][-1], alt_change),
+            ChangeDecimalToValue(gf_labels[-1][0][0], alt_change),
             ChangeDecimalToValue(change_labels[-1], alt_change),
             ChangeDecimalToValue(totals[-1], alt_total),
         )
