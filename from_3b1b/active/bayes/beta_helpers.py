@@ -335,7 +335,7 @@ def get_beta_graph(axes, n_plus, n_minus):
 
 
 def get_beta_label(n_plus, n_minus, point=ORIGIN):
-    template = TextMobject("beta(", "00", ",", "00", ")")
+    template = TextMobject("Beta(", "00", ",", "00", ")")
     template.scale(1.5)
     a_label = Integer(n_plus + 1)
     a_label.set_color(GREEN)
@@ -390,6 +390,15 @@ def get_checks_and_crosses(bools, width=12):
     return result
 
 
+def get_underlines(marks):
+    underlines = VGroup()
+    for mark in marks:
+        underlines.add(Underline(mark))
+    for line in underlines:
+        line.align_to(underlines[-1], DOWN)
+    return underlines
+
+
 def get_random_checks_and_crosses(n=50, s=0.95, width=12):
     return get_checks_and_crosses(
         bools=(np.random.random(n) < s),
@@ -397,14 +406,15 @@ def get_random_checks_and_crosses(n=50, s=0.95, width=12):
     )
 
 
-def get_random_lt100_row(s, n=10):
-    values = np.random.randint(0, 100, n)
+def get_random_num_row(s, n=10):
+    values = np.random.random(n)
     nums = VGroup()
     syms = VGroup()
     for x, value in enumerate(values):
-        num = Integer(value)
+        num = DecimalNumber(value)
+        num.set_height(0.25)
         num.move_to(x * RIGHT)
-        num.positive = (num.get_value() < s * 100)
+        num.positive = (num.get_value() < s)
         if num.positive:
             num.set_color(GREEN)
             sym = TexMobject(CMARK_TEX)
@@ -519,3 +529,7 @@ def get_check_count_label(nc, nx, include_rect=True):
         result.add_to_back(rect)
 
     return result
+
+
+def reverse_smooth(t):
+    return smooth(1 - t)

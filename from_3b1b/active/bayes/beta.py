@@ -14,7 +14,7 @@ class BarChartTest(Scene):
         self.add(bar_chart)
 
 
-class Thumbnail(Scene):
+class Thumbnail1(Scene):
     def construct(self):
         p1 = "$96\\%$"
         p2 = "$93\\%$"
@@ -38,6 +38,161 @@ class Thumbnail(Scene):
         text.arrange(DOWN, buff=LARGE_BUFF)
         text.set_width(FRAME_WIDTH - 1)
         self.add(text)
+
+
+class Thumbnail2(Scene):
+    def construct(self):
+        axes = self.get_axes()
+        graph = get_beta_graph(axes, 2, 2)
+        # sub_graph = axes.get_graph(
+        #     lambda x: (1 - x) * graph.underlying_function(x)
+        # )
+        # sub_graph.add_line_to(axes.c2p(1, 0))
+        # sub_graph.add_line_to(axes.c2p(0, 0))
+        # sub_graph.set_stroke(YELLOW, 4)
+        # sub_graph.set_fill(YELLOW_D, 1)
+
+        new_graph = get_beta_graph(axes, 9, 2)
+        new_graph.set_stroke(GREEN, 4)
+        new_graph.set_fill(GREEN, 0.5)
+
+        self.add(axes)
+        self.add(graph)
+        self.add(new_graph)
+
+        arrow = Arrow(
+            axes.input_to_graph_point(0.5, graph),
+            axes.input_to_graph_point(0.8, new_graph),
+            path_arc=-90 * DEGREES,
+            buff=0.3
+        )
+        self.add(arrow)
+
+        formula = TexMobject(
+            "P(H|D) = {P(H)P(D|H) \\over P(D)}",
+            tex_to_color_map={
+                "H": YELLOW,
+                "D": GREEN,
+            }
+        )
+        formula.next_to(axes.c2p(0, 3), RIGHT, LARGE_BUFF)
+        formula.set_height(1.5)
+        formula.to_edge(LEFT)
+        formula.to_edge(UP, LARGE_BUFF)
+        formula.add_to_back(BackgroundRectangle(formula[:4], buff=0.25))
+
+        self.add(formula)
+
+    def get_axes(self, y_max=3, y_height=4.5, y_unit=0.5):
+        axes = get_beta_dist_axes(y_max=y_max, y_unit=y_unit)
+        axes.y_axis.set_height(y_height, about_point=axes.c2p(0, 0))
+        axes.to_edge(DOWN)
+        axes.scale(0.9)
+        return axes
+
+
+class Thumbnail3(Thumbnail2):
+    def construct(self):
+        axes = self.get_axes(y_max=4, y_height=6)
+        axes.set_height(7)
+        graph = get_beta_graph(axes, 9, 2)
+
+        self.add(axes)
+        self.add(graph)
+
+        label = TexMobject(
+            "\\text{Beta}(10, 3)",
+            tex_to_color_map={
+                "10": GREEN,
+                "3": RED,
+            }
+        )
+        label = get_beta_label(9, 2)
+        label.set_height(1.25)
+        label.next_to(axes.c2p(0, 3), RIGHT, LARGE_BUFF)
+
+        self.add(label)
+
+
+class HighlightReviewParts(Scene):
+    def construct(self):
+        # Setup up rectangles
+        rects = VGroup(*[Rectangle() for x in range(3)])
+        rects.set_stroke(width=0)
+        rects.set_fill(GREY, 0.5)
+
+        rects.set_height(1.35, stretch=True)
+        rects.set_width(9.75, stretch=True)
+
+        rects[0].move_to([-0.2, 0.5, 0])
+        rects[1].next_to(rects[0], DOWN, buff=0)
+        rects[2].next_to(rects[1], DOWN, buff=0)
+
+        rects[2].set_height(1, stretch=True, about_edge=UP)
+
+        inv_rects = VGroup()
+        for rect in rects:
+            fsr = FullScreenFadeRectangle()
+            fsr.append_points(rect.points[::-1])
+            inv_rects.add(fsr)
+
+        inv_rects.set_fill(BLACK, 0.85)
+
+        # Set up labels
+        ratings = [100, 96, 93]
+        n_reviews = [10, 50, 200]
+        colors = [PINK, BLUE, YELLOW]
+
+        review_labels = VGroup()
+        for rect, rating, nr, color in zip(rects, ratings, n_reviews, colors):
+            label = TexMobject(
+                f"{nr}", "\\text{ reviews }",
+                f"{rating}", "\\%",
+            )
+            label[2:].set_color(color)
+            label.set_height(1)
+            label.next_to(rect, UP, aligned_edge=RIGHT)
+            label.set_stroke(BLACK, 4, background=True)
+            fix_percent(label[3][0])
+            review_labels.add(label)
+
+        # Animations
+        curr_fsr = inv_rects[0]
+        curr_label = None
+
+        for fsr, label in zip(inv_rects, review_labels):
+            if curr_fsr is fsr:
+                self.play(VFadeIn(fsr))
+            else:
+                self.play(
+                    Transform(curr_fsr, fsr),
+                    MoveToTarget(curr_label),
+                )
+            self.add(label[2:])
+            self.wait(2)
+            self.add(label[:2])
+            self.wait(2)
+
+            label.generate_target()
+            label.target.scale(0.5)
+            if curr_label is None:
+                label.target.to_corner(UR)
+                label.target.shift(MED_LARGE_BUFF * LEFT)
+            else:
+                label.target.next_to(curr_label, DOWN)
+
+            curr_label = label
+        self.play(MoveToTarget(curr_label))
+        self.wait()
+
+        br = BackgroundRectangle(review_labels, buff=0.25)
+        br.set_fill(BLACK, 0.85)
+        self.add(br, review_labels)
+        self.play(
+            FadeOut(curr_fsr),
+            FadeIn(br),
+        )
+        self.wait()
 
 
 class ShowThreeCases(Scene):
@@ -248,7 +403,507 @@ class ShowThreeCases(Scene):
         return checks
 
 
+class PreviewThreeVideos(Scene):
+    def construct(self):
+        # Write equations
+        equations = VGroup(
+            TexMobject("{10", "\\over", "10}", "=", "100\\%"),
+            TexMobject("{48", "\\over", "50}", "=", "96\\%"),
+            TexMobject("{186", "\\over", "200}", "=", "93\\%"),
+        )
+        equations.arrange(RIGHT, buff=3)
+        equations.to_edge(UP)
+
+        colors = [PINK, BLUE, YELLOW]
+        for eq, color in zip(equations, colors):
+            eq[-1].set_color(color)
+            fix_percent(eq[-1][-1])
+
+        vs_labels = VGroup(*[TextMobject("vs.") for x in range(2)])
+        for eq1, eq2, vs in zip(equations, equations[1:], vs_labels):
+            vs.move_to(midpoint(eq1.get_right(), eq2.get_left()))
+
+        self.add(equations)
+        self.add(vs_labels)
+
+        # Show topics
+        title = TextMobject("To be explained:")
+        title.set_height(0.7)
+        title.next_to(equations, DOWN, LARGE_BUFF)
+        title.to_edge(LEFT)
+        title.add(Underline(title))
+
+        topics = VGroup(
+            TextMobject("Binomial distributions"),
+            TextMobject("Bayesian updating"),
+            TextMobject("Probability density functions"),
+            TextMobject("Beta distribution"),
+        )
+        topics.arrange(DOWN, buff=MED_LARGE_BUFF, aligned_edge=LEFT)
+        topics.next_to(title, DOWN, MED_LARGE_BUFF)
+        topics.to_edge(LEFT, buff=LARGE_BUFF)
+
+        bullets = VGroup()
+        for topic in topics:
+            bullet = Dot()
+            bullet.next_to(topic, LEFT)
+            bullets.add(bullet)
+
+        self.play(
+            Write(title),
+            Write(bullets),
+            run_time=1,
+        )
+        self.play(LaggedStart(*[
+            FadeIn(topic, lag_ratio=0.1)
+            for topic in topics
+        ], run_time=3, lag_ratio=0.3))
+        self.wait()
+
+        # Show videos
+        images = [
+            ImageMobject(os.path.join(
+                consts.VIDEO_DIR,
+                OUTPUT_DIRECTORY,
+                "images",
+                name
+            ))
+            for name in ["Thumbnail1", "Thumbnail2", "Thumbnail3"]
+        ]
+        thumbnails = Group()
+        for image in images:
+            image.set_width(FRAME_WIDTH / 3 - 1)
+            rect = SurroundingRectangle(image, buff=0)
+            rect.set_stroke(WHITE, 3)
+            rect.set_fill(BLACK, 1)
+            thumbnails.add(Group(rect, image))
+
+        thumbnails.arrange(RIGHT, buff=LARGE_BUFF)
+
+        for topic, i in zip(topics, [0, 1, 1, 2]):
+            thumbnail = thumbnails[i]
+            topic.generate_target()
+            topic.target.scale(0.6)
+            topic.target.next_to(thumbnail, DOWN, aligned_edge=LEFT)
+        topics[2].target.next_to(
+            topics[1].target, DOWN,
+            aligned_edge=LEFT,
+        )
+
+        self.play(
+            FadeOutAndShift(title, LEFT),
+            FadeOutAndShift(bullets, LEFT),
+            LaggedStartMap(MoveToTarget, topics),
+            LaggedStartMap(FadeIn, thumbnails),
+        )
+        self.wait()
+
+        tn_groups = Group(
+            Group(thumbnails[0], topics[0]),
+            Group(thumbnails[1], topics[1], topics[2]),
+            Group(thumbnails[2], topics[3]),
+        )
+
+        setup_words = TextMobject("Set up the model")
+        analysis_words = TextMobject("Analysis")
+        for words in [setup_words, analysis_words]:
+            words.scale(topics[0][0].get_height() / words[0][0].get_height())
+            words.set_color(YELLOW)
+        setup_words.move_to(topics[0], UL)
+        analysis_words.next_to(topics[3], DOWN, aligned_edge=LEFT)
+
+        def set_opacity(mob, alpha):
+            for sm in mob.family_members_with_points():
+                sm.set_opacity(alpha)
+            return mob
+
+        self.play(ApplyFunction(lambda m: set_opacity(m, 0.2), tn_groups[1:]))
+        self.play(
+            FadeIn(setup_words, lag_ratio=0.1),
+            topics[0].next_to, setup_words, DOWN, {"aligned_edge": LEFT},
+        )
+        tn_groups[0].add(setup_words)
+        self.wait(2)
+        for i in 0, 1:
+            self.play(
+                ApplyFunction(lambda m: set_opacity(m, 0.2), tn_groups[i]),
+                ApplyFunction(lambda m: set_opacity(m, 1), tn_groups[i + 1]),
+            )
+            self.wait(2)
+        self.play(FadeInFrom(analysis_words, 0.25 * UP))
+        tn_groups[2].add(analysis_words)
+        self.wait(2)
+
+        self.play(
+            FadeOut(setup_words),
+            FadeOut(topics[0]),
+            FadeOut(tn_groups[1]),
+            FadeOut(tn_groups[2]),
+            FadeOutAndShift(vs_labels, UP),
+            FadeOutAndShift(equations, UP),
+            ApplyFunction(lambda m: set_opacity(m, 1), thumbnails[0]),
+        )
+        thumbnails[0].generate_target()
+        # thumbnails[0].target.set_width(FRAME_WIDTH)
+        # thumbnails[0].target.center()
+        thumbnails[0].target.to_edge(UP)
+        self.play(MoveToTarget(thumbnails[0], run_time=4))
+        self.wait()
+
+
+class LetsLookAtOneAnswer(TeacherStudentsScene):
+    def construct(self):
+        self.remove(self.background)
+        self.teacher_says(
+            "Let me show you\\\\one answer.",
+            added_anims=[
+                self.get_student_changes("pondering", "thinking", "pondering")
+            ]
+        )
+        self.look_at(self.screen)
+        self.change_all_student_modes("thinking", look_at_arg=self.screen)
+        self.wait(4)
+
+
+class LaplacesRuleOfSuccession(Scene):
+    def construct(self):
+        # Setup
+        title = TextMobject("How to read a rating")
+        title.set_height(0.75)
+        title.to_edge(UP)
+        underline = Underline(title)
+        underline.scale(1.2)
+        self.add(title, underline)
+
+        data = get_checks_and_crosses(11 * [True] + [False], width=10)
+        data.shift(DOWN)
+        underlines = get_underlines(data)
+
+        real_data = data[:10]
+        fake_data = data[10:]
+
+        def get_review_label(num, denom):
+            result = VGroup(
+                Integer(num, color=GREEN),
+                TextMobject("out of"),
+                Integer(denom),
+            )
+            result.arrange(RIGHT)
+            result.set_height(0.6)
+            return result
+
+        review_label = get_review_label(10, 10)
+        review_label.next_to(data[:10], UP, MED_LARGE_BUFF)
+
+        # Show initial review
+        self.add(review_label)
+        self.add(underlines[:10])
+
+        self.play(
+            ShowIncreasingSubsets(real_data, int_func=np.ceil),
+            CountInFrom(review_label[0], 0),
+            rate_func=lambda t: smooth(t, 3),
+        )
+        self.wait()
+
+        # Fake data
+        fd_rect = SurroundingRectangle(VGroup(fake_data, underlines[10:]))
+        fd_rect.set_stroke(WHITE, 2)
+        fd_rect.set_fill(GREY_E, 1)
+
+        fd_label = TextMobject("Pretend you see\\\\two more")
+        fd_label.next_to(fd_rect, DOWN)
+        fd_label.shift_onto_screen()
+
+        self.play(
+            FadeInFrom(fd_label, UP),
+            DrawBorderThenFill(fd_rect),
+            ShowCreation(underlines[10:])
+        )
+        self.wait()
+        for mark in data[10:]:
+            self.play(Write(mark))
+        self.wait()
+
+        # Update rating
+        review_center = VectorizedPoint(review_label.get_center())
+        pretend_label = TextMobject("Pretend that it's")
+        pretend_label.match_width(review_label)
+        pretend_label.next_to(review_label, UP, MED_LARGE_BUFF)
+        pretend_label.match_x(data)
+        pretend_label.set_color(BLUE_D)
+
+        old_review_label = VGroup(Integer(0), TextMobject("out of"), Integer(0))
+        old_review_label.become(review_label)
+
+        self.add(old_review_label, review_label)
+        self.play(
+            review_center.set_x, data.get_center()[0],
+            MaintainPositionRelativeTo(review_label, review_center),
+            UpdateFromAlphaFunc(
+                review_label[0],
+                lambda m, a: m.set_value(int(interpolate(10, 11, a)))
+            ),
+            UpdateFromAlphaFunc(
+                review_label[2],
+                lambda m, a: m.set_value(int(interpolate(10, 12, a)))
+            ),
+            FadeInFrom(pretend_label, LEFT),
+            old_review_label.scale, 0.5,
+            old_review_label.set_opacity, 0.5,
+            old_review_label.to_edge, LEFT,
+        )
+        self.wait()
+
+        # Show fraction
+        eq = TexMobject(
+            "{11", "\\over", "12}",
+            "\\approx", "91.7\\%"
+        )
+        fix_percent(eq[-1][-1])
+        eq.set_color_by_tex("11", GREEN)
+
+        eq.next_to(pretend_label, RIGHT)
+        eq.to_edge(RIGHT, buff=MED_LARGE_BUFF)
+
+        self.play(Write(eq))
+        self.wait()
+        self.play(ShowCreationThenFadeAround(eq))
+        self.wait()
+
+        # Remove clutter
+        old_review_label.generate_target()
+        old_review_label.target.next_to(title, DOWN, LARGE_BUFF)
+        old_review_label.target.to_edge(LEFT)
+        old_review_label.target.set_opacity(1)
+        arrow = Vector(0.5 * RIGHT)
+        arrow.next_to(old_review_label.target, RIGHT)
+
+        self.play(
+            MoveToTarget(old_review_label),
+            FadeIn(arrow),
+            eq.next_to, arrow, RIGHT,
+            FadeOutAndShift(
+                VGroup(
+                    fake_data,
+                    underlines,
+                    pretend_label,
+                    review_label,
+                    fd_rect, fd_label,
+                ),
+                DOWN,
+                lag_ratio=0.01,
+            ),
+            real_data.match_width, old_review_label.target,
+            real_data.next_to, old_review_label.target, DOWN,
+        )
+        self.wait()
+
+        # Show 48 of 50 case
+        # Largely copied from above...not great
+        data = get_checks_and_crosses(
+            48 * [True] + 2 * [False] + [True, False],
+            width=FRAME_WIDTH - 1,
+        )
+        data.shift(DOWN)
+        underlines = get_underlines(data)
+
+        review_label = get_review_label(48, 50)
+        review_label.next_to(data, UP, MED_LARGE_BUFF)
+
+        true_data = data[:-2]
+        fake_data = data[-2:]
+
+        fd_rect.replace(fake_data, stretch=True)
+        fd_rect.stretch(1.2, 0)
+        fd_rect.stretch(2.2, 1)
+        fd_rect.shift(0.025 * DOWN)
+        fd_label.next_to(fd_rect, DOWN, LARGE_BUFF)
+        fd_label.shift_onto_screen()
+        fd_arrow = Arrow(fd_label.get_top(), fd_rect.get_corner(DL))
+
+        self.play(
+            FadeIn(underlines[:-2]),
+            ShowIncreasingSubsets(true_data, int_func=np.ceil),
+            CountInFrom(review_label[0], 0),
+            UpdateFromAlphaFunc(
+                review_label,
+                lambda m, a: m.set_opacity(a),
+            ),
+        )
+        self.wait()
+        self.play(
+            FadeIn(fd_label),
+            GrowArrow(fd_arrow),
+            FadeIn(fd_rect),
+            Write(fake_data),
+            Write(underlines[-2:]),
+        )
+        self.wait()
+
+        # Pretend it's 49 / 52
+        old_review_label = VGroup(Integer(0), TextMobject("out of"), Integer(0))
+        old_review_label.become(review_label)
+        review_center = VectorizedPoint(review_label.get_center())
+
+        self.play(
+            review_center.set_x, data.get_center()[0] + 3,
+            MaintainPositionRelativeTo(review_label, review_center),
+            UpdateFromAlphaFunc(
+                review_label[0],
+                lambda m, a: m.set_value(int(interpolate(48, 49, a)))
+            ),
+            UpdateFromAlphaFunc(
+                review_label[2],
+                lambda m, a: m.set_value(int(interpolate(50, 52, a)))
+            ),
+            old_review_label.scale, 0.5,
+            old_review_label.to_edge, LEFT,
+        )
+        self.wait()
+
+        arrow2 = Vector(0.5 * RIGHT)
+        arrow2.next_to(old_review_label, RIGHT)
+
+        eq2 = TexMobject(
+            "{49", "\\over", "52}",
+            "\\approx", "94.2\\%"
+        )
+        fix_percent(eq2[-1][-1])
+        eq2[0].set_color(GREEN)
+        eq2.next_to(arrow2, RIGHT)
+        eq2.save_state()
+        eq2[1].set_opacity(0)
+        eq2[3:].set_opacity(0)
+        eq2[0].replace(review_label[0])
+        eq2[2].replace(review_label[2])
+
+        self.play(
+            Restore(eq2, run_time=1.5),
+            FadeIn(arrow2),
+        )
+        self.wait()
+
+        faders = VGroup(
+            fd_rect, fd_arrow, fd_label,
+            fake_data, underlines,
+            review_label,
+        )
+        self.play(
+            FadeOut(faders),
+            true_data.match_width, old_review_label,
+            true_data.next_to, old_review_label, DOWN,
+        )
+
+        # 200 review case
+        final_review_label = get_review_label(186, 200)
+        final_review_label.match_height(old_review_label)
+        final_review_label.move_to(old_review_label, LEFT)
+        final_review_label.shift(
+            arrow2.get_center() -
+            arrow.get_center()
+        )
+
+        data = get_checks_and_crosses([True] * 186 + [False] * 14 + [True, False])
+        data[:200].arrange_in_grid(10, 20, buff=0)
+        data[-2:].next_to(data[:200], DOWN, buff=0)
+        data.set_width(FRAME_WIDTH / 2 - 1)
+        data.to_edge(RIGHT, buff=MED_SMALL_BUFF)
+        data.to_edge(DOWN)
+        for mark in data:
+            mark.scale(0.5)
+
+        true_data = data[:-2]
+        fake_data = data[-2:]
+
+        self.play(
+            UpdateFromAlphaFunc(
+                final_review_label,
+                lambda m, a: m.set_opacity(a),
+            ),
+            CountInFrom(final_review_label[0], 0),
+            ShowIncreasingSubsets(true_data),
+        )
+        self.wait()
+
+        arrow3 = Vector(0.5 * RIGHT)
+        arrow3.next_to(final_review_label, RIGHT)
+
+        eq3 = TexMobject(
+            "{187", "\\over", "202}",
+            "\\approx", "92.6\\%"
+        )
+        fix_percent(eq3[-1][-1])
+        eq3[0].set_color(GREEN)
+        eq3.next_to(arrow3, RIGHT)
+
+        self.play(
+            GrowArrow(arrow3),
+            FadeIn(eq3),
+            Write(fake_data)
+        )
+        self.wait()
+        self.play(
+            true_data.match_width, final_review_label,
+            true_data.next_to, final_review_label, DOWN,
+            FadeOut(fake_data)
+        )
+        self.wait()
+
+        # Make a selection
+        rect = SurroundingRectangle(VGroup(eq2, old_review_label))
+        rect.set_stroke(YELLOW, 2)
+
+        self.play(
+            ShowCreation(rect),
+            eq2[-1].set_color, YELLOW,
+        )
+        self.wait()
+
+        # Retitle
+        name = TextMobject("Laplace's rule of succession")
+        name.match_height(title)
+        name.move_to(title)
+        name.set_color(TEAL)
+
+        self.play(
+            FadeInFromDown(name),
+            FadeOutAndShift(title, UP),
+            underline.match_width, name,
+        )
+        self.wait()
+
+
+class AskWhy(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Wait...why?",
+            look_at_arg=self.screen,
+        )
+        self.play(
+            self.students[0].change, "confused", self.screen,
+            self.students[1].change, "confused", self.screen,
+            self.teacher.change, "tease", self.students[2].eyes,
+        )
+        self.wait(3)
+
+        self.students[2].bubble.content.unlock_triangulation()
+        self.student_says(
+            "Is that really\\\\the answer?",
+            target_mode="raise_right_hand",
+            added_anims=[self.teacher.change, "thinking"],
+        )
+        self.wait(2)
+        self.teacher_says("Let's dive in!", target_mode="hooray")
+        self.change_all_student_modes("hooray")
+        self.wait(3)
+
+
 class WhatsTheModel(Scene):
+    CONFIG = {
+        "random_seed": 5,
+    }
+
     def construct(self):
         self.add_questions()
         self.introduce_buyer_and_seller()
@@ -416,7 +1071,7 @@ class WhatsTheModel(Scene):
         if positive:
             new_mode = random.choice([
                 "hooray",
-                "happy",
+                "coin_flip_1",
             ])
         else:
             new_mode = random.choice([
@@ -450,10 +1105,10 @@ class IsSellerOne100(Scene):
     def construct(self):
         self.add_review()
         self.show_probability()
-        self.show_random_numbers()
+        self.show_simulated_reviews()
 
     def add_review(self):
-        reviews = VGroup(*[TexMobject("\\checkmark") for x in range(10)])
+        reviews = VGroup(*[TexMobject(CMARK_TEX) for x in range(10)])
         reviews.arrange(RIGHT)
         reviews.scale(2)
         reviews.set_color(GREEN)
@@ -556,6 +1211,221 @@ class IsSellerOne100(Scene):
             prob_label, rhs, q_mark,
         )
 
+    def show_simulated_reviews(self):
+        prob_label_group = self.prob_label_group
+        review_group = self.review_group
+
+        # Set up decimals
+        random.seed(2)
+        decimals = VGroup()
+        for x in range(10):
+            dec = DecimalNumber()
+            decimals.add(dec)
+
+        def randomize_decimals(decimals):
+            for dec in decimals:
+                value = random.random()
+                dec.set_value(value)
+                if value > 0.95:
+                    dec.set_color(RED)
+                else:
+                    dec.set_color(WHITE)
+
+        randomize_decimals(decimals)
+
+        decimals.set_height(0.3)
+        decimals.arrange(RIGHT, buff=MED_LARGE_BUFF)
+        decimals.next_to(ORIGIN, DOWN)
+        decimals[0].set_value(0.42)
+        decimals[0].set_color(WHITE)
+        decimals[1].set_value(0.97)
+        decimals[1].set_color(RED)
+
+        random_label = TextMobject("Random number\\\\in [0, 1]")
+        random_label.scale(0.7)
+        random_label.next_to(decimals[0], DOWN)
+        random_label.set_color(GREY_B)
+
+        arrows = VGroup()
+        for dec in decimals:
+            arrow = Vector(0.4 * UP)
+            arrow.next_to(dec, UP)
+            arrows.add(arrow)
+
+        # Set up marks
+        def get_marks(decs, arrows):
+            marks = VGroup()
+            for dec, arrow in zip(decs, arrows):
+                if dec.get_value() < 0.95:
+                    mark = TexMobject(CMARK_TEX)
+                    mark.set_color(GREEN)
+                else:
+                    mark = TexMobject(XMARK_TEX)
+                    mark.set_color(RED)
+                mark.set_height(0.5)
+                mark.next_to(arrow, UP)
+                marks.add(mark)
+            return marks
+
+        marks = get_marks(decimals, arrows)
+
+        lt_p95 = TexMobject("< 0.95")
+        gte_p95 = TexMobject("\\ge 0.95")
+        for label in lt_p95, gte_p95:
+            label.match_height(decimals[0])
+
+        lt_p95.next_to(decimals[0], RIGHT, MED_SMALL_BUFF)
+        gte_p95.next_to(decimals[1], RIGHT, MED_SMALL_BUFF)
+        lt_p95.set_color(GREEN)
+        gte_p95.set_color(RED)
+
+        # Introduce simulation
+        review_group.save_state()
+        self.play(
+            review_group.scale, 0.25,
+            review_group.to_corner, UR,
+            Write(random_label),
+            CountInFrom(decimals[0], 0),
+        )
+        self.wait()
+        self.play(FadeInFrom(lt_p95, LEFT))
+        self.play(
+            GrowArrow(arrows[0]),
+            FadeInFrom(marks[0], DOWN)
+        )
+        self.wait()
+        self.play(
+            FadeOutAndShift(lt_p95, 0.5 * RIGHT),
+            FadeInFrom(gte_p95, 0.5 * LEFT),
+        )
+        self.play(
+            random_label.match_x, decimals[1],
+            CountInFrom(decimals[1], 0),
+            UpdateFromAlphaFunc(
+                decimals[1],
+                lambda m, a: m.set_opacity(a),
+            ),
+        )
+        self.play(
+            GrowArrow(arrows[1]),
+            FadeInFrom(marks[1], DOWN),
+        )
+        self.wait()
+        self.play(
+            LaggedStartMap(
+                CountInFrom, decimals[2:],
+            ),
+            UpdateFromAlphaFunc(
+                decimals[2:],
+                lambda m, a: m.set_opacity(a),
+            ),
+            FadeOut(gte_p95),
+            run_time=1,
+        )
+        self.add(decimals)
+        self.play(
+            LaggedStartMap(GrowArrow, arrows[2:]),
+            LaggedStartMap(FadeInFromDown, marks[2:]),
+            run_time=1
+        )
+        self.add(arrows, marks)
+        self.wait()
+
+        # Add new rows
+        decimals.arrows = arrows
+        decimals.add_updater(lambda d: d.next_to(d.arrows, DOWN))
+        added_anims = [FadeOut(random_label)]
+        rows = VGroup(marks)
+        for x in range(3):
+            self.play(
+                arrows.shift, DOWN,
+                UpdateFromFunc(decimals, randomize_decimals),
+                *added_anims,
+            )
+            added_anims = []
+            new_marks = get_marks(decimals, arrows)
+            self.play(LaggedStartMap(FadeInFromDown, new_marks))
+            self.wait()
+            rows.add(new_marks)
+
+        # Create a stockpile of new rows
+        added_rows = VGroup()
+        decimals.clear_updaters()
+        decimals.save_state()
+        for x in range(100):
+            randomize_decimals(decimals)
+            added_rows.add(get_marks(decimals, arrows))
+        decimals.restore()
+
+        # Compress rows
+        rows.generate_target()
+        for group in rows.target, added_rows:
+            group.scale(0.3)
+            for row in group:
+                row.arrange(RIGHT, buff=SMALL_BUFF)
+            group.arrange(DOWN, buff=0.2)
+        rows.target.next_to(prob_label_group, DOWN, MED_LARGE_BUFF)
+        rows.target.set_x(-3.5)
+
+        nr = 15
+        added_rows[:nr].move_to(rows.target, UP)
+        added_rows[nr:2 * nr].move_to(rows.target, UP)
+        added_rows[nr:2 * nr].shift(3.5 * RIGHT)
+        added_rows[2 * nr:3 * nr].move_to(rows.target, UP)
+        added_rows[2 * nr:3 * nr].shift(7 * RIGHT)
+        added_rows = added_rows[4:3 * nr]
+
+        self.play(
+            MoveToTarget(rows),
+            FadeOut(decimals),
+            FadeOut(arrows),
+        )
+        self.play(ShowIncreasingSubsets(added_rows), run_time=3)
+
+        # Show scores
+        all_rows = VGroup(*rows, *added_rows)
+        scores = VGroup()
+        ten_rects = VGroup()
+        for row in all_rows:
+            score = Integer(sum([
+                mark.get_color() == Color(GREEN)
+                for mark in row
+            ]))
+            score.match_height(row)
+            score.next_to(row, RIGHT)
+            if score.get_value() == 10:
+                score.set_color(TEAL)
+                ten_rects.add(SurroundingRectangle(score))
+            scores.add(score)
+
+        ten_rects.set_stroke(YELLOW, 2)
+
+        self.play(FadeIn(scores))
+        self.wait()
+        self.play(LaggedStartMap(ShowCreation, ten_rects))
+        self.play(LaggedStartMap(FadeOut, ten_rects))
+        self.wait(2)
+
+        # Show alternate possibilities
+        prob = DecimalNumber(0.95)
+        prob.set_color(YELLOW)
+        template = prob_label_group[0][-1]
+        prob.match_height(template)
+        prob.move_to(template, LEFT)
+        rect = BackgroundRectangle(template, buff=SMALL_BUFF)
+        rect.set_fill(BLACK, 1)
+        self.add(rect)
+        self.add(prob)
+        self.play(
+            LaggedStartMap(FadeOutAndShift, all_rows, lag_ratio=0.01),
+            LaggedStartMap(FadeOutAndShift, scores, lag_ratio=0.01),
+            Restore(review_group),
+        )
+        for value in [0.9, 0.99, 0.8, 0.95]:
+            self.play(ChangeDecimalToValue(prob, value))
+            self.wait()
+
+    # No longer used
     def show_random_numbers(self):
         prob_label_group = self.prob_label_group
 
@@ -585,12 +1455,12 @@ class IsSellerOne100(Scene):
         square.set_stroke(width=0)
         square.set_fill(YELLOW, 0.5)
         square.set_width(1.5 * rows[0][0].get_height())
-        highlights = VGroup(*[
-            square.copy().move_to(mob)
-            for row in rows
-            for mob in row
-            if mob.get_value() < 95
-        ])
+        # highlights = VGroup(*[
+        #     square.copy().move_to(mob)
+        #     for row in rows
+        #     for mob in row
+        #     if mob.get_value() < 95
+        # ])
 
         row_rects = VGroup(*[
             SurroundingRectangle(row)
@@ -813,7 +1683,7 @@ class AskAboutUnknownProbabilities(Scene):
             LaggedStartMap(Restore, prob_labels),
             run_time=1
         )
-        self.wait(2)
+        self.wait(10)
         # self.play(
         #     LaggedStartMap(
         #         ShowCreationThenFadeOut,
@@ -969,6 +1839,175 @@ class AskAboutUnknownProbabilities(Scene):
         ))
         self.wait()
         self.play(FadeOut(coins))
+
+
+class AskProbabilityOfCoins(Scene):
+    def construct(self):
+        condition = VGroup(
+            TextMobject("If you've seen"),
+            Integer(80, color=BLUE_C),
+            get_coin(BLUE_E, "H").set_height(0.5),
+            TextMobject("and"),
+            Integer(20, color=RED_C),
+            get_coin(RED_E, "T").set_height(0.5),
+        )
+        condition.arrange(RIGHT)
+        condition.to_edge(UP)
+        self.add(condition)
+
+        question = TexMobject(
+            "\\text{What is }",
+            "P(", "00", ")", "?"
+        )
+        coin = get_coin(BLUE_E, "H")
+        coin.replace(question.get_part_by_tex("00"))
+        question.replace_submobject(
+            question.index_of_part_by_tex("00"),
+            coin
+        )
+        question.next_to(condition, DOWN)
+        self.add(question)
+
+        values = ["H"] * 80 + ["T"] * 20
+        random.shuffle(values)
+
+        coins = VGroup(*[
+            get_coin(
+                BLUE_E if symbol == "H" else RED_E,
+                symbol
+            )
+            for symbol in values
+        ])
+        coins.arrange_in_grid(10, 10, buff=MED_SMALL_BUFF)
+        coins.set_width(5)
+        coins.next_to(question, DOWN, MED_LARGE_BUFF)
+
+        self.play(
+            ShowIncreasingSubsets(coins),
+            run_time=8,
+            rate_func=bezier([0, 0, 1, 1])
+        )
+        self.wait()
+
+        self.embed()
+
+
+class RunCarFactory(Scene):
+    def construct(self):
+        # Factory
+        factory = SVGMobject(file_name="factory")
+        factory.set_fill(GREY_D)
+        factory.set_stroke(width=0)
+        factory.flip()
+        factory.set_height(6)
+        factory.to_edge(LEFT)
+
+        self.add(factory)
+
+        # Dumb hack
+        l1 = Line(
+            factory[0].points[-200],
+            factory[0].points[-216],
+        )
+        l2 = Line(
+            factory[0].points[-300],
+            factory[0].points[-318],
+        )
+        for line in l1, l2:
+            square = Square()
+            square.set_fill(BLACK, 1)
+            square.set_stroke(width=0)
+            square.replace(line)
+            factory.add(square)
+
+        rect = Rectangle()
+        rect.match_style(factory)
+        rect.set_height(1.1)
+        rect.set_width(6.75, stretch=True)
+        rect.move_to(factory, DL)
+
+        # Get cars
+        car = Car(color=interpolate_color(BLUE_E, GREY_C, 0.5))
+        car.set_height(0.9)
+        for tire in car.get_tires():
+            tire.set_fill(GREY_C)
+            tire.set_stroke(BLACK)
+        car.randy.set_opacity(0)
+        car.move_to(rect.get_corner(DR))
+
+        cars = VGroup()
+        n_cars = 20
+        for x in range(n_cars):
+            cars.add(car.copy())
+
+        for car in cars[4], cars[6]:
+            scratch = VMobject()
+            scratch.start_new_path(UP)
+            scratch.add_line_to(0.25 * DL)
+            scratch.add_line_to(0.25 * UR)
+            scratch.add_line_to(DOWN)
+            scratch.set_stroke([RED_A, RED_C], [0.1, 2, 2, 0.1])
+            scratch.set_height(0.25)
+            scratch.move_to(car)
+            scratch.shift(0.1 * DOWN)
+            car.add(scratch)
+
+        self.add(cars, rect)
+        self.play(LaggedStartMap(
+            MoveCar, cars,
+            lambda m: (m, m.get_corner(DR) + 10 * RIGHT),
+            lag_ratio=0.3,
+            rate_func=linear,
+            run_time=1.5 * n_cars,
+        ))
+        self.remove(cars)
+
+
+class CarFactoryNumbers(Scene):
+    def construct(self):
+        # Test words
+        denom_words = TextMobject(
+            "in a test of 100 cars",
+            tex_to_color_map={"100": BLUE},
+        )
+        denom_words.to_corner(UR)
+
+        numer_words = TextMobject(
+            "2 defects found",
+            tex_to_color_map={"2": RED}
+        )
+        numer_words.move_to(denom_words, LEFT)
+
+        self.play(Write(denom_words, run_time=1))
+        self.wait()
+        self.play(
+            denom_words.next_to, numer_words, DOWN, {"aligned_edge": LEFT},
+            FadeIn(numer_words),
+        )
+        self.wait()
+
+        # Question words
+        question = VGroup(
+            TextMobject("How do you plan"),
+            TextMobject("for"),
+            Integer(int(1e6), color=BLUE),
+            TextMobject("cars?")
+        )
+        question[1:].arrange(RIGHT, aligned_edge=DOWN)
+        question[2].shift(
+            (question[2][1].get_bottom()[1] - question[2][0].get_bottom()[1]) * UP
+        )
+        question[1:].next_to(question[0], DOWN, aligned_edge=LEFT)
+        question.next_to(denom_words, DOWN, LARGE_BUFF, aligned_edge=LEFT)
+
+        self.play(
+            UpdateFromAlphaFunc(
+                question,
+                lambda m, a: m.set_opacity(a),
+            ),
+            CountInFrom(question[2], 0, run_time=1.5)
+        )
+        self.wait()
 
 
 class ComplainAboutSimplisticModel(TeacherStudentsScene):
@@ -1191,7 +2230,7 @@ class AskInverseQuestion(WhatsTheModel):
         labels = VGroup(
             self.get_prob_review_label(10, 0),
             self.get_prob_review_label(48, 2),
-            self.get_prob_review_label(184, 16),
+            self.get_prob_review_label(186, 14),
         )
         labels.arrange(DOWN)
         labels.to_edge(UP)
@@ -1259,10 +2298,13 @@ class AskInverseQuestion(WhatsTheModel):
 
 class SimulationsOf10Reviews(Scene):
     CONFIG = {
-        "s": 0.95
+        "s": 0.95,
+        "histogram_height": 5,
+        "histogram_width": 10,
     }
 
     def construct(self):
+        # Add s label
         s_label = TexMobject("s = 0.95")
         s_label.set_height(0.3)
         s_label.to_corner(UL, buff=MED_SMALL_BUFF)
@@ -1271,8 +2313,9 @@ class SimulationsOf10Reviews(Scene):
         self.camera.frame.shift(LEFT)
         s_label.shift(LEFT)
 
-        np.random.seed(6)
-        row = get_random_lt100_row(self.s)
+        # Add random row
+        np.random.seed(0)
+        row = get_random_num_row(self.s)
         count = self.get_count(row)
         count.add_updater(
             lambda m: m.set_value(
@@ -1282,7 +2325,7 @@ class SimulationsOf10Reviews(Scene):
 
         def update_nums(nums):
             for num in nums:
-                num.set_value(np.random.randint(0, 100))
+                num.set_value(np.random.random())
 
         row.nums.save_state()
         row.nums.set_color(WHITE)
@@ -1304,14 +2347,7 @@ class SimulationsOf10Reviews(Scene):
 
         # Histogram
         data = np.zeros(11)
-        histogram = Histogram(
-            data,
-            bar_colors=[RED, RED, BLUE, GREEN]
-        )
-        histogram.to_edge(DOWN)
-
-        histogram.axes.y_labels.set_opacity(0)
-        histogram.axes.h_lines.set_opacity(0)
+        histogram = self.get_histogram(data)
 
         stacks = VGroup()
         for bar in histogram.bars:
@@ -1329,6 +2365,7 @@ class SimulationsOf10Reviews(Scene):
             stack.add(row)
             return row_count_group
 
+        # Random samples in histogram
         self.play(
             FadeIn(histogram),
             ApplyFunction(
@@ -1338,7 +2375,7 @@ class SimulationsOf10Reviews(Scene):
         )
         self.wait()
         for x in range(2):
-            row = get_random_lt100_row(self.s)
+            row = get_random_num_row(self.s)
             count = self.get_count(row)
             group = VGroup(row, count)
             self.play(FadeIn(group, lag_ratio=0.2))
@@ -1350,8 +2387,9 @@ class SimulationsOf10Reviews(Scene):
                 )
             )
 
+        # More!
         for x in range(40):
-            row = get_random_lt100_row(self.s)
+            row = get_random_num_row(self.s)
             count = self.get_count(row)
             lower_group = VGroup(row, count).copy()
             put_into_histogram(lower_group)
@@ -1377,7 +2415,7 @@ class SimulationsOf10Reviews(Scene):
         arrow.next_to(histogram.bars[10], UP, SMALL_BUFF)
 
         def update(dummy):
-            new_row = get_random_lt100_row(self.s)
+            new_row = get_random_num_row(self.s)
             row.become(new_row)
             count = sum([m.positive for m in new_row.nums])
             data[count] += 1
@@ -1391,12 +2429,37 @@ class SimulationsOf10Reviews(Scene):
         )
 
     #
+    def get_histogram(self, data):
+        histogram = Histogram(
+            data,
+            bar_colors=[RED, RED, BLUE, GREEN],
+            height=self.histogram_height,
+            width=self.histogram_width,
+        )
+        histogram.to_edge(DOWN)
+
+        histogram.axes.y_labels.set_opacity(0)
+        histogram.axes.h_lines.set_opacity(0)
+        return histogram
+
     def get_count(self, row):
         count = Integer()
         count.set_height(0.75)
         count.next_to(row, DOWN, buff=0.65)
         count.set_value(sum([s.positive for s in row.syms]))
         return count
+
+
+class SimulationsOf10ReviewsSquished(SimulationsOf10Reviews):
+    CONFIG = {
+        "histogram_height": 2,
+        "histogram_width": 11,
+    }
+
+    def get_histogram(self, data):
+        hist = super().get_histogram(data)
+        hist.to_edge(UP, buff=1.5)
+        return hist
 
 
 class SimulationsOf50Reviews(Scene):
@@ -1513,7 +2576,7 @@ class SimulationsOf50Reviews(Scene):
 
     def get_row(self, n=50):
         row = get_random_checks_and_crosses(n, self.s)
-        row.to_edge(UP)
+        row.move_to(3.5 * UP)
         return row
 
     def get_count(self, row):
@@ -1825,7 +2888,7 @@ class ShowBinomialFormula(SimulationsOf50Reviews):
             hist.rhs_value.set_value(new_dist.pmf(48))
 
         bar_copy = histogram.bars[48].copy()
-        value.initial_config["num_decimal_places"] = 2
+        value.initial_config["num_decimal_places"] = 3
         value.set_value(value.get_value())
         bar_copy.next_to(value, RIGHT, aligned_edge=DOWN)
         bar_copy.add_updater(
@@ -1905,6 +2968,114 @@ class ShowBinomialFormula(SimulationsOf50Reviews):
                 UpdateFromFunc(decimals, update_decimals),
                 UpdateFromFunc(histogram, update_histogram),
                 UpdateFromFunc(value, lambda m: m),
+                run_time=5,
+            )
+            self.wait()
+
+        # Write formula
+        clean_form = TexMobject(
+            "P(", "\\text{data}", "\\,|\\,", "{s}", ")", "=",
+            "c", "\\cdot",
+            "{s}", "^{\\#" + CMARK_TEX + "}",
+            "(1 - ", "{s}", ")", "^{\\#" + XMARK_TEX + "}",
+            tex_to_color_map={
+                "{s}": YELLOW,
+                "\\#" + CMARK_TEX: GREEN,
+                "\\#" + XMARK_TEX: RED,
+            }
+        )
+        clean_form.next_to(formula, DOWN, MED_LARGE_BUFF)
+        clean_form.save_state()
+        clean_form[:6].align_to(equation[1], RIGHT)
+        clean_form[6].match_x(formula[2])
+        clean_form[7].set_opacity(0)
+        clean_form[7].next_to(clean_form[6], RIGHT, SMALL_BUFF)
+        clean_form[8:11].match_x(formula[4:8])
+        clean_form[11:].match_x(formula[8:])
+        clean_form.saved_state.move_to(clean_form, LEFT)
+
+        fade_rects = VGroup(
+            BackgroundRectangle(equation[:2]),
+            BackgroundRectangle(formula),
+            BackgroundRectangle(VGroup(eq2, bar_copy)),
+        )
+        fade_rects.set_fill(BLACK, 0.8)
+        fade_rects[1].set_fill(opacity=0)
+
+        pre_c = formula[:4].copy()
+        pre_s = formula[4:8].copy()
+        pre_1ms = formula[8:].copy()
+
+        self.play(
+            FadeIn(fade_rects),
+            FadeIn(clean_form[:6])
+        )
+        self.play(ShowCreationThenFadeAround(clean_form[3]))
+        self.wait()
+        for cf, pre in (clean_form[6], pre_c), (clean_form[8:11], pre_s), (clean_form[11:], pre_1ms):
+            self.play(
+                GrowFromPoint(cf, pre.get_center()),
+                pre.move_to, cf,
+                pre.scale, 0,
+            )
+            self.remove(pre)
+            self.wait()
+
+        self.wait()
+        self.play(Restore(clean_form))
+
+        # Show with 480 and 20
+        top_fade_rect = BackgroundRectangle(histogram)
+        top_fade_rect.shift(SMALL_BUFF * DOWN)
+        top_fade_rect.scale(1.5, about_edge=DOWN)
+        top_fade_rect.set_fill(BLACK, 0)
+
+        new_formula = get_binomial_formula(500, 480, 0.96)
+        new_formula.move_to(formula)
+
+        def func500(x):
+            return scipy.stats.binom(500, x).pmf(480) + 1e-5
+
+        graph500 = low_axes.get_graph(func500, step_size=0.05)
+        graph500.set_stroke(TEAL, 3)
+
+        self.play(
+            top_fade_rect.set_opacity, 1,
+            fade_rects.set_opacity, 1,
+            FadeIn(new_formula)
+        )
+
+        self.clear()
+        self.add(new_formula, clean_form, low_axes, graph, v_line, dot)
+        self.add(low_axes.y_axis)
+
+        self.play(TransformFromCopy(graph, graph500))
+        self.wait()
+
+        y_axis = low_axes.y_axis
+        y_axis.save_state()
+        sf = 3
+        y_axis.stretch(sf, 1, about_point=low_axes.c2p(0, 0))
+        for label in y_label_copies:
+            label.stretch(1 / sf, 1)
+
+        v_line.suspend_updating()
+        v_line.graph = graph500
+        self.play(
+            Restore(y_axis, rate_func=reverse_smooth),
+            graph.stretch, sf, 1, {"about_edge": DOWN},
+            graph500.stretch, sf, 1, {"about_edge": DOWN},
+        )
+        v_line.resume_updating()
+        self.add(v_line, dot)
+
+        sub_decimals = VGroup(new_formula[5], new_formula[9])
+        sub_decimals.s_tracker = s_tracker
+
+        for s in [0.94, 0.98, 0.96]:
+            self.play(
+                s_tracker.set_value, s,
+                UpdateFromFunc(sub_decimals, update_decimals),
                 run_time=5,
             )
             self.wait()
@@ -2022,6 +3193,105 @@ class ShowBinomialFormula(SimulationsOf50Reviews):
         )
 
 
+class StateIndependence(Scene):
+    def construct(self):
+        row = get_random_checks_and_crosses()
+        row.to_edge(UP)
+        # self.add(row)
+
+        arrows = VGroup()
+        for m1, m2 in zip(row, row[1:]):
+            arrow = Arrow(
+                m1.get_bottom() + 0.025 * DOWN,
+                m2.get_bottom(),
+                path_arc=145 * DEGREES,
+                max_stroke_width_to_length_ratio=10,
+                max_tip_length_to_length_ratio=0.5,
+            )
+            arrow.tip.rotate(-10 * DEGREES)
+            arrow.shift(SMALL_BUFF * DOWN)
+            arrow.set_color(YELLOW)
+            arrows.add(arrow)
+
+        words = TextMobject("No influence")
+        words.set_height(0.25)
+        words.next_to(arrows[0], DOWN)
+
+        self.play(
+            ShowCreation(arrows[0]),
+            FadeIn(words)
+        )
+        for i in range(10):
+            self.play(
+                words.next_to, arrows[i + 1], DOWN,
+                FadeOut(arrows[i]),
+                ShowCreation(arrows[i + 1])
+            )
+            last_arrow = arrows[i + 1]
+
+        self.play(
+            FadeOut(words),
+            FadeOut(last_arrow),
+        )
+
+
+class IllustrateBinomialSetupWithCoins(Scene):
+    def construct(self):
+        coins = [
+            get_coin(BLUE_E, "H"),
+            get_coin(RED_E, "T"),
+        ]
+
+        coin_row = VGroup()
+        for x in range(12):
+            coin_row.add(random.choice(coins).copy())
+
+        coin_row.arrange(RIGHT)
+        coin_row.to_edge(UP)
+
+        first_coin = get_random_coin(shuffle_time=2, total_time=2)
+        first_coin.move_to(coin_row[0])
+
+        brace = Brace(coin_row, UP)
+        brace_label = brace.get_text("$N$ times")
+
+        prob_label = TexMobject(
+            "P(\\# 00 = k)",
+            tex_to_color_map={
+                "00": WHITE,
+                "k": GREEN,
+            }
+        )
+        heads = get_coin(BLUE_E, "H")
+        template = prob_label.get_part_by_tex("00")
+        heads.replace(template)
+        prob_label.replace_submobject(
+            prob_label.index_of_part(template),
+            heads,
+        )
+        prob_label.set_height(1)
+        prob_label.next_to(coin_row, DOWN, LARGE_BUFF)
+
+        self.camera.frame.set_height(1.5 * FRAME_HEIGHT)
+
+        self.add(first_coin)
+        for x in range(4):
+            self.wait()
+            first_coin.suspend_updating()
+            self.wait()
+            first_coin.resume_updating()
+
+        self.remove(first_coin)
+        self.play(
+            ShowIncreasingSubsets(coin_row, int_func=np.ceil),
+            GrowFromPoint(brace, brace.get_left()),
+            FadeInFrom(brace_label, 3 * LEFT)
+        )
+        self.wait()
+        self.play(FadeIn(prob_label, lag_ratio=0.1))
+        self.wait()
+
+
 class WriteLikelihoodFunction(Scene):
     def construct(self):
         formula = TexMobject(
@@ -2047,6 +3317,35 @@ class WriteLikelihoodFunction(Scene):
         self.wait()
 
         self.add(formula)
+        self.embed()
+
+
+class Guess96Percent(Scene):
+    def construct(self):
+        randy = Randolph()
+        randy.set_height(1)
+
+        bubble = SpeechBubble(height=2, width=3)
+        bubble.pin_to(randy)
+        words = TextMobject("96$\\%$, right?")
+        fix_percent(words[0][2])
+        bubble.add_content(words)
+
+        arrow = Vector(2 * RIGHT + DOWN)
+        arrow.next_to(randy, RIGHT)
+        arrow.shift(2 * UP)
+
+        self.play(
+            FadeIn(randy),
+            ShowCreation(bubble),
+            Write(words),
+        )
+        self.play(randy.change, "shruggie", randy.get_right() + RIGHT)
+        self.play(ShowCreation(arrow))
+        for x in range(2):
+            self.play(Blink(randy))
+            self.wait()
+
         self.embed()
 
 
@@ -2080,6 +3379,10 @@ class LikelihoodGraphFor10of10(ShowBinomialFormula):
         histogram.add(x_label)
         self.add(histogram)
 
+        arrow = Vector(DOWN)
+        arrow.next_to(histogram.bars[10], UP, SMALL_BUFF)
+        self.add(arrow)
+
         # Add formula
         prob_label = get_prob_review_label(10, 0)
         eq = TexMobject("=")
@@ -2090,12 +3393,6 @@ class LikelihoodGraphFor10of10(ShowBinomialFormula):
         equation = VGroup(prob_label, eq, formula, eq2, value)
         equation.arrange(RIGHT)
         equation.next_to(histogram, DOWN, MED_LARGE_BUFF)
-
-        arrow = Vector(DOWN)
-        arrow.next_to(histogram.bars[10], UP, SMALL_BUFF)
-
-        self.add(equation)
-        self.add(arrow)
 
         # Add lower axes
         low_axes = get_beta_dist_axes(y_max=1, y_unit=0.25, label_y=False)
@@ -2111,8 +3408,6 @@ class LikelihoodGraphFor10of10(ShowBinomialFormula):
         y_label_copies.next_to(low_axes, LEFT, 0, aligned_edge=UP)
         y_label_copies.shift(SMALL_BUFF * UP)
         low_axes.y_axis.add(y_label_copies)
-
-        self.add(low_axes)
 
         # Add lower plot
         s_tracker = ValueTracker(self.s)
@@ -2141,8 +3436,6 @@ class LikelihoodGraphFor10of10(ShowBinomialFormula):
         dot.set_height(0.05)
         dot.add_updater(lambda m: m.move_to(m.line.get_end()))
 
-        self.add(graph, v_line, dot)
-
         # Show simpler formula
         brace = Brace(formula, DOWN, buff=SMALL_BUFF)
         simpler_formula = TexMobject("s", "^{10}")
@@ -2157,8 +3450,11 @@ class LikelihoodGraphFor10of10(ShowBinomialFormula):
         rects.set_opacity(0.75)
 
         self.wait()
-        self.play(FadeIn(rects))
+        self.play(FadeIn(equation))
+
+        self.wait()
         self.play(
+            FadeIn(rects),
             GrowFromCenter(brace),
             FadeInFrom(simpler_formula, UP)
         )
@@ -2194,6 +3490,17 @@ class LikelihoodGraphFor10of10(ShowBinomialFormula):
 
         self.add(histogram)
         self.add(decimals, rects)
+        self.play(
+            FadeIn(low_axes),
+        )
+        self.play(
+            ShowCreation(v_line),
+            FadeIn(dot),
+        )
+        self.add(graph, v_line, dot)
+        self.play(ShowCreation(graph))
+        self.wait()
+
         always(arrow.next_to, histogram.bars[10], UP, SMALL_BUFF)
         for s in [0.8, 1]:
             self.play(
@@ -2260,21 +3567,20 @@ class StateNeedForBayesRule(TeacherStudentsScene):
             "thinking", "thinking", "pondering",
             look_at_arg=v_lines,
         )
-        self.wait(3)
+        self.wait(2)
 
         self.teacher_says(
-            "First we need\\\\Bayes' rule",
+            "But first...",
             added_anims=[
                 FadeOutAndShift(plot, LEFT),
                 FadeOutAndShift(v_lines, LEFT),
                 self.get_student_changes(
-                    "pondering", "thinking", "pondering",
+                    "erm", "erm", "erm",
                     look_at_arg=self.teacher.eyes,
                 )
             ]
         )
-        self.change_all_student_modes("hooray")
-        self.wait(2)
+        self.wait(5)
 
 
 class ShowBayesRule(Scene):
@@ -3389,3 +4695,185 @@ class ShowLimitToPdf(Scene):
             bar.move_to(h_line, DOWN)
             bars.add(bar)
         return bars
+
+
+class Part1EndScreen(PatreonEndScreen):
+    CONFIG = {
+        "specific_patrons": [
+            "1stViewMaths",
+            "Adam Dřínek",
+            "Aidan Shenkman",
+            "Alan Stein",
+            "Alex Mijalis",
+            "Alexis Olson",
+            "Ali Yahya",
+            "Andrew Busey",
+            "Andrew Cary",
+            "Andrew R. Whalley",
+            "Aravind C V",
+            "Arjun Chakroborty",
+            "Arthur Zey",
+            "Ashwin Siddarth",
+            "Austin Goodman",
+            "Avi Finkel",
+            "Awoo",
+            "Axel Ericsson",
+            "Ayan Doss",
+            "AZsorcerer",
+            "Barry Fam",
+            "Bernd Sing",
+            "Boris Veselinovich",
+            "Bradley Pirtle",
+            "Brandon Huang",
+            "Brian Staroselsky",
+            "Britt Selvitelle",
+            "Britton Finley",
+            "Burt Humburg",
+            "Calvin Lin",
+            "Charles Southerland",
+            "Charlie N",
+            "Chenna Kautilya",
+            "Chris Connett",
+            "Christian Kaiser",
+            "cinterloper",
+            "Clark Gaebel",
+            "Colwyn Fritze-Moor",
+            "Cooper Jones",
+            "Corey Ogburn",
+            "D. Sivakumar",
+            "Dan Herbatschek",
+            "Daniel Herrera C",
+            "Dave B",
+            "Dave Kester",
+            "dave nicponski",
+            "David B. Hill",
+            "David Clark",
+            "David Gow",
+            "Delton Ding",
+            "Dominik Wagner",
+            "Douglas Cantrell",
+            "emptymachine",
+            "Eric Younge",
+            "Eryq Ouithaqueue",
+            "Farzaneh Sarafraz",
+            "Federico Lebron",
+            "Frank R. Brown, Jr.",
+            "Giovanni Filippi",
+            "Hal Hildebrand",
+            "Hitoshi Yamauchi",
+            "Ivan Sorokin",
+            "Jacob Baxter",
+            "Jacob Harmon",
+            "Jacob Hartmann",
+            "Jacob Magnuson",
+            "Jake Vartuli - Schonberg",
+            "Jalex Stark",
+            "Jameel Syed",
+            "Jason Hise",
+            "Jayne Gabriele",
+            "Jean-Manuel Izaret",
+            "Jeff Linse",
+            "Jeff Straathof",
+            "Jimmy Yang",
+            "John C. Vesey",
+            "John Haley",
+            "John Le",
+            "John V Wertheim",
+            "Jonathan Heckerman",
+            "Jonathan Wilson",
+            "Joseph John Cox",
+            "Joseph Kelly",
+            "Josh Kinnear",
+            "Joshua Claeys",
+            "Juan Benet",
+            "Kai-Siang Ang",
+            "Kanan Gill",
+            "Karl Niu",
+            "Kartik Cating-Subramanian",
+            "Kaustuv DeBiswas",
+            "Killian McGuinness",
+            "Kros Dai",
+            "L0j1k",
+            "LAI Oscar",
+            "Lambda GPU Workstations",
+            "Lee Redden",
+            "Linh Tran",
+            "Luc Ritchie",
+            "Ludwig Schubert",
+            "Lukas Biewald",
+            "Magister Mugit",
+            "Magnus Dahlström",
+            "Manoj Rewatkar - RITEK SOLUTIONS",
+            "Mark B Bahu",
+            "Mark Heising",
+            "Mark Mann",
+            "Martin Price",
+            "Mathias Jansson",
+            "Matt Godbolt",
+            "Matt Langford",
+            "Matt Roveto",
+            "Matt Russell",
+            "Matteo Delabre",
+            "Matthew Bouchard",
+            "Matthew Cocke",
+            "Mia Parent",
+            "Michael Hardel",
+            "Michael W White",
+            "Mirik Gogri",
+            "Mustafa Mahdi",
+            "Márton Vaitkus",
+            "Nicholas Cahill",
+            "Nikita Lesnikov",
+            "Oleg Leonov",
+            "Oliver Steele",
+            "Omar Zrien",
+            "Owen Campbell-Moore",
+            "Patrick Lucas",
+            "Pavel Dubov",
+            "Peter Ehrnstrom",
+            "Peter Mcinerney",
+            "Pierre Lancien",
+            "Quantopian",
+            "Randy C. Will",
+            "rehmi post",
+            "Rex Godby",
+            "Ripta Pasay",
+            "Rish Kundalia",
+            "Roman Sergeychik",
+            "Roobie",
+            "Ryan Atallah",
+            "Samuel Judge",
+            "SansWord Huang",
+            "Scott Gray",
+            "Scott Walter, Ph.D.",
+            "soekul",
+            "Solara570",
+            "Steve Huynh",
+            "Steve Sperandeo",
+            "Steven Braun",
+            "Steven Siddals",
+            "Stevie Metke",
+            "supershabam",
+            "Suteerth Vishnu",
+            "Suthen Thomas",
+            "Tal Einav",
+            "Taras Bobrovytsky",
+            "Tauba Auerbach",
+            "Ted Suzman",
+            "Thomas J Sargent",
+            "Thomas Tarler",
+            "Tianyu Ge",
+            "Tihan Seale",
+            "Tyler VanValkenburg",
+            "Vassili Philippov",
+            "Veritasium",
+            "Vignesh Ganapathi Subramanian",
+            "Vinicius Reis",
+            "Xuanji Li",
+            "Yana Chernobilsky",
+            "Yavor Ivanov",
+            "YinYangBalance.Asia",
+            "Yu Jun",
+            "Yurii Monastyrshyn",
+        ],
+    }
