@@ -154,7 +154,7 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         "randomize_order": True,
         "capitalize": True,
         "name_y_spacing": 0.6,
-        "thanks_words": "Find value in this? Join me in thanking these patrons:",
+        "thanks_words": "Many thanks to this channel's supporters",
     }
 
     def construct(self):
