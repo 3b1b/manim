@@ -3054,7 +3054,9 @@ class ShowBinomialFormula(SimulationsOf50Reviews):
 
         y_axis = low_axes.y_axis
         y_axis.save_state()
-        sf = 3
+        sf = 3.04646403602878 # (scipy.stats.binom(50, x).pmf(48) + 1e-5) / (scipy.stats.binom(500, x).pmf(480) + 1e-5)
+                              # for x = 0.96, this should be the just right scale
+                              # cheers !
         y_axis.stretch(sf, 1, about_point=low_axes.c2p(0, 0))
         for label in y_label_copies:
             label.stretch(1 / sf, 1)
