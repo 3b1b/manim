@@ -877,6 +877,10 @@ class Mobject(Container):
     def point_from_proportion(self, alpha):
         raise Exception("Not implemented")
 
+    def pfp(self, alpha):
+        """Abbreviation fo point_from_proportion"""
+        return self.point_from_proportion(alpha)
+
     def get_pieces(self, n_pieces):
         template = self.copy()
         template.set_submobjects([])
