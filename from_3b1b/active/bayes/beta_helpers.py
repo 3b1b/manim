@@ -151,9 +151,11 @@ def get_random_process(choices, shuffle_time=2, total_time=3, change_rate=0.05,
 
     def update(container, dt):
         container.time += dt
+
         t = container.time
         change = all([
             (t % total_time) < shuffle_time,
+            container.time - container.last_change_time > change_rate
         ])
         if change:
             mob = container.submobjects[0]
@@ -163,7 +165,7 @@ def get_random_process(choices, shuffle_time=2, total_time=3, change_rate=0.05,
             new_mob.shift(2 * np.random.random() * h_buff * RIGHT)
             new_mob.shift(2 * np.random.random() * v_buff * UP)
             container.set_submobjects([new_mob])
-            container.last_change_time = time
+            container.last_change_time = container.time
 
     container.add_updater(update)
     return container
@@ -173,7 +175,7 @@ def get_coin(color, symbol):
     coin = VGroup()
     circ = Circle()
     circ.set_fill(color, 1)
-    circ.set_stroke(WHITE, 2)
+    circ.set_stroke(WHITE, 1)
     circ.set_height(1)
     label = TextMobject(symbol)
     label.set_height(0.5 * circ.get_height())
@@ -323,9 +325,9 @@ def get_beta_dist_axes(y_max=20, y_unit=2, label_y=False, **kwargs):
     return result
 
 
-def get_beta_graph(axes, n_plus, n_minus):
+def get_beta_graph(axes, n_plus, n_minus, **kwargs):
     dist = scipy.stats.beta(n_plus + 1, n_minus + 1)
-    graph = axes.get_graph(dist.pdf)
+    graph = axes.get_graph(dist.pdf, **kwargs)
     graph.add_line_to(axes.c2p(1, 0))
     graph.add_line_to(axes.c2p(0, 0))
     graph.set_stroke(BLUE, 2)
@@ -533,3 +535,30 @@ def get_check_count_label(nc, nx, include_rect=True):
 
 def reverse_smooth(t):
     return smooth(1 - t)
+
+
+def get_region_under_curve(axes, graph, min_x, max_x):
+    props = [
+        binary_search(
+            function=lambda a: axes.x_axis.p2n(graph.pfp(a)),
+            target=x,
+            lower_bound=axes.x_min,
+            upper_bound=axes.x_max,
+        )
+        for x in [min_x, max_x]
+    ]
+    region = graph.copy()
+    region.pointwise_become_partial(graph, *props)
+    region.add_line_to(axes.c2p(max_x, 0))
+    region.add_line_to(axes.c2p(min_x, 0))
+    region.add_line_to(region.get_start())
+
+    region.set_stroke(GREEN, 2)
+    region.set_fill(GREEN, 0.5)
+
+    region.axes = axes
+    region.graph = graph
+    region.min_x = min_x
+    region.max_x = max_x
+
+    return region
