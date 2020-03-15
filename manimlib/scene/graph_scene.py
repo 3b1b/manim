@@ -51,6 +51,10 @@ class GraphScene(Scene):
         "default_riemann_end_color": GREEN,
         "area_opacity": 0.8,
         "num_rects": 50,
+        "x_label_decimal":0,
+        "y_label_decimal":0,
+        "x_axis_label_position": UP + RIGHT,
+        "y_axis_label_position": UP + RIGHT
     }
 
     def setup(self):
@@ -76,7 +80,8 @@ class GraphScene(Scene):
             tick_frequency=self.x_tick_frequency,
             leftmost_tick=self.x_leftmost_tick,
             numbers_with_elongated_ticks=self.x_labeled_nums,
-            color=self.axes_color
+            color=self.axes_color,
+            decimal_number_config={"num_decimal_places":self.x_label_decimal}
         )
         x_axis.shift(self.graph_origin - x_axis.number_to_point(0))
         if len(self.x_labeled_nums) > 0:
@@ -110,6 +115,7 @@ class GraphScene(Scene):
             color=self.axes_color,
             line_to_number_vect=LEFT,
             label_direction=LEFT,
+            decimal_number_config={"num_decimal_places":self.y_label_decimal}
         )
         y_axis.shift(self.graph_origin - y_axis.number_to_point(0))
         y_axis.rotate(np.pi / 2, about_point=y_axis.number_to_point(0))
