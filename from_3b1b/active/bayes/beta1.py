@@ -115,6 +115,10 @@ class Thumbnail3(Thumbnail2):
 
 
 class HighlightReviewParts(Scene):
+    CONFIG = {
+        "reverse_order": False,
+    }
+
     def construct(self):
         # Setup up rectangles
         rects = VGroup(*[Rectangle() for x in range(3)])
@@ -160,7 +164,12 @@ class HighlightReviewParts(Scene):
         curr_fsr = inv_rects[0]
         curr_label = None
 
-        for fsr, label in zip(inv_rects, review_labels):
+        tuples = list(zip(inv_rects, review_labels))
+        if self.reverse_order:
+            tuples = reversed(tuples)
+            curr_fsr = inv_rects[-1]
+
+        for fsr, label in tuples:
             if curr_fsr is fsr:
                 self.play(VFadeIn(fsr))
             else:
@@ -168,13 +177,18 @@ class HighlightReviewParts(Scene):
                     Transform(curr_fsr, fsr),
                     MoveToTarget(curr_label),
                 )
-            self.add(label[2:])
+
+            first, second = label[2:], label[:2]
+            if self.reverse_order:
+                first, second = second, first
+
+            self.add(first)
             self.wait(2)
-            self.add(label[:2])
+            self.add(second)
             self.wait(2)
 
             label.generate_target()
-            label.target.scale(0.5)
+            label.target.scale(0.3)
             if curr_label is None:
                 label.target.to_corner(UR)
                 label.target.shift(MED_LARGE_BUFF * LEFT)
@@ -187,6 +201,9 @@ class HighlightReviewParts(Scene):
 
         br = BackgroundRectangle(review_labels, buff=0.25)
         br.set_fill(BLACK, 0.85)
+        br.set_width(FRAME_WIDTH)
+        br.set_height(FRAME_HEIGHT, stretch=True)
+        br.center()
         self.add(br, review_labels)
         self.play(
             FadeOut(curr_fsr),
@@ -897,6 +914,16 @@ class AskWhy(TeacherStudentsScene):
         self.teacher_says("Let's dive in!", target_mode="hooray")
         self.change_all_student_modes("hooray")
         self.wait(3)
+
+
+class BinomialName(Scene):
+    def construct(self):
+        text = TextMobject("Probabilities of probabilities\\\\", "Part 1")
+        text.set_width(FRAME_WIDTH - 1)
+        text[0].set_color(BLUE)
+        self.add(text[0])
+        self.play(Write(text[1], run_time=2))
+        self.wait(2)
 
 
 class WhatsTheModel(Scene):

@@ -7,6 +7,22 @@ import scipy.stats
 OUTPUT_DIRECTORY = "bayes/beta2"
 
 
+class PartTwoReady(Scene):
+    def construct(self):
+        br = FullScreenFadeRectangle()
+        br.set_fill(GREY_E, 1)
+        self.add(br)
+        text = TextMobject(
+            "Part 2\\\\",
+            "Early view\\\\for supporters"
+        )
+        text.scale(1.5)
+        text[0].match_width(text[1], about_edge=DOWN)
+        text[0].shift(MED_SMALL_BUFF * UP)
+        text[1].set_color("#f96854")
+        self.add(text)
+
+
 class ShowBayesianUpdating(Scene):
     CONFIG = {
         "true_p": 0.72,
@@ -168,7 +184,8 @@ class ShowBayesianUpdating(Scene):
         dist = scipy.stats.beta(n_heads + 1, n_tails + 1)
         v_lines = VGroup()
         labels = VGroup()
-        for x in dist.interval(0.95):
+        x_bounds = dist.interval(0.95)
+        for x in x_bounds:
             line = DashedLine(
                 axes.c2p(x, 0),
                 axes.c2p(x, 12),
@@ -180,10 +197,28 @@ class ShowBayesianUpdating(Scene):
             label.next_to(line, UP)
             label.match_color(line)
             labels.add(label)
-            self.play(
-                FadeInFrom(label, 3 * DOWN),
-                ShowCreation(line),
-            )
+
+        true_graph = axes.get_graph(dist.pdf)
+        region = get_region_under_curve(axes, true_graph, *x_bounds)
+        region.set_fill(GREY_BROWN, 0.85)
+        region.set_stroke(YELLOW, 1)
+
+        label95 = TexMobject("95\\%")
+        fix_percent(label95.family_members_with_points()[-1])
+        label95.move_to(region, DOWN)
+        label95.shift(0.5 * UP)
+
+        self.play(*map(ShowCreation, v_lines))
+        self.play(
+            FadeIn(region),
+            Write(label95)
+        )
+        self.wait()
+        for label in labels:
+            self.play(FadeInFromDown(label))
+        self.wait()
+
+        # Show true value
         self.wait()
         self.play(FadeOut(prob_box))
         self.play(ShowCreationThenFadeAround(prob))
@@ -200,6 +235,10 @@ class ShowBayesianUpdating(Scene):
         graph.axes = axes
         graph.v_lines = v_lines
         graph.labels = labels
+        graph.region = region
+        graph.label95 = label95
+
+        label95.width_ratio = label95.get_width() / region.get_width()
 
         def update_graph(graph):
             N = int(graph.N_tracker.get_value())
@@ -209,19 +248,31 @@ class ShowBayesianUpdating(Scene):
             graph.become(new_graph)
 
             dist = scipy.stats.beta(nh + 1, nt + 1)
-            for x, line, label in zip(dist.interval(0.95), graph.v_lines, graph.labels):
+            x_bounds = dist.interval(0.95)
+            for x, line, label in zip(x_bounds, graph.v_lines, graph.labels):
                 line.set_x(graph.axes.c2p(x, 0)[0])
                 label.set_x(graph.axes.c2p(x, 0)[0])
                 label.set_value(x)
+
             graph.labels[0].shift(MED_SMALL_BUFF * LEFT)
             graph.labels[1].shift(MED_SMALL_BUFF * RIGHT)
 
-        self.add(graph, p_label)
+            new_simple_graph = graph.axes.get_graph(dist.pdf)
+            new_region = get_region_under_curve(graph.axes, new_simple_graph, *x_bounds)
+            new_region.match_style(graph.region)
+            graph.region.become(new_region)
+
+            graph.label95.set_width(graph.label95.width_ratio * graph.region.get_width())
+            graph.label95.match_x(graph.region)
+
+        self.add(graph, region, label95, p_label)
         self.play(
             N_tracker.set_value, 1000,
             UpdateFromFunc(graph, update_graph),
             Animation(v_lines),
             Animation(labels),
+            Animation(graph.region),
+            Animation(graph.label95),
             run_time=5,
         )
         self.wait()
@@ -283,6 +334,38 @@ class ShowBayesianUpdating(Scene):
         prob_box.add(q_marks)
 
         return p_label, prob, prob_box
+
+
+class HighlightReviewPartsReversed(HighlightReviewParts):
+    CONFIG = {
+        "reverse_order": True,
+    }
+
+
+class LastTimeWrapper(Scene):
+    def construct(self):
+        fs_rect = FullScreenFadeRectangle(fill_opacity=1, fill_color=GREY_E)
+        self.add(fs_rect)
+
+        title = TextMobject("Last Time")
+        title.scale(1.5)
+        title.to_edge(UP)
+
+        rect = ScreenRectangle()
+        rect.set_height(6)
+        rect.set_fill(BLACK, 1)
+        rect.next_to(title, DOWN)
+
+        self.play(
+            DrawBorderThenFill(rect),
+            FadeInFromDown(title),
+        )
+        self.wait()
+
+
+class Grey(Scene):
+    def construct(self):
+        self.add(FullScreenFadeRectangle(fill_color=GREY_D, fill_opacity=1))
 
 
 class ShowBayesRule(Scene):
@@ -1945,8 +2028,6 @@ class TalkThroughCoinExample(ShowBayesianUpdating):
         p_label, prob, prob_box = self.get_probability_label()
         prob_box_x = x_label.copy().move_to(prob_box)
 
-        prob_box.add()
-
         self.add(axes)
         self.add(p_label)
         self.add(prob_box)
@@ -1962,7 +2043,7 @@ class TalkThroughCoinExample(ShowBayesianUpdating):
 
         # Setup coins
         bool_values = (np.random.random(100) < self.true_p)
-        bool_values[:2] = [True, False, True, True, False]
+        bool_values[:5] = [True, False, True, True, False]
         coins = self.get_coins(bool_values)
         coins.next_to(axes.y_axis, RIGHT, MED_LARGE_BUFF)
         coins.to_edge(UP)
@@ -2189,10 +2270,216 @@ class TalkThroughCoinExample(ShowBayesianUpdating):
             group.set_color, BLUE,
             FadeOut(region),
         )
+        region = scaled_region
         self.play(FadeOut(p_data_rect))
         self.wait()
         self.play(ShowCreationThenFadeAround(const))
 
         # Repeat
+        exp1 = Integer(1)
+        exp1.set_height(0.2)
+        exp1.move_to(func_label[2].get_corner(UR), DL)
+        exp1.shift(0.02 * DOWN + 0.07 * RIGHT)
 
-        self.embed()
+        exp2 = exp1.copy()
+        exp2.move_to(eq_1mx.get_corner(UR), DL)
+        exp2.shift(0.1 * RIGHT)
+        exp2.align_to(exp1, DOWN)
+
+        shift_vect = UP + 0.5 * LEFT
+        VGroup(exp1, exp2).shift(shift_vect)
+
+        self.play(
+            FadeInFrom(exp1, DOWN),
+            FadeInFrom(exp2, DOWN),
+            VGroup(func_label, dot, eq_1mx).shift, shift_vect,
+            bayes.scale, 0.5,
+            bayes.next_to, p_label, DOWN, LARGE_BUFF, {"aligned_edge": RIGHT},
+        )
+        nh = 1
+        nt = 1
+        for coin, is_heads in zip(coins[2:10], bool_values[2:10]):
+            self.play(
+                arrow.next_to, coin, DOWN, SMALL_BUFF,
+                MaintainPositionRelativeTo(data_label, arrow),
+                FadeInFrom(coin, DOWN),
+            )
+            if is_heads:
+                nh += 1
+                old_exp = exp1
+            else:
+                nt += 1
+                old_exp = exp2
+
+            new_exp = old_exp.copy()
+            new_exp.increment_value(1)
+
+            dist = scipy.stats.beta(nh + 1, nt + 1)
+            new_graph = axes.get_graph(dist.pdf)
+            new_region = get_region_under_curve(axes, new_graph, 0, 1)
+            new_region.match_style(region)
+
+            self.play(
+                FadeOut(graph),
+                FadeOut(region),
+                FadeIn(new_graph),
+                FadeIn(new_region),
+                FadeOutAndShift(old_exp, MED_SMALL_BUFF * UP),
+                FadeInFrom(new_exp, MED_SMALL_BUFF * DOWN),
+            )
+            graph = new_graph
+            region = new_region
+            self.remove(new_exp)
+            self.add(old_exp)
+            old_exp.increment_value()
+            self.wait()
+
+            if coin is coins[4]:
+                area_label = TextMobject("Area = 1")
+                area_label.move_to(axes.c2p(0.6, 0.8))
+                self.play(GrowFromPoint(
+                    area_label, const.get_center()
+                ))
+
+
+class PDefectEqualsQmark(Scene):
+    def construct(self):
+        label = TexMobject(
+            "P(\\text{Defect}) = ???",
+            tex_to_color_map={
+                "\\text{Defect}": RED,
+            }
+        )
+        self.play(FadeInFrom(label, DOWN))
+        self.wait()
+
+
+class UpdateOnceWithBinomial(TalkThroughCoinExample):
+    def construct(self):
+        # Fair bit of copy-pasting from above.  If there's
+        # time, refactor this properly
+        # Setup
+        axes = self.get_axes()
+        x_label = TexMobject("x")
+        x_label.next_to(axes.x_axis.get_end(), UR, MED_SMALL_BUFF)
+        axes.add(x_label)
+
+        p_label, prob, prob_box = self.get_probability_label()
+        prob_box_x = x_label.copy().move_to(prob_box)
+
+        q_marks = prob_box[1]
+        prob_box.remove(q_marks)
+        prob_box.add(prob_box_x)
+
+        self.add(axes)
+        self.add(p_label)
+        self.add(prob_box)
+
+        # Coins
+        bool_values = (np.random.random(100) < self.true_p)
+        bool_values[:5] = [True, False, True, True, False]
+        coins = self.get_coins(bool_values)
+        coins.next_to(axes.y_axis, RIGHT, MED_LARGE_BUFF)
+        coins.to_edge(UP)
+        self.add(coins[:10])
+
+        # Uniform pdf
+        region = get_beta_graph(axes, 0, 0)
+        graph = axes.get_graph(
+            lambda x: 1,
+            min_samples=30,
+        )
+        self.add(region, graph)
+
+        # Show Bayes rule
+        bayes = TexMobject(
+            "p({x} | \\text{data})", "=",
+            "p({x})",
+            "{P(\\text{data} | {x})",
+            "\\over",
+            "P(\\text{data})",
+            tex_to_color_map={
+                "{x}": WHITE,
+                "\\text{data}": GREEN,
+            }
+        )
+        bayes.move_to(axes.c2p(0, 2.5))
+        bayes.align_to(coins, LEFT)
+
+        likelihood = bayes[9:14]
+        # likelihood_rect = SurroundingRectangle(likelihood, buff=0.05)
+
+        self.add(bayes)
+
+        # All data at once
+        brace = Brace(coins[:10], DOWN)
+        all_data_label = brace.get_text("One update from all data")
+
+        self.wait()
+        self.play(
+            GrowFromCenter(brace),
+            FadeInFrom(all_data_label, 0.2 * UP),
+        )
+        self.wait()
+
+        # Binomial formula
+        nh = sum(bool_values[:10])
+        nt = sum(~bool_values[:10])
+
+        likelihood_brace = Brace(likelihood, UP)
+        t2c = {
+            str(nh): BLUE,
+            str(nt): RED,
+        }
+        binom_formula = TexMobject(
+            "{10 \\choose ", str(nh), "}",
+            "x^{", str(nh), "}",
+            "(1-x)^{" + str(nt) + "}",
+            tex_to_color_map=t2c,
+        )
+        binom_formula[0][-1].set_color(BLUE)
+        binom_formula[1].set_color(WHITE)
+        binom_formula.set_width(likelihood_brace.get_width() + 0.5)
+        binom_formula.next_to(likelihood_brace, UP)
+
+        self.play(
+            TransformFromCopy(brace, likelihood_brace),
+            FadeOut(all_data_label),
+            FadeIn(binom_formula)
+        )
+        self.wait()
+
+        # New plot
+        rhs = TexMobject(
+            "C \\cdot",
+            "x^{", str(nh), "}",
+            "(1-x)^{", str(nt), "}",
+            tex_to_color_map=t2c
+        )
+        rhs.next_to(bayes[:5], DOWN, LARGE_BUFF, aligned_edge=LEFT)
+        eq = TexMobject("=")
+        eq.rotate(90 * DEGREES)
+        eq.next_to(bayes[:5], DOWN, buff=0.35)
+
+        dist = scipy.stats.beta(nh + 1, nt + 1)
+        new_graph = axes.get_graph(dist.pdf)
+        new_graph.shift(1e-6 * UP)
+        new_graph.set_stroke(WHITE, 1, opacity=0.5)
+        new_region = get_region_under_curve(axes, new_graph, 0, 1)
+        new_region.match_style(region)
+        new_region.set_opacity(0.75)
+
+        self.add(new_region, new_graph, bayes)
+        region.unlock_triangulation()
+        self.play(
+            FadeOut(graph),
+            FadeOut(region),
+            FadeIn(new_graph),
+            FadeIn(new_region),
+            run_time=1,
+        )
+        self.play(
+            Write(eq),
+            FadeInFrom(rhs, UP)
+        )
+        self.wait()
