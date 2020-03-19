@@ -59,7 +59,8 @@ class Mobject(Container):
         self.color = Color(self.color)
         if self.name is None:
             self.name = self.__class__.__name__
-        self.updaters = []
+        self.time_based_updaters = []
+        self.non_time_updaters = []
         self.updating_suspended = False
         self.shader_data_is_locked = False
 
@@ -197,7 +198,7 @@ class Mobject(Container):
         copy_mobject.points = np.array(self.points)
         copy_mobject.submobjects = []
         copy_mobject.add(*[sm.copy() for sm in self.submobjects])
-        copy_mobject.updaters = list(self.updaters)
+        copy_mobject.match_updaters(self)
 
         # Make sure any mobject or numpy array attributes are copied
         family = self.get_family()
@@ -228,31 +229,23 @@ class Mobject(Container):
     def update(self, dt=0, recursive=True):
         if self.updating_suspended:
             return self
-        for updater in self.updaters:
-            parameters = get_parameters(updater)
-            if "dt" in parameters:
-                updater(self, dt)
-            else:
-                updater(self)
+        for updater in self.time_based_updaters:
+            updater(self, dt)
+        for updater in self.non_time_updaters:
+            updater(self)
         if recursive:
             for submob in self.submobjects:
                 submob.update(dt, recursive)
         return self
 
     def get_time_based_updaters(self):
-        return [
-            updater for updater in self.updaters
-            if "dt" in get_parameters(updater)
-        ]
+        return self.time_based_updaters
 
     def has_time_based_updater(self):
-        for updater in self.updaters:
-            if "dt" in get_parameters(updater):
-                return True
-        return False
+        return len(self.time_based_updaters) > 0
 
     def get_updaters(self):
-        return self.updaters
+        return self.time_based_updaters + self.non_time_updaters
 
     def get_family_updaters(self):
         return list(it.chain(*[
@@ -261,21 +254,29 @@ class Mobject(Container):
         ]))
 
     def add_updater(self, update_function, index=None, call_updater=True):
-        if index is None:
-            self.updaters.append(update_function)
+        if "dt" in get_parameters(update_function):
+            updater_list = self.time_based_updaters
         else:
-            self.updaters.insert(index, update_function)
+            updater_list = self.non_time_updaters
+
+        if index is None:
+            updater_list.append(update_function)
+        else:
+            updater_list.insert(index, update_function)
+
         if call_updater:
             self.update(0)
         return self
 
     def remove_updater(self, update_function):
-        while update_function in self.updaters:
-            self.updaters.remove(update_function)
+        for updater_list in [self.time_based_updaters, self.non_time_updaters]:
+            while update_function in updater_list:
+                updater_list.remove(update_function)
         return self
 
     def clear_updaters(self, recursive=True):
-        self.updaters = []
+        self.time_based_updaters = []
+        self.non_time_updaters = []
         if recursive:
             for submob in self.submobjects:
                 submob.clear_updaters()
