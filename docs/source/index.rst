@@ -20,6 +20,7 @@ a pull request there.
     coordinate
     animation
     constants
+    geometry
 
 
 Indices and tables
