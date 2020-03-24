@@ -3,7 +3,13 @@ Geometry
 In the file geometry.py are contained several classes to create shapes and other objects.
 This is a list of commonly used classes.
 The most useful constructor parameters are listed under the description of the classes.
-However, these lists are not exhaustive and for example all objects can be passed a color argument.
+However, these lists are not exhaustive and for example many objects can be passed the following arguments :
+
+*color* \:
+        color to draw and fill the object with
+
+*fill_opacity* \: float (between 0 and 1)
+        the object is filled with the given opacity
 
 .. _Arc:
 
