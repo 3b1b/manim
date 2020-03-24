@@ -174,6 +174,93 @@ This is indicated as broken in the source code.
                 self.add(anno)
                 self.play(AddTextWordByWord(text, run_time=5.0))
 
+Transform
+---------
+
+Transforms a *mobject* into another *mobject*.
+This does not only perform the animation but changes the properties of the transformed object.
+
+Parameters :
+
+*mobject* \: Mobject
+        object to be transformed
+
+*target_mobject* \: Mobject, optional, default: None
+        target object
+
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/animation/AnimationTransform.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
+
+        class AnimationTransform(Scene):
+            def construct(self):
+                square = Square()
+                circle = Circle()
+                anno = TextMobject("Transform")
+                anno.shift(2 * DOWN)
+                self.add(anno)
+                self.add(square)
+                self.play(Transform(square, circle))
+                square.generate_target()
+                square.target.move_to(2*UP)
+                self.play(MoveToTarget(square))
+
+ReplacementTransform
+--------------------
+
+Same as Transforms.
+However, the target object is the one that is now to be used for future actions.
+
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/animation/AnimationReplacementTransform.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
+
+        class AnimationReplacementTransform(Scene):
+            def construct(self):
+                square = Square()
+                circle = Circle()
+                anno = TextMobject("Replacement Transform")
+                anno.shift(2 * DOWN)
+                self.add(anno)
+                self.add(square)
+                self.play(ReplacementTransform(square, circle))
+                circle.generate_target()
+                circle.target.move_to(2*UP)
+                self.play(MoveToTarget(circle))
+
+TransformFromCopy
+-----------------
+
+Similar to ReplacementTransform but also keeps the first object as it was.
+
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/animation/AnimationTransformFromCopy.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
+
+        class AnimationTransformFromCopy(Scene):
+            def construct(self):
+                square = Square()
+                circle = Circle()
+                anno = TextMobject("Transform from copy")
+                anno.shift(2 * DOWN)
+                self.add(anno)
+                self.add(square)
+                self.play(TransformFromCopy(square, circle))
+                self.remove(circle)
+                self.wait(2)
+
 Fade
 ----
 
