@@ -368,6 +368,36 @@ Parameters :
                 self.add(square)
                 self.play(ApplyMethod(square.custom_method, RED))
 
+ApplyPointwiseFunction
+----------------------
+
+Applies a function on each point defining the *Mobject*.
+
+Parameters :
+
+*function* \:
+        the function to apply at each point. It should return a point, numpy array of dimension 3.
+
+*mobject* \:
+        *Mobject* to which the function is applied at each point
+
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/animation/AnimationApplyPointwiseFunction.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
+
+        class AnimationApplyPointwiseFunction(Scene):
+            def construct(self):
+                square = Square()
+                anno = TextMobject("Apply pointwise function")
+                anno.shift(2 * DOWN)
+                self.add(anno)
+                self.add(square)
+                self.play(ApplyPointwiseFunction(lambda x: 2 * x + UP, square))
+
 Fade
 ----
 
