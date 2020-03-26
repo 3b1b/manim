@@ -70,6 +70,24 @@ git clone https://github.com/3b1b/manim.git
 mkvirtualenv -a manim -r requirements.txt manim
 python3 -m manim example_scenes.py SquareToCircle -pl
 ```
+## Using Virtual Box
+
+Creates a virtual Ubuntu os on your host os. All the dependencies are pre-installed so that you are directly use manim.
+
+1. [Install VirtualBox](https://www.virtualbox.org/).
+2. Download [.ova file](https://drive.google.com/open?id=1QLWhUw4OrOZGpjQh4Wj-dnjCjAKUfl-M) for manim virtual machine.
+3. Install the file 
+4. Use ```fossee``` as the password
+5. Clone manim repository
+
+
+
+    ```sh
+    git clone https://github.com/3b1b/manim.git
+    cd manim
+    python3 manim.py example_scenes.py SquareToCircle -pl
+    ```
+
 
 ### Using Docker
 Since it's a bit tricky to get all the dependencies set up just right, there is a Dockerfile and Compose file provided in this repo as well as [a premade image on Docker Hub](https://hub.docker.com/r/eulertour/manim/tags/). The Dockerfile contains instructions on how to build a manim image, while the Compose file contains instructions on how to run the image.
