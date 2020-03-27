@@ -44,7 +44,7 @@ python3 ./manim.py example_scenes.py SquareToCircle -pl
 
 3. [Install SoX](https://sourceforge.net/projects/sox/files/sox/).
 
-4. Install the remaining Python packages. Make sure that ``pycairo==1.17.1`` is changed to ``pycairo==1.18.0`` in requirements.txt.
+4. Install the remaining Python packages.
     ```sh
     git clone https://github.com/3b1b/manim.git
     cd manim
