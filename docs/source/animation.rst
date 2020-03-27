@@ -398,6 +398,242 @@ Parameters :
                 self.add(square)
                 self.play(ApplyPointwiseFunction(lambda x: 2 * x + UP, square))
 
+FadeToColor
+-----------
+
+Takes as second parameter the color to which the *Mobject* should fade to.
+
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/animation/AnimationFadeToColor.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
+
+        class AnimationFadeToColor(Scene):
+            def construct(self):
+                square = Square(fill_opacity=1)
+                anno = TextMobject("Fade to color")
+                anno.shift(2 * DOWN)
+                self.add(anno)
+                self.add(square)
+                self.play(FadeToColor(square, RED))
+
+ScaleInPlace
+------------
+
+Takes as second parameter the scaling factor.
+
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/animation/AnimationScaleInPlace.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
+
+        class AnimationScaleInPlace(Scene):
+            def construct(self):
+                square = Square()
+                anno = TextMobject("Scale in place")
+                anno.shift(2 * DOWN)
+                self.add(anno)
+                self.add(square)
+                self.play(ScaleInPlace(square, 0.5))
+
+ShrinkToCenter
+--------------
+
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/animation/AnimationShrinkToCenter.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
+
+        class AnimationShrinkToCenter(Scene):
+            def construct(self):
+                square = Square()
+                anno = TextMobject("Shrink to center")
+                anno.shift(2 * DOWN)
+                self.add(anno)
+                self.add(square)
+                self.play(ShrinkToCenter(square))
+
+Restore
+-------
+
+Restores the *Mobject* to a previous saved state.
+A state is saved by applying ``Mobject.save_state()``.
+
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/animation/AnimationRestore.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
+
+        class AnimationRestore(Scene):
+            def construct(self):
+                square = Square()
+                anno = TextMobject("Restore")
+                anno.shift(2 * DOWN)
+                self.add(anno)
+                square.save_state()
+                circle = Circle()
+                self.play(Transform(square, circle))
+                square.generate_target()
+                square.target.shift(2 * UP)
+                self.play(MoveToTarget(square))
+                self.play(Restore(square))
+
+ApplyFunction
+-------------
+
+Applies a function the *Mobject*.
+
+Parameters :
+
+*function* \:
+        the function to apply. It should return a *Mobject*.
+
+*mobject* \:
+        *Mobject* to which the function is applied
+
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/animation/AnimationApplyFunction.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
+
+        def shift_up(mobject):
+            return mobject.shift(2 * UP)
+
+
+        class AnimationApplyFunction(Scene):
+            def construct(self):
+                square = Square()
+                anno = TextMobject("Apply Function")
+                anno.shift(2 * DOWN)
+                self.add(anno)
+                self.add(square)
+                self.play(ApplyFunction(shift_up, square))
+
+ApplyMatrix
+-----------
+
+Applies a each point defining the *Mobject*, the transformation :
+
+.. math::
+
+        matrix \times point = new\_point
+
+Parameters :
+
+*matrix* \: matrix of 2x2, can be list of lists or numpy arrays
+        the matrix to apply
+
+*mobject* \:
+        *Mobject* to which the matrix is applied
+
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/animation/AnimationApplyMatrix.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
+
+        class AnimationApplyMatrix(Scene):
+            def construct(self):
+                mat = [[1.0, 0.5], [1.0, 0.0]]
+                square = Square()
+                anno = TextMobject("Apply Matrix")
+                anno.shift(2 * DOWN)
+                self.add(anno)
+                self.add(square)
+                self.play(ApplyMatrix(mat, square))
+
+ApplyComplexFunction
+--------------------
+
+Applies a each point defining the *Mobject*, the complex function.
+The function considers the point as a complex such that :
+
+.. math::
+
+        new\_x = imaginary(f(x+i*y))\\
+        new\_y = real(f(x+i*y))
+
+It performs the transformation and moves the object on an arc trajectory dependant of the function.
+
+Parameters :
+
+*function* \:
+        the complex function to apply. It should take a complex as parameter and return a parameter.
+
+*mobject* \:
+        *Mobject* to which the function is applied at each point.
+
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/animation/AnimationApplyComplexFunction.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
+
+        class AnimationApplyComplexFunction(Scene):
+            def construct(self):
+                square = Square()
+                anno = TextMobject("Apply Complex Function")
+                anno.shift(2 * DOWN)
+                self.add(anno)
+                self.add(square)
+                self.play(
+                    ApplyComplexFunction(
+                        lambda complex_num: complex_num + 2 * np.complex(0, 1), square
+                    )
+                )
+
+CyclicReplace
+-------------
+
+Replaces every *Mobject* passed as an argument by the next on the list.
+
+.. raw:: html
+
+    <video width="560" height="315" controls>
+        <source src="_static/animation/AnimationCyclicReplace.mp4" type="video/mp4">
+    </video>
+
+.. code-block:: python
+
+        class AnimationCyclicReplace(Scene):
+            def construct(self):
+                square = Square()
+                circle = Circle()
+                circle.shift(2 * UP + 2 * RIGHT)
+                triangle = Triangle()
+                triangle.shift(2 * UP + 2 * LEFT)
+                anno = TextMobject("Cyclic Replace")
+                anno.shift(2 * DOWN)
+                self.add(anno)
+                self.add(square)
+                self.add(circle)
+                self.add(triangle)
+                self.play(CyclicReplace(square, circle, triangle))
+
+Swap
+----
+
+Alias for cyclic replace.
+
 Fade
 ----
 
