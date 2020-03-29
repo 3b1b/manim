@@ -1396,10 +1396,10 @@ class QuarantineInfectious(RunSimpleSimulation):
 
     def construct(self):
         self.wait_until_infection_threshold(self.trigger_infection_count)
-        self.add_quarantine_box()
-        self.set_quarantine_updaters()
         self.add_death_box()
         self.set_death_updaters()
+        self.add_quarantine_box()
+        self.set_quarantine_updaters()
         self.run_until_zero_infections()
 
     def add_quarantine_box(self):
