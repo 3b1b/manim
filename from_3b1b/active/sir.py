@@ -9,6 +9,7 @@ COLOR_MAP = {
     "S": BLUE,
     "I": RED,
     "R": GREY_D,
+    "D": GREEN
 }
 
 
@@ -256,6 +257,7 @@ class PiPerson(Person):
             "S": "guilty",
             "I": "sick",
             "R": "tease",
+            "D": "dead"
         }
     }
 
@@ -289,6 +291,7 @@ class SIRSimulation(VGroup):
     CONFIG = {
         "n_cities": 1,
         "city_population": 100,
+        "city_icu_capacity": 5,
         "box_size": 7,
         "person_type": PiPerson,
         "person_config": {
@@ -298,6 +301,8 @@ class SIRSimulation(VGroup):
             "wander_step_size": 1,
         },
         "p_infection_per_day": 0.2,
+        "p_death_rate_from_infection": 0.05,
+        "p_death_rate_from_infection_no_access_to_healthcare": 0.2,
         "infection_time": 5,
         "travel_rate": 0,
         "limit_social_distancing_to_infectious": False,
@@ -367,7 +372,17 @@ class SIRSimulation(VGroup):
                         i_person.num_infected += 1
             for i_person in i_group:
                 if (i_person.time - i_person.infection_start_time) > self.infection_time:
-                    i_person.set_status("R")
+                    total_infected = self.get_status_counts()[1]
+                    expected_death_rate = (min(total_infected,self.city_icu_capacity)*self.p_death_rate_from_infection 
+                        + max(total_infected-self.city_icu_capacity,0)*self.p_death_rate_from_infection_no_access_to_healthcare 
+                        ) / total_infected
+
+                    if random.random() > expected_death_rate:
+                        i_person.set_status("R")
+                    else:
+                        #death
+                        #if total infections above hospital capacity, then increase mortality rate
+                        i_person.set_status("D")
 
         # Travel
         if self.travel_rate > 0:
@@ -415,7 +430,7 @@ class SIRSimulation(VGroup):
                 lambda m: m.status == status,
                 self.people
             )))
-            for status in "SIR"
+            for status in "SIRD"
         ])
 
     def get_status_proportions(self):
@@ -479,18 +494,26 @@ class SIRGraph(VGroup):
         axes = self.axes
         i_points = []
         s_points = []
+        d_points = []
+
         for x, props in zip(np.linspace(0, 1, len(data)), data):
             i_point = axes.c2p(x, props[1])
             s_point = axes.c2p(x, sum(props[:2]))
+            d_point = axes.c2p(x, sum(props[:2])+props[3])
             i_points.append(i_point)
             s_points.append(s_point)
+            d_points.append(d_point)
 
         r_points = [
             axes.c2p(0, 1),
             axes.c2p(1, 1),
-            *s_points[::-1],
+            *d_points[::-1],
             axes.c2p(0, 1),
         ]
+        d_points.extend([
+            *s_points[::-1],
+            d_points[0]
+            ])
         s_points.extend([
             *i_points[::-1],
             s_points[0],
@@ -501,10 +524,10 @@ class SIRGraph(VGroup):
             i_points[0],
         ])
 
-        points_lists = [s_points, i_points, r_points]
-        regions = VGroup(VMobject(), VMobject(), VMobject())
+        points_lists = [s_points, i_points, r_points, d_points]
+        regions = VGroup(VMobject(), VMobject(), VMobject(), VMobject())
 
-        for region, status, points in zip(regions, "SIR", points_lists):
+        for region, status, points in zip(regions, "SIRD", points_lists):
             region.set_points_as_corners(points)
             region.set_stroke(width=0)
             region.set_fill(self.color_map[status], 1)
@@ -596,7 +619,7 @@ class GraphBraces(VGroup):
         axes = self.axes = graph.axes
         self.simulation = simulation
 
-        ys = np.linspace(0, 1, 4)
+        ys = np.linspace(0, 1, 5)
         self.lines = VGroup(*[
             Line(axes.c2p(1, y1), axes.c2p(1, y2))
             for y1, y2 in zip(ys, ys[1:])
@@ -604,8 +627,9 @@ class GraphBraces(VGroup):
         self.braces = VGroup(*[Brace(line, RIGHT) for line in self.lines])
         self.labels = VGroup(
             TextMobject("Susceptible", color=COLOR_MAP["S"]),
-            TextMobject("Infectious", color=COLOR_MAP["I"]),
-            TextMobject("Removed", color=COLOR_MAP["R"]),
+            TextMobject("Infectious", color=COLOR_MAP["I"]),      
+            TextMobject("Recovered", color=COLOR_MAP["R"]),
+            TextMobject("Deaths", color=COLOR_MAP["D"]),
         )
 
         self.max_label_height = graph.get_height() * 0.05
@@ -629,10 +653,10 @@ class GraphBraces(VGroup):
         axes = self.axes
 
         props = self.simulation.get_status_proportions()
-        ys = np.cumsum([0, props[1], props[0], props[2]])
+        ys = np.cumsum([0, props[1], props[0], props[3], props[2]])
 
         epsilon = 1e-6
-        for i, y1, y2 in zip([1, 0, 2], ys, ys[1:]):
+        for i, y1, y2 in zip([1, 0, 3, 2], ys, ys[1:]):
             lines[i].set_points_as_corners([
                 axes.c2p(1, y1),
                 axes.c2p(1, y2),
@@ -759,7 +783,45 @@ class RunSimpleSimulation(Scene):
         self.add_total_cases_label()
 
     def construct(self):
+        self.add_death_box()
+        self.set_death_updaters()
         self.run_until_zero_infections()
+
+    def add_death_box(self):
+        boxes = self.simulation.boxes
+        d_box = boxes[0].copy()
+        d_box.set_color(COLOR_MAP["D"])
+        d_box.set_width(boxes.get_width() / 3)
+        d_box.next_to(
+            boxes, LEFT,
+            aligned_edge=DOWN,
+            buff=0.25 * d_box.get_width()
+        )
+        # label = TextMobject("Deaths")
+        # label.set_color(COLOR_MAP["D"])
+        # label.match_width(d_box)
+        # label.next_to(d_box, DOWN, buff=0.1 * d_box.get_width())
+
+        self.add(d_box)
+        # self.add(label)
+        self.d_box = d_box
+
+    def set_death_updaters(self):
+        def move_to_death_box_if_ready(simulation): #somewhat morbid but in line with code patterns :-)
+            for person in simulation.people:
+                if person.status == "D":
+                    person.box = self.d_box
+                    person.dl_bound = self.d_box.get_corner(DL)
+                    person.ur_bound = self.d_box.get_corner(UR)
+                    person.old_center = person.get_center()
+                    person.new_center = self.d_box.get_center()
+                    point = VectorizedPoint(person.get_center())
+                    person.push_anim(ApplyMethod(point.move_to, self.d_box.get_center(), run_time=0.5))
+                    person.push_anim(MaintainPositionRelativeTo(person, point))
+                    person.move_to(self.d_box.get_center())
+                    person.is_quarantined = False
+
+        self.simulation.add_updater(move_to_death_box_if_ready)
 
     def wait_until_infection_threshold(self, threshold):
         self.wait_until(lambda: self.simulation.get_status_counts()[1] > threshold)
@@ -809,18 +871,33 @@ class RunSimpleSimulation(Scene):
             TextMobject("\\# Active cases = "),
             Integer(1),
         )
+        d_label = VGroup(
+            TextMobject("\\# Deaths = "),
+            Integer(1),
+        )
         label.arrange(RIGHT)
+        d_label.arrange(RIGHT)
         label[1].align_to(label[0][0][1], DOWN)
-        label.set_color(RED)
+        d_label[1].align_to(label[0][0][1], DOWN)
+        label.set_color(COLOR_MAP["I"])
+        d_label.set_color(COLOR_MAP["D"])
         boxes = self.simulation.boxes
         label.set_width(0.5 * boxes.get_width())
+        d_label.set_width(0.5 * boxes.get_width())
         label.next_to(boxes, UP, buff=0.03 * boxes.get_width())
+        d_label.next_to(label, UP, buff=0.03 * boxes.get_width())
 
         label.add_updater(
             lambda m: m[1].set_value(self.simulation.get_status_counts()[1])
         )
+
+        d_label.add_updater(
+            lambda m: m[1].set_value(self.simulation.get_status_counts()[3])
+        )
         self.total_cases_label = label
+        self.deaths_label = d_label
         self.add(label)
+        self.add(d_label)
 
     def add_simulation(self):
         self.simulation = SIRSimulation(**self.simulation_config)
@@ -948,8 +1025,8 @@ class DelayedSocialDistancing(RunSimpleSimulation):
         )
         self.graph.add_v_line()
         self.play(self.sd_slider.get_change_anim(self.target_sd_factor))
-
-        self.run_until_zero_infections()
+        super().construct()
+        #self.run_until_zero_infections()
 
     def change_social_distance_factor(self, new_factor, prob):
         for person in self.simulation.people:
@@ -1321,6 +1398,8 @@ class QuarantineInfectious(RunSimpleSimulation):
         self.wait_until_infection_threshold(self.trigger_infection_count)
         self.add_quarantine_box()
         self.set_quarantine_updaters()
+        self.add_death_box()
+        self.set_death_updaters()
         self.run_until_zero_infections()
 
     def add_quarantine_box(self):
@@ -1329,7 +1408,8 @@ class QuarantineInfectious(RunSimpleSimulation):
         q_box.set_color(RED_E)
         q_box.set_width(boxes.get_width() / 3)
         q_box.next_to(
-            boxes, LEFT,
+            # boxes, LEFT,
+            self.d_box, LEFT,
             aligned_edge=DOWN,
             buff=0.25 * q_box.get_width()
         )
@@ -1349,6 +1429,7 @@ class QuarantineInfectious(RunSimpleSimulation):
                 send_to_q_box = all([
                     not person.is_quarantined,
                     person.symptomatic,
+                    person.status != "D",
                     (person.time - person.infection_start_time) > self.infection_time_before_quarantine,
                 ])
                 if send_to_q_box:
