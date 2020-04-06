@@ -154,7 +154,7 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         "randomize_order": True,
         "capitalize": True,
         "name_y_spacing": 0.6,
-        "thanks_words": "Find value in this? Join me in thanking these patrons:",
+        "thanks_words": "Many thanks to this channel's supporters",
     }
 
     def construct(self):
@@ -183,7 +183,8 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
             pi.change_mode("thinking")
             pi.look(DOWN)
             pi.next_to(title, vect, buff=MED_LARGE_BUFF)
-        self.add_foreground_mobjects(title, randy, morty)
+        self.add(title, randy, morty)
+        self.foreground = VGroup(title, randy, morty)
         return self.pi_creatures
 
     def scroll_through_patrons(self):
@@ -256,7 +257,7 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
             rate=(distance / wait_time)
         )
 
-        self.add(columns, black_rect, line, thanks)
+        self.add(columns, black_rect, line, thanks, self.foreground)
         self.wait(wait_time)
 
     def modify_patron_name(self, name):
@@ -266,6 +267,7 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
             "akostrikov": "Aleksandr Kostrikov",
             "Jacob Baxter": "Will Fleshman",
             "Sansword Huang": "SansWord@TW",
+            "Still working on an upcoming skeptical humanist SciFi novels- Elux Luc": "Uber Miguel",
         }
         for n1, n2 in modification_map.items():
             if name.lower() == n1.lower():

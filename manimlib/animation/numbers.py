@@ -50,3 +50,13 @@ class ChangeDecimalToValue(ChangingDecimal):
             lambda a: interpolate(start_number, target_number, a),
             **kwargs
         )
+
+
+class CountInFrom(ChangingDecimal):
+    def __init__(self, decimal_mob, source_number=0, **kwargs):
+        start_number = decimal_mob.number
+        super().__init__(
+            decimal_mob,
+            lambda a: interpolate(source_number, start_number, a),
+            **kwargs
+        )

@@ -211,7 +211,7 @@ class PiCreature(SVGMobject):
         eye_parts = self.eye_parts
         eye_bottom_y = eye_parts.get_y(DOWN)
 
-        for eye_part in eye_parts:
+        for eye_part in eye_parts.family_members_with_points():
             eye_part.points[:, 1] = eye_bottom_y
 
         return self

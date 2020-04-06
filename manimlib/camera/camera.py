@@ -211,6 +211,8 @@ class Camera(object):
 
     # Rendering
     def capture(self, *mobjects, **kwargs):
+        self.refresh_shader_uniforms()
+
         shader_infos = it.chain(*[
             mob.get_shader_info_list()
             for mob in mobjects

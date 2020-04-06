@@ -151,9 +151,11 @@ def get_random_process(choices, shuffle_time=2, total_time=3, change_rate=0.05,
 
     def update(container, dt):
         container.time += dt
+
         t = container.time
         change = all([
             (t % total_time) < shuffle_time,
+            container.time - container.last_change_time > change_rate
         ])
         if change:
             mob = container.submobjects[0]
@@ -163,7 +165,7 @@ def get_random_process(choices, shuffle_time=2, total_time=3, change_rate=0.05,
             new_mob.shift(2 * np.random.random() * h_buff * RIGHT)
             new_mob.shift(2 * np.random.random() * v_buff * UP)
             container.set_submobjects([new_mob])
-            container.last_change_time = time
+            container.last_change_time = container.time
 
     container.add_updater(update)
     return container
@@ -173,7 +175,7 @@ def get_coin(color, symbol):
     coin = VGroup()
     circ = Circle()
     circ.set_fill(color, 1)
-    circ.set_stroke(WHITE, 2)
+    circ.set_stroke(WHITE, 1)
     circ.set_height(1)
     label = TextMobject(symbol)
     label.set_height(0.5 * circ.get_height())
@@ -308,7 +310,7 @@ def get_beta_dist_axes(y_max=20, y_unit=2, label_y=False, **kwargs):
 
     if label_y:
         result.y_axis.add_numbers(
-            *range(y_unit, y_max, y_unit)
+            *np.arange(y_unit, y_max, y_unit)
         )
         label = TextMobject("Probability density")
         label.scale(0.5)
@@ -316,15 +318,16 @@ def get_beta_dist_axes(y_max=20, y_unit=2, label_y=False, **kwargs):
         label.next_to(result.y_axis, UP, SMALL_BUFF)
         label.align_to(result.y_axis.numbers, LEFT)
         result.add(label)
+        result.y_axis_label = label
 
     result.to_corner(DR, LARGE_BUFF)
 
     return result
 
 
-def get_beta_graph(axes, n_plus, n_minus):
+def get_beta_graph(axes, n_plus, n_minus, **kwargs):
     dist = scipy.stats.beta(n_plus + 1, n_minus + 1)
-    graph = axes.get_graph(dist.pdf)
+    graph = axes.get_graph(dist.pdf, **kwargs)
     graph.add_line_to(axes.c2p(1, 0))
     graph.add_line_to(axes.c2p(0, 0))
     graph.set_stroke(BLUE, 2)
@@ -334,7 +337,7 @@ def get_beta_graph(axes, n_plus, n_minus):
 
 
 def get_beta_label(n_plus, n_minus, point=ORIGIN):
-    template = TextMobject("beta(", "00", ",", "00", ")")
+    template = TextMobject("Beta(", "00", ",", "00", ")")
     template.scale(1.5)
     a_label = Integer(n_plus + 1)
     a_label.set_color(GREEN)
@@ -389,6 +392,15 @@ def get_checks_and_crosses(bools, width=12):
     return result
 
 
+def get_underlines(marks):
+    underlines = VGroup()
+    for mark in marks:
+        underlines.add(Underline(mark))
+    for line in underlines:
+        line.align_to(underlines[-1], DOWN)
+    return underlines
+
+
 def get_random_checks_and_crosses(n=50, s=0.95, width=12):
     return get_checks_and_crosses(
         bools=(np.random.random(n) < s),
@@ -396,14 +408,15 @@ def get_random_checks_and_crosses(n=50, s=0.95, width=12):
     )
 
 
-def get_random_lt100_row(s, n=10):
-    values = np.random.randint(0, 100, n)
+def get_random_num_row(s, n=10):
+    values = np.random.random(n)
     nums = VGroup()
     syms = VGroup()
     for x, value in enumerate(values):
-        num = Integer(value)
+        num = DecimalNumber(value)
+        num.set_height(0.25)
         num.move_to(x * RIGHT)
-        num.positive = (num.get_value() < s * 100)
+        num.positive = (num.get_value() < s)
         if num.positive:
             num.set_color(GREEN)
             sym = TexMobject(CMARK_TEX)
@@ -499,3 +512,53 @@ def get_binomial_formula(n, k, p):
         term.set_y(y)
 
     return formula
+
+
+def get_check_count_label(nc, nx, include_rect=True):
+    result = VGroup(
+        Integer(nc),
+        TexMobject(CMARK_TEX, color=GREEN),
+        Integer(nx),
+        TexMobject(XMARK_TEX, color=RED),
+    )
+    result.arrange(RIGHT, buff=SMALL_BUFF)
+    result[2:].shift(SMALL_BUFF * RIGHT)
+
+    if include_rect:
+        rect = SurroundingRectangle(result)
+        rect.set_stroke(WHITE, 1)
+        rect.set_fill(GREY_E, 1)
+        result.add_to_back(rect)
+
+    return result
+
+
+def reverse_smooth(t):
+    return smooth(1 - t)
+
+
+def get_region_under_curve(axes, graph, min_x, max_x):
+    props = [
+        binary_search(
+            function=lambda a: axes.x_axis.p2n(graph.pfp(a)),
+            target=x,
+            lower_bound=axes.x_min,
+            upper_bound=axes.x_max,
+        )
+        for x in [min_x, max_x]
+    ]
+    region = graph.copy()
+    region.pointwise_become_partial(graph, *props)
+    region.add_line_to(axes.c2p(max_x, 0))
+    region.add_line_to(axes.c2p(min_x, 0))
+    region.add_line_to(region.get_start())
+
+    region.set_stroke(GREEN, 2)
+    region.set_fill(GREEN, 0.5)
+
+    region.axes = axes
+    region.graph = graph
+    region.min_x = min_x
+    region.max_x = max_x
+
+    return region

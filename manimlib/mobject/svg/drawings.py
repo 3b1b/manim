@@ -392,13 +392,13 @@ class ClockPassesTime(Animation):
         hour_radians = -self.hours_passed * 2 * np.pi / 12
         self.hour_rotation = Rotating(
             clock.hour_hand,
-            radians=hour_radians,
+            angle=hour_radians,
             **rot_kwargs
         )
         self.hour_rotation.begin()
         self.minute_rotation = Rotating(
             clock.minute_hand,
-            radians=12 * hour_radians,
+            angle=12 * hour_radians,
             **rot_kwargs
         )
         self.minute_rotation.begin()
