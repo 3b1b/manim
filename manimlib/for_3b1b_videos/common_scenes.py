@@ -268,6 +268,7 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
             "Jacob Baxter": "Will Fleshman",
             "Sansword Huang": "SansWord@TW",
             "Still working on an upcoming skeptical humanist SciFi novels- Elux Luc": "Uber Miguel",
+            "Sunil Nagaraj": "Ubiquity Ventures",
         }
         for n1, n2 in modification_map.items():
             if name.lower() == n1.lower():
