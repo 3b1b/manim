@@ -8,6 +8,8 @@ SICKLY_GREEN = "#9BBD37"
 COLOR_MAP = {
     "S": BLUE,
     "I": RED,
+    "H": ORANGE,
+    "D": YELLOW,
     "R": GREY_D,
 }
 
@@ -18,7 +20,7 @@ def update_time(mob, dt):
 
 class Person(VGroup):
     CONFIG = {
-        "status": "S",  # S, I or R
+        "status": "S",  # S, I , H, D or R
         "height": 0.2,
         "color_map": COLOR_MAP,
         "infection_ring_style": {
@@ -29,7 +31,16 @@ class Person(VGroup):
         "infection_radius": 0.5,
         "infection_animation_period": 2,
         "symptomatic": False,
+        "hospitalized": False,
+        "at_risk": False,
+        "distressed": False,
+        "is_hospitalized": False,
+        "is_quarantined": False,
         "p_symptomatic_on_infection": 1,
+        "p_hospitalize_on_infection": 0.1,
+        "p_death_rate": 0.05,
+        "p_at_risk": 0.5,
+        "p_distressed": 0.2,
         "max_speed": 1,
         "dl_bound": [-FRAME_WIDTH / 2, -FRAME_HEIGHT / 2],
         "ur_bound": [FRAME_WIDTH / 2, FRAME_HEIGHT / 2],
@@ -94,9 +105,21 @@ class Person(VGroup):
             else:
                 self.infection_ring.set_color(self.asymptomatic_color)
                 end_color = self.asymptomatic_color
-        if self.status == "I":
+
+        if self.status == "I" or self.status == "H":
             self.infection_end_time = self.time
             self.symptomatic = False
+
+        if status == "R":
+            self.box = self.orig_box
+            self.dl_bound = self.orig_box.get_corner(DL)
+            self.ur_bound = self.orig_box.get_corner(UR)
+            self.old_center = self.get_center()
+            self.new_center = self.orig_box.get_center()
+            point = VectorizedPoint(self.get_center())
+            self.push_anim(ApplyMethod(point.move_to, self.orig_box.get_center(), run_time=0.5))
+            self.push_anim(MaintainPositionRelativeTo(self, point))
+            self.move_to(self.orig_box.get_center())
 
         anims = [
             UpdateFromAlphaFunc(
@@ -183,10 +206,8 @@ class Person(VGroup):
             # Bounce
             if to_lower < 0:
                 self.velocity[i] = abs(self.velocity[i])
-                self.set_coord(self.dl_bound[i], i)
             if to_upper < 0:
                 self.velocity[i] = -abs(self.velocity[i])
-                self.set_coord(self.ur_bound[i], i)
 
             # Repelling force
             wall_force[i] += max((-1 / self.wall_buffer + 1 / to_lower), 0)
@@ -255,6 +276,8 @@ class PiPerson(Person):
         "mode_map": {
             "S": "guilty",
             "I": "sick",
+            "H": "sick",
+            "D": "tease",
             "R": "tease",
         }
     }
@@ -298,7 +321,7 @@ class SIRSimulation(VGroup):
             "wander_step_size": 1,
         },
         "p_infection_per_day": 0.2,
-        "infection_time": 5,
+        "infection_time": 14,
         "travel_rate": 0,
         "limit_social_distancing_to_infectious": False,
     }
@@ -341,6 +364,12 @@ class SIRSimulation(VGroup):
                     for lower, upper in zip(dl_bound, ur_bound)
                 ])
                 person.box = box
+                person.orig_box = box
+
+                #Percantage of population at risk
+                if random.random() < person.p_at_risk:
+                    person.at_risk = True
+
                 box.people.add(person)
                 people.add(person)
 
@@ -351,12 +380,12 @@ class SIRSimulation(VGroup):
 
     def update_statusses(self, dt):
         for box in self.boxes:
-            s_group, i_group = [
+            s_group, h_group, i_group = [
                 list(filter(
                     lambda m: m.status == status,
                     box.people
                 ))
-                for status in ["S", "I"]
+                for status in ["S", "H", "I"]
             ]
 
             for s_person in s_group:
@@ -366,14 +395,23 @@ class SIRSimulation(VGroup):
                         s_person.set_status("I")
                         i_person.num_infected += 1
             for i_person in i_group:
+                if i_person.at_risk and i_person.symptomatic and random.random() < i_person.p_hospitalize_on_infection:
+                    i_person.distressed = True
+                if i_person.is_hospitalized:
+                    i_person.set_status("H")
                 if (i_person.time - i_person.infection_start_time) > self.infection_time:
                     i_person.set_status("R")
+            for h_person in h_group:
+                if (h_person.time - h_person.infection_start_time) > self.infection_time:
+                    h_person.set_status("R")
+                if random.random() < h_person.p_death_rate / 8.0  and h_person.status == "H":
+                    h_person.set_status("D")
 
         # Travel
         if self.travel_rate > 0:
             path_func = path_along_arc(45 * DEGREES)
             for person in self.people:
-                if random.random() < self.travel_rate * dt:
+                if random.random() < self.travel_rate * dt and not person.is_hospitalized and not person.is_quarantined:
                     new_box = random.choice(self.boxes)
                     person.box.people.remove(person)
                     new_box.people.add(person)
@@ -415,7 +453,7 @@ class SIRSimulation(VGroup):
                 lambda m: m.status == status,
                 self.people
             )))
-            for status in "SIR"
+            for status in "SIHRD"
         ])
 
     def get_status_proportions(self):
@@ -479,32 +517,46 @@ class SIRGraph(VGroup):
         axes = self.axes
         i_points = []
         s_points = []
+        h_points = []
+        r_points = []
         for x, props in zip(np.linspace(0, 1, len(data)), data):
-            i_point = axes.c2p(x, props[1])
-            s_point = axes.c2p(x, sum(props[:2]))
+            i_point = axes.c2p(x, sum(props[1:3]))
+            s_point = axes.c2p(x, sum(props[:3]))
+            r_point = axes.c2p(x, sum(props[:4]))
+            h_point = axes.c2p(x, props[2])
             i_points.append(i_point)
+            h_points.append(h_point)
             s_points.append(s_point)
+            r_points.append(r_point)
 
-        r_points = [
+        d_points = [
             axes.c2p(0, 1),
             axes.c2p(1, 1),
-            *s_points[::-1],
+            *r_points[::-1],
             axes.c2p(0, 1),
         ]
+        r_points.extend([
+            *s_points[::-1],
+            r_points[0],
+        ])
         s_points.extend([
             *i_points[::-1],
             s_points[0],
         ])
         i_points.extend([
-            axes.c2p(1, 0),
-            axes.c2p(0, 0),
+            *h_points[::-1],
             i_points[0],
         ])
+        h_points.extend([
+            axes.c2p(1, 0),
+            axes.c2p(0, 0),
+            h_points[0],
+        ])
 
-        points_lists = [s_points, i_points, r_points]
-        regions = VGroup(VMobject(), VMobject(), VMobject())
+        points_lists = [s_points, i_points, h_points, r_points, d_points]
+        regions = VGroup(VMobject(), VMobject(), VMobject(), VMobject(), VMobject())
 
-        for region, status, points in zip(regions, "SIR", points_lists):
+        for region, status, points in zip(regions, "SIHRD", points_lists):
             region.set_points_as_corners(points)
             region.set_stroke(width=0)
             region.set_fill(self.color_map[status], 1)
@@ -596,7 +648,7 @@ class GraphBraces(VGroup):
         axes = self.axes = graph.axes
         self.simulation = simulation
 
-        ys = np.linspace(0, 1, 4)
+        ys = np.linspace(0, 1, 6)
         self.lines = VGroup(*[
             Line(axes.c2p(1, y1), axes.c2p(1, y2))
             for y1, y2 in zip(ys, ys[1:])
@@ -605,7 +657,9 @@ class GraphBraces(VGroup):
         self.labels = VGroup(
             TextMobject("Susceptible", color=COLOR_MAP["S"]),
             TextMobject("Infectious", color=COLOR_MAP["I"]),
+            TextMobject("Hospitalized", color=COLOR_MAP["H"]),
             TextMobject("Removed", color=COLOR_MAP["R"]),
+            TextMobject("Deceased", color=COLOR_MAP["D"]),
         )
 
         self.max_label_height = graph.get_height() * 0.05
@@ -629,10 +683,11 @@ class GraphBraces(VGroup):
         axes = self.axes
 
         props = self.simulation.get_status_proportions()
-        ys = np.cumsum([0, props[1], props[0], props[2]])
+        ys = np.cumsum([0, props[2], props[1], props[0], props[3], props[4]])
 
         epsilon = 1e-6
-        for i, y1, y2 in zip([1, 0, 2], ys, ys[1:]):
+        for i, y1, y2 in zip([2, 1, 0, 3, 4], ys, ys[1:]):
+            print(i)
             lines[i].set_points_as_corners([
                 axes.c2p(1, y1),
                 axes.c2p(1, y2),
@@ -740,7 +795,7 @@ class RunSimpleSimulation(Scene):
                 "max_speed": 0.5,
             },
             "travel_rate": 0,
-            "infection_time": 5,
+            "infection_time": 14,
         },
         "graph_config": {
             "update_frequency": 1 / 15,
@@ -748,6 +803,7 @@ class RunSimpleSimulation(Scene):
         "graph_height_to_frame_height": 0.5,
         "graph_width_to_frame_height": 0.75,
         "include_graph_braces": True,
+        "infection_time_before_hospitalization": 6,
     }
 
     def setup(self):
@@ -757,6 +813,8 @@ class RunSimpleSimulation(Scene):
         self.add_sliders()
         self.add_R_label()
         self.add_total_cases_label()
+        self.add_hospital_box()
+        self.set_hospital_updaters()
 
     def construct(self):
         self.run_until_zero_infections()
@@ -770,6 +828,51 @@ class RunSimpleSimulation(Scene):
             if self.simulation.get_status_counts()[1] == 0:
                 self.wait(5)
                 break
+
+    def add_hospital_box(self):
+        boxes = self.simulation.boxes
+        h_box = boxes[0].copy()
+        h_box.set_color(RED_E)
+        h_box.set_width(boxes.get_width() / 3)
+        h_box.next_to(
+            boxes, LEFT,
+            aligned_edge=UP,
+            buff=0.25 * h_box.get_width()
+        )
+
+        label = TextMobject("Hospital zone")
+        label.set_color(ORANGE)
+        label.match_width(h_box)
+        label.next_to(h_box, DOWN, buff=0.1 * h_box.get_width())
+
+        self.add(h_box)
+        self.add(label)
+        self.h_box = h_box
+
+    def set_hospital_updaters(self):
+        def hospitalize_if_ready(simulation):
+            for person in simulation.people:
+                send_to_h_box = all([
+                    not person.is_hospitalized,
+                    person.distressed,
+                    (person.time - person.infection_start_time) > self.infection_time_before_hospitalization,
+                ])
+                if send_to_h_box:
+                    person.box = self.h_box
+                    person.dl_bound = self.h_box.get_corner(DL)
+                    person.ur_bound = self.h_box.get_corner(UR)
+                    person.old_center = person.get_center()
+                    person.new_center = self.h_box.get_center()
+                    point = VectorizedPoint(person.get_center())
+                    person.push_anim(ApplyMethod(point.move_to, self.h_box.get_center(), run_time=0.5))
+                    person.push_anim(MaintainPositionRelativeTo(person, point))
+                    person.move_to(self.h_box.get_center())
+                    person.is_hospitalized = True
+
+        for person in self.simulation.people:
+            person.is_hospitalized = False
+            # person.add_updater(quarantine_if_ready)
+        self.simulation.add_updater(hospitalize_if_ready)
 
     def add_R_label(self):
         label = VGroup(
@@ -927,7 +1030,7 @@ class SimpleSocialDistancing(RunSimpleSimulation):
                 "gravity_strength": 0.1,
             },
             "travel_rate": 0,
-            "infection_time": 5,
+            "infection_time": 14,
         },
     }
 
@@ -1088,7 +1191,7 @@ class SimpleTravel(RunSimpleSimulation):
                 "gravity_strength": 0.5,
             },
             "travel_rate": 0.02,
-            "infection_time": 5,
+            "infection_time": 14,
         },
     }
 
@@ -1120,7 +1223,7 @@ class SimpleTravel2(SimpleTravel):
 class SimpleTravelLongInfectionPeriod(SimpleTravel):
     CONFIG = {
         "simulation_config": {
-            "infection_time": 10,
+            "infection_time": 14,
         }
     }
 
@@ -1314,13 +1417,17 @@ class QuarantineInfectious(RunSimpleSimulation):
     CONFIG = {
         "trigger_infection_count": 10,
         "target_sd_factor": 3,
-        "infection_time_before_quarantine": 1,
+        "infection_time_before_quarantine": 4,
+        "infection_time_before_hospitalization": 6,
+        "chicken_pox_party": 0.05,
     }
 
     def construct(self):
         self.wait_until_infection_threshold(self.trigger_infection_count)
         self.add_quarantine_box()
         self.set_quarantine_updaters()
+        self.add_hospital_box()
+        self.set_hospital_updaters()
         self.run_until_zero_infections()
 
     def add_quarantine_box(self):
@@ -1343,15 +1450,43 @@ class QuarantineInfectious(RunSimpleSimulation):
         self.add(label)
         self.q_box = q_box
 
+    def add_hospital_box(self):
+        boxes = self.simulation.boxes
+        h_box = boxes[0].copy()
+        h_box.set_color(RED_E)
+        h_box.set_width(boxes.get_width() / 3)
+        h_box.next_to(
+            boxes, LEFT,
+            aligned_edge=UP,
+            buff=0.25 * h_box.get_width()
+        )
+
+        label = TextMobject("Hospital zone")
+        label.set_color(ORANGE)
+        label.match_width(h_box)
+        label.next_to(h_box, DOWN, buff=0.1 * h_box.get_width())
+
+        self.add(h_box)
+        self.add(label)
+        self.h_box = h_box
+
     def set_quarantine_updaters(self):
         def quarantine_if_ready(simulation):
             for person in simulation.people:
                 send_to_q_box = all([
+                    not person.is_hospitalized,
                     not person.is_quarantined,
                     person.symptomatic,
                     (person.time - person.infection_start_time) > self.infection_time_before_quarantine,
                 ])
-                if send_to_q_box:
+                healthy_exposure = all([
+                    not person.is_quarantined,
+                    not person.at_risk,
+                    not person.is_hospitalized,
+                    random.random() < self.chicken_pox_party,
+                    ])
+
+                if send_to_q_box or healthy_exposure:
                     person.box = self.q_box
                     person.dl_bound = self.q_box.get_corner(DL)
                     person.ur_bound = self.q_box.get_corner(UR)
@@ -1368,6 +1503,30 @@ class QuarantineInfectious(RunSimpleSimulation):
             # person.add_updater(quarantine_if_ready)
         self.simulation.add_updater(quarantine_if_ready)
 
+    def set_hospital_updaters(self):
+        def hospitalize_if_ready(simulation):
+            for person in simulation.people:
+                send_to_h_box = all([
+                    not person.is_hospitalized,
+                    person.symptomatic,
+                    person.distressed,
+                    (person.time - person.infection_start_time) > self.infection_time_before_hospitalization,
+                ])
+                if send_to_h_box:
+                    person.box = self.h_box
+                    person.dl_bound = self.h_box.get_corner(DL)
+                    person.ur_bound = self.h_box.get_corner(UR)
+                    person.old_center = person.get_center()
+                    person.new_center = self.h_box.get_center()
+                    point = VectorizedPoint(person.get_center())
+                    person.push_anim(ApplyMethod(point.move_to, self.h_box.get_center(), run_time=0.5))
+                    person.push_anim(MaintainPositionRelativeTo(person, point))
+                    person.move_to(self.h_box.get_center())
+                    person.is_hospitalized = True
+
+        for person in self.simulation.people:
+            person.is_hospitalized = False
+        self.simulation.add_updater(hospitalize_if_ready)
 
 class QuarantineInfectiousLarger(QuarantineInfectious, LargerCity):
     CONFIG = {
@@ -1594,6 +1753,8 @@ class CentralMarketQuarantine(QuarantineInfectiousLarger, CentralMarketLowerInfe
         self.graph.add_v_line()
         self.add_quarantine_box()
         self.set_quarantine_updaters()
+        self.add_hospital_box()
+        self.set_hospital_updaters()
         self.run_until_zero_infections()
 
 
