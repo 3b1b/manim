@@ -974,7 +974,7 @@ class Mobject(Container):
     def arrange_in_grid(self, n_rows=None, n_cols=None, **kwargs):
         submobs = self.submobjects
         if n_rows is None and n_cols is None:
-            n_cols = int(np.sqrt(len(submobs)))
+            n_rows = int(np.sqrt(len(submobs)))
 
         if n_rows is not None:
             v1 = RIGHT
