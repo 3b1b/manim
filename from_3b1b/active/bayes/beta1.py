@@ -1827,8 +1827,8 @@ class AskAboutUnknownProbabilities(Scene):
 
     def show_many_coins(self, n_rows, n_cols):
         coin_choices = VGroup(
-            get_coin(BLUE_E, "H"),
-            get_coin(RED_E, "T"),
+            get_coin("H"),
+            get_coin("T"),
         )
         coin_choices.set_stroke(width=0)
         coins = VGroup(*[
@@ -1873,10 +1873,10 @@ class AskProbabilityOfCoins(Scene):
         condition = VGroup(
             TextMobject("If you've seen"),
             Integer(80, color=BLUE_C),
-            get_coin(BLUE_E, "H").set_height(0.5),
+            get_coin("H").set_height(0.5),
             TextMobject("and"),
             Integer(20, color=RED_C),
-            get_coin(RED_E, "T").set_height(0.5),
+            get_coin("T").set_height(0.5),
         )
         condition.arrange(RIGHT)
         condition.to_edge(UP)
@@ -1886,7 +1886,7 @@ class AskProbabilityOfCoins(Scene):
             "\\text{What is }",
             "P(", "00", ")", "?"
         )
-        coin = get_coin(BLUE_E, "H")
+        coin = get_coin("H")
         coin.replace(question.get_part_by_tex("00"))
         question.replace_submobject(
             question.index_of_part_by_tex("00"),
@@ -1899,10 +1899,7 @@ class AskProbabilityOfCoins(Scene):
         random.shuffle(values)
 
         coins = VGroup(*[
-            get_coin(
-                BLUE_E if symbol == "H" else RED_E,
-                symbol
-            )
+            get_coin(symbol)
             for symbol in values
         ])
         coins.arrange_in_grid(10, 10, buff=MED_SMALL_BUFF)
@@ -3265,8 +3262,8 @@ class StateIndependence(Scene):
 class IllustrateBinomialSetupWithCoins(Scene):
     def construct(self):
         coins = [
-            get_coin(BLUE_E, "H"),
-            get_coin(RED_E, "T"),
+            get_coin("H"),
+            get_coin("T"),
         ]
 
         coin_row = VGroup()
@@ -3289,7 +3286,7 @@ class IllustrateBinomialSetupWithCoins(Scene):
                 "k": GREEN,
             }
         )
-        heads = get_coin(BLUE_E, "H")
+        heads = get_coin("H")
         template = prob_label.get_part_by_tex("00")
         heads.replace(template)
         prob_label.replace_submobject(
