@@ -389,11 +389,18 @@ def scaled_pdf_axes(scale_factor=3.5):
     return axes
 
 
+def close_off_graph(axes, graph):
+    x_max = axes.x_axis.p2n(graph.get_end())
+    graph.add_line_to(axes.c2p(x_max, 0))
+    graph.add_line_to(axes.c2p(0, 0))
+    graph.lock_triangulation()
+    return graph
+
+
 def get_beta_graph(axes, n_plus, n_minus, **kwargs):
     dist = scipy.stats.beta(n_plus + 1, n_minus + 1)
     graph = axes.get_graph(dist.pdf, **kwargs)
-    graph.add_line_to(axes.c2p(1, 0))
-    graph.add_line_to(axes.c2p(0, 0))
+    close_off_graph(axes, graph)
     graph.set_stroke(BLUE, 2)
     graph.set_fill(BLUE_E, 1)
     graph.lock_triangulation()
