@@ -155,6 +155,7 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         "capitalize": True,
         "name_y_spacing": 0.6,
         "thanks_words": "Many thanks to this channel's supporters",
+        "scroll_time": 20,
     }
 
     def construct(self):
@@ -250,7 +251,7 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         columns.target.to_edge(DOWN, buff=4)
         vect = columns.target.get_center() - columns.get_center()
         distance = get_norm(vect)
-        wait_time = 20
+        wait_time = self.scroll_time
         always_shift(
             columns,
             direction=normalize(vect),
