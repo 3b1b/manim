@@ -120,6 +120,8 @@ class Scene(Container):
         # Stack depth of 2 means the shell will use
         # the namespace of the caller, not this method
         shell(stack_depth=2)
+        # End scene when exiting an embed.
+        raise EndSceneEarlyException()
 
     def __str__(self):
         return self.__class__.__name__
