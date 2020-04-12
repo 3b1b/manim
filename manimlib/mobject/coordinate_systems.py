@@ -84,9 +84,12 @@ class CoordinateSystem():
         )
         return self.axis_labels
 
-    def get_graph(self, function, **kwargs):
-        x_min = kwargs.pop("x_min", self.x_min)
-        x_max = kwargs.pop("x_max", self.x_max)
+    def get_graph(self, function, x_min=None, x_max=None, **kwargs):
+        if x_min is None:
+            x_min = self.x_min
+        if x_max is None:
+            x_max = self.x_max
+
         graph = ParametricFunction(
             lambda t: self.coords_to_point(t, function(t)),
             t_min=x_min,
