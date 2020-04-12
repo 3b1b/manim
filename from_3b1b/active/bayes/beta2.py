@@ -1,6 +1,7 @@
 from manimlib.imports import *
 from from_3b1b.active.bayes.beta_helpers import *
 from from_3b1b.active.bayes.beta1 import *
+from from_3b1b.old.hyperdarts import Dartboard
 
 import scipy.stats
 
@@ -441,7 +442,7 @@ class LabelH(Scene):
         self.wait()
 
 
-class Underline(Scene):
+class DrawUnderline(Scene):
     def construct(self):
         line = Line(2 * LEFT, 2 * RIGHT)
         line.set_stroke(PINK, 5)
@@ -1396,7 +1397,7 @@ class ShowLimitToPdf(Scene):
 class FiniteVsContinuum(Scene):
     def construct(self):
         # Title
-        f_title = TextMobject("Finite context")
+        f_title = TextMobject("Discrete context")
         f_title.set_height(0.5)
         f_title.to_edge(UP)
         f_underline = Underline(f_title)
@@ -1406,7 +1407,7 @@ class FiniteVsContinuum(Scene):
 
         # Equations
         dice = get_die_faces()[::2]
-        cards = [PlayingCard("A" + sym) for sym in "SHCD"]
+        cards = [PlayingCard(letter + "H") for letter in "A35"]
 
         eqs = VGroup(
             self.get_union_equation(dice),
@@ -1473,8 +1474,6 @@ class FiniteVsContinuum(Scene):
         self.wait(2)
         self.play(ShowCreation(e_cross))
         self.wait()
-
-        self.embed()
 
     def get_union_equation(self, mobs):
         mob_copies1 = VGroup()
@@ -1675,9 +1674,444 @@ class HalfFiniteHalfContinuous(Scene):
         self.wait(30)
 
 
+class SumToIntegral(Scene):
+    def construct(self):
+        # Titles
+        titles = VGroup(
+            TextMobject("Discrete context"),
+            TextMobject("Continuous context"),
+        )
+        titles.set_height(0.5)
+        for title, vect in zip(titles, [LEFT, RIGHT]):
+            title.move_to(vect * FRAME_WIDTH / 4)
+            title.to_edge(UP, buff=MED_SMALL_BUFF)
+
+        v_line = Line(UP, DOWN).set_height(FRAME_HEIGHT)
+        h_line = Line(LEFT, RIGHT).set_width(FRAME_WIDTH)
+        h_line.next_to(titles, DOWN)
+        h_line.set_x(0)
+        v_line.center()
+
+        self.play(
+            ShowCreation(VGroup(h_line, v_line)),
+            LaggedStartMap(
+                FadeInFrom, titles,
+                lambda m: (m, -0.2 * m.get_center()[0] * RIGHT),
+                run_time=1,
+                lag_ratio=0.1,
+            ),
+        )
+        self.wait()
+
+        # Sum and int
+        kw = {"tex_to_color_map": {"S": BLUE}}
+        s_sym = TexMobject("\\sum", "_{x \\in S} P(x)", **kw)
+        i_sym = TexMobject("\\int_{S} p(x)", "\\text{d}x", **kw)
+        syms = VGroup(s_sym, i_sym)
+        syms.scale(2)
+        for sym, title in zip(syms, titles):
+            sym.shift(-sym[-1].get_center())
+            sym.match_x(title)
+
+        arrow = Arrow(
+            s_sym[0].get_corner(UP),
+            i_sym[0].get_corner(UP),
+            path_arc=-90 * DEGREES,
+        )
+        arrow.set_color(YELLOW)
+
+        self.play(Write(s_sym, run_time=1))
+        anims = [ShowCreation(arrow)]
+        for i, j in [(0, 0), (2, 1), (3, 2)]:
+            source = s_sym[i].deepcopy()
+            target = i_sym[j]
+            target.save_state()
+            source.generate_target()
+            target.replace(source, stretch=True)
+            source.target.replace(target, stretch=True)
+            target.set_opacity(0)
+            source.target.set_opacity(0)
+            anims += [
+                Restore(target, path_arc=-60 * DEGREES),
+                MoveToTarget(source, path_arc=-60 * DEGREES),
+            ]
+        self.play(LaggedStart(*anims))
+        self.play(FadeInFromDown(i_sym[3]))
+        self.add(i_sym)
+        self.wait()
+        self.play(
+            FadeOutAndShift(arrow, UP),
+            syms.next_to, h_line, DOWN, {"buff": MED_LARGE_BUFF},
+            syms.match_x, syms,
+        )
+
+        # Add curve area in editing
+        # Add bar chart
+        axes = Axes(
+            x_min=0,
+            x_max=10,
+            y_min=0,
+            y_max=7,
+            y_axis_config={
+                "unit_size": 0.75,
+            }
+        )
+        axes.set_width(0.5 * FRAME_WIDTH - 1)
+        axes.next_to(s_sym, DOWN)
+        axes.y_axis.add_numbers(2, 4, 6)
+
+        bars = VGroup()
+        for x, y in [(1, 1), (4, 3), (7, 2)]:
+            bar = Rectangle()
+            bar.set_stroke(WHITE, 1)
+            bar.set_fill(BLUE_D, 1)
+            line = Line(axes.c2p(x, 0), axes.c2p(x + 2, y))
+            bar.replace(line, stretch=True)
+            bars.add(bar)
+
+        addition_formula = TexMobject(*"1+3+2")
+        addition_formula.space_out_submobjects(2.1)
+        addition_formula.next_to(bars, UP)
+
+        for bar in bars:
+            bar.save_state()
+            bar.stretch(0, 1, about_edge=DOWN)
+
+        self.play(
+            Write(axes),
+            LaggedStartMap(Restore, bars),
+            LaggedStartMap(FadeInFromDown, addition_formula),
+        )
+        self.wait()
+
+        # Confusion
+        morty = Mortimer()
+        morty.to_corner(DR)
+        morty.look_at(i_sym)
+        self.play(
+            *map(FadeOut, [axes, bars, addition_formula]),
+            FadeIn(morty)
+        )
+        self.play(morty.change, "maybe")
+        self.play(Blink(morty))
+        self.play(morty.change, "confused", i_sym.get_right())
+        self.play(Blink(morty))
+        self.wait()
+
+        # Focus on integral
+        self.play(
+            Uncreate(VGroup(v_line, h_line)),
+            FadeOutAndShift(titles, UP),
+            FadeOutAndShift(morty, RIGHT),
+            FadeOutAndShift(s_sym, LEFT),
+            i_sym.center,
+            i_sym.to_edge, LEFT
+        )
+
+        arrows = VGroup()
+        for vect in [UP, DOWN]:
+            corner = i_sym[-1].get_corner(RIGHT + vect)
+            arrows.add(Arrow(
+                corner,
+                corner + 2 * RIGHT + 2 * vect,
+                path_arc=-np.sign(vect[1]) * 60 * DEGREES,
+            ))
+
+        self.play(*map(ShowCreation, arrows))
+
+        # Types of integration
+        dist = scipy.stats.beta(7 + 1, 3 + 1)
+        axes_pair = VGroup()
+        graph_pair = VGroup()
+        for arrow in arrows:
+            axes = get_beta_dist_axes(y_max=5, y_unit=1)
+            axes.set_width(4)
+            axes.next_to(arrow.get_end(), RIGHT)
+            graph = axes.get_graph(dist.pdf)
+            graph.set_stroke(BLUE, 2)
+            graph.set_fill(BLUE_E, 0)
+            graph.make_smooth()
+            axes_pair.add(axes)
+            graph_pair.add(graph)
+
+        r_axes, l_axes = axes_pair
+        r_graph, l_graph = graph_pair
+        r_name = TextMobject("Riemann\\\\Integration")
+        r_name.next_to(r_axes, RIGHT)
+        l_name = TextMobject("Lebesgue\\\\Integration$^*$")
+        l_name.next_to(l_axes, RIGHT)
+        footnote = TextMobject("*a bit more complicated than\\\\these bars make it look")
+        footnote.match_width(l_name)
+        footnote.next_to(l_name, DOWN)
+
+        self.play(LaggedStart(
+            FadeIn(r_axes),
+            FadeIn(r_graph),
+            FadeIn(r_name),
+            FadeIn(l_axes),
+            FadeIn(l_graph),
+            FadeIn(l_name),
+            run_time=1,
+        ))
+
+        # Approximation bars
+        def get_riemann_rects(dx, axes=r_axes, func=dist.pdf):
+            bars = VGroup()
+            for x in np.arange(0, 1, dx):
+                bar = Rectangle()
+                line = Line(
+                    axes.c2p(x, 0),
+                    axes.c2p(x + dx, func(x)),
+                )
+                bar.replace(line, stretch=True)
+                bar.set_stroke(BLUE_E, width=10 * dx, opacity=1)
+                bar.set_fill(BLUE, 0.5)
+                bars.add(bar)
+            return bars
+
+        def get_lebesgue_bars(dy, axes=l_axes, func=dist.pdf, mx=0.7, y_max=dist.pdf(0.7)):
+            bars = VGroup()
+            for y in np.arange(dy, y_max + dy, dy):
+                x0 = binary_search(func, y, 0, mx) or mx
+                x1 = binary_search(func, y, mx, 1) or mx
+                line = Line(axes.c2p(x0, y - dy), axes.c2p(x1, y))
+                bar = Rectangle()
+                bar.set_stroke(RED_E, 0)
+                bar.set_fill(RED_E, 0.5)
+                bar.replace(line, stretch=True)
+                bars.add(bar)
+            return bars
+
+        r_bar_groups = []
+        l_bar_groups = []
+        Ns = [10, 20, 40, 80, 160]
+        Ms = [2, 4, 8, 16, 32]
+        for N, M in zip(Ns, Ms):
+            r_bar_groups.append(get_riemann_rects(dx=1 / N))
+            l_bar_groups.append(get_lebesgue_bars(dy=1 / M))
+        self.play(
+            FadeIn(r_bar_groups[0], lag_ratio=0.1),
+            FadeIn(l_bar_groups[0], lag_ratio=0.1),
+            FadeIn(footnote),
+        )
+        self.wait()
+        for rbg0, rbg1, lbg0, lbg1 in zip(r_bar_groups, r_bar_groups[1:], l_bar_groups, l_bar_groups[1:]):
+            self.play(
+                ReplacementTransform(
+                    rbg0, rbg1,
+                    lag_ratio=1 / len(rbg0),
+                    run_time=2,
+                ),
+                ReplacementTransform(
+                    lbg0, lbg1,
+                    lag_ratio=1 / len(lbg0),
+                    run_time=2,
+                ),
+            )
+            self.wait()
+        self.play(
+            FadeOut(r_bar_groups[-1]),
+            FadeOut(l_bar_groups[-1]),
+            r_graph.set_fill, BLUE_E, 1,
+            l_graph.set_fill, RED_E, 1,
+        )
+
+
+class MeasureTheoryLeadsTo(Scene):
+    def construct(self):
+        words = TextMobject("Measure Theory")
+        words.set_color(RED)
+        arrow = Vector(DOWN)
+        arrow.next_to(words, DOWN, buff=SMALL_BUFF)
+        arrow.set_stroke(width=7)
+        arrow.rotate(45 * DEGREES, about_point=arrow.get_start())
+        self.play(
+            FadeInFrom(words, DOWN),
+            GrowArrow(arrow),
+            UpdateFromAlphaFunc(arrow, lambda m, a: m.set_opacity(a)),
+        )
+        self.wait()
+
+
+class WhenIWasFirstLearning(TeacherStudentsScene):
+    def construct(self):
+        self.teacher.change_mode("raise_right_hand")
+        self.play(
+            self.get_student_changes("pondering", "thinking", "tease"),
+            self.teacher.change, "thinking",
+        )
+
+        younger = BabyPiCreature(color=GREY_BROWN)
+        younger.set_height(2)
+        younger.move_to(self.students, DL)
+
+        self.look_at(self.screen)
+        self.wait()
+        self.play(
+            ReplacementTransform(self.teacher, younger),
+            LaggedStartMap(
+                FadeOutAndShift, self.students,
+                lambda m: (m, DOWN),
+            )
+        )
+
+        # Bubble
+        bubble = ThoughtBubble()
+        bubble[-1].set_fill(GREEN_SCREEN, 1)
+        bubble.move_to(younger.get_corner(UR), DL)
+
+        self.play(
+            Write(bubble),
+            younger.change, "maybe", bubble.get_bubble_center(),
+        )
+        self.play(Blink(younger))
+        for mode in ["confused", "angry", "pondering", "maybe"]:
+            self.play(younger.change, mode)
+            for x in range(2):
+                self.wait()
+                if random.random() < 0.5:
+                    self.play(Blink(younger))
+
+
+class PossibleYetProbabilityZero(Scene):
+    def construct(self):
+        poss = TextMobject("Possible")
+        prob = TextMobject("Probability = 0")
+        total = TextMobject("P(dart hits somewhere) = 1")
+        # total[1].next_to(total[0][0], RIGHT)
+        words = VGroup(poss, prob, total)
+        words.scale(1.5)
+        words.arrange(DOWN, aligned_edge=LEFT, buff=MED_LARGE_BUFF)
+
+        self.play(Write(poss, run_time=0.5))
+        self.wait()
+        self.play(FadeInFrom(prob, UP))
+        self.wait()
+        self.play(FadeInFrom(total, UP))
+        self.wait()
+
+
+class TiePossibleToDensity(Scene):
+    def construct(self):
+        poss = TextMobject("Possibility")
+        prob = TextMobject("Probability", " $>$ 0")
+        dens = TextMobject("Probability \\emph{density}", " $>$ 0")
+        dens[0].set_color(BLUE)
+        implies = TexMobject("\\Rightarrow")
+        implies2 = implies.copy()
+
+        poss.next_to(implies, LEFT)
+        prob.next_to(implies, RIGHT)
+        dens.next_to(implies, RIGHT)
+        cross = Cross(implies)
+
+        self.camera.frame.scale(0.7, about_point=dens.get_center())
+
+        self.add(poss)
+        self.play(
+            FadeInFrom(prob, LEFT),
+            Write(implies, run_time=1)
+        )
+        self.wait()
+        self.play(ShowCreation(cross))
+        self.wait()
+
+        self.play(
+            VGroup(implies, cross, prob).shift, UP,
+            FadeIn(implies2),
+            FadeIn(dens),
+        )
+        self.wait()
+
+        self.embed()
+
+
+class DrawBigRect(Scene):
+    def construct(self):
+        rect = Rectangle(width=7, height=2.5)
+        rect.set_stroke(RED, 5)
+        rect.to_edge(RIGHT)
+
+        words = TextMobject("Not how to\\\\think about it")
+        words.set_color(RED)
+        words.align_to(rect, LEFT)
+        words.to_edge(UP)
+
+        arrow = Arrow(
+            words.get_bottom(),
+            rect.get_top(),
+            buff=0.25,
+            color=RED,
+        )
+
+        self.play(ShowCreation(rect))
+        self.play(
+            FadeInFromDown(words),
+            GrowArrow(arrow),
+        )
+        self.wait()
+
+
 class Thumbnail(Scene):
     def construct(self):
-        pass
+        dartboard = Dartboard()
+        axes = NumberPlane(
+            x_min=-1.25,
+            x_max=1.25,
+            y_min=-1.25,
+            y_max=1.25,
+            axis_config={
+                "unit_size": 0.5 * dartboard.get_width(),
+                "tick_frequency": 0.25,
+            },
+            x_line_frequency=1.0,
+            y_line_frequency=1.0,
+        )
+        group = VGroup(dartboard, axes)
+        group.to_edge(LEFT, buff=0)
+
+        # Arrow
+        arrow = Vector(DR, max_stroke_width_to_length_ratio=np.inf)
+        arrow.move_to(axes.c2p(PI / 10, np.exp(1) / 10), DR)
+        arrow.scale(1.5, about_edge=DR)
+        arrow.set_stroke(WHITE, 10)
+
+        black_arrow = arrow.copy()
+        black_arrow.set_color(BLACK)
+        black_arrow.set_stroke(width=20)
+
+        arrow.points[0] += 0.025 * DR
+
+        # Coords
+        coords = TexMobject("(x, y) = (0.31415\\dots, 0.27182\\dots)")
+        coords.set_width(5.5)
+        coords.set_stroke(BLACK, 10, background=True)
+        coords.next_to(axes.get_bottom(), UP, buff=0)
+
+        # Words
+        words = VGroup(
+            TextMobject("Probability = 0"),
+            TextMobject("$\\dots$but still possible"),
+        )
+        for word in words:
+            word.set_width(6)
+        words.arrange(DOWN, buff=MED_LARGE_BUFF)
+        words.next_to(axes, RIGHT)
+        words.to_edge(UP, buff=LARGE_BUFF)
+
+        # Pi
+        morty = Mortimer()
+        morty.to_corner(DR)
+        morty.change("confused", words)
+
+        self.add(group)
+        self.add(black_arrow)
+        self.add(arrow)
+        self.add(coords)
+        self.add(words)
+        self.add(morty)
+
+        self.embed()
 
 
 class Part2EndScreen(PatreonEndScreen):

@@ -1,22 +1,16 @@
 from manimlib.imports import *
 from from_3b1b.active.bayes.beta_helpers import *
 from from_3b1b.active.bayes.beta1 import *
-from from_3b1b.active.bayes.beta2 import *
+from from_3b1b.active.bayes.beta2 import ShowLimitToPdf
 
 import scipy.stats
 
 OUTPUT_DIRECTORY = "bayes/beta3"
 
 
-class WeightedCoin(Scene):
+class RemindOfWeightedCoin(Scene):
     def construct(self):
-        # Coin grid
-        bools = 50 * [True] + 50 * [False]
-        random.shuffle(bools)
-        grid = get_coin_grid(bools)
-
-        sorted_grid = VGroup(*grid)
-        sorted_grid.submobjects.sort(key=lambda m: m.symbol)
+        # Largely copied from beta2
 
         # Prob label
         p_label = get_prob_coin_label()
@@ -24,165 +18,164 @@ class WeightedCoin(Scene):
         p_label.to_edge(UP)
 
         rhs = p_label[-1]
-        rhs_box = SurroundingRectangle(rhs, color=RED)
-        rhs_label = TextMobject("Not necessarily")
-        rhs_label.next_to(rhs_box, DOWN, LARGE_BUFF)
-        rhs_label.to_edge(RIGHT)
-        rhs_label.match_color(rhs_box)
+        q_box = get_q_box(rhs)
+        p_label.add(q_box)
 
-        rhs_arrow = Arrow(
-            rhs_label.get_top(),
-            rhs_box.get_right(),
-            buff=SMALL_BUFF,
-            path_arc=60 * DEGREES,
-            color=rhs_box.get_color()
-        )
+        self.add(p_label)
 
-        # Introduce coin
-        self.play(FadeIn(
-            grid,
-            run_time=2,
-            rate_func=linear,
-            lag_ratio=3 / len(grid),
+        # Coin grid
+        def get_random_coin_grid(p):
+            bools = np.random.random(100) < p
+            grid = get_coin_grid(bools)
+            return grid
+
+        grid = get_random_coin_grid(0.5)
+        grid.next_to(p_label, DOWN, MED_LARGE_BUFF)
+
+        self.play(LaggedStartMap(
+            FadeIn, grid,
+            lag_ratio=2 / len(grid),
+            run_time=3,
         ))
         self.wait()
-        self.play(
-            grid.set_height, 5,
-            grid.to_edge, DOWN,
-            FadeInFromDown(p_label)
-        )
 
-        for coin in grid:
-            coin.generate_target()
-        sorted_coins = list(grid)
-        sorted_coins.sort(key=lambda m: m.symbol)
-        for c1, c2 in zip(sorted_coins, grid):
-            c1.target.move_to(c2)
+        # Label as h
+        brace = Brace(q_box, DOWN, buff=SMALL_BUFF)
+        h_label = TexMobject("h")
+        h_label.next_to(brace, DOWN)
+        eq = TexMobject("=")
+        eq.next_to(h_label, RIGHT)
+        h_decimal = DecimalNumber(0.5)
+        h_decimal.next_to(eq, RIGHT)
 
         self.play(
-            FadeIn(rhs_label, lag_ratio=0.1),
-            ShowCreation(rhs_arrow),
-            ShowCreation(rhs_box),
-            LaggedStartMap(
-                MoveToTarget, grid,
-                path_arc=30 * DEGREES,
-                lag_ratio=0.01,
-            ),
+            GrowFromCenter(brace),
+            FadeInFrom(h_label, UP),
+            grid.scale, 0.8, {"about_edge": DOWN},
         )
+        self.wait()
 
         # Alternate weightings
-        old_grid = VGroup(*sorted_coins)
-        rhs_junk_on_screen = True
-        for value in [0.2, 0.9, 0.31]:
-            n = int(100 * value)
-            new_grid = get_coin_grid([True] * n + [False] * (100 - n))
-            new_grid.replace(grid)
+        tail_grid = get_random_coin_grid(0)
+        head_grid = get_random_coin_grid(1)
+        grid70 = get_random_coin_grid(0.7)
+        alt_grids = [tail_grid, head_grid, grid70]
+        for ag in alt_grids:
+            ag.replace(grid)
 
-            anims = []
-            if rhs_junk_on_screen:
-                anims += [
-                    FadeOut(rhs_box),
-                    FadeOut(rhs_label),
-                    FadeOut(rhs_arrow),
-                ]
-                rhs_junk_on_screen = False
+        for coins in [grid, *alt_grids]:
+            for coin in coins:
+                coin.generate_target()
+                coin.target.rotate(90 * DEGREES, axis=UP)
+                coin.target.set_opacity(0)
 
-            self.wait()
-            self.play(
-                FadeOutAndShift(
-                    old_grid,
-                    0.1 * DOWN,
-                    lag_ratio=0.01,
-                    run_time=1.5
-                ),
-                FadeIn(new_grid, lag_ratio=0.01, run_time=1.5),
-                ChangeDecimalToValue(rhs, value),
-                *anims,
-            )
-            old_grid = new_grid
+        def get_grid_swap_anims(g1, g2):
+            return [
+                LaggedStartMap(MoveToTarget, g1, lag_ratio=0.02, run_time=1.5, remover=True),
+                LaggedStartMap(MoveToTarget, g2, lag_ratio=0.02, run_time=1.5, rate_func=reverse_smooth),
+            ]
 
-        long_rhs = DecimalNumber(
-            0.31415926,
-            num_decimal_places=8,
-            show_ellipsis=True,
-        )
-        long_rhs.match_height(rhs)
-        long_rhs.move_to(rhs, DL)
-
-        self.play(ShowIncreasingSubsets(long_rhs, rate_func=linear))
-        self.wait()
-
-        # You just don't know
-        box = get_q_box(rhs)
-
-        self.remove(rhs)
         self.play(
-            FadeOut(old_grid, lag_ratio=0.1),
-            FadeOutAndShift(long_rhs, 0.1 * RIGHT, lag_ratio=0.1),
-            Write(box),
+            FadeIn(eq),
+            UpdateFromAlphaFunc(h_decimal, lambda m, a: m.set_opacity(a)),
+            ChangeDecimalToValue(h_decimal, 0, run_time=2),
+            *get_grid_swap_anims(grid, tail_grid)
         )
-        p_label.add(box)
         self.wait()
-
-        # 7/10 heads
-        bools = [True] * 7 + [False] * 3
-        random.shuffle(bools)
-        coins = VGroup(*[
-            get_coin("H" if heads else "T")
-            for heads in bools
-        ])
-        coins.arrange(RIGHT)
-        coins.set_height(0.7)
-        coins.next_to(p_label, DOWN, buff=LARGE_BUFF)
-
-        heads_arrows = VGroup(*[
-            Vector(
-                0.5 * UP,
-                max_stroke_width_to_length_ratio=15,
-                max_tip_length_to_length_ratio=0.4,
-            ).next_to(coin, DOWN)
-            for coin in coins
-            if coin.symbol == "H"
-        ])
-        numbers = VGroup(*[
-            Integer(i + 1).next_to(arrow, DOWN, SMALL_BUFF)
-            for i, arrow in enumerate(heads_arrows)
-        ])
-
-        for coin in coins:
-            coin.save_state()
-            coin.stretch(0, 0)
-            coin.set_opacity(0)
-
-        self.play(LaggedStartMap(Restore, coins), run_time=1)
         self.play(
-            ShowIncreasingSubsets(heads_arrows),
-            ShowIncreasingSubsets(numbers),
-            rate_func=linear,
+            ChangeDecimalToValue(h_decimal, 1, run_time=1.5),
+            *get_grid_swap_anims(tail_grid, head_grid)
+        )
+        self.wait()
+        self.play(
+            ChangeDecimalToValue(h_decimal, 0.7, run_time=1.5),
+            *get_grid_swap_anims(head_grid, grid70)
         )
         self.wait()
 
-        # Plot
-        # axes = scaled_pdf_axes(scale_factor=2)
+        # Graph
         axes = scaled_pdf_axes()
         axes.to_edge(DOWN, buff=MED_SMALL_BUFF)
         axes.y_axis.numbers.set_opacity(0)
         axes.y_axis_label.set_opacity(0)
+
+        h_lines = VGroup()
+        for y in range(15):
+            h_line = Line(axes.c2p(0, y), axes.c2p(1, y))
+            h_lines.add(h_line)
+        h_lines.set_stroke(WHITE, 0.5, opacity=0.5)
+        axes.add(h_lines)
 
         x_axis_label = p_label[:4].copy()
         x_axis_label.set_height(0.4)
         x_axis_label.next_to(axes.c2p(1, 0), UR, buff=SMALL_BUFF)
         axes.x_axis.add(x_axis_label)
 
-        n_heads = 7
-        n_tails = 3
-        graph = get_beta_graph(axes, n_heads, n_tails)
-        dist = scipy.stats.beta(n_heads + 1, n_tails + 1)
-        true_graph = axes.get_graph(dist.pdf)
+        n_heads_tracker = ValueTracker(3)
+        n_tails_tracker = ValueTracker(3)
 
-        region = get_region_under_curve(axes, true_graph, 0.6, 0.8)
-        region.set_fill(GREY, 0.85)
-        region.set_stroke(YELLOW, 1)
+        def get_graph(axes=axes, nht=n_heads_tracker, ntt=n_tails_tracker):
+            dist = scipy.stats.beta(nht.get_value() + 1, ntt.get_value() + 1)
+            graph = axes.get_graph(dist.pdf, step_size=0.05)
+            graph.set_stroke(BLUE, 3)
+            graph.set_fill(BLUE_E, 1)
+            return graph
+
+        graph = always_redraw(get_graph)
+
+        area_label = TextMobject("Area = 1")
+        area_label.set_height(0.5)
+        area_label.move_to(axes.c2p(0.5, 1))
+
+        # pdf label
+        pdf_label = TextMobject("probability ", "density ", "function")
+        pdf_label.next_to(axes.input_to_graph_point(0.5, graph), UP)
+        pdf_target_template = TextMobject("p", "d", "f")
+        pdf_target_template.next_to(axes.input_to_graph_point(0.7, graph), UR)
+        pdf_label.generate_target()
+        for part, letter2 in zip(pdf_label.target, pdf_target_template):
+            for letter1 in part:
+                letter1.move_to(letter2)
+            part[1:].set_opacity(0)
+
+        # Add plot
+        self.add(axes, *self.mobjects)
+        self.play(
+            FadeOut(eq),
+            FadeOut(h_decimal),
+            LaggedStartMap(MoveToTarget, grid70, run_time=1, remover=True),
+            FadeIn(axes),
+        )
+        self.play(
+            DrawBorderThenFill(graph),
+            FadeIn(area_label, rate_func=squish_rate_func(smooth, 0.5, 1), run_time=2),
+            Write(pdf_label, run_time=1),
+        )
+        self.wait()
+
+        # Region
+        lh_tracker = ValueTracker(0.7)
+        rh_tracker = ValueTracker(0.7)
+
+        def get_region(axes=axes, graph=graph, lh_tracker=lh_tracker, rh_tracker=rh_tracker):
+            lh = lh_tracker.get_value()
+            rh = rh_tracker.get_value()
+            region = get_region_under_curve(axes, graph, lh, rh)
+            region.set_fill(GREY, 0.85)
+            region.set_stroke(YELLOW, 1)
+            return region
+
+        region = always_redraw(get_region)
+
+        region_area_label = DecimalNumber(num_decimal_places=3)
+        region_area_label.next_to(axes.c2p(0.7, 0), UP, MED_LARGE_BUFF)
+
+        def update_ra_label(label, nht=n_heads_tracker, ntt=n_tails_tracker, lht=lh_tracker, rht=rh_tracker):
+            dist = scipy.stats.beta(nht.get_value() + 1, ntt.get_value() + 1)
+            area = dist.cdf(rht.get_value()) - dist.cdf(lht.get_value())
+            label.set_value(area)
+
+        region_area_label.add_updater(update_ra_label)
 
         range_label = VGroup(
             TexMobject("0.6 \\le"),
@@ -204,72 +197,118 @@ class WeightedCoin(Scene):
         pp_label.move_to(axes.c2p(0.3, 3))
 
         self.play(
-            FadeOut(heads_arrows),
-            FadeOut(numbers),
-            Write(axes),
-            DrawBorderThenFill(graph),
-        )
-        self.play(
             FadeIn(pp_label[::2]),
-            FadeIn(region),
+            MoveToTarget(pdf_label),
+            FadeOut(area_label),
         )
         self.wait()
         self.play(TransformFromCopy(p_label[:4], range_label[1]))
-        self.play(GrowFromPoint(range_label[0], axes.c2p(0.6, 0)))
-        self.play(GrowFromPoint(range_label[2], axes.c2p(0.8, 0)))
+        self.wait()
+        self.play(TransformFromCopy(axes.x_axis.numbers[2], range_label[0]))
+        self.play(TransformFromCopy(axes.x_axis.numbers[3], range_label[2]))
         self.wait()
 
-        # Remind what the title is
-        title = TextMobject(
-            "Probabilities", "of", "Probabilities"
+        self.add(region)
+        self.play(
+            lh_tracker.set_value, 0.6,
+            rh_tracker.set_value, 0.8,
+            UpdateFromAlphaFunc(
+                region_area_label,
+                lambda m, a: m.set_opacity(a),
+                rate_func=squish_rate_func(smooth, 0.25, 1)
+            ),
+            run_time=3,
         )
-        title.arrange(DOWN, aligned_edge=LEFT)
-        title.next_to(axes.c2p(0, 0), UR, buff=MED_LARGE_BUFF)
-        title.align_to(pp_label, LEFT)
-
-        self.play(ShowIncreasingSubsets(title, rate_func=linear))
         self.wait()
-        self.play(FadeOut(title))
+
+        # 7/10 heads
+        bools = [True] * 7 + [False] * 3
+        random.shuffle(bools)
+        coins = VGroup(*[
+            get_coin("H" if heads else "T")
+            for heads in bools
+        ])
+        coins.arrange(RIGHT)
+        coins.set_height(0.7)
+        coins.next_to(h_label, DOWN, buff=MED_LARGE_BUFF)
+
+        heads = [c for c in coins if c.symbol == "H"]
+        numbers = VGroup(*[
+            Integer(i + 1).set_height(0.2).next_to(coin, DOWN, SMALL_BUFF)
+            for i, coin in enumerate(heads)
+        ])
+
+        for coin in coins:
+            coin.save_state()
+            coin.rotate(90 * DEGREES, UP)
+            coin.set_opacity(0)
+
+        pp_label.generate_target()
+        pp_label.target.set_height(0.5)
+        pp_label.target.next_to(axes.c2p(0, 2), RIGHT, MED_LARGE_BUFF)
+
+        self.play(
+            LaggedStartMap(Restore, coins),
+            MoveToTarget(pp_label),
+            run_time=1,
+        )
+        self.play(ShowIncreasingSubsets(numbers))
+        self.wait()
+
+        # Move plot
+        self.play(
+            n_heads_tracker.set_value, 7,
+            n_tails_tracker.set_value, 3,
+            FadeOut(pdf_label, rate_func=squish_rate_func(smooth, 0, 0.5)),
+            run_time=2
+        )
+        self.wait()
 
         # How does the answer change with more data
         new_bools = [True] * 63 + [False] * 27
         random.shuffle(new_bools)
-        bools += new_bools
+        bools = [c.symbol == "H" for c in coins] + new_bools
         grid = get_coin_grid(bools)
         grid.set_height(3.5)
+        grid.next_to(axes.c2p(0, 3), RIGHT, MED_LARGE_BUFF)
 
-        pp_label.generate_target()
-        pp_label.target.next_to(p_label, DOWN, MED_LARGE_BUFF)
-        pp_label.target.match_x(pp_label)
-        rhs.set_opacity(0)
-
-        grid.next_to(pp_label.target, DOWN, MED_LARGE_BUFF, aligned_edge=LEFT)
-
-        self.remove(coins)
-        self.add(p_label)
         self.play(
-            ReplacementTransform(coins, grid[:10], path_arc=-30 * DEGREES),
+            FadeOut(numbers),
+            ReplacementTransform(coins, grid[:10]),
+        )
+        self.play(
             FadeIn(grid[10:], lag_ratio=0.1, rate_func=linear),
-            MoveToTarget(pp_label, path_arc=-30 * DEGREES),
-            p_label.align_to, pp_label.target, LEFT,
+            pp_label.next_to, grid, DOWN,
+        )
+        self.wait()
+        self.add(graph, region, region_area_label, p_label, q_box, brace, h_label)
+        self.play(
+            n_heads_tracker.set_value, 70,
+            n_tails_tracker.set_value, 30,
+        )
+        self.wait()
+        origin = axes.c2p(0, 0)
+        self.play(
+            axes.y_axis.stretch, 0.5, 1, {"about_point": origin},
+            h_lines.stretch, 0.5, 1, {"about_point": origin},
         )
         self.wait()
 
-        n_heads = 70
-        n_tails = 30
-        graph100 = get_beta_graph(axes, n_heads, n_tails)
-        dist = scipy.stats.beta(n_heads + 1, n_tails + 1)
-        true_graph100 = axes.get_graph(dist.pdf, step_size=0.01)
-        region100 = get_region_under_curve(axes, true_graph100, 0.6, 0.8)
-        region100.match_style(region)
-
-        self.play(
-            graph.set_opacity, 0.2,
-            region.set_opacity, 0.2,
-            FadeIn(graph100),
-            FadeIn(region100),
-        )
-        self.play(FadeIn(region100))
+        # Shift the shape around
+        pairs = [
+            (70 * 3, 30 * 3),
+            (35, 15),
+            (35 + 20, 15 + 20),
+            (7, 3),
+            (70, 30),
+        ]
+        for nh, nt in pairs:
+            self.play(
+                n_heads_tracker.set_value, nh,
+                n_tails_tracker.set_value, nt,
+                run_time=2,
+            )
+            self.wait()
 
         # End
         self.embed()
@@ -300,6 +339,110 @@ class ComplainAboutSimplisticModel(ExternallyAnimatedScene):
     pass
 
 
+class BayesianFrequentistDivide(Scene):
+    def construct(self):
+        # Setup Bayesian vs. Frequentist divide
+        b_label = TextMobject("Bayesian")
+        f_label = TextMobject("Frequentist")
+        labels = VGroup(b_label, f_label)
+        for label, vect in zip(labels, [LEFT, RIGHT]):
+            label.set_height(0.7)
+            label.move_to(vect * FRAME_WIDTH / 4)
+            label.to_edge(UP, buff=0.35)
+
+        h_line = Line(LEFT, RIGHT)
+        h_line.set_width(FRAME_WIDTH)
+        h_line.next_to(labels, DOWN)
+        v_line = Line(UP, DOWN)
+        v_line.set_height(FRAME_HEIGHT)
+        v_line.center()
+
+        for label in labels:
+            label.save_state()
+            label.set_y(0)
+            self.play(
+                FadeInFrom(label, -normalize(label.get_center())),
+            )
+        self.wait()
+        self.play(
+            ShowCreation(VGroup(v_line, h_line)),
+            *map(Restore, labels),
+        )
+        self.wait()
+
+        # Overlay ShowBayesianUpdating in editing
+        # Frequentist list (ignore?)
+        kw = {
+            "tex_to_color_map": {
+                "$p$-value": YELLOW,
+                "$H_0$": PINK,
+                "$\\alpha$": BLUE,
+            },
+            "alignment": "",
+        }
+        freq_list = VGroup(
+            TextMobject("1. State a null hypothesis $H_0$", **kw),
+            TextMobject("2. Choose a test statistic,\\\\", "$\\qquad$ compute its value", **kw),
+            TextMobject("3. Calculate a $p$-value", **kw),
+            TextMobject("4. Choose a significance value $\\alpha$", **kw),
+            TextMobject("5. Reject $H_0$ if $p$-value\\\\", "$\\qquad$ is less than $\\alpha$", **kw),
+        )
+
+        freq_list.set_width(0.5 * FRAME_WIDTH - 1)
+        freq_list.arrange(DOWN, buff=MED_LARGE_BUFF, aligned_edge=LEFT)
+        freq_list.move_to(FRAME_WIDTH * RIGHT / 4)
+        freq_list.to_edge(DOWN, buff=LARGE_BUFF)
+
+        # Frequentist icon
+        axes = get_beta_dist_axes(y_max=5, y_unit=1)
+        axes.set_width(0.5 * FRAME_WIDTH - 1)
+        axes.move_to(FRAME_WIDTH * RIGHT / 4 + DOWN)
+
+        dist = scipy.stats.norm(0.5, 0.1)
+        graph = axes.get_graph(dist.pdf)
+        graphs = VGroup()
+        for x_min, x_max in [(0, 0.3), (0.3, 0.7), (0.7, 1.0)]:
+            graph = axes.get_graph(dist.pdf, x_min=x_min, x_max=x_max)
+            graph.add_line_to(axes.c2p(x_max, 0))
+            graph.add_line_to(axes.c2p(x_min, 0))
+            graph.add_line_to(graph.get_start())
+            graphs.add(graph)
+
+        graphs.set_stroke(width=0)
+        graphs.set_fill(RED, 1)
+        graphs[1].set_fill(GREY_D, 1)
+
+        H_words = VGroup(*[TextMobject("Reject\\\\$H_0$") for x in range(2)])
+        for H_word, graph, vect in zip(H_words, graphs[::2], [RIGHT, LEFT]):
+            H_word.next_to(graph, UP, MED_LARGE_BUFF)
+            arrow = Arrow(
+                H_word.get_bottom(),
+                graph.get_center() + 0.75 * vect,
+                buff=SMALL_BUFF
+            )
+            H_word.add(arrow)
+
+        H_words.set_color(RED)
+        self.add(H_words)
+
+        self.add(axes)
+        self.add(graphs)
+
+        self.embed()
+
+        # Transition to 2x2
+        # Go back to prior
+        # Label uniform prior
+        # Talk about real coin prior
+        # Update ad infinitum
+
+
+class ArgumentBetweenBayesianAndFrequentist(Scene):
+    def construct(self):
+        pass
+
+
+# From version 1
 class ShowBayesianUpdating(Scene):
     CONFIG = {
         "true_p": 0.72,
@@ -597,7 +740,6 @@ class ShowBayesianUpdating(Scene):
         return p_label, prob, prob_box
 
 
-# From version 1
 class HighlightReviewPartsReversed(HighlightReviewParts):
     CONFIG = {
         "reverse_order": True,
