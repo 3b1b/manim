@@ -26,3 +26,7 @@ manim.egg-info/
 
 primes.py
 /media_dir.txt
+*.tex
+Tex/*
+tutorial/*
+.tmp/*

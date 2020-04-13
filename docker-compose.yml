@@ -3,14 +3,16 @@ version: '3.1'
 services:
   manim:
     # comment this line if you build the image to prevent overwriting the tag
-    image: eulertour/manim:latest
+    # image: eulertour/manim:latest
     # uncomment this line to build rather than pull the image
-    # build: .
+    build: .
     entrypoint:
       - manim
-      - --media_dir=/tmp/output
+      - --media_dir=.tmp/output
     volumes:
-      - ${INPUT_PATH:?INPUT_PATH environment variable isn't set}:/tmp/input
-      - ${OUTPUT_PATH:?OUTPUT_PATH environment variable isn't set}:/tmp/output
+      # - ${INPUT_PATH:?INPUT_PATH environment variable isn't set}:/tmp/input
+      # - ${OUTPUT_PATH:?OUTPUT_PATH environment variable isn't set}:/tmp/output
+      - .:/tmp/input
+      - .tmp/output:/tmp/output
     working_dir: /tmp/input
     network_mode: "none"

@@ -4,7 +4,6 @@ import manimlib.constants
 import manimlib.extract_scene
 import manimlib.stream_starter
 
-
 def main():
     args = manimlib.config.parse_cli()
     if not args.livestream:

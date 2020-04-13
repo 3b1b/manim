@@ -98,6 +98,7 @@ from manimlib.utils.space_ops import *
 from manimlib.utils.strings import *
 
 # Non manim libraries that are also nice to have without thinking
+from manimlib.new_packages.new_classes import *
 
 import inspect
 import itertools as it
@@ -112,3 +113,4 @@ import math
 
 from PIL import Image
 from colour import Color
+
