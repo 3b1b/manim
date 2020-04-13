@@ -47,7 +47,7 @@ python3 ./manim.py example_scenes.py SquareToCircle -pl
 
 4. [Install SoX](https://sourceforge.net/projects/sox/files/sox/).
 
-5. Install the remaining Python packages. Make sure that ``pycairo==1.17.1`` is changed to ``pycairo==1.18.0`` in requirements.txt.
+5. Install the remaining Python packages.
     ```sh
     git clone https://github.com/3b1b/manim.git
     cd manim
@@ -58,9 +58,13 @@ python3 ./manim.py example_scenes.py SquareToCircle -pl
 
 ## Anaconda Install
 
-* Install sox and latex as above. 
-* Create a conda environment using `conda env create -f environment.yml`
-* **WINDOWS ONLY** Install `pyreadline` via `pip install pyreadline`. 
+* Install SoX and LaTeX as above.
+* Clone this repository as above: `git clone https://github.com/3b1b/manim.git`.
+* Navigate into the repository as above: `cd manim`.
+* Create a conda environment using `conda env create -f environment.yml`.
+* Activate the environment: `conda activate manim`.
+* Add the repo's directory to the Python path: `conda develop .`.
+* Test your setup: `python -m manim example_scenes.py SquareToCircle -pl`.
 
 
 ### Using `virtualenv` and `virtualenvwrapper`
