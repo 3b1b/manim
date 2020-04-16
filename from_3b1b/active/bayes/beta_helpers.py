@@ -5,6 +5,11 @@ import scipy.stats
 CMARK_TEX = "\\text{\\ding{51}}"
 XMARK_TEX = "\\text{\\ding{55}}"
 
+COIN_COLOR_MAP = {
+    "H": BLUE_E,
+    "T": RED_E,
+}
+
 
 class Histogram(Group):
     CONFIG = {
@@ -171,29 +176,6 @@ def get_random_process(choices, shuffle_time=2, total_time=3, change_rate=0.05,
     return container
 
 
-def get_coin(color, symbol):
-    coin = VGroup()
-    circ = Circle()
-    circ.set_fill(color, 1)
-    circ.set_stroke(WHITE, 1)
-    circ.set_height(1)
-    label = TextMobject(symbol)
-    label.set_height(0.5 * circ.get_height())
-    label.move_to(circ)
-    coin.add(circ, label)
-    coin.symbol = symbol
-    coin.lock_triangulation()
-    return coin
-
-
-def get_random_coin(**kwargs):
-    coins = VGroup(
-        get_coin(BLUE_E, "H"),
-        get_coin(RED_E, "T"),
-    )
-    return get_random_process(coins, **kwargs)
-
-
 def get_die_faces():
     dot = Dot()
     dot.set_width(0.15)
@@ -240,6 +222,69 @@ def get_random_card(height=1, **kwargs):
     cards = DeckOfCards()
     cards.set_height(height)
     return get_random_process(cards, **kwargs)
+
+
+# Coins
+def get_coin(symbol, color=None):
+    if color is None:
+        color = COIN_COLOR_MAP.get(symbol, GREY_E)
+    coin = VGroup()
+    circ = Circle()
+    circ.set_fill(color, 1)
+    circ.set_stroke(WHITE, 1)
+    circ.set_height(1)
+    label = TextMobject(symbol)
+    label.set_height(0.5 * circ.get_height())
+    label.move_to(circ)
+    coin.add(circ, label)
+    coin.symbol = symbol
+    coin.lock_triangulation()
+    return coin
+
+
+def get_random_coin(**kwargs):
+    return get_random_process([get_coin("H"), get_coin("T")], **kwargs)
+
+
+def get_prob_coin_label(symbol="H", color=None, p=0.5, num_decimal_places=2):
+    label = TexMobject("P", "(", "00", ")", "=",)
+    coin = get_coin(symbol, color)
+    template = label.get_part_by_tex("00")
+    coin.replace(template)
+    label.replace_submobject(label.index_of_part(template), coin)
+    rhs = DecimalNumber(p, num_decimal_places=num_decimal_places)
+    rhs.next_to(label, RIGHT, buff=MED_SMALL_BUFF)
+    label.add(rhs)
+    return label
+
+
+def get_q_box(mob):
+    box = SurroundingRectangle(mob)
+    box.set_stroke(WHITE, 1)
+    box.set_fill(GREY_E, 1)
+    q_marks = TexMobject("???")
+    max_width = 0.8 * box.get_width()
+    max_height = 0.8 * box.get_height()
+
+    if q_marks.get_width() > max_width:
+        q_marks.set_width(max_width)
+
+    if q_marks.get_height() > max_height:
+        q_marks.set_height(max_height)
+
+    q_marks.move_to(box)
+    box.add(q_marks)
+    return box
+
+
+def get_coin_grid(bools, height=6):
+    coins = VGroup(*[
+        get_coin("H" if heads else "T")
+        for heads in bools
+    ])
+    coins.arrange_in_grid()
+    coins.set_height(height)
+    return coins
 
 
 def get_prob_positive_experience_label(include_equals=False,
@@ -325,11 +370,37 @@ def get_beta_dist_axes(y_max=20, y_unit=2, label_y=False, **kwargs):
     return result
 
 
+def scaled_pdf_axes(scale_factor=3.5):
+    axes = get_beta_dist_axes(
+        label_y=True,
+        y_unit=1,
+    )
+    axes.y_axis.numbers.set_submobjects([
+        *axes.y_axis.numbers[:5],
+        *axes.y_axis.numbers[4::5]
+    ])
+    sf = scale_factor
+    axes.y_axis.stretch(sf, 1, about_point=axes.c2p(0, 0))
+    for number in axes.y_axis.numbers:
+        number.stretch(1 / sf, 1)
+    axes.y_axis_label.to_edge(LEFT)
+    axes.y_axis_label.add_background_rectangle(opacity=1)
+    axes.set_stroke(background=True)
+    return axes
+
+
+def close_off_graph(axes, graph):
+    x_max = axes.x_axis.p2n(graph.get_end())
+    graph.add_line_to(axes.c2p(x_max, 0))
+    graph.add_line_to(axes.c2p(0, 0))
+    graph.lock_triangulation()
+    return graph
+
+
 def get_beta_graph(axes, n_plus, n_minus, **kwargs):
     dist = scipy.stats.beta(n_plus + 1, n_minus + 1)
     graph = axes.get_graph(dist.pdf, **kwargs)
-    graph.add_line_to(axes.c2p(1, 0))
-    graph.add_line_to(axes.c2p(0, 0))
+    close_off_graph(axes, graph)
     graph.set_stroke(BLUE, 2)
     graph.set_fill(BLUE_E, 1)
     graph.lock_triangulation()
