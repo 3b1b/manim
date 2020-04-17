@@ -2,7 +2,6 @@
 import manimlib.config
 import manimlib.constants
 import manimlib.extract_scene
-import manimlib.stream_starter
 
 def main():
     args = manimlib.config.parse_cli()
@@ -16,6 +15,3 @@ def main():
             to_twitch=args.to_twitch,
             twitch_key=args.twitch_key,
         )
-
-
-        

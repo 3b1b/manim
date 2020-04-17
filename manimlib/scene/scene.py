@@ -552,17 +552,6 @@ class Scene(Container):
         self.update_frame(ignore_skipping=True)
         self.get_image().show()
 
-    # TODO, this doesn't belong in Scene, but should be
-    # part of some more specialized subclass optimized
-    # for livestreaming
-    def tex(self, latex):
-        eq = TextMobject(latex)
-        anims = []
-        anims.append(Write(eq))
-        for mobject in self.mobjects:
-            anims.append(ApplyMethod(mobject.shift, 2 * UP))
-        self.play(*anims)
-
 
 class EndSceneEarlyException(Exception):
     pass
