@@ -13,7 +13,6 @@ def parse_cli():
         parser = argparse.ArgumentParser()
         parser.add_argument(
             "file",
-            nargs="+",
             help="path to file holding the python code for the scene",
         )
         parser.add_argument(
