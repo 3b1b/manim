@@ -11,10 +11,9 @@ import manimlib.constants
 def parse_cli():
     try:
         parser = argparse.ArgumentParser()
-        module_location = parser.add_mutually_exclusive_group()
-        module_location.add_argument(
+        parser.add_argument(
             "file",
-            nargs="?",
+            nargs="+",
             help="path to file holding the python code for the scene",
         )
         parser.add_argument(
