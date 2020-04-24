@@ -24,6 +24,11 @@ class Text(SVGMobject):
         # Mobject
         'color': consts.WHITE,
         'height': None,
+        'width': None,
+        'fill_opacity': 1,
+        'stroke_width': 0,
+        "should_center": True,
+        "unpack_groups": True,
         # Text
         'font': '',
         'gradient': None,
