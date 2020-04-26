@@ -364,6 +364,12 @@ class Mobject(Container):
     def rotate_in_place(self, angle, axis=OUT):
         # redundant with default behavior of rotate now.
         return self.rotate(angle, axis=axis)
+    
+    def rotate_to_match_vector(self, vector):
+        #rotates a 2D plane such that it's normal matches a 3D vector
+        rotation_axis= np.cross(vector, OUT)
+        angle = angle_between_vectors(vector, OUT)
+        self.rotate_in_place(-angle, axis= rotation_axis)
 
     def scale_in_place(self, scale_factor, **kwargs):
         # Redundant with default behavior of scale now.
