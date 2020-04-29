@@ -124,6 +124,9 @@ class SceneFileWriter(object):
     def get_movie_file_path(self):
         return self.movie_file_path
 
+    def get_gif_file_path(self):
+        return self.gif_file_path
+
     # Sound
     def init_audio(self):
         self.includes_sound = False

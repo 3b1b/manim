@@ -27,7 +27,9 @@ def open_file_if_needed(file_writer, **config):
 
         if config["file_writer_config"]["save_last_frame"]:
             file_paths.append(file_writer.get_image_file_path())
-        if config["file_writer_config"]["write_to_movie"]:
+        elif config["file_writer_config"]["save_as_gif"]:
+            file_paths.append(file_writer.get_gif_file_path())
+        elif config["file_writer_config"]["write_to_movie"]:
             file_paths.append(file_writer.get_movie_file_path())
 
         for file_path in file_paths:
