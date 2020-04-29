@@ -1,8 +1,6 @@
 from manimlib.imports_with_c import *
 from htmldom import htmldom
 import html
-import sympy
-
 
 def latex_escape(str):
     # Replace a \ with $\backslash$
