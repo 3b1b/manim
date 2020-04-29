@@ -41,12 +41,6 @@ class CodeMobject(VGroup):
         self.gen_chars_matrix()
         VGroup.__init__(self, *[self.chars_matrix[i] for i in range(self.chars_matrix.__len__())], **kwargs)
 
-    def scale(self, scale_factor,**kwargs):
-        self.apply_points_function_about_point(
-            lambda points: scale_factor * points, **kwargs
-        )
-        return self
-
     def apply_points_function_about_point(self, func, about_point=None, about_edge=None):
         if about_point is None:
             if about_edge is None:
