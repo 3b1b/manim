@@ -3,6 +3,7 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VectorizedPoint
 from manimlib.utils.strings import split_string_list_to_isolate_substrings
 import re
+import os
 import copy
 import hashlib
 import cairo
