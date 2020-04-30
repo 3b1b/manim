@@ -1,4 +1,4 @@
-from manimlib.imports_with_c import *
+from manimlib.imports import *
 import html
 
 class CodeMobject(VGroup):
