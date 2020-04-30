@@ -1,5 +1,11 @@
-from manimlib.imports import *
 import html
+import os
+import numpy as np
+from manimlib.constants import *
+from manimlib.container.container import Container
+from manimlib.mobject.svg.text_mobject import Text
+from manimlib.mobject.types.vectorized_mobject import VGroup
+
 
 class CodeMobject(VGroup):
     CONFIG = {
