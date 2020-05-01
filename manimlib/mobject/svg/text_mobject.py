@@ -1,3 +1,7 @@
+import operator as op
+from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.mobject.types.vectorized_mobject import VectorizedPoint
+from manimlib.utils.strings import split_string_list_to_isolate_substrings
 import re
 import os
 import copy
@@ -19,16 +23,11 @@ class TextSetting(object):
         self.line_num = line_num
 
 
-class Text(SVGMobject):
+class SingleStringTextMobject(SVGMobject):
     CONFIG = {
         # Mobject
         'color': consts.WHITE,
         'height': None,
-        'width': None,
-        'fill_opacity': 1,
-        'stroke_width': 0,
-        "should_center": True,
-        "unpack_groups": True,
         # Text
         'font': '',
         'gradient': None,
@@ -41,6 +40,7 @@ class Text(SVGMobject):
         't2g': {},
         't2s': {},
         't2w': {},
+        "organize_left_to_right": False,
     }
 
     def __init__(self, text, **config):
@@ -179,8 +179,8 @@ class Text(SVGMobject):
         size = self.size * 10
         lsh = self.lsh * 10
 
-        if self.font == '':
-            print(NOT_SETTING_FONT_MSG)
+        #if self.font == '':
+            #print(NOT_SETTING_FONT_MSG)
 
         dir_name = consts.TEXT_DIR
         hash_name = self.text2hash()
@@ -211,3 +211,117 @@ class Text(SVGMobject):
             offset_x += context.text_extents(text)[4]
 
         return file_name
+
+class Text(SingleStringTextMobject):
+    CONFIG = {
+        "substrings_to_isolate": [],
+        "tex_to_color_map": {},
+        "template_tex_file_body": TEMPLATE_TEXT_FILE_BODY,
+        "alignment": "\\centering",
+        "arg_separator": "",
+
+    }
+
+    def __init__(self, *tex_strings, **kwargs):
+        digest_config(self, kwargs)
+        tex_strings = self.break_up_tex_strings(tex_strings)
+        self.tex_strings = tex_strings
+        SingleStringTextMobject.__init__(
+            self, self.arg_separator.join(tex_strings), **kwargs
+        )
+        self.break_up_by_substrings()
+        self.set_color_by_tex_to_color_map(self.tex_to_color_map)
+
+        if self.organize_left_to_right:
+            self.organize_submobjects_left_to_right()
+
+    def break_up_tex_strings(self, tex_strings):
+        substrings_to_isolate = op.add(
+            self.substrings_to_isolate,
+            list(self.tex_to_color_map.keys())
+        )
+        split_list = split_string_list_to_isolate_substrings(
+            tex_strings, *substrings_to_isolate
+        )
+        if self.arg_separator == ' ':
+            split_list = [str(x).strip() for x in split_list]
+        #split_list = list(map(str.strip, split_list))
+        split_list = [s for s in split_list if s != '']
+        return split_list
+
+    def break_up_by_substrings(self):
+        """
+        Reorganize existing submojects one layer
+        deeper based on the structure of tex_strings (as a list
+        of tex_strings)
+        """
+        new_submobjects = []
+        curr_index = 0
+        config = dict(self.CONFIG)
+        config["alignment"] = ""
+        for tex_string in self.tex_strings:
+            sub_tex_mob = SingleStringTextMobject(tex_string, **config)
+            num_submobs = len(sub_tex_mob.submobjects)
+            new_index = curr_index + num_submobs
+            if num_submobs == 0:
+                # For cases like empty tex_strings, we want the corresponing
+                # part of the whole TexMobject to be a VectorizedPoint
+                # positioned in the right part of the TexMobject
+                sub_tex_mob.submobjects = [VectorizedPoint()]
+                last_submob_index = min(curr_index, len(self.submobjects) - 1)
+                sub_tex_mob.move_to(self.submobjects[last_submob_index], RIGHT)
+            else:
+                sub_tex_mob.submobjects = self.submobjects[curr_index:new_index]
+            new_submobjects.append(sub_tex_mob)
+            curr_index = new_index
+        self.submobjects = new_submobjects
+        return self
+
+    def get_parts_by_tex(self, tex, substring=True, case_sensitive=True):
+        def test(tex1, tex2):
+            if not case_sensitive:
+                tex1 = tex1.lower()
+                tex2 = tex2.lower()
+            if substring:
+                return tex1 in tex2
+            else:
+                return tex1 == tex2
+
+        return VGroup(*[m for m in self.submobjects if test(tex, m.get_tex_string())])
+
+    def get_part_by_tex(self, tex, **kwargs):
+        all_parts = self.get_parts_by_tex(tex, **kwargs)
+        return all_parts[0] if all_parts else None
+
+    def set_color_by_tex(self, tex, color, **kwargs):
+        parts_to_color = self.get_parts_by_tex(tex, **kwargs)
+        for part in parts_to_color:
+            part.set_color(color)
+        return self
+
+    def set_color_by_tex_to_color_map(self, texs_to_color_map, **kwargs):
+        for texs, color in list(texs_to_color_map.items()):
+            try:
+                # If the given key behaves like tex_strings
+                texs + ''
+                self.set_color_by_tex(texs, color, **kwargs)
+            except TypeError:
+                # If the given key is a tuple
+                for tex in texs:
+                    self.set_color_by_tex(tex, color, **kwargs)
+        return self
+
+    def index_of_part(self, part):
+        split_self = self.split()
+        if part not in split_self:
+            raise Exception("Trying to get index of part not in TexMobject")
+        return split_self.index(part)
+
+    def index_of_part_by_tex(self, tex, **kwargs):
+        part = self.get_part_by_tex(tex, **kwargs)
+        return self.index_of_part(part)
+
+    def sort_alphabetically(self):
+        self.submobjects.sort(
+            key=lambda m: m.get_tex_string()
+        )
