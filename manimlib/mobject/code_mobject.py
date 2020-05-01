@@ -25,8 +25,7 @@ class CodeMobject(VGroup):
         self.gen_code_json()
         self.temp_char = Text("(").scale(self.scale_factor)
         self.code_json_to_mobject_array()
-        self.gen_words_matrix()
-        VGroup.__init__(self, *[self.words_matrix[i] for i in range(self.words_matrix.__len__())], **kwargs)
+        VGroup.__init__(self, *[self.lines[i] for i in range(self.lines.__len__())], **kwargs)
 
 
     def apply_points_function_about_point(self, func, about_point=None, about_edge=None):
@@ -58,33 +57,33 @@ class CodeMobject(VGroup):
         raise IOError("No file matching %s in image directory" %
                       self.file_name)
 
-    def gen_words_matrix(self):
-        self.words_matrix = VGroup()
-        for i in range(0, self.lines_mobjets.__len__()):
-            self.words_matrix.add(VGroup())
-            for j in range(0, self.lines_mobjets[i].__len__()):
-                for k in range(0, self.lines_mobjets[i][j].__len__()):
-                    self.words_matrix[i].add(self.lines_mobjets[i][j][k])
 
     def code_json_to_mobject_array(self):
-        self.lines_mobjets = []
+        self.lines = []
         for line_no in range(0, self.code_json.__len__()):
             #print([self.code_json[line_no][j][0] for j in range(self.code_json[line_no].__len__())])
-            tmo = Text(*[self.code_json[line_no][j][0] for j in range(self.code_json[line_no].__len__())], font=self.font, stroke_width=self.stroke_width).scale(self.scale_factor)
-            for l in range(0, self.code_json[line_no].__len__()):
-                tmo[l].set_color(self.code_json[line_no][l][1])
+            line_chars_list = []
+            for j in range(self.code_json[line_no].__len__()):
+                for k in range(self.code_json[line_no][j][0].__len__()):
+                    line_chars_list.append(self.code_json[line_no][j][0][k])
+            line = Text(*line_chars_list,font=self.font, stroke_width=self.stroke_width).scale(self.scale_factor)
+            m = 0
+            for j in range(self.code_json[line_no].__len__()):
+                for k in range(self.code_json[line_no][j][0].__len__()):
+                    line[m].set_color(self.code_json[line_no][j][1])
+                    m = m +1
             if line_no == 0:
-                tmo.move_to(
+                line.move_to(
                     np.array([self.coordinates[0], self.coordinates[1], 0]) +
-                    np.array([tmo.get_width() / 2, 0, 0]) +
+                    np.array([line.get_width() / 2, 0, 0]) +
                     RIGHT * self.tab_spaces[line_no] * self.tab_spacing)
             else:
-                tmo.move_to(
+                line.move_to(
                     np.array([self.coordinates[0], self.coordinates[1], 0]) +
-                    np.array([tmo.get_width() / 2, 0, 0]) +
+                    np.array([line.get_width() / 2, 0, 0]) +
                     DOWN * line_no * (self.temp_char.get_height() + self.line_spacing) +
                     RIGHT * (self.tab_spaces[line_no] * self.tab_spacing))
-            self.lines_mobjets.append(tmo)
+            self.lines.append(line)
 
 
     def gen_code_json(self):
