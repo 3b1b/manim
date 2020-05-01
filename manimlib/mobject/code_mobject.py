@@ -42,18 +42,18 @@ class CodeMobject(VGroup):
         if self.file_name is None:
             raise Exception("Must specify file for CodeMobject")
         possible_paths = [
-            os.path.join(os.path.join("assets", "code_htmls"), self.file_name),
-            os.path.join(os.path.join("assets", "code_htmls"), self.file_name + ".html"),
-            os.path.join(os.path.join("assets", "code_htmls"), self.file_name + ".htm"),
-            os.path.join(os.path.join("assets", "code_htmls"), self.file_name + ".HTML"),
-            os.path.join(os.path.join("assets", "code_htmls"), self.file_name + ".HTM"),
+            os.path.join(os.path.join("assets", "codes"), self.file_name),
+            os.path.join(os.path.join("assets", "codes"), self.file_name + ".html"),
+            os.path.join(os.path.join("assets", "codes"), self.file_name + ".htm"),
+            os.path.join(os.path.join("assets", "codes"), self.file_name + ".HTML"),
+            os.path.join(os.path.join("assets", "codes"), self.file_name + ".HTM"),
             self.file_name,
         ]
         for path in possible_paths:
             if os.path.exists(path):
                 self.file_path = path
                 return
-        raise IOError("No file matching %s in image directory" %
+        raise IOError("No file matching %s in codes directory" %
                       self.file_name)
 
 
@@ -87,6 +87,7 @@ class CodeMobject(VGroup):
     def gen_code_json(self):
         file = open(self.file_path, "r")
         html_string = file.read()
+        file.close()
         i = html_string.find("&#xa0;")
         str1 = html_string[0:i]
         str1 = str1[0:-31] + "" \
