@@ -218,6 +218,7 @@ class SingleStringTextMobject(SVGMobject):
 
         return file_name
 
+#copied from tex_mobject.py texMobject class
 class Text(SingleStringTextMobject):
     CONFIG = {
         "substrings_to_isolate": [],
