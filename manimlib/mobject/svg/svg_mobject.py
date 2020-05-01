@@ -87,9 +87,10 @@ class SVGMobject(VMobject):
                 for child in element.childNodes
             ])
         elif element.tagName == 'path':
-            if element.getAttribute('d') != "":
+            temp = element.getAttribute('d')
+            if  temp != "":
                 result.append(self.path_string_to_mobject(
-                    element.getAttribute('d')
+                    temp
                 ))
 
         elif element.tagName == 'use':
