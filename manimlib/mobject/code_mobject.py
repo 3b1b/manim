@@ -1,6 +1,4 @@
 import html
-import os
-import numpy as np
 from manimlib.constants import *
 from manimlib.container.container import Container
 from manimlib.mobject.svg.text_mobject import Text
@@ -62,17 +60,16 @@ class CodeMobject(VGroup):
     def code_json_to_mobject_array(self):
         self.lines = []
         for line_no in range(0, self.code_json.__len__()):
-            #print([self.code_json[line_no][j][0] for j in range(self.code_json[line_no].__len__())])
-            line_chars_list = []
+            line_str = ""
             for j in range(self.code_json[line_no].__len__()):
-                for k in range(self.code_json[line_no][j][0].__len__()):
-                    line_chars_list.append(self.code_json[line_no][j][0][k])
-            line = Text(*line_chars_list,font=self.font, stroke_width=self.stroke_width).scale(self.scale_factor)
+                line_str = line_str + self.code_json[line_no][j][0]
+            line = Text(line_str,font=self.font, stroke_width=self.stroke_width).scale(self.scale_factor)
             m = 0
             for j in range(self.code_json[line_no].__len__()):
                 for k in range(self.code_json[line_no][j][0].__len__()):
-                    line[m].set_color(self.code_json[line_no][j][1])
-                    m = m +1
+                    if self.code_json[line_no][j][0][k] != " ":
+                        line[m].set_color(self.code_json[line_no][j][1])
+                        m = m +1
             if line_no == 0:
                 line.move_to(
                     np.array([self.coordinates[0], self.coordinates[1], 0]) +
