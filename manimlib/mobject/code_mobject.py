@@ -15,7 +15,8 @@ class CodeMobject(VGroup):
         "scale_factor": 0.5,
         "run_time": 1,
         "font":'Monospac821 BT',
-        'stroke_width':0
+        'stroke_width':0,
+        'indentation_char':"  "
     }
 
     def __init__(self, file_name=None, **kwargs):
@@ -135,9 +136,9 @@ class CodeMobject(VGroup):
                 continue
             code_json.append([])
             k = k + 1
-            if lines[i][0] == " ":
+            if lines[i].startswith(self.indentation_char):
                 j = lines[i].find("<")
-                lines[i] = "\t" * int(j / 2) + lines[i][j:]
+                lines[i] = "\t" * lines[i][:j].count(self.indentation_char) + lines[i][j:]
             count = 0
             while lines[i][count] == '\t':
                 count = count + 1
