@@ -1,431 +1,328 @@
-import itertools as it
-import re
-import string
-import warnings
-
-from xml.dom import minidom
-
-from manimlib.constants import *
-from manimlib.mobject.geometry import Circle
-from manimlib.mobject.geometry import Rectangle
-from manimlib.mobject.geometry import RoundedRectangle
+import operator as op
 from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.color import *
+from manimlib.mobject.types.vectorized_mobject import VectorizedPoint
+from manimlib.utils.strings import split_string_list_to_isolate_substrings
+import re
+import os
+import copy
+import hashlib
+import cairo
+import manimlib.constants as consts
+from manimlib.constants import *
+from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.config_ops import digest_locals
 
 
-def string_to_numbers(num_string):
-    num_string = num_string.replace("-", ",-")
-    num_string = num_string.replace("e,-", "e-")
-    return [
-        float(s)
-        for s in re.split("[ ,]", num_string)
-        if s != ""
-    ]
+class TextSetting(object):
+    def __init__(self, start, end, font, slant, weight, line_num=-1):
+        self.start = start
+        self.end = end
+        self.font = font
+        self.slant = slant
+        self.weight = weight
+        self.line_num = line_num
 
 
-class SVGMobject(VMobject):
+class SingleStringTextMobject(SVGMobject):
     CONFIG = {
-        "should_center": True,
-        "height": 2,
-        "width": None,
-        # Must be filled in in a subclass, or when called
-        "file_name": None,
-        "unpack_groups": True,  # if False, creates a hierarchy of VGroups
-        "stroke_width": DEFAULT_STROKE_WIDTH,
-        "fill_opacity": 1.0,
-        # "fill_color" : LIGHT_GREY,
+        # Mobject
+        'color': consts.WHITE,
+        'height': None,
+        # Text
+        'font': '',
+        'gradient': None,
+        'lsh': -1,
+        'size': 1,
+        'slant': NORMAL,
+        'weight': NORMAL,
+        't2c': {},
+        't2f': {},
+        't2g': {},
+        't2s': {},
+        't2w': {},
+        "organize_left_to_right": False,
+        'stroke_width': 0
     }
 
-    def __init__(self, file_name=None, **kwargs):
+    def __init__(self, text, **config):
+        self.text = text
+        self.full2short(config)
+        digest_config(self, config)
+        self.lsh = self.size if self.lsh == -1 else self.lsh
+
+        file_name = self.text2svg()
+        SVGMobject.__init__(self, file_name, **config)
+
+        if self.t2c:
+            self.set_color_by_t2c()
+        if self.gradient:
+            self.set_color_by_gradient(*self.gradient)
+        if self.t2g:
+            self.set_color_by_t2g()
+
+        # anti-aliasing
+        self.scale(0.1)
+
+    def find_indexes(self, word):
+        m = re.match(r'\[([0-9\-]{0,}):([0-9\-]{0,})\]', word)
+        if m:
+            start = int(m.group(1)) if m.group(1) != '' else 0
+            end = int(m.group(2)) if m.group(2) != '' else len(self.text)
+            start = len(self.text) + start if start < 0 else start
+            end = len(self.text) + end if end < 0 else end
+            return [(start, end)]
+
+        indexes = []
+        index = self.text.find(word)
+        while index != -1:
+            indexes.append((index, index + len(word)))
+            index = self.text.find(word, index + len(word))
+        return indexes
+
+    def full2short(self, config):
+        for kwargs in [config, self.CONFIG]:
+            if kwargs.__contains__('line_spacing_height'):
+                kwargs['lsh'] = kwargs.pop('line_spacing_height')
+            if kwargs.__contains__('text2color'):
+                kwargs['t2c'] = kwargs.pop('text2color')
+            if kwargs.__contains__('text2font'):
+                kwargs['t2f'] = kwargs.pop('text2font')
+            if kwargs.__contains__('text2gradient'):
+                kwargs['t2g'] = kwargs.pop('text2gradient')
+            if kwargs.__contains__('text2slant'):
+                kwargs['t2s'] = kwargs.pop('text2slant')
+            if kwargs.__contains__('text2weight'):
+                kwargs['t2w'] = kwargs.pop('text2weight')
+
+    def set_color_by_t2c(self, t2c=None):
+        t2c = t2c if t2c else self.t2c
+        for word, color in list(t2c.items()):
+            for start, end in self.find_indexes(word):
+                self[start:end].set_color(color)
+
+    def set_color_by_t2g(self, t2g=None):
+        t2g = t2g if t2g else self.t2g
+        for word, gradient in list(t2g.items()):
+            for start, end in self.find_indexes(word):
+                self[start:end].set_color_by_gradient(*gradient)
+
+    def str2slant(self, string):
+        if string == NORMAL:
+            return cairo.FontSlant.NORMAL
+        if string == ITALIC:
+            return cairo.FontSlant.ITALIC
+        if string == OBLIQUE:
+            return cairo.FontSlant.OBLIQUE
+
+    def str2weight(self, string):
+        if string == NORMAL:
+            return cairo.FontWeight.NORMAL
+        if string == BOLD:
+            return cairo.FontWeight.BOLD
+
+    def text2hash(self):
+        settings = self.font + self.slant + self.weight
+        settings += str(self.t2f) + str(self.t2s) + str(self.t2w)
+        settings += str(self.lsh) + str(self.size)
+        id_str = self.text+settings
+        hasher = hashlib.sha256()
+        hasher.update(id_str.encode())
+        return hasher.hexdigest()[:16]
+
+    def text2settings(self):
+        settings = []
+        t2x = [self.t2f, self.t2s, self.t2w]
+        for i in range(len(t2x)):
+            fsw = [self.font, self.slant, self.weight]
+            if t2x[i]:
+                for word, x in list(t2x[i].items()):
+                    for start, end in self.find_indexes(word):
+                        fsw[i] = x
+                        settings.append(TextSetting(start, end, *fsw))
+
+        # Set All text settings(default font slant weight)
+        fsw = [self.font, self.slant, self.weight]
+        settings.sort(key=lambda setting: setting.start)
+        temp_settings = settings.copy()
+        start = 0
+        for setting in settings:
+            if setting.start != start:
+                temp_settings.append(TextSetting(start, setting.start, *fsw))
+            start = setting.end
+        if start != len(self.text):
+            temp_settings.append(TextSetting(start, len(self.text), *fsw))
+        settings = sorted(temp_settings, key=lambda setting: setting.start)
+
+        if re.search(r'\n', self.text):
+            line_num = 0
+            for start, end in self.find_indexes('\n'):
+                for setting in settings:
+                    if setting.line_num == -1:
+                        setting.line_num = line_num
+                    if start < setting.end:
+                        line_num += 1
+                        new_setting = copy.copy(setting)
+                        setting.end = end
+                        new_setting.start = end
+                        new_setting.line_num = line_num
+                        settings.append(new_setting)
+                        settings.sort(key=lambda setting: setting.start)
+                        break
+
+        for setting in settings:
+            if setting.line_num == -1:
+                setting.line_num = 0
+
+        return settings
+
+    def text2svg(self):
+        # anti-aliasing
+        size = self.size * 10
+        lsh = self.lsh * 10
+
+        #if self.font == '':
+            #print(NOT_SETTING_FONT_MSG)
+
+        dir_name = consts.TEXT_DIR
+        hash_name = self.text2hash()
+        file_name = os.path.join(dir_name, hash_name)+'.svg'
+        if os.path.exists(file_name):
+            return file_name
+
+        surface = cairo.SVGSurface(file_name, 600, 400)
+        context = cairo.Context(surface)
+        context.set_font_size(size)
+        context.move_to(START_X, START_Y)
+
+        settings = self.text2settings()
+        offset_x = 0
+        last_line_num = 0
+        for setting in settings:
+            font = setting.font
+            slant = self.str2slant(setting.slant)
+            weight = self.str2weight(setting.weight)
+            text = self.text[setting.start:setting.end].replace('\n', ' ')
+
+            context.select_font_face(font, slant, weight)
+            if setting.line_num != last_line_num:
+                offset_x = 0
+                last_line_num = setting.line_num
+            context.move_to(START_X + offset_x, START_Y + lsh*setting.line_num)
+            context.show_text(text)
+            offset_x += context.text_extents(text)[4]
+
+        return file_name
+
+class Text(SingleStringTextMobject):
+    CONFIG = {
+        "substrings_to_isolate": [],
+        "tex_to_color_map": {},
+        "template_tex_file_body": TEMPLATE_TEXT_FILE_BODY,
+        "alignment": "\\centering",
+        "arg_separator": "",
+
+    }
+
+    def __init__(self, *tex_strings, **kwargs):
         digest_config(self, kwargs)
-        self.file_name = file_name or self.file_name
-        self.ensure_valid_file()
-        VMobject.__init__(self, **kwargs)
-        self.move_into_position()
-
-    def ensure_valid_file(self):
-        if self.file_name is None:
-            raise Exception("Must specify file for SVGMobject")
-        possible_paths = [
-            os.path.join(os.path.join("assets", "svg_images"), self.file_name),
-            os.path.join(os.path.join("assets", "svg_images"), self.file_name + ".svg"),
-            os.path.join(os.path.join("assets", "svg_images"), self.file_name + ".xdv"),
-            self.file_name,
-        ]
-        for path in possible_paths:
-            if os.path.exists(path):
-                self.file_path = path
-                return
-        raise IOError("No file matching %s in image directory" %
-                      self.file_name)
-
-    def generate_points(self):
-        doc = minidom.parse(self.file_path)
-        self.ref_to_element = {}
-        for svg in doc.getElementsByTagName("svg"):
-            mobjects = self.get_mobjects_from(svg)
-            if self.unpack_groups:
-                self.add(*mobjects)
-            else:
-                self.add(*mobjects[0].submobjects)
-        doc.unlink()
-
-    def get_mobjects_from(self, element):
-        result = []
-        if not isinstance(element, minidom.Element):
-            return result
-        if element.tagName == 'defs':
-            self.update_ref_to_element(element)
-        elif element.tagName == 'style':
-            pass  # TODO, handle style
-        elif element.tagName in ['g', 'svg', 'symbol']:
-            result += it.chain(*[
-                self.get_mobjects_from(child)
-                for child in element.childNodes
-            ])
-        elif element.tagName == 'path':
-            result.append(self.path_string_to_mobject(
-                element.getAttribute('d')
-            ))
-        elif element.tagName == 'use':
-            result += self.use_to_mobjects(element)
-        elif element.tagName == 'rect':
-            result.append(self.rect_to_mobject(element))
-        elif element.tagName == 'circle':
-            result.append(self.circle_to_mobject(element))
-        elif element.tagName == 'ellipse':
-            result.append(self.ellipse_to_mobject(element))
-        elif element.tagName in ['polygon', 'polyline']:
-            result.append(self.polygon_to_mobject(element))
-        else:
-            pass  # TODO
-            # warnings.warn("Unknown element type: " + element.tagName)
-        result = [m for m in result if m is not None]
-        self.handle_transforms(element, VGroup(*result))
-        if len(result) > 1 and not self.unpack_groups:
-            result = [VGroup(*result)]
-
-        return result
-
-    def g_to_mobjects(self, g_element):
-        mob = VGroup(*self.get_mobjects_from(g_element))
-        self.handle_transforms(g_element, mob)
-        return mob.submobjects
-
-    def path_string_to_mobject(self, path_string):
-        return VMobjectFromSVGPathstring(path_string)
-
-    def use_to_mobjects(self, use_element):
-        # Remove initial "#" character
-        ref = use_element.getAttribute("xlink:href")[1:]
-        if ref not in self.ref_to_element:
-            warnings.warn("%s not recognized" % ref)
-            return VGroup()
-        return self.get_mobjects_from(
-            self.ref_to_element[ref]
+        tex_strings = self.break_up_tex_strings(tex_strings)
+        self.tex_strings = tex_strings
+        SingleStringTextMobject.__init__(
+            self, self.arg_separator.join(tex_strings), **kwargs
         )
+        self.break_up_by_substrings()
+        self.set_color_by_tex_to_color_map(self.tex_to_color_map)
 
-    def attribute_to_float(self, attr):
-        stripped_attr = "".join([
-            char for char in attr
-            if char in string.digits + "." + "-"
-        ])
-        return float(stripped_attr)
+        if self.organize_left_to_right:
+            self.organize_submobjects_left_to_right()
 
-    def polygon_to_mobject(self, polygon_element):
-        # TODO, This seems hacky...
-        path_string = polygon_element.getAttribute("points")
-        for digit in string.digits:
-            path_string = path_string.replace(" " + digit, " L" + digit)
-        path_string = "M" + path_string
-        return self.path_string_to_mobject(path_string)
+    def break_up_tex_strings(self, tex_strings):
+        substrings_to_isolate = op.add(
+            self.substrings_to_isolate,
+            list(self.tex_to_color_map.keys())
+        )
+        split_list = split_string_list_to_isolate_substrings(
+            tex_strings, *substrings_to_isolate
+        )
+        if self.arg_separator == ' ':
+            split_list = [str(x).strip() for x in split_list]
+        #split_list = list(map(str.strip, split_list))
+        split_list = [s for s in split_list if s != '']
+        return split_list
 
-    # <circle class="st1" cx="143.8" cy="268" r="22.6"/>
-
-    def circle_to_mobject(self, circle_element):
-        x, y, r = [
-            self.attribute_to_float(
-                circle_element.getAttribute(key)
-            )
-            if circle_element.hasAttribute(key)
-            else 0.0
-            for key in ("cx", "cy", "r")
-        ]
-        return Circle(radius=r).shift(x * RIGHT + y * DOWN)
-
-    def ellipse_to_mobject(self, circle_element):
-        x, y, rx, ry = [
-            self.attribute_to_float(
-                circle_element.getAttribute(key)
-            )
-            if circle_element.hasAttribute(key)
-            else 0.0
-            for key in ("cx", "cy", "rx", "ry")
-        ]
-        return Circle().scale(rx * RIGHT + ry * UP).shift(x * RIGHT + y * DOWN)
-
-    def rect_to_mobject(self, rect_element):
-        fill_color = rect_element.getAttribute("fill")
-        stroke_color = rect_element.getAttribute("stroke")
-        stroke_width = rect_element.getAttribute("stroke-width")
-        corner_radius = rect_element.getAttribute("rx")
-
-        # input preprocessing
-        if fill_color in ["", "none", "#FFF", "#FFFFFF"] or Color(fill_color) == Color(WHITE):
-            opacity = 0
-            fill_color = BLACK  # shdn't be necessary but avoids error msgs
-        if fill_color in ["#000", "#000000"]:
-            fill_color = WHITE
-        if stroke_color in ["", "none", "#FFF", "#FFFFFF"] or Color(stroke_color) == Color(WHITE):
-            stroke_width = 0
-            stroke_color = BLACK
-        if stroke_color in ["#000", "#000000"]:
-            stroke_color = WHITE
-        if stroke_width in ["", "none", "0"]:
-            stroke_width = 0
-
-        if corner_radius in ["", "0", "none"]:
-            corner_radius = 0
-
-        corner_radius = float(corner_radius)
-
-        if corner_radius == 0:
-            mob = Rectangle(
-                width=self.attribute_to_float(
-                    rect_element.getAttribute("width")
-                ),
-                height=self.attribute_to_float(
-                    rect_element.getAttribute("height")
-                ),
-                stroke_width=stroke_width,
-                stroke_color=stroke_color,
-                fill_color=fill_color,
-                fill_opacity=opacity
-            )
-        else:
-            mob = RoundedRectangle(
-                width=self.attribute_to_float(
-                    rect_element.getAttribute("width")
-                ),
-                height=self.attribute_to_float(
-                    rect_element.getAttribute("height")
-                ),
-                stroke_width=stroke_width,
-                stroke_color=stroke_color,
-                fill_color=fill_color,
-                fill_opacity=opacity,
-                corner_radius=corner_radius
-            )
-
-        mob.shift(mob.get_center() - mob.get_corner(UP + LEFT))
-        return mob
-
-    def handle_transforms(self, element, mobject):
-        x, y = 0, 0
-        try:
-            x = self.attribute_to_float(element.getAttribute('x'))
-            # Flip y
-            y = -self.attribute_to_float(element.getAttribute('y'))
-            mobject.shift(x * RIGHT + y * UP)
-        except:
-            pass
-
-        transform = element.getAttribute('transform')
-
-        try:  # transform matrix
-            prefix = "matrix("
-            suffix = ")"
-            if not transform.startswith(prefix) or not transform.endswith(suffix):
-                raise Exception()
-            transform = transform[len(prefix):-len(suffix)]
-            transform = string_to_numbers(transform)
-            transform = np.array(transform).reshape([3, 2])
-            x = transform[2][0]
-            y = -transform[2][1]
-            matrix = np.identity(self.dim)
-            matrix[:2, :2] = transform[:2, :]
-            matrix[1] *= -1
-            matrix[:, 1] *= -1
-
-            for mob in mobject.family_members_with_points():
-                mob.points = np.dot(mob.points, matrix)
-            mobject.shift(x * RIGHT + y * UP)
-        except:
-            pass
-
-        try:  # transform scale
-            prefix = "scale("
-            suffix = ")"
-            if not transform.startswith(prefix) or not transform.endswith(suffix):
-                raise Exception()
-            transform = transform[len(prefix):-len(suffix)]
-            scale_values = string_to_numbers(transform)
-            if len(scale_values) == 2:
-                scale_x, scale_y = scale_values
-                mobject.scale(np.array([scale_x, scale_y, 1]), about_point=ORIGIN)
-            elif len(scale_values) == 1:
-                scale = scale_values[0]
-                mobject.scale(np.array([scale, scale, 1]), about_point=ORIGIN)
-        except:
-            pass
-
-        try:  # transform translate
-            prefix = "translate("
-            suffix = ")"
-            if not transform.startswith(prefix) or not transform.endswith(suffix):
-                raise Exception()
-            transform = transform[len(prefix):-len(suffix)]
-            x, y = string_to_numbers(transform)
-            mobject.shift(x * RIGHT + y * DOWN)
-        except:
-            pass
-        # TODO, ...
-
-    def flatten(self, input_list):
-        output_list = []
-        for i in input_list:
-            if isinstance(i, list):
-                output_list.extend(self.flatten(i))
+    def break_up_by_substrings(self):
+        """
+        Reorganize existing submojects one layer
+        deeper based on the structure of tex_strings (as a list
+        of tex_strings)
+        """
+        new_submobjects = []
+        curr_index = 0
+        config = dict(self.CONFIG)
+        config["alignment"] = ""
+        for tex_string in self.tex_strings:
+            sub_tex_mob = SingleStringTextMobject(tex_string, **config)
+            num_submobs = len(sub_tex_mob.submobjects)
+            new_index = curr_index + num_submobs
+            if num_submobs == 0:
+                # For cases like empty tex_strings, we want the corresponing
+                # part of the whole TexMobject to be a VectorizedPoint
+                # positioned in the right part of the TexMobject
+                sub_tex_mob.submobjects = [VectorizedPoint()]
+                last_submob_index = min(curr_index, len(self.submobjects) - 1)
+                sub_tex_mob.move_to(self.submobjects[last_submob_index], RIGHT)
             else:
-                output_list.append(i)
-        return output_list
+                sub_tex_mob.submobjects = self.submobjects[curr_index:new_index]
+            new_submobjects.append(sub_tex_mob)
+            curr_index = new_index
+        self.submobjects = new_submobjects
+        return self
 
-    def get_all_childNodes_have_id(self, element):
-        all_childNodes_have_id = []
-        if not isinstance(element, minidom.Element):
-            return
-        if element.hasAttribute('id'):
-            return [element]
-        for e in element.childNodes:
-            all_childNodes_have_id.append(self.get_all_childNodes_have_id(e))
-        return self.flatten([e for e in all_childNodes_have_id if e])
+    def get_parts_by_tex(self, tex, substring=True, case_sensitive=True):
+        def test(tex1, tex2):
+            if not case_sensitive:
+                tex1 = tex1.lower()
+                tex2 = tex2.lower()
+            if substring:
+                return tex1 in tex2
+            else:
+                return tex1 == tex2
 
-    def update_ref_to_element(self, defs):
-        new_refs = dict([(e.getAttribute('id'), e) for e in self.get_all_childNodes_have_id(defs)])
-        self.ref_to_element.update(new_refs)
+        return VGroup(*[m for m in self.submobjects if test(tex, m.get_tex_string())])
 
-    def move_into_position(self):
-        if self.should_center:
-            self.center()
-        if self.height is not None:
-            self.set_height(self.height)
-        if self.width is not None:
-            self.set_width(self.width)
+    def get_part_by_tex(self, tex, **kwargs):
+        all_parts = self.get_parts_by_tex(tex, **kwargs)
+        return all_parts[0] if all_parts else None
 
+    def set_color_by_tex(self, tex, color, **kwargs):
+        parts_to_color = self.get_parts_by_tex(tex, **kwargs)
+        for part in parts_to_color:
+            part.set_color(color)
+        return self
 
-class VMobjectFromSVGPathstring(VMobject):
-    def __init__(self, path_string, **kwargs):
-        digest_locals(self)
-        VMobject.__init__(self, **kwargs)
+    def set_color_by_tex_to_color_map(self, texs_to_color_map, **kwargs):
+        for texs, color in list(texs_to_color_map.items()):
+            try:
+                # If the given key behaves like tex_strings
+                texs + ''
+                self.set_color_by_tex(texs, color, **kwargs)
+            except TypeError:
+                # If the given key is a tuple
+                for tex in texs:
+                    self.set_color_by_tex(tex, color, **kwargs)
+        return self
 
-    def get_path_commands(self):
-        result = [
-            "M",  # moveto
-            "L",  # lineto
-            "H",  # horizontal lineto
-            "V",  # vertical lineto
-            "C",  # curveto
-            "S",  # smooth curveto
-            "Q",  # quadratic Bezier curve
-            "T",  # smooth quadratic Bezier curveto
-            "A",  # elliptical Arc
-            "Z",  # closepath
-        ]
-        result += [s.lower() for s in result]
-        return result
+    def index_of_part(self, part):
+        split_self = self.split()
+        if part not in split_self:
+            raise Exception("Trying to get index of part not in TexMobject")
+        return split_self.index(part)
 
-    def generate_points(self):
-        pattern = "[%s]" % ("".join(self.get_path_commands()))
-        pairs = list(zip(
-            re.findall(pattern, self.path_string),
-            re.split(pattern, self.path_string)[1:]
-        ))
-        # Which mobject should new points be added to
-        self = self
-        for command, coord_string in pairs:
-            self.handle_command(command, coord_string)
-        # people treat y-coordinate differently
-        self.rotate(np.pi, RIGHT, about_point=ORIGIN)
+    def index_of_part_by_tex(self, tex, **kwargs):
+        part = self.get_part_by_tex(tex, **kwargs)
+        return self.index_of_part(part)
 
-    def handle_command(self, command, coord_string):
-        isLower = command.islower()
-        command = command.upper()
-        # new_points are the points that will be added to the curr_points
-        # list. This variable may get modified in the conditionals below.
-        points = self.points
-        new_points = self.string_to_points(coord_string)
-
-        if isLower and len(points) > 0:
-            new_points += points[-1]
-
-        if command == "M":  # moveto
-            self.start_new_path(new_points[0])
-            if len(new_points) <= 1:
-                return
-
-            # Draw relative line-to values.
-            points = self.points
-            new_points = new_points[1:]
-            command = "L"
-
-            for p in new_points:
-                if isLower:
-                    # Treat everything as relative line-to until empty
-                    p[0] += self.points[-1, 0]
-                    p[1] += self.points[-1, 1]
-                self.add_line_to(p)
-            return
-
-        elif command in ["L", "H", "V"]:  # lineto
-            if command == "H":
-                new_points[0, 1] = points[-1, 1]
-            elif command == "V":
-                if isLower:
-                    new_points[0, 0] -= points[-1, 0]
-                    new_points[0, 0] += points[-1, 1]
-                new_points[0, 1] = new_points[0, 0]
-                new_points[0, 0] = points[-1, 0]
-            self.add_line_to(new_points[0])
-            return
-
-        if command == "C":  # curveto
-            pass  # Yay! No action required
-        elif command in ["S", "T"]:  # smooth curveto
-            self.add_smooth_curve_to(*new_points)
-            # handle1 = points[-1] + (points[-1] - points[-2])
-            # new_points = np.append([handle1], new_points, axis=0)
-            return
-        elif command == "Q":  # quadratic Bezier curve
-            # TODO, this is a suboptimal approximation
-            new_points = np.append([new_points[0]], new_points, axis=0)
-        elif command == "A":  # elliptical Arc
-            raise Exception("Not implemented")
-        elif command == "Z":  # closepath
-            return
-
-        # Add first three points
-        self.add_cubic_bezier_curve_to(*new_points[0:3])
-
-        # Handle situations where there's multiple relative control points
-        if len(new_points) > 3:
-            # Add subsequent offset points relatively.
-            for i in range(3, len(new_points), 3):
-                if isLower:
-                    new_points[i:i + 3] -= points[-1]
-                    new_points[i:i + 3] += new_points[i - 1]
-                self.add_cubic_bezier_curve_to(*new_points[i:i+3])
-
-    def string_to_points(self, coord_string):
-        numbers = string_to_numbers(coord_string)
-        if len(numbers) % 2 == 1:
-            numbers.append(0)
-        num_points = len(numbers) // 2
-        result = np.zeros((num_points, self.dim))
-        result[:, :2] = np.array(numbers).reshape((num_points, 2))
-        return result
-
-    def get_original_path_string(self):
-        return self.path_string
+    def sort_alphabetically(self):
+        self.submobjects.sort(
+            key=lambda m: m.get_tex_string()
+        )
