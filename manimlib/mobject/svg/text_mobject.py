@@ -41,6 +41,7 @@ class SingleStringTextMobject(SVGMobject):
         't2s': {},
         't2w': {},
         "organize_left_to_right": False,
+        'stroke_width': 0
     }
 
     def __init__(self, text, **config):
