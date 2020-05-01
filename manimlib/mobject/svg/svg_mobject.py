@@ -87,9 +87,11 @@ class SVGMobject(VMobject):
                 for child in element.childNodes
             ])
         elif element.tagName == 'path':
-            result.append(self.path_string_to_mobject(
-                element.getAttribute('d')
-            ))
+            if element.getAttribute('d') != "":
+                result.append(self.path_string_to_mobject(
+                    element.getAttribute('d')
+                ))
+
         elif element.tagName == 'use':
             result += self.use_to_mobjects(element)
         elif element.tagName == 'rect':
@@ -416,7 +418,7 @@ class VMobjectFromSVGPathstring(VMobject):
                 if isLower:
                     new_points[i:i + 3] -= points[-1]
                     new_points[i:i + 3] += new_points[i - 1]
-                self.add_cubic_bezier_curve_to(*new_points[i:i+3])
+                self.add_cubic_bezier_curve_to(*new_points[i:i + 3])
 
     def string_to_points(self, coord_string):
         numbers = string_to_numbers(coord_string)
