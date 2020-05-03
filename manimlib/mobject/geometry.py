@@ -203,6 +203,29 @@ class TipableVMobject(VMobject):
 
 
 class Arc(TipableVMobject):
+    '''
+    Creates an arc.
+
+    Parameters
+    -----
+    radius : float
+        Radius of the arc
+    start_angle : float
+        Starting angle of the arc in radians. (Angles are measured counter-clockwise)
+    angle : float
+        Angle subtended by the arc at its center in radians. (Angles are measured counter-clockwise)
+    arc_center : array_like
+        Center of the arc
+    Examples :
+            arc = Arc(radius = 3, start_angle = TAU/4, angle = TAU/2, arc_center = ORIGIN)
+
+            arc = Arc(radius = 4.5, angle = TAU/4, arc_center = (1,2,0), color = BLUE)
+
+    Returns
+    -----
+    out : Arc object
+        An Arc object satisfying the specified requirements
+    '''
     CONFIG = {
         "radius": 1.0,
         "num_components": 9,
@@ -214,6 +237,7 @@ class Arc(TipableVMobject):
         self.start_angle = start_angle
         self.angle = angle
         VMobject.__init__(self, **kwargs)
+        self.arc_center = np.array(self.arc_center)
 
     def generate_points(self):
         self.set_pre_positioned_points()
@@ -278,6 +302,28 @@ class Arc(TipableVMobject):
 
 
 class ArcBetweenPoints(Arc):
+    '''
+    Creates an arc passing through the specified points with "angle" as the
+    angle subtended at its center.
+
+    Parameters
+    -----
+    start : array_like
+        Starting point of the arc
+    end : array_like
+        Ending point of the arc
+    angle : float
+        Angle subtended by the arc at its center in radians. (Angles are measured counter-clockwise)
+    Examples :
+            arc = ArcBetweenPoints(start = (0, 0, 0), end = (1, 2, 0), angle = TAU/2)
+
+            arc = ArcBetweenPoints(start = (-2, 3, 0), end = (1, 2, 0), angle = -TAU/12, color = BLUE)
+
+    Returns
+    -----
+    out : ArcBetweenPoints object
+        An ArcBetweenPoints object satisfying the specified requirements
+    '''
     def __init__(self, start, end, angle=TAU / 4, **kwargs):
         Arc.__init__(
             self,
@@ -286,16 +332,60 @@ class ArcBetweenPoints(Arc):
         )
         if angle == 0:
             self.set_points_as_corners([LEFT, RIGHT])
-        self.put_start_and_end_on(start, end)
+        self.put_start_and_end_on(np.array(start), np.array(end))
 
 
 class CurvedArrow(ArcBetweenPoints):
+    '''
+    Creates a curved arrow passing through the specified points with "angle" as the
+    angle subtended at its center.
+
+    Parameters
+    -----
+    start_point : array_like
+        Starting point of the curved arrow
+    end_point : array_like
+        Ending point of the curved arrow
+    angle : float
+        Angle subtended by the curved arrow at its center in radians. (Angles are measured counter-clockwise)
+    Examples :
+            curvedArrow = CurvedArrow(start_point = (0, 0, 0), end_point = (1, 2, 0), angle = TAU/2)
+
+            curvedArrow = CurvedArrow(start_point = (-2, 3, 0), end_point = (1, 2, 0), angle = -TAU/12, color = BLUE)
+
+    Returns
+    -----
+    out : CurvedArrow object
+        A CurvedArrow object satisfying the specified requirements
+    '''
     def __init__(self, start_point, end_point, **kwargs):
         ArcBetweenPoints.__init__(self, start_point, end_point, **kwargs)
         self.add_tip()
 
 
 class CurvedDoubleArrow(CurvedArrow):
+    '''
+    Creates a curved double arrow passing through the specified points with "angle" as the
+    angle subtended at its center.
+
+    Parameters
+    -----
+    start_point : array_like
+        Starting point of the curved double arrow
+    end_point : array_like
+        Ending point of the curved double arrow
+    angle : float
+        Angle subtended by the curved double arrow at its center in radians. (Angles are measured counter-clockwise)
+    Examples :
+            curvedDoubleArrow = CurvedDoubleArrow(start_point = (0, 0, 0), end_point = (1, 2, 0), angle = TAU/2)
+
+            curvedDoubleArrow = CurvedDoubleArrow(start_point = (-2, 3, 0), end_point = (1, 2, 0), angle = -TAU/12, color = BLUE)
+
+    Returns
+    -----
+    out : CurvedDoubleArrow object
+        A CurvedDoubleArrow object satisfying the specified requirements
+    '''
     def __init__(self, start_point, end_point, **kwargs):
         CurvedArrow.__init__(
             self, start_point, end_point, **kwargs
@@ -304,6 +394,25 @@ class CurvedDoubleArrow(CurvedArrow):
 
 
 class Circle(Arc):
+    '''
+    Creates a circle.
+
+    Parameters
+    -----
+    radius : float
+        Radius of the circle
+    arc_center : array_like
+        Center of the circle
+    Examples :
+            circle = Circle(radius = 2, arc_center = (1,2,0))
+
+            circle = Circle(radius = 3.14, arc_center = 2 * LEFT + UP, color = DARK_BLUE)
+
+    Returns
+    -----
+    out : Circle object
+        A Circle object satisfying the specified requirements
+    '''
     CONFIG = {
         "color": RED,
         "close_new_points": True,
@@ -336,6 +445,21 @@ class Circle(Arc):
 
 
 class Dot(Circle):
+    '''
+    Creates a dot. Dot is a filled white circle with no bounary and DEFAULT_DOT_RADIUS.
+
+    Parameters
+    -----
+    point : array_like
+        Coordinates of center of the dot.
+    Examples :
+            dot = Dot(point = (1, 2, 0))
+    
+    Returns
+    -----
+    out : Dot object
+        A Dot object satisfying the specified requirements
+    '''
     CONFIG = {
         "radius": DEFAULT_DOT_RADIUS,
         "stroke_width": 0,
@@ -344,16 +468,52 @@ class Dot(Circle):
     }
 
     def __init__(self, point=ORIGIN, **kwargs):
-        Circle.__init__(self, arc_center=point, **kwargs)
+        Circle.__init__(self, arc_center=np.array(point), **kwargs)
 
 
 class SmallDot(Dot):
+    '''
+    Creates a small dot. Small dot is a filled white circle with no bounary and DEFAULT_SMALL_DOT_RADIUS.
+
+    Parameters
+    -----
+    point : array_like
+        Coordinates of center of the small dot.
+    Examples :
+            smallDot = SmallDot(point = (1, 2, 0))
+    
+    Returns
+    -----
+    out : SmallDot object
+        A SmallDot object satisfying the specified requirements
+    '''
     CONFIG = {
         "radius": DEFAULT_SMALL_DOT_RADIUS,
     }
 
 
 class Ellipse(Circle):
+    '''
+    Creates an ellipse.
+
+    Parameters
+    -----
+    width : float
+        Width of the ellipse
+    height : float
+        Height of the ellipse
+    arc_center : array_like
+        Coordinates of center of the ellipse
+    Examples :
+            ellipse = Ellipse(width = 4, height = 1, arc_center = (3, 3, 0))
+
+            ellipse = Ellipse(width = 2, height = 5, arc_center = ORIGIN, color = BLUE)
+
+    Returns
+    -----
+    out : Ellipse object
+        An Ellipse object satisfying the specified requirements
+    '''
     CONFIG = {
         "width": 2,
         "height": 1
@@ -366,6 +526,29 @@ class Ellipse(Circle):
 
 
 class AnnularSector(Arc):
+    '''
+    Creates an annular sector.
+
+    Parameters
+    -----
+    inner_radius : float
+        Inner radius of the annular sector
+    outer_radius : float
+        Outer radius of the annular sector
+    start_angle : float
+        Starting angle of the annular sector (Angles are measured counter-clockwise)
+    angle : float
+        Angle subtended at the center of the annular sector (Angles are measured counter-clockwise)
+    arc_center : array_like
+        Coordinates of center of the annular sector
+    Examples :
+            annularSector = AnnularSector(inner_radius = 1, outer_radius = 2, angle = TAU/2, start_angle = TAU*3/4, arc_center = (1,-2,0))
+
+    Returns
+    -----
+    out : AnnularSector object
+        An AnnularSector object satisfying the specified requirements
+    '''
     CONFIG = {
         "inner_radius": 1,
         "outer_radius": 2,
@@ -394,6 +577,29 @@ class AnnularSector(Arc):
 
 
 class Sector(AnnularSector):
+    '''
+    Creates a sector.
+
+    Parameters
+    -----
+    outer_radius : float
+        Radius of the sector
+    start_angle : float
+        Starting angle of the sector in radians. (Angles are measured counter-clockwise)
+    angle : float
+        Angle subtended by the sector at its center in radians. (Angles are measured counter-clockwise)
+    arc_center : array_like
+        Coordinates of center of the sector
+    Examples :
+            sector = Sector(outer_radius = 1, start_angle = TAU/3, angle = TAU/2, arc_center = [0,3,0])
+
+            sector = Sector(outer_radius = 3, start_angle = TAU/4, angle = TAU/4, arc_center = ORIGIN, color = PINK)
+
+    Returns
+    -----
+    out : Sector object
+        An Sector object satisfying the specified requirements
+    '''
     CONFIG = {
         "outer_radius": 1,
         "inner_radius": 0
@@ -401,6 +607,27 @@ class Sector(AnnularSector):
 
 
 class Annulus(Circle):
+    '''
+    Creates an annulus.
+
+    Parameters
+    -----
+    inner_radius : float
+        Inner radius of the annulus
+    outer_radius : float
+        Outer radius of the annulus
+    arc_center : array_like
+        Coordinates of center of the annulus
+    Examples :
+            annulus = Annulus(inner_radius = 2, outer_radius = 3, arc_center = (1, -1, 0))
+
+            annulus = Annulus(inner_radius = 2, outer_radius = 3, stroke_width = 20, stroke_color = RED, fill_color = BLUE, arc_center = ORIGIN)
+
+    Returns
+    -----
+    out : Annulus object
+        An Annulus object satisfying the specified requirements
+    '''
     CONFIG = {
         "inner_radius": 1,
         "outer_radius": 2,
@@ -421,12 +648,33 @@ class Annulus(Circle):
 
 
 class Line(TipableVMobject):
+    '''
+    Creates a line joining the points "start" and "end".
+
+    Parameters
+    -----
+    start : array_like
+        Starting point of the line
+    end : array_like
+        Ending point of the line 
+    Examples :
+            line = Line((0, 0, 0), (3, 0, 0))
+
+            line = Line((1, 2, 0), (-2, -3, 0), color = BLUE)
+
+    Returns
+    -----
+    out : Line object
+        A Line object satisfying the specified requirements
+    '''
     CONFIG = {
         "buff": 0,
         "path_arc": None,  # angle of arc specified here
     }
 
     def __init__(self, start=LEFT, end=RIGHT, **kwargs):
+        start = np.array(start)
+        end = np.array(end)
         digest_config(self, kwargs)
         self.set_start_and_end_attrs(start, end)
         VMobject.__init__(self, **kwargs)
@@ -526,6 +774,25 @@ class Line(TipableVMobject):
 
 
 class DashedLine(Line):
+    '''
+    Creates a dashed line joining the points "start" and "end".
+
+    Parameters
+    -----
+    start : array_like
+        Starting point of the dashed line
+    end : array_like
+        Ending point of the dashed line 
+    Examples :
+            line = DashedLine((0, 0, 0), (3, 0, 0))
+
+            line = DashedLine((1, 2, 3), (4, 5, 6), color = BLUE)
+
+    Returns
+    -----
+    out : DashedLine object
+        A DashedLine object satisfying the specified requirements
+    '''
     CONFIG = {
         "dash_length": DEFAULT_DASH_LENGTH,
         "dash_spacing": None,
@@ -579,6 +846,27 @@ class DashedLine(Line):
 
 
 class TangentLine(Line):
+    '''
+    Creates a tangent line to the specified vectorized math object.
+
+    Parameters
+    -----
+    vmob : VMobject object
+        Vectorized math object which the line will be tangent to 
+    alpha : float
+        Point on the perimeter of the vectorized math object. It takes value between 0 and 1
+        both inclusive.
+    length : float
+        Length of the tangent line
+    Examples :
+            circle = Circle(arc_center = ORIGIN, radius = 3, color = GREEN)
+            tangentLine = TangentLine(vmob = circle, alpha = 1/3, length = 6, color = BLUE)
+
+    Returns
+    -----
+    out : TangentLine object
+        A TangentLine object satisfying the specified requirements
+    '''
     CONFIG = {
         "length": 1,
         "d_alpha": 1e-6
@@ -598,6 +886,23 @@ class TangentLine(Line):
 
 
 class Elbow(VMobject):
+    '''
+    Creates an elbow. Elbow is an L-shaped shaped object.
+
+    Parameters
+    -----
+    width : float
+        Width of the elbow
+    angle : float
+        Angle of the elbow in radians with the horizontal. (Angles are measured counter-clockwise)
+    Examples :
+            line = Elbow(width = 2, angle = TAU/16)
+
+    Returns
+    -----
+    out : Elbow object
+        A Elbow object satisfying the specified requirements
+    '''
     CONFIG = {
         "width": 0.2,
         "angle": 0,
@@ -611,6 +916,25 @@ class Elbow(VMobject):
 
 
 class Arrow(Line):
+    '''
+    Creates an arrow.
+
+    Parameters
+    -----
+    start : array_like
+        Starting point of the arrow
+    end : array_like
+        Ending point of the arrow 
+    Examples :
+            arrow = Arrow((0, 0, 0), (3, 0, 0))
+
+            arrow = Arrow((1, 2, 0), (-2, -3, 0), color = BLUE)
+
+    Returns
+    -----
+    out : Arrow object
+        A Arrow object satisfying the specified requirements
+    '''
     CONFIG = {
         "stroke_width": 6,
         "buff": MED_SMALL_BUFF,
@@ -686,6 +1010,23 @@ class Arrow(Line):
 
 
 class Vector(Arrow):
+    '''
+    Creates a vector. Vector is an arrow with start point as ORIGIN
+
+    Parameters
+    -----
+    direction : array_like
+        Coordinates of direction of the arrow
+    Examples :
+            arrow = Vector(direction = LEFT)
+
+            arrow = Vector(direction = (4,3,0), color = BLUE)
+
+    Returns
+    -----
+    out : Vector object
+        A Vector object satisfying the specified requirements
+    '''
     CONFIG = {
         "buff": 0,
     }
@@ -697,6 +1038,25 @@ class Vector(Arrow):
 
 
 class DoubleArrow(Arrow):
+    '''
+    Creates a double arrow.
+
+    Parameters
+    -----
+    start : array_like
+        Starting point of the double arrow
+    end : array_like
+        Ending point of the double arrow 
+    Examples :
+            doubleArrow = DoubleArrow((0, 0, 0), (3, 0, 0))
+
+            doubleArrow = DoubleArrow((1, 2, 0), (-2, -3, 0), color = BLUE)
+
+    Returns
+    -----
+    out : DoubleArrow object
+        A DoubleArrow object satisfying the specified requirements
+    '''
     def __init__(self, *args, **kwargs):
         Arrow.__init__(self, *args, **kwargs)
         self.add_tip(at_start=True)
@@ -709,11 +1069,27 @@ class CubicBezier(VMobject):
 
 
 class Polygon(VMobject):
+    '''
+    Creates a polygon by joining the specified vertices.
+
+    Parameters
+    -----
+    *vertices : array_like
+        Vertex of the polygon
+    Examples :
+            triangle = Polygon((-3,0,0), (3,0,0), (0,3,0))
+
+    Returns
+    -----
+    out : Polygon object
+        A Polygon object satisfying the specified requirements
+    '''
     CONFIG = {
         "color": BLUE,
     }
 
     def __init__(self, *vertices, **kwargs):
+        vertices = tuple(np.array(x) for x in vertices)
         VMobject.__init__(self, **kwargs)
         self.set_points_as_corners(
             [*vertices, vertices[0]]
@@ -760,6 +1136,23 @@ class Polygon(VMobject):
 
 
 class RegularPolygon(Polygon):
+    '''
+    Creates a regular polygon of edge length 1 at the center of the screen.
+
+    Parameters
+    -----
+    n : int
+        Number of vertices of the regular polygon
+    start_angle : float
+        Starting angle of the regular polygon in radians. (Angles are measured counter-clockwise)
+    Examples :
+            pentagon = RegularPolygon(n = 5, start_angle = 30 * DEGREES)
+
+    Returns
+    -----
+    out : RegularPolygon object
+        A RegularPolygon object satisfying the specified requirements
+    '''
     CONFIG = {
         "start_angle": None,
     }
@@ -777,11 +1170,34 @@ class RegularPolygon(Polygon):
 
 
 class Triangle(RegularPolygon):
+    '''
+    Creates a triangle of edge length 1 at the center of the screen.
+
+    Parameters
+    -----
+    start_angle : float
+        Starting angle of the triangle in radians. (Angles are measured counter-clockwise)
+    Examples :
+            triangle = Triangle(start_angle = 45 * DEGREES)
+
+    Returns
+    -----
+    out : Triangle object
+        A Triangle object satisfying the specified requirements
+    '''
     def __init__(self, **kwargs):
         RegularPolygon.__init__(self, n=3, **kwargs)
 
 
 class ArrowTip(Triangle):
+    '''
+    Creates an arrow tip.
+
+    Returns
+    -----
+    out : ArrowTip object
+        A ArrowTip object satisfying the specified requirements
+    '''
     CONFIG = {
         "fill_opacity": 1,
         "stroke_width": 0,
@@ -811,6 +1227,23 @@ class ArrowTip(Triangle):
 
 
 class Rectangle(Polygon):
+    '''
+    Creates a rectangle at the center of the screen.
+
+    Parameters
+    -----
+    width : float
+        Width of the rectangle
+    height : float
+        Height of the rectangle
+    Examples :
+            rectangle = Rectangle(width = 3, height = 4, color = BLUE)
+
+    Returns
+    -----
+    out : Rectangle object
+        A Rectangle object satisfying the specified requirements
+    '''
     CONFIG = {
         "color": WHITE,
         "height": 2.0,
@@ -826,6 +1259,21 @@ class Rectangle(Polygon):
 
 
 class Square(Rectangle):
+    '''
+    Creates a square at the center of the screen.
+
+    Parameters
+    -----
+    side_length : float
+        Edge length of the square
+    Examples :
+            square = Square(side_length = 5, color = PINK)
+
+    Returns
+    -----
+    out : Square object
+        A Square object satisfying the specified requirements
+    '''
     CONFIG = {
         "side_length": 2.0,
     }
@@ -841,6 +1289,25 @@ class Square(Rectangle):
 
 
 class RoundedRectangle(Rectangle):
+    '''
+    Creates a rectangle with round edges at the center of the screen.
+
+    Parameters
+    -----
+    width : float
+        Width of the rounded rectangle
+    height : float
+        Height of the rounded rectangle
+    corner_radius : float
+        Corner radius of the rectangle
+    Examples :
+            rRectangle = RoundedRectangle(width = 3, height = 4, corner_radius = 1, color = BLUE)
+
+    Returns
+    -----
+    out : RoundedRectangle object
+        A RoundedRectangle object satisfying the specified requirements
+    '''
     CONFIG = {
         "corner_radius": 0.5,
     }
