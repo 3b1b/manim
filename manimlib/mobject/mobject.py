@@ -21,6 +21,7 @@ from manimlib.utils.simple_functions import get_parameters
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotation_matrix
+from manimlib.utils.space_ops import angle_between_vectors
 
 
 # TODO: Explain array_attrs
