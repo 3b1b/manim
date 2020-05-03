@@ -58,6 +58,7 @@ from manimlib.mobject.types.vectorized_mobject import *
 from manimlib.mobject.mobject_update_utils import *
 from manimlib.mobject.value_tracker import *
 from manimlib.mobject.vector_field import *
+from manimlib.mobject.code_mobject import *
 
 from manimlib.for_3b1b_videos.common_scenes import *
 from manimlib.for_3b1b_videos.pi_creature import *
