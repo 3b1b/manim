@@ -237,7 +237,6 @@ class Arc(TipableVMobject):
         self.start_angle = start_angle
         self.angle = angle
         VMobject.__init__(self, **kwargs)
-        self.arc_center = np.array(self.arc_center)
 
     def generate_points(self):
         self.set_pre_positioned_points()
@@ -468,7 +467,7 @@ class Dot(Circle):
     }
 
     def __init__(self, point=ORIGIN, **kwargs):
-        Circle.__init__(self, arc_center=np.array(point), **kwargs)
+        Circle.__init__(self, arc_center=point, **kwargs)
 
 
 class SmallDot(Dot):
@@ -673,8 +672,6 @@ class Line(TipableVMobject):
     }
 
     def __init__(self, start=LEFT, end=RIGHT, **kwargs):
-        start = np.array(start)
-        end = np.array(end)
         digest_config(self, kwargs)
         self.set_start_and_end_attrs(start, end)
         VMobject.__init__(self, **kwargs)
@@ -1089,7 +1086,6 @@ class Polygon(VMobject):
     }
 
     def __init__(self, *vertices, **kwargs):
-        vertices = tuple(np.array(x) for x in vertices)
         VMobject.__init__(self, **kwargs)
         self.set_points_as_corners(
             [*vertices, vertices[0]]
