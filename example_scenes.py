@@ -104,6 +104,8 @@ class WriteStuff(Scene):
         example_tex = TexMobject(
             "\\sum_{k=1}^\\infty {1 \\over k^2} = {\\pi^2 \\over 6}",
         )
+        example_tex.set_color_by_gradient(RED, BLUE)
+        
         group = VGroup(example_text, example_tex)
         group.arrange(DOWN)
         group.set_width(FRAME_WIDTH - 2 * LARGE_BUFF)
