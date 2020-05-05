@@ -102,7 +102,8 @@ class CodeMobject(VGroup):
             green_button = Dot(radius=0.1, stroke_width=0, color='#27c93f')
             green_button.shift(RIGHT * 0.1 * 3)
             buttons = VGroup(red_button, yellow_button, green_button)
-            buttons.shift(UP * (height / 2 - 0.1 * 2 - 0.05) + LEFT * (width / 2 - 0.1 * 5 - 0.05))
+            buttons.shift(
+                UP * (height / 2 - 0.1 * 2 - 0.05) + LEFT * (width / 2 - 0.1 * 5 - self.corner_radius / 2 - 0.05))
 
             self.background_mobject = VGroup(rrect, buttons)
             x = (height - forground.get_height()) / 2 - 0.1 * 3
