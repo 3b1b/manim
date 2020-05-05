@@ -11,7 +11,7 @@ from pygments.lexers import get_lexer_by_name
 from pygments.formatters.html import HtmlFormatter
 
 '''
-coordinate point is LEFT+UP corner background_rect
+coordinate point is LEFT+UP corner of background_rect
 
 codemobject is VGroup() with three things
 codemobject[0] is codemobject.background_rect 
