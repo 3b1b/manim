@@ -15,11 +15,10 @@ from pygments.formatters.html import HtmlFormatter
 coordinate point is LEFT+UP corner background_rect
 
 codemobject is VGroup() with three things
-codemobject[0] is codemobject.background
+codemobject[0] is codemobject.background_mobject
     which can be a 
         Rectangle() if background == "rectangle" 
-        VGroup() of 
-    
+        VGroup() of Rectangle() and Dot() for three buttons
 codemobject[1] is codemobject.line_numbers
     Which is a VGroup() of Text() objects with line numbers as a text, this mean you can use 
         codemobject.line_numbers[0] or codemobject[1][0] to access first line number 
