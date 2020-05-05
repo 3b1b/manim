@@ -10,6 +10,31 @@ from pygments import highlight
 from pygments.lexers import get_lexer_by_name
 from pygments.formatters.html import HtmlFormatter
 
+'''
+Creates a three things
+codemobject[0] is codemobject.background_rect 
+    which is a Rectangle()
+codemobject[1] is codemobject.line_numbers
+    Which is a VGroup() of Text() objects with line numbers as a text, this mean you can use 
+        codemobject.line_numbers[0] or codemobject[1][0] to access first line number 
+codemobject[2] is codemobject.code
+    Which is a VGroup() of lines with color highlighted, this mean you can use 
+        codemobject.code[1] or codemobject[2][1] 
+            line number 1
+        codemobject.code[1][0] or codemobject.code[1][0] 
+            first character of line number 1
+        codemobject.code[1][0:5] or codemobject.code[1][0:5] 
+            first five characters of line number 1
+            
+NOTE : " " spaces are not counted in Text() object
+for example if line number 5 of code is "c = a+b" then 
+            codemobject.code[5][1] -> c
+            codemobject.code[5][2] -> =
+            codemobject.code[5][3] -> a
+            codemobject.code[5][4] -> +
+            codemobject.code[5][5] -> a
+            codemobject.code[5][6] -> b
+'''
 
 class CodeMobject(VGroup):
     CONFIG = {
