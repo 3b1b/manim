@@ -11,7 +11,7 @@ from pygments.lexers import get_lexer_by_name
 from pygments.formatters.html import HtmlFormatter
 
 '''
-coordinate point is LEFT+UP corner of background_rect
+coordinate point is LEFT+UP corner background_rect
 
 codemobject is VGroup() with three things
 codemobject[0] is codemobject.background_rect 
@@ -27,15 +27,7 @@ codemobject[2] is codemobject.code
             first character of line number 1
         codemobject.code[1][0:5] or codemobject.code[1][0:5] 
             first five characters of line number 1
-            
-NOTE : " " spaces are not counted in Text() object
-for example if line number 5 of code is "c = a+b" then 
-            codemobject.code[5][1] -> c
-            codemobject.code[5][2] -> =
-            codemobject.code[5][3] -> a
-            codemobject.code[5][4] -> +
-            codemobject.code[5][5] -> a
-            codemobject.code[5][6] -> b
+
 '''
 
 class CodeMobject(VGroup):
@@ -160,9 +152,8 @@ class CodeMobject(VGroup):
             line_char_index = 0
             for word_index in range(self.code_json[line_no].__len__()):
                 for char_index in range(self.code_json[line_no][word_index][0].__len__()):
-                    if self.code_json[line_no][word_index][0][char_index] != " ":
-                        line[line_char_index].set_color(self.code_json[line_no][word_index][1])
-                        line_char_index = line_char_index + 1
+                    line[line_char_index].set_color(self.code_json[line_no][word_index][1])
+                    line_char_index = line_char_index + 1
             if self.insert_line_no:
                 if line_no == 0:
                     line.move_to(np.array([self.coordinates[0], self.coordinates[1], 0]) +
