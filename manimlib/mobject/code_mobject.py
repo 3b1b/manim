@@ -11,7 +11,7 @@ from pygments.lexers import get_lexer_by_name
 from pygments.formatters.html import HtmlFormatter
 
 '''
-Creates a three things
+codemobject is VGroup() with three things
 codemobject[0] is codemobject.background_rect 
     which is a Rectangle()
 codemobject[1] is codemobject.line_numbers
