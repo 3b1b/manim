@@ -67,7 +67,10 @@ class Text(SVGMobject):
     def apply_space_char(self):
         for start, end in self.find_indexes(' '):
             space = Dot(fill_opacity=0, stroke_opacity=0)
-            space.next_to(self.submobjects[start-1])
+            if start == 0:
+                space.next_to(self.submobjects[1])
+            else:
+                space.next_to(self.submobjects[start-1])
             self.submobjects.insert(start, space)
 
     def find_indexes(self, word):
