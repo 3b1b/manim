@@ -14,27 +14,27 @@ from pygments.formatters.html import HtmlFormatter
 '''
 coordinate point is LEFT+UP corner
 
-codemobject is VGroup() with three things
-codemobject[0] is codemobject.background_mobject
+Code is VGroup() with three things
+Code[0] is Code.background_mobject
     which can be a 
         Rectangle() if background == "rectangle" 
         VGroup() of Rectangle() and Dot() for three buttons
-codemobject[1] is codemobject.line_numbers
+Code[1] is Code.line_numbers
     Which is a VGroup() of Text() objects with line numbers as a text, this mean you can use 
-        codemobject.line_numbers[0] or codemobject[1][0] to access first line number 
-codemobject[2] is codemobject.code
+        Code.line_numbers[0] or Code[1][0] to access first line number 
+Code[2] is Code.code
     Which is a VGroup() of lines with color highlighted, this mean you can use 
-        codemobject.code[1] or codemobject[2][1] 
+        Code.code[1] or Code[2][1] 
             line number 1
-        codemobject.code[1][0] or codemobject.code[1][0] 
+        Code.code[1][0] or Code.code[1][0] 
             first character of line number 1
-        codemobject.code[1][0:5] or codemobject.code[1][0:5] 
+        Code.code[1][0:5] or Code.code[1][0:5] 
             first five characters of line number 1
 
 '''
 
 
-class CodeMobject(VGroup):
+class Code(VGroup):
     CONFIG = {
         "tab_spacing": 0.4,
         "line_spacing": 0.1,
@@ -135,7 +135,7 @@ class CodeMobject(VGroup):
 
     def ensure_valid_file(self):
         if self.file_name is None:
-            raise Exception("Must specify file for CodeMobject")
+            raise Exception("Must specify file for Code")
         possible_paths = [
             os.path.join(os.path.join("assets", "codes"), self.file_name),
             self.file_name,
