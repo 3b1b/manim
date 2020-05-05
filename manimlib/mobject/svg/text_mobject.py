@@ -51,7 +51,6 @@ class Text(SVGMobject):
 
         file_name = self.text2svg()
         SVGMobject.__init__(self, file_name, **config)
-        
         self.text = text.replace(" ", "")
         if self.t2c:
             self.set_color_by_t2c()
