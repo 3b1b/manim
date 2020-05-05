@@ -224,7 +224,7 @@ class Arc(TipableVMobject):
     Returns
     -----
     out : Arc object
-        An Arc object satisfying the specified requirements
+        An Arc object satisfying the specified parameters
     '''
     CONFIG = {
         "radius": 1.0,
@@ -321,7 +321,7 @@ class ArcBetweenPoints(Arc):
     Returns
     -----
     out : ArcBetweenPoints object
-        An ArcBetweenPoints object satisfying the specified requirements
+        An ArcBetweenPoints object satisfying the specified parameters
     '''
     def __init__(self, start, end, angle=TAU / 4, **kwargs):
         Arc.__init__(
@@ -355,7 +355,7 @@ class CurvedArrow(ArcBetweenPoints):
     Returns
     -----
     out : CurvedArrow object
-        A CurvedArrow object satisfying the specified requirements
+        A CurvedArrow object satisfying the specified parameters
     '''
     def __init__(self, start_point, end_point, **kwargs):
         ArcBetweenPoints.__init__(self, start_point, end_point, **kwargs)
@@ -383,7 +383,7 @@ class CurvedDoubleArrow(CurvedArrow):
     Returns
     -----
     out : CurvedDoubleArrow object
-        A CurvedDoubleArrow object satisfying the specified requirements
+        A CurvedDoubleArrow object satisfying the specified parameters
     '''
     def __init__(self, start_point, end_point, **kwargs):
         CurvedArrow.__init__(
@@ -410,7 +410,7 @@ class Circle(Arc):
     Returns
     -----
     out : Circle object
-        A Circle object satisfying the specified requirements
+        A Circle object satisfying the specified parameters
     '''
     CONFIG = {
         "color": RED,
@@ -457,7 +457,7 @@ class Dot(Circle):
     Returns
     -----
     out : Dot object
-        A Dot object satisfying the specified requirements
+        A Dot object satisfying the specified parameters
     '''
     CONFIG = {
         "radius": DEFAULT_DOT_RADIUS,
@@ -484,7 +484,7 @@ class SmallDot(Dot):
     Returns
     -----
     out : SmallDot object
-        A SmallDot object satisfying the specified requirements
+        A SmallDot object satisfying the specified parameters
     '''
     CONFIG = {
         "radius": DEFAULT_SMALL_DOT_RADIUS,
@@ -511,7 +511,7 @@ class Ellipse(Circle):
     Returns
     -----
     out : Ellipse object
-        An Ellipse object satisfying the specified requirements
+        An Ellipse object satisfying the specified parameters
     '''
     CONFIG = {
         "width": 2,
@@ -546,7 +546,7 @@ class AnnularSector(Arc):
     Returns
     -----
     out : AnnularSector object
-        An AnnularSector object satisfying the specified requirements
+        An AnnularSector object satisfying the specified parameters
     '''
     CONFIG = {
         "inner_radius": 1,
@@ -597,7 +597,7 @@ class Sector(AnnularSector):
     Returns
     -----
     out : Sector object
-        An Sector object satisfying the specified requirements
+        An Sector object satisfying the specified parameters
     '''
     CONFIG = {
         "outer_radius": 1,
@@ -625,7 +625,7 @@ class Annulus(Circle):
     Returns
     -----
     out : Annulus object
-        An Annulus object satisfying the specified requirements
+        An Annulus object satisfying the specified parameters
     '''
     CONFIG = {
         "inner_radius": 1,
@@ -664,7 +664,7 @@ class Line(TipableVMobject):
     Returns
     -----
     out : Line object
-        A Line object satisfying the specified requirements
+        A Line object satisfying the specified parameters
     '''
     CONFIG = {
         "buff": 0,
@@ -788,7 +788,7 @@ class DashedLine(Line):
     Returns
     -----
     out : DashedLine object
-        A DashedLine object satisfying the specified requirements
+        A DashedLine object satisfying the specified parameters
     '''
     CONFIG = {
         "dash_length": DEFAULT_DASH_LENGTH,
@@ -862,7 +862,7 @@ class TangentLine(Line):
     Returns
     -----
     out : TangentLine object
-        A TangentLine object satisfying the specified requirements
+        A TangentLine object satisfying the specified parameters
     '''
     CONFIG = {
         "length": 1,
@@ -898,7 +898,7 @@ class Elbow(VMobject):
     Returns
     -----
     out : Elbow object
-        A Elbow object satisfying the specified requirements
+        A Elbow object satisfying the specified parameters
     '''
     CONFIG = {
         "width": 0.2,
@@ -930,7 +930,7 @@ class Arrow(Line):
     Returns
     -----
     out : Arrow object
-        A Arrow object satisfying the specified requirements
+        A Arrow object satisfying the specified parameters
     '''
     CONFIG = {
         "stroke_width": 6,
@@ -1022,7 +1022,7 @@ class Vector(Arrow):
     Returns
     -----
     out : Vector object
-        A Vector object satisfying the specified requirements
+        A Vector object satisfying the specified parameters
     '''
     CONFIG = {
         "buff": 0,
@@ -1052,7 +1052,7 @@ class DoubleArrow(Arrow):
     Returns
     -----
     out : DoubleArrow object
-        A DoubleArrow object satisfying the specified requirements
+        A DoubleArrow object satisfying the specified parameters
     '''
     def __init__(self, *args, **kwargs):
         Arrow.__init__(self, *args, **kwargs)
@@ -1079,7 +1079,7 @@ class Polygon(VMobject):
     Returns
     -----
     out : Polygon object
-        A Polygon object satisfying the specified requirements
+        A Polygon object satisfying the specified parameters
     '''
     CONFIG = {
         "color": BLUE,
@@ -1147,7 +1147,7 @@ class RegularPolygon(Polygon):
     Returns
     -----
     out : RegularPolygon object
-        A RegularPolygon object satisfying the specified requirements
+        A RegularPolygon object satisfying the specified parameters
     '''
     CONFIG = {
         "start_angle": None,
@@ -1179,7 +1179,7 @@ class Triangle(RegularPolygon):
     Returns
     -----
     out : Triangle object
-        A Triangle object satisfying the specified requirements
+        A Triangle object satisfying the specified parameters
     '''
     def __init__(self, **kwargs):
         RegularPolygon.__init__(self, n=3, **kwargs)
@@ -1192,7 +1192,7 @@ class ArrowTip(Triangle):
     Returns
     -----
     out : ArrowTip object
-        A ArrowTip object satisfying the specified requirements
+        A ArrowTip object satisfying the specified parameters
     '''
     CONFIG = {
         "fill_opacity": 1,
@@ -1238,7 +1238,7 @@ class Rectangle(Polygon):
     Returns
     -----
     out : Rectangle object
-        A Rectangle object satisfying the specified requirements
+        A Rectangle object satisfying the specified parameters
     '''
     CONFIG = {
         "color": WHITE,
@@ -1268,7 +1268,7 @@ class Square(Rectangle):
     Returns
     -----
     out : Square object
-        A Square object satisfying the specified requirements
+        A Square object satisfying the specified parameters
     '''
     CONFIG = {
         "side_length": 2.0,
@@ -1302,7 +1302,7 @@ class RoundedRectangle(Rectangle):
     Returns
     -----
     out : RoundedRectangle object
-        A RoundedRectangle object satisfying the specified requirements
+        A RoundedRectangle object satisfying the specified parameters
     '''
     CONFIG = {
         "corner_radius": 0.5,
