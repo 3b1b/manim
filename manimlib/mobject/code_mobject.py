@@ -1,7 +1,8 @@
 import html
 from manimlib.constants import *
 from manimlib.container.container import Container
-from manimlib.mobject.geometry import Rectangle
+from manimlib.mobject.geometry import Rectangle, Dot
+from manimlib.mobject.shape_matchers import SurroundingRectangle
 from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VGroup
 
@@ -29,6 +30,7 @@ codemobject[2] is codemobject.code
             first five characters of line number 1
 
 '''
+
 
 class CodeMobject(VGroup):
     CONFIG = {
@@ -66,28 +68,24 @@ class CodeMobject(VGroup):
 
         self.gen_colored_lines()
         self.code = VGroup(*[self.lines[i] for i in range(self.lines.__len__())])
-        if self.insert_line_no:
-            rectw = VGroup(self.code, self.line_numbers).get_width() + (self.margin * 2)
-        else:
-            rectw = self.code.get_width() + (self.margin * 2)
 
-        recth = self.code.get_height() + (self.margin * 2)
-        self.background_rect = Rectangle(height=recth,
-                                         width=rectw,
-                                         color=self.background_color,
-                                         fill_color=self.background_color,
-                                         stroke_width=0,
-                                         fill_opacity=1, )
-        self.background_rect.move_to(np.array([self.coordinates[0], self.coordinates[1], 0]) +
-                                     np.array([self.background_rect.get_width() / 2, 0, 0]) -
-                                     np.array([0, self.background_rect.get_height() / 2, 0]) +
-                                     np.array([0, self.temp_char.get_height() / 2, 0])
-                                     )
+        if self.insert_line_no:
+            self.background_rect = SurroundingRectangle(VGroup(self.code, self.line_numbers), buff=self.margin,
+                                                        color=self.background_color,
+                                                        fill_color=self.background_color,
+                                                        stroke_width=0,
+                                                        fill_opacity=1, )
+        else:
+            self.background_rect = SurroundingRectangle(self.code, buff=self.margin,
+                                                        color=self.background_color,
+                                                        fill_color=self.background_color,
+                                                        stroke_width=0,
+                                                        fill_opacity=1, )
 
         if self.insert_line_no:
             VGroup.__init__(self, self.background_rect, self.line_numbers, *self.code, **kwargs)
         else:
-            VGroup.__init__(self, self.background_rect, *self.code, **kwargs)
+            VGroup.__init__(self, self.background_rect, Dot(fill_opacity=0, stroke_opacity=0), *self.code, **kwargs)
 
     def apply_points_function_about_point(self, func, about_point=None, about_edge=None):
         if about_point is None:
