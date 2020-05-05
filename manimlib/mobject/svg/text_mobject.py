@@ -50,6 +50,7 @@ class Text(SVGMobject):
         self.lsh = self.size if self.lsh == -1 else self.lsh
 
         file_name = self.text2svg()
+        self.remove_last_M(file_name)
         SVGMobject.__init__(self, file_name, **config)
 
         if self.t2c:
@@ -61,6 +62,13 @@ class Text(SVGMobject):
 
         # anti-aliasing
         self.scale(0.1)
+
+    def remove_last_M(self, file_name):
+        with open(file_name, 'r') as fpr:
+            content = fpr.read()
+        content = re.sub(r'Z M [^[A-Za-z]*? "\/>', 'Z "/>', content)
+        with open(file_name, 'w') as fpw:
+            fpw.write(content)
 
     def find_indexes(self, word):
         m = re.match(r'\[([0-9\-]{0,}):([0-9\-]{0,})\]', word)
