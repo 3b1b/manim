@@ -1,7 +1,7 @@
 import html
 from manimlib.constants import *
 from manimlib.container.container import Container
-from manimlib.mobject.geometry import Rectangle, Dot
+from manimlib.mobject.geometry import Rectangle, Dot, RoundedRectangle
 from manimlib.mobject.shape_matchers import SurroundingRectangle
 from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VGroup
@@ -15,8 +15,11 @@ from pygments.formatters.html import HtmlFormatter
 coordinate point is LEFT+UP corner background_rect
 
 codemobject is VGroup() with three things
-codemobject[0] is codemobject.background_rect 
-    which is a Rectangle()
+codemobject[0] is codemobject.background
+    which can be a 
+        Rectangle() if background == "rectangle" 
+        VGroup() of 
+    
 codemobject[1] is codemobject.line_numbers
     Which is a VGroup() of Text() objects with line numbers as a text, this mean you can use 
         codemobject.line_numbers[0] or codemobject[1][0] to access first line number 
@@ -43,6 +46,8 @@ class CodeMobject(VGroup):
         'stroke_width': 0,
         'margin': 0.3,
         'indentation_char': "  ",
+        "background": "rectangle",  # or window
+        "corner_radius": 0.2,
         'insert_line_no': True,
         'line_no_from': 1,
         'style': 'vim',
@@ -69,23 +74,53 @@ class CodeMobject(VGroup):
         self.gen_colored_lines()
         self.code = VGroup(*[self.lines[i] for i in range(self.lines.__len__())])
 
-        if self.insert_line_no:
-            self.background_rect = SurroundingRectangle(VGroup(self.code, self.line_numbers), buff=self.margin,
-                                                        color=self.background_color,
-                                                        fill_color=self.background_color,
-                                                        stroke_width=0,
-                                                        fill_opacity=1, )
+        if self.background == "rectangle":
+            if self.insert_line_no:
+                forground = VGroup(self.code, self.line_numbers)
+            else:
+                forground = self.code
+            self.background_mobject = SurroundingRectangle(forground, buff=self.margin,
+                                                           color=self.background_color,
+                                                           fill_color=self.background_color,
+                                                           stroke_width=0,
+                                                           fill_opacity=1, )
+            self.background_mobject.round_corners(self.corner_radius)
         else:
-            self.background_rect = SurroundingRectangle(self.code, buff=self.margin,
-                                                        color=self.background_color,
-                                                        fill_color=self.background_color,
-                                                        stroke_width=0,
-                                                        fill_opacity=1, )
+            if self.insert_line_no:
+                forground = VGroup(self.code, self.line_numbers)
+            else:
+                forground = self.code
+
+            height = forground.get_height() + 0.1 * 3 + 2 * self.margin
+            width = forground.get_width() + 0.1 * 3 + 2 * self.margin
+
+            rrect = RoundedRectangle(corner_radius=self.corner_radius, height=height, width=width,
+                                     stroke_width=0,
+                                     color=self.background_color, fill_opacity=1)
+            red_button = Dot(radius=0.1, stroke_width=0, color='#ff5f56')
+            red_button.shift(LEFT * 0.1 * 3)
+            yellow_button = Dot(radius=0.1, stroke_width=0, color='#ffbd2e')
+            green_button = Dot(radius=0.1, stroke_width=0, color='#27c93f')
+            green_button.shift(RIGHT * 0.1 * 3)
+            buttons = VGroup(red_button, yellow_button, green_button)
+            buttons.shift(UP * (height / 2 - 0.1 * 2 - 0.05) + LEFT * (width / 2 - 0.1 * 5 - 0.05))
+
+            self.background_mobject = VGroup(rrect, buttons)
+            x = (height - forground.get_height()) / 2 - 0.1 * 3
+            self.background_mobject.shift(forground.get_center())
+            self.background_mobject.shift(UP * x)
+            # self.background_mobject.move_to(np.array([self.coordinates[0], self.coordinates[1], 0]) +
+            # np.array([self.background_mobject.get_width() / 2 - self.margin, 0, 0]) +
+            # np.array([0, - self.background_mobject.get_height() / 2 + self.margin + 0.1*3, 0])
+            # )
+
+            # self.background_mobject.move_to(forground.get_center() +
+            # np.array([0, 0.1 * 2 * 2, 0]))
 
         if self.insert_line_no:
-            VGroup.__init__(self, self.background_rect, self.line_numbers, *self.code, **kwargs)
+            VGroup.__init__(self, self.background_mobject, self.line_numbers, *self.code, **kwargs)
         else:
-            VGroup.__init__(self, self.background_rect, Dot(fill_opacity=0, stroke_opacity=0), *self.code, **kwargs)
+            VGroup.__init__(self, self.background_mobject, Dot(fill_opacity=0, stroke_opacity=0), *self.code, **kwargs)
 
     def apply_points_function_about_point(self, func, about_point=None, about_edge=None):
         if about_point is None:
@@ -113,6 +148,10 @@ class CodeMobject(VGroup):
                       self.file_name)
 
     def gen_line_numbers(self):
+        if self.background == "rectangle":
+            top_margin = 0
+        else:
+            top_margin = 0.1 * 3
         self.line_numbers_array = []
         last_number = self.line_no_from + self.code_json.__len__()
         max_len = str(last_number).__len__()
@@ -128,7 +167,7 @@ class CodeMobject(VGroup):
                     np.array([self.coordinates[0], self.coordinates[1], 0]) +
                     np.array([number.get_width() / 2, 0, 0]) +
                     RIGHT * self.margin +
-                    DOWN * self.margin
+                    DOWN * (self.margin + top_margin)
                 )
             else:
                 number.move_to(
@@ -136,12 +175,16 @@ class CodeMobject(VGroup):
                     np.array([number.get_width() / 2, 0, 0]) +
                     DOWN * line_no * (self.temp_char.get_height() + self.line_spacing) +
                     RIGHT * self.margin +
-                    DOWN * self.margin
+                    DOWN * (self.margin + top_margin)
                 )
             self.line_numbers_array.append(number)
 
     def gen_colored_lines(self):
         self.lines = []
+        if self.background == "rectangle":
+            top_margin = 0
+        else:
+            top_margin = 0.1 * 3
         for line_no in range(0, self.code_json.__len__()):
             line_str = ""
             for word_index in range(self.code_json[line_no].__len__()):
@@ -152,6 +195,7 @@ class CodeMobject(VGroup):
                 for char_index in range(self.code_json[line_no][word_index][0].__len__()):
                     line[line_char_index].set_color(self.code_json[line_no][word_index][1])
                     line_char_index = line_char_index + 1
+
             if self.insert_line_no:
                 if line_no == 0:
                     line.move_to(np.array([self.coordinates[0], self.coordinates[1], 0]) +
@@ -161,7 +205,7 @@ class CodeMobject(VGroup):
                                  np.array([line.get_width() / 2, 0, 0]) +
                                  RIGHT * self.tab_spaces[line_no] * self.tab_spacing +
                                  RIGHT * self.margin +
-                                 DOWN * self.margin
+                                 DOWN * (self.margin + top_margin)
                                  )
 
                 else:
@@ -173,7 +217,7 @@ class CodeMobject(VGroup):
                                  DOWN * line_no * (self.temp_char.get_height() + self.line_spacing) +
                                  RIGHT * (self.tab_spaces[line_no] * self.tab_spacing) +
                                  RIGHT * self.margin +
-                                 DOWN * self.margin
+                                 DOWN * (self.margin + top_margin)
                                  )
             else:
                 if line_no == 0:
@@ -182,7 +226,7 @@ class CodeMobject(VGroup):
                         np.array([line.get_width() / 2, 0, 0]) +
                         RIGHT * self.tab_spaces[line_no] * self.tab_spacing +
                         RIGHT * self.margin +
-                        DOWN * self.margin
+                        DOWN * (self.margin + top_margin)
                     )
                 else:
                     line.move_to(
@@ -191,7 +235,7 @@ class CodeMobject(VGroup):
                         DOWN * line_no * (self.temp_char.get_height() + self.line_spacing) +
                         RIGHT * (self.tab_spaces[line_no] * self.tab_spacing) +
                         RIGHT * self.margin +
-                        DOWN * self.margin
+                        DOWN * (self.margin + top_margin)
                     )
             self.lines.append(line)
 
