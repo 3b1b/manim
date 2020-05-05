@@ -160,6 +160,8 @@ class CodeMobject(VGroup):
                           stroke_width=self.stroke_width).scale(self.scale_factor)
             number_len = str(self.line_no_from + line_no).__len__()
             # print(("'{:0" + str(max_len) + "d}'").format(self.line_no_from + line_no))
+            for char_index in range(0, max_len - number_len):
+                number[char_index].set_color(self.background_color)
             for char_index in range(max_len - 1, max_len - number_len - 1, -1):
                 number[char_index].set_color(self.default_color)
             if line_no == 0:
