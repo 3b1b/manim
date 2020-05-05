@@ -45,7 +45,7 @@ class Text(SVGMobject):
     }
 
     def __init__(self, text, **config):
-        self.text = text
+        self.text = text.strip()
         self.full2short(config)
         digest_config(self, config)
         self.lsh = self.size if self.lsh == -1 else self.lsh
