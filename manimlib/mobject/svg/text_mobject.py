@@ -5,6 +5,7 @@ import hashlib
 import cairo
 import manimlib.constants as consts
 from manimlib.constants import *
+from manimlib.mobject.geometry import Dot
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.utils.config_ops import digest_config
 
@@ -51,7 +52,8 @@ class Text(SVGMobject):
 
         file_name = self.text2svg()
         SVGMobject.__init__(self, file_name, **config)
-        self.text = text.replace(" ", "")
+        self.apply_space_char()
+
         if self.t2c:
             self.set_color_by_t2c()
         if self.gradient:
@@ -61,6 +63,12 @@ class Text(SVGMobject):
 
         # anti-aliasing
         self.scale(0.1)
+
+    def apply_space_char(self):
+        for start, end in self.find_indexes(' '):
+            space = Dot(fill_opacity=0, stroke_opacity=0)
+            space.next_to(self.submobjects[start-1])
+            self.submobjects.insert(start, space)
 
     def find_indexes(self, word):
         m = re.match(r'\[([0-9\-]{0,}):([0-9\-]{0,})\]', word)
@@ -201,7 +209,6 @@ class Text(SVGMobject):
             slant = self.str2slant(setting.slant)
             weight = self.str2weight(setting.weight)
             text = self.text[setting.start:setting.end].replace('\n', ' ')
-
             context.select_font_face(font, slant, weight)
             if setting.line_num != last_line_num:
                 offset_x = 0
