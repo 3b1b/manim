@@ -9,6 +9,9 @@ from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.utils.config_ops import digest_config
 
 
+TEXT_MOB_SCALE_FACTOR = 0.05
+
+
 class TextSetting(object):
     def __init__(self, start, end, font, slant, weight, line_num=-1):
         self.start = start
@@ -76,7 +79,7 @@ class Text(SVGMobject):
             self.set_color_by_t2g()
 
         # anti-aliasing
-        self.scale(0.1)
+        self.scale(TEXT_MOB_SCALE_FACTOR)
 
     def remove_last_M(self, file_name):
         with open(file_name, 'r') as fpr:
