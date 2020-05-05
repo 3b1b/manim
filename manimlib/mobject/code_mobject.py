@@ -23,7 +23,7 @@ class CodeMobject(VGroup):
         'margin': 0.3,
         'indentation_char': "  ",
         'insert_line_no': True,
-        'line_no_start_from': 1,
+        'line_no_from': 1,
         'style': 'vim',
         'language': 'cpp',
         'generate_html_file': False
@@ -48,10 +48,9 @@ class CodeMobject(VGroup):
         self.gen_colored_lines()
         self.code = VGroup(*[self.lines[i] for i in range(self.lines.__len__())])
         if self.insert_line_no:
-            rectw = VGroup(self.code,self.line_numbers).get_width() + (self.margin * 2)
+            rectw = VGroup(self.code, self.line_numbers).get_width() + (self.margin * 2)
         else:
             rectw = self.code.get_width() + (self.margin * 2)
-
 
         recth = self.code.get_height() + (self.margin * 2)
         self.background_rect = Rectangle(height=recth,
@@ -98,13 +97,13 @@ class CodeMobject(VGroup):
 
     def gen_line_numbers(self):
         self.line_numbers_array = []
-        last_number = self.line_no_start_from + self.code_json.__len__()
+        last_number = self.line_no_from + self.code_json.__len__()
         max_len = str(last_number).__len__()
         for line_no in range(0, self.code_json.__len__()):
-            number = Text(("{:0" + str(max_len) + "d}").format(self.line_no_start_from + line_no), font=self.font,
+            number = Text(("{:0" + str(max_len) + "d}").format(self.line_no_from + line_no), font=self.font,
                           stroke_width=self.stroke_width).scale(self.scale_factor)
-            number_len = str(self.line_no_start_from + line_no).__len__()
-            #print(("'{:0" + str(max_len) + "d}'").format(self.line_no_start_from + line_no))
+            number_len = str(self.line_no_from + line_no).__len__()
+            # print(("'{:0" + str(max_len) + "d}'").format(self.line_no_from + line_no))
             for char_index in range(max_len - 1, max_len - number_len - 1, -1):
                 number[char_index].set_color(self.default_color)
             if line_no == 0:
