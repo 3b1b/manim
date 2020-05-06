@@ -71,6 +71,20 @@ class Text(SVGMobject):
                     last = points[index + 1]
             each.add_line_to(last)
 
+        nppc = self.n_points_per_cubic_curve
+        for each in self:
+            if len(each.points) == 0:
+                continue
+            points = each.points
+            last = points[0]
+            each.clear_points()
+            for index, point in enumerate(points):
+                each.append_points([point])
+                if index != len(points) - 1 and (index + 1) % nppc == 0 and any(point != points[index+1]):
+                    each.add_line_to(last)
+                    last = points[index + 1]
+            each.add_line_to(last)
+
         if self.t2c:
             self.set_color_by_t2c()
         if self.gradient:
