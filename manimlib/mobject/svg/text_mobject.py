@@ -10,6 +10,9 @@ from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.utils.config_ops import digest_config
 
 
+TEXT_MOB_SCALE_FACTOR = 0.05
+
+
 class TextSetting(object):
     def __init__(self, start, end, font, slant, weight, line_num=-1):
         self.start = start
@@ -51,8 +54,22 @@ class Text(SVGMobject):
         self.lsh = self.size if self.lsh == -1 else self.lsh
 
         file_name = self.text2svg()
+        self.remove_last_M(file_name)
         SVGMobject.__init__(self, file_name, **config)
         self.apply_space_char()
+        nppc = self.n_points_per_cubic_curve
+        for each in self:
+            if len(each.points) == 0:
+                continue
+            points = each.points
+            last = points[0]
+            each.clear_points()
+            for index, point in enumerate(points):
+                each.append_points([point])
+                if index != len(points) - 1 and (index + 1) % nppc == 0 and any(point != points[index+1]):
+                    each.add_line_to(last)
+                    last = points[index + 1]
+            each.add_line_to(last)
 
         if self.t2c:
             self.set_color_by_t2c()
@@ -62,7 +79,7 @@ class Text(SVGMobject):
             self.set_color_by_t2g()
 
         # anti-aliasing
-        self.scale(0.1)
+        self.scale(TEXT_MOB_SCALE_FACTOR)
 
     def apply_space_char(self):
         for start, end in self.find_indexes(' '):
@@ -70,8 +87,15 @@ class Text(SVGMobject):
             if start == 0:
                 space.next_to(self.submobjects[1])
             else:
-                space.next_to(self.submobjects[start-1])
+                space.next_to(self.submobjects[start - 1])
             self.submobjects.insert(start, space)
+    
+    def remove_last_M(self, file_name):
+        with open(file_name, 'r') as fpr:
+            content = fpr.read()
+        content = re.sub(r'Z M [^[A-Za-z]*? "\/>', 'Z "/>', content)
+        with open(file_name, 'w') as fpw:
+            fpw.write(content)
 
     def find_indexes(self, word):
         m = re.match(r'\[([0-9\-]{0,}):([0-9\-]{0,})\]', word)
@@ -212,6 +236,7 @@ class Text(SVGMobject):
             slant = self.str2slant(setting.slant)
             weight = self.str2weight(setting.weight)
             text = self.text[setting.start:setting.end].replace('\n', ' ')
+
             context.select_font_face(font, slant, weight)
             if setting.line_num != last_line_num:
                 offset_x = 0
