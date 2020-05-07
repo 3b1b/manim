@@ -60,7 +60,7 @@ class Text(SVGMobject):
         self.remove_last_M(file_name)
         SVGMobject.__init__(self, file_name, **config)
         self.apply_space_chars()
-        self.move_into_position()
+        self.move_to(ORIGIN)
 
         nppc = self.n_points_per_cubic_curve
         for each in self:
@@ -84,7 +84,8 @@ class Text(SVGMobject):
             self.set_color_by_t2g()
 
         # anti-aliasing
-        self.scale(TEXT_MOB_SCALE_FACTOR)
+        if self.height is None and self.width is None:
+            self.scale(TEXT_MOB_SCALE_FACTOR)
 
     def apply_space_chars(self):
         indexes = self.find_indexes(' ') + self.find_indexes('\n')
