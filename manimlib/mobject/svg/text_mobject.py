@@ -7,6 +7,7 @@ import manimlib.constants as consts
 from manimlib.constants import *
 from manimlib.container.container import Container
 from manimlib.mobject.geometry import Dot, Rectangle
+from manimlib.mobject.shape_matchers import SurroundingRectangle
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import digest_config
@@ -42,6 +43,16 @@ class Text(SVGMobject):
     def __init__(self, text, **config):
         self.full2short(config)
         digest_config(self, config)
+
+        for i in range(text.__len__()):
+            if text[i] == "\t" or text[i] == " ":
+                continue
+            else:
+                break
+        first_visible_char_index = i
+        text_with_space = text[first_visible_char_index] + " " + text[first_visible_char_index]
+        self.space_width = self.get_space_width(text_with_space)
+
         text_without_tabs = text
         if text.find('\t') != -1:
             text_without_tabs = text.replace('\t', ' ' * self.tab_width)
@@ -94,14 +105,13 @@ class Text(SVGMobject):
             else:
                 break
         last_visible_char_index = i
-        space_width = Text("_", size=self.size, font=self.font).get_width()
-        max_height = Text("(gyt{[/QW",size=self.size, font=self.font).get_height()
+        max_height = self.get_height()
         for i in range(first_visible_char_index - 1, -1, -1):
             if self.text[i] == " ":
-                space = Rectangle(width=space_width, height=max_height, fill_opacity=0, stroke_opacity=0,
+                space = Rectangle(width=self.space_width, height=max_height, fill_opacity=0, stroke_opacity=0,
                                   stroke_width=0)
             elif self.text[i] == "\t":
-                space = Rectangle(width=space_width * self.tab_width, height=max_height, fill_opacity=0,
+                space = Rectangle(width=self.space_width * self.tab_width, height=max_height, fill_opacity=0,
                                   stroke_opacity=0,
                                   stroke_width=0)
             text_width = self.get_width()
@@ -112,10 +122,10 @@ class Text(SVGMobject):
         for i in range(indexes.__len__()):
             start = indexes[i][0]
             if self.text[start] == " ":
-                space = Rectangle(width=space_width, height=max_height, fill_opacity=0, stroke_opacity=0,
+                space = Rectangle(width=self.space_width, height=max_height, fill_opacity=0, stroke_opacity=0,
                                   stroke_width=0)
             elif self.text[start] == "\t":
-                space = Rectangle(width=space_width * self.tab_width, height=max_height, fill_opacity=0,
+                space = Rectangle(width=self.space_width * self.tab_width, height=max_height, fill_opacity=0,
                                   stroke_opacity=0,
                                   stroke_width=0)
             if first_visible_char_index <= start <= last_visible_char_index:
@@ -220,10 +230,33 @@ class Text(SVGMobject):
 
         return file_name
 
+    def get_space_width(self, text_with_space):
+        size = self.size * 10
+
+        dir_name = consts.TEXT_DIR
+        file_name = os.path.join(dir_name, "space") + '.svg'
+
+        surface = cairo.SVGSurface(file_name, 600, 400)
+        context = cairo.Context(surface)
+        context.set_font_size(size)
+        context.move_to(START_X, START_Y)
+        context.select_font_face(self.font, self.str2slant(self.slant), self.str2weight(self.weight))
+        context.move_to(START_X, START_Y)
+        context.show_text(text_with_space)
+        surface.finish()
+        svg_with_space = SVGMobject(file_name, height=None,
+                                         width=None,
+                                         stroke_width=0,
+                                         should_center=True,
+                                         unpack_groups=True, )
+        svg_with_space.scale(TEXT_MOB_SCALE_FACTOR)
+        space_width = svg_with_space[1].get_left()[0] - svg_with_space[0].get_right()[0]
+        return space_width
+
 
 class TextWithFixHeight(Text):
     def __init__(self, text, **kwargs):
-        Text.__init__(self,text,**kwargs)
+        Text.__init__(self, text, **kwargs)
         max_height = Text("(gyt{[/QW", **kwargs).get_height()
         rectangle = Rectangle(width=0, height=max_height, fill_opacity=0,
                               stroke_opacity=0,
