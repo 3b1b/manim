@@ -5,25 +5,16 @@ import hashlib
 import cairo
 import manimlib.constants as consts
 from manimlib.constants import *
-from manimlib.mobject.geometry import Dot
+from manimlib.container.container import Container
+from manimlib.mobject.geometry import Dot, Rectangle
 from manimlib.mobject.svg.svg_mobject import SVGMobject
+from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import digest_config
-
 
 TEXT_MOB_SCALE_FACTOR = 0.05
 
 
-class TextSetting(object):
-    def __init__(self, start, end, font, slant, weight, line_num=-1):
-        self.start = start
-        self.end = end
-        self.font = font
-        self.slant = slant
-        self.weight = weight
-        self.line_num = line_num
-
-
-class Text(SVGMobject):
+class SingleStringTextMobject(SVGMobject):
     CONFIG = {
         # Mobject
         'color': consts.WHITE,
@@ -45,18 +36,22 @@ class Text(SVGMobject):
         't2g': {},
         't2s': {},
         't2w': {},
+        'tab_width': 4,
     }
 
     def __init__(self, text, **config):
-        self.text = text
         self.full2short(config)
         digest_config(self, config)
+        text_without_tabs = text
+        if text.find('\t') != -1:
+            text_without_tabs = text.replace('\t', ' ' * self.tab_width)
+        self.text = text_without_tabs
         self.lsh = self.size if self.lsh == -1 else self.lsh
-
         file_name = self.text2svg()
         self.remove_last_M(file_name)
         SVGMobject.__init__(self, file_name, **config)
-        self.apply_space_char()
+        # self.text = text_without_tabs
+
         nppc = self.n_points_per_cubic_curve
         for each in self:
             if len(each.points) == 0:
@@ -66,11 +61,16 @@ class Text(SVGMobject):
             each.clear_points()
             for index, point in enumerate(points):
                 each.append_points([point])
-                if index != len(points) - 1 and (index + 1) % nppc == 0 and any(point != points[index+1]):
+                if index != len(points) - 1 and (index + 1) % nppc == 0 and any(point != points[index + 1]):
                     each.add_line_to(last)
                     last = points[index + 1]
             each.add_line_to(last)
 
+        self.text = text
+        # anti-aliasing
+        self.scale(TEXT_MOB_SCALE_FACTOR)
+        if self.text.find("\t") != -1 or self.text.find(" ") != -1:
+            self.apply_space_chars()
         if self.t2c:
             self.set_color_by_t2c()
         if self.gradient:
@@ -78,18 +78,53 @@ class Text(SVGMobject):
         if self.t2g:
             self.set_color_by_t2g()
 
-        # anti-aliasing
-        self.scale(TEXT_MOB_SCALE_FACTOR)
-
-    def apply_space_char(self):
-        for start, end in self.find_indexes(' '):
-            space = Dot(fill_opacity=0, stroke_opacity=0)
-            if start == 0:
-                space.next_to(self.submobjects[1])
+    def apply_space_chars(self):
+        indexes = self.find_indexes(' ') + self.find_indexes("\t")
+        indexes = sorted(indexes, key=lambda i: i[0])
+        for i in range(self.text.__len__()):
+            if self.text[i] == "\t" or self.text[i] == " ":
+                continue
             else:
-                space.next_to(self.submobjects[start - 1])
-            self.submobjects.insert(start, space)
-    
+                break
+        first_visible_char_index = i
+
+        for i in range(self.text.__len__() - 1, -1, -1):
+            if self.text[i] == "\t" or self.text[i] == " ":
+                continue
+            else:
+                break
+        last_visible_char_index = i
+        space_width = SingleStringTextMobject("_", size=self.size, font=self.font).get_width()
+        for i in range(first_visible_char_index - 1, -1, -1):
+            if self.text[i] == " ":
+                space = Rectangle(width=space_width, height=space_width / 2, fill_opacity=0, stroke_opacity=0,
+                                  stroke_width=0)
+            elif self.text[i] == "\t":
+                space = Rectangle(width=space_width * self.tab_width, height=space_width / 2, fill_opacity=0,
+                                  stroke_opacity=0,
+                                  stroke_width=0)
+            text_width = self.get_width()
+            space.move_to(np.array([-text_width / 2, 0, 0]))
+            self.next_to(space, direction=RIGHT, buff=0)
+            self.submobjects.insert(0, space)
+
+        for i in range(indexes.__len__()):
+            start = indexes[i][0]
+            if self.text[start] == " ":
+                space = Rectangle(width=space_width, height=space_width / 2, fill_opacity=0, stroke_opacity=0,
+                                  stroke_width=0)
+            elif self.text[start] == "\t":
+                space = Rectangle(width=space_width * self.tab_width, height=space_width / 2, fill_opacity=0,
+                                  stroke_opacity=0,
+                                  stroke_width=0)
+            if first_visible_char_index <= start <= last_visible_char_index:
+                space.next_to(self.submobjects[start - 1], direction=RIGHT, buff=0)
+                self.submobjects.insert(start, space)
+            elif start > last_visible_char_index:
+                space.next_to(self.submobjects[start - 1], direction=RIGHT, buff=0)
+                self.submobjects.insert(start, space)
+        self.move_to(np.array([0, 0, 0]))
+
     def remove_last_M(self, file_name):
         with open(file_name, 'r') as fpr:
             content = fpr.read()
@@ -158,68 +193,18 @@ class Text(SVGMobject):
         settings = self.font + self.slant + self.weight
         settings += str(self.t2f) + str(self.t2s) + str(self.t2w)
         settings += str(self.lsh) + str(self.size)
-        id_str = self.text+settings
+        id_str = self.text + settings
         hasher = hashlib.sha256()
         hasher.update(id_str.encode())
         return hasher.hexdigest()[:16]
 
-    def text2settings(self):
-        settings = []
-        t2x = [self.t2f, self.t2s, self.t2w]
-        for i in range(len(t2x)):
-            fsw = [self.font, self.slant, self.weight]
-            if t2x[i]:
-                for word, x in list(t2x[i].items()):
-                    for start, end in self.find_indexes(word):
-                        fsw[i] = x
-                        settings.append(TextSetting(start, end, *fsw))
-
-        # Set All text settings(default font slant weight)
-        fsw = [self.font, self.slant, self.weight]
-        settings.sort(key=lambda setting: setting.start)
-        temp_settings = settings.copy()
-        start = 0
-        for setting in settings:
-            if setting.start != start:
-                temp_settings.append(TextSetting(start, setting.start, *fsw))
-            start = setting.end
-        if start != len(self.text):
-            temp_settings.append(TextSetting(start, len(self.text), *fsw))
-        settings = sorted(temp_settings, key=lambda setting: setting.start)
-
-        if re.search(r'\n', self.text):
-            line_num = 0
-            for start, end in self.find_indexes('\n'):
-                for setting in settings:
-                    if setting.line_num == -1:
-                        setting.line_num = line_num
-                    if start < setting.end:
-                        line_num += 1
-                        new_setting = copy.copy(setting)
-                        setting.end = end
-                        new_setting.start = end
-                        new_setting.line_num = line_num
-                        settings.append(new_setting)
-                        settings.sort(key=lambda setting: setting.start)
-                        break
-
-        for setting in settings:
-            if setting.line_num == -1:
-                setting.line_num = 0
-
-        return settings
-
     def text2svg(self):
         # anti-aliasing
         size = self.size * 10
-        lsh = self.lsh * 10
-
-        if self.font == '':
-            print(NOT_SETTING_FONT_MSG)
 
         dir_name = consts.TEXT_DIR
         hash_name = self.text2hash()
-        file_name = os.path.join(dir_name, hash_name)+'.svg'
+        file_name = os.path.join(dir_name, hash_name) + '.svg'
         if os.path.exists(file_name):
             return file_name
 
@@ -227,22 +212,76 @@ class Text(SVGMobject):
         context = cairo.Context(surface)
         context.set_font_size(size)
         context.move_to(START_X, START_Y)
-
-        settings = self.text2settings()
-        offset_x = 0
-        last_line_num = 0
-        for setting in settings:
-            font = setting.font
-            slant = self.str2slant(setting.slant)
-            weight = self.str2weight(setting.weight)
-            text = self.text[setting.start:setting.end].replace('\n', ' ')
-
-            context.select_font_face(font, slant, weight)
-            if setting.line_num != last_line_num:
-                offset_x = 0
-                last_line_num = setting.line_num
-            context.move_to(START_X + offset_x, START_Y + lsh*setting.line_num)
-            context.show_text(text)
-            offset_x += context.text_extents(text)[4]
+        text = self.text
+        context.select_font_face(self.font, self.str2slant(self.slant), self.str2weight(self.weight))
+        context.move_to(START_X, START_Y)
+        context.show_text(text)
 
         return file_name
+
+
+class Text(VGroup):
+    CONFIG = {
+        "line_spacing": 0.1,
+        "alignment": "center"
+    }
+
+    def __init__(self, *text, **config):
+        Container.__init__(self, **config)
+        self.lines_list = list(text)
+        self.lines = []
+        self.lines.append([])
+        for line_no in range(self.lines_list.__len__()):
+            if "\n" in self.lines_list[line_no]:
+                self.lines_list[line_no:line_no + 1] = self.lines_list[line_no].split("\n")
+        for line_no in range(self.lines_list.__len__()):
+            self.lines[0].append(SingleStringTextMobject(self.lines_list[line_no], **config))
+        self.temp_char = SingleStringTextMobject("(", **config)
+        self.char_height = self.temp_char.get_height()
+        self.lines.append([])
+        self.set_all_lines_alignment(self.alignment)
+        self.align_lines()
+        self.text = VGroup(*[self.lines[0][i] for i in range(self.lines[0].__len__())])
+        self.config = config
+        VGroup.__init__(self, *self.text, **config)
+        self.move_to(np.array([0, 0, 0]))
+
+    def set_all_lines_alignment(self, alignment):
+        self.lines[1].extend([alignment for _ in range(self.lines_list.__len__())])
+        self.align_lines()
+
+    def align_lines(self):
+        for line_no in range(0, self.lines[0].__len__()):
+            if self.lines[1][line_no] == "center":
+                self.lines[0][line_no].move_to(
+                    np.array([0, 0, 0]) + np.array([0, - line_no * (self.char_height + self.line_spacing), 0]))
+            elif self.lines[1][line_no] == "left":
+                self.lines[0][line_no].move_to(np.array([0, 0, 0]) +
+                                               np.array([self.lines[0][line_no].get_width() / 2,
+                                                         - line_no * (self.char_height + self.line_spacing), 0])
+                                               )
+            elif self.lines[1][line_no] == "right":
+                self.lines[0][line_no].move_to(np.array([0, 0, 0]) +
+                                               np.array([- self.lines[0][line_no].get_width() / 2,
+                                                         - line_no * (self.char_height + self.line_spacing), 0])
+                                               )
+
+    def set_alignment(self, alignment, line_no):
+        self.lines[1][line_no] = alignment
+        if self.lines[1][line_no] == "center":
+            self.lines[0][line_no].move_to(self.get_top() +
+                                           np.array([0, -self.char_height / 2, 0]) +
+                                           np.array([0, - line_no * (self.char_height + self.line_spacing), 0]))
+        elif self.lines[1][line_no] == "left":
+            self.lines[0][line_no].move_to(self.get_top() +
+                                           np.array([0, -self.char_height / 2, 0]) +
+                                           np.array([self.get_width() / 2 - self.lines[0][line_no].get_width() / 2,
+                                                     - line_no * (self.char_height + self.line_spacing), 0])
+                                           )
+        elif self.lines[1][line_no] == "right":
+            self.lines[0][line_no].move_to(self.get_top() +
+                                           np.array([0, -self.char_height / 2, 0]) +
+                                           np.array([- self.get_width() / 2 + self.lines[0][line_no].get_width() / 2,
+                                                     - line_no * (self.char_height + self.line_spacing), 0])
+                                           )
+        self.move_to(np.array([0, 0, 0]))
