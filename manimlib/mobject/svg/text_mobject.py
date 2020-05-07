@@ -239,7 +239,7 @@ class Text(VGroup):
         self.temp_char = SingleStringTextMobject("(", **config)
         self.char_height = self.temp_char.get_height()
         self.lines.append([])
-        self.set_all_lines_alignment(self.alignment)
+        self.lines[1].extend([self.alignment for _ in range(self.lines_list.__len__())])
         self.align_lines()
         self.text = VGroup(*[self.lines[0][i] for i in range(self.lines[0].__len__())])
         self.config = config
@@ -248,7 +248,9 @@ class Text(VGroup):
 
     def set_all_lines_alignment(self, alignment):
         self.lines[1].extend([alignment for _ in range(self.lines_list.__len__())])
-        self.align_lines()
+        for line_no in range(0, self.lines[0].__len__()):
+            self.change_alignment_for_a_line(alignment,line_no)
+        self.move_to(np.array([0, 0, 0]))
 
     def align_lines(self):
         for line_no in range(0, self.lines[0].__len__()):
@@ -267,6 +269,10 @@ class Text(VGroup):
                                                )
 
     def set_alignment(self, alignment, line_no):
+        self.change_alignment_for_a_line(alignment,line_no)
+        self.move_to(np.array([0, 0, 0]))
+
+    def change_alignment_for_a_line(self,alignment, line_no):
         self.lines[1][line_no] = alignment
         if self.lines[1][line_no] == "center":
             self.lines[0][line_no].move_to(self.get_top() +
@@ -284,4 +290,4 @@ class Text(VGroup):
                                            np.array([- self.get_width() / 2 + self.lines[0][line_no].get_width() / 2,
                                                      - line_no * (self.char_height + self.line_spacing), 0])
                                            )
-        self.move_to(np.array([0, 0, 0]))
+
