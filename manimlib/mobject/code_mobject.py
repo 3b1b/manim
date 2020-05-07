@@ -12,33 +12,30 @@ from pygments.lexers import get_lexer_by_name
 from pygments.formatters.html import HtmlFormatter
 
 '''
-coordinate point is LEFT+UP corner
-
-Code is VGroup() with three things
-Code[0] is Code.background_mobject
-    which can be a 
-        Rectangle() if background == "rectangle" 
-        VGroup() of Rectangle() and Dot() for three buttons
-Code[1] is Code.line_numbers
-    Which is a VGroup() of Text() objects with line numbers as a text, this mean you can use 
-        Code.line_numbers[0] or Code[1][0] to access first line number 
-Code[2] is Code.code
-    Which is a VGroup() of lines with color highlighted, this mean you can use 
-        Code.code[1] or Code[2][1] 
-            line number 1
-        Code.code[1][0] or Code.code[1][0] 
-            first character of line number 1
-        Code.code[1][0:5] or Code.code[1][0:5] 
-            first five characters of line number 1
-
+1) Code is VGroup() with three things
+    1.1) Code[0] is Code.background_mobject
+        which can be a 
+            1.1.1) Rectangle() if background == "rectangle" 
+            1.1.2) VGroup() of Rectangle() and Dot() for three buttons
+    1.2) Code[1] is Code.line_numbers
+        1.2.1) Which is a VGroup() of Text() objects with line numbers as a text, 
+        1.2.2) this mean you can use 
+                Code.line_numbers[0] or Code[1][0] to access first line number 
+    1.3) Code[2] is Code.code
+        1.3.1) Which is a VGroup() of lines with color highlighted, this mean you can use 
+            Code.code[1] or Code[2][1] 
+                line number 1
+            Code.code[1][0] or Code.code[1][0] 
+                first character of line number 1
+            Code.code[1][0:5] or Code.code[1][0:5] 
+                first five characters of line number 1
 '''
 
 
 class Code(VGroup):
     CONFIG = {
-        "tab_spacing": 0.4,
+        "tab_width": 4,
         "line_spacing": 0.1,
-        "coordinates": [0, 0],
         "scale_factor": 0.5,
         "run_time": 1,
         "font": 'Monospac821 BT',
@@ -49,6 +46,7 @@ class Code(VGroup):
         "corner_radius": 0.2,
         'insert_line_no': True,
         'line_no_from': 1,
+        "line_no_buff": 0.4,
         'style': 'vim',
         'language': 'cpp',
         'generate_html_file': False
@@ -65,13 +63,10 @@ class Code(VGroup):
         self.gen_code_json()
         self.temp_char = Text("(").scale(self.scale_factor)
 
+        self.code = self.gen_colored_lines()
         if self.insert_line_no:
-            self.gen_line_numbers()
-            self.line_numbers = VGroup(
-                *[self.line_numbers_array[i] for i in range(self.line_numbers_array.__len__())])
-
-        self.gen_colored_lines()
-        self.code = VGroup(*[self.lines[i] for i in range(self.lines.__len__())])
+            self.line_numbers = self.gen_line_numbers()
+            self.line_numbers.next_to(self.code, direction=LEFT, buff=self.line_no_buff)
 
         if self.background == "rectangle":
             if self.insert_line_no:
@@ -109,18 +104,13 @@ class Code(VGroup):
             x = (height - forground.get_height()) / 2 - 0.1 * 3
             self.background_mobject.shift(forground.get_center())
             self.background_mobject.shift(UP * x)
-            # self.background_mobject.move_to(np.array([self.coordinates[0], self.coordinates[1], 0]) +
-            # np.array([self.background_mobject.get_width() / 2 - self.margin, 0, 0]) +
-            # np.array([0, - self.background_mobject.get_height() / 2 + self.margin + 0.1*3, 0])
-            # )
-
-            # self.background_mobject.move_to(forground.get_center() +
-            # np.array([0, 0.1 * 2 * 2, 0]))
 
         if self.insert_line_no:
             VGroup.__init__(self, self.background_mobject, self.line_numbers, *self.code, **kwargs)
         else:
             VGroup.__init__(self, self.background_mobject, Dot(fill_opacity=0, stroke_opacity=0), *self.code, **kwargs)
+
+        self.move_to(np.array([0, 0, 0]))
 
     def apply_points_function_about_point(self, func, about_point=None, about_edge=None):
         if about_point is None:
@@ -148,98 +138,31 @@ class Code(VGroup):
                       self.file_name)
 
     def gen_line_numbers(self):
-        if self.background == "rectangle":
-            top_margin = 0
-        else:
-            top_margin = 0.1 * 3
-        self.line_numbers_array = []
-        last_number = self.line_no_from + self.code_json.__len__()
-        max_len = str(last_number).__len__()
+        line_numbers_array = []
         for line_no in range(0, self.code_json.__len__()):
-            number = Text(("{:0" + str(max_len) + "d}").format(self.line_no_from + line_no), font=self.font,
-                          stroke_width=self.stroke_width).scale(self.scale_factor)
-            number_len = str(self.line_no_from + line_no).__len__()
-            # print(("'{:0" + str(max_len) + "d}'").format(self.line_no_from + line_no))
-            for char_index in range(0, max_len - number_len):
-                number[char_index].set_color(self.background_color)
-            for char_index in range(max_len - 1, max_len - number_len - 1, -1):
-                number[char_index].set_color(self.default_color)
-            if line_no == 0:
-                number.move_to(
-                    np.array([self.coordinates[0], self.coordinates[1], 0]) +
-                    np.array([number.get_width() / 2, 0, 0]) +
-                    RIGHT * self.margin +
-                    DOWN * (self.margin + top_margin)
-                )
-            else:
-                number.move_to(
-                    np.array([self.coordinates[0], self.coordinates[1], 0]) +
-                    np.array([number.get_width() / 2, 0, 0]) +
-                    DOWN * line_no * (self.temp_char.get_height() + self.line_spacing) +
-                    RIGHT * self.margin +
-                    DOWN * (self.margin + top_margin)
-                )
-            self.line_numbers_array.append(number)
+            number = str(self.line_no_from + line_no)
+            line_numbers_array.append(number)
+        line_numbers = Text(*[i for i in line_numbers_array], line_spacing=self.line_spacing,
+                            alignment="right", font=self.font, stroke_width=self.stroke_width).scale(self.scale_factor)
+        return line_numbers
 
     def gen_colored_lines(self):
-        self.lines = []
-        if self.background == "rectangle":
-            top_margin = 0
-        else:
-            top_margin = 0.1 * 3
+        lines_text = []
         for line_no in range(0, self.code_json.__len__()):
             line_str = ""
             for word_index in range(self.code_json[line_no].__len__()):
                 line_str = line_str + self.code_json[line_no][word_index][0]
-            line = Text(line_str, font=self.font, stroke_width=self.stroke_width).scale(self.scale_factor)
-            line_char_index = 0
+            lines_text.append(self.tab_spaces[line_no] * "\t" + line_str)
+        code = Text(*[i for i in lines_text], line_spacing=self.line_spacing, tab_width=self.tab_width,
+                    alignment="left", font=self.font, stroke_width=self.stroke_width).scale(self.scale_factor)
+        for line_no in range(code.__len__()):
+            line = code[line_no]
+            line_char_index = self.tab_spaces[line_no]
             for word_index in range(self.code_json[line_no].__len__()):
-                for char_index in range(self.code_json[line_no][word_index][0].__len__()):
-                    line[line_char_index].set_color(self.code_json[line_no][word_index][1])
-                    line_char_index = line_char_index + 1
-
-            if self.insert_line_no:
-                if line_no == 0:
-                    line.move_to(np.array([self.coordinates[0], self.coordinates[1], 0]) +
-                                 np.array(
-                                     [self.line_numbers_array[line_no].get_width() + self.temp_char.get_width() * 5, 0,
-                                      0]) +
-                                 np.array([line.get_width() / 2, 0, 0]) +
-                                 RIGHT * self.tab_spaces[line_no] * self.tab_spacing +
-                                 RIGHT * self.margin +
-                                 DOWN * (self.margin + top_margin)
-                                 )
-
-                else:
-                    line.move_to(np.array([self.coordinates[0], self.coordinates[1], 0]) +
-                                 np.array(
-                                     [self.line_numbers_array[line_no].get_width() + self.temp_char.get_width() * 5, 0,
-                                      0]) +
-                                 np.array([line.get_width() / 2, 0, 0]) +
-                                 DOWN * line_no * (self.temp_char.get_height() + self.line_spacing) +
-                                 RIGHT * (self.tab_spaces[line_no] * self.tab_spacing) +
-                                 RIGHT * self.margin +
-                                 DOWN * (self.margin + top_margin)
-                                 )
-            else:
-                if line_no == 0:
-                    line.move_to(
-                        np.array([self.coordinates[0], self.coordinates[1], 0]) +
-                        np.array([line.get_width() / 2, 0, 0]) +
-                        RIGHT * self.tab_spaces[line_no] * self.tab_spacing +
-                        RIGHT * self.margin +
-                        DOWN * (self.margin + top_margin)
-                    )
-                else:
-                    line.move_to(
-                        np.array([self.coordinates[0], self.coordinates[1], 0]) +
-                        np.array([line.get_width() / 2, 0, 0]) +
-                        DOWN * line_no * (self.temp_char.get_height() + self.line_spacing) +
-                        RIGHT * (self.tab_spaces[line_no] * self.tab_spacing) +
-                        RIGHT * self.margin +
-                        DOWN * (self.margin + top_margin)
-                    )
-            self.lines.append(line)
+                line[line_char_index:line_char_index + self.code_json[line_no][word_index][0].__len__()].set_color(
+                    self.code_json[line_no][word_index][1])
+                line_char_index += self.code_json[line_no][word_index][0].__len__()
+        return code
 
     def gen_html_string(self):
         file = open(self.file_path, "r")
