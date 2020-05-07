@@ -432,3 +432,4 @@ class Texts(VGroup):
                                            np.array([- self.get_width() / 2 + self.lines[0][line_no].get_width() / 2,
                                                      - line_no * (self.char_height + self.line_spacing), 0])
                                            )
+            
