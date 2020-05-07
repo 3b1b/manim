@@ -14,7 +14,7 @@ from manimlib.utils.config_ops import digest_config
 TEXT_MOB_SCALE_FACTOR = 0.05
 
 
-class SingleStringTextMobject(SVGMobject):
+class Text(SVGMobject):
     CONFIG = {
         # Mobject
         'color': consts.WHITE,
@@ -94,8 +94,8 @@ class SingleStringTextMobject(SVGMobject):
             else:
                 break
         last_visible_char_index = i
-        space_width = SingleStringTextMobject("_", size=self.size, font=self.font).get_width()
-        max_height = SingleStringTextMobject("(gyt{[/QW",size=self.size, font=self.font).get_height()
+        space_width = Text("_", size=self.size, font=self.font).get_width()
+        max_height = Text("(gyt{[/QW",size=self.size, font=self.font).get_height()
         for i in range(first_visible_char_index - 1, -1, -1):
             if self.text[i] == " ":
                 space = Rectangle(width=space_width, height=max_height, fill_opacity=0, stroke_opacity=0,
@@ -221,17 +221,17 @@ class SingleStringTextMobject(SVGMobject):
         return file_name
 
 
-class SingleStringTextWithFixHeight(SingleStringTextMobject):
+class TextWithFixHeight(Text):
     def __init__(self, text, **kwargs):
-        SingleStringTextMobject.__init__(self,text,**kwargs)
-        max_height = SingleStringTextMobject("(gyt{[/QW", **kwargs).get_height()
+        Text.__init__(self,text,**kwargs)
+        max_height = Text("(gyt{[/QW", **kwargs).get_height()
         rectangle = Rectangle(width=0, height=max_height, fill_opacity=0,
                               stroke_opacity=0,
                               stroke_width=0)
         self.submobjects.append(rectangle)
 
 
-class Text(VGroup):
+class Texts(VGroup):
     CONFIG = {
         "line_spacing": 0.1,
         "alignment": "center"
@@ -246,8 +246,8 @@ class Text(VGroup):
             if "\n" in self.lines_list[line_no]:
                 self.lines_list[line_no:line_no + 1] = self.lines_list[line_no].split("\n")
         for line_no in range(self.lines_list.__len__()):
-            self.lines[0].append(SingleStringTextWithFixHeight(self.lines_list[line_no], **config))
-        self.char_height = SingleStringTextWithFixHeight("(", **config).get_height()
+            self.lines[0].append(TextWithFixHeight(self.lines_list[line_no], **config))
+        self.char_height = TextWithFixHeight("(", **config).get_height()
         self.lines.append([])
         self.lines[1].extend([self.alignment for _ in range(self.lines_list.__len__())])
         self.lines[0][0].move_to(np.array([0, 0, 0]))
