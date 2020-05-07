@@ -60,7 +60,6 @@ class Text(SVGMobject):
         self.remove_last_M(file_name)
         SVGMobject.__init__(self, file_name, **config)
         self.apply_space_chars()
-        self.move_to(ORIGIN)
 
         nppc = self.n_points_per_cubic_curve
         for each in self:
