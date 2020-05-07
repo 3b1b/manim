@@ -220,6 +220,16 @@ class SingleStringTextMobject(SVGMobject):
         return file_name
 
 
+class SingleStringTextWithFixHeight(SingleStringTextMobject):
+    def __init__(self, text, **kwargs):
+        SingleStringTextMobject.__init__(self,text,**kwargs)
+        max_height = SingleStringTextMobject("(gyt{[/QW", **kwargs).get_height()
+        rectangle = Rectangle(width=0, height=max_height, fill_opacity=0,
+                              stroke_opacity=0,
+                              stroke_width=0)
+        self.submobjects.append(rectangle)
+
+
 class Text(VGroup):
     CONFIG = {
         "line_spacing": 0.1,
@@ -235,12 +245,13 @@ class Text(VGroup):
             if "\n" in self.lines_list[line_no]:
                 self.lines_list[line_no:line_no + 1] = self.lines_list[line_no].split("\n")
         for line_no in range(self.lines_list.__len__()):
-            self.lines[0].append(SingleStringTextMobject(self.lines_list[line_no], **config))
-        self.temp_char = SingleStringTextMobject("(", **config)
-        self.char_height = self.temp_char.get_height()
+            self.lines[0].append(SingleStringTextWithFixHeight(self.lines_list[line_no], **config))
+        self.char_height = SingleStringTextWithFixHeight("(", **config).get_height()
         self.lines.append([])
         self.lines[1].extend([self.alignment for _ in range(self.lines_list.__len__())])
+        self.lines[0][0].move_to(np.array([0, 0, 0]))
         self.align_lines()
+
         self.text = VGroup(*[self.lines[0][i] for i in range(self.lines[0].__len__())])
         self.config = config
         VGroup.__init__(self, *self.text, **config)
@@ -249,11 +260,12 @@ class Text(VGroup):
     def set_all_lines_alignment(self, alignment):
         self.lines[1].extend([alignment for _ in range(self.lines_list.__len__())])
         for line_no in range(0, self.lines[0].__len__()):
-            self.change_alignment_for_a_line(alignment,line_no)
+            self.change_alignment_for_a_line(alignment, line_no)
         self.move_to(np.array([0, 0, 0]))
 
     def align_lines(self):
         for line_no in range(0, self.lines[0].__len__()):
+            print(self.lines[0][line_no].get_height())
             if self.lines[1][line_no] == "center":
                 self.lines[0][line_no].move_to(
                     np.array([0, 0, 0]) + np.array([0, - line_no * (self.char_height + self.line_spacing), 0]))
@@ -269,10 +281,10 @@ class Text(VGroup):
                                                )
 
     def set_alignment(self, alignment, line_no):
-        self.change_alignment_for_a_line(alignment,line_no)
+        self.change_alignment_for_a_line(alignment, line_no)
         self.move_to(np.array([0, 0, 0]))
 
-    def change_alignment_for_a_line(self,alignment, line_no):
+    def change_alignment_for_a_line(self, alignment, line_no):
         self.lines[1][line_no] = alignment
         if self.lines[1][line_no] == "center":
             self.lines[0][line_no].move_to(self.get_top() +
@@ -290,4 +302,3 @@ class Text(VGroup):
                                            np.array([- self.get_width() / 2 + self.lines[0][line_no].get_width() / 2,
                                                      - line_no * (self.char_height + self.line_spacing), 0])
                                            )
-
