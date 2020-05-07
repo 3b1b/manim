@@ -73,7 +73,8 @@ class Text(SVGMobject):
             self.set_color_by_t2g()
 
         # anti-aliasing
-        self.scale(TEXT_MOB_SCALE_FACTOR)
+        if self.height is None:
+            self.scale(TEXT_MOB_SCALE_FACTOR)
 
     def remove_last_M(self, file_name):
         with open(file_name, 'r') as fpr:
