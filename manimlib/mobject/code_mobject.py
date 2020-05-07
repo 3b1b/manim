@@ -16,13 +16,11 @@ from pygments.formatters.html import HtmlFormatter
     1.1) Code[0] is Code.background_mobject
         which can be a 
             1.1.1) Rectangle() if background == "rectangle" 
-            1.1.2) VGroup() of Rectangle() and Dot() for three buttons
-    1.2) Code[1] is Code.line_numbers
-        1.2.1) Which is a VGroup() of Text() objects with line numbers as a text, 
-        1.2.2) this mean you can use 
+            1.1.2) VGroup() of Rectangle() and Dot() for three buttons if background == "window" 
+    1.2) Code[1] is Code.line_numbers Which is a Texts() object, this mean you can use 
                 Code.line_numbers[0] or Code[1][0] to access first line number 
     1.3) Code[2] is Code.code
-        1.3.1) Which is a VGroup() of lines with color highlighted, this mean you can use 
+        1.3.1) Which is a Texts() with color highlighted, this mean you can use 
             Code.code[1] or Code[2][1] 
                 line number 1
             Code.code[1][0] or Code.code[1][0] 
