@@ -227,6 +227,7 @@ class Text(SVGMobject):
         context.select_font_face(self.font, self.str2slant(self.slant), self.str2weight(self.weight))
         context.move_to(START_X, START_Y)
         context.show_text(text)
+        surface.finish()
 
         return file_name
 
