@@ -3,7 +3,7 @@ from manimlib.constants import *
 from manimlib.container.container import Container
 from manimlib.mobject.geometry import Rectangle, Dot, RoundedRectangle
 from manimlib.mobject.shape_matchers import SurroundingRectangle
-from manimlib.mobject.svg.text_mobject import Text
+from manimlib.mobject.svg.text_mobject import Texts
 from manimlib.mobject.types.vectorized_mobject import VGroup
 
 import re
@@ -61,7 +61,6 @@ class Code(VGroup):
         strati = self.html_string.find("background:")
         self.background_color = self.html_string[strati + 12:strati + 19]
         self.gen_code_json()
-        self.temp_char = Text("(").scale(self.scale_factor)
 
         self.code = self.gen_colored_lines()
         if self.insert_line_no:
@@ -142,7 +141,7 @@ class Code(VGroup):
         for line_no in range(0, self.code_json.__len__()):
             number = str(self.line_no_from + line_no)
             line_numbers_array.append(number)
-        line_numbers = Text(*[i for i in line_numbers_array], line_spacing=self.line_spacing,
+        line_numbers = Texts(*[i for i in line_numbers_array], line_spacing=self.line_spacing,
                             alignment="right", font=self.font, stroke_width=self.stroke_width).scale(self.scale_factor)
         return line_numbers
 
@@ -153,7 +152,7 @@ class Code(VGroup):
             for word_index in range(self.code_json[line_no].__len__()):
                 line_str = line_str + self.code_json[line_no][word_index][0]
             lines_text.append(self.tab_spaces[line_no] * "\t" + line_str)
-        code = Text(*[i for i in lines_text], line_spacing=self.line_spacing, tab_width=self.tab_width,
+        code = Texts(*[i for i in lines_text], line_spacing=self.line_spacing, tab_width=self.tab_width,
                     alignment="left", font=self.font, stroke_width=self.stroke_width).scale(self.scale_factor)
         for line_no in range(code.__len__()):
             line = code[line_no]
