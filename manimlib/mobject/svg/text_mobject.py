@@ -265,7 +265,6 @@ class Text(VGroup):
 
     def align_lines(self):
         for line_no in range(0, self.lines[0].__len__()):
-            print(self.lines[0][line_no].get_height())
             if self.lines[1][line_no] == "center":
                 self.lines[0][line_no].move_to(
                     np.array([0, 0, 0]) + np.array([0, - line_no * (self.char_height + self.line_spacing), 0]))
