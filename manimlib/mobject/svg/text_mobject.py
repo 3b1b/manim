@@ -78,7 +78,7 @@ class Text(SVGMobject):
     def remove_last_M(self, file_name):
         with open(file_name, 'r') as fpr:
             content = fpr.read()
-        content = re.sub(r'Z M [^[A-Za-z]*? "\/>', 'Z "/>', content)
+        content = re.sub(r'Z M [^A-Za-z]*? "\/>', 'Z "/>', content)
         with open(file_name, 'w') as fpw:
             fpw.write(content)
 
