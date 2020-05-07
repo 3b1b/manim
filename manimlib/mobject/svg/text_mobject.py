@@ -5,6 +5,7 @@ import hashlib
 import cairo
 import manimlib.constants as consts
 from manimlib.constants import *
+from manimlib.mobject.geometry import Dot
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.utils.config_ops import digest_config
 
@@ -44,17 +45,21 @@ class Text(SVGMobject):
         't2g': {},
         't2s': {},
         't2w': {},
+        'tab_width': 4,
     }
 
     def __init__(self, text, **config):
-        self.text = text
         self.full2short(config)
         digest_config(self, config)
+        if text.find('\t') != -1:
+            text = text.replace('\t', ' '*self.tab_width)
+        self.text = text
         self.lsh = self.size if self.lsh == -1 else self.lsh
 
         file_name = self.text2svg()
         self.remove_last_M(file_name)
         SVGMobject.__init__(self, file_name, **config)
+        self.apply_space_chars()
 
         nppc = self.n_points_per_cubic_curve
         for each in self:
@@ -78,12 +83,28 @@ class Text(SVGMobject):
             self.set_color_by_t2g()
 
         # anti-aliasing
-        self.scale(TEXT_MOB_SCALE_FACTOR)
+        if self.height is None and self.width is None:
+            self.scale(TEXT_MOB_SCALE_FACTOR)
+
+    def apply_space_chars(self):
+        indexes = self.find_indexes(' ') + self.find_indexes('\n')
+        indexes = sorted(indexes, key=lambda i: i[0])
+        if len(self.text) == len(indexes):
+            space = Dot(fill_opacity=0, stroke_opacity=0)
+            self.submobjects = [space.copy() for _ in range(len(indexes))]
+            return
+        for start, _ in indexes:
+            space = Dot(fill_opacity=0, stroke_opacity=0)
+            if start == 0:
+                space.move_to(self.submobjects[0].get_center())
+            else:
+                space.move_to(self.submobjects[start-1].get_center())
+            self.submobjects.insert(start, space)
 
     def remove_last_M(self, file_name):
         with open(file_name, 'r') as fpr:
             content = fpr.read()
-        content = re.sub(r'Z M [^[A-Za-z]*? "\/>', 'Z "/>', content)
+        content = re.sub(r'Z M [^A-Za-z]*? "\/>', 'Z "/>', content)
         with open(file_name, 'w') as fpw:
             fpw.write(content)
 
