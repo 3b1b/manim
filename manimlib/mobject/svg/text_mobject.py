@@ -11,7 +11,6 @@ from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import digest_config
 
-
 TEXT_MOB_SCALE_FACTOR = 0.05
 
 
@@ -92,7 +91,7 @@ class Text(SVGMobject):
             each.clear_points()
             for index, point in enumerate(points):
                 each.append_points([point])
-                if index != len(points) - 1 and (index + 1) % nppc == 0 and any(point != points[index+1]):
+                if index != len(points) - 1 and (index + 1) % nppc == 0 and any(point != points[index + 1]):
                     each.add_line_to(last)
                     last = points[index + 1]
             each.add_line_to(last)
@@ -120,7 +119,7 @@ class Text(SVGMobject):
             if start == 0:
                 space.move_to(self.submobjects[0].get_center())
             else:
-                space.move_to(self.submobjects[start-1].get_center())
+                space.move_to(self.submobjects[start - 1].get_center())
             self.submobjects.insert(start, space)
 
     def apply_exact_space_chars(self):
@@ -238,7 +237,7 @@ class Text(SVGMobject):
         settings = self.font + self.slant + self.weight
         settings += str(self.t2f) + str(self.t2s) + str(self.t2w)
         settings += str(self.lsh) + str(self.size)
-        id_str = self.text+settings
+        id_str = self.text + settings
         hasher = hashlib.sha256()
         hasher.update(id_str.encode())
         return hasher.hexdigest()[:16]
@@ -300,7 +299,7 @@ class Text(SVGMobject):
 
         dir_name = consts.TEXT_DIR
         hash_name = self.text2hash()
-        file_name = os.path.join(dir_name, hash_name)+'.svg'
+        file_name = os.path.join(dir_name, hash_name) + '.svg'
         if os.path.exists(file_name):
             return file_name
 
@@ -322,7 +321,7 @@ class Text(SVGMobject):
             if setting.line_num != last_line_num:
                 offset_x = 0
                 last_line_num = setting.line_num
-            context.move_to(START_X + offset_x, START_Y + lsh*setting.line_num)
+            context.move_to(START_X + offset_x, START_Y + lsh * setting.line_num)
             context.show_text(text)
             offset_x += context.text_extents(text)[4]
 
@@ -343,12 +342,13 @@ class Text(SVGMobject):
         context.show_text(text_with_space)
         surface.finish()
         svg_with_space = SVGMobject(file_name, height=self.height,
-                                         width=self.width,
-                                         stroke_width=self.stroke_width,
-                                         should_center=self.should_center,
-                                         unpack_groups=self.unpack_groups, )
+                                    width=self.width,
+                                    stroke_width=self.stroke_width,
+                                    should_center=self.should_center,
+                                    unpack_groups=self.unpack_groups, )
         space_width = svg_with_space[1].get_left()[0] - svg_with_space[0].get_right()[0]
         return space_width
+
 
 class TextWithFixHeight(Text):
     def __init__(self, text, **kwargs):
@@ -363,7 +363,8 @@ class TextWithFixHeight(Text):
 class Texts(VGroup):
     CONFIG = {
         "line_spacing": 0.1,
-        "alignment": "center"
+        "alignment": "center",
+        "exact_spaces": True
     }
 
     def __init__(self, *text, **config):
@@ -375,7 +376,7 @@ class Texts(VGroup):
             if "\n" in self.lines_list[line_no]:
                 self.lines_list[line_no:line_no + 1] = self.lines_list[line_no].split("\n")
         for line_no in range(self.lines_list.__len__()):
-            self.lines[0].append(TextWithFixHeight(self.lines_list[line_no], **config))
+            self.lines[0].append(TextWithFixHeight(self.lines_list[line_no], **config, exact_spaces=True))
         self.char_height = TextWithFixHeight("(", **config).get_height()
         self.lines.append([])
         self.lines[1].extend([self.alignment for _ in range(self.lines_list.__len__())])
