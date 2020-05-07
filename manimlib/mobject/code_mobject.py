@@ -32,7 +32,7 @@ from pygments.formatters.html import HtmlFormatter
 
 class Code(VGroup):
     CONFIG = {
-        "tab_width": 4,
+        "tab_width": 3,
         "line_spacing": 0.1,
         "scale_factor": 0.5,
         "run_time": 1,
