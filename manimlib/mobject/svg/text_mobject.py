@@ -53,7 +53,6 @@ class Text(SVGMobject):
     def __init__(self, text, **config):
         self.full2short(config)
         digest_config(self, config)
-
         if self.exact_spaces == True:
             for i in range(text.__len__()):
                 if text[i] == "\t" or text[i] == " ":
@@ -77,6 +76,7 @@ class Text(SVGMobject):
         file_name = self.text2svg()
         self.remove_last_M(file_name)
         SVGMobject.__init__(self, file_name, **config)
+
         if self.exact_spaces == True:
             self.apply_exact_space_chars()
         else:
