@@ -95,12 +95,13 @@ class SingleStringTextMobject(SVGMobject):
                 break
         last_visible_char_index = i
         space_width = SingleStringTextMobject("_", size=self.size, font=self.font).get_width()
+        max_height = SingleStringTextMobject("(gyt{[/QW",size=self.size, font=self.font).get_height()
         for i in range(first_visible_char_index - 1, -1, -1):
             if self.text[i] == " ":
-                space = Rectangle(width=space_width, height=space_width / 2, fill_opacity=0, stroke_opacity=0,
+                space = Rectangle(width=space_width, height=max_height, fill_opacity=0, stroke_opacity=0,
                                   stroke_width=0)
             elif self.text[i] == "\t":
-                space = Rectangle(width=space_width * self.tab_width, height=space_width / 2, fill_opacity=0,
+                space = Rectangle(width=space_width * self.tab_width, height=max_height, fill_opacity=0,
                                   stroke_opacity=0,
                                   stroke_width=0)
             text_width = self.get_width()
@@ -111,10 +112,10 @@ class SingleStringTextMobject(SVGMobject):
         for i in range(indexes.__len__()):
             start = indexes[i][0]
             if self.text[start] == " ":
-                space = Rectangle(width=space_width, height=space_width / 2, fill_opacity=0, stroke_opacity=0,
+                space = Rectangle(width=space_width, height=max_height, fill_opacity=0, stroke_opacity=0,
                                   stroke_width=0)
             elif self.text[start] == "\t":
-                space = Rectangle(width=space_width * self.tab_width, height=space_width / 2, fill_opacity=0,
+                space = Rectangle(width=space_width * self.tab_width, height=max_height, fill_opacity=0,
                                   stroke_opacity=0,
                                   stroke_width=0)
             if first_visible_char_index <= start <= last_visible_char_index:
