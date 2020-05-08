@@ -8,5 +8,5 @@ tqdm
 opencv-python
 pycairo
 pydub
-pyreadline
+pyreadline; sys_platform == 'win32'
 coverage
