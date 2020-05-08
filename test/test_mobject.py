@@ -8,4 +8,4 @@ from manimlib.mobject.mobject import Mobject
 
 class MObjectTest(unittest.TestCase):
     def test_dummy(self):
-        self.assertEquals(True, True)
+        self.assertEqual(True, True)
