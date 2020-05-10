@@ -317,7 +317,7 @@ class SceneFileWriter(object):
             )
             temp_file_path = movie_file_path.replace(".", "_temp.")
             commands = [
-                "ffmpeg",
+                FFMPEG_BIN,
                 "-i", movie_file_path,
                 "-i", sound_file_path,
                 '-y',  # overwrite output file if it exists
