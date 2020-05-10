@@ -701,7 +701,6 @@ class Mobject(Container):
                 result, submob.get_merged_array(array_attr),
                 axis=0
             )
-            submob.get_merged_array(array_attr)
         return result
 
     def get_all_points(self):
