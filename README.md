@@ -8,6 +8,8 @@
 
 Manim is an animation engine for explanatory math videos. It's used to create precise animations programmatically, as seen in the videos at [3Blue1Brown](https://www.3blue1brown.com/).
 
+### NOTE: This branch contains the latest, experimental, and under-development version of Manim which uses [ModernGL](https://github.com/moderngl/moderngl) and will house any future 3Blue1Brown projects. Use at your own discretion.
+
 ## Installation
 Manim runs on Python 3.7. You can install it from PyPI via pip:
 
