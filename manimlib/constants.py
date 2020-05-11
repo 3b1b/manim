@@ -195,6 +195,9 @@ DEGREES = TAU / 360
 
 FFMPEG_BIN = "ffmpeg"
 
+# Dashes
+DASHED = [.1, .05]
+
 # Colors
 COLOR_MAP = {
     "DARK_BLUE": "#236B8E",

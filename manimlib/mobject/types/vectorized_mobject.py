@@ -35,6 +35,7 @@ class VMobject(Mobject):
         "stroke_color": None,
         "stroke_opacity": 1.0,
         "stroke_width": DEFAULT_STROKE_WIDTH,
+        "dash_pattern": None,
         # The purpose of background stroke is to have
         # something that won't overlap the fill, e.g.
         # For text against some textured background
@@ -312,6 +313,9 @@ class VMobject(Mobject):
         else:
             width = self.stroke_width
         return max(0, width)
+
+    def get_stroke_dash_pattern(self):
+        return self.dash_pattern
 
     def get_stroke_opacity(self, background=False):
         return self.get_stroke_opacities(background)[0]

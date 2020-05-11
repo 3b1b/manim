@@ -396,7 +396,12 @@ class Camera(object):
             # as you zoom in on them.
             (self.get_frame_width() / FRAME_WIDTH)
         )
+        dash_pattern = vmobject.get_stroke_dash_pattern()
+        ctx.save()
+        if None != dash_pattern:
+            ctx.set_dash(dash_pattern)
         ctx.stroke_preserve()
+        ctx.restore()
         return self
 
     def get_stroke_rgbas(self, vmobject, background=False):
