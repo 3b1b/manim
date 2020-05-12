@@ -287,7 +287,7 @@ class SceneFileWriter(object):
                 if os.name == 'nt':
                     pf_path = pf_path.replace('\\', '/')
                 fp.write("file \'{}\'\n".format(pf_path))
-                
+
         movie_file_path = self.get_movie_file_path()
         commands = [
             FFMPEG_BIN,
