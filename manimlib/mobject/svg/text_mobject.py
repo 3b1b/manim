@@ -5,11 +5,10 @@ import hashlib
 import cairo
 import manimlib.constants as consts
 from manimlib.constants import *
-from manimlib.container.container import Container
-from manimlib.mobject.geometry import Dot, Rectangle
+from manimlib.mobject.geometry import Dot
 from manimlib.mobject.svg.svg_mobject import SVGMobject
-from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import digest_config
+
 
 TEXT_MOB_SCALE_FACTOR = 0.05
 
@@ -47,40 +46,20 @@ class Text(SVGMobject):
         't2s': {},
         't2w': {},
         'tab_width': 4,
-        "exact_spaces": False
     }
 
     def __init__(self, text, **config):
         self.full2short(config)
         digest_config(self, config)
-        if self.exact_spaces == True:
-            for i in range(text.__len__()):
-                if text[i] == "\t" or text[i] == " ":
-                    continue
-                else:
-                    break
-            first_visible_char_index = i
-            text_with_space = text[first_visible_char_index] + " " + text[first_visible_char_index]
-            self.space_width = self.get_space_width(text_with_space)
-            text_without_tabs = text
-            if text.find('\t') != -1:
-                text_without_tabs = text.replace('\t', ' ' * self.tab_width)
-            self.text = text_without_tabs
-        else:
-            if text.find('\t') != -1:
-                text = text.replace('\t', ' ' * self.tab_width)
-            self.text = text
-
+        if text.find('\t') != -1:
+            text = text.replace('\t', ' '*self.tab_width)
+        self.text = text
         self.lsh = self.size if self.lsh == -1 else self.lsh
 
         file_name = self.text2svg()
         self.remove_last_M(file_name)
         SVGMobject.__init__(self, file_name, **config)
-
-        if self.exact_spaces == True:
-            self.apply_exact_space_chars()
-        else:
-            self.apply_space_chars()
+        self.apply_space_chars()
 
         nppc = self.n_points_per_cubic_curve
         for each in self:
@@ -91,7 +70,7 @@ class Text(SVGMobject):
             each.clear_points()
             for index, point in enumerate(points):
                 each.append_points([point])
-                if index != len(points) - 1 and (index + 1) % nppc == 0 and any(point != points[index + 1]):
+                if index != len(points) - 1 and (index + 1) % nppc == 0 and any(point != points[index+1]):
                     each.add_line_to(last)
                     last = points[index + 1]
             each.add_line_to(last)
@@ -119,55 +98,8 @@ class Text(SVGMobject):
             if start == 0:
                 space.move_to(self.submobjects[0].get_center())
             else:
-                space.move_to(self.submobjects[start - 1].get_center())
+                space.move_to(self.submobjects[start-1].get_center())
             self.submobjects.insert(start, space)
-
-    def apply_exact_space_chars(self):
-        indexes = self.find_indexes(' ') + self.find_indexes("\t")
-        indexes = sorted(indexes, key=lambda i: i[0])
-        for i in range(self.text.__len__()):
-            if self.text[i] == "\t" or self.text[i] == " ":
-                continue
-            else:
-                break
-        first_visible_char_index = i
-
-        for i in range(self.text.__len__() - 1, -1, -1):
-            if self.text[i] == "\t" or self.text[i] == " ":
-                continue
-            else:
-                break
-        last_visible_char_index = i
-        max_height = self.get_height()
-        for i in range(first_visible_char_index - 1, -1, -1):
-            if self.text[i] == " ":
-                space = Rectangle(width=self.space_width, height=max_height, fill_opacity=0, stroke_opacity=0,
-                                  stroke_width=0)
-            elif self.text[i] == "\t":
-                space = Rectangle(width=self.space_width * self.tab_width, height=max_height, fill_opacity=0,
-                                  stroke_opacity=0,
-                                  stroke_width=0)
-            text_width = self.get_width()
-            space.move_to(np.array([-text_width / 2, 0, 0]))
-            self.next_to(space, direction=RIGHT, buff=0)
-            self.submobjects.insert(0, space)
-
-        for i in range(indexes.__len__()):
-            start = indexes[i][0]
-            if self.text[start] == " ":
-                space = Rectangle(width=self.space_width, height=max_height, fill_opacity=0, stroke_opacity=0,
-                                  stroke_width=0)
-            elif self.text[start] == "\t":
-                space = Rectangle(width=self.space_width * self.tab_width, height=max_height, fill_opacity=0,
-                                  stroke_opacity=0,
-                                  stroke_width=0)
-            if first_visible_char_index <= start <= last_visible_char_index:
-                space.next_to(self.submobjects[start - 1], direction=RIGHT, buff=0)
-                self.submobjects.insert(start, space)
-            elif start > last_visible_char_index:
-                space.next_to(self.submobjects[start - 1], direction=RIGHT, buff=0)
-                self.submobjects.insert(start, space)
-        self.move_to(np.array([0, 0, 0]))
 
     def remove_last_M(self, file_name):
         with open(file_name, 'r') as fpr:
@@ -237,7 +169,7 @@ class Text(SVGMobject):
         settings = self.font + self.slant + self.weight
         settings += str(self.t2f) + str(self.t2s) + str(self.t2w)
         settings += str(self.lsh) + str(self.size)
-        id_str = self.text + settings
+        id_str = self.text+settings
         hasher = hashlib.sha256()
         hasher.update(id_str.encode())
         return hasher.hexdigest()[:16]
@@ -294,12 +226,11 @@ class Text(SVGMobject):
         lsh = self.lsh * 10
 
         if self.font == '':
-            if NOT_SETTING_FONT_MSG != "":
-                print(NOT_SETTING_FONT_MSG)
+            print(NOT_SETTING_FONT_MSG)
 
         dir_name = consts.TEXT_DIR
         hash_name = self.text2hash()
-        file_name = os.path.join(dir_name, hash_name) + '.svg'
+        file_name = os.path.join(dir_name, hash_name)+'.svg'
         if os.path.exists(file_name):
             return file_name
 
@@ -321,115 +252,8 @@ class Text(SVGMobject):
             if setting.line_num != last_line_num:
                 offset_x = 0
                 last_line_num = setting.line_num
-            context.move_to(START_X + offset_x, START_Y + lsh * setting.line_num)
+            context.move_to(START_X + offset_x, START_Y + lsh*setting.line_num)
             context.show_text(text)
             offset_x += context.text_extents(text)[4]
 
         return file_name
-
-    def get_space_width(self, text_with_space):
-        size = self.size * 10
-
-        dir_name = consts.TEXT_DIR
-        file_name = os.path.join(dir_name, "space") + '.svg'
-
-        surface = cairo.SVGSurface(file_name, 600, 400)
-        context = cairo.Context(surface)
-        context.set_font_size(size)
-        context.move_to(START_X, START_Y)
-        context.select_font_face(self.font, self.str2slant(self.slant), self.str2weight(self.weight))
-        context.move_to(START_X, START_Y)
-        context.show_text(text_with_space)
-        surface.finish()
-        svg_with_space = SVGMobject(file_name, height=self.height,
-                                    width=self.width,
-                                    stroke_width=self.stroke_width,
-                                    should_center=self.should_center,
-                                    unpack_groups=self.unpack_groups, )
-        space_width = svg_with_space[1].get_left()[0] - svg_with_space[0].get_right()[0]
-        return space_width
-
-
-class TextWithFixHeight(Text):
-    def __init__(self, text, **kwargs):
-        Text.__init__(self, text, **kwargs)
-        max_height = Text("(gyt{[/QW", **kwargs).get_height()
-        rectangle = Rectangle(width=0, height=max_height, fill_opacity=0,
-                              stroke_opacity=0,
-                              stroke_width=0)
-        self.submobjects.append(rectangle)
-
-
-class Texts(VGroup):
-    CONFIG = {
-        "line_spacing": 0.1,
-        "alignment": "center",
-        "exact_spaces": True
-    }
-
-    def __init__(self, *text, **config):
-        Container.__init__(self, **config)
-        self.lines_list = list(text)
-        self.lines = []
-        self.lines.append([])
-        for line_no in range(self.lines_list.__len__()):
-            if "\n" in self.lines_list[line_no]:
-                self.lines_list[line_no:line_no + 1] = self.lines_list[line_no].split("\n")
-        for line_no in range(self.lines_list.__len__()):
-            self.lines[0].append(TextWithFixHeight(self.lines_list[line_no], **config, exact_spaces=True))
-        self.char_height = TextWithFixHeight("(", **config).get_height()
-        self.lines.append([])
-        self.lines[1].extend([self.alignment for _ in range(self.lines_list.__len__())])
-        self.lines[0][0].move_to(np.array([0, 0, 0]))
-        self.align_lines()
-
-        self.text = VGroup(*[self.lines[0][i] for i in range(self.lines[0].__len__())])
-        self.config = config
-        VGroup.__init__(self, *self.text, **config)
-        self.move_to(np.array([0, 0, 0]))
-
-    def set_all_lines_alignment(self, alignment):
-        self.lines[1].extend([alignment for _ in range(self.lines_list.__len__())])
-        for line_no in range(0, self.lines[0].__len__()):
-            self.change_alignment_for_a_line(alignment, line_no)
-        self.move_to(np.array([0, 0, 0]))
-
-    def align_lines(self):
-        for line_no in range(0, self.lines[0].__len__()):
-            if self.lines[1][line_no] == "center":
-                self.lines[0][line_no].move_to(
-                    np.array([0, 0, 0]) + np.array([0, - line_no * (self.char_height + self.line_spacing), 0]))
-            elif self.lines[1][line_no] == "left":
-                self.lines[0][line_no].move_to(np.array([0, 0, 0]) +
-                                               np.array([self.lines[0][line_no].get_width() / 2,
-                                                         - line_no * (self.char_height + self.line_spacing), 0])
-                                               )
-            elif self.lines[1][line_no] == "right":
-                self.lines[0][line_no].move_to(np.array([0, 0, 0]) +
-                                               np.array([- self.lines[0][line_no].get_width() / 2,
-                                                         - line_no * (self.char_height + self.line_spacing), 0])
-                                               )
-
-    def set_alignment(self, alignment, line_no):
-        self.change_alignment_for_a_line(alignment, line_no)
-        self.move_to(np.array([0, 0, 0]))
-
-    def change_alignment_for_a_line(self, alignment, line_no):
-        self.lines[1][line_no] = alignment
-        if self.lines[1][line_no] == "center":
-            self.lines[0][line_no].move_to(self.get_top() +
-                                           np.array([0, -self.char_height / 2, 0]) +
-                                           np.array([0, - line_no * (self.char_height + self.line_spacing), 0]))
-        elif self.lines[1][line_no] == "left":
-            self.lines[0][line_no].move_to(self.get_top() +
-                                           np.array([0, -self.char_height / 2, 0]) +
-                                           np.array([self.get_width() / 2 - self.lines[0][line_no].get_width() / 2,
-                                                     - line_no * (self.char_height + self.line_spacing), 0])
-                                           )
-        elif self.lines[1][line_no] == "right":
-            self.lines[0][line_no].move_to(self.get_top() +
-                                           np.array([0, -self.char_height / 2, 0]) +
-                                           np.array([- self.get_width() / 2 + self.lines[0][line_no].get_width() / 2,
-                                                     - line_no * (self.char_height + self.line_spacing), 0])
-                                           )
-            
