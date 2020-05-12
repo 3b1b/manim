@@ -349,7 +349,7 @@ class Text(SVGMobject):
         space_width = svg_with_space[1].get_left()[0] - svg_with_space[0].get_right()[0]
         char_space_width = svg_with_space[2].get_left()[0] - svg_with_space[1].get_right()[0]
         space_width -= 2 * char_space_width
-        return space_width,char_space_width
+        return space_width, char_space_width
 
 
 class TextWithFixHeight(Text):
@@ -384,14 +384,11 @@ class Texts(VGroup):
         self.lines[1].extend([self.alignment for _ in range(self.lines_list.__len__())])
         self.lines[0][0].move_to(np.array([0, 0, 0]))
         self.align_lines()
-
-        self.text = VGroup(*[self.lines[0][i] for i in range(self.lines[0].__len__())])
-        self.config = config
-        VGroup.__init__(self, *self.text, **config)
+        VGroup.__init__(self, *[self.lines[0][i] for i in range(self.lines[0].__len__())], **config)
         self.move_to(np.array([0, 0, 0]))
 
     def set_all_lines_alignment(self, alignment):
-        self.lines[1].extend([alignment for _ in range(self.lines_list.__len__())])
+        self.lines[1] = [alignment for _ in range(self.lines_list.__len__())]
         for line_no in range(0, self.lines[0].__len__()):
             self.change_alignment_for_a_line(alignment, line_no)
         return self
@@ -403,21 +400,22 @@ class Texts(VGroup):
     def change_alignment_for_a_line(self, alignment, line_no):
         self.lines[1][line_no] = alignment
         if self.lines[1][line_no] == "center":
-            self.lines[0][line_no].move_to(self.get_top() +
-                                           np.array([0, -self.char_height / 2, 0]) +
-                                           np.array([0, - line_no * (self.char_height + self.line_spacing), 0]))
+            self[line_no].move_to(self.get_top() +
+                                  np.array([0, -self.char_height / 2, 0]) +
+                                  np.array([0, - line_no * (self.char_height + self.line_spacing), 0]))
         elif self.lines[1][line_no] == "right":
-            self.lines[0][line_no].move_to(self.get_top() +
-                                           np.array([0, -self.char_height / 2, 0]) +
-                                           np.array([self.get_width() / 2 - self.lines[0][line_no].get_width() / 2,
-                                                     - line_no * (self.char_height + self.line_spacing), 0])
-                                           )
+            self[line_no].move_to(self.get_top() +
+                                  np.array([0, -self.char_height / 2, 0]) +
+                                  np.array([self.get_width() / 2 - self.lines[0][line_no].get_width() / 2,
+                                            - line_no * (self.char_height + self.line_spacing), 0])
+                                  )
         elif self.lines[1][line_no] == "left":
-            self.lines[0][line_no].move_to(self.get_top() +
-                                           np.array([0, -self.char_height / 2, 0]) +
-                                           np.array([- self.get_width() / 2 + self.lines[0][line_no].get_width() / 2,
-                                                     - line_no * (self.char_height + self.line_spacing), 0])
-                                           )
+            self[line_no].move_to(self.get_top() +
+                                  np.array([0, -self.char_height / 2, 0]) +
+                                  np.array([- self.get_width() / 2 + self.lines[0][line_no].get_width() / 2,
+                                            - line_no * (self.char_height + self.line_spacing), 0])
+                                  )
+
     def align_lines(self):
         for line_no in range(0, self.lines[0].__len__()):
             if self.lines[1][line_no] == "center":
