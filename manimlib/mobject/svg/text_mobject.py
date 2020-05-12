@@ -60,8 +60,8 @@ class Text(SVGMobject):
                 else:
                     break
             first_visible_char_index = i
-            text_with_space = text[first_visible_char_index] + " " + text[first_visible_char_index]
-            self.space_width = self.get_space_width(text_with_space)
+            text_for_calculate_spaces_width = text[first_visible_char_index] + " " + 2 * text[first_visible_char_index]
+            self.space_width, self.char_space_width = self.get_space_width(text_for_calculate_spaces_width)
             text_without_tabs = text
             if text.find('\t') != -1:
                 text_without_tabs = text.replace('\t', ' ' * self.tab_width)
@@ -149,7 +149,7 @@ class Text(SVGMobject):
                                   stroke_width=0)
             text_width = self.get_width()
             space.move_to(np.array([-text_width / 2, 0, 0]))
-            self.next_to(space, direction=RIGHT, buff=0)
+            self.next_to(space, direction=RIGHT, buff=self.char_space_width)
             self.submobjects.insert(0, space)
 
         for i in range(indexes.__len__()):
@@ -162,10 +162,10 @@ class Text(SVGMobject):
                                   stroke_opacity=0,
                                   stroke_width=0)
             if first_visible_char_index <= start <= last_visible_char_index:
-                space.next_to(self.submobjects[start - 1], direction=RIGHT, buff=0)
+                space.next_to(self.submobjects[start - 1], direction=RIGHT, buff=self.char_space_width)
                 self.submobjects.insert(start, space)
             elif start > last_visible_char_index:
-                space.next_to(self.submobjects[start - 1], direction=RIGHT, buff=0)
+                space.next_to(self.submobjects[start - 1], direction=RIGHT, buff=self.char_space_width)
                 self.submobjects.insert(start, space)
         self.move_to(np.array([0, 0, 0]))
 
@@ -327,7 +327,7 @@ class Text(SVGMobject):
 
         return file_name
 
-    def get_space_width(self, text_with_space):
+    def get_space_width(self, text_for_calculate_spaces_width):
         size = self.size * 10
 
         dir_name = consts.TEXT_DIR
@@ -339,7 +339,7 @@ class Text(SVGMobject):
         context.move_to(START_X, START_Y)
         context.select_font_face(self.font, self.str2slant(self.slant), self.str2weight(self.weight))
         context.move_to(START_X, START_Y)
-        context.show_text(text_with_space)
+        context.show_text(text_for_calculate_spaces_width)
         surface.finish()
         svg_with_space = SVGMobject(file_name, height=self.height,
                                     width=self.width,
@@ -347,7 +347,9 @@ class Text(SVGMobject):
                                     should_center=self.should_center,
                                     unpack_groups=self.unpack_groups, )
         space_width = svg_with_space[1].get_left()[0] - svg_with_space[0].get_right()[0]
-        return space_width
+        char_space_width = svg_with_space[2].get_left()[0] - svg_with_space[1].get_right()[0]
+        space_width -= 2 * char_space_width
+        return space_width,char_space_width
 
 
 class TextWithFixHeight(Text):
@@ -432,4 +434,3 @@ class Texts(VGroup):
                                            np.array([- self.get_width() / 2 + self.lines[0][line_no].get_width() / 2,
                                                      - line_no * (self.char_height + self.line_spacing), 0])
                                            )
-            
