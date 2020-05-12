@@ -422,13 +422,13 @@ class Texts(VGroup):
             self.lines[0][line_no].move_to(self.get_top() +
                                            np.array([0, -self.char_height / 2, 0]) +
                                            np.array([0, - line_no * (self.char_height + self.line_spacing), 0]))
-        elif self.lines[1][line_no] == "left":
+        elif self.lines[1][line_no] == "right":
             self.lines[0][line_no].move_to(self.get_top() +
                                            np.array([0, -self.char_height / 2, 0]) +
                                            np.array([self.get_width() / 2 - self.lines[0][line_no].get_width() / 2,
                                                      - line_no * (self.char_height + self.line_spacing), 0])
                                            )
-        elif self.lines[1][line_no] == "right":
+        elif self.lines[1][line_no] == "left":
             self.lines[0][line_no].move_to(self.get_top() +
                                            np.array([0, -self.char_height / 2, 0]) +
                                            np.array([- self.get_width() / 2 + self.lines[0][line_no].get_width() / 2,
