@@ -161,21 +161,6 @@ class Text(SVGMobject):
                 space.move_to(self.submobjects[char_index - 1].get_center())
                 self.submobjects.insert(char_index, space)
 
-    def apply_space_chars1(self):
-        indexes = self.find_indexes(' ') + self.find_indexes('\n')
-        indexes = sorted(indexes, key=lambda i: i[0])
-        if len(self.text) == len(indexes):
-            space = Dot(fill_opacity=0, stroke_opacity=0)
-            self.submobjects = [space.copy() for _ in range(len(indexes))]
-            return
-        for start, _ in indexes:
-            space = Dot(fill_opacity=0, stroke_opacity=0)
-            if start == 0:
-                space.move_to(self.submobjects[0].get_center())
-            else:
-                space.move_to(self.submobjects[start-1].get_center())
-            self.submobjects.insert(start, space)
-
     def remove_last_M(self, file_name):
         with open(file_name, 'r') as fpr:
             content = fpr.read()
