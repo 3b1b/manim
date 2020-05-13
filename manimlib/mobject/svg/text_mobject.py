@@ -125,7 +125,7 @@ class Text(SVGMobject):
             else:
                 break
         first_visible_char_index = i
-        if first_visible_char_index != -1:
+        if first_visible_char_index != 0:
             space = Rectangle(width=space_width * front_spaces_count, height=max_height, fill_opacity=0,
                                   stroke_opacity=0,
                                   stroke_width=0)
@@ -147,6 +147,7 @@ class Text(SVGMobject):
             space = Rectangle(width=space_width * last_spaces_count, height=max_height, fill_opacity=0,
                                   stroke_opacity=0,
                                   stroke_width=0)
+            text_width = self.get_width()
             space.move_to(np.array([-text_width / 2, max_height / 2, 0]))
             self.next_to(space, direction=LEFT, buff=0)
             self.submobjects.append(space)
