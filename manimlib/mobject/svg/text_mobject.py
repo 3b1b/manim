@@ -119,7 +119,7 @@ class Text(SVGMobject):
         front_spaces_count = 0
         i = -1
         for i in range(self.text.__len__()):
-            if self.text[i] == "\t" or self.text[i] == " ":
+            if self.text[i] == " ":
                 front_spaces_count += 1
                 continue
             else:
@@ -137,7 +137,7 @@ class Text(SVGMobject):
         i = -1
         last_spaces_count = 0
         for i in range(self.text.__len__() - 1, -1, -1):
-            if self.text[i] == "\t" or self.text[i] == " ":
+            if self.text[i] == " ":
                 last_spaces_count += 1
                 continue
             else:
