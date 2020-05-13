@@ -347,7 +347,6 @@ class Texts(VGroup):
     CONFIG = {
         "line_spacing": 0.1,
         "alignment": "center",
-        "exact_spaces": True
     }
 
     def __init__(self, *text, **config):
