@@ -33,7 +33,7 @@ from pygments.formatters.html import HtmlFormatter
 class Code(VGroup):
     CONFIG = {
         "tab_width": 3,
-        "line_spacing": 0.1,
+        "line_spacing": -1,
         "scale_factor": 0.5,
         "run_time": 1,
         "font": 'Monospac821 BT',
@@ -41,6 +41,8 @@ class Code(VGroup):
         'margin': 0.3,
         'indentation_char': "  ",
         "background": "rectangle",  # or window
+        "background_stroke_width": 1,
+        "background_stroke_color": WHITE,
         "corner_radius": 0.2,
         'insert_line_no': True,
         'line_no_from': 1,
@@ -73,7 +75,8 @@ class Code(VGroup):
             self.background_mobject = SurroundingRectangle(forground, buff=self.margin,
                                                            color=self.background_color,
                                                            fill_color=self.background_color,
-                                                           stroke_width=0,
+                                                           stroke_width=self.background_stroke_width,
+                                                           stroke_color=self.background_stroke_color,
                                                            fill_opacity=1, )
             self.background_mobject.round_corners(self.corner_radius)
         else:
@@ -86,7 +89,8 @@ class Code(VGroup):
             width = forground.get_width() + 0.1 * 3 + 2 * self.margin
 
             rrect = RoundedRectangle(corner_radius=self.corner_radius, height=height, width=width,
-                                     stroke_width=0,
+                                     stroke_width=self.background_stroke_width,
+                                     stroke_color=self.background_stroke_color,
                                      color=self.background_color, fill_opacity=1)
             red_button = Dot(radius=0.1, stroke_width=0, color='#ff5f56')
             red_button.shift(LEFT * 0.1 * 3)
@@ -140,7 +144,10 @@ class Code(VGroup):
             number = str(self.line_no_from + line_no)
             line_numbers_array.append(number)
         line_numbers = Paragraph(*[i for i in line_numbers_array], line_spacing=self.line_spacing,
-                            alignment="right", font=self.font, stroke_width=self.stroke_width).scale(self.scale_factor)
+                                 alignment="right", font=self.font, stroke_width=self.stroke_width).scale(
+            self.scale_factor)
+        for i in line_numbers:
+            i.set_color(self.default_color)
         return line_numbers
 
     def gen_colored_lines(self):
@@ -151,7 +158,7 @@ class Code(VGroup):
                 line_str = line_str + self.code_json[line_no][word_index][0]
             lines_text.append(self.tab_spaces[line_no] * "\t" + line_str)
         code = Paragraph(*[i for i in lines_text], line_spacing=self.line_spacing, tab_width=self.tab_width,
-                    alignment="left", font=self.font, stroke_width=self.stroke_width).scale(self.scale_factor)
+                         font=self.font, stroke_width=self.stroke_width).scale(self.scale_factor)
         for line_no in range(code.__len__()):
             line = code[line_no]
             line_char_index = self.tab_spaces[line_no]
@@ -181,6 +188,7 @@ class Code(VGroup):
             self.default_color = "#ffffff"
         else:
             self.default_color = "#000000"
+        # print(self.default_color,self.background_color)
         for i in range(3, -1, -1):
             self.html_string = self.html_string.replace("</" + " " * i, "</")
         for i in range(10, -1, -1):
