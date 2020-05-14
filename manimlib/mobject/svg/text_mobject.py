@@ -289,7 +289,6 @@ class Paragraph(VGroup):
             self.set_all_lines_alignments(self.alignment)
 
     def set_all_lines_alignments(self, alignment):
-        self.lines[1] = [alignment for _ in range(self.lines[0].__len__())]
         for line_no in range(0, self.lines[0].__len__()):
             self.change_alignment_for_a_line(alignment, line_no)
         return self
@@ -305,6 +304,7 @@ class Paragraph(VGroup):
         return self
 
     def set_line_to_initial_position(self, line_no):
+        self.lines[1][line_no] = None
         self[line_no].move_to(self.get_center() + self.lines_initial_positions[line_no])
         return self
 
