@@ -3,7 +3,7 @@ from manimlib.constants import *
 from manimlib.container.container import Container
 from manimlib.mobject.geometry import Rectangle, Dot, RoundedRectangle
 from manimlib.mobject.shape_matchers import SurroundingRectangle
-from manimlib.mobject.svg.text_mobject import Texts
+from manimlib.mobject.svg.text_mobject import Paragraph
 from manimlib.mobject.types.vectorized_mobject import VGroup
 
 import re
@@ -17,10 +17,10 @@ from pygments.formatters.html import HtmlFormatter
         which can be a 
             1.1.1) Rectangle() if background == "rectangle" 
             1.1.2) VGroup() of Rectangle() and Dot() for three buttons if background == "window" 
-    1.2) Code[1] is Code.line_numbers Which is a Texts() object, this mean you can use 
+    1.2) Code[1] is Code.line_numbers Which is a Paragraph() object, this mean you can use 
                 Code.line_numbers[0] or Code[1][0] to access first line number 
     1.3) Code[2] is Code.code
-        1.3.1) Which is a Texts() with color highlighted, this mean you can use 
+        1.3.1) Which is a Paragraph() with color highlighted, this mean you can use 
             Code.code[1] or Code[2][1] 
                 line number 1
             Code.code[1][0] or Code.code[1][0] 
@@ -139,7 +139,7 @@ class Code(VGroup):
         for line_no in range(0, self.code_json.__len__()):
             number = str(self.line_no_from + line_no)
             line_numbers_array.append(number)
-        line_numbers = Texts(*[i for i in line_numbers_array], line_spacing=self.line_spacing,
+        line_numbers = Paragraph(*[i for i in line_numbers_array], line_spacing=self.line_spacing,
                             alignment="right", font=self.font, stroke_width=self.stroke_width).scale(self.scale_factor)
         return line_numbers
 
@@ -150,7 +150,7 @@ class Code(VGroup):
             for word_index in range(self.code_json[line_no].__len__()):
                 line_str = line_str + self.code_json[line_no][word_index][0]
             lines_text.append(self.tab_spaces[line_no] * "\t" + line_str)
-        code = Texts(*[i for i in lines_text], line_spacing=self.line_spacing, tab_width=self.tab_width,
+        code = Paragraph(*[i for i in lines_text], line_spacing=self.line_spacing, tab_width=self.tab_width,
                     alignment="left", font=self.font, stroke_width=self.stroke_width).scale(self.scale_factor)
         for line_no in range(code.__len__()):
             line = code[line_no]
