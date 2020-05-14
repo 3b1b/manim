@@ -262,18 +262,37 @@ class StreamLines(VGroup):
             )
             self.color_using_background_image(image_file)
 
-    def get_start_points(self):
-        x_min = self.x_min
-        x_max = self.x_max
-        y_min = self.y_min
-        y_max = self.y_max
-        delta_x = self.delta_x
-        delta_y = self.delta_y
-        n_repeats = self.n_repeats
-        noise_factor = self.noise_factor
-
+    def get_start_points(
+        self,
+        x_min = None,
+        x_max = None,
+        y_min = None,
+        y_max = None,
+        delta_x = None,
+        delta_y = None,
+        n_repeats = None,
+        noise_factor = None
+    ):
+        if x_min is None:
+            x_min = self.x_min
+        if x_max is None:
+            x_max = self.x_max
+        if y_min is None:
+            y_min = self.y_min
+        if y_max is None:
+            y_max = self.y_max
+        if delta_x is None:
+            delta_x = self.delta_x
+        if delta_y is None:
+            delta_y = self.delta_y
+        if n_repeats is None:
+            n_repeats = self.n_repeats
         if noise_factor is None:
-            noise_factor = delta_y / 2
+            if self.noise_factor is not None:
+                noise_factor = self.noise_factor
+            else:
+                noise_factor = delta_y / 2 if delta_y != 0 else 0
+
         return np.array([
             x * RIGHT + y * UP + noise_factor * np.random.random(3)
             for n in range(n_repeats)
