@@ -6,6 +6,11 @@ import numpy as np
 
 from manimlib.mobject.mobject import Mobject
 
+def __func__(mob):
+    mob.name = "lambda"
+def __dt_func__(mob, dt):
+    mob.name = str(dt)
+
 class MObjectTest(unittest.TestCase):
     def test_to_string(self):
         obj = Mobject()
@@ -109,3 +114,36 @@ class MObjectTest(unittest.TestCase):
         obj = Mobject()
         self.assertEqual(["points"], obj.get_array_attrs())
 
+    # ---------- Drawing Tests ---------- #
+
+    # ---------- Update Tests ---------- #
+    def test_update_returns_self(self):
+        obj = Mobject()
+        self.assertEqual(obj, obj.update())
+
+    def test_update_dt(self):
+        obj = Mobject()
+        obj.add_updater(__dt_func__)
+        obj.update(dt=0.1)
+        self.assertEqual("0.1", str(obj))
+
+    def test_update_no_dt(self):
+        obj = Mobject()
+        obj.add_updater(__func__)
+        obj.update()
+        self.assertEqual("lambda", obj.name)
+
+    def test_update_children(self):
+        a, b, c, obj = Mobject(), Mobject(), Mobject(), Mobject()
+        a.add_updater(__func__)
+        b.add_updater(__func__)
+        c.add_updater(__func__)
+        obj.add(a, b, c)
+        obj.update()
+        for sub in obj.submobjects:
+            self.assertEqual("lambda", str(sub))
+
+    # ---------- Transformation Tests ---------- #
+    # ---------- Positioning Tests ---------- #
+    # ---------- Coloring Tests ---------- #
+    # ---------- Mobject Comparision Tests ---------- #
