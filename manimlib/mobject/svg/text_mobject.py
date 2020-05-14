@@ -329,7 +329,7 @@ class TextWithFixHeight(Text):
                               stroke_width=0)
         self.submobjects.append(rectangle)
 
-class Texts(VGroup):
+class Paragraph(VGroup):
     CONFIG = {
         "line_spacing": 0.1,
         "alignment": "center",
