@@ -120,6 +120,13 @@ class MObjectTest(unittest.TestCase):
     def test_update_returns_self(self):
         obj = Mobject()
         self.assertEqual(obj, obj.update())
+    
+    def test_update_suspended(self):
+        obj = Mobject(name="obj")
+        obj.updating_suspended = True
+        obj.add_updater(__func__)
+        obj.update()
+        self.assertEqual("obj", str(obj))
 
     def test_update_dt(self):
         obj = Mobject()
@@ -142,6 +149,153 @@ class MObjectTest(unittest.TestCase):
         obj.update()
         for sub in obj.submobjects:
             self.assertEqual("lambda", str(sub))
+
+    def test_get_updaters(self):
+        obj = Mobject()
+        obj.add_updater(__func__)
+        obj.add_updater(__func__)
+        obj.add_updater(__func__)
+        self.assertListEqual([__func__, __func__, __func__], obj.get_updaters())
+
+    def test_get_dt_updaters(self):
+        obj = Mobject()
+        obj.add_updater(__func__)
+        obj.add_updater(__dt_func__)
+        obj.add_updater(__func__)
+        self.assertListEqual([__dt_func__], obj.get_time_based_updaters())
+
+    def test_has_dt_updater(self):
+        obj = Mobject()
+        obj.add_updater(__dt_func__)
+        self.assertTrue(obj.has_time_based_updater())
+
+    def test_has_no_dt_updater(self):
+        obj = Mobject()
+        obj.add_updater(__func__)
+        self.assertFalse(obj.has_time_based_updater())
+
+    def test_get_family_updater(self):
+        a, b, c, obj = Mobject(), Mobject(), Mobject(), Mobject()
+        obj.add(a, b, c)
+        obj.add_updater(__func__)
+        a.add_updater(__func__)
+        b.add_updater(__func__)
+        c.add_updater(__func__)
+        self.assertListEqual([__func__, __func__, __func__, __func__], obj.get_family_updaters())
+
+    def test_add_updater_returns_self(self):
+        obj = Mobject()
+        self.assertEqual(obj, obj.add_updater(__func__))
+
+    def test_add_updater(self):
+        obj = Mobject()
+        self.assertListEqual([], obj.updaters)
+        obj.add_updater(__func__)
+        self.assertListEqual([__func__], obj.updaters)
+        obj.add_updater(__dt_func__)
+        self.assertListEqual([__func__, __dt_func__], obj.updaters)
+
+    def test_add_updater_by_index(self):
+        obj = Mobject()
+        self.assertListEqual([], obj.updaters)
+        obj.add_updater(__func__, 0)
+        self.assertListEqual([__func__], obj.updaters)
+        obj.add_updater(__dt_func__, 0)
+        self.assertListEqual([__dt_func__, __func__], obj.updaters)
+        obj.add_updater(__dt_func__, 1)
+        self.assertListEqual([__dt_func__, __dt_func__, __func__], obj.updaters)
+
+    def test_remove_updater_returns_self(self):
+        obj = Mobject()
+        self.assertEqual(obj, obj.remove_updater(__func__))
+
+    def test_remove_updater(self):
+        obj = Mobject()
+        obj.add_updater(__func__)
+        obj.add_updater(__dt_func__)
+        obj.add_updater(__func__)
+        self.assertListEqual([__func__, __dt_func__, __func__], obj.updaters)
+        obj.remove_updater(__func__)
+        self.assertListEqual([__dt_func__], obj.updaters)
+
+    def test_remove_no_updater(self):
+        obj = Mobject()
+        obj.add_updater(__func__)
+        self.assertListEqual([__func__], obj.updaters)
+        obj.remove_updater(__dt_func__)
+        self.assertListEqual([__func__], obj.updaters)
+
+    def test_clear_updaters_returns_self(self):
+        obj = Mobject()
+        self.assertEqual(obj, obj.clear_updaters())
+
+    def test_clear_updaters(self):
+        obj = Mobject()
+        obj.add_updater(__func__)
+        obj.add_updater(__dt_func__)
+        obj.add_updater(__func__)
+        self.assertListEqual([__func__, __dt_func__, __func__], obj.updaters)
+        obj.clear_updaters()
+        self.assertListEqual([], obj.updaters)
+
+    def test_clear_updaters_in_children(self):
+        a, b, c, obj = Mobject(), Mobject(), Mobject(), Mobject()
+        obj.add(a, b, c)
+        obj.add_updater(__func__)
+        a.add_updater(__func__)
+        b.add_updater(__func__)
+        c.add_updater(__func__)
+        self.assertListEqual([__func__, __func__, __func__, __func__], obj.get_family_updaters())
+        obj.clear_updaters()
+        self.assertListEqual([], obj.get_family_updaters())
+
+    def test_match_updaters_returns_self(self):
+        obj1, obj2 = Mobject(), Mobject()
+        self.assertEqual(obj1, obj1.match_updaters(obj2))
+
+    def test_match_updater_1(self):
+        a, b = Mobject(), Mobject()
+        a.add_updater(__func__)
+        a.add_updater(__dt_func__)
+        self.assertListEqual([__func__, __dt_func__], a.updaters)
+        self.assertListEqual([], b.updaters)
+        b.match_updaters(a)
+        self.assertListEqual([__func__, __dt_func__], a.updaters)
+        self.assertListEqual([__func__, __dt_func__], b.updaters)
+
+    def test_match_updater_2(self):
+        a, b = Mobject(), Mobject()
+        a.add_updater(__func__)
+        a.add_updater(__dt_func__)
+        self.assertListEqual([__func__, __dt_func__], a.updaters)
+        self.assertListEqual([], b.updaters)
+        a.match_updaters(b)
+        self.assertListEqual([], a.updaters)
+        self.assertListEqual([], b.updaters)
+
+    def test_suspend_update(self):
+        a, b, c = Mobject(), Mobject(), Mobject()
+        a.add(b)
+        a.updating_suspended = True
+        b.updating_suspended = True
+        c.updating_suspended = False
+        a.suspend_updating()
+        c.suspend_updating()
+        self.assertTrue(a.updating_suspended)
+        self.assertTrue(b.updating_suspended)
+        self.assertTrue(c.updating_suspended)
+
+    def test_resume_update(self):
+        a, b, c = Mobject(), Mobject(), Mobject()
+        a.add(b)
+        a.updating_suspended = True
+        b.updating_suspended = True
+        c.updating_suspended = False
+        a.resume_updating()
+        c.resume_updating()
+        self.assertFalse(a.updating_suspended)
+        self.assertFalse(b.updating_suspended)
+        self.assertFalse(c.updating_suspended)
 
     # ---------- Transformation Tests ---------- #
     # ---------- Positioning Tests ---------- #
