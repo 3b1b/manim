@@ -4,12 +4,15 @@ import random
 import unittest
 import numpy as np
 
+from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 
 def __func__(mob):
     mob.name = "lambda"
 def __dt_func__(mob, dt):
     mob.name = str(dt)
+def __x_func__(mob):
+    mob.set_x(mob.get_x() + 1)
 
 class MObjectTest(unittest.TestCase):
     def test_to_string(self):
@@ -298,6 +301,12 @@ class MObjectTest(unittest.TestCase):
         self.assertFalse(c.updating_suspended)
 
     # ---------- Transformation Tests ---------- #
+    def test_apply_to_family(self):
+        obj = Mobject()
+        obj.points = np.zeros((1, 3))
+        obj.apply_to_family(__x_func__)
+        self.assertEqual(1, obj.get_x())
+        
     # ---------- Positioning Tests ---------- #
     # ---------- Coloring Tests ---------- #
     # ---------- Mobject Comparision Tests ---------- #
