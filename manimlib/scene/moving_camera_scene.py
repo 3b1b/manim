@@ -4,11 +4,19 @@ from manimlib.utils.iterables import list_update
 
 
 class MovingCameraScene(Scene):
+    """
+    This is a Scene, with special configurations and properties that
+    make it suitable for cases where the camera must be moved around.
+    """
     CONFIG = {
         "camera_class": MovingCamera
     }
 
     def setup(self):
+        """
+        This method is used internally by Manim
+        to set up the scene for proper use.
+        """
         Scene.setup(self)
         assert(isinstance(self.camera, MovingCamera))
         self.camera_frame = self.camera.frame
@@ -17,6 +25,15 @@ class MovingCameraScene(Scene):
         return self
 
     def get_moving_mobjects(self, *animations):
+        """
+        This method returns a list of all of the Mobjects in the Scene that
+        are moving, that are also in the animations passed.
+
+        Parameters
+        ----------
+        *animations (Animation)
+            The animations whose mobjects will be checked.
+        """
         moving_mobjects = Scene.get_moving_mobjects(self, *animations)
         all_moving_mobjects = self.camera.extract_mobject_family_members(
             moving_mobjects
