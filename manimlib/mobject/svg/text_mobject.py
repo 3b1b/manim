@@ -8,10 +8,21 @@ from manimlib.constants import *
 from manimlib.container.container import Container
 from manimlib.mobject.geometry import Dot, Rectangle
 from manimlib.mobject.svg.svg_mobject import SVGMobject
-from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.mobject.types.vectorized_mobject import VGroup, VMobject
 from manimlib.utils.config_ops import digest_config
 
 TEXT_MOB_SCALE_FACTOR = 0.05
+
+
+def remove_spaces_from_chars(chars):
+    chars_without_spaces = VGroup()
+    if chars[0].__class__ == VGroup:
+        for i in range(chars.__len__()):
+            chars_without_spaces.add(VGroup())
+            chars_without_spaces[i].add(*[k for k in chars[i] if k.__class__ != Dot])
+    else:
+        chars_without_spaces.add(*[k for k in chars if k.__class__ != Dot])
+    return chars_without_spaces
 
 
 class TextSetting(object):
@@ -22,6 +33,19 @@ class TextSetting(object):
         self.slant = slant
         self.weight = weight
         self.line_num = line_num
+
+
+'''
+Text.chars is VGroup() of each characters counting space characters (Dot()s with zero radius)
+that mean you can use it like 
+    Text.chars[0:5] to access first five characters 
+Or you can use simply Text[0:5] But this way it counts only visible characters i.e not counting spaces(" "), tabs("\t") and newlines("\n")
+that means if Text(" a b") then Text[3] = 'b'
+
+Text.chars[0:5] will create problems when using Transform() because of invisible characters 
+so, before using Transform() remove invisible characters by using remove_spaces_from_chars()
+for example self.play(Transform(remove_spaces_from_chars(text.chars[0:4]), remove_spaces_from_chars(text2.chars[0:2])))
+'''
 
 
 class Text(SVGMobject):
@@ -61,7 +85,9 @@ class Text(SVGMobject):
         self.remove_last_M(file_name)
         SVGMobject.__init__(self, file_name, **config)
         self.text = text
-        self.apply_space_chars()
+        self.chars = VGroup(*self.gen_chars())
+        # self.chars.submobjects = [e for e in self.chars.submobjects if e != Dot]
+        self.text = text_without_tabs.replace(" ", "").replace("\n", "")
 
         nppc = self.n_points_per_cubic_curve
         for each in self:
@@ -88,15 +114,21 @@ class Text(SVGMobject):
         if self.height is None and self.width is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
 
-    def apply_space_chars(self):
+    def gen_chars(self):
+        chars = VGroup()
+        submobjects_char_index = 0
         for char_index in range(self.text.__len__()):
             if self.text[char_index] == " " or self.text[char_index] == "\t" or self.text[char_index] == "\n":
                 space = Dot(redius=0, fill_opacity=0, stroke_opacity=0)
                 if char_index == 0:
-                    space.move_to(self.submobjects[char_index].get_center())
+                    space.move_to(self.submobjects[submobjects_char_index].get_center())
                 else:
-                    space.move_to(self.submobjects[char_index - 1].get_center())
-                self.submobjects.insert(char_index, space)
+                    space.move_to(self.submobjects[submobjects_char_index - 1].get_center())
+                chars.add(space)
+            else:
+                chars.add(self.submobjects[submobjects_char_index])
+                submobjects_char_index += 1
+        return chars
 
     def remove_last_M(self, file_name):
         with open(file_name, 'r') as fpr:
@@ -255,6 +287,24 @@ class Text(SVGMobject):
         return file_name
 
 
+'''
+Paragraph.chars is VGroup() of each lines and each line is VGroup() of that line's characters counting space characters (Dot()s with zero radius)
+that mean you can use it like 
+    paragraph.chars[0:5] to access first five lines
+    paragraph.chars[0][0:5] to access first line's first five characters
+Or you can use simply paragraph[0:5] to access first five lines and paragraph[0][0:5] to access first line's first five characters
+But this way it counts only visible characters i.e not counting spaces(" "), tabs("\t") and newlines("\n")
+that means if paragraph(" a b", " b") then Paragraph[1] = 'b'
+
+paragraph.chars[][] will create problems when using Transform() because of invisible characters 
+so, before using Transform() remove invisible characters by using remove_spaces_from_chars()
+for example self.play(Transform(remove_spaces_from_chars(paragraph.chars[0:2]), remove_spaces_from_chars(paragraph.chars[3][0:3])))
+
+paragraph(" a b", " bcd\nefg") is same as paragraph(" a b", " bcd", "efg")
+that means paragraph[2] is "efg"
+'''
+
+
 class Paragraph(VGroup):
     CONFIG = {
         "line_spacing": -1,
@@ -265,14 +315,20 @@ class Paragraph(VGroup):
         Container.__init__(self, **config)
 
         lines_str = "\n".join(list(text))
+        self.lines_text = Text(lines_str, **config)
         lines_str_list = lines_str.split("\n")
-        lines_text = Text(lines_str, **config)
+        self.chars = self.gen_chars(lines_str_list)
+
+        lines_str = lines_str.replace("\t", "").replace(" ", "")
+        lines_str_list = lines_str.split("\n")
+
+        lines_str = lines_str.replace("\n", "")
         lines_text_list = VGroup()
         char_index_counter = 0
         for line_index in range(lines_str_list.__len__()):
             lines_text_list.add(
-                lines_text[char_index_counter:char_index_counter + lines_str_list[line_index].__len__() + 1])
-            char_index_counter += lines_str_list[line_index].__len__() + 1
+                self.lines_text[char_index_counter:char_index_counter + lines_str_list[line_index].__len__()])
+            char_index_counter += lines_str_list[line_index].__len__()
 
         self.lines = []
         self.lines.append([])
@@ -287,6 +343,16 @@ class Paragraph(VGroup):
         self.move_to(np.array([0, 0, 0]))
         if self.alignment:
             self.set_all_lines_alignments(self.alignment)
+
+    def gen_chars(self, lines_str_list):
+        char_index_counter = 0
+        chars = VGroup()
+        for line_no in range(lines_str_list.__len__()):
+            chars.add(VGroup())
+            chars[line_no].add(
+                *self.lines_text.chars[char_index_counter:char_index_counter + lines_str_list[line_no].__len__() + 1])
+            char_index_counter += lines_str_list[line_no].__len__() + 1
+        return chars
 
     def set_all_lines_alignments(self, alignment):
         for line_no in range(0, self.lines[0].__len__()):
