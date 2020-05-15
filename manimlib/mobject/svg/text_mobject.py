@@ -87,7 +87,6 @@ class Text(SVGMobject):
         SVGMobject.__init__(self, file_name, **config)
         self.text = text
         self.chars = VGroup(*self.gen_chars())
-        # self.chars.submobjects = [e for e in self.chars.submobjects if e != Dot]
         self.text = text_without_tabs.replace(" ", "").replace("\n", "")
 
         nppc = self.n_points_per_cubic_curve
