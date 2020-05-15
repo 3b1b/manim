@@ -67,6 +67,7 @@ python3 ./manim.py example_scenes.py SquareToCircle -pl
 After installing `virtualenv` and `virtualenvwrapper`
 ```sh
 git clone https://github.com/3b1b/manim.git
+cd manim
 mkvirtualenv -a manim -r requirements.txt manim
 python3 -m manim example_scenes.py SquareToCircle -pl
 ```
