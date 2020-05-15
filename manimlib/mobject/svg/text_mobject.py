@@ -14,7 +14,7 @@ from manimlib.utils.config_ops import digest_config
 TEXT_MOB_SCALE_FACTOR = 0.05
 
 
-def remove_spaces_from_chars(chars):
+def remove_invisible_chars(chars):
     chars_without_spaces = VGroup()
     if chars[0].__class__ == VGroup:
         for i in range(chars.__len__()):
@@ -44,8 +44,8 @@ Or you can use simply Text[0:5] But this way it counts only visible characters i
 that means if Text(" a b") then Text[3] = 'b'
 
 Text.chars[0:5] will create problems when using Transform() because of invisible characters 
-so, before using Transform() remove invisible characters by using remove_spaces_from_chars()
-for example self.play(Transform(remove_spaces_from_chars(text.chars[0:4]), remove_spaces_from_chars(text2.chars[0:2])))
+so, before using Transform() remove invisible characters by using remove_invisible_chars()
+for example self.play(Transform(remove_invisible_chars(text.chars[0:4]), remove_invisible_chars(text2.chars[0:2])))
 '''
 
 
@@ -298,8 +298,8 @@ But this way it counts only visible characters i.e not including spaces(" "), ta
 that means if paragraph(" a b", " b") then Paragraph[1] = 'b'
 
 paragraph.chars[][] will create problems when using Transform() because of invisible characters 
-so, before using Transform() remove invisible characters by using remove_spaces_from_chars()
-for example self.play(Transform(remove_spaces_from_chars(paragraph.chars[0:2]), remove_spaces_from_chars(paragraph.chars[3][0:3])))
+so, before using Transform() remove invisible characters by using remove_invisible_chars()
+for example self.play(Transform(remove_invisible_chars(paragraph.chars[0:2]), remove_invisible_chars(paragraph.chars[3][0:3])))
 
 paragraph(" a b", " bcd\nefg") is same as paragraph(" a b", " bcd", "efg")
 that means paragraph[2] is "efg"
