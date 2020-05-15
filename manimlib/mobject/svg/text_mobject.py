@@ -36,7 +36,8 @@ class TextSetting(object):
 
 
 '''
-Text.chars is VGroup() of each characters including space characters (Dot()s with zero radius)
+Text.chars is VGroup() of each characters including visible characters 
+i.e including spaces(" "), tabs("\t") and newlines("\n") (visible characters are Dot()s with zero radius)
 that mean you can use it like 
     Text.chars[0:5] to access first five characters 
 Or you can use simply Text[0:5] But this way it counts only visible characters i.e not including spaces(" "), tabs("\t") and newlines("\n")
@@ -288,7 +289,8 @@ class Text(SVGMobject):
 
 
 '''
-Paragraph.chars is VGroup() of each lines and each line is VGroup() of that line's characters including space characters (Dot()s with zero radius)
+Paragraph.chars is VGroup() of each lines and each line is VGroup() of that line's characters including visible characters 
+i.e including spaces(" "), tabs("\t") and newlines("\n") (visible characters are Dot()s with zero radius)
 that mean you can use it like 
     paragraph.chars[0:5] to access first five lines
     paragraph.chars[0][0:5] to access first line's first five characters
