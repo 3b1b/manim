@@ -36,10 +36,10 @@ class TextSetting(object):
 
 
 '''
-Text.chars is VGroup() of each characters counting space characters (Dot()s with zero radius)
+Text.chars is VGroup() of each characters including space characters (Dot()s with zero radius)
 that mean you can use it like 
     Text.chars[0:5] to access first five characters 
-Or you can use simply Text[0:5] But this way it counts only visible characters i.e not counting spaces(" "), tabs("\t") and newlines("\n")
+Or you can use simply Text[0:5] But this way it counts only visible characters i.e not including spaces(" "), tabs("\t") and newlines("\n")
 that means if Text(" a b") then Text[3] = 'b'
 
 Text.chars[0:5] will create problems when using Transform() because of invisible characters 
@@ -288,12 +288,12 @@ class Text(SVGMobject):
 
 
 '''
-Paragraph.chars is VGroup() of each lines and each line is VGroup() of that line's characters counting space characters (Dot()s with zero radius)
+Paragraph.chars is VGroup() of each lines and each line is VGroup() of that line's characters including space characters (Dot()s with zero radius)
 that mean you can use it like 
     paragraph.chars[0:5] to access first five lines
     paragraph.chars[0][0:5] to access first line's first five characters
 Or you can use simply paragraph[0:5] to access first five lines and paragraph[0][0:5] to access first line's first five characters
-But this way it counts only visible characters i.e not counting spaces(" "), tabs("\t") and newlines("\n")
+But this way it counts only visible characters i.e not including spaces(" "), tabs("\t") and newlines("\n")
 that means if paragraph(" a b", " b") then Paragraph[1] = 'b'
 
 paragraph.chars[][] will create problems when using Transform() because of invisible characters 
