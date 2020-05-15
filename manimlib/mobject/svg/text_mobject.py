@@ -93,7 +93,7 @@ class Text(SVGMobject):
             if self.text[char_index] == " " or self.text[char_index] == "\t" or self.text[char_index] == "\n":
                 space = Dot(redius=0, fill_opacity=0, stroke_opacity=0)
                 if char_index == 0:
-                    space.move_to(self.submobjects[char_index - 1].get_center())
+                    space.move_to(self.submobjects[char_index].get_center())
                 else:
                     space.move_to(self.submobjects[char_index - 1].get_center())
                 self.submobjects.insert(char_index, space)
