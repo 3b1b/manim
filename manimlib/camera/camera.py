@@ -390,12 +390,7 @@ class Camera(object):
             self.get_stroke_rgbas(vmobject, background=background),
             vmobject
         )
-        ctx.set_line_width(
-            width * self.cairo_line_width_multiple *
-            # This ensures lines have constant width
-            # as you zoom in on them.
-            (self.get_frame_width() / FRAME_WIDTH)
-        )
+        ctx.set_line_width(width * self.cairo_line_width_multiple)
         ctx.stroke_preserve()
         return self
 
