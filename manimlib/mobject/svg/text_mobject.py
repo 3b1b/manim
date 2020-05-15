@@ -14,14 +14,14 @@ TEXT_MOB_SCALE_FACTOR = 0.05
 
 
 def remove_invisible_chars(chars):
-    chars_without_spaces = VGroup()
+    chars_without_dots = VGroup()
     if chars[0].__class__ == VGroup:
         for i in range(chars.__len__()):
-            chars_without_spaces.add(VGroup())
-            chars_without_spaces[i].add(*[k for k in chars[i] if k.__class__ != Dot])
+            chars_without_dots.add(VGroup())
+            chars_without_dots[i].add(*[k for k in chars[i] if k.__class__ != Dot])
     else:
-        chars_without_spaces.add(*[k for k in chars if k.__class__ != Dot])
-    return chars_without_spaces
+        chars_without_dots.add(*[k for k in chars if k.__class__ != Dot])
+    return chars_without_dots
 
 
 class TextSetting(object):
