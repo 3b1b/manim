@@ -13,15 +13,15 @@ from pygments.lexers import get_lexer_by_name
 from pygments.formatters.html import HtmlFormatter
 
 '''
-1) Code is VGroup() with three things
-    1.1) Code[0] is Code.background_mobject
+Code is VGroup() with three things
+    Code[0] is Code.background_mobject
         which can be a 
-            1.1.1) Rectangle() if background == "rectangle" 
-            1.1.2) VGroup() of Rectangle() and Dot() for three buttons if background == "window" 
-    1.2) Code[1] is Code.line_numbers Which is a Paragraph() object, this mean you can use 
+            Rectangle() if background == "rectangle" 
+            VGroup() of Rectangle() and Dot() for three buttons if background == "window" 
+    Code[1] is Code.line_numbers Which is a Paragraph() object, this mean you can use 
                 Code.line_numbers.chars[0] or Code[1].chars[0] to access first line number 
-    1.3) Code[2] is Code.code
-        1.3.1) Which is a Paragraph() with color highlighted, this mean you can use 
+    Code[2] is Code.code
+        Which is a Paragraph() with color highlighted, this mean you can use 
             Code.code.chars[1] or Code[2].chars[1] 
                 line number 1
             Code.code.chars[1][0] or Code[2].chars[1][0]
@@ -30,7 +30,7 @@ from pygments.formatters.html import HtmlFormatter
                 first five characters of line number 1
 
 Or you can use simply Code.code[0:5] to access first five lines and Code.code[0][0:5] to access first line's first five characters
-But this way it counts only visible characters i.e not counting spaces(" "), tabs("\t") and newlines("\n")
+But this way it counts only visible characters i.e not including spaces(" "), tabs("\t") and newlines("\n")
 that means if Code.code = "c = a + b" then Code.code[2]  = 'a'
 
 Code.code.chars[][] will create problems when using Transform() because of invisible characters 
