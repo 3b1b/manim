@@ -4,7 +4,7 @@ from manimlib.container.container import Container
 from manimlib.mobject.geometry import Dot, RoundedRectangle
 from manimlib.mobject.shape_matchers import SurroundingRectangle
 from manimlib.mobject.svg.text_mobject import Paragraph
-from manimlib.mobject.svg.text_mobject import remove_spaces_from_chars
+from manimlib.mobject.svg.text_mobject import remove_invisible_chars
 from manimlib.mobject.types.vectorized_mobject import VGroup
 
 import re
@@ -34,8 +34,8 @@ But this way it counts only visible characters i.e not including spaces(" "), ta
 that means if Code.code = "c = a + b" then Code.code[2]  = 'a'
 
 Code.code.chars[][] will create problems when using Transform() because of invisible characters 
-so, before using Transform() remove invisible characters by using remove_spaces_from_chars()
-for example self.play(Transform(remove_spaces_from_chars(Code.code.chars[0:2]), remove_spaces_from_chars(Code.code.chars[3][0:3])))
+so, before using Transform() remove invisible characters by using remove_invisible_chars()
+for example self.play(Transform(remove_invisible_chars(Code.code.chars[0:2]), remove_invisible_chars(Code.code.chars[3][0:3])))
 '''
 
 
