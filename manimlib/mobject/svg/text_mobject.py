@@ -36,7 +36,7 @@ class TextSetting(object):
 
 
 '''
-Text.chars is VGroup() of each characters including visible characters 
+Text.chars is VGroup() of each characters including invisible characters 
 i.e including spaces(" "), tabs("\t") and newlines("\n") (visible characters are Dot()s with zero radius)
 that mean you can use it like 
     Text.chars[0:5] to access first five characters 
@@ -289,7 +289,7 @@ class Text(SVGMobject):
 
 
 '''
-Paragraph.chars is VGroup() of each lines and each line is VGroup() of that line's characters including visible characters 
+Paragraph.chars is VGroup() of each lines and each line is VGroup() of that line's characters including invisible characters 
 i.e including spaces(" "), tabs("\t") and newlines("\n") (visible characters are Dot()s with zero radius)
 that mean you can use it like 
     paragraph.chars[0:5] to access first five lines
