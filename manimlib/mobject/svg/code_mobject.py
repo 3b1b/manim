@@ -1,9 +1,10 @@
 import html
 from manimlib.constants import *
 from manimlib.container.container import Container
-from manimlib.mobject.geometry import Rectangle, Dot, RoundedRectangle
+from manimlib.mobject.geometry import Dot, RoundedRectangle
 from manimlib.mobject.shape_matchers import SurroundingRectangle
 from manimlib.mobject.svg.text_mobject import Paragraph
+from manimlib.mobject.svg.text_mobject import remove_spaces_from_chars
 from manimlib.mobject.types.vectorized_mobject import VGroup
 
 import re
@@ -18,15 +19,23 @@ from pygments.formatters.html import HtmlFormatter
             1.1.1) Rectangle() if background == "rectangle" 
             1.1.2) VGroup() of Rectangle() and Dot() for three buttons if background == "window" 
     1.2) Code[1] is Code.line_numbers Which is a Paragraph() object, this mean you can use 
-                Code.line_numbers[0] or Code[1][0] to access first line number 
+                Code.line_numbers.chars[0] or Code[1].chars[0] to access first line number 
     1.3) Code[2] is Code.code
         1.3.1) Which is a Paragraph() with color highlighted, this mean you can use 
-            Code.code[1] or Code[2][1] 
+            Code.code.chars[1] or Code[2].chars[1] 
                 line number 1
-            Code.code[1][0] or Code.code[1][0] 
+            Code.code.chars[1][0] or Code[2].chars[1][0]
                 first character of line number 1
-            Code.code[1][0:5] or Code.code[1][0:5] 
+            Code.code.chars[1][0:5] or Code[2].chars[1][0:5]
                 first five characters of line number 1
+
+Or you can use simply Code.code[0:5] to access first five lines and Code.code[0][0:5] to access first line's first five characters
+But this way it counts only visible characters i.e not counting spaces(" "), tabs("\t") and newlines("\n")
+that means if Code.code = "c = a + b" then Code.code[2]  = 'a'
+
+Code.code.chars[][] will create problems when using Transform() because of invisible characters 
+so, before using Transform() remove invisible characters by using remove_spaces_from_chars()
+for example self.play(Transform(remove_spaces_from_chars(Code.code.chars[0:2]), remove_spaces_from_chars(Code.code.chars[3][0:3])))
 '''
 
 
@@ -39,7 +48,7 @@ class Code(VGroup):
         "font": 'Monospac821 BT',
         'stroke_width': 0,
         'margin': 0.3,
-        'indentation_char': "  ",
+        'indentation_char': "    ",
         "background": "rectangle",  # or window
         "background_stroke_width": 1,
         "background_stroke_color": WHITE,
@@ -160,7 +169,7 @@ class Code(VGroup):
         code = Paragraph(*[i for i in lines_text], line_spacing=self.line_spacing, tab_width=self.tab_width,
                          font=self.font, stroke_width=self.stroke_width).scale(self.scale_factor)
         for line_no in range(code.__len__()):
-            line = code[line_no]
+            line = code.chars[line_no]
             line_char_index = self.tab_spaces[line_no]
             for word_index in range(self.code_json[line_no].__len__()):
                 line[line_char_index:line_char_index + self.code_json[line_no][word_index][0].__len__()].set_color(
