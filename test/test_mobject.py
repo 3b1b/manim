@@ -1,4 +1,5 @@
 import copy
+import math
 import random
 
 import unittest
@@ -304,8 +305,65 @@ class MObjectTest(unittest.TestCase):
     def test_apply_to_family(self):
         obj = Mobject()
         obj.points = np.zeros((1, 3))
+        self.assertEqual(0, obj.get_x())
+        self.assertEqual(0, obj.get_y())
         obj.apply_to_family(__x_func__)
         self.assertEqual(1, obj.get_x())
+        self.assertEqual(0, obj.get_y())
+
+    def test_shift_returns_self(self):
+        obj = Mobject()
+        obj.points = np.array([0, 0, 0])
+        self.assertEqual(obj, obj.shift(np.array([0, 0, 0])))
+
+    def test_shift(self):
+        a = random.Random().randint(-1000, 1000)
+        b = random.Random().randint(-1000, 1000)
+        c = random.Random().randint(-1000, 1000)
+        x = random.Random().randint(-1000, 1000)
+        y = random.Random().randint(-1000, 1000)
+        z = random.Random().randint(-1000, 1000)
+        obj = Mobject()
+        obj.points = np.array([x, y, z])
+        obj.shift(np.array([a, b, c]))
+        self.assertEqual(obj.points.all(), np.array([x + a, y + b, z + c]).all())
+
+    def test_scale_returns_self(self):
+        obj = Mobject()
+        obj.points = np.array([0, 0, 0])
+        self.assertEqual(obj, obj.scale(1, about_point=np.array([0, 0, 0])))
+
+    def test_scale(self):
+        s = random.Random().randint(-1000, 1000)
+        x = random.Random().randint(-1000, 1000)
+        y = random.Random().randint(-1000, 1000)
+        z = random.Random().randint(-1000, 1000)
+        obj = Mobject()
+        obj.points = np.array([x, y, z])
+        obj.scale(s, about_point=np.array([0, 0, 0]))
+        self.assertEqual(obj.points.all(), np.array([x * s, y * s, z * s]).all())
+
+    def test_rotate_returns_self(self):
+        a = random.Random().randint(-1000, 1000)
+        x = random.Random().randint(-1000, 1000)
+        y = random.Random().randint(-1000, 1000)
+        z = random.Random().randint(-1000, 1000)
+        obj = Mobject()
+        obj.points = np.array([x, y, z])
+        self.assertEqual(obj, obj.rotate(a, about_point=np.array([0, 0, 0])))
+
+    def test_rotate(self):
+        a = random.Random().randint(-1000, 1000)
+        x = random.Random().randint(-1000, 1000)
+        y = random.Random().randint(-1000, 1000)
+        z = random.Random().randint(-1000, 1000)
+        obj = Mobject()
+        obj.points = np.array([x, y, z])
+        obj.rotate(a, axis=np.array([0, 0, 1]), about_point=np.array([0, 0, 0]))
+        self.assertEqual(obj.points.all(), np.array([
+            x * math.cos(a) - y * math.sin(a),
+            x * math.sin(a) + y * math.cos(a),
+            z]).all())
         
     # ---------- Positioning Tests ---------- #
     # ---------- Coloring Tests ---------- #
