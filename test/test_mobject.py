@@ -362,12 +362,46 @@ class MObjectTest(unittest.TestCase):
         y = random.Random().randint(-1000, 1000)
         z = random.Random().randint(-1000, 1000)
         obj = Mobject()
-        obj.points = np.array(([x, y, z]))
-        obj.rotate(a, axis=np.array([0, 0, 1]), about_point=np.zeros(3))
-        np.testing.assert_array_equal(obj.points, np.array([
+        obj.points = np.array([[x, y, z]])
+        obj.rotate(a, axis=np.array([0, 0, 1]), about_point=np.array([0, 0, 0]))
+        np.testing.assert_array_equal(obj.points, np.array([[
             x * math.cos(a) - y * math.sin(a),
             x * math.sin(a) + y * math.cos(a),
-            z]))
+            z]]))
+
+    def test_stretch_returns_self(self):
+        obj = Mobject()
+        obj.points = np.zeros((1, 3))
+        self.assertEqual(obj, obj.stretch(1, 0))
+
+    def test_stretch_factor_1(self):
+        obj = Mobject()
+        obj.points = np.array([[1.0, 1.0, 1.0]])
+        obj.stretch(1, 0)
+        obj.stretch(1, 1)
+        obj.stretch(1, 2)
+        np.testing.assert_array_equal(obj.points, np.array([[1, 1, 1]]))
+        
+    def test_stretch_origin(self):
+        obj = Mobject()
+        obj.points = np.array([[0.0, 0.0, 0.0]])
+        f = random.Random().randint(-1000, 1000)
+        obj.stretch(f, 0)
+        obj.stretch(f, 1)
+        obj.stretch(f, 2)
+        np.testing.assert_array_equal(obj.points, np.zeros((1, 3)))
+        
+    def test_stretch_factor_random(self):
+        obj = Mobject()
+        obj.points = np.array([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]])
+        f = random.Random().randint(-1000, 1000)
+        obj.stretch(f, 0)
+        obj.stretch(f, 1)
+        obj.stretch(f, 2)
+        f /= 2
+        np.testing.assert_array_almost_equal(obj.points,
+                np.array([[-f, -f, -f], [f, f, f]]),
+                decimal=0)
         
     # ---------- Positioning Tests ---------- #
     def test_center_returns_self(self):
@@ -395,13 +429,13 @@ class MObjectTest(unittest.TestCase):
         obj.align_on_border(np.array([0, 1, 0]))
         np.testing.assert_array_equal(obj.points, np.array([[
             0,
-            FRAME_Y_RADIUS * DEFAULT_MOBJECT_TO_EDGE_BUFFER,
+            FRAME_Y_RADIUS - DEFAULT_MOBJECT_TO_EDGE_BUFFER,
             0]]))
 
         obj.align_on_border(np.array([1, 0, 0]))
         np.testing.assert_array_equal(obj.points, np.array([[
-            FRAME_X_RADIUS * DEFAULT_MOBJECT_TO_EDGE_BUFFER,
-            FRAME_Y_RADIUS * DEFAULT_MOBJECT_TO_EDGE_BUFFER,
+            FRAME_X_RADIUS - DEFAULT_MOBJECT_TO_EDGE_BUFFER,
+            FRAME_Y_RADIUS - DEFAULT_MOBJECT_TO_EDGE_BUFFER,
             0]]))
 
     # need more next to tests for branch coverage
@@ -416,7 +450,8 @@ class MObjectTest(unittest.TestCase):
         a.points = np.array([[-1, 0, 0]])
         b.points = np.array([[1, 0, 0]])
         a.next_to(b)
-        np.testing.assert_array_equal(a.points, b.points)
+        np.testing.assert_array_equal(a.points,
+                b.points + RIGHT * DEFAULT_MOBJECT_TO_MOBJECT_BUFFER)
 
     def test_shift_onto_screen_returns_self(self):
         obj = Mobject()
@@ -433,7 +468,33 @@ class MObjectTest(unittest.TestCase):
         obj = Mobject()
         obj.points = np.array([[FRAME_X_RADIUS*2, 0, 0]])
         obj.shift_onto_screen()
-        np.testing.assert_array_equal(obj.points, np.array([FRAME_X_RADIUS, 0, 0]))
+        np.testing.assert_array_equal(obj.points, np.array([[
+            FRAME_X_RADIUS - DEFAULT_MOBJECT_TO_EDGE_BUFFER, 0, 0]]))
+
+    def test_is_off_screen_false(self):
+        obj = Mobject()
+        obj.points = np.zeros((1, 3))
+        self.assertFalse(obj.is_off_screen())
+
+    def test_is_off_screen_right(self):
+        obj = Mobject()
+        obj.points = np.array([[FRAME_X_RADIUS*2, 0, 0]])
+        self.assertTrue(obj.is_off_screen())
+
+    def test_is_off_screen_left(self):
+        obj = Mobject()
+        obj.points = np.array([[-FRAME_X_RADIUS*2, 0, 0]])
+        self.assertTrue(obj.is_off_screen())
+
+    def test_is_off_screen_up(self):
+        obj = Mobject()
+        obj.points = np.array([[0, FRAME_Y_RADIUS*2, 0]])
+        self.assertTrue(obj.is_off_screen())
+
+    def test_is_off_screen_down(self):
+        obj = Mobject()
+        obj.points = np.array([[0, -FRAME_Y_RADIUS*2, 0]])
+        self.assertTrue(obj.is_off_screen())
 
     # ---------- Coloring Tests ---------- #
     # ---------- Mobject Comparision Tests ---------- #
