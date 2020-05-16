@@ -15,7 +15,7 @@ def __dt_func__(mob, dt):
 def __x_func__(mob):
     mob.set_x(mob.get_x() + 1)
 
-class MObjectTest(unittest.TestCase):
+class MobjectTest(unittest.TestCase):
     def test_to_string(self):
         obj = Mobject()
         self.assertEqual(str(obj), "Mobject")
