@@ -307,13 +307,15 @@ class MObjectTest(unittest.TestCase):
         obj.points = np.zeros((1, 3))
         self.assertEqual(0, obj.get_x())
         self.assertEqual(0, obj.get_y())
+        self.assertEqual(0, obj.get_z())
         obj.apply_to_family(__x_func__)
         self.assertEqual(1, obj.get_x())
         self.assertEqual(0, obj.get_y())
+        self.assertEqual(0, obj.get_z())
 
     def test_shift_returns_self(self):
         obj = Mobject()
-        obj.points = np.array([0, 0, 0])
+        obj.points = np.array([[0, 0, 0]])
         self.assertEqual(obj, obj.shift(np.array([0, 0, 0])))
 
     def test_shift(self):
@@ -324,7 +326,7 @@ class MObjectTest(unittest.TestCase):
         y = random.Random().randint(-1000, 1000)
         z = random.Random().randint(-1000, 1000)
         obj = Mobject()
-        obj.points = np.array([x, y, z])
+        obj.points = np.array([[x, y, z]])
         obj.shift(np.array([a, b, c]))
         self.assertEqual(obj.points.all(), np.array([x + a, y + b, z + c]).all())
 
@@ -339,7 +341,7 @@ class MObjectTest(unittest.TestCase):
         y = random.Random().randint(-1000, 1000)
         z = random.Random().randint(-1000, 1000)
         obj = Mobject()
-        obj.points = np.array([x, y, z])
+        obj.points = np. array([[x, y, z]])
         obj.scale(s, about_point=np.array([0, 0, 0]))
         self.assertEqual(obj.points.all(), np.array([x * s, y * s, z * s]).all())
 
@@ -358,7 +360,7 @@ class MObjectTest(unittest.TestCase):
         y = random.Random().randint(-1000, 1000)
         z = random.Random().randint(-1000, 1000)
         obj = Mobject()
-        obj.points = np.array([x, y, z])
+        obj.points = np.array(([x, y, z]))
         obj.rotate(a, axis=np.array([0, 0, 1]), about_point=np.array([0, 0, 0]))
         self.assertEqual(obj.points.all(), np.array([
             x * math.cos(a) - y * math.sin(a),
@@ -366,5 +368,51 @@ class MObjectTest(unittest.TestCase):
             z]).all())
         
     # ---------- Positioning Tests ---------- #
+    def test_center_returns_self(self):
+        obj = Mobject()
+        obj.points = np.zeros((1, obj.dim))
+        self.assertEqual(obj, obj.center())
+
+    def test_center(self):
+        x = random.Random().randint(-1000, 1000)
+        y = random.Random().randint(-1000, 1000)
+        z = random.Random().randint(-1000, 1000)
+        obj = Mobject()
+        obj.points = np.array([[x, y, z]])
+        obj.center()
+        self.assertEqual(np.zeros((1, 3)).all(), obj.points.all())
+
+    def test_align_on_border_returns_self(self):
+        obj = Mobject()
+        obj.points = np.zeros((1, 3))
+        self.assertEqual(obj, obj.align_on_border(np.zeros(3)))
+
+    def test_align_on_border(self):
+        obj = Mobject()
+        obj.points = np.zeros((1, 3))
+        obj.align_on_border(np.array([0, 1, 0]))
+        self.assertEqual(obj.points.all(), np.array([[
+            0,
+            FRAME_Y_RADIUS * DEFAULT_MOBJECT_TO_EDGE_BUFFER,
+            0]]).all())
+        obj.align_on_border(np.array([1, 0, 0]))
+        self.assertEqual(obj.points.all(), np.array([[
+            FRAME_X_RADIUS * DEFAULT_MOBJECT_TO_EDGE_BUFFER,
+            FRAME_Y_RADIUS * DEFAULT_MOBJECT_TO_EDGE_BUFFER,
+            0]]).all())
+
+    def test_next_to_returns_self(self):
+        a, b = Mobject(), Mobject()
+        a.points = np.array([[-1, 0, 0]])
+        b.points = np.array([[1, 0, 0]])
+        self.assertEqual(a, a.next_to(b))
+
+    def test_next_to(self):
+        a, b = Mobject(), Mobject()
+        a.points = np.array([[-1, 0, 0]])
+        b.points = np.array([[1, 0, 0]])
+        a.next_to(b)
+        self.assertEqual(a.points.all(), b.points.all())
+
     # ---------- Coloring Tests ---------- #
     # ---------- Mobject Comparision Tests ---------- #
