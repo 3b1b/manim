@@ -76,6 +76,7 @@ class Text(SVGMobject):
     def __init__(self, text, **config):
         self.full2short(config)
         digest_config(self, config)
+        self.original_text = text
         text_without_tabs = text
         if text.find('\t') != -1:
             text_without_tabs = text.replace('\t', ' ' * self.tab_width)
@@ -140,16 +141,16 @@ class Text(SVGMobject):
         m = re.match(r'\[([0-9\-]{0,}):([0-9\-]{0,})\]', word)
         if m:
             start = int(m.group(1)) if m.group(1) != '' else 0
-            end = int(m.group(2)) if m.group(2) != '' else len(self.text)
-            start = len(self.text) + start if start < 0 else start
-            end = len(self.text) + end if end < 0 else end
+            end = int(m.group(2)) if m.group(2) != '' else len(self.original_text)
+            start = len(self.original_text) + start if start < 0 else start
+            end = len(self.original_text) + end if end < 0 else end
             return [(start, end)]
 
         indexes = []
-        index = self.text.find(word)
+        index = self.original_text.find(word)
         while index != -1:
             indexes.append((index, index + len(word)))
-            index = self.text.find(word, index + len(word))
+            index = self.original_text.find(word, index + len(word))
         return indexes
 
     def full2short(self, config):
@@ -169,13 +170,13 @@ class Text(SVGMobject):
         t2c = t2c if t2c else self.t2c
         for word, color in list(t2c.items()):
             for start, end in self.find_indexes(word):
-                self[start:end].set_color(color)
+                self.chars[start:end].set_color(color)
 
     def set_color_by_t2g(self, t2g=None):
         t2g = t2g if t2g else self.t2g
         for word, gradient in list(t2g.items()):
             for start, end in self.find_indexes(word):
-                self[start:end].set_color_by_gradient(*gradient)
+                self.chars[start:end].set_color_by_gradient(*gradient)
 
     def str2slant(self, string):
         if string == NORMAL:
