@@ -328,7 +328,8 @@ class MObjectTest(unittest.TestCase):
         obj = Mobject()
         obj.points = np.array([[x, y, z]])
         obj.shift(np.array([a, b, c]))
-        self.assertEqual(obj.points.all(), np.array([x + a, y + b, z + c]).all())
+        np.testing.assert_array_equal(obj.points,
+                np.array([[x + a, y + b, z + c]]))
 
     def test_scale_returns_self(self):
         obj = Mobject()
@@ -343,7 +344,8 @@ class MObjectTest(unittest.TestCase):
         obj = Mobject()
         obj.points = np. array([[x, y, z]])
         obj.scale(s, about_point=np.array([0, 0, 0]))
-        self.assertEqual(obj.points.all(), np.array([x * s, y * s, z * s]).all())
+        np.testing.assert_array_equal(obj.points,
+                np.array([[x * s, y * s, z * s]]))
 
     def test_rotate_returns_self(self):
         a = random.Random().randint(-1000, 1000)
@@ -361,11 +363,11 @@ class MObjectTest(unittest.TestCase):
         z = random.Random().randint(-1000, 1000)
         obj = Mobject()
         obj.points = np.array(([x, y, z]))
-        obj.rotate(a, axis=np.array([0, 0, 1]), about_point=np.array([0, 0, 0]))
-        self.assertEqual(obj.points.all(), np.array([
+        obj.rotate(a, axis=np.array([0, 0, 1]), about_point=np.zeros(3))
+        np.testing.assert_array_equal(obj.points, np.array([
             x * math.cos(a) - y * math.sin(a),
             x * math.sin(a) + y * math.cos(a),
-            z]).all())
+            z]))
         
     # ---------- Positioning Tests ---------- #
     def test_center_returns_self(self):
@@ -380,7 +382,7 @@ class MObjectTest(unittest.TestCase):
         obj = Mobject()
         obj.points = np.array([[x, y, z]])
         obj.center()
-        self.assertEqual(np.zeros((1, 3)).all(), obj.points.all())
+        np.testing.assert_array_equal(obj.points, np.zeros((1, 3)))
 
     def test_align_on_border_returns_self(self):
         obj = Mobject()
@@ -391,16 +393,18 @@ class MObjectTest(unittest.TestCase):
         obj = Mobject()
         obj.points = np.zeros((1, 3))
         obj.align_on_border(np.array([0, 1, 0]))
-        self.assertEqual(obj.points.all(), np.array([[
+        np.testing.assert_array_equal(obj.points, np.array([[
             0,
             FRAME_Y_RADIUS * DEFAULT_MOBJECT_TO_EDGE_BUFFER,
-            0]]).all())
+            0]]))
+
         obj.align_on_border(np.array([1, 0, 0]))
-        self.assertEqual(obj.points.all(), np.array([[
+        np.testing.assert_array_equal(obj.points, np.array([[
             FRAME_X_RADIUS * DEFAULT_MOBJECT_TO_EDGE_BUFFER,
             FRAME_Y_RADIUS * DEFAULT_MOBJECT_TO_EDGE_BUFFER,
-            0]]).all())
+            0]]))
 
+    # need more next to tests for branch coverage
     def test_next_to_returns_self(self):
         a, b = Mobject(), Mobject()
         a.points = np.array([[-1, 0, 0]])
@@ -412,7 +416,24 @@ class MObjectTest(unittest.TestCase):
         a.points = np.array([[-1, 0, 0]])
         b.points = np.array([[1, 0, 0]])
         a.next_to(b)
-        self.assertEqual(a.points.all(), b.points.all())
+        np.testing.assert_array_equal(a.points, b.points)
+
+    def test_shift_onto_screen_returns_self(self):
+        obj = Mobject()
+        obj.points = np.zeros((1, 3))
+        self.assertEqual(obj, obj.shift_onto_screen())
+
+    def test_shift_onto_screen_one(self):
+        obj = Mobject()
+        obj.points = np.zeros((1, 3))
+        obj.shift_onto_screen()
+        np.testing.assert_array_equal(obj.points, np.zeros((1, 3)))
+
+    def test_shift_onto_screen_two(self):
+        obj = Mobject()
+        obj.points = np.array([[FRAME_X_RADIUS*2, 0, 0]])
+        obj.shift_onto_screen()
+        np.testing.assert_array_equal(obj.points, np.array([FRAME_X_RADIUS, 0, 0]))
 
     # ---------- Coloring Tests ---------- #
     # ---------- Mobject Comparision Tests ---------- #
