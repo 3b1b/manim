@@ -369,6 +369,15 @@ class MobjectTest(unittest.TestCase):
         np.testing.assert_array_equal(obj.points,
                 np.array([[x * s, y * s, z * s]]))
 
+    def test_scale_property(self):
+        gen = mob_gen.MobjectGenerator(max_depth=0)
+        obj = gen.next()
+        og = copy.deepcopy(obj)
+        obj.scale(10)
+        np.testing.assert_array_less(
+                np.absolute(og.get_all_points()),
+                np.absolute(obj.get_all_points()))
+
     def test_rotate_returns_self(self):
         a = random.Random().randint(-1000, 1000)
         x = random.Random().randint(-1000, 1000)
@@ -439,6 +448,20 @@ class MobjectTest(unittest.TestCase):
         obj.points = np.array([[x, y, z]])
         obj.center()
         np.testing.assert_array_equal(obj.points, np.zeros((1, 3)))
+
+    def test_center_negative_bound_object(self):
+        gen = mob_gen.MobjectGenerator(upper_bound=-1)
+        obj = gen.next()
+        og = copy.deepcopy(obj)
+        obj.center()
+        np.testing.assert_array_less(og.get_all_points(), obj.get_all_points())
+
+    def test_center_positive_bound_object(self):
+        gen = mob_gen.MobjectGenerator(lower_bound=1)
+        obj = gen.next()
+        og = copy.deepcopy(obj)
+        obj.center()
+        np.testing.assert_array_less(obj.get_all_points(), og.get_all_points())
 
     def test_align_on_border_returns_self(self):
         obj = Mobject()
