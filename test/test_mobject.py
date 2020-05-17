@@ -7,6 +7,7 @@ import numpy as np
 
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
+import test.mobject_generator as mob_gen
 
 def __func__(mob):
     mob.name = "lambda"
@@ -330,6 +331,27 @@ class MobjectTest(unittest.TestCase):
         obj.shift(np.array([a, b, c]))
         np.testing.assert_array_equal(obj.points,
                 np.array([[x + a, y + b, z + c]]))
+
+    def test_shift_by_zero_property(self):
+        gen = mob_gen.MobjectGenerator(max_depth = 0)
+        obj = gen.next()
+        og = obj.points
+        obj.shift(np.zeros((1, 3)))
+        np.testing.assert_array_equal(og, obj.points)
+
+    def test_shift_negative_property(self):
+        gen = mob_gen.MobjectGenerator(max_depth=0)
+        obj = gen.next()
+        og = copy.deepcopy(obj)
+        obj.shift(np.full((1, 3), random.Random().randrange(-1000, -1)))
+        np.testing.assert_array_less(obj.get_all_points(), og.get_all_points())
+
+    def test_shift_positive_property(self):
+        gen = mob_gen.MobjectGenerator(max_depth=0)
+        obj = gen.next()
+        og = copy.deepcopy(obj)
+        obj.shift(np.full((1, 3), random.Random().randrange(1, 1000)))
+        np.testing.assert_array_less(og.get_all_points(), obj.get_all_points())
 
     def test_scale_returns_self(self):
         obj = Mobject()
