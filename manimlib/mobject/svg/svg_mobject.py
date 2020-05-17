@@ -100,6 +100,8 @@ class SVGMobject(VMobject):
             result.append(self.ellipse_to_mobject(element))
         elif element.tagName in ['polygon', 'polyline']:
             result.append(self.polygon_to_mobject(element))
+        elif element.tagName == 'text':
+            result.append(self.text_to_mobject(element))
         else:
             pass  # TODO
             # warnings.warn("Unknown element type: " + element.tagName)
@@ -109,6 +111,13 @@ class SVGMobject(VMobject):
             result = [VGroup(*result)]
 
         return result
+
+    def text_to_mobject(self, g_element):
+        from manimlib.mobject.svg.text_mobject import Text
+        font_size = self.attribute_to_float(g_element.getAttribute('font-size')) if g_element.hasAttribute('font-size') else 1.0
+        font_family = g_element.getAttribute('font-family') if g_element.hasAttribute('font-size') else ''
+        content = g_element.firstChild.nodeValue
+        return Text(content, size=font_size, font=font_family)
 
     def g_to_mobjects(self, g_element):
         mob = VGroup(*self.get_mobjects_from(g_element))
