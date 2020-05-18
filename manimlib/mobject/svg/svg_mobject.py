@@ -37,6 +37,7 @@ class SVGMobject(VMobject):
         "stroke_width": DEFAULT_STROKE_WIDTH,
         "fill_opacity": 1.0,
         # "fill_color" : LIGHT_GREY,
+        "text_scale": 1.0,
     }
 
     def __init__(self, file_name=None, **kwargs):
@@ -117,7 +118,7 @@ class SVGMobject(VMobject):
         font_size = self.attribute_to_float(g_element.getAttribute('font-size')) if g_element.hasAttribute('font-size') else 1.0
         font_family = g_element.getAttribute('font-family') if g_element.hasAttribute('font-size') else ''
         content = g_element.firstChild.nodeValue
-        return Text(content, size=font_size, font=font_family)
+        return Text(content, size=font_size*self.text_scale, font=font_family)
 
     def g_to_mobjects(self, g_element):
         mob = VGroup(*self.get_mobjects_from(g_element))
