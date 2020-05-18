@@ -113,6 +113,24 @@ class Text(SVGMobject):
         space_width = svg_with_space.get_width()
         return space_width
 
+    def get_extra_space_perc(self):
+        size = self.size * 10
+        dir_name = consts.TEXT_DIR
+        file_name = os.path.join(dir_name, "space") + '.svg'
+        surface = cairo.SVGSurface(file_name, 600, 400)
+        context = cairo.Context(surface)
+        context.set_font_size(size)
+        context.select_font_face(self.font, self.str2slant(self.slant), self.str2weight(self.weight))
+        _,text_yb,_,text_h,_,_ = context.text_extents(self.text)
+        char_extents = [context.text_extents(c) for c in self.text]
+        max_top_space = max([ce[1]-text_yb for ce in char_extents])
+        max_bottom_space = max([ce[3]+ce[1] for ce in char_extents])
+        return max_top_space/text_h, max_bottom_space/text_h
+
+    def get_extra_space_ushift(self):
+        ts,bs = self.get_extra_space_perc()
+        return 0.5*(ts-bs)
+
     def apply_front_and_end_spaces(self):
         space_width = self.get_space_width()
         max_height = self.get_height()
