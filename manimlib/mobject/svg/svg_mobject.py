@@ -117,8 +117,11 @@ class SVGMobject(VMobject):
         from manimlib.mobject.svg.text_mobject import Text
         font_size = self.attribute_to_float(g_element.getAttribute('font-size')) if g_element.hasAttribute('font-size') else 1.0
         font_family = g_element.getAttribute('font-family') if g_element.hasAttribute('font-size') else ''
+        font_family_list = [s.strip() for s in font_family.split(',')]
         content = g_element.firstChild.nodeValue
-        return Text(content, size=font_size*self.text_scale, font=font_family)
+        txt_mobject = Text(content, size=font_size*self.text_scale, font=font_family_list[0])
+        o_hight = Text('o', size=font_size*self.text_scale, font=font_family_list[0]).get_height() # vertical centering with 'o'
+        return txt_mobject.shift(UP*o_hight*0.5)
 
     def g_to_mobjects(self, g_element):
         mob = VGroup(*self.get_mobjects_from(g_element))
