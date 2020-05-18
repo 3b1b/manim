@@ -81,7 +81,10 @@ class Text(SVGMobject):
         if text.find('\t') != -1:
             text_without_tabs = text.replace('\t', ' ' * self.tab_width)
         self.text = text_without_tabs
-        self.line_spacing = self.size + self.size * 0.2 if self.line_spacing == -1 else self.line_spacing
+        if self.line_spacing == -1:
+            self.line_spacing = self.size + self.size * 0.3
+        else:
+            self.line_spacing = self.size + self.size * self.line_spacing
         file_name = self.text2svg()
         self.remove_last_M(file_name)
         SVGMobject.__init__(self, file_name, **config)
@@ -137,20 +140,20 @@ class Text(SVGMobject):
         with open(file_name, 'w') as fpw:
             fpw.write(content)
 
-    def find_indexes(self, word):
+    def find_indexes(self, word, text):
         m = re.match(r'\[([0-9\-]{0,}):([0-9\-]{0,})\]', word)
         if m:
             start = int(m.group(1)) if m.group(1) != '' else 0
-            end = int(m.group(2)) if m.group(2) != '' else len(self.original_text)
-            start = len(self.original_text) + start if start < 0 else start
-            end = len(self.original_text) + end if end < 0 else end
+            end = int(m.group(2)) if m.group(2) != '' else len(text)
+            start = len(text) + start if start < 0 else start
+            end = len(text) + end if end < 0 else end
             return [(start, end)]
 
         indexes = []
-        index = self.original_text.find(word)
+        index = text.find(word)
         while index != -1:
             indexes.append((index, index + len(word)))
-            index = self.original_text.find(word, index + len(word))
+            index = text.find(word, index + len(word))
         return indexes
 
     def full2short(self, config):
@@ -169,13 +172,13 @@ class Text(SVGMobject):
     def set_color_by_t2c(self, t2c=None):
         t2c = t2c if t2c else self.t2c
         for word, color in list(t2c.items()):
-            for start, end in self.find_indexes(word):
+            for start, end in self.find_indexes(word,self.original_text):
                 self.chars[start:end].set_color(color)
 
     def set_color_by_t2g(self, t2g=None):
         t2g = t2g if t2g else self.t2g
         for word, gradient in list(t2g.items()):
-            for start, end in self.find_indexes(word):
+            for start, end in self.find_indexes(word,self.original_text):
                 self.chars[start:end].set_color_by_gradient(*gradient)
 
     def str2slant(self, string):
@@ -208,7 +211,7 @@ class Text(SVGMobject):
             fsw = [self.font, self.slant, self.weight]
             if t2x[i]:
                 for word, x in list(t2x[i].items()):
-                    for start, end in self.find_indexes(word):
+                    for start, end in self.find_indexes(word,self.text):
                         fsw[i] = x
                         settings.append(TextSetting(start, end, *fsw))
 
@@ -227,7 +230,7 @@ class Text(SVGMobject):
 
         if re.search(r'\n', self.text):
             line_num = 0
-            for start, end in self.find_indexes('\n'):
+            for start, end in self.find_indexes('\n', self.text):
                 for setting in settings:
                     if setting.line_num == -1:
                         setting.line_num = line_num
