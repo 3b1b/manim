@@ -8,6 +8,8 @@
 
 Manim is an animation engine for explanatory math videos. It's used to create precise animations programmatically, as seen in the videos at [3Blue1Brown](https://www.3blue1brown.com/).
 
+### NOTE: This repository is maintained by the Manim Community, and is not associated with Grant Sanderson or 3Blue1Brown in any way (though we are definitely indebted to him for providing his work to the world). If you want to study how Grant make's his videos, head over to the main repository (3b1b/manim). This is a more frequently updated repository than the main one, and is recommended if you want to use Manim for your own projects.
+
 ## Installation
 Manim runs on Python 3.7. You can install it from PyPI via pip:
 
