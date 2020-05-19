@@ -1,12 +1,12 @@
-argparse==1.4.0
-colour==0.1.5
-numpy==1.16.4
-Pillow==5.2.0
-progressbar==2.5
-scipy==1.3.0
-tqdm==4.24.0
-opencv-python==3.4.2.17
-pycairo==1.17.1; sys_platform == 'linux'
-pycairo>=1.18.1; sys_platform == 'win32'
-pydub==0.23.0
-pyreadline==2.1; sys_platform == 'win32'
+argparse
+colour
+numpy
+Pillow
+progressbar
+scipy
+tqdm
+opencv-python
+pycairo
+pydub
+pygments
+pyreadline; sys_platform == 'win32'
