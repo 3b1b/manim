@@ -178,23 +178,25 @@ class Scene(Container):
 
     def set_camera_pixel_array(self, pixel_array):
         """
-        Sets the camera to display a Pixel Array
-        
+        Sets the camera's pixel array to the passed pixel
+        array. Does not impact what the scene currently displays.
+
         Parameters
         ----------
         pixel_array: Union[np.ndarray,list,tuple]
-            Pixel array to set the camera to display
+            Pixel array
         """
         self.camera.set_pixel_array(pixel_array)
 
     def set_camera_background(self, background):
         """
         Sets the camera to display a Pixel Array
+        in the background.
         
         Parameters
         ----------
         background: Union[np.ndarray,list,tuple]
-            
+            The Pixel Array of the background.
         """
         self.camera.set_background(background)
 
