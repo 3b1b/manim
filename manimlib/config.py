@@ -51,6 +51,11 @@ def parse_cli():
             help="Render at a high quality",
         ),
         parser.add_argument(
+            "-k", "--four_k",
+            action="store_true",
+            help="Render at a 4K quality",
+        ),
+        parser.add_argument(
             "-g", "--save_pngs",
             action="store_true",
             help="Save each frame as a png",
@@ -214,12 +219,23 @@ def get_camera_configuration(args):
         camera_config.update(manimlib.constants.MEDIUM_QUALITY_CAMERA_CONFIG)
     elif args.high_quality:
         camera_config.update(manimlib.constants.HIGH_QUALITY_CAMERA_CONFIG)
+    elif args.four_k:
+        camera_config.update(manimlib.constants.FOURK_CAMERA_CONFIG)
     else:
         camera_config.update(manimlib.constants.PRODUCTION_QUALITY_CAMERA_CONFIG)
 
     # If the resolution was passed in via -r
     if args.resolution:
-        if "," in args.resolution:
+        if args.resolution.lower() == "low":
+            camera_config.update(manimlib.constants.LOW_QUALITY_CAMERA_CONFIG)
+        elif args.resolution.lower() == "medium":
+            camera_config.update(manimlib.constants.MEDIUM_QUALITY_CAMERA_CONFIG)
+        elif args.resolution.lower() == "high":
+            camera_config.update(manimlib.constants.HIGH_QUALITY_CAMERA_CONFIG)
+        elif args.resolution.lower() == "4K":
+            camera_config.update(manimlib.constants.FOURK_CAMERA_CONFIG)
+
+        elif "," in args.resolution:
             height_str, width_str = args.resolution.split(",")
             height = int(height_str)
             width = int(width_str)
