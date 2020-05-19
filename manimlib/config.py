@@ -51,6 +51,11 @@ def parse_cli():
             help="Render at a high quality",
         ),
         parser.add_argument(
+            "--four_k",
+            action="store_true",
+            help="Render at a 4K quality",
+        ),
+        parser.add_argument(
             "-g", "--save_pngs",
             action="store_true",
             help="Save each frame as a png",
@@ -214,6 +219,8 @@ def get_camera_configuration(args):
         camera_config.update(manimlib.constants.MEDIUM_QUALITY_CAMERA_CONFIG)
     elif args.high_quality:
         camera_config.update(manimlib.constants.HIGH_QUALITY_CAMERA_CONFIG)
+    elif args.four_k:
+        camera_config.update(manimlib.constants.FOURK_CAMERA_CONFIG)
     else:
         camera_config.update(manimlib.constants.PRODUCTION_QUALITY_CAMERA_CONFIG)
 
