@@ -51,7 +51,7 @@ def parse_cli():
             help="Render at a high quality",
         ),
         parser.add_argument(
-            "--four_k",
+            "-k", "--four_k",
             action="store_true",
             help="Render at a 4K quality",
         ),
