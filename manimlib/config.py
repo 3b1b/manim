@@ -226,7 +226,16 @@ def get_camera_configuration(args):
 
     # If the resolution was passed in via -r
     if args.resolution:
-        if "," in args.resolution:
+        if args.resolution.lower() == "low":
+            camera_config.update(manimlib.constants.LOW_QUALITY_CAMERA_CONFIG)
+        elif args.resolution.lower() == "medium":
+            camera_config.update(manimlib.constants.MEDIUM_QUALITY_CAMERA_CONFIG)
+        elif args.resolution.lower() == "high":
+            camera_config.update(manimlib.constants.HIGH_QUALITY_CAMERA_CONFIG)
+        elif args.resolution.lower() == "4K":
+            camera_config.update(manimlib.constants.FOURK_CAMERA_CONFIG)
+
+        elif "," in args.resolution:
             height_str, width_str = args.resolution.split(",")
             height = int(height_str)
             width = int(width_str)
