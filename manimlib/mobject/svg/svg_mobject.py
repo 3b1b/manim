@@ -120,7 +120,7 @@ class SVGMobject(VMobject):
         font_family_list = [s.strip() for s in font_family.split(',')]
         content = g_element.firstChild.nodeValue
         txt_mobject = Text(content, size=font_size*self.text_scale, font=font_family_list[0])
-        return txt_mobject.shift(UP*txt_mobject.get_height()*txt_mobject.get_extra_space_ushift())
+        return txt_mobject.shift(UP*txt_mobject.get_height()*(0.5-txt_mobject.get_extra_bottom_space_perc()))
 
     def g_to_mobjects(self, g_element):
         mob = VGroup(*self.get_mobjects_from(g_element))
