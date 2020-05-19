@@ -129,7 +129,7 @@ class Text(SVGMobject):
 
     def get_extra_space_ushift(self):
         ts,bs = self.get_extra_space_perc()
-        return 0.5*(ts-bs)
+        return 0.5-bs
 
     def apply_front_and_end_spaces(self):
         space_width = self.get_space_width()
