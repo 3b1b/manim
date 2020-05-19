@@ -124,6 +124,9 @@ Documentation is in progress at [eulertour.com/docs](https://www.eulertour.com/d
 ### Walkthrough
 Todd Zimmerman put together a [tutorial](https://talkingphysics.wordpress.com/2019/01/08/getting-started-animating-with-manim-and-python-3-7/) on getting started with manim, which has been updated to run on Python 3.7.
 
+## Help With Usage and Installation
+The issues board is reserved for bugs, and future features planned for Manim. If you need help installing or using Manim, please take a look at [the Reddit Community](https://www.reddit.com/r/manim) or the [Discord Community](https://discord.gg/mMRrZQW)
+
 ## Contributing
 Is always welcome. In particular, there is a dire need for tests and documentation.
 
