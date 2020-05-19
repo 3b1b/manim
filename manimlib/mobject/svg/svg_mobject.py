@@ -46,6 +46,7 @@ class SVGMobject(VMobject):
         self.ensure_valid_file()
         VMobject.__init__(self, **kwargs)
         self.move_into_position()
+        self.update_text_stroke_and_fill(self)
 
     def ensure_valid_file(self):
         if self.file_name is None:
@@ -118,9 +119,25 @@ class SVGMobject(VMobject):
         font_size = self.attribute_to_float(g_element.getAttribute('font-size')) if g_element.hasAttribute('font-size') else 1.0
         font_family = g_element.getAttribute('font-family') if g_element.hasAttribute('font-size') else ''
         font_family_list = [s.strip() for s in font_family.split(',')]
+        text_anchor = g_element.getAttribute('text-anchor') if g_element.hasAttribute('text-anchor') else 'middle'
         content = g_element.firstChild.nodeValue
         txt_mobject = Text(content, size=font_size*self.text_scale, font=font_family_list[0])
-        return txt_mobject.shift(UP*txt_mobject.get_height()*(0.5-txt_mobject.get_extra_bottom_space_perc()))
+        u_shuft = txt_mobject.get_height()*(0.5-txt_mobject.get_extra_bottom_space_perc())
+        if text_anchor == 'start':
+            r_shift = 0.5*txt_mobject.get_width()
+        elif text_anchor == 'end':
+            r_shift = -0.5*txt_mobject.get_width()
+        else:
+            r_shift = 0.0
+        return txt_mobject.shift(UP*u_shuft + RIGHT*r_shift)
+
+    def update_text_stroke_and_fill(self, mobject):
+        from manimlib.mobject.svg.text_mobject import Text
+        for submobject in mobject.submobjects:
+            if isinstance(submobject, Text):
+                submobject.set_fill(color=self.get_stroke_color(), opacity=1)
+                submobject.set_stroke(color=None, opacity=0)
+            self.update_text_stroke_and_fill(submobject)
 
     def g_to_mobjects(self, g_element):
         mob = VGroup(*self.get_mobjects_from(g_element))
