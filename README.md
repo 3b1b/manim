@@ -73,35 +73,6 @@ mkvirtualenv -a manim -r requirements.txt manim
 python3 -m manim example_scenes.py SquareToCircle -pl
 ```
 
-### Using Docker
-Since it's a bit tricky to get all the dependencies set up just right, there is a Dockerfile and Compose file provided in this repo as well as [a premade image on Docker Hub](https://hub.docker.com/r/eulertour/manim/tags/). The Dockerfile contains instructions on how to build a manim image, while the Compose file contains instructions on how to run the image.
-
-The prebuilt container image has manim repository included.
-`INPUT_PATH` is where the container looks for scene files. You must set the `INPUT_PATH`
-environment variable to the absolute path containing your scene file and the
-`OUTPUT_PATH` environment variable to the directory where you want media to be written.
-
-1. [Install Docker](https://docs.docker.com)
-2. [Install Docker Compose](https://docs.docker.com/compose/install/)
-3. Render an animation:
-```sh
-INPUT_PATH=/path/to/dir/containing/source/code \
-OUTPUT_PATH=/path/to/output/ \
-docker-compose run manim example_scenes.py SquareToCircle -l
-```
-The command needs to be run as root if your username is not in the docker group.
-
-You can replace `example.scenes.py` with any relative path from your `INPUT_PATH`.
-
-![docker diagram](./manim_docker_diagram.png)
-
-After running the output will say files ready at `/tmp/output/`, which refers to path inside the container. Your `OUTPUT_PATH` is bind mounted to this `/tmp/output` so any changes made by the container to `/tmp/output` will be mirrored on your `OUTPUT_PATH`. `/media/` will be created in `OUTPUT_PATH`.
-
-`-p` won't work as manim would look for video player in the container system, which it does not have.
-
-The first time you execute the above command, Docker will pull the image from Docker Hub and cache it. Any subsequent runs until the image is evicted will use the cached image.
-Note that the image doesn't have any development tools installed and can't preview animations. Its purpose is building and testing only.
-
 ## Using manim
 Try running the following:
 ```sh
