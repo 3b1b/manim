@@ -14,7 +14,7 @@ class Test_geometry(Scene):
         self.play(Transform(square, circle))
         self.play(FadeOut(square))
 
-        text = TextMobject("Testing !")
+        text = Text("Testing !")
         self.play(DrawBorderThenFill(text))
 
         decimal = DecimalNumber(
