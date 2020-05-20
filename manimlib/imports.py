@@ -65,14 +65,6 @@ from .for_3b1b_videos.pi_creature import *
 from .for_3b1b_videos.pi_creature_animations import *
 from .for_3b1b_videos.pi_creature_scene import *
 
-from .once_useful_constructs.arithmetic import *
-from .once_useful_constructs.combinatorics import *
-from .once_useful_constructs.complex_transformation_scene import *
-from .once_useful_constructs.counting import *
-from .once_useful_constructs.fractals import *
-from .once_useful_constructs.graph_theory import *
-from .once_useful_constructs.light import *
-
 from .scene.graph_scene import *
 from .scene.moving_camera_scene import *
 from .scene.reconfigurable_scene import *
