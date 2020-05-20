@@ -1,7 +1,7 @@
 import numpy as np
 
-from manimlib.constants import ORIGIN
-from manimlib.utils.space_ops import get_unit_normal
+from ..constants import ORIGIN
+from ..utils.space_ops import get_unit_normal
 
 
 def get_3d_vmob_gradient_start_and_end_points(vmob):

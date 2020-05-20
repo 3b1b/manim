@@ -1,15 +1,15 @@
 import operator as op
 
-from manimlib.animation.composition import LaggedStart
-from manimlib.animation.transform import ApplyMethod
-from manimlib.animation.transform import Restore
-from manimlib.constants import WHITE
-from manimlib.constants import BLACK
-from manimlib.mobject.geometry import Circle
-from manimlib.mobject.svg.drawings import Car
-from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.utils.config_ops import digest_config
-from manimlib.utils.space_ops import get_norm
+from ..animation.composition import LaggedStart
+from ..animation.transform import ApplyMethod
+from ..animation.transform import Restore
+from ..constants import WHITE
+from ..constants import BLACK
+from ..mobject.geometry import Circle
+from ..mobject.svg.drawings import Car
+from ..mobject.types.vectorized_mobject import VGroup
+from ..utils.config_ops import digest_config
+from ..utils.space_ops import get_norm
 
 
 class MoveCar(ApplyMethod):

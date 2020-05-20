@@ -1,9 +1,9 @@
 from copy import deepcopy
 import itertools as it
 
-from manimlib.constants import *
-from manimlib.mobject.mobject import Mobject
-from manimlib.utils.iterables import adjacent_pairs
+from ..constants import *
+from ..mobject.mobject import Mobject
+from ..utils.iterables import adjacent_pairs
 
 # Warning: This is all now pretty depricated, and should not be expected to work
 

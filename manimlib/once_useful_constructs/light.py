@@ -2,20 +2,20 @@ from traceback import *
 
 from scipy.spatial import ConvexHull
 
-from manimlib.animation.composition import LaggedStartMap
-from manimlib.animation.fading import FadeIn
-from manimlib.animation.fading import FadeOut
-from manimlib.animation.transform import Transform
-from manimlib.constants import *
-from manimlib.mobject.geometry import AnnularSector
-from manimlib.mobject.geometry import Annulus
-from manimlib.mobject.svg.svg_mobject import SVGMobject
-from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.mobject.types.vectorized_mobject import VectorizedPoint
-from manimlib.utils.space_ops import angle_between_vectors
-from manimlib.utils.space_ops import project_along_vector
-from manimlib.utils.space_ops import rotate_vector
-from manimlib.utils.space_ops import z_to_vector
+from ..animation.composition import LaggedStartMap
+from ..animation.fading import FadeIn
+from ..animation.fading import FadeOut
+from ..animation.transform import Transform
+from ..constants import *
+from ..mobject.geometry import AnnularSector
+from ..mobject.geometry import Annulus
+from ..mobject.svg.svg_mobject import SVGMobject
+from ..mobject.types.vectorized_mobject import VMobject
+from ..mobject.types.vectorized_mobject import VectorizedPoint
+from ..utils.space_ops import angle_between_vectors
+from ..utils.space_ops import project_along_vector
+from ..utils.space_ops import rotate_vector
+from ..utils.space_ops import z_to_vector
 
 LIGHT_COLOR = YELLOW
 SHADOW_COLOR = BLACK

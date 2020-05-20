@@ -1,10 +1,10 @@
-from manimlib.animation.animation import Animation
-from manimlib.animation.animation import DEFAULT_ANIMATION_LAG_RATIO
-from manimlib.animation.transform import Transform
-from manimlib.constants import DOWN
-from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.bezier import interpolate
-from manimlib.utils.rate_functions import there_and_back
+from ..animation.animation import Animation
+from ..animation.animation import DEFAULT_ANIMATION_LAG_RATIO
+from ..animation.transform import Transform
+from ..constants import DOWN
+from ..mobject.types.vectorized_mobject import VMobject
+from ..utils.bezier import interpolate
+from ..utils.rate_functions import there_and_back
 
 
 DEFAULT_FADE_LAG_RATIO = 0

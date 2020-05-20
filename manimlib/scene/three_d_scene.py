@@ -1,15 +1,15 @@
-from manimlib.animation.transform import ApplyMethod
-from manimlib.camera.three_d_camera import ThreeDCamera
-from manimlib.constants import DEGREES
-from manimlib.constants import PRODUCTION_QUALITY_CAMERA_CONFIG
-from manimlib.mobject.coordinate_systems import ThreeDAxes
-from manimlib.mobject.geometry import Line
-from manimlib.mobject.three_dimensions import Sphere
-from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.mobject.types.vectorized_mobject import VectorizedPoint
-from manimlib.scene.scene import Scene
-from manimlib.utils.config_ops import digest_config
-from manimlib.utils.config_ops import merge_dicts_recursively
+from ..animation.transform import ApplyMethod
+from ..camera.three_d_camera import ThreeDCamera
+from ..constants import DEGREES
+from ..constants import PRODUCTION_QUALITY_CAMERA_CONFIG
+from ..mobject.coordinate_systems import ThreeDAxes
+from ..mobject.geometry import Line
+from ..mobject.three_dimensions import Sphere
+from ..mobject.types.vectorized_mobject import VGroup
+from ..mobject.types.vectorized_mobject import VectorizedPoint
+from ..scene.scene import Scene
+from ..utils.config_ops import digest_config
+from ..utils.config_ops import merge_dicts_recursively
 
 
 class ThreeDScene(Scene):

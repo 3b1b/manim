@@ -5,11 +5,12 @@ import platform
 import subprocess as sp
 import sys
 import traceback
+import importlib.util
 
-from manimlib.scene.scene import Scene
-from manimlib.utils.sounds import play_error_sound
-from manimlib.utils.sounds import play_finish_sound
-import manimlib.constants
+from .scene.scene import Scene
+from .utils.sounds import play_error_sound
+from .utils.sounds import play_finish_sound
+from . import constants
 
 
 def open_file_if_needed(file_writer, **config):
@@ -76,15 +77,15 @@ def prompt_user_for_choice(scene_classes):
         print("%d: %s" % (count, name))
         num_to_class[count] = scene_class
     try:
-        user_input = input(manimlib.constants.CHOOSE_NUMBER_MESSAGE)
+        user_input = input(constants.CHOOSE_NUMBER_MESSAGE)
         return [
             num_to_class[int(num_str)]
             for num_str in user_input.split(",")
         ]
     except KeyError:
-        print(manimlib.constants.INVALID_NUMBER_MESSAGE)
+        print(constants.INVALID_NUMBER_MESSAGE)
         sys.exit(2)
-        user_input = input(manimlib.constants.CHOOSE_NUMBER_MESSAGE)
+        user_input = input(constants.CHOOSE_NUMBER_MESSAGE)
         return [
             num_to_class[int(num_str)]
             for num_str in user_input.split(",")
@@ -95,7 +96,7 @@ def prompt_user_for_choice(scene_classes):
 
 def get_scenes_to_render(scene_classes, config):
     if len(scene_classes) == 0:
-        print(manimlib.constants.NO_SCENE_MESSAGE)
+        print(constants.NO_SCENE_MESSAGE)
         return []
     if config["write_all"]:
         return scene_classes
@@ -109,7 +110,7 @@ def get_scenes_to_render(scene_classes, config):
                 break
         if not found and (scene_name != ""):
             print(
-                manimlib.constants.SCENE_NOT_FOUND_MESSAGE.format(
+                constants.SCENE_NOT_FOUND_MESSAGE.format(
                     scene_name
                 ),
                 file=sys.stderr
@@ -132,8 +133,26 @@ def get_scene_classes_from_module(module):
         ]
 
 
+def get_module(file_name):
+    if file_name == "-":
+        module = types.ModuleType("input_scenes")
+        code = sys.stdin.read()
+        try:
+            exec(code, module.__dict__)
+            return module
+        except Exception as e:
+            print(f"Failed to render scene: {str(e)}")
+            sys.exit(2)
+    else:
+        module_name = file_name.replace(os.sep, ".").replace(".py", "")
+        spec = importlib.util.spec_from_file_location(module_name, file_name)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+
 def main(config):
-    module = config["module"]
+    module = get_module(config["file"])
     all_scene_classes = get_scene_classes_from_module(module)
     scene_classes_to_render = get_scenes_to_render(all_scene_classes, config)
 

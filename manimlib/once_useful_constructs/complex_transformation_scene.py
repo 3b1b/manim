@@ -1,10 +1,10 @@
-from manimlib.animation.animation import Animation
-from manimlib.animation.movement import ComplexHomotopy
-from manimlib.animation.transform import MoveToTarget
-from manimlib.constants import *
-from manimlib.mobject.coordinate_systems import ComplexPlane
-from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.scene.scene import Scene
+from ..animation.animation import Animation
+from ..animation.movement import ComplexHomotopy
+from ..animation.transform import MoveToTarget
+from ..constants import *
+from ..mobject.coordinate_systems import ComplexPlane
+from ..mobject.types.vectorized_mobject import VGroup
+from ..scene.scene import Scene
 
 
 # TODO, refactor this full scene

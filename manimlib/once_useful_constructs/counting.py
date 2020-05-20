@@ -1,14 +1,14 @@
-from manimlib.animation.creation import ShowCreation
-from manimlib.animation.fading import FadeIn
-from manimlib.animation.transform import MoveToTarget
-from manimlib.animation.transform import Transform
-from manimlib.constants import *
-from manimlib.mobject.geometry import Arrow
-from manimlib.mobject.geometry import Circle
-from manimlib.mobject.geometry import Dot
-from manimlib.mobject.svg.tex_mobject import TexMobject
-from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.scene.scene import Scene
+from ..animation.creation import ShowCreation
+from ..animation.fading import FadeIn
+from ..animation.transform import MoveToTarget
+from ..animation.transform import Transform
+from ..constants import *
+from ..mobject.geometry import Arrow
+from ..mobject.geometry import Circle
+from ..mobject.geometry import Dot
+from ..mobject.svg.tex_mobject import TexMobject
+from ..mobject.types.vectorized_mobject import VGroup
+from ..scene.scene import Scene
 
 
 class CountingScene(Scene):

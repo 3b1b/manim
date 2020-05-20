@@ -1,17 +1,17 @@
-from manimlib.animation.animation import Animation
-from manimlib.animation.composition import AnimationGroup
-from manimlib.animation.fading import FadeOut
-from manimlib.animation.creation import DrawBorderThenFill
-from manimlib.animation.creation import Write
-from manimlib.animation.transform import ApplyMethod
-from manimlib.animation.transform import MoveToTarget
-from manimlib.constants import *
-from manimlib.for_3b1b_videos.pi_class import PiCreatureClass
-from manimlib.mobject.mobject import Group
-from manimlib.mobject.svg.drawings import SpeechBubble
-from manimlib.utils.config_ops import digest_config
-from manimlib.utils.rate_functions import squish_rate_func
-from manimlib.utils.rate_functions import there_and_back
+from ..animation.animation import Animation
+from ..animation.composition import AnimationGroup
+from ..animation.fading import FadeOut
+from ..animation.creation import DrawBorderThenFill
+from ..animation.creation import Write
+from ..animation.transform import ApplyMethod
+from ..animation.transform import MoveToTarget
+from ..constants import *
+from ..for_3b1b_videos.pi_class import PiCreatureClass
+from ..mobject.mobject import Group
+from ..mobject.svg.drawings import SpeechBubble
+from ..utils.config_ops import digest_config
+from ..utils.rate_functions import squish_rate_func
+from ..utils.rate_functions import there_and_back
 
 
 class Blink(ApplyMethod):

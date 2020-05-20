@@ -1,26 +1,26 @@
 import itertools as it
 import random
 
-from manimlib.animation.transform import ReplacementTransform
-from manimlib.animation.transform import Transform
-from manimlib.animation.transform import ApplyMethod
-from manimlib.animation.composition import LaggedStart
-from manimlib.constants import *
-from manimlib.for_3b1b_videos.pi_creature import Mortimer
-from manimlib.for_3b1b_videos.pi_creature import PiCreature
-from manimlib.for_3b1b_videos.pi_creature import Randolph
-from manimlib.for_3b1b_videos.pi_creature_animations import Blink
-from manimlib.for_3b1b_videos.pi_creature_animations import PiCreatureBubbleIntroduction
-from manimlib.for_3b1b_videos.pi_creature_animations import RemovePiCreatureBubble
-from manimlib.mobject.mobject import Group
-from manimlib.mobject.frame import ScreenRectangle
-from manimlib.mobject.svg.drawings import SpeechBubble
-from manimlib.mobject.svg.drawings import ThoughtBubble
-from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.scene.scene import Scene
-from manimlib.utils.rate_functions import squish_rate_func
-from manimlib.utils.rate_functions import there_and_back
-from manimlib.utils.space_ops import get_norm
+from ..animation.transform import ReplacementTransform
+from ..animation.transform import Transform
+from ..animation.transform import ApplyMethod
+from ..animation.composition import LaggedStart
+from ..constants import *
+from ..for_3b1b_videos.pi_creature import Mortimer
+from ..for_3b1b_videos.pi_creature import PiCreature
+from ..for_3b1b_videos.pi_creature import Randolph
+from ..for_3b1b_videos.pi_creature_animations import Blink
+from ..for_3b1b_videos.pi_creature_animations import PiCreatureBubbleIntroduction
+from ..for_3b1b_videos.pi_creature_animations import RemovePiCreatureBubble
+from ..mobject.mobject import Group
+from ..mobject.frame import ScreenRectangle
+from ..mobject.svg.drawings import SpeechBubble
+from ..mobject.svg.drawings import ThoughtBubble
+from ..mobject.types.vectorized_mobject import VGroup
+from ..scene.scene import Scene
+from ..utils.rate_functions import squish_rate_func
+from ..utils.rate_functions import there_and_back
+from ..utils.space_ops import get_norm
 
 
 class PiCreatureScene(Scene):

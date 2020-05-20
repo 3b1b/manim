@@ -3,7 +3,7 @@ import os
 
 from PIL import Image
 
-from manimlib.utils.file_ops import seek_full_path_from_defaults
+from ..utils.file_ops import seek_full_path_from_defaults
 
 
 def get_full_raster_image_path(image_file_name):

@@ -3,13 +3,12 @@ import os
 import copy
 import hashlib
 import cairo
-import manimlib.constants as consts
-from manimlib.constants import *
-from manimlib.container.container import Container
-from manimlib.mobject.geometry import Dot, Rectangle
-from manimlib.mobject.svg.svg_mobject import SVGMobject
-from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.utils.config_ops import digest_config
+from ...constants import *
+from ...container.container import Container
+from ...mobject.geometry import Rectangle
+from ...mobject.svg.svg_mobject import SVGMobject
+from ...mobject.types.vectorized_mobject import VGroup
+from ...utils.config_ops import digest_config
 
 
 TEXT_MOB_SCALE_FACTOR = 0.05
@@ -28,7 +27,7 @@ class TextSetting(object):
 class Text(SVGMobject):
     CONFIG = {
         # Mobject
-        'color': consts.WHITE,
+        'color': WHITE,
         'height': None,
         'width': None,
         'fill_opacity': 1,
@@ -94,7 +93,7 @@ class Text(SVGMobject):
     def get_space_width(self):
         size = self.size * 10
 
-        dir_name = consts.TEXT_DIR
+        dir_name = TEXT_DIR
         file_name = os.path.join(dir_name, "space") + '.svg'
 
         surface = cairo.SVGSurface(file_name, 600, 400)
@@ -290,7 +289,7 @@ class Text(SVGMobject):
             if NOT_SETTING_FONT_MSG != '':
                 print(NOT_SETTING_FONT_MSG)
 
-        dir_name = consts.TEXT_DIR
+        dir_name = TEXT_DIR
         hash_name = self.text2hash()
         file_name = os.path.join(dir_name, hash_name)+'.svg'
         if os.path.exists(file_name):

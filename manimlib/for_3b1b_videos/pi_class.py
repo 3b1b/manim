@@ -1,6 +1,6 @@
-from manimlib.constants import *
-from manimlib.for_3b1b_videos.pi_creature import PiCreature
-from manimlib.mobject.types.vectorized_mobject import VGroup
+from ..constants import *
+from ..for_3b1b_videos.pi_creature import PiCreature
+from ..mobject.types.vectorized_mobject import VGroup
 
 
 class PiCreatureClass(VGroup):

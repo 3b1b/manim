@@ -1,6 +1,6 @@
-from manimlib.constants import *
-from manimlib.mobject.geometry import Rectangle
-from manimlib.utils.config_ops import digest_config
+from ..constants import *
+from ..mobject.geometry import Rectangle
+from ..utils.config_ops import digest_config
 
 
 class ScreenRectangle(Rectangle):

@@ -1,9 +1,9 @@
-from manimlib.constants import *
-from manimlib.mobject.geometry import Square
-from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.iterables import tuplify
-from manimlib.utils.space_ops import z_to_vector
+from ..constants import *
+from ..mobject.geometry import Square
+from ..mobject.types.vectorized_mobject import VGroup
+from ..mobject.types.vectorized_mobject import VMobject
+from ..utils.iterables import tuplify
+from ..utils.space_ops import z_to_vector
 
 ##############
 

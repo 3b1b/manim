@@ -1,8 +1,8 @@
-from manimlib.constants import *
-from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.utils.rate_functions import smooth
-from manimlib.utils.space_ops import get_norm
+from ..constants import *
+from ..mobject.types.vectorized_mobject import VMobject
+from ..mobject.types.vectorized_mobject import VGroup
+from ..utils.rate_functions import smooth
+from ..utils.space_ops import get_norm
 
 
 class AnimatedBoundary(VGroup):

@@ -1,29 +1,29 @@
 import random
 
-from manimlib.animation.composition import LaggedStartMap
-from manimlib.animation.creation import DrawBorderThenFill
-from manimlib.animation.creation import Write
-from manimlib.animation.fading import FadeIn
-from manimlib.animation.fading import FadeOut
-from manimlib.constants import *
-from manimlib.for_3b1b_videos.pi_creature import Mortimer
-from manimlib.for_3b1b_videos.pi_creature import Randolph
-from manimlib.for_3b1b_videos.pi_creature_animations import Blink
-from manimlib.for_3b1b_videos.pi_creature_scene import PiCreatureScene
-from manimlib.mobject.geometry import DashedLine
-from manimlib.mobject.geometry import Line
-from manimlib.mobject.geometry import Rectangle
-from manimlib.mobject.geometry import Square
-from manimlib.mobject.svg.drawings import Logo
-from manimlib.mobject.svg.drawings import PatreonLogo
-from manimlib.mobject.svg.tex_mobject import TextMobject
-from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.mobject.mobject_update_utils import always_shift
-from manimlib.scene.moving_camera_scene import MovingCameraScene
-from manimlib.scene.scene import Scene
-from manimlib.utils.rate_functions import linear
-from manimlib.utils.space_ops import get_norm
-from manimlib.utils.space_ops import normalize
+from ..animation.composition import LaggedStartMap
+from ..animation.creation import DrawBorderThenFill
+from ..animation.creation import Write
+from ..animation.fading import FadeIn
+from ..animation.fading import FadeOut
+from ..constants import *
+from ..for_3b1b_videos.pi_creature import Mortimer
+from ..for_3b1b_videos.pi_creature import Randolph
+from ..for_3b1b_videos.pi_creature_animations import Blink
+from ..for_3b1b_videos.pi_creature_scene import PiCreatureScene
+from ..mobject.geometry import DashedLine
+from ..mobject.geometry import Line
+from ..mobject.geometry import Rectangle
+from ..mobject.geometry import Square
+from ..mobject.svg.drawings import Logo
+from ..mobject.svg.drawings import PatreonLogo
+from ..mobject.svg.tex_mobject import TextMobject
+from ..mobject.types.vectorized_mobject import VGroup
+from ..mobject.mobject_update_utils import always_shift
+from ..scene.moving_camera_scene import MovingCameraScene
+from ..scene.scene import Scene
+from ..utils.rate_functions import linear
+from ..utils.space_ops import get_norm
+from ..utils.space_ops import normalize
 
 
 class OpeningQuote(Scene):

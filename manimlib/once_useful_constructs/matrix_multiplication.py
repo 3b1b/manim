@@ -1,16 +1,16 @@
 import numpy as np
 
-from manimlib.animation.creation import ShowCreation
-from manimlib.animation.fading import FadeOut
-from manimlib.animation.transform import ApplyMethod
-from manimlib.animation.transform import Transform
-from manimlib.constants import *
-from manimlib.mobject.geometry import Circle
-from manimlib.mobject.geometry import Line
-from manimlib.mobject.matrix import Matrix
-from manimlib.mobject.svg.tex_mobject import TexMobject
-from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.scene.scene import Scene
+from ..animation.creation import ShowCreation
+from ..animation.fading import FadeOut
+from ..animation.transform import ApplyMethod
+from ..animation.transform import Transform
+from ..constants import *
+from ..mobject.geometry import Circle
+from ..mobject.geometry import Line
+from ..mobject.matrix import Matrix
+from ..mobject.svg.tex_mobject import TexMobject
+from ..mobject.types.vectorized_mobject import VGroup
+from ..scene.scene import Scene
 
 
 class NumericalMatrixMultiplication(Scene):

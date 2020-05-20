@@ -1,12 +1,12 @@
 import numpy as np
 
-from manimlib.animation.animation import Animation
-from manimlib.mobject.mobject import Group
-from manimlib.utils.bezier import integer_interpolate
-from manimlib.utils.bezier import interpolate
-from manimlib.utils.config_ops import digest_config
-from manimlib.utils.iterables import remove_list_redundancies
-from manimlib.utils.rate_functions import linear
+from ..animation.animation import Animation
+from ..mobject.mobject import Group
+from ..utils.bezier import integer_interpolate
+from ..utils.bezier import interpolate
+from ..utils.config_ops import digest_config
+from ..utils.iterables import remove_list_redundancies
+from ..utils.rate_functions import linear
 
 
 DEFAULT_LAGGED_START_LAG_RATIO = 0.05

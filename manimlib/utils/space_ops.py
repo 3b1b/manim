@@ -2,12 +2,12 @@ from functools import reduce
 
 import numpy as np
 
-from manimlib.constants import OUT
-from manimlib.constants import PI
-from manimlib.constants import RIGHT
-from manimlib.constants import TAU
-from manimlib.utils.iterables import adjacent_pairs
-from manimlib.utils.simple_functions import fdiv
+from ..constants import OUT
+from ..constants import PI
+from ..constants import RIGHT
+from ..constants import TAU
+from ..utils.iterables import adjacent_pairs
+from ..utils.simple_functions import fdiv
 
 
 def get_norm(vect):
