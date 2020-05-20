@@ -123,30 +123,30 @@ Before installing `manim-community`, there are some additional dependencies that
  - FFmpeg
  - Sox (optional, for sound)
  - LaTeX (optional, for LaTeX)
+ - Homebrew
 
-#### Cairo Installation
-1. Press Command+Space and type Terminal and press enter/return key
-2. Run the following in the Terminal app:
+HomeBrew is a package manager similar to `apt` on linux that allows you to install packages easily.
+If it is not installed, please install it with this command:
+
 ```
 ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
 ```
-and press your enter/return key.
-> If the screen prompts you to enter a password, please enter your Mac's user password to continue. When you type the password, it won't be displayed on screen, but the system would accept it. So just type your password and press ENTER/RETURN key. Then wait for the command to finish.
 
-3. Run `brew install cairo`
+#### Cairo Installation
+1. Run `brew install cairo`
 
 #### FFmpeg Installation
-1. Refer to the section on Cairo installation to see how to install `brew`
+1. Refer to the section on Brew installation to see how to install `brew`
 2. Run `brew install ffmpeg`
 3. You can check you did it right by running `ffmpeg -version`
 
 #### SoX Installation
-1. Refer to the section on Cairo installation to see how to install `brew`
+1. Refer to the section on Brew installation to see how to install `brew`
 2. Run `brew install sox`
 3. You can check you did it right by running `sox`
 
 #### LaTeX Installation
-1. Refer to the section on Cairo installation to see how to install `brew`
+1. Refer to the section on Brew installation to see how to install `brew`
 2. Run `brew cask install mactex`
 2. You can check you did it right by running `latex` 
 
