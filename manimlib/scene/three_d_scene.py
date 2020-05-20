@@ -32,16 +32,16 @@ class ThreeDScene(Scene):
 
         Parameters
         ----------
-        phi : (int,float)
+        phi : int or float, optional
             The polar angle i.e the angle between Z_AXIS and Camera through ORIGIN in radians.
-        
-        theta : (int,float)
+
+        theta : int or float, optional
             The azimuthal angle i.e the angle that spins the camera around the Z_AXIS.
-        
-        distance : (int, float)
+
+        distance : int or float, optional
             The radial distance between ORIGIN and Camera.
-        
-        gamma : (int, float)
+
+        gamma : int or float, optional
             The rotation of the camera about the vector from the ORIGIN to the Camera.
         """
         if phi is not None:
@@ -60,7 +60,7 @@ class ThreeDScene(Scene):
 
         Parameters
         ----------
-        rate : (int,float=0.02)
+        rate : int or float, optional
             The rate at which the camera should rotate about the Z_AXIS.
             Negative rate means clockwise rotation.
         """
@@ -92,24 +92,24 @@ class ThreeDScene(Scene):
 
         Parameters
         ----------
-        phi : (int,float)
+        phi : int or float, optional
             The polar angle i.e the angle between Z_AXIS and Camera through ORIGIN in radians.
-        
-        theta : (int,float)
-            The azimuthal angle i.e the angle that spins the camera around the Z_AXIS.
-        
-        distance : (int, float)
-            The radial distance between ORIGIN and Camera.
-        
-        gamma : (int, float)
-            The rotation of the camera about the vector from the ORIGIN to the Camera.
-        
-        frame_center : Union[list,tuple,array]
-            The new center of the camera frame.
 
-        added_anims : list
-            Any other animations to be played at the same time?
-        
+        theta : int or float, optional
+            The azimuthal angle i.e the angle that spins the camera around the Z_AXIS.
+
+        distance : int or float, optional
+            The radial distance between ORIGIN and Camera.
+
+        gamma : int or float, optional
+            The rotation of the camera about the vector from the ORIGIN to the Camera.
+
+        frame_center : list, tuple or np.array, optional
+            The new center of the camera frame in cartesian coordinates
+
+        added_anims : list, optional
+            Any other animations to be played at the same time.
+
         """
         anims = []
         value_tracker_pairs = [
@@ -138,7 +138,7 @@ class ThreeDScene(Scene):
 
         Parameters
         ----------
-        *animations (Animation)
+        *animations : Animation
             The animations whose mobjects will be checked.
         """
         moving_mobjects = Scene.get_moving_mobjects(self, *animations)
@@ -151,19 +151,19 @@ class ThreeDScene(Scene):
         """
         This method is used to prevent the rotation and tilting
         of mobjects as the camera moves around. The mobject can
-        still move in the x,y,z directions, but will always be 
-        at the angle (relative to the camera) that it was at 
+        still move in the x,y,z directions, but will always be
+        at the angle (relative to the camera) that it was at
         when it was passed through this method.)
 
         Parameters
         ----------
-        *mobjects (Mobjects)
-            The Mobjects whose orientation must be fixed.
-        
+        *mobjects : Mobject
+            The Mobject(s) whose orientation must be fixed.
+
         **kwargs
-            Some valid kwargs are 
-                use_static_center_func (bool)
-                center_func (function)
+            Some valid kwargs are
+                use_static_center_func : bool
+                center_func : function
         """
         self.add(*mobjects)
         self.camera.add_fixed_orientation_mobjects(*mobjects, **kwargs)
@@ -177,7 +177,7 @@ class ThreeDScene(Scene):
 
         Parameters
         ----------
-        *mobjects (Mobjects)
+        *mobjects : Mobjects
             The Mobjects whose orientation must be fixed.
         """
         self.add(*mobjects)
@@ -192,7 +192,7 @@ class ThreeDScene(Scene):
 
         Parameters
         ----------
-        *mobjects (Mobjects)
+        *mobjects : Mobjects
             The Mobjects whose orientation must be unfixed.
         """
         self.camera.remove_fixed_orientation_mobjects(*mobjects)
@@ -205,7 +205,7 @@ class ThreeDScene(Scene):
 
         Parameters
         ----------
-        *mobjects (Mobjects)
+        *mobjects : Mobjects
             The Mobjects whose position and orientation must be unfixed.
         """
         self.camera.remove_fixed_in_frame_mobjects(*mobjects)
@@ -219,7 +219,7 @@ class ThreeDScene(Scene):
         Parameters
         ----------
         **kwargs
-            Some recognised kwargs are phi, theta, distance, gamma, 
+            Some recognised kwargs are phi, theta, distance, gamma,
             which have the same meaning as the parameters in set_camera_orientation.
         """
         config = dict(self.default_camera_orientation_kwargs)
@@ -291,7 +291,7 @@ class SpecialThreeDScene(ThreeDScene):
 
         Returns
         -------
-        ThreeDAxes object
+        ThreeDAxes
         """
         axes = ThreeDAxes(**self.three_d_axes_config)
         for axis in axes:
@@ -323,7 +323,7 @@ class SpecialThreeDScene(ThreeDScene):
         **kwargs
             Some valid kwargs are:
                 Any param of a Sphere or ParametricSurface.
-        
+
         Returns
         -------
         Sphere

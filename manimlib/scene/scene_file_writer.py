@@ -238,12 +238,14 @@ class SceneFileWriter(object):
         
         Parameters
         ----------
-        new_segment (AudioSegment)
+        new_segment : AudioSegment
             The audio segment to add
-        time (Union[int, float])
+        
+        time : int, float, optional
             the timestamp at which the
             sound should be added.
-        gain_to_background
+        
+        gain_to_background : optional
             The gain of the segment from the background.
         """
         if not self.includes_sound:
@@ -275,13 +277,13 @@ class SceneFileWriter(object):
 
         Parameters
         ----------
-        sound_file (str)
+        sound_file : str
             The path to the sound file.
         
-        time (Union[float, int])
+        time : float or int, optional
             The timestamp at which the audio should be added.
 
-        gain
+        gain : optional
             The gain of the given audio segment.
 
         **kwargs
@@ -303,7 +305,7 @@ class SceneFileWriter(object):
 
         Parameters
         ----------
-        allow_write (bool=False)
+        allow_write : bool, optional
             Whether or not to write to a video file.
         """
         if self.write_to_movie and allow_write:
@@ -316,7 +318,7 @@ class SceneFileWriter(object):
 
         Parameters
         ----------
-        allow_write (bool=False)
+        allow_write : bool, optional
             Whether or not to write to a video file.
         """
         if self.write_to_movie and allow_write:
@@ -329,7 +331,7 @@ class SceneFileWriter(object):
 
         Parameters
         ----------
-        frame (np.ndarray)
+        frame : np.array
             Pixel array of the frame.
         """
         if self.write_to_movie:
@@ -342,7 +344,7 @@ class SceneFileWriter(object):
 
         Parameters
         ----------
-        image (np.ndarray)
+        image : np.array
             The pixel array of the image to save.
         """
         file_path = self.get_image_file_path()

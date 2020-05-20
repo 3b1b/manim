@@ -31,8 +31,8 @@ class MovingCameraScene(Scene):
 
         Parameters
         ----------
-        *animations (Animation)
-            The animations whose mobjects will be checked.
+        *animations : Animation
+            The Animations whose mobjects will be checked.
         """
         moving_mobjects = Scene.get_moving_mobjects(self, *animations)
         all_moving_mobjects = self.camera.extract_mobject_family_members(

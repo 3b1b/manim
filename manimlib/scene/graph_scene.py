@@ -71,7 +71,7 @@ class GraphScene(Scene):
 
         Parameters
         ----------
-        animate (bool=False)
+        animate : bool, optional
             Whether or not to animate the setting up of the Axes.
         """
         # TODO, once eoc is done, refactor this to be less redundant.
@@ -156,12 +156,12 @@ class GraphScene(Scene):
 
         Parameters
         ----------
-        x : (int,float)
+        x : int, float
             The x value
 
-        y : (int,float)
+        y : int, float
             The y value
-        
+
         Returns
         -------
         np.ndarray
@@ -184,9 +184,9 @@ class GraphScene(Scene):
 
         Parameters
         ----------
-        point (np.ndarray)
+        point : np.ndarray
             The point on the graph.
-        
+
         Returns
         -------
         tuple
@@ -210,17 +210,17 @@ class GraphScene(Scene):
         func : function
             The function to plot. It's return value should be
             the y-coordinate for a given x-coordinate
-        
-        color : str
+
+        color : str, optional
             The string of the RGB color of the curve. in Hexadecimal representation.
-        
-        x_min : (Union[int,float])
+
+        x_min : int, float, optional
             The lower x_value from which to plot the curve.
-        
-        x_max : (Union[int,float])
+
+        x_max : int, float, optional
             The higher x_value until which to plot the curve.
-        
-        **kwargs:
+
+        **kwargs :
             Any valid keyword arguments of ParametricFunction.
 
         Return
@@ -259,13 +259,13 @@ class GraphScene(Scene):
 
         Parameters
         ----------
-        x (Union[int, float])
+        x : int, float
             The x value for which to find the y value.
-        
-        graph ParametricFunction
+
+        graph : ParametricFunction
             The ParametricFunction object on which
             the x and y value lie.
-        
+
         Returns
         -------
         numpy.nparray
@@ -280,16 +280,16 @@ class GraphScene(Scene):
 
         Parameters
         ----------
-        x (Union[int, float])
+        x : int, float
             The x value at which the tangent must touch the curve.
-        
-        graph ParametricFunction
+
+        graph : ParametricFunction
             The ParametricFunction for which to calculate the tangent.
-        
-        dx (Union(float, int =0.01))
+
+        dx : int, float, optional
             The small change in x with which a small change in y
             will be compared in order to obtain the tangent.
-        
+
         Returns
         -------
         float
@@ -301,21 +301,21 @@ class GraphScene(Scene):
 
     def slope_of_tangent(self, *args, **kwargs):
         """
-        Returns the slople of the tangent to the plotted curve 
+        Returns the slople of the tangent to the plotted curve
         at a particular x-value.
 
         Parameters
         ----------
-        x (Union[int, float])
+        x : int, float
             The x value at which the tangent must touch the curve.
-        
-        graph ParametricFunction
+
+        graph : ParametricFunction
             The ParametricFunction for which to calculate the tangent.
-        
-        dx (Union(float, int =0.01))
+
+        dx : int, float, optional
             The small change in x with which a small change in y
             will be compared in order to obtain the tangent.
-        
+
         Returns
         -------
         float
@@ -330,19 +330,19 @@ class GraphScene(Scene):
 
         Parameters
         ----------
-        graph (ParametricFunction)
+        graph : ParametricFunction
             The graph for which the derivative must be found.
-        
-        dx (Union(float, int =0.01))
+
+        dx : float, int, optional
             The small change in x with which a small change in y
             will be compared in order to obtain the derivative.
-        
+
         **kwargs
             Any valid keyword argument of ParametricFunction
-        
+
         Returns
         -------
-        ParametricFuncion
+        ParametricFunction
             The curve of the derivative.
         """
         if "color" not in kwargs:
@@ -370,22 +370,22 @@ class GraphScene(Scene):
         graph : ParametricFunction
             The curve of the function plotted.
 
-        label : str = "f(x)"
+        label : str, optional
             The label for the function's curve.
 
-        x_val : Union[float, int]
+        x_val : int, float, optional
             The x_value with which the label should be aligned.
 
-        direction : Union[np.ndarray,list,tuple]=RIGHT
-            The position, relative to the curve that the label will be at.
+        direction : np.ndarray, list, tuple
+            The cartesian position, relative to the curve that the label will be at.
             e.g LEFT, RIGHT
 
-        buff : Union[float, int]
+        buff : float, int, option
             The buffer space between the curve and the label
 
-        color : str
+        color : str, optional
             The color of the label.
-        
+
         Returns
         -------
         TexMobject
@@ -431,49 +431,49 @@ class GraphScene(Scene):
 
         Parameters
         ----------
-        graph (ParametricFunction)
+        graph : ParametricFunction
             The graph whose area needs to be approximated
             by the Riemann Rectangles.
-        
-        x_min Union[int,float]
+
+        x_min : int, float, optional
             The lower bound from which to start adding rectangles
-        
-        x_max Union[int,float]
+
+        x_max : int, float, optional
             The upper bound where the rectangles stop.
-        
-        dx Union[int,float]
-            The smallest change in x-values that is 
+
+        dx : int, float, optional
+            The smallest change in x-values that is
             considered significant.
-        
-        input_sample_type str
+
+        input_sample_type : {"left", "right", "center"}
             Can be any of "left", "right" or "center
-        
-        stroke_width : Union[int, float]
+
+        stroke_width : int, float, optional
             The stroke_width of the border of the rectangles.
-        
-        stroke_color : str
+
+        stroke_color : str, optional
             The string of hex colour of the rectangle's border.
 
-        fill_opacity Union[int, float]
-            The opacity of the rectangles.
+        fill_opacity : int, float
+            The opacity of the rectangles. Takes values from 0 to 1.
 
-        start_color : str,
+        start_color : str, optional
             The hex starting colour for the rectangles,
             this will, if end_color is a different colour,
             make a nice gradient.
-        
-        end_color : str,
+
+        end_color : str, optional
             The hex ending colour for the rectangles,
             this will, if start_color is a different colour,
             make a nice gradient.
-        
-        show_signed_area : bool (True)
+
+        show_signed_area : bool, optional
             Whether or not to indicate -ve area if curve dips below
             x-axis.
-        
-        width_scale_factor : Union[int, float]
+
+        width_scale_factor : int, float, optional
             How much the width of the rectangles are scaled by when transforming.
-        
+
         Returns
         -------
         VGroup
@@ -533,24 +533,25 @@ class GraphScene(Scene):
 
         Parameters
         ----------
-        graph (ParametricFunction)
+        graph : ParametricFunction
             The graph whose area needs to be approximated
             by the Riemann Rectangles.
-        
-        n_iterations,
+
+        n_iterations : int,
             The number of VGroups of successive accuracy that are needed.
-        
-        max_dx Union[int,float]
+
+        max_dx : int, float, optional
             The maximum change in x between two VGroups of Riemann Rectangles
-        
-        power_base Union[int,float=2]
-        
-        stroke_width : Union[int, float]
+
+        power_base : int, float, optional
+            Defaults to 2
+
+        stroke_width : int, float, optional
             The stroke_width of the border of the rectangles.
-        
+
         **kwargs
             Any valid keyword arguments of get_riemann_rectangles.
-        
+
         Returns
         -------
         list
@@ -571,18 +572,18 @@ class GraphScene(Scene):
         Returns a VGroup of Riemann rectangles
         sufficiently small enough to visually
         approximate the area under the graph passed.
-        
+
         Parameters
         ----------
-        graph (ParametricFunction)
+        graph : ParametricFunction
             The graph/curve for which the area needs to be gotten.
-        
-        t_min Union[int, float]
+
+        t_min : int, float
             The lower bound of x from which to approximate the area.
-        
-        t_max Union[int, float]
+
+        t_max : int, float
             The upper bound of x until which the area must be approximated.
-        
+
         Returns
         -------
         VGroup
@@ -608,10 +609,10 @@ class GraphScene(Scene):
         ----------
         curr_rects : VGroup
             The current Riemann Rectangles
-        
+
         new_rects : VGroup
             The Riemann Rectangles to transform to.
-        
+
         **kwargs
             added_anims
                 Any other animations to play simultaneously.
@@ -642,25 +643,25 @@ class GraphScene(Scene):
         **line_kwargs
     ):
         """
-        This method returns a Vertical line from the x-axis to 
+        This method returns a Vertical line from the x-axis to
         the corresponding point on the graph/curve.
 
         Parameters
         ----------
-        x Union[int,float]
+        x : int, float
             The x-value at which the line should be placed/calculated.
 
-        graph (ParametricFunction)
+        graph : ParametricFunction
             The graph on which the line should extend to.
-        
-        line_class (Line and similar)
+
+        line_class : Line and similar
             The type of line that should be used.
-            Defaults to Line
-        
+            Defaults to Line.
+
         **line_kwargs
             Any valid keyword arguments of the object passed in "line_class"
             If line_class is Line, any valid keyword arguments of Line are allowed.
-        
+
         Return
         ------
         An object of type passed in "line_class"
@@ -683,27 +684,27 @@ class GraphScene(Scene):
     ):
         """
         Obtains multiple lines from the x axis to the Graph/curve.
-        
+
         Parameters
         ----------
-        graph (ParametricFunction)
+        graph : ParametricFunction
             The graph on which the line should extend to.
-        
-        x_min (Union[int, float])
+
+        x_min : int, float, optional
             The lower bound from which lines can appear.
-        
-        x_max (Union[int, float])
+
+        x_max : int, float, optional
             The upper bound until which the lines can appear.
-        
-        num_lines (Union[int, float])
+
+        num_lines : int, optional
             The number of lines (evenly spaced)
             that are needed.
-        
+
         Returns
         -------
         VGroup
             The VGroup of the evenly spaced lines.
-        
+
         """
         x_min = x_min or self.x_min
         x_max = x_max or self.x_max
@@ -725,46 +726,46 @@ class GraphScene(Scene):
         secant_line_length=10,
     ):
         """
-        This method returns a VGroup of (two lines 
-        representing dx and df, the labels for dx and 
-        df, and the Secant to the Graph/curve at a 
+        This method returns a VGroup of (two lines
+        representing dx and df, the labels for dx and
+        df, and the Secant to the Graph/curve at a
         particular x value.
 
         Parameters
         ----------
-        x (Union[float, int])
+        x : int, float
             The x value at which the secant enters, and intersects
             the graph for the first time.
-        
-        graph (ParametricFunction)
+
+        graph : ParametricFunction
             The curve/graph for which the secant must
             be found.
-        
-        dx (Union[float, int])
+
+        dx : int, float, optional
             The change in x after which the secant exits.
-        
-        dx_line_color (str)
+
+        dx_line_color : str, optional
             The line color for the line that indicates the change in x.
-        
-        df_line_color (str)
+
+        df_line_color : str, optional
             The line color for the line that indicates the change in y.
-        
-        dx_label (str)
+
+        dx_label : str, optional
             The label to be provided for the change in x.
-        
-        df_label (str)
+
+        df_label : str, optional
             The label to be provided for the change in y.
-        
-        include_secant_line (bool=True)
+
+        include_secant_line : bool, optional
             Whether or not to include the secant line in the graph,
             or just have the df and dx lines and labels.
-        
-        secant_line_color (str)
+
+        secant_line_color : str, optional
             The color of the secant line.
-        
-        secant_line_length (Union[float,int=10])
+
+        secant_line_length : int, float, optional
             How long the secant line should be.
-        
+
         Returns:
         --------
         VGroup
@@ -854,21 +855,21 @@ class GraphScene(Scene):
 
         Parameters
         ----------
-        x_val (Union[float, int])
+        x_val : float, int
             The x value at which the secant enters, and intersects
             the graph for the first time.
-        
-        side (np.ndarray())
-        
-        label (str)
+
+        side np.array(), optional
+
+        label : str, optional
             The label to give the vertline and triangle
-        
-        color (str)
+
+        color : str, optional
             The hex color of the label.
-        
-        animated (bool=False)
+
+        animated : bool, optional
             Whether or not to animate the addition of the T_label
-        
+
         **kwargs
             Any valid keyword argument of a self.play call.
         """
@@ -919,25 +920,25 @@ class GraphScene(Scene):
         self.left_v_line and self.right_v_line must be defined from self.get_v_line
         self.left_T_label_group and self.right_T_label_group must be defined from self.add_T_label
 
-        This method will returna VGroup of new mobjects for each of those, when provided the graph/curve,
+        This method will return a VGroup of new mobjects for each of those, when provided the graph/curve,
         the new t_min and t_max, the run_time and a bool stating whether or not to fade when close to
         the origin.
 
         Parameters
         ----------
-        graph (ParametricFunction)
+        graph : ParametricFunction
             The graph for which this must be done.
-        
-        new_t_min (Union[int,float])
+
+        new_t_min : int, float
             The new lower bound.
-        
-        new_t_max (Union[int,float])
+
+        new_t_max : int, float
             The new upper bound.
-        
-        fade_close_to_origin (bool=True)
+
+        fade_close_to_origin : bool, optional
             Whether or not to fade when close to the origin.
-        
-        run_time (Union[int,float=1.0])
+
+        run_time : int, float, optional
             The run_time of the animation of this change.
         """
         curr_t_min = self.x_axis.point_to_number(self.area.get_left())
@@ -999,21 +1000,21 @@ class GraphScene(Scene):
 
         Parameters
         ----------
-        secant_slope_group (VGroup)
+        secant_slope_group : VGroup
             The old secant_slope_group
-        
-        target_dx Union[int, float]
+
+        target_dx : int, float, optional
             The new dx value.
-        
-        target_x Union[int, float]
+
+        target_x : int, float, optional
             The new x value at which the secant should be.
-        
-        run_time Union[int,float=3]
+
+        run_time : int, float, optional
             The run time for this change when animated.
-        
-        added_anims
+
+        added_anims : list, optional
             Any exta animations that should be played alongside.
-        
+
         **anim_kwargs
             Any valid kwargs of a self.play call.
 
