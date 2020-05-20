@@ -1,1 +1,0 @@
-This folder contains a collection of various things that were built for a video at some point, but were really one-off and should be given more careful consideration before being brought into the main library.  In particular, there is really no guarantee of these being fully functional.
