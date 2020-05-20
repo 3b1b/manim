@@ -17,9 +17,6 @@ class Test_geometry(Scene):
         text = TextMobject("Testing !")
         self.play(DrawBorderThenFill(text))
 
-        eq1=TextMobject("$\\vec{X}_0 \\cdot \\vec{Y}_1 = 56$")
-        self.play(Transform(text, eq1), eq1.shift, 3*UP)
-        self.remove(eq1, text)
         decimal = DecimalNumber(
             0,
             show_ellipsis=True,
