@@ -18,13 +18,13 @@ Manim is an animation engine for explanatory math videos. It's used to create pr
     + [SoX Installation](#sox-installation)
     + [LaTeX Installation](#latex-installation)
   * [Linux](#linux)
-  + [Cairo Installation](#brew-installation)
     + [Cairo Installation](#cairo-installation-1)
     + [FFmpeg Installation](#ffmpeg-installation-1)
     + [SoX Installation](#sox-installation-1)
     + [LaTeX Installation](#latex-installation-1)
     + [Additional Installation Steps](#additional-installation-steps)
   * [Mac](#mac)
+    + [Homebrew Installation](#homebrew-installation)
     + [Cairo Installation](#cairo-installation-2)
     + [FFmpeg Installation](#ffmpeg-installation-2)
     + [SoX Installation](#sox-installation-2)
@@ -120,15 +120,15 @@ sudo apt install ubuntu-restricted-extras
 ### Mac
 
 Before installing `manim-community`, there are some additional dependencies that you must have installed:
+ - Homebrew
  - Cairo
  - FFmpeg
  - Sox (optional, for sound)
  - LaTeX (optional, for LaTeX)
- - Homebrew
 
-#### Brew Installation
+#### Homebrew Installation
 
-HomeBrew is a package manager similar to `apt` on linux that allows you to install packages easily.
+Homebrew is a package manager similar to `apt` on linux that allows you to install packages easily.
 If it is not installed, please install it with this command:
 
 ```
