@@ -30,6 +30,15 @@ class ThreeDCamera(Camera):
     }
 
     def __init__(self, *args, **kwargs):
+        """Initialises the ThreeDCamera
+
+        Parameters
+        ----------
+        *args
+            Any argument of Camera
+        *kwargs
+            Any keyword argument of Camera.
+        """
         Camera.__init__(self, *args, **kwargs)
         self.phi_tracker = ValueTracker(self.phi)
         self.theta_tracker = ValueTracker(self.theta)
@@ -46,6 +55,13 @@ class ThreeDCamera(Camera):
         Camera.capture_mobjects(self, mobjects, **kwargs)
 
     def get_value_trackers(self):
+        """Returns list of ValueTrackers of phi, theta, distance and gamma
+
+        Returns
+        -------
+        list
+            list of ValueTracker objects
+        """
         return [
             self.phi_tracker,
             self.theta_tracker,
@@ -53,7 +69,7 @@ class ThreeDCamera(Camera):
             self.gamma_tracker,
         ]
 
-    def modified_rgbas(self, vmobject, rgbas):
+    def modified_rgbas(self, vmobject, rgbas): # TODO: Write DocStrings for this method.
         if not self.should_apply_shading:
             return rgbas
         if vmobject.shade_in_3d and (vmobject.get_num_points() > 0):
@@ -77,17 +93,17 @@ class ThreeDCamera(Camera):
             return shaded_rgbas
         return rgbas
 
-    def get_stroke_rgbas(self, vmobject, background=False):
+    def get_stroke_rgbas(self, vmobject, background=False): #NOTE : DocStrings From parent
         return self.modified_rgbas(
             vmobject, vmobject.get_stroke_rgbas(background)
         )
 
-    def get_fill_rgbas(self, vmobject):
+    def get_fill_rgbas(self, vmobject): #NOTE : DocStrings From parent
         return self.modified_rgbas(
             vmobject, vmobject.get_fill_rgbas()
         )
 
-    def get_mobjects_to_display(self, *args, **kwargs):
+    def get_mobjects_to_display(self, *args, **kwargs): #NOTE : DocStrings From parent
         mobjects = Camera.get_mobjects_to_display(
             self, *args, **kwargs
         )
@@ -105,42 +121,130 @@ class ThreeDCamera(Camera):
         return sorted(mobjects, key=z_key)
 
     def get_phi(self):
+        """Returns the Polar angle (the angle off Z_AXIS) phi.
+
+        Returns
+        -------
+        float
+            The Polar angle in radians.
+        """
         return self.phi_tracker.get_value()
 
     def get_theta(self):
+        """Returns the Azimuthal i.e the angle that spins the camera around the Z_AXIS.
+
+        Returns
+        -------
+        float
+            The Azimuthal angle in radians.
+        """
         return self.theta_tracker.get_value()
 
     def get_distance(self):
+        """Returns radial distance from ORIGIN.
+
+        Returns
+        -------
+        float
+            The radial distance from ORIGIN in MUnits.
+        """
         return self.distance_tracker.get_value()
 
     def get_gamma(self):
+        """Returns the rotation of the camera about the vector from the ORIGIN to the Camera.
+
+        Returns
+        -------
+        float
+            The angle of rotation of the camera about the vector
+            from the ORIGIN to the Camera in radians
+        """
         return self.gamma_tracker.get_value()
 
     def get_frame_center(self):
+        """Returns the center of the camera frame in cartesian coordinates.
+
+        Returns
+        -------
+        np.array
+            The cartesian coordinates of the center of the camera frame.
+        """
         return self.frame_center.points[0]
 
     def set_phi(self, value):
+        """Sets the polar angle i.e the angle between Z_AXIS and Camera through ORIGIN in radians.
+
+        Parameters
+        ----------
+        value : int, float
+            The new value of the polar angle in radians.
+        """
         self.phi_tracker.set_value(value)
 
     def set_theta(self, value):
+        """Sets the azimuthal angle i.e the angle that spins the camera around Z_AXIS in radians.
+
+        Parameters
+        ----------
+        value : int, float
+            The new value of the azimuthal angle in radians.
+        """
         self.theta_tracker.set_value(value)
 
     def set_distance(self, value):
+        """Sets the radial distance between the camera and ORIGIN.
+
+        Parameters
+        ----------
+        value : int, float
+            The new radial distance.
+        """
         self.distance_tracker.set_value(value)
 
     def set_gamma(self, value):
+        """Sets the angle of rotation of the camera about the vector from the ORIGIN to the Camera.
+
+        Parameters
+        ----------
+        value : int, float
+            The new angle of rotation of the camera.
+        """
         self.gamma_tracker.set_value(value)
 
     def set_frame_center(self, point):
+        """Sets the camera frame center to the passed cartesian coordinate.
+
+        Parameters
+        ----------
+        point : list, tuple, np.array
+            The cartesian coordinates of the new frame center.
+        """
         self.frame_center.move_to(point)
 
     def reset_rotation_matrix(self):
+        """Sets the value of self.rotation_matrix to
+        the matrix corresponding to the current position of the camera
+        """
         self.rotation_matrix = self.generate_rotation_matrix()
 
     def get_rotation_matrix(self):
+        """Returns the matrix corresponding to the current position of the camera.
+
+        Returns
+        -------
+        np.array
+            The matrix corresponding to the current position of the camera.
+        """
         return self.rotation_matrix
 
     def generate_rotation_matrix(self):
+        """Generates a rotation matrix based off the current position of the camera.
+
+        Returns
+        -------
+        np.array
+            The matrix corresponding to the current position of the camera.
+        """
         phi = self.get_phi()
         theta = self.get_theta()
         gamma = self.get_gamma()
@@ -155,6 +259,19 @@ class ThreeDCamera(Camera):
         return result
 
     def project_points(self, points):
+        """Applies the current rotation_matrix as a projection
+        matrix to the passed array of points.
+
+        Parameters
+        ----------
+        points : np.array, list
+            The list of points to project.
+
+        Returns
+        -------
+        np.array
+            The points after projecting.
+        """
         frame_center = self.get_frame_center()
         distance = self.get_distance()
         rot_matrix = self.get_rotation_matrix()
@@ -180,9 +297,22 @@ class ThreeDCamera(Camera):
         return points
 
     def project_point(self, point):
+        """Applies the current rotation_matrix as a projection
+        matrix to the passed point.
+
+        Parameters
+        ----------
+        point : list, np.array
+            The point to project.
+
+        Returns
+        -------
+        np.array
+            The point after projection.
+        """
         return self.project_points(point.reshape((1, 3)))[0, :]
 
-    def transform_points_pre_display(self, mobject, points):
+    def transform_points_pre_display(self, mobject, points): #TODO: Write Docstrings for this Method.
         points = super().transform_points_pre_display(mobject, points)
         fixed_orientation = mobject in self.fixed_orientation_mobjects
         fixed_in_frame = mobject in self.fixed_in_frame_mobjects
@@ -201,6 +331,23 @@ class ThreeDCamera(Camera):
             self, *mobjects,
             use_static_center_func=False,
             center_func=None):
+        """This method allows the mobject to have a fixed orientation,
+        even when the camera moves around.
+        E.G If it was passed through this method, facing the camera, it
+        will continue to face the camera even as the camera moves.
+        Highly useful when adding labels to graphs and the like.
+
+        Parameters
+        ----------
+        *mobjects : Mobject
+            The mobject whose orientation must be fixed.
+        use_static_center_func : bool, optional
+            Whether or not to use the function that takes the mobject's
+            center as centerpoint, by default False
+        center_func : func, optional
+            The function which returns the centerpoint
+            with respect to which the mobjec will be oriented, by default None
+        """
         # This prevents the computation of mobject.get_center
         # every single time a projetion happens
         def get_static_center_func(mobject):
@@ -218,15 +365,45 @@ class ThreeDCamera(Camera):
                 self.fixed_orientation_mobjects[submob] = func
 
     def add_fixed_in_frame_mobjects(self, *mobjects):
+        """This method allows the mobject to have a fixed position,
+        even when the camera moves around.
+        E.G If it was passed through this method, at the top of the frame, it
+        will continue to be displayed at the top of the frame.
+
+        Highly useful when displaying Titles or formulae or the like.
+
+        Parameters
+        ----------
+        **mobjects : Mobject
+            The mobject to fix in frame.
+        """
         for mobject in self.extract_mobject_family_members(mobjects):
             self.fixed_in_frame_mobjects.add(mobject)
 
     def remove_fixed_orientation_mobjects(self, *mobjects):
+        """If a mobject was fixed in its orientation by passing it through
+        `self.add_fixed_orientation_mobjects`, then this undoes that fixing.
+        The Mobject will no longer have a fixed orientation.
+
+        Parameters:
+        -----------
+        *mobjects : Mobject
+            The mobjects whose orientation need not be fixed any longer.
+        """
         for mobject in self.extract_mobject_family_members(mobjects):
             if mobject in self.fixed_orientation_mobjects:
                 self.fixed_orientation_mobjects.remove(mobject)
 
     def remove_fixed_in_frame_mobjects(self, *mobjects):
+        """If a mobject was fixed in frame by passing it through
+        `self.add_fixed_in_frame_mobjects`, then this undoes that fixing.
+        The Mobject will no longer be fixed in frame.
+
+        Parameters:
+        -----------
+        *mobjects : Mobject
+            The mobjects which need not be fixed in frame any longer.
+        """
         for mobject in self.extract_mobject_family_members(mobjects):
             if mobject in self.fixed_in_frame_mobjects:
                 self.fixed_in_frame_mobjects.remove(mobject)

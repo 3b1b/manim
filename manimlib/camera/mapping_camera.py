@@ -10,6 +10,9 @@ from manimlib.utils.config_ops import digest_config
 
 
 class MappingCamera(Camera):
+    """Camera object that allows mapping
+    between objects.
+    """
     CONFIG = {
         "mapping_func": lambda p: p,
         "min_num_curves": 50,

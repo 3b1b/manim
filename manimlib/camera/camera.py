@@ -30,6 +30,14 @@ class Camera(object):
     Base Camera class.
     This is the object which takes care of what exactly is displayed
     on screen at any given moment.
+
+    Some important CONFIG values and local variables to note are:
+
+    self.background_image : str, optional
+        The path to an image that should be the background image.
+        If not set, the background is filled with `self.background_color`
+    
+    self.pixel_height
     """
     CONFIG = {
         "background_image": None,
@@ -56,6 +64,15 @@ class Camera(object):
     }
 
     def __init__(self, background=None, **kwargs):
+        """Initialises the Camera.
+
+        Parameters
+        ----------
+        background : optional
+            What self.background should be, by default None as will be set later.
+        **kwargs
+            Any local variables to be set.
+        """
         digest_config(self, kwargs, locals())
         self.rgb_max_val = np.iinfo(self.pixel_array_dtype).max
         self.pixel_array_to_cairo_context = {}
@@ -200,7 +217,7 @@ class Camera(object):
 
     def init_background(self):
         """Initialize the background.
-        If self.background image is the path of an image
+        If self.background_image is the path of an image
         the image is set as background; else, the default
         background color fills the background.
         """
