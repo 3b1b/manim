@@ -8,7 +8,7 @@
 
 Manim is an animation engine for explanatory math videos. It's used to create precise animations programmatically, as seen in the videos at [3Blue1Brown](https://www.3blue1brown.com/).
 
-> NOTE: This repository is maintained by the Manim Community, and is not associated with Grant Sanderson or 3Blue1Brown in any way (though we are definitely indebted to him for providing his work to the world). If you want to study how Grant make's his videos, head over to the main repository (3b1b/manim). This is a more frequently updated repository than the main one, and is recommended if you want to use Manim for your own projects.
+> NOTE: This repository is maintained by the Manim Community, and is not associated with Grant Sanderson or 3Blue1Brown in any way (though we are definitely indebted to him for providing his work to the world). If you want to study how Grant makes his videos, head over to the main repository (3b1b/manim). This is a more frequently updated repository than the main one, and is recommended if you want to use Manim for your own projects.
 
 ## Table of Contents:
 - [Installation](#installation)
@@ -161,10 +161,26 @@ Manim runs on Python 3.7+. If you'd like to just use the library, you can instal
 pip3 install manimlib
 ```
 
-However, if you'd like to contribute to and/or help develop `manim-community`, you can clone this branch to your local device. To do this, run the following command (with `git` installed):
+However, if you'd like to contribute to and/or help develop
+`manim-community`, you can clone this branch to your local device. To do
+this, first make sure you have `git` installed. Then, clone this repo by
+executing either
+
+```sh
+git clone git@github.com:ManimCommunity/manim.git
+```
+
+or 
 
 ```sh
 git clone https://github.com/ManimCommunity/manim.git
+```
+
+depending on whether you want to use HTTPS or SSH. Finally, run the
+following:
+
+```sh
+
 python3 -m pip install -r requirements.txt
 ```
 
