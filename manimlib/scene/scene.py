@@ -7,7 +7,7 @@ from tqdm import tqdm as ProgressDisplay
 import numpy as np
 
 from ..animation.animation import Animation
-from ..animation.transform import ApplyMethod
+from ..animation.transform import MoveToTarget, ApplyMethod
 from ..camera.camera import Camera
 from ..constants import *
 from ..container.container import Container

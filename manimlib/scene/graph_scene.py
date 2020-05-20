@@ -1,6 +1,6 @@
 import itertools as it
 
-from ..animation.creation import ShowCreation
+from ..animation.creation import Write, DrawBorderThenFill, ShowCreation
 from ..animation.transform import Transform
 from ..animation.update import UpdateFromAlphaFunc
 from ..constants import *

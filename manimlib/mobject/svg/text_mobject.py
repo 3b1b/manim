@@ -5,7 +5,7 @@ import hashlib
 import cairo
 from ...constants import *
 from ...container.container import Container
-from ...mobject.geometry import Rectangle
+from ...mobject.geometry import Dot, Rectangle
 from ...mobject.svg.svg_mobject import SVGMobject
 from ...mobject.types.vectorized_mobject import VGroup
 from ...utils.config_ops import digest_config
