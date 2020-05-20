@@ -23,9 +23,9 @@ class Scene(Container):
     other named scenes.
 
     Use a construct() function to tell Manim what should go on in the Scene.
-    
+
     E.G:
-        
+
         class MyScene(Scene):
             def construct(self):
                 self.play(
@@ -130,12 +130,12 @@ class Scene(Container):
     def get_attrs(self, *keys):
         """
         Gets attributes of a scene given the attribute's identifier/name.
-        
+
         Parameters
         ----------
-        *args: (str)
+        *keys : str
             Name(s) of the argument(s) to return the attribute of.
-        
+
         Returns
         -------
         list
@@ -147,28 +147,30 @@ class Scene(Container):
     def set_camera(self, camera):
         """
         Sets the scene's camera to be the passed Camera Object.
+
         Parameters
         ----------
-        camera: Union[Camera, MappingCamera,MovingCamera,MultiCamera,ThreeDCamera]
-            Camera object to use.
+        camera : Camera
+            The camera object to use.
         """
         self.camera = camera
 
     def get_frame(self):
         """
-        Gets current frame as NumPy array.
-        
+        Gets the current frame as NumPy array.
+
         Returns
         -------
         np.array
-            NumPy array of pixel values of each pixel in screen
+            NumPy array of pixel values of each pixel in screen.
+            The shape of the array is height x width x 3
         """
         return np.array(self.camera.get_pixel_array())
 
     def get_image(self):
         """
         Gets current frame as PIL Image
-        
+
         Returns
         -------
         PIL.Image
@@ -192,7 +194,7 @@ class Scene(Container):
         """
         Sets the camera to display a Pixel Array
         in the background.
-        
+
         Parameters
         ----------
         background: Union[np.ndarray,list,tuple]
@@ -222,15 +224,15 @@ class Scene(Container):
         """
         Parameters:
         -----------
-        mobjects: list
+        mobjects: list, optional
             list of mobjects
-        
-        background: np.ndarray
-            Pixel Array for Background
-        
-        include_submobjects: bool (True)
-        
-        ignore_skipping : bool (True)
+
+        background: np.ndarray, optional
+            Pixel Array for Background.
+
+        include_submobjects: bool, optional
+
+        ignore_skipping : bool, optional
 
         **kwargs
 
@@ -259,10 +261,10 @@ class Scene(Container):
     def update_mobjects(self, dt):
         """
         Begins updating all mobjects in the Scene.
-        
+
         Parameters
         ----------
-        dt: Union[int,float]
+        dt: int or float
             Change in time between updates. Defaults (mostly) to 1/frames_per_second
         """
         for mobject in self.mobjects:
@@ -272,7 +274,7 @@ class Scene(Container):
         """
         Returns True if any mobject in Scene is being updated
         or if the scene has always_update_mobjects set to true.
-        
+
         Returns
         -------
             bool
@@ -287,10 +289,10 @@ class Scene(Container):
     def get_time(self):
         """
         Returns time in seconds elapsed after initialisation of scene
-        
+
         Returns
         -------
-        self.time : Union[int,float]
+        self.time : float
             Returns time in seconds elapsed after initialisation of scene
         """
         return self.time
@@ -299,10 +301,10 @@ class Scene(Container):
         """
         Increments the time elapsed after intialisation of scene by
         passed "d_time".
-        
+
         Parameters
         ----------
-        d_time : Union[int,float]
+        d_time : int or float
             Time in seconds to increment by.
         """
         self.time += d_time
@@ -352,9 +354,9 @@ class Scene(Container):
 
         Parameters
         ---------
-        *mobjects
+        *mobjects : Mobject
             Mobjects to add.
-        
+
         Returns
         -------
         Scene
@@ -383,6 +385,11 @@ class Scene(Container):
         Removes mobjects in the passed list of mobjects
         from the scene and the foreground, by removing them
         from "mobjects" and "foreground_mobjects"
+
+        Parameters
+        ----------
+        *mobjects : Mobject
+            The mobjects to remove.
         """
         for list_name in "mobjects", "foreground_mobjects":
             self.restructure_mobjects(mobjects, list_name, False)
@@ -394,9 +401,9 @@ class Scene(Container):
         """
         tl:wr
             If your scene has a Group(), and you removed a mobject from the Group,
-            this dissolves the group and puts the rest of the mobjects directly 
+            this dissolves the group and puts the rest of the mobjects directly
             in self.mobjects or self.foreground_mobjects.
-        
+
         In cases where the scene contains a group, e.g. Group(m1, m2, m3), but one
         of its submobjects is removed, e.g. scene.remove(m1), the list of mobjects
         will be edited to contain other submobjects, but not m1, e.g. it will now
@@ -406,13 +413,13 @@ class Scene(Container):
         ----------
         to_remove : Mobject
             The Mobject to remove.
-        
-        mobject_list_name : str
+
+        mobject_list_name : str, optional
             The list of mobjects ("mobjects", "foreground_mobjects" etc) to remove from.
-        
-        extract_families : bool
+
+        extract_families : bool, optional
             Whether the mobject's families should be recursively extracted.
-        
+
         Returns
         -------
         Scene
@@ -429,22 +436,22 @@ class Scene(Container):
         """
         Given a list of mobjects and a list of mobjects to be removed, this
         filters out the removable mobjects from the list of mobjects.
-        
+
         Parameters
         ----------
 
         mobjects : list
             The Mobjects to check.
-        
+
         to_remove : list
             The list of mobjects to remove.
-        
+
         Returns
         -------
         list
             The list of mobjects with the mobjects to remove removed.
         """
-        
+
         new_mobjects = []
 
         def add_safe_mobjects_from_list(list_to_examine, set_to_remove):
@@ -462,14 +469,14 @@ class Scene(Container):
     # TODO, remove this, and calls to this
     def add_foreground_mobjects(self, *mobjects):
         """
-        Adds mobjects to the foreground, and internally to the list 
+        Adds mobjects to the foreground, and internally to the list
         foreground_mobjects, and mobjects.
 
         Parameters
         ----------
         *mobjects : Mobject
             The Mobjects to add to the foreground.
-        
+
         Returns
         ------
         Scene
@@ -484,14 +491,14 @@ class Scene(Container):
 
     def add_foreground_mobject(self, mobject):
         """
-        Adds a single mobject to the foreground, and internally to the list 
+        Adds a single mobject to the foreground, and internally to the list
         foreground_mobjects, and mobjects.
 
         Parameters
         ----------
         mobject : Mobject
             The Mobject to add to the foreground.
-        
+
         Returns
         ------
         Scene
@@ -501,14 +508,14 @@ class Scene(Container):
 
     def remove_foreground_mobjects(self, *to_remove):
         """
-        Removes mobjects from the foreground, and internally from the list 
+        Removes mobjects from the foreground, and internally from the list
         foreground_mobjects.
 
         Parameters
         ----------
         *to_remove : Mobject
             The mobject(s) to remove from the foreground.
-        
+
         Returns
         ------
         Scene
@@ -519,14 +526,14 @@ class Scene(Container):
 
     def remove_foreground_mobject(self, mobject):
         """
-        Removes a single mobject from the foreground, and internally from the list 
+        Removes a single mobject from the foreground, and internally from the list
         foreground_mobjects.
 
         Parameters
         ----------
         mobject : Mobject
             The mobject to remove from the foreground.
-        
+
         Returns
         ------
         Scene
@@ -536,14 +543,14 @@ class Scene(Container):
 
     def bring_to_front(self, *mobjects):
         """
-        Adds the passed mobjects to the scene again, 
+        Adds the passed mobjects to the scene again,
         pushing them to he front of the scene.
 
         Parameters
         ----------
         *mobjects : Mobject
             The mobject(s) to bring to the front of the scene.
-        
+
         Returns
         ------
         Scene
@@ -562,7 +569,7 @@ class Scene(Container):
         ----------
         *mobjects : Mobject
             The mobject(s) to push to the back of the scene.
-        
+
         Returns
         ------
         Scene
@@ -581,7 +588,7 @@ class Scene(Container):
         Returns
         ------
         Scene
-            The Scene, with all of its mobjects in 
+            The Scene, with all of its mobjects in
             self.mobjects and self.foreground_mobjects
             removed.
         """
@@ -616,10 +623,10 @@ class Scene(Container):
     def get_moving_mobjects(self, *animations):
         """
         Gets all moving mobjects in the passed animation(s).
-        
+
         Parameters
         ----------
-        *animations
+        *animations : Animation
             The animations to check for moving mobjects.
 
         Returns
@@ -650,20 +657,20 @@ class Scene(Container):
         This method is for Manim's internal use.
 
         Returns a CommandLine ProgressBar whose fill_time
-        is dependent on the run_time of an animation, 
+        is dependent on the run_time of an animation,
         the iterations to perform in that animation
         and a bool saying whether or not to consider
         the skipped animations.
 
         Parameters
         ----------
-        run_time: Union[int,float]
+        run_time: float
             The run_time of the animation.
-        
-        n_iterations: None, int
+
+        n_iterations: int, optional
             The number of iterations in the animation.
-        
-        override_skip_animations: bool (True)
+
+        override_skip_animations: bool, optional
             Whether or not to show skipped animations in the progress bar.
 
         Returns
@@ -689,10 +696,10 @@ class Scene(Container):
 
         Parameters
         ----------
-        animations: list
-            A list of the animations whose total 
+        animations: list of Animation
+            A list of the animations whose total
             run_time is to be calculated.
-        
+
         Returns
         ------
         float
@@ -708,11 +715,11 @@ class Scene(Container):
 
         Uses get_time_progression to obtaina
         CommandLine ProgressBar whose fill_time is
-        dependent on the qualities of the passed animation, 
+        dependent on the qualities of the passed Animation,
 
         Parameters
         ----------
-        animations : list
+        animations : list of Animation
             The list of animations to get
             the time progression for.
 
@@ -740,10 +747,11 @@ class Scene(Container):
         s hit, a MoveToTarget animation is built using the args that
         follow up until either another animation is hit, another method
         is hit, or the args list runs out.
-        
+
         Parameters
         ----------
-        *args : Union[Animation, method(of a mobject, which is followed by that method's arguments)]
+        *args : Animation or method of a mobject, which is followed by that method's arguments
+
         **kwargs : any named arguments like run_time or lag_ratio.
 
         Returns
@@ -811,10 +819,10 @@ class Scene(Container):
         This method is used internally to check if the current
         animation needs to be skipped or not. It also checks if
         the number of animations that were played correspond to
-        the number of animations that need to be played, and 
+        the number of animations that need to be played, and
         raises an EndSceneEarlyException if they don't correspond.
         """
-        
+
         if self.start_at_animation_number:
             if self.num_plays == self.start_at_animation_number:
                 self.skip_animations = False
@@ -828,18 +836,18 @@ class Scene(Container):
         This method is used internally to wrap the
         passed function, into a function that
         actually writes to the video stream.
-        Simultaneously, it also adds to the number 
+        Simultaneously, it also adds to the number
         of animations played.
 
         Parameters
         ----------
-        func: function object
+        func : function
             The play() like function that has to be
             written to the video file stream.
 
         Returns
         -------
-        function object
+        function
             The play() like function that can now write
             to the video file stream.
         """
@@ -860,7 +868,7 @@ class Scene(Container):
 
         Parameters
         ----------
-        animations: list
+        animations : list
             List of involved animations.
 
         """
@@ -882,7 +890,7 @@ class Scene(Container):
 
         Parameters
         ----------
-        animations: list
+        animations : list
             List of involved animations.
         """
         # Paint all non-moving objects onto the screen, so they don't
@@ -909,7 +917,7 @@ class Scene(Container):
 
         Parameters
         ----------
-        animations: list
+        animations : list
             list of animations to finish.
         """
         for animation in animations:
@@ -933,8 +941,8 @@ class Scene(Container):
 
         Parameters
         ----------
-        *args: Animation, mobject with mobject method and params
-        **kwargs: named parameters affecting what was passed in *args e.g run_time, lag_ratio etc.
+        *args : Animation or mobject with mobject method and params
+        **kwargs : named parameters affecting what was passed in *args e.g run_time, lag_ratio etc.
         """
         if len(args) == 0:
             warnings.warn("Called Scene.play with no animations")
@@ -948,9 +956,9 @@ class Scene(Container):
 
     def idle_stream(self):
         """
-        This method is used internally to 
-        idle the vide file_writer until an
-        animation etc needs to be written 
+        This method is used internally to
+        idle the video file_writer until an
+        animation etc needs to be written
         to the video file.
         """
         self.file_writer.idle_stream()
@@ -962,7 +970,7 @@ class Scene(Container):
 
         Parameters
         ----------
-        *animations: Animation
+        *animations : Animation
             Animation to clean up.
 
         Returns
@@ -999,12 +1007,12 @@ class Scene(Container):
 
         Parameters
         ----------
-        duration: Union[list,float]
+        duration: int or float
             duration of wait time
-        
-        stop_condition: function
+
+        stop_condition : function
             The function which determines whether to continue waiting.
-        
+
         Returns
         -------
         ProgressBar
@@ -1036,11 +1044,11 @@ class Scene(Container):
 
         Parameters
         ----------
-        duration : Union[float, int]
-            The duration of wait time. Defaults to None.
-        stop_condition : 
+        duration : float or int, optional
+            The duration of wait time.
+        stop_condition :
             A function that determines whether to stop waiting or not.
-        
+
         Returns
         -------
         Scene
@@ -1077,15 +1085,14 @@ class Scene(Container):
         Like a wrapper for wait().
         You pass a function that determines whether to continue waiting,
         and a max wait time if that is never fulfilled.
-        
+
         Parameters
         ----------
-        stop_condition: function definition
+        stop_condition : function
             The function whose boolean return value determines whether to continue waiting
-        
-        max_time: Union[int,float]
+
+        max_time : int or float, optional
             The maximum wait time in seconds, if the stop_condition is never fulfilled.
-            Defaults to 60.
         """
         self.wait(max_time, stop_condition=stop_condition)
 
@@ -1108,7 +1115,7 @@ class Scene(Container):
     def revert_to_original_skipping_status(self):
         """
         Forces the scene to go back to its original skipping status,
-        by setting skip_animations to whatever it reads 
+        by setting skip_animations to whatever it reads
         from original_skipping_status.
 
         Returns
@@ -1142,15 +1149,14 @@ class Scene(Container):
 
         Parameters
         ----------
-        sound_file: str
+        sound_file : str
             The path to the sound file.
-        
-        time_offset: int,float = 0
+
+        time_offset : int,float, optional
             The offset in the sound file after which
             the sound can be played.
-        gain:
-            
-        **kwargs : Present for excess? 
+
+        gain :
 
         """
         if self.skip_animations:

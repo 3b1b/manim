@@ -3,17 +3,36 @@ from manimlib.utils.iterables import list_difference_update
 
 
 class MultiCamera(MovingCamera):
+    """Camera Object that allows for multiple perspectives.
+    """
     CONFIG = {
         "allow_cameras_to_capture_their_own_display": False,
     }
 
     def __init__(self, *image_mobjects_from_cameras, **kwargs):
+        """Initalises the MultiCamera
+
+        Parameters:
+        -----------
+        *image_mobjects_from_cameras : ImageMobject
+
+        **kwargs
+            Any valid keyword arguments of MovingCamera.
+        """
         self.image_mobjects_from_cameras = []
         for imfc in image_mobjects_from_cameras:
             self.add_image_mobject_from_camera(imfc)
         MovingCamera.__init__(self, **kwargs)
 
     def add_image_mobject_from_camera(self, image_mobject_from_camera):
+        """Adds an ImageMobject that's been obtained from the camera
+        into the list `self.image_mobject_from_cameras`
+
+        Parameters
+        ----------
+        image_mobject_from_camera : ImageMobject
+            The ImageMobject to add to self.image_mobject_from_cameras
+        """
         # A silly method to have right now, but maybe there are things
         # we want to guarantee about any imfc's added later.
         imfc = image_mobject_from_camera
@@ -34,6 +53,13 @@ class MultiCamera(MovingCamera):
             )
 
     def reset(self):
+        """Resets the MultiCamera.
+
+        Returns
+        -------
+        MultiCamera
+            The reset MultiCamera
+        """
         for imfc in self.image_mobjects_from_cameras:
             imfc.camera.reset()
         MovingCamera.reset(self)
@@ -51,6 +77,13 @@ class MultiCamera(MovingCamera):
         MovingCamera.capture_mobjects(self, mobjects, **kwargs)
 
     def get_mobjects_indicating_movement(self):
+        """Returns all mobjets whose movement implies that the camera
+        should think of all other mobjects on the screen as moving
+
+        Returns
+        -------
+        list
+        """
         return [self.frame] + [
             imfc.camera.frame
             for imfc in self.image_mobjects_from_cameras

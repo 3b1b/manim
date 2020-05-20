@@ -68,10 +68,10 @@ class ZoomedScene(MovingCameraScene):
         """
         This method is used to activate the zooming for
         the zoomed_camera.
-        
+
         Parameters
         ----------
-        animate (bool=False)
+        animate : bool, optional
             Whether or not to animate the activation
             of the zoomed camera.
         """
@@ -88,14 +88,14 @@ class ZoomedScene(MovingCameraScene):
     def get_zoom_in_animation(self, run_time=2, **kwargs):
         """
         Returns the animation of camera zooming in.
-        
+
         Parameters
         ----------
-        run_time (Union[int,float=2])
+        run_time : int or float, optional
             The run_time of the animation of the camera zooming in.
         **kwargs
             Any valid keyword arguments of ApplyMethod()
-        
+
         Returns
         -------
         ApplyMethod
@@ -115,7 +115,7 @@ class ZoomedScene(MovingCameraScene):
         """
         This is the animation of the popping out of the
         mini-display that shows the content of the zoomed
-        camera. 
+        camera.
 
         Returns
         -------
