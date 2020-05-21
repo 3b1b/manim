@@ -1,4 +1,4 @@
-from manimlib.imports import *
+from manim.imports import *
 
 # This file is intended to test any new feature added. 
 # Feel free to add a test or to modify one when adding a new/changing a feature. 
