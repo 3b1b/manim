@@ -180,7 +180,6 @@ depending on whether you want to use HTTPS or SSH. Finally, run the
 following:
 
 ```sh
-
 python3 -m pip install -r requirements.txt
 ```
 
@@ -188,15 +187,16 @@ python3 -m pip install -r requirements.txt
 
 To run your first example Scene, you can run the following commands:
 For users:
-1. Download the `example_scenes.py` file from [GitHub](https://github.com/ManimCommunity/manim/blob/master/example_scenes.py)
+
+1. Download the `example_scenes.py` file from [GitHub](https://github.com/ManimCommunity/manim/blob/master/example_scenes/basic.py)
 2. Run the following command:
 ```sh
-manim example_scenes.py SquareToCircle -pl
+manim basic.py SquareToCircle -pl
 ```
 1. Run the following command:
 For developers:
 ```sh
-python3 manim.py example_scenes.py SquareToCircle -pl
+python3 manim.py example_scenes\basic.py SquareToCircle -pl
 ```
 
 ![](./readme-assets/command.png)

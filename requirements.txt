@@ -1,12 +1,12 @@
-argparse
-colour
-numpy
-Pillow
-progressbar
-scipy
-tqdm
-opencv-python
-pycairo
-pydub
-pygments
-pyreadline; sys_platform == 'win32'
+argparse==1.4.0
+colour==0.1.5
+numpy==1.18.4
+opencv-python==4.2.0.34
+Pillow==7.1.2
+progressbar==2.5
+pycairo==1.19.1
+pydub==0.24.0
+Pygments==2.6.1
+scipy==1.4.1
+tqdm==4.46.0
+pyreadline==2.1; sys_platform == 'win32'
