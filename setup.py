@@ -1,15 +1,15 @@
 from setuptools import setup, find_namespace_packages
 setup(
-    name="manimlib",
+    name="manim",
     version="0.2.0",
     description="Animation engine for explanatory math videos",
     license="MIT",
     packages=find_namespace_packages(),
-    package_data={ "manimlib": ["*.tex"] },
+    package_data={ "manim": ["*.tex"] },
     entry_points={
         "console_scripts": [
-            "manim=manimlib:main",
-            "manimcm=manimlib:main",
+            "manim=manim:main",
+            "manimcm=manim:main",
         ]
     },
     install_requires=[
