@@ -58,7 +58,7 @@ def read_in_primes(max_N=None):
 class SpiralScene(MovingCameraScene):
     CONFIG = {
         "axes_config": {
-            "number_line_config": {
+            "axis_config": {
                 "stroke_width": 1.5,
             }
         },
@@ -2897,7 +2897,7 @@ class ExplainRays(Explain44Spirals):
             "x_max": 1000,
             "y_min": -1000,
             "y_max": 1000,
-            "number_line_config": {
+            "axis_config": {
                 "tick_frequency": 50,
             },
         },
@@ -4912,15 +4912,20 @@ class Thumbnail(SpiralScene):
         dots.set_fill([TEAL_E, TEAL_A])
         dots.set_stroke(BLACK, 1)
 
-        label = VGroup(
-            TextMobject("$(p, p)$ for all primes $p$, in polar"),
+        label = TextMobject(
+            "($p$, $p$) for all primes $p$,\\\\",
+            "in polar coordinates",
+            tex_to_color_map={
+                "$p$": YELLOW,
+            },
         )
+
         label.scale(2)
         label.set_stroke(BLACK, 10, background=True)
-        label.add_background_rectangle()
-        label.to_corner(DL)
+        label.add_background_rectangle_to_submobjects()
+        label.to_corner(DL, MED_LARGE_BUFF)
 
         self.add(dots)
-        self.add(label)
+        # self.add(label)
 
         self.dots = dots
