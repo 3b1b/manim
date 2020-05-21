@@ -65,22 +65,6 @@ class Guitar(SVGMobject):
     }
 
 
-class SunGlasses(SVGMobject):
-    CONFIG = {
-        "file_name": "sunglasses",
-        "glasses_width_to_eyes_width": 1.1,
-    }
-
-    def __init__(self, pi_creature, **kwargs):
-        SVGMobject.__init__(self, **kwargs)
-        self.set_stroke(WHITE, width=0)
-        self.set_fill(GREY, 1)
-        self.set_width(
-            self.glasses_width_to_eyes_width * pi_creature.eyes.get_width()
-        )
-        self.move_to(pi_creature.eyes, UP)
-
-
 class Speedometer(VMobject):
     CONFIG = {
         "arc_angle": 4 * np.pi / 3,
@@ -175,7 +159,6 @@ class PartyHat(SVGMobject):
     CONFIG = {
         "file_name": "party_hat",
         "height": 1.5,
-        "pi_creature": None,
         "stroke_width": 0,
         "fill_opacity": 1,
         "frills_colors": [MAROON_B, PURPLE],
@@ -188,8 +171,6 @@ class PartyHat(SVGMobject):
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
         self.set_height(self.height)
-        if self.pi_creature is not None:
-            self.next_to(self.pi_creature.eyes, UP, buff=0)
 
         self.frills = VGroup(*self[:self.NUM_FRILLS])
         self.cone = self[self.NUM_FRILLS]
@@ -332,18 +313,13 @@ class Headphones(SVGMobject):
         "color": GREY,
     }
 
-    def __init__(self, pi_creature=None, **kwargs):
+    def __init__(self, **kwargs):
         digest_config(self, kwargs)
         SVGMobject.__init__(self, file_name=self.file_name, **kwargs)
         self.stretch(self.y_stretch_factor, 1)
         self.set_height(self.height)
         self.set_stroke(width=0)
         self.set_fill(color=self.color)
-        if pi_creature is not None:
-            eyes = pi_creature.eyes
-            self.set_height(3 * eyes.get_height())
-            self.move_to(eyes, DOWN)
-            self.shift(DOWN * eyes.get_height() / 4)
 
 
 class Clock(VGroup):
@@ -559,16 +535,6 @@ class Car(SVGMobject):
         self.set_height(self.height)
         self.set_stroke(color=WHITE, width=0)
         self.set_fill(self.color, opacity=1)
-
-        from manimlib.for_3b1b_videos.pi_creature import Randolph
-        randy = Randolph(mode="happy")
-        randy.set_height(0.6 * self.get_height())
-        randy.stretch(0.8, 0)
-        randy.look(RIGHT)
-        randy.move_to(self)
-        randy.shift(0.07 * self.height * (RIGHT + UP))
-        self.randy = self.pi_creature = randy
-        self.add_to_back(randy)
 
         orientation_line = Line(self.get_left(), self.get_right())
         orientation_line.set_stroke(width=0)
@@ -994,46 +960,7 @@ class PlayingCard(VGroup):
         return design
 
     def get_face_card_design(self, value, symbol):
-        from for_3b1b_videos.pi_creature import PiCreature
-        sub_rect = Rectangle(
-            stroke_color=BLACK,
-            fill_opacity=0,
-            height=0.9 * self.get_height(),
-            width=0.6 * self.get_width(),
-        )
-        sub_rect.move_to(self)
-
-        # pi_color = average_color(symbol.get_color(), GREY)
-        pi_color = symbol.get_color()
-        pi_mode = {
-            "J": "plain",
-            "Q": "thinking",
-            "K": "hooray"
-        }[value]
-        pi_creature = PiCreature(
-            mode=pi_mode,
-            color=pi_color,
-        )
-        pi_creature.set_width(0.8 * sub_rect.get_width())
-        if value in ["Q", "K"]:
-            prefix = "king" if value == "K" else "queen"
-            crown = SVGMobject(file_name=prefix + "_crown")
-            crown.set_stroke(width=0)
-            crown.set_fill(YELLOW, 1)
-            crown.stretch_to_fit_width(0.5 * sub_rect.get_width())
-            crown.stretch_to_fit_height(0.17 * sub_rect.get_height())
-            crown.move_to(pi_creature.eyes.get_center(), DOWN)
-            pi_creature.add_to_back(crown)
-            to_top_buff = 0
-        else:
-            to_top_buff = SMALL_BUFF * sub_rect.get_height()
-        pi_creature.next_to(sub_rect.get_top(), DOWN, to_top_buff)
-        # pi_creature.shift(0.05*sub_rect.get_width()*RIGHT)
-
-        pi_copy = pi_creature.copy()
-        pi_copy.rotate(np.pi, about_point=sub_rect.get_center())
-
-        return VGroup(sub_rect, pi_creature, pi_copy)
+        return VGroup()
 
     def get_corner_numbers(self, value, symbol):
         value_mob = TextMobject(value)

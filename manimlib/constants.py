@@ -117,13 +117,19 @@ CHOOSE_NUMBER_MESSAGE = """
 Choose number corresponding to desired scene/arguments.
 (Use comma separated list for multiple entries)
 Choice(s): """
-INVALID_NUMBER_MESSAGE = "Fine then, if you don't want to give a valid number I'll just quit"
+INVALID_NUMBER_MESSAGE = "Invalid scene numbers have been specified. Aborting."
 
 NO_SCENE_MESSAGE = """
    There are no scenes inside that module
 """
 
 # There might be other configuration than pixel shape later...
+FOURK_CAMERA_CONFIG = {
+    "pixel_height": 2160,
+    "pixel_width": 3840,
+    "frame_rate": 60,
+}
+
 PRODUCTION_QUALITY_CAMERA_CONFIG = {
     "pixel_height": 1440,
     "pixel_width": 2560,
