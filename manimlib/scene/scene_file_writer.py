@@ -6,6 +6,7 @@ import os
 import _thread as thread
 from time import sleep
 import datetime
+from PIL import Image
 
 from ..constants import FFMPEG_BIN
 from ..constants import STREAMING_IP
@@ -38,7 +39,6 @@ class SceneFileWriter(object):
     """
     CONFIG = {
         "write_to_movie": False,
-        # TODO, save_pngs is doing nothing
         "save_pngs": False,
         "png_mode": "RGBA",
         "save_last_frame": False,
@@ -57,6 +57,7 @@ class SceneFileWriter(object):
         self.stream_lock = False
         self.init_output_directories()
         self.init_audio()
+        self.frame_count = 0
 
     # Output directories and files
     def init_output_directories(self):
@@ -67,8 +68,8 @@ class SceneFileWriter(object):
         """
         module_directory = self.output_directory or self.get_default_module_directory()
         scene_name = self.file_name or self.get_default_scene_name()
-        if self.save_last_frame:
-            if VIDEO_DIR != "":
+        if self.save_last_frame or self.save_pngs:
+            if consts.VIDEO_DIR != "":
                 image_dir = guarantee_existence(os.path.join(
                     VIDEO_DIR,
                     module_directory,
@@ -335,6 +336,10 @@ class SceneFileWriter(object):
         """
         if self.write_to_movie:
             self.writing_process.stdin.write(frame.tostring())
+        if self.save_pngs:
+            path, extension = os.path.splitext(self.image_file_path)
+            Image.fromarray(frame).save(f'{path}{self.frame_count}{extension}')
+            self.frame_count += 1
 
     def save_final_image(self, image):
         """

@@ -60,11 +60,6 @@ from .mobject.mobject_update_utils import *
 from .mobject.value_tracker import *
 from .mobject.vector_field import *
 
-from .for_3b1b_videos.common_scenes import *
-from .for_3b1b_videos.pi_creature import *
-from .for_3b1b_videos.pi_creature_animations import *
-from .for_3b1b_videos.pi_creature_scene import *
-
 from .scene.graph_scene import *
 from .scene.moving_camera_scene import *
 from .scene.reconfigurable_scene import *
