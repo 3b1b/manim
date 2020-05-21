@@ -1,6 +1,6 @@
 from setuptools import setup, find_namespace_packages
 setup(
-    name="manim",
+    name="manimlib",
     version="0.2.0",
     description="Animation engine for explanatory math videos",
     license="MIT",
