@@ -142,10 +142,6 @@ class ShowIncreasingSubsets(Animation):
 
 
 class ShowSubmobjectsOneByOne(ShowIncreasingSubsets):
-    CONFIG = {
-        "int_func": np.ceil,
-    }
-
     def __init__(self, group, **kwargs):
         new_group = Group(*group)
         super().__init__(new_group, **kwargs)
