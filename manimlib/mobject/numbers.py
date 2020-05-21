@@ -1,6 +1,6 @@
-from manimlib.constants import *
-from manimlib.mobject.svg.tex_mobject import SingleStringTexMobject
-from manimlib.mobject.types.vectorized_mobject import VMobject
+from ..constants import *
+from ..mobject.svg.tex_mobject import SingleStringTexMobject
+from ..mobject.types.vectorized_mobject import VMobject
 
 
 class DecimalNumber(VMobject):

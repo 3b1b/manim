@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-import manimlib.config
-import manimlib.constants
-import manimlib.extract_scene
+from . import config
+from . import constants
 
 
 def main():
-    args = manimlib.config.parse_cli()
-    config = manimlib.config.get_configuration(args)
-    manimlib.constants.initialize_directories(config)
-    manimlib.extract_scene.main(config)
+    args = config.parse_cli()
+    cfg = config.get_configuration(args)
+    constants.initialize_directories(cfg)
+    from . import extract_scene
+    extract_scene.main(cfg)

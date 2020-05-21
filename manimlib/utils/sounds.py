@@ -1,5 +1,5 @@
 import os
-from manimlib.utils.file_ops import seek_full_path_from_defaults
+from ..utils.file_ops import seek_full_path_from_defaults
 
 
 def play_chord(*nums):

@@ -1,9 +1,9 @@
-from manimlib.animation.animation import Animation
-from manimlib.animation.transform import Transform
-from manimlib.constants import OUT
-from manimlib.constants import PI
-from manimlib.constants import TAU
-from manimlib.utils.rate_functions import linear
+from ..animation.animation import Animation
+from ..animation.transform import Transform
+from ..constants import OUT
+from ..constants import PI
+from ..constants import TAU
+from ..utils.rate_functions import linear
 
 
 class Rotating(Animation):

@@ -1,4 +1,4 @@
-from manimlib.utils.config_ops import digest_config
+from ..utils.config_ops import digest_config
 
 # Currently, this is only used by both Scene and Mobject.
 # Still, we abstract its functionality here, albeit purely nominally.

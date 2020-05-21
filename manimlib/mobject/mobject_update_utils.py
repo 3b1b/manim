@@ -1,9 +1,9 @@
 import inspect
 import numpy as np
 
-from manimlib.constants import DEGREES
-from manimlib.constants import RIGHT
-from manimlib.mobject.mobject import Mobject
+from ..constants import DEGREES
+from ..constants import RIGHT
+from ..mobject.mobject import Mobject
 
 
 def assert_is_mobject_method(method):

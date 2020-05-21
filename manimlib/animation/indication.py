@@ -1,24 +1,24 @@
 import numpy as np
 
-from manimlib.constants import *
-from manimlib.animation.animation import Animation
-from manimlib.animation.movement import Homotopy
-from manimlib.animation.composition import AnimationGroup
-from manimlib.animation.composition import Succession
-from manimlib.animation.creation import ShowCreation
-from manimlib.animation.creation import ShowPartial
-from manimlib.animation.fading import FadeOut
-from manimlib.animation.transform import Transform
-from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.mobject.geometry import Circle
-from manimlib.mobject.geometry import Dot
-from manimlib.mobject.shape_matchers import SurroundingRectangle
-from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.mobject.geometry import Line
-from manimlib.utils.bezier import interpolate
-from manimlib.utils.config_ops import digest_config
-from manimlib.utils.rate_functions import there_and_back
-from manimlib.utils.rate_functions import wiggle
+from ..constants import *
+from ..animation.animation import Animation
+from ..animation.movement import Homotopy
+from ..animation.composition import AnimationGroup
+from ..animation.composition import Succession
+from ..animation.creation import ShowCreation
+from ..animation.creation import ShowPartial
+from ..animation.fading import FadeOut
+from ..animation.transform import Transform
+from ..mobject.types.vectorized_mobject import VMobject
+from ..mobject.geometry import Circle
+from ..mobject.geometry import Dot
+from ..mobject.shape_matchers import SurroundingRectangle
+from ..mobject.types.vectorized_mobject import VGroup
+from ..mobject.geometry import Line
+from ..utils.bezier import interpolate
+from ..utils.config_ops import digest_config
+from ..utils.rate_functions import there_and_back
+from ..utils.rate_functions import wiggle
 
 
 class FocusOn(Transform):

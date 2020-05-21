@@ -8,16 +8,17 @@ from time import sleep
 import datetime
 from PIL import Image
 
-import manimlib.constants as consts
-from manimlib.constants import FFMPEG_BIN
-from manimlib.constants import STREAMING_IP
-from manimlib.constants import STREAMING_PORT
-from manimlib.constants import STREAMING_PROTOCOL
-from manimlib.utils.config_ops import digest_config
-from manimlib.utils.file_ops import guarantee_existence
-from manimlib.utils.file_ops import add_extension_if_not_present
-from manimlib.utils.file_ops import get_sorted_integer_files
-from manimlib.utils.sounds import get_full_sound_file_path
+from ..constants import FFMPEG_BIN
+from ..constants import STREAMING_IP
+from ..constants import STREAMING_PORT
+from ..constants import STREAMING_PROTOCOL
+from ..constants import VIDEO_DIR
+from ..constants import VIDEO_OUTPUT_DIR
+from ..utils.config_ops import digest_config
+from ..utils.file_ops import guarantee_existence
+from ..utils.file_ops import add_extension_if_not_present
+from ..utils.file_ops import get_sorted_integer_files
+from ..utils.sounds import get_full_sound_file_path
 
 
 class SceneFileWriter(object):
@@ -70,13 +71,13 @@ class SceneFileWriter(object):
         if self.save_last_frame or self.save_pngs:
             if consts.VIDEO_DIR != "":
                 image_dir = guarantee_existence(os.path.join(
-                    consts.VIDEO_DIR,
+                    VIDEO_DIR,
                     module_directory,
                     "images",
                 ))
             else:
                 image_dir = guarantee_existence(os.path.join(
-                    consts.VIDEO_OUTPUT_DIR,
+                    VIDEO_OUTPUT_DIR,
                     "images",
                 ))
             self.image_file_path = os.path.join(
@@ -84,14 +85,14 @@ class SceneFileWriter(object):
                 add_extension_if_not_present(scene_name, ".png")
             )
         if self.write_to_movie:
-            if consts.VIDEO_DIR != "":
+            if VIDEO_DIR != "":
                 movie_dir = guarantee_existence(os.path.join(
-                    consts.VIDEO_DIR,
+                    VIDEO_DIR,
                     module_directory,
                     self.get_resolution_directory(),
                 ))
             else:
-                movie_dir = guarantee_existence(consts.VIDEO_OUTPUT_DIR)
+                movie_dir = guarantee_existence(VIDEO_OUTPUT_DIR)
             self.movie_file_path = os.path.join(
                 movie_dir,
                 add_extension_if_not_present(

@@ -1,10 +1,10 @@
 import html
-from manimlib.constants import *
-from manimlib.container.container import Container
-from manimlib.mobject.geometry import Rectangle, Dot, RoundedRectangle
-from manimlib.mobject.shape_matchers import SurroundingRectangle
-from manimlib.mobject.svg.text_mobject import Paragraph
-from manimlib.mobject.types.vectorized_mobject import VGroup
+from ...constants import *
+from ...container.container import Container
+from ...mobject.geometry import RoundedRectangle
+from ...mobject.shape_matchers import SurroundingRectangle
+from ...mobject.svg.text_mobject import Paragraph
+from ...mobject.types.vectorized_mobject import VGroup
 
 import re
 from pygments import highlight

@@ -1,8 +1,8 @@
 import warnings
 
-from manimlib.animation.animation import Animation
-from manimlib.mobject.numbers import DecimalNumber
-from manimlib.utils.bezier import interpolate
+from ..animation.animation import Animation
+from ..mobject.numbers import DecimalNumber
+from ..utils.bezier import interpolate
 
 
 class ChangingDecimal(Animation):

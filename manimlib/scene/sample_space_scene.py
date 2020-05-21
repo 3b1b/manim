@@ -1,11 +1,11 @@
-from manimlib.animation.animation import Animation
-from manimlib.animation.transform import MoveToTarget
-from manimlib.animation.transform import Transform
-from manimlib.animation.update import UpdateFromFunc
-from manimlib.constants import *
-from manimlib.scene.scene import Scene
-from manimlib.mobject.probability import SampleSpace
-from manimlib.mobject.types.vectorized_mobject import VGroup
+from ..animation.animation import Animation
+from ..animation.transform import MoveToTarget
+from ..animation.transform import Transform
+from ..animation.update import UpdateFromFunc
+from ..constants import *
+from ..scene.scene import Scene
+from ..mobject.probability import SampleSpace
+from ..mobject.types.vectorized_mobject import VGroup
 
 
 class SampleSpaceScene(Scene):

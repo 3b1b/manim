@@ -1,5 +1,5 @@
-from manimlib.animation.animation import Animation
-from manimlib.utils.rate_functions import linear
+from ..animation.animation import Animation
+from ..utils.rate_functions import linear
 
 
 class Homotopy(Animation):

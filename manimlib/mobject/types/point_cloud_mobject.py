@@ -1,12 +1,12 @@
-from manimlib.constants import *
-from manimlib.mobject.mobject import Mobject
-from manimlib.utils.bezier import interpolate
-from manimlib.utils.color import color_gradient
-from manimlib.utils.color import color_to_rgba
-from manimlib.utils.color import rgba_to_color
-from manimlib.utils.config_ops import digest_config
-from manimlib.utils.iterables import stretch_array_to_length
-from manimlib.utils.space_ops import get_norm
+from ...constants import *
+from ...mobject.mobject import Mobject
+from ...utils.bezier import interpolate
+from ...utils.color import color_gradient
+from ...utils.color import color_to_rgba
+from ...utils.color import rgba_to_color
+from ...utils.config_ops import digest_config
+from ...utils.iterables import stretch_array_to_length
+from ...utils.space_ops import get_norm
 
 
 class PMobject(Mobject):

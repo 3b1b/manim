@@ -1,11 +1,10 @@
 import argparse
 import colour
-import importlib.util
 import os
 import sys
 import types
 
-import manimlib.constants
+from . import constants
 
 
 def parse_cli():
@@ -138,26 +137,7 @@ def parse_cli():
         sys.exit(2)
 
 
-def get_module(file_name):
-    if file_name == "-":
-        module = types.ModuleType("input_scenes")
-        code = "from manimlib.imports import *\n\n" + sys.stdin.read()
-        try:
-            exec(code, module.__dict__)
-            return module
-        except Exception as e:
-            print(f"Failed to render scene: {str(e)}")
-            sys.exit(2)
-    else:
-        module_name = file_name.replace(os.sep, ".").replace(".py", "")
-        spec = importlib.util.spec_from_file_location(module_name, file_name)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        return module
-
-
 def get_configuration(args):
-    module = get_module(args.file)
     file_writer_config = {
         # By default, write to file
         "write_to_movie": args.write_to_movie or not args.save_last_frame,
@@ -170,10 +150,8 @@ def get_configuration(args):
         "file_name": args.file_name,
         "input_file_path": args.file,
     }
-    if hasattr(module, "OUTPUT_DIRECTORY"):
-        file_writer_config["output_directory"] = module.OUTPUT_DIRECTORY
     config = {
-        "module": module,
+        "file": args.file,
         "scene_names": args.scene_names,
         "open_video_upon_completion": args.preview,
         "show_file_in_finder": args.show_file_in_finder,
@@ -214,26 +192,26 @@ def get_configuration(args):
 def get_camera_configuration(args):
     camera_config = {}
     if args.low_quality:
-        camera_config.update(manimlib.constants.LOW_QUALITY_CAMERA_CONFIG)
+        camera_config.update(constants.LOW_QUALITY_CAMERA_CONFIG)
     elif args.medium_quality:
-        camera_config.update(manimlib.constants.MEDIUM_QUALITY_CAMERA_CONFIG)
+        camera_config.update(constants.MEDIUM_QUALITY_CAMERA_CONFIG)
     elif args.high_quality:
-        camera_config.update(manimlib.constants.HIGH_QUALITY_CAMERA_CONFIG)
+        camera_config.update(constants.HIGH_QUALITY_CAMERA_CONFIG)
     elif args.four_k:
-        camera_config.update(manimlib.constants.FOURK_CAMERA_CONFIG)
+        camera_config.update(constants.FOURK_CAMERA_CONFIG)
     else:
-        camera_config.update(manimlib.constants.PRODUCTION_QUALITY_CAMERA_CONFIG)
+        camera_config.update(constants.PRODUCTION_QUALITY_CAMERA_CONFIG)
 
     # If the resolution was passed in via -r
     if args.resolution:
         if args.resolution.lower() == "low":
-            camera_config.update(manimlib.constants.LOW_QUALITY_CAMERA_CONFIG)
+            camera_config.update(constants.LOW_QUALITY_CAMERA_CONFIG)
         elif args.resolution.lower() == "medium":
-            camera_config.update(manimlib.constants.MEDIUM_QUALITY_CAMERA_CONFIG)
+            camera_config.update(constants.MEDIUM_QUALITY_CAMERA_CONFIG)
         elif args.resolution.lower() == "high":
-            camera_config.update(manimlib.constants.HIGH_QUALITY_CAMERA_CONFIG)
+            camera_config.update(constants.HIGH_QUALITY_CAMERA_CONFIG)
         elif args.resolution.lower() == "4K":
-            camera_config.update(manimlib.constants.FOURK_CAMERA_CONFIG)
+            camera_config.update(constants.FOURK_CAMERA_CONFIG)
 
         elif "," in args.resolution:
             height_str, width_str = args.resolution.split(",")

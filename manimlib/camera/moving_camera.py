@@ -1,11 +1,11 @@
-from manimlib.camera.camera import Camera
-from manimlib.constants import FRAME_HEIGHT
-from manimlib.constants import FRAME_WIDTH
-from manimlib.constants import ORIGIN
-from manimlib.constants import WHITE
-from manimlib.mobject.frame import ScreenRectangle
-from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.utils.config_ops import digest_config
+from ..camera.camera import Camera
+from ..constants import FRAME_HEIGHT
+from ..constants import FRAME_WIDTH
+from ..constants import ORIGIN
+from ..constants import WHITE
+from ..mobject.frame import ScreenRectangle
+from ..mobject.types.vectorized_mobject import VGroup
+from ..utils.config_ops import digest_config
 
 
 # TODO, think about how to incorporate perspective

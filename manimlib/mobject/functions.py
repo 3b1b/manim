@@ -1,6 +1,6 @@
-from manimlib.constants import *
-from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.config_ops import digest_config
+from ..constants import *
+from ..mobject.types.vectorized_mobject import VMobject
+from ..utils.config_ops import digest_config
 import math
 
 

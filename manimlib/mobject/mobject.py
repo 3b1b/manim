@@ -9,18 +9,17 @@ import sys
 from colour import Color
 import numpy as np
 
-import manimlib.constants as consts
-from manimlib.constants import *
-from manimlib.container.container import Container
-from manimlib.utils.color import color_gradient
-from manimlib.utils.color import interpolate_color
-from manimlib.utils.iterables import list_update
-from manimlib.utils.iterables import remove_list_redundancies
-from manimlib.utils.paths import straight_path
-from manimlib.utils.simple_functions import get_parameters
-from manimlib.utils.space_ops import angle_of_vector
-from manimlib.utils.space_ops import get_norm
-from manimlib.utils.space_ops import rotation_matrix
+from ..constants import *
+from ..container.container import Container
+from ..utils.color import color_gradient
+from ..utils.color import interpolate_color
+from ..utils.iterables import list_update
+from ..utils.iterables import remove_list_redundancies
+from ..utils.paths import straight_path
+from ..utils.simple_functions import get_parameters
+from ..utils.space_ops import angle_of_vector
+from ..utils.space_ops import get_norm
+from ..utils.space_ops import rotation_matrix
 
 
 # TODO: Explain array_attrs
@@ -100,7 +99,7 @@ class Mobject(Container):
 
     def get_image(self, camera=None):
         if camera is None:
-            from manimlib.camera.camera import Camera
+            from ..camera.camera import Camera
             camera = Camera()
         camera.capture_mobject(self)
         return camera.get_image()
@@ -110,7 +109,7 @@ class Mobject(Container):
 
     def save_image(self, name=None):
         self.get_image().save(
-            os.path.join(consts.VIDEO_DIR, (name or str(self)) + ".png")
+            os.path.join(VIDEO_DIR, (name or str(self)) + ".png")
         )
 
     def copy(self):
@@ -567,7 +566,7 @@ class Mobject(Container):
     def add_background_rectangle(self, color=BLACK, opacity=0.75, **kwargs):
         # TODO, this does not behave well when the mobject has points,
         # since it gets displayed on top
-        from manimlib.mobject.shape_matchers import BackgroundRectangle
+        from ..mobject.shape_matchers import BackgroundRectangle
         self.background_rectangle = BackgroundRectangle(
             self, color=color,
             fill_opacity=opacity,
