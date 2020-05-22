@@ -33,25 +33,6 @@ with open(TEMPLATE_TEX_FILE, "r") as infile:
         "\\begin{align*}\n" + TEX_TEXT_TO_REPLACE + "\n\\end{align*}",
     )
 
-HELP_MESSAGE = """
-   Usage:
-   python extract_scene.py <module> [<scene name>]
-   -p preview (opens file in OS assigned program after finishing)
-   -s show and save picture of last frame
-   -w write result to file [this is default if nothing else is stated]
-   -o <file_name> write to a different file_name
-   -l use low quality
-   -m use medium quality
-   -e use high quality
-   -k use 4K quality
-   -a run and save every scene in the script, or all args for the given scene
-   -q don't print progress
-   -f when writing to a movie file, export the frames in png sequence
-   -t use transperency when exporting images
-   -n specify the number of the animation to start from
-   -r specify a resolution
-   -c specify a background color
-"""
 SCENE_NOT_FOUND_MESSAGE = """
    {} is not in the script
 """
