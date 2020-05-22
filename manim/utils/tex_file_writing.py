@@ -5,8 +5,7 @@ from pathlib import Path
 
 from ..constants import TEX_TEXT_TO_REPLACE
 from ..constants import TEX_USE_CTEX
-from ..constants import TEX_DIR
-
+from .. import dirs
 
 def tex_hash(expression, template_tex_file_body):
     id_str = str(expression + template_tex_file_body)
@@ -24,7 +23,7 @@ def tex_to_svg_file(expression, template_tex_file_body):
 
 def generate_tex_file(expression, template_tex_file_body):
     result = os.path.join(
-        TEX_DIR,
+        dirs.TEX_DIR,
         tex_hash(expression, template_tex_file_body)
     ) + ".tex"
     if not os.path.exists(result):
@@ -43,7 +42,7 @@ def tex_to_dvi(tex_file):
     result = tex_file.replace(".tex", ".dvi" if not TEX_USE_CTEX else ".xdv")
     result = Path(result).as_posix()
     tex_file = Path(tex_file).as_posix()
-    tex_dir = Path(TEX_DIR).as_posix()
+    tex_dir = Path(dirs.TEX_DIR).as_posix()
     if not os.path.exists(result):
         commands = [
             "latex",
