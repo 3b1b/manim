@@ -1,4 +1,4 @@
-MEDIA_DIR = r"K:\ManimMedia"
-VIDEO_DIR = r"K:\ManimMedia\videos"
-TEX_DIR = r"K:\ManimMedia\files"
-TEXT_DIR = r"K:\ManimMedia\files\text"
+MEDIA_DIR = r""
+VIDEO_DIR = r""
+TEX_DIR = r""
+TEXT_DIR = r""
