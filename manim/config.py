@@ -37,7 +37,7 @@ def parse_cli():
         parser.add_argument(
             "--dry_run", 
             action="store_true",
-            help= "run a dry test",
+            help= "Do a dry run (render scenes but generate no output files)",
         )
         parser.add_argument(
             "-l", "--low_quality",
