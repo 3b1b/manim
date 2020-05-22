@@ -245,7 +245,6 @@ def initialize_directories(cfgargs):
     dir_config = {}
     dir_config["media_dir"] = cfgargs["media_dir"] or dirs.MEDIA_DIR
     dir_config["video_dir"] = cfgargs["video_dir"] or dirs.VIDEO_DIR
-    print(not(cfgargs["video_dir"] or dirs.VIDEO_DIR))
 
     if not (cfgargs["video_dir"] and cfgargs["tex_dir"]):
         if cfgargs["media_dir"]:
@@ -282,4 +281,3 @@ def initialize_directories(cfgargs):
     dirs.VIDEO_DIR = dir_config["video_dir"]
     dirs.TEX_DIR = dir_config["tex_dir"]
     dirs.TEXT_DIR = dir_config["text_dir"]
-    print(dirs.MEDIA_DIR)
