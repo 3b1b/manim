@@ -188,10 +188,10 @@ python3 -m pip install -r requirements.txt
 To run your first example Scene, you can run the following commands:
 For users:
 
-1. Download the `example_scenes.py` file from [GitHub](https://github.com/ManimCommunity/manim/blob/master/example_scenes/basic.py)
+1. Download the `example_scenes/basic.py` file from [GitHub](https://github.com/ManimCommunity/manim/blob/master/example_scenes/basic.py)
 2. Run the following command:
 ```sh
-manim basic.py SquareToCircle -pl
+manim example_scenes/basic.py SquareToCircle -pl
 ```
 1. Run the following command:
 For developers:
