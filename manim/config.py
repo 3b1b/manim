@@ -5,7 +5,9 @@ import sys
 import types
 
 from . import constants
+from .logger import logger
 
+ 
 
 def parse_cli():
     try:
@@ -133,7 +135,7 @@ def parse_cli():
         )
         return parser.parse_args()
     except argparse.ArgumentError as err:
-        print(str(err))
+        logger.error(str(err))
         sys.exit(2)
 
 
@@ -229,8 +231,8 @@ def get_camera_configuration(args):
         try:
             camera_config["background_color"] = colour.Color(args.color)
         except AttributeError as err:
-            print("Please use a valid color")
-            print(err)
+            logger.warning("Please use a valid color")
+            logger.error(err)
             sys.exit(2)
 
     # If rendering a transparent image/move, make sure the

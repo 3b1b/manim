@@ -1,12 +1,12 @@
 import numpy as np
 import os
+from .logger import logger
 
 MEDIA_DIR = ""
 VIDEO_DIR = ""
 VIDEO_OUTPUT_DIR = ""
 TEX_DIR = ""
 TEXT_DIR = ""
-
 
 def initialize_directories(config):
     global MEDIA_DIR
@@ -27,13 +27,13 @@ def initialize_directories(config):
             )
         if not os.path.isdir(MEDIA_DIR):
             MEDIA_DIR = "./media"
-        print(
+        logger.info(
             f"Media will be written to {MEDIA_DIR + os.sep}. You can change "
             "this behavior with the --media_dir flag."
         )
     else:
         if config["media_dir"]:
-            print(
+            logger.warning(
                 "Ignoring --media_dir, since both --tex_dir and a video "
                 "directory were both passed"
             )
@@ -53,7 +53,6 @@ def initialize_directories(config):
             os.makedirs(folder)
 
 NOT_SETTING_FONT_MSG='''
-Warning:
 You haven't set font.
 If you are not using English, this may cause text rendering problem.
 You set font like:

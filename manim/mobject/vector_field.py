@@ -5,7 +5,7 @@ from PIL import Image
 import random
 
 from ..constants import *
-
+from ..logger import logger
 from ..animation.composition import AnimationGroup
 from ..animation.indication import ShowPassingFlash
 from ..mobject.geometry import Vector
@@ -85,7 +85,7 @@ def get_color_field_image_file(scalar_func,
     file_name = "%d.png" % func_hash
     full_path = os.path.join(RASTER_IMAGE_DIR, file_name)
     if not os.path.exists(full_path):
-        print("Rendering color field image " + str(func_hash))
+        logger.info("Rendering color field image " + str(func_hash))
         rgb_gradient_func = get_rgb_gradient_function(
             min_value=min_value,
             max_value=max_value,

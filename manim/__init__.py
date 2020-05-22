@@ -2,8 +2,7 @@
 from . import config
 from . import constants
 
-
-def main():
+def main():    
     args = config.parse_cli()
     cfg = config.get_configuration(args)
     constants.initialize_directories(cfg)

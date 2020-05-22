@@ -14,6 +14,7 @@ from ..constants import STREAMING_PORT
 from ..constants import STREAMING_PROTOCOL
 from ..constants import VIDEO_DIR
 from ..constants import VIDEO_OUTPUT_DIR
+from ..logger import logger
 from ..utils.config_ops import digest_config
 from ..utils.file_ops import guarantee_existence
 from ..utils.file_ops import add_extension_if_not_present
@@ -473,7 +474,7 @@ class SceneFileWriter(object):
             **kwargs
         )
         if len(partial_movie_files) == 0:
-            print("No animations in this scene")
+            logger.error("No animations in this scene")
             return
 
         # Write a file partial_file_list.txt containing all
@@ -542,4 +543,4 @@ class SceneFileWriter(object):
         """
         Prints the "File Ready" message to STDOUT.
         """
-        print("\nFile ready at {}\n".format(file_path))
+        logger.info("\nFile ready at {}\n".format(file_path))

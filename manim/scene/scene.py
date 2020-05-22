@@ -11,6 +11,7 @@ from ..animation.transform import MoveToTarget, ApplyMethod
 from ..camera.camera import Camera
 from ..constants import *
 from ..container.container import Container
+from ..logger import logger
 from ..mobject.mobject import Mobject
 from ..scene.scene_file_writer import SceneFileWriter
 from ..utils.iterables import list_update
@@ -110,7 +111,7 @@ class Scene(Container):
         Used internally to print the number of
         animations played after the scene ends.
         """
-        print("Played {} animations".format(self.num_plays))
+        logger.info("Played {} animations".format(self.num_plays))
 
     def set_variables_as_attrs(self, *objects, **newly_named_objects):
         """
