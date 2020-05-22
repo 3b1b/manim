@@ -113,8 +113,7 @@ def get_scenes_to_render(scene_classes, config):
             logger.error(
                 constants.SCENE_NOT_FOUND_MESSAGE.format(
                     scene_name
-                ),
-                file=sys.stderr
+                )
             )
     if result:
         return result
