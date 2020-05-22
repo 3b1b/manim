@@ -69,9 +69,9 @@ class SceneFileWriter(object):
         module_directory = self.output_directory or self.get_default_module_directory()
         scene_name = self.file_name or self.get_default_scene_name()
         if self.save_last_frame or self.save_pngs:
-            if VIDEO_DIR != "":
+            if MEDIA_DIR != "":
                 image_dir = guarantee_existence(os.path.join(
-                    VIDEO_DIR,
+                    MEDIA_DIR,
                     "images",
                     module_directory,
                 ))
