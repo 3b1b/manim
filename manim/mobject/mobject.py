@@ -10,6 +10,7 @@ from colour import Color
 import numpy as np
 
 from ..constants import *
+from ..dirs import VIDEO_DIR
 from ..container.container import Container
 from ..utils.color import color_gradient
 from ..utils.color import interpolate_color

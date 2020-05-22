@@ -5,8 +5,7 @@ from pathlib import Path
 
 from ..constants import TEX_TEXT_TO_REPLACE
 from ..constants import TEX_USE_CTEX
-from ..constants import TEX_DIR
-
+from ..dirs import TEX_DIR
 
 def tex_hash(expression, template_tex_file_body):
     id_str = str(expression + template_tex_file_body)

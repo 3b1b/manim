@@ -3,7 +3,9 @@ import os
 import copy
 import hashlib
 import cairo
+
 from ...constants import *
+from ...dirs import TEXT_DIR
 from ...container.container import Container
 from ...mobject.geometry import Dot, Rectangle
 from ...mobject.svg.svg_mobject import SVGMobject
