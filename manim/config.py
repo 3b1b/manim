@@ -4,7 +4,6 @@ import os
 import sys
 import types
 
-
 from . import constants
 from . import dirs
 
