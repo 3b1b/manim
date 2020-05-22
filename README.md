@@ -193,11 +193,6 @@ For users:
 ```sh
 manim example_scenes.py SquareToCircle -pl
 ```
-1. Run the following command:
-For developers:
-```sh
-python3 manim.py example_scenes.py SquareToCircle -pl
-```
 
 ![](./readme-assets/command.png)
 
