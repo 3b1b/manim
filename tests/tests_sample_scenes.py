@@ -2,7 +2,11 @@ from manim.imports import *
 
 # This file is intended to test any new feature added. 
 # Feel free to add a test or to modify one when adding a new/changing a feature. 
-
+class Test(Scene): 
+    def construct(self): 
+        square = Square()
+        self.play(ShowCreation(square))
+    
 class Test_geometry(Scene): 
     def construct(self):
         circle = Circle()

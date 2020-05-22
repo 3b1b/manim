@@ -23,67 +23,72 @@ def parse_cli():
             "-p", "--preview",
             action="store_true",
             help="Automatically open the saved file once its done",
-        ),
+        )
         parser.add_argument(
             "-w", "--write_to_movie",
             action="store_true",
             help="Render the scene as a movie file",
-        ),
+        )
         parser.add_argument(
             "-s", "--save_last_frame",
             action="store_true",
             help="Save the last frame",
-        ),
+        )
+        parser.add_argument(
+            "--dry_run", 
+            action="store_true",
+            help= "Do a dry run (render scenes but generate no output files)",
+        )
         parser.add_argument(
             "-l", "--low_quality",
             action="store_true",
             help="Render at a low quality (for faster rendering)",
-        ),
+        )
         parser.add_argument(
             "-m", "--medium_quality",
             action="store_true",
             help="Render at a medium quality",
-        ),
+        )
         parser.add_argument(
             "--high_quality",
             action="store_true",
             help="Render at a high quality",
-        ),
+        )
         parser.add_argument(
             "-k", "--four_k",
             action="store_true",
             help="Render at a 4K quality",
-        ),
+        )
         parser.add_argument(
             "-g", "--save_pngs",
             action="store_true",
             help="Save each frame as a png",
-        ),
+        )
         parser.add_argument(
             "-i", "--save_as_gif",
             action="store_true",
             help="Save the video as gif",
-        ),
+        )
         parser.add_argument(
             "-f", "--show_file_in_finder",
             action="store_true",
             help="Show the output file in finder",
-        ),
+        )
         parser.add_argument(
             "-t", "--transparent",
             action="store_true",
             help="Render to a movie file with an alpha channel",
-        ),
+        )
         parser.add_argument(
             "-q", "--quiet",
             action="store_true",
             help="",
-        ),
+        )
         parser.add_argument(
             "-a", "--write_all",
             action="store_true",
             help="Write all the scenes from a file",
-        ),
+        )
         parser.add_argument(
             "-o", "--file_name",
             help="Specify the name of the output file, if"
@@ -140,8 +145,8 @@ def parse_cli():
 def get_configuration(args):
     file_writer_config = {
         # By default, write to file
-        "write_to_movie": args.write_to_movie or not args.save_last_frame,
-        "save_last_frame": args.save_last_frame,
+        "write_to_movie": (args.write_to_movie or not args.save_last_frame) and not args.dry_run,
+        "save_last_frame": args.save_last_frame and not args.dry_run,
         "save_pngs": args.save_pngs,
         "save_as_gif": args.save_as_gif,
         # If -t is passed in (for transparent), this will be RGBA
