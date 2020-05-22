@@ -194,6 +194,7 @@ To run your first example Scene, you can run the following commands:
 ```sh
 manim example_scenes/basic.py SquareToCircle -pl
 ```
+
 ### For developers:
 
 - Run the following command to install manim:
