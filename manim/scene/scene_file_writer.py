@@ -12,8 +12,7 @@ from ..constants import FFMPEG_BIN
 from ..constants import STREAMING_IP
 from ..constants import STREAMING_PORT
 from ..constants import STREAMING_PROTOCOL
-from ..dirs import MEDIA_DIR
-from ..dirs import VIDEO_DIR
+from .. import dirs
 from ..utils.config_ops import digest_config
 from ..utils.file_ops import guarantee_existence
 from ..utils.file_ops import add_extension_if_not_present
@@ -68,26 +67,23 @@ class SceneFileWriter(object):
         """
         module_directory = self.output_directory or self.get_default_module_directory()
         scene_name = self.file_name or self.get_default_scene_name()
+        #print("1")
+        #print(dirs.MEDIA_DIR)
         if self.save_last_frame or self.save_pngs:
-            if MEDIA_DIR != "":
+            if dirs.MEDIA_DIR != "":
                 image_dir = guarantee_existence(os.path.join(
-                    MEDIA_DIR,
+                    dirs.MEDIA_DIR,
                     "images",
                     module_directory,
-                ))
-            else:
-                image_dir = guarantee_existence(os.path.join(
-                    VIDEO_OUTPUT_DIR,
-                    "images",
                 ))
             self.image_file_path = os.path.join(
                 image_dir,
                 add_extension_if_not_present(scene_name, ".png")
             )
         if self.write_to_movie:
-            if VIDEO_DIR != "":
+            if dirs.VIDEO_DIR != "":
                 movie_dir = guarantee_existence(os.path.join(
-                    VIDEO_DIR,
+                    dirs.VIDEO_DIR,
                     module_directory,
                     self.get_resolution_directory(),
                 ))
