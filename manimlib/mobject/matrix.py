@@ -145,7 +145,7 @@ class Matrix(VMobject):
         
         Parameters
         ----------
-        colors : str
+        colors : :class:`str`
             The list of colors; each color specified corresponds to a row.
         
         Returns
