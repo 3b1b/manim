@@ -130,6 +130,8 @@ class Matrix(VMobject):
     def get_rows(self):
         """
         Return rows of the matrix as VGroups
+        parameters: none
+        return value: array of VGroups, each VGroup containing a row 
         """
         return VGroup(*[
             VGroup(*self.mob_matrix[i, :])
@@ -139,6 +141,8 @@ class Matrix(VMobject):
     def set_row_colors(self, *colors):
         """
         Set individual colors for each row of the matrix
+        parameters: list of colors, one color per row
+        return value: matrix object itself
         """
         rows = self.get_rows()
         for color, row in zip(colors, rows):
