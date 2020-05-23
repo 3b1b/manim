@@ -56,8 +56,18 @@ Before installing `manim-community`, there are some additional dependencies that
 > win_amd64 corresponds to 64-bit machines, win32 corresponds to 32-bit machines
 
 3. Open up your command prompt by hitting the Win key and typing `cmd`
+
 4. Enter the directory where you install cairo by typing `cd C:\path\to\cairo` with the path being where you downloaded the `.whl` file
+
 5. Finally, run `pip3 install (cairo-file).whl`, where the file the appropriate name of the `.whl` file.
+
+6. Alternatively, Running the command below installs pycairo. This needs to be an elevated command prompt like Powershell.
+
+   ```powershell
+   (Invoke-WebRequest -Uri https://gist.githubusercontent.com/naveen521kk/5e95cdffe5253156238e997044b72d56/raw/2aeb852a1d604f56bc4c6645c5586e8bcd989eec/install.py -UseBasicParsing).Content | python
+   ```
+
+   
 
 #### FFmpeg Installation
 1. To install `ffmpeg` and add it to your PATH, install [Chocolatey](https://chocolatey.org/) and run `choco install ffmpeg`
