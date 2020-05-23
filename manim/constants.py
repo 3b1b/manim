@@ -1,11 +1,11 @@
 import numpy as np
 import os
+from .logger import logger
 
 NOT_SETTING_FONT_MSG='''
-Warning:
-You haven't set a font.
-If you are not using English, this may cause text rendering problems.
-You set fonts like:
+You haven't set font.
+If you are not using English, this may cause text rendering problem.
+You set font like:
 text = Text('your text', font='your font')
 or:
 class MyText(Text):

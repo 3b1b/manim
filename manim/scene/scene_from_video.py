@@ -2,6 +2,7 @@ from tqdm import tqdm as show_progress
 import cv2
 
 from ..scene.scene import Scene
+from ..logger import logger
 
 
 # TODO, is this depricated?
@@ -24,7 +25,7 @@ class SceneFromVideo(Scene):
             start_frame, end_frame = [fps * t for t in time_range]
 
         frame_count = end_frame - start_frame
-        print("Reading in " + file_name + "...")
+        logger.info("Reading in " + file_name + "...")
         for count in show_progress(list(range(start_frame, end_frame + 1))):
             returned, frame = cap.read()
             if not returned:

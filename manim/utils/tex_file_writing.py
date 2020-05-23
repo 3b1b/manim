@@ -6,6 +6,7 @@ from pathlib import Path
 from ..constants import TEX_TEXT_TO_REPLACE
 from ..constants import TEX_USE_CTEX
 from .. import dirs
+from ..logger import logger
 
 def tex_hash(expression, template_tex_file_body):
     id_str = str(expression + template_tex_file_body)
@@ -27,7 +28,7 @@ def generate_tex_file(expression, template_tex_file_body):
         tex_hash(expression, template_tex_file_body)
     ) + ".tex"
     if not os.path.exists(result):
-        print("Writing \"%s\" to %s" % (
+        logger.info("Writing \"%s\" to %s" % (
             "".join(expression), result
         ))
         new_body = template_tex_file_body.replace(

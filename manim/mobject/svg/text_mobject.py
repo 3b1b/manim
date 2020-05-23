@@ -7,6 +7,7 @@ import cairo
 from ...constants import *
 from ... import dirs
 from ...container.container import Container
+from ...logger import logger
 from ...mobject.geometry import Dot, Rectangle
 from ...mobject.svg.svg_mobject import SVGMobject
 from ...mobject.types.vectorized_mobject import VGroup
@@ -289,7 +290,7 @@ class Text(SVGMobject):
 
         if self.font == '':
             if NOT_SETTING_FONT_MSG != '':
-                print(NOT_SETTING_FONT_MSG)
+                logger.warning(NOT_SETTING_FONT_MSG)
 
         dir_name = dirs.TEXT_DIR
         hash_name = self.text2hash()

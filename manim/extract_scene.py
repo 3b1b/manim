@@ -11,6 +11,7 @@ from .scene.scene import Scene
 from .utils.sounds import play_error_sound
 from .utils.sounds import play_finish_sound
 from . import constants
+from .logger import logger
 
 
 def open_file_if_needed(file_writer, **config):
@@ -83,7 +84,7 @@ def prompt_user_for_choice(scene_classes):
             for num_str in user_input.split(",")
         ]
     except KeyError:
-        print(constants.INVALID_NUMBER_MESSAGE)
+        logger.error(constants.INVALID_NUMBER_MESSAGE)
         sys.exit(2)
         user_input = input(constants.CHOOSE_NUMBER_MESSAGE)
         return [
@@ -96,7 +97,7 @@ def prompt_user_for_choice(scene_classes):
 
 def get_scenes_to_render(scene_classes, config):
     if len(scene_classes) == 0:
-        print(constants.NO_SCENE_MESSAGE)
+        logger.error(constants.NO_SCENE_MESSAGE)
         return []
     if config["write_all"]:
         return scene_classes
@@ -109,11 +110,10 @@ def get_scenes_to_render(scene_classes, config):
                 found = True
                 break
         if not found and (scene_name != ""):
-            print(
+            logger.error(
                 constants.SCENE_NOT_FOUND_MESSAGE.format(
                     scene_name
-                ),
-                file=sys.stderr
+                )
             )
     if result:
         return result
@@ -141,7 +141,7 @@ def get_module(file_name):
             exec(code, module.__dict__)
             return module
         except Exception as e:
-            print(f"Failed to render scene: {str(e)}")
+            logger.error(f"Failed to render scene: {str(e)}")
             sys.exit(2)
     else:
         module_name = file_name.replace(os.sep, ".").replace(".py", "")

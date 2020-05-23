@@ -10,6 +10,7 @@ import cairo
 import numpy as np
 
 from ..constants import *
+from ..logger import logger
 from ..mobject.types.image_mobject import AbstractImageMobject
 from ..mobject.mobject import Mobject
 from ..mobject.types.point_cloud_mobject import PMobject
@@ -23,7 +24,6 @@ from ..utils.iterables import remove_list_redundancies
 from ..utils.simple_functions import fdiv
 from ..utils.space_ops import angle_of_vector
 from ..utils.space_ops import get_norm
-
 
 class Camera(object):
     """
@@ -348,14 +348,14 @@ class Camera(object):
             The pixel array which can then be passed to set_background.
         """
 
-        print("Starting set_background; for reference, the current time is ", time.strftime("%H:%M:%S"))
+        logger.info("Starting set_background; for reference, the current time is ", time.strftime("%H:%M:%S"))
         coords = self.get_coords_of_all_pixels()
         new_background = np.apply_along_axis(
             coords_to_colors_func,
             2,
             coords
         )
-        print("Ending set_background; for reference, the current time is ", time.strftime("%H:%M:%S"))
+        logger.info("Ending set_background; for reference, the current time is ", time.strftime("%H:%M:%S"))
 
         return self.convert_pixel_array(new_background, convert_from_floats=True)
 
