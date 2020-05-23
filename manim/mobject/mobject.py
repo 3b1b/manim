@@ -10,6 +10,7 @@ from colour import Color
 import numpy as np
 
 from ..constants import *
+from .. import dirs
 from ..container.container import Container
 from ..utils.color import color_gradient
 from ..utils.color import interpolate_color
@@ -109,7 +110,7 @@ class Mobject(Container):
 
     def save_image(self, name=None):
         self.get_image().save(
-            os.path.join(VIDEO_DIR, (name or str(self)) + ".png")
+            os.path.join(dirs.VIDEO_DIR, (name or str(self)) + ".png")
         )
 
     def copy(self):

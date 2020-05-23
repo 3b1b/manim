@@ -5,9 +5,8 @@ import sys
 import types
 
 from . import constants
+from . import dirs
 from .logger import logger
-
- 
 
 def parse_cli():
     try:
@@ -25,67 +24,72 @@ def parse_cli():
             "-p", "--preview",
             action="store_true",
             help="Automatically open the saved file once its done",
-        ),
+        )
         parser.add_argument(
             "-w", "--write_to_movie",
             action="store_true",
             help="Render the scene as a movie file",
-        ),
+        )
         parser.add_argument(
             "-s", "--save_last_frame",
             action="store_true",
             help="Save the last frame",
-        ),
+        )
+        parser.add_argument(
+            "--dry_run", 
+            action="store_true",
+            help= "Do a dry run (render scenes but generate no output files)",
+        )
         parser.add_argument(
             "-l", "--low_quality",
             action="store_true",
-            help="Render at a low quality (for faster rendering)",
+            help="Render at low quality (for fastest rendering)",
         ),
         parser.add_argument(
             "-m", "--medium_quality",
             action="store_true",
-            help="Render at a medium quality",
+            help="Render at medium quality (for much faster rendering)",
         ),
         parser.add_argument(
-            "--high_quality",
+            "-e", "--high_quality",
             action="store_true",
-            help="Render at a high quality",
+            help="Render at high quality (for slightly faster rendering)",
         ),
         parser.add_argument(
             "-k", "--four_k",
             action="store_true",
-            help="Render at a 4K quality",
+            help="Render at 4K quality (slower rendering)",
         ),
         parser.add_argument(
             "-g", "--save_pngs",
             action="store_true",
             help="Save each frame as a png",
-        ),
+        )
         parser.add_argument(
             "-i", "--save_as_gif",
             action="store_true",
             help="Save the video as gif",
-        ),
+        )
         parser.add_argument(
             "-f", "--show_file_in_finder",
             action="store_true",
             help="Show the output file in finder",
-        ),
+        )
         parser.add_argument(
             "-t", "--transparent",
             action="store_true",
             help="Render to a movie file with an alpha channel",
-        ),
+        )
         parser.add_argument(
             "-q", "--quiet",
             action="store_true",
             help="",
-        ),
+        )
         parser.add_argument(
             "-a", "--write_all",
             action="store_true",
             help="Write all the scenes from a file",
-        ),
+        )
         parser.add_argument(
             "-o", "--file_name",
             help="Specify the name of the output file, if"
@@ -125,13 +129,13 @@ def parse_cli():
             "--video_dir",
             help="directory to write file tree for video",
         )
-        video_group.add_argument(
-            "--video_output_dir",
-            help="directory to write video",
-        )
         parser.add_argument(
             "--tex_dir",
             help="directory to write tex",
+        )
+        parser.add_argument(
+            "--text_dir",
+            help="directory to write text",
         )
         return parser.parse_args()
     except argparse.ArgumentError as err:
@@ -142,8 +146,8 @@ def parse_cli():
 def get_configuration(args):
     file_writer_config = {
         # By default, write to file
-        "write_to_movie": args.write_to_movie or not args.save_last_frame,
-        "save_last_frame": args.save_last_frame,
+        "write_to_movie": (args.write_to_movie or not args.save_last_frame) and not args.dry_run,
+        "save_last_frame": args.save_last_frame and not args.dry_run,
         "save_pngs": args.save_pngs,
         "save_as_gif": args.save_as_gif,
         # If -t is passed in (for transparent), this will be RGBA
@@ -167,8 +171,8 @@ def get_configuration(args):
         "leave_progress_bars": args.leave_progress_bars,
         "media_dir": args.media_dir,
         "video_dir": args.video_dir,
-        "video_output_dir": args.video_output_dir,
         "tex_dir": args.tex_dir,
+        "text_dir": args.text_dir,
     }
 
     # Camera configuration
@@ -206,16 +210,7 @@ def get_camera_configuration(args):
 
     # If the resolution was passed in via -r
     if args.resolution:
-        if args.resolution.lower() == "low":
-            camera_config.update(constants.LOW_QUALITY_CAMERA_CONFIG)
-        elif args.resolution.lower() == "medium":
-            camera_config.update(constants.MEDIUM_QUALITY_CAMERA_CONFIG)
-        elif args.resolution.lower() == "high":
-            camera_config.update(constants.HIGH_QUALITY_CAMERA_CONFIG)
-        elif args.resolution.lower() == "4K":
-            camera_config.update(constants.FOURK_CAMERA_CONFIG)
-
-        elif "," in args.resolution:
+        if  "," in args.resolution:
             height_str, width_str = args.resolution.split(",")
             height = int(height_str)
             width = int(width_str)
@@ -241,3 +236,45 @@ def get_camera_configuration(args):
         camera_config["background_opacity"] = 0
 
     return camera_config
+
+
+def initialize_directories(config):
+    dir_config = {}
+    dir_config["media_dir"] = config["media_dir"] or dirs.MEDIA_DIR
+    dir_config["video_dir"] = config["video_dir"] or dirs.VIDEO_DIR
+
+    if not (config["video_dir"] and config["tex_dir"]):
+        if config["media_dir"]:
+            if not os.path.isdir(dir_config["media_dir"]):
+                os.makedirs(dir_config["media_dir"])
+        if not os.path.isdir(dir_config["media_dir"]):
+            dir_config["media_dir"] = "./media"
+        else:
+            print(
+                f"Media will be written to {dir_config['media_dir'] + os.sep}. You can change "
+                "this behavior with the --media_dir flag, or by adjusting dirs.py.,"
+            )
+    else:
+        if config["media_dir"]:
+            print(
+                "Ignoring --media_dir, since both --tex_dir and --video_dir were passed."
+            )
+
+    dir_config["tex_dir"] = (config["tex_dir"]
+                             or dirs.TEX_DIR
+                             or os.path.join(dir_config["media_dir"], "Tex"))
+    dir_config["text_dir"] = (config["text_dir"]
+                              or dirs.TEXT_DIR
+                              or os.path.join(dir_config["media_dir"], "texts"))
+
+    if not config["video_dir"] or dirs.VIDEO_DIR:
+        dir_config["video_dir"] = os.path.join(dir_config["media_dir"], "videos")
+        
+    for folder in [dir_config["video_dir"], dir_config["tex_dir"], dir_config["text_dir"]]:
+        if folder != "" and not os.path.exists(folder):
+            os.makedirs(folder)
+
+    dirs.MEDIA_DIR = dir_config["media_dir"]
+    dirs.VIDEO_DIR = dir_config["video_dir"]
+    dirs.TEX_DIR = dir_config["tex_dir"]
+    dirs.TEXT_DIR = dir_config["text_dir"]
