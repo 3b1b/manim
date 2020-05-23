@@ -64,7 +64,7 @@ Before installing `manim-community`, there are some additional dependencies that
 6. Alternatively, Running the command below installs pycairo. This needs to be an elevated command prompt like Powershell.
 
    ```powershell
-   (Invoke-WebRequest -Uri https://gist.githubusercontent.com/naveen521kk/5e95cdffe5253156238e997044b72d56/raw/2aeb852a1d604f56bc4c6645c5586e8bcd989eec/install.py -UseBasicParsing).Content | python
+   (Invoke-WebRequest -Uri https://raw.githubusercontent.com/ManimCommunity/manim/master/scripts/pycairoInstall.py -UseBasicParsing).Content | python
    ```
 
    
