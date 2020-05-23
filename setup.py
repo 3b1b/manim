@@ -13,7 +13,6 @@ setup(
         ]
     },
     install_requires=[
-        "colour",
         "argparse",
         "colour",
         "numpy",
