@@ -203,7 +203,7 @@ pip install -e .
 ```
 - Then run the following command below:
 ```sh
-manim example_scenes.py SquareToCircle -pl
+manim example_scenes/basic.py SquareToCircle -pl
 ```
 
 ![](./readme-assets/command.png)
