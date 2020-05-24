@@ -1,61 +1,58 @@
-matrix:
-    include:
-        - os: linux
-          language: python
-          python: "3.6"
+language: python
+python:
+  - "3.6"
+  - "3.7"
+  - "3.8"
 
-        - os: linux
-          language: python
-          python: "3.7"
+jobs:
+  include:
+      # Linux Jobs
+    - os: linux
+      language: python
+      python: 3.6
+    - os: linux
+      language: python
+      python: 3.7
+    - os: linux
+      language: python
+      python: 3.8
 
-        - os: linux
-          language: python
-          python: "3.8"
+      # MacOS (OSX) Jobs
+    - os: osx
+      language: sh
+      python: 3.6
+      env: PYVER="3.6.10"
+    - os: osx
+      language: sh
+      python: 3.7
+      env: PYVER="3.7.7"
+    - os: osx
+      language: sh
+      python: 3.8
+      env: PYVER="3.8.2"
 
-        # Travis does not currently support python builds on windows. For
-        # macOS, we need to do some magic (see before_install section).
-        # https://docs.travis-ci.com/user/languages/python/
-        - os: osx
-          language: generic
-          python: "3.6"
-          env: PYVER="3.6.10"
-
-        - os: osx
-          language: generic
-          python: "3.7"
-          env: PYVER="3.7.7"
-
-        - os: osx
-          language: generic
-          python: "3.8"
-          env: PYVER="3.8.0"
-
+      # Windows Jobs
+    - os: windows
+      language: sh
+      python: 3.6
+      env: PYVER=Python36
+    - os: windows
+      language: sh
+      python: 3.7
+      env: PYVER=Python37
+    - os: windows
+      language: sh
+      python: 3.8
+      env: PYVER=Python38
 
 before_install:
-  - |
-    if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-    brew update
-    brew install openssl readline
-    brew outdated pyenv || brew upgrade pyenv
-    brew install pyenv-virtualenv
-    pyenv install $PYVER
-    export PYENV_VERSION=$PYVER
-    export PATH="/Users/travis/.pyenv/shims:${PATH}"
-    pyenv virtualenv venv
-    source ~/.pyenv/versions/venv/bin/activate
-    python --version
-    fi
-
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then chmod +x .travis/linux.sh; sh .travis/linux.sh; fi
+  - if [ "$TRAVIS_OS_NAME" == "windows" ]; then chmod +x .travis/windows.sh; sh .travis/windows.sh; fi
+  
 install:
   - pip install --upgrade pip
   - pip install -r requirements.txt
   - pip install .
 
-# command to run tests
 script:
   - pytest
-
-# branches that trigger Travis builds
-branches:
-  only:
-  - travis-setup
