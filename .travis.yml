@@ -12,29 +12,24 @@ matrix:
           language: python
           python: "3.8"
 
+        # Travis does not currently support python builds on windows. For
+        # macOS, we need to do some magic (see before_install section).
+        # https://docs.travis-ci.com/user/languages/python/
         - os: osx
           language: generic
           python: "3.6"
-          env: PYVER="3.6.9"
+          env: PYVER="3.6.10"
 
         - os: osx
           language: generic
           python: "3.7"
-          env: PYVER="3.7.5"
+          env: PYVER="3.7.7"
 
         - os: osx
           language: generic
           python: "3.8"
-          env: PYVER="3.8.0"
+          env: PYVER="3.8.3"
 
-os:
-  - linux
-  - osx
-
-  # Travis does not currently support python builds on windows or macos
-  # https://docs.travis-ci.com/user/languages/python/
-  # - osx
-  # - windows
 
 before_install:
   - |
