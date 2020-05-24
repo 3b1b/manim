@@ -2,3 +2,4 @@
 
 choco install python3
 export PATH="/c/$PYVER:/c/$PYVER/Scripts:$PATH"
+refreshenv
