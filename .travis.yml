@@ -1,0 +1,25 @@
+language: python
+
+python:
+  - "3.6"
+  - "3.7"
+  - "3.8"
+
+os:
+  - linux
+  - osx
+  - windows
+
+# command to install dependencies
+install:
+  - pip install -r requirements.txt
+  - pip install .
+
+# command to run tests
+script:
+  - pytest
+
+# branches that trigger Travis builds
+branches:
+  only:
+  - travis-setup  

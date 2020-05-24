@@ -1,13 +1,14 @@
 from manim.imports import *
 
-# This file is intended to test any new feature added. 
-# Feel free to add a test or to modify one when adding a new/changing a feature. 
-class Test(Scene): 
-    def construct(self): 
+# This file is intended to test any new feature added.
+# Feel free to add a test or to modify one when adding a new/changing a feature.
+class BasicScene(Scene):
+    def construct(self):
         square = Square()
         self.play(ShowCreation(square))
-    
-class Test_geometry(Scene): 
+
+
+class GeometryScene(Scene):
     def construct(self):
         circle = Circle()
         square = Square()
@@ -39,7 +40,8 @@ class Test_geometry(Scene):
         )
         self.wait()
 
-class Test_plotting(GraphScene):
+
+class PlottingScene(GraphScene):
     CONFIG = {
         "x_min" : -10,
         "x_max" : 10.3,
@@ -49,8 +51,12 @@ class Test_plotting(GraphScene):
         "function_color" : RED ,
         "axes_color" : GREEN,
         "x_labeled_nums" :range(-10,12,2),
-    }  
-    def construct(self): 
+    }
+    def construct(self):
         self.setup_axes(animate=False)
         func_graph = self.get_graph(lambda x : x**2, self.function_color)
         self.play(ShowCreation(func_graph))
+
+
+def test_scenes():
+    BasicScene()
