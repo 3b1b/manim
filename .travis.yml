@@ -8,7 +8,8 @@ python:
 os:
   - linux
   - osx
-  - windows
+  # Travis-CI does not currently support python builds on windows
+  # - windows
 
 # command to install dependencies
 install:
@@ -22,4 +23,4 @@ script:
 # branches that trigger Travis builds
 branches:
   only:
-  - travis-setup  
+  - travis-setup
