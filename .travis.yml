@@ -1,13 +1,15 @@
-language: python
 matrix:
     include:
         - os: linux
+          language: python
           python: "3.6"
 
         - os: linux
+          language: python
           python: "3.7"
 
         - os: linux
+          language: python
           python: "3.8"
 
         - os: osx
@@ -34,7 +36,21 @@ os:
   # - osx
   # - windows
 
-# command to install dependencies
+before_install:
+  - |
+    if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+    brew update
+    brew install openssl readline
+    brew outdated pyenv || brew upgrade pyenv
+    brew install pyenv-virtualenv
+    pyenv install $PYVER
+    export PYENV_VERSION=$PYVER
+    export PATH="/Users/travis/.pyenv/shims:${PATH}"
+    pyenv virtualenv venv
+    source ~/.pyenv/versions/venv/bin/activate
+    python --version
+    fi
+
 install:
   - pip install --upgrade pip
   - pip install -r requirements.txt
