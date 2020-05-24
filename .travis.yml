@@ -35,18 +35,15 @@ jobs:
     - os: windows
       language: sh
       python: 3.6
-      env: PYVER="3.6.10"
-      env: PYDIR="Python36"
+      env: PYVER="3.6.10" PYDIR="Python36"
     - os: windows
       language: sh
       python: 3.7
-      env: PYVER="3.7.7"
-      env: PYDIR="Python37"
+      env: PYVER="3.7.7" PYDIR="Python37"
     - os: windows
       language: sh
       python: 3.8
-      env: PYVER="3.8.0"
-      env: PYDIR="Python38"
+      env: PYVER="3.8.0" PYDIR="Python38"
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then chmod +x ./.travis/osx.sh; sh ./.travis/osx.sh; fi
