@@ -29,7 +29,7 @@ jobs:
     - os: osx
       language: sh
       python: 3.8
-      env: PYVER="3.8.2"
+      env: PYVER="3.8.0"
 
       # Windows Jobs
     - os: windows
@@ -48,7 +48,7 @@ jobs:
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then chmod +x ./.travis/osx.sh; sh ./.travis/osx.sh; fi
   - if [ "$TRAVIS_OS_NAME" == "windows" ]; then chmod +x ./.travis/windows.sh; sh ./.travis/windows.sh; fi
-  
+
 install:
   - pip install --upgrade pip
   - pip install -r requirements.txt
