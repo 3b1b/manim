@@ -46,8 +46,8 @@ jobs:
       env: PYVER="Python38"
 
 before_install:
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then chmod +x .travis/linux.sh; sh .travis/linux.sh; fi
-  - if [ "$TRAVIS_OS_NAME" == "windows" ]; then chmod +x .travis/windows.sh; sh .travis/windows.sh; fi
+  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then chmod +x ./.travis/osx.sh; sh ./.travis/osx.sh; fi
+  - if [ "$TRAVIS_OS_NAME" == "windows" ]; then chmod +x ./.travis/windows.sh; sh ./.travis/windows.sh; fi
   
 install:
   - pip install --upgrade pip
