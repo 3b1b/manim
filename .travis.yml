@@ -7,8 +7,10 @@ python:
 
 os:
   - linux
-  - osx
-  # Travis-CI does not currently support python builds on windows
+
+  # Travis does not currently support python builds on windows or macos
+  # https://docs.travis-ci.com/user/languages/python/
+  # - osx
   # - windows
 
 # command to install dependencies
