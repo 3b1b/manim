@@ -8,6 +8,9 @@ from . import constants
 from . import dirs
 from .logger import logger
 
+__all__ = ["parse_cli", "get_configuration", "initialize_directories"]
+
+
 def parse_cli():
     try:
         parser = argparse.ArgumentParser()
@@ -36,7 +39,7 @@ def parse_cli():
             help="Save the last frame",
         )
         parser.add_argument(
-            "--dry_run", 
+            "--dry_run",
             action="store_true",
             help= "Do a dry run (render scenes but generate no output files)",
         )
@@ -269,7 +272,7 @@ def initialize_directories(config):
 
     if not config["video_dir"] or dirs.VIDEO_DIR:
         dir_config["video_dir"] = os.path.join(dir_config["media_dir"], "videos")
-        
+
     for folder in [dir_config["video_dir"], dir_config["tex_dir"], dir_config["text_dir"]]:
         if folder != "" and not os.path.exists(folder):
             os.makedirs(folder)

@@ -181,7 +181,3 @@ def main(config):
             print("\n\n")
             if config["sound"]:
                 play_error_sound()
-
-
-if __name__ == "__main__":
-    main()

@@ -1,4 +1,5 @@
 from setuptools import setup, find_namespace_packages
+
 setup(
     name="manimlib",
     version="0.2.0",
@@ -8,8 +9,8 @@ setup(
     package_data={ "manim": ["*.tex"] },
     entry_points={
         "console_scripts": [
-            "manim=manim:main",
-            "manimcm=manim:main",
+            "manim=manim.__main__:main",
+            "manimcm=manim.__main__:main",
         ]
     },
     install_requires=[
