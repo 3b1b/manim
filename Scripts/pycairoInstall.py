@@ -20,7 +20,7 @@ if 'Windows' in platform.system():
         urllib.request.urlretrieve("https://download.lfd.uci.edu/pythonlibs/s2jqpv5t/pycairo-1.19.1-cp37-cp37m-win_amd64.whl", "pycairo-1.19.1-cp37-cp37m-win_amd64.whl")
         print("Sucessfully downloaded Cairo for your system")
         print("Installing Cairo")
-        os.system("pip3 install pycairo-1.19.1-cp37-cp37m-win_amd64.whl")
+        os.system("pip install pycairo-1.19.1-cp37-cp37m-win_amd64.whl")
         os.remove("pycairo-1.19.1-cp37-cp37m-win_amd64.whl")
         print("Succesfully installed Cairo")
         
@@ -29,7 +29,7 @@ if 'Windows' in platform.system():
         urllib.request.urlretrieve("https://download.lfd.uci.edu/pythonlibs/s2jqpv5t/pycairo-1.19.1-cp38-cp38-win32.whl", "pycairo-1.19.1-cp38-cp38-win32.whl")
         print("Sucessfully downloaded Cairo for your system")
         print("Installing Cairo")
-        os.system("pip3 install pycairo-1.19.1-cp38-cp38-win32.whl")
+        os.system("pip install pycairo-1.19.1-cp38-cp38-win32.whl")
         os.remove("pycairo-1.19.1-cp38-cp38-win32.whl")
         print("Succesfully installed Cairo")
         
