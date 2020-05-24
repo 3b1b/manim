@@ -35,7 +35,8 @@ jobs:
     - os: windows
       language: sh
       python: 3.6
-      env: PYVER="3.6.10" PYDIR="Python36"
+      # the latest version available on chocolatey is 3.6.8
+      env: PYVER="3.6.8" PYDIR="Python36"
     - os: windows
       language: sh
       python: 3.7

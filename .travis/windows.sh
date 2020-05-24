@@ -2,4 +2,4 @@
 
 choco install python --version=$PYVER
 export PATH="/c/$PYDIR:/c/$PYDIR/Scripts:$PATH"
-refreshenv
+cmd.exe //c "RefreshEnv.cmd"
