@@ -1,12 +1,33 @@
 language: python
+matrix:
+    include:
+        - os: linux
+          python: "3.6"
 
-python:
-  - "3.6"
-  - "3.7"
-  - "3.8"
+        - os: linux
+          python: "3.7"
+
+        - os: linux
+          python: "3.8"
+
+        - os: osx
+          language: generic
+          python: "3.6"
+          env: PYVER="3.6.9"
+
+        - os: osx
+          language: generic
+          python: "3.7"
+          env: PYVER="3.7.5"
+
+        - os: osx
+          language: generic
+          python: "3.8"
+          env: PYVER="3.8.0"
 
 os:
   - linux
+  - osx
 
   # Travis does not currently support python builds on windows or macos
   # https://docs.travis-ci.com/user/languages/python/
@@ -15,6 +36,7 @@ os:
 
 # command to install dependencies
 install:
+  - pip install --upgrade pip
   - pip install -r requirements.txt
   - pip install .
 
