@@ -5,6 +5,8 @@ import platform
 import subprocess as sp
 import sys
 import traceback
+import threading
+import time
 
 from manimlib.scene.scene import Scene
 from manimlib.utils.sounds import play_error_sound
@@ -131,6 +133,28 @@ def get_scene_classes_from_module(module):
             )
         ]
 
+class SceneCreationThread(threading.Thread):
+    def __init__(self, threadID, SceneClass, config, scene_kwargs):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.SceneClass = SceneClass
+        self.config = config
+        self.scene_kwargs = scene_kwargs
+
+    def run(self):
+        try:
+            self.scene = self.SceneClass(**self.scene_kwargs)
+            # By invoking, this renders the full scene
+            open_file_if_needed(self.scene.file_writer, **self.config)
+            if self.config["sound"]:
+                play_finish_sound()
+        except Exception:
+            print("\n\n")
+            traceback.print_exc()
+            print("\n\n")
+            if self.config["sound"]:
+                play_error_sound()
+        
 
 def main(config):
     module = config["module"]
@@ -148,21 +172,14 @@ def main(config):
             "leave_progress_bars",
         ]
     ])
-
-    for SceneClass in scene_classes_to_render:
-        try:
-            # By invoking, this renders the full scene
-            scene = SceneClass(**scene_kwargs)
-            open_file_if_needed(scene.file_writer, **config)
-            if config["sound"]:
-                play_finish_sound()
-        except Exception:
-            print("\n\n")
-            traceback.print_exc()
-            print("\n\n")
-            if config["sound"]:
-                play_error_sound()
-
+    
+    threads = config['threads']
+    thread_objects = []
+    for i,SceneClass in enumerate(scene_classes_to_render):
+        while threading.activeCount() >= threads + 1:
+            time.sleep(0.01)
+        thread_objects.append(SceneCreationThread(i, SceneClass, config, scene_kwargs))
+        thread_objects[-1].start()
 
 if __name__ == "__main__":
     main()

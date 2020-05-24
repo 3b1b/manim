@@ -101,6 +101,11 @@ def parse_cli():
             help="Background color",
         )
         parser.add_argument(
+            "-j", "--threads", type=int,
+            default=1,
+            help="Sets the amount of concurrent threads to use",
+        )
+        parser.add_argument(
             "--sound",
             action="store_true",
             help="Play a success/failure sound",
@@ -184,6 +189,7 @@ def get_configuration(args):
         "video_dir": args.video_dir,
         "video_output_dir": args.video_output_dir,
         "tex_dir": args.tex_dir,
+        "threads": args.threads 
     }
 
     # Camera configuration
