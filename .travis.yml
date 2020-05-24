@@ -35,15 +35,15 @@ jobs:
     - os: windows
       language: sh
       python: 3.6
-      env: PYVER=Python36
+      env: PYVER="Python36"
     - os: windows
       language: sh
       python: 3.7
-      env: PYVER=Python37
+      env: PYVER="Python37"
     - os: windows
       language: sh
       python: 3.8
-      env: PYVER=Python38
+      env: PYVER="Python38"
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then chmod +x .travis/linux.sh; sh .travis/linux.sh; fi
@@ -56,3 +56,7 @@ install:
 
 script:
   - pytest
+
+branches:
+  only:
+  - travis-setup
