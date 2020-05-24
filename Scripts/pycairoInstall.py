@@ -13,7 +13,6 @@ if 'Windows' in platform.system():
         print("Installing Cairo")
         os.system("pip install pycairo-1.19.1-cp37-cp37m-win32.whl")
         os.remove("pycairo-1.19.1-cp37-cp37m-win32.whl")
-        print("Succesfully installed Cairo")
 
     #In case the python version is 3.7 and the system is AMD64, try pycairo-1.19.1-cp37-cp37m-win_amd64.whl version of cairo
     elif sys.version[:3]=='3.7' and platform.machine()=='AMD64':
@@ -22,7 +21,6 @@ if 'Windows' in platform.system():
         print("Installing Cairo")
         os.system("pip install pycairo-1.19.1-cp37-cp37m-win_amd64.whl")
         os.remove("pycairo-1.19.1-cp37-cp37m-win_amd64.whl")
-        print("Succesfully installed Cairo")
         
     #In case the python version is 3.8 and the system is 32-bit, try pycairo-1.19.1-cp38-cp38-win32.whl version of cairo
     elif sys.version[:3]=='3.8' and platform.machine()=='x86':
@@ -31,7 +29,6 @@ if 'Windows' in platform.system():
         print("Installing Cairo")
         os.system("pip install pycairo-1.19.1-cp38-cp38-win32.whl")
         os.remove("pycairo-1.19.1-cp38-cp38-win32.whl")
-        print("Succesfully installed Cairo")
         
     #In case the python version is 3.8 and the system is AMD64, try pycairo-1.19.1-cp38-cp38-win_amd64.whl version of cairo
     elif sys.version[:3]=='3.8' and platform.machine()=='AMD64':
@@ -39,5 +36,4 @@ if 'Windows' in platform.system():
         print("Sucessfully downloaded Cairo for your system")
         print("Installing Cairo")
         os.system("pip install pycairo-1.19.1-cp38-cp38-win_amd64.whl")
-        os.remove("pycairo-1.19.1-cp38-cp38-win_amd64.whl")
-        print("Succesfully installed Cairo")       
+        os.remove("pycairo-1.19.1-cp38-cp38-win_amd64.whl")     
