@@ -80,9 +80,11 @@ jobs:
       install:
         - choco install python --version=$PYVER
         - export PATH="/c/$PYDIR:/c/$PYDIR/Scripts:$PATH"
+        - choco install ffmpeg
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --upgrade pip
         - python -m pip install --user -r ./.travis/travis-requirements.txt
+        - python -m pip install opencv-contrib-python
         - python ./.travis/cairo-windows.py
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .
@@ -96,9 +98,11 @@ jobs:
       install:
         - choco install python --version=$PYVER
         - export PATH="/c/$PYDIR:/c/$PYDIR/Scripts:$PATH"
+        - choco install ffmpeg
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --upgrade pip
         - python -m pip install --user -r ./.travis/travis-requirements.txt
+        - python -m pip install opencv-contrib-python
         - python ./.travis/cairo-windows.py
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .
@@ -112,9 +116,11 @@ jobs:
       install:
         - choco install python --version=$PYVER
         - export PATH="/c/$PYDIR:/c/$PYDIR/Scripts:$PATH"
+        - choco install ffmpeg
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --upgrade pip
         - python -m pip install --user -r ./.travis/travis-requirements.txt
+        - python -m pip install opencv-contrib-python
         - python ./.travis/cairo-windows.py
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .
