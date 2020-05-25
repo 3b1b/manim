@@ -1,7 +1,7 @@
 import numpy as np
 import os
-from .logger import logger
 
+# Messages
 NOT_SETTING_FONT_MSG='''
 You haven't set font.
 If you are not using English, this may cause text rendering problem.
@@ -13,13 +13,51 @@ class MyText(Text):
         'font': 'My Font'
     }
 '''
-START_X = 30
-START_Y = 20
+SCENE_NOT_FOUND_MESSAGE = """
+   {} is not in the script
+"""
+CHOOSE_NUMBER_MESSAGE = """
+Choose number corresponding to desired scene/arguments.
+(Use comma separated list for multiple entries)
+Choice(s): """
+INVALID_NUMBER_MESSAGE = "Invalid scene numbers have been specified. Aborting."
+NO_SCENE_MESSAGE = """
+   There are no scenes inside that module
+"""
+
+# Cairo stuff
 NORMAL = 'NORMAL'
 ITALIC = 'ITALIC'
 OBLIQUE = 'OBLIQUE'
 BOLD = 'BOLD'
 
+# Geometry: directions
+ORIGIN = np.array((0., 0., 0.))
+UP = np.array((0., 1., 0.))
+DOWN = np.array((0., -1., 0.))
+RIGHT = np.array((1., 0., 0.))
+LEFT = np.array((-1., 0., 0.))
+IN = np.array((0., 0., -1.))
+OUT = np.array((0., 0., 1.))
+
+# Geometry: axes
+X_AXIS = np.array((1., 0., 0.))
+Y_AXIS = np.array((0., 1., 0.))
+Z_AXIS = np.array((0., 0., 1.))
+
+# Geometry: useful abbreviations for diagonals
+UL = UP + LEFT
+UR = UP + RIGHT
+DL = DOWN + LEFT
+DR = DOWN + RIGHT
+
+# Geometry: sides
+TOP = FRAME_Y_RADIUS * UP
+BOTTOM = FRAME_Y_RADIUS * DOWN
+LEFT_SIDE = FRAME_X_RADIUS * LEFT
+RIGHT_SIDE = FRAME_X_RADIUS * RIGHT
+
+# Tex stuff
 TEX_USE_CTEX = False
 TEX_TEXT_TO_REPLACE = "YourTextHere"
 TEMPLATE_TEX_FILE = os.path.join(
@@ -33,104 +71,12 @@ with open(TEMPLATE_TEX_FILE, "r") as infile:
         "\\begin{align*}\n" + TEX_TEXT_TO_REPLACE + "\n\\end{align*}",
     )
 
-SCENE_NOT_FOUND_MESSAGE = """
-   {} is not in the script
-"""
-CHOOSE_NUMBER_MESSAGE = """
-Choose number corresponding to desired scene/arguments.
-(Use comma separated list for multiple entries)
-Choice(s): """
-INVALID_NUMBER_MESSAGE = "Invalid scene numbers have been specified. Aborting."
-
-NO_SCENE_MESSAGE = """
-   There are no scenes inside that module
-"""
-
-# There might be other configuration than pixel shape later...
-FOURK_CAMERA_CONFIG = {
-    "pixel_height": 2160,
-    "pixel_width": 3840,
-    "frame_rate": 60,
-}
-
-PRODUCTION_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 1440,
-    "pixel_width": 2560,
-    "frame_rate": 60,
-}
-
-HIGH_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 1080,
-    "pixel_width": 1920,
-    "frame_rate": 60,
-}
-
-MEDIUM_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 720,
-    "pixel_width": 1280,
-    "frame_rate": 30,
-}
-
-LOW_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 480,
-    "pixel_width": 854,
-    "frame_rate": 15,
-}
-
-DEFAULT_PIXEL_HEIGHT = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_height"]
-DEFAULT_PIXEL_WIDTH = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_width"]
-DEFAULT_FRAME_RATE = 60
-
-DEFAULT_POINT_DENSITY_2D = 25
-DEFAULT_POINT_DENSITY_1D = 250
-
-DEFAULT_STROKE_WIDTH = 4
-
-FRAME_HEIGHT = 8.0
-FRAME_WIDTH = FRAME_HEIGHT * DEFAULT_PIXEL_WIDTH / DEFAULT_PIXEL_HEIGHT
-FRAME_Y_RADIUS = FRAME_HEIGHT / 2
-FRAME_X_RADIUS = FRAME_WIDTH / 2
-
-SMALL_BUFF = 0.1
-MED_SMALL_BUFF = 0.25
-MED_LARGE_BUFF = 0.5
-LARGE_BUFF = 1
-
-DEFAULT_MOBJECT_TO_EDGE_BUFFER = MED_LARGE_BUFF
-DEFAULT_MOBJECT_TO_MOBJECT_BUFFER = MED_SMALL_BUFF
-
-
-# All in seconds
-DEFAULT_POINTWISE_FUNCTION_RUN_TIME = 3.0
-DEFAULT_WAIT_TIME = 1.0
-
-
-ORIGIN = np.array((0., 0., 0.))
-UP = np.array((0., 1., 0.))
-DOWN = np.array((0., -1., 0.))
-RIGHT = np.array((1., 0., 0.))
-LEFT = np.array((-1., 0., 0.))
-IN = np.array((0., 0., -1.))
-OUT = np.array((0., 0., 1.))
-X_AXIS = np.array((1., 0., 0.))
-Y_AXIS = np.array((0., 1., 0.))
-Z_AXIS = np.array((0., 0., 1.))
-
-# Useful abbreviations for diagonals
-UL = UP + LEFT
-UR = UP + RIGHT
-DL = DOWN + LEFT
-DR = DOWN + RIGHT
-
-TOP = FRAME_Y_RADIUS * UP
-BOTTOM = FRAME_Y_RADIUS * DOWN
-LEFT_SIDE = FRAME_X_RADIUS * LEFT
-RIGHT_SIDE = FRAME_X_RADIUS * RIGHT
-
+# Mathematical constants
 PI = np.pi
 TAU = 2 * PI
 DEGREES = TAU / 360
 
+# ffmpeg stuff
 FFMPEG_BIN = "ffmpeg"
 
 # Colors
@@ -194,25 +140,13 @@ COLOR_MAP = {
     "GREEN_SCREEN": "#00FF00",
     "ORANGE": "#FF862F",
 }
+COLOR_MAP.update({name.replace("_C", ""): COLOR_MAP[name]
+                  for name in COLOR_MAP
+                  if name.endswith("_C")})
 PALETTE = list(COLOR_MAP.values())
 locals().update(COLOR_MAP)
-for name in [s for s in list(COLOR_MAP.keys()) if s.endswith("_C")]:
-    locals()[name.replace("_C", "")] = locals()[name]
 
-# Streaming related configuration
-LIVE_STREAM_NAME = "LiveStream"
-TWITCH_STREAM_KEY = "YOUR_STREAM_KEY"
-STREAMING_PROTOCOL = "tcp"
-STREAMING_IP = "127.0.0.1"
-STREAMING_PORT = "2000"
-STREAMING_CLIENT = "ffplay"
-STREAMING_URL = f"{STREAMING_PROTOCOL}://{STREAMING_IP}:{STREAMING_PORT}?listen"
-STREAMING_CONSOLE_BANNER = """
-Manim is now running in streaming mode. Stream animations by passing
-them to manim.play(), e.g.
->>> c = Circle()
->>> manim.play(ShowCreation(c))
-"""
+# Settings for CodeMobject
 code_languages_list = {"abap": "abap", "as": "as", "as3": "as3", "ada": "ada", "antlr": "antlr",
                        "antlr_as": "antlr-as",
                        "antlr_csharp": "antlr-csharp", "antlr_cpp": "antlr-cpp", "antlr_java": "antlr-java",
@@ -313,7 +247,6 @@ code_languages_list = {"abap": "abap", "as": "as", "as3": "as3", "ada": "ada", "
                        "xml_smarty": "xml+smarty",
                        "xml_velocity": "xml+velocity", "xquery": "xquery", "xslt": "xslt", "xtend": "xtend",
                        "yaml": "yaml"}
-
 code_styles_list = {0: "autumn", 1: "borland", 2: "bw", 3: "colorful", 4: "default", 5: "emacs",
                     6: "friendly", 7: "fruity", 8: "manni", 9: "monokai", 10: "murphy", 11: "native",
                     12: "pastie", 13: "perldoc", 14: "rrt", 15: "tango", 16: "trac", 17: "vim", 18: "vs"}
