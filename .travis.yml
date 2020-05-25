@@ -9,6 +9,8 @@ jobs:
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo
         - pip3 install .
+      script:
+        - pytest
 
     - os: linux
       language: python
@@ -18,6 +20,8 @@ jobs:
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo
         - pip3 install .
+      script:
+        - pytest
 
     - os: linux
       language: python
@@ -27,6 +31,8 @@ jobs:
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo
         - pip3 install .
+      script:
+        - pytest
 
       # MacOS (OSX) Jobs
     - os: osx
@@ -38,6 +44,8 @@ jobs:
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo
         - pip3 install .
+      script:
+        - pytest
 
     - os: osx
       language: sh
@@ -48,6 +56,8 @@ jobs:
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo
         - pip3 install .
+      script:
+        - pytest
 
     - os: osx
       language: sh
@@ -58,6 +68,8 @@ jobs:
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo
         - pip3 install .
+      script:
+        - pytest
 
       # Windows Jobs
     - os: windows
@@ -74,6 +86,8 @@ jobs:
         - python ./.travis/cairo-windows.py
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .
+      script: 
+        - python -m pytest
 
     - os: windows
       language: sh
@@ -88,6 +102,8 @@ jobs:
         - python ./.travis/cairo-windows.py
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .
+      script: 
+        - python -m pytest
 
     - os: windows
       language: sh
@@ -102,12 +118,11 @@ jobs:
         - python ./.travis/cairo-windows.py
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .
+      script: 
+        - python -m pytest
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then chmod +x ./.travis/osx.sh; sh ./.travis/osx.sh; fi
-
-script:
-  - pytest
 
 branches:
   only:
