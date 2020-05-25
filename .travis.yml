@@ -1,9 +1,3 @@
-language: python
-python:
-  - "3.6"
-  - "3.7"
-  - "3.8"
-
 jobs:
   include:
       # Linux Jobs
@@ -92,7 +86,7 @@ jobs:
         - python -m pip install --user -r ./.travis/travis-requirements.txt
         - python ./.travis/cairo-windows.py
         - python -m pip install --user .
-        
+
     - os: windows
       language: sh
       python: 3.8
