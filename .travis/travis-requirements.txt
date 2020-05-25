@@ -5,8 +5,8 @@ Pillow
 progressbar
 scipy
 tqdm
-opencv-python
-#pycairo
+# opencv-python
+# pycairo
 pydub
 pygments
 pyreadline; sys_platform == 'win32'

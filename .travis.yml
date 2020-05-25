@@ -84,7 +84,6 @@ jobs:
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --upgrade pip
         - python -m pip install --user -r ./.travis/travis-requirements.txt
-        - python -m pip install opencv-contrib-python
         - python ./.travis/cairo-windows.py
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .
@@ -102,7 +101,6 @@ jobs:
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --upgrade pip
         - python -m pip install --user -r ./.travis/travis-requirements.txt
-        - python -m pip install opencv-contrib-python
         - python ./.travis/cairo-windows.py
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .
@@ -120,7 +118,6 @@ jobs:
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --upgrade pip
         - python -m pip install --user -r ./.travis/travis-requirements.txt
-        - python -m pip install opencv-contrib-python
         - python ./.travis/cairo-windows.py
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .

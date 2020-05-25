@@ -66,7 +66,7 @@ from .scene.reconfigurable_scene import *
 from .scene.scene import *
 from .scene.sample_space_scene import *
 from .scene.graph_scene import *
-from .scene.scene_from_video import *
+# from .scene.scene_from_video import *
 from .scene.three_d_scene import *
 from .scene.vector_space_scene import *
 from .scene.zoomed_scene import *

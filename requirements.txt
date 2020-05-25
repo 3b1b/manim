@@ -5,7 +5,7 @@ Pillow
 progressbar
 scipy
 tqdm
-opencv-python
+# opencv-python
 pycairo
 pydub
 pygments
