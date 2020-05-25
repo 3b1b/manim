@@ -3,4 +3,4 @@
 choco install python --version=$PYVER
 export PATH="/c/$PYDIR:/c/$PYDIR/Scripts:$PATH"
 cmd.exe //c "RefreshEnv.cmd"
-exec $SHELL
+python -m pip install --upgrade pip
