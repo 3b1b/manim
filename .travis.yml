@@ -51,9 +51,9 @@ before_install:
   - if [ "$TRAVIS_OS_NAME" == "windows" ]; then chmod +x ./.travis/windows.sh; sh ./.travis/windows.sh; fi
 
 install:
-  - pip3 install --upgrade pip
-  - pip3 install -r requirements.txt
-  - pip3 install .
+  - python3 -m pip install --upgrade pip
+  - python3 -m pip install -r requirements.txt
+  - python3 -m pip install .
 
 script:
   - pytest
