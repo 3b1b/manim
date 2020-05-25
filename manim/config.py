@@ -17,6 +17,9 @@ from . import constants
 from . import dirs
 from .logger import logger
 
+__all__ = ["parse_cli", "get_configuration", "initialize_directories"]
+
+
 def parse_cli():
     try:
         parser = argparse.ArgumentParser()
