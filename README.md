@@ -78,7 +78,7 @@ Before installing `manim-community`, there are some additional dependencies that
 
 #### LaTeX Installation
 1. Download the MiKTex installer from its [Download Page](https://miktex.org/download)
-2. You can check you did it right by running `refreshenv` to update your environment variable and running `latex` 
+2. You can check you did it right by running `refreshenv` to update your environment variable and running `latex`
 
 <img style="width: 20vw;" src="./readme-assets/windows_miktex.png" />
 <br><br>
@@ -108,7 +108,7 @@ Before installing `manim-community`, there are some additional dependencies that
 sudo apt install texlive texlive-latex-extra texlive-fonts-extra texlive-latex-recommended texlive-science texlive-fonts-extra tipa
 ```
 > Note: this installation may take up a lot of space. The developers are working on providing a simpler, lighter LaTeX package for you to install
-2. You can check you did it right by running `latex` 
+2. You can check you did it right by running `latex`
 
 #### Additional Installation Steps
 - You must install additional codecs to play MP4 files:
@@ -151,7 +151,22 @@ ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/
 #### LaTeX Installation
 1. Refer to the section on Brew installation to see how to install `brew`
 2. Run `brew cask install mactex`
-2. You can check you did it right by running `latex` 
+3. You can check you did it right by running `latex`
+
+> Note that MacTeX will require at least 4.5GB of hard disk space and bandwidth.
+>
+> This is due to the fact that it installs every LaTeX addon package offered by [CTAN](https://ctan.org/). Only a few of these packages are required by Manim.
+>
+> If you would like a smaller LaTeX install which only contains the packages needed by Manim alone, consider installing BasicTeX and suitable packages with the instructions below. This will require about 1.5 GB of space and bandwidth.
+
+If you have installed MacTeX and are comfortable with it, do not install BasicTeX.
+
+1. Refer to the section on Brew installation to see how to install `brew`
+2. Run `brew cask install basictex`
+3. Ensure that the TeXLiveManager tool `tlmgr` works, by running `tlmgr --version` in the terminal.
+4. Run `sudo tlmgr install standalone preview doublestroke relsize fundus-calligra wasysym physics dvisvgm.x86_64-darwin dvisvgm rsfs wasy cm-super`
+4. Ensure that LaTeX works by running `latex` in the Terminal.
+
 
 ### Installing Manim-Community itself
 
@@ -170,7 +185,7 @@ executing either
 git clone git@github.com:ManimCommunity/manim.git
 ```
 
-or 
+or
 
 ```sh
 git clone https://github.com/ManimCommunity/manim.git
