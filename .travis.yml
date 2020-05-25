@@ -129,7 +129,7 @@ before_install:
 
 branches:
   only:
-  - travis-setup
+  - master
 
 notifications:
   email: false
