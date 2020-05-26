@@ -3,8 +3,7 @@ from manimlib.constants import *
 from manimlib.container.container import Container
 from manimlib.mobject.geometry import Dot, RoundedRectangle
 from manimlib.mobject.shape_matchers import SurroundingRectangle
-from manimlib.mobject.svg.text_mobject import Paragraph
-from manimlib.mobject.svg.text_mobject import remove_invisible_chars
+from manimlib.mobject.svg.text_mobject import Paragraph, remove_invisible_chars
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from pygments.lexers import guess_lexer_for_filename
 
