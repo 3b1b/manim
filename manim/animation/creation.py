@@ -140,6 +140,22 @@ class ShowIncreasingSubsets(Animation):
     def update_submobject_list(self, index):
         self.mobject.submobjects = self.all_submobs[:index]
 
+class AddTextLetterByLetter(ShowIncreasingSubsets):
+    """
+        Add a Text Object letter by letter on the scene. Use time_per_char to change frequency of appearance of the letters. 
+    """
+    CONFIG = {
+        "suspend_mobject_updating": False,
+        "int_func": np.ceil,
+        "rate_func" : linear,
+        "time_per_char": 0.1,
+    }
+
+    def __init__(self, text, **kwargs):
+        digest_config(self, kwargs)
+        
+        self.run_time = np.max((0.06, self.time_per_char)) * len(text) #Time_per_char must be above 0.06. Otherwise the animation doesn't finish. 
+        super().__init__(text, **kwargs)
 
 class ShowSubmobjectsOneByOne(ShowIncreasingSubsets):
     CONFIG = {
