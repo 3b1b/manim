@@ -22,23 +22,20 @@ Code is VGroup() with three things
             Rectangle() if background == "rectangle" 
             VGroup() of Rectangle() and Dot() for three buttons if background == "window" 
     Code[1] is Code.line_numbers Which is a Paragraph() object, this mean you can use 
-                Code.line_numbers.chars[0] or Code[1].chars[0] to access first line number 
+                Code.line_numbers[0] or Code.line_numbers.chars[0] or Code[1].chars[0] to access first line number 
     Code[2] is Code.code
         Which is a Paragraph() with color highlighted, this mean you can use 
-            Code.code.chars[1] or Code[2].chars[1] 
+            Code.code[1] or Code.code.chars[1] or Code[2].chars[1] 
                 line number 1
-            Code.code.chars[1][0] or Code[2].chars[1][0]
+            Code.code[1][0] or Code.code.chars[1][0] or Code[2].chars[1][0]
                 first character of line number 1
-            Code.code.chars[1][0:5] or Code[2].chars[1][0:5]
+            Code.code[1][0:5] Code.code.chars[1][0:5] or Code[2].chars[1][0:5]
                 first five characters of line number 1
 
-Or you can use simply Code.code[0:5] to access first five lines and Code.code[0][0:5] to access first line's first five characters
-But this way it counts only visible characters i.e not including spaces(" "), tabs("\t") and newlines("\n")
-that means if Code.code = "c = a + b" then Code.code[2]  = 'a'
-
-Code.code.chars[][] will create problems when using Transform() because of invisible characters 
+Code.code[][] Code.code.chars[][] or Code[2].chars[][] will create problems when using Transform() because of invisible characters 
 so, before using Transform() remove invisible characters by using remove_invisible_chars()
 for example self.play(Transform(remove_invisible_chars(Code.code.chars[0:2]), remove_invisible_chars(Code.code.chars[3][0:3])))
+or remove_invisible_chars(Code.code) or remove_invisible_chars(Code)
 '''
 
 
