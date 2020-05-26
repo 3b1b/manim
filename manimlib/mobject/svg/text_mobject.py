@@ -6,6 +6,7 @@ import manimlib.constants as consts
 from manimlib.constants import *
 from manimlib.container.container import Container
 from manimlib.mobject.geometry import Dot
+from manimlib.mobject.svg.code_mobject import Code
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import digest_config
@@ -13,15 +14,19 @@ from manimlib.utils.config_ops import digest_config
 TEXT_MOB_SCALE_FACTOR = 0.05
 
 
-def remove_invisible_chars(chars):
-    chars_without_dots = VGroup()
-    if chars[0].__class__ == VGroup:
-        for i in range(chars.__len__()):
-            chars_without_dots.add(VGroup())
-            chars_without_dots[i].add(*[k for k in chars[i] if k.__class__ != Dot])
+def remove_invisible_chars(mobject):
+    if mobject.__class__ == Text:
+        mobject = mobject[:]
+    elif mobject.__class__ == Code:
+        mobject = mobject.code
+    mobject_without_dots = VGroup()
+    if mobject[0].__class__ == VGroup:
+        for i in range(mobject.__len__()):
+            mobject_without_dots.add(VGroup())
+            mobject_without_dots[i].add(*[k for k in mobject[i] if k.__class__ != Dot])
     else:
-        chars_without_dots.add(*[k for k in chars if k.__class__ != Dot])
-    return chars_without_dots
+        mobject_without_dots.add(*[k for k in mobject if k.__class__ != Dot])
+    return mobject_without_dots
 
 
 class TextSetting(object):
@@ -35,14 +40,11 @@ class TextSetting(object):
 
 
 '''
-Text.chars is VGroup() of each characters including invisible characters 
-i.e including spaces(" "), tabs("\t") and newlines("\n") (visible characters are Dot()s with zero radius)
+Text is VGroup() of each characters
 that mean you can use it like 
-    Text.chars[0:5] to access first five characters 
-Or you can use simply Text[0:5] But this way it counts only visible characters i.e not including spaces(" "), tabs("\t") and newlines("\n")
-that means if Text(" a b") then Text[3] = 'b'
+    Text[0:5] or Text.chars[0:5] to access first five characters 
 
-Text.chars[0:5] will create problems when using Transform() because of invisible characters 
+Text[0:5] or Text or Text.chars[0:5] will create problems when using Transform() because of invisible characters 
 so, before using Transform() remove invisible characters by using remove_invisible_chars()
 for example self.play(Transform(remove_invisible_chars(text.chars[0:4]), remove_invisible_chars(text2.chars[0:2])))
 '''
@@ -89,9 +91,9 @@ class Text(SVGMobject):
         self.remove_last_M(file_name)
         SVGMobject.__init__(self, file_name, **config)
         self.text = text
-        self.chars = VGroup(*self.gen_chars())
+        self.submobjects = [*self.gen_chars()]
+        self.chars = VGroup(*self.submobjects)
         self.text = text_without_tabs.replace(" ", "").replace("\n", "")
-
         nppc = self.n_points_per_cubic_curve
         for each in self:
             if len(each.points) == 0:
@@ -116,6 +118,24 @@ class Text(SVGMobject):
         # anti-aliasing
         if self.height is None and self.width is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
+
+    def get_extra_space_perc(self):
+        size = self.size * 10
+        dir_name = consts.TEXT_DIR
+        file_name = os.path.join(dir_name, "space") + '.svg'
+        surface = cairo.SVGSurface(file_name, 600, 400)
+        context = cairo.Context(surface)
+        context.set_font_size(size)
+        context.select_font_face(self.font, self.str2slant(self.slant), self.str2weight(self.weight))
+        _, text_yb, _, text_h, _, _ = context.text_extents(self.text)
+        char_extents = [context.text_extents(c) for c in self.text]
+        max_top_space = max([ce[1] - text_yb for ce in char_extents])
+        max_bottom_space = max([ce[3] + ce[1] for ce in char_extents])
+        return max_top_space / text_h, max_bottom_space / text_h
+
+    def get_extra_space_ushift(self):
+        ts, bs = self.get_extra_space_perc()
+        return 0.5 * (ts - bs)
 
     def gen_chars(self):
         chars = VGroup()
@@ -172,13 +192,13 @@ class Text(SVGMobject):
     def set_color_by_t2c(self, t2c=None):
         t2c = t2c if t2c else self.t2c
         for word, color in list(t2c.items()):
-            for start, end in self.find_indexes(word,self.original_text):
+            for start, end in self.find_indexes(word, self.original_text):
                 self.chars[start:end].set_color(color)
 
     def set_color_by_t2g(self, t2g=None):
         t2g = t2g if t2g else self.t2g
         for word, gradient in list(t2g.items()):
-            for start, end in self.find_indexes(word,self.original_text):
+            for start, end in self.find_indexes(word, self.original_text):
                 self.chars[start:end].set_color_by_gradient(*gradient)
 
     def str2slant(self, string):
@@ -211,7 +231,7 @@ class Text(SVGMobject):
             fsw = [self.font, self.slant, self.weight]
             if t2x[i]:
                 for word, x in list(t2x[i].items()):
-                    for start, end in self.find_indexes(word,self.text):
+                    for start, end in self.find_indexes(word, self.text):
                         fsw[i] = x
                         settings.append(TextSetting(start, end, *fsw))
 
@@ -286,21 +306,99 @@ class Text(SVGMobject):
             context.move_to(START_X + offset_x, START_Y + line_spacing * setting.line_num)
             context.show_text(text)
             offset_x += context.text_extents(text)[4]
+        surface.finish()
+        return file_name
 
+
+class TextWithBackground(Text):
+    CONFIG = {
+        "background_color": BLACK,
+    }
+
+    def __init__(self, text, **config):
+        Text.__init__(self, text, **config)
+        # self.text_backgrounds = self.gen_text_backgrounds(text)
+
+    def gen_text_backgrounds(self, text):
+        text_with_visible_chars = text.replace(" ", "").replace('\t', "")
+        text_list = text_with_visible_chars.split("\n")
+        text_backgrounds = VGroup()
+        start_i = 0
+        for line_no in range(text_list.__len__()):
+            rect_counts = len(text_list[line_no])
+            text_backgrounds.add(*self[start_i:rect_counts])
+            start_i += 2 * rect_counts
+        text_backgrounds.set_color(self.background_color)
+
+        return text_backgrounds
+
+    def text2svg1(self):
+        # anti-aliasing
+        size = self.size * 10
+        line_spacing = self.line_spacing * 10
+
+        if self.font == '':
+            if NOT_SETTING_FONT_MSG != '':
+                print(NOT_SETTING_FONT_MSG)
+
+        dir_name = consts.TEXT_DIR
+        hash_name = self.text2hash()
+        file_name = os.path.join(dir_name, hash_name) + '.svg'
+        # if os.path.exists(file_name):
+        # return file_name
+
+        surface = cairo.SVGSurface(file_name, 600, 400)
+        context = cairo.Context(surface)
+        context.set_font_size(size)
+        context.move_to(START_X, START_Y)
+
+        settings = self.text2settings()
+        offset_x = 0
+        last_line_num = 0
+        for setting in settings:
+            font = setting.font
+            slant = self.str2slant(setting.slant)
+            weight = self.str2weight(setting.weight)
+            text = self.text[setting.start:setting.end].replace('\n', ' ')
+            context.select_font_face(font, slant, weight)
+            if setting.line_num != last_line_num:
+                offset_x = 0
+                last_line_num = setting.line_num
+            tempx = START_X + offset_x
+            tempy = START_Y + line_spacing * setting.line_num
+            char_offset_x = 0
+            char_height = tempy - size / 2 - (line_spacing - size)
+            # context.set_font_matrix(cairo.Matrix(13, 0, 0, 13, 0, 0))
+            # print(context.get_font_matrix(),size)
+            # if (context.text_extents("99").width-context.text_extents("11").width)/size > 0.13:
+            # for char_index in range(text.__len__()):
+
+            # else:
+
+            print(context.text_extents("  ").width)
+            '''
+            for char_index in range(text.__len__()):
+                (x, y, width, height, dx, dy) = context.text_extents("a" + text[char_index] + "a")
+                (_, _, widtha, _, _, _) = context.text_extents("a")
+                width -= 2 * widtha
+                context.rectangle(tempx + char_offset_x, char_height, width, size)
+                context.fill()
+                char_offset_x += width
+            '''
+            context.move_to(tempx, tempy)
+            context.show_text(text)
+            offset_x += context.text_extents(text)[4]
+        surface.finish()
         return file_name
 
 
 '''
-Paragraph.chars is VGroup() of each lines and each line is VGroup() of that line's characters including invisible characters 
-i.e including spaces(" "), tabs("\t") and newlines("\n") (visible characters are Dot()s with zero radius)
+paragraph paragraph.chars is VGroup() of each lines and each line is VGroup() of that line's characters 
 that mean you can use it like 
-    paragraph.chars[0:5] to access first five lines
-    paragraph.chars[0][0:5] to access first line's first five characters
-Or you can use simply paragraph[0:5] to access first five lines and paragraph[0][0:5] to access first line's first five characters
-But this way it counts only visible characters i.e not including spaces(" "), tabs("\t") and newlines("\n")
-that means if paragraph(" a b", " b") then Paragraph[1] = 'b'
+    paragraph[0:5] or paragraph.chars[0:5] to access first five lines
+    paragraph[0][0:5] or paragraph.chars[0][0:5] to access first line's first five characters
 
-paragraph.chars[][] will create problems when using Transform() because of invisible characters 
+paragraph or paragraph[] or paragraph.chars[][] will create problems when using Transform() because of invisible characters 
 so, before using Transform() remove invisible characters by using remove_invisible_chars()
 for example self.play(Transform(remove_invisible_chars(paragraph.chars[0:2]), remove_invisible_chars(paragraph.chars[3][0:3])))
 
@@ -323,26 +421,22 @@ class Paragraph(VGroup):
         lines_str_list = lines_str.split("\n")
         self.chars = self.gen_chars(lines_str_list)
 
-        lines_str = lines_str.replace("\t", "").replace(" ", "")
-        lines_str_list = lines_str.split("\n")
-
-        lines_str = lines_str.replace("\n", "")
-        lines_text_list = VGroup()
+        chars_lines_text_list = VGroup()
         char_index_counter = 0
         for line_index in range(lines_str_list.__len__()):
-            lines_text_list.add(
-                self.lines_text[char_index_counter:char_index_counter + lines_str_list[line_index].__len__()])
-            char_index_counter += lines_str_list[line_index].__len__()
+            chars_lines_text_list.add(
+                self.lines_text[char_index_counter:char_index_counter + lines_str_list[line_index].__len__() + 1])
+            char_index_counter += lines_str_list[line_index].__len__() + 1
 
         self.lines = []
         self.lines.append([])
-        for line_no in range(lines_text_list.__len__()):
-            self.lines[0].append(lines_text_list[line_no])
+        for line_no in range(chars_lines_text_list.__len__()):
+            self.lines[0].append(chars_lines_text_list[line_no])
         self.lines_initial_positions = []
         for line_no in range(self.lines[0].__len__()):
             self.lines_initial_positions.append(self.lines[0][line_no].get_center())
         self.lines.append([])
-        self.lines[1].extend([self.alignment for _ in range(lines_text_list.__len__())])
+        self.lines[1].extend([self.alignment for _ in range(chars_lines_text_list.__len__())])
         VGroup.__init__(self, *[self.lines[0][i] for i in range(self.lines[0].__len__())], **config)
         self.move_to(np.array([0, 0, 0]))
         if self.alignment:
