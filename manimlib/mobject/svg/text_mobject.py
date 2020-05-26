@@ -6,7 +6,6 @@ import manimlib.constants as consts
 from manimlib.constants import *
 from manimlib.container.container import Container
 from manimlib.mobject.geometry import Dot
-from manimlib.mobject.svg.code_mobject import Code
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import digest_config
@@ -15,9 +14,12 @@ TEXT_MOB_SCALE_FACTOR = 0.05
 
 
 def remove_invisible_chars(mobject):
-    if mobject.__class__ == Text:
+    iscode = False
+    if mobject.__class__.__name__ == "Text":
         mobject = mobject[:]
-    elif mobject.__class__ == Code:
+    elif mobject.__class__.__name__ == "Code":
+        iscode = True
+        code = mobject
         mobject = mobject.code
     mobject_without_dots = VGroup()
     if mobject[0].__class__ == VGroup:
@@ -26,6 +28,9 @@ def remove_invisible_chars(mobject):
             mobject_without_dots[i].add(*[k for k in mobject[i] if k.__class__ != Dot])
     else:
         mobject_without_dots.add(*[k for k in mobject if k.__class__ != Dot])
+    if iscode:
+        code.code = mobject_without_dots
+        return code
     return mobject_without_dots
 
 
