@@ -122,9 +122,9 @@ class Code(VGroup):
             self.background_mobject.shift(UP * x)
 
         if self.insert_line_no:
-            VGroup.__init__(self, self.background_mobject, self.line_numbers, *self.code, **kwargs)
+            VGroup.__init__(self, self.background_mobject, self.line_numbers, self.code, **kwargs)
         else:
-            VGroup.__init__(self, self.background_mobject, Dot(fill_opacity=0, stroke_opacity=0), *self.code, **kwargs)
+            VGroup.__init__(self, self.background_mobject, Dot(fill_opacity=0, stroke_opacity=0), self.code, **kwargs)
 
         self.move_to(np.array([0, 0, 0]))
 
