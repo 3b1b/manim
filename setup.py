@@ -28,4 +28,5 @@ setup(
         "pyreadline; sys_platform == 'win32'",
         "rich",
     ],
+    data_files=[('manim/', ['manim/manim.cfg'])],
 )

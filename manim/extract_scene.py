@@ -15,21 +15,21 @@ from .logger import logger
 
 
 def open_file_if_needed(file_writer, **config):
-    if config["quiet"]:
+    if config["QUIET"]:
         curr_stdout = sys.stdout
         sys.stdout = open(os.devnull, "w")
 
     open_file = any([
-        config["open_video_upon_completion"],
-        config["show_file_in_finder"]
+        config["PREVIEW"],
+        config["SHOW_FILE_IN_FINDER"]
     ])
     if open_file:
         current_os = platform.system()
         file_paths = []
 
-        if config["file_writer_config"]["save_last_frame"]:
+        if config["FILE_WRITER_CONFIG"]["SAVE_LAST_FRAME"]:
             file_paths.append(file_writer.get_image_file_path())
-        if config["file_writer_config"]["write_to_movie"]:
+        if config["FILE_WRITER_CONFIG"]["WRITE_TO_MOVIE"]:
             file_paths.append(file_writer.get_movie_file_path())
 
         for file_path in file_paths:
@@ -44,7 +44,7 @@ def open_file_if_needed(file_writer, **config):
                 else:  # Assume macOS
                     commands.append("open")
 
-                if config["show_file_in_finder"]:
+                if config["SHOW_FILE_IN_FINDER"]:
                     commands.append("-R")
 
                 commands.append(file_path)
@@ -54,7 +54,7 @@ def open_file_if_needed(file_writer, **config):
                 sp.call(commands, stdout=FNULL, stderr=sp.STDOUT)
                 FNULL.close()
 
-    if config["quiet"]:
+    if config["QUIET"]:
         sys.stdout.close()
         sys.stdout = curr_stdout
 
@@ -96,13 +96,13 @@ def prompt_user_for_choice(scene_classes):
 
 
 def get_scenes_to_render(scene_classes, config):
-    if len(scene_classes) == 0:
+    if not scene_classes:
         logger.error(constants.NO_SCENE_MESSAGE)
         return []
-    if config["write_all"]:
+    if config["WRITE_ALL"]:
         return scene_classes
     result = []
-    for scene_name in config["scene_names"]:
+    for scene_name in config["SCENE_NAMES"]:
         found = False
         for scene_class in scene_classes:
             if scene_class.__name__ == scene_name:
@@ -144,40 +144,41 @@ def get_module(file_name):
             logger.error(f"Failed to render scene: {str(e)}")
             sys.exit(2)
     else:
-        module_name = file_name.replace(os.sep, ".").replace(".py", "")
-        spec = importlib.util.spec_from_file_location(module_name, file_name)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        return module
+        if os.path.exists(file_name):
+            module_name = file_name.replace(os.sep, ".").replace(".py", "")
+            spec = importlib.util.spec_from_file_location(module_name, file_name)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module
+        else:
+            raise FileNotFoundError(f'{file_name} not found')
 
 
 def main(config):
-    module = get_module(config["file"])
+    module = get_module(config["FILE"])
     all_scene_classes = get_scene_classes_from_module(module)
     scene_classes_to_render = get_scenes_to_render(all_scene_classes, config)
 
-    scene_kwargs = dict([
-        (key, config[key])
-        for key in [
-            "camera_config",
-            "file_writer_config",
-            "skip_animations",
-            "start_at_animation_number",
-            "end_at_animation_number",
-            "leave_progress_bars",
+    keys = [
+        "CAMERA_CONFIG",
+        "FILE_WRITER_CONFIG",
+        "SKIP_ANIMATIONS",
+        "FROM_ANIMATION_NUMBER",
+        "UPTO_ANIMATION_NUMBER",
+        "LEAVE_PROGRESS_BARS",
         ]
-    ])
+    scene_kwargs = {key: config[key] for key in keys}
 
     for SceneClass in scene_classes_to_render:
         try:
             # By invoking, this renders the full scene
             scene = SceneClass(**scene_kwargs)
             open_file_if_needed(scene.file_writer, **config)
-            if config["sound"]:
+            if config["SOUND"]:
                 play_finish_sound()
         except Exception:
             print("\n\n")
             traceback.print_exc()
             print("\n\n")
-            if config["sound"]:
+            if config["SOUND"]:
                 play_error_sound()

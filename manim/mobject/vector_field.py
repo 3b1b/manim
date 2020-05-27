@@ -27,8 +27,8 @@ DEFAULT_SCALAR_FIELD_COLORS = [BLUE_E, GREEN, YELLOW, RED]
 
 def get_colored_background_image(scalar_field_func,
                                  number_to_rgb_func,
-                                 pixel_height=DEFAULT_PIXEL_HEIGHT,
-                                 pixel_width=DEFAULT_PIXEL_WIDTH):
+                                 pixel_height=PIXEL_HEIGHT,
+                                 pixel_width=PIXEL_WIDTH):
     ph = pixel_height
     pw = pixel_width
     fw = FRAME_WIDTH

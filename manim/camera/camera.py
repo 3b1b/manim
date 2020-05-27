@@ -36,14 +36,14 @@ class Camera(object):
     self.background_image : str, optional
         The path to an image that should be the background image.
         If not set, the background is filled with `self.background_color`
-    
+
     self.pixel_height
     """
     CONFIG = {
         "background_image": None,
-        "pixel_height": DEFAULT_PIXEL_HEIGHT,
-        "pixel_width": DEFAULT_PIXEL_WIDTH,
-        "frame_rate": DEFAULT_FRAME_RATE,
+        "pixel_height": PIXEL_HEIGHT,
+        "pixel_width": PIXEL_WIDTH,
+        "frame_rate": FRAME_RATE,
         # Note: frame height and width will be resized to match
         # the pixel aspect ratio
         "frame_height": FRAME_HEIGHT,

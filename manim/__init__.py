@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+# Importing config should be the first thing since other modules use it
+from .config import config
 from .constants import *
 
 from .animation.animation import *
