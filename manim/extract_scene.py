@@ -31,6 +31,8 @@ def open_file_if_needed(file_writer, **config):
             file_paths.append(file_writer.get_image_file_path())
         if config["file_writer_config"]["write_to_movie"]:
             file_paths.append(file_writer.get_movie_file_path())
+        if file_writer.save_as_gif:
+            file_paths.append(file_writer.gif_file_path)
 
         for file_path in file_paths:
             if current_os == "Windows":

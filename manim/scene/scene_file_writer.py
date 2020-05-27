@@ -494,6 +494,16 @@ class SceneFileWriter(object):
             '-c', 'copy',
             movie_file_path
         ]
+        if not self.save_as_gif:
+            commands+=[
+                "-c", "copy",
+                movie_file_path
+            ]
+        if self.save_as_gif:
+            movie_file_path=self.gif_file_path
+            commands += [
+                movie_file_path
+            ]
         if not self.includes_sound:
             commands.insert(-1, '-an')
 
