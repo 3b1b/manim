@@ -550,7 +550,7 @@ class Mobject(Container):
         curr_vect = curr_end - curr_start
         if np.all(curr_vect == 0):
             raise Exception("Cannot position endpoints of closed loop")
-        target_vect = end - start
+        target_vect = np.array(end) - np.array(start)
         self.scale(
             get_norm(target_vect) / get_norm(curr_vect),
             about_point=curr_start,

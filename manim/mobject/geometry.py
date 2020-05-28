@@ -1,5 +1,6 @@
 import warnings
 import numpy as np
+import math
 
 from ..constants import *
 from ..mobject.mobject import Mobject
@@ -245,7 +246,7 @@ class Arc(TipableVMobject):
             anchors[1:],
         )
 
-    def get_arc_center(self):
+    def get_arc_center(self,warning=True):
         """
         Looks at the normals to the first two
         anchors, and finds their intersection points
@@ -258,13 +259,16 @@ class Arc(TipableVMobject):
         # Normals
         n1 = rotate_vector(t1, TAU / 4)
         n2 = rotate_vector(t2, TAU / 4)
+        self.failed_to_get_center=False
         try:
             return line_intersection(
                 line1=(a1, a1 + n1),
                 line2=(a2, a2 + n2),
             )
         except Exception:
-            warnings.warn("Can't find Arc center, using ORIGIN instead")
+            if warning:
+                warnings.warn("Can't find Arc center, using ORIGIN instead")
+            self.failed_to_get_center=True
             return np.array(ORIGIN)
 
     def move_arc_center_to(self, point):
@@ -278,7 +282,24 @@ class Arc(TipableVMobject):
 
 
 class ArcBetweenPoints(Arc):
-    def __init__(self, start, end, angle=TAU / 4, **kwargs):
+    """
+    Inherits from Arc and additionally takes 2 points between which the arc is spanned.
+    """
+    def __init__(self, start, end, angle=TAU / 4, radius=None, **kwargs):
+        if radius!=None:
+            self.radius=radius
+            if radius < 0:
+                sign=-2
+                radius*=(-1)
+            else:
+                sign=2
+            halfdist=np.linalg.norm(np.array(start) - np.array(end)) / 2
+            if radius < halfdist:
+                raise ValueError("""ArcBetweenPoints called with a radius that is
+                            smaller than half the distance between the points.""")
+            arc_height=radius - math.sqrt(radius ** 2 - halfdist ** 2)
+            angle=math.acos((radius - arc_height) / radius)*sign
+
         Arc.__init__(
             self,
             angle=angle,
@@ -287,6 +308,13 @@ class ArcBetweenPoints(Arc):
         if angle == 0:
             self.set_points_as_corners([LEFT, RIGHT])
         self.put_start_and_end_on(start, end)
+        
+        if radius==None:
+            center=self.get_arc_center(warning=False)
+            if not self.failed_to_get_center:
+                self.radius=np.linalg.norm(np.array(start) - np.array(center))
+            else:
+                self.radius=math.inf
 
 
 class CurvedArrow(ArcBetweenPoints):
