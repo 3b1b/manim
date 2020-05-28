@@ -286,7 +286,7 @@ class ArcBetweenPoints(Arc):
     Inherits from Arc and additionally takes 2 points between which the arc is spanned.
     """
     def __init__(self, start, end, angle=TAU / 4, radius=None, **kwargs):
-        if radius!=None:
+        if radius is not None:
             self.radius=radius
             if radius < 0:
                 sign=-2
@@ -309,7 +309,7 @@ class ArcBetweenPoints(Arc):
             self.set_points_as_corners([LEFT, RIGHT])
         self.put_start_and_end_on(start, end)
         
-        if radius==None:
+        if radius is None:
             center=self.get_arc_center(warning=False)
             if not self.failed_to_get_center:
                 self.radius=np.linalg.norm(np.array(start) - np.array(center))
