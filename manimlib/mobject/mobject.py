@@ -215,8 +215,12 @@ class Mobject(Container):
         return self
 
     def resume_updating(self, recursive=True):
-        assert(self.updating_suspended >= 1)
         self.updating_suspended -= 1
+        # It might happen that we where added to a mobject that
+        # was already suspended. Therefore, resume_updating()
+        # would be called even if suspend_updating() was never called.
+        if self.updating_suspended < 0:
+            self.updating_suspended = 0
         if recursive:
             for submob in self.submobjects:
                 submob.resume_updating(recursive)
