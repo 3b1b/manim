@@ -361,13 +361,13 @@ def _init_dirs(config):
         if not os.path.isdir(config["MEDIA_DIR"]):
             config["MEDIA_DIR"] = "./media"
         else:
-            print(
+            logger.warning(
                 f"Media will be written to {config['media_dir'] + os.sep}. You can change "
                 "this behavior with the --media_dir flag, or by adjusting manim.cfg."
             )
     else:
         if config["MEDIA_DIR"]:
-            print(
+            logger.warning(
                 "Ignoring --media_dir, since both --tex_dir and --video_dir were passed."
             )
 
@@ -377,14 +377,15 @@ def _init_dirs(config):
             os.makedirs(folder)
 
 
-config_filename = 'manim.cfg'
-
-foobar =  os.path.join(os.path.dirname(__file__), config_filename)
-print(foobar)
+# Config files to be parsed, in ascending priority
+library_wide = os.path.join(os.path.dirname(__file__), 'default.cfg'),
 config_files = [
-    foobar,
-    os.path.expanduser('~/.{}'.format(config_filename)),
-    os.path.join(os.getcwd(), config_filename),
+    # Lowest priority: library-wide defaults
+    library_wide,
+    # Medium priority: look for a 'manim.cfg' in the user home
+    os.path.expanduser('~/.manim.cfg'),
+    # Highest priority: look for a 'manim.cfg' in the current dir
+    os.path.join(os.getcwd(), 'manim.cfg'),
     ]
 
 prog = os.path.split(sys.argv[0])[-1]
@@ -393,10 +394,11 @@ if prog in ['manim', 'manimcm']:
     # defaults using CLI arguments
     args = _parse_cli()
 
-    print(args)
-
+    # If the user specified a config file, only use that one and the
+    # library-wide defaults.
     if args.config_file is not None:
-        config_files.append(args.config_file)
+        config_files = [library_wide, args.config_file]
+
     config, config_parser = _parse_config(args.file, config_files)
     _update_config_with_args(config, config_parser, args)
 
