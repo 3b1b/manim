@@ -214,7 +214,7 @@ class Arc(TipableVMobject):
     def __init__(self, start_angle=0, angle=TAU / 4, **kwargs):
         self.start_angle = start_angle
         self.angle = angle
-        self.failed_to_get_center=False
+        self._failed_to_get_center=False
         VMobject.__init__(self, **kwargs)
 
     def generate_points(self):
@@ -268,7 +268,7 @@ class Arc(TipableVMobject):
         except Exception:
             if warning:
                 warnings.warn("Can't find Arc center, using ORIGIN instead")
-            self.failed_to_get_center=True
+            self._failed_to_get_center=True
             return np.array(ORIGIN)
 
     def move_arc_center_to(self, point):
@@ -311,7 +311,7 @@ class ArcBetweenPoints(Arc):
         
         if radius is None:
             center=self.get_arc_center(warning=False)
-            if not self.failed_to_get_center:
+            if not self._failed_to_get_center:
                 self.radius=np.linalg.norm(np.array(start) - np.array(center))
             else:
                 self.radius=math.inf
