@@ -995,8 +995,8 @@ class Mobject(Container):
         The simplest mobject to be transformed to or from self.
         Should by a point of the appropriate type
         """
-        message = "get_point_mobject not implemented for {}"
-        raise Exception(message.format(self.__class__.__name__))
+        msg = f"get_point_mobject not implemented for {self.__class__.__name__}"
+        raise NotImplementedError(msg)
 
     def align_points(self, mobject):
         count1 = self.get_num_points()
