@@ -186,7 +186,11 @@ class Camera(object):
         self.frame.move_to(center)
 
     def pixel_coords_to_space_coords(self, px, py, relative=False):
-        pw, ph = self.fbo.size
+        # pw, ph = self.fbo.size
+        # Back hack, not sure why this is needed.
+        pw, ph = self.get_pixel_shape()
+        pw //= 2
+        ph //= 2
         fw, fh = self.get_frame_shape()
         fc = self.get_frame_center()
         if relative:
