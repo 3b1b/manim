@@ -256,6 +256,7 @@ Is always welcome. In particular, there is a dire need for tests and documentati
 
 ## License
 
-The software is double-licensed, copyright 3blue1brown LLC (see LICENSE)
-and copyright Manim Community Developers (see LICENSE.community).
+The software is double-licensed under the MIT license, and with copyright
+by 3blue1brown LLC (see LICENSE), and copyright by Manim Community
+Developers (see LICENSE.community).
 
