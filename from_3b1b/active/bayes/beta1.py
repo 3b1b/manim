@@ -40,6 +40,36 @@ class Thumbnail1(Scene):
         self.add(text)
 
 
+class AltThumbnail1(Scene):
+    def construct(self):
+        N = 20
+        n_trials = 10000
+        p = 0.7
+        outcomes = (np.random.random((N, n_trials)) < p).sum(0)
+        counts = []
+        for k in range(N + 1):
+            counts.append((outcomes == k).sum())
+
+        hist = Histogram(
+            counts,
+            y_max=0.3,
+            y_tick_freq=0.05,
+            y_axis_numbers_to_show=[10, 20, 30],
+            x_label_freq=10,
+        )
+        hist.set_width(FRAME_WIDTH - 1)
+        hist.bars.set_submobject_colors_by_gradient(YELLOW, YELLOW, GREEN, BLUE)
+        hist.bars.set_stroke(WHITE, 2)
+
+        title = TextMobject("Binomial distribution")
+        title.set_width(12)
+        title.to_corner(UR, buff=0.8)
+        title.add_background_rectangle()
+
+        self.add(hist)
+        self.add(title)
+
+
 class Thumbnail2(Scene):
     def construct(self):
         axes = self.get_axes()
