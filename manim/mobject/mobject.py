@@ -823,7 +823,7 @@ class Mobject(Container):
         return self.get_start(), self.get_end()
 
     def point_from_proportion(self, alpha):
-        raise Exception("Not implemented")
+        raise NotImplementedError('Please override in a child class.')
 
     def get_pieces(self, n_pieces):
         template = self.copy()
@@ -1008,7 +1008,7 @@ class Mobject(Container):
         return self
 
     def align_points_with_larger(self, larger_mobject):
-        raise Exception("Not implemented")
+        raise NotImplementedError('Please override in a child class.')
 
     def align_submobjects(self, mobject):
         mob1 = self
@@ -1085,7 +1085,7 @@ class Mobject(Container):
         return self
 
     def interpolate_color(self, mobject1, mobject2, alpha):
-        pass  # To implement in subclass
+        raise NotImplementedError('Please override in a child class.')
 
     def become_partial(self, mobject, a, b):
         """
@@ -1094,12 +1094,12 @@ class Mobject(Container):
         Inputs 0 <= a < b <= 1 determine what portion
         of mobject to become.
         """
-        pass  # To implement in subclasses
+        raise NotImplementedError('Please override in a child class.')
 
         # TODO, color?
 
     def pointwise_become_partial(self, mobject, a, b):
-        pass  # To implement in subclass
+        raise NotImplementedError('Please override in a child class.')
 
     def become(self, mobject, copy_submobjects=True):
         """
