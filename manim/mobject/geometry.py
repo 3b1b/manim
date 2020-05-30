@@ -214,6 +214,7 @@ class Arc(TipableVMobject):
     def __init__(self, start_angle=0, angle=TAU / 4, **kwargs):
         self.start_angle = start_angle
         self.angle = angle
+        self.failed_to_get_center=False
         VMobject.__init__(self, **kwargs)
 
     def generate_points(self):
@@ -259,7 +260,6 @@ class Arc(TipableVMobject):
         # Normals
         n1 = rotate_vector(t1, TAU / 4)
         n2 = rotate_vector(t2, TAU / 4)
-        self.failed_to_get_center=False
         try:
             return line_intersection(
                 line1=(a1, a1 + n1),
