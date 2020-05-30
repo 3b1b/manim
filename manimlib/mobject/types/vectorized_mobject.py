@@ -952,6 +952,7 @@ class VMobject(Mobject):
         if len(self.points) <= 1:
             return []
 
+        # Otherwise, compute from scratch
         points = self.points
         indices = np.arange(len(points), dtype=int)
 
