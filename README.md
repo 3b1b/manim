@@ -20,17 +20,17 @@ Manim is an animation engine for explanatory math videos. It's used to create pr
     + [SoX Installation](#sox-installation)
     + [LaTeX Installation](#latex-installation)
   * [Linux](#linux)
-    + [Cairo Installation](#cairo-installation-1)
-    + [FFmpeg Installation](#ffmpeg-installation-1)
-    + [SoX Installation](#sox-installation-1)
-    + [LaTeX Installation](#latex-installation-1)
+    + [Cairo Installation](#cairo-installation-1)<!-- @IGNORE PREVIOUS: anchor -->
+    + [FFmpeg Installation](#ffmpeg-installation-1)<!-- @IGNORE PREVIOUS: anchor -->
+    + [SoX Installation](#sox-installation-1)<!-- @IGNORE PREVIOUS: anchor -->
+    + [LaTeX Installation](#latex-installation-1)<!-- @IGNORE PREVIOUS: anchor -->
     + [Additional Installation Steps](#additional-installation-steps)
   * [Mac](#mac)
     + [Homebrew Installation](#homebrew-installation)
-    + [Cairo Installation](#cairo-installation-2)
-    + [FFmpeg Installation](#ffmpeg-installation-2)
-    + [SoX Installation](#sox-installation-2)
-    + [LaTeX Installation](#latex-installation-2)
+    + [Cairo Installation](#cairo-installation-2)<!-- @IGNORE PREVIOUS: anchor -->
+    + [FFmpeg Installation](#ffmpeg-installation-2)<!-- @IGNORE PREVIOUS: anchor -->
+    + [SoX Installation](#sox-installation-2)<!-- @IGNORE PREVIOUS: anchor -->
+    + [LaTeX Installation](#latex-installation-2)<!-- @IGNORE PREVIOUS: anchor -->
   * [Installing Manim-Community itself](#installing-manim-community-itself)
 - [Usage](#usage)
 - [Documentation](#documentation)
