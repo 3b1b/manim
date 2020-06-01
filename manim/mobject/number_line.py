@@ -35,8 +35,8 @@ class NumberLine(Line):
         "include_tip": False,
         "tip_width": 0.25,
         "tip_height": 0.25,
-        "add_start": 0,
-        "add_end": 0,
+        "add_start": 0, # extend number line by this amount at its starting point
+        "add_end": 0,   # extend number line by this amount at its end point
         "decimal_number_config": {
             "num_decimal_places": 0,
         },

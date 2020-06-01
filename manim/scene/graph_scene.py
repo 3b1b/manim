@@ -51,15 +51,15 @@ class GraphScene(Scene):
         "default_riemann_end_color": GREEN,
         "area_opacity": 0.8,
         "num_rects": 50,
-        "include_tip": False,
-        "x_axis_visibility": True,
-        "y_axis_visibility": True,
-        "x_label_position": UP+RIGHT,
-        "y_label_position": UP+RIGHT,
-        "x_add_start": 0,
-        "x_add_end": 0,
-        "y_add_start": 0,
-        "y_add_end": 0,
+        "include_tip": False,          # add tip at the end of the axes
+        "x_axis_visibility": True,     # show or hide the x axis
+        "y_axis_visibility": True,     # show or hide the y axis
+        "x_label_position": UP+RIGHT,  # where to place the label of the x axis
+        "y_label_position": UP+RIGHT,  # where to place the label of the y axis
+        "x_add_start": 0,              # extend the x axis to the left
+        "x_add_end": 0,                # extend the x axis to the right
+        "y_add_start": 0,              # extend the y axis to the bottom
+        "y_add_end": 0,                # extend the y axis to the top
     }
 
     def setup(self):
