@@ -1,6 +1,8 @@
 // This file is not a shader, it's just a set of
 // functions meant to be inserted into other shaders.
 
+// Must be inserted in a context with a definition for modify_distance_for_endpoints
+
 // All of this is with respect to a curve that's been rotated/scaled
 // so that b0 = (0, 0) and b1 = (1, 0).  That is, b2 entirely
 // determines the shape of the curve
@@ -16,36 +18,6 @@ vec2 bezier(float t, vec2 b2){
     );
 }
 
-void compute_C_and_grad_C(float a, float b, vec2 p, out float Cxy, out vec2 grad_Cxy){
-    // Curve has the implicit form x = a*y + b*sqrt(y), which is also
-    // 0 = -x^2 + 2axy + b^2 y - a^2 y^2.
-    Cxy = -p.x*p.x + 2 * a * p.x*p.y + b*b * p.y - a*a * p.y*p.y;
-
-    // Approximate distance to curve using the gradient of -x^2 + 2axy + b^2 y - a^2 y^2
-    grad_Cxy = vec2(
-        -2 * p.x + 2 * a * p.y, // del C / del x
-        2 * a * p.x + b*b - 2 * a*a * p.y  // del C / del y
-    );
-}
-
-// This function is flawed.
-float cheap_dist_to_curve(vec2 p, vec2 b2){
-    float a = (b2.x - 2.0) / b2.y;
-    float b = sign(b2.y) * 2.0 / sqrt(abs(b2.y));
-    float x = p.x;
-    float y = p.y;
-
-    // Curve has the implicit form x = a*y + b*sqrt(y), which is also
-    // 0 = -x^2 + 2axy + b^2 y - a^2 y^2.
-    float Cxy = -x * x + 2 * a * x * y + sign(b2.y) * b * b * y - a * a * y * y;
-
-    // Approximate distance to curve using the gradient of -x^2 + 2axy + b^2 y - a^2 y^2
-    vec2 grad_Cxy = 2 * vec2(
-        -x + a * y, // del C / del x
-        a * x + b * b / 2 - a * a * y  // del C / del y
-    );
-    return abs(Cxy / length(grad_Cxy));
-}
 
 float cube_root(float x){
     return sign(x) * pow(abs(x), 1.0 / 3.0);
@@ -114,10 +86,9 @@ float dist_to_point_on_curve(vec2 p, float t, vec2 b2){
 }
 
 
-float min_dist_to_curve(vec2 p, vec2 b2, float degree, bool quick_approx){
+float min_dist_to_curve(vec2 p, vec2 b2, float degree){
     // Check if curve is really a a line
     if(degree == 1) return dist_to_line(p, b2);
-    if(quick_approx) return cheap_dist_to_curve(p, b2);
 
     // Try finding the exact sdf by solving the equation
     // (d/dt) dist^2(t) = 0, which amount to the following

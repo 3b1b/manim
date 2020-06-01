@@ -1,4 +1,4 @@
-// Assumes theese uniforms exist in the surrounding context
+// Assumes the following uniforms exist in the surrounding context:
 // uniform float scale;
 // uniform float aspect_ratio;
 // uniform float frame_center;

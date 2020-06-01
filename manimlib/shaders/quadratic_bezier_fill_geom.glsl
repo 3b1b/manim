@@ -21,16 +21,9 @@ out vec2 uv_b2;
 
 out float bezier_degree;
 
-const float FILL_INSIDE = 0;
-const float FILL_OUTSIDE = 1;
-const float FILL_ALL = 2;
-
-const float SQRT5 = 2.236068;
-
-
 // To my knowledge, there is no notion of #include for shaders,
 // so to share functionality between this and others, the caller
-// replaces this line with the contents of named file
+// in manim replaces this line with the contents of named file
 #INSERT quadratic_bezier_geometry_functions.glsl
 #INSERT scale_and_shift_point_for_frame.glsl
 

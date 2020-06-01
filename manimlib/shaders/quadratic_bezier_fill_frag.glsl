@@ -10,11 +10,6 @@ in float bezier_degree;
 
 out vec4 frag_color;
 
-const float FILL_INSIDE = 0;
-const float FILL_OUTSIDE = 1;
-const float FILL_ALL = 2;
-
-
 // Needed for quadratic_bezier_distance insertion below
 float modify_distance_for_endpoints(vec2 p, float dist, float t){
     return dist;
@@ -28,7 +23,7 @@ float modify_distance_for_endpoints(vec2 p, float dist, float t){
 float sdf(){
     // For really flat curves, just take the distance to the curve
     if(bezier_degree < 2 || abs(uv_b2.y / uv_b2.x) < uv_anti_alias_width){
-        return min_dist_to_curve(uv_coords, uv_b2, bezier_degree, false);
+        return min_dist_to_curve(uv_coords, uv_b2, bezier_degree);
     }
     // This converts uv_coords to a space where the bezier points sit on
     // (0, 0), (1/2, 0) and (1, 1), so that the curve can be expressed implicityly
