@@ -3,9 +3,6 @@ from manimlib.mobject.geometry import Rectangle
 from manimlib.utils.config_ops import digest_config
 
 
-# TODO, put CameraFrame in here?
-
-
 class ScreenRectangle(Rectangle):
     CONFIG = {
         "aspect_ratio": 16.0 / 9.0,

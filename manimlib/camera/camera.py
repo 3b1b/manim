@@ -15,6 +15,11 @@ from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.shaders import shader_info_to_id
 from manimlib.utils.shaders import shader_id_to_info
 from manimlib.utils.shaders import get_shader_code_from_file
+from manimlib.utils.space_ops import cross
+from manimlib.utils.space_ops import rotation_matrix_transpose_from_quaternion
+from manimlib.utils.space_ops import normalize
+from manimlib.utils.space_ops import quaternion_from_angle_axis
+from manimlib.utils.space_ops import quaternion_mult
 
 
 # TODO, think about how to incorporate perspective,
@@ -23,25 +28,100 @@ class CameraFrame(Mobject):
     CONFIG = {
         "width": FRAME_WIDTH,
         "height": FRAME_HEIGHT,
-        "center": ORIGIN,
+        "center_point": ORIGIN,
+        # The quaternion describing how to rotate into
+        # the position of the camera.
+        "rotation_quaternion": [1, 0, 0, 0],
+        "focal_distance": 5,
     }
 
     def init_points(self):
-        self.points = np.array([UL, UR, DR, DL])
-        self.set_width(self.width, stretch=True)
-        self.set_height(self.height, stretch=True)
-        self.move_to(self.center)
-        self.save_state()
+        self.points = np.array([self.center_point])
+        self.rotation_quaternion = quaternion_from_angle_axis(angle=0, axis=OUT)
+
+    def to_default_state(self):
+        self.center()
+        self.set_height(FRAME_HEIGHT)
+        self.set_width(FRAME_WIDTH)
+        self.set_rotation_quaternion([1, 0, 0, 0])
+        return self
+
+    def get_transform_to_screen_space(self):
+        # Map from real space into camera space
+        result = np.identity(4)
+        # First shift so that origin of real space coincides with camera origin
+        result[:3, 3] = -self.get_center().T
+        # Rotate based on camera orientation
+        result[:3, :3] = np.dot(
+            rotation_matrix_transpose_from_quaternion(self.rotation_quaternion),
+            result[:3, :3]
+        )
+        # Scale to have height 2 (matching the height of the box [-1, 1]^2)
+        result *= 2 / self.height
+        return result
+
+    def rotate(self, angle, axis=OUT, **kwargs):
+        self.rotation_quaternion = normalize(quaternion_mult(
+            quaternion_from_angle_axis(angle, axis),
+            self.rotation_quaternion
+        ))
+        return self
+
+    def set_rotation(self, phi=0, theta=0, gamma=0):
+        self.rotation_quaternion = normalize(quaternion_mult(
+            quaternion_from_angle_axis(theta, OUT),
+            quaternion_from_angle_axis(phi, RIGHT),
+            quaternion_from_angle_axis(gamma, OUT),
+        ))
+        return self
+
+    def set_rotation_quaternion(self, quat):
+        self.rotation_quaternion = quat
+        return self
+
+    def increment_theta(self, dtheta):
+        self.rotate(dtheta, OUT)
+
+    def increment_phi(self, dphi):
+        camera_point = rotation_matrix_transpose_from_quaternion(self.rotation_quaternion)[2]
+        axis = cross(OUT, camera_point)
+        axis = normalize(axis, fall_back=RIGHT)
+        self.rotate(dphi, axis)
+
+    def scale(self, scale_factor, **kwargs):
+        # TODO, handle about_point and about_edge?
+        self.height *= scale_factor
+        self.width *= scale_factor
+        return self
+
+    def set_height(self, height):
+        self.height = height
+        return self
+
+    def set_width(self, width):
+        self.width = width
+        return self
+
+    def get_height(self):
+        return self.height
+
+    def get_width(self):
+        return self.width
+
+    def get_center(self):
+        return self.points[0]
+
+    def get_focal_distance(self):
+        return self.focal_distance
+
+    def interpolate(self, mobject1, mobject2, alpha, **kwargs):
+        pass
 
 
 class Camera(object):
     CONFIG = {
         "background_image": None,
-        "frame_config": {
-            "width": FRAME_WIDTH,
-            "height": FRAME_HEIGHT,
-            "center": ORIGIN,
-        },
+        "frame_config": {},
         "pixel_height": DEFAULT_PIXEL_HEIGHT,
         "pixel_width": DEFAULT_PIXEL_WIDTH,
         "frame_rate": DEFAULT_FRAME_RATE,  # TODO, move this elsewhere
@@ -107,8 +187,8 @@ class Camera(object):
             frame_height = frame_width / aspect_ratio
         else:
             frame_width = aspect_ratio * frame_height
-        self.set_frame_height(frame_height)
-        self.set_frame_width(frame_width)
+        self.frame.set_height(frame_height)
+        self.frame.set_width(frame_width)
 
     def clear(self):
         rgba = (*Color(self.background_color).get_rgb(), self.background_opacity)
@@ -163,7 +243,6 @@ class Camera(object):
     def get_pixel_height(self):
         return self.get_pixel_shape()[1]
 
-    # TODO, make these work for a rotated frame
     def get_frame_height(self):
         return self.frame.get_height()
 
@@ -176,18 +255,9 @@ class Camera(object):
     def get_frame_center(self):
         return self.frame.get_center()
 
-    def set_frame_height(self, height):
-        self.frame.set_height(height, stretch=True)
-
-    def set_frame_width(self, width):
-        self.frame.set_width(width, stretch=True)
-
-    def set_frame_center(self, center):
-        self.frame.move_to(center)
-
     def pixel_coords_to_space_coords(self, px, py, relative=False):
         # pw, ph = self.fbo.size
-        # Back hack, not sure why this is needed.
+        # Bad hack, not sure why this is needed.
         pw, ph = self.get_pixel_shape()
         pw //= 2
         ph //= 2
@@ -199,19 +269,6 @@ class Camera(object):
             # Only scale wrt one axis
             scale = fh / ph
             return fc + scale * np.array([(px - pw / 2), (py - ph / 2), 0])
-
-    # TODO, account for 3d
-    # Also, move this to CameraFrame?
-    def is_in_frame(self, mobject):
-        fc = self.get_frame_center()
-        fh = self.get_frame_height()
-        fw = self.get_frame_width()
-        return not reduce(op.or_, [
-            mobject.get_right()[0] < fc[0] - fw,
-            mobject.get_bottom()[1] > fc[1] + fh,
-            mobject.get_left()[0] > fc[0] + fw,
-            mobject.get_top()[1] < fc[1] - fh,
-        ])
 
     # Rendering
     def capture(self, *mobjects, **kwargs):
@@ -270,15 +327,13 @@ class Camera(object):
         if shader is None:
             return
         # TODO, think about how uniforms come from mobjects as well.
-        fh = self.get_frame_height()
-        fc = self.get_frame_center()
         pw, ph = self.get_pixel_shape()
 
         mapping = {
-            'scale': fh / 2,  # Scale based on frame size
+            'to_screen_space': tuple(self.frame.get_transform_to_screen_space().T.flatten()),
             'aspect_ratio': (pw / ph),  # AR based on pixel shape
-            'anti_alias_width': ANTI_ALIAS_WIDTH_OVER_FRAME_HEIGHT * fh,
-            'frame_center': tuple(fc),
+            'focal_distance': self.frame.get_focal_distance(),
+            'anti_alias_width': 3 / ph,  # 1.5 Pixel widths
         }
         for key, value in mapping.items():
             try:

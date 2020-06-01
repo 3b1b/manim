@@ -1369,9 +1369,7 @@ class SineWaveScaledByExp(TemperatureGraphScene):
             theta=-80 * DEGREES,
             distance=50,
         )
-        self.camera.set_frame_center(
-            2 * RIGHT,
-        )
+        self.camera.frame.move_to(2 * RIGHT)
 
     def show_sine_wave(self):
         time_tracker = ValueTracker(0)

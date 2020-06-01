@@ -84,6 +84,22 @@ def thick_diagonal(dim, thickness=2):
     return (np.abs(row_indices - col_indices) < thickness).astype('uint8')
 
 
+def rotation_matrix_transpose_from_quaternion(quat):
+    quat_inv = quaternion_conjugate(quat)
+    return [
+        quaternion_mult(quat, [0, *basis], quat_inv)[1:]
+        for basis in [
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1],
+        ]
+    ]
+
+
+def rotation_matrix_from_quaternion(quat):
+    return np.transpose(rotation_matrix_transpose_from_quaternion(quat))
+
+
 def rotation_matrix_transpose(angle, axis):
     if axis[0] == 0 and axis[1] == 0:
         # axis = [0, 0, z] case is common enough it's worth
@@ -97,15 +113,7 @@ def rotation_matrix_transpose(angle, axis):
             [0, 0, 1],
         ]
     quat = quaternion_from_angle_axis(angle, axis)
-    quat_inv = quaternion_conjugate(quat)
-    return [
-        quaternion_mult(quat, [0, *basis], quat_inv)[1:]
-        for basis in [
-            [1, 0, 0],
-            [0, 1, 0],
-            [0, 0, 1],
-        ]
-    ]
+    return rotation_matrix_transpose_from_quaternion(quat)
 
 
 def rotation_matrix(angle, axis):

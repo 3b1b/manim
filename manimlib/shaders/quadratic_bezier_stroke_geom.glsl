@@ -3,10 +3,9 @@
 layout (triangles) in;
 layout (triangle_strip, max_vertices = 5) out;
 
-uniform float scale;
+// Needed for get_gl_Position
 uniform float aspect_ratio;
 uniform float anti_alias_width;
-uniform vec3 frame_center;
 
 in vec3 bp[3];
 in vec3 prev_bp[3];
@@ -43,7 +42,7 @@ const float MITER_JOINT = 3;
 // so to share functionality between this and others, the caller
 // replaces this line with the contents of named file
 #INSERT quadratic_bezier_geometry_functions.glsl
-#INSERT scale_and_shift_point_for_frame.glsl
+#INSERT get_gl_Position.glsl
 
 
 float angle_between_vectors(vec2 v1, vec2 v2){
@@ -160,7 +159,7 @@ int get_corners(vec2 controls[3], int degree, out vec2 corners[5]){
         create_joint(-angle_to_next, v21, buff2, bevel_end, c2, c2, c3, c3);
     }
 
-    // Linear case is the simplets
+    // Linear case is the simplest
     if(degree == 1){
         // Swap between 2 and 3 is deliberate, the order of corners
         // should be for a triangle_strip.  Last entry is a dummy
@@ -306,10 +305,7 @@ void main() {
         uv_stroke_width = stroke_widths[i] / scale_factor;
         color = stroke_colors[i];
 
-        gl_Position = vec4(
-            scale_and_shift_point_for_frame(vec3(corner, z_values[i])),
-            1.0
-        );
+        gl_Position = get_gl_Position(vec3(corner, z_values[i]));
         EmitVertex();
     }
     EndPrimitive();

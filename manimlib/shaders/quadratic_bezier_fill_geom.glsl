@@ -3,10 +3,9 @@
 layout (triangles) in;
 layout (triangle_strip, max_vertices = 5) out;
 
-uniform float scale;
+// Needed for get_gl_Position
 uniform float aspect_ratio;
 uniform float anti_alias_width;
-uniform vec3 frame_center;
 
 in vec3 bp[3];
 in vec4 v_color[3];
@@ -25,15 +24,12 @@ out float bezier_degree;
 // so to share functionality between this and others, the caller
 // in manim replaces this line with the contents of named file
 #INSERT quadratic_bezier_geometry_functions.glsl
-#INSERT scale_and_shift_point_for_frame.glsl
+#INSERT get_gl_Position.glsl
 
 void emit_simple_triangle(){
     for(int i = 0; i < 3; i++){
         color = v_color[i];
-        gl_Position = vec4(
-            scale_and_shift_point_for_frame(bp[i]),
-            1.0
-        );
+        gl_Position = get_gl_Position(bp[i]);
         EmitVertex();
     }
     EndPrimitive();
@@ -79,10 +75,7 @@ void emit_pentagon(vec2 bp0, vec2 bp1, vec2 bp2){
         if(i < 2)       color = v_color[0];
         else if(i == 2) color = v_color[1];
         else            color = v_color[2];
-        gl_Position = vec4(
-            scale_and_shift_point_for_frame(vec3(corner, z)),
-            1.0
-        );
+        gl_Position = get_gl_Position(vec3(corner, z));
         EmitVertex();
     }
     EndPrimitive();
