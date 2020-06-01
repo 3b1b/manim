@@ -64,7 +64,6 @@ class VMobject(Mobject):
             ('point', np.float32, (3,)),
             ('color', np.float32, (4,)),
             ('fill_all', np.float32, (1,)),
-            ('orientation', np.float32, (1,)),
         ],
         "stroke_dtype": [
             ("point", np.float32, (3,)),
@@ -984,16 +983,13 @@ class VMobject(Mobject):
 
         # Triangulate
         inner_verts = points[inner_vert_indices]
-        inner_tri_indices = inner_vert_indices[
-            earclip_triangulation(inner_verts, rings)
-        ]
+        inner_tri_indices = inner_vert_indices[earclip_triangulation(inner_verts, rings)]
 
         tri_indices = np.hstack([indices, inner_tri_indices])
         return tri_indices
 
     def get_fill_shader_data(self):
         points = self.points
-
         orientation = self.get_orientation()
         tri_indices = self.get_triangulation(orientation)
 
@@ -1007,8 +1003,9 @@ class VMobject(Mobject):
         # are on the boundary, and the rest are in the interior
         data["fill_all"][:len(points)] = 0
         data["fill_all"][len(points):] = 1
-        data["orientation"] = orientation
-
+        # Always send points in a positively oriented way
+        if orientation < 0:
+            data["point"][:len(points)] = points[::-1]
         return data
 
 

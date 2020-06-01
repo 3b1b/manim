@@ -30,25 +30,25 @@ mat3 get_xy_to_uv(vec2 b0, vec2 b1){
 // might change.  The idea is to inform the caller of the degree,
 // while also passing tangency information in the linear case.
 int get_reduced_control_points(vec2 b0, vec2 b1, vec2 b2, out vec2 new_points[3]){
-    float epsilon = 1e-6;
+    float length_threshold = 1e-6;
+    float angle_threshold = 1e-3;
     vec2 v01 = (b1 - b0);
     vec2 v12 = (b2 - b1);
-    bool distinct_01 = length(v01) > epsilon;  // v01 is considered nonzero
-    bool distinct_12 = length(v12) > epsilon;  // v12 is considered nonzero
+    // bool aligned = abs(cross(normalize(v01), normalize(v12))) < angle_threshold;
+    bool aligned = acos(dot(normalize(v01), normalize(v12))) < angle_threshold;
+    bool distinct_01 = length(v01) > length_threshold;  // v01 is considered nonzero
+    bool distinct_12 = length(v12) > length_threshold;  // v12 is considered nonzero
     int n_uniques = int(distinct_01) + int(distinct_12);
-    if(n_uniques == 2){
-        bool linear = dot(normalize(v01), normalize(v12)) > 1 - epsilon;
-        if(linear){
-            new_points[0] = b0;
-            new_points[1] = b2;
-            return 1;
-        }else{
-            new_points[0] = b0;
-            new_points[1] = b1;
-            new_points[2] = b2;
-            return 2;
-        }
-    }else if(n_uniques == 1){
+
+    bool quadratic = (n_uniques == 2) && !aligned;
+    bool linear = (n_uniques == 1) || ((n_uniques == 2) && aligned);
+    bool constant = (n_uniques == 0);
+    if(quadratic){
+        new_points[0] = b0;
+        new_points[1] = b1;
+        new_points[2] = b2;
+        return 2;
+    }else if(linear){
         new_points[0] = b0;
         new_points[1] = b2;
         return 1;
