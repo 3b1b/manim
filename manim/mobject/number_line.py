@@ -47,7 +47,12 @@ class NumberLine(Line):
         digest_config(self, kwargs)
         start = self.unit_size * self.x_min * RIGHT
         end = self.unit_size * self.x_max * RIGHT
-        Line.__init__(self, start-self.add_start*RIGHT, end+self.add_end*RIGHT, **kwargs)
+        Line.__init__(
+            self,
+            start - self.add_start * RIGHT,
+            end + self.add_end * RIGHT,
+            **kwargs
+        )
         self.shift(-self.number_to_point(self.number_at_center))
 
         self.init_leftmost_tick()
