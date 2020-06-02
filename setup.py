@@ -14,7 +14,6 @@ setup(
         ]
     },
     install_requires=[
-        "argparse",
         "colour",
         "numpy",
         "Pillow",
