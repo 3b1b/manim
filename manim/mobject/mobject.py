@@ -1123,10 +1123,29 @@ class Mobject(Container):
     
     # About z-index
     def set_z_index(self, z_index_value):
+        """Set mobject's z_index property to z_index_value
+
+        Parameters
+        ----------
+        z_index_value : Union[:class:`int`, :class:`float`]
+            The value of z_index that needs to be set.
+        
+        Returns
+        -------
+        :class:`Mobject`
+            The mobject object after setting z_index
+        """
         self.z_index = z_index_value
         return self
     
     def set_z_index_by_z_coordinate(self):
+        """Set mobject's z coordinate to the value of z_index
+        
+        Returns
+        -------
+        :class:`Mobject`
+            The mobject object after setting z_index
+        """
         z_coord = self.get_center()[-1]
         self.set_z_index(z_coord)
         return self
