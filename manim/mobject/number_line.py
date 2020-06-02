@@ -107,7 +107,9 @@ class NumberLine(Line):
     def number_to_point(self, number):
         alpha = float(number - self.x_min) / (self.x_max - self.x_min)
         return interpolate(
-            self.get_start()+self.add_start*RIGHT, self.get_end()-self.add_end*RIGHT, alpha
+            self.get_start() + self.add_start * RIGHT,
+            self.get_end() - self.add_end * RIGHT,
+            alpha
         )
 
     def point_to_number(self, point):
