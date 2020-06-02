@@ -61,7 +61,7 @@ class Camera(object):
         # round z coordinate to nearest hundredth when comparring
         "z_buff_func": lambda m: np.round(m.get_center()[2], 2),
         "cairo_line_width_multiple": 0.01,
-        "open_z_index": True,
+        "use_z_index": True,
     }
 
     def __init__(self, background=None, **kwargs):

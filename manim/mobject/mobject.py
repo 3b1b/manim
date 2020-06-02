@@ -1126,9 +1126,6 @@ class Mobject(Container):
         self.z_index = z_index_value
         return self
     
-    def get_z_index(self):
-        return self.z_index
-    
     def set_z_index_by_z_coordinate(self):
         z_coord = self.get_center()[-1]
         self.set_z_index(z_coord)
