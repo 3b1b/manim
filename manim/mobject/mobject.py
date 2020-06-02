@@ -1139,12 +1139,12 @@ class Mobject(Container):
         return self
     
     def set_z_index_by_z_coordinate(self):
-        """Set mobject's z coordinate to the value of z_index
+        """Sets the mobject's z coordinate to the value of :attr:`z_index`.
         
         Returns
         -------
         :class:`Mobject`
-            The mobject object after setting z_index
+            The Mobject itself, after :attr:`z_index` is set. (Returns `self`.)
         """
         z_coord = self.get_center()[-1]
         self.set_z_index(z_coord)
