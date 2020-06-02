@@ -414,7 +414,7 @@ class Camera(object):
             method = Mobject.family_members_with_points
         else:
             method = Mobject.get_family
-        if self.open_z_index:
+        if self.use_z_index:
             mobjects.sort(key=lambda m: m.z_index)
         return remove_list_redundancies(list(
             it.chain(*[method(m) for m in mobjects])
