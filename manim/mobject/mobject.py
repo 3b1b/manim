@@ -1123,17 +1123,17 @@ class Mobject(Container):
     
     # About z-index
     def set_z_index(self, z_index_value):
-        """Set mobject's z_index property to z_index_value
+        """Sets the mobject's :attr:`z_index` to the value specified in `z_index_value`.
 
         Parameters
         ----------
         z_index_value : Union[:class:`int`, :class:`float`]
-            The value of z_index that needs to be set.
+            The new value of :attr:`z_index` set.
         
         Returns
         -------
         :class:`Mobject`
-            The mobject object after setting z_index
+            The Mobject itself, after :attr:`z_index` is set. (Returns `self`.)
         """
         self.z_index = z_index_value
         return self
