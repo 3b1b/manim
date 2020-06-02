@@ -34,6 +34,7 @@ class Mobject(Container):
         "name": None,
         "dim": 3,
         "target": None,
+        "z_index": 0,
     }
 
     def __init__(self, **kwargs):
@@ -1119,6 +1120,19 @@ class Mobject(Container):
                       "for a Mobject with no points"
             caller_name = sys._getframe(1).f_code.co_name
             raise Exception(message.format(caller_name))
+    
+    # About z-index
+    def set_z_index(self, z_index_value):
+        self.z_index = z_index_value
+        return self
+    
+    def get_z_index(self):
+        return self.z_index
+    
+    def set_z_index_by_z_coordinate(self):
+        z_coord = self.get_center()[-1]
+        self.set_z_index(z_coord)
+        return self
 
 
 class Group(Mobject):
