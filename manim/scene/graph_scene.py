@@ -109,16 +109,11 @@ class GraphScene(Scene):
             x_axis.add_numbers(*self.x_labeled_nums)
         if self.x_axis_label:
             x_label = TextMobject(self.x_axis_label)
-            if self.include_tip:
-                x_label.next_to(
-                    x_axis.get_tips(), self.x_label_position,
-                    buff=SMALL_BUFF
-                )
-            else:
-                x_label.next_to(
-                    x_axis.get_tick_marks(), self.x_label_position,
-                    buff=SMALL_BUFF
-                )
+            x_label.next_to(
+                x_axis.get_tips() if self.include_tip else x_axis.get_tick_marks(),
+                self.x_label_position,
+                buff=SMALL_BUFF
+            )
             x_label.shift_onto_screen()
             x_axis.add(x_label)
             self.x_axis_label_mob = x_label
