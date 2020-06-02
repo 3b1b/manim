@@ -1,5 +1,3 @@
-from functools import reduce
-import operator as op
 import moderngl
 from colour import Color
 
@@ -9,6 +7,7 @@ import itertools as it
 
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
+from manimlib.mobject.mobject import Point
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.simple_functions import fdiv
@@ -22,8 +21,6 @@ from manimlib.utils.space_ops import quaternion_from_angle_axis
 from manimlib.utils.space_ops import quaternion_mult
 
 
-# TODO, think about how to incorporate perspective,
-# and change get_height, etc. to take orientation into account
 class CameraFrame(Mobject):
     CONFIG = {
         "width": FRAME_WIDTH,
@@ -46,7 +43,7 @@ class CameraFrame(Mobject):
         self.set_rotation_quaternion([1, 0, 0, 0])
         return self
 
-    def get_transform_to_screen_space(self):
+    def get_inverse_camera_position_matrix(self):
         # Map from real space into camera space
         result = np.identity(4)
         # First shift so that origin of real space coincides with camera origin
@@ -83,6 +80,7 @@ class CameraFrame(Mobject):
         self.rotate(dtheta, OUT)
 
     def increment_phi(self, dphi):
+        # TODO, this seems clunky
         camera_point = rotation_matrix_transpose_from_quaternion(self.rotation_quaternion)[2]
         axis = cross(OUT, camera_point)
         axis = normalize(axis, fall_back=RIGHT)
@@ -135,7 +133,7 @@ class Camera(object):
         "image_mode": "RGBA",
         "n_channels": 4,
         "pixel_array_dtype": 'uint8',
-        "line_width_multiple": 0.01,
+        "light_source_position": [-10, 10, 10],
     }
 
     def __init__(self, ctx=None, **kwargs):
@@ -145,6 +143,7 @@ class Camera(object):
         self.init_context(ctx)
         self.init_shaders()
         self.init_textures()
+        self.light_source = Point(self.light_source_position)
 
     def init_frame(self):
         self.frame = CameraFrame(**self.frame_config)
@@ -329,11 +328,15 @@ class Camera(object):
         # TODO, think about how uniforms come from mobjects as well.
         pw, ph = self.get_pixel_shape()
 
+        transform = self.frame.get_inverse_camera_position_matrix()
+        light = self.light_source.get_location()
+        transformed_light = np.dot(transform, [*light, 1])[:3]
         mapping = {
-            'to_screen_space': tuple(self.frame.get_transform_to_screen_space().T.flatten()),
+            'to_screen_space': tuple(transform.T.flatten()),
             'aspect_ratio': (pw / ph),  # AR based on pixel shape
             'focal_distance': self.frame.get_focal_distance(),
             'anti_alias_width': 3 / ph,  # 1.5 Pixel widths
+            'light_source_position': tuple(transformed_light),
         }
         for key, value in mapping.items():
             try:

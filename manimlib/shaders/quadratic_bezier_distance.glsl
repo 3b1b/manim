@@ -70,9 +70,9 @@ int cubic_solve(float a, float b, float c, float d, out float roots[3]){
 float dist_to_line(vec2 p, vec2 b2){
     float t = clamp(p.x / b2.x, 0, 1);
     float dist;
-    if(t == 0) dist = length(p);
+    if(t == 0)      dist = length(p);
     else if(t == 1) dist = distance(p, b2);
-    else dist = abs(p.y);
+    else            dist = abs(p.y);
 
     return modify_distance_for_endpoints(p, dist, t);
 }

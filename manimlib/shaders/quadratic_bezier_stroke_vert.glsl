@@ -10,6 +10,7 @@ in vec3 next_point;
 in float stroke_width;
 in vec4 color;
 in float joint_type;
+in float gloss;
 
 // Bezier control point
 out vec3 bp;
@@ -19,6 +20,7 @@ out vec3 next_bp;
 out float v_stroke_width;
 out vec4 v_color;
 out float v_joint_type;
+out float v_gloss;
 
 const float STROKE_WIDTH_CONVERSION = 0.0025;
 
@@ -33,7 +35,8 @@ void main(){
     next_bp = position_point_into_frame(next_point);
 
     v_stroke_width = STROKE_WIDTH_CONVERSION * stroke_width;
-    v_stroke_width /= (1 - bp.z);  // Change stroke width by perspective
+    // v_stroke_width /= (1 - bp.z / focal_distance);  // Change stroke width by perspective
     v_color = color;
     v_joint_type = joint_type;
+    v_gloss = gloss;
 }

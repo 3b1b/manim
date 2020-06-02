@@ -58,12 +58,15 @@ class VMobject(Mobject):
         "fill_frag_shader_file": "quadratic_bezier_fill_frag.glsl",
         # Could also be Bevel, Miter, Round
         "joint_type": "auto",
+        # Positive gloss up to 1 makes it reflect the light.
+        "gloss": 0.0,
         "render_primative": moderngl.TRIANGLES,
         "triangulation_locked": False,
         "fill_dtype": [
             ('point', np.float32, (3,)),
             ('color', np.float32, (4,)),
             ('fill_all', np.float32, (1,)),
+            ('gloss', np.float32, (1,)),
         ],
         "stroke_dtype": [
             ("point", np.float32, (3,)),
@@ -72,6 +75,7 @@ class VMobject(Mobject):
             ("stroke_width", np.float32, (1,)),
             ("color", np.float32, (4,)),
             ("joint_type", np.float32, (1,)),
+            ("gloss", np.float32, (1,)),
         ]
     }
 
@@ -225,6 +229,14 @@ class VMobject(Mobject):
             family=False,
         )
         super().fade(darkness, family)
+        return self
+
+    def set_gloss(self, gloss, family=True):
+        if family:
+            for sm in self.get_family():
+                sm.gloss = gloss
+        else:
+            self.gloss = gloss
         return self
 
     def get_fill_rgbas(self):
@@ -896,14 +908,15 @@ class VMobject(Mobject):
             stroke_width = self.stretched_style_array_matching_points(stroke_width)
 
         data = self.get_blank_shader_data_array(len(self.points), "stroke_data")
-        data['point'] = self.points
-        data['prev_point'][:3] = self.points[-3:]
-        data['prev_point'][3:] = self.points[:-3]
-        data['next_point'][:-3] = self.points[3:]
-        data['next_point'][-3:] = self.points[:3]
-        data['stroke_width'][:, 0] = stroke_width
-        data['color'] = rgbas
-        data['joint_type'] = joint_type_to_code[self.joint_type]
+        data["point"] = self.points
+        data["prev_point"][:3] = self.points[-3:]
+        data["prev_point"][3:] = self.points[:-3]
+        data["next_point"][:-3] = self.points[3:]
+        data["next_point"][-3:] = self.points[:3]
+        data["stroke_width"][:, 0] = stroke_width
+        data["color"] = rgbas
+        data["joint_type"] = joint_type_to_code[self.joint_type]
+        data["gloss"] = self.gloss
         return data
 
     def lock_triangulation(self, family=True):
@@ -1003,6 +1016,7 @@ class VMobject(Mobject):
         # are on the boundary, and the rest are in the interior
         data["fill_all"][:len(points)] = 0
         data["fill_all"][len(points):] = 1
+        data["gloss"] = self.gloss
         # Always send points in a positively oriented way
         if orientation < 0:
             data["point"][:len(points)] = points[::-1]
