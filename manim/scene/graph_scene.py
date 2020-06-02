@@ -160,21 +160,16 @@ class GraphScene(Scene):
             y_axis.add(y_label)
             self.y_axis_label_mob = y_label
 
-        if self.x_axis_visibility and self.y_axis_visibility:
-            if animate:
-                self.play(Write(VGroup(x_axis, y_axis)))
-            else:
-                self.add(x_axis, y_axis)
-        elif self.x_axis_visibility:
-            if animate:
-                self.play(Write(x_axis))
-            else:
-                self.add(x_axis)
-        elif self.y_axis_visibility:
-            if animate:
-                self.play(Write(y_axis))
-            else:
-                self.add(y_axis)
+        axes = []
+        if self.x_axis_visibility:
+            axes.append(x_axis)
+        if self.y_axis_visibility:
+            axes.append(y_axis)
+
+        if animate:
+            self.play(Write(VGroup(*axes)))
+        else:
+            self.add(*axes)
         self.x_axis, self.y_axis = self.axes = VGroup(x_axis, y_axis)
         self.default_graph_colors = it.cycle(self.default_graph_colors)
 
