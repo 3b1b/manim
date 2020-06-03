@@ -709,9 +709,9 @@ class VMobject(Mobject):
         ))))
 
     def get_points_defining_boundary(self):
-        return np.array(list(it.chain(*[
-            sm.get_anchors()
-            for sm in self.get_family()
+        return np.array(list(it.chain(self.get_anchors(), *[
+            sm.get_points_defining_boundary()
+            for sm in self.get_family()[1:]
         ])))
 
     def get_arc_length(self, n_sample_points=None):
