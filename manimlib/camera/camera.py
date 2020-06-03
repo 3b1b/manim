@@ -14,9 +14,10 @@ from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.shaders import shader_info_to_id
 from manimlib.utils.shaders import shader_id_to_info
 from manimlib.utils.shaders import get_shader_code_from_file
-from manimlib.utils.space_ops import cross
+from manimlib.utils.simple_functions import clip
+from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import rotation_matrix_transpose_from_quaternion
-from manimlib.utils.space_ops import normalize
+from manimlib.utils.space_ops import rotation_matrix_transpose
 from manimlib.utils.space_ops import quaternion_from_angle_axis
 from manimlib.utils.space_ops import quaternion_mult
 
@@ -26,65 +27,72 @@ class CameraFrame(Mobject):
         "width": FRAME_WIDTH,
         "height": FRAME_HEIGHT,
         "center_point": ORIGIN,
-        # The quaternion describing how to rotate into
-        # the position of the camera.
-        "rotation_quaternion": [1, 0, 0, 0],
+        # Theta, phi, gamma
+        "euler_angles": [0, 0, 0],
         "focal_distance": 5,
     }
 
     def init_points(self):
         self.points = np.array([self.center_point])
-        self.rotation_quaternion = quaternion_from_angle_axis(angle=0, axis=OUT)
+        self.euler_angles = np.array(self.euler_angles, dtype='float64')
 
     def to_default_state(self):
         self.center()
         self.set_height(FRAME_HEIGHT)
         self.set_width(FRAME_WIDTH)
-        self.set_rotation_quaternion([1, 0, 0, 0])
+        self.set_rotation(0, 0, 0)
         return self
 
     def get_inverse_camera_position_matrix(self):
-        # Map from real space into camera space
         result = np.identity(4)
         # First shift so that origin of real space coincides with camera origin
         result[:3, 3] = -self.get_center().T
         # Rotate based on camera orientation
-        result[:3, :3] = np.dot(
-            rotation_matrix_transpose_from_quaternion(self.rotation_quaternion),
-            result[:3, :3]
-        )
+        result[:3, :3] = np.dot(self.get_inverse_camera_rotation_matrix(), result[:3, :3])
         # Scale to have height 2 (matching the height of the box [-1, 1]^2)
         result *= 2 / self.height
         return result
 
-    def rotate(self, angle, axis=OUT, **kwargs):
-        self.rotation_quaternion = normalize(quaternion_mult(
-            quaternion_from_angle_axis(angle, axis),
-            self.rotation_quaternion
-        ))
-        return self
-
-    def set_rotation(self, phi=0, theta=0, gamma=0):
-        self.rotation_quaternion = normalize(quaternion_mult(
+    def get_inverse_camera_rotation_matrix(self):
+        theta, phi, gamma = self.euler_angles
+        quat = quaternion_mult(
             quaternion_from_angle_axis(theta, OUT),
             quaternion_from_angle_axis(phi, RIGHT),
             quaternion_from_angle_axis(gamma, OUT),
-        ))
+        )
+        return rotation_matrix_transpose_from_quaternion(quat)
+
+    def rotate(self, angle, axis=OUT, **kwargs):
+        curr_rot_T = self.get_inverse_camera_rotation_matrix()
+        added_rot_T = rotation_matrix_transpose(angle, axis)
+        new_rot_T = np.dot(curr_rot_T, added_rot_T)
+        Fz = new_rot_T[2]
+        phi = np.arccos(Fz[2])
+        theta = angle_of_vector(Fz[:2]) + PI / 2
+        partial_rot_T = np.dot(
+            rotation_matrix_transpose(phi, RIGHT),
+            rotation_matrix_transpose(theta, OUT),
+        )
+        gamma = angle_of_vector(np.dot(partial_rot_T, new_rot_T.T)[:, 0])
+        # TODO, write a function that converts quaternions to euler angles
+        self.euler_angles[:] = theta, phi, gamma
         return self
 
-    def set_rotation_quaternion(self, quat):
-        self.rotation_quaternion = quat
+    def set_rotation(self, theta=0, phi=0, gamma=0):
+        self.euler_angles[:] = theta, phi, gamma
         return self
 
     def increment_theta(self, dtheta):
-        self.rotate(dtheta, OUT)
+        self.euler_angles[0] += dtheta
+        return self
 
     def increment_phi(self, dphi):
-        # TODO, this seems clunky
-        camera_point = rotation_matrix_transpose_from_quaternion(self.rotation_quaternion)[2]
-        axis = cross(OUT, camera_point)
-        axis = normalize(axis, fall_back=RIGHT)
-        self.rotate(dphi, axis)
+        self.euler_angles[1] = clip(self.euler_angles[1] + dphi, 0, PI)
+        return self
+
+    def increment_gamma(self, dgamma):
+        self.euler_angles[2] += dgamma
+        return self
 
     def scale(self, scale_factor, **kwargs):
         # TODO, handle about_point and about_edge?
@@ -133,7 +141,8 @@ class Camera(object):
         "image_mode": "RGBA",
         "n_channels": 4,
         "pixel_array_dtype": 'uint8',
-        "light_source_position": [-10, 10, 10],
+        "light_source_position": [-10, 10, 10],  # TODO, add multiple light sources
+        "apply_depth_test": False,
     }
 
     def __init__(self, ctx=None, **kwargs):
@@ -143,7 +152,7 @@ class Camera(object):
         self.init_context(ctx)
         self.init_shaders()
         self.init_textures()
-        self.light_source = Point(self.light_source_position)
+        self.init_light_source()
 
     def init_frame(self):
         self.frame = CameraFrame(**self.frame_config)
@@ -157,12 +166,18 @@ class Camera(object):
             self.fbo = self.get_fbo()
             self.fbo.use()
 
-        self.ctx.enable(moderngl.BLEND)
-        self.ctx.blend_func = (
-            moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA,
-            moderngl.ONE, moderngl.ONE
-        )
+        if self.apply_depth_test:
+            self.ctx.enable(moderngl.DEPTH_TEST | moderngl.BLEND)
+        else:
+            self.ctx.enable(moderngl.BLEND)
+            self.ctx.blend_func = (
+                moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA,
+                moderngl.ONE, moderngl.ONE
+            )
         self.background_fbo = None
+
+    def init_light_source(self):
+        self.light_source = Point(self.light_source_position)
 
     # Methods associated with the frame buffer
     def get_fbo(self):
