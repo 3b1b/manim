@@ -3,8 +3,6 @@ import hashlib
 
 from pathlib import Path
 
-#from ..constants import TEX_TEXT_TO_REPLACE
-#from ..constants import TEX_USE_CTEX
 import manim.constants as consts
 
 from .. import dirs
