@@ -1,4 +1,3 @@
-argparse
 colour
 numpy
 Pillow
