@@ -1,4 +1,11 @@
-#### Contributing to the Manim Community Fork - General guidelines
+# General Contribution Guidelines
+
+1. If code changes are being made, please include documentation **following the guidelines in the Wiki** (typings are also welcome, but we can probably do them for you, given the documentation).
+2. (For the maintainers of this repo) Label PRs appropriately.
+3. Link relevant issues.
+4. Ensure compatibility with the latest changes in the repo.
+
+## Contributing to the Manim Community Fork - General guidelines
 
 As this is a Fork of [Manim from 3b1b](https://github.com/3b1b/manim), contributing can be a bit confusing. So here is a small guide on it. 
 
