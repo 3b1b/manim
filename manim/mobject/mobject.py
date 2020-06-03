@@ -1088,17 +1088,6 @@ class Mobject(Container):
     def interpolate_color(self, mobject1, mobject2, alpha):
         raise NotImplementedError('Please override in a child class.')
 
-    def become_partial(self, mobject, a, b):
-        """
-        Set points in such a way as to become only
-        part of mobject.
-        Inputs 0 <= a < b <= 1 determine what portion
-        of mobject to become.
-        """
-        raise NotImplementedError('Please override in a child class.')
-
-        # TODO, color?
-
     def pointwise_become_partial(self, mobject, a, b):
         raise NotImplementedError('Please override in a child class.')
 
@@ -1120,7 +1109,7 @@ class Mobject(Container):
                       "for a Mobject with no points"
             caller_name = sys._getframe(1).f_code.co_name
             raise Exception(message.format(caller_name))
-    
+
     # About z-index
     def set_z_index(self, z_index_value):
         """Sets the mobject's :attr:`z_index` to the value specified in `z_index_value`.
@@ -1129,7 +1118,7 @@ class Mobject(Container):
         ----------
         z_index_value : Union[:class:`int`, :class:`float`]
             The new value of :attr:`z_index` set.
-        
+
         Returns
         -------
         :class:`Mobject`
@@ -1137,10 +1126,10 @@ class Mobject(Container):
         """
         self.z_index = z_index_value
         return self
-    
+
     def set_z_index_by_z_coordinate(self):
         """Sets the mobject's z coordinate to the value of :attr:`z_index`.
-        
+
         Returns
         -------
         :class:`Mobject`
