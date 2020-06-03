@@ -46,4 +46,4 @@ def test_WriteStuff():
     assert (b"Played 2 animation" in out.splitlines()[-1])
     assert os.path.exists(os.path.join(
         path_output, "videos", "basic_scenes", "480p15", "WriteStuff.mp4")), "Error in the file generation. Please ignore if it was intended"
-    #rmtree(path_output)
+    rmtree(path_output)
