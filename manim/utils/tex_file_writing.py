@@ -3,8 +3,7 @@ import hashlib
 
 from pathlib import Path
 
-import manim.constants as consts
-
+from .. import constants
 from .. import dirs
 from ..logger import logger
 
@@ -16,7 +15,7 @@ def tex_hash(expression):
     return hasher.hexdigest()[:16]
 
 def tex_to_svg_file(expression, source_type):
-    tex_template = consts.TEX_TEMPLATE
+    tex_template = constants.TEX_TEMPLATE
     tex_file = generate_tex_file(expression, tex_template, source_type)
     dvi_file = tex_to_dvi(tex_file, tex_template.use_ctex)
     return dvi_to_svg(dvi_file, use_ctex=tex_template.use_ctex)
