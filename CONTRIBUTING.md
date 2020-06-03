@@ -36,6 +36,6 @@ As this is a Fork of [Manim from 3b1b](https://github.com/3b1b/manim), contribut
 
    Then you can make a Pull Request to the Manim Community Repo from your fork, through GitHub. Make sure to select `ManimCommunity/manim` instead of `3b1b/manim` as `base repository` and your fork and branch as `head repository`. See the picture below.
 
-   ![pull-requests-example-manim-community](readme-assets\pull-requests.PNG)
+   ![pull-requests-example-manim-community](./readme-assets/pull-requests.PNG)
 
 Also make sure to pull from upstream/master right before making a Pull Request, resolving merge conflicts locally and only then submitting the Pull Request.
