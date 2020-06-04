@@ -269,8 +269,7 @@ void set_previous_and_next(vec3 controls[3], int degree, vec3 normal){
 
 
 void main() {
-    unit_normal = get_unit_normal(bp[0], bp[1], bp[2]);
-    // unit_normal = vec3(0, 0, 1);
+    unit_normal = get_unit_normal(vec3[3](bp[0], bp[1], bp[2]));
 
     vec3 controls[3];
     bezier_degree = get_reduced_control_points(vec3[3](bp[0], bp[1], bp[2]), controls);

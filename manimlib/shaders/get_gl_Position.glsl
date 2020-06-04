@@ -10,5 +10,5 @@ vec4 get_gl_Position(vec3 point){
     // the z-coordiante of gl_Position only matter for z-indexing.  The reason
     // for thie line is to avoid agressive clipping of distant points.
     if(point.z < 0) point.z *= 0.1;
-    return vec4(point, 1);
+    return vec4(point.xy, -point.z, 1);
 }

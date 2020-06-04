@@ -136,25 +136,11 @@ def z_to_vector(vector):
     Returns some matrix in SO(3) which takes the z-axis to the
     (normalized) vector provided as an argument
     """
-    norm = get_norm(vector)
-    if norm == 0:
+    cp = cross(OUT, vector)
+    if get_norm(cp) == 0:
         return np.identity(3)
-    v = np.array(vector) / norm
-    phi = np.arccos(v[2])
-    if any(v[:2]):
-        # projection of vector to unit circle
-        axis_proj = v[:2] / get_norm(v[:2])
-        theta = np.arccos(axis_proj[0])
-        if axis_proj[1] < 0:
-            theta = -theta
-    else:
-        theta = 0
-    phi_down = np.array([
-        [math.cos(phi), 0, math.sin(phi)],
-        [0, 1, 0],
-        [-math.sin(phi), 0, math.cos(phi)]
-    ])
-    return np.dot(rotation_about_z(theta), phi_down)
+    angle = np.arccos(np.dot(OUT, normalize(vector)))
+    return rotation_matrix(angle, axis=cp)
 
 
 def angle_of_vector(vector):
@@ -196,8 +182,19 @@ def cross(v1, v2):
     ])
 
 
-def get_unit_normal(v1, v2):
-    return normalize(cross(v1, v2))
+def get_unit_normal(v1, v2, tol=1e-6):
+    v1 = normalize(v1)
+    v2 = normalize(v2)
+    cp = cross(v1, v2)
+    cp_norm = get_norm(cp)
+    if cp_norm < tol:
+        # Vectors align, so find a normal to them in the plane shared with the z-axis
+        new_cp = cross(cross(v1, OUT), v1)
+        new_cp_norm = get_norm(new_cp)
+        if new_cp_norm < tol:
+            return RIGHT
+        return new_cp / new_cp_norm
+    return cp / cp_norm
 
 
 ###

@@ -3,11 +3,13 @@
 uniform mat4 to_screen_space;
 
 in vec3 point;
+in vec3 unit_normal;
 in vec4 color;
 in float fill_all;  // Either 0 or 1
 in float gloss;
 
 out vec3 bp;  // Bezier control point
+out vec3 v_global_unit_normal;
 out vec4 v_color;
 out float v_fill_all;
 out float v_gloss;
@@ -19,6 +21,7 @@ out float v_gloss;
 
 void main(){
     bp = position_point_into_frame(point);
+    v_global_unit_normal = position_point_into_frame(unit_normal);
     v_color = color;
     v_fill_all = fill_all;
     v_gloss = gloss;
