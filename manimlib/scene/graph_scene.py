@@ -65,7 +65,7 @@ class GraphScene(Scene):
         self.right_T_label = VGroup()
         self.right_v_line = VGroup()
 
-    def setup_axes(self, animate=False):
+    def setup_axes(self, animate=False, hideaxes=False):
         """
         This method sets up the axes of the graph.
 
@@ -141,6 +141,8 @@ class GraphScene(Scene):
 
         if animate:
             self.play(Write(VGroup(x_axis, y_axis)))
+        elif hideaxes:
+            pass
         else:
             self.add(x_axis, y_axis)
         self.x_axis, self.y_axis = self.axes = VGroup(x_axis, y_axis)
