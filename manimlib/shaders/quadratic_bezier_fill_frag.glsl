@@ -8,7 +8,7 @@ in float fill_all;  // Either 0 or 1e
 in float uv_anti_alias_width;
 
 in vec3 xyz_coords;
-in vec3 local_unit_normal;
+in vec3 global_unit_normal;
 in float orientation;
 in vec2 uv_coords;
 in vec2 uv_b2;
@@ -67,7 +67,7 @@ float sdf(){
 
 void main() {
     if (color.a == 0) discard;
-    frag_color = add_light(color, xyz_coords, local_unit_normal, light_source_position, gloss);
+    frag_color = add_light(color, xyz_coords, global_unit_normal, light_source_position, gloss);
     if (fill_all == 1.0) return;
     frag_color.a *= smoothstep(1, 0, sdf() / uv_anti_alias_width);
 }

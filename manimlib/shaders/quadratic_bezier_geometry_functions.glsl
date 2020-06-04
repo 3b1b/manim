@@ -47,7 +47,8 @@ float get_reduced_control_points(in vec3 points[3], out vec3 new_points[3]){
     vec3 v01 = (p1 - p0);
     vec3 v12 = (p2 - p1);
 
-    bool aligned = acos(dot(normalize(v01), normalize(v12))) < angle_threshold;
+    float dot_prod = clamp(dot(normalize(v01), normalize(v12)), -1, 1);
+    bool aligned = acos(dot_prod) < angle_threshold;
     bool distinct_01 = length(v01) > length_threshold;  // v01 is considered nonzero
     bool distinct_12 = length(v12) > length_threshold;  // v12 is considered nonzero
     int n_uniques = int(distinct_01) + int(distinct_12);

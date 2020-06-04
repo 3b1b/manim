@@ -4,7 +4,7 @@ uniform mat4 to_screen_space;
 uniform vec3 light_source_position;
 
 in vec3 xyz_coords;
-in vec3 unit_normal;
+in vec3 global_unit_normal;
 in vec2 uv_coords;
 in vec2 uv_b2;
 
@@ -91,10 +91,12 @@ void main() {
     if (uv_stroke_width == 0) discard;
 
     // Add lighting if needed
-    frag_color = add_light(color, xyz_coords, unit_normal, light_source_position, gloss);
+    frag_color = add_light(color, xyz_coords, global_unit_normal, light_source_position, gloss);
 
     float dist_to_curve = min_dist_to_curve(uv_coords, uv_b2, bezier_degree);
     // An sdf for the region around the curve we wish to color.
     float signed_dist = abs(dist_to_curve) - 0.5 * uv_stroke_width;
     frag_color.a *= smoothstep(0.5, -0.5, signed_dist / uv_anti_alias_width);
+
+    // frag_color.a += 0.3;
 }

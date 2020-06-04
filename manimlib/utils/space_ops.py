@@ -3,9 +3,10 @@ import math
 import itertools as it
 from mapbox_earcut import triangulate_float32 as earcut
 
+from manimlib.constants import RIGHT
+from manimlib.constants import UP
 from manimlib.constants import OUT
 from manimlib.constants import PI
-from manimlib.constants import RIGHT
 from manimlib.constants import TAU
 from manimlib.utils.iterables import adjacent_pairs
 
@@ -192,7 +193,7 @@ def get_unit_normal(v1, v2, tol=1e-6):
         new_cp = cross(cross(v1, OUT), v1)
         new_cp_norm = get_norm(new_cp)
         if new_cp_norm < tol:
-            return RIGHT
+            return UP
         return new_cp / new_cp_norm
     return cp / cp_norm
 

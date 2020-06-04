@@ -20,7 +20,7 @@ out float fill_all;
 out float uv_anti_alias_width;
 
 out vec3 xyz_coords;
-out vec3 local_unit_normal;
+out vec3 global_unit_normal;
 out float orientation;
 // uv space is where b0 = (0, 0), b1 = (1, 0), and transform is orthogonal
 out vec2 uv_coords;
@@ -38,6 +38,7 @@ out float bezier_degree;
 void emit_vertex_wrapper(vec3 point, int index){
     color = v_color[index];
     gloss = v_gloss[index];
+    global_unit_normal = v_global_unit_normal[index];
     xyz_coords = point;
     gl_Position = get_gl_Position(xyz_coords);
     EmitVertex();
@@ -59,29 +60,29 @@ void emit_pentagon(vec3[3] points, vec3 normal){
     // Tangent vectors
     vec3 t01 = normalize(p1 - p0);
     vec3 t12 = normalize(p2 - p1);
-    // Vectors normal to the curve in the plane of the curve pointing outside the curve
-    vec3 n01 = cross(t01, normal);
-    vec3 n12 = cross(t12, normal);
+    // Vectors perpendicular to the curve in the plane of the curve pointing outside the curve
+    vec3 p0_perp = cross(t01, normal);
+    vec3 p2_perp = cross(t12, normal);
 
     bool fill_in = orientation > 0;
     float aaw = anti_alias_width;
     vec3 corners[5];
     if(fill_in){
-        // Note, straight lines will also fall into this case, and since n01 and n12
+        // Note, straight lines will also fall into this case, and since p0_perp and p2_perp
         // will point to the right of the curve, it's just what we want
         corners = vec3[5](
-            p0 + aaw * n01,
+            p0 + aaw * p0_perp,
             p0,
-            p1 + 0.5 * aaw * (n01 + n12),
+            p1 + 0.5 * aaw * (p0_perp + p2_perp),
             p2,
-            p2 + aaw * n12
+            p2 + aaw * p2_perp
         );
     }else{
         corners = vec3[5](
             p0,
-            p0 - aaw * n01,
+            p0 - aaw * p0_perp,
             p1,
-            p2 - aaw * n12,
+            p2 - aaw * p2_perp,
             p2
         );
     }
@@ -102,7 +103,7 @@ void emit_pentagon(vec3[3] points, vec3 normal){
 
 void main(){
     fill_all = v_fill_all[0];
-    local_unit_normal = get_unit_normal(vec3[3](bp[0], bp[1], bp[2]));
+    vec3 local_unit_normal = get_unit_normal(vec3[3](bp[0], bp[1], bp[2]));
     orientation = sign(dot(v_global_unit_normal[0], local_unit_normal));
 
     if(fill_all == 1){

@@ -11,6 +11,7 @@ uniform float anti_alias_width;
 in vec3 bp[3];
 in vec3 prev_bp[3];
 in vec3 next_bp[3];
+in vec3 v_global_unit_normal[3];
 
 in vec4 v_color[3];
 in float v_stroke_width[3];
@@ -32,7 +33,7 @@ out float angle_to_next;
 out float bezier_degree;
 
 out vec3 xyz_coords;
-out vec3 unit_normal;
+out vec3 global_unit_normal;
 out vec2 uv_coords;
 out vec2 uv_b2;
 
@@ -51,9 +52,19 @@ const float MITER_JOINT = 3;
 #INSERT get_unit_normal.glsl
 
 
+float get_aaw_scalar(vec3 normal){
+    return min(abs(normal.z), 5);
+}
+
+
 float angle_between_vectors(vec3 v1, vec3 v2, vec3 normal){
-    vec3 nv1 = normalize(v1);
-    vec3 nv2 = normalize(v2);
+    float v1_norm = length(v1);
+    float v2_norm = length(v2);
+    if(v1_norm == 0 || v2_norm == 0) return 0;
+    vec3 nv1 = v1 / v1_norm;
+    vec3 nv2 = v2 / v2_norm;
+    // float signed_area = clamp(dot(cross(nv1, nv2), normal), -1, 1);
+    // return asin(signed_area);
     float unsigned_angle = acos(clamp(dot(nv1, nv2), -1, 1));
     float sn = sign(dot(cross(nv1, nv2), normal));
     return sn * unsigned_angle;
@@ -129,23 +140,20 @@ int get_corners(vec3 controls[3], vec3 normal, int degree, out vec3 corners[5]){
     vec3 p1 = controls[1];
     vec3 p2 = controls[2];
 
-    // Unit vectors for directions between
-    // Various control points
-    vec3 v02 = normalize(p2 - p0);
+    // Unit vectors for directions between control points
     vec3 v10 = normalize(p0 - p1);
     vec3 v12 = normalize(p2 - p1);
-    vec3 v20 = -v02;
     vec3 v01 = -v10;
     vec3 v21 = -v12;
 
-    // Find bounding points around ends
-    vec3 p0_perp = cross(normal, v01);
-    vec3 p2_perp = cross(normal, v21);
+    // 
+    vec3 p0_perp = cross(normal, v01);  // Pointing to the left of the curve from p0
+    vec3 p2_perp = cross(normal, v12);  // Pointing to the left of the curve from p2
 
     // aaw is the added width given around the polygon for antialiasing.
     // In case the normal is faced away from (0, 0, 1), the vector to the
     // camera, this is scaled up.
-    float aaw = anti_alias_width / normal.z;
+    float aaw = anti_alias_width / get_aaw_scalar(normal);
     float buff0 = 0.5 * v_stroke_width[0] + aaw;
     float buff2 = 0.5 * v_stroke_width[2] + aaw;
     float aaw0 = (1 - has_prev) * aaw;
@@ -153,16 +161,12 @@ int get_corners(vec3 controls[3], vec3 normal, int degree, out vec3 corners[5]){
 
     vec3 c0 = p0 - buff0 * p0_perp + aaw0 * v10;
     vec3 c1 = p0 + buff0 * p0_perp + aaw0 * v10;
-    vec3 c2 = p2 - buff2 * p2_perp + aaw2 * v12;
-    vec3 c3 = p2 + buff2 * p2_perp + aaw2 * v12;
+    vec3 c2 = p2 + buff2 * p2_perp + aaw2 * v12;
+    vec3 c3 = p2 - buff2 * p2_perp + aaw2 * v12;
 
     // Account for previous and next control points
-    if(has_prev == 1){
-        create_joint(angle_from_prev, v01, buff0, bevel_start, c0, c0, c1, c1);
-    }
-    if(has_next == 1){
-        create_joint(-angle_to_next, v21, buff2, bevel_end, c2, c2, c3, c3);
-    }
+    if(has_prev > 0) create_joint(angle_from_prev, v01, buff0, bevel_start, c0, c0, c1, c1);
+    if(has_next > 0) create_joint(angle_to_next, v21, buff2, bevel_end, c3, c3, c2, c2);
 
     // Linear case is the simplest
     if(degree == 1){
@@ -171,46 +175,12 @@ int get_corners(vec3 controls[3], vec3 normal, int degree, out vec3 corners[5]){
         corners = vec3[5](c0, c1, c3, c2, vec3(0.0));
         return 4;
     }
-
-    // Some admitedly complicated logic to (hopefully efficiently)
-    // make sure corners forms a convex hull around the curve.
-    if(dot(cross(v10, v12), normal) > 0){
-        bool change_c0 = (
-            // has_prev == 0 &&
-            dot(v21, v20) > 0 &&
-            should_motify_corner(c0, v01, c2, c3, v21, normal, buff0)
-        );
-        if(change_c0) c0 = p0 + p2_perp * buff0;
-
-        bool change_c3 = (
-            // has_next == 0 &&
-            dot(v01, v02) > 0 &&
-            should_motify_corner(c3, v21, c1, c0, v01, normal, buff2)
-        );
-        if(change_c3) c3 = p2 - p0_perp * buff2;
-
-        vec3 i12;
-        find_intersection(c1, v01, c2, v21, normal, i12);
-        corners = vec3[5](c1, c0, i12, c3, c2);
-    }else{
-        bool change_c1 = (
-            // has_prev == 0 &&
-            dot(v21, v20) > 0 &&
-            should_motify_corner(c1, v01, c3, c2, v21, normal, buff0)
-        );
-        if(change_c1) c1 = p0 - p2_perp * buff0;
-
-        bool change_c2 = (
-            // has_next == 0 &&
-            dot(v01, v02) > 0 &&
-            should_motify_corner(c2, v21, c0, c1, v01, normal, buff2)
-        );
-        if(change_c2) c2 = p2 + p0_perp * buff2;
-
-        vec3 i03;
-        find_intersection(c0, v01, c3, v21, normal, i03);
-        corners = vec3[5](c0, c1, i03, c2, c3);
-    }
+    // Otherwise, form a pentagon around the curve
+    float orientation = sign(dot(cross(v01, v12), normal));  // Positive for ccw curves
+    if(orientation > 0) corners = vec3[5](c0, c1, p1, c2, c3);
+    else                corners = vec3[5](c1, c0, p1, c3, c2);
+    // Replace corner[2] with convex hull point accounting for stroke width
+    find_intersection(corners[0], v01, corners[4], v21, normal, corners[2]);
     return 5;
 }
 
@@ -219,23 +189,14 @@ void set_adjascent_info(vec3 c0, vec3 tangent,
                         int degree,
                         vec3 normal,
                         vec3 adj[3],
-                        out float has,
                         out float bevel,
                         out float angle
                         ){
     float joint_type = v_joint_type[0];
-
-    has = 0;
-    bevel = 0;
-    angle = 0;
-
     vec3 new_adj[3];
     float adj_degree = get_reduced_control_points(adj, new_adj);
-    has = float(adj_degree > 0);
-    if(has == 1){
-        vec3 adj = new_adj[1];
-        angle = angle_between_vectors(c0 - adj, tangent, normal);
-    }
+    // Check if adj_degree is zero?
+    angle = angle_between_vectors(c0 - new_adj[1], tangent, normal);
     // Decide on joint type
     bool one_linear = (degree == 1 || adj_degree == 1.0);
     bool should_bevel = (
@@ -247,29 +208,35 @@ void set_adjascent_info(vec3 c0, vec3 tangent,
 
 
 void set_previous_and_next(vec3 controls[3], int degree, vec3 normal){
-    float a_tol = 1e-10;
+    float a_tol = 1e-8;
 
-    if(distance(prev_bp[2], bp[0]) < a_tol){
+    // Made as floats not bools so they can be passed to the frag shader
+    has_prev = float(distance(prev_bp[2], bp[0]) < a_tol);
+    has_next = float(distance(next_bp[0], bp[2]) < a_tol);
+
+    if(has_prev > 0){
         vec3 tangent = controls[1] - controls[0];
         set_adjascent_info(
             controls[0], tangent, degree, normal,
             vec3[3](prev_bp[0], prev_bp[1], prev_bp[2]),
-            has_prev, bevel_start, angle_from_prev
+            bevel_start, angle_from_prev
         );
     }
-    if(distance(next_bp[0], bp[2]) < a_tol){
+    if(has_next > 0){
         vec3 tangent = controls[1] - controls[2];
         set_adjascent_info(
             controls[2], tangent, degree, normal,
             vec3[3](next_bp[0], next_bp[1], next_bp[2]),
-            has_next, bevel_end, angle_to_next
+            bevel_end, angle_to_next
         );
+        angle_to_next *= -1;
     }
 }
 
 
 void main() {
-    unit_normal = get_unit_normal(vec3[3](bp[0], bp[1], bp[2]));
+    vec3 unit_normal = v_global_unit_normal[0];
+    // anti_alias_width /= cos(0.5 * acos(abs(unit_normal.z)));
 
     vec3 controls[3];
     bezier_degree = get_reduced_control_points(vec3[3](bp[0], bp[1], bp[2]), controls);
@@ -283,16 +250,13 @@ void main() {
     // Find uv conversion matrix
     mat4 xyz_to_uv = get_xyz_to_uv(controls[0], controls[1], unit_normal);
     float scale_factor = length(controls[1] - controls[0]);
-    uv_anti_alias_width = anti_alias_width / scale_factor / unit_normal.z;
+    uv_anti_alias_width = anti_alias_width / scale_factor / get_aaw_scalar(unit_normal);
     uv_b2 = (xyz_to_uv * vec4(controls[2], 1.0)).xy;
 
     // Corners of a bounding region around curve
     vec3 corners[5];
     int n_corners = get_corners(controls, unit_normal, degree, corners);
 
-    // Get style info aligned to the corners
-    float stroke_widths[5];
-    vec4 stroke_colors[5];
     int index_map[5] = int[5](0, 0, 1, 2, 2);
     if(n_corners == 4) index_map[2] = 2;
 
@@ -303,6 +267,7 @@ void main() {
         uv_stroke_width = v_stroke_width[index_map[i]] / scale_factor;
         color = v_color[index_map[i]];
         gloss = v_gloss[index_map[i]];
+        global_unit_normal = v_global_unit_normal[index_map[i]];
         gl_Position = get_gl_Position(xyz_coords);
         EmitVertex();
     }

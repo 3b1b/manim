@@ -1,7 +1,9 @@
 import itertools as it
+import operator as op
 import moderngl
 
 from colour import Color
+from functools import reduce
 
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
@@ -23,7 +25,7 @@ from manimlib.utils.space_ops import angle_between_vectors
 from manimlib.utils.space_ops import cross2d
 from manimlib.utils.space_ops import earclip_triangulation
 from manimlib.utils.space_ops import get_norm
-from manimlib.utils.space_ops import normalize
+from manimlib.utils.space_ops import get_unit_normal
 from manimlib.utils.space_ops import z_to_vector
 from manimlib.utils.shaders import get_shader_info
 
@@ -75,6 +77,7 @@ class VMobject(Mobject):
             ("point", np.float32, (3,)),
             ("prev_point", np.float32, (3,)),
             ("next_point", np.float32, (3,)),
+            ('unit_normal', np.float32, (3,)),
             ("stroke_width", np.float32, (1,)),
             ("color", np.float32, (4,)),
             ("joint_type", np.float32, (1,)),
@@ -668,6 +671,14 @@ class VMobject(Mobject):
             self.get_end_anchors(),
         ))))
 
+    def get_points_without_null_curves(self, atol=1e-9):
+        nppc = self.n_points_per_curve
+        distinct_curves = reduce(op.or_, [
+            (abs(self.points[i::nppc] - self.points[0::nppc]) > atol).any(1)
+            for i in range(1, nppc)
+        ])
+        return self.points[distinct_curves.repeat(nppc)]
+
     def get_arc_length(self, n_sample_points=None):
         if n_sample_points is None:
             n_sample_points = 4 * self.get_num_curves() + 1
@@ -678,6 +689,38 @@ class VMobject(Mobject):
         diffs = points[1:] - points[:-1]
         norms = np.array([get_norm(d) for d in diffs])
         return norms.sum()
+
+    def get_area_vector(self):
+        # Returns a vector whose length is the area bound by
+        # the polygon formed by the anchor points, pointing
+        # in a direction perpendicular to the polygon according
+        # to the right hand rule.
+        if self.has_no_points():
+            return np.zeros(3)
+
+        nppc = self.n_points_per_curve
+        p0 = self.points[0::nppc]
+        p1 = self.points[nppc - 1::nppc]
+
+        # Each term goes through all edges [(x1, y1, z1), (x2, y2, z2)]
+        return 0.5 * np.array([
+            sum((p0[:, 1] + p1[:, 1]) * (p1[:, 2] - p0[:, 2])),  # Add up (y1 + y2)*(z2 - z1)
+            sum((p0[:, 2] + p1[:, 2]) * (p1[:, 0] - p0[:, 0])),  # Add up (z1 + z2)*(x2 - x1)
+            sum((p0[:, 0] + p1[:, 0]) * (p1[:, 1] - p0[:, 1])),  # Add up (x1 + x2)*(y2 - y1)
+        ])
+
+    def get_unit_normal_vector(self):
+        if len(self.points) < 3:
+            return OUT
+        area_vect = self.get_area_vector()
+        area = get_norm(area_vect)
+        if area > 0:
+            return area_vect / area
+        else:
+            return get_unit_normal(
+                self.points[1] - self.points[0],
+                self.points[2] - self.points[1],
+            )
 
     # Alignment
     def align_points(self, vmobject):
@@ -910,12 +953,16 @@ class VMobject(Mobject):
         if len(stroke_width) > 1:
             stroke_width = self.stretched_style_array_matching_points(stroke_width)
 
-        data = self.get_blank_shader_data_array(len(self.points), "stroke_data")
-        data["point"] = self.points
-        data["prev_point"][:3] = self.points[-3:]
-        data["prev_point"][3:] = self.points[:-3]
-        data["next_point"][:-3] = self.points[3:]
-        data["next_point"][-3:] = self.points[:3]
+        points = self.get_points_without_null_curves()
+        nppc = self.n_points_per_curve
+
+        data = self.get_blank_shader_data_array(len(points), "stroke_data")
+        data["point"] = points
+        data["prev_point"][:nppc] = points[-nppc:]
+        data["prev_point"][nppc:] = points[:-nppc]
+        data["next_point"][:-nppc] = points[nppc:]
+        data["next_point"][-nppc:] = points[:nppc]
+        data["unit_normal"] = self.get_unit_normal_vector()
         data["stroke_width"][:, 0] = stroke_width
         data["color"] = rgbas
         data["joint_type"] = joint_type_to_code[self.joint_type]
@@ -938,27 +985,6 @@ class VMobject(Mobject):
         for sm in self.get_family():
             if sm.triangulation_locked:
                 sm.lock_triangulation(family=False)
-
-    def get_area_vector(self):
-        # Returns a vector whose length is the area bound by
-        # the polygon formed by the anchor points, pointing
-        # in a direction perpendicular to the polygon according
-        # to the right hand rule.
-        nppc = self.n_points_per_curve
-        p0 = self.points[0::nppc]
-        p1 = self.points[nppc - 1::nppc]
-
-        # Each term goes through all edges [(x1, y1, z1), (x2, y2, z2)]
-        return 0.5 * np.array([
-            sum((p0[:, 1] + p1[:, 1]) * (p1[:, 2] - p0[:, 2])),  # Add up (y1 + y2)*(z2 - z1)
-            sum((p0[:, 2] + p1[:, 2]) * (p1[:, 0] - p0[:, 0])),  # Add up (z1 + z2)*(x2 - x1)
-            sum((p0[:, 0] + p1[:, 0]) * (p1[:, 1] - p0[:, 1])),  # Add up (x1 + x2)*(y2 - y1)
-        ])
-
-    def get_unit_normal_vector(self):
-        if self.has_no_points():
-            return ORIGIN
-        return normalize(self.get_area_vector())
 
     def get_triangulation(self, normal_vector=None):
         # Figure out how to triangulate the interior to know

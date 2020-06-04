@@ -21,7 +21,7 @@ out float v_gloss;
 
 void main(){
     bp = position_point_into_frame(point);
-    v_global_unit_normal = position_point_into_frame(unit_normal);
+    v_global_unit_normal = normalize(position_point_into_frame(unit_normal));
     v_color = color;
     v_fill_all = fill_all;
     v_gloss = gloss;
