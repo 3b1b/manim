@@ -61,6 +61,7 @@ class Camera(object):
         # round z coordinate to nearest hundredth when comparring
         "z_buff_func": lambda m: np.round(m.get_center()[2], 2),
         "cairo_line_width_multiple": 0.01,
+        "use_z_index": True,
     }
 
     def __init__(self, background=None, **kwargs):
@@ -413,6 +414,8 @@ class Camera(object):
             method = Mobject.family_members_with_points
         else:
             method = Mobject.get_family
+        if self.use_z_index:
+            mobjects.sort(key=lambda m: m.z_index)
         return remove_list_redundancies(list(
             it.chain(*[method(m) for m in mobjects])
         ))

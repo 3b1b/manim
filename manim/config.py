@@ -12,10 +12,10 @@ import sys
 import argparse
 import configparser
 import colour
-
+from .utils.tex import TexTemplateFromFile, TexTemplate
 from .logger import logger
 
-__all__ = ['config']
+__all__ = ["config", "register_tex_template", "initialize_tex"]
 
 
 def _parse_config(input_file, config_files):
@@ -200,6 +200,10 @@ def _parse_cli():
         "--text_dir",
         help="directory to write text",
     )
+    parser.add_argument(
+        "--tex_template",
+        help="Specify a custom TeX template file",
+    )
 
     # All of the following use (action="store_true"). This means that
     # they are by default False.  In contrast to the previous ones that
@@ -284,7 +288,7 @@ def _update_config_with_args(config, config_parser, args):
         if getattr(args, opt.lower()) is not None:
             config[opt] = getattr(args, opt.lower())
 
-   # Parse the -n flag.
+    # Parse the -n flag.
     nflag = args.from_animation_number
     if nflag is not None:
         if ',' in nflag:
@@ -325,7 +329,7 @@ def _update_config_with_args(config, config_parser, args):
     # correspond to any section in manim.cfg, but overrides the same
     # options as the *_quality sections.
     if args.resolution is not None:
-        if  "," in args.resolution:
+        if "," in args.resolution:
             height_str, width_str = args.resolution.split(",")
             height = int(height_str)
             width = int(width_str)
@@ -377,6 +381,44 @@ def _init_dirs(config):
             os.makedirs(folder)
 
 
+def register_tex_template(tpl):
+    """Register the given LaTeX template for later use.
+
+    Parameters
+    ----------
+    tpl : :class:`~.TexTemplate`
+        The LaTeX template to register.
+    """
+    config['tex_template'] = tpl
+
+
+def initialize_tex(config):
+    """Safely create a LaTeX template object from a file.
+    If file is not readable, the default template file is used.
+
+    Parameters
+    ----------
+    filename : :class:`str`
+        The name of the file with the LaTeX template.
+    """
+    filename = ""
+    if config["tex_template"]:
+        filename = os.path.expanduser(config["tex_template"])
+    if filename and not os.access(filename, os.R_OK):
+        # custom template not available, fallback to default
+        logger.warning(
+            f"Custom TeX template {filename} not found or not readable. "
+            "Falling back to the default template."
+        )
+        filename = ""
+    if filename:
+        # still having a filename -> use the file
+        config['tex_template'] = TexTemplateFromFile(filename=filename)
+    else:
+        # use the default template
+        config['tex_template'] = TexTemplate()
+
+
 # Config files to be parsed, in ascending priority
 library_wide = os.path.join(os.path.dirname(__file__), 'default.cfg'),
 config_files = [
@@ -405,4 +447,7 @@ if prog in ['manim', 'manimcm']:
 else:
     config, _ = _parse_config('', config_files)
 
+#########    ##########    ##########
+# make sure to set dirs.TEX_DIR somewhere
+#########    ##########    ##########
 _init_dirs(config)

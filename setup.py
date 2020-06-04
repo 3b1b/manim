@@ -14,14 +14,12 @@ setup(
         ]
     },
     install_requires=[
-        "argparse",
         "colour",
         "numpy",
         "Pillow",
         "progressbar",
         "scipy",
         "tqdm",
-        "opencv-python",
         "pycairo",
         "pydub",
         "pygments",
