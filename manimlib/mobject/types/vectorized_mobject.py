@@ -137,7 +137,8 @@ class VMobject(Mobject):
     def set_fill(self, color=None, opacity=None, family=True):
         if family:
             for submobject in self.submobjects:
-                submobject.set_fill(color, opacity, family)
+                if hasattr(submobject, 'set_fill'):
+                    submobject.set_fill(color, opacity, family)
         self.update_rgbas_array("fill_rgbas", color, opacity)
         return self
 
@@ -145,9 +146,10 @@ class VMobject(Mobject):
                    background=False, family=True):
         if family:
             for submobject in self.submobjects:
-                submobject.set_stroke(
-                    color, width, opacity, background, family
-                )
+                if hasattr(submobject, 'set_stroke'):
+                    submobject.set_stroke(
+                        color, width, opacity, background, family
+                    )
         if background:
             array_name = "background_stroke_rgbas"
             width_name = "background_stroke_width"
