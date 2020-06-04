@@ -10,7 +10,7 @@
 As this is a Fork of [Manim by 3b1b](https://github.com/3b1b/manim), contributing can be a bit confusing. Because of that, here is a small guide on it. 
 
 1. First, make a fork of this repository.
-2. Then clone the repository you forked using the command below (bash/zsh)
+2. Then clone the repository you forked using the command below (bash/zsh).
 
  ```sh
    git clone <your-fork-url>
