@@ -8,7 +8,6 @@ from functools import reduce
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
-from manimlib.mobject.three_d_utils import get_3d_vmob_gradient_start_and_end_points
 from manimlib.utils.bezier import bezier
 from manimlib.utils.bezier import get_smooth_handle_points
 from manimlib.utils.bezier import get_quadratic_approximation_of_cubic
@@ -63,7 +62,7 @@ class VMobject(Mobject):
         # Could also be Bevel, Miter, Round
         "joint_type": "auto",
         # Positive gloss up to 1 makes it reflect the light.
-        "gloss": 0.0,
+        "gloss": 0.2,
         "render_primative": moderngl.TRIANGLES,
         "triangulation_locked": False,
         "fill_dtype": [

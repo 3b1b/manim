@@ -166,14 +166,14 @@ class Camera(object):
             self.fbo = self.get_fbo()
             self.fbo.use()
 
+        flag = moderngl.BLEND
         if self.apply_depth_test:
-            self.ctx.enable(moderngl.DEPTH_TEST | moderngl.BLEND)
-        else:
-            self.ctx.enable(moderngl.BLEND)
-            self.ctx.blend_func = (
-                moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA,
-                moderngl.ONE, moderngl.ONE
-            )
+            flag |= moderngl.DEPTH_TEST
+        self.ctx.enable(flag)
+        self.ctx.blend_func = (  # Needed?
+            moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA,
+            moderngl.ONE, moderngl.ONE
+        )
         self.background_fbo = None
 
     def init_light_source(self):
@@ -379,3 +379,8 @@ class Camera(object):
             texture.use(location=tid)
             self.path_to_texture_id[path] = tid
         return self.path_to_texture_id[path]
+
+
+class ThreeDCamera(Camera):
+    # Purely here to keep old scenes happy
+    pass
