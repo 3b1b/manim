@@ -347,6 +347,7 @@ class Banner(Scene):
         pis.set_height(self.pi_height)
         pis.arrange(RIGHT, aligned_edge=DOWN)
         pis.move_to(self.pi_bottom, DOWN)
+        self.pis = pis
         self.add(pis)
 
         if self.use_date:
