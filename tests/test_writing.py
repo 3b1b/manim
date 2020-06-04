@@ -12,6 +12,8 @@ class TextTest(Scene):
 
 class TextMobjectTest(Scene):
     def construct(self):
+        constants.TEX_TEMPLATE = TexTemplate()
+
         t = TextMobject('Hello world !')
 
         self.play(Animation(t))
@@ -19,11 +21,12 @@ class TextMobjectTest(Scene):
 
 class TexMobjectTest(Scene):
     def construct(self):
+        constants.TEX_TEMPLATE = TexTemplate()
+    
         t = TexMobject(
             "\\sum_{n=1}^\\infty "
             "\\frac{1}{n^2} = \\frac{\\pi^2}{6}"
         )
-
         self.play(Animation(t))
 
 

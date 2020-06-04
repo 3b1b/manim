@@ -25,7 +25,7 @@ class DrawBorderThenFillTest(Scene):
 
 class WriteTest(Scene):
     def construct(self):
-        t = Text('Test')
+        t = Text('helloworld')
 
         self.play(Write(t))
 
@@ -112,4 +112,3 @@ def test_scenes(get_config_test, Tester):
     module_name = os.path.splitext(os.path.basename(__file__))[0].replace('test_', '')
     for _, scene_tested in inspect.getmembers(sys.modules[__name__], lambda m: inspect.isclass(m) and m.__module__ == __name__):
         Tester(scene_tested, CONFIG, module_name).test()
-
