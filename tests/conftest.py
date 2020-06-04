@@ -15,10 +15,10 @@ class SceneTester:
     def __init__(self, scene_object, config_scene, module_tested, caching_needed=False):
         # Disable the the logs, (--quiet is broken) TODO
         logging.disable(logging.CRITICAL)
-        self.path_tests_medias = os.path.join(os.getcwd(),
-                                              'manim', 'tests', 'tests_cache', module_tested)
-        self.path_tests_data = os.path.join(os.getcwd(),
-                                            'manim', 'tests', 'tests_data', module_tested)
+        self.path_tests_medias = os.path.join(
+            'tests', 'tests_cache', module_tested)
+        self.path_tests_data = os.path.join(
+            'tests', 'tests_data', module_tested)
 
         tex_dir, text_dir = None, None
         if caching_needed:
@@ -44,7 +44,7 @@ class SceneTester:
                 self.path_tests_data, "{}.npy".format(str(self.scene))))
             raise FileNotFoundError('test_data not found !')
         assert (str(e_info.value) ==
-                'test_data not found !'), '{} seems to not have a pre-rendered frame for testing.'.format(str(self.scene).replace('Test', ''))
+                'test_data not found !'), '{} does not seem have a pre-rendered frame for testing.'.format(str(self.scene).replace('Test', ''))
         return data_loaded
 
     def test(self):

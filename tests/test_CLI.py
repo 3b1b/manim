@@ -21,9 +21,8 @@ def test_help():
 
 def test_basicScene():
     """ Simulate SquareToCircle. The cache will be saved in tests_caches/media_temp (temporary directory). This is mainly intended to test the partial-movies process. """
-    path_basic_scene = os.path.join(
-        "manim", "tests", "tests_data", "basic_scenes.py")
-    path_output = os.path.join("manim", "tests", "tests_cache", "media_temp")
+    path_basic_scene = os.path.join("tests", "tests_data", "basic_scenes.py")
+    path_output = os.path.join("tests", "tests_cache", "media_temp")
     command = ["python", "-m", "manim", path_basic_scene,
                "SquareToCircle", "-l", "--media_dir", path_output]
     out, err, exitcode = capture(command)
@@ -36,9 +35,8 @@ def test_basicScene():
 
 def test_WriteStuff():
     """Simulate WriteStuff. This is mainly intended to test the caching process of the tex objects"""
-    path_basic_scene = os.path.join(
-        "manim", "tests", "tests_data", "basic_scenes.py")
-    path_output = os.path.join("manim", "tests", "tests_cache", "media_temp")
+    path_basic_scene = os.path.join("tests", "tests_data", "basic_scenes.py")
+    path_output = os.path.join("tests", "tests_cache", "media_temp")
     command = ["python", "-m", "manim", path_basic_scene,
                "WriteStuff", "-l", "--media_dir", path_output]
     out, err, exitcode = capture(command)
