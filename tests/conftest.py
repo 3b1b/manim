@@ -11,21 +11,25 @@ import logging
 class SceneTester:
     """Class used to test the animations. 
     """
-    def __init__(self, scene_object, config_scene, module_tested, caching_needed = False):
-        logging.disable(logging.CRITICAL) #Disable the the logs, (--quiet is broken) TODO
-        self.path_tests_medias = os.path.join(
-            'manim', 'tests', 'tests_cache', module_tested)
-        self.path_tests_data = os.path.join(
-            'manim', 'tests', 'tests_data', module_tested)
+
+    def __init__(self, scene_object, config_scene, module_tested, caching_needed=False):
+        # Disable the the logs, (--quiet is broken) TODO
+        logging.disable(logging.CRITICAL)
+        self.path_tests_medias = os.path.join(os.getcwd(),
+                                              'manim', 'tests', 'tests_cache', module_tested)
+        self.path_tests_data = os.path.join(os.getcwd(),
+                                            'manim', 'tests', 'tests_data', module_tested)
 
         tex_dir, text_dir = None, None
-        if caching_needed: 
-            text_dir = os.path.join(self.path_tests_medias, scene_object.__name__, 'Text')
-            tex_dir = os.path.join(self.path_tests_medias, scene_object.__name__, 'Tex')
+        if caching_needed:
+            text_dir = os.path.join(
+                self.path_tests_medias, scene_object.__name__, 'Text')
+            tex_dir = os.path.join(
+                self.path_tests_medias, scene_object.__name__, 'Tex')
         conf_dirs = {'media_dir': None,
-                     'video_dir': None, 
-                     'tex_dir': tex_dir, 
-                     'text_dir': text_dir, 
+                     'video_dir': None,
+                     'tex_dir': tex_dir,
+                     'text_dir': text_dir,
                      }
         # PROVISIONAL. To change when #98 is merged. TODO
         config.initialize_directories(conf_dirs)
@@ -49,11 +53,12 @@ class SceneTester:
         assert(test_result), "The frames don't match. {} has been modified. Please ignore if it was intended".format(
             str(self.scene).replace('Test', ''))
         return 1
-    
+
 
 @pytest.fixture
 def Tester():
     return SceneTester
+
 
 @pytest.fixture
 def get_config_test():
@@ -82,4 +87,3 @@ def get_config_test():
         'start_at_animation_number': None
     }
     return CONFIG
-
