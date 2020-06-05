@@ -34,14 +34,14 @@ class ParametricSurface(Mobject):
     }
 
     def __init__(self, function=None, **kwargs):
-        if function is None:
-            self.uv_func = self.func
-        else:
-            self.uv_func = function
+        self.passed_function = function
         super().__init__(**kwargs)
 
-    def func(self, u, v):
-        raise Exception("Not implemented")
+    def uv_func(self, u, v):
+        # Typically to be implemented by a subclass
+        if self.passed_function is not None:
+            return self.passed_function(u, v)
+        return [u, v, 0]
 
     def init_points(self):
         nu, nv = self.resolution
@@ -95,13 +95,15 @@ class ParametricSurface(Mobject):
         )
         return normalize_along_axis(normals, 1)
 
-    def set_color(self, color, opacity=1.0, family=True):
+    def set_color(self, color, opacity=1.0, gloss=None, family=True):
         # TODO, allow for multiple colors
         rgba = color_to_rgba(color, opacity)
         self.rgbas = np.array([rgba])
+        if gloss is not None:
+            self.set_gloss(gloss)
         if family:
             for submob in self.submobjects:
-                submob.set_color(color, opacity)
+                submob.set_color(color, opacity, gloss, family)
 
     def set_opacity(self, opacity, family=True):
         self.rgbas[:, 3] = opacity

@@ -1,7 +1,11 @@
 from manimlib.constants import *
+from manimlib.mobject.mobject import Group
 from manimlib.mobject.geometry import Square
 from manimlib.mobject.types.surface import ParametricSurface
 from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.utils.config_ops import digest_config
+from manimlib.utils.space_ops import get_norm
+from manimlib.utils.space_ops import z_to_vector
 
 
 # Sphere, cylinder, cube, prism
@@ -14,7 +18,7 @@ class Sphere(ParametricSurface):
         "v_range": (0, PI),
     }
 
-    def func(self, u, v):
+    def uv_func(self, u, v):
         return self.radius * np.array([
             np.cos(u) * np.sin(v),
             np.sin(u) * np.sin(v),
@@ -22,34 +26,90 @@ class Sphere(ParametricSurface):
         ])
 
 
-class Clyinder(ParametricSurface):
+class Cylinder(ParametricSurface):
     CONFIG = {
-
+        "height": 2,
+        "radius": 1,
+        "axis": OUT,
+        "u_range": (0, TAU),
+        "v_range": (-1, 1),
+        "resolution": (100, 10),
     }
 
-    def func(self, u, v):
-        pass
+    def init_points(self):
+        super().init_points()
+        self.scale(self.radius)
+        self.set_depth(self.height, stretch=True)
+        self.apply_matrix(z_to_vector(self.axis))
+        return self
+
+    def uv_func(self, u, v):
+        return [np.cos(u), np.sin(u), v]
 
 
-class Cube(VGroup):
+class Line3D(Cylinder):
     CONFIG = {
-        "fill_opacity": 0.75,
-        "fill_color": BLUE,
-        "stroke_width": 0,
+        "width": 0.05,
+    }
+
+    def __init__(self, start, end, **kwargs):
+        digest_config(self, kwargs)
+        axis = end - start
+        super().__init__(
+            height=get_norm(axis),
+            radius=self.width / 2,
+            axis=axis
+        )
+
+
+class Disk3D(ParametricSurface):
+    CONFIG = {
+        "radius": 1,
+        "u_range": (0, 1),
+        "v_range": (0, TAU),
+        "resolution": (1, 24),
+    }
+
+    def init_points(self):
+        super().init_points()
+        self.scale(self.radius)
+
+    def uv_func(self, u, v):
+        return [
+            u * np.cos(v),
+            u * np.sin(v),
+            0
+        ]
+
+
+class Cube(Group):
+    CONFIG = {
+        # "fill_color": BLUE,
+        # "fill_opacity": 1,
+        # "stroke_width": 1,
+        # "stroke_color": BLACK,
+        "color": BLUE,
+        "opacity": 1,
+        "gloss": 0.5,
+        "square_resolution": (1, 1),
         "side_length": 2,
     }
 
     def init_points(self):
+        square = ParametricSurface(
+            lambda u, v: [u, v, 0],
+            resolution=self.square_resolution,
+            u_range=(-1, 1),
+            v_range=(-1, 1),
+        )
+        square.set_color(self.color, self.opacity, self.gloss)
         for vect in IN, OUT, LEFT, RIGHT, UP, DOWN:
-            face = Square(
-                side_length=self.side_length,
-                shade_in_3d=True,
-            )
-            face.flip()
-            face.shift(self.side_length * OUT / 2.0)
+            # face = Square(side_length=self.side_length)
+            face = square.deepcopy()
+            face.shift(OUT)
             face.apply_matrix(z_to_vector(vect))
-
             self.add(face)
+        self.set_height(self.side_length)
 
 
 class Prism(Cube):
