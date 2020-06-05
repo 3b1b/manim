@@ -4,6 +4,9 @@ jobs:
     - os: linux
       language: python
       python: 3.6
+      before_install: 
+        - sudo apt-get -y install ffmpeg
+        - sudo apt-get -y install texlive texlive-latex-extra texlive-fonts-extra texlive-latex-recommended texlive-science texlive-fonts-extra tipa
       install:
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
