@@ -137,11 +137,14 @@ def z_to_vector(vector):
     Returns some matrix in SO(3) which takes the z-axis to the
     (normalized) vector provided as an argument
     """
-    cp = cross(OUT, vector)
-    if get_norm(cp) == 0:
-        return np.identity(3)
+    axis = cross(OUT, vector)
+    if get_norm(axis) == 0:
+        if vector[2] > 0:
+            return np.identity(3)
+        else:
+            return rotation_matrix(PI, RIGHT)
     angle = np.arccos(np.dot(OUT, normalize(vector)))
-    return rotation_matrix(angle, axis=cp)
+    return rotation_matrix(angle, axis=axis)
 
 
 def angle_of_vector(vector):
