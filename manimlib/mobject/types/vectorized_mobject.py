@@ -37,15 +37,11 @@ class VMobject(Mobject):
         "stroke_opacity": 1.0,
         "stroke_width": DEFAULT_STROKE_WIDTH,
         "draw_stroke_behind_fill": False,
-        # TODO, currently sheen does nothing
-        "sheen_factor": 0.0,
-        "sheen_direction": UL,
         # Indicates that it will not be displayed, but
         # that it should count in parent mobject's path
         "pre_function_handle_to_anchor_scale_factor": 0.01,
         "make_smooth_after_applying_functions": False,
         "background_image_file": None,
-        "shade_in_3d": False,
         # This is within a pixel
         # TODO, do we care about accounting for
         # varying zoom levels?
@@ -311,13 +307,6 @@ class VMobject(Mobject):
 
     def match_background_image_file(self, vmobject):
         self.color_using_background_image(vmobject.get_background_image_file())
-        return self
-
-    def set_shade_in_3d(self, value=True, z_index_as_group=False):
-        for submob in self.get_family():
-            submob.shade_in_3d = value
-            if z_index_as_group:
-                submob.z_index_group = self
         return self
 
     def stretched_style_array_matching_points(self, array):
