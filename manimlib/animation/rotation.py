@@ -1,5 +1,4 @@
 from manimlib.animation.animation import Animation
-from manimlib.animation.transform import Transform
 from manimlib.constants import OUT
 from manimlib.constants import PI
 from manimlib.constants import TAU
