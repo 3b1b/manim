@@ -1088,8 +1088,7 @@ class Mobject(Container):
         self.set_submobjects(new_submobs)
         return self
 
-    def interpolate(self, mobject1, mobject2,
-                    alpha, path_func=straight_path):
+    def interpolate(self, mobject1, mobject2, alpha, path_func=straight_path):
         """
         Turns self into an interpolation between mobject1
         and mobject2.
@@ -1230,4 +1229,4 @@ class Point(Mobject):
         return self.get_location()
 
     def set_location(self, new_loc):
-        self.points = np.array(new_loc, ndmin=2)
+        self.points = np.array(new_loc, ndmin=2, dtype=float)
