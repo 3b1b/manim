@@ -120,6 +120,8 @@ class Scene(Container):
         # Stack depth of 2 means the shell will use
         # the namespace of the caller, not this method
         shell(stack_depth=2)
+        # End scene when exiting an embed.
+        raise EndSceneEarlyException()
 
     def __str__(self):
         return self.__class__.__name__
@@ -527,6 +529,9 @@ class Scene(Container):
 
     def on_mouse_drag(self, point, d_point, buttons, modifiers):
         self.mouse_drag_point.move_to(point)
+        # Only if 3d rotation is enabled?
+        self.camera.frame.increment_theta(-d_point[0])
+        self.camera.frame.increment_phi(d_point[1])
 
     def on_mouse_press(self, point, button, mods):
         pass
@@ -548,7 +553,7 @@ class Scene(Container):
 
     def on_key_press(self, symbol, modifiers):
         if chr(symbol) == "r":
-            self.camera.frame.restore()
+            self.camera.frame.to_default_state()
         elif chr(symbol) == "z":
             self.zoom_on_scroll = True
         elif chr(symbol) == "q":

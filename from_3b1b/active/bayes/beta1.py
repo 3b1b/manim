@@ -40,6 +40,36 @@ class Thumbnail1(Scene):
         self.add(text)
 
 
+class AltThumbnail1(Scene):
+    def construct(self):
+        N = 20
+        n_trials = 10000
+        p = 0.7
+        outcomes = (np.random.random((N, n_trials)) < p).sum(0)
+        counts = []
+        for k in range(N + 1):
+            counts.append((outcomes == k).sum())
+
+        hist = Histogram(
+            counts,
+            y_max=0.3,
+            y_tick_freq=0.05,
+            y_axis_numbers_to_show=[10, 20, 30],
+            x_label_freq=10,
+        )
+        hist.set_width(FRAME_WIDTH - 1)
+        hist.bars.set_submobject_colors_by_gradient(YELLOW, YELLOW, GREEN, BLUE)
+        hist.bars.set_stroke(WHITE, 2)
+
+        title = TextMobject("Binomial distribution")
+        title.set_width(12)
+        title.to_corner(UR, buff=0.8)
+        title.add_background_rectangle()
+
+        self.add(hist)
+        self.add(title)
+
+
 class Thumbnail2(Scene):
     def construct(self):
         axes = self.get_axes()
@@ -1827,8 +1857,8 @@ class AskAboutUnknownProbabilities(Scene):
 
     def show_many_coins(self, n_rows, n_cols):
         coin_choices = VGroup(
-            get_coin(BLUE_E, "H"),
-            get_coin(RED_E, "T"),
+            get_coin("H"),
+            get_coin("T"),
         )
         coin_choices.set_stroke(width=0)
         coins = VGroup(*[
@@ -1873,10 +1903,10 @@ class AskProbabilityOfCoins(Scene):
         condition = VGroup(
             TextMobject("If you've seen"),
             Integer(80, color=BLUE_C),
-            get_coin(BLUE_E, "H").set_height(0.5),
+            get_coin("H").set_height(0.5),
             TextMobject("and"),
             Integer(20, color=RED_C),
-            get_coin(RED_E, "T").set_height(0.5),
+            get_coin("T").set_height(0.5),
         )
         condition.arrange(RIGHT)
         condition.to_edge(UP)
@@ -1886,7 +1916,7 @@ class AskProbabilityOfCoins(Scene):
             "\\text{What is }",
             "P(", "00", ")", "?"
         )
-        coin = get_coin(BLUE_E, "H")
+        coin = get_coin("H")
         coin.replace(question.get_part_by_tex("00"))
         question.replace_submobject(
             question.index_of_part_by_tex("00"),
@@ -1899,10 +1929,7 @@ class AskProbabilityOfCoins(Scene):
         random.shuffle(values)
 
         coins = VGroup(*[
-            get_coin(
-                BLUE_E if symbol == "H" else RED_E,
-                symbol
-            )
+            get_coin(symbol)
             for symbol in values
         ])
         coins.arrange_in_grid(10, 10, buff=MED_SMALL_BUFF)
@@ -3265,8 +3292,8 @@ class StateIndependence(Scene):
 class IllustrateBinomialSetupWithCoins(Scene):
     def construct(self):
         coins = [
-            get_coin(BLUE_E, "H"),
-            get_coin(RED_E, "T"),
+            get_coin("H"),
+            get_coin("T"),
         ]
 
         coin_row = VGroup()
@@ -3289,7 +3316,7 @@ class IllustrateBinomialSetupWithCoins(Scene):
                 "k": GREEN,
             }
         )
-        heads = get_coin(BLUE_E, "H")
+        heads = get_coin("H")
         template = prob_label.get_part_by_tex("00")
         heads.replace(template)
         prob_label.replace_submobject(

@@ -1,12 +1,13 @@
 import itertools as it
+import operator as op
 import moderngl
 
 from colour import Color
+from functools import reduce
 
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
-from manimlib.mobject.three_d_utils import get_3d_vmob_gradient_start_and_end_points
 from manimlib.utils.bezier import bezier
 from manimlib.utils.bezier import get_smooth_handle_points
 from manimlib.utils.bezier import get_quadratic_approximation_of_cubic
@@ -19,10 +20,12 @@ from manimlib.utils.iterables import make_even
 from manimlib.utils.iterables import stretch_array_to_length
 from manimlib.utils.iterables import stretch_array_to_length_with_interpolation
 from manimlib.utils.iterables import listify
-from manimlib.utils.space_ops import cross2d
-from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import angle_between_vectors
+from manimlib.utils.space_ops import cross2d
 from manimlib.utils.space_ops import earclip_triangulation
+from manimlib.utils.space_ops import get_norm
+from manimlib.utils.space_ops import get_unit_normal
+from manimlib.utils.space_ops import z_to_vector
 from manimlib.utils.shaders import get_shader_info
 
 
@@ -58,21 +61,26 @@ class VMobject(Mobject):
         "fill_frag_shader_file": "quadratic_bezier_fill_frag.glsl",
         # Could also be Bevel, Miter, Round
         "joint_type": "auto",
+        # Positive gloss up to 1 makes it reflect the light.
+        "gloss": 0.2,
         "render_primative": moderngl.TRIANGLES,
         "triangulation_locked": False,
         "fill_dtype": [
             ('point', np.float32, (3,)),
+            ('unit_normal', np.float32, (3,)),
             ('color', np.float32, (4,)),
             ('fill_all', np.float32, (1,)),
-            ('orientation', np.float32, (1,)),
+            ('gloss', np.float32, (1,)),
         ],
         "stroke_dtype": [
             ("point", np.float32, (3,)),
             ("prev_point", np.float32, (3,)),
             ("next_point", np.float32, (3,)),
+            ('unit_normal', np.float32, (3,)),
             ("stroke_width", np.float32, (1,)),
             ("color", np.float32, (4,)),
             ("joint_type", np.float32, (1,)),
+            ("gloss", np.float32, (1,)),
         ]
     }
 
@@ -226,6 +234,14 @@ class VMobject(Mobject):
             family=False,
         )
         super().fade(darkness, family)
+        return self
+
+    def set_gloss(self, gloss, family=True):
+        if family:
+            for sm in self.get_family():
+                sm.gloss = gloss
+        else:
+            self.gloss = gloss
         return self
 
     def get_fill_rgbas(self):
@@ -654,6 +670,14 @@ class VMobject(Mobject):
             self.get_end_anchors(),
         ))))
 
+    def get_points_without_null_curves(self, atol=1e-9):
+        nppc = self.n_points_per_curve
+        distinct_curves = reduce(op.or_, [
+            (abs(self.points[i::nppc] - self.points[0::nppc]) > atol).any(1)
+            for i in range(1, nppc)
+        ])
+        return self.points[distinct_curves.repeat(nppc)]
+
     def get_arc_length(self, n_sample_points=None):
         if n_sample_points is None:
             n_sample_points = 4 * self.get_num_curves() + 1
@@ -664,6 +688,38 @@ class VMobject(Mobject):
         diffs = points[1:] - points[:-1]
         norms = np.array([get_norm(d) for d in diffs])
         return norms.sum()
+
+    def get_area_vector(self):
+        # Returns a vector whose length is the area bound by
+        # the polygon formed by the anchor points, pointing
+        # in a direction perpendicular to the polygon according
+        # to the right hand rule.
+        if self.has_no_points():
+            return np.zeros(3)
+
+        nppc = self.n_points_per_curve
+        p0 = self.points[0::nppc]
+        p1 = self.points[nppc - 1::nppc]
+
+        # Each term goes through all edges [(x1, y1, z1), (x2, y2, z2)]
+        return 0.5 * np.array([
+            sum((p0[:, 1] + p1[:, 1]) * (p1[:, 2] - p0[:, 2])),  # Add up (y1 + y2)*(z2 - z1)
+            sum((p0[:, 2] + p1[:, 2]) * (p1[:, 0] - p0[:, 0])),  # Add up (z1 + z2)*(x2 - x1)
+            sum((p0[:, 0] + p1[:, 0]) * (p1[:, 1] - p0[:, 1])),  # Add up (x1 + x2)*(y2 - y1)
+        ])
+
+    def get_unit_normal_vector(self):
+        if len(self.points) < 3:
+            return OUT
+        area_vect = self.get_area_vector()
+        area = get_norm(area_vect)
+        if area > 0:
+            return area_vect / area
+        else:
+            return get_unit_normal(
+                self.points[1] - self.points[0],
+                self.points[2] - self.points[1],
+            )
 
     # Alignment
     def align_points(self, vmobject):
@@ -896,15 +952,20 @@ class VMobject(Mobject):
         if len(stroke_width) > 1:
             stroke_width = self.stretched_style_array_matching_points(stroke_width)
 
-        data = self.get_blank_shader_data_array(len(self.points), "stroke_data")
-        data['point'] = self.points
-        data['prev_point'][:3] = self.points[-3:]
-        data['prev_point'][3:] = self.points[:-3]
-        data['next_point'][:-3] = self.points[3:]
-        data['next_point'][-3:] = self.points[:3]
-        data['stroke_width'][:, 0] = stroke_width
-        data['color'] = rgbas
-        data['joint_type'] = joint_type_to_code[self.joint_type]
+        points = self.get_points_without_null_curves()
+        nppc = self.n_points_per_curve
+
+        data = self.get_blank_shader_data_array(len(points), "stroke_data")
+        data["point"] = points
+        data["prev_point"][:nppc] = points[-nppc:]
+        data["prev_point"][nppc:] = points[:-nppc]
+        data["next_point"][:-nppc] = points[nppc:]
+        data["next_point"][-nppc:] = points[:nppc]
+        data["unit_normal"] = self.get_unit_normal_vector()
+        data["stroke_width"][:, 0] = stroke_width
+        data["color"] = rgbas
+        data["joint_type"] = joint_type_to_code[self.joint_type]
+        data["gloss"] = self.gloss
         return data
 
     def lock_triangulation(self, family=True):
@@ -912,7 +973,6 @@ class VMobject(Mobject):
         for mob in mobs:
             mob.triangulation_locked = False
             mob.saved_triangulation = mob.get_triangulation()
-            mob.saved_orientation = mob.get_orientation()
             mob.triangulation_locked = True
         return self
 
@@ -925,26 +985,12 @@ class VMobject(Mobject):
             if sm.triangulation_locked:
                 sm.lock_triangulation(family=False)
 
-    def get_signed_polygonal_area(self):
-        nppc = self.n_points_per_curve
-        p0 = self.points[0::nppc]
-        p1 = self.points[nppc - 1::nppc]
-        # Add up (x1 + x2)*(y2 - y1) for all edges (x1, y1), (x2, y2)
-        return sum((p0[:, 0] + p1[:, 0]) * (p1[:, 1] - p0[:, 1]))
-
-    def get_orientation(self):
-        if self.triangulation_locked:
-            return self.saved_orientation
-        if self.has_no_points():
-            return 0
-        return np.sign(self.get_signed_polygonal_area())
-
-    def get_triangulation(self, orientation=None):
+    def get_triangulation(self, normal_vector=None):
         # Figure out how to triangulate the interior to know
         # how to send the points as to the vertex shader.
         # First triangles come directly from the points
-        if orientation is None:
-            orientation = self.get_orientation()
+        if normal_vector is None:
+            normal_vector = self.get_unit_normal_vector()
 
         if self.triangulation_locked:
             return self.saved_triangulation
@@ -952,7 +998,9 @@ class VMobject(Mobject):
         if len(self.points) <= 1:
             return []
 
-        points = self.points
+        # Rotate points such that unit normal vector is OUT
+        # TODO, 99% of the time this does nothing.  Do a check for that?
+        points = np.dot(self.points, z_to_vector(normal_vector))
         indices = np.arange(len(points), dtype=int)
 
         b0s = points[0::3]
@@ -961,9 +1009,8 @@ class VMobject(Mobject):
         v01s = b1s - b0s
         v12s = b2s - b1s
 
-        # TODO, account for 3d
         crosses = cross2d(v01s, v12s)
-        convexities = orientation * np.sign(crosses)
+        convexities = np.sign(crosses)
 
         atol = self.tolerance_for_point_equality
         end_of_loop = np.zeros(len(b0s), dtype=bool)
@@ -983,31 +1030,28 @@ class VMobject(Mobject):
 
         # Triangulate
         inner_verts = points[inner_vert_indices]
-        inner_tri_indices = inner_vert_indices[
-            earclip_triangulation(inner_verts, rings)
-        ]
+        inner_tri_indices = inner_vert_indices[earclip_triangulation(inner_verts, rings)]
 
         tri_indices = np.hstack([indices, inner_tri_indices])
         return tri_indices
 
     def get_fill_shader_data(self):
         points = self.points
-
-        orientation = self.get_orientation()
-        tri_indices = self.get_triangulation(orientation)
+        unit_normal = self.get_unit_normal_vector()
+        tri_indices = self.get_triangulation(unit_normal)
 
         # TODO, best way to enable multiple colors?
         rgbas = self.get_fill_rgbas()[:1]
 
         data = self.get_blank_shader_data_array(len(tri_indices), "fill_data")
         data["point"] = points[tri_indices]
+        data["unit_normal"] = unit_normal
         data["color"] = rgbas
         # Assume the triangulation is such that the first n_points points
         # are on the boundary, and the rest are in the interior
         data["fill_all"][:len(points)] = 0
         data["fill_all"][len(points):] = 1
-        data["orientation"] = orientation
-
+        data["gloss"] = self.gloss
         return data
 
 

@@ -155,6 +155,7 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         "capitalize": True,
         "name_y_spacing": 0.6,
         "thanks_words": "Many thanks to this channel's supporters",
+        "scroll_time": 20,
     }
 
     def construct(self):
@@ -250,7 +251,7 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         columns.target.to_edge(DOWN, buff=4)
         vect = columns.target.get_center() - columns.get_center()
         distance = get_norm(vect)
-        wait_time = 20
+        wait_time = self.scroll_time
         always_shift(
             columns,
             direction=normalize(vect),
@@ -267,7 +268,8 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
             "akostrikov": "Aleksandr Kostrikov",
             "Jacob Baxter": "Will Fleshman",
             "Sansword Huang": "SansWord@TW",
-            "Still working on an upcoming skeptical humanist SciFi novels- Elux Luc": "Uber Miguel",
+            "Sunil Nagaraj": "Ubiquity Ventures",
+            "Nitu Kitchloo": "Ish Kitchloo",
         }
         for n1, n2 in modification_map.items():
             if name.lower() == n1.lower():
@@ -345,6 +347,7 @@ class Banner(Scene):
         pis.set_height(self.pi_height)
         pis.arrange(RIGHT, aligned_edge=DOWN)
         pis.move_to(self.pi_bottom, DOWN)
+        self.pis = pis
         self.add(pis)
 
         if self.use_date:

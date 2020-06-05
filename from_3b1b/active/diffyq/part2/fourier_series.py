@@ -331,6 +331,8 @@ class FourierOfPiSymbol(FourierCirclesScene):
     def add_vectors_circles_path(self):
         path = self.get_path()
         coefs = self.get_coefficients_of_path(path)
+        for coef in coefs:
+            print(coef)
         vectors = self.get_rotating_vectors(coefficients=coefs)
         circles = self.get_circles(vectors)
         self.set_decreasing_stroke_widths(circles)

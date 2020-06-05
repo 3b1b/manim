@@ -30,9 +30,6 @@ from manimlib.animation.transform import *
 from manimlib.animation.update import *
 
 from manimlib.camera.camera import *
-from manimlib.camera.mapping_camera import *
-from manimlib.camera.moving_camera import *
-from manimlib.camera.three_d_camera import *
 
 from manimlib.mobject.coordinate_systems import *
 from manimlib.mobject.changing import *
@@ -50,10 +47,10 @@ from manimlib.mobject.svg.drawings import *
 from manimlib.mobject.svg.svg_mobject import *
 from manimlib.mobject.svg.tex_mobject import *
 from manimlib.mobject.svg.text_mobject import *
-from manimlib.mobject.three_d_utils import *
 from manimlib.mobject.three_dimensions import *
 from manimlib.mobject.types.image_mobject import *
 from manimlib.mobject.types.point_cloud_mobject import *
+from manimlib.mobject.types.surface_mobject import *
 from manimlib.mobject.types.vectorized_mobject import *
 from manimlib.mobject.mobject_update_utils import *
 from manimlib.mobject.value_tracker import *

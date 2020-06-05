@@ -3,176 +3,119 @@
 layout (triangles) in;
 layout (triangle_strip, max_vertices = 5) out;
 
-uniform float scale;
-uniform float aspect_ratio;
 uniform float anti_alias_width;
-uniform vec3 frame_center;
+// Needed for get_gl_Position
+uniform float aspect_ratio;
+uniform float focal_distance;
 
 in vec3 bp[3];
+in vec3 v_global_unit_normal[3];
 in vec4 v_color[3];
 in float v_fill_all[3];
-in float v_orientation[3];
+in float v_gloss[3];
 
 out vec4 color;
-out float fill_type;
+out float gloss;
+out float fill_all;
 out float uv_anti_alias_width;
 
+out vec3 xyz_coords;
+out vec3 global_unit_normal;
+out float orientation;
 // uv space is where b0 = (0, 0), b1 = (1, 0), and transform is orthogonal
 out vec2 uv_coords;
 out vec2 uv_b2;
-// wz space is where b0 = (0, 0), b1 = (0.5, 0), b2 = (1, 1)
-out vec2 wz_coords;
-
 out float bezier_degree;
-
-const float FILL_INSIDE = 0;
-const float FILL_OUTSIDE = 1;
-const float FILL_ALL = 2;
-
-const float SQRT5 = 2.236068;
-
 
 // To my knowledge, there is no notion of #include for shaders,
 // so to share functionality between this and others, the caller
-// replaces this line with the contents of named file
+// in manim replaces this line with the contents of named file
 #INSERT quadratic_bezier_geometry_functions.glsl
-#INSERT scale_and_shift_point_for_frame.glsl
+#INSERT get_gl_Position.glsl
+#INSERT get_unit_normal.glsl
 
 
-mat3 get_xy_to_wz(vec2 b0, vec2 b1, vec2 b2){
-    // If linear or null, this matrix is not needed
-    if(bezier_degree < 2) return mat3(1.0);
-
-    vec2 inv_col1 = 2 * (b1 - b0);
-    vec2 inv_col2 = b2 - 2 * b1 + b0;
-    float inv_det = cross(inv_col1, inv_col2);
-
-    mat3 transform = mat3(
-        inv_col2.y, -inv_col1.y, 0,
-        -inv_col2.x, inv_col1.x, 0,
-        0, 0, inv_det
-    ) / inv_det;
-
-    mat3 shift = mat3(
-        1, 0, 0,
-        0, 1, 0,
-        -b0.x, -b0.y, 1
-    );
-    return transform * shift;
+void emit_vertex_wrapper(vec3 point, int index){
+    color = v_color[index];
+    gloss = v_gloss[index];
+    global_unit_normal = v_global_unit_normal[index];
+    xyz_coords = point;
+    gl_Position = get_gl_Position(xyz_coords);
+    EmitVertex();
 }
 
 
 void emit_simple_triangle(){
     for(int i = 0; i < 3; i++){
-        color = v_color[i];
-        gl_Position = vec4(
-            scale_and_shift_point_for_frame(bp[i]),
-            1.0
-        );
-        EmitVertex();
+        emit_vertex_wrapper(bp[i], i);
     }
     EndPrimitive();
 }
 
 
-void emit_pentagon(vec2 bp0, vec2 bp1, vec2 bp2, float orientation){
+void emit_pentagon(vec3[3] points, vec3 normal){
+    vec3 p0 = points[0];
+    vec3 p1 = points[1];
+    vec3 p2 = points[2];
     // Tangent vectors
-    vec2 t01 = normalize(bp1 - bp0);
-    vec2 t12 = normalize(bp2 - bp1);
+    vec3 t01 = normalize(p1 - p0);
+    vec3 t12 = normalize(p2 - p1);
+    // Vectors perpendicular to the curve in the plane of the curve pointing outside the curve
+    vec3 p0_perp = cross(t01, normal);
+    vec3 p2_perp = cross(t12, normal);
 
-    // Inside and left turn -> rot right -> -1
-    // Outside and left turn -> rot left -> +1
-    // Inside and right turn -> rot left -> +1
-    // Outside and right turn -> rot right -> -1
-    float c_orient = (cross(t01, t12) > 0) ? 1 : -1;
-    c_orient *= orientation;
-
-    bool fill_in = (c_orient > 0);
-    fill_type = fill_in ? FILL_INSIDE : FILL_OUTSIDE;
-
-    // float orient = in_or_out * c_orient;
-
-    // Normal vectors
-    // Rotate tangent vector 90-degrees clockwise
-    // if the curve is positively oriented, otherwise
-    // rotate it 90-degrees counterclockwise
-    vec2 n01 = orientation * vec2(t01.y, -t01.x);
-    vec2 n12 = orientation * vec2(t12.y, -t12.x);
-
+    bool fill_in = orientation > 0;
     float aaw = anti_alias_width;
-    vec2 nudge1 = fill_in ? 0.5 * aaw * (n01 + n12) : vec2(0);
-    vec2 corners[5] = vec2[5](
-        bp0 + aaw * n01,
-        bp0,
-        bp1 + nudge1,
-        bp2,
-        bp2 + aaw * n12
-    );
+    vec3 corners[5];
+    if(fill_in){
+        // Note, straight lines will also fall into this case, and since p0_perp and p2_perp
+        // will point to the right of the curve, it's just what we want
+        corners = vec3[5](
+            p0 + aaw * p0_perp,
+            p0,
+            p1 + 0.5 * aaw * (p0_perp + p2_perp),
+            p2,
+            p2 + aaw * p2_perp
+        );
+    }else{
+        corners = vec3[5](
+            p0,
+            p0 - aaw * p0_perp,
+            p1,
+            p2 - aaw * p2_perp,
+            p2
+        );
+    }
 
-    int coords_index_map[5] = int[5](0, 1, 2, 3, 4);
-    if(!fill_in) coords_index_map = int[5](1, 0, 2, 4, 3);
-        
-    mat3 xy_to_uv = get_xy_to_uv(bp0, bp1);
-    mat3 xy_to_wz = get_xy_to_wz(bp0, bp1, bp2);
-    uv_b2 = (xy_to_uv * vec3(bp2, 1)).xy;
-    uv_anti_alias_width = anti_alias_width / length(bp1 - bp0);
+    mat4 xyz_to_uv = get_xyz_to_uv(p0, p1, normal);
+    uv_b2 = (xyz_to_uv * vec4(p2, 1)).xy;
+    uv_anti_alias_width = anti_alias_width / length(p1 - p0);
 
     for(int i = 0; i < 5; i++){
-        vec2 corner = corners[coords_index_map[i]];
-        uv_coords = (xy_to_uv * vec3(corner, 1)).xy;
-        wz_coords = (xy_to_wz * vec3(corner, 1)).xy;
-        float z;
-        // I haven't a clue why an index map doesn't work just
-        // as well here, but for some reason it doesn't.
-        if(i < 2){
-            color = v_color[0];
-            z = bp[0].z;
-        }
-        else if(i == 2){
-            color = v_color[1];
-            z = bp[1].z;
-        }
-        else{
-            color = v_color[2];
-            z = bp[2].z;
-        }
-        gl_Position = vec4(
-            scale_and_shift_point_for_frame(vec3(corner, z)),
-            1.0
-        );
-        EmitVertex();
+        vec3 corner = corners[i];
+        uv_coords = (xyz_to_uv * vec4(corner, 1)).xy;
+        int j = int(sign(i - 1) + 1);  // Maps i = [0, 1, 2, 3, 4] onto j = [0, 0, 1, 2, 2]
+        emit_vertex_wrapper(corner, j);
     }
     EndPrimitive();
 }
 
 
 void main(){
-    float fill_all = v_fill_all[0];
+    fill_all = v_fill_all[0];
+    vec3 local_unit_normal = get_unit_normal(vec3[3](bp[0], bp[1], bp[2]));
+    orientation = sign(dot(v_global_unit_normal[0], local_unit_normal));
 
     if(fill_all == 1){
-        fill_type = FILL_ALL;
         emit_simple_triangle();
-    }else{
-        vec2 new_bp[3];
-        int n = get_reduced_control_points(bp[0].xy, bp[1].xy, bp[2].xy, new_bp);
-        bezier_degree = float(n);
-        float orientation = v_orientation[0];
-
-        vec2 bp0, bp1, bp2;
-        if(n == 0){
-            return;  // Don't emit any vertices
-        }
-        else if(n == 1){
-            bp0 = new_bp[0];
-            bp2 = new_bp[1];
-            bp1 = 0.5 * (bp0 + bp2);
-        }else{
-            bp0 = new_bp[0];
-            bp1 = new_bp[1];
-            bp2 = new_bp[2];
-        }
-
-        emit_pentagon(bp0, bp1, bp2, orientation);
+        return;
     }
+
+    vec3 new_bp[3];
+    bezier_degree = get_reduced_control_points(vec3[3](bp[0], bp[1], bp[2]), new_bp);
+    if(bezier_degree >= 1){
+        emit_pentagon(new_bp, local_unit_normal);
+    }
+    // Don't emit any vertices for bezier_degree 0
 }
 

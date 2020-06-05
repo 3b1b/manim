@@ -1,5 +1,3 @@
-from functools import reduce
-import operator as op
 import moderngl
 from colour import Color
 
@@ -9,39 +7,127 @@ import itertools as it
 
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
+from manimlib.mobject.mobject import Point
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.shaders import shader_info_to_id
 from manimlib.utils.shaders import shader_id_to_info
 from manimlib.utils.shaders import get_shader_code_from_file
+from manimlib.utils.simple_functions import clip
+from manimlib.utils.space_ops import angle_of_vector
+from manimlib.utils.space_ops import rotation_matrix_transpose_from_quaternion
+from manimlib.utils.space_ops import rotation_matrix_transpose
+from manimlib.utils.space_ops import quaternion_from_angle_axis
+from manimlib.utils.space_ops import quaternion_mult
 
 
-# TODO, think about how to incorporate perspective,
-# and change get_height, etc. to take orientation into account
 class CameraFrame(Mobject):
     CONFIG = {
         "width": FRAME_WIDTH,
         "height": FRAME_HEIGHT,
-        "center": ORIGIN,
+        "center_point": ORIGIN,
+        # Theta, phi, gamma
+        "euler_angles": [0, 0, 0],
+        "focal_distance": 5,
     }
 
     def init_points(self):
-        self.points = np.array([UL, UR, DR, DL])
-        self.set_width(self.width, stretch=True)
-        self.set_height(self.height, stretch=True)
-        self.move_to(self.center)
-        self.save_state()
+        self.points = np.array([self.center_point])
+        self.euler_angles = np.array(self.euler_angles, dtype='float64')
+
+    def to_default_state(self):
+        self.center()
+        self.set_height(FRAME_HEIGHT)
+        self.set_width(FRAME_WIDTH)
+        self.set_rotation(0, 0, 0)
+        return self
+
+    def get_inverse_camera_position_matrix(self):
+        result = np.identity(4)
+        # First shift so that origin of real space coincides with camera origin
+        result[:3, 3] = -self.get_center().T
+        # Rotate based on camera orientation
+        result[:3, :3] = np.dot(self.get_inverse_camera_rotation_matrix(), result[:3, :3])
+        # Scale to have height 2 (matching the height of the box [-1, 1]^2)
+        result *= 2 / self.height
+        return result
+
+    def get_inverse_camera_rotation_matrix(self):
+        theta, phi, gamma = self.euler_angles
+        quat = quaternion_mult(
+            quaternion_from_angle_axis(theta, OUT),
+            quaternion_from_angle_axis(phi, RIGHT),
+            quaternion_from_angle_axis(gamma, OUT),
+        )
+        return rotation_matrix_transpose_from_quaternion(quat)
+
+    def rotate(self, angle, axis=OUT, **kwargs):
+        curr_rot_T = self.get_inverse_camera_rotation_matrix()
+        added_rot_T = rotation_matrix_transpose(angle, axis)
+        new_rot_T = np.dot(curr_rot_T, added_rot_T)
+        Fz = new_rot_T[2]
+        phi = np.arccos(Fz[2])
+        theta = angle_of_vector(Fz[:2]) + PI / 2
+        partial_rot_T = np.dot(
+            rotation_matrix_transpose(phi, RIGHT),
+            rotation_matrix_transpose(theta, OUT),
+        )
+        gamma = angle_of_vector(np.dot(partial_rot_T, new_rot_T.T)[:, 0])
+        # TODO, write a function that converts quaternions to euler angles
+        self.euler_angles[:] = theta, phi, gamma
+        return self
+
+    def set_rotation(self, theta=0, phi=0, gamma=0):
+        self.euler_angles[:] = theta, phi, gamma
+        return self
+
+    def increment_theta(self, dtheta):
+        self.euler_angles[0] += dtheta
+        return self
+
+    def increment_phi(self, dphi):
+        self.euler_angles[1] = clip(self.euler_angles[1] + dphi, 0, PI)
+        return self
+
+    def increment_gamma(self, dgamma):
+        self.euler_angles[2] += dgamma
+        return self
+
+    def scale(self, scale_factor, **kwargs):
+        # TODO, handle about_point and about_edge?
+        self.height *= scale_factor
+        self.width *= scale_factor
+        return self
+
+    def set_height(self, height):
+        self.height = height
+        return self
+
+    def set_width(self, width):
+        self.width = width
+        return self
+
+    def get_height(self):
+        return self.height
+
+    def get_width(self):
+        return self.width
+
+    def get_center(self):
+        return self.points[0]
+
+    def get_focal_distance(self):
+        return self.focal_distance
+
+    def interpolate(self, mobject1, mobject2, alpha, **kwargs):
+        pass
 
 
 class Camera(object):
     CONFIG = {
         "background_image": None,
-        "frame_config": {
-            "width": FRAME_WIDTH,
-            "height": FRAME_HEIGHT,
-            "center": ORIGIN,
-        },
+        "frame_config": {},
         "pixel_height": DEFAULT_PIXEL_HEIGHT,
         "pixel_width": DEFAULT_PIXEL_WIDTH,
         "frame_rate": DEFAULT_FRAME_RATE,  # TODO, move this elsewhere
@@ -55,7 +141,8 @@ class Camera(object):
         "image_mode": "RGBA",
         "n_channels": 4,
         "pixel_array_dtype": 'uint8',
-        "line_width_multiple": 0.01,
+        "light_source_position": [-10, 10, 10],  # TODO, add multiple light sources
+        "apply_depth_test": False,
     }
 
     def __init__(self, ctx=None, **kwargs):
@@ -65,6 +152,7 @@ class Camera(object):
         self.init_context(ctx)
         self.init_shaders()
         self.init_textures()
+        self.init_light_source()
 
     def init_frame(self):
         self.frame = CameraFrame(**self.frame_config)
@@ -78,12 +166,18 @@ class Camera(object):
             self.fbo = self.get_fbo()
             self.fbo.use()
 
-        self.ctx.enable(moderngl.BLEND)
-        self.ctx.blend_func = (
+        flag = moderngl.BLEND
+        if self.apply_depth_test:
+            flag |= moderngl.DEPTH_TEST
+        self.ctx.enable(flag)
+        self.ctx.blend_func = (  # Needed?
             moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA,
             moderngl.ONE, moderngl.ONE
         )
         self.background_fbo = None
+
+    def init_light_source(self):
+        self.light_source = Point(self.light_source_position)
 
     # Methods associated with the frame buffer
     def get_fbo(self):
@@ -107,8 +201,8 @@ class Camera(object):
             frame_height = frame_width / aspect_ratio
         else:
             frame_width = aspect_ratio * frame_height
-        self.set_frame_height(frame_height)
-        self.set_frame_width(frame_width)
+        self.frame.set_height(frame_height)
+        self.frame.set_width(frame_width)
 
     def clear(self):
         rgba = (*Color(self.background_color).get_rgb(), self.background_opacity)
@@ -163,7 +257,6 @@ class Camera(object):
     def get_pixel_height(self):
         return self.get_pixel_shape()[1]
 
-    # TODO, make these work for a rotated frame
     def get_frame_height(self):
         return self.frame.get_height()
 
@@ -176,17 +269,12 @@ class Camera(object):
     def get_frame_center(self):
         return self.frame.get_center()
 
-    def set_frame_height(self, height):
-        self.frame.set_height(height, stretch=True)
-
-    def set_frame_width(self, width):
-        self.frame.set_width(width, stretch=True)
-
-    def set_frame_center(self, center):
-        self.frame.move_to(center)
-
     def pixel_coords_to_space_coords(self, px, py, relative=False):
-        pw, ph = self.fbo.size
+        # pw, ph = self.fbo.size
+        # Bad hack, not sure why this is needed.
+        pw, ph = self.get_pixel_shape()
+        pw //= 2
+        ph //= 2
         fw, fh = self.get_frame_shape()
         fc = self.get_frame_center()
         if relative:
@@ -195,19 +283,6 @@ class Camera(object):
             # Only scale wrt one axis
             scale = fh / ph
             return fc + scale * np.array([(px - pw / 2), (py - ph / 2), 0])
-
-    # TODO, account for 3d
-    # Also, move this to CameraFrame?
-    def is_in_frame(self, mobject):
-        fc = self.get_frame_center()
-        fh = self.get_frame_height()
-        fw = self.get_frame_width()
-        return not reduce(op.or_, [
-            mobject.get_right()[0] < fc[0] - fw,
-            mobject.get_bottom()[1] > fc[1] + fh,
-            mobject.get_left()[0] > fc[0] + fw,
-            mobject.get_top()[1] < fc[1] - fh,
-        ])
 
     # Rendering
     def capture(self, *mobjects, **kwargs):
@@ -266,15 +341,17 @@ class Camera(object):
         if shader is None:
             return
         # TODO, think about how uniforms come from mobjects as well.
-        fh = self.get_frame_height()
-        fc = self.get_frame_center()
         pw, ph = self.get_pixel_shape()
 
+        transform = self.frame.get_inverse_camera_position_matrix()
+        light = self.light_source.get_location()
+        transformed_light = np.dot(transform, [*light, 1])[:3]
         mapping = {
-            'scale': fh / 2,  # Scale based on frame size
+            'to_screen_space': tuple(transform.T.flatten()),
             'aspect_ratio': (pw / ph),  # AR based on pixel shape
-            'anti_alias_width': ANTI_ALIAS_WIDTH_OVER_FRAME_HEIGHT * fh,
-            'frame_center': tuple(fc),
+            'focal_distance': self.frame.get_focal_distance(),
+            'anti_alias_width': 3 / ph,  # 1.5 Pixel widths
+            'light_source_position': tuple(transformed_light),
         }
         for key, value in mapping.items():
             try:
@@ -302,3 +379,8 @@ class Camera(object):
             texture.use(location=tid)
             self.path_to_texture_id[path] = tid
         return self.path_to_texture_id[path]
+
+
+class ThreeDCamera(Camera):
+    # Purely here to keep old scenes happy
+    pass

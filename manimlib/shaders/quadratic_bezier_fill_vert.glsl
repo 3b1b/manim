@@ -1,24 +1,28 @@
 #version 330
 
+uniform mat4 to_screen_space;
+
 in vec3 point;
+in vec3 unit_normal;
 in vec4 color;
-// fill_all is 0 or 1
-in float fill_all;
-// orientation is +1 for counterclockwise curves, -1 otherwise
-in float orientation;
+in float fill_all;  // Either 0 or 1
+in float gloss;
 
 out vec3 bp;  // Bezier control point
+out vec3 v_global_unit_normal;
 out vec4 v_color;
 out float v_fill_all;
-out float v_orientation;
+out float v_gloss;
 
-
-#INSERT rotate_point_for_frame.glsl
-
+// To my knowledge, there is no notion of #include for shaders,
+// so to share functionality between this and others, the caller
+// replaces this line with the contents of named file
+#INSERT position_point_into_frame.glsl
 
 void main(){
-    bp = rotate_point_for_frame(point);
+    bp = position_point_into_frame(point);
+    v_global_unit_normal = normalize(position_point_into_frame(unit_normal));
     v_color = color;
     v_fill_all = fill_all;
-    v_orientation = orientation;
+    v_gloss = gloss;
 }

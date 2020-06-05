@@ -1,29 +1,14 @@
 from manimlib.constants import *
 from manimlib.mobject.geometry import Square
+from manimlib.mobject.types.surface_mobject import SurfaceMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.iterables import listify
-from manimlib.utils.space_ops import z_to_vector
-
-##############
 
 
-# TODO, replace these with a special 3d type, not VMobject
-
-
-class ThreeDVMobject(VMobject):
+class ParametricSurface(SurfaceMobject):
     CONFIG = {
-        "shade_in_3d": True,
-    }
-
-
-class ParametricSurface(VGroup):
-    CONFIG = {
-        "u_min": 0,
-        "u_max": 1,
-        "v_min": 0,
-        "v_max": 1,
-        "resolution": 32,
+        "u_range": (0, 1),
+        "v_range": (0, 1),
+        "resolution": (32, 32),
         "surface_piece_config": {},
         "fill_color": BLUE_D,
         "fill_opacity": 1.0,
@@ -34,93 +19,72 @@ class ParametricSurface(VGroup):
         "pre_function_handle_to_anchor_scale_factor": 0.00001,
     }
 
-    def __init__(self, func, **kwargs):
-        VGroup.__init__(self, **kwargs)
-        self.func = func
-        self.setup_in_uv_space()
-        self.apply_function(lambda p: func(p[0], p[1]))
-        if self.should_make_jagged:
-            self.make_jagged()
-
-    def get_u_values_and_v_values(self):
-        res = listify(self.resolution)
-        if len(res) == 1:
-            u_res = v_res = res[0]
+    def __init__(self, function=None, **kwargs):
+        if function is None:
+            self.uv_func = self.func
         else:
-            u_res, v_res = res
-        u_min = self.u_min
-        u_max = self.u_max
-        v_min = self.v_min
-        v_max = self.v_max
+            self.uv_func = function
+        super().__init__(**kwargs)
 
-        u_values = np.linspace(u_min, u_max, u_res + 1)
-        v_values = np.linspace(v_min, v_max, v_res + 1)
-
-        return u_values, v_values
-
-    def setup_in_uv_space(self):
-        u_values, v_values = self.get_u_values_and_v_values()
-        faces = VGroup()
-        for i in range(len(u_values) - 1):
-            for j in range(len(v_values) - 1):
-                u1, u2 = u_values[i:i + 2]
-                v1, v2 = v_values[j:j + 2]
-                face = ThreeDVMobject()
-                face.set_points_as_corners([
-                    [u1, v1, 0],
-                    [u2, v1, 0],
-                    [u2, v2, 0],
-                    [u1, v2, 0],
-                    [u1, v1, 0],
-                ])
-                faces.add(face)
-                face.u_index = i
-                face.v_index = j
-                face.u1 = u1
-                face.u2 = u2
-                face.v1 = v1
-                face.v2 = v2
-        faces.set_fill(
-            color=self.fill_color,
-            opacity=self.fill_opacity
+    def init_points(self):
+        epsilon = 1e-6   # For differentials
+        nu, nv = self.resolution
+        u_range = np.linspace(*self.u_range, nu + 1)
+        v_range = np.linspace(*self.v_range, nv + 1)
+        # List of three grids, [Pure uv values, those nudged by du, those nudged by dv]
+        uv_grids = [
+            np.array([[[u, v] for v in v_range] for u in u_range])
+            for (du, dv) in [(0, 0), (epsilon, 0), (0, epsilon)]
+        ]
+        point_grid, points_nudged_du, points_nudged_dv = [
+            np.apply_along_axis(lambda p: self.uv_func(*p), 2, uv_grid)
+            for uv_grid in uv_grids
+        ]
+        normal_grid = np.cross(
+            (points_nudged_du - point_grid) / epsilon,
+            (points_nudged_dv - point_grid) / epsilon,
         )
-        faces.set_stroke(
-            color=self.stroke_color,
-            width=self.stroke_width,
-            opacity=self.stroke_opacity,
+
+        self.set_points(
+            self.get_triangle_ready_array_from_grid(point_grid),
+            self.get_triangle_ready_array_from_grid(normal_grid),
         )
-        self.add(*faces)
-        if self.checkerboard_colors:
-            self.set_fill_by_checkerboard(*self.checkerboard_colors)
 
-    def set_fill_by_checkerboard(self, *colors, opacity=None):
-        n_colors = len(colors)
-        for face in self:
-            c_index = (face.u_index + face.v_index) % n_colors
-            face.set_fill(colors[c_index], opacity=opacity)
+        # self.points = point_grid[indices]
+
+    def get_triangle_ready_array_from_grid(self, grid):
+        # Given a grid, say of points or normals, this returns an Nx3 array
+        # whose rows are elements from this grid in such such a way that successive
+        # triplets of points form triangles covering the grid.
+        nu = grid.shape[0] - 1
+        nv = grid.shape[1] - 1
+        dim = grid.shape[2]
+        arr = np.zeros((nu * nv * 6, dim))
+        # To match the triangles covering this surface
+        arr[0::6] = grid[:-1, :-1].reshape((nu * nv, 3))  # Top left
+        arr[1::6] = grid[+1:, :-1].reshape((nu * nv, 3))  # Bottom left
+        arr[2::6] = grid[:-1, +1:].reshape((nu * nv, 3))  # Top right
+        arr[3::6] = grid[:-1, +1:].reshape((nu * nv, 3))  # Top right
+        arr[4::6] = grid[+1:, :-1].reshape((nu * nv, 3))  # Bottom left
+        arr[5::6] = grid[+1:, +1:].reshape((nu * nv, 3))  # Bottom right
+        return arr
+
+    def func(self, u, v):
+        pass
 
 
-# Specific shapes
-
+# Sphere, cylinder, cube, prism
 
 class Sphere(ParametricSurface):
     CONFIG = {
         "resolution": (12, 24),
         "radius": 1,
-        "u_min": 0.001,
-        "u_max": PI - 0.001,
-        "v_min": 0,
-        "v_max": TAU,
+        "u_range": (0, PI),
+        "v_range": (0, TAU),
     }
 
-    def __init__(self, **kwargs):
-        ParametricSurface.__init__(
-            self, self.func, **kwargs
-        )
-        self.scale(self.radius)
-
     def func(self, u, v):
-        return np.array([
+        return self.radius * np.array([
             np.cos(v) * np.sin(u),
             np.sin(v) * np.sin(u),
             np.cos(u)

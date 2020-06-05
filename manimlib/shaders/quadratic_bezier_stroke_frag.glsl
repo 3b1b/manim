@@ -1,10 +1,16 @@
 #version 330
 
+uniform mat4 to_screen_space;
+uniform vec3 light_source_position;
+
+in vec3 xyz_coords;
+in vec3 global_unit_normal;
 in vec2 uv_coords;
 in vec2 uv_b2;
 
 in float uv_stroke_width;
 in vec4 color;
+in float gloss;
 in float uv_anti_alias_width;
 
 in float has_prev;
@@ -19,7 +25,7 @@ in float bezier_degree;
 out vec4 frag_color;
 
 
-float cross(vec2 v, vec2 w){
+float cross2d(vec2 v, vec2 w){
     return v.x * w.y - w.x * v.y;
 }
 
@@ -64,8 +70,8 @@ float modify_distance_for_endpoints(vec2 p, float dist, float t){
             );
             vec2 v21_unit = v21 / length(v21);
             float bevel_d = max(
-                abs(cross(p - uv_b2, v21_unit)),
-                abs(cross((rot * (p - uv_b2)), v21_unit))
+                abs(cross2d(p - uv_b2, v21_unit)),
+                abs(cross2d((rot * (p - uv_b2)), v21_unit))
             );
             return min(dist, bevel_d);
         }
@@ -78,14 +84,19 @@ float modify_distance_for_endpoints(vec2 p, float dist, float t){
 // so to share functionality between this and others, the caller
 // replaces this line with the contents of named file
 #INSERT quadratic_bezier_distance.glsl
+#INSERT add_light.glsl
 
 
 void main() {
     if (uv_stroke_width == 0) discard;
 
-    frag_color = color;
-    float dist_to_curve = min_dist_to_curve(uv_coords, uv_b2, bezier_degree, false);
+    // Add lighting if needed
+    frag_color = add_light(color, xyz_coords, global_unit_normal, light_source_position, gloss);
+
+    float dist_to_curve = min_dist_to_curve(uv_coords, uv_b2, bezier_degree);
     // An sdf for the region around the curve we wish to color.
     float signed_dist = abs(dist_to_curve) - 0.5 * uv_stroke_width;
     frag_color.a *= smoothstep(0.5, -0.5, signed_dist / uv_anti_alias_width);
+
+    // frag_color.a += 0.3;
 }

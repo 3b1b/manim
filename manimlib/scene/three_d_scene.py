@@ -1,5 +1,4 @@
 from manimlib.animation.transform import ApplyMethod
-from manimlib.camera.three_d_camera import ThreeDCamera
 from manimlib.constants import DEGREES
 from manimlib.constants import PRODUCTION_QUALITY_CAMERA_CONFIG
 from manimlib.mobject.coordinate_systems import ThreeDAxes
@@ -12,9 +11,10 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.config_ops import merge_dicts_recursively
 
 
+# TODO, these seem deprecated.
+
 class ThreeDScene(Scene):
     CONFIG = {
-        "camera_class": ThreeDCamera,
         "ambient_camera_rotation": None,
         "default_angled_camera_orientation_kwargs": {
             "phi": 70 * DEGREES,
