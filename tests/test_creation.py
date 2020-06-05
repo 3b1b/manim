@@ -25,7 +25,7 @@ class DrawBorderThenFillTest(Scene):
 
 class WriteTest(Scene):
     def construct(self):
-        t = Text('helloworld')
+        t = Text('helloworld', font = "Arial") 
 
         self.play(Write(t))
 
