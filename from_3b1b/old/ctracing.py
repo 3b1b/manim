@@ -1,5 +1,5 @@
 from manimlib.imports import *
-from from_3b1b.active.sir import *
+from from_3b1b.old.sir import *
 
 
 class LastFewMonths(Scene):
