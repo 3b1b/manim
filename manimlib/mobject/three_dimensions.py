@@ -1,8 +1,6 @@
 from manimlib.constants import *
-from manimlib.mobject.mobject import Group
-from manimlib.mobject.geometry import Square
 from manimlib.mobject.types.surface import ParametricSurface
-from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.mobject.types.surface import SGroup
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import z_to_vector
@@ -82,7 +80,23 @@ class Disk3D(ParametricSurface):
         ]
 
 
-class Cube(Group):
+class Square3D(ParametricSurface):
+    CONFIG = {
+        "side_length": 2,
+        "u_range": (-1, 1),
+        "v_range": (-1, 1),
+        "resolution": (1, 1),
+    }
+
+    def init_points(self):
+        super().init_points()
+        self.scale(self.side_length / 2)
+
+    def uv_func(self, u, v):
+        return [u, v, 0]
+
+
+class Cube(SGroup):
     CONFIG = {
         # "fill_color": BLUE,
         # "fill_opacity": 1,
@@ -96,20 +110,13 @@ class Cube(Group):
     }
 
     def init_points(self):
-        square = ParametricSurface(
-            lambda u, v: [u, v, 0],
-            resolution=self.square_resolution,
-            u_range=(-1, 1),
-            v_range=(-1, 1),
-        )
-        square.set_color(self.color, self.opacity, self.gloss)
         for vect in IN, OUT, LEFT, RIGHT, UP, DOWN:
-            # face = Square(side_length=self.side_length)
-            face = square.deepcopy()
+            face = Square3D(resolution=self.square_resolution)
             face.shift(OUT)
             face.apply_matrix(z_to_vector(vect))
             self.add(face)
         self.set_height(self.side_length)
+        # self.set_color(self.color, self.opacity, self.gloss)
 
 
 class Prism(Cube):

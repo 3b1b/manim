@@ -134,6 +134,15 @@ class ParametricSurface(Mobject):
         return data
 
 
+class SGroup(ParametricSurface):
+    def __init__(self, *parametric_surfaces, **kwargs):
+        super().__init__(**kwargs)
+        self.add(*parametric_surfaces)
+
+    def init_points(self):
+        pass
+
+
 class TexturedSurface(ParametricSurface):
     CONFIG = {
         "vert_shader_file": "textured_surface_vert.glsl",
