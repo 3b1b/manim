@@ -100,10 +100,7 @@ class VMobject(Mobject):
             width=self.stroke_width,
             opacity=self.stroke_opacity,
         )
-        self.set_sheen(
-            factor=self.sheen_factor,
-            direction=self.sheen_direction,
-        )
+        self.set_gloss(self.gloss)
         return self
 
     def generate_rgba_array(self, color, opacity):
@@ -161,8 +158,7 @@ class VMobject(Mobject):
                   stroke_color=None,
                   stroke_width=None,
                   stroke_opacity=None,
-                  sheen_factor=None,
-                  sheen_direction=None,
+                  gloss=None,
                   background_image_file=None,
                   family=True):
         self.set_fill(
@@ -176,12 +172,8 @@ class VMobject(Mobject):
             opacity=stroke_opacity,
             family=family,
         )
-        if sheen_factor:
-            self.set_sheen(
-                factor=sheen_factor,
-                direction=sheen_direction,
-                family=family,
-            )
+        if gloss:
+            self.set_gloss(gloss, family=family)
         if background_image_file:
             self.color_using_background_image(background_image_file)
         return self
@@ -193,8 +185,7 @@ class VMobject(Mobject):
             "stroke_color": self.get_stroke_colors(),
             "stroke_width": self.get_stroke_width(),
             "stroke_opacity": self.get_stroke_opacity(),
-            "sheen_factor": self.get_sheen_factor(),
-            "sheen_direction": self.get_sheen_direction(),
+            "gloss": self.get_gloss(),
             "background_image_file": self.get_background_image_file(),
         }
 
@@ -244,6 +235,9 @@ class VMobject(Mobject):
             self.gloss = gloss
         return self
 
+    def get_gloss(self):
+        return self.gloss
+
     def get_fill_rgbas(self):
         try:
             return self.fill_rgbas
@@ -280,6 +274,7 @@ class VMobject(Mobject):
             return np.zeros((1, 4))
 
     # TODO, it's weird for these to return the first of various lists
+    # rather than the full information
     def get_stroke_color(self):
         return self.get_stroke_colors()[0]
 
@@ -303,50 +298,7 @@ class VMobject(Mobject):
             return self.get_stroke_color()
         return self.get_fill_color()
 
-    # TODO, sheen currently has no effect
-    def set_sheen_direction(self, direction, family=True):
-        direction = np.array(direction)
-        if family:
-            for submob in self.get_family():
-                submob.sheen_direction = direction
-        else:
-            self.sheen_direction = direction
-        return self
-
-    def set_sheen(self, factor, direction=None, family=True):
-        if family:
-            for submob in self.submobjects:
-                submob.set_sheen(factor, direction, family)
-        self.sheen_factor = factor
-        if direction is not None:
-            # family set to false because recursion will
-            # already be handled above
-            self.set_sheen_direction(direction, family=False)
-        # Reset color to put sheen_factor into effect
-        if factor != 0:
-            self.set_stroke(self.get_stroke_color(), family=family)
-            self.set_fill(self.get_fill_color(), family=family)
-        return self
-
-    def get_sheen_direction(self):
-        return np.array(self.sheen_direction)
-
-    def get_sheen_factor(self):
-        return self.sheen_factor
-
-    def get_gradient_start_and_end_points(self):
-        if self.shade_in_3d:
-            return get_3d_vmob_gradient_start_and_end_points(self)
-        else:
-            direction = self.get_sheen_direction()
-            c = self.get_center()
-            bases = np.array([
-                self.get_edge_center(vect) - c
-                for vect in [RIGHT, UP, OUT]
-            ]).transpose()
-            offset = np.dot(bases, direction)
-            return (c - offset, c + offset)
-
+    # TODO, this currently does nothing
     def color_using_background_image(self, background_image_file):
         self.background_image_file = background_image_file
         self.set_color(WHITE)
@@ -921,7 +873,8 @@ class VMobject(Mobject):
                     data = back_stroke_data
                 else:
                     data = stroke_data
-                data.append(submob.get_stroke_shader_data())
+                new_data = submob.get_stroke_shader_data()
+                data.append(new_data)
 
         result = []
         if back_stroke_data:
