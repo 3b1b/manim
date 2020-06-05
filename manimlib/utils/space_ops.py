@@ -175,6 +175,14 @@ def normalize(vect, fall_back=None):
         return np.zeros(len(vect))
 
 
+def normalize_along_axis(array, axis, fall_back=None):
+    norms = np.sqrt((array * array).sum(axis))
+    norms[norms == 0] = 1
+    buffed_norms = np.repeat(norms, array.shape[axis]).reshape(array.shape)
+    array /= buffed_norms
+    return array
+
+
 def cross(v1, v2):
     return np.array([
         v1[1] * v2[2] - v1[2] * v2[1],
