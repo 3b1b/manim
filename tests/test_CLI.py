@@ -28,7 +28,7 @@ def test_basicScene():
     out, err, exitcode = capture(command)
     assert exitcode == 0, err
     assert os.path.exists(os.path.join(
-        path_output, "videos", "basic_scenes", "480p15", "SquareToCircle.mp4")), "Error in the file generation. Please ignore if it was intended"
+        path_output, "videos", "basic_scenes", "480p15", "SquareToCircle.mp4")), err # "Error in the file generation. Please ignore if it was intended"
     rmtree(path_output)
 
 
@@ -41,5 +41,5 @@ def test_WriteStuff():
     out, err, exitcode = capture(command)
     assert exitcode == 0, err
     assert os.path.exists(os.path.join(
-        path_output, "videos", "basic_scenes", "480p15", "WriteStuff.mp4")), "Error in the file generation. Please ignore if it was intended"
+        path_output, "videos", "basic_scenes", "480p15", "WriteStuff.mp4")), err# "Error in the file generation. Please ignore if it was intended"
     rmtree(path_output)
