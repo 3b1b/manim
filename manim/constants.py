@@ -1,7 +1,4 @@
 import numpy as np
-import os
-from .config import config
-
 
 # Messages
 NOT_SETTING_FONT_MSG = '''
@@ -15,7 +12,6 @@ class MyText(Text):
         'font': 'My Font'
     }
 '''
-
 SCENE_NOT_FOUND_MESSAGE = """
    {} is not in the script
 """
@@ -58,21 +54,6 @@ DR = DOWN + RIGHT
 START_X = 30
 START_Y = 20
 
-# Geometry: frame
-FRAME_HEIGHT = 8.0
-PIXEL_WIDTH = config['CAMERA_CONFIG']['PIXEL_WIDTH']
-PIXEL_HEIGHT = config['CAMERA_CONFIG']['PIXEL_HEIGHT']
-FRAME_RATE = config['CAMERA_CONFIG']['FRAME_RATE']
-FRAME_WIDTH = FRAME_HEIGHT * PIXEL_WIDTH / PIXEL_HEIGHT
-FRAME_Y_RADIUS = FRAME_HEIGHT / 2
-FRAME_X_RADIUS = FRAME_WIDTH / 2
-
-# Geometry: sides
-TOP = FRAME_Y_RADIUS * UP
-BOTTOM = FRAME_Y_RADIUS * DOWN
-LEFT_SIDE = FRAME_X_RADIUS * LEFT
-RIGHT_SIDE = FRAME_X_RADIUS * RIGHT
-
 # Default buffers (padding)
 SMALL_BUFF = 0.1
 MED_SMALL_BUFF = 0.25
@@ -89,9 +70,6 @@ DEFAULT_WAIT_TIME = 1.0
 DEFAULT_POINT_DENSITY_2D = 25
 DEFAULT_POINT_DENSITY_1D = 250
 DEFAULT_STROKE_WIDTH = 4
-
-# Tex stuff
-TEX_TEMPLATE = None
 
 # Mathematical constants
 PI = np.pi

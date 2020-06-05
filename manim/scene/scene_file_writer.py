@@ -9,7 +9,7 @@ import datetime
 from PIL import Image
 
 from ..constants import FFMPEG_BIN
-from ..config import config
+from ..config import file_writer_config
 from ..logger import logger
 from ..utils.config_ops import digest_config
 from ..utils.file_ops import guarantee_existence
@@ -75,10 +75,10 @@ class SceneFileWriter(object):
                 add_extension_if_not_present(scene_name, ".png")
             )
 
-        if config['WRITE_TO_MOVIE']:
-            if config['VIDEO_DIR']:
+        if file_writer_config['write_to_movie']:
+            if file_writer_config['video_dir']:
                 movie_dir = guarantee_existence(os.path.join(
-                    config['VIDEO_DIR'],
+                    file_writer_config['video_dir'],
                     module_directory,
                     self.get_resolution_directory(),
                 ))

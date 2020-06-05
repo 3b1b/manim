@@ -10,6 +10,7 @@ import cairo
 import numpy as np
 
 from ..constants import *
+from ..config import config
 from ..logger import logger
 from ..mobject.types.image_mobject import AbstractImageMobject
 from ..mobject.mobject import Mobject
@@ -767,7 +768,7 @@ class Camera(object):
             width * self.cairo_line_width_multiple *
             # This ensures lines have constant width
             # as you zoom in on them.
-            (self.get_frame_width() / FRAME_WIDTH)
+            (self.get_frame_width() / self.frame_width)
         )
         ctx.stroke_preserve()
         return self

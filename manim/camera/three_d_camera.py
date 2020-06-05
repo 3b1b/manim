@@ -2,6 +2,7 @@ import numpy as np
 
 from ..camera.camera import Camera
 from ..constants import *
+from ..config import config
 from ..mobject.three_d_utils import get_3d_vmob_end_corner
 from ..mobject.three_d_utils import get_3d_vmob_end_corner_unit_normal
 from ..mobject.three_d_utils import get_3d_vmob_start_corner
@@ -26,7 +27,7 @@ class ThreeDCamera(Camera):
         "frame_center": ORIGIN,
         "should_apply_shading": True,
         "exponential_projection": False,
-        "max_allowable_norm": 3 * FRAME_WIDTH,
+        "max_allowable_norm": 3 * config['frame_width'],
     }
 
     def __init__(self, *args, **kwargs):

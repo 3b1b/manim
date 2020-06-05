@@ -1,6 +1,7 @@
 import operator as op
 
 from ..constants import *
+from ..config import config
 from ..mobject.geometry import Line
 from ..mobject.numbers import DecimalNumber
 from ..mobject.types.vectorized_mobject import VGroup
@@ -14,8 +15,8 @@ from ..utils.space_ops import normalize
 class NumberLine(Line):
     CONFIG = {
         "color": LIGHT_GREY,
-        "x_min": -FRAME_X_RADIUS,
-        "x_max": FRAME_X_RADIUS,
+        "x_min": -config['frame_x_radius'],
+        "x_max": config['frame_x_radius'],
         "unit_size": 1,
         "include_ticks": True,
         "tick_size": 0.1,

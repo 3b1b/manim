@@ -14,97 +14,180 @@ import configparser
 import colour
 from .utils.tex import TexTemplateFromFile, TexTemplate
 from .logger import logger
+from . import constants
 
 __all__ = ["config", "register_tex_template", "initialize_tex"]
 
 
-def _parse_config(input_file, config_files):
-    # This only loads the [CLI] section of the manim.cfg file.  If using
-    # CLI arguments, the _update_config_with_args function will take care
-    # of overriding any of these defaults.
-    config_parser = configparser.ConfigParser()
-    successfully_read_files = config_parser.read(config_files)
-    if not successfully_read_files:
-        raise FileNotFoundError('Config file could not be read')
+def _parse_config(config_parser, args):
+    """Parse config files and CLI arguments into a single dictionary."""
+    # By default, use the CLI section of the digested .cfg files
+    default = config_parser['CLI']
 
-    # Put everything in a dict
+    # This will be the final config dict exposed to the user
     config = {}
 
-    # Make sure we have an input file
-    config['INPUT_FILE'] = input_file
+    # Handle the *_quality flags.  These determine the section to read
+    # and are stored in 'camera_config'.  Note the highest resolution
+    # passed as argument will be used.
+    for flag in ['fourk_quality', 'high_quality', 'medium_quality', 'low_quality']:
+        if getattr(args, flag):
+            section = config_parser[flag]
+            break
+    else:
+        section = config_parser['CLI']
+    config = {opt: section.getint(opt) for opt in config_parser[flag]}
 
-    # ConfigParser options are all strings, so need to convert to the
-    # appropriate type
+    # The -r, --resolution flag overrides the *_quality flags
+    if args.resolution is not None:
+        if "," in args.resolution:
+            height_str, width_str = args.resolution.split(",")
+            height, width = int(height_str), int(width_str)
+        else:
+            height, width = int(args.resolution), int(16 * height / 9)
+        config['camera_config'].update({'pixel_height': height,
+                                        'pixel_width': width})
 
-    # booleans
-    for opt in ['PREVIEW', 'SHOW_FILE_IN_FINDER', 'QUIET', 'SOUND',
-                'LEAVE_PROGRESS_BARS', 'WRITE_ALL', 'WRITE_TO_MOVIE',
-                'SAVE_LAST_FRAME', 'DRY_RUN', 'SAVE_PNGS', 'SAVE_AS_GIF']:
-        config[opt] = config_parser['CLI'].getboolean(opt)
+    # Handle the -c (--color) flag
+    if args.color is not None:
+        try:
+            background_color = colour.Color(args.color)
+        except AttributeError as err:
+            logger.warning('Please use a valid color.')
+            logger.error(err)
+            sys.exit(2)
+    else:
+        background_color = colour.Color(default['background_color'])
+    config['background_color'] = background_color
 
-    # numbers
-    for opt in ['FROM_ANIMATION_NUMBER', 'UPTO_ANIMATION_NUMBER',
-                'BACKGROUND_OPACITY']:
-        config[opt] = config_parser['CLI'].getint(opt)
+    # Set the rest of the frame properties
+    config['frame_height'] = 8.0
+    config['frame_width'] = (config['frame_height']
+                             * config['pixel_width']
+                             / config['pixel_height'])
+    config['frame_y_radius'] = config['frame_height'] / 2
+    config['frame_x_radius'] = config['frame_width'] / 2
+    config['top'] = config['frame_y_radius'] * constants.UP
+    config['bottom'] = config['frame_y_radius'] * constants.DOWN
+    config['left_side'] = config['frame_x_radius'] * constants.LEFT
+    config['right_side'] = config['frame_x_radius'] * constants.RIGHT
 
-    # UPTO_ANIMATION_NUMBER is special because -1 actually means np.inf
-    if config['UPTO_ANIMATION_NUMBER'] == -1:
-        import numpy as np
-        config['UPTO_ANIMATION_NUMBER'] = np.inf
+    # Hangle the --tex_template flag.  Note we accept None if the flag is absent
+    filename = (os.path.expanduser(args.tex_template)
+                if args.tex_template is not None
+                else None)
 
-    # strings
-    for opt in ['PNG_MODE', 'MOVIE_FILE_EXTENSION', 'MEDIA_DIR',
-                'OUTPUT_FILE', 'VIDEO_DIR', 'TEX_DIR', 'TEXT_DIR',
-                'BACKGROUND_COLOR']:
-        config[opt] = config_parser['CLI'][opt]
+    if filename is not None and not os.access(filename, os.R_OK):
+        # custom template not available, fallback to default
+        logger.warning(
+            f"Custom TeX template {filename} not found or not readable. "
+            "Falling back to the default template."
+        )
+        filename = None
+    config['tex_template_file'] = filename
+    config['tex_template'] = (TexTemplateFromFile(filename=filename)
+                              if filename is not None
+                              else TexTemplate())
 
-    # streaming section -- all values are strings
-    config['STREAMING'] = {}
-    for opt in ['LIVE_STREAM_NAME', 'TWITCH_STREAM_KEY',
-                'STREAMING_PROTOCOL', 'STREAMING_PROTOCOL', 'STREAMING_IP',
-                'STREAMING_PORT', 'STREAMING_PORT', 'STREAMING_CLIENT',
-                'STREAMING_CONSOLE_BANNER']:
-        config['STREAMING'][opt] = config_parser['streaming'][opt]
-
-    # for internal use (no CLI flag)
-    config['SKIP_ANIMATIONS'] = any([
-        config['SAVE_LAST_FRAME'],
-        config['FROM_ANIMATION_NUMBER'],
-    ])
-
-    # camera config -- all happen to be integers
-    config['CAMERA_CONFIG'] = {}
-    for opt in ['FRAME_RATE', 'PIXEL_HEIGHT', 'PIXEL_WIDTH']:
-        config['CAMERA_CONFIG'][opt] = config_parser['CLI'].getint(opt)
-
-    # file writer config -- just pull them from the overall config for now
-    config['FILE_WRITER_CONFIG'] = {key: config[key] for key in [
-        "WRITE_TO_MOVIE", "SAVE_LAST_FRAME", "SAVE_PNGS",
-        "SAVE_AS_GIF", "PNG_MODE", "MOVIE_FILE_EXTENSION",
-        "OUTPUT_FILE", "INPUT_FILE"]}
-
-    return config, config_parser
+    return config
 
 
-def _parse_cli():
+def _parse_file_writer_config(config_parser, args):
+    """Parse config files and CLI arguments into a single dictionary."""
+    # By default, use the CLI section of the digested .cfg files
+    default = config_parser['CLI']
+
+    # This will be the final config dict exposed to the user
+    config = {}
+
+    # Handle input files and scenes.  Note these cannot be set from
+    # the .cfg files, only from CLI arguments
+    config['input_file'] = args.file
+    config['scene_names'] = (args.scene_names
+                             if args.scene_names is not None else [])
+
+    # Read some options that cannot be overriden by CLI arguments
+    for opt in ['gif_file_extension']:
+        config[opt] = default[opt]
+
+    # Handle all options that are directly overridden by CLI
+    # arguments.  Note ConfigParser options are all strings and each
+    # needs to be converted to the appropriate type. Thus, we do this
+    # in batches, depending on their type: booleans and strings
+    for boolean_opt in ['preview', 'show_file_in_finder', 'quiet',
+                        'sound', 'leave_progress_bars']:
+        config[boolean_opt] = (default.getboolean(boolean_opt)
+                               if getattr(args, boolean_opt) is None
+                               else getattr(args, boolean_opt))
+    for str_opt in ['media_dir', 'video_dir', 'tex_dir',
+                    'text_dir']:
+        config[str_opt] = (default[str_opt]
+                           if getattr(args, str_opt) is None
+                           else getattr(args, str_opt))
+
+    # Handle the -t (--transparent) flag.  This flag determines which
+    # section to use from the .cfg file.
+    section = config_parser['transparent'] if args.transparent else default
+    for opt in ['png_mode', 'movie_file_extension',
+                'background_opacity']:
+        config[opt] = section[opt]
+
+    # Handle the -n flag.  Read first from the cfg and then override with CLI.
+    # These two are integers -- use getint()
+    for opt in ['from_animation_number', 'upto_animation_number']:
+        config[opt] = default.getint(opt)
+    if config['upto_animation_number'] == -1:
+        config['upto_animation_number'] = float('inf')
+    nflag = args.from_animation_number
+    if nflag is not None:
+        if ',' in nflag:
+            start, end = nflag.split(',')
+            config['from_animation_number'] = int(start)
+            config['upto_animation_number'] = int(end)
+        else:
+            config['from_animation_number'] = int(nflag)
+
+    # Handle the --dry_run flag.  This flag determines which section
+    # to use from the .cfg file.  All options involved are boolean.
+    section = config_parser['dry_run'] if args.dry_run else default
+    for opt in ['write_to_movie', 'write_all', 'save_last_frame', 'save_pngs', 'save_as_gif']:
+        config[opt] = section.getboolean(opt)
+
+    # Read in the streaming section -- all values are strings
+    config['streaming'] = {opt: config_parser['streaming'][opt]
+                           for opt in ['live_stream_name', 'twitch_stream_key',
+                                       'streaming_protocol', 'streaming_ip',
+                                       'streaming_protocol', 'streaming_client',
+                                       'streaming_port', 'streaming_port',
+                                       'streaming_console_banner']}
+
+    # For internal use (no CLI flag)
+    config['skip_animations'] = any([config['save_last_frame'],
+                                     config['from_animation_number']])
+
+    return config
+
+
+def _parse_cli(arg_list, input=True):
     parser = argparse.ArgumentParser(
         description='Animation engine for explanatory math videos',
         epilog='Made with <3 by the manim community devs'
     )
-    parser.add_argument(
-        "file",
-        help="path to file holding the python code for the scene",
-    )
-    parser.add_argument(
-        "--scene_names",
-        nargs="*",
-        help="Name of the Scene class you want to see",
-    )
-    parser.add_argument(
-        "-o", "--output_file",
-        help="Specify the name of the output file, if"
-             "it should be different from the scene class name",
-    )
+    if input:
+        parser.add_argument(
+            "file",
+            help="path to file holding the python code for the scene",
+        )
+        parser.add_argument(
+            "scene_names",
+            nargs="*",
+            help="Name of the Scene class you want to see",
+        )
+        parser.add_argument(
+            "-o", "--output_file",
+            help="Specify the name of the output file, if"
+                 "it should be different from the scene class name",
+        )
 
     # Note the following use (action='store_const', const=True),
     # instead of using the built-in (action='store_true').  The reason
@@ -270,184 +353,77 @@ def _parse_cli():
         help="Specify the configuration file",
     )
 
-    return parser.parse_args()
-
-
-def _update_config_with_args(config, config_parser, args):
-    # Take care of options that do not have defaults in manim.cfg
-    config['FILE'] = args.file
-    config['SCENE_NAMES'] = (args.scene_names
-                             if args.scene_names is not None else [])
-
-    # Flags that directly override config defaults.
-    for opt in ['PREVIEW', 'SHOW_FILE_IN_FINDER', 'QUIET', 'SOUND',
-                'LEAVE_PROGRESS_BARS', 'WRITE_ALL', 'WRITE_TO_MOVIE',
-                'SAVE_LAST_FRAME', 'SAVE_PNGS', 'SAVE_AS_GIF', 'MEDIA_DIR',
-                'VIDEO_DIR', 'TEX_DIR', 'TEXT_DIR', 'BACKGROUND_OPACITY',
-                'OUTPUT_FILE']:
-        if getattr(args, opt.lower()) is not None:
-            config[opt] = getattr(args, opt.lower())
-
-    # Parse the -n flag.
-    nflag = args.from_animation_number
-    if nflag is not None:
-        if ',' in nflag:
-            start, end = nflag.split(',')
-            config['FROM_ANIMATION_NUMBER'] = int(start)
-            config['UPTO_ANIMATION_NUMBER'] = int(end)
-        else:
-            config['FROM_ANIMATION_NUMBER'] = int(nflag)
-
-    # The following flags use the options in the corresponding manim.cfg
-    # sections to override default options.  For example, passing the -t
-    # (--transparent) flag takes all of the options defined in the
-    # [transparent] section of manim.cfg and uses their values to override
-    # the values of those options defined in CLI.
-
-    # -t, --transparent
-    if args.transparent:
-        config.update({
-            'PNG_MODE': config_parser['transparent']['PNG_MODE'],
-            'MOVIE_FILE_EXTENSION': config_parser['transparent']['MOVIE_FILE_EXTENSION'],
-            'BACKGROUND_OPACITY': config_parser['transparent'].getfloat('BACKGROUND_OPACITY')
-        })
-
-    # --dry_run happens to override options that are all booleans
-    if args.dry_run:
-        config.update({opt.upper(): config_parser['dry_run'].getboolean(opt)
-                       for opt in config_parser['dry_run']})
-
-    # the *_quality arguments happen to override options that are all ints
-    for flag in ['fourk_quality', 'high_quality', 'medium_quality',
-                 'low_quality']:
-        if getattr(args, flag) is not None:
-            config['CAMERA_CONFIG'].update(
-                {opt.upper(): config_parser[flag].getint(opt)
-                 for opt in config_parser[flag]})
-
-    # Parse the -r (--resolution) flag.  Note the -r flag does not
-    # correspond to any section in manim.cfg, but overrides the same
-    # options as the *_quality sections.
-    if args.resolution is not None:
-        if "," in args.resolution:
-            height_str, width_str = args.resolution.split(",")
-            height = int(height_str)
-            width = int(width_str)
-        else:
-            height = int(args.resolution)
-            width = int(16 * height / 9)
-        config['CAMERA_CONFIG'].update({'pixel_height': height,
-                                        'pixel_width': width})
-
-    # Parse the -c (--color) flag
-    if args.color is not None:
-        try:
-            config['CAMERA_CONFIG']['BACKGROUND_COLOR'] = colour.Color(args.color)
-        except AttributeError as err:
-            logger.warning('Please use a valid color')
-            logger.error(err)
-            sys.exit(2)
-
-    # As before, make FILE_WRITER_CONFIG by pulling form the overall
-    config['FILE_WRITER_CONFIG'] = {key: config[key] for key in [
-        "WRITE_TO_MOVIE", "SAVE_LAST_FRAME", "SAVE_PNGS",
-        "SAVE_AS_GIF", "PNG_MODE", "MOVIE_FILE_EXTENSION",
-        "OUTPUT_FILE", "INPUT_FILE"]}
-
-    return config
+    return parser.parse_args(arg_list)
 
 
 def _init_dirs(config):
-    if not (config["VIDEO_DIR"] and config["TEX_DIR"]):
-        if config["MEDIA_DIR"]:
-            if not os.path.isdir(config["MEDIA_DIR"]):
-                os.makedirs(config["MEDIA_DIR"])
-        if not os.path.isdir(config["MEDIA_DIR"]):
-            config["MEDIA_DIR"] = "./media"
+    if not (config["video_dir"] and config["tex_dir"]):
+        if config["media_dir"]:
+            if not os.path.isdir(config["media_dir"]):
+                os.makedirs(config["media_dir"])
+        if not os.path.isdir(config["media_dir"]):
+            config["media_dir"] = "./media"
         else:
             logger.warning(
                 f"Media will be written to {config['media_dir'] + os.sep}. You can change "
                 "this behavior with the --media_dir flag, or by adjusting manim.cfg."
             )
     else:
-        if config["MEDIA_DIR"]:
+        if config["media_dir"]:
             logger.warning(
                 "Ignoring --media_dir, since both --tex_dir and --video_dir were passed."
             )
 
     # Make sure all folders exist
-    for folder in [config["VIDEO_DIR"], config["TEX_DIR"], config["TEXT_DIR"]]:
+    for folder in [config["video_dir"], config["tex_dir"], config["text_dir"]]:
         if not os.path.exists(folder):
             os.makedirs(folder)
 
 
-def register_tex_template(tpl):
-    """Register the given LaTeX template for later use.
+def _from_command_line():
+    """Determine if manim was called from the command line."""
+    # Manim can be called from the command line in three different
+    # ways.  The first two involve using the manim or manimcm commands
+    prog = os.path.split(sys.argv[0])[-1]
+    from_cli_command = prog in ['manim', 'manimcm']
 
-    Parameters
-    ----------
-    tpl : :class:`~.TexTemplate`
-        The LaTeX template to register.
-    """
-    config['tex_template'] = tpl
+    # The third way involves using `python -m manim ...`.  In this
+    # case, the CLI arguments passed to manim do not include 'manim',
+    # 'manimcm', or even 'python'.  However, the -m flag will always
+    # be the first argument.
+    from_python_m = sys.argv[0] == '-m'
 
-
-def initialize_tex(config):
-    """Safely create a LaTeX template object from a file.
-    If file is not readable, the default template file is used.
-
-    Parameters
-    ----------
-    filename : :class:`str`
-        The name of the file with the LaTeX template.
-    """
-    filename = ""
-    if config["tex_template"]:
-        filename = os.path.expanduser(config["tex_template"])
-    if filename and not os.access(filename, os.R_OK):
-        # custom template not available, fallback to default
-        logger.warning(
-            f"Custom TeX template {filename} not found or not readable. "
-            "Falling back to the default template."
-        )
-        filename = ""
-    if filename:
-        # still having a filename -> use the file
-        config['tex_template'] = TexTemplateFromFile(filename=filename)
-    else:
-        # use the default template
-        config['tex_template'] = TexTemplate()
+    return from_cli_command or from_python_m
 
 
 # Config files to be parsed, in ascending priority
-library_wide = os.path.join(os.path.dirname(__file__), 'default.cfg'),
+library_wide = os.path.join(os.path.dirname(__file__), 'default.cfg')
 config_files = [
-    # Lowest priority: library-wide defaults
     library_wide,
-    # Medium priority: look for a 'manim.cfg' in the user home
     os.path.expanduser('~/.manim.cfg'),
-    # Highest priority: look for a 'manim.cfg' in the current dir
     os.path.join(os.getcwd(), 'manim.cfg'),
-    ]
+]
 
-prog = os.path.split(sys.argv[0])[-1]
-if prog in ['manim', 'manimcm']:
-    # If called as entrypoint, set default config, and override the
-    # defaults using CLI arguments
-    args = _parse_cli()
-
-    # If the user specified a config file, only use that one and the
-    # library-wide defaults.
+if _from_command_line():
+    args = _parse_cli(sys.argv)
     if args.config_file is not None:
-        config_files = [library_wide, args.config_file]
-
-    config, config_parser = _parse_config(args.file, config_files)
-    _update_config_with_args(config, config_parser, args)
+        config_files.append(args.config_file)
 
 else:
-    config, _ = _parse_config('', config_files)
+    # In this case, we still need an empty args object.
+    args = _parse_cli([], input=False)
+    # Need to populate the options left out
+    args.file, args.scene_names, args.output_file = '', '', ''
 
-#########    ##########    ##########
-# make sure to set dirs.TEX_DIR somewhere
-#########    ##########    ##########
-_init_dirs(config)
+config_parser = configparser.ConfigParser()
+successfully_read_files = config_parser.read(config_files)
+logger.info(f'Read configuration files: {successfully_read_files}')
+
+# this is for internal use when writing output files
+file_writer_config = _parse_file_writer_config(config_parser, args)
+
+# this is for the user
+config = _parse_config(config_parser, args)
+camera_config = config
+
+_init_dirs(file_writer_config)

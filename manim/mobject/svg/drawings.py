@@ -4,6 +4,7 @@ import string
 from ...animation.animation import Animation
 from ...animation.rotation import Rotating
 from ...constants import *
+from ...config import config
 from ...mobject.geometry import AnnularSector
 from ...mobject.geometry import Arc
 from ...mobject.geometry import Circle
@@ -279,7 +280,7 @@ class PatreonLogo(SVGMobject):
 class VideoIcon(SVGMobject):
     CONFIG = {
         "file_name": "video_icon",
-        "width": FRAME_WIDTH / 12.,
+        "width": config['frame_width'] / 12.,
     }
 
     def __init__(self, **kwargs):

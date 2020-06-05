@@ -2,6 +2,7 @@ from functools import reduce
 import operator as op
 
 from ...constants import *
+from ...config import config
 from ...mobject.geometry import Line
 from ...mobject.svg.svg_mobject import SVGMobject
 from ...mobject.svg.svg_mobject import VMobjectFromSVGPathstring
@@ -15,10 +16,9 @@ TEX_MOB_SCALE_FACTOR = 0.05
 
 
 class TexSymbol(VMobjectFromSVGPathstring):
-    """
-    Purely a renaming of VMobjectFromSVGPathstring
-    """
+    """Purely a renaming of VMobjectFromSVGPathstring."""
     pass
+
 
 class SingleStringTexMobject(SVGMobject):
     CONFIG = {
@@ -304,7 +304,7 @@ class Title(TextMobject):
     CONFIG = {
         "scale_factor": 1,
         "include_underline": True,
-        "underline_width": FRAME_WIDTH - 2,
+        "underline_width": config['frame_width'] - 2,
         # This will override underline_width
         "match_underline_width_to_text": False,
         "underline_buff": MED_SMALL_BUFF,

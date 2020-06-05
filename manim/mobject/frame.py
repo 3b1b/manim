@@ -1,4 +1,5 @@
 from ..constants import *
+from ..config import config
 from ..mobject.geometry import Rectangle
 from ..utils.config_ops import digest_config
 
@@ -19,7 +20,7 @@ class ScreenRectangle(Rectangle):
 
 class FullScreenRectangle(ScreenRectangle):
     CONFIG = {
-        "height": FRAME_HEIGHT,
+        "height": config['frame_height'],
     }
 
 

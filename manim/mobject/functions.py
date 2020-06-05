@@ -1,4 +1,5 @@
 from ..constants import *
+from ..config import config
 from ..mobject.types.vectorized_mobject import VMobject
 from ..utils.config_ops import digest_config
 import math
@@ -80,8 +81,8 @@ class ParametricFunction(VMobject):
 class FunctionGraph(ParametricFunction):
     CONFIG = {
         "color": YELLOW,
-        "x_min": -FRAME_X_RADIUS,
-        "x_max": FRAME_X_RADIUS,
+        "x_min": -config['frame_x_radius'],
+        "x_max": config['frame_x_radius'],
     }
 
     def __init__(self, function, **kwargs):
