@@ -48,6 +48,10 @@ jobs:
       language: sh
       python: 3.6
       env: PYVER="3.6.10"
+      before_install: 
+        - ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
+        - brew install ffmpeg
+        - brew cask install mactex
       install:
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
@@ -60,6 +64,10 @@ jobs:
       language: sh
       python: 3.7
       env: PYVER="3.7.7"
+      before_install: 
+        - ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
+        - brew install ffmpeg
+        - brew cask install mactex
       install:
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
@@ -72,6 +80,10 @@ jobs:
       language: sh
       python: 3.8
       env: PYVER="3.8.0" # Using Python 3.8.0 due to error with rich
+      before_install: 
+        - ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
+        - brew install ffmpeg
+        - brew cask install mactex
       install:
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
