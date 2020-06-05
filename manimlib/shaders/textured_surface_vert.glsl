@@ -9,7 +9,8 @@ uniform vec3 light_source_position;
 // uniform sampler2D Texture;
 
 in vec3 point;
-in vec3 normal;
+in vec3 du_point;
+in vec3 dv_point;
 in vec2 im_coords;
 in float opacity;
 in float gloss;
@@ -20,14 +21,14 @@ out vec2 v_im_coords;
 out float v_opacity;
 out float v_gloss;
 
-
 // These lines will get replaced
 #INSERT position_point_into_frame.glsl
 #INSERT get_gl_Position.glsl
+#INSERT get_rotated_surface_unit_normal_vector.glsl
 
 void main(){
     xyz_coords = position_point_into_frame(point);
-    v_normal = position_point_into_frame(normal);
+    v_normal = get_rotated_surface_unit_normal_vector(point, du_point, dv_point);
     v_im_coords = im_coords;
     v_opacity = opacity;
     v_gloss = gloss;

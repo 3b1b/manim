@@ -1,6 +1,6 @@
 from manimlib.constants import *
 from manimlib.mobject.geometry import Square
-from manimlib.mobject.types.surface_mobject import ParametricSurface
+from manimlib.mobject.types.surface import ParametricSurface
 from manimlib.mobject.types.vectorized_mobject import VGroup
 
 
@@ -8,7 +8,7 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 
 class Sphere(ParametricSurface):
     CONFIG = {
-        "resolution": (96, 48),
+        "resolution": (100, 50),
         "radius": 1,
         "u_range": (0, TAU),
         "v_range": (0, PI),
@@ -18,8 +18,17 @@ class Sphere(ParametricSurface):
         return self.radius * np.array([
             np.cos(u) * np.sin(v),
             np.sin(u) * np.sin(v),
-            np.cos(v)
+            -np.cos(v)
         ])
+
+
+class Clyinder(ParametricSurface):
+    CONFIG = {
+
+    }
+
+    def func(self, u, v):
+        pass
 
 
 class Cube(VGroup):

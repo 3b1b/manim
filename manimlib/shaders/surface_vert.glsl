@@ -6,26 +6,26 @@ uniform mat4 to_screen_space;
 uniform float focal_distance;
 uniform vec3 light_source_position;
 
-// uniform sampler2D Texture;
-
 in vec3 point;
-in vec3 normal;
-// in vec2 im_coords;
+in vec3 du_point;
+in vec3 dv_point;
 in vec4 color;
 in float gloss;
 
-// out vec2 v_im_coords;
+out vec3 xyz_coords;
+out vec3 v_normal;
 out vec4 v_color;
+out float v_gloss;
 
 // These lines will get replaced
 #INSERT position_point_into_frame.glsl
 #INSERT get_gl_Position.glsl
-#INSERT add_light.glsl
+#INSERT get_rotated_surface_unit_normal_vector.glsl
 
 void main(){
-    vec3 xyz_coords = position_point_into_frame(point);
-    vec3 unit_normal = normalize(position_point_into_frame(normal));
-    // v_im_coords = im_coords;
-    v_color = add_light(color, xyz_coords, unit_normal, light_source_position, gloss);
+    xyz_coords = position_point_into_frame(point);
+    v_normal = get_rotated_surface_unit_normal_vector(point, du_point, dv_point);
+    v_color = color;
+    v_gloss = gloss;
     gl_Position = get_gl_Position(xyz_coords);
 }

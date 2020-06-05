@@ -50,7 +50,7 @@ from manimlib.mobject.svg.text_mobject import *
 from manimlib.mobject.three_dimensions import *
 from manimlib.mobject.types.image_mobject import *
 from manimlib.mobject.types.point_cloud_mobject import *
-from manimlib.mobject.types.surface_mobject import *
+from manimlib.mobject.types.surface import *
 from manimlib.mobject.types.vectorized_mobject import *
 from manimlib.mobject.mobject_update_utils import *
 from manimlib.mobject.value_tracker import *

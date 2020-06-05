@@ -174,6 +174,7 @@ class Camera(object):
             moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA,
             moderngl.ONE, moderngl.ONE
         )
+        self.ctx.multisample = True  # Testing
         self.background_fbo = None
 
     def init_light_source(self):

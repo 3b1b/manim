@@ -1,8 +1,7 @@
 vec4 add_light(vec4 raw_color, vec3 point, vec3 unit_normal, vec3 light_coords, float gloss){
     if(gloss == 0.0) return raw_color;
 
-    // TODO, do we actually want this?  For VMobjects its nice to just choose whichever unit normal
-    // is pointing towards the camera.
+    // TODO, do we actually want this?  It effectively treats surfaces as two-sided
     if(unit_normal.z < 0){
         unit_normal *= -1;
     }
@@ -15,8 +14,9 @@ vec4 add_light(vec4 raw_color, vec3 point, vec3 unit_normal, vec3 light_coords, 
     float dot_prod = dot(normalize(light_reflection), normalize(to_camera));
     float shine = gloss * exp(-3 * pow(1 - dot_prod, 2));
     float dp2 = dot(normalize(to_light), unit_normal);
+    float mult = ((dp2 + 2.0) / 3.0);
     return vec4(
-        ((dp2 + 3.0) / 4.0) * mix(raw_color.rgb, vec3(1.0), shine),
+        mult * mix(raw_color.rgb, vec3(1.0), shine),
         raw_color.a
     );
 }
