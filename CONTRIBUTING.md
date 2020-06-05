@@ -5,7 +5,7 @@
 3. Link relevant issues.
 4. Ensure compatibility with the latest changes in the repo.
 
-## Contributing to the Manim Community Fork - General guidelines
+## Contributing to the Manim Community Fork - General instructions
 
 As this is a Fork of [Manim by 3b1b](https://github.com/3b1b/manim), contributing can be a bit confusing. Because of that, here is a small guide on it. 
 
