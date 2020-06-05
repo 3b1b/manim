@@ -42,19 +42,19 @@ class Camera(object):
     """
     CONFIG = {
         "background_image": None,
-        "pixel_height": PIXEL_HEIGHT,
-        "pixel_width": PIXEL_WIDTH,
-        "frame_rate": FRAME_RATE,
+        "pixel_height": config['pixel_height'],
+        "pixel_width": config['pixel_width'],
+        "frame_rate": config['frame_rate'],
         # Note: frame height and width will be resized to match
         # the pixel aspect ratio
-        "frame_height": FRAME_HEIGHT,
-        "frame_width": FRAME_WIDTH,
+        "frame_height": config['frame_height'],
+        "frame_width": config['frame_width'],
         "frame_center": ORIGIN,
         "background_color": BLACK,
         "background_opacity": 1,
         # Points in vectorized mobjects with norm greater
         # than this value will be rescaled.
-        "max_allowable_norm": FRAME_WIDTH,
+        "max_allowable_norm": config['frame_width'],
         "image_mode": "RGBA",
         "n_channels": 4,
         "pixel_array_dtype": 'uint8',

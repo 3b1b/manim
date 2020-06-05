@@ -16,7 +16,7 @@ from .utils.tex import TexTemplateFromFile, TexTemplate
 from .logger import logger
 from . import constants
 
-__all__ = ["config", "register_tex_template", "initialize_tex"]
+__all__ = ["file_writer_config", "config", "camera_config"]
 
 
 def _parse_config(config_parser, args):

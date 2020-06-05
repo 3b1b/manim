@@ -45,21 +45,16 @@ class Scene(Container):
     """
     CONFIG = {
         "camera_class": Camera,
-        "CAMERA_CONFIG": {},
-        "FILE_WRITER_CONFIG": {},
-        "SKIP_ANIMATIONS": False,
+        "skip_animations": False,
         "always_update_mobjects": False,
         "random_seed": 0,
-        "FROM_ANIMATION_NUMBER": None,
-        "UPTO_ANIMATION_NUMBER": None,
-        "LEAVE_PROGRESS_BARS": False,
     }
 
     def __init__(self, **kwargs):
         Container.__init__(self, **kwargs)
-        self.camera = self.camera_class(**self.CAMERA_CONFIG)
+        self.camera = self.camera_class(**camera_config)
         self.file_writer = SceneFileWriter(
-            self, **self.FILE_WRITER_CONFIG,
+            self, **file_writer_config,
         )
 
         self.mobjects = []
@@ -67,7 +62,7 @@ class Scene(Container):
         self.foreground_mobjects = []
         self.num_plays = 0
         self.time = 0
-        self.original_skipping_status = self.SKIP_ANIMATIONS
+        self.original_skipping_status = self.skip_animations
         if self.random_seed is not None:
             random.seed(self.random_seed)
             np.random.seed(self.random_seed)
@@ -239,7 +234,7 @@ class Scene(Container):
         **kwargs
 
         """
-        if self.SKIP_ANIMATIONS and not ignore_skipping:
+        if self.skip_animations and not ignore_skipping:
             return
         if mobjects is None:
             mobjects = list_update(
@@ -680,14 +675,14 @@ class Scene(Container):
         ProgressDisplay
             The CommandLine Progress Bar.
         """
-        if self.SKIP_ANIMATIONS and not override_skip_animations:
+        if self.skip_animations and not override_skip_animations:
             times = [run_time]
         else:
             step = 1 / self.camera.frame_rate
             times = np.arange(0, run_time, step)
         time_progression = ProgressDisplay(
             times, total=n_iterations,
-            leave=self.LEAVE_PROGRESS_BARS,
+            leave=file_writer_config['leave_progress_bars'],
             ascii=False if platform.system() != 'Windows' else True
         )
         return time_progression
@@ -825,12 +820,12 @@ class Scene(Container):
         raises an EndSceneEarlyException if they don't correspond.
         """
 
-        if self.FROM_ANIMATION_NUMBER:
-            if self.num_plays == self.FROM_ANIMATION_NUMBER:
-                self.SKIP_ANIMATIONS = False
-        if self.UPTO_ANIMATION_NUMBER:
-            if self.num_plays >= self.UPTO_ANIMATION_NUMBER:
-                self.SKIP_ANIMATIONS = True
+        if file_writer_config['from_animation_number']:
+            if self.num_plays == file_writer_config['from_animation_number']:
+                self.skip_animations = False
+        if file_writer_config['upto_animation_number']:
+            if self.num_plays >= file_writer_config['upto_animation_number']:
+                self.skip_animations = True
                 raise EndSceneEarlyException()
 
     def handle_play_like_call(func):
@@ -855,7 +850,7 @@ class Scene(Container):
         """
         def wrapper(self, *args, **kwargs):
             self.update_skipping_status()
-            allow_write = not self.SKIP_ANIMATIONS
+            allow_write = not self.skip_animations
             self.file_writer.begin_animation(allow_write)
             func(self, *args, **kwargs)
             self.file_writer.end_animation(allow_write)
@@ -928,7 +923,7 @@ class Scene(Container):
         self.mobjects_from_last_animation = [
             anim.mobject for anim in animations
         ]
-        if self.SKIP_ANIMATIONS:
+        if self.skip_animations:
             # TODO, run this call in for each animation?
             self.update_mobjects(self.get_run_time(animations))
         else:
@@ -1071,7 +1066,7 @@ class Scene(Container):
                 if stop_condition is not None and stop_condition():
                     time_progression.close()
                     break
-        elif self.SKIP_ANIMATIONS:
+        elif self.skip_animations:
             # Do nothing
             return self
         else:
@@ -1140,7 +1135,7 @@ class Scene(Container):
         """
         dt = 1 / self.camera.frame_rate
         self.increment_time(len(frames) * dt)
-        if self.SKIP_ANIMATIONS:
+        if self.skip_animations:
             return
         for frame in frames:
             self.file_writer.write_frame(frame)
