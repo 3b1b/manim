@@ -1,16 +1,64 @@
 from manimlib.constants import *
 from manimlib.mobject.types.surface import ParametricSurface
 from manimlib.mobject.types.surface import SGroup
+from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import z_to_vector
 
 
+class SurfaceMesh(VGroup):
+    CONFIG = {
+        "resolution": (21, 21),
+        "stroke_width": 1,
+        "normal_nudge": 1e-2,
+    }
+
+    def __init__(self, uv_surface, **kwargs):
+        if not isinstance(uv_surface, ParametricSurface):
+            raise Exception("uv_surface must be of type ParametricSurface")
+        self.uv_surface = uv_surface
+        super().__init__(**kwargs)
+
+    def init_points(self):
+        uv_surface = self.uv_surface
+
+        full_nu, full_nv = uv_surface.resolution
+        part_nu, part_nv = self.resolution
+        u_indices = np.linspace(0, full_nu, part_nu).astype(int)
+        v_indices = np.linspace(0, full_nv, part_nv).astype(int)
+
+        points, du_points, dv_points = uv_surface.get_surface_points_and_nudged_points()
+        normals = uv_surface.get_unit_normals()
+        nudge = 1e-2
+        nudged_points = points + nudge * normals
+
+        for ui in u_indices:
+            path = VMobject()
+            full_ui = full_nv * ui
+            path.set_points_smoothly(nudged_points[full_ui:full_ui + full_nv])
+            self.add(path)
+        for vi in v_indices:
+            path = VMobject()
+            path.set_points_smoothly(nudged_points[vi::full_nv])
+            self.add(path)
+
+
 # Sphere, cylinder, cube, prism
 
-class Sphere(ParametricSurface):
+class ArglessSurface(ParametricSurface):
+    def __init__(self, **kwargs):
+        super().__init__(self.uv_func, **kwargs)
+
+    def uv_func(self, u, v):
+        # To be implemented by a subclass
+        return [u, v, 0]
+
+
+class Sphere(ArglessSurface):
     CONFIG = {
-        "resolution": (100, 50),
+        "resolution": (101, 51),
         "radius": 1,
         "u_range": (0, TAU),
         "v_range": (0, PI),
@@ -24,14 +72,14 @@ class Sphere(ParametricSurface):
         ])
 
 
-class Cylinder(ParametricSurface):
+class Cylinder(ArglessSurface):
     CONFIG = {
         "height": 2,
         "radius": 1,
         "axis": OUT,
         "u_range": (0, TAU),
         "v_range": (-1, 1),
-        "resolution": (100, 10),
+        "resolution": (101, 11),
     }
 
     def init_points(self):
@@ -60,12 +108,12 @@ class Line3D(Cylinder):
         )
 
 
-class Disk3D(ParametricSurface):
+class Disk3D(ArglessSurface):
     CONFIG = {
         "radius": 1,
         "u_range": (0, 1),
         "v_range": (0, TAU),
-        "resolution": (1, 24),
+        "resolution": (2, 25),
     }
 
     def init_points(self):
@@ -80,12 +128,12 @@ class Disk3D(ParametricSurface):
         ]
 
 
-class Square3D(ParametricSurface):
+class Square3D(ArglessSurface):
     CONFIG = {
         "side_length": 2,
         "u_range": (-1, 1),
         "v_range": (-1, 1),
-        "resolution": (1, 1),
+        "resolution": (2, 2),
     }
 
     def init_points(self):
@@ -105,7 +153,7 @@ class Cube(SGroup):
         "color": BLUE,
         "opacity": 1,
         "gloss": 0.5,
-        "square_resolution": (1, 1),
+        "square_resolution": (2, 2),
         "side_length": 2,
     }
 
