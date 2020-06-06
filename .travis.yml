@@ -9,6 +9,7 @@ jobs:
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo pytest
         - pip3 install .
+        - sudo apt install ffmpeg
       script:
         - pytest
 
@@ -20,6 +21,7 @@ jobs:
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo pytest
         - pip3 install .
+        - sudo apt install ffmpeg
       script:
         - pytest
 
@@ -31,6 +33,7 @@ jobs:
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo pytest
         - pip3 install .
+        - sudo apt install ffmpeg
       script:
         - pytest
 
@@ -87,7 +90,7 @@ jobs:
         - python ./.travis/cairo-windows.py
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .
-      script: 
+      script:
         - python -m pytest
 
     - os: windows
@@ -104,7 +107,7 @@ jobs:
         - python ./.travis/cairo-windows.py
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .
-      script: 
+      script:
         - python -m pytest
 
     - os: windows
@@ -121,7 +124,7 @@ jobs:
         - python ./.travis/cairo-windows.py
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .
-      script: 
+      script:
         - python -m pytest
 
 before_install:

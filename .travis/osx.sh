@@ -3,6 +3,7 @@
 brew update
 brew install openssl readline
 brew outdated pyenv || brew upgrade pyenv
+brew install ffmpeg
 brew install pyenv-virtualenv
 pyenv install $PYVER
 export PYENV_VERSION=$PYVER
