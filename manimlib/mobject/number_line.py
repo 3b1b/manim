@@ -5,6 +5,7 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.config_ops import merge_dicts_recursively
+from manimlib.utils.iterables import list_difference_update
 from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.space_ops import normalize
 
@@ -12,11 +13,12 @@ from manimlib.utils.space_ops import normalize
 class NumberLine(Line):
     CONFIG = {
         "color": LIGHT_GREY,
-        "stroke_width": 3,
+        "stroke_width": 2,
         # List of 2 or 3 elements, x_min, x_max, step_size
         "x_range": [-8, 8, 1],
         # How big is one one unit of this number line in terms of absolute spacial distance
         "unit_size": 1,
+        "width": None,
         "include_ticks": True,
         "tick_size": 0.1,
         "longer_tick_multiple": 1.5,
@@ -37,12 +39,12 @@ class NumberLine(Line):
 
     def __init__(self, x_range=None, **kwargs):
         digest_config(self, kwargs)
-        if x_range is not None:
-            self.x_range = x_range
-        if len(self.x_range) == 2:
-            self.x_range.append(1)
+        if x_range is None:
+            x_range = self.x_range
+        if len(x_range) == 2:
+            x_range = [*x_range, 1]
 
-        x_min, x_max, x_step = self.x_range
+        x_min, x_max, x_step = x_range
         # A lot of old scenes pass in x_min or x_max explicitly,
         # so this is just here to keep those workin
         self.x_min = kwargs.get("x_min", x_min)
@@ -50,7 +52,10 @@ class NumberLine(Line):
         self.x_step = kwargs.get("x_step", x_step)
 
         super().__init__(self.x_min * RIGHT, self.x_max * RIGHT, **kwargs)
-        self.scale(self.unit_size)
+        if self.width:
+            self.set_width(self.width)
+        else:
+            self.scale(self.unit_size)
         self.center()
 
         if self.include_tip:
@@ -74,8 +79,6 @@ class NumberLine(Line):
             if x in self.numbers_with_elongated_ticks:
                 size *= self.longer_tick_multiple
             ticks.add(self.get_tick(x, size))
-        if self.include_tip:
-            ticks.remove(ticks[-1])
         self.add(ticks)
         self.ticks = ticks
 
@@ -135,20 +138,22 @@ class NumberLine(Line):
             direction=direction,
             buff=buff
         )
-        if x < 0:
+        if x < 0 and self.line_to_number_direction[0] == 0:
             # Align without the minus sign
             num_mob.shift(num_mob[0].get_width() * LEFT / 2)
         return num_mob
 
-    def add_numbers(self, *x_values, **kwargs):
-        if len(x_values) == 0:
+    def add_numbers(self, x_values=None, excluding=None, **kwargs):
+        if x_values is None:
             x_values = self.get_tick_range()
+        if excluding is not None:
+            x_values = list_difference_update(x_values, excluding)
 
         self.numbers = VGroup()
         for x in x_values:
             self.numbers.add(self.get_number_mobject(x, **kwargs))
         self.add(self.numbers)
-        return self
+        return self.numbers
 
 
 class UnitInterval(NumberLine):
