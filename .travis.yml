@@ -9,7 +9,6 @@ jobs:
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo pytest
         - pip3 install .
-        - sudo apt install ffmpeg
       script:
         - pytest
 
@@ -21,7 +20,6 @@ jobs:
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo pytest
         - pip3 install .
-        - sudo apt install ffmpeg
       script:
         - pytest
 
@@ -33,7 +31,6 @@ jobs:
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo pytest
         - pip3 install .
-        - sudo apt install ffmpeg
       script:
         - pytest
 
@@ -129,6 +126,7 @@ jobs:
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then chmod +x ./.travis/osx.sh; sh ./.travis/osx.sh; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then chmod +x ./.travis/linux.sh; sh ./.travis/linux.sh; fi
 
 branches:
   only:
