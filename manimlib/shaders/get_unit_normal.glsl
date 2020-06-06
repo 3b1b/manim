@@ -13,7 +13,7 @@ vec3 get_unit_normal(in vec3[3] points){
         if(new_cp_norm < tol){
             // We only come here if all three points line up
             // on the z-axis.
-            return vec3(0.0, 1.0, 0.0);
+            return vec3(0.0, -1.0, 0.0);
             // return k_hat;
         }
         return new_cp / new_cp_norm;
