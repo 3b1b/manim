@@ -1,6 +1,5 @@
 #version 330
 
-uniform vec3 light_source_position;
 uniform mat4 to_screen_space;
 
 in vec4 color;
@@ -8,12 +7,10 @@ in float fill_all;  // Either 0 or 1e
 in float uv_anti_alias_width;
 
 in vec3 xyz_coords;
-in vec3 global_unit_normal;
 in float orientation;
 in vec2 uv_coords;
 in vec2 uv_b2;
 in float bezier_degree;
-in float gloss;
 
 out vec4 frag_color;
 
@@ -26,7 +23,6 @@ float modify_distance_for_endpoints(vec2 p, float dist, float t){
 // so to share functionality between this and others, the caller
 // replaces this line with the contents of quadratic_bezier_sdf.glsl
 #INSERT quadratic_bezier_distance.glsl
-#INSERT add_light.glsl
 
 
 float sdf(){
@@ -67,7 +63,7 @@ float sdf(){
 
 void main() {
     if (color.a == 0) discard;
-    frag_color = add_light(color, xyz_coords, global_unit_normal, light_source_position, gloss);
+    frag_color = color;
     if (fill_all == 1.0) return;
     frag_color.a *= smoothstep(1, 0, sdf() / uv_anti_alias_width);
 }

@@ -1,5 +1,5 @@
-vec4 add_light(vec4 raw_color, vec3 point, vec3 unit_normal, vec3 light_coords, float gloss){
-    if(gloss == 0.0) return raw_color;
+vec4 add_light(vec4 raw_color, vec3 point, vec3 unit_normal, vec3 light_coords, float gloss, float shadow){
+    if(gloss == 0.0 && shadow == 0.0) return raw_color;
 
     // TODO, do we actually want this?  It effectively treats surfaces as two-sided
     if(unit_normal.z < 0){
@@ -14,9 +14,9 @@ vec4 add_light(vec4 raw_color, vec3 point, vec3 unit_normal, vec3 light_coords, 
     float dot_prod = dot(normalize(light_reflection), normalize(to_camera));
     float shine = gloss * exp(-3 * pow(1 - dot_prod, 2));
     float dp2 = dot(normalize(to_light), unit_normal);
-    float shadow = ((dp2 + 2.0) / 3.0);  // TODO, this should come from the mobject in some way
+    float darkening = mix(1, max(dp2, 0), shadow);
     return vec4(
-        shadow * mix(raw_color.rgb, vec3(1.0), shine),
+        darkening * mix(raw_color.rgb, vec3(1.0), shine),
         raw_color.a
     );
 }

@@ -7,20 +7,20 @@ uniform float anti_alias_width;
 // Needed for get_gl_Position
 uniform float aspect_ratio;
 uniform float focal_distance;
+uniform vec3 light_source_position;
 
 in vec3 bp[3];
 in vec3 v_global_unit_normal[3];
 in vec4 v_color[3];
 in float v_fill_all[3];
 in float v_gloss[3];
+in float v_shadow[3];
 
 out vec4 color;
-out float gloss;
 out float fill_all;
 out float uv_anti_alias_width;
 
 out vec3 xyz_coords;
-out vec3 global_unit_normal;
 out float orientation;
 // uv space is where b0 = (0, 0), b1 = (1, 0), and transform is orthogonal
 out vec2 uv_coords;
@@ -33,12 +33,18 @@ out float bezier_degree;
 #INSERT quadratic_bezier_geometry_functions.glsl
 #INSERT get_gl_Position.glsl
 #INSERT get_unit_normal.glsl
+#INSERT add_light.glsl
 
 
 void emit_vertex_wrapper(vec3 point, int index){
-    color = v_color[index];
-    gloss = v_gloss[index];
-    global_unit_normal = v_global_unit_normal[index];
+    color = add_light(
+        v_color[index],
+        point,
+        v_global_unit_normal[index],
+        light_source_position,
+        v_gloss[index],
+        v_shadow[index]
+    );
     xyz_coords = point;
     gl_Position = get_gl_Position(xyz_coords);
     EmitVertex();

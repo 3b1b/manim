@@ -57,8 +57,6 @@ class VMobject(Mobject):
         "fill_frag_shader_file": "quadratic_bezier_fill_frag.glsl",
         # Could also be Bevel, Miter, Round
         "joint_type": "auto",
-        # Positive gloss up to 1 makes it reflect the light.
-        "gloss": 0.2,
         "render_primative": moderngl.TRIANGLES,
         "triangulation_locked": False,
         "fill_dtype": [
@@ -67,6 +65,7 @@ class VMobject(Mobject):
             ('color', np.float32, (4,)),
             ('fill_all', np.float32, (1,)),
             ('gloss', np.float32, (1,)),
+            ('shadow', np.float32, (1,)),
         ],
         "stroke_dtype": [
             ("point", np.float32, (3,)),
@@ -77,6 +76,7 @@ class VMobject(Mobject):
             ("color", np.float32, (4,)),
             ("joint_type", np.float32, (1,)),
             ("gloss", np.float32, (1,)),
+            ("shadow", np.float32, (1,)),
         ]
     }
 
@@ -155,6 +155,7 @@ class VMobject(Mobject):
                   stroke_width=None,
                   stroke_opacity=None,
                   gloss=None,
+                  shadow=None,
                   background_image_file=None,
                   family=True):
         self.set_fill(
@@ -168,8 +169,10 @@ class VMobject(Mobject):
             opacity=stroke_opacity,
             family=family,
         )
-        if gloss:
+        if gloss is not None:
             self.set_gloss(gloss, family=family)
+        if shadow is not None:
+            self.set_shadow(shadow, family=family)
         if background_image_file:
             self.color_using_background_image(background_image_file)
         return self
@@ -222,17 +225,6 @@ class VMobject(Mobject):
         )
         super().fade(darkness, family)
         return self
-
-    def set_gloss(self, gloss, family=True):
-        if family:
-            for sm in self.get_family():
-                sm.gloss = gloss
-        else:
-            self.gloss = gloss
-        return self
-
-    def get_gloss(self):
-        return self.gloss
 
     def get_fill_rgbas(self):
         try:
@@ -908,6 +900,7 @@ class VMobject(Mobject):
         data["color"] = rgbas
         data["joint_type"] = joint_type_to_code[self.joint_type]
         data["gloss"] = self.gloss
+        data["shadow"] = self.shadow
         return data
 
     def lock_triangulation(self, family=True):
@@ -994,6 +987,7 @@ class VMobject(Mobject):
         data["fill_all"][:len(points)] = 0
         data["fill_all"][len(points):] = 1
         data["gloss"] = self.gloss
+        data["shadow"] = self.shadow
         return data
 
 

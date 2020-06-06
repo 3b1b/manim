@@ -14,12 +14,14 @@ class ParametricSurface(Mobject):
     CONFIG = {
         "u_range": (0, 1),
         "v_range": (0, 1),
-        # Resolution counts number of points sampled, which is off by
-        # 1 from the number of actual approximating squares seen
+        # Resolution counts number of points sampled, which for
+        # each coordinate is one more than the the number of rows/columns
+        # of approximating squares
         "resolution": (101, 101),
         "color": GREY,
         "opacity": 1.0,
         "gloss": 0.3,
+        "shadow": 0.4,
         # For du and dv steps.  Much smaller and numerical error
         # can crop up in the shaders.
         "epsilon": 1e-5,
@@ -32,6 +34,7 @@ class ParametricSurface(Mobject):
             ('dv_point', np.float32, (3,)),
             ('color', np.float32, (4,)),
             ('gloss', np.float32, (1,)),
+            ('shadow', np.float32, (1,)),
         ]
     }
 
@@ -114,13 +117,6 @@ class ParametricSurface(Mobject):
                 sm.set_opacity(opacity, family)
         return self
 
-    def set_gloss(self, gloss, family=True):
-        self.gloss = gloss
-        if family:
-            for sm in self.submobjects:
-                sm.set_gloss(gloss, family)
-        return self
-
     def get_shader_data(self):
         s_points, du_points, dv_points = [
             self.get_triangle_ready_array(array)
@@ -130,12 +126,13 @@ class ParametricSurface(Mobject):
         data["point"] = s_points
         data["du_point"] = du_points
         data["dv_point"] = dv_points
+        data["gloss"] = self.gloss
+        data["shadow"] = self.shadow
         self.fill_in_shader_color_info(data)
         return data
 
     def fill_in_shader_color_info(self, data):
         data["color"] = self.rgbas
-        data["gloss"] = self.gloss
         return data
 
 
@@ -159,6 +156,7 @@ class TexturedSurface(ParametricSurface):
             ('im_coords', np.float32, (2,)),
             ('opacity', np.float32, (1,)),
             ('gloss', np.float32, (1,)),
+            ('shadow', np.float32, (1,)),
         ]
     }
 
@@ -199,5 +197,4 @@ class TexturedSurface(ParametricSurface):
     def fill_in_shader_color_info(self, data):
         data["im_coords"] = self.get_triangle_ready_array(self.im_coords)
         data["opacity"] = self.opacity
-        data["gloss"] = self.gloss
         return data

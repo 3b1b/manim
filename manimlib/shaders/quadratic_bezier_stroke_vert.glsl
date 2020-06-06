@@ -12,6 +12,7 @@ in float stroke_width;
 in vec4 color;
 in float joint_type;
 in float gloss;
+in float shadow;
 
 // Bezier control point
 out vec3 bp;
@@ -23,6 +24,7 @@ out float v_stroke_width;
 out vec4 v_color;
 out float v_joint_type;
 out float v_gloss;
+out float v_shadow;
 
 const float STROKE_WIDTH_CONVERSION = 0.0025;
 
@@ -41,4 +43,5 @@ void main(){
     v_color = color;
     v_joint_type = joint_type;
     v_gloss = gloss;
+    v_shadow = shadow;
 }

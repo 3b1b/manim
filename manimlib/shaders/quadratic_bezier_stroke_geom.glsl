@@ -18,6 +18,7 @@ in vec4 v_color[3];
 in float v_stroke_width[3];
 in float v_joint_type[3];
 in float v_gloss[3];
+in float v_shadow[3];
 
 out vec4 color;
 out float uv_stroke_width;
@@ -256,7 +257,8 @@ void main() {
             xyz_coords,
             v_global_unit_normal[index_map[i]],
             light_source_position,
-            v_gloss[index_map[i]]
+            v_gloss[index_map[i]],
+            v_shadow[index_map[i]]
         );
         gl_Position = get_gl_Position(xyz_coords);
         EmitVertex();

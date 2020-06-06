@@ -382,5 +382,7 @@ class Camera(object):
 
 
 class ThreeDCamera(Camera):
-    # Purely here to keep old scenes happy
-    pass
+    CONFIG = {
+        "apply_depth_test": True,
+        # TODO, default to do some multisampling?
+    }

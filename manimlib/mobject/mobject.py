@@ -39,6 +39,11 @@ class Mobject(Container):
         "color": WHITE,
         "name": None,
         "dim": 3,
+        # Lighting parameters
+        # Positive gloss up to 1 makes it reflect the light.
+        "gloss": 0.0,
+        # Positive shadow up to 1 makes a side opposite the light darker
+        "shadow": 0.0,
         # For shaders
         "vert_shader_file": "",
         "geom_shader_file": "",
@@ -734,6 +739,26 @@ class Mobject(Container):
 
     def get_color(self):
         return self.color
+
+    def get_gloss(self):
+        return self.gloss
+
+    def set_gloss(self, gloss, family=True):
+        self.gloss = gloss
+        if family:
+            for submob in self.submobjects:
+                submob.set_gloss(gloss, family)
+        return self
+
+    def get_shadow(self):
+        return self.shadow
+
+    def set_shadow(self, shadow, family=True):
+        self.shadow = shadow
+        if family:
+            for submob in self.submobjects:
+                submob.set_shadow(shadow, family)
+        return self
 
     ##
 
