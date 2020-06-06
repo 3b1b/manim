@@ -7,7 +7,7 @@ from manimlib.utils.space_ops import get_norm
 class ParametricCurve(VMobject):
     CONFIG = {
         "t_range": [0, 1, 0.1],
-        "min_samples": 8,
+        "min_samples": 10,
         "epsilon": 1e-8,
         # TODO, automatically figure out discontinuities
         "discontinuities": [],
