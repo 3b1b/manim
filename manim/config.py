@@ -182,11 +182,13 @@ def _parse_cli(arg_list, input=True):
             "scene_names",
             nargs="*",
             help="Name of the Scene class you want to see",
+            default=[''],
         )
         parser.add_argument(
             "-o", "--output_file",
             help="Specify the name of the output file, if"
                  "it should be different from the scene class name",
+            default='',
         )
 
     # Note the following use (action='store_const', const=True),
@@ -404,7 +406,7 @@ config_files = [
 ]
 
 if _from_command_line():
-    args = _parse_cli(sys.argv)
+    args = _parse_cli(sys.argv[1:])
     if args.config_file is not None:
         config_files.append(args.config_file)
 
