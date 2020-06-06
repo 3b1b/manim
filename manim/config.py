@@ -105,6 +105,7 @@ def _parse_file_writer_config(config_parser, args):
     config['input_file'] = args.file
     config['scene_names'] = (args.scene_names
                              if args.scene_names is not None else [])
+    config['output_file'] = args.output_file
 
     # Read some options that cannot be overriden by CLI arguments
     for opt in ['gif_file_extension']:

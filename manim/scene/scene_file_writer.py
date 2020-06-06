@@ -106,16 +106,18 @@ class SceneFileWriter(object):
     def get_default_scene_name(self):
         """
         This method returns the default scene name
-        which is the value of "file_name", if it exists and
+        which is the value of "output_file", if it exists and
         the actual name of the class that inherited from
-        Scene in your animation script, if "file_name" is None.
+        Scene in your animation script, if "output_file" is None.
 
         Returns
         -------
         str
             The default scene name.
         """
-        return self.scene.__class__.__name__
+        return (file_writer_config['output_file']
+                if file_writer_config['output_file'] is not None
+                else self.scene.__class__.__name__)
 
     def get_resolution_directory(self):
         """
