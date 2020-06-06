@@ -212,13 +212,9 @@ void find_joint_info(vec3 controls[3], vec3 prev[3], vec3 next[3], int degree, v
 
 
 void main() {
-    vec3 unit_normal = v_global_unit_normal[0];
-
     vec3 controls[3];
     bezier_degree = get_reduced_control_points(vec3[3](bp[0], bp[1], bp[2]), controls);
     int degree = int(bezier_degree);
-
-    // Stroke width should then scale based on z value
 
     // Control points are projected to the xy plane before drawing, which in turn
     // gets tranlated to a uv plane.  The z-coordinate information will be remembered
@@ -253,7 +249,6 @@ void main() {
     for(int i = 0; i < n_corners; i++){
         uv_coords = (xyz_to_uv * vec4(corners[i], 1.0)).xy;
         uv_stroke_width = v_stroke_width[index_map[i]] / scale_factor;
-        // TODO, scale stroke width by z coord somehow...
         // Apply some lighting to the color before sending out.
         vec3 xyz_coords = vec3(corners[i].xy, controls[index_map[i]].z);
         color = add_light(
