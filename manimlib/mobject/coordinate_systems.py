@@ -84,16 +84,12 @@ class CoordinateSystem():
         )
         return self.axis_labels
 
-    def get_graph(self, function, x_min=None, x_max=None, **kwargs):
-        if x_min is None:
-            x_min = self.x_min
-        if x_max is None:
-            x_max = self.x_max
-
+    def get_graph(self, function, x_range=None, **kwargs):
+        if x_range is None:
+            x_range = self.x_range
         graph = ParametricCurve(
             lambda t: self.coords_to_point(t, function(t)),
-            t_min=x_min,
-            t_max=x_max,
+            t_range=x_range,
             **kwargs
         )
         graph.underlying_function = function
@@ -102,9 +98,7 @@ class CoordinateSystem():
     def get_parametric_curve(self, function, **kwargs):
         dim = self.dimension
         graph = ParametricCurve(
-            lambda t: self.coords_to_point(
-                *function(t)[:dim]
-            ),
+            lambda t: self.coords_to_point(*function(t)[:dim]),
             **kwargs
         )
         graph.underlying_function = function
@@ -119,8 +113,8 @@ class CoordinateSystem():
                     graph.point_from_proportion(a)
                 )[0],
                 target=x,
-                lower_bound=self.x_min,
-                upper_bound=self.x_max,
+                lower_bound=self.x_range[0],
+                upper_bound=self.x_range[1],
             )
             if alpha is not None:
                 return graph.point_from_proportion(alpha)
