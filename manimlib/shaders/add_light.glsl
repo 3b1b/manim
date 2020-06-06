@@ -14,9 +14,9 @@ vec4 add_light(vec4 raw_color, vec3 point, vec3 unit_normal, vec3 light_coords, 
     float dot_prod = dot(normalize(light_reflection), normalize(to_camera));
     float shine = gloss * exp(-3 * pow(1 - dot_prod, 2));
     float dp2 = dot(normalize(to_light), unit_normal);
-    float mult = ((dp2 + 2.0) / 3.0);
+    float shadow = ((dp2 + 2.0) / 3.0);  // TODO, this should come from the mobject in some way
     return vec4(
-        mult * mix(raw_color.rgb, vec3(1.0), shine),
+        shadow * mix(raw_color.rgb, vec3(1.0), shine),
         raw_color.a
     );
 }
