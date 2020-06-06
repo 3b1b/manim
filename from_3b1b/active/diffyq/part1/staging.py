@@ -383,7 +383,7 @@ class ShowGravityAcceleration(Scene):
         p0 = 3 * DOWN + 5 * LEFT
         v0 = 2.8 * UP + 1.5 * RIGHT
         g = 0.9 * DOWN
-        graph = ParametricFunction(
+        graph = ParametricCurve(
             lambda t: p0 + v0 * t + 0.5 * g * t**2,
             t_min=0,
             t_max=total_time,
@@ -398,7 +398,7 @@ class ShowGravityAcceleration(Scene):
         )
         times = np.arange(0, total_time + 1)
 
-        velocity_graph = ParametricFunction(
+        velocity_graph = ParametricCurve(
             lambda t: v0 + g * t,
             t_min=0, t_max=total_time,
         )

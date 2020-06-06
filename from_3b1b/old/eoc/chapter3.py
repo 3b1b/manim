@@ -94,7 +94,7 @@ class ContrastAbstractAndConcrete(Scene):
 
     def get_spring_anim(self, alignement_mob):
         compact_spring, extended_spring = [
-            ParametricFunction(
+            ParametricCurve(
                 lambda t : (t/denom)*RIGHT+np.sin(t)*UP+np.cos(t)*OUT,
                 t_max = 12*np.pi,
             )

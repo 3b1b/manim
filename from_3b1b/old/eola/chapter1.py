@@ -1147,7 +1147,7 @@ class ItDoesntMatterWhich(Scene):
 class DataAnalyst(Scene):
     def construct(self):
         plane = NumberPlane()
-        ellipse = ParametricFunction(
+        ellipse = ParametricCurve(
             lambda x : 2*np.cos(x)*(UP+RIGHT) + np.sin(x)*(UP+LEFT),
             color = PINK, 
             t_max = 2*np.pi

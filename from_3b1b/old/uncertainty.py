@@ -3426,7 +3426,7 @@ class HangingWeightsScene(MovingCameraScene):
             t_max = 6.5
             r = self.spring_radius
             s = (height - r)/(t_max**2)
-            spring = ParametricFunction(
+            spring = ParametricCurve(
                 lambda t : op.add(
                     r*(np.sin(TAU*t)*RIGHT+np.cos(TAU*t)*UP),
                     s*((t_max - t)**2)*DOWN,

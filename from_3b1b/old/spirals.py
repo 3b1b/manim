@@ -647,7 +647,7 @@ class RefresherOnPolarCoordinates(MovingCameraScene):
             for n in [5, 6, 7, 8, 9]
         ]))
 
-        spiral = ParametricFunction(
+        spiral = ParametricCurve(
             lambda t: self.get_polar_point(t, t),
             t_min=0,
             t_max=25,
@@ -770,7 +770,7 @@ class RefresherOnPolarCoordinates(MovingCameraScene):
     def get_arc(self, theta, r=1, color=None):
         if color is None:
             color = self.theta_color
-        return ParametricFunction(
+        return ParametricCurve(
             lambda t: self.get_polar_point(1 + 0.025 * t, t),
             t_min=0,
             t_max=theta,
@@ -1744,7 +1744,7 @@ class ExplainSixSpirals(ShowSpiralsForWholeNumbers):
     def get_arc(self, n):
         if n == 0:
             return VectorizedPoint()
-        return ParametricFunction(
+        return ParametricCurve(
             self.arc_func,
             t_min=0,
             t_max=n,

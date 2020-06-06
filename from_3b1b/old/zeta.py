@@ -1645,17 +1645,17 @@ class VisualizingSSquared(ComplexTransformationScene):
         ])
         arrows = VGroup()
         VGroup(*[
-            ParametricFunction(
+            ParametricCurve(
                 lambda t : self.z_to_point(z**(1.1+0.8*t))
             )
             for z in inputs
         ])
         for z, dot in zip(inputs, input_dots):
-            path = ParametricFunction(
+            path = ParametricCurve(
                 lambda t : self.z_to_point(z**(1+t))
             )
             dot.path = path
-            arrow = ParametricFunction(
+            arrow = ParametricCurve(
                 lambda t : self.z_to_point(z**(1.1+0.8*t))
             )
             stand_in_arrow = Arrow(
@@ -2897,7 +2897,7 @@ class DiscussZeros(ZetaTransformationScene):
             result += 3*np.cos(2*2*np.pi*t)*UP
             return result
 
-        self.wandering_path = ParametricFunction(func)
+        self.wandering_path = ParametricCurve(func)
         for i, dot in enumerate(self.dots):
             dot.target = dot.copy()
             q_mark = TexMobject("?")
@@ -2948,7 +2948,7 @@ class DiscussZeros(ZetaTransformationScene):
             z = zeta(complex(0.5, t))
             return z.real*RIGHT + z.imag*UP
         full_line = VGroup(*[
-            ParametricFunction(func, t_min = t0, t_max = t0+1)
+            ParametricCurve(func, t_min = t0, t_max = t0+1)
             for t0 in range(100)
         ])
         full_line.set_color_by_gradient(

@@ -4,7 +4,7 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.space_ops import get_norm
 
 
-class ParametricFunction(VMobject):
+class ParametricCurve(VMobject):
     CONFIG = {
         "t_min": 0,
         "t_max": 1,
@@ -63,7 +63,7 @@ class ParametricFunction(VMobject):
         return self
 
 
-class FunctionGraph(ParametricFunction):
+class FunctionGraph(ParametricCurve):
     CONFIG = {
         "color": YELLOW,
         "x_min": -FRAME_X_RADIUS,
@@ -74,7 +74,7 @@ class FunctionGraph(ParametricFunction):
         digest_config(self, kwargs)
         self.parametric_function = \
             lambda t: np.array([t, function(t), 0])
-        ParametricFunction.__init__(
+        ParametricCurve.__init__(
             self,
             self.parametric_function,
             t_min=self.x_min,

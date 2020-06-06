@@ -120,7 +120,7 @@ class TemperatureGraphScene(SpecialThreeDScene):
             "t_max": axes.x_max,
         })
         config.update(kwargs)
-        return ParametricFunction(
+        return ParametricCurve(
             lambda x: axes.c2p(
                 x, t, func(x, t)
             ),
@@ -786,7 +786,7 @@ class OceanOfPossibilities(TemperatureGraphScene):
             for x in [0, axes.x_max]
         ])
         surface_boundary_lines = always_redraw(lambda: VGroup(*[
-            ParametricFunction(
+            ParametricCurve(
                 lambda t: axes.c2p(
                     x, t,
                     self.surface_func(x, t)
@@ -1436,7 +1436,7 @@ class SineWaveScaledByExp(TemperatureGraphScene):
             ).set_stroke(opacity=0)
         )
 
-        exp_graph = ParametricFunction(
+        exp_graph = ParametricCurve(
             lambda t: axes.c2p(
                 PI / 2,
                 t,

@@ -2,7 +2,7 @@ import numpy as np
 import numbers
 
 from manimlib.constants import *
-from manimlib.mobject.functions import ParametricFunction
+from manimlib.mobject.functions import ParametricCurve
 from manimlib.mobject.geometry import Arrow
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.number_line import NumberLine
@@ -90,7 +90,7 @@ class CoordinateSystem():
         if x_max is None:
             x_max = self.x_max
 
-        graph = ParametricFunction(
+        graph = ParametricCurve(
             lambda t: self.coords_to_point(t, function(t)),
             t_min=x_min,
             t_max=x_max,
@@ -101,7 +101,7 @@ class CoordinateSystem():
 
     def get_parametric_curve(self, function, **kwargs):
         dim = self.dimension
-        graph = ParametricFunction(
+        graph = ParametricCurve(
             lambda t: self.coords_to_point(
                 *function(t)[:dim]
             ),

@@ -633,7 +633,7 @@ class SimpleComplexExponentExample(ClarifyInputAndOutput):
         )
 
         t_max = 40
-        full_output_path = ParametricFunction(
+        full_output_path = ParametricCurve(
             lambda t: plane.n2p(np.exp(complex(0, t))),
             t_min=0,
             t_max=t_max

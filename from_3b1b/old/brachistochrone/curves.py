@@ -4,7 +4,7 @@ RANDY_SCALE_FACTOR = 0.3
 
 
 
-class Cycloid(ParametricFunction):
+class Cycloid(ParametricCurve):
     CONFIG = {
         "point_a"       : 6*LEFT+3*UP,
         "radius"        : 2,
@@ -14,7 +14,7 @@ class Cycloid(ParametricFunction):
     }
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
-        ParametricFunction.__init__(self, self.pos_func, **kwargs)
+        ParametricCurve.__init__(self, self.pos_func, **kwargs)
 
     def pos_func(self, t):
         T = t*self.end_theta
@@ -24,7 +24,7 @@ class Cycloid(ParametricFunction):
             0
         ])
 
-class LoopTheLoop(ParametricFunction):
+class LoopTheLoop(ParametricCurve):
     CONFIG = {
         "color" : YELLOW_D,
         "density" : 10*DEFAULT_POINT_DENSITY_1D
@@ -35,7 +35,7 @@ class LoopTheLoop(ParametricFunction):
             t = (6*np.pi/2)*(t-0.5)
             return (t/2-np.sin(t))*RIGHT + \
                    (np.cos(t)+(t**2)/10)*UP
-        ParametricFunction.__init__(self, func, **kwargs)
+        ParametricCurve.__init__(self, func, **kwargs)
 
 
 class SlideWordDownCycloid(Animation):
@@ -658,7 +658,7 @@ class DefineCurveWithKnob(PathSlidingScene):
 
 class WonkyDefineCurveWithKnob(DefineCurveWithKnob):
     def get_path(self):
-        return ParametricFunction(
+        return ParametricCurve(
             lambda t : t*RIGHT + (-0.2*t-np.sin(2*np.pi*t/6))*UP,
             start = -7, 
             end = 10
@@ -667,7 +667,7 @@ class WonkyDefineCurveWithKnob(DefineCurveWithKnob):
 
 class SlowDefineCurveWithKnob(DefineCurveWithKnob):
     def get_path(self):
-        return ParametricFunction(
+        return ParametricCurve(
             lambda t : t*RIGHT + (np.exp(-(t+2)**2)-0.2*np.exp(t-2)),
             start = -4, 
             end = 4

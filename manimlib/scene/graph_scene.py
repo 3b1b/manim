@@ -4,7 +4,7 @@ from manimlib.animation.creation import Write, DrawBorderThenFill, ShowCreation
 from manimlib.animation.transform import Transform
 from manimlib.animation.update import UpdateFromAlphaFunc
 from manimlib.constants import *
-from manimlib.mobject.functions import ParametricFunction
+from manimlib.mobject.functions import ParametricCurve
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import RegularPolygon
@@ -165,7 +165,7 @@ class GraphScene(Scene):
                 y = self.y_max
             return self.coords_to_point(x, y)
 
-        graph = ParametricFunction(
+        graph = ParametricCurve(
             parameterized_function,
             color=color,
             **kwargs

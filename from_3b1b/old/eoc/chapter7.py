@@ -2468,7 +2468,7 @@ class GeneralLHoptial(LHopitalExample):
             x_val = 3, 
             direction = RIGHT
         )
-        g_graph = ParametricFunction(
+        g_graph = ParametricCurve(
             lambda y : self.coords_to_point(np.exp(y)+self.a_value-1, y),
             t_min = self.y_min,
             t_max = self.y_max,

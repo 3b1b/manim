@@ -1417,7 +1417,7 @@ class DrawFrequencyPlot(WrapCosineGraphAroundCircle, PiCreatureScene):
             RIGHT, aligned_edge = UP, buff = LARGE_BUFF
         )
         x_coord_label.add_background_rectangle()
-        flower_path = ParametricFunction(
+        flower_path = ParametricCurve(
             lambda t : self.circle_plane.coords_to_point(
                 np.sin(2*t)*np.cos(t),
                 np.sin(2*t)*np.sin(t),
@@ -2704,7 +2704,7 @@ class WriteComplexExponentialExpression(DrawFrequencyPlot):
             ),
         )
         number_label_update_anim.update(0)
-        flower_path = ParametricFunction(
+        flower_path = ParametricCurve(
             lambda t : plane.coords_to_point(
                 np.sin(2*t)*np.cos(t),
                 np.sin(2*t)*np.sin(t),
@@ -4248,7 +4248,7 @@ class Thumbnail(Scene):
 
         pol_graphs = VGroup()
         for f in np.linspace(1.98, 2.02, 7):
-            pol_graph = ParametricFunction(
+            pol_graph = ParametricCurve(
                 lambda t : complex_to_R3(
                     (2+np.cos(2*TAU*t)+np.cos(3*TAU*t))*np.exp(-complex(0, TAU*f*t))
                 ),

@@ -563,7 +563,7 @@ class IntegrationByParts(Scene):
         # f = lambda t : 4*np.sin(t*np.pi/2)
         f = lambda t : 4*t
         g = lambda t : 3*smooth(t)
-        curve = ParametricFunction(lambda t : f(t)*RIGHT + g(t)*DOWN)
+        curve = ParametricCurve(lambda t : f(t)*RIGHT + g(t)*DOWN)
         curve.set_color(YELLOW)
         curve.center()
         rect = Rectangle()

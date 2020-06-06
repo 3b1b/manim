@@ -706,7 +706,7 @@ class FunctionGInputSpace(SpecialThreeDScene):
         )
 
     def get_start_path(self):
-        path = ParametricFunction(
+        path = ParametricCurve(
             lambda t: np.array([
                 -np.sin(TAU * t + TAU / 4),
                 np.cos(2 * TAU * t + TAU / 4),
@@ -725,7 +725,7 @@ class FunctionGInputSpace(SpecialThreeDScene):
 
     def get_antipodal_path(self):
         start = self.get_start_point()
-        path = ParametricFunction(
+        path = ParametricCurve(
             lambda t: 2.03 * np.array([
                 0,
                 np.sin(PI * t),
@@ -741,7 +741,7 @@ class FunctionGInputSpace(SpecialThreeDScene):
         return dashed_path
 
     def get_lat_line(self, lat=0):
-        equator = ParametricFunction(lambda t: 2.03 * np.array([
+        equator = ParametricCurve(lambda t: 2.03 * np.array([
             np.cos(lat) * np.sin(TAU * t),
             np.cos(lat) * (-np.cos(TAU * t)),
             np.sin(lat)

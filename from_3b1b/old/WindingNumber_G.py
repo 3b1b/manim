@@ -1337,7 +1337,7 @@ class DotsHoppingToColor(InputOutputScene):
         ]))
         for x in range(2):
             for zero in zeros:
-                path = ParametricFunction(
+                path = ParametricCurve(
                     bezier([
                         inspector.get_center(), 
                         input_plane.coords_to_point(0, 0),

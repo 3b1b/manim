@@ -681,7 +681,7 @@ class StartingCalc101(PiCreatureScene):
     def get_physics_image(self):
         t_max = 6.5
         r = 0.2
-        spring = ParametricFunction(
+        spring = ParametricCurve(
             lambda t: op.add(
                 r * (np.sin(TAU * t) * RIGHT + np.cos(TAU * t) * UP),
                 t * DOWN,

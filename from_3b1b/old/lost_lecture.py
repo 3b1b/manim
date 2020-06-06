@@ -547,7 +547,7 @@ class FeynmanFame(Scene):
         wave_label.next_to(wave, UP, SMALL_BUFF)
         labels.add(wave_label)
 
-        squiggle = ParametricFunction(
+        squiggle = ParametricCurve(
             lambda t: np.array([
                 t + 0.5 * np.sin(TAU * t),
                 0.5 * np.cos(TAU * t),
@@ -2385,7 +2385,7 @@ class NonEllipticalKeplersLaw(KeplersSecondLaw):
         self.ellipse = orbit_shape
 
     def get_ellipse(self):
-        orbit_shape = ParametricFunction(
+        orbit_shape = ParametricCurve(
             lambda t: (1 + 0.2 * np.sin(5 * TAU * t)) * np.array([
                 np.cos(TAU * t),
                 np.sin(TAU * t),

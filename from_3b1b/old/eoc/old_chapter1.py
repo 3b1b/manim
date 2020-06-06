@@ -1427,7 +1427,7 @@ class DerivativeAsTangentLine(ZoomedScene):
             y = y_axis.number_to_point(output)[1]
             return x*RIGHT + y*UP
 
-        graph = ParametricFunction(func, color = BLUE)
+        graph = ParametricCurve(func, color = BLUE)
         graph_label = TexMobject("A(R) = \\pi R^2")
         graph_label.set_color(BLUE)
         graph_label.next_to(

@@ -671,7 +671,7 @@ class GraphsAndEulersFormulaJoke(Scene):
             NumberLine(),
             NumberLine().rotate(np.pi / 2)
         )
-        graph = ParametricFunction(
+        graph = ParametricCurve(
             lambda t : (10*t, ((10*t)**3 - 10*t), 0),
             expected_measure = 40.0
         )

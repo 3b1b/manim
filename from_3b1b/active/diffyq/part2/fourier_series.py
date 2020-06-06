@@ -142,7 +142,7 @@ class FourierCirclesScene(Scene):
         freqs = [v.freq for v in vectors]
         center = vectors[0].get_start()
 
-        path = ParametricFunction(
+        path = ParametricCurve(
             lambda t: center + reduce(op.add, [
                 complex_to_R3(
                     coef * np.exp(TAU * 1j * freq * t)
@@ -192,7 +192,7 @@ class FourierCirclesScene(Scene):
                              n_copies=2,
                              right_shift_rate=5):
         path = self.get_vector_sum_path(vectors)
-        wave = ParametricFunction(
+        wave = ParametricCurve(
             lambda t: op.add(
                 right_shift_rate * t * LEFT,
                 path.function(t)[1] * UP

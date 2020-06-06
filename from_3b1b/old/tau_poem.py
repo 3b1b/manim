@@ -379,7 +379,7 @@ class TauPoem(Scene):
             result *= interval_size
             result += axes_center
             return result
-        sine = ParametricFunction(sine_curve)
+        sine = ParametricCurve(sine_curve)
         sine_period = Line(
             axes_center,
             axes_center + 2*np.pi*interval_size*RIGHT

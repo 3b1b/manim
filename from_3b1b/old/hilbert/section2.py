@@ -479,11 +479,11 @@ class FormalDefinitionOfContinuity(Scene):
             theta = 2*np.pi*t
             return t*np.cos(theta)*RIGHT+t*np.sin(theta)*UP
 
-        self.spiril1 = ParametricFunction(
+        self.spiril1 = ParametricCurve(
             lambda t : 1.5*RIGHT + DOWN + 2*spiril(t),
             density = 5*DEFAULT_POINT_DENSITY_1D,
         )
-        self.spiril2 = ParametricFunction(
+        self.spiril2 = ParametricCurve(
             lambda t : 5.5*RIGHT + UP - 2*spiril(1-t),
             density = 5*DEFAULT_POINT_DENSITY_1D,
         )

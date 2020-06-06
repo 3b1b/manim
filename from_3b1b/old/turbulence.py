@@ -78,7 +78,7 @@ class Eddy(VMobject):
         ])
 
     def get_line(self, r):
-        return ParametricFunction(
+        return ParametricCurve(
             lambda t: r * (t + 1)**(-1) * np.array([
                 np.cos(TAU * t),
                 np.sin(TAU * t),
@@ -1594,7 +1594,7 @@ class VortedStretching(ThreeDScene):
 
     def get_cylinder_circles(self, radius, radius_var, max_z):
         return VGroup(*[
-            ParametricFunction(
+            ParametricCurve(
                 lambda t: np.array([
                     np.cos(TAU * t) * r,
                     np.sin(TAU * t) * r,
@@ -1610,7 +1610,7 @@ class VortedStretching(ThreeDScene):
         result = VGroup()
         for u in sorted(np.random.random(self.n_circles)):
             r = in_r + in_r_var * random.random()
-            circle = ParametricFunction(
+            circle = ParametricCurve(
                 lambda t: r * np.array([
                     np.cos(TAU * t),
                     np.sin(TAU * t),

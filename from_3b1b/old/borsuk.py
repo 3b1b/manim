@@ -913,7 +913,7 @@ class WalkEquatorPostTransform(GraphScene):
 
     def get_great_arc_images(self):
         curves = VGroup(*[
-            ParametricFunction(
+            ParametricCurve(
                 lambda t : self.sphere_point(t, s)
             ).apply_function(self.sphere_to_plane)
             for s in np.arange(0, 1, 1./self.num_great_arcs)

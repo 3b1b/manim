@@ -361,7 +361,7 @@ class StraightLinesFastestInConstantMedium(PhotonScene):
 
 
     def get_paths(self):
-        squaggle = ParametricFunction(
+        squaggle = ParametricCurve(
             lambda t : (0.5*t+np.cos(t))*RIGHT+np.sin(t)*UP,
             start = -np.pi,
             end = 2*np.pi

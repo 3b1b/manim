@@ -772,7 +772,7 @@ class ShowProjection(SphereCylinderScene):
         u_values, v_values = sphere.get_u_values_and_v_values()
         radius = sphere.radius
         lat_lines = VGroup(*[
-            ParametricFunction(
+            ParametricCurve(
                 lambda t: radius * sphere.func(u, t),
                 t_min=sphere.v_min,
                 t_max=sphere.v_max,
@@ -780,7 +780,7 @@ class ShowProjection(SphereCylinderScene):
             for u in u_values
         ])
         lon_lines = VGroup(*[
-            ParametricFunction(
+            ParametricCurve(
                 lambda t: radius * sphere.func(t, v),
                 t_min=sphere.u_min,
                 t_max=sphere.u_max,

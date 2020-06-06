@@ -918,7 +918,7 @@ class WherePendulumLeads(PiCreatureScene):
 
         get_theta = pendulum.get_theta
         spring = always_redraw(
-            lambda: ParametricFunction(
+            lambda: ParametricCurve(
                 lambda t: np.array([
                     np.cos(TAU * t) + (1.4 + get_theta()) * t,
                     np.sin(TAU * t) - 0.5,

@@ -227,7 +227,7 @@ class ThetaTGraph(Scene):
         theta_mob.to_edge(UP)
         t_mob.next_to(t_axis, UP)
         t_mob.to_edge(RIGHT)
-        graph = ParametricFunction(
+        graph = ParametricCurve(
             lambda t : 4*t*RIGHT + 2*smooth(t)*UP
         )
         line = Line(graph.points[0], graph.points[-1], color = WHITE)
@@ -237,7 +237,7 @@ class ThetaTGraph(Scene):
         stars.scale(0.1).shift(q_mark.get_center())
 
 
-        squiggle = ParametricFunction(
+        squiggle = ParametricCurve(
             lambda t : t*RIGHT + 0.2*t*(5-t)*(np.sin(t)**2)*UP,
             start = 0,
             end = 5
@@ -378,7 +378,7 @@ class ShortestPathProblem(Scene):
             dot.add(letter)
             dots.append(dot)
 
-        path = ParametricFunction(
+        path = ParametricCurve(
             lambda t : (t/2 + np.cos(t))*RIGHT + np.sin(t)*UP,
             start = -2*np.pi,
             end = 2*np.pi
