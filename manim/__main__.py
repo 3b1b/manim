@@ -163,7 +163,7 @@ def main():
     for SceneClass in scene_classes_to_render:
         try:
             # By invoking, this renders the full scene
-            scene = SceneClass(**{})
+            scene = SceneClass()
             open_file_if_needed(scene.file_writer)
             if file_writer_config["sound"]:
                 play_finish_sound()
