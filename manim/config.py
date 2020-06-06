@@ -114,13 +114,13 @@ def _parse_file_writer_config(config_parser, args):
     # arguments.  Note ConfigParser options are all strings and each
     # needs to be converted to the appropriate type. Thus, we do this
     # in batches, depending on their type: booleans and strings
-    for boolean_opt in ['preview', 'show_file_in_finder', 'quiet',
-                        'sound', 'leave_progress_bars']:
+    for boolean_opt in ['preview', 'show_file_in_finder', 'quiet', 'sound',
+                        'leave_progress_bars', 'write_to_movie', 'save_last_frame',
+                        'save_pngs', 'save_as_gif', 'write_all']:
         config[boolean_opt] = (default.getboolean(boolean_opt)
                                if getattr(args, boolean_opt) is None
                                else getattr(args, boolean_opt))
-    for str_opt in ['media_dir', 'video_dir', 'tex_dir',
-                    'text_dir']:
+    for str_opt in ['media_dir', 'video_dir', 'tex_dir', 'text_dir']:
         config[str_opt] = (default[str_opt]
                            if getattr(args, str_opt) is None
                            else getattr(args, str_opt))
@@ -128,8 +128,7 @@ def _parse_file_writer_config(config_parser, args):
     # Handle the -t (--transparent) flag.  This flag determines which
     # section to use from the .cfg file.
     section = config_parser['transparent'] if args.transparent else default
-    for opt in ['png_mode', 'movie_file_extension',
-                'background_opacity']:
+    for opt in ['png_mode', 'movie_file_extension', 'background_opacity']:
         config[opt] = section[opt]
 
     # Handle the -n flag.  Read first from the cfg and then override with CLI.
@@ -149,9 +148,11 @@ def _parse_file_writer_config(config_parser, args):
 
     # Handle the --dry_run flag.  This flag determines which section
     # to use from the .cfg file.  All options involved are boolean.
-    section = config_parser['dry_run'] if args.dry_run else default
-    for opt in ['write_to_movie', 'write_all', 'save_last_frame', 'save_pngs', 'save_as_gif']:
-        config[opt] = section.getboolean(opt)
+    # Note this overrides the flags -w, -s, -a, -g, and -i.
+    if args.dry_run:
+        for opt in ['write_to_movie', 'save_last_frame', 'save_pngs',
+                    'save_as_gif', 'write_all']:
+            config[opt] = config_parser['dry_run'].getboolean(opt)
 
     # Read in the streaming section -- all values are strings
     config['streaming'] = {opt: config_parser['streaming'][opt]
