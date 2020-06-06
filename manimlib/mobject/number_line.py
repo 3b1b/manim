@@ -29,7 +29,10 @@ class NumberLine(Line):
         "line_to_number_direction": DOWN,
         "line_to_number_buff": MED_SMALL_BUFF,
         "include_tip": False,
-        "tip_config": {},  # TODO
+        "tip_config": {
+            "width": 0.25,
+            "length": 0.25,
+        },
         "decimal_number_config": {
             "num_decimal_places": 0,
             "height": 0.25,
@@ -60,6 +63,10 @@ class NumberLine(Line):
 
         if self.include_tip:
             self.add_tip()
+            self.tip.set_stroke(
+                self.stroke_color,
+                self.stroke_width,
+            )
         if self.include_ticks:
             self.add_ticks()
         if self.include_numbers:

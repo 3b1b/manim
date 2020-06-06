@@ -23,6 +23,7 @@ DEFAULT_DOT_RADIUS = 0.08
 DEFAULT_SMALL_DOT_RADIUS = 0.04
 DEFAULT_DASH_LENGTH = 0.05
 DEFAULT_ARROW_TIP_LENGTH = 0.35
+DEFAULT_ARROW_TIP_WIDTH = 0.35
 
 
 class TipableVMobject(VMobject):
@@ -42,56 +43,46 @@ class TipableVMobject(VMobject):
         * Getters
             - Straightforward accessors, returning information pertaining
                 to the TipableVMobject instance's tip(s), its length etc
-
     """
     CONFIG = {
-        "tip_length": DEFAULT_ARROW_TIP_LENGTH,
-        # TODO
-        "normal_vector": OUT,
-        "tip_style": {
+        "tip_config": {
             "fill_opacity": 1,
             "stroke_width": 0,
-        }
+        },
+        "normal_vector": OUT,
     }
 
     # Adding, Creating, Modifying tips
-
-    def add_tip(self, tip_length=None, at_start=False):
+    def add_tip(self, at_start=False, **kwargs):
         """
         Adds a tip to the TipableVMobject instance, recognising
         that the endpoints might need to be switched if it's
         a 'starting tip' or not.
         """
-        tip = self.create_tip(tip_length, at_start)
+        tip = self.create_tip(at_start, **kwargs)
         self.reset_endpoints_based_on_tip(tip, at_start)
         self.asign_tip_attr(tip, at_start)
         self.add(tip)
         return self
 
-    def create_tip(self, tip_length=None, at_start=False):
+    def create_tip(self, at_start=False, **kwargs):
         """
         Stylises the tip, positions it spacially, and returns
         the newly instantiated tip to the caller.
         """
-        tip = self.get_unpositioned_tip(tip_length)
+        tip = self.get_unpositioned_tip(**kwargs)
         self.position_tip(tip, at_start)
         return tip
 
-    def get_unpositioned_tip(self, tip_length=None):
+    def get_unpositioned_tip(self, **kwargs):
         """
         Returns a tip that has been stylistically configured,
         but has not yet been given a position in space.
         """
-        if tip_length is None:
-            tip_length = self.get_default_tip_length()
-        color = self.get_color()
-        style = {
-            "fill_color": color,
-            "stroke_color": color
-        }
-        style.update(self.tip_style)
-        tip = ArrowTip(length=tip_length, **style)
-        return tip
+        config = self.get_style()
+        config.update(self.tip_config)
+        config.update(kwargs)
+        return ArrowTip(**config)
 
     def position_tip(self, tip, at_start=False):
         # Last two control points, defining both
@@ -102,10 +93,7 @@ class TipableVMobject(VMobject):
         else:
             handle = self.get_last_handle()
             anchor = self.get_end()
-        tip.rotate(
-            angle_of_vector(handle - anchor) -
-            PI - tip.get_angle()
-        )
+        tip.rotate(angle_of_vector(handle - anchor) - PI - tip.get_angle())
         tip.shift(anchor - tip.get_tip_point())
         return tip
 
@@ -744,14 +732,16 @@ class ArrowTip(Triangle):
     CONFIG = {
         "fill_opacity": 1,
         "stroke_width": 0,
+        "width": DEFAULT_ARROW_TIP_WIDTH,
         "length": DEFAULT_ARROW_TIP_LENGTH,
-        "start_angle": PI,
+        "angle": 0,
     }
 
     def __init__(self, **kwargs):
-        Triangle.__init__(self, **kwargs)
-        self.set_width(self.length)
-        self.set_height(self.length, stretch=True)
+        Triangle.__init__(self, start_angle=0, **kwargs)
+        self.set_height(self.width)
+        self.set_width(self.length, stretch=True)
+        self.rotate(self.angle)
 
     def get_base(self):
         return self.point_from_proportion(0.5)
