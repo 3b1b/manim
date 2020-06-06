@@ -6,6 +6,8 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 # TODO, have this cache TexMobjects
 class DecimalNumber(VMobject):
     CONFIG = {
+        "stroke_width": 0,
+        "fill_opacity": 1.0,
         "num_decimal_places": 2,
         "include_sign": False,
         "group_with_commas": True,
@@ -14,6 +16,7 @@ class DecimalNumber(VMobject):
         "unit": None,  # Aligned to bottom unless it starts with "^"
         "include_background_rectangle": False,
         "edge_to_fix": LEFT,
+        "height": 0.4,
     }
 
     def __init__(self, number=0, **kwargs):
@@ -34,10 +37,7 @@ class DecimalNumber(VMobject):
             else:
                 num_string = num_string[1:]
 
-        self.add(*[
-            SingleStringTexMobject(char, **kwargs)
-            for char in num_string
-        ])
+        self.add(*map(SingleStringTexMobject, num_string))
 
         # Add non-numerical bits
         if self.show_ellipsis:
@@ -69,7 +69,11 @@ class DecimalNumber(VMobject):
                 self[i].shift(self[i].get_height() * DOWN / 2)
         if self.unit and self.unit.startswith("^"):
             self.unit_sign.align_to(self, UP)
-        #
+
+        # Styling
+        self.set_height(self.height)
+        self.init_colors()
+
         if self.include_background_rectangle:
             self.add_background_rectangle()
 
