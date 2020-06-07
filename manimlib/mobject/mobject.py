@@ -62,7 +62,6 @@ class Mobject(Container):
         self.submobjects = []
         self.parents = []
         self.family = [self]
-        self.color = Color(self.color)
         if self.name is None:
             self.name = self.__class__.__name__
         self.time_based_updaters = []
@@ -670,18 +669,29 @@ class Mobject(Container):
 
     # Color functions
 
-    def set_color(self, color=YELLOW_C, family=True):
-        """
-        Condition is function which takes in one arguments, (x, y, z).
-        Here it just recurses to submobjects, but in subclasses this
-        should be further implemented based on the the inner workings
-        of color
-        """
+    def set_color(self, color, family=True):
+        # Here it just recurses to submobjects, but in subclasses this
+        # should be further implemented based on the the inner workings
+        # of color
         if family:
             for submob in self.submobjects:
                 submob.set_color(color, family=family)
-        self.color = color
         return self
+
+    def set_opacity(self, opacity, family=True):
+        # Here it just recurses to submobjects, but in subclasses this
+        # should be further implemented based on the the inner workings
+        # of color
+        if family:
+            for submob in self.submobjects:
+                submob.set_opacity(opacity, family=family)
+        return self
+
+    def get_color(self):
+        raise Exception("Not implemented")
+
+    def get_opacity(self):
+        raise Exception("Not implemented")
 
     def set_color_by_gradient(self, *colors):
         self.set_submobject_colors_by_gradient(*colors)
@@ -717,10 +727,6 @@ class Mobject(Container):
 
         return self
 
-    def to_original_color(self):
-        self.set_color(self.color)
-        return self
-
     def fade_to(self, color, alpha, family=True):
         if self.get_num_points() > 0:
             new_color = interpolate_color(
@@ -737,9 +743,6 @@ class Mobject(Container):
             for submob in self.submobjects:
                 submob.fade(darkness, family)
         return self
-
-    def get_color(self):
-        return self.color
 
     def get_gloss(self):
         return self.gloss
