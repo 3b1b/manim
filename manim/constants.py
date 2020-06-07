@@ -79,6 +79,9 @@ DEGREES = TAU / 360
 # ffmpeg stuff
 FFMPEG_BIN = "ffmpeg"
 
+# gif stuff
+GIF_FILE_EXTENSION = '.gif'
+
 # Colors
 COLOR_MAP = {
     "DARK_BLUE": "#236B8E",

@@ -107,10 +107,6 @@ def _parse_file_writer_config(config_parser, args):
                              if args.scene_names is not None else [])
     config['output_file'] = args.output_file
 
-    # Read some options that cannot be overriden by CLI arguments
-    for opt in ['gif_file_extension']:
-        config[opt] = default[opt]
-
     # Handle all options that are directly overridden by CLI
     # arguments.  Note ConfigParser options are all strings and each
     # needs to be converted to the appropriate type. Thus, we do this

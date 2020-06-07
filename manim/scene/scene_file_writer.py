@@ -8,7 +8,7 @@ from time import sleep
 import datetime
 from PIL import Image
 
-from ..constants import FFMPEG_BIN
+from ..constants import FFMPEG_BIN, GIF_FILE_EXTENSION
 from ..config import file_writer_config
 from ..logger import logger
 from ..utils.config_ops import digest_config
@@ -80,7 +80,7 @@ class SceneFileWriter(object):
             self.gif_file_path = os.path.join(
                 movie_dir,
                 add_extension_if_not_present(
-                    scene_name, file_writer_config['gif_file_extension']
+                    scene_name, GIF_FILE_EXTENSION
                 )
             )
             self.partial_movie_directory = guarantee_existence(os.path.join(
