@@ -189,12 +189,11 @@ def _parse_cli(arg_list, input=True):
             default='',
         )
 
-    # Note the following use (action='store_const', const=True),
-    # instead of using the built-in (action='store_true').  The latter
-    # is equivalent to (action='store_const', const=True,
-    # default=False), while the former sets no default value.  Since
-    # we do not want to set the default here, but in the manim.cfg
-    # file, we use the latter.
+    # The following use (action='store_const', const=True) instead of
+    # the built-in (action='store_true').  This is because the latter
+    # will default to False if not specified, while the former sets no
+    # default value.  Since we want to set the default value in
+    # manim.cfg rather than here, we use the former.
     parser.add_argument(
         "-p", "--preview",
         action="store_const",
