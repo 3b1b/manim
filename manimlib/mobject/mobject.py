@@ -17,6 +17,7 @@ from manimlib.utils.color import color_gradient
 from manimlib.utils.color import interpolate_color
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.iterables import list_update
+from manimlib.utils.bezier import interpolate
 from manimlib.utils.paths import straight_path
 from manimlib.utils.simple_functions import get_parameters
 from manimlib.utils.space_ops import angle_of_vector
@@ -1120,10 +1121,16 @@ class Mobject(Container):
         """
         self.points[:] = path_func(mobject1.points, mobject2.points, alpha)
         self.interpolate_color(mobject1, mobject2, alpha)
+        self.interpolate_light_style(mobject1, mobject2, alpha)
         return self
 
     def interpolate_color(self, mobject1, mobject2, alpha):
         pass  # To implement in subclass
+
+    def interpolate_light_style(self, mobject1, mobject2, alpha):
+        self.set_gloss(interpolate(mobject1.get_gloss(), mobject2.get_gloss(), alpha))
+        self.set_shadow(interpolate(mobject1.get_shadow(), mobject2.get_shadow(), alpha))
+        return self
 
     def become_partial(self, mobject, a, b):
         """
