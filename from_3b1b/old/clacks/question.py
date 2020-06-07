@@ -1062,7 +1062,7 @@ class StepsOfTheAlgorithmJustTitles(StepsOfTheAlgorithm):
         for title in titles:
             self.play(
                 FadeInFromDown(title),
-                FadeOutAndShift(last_title, UP),
+                FadeOut(last_title, UP),
             )
             self.wait()
             last_title = title
@@ -1138,7 +1138,7 @@ class CompareToGalacticMass(Scene):
         group.next_to(brace, DOWN)
         self.play(
             MoveToTarget(counter),
-            FadeInFrom(digits_word, LEFT),
+            FadeIn(digits_word, LEFT),
         )
         self.wait()
 
@@ -1366,8 +1366,8 @@ class CompareAlgorithmToPhysics(PiCreatureScene):
         digits.set_width(FRAME_WIDTH - 1)
         digits.to_edge(UP)
         self.play(
-            FadeOutAndShift(right_pic, 5 * RIGHT),
-            # FadeOutAndShift(left_rect, 5 * LEFT),
+            FadeOut(right_pic, 5 * RIGHT),
+            # FadeOut(left_rect, 5 * LEFT),
             FadeOut(left_rect),
             PiCreatureBubbleIntroduction(
                 morty, "This doesn't seem \\\\ like me...",

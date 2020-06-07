@@ -138,7 +138,7 @@ class AskAboutShadowRelation(SpecialThreeDScene):
             Write(sphere, stroke_width=1),
             FadeInFromDown(sa_equation),
             # ShowCreation(radial_line),
-            # FadeInFrom(R_label, IN),
+            # FadeIn(R_label, IN),
         )
         # self.play(
         #     Transform(
@@ -459,12 +459,12 @@ class MapSphereOntoCylinder(SphereCylinderScene):
 
         self.play(
             ShowCreation(top_line),
-            FadeInFrom(two_pi_R, IN)
+            FadeIn(two_pi_R, IN)
         )
         self.wait()
         self.play(
             ShowCreation(side_line),
-            FadeInFrom(two_R, RIGHT)
+            FadeIn(two_R, RIGHT)
         )
         self.wait()
 
@@ -1167,7 +1167,7 @@ class JustifyLengthStretch(ShowProjection):
         self.add_fixed_orientation_mobjects(R_label)
         self.play(
             ShowCreation(R_line),
-            FadeInFrom(R_label, IN),
+            FadeIn(R_label, IN),
         )
         self.wait()
 
@@ -1189,7 +1189,7 @@ class JustifyLengthStretch(ShowProjection):
         self.add_fixed_orientation_mobjects(d_label)
         self.play(
             ShowCreation(d_line),
-            FadeInFrom(d_label, IN),
+            FadeIn(d_label, IN),
         )
         self.wait()
         for x in range(self.d_ambiguity_iterations):
@@ -1263,7 +1263,7 @@ class JustifyLengthStretch(ShowProjection):
         )
         self.add_fixed_in_frame_mobjects(equation, eq_d, eq_R)
         self.play(
-            FadeInFrom(equation[0], 7 * RIGHT + 2.5 * DOWN),
+            FadeIn(equation[0], 7 * RIGHT + 2.5 * DOWN),
             FadeIn(equation[1:]),
             FadeInFromDown(eq_d),
             FadeInFromDown(eq_R),
@@ -1751,9 +1751,9 @@ class JustifyHeightSquish(MovingCameraScene):
             ShowCreation(beta_arc),
         )
         self.wait()
-        self.play(FadeInFrom(alpha_label, UP))
+        self.play(FadeIn(alpha_label, UP))
         self.wait()
-        self.play(FadeInFrom(beta_label, LEFT))
+        self.play(FadeIn(beta_label, LEFT))
         self.wait()
         self.play(ShowCreation(elbow))
         self.wait()
@@ -1763,7 +1763,7 @@ class JustifyHeightSquish(MovingCameraScene):
             LaggedStartMap(FadeInFromDown, equation[1:4:2])
         )
         self.wait()
-        self.play(FadeInFrom(equation[-2:], LEFT))
+        self.play(FadeIn(equation[-2:], LEFT))
         self.remove(equation, movers)
         self.add(equation)
         self.wait()
@@ -1847,13 +1847,13 @@ class JustifyHeightSquish(MovingCameraScene):
         beta_label1.shift(0.01 * LEFT)
 
         self.play(FadeOut(words))
-        self.play(FadeInFrom(deg90, 0.1 * UP))
+        self.play(FadeIn(deg90, 0.1 * UP))
         self.wait(0.25)
         self.play(WiggleOutThenIn(beta_label))
         self.wait(0.25)
         self.play(
             ShowCreation(alpha_arc1),
-            FadeInFrom(q_mark, 0.1 * RIGHT)
+            FadeIn(q_mark, 0.1 * RIGHT)
         )
         self.wait()
         self.play(ShowPassingFlash(
@@ -2291,8 +2291,8 @@ class SequenceOfSpheres(SphereCylinderScene):
 
         for i in range(n_shapes):
             anims = [
-                FadeInFrom(spheres[i], LEFT),
-                FadeInFrom(cylinders[i], LEFT),
+                FadeIn(spheres[i], LEFT),
+                FadeIn(cylinders[i], LEFT),
             ]
             if i > 0:
                 anims += [
@@ -2302,7 +2302,7 @@ class SequenceOfSpheres(SphereCylinderScene):
             self.play(*anims, run_time=1)
             self.play(GrowFromCenter(all_equals[i]))
         self.play(
-            FadeInFrom(q_marks, LEFT),
+            FadeIn(q_marks, LEFT),
             Write(final_arrows)
         )
         self.wait()
@@ -2699,7 +2699,7 @@ class ExercisesGiveLearning(MovingCameraScene):
         self.play(ShowCreation(cross))
         self.play(
             VGroup(lectures, cross).shift, DOWN,
-            FadeInFrom(exercises, UP)
+            FadeIn(exercises, UP)
         )
         self.wait()
 
@@ -3010,7 +3010,7 @@ class SecondProof(SpecialThreeDScene):
         )
         self.wait()
         self.play(
-            FadeInFrom(brace_label, IN),
+            FadeIn(brace_label, IN),
         )
         self.play(
             ShowCreation(radial_line),
@@ -3335,7 +3335,7 @@ class Question1(Scene):
             word.circum = word.get_part_by_tex("circumference")
             word.remove(word.circum)
         self.play(
-            FadeOutAndShift(question, UP),
+            FadeOut(question, UP),
             FadeInFromDown(prompt),
             question.circum.replace, prompt.circum,
             run_time=1.5
@@ -3394,7 +3394,7 @@ class Question3(Scene):
         which_one.next_to(brace, DOWN, SMALL_BUFF)
 
         self.add(question)
-        self.play(FadeInFrom(equation))
+        self.play(FadeIn(equation))
         self.wait()
         self.play(
             GrowFromCenter(brace),

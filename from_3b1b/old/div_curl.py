@@ -2216,7 +2216,7 @@ class ShearCurl(IntroduceCurl):
             twig, rate=-90 * DEGREES,
         )
 
-        self.play(FadeInFrom(twig, UP))
+        self.play(FadeIn(twig, UP))
         self.add(twig_rotation)
         self.wait(16)
 
@@ -3621,7 +3621,7 @@ class DivergenceTinyNudgesView(MovingCameraScene):
         )
         self.add_foreground_mobjects(input_dot)
         self.play(
-            FadeInFrom(input_dot, SMALL_BUFF * DL),
+            FadeIn(input_dot, SMALL_BUFF * DL),
             Write(input_words),
         )
         self.play(
@@ -3924,13 +3924,13 @@ class DivergenceTinyNudgesView(MovingCameraScene):
             dot_product.fade, 1,
             remover=True
         )
-        self.play(FadeInFrom(cross_product, sf * DOWN))
+        self.play(FadeIn(cross_product, sf * DOWN))
         self.play(
             div_text.shift, sf * DOWN,
             div_text.fade, 1,
             remover=True
         )
-        self.play(FadeInFrom(curl_text, sf * DOWN))
+        self.play(FadeIn(curl_text, sf * DOWN))
         self.wait()
 
     def rotate_difference_vectors(self):
@@ -4358,7 +4358,7 @@ class ThoughtsOnAds(Scene):
 
         self.play(
             FadeIn(left_text),
-            FadeInFrom(knob, 2 * RIGHT)
+            FadeIn(knob, 2 * RIGHT)
         )
         self.wait()
         self.play(

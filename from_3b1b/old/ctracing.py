@@ -59,7 +59,7 @@ class ExplainTracing(Scene):
 
         self.play(
             words[1].to_edge, UP,
-            FadeOutAndShift(words[0], 6 * UP)
+            FadeOut(words[0], 6 * UP)
         )
 
         ct_word = words[1][0]
@@ -99,7 +99,7 @@ class ExplainTracing(Scene):
         self.play(
             sicky.change, "sick",
             sicky.set_color, "#9BBD37",
-            FadeInFrom(covid_words, RIGHT),
+            FadeIn(covid_words, RIGHT),
             GrowArrow(arrow),
         )
         self.play(ShowCreation(sicky.box))
@@ -149,7 +149,7 @@ class ExplainTracing(Scene):
 
         self.play(
             Write(implies),
-            FadeInFrom(loc_tracking, UP)
+            FadeIn(loc_tracking, UP)
         )
         self.play(FadeIn(q_marks, lag_ratio=0.1))
         self.wait()
@@ -171,7 +171,7 @@ class ExplainTracing(Scene):
 
         self.play(
             ShowCreation(cross),
-            FadeOutAndShift(q_marks, RIGHT),
+            FadeOut(q_marks, RIGHT),
             FadeOut(lines),
         )
         self.wait()
@@ -221,7 +221,7 @@ class ContactTracingMisnomer(Scene):
             expl.set_color(color)
 
             self.play(
-                FadeInFrom(expl, -vect),
+                FadeIn(expl, -vect),
                 GrowArrow(arrow),
                 ShowCreation(rect),
             )

@@ -116,8 +116,8 @@ class ThisIsAFootnote(TeacherStudentsScene):
 
         self.play(
             MoveToTarget(full_equation),
-            FadeOutAndShift(image_group, 2 * LEFT),
-            FadeOutAndShift(asterisk, 2 * LEFT),
+            FadeOut(image_group, 2 * LEFT),
+            FadeOut(asterisk, 2 * LEFT),
             self.teacher.look_at, 4 * UP,
             self.get_student_changes(
                 "thinking", "erm", "confused",
@@ -933,7 +933,7 @@ class TemptingFormula(ShowTwoPerspectives, RandomnessVsProportions):
         )
         self.play(
             FadeIn(real_rect),
-            FadeInFrom(check, RIGHT),
+            FadeIn(check, RIGHT),
         )
         self.wait()
 
@@ -1070,7 +1070,7 @@ class DiseaseBayes(Scene):
         )
         self.play(
             GrowArrow(positive_arrow),
-            FadeInFrom(positive_words, UP),
+            FadeIn(positive_words, UP),
         )
         self.wait(2)
         self.play(

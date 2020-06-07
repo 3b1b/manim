@@ -464,7 +464,7 @@ class ManyNumberSystems(Scene):
             R_label.move_to, 0.25 * FRAME_WIDTH * LEFT + 2 * UP,
             C_label.move_to, 0.25 * FRAME_WIDTH * RIGHT + 2 * UP,
             H_label.move_to, 0.75 * FRAME_WIDTH * RIGHT + 2 * UP,
-            FadeOutAndShift(systems[3:], 2 * DOWN),
+            FadeOut(systems[3:], 2 * DOWN),
             Write(number_line),
             Write(plane),
             GrowFromCenter(R_example_dot),
@@ -711,16 +711,16 @@ class QuaternionHistory(Scene):
             aligned_edge=LEFT,
         )
 
-        self.play(FadeInFrom(dot_product, 2 * RIGHT))
-        self.play(FadeInFrom(cross_product, 2 * LEFT))
+        self.play(FadeIn(dot_product, 2 * RIGHT))
+        self.play(FadeIn(cross_product, 2 * LEFT))
         self.wait()
         self.play(FadeInFromDown(date))
         self.play(ApplyMethod(dot_product.fade, 0.7))
         self.play(ApplyMethod(cross_product.fade, 0.7))
         self.wait()
         self.play(
-            FadeOutAndShift(dot_product, 2 * LEFT),
-            FadeOutAndShift(cross_product, 2 * RIGHT),
+            FadeOut(dot_product, 2 * LEFT),
+            FadeOut(cross_product, 2 * RIGHT),
         )
 
         self.date = date
@@ -811,12 +811,12 @@ class QuaternionHistory(Scene):
         )
         blink_wait(3)
         self.play(
-            FadeOutAndShift(hamilton, RIGHT),
+            FadeOut(hamilton, RIGHT),
             LaggedStartMap(
                 FadeOutAndShift, images_with_labels,
                 lambda m: (m, UP)
             ),
-            FadeOutAndShift(students, DOWN),
+            FadeOut(students, DOWN),
             FadeOut(society_title),
             run_time=1
         )
@@ -924,7 +924,7 @@ class QuaternionHistory(Scene):
         for x in range(4):
             self.play(get_change_places())
         self.play(
-            FadeOutAndShift(VGroup(title, author_brace, aka)),
+            FadeOut(VGroup(title, author_brace, aka)),
             FadeInFromDown(quote),
         )
         self.play(get_change_places())
@@ -1148,7 +1148,7 @@ class HereWeTackle4d(TeacherStudentsScene):
         self.wait(3)
         self.play(
             self.teacher.change, "hooray",
-            FadeInFrom(titles[1]),
+            FadeIn(titles[1]),
             ApplyMethod(
                 titles[0].shift, 2 * UP,
                 rate_func=squish_rate_func(smooth, 0.2, 1)
@@ -1882,7 +1882,7 @@ class WalkThroughComplexMultiplication(ShowComplexMultiplicationExamples):
         self.add(product[:-1])
         self.play(
             ReplacementTransform(w_label[1][0].copy(), w_sym),
-            FadeInFrom(product[2], LEFT),
+            FadeIn(product[2], LEFT),
             FadeIn(product[0]),
         )
         self.wait()
@@ -2005,11 +2005,11 @@ class WalkThroughComplexMultiplication(ShowComplexMultiplicationExamples):
             rate_func=lambda t: there_and_back_with_pause(t, 2 / 9)
         )
         self.wait()
-        self.play(FadeInFrom(pin, UL))
+        self.play(FadeIn(pin, UL))
         self.play(Write(zero_eq))
         self.play(
             FadeInFromLarge(one_dot),
-            FadeInFrom(hand, UR)
+            FadeIn(hand, UR)
         )
         self.play(Write(one_eq))
         self.wait()
@@ -2446,13 +2446,13 @@ class IntroduceStereographicProjection(MovingCameraScene):
         self.wait()
         dot.move_to(i_point)
         self.play(ShowCreation(dot))
-        self.play(FadeInFrom(i_pin, UL))
+        self.play(FadeIn(i_pin, UL))
         self.wait()
         self.play(
             dot.move_to, neg_i_point,
             path_arc=-60 * DEGREES
         )
-        self.play(FadeInFrom(neg_i_pin, UL))
+        self.play(FadeIn(neg_i_pin, UL))
         self.wait()
         self.play(
             dot.move_to, one_point,
@@ -2888,7 +2888,7 @@ class ShowRotationUnderStereographicProjection(IntroduceStereographicProjection)
             lambda h: h.move_to(one_dot.get_center(), LEFT)
         )
         self.play(
-            FadeInFrom(hand, RIGHT),
+            FadeIn(hand, RIGHT),
             FadeInFromLarge(one_dot, 3),
         )
         for angle in 90 * DEGREES, -90 * DEGREES:
@@ -3170,7 +3170,7 @@ class IntroduceThreeDNumbers(SpecialThreeDScene):
         )
         self.begin_ambient_camera_rotation(rate=0.02)
         self.wait()
-        self.play(FadeInFrom(j_labels, IN))
+        self.play(FadeIn(j_labels, IN))
         z_axis.add(j_labels)
         self.play(
             ShowCreationThenDestruction(z_unit_line),
@@ -3238,7 +3238,7 @@ class IntroduceThreeDNumbers(SpecialThreeDScene):
         self.add_fixed_in_frame_mobjects(number_label)
         self.play(
             ShowCreation(point_line),
-            FadeInFrom(dot, -coords),
+            FadeIn(dot, -coords),
             FadeInFromDown(number_label)
         )
         self.wait()
@@ -4219,7 +4219,7 @@ class IntroduceQuaternions(Scene):
         group = VGroup(numbers, labels)
         self.play(
             group.to_edge, UP,
-            FadeOutAndShift(self.three_axes, DOWN)
+            FadeOut(self.three_axes, DOWN)
         )
         self.wait()
 
@@ -4249,15 +4249,15 @@ class IntroduceQuaternions(Scene):
         )
         self.wait()
         self.play(
-            FadeOutAndShift(real_word, DOWN),
-            FadeInFrom(scalar_word, DOWN),
+            FadeOut(real_word, DOWN),
+            FadeIn(scalar_word, DOWN),
         )
         self.wait(2)
         self.play(ChangeDecimalToValue(real_part, 0))
         self.wait()
         self.play(
-            FadeOutAndShift(imag_word, DOWN),
-            FadeInFrom(vector_word, DOWN)
+            FadeOut(imag_word, DOWN),
+            FadeIn(vector_word, DOWN)
         )
         self.wait(2)
 
@@ -4600,7 +4600,7 @@ class BreakUpQuaternionMultiplicationInParts(Scene):
         self.wait()
         self.play(
             GrowFromCenter(rotate_brace),
-            FadeInFrom(rotate_words, UP),
+            FadeIn(rotate_words, UP),
         )
         self.play(
             Rotate(
@@ -4944,7 +4944,7 @@ class HypersphereStereographicProjection(SpecialThreeDScene):
 
         # Show xy plane
         self.play(
-            FadeOutAndShift(circle_words, DOWN),
+            FadeOut(circle_words, DOWN),
             FadeInFromDown(sphere_1ij_words),
             FadeOut(circle),
             sphere_ijk.set_stroke, {"width": 0.0}
@@ -4955,7 +4955,7 @@ class HypersphereStereographicProjection(SpecialThreeDScene):
 
         # Show yz plane
         self.play(
-            FadeOutAndShift(sphere_1ij_words, DOWN),
+            FadeOut(sphere_1ij_words, DOWN),
             FadeInFromDown(sphere_1jk_words),
             sphere_1ij.set_fill, BLUE_E, 0.25,
             sphere_1ij.set_stroke, {"width": 0.0},
@@ -4965,7 +4965,7 @@ class HypersphereStereographicProjection(SpecialThreeDScene):
 
         # Show xz plane
         self.play(
-            FadeOutAndShift(sphere_1jk_words, DOWN),
+            FadeOut(sphere_1jk_words, DOWN),
             FadeInFromDown(sphere_1ik_words),
             sphere_1jk.set_fill, GREEN_E, 0.25,
             sphere_1jk.set_stroke, {"width": 0.0},
@@ -5148,11 +5148,11 @@ class RuleOfQuaternionMultiplicationOverlay(Scene):
 
         self.add(q_times_p)
         self.play(
-            FadeInFrom(q_words, UP),
+            FadeIn(q_words, UP),
             GrowArrow(q_arrow),
         )
         self.play(
-            FadeInFrom(p_words, DOWN),
+            FadeIn(p_words, DOWN),
             GrowArrow(p_arrow),
         )
         self.wait()
@@ -5162,7 +5162,7 @@ class RuleOfQuaternionMultiplicationOverlay(Scene):
         ]))
         self.play(
             FadeInFromDown(i_mob),
-            FadeOutAndShift(q_mob, UP)
+            FadeOut(q_mob, UP)
         )
         product = VGroup(i_mob, times_mob, p_mob)
         self.play(product.to_edge, UP)
@@ -5841,14 +5841,14 @@ class ShowArbitraryMultiplication(ShowMultiplicationBy135Example):
         self.stop_ambient_camera_rotation()
         self.begin_ambient_camera_rotation(rate=0.02)
         self.set_quat(special_q)
-        self.play(FadeInFrom(label, IN))
+        self.play(FadeIn(label, IN))
         self.wait(3)
         for circle in [circle1, circle2]:
             self.play(ShowCreation(circle, run_time=3))
             circle.updaters = circle.tucked_away_updaters
             self.wait(2)
         self.play(
-            FadeInFrom(hand, 2 * IN + 2 * RIGHT),
+            FadeIn(hand, 2 * IN + 2 * RIGHT),
             run_time=2
         )
         hand.add_updater(
@@ -5896,7 +5896,7 @@ class MentionCommutativity(TeacherStudentsScene):
             self.teacher.change, "raise_right_hand",
             self.get_student_changes("erm", "confused", "sassy")
         )
-        self.play(FadeInFrom(words, RIGHT))
+        self.play(FadeIn(words, RIGHT))
         self.wait(2)
         self.play(
             ReplacementTransform(words, joke),
@@ -5907,7 +5907,7 @@ class MentionCommutativity(TeacherStudentsScene):
         self.look_at(self.screen)
         self.wait(3)
         self.play(
-            FadeInFrom(ji_eq),
+            FadeIn(ji_eq),
             LaggedStartMap(
                 ApplyMethod, VGroup(ij_eq, general_eq),
                 lambda m: (m.shift, UP),
@@ -5977,11 +5977,11 @@ class RotationsOfCube(SpecialThreeDScene):
         self.add(axes, cube)
         self.play(
             Rotate(cube, 90 * DEGREES, OUT, run_time=2),
-            FadeInFrom(label1[0], IN),
+            FadeIn(label1[0], IN),
         )
         self.play(
             Rotate(cube, 90 * DEGREES, RIGHT, run_time=2),
-            FadeInFrom(label1[1], IN),
+            FadeIn(label1[1], IN),
         )
         self.wait()
         self.play(
@@ -5991,11 +5991,11 @@ class RotationsOfCube(SpecialThreeDScene):
         )
         self.play(
             Rotate(cube2, 90 * DEGREES, RIGHT, run_time=2),
-            FadeInFrom(label2[0], IN),
+            FadeIn(label2[0], IN),
         )
         self.play(
             Rotate(cube2, 90 * DEGREES, OUT, run_time=2),
-            FadeInFrom(label2[1], IN),
+            FadeIn(label2[1], IN),
         )
         self.wait(5)
 
@@ -6196,7 +6196,7 @@ class ShareWithFriends(PiCreatureScene):
         self.play(
             Animation(VectorizedPoint().next_to(pi1, UL, LARGE_BUFF)),
             pi2.change, "sad",
-            FadeOutAndShift(bubble.content, DOWN),
+            FadeOut(bubble.content, DOWN),
             FadeInFromDown(time_words, DOWN),
         )
         self.wait(7)

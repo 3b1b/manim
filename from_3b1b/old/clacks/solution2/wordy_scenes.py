@@ -45,13 +45,13 @@ class ConnectionToOptics(Scene):
         self.play(FadeInFromDown(e_group))
         self.play(
             Write(arrows[0]),
-            FadeInFrom(c_group, LEFT)
+            FadeIn(c_group, LEFT)
         )
         self.wait()
         self.play(FadeInFromDown(m_group))
         self.play(
             Write(arrows[1]),
-            FadeInFrom(a_group, LEFT)
+            FadeIn(a_group, LEFT)
         )
         self.wait(4)
         for k in range(2):
@@ -281,15 +281,15 @@ class RearrangeMomentumEquation(ShowMomentumConservation):
         new_eq_group.target.next_to(new_dot_product, DOWN, LARGE_BUFF)
 
         self.play(
-            FadeInFrom(new_equation, UP),
+            FadeIn(new_equation, UP),
             simple_dot_product.to_edge, DOWN, LARGE_BUFF,
         )
         self.wait()
         self.play(
             GrowFromCenter(x_brace),
             GrowFromCenter(y_brace),
-            FadeInFrom(dx_dt, UP),
-            FadeInFrom(dy_dt, UP),
+            FadeIn(dx_dt, UP),
+            FadeIn(dy_dt, UP),
         )
         self.wait()
         self.play(

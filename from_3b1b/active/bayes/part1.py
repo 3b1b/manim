@@ -471,9 +471,9 @@ class IntroduceFormula(Scene):
         # self.add(get_submobject_index_labels(formula))
         # return
         self.play(
-            FadeInFrom(hyp_label, DOWN),
+            FadeIn(hyp_label, DOWN),
             GrowArrow(hyp_arrow),
-            FadeInFrom(evid_label, UP),
+            FadeIn(evid_label, UP),
             GrowArrow(evid_arrow),
         )
         self.wait()
@@ -560,7 +560,7 @@ class StateGoal(PiCreatureScene, Scene):
         self.add(line, now_label)
         self.add(you)
         self.play(
-            FadeInFrom(you_label, LEFT),
+            FadeIn(you_label, LEFT),
             GrowArrow(you_arrow),
             you.change, "pondering",
         )
@@ -622,7 +622,7 @@ class StateGoal(PiCreatureScene, Scene):
             )),
         )
         self.play(
-            FadeInFrom(gold, LEFT),
+            FadeIn(gold, LEFT),
             you.change, "erm", gold,
         )
         self.play(Blink(you))
@@ -643,11 +643,11 @@ class StateGoal(PiCreatureScene, Scene):
         words.next_to(ship, RIGHT)
 
         self.play(
-            FadeInFrom(words[0], LEFT),
+            FadeIn(words[0], LEFT),
             you.change, "tease", words,
             FadeOut(icons[:2]),
         )
-        self.play(FadeInFrom(words[1], UP))
+        self.play(FadeIn(words[1], UP))
         self.wait()
 
         self.add(ship, gold)
@@ -1053,18 +1053,18 @@ class IntroduceKahnemanAndTversky(DescriptionOfSteve, MovingCameraScene):
         books.to_edge(RIGHT, buff=MED_LARGE_BUFF)
 
         self.play(
-            FadeInFrom(danny, DOWN),
-            FadeInFrom(danny.name, LEFT),
+            FadeIn(danny, DOWN),
+            FadeIn(danny.name, LEFT),
         )
         self.play(
-            FadeInFrom(amos, UP),
-            FadeInFrom(amos.name, LEFT),
+            FadeIn(amos, UP),
+            FadeIn(amos.name, LEFT),
         )
         self.wait()
         self.play(FadeInFromLarge(prize))
         self.wait()
         for book in books:
-            self.play(FadeInFrom(book, LEFT))
+            self.play(FadeIn(book, LEFT))
         self.wait()
 
         # Show them thinking
@@ -1124,7 +1124,7 @@ class IntroduceKahnemanAndTversky(DescriptionOfSteve, MovingCameraScene):
         )
         self.play(
             DrawBorderThenFill(bubble),
-            FadeInFrom(
+            FadeIn(
                 randy, UR,
                 rate_func=squish_rate_func(smooth, 0.5, 1),
                 run_time=2,
@@ -1263,8 +1263,8 @@ class IntroduceKahnemanAndTversky(DescriptionOfSteve, MovingCameraScene):
                 description,
                 lambda m: (m, LEFT)
             ),
-            FadeOutAndShift(randy, LEFT),
-            FadeOutAndShift(bar, LEFT),
+            FadeOut(randy, LEFT),
+            FadeOut(bar, LEFT),
         )
 
 
@@ -1303,7 +1303,7 @@ class CorrectViewOfFarmersAndLibrarians(Scene):
             word.next_to(arrow, vect)
             self.play(
                 GrowArrow(arrow),
-                FadeInFrom(word, UP),
+                FadeIn(word, UP),
             )
         self.wait()
 
@@ -1472,7 +1472,7 @@ class SpoilerAlert(Scene):
 
         self.add(sa_words)
         self.wait()
-        self.play(FadeInFrom(formula_group, UP))
+        self.play(FadeIn(formula_group, UP))
         self.wait()
 
 
@@ -1813,7 +1813,7 @@ class ReasonByRepresentativeSample(CorrectViewOfFarmersAndLibrarians):
             VGroup(equation_rect, equation).shift, prior_rect.get_height() * DOWN,
             FadeIn(prior_rect),
             FadeIn(prior_equation),
-            FadeInFrom(prior_label, RIGHT),
+            FadeIn(prior_label, RIGHT),
             GrowArrow(prior_arrow),
         )
         self.wait()
@@ -1845,7 +1845,7 @@ class NewEvidenceUpdatesPriorBeliefs(DescriptionOfSteve):
         self.add(evid)
         self.play(
             GrowArrow(arrow),
-            FadeInFrom(librarian, LEFT)
+            FadeIn(librarian, LEFT)
         )
         self.play(ShowCreation(cross))
         self.wait()
@@ -2030,7 +2030,7 @@ class HeartOfBayesTheorem(Scene):
         arrow.set_stroke(width=5)
 
         self.play(
-            FadeInFrom(words, DOWN),
+            FadeIn(words, DOWN),
             GrowArrow(arrow),
             FadeOut(prob),
             title.to_edge, LEFT
@@ -2140,9 +2140,9 @@ class WhenDoesBayesApply(DescriptionOfSteve):
         self.play(FadeInFromDown(all_words[0]))
         self.play(
             LaggedStart(
-                FadeInFrom(hypothesis_icon[0], DOWN),
+                FadeIn(hypothesis_icon[0], DOWN),
                 Write(hypothesis_icon[1]),
-                FadeInFrom(hypothesis_icon[2], UP),
+                FadeIn(hypothesis_icon[2], UP),
                 run_time=1,
             )
         )
@@ -2286,7 +2286,7 @@ class CreateFormulaFromDiagram(Scene):
         )
         self.wait()
         self.play(
-            FadeInFrom(prior_word, RIGHT),
+            FadeIn(prior_word, RIGHT),
             GrowArrow(prior_arrow)
         )
         self.wait()
@@ -2339,8 +2339,8 @@ class CreateFormulaFromDiagram(Scene):
             diagram.hne_rect.set_opacity, 1,
             MoveToTarget(hne_people),
             GrowFromCenter(diagram.he_brace),
-            FadeInFrom(like_label, RIGHT),
-            FadeInFrom(like_example, RIGHT),
+            FadeIn(like_label, RIGHT),
+            FadeIn(like_example, RIGHT),
         )
         self.wait()
         self.play(
@@ -2361,7 +2361,7 @@ class CreateFormulaFromDiagram(Scene):
         self.play(
             diagram.people[10:].set_opacity, 0.2,
             diagram.nh_rect.set_opacity, 0.2,
-            FadeInFrom(limit_word, DOWN),
+            FadeIn(limit_word, DOWN),
             GrowArrow(limit_arrow),
             rate_func=there_and_back_with_pause,
             run_time=6,
@@ -2401,8 +2401,8 @@ class CreateFormulaFromDiagram(Scene):
             Restore(diagram.nhe_rect),
             GrowFromCenter(diagram.nhe_brace),
             MoveToTarget(nhne_people),
-            FadeInFrom(anti_label, LEFT),
-            FadeInFrom(anti_example, LEFT),
+            FadeIn(anti_label, LEFT),
+            FadeIn(anti_example, LEFT),
         )
         diagram.nhne_rect.set_opacity(1)
         self.wait()
@@ -2739,7 +2739,7 @@ class CreateFormulaFromDiagram(Scene):
         # Name posterior
         self.play(
             GrowArrow(post_arrow),
-            FadeInFrom(post_word, RIGHT),
+            FadeIn(post_word, RIGHT),
             FadeOut(formula_rect),
             FadeOut(bayes_words),
         )
@@ -3224,7 +3224,7 @@ class UsesOfBayesTheorem(Scene):
 
         # Add people
         for person in [scientist, programmer]:
-            self.play(FadeInFrom(person, DOWN))
+            self.play(FadeIn(person, DOWN))
             rhs_copy = rhs.copy()
             rhs_copy.add_to_back(
                 SurroundingRectangle(
@@ -3286,7 +3286,7 @@ class AskAboutWhenProbabilityIsIntuitive(TeacherStudentsScene):
 
         self.play(
             self.teacher.change, "raise_right_hand",
-            FadeInFrom(words, DOWN),
+            FadeIn(words, DOWN),
             self.get_student_changes("erm", "pondering", "confused")
         )
         self.wait(2)
@@ -3328,8 +3328,8 @@ class IntroduceLinda(DescriptionOfSteve):
         steve_words.next_to(steve, UP, LARGE_BUFF)
 
         self.play(LaggedStart(
-            FadeInFrom(steve, LEFT),
-            FadeInFrom(steve_words, LEFT),
+            FadeIn(steve, LEFT),
+            FadeIn(steve_words, LEFT),
         ))
         self.wait()
 
@@ -3342,9 +3342,9 @@ class IntroduceLinda(DescriptionOfSteve):
 
         self.play(
             LaggedStart(
-                FadeOutAndShift(steve_words, 2 * RIGHT),
-                FadeOutAndShift(steve, 2 * RIGHT),
-                FadeInFrom(linda, 2 * LEFT),
+                FadeOut(steve_words, 2 * RIGHT),
+                FadeOut(steve, 2 * RIGHT),
+                FadeIn(linda, 2 * LEFT),
                 lag_ratio=0.15,
             )
         )
@@ -3404,7 +3404,7 @@ class IntroduceLinda(DescriptionOfSteve):
             MoveToTarget(options),
             MoveToTarget(rect),
             VFadeIn(rect),
-            FadeInFrom(result, LEFT),
+            FadeIn(result, LEFT),
             GrowArrow(arrow)
         )
         self.wait()
@@ -3642,7 +3642,7 @@ class AlternatePhrasings(PiCreatureScene):
         stereotypes.move_to(people)
 
         self.play(
-            FadeInFrom(phrases[0], UP),
+            FadeIn(phrases[0], UP),
             randy.change, "pondering",
         )
         self.play(
@@ -3652,7 +3652,7 @@ class AlternatePhrasings(PiCreatureScene):
         )
         self.wait()
         self.play(
-            FadeInFrom(phrases[1], UP),
+            FadeIn(phrases[1], UP),
             randy.change, "confused", phrases[1],
             FadeOut(people),
             ApplyFunction(push_down, phrases[0]),
@@ -3661,7 +3661,7 @@ class AlternatePhrasings(PiCreatureScene):
         self.play(bar.p_tracker.set_value, 0.4)
         bar.clear_updaters()
         self.play(
-            FadeInFrom(phrases[2], UP),
+            FadeIn(phrases[2], UP),
             ApplyFunction(push_down, phrases[:2]),
             FadeOut(bar.percentages),
             randy.change, "guilty",
@@ -3669,7 +3669,7 @@ class AlternatePhrasings(PiCreatureScene):
         self.wait()
         bar.remove(bar.percentages)
         self.play(
-            FadeInFrom(phrases[3], UP),
+            FadeIn(phrases[3], UP),
             ApplyFunction(push_down, phrases[:3]),
             FadeOut(bar),
             FadeIn(stereotypes),
@@ -3861,13 +3861,13 @@ class RandomnessVsProportions(Scene):
 
         self.play(FadeInFromDown(prob_word))
         self.play(
-            FadeInFrom(unc_word, LEFT),
+            FadeIn(unc_word, LEFT),
             Write(arrows[1]),
         )
         self.add(random_dice)
         self.wait(9)
         self.play(
-            FadeInFrom(prop_word, RIGHT),
+            FadeIn(prop_word, RIGHT),
             Write(arrows[0])
         )
         self.play(FadeIn(diagram))
@@ -4089,7 +4089,7 @@ class BayesTheoremOnProportions(Scene):
             ),
             FadeIn(denom_rect),
             ShowCreation(E_arrow),
-            FadeInFrom(E_words, UP),
+            FadeIn(E_words, UP),
             low_diagram_rects.set_stroke, TEAL, 3,
         )
         self.wait()
@@ -4099,8 +4099,8 @@ class BayesTheoremOnProportions(Scene):
             FadeOut(denom_rect),
             FadeIn(numer_rect),
             ShowCreation(H_arrow),
-            FadeInFrom(H_words, DOWN),
-            FadeOutAndShift(title, UP),
+            FadeIn(H_words, DOWN),
+            FadeOut(title, UP),
             low_diagram_rects.set_stroke, WHITE, 1,
             top_diagram_rects.set_stroke, YELLOW, 3,
         )
@@ -4253,7 +4253,7 @@ class QuestionSteveConclusion(HeartOfBayesTheorem, DescriptionOfSteve):
         self.play(randy.change, "sassy")
         self.wait()
         self.play(
-            FadeInFrom(people, RIGHT, lag_ratio=0.01),
+            FadeIn(people, RIGHT, lag_ratio=0.01),
             randy.change, "raise_left_hand", people,
         )
         self.wait()
@@ -4287,7 +4287,7 @@ class QuestionSteveConclusion(HeartOfBayesTheorem, DescriptionOfSteve):
             MoveToTarget(steve),
             randy.shift, 2 * LEFT,
             randy.change, 'erm', kt.target,
-            FadeOutAndShift(people, 2 * LEFT),
+            FadeOut(people, 2 * LEFT),
         )
         self.remove(people, cross)
         self.play(Blink(randy))
@@ -4453,13 +4453,13 @@ class ReprogrammingThought(Scene):
         brain_outline.set_fill(opacity=0)
         brain_outline.set_stroke(TEAL, 4)
 
-        self.play(FadeInFrom(brain, RIGHT))
+        self.play(FadeIn(brain, RIGHT))
         self.play(
             GrowFromCenter(arrow),
             LaggedStartMap(FadeInFromDown, q_marks[0]),
             run_time=1
         )
-        self.play(FadeInFrom(formula, LEFT))
+        self.play(FadeIn(formula, LEFT))
         self.wait()
 
         kw = {"run_time": 1, "lag_ratio": 0.3}
@@ -4586,7 +4586,7 @@ class ShowProgrammer(Scene):
         programmer.set_height(3)
 
         programmer.to_corner(DL)
-        self.play(FadeInFrom(programmer, DOWN))
+        self.play(FadeIn(programmer, DOWN))
         self.wait()
 
 

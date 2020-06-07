@@ -969,8 +969,8 @@ class FeynmanOnTurbulence(Scene):
         Group(feynman, name, quote).center()
 
         self.play(
-            FadeInFrom(feynman, UP),
-            FadeInFrom(name, DOWN),
+            FadeIn(feynman, UP),
+            FadeIn(name, DOWN),
             Write(quote, run_time=4)
         )
         self.wait()
@@ -1292,7 +1292,7 @@ class KineticEnergyBreakdown(Scene):
         )
         self.wait()
         for item in left_items:
-            self.play(FadeInFrom(item))
+            self.play(FadeIn(item))
             self.wait()
 
 
@@ -1378,7 +1378,7 @@ class Poem(Scene):
         poem.next_to(picture, RIGHT, LARGE_BUFF)
 
         self.add(picture)
-        self.play(FadeInFrom(title, DOWN))
+        self.play(FadeIn(title, DOWN))
         self.wait()
         for word in poem:
             if "whirl" in word.get_tex_string():
@@ -1415,7 +1415,7 @@ class SwirlDiameterD(Scene):
         self.play(*map(ShowCreation, swirl))
         self.play(
             GrowFromCenter(h_line),
-            FadeInFrom(D_label, UP),
+            FadeIn(D_label, UP),
         )
         self.wait()
 
@@ -1540,7 +1540,7 @@ class TurbulenceGifLabel(Scene):
         attribution.to_edge(DOWN)
 
         self.play(Write(title))
-        self.play(FadeInFrom(attribution, UP))
+        self.play(FadeIn(attribution, UP))
         self.wait()
 
 

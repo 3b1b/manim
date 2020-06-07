@@ -67,7 +67,7 @@ class ThinkingAboutAProof(PiCreatureScene):
 
         self.add(bubble)
         self.play(
-            FadeInFrom(you, LEFT),
+            FadeIn(you, LEFT),
             GrowArrow(you_arrow),
         )
         self.play(
@@ -293,7 +293,7 @@ class StretchACircle(Scene):
         self.play(
             GrowArrow(xy_arrow),
             Write(xy),
-            FadeInFrom(start_point, UP),
+            FadeIn(start_point, UP),
         )
         self.wait()
         self.add(circle_ghost)
@@ -508,7 +508,7 @@ class ShowOrbits(ShowArrayOfEccentricities):
                 eccentricity_label,
                 lambda a: self.get_eccentricity(comet_orbit)
             ),
-            FadeOutAndShift(earth_orbit_words, UP),
+            FadeOut(earth_orbit_words, UP),
             FadeInFromDown(comet_orbit_words)
         )
         self.add(orbiting_comet)
@@ -753,8 +753,8 @@ class AskWhyAreTheyTheSame(TeacherStudentsScene):
         baby_morty.to_corner(DL)
 
         self.play(
-            FadeOutAndShift(bubble),
-            FadeOutAndShift(bubble.content),
+            FadeOut(bubble),
+            FadeOut(bubble.content),
             LaggedStartMap(
                 FadeOutAndShift, self.students,
                 lambda m: (m, 3 * DOWN),
@@ -832,7 +832,7 @@ class TriangleOfEquivalences(Scene):
             run_time=3,
         ))
         self.wait()
-        self.play(FadeOutAndShift(arrows[1:]))
+        self.play(FadeOut(arrows[1:]))
         self.wait()
 
 
@@ -869,7 +869,7 @@ class ShowMeasurementBook(TeacherStudentsScene):
         self.wait()
         self.play(
             GrowArrow(arrow),
-            FadeInFrom(words, RIGHT),
+            FadeIn(words, RIGHT),
             self.get_student_changes(
                 "thinking", "happy", "pondering",
                 look_at_arg=arrow
@@ -1274,7 +1274,7 @@ class NameDandelin(Scene):
         self.play(FadeInFromDown(portrait))
         self.play(Write(title[1]))
         self.wait()
-        self.play(FadeInFrom(google_result, LEFT))
+        self.play(FadeIn(google_result, LEFT))
         self.play(Write(cmon_google, run_time=1))
         self.wait()
 
@@ -1332,7 +1332,7 @@ class AskWhyYouWouldChooseThisProof(PiCreatureScene):
         for pi, mode in (randy, "hooray"), (other, "tired"):
             self.play(
                 GrowArrow(pi.arrow),
-                FadeInFrom(pi.label, RIGHT),
+                FadeIn(pi.label, RIGHT),
                 pi.change, mode,
             )
         self.play(
@@ -1390,7 +1390,7 @@ class CreativeConstruction(PiCreatureScene):
             {"buff": LARGE_BUFF, "aligned_edge": UP},
             randy.change, "pondering",
             VFadeIn(randy),
-            FadeOutAndShift(dandelin, DOWN),
+            FadeOut(dandelin, DOWN),
         )
 
         self.play(

@@ -91,7 +91,7 @@ class GeneralizeToComplexFunctions(Scene):
 
         self.wait(2)
         self.play(
-            FadeInFrom(real_words, RIGHT),
+            FadeIn(real_words, RIGHT),
             FadeIn(real_arrow),
         )
         self.wait(5)
@@ -357,7 +357,7 @@ class ClarifyInputAndOutput(GeneralizeToComplexFunctions):
     def describe_input(self):
         input_tracker = self.input_tracker
 
-        self.play(FadeInFrom(self.input_words, UP))
+        self.play(FadeIn(self.input_words, UP))
         self.play(
             FadeInFromLarge(self.input_dot),
             FadeIn(self.input_decimal),
@@ -387,14 +387,14 @@ class ClarifyInputAndOutput(GeneralizeToComplexFunctions):
 
         self.play(
             ShowCreation(real_line),
-            FadeInFrom(real_words, DOWN)
+            FadeIn(real_words, DOWN)
         )
         self.play(
             FadeOut(real_line),
             FadeOut(real_words),
         )
         self.play(
-            FadeInFrom(plane.sublabel, UP)
+            FadeIn(plane.sublabel, UP)
         )
         self.play(
             FadeIn(output_decimal),

@@ -155,7 +155,7 @@ class IntroduceIMO(Scene):
         self.play(
             LaggedStart(
                 *[
-                    FadeOutAndShift(flag, DOWN)
+                    FadeOut(flag, DOWN)
                     for flag in random_flags
                 ],
                 lag_ratio=0.05,
@@ -299,7 +299,7 @@ class ShowTinyTao(IntroduceIMO):
 class FootnoteToIMOIntro(Scene):
     def construct(self):
         words = TextMobject("$^*$Based on data from 2019 test")
-        self.play(FadeInFrom(words, UP))
+        self.play(FadeIn(words, UP))
         self.wait()
 
 
@@ -361,20 +361,20 @@ class ShowTest(Scene):
         # Introduce test
         self.play(
             LaggedStart(
-                FadeInFrom(test[0], 2 * RIGHT),
-                FadeInFrom(test[1], 2 * LEFT),
+                FadeIn(test[0], 2 * RIGHT),
+                FadeIn(test[1], 2 * LEFT),
                 lag_ratio=0.3,
             )
         )
         self.wait()
         self.play(
             MoveToTarget(test, lag_ratio=0.2),
-            FadeInFrom(day_labels, UP, lag_ratio=0.2),
+            FadeIn(day_labels, UP, lag_ratio=0.2),
         )
         self.wait()
         self.play(
             *map(Restore, day_labels),
-            FadeInFrom(hour_labels, LEFT),
+            FadeIn(hour_labels, LEFT),
         )
         self.wait()
 
@@ -387,7 +387,7 @@ class ShowTest(Scene):
         )
         self.play(
             LaggedStart(*[
-                FadeInFrom(word, LEFT)
+                FadeIn(word, LEFT)
                 for word in proof_words
             ]),
             LaggedStart(*[
@@ -746,7 +746,7 @@ class Describe2011IMO(IntroduceIMO):
         group.shift(LEFT)
 
         self.add(group)
-        self.play(FadeInFrom(year, RIGHT))
+        self.play(FadeIn(year, RIGHT))
 
         self.title = group
 
@@ -865,7 +865,7 @@ class Describe2011IMO(IntroduceIMO):
         self.play(
             randy.change, "thinking",
             LaggedStart(*[
-                FadeInFrom(word, UP)
+                FadeIn(word, UP)
                 for word in words
             ], run_time=3, lag_ratio=0.5)
         )
@@ -922,7 +922,7 @@ class Describe2011IMO(IntroduceIMO):
         self.wait()
         self.play(
             LaggedStart(*[
-                FadeInFrom(row, UP)
+                FadeIn(row, UP)
                 for row in grid.rows[2:4]
             ]),
             LaggedStart(*[
@@ -940,8 +940,8 @@ class Describe2011IMO(IntroduceIMO):
         self.wait()
         student_counter.clear_updaters()
         self.play(
-            FadeOutAndShift(self.title, UP),
-            FadeOutAndShift(student_counter, UP),
+            FadeOut(self.title, UP),
+            FadeOut(student_counter, UP),
             grid.rows[:4].shift, 3 * UP,
             grid.h_lines[:3].shift, 3 * UP,
         )
@@ -1072,7 +1072,7 @@ class AskWhatsOnTest(ShowTest, MovingCameraScene):
         )
         self.wait()
         self.play(
-            FadeInFrom(research, DOWN),
+            FadeIn(research, DOWN),
             question.shift, 2 * UP,
         )
         self.wait()
@@ -1474,8 +1474,8 @@ class IntroduceWindmill(WindmillScene):
 
         self.play(
             FadeIn(S_eq),
-            FadeInFrom(braces[0], RIGHT),
-            FadeInFrom(braces[1], LEFT),
+            FadeIn(braces[0], RIGHT),
+            FadeIn(braces[1], LEFT),
         )
         self.play(
             LaggedStartMap(FadeInFromLarge, dots)
@@ -1506,7 +1506,7 @@ class IntroduceWindmill(WindmillScene):
         self.add(line, dots)
         self.play(
             ShowCreation(line),
-            FadeInFrom(words, LEFT),
+            FadeIn(words, LEFT),
             dots[-1].set_color, RED,
         )
         self.wait()
@@ -1515,7 +1515,7 @@ class IntroduceWindmill(WindmillScene):
             FadeOut(words),
         )
         self.play(
-            FadeOutAndShift(
+            FadeOut(
                 dots[-1], 3 * RIGHT,
                 path_arc=-PI / 4,
                 rate_func=running_start,
@@ -1557,7 +1557,7 @@ class IntroduceWindmill(WindmillScene):
         self.add(windmill, dots)
         self.play(
             GrowFromCenter(windmill),
-            FadeInFrom(l_label, DL),
+            FadeIn(l_label, DL),
         )
         self.wait()
         self.play(
@@ -1606,7 +1606,7 @@ class IntroduceWindmill(WindmillScene):
 
         self.rotate_to_next_pivot(windmill)
         self.play(
-            FadeInFrom(q_label, LEFT),
+            FadeIn(q_label, LEFT),
             FadeOut(p_label),
             FadeOut(arcs),
         )
@@ -1635,8 +1635,8 @@ class IntroduceWindmill(WindmillScene):
             buff=SMALL_BUFF,
         )
 
-        self.play(FadeInFrom(p_label, UL))
-        self.play(FadeInFrom(l_label, LEFT))
+        self.play(FadeIn(p_label, UL))
+        self.play(FadeIn(l_label, LEFT))
         self.wait()
 
         self.add(
@@ -1845,7 +1845,7 @@ class HarderThanExpected(TeacherStudentsScene):
         )
         self.wait()
         self.play(
-            FadeInFrom(words, UP),
+            FadeIn(words, UP),
             self.get_student_changes(*3 * ["horrified"]),
         )
         self.wait(3)
@@ -1895,7 +1895,7 @@ class TraditionalDifficulty(ContrastToOtherOlympiadProblems):
         self.play(
             FadeIn(harder_words),
             GrowArrow(arrow),
-            LaggedStart(*[FadeInFrom(p, UP) for p in p_labels[:3]]),
+            LaggedStart(*[FadeIn(p, UP) for p in p_labels[:3]]),
             LaggedStartMap(ShowCreation, rects[:3]),
         )
         self.wait()
@@ -1920,16 +1920,16 @@ class TraditionalDifficulty(ContrastToOtherOlympiadProblems):
             Transform(big_rect, big_rects[1]),
             FadeOut(p_labels[0::3]),
             FadeIn(p_labels[1::3]),
-            FadeOutAndShift(p_words[0::3], DOWN),
-            FadeInFrom(p_words[1::3], UP),
+            FadeOut(p_words[0::3], DOWN),
+            FadeIn(p_words[1::3], UP),
         )
         self.wait()
         self.play(
             Transform(big_rect, big_rects[2]),
             FadeOut(p_labels[1::3]),
             FadeIn(p_labels[2::3]),
-            FadeOutAndShift(p_words[1::3], DOWN),
-            FadeInFrom(p_words[2::3], UP),
+            FadeOut(p_words[1::3], DOWN),
+            FadeIn(p_words[2::3], UP),
         )
         self.wait()
 
@@ -2136,14 +2136,14 @@ class SixOnSix(Describe2011IMO):
 
         self.play(
             Write(title),
-            LaggedStart(*[FadeInFrom(row, UP) for row in grid.rows]),
+            LaggedStart(*[FadeIn(row, UP) for row in grid.rows]),
             LaggedStart(*[ShowCreation(line) for line in grid.h_lines]),
         )
         self.play(ShowCreation(six_rect))
         self.wait()
         self.play(
             ReplacementTransform(six_rect, two_rect),
-            FadeInFrom(subtitle, UP)
+            FadeIn(subtitle, UP)
         )
         self.wait()
 
@@ -2215,7 +2215,7 @@ class TryOutSimplestExamples(WindmillScene):
         # Shift point
         self.play(
             dot.next_to, words, DOWN,
-            FadeInFrom(words, RIGHT),
+            FadeIn(words, RIGHT),
         )
         windmill.point_set[3] = dot.get_center()
         self.let_windmill_run(windmill, 4)
@@ -2239,7 +2239,7 @@ class TryOutSimplestExamples(WindmillScene):
         counters = self.get_pivot_counters(windmill)
         self.play(
             LaggedStart(*[
-                FadeInFrom(counter, DOWN)
+                FadeIn(counter, DOWN)
                 for counter in counters
             ])
         )
@@ -2329,14 +2329,14 @@ class WhereItStartsItEnds(WindmillScene):
         self.play(
             ShowCreation(windmill),
             GrowFromCenter(pivot_dot),
-            FadeInFrom(start_words, LEFT),
+            FadeIn(start_words, LEFT),
         )
         self.wait()
         self.start_leaving_shadows()
         self.add(windmill, dots, pivot_dot)
         half_time = PI / windmill.rot_speed
         self.let_windmill_run(windmill, time=half_time)
-        self.play(FadeInFrom(end_words, UP))
+        self.play(FadeIn(end_words, UP))
         self.wait()
         self.let_windmill_run(windmill, time=half_time)
         self.wait()
@@ -2388,7 +2388,7 @@ class WhereItStartsItEnds(WindmillScene):
             Write(middle_words),
         )
         self.wait()
-        self.play(FadeInFrom(proof_words2, UP))
+        self.play(FadeIn(proof_words2, UP))
         self.wait()
         self.let_windmill_run(self.windmill, time=10)
 
@@ -2472,7 +2472,7 @@ class FormalizeMiddle(WhereItStartsItEnds):
         self.wait()
         for arrow, step in zip(arrows, steps[1:]):
             self.play(
-                FadeInFrom(step, UP),
+                FadeIn(step, UP),
                 GrowArrow(arrow),
             )
             self.wait()
@@ -2615,7 +2615,7 @@ class FormalizeMiddle(WhereItStartsItEnds):
             dot_rect.match_color(dot)
             dot_rects.add(dot_rect)
 
-        self.play(FadeInFrom(words, DOWN))
+        self.play(FadeIn(words, DOWN))
         self.wait()
 
         self.play(
@@ -2623,7 +2623,7 @@ class FormalizeMiddle(WhereItStartsItEnds):
             self.pivot_dot.set_color, WHITE,
         )
 
-        self.play(FadeInFrom(example, UP))
+        self.play(FadeIn(example, UP))
         self.play(
             ShowIncreasingSubsets(dot_rects),
             ChangingDecimal(
@@ -2789,12 +2789,12 @@ class TalkThroughPivotChange(WindmillScene):
         self.add(top_half, tips)
         self.play(
             ShowCreationThenFadeOut(top_half),
-            FadeInFrom(top_words, -vect),
+            FadeIn(top_words, -vect),
         )
         self.add(low_half, tips)
         self.play(
             ShowCreationThenFadeOut(low_half),
-            FadeInFrom(low_words, vect),
+            FadeIn(low_words, vect),
         )
         self.wait()
 
@@ -2851,7 +2851,7 @@ class TalkThroughPivotChange(WindmillScene):
             blue_rect.move_to, windmill.pivot,
             blue_rect.set_color, GREY_BROWN,
             old_pivot_word.move_to, new_pivot_word,
-            FadeOutAndShift(new_pivot_word, DL)
+            FadeOut(new_pivot_word, DL)
         )
         self.let_windmill_run(windmill, 1)
         self.wait()
@@ -3117,11 +3117,11 @@ class EvenCase(Rotate180Argument):
         groups.next_to(counter_group, DOWN, aligned_edge=LEFT)
 
         self.play(
-            FadeInFrom(blues_group, UP),
+            FadeIn(blues_group, UP),
             ShowCreation(blue_rects),
         )
         self.play(
-            FadeInFrom(browns_group, UP),
+            FadeIn(browns_group, UP),
             ShowCreation(brown_rects),
         )
         self.wait()
@@ -3133,7 +3133,7 @@ class EvenCase(Rotate180Argument):
         pivot_words.next_to(arrow, RIGHT, SMALL_BUFF)
 
         self.play(
-            FadeInFrom(pivot_words, LEFT),
+            FadeIn(pivot_words, LEFT),
             ShowCreation(arrow),
         )
         self.play(
@@ -3191,7 +3191,7 @@ class EvenCase(Rotate180Argument):
             pivot_tracker.move_to, points[n // 2],
             run_time=2
         )
-        self.play(FadeInFrom(p_label, LEFT))
+        self.play(FadeIn(p_label, LEFT))
         self.wait()
         windmill.remove_updater(update_pivot)
 
@@ -3232,7 +3232,7 @@ class TwoTakeaways(TeacherStudentsScene):
         self.change_all_student_modes("pondering")
         self.wait()
         for item in items:
-            self.play(FadeInFrom(item, LEFT))
+            self.play(FadeIn(item, LEFT))
             item.big = item.copy()
             item.small = item.copy()
             item.big.scale(1.5, about_edge=LEFT)
@@ -3282,7 +3282,7 @@ class EasyToFoolYourself(PiCreatureScene):
         self.wait()
         self.play(morty.change, "thinking")
         self.play(
-            FadeInFrom(fool_word, LEFT),
+            FadeIn(fool_word, LEFT),
             ShowCreation(fool_arrow),
         )
         self.wait()
@@ -3510,7 +3510,7 @@ class VastSpaceOfConsiderations(Scene):
         considerations.to_edge(LEFT)
 
         self.play(LaggedStart(*[
-            FadeInFrom(mob, UP)
+            FadeIn(mob, UP)
             for mob in considerations
         ], run_time=3, lag_ratio=0.2))
 
@@ -3539,7 +3539,7 @@ class WhatStaysConstantWrapper(Scene):
         self.play(FadeInFromDown(title1))
         self.wait()
         self.play(
-            FadeOutAndShift(title1, UP),
+            FadeOut(title1, UP),
             FadeInFromDown(title2),
         )
         self.wait()
@@ -3580,10 +3580,10 @@ class CountHoles(Scene):
             FadeOut(labels[0::2]),
         )
         self.play(
-            FadeInFrom(equation, RIGHT),
+            FadeIn(equation, RIGHT),
             GrowArrow(arrow),
         )
-        self.play(FadeInFrom(equation_text, UP))
+        self.play(FadeIn(equation_text, UP))
         self.wait()
 
 
@@ -3667,7 +3667,7 @@ class TerryTaoQuote(Scene):
         )
         self.wait()
         self.play(
-            FadeInFrom(tiny_tao, LEFT)
+            FadeIn(tiny_tao, LEFT)
         )
         self.wait()
         self.play(FadeOut(tiny_tao))
@@ -3728,8 +3728,8 @@ class WindmillFairyTale(Scene):
         self.wait()
         self.play(
             LaggedStart(
-                FadeInFrom(paths[1], RIGHT),
-                FadeInFrom(paths[2], RIGHT),
+                FadeIn(paths[1], RIGHT),
+                FadeIn(paths[2], RIGHT),
                 lag_ratio=0.2,
                 run_time=3,
             )
@@ -3761,7 +3761,7 @@ class SolveAProblemOneDay(SpiritOfIMO, PiCreatureScene):
             randy.change, "pondering",
         )
         self.play(
-            FadeInFrom(you, LEFT),
+            FadeIn(you, LEFT),
             GrowArrow(arrow)
         )
         self.wait(2)
@@ -4092,11 +4092,11 @@ class Thumbnail(WindmillScene):
                     for dot in sorted_dots[7:]
                 ]),
                 LaggedStart(*[
-                    FadeOutAndShift(word, RIGHT)
+                    FadeOut(word, RIGHT)
                     for word in words
                 ]),
                 LaggedStart(*[
-                    FadeOutAndShift(word, LEFT)
+                    FadeOut(word, LEFT)
                     for word in words2
                 ]),
                 LaggedStartMap(

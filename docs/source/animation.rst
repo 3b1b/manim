@@ -61,7 +61,7 @@ Fade
 
 .. code-block:: python
 
-  class AnimationFadeInFrom(Scene):
+  class AnimationFadeIn(Scene):
       def construct(self):
           square = Square()
           for label, edge in zip(
@@ -71,7 +71,7 @@ Fade
               anno.shift(2 * DOWN)
               self.add(anno)
 
-              self.play(FadeInFrom(square, edge))
+              self.play(FadeIn(square, edge))
               self.remove(anno, square)
 
 
@@ -84,7 +84,7 @@ Fade
 
 .. code-block:: python
 
-  class AnimationFadeOutAndShift(Scene):
+  class AnimationFadeOut(Scene):
       def construct(self):
           square = Square()
           for label, edge in zip(
@@ -94,7 +94,7 @@ Fade
               anno.shift(2 * DOWN)
               self.add(anno)
 
-              self.play(FadeOutAndShift(square, edge))
+              self.play(FadeOut(square, edge))
               self.remove(anno, square)
 
 
@@ -203,7 +203,7 @@ You can combine cardinal directions to form diagonal animations
       def construct(self):
           square = Square()
           for diag in [UP + LEFT, UP + RIGHT, DOWN + LEFT, DOWN + RIGHT]:
-              self.play(FadeInFrom(square, diag))
+              self.play(FadeIn(square, diag))
 
 .. note::
     You can also use the abbreviated forms like ``UL, UR, DL, DR``.

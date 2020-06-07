@@ -52,73 +52,30 @@ class FadeIn(Transform):
 
 # Below will be deprecated
 
-class FadeInFrom(Transform):
-    CONFIG = {
-        "direction": DOWN,
-        "lag_ratio": DEFAULT_ANIMATION_LAG_RATIO,
-    }
 
-    def __init__(self, mobject, direction=None, **kwargs):
-        if direction is not None:
-            self.direction = direction
-        super().__init__(mobject, **kwargs)
-
-    def create_target(self):
-        return self.mobject.copy()
-
-    def begin(self):
-        super().begin()
-        self.starting_mobject.shift(self.direction)
-        self.starting_mobject.set_opacity(0)
-
-
-class FadeInFromDown(FadeInFrom):
+class FadeInFromDown(FadeIn):
     """
-    Identical to FadeInFrom, just with a name that
+    Identical to FadeIn, just with a name that
     communicates the default
     """
-    CONFIG = {
-        "direction": DOWN,
-        "lag_ratio": DEFAULT_ANIMATION_LAG_RATIO,
-    }
+
+    def __init__(self, mobject, **kwargs):
+        super().__init__(mobject, DOWN, **kwargs)
 
 
-class FadeOutAndShift(FadeOut):
-    CONFIG = {
-        "direction": DOWN,
-    }
-
-    def __init__(self, mobject, direction=None, **kwargs):
-        if direction is not None:
-            self.direction = direction
-        super().__init__(mobject, **kwargs)
-
-    def create_target(self):
-        target = super().create_target()
-        target.shift(self.direction)
-        return target
-
-
-class FadeOutAndShiftDown(FadeOutAndShift):
+class FadeOutAndShiftDown(FadeOut):
     """
-    Identical to FadeOutAndShift, just with a name that
+    Identical to FadeOut, just with a name that
     communicates the default
     """
-    CONFIG = {
-        "direction": DOWN,
-    }
+
+    def __init__(self, mobject, **kwargs):
+        super().__init__(mobject, DOWN, **kwargs)
 
 
 class FadeInFromPoint(FadeIn):
     def __init__(self, mobject, point, **kwargs):
-        self.point = point
-        super().__init__(mobject, **kwargs)
-
-    def create_starting_mobject(self):
-        start = super().create_starting_mobject()
-        start.scale(0)
-        start.move_to(self.point)
-        return start
+        super().__init__(mobject, point - mobject.get_center(), **kwargs)
 
 
 class FadeInFromLarge(FadeIn):

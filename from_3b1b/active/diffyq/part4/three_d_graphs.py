@@ -95,7 +95,7 @@ class ShowLinearity(WriteHeatEquationTemplate, TemperatureGraphScene):
             ShowCreation(arrow),
             group.next_to, arrow, LEFT
         )
-        self.play(FadeInFrom(linear_word, LEFT))
+        self.play(FadeIn(linear_word, LEFT))
         self.wait()
 
     def add_function_labels(self):
@@ -144,12 +144,12 @@ class ShowLinearity(WriteHeatEquationTemplate, TemperatureGraphScene):
         ))
 
         self.play(
-            FadeInFrom(T1[1], DOWN),
-            FadeInFrom(solution_labels[0], UP),
+            FadeIn(T1[1], DOWN),
+            FadeIn(solution_labels[0], UP),
         )
         self.play(
-            FadeInFrom(T2[1], DOWN),
-            FadeInFrom(solution_labels[1], UP),
+            FadeIn(T2[1], DOWN),
+            FadeIn(solution_labels[1], UP),
         )
         self.wait()
         self.play(
@@ -166,7 +166,7 @@ class ShowLinearity(WriteHeatEquationTemplate, TemperatureGraphScene):
             ]
         )
         self.wait()
-        self.play(FadeInFrom(solution_labels[2], UP))
+        self.play(FadeIn(solution_labels[2], UP))
         self.wait()
 
         # Show constants

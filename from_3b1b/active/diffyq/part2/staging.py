@@ -526,7 +526,7 @@ class TwoBodyEquations(Scene):
             variable.move_to(lhs, LEFT)
 
         self.play(LaggedStart(*[
-            FadeInFrom(v, RIGHT)
+            FadeIn(v, RIGHT)
             for v in variables
         ]))
         self.wait()
@@ -686,7 +686,7 @@ class StrogatzMention(PiCreatureScene):
         self.play(FadeInFromDown(steve))
         self.wait()
         self.play(
-            FadeInFrom(book, DOWN),
+            FadeIn(book, DOWN),
             steve.shift, 4 * RIGHT,
             RemovePiCreatureBubble(
                 morty, target_mode="thinking"

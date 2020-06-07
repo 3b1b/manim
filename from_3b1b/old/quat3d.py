@@ -214,7 +214,7 @@ class Introduction(QuaternionHistory):
         self.wait()
         for image, name, quote in zip(images, names, quotes):
             self.play(
-                FadeInFrom(image, 3 * DOWN),
+                FadeIn(image, 3 * DOWN),
                 FadeInFromLarge(name),
                 LaggedStartMap(
                     FadeIn, VGroup(*it.chain(*quote)),
@@ -295,9 +295,9 @@ class WhoCares(TeacherStudentsScene):
 
         # self.play(
         #     hn_quote.scale, 2, {"about_edge": DL},
-        #     FadeOutAndShift(quotes[0], 5 * UP),
-        #     FadeOutAndShift(quotes[2], UR),
-        #     FadeOutAndShift(quotes[3], RIGHT),
+        #     FadeOut(quotes[0], 5 * UP),
+        #     FadeOut(quotes[2], UR),
+        #     FadeOut(quotes[3], RIGHT),
         #     FadeInFromDown(hn_context),
         # )
         # hn_rect = Rectangle(
@@ -333,9 +333,9 @@ class WhoCares(TeacherStudentsScene):
         # t_quote.next_to(FRAME_WIDTH * LEFT / 2 + FRAME_WIDTH * UP / 2, UR)
         # t_quote.set_opacity(0)
         # self.play(
-        #     FadeOutAndShift(hn_quote, 4 * LEFT),
-        #     FadeOutAndShift(hn_rect, 4 * LEFT),
-        #     FadeOutAndShift(hn_context, UP),
+        #     FadeOut(hn_quote, 4 * LEFT),
+        #     FadeOut(hn_rect, 4 * LEFT),
+        #     FadeOut(hn_context, UP),
         #     FadeOut(vr_headsets),
         #     t_quote.set_opacity, 1,
         #     t_quote.scale, 2,
@@ -1068,9 +1068,9 @@ class ComplexNumberRotation(Scene):
             Write(parens)
         )
         self.wait()
-        self.play(FadeInFrom(mid_line, UP))
+        self.play(FadeIn(mid_line, UP))
         self.wait()
-        self.play(FadeInFrom(low_line, UP))
+        self.play(FadeIn(low_line, UP))
         self.wait(2)
         self.play(FadeOut(self.unit_z_group))
         self.rotation_mobs.save_state()

@@ -408,7 +408,7 @@ class IntroQuestion(Scene):
         questions.arrange(DOWN, buff=MED_LARGE_BUFF, aligned_edge=LEFT)
 
         for question in questions:
-            self.play(FadeInFrom(question, RIGHT))
+            self.play(FadeIn(question, RIGHT))
             self.wait()
         self.play(LaggedStartMap(
             FadeOutAndShift, questions,
@@ -556,7 +556,7 @@ class GrowthEquation(Scene):
         self.play(FadeIn(delta_N), FadeIn(eq))
         self.play(
             GrowFromCenter(delta_N_brace),
-            FadeInFrom(delta_N_text, 0.5 * UP),
+            FadeIn(delta_N_text, 0.5 * UP),
         )
         self.wait()
         self.play(LaggedStart(
@@ -591,7 +591,7 @@ class GrowthEquation(Scene):
         self.play(
             FadeOut(delta_N_brace),
             FadeOut(delta_N_text),
-            FadeInFrom(lhs, UP),
+            FadeIn(lhs, UP),
         )
         self.play(FadeIn(rhs[:2]))
         self.play(TransformFromCopy(nep, rhs[2]))
@@ -632,7 +632,7 @@ class GrowthEquation(Scene):
         text.next_to(brace, DOWN)
         self.play(
             GrowFromCenter(brace),
-            FadeInFrom(text, 0.5 * UP)
+            FadeIn(text, 0.5 * UP)
         )
         self.wait()
 
@@ -673,7 +673,7 @@ class GrowthEquation(Scene):
 
         self.play(
             GrowArrow(arrow),
-            FadeInFrom(exp_eq, 2 * LEFT)
+            FadeIn(exp_eq, 2 * LEFT)
         )
         self.wait()
 
@@ -736,7 +736,7 @@ class GrowthEquation(Scene):
 
         self.play(
             ShowCreation(ep_rect),
-            FadeInFrom(ep_question, LEFT)
+            FadeIn(ep_question, LEFT)
         )
         self.wait()
         for line in E_line, p_line:
@@ -970,7 +970,7 @@ class RescaleToLogarithmic(IntroducePlot):
             rect.stretch(0, 0, about_edge=LEFT)
             self.play(
                 Restore(rect),
-                FadeInFrom(label, LEFT)
+                FadeIn(label, LEFT)
             )
             self.wait()
 
@@ -979,7 +979,7 @@ class RescaleToLogarithmic(IntroducePlot):
                     rect.stretch, 0, 0, {"about_edge": RIGHT},
                     remover=True,
                 ),
-                FadeOutAndShift(label, RIGHT),
+                FadeOut(label, RIGHT),
             ]
         self.wait()
 
@@ -1148,7 +1148,7 @@ class RescaleToLogarithmic(IntroducePlot):
             else:
                 rect.save_state()
                 rect.stretch(0, 0, about_edge=LEFT)
-                self.play(Restore(rect), FadeInFrom(label, LEFT))
+                self.play(Restore(rect), FadeIn(label, LEFT))
             self.wait()
 
             self.play(
@@ -1161,7 +1161,7 @@ class RescaleToLogarithmic(IntroducePlot):
 
         self.wait()
         self.play(
-            FadeOutAndShift(last_label, RIGHT),
+            FadeOut(last_label, RIGHT),
             ApplyMethod(
                 last_rect.stretch, 0, 0, {"about_edge": RIGHT},
                 remover=True
@@ -1273,11 +1273,11 @@ class CompareCountries(Scene):
         alt_arrow_label.next_to(arrow, DOWN)
 
         self.play(ShowCreation(arrow))
-        self.play(FadeInFrom(arrow_label, 0.5 * UP))
+        self.play(FadeIn(arrow_label, 0.5 * UP))
         self.wait(2)
         self.play(
-            FadeInFrom(alt_arrow_label, 0.5 * UP),
-            FadeOutAndShift(arrow_label, 0.5 * DOWN),
+            FadeIn(alt_arrow_label, 0.5 * UP),
+            FadeOut(arrow_label, 0.5 * DOWN),
         )
         self.wait(2)
 
@@ -1316,11 +1316,11 @@ class SARSvs1918(Scene):
 
         for image, title, label in zip(images, titles, n_cases_labels):
             self.play(
-                FadeInFrom(image, DOWN),
+                FadeIn(image, DOWN),
                 Write(title),
                 run_time=1,
             )
-            self.play(FadeInFrom(label, UP))
+            self.play(FadeIn(label, UP))
             self.wait()
 
 
@@ -1638,8 +1638,8 @@ class ShowLogisticCurve(Scene):
             label.add_to_back(arrow)
 
         self.play(
-            FadeInFrom(gf_label[0], RIGHT),
-            FadeInFrom(gf_label[1:], LEFT),
+            FadeIn(gf_label[0], RIGHT),
+            FadeIn(gf_label[1:], LEFT),
             FadeOut(ode)
         )
         self.wait()

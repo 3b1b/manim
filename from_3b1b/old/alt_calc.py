@@ -2860,7 +2860,7 @@ class RepeatedApplicationGraphically(GraphOnePlusOneOverX, PiCreatureScene):
         dot = Dot(color=RED, fill_opacity=0.7)
         dot.move_to(self.coords_to_point(x_val, curr_output))
 
-        self.play(FadeInFrom(dot, 2 * UR))
+        self.play(FadeIn(dot, 2 * UR))
         self.wait()
 
         for n in range(self.n_jumps):

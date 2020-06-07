@@ -202,7 +202,7 @@ class LooseWithLanguage(TeacherStudentsScene):
             run_time=2,
         )
         self.play(
-            FadeInFrom(terms[1], DOWN),
+            FadeIn(terms[1], DOWN),
             self.get_student_changes(
                 "thinking", "pondering", "erm",
                 look_at_arg=terms,

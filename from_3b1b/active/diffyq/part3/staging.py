@@ -41,11 +41,11 @@ class FourierNameIntro(Scene):
         v_line.set_stroke(WHITE, 2)
 
         self.play(
-            FadeInFrom(lt, RIGHT),
+            FadeIn(lt, RIGHT),
             ShowCreation(v_line)
         )
         self.play(
-            FadeInFrom(rt, LEFT),
+            FadeIn(rt, LEFT),
         )
         # Edit in images of circle animations
         # and clips from FT video
@@ -55,12 +55,12 @@ class FourierNameIntro(Scene):
             # Maybe do it for left variant, maybe not...
             self.play(
                 MoveToTarget(title),
-                FadeInFrom(variants[0][0], LEFT)
+                FadeIn(variants[0][0], LEFT)
             )
             for v1, v2 in zip(variants, variants[1:]):
                 self.play(
-                    FadeOutAndShift(v1[0], UP),
-                    FadeInFrom(v2[0], DOWN),
+                    FadeOut(v1[0], UP),
+                    FadeIn(v2[0], DOWN),
                     run_time=0.5,
                 )
                 self.wait(0.5)
@@ -177,7 +177,7 @@ class FourierNameIntro(Scene):
             color=heat_rect.get_color(),
         )
 
-        self.play(FadeInFrom(paper, LEFT))
+        self.play(FadeIn(paper, LEFT))
         self.play(
             ShowCreation(date_rect),
         )
@@ -775,7 +775,7 @@ class InvestmentGrowth(Scene):
 
         self.play(FadeInFromDown(ode))
         self.wait(6)
-        self.play(FadeInFrom(exp, UP))
+        self.play(FadeIn(exp, UP))
         self.wait(2)
         self.play(
             Restore(exp_part),
@@ -936,7 +936,7 @@ class BoundaryConditionInterlude(Scene):
         for im1, im2, arrow in zip(storyline, storyline[1:], storyline.arrows):
             self.add(im2, im1)
             self.play(
-                FadeInFrom(im2, -im_to_im),
+                FadeIn(im2, -im_to_im),
                 ShowCreation(arrow),
             )
         self.wait()
@@ -1011,7 +1011,7 @@ class BoundaryConditionInterlude(Scene):
         )
         self.play(
             GrowFromCenter(brace),
-            FadeInFrom(nv_text, RIGHT)
+            FadeIn(nv_text, RIGHT)
         )
         self.wait()
 

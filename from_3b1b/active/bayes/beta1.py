@@ -316,10 +316,10 @@ class ShowThreeCases(Scene):
         last_percent = hundo
         for ar, ap in zip(alt_reviews, alt_percents):
             self.play(
-                FadeInFrom(ar, 0.5 * DOWN, lag_ratio=0.2),
+                FadeIn(ar, 0.5 * DOWN, lag_ratio=0.2),
                 FadeOut(last_review),
-                FadeInFrom(ap, 0.5 * DOWN),
-                FadeOutAndShift(last_percent, 0.5 * UP),
+                FadeIn(ap, 0.5 * DOWN),
+                FadeOut(last_percent, 0.5 * UP),
                 run_time=1.5
             )
             last_review = ar
@@ -538,8 +538,8 @@ class PreviewThreeVideos(Scene):
         )
 
         self.play(
-            FadeOutAndShift(title, LEFT),
-            FadeOutAndShift(bullets, LEFT),
+            FadeOut(title, LEFT),
+            FadeOut(bullets, LEFT),
             LaggedStartMap(MoveToTarget, topics),
             LaggedStartMap(FadeIn, thumbnails),
         )
@@ -577,7 +577,7 @@ class PreviewThreeVideos(Scene):
                 ApplyFunction(lambda m: set_opacity(m, 1), tn_groups[i + 1]),
             )
             self.wait(2)
-        self.play(FadeInFrom(analysis_words, 0.25 * UP))
+        self.play(FadeIn(analysis_words, 0.25 * UP))
         tn_groups[2].add(analysis_words)
         self.wait(2)
 
@@ -586,8 +586,8 @@ class PreviewThreeVideos(Scene):
             FadeOut(topics[0]),
             FadeOut(tn_groups[1]),
             FadeOut(tn_groups[2]),
-            FadeOutAndShift(vs_labels, UP),
-            FadeOutAndShift(equations, UP),
+            FadeOut(vs_labels, UP),
+            FadeOut(equations, UP),
             ApplyFunction(lambda m: set_opacity(m, 1), thumbnails[0]),
         )
         thumbnails[0].generate_target()
@@ -663,7 +663,7 @@ class LaplacesRuleOfSuccession(Scene):
         fd_label.shift_onto_screen()
 
         self.play(
-            FadeInFrom(fd_label, UP),
+            FadeIn(fd_label, UP),
             DrawBorderThenFill(fd_rect),
             ShowCreation(underlines[10:])
         )
@@ -695,7 +695,7 @@ class LaplacesRuleOfSuccession(Scene):
                 review_label[2],
                 lambda m, a: m.set_value(int(interpolate(10, 12, a)))
             ),
-            FadeInFrom(pretend_label, LEFT),
+            FadeIn(pretend_label, LEFT),
             old_review_label.scale, 0.5,
             old_review_label.set_opacity, 0.5,
             old_review_label.to_edge, LEFT,
@@ -730,7 +730,7 @@ class LaplacesRuleOfSuccession(Scene):
             MoveToTarget(old_review_label),
             FadeIn(arrow),
             eq.next_to, arrow, RIGHT,
-            FadeOutAndShift(
+            FadeOut(
                 VGroup(
                     fake_data,
                     underlines,
@@ -915,7 +915,7 @@ class LaplacesRuleOfSuccession(Scene):
 
         self.play(
             FadeInFromDown(name),
-            FadeOutAndShift(title, UP),
+            FadeOut(title, UP),
             underline.match_width, name,
         )
         self.wait()
@@ -983,8 +983,8 @@ class WhatsTheModel(Scene):
         questions.scale(1.5)
 
         # Intro questions
-        self.play(FadeInFrom(questions[0]))
-        self.play(FadeInFrom(questions[1], UP))
+        self.play(FadeIn(questions[0]))
+        self.play(FadeIn(questions[1], UP))
         self.wait()
         questions[1].save_state()
 
@@ -1056,12 +1056,12 @@ class WhatsTheModel(Scene):
 
         self.play(
             GrowFromCenter(brace),
-            FadeInFrom(success_rate, 0.5 * DOWN)
+            FadeIn(success_rate, 0.5 * DOWN)
         )
         self.wait()
         self.play(
             TransformFromCopy(success_rate[0], s_sym),
-            FadeOutAndShift(success_rate, 0.1 * RIGHT, lag_ratio=0.1),
+            FadeOut(success_rate, 0.1 * RIGHT, lag_ratio=0.1),
         )
         for x in range(2):
             self.play(*self.experience_animations(seller, buyer, arc=30 * DEGREES))
@@ -1075,9 +1075,9 @@ class WhatsTheModel(Scene):
         lil_q_marks.next_to(buyer, UP)
 
         self.play(
-            FadeOutAndShift(rhs, 0.5 * DOWN),
-            FadeInFrom(grey_box, 0.5 * UP),
-            FadeInFrom(lil_q_marks, DOWN),
+            FadeOut(rhs, 0.5 * DOWN),
+            FadeIn(grey_box, 0.5 * UP),
+            FadeIn(lil_q_marks, DOWN),
             buyer.change, "confused", grey_box,
         )
         rhs.set_opacity(0)
@@ -1345,15 +1345,15 @@ class IsSellerOne100(Scene):
             CountInFrom(decimals[0], 0),
         )
         self.wait()
-        self.play(FadeInFrom(lt_p95, LEFT))
+        self.play(FadeIn(lt_p95, LEFT))
         self.play(
             GrowArrow(arrows[0]),
-            FadeInFrom(marks[0], DOWN)
+            FadeIn(marks[0], DOWN)
         )
         self.wait()
         self.play(
-            FadeOutAndShift(lt_p95, 0.5 * RIGHT),
-            FadeInFrom(gte_p95, 0.5 * LEFT),
+            FadeOut(lt_p95, 0.5 * RIGHT),
+            FadeIn(gte_p95, 0.5 * LEFT),
         )
         self.play(
             random_label.match_x, decimals[1],
@@ -1365,7 +1365,7 @@ class IsSellerOne100(Scene):
         )
         self.play(
             GrowArrow(arrows[1]),
-            FadeInFrom(marks[1], DOWN),
+            FadeIn(marks[1], DOWN),
         )
         self.wait()
         self.play(
@@ -1532,7 +1532,7 @@ class IsSellerOne100(Scene):
                 run_time=3,
                 lag_ratio=0.25,
             ),
-            FadeOutAndShift(self.review_group, DOWN),
+            FadeOut(self.review_group, DOWN),
             prob_label_group.set_height, 0.75,
             prob_label_group.to_corner, UL,
         )
@@ -1787,12 +1787,12 @@ class AskAboutUnknownProbabilities(Scene):
         processes.suspend_updating()
         self.play(
             LaggedStart(
-                FadeOutAndShift(unknown_title, UP),
-                FadeOutAndShift(prob_title, UP),
+                FadeOut(unknown_title, UP),
+                FadeOut(prob_title, UP),
                 lag_ratio=0.2,
             ),
-            FadeOutAndShift(h_line, UP, lag_ratio=0.1),
-            FadeOutAndShift(processes, LEFT, lag_ratio=0.1),
+            FadeOut(h_line, UP, lag_ratio=0.1),
+            FadeOut(processes, LEFT, lag_ratio=0.1),
             FadeOut(prob_labels[1]),
             FadeOut(prob_labels[2]),
             v_line.rotate, 90 * DEGREES,
@@ -1811,11 +1811,11 @@ class AskAboutUnknownProbabilities(Scene):
 
         self.play(
             GrowArrow(arrow),
-            FadeInFrom(question, UP),
+            FadeIn(question, UP),
         )
         self.wait(2)
         self.play(
-            FadeOutAndShift(question, RIGHT),
+            FadeOut(question, RIGHT),
             Rotate(arrow, 90 * DEGREES),
             VFadeOut(arrow),
         )
@@ -1834,8 +1834,8 @@ class AskAboutUnknownProbabilities(Scene):
         randy.look_at(prob_half)
 
         self.play(
-            FadeOutAndShift(half, UP),
-            FadeInFrom(q_marks, DOWN),
+            FadeOut(half, UP),
+            FadeIn(q_marks, DOWN),
         )
         self.play(FadeIn(randy))
         self.play(Blink(randy))
@@ -2327,7 +2327,7 @@ class AskInverseQuestion(WhatsTheModel):
         bs_group.add(self.probability_label)
 
         self.play(
-            FadeInFrom(short_label, UP),
+            FadeIn(short_label, UP),
             bs_group.scale, 0.5, {"about_edge": DOWN},
         )
         self.play(ShowCreation(rect))
@@ -2723,7 +2723,7 @@ class ShowBinomialFormula(SimulationsOf50Reviews):
         rhs.match_y(eq)
         rhs.to_edge(RIGHT, buff=MED_SMALL_BUFF)
         self.play(
-            FadeInFrom(value, LEFT),
+            FadeIn(value, LEFT),
             FadeIn(eq2),
             equation.next_to, eq2, LEFT,
         )
@@ -2763,7 +2763,7 @@ class ShowBinomialFormula(SimulationsOf50Reviews):
         self.play(
             long_equation.next_to, self.slots, DOWN, MED_LARGE_BUFF,
             long_equation.to_edge, RIGHT,
-            FadeInFrom(bin_name, DOWN),
+            FadeIn(bin_name, DOWN),
         )
         self.wait()
         self.play(ShowCreationThenDestruction(underline))
@@ -2807,14 +2807,14 @@ class ShowBinomialFormula(SimulationsOf50Reviews):
         posterior_label.next_to(right_arrow, RIGHT)
 
         self.play(
-            FadeInFrom(likelihood_label, UP),
+            FadeIn(likelihood_label, UP),
             bin_name.set_height, 0.4,
             bin_name.set_y, histogram.axes.c2p(0, .25)[1]
         )
         self.wait()
         self.play(
             GrowArrow(right_arrow),
-            FadeInFrom(ra_label, 0.5 * LEFT),
+            FadeIn(ra_label, 0.5 * LEFT),
         )
         anims = []
         for i, j in enumerate([0, 3, 2, 1, 4]):
@@ -2838,8 +2838,8 @@ class ShowBinomialFormula(SimulationsOf50Reviews):
             FadeOut(posterior_label),
             FadeOut(right_arrow),
             FadeOut(ra_label),
-            FadeOutAndShift(row, UP),
-            FadeOutAndShift(self.slots, UP),
+            FadeOut(row, UP),
+            FadeOut(self.slots, UP),
             histogram.scale, 0.7,
             histogram.to_edge, UP,
             arrow.scale, 0.5,
@@ -3339,7 +3339,7 @@ class IllustrateBinomialSetupWithCoins(Scene):
         self.play(
             ShowIncreasingSubsets(coin_row, int_func=np.ceil),
             GrowFromPoint(brace, brace.get_left()),
-            FadeInFrom(brace_label, 3 * LEFT)
+            FadeIn(brace_label, 3 * LEFT)
         )
         self.wait()
         self.play(FadeIn(prob_label, lag_ratio=0.1))
@@ -3510,7 +3510,7 @@ class LikelihoodGraphFor10of10(ShowBinomialFormula):
         self.play(
             FadeIn(rects),
             GrowFromCenter(brace),
-            FadeInFrom(simpler_formula, UP)
+            FadeIn(simpler_formula, UP)
         )
         self.wait()
 
@@ -3602,7 +3602,7 @@ class StateNeedForBayesRule(TeacherStudentsScene):
                 ApplyMethod(student1.change, "pondering", plot),
                 ApplyMethod(student2.change, "raise_left_hand", plot),
             ),
-            FadeInFrom(plot, DOWN),
+            FadeIn(plot, DOWN),
             run_time=1.5
         )
         self.play(*map(ShowCreation, v_lines))
@@ -3626,8 +3626,8 @@ class StateNeedForBayesRule(TeacherStudentsScene):
         self.teacher_says(
             "But first...",
             added_anims=[
-                FadeOutAndShift(plot, LEFT),
-                FadeOutAndShift(v_lines, LEFT),
+                FadeOut(plot, LEFT),
+                FadeOut(v_lines, LEFT),
                 self.get_student_changes(
                     "erm", "erm", "erm",
                     look_at_arg=self.teacher.eyes,

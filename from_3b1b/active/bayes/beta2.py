@@ -89,7 +89,7 @@ class WeightedCoin(Scene):
 
             self.wait()
             self.play(
-                FadeOutAndShift(
+                FadeOut(
                     old_grid,
                     0.1 * DOWN,
                     lag_ratio=0.01,
@@ -118,7 +118,7 @@ class WeightedCoin(Scene):
         self.remove(rhs)
         self.play(
             FadeOut(old_grid, lag_ratio=0.1),
-            FadeOutAndShift(long_rhs, 0.1 * RIGHT, lag_ratio=0.1),
+            FadeOut(long_rhs, 0.1 * RIGHT, lag_ratio=0.1),
             Write(box),
         )
         p_label.add(box)
@@ -437,7 +437,7 @@ class LabelH(Scene):
         self.play(ShowCreationThenFadeAround(p_label))
         self.play(
             GrowFromCenter(brace),
-            FadeInFrom(h, UP),
+            FadeIn(h, UP),
         )
         self.wait()
 
@@ -498,7 +498,7 @@ class TryAssigningProbabilitiesToSpecificValues(Scene):
 
         # Animations
         self.play(FadeInFromDown(labels[0]))
-        self.play(FadeInFrom(q_marks[0], LEFT))
+        self.play(FadeIn(q_marks[0], LEFT))
         self.wait()
         self.play(*[
             TransformFromCopy(m1, m2)
@@ -590,8 +590,8 @@ class TryAssigningProbabilitiesToSpecificValues(Scene):
         )
         self.wait()
         self.play(
-            FadeInFrom(zero, DOWN),
-            FadeOutAndShift(infty, UP),
+            FadeIn(zero, DOWN),
+            FadeOut(infty, UP),
             morty.change, "sad", zero
         )
         self.play(Blink(morty))
@@ -744,14 +744,14 @@ class ShowLimitToPdf(Scene):
         ineq_label.next_to(brace, UP)
 
         self.play(
-            FadeInFrom(eq_label, 0.2 * DOWN),
+            FadeIn(eq_label, 0.2 * DOWN),
             GrowArrow(arrows[0]),
         )
         self.wait()
         vect = eq_label.get_center() - ineq_label.get_center()
         self.play(
-            FadeOutAndShift(eq_label, -vect),
-            FadeInFrom(ineq_label, vect),
+            FadeOut(eq_label, -vect),
+            FadeIn(ineq_label, vect),
             TransformFromCopy(*arrows),
             GrowFromPoint(brace, brace.get_left()),
         )
@@ -825,12 +825,12 @@ class ShowLimitToPdf(Scene):
         self.add(height_word)
         self.play(
             ShowCreation(height_cross),
-            FadeOutAndShift(axis_prob_label, LEFT)
+            FadeOut(axis_prob_label, LEFT)
         )
         self.wait()
         self.play(
-            FadeOutAndShift(height_word, UP),
-            FadeOutAndShift(height_cross, UP),
+            FadeOut(height_word, UP),
+            FadeOut(height_cross, UP),
             FadeInFromDown(area_word),
         )
         self.play(
@@ -913,8 +913,8 @@ class ShowLimitToPdf(Scene):
                     lag_ratio=step_size,
                 ),
                 MoveToTarget(arrow),
-                FadeOutAndShift(last_ineq_label, vect),
-                FadeInFrom(new_ineq_label, -vect),
+                FadeOut(last_ineq_label, vect),
+                FadeIn(new_ineq_label, -vect),
                 run_time=2,
             )
             last_ineq_label = new_ineq_label
@@ -1025,9 +1025,9 @@ class ShowLimitToPdf(Scene):
             FadeOut(limit_words),
             FadeOut(graph),
             FadeIn(bars),
-            FadeOutAndShift(area_word, UP),
-            FadeInFrom(height_word, DOWN),
-            FadeInFrom(new_y_numbers, 0.5 * RIGHT),
+            FadeOut(area_word, UP),
+            FadeIn(height_word, DOWN),
+            FadeIn(new_y_numbers, 0.5 * RIGHT),
         )
 
         # Height refine
@@ -1061,13 +1061,13 @@ class ShowLimitToPdf(Scene):
         # Back to area
         self.play(
             FadeIn(graph),
-            FadeInFrom(area_word, 0.5 * DOWN),
-            FadeOutAndShift(height_word, 0.5 * UP),
+            FadeIn(area_word, 0.5 * DOWN),
+            FadeOut(height_word, 0.5 * UP),
             FadeOut(new_y_numbers, lag_ratio=0.2),
         )
         self.play(
             arrow.scale, 0, {"about_edge": DOWN},
-            FadeOutAndShift(to_zero_words, DOWN),
+            FadeOut(to_zero_words, DOWN),
             LaggedStartMap(FadeOutAndShiftDown, all_ineq_labels),
             LaggedStartMap(FadeOutAndShiftDown, rhss),
         )
@@ -1152,7 +1152,7 @@ class ShowLimitToPdf(Scene):
         total_label.set_height(0.5)
         total_label.next_to(bars, UP, LARGE_BUFF)
 
-        self.play(FadeInFrom(total_label, DOWN))
+        self.play(FadeIn(total_label, DOWN))
         bars.save_state()
         self.play(
             bars.arrange, RIGHT, {"aligned_edge": DOWN, "buff": SMALL_BUFF},
@@ -1256,7 +1256,7 @@ class ShowLimitToPdf(Scene):
         rhs.next_to(p_label, RIGHT)
 
         self.play(
-            FadeInFrom(p_label, 2 * DOWN),
+            FadeIn(p_label, 2 * DOWN),
             *map(ShowCreation, v_lines),
         )
         self.wait()
@@ -1740,7 +1740,7 @@ class SumToIntegral(Scene):
         self.add(i_sym)
         self.wait()
         self.play(
-            FadeOutAndShift(arrow, UP),
+            FadeOut(arrow, UP),
             syms.next_to, h_line, DOWN, {"buff": MED_LARGE_BUFF},
             syms.match_x, syms,
         )
@@ -1801,9 +1801,9 @@ class SumToIntegral(Scene):
         # Focus on integral
         self.play(
             Uncreate(VGroup(v_line, h_line)),
-            FadeOutAndShift(titles, UP),
-            FadeOutAndShift(morty, RIGHT),
-            FadeOutAndShift(s_sym, LEFT),
+            FadeOut(titles, UP),
+            FadeOut(morty, RIGHT),
+            FadeOut(s_sym, LEFT),
             i_sym.center,
             i_sym.to_edge, LEFT
         )
@@ -1926,7 +1926,7 @@ class MeasureTheoryLeadsTo(Scene):
         arrow.set_stroke(width=7)
         arrow.rotate(45 * DEGREES, about_point=arrow.get_start())
         self.play(
-            FadeInFrom(words, DOWN),
+            FadeIn(words, DOWN),
             GrowArrow(arrow),
             UpdateFromAlphaFunc(arrow, lambda m, a: m.set_opacity(a)),
         )
@@ -1985,9 +1985,9 @@ class PossibleYetProbabilityZero(Scene):
 
         self.play(Write(poss, run_time=0.5))
         self.wait()
-        self.play(FadeInFrom(prob, UP))
+        self.play(FadeIn(prob, UP))
         self.wait()
-        self.play(FadeInFrom(total, UP))
+        self.play(FadeIn(total, UP))
         self.wait()
 
 
@@ -2009,7 +2009,7 @@ class TiePossibleToDensity(Scene):
 
         self.add(poss)
         self.play(
-            FadeInFrom(prob, LEFT),
+            FadeIn(prob, LEFT),
             Write(implies, run_time=1)
         )
         self.wait()

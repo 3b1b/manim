@@ -194,6 +194,11 @@ class TexturedSurface(ParametricSurface):
         self.opacity = self.uv_surface.rgbas[:, 3]
         self.gloss = self.uv_surface.gloss
 
+    def interpolate_color(self, mobject1, mobject2, alpha):
+        # TODO, handle multiple textures
+        self.opacity = interpolate(mobject1.opacity, mobject2.opacity, alpha)
+        return self
+
     def set_opacity(self, opacity, family=True):
         self.opacity = opacity
         if family:

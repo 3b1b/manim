@@ -101,8 +101,8 @@ class HeatEquationIntroTitle(WriteHeatEquationTemplate):
         equation.set_color_by_tex("{T}", RED)
 
         self.play(
-            FadeInFrom(title, DOWN),
-            FadeInFrom(equation, UP),
+            FadeIn(title, DOWN),
+            FadeIn(equation, UP),
         )
         self.wait()
 
@@ -207,9 +207,9 @@ class FourierSeriesIntro(WriteHeatEquationTemplate):
         self.wait()
         self.add(rot_square)
         self.play(
-            FadeInFrom(physics, RIGHT),
+            FadeIn(physics, RIGHT),
             GrowArrow(arrow2),
-            FadeInFrom(heat, RIGHT),
+            FadeIn(heat, RIGHT),
             GrowArrow(arrow1),
             MoveToTarget(title),
         )
@@ -273,7 +273,7 @@ class ShowPartialDerivativeSymbols(Scene):
         ]))
 
         dTdx.to_edge(UP)
-        self.play(FadeInFrom(dTdx, DOWN))
+        self.play(FadeIn(dTdx, DOWN))
         self.wait()
         self.play(ShowCreationThenFadeAround(dTdx[3:5]))
         self.play(ShowCreationThenFadeAround(dTdx[:2]))
@@ -384,8 +384,8 @@ class WriteHeatEquation(WriteHeatEquationTemplate):
         del_outlines.set_fill(opacity=0)
 
         self.play(
-            FadeInFrom(title, 0.5 * DOWN),
-            FadeInFrom(equation, 0.5 * UP),
+            FadeIn(title, 0.5 * DOWN),
+            FadeIn(equation, 0.5 * UP),
         )
         self.wait()
         self.play(ShowCreation(dt_rect))
@@ -402,8 +402,8 @@ class WriteHeatEquation(WriteHeatEquationTemplate):
             )
         )
         self.play(
-            FadeOutAndShift(title, UP),
-            FadeInFrom(pde, DOWN),
+            FadeOut(title, UP),
+            FadeIn(pde, DOWN),
             FadeOut(dt_rect),
             FadeOut(dx_rect),
         )
@@ -462,13 +462,13 @@ class Show1DAnd3DEquations(WriteHeatEquationTemplate):
 
         self.play(
             Write(d1_words),
-            FadeInFrom(d1_equation, UP),
+            FadeIn(d1_equation, UP),
             run_time=1,
         )
         self.wait(2)
         self.play(
             Restore(d1_group),
-            FadeInFrom(d3_group, LEFT)
+            FadeIn(d3_group, LEFT)
         )
         self.wait()
         self.play(
@@ -576,7 +576,7 @@ class ShowLaplacian(WriteHeatEquation):
         for part in parts[1:]:
             self.play(
                 rp.become, part.rp,
-                FadeInFrom(part, LEFT),
+                FadeIn(part, LEFT),
                 Write(part.plus),
                 ShowCreation(part.rect),
             )
@@ -640,10 +640,10 @@ class AskAboutActuallySolving(WriteHeatEquationTemplate):
             FadeInFromDown(q2),
             q1.shift, 1.5 * UP,
         )
-        self.play(FadeInFrom(formula, UP))
+        self.play(FadeIn(formula, UP))
         self.play(
             GrowArrow(arrow),
-            FadeInFrom(q3, LEFT)
+            FadeIn(q3, LEFT)
         )
         self.wait()
 

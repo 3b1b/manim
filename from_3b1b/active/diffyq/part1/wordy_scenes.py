@@ -30,7 +30,7 @@ class SmallAngleApproximationTex(Scene):
         self.add(approx, approx_brace, approx_words)
         self.play(
             Write(implies),
-            FadeInFrom(period, LEFT)
+            FadeIn(period, LEFT)
         )
         self.wait()
 
@@ -47,7 +47,7 @@ class StrogatzQuote(Scene):
             disc.move_to(mover)
             mover.become(disc)
         self.play(
-            FadeInFrom(quote.author_part, LEFT),
+            FadeIn(quote.author_part, LEFT),
             LaggedStartMap(
                 # FadeInFromLarge,
                 # quote[:-1].family_members_with_points(),
@@ -151,7 +151,7 @@ class InputLabel(Scene):
         arrow = Vector(UP)
         arrow.next_to(label, UP)
         self.play(
-            FadeInFrom(label, UP),
+            FadeIn(label, UP),
             GrowArrow(arrow)
         )
         self.wait()
@@ -272,19 +272,19 @@ class ReasonForSolution(Scene):
         self.add(eq_word)
         self.add(equation)
         self.play(
-            FadeInFrom(s_word, LEFT),
+            FadeIn(s_word, LEFT),
             GrowArrow(arrows[0]),
             TransformFromCopy(equation, solution)
         )
         self.wait()
         self.play(
-            FadeInFrom(c_word, UL),
+            FadeIn(c_word, UL),
             GrowArrow(arrows[2]),
-            FadeInFrom(computation, UP)
+            FadeIn(computation, UP)
         )
         self.wait()
         self.play(
-            FadeInFrom(u_word, DL),
+            FadeIn(u_word, DL),
             GrowArrow(arrows[1]),
             FadeInFromDown(graph)
         )
@@ -357,8 +357,8 @@ class GleickQuote(Scene):
         quote.to_edge(UP)
 
         self.play(
-            FadeInFrom(book, RIGHT),
-            FadeInFrom(gleick, LEFT),
+            FadeIn(book, RIGHT),
+            FadeIn(gleick, LEFT),
         )
         self.wait()
         self.play(Write(quote))
@@ -448,7 +448,7 @@ class SetAsideSeekingSolution(Scene):
             q1.scale, 0.3,
             q1.to_corner, UR, MED_SMALL_BUFF,
         )
-        self.play(FadeInFrom(q2, DOWN))
+        self.play(FadeIn(q2, DOWN))
         self.play(
             eyes.blink,
             rate_func=lambda t: smooth(1 - t),
@@ -698,8 +698,8 @@ class RevisitQuote(StrogatzQuote, PiCreatureScene):
         randy = self.pi_creature
 
         self.play(
-            FadeInFrom(quote[:-1], DOWN),
-            FadeInFrom(quote[-1:], LEFT),
+            FadeIn(quote[:-1], DOWN),
+            FadeIn(quote[-1:], LEFT),
             randy.change, "raise_right_hand",
         )
         self.play(Blink(randy))

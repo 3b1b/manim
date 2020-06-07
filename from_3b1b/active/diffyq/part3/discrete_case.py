@@ -92,7 +92,7 @@ class ShowNewRuleAtDiscreteBoundary(DiscreteSetup):
         self.play(
             LaggedStartMap(ShowCreation, arrows),
             LaggedStart(*[
-                FadeInFrom(q_mark, -arrow.get_vector())
+                FadeIn(q_mark, -arrow.get_vector())
                 for q_mark, arrow in zip(q_marks, arrows)
             ]),
             run_time=1.5
@@ -126,7 +126,7 @@ class ShowNewRuleAtDiscreteBoundary(DiscreteSetup):
             ReplacementTransform(*blocking_rects)
         )
         self.wait()
-        self.play(FadeInFrom(braces, UP))
+        self.play(FadeIn(braces, UP))
         self.wait()
         self.play(
             FadeOut(new_arrows),

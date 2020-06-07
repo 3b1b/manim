@@ -198,7 +198,7 @@ class ShowEmergingEllipse(Scene):
 
         self.play(ShowCreation(circle))
         self.play(
-            FadeInFrom(e_dot, LEFT),
+            FadeIn(e_dot, LEFT),
             Write(eccentric_words, run_time=1)
         )
         self.wait()
@@ -2772,7 +2772,7 @@ class FeynmanRecountingNewton(Scene):
         )
         self.wait()
         self.play(*[
-            FadeInFrom(
+            FadeIn(
                 mob, direction=3 * LEFT
             )
             for mob in (principia, principia.rect)

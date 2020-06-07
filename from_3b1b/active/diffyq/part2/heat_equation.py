@@ -253,11 +253,11 @@ class BringTwoRodsTogether(Scene):
             rod.label = label
 
         self.play(
-            FadeInFrom(rod1, UP),
+            FadeIn(rod1, UP),
             Write(rod1.label),
         )
         self.play(
-            FadeInFrom(rod2, DOWN),
+            FadeIn(rod2, DOWN),
             Write(rod2.label)
         )
         self.wait()
@@ -612,7 +612,7 @@ class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows, SpecialThreeDScene
         self.play(LaggedStart(*[
             Succession(
                 FadeInFromLarge(q_mark),
-                FadeOutAndShift(q_mark, DOWN),
+                FadeOut(q_mark, DOWN),
             )
             for q_mark in q_marks
         ]))
@@ -651,7 +651,7 @@ class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows, SpecialThreeDScene
 
         self.play(
             rod.set_opacity, 0.5,
-            FadeInFrom(x_axis_label, UL),
+            FadeIn(x_axis_label, UL),
             LaggedStartMap(
                 FadeInFrom, x_numbers,
                 lambda m: (m, UP),
@@ -705,7 +705,7 @@ class TalkThrough1DHeatGraph(ShowEvolvingTempGraphWithArrows, SpecialThreeDScene
         )
 
         self.play(
-            FadeInFrom(triangle, UP),
+            FadeIn(triangle, UP),
             FadeIn(x_label),
             FadeIn(rod_piece),
             FadeOut(self.rod_word),
@@ -1135,12 +1135,12 @@ class ContrastXChangesToTChanges(TalkThrough1DHeatGraph):
 
         self.play(
             ShowCreation(dx_line),
-            FadeInFrom(dx, LEFT)
+            FadeIn(dx, LEFT)
         )
         self.wait()
         self.play(
             ShowCreation(dT_line),
-            FadeInFrom(dT, IN)
+            FadeIn(dT, IN)
         )
         self.wait()
         self.play(*map(FadeOut, [
@@ -1186,7 +1186,7 @@ class ContrastXChangesToTChanges(TalkThrough1DHeatGraph):
                 graph.copy(),
                 remover=True
             ),
-            FadeInFrom(plane, 6 * DOWN, run_time=2),
+            FadeIn(plane, 6 * DOWN, run_time=2),
             VFadeIn(line),
             ApplyMethod(
                 alpha_tracker.set_value, 1,
@@ -1358,7 +1358,7 @@ class ShowDelTermsAsTinyNudges(TransitionToTempVsTime):
         )
         for sym in reversed(syms):
             self.play(
-                FadeInFrom(sym, -sym.direction),
+                FadeIn(sym, -sym.direction),
                 ShowCreation(
                     sym.line.copy(),
                     remover=True
@@ -1433,7 +1433,7 @@ class ShowDelTermsAsTinyNudges(TransitionToTempVsTime):
         )
         for sym in reversed(syms):
             self.play(
-                FadeInFrom(sym, -sym.direction),
+                FadeIn(sym, -sym.direction),
                 ShowCreation(
                     sym.line.copy(),
                     remover=True
@@ -1725,10 +1725,10 @@ class DiscreteSetup(ShowEvolvingTempGraphWithArrows):
         self.play(
             dot.scale, 0,
             dot.set_opacity, 0,
-            FadeInFrom(point_label, DOWN)
+            FadeIn(point_label, DOWN)
         )
         self.play(
-            FadeInFrom(neighbors_label, DOWN),
+            FadeIn(neighbors_label, DOWN),
             *map(GrowArrow, arrows)
         )
         self.wait()
@@ -2161,8 +2161,8 @@ class DiscreteSetup(ShowEvolvingTempGraphWithArrows):
         second_difference_word.next_to(delta_delta, DOWN)
 
         self.play(
-            FadeOutAndShift(dd_word, UP),
-            FadeInFrom(delta_delta, UP),
+            FadeOut(dd_word, UP),
+            FadeIn(delta_delta, UP),
         )
         self.wait()
         self.play(
@@ -2381,7 +2381,7 @@ class TransitionToContinuousCase(DiscreteSetup):
 
         self.play(
             ShowCreation(VGroup(dx_line, dT_line)),
-            FadeInFrom(delta_T, LEFT)
+            FadeIn(delta_T, LEFT)
         )
         self.play(
             GrowFromCenter(brace),
@@ -2828,7 +2828,7 @@ class ShowNewtonsLawGraph(Scene):
         room_words.next_to(room_line, DOWN, SMALL_BUFF)
 
         self.play(
-            FadeInFrom(water_dot, RIGHT),
+            FadeIn(water_dot, RIGHT),
             GrowArrow(water_arrow),
             Write(water_words),
             run_time=1,

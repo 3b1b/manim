@@ -21,8 +21,8 @@ class WrapperScene(Scene):
         self.add(big_rect, screen_rect)
         self.play(
             FadeIn(big_rect),
-            FadeInFrom(title, DOWN),
-            FadeInFrom(screen_rect, UP),
+            FadeIn(title, DOWN),
+            FadeIn(screen_rect, UP),
         )
         self.wait()
 
@@ -513,7 +513,7 @@ class FinalFormula(Scene):
         group.to_edge(UP)
 
         self.play(Write(text))
-        self.play(FadeInFrom(formula))
+        self.play(FadeIn(formula))
         self.play(ShowCreationThenFadeAround(formula))
         self.wait()
 

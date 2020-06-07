@@ -594,7 +594,7 @@ class ShowExampleHit(HyperdartScene):
         self.play(
             circle.set_color, DARK_GREY,
             TransformFromCopy(chord, chord_copy),
-            FadeInFrom(new_diam_word, UP)
+            FadeIn(new_diam_word, UP)
         )
         self.play(
             Rotate(chord_copy, PI),
@@ -2056,7 +2056,7 @@ class ExpectedValueFromBars(HistogramScene):
         self.add(mean_label)
         self.play(
             mean_label[1:].shift, LEFT,
-            FadeInFrom(equation, LEFT)
+            FadeIn(equation, LEFT)
         )
 
         p_parts = VGroup()
@@ -2140,7 +2140,7 @@ class ProbabilitySGtOne(HistogramScene):
             bars[0].set_opacity, 0.2,
             bars[1:].set_opacity, 0.8,
             ShowCreationThenFadeOut(outlines),
-            FadeInFrom(label, LEFT),
+            FadeIn(label, LEFT),
         )
         self.wait()
 
@@ -2174,7 +2174,7 @@ class ProbabilitySGtOne(HistogramScene):
 
         self.play(
             label.shift, shift_val,
-            FadeInFrom(rhs, LEFT)
+            FadeIn(rhs, LEFT)
         )
         self.wait()
 
@@ -2223,7 +2223,7 @@ class ProbabilitySGtOne(HistogramScene):
 
         self.play(
             MoveToTarget(new_label),
-            FadeInFrom(new_rhs, LEFT)
+            FadeIn(new_rhs, LEFT)
         )
         self.wait()
 
@@ -2372,7 +2372,7 @@ class VolumsOfNBalls(Scene):
         self.wait()
         self.play(
             FadeOut(braces[:3]),
-            FadeInFrom(gen_form, UP),
+            FadeIn(gen_form, UP),
         )
         self.wait()
 
@@ -2522,7 +2522,7 @@ class IntroduceGame(HyperdartScene):
         self.add(radius, self.circle_center_dot)
         self.play(
             ShowCreation(radius),
-            FadeInFrom(radius_label, RIGHT),
+            FadeIn(radius_label, RIGHT),
             FadeIn(self.circle_center_dot),
         )
         self.play(
@@ -2588,7 +2588,7 @@ class IntroduceGame(HyperdartScene):
         point = 0.2 * circle.point_from_proportion(3 / 8)
         self.play(
             FadeInFromDown(new_label),
-            FadeOutAndShift(label, UP),
+            FadeOut(label, UP),
         )
         self.show_full_hit_process(point)
         self.wait()
@@ -2666,8 +2666,8 @@ class ShowScoring(HyperdartScene):
         new_score = score.copy()
         new_score.increment_value(1)
         self.play(
-            FadeOutAndShift(score, UP),
-            FadeInFrom(new_score, DOWN),
+            FadeOut(score, UP),
+            FadeIn(new_score, DOWN),
             run_time=1,
         )
         self.remove(new_score)
@@ -2718,8 +2718,8 @@ class ShowSeveralRounds(ShowScoring):
         new_score.set_value(0)
         self.play(
             self.circle.match_width, self.square,
-            FadeOutAndShift(score, UP),
-            FadeInFrom(new_score, DOWN),
+            FadeOut(score, UP),
+            FadeIn(new_score, DOWN),
         )
         score.set_value(0)
         self.add(score)
@@ -2804,7 +2804,7 @@ class ShowUniformDistribution(HyperdartScene):
     def exchange_titles(self):
         self.play(
             FadeInFromDown(self.new_title),
-            FadeOutAndShift(self.title, UP),
+            FadeOut(self.title, UP),
         )
 
 
@@ -2821,6 +2821,6 @@ class ExpectedScoreEqualsQMark(Scene):
 
         self.play(Write(equation))
         self.wait(2)
-        self.play(FadeInFrom(aka, UP))
+        self.play(FadeIn(aka, UP))
         self.wait()
 

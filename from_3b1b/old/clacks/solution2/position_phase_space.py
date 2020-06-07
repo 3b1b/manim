@@ -1128,7 +1128,7 @@ class FailedAngleRelation(PositionPhaseSpaceScene):
 
         for arc in arcs:
             self.play(
-                FadeInFrom(arc.word, LEFT),
+                FadeIn(arc.word, LEFT),
                 GrowArrow(arc.arrow, path_arc=arc.arrow.path_arc),
             )
             self.play(
@@ -1556,13 +1556,13 @@ class IntroduceVelocityVector(PositionPhaseSpaceScene, MovingCameraScene):
             TransformFromCopy(ps_vect, x_vect),
             ShowCreation(x_line),
         )
-        self.play(FadeInFrom(dx_label, 0.25 * DOWN))
+        self.play(FadeIn(dx_label, 0.25 * DOWN))
         self.wait()
         self.play(
             TransformFromCopy(ps_vect, y_vect),
             ShowCreation(y_line),
         )
-        self.play(FadeInFrom(dy_label, 0.25 * LEFT))
+        self.play(FadeIn(dy_label, 0.25 * LEFT))
         self.wait()
 
         # Ask about dx_dt
@@ -1742,11 +1742,11 @@ class IntroduceVelocityVector(PositionPhaseSpaceScene, MovingCameraScene):
         self.wait()
         self.play(Write(rhs[1:]))
         self.wait()
-        self.play(FadeInFrom(new_rhs, UP))
+        self.play(FadeIn(new_rhs, UP))
         for equation in self.derivative_equations:
             self.play(ShowCreationThenFadeAround(equation))
         self.wait()
-        self.play(FadeInFrom(final_rhs, UP))
+        self.play(FadeIn(final_rhs, UP))
         self.wait()
 
     def let_process_play_out(self):
@@ -1995,7 +1995,7 @@ class ShowMomentumConservation(IntroduceVelocityVector):
         question.set_background_stroke(color=BLACK, width=3)
         question.next_to(self.ps_point, UP)
 
-        self.play(FadeInFrom(question, DOWN))
+        self.play(FadeIn(question, DOWN))
         ps_vect.suspend_updating()
         angles = [0.75 * PI, -0.5 * PI, -0.25 * PI]
         for last_angle, angle in zip(np.cumsum([0] + angles), angles):

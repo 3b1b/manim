@@ -179,7 +179,7 @@ class SphereRings(SecondProof):
                 ring.set_fill, {"opacity": 0.5},
                 ring.set_stroke, {"opacity": 0.1},
                 ShowCreation(R_line),
-                FadeInFrom(R_label, IN),
+                FadeIn(R_label, IN),
             ]
         )
         self.wait()
@@ -191,7 +191,7 @@ class SphereRings(SecondProof):
         self.wait()
         self.play(
             ShowCreation(r_line),
-            FadeInFrom(r_label, IN),
+            FadeIn(r_label, IN),
         )
         self.wait()
         self.move_camera(
@@ -267,7 +267,7 @@ class IntegralSymbols(Scene):
         self.add(int_sign)
         self.play(
             GrowFromCenter(area_brace),
-            FadeInFrom(area_text, UP),
+            FadeIn(area_text, UP),
         )
         self.wait()
         self.play(FadeInFromDown(circumference))
@@ -283,7 +283,7 @@ class IntegralSymbols(Scene):
             circumference.shift, SMALL_BUFF * UR,
             GrowFromCenter(circum_brace),
         )
-        self.play(FadeInFrom(circum_formula, UP))
+        self.play(FadeIn(circum_formula, UP))
         self.wait()
         self.play(
             thickness.next_to, circumference, RIGHT, MED_SMALL_BUFF,
@@ -291,7 +291,7 @@ class IntegralSymbols(Scene):
             area_brace.stretch, 0.84, 0, {"about_edge": LEFT},
             MaintainPositionRelativeTo(area_text, area_brace),
         )
-        self.play(FadeInFrom(R_dtheta, UP))
+        self.play(FadeIn(R_dtheta, UP))
         self.wait()
         self.play(ReplacementTransform(all_rings, bounds))
         self.wait()
@@ -308,7 +308,7 @@ class IntegralSymbols(Scene):
         one = TexMobject("1")
         one.move_to(q_marks)
 
-        self.play(FadeInFrom(rhs, 4 * LEFT))
+        self.play(FadeIn(rhs, 4 * LEFT))
         self.wait()
         self.play(ShowCreationThenFadeAround(rhs[1]))
         self.wait()

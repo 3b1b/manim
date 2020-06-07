@@ -62,7 +62,7 @@ class ThreeMainObservations(Scene):
         )
         self.wait()
         for obs in observations:
-            self.play(FadeInFrom(obs[1], LEFT))
+            self.play(FadeIn(obs[1], LEFT))
             self.wait()
 
 
@@ -138,7 +138,7 @@ class ThreeConstraints(WriteHeatEquationTemplate):
 
         self.play(
             FadeInFromDown(title),
-            FadeOutAndShift(to_remove, UP),
+            FadeOut(to_remove, UP),
             equation.scale, 0.6,
             equation.next_to, items[0], DOWN,
             equation.shift_onto_screen,
@@ -151,7 +151,7 @@ class ThreeConstraints(WriteHeatEquationTemplate):
         self.wait()
         self.play(Write(items[1][1]))
         bc_paren.match_y(equation)
-        self.play(FadeInFrom(bc_paren, UP))
+        self.play(FadeIn(bc_paren, UP))
         self.wait(2)
         self.play(Write(items[2][1]))
         self.wait(2)
@@ -229,7 +229,7 @@ class SeekIdealized(Scene):
             words[0].to_edge, DOWN,
             words[0].set_opacity, 0.5,
             Transform(phrase, phrases[1]),
-            FadeInFrom(words[1], UP)
+            FadeIn(words[1], UP)
         )
         self.wait()
         # self.play(
@@ -244,7 +244,7 @@ class SeekIdealized(Scene):
             MaintainPositionRelativeTo(
                 phrase, words[1]
             ),
-            FadeInFrom(solutions, LEFT),
+            FadeIn(solutions, LEFT),
             FadeIn(words[3]),
         )
         self.wait()
@@ -259,7 +259,7 @@ class SeekIdealized(Scene):
         self.play(
             MoveToTarget(words[0]),
             ShowCreation(low_arrow),
-            FadeInFrom(models, LEFT)
+            FadeIn(models, LEFT)
         )
         self.wait()
 
@@ -308,8 +308,8 @@ class EquationAboveSineAnalysis(WriteHeatEquationTemplate):
         self.play(ShowCreationThenFadeAround(rhs))
         self.wait()
         self.play(
-            FadeOutAndShift(t_terms, UP),
-            FadeInFrom(zeros, DOWN),
+            FadeOut(t_terms, UP),
+            FadeIn(zeros, DOWN),
         )
         t_terms.fade(1)
         self.wait()
@@ -353,8 +353,8 @@ class ExpVideoWrapper(Scene):
 
         screen.center()
         self.play(
-            # FadeInFrom(title, LEFT),
-            FadeInFrom(screen, DOWN),
+            # FadeIn(title, LEFT),
+            FadeIn(screen, DOWN),
         )
         self.wait()
 
@@ -413,7 +413,7 @@ class ShowSinExpDerivatives(WriteHeatEquationTemplate):
         self.wait()
         self.play(
             MoveToTarget(pde),
-            FadeInFrom(new_rhs, LEFT)
+            FadeIn(new_rhs, LEFT)
         )
         self.wait()
         self.play(
@@ -610,7 +610,7 @@ class ShowSinExpDerivatives(WriteHeatEquationTemplate):
         checkmark.move_to(q_mark, DOWN)
         self.play(
             FadeInFromDown(checkmark),
-            FadeOutAndShift(q_mark, UP)
+            FadeOut(q_mark, UP)
         )
         self.wait()
 
@@ -737,8 +737,8 @@ class WriteOutBoundaryCondition(FlatAtBoundaryWords, ThreeConstraints, MovingCam
             VGroup(self.items[0], self.pde)
         ))
         self.play(
-            FadeOutAndShift(bc_paren, UP),
-            FadeInFrom(bc_words, DOWN),
+            FadeOut(bc_paren, UP),
+            FadeIn(bc_words, DOWN),
         )
         self.wait()
 
@@ -758,7 +758,7 @@ class WriteOutBoundaryCondition(FlatAtBoundaryWords, ThreeConstraints, MovingCam
         self.play(
             self.camera_frame.shift, 0.8 * DOWN,
         )
-        self.play(FadeInFrom(equation, UP))
+        self.play(FadeIn(equation, UP))
         self.wait()
 
 
@@ -891,7 +891,7 @@ class WorryAboutGenerality(TeacherStudentsScene, WriteHeatEquationTemplate):
             self.get_student_changes(*3 * ["pondering"]),
         )
         self.play(
-            FadeInFrom(themes, UP),
+            FadeIn(themes, UP),
             self.get_student_changes(*3 * ["thinking"]),
             self.teacher.change, "happy"
         )

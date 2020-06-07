@@ -2061,7 +2061,7 @@ class PlugObserverIntoPolynomial(DistanceProductScene):
         ]
 
         self.play(
-            FadeInFrom(observer, direction=-vect),
+            FadeIn(observer, direction=-vect),
             GrowArrow(arrow)
         )
         self.play(Write(full_name))
@@ -4181,7 +4181,7 @@ class HowThisArgumentRequiresCommunitingLimits(PiCreatureScene):
         )
         self.play(
             GrowArrow(result_limit_arrow),
-            FadeInFrom(result_limit, direction=UP),
+            FadeIn(result_limit, direction=UP),
             morty.change, "confused",
         )
         self.wait(2)
@@ -4447,7 +4447,7 @@ class DelicacyInIntermixingSeries(Scene):
         for product in products:
             self.play(
                 GrowArrow(product.arrow),
-                FadeInFrom(product.limit, direction=LEFT)
+                FadeIn(product.limit, direction=LEFT)
             )
             self.wait()
         self.play(
@@ -4518,7 +4518,7 @@ class DelicacyInIntermixingSeries(Scene):
         )
         self.play(
             GrowArrow(new_arrow),
-            FadeInFrom(new_limit, LEFT),
+            FadeIn(new_limit, LEFT),
             bottom_product.parts[3:].fade, 1,
         )
         self.play(FadeIn(randy))

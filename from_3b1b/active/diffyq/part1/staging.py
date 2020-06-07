@@ -79,7 +79,7 @@ class AirResistanceBrace(Scene):
         brace = Brace(Line(ORIGIN, RIGHT), DOWN)
         word = TextMobject("Air resistance")
         word.next_to(brace, DOWN)
-        self.play(GrowFromCenter(brace), FadeInFrom(word, UP))
+        self.play(GrowFromCenter(brace), FadeIn(word, UP))
         self.wait()
 
 
@@ -197,7 +197,7 @@ class TourOfDifferentialEquations(MovingCameraScene):
         for word1, word2 in zip(words, words[1:]):
             self.play(
                 FadeInFromDown(word2),
-                FadeOutAndShift(word1, UP),
+                FadeOut(word1, UP),
             )
             self.wait()
         self.play(
@@ -360,12 +360,12 @@ class ShowGravityAcceleration(Scene):
         self.add(num)
         self.wait(0.75)
         self.play(
-            FadeInFrom(ms, 0.25 * DOWN, run_time=0.5)
+            FadeIn(ms, 0.25 * DOWN, run_time=0.5)
         )
         self.wait(0.25)
         self.play(LaggedStart(
             GrowFromPoint(per, per.get_left()),
-            FadeInFrom(s, 0.5 * UP),
+            FadeIn(s, 0.5 * UP),
             lag_ratio=0.7,
             run_time=0.75
         ))
@@ -534,7 +534,7 @@ class ShowGravityAcceleration(Scene):
         self.play(
             FadeOut(self.title),
             GrowFromCenter(brace),
-            FadeInFrom(g, UP),
+            FadeIn(g, UP),
         )
         self.wait()
 
@@ -909,8 +909,8 @@ class SimpleProjectileEquation(ShowGravityAcceleration):
         y_dot_equation.to_corner(UR)
 
         self.play(
-            FadeInFrom(tex_question, DOWN),
-            FadeInFrom(question, UP)
+            FadeIn(tex_question, DOWN),
+            FadeIn(question, UP)
         )
         self.wait()
         self.add(v_graph, question)
@@ -1001,7 +1001,7 @@ class SimpleProjectileEquation(ShowGravityAcceleration):
         )
 
         self.play(
-            FadeInFrom(tex_question, DOWN),
+            FadeIn(tex_question, DOWN),
         )
         self.wait()
         self.add(graph, tex_question)
@@ -1117,19 +1117,19 @@ class UniversalGravityLawSymbols(Scene):
         self.play(
             ShowCreationThenFadeOut(rects[0]),
             GrowFromCenter(braces[0]),
-            FadeInFrom(words[0], UP)
+            FadeIn(words[0], UP)
         )
         self.wait()
         self.play(
             ShowCreationThenFadeOut(rects[1]),
             GrowFromCenter(braces[1]),
-            FadeInFrom(words[1], UP)
+            FadeIn(words[1], UP)
         )
         self.wait()
         self.play(
             ShowCreationThenFadeOut(rects[2]),
             TransformFromCopy(*braces[1:3]),
-            FadeInFrom(words[2], UP),
+            FadeIn(words[2], UP),
         )
         self.wait()
 
@@ -1223,18 +1223,18 @@ class ExampleTypicalODE(TeacherStudentsScene):
         examples.to_edge(UP)
 
         self.play(
-            FadeInFrom(examples[0], UP),
+            FadeIn(examples[0], UP),
             self.teacher.change, "raise_right_hand",
         )
         self.play(
-            FadeInFrom(examples[1], UP),
+            FadeIn(examples[1], UP),
             self.get_student_changes(
                 *3 * ["pondering"],
                 look_at_arg=examples,
             ),
         )
         self.play(
-            FadeInFrom(examples[2], UP)
+            FadeIn(examples[2], UP)
         )
         self.wait(5)
 
@@ -1481,14 +1481,14 @@ class DefineODE(Scene):
         self.play(
             ShowCreation(v_line),
             FadeInFromPoint(dot, v_line.get_start()),
-            FadeInFrom(theta, DOWN),
-            FadeInFrom(theta.word, DOWN),
+            FadeIn(theta, DOWN),
+            FadeIn(theta.word, DOWN),
         )
         self.add(slope_line, dot)
         self.play(
             ShowCreation(slope_line),
-            FadeInFrom(d_theta, LEFT),
-            FadeInFrom(d_theta.word, LEFT),
+            FadeIn(d_theta, LEFT),
+            FadeIn(d_theta.word, LEFT),
         )
 
         a_tracker = ValueTracker(0)
@@ -1504,8 +1504,8 @@ class DefineODE(Scene):
         self.add(curve, dot)
         self.play(
             ShowCreation(curve),
-            FadeInFrom(dd_theta, LEFT),
-            FadeInFrom(dd_theta.word, LEFT),
+            FadeIn(dd_theta, LEFT),
+            FadeIn(dd_theta.word, LEFT),
         )
         self.add(changing_slope)
         self.play(
@@ -1554,7 +1554,7 @@ class DefineODE(Scene):
         )
         self.play(
             MoveToTarget(de_word),
-            FadeInFrom(ordinary, RIGHT),
+            FadeIn(ordinary, RIGHT),
             GrowFromCenter(ordinary_underline)
         )
         self.play(FadeOut(ordinary_underline))
@@ -1746,7 +1746,7 @@ class SecondOrderEquationExample(DefineODE):
         self.add(de_word, equation)
         self.play(
             MoveToTarget(de_word),
-            FadeInFrom(so_word, RIGHT),
+            FadeIn(so_word, RIGHT),
             GrowFromCenter(so_line),
         )
         self.play(ReplacementTransform(so_line, dd_x_rect))
@@ -1851,14 +1851,14 @@ class SecondOrderEquationExample(DefineODE):
         self.play(
             ShowCreation(v_line),
             FadeInFromPoint(dot, v_line.get_start()),
-            FadeInFrom(x, DOWN),
-            FadeInFrom(x.word, DOWN),
+            FadeIn(x, DOWN),
+            FadeIn(x.word, DOWN),
         )
         self.add(slope_line, dot)
         self.play(
             ShowCreation(slope_line),
-            FadeInFrom(d_x, LEFT),
-            FadeInFrom(d_x.word, LEFT),
+            FadeIn(d_x, LEFT),
+            FadeIn(d_x.word, LEFT),
         )
 
         a_tracker = ValueTracker(0)
@@ -1874,8 +1874,8 @@ class SecondOrderEquationExample(DefineODE):
         self.add(curve, dot)
         self.play(
             ShowCreation(curve),
-            FadeInFrom(dd_x, LEFT),
-            FadeInFrom(dd_x.word, LEFT),
+            FadeIn(dd_x, LEFT),
+            FadeIn(dd_x.word, LEFT),
         )
         self.add(changing_slope)
         self.play(
@@ -2110,7 +2110,7 @@ class BreakingSecondOrderIntoTwoFirstOrder(IntroduceVectorField):
         ))
 
         self.add(ode)
-        self.play(FadeInFrom(so_word, 0.5 * DOWN))
+        self.play(FadeIn(so_word, 0.5 * DOWN))
         self.wait()
 
         self.play(
@@ -2872,8 +2872,8 @@ class ComparePhysicsToLove(Scene):
 
         arrow = DoubleArrow(love.get_top(), ode.get_bottom())
 
-        self.play(FadeInFrom(ode, DOWN))
-        self.play(FadeInFrom(love, UP))
+        self.play(FadeIn(ode, DOWN))
+        self.play(FadeIn(love, UP))
         self.wait()
         self.play(LaggedStartMap(
             ShowCreationThenFadeAround,
@@ -3019,7 +3019,7 @@ class InaccurateComputation(Scene):
             run_time=2,
         )
         self.wait()
-        self.play(FadeInFrom(errors, 3 * LEFT))
+        self.play(FadeIn(errors, 3 * LEFT))
         self.wait()
 
 

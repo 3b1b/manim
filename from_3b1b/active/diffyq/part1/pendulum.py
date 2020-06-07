@@ -508,7 +508,7 @@ class IntroducePendulum(PiCreatureScene, MovingCameraScene):
         )
         formula.set_stroke(width=0, background=True)
 
-        self.play(FadeInFrom(hm_word, DOWN))
+        self.play(FadeIn(hm_word, DOWN))
         self.wait()
         self.play(
             Write(formula),
@@ -970,12 +970,12 @@ class WherePendulumLeads(PiCreatureScene):
         self.wait(5)
         self.play(
             Animation(VectorizedPoint(pendulum.get_top())),
-            FadeOutAndShift(q_marks, UP, lag_ratio=0.3),
+            FadeOut(q_marks, UP, lag_ratio=0.3),
         )
         self.add(spring_system)
         self.play(
             FadeOut(spring_rect),
-            FadeInFrom(linear_formula, UP),
+            FadeIn(linear_formula, UP),
             FadeInFromDown(l_title),
         )
         self.play(FadeInFromDown(c_title))
@@ -1084,7 +1084,7 @@ class AnalyzePendulumForce(MovingCameraScene):
                 path_arc=angle
             ),
         )
-        self.play(FadeInFrom(x_sym, UP))
+        self.play(FadeIn(x_sym, UP))
         self.wait()
 
         # Show equation
@@ -1135,7 +1135,7 @@ class AnalyzePendulumForce(MovingCameraScene):
 
         self.play(
             GrowArrow(g_vect),
-            FadeInFrom(g_word, UP, lag_ratio=0.1),
+            FadeIn(g_word, UP, lag_ratio=0.1),
         )
         self.wait()
 
@@ -1300,7 +1300,7 @@ class AnalyzePendulumForce(MovingCameraScene):
         ))
 
         self.play(
-            FadeInFrom(theta_decimal, UP),
+            FadeIn(theta_decimal, UP),
             FadeOut(self.x_eq),
             FadeOut(self.line_L),
         )
@@ -1831,7 +1831,7 @@ class BuildUpEquation(Scene):
         word.next_to(arrow, DOWN)
 
         self.play(
-            FadeInFrom(word, UP),
+            FadeIn(word, UP),
             GrowArrow(arrow)
         )
         self.play(

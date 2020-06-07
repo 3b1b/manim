@@ -50,7 +50,7 @@ class RemindOfWeightedCoin(Scene):
 
         self.play(
             GrowFromCenter(brace),
-            FadeInFrom(h_label, UP),
+            FadeIn(h_label, UP),
             grid.scale, 0.8, {"about_edge": DOWN},
         )
         self.wait()
@@ -361,7 +361,7 @@ class BayesianFrequentistDivide(Scene):
             label.save_state()
             label.set_y(0)
             self.play(
-                FadeInFrom(label, -normalize(label.get_center())),
+                FadeIn(label, -normalize(label.get_center())),
             )
         self.wait()
         self.play(
@@ -1127,8 +1127,8 @@ class VisualizeBayesRule(Scene):
         uniform_name.set_y(bars.get_top()[1] + MED_SMALL_BUFF, DOWN)
         self.play(
             prior_name[0].next_to, uniform_name, RIGHT, MED_SMALL_BUFF, DOWN,
-            FadeOutAndShift(prior_name[1], RIGHT),
-            FadeInFrom(uniform_name, LEFT)
+            FadeOut(prior_name[1], RIGHT),
+            FadeIn(uniform_name, LEFT)
         )
         self.wait()
 
@@ -1203,7 +1203,7 @@ class VisualizeBayesRule(Scene):
                 post_bars,
             ),
             GrowFromCenter(brace),
-            FadeInFrom(post_word, 0.25 * UP)
+            FadeIn(post_word, 0.25 * UP)
         )
         self.wait()
         self.play(
@@ -1725,11 +1725,11 @@ class TalkThroughCoinExample(ShowBayesianUpdating):
         last_row = VMobject()
         for row in rows:
             self.play(
-                FadeOutAndShift(last_row, DOWN),
+                FadeOut(last_row, DOWN),
                 FadeIn(row, lag_ratio=0.1)
             )
             last_row = row
-        self.play(FadeOutAndShift(last_row, DOWN))
+        self.play(FadeOut(last_row, DOWN))
 
         # Uniform pdf
         region = get_beta_graph(axes, 0, 0)
@@ -1758,7 +1758,7 @@ class TalkThroughCoinExample(ShowBayesianUpdating):
         data_label.shift(0.5 * RIGHT)
 
         self.play(
-            FadeInFrom(coin, DOWN),
+            FadeIn(coin, DOWN),
             GrowArrow(arrow),
             Write(data_label, run_time=1)
         )
@@ -1844,7 +1844,7 @@ class TalkThroughCoinExample(ShowBayesianUpdating):
             sub_region.set_color, BLUE,
             graph.stretch, 2, 1, {"about_edge": DOWN},
             FadeInFromDown(two),
-            FadeOutAndShift(one, UP),
+            FadeOut(one, UP),
         )
         region = sub_region
         func_label = VGroup(func_label[0], two, times_x)
@@ -1858,8 +1858,8 @@ class TalkThroughCoinExample(ShowBayesianUpdating):
         const.move_to(two, DR)
         const.shift(0.07 * RIGHT)
         self.play(
-            FadeOutAndShift(two, UP),
-            FadeInFrom(const, DOWN)
+            FadeOut(two, UP),
+            FadeIn(const, DOWN)
         )
         self.remove(func_label)
         func_label = VGroup(func_label[0], const, times_x)
@@ -1902,7 +1902,7 @@ class TalkThroughCoinExample(ShowBayesianUpdating):
 
         self.play(
             ShowCreation(likelihood_rect),
-            FadeInFrom(l_1mx, 0.5 * DOWN),
+            FadeIn(l_1mx, 0.5 * DOWN),
         )
         self.wait()
         self.play(ShowCreationThenFadeOut(Underline(p_label)))
@@ -1910,7 +1910,7 @@ class TalkThroughCoinExample(ShowBayesianUpdating):
         self.wait()
         self.play(
             TransformFromCopy(l_1mx, eq_1mx),
-            FadeInFrom(dot, RIGHT),
+            FadeIn(dot, RIGHT),
             func_label.next_to, dot, LEFT, 0.2,
         )
 
@@ -1955,8 +1955,8 @@ class TalkThroughCoinExample(ShowBayesianUpdating):
         VGroup(exp1, exp2).shift(shift_vect)
 
         self.play(
-            FadeInFrom(exp1, DOWN),
-            FadeInFrom(exp2, DOWN),
+            FadeIn(exp1, DOWN),
+            FadeIn(exp2, DOWN),
             VGroup(func_label, dot, eq_1mx).shift, shift_vect,
             bayes.scale, 0.5,
             bayes.next_to, p_label, DOWN, LARGE_BUFF, {"aligned_edge": RIGHT},
@@ -1967,7 +1967,7 @@ class TalkThroughCoinExample(ShowBayesianUpdating):
             self.play(
                 arrow.next_to, coin, DOWN, SMALL_BUFF,
                 MaintainPositionRelativeTo(data_label, arrow),
-                FadeInFrom(coin, DOWN),
+                FadeIn(coin, DOWN),
             )
             if is_heads:
                 nh += 1
@@ -1989,8 +1989,8 @@ class TalkThroughCoinExample(ShowBayesianUpdating):
                 FadeOut(region),
                 FadeIn(new_graph),
                 FadeIn(new_region),
-                FadeOutAndShift(old_exp, MED_SMALL_BUFF * UP),
-                FadeInFrom(new_exp, MED_SMALL_BUFF * DOWN),
+                FadeOut(old_exp, MED_SMALL_BUFF * UP),
+                FadeIn(new_exp, MED_SMALL_BUFF * DOWN),
             )
             graph = new_graph
             region = new_region
@@ -2015,7 +2015,7 @@ class PDefectEqualsQmark(Scene):
                 "\\text{Defect}": RED,
             }
         )
-        self.play(FadeInFrom(label, DOWN))
+        self.play(FadeIn(label, DOWN))
         self.wait()
 
 
@@ -2083,7 +2083,7 @@ class UpdateOnceWithBinomial(TalkThroughCoinExample):
         self.wait()
         self.play(
             GrowFromCenter(brace),
-            FadeInFrom(all_data_label, 0.2 * UP),
+            FadeIn(all_data_label, 0.2 * UP),
         )
         self.wait()
 
@@ -2145,6 +2145,6 @@ class UpdateOnceWithBinomial(TalkThroughCoinExample):
         )
         self.play(
             Write(eq),
-            FadeInFrom(rhs, UP)
+            FadeIn(rhs, UP)
         )
         self.wait()

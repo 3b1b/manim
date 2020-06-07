@@ -76,7 +76,7 @@ class InFouriersShoes(PiCreatureScene, WriteHeatEquationTemplate):
         triangle.move_to(time_line.n2p(2019), DOWN)
         triangle.set_color(WHITE)
 
-        self.play(FadeInFrom(fourier, 2 * LEFT))
+        self.play(FadeIn(fourier, 2 * LEFT))
         self.play(randy.change, "pondering")
         self.wait()
         self.play(

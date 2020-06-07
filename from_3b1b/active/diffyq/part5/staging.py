@@ -97,7 +97,7 @@ class IntroductionOfExp(Scene):
         self.wait()
         self.play(
             Restore(derivative),
-            FadeInFrom(ic, LEFT)
+            FadeIn(ic, LEFT)
         )
         self.wait()
         self.play(
@@ -388,7 +388,7 @@ class IntroducePhysicalModel(IntroductionOfExp):
 
         self.play(
             ShowCreation(rhs_rect),
-            FadeInFrom(rhs_word, UP),
+            FadeIn(rhs_word, UP),
             ShowCreation(self.position_vect)
         )
         self.add(
@@ -410,7 +410,7 @@ class IntroducePhysicalModel(IntroductionOfExp):
         self.wait()
         self.play(
             ShowCreation(lhs_rect),
-            FadeInFrom(lhs_word, UP),
+            FadeIn(lhs_word, UP),
         )
         self.wait()
         self.play(
@@ -938,7 +938,7 @@ class ImaginaryConstant(ConstantEquals2):
         self.play(randy.change, "confused")
         self.play(
             ShowCreation(p_rect),
-            FadeInFrom(p_label, UP)
+            FadeIn(p_label, UP)
         )
         self.add(self.number_line, self.position_vect)
         self.play(
@@ -1466,24 +1466,24 @@ class ReferenceWhatItMeans(PiCreatureScene):
 
         self.add(epii)
         self.play(
-            FadeInFrom(arrow, LEFT),
-            FadeInFrom(repeated_mult, 2 * LEFT),
+            FadeIn(arrow, LEFT),
+            FadeIn(repeated_mult, 2 * LEFT),
             randy.change, "maybe",
         )
         self.wait()
         self.play(randy.change, "confused")
         self.play(
-            FadeOutAndShift(arrow, DOWN),
-            FadeInFrom(does_not_mean, UP),
+            FadeOut(arrow, DOWN),
+            FadeIn(does_not_mean, UP),
         )
         self.play(Write(nonsense))
         self.play(randy.change, "angry")
         # self.play(ShowCreation(cross))
         self.wait()
         self.play(
-            FadeOutAndShift(randy, DOWN),
-            FadeInFrom(down_arrow, UP),
-            FadeInFrom(actually_means, LEFT),
+            FadeOut(randy, DOWN),
+            FadeIn(down_arrow, UP),
+            FadeIn(actually_means, LEFT),
             FadeIn(series, lag_ratio=0.1, run_time=2)
         )
         self.wait()

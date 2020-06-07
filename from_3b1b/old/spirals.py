@@ -247,7 +247,7 @@ class MathExchangeNames(Scene):
         )
         names.arrange(DOWN, buff=1)
         for name in names:
-            self.play(FadeInFrom(name, RIGHT))
+            self.play(FadeIn(name, RIGHT))
             self.wait()
 
 
@@ -511,7 +511,7 @@ class RefresherOnPolarCoordinates(MovingCameraScene):
 
         self.play(ShowCreation(degree_cross))
         self.play(
-            FadeOutAndShift(
+            FadeOut(
                 VGroup(degree_label, degree_cross),
                 DOWN
             ),
@@ -1074,10 +1074,10 @@ class AskAboutRelationToPrimes(TeacherStudentsScene):
             ),
             self.teacher.change, "maybe", numbers,
             ShowCreation(arrow),
-            FadeInFrom(numbers, RIGHT)
+            FadeIn(numbers, RIGHT)
         )
         self.play(
-            FadeInFrom(primes, LEFT),
+            FadeIn(primes, LEFT),
         )
         self.play(
             LaggedStartMap(FadeInFromDown, q_marks[0]),
@@ -1210,7 +1210,7 @@ class JustPrimesLabel(Scene):
         text.to_corner(UL)
         self.play(Write(text))
         self.wait(3)
-        self.play(FadeOutAndShift(text, DOWN))
+        self.play(FadeOut(text, DOWN))
 
 
 class DirichletComingUp(Scene):
@@ -1228,8 +1228,8 @@ class DirichletComingUp(Scene):
         Group(words, image).center()
 
         self.play(
-            FadeInFrom(image, RIGHT),
-            FadeInFrom(words, LEFT),
+            FadeIn(image, RIGHT),
+            FadeIn(words, LEFT),
         )
         self.wait()
 
@@ -1781,7 +1781,7 @@ class IntroduceResidueClassTerminology(Scene):
         underline.set_color(BLUE)
         self.play(
             ReplacementTransform(pre_title[0], title[1]),
-            FadeInFrom(title[0], RIGHT),
+            FadeIn(title[0], RIGHT),
             GrowFromCenter(underline)
         )
         self.play(
@@ -1961,7 +1961,7 @@ class IntroduceResidueClassTerminology(Scene):
         self.play(
             FadeOut(new_phrase),
             FadeIn(terminology),
-            FadeOutAndShift(randy, DOWN)
+            FadeOut(randy, DOWN)
         )
         self.wait()
         self.wait(6)
@@ -2146,7 +2146,7 @@ class Explain44Spirals(ExplainSixSpirals):
 
         self.play(MoveToTarget(ff))
         top_line.add(ff)
-        self.play(FadeInFrom(radians, LEFT))
+        self.play(FadeIn(radians, LEFT))
         self.wait()
         self.add(rect, top_line, unit_conversion)
         self.play(
@@ -2560,7 +2560,7 @@ class IntroduceTotientJargon(TeacherStudentsScene):
             MoveToTarget(words),
             FadeOut(self.teacher.bubble),
             LaggedStart(*[
-                FadeOutAndShift(pi, 4 * DOWN)
+                FadeOut(pi, 4 * DOWN)
                 for pi in self.pi_creatures
             ]),
             ShowCreation(underline)
@@ -2607,7 +2607,7 @@ class IntroduceTotientJargon(TeacherStudentsScene):
         # Show coprimes
         self.play(
             ShowIncreasingSubsets(numbers, run_time=3),
-            FadeInFrom(words, LEFT)
+            FadeIn(words, LEFT)
         )
         self.wait()
         for group in evens, div11:
@@ -2728,7 +2728,7 @@ class IntroduceTotientJargon(TeacherStudentsScene):
 
         self.play(
             GrowFromCenter(brace),
-            FadeInFrom(etf, UP)
+            FadeIn(etf, UP)
         )
         self.wait()
         self.play(
@@ -2870,7 +2870,7 @@ class TwoUnrelatedFacts(Scene):
 
         self.play(ShowCreation(v_line))
         self.wait()
-        self.play(FadeInFrom(approx, DOWN))
+        self.play(FadeIn(approx, DOWN))
         self.wait()
         self.play(FadeIn(residue_classes))
         self.wait()
@@ -2967,7 +2967,7 @@ class ExplainRays(Explain44Spirals):
             FadeIn(fade_rect),
             FadeOut(labels),
             FadeInFromLarge(box_710),
-            FadeInFrom(label_710, DOWN),
+            FadeIn(label_710, DOWN),
             ShowCreation(arrow),
         )
         self.wait()
@@ -3018,7 +3018,7 @@ class ExplainRays(Explain44Spirals):
             FadeIn(equation[1:3]),
         )
         self.play(
-            FadeInFrom(equation[3:], LEFT)
+            FadeIn(equation[3:], LEFT)
         )
         self.play(GrowFromCenter(brace))
         self.play(
@@ -3204,8 +3204,8 @@ class CompareTauToApprox(Scene):
             eq.set_stroke(BLACK, 8, background=True)
 
         self.play(LaggedStart(
-            FadeInFrom(eqs[0], DOWN),
-            FadeInFrom(eqs[1], UP),
+            FadeIn(eqs[0], DOWN),
+            FadeIn(eqs[1], UP),
         ))
         self.play(MoveToTarget(eqs))
         self.wait()
@@ -3376,12 +3376,12 @@ class LookAtRemainderMod710(Scene):
 
         self.add(equation)
         self.play(
-            FadeInFrom(n_label, UP),
+            FadeIn(n_label, UP),
             ShowCreation(n_arrow),
         )
         self.wait()
         self.play(
-            FadeInFrom(r_label, DOWN),
+            FadeIn(r_label, DOWN),
             ShowCreation(r_arrow),
         )
         self.wait()
@@ -3564,14 +3564,14 @@ class DiscussPrimesMod10(Scene):
 
         # Introduce everything
         self.play(LaggedStart(*[
-            FadeInFrom(label, UP)
+            FadeIn(label, UP)
             for label in labels
         ]))
         self.wait()
         self.play(
             LaggedStart(*[
                 LaggedStart(*[
-                    FadeInFrom(item, LEFT)
+                    FadeIn(item, LEFT)
                     for item in sequence
                 ])
                 for sequence in sequences
@@ -3895,8 +3895,8 @@ class PhraseDirichletsTheoremFor10(TeacherStudentsScene):
             Write(rp),
             Write(eq),
         )
-        self.play(FadeInFrom(fourth, LEFT))
-        self.play(FadeInFrom(lim, RIGHT))
+        self.play(FadeIn(fourth, LEFT))
+        self.play(FadeIn(lim, RIGHT))
         self.play(
             ChangeDecimalToValue(
                 x_example[1], int(1e7),
@@ -3920,7 +3920,7 @@ class InsertNewResidueClasses(Scene):
         for num, color in zip(nums, colors):
             num.set_color(color)
             num.add_background_rectangle(buff=SMALL_BUFF, opacity=1)
-            self.play(FadeInFrom(num, UP))
+            self.play(FadeIn(num, UP))
             self.wait()
 
 
@@ -3997,7 +3997,7 @@ class DirichletIn1837(MovingCameraScene):
         image = ImageMobject("Dirichlet")
         image.set_height(3)
         image.next_to(d_label, LEFT)
-        self.play(FadeInFrom(image, RIGHT))
+        self.play(FadeIn(image, RIGHT))
         self.wait()
 
         # Flash
@@ -4117,12 +4117,12 @@ class PhraseDirichletsTheorem(DirichletIn1837):
             self.play(ShowCreationThenFadeAround(mob))
             self.wait()
         self.play(
-            FadeInFrom(r, DOWN),
-            FadeOutAndShift(one, UP),
+            FadeIn(r, DOWN),
+            FadeOut(one, UP),
         )
         self.play(
-            FadeInFrom(N, DOWN),
-            FadeOutAndShift(ten, UP),
+            FadeIn(N, DOWN),
+            FadeOut(ten, UP),
         )
         self.wait()
         self.play(
@@ -4143,13 +4143,13 @@ class PhraseDirichletsTheorem(DirichletIn1837):
             ShowCreationThenFadeAround(fourth),
         )
         self.play(
-            FadeInFrom(one_over_phi_N[2:], LEFT),
-            FadeOutAndShift(four, RIGHT),
+            FadeIn(one_over_phi_N[2:], LEFT),
+            FadeOut(four, RIGHT),
             ReplacementTransform(fourth[0], one_over_phi_N[0][0]),
             ReplacementTransform(fourth[1], one_over_phi_N[1][0]),
         )
         self.play(
-            FadeInFrom(phi_N_label, DOWN)
+            FadeIn(phi_N_label, DOWN)
         )
         self.wait()
 
@@ -4570,7 +4570,7 @@ class RandomWalkOfTopics(Scene):
             Restore(title[0]),
             GrowFromCenter(title[1]),
             FadeIn(arrow_words),
-            FadeInFrom(title[2], LEFT),
+            FadeIn(title[2], LEFT),
             LaggedStartMap(
                 ShowCreation, sd.edges,
                 run_time=3,

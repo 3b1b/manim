@@ -533,7 +533,7 @@ class LabelRotatingVectors(PiFourierSeries):
             for circle in circles
         ])
 
-        self.play(FadeInFrom(formulas, DOWN))
+        self.play(FadeIn(formulas, DOWN))
         self.play(LaggedStartMap(
             FadeInFrom, q_marks,
             lambda m: (m, UP),
@@ -575,8 +575,8 @@ class LabelRotatingVectors(PiFourierSeries):
         vector_clock.add_updater(vc_updater)
         self.wait()
         self.play(
-            FadeOutAndShift(q_marks[0], UP),
-            FadeInFrom(one_label, DOWN),
+            FadeOut(q_marks[0], UP),
+            FadeIn(one_label, DOWN),
         )
         self.wait(4)
 
@@ -633,11 +633,11 @@ class LabelRotatingVectors(PiFourierSeries):
         self.play(
             ReplacementTransform(vg1_copy, vg1),
         )
-        self.play(FadeInFrom(cps_1, DOWN))
+        self.play(FadeIn(cps_1, DOWN))
         self.wait(2)
         self.play(
-            FadeOutAndShift(q_marks[1], UP),
-            FadeInFrom(f1_exp, DOWN),
+            FadeOut(q_marks[1], UP),
+            FadeIn(f1_exp, DOWN),
         )
         self.wait(2)
         self.play(ShowCreationThenFadeAround(
@@ -679,7 +679,7 @@ class LabelRotatingVectors(PiFourierSeries):
         )
         self.wait(2)
         self.play(
-            FadeOutAndShift(q_marks[2], UP),
+            FadeOut(q_marks[2], UP),
             FadeInFromDown(fm1_exp),
             v1_rect.stretch, 1.4, 0,
         )
@@ -710,7 +710,7 @@ class LabelRotatingVectors(PiFourierSeries):
         )
         self.wait()
         self.play(
-            FadeOutAndShift(q_marks[3], UP),
+            FadeOut(q_marks[3], UP),
             FadeInFromDown(f2_exp),
         )
         self.wait(3)
@@ -757,7 +757,7 @@ class LabelRotatingVectors(PiFourierSeries):
             FadeIn(v_lines, lag_ratio=0.2)
         )
         self.play(
-            FadeInFrom(f_exp_general, UP)
+            FadeIn(f_exp_general, UP)
         )
         self.play(ShowCreationThenFadeAround(f_exp_general))
         self.wait(3)

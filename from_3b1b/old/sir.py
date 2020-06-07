@@ -1866,8 +1866,8 @@ class DescribeModel(Scene):
         removed.move_to(words[2], DL)
 
         self.play(
-            FadeOutAndShift(words[2], UP),
-            FadeInFrom(removed, DOWN),
+            FadeOut(words[2], UP),
+            FadeIn(removed, DOWN),
         )
         self.play(
             i_pi.body.change, 'pleading', removed,
@@ -2114,7 +2114,7 @@ class KeyTakeaways(Scene):
                 Restore(title),
                 FadeIn(other_titles),
                 Uncreate(temp_h_line),
-                FadeOutAndShift(takeaway, DOWN, lag_ratio=0.25 / len(takeaway.family_members_with_points()))
+                FadeOut(takeaway, DOWN, lag_ratio=0.25 / len(takeaway.family_members_with_points()))
             )
             self.wait()
 
@@ -2285,7 +2285,7 @@ class FastForwardBy2(Scene):
                 FadeInFrom, triangles,
                 lambda m: (m, 0.4 * LEFT),
             ),
-            FadeInFrom(label, 0.2 * LEFT),
+            FadeIn(label, 0.2 * LEFT),
             run_time=1,
         )
         self.play(
@@ -2420,14 +2420,14 @@ class SARS2002(TeacherStudentsScene):
 
         self.play(
             self.teacher.change, "raise_right_hand",
-            FadeInFrom(image, DOWN, run_time=2),
+            FadeIn(image, DOWN, run_time=2),
             self.get_student_changes(
                 "pondering", "thinking", "pondering",
                 look_at_arg=image,
             )
         )
         self.play(
-            FadeInFrom(name, RIGHT),
+            FadeIn(name, RIGHT),
         )
         self.play(
             GrowArrow(arrow),
@@ -2593,7 +2593,7 @@ class IntroduceR0(Scene):
         name.to_edge(LEFT)
         self.play(
             GrowFromCenter(brace),
-            FadeInFrom(name, 0.5 * UP),
+            FadeIn(name, 0.5 * UP),
         )
         self.wait(5)
 
@@ -2609,10 +2609,10 @@ class IntroduceR0(Scene):
             pi.set_status("S")
 
         self.play(
-            FadeOutAndShift(R_label[1], UP),
-            FadeOutAndShift(name, UP),
-            FadeInFrom(R0, DOWN),
-            FadeInFrom(brr, DOWN),
+            FadeOut(R_label[1], UP),
+            FadeOut(name, UP),
+            FadeIn(R0, DOWN),
+            FadeIn(brr, DOWN),
             FadeOut(zeros),
             FadeOut(count_copy),
             brace.match_width, R0, {"stretch": True},
@@ -2682,14 +2682,14 @@ class HowR0IsCalculatedHere(Scene):
         self.play(Restore(words))
         self.wait()
         self.play(
-            FadeOutAndShift(words[0][0], UP),
-            FadeInFrom(estimate, DOWN),
+            FadeOut(words[0][0], UP),
+            FadeIn(estimate, DOWN),
         )
         self.wait()
 
         self.play(
             Write(parens),
-            FadeInFrom(average, 0.5 * RIGHT),
+            FadeIn(average, 0.5 * RIGHT),
             self.camera.frame.shift, LEFT,
         )
         self.wait()
@@ -2745,7 +2745,7 @@ class DoubleInfectionRadius(Scene):
             circ.dot = dots
             anims = [ShowIncreasingSubsets(dots)]
             if hasattr(circ, "label"):
-                anims.append(FadeInFrom(circ.label, 0.5 * UP))
+                anims.append(FadeIn(circ.label, 0.5 * UP))
             self.play(*anims)
             self.wait()
 
@@ -2837,7 +2837,7 @@ class R0Categories(Scene):
             for line in line_row:
                 anims.append(ShowCreation(line))
             self.play(*anims)
-        self.play(FadeInFrom(names[0], UP))
+        self.play(FadeIn(names[0], UP))
         self.wait()
 
         exp_tree = VGroup(rows, lines)
@@ -2865,7 +2865,7 @@ class R0Categories(Scene):
                 TransformFromCopy(dot, dot.child),
                 ShowCreation(line)
             )
-        self.play(FadeInFrom(names[1], UP))
+        self.play(FadeIn(names[1], UP))
         self.wait()
 
         # Inverted tree
@@ -2874,7 +2874,7 @@ class R0Categories(Scene):
         exp_tree_copy.match_x(titles[2])
 
         self.play(TransformFromCopy(exp_tree, exp_tree_copy))
-        self.play(FadeInFrom(names[2], UP))
+        self.play(FadeIn(names[2], UP))
         self.wait()
 
 
@@ -2901,8 +2901,8 @@ class RealR0Estimates(Scene):
 
         for label, image in zip(labels, images):
             self.play(
-                FadeInFrom(image, DOWN),
-                FadeInFrom(label, UP),
+                FadeIn(image, DOWN),
+                FadeIn(label, UP),
             )
             self.wait()
 

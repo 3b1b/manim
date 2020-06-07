@@ -83,7 +83,7 @@ class FormulasAreLies(PiCreatureScene):
         )
         theta_eq.add(*theta_eq.sqrt_part)
         self.play(
-            FadeInFrom(theta0_words, LEFT),
+            FadeIn(theta0_words, LEFT),
             GrowArrow(arrow),
         )
         self.wait()
@@ -446,7 +446,7 @@ class HungerForExactness(TeacherStudentsScene):
         modes = ["erm", "sad", "sad", "horrified"]
         for part, mode in zip(solution, modes):
             self.play(
-                FadeInFrom(part, UP),
+                FadeIn(part, UP),
                 self.get_student_changes(
                     *3 * [mode],
                     look_at_arg=part,
@@ -459,7 +459,7 @@ class HungerForExactness(TeacherStudentsScene):
         self.look_at(solution)
         self.wait(5)
         self.play(
-            FadeOutAndShift(solution, 2 * LEFT),
+            FadeOut(solution, 2 * LEFT),
             Restore(ode),
             self.get_student_changes(
                 "sick", "angry", "tired",

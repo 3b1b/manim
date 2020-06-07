@@ -142,7 +142,7 @@ class TriangleModuliSpace(Scene):
         similar_word.to_edge(UP)
 
         self.play(
-            FadeOutAndShift(VGroup(title, subtitle), UP),
+            FadeOut(VGroup(title, subtitle), UP),
             tri1.next_to, sim_sign, LEFT, 0.75,
             tri2.next_to, sim_sign, RIGHT, 0.75,
         )
@@ -230,7 +230,7 @@ class TriangleModuliSpace(Scene):
             FadeOut(not_similar_word),
             FadeOut(sim_sign),
             FadeOut(sim_cross),
-            FadeInFrom(new_title[1], UP),
+            FadeIn(new_title[1], UP),
         )
         self.play(
             ShowCreationThenDestruction(new_title_underline),
@@ -380,7 +380,7 @@ class TriangleModuliSpace(Scene):
             var.suspend_updating()
             var.brace.suspend_updating()
             self.play(
-                FadeInFrom(var, DOWN),
+                FadeIn(var, DOWN),
                 Write(var.brace, run_time=1),
                 # MoveToTarget(num)
             )
@@ -602,8 +602,8 @@ class TriangleModuliSpace(Scene):
 
         self.play(
             ShowCreation(xpy1_line),
-            # FadeInFrom(xpy1_label, DOWN),
-            FadeInFrom(xpy1_ineq, UP)
+            # FadeIn(xpy1_label, DOWN),
+            FadeIn(xpy1_ineq, UP)
         )
         self.wait()
         self.play(
@@ -652,7 +652,7 @@ class TriangleModuliSpace(Scene):
         ms_arrow.scale(0.95)
 
         self.play(
-            FadeInFrom(ms_words, LEFT),
+            FadeIn(ms_words, LEFT),
         )
         self.play(ShowCreation(ms_arrow))
         self.wait()
@@ -691,8 +691,8 @@ class TriangleModuliSpace(Scene):
         )
         self.play(
             ShowCreation(elbow),
-            FadeInFrom(right_words, UP),
-            FadeOutAndShift(ineqs, DOWN),
+            FadeIn(right_words, UP),
+            FadeOut(ineqs, DOWN),
         )
         self.play(
             ShowCreationThenFadeOut(elbow_circle),
@@ -711,7 +711,7 @@ class TriangleModuliSpace(Scene):
         arc.replace(box)
 
         self.play(
-            FadeInFrom(pythag_eq, UP),
+            FadeIn(pythag_eq, UP),
         )
         self.add(arc, arc)
         self.play(ShowCreation(arc))
@@ -757,10 +757,10 @@ class TriangleModuliSpace(Scene):
             coord_label.set_opacity, 0,
             FadeOut(elbow),
             FadeIn(acute_region),
-            FadeOutAndShift(right_words, UP),
-            FadeOutAndShift(eq, UP),
-            FadeInFrom(acute_words, DOWN),
-            FadeInFrom(gt, DOWN),
+            FadeOut(right_words, UP),
+            FadeOut(eq, UP),
+            FadeIn(acute_words, DOWN),
+            FadeIn(gt, DOWN),
         )
         self.wait()
         self.play(tip_tracker.shift, 0.5 * RIGHT)
@@ -769,10 +769,10 @@ class TriangleModuliSpace(Scene):
         self.play(
             tip_tracker.shift, 1.5 * DOWN,
             FadeIn(obtuse_region),
-            FadeOutAndShift(acute_words, DOWN),
-            FadeOutAndShift(gt, DOWN),
-            FadeInFrom(obtuse_words, UP),
-            FadeInFrom(lt, UP),
+            FadeOut(acute_words, DOWN),
+            FadeOut(gt, DOWN),
+            FadeIn(obtuse_words, UP),
+            FadeIn(lt, UP),
         )
         self.wait()
         self.play(tip_tracker.shift, 0.5 * LEFT)

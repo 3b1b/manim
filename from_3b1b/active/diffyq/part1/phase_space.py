@@ -561,8 +561,8 @@ class IntroduceVectorField(VisualizeStates):
         ode_word.next_to(ode, DOWN)
 
         self.play(
-            FadeInFrom(ode, 0.5 * DOWN),
-            FadeInFrom(ode_word, 0.5 * UP),
+            FadeIn(ode, 0.5 * DOWN),
+            FadeIn(ode_word, 0.5 * UP),
         )
 
         self.ode = ode
@@ -663,7 +663,7 @@ class IntroduceVectorField(VisualizeStates):
         self.play(Write(ddt))
         self.play(
             plane.y_axis.numbers.fade, 1,
-            FadeInFrom(equals, LEFT),
+            FadeIn(equals, LEFT),
             TransformFromCopy(vect_sym, d_vect_sym)
         )
         self.wait()
@@ -775,7 +775,7 @@ class IntroduceVectorField(VisualizeStates):
         )
         self.wait()
         self.play(
-            FadeInFrom(expanded_derivative, LEFT),
+            FadeIn(expanded_derivative, LEFT),
             FadeIn(equals2),
             equation.next_to, equals2, LEFT, SMALL_BUFF,
             MaintainPositionRelativeTo(rect, equation),
@@ -1899,7 +1899,7 @@ class SetupToTakingManyTinySteps(TakeManyTinySteps):
         self.add(vector, dot)
         self.play(
             ShowCreation(vector),
-            FadeInFrom(v_label, RIGHT),
+            FadeIn(v_label, RIGHT),
         )
         self.play(FadeInFromDown(dt_label))
         self.wait()

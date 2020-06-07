@@ -344,8 +344,8 @@ class AddMultipleSolutions(SimpleCosExpGraph):
                 Write(axes2.surface),
             ),
             LaggedStart(
-                FadeInFrom(axes1.checkmark, DOWN),
-                FadeInFrom(axes2.checkmark, DOWN),
+                FadeIn(axes1.checkmark, DOWN),
+                FadeIn(axes2.checkmark, DOWN),
             ),
             lag_ratio=0.2,
             run_time=1,
@@ -361,10 +361,10 @@ class AddMultipleSolutions(SimpleCosExpGraph):
                 axes2.copy().set_fill(opacity=0),
                 axes3
             ),
-            FadeInFrom(equals, LEFT)
+            FadeIn(equals, LEFT)
         )
         self.play(
-            FadeInFrom(axes3.checkmark, DOWN),
+            FadeIn(axes3.checkmark, DOWN),
         )
         self.wait()
 
@@ -528,13 +528,13 @@ class BreakDownAFunction(SimpleCosExpGraph):
         self.add(top_axes)
         self.play(ShowCreation(top_graph))
         self.play(
-            FadeInFrom(top_words, RIGHT),
+            FadeIn(top_words, RIGHT),
             ShowCreation(top_arrow)
         )
         self.wait()
         self.play(
             LaggedStartMap(FadeIn, low_axes_group),
-            FadeInFrom(low_words, UP),
+            FadeIn(low_words, UP),
             LaggedStartMap(FadeInFromDown, [*plusses, dots]),
             *[
                 TransformFromCopy(top_graph, low_graph)
@@ -978,7 +978,7 @@ class AnalyzeSineCurve(TemperatureGraphScene):
         self.play(
             Write(axes),
             self.quick_sine_curve.become, graph,
-            FadeOutAndShift(self.question_group, UP),
+            FadeOut(self.question_group, UP),
         )
         self.play(
             FadeInFromDown(graph_label),
@@ -1043,12 +1043,12 @@ class AnalyzeSineCurve(TemperatureGraphScene):
 
         self.play(
             Animation(Group(*self.get_mobjects())),
-            FadeInFrom(deriv1, LEFT),
+            FadeIn(deriv1, LEFT),
             self.camera.frame_center.shift, 2 * RIGHT,
         )
         self.wait()
         self.play(
-            FadeInFrom(deriv2, UP)
+            FadeIn(deriv2, UP)
         )
         self.wait()
 
@@ -1152,8 +1152,8 @@ class AnalyzeSineCurve(TemperatureGraphScene):
                 graph_label[i + 1:i + 3],
                 new_label[i + 1:i + 3],
             ),
-            FadeOutAndShift(graph_label[i], UP),
-            FadeInFrom(new_label[i], DOWN),
+            FadeOut(graph_label[i], UP),
+            FadeIn(new_label[i], DOWN),
         )
         self.play(
             ReplacementTransform(
@@ -1187,14 +1187,14 @@ class AnalyzeSineCurve(TemperatureGraphScene):
                 aligned_edge=DOWN,
             )
             exp.move_to(c.get_corner(UR), DL)
-            anims1 = [FadeInFrom(coef, 0.25 * DOWN)]
-            anims2 = [FadeInFrom(exp, 0.25 * DOWN)]
+            anims1 = [FadeIn(coef, 0.25 * DOWN)]
+            anims2 = [FadeIn(exp, 0.25 * DOWN)]
             if last_coef:
                 anims1.append(
-                    FadeOutAndShift(last_coef, 0.25 * UP)
+                    FadeOut(last_coef, 0.25 * UP)
                 )
                 anims2.append(
-                    FadeOutAndShift(last_exp, 0.25 * UP)
+                    FadeOut(last_exp, 0.25 * UP)
                 )
             last_coef = coef
             last_exp = exp
@@ -1393,7 +1393,7 @@ class SineWaveScaledByExp(TemperatureGraphScene):
 
         self.play(
             ShowCreation(graph),
-            FadeInFrom(graph_label, IN)
+            FadeIn(graph_label, IN)
         )
         self.wait()
         graph.resume_updating()
@@ -1478,7 +1478,7 @@ class SineWaveScaledByExp(TemperatureGraphScene):
         self.play(
             ShowCreation(exp_graph),
             FadeOut(plane),
-            FadeInFrom(exp_label, IN),
+            FadeIn(exp_label, IN),
             time_slices.set_stroke, {"width": 1},
         )
 
@@ -2171,8 +2171,8 @@ class ManipulateSinExpSurface(TemperatureGraphScene):
             ApplyMethod(
                 self.phi_tracker.set_value, 0,
             ),
-            FadeOutAndShift(sin_label, LEFT),
-            FadeInFrom(cos_label, RIGHT),
+            FadeOut(sin_label, LEFT),
+            FadeIn(cos_label, RIGHT),
             run_time=2,
         )
         left_tangent.move_to(graph.get_start(), LEFT)
@@ -2677,8 +2677,8 @@ class ShowHarmonics(SimulateRealSineCurve):
             new_n_sym.move_to(n_sym, DR)
             new_n_sym.match_style(n_sym)
             self.play(
-                FadeOutAndShift(n_sym, UP),
-                FadeInFrom(new_n_sym, DOWN),
+                FadeOut(n_sym, UP),
+                FadeIn(new_n_sym, DOWN),
                 omega_tracker.set_value, n * PI / L,
             )
             self.wait()

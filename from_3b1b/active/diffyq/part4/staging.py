@@ -86,7 +86,7 @@ class RelationToOtherVideos(Scene):
 
         self.play(
             MoveToTarget(group),
-            FadeInFrom(fourier, LEFT)
+            FadeIn(fourier, LEFT)
         )
         self.play(Write(bubble, run_time=1))
         self.wait()
@@ -106,7 +106,7 @@ class RelationToOtherVideos(Scene):
             Transform(brace, new_brace),
             text.scale, 0.7,
             text.next_to, new_brace, UP,
-            FadeOutAndShift(bubble, LEFT),
+            FadeOut(bubble, LEFT),
         )
         self.play(
             videos[2].scale, 1.7,
@@ -470,7 +470,7 @@ class ShowInfiniteSum(FourierSeriesIllustraiton):
         words.next_to(arrow, DOWN)
 
         self.play(
-            FadeInFrom(words, LEFT),
+            FadeIn(words, LEFT),
             GrowArrow(arrow)
         )
         self.wait()
@@ -604,8 +604,8 @@ class ShowInfiniteSum(FourierSeriesIllustraiton):
         num_inf_sum.move_to(UP)
 
         self.play(
-            FadeOutAndShift(graph_group, DOWN),
-            FadeInFrom(number_line, UP),
+            FadeOut(graph_group, DOWN),
+            FadeIn(number_line, UP),
             FadeOut(self.inf_words),
             *[
                 TransformFromCopy(t1[-1:], t2)
@@ -908,7 +908,7 @@ class ShowInfiniteSum(FourierSeriesIllustraiton):
         ))
 
         self.play(
-            FadeInFrom(input_label, LEFT),
+            FadeIn(input_label, LEFT),
             dot.scale, 1.5,
         )
         self.wait()
@@ -1116,7 +1116,7 @@ class TechnicalNuances(Scene):
             question.next_to(line, DOWN, MED_LARGE_BUFF)
             self.play(
                 FadeInFromDown(question),
-                FadeOutAndShift(last_question, UP)
+                FadeOut(last_question, UP)
             )
             self.wait(2)
             last_question = question
@@ -1192,7 +1192,7 @@ class AskAboutComplexNotVector(Scene):
         )
         for q, ex in zip(questions, group):
             self.play(
-                FadeInFrom(q, LEFT),
+                FadeIn(q, LEFT),
                 FadeIn(ex)
             )
         self.wait()
@@ -1321,7 +1321,7 @@ class SwapIntegralAndSum(Scene):
 
         self.add(int_ft)
         self.play(
-            FadeInFrom(breakdown_label, LEFT),
+            FadeIn(breakdown_label, LEFT),
             GrowArrow(arrow),
         )
         self.wait()
@@ -1496,8 +1496,8 @@ class SwapIntegralAndSum(Scene):
         ])
         self.wait()
         self.play(
-            FadeOutAndShift(something, UP),
-            FadeInFrom(new_exp, DOWN),
+            FadeOut(something, UP),
+            FadeIn(new_exp, DOWN),
         )
         self.play(FadeOut(self.to_fade))
 
@@ -1547,13 +1547,13 @@ class SwapIntegralAndSum(Scene):
                     moving_exp[1],
                     replacement1[1],
                 ),
-                FadeOutAndShift(exp1[1], DOWN),
+                FadeOut(exp1[1], DOWN),
                 Transform(exp1[0], replacement1[0]),
                 Transform(exp1[2:], replacement1[2:]),
             )
             self.play(
                 TransformFromCopy(replacement1, replacement2),
-                FadeOutAndShift(exp2, DOWN),
+                FadeOut(exp2, DOWN),
                 FadeOut(diagram),
             )
         self.play(Restore(moving_exp))
@@ -1846,7 +1846,7 @@ class DescribeSVG(Scene):
             rate_func=lambda t: 0.3 * there_and_back(t)
         ))
         self.wait()
-        self.play(FadeInFrom(answer, UP))
+        self.play(FadeIn(answer, UP))
         self.play(
             FadeOut(path),
             FadeOut(dot),
@@ -2065,7 +2065,7 @@ class StepFunctionIntegral(Scene):
 
         self.add(cn_expression)
         self.wait()
-        self.play(FadeInFrom(expansion, LEFT))
+        self.play(FadeIn(expansion, LEFT))
         for words in all_words:
             self.play(FadeIn(words))
             self.wait()
@@ -2305,7 +2305,7 @@ class ExponentialsMoreBroadly(Scene):
 
         self.play(
             FadeInFromDown(m_exp),
-            FadeOutAndShift(formula, UP),
+            FadeOut(formula, UP),
             FadeOut(c_exp)
         )
         self.add(vector_field, circle, dot, m_exp)

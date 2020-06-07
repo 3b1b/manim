@@ -307,13 +307,13 @@ class AskAboutFindingNewVelocities(Scene):
         self.play(Blink(randy))
         self.wait()
         self.play(
-            FadeInFrom(energy_words, RIGHT),
+            FadeIn(energy_words, RIGHT),
             FadeInFromDown(energy_expression),
             FadeOut(randy),
         )
         self.wait()
         self.play(
-            FadeInFrom(momentum_words, RIGHT),
+            FadeIn(momentum_words, RIGHT),
             FadeInFromDown(momentum_expression)
         )
         self.wait()
@@ -520,7 +520,7 @@ class AskAboutFindingNewVelocities(Scene):
         self.play(*anims, run_time=0.5)
 
     def get_next_velocity_labels_animation(self):
-        return FadeInFrom(
+        return FadeIn(
             self.get_next_velocity_labels(),
             LEFT,
             run_time=0.5
@@ -851,7 +851,7 @@ class IntroduceVelocityPhaseSpace(AskAboutFindingNewVelocities):
         )
 
         self.play(
-            FadeInFrom(xy_equation, UP),
+            FadeIn(xy_equation, UP),
             FadeOut(equations[1])
         )
         self.wait()
@@ -928,7 +928,7 @@ class IntroduceVelocityPhaseSpace(AskAboutFindingNewVelocities):
         )
         self.play(ShowCreationThenFadeAround(momentum_expression))
         self.wait()
-        self.play(FadeInFrom(momentum_xy_equation, UP))
+        self.play(FadeIn(momentum_xy_equation, UP))
         self.wait()
 
     def show_momentum_line(self):
@@ -962,7 +962,7 @@ class IntroduceVelocityPhaseSpace(AskAboutFindingNewVelocities):
         self.add(line, *foreground_mobs)
         self.play(ShowCreation(line))
         self.play(
-            FadeInFrom(slope_label, RIGHT),
+            FadeIn(slope_label, RIGHT),
             GrowArrow(slope_arrow),
         )
         self.wait()
@@ -1354,7 +1354,7 @@ class AnnouncePhaseDiagram(CircleDiagramFromSlidingBlocks):
         )
         self.wait()
         self.play(
-            FadeInFrom(simple_words, RIGHT),
+            FadeIn(simple_words, RIGHT),
             GrowArrow(simple_arrow),
             self.teacher.change, "hooray",
         )
@@ -1608,7 +1608,7 @@ class AnalyzeCircleGeometry(CircleDiagramFromSlidingBlocks, MovingCameraScene):
         self.wait()
         self.play(
             ShowCreation(theta_arc),
-            FadeInFrom(theta_label, UP)
+            FadeIn(theta_label, UP)
         )
         self.wait()
         self.play(
@@ -1703,8 +1703,8 @@ class AnalyzeCircleGeometry(CircleDiagramFromSlidingBlocks, MovingCameraScene):
         for line, arc, label, wedge in zip(lines, arcs, two_theta_labels, wedges):
             self.play(
                 ShowCreation(line),
-                FadeInFrom(arc, normalize(arc.get_center())),
-                FadeInFrom(label, normalize(arc.get_center())),
+                FadeIn(arc, normalize(arc.get_center())),
+                FadeIn(label, normalize(arc.get_center())),
                 FadeIn(wedge),
             )
 
@@ -1976,9 +1976,9 @@ class AddTwoThetaManyTimes(Scene):
             self.add(expression[:2 * n + 1])
             self.wait(0.25)
         self.play(
-            FadeInFrom(expression[-2:], LEFT),
+            FadeIn(expression[-2:], LEFT),
             GrowFromCenter(brace),
-            FadeInFrom(question, UP)
+            FadeIn(question, UP)
         )
         self.wait(3)
         self.play(
@@ -2130,7 +2130,7 @@ class ComputeThetaFor1e4(AnalyzeCircleGeometry):
         self.play(
             lines_to_fade.set_stroke, WHITE, 1, 0.3,
             ShowCreation(arc),
-            FadeInFrom(theta_label, UP)
+            FadeIn(theta_label, UP)
         )
 
         self.two_lines = two_lines
@@ -2165,7 +2165,7 @@ class ComputeThetaFor1e4(AnalyzeCircleGeometry):
         self.remove(new_line)
         line.match_style(new_line)
         self.play(
-            FadeInFrom(slope_label[3:5], LEFT)
+            FadeIn(slope_label[3:5], LEFT)
         )
         self.wait()
         self.play(
@@ -2756,13 +2756,13 @@ class UnitCircleIntuition(Scene):
 
         self.play(
             ShowCreation(height_line.copy().clear_updaters(), remover=True),
-            FadeInFrom(h_label.copy().clear_updaters(), RIGHT, remover=True),
+            FadeIn(h_label.copy().clear_updaters(), RIGHT, remover=True),
             Write(rhs[:2])
         )
         self.add(height_line, h_label)
         self.play(
             ShowCreation(width_line.copy().clear_updaters(), remover=True),
-            FadeInFrom(w_label.copy().clear_updaters(), UP, remover=True),
+            FadeIn(w_label.copy().clear_updaters(), UP, remover=True),
             self.r_label.fade, 1,
             Write(rhs[2])
         )
@@ -3026,18 +3026,18 @@ class FinalCommentsOnPhaseSpace(Scene):
         geometry.move_to(point, LEFT)
 
         self.play(
-            FadeOutAndShift(self.to_fade, UP),
-            FadeInFrom(state, UP)
+            FadeOut(self.to_fade, UP),
+            FadeIn(state, UP)
         )
         self.play(
             GrowArrow(arrow),
-            FadeInFrom(point, LEFT)
+            FadeIn(point, LEFT)
         )
         self.wait(2)
         for w1, w2 in [(state, dynamics), (point, geometry)]:
             self.play(
-                FadeOutAndShift(w1, UP),
-                FadeInFrom(w2, DOWN),
+                FadeOut(w1, UP),
+                FadeIn(w2, DOWN),
             )
             self.wait()
         self.wait()

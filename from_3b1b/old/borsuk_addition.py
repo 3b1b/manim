@@ -134,7 +134,7 @@ class UnexpectedConnection(Scene):
         self.wait()
         self.play(
             Restore(arrow),
-            FadeInFrom(formula, LEFT)
+            FadeIn(formula, LEFT)
         )
         self.wait()
 
@@ -452,7 +452,7 @@ class FunctionGInSymbols(Scene):
         self.play(WiggleOutThenIn(f))
         self.wait()
         self.play(
-            FadeOutAndShift(dec_rhs, DOWN),
+            FadeOut(dec_rhs, DOWN),
             FadeInFromDown(f_of_neg_p)
         )
         self.wait()
@@ -468,7 +468,7 @@ class FunctionGInSymbols(Scene):
             MoveToTarget(f_of_p, path_arc=PI),
             MoveToTarget(f_of_neg_p, path_arc=-PI),
             FadeInFromLarge(minus),
-            FadeInFrom(zero_zero, LEFT)
+            FadeIn(zero_zero, LEFT)
         )
         self.wait()
 
@@ -493,7 +493,7 @@ class FunctionGInSymbols(Scene):
 
         self.play(
             FadeInFromLarge(g_of_p),
-            FadeInFrom(def_eq, LEFT)
+            FadeIn(def_eq, LEFT)
         )
         self.play(
             FadeInFromDown(seeking_text),
@@ -596,7 +596,7 @@ class FunctionGInputSpace(SpecialThreeDScene):
         self.play(
             point_mob.move_to, start_point,
             GrowArrow(arrow),
-            FadeInFrom(p_label, IN)
+            FadeIn(p_label, IN)
         )
         self.wait()
         self.play(
@@ -835,7 +835,7 @@ class FunctionGOutputSpace(FunctionGInputSpace):
         self.wait(3)
         dc = dot.copy()
         self.play(
-            FadeInFrom(dc, 2 * UP, remover=True),
+            FadeIn(dc, 2 * UP, remover=True),
             UpdateFromFunc(fp_label, lambda fp: fp.next_to(dc, UL, SMALL_BUFF))
         )
         self.add(dot)

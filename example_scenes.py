@@ -25,7 +25,7 @@ class OpeningManimExample(Scene):
         VGroup(title, basel).arrange(DOWN)
         self.play(
             Write(title),
-            FadeInFrom(basel, UP),
+            FadeIn(basel, UP),
         )
         self.wait()
 
