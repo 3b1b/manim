@@ -5,6 +5,7 @@ from PIL import Image
 
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
+from manimlib.utils.bezier import interpolate
 from manimlib.utils.color import color_to_rgba
 from manimlib.utils.images import get_full_raster_image_path
 from manimlib.utils.space_ops import normalize_along_axis
@@ -68,6 +69,8 @@ class ParametricSurface(Mobject):
         # normals, this returns an Nx3 array whose rows are elements from this grid
         # in such such a way that successive triplets of points form triangles covering
         # the grid.
+        if array.size == 0:
+            return array
         dim = array.shape[1]
         nu, nv = self.resolution
         assert(array.shape == (nu * nv, dim))
@@ -100,21 +103,24 @@ class ParametricSurface(Mobject):
         )
         return normalize_along_axis(normals, 1)
 
-    def set_color(self, color, opacity=1.0, gloss=None, family=True):
+    def set_color(self, color, opacity=1.0, family=True):
         # TODO, allow for multiple colors
         rgba = color_to_rgba(color, opacity)
         self.rgbas = np.array([rgba])
-        if gloss is not None:
-            self.set_gloss(gloss)
         if family:
             for submob in self.submobjects:
-                submob.set_color(color, opacity, gloss, family)
+                submob.set_color(color, opacity, family)
+        return self
 
     def set_opacity(self, opacity, family=True):
         self.rgbas[:, 3] = opacity
         if family:
             for sm in self.submobjects:
                 sm.set_opacity(opacity, family)
+        return self
+
+    def interpolate_color(self, mobject1, mobject2, alpha):
+        self.rgbas = interpolate(mobject1.rgbas, mobject2.rgbas, alpha)
         return self
 
     def get_shader_data(self):
@@ -138,7 +144,8 @@ class ParametricSurface(Mobject):
 
 class SGroup(ParametricSurface):
     def __init__(self, *parametric_surfaces, **kwargs):
-        super().__init__(**kwargs)
+        # TODO, separate out the surface type...again
+        super().__init__(uv_func=None, **kwargs)
         self.add(*parametric_surfaces)
 
     def init_points(self):
