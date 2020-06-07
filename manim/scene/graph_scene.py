@@ -51,6 +51,15 @@ class GraphScene(Scene):
         "default_riemann_end_color": GREEN,
         "area_opacity": 0.8,
         "num_rects": 50,
+        "include_tip": False,          # add tip at the end of the axes
+        "x_axis_visibility": True,     # show or hide the x axis
+        "y_axis_visibility": True,     # show or hide the y axis
+        "x_label_position": UP+RIGHT,  # where to place the label of the x axis
+        "y_label_position": UP+RIGHT,  # where to place the label of the y axis
+        "x_add_start": 0,              # extend the x axis to the left
+        "x_add_end": 0,                # extend the x axis to the right
+        "y_add_start": 0,              # extend the y axis to the bottom
+        "y_add_end": 0,                # extend the y axis to the top
     }
 
     def setup(self):
@@ -88,7 +97,10 @@ class GraphScene(Scene):
             tick_frequency=self.x_tick_frequency,
             leftmost_tick=self.x_leftmost_tick,
             numbers_with_elongated_ticks=self.x_labeled_nums,
-            color=self.axes_color
+            color=self.axes_color,
+            include_tip=self.include_tip,
+            add_start=self.x_add_start,
+            add_end=self.x_add_end
         )
         x_axis.shift(self.graph_origin - x_axis.number_to_point(0))
         if len(self.x_labeled_nums) > 0:
@@ -98,7 +110,8 @@ class GraphScene(Scene):
         if self.x_axis_label:
             x_label = TextMobject(self.x_axis_label)
             x_label.next_to(
-                x_axis.get_tick_marks(), UP + RIGHT,
+                x_axis.get_tips() if self.include_tip else x_axis.get_tick_marks(),
+                self.x_label_position,
                 buff=SMALL_BUFF
             )
             x_label.shift_onto_screen()
@@ -122,6 +135,9 @@ class GraphScene(Scene):
             color=self.axes_color,
             line_to_number_vect=LEFT,
             label_direction=LEFT,
+            include_tip=self.include_tip,
+            add_start=self.y_add_start,
+            add_end=self.y_add_end
         )
         y_axis.shift(self.graph_origin - y_axis.number_to_point(0))
         y_axis.rotate(np.pi / 2, about_point=y_axis.number_to_point(0))
@@ -132,17 +148,23 @@ class GraphScene(Scene):
         if self.y_axis_label:
             y_label = TextMobject(self.y_axis_label)
             y_label.next_to(
-                y_axis.get_corner(UP + RIGHT), UP + RIGHT,
+                y_axis.get_corner(self.y_label_position), self.y_label_position,
                 buff=SMALL_BUFF
             )
             y_label.shift_onto_screen()
             y_axis.add(y_label)
             self.y_axis_label_mob = y_label
 
+        axes = []
+        if self.x_axis_visibility:
+            axes.append(x_axis)
+        if self.y_axis_visibility:
+            axes.append(y_axis)
+
         if animate:
-            self.play(Write(VGroup(x_axis, y_axis)))
+            self.play(Write(VGroup(*axes)))
         else:
-            self.add(x_axis, y_axis)
+            self.add(*axes)
         self.x_axis, self.y_axis = self.axes = VGroup(x_axis, y_axis)
         self.default_graph_colors = it.cycle(self.default_graph_colors)
 

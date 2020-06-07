@@ -35,6 +35,8 @@ class NumberLine(Line):
         "include_tip": False,
         "tip_width": 0.25,
         "tip_height": 0.25,
+        "add_start": 0,  # extend number line by this amount at its starting point
+        "add_end": 0,    # extend number line by this amount at its end point
         "decimal_number_config": {
             "num_decimal_places": 0,
         },
@@ -45,7 +47,12 @@ class NumberLine(Line):
         digest_config(self, kwargs)
         start = self.unit_size * self.x_min * RIGHT
         end = self.unit_size * self.x_max * RIGHT
-        Line.__init__(self, start, end, **kwargs)
+        Line.__init__(
+            self,
+            start - self.add_start * RIGHT,
+            end + self.add_end * RIGHT,
+            **kwargs
+        )
         self.shift(-self.number_to_point(self.number_at_center))
 
         self.init_leftmost_tick()
@@ -95,7 +102,7 @@ class NumberLine(Line):
         )
 
     def get_tick_numbers(self):
-        u = -1 if self.include_tip else 1
+        u = -1 if self.include_tip and self.add_end == 0 else 1
         return np.arange(
             self.leftmost_tick,
             self.x_max + u * self.tick_frequency / 2,
@@ -105,7 +112,9 @@ class NumberLine(Line):
     def number_to_point(self, number):
         alpha = float(number - self.x_min) / (self.x_max - self.x_min)
         return interpolate(
-            self.get_start(), self.get_end(), alpha
+            self.get_start() + self.add_start * RIGHT,
+            self.get_end() - self.add_end * RIGHT,
+            alpha
         )
 
     def point_to_number(self, point):
