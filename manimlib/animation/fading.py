@@ -1,8 +1,8 @@
 from manimlib.animation.animation import Animation
 from manimlib.animation.animation import DEFAULT_ANIMATION_LAG_RATIO
 from manimlib.animation.transform import Transform
+from manimlib.constants import ORIGIN
 from manimlib.constants import DOWN
-from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.rate_functions import there_and_back
 
@@ -16,8 +16,15 @@ class FadeOut(Transform):
         "lag_ratio": DEFAULT_FADE_LAG_RATIO,
     }
 
+    def __init__(self, mobject, to_vect=ORIGIN, **kwargs):
+        self.to_vect = to_vect
+        super().__init__(mobject, **kwargs)
+
     def create_target(self):
-        return self.mobject.copy().fade(1)
+        result = self.mobject.copy()
+        result.set_opacity(0)
+        result.shift(self.to_vect)
+        return result
 
     def clean_up_from_scene(self, scene=None):
         super().clean_up_from_scene(scene)
@@ -29,17 +36,21 @@ class FadeIn(Transform):
         "lag_ratio": DEFAULT_FADE_LAG_RATIO,
     }
 
+    def __init__(self, mobject, from_vect=ORIGIN, **kwargs):
+        self.from_vect = from_vect
+        super().__init__(mobject, **kwargs)
+
     def create_target(self):
         return self.mobject
 
     def create_starting_mobject(self):
         start = super().create_starting_mobject()
-        start.fade(1)
-        if isinstance(start, VMobject):
-            start.set_stroke(width=0)
-            start.set_fill(opacity=0)
+        start.set_opacity(0)
+        start.shift(self.from_vect)
         return start
 
+
+# Below will be deprecated
 
 class FadeInFrom(Transform):
     CONFIG = {
@@ -58,7 +69,7 @@ class FadeInFrom(Transform):
     def begin(self):
         super().begin()
         self.starting_mobject.shift(self.direction)
-        self.starting_mobject.fade(1)
+        self.starting_mobject.set_opacity(0)
 
 
 class FadeInFromDown(FadeInFrom):
