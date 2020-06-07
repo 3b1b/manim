@@ -1,11 +1,12 @@
 import numpy as np
 
+from ..utils.paths import straight_path
 from ..mobject.mobject import Mobject
 
 
 class ValueTracker(Mobject):
     """
-    Note meant to be displayed.  Instead the position encodes some
+    Not meant to be displayed.  Instead the position encodes some
     number, often one which another animation or continual_animation
     uses for its update function, and by treating it as a mobject it can
     still be animated and manipulated just like anything else.
@@ -25,6 +26,17 @@ class ValueTracker(Mobject):
 
     def increment_value(self, d_value):
         self.set_value(self.get_value() + d_value)
+
+    def interpolate(self, mobject1, mobject2,
+                    alpha, path_func=straight_path):
+        """
+        Turns self into an interpolation between mobject1
+        and mobject2.
+        """
+        self.points = path_func(
+            mobject1.points, mobject2.points, alpha
+        )
+        return self
 
 
 class ExponentialValueTracker(ValueTracker):

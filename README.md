@@ -10,6 +10,8 @@ Manim is an animation engine for explanatory math videos. It's used to create pr
 
 > NOTE: This repository is maintained by the Manim Community, and is not associated with Grant Sanderson or 3Blue1Brown in any way (though we are definitely indebted to him for providing his work to the world). If you want to study how Grant makes his videos, head over to the main repository (3b1b/manim). This is a more frequently updated repository than the main one, and is recommended if you want to use Manim for your own projects.
 
+
+
 ## Table of Contents:
 - [Installation](#installation)
   * [Windows](#windows)
@@ -34,6 +36,7 @@ Manim is an animation engine for explanatory math videos. It's used to create pr
 - [Documentation](#documentation)
 - [Help with Manim](#help-with-manim)
 - [Contributing](#contributing)
+- [License](#license)
 
 ## Installation
 
@@ -249,4 +252,13 @@ Documentation is in progress at [eulertour.com/docs](https://www.eulertour.com/d
 The issues board is reserved for bugs, and future features planned for Manim. If you need help installing or using Manim, please take a look at [the Reddit Community](https://www.reddit.com/r/manim) or the [Discord Community](https://discord.gg/mMRrZQW)
 
 ## Contributing
-Is always welcome. In particular, there is a dire need for tests and documentation.
+Is always welcome. In particular, there is a dire need for tests and documentation. 
+
+For instructions, guidelines and other details, please check out the file [CONTRIBUTING.md](https://github.com/ManimCommunity/manim/blob/master/CONTRIBUTING.md).
+
+## License
+
+The software is double-licensed under the MIT license, with copyright
+by 3blue1brown LLC (see LICENSE), and copyright by Manim Community
+Developers (see LICENSE.community).
+

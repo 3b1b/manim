@@ -11,7 +11,6 @@ from ...utils.config_ops import digest_config
 from ...utils.strings import split_string_list_to_isolate_substrings
 from ...utils.tex_file_writing import tex_to_svg_file
 
-
 TEX_MOB_SCALE_FACTOR = 0.05
 
 
@@ -21,10 +20,8 @@ class TexSymbol(VMobjectFromSVGPathstring):
     """
     pass
 
-
 class SingleStringTexMobject(SVGMobject):
     CONFIG = {
-        "template_tex_file_body": TEMPLATE_TEX_FILE_BODY,
         "stroke_width": 0,
         "fill_opacity": 1.0,
         "background_stroke_width": 1,
@@ -33,6 +30,7 @@ class SingleStringTexMobject(SVGMobject):
         "height": None,
         "organize_left_to_right": False,
         "alignment": "",
+        "type": "tex",
     }
 
     def __init__(self, tex_string, **kwargs):
@@ -41,7 +39,7 @@ class SingleStringTexMobject(SVGMobject):
         self.tex_string = tex_string
         file_name = tex_to_svg_file(
             self.get_modified_expression(tex_string),
-            self.template_tex_file_body
+            self.type
         )
         SVGMobject.__init__(self, file_name=file_name, **kwargs)
         if self.height is None:
@@ -247,9 +245,9 @@ class TexMobject(SingleStringTexMobject):
 
 class TextMobject(TexMobject):
     CONFIG = {
-        "template_tex_file_body": TEMPLATE_TEXT_FILE_BODY,
         "alignment": "\\centering",
         "arg_separator": "",
+        "type": "text",
     }
 
 
@@ -258,7 +256,6 @@ class BulletedList(TextMobject):
         "buff": MED_LARGE_BUFF,
         "dot_scale_factor": 2,
         # Have to include because of handle_multiple_args implementation
-        "template_tex_file_body": TEMPLATE_TEXT_FILE_BODY,
         "alignment": "",
     }
 

@@ -34,6 +34,7 @@ class Mobject(Container):
         "name": None,
         "dim": 3,
         "target": None,
+        "z_index": 0,
     }
 
     def __init__(self, **kwargs):
@@ -550,7 +551,7 @@ class Mobject(Container):
         curr_vect = curr_end - curr_start
         if np.all(curr_vect == 0):
             raise Exception("Cannot position endpoints of closed loop")
-        target_vect = end - start
+        target_vect = np.array(end) - np.array(start)
         self.scale(
             get_norm(target_vect) / get_norm(curr_vect),
             about_point=curr_start,
@@ -823,7 +824,7 @@ class Mobject(Container):
         return self.get_start(), self.get_end()
 
     def point_from_proportion(self, alpha):
-        raise Exception("Not implemented")
+        raise NotImplementedError('Please override in a child class.')
 
     def get_pieces(self, n_pieces):
         template = self.copy()
@@ -995,8 +996,8 @@ class Mobject(Container):
         The simplest mobject to be transformed to or from self.
         Should by a point of the appropriate type
         """
-        message = "get_point_mobject not implemented for {}"
-        raise Exception(message.format(self.__class__.__name__))
+        msg = f"get_point_mobject not implemented for {self.__class__.__name__}"
+        raise NotImplementedError(msg)
 
     def align_points(self, mobject):
         count1 = self.get_num_points()
@@ -1008,7 +1009,7 @@ class Mobject(Container):
         return self
 
     def align_points_with_larger(self, larger_mobject):
-        raise Exception("Not implemented")
+        raise NotImplementedError('Please override in a child class.')
 
     def align_submobjects(self, mobject):
         mob1 = self
@@ -1085,21 +1086,10 @@ class Mobject(Container):
         return self
 
     def interpolate_color(self, mobject1, mobject2, alpha):
-        pass  # To implement in subclass
-
-    def become_partial(self, mobject, a, b):
-        """
-        Set points in such a way as to become only
-        part of mobject.
-        Inputs 0 <= a < b <= 1 determine what portion
-        of mobject to become.
-        """
-        pass  # To implement in subclasses
-
-        # TODO, color?
+        raise NotImplementedError('Please override in a child class.')
 
     def pointwise_become_partial(self, mobject, a, b):
-        pass  # To implement in subclass
+        raise NotImplementedError('Please override in a child class.')
 
     def become(self, mobject, copy_submobjects=True):
         """
@@ -1119,6 +1109,35 @@ class Mobject(Container):
                       "for a Mobject with no points"
             caller_name = sys._getframe(1).f_code.co_name
             raise Exception(message.format(caller_name))
+
+    # About z-index
+    def set_z_index(self, z_index_value):
+        """Sets the mobject's :attr:`z_index` to the value specified in `z_index_value`.
+
+        Parameters
+        ----------
+        z_index_value : Union[:class:`int`, :class:`float`]
+            The new value of :attr:`z_index` set.
+
+        Returns
+        -------
+        :class:`Mobject`
+            The Mobject itself, after :attr:`z_index` is set. (Returns `self`.)
+        """
+        self.z_index = z_index_value
+        return self
+
+    def set_z_index_by_z_coordinate(self):
+        """Sets the mobject's z coordinate to the value of :attr:`z_index`.
+
+        Returns
+        -------
+        :class:`Mobject`
+            The Mobject itself, after :attr:`z_index` is set. (Returns `self`.)
+        """
+        z_coord = self.get_center()[-1]
+        self.set_z_index(z_coord)
+        return self
 
 
 class Group(Mobject):
