@@ -33,6 +33,8 @@ As this is a Fork of [Manim by 3b1b](https://github.com/3b1b/manim), contributin
 
 4. After that, you can make your changes to the repo's files (the code is in the `manim` directory). Then, you can commit said changes.
 
+> Note: if your Pull Request doesn't change any of the actual code, please add `[skip ci]` to your commit message for Travis to ignore it.
+
 5. Finally, instead of  typing in `git push`, enter the command below.
 
    ```sh
