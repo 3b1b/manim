@@ -84,7 +84,7 @@ jobs:
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --upgrade pip
         - python -m pip install --user -r ./.travis/travis-requirements.txt
-        - python ./.travis/cairo-windows.py
+        - python ./scripts/pycairoinstall.py
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .
       script:
@@ -101,7 +101,7 @@ jobs:
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --upgrade pip
         - python -m pip install --user -r ./.travis/travis-requirements.txt
-        - python ./.travis/cairo-windows.py
+        - python ./scripts/pycairoinstall.py
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .
       script:
@@ -118,7 +118,7 @@ jobs:
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --upgrade pip
         - python -m pip install --user -r ./.travis/travis-requirements.txt
-        - python ./.travis/cairo-windows.py
+        - python ./scripts/pycairoinstall.py
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .
       script:

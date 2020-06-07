@@ -252,7 +252,9 @@ Documentation is in progress at [eulertour.com/docs](https://www.eulertour.com/d
 The issues board is reserved for bugs, and future features planned for Manim. If you need help installing or using Manim, please take a look at [the Reddit Community](https://www.reddit.com/r/manim) or the [Discord Community](https://discord.gg/mMRrZQW)
 
 ## Contributing
-Is always welcome. In particular, there is a dire need for tests and documentation.
+Is always welcome. In particular, there is a dire need for tests and documentation. 
+
+For instructions, guidelines and other details, please check out the file [CONTRIBUTING.md](https://github.com/ManimCommunity/manim/blob/master/CONTRIBUTING.md).
 
 ## License
 
