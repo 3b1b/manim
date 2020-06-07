@@ -293,13 +293,11 @@ class Camera(object):
             for mob in mobjects
         ])
         batches = batch_by_property(shader_infos, shader_info_to_id)
+        # TODO, if apply_depth_test, don't worry about order.
+        # Maybe rewrite batch_by_property to have a "preserve_order" argument
 
         for info_group, sid in batches:
-            if len(info_group) == 1:
-                data = info_group[0]["data"]
-            else:
-                data = np.hstack([info["data"] for info in info_group])
-
+            data = np.hstack([info["data"] for info in info_group])
             shader = self.get_shader(info_group[0])
             render_primative = int(info_group[0]["render_primative"])
             self.render(shader, data, render_primative)
