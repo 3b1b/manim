@@ -158,7 +158,7 @@ class Cube(SGroup):
     }
 
     def init_points(self):
-        for vect in IN, OUT, LEFT, RIGHT, UP, DOWN:
+        for vect in [OUT, RIGHT, UP, LEFT, DOWN, IN]:
             face = Square3D(resolution=self.square_resolution)
             face.shift(OUT)
             face.apply_matrix(z_to_vector(vect))
