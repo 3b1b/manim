@@ -25,7 +25,7 @@ class ImageMobject(Mobject):
     def __init__(self, filename, **kwargs):
         path = get_full_raster_image_path(filename)
         self.image = Image.open(path)
-        self.texture_path = path
+        self.texture_paths = {"Texture": path}
         Mobject.__init__(self, **kwargs)
 
     def init_points(self):

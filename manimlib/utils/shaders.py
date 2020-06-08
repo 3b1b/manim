@@ -2,6 +2,7 @@ import os
 import warnings
 import re
 import moderngl
+import json
 
 from manimlib.constants import SHADER_DIR
 
@@ -13,11 +14,19 @@ from manimlib.constants import SHADER_DIR
 
 
 SHADER_INFO_KEYS = [
+    # A structred array caring all of the points/color/lighting/etc. information
+    # needed for the shader.
     "data",
+    # Filename of vetex shader
     "vert",
+    # Filename of geometry shader, if there is one
     "geom",
+    # Filename of fragment shader
     "frag",
-    "texture_path",
+    # A dictionary mapping names (as they show up in)
+    # the shader to filepaths for textures.
+    "texture_paths",
+    # E.g. moderngl.TRIANGLE_STRIP
     "render_primative",
 ]
 
@@ -26,15 +35,18 @@ def get_shader_info(data=None,
                     vert_file=None,
                     geom_file=None,
                     frag_file=None,
-                    texture_path=None,
-                    render_primative=moderngl.TRIANGLE_STRIP):
+                    render_primative=moderngl.TRIANGLE_STRIP,
+                    texture_paths=None,
+                    ):
     return {
         key: value
         for key, value in zip(
             SHADER_INFO_KEYS,
             [
-                data, vert_file, geom_file, frag_file,
-                texture_path, str(render_primative)
+                data,
+                vert_file, geom_file, frag_file,
+                texture_paths or {},
+                str(render_primative)
             ]
         )
     }
@@ -52,32 +64,23 @@ def is_valid_shader_info(shader_info):
 def shader_info_to_id(shader_info):
     # A unique id for a shader based on the
     # files holding its code and texture
-    return "|".join([
-        shader_info.get(key, "") or ""
-        for key in SHADER_INFO_KEYS[1:]
-    ])
+    tuples = [
+        (key, shader_info[key])
+        for key in SHADER_INFO_KEYS[1:]  # Skip data
+    ]
+    return json.dumps(tuples)
 
 
 def shader_id_to_info(sid):
-    return {
-        key: (value or None)
-        for key, value in zip(
-            SHADER_INFO_KEYS,
-            [None, *sid.split("|")]
-        )
-    }
+    result = dict(json.loads(sid))
+    result["data"] = None
+    return result
 
 
 def same_shader_type(info1, info2):
     return all([
         info1[key] == info2[key]
-        for key in [
-            "vert",
-            "geom",
-            "frag",
-            "texture_path",
-            "render_primative",
-        ]
+        for key in SHADER_INFO_KEYS[1:]  # Skip data
     ])
 
 

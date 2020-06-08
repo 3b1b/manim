@@ -167,12 +167,15 @@ class TexturedSurface(ParametricSurface):
         ]
     }
 
-    def __init__(self, uv_surface, filename, **kwargs):
+    def __init__(self, uv_surface, image_file, dark_image_file=None, **kwargs):
         if not isinstance(uv_surface, ParametricSurface):
             raise Exception("uv_surface must be of type ParametricSurface")
-        path = get_full_raster_image_path(filename)
-        self.image = Image.open(path)
-        self.texture_path = path
+        if dark_image_file is None:
+            dark_image_file = image_file
+        self.texture_paths = {
+            "LightTexture": get_full_raster_image_path(image_file),
+            "DarkTexture": get_full_raster_image_path(dark_image_file),
+        }
 
         self.uv_surface = uv_surface
         self.uv_func = uv_surface.uv_func

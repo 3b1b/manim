@@ -827,14 +827,12 @@ class VMobject(Mobject):
             vert_file=self.stroke_vert_shader_file,
             geom_file=self.stroke_geom_shader_file,
             frag_file=self.stroke_frag_shader_file,
-            texture_path=self.texture_path,
             render_primative=self.render_primative,
         )
         fill_info = get_shader_info(
             vert_file=self.fill_vert_shader_file,
             geom_file=self.fill_geom_shader_file,
             frag_file=self.fill_frag_shader_file,
-            texture_path=self.texture_path,
             render_primative=self.render_primative,
         )
 

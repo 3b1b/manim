@@ -367,11 +367,10 @@ class Camera(object):
                 geometry_shader=get_shader_code_from_file(info["geom"]),
                 fragment_shader=get_shader_code_from_file(info["frag"]),
             )
-            if info["texture_path"]:
-                # TODO, this currently assumes that the uniform Sampler2D
-                # is named Texture, and that there's only one of them
-                tid = self.get_texture_id(info["texture_path"])
-                shader["Texture"].value = tid
+            if info["texture_paths"]:
+                for name, path in info["texture_paths"].items():
+                    tid = self.get_texture_id(path)
+                    shader[name].value = tid
 
             self.set_shader_uniforms(shader)
             self.id_to_shader[sid] = shader

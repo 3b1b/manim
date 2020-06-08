@@ -50,7 +50,7 @@ class Mobject(Container):
         "geom_shader_file": "",
         "frag_shader_file": "",
         "render_primative": moderngl.TRIANGLE_STRIP,
-        "texture_path": "",
+        "texture_paths": None,
         # Must match in attributes of vert shader
         "shader_dtype": [
             ('point', np.float32, (3,)),
@@ -1215,8 +1215,8 @@ class Mobject(Container):
             vert_file=self.vert_shader_file,
             geom_file=self.geom_shader_file,
             frag_file=self.frag_shader_file,
-            texture_path=self.texture_path,
             render_primative=self.render_primative,
+            texture_paths=self.texture_paths,
         )
 
     def get_shader_data(self):
