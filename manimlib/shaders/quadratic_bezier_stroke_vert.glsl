@@ -10,7 +10,6 @@ in vec3 unit_normal;
 
 in float stroke_width;
 in vec4 color;
-in float joint_type;
 in float gloss;
 in float shadow;
 
@@ -22,7 +21,6 @@ out vec3 v_global_unit_normal;
 
 out float v_stroke_width;
 out vec4 v_color;
-out float v_joint_type;
 out float v_gloss;
 out float v_shadow;
 
@@ -41,7 +39,6 @@ void main(){
 
     v_stroke_width = STROKE_WIDTH_CONVERSION * stroke_width;
     v_color = color;
-    v_joint_type = joint_type;
     v_gloss = gloss;
     v_shadow = shadow;
 }

@@ -74,7 +74,6 @@ class VMobject(Mobject):
             ('unit_normal', np.float32, (3,)),
             ("stroke_width", np.float32, (1,)),
             ("color", np.float32, (4,)),
-            ("joint_type", np.float32, (1,)),
             ("gloss", np.float32, (1,)),
             ("shadow", np.float32, (1,)),
         ]
@@ -877,17 +876,9 @@ class VMobject(Mobject):
             "bevel": 2,
             "miter": 3,
         }
-        # return {"joint_type": joint_type_to_code[self.joint_type]}
-        return {}  # TODO
+        return {"joint_type": joint_type_to_code[self.joint_type]}
 
     def get_stroke_shader_data(self):
-        joint_type_to_code = {
-            "auto": 0,
-            "round": 1,
-            "bevel": 2,
-            "miter": 3,
-        }
-
         rgbas = self.get_stroke_rgbas()
         if len(rgbas) > 1:
             rgbas = self.stretched_style_array_matching_points(rgbas)
@@ -908,7 +899,6 @@ class VMobject(Mobject):
         data["unit_normal"] = self.get_unit_normal_vector()
         data["stroke_width"][:, 0] = stroke_width
         data["color"] = rgbas
-        data["joint_type"] = joint_type_to_code[self.joint_type]
         data["gloss"] = self.gloss
         data["shadow"] = self.shadow
         return data

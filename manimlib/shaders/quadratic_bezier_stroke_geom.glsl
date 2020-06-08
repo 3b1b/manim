@@ -8,6 +8,7 @@ uniform float aspect_ratio;
 uniform float focal_distance;
 uniform float anti_alias_width;
 uniform vec3 light_source_position;
+uniform float joint_type;
 
 in vec3 bp[3];
 in vec3 prev_bp[3];
@@ -16,7 +17,6 @@ in vec3 v_global_unit_normal[3];
 
 in vec4 v_color[3];
 in float v_stroke_width[3];
-in float v_joint_type[3];
 in float v_gloss[3];
 in float v_shadow[3];
 
@@ -95,7 +95,6 @@ void create_joint(float angle, vec3 unit_tan, float buff, float should_bevel,
                   vec3 static_c0, out vec3 changing_c0,
                   vec3 static_c1, out vec3 changing_c1){
     float shift;
-    float joint_type = v_joint_type[0];
     bool miter = (
         (joint_type == AUTO_JOINT && abs(angle) > 2.8 && should_bevel == 1) ||
         (joint_type == MITER_JOINT)
@@ -172,7 +171,6 @@ void set_adjascent_info(vec3 c0, vec3 tangent,
                         out float bevel,
                         out float angle
                         ){
-    float joint_type = v_joint_type[0];
     vec3 new_adj[3];
     float adj_degree = get_reduced_control_points(adj, new_adj);
     // Check if adj_degree is zero?
