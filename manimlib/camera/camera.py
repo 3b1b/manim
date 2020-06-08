@@ -1,5 +1,6 @@
 import moderngl
 from colour import Color
+import OpenGL.GL as gl
 
 from PIL import Image
 import numpy as np
@@ -9,6 +10,7 @@ from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.bezier import interpolate
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.shaders import shader_info_to_id
@@ -24,6 +26,8 @@ from manimlib.utils.space_ops import quaternion_mult
 
 class CameraFrame(Mobject):
     CONFIG = {
+        # TODO, package these togeher
+        # Also, interpolation doesn't yet do anything with them.
         "width": FRAME_WIDTH,
         "height": FRAME_HEIGHT,
         "center_point": ORIGIN,
@@ -120,8 +124,17 @@ class CameraFrame(Mobject):
     def get_focal_distance(self):
         return self.focal_distance
 
-    def interpolate(self, mobject1, mobject2, alpha, **kwargs):
-        pass
+    def interpolate(self, frame1, frame2, alpha, path_func):
+        self.euler_angles[:] = interpolate(
+            frame1.euler_angles,
+            frame2.euler_angles,
+            alpha
+        )
+        self.points = interpolate(
+            frame1.points,
+            frame2.points,
+            alpha,
+        )
 
 
 class Camera(object):
@@ -141,13 +154,23 @@ class Camera(object):
         "image_mode": "RGBA",
         "n_channels": 4,
         "pixel_array_dtype": 'uint8',
-        "light_source_position": [-10, 10, 10],  # TODO, add multiple light sources
+        "light_source_position": [-10, 10, 10],
         "apply_depth_test": False,
+        # Measured in pixel widths, used for vector graphics
+        "anti_alias_width": 1.5,
+        # Although vector graphics handle antialiasing fine
+        # without multisampling, for 3d scenes one might want
+        # to set samples to be greater than 0.
+        "samples": 0,
     }
 
     def __init__(self, ctx=None, **kwargs):
         digest_config(self, kwargs, locals())
         self.rgb_max_val = np.iinfo(self.pixel_array_dtype).max
+        self.background_rgba = [
+            *Color(self.background_color).get_rgb(),
+            self.background_opacity
+        ]
         self.init_frame()
         self.init_context(ctx)
         self.init_shaders()
@@ -158,63 +181,63 @@ class Camera(object):
         self.frame = CameraFrame(**self.frame_config)
 
     def init_context(self, ctx=None):
-        if ctx is not None:
-            self.ctx = ctx
-            self.fbo = self.ctx.detect_framebuffer()
+        if ctx is None:
+            ctx = moderngl.create_standalone_context()
+            fbo = self.get_fbo(ctx, 0)
         else:
-            self.ctx = moderngl.create_standalone_context()
-            self.fbo = self.get_fbo()
-            self.fbo.use()
+            fbo = ctx.detect_framebuffer()
+
+        # For multisample antialiasing
+        fbo_msaa = self.get_fbo(ctx, self.samples)
+        fbo_msaa.use()
 
         flag = moderngl.BLEND
         if self.apply_depth_test:
             flag |= moderngl.DEPTH_TEST
-        self.ctx.enable(flag)
-        self.ctx.blend_func = (  # Needed?
+        ctx.enable(flag)
+        ctx.blend_func = (
             moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA,
             moderngl.ONE, moderngl.ONE
         )
-        self.background_fbo = None
+
+        self.ctx = ctx
+        self.fbo = fbo
+        self.fbo_msaa = fbo_msaa
 
     def init_light_source(self):
         self.light_source = Point(self.light_source_position)
 
     # Methods associated with the frame buffer
-    def get_fbo(self):
-        return self.ctx.simple_framebuffer(
-            (self.pixel_width, self.pixel_height)
+    def get_fbo(self, ctx, samples=0):
+        pw = self.pixel_width
+        ph = self.pixel_height
+        return ctx.framebuffer(
+            color_attachments=ctx.texture(
+                (pw, ph),
+                components=self.n_channels,
+                samples=samples,
+            ),
+            depth_attachment=ctx.depth_renderbuffer(
+                (pw, ph),
+                samples=samples
+            )
         )
 
-    def resize_frame_shape(self, fixed_dimension=0):
-        """
-        Changes frame_shape to match the aspect ratio
-        of the pixels, where fixed_dimension determines
-        whether frame_height or frame_width
-        remains fixed while the other changes accordingly.
-        """
-        pixel_height = self.get_pixel_height()
-        pixel_width = self.get_pixel_width()
-        frame_height = self.get_frame_height()
-        frame_width = self.get_frame_width()
-        aspect_ratio = fdiv(pixel_width, pixel_height)
-        if fixed_dimension == 0:
-            frame_height = frame_width / aspect_ratio
-        else:
-            frame_width = aspect_ratio * frame_height
-        self.frame.set_height(frame_height)
-        self.frame.set_width(frame_width)
-
     def clear(self):
-        rgba = (*Color(self.background_color).get_rgb(), self.background_opacity)
-        self.fbo.clear(*rgba)
+        self.fbo.clear(*self.background_rgba)
+        self.fbo_msaa.clear(*self.background_rgba)
 
     def reset_pixel_shape(self, new_width, new_height):
         self.pixel_width = new_width
         self.pixel_height = new_height
         self.refresh_shader_uniforms()
 
-    # Various ways to read from the fbo
     def get_raw_fbo_data(self, dtype='f1'):
+        # Copy blocks from the fbo_msaa to the drawn fbo using Blit
+        pw, ph = (self.pixel_width, self.pixel_height)
+        gl.glBindFramebuffer(gl.GL_READ_FRAMEBUFFER, self.fbo_msaa.glo)
+        gl.glBindFramebuffer(gl.GL_DRAW_FRAMEBUFFER, self.fbo.glo)
+        gl.glBlitFramebuffer(0, 0, pw, ph, 0, 0, pw, ph, gl.GL_COLOR_BUFFER_BIT, gl.GL_LINEAR)
         return self.fbo.read(
             viewport=self.fbo.viewport,
             components=self.n_channels,
@@ -268,6 +291,25 @@ class Camera(object):
 
     def get_frame_center(self):
         return self.frame.get_center()
+
+    def resize_frame_shape(self, fixed_dimension=0):
+        """
+        Changes frame_shape to match the aspect ratio
+        of the pixels, where fixed_dimension determines
+        whether frame_height or frame_width
+        remains fixed while the other changes accordingly.
+        """
+        pixel_height = self.get_pixel_height()
+        pixel_width = self.get_pixel_width()
+        frame_height = self.get_frame_height()
+        frame_width = self.get_frame_width()
+        aspect_ratio = fdiv(pixel_width, pixel_height)
+        if fixed_dimension == 0:
+            frame_height = frame_width / aspect_ratio
+        else:
+            frame_width = aspect_ratio * frame_height
+        self.frame.set_height(frame_height)
+        self.frame.set_width(frame_width)
 
     def pixel_coords_to_space_coords(self, px, py, relative=False):
         # pw, ph = self.fbo.size
@@ -327,7 +369,7 @@ class Camera(object):
             )
             if info["texture_path"]:
                 # TODO, this currently assumes that the uniform Sampler2D
-                # is named Texture
+                # is named Texture, and that there's only one of them
                 tid = self.get_texture_id(info["texture_path"])
                 shader["Texture"].value = tid
 
@@ -336,11 +378,12 @@ class Camera(object):
         return self.id_to_shader[sid]
 
     def set_shader_uniforms(self, shader):
+        # TODO, think about how uniforms come from mobjects as well.
         if shader is None:
             return
-        # TODO, think about how uniforms come from mobjects as well.
-        pw, ph = self.get_pixel_shape()
 
+        pw, ph = self.get_pixel_shape()
+        anti_alias_width = self.anti_alias_width / (ph / 2)
         transform = self.frame.get_inverse_camera_position_matrix()
         light = self.light_source.get_location()
         transformed_light = np.dot(transform, [*light, 1])[:3]
@@ -348,7 +391,7 @@ class Camera(object):
             'to_screen_space': tuple(transform.T.flatten()),
             'aspect_ratio': (pw / ph),  # AR based on pixel shape
             'focal_distance': self.frame.get_focal_distance(),
-            'anti_alias_width': 3 / ph,  # 1.5 Pixel widths
+            'anti_alias_width': anti_alias_width,
             'light_source_position': tuple(transformed_light),
         }
         for key, value in mapping.items():
@@ -382,5 +425,5 @@ class Camera(object):
 class ThreeDCamera(Camera):
     CONFIG = {
         "apply_depth_test": True,
-        # TODO, default to do some multisampling?
+        "samples": 8,
     }
