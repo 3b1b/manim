@@ -52,6 +52,7 @@ jobs:
         - ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
         - brew install ffmpeg
         - brew cask install mactex
+        - eval "$(/usr/libexec/path_helper)"
       install:
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
@@ -68,6 +69,7 @@ jobs:
         - ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
         - brew install ffmpeg
         - brew cask install mactex
+        - eval "$(/usr/libexec/path_helper)"
       install:
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
@@ -84,6 +86,7 @@ jobs:
         - ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
         - brew install ffmpeg
         - brew cask install mactex
+        - eval "$(/usr/libexec/path_helper)"
       install:
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
