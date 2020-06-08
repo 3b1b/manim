@@ -4,14 +4,19 @@ Animation
 
 
 The simplest of which is ``Scene.add``. The object appears on the first frame
-without any animation::
+without any animation:
+
+
+.. code-block:: python
 
   class NoAnimation(Scene):
       def construct(self):
           square = Square()
-          self.add(square))
+          self.add(square)
+          self.wait() # To be able to render a scene, there should be the notion of time.
 
-Animation are used in conjunction with ``scene.Play``
+
+Animation are used in conjunction with ``scene.Play``.
 
 Fade
 ----
@@ -206,5 +211,6 @@ You can combine cardinal directions to form diagonal animations
               self.play(FadeInFrom(square, diag))
 
 .. note::
+
     You can also use the abbreviated forms like ``UL, UR, DL, DR``.
     See :ref:`ref-directions`.
