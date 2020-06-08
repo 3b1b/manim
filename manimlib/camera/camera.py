@@ -371,13 +371,14 @@ class Camera(object):
                 for name, path in info["texture_paths"].items():
                     tid = self.get_texture_id(path)
                     shader[name].value = tid
+            for name, value in info["uniforms"].items():
+                shader[name].value = value
 
             self.set_shader_uniforms(shader)
             self.id_to_shader[sid] = shader
         return self.id_to_shader[sid]
 
     def set_shader_uniforms(self, shader):
-        # TODO, think about how uniforms come from mobjects as well.
         if shader is None:
             return
 

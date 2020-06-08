@@ -170,8 +170,12 @@ class TexturedSurface(ParametricSurface):
     def __init__(self, uv_surface, image_file, dark_image_file=None, **kwargs):
         if not isinstance(uv_surface, ParametricSurface):
             raise Exception("uv_surface must be of type ParametricSurface")
+        # Set texture information
         if dark_image_file is None:
             dark_image_file = image_file
+            self.num_textures = 1
+        else:
+            self.num_textures = 2
         self.texture_paths = {
             "LightTexture": get_full_raster_image_path(image_file),
             "DarkTexture": get_full_raster_image_path(dark_image_file),
@@ -208,6 +212,9 @@ class TexturedSurface(ParametricSurface):
             for sm in self.submobjects:
                 sm.set_opacity(opacity, family)
         return self
+
+    def get_shader_uniforms(self):
+        return {"num_textures": self.num_textures}
 
     def fill_in_shader_color_info(self, data):
         data["im_coords"] = self.get_triangle_ready_array(self.im_coords)

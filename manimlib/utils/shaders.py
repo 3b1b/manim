@@ -17,6 +17,8 @@ SHADER_INFO_KEYS = [
     # A structred array caring all of the points/color/lighting/etc. information
     # needed for the shader.
     "data",
+    # A dictionary mapping names of uniform variables
+    "uniforms",
     # Filename of vetex shader
     "vert",
     # Filename of geometry shader, if there is one
@@ -30,8 +32,12 @@ SHADER_INFO_KEYS = [
     "render_primative",
 ]
 
+# Exclude data
+SHADER_KEYS_FOR_ID = SHADER_INFO_KEYS[1:]
+
 
 def get_shader_info(data=None,
+                    uniforms=None,
                     vert_file=None,
                     geom_file=None,
                     frag_file=None,
@@ -44,6 +50,7 @@ def get_shader_info(data=None,
             SHADER_INFO_KEYS,
             [
                 data,
+                uniforms,
                 vert_file, geom_file, frag_file,
                 texture_paths or {},
                 str(render_primative)
@@ -66,7 +73,7 @@ def shader_info_to_id(shader_info):
     # files holding its code and texture
     tuples = [
         (key, shader_info[key])
-        for key in SHADER_INFO_KEYS[1:]  # Skip data
+        for key in SHADER_KEYS_FOR_ID
     ]
     return json.dumps(tuples)
 
@@ -80,7 +87,7 @@ def shader_id_to_info(sid):
 def same_shader_type(info1, info2):
     return all([
         info1[key] == info2[key]
-        for key in SHADER_INFO_KEYS[1:]  # Skip data
+        for key in SHADER_KEYS_FOR_ID
     ])
 
 

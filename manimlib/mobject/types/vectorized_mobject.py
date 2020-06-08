@@ -824,12 +824,14 @@ class VMobject(Mobject):
             return self.saved_shader_info_list
 
         stroke_info = get_shader_info(
+            uniforms=self.get_stroke_uniforms(),
             vert_file=self.stroke_vert_shader_file,
             geom_file=self.stroke_geom_shader_file,
             frag_file=self.stroke_frag_shader_file,
             render_primative=self.render_primative,
         )
         fill_info = get_shader_info(
+            uniforms={},
             vert_file=self.fill_vert_shader_file,
             geom_file=self.fill_geom_shader_file,
             frag_file=self.fill_frag_shader_file,
@@ -867,6 +869,16 @@ class VMobject(Mobject):
             stroke_info["data"] = np.hstack(stroke_data)
             result.append(stroke_info)
         return result
+
+    def get_stroke_uniforms(self):
+        joint_type_to_code = {
+            "auto": 0,
+            "round": 1,
+            "bevel": 2,
+            "miter": 3,
+        }
+        # return {"joint_type": joint_type_to_code[self.joint_type]}
+        return {}  # TODO
 
     def get_stroke_shader_data(self):
         joint_type_to_code = {

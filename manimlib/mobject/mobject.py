@@ -1212,12 +1212,16 @@ class Mobject(Container):
     def get_shader_info(self):
         return get_shader_info(
             data=self.get_shader_data(),
+            uniforms=self.get_shader_uniforms(),
             vert_file=self.vert_shader_file,
             geom_file=self.geom_shader_file,
             frag_file=self.frag_shader_file,
             render_primative=self.render_primative,
             texture_paths=self.texture_paths,
         )
+
+    def get_shader_uniforms(self):
+        return {}
 
     def get_shader_data(self):
         # Typically to be implemented by subclasses
