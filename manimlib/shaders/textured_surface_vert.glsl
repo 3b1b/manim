@@ -6,8 +6,6 @@ uniform mat4 to_screen_space;
 uniform float focal_distance;
 uniform vec3 light_source_position;
 
-// uniform sampler2D Texture;
-
 in vec3 point;
 in vec3 du_point;
 in vec3 dv_point;
