@@ -105,6 +105,7 @@ jobs:
         - choco install python --version=$PYVER
         - export PATH="/c/$PYDIR:/c/$PYDIR/Scripts:$PATH"
         - choco install ffmpeg
+        - choco install miktex
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --upgrade pip
         - python -m pip install --user -r ./.travis/travis-requirements.txt
@@ -122,6 +123,7 @@ jobs:
         - choco install python --version=$PYVER
         - export PATH="/c/$PYDIR:/c/$PYDIR/Scripts:$PATH"
         - choco install ffmpeg
+        - choco install miktex
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --upgrade pip
         - python -m pip install --user -r ./.travis/travis-requirements.txt
@@ -139,6 +141,7 @@ jobs:
         - choco install python --version=$PYVER
         - export PATH="/c/$PYDIR:/c/$PYDIR/Scripts:$PATH"
         - choco install ffmpeg
+        - choco install miktex
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --upgrade pip
         - python -m pip install --user -r ./.travis/travis-requirements.txt
