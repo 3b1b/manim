@@ -70,7 +70,7 @@ class ParametricCurve(VMobject):
 class FunctionGraph(ParametricCurve):
     CONFIG = {
         "color": YELLOW,
-        "x_range": [-8, 8, 0.1],
+        "x_range": [-8, 8, 0.5],
     }
 
     def __init__(self, function, x_range=None, **kwargs):
@@ -83,7 +83,7 @@ class FunctionGraph(ParametricCurve):
         def parametric_function(t):
             return [t, function(t), 0]
 
-        super().__init__(parametric_function, x_range, **kwargs)
+        super().__init__(parametric_function, self.x_range, **kwargs)
 
     def get_function(self):
         return self.function
