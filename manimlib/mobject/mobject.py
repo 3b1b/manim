@@ -7,7 +7,6 @@ import random
 import sys
 import moderngl
 
-from colour import Color
 import numpy as np
 
 import manimlib.constants as consts
