@@ -1,8 +1,11 @@
 from scipy import linalg
 import numpy as np
 
+from manimlib.constants import PI
 from manimlib.utils.simple_functions import choose
+from manimlib.utils.space_ops import rotate_vector
 from manimlib.utils.space_ops import find_intersection
+from manimlib.utils.space_ops import cross
 from manimlib.utils.space_ops import cross2d
 
 CLOSED_THRESHOLD = 0.001
@@ -83,9 +86,36 @@ def match_interpolate(new_start, new_end, old_start, old_end, old_value):
 
 
 # Figuring out which bezier curves most smoothly connect a sequence of points
+def get_smooth_quadratic_bezier_handle_points(points):
+    # Alas, this function does not actually work very well.
+    # 
+    # For each point P_i, where 1 <= i <= n, draw a line through
+    # P_i parallel to the line through (P_{i-1}, P_{i+1}).  The
+    # intersection of these lines form most of the handles.
+    #
+    # What remains are those near the end points.  For that, we want
+    # the handle between P_0 and P_1 to be closest to (P_0 + P_1) / 2,
+    # which will minimize the second derivative of that curve.  Likewise
+    # for the last handle point.
+    t01 = points[1] - points[0]
+    t12 = points[2] - points[1]
+    tm2 = points[-2] - points[-3]
+    tm1 = points[-1] - points[-2]
+    tangents = np.vstack([
+        rotate_vector(t01, PI / 2, cross(t01, t12)),
+        points[2:] - points[:-2],
+        rotate_vector(tm1, PI / 2, cross(tm1, tm2))
+    ])
+    alt_points = np.array(points)
+    alt_points[0] = points[:2].mean(0)
+    alt_points[-1] = points[-2:].mean(0)
+    return find_intersection(
+        alt_points[:-1], tangents[:-1],
+        alt_points[1:], tangents[1:],
+    )
 
 
-def get_smooth_handle_points(points):
+def get_smooth_cubic_bezier_handle_points(points):
     points = np.array(points)
     num_handles = len(points) - 1
     dim = points.shape[1]
@@ -234,7 +264,8 @@ def get_quadratic_approximation_of_cubic(a0, h0, h1, a1):
 
 
 def get_smooth_quadratic_bezier_path_through(points):
-    h0, h1 = get_smooth_handle_points(points)
+    # TODO
+    h0, h1 = get_smooth_cubic_bezier_handle_points(points)
     a0 = points[:-1]
     a1 = points[1:]
     return get_quadratic_approximation_of_cubic(a0, h0, h1, a1)

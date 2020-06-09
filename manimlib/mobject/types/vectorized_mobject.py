@@ -9,7 +9,8 @@ from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.bezier import bezier
-from manimlib.utils.bezier import get_smooth_handle_points
+from manimlib.utils.bezier import get_smooth_cubic_bezier_handle_points
+from manimlib.utils.bezier import get_smooth_quadratic_bezier_handle_points
 from manimlib.utils.bezier import get_quadratic_approximation_of_cubic
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import integer_interpolate
@@ -477,7 +478,7 @@ class VMobject(Mobject):
             for subpath in subpaths:
                 anchors = np.vstack([subpath[::nppc], subpath[-1:]])
                 if mode == "smooth":
-                    h1, h2 = get_smooth_handle_points(anchors)
+                    h1, h2 = get_smooth_cubic_bezier_handle_points(anchors)
                     new_subpath = get_quadratic_approximation_of_cubic(
                         anchors[:-1], h1, h2, anchors[1:]
                     )
@@ -523,10 +524,7 @@ class VMobject(Mobject):
 
     #
     def consider_points_equals(self, p0, p1):
-        return np.allclose(
-            p0, p1,
-            atol=self.tolerance_for_point_equality
-        )
+        return get_norm(p1 - p0) < self.tolerance_for_point_equality
 
     # Information about the curve
     def get_bezier_tuples_from_points(self, points):
@@ -543,10 +541,14 @@ class VMobject(Mobject):
 
     def get_subpaths_from_points(self, points):
         nppc = self.n_points_per_curve
-        split_indices = filter(
-            lambda n: not self.consider_points_equals(points[n - 1], points[n]),
-            range(nppc, len(points), nppc)
-        )
+        diffs = points[nppc - 1:-1:nppc] - points[nppc::nppc]
+        splits = (diffs * diffs).sum(1) > self.tolerance_for_point_equality
+        split_indices = np.arange(nppc, len(points), nppc, dtype=int)[splits]
+
+        # split_indices = filter(
+        #     lambda n: not self.consider_points_equals(points[n - 1], points[n]),
+        #     range(nppc, len(points), nppc)
+        # )
         split_indices = [0, *split_indices, len(points)]
         return [
             points[i1:i2]
