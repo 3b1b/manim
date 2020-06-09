@@ -148,7 +148,7 @@ class Camera(object):
         "light_source_position": [-10, 10, 10],
         "apply_depth_test": False,
         # Measured in pixel widths, used for vector graphics
-        "anti_alias_width": 1.5,
+        "anti_alias_width": 3,
         # Although vector graphics handle antialiasing fine
         # without multisampling, for 3d scenes one might want
         # to set samples to be greater than 0.
@@ -362,14 +362,11 @@ class Camera(object):
                 for name, path in info["texture_paths"].items():
                     tid = self.get_texture_id(path)
                     shader[name].value = tid
-            for name, value in info["uniforms"].items():
-                shader[name].value = value
-
-            self.set_shader_uniforms(shader)
+            self.set_shader_uniforms(shader, sid)
             self.id_to_shader[sid] = shader
         return self.id_to_shader[sid]
 
-    def set_shader_uniforms(self, shader):
+    def set_shader_uniforms(self, shader, sid):
         if shader is None:
             return
 
@@ -378,13 +375,15 @@ class Camera(object):
         transform = self.frame.get_inverse_camera_position_matrix()
         light = self.light_source.get_location()
         transformed_light = np.dot(transform, [*light, 1])[:3]
-        mapping = {
-            'to_screen_space': tuple(transform.T.flatten()),
-            'frame_shape': self.frame.get_shape(),
-            'focal_distance': self.frame.get_focal_distance(),
-            'anti_alias_width': anti_alias_width,
-            'light_source_position': tuple(transformed_light),
-        }
+        mapping = dict()
+        mapping['to_screen_space'] = tuple(transform.T.flatten())
+        mapping['frame_shape'] = self.frame.get_shape()
+        mapping['focal_distance'] = self.frame.get_focal_distance()
+        mapping['anti_alias_width'] = anti_alias_width
+        mapping['light_source_position'] = tuple(transformed_light)
+        # Potentially overwrite with whatever came from the mobject
+        mapping.update(shader_id_to_info(sid)["uniforms"])
+
         for key, value in mapping.items():
             try:
                 shader[key].value = value
@@ -393,7 +392,7 @@ class Camera(object):
 
     def refresh_shader_uniforms(self):
         for sid, shader in self.id_to_shader.items():
-            self.set_shader_uniforms(shader)
+            self.set_shader_uniforms(shader, sid)
 
     def init_textures(self):
         self.path_to_texture_id = {}

@@ -1,6 +1,7 @@
 #version 330
 
 uniform mat4 to_screen_space;
+uniform float is_fixed_in_frame;
 
 in vec3 point;
 in vec3 unit_normal;

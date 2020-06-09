@@ -7,6 +7,7 @@ uniform float anti_alias_width;
 // Needed for get_gl_Position
 uniform vec2 frame_shape;
 uniform float focal_distance;
+uniform float is_fixed_in_frame;
 uniform vec3 light_source_position;
 
 in vec3 bp[3];

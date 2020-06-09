@@ -830,7 +830,7 @@ class VMobject(Mobject):
             render_primative=self.render_primative,
         )
         fill_info = get_shader_info(
-            uniforms={},
+            uniforms=self.get_shader_uniforms(),
             vert_file=self.fill_vert_shader_file,
             geom_file=self.fill_geom_shader_file,
             frag_file=self.fill_frag_shader_file,
@@ -870,13 +870,15 @@ class VMobject(Mobject):
         return result
 
     def get_stroke_uniforms(self):
-        joint_type_to_code = {
+        j_map = {
             "auto": 0,
             "round": 1,
             "bevel": 2,
             "miter": 3,
         }
-        return {"joint_type": joint_type_to_code[self.joint_type]}
+        result = super().get_shader_uniforms()
+        result["join_type"] = j_map[self.joint_type]
+        return result
 
     def get_stroke_shader_data(self):
         rgbas = self.get_stroke_rgbas()

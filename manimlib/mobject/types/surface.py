@@ -214,7 +214,9 @@ class TexturedSurface(ParametricSurface):
         return self
 
     def get_shader_uniforms(self):
-        return {"num_textures": self.num_textures}
+        result = super().get_shader_uniforms()
+        result["num_textures"] = self.num_textures
+        return result
 
     def fill_in_shader_color_info(self, data):
         data["im_coords"] = self.get_triangle_ready_array(self.im_coords)

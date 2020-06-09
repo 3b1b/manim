@@ -51,6 +51,8 @@ class Mobject(Container):
         "frag_shader_file": "",
         "render_primative": moderngl.TRIANGLE_STRIP,
         "texture_paths": None,
+        # If true, the mobject will not get rotated according to camera position
+        "is_fixed_in_frame": False,
         # Must match in attributes of vert shader
         "shader_dtype": [
             ('point', np.float32, (3,)),
@@ -455,8 +457,19 @@ class Mobject(Container):
         # Redundant with default behavior of scale now.
         return self.scale(scale_factor, about_point=point)
 
-    def pose_at_angle(self, angle=TAU / 14, axis=UR, **kwargs):
-        return self.rotate(angle, axis, **kwargs)
+    def fix_in_frame(self, family=True):
+        self.is_fixed_in_frame = True
+        if family:
+            for submob in self.submobjects:
+                submob.fix_in_frame(family)
+        return self
+
+    def unfix_from_frame(self, family=True):
+        self.is_fixed_in_frame = False
+        if family:
+            for submob in self.submobjects:
+                submob.unfix_from_frame(family)
+        return self
 
     # Positioning methods
 
@@ -1221,7 +1234,9 @@ class Mobject(Container):
         )
 
     def get_shader_uniforms(self):
-        return {}
+        return {
+            "is_fixed_in_frame": float(self.is_fixed_in_frame),
+        }
 
     def get_shader_data(self):
         # Typically to be implemented by subclasses
