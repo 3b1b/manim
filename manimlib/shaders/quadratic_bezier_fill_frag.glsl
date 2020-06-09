@@ -20,9 +20,6 @@ float modify_distance_for_endpoints(vec2 p, float dist, float t){
     return dist;
 }
 
-// To my knowledge, there is no notion of #include for shaders,
-// so to share functionality between this and others, the caller
-// replaces this line with the contents of quadratic_bezier_sdf.glsl
 #INSERT quadratic_bezier_distance.glsl
 
 
@@ -52,13 +49,13 @@ float sdf(){
     );
     vec2 p = to_simple_space * uv_coords;
     // Sign takes care of whether we should be filling the inside or outside of curve.
-    float sn = orientation * sign(v2);
-    float Fp = sn * (p.x * p.x - p.y);
-    vec2 grad = vec2(
-        -2 * p.x * v2,  // del C / del u
-        4 * v2 - 4 * p.x * (2 - u2)  // del C / del v
-    );
-    return Fp / length(grad);
+    float sgn = orientation * sign(v2);
+    float Fp = (p.x * p.x - p.y);
+    if(sgn * Fp < 0){
+        return 0;
+    }else{
+        return min_dist_to_curve(uv_coords, uv_b2, bezier_degree);
+    }
 }
 
 

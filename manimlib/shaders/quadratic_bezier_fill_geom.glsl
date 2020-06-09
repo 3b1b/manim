@@ -110,13 +110,13 @@ void emit_pentagon(vec3[3] points, vec3 normal){
 
 void main(){
     fill_all = v_fill_all[0];
-    vec3 local_unit_normal = get_unit_normal(vec3[3](bp[0], bp[1], bp[2]));
-    orientation = sign(dot(v_global_unit_normal[0], local_unit_normal));
-
     if(fill_all == 1){
         emit_simple_triangle();
         return;
     }
+
+    vec3 local_unit_normal = get_unit_normal(vec3[3](bp[0], bp[1], bp[2]));
+    orientation = sign(dot(v_global_unit_normal[0], local_unit_normal));
 
     vec3 new_bp[3];
     bezier_degree = get_reduced_control_points(vec3[3](bp[0], bp[1], bp[2]), new_bp);

@@ -148,7 +148,7 @@ class Camera(object):
         "light_source_position": [-10, 10, 10],
         "apply_depth_test": False,
         # Measured in pixel widths, used for vector graphics
-        "anti_alias_width": 3,
+        "anti_alias_width": 1.5,
         # Although vector graphics handle antialiasing fine
         # without multisampling, for 3d scenes one might want
         # to set samples to be greater than 0.
@@ -371,7 +371,8 @@ class Camera(object):
             return
 
         pw, ph = self.get_pixel_shape()
-        anti_alias_width = self.anti_alias_width / (ph / 2)
+        fw, fh = self.frame.get_shape()
+        anti_alias_width = self.anti_alias_width / (ph / fh)
         transform = self.frame.get_inverse_camera_position_matrix()
         light = self.light_source.get_location()
         transformed_light = np.dot(transform, [*light, 1])[:3]
