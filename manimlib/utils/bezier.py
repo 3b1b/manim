@@ -87,32 +87,28 @@ def match_interpolate(new_start, new_end, old_start, old_end, old_value):
 
 # Figuring out which bezier curves most smoothly connect a sequence of points
 def get_smooth_quadratic_bezier_handle_points(points):
-    # Alas, this function does not actually work very well.
-    # 
-    # For each point P_i, where 1 <= i <= n, draw a line through
-    # P_i parallel to the line through (P_{i-1}, P_{i+1}).  The
-    # intersection of these lines form most of the handles.
-    #
-    # What remains are those near the end points.  For that, we want
-    # the handle between P_0 and P_1 to be closest to (P_0 + P_1) / 2,
-    # which will minimize the second derivative of that curve.  Likewise
-    # for the last handle point.
-    t01 = points[1] - points[0]
-    t12 = points[2] - points[1]
-    tm2 = points[-2] - points[-3]
-    tm1 = points[-1] - points[-2]
-    tangents = np.vstack([
-        rotate_vector(t01, PI / 2, cross(t01, t12)),
-        points[2:] - points[:-2],
-        rotate_vector(tm1, PI / 2, cross(tm1, tm2))
+    n = len(points)
+    # Top matrix sets the constraint h_i + h_{i + 1} = 2 * P_i
+    top_mat = np.zeros((n - 2, n - 1))
+    np.fill_diagonal(top_mat, 1)
+    np.fill_diagonal(top_mat[:, 1:], 1)
+
+    # Lower matrix sets the constraint that 2(h1 - h0)= p2 - p0 and 2(h_{n-1}- h_{n-2}) = p_n - p_{n-2}
+    low_mat = np.zeros((2, n - 1))
+    low_mat[0, :2] = [-2, 2]
+    low_mat[1, -2:] = [-2, 2]
+
+    # Use the pseudoinverse to find a near solution to these constraints
+    full_mat = np.vstack([top_mat, low_mat])
+    full_mat_pinv = np.linalg.pinv(full_mat)
+
+    rhs = np.vstack([
+        2 * points[1:-1],
+        [points[2] - points[0]],
+        [points[-1] - points[-3]],
     ])
-    alt_points = np.array(points)
-    alt_points[0] = points[:2].mean(0)
-    alt_points[-1] = points[-2:].mean(0)
-    return find_intersection(
-        alt_points[:-1], tangents[:-1],
-        alt_points[1:], tangents[1:],
-    )
+
+    return np.dot(full_mat_pinv, rhs)
 
 
 def get_smooth_cubic_bezier_handle_points(points):
@@ -148,6 +144,7 @@ def get_smooth_cubic_bezier_handle_points(points):
 
     def solve_func(b):
         return linalg.solve_banded((l, u), diag, b)
+
     use_closed_solve_function = is_closed(points)
     if use_closed_solve_function:
         # Get equations to relate first and last points

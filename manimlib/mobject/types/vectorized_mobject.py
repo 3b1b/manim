@@ -477,16 +477,11 @@ class VMobject(Mobject):
             submob.clear_points()
             for subpath in subpaths:
                 anchors = np.vstack([subpath[::nppc], subpath[-1:]])
+                new_subpath = np.array(subpath)
                 if mode == "smooth":
-                    h1, h2 = get_smooth_cubic_bezier_handle_points(anchors)
-                    new_subpath = get_quadratic_approximation_of_cubic(
-                        anchors[:-1], h1, h2, anchors[1:]
-                    )
+                    new_subpath[1::nppc] = get_smooth_quadratic_bezier_handle_points(anchors)
                 elif mode == "jagged":
-                    new_subpath = np.array(subpath)
-                    new_subpath[1::nppc] = interpolate(
-                        anchors[:-1], anchors[1:], 0.5
-                    )
+                    new_subpath[1::nppc] = 0.5 * (anchors[:-1] + anchors[1:])
                 submob.append_points(new_subpath)
             submob.refresh_triangulation()
         return self
