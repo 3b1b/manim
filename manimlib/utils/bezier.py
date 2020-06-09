@@ -3,6 +3,7 @@ import numpy as np
 
 from manimlib.utils.simple_functions import choose
 from manimlib.utils.space_ops import find_intersection
+from manimlib.utils.space_ops import cross2d
 
 CLOSED_THRESHOLD = 0.001
 
@@ -182,26 +183,21 @@ def get_quadratic_approximation_of_cubic(a0, h0, h1, a1):
     q = h1 - 2 * h0 + a0
     r = a1 - 3 * h1 + 3 * h0 - a0
 
-    def cross2d(v, w):
-        return v[:, 0] * w[:, 1] - v[:, 1] * w[:, 0]
-
     a = cross2d(q, r)
     b = cross2d(p, r)
     c = cross2d(p, q)
 
     disc = b * b - 4 * a * c
     has_infl &= (disc > 0)
-    sqrt_disc = np.sqrt(abs(disc))
-    # print(a, b, c, sqrt_disc)
+    sqrt_disc = np.sqrt(np.abs(disc))
     settings = np.seterr(all='ignore')
-    ti_min, ti_max = [
-        np.true_divide(
-            -b + sgn * sqrt_disc, 2 * a,
-            out=(-c / b),
-            where=(a != 0),
-        )
-        for sgn in [-1, +1]
-    ]
+    ti_bounds = []
+    for sgn in [-1, +1]:
+        ti = (-b + sgn * sqrt_disc) / (2 * a)
+        ti[a == 0] = (-c / b)[a == 0]
+        ti[(a == 0) & (b == 0)] = 0
+        ti_bounds.append(ti)
+    ti_min, ti_max = ti_bounds
     np.seterr(**settings)
     ti_min_in_range = has_infl & (0 < ti_min) & (ti_min < 1)
     ti_max_in_range = has_infl & (0 < ti_max) & (ti_max < 1)
