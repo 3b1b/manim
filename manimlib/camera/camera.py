@@ -26,10 +26,7 @@ from manimlib.utils.space_ops import quaternion_mult
 
 class CameraFrame(Mobject):
     CONFIG = {
-        # TODO, package these togeher
-        # Also, interpolation doesn't yet do anything with them.
-        "width": FRAME_WIDTH,
-        "height": FRAME_HEIGHT,
+        "frame_shape": (FRAME_WIDTH, FRAME_HEIGHT),
         "center_point": ORIGIN,
         # Theta, phi, gamma
         "euler_angles": [0, 0, 0],
@@ -37,7 +34,10 @@ class CameraFrame(Mobject):
     }
 
     def init_points(self):
-        self.points = np.array([self.center_point])
+        self.points = np.array([UR, UL, DL, DR])
+        self.set_width(self.frame_shape[0], stretch=True)
+        self.set_height(self.frame_shape[1], stretch=True)
+        self.move_to(self.center_point)
         self.euler_angles = np.array(self.euler_angles, dtype='float64')
 
     def to_default_state(self):
@@ -53,8 +53,6 @@ class CameraFrame(Mobject):
         result[:3, 3] = -self.get_center().T
         # Rotate based on camera orientation
         result[:3, :3] = np.dot(self.get_inverse_camera_rotation_matrix(), result[:3, :3])
-        # Scale to have height 2 (matching the height of the box [-1, 1]^2)
-        result *= 2 / self.height
         return result
 
     def get_inverse_camera_rotation_matrix(self):
@@ -98,28 +96,21 @@ class CameraFrame(Mobject):
         self.euler_angles[2] += dgamma
         return self
 
-    def scale(self, scale_factor, **kwargs):
-        # TODO, handle about_point and about_edge?
-        self.height *= scale_factor
-        self.width *= scale_factor
-        return self
+    # def scale(self, scale_factor, **kwargs):
+    #     # TODO, handle about_point and about_edge?
+    #     self.frame_dimensions *= scale_factor
+    #     return self
 
-    def set_height(self, height):
-        self.height = height
-        return self
+    # def set_height(self, height, stretch=False):
+    #     self.height = height
+    #     return self
 
-    def set_width(self, width):
-        self.width = width
-        return self
+    # def set_width(self, width, stretch=False):
+    #     self.width = width
+    #     return self
 
-    def get_height(self):
-        return self.height
-
-    def get_width(self):
-        return self.width
-
-    def get_center(self):
-        return self.points[0]
+    def get_shape(self):
+        return (self.get_width(), self.get_height())
 
     def get_focal_distance(self):
         return self.focal_distance
@@ -389,7 +380,7 @@ class Camera(object):
         transformed_light = np.dot(transform, [*light, 1])[:3]
         mapping = {
             'to_screen_space': tuple(transform.T.flatten()),
-            'aspect_ratio': (pw / ph),  # AR based on pixel shape
+            'frame_shape': self.frame.get_shape(),
             'focal_distance': self.frame.get_focal_distance(),
             'anti_alias_width': anti_alias_width,
             'light_source_position': tuple(transformed_light),

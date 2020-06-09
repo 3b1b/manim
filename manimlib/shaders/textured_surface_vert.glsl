@@ -1,6 +1,6 @@
 #version 330
 
-uniform float aspect_ratio;
+uniform vec2 frame_shape;
 uniform float anti_alias_width;
 uniform mat4 to_screen_space;
 uniform float focal_distance;

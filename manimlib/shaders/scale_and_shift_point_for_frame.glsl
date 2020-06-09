@@ -1,5 +1,5 @@
 // Assumes the following uniforms exist in the surrounding context:
-// uniform float aspect_ratio;
+// uniform vec2 frame_shape;
 // TODO, rename
 
 vec3 get_gl_Position(vec3 point){

@@ -4,7 +4,7 @@ layout (triangles) in;
 layout (triangle_strip, max_vertices = 5) out;
 
 // Needed for get_gl_Position
-uniform float aspect_ratio;
+uniform vec2 frame_shape;
 uniform float focal_distance;
 uniform float anti_alias_width;
 uniform vec3 light_source_position;
