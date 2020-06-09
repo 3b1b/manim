@@ -57,6 +57,12 @@ class SceneTester:
 def Tester():
     return SceneTester
 
+@pytest.fixture(scope= "module")
+def python_version(): 
+    if sys.platform == "darwin" : 
+        return "python3"
+    return "python"
+
 @pytest.fixture
 def get_config_test():
     """Function used internally by pytest as a fixture. Return the Configuration for the scenes rendered. The config is the one used when 
