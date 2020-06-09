@@ -105,7 +105,10 @@ jobs:
         - choco install python --version=$PYVER
         - export PATH="/c/$PYDIR:/c/$PYDIR/Scripts:$PATH"
         - choco install ffmpeg
-        - choco install miktex
+        - curl https://miktex.org/download/win/miktexsetup-x64.zip -V -o miktexsetup-x64.zip
+        - unzip miktexsetup-x64.zip
+        - miktexsetup.exe --verbose --package-set=essential download
+        - miktexsetup.exe --verbose --modify-path install
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --upgrade pip
         - python -m pip install --user -r ./.travis/travis-requirements.txt
@@ -123,7 +126,10 @@ jobs:
         - choco install python --version=$PYVER
         - export PATH="/c/$PYDIR:/c/$PYDIR/Scripts:$PATH"
         - choco install ffmpeg
-        - choco install miktex
+        - curl https://miktex.org/download/win/miktexsetup-x64.zip -V -o miktexsetup-x64.zip
+        - unzip miktexsetup-x64.zip
+        - miktexsetup.exe --verbose --package-set=essential download
+        - miktexsetup.exe --verbose --modify-path install
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --upgrade pip
         - python -m pip install --user -r ./.travis/travis-requirements.txt
@@ -141,7 +147,10 @@ jobs:
         - choco install python --version=$PYVER
         - export PATH="/c/$PYDIR:/c/$PYDIR/Scripts:$PATH"
         - choco install ffmpeg
-        - choco install miktex
+        - curl https://miktex.org/download/win/miktexsetup-x64.zip -V -o miktexsetup-x64.zip
+        - unzip miktexsetup-x64.zip
+        - miktexsetup.exe --verbose --package-set=essential download
+        - miktexsetup.exe --verbose --modify-path install
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --upgrade pip
         - python -m pip install --user -r ./.travis/travis-requirements.txt
