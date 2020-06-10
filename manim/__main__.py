@@ -159,19 +159,19 @@ def main():
     module = get_module(file_writer_config["input_file"])
     all_scene_classes = get_scene_classes_from_module(module)
     scene_classes_to_render = get_scenes_to_render(all_scene_classes)
-
+    sound_on = file_writer_config["sound"]
     for SceneClass in scene_classes_to_render:
         try:
             # By invoking, this renders the full scene
             scene = SceneClass()
             open_file_if_needed(scene.file_writer)
-            if file_writer_config["sound"]:
+            if sound_on:
                 play_finish_sound()
         except Exception:
             print("\n\n")
             traceback.print_exc()
             print("\n\n")
-            if file_writer_config["sound"]:
+            if sound_on:
                 play_error_sound()
 
 
