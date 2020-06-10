@@ -1,0 +1,5 @@
+[styles]
+info = dim cyan
+warning = magenta
+danger = bold red
+listScenes = yellow

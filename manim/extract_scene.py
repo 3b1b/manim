@@ -12,7 +12,7 @@ from .utils.sounds import play_error_sound
 from .utils.sounds import play_finish_sound
 from . import constants
 from .logger import logger
-
+from .logger.console import console
 
 def open_file_if_needed(file_writer, **config):
     if config["quiet"]:
@@ -77,10 +77,10 @@ def prompt_user_for_choice(scene_classes):
     num_to_class = {}
     for count, scene_class in zip(it.count(1), scene_classes):
         name = scene_class.__name__
-        print("%d: %s" % (count, name))
+        console.print("%d: %s" % (count, name),style="warning")
         num_to_class[count] = scene_class
     try:
-        user_input = input(constants.CHOOSE_NUMBER_MESSAGE)
+        user_input = console.input("[log.message]"+constants.CHOOSE_NUMBER_MESSAGE+"[/log.message]")
         return [
             num_to_class[int(num_str)]
             for num_str in user_input.split(",")
@@ -88,7 +88,7 @@ def prompt_user_for_choice(scene_classes):
     except KeyError:
         logger.error(constants.INVALID_NUMBER_MESSAGE)
         sys.exit(2)
-        user_input = input(constants.CHOOSE_NUMBER_MESSAGE)
+        user_input = console.input(constants.CHOOSE_NUMBER_MESSAGE)
         return [
             num_to_class[int(num_str)]
             for num_str in user_input.split(",")
