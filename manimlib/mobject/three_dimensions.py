@@ -1,3 +1,5 @@
+import math
+
 from manimlib.constants import *
 from manimlib.mobject.types.surface import ParametricSurface
 from manimlib.mobject.types.surface import SGroup
@@ -91,6 +93,19 @@ class Cylinder(ArglessSurface):
 
     def uv_func(self, u, v):
         return [np.cos(u), np.sin(u), v]
+
+
+class Torus(ArglessSurface):
+    CONFIG = {
+        "u_range": (0, TAU),
+        "v_range": (0, TAU),
+        "r1": 3,
+        "r2": 1,
+    }
+
+    def uv_func(self, u, v):
+        P = np.array([math.cos(u), math.sin(u), 0])
+        return (self.r1 - self.r2 * math.cos(v)) * P - math.sin(v) * OUT
 
 
 class Line3D(Cylinder):
