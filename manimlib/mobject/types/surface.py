@@ -64,29 +64,17 @@ class ParametricSurface(Mobject):
         # are still easily recoverable.
         self.points = np.vstack(point_lists)
 
-    def get_triangle_ready_array(self, array):
-        # Given an array of points representing a flattened grid, say of points or
-        # normals, this returns an Nx3 array whose rows are elements from this grid
-        # in such such a way that successive triplets of points form triangles covering
-        # the grid.
-        if array.size == 0:
-            return array
-        dim = array.shape[1]
+    def get_triangle_indices(self):
         nu, nv = self.resolution
-        assert(array.shape == (nu * nv, dim))
-        grid = array.reshape((nu, nv, dim))
-
-        new_length = (nu - 1) * (nv - 1)
-        arr = np.zeros((6 * new_length, dim))
-        shape = (new_length, dim)
-        # To match the triangles covering this surface
-        arr[0::6] = grid[:-1, :-1].reshape(shape)  # Top left
-        arr[1::6] = grid[+1:, :-1].reshape(shape)  # Bottom left
-        arr[2::6] = grid[:-1, +1:].reshape(shape)  # Top right
-        arr[3::6] = grid[:-1, +1:].reshape(shape)  # Top right
-        arr[4::6] = grid[+1:, :-1].reshape(shape)  # Bottom left
-        arr[5::6] = grid[+1:, +1:].reshape(shape)  # Bottom right
-        return arr
+        index_grid = np.arange(nu * nv).reshape((nu, nv))
+        result = np.zeros(6 * (nu - 1) * (nv - 1), dtype=int)
+        result[0::6] = index_grid[:-1, :-1].flatten()  # Top left
+        result[1::6] = index_grid[+1:, :-1].flatten()  # Bottom left
+        result[2::6] = index_grid[:-1, +1:].flatten()  # Top right
+        result[3::6] = index_grid[:-1, +1:].flatten()  # Top right
+        result[4::6] = index_grid[+1:, :-1].flatten()  # Bottom left
+        result[5::6] = index_grid[+1:, +1:].flatten()  # Bottom right
+        return result
 
     def init_colors(self):
         self.set_color(self.color, self.opacity)
@@ -124,14 +112,12 @@ class ParametricSurface(Mobject):
         return self
 
     def get_shader_data(self):
-        s_points, du_points, dv_points = [
-            self.get_triangle_ready_array(array)
-            for array in self.get_surface_points_and_nudged_points()
-        ]
-        data = self.get_blank_shader_data_array(len(s_points))
-        data["point"] = s_points
-        data["du_point"] = du_points
-        data["dv_point"] = dv_points
+        s_points, du_points, dv_points = self.get_surface_points_and_nudged_points()
+        tri_indices = self.get_triangle_indices()
+        data = self.get_blank_shader_data_array(len(tri_indices))
+        data["point"] = s_points[tri_indices]
+        data["du_point"] = du_points[tri_indices]
+        data["dv_point"] = dv_points[tri_indices]
         data["gloss"] = self.gloss
         data["shadow"] = self.shadow
         self.fill_in_shader_color_info(data)
@@ -219,6 +205,6 @@ class TexturedSurface(ParametricSurface):
         return result
 
     def fill_in_shader_color_info(self, data):
-        data["im_coords"] = self.get_triangle_ready_array(self.im_coords)
+        data["im_coords"] = self.im_coords[self.get_triangle_indices()]
         data["opacity"] = self.opacity
         return data
