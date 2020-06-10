@@ -608,8 +608,6 @@ class VMobject(Mobject):
 
     def get_points_without_null_curves(self, atol=1e-9):
         nppc = self.n_points_per_curve
-        if len(self.points) <= nppc + 1:
-            return self.points
         distinct_curves = reduce(op.or_, [
             (abs(self.points[i::nppc] - self.points[0::nppc]) > atol).any(1)
             for i in range(1, nppc)
@@ -912,7 +910,7 @@ class VMobject(Mobject):
         if len(stroke_width) > 1:
             stroke_width = self.stretched_style_array_matching_points(stroke_width)
 
-        points = self.get_points_without_null_curves()
+        points = self.points
         nppc = self.n_points_per_curve
 
         data = self.get_blank_shader_data_array(len(points), "stroke_data")

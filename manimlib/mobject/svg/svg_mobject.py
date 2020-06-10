@@ -329,7 +329,7 @@ class VMobjectFromSVGPathstring(VMobject):
 
     def __init__(self, path_string, **kwargs):
         self.path_string = path_string
-        VMobject.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
     def init_points(self):
         # TODO, move this caching operation
@@ -355,10 +355,10 @@ class VMobjectFromSVGPathstring(VMobject):
                 self.subdivide_sharp_curves()
             # SVG treats y-coordinate differently
             self.stretch(-1, 1, about_point=ORIGIN)
+            # Get rid of any null curves
+            self.points = self.get_points_without_null_curves()
             # Save to a file for future use
             np.save(filepath, self.points)
-        # Faster rendering
-        self.lock_triangulation()
 
     def get_commands_and_coord_strings(self):
         all_commands = list(self.get_command_to_function_map().keys())
