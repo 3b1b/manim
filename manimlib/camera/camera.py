@@ -30,7 +30,7 @@ class CameraFrame(Mobject):
         "center_point": ORIGIN,
         # Theta, phi, gamma
         "euler_angles": [0, 0, 0],
-        "focal_distance": 3,
+        "focal_distance": 4,
     }
 
     def init_points(self):
