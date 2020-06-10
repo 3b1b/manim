@@ -61,20 +61,20 @@ def open_file_if_needed(file_writer):
 
 
 def is_child_scene(obj, module):
-    if not inspect.isclass(obj):
-        return False
-    if not issubclass(obj, Scene):
-        return False
-    if obj == Scene:
-        return False
-    if not obj.__module__.startswith(module.__name__):
+    if (
+        not inspect.isclass(obj)
+        or not issubclass(obj, Scene)
+        or obj == Scene
+        or not obj.__module__.startswith(module.__name__)
+    ):
         return False
     return True
 
 
 def prompt_user_for_choice(scene_classes):
     num_to_class = {}
-    for count, scene_class in zip(it.count(1), scene_classes):
+    for count, scene_class in enumerate(scene_classes):
+        count += 1  # start with 1 instead of 0
         name = scene_class.__name__
         print("%d: %s" % (count, name))
         num_to_class[count] = scene_class
@@ -159,19 +159,19 @@ def main():
     module = get_module(file_writer_config["input_file"])
     all_scene_classes = get_scene_classes_from_module(module)
     scene_classes_to_render = get_scenes_to_render(all_scene_classes)
-
+    sound_on = file_writer_config["sound"]
     for SceneClass in scene_classes_to_render:
         try:
             # By invoking, this renders the full scene
             scene = SceneClass()
             open_file_if_needed(scene.file_writer)
-            if file_writer_config["sound"]:
+            if sound_on:
                 play_finish_sound()
         except Exception:
             print("\n\n")
             traceback.print_exc()
             print("\n\n")
-            if file_writer_config["sound"]:
+            if sound_on:
                 play_error_sound()
 
 
