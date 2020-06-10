@@ -11,6 +11,4 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger("rich")
-
-
     

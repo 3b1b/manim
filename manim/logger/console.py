@@ -6,8 +6,11 @@ def parseTheme(fp):
     with open(fp,'r') as f:
         content=f.read()
         theme=json.loads(content)
-    theme['listScenes']='yellow'
     customTheme=Theme(theme)
     return customTheme
-customTheme =  parseTheme("rich.json")
-console = Console(theme=customTheme)
+try:
+    customTheme =  parseTheme("rich.cfg")
+    console = Console(theme=customTheme)
+except:
+    console = Console()
+

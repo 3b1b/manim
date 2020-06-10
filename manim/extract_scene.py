@@ -77,7 +77,7 @@ def prompt_user_for_choice(scene_classes):
     num_to_class = {}
     for count, scene_class in zip(it.count(1), scene_classes):
         name = scene_class.__name__
-        console.print("%d: %s" % (count, name),style="warning")
+        console.print("%d: %s" % (count, name),style="logging.level.info")
         num_to_class[count] = scene_class
     try:
         user_input = console.input("[log.message]"+constants.CHOOSE_NUMBER_MESSAGE+"[/log.message]")
