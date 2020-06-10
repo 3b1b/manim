@@ -34,7 +34,7 @@ class CameraFrame(Mobject):
     }
 
     def init_points(self):
-        self.points = np.array([UR, UL, DL, DR])
+        self.points = np.array([ORIGIN, LEFT, RIGHT, DOWN, UP])
         self.set_width(self.frame_shape[0], stretch=True)
         self.set_height(self.frame_shape[1], stretch=True)
         self.move_to(self.center_point)
@@ -58,9 +58,9 @@ class CameraFrame(Mobject):
     def get_inverse_camera_rotation_matrix(self):
         theta, phi, gamma = self.euler_angles
         quat = quaternion_mult(
-            quaternion_from_angle_axis(theta, OUT),
-            quaternion_from_angle_axis(phi, RIGHT),
-            quaternion_from_angle_axis(gamma, OUT),
+            quaternion_from_angle_axis(theta, OUT, axis_normalized=True),
+            quaternion_from_angle_axis(phi, RIGHT, axis_normalized=True),
+            quaternion_from_angle_axis(gamma, OUT, axis_normalized=True),
         )
         return rotation_matrix_transpose_from_quaternion(quat)
 
@@ -96,21 +96,15 @@ class CameraFrame(Mobject):
         self.euler_angles[2] += dgamma
         return self
 
-    # def scale(self, scale_factor, **kwargs):
-    #     # TODO, handle about_point and about_edge?
-    #     self.frame_dimensions *= scale_factor
-    #     return self
-
-    # def set_height(self, height, stretch=False):
-    #     self.height = height
-    #     return self
-
-    # def set_width(self, width, stretch=False):
-    #     self.width = width
-    #     return self
-
     def get_shape(self):
-        return (self.get_width(), self.get_height())
+        return (
+            self.points[:, 0].max() - self.points[:, 0].min(),
+            self.points[:, 1].max() - self.points[:, 1].min(),
+        )
+
+    def get_center(self):
+        # Assumes first point is at the center
+        return self.points[0]
 
     def get_focal_distance(self):
         return self.focal_distance

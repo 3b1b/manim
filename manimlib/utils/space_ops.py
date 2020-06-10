@@ -35,11 +35,10 @@ def quaternion_mult(*quats):
     return result
 
 
-def quaternion_from_angle_axis(angle, axis):
-    return [
-        math.cos(angle / 2),
-        *(math.sin(angle / 2) * normalize(axis))
-    ]
+def quaternion_from_angle_axis(angle, axis, axis_normalized=False):
+    if not axis_normalized:
+        axis = normalize(axis)
+    return [math.cos(angle / 2), *(math.sin(angle / 2) * axis)]
 
 
 def angle_axis_from_quaternion(quaternion):
