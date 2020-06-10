@@ -61,13 +61,12 @@ def open_file_if_needed(file_writer):
 
 
 def is_child_scene(obj, module):
-    if not inspect.isclass(obj):
-        return False
-    if not issubclass(obj, Scene):
-        return False
-    if obj == Scene:
-        return False
-    if not obj.__module__.startswith(module.__name__):
+    if (
+        not inspect.isclass(obj)
+        or not issubclass(obj, Scene)
+        or obj == Scene
+        or not obj.__module__.startswith(module.__name__)
+    ):
         return False
     return True
 
