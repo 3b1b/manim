@@ -72,7 +72,7 @@ def _parse_config(config_parser, args):
     config['left_side'] = config['frame_x_radius'] * constants.LEFT
     config['right_side'] = config['frame_x_radius'] * constants.RIGHT
 
-    # Hangle the --tex_template flag.  Note we accept None if the flag is absent
+    # Handle the --tex_template flag.  Note we accept None if the flag is absent
     filename = (os.path.expanduser(args.tex_template)
                 if args.tex_template is not None
                 else None)
