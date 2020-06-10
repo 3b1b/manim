@@ -84,6 +84,15 @@ class CameraFrame(Mobject):
         self.euler_angles[:] = theta, phi, gamma
         return self
 
+    def set_theta(self, theta):
+        self.euler_angles[0] = theta
+
+    def set_phi(self, phi):
+        self.euler_angles[1] = phi
+
+    def set_gamma(self, gamma):
+        self.euler_angles[2] = gamma
+
     def increment_theta(self, dtheta):
         self.euler_angles[0] += dtheta
         return self
