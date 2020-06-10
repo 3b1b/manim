@@ -85,31 +85,59 @@ class CoinsOnBoard(Group):
         return self
 
 
+class FlipCoin(Animation):
+    CONFIG = {
+        "axis": RIGHT,
+        "run_time": 1,
+        "shift_dir": OUT,
+    }
+
+    def __init__(self, coin, **kwargs):
+        super().__init__(coin, **kwargs)
+        self.shift_vect = coin.get_height() * self.shift_dir / 2
+
+    def interpolate_mobject(self, alpha):
+        coin = self.mobject
+        for sm, start_sm in self.families:
+            sm.points[:] = start_sm.points
+        coin.rotate(alpha * PI, axis=self.axis)
+        coin.shift(4 * alpha * (1 - alpha) * self.shift_vect)
+        return coin
+
 # Scenes
 
-class Test(Scene):
+class IntroducePuzzle(Scene):
     CONFIG = {
         "camera_config": {
             "apply_depth_test": True,
+            "samples": 8,
         }
     }
 
     def construct(self):
+        frame = self.camera.frame
+
         chessboard = Chessboard()
         chessboard.move_to(ORIGIN, OUT)
 
-        coins = CoinsOnBoard(chessboard, include_labels=False)
-        coins.flip_at_random()
-
-        self.camera.frame.set_rotation(
-            phi=45 * DEGREES,
-            theta=0 * DEGREES,
+        plane = NumberPlane(
+            x_range=(0, 8), y_range=(0, 8),
+            faded_line_ratio=1,
         )
 
-        self.add(chessboard)
-        self.add(coins)
+        coins = CoinsOnBoard(chessboard, include_labels=False)
+        coins_random_order = Group(*coins)
+        coins_random_order.shuffle()
 
-        # print(get_runtime(self.update_frame))
-        self.play(LaggedStartMap(FadeIn, coins, lambda m: (m, UP), run_time=2))
+        frame.set_phi(45 * DEGREES)
+
+        self.add(chessboard)
+        self.play(LaggedStartMap(FadeIn, coins_random_order, lambda m: (m, UP), run_time=1))
+        self.add(coins)
         self.wait()
-        self.play(FadeOut(chessboard, RIGHT))
+
+        coins_to_flip = Group(*[c for c in coins_random_order if random.random() < 0.5])
+        self.play(LaggedStartMap(FlipCoin, coins_to_flip, run_time=1, lag_ratio=0.05))
+        self.wait()
+
+        self.embed()
