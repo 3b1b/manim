@@ -80,6 +80,13 @@ class VMobject(Mobject):
         ]
     }
 
+    def __init__(self, **kwargs):
+        self.unit_normal_locked = False
+        self.triangulation_locked = False
+        super().__init__(**kwargs)
+        self.lock_unit_normal()
+        self.lock_triangulation()
+
     def get_group_class(self):
         return VGroup
 
@@ -601,6 +608,8 @@ class VMobject(Mobject):
 
     def get_points_without_null_curves(self, atol=1e-9):
         nppc = self.n_points_per_curve
+        if len(self.points) <= nppc + 1:
+            return self.points
         distinct_curves = reduce(op.or_, [
             (abs(self.points[i::nppc] - self.points[0::nppc]) > atol).any(1)
             for i in range(1, nppc)
@@ -637,9 +646,13 @@ class VMobject(Mobject):
             sum((p0[:, 0] + p1[:, 0]) * (p1[:, 1] - p0[:, 1])),  # Add up (x1 + x2)*(y2 - y1)
         ])
 
-    def get_unit_normal_vector(self):
+    def get_unit_normal(self):
+        if self.unit_normal_locked:
+            return self.saved_unit_normal
+
         if len(self.points) < 3:
             return OUT
+
         area_vect = self.get_area_vector()
         area = get_norm(area_vect)
         if area > 0:
@@ -649,6 +662,19 @@ class VMobject(Mobject):
                 self.points[1] - self.points[0],
                 self.points[2] - self.points[1],
             )
+
+    def lock_unit_normal(self, family=True):
+        mobs = self.get_family() if family else [self]
+        for mob in mobs:
+            mob.unit_normal_locked = False
+            mob.saved_unit_normal = mob.get_unit_normal()
+            mob.unit_normal_locked = True
+        return self
+
+    def unlock_unit_normal(self):
+        for mob in self.get_family():
+            self.unit_normal_locked = False
+        return self
 
     # Alignment
     def align_points(self, vmobject):
@@ -895,7 +921,7 @@ class VMobject(Mobject):
         data["prev_point"][nppc:] = points[:-nppc]
         data["next_point"][:-nppc] = points[nppc:]
         data["next_point"][-nppc:] = points[:nppc]
-        data["unit_normal"] = self.get_unit_normal_vector()
+        data["unit_normal"] = self.get_unit_normal()
         data["stroke_width"][:, 0] = stroke_width
         data["color"] = rgbas
         data["gloss"] = self.gloss
@@ -915,16 +941,14 @@ class VMobject(Mobject):
             sm.triangulation_locked = False
 
     def refresh_triangulation(self):
-        for sm in self.get_family():
-            if sm.triangulation_locked:
-                sm.lock_triangulation(family=False)
+        self.lock_triangulation()
 
     def get_triangulation(self, normal_vector=None):
         # Figure out how to triangulate the interior to know
         # how to send the points as to the vertex shader.
         # First triangles come directly from the points
         if normal_vector is None:
-            normal_vector = self.get_unit_normal_vector()
+            normal_vector = self.get_unit_normal()
 
         if self.triangulation_locked:
             return self.saved_triangulation
@@ -971,7 +995,7 @@ class VMobject(Mobject):
 
     def get_fill_shader_data(self):
         points = self.points
-        unit_normal = self.get_unit_normal_vector()
+        unit_normal = self.get_unit_normal()
         tri_indices = self.get_triangulation(unit_normal)
 
         # TODO, best way to enable multiple colors?
