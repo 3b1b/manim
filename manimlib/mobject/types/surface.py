@@ -115,6 +115,8 @@ class ParametricSurface(Mobject):
         s_points, du_points, dv_points = self.get_surface_points_and_nudged_points()
         tri_indices = self.get_triangle_indices()
         data = self.get_blank_shader_data_array(len(tri_indices))
+        if len(tri_indices) == 0:
+            return data
         data["point"] = s_points[tri_indices]
         data["du_point"] = du_points[tri_indices]
         data["dv_point"] = dv_points[tri_indices]
@@ -129,6 +131,10 @@ class ParametricSurface(Mobject):
 
 
 class SGroup(ParametricSurface):
+    CONFIG = {
+        "resolution": (0, 0),
+    }
+
     def __init__(self, *parametric_surfaces, **kwargs):
         # TODO, separate out the surface type...again
         super().__init__(uv_func=None, **kwargs)
@@ -136,6 +142,9 @@ class SGroup(ParametricSurface):
 
     def init_points(self):
         pass
+
+    def get_triangle_indices(self):
+        return np.zeros(0)
 
 
 class TexturedSurface(ParametricSurface):
