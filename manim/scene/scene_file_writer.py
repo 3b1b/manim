@@ -392,7 +392,7 @@ class SceneFileWriter(object):
             '-r', str(fps),  # frames per second
             '-i', '-',  # The imput comes from a pipe
             '-an',  # Tells FFMPEG not to expect any audio
-            '-loglevel', 'debug',
+            '-loglevel', 'error',
         ]
         # TODO, the test for a transparent background should not be based on
         # the file extension.
@@ -473,7 +473,7 @@ class SceneFileWriter(object):
             '-f', 'concat',
             '-safe', '0',
             '-i', file_list,
-            '-loglevel', 'debug',
+            '-loglevel', 'error',
             '-c', 'copy',
             movie_file_path
         ]
@@ -506,7 +506,7 @@ class SceneFileWriter(object):
                 "-map", "0:v:0",
                 # select audio stream from second file
                 "-map", "1:a:0",
-                '-loglevel', 'debug',
+                '-loglevel', 'error',
                 # "-shortest",
                 temp_file_path,
             ]
