@@ -73,7 +73,8 @@ def is_child_scene(obj, module):
 
 def prompt_user_for_choice(scene_classes):
     num_to_class = {}
-    for count, scene_class in zip(it.count(1), scene_classes):
+    for count, scene_class in enumerate(scene_classes):
+        count += 1  # start with 1 instead of 0
         name = scene_class.__name__
         print("%d: %s" % (count, name))
         num_to_class[count] = scene_class
