@@ -115,9 +115,8 @@ class SceneFileWriter(object):
         str
             The default scene name.
         """
-        return (file_writer_config['output_file']
-                if file_writer_config['output_file'] is not None
-                else self.scene.__class__.__name__)
+        fn = file_writer_config['output_file']
+        return (fn if fn is not None and fn else self.scene.__class__.__name__)
 
     def get_resolution_directory(self):
         """
