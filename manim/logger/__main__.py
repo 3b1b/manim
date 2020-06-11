@@ -1,10 +1,11 @@
 from rich.console import Console
 from rich.progress import track
-import json
+import configparser
 
 
 if __name__=="__main__":
     console = Console()
+    config = configparser.ConfigParser()
     default={"logging.keyword":"bold yellow",
         "logging.level.notset":"dim",
         "logging.level.debug":"green",
@@ -25,7 +26,8 @@ if __name__=="__main__":
         temp=input()
         if temp:
             default[key]=temp
+    config['log.color']=default
     for n in track(range(100), description="Converting to JSON"):
-        with open("rich.cfg","w") as fp:
-            json.dump(default,fp,indent=4)
-    console.print("A file called [yellow]rich.cfg[/yellow] is created. To save your theme please save that file and each time \nplace it in you current working directory(The directory where you execute manim command) for the your theme to be displayed.")
+        with open("manim.cfg","w") as fp:
+            config.write(fp)
+    console.print("A file called [yellow]manim.cfg[/yellow] is created. To save your theme please save that file and each time \nplace it in you current working directory(The directory where you execute manim command) for the your theme to be displayed.")
