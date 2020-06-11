@@ -61,14 +61,10 @@ def open_file_if_needed(file_writer):
 
 
 def is_child_scene(obj, module):
-    if (
-        not inspect.isclass(obj)
-        or not issubclass(obj, Scene)
-        or obj == Scene
-        or not obj.__module__.startswith(module.__name__)
-    ):
-        return False
-    return True
+    return (inspect.isclass(obj)
+            and issubclass(obj, Scene)
+            and obj != Scene
+            and obj.__module__.startswith(module.__name__))
 
 
 def prompt_user_for_choice(scene_classes):
@@ -79,19 +75,13 @@ def prompt_user_for_choice(scene_classes):
         print("%d: %s" % (count, name))
         num_to_class[count] = scene_class
     try:
+        import re
         user_input = input(constants.CHOOSE_NUMBER_MESSAGE)
-        return [
-            num_to_class[int(num_str)]
-            for num_str in user_input.split(",")
-        ]
+        return [num_to_class[int(num_str)]
+                for num_str in re.split(r"\s*,\s*", user_input.strip())]
     except KeyError:
         logger.error(constants.INVALID_NUMBER_MESSAGE)
         sys.exit(2)
-        user_input = input(constants.CHOOSE_NUMBER_MESSAGE)
-        return [
-            num_to_class[int(num_str)]
-            for num_str in user_input.split(",")
-        ]
     except EOFError:
         sys.exit(1)
 

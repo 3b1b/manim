@@ -24,9 +24,6 @@ def _parse_config(config_parser, args):
     # By default, use the CLI section of the digested .cfg files
     default = config_parser['CLI']
 
-    # This will be the final config dict exposed to the user
-    config = {}
-
     # Handle the *_quality flags.  These determine the section to read
     # and are stored in 'camera_config'.  Note the highest resolution
     # passed as argument will be used.
@@ -114,13 +111,12 @@ def _parse_file_writer_config(config_parser, args):
     for boolean_opt in ['preview', 'show_file_in_finder', 'quiet', 'sound',
                         'leave_progress_bars', 'write_to_movie', 'save_last_frame',
                         'save_pngs', 'save_as_gif', 'write_all']:
+        attr = getattr(args, boolean_opt)
         config[boolean_opt] = (default.getboolean(boolean_opt)
-                               if getattr(args, boolean_opt) is None
-                               else getattr(args, boolean_opt))
+                               if attr is None else attr)
     for str_opt in ['media_dir', 'video_dir', 'tex_dir', 'text_dir']:
-        config[str_opt] = (default[str_opt]
-                           if getattr(args, str_opt) is None
-                           else getattr(args, str_opt))
+        attr = getattr(args, str_opt)
+        config[str_opt] = (default[str_opt] if attr is None else attr)
 
     # Handle the -t (--transparent) flag.  This flag determines which
     # section to use from the .cfg file.
