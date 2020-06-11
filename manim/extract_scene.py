@@ -88,7 +88,7 @@ def prompt_user_for_choice(scene_classes):
     except KeyError:
         logger.error(constants.INVALID_NUMBER_MESSAGE)
         sys.exit(2)
-        user_input = console.input(constants.CHOOSE_NUMBER_MESSAGE)
+        user_input = console.input("[log.message]"+constants.CHOOSE_NUMBER_MESSAGE+"[/log.message]")
         return [
             num_to_class[int(num_str)]
             for num_str in user_input.split(",")
