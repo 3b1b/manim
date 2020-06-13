@@ -564,13 +564,14 @@ class Arrow(Line):
     CONFIG = {
         "stroke_width": 6,
         "buff": MED_SMALL_BUFF,
+        # TODO, the interface is terrible
         "max_tip_length_to_length_ratio": 0.25,
         "max_stroke_width_to_length_ratio": 5,
         "preserve_tip_size_when_scaling": True,
     }
 
     def __init__(self, *args, **kwargs):
-        Line.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         # TODO, should this be affected when
         # Arrow.set_stroke is called?
         self.initial_stroke_width = self.stroke_width
@@ -620,19 +621,10 @@ class Arrow(Line):
         )
 
     def set_stroke_width_from_length(self):
-        max_ratio = self.max_stroke_width_to_length_ratio
-        self.set_stroke(
-            width=min(
-                self.initial_stroke_width,
-                max_ratio * self.get_length(),
-            ),
-            family=False,
-        )
+        mr = self.max_stroke_width_to_length_ratio
+        width = min(self.initial_stroke_width, mr * self.get_length())
+        self.set_stroke(width=width)
         return self
-
-    # TODO, should this be the default for everything?
-    # def copy(self):
-    #     return self.deepcopy()
 
 
 class Vector(Arrow):
@@ -664,8 +656,12 @@ class Polygon(VMobject):
     }
 
     def __init__(self, *vertices, **kwargs):
-        VMobject.__init__(self, **kwargs)
-        self.set_points_as_corners([*vertices, vertices[0]])
+        self.vertices = vertices
+        super().__init__(**kwargs)
+
+    def init_points(self):
+        verts = self.vertices
+        self.set_points_as_corners([*verts, verts[0]])
 
     def get_vertices(self):
         return self.get_start_anchors()
@@ -720,12 +716,12 @@ class RegularPolygon(Polygon):
             self.start_angle = (n % 2) * 90 * DEGREES
         start_vect = rotate_vector(RIGHT, self.start_angle)
         vertices = compass_directions(n, start_vect)
-        Polygon.__init__(self, *vertices, **kwargs)
+        super().__init__(*vertices, **kwargs)
 
 
 class Triangle(RegularPolygon):
     def __init__(self, **kwargs):
-        RegularPolygon.__init__(self, n=3, **kwargs)
+        super().__init__(n=3, **kwargs)
 
 
 class ArrowTip(Triangle):
@@ -762,14 +758,16 @@ class ArrowTip(Triangle):
 class Rectangle(Polygon):
     CONFIG = {
         "color": WHITE,
-        "height": 2.0,
         "width": 4.0,
+        "height": 2.0,
         "mark_paths_closed": True,
         "close_new_points": True,
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, width=None, height=None, **kwargs):
         Polygon.__init__(self, UR, UL, DL, DR, **kwargs)
+        self.width = width or self.width
+        self.height = height or self.height
         self.set_width(self.width, stretch=True)
         self.set_height(self.height, stretch=True)
 
