@@ -185,10 +185,10 @@ class Camera(object):
         fbo_msaa = self.get_fbo(ctx, self.samples)
         fbo_msaa.use()
 
-        flag = moderngl.BLEND
         if self.apply_depth_test:
-            flag |= moderngl.DEPTH_TEST
-        ctx.enable(flag)
+            ctx.enable(moderngl.BLEND | moderngl.DEPTH_TEST)
+        else:
+            ctx.enable(moderngl.BLEND)
         ctx.blend_func = (
             moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA,
             moderngl.ONE, moderngl.ONE
