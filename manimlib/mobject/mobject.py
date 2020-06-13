@@ -618,8 +618,8 @@ class Mobject(Container):
             raise Warning("Attempting to replace mobject with no points")
             return self
         if stretch:
-            self.stretch_to_fit_width(mobject.get_width())
-            self.stretch_to_fit_height(mobject.get_height())
+            for i in range(self.dim):
+                self.rescale_to_fit(mobject.length_over_dim(i), i, stretch=True)
         else:
             self.rescale_to_fit(
                 mobject.length_over_dim(dim_to_match),
