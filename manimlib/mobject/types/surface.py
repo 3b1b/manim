@@ -1,12 +1,11 @@
 import numpy as np
 import moderngl
 
-from PIL import Image
-
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.color import color_to_rgba
+from manimlib.utils.color import rgb_to_hex
 from manimlib.utils.images import get_full_raster_image_path
 from manimlib.utils.space_ops import normalize_along_axis
 
@@ -99,6 +98,9 @@ class ParametricSurface(Mobject):
             for submob in self.submobjects:
                 submob.set_color(color, opacity, family)
         return self
+
+    def get_color(self):
+        return rgb_to_hex(self.rgbas[0, :3])
 
     def set_opacity(self, opacity, family=True):
         self.rgbas[:, 3] = opacity
