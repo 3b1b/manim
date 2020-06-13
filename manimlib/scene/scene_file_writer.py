@@ -226,7 +226,6 @@ class SceneFileWriter(object):
             command += [
                 '-vcodec', 'libx264',
                 '-pix_fmt', 'yuv420p',
-                # '-pix_fmt', 'yuv444p14le',
             ]
         command += [temp_file_path]
         self.writing_process = sp.Popen(command, stdin=sp.PIPE)
