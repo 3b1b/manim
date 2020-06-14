@@ -35,7 +35,9 @@ As this is a Fork of [Manim by 3b1b](https://github.com/3b1b/manim), contributin
 
 > Note: if your Pull Request doesn't change any of the actual code, please add `[skip ci]` to your commit message for Travis to ignore it.
 
-5. Finally, instead of  typing in `git push`, enter the command below.
+5. After you've made your changes, please test them out thoroughly, both with the scenes in the `example_scenes` directory, as well as those in the `tests` directory. If you are adding a new feature to Manim, please do consider writing a test to ensure it works as intended. You can place this test in the `tests` directory.
+
+6. Finally, instead of  typing in `git push`, enter the command below.
 
    ```sh
    git push -u origin <your-branch-name>
