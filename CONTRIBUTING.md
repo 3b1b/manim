@@ -4,7 +4,7 @@
 2. (For the maintainers of this repo) Label PRs appropriately.
 3. Link relevant issues.
 4. Ensure compatibility with the latest changes in the repo.
-5. After you've made your changes, please test them out thoroughly. If the repository has any example code or code exclusively used for testing, please test your changes against those. If you have added new features, consider writing and contributing a test for that feature to ensure it works properly.
+5. After you've made your changes, please test them out thoroughly. If the repository has any example code or code exclusively used for testing, please test your changes against those. If you have added new features, consider writing and contributing to a test for that feature to ensure it works properly.
 
 ## Contributing to the Manim Community Fork - General instructions
 
