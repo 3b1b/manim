@@ -73,7 +73,7 @@ class Network(object):
         if n_layers is None:
             n_layers = self.num_layers
         activations = [input_a.reshape((input_a.size, 1))]
-        for bias, weight in zip(self.biases, self.weights)[:n_layers]:
+        for bias, weight in list(zip(self.biases, self.weights))[:n_layers]:
             last_a = activations[-1]
             new_a = self.non_linearity(np.dot(weight, last_a) + bias)
             new_a = new_a.reshape((new_a.size, 1))
