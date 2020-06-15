@@ -19,7 +19,7 @@ Manim is an animation engine for explanatory math videos. It's used to create pr
     + [FFmpeg Installation](#ffmpeg-installation)
     + [SoX Installation](#sox-installation)
     + [LaTeX Installation](#latex-installation)
-  * [Linux](#linux)
+  * [Ubuntu/Debian](#Ubuntu/Debian)
     + [Cairo Installation](#cairo-installation-1)
     + [FFmpeg Installation](#ffmpeg-installation-1)
     + [SoX Installation](#sox-installation-1)
@@ -96,7 +96,7 @@ Before installing `manim-community`, there are some additional dependencies that
 <img style="width: 20vw;" src="./readme-assets/windows_miktex.png" />
 <br><br>
 
-### Linux
+### Ubuntu/Debian
 
 Before installing `manim-community`, there are some additional dependencies that you must have installed:
  - Cairo
