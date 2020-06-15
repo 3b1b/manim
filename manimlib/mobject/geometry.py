@@ -766,10 +766,14 @@ class Rectangle(Polygon):
 
     def __init__(self, width=None, height=None, **kwargs):
         Polygon.__init__(self, UR, UL, DL, DR, **kwargs)
-        self.width = width or self.width
-        self.height = height or self.height
-        self.set_width(self.width, stretch=True)
-        self.set_height(self.height, stretch=True)
+
+        if width is None:
+            width = self.width
+        if height is None:
+            height = self.height
+
+        self.set_width(width, stretch=True)
+        self.set_height(height, stretch=True)
 
 
 class Square(Rectangle):
@@ -777,14 +781,13 @@ class Square(Rectangle):
         "side_length": 2.0,
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, side_length=None, **kwargs):
         digest_config(self, kwargs)
-        Rectangle.__init__(
-            self,
-            height=self.side_length,
-            width=self.side_length,
-            **kwargs
-        )
+
+        if side_length is None:
+            side_length = self.side_length
+
+        super().__init__(side_length, side_length, **kwargs)
 
 
 class RoundedRectangle(Rectangle):
