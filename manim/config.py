@@ -118,6 +118,12 @@ def _parse_file_writer_config(config_parser, args):
         attr = getattr(args, str_opt)
         config[str_opt] = (default[str_opt] if attr is None else attr)
 
+    # Handle the -s (--save_last_frame) flag: invalidate the -w flag
+    # At this point the save_last_frame option has already been set by
+    # both CLI and the cfg file, so read the config dict directly
+    if config['save_last_frame']:
+        config['write_to_movie'] = False
+
     # Handle the -t (--transparent) flag.  This flag determines which
     # section to use from the .cfg file.
     section = config_parser['transparent'] if args.transparent else default
@@ -236,7 +242,7 @@ def _parse_cli(arg_list, input=True):
         "-s", "--save_last_frame",
         action="store_const",
         const=True,
-        help="Save the last frame",
+        help="Save the last frame (and do not save movie)",
     )
     parser.add_argument(
         "-g", "--save_pngs",
