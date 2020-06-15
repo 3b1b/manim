@@ -15,6 +15,7 @@ class SurfaceMesh(VGroup):
         "resolution": (21, 21),
         "stroke_width": 1,
         "normal_nudge": 1e-2,
+        "depth_test": True,
     }
 
     def __init__(self, uv_surface, **kwargs):
