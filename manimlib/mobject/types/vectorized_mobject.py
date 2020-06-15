@@ -9,7 +9,6 @@ from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.bezier import bezier
-from manimlib.utils.bezier import get_smooth_cubic_bezier_handle_points
 from manimlib.utils.bezier import get_smooth_quadratic_bezier_handle_points
 from manimlib.utils.bezier import get_quadratic_approximation_of_cubic
 from manimlib.utils.bezier import interpolate
@@ -84,8 +83,8 @@ class VMobject(Mobject):
         self.unit_normal_locked = False
         self.triangulation_locked = False
         super().__init__(**kwargs)
-        self.lock_unit_normal()
-        self.lock_triangulation()
+        self.lock_unit_normal(family=False)
+        self.lock_triangulation(family=False)
 
     def get_group_class(self):
         return VGroup
@@ -676,7 +675,11 @@ class VMobject(Mobject):
         return self
 
     def refresh_unit_normal(self):
-        self.lock_unit_normal()
+        for mob in self.get_family():
+            mob.unit_normal_locked = False
+            mob.saved_unit_normal = mob.get_unit_normal()
+            mob.unit_normal_locked = True
+        return self
 
     # Alignment
     def align_points(self, vmobject):
@@ -842,27 +845,29 @@ class VMobject(Mobject):
     def init_shader_data(self):
         self.fill_data = np.zeros(len(self.points), dtype=self.fill_dtype)
         self.stroke_data = np.zeros(len(self.points), dtype=self.stroke_dtype)
+        self.fill_shader_info_template = get_shader_info(
+            vert_file=self.fill_vert_shader_file,
+            geom_file=self.fill_geom_shader_file,
+            frag_file=self.fill_frag_shader_file,
+            depth_test=self.depth_test,
+            render_primative=self.render_primative,
+        )
+        self.stroke_shader_info_template = get_shader_info(
+            vert_file=self.stroke_vert_shader_file,
+            geom_file=self.stroke_geom_shader_file,
+            frag_file=self.stroke_frag_shader_file,
+            depth_test=self.depth_test,
+            render_primative=self.render_primative,
+        )
 
     def get_shader_info_list(self):
         if self.shader_data_is_locked:
             return self.saved_shader_info_list
 
-        stroke_info = get_shader_info(
-            vert_file=self.stroke_vert_shader_file,
-            geom_file=self.stroke_geom_shader_file,
-            frag_file=self.stroke_frag_shader_file,
-            uniforms=self.get_stroke_uniforms(),
-            depth_test=self.depth_test,
-            render_primative=self.render_primative,
-        )
-        fill_info = get_shader_info(
-            vert_file=self.fill_vert_shader_file,
-            geom_file=self.fill_geom_shader_file,
-            frag_file=self.fill_frag_shader_file,
-            uniforms=self.get_shader_uniforms(),
-            depth_test=self.depth_test,
-            render_primative=self.render_primative,
-        )
+        fill_info = dict(self.fill_shader_info_template)
+        stroke_info = dict(self.stroke_shader_info_template)
+        fill_info["uniforms"] = self.get_shader_uniforms()
+        stroke_info["uniforms"] = self.get_stroke_uniforms()
 
         back_stroke_data = []
         stroke_data = []
@@ -941,11 +946,16 @@ class VMobject(Mobject):
         return self
 
     def unlock_triangulation(self):
-        for sm in self.family_members_with_points():
+        for sm in self.get_family():
             sm.triangulation_locked = False
 
     def refresh_triangulation(self):
-        self.lock_triangulation()
+        for mob in self.get_family():
+            if mob.triangulation_locked:
+                mob.triangulation_locked = False
+                mob.saved_triangulation = mob.get_triangulation()
+                mob.triangulation_locked = True
+        return self
 
     def get_triangulation(self, normal_vector=None):
         # Figure out how to triangulate the interior to know

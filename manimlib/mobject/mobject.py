@@ -75,6 +75,11 @@ class Mobject(Container):
         self.init_colors()
         self.init_shader_data()
 
+        if self.is_fixed_in_frame:
+            self.fix_in_frame()
+        if self.depth_test:
+            self.apply_depth_test()
+
     def __str__(self):
         return str(self.name)
 
@@ -1195,6 +1200,14 @@ class Mobject(Container):
     # For shaders
     def init_shader_data(self):
         self.shader_data = np.zeros(len(self.points), dtype=self.shader_dtype)
+        self.shader_info_template = get_shader_info(
+            vert_file=self.vert_shader_file,
+            geom_file=self.geom_shader_file,
+            frag_file=self.frag_shader_file,
+            texture_paths=self.texture_paths,
+            depth_test=self.depth_test,
+            render_primative=self.render_primative,
+        )
 
     def get_blank_shader_data_array(self, size, name="shader_data"):
         # If possible, try to populate an existing array, rather
@@ -1219,10 +1232,7 @@ class Mobject(Container):
             return self.saved_shader_info_list
         shader_infos = it.chain(
             [self.get_shader_info()],
-            *[
-                submob.get_shader_info_list()
-                for submob in self.submobjects
-            ]
+            *[sm.get_shader_info_list() for sm in self.submobjects]
         )
         batches = batch_by_property(shader_infos, shader_info_to_id)
 
@@ -1235,16 +1245,10 @@ class Mobject(Container):
         return result
 
     def get_shader_info(self):
-        return get_shader_info(
-            data=self.get_shader_data(),
-            vert_file=self.vert_shader_file,
-            geom_file=self.geom_shader_file,
-            frag_file=self.frag_shader_file,
-            uniforms=self.get_shader_uniforms(),
-            texture_paths=self.texture_paths,
-            depth_test=self.depth_test,
-            render_primative=self.render_primative,
-        )
+        shader_info = dict(self.shader_info_template)
+        shader_info["data"] = self.get_shader_data()
+        shader_info["uniforms"] = self.get_shader_uniforms()
+        return shader_info
 
     def get_shader_uniforms(self):
         return {
