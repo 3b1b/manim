@@ -9,8 +9,7 @@ import logging
 
 
 class SceneTester:
-    """Class used to test the animations. 
-    """
+    """Class used to test the animations."""
 
     def __init__(self, scene_object, config_scene, module_tested, caching_needed=False):
         # Disable the the logs, (--quiet is broken) TODO
@@ -51,7 +50,21 @@ class SceneTester:
         assert(test_result), "The frames don't match. {} has been modified. Please ignore if it was intended".format(
             str(self.scene).replace('Test', ''))
         return 1
-    
+
+def pytest_addoption(parser):
+    parser.addoption("--skip_end_to_end", action="store_true", default=False, help = "Will skip all the end-to-end tests. Useful when ffmpeg is not installed.")
+
+def pytest_configure(config):
+    config.addinivalue_line("markers", "skip_end_to_end: mark test as end_to_end test")
+
+def pytest_collection_modifyitems(config, items):
+    if config.getoption("--skip_end_to_end") == False:
+        return
+    else: 
+        skip_end_to_end = pytest.mark.skip(reason="End to end test skipped due to --skip_end_to_end flag")
+        for item in items:
+            if "skip_end_to_end" in item.keywords:
+                item.add_marker(skip_end_to_end)
 
 @pytest.fixture
 def Tester():
