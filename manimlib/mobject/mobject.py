@@ -24,7 +24,6 @@ from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotation_matrix_transpose
 from manimlib.utils.shaders import get_shader_info
 from manimlib.utils.shaders import shader_info_to_id
-from manimlib.utils.shaders import shader_id_to_info
 from manimlib.utils.shaders import is_valid_shader_info
 
 
@@ -1229,7 +1228,7 @@ class Mobject(Container):
 
         result = []
         for info_group, sid in batches:
-            shader_info = shader_id_to_info(sid)
+            shader_info = info_group[0]
             shader_info["data"] = np.hstack([info["data"] for info in info_group])
             if is_valid_shader_info(shader_info):
                 result.append(shader_info)
@@ -1238,10 +1237,10 @@ class Mobject(Container):
     def get_shader_info(self):
         return get_shader_info(
             data=self.get_shader_data(),
-            uniforms=self.get_shader_uniforms(),
             vert_file=self.vert_shader_file,
             geom_file=self.geom_shader_file,
             frag_file=self.frag_shader_file,
+            uniforms=self.get_shader_uniforms(),
             texture_paths=self.texture_paths,
             depth_test=self.depth_test,
             render_primative=self.render_primative,

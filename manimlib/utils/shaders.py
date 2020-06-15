@@ -2,7 +2,6 @@ import os
 import warnings
 import re
 import moderngl
-import json
 
 from manimlib.constants import SHADER_DIR
 
@@ -17,14 +16,14 @@ SHADER_INFO_KEYS = [
     # A structred array caring all of the points/color/lighting/etc. information
     # needed for the shader.
     "data",
-    # A dictionary mapping names of uniform variables
-    "uniforms",
     # Filename of vetex shader
     "vert",
     # Filename of geometry shader, if there is one
     "geom",
     # Filename of fragment shader
     "frag",
+    # A dictionary mapping names of uniform variables
+    "uniforms",
     # A dictionary mapping names (as they show up in)
     # the shader to filepaths for textures.
     "texture_paths",
@@ -39,10 +38,10 @@ SHADER_KEYS_FOR_ID = SHADER_INFO_KEYS[1:]
 
 
 def get_shader_info(data=None,
-                    uniforms=None,
                     vert_file=None,
                     geom_file=None,
                     frag_file=None,
+                    uniforms=None,
                     texture_paths=None,
                     depth_test=False,
                     render_primative=moderngl.TRIANGLE_STRIP,
@@ -53,11 +52,11 @@ def get_shader_info(data=None,
             SHADER_INFO_KEYS,
             [
                 data,
-                uniforms,
                 vert_file,
                 geom_file,
                 frag_file,
-                texture_paths or {},
+                uniforms or dict(),
+                texture_paths or dict(),
                 depth_test,
                 str(render_primative)
             ]
@@ -75,19 +74,8 @@ def is_valid_shader_info(shader_info):
 
 
 def shader_info_to_id(shader_info):
-    # A unique id for a shader based on the
-    # files holding its code and texture
-    tuples = [
-        (key, shader_info[key])
-        for key in SHADER_KEYS_FOR_ID
-    ]
-    return json.dumps(tuples)
-
-
-def shader_id_to_info(sid):
-    result = dict(json.loads(sid))
-    result["data"] = None
-    return result
+    # A unique id for a shader
+    return "|".join([str(shader_info[key]) for key in SHADER_KEYS_FOR_ID])
 
 
 def same_shader_type(info1, info2):
@@ -95,6 +83,14 @@ def same_shader_type(info1, info2):
         info1[key] == info2[key]
         for key in SHADER_KEYS_FOR_ID
     ])
+
+
+def shader_info_to_program_code(shader_info):
+    return {
+        "vertex_shader": get_shader_code_from_file(shader_info["vert"]),
+        "geometry_shader": get_shader_code_from_file(shader_info["geom"]),
+        "fragment_shader": get_shader_code_from_file(shader_info["frag"]),
+    }
 
 
 def get_shader_code_from_file(filename):

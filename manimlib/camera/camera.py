@@ -14,8 +14,7 @@ from manimlib.utils.bezier import interpolate
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.shaders import shader_info_to_id
-from manimlib.utils.shaders import shader_id_to_info
-from manimlib.utils.shaders import get_shader_code_from_file
+from manimlib.utils.shaders import shader_info_to_program_code
 from manimlib.utils.simple_functions import clip
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import rotation_matrix_transpose_from_quaternion
@@ -355,38 +354,37 @@ class Camera(object):
     def get_shader(self, shader_info):
         sid = shader_info_to_id(shader_info)
         if sid not in self.id_to_shader:
-            info = shader_id_to_info(sid)
-            shader = self.ctx.program(
-                vertex_shader=get_shader_code_from_file(info["vert"]),
-                geometry_shader=get_shader_code_from_file(info["geom"]),
-                fragment_shader=get_shader_code_from_file(info["frag"]),
-            )
-            if info["texture_paths"]:
-                for name, path in info["texture_paths"].items():
-                    tid = self.get_texture_id(path)
-                    shader[name].value = tid
-            self.set_shader_uniforms(shader, sid)
+            # Create shader program for the first time, then cache
+            # in the id_to_shader dictionary
+            shader = self.ctx.program(**shader_info_to_program_code(sid))
+            self.set_shader_uniforms(shader)
+            for name, path in shader_info["texture_paths"].items():
+                tid = self.get_texture_id(path)
+                shader[name].value = tid
+            for name, value in shader_info["uniforms"].items():
+                shader[name].value = value
             self.id_to_shader[sid] = shader
         return self.id_to_shader[sid]
 
-    def set_shader_uniforms(self, shader, sid):
+    def set_shader_uniforms(self, shader):
         if shader is None:
             return
 
         pw, ph = self.get_pixel_shape()
         fw, fh = self.frame.get_shape()
+        # TODO, this should probably be a mobject uniform, with
+        # the camera taking care of the conversion factor
         anti_alias_width = self.anti_alias_width / (ph / fh)
         transform = self.frame.get_inverse_camera_position_matrix()
         light = self.light_source.get_location()
         transformed_light = np.dot(transform, [*light, 1])[:3]
-        mapping = dict()
-        mapping['to_screen_space'] = tuple(transform.T.flatten())
-        mapping['frame_shape'] = self.frame.get_shape()
-        mapping['focal_distance'] = self.frame.get_focal_distance()
-        mapping['anti_alias_width'] = anti_alias_width
-        mapping['light_source_position'] = tuple(transformed_light)
-        # Potentially overwrite with whatever came from the mobject
-        mapping.update(shader_id_to_info(sid)["uniforms"])
+        mapping = {
+            'to_screen_space': tuple(transform.T.flatten()),
+            'frame_shape': self.frame.get_shape(),
+            'focal_distance': self.frame.get_focal_distance(),
+            'anti_alias_width': anti_alias_width,
+            'light_source_position': tuple(transformed_light),
+        }
 
         for key, value in mapping.items():
             try:
@@ -396,7 +394,7 @@ class Camera(object):
 
     def refresh_shader_uniforms(self):
         for sid, shader in self.id_to_shader.items():
-            self.set_shader_uniforms(shader, sid)
+            self.set_shader_uniforms(shader)
 
     def init_textures(self):
         self.path_to_texture_id = {}

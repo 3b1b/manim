@@ -848,18 +848,18 @@ class VMobject(Mobject):
             return self.saved_shader_info_list
 
         stroke_info = get_shader_info(
-            uniforms=self.get_stroke_uniforms(),
             vert_file=self.stroke_vert_shader_file,
             geom_file=self.stroke_geom_shader_file,
             frag_file=self.stroke_frag_shader_file,
+            uniforms=self.get_stroke_uniforms(),
             depth_test=self.depth_test,
             render_primative=self.render_primative,
         )
         fill_info = get_shader_info(
-            uniforms=self.get_shader_uniforms(),
             vert_file=self.fill_vert_shader_file,
             geom_file=self.fill_geom_shader_file,
             frag_file=self.fill_frag_shader_file,
+            uniforms=self.get_shader_uniforms(),
             depth_test=self.depth_test,
             render_primative=self.render_primative,
         )
@@ -904,7 +904,7 @@ class VMobject(Mobject):
             "miter": 3,
         }
         result = super().get_shader_uniforms()
-        result["join_type"] = j_map[self.joint_type]
+        result["joint_type"] = j_map[self.joint_type]
         return result
 
     def get_stroke_shader_data(self):
