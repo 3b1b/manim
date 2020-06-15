@@ -19,7 +19,7 @@ Manim is an animation engine for explanatory math videos. It's used to create pr
     + [FFmpeg Installation](#ffmpeg-installation)
     + [SoX Installation](#sox-installation)
     + [LaTeX Installation](#latex-installation)
-  * [Ubuntu/Debian](#Ubuntu/Debian)
+  * [Ubuntu/Debian](#ubuntudebian)
     + [Cairo Installation](#cairo-installation-1)
     + [FFmpeg Installation](#ffmpeg-installation-1)
     + [SoX Installation](#sox-installation-1)
