@@ -4,6 +4,7 @@ import os
 import platform
 import subprocess as sp
 import sys
+import re
 import traceback
 import importlib.util
 
@@ -75,7 +76,6 @@ def prompt_user_for_choice(scene_classes):
         print("%d: %s" % (count, name))
         num_to_class[count] = scene_class
     try:
-        import re
         user_input = input(constants.CHOOSE_NUMBER_MESSAGE)
         return [num_to_class[int(num_str)]
                 for num_str in re.split(r"\s*,\s*", user_input.strip())]
@@ -136,7 +136,7 @@ def get_module(file_name):
             sys.exit(2)
     else:
         if os.path.exists(file_name):
-            module_name = file_name.replace(os.sep, ".").replace(".py", "")
+            module_name = re.replace(r"\..+$", "", file_name.replace(os.sep, "."))
             spec = importlib.util.spec_from_file_location(module_name, file_name)
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
