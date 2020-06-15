@@ -26,6 +26,7 @@ class ParametricSurface(Mobject):
         # can crop up in the shaders.
         "epsilon": 1e-5,
         "render_primative": moderngl.TRIANGLES,
+        "depth_test": True,
         "vert_shader_file": "surface_vert.glsl",
         "frag_shader_file": "surface_frag.glsl",
         "shader_dtype": [

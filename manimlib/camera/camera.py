@@ -149,7 +149,6 @@ class Camera(object):
         "n_channels": 4,
         "pixel_array_dtype": 'uint8',
         "light_source_position": [-10, 10, 10],
-        "apply_depth_test": False,
         # Measured in pixel widths, used for vector graphics
         "anti_alias_width": 1.5,
         # Although vector graphics handle antialiasing fine
@@ -185,10 +184,7 @@ class Camera(object):
         fbo_msaa = self.get_fbo(ctx, self.samples)
         fbo_msaa.use()
 
-        if self.apply_depth_test:
-            ctx.enable(moderngl.BLEND | moderngl.DEPTH_TEST)
-        else:
-            ctx.enable(moderngl.BLEND)
+        ctx.enable(moderngl.BLEND)
         ctx.blend_func = (
             moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA,
             moderngl.ONE, moderngl.ONE
@@ -329,20 +325,24 @@ class Camera(object):
             for mob in mobjects
         ])
         batches = batch_by_property(shader_infos, shader_info_to_id)
-        # TODO, if apply_depth_test, don't worry about order.
-        # Maybe rewrite batch_by_property to have a "preserve_order" argument
 
         for info_group, sid in batches:
             data = np.hstack([info["data"] for info in info_group])
             shader = self.get_shader(info_group[0])
             render_primative = int(info_group[0]["render_primative"])
-            self.render(shader, data, render_primative)
+            depth_test = info_group[0]["depth_test"]
+            self.render(shader, data, render_primative, depth_test)
 
-    def render(self, shader, data, render_primative):
+    def render(self, shader, data, render_primative, depth_test=False):
         if data is None or len(data) == 0:
             return
         if shader is None:
             return
+        if depth_test:
+            self.ctx.enable(moderngl.DEPTH_TEST)
+        else:
+            self.ctx.disable(moderngl.DEPTH_TEST)
+
         vbo = self.ctx.buffer(data.tobytes())
         vao = self.ctx.simple_vertex_array(shader, vbo, *data.dtype.names)
         vao.render(render_primative)
@@ -418,6 +418,5 @@ class Camera(object):
 
 class ThreeDCamera(Camera):
     CONFIG = {
-        "apply_depth_test": True,
         "samples": 8,
     }

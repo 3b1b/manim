@@ -522,6 +522,7 @@ class VMobject(Mobject):
 
     def flip(self, *args, **kwargs):
         super().flip(*args, **kwargs)
+        self.refresh_unit_normal()
         self.refresh_triangulation()
 
     #
@@ -673,6 +674,9 @@ class VMobject(Mobject):
         for mob in self.get_family():
             self.unit_normal_locked = False
         return self
+
+    def refresh_unit_normal(self):
+        self.lock_unit_normal()
 
     # Alignment
     def align_points(self, vmobject):
@@ -848,6 +852,7 @@ class VMobject(Mobject):
             vert_file=self.stroke_vert_shader_file,
             geom_file=self.stroke_geom_shader_file,
             frag_file=self.stroke_frag_shader_file,
+            depth_test=self.depth_test,
             render_primative=self.render_primative,
         )
         fill_info = get_shader_info(
@@ -855,6 +860,7 @@ class VMobject(Mobject):
             vert_file=self.fill_vert_shader_file,
             geom_file=self.fill_geom_shader_file,
             frag_file=self.fill_frag_shader_file,
+            depth_test=self.depth_test,
             render_primative=self.render_primative,
         )
 

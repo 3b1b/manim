@@ -28,6 +28,8 @@ SHADER_INFO_KEYS = [
     # A dictionary mapping names (as they show up in)
     # the shader to filepaths for textures.
     "texture_paths",
+    # Whether or not to apply depth test
+    "depth_test",
     # E.g. moderngl.TRIANGLE_STRIP
     "render_primative",
 ]
@@ -41,8 +43,9 @@ def get_shader_info(data=None,
                     vert_file=None,
                     geom_file=None,
                     frag_file=None,
-                    render_primative=moderngl.TRIANGLE_STRIP,
                     texture_paths=None,
+                    depth_test=False,
+                    render_primative=moderngl.TRIANGLE_STRIP,
                     ):
     return {
         key: value
@@ -51,8 +54,11 @@ def get_shader_info(data=None,
             [
                 data,
                 uniforms,
-                vert_file, geom_file, frag_file,
+                vert_file,
+                geom_file,
+                frag_file,
                 texture_paths or {},
+                depth_test,
                 str(render_primative)
             ]
         )

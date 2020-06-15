@@ -50,6 +50,7 @@ class Mobject(Container):
         "frag_shader_file": "",
         "render_primative": moderngl.TRIANGLE_STRIP,
         "texture_paths": None,
+        "depth_test": False,
         # If true, the mobject will not get rotated according to camera position
         "is_fixed_in_frame": False,
         # Must match in attributes of vert shader
@@ -468,6 +469,20 @@ class Mobject(Container):
         if family:
             for submob in self.submobjects:
                 submob.unfix_from_frame(family)
+        return self
+
+    def apply_depth_test(self, family=True):
+        self.depth_test = True
+        if family:
+            for submob in self.submobjects:
+                submob.apply_depth_test(family)
+        return self
+
+    def deactivate_depth_test(self, family=True):
+        self.depth_test = False
+        if family:
+            for submob in self.submobjects:
+                submob.deactivate_depth_test(family)
         return self
 
     # Positioning methods
@@ -1203,7 +1218,6 @@ class Mobject(Container):
     def get_shader_info_list(self):
         if self.shader_data_is_locked:
             return self.saved_shader_info_list
-
         shader_infos = it.chain(
             [self.get_shader_info()],
             *[
@@ -1228,8 +1242,9 @@ class Mobject(Container):
             vert_file=self.vert_shader_file,
             geom_file=self.geom_shader_file,
             frag_file=self.frag_shader_file,
-            render_primative=self.render_primative,
             texture_paths=self.texture_paths,
+            depth_test=self.depth_test,
+            render_primative=self.render_primative,
         )
 
     def get_shader_uniforms(self):
