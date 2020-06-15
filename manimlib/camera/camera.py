@@ -319,10 +319,7 @@ class Camera(object):
     def capture(self, *mobjects, **kwargs):
         self.refresh_shader_uniforms()
 
-        shader_infos = it.chain(*[
-            mob.get_shader_info_list()
-            for mob in mobjects
-        ])
+        shader_infos = it.chain(*[mob.get_shader_info_list() for mob in mobjects])
         batches = batch_by_property(shader_infos, shader_info_to_id)
 
         for info_group, sid in batches:
@@ -356,7 +353,7 @@ class Camera(object):
         if sid not in self.id_to_shader:
             # Create shader program for the first time, then cache
             # in the id_to_shader dictionary
-            shader = self.ctx.program(**shader_info_to_program_code(sid))
+            shader = self.ctx.program(**shader_info_to_program_code(shader_info))
             self.set_shader_uniforms(shader)
             for name, path in shader_info["texture_paths"].items():
                 tid = self.get_texture_id(path)
