@@ -111,7 +111,7 @@ jobs:
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .
       script: 
-        - python -m pytest --skip_end_to_end
+        - python -m pytest --skip_end_to_end -rs
 
     - os: windows
       language: sh
@@ -127,7 +127,7 @@ jobs:
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .
       script: 
-        - python -m pytest --skip_end_to_end
+        - python -m pytest --skip_end_to_end -rs
 
     - os: windows
       language: sh
@@ -143,7 +143,7 @@ jobs:
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .
       script: 
-        - python -m pytest --skip_end_to_end
+        - python -m pytest --skip_end_to_end -rs
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then chmod +x ./.travis/osx.sh; sh ./.travis/osx.sh; fi
