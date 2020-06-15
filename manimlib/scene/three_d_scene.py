@@ -11,9 +11,18 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.config_ops import merge_dicts_recursively
 
 
+class ThreeDScene(Scene):
+    CONFIG = {
+        "camera_config": {
+            "samples": 8,
+        }
+    }
+    # TODO, maybe dragging events should only be activated here?
+
+
 # TODO, these seem deprecated.
 
-class ThreeDScene(Scene):
+class OldThreeDScene(Scene):
     CONFIG = {
         "ambient_camera_rotation": None,
         "default_angled_camera_orientation_kwargs": {
@@ -100,7 +109,7 @@ class ThreeDScene(Scene):
         self.set_camera_orientation(**config)
 
 
-class SpecialThreeDScene(ThreeDScene):
+class OldSpecialThreeDScene(ThreeDScene):
     CONFIG = {
         "cut_axes_at_radius": True,
         "camera_config": {
