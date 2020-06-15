@@ -53,22 +53,21 @@ def batch_by_property(items, property_func):
     preserved)
     """
     batch_prop_pairs = []
-
-    def add_batch_prop_pair(batch):
-        if len(batch) > 0:
-            prop = property_func(batch[0])
-            batch_prop_pairs.append((batch, prop))
     curr_batch = []
     curr_prop = None
     for item in items:
         prop = property_func(item)
         if prop != curr_prop:
-            add_batch_prop_pair(curr_batch)
+            # Add current batch
+            if len(curr_batch) > 0:
+                batch_prop_pairs.append((curr_batch, curr_prop))
+            # Redefine curr
             curr_prop = prop
             curr_batch = [item]
         else:
             curr_batch.append(item)
-    add_batch_prop_pair(curr_batch)
+    if len(curr_batch) > 0:
+        batch_prop_pairs.append((curr_batch, curr_prop))
     return batch_prop_pairs
 
 
