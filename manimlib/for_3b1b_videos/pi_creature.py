@@ -59,7 +59,6 @@ class PiCreature(SVGMobject):
                 PI_CREATURE_DIR,
                 f"{self.file_name_prefix}_{mode}.svg"
             )
-            SVGMobject.__init__(self, file_name=svg_file, **kwargs)
         except Exception:
             warnings.warn(f"No {self.file_name_prefix} design with mode {mode}")
             svg_file = os.path.join(
@@ -68,7 +67,7 @@ class PiCreature(SVGMobject):
                 "files",
                 "PiCreatures_plain.svg",
             )
-            SVGMobject.__init__(self, file_name=svg_file, **kwargs)
+        SVGMobject.__init__(self, file_name=svg_file, **kwargs)
 
         if self.flip_at_start:
             self.flip()
@@ -262,9 +261,6 @@ class PiCreature(SVGMobject):
 
     def prepare_for_animation(self):
         self.unlock_triangulation()
-
-    def cleanup_from_animation(self):
-        self.lock_triangulation()
 
 
 def get_all_pi_creature_modes():
