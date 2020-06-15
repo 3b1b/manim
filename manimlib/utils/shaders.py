@@ -46,22 +46,19 @@ def get_shader_info(data=None,
                     depth_test=False,
                     render_primative=moderngl.TRIANGLE_STRIP,
                     ):
-    return {
-        key: value
-        for key, value in zip(
-            SHADER_INFO_KEYS,
-            [
-                data,
-                vert_file,
-                geom_file,
-                frag_file,
-                uniforms or dict(),
-                texture_paths or dict(),
-                depth_test,
-                str(render_primative)
-            ]
-        )
+    result = {
+        "data": data,
+        "vert": vert_file,
+        "geom": geom_file,
+        "frag": frag_file,
+        "uniforms": uniforms or dict(),
+        "texture_paths": texture_paths or dict(),
+        "depth_test": depth_test,
+        "render_primative": str(render_primative),
     }
+    # A unique id for a shader
+    result["id"] = "|".join([str(result[key]) for key in SHADER_KEYS_FOR_ID])
+    return result
 
 
 def is_valid_shader_info(shader_info):
@@ -75,7 +72,7 @@ def is_valid_shader_info(shader_info):
 
 def shader_info_to_id(shader_info):
     # A unique id for a shader
-    return "|".join([str(shader_info[key]) for key in SHADER_KEYS_FOR_ID])
+    return shader_info["id"]
 
 
 def same_shader_type(info1, info2):
