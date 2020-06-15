@@ -25,12 +25,17 @@ Manim is an animation engine for explanatory math videos. It's used to create pr
     + [SoX Installation](#sox-installation-1)
     + [LaTeX Installation](#latex-installation-1)
     + [Additional Installation Steps](#additional-installation-steps)
-  * [Mac](#mac)
-    + [Homebrew Installation](#homebrew-installation)
+  * [Arch/Manjaro](#archmanjaro)
     + [Cairo Installation](#cairo-installation-2)
     + [FFmpeg Installation](#ffmpeg-installation-2)
     + [SoX Installation](#sox-installation-2)
     + [LaTeX Installation](#latex-installation-2)
+  * [Mac](#mac)
+    + [Homebrew Installation](#homebrew-installation)
+    + [Cairo Installation](#cairo-installation-3)
+    + [FFmpeg Installation](#ffmpeg-installation-3)
+    + [SoX Installation](#sox-installation-3)
+    + [LaTeX Installation](#latex-installation-3)
   * [Installing Manim-Community itself](#installing-manim-community-itself)
 - [Usage](#usage)
 - [Documentation](#documentation)
@@ -123,12 +128,32 @@ sudo apt install texlive texlive-latex-extra texlive-fonts-extra texlive-latex-r
 > Note: this installation may take up a lot of space. The developers are working on providing a simpler, lighter LaTeX package for you to install
 2. You can check you did it right by running `latex`
 
-#### Additional Installation Steps
-- You must install additional codecs to play MP4 files:
+### Arch/Manjaro
+
+Before installing `manim-community`, there are some additional dependencies that you must have installed:
+ - Cairo
+ - FFmpeg
+ - Sox (optional, for sound)
+ - LaTeX (optional, for LaTeX)
+
+#### Cairo Installation
+1. Install the `cairo` package with your package manager: `sudo pacman -S cairo`
+
+#### FFmpeg Installation
+1. Install the `ffmpeg` package with your package manager: `sudo pacman -S ffmpeg`
+2. You can check you did it right by running `ffmpeg -version`
+
+#### SoX Installation
+1. Install the `sox` package with your package manager: `sudo pacman -S sox`
+2. You can check you did it right by running `sox`
+
+#### LaTeX Installation
+1. Install `texlive` with your package manager by running the following commands:
 ```
-sudo apt install libdvdnav4 libdvd-pkg gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly libdvd-pkg
-sudo apt install ubuntu-restricted-extras
+sudo pacman -S texlive-most
 ```
+> Note: this installation may take up a lot of space. The developers are working on providing a simpler, lighter LaTeX package for you to install
+2. You can check you did it right by running `latex`
 
 ### Mac
 
