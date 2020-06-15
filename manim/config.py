@@ -357,25 +357,9 @@ def _parse_cli(arg_list, input=True):
 
 
 def _init_dirs(config):
-    if not (config["video_dir"] and config["tex_dir"]):
-        if config["media_dir"]:
-            if not os.path.isdir(config["media_dir"]):
-                os.makedirs(config["media_dir"])
-        if not os.path.isdir(config["media_dir"]):
-            config["media_dir"] = "./media"
-        else:
-            logger.warning(
-                f"Media will be written to {config['media_dir'] + os.sep}. You can change "
-                "this behavior with the --media_dir flag, or by adjusting manim.cfg."
-            )
-    else:
-        if config["media_dir"]:
-            logger.warning(
-                "Ignoring --media_dir, since both --tex_dir and --video_dir were passed."
-            )
-
     # Make sure all folders exist
-    for folder in [config["video_dir"], config["tex_dir"], config["text_dir"]]:
+    for folder in [config["media_dir"], config["video_dir"],
+                   config["tex_dir"], config["text_dir"]]:
         if not os.path.exists(folder):
             os.makedirs(folder)
 
