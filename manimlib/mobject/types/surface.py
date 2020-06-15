@@ -6,6 +6,7 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.color import color_to_rgba
 from manimlib.utils.color import rgb_to_hex
+from manimlib.utils.config_ops import digest_config
 from manimlib.utils.images import get_full_raster_image_path
 from manimlib.utils.space_ops import normalize_along_axis
 
@@ -40,7 +41,9 @@ class ParametricSurface(Mobject):
     }
 
     def __init__(self, uv_func, **kwargs):
+        digest_config(self, kwargs)
         self.uv_func = uv_func
+        self.compute_triangle_indices()
         super().__init__(**kwargs)
 
     def init_points(self):
@@ -64,17 +67,25 @@ class ParametricSurface(Mobject):
         # are still easily recoverable.
         self.points = np.vstack(point_lists)
 
-    def get_triangle_indices(self):
+    def compute_triangle_indices(self):
+        # TODO, if there is an event which changes
+        # the resolution of the surface, make sure
+        # this is called.
         nu, nv = self.resolution
+        if nu == 0 and nv == 0:
+            return np.zeros(0, dtype=int)
         index_grid = np.arange(nu * nv).reshape((nu, nv))
-        result = np.zeros(6 * (nu - 1) * (nv - 1), dtype=int)
-        result[0::6] = index_grid[:-1, :-1].flatten()  # Top left
-        result[1::6] = index_grid[+1:, :-1].flatten()  # Bottom left
-        result[2::6] = index_grid[:-1, +1:].flatten()  # Top right
-        result[3::6] = index_grid[:-1, +1:].flatten()  # Top right
-        result[4::6] = index_grid[+1:, :-1].flatten()  # Bottom left
-        result[5::6] = index_grid[+1:, +1:].flatten()  # Bottom right
-        return result
+        indices = np.zeros(6 * (nu - 1) * (nv - 1), dtype=int)
+        indices[0::6] = index_grid[:-1, :-1].flatten()  # Top left
+        indices[1::6] = index_grid[+1:, :-1].flatten()  # Bottom left
+        indices[2::6] = index_grid[:-1, +1:].flatten()  # Top right
+        indices[3::6] = index_grid[:-1, +1:].flatten()  # Top right
+        indices[4::6] = index_grid[+1:, :-1].flatten()  # Bottom left
+        indices[5::6] = index_grid[+1:, +1:].flatten()  # Bottom right
+        self.triangle_indices = indices
+
+    def get_triangle_indices(self):
+        return self.triangle_indices
 
     def init_colors(self):
         self.set_color(self.color, self.opacity)
