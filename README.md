@@ -39,15 +39,34 @@ python3 ./manim.py example_scenes.py SquareToCircle -pl
 
 ### Directly (Windows)
 1. [Install FFmpeg](https://www.wikihow.com/Install-FFmpeg-on-Windows).
-2. [Install Cairo](https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo). For most users, ``pycairo‑1.18.0‑cp37‑cp37m‑win32.whl`` will do fine.
-    ```sh
-    pip3 install C:\path\to\wheel\pycairo‑1.18.0‑cp37‑cp37m‑win32.whl
+
+2. #### Cairo Installation
+
+     Running the command below installs `pycairo`. This needs to be an elevated command prompt like Powershell.
+     
+    ```powershell
+    (Invoke-WebRequest -Uri https://raw.githubusercontent.com/ManimCommunity/manim/master/scripts/pycairoinstall.py -UseBasicParsing).Content | py -3
     ```
+    If the above one Fails, here is the alternative for it below.
+    1. Visit the [Download Page](https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo)
+    2. Select the download that corresponds to your PC's architechture and Python Version
+
+    ![cairo-installation](windows_cairo.png)
+
+    > cp38 corresponds to Python 3.8, cp37 corresponds to Python 3.7, etc
+    > win_amd64 corresponds to 64-bit machines, win32 corresponds to 32-bit machines
+
+    3. Open up your command prompt by hitting the Win key and typing `cmd`
+
+    4. Enter the directory where you install cairo by typing `cd C:\path\to\cairo` with the path being where you downloaded the `.whl` file. Alternatively, `shift+Right Click` will open an option for opening in powershell window.
+
+    5. Finally, run `pip3 install (cairo-file).whl`, where the file the appropriate name of the `.whl` file.
+
 3. Install a LaTeX distribution. [MiKTeX](https://miktex.org/download) is recommended.
 
 4. [Install SoX](https://sourceforge.net/projects/sox/files/sox/).
 
-5. Install the remaining Python packages. Make sure that ``pycairo==1.17.1`` is changed to ``pycairo==1.18.0`` in requirements.txt.
+5. Install the remaining Python packages. Make sure that ``pycairo==1.17.1`` is changed to ``pycairo==1.19.1`` in requirements.txt.
     ```sh
     git clone https://github.com/3b1b/manim.git
     cd manim
