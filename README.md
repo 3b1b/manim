@@ -124,6 +124,8 @@ Documentation is in progress at [eulertour.com/docs](https://www.eulertour.com/d
 ### Walkthrough
 Todd Zimmerman put together a [tutorial](https://talkingphysics.wordpress.com/2019/01/08/getting-started-animating-with-manim-and-python-3-7/) on getting started with manim, which has been updated to run on Python 3.7.
 
+Theorum of Beethoven has made an extensive [tutorial](https://github.com/Elteoremadebeethoven/AnimationsWithManim) series on GitHub and YouTube that highlights in depth many of manim's features.
+
 ## Contributing
 Is always welcome. In particular, there is a dire need for tests and documentation.
 
