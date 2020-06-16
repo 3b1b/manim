@@ -17,3 +17,4 @@ dependencies:
   - ffmpeg
   - pip:
     - pyreadline
+    - python-pygments
