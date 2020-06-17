@@ -18,9 +18,9 @@ class SceneTester:
     config_scene : :class:`Dict`
         The configuration of the scene
     module_tested: :class: `str`
-        The name of the module tested. i.e if we are testing functions of creation.py, the module will be "creatio"
+        The name of the module tested. i.e if we are testing functions of creation.py, the module will be "creation"
     
-    Attriubutes
+    Attributes
     -----------
     path_tests_medias : : class: `str`
         self-explanatory
