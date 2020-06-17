@@ -23,12 +23,7 @@ class DrawBorderThenFillTest(Scene):
         self.play(DrawBorderThenFill(square))
 
 
-class WriteTest(Scene):
-    def construct(self):
-        t = Text('helloworld', font = "Arial") 
-
-        self.play(Write(t))
-
+# NOTE : Here should be the Write Test. But for some reasons it appears that this function is untestable (see issue #157)
 
 class FadeOutTest(Scene):
     def construct(self):
