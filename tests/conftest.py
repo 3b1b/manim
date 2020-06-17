@@ -9,7 +9,26 @@ import logging
 
 
 class SceneTester:
-    """Class used to test the animations."""
+    """Class used to test the animations.
+    
+    Parameters 
+    ----------
+    scene_object: : class: `Scene`
+        The scene to be tested
+    config_scene : :class:`Dict`
+        The configuration of the scene
+    module_tested: :class: `str`
+        The name of the module tested. i.e if we are testing functions of creation.py, the module will be "creatio"
+    
+    Attriubutes
+    -----------
+    path_tests_medias : : class: `str`
+        self-explanatory
+    path_tests_data : : class: `str`
+        self-explanatory
+    scene : :class:`Scene`
+        The scene tested
+    """
 
     def __init__(self, scene_object, config_scene, module_tested, caching_needed=False):
         # Disable the the logs, (--quiet is broken) TODO
