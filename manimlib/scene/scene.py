@@ -100,10 +100,13 @@ class Scene(Container):
         # which updates the frame while under
         # the hood calling the pyglet event loop
         self.quit_interaction = False
+        self.lock_static_mobject_data()
         while not self.window.is_closing and not self.quit_interaction:
             self.update_frame()
         if self.window.is_closing:
             self.window.destroy()
+        if self.quit_interaction:
+            self.unlock_mobject_data()
 
     def embed(self):
         if not self.preview:
