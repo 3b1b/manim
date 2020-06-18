@@ -143,8 +143,6 @@ class Scene(Container):
 
         if self.window:
             self.window.swap_buffers()
-            # win_time, win_dt = self.window.timer.next_frame()
-            # while (self.time - self.skip_time - win_time) > 0:
             vt = self.time - self.virtual_animation_start_time
             rt = time.time() - self.real_animation_start_time
             if rt < vt:
