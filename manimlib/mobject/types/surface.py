@@ -5,7 +5,7 @@ from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.color import color_to_rgba
-from manimlib.utils.color import rgb_to_hex
+from manimlib.utils.color import rgb_to_color
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.images import get_full_raster_image_path
 from manimlib.utils.space_ops import normalize_along_axis
@@ -88,6 +88,7 @@ class ParametricSurface(Mobject):
         return self.triangle_indices
 
     def init_colors(self):
+        self.rgbas = np.zeros((1, 4))
         self.set_color(self.color, self.opacity)
 
     def get_surface_points_and_nudged_points(self):
@@ -105,20 +106,18 @@ class ParametricSurface(Mobject):
     def set_color(self, color, opacity=1.0, family=True):
         # TODO, allow for multiple colors
         rgba = color_to_rgba(color, opacity)
-        self.rgbas = np.array([rgba])
-        if family:
-            for submob in self.submobjects:
-                submob.set_color(color, opacity, family)
+        mobs = self.get_family() if family else [self]
+        for mob in mobs:
+            mob.rgbas[:] = rgba
         return self
 
     def get_color(self):
-        return rgb_to_hex(self.rgbas[0, :3])
+        return rgb_to_color(self.rgbas[0, :3])
 
     def set_opacity(self, opacity, family=True):
-        self.rgbas[:, 3] = opacity
-        if family:
-            for sm in self.submobjects:
-                sm.set_opacity(opacity, family)
+        mobs = self.get_family() if family else [self]
+        for mob in mobs:
+            mob.rgbas[:, 3] = opacity
         return self
 
     def interpolate_color(self, mobject1, mobject2, alpha):
