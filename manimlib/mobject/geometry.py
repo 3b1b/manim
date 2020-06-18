@@ -623,7 +623,7 @@ class Arrow(Line):
     def set_stroke_width_from_length(self):
         mr = self.max_stroke_width_to_length_ratio
         width = min(self.initial_stroke_width, mr * self.get_length())
-        self.set_stroke(width=width)
+        self.set_stroke(width=width, family=False)
         return self
 
 
