@@ -112,6 +112,7 @@ class Cylinder(ArglessSurface):
 class Line3D(Cylinder):
     CONFIG = {
         "width": 0.05,
+        "resolution": (21, 25)
     }
 
     def __init__(self, start, end, **kwargs):
