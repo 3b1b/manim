@@ -75,6 +75,19 @@ class Sphere(ArglessSurface):
         ])
 
 
+class Torus(ArglessSurface):
+    CONFIG = {
+        "u_range": (0, TAU),
+        "v_range": (0, TAU),
+        "r1": 3,
+        "r2": 1,
+    }
+
+    def uv_func(self, u, v):
+        P = np.array([math.cos(u), math.sin(u), 0])
+        return (self.r1 - self.r2 * math.cos(v)) * P - math.sin(v) * OUT
+
+
 class Cylinder(ArglessSurface):
     CONFIG = {
         "height": 2,
@@ -96,19 +109,6 @@ class Cylinder(ArglessSurface):
         return [np.cos(u), np.sin(u), v]
 
 
-class Torus(ArglessSurface):
-    CONFIG = {
-        "u_range": (0, TAU),
-        "v_range": (0, TAU),
-        "r1": 3,
-        "r2": 1,
-    }
-
-    def uv_func(self, u, v):
-        P = np.array([math.cos(u), math.sin(u), 0])
-        return (self.r1 - self.r2 * math.cos(v)) * P - math.sin(v) * OUT
-
-
 class Line3D(Cylinder):
     CONFIG = {
         "width": 0.05,
@@ -122,6 +122,7 @@ class Line3D(Cylinder):
             radius=self.width / 2,
             axis=axis
         )
+        self.shift((start + end) / 2)
 
 
 class Disk3D(ArglessSurface):
