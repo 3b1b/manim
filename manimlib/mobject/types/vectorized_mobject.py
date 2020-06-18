@@ -868,6 +868,8 @@ class VMobject(Mobject):
         stroke_info = dict(self.stroke_shader_info_template)
         fill_info["uniforms"] = self.get_shader_uniforms()
         stroke_info["uniforms"] = self.get_stroke_uniforms()
+        fill_info["depth_test"] = self.depth_test
+        stroke_info["depth_test"] = self.depth_test
 
         back_stroke_data = []
         stroke_data = []
