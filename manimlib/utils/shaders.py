@@ -56,8 +56,8 @@ def get_shader_info(data=None,
         "depth_test": depth_test,
         "render_primative": str(render_primative),
     }
-    # A unique id for a shader
-    result["id"] = "|".join([str(result[key]) for key in SHADER_KEYS_FOR_ID])
+    # # A unique id for a shader
+    # result["id"] = "|".join([str(result[key]) for key in SHADER_KEYS_FOR_ID])
     return result
 
 
@@ -72,7 +72,7 @@ def is_valid_shader_info(shader_info):
 
 def shader_info_to_id(shader_info):
     # A unique id for a shader
-    return shader_info["id"]
+    return "|".join([str(shader_info[key]) for key in SHADER_KEYS_FOR_ID])
 
 
 def same_shader_type(info1, info2):
