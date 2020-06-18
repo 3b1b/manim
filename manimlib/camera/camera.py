@@ -342,6 +342,8 @@ class Camera(object):
         vbo = self.ctx.buffer(data.tobytes())
         vao = self.ctx.simple_vertex_array(shader, vbo, *data.dtype.names)
         vao.render(render_primative)
+        vbo.release()
+        vao.release()
 
     # Shaders
     def init_shaders(self):
