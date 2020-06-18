@@ -462,31 +462,27 @@ class Mobject(Container):
         return self.scale(scale_factor, about_point=point)
 
     def fix_in_frame(self, family=True):
-        self.is_fixed_in_frame = True
-        if family:
-            for submob in self.submobjects:
-                submob.fix_in_frame(family)
+        mobs = self.get_family() if family else [self]
+        for mob in mobs:
+            mob.is_fixed_in_frame = True
         return self
 
     def unfix_from_frame(self, family=True):
-        self.is_fixed_in_frame = False
-        if family:
-            for submob in self.submobjects:
-                submob.unfix_from_frame(family)
+        mobs = self.get_family() if family else [self]
+        for mob in mobs:
+            mob.is_fixed_in_frame = False
         return self
 
     def apply_depth_test(self, family=True):
-        self.depth_test = True
-        if family:
-            for submob in self.submobjects:
-                submob.apply_depth_test(family)
+        mobs = self.get_family() if family else [self]
+        for mob in mobs:
+            mob.depth_test = True
         return self
 
     def deactivate_depth_test(self, family=True):
-        self.depth_test = False
-        if family:
-            for submob in self.submobjects:
-                submob.deactivate_depth_test(family)
+        mobs = self.get_family() if family else [self]
+        for mob in mobs:
+            mob.depth_test = False
         return self
 
     # Positioning methods
@@ -1061,6 +1057,7 @@ class Mobject(Container):
             for submob in self.submobjects:
                 submob.shuffle(recursive=True)
         random.shuffle(self.submobjects)
+        return self
 
     # Just here to keep from breaking old scenes.
     def arrange_submobjects(self, *args, **kwargs):
