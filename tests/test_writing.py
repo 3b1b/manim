@@ -35,7 +35,6 @@ class TexMobjectTest(Scene):
 
 def test_scenes(get_config_test, Tester):
     CONFIG = get_config_test
-    CONFIG["font"] = "Gabriola"
     module_name = os.path.splitext(os.path.basename(__file__))[
         0].replace('test_', '')
     for name, scene_tested in inspect.getmembers(sys.modules[__name__], lambda m: inspect.isclass(m) and m.__module__ == __name__):
