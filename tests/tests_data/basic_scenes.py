@@ -1,6 +1,6 @@
 from manim import *
 
-#This module is used for testing purpose only
+# This module is used in the CLI tests in tests_CLi.py.
 
 class SquareToCircle(Scene):
     def construct(self):
@@ -28,4 +28,3 @@ class WriteStuff(Scene):
         group.set_width(FRAME_WIDTH - 2 * LARGE_BUFF)
 
         self.play(Write(example_text))
-        self.play(Write(example_tex))
