@@ -67,7 +67,6 @@ class SceneTester:
         test_result = np.array_equal(self.scene.get_frame(), self.load_data())
         assert(test_result), "The frames don't match. {} has been modified. Please ignore if it was intended".format(
             str(self.scene).replace('Test', ''))
-        return 1
 
 def pytest_addoption(parser):
     parser.addoption("--skip_end_to_end", action="store_true", default=False, help = "Will skip all the end-to-end tests. Useful when ffmpeg is not installed.")
