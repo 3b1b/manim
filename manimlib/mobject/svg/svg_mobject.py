@@ -62,9 +62,13 @@ class SVGMobject(VMobject):
         raise IOError("No file matching %s in image directory" %
                       self.file_name)
 
+    def get_mobject_by_id(self, id):
+        return self.mobject_id_dict[id]
+
     def generate_points(self):
         doc = minidom.parse(self.file_path)
         self.ref_to_element = {}
+        self.mobject_id_dict = {}
         for svg in doc.getElementsByTagName("svg"):
             mobjects = self.get_mobjects_from(svg)
             if self.unpack_groups:
@@ -107,6 +111,11 @@ class SVGMobject(VMobject):
         self.handle_transforms(element, VGroup(*result))
         if len(result) > 1 and not self.unpack_groups:
             result = [VGroup(*result)]
+
+        if len(result) == 1:
+            id = element.getAttribute('id')
+            if id != '':
+                self.mobject_id_dict[id] = result[0]
 
         return result
 
