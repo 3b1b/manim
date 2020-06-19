@@ -75,7 +75,7 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "skip_end_to_end: mark test as end_to_end test")
 
 def pytest_collection_modifyitems(config, items):
-    if config.getoption("--skip_end_to_end") == False:
+    if not config.getoption("--skip_end_to_end"):
         return
     else: 
         skip_end_to_end = pytest.mark.skip(reason="End to end test skipped due to --skip_end_to_end flag")
