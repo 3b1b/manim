@@ -89,9 +89,7 @@ def Tester():
 
 @pytest.fixture(scope= "module")
 def python_version(): 
-    if sys.platform == "darwin" : 
-        return "python3"
-    return "python"
+    return "python3" if sys.platform == "darwin" else "python"
 
 @pytest.fixture
 def get_config_test():
