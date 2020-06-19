@@ -69,7 +69,7 @@ class SceneTester:
             str(self.scene).replace('Test', ''))
 
 def pytest_addoption(parser):
-    parser.addoption("--skip_end_to_end", action="store_true", default=False, help = "Will skip all the end-to-end tests. Useful when ffmpeg is not installed.")
+    parser.addoption("--skip_end_to_end", action="store_true", default=False, help = "Will skip all the end-to-end tests. Useful when ffmpeg is not installed, e.g. on Windows jobs.")
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "skip_end_to_end: mark test as end_to_end test")
