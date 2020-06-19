@@ -30,12 +30,12 @@ def test_basicScene(python_version):
     out, err, exitcode = capture(command)
     assert exitcode == 0, err
     assert os.path.exists(os.path.join(
-        path_output, "videos", "basic_scenes", "480p15", "SquareToCircle.mp4")), err # "Error in the file generation. Please ignore if it was intended"
+        path_output, "videos", "basic_scenes", "480p15", "SquareToCircle.mp4")), err
     rmtree(path_output)
 
 @pytest.mark.skip_end_to_end
 def test_WriteStuff(python_version):
-    """Simulate WriteStuff. This is mainly intended to test the caching process of the tex objects"""
+    """This is mainly intended to test the caching process of the tex objects"""
     path_basic_scene = os.path.join("tests", "tests_data", "basic_scenes.py")
     path_output = os.path.join("tests", "tests_cache", "media_temp")
     command = [python_version, "-m", "manim", path_basic_scene,
@@ -43,5 +43,5 @@ def test_WriteStuff(python_version):
     out, err, exitcode = capture(command)
     assert exitcode == 0, err
     assert os.path.exists(os.path.join(
-        path_output, "videos", "basic_scenes", "480p15", "WriteStuff.mp4")), err# "Error in the file generation. Please ignore if it was intended"
+        path_output, "videos", "basic_scenes", "480p15", "WriteStuff.mp4")), err 
     rmtree(path_output)

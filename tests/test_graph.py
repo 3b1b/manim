@@ -26,3 +26,4 @@ def test_scenes(get_config_test, Tester):
         0].replace('test_', '')
     for name, scene_tested in inspect.getmembers(sys.modules[__name__], lambda m: inspect.isclass(m) and m.__module__ == __name__):
         Tester(scene_tested, CONFIG, module_name, caching_needed=True).test()
+        
