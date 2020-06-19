@@ -13,7 +13,7 @@ class SceneTester:
     
     Parameters 
     ----------
-    scene_object: : class: `Scene`
+    scene_object: : class:`Scene`
         The scene to be tested
     config_scene : :class:`Dict`
         The configuration of the scene
