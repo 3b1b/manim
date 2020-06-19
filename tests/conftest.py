@@ -33,15 +33,15 @@ class SceneTester:
     def __init__(self, scene_object, config_scene, module_tested, caching_needed=False):
         # Disable the the logs, (--quiet is broken) TODO
         logging.disable(logging.CRITICAL)
-        self.path_tests_medias = os.path.join(
+        self.path_tests_media = os.path.join(
             'tests', 'tests_cache', module_tested)
         self.path_tests_data = os.path.join(
             'tests', 'tests_data', module_tested)
 
         tex_dir, text_dir = None, None
         if caching_needed: 
-            text_dir = os.path.join(self.path_tests_medias, scene_object.__name__, 'Text')
-            tex_dir = os.path.join(self.path_tests_medias, scene_object.__name__, 'Tex')
+            text_dir = os.path.join(self.path_tests_media, scene_object.__name__, 'Text')
+            tex_dir = os.path.join(self.path_tests_media, scene_object.__name__, 'Tex')
         conf_dirs = {'media_dir': None,
                      'video_dir': None, 
                      'tex_dir': tex_dir, 
@@ -53,8 +53,7 @@ class SceneTester:
         self.scene = scene_object(**config_scene)
 
     def load_data(self):
-        """ Will load the numpy array of the (potential) previously rendered scene. If not found, throw FileNotFoundError. 
-        """
+        """Load the np.array of the last frame of a pre-rendered scene. If not found, throw FileNotFoundError."""
         with pytest.raises(FileNotFoundError) as e_info:
             data_loaded = np.load(os.path.join(
                 self.path_tests_data, "{}.npy".format(str(self.scene))))
