@@ -10,4 +10,4 @@ def set_test_scene(scene_object, CONFIG, module_name):
     if not os.path.isdir(path):
         os.makedirs(path)
     np.save(os.path.join(path, str(scene)), data)
-    print('Saved in ' + path + '\n')
+    logger.info('Saved in ' + path + '\n')
