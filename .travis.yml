@@ -4,9 +4,6 @@ jobs:
     - os: linux
       language: python
       python: 3.6
-      before_install: 
-        - sudo apt-get -y install ffmpeg
-        - sudo apt-get -y install texlive texlive-latex-extra texlive-fonts-extra texlive-latex-recommended texlive-science texlive-fonts-extra tipa
       install:
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
@@ -17,10 +14,7 @@ jobs:
 
     - os: linux
       language: python
-      python: 3.7
-      before_install: 
-              - sudo apt-get -y install ffmpeg
-              - sudo apt-get -y install texlive texlive-latex-extra texlive-fonts-extra texlive-latex-recommended texlive-science texlive-fonts-extra tipa        
+      python: 3.7     
       install:
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
@@ -32,9 +26,6 @@ jobs:
     - os: linux
       language: python
       python: 3.8
-      before_install: 
-        - sudo apt-get -y install ffmpeg
-        - sudo apt-get -y install texlive texlive-latex-extra texlive-fonts-extra texlive-latex-recommended texlive-science texlive-fonts-extra tipa
       install:
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
@@ -147,7 +138,7 @@ jobs:
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then chmod +x ./.travis/osx.sh; sh ./.travis/osx.sh; fi
-
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then chmod +x ./.travis/linux.sh; sh ./.travis/linux.sh; fi
 branches:
   only:
   - master
