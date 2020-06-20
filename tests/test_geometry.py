@@ -1,4 +1,5 @@
 from manim import *
+from testing_utils import utils_test_scenes, get_scenes_to_test
 
 
 class CoordinatesTest(Scene):
@@ -119,8 +120,5 @@ class RoundedRectangleTest(Scene):
 
         self.play(Animation(a))
 
-def test_scenes(get_config_test, Tester):
-    CONFIG = get_config_test
-    module_name = os.path.splitext(os.path.basename(__file__))[0].replace('test_', '')
-    for _, scene_tested in inspect.getmembers(sys.modules[__name__], lambda m: inspect.isclass(m) and m.__module__ == __name__):
-        Tester(scene_tested, CONFIG, module_name).test()
+def test_scenes(get_config_test):
+    utils_test_scenes(get_scenes_to_test(__name__), get_config_test, "geometry")
