@@ -18,7 +18,7 @@ class PlotFunctions(GraphScene):
         constants.TEX_TEMPLATE = TexTemplate()
 
         self.setup_axes()
-        f = self.get_graph(lambda x : x**2)
+        f = self.get_graph(lambda x: x**2)
 
         self.play(Animation(f))
 
