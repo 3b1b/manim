@@ -1,489 +1,432 @@
-import re
-import copy
-import hashlib
-import cairo
-import manimlib.constants as consts
+import html
 from manimlib.constants import *
 from manimlib.container.container import Container
-from manimlib.mobject.geometry import Dot
-from manimlib.mobject.svg.svg_mobject import SVGMobject
+from manimlib.mobject.geometry import Dot, RoundedRectangle
+from manimlib.mobject.shape_matchers import SurroundingRectangle
+from manimlib.mobject.svg.text_mobject import Paragraph, remove_invisible_chars
 from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.utils.config_ops import digest_config
+from pygments.lexers import guess_lexer_for_filename
 
-TEXT_MOB_SCALE_FACTOR = 0.05
-
-
-def remove_invisible_chars(mobject):
-    iscode = False
-    if mobject.__class__.__name__ == "Text":
-        mobject = mobject[:]
-    elif mobject.__class__.__name__ == "Code":
-        iscode = True
-        code = mobject
-        mobject = mobject.code
-    mobject_without_dots = VGroup()
-    if mobject[0].__class__ == VGroup:
-        for i in range(mobject.__len__()):
-            mobject_without_dots.add(VGroup())
-            mobject_without_dots[i].add(*[k for k in mobject[i] if k.__class__ != Dot])
-    else:
-        mobject_without_dots.add(*[k for k in mobject if k.__class__ != Dot])
-    if iscode:
-        code.code = mobject_without_dots
-        return code
-    return mobject_without_dots
-
-
-class TextSetting(object):
-    def __init__(self, start, end, font, slant, weight, line_num=-1):
-        self.start = start
-        self.end = end
-        self.font = font
-        self.slant = slant
-        self.weight = weight
-        self.line_num = line_num
-
+import re
+from pygments import highlight
+from pygments.lexers import get_lexer_by_name
+from pygments.formatters.html import HtmlFormatter
+from pygments.styles import get_all_styles
 
 '''
-Text is VGroup() of each characters
-that mean you can use it like 
-    Text[0:5] or Text.chars[0:5] to access first five characters 
+Code.styles_list static variable is containing list of names of all styles 
+Code is VGroup() with three things
+    Code[0] is Code.background_mobject is a VGroup()
+        VGroup() of SurroundingRectangle() if background == "rectangle" 
+        VGroup() of RoundedRectangle() and Dot() for three buttons if background == "window" 
+    Code[1] is Code.line_numbers Which is a Paragraph() object, this mean you can use 
+                Code.line_numbers[0] or Code.line_numbers.chars[0] or Code[1].chars[0] to access first line number 
+    Code[2] is Code.code
+        Which is a Paragraph() with color highlighted, this mean you can use 
+            Code.code[1] or Code.code.chars[1] or Code[2].chars[1] 
+                line number 1
+            Code.code[1][0] or Code.code.chars[1][0] or Code[2].chars[1][0]
+                first character of line number 1
+            Code.code[1][0:5] Code.code.chars[1][0:5] or Code[2].chars[1][0:5]
+                first five characters of line number 1
 
-Text[0:5] or Text or Text.chars[0:5] will create problems when using Transform() because of invisible characters 
+Code.code[][] Code.code.chars[][] or Code[2].chars[][] will create problems when using Transform() because of invisible characters 
 so, before using Transform() remove invisible characters by using remove_invisible_chars()
-for example self.play(Transform(remove_invisible_chars(text.chars[0:4]), remove_invisible_chars(text2.chars[0:2])))
+for example self.play(Transform(remove_invisible_chars(Code.code.chars[0:2]), remove_invisible_chars(Code.code.chars[3][0:3])))
+or remove_invisible_chars(Code.code) or remove_invisible_chars(Code)
 '''
 
 
-class Text(SVGMobject):
+class Code(VGroup):
+    """Class Code is used to display code with color highlighted.
+
+    Parameters
+    ----------
+    file_name : :class:`str`
+        Name of the code file to display.
+    tab_width : :class:`int`, optional (default is 3).
+        Number of space characters for a tab character.
+    line_spacing : :class:`float`, optional (default is 0.3, which means 30% of font size)
+        Amount of space between lines in respect of font size.
+    scale_factor : class:`float`, optional (default is 0.5)
+        It is a number which scales displayed code.
+    font : :class:`str`, optional (default is 'Monospac821 BT')
+         Name of text font.
+    stroke_width : class:`float`, optional (default is 0)
+        Stroke width for text. 0 is recommended.
+    margin: class :`float`, optional (default is 0.3)
+        Inner margin of text from background.
+    indentation_chars : :class:`str`, optional (default is "    ")
+        Indentation chars refers to the spaces/tabs at the beginning of given code line.
+    background : :class:`str`, optional (default is "rectangle")
+        It defines background type. Currently supports only "rectangle" and "window".
+    background_stroke_width : class:`float`, optional (default is 1)
+        It defines stroke width of background.
+    background_stroke_color : class:`str`, optional (default is WHITE)
+        It defines stroke color for background.
+    corner_radius : :class:`float`, optional (default is 0.2)
+        It defines corner radius for background.
+    insert_line_no : :class:`bool`, optional (default is True)
+        It defines whether insert line numbers in displayed code.
+    line_no_from : :class:`int`, optional (default is 1)
+        It defines starting number for counting lines.
+    line_no_buff : :class:`float`, optional (default is 0.4)
+        It defines space between line numbers and displayed code.
+    style : :class:`str`, optional (default is 'vim')
+        It defines style type of displayed code. You can see names of styles from Code.styles_list.
+    language : :class:`str`, optional (default is None, Which mean it will automatically detects the language)
+        It defines the language name of given code.
+        For Knowing more available options visit https://pygments.org/docs/lexers/  for 'aliases or short names'
+    generate_html_file : :class:`bool`, optional (default is False)
+        It defines whether to generate code highlighted html to folder assets/codes/generated_html_files.
+
+    Attributes (It have all Parameters as Attributes and some extra as following)
+    ----------
+    background_mobject : :class:`~.VGroup`
+        To display background according to background type specified by background in Parameters.
+        VGroup with SurroundingRectangle() if background == "rectangle"
+        VGroup with RoundedRectangle() and Dot() for three buttons if background == "window"
+    line_numbers : :class:`~.Paragraph`
+        To display line numbers of displayed code if insert_line_no == True.
+    code : :class:`~.Paragraph`
+        To display highlighted code.
+    """
+
+    # tuples in the form (name, aliases, filetypes, mimetypes)
+    # 'language' of CONFIG is aliases or short names
+    # For more information about pygments.lexers visit https://pygments.org/docs/lexers/
+    # from pygments.lexers import get_all_lexers
+    # all_lexers = get_all_lexers()
+    styles_list = list(get_all_styles())
+    # For more information about pygments.styles visit https://pygments.org/docs/styles/
     CONFIG = {
-        # Mobject
-        'color': consts.WHITE,
-        'height': None,
-        'width': None,
-        'fill_opacity': 1,
+        "tab_width": 3,
+        "line_spacing": 0.3,
+        "scale_factor": 0.5,
+        "font": 'Monospac821 BT',
         'stroke_width': 0,
-        "should_center": True,
-        "unpack_groups": True,
-        # Text
-        'font': '',
-        'gradient': None,
-        'line_spacing': -1,
-        'size': 1,
-        'slant': NORMAL,
-        'weight': NORMAL,
-        't2c': {},
-        't2f': {},
-        't2g': {},
-        't2s': {},
-        't2w': {},
-        'tab_width': 4,
+        'margin': 0.3,
+        'indentation_chars': "    ",
+        "background": "rectangle",  # or window
+        "background_stroke_width": 1,
+        "background_stroke_color": WHITE,
+        "corner_radius": 0.2,
+        'insert_line_no': True,
+        'line_no_from': 1,
+        "line_no_buff": 0.4,
+        'style': 'vim',
+        'language': None,
+        'generate_html_file': False
     }
 
-    def __init__(self, text, **config):
-        self.full2short(config)
-        digest_config(self, config)
-        self.original_text = text
-        text_without_tabs = text
-        if text.find('\t') != -1:
-            text_without_tabs = text.replace('\t', ' ' * self.tab_width)
-        self.text = text_without_tabs
-        if self.line_spacing == -1:
-            self.line_spacing = self.size + self.size * 0.3
-        else:
-            self.line_spacing = self.size + self.size * self.line_spacing
-        file_name = self.text2svg()
-        self.remove_last_M(file_name)
-        SVGMobject.__init__(self, file_name, **config)
-        self.text = text
-        self.submobjects = [*self.gen_chars()]
-        self.chars = VGroup(*self.submobjects)
-        self.text = text_without_tabs.replace(" ", "").replace("\n", "")
-        nppc = self.n_points_per_cubic_curve
-        for each in self:
-            if len(each.points) == 0:
-                continue
-            points = each.points
-            last = points[0]
-            each.clear_points()
-            for index, point in enumerate(points):
-                each.append_points([point])
-                if index != len(points) - 1 and (index + 1) % nppc == 0 and any(point != points[index + 1]):
-                    each.add_line_to(last)
-                    last = points[index + 1]
-            each.add_line_to(last)
+    def __init__(self, file_name=None, **kwargs):
+        Container.__init__(self, **kwargs)
+        self.file_name = file_name or self.file_name
+        self.ensure_valid_file()
+        self.style = self.style.lower()
+        self.gen_html_string()
+        strati = self.html_string.find("background:")
+        self.background_color = self.html_string[strati + 12:strati + 19]
+        self.gen_code_json()
 
-        if self.t2c:
-            self.set_color_by_t2c()
-        if self.gradient:
-            self.set_color_by_gradient(*self.gradient)
-        if self.t2g:
-            self.set_color_by_t2g()
+        self.code = self.gen_colored_lines()
+        if self.insert_line_no:
+            self.line_numbers = self.gen_line_numbers()
+            self.line_numbers.next_to(self.code, direction=LEFT, buff=self.line_no_buff)
 
-        # anti-aliasing
-        if self.height is None and self.width is None:
-            self.scale(TEXT_MOB_SCALE_FACTOR)
-
-    def get_extra_space_perc(self):
-        size = self.size * 10
-        dir_name = consts.TEXT_DIR
-        file_name = os.path.join(dir_name, "space") + '.svg'
-        surface = cairo.SVGSurface(file_name, 600, 400)
-        context = cairo.Context(surface)
-        context.set_font_size(size)
-        context.select_font_face(self.font, self.str2slant(self.slant), self.str2weight(self.weight))
-        _, text_yb, _, text_h, _, _ = context.text_extents(self.text)
-        char_extents = [context.text_extents(c) for c in self.text]
-        max_top_space = max([ce[1] - text_yb for ce in char_extents])
-        max_bottom_space = max([ce[3] + ce[1] for ce in char_extents])
-        return max_top_space / text_h, max_bottom_space / text_h
-
-    def get_extra_space_ushift(self):
-        ts, bs = self.get_extra_space_perc()
-        return 0.5 * (ts - bs)
-
-    def gen_chars(self):
-        chars = VGroup()
-        submobjects_char_index = 0
-        for char_index in range(self.text.__len__()):
-            if self.text[char_index] == " " or self.text[char_index] == "\t" or self.text[char_index] == "\n":
-                space = Dot(redius=0, fill_opacity=0, stroke_opacity=0)
-                if char_index == 0:
-                    space.move_to(self.submobjects[submobjects_char_index].get_center())
-                else:
-                    space.move_to(self.submobjects[submobjects_char_index - 1].get_center())
-                chars.add(space)
+        if self.background == "rectangle":
+            if self.insert_line_no:
+                forground = VGroup(self.code, self.line_numbers)
             else:
-                chars.add(self.submobjects[submobjects_char_index])
-                submobjects_char_index += 1
-        return chars
+                forground = self.code
+            rect = SurroundingRectangle(forground, buff=self.margin,
+                                        color=self.background_color,
+                                        fill_color=self.background_color,
+                                        stroke_width=self.background_stroke_width,
+                                        stroke_color=self.background_stroke_color,
+                                        fill_opacity=1, )
+            rect.round_corners(self.corner_radius)
+            self.background_mobject = VGroup(rect)
+        else:
+            if self.insert_line_no:
+                forground = VGroup(self.code, self.line_numbers)
+            else:
+                forground = self.code
 
-    def remove_last_M(self, file_name):
-        with open(file_name, 'r') as fpr:
-            content = fpr.read()
-        content = re.sub(r'Z M [^A-Za-z]*? "\/>', 'Z "/>', content)
-        with open(file_name, 'w') as fpw:
-            fpw.write(content)
+            height = forground.get_height() + 0.1 * 3 + 2 * self.margin
+            width = forground.get_width() + 0.1 * 3 + 2 * self.margin
 
-    def find_indexes(self, word, text):
-        m = re.match(r'\[([0-9\-]{0,}):([0-9\-]{0,})\]', word)
-        if m:
-            start = int(m.group(1)) if m.group(1) != '' else 0
-            end = int(m.group(2)) if m.group(2) != '' else len(text)
-            start = len(text) + start if start < 0 else start
-            end = len(text) + end if end < 0 else end
-            return [(start, end)]
+            rect = RoundedRectangle(corner_radius=self.corner_radius, height=height, width=width,
+                                    stroke_width=self.background_stroke_width,
+                                    stroke_color=self.background_stroke_color,
+                                    color=self.background_color, fill_opacity=1)
+            red_button = Dot(radius=0.1, stroke_width=0, color='#ff5f56')
+            red_button.shift(LEFT * 0.1 * 3)
+            yellow_button = Dot(radius=0.1, stroke_width=0, color='#ffbd2e')
+            green_button = Dot(radius=0.1, stroke_width=0, color='#27c93f')
+            green_button.shift(RIGHT * 0.1 * 3)
+            buttons = VGroup(red_button, yellow_button, green_button)
+            buttons.shift(
+                UP * (height / 2 - 0.1 * 2 - 0.05) + LEFT * (width / 2 - 0.1 * 5 - self.corner_radius / 2 - 0.05))
 
-        indexes = []
-        index = text.find(word)
-        while index != -1:
-            indexes.append((index, index + len(word)))
-            index = text.find(word, index + len(word))
-        return indexes
+            self.background_mobject = VGroup(rect, buttons)
+            x = (height - forground.get_height()) / 2 - 0.1 * 3
+            self.background_mobject.shift(forground.get_center())
+            self.background_mobject.shift(UP * x)
 
-    def full2short(self, config):
-        for kwargs in [config, self.CONFIG]:
-            if kwargs.__contains__('text2color'):
-                kwargs['t2c'] = kwargs.pop('text2color')
-            if kwargs.__contains__('text2font'):
-                kwargs['t2f'] = kwargs.pop('text2font')
-            if kwargs.__contains__('text2gradient'):
-                kwargs['t2g'] = kwargs.pop('text2gradient')
-            if kwargs.__contains__('text2slant'):
-                kwargs['t2s'] = kwargs.pop('text2slant')
-            if kwargs.__contains__('text2weight'):
-                kwargs['t2w'] = kwargs.pop('text2weight')
+        if self.insert_line_no:
+            VGroup.__init__(self, self.background_mobject, self.line_numbers, self.code, **kwargs)
+        else:
+            VGroup.__init__(self, self.background_mobject, Dot(fill_opacity=0, stroke_opacity=0), self.code, **kwargs)
 
-    def set_color_by_t2c(self, t2c=None):
-        t2c = t2c if t2c else self.t2c
-        for word, color in list(t2c.items()):
-            for start, end in self.find_indexes(word, self.original_text):
-                self.chars[start:end].set_color(color)
-
-    def set_color_by_t2g(self, t2g=None):
-        t2g = t2g if t2g else self.t2g
-        for word, gradient in list(t2g.items()):
-            for start, end in self.find_indexes(word, self.original_text):
-                self.chars[start:end].set_color_by_gradient(*gradient)
-
-    def str2slant(self, string):
-        if string == NORMAL:
-            return cairo.FontSlant.NORMAL
-        if string == ITALIC:
-            return cairo.FontSlant.ITALIC
-        if string == OBLIQUE:
-            return cairo.FontSlant.OBLIQUE
-
-    def str2weight(self, string):
-        if string == NORMAL:
-            return cairo.FontWeight.NORMAL
-        if string == BOLD:
-            return cairo.FontWeight.BOLD
-
-    def text2hash(self):
-        settings = self.font + self.slant + self.weight
-        settings += str(self.t2f) + str(self.t2s) + str(self.t2w)
-        settings += str(self.line_spacing) + str(self.size)
-        id_str = self.text + settings
-        hasher = hashlib.sha256()
-        hasher.update(id_str.encode())
-        return hasher.hexdigest()[:16]
-
-    def text2settings(self):
-        settings = []
-        t2x = [self.t2f, self.t2s, self.t2w]
-        for i in range(len(t2x)):
-            fsw = [self.font, self.slant, self.weight]
-            if t2x[i]:
-                for word, x in list(t2x[i].items()):
-                    for start, end in self.find_indexes(word, self.text):
-                        fsw[i] = x
-                        settings.append(TextSetting(start, end, *fsw))
-
-        # Set All text settings(default font slant weight)
-        fsw = [self.font, self.slant, self.weight]
-        settings.sort(key=lambda setting: setting.start)
-        temp_settings = settings.copy()
-        start = 0
-        for setting in settings:
-            if setting.start != start:
-                temp_settings.append(TextSetting(start, setting.start, *fsw))
-            start = setting.end
-        if start != len(self.text):
-            temp_settings.append(TextSetting(start, len(self.text), *fsw))
-        settings = sorted(temp_settings, key=lambda setting: setting.start)
-
-        if re.search(r'\n', self.text):
-            line_num = 0
-            for start, end in self.find_indexes('\n', self.text):
-                for setting in settings:
-                    if setting.line_num == -1:
-                        setting.line_num = line_num
-                    if start < setting.end:
-                        line_num += 1
-                        new_setting = copy.copy(setting)
-                        setting.end = end
-                        new_setting.start = end
-                        new_setting.line_num = line_num
-                        settings.append(new_setting)
-                        settings.sort(key=lambda setting: setting.start)
-                        break
-
-        for setting in settings:
-            if setting.line_num == -1:
-                setting.line_num = 0
-
-        return settings
-
-    def text2svg(self):
-        # anti-aliasing
-        size = self.size * 10
-        line_spacing = self.line_spacing * 10
-
-        if self.font == '':
-            if NOT_SETTING_FONT_MSG != '':
-                print(NOT_SETTING_FONT_MSG)
-
-        dir_name = consts.TEXT_DIR
-        hash_name = self.text2hash()
-        file_name = os.path.join(dir_name, hash_name) + '.svg'
-        if os.path.exists(file_name):
-            return file_name
-
-        surface = cairo.SVGSurface(file_name, 600, 400)
-        context = cairo.Context(surface)
-        context.set_font_size(size)
-        context.move_to(START_X, START_Y)
-
-        settings = self.text2settings()
-        offset_x = 0
-        last_line_num = 0
-        for setting in settings:
-            font = setting.font
-            slant = self.str2slant(setting.slant)
-            weight = self.str2weight(setting.weight)
-            text = self.text[setting.start:setting.end].replace('\n', ' ')
-
-            context.select_font_face(font, slant, weight)
-            if setting.line_num != last_line_num:
-                offset_x = 0
-                last_line_num = setting.line_num
-            context.move_to(START_X + offset_x, START_Y + line_spacing * setting.line_num)
-            context.show_text(text)
-            offset_x += context.text_extents(text)[4]
-        surface.finish()
-        return file_name
-
-
-class TextWithBackground(Text):
-    CONFIG = {
-        "background_color": BLACK,
-    }
-
-    def __init__(self, text, **config):
-        Text.__init__(self, text, **config)
-        # self.text_backgrounds = self.gen_text_backgrounds(text)
-
-    def gen_text_backgrounds(self, text):
-        text_with_visible_chars = text.replace(" ", "").replace('\t', "")
-        text_list = text_with_visible_chars.split("\n")
-        text_backgrounds = VGroup()
-        start_i = 0
-        for line_no in range(text_list.__len__()):
-            rect_counts = len(text_list[line_no])
-            text_backgrounds.add(*self[start_i:rect_counts])
-            start_i += 2 * rect_counts
-        text_backgrounds.set_color(self.background_color)
-
-        return text_backgrounds
-
-    def text2svg1(self):
-        # anti-aliasing
-        size = self.size * 10
-        line_spacing = self.line_spacing * 10
-
-        if self.font == '':
-            if NOT_SETTING_FONT_MSG != '':
-                print(NOT_SETTING_FONT_MSG)
-
-        dir_name = consts.TEXT_DIR
-        hash_name = self.text2hash()
-        file_name = os.path.join(dir_name, hash_name) + '.svg'
-        # if os.path.exists(file_name):
-        # return file_name
-
-        surface = cairo.SVGSurface(file_name, 600, 400)
-        context = cairo.Context(surface)
-        context.set_font_size(size)
-        context.move_to(START_X, START_Y)
-
-        settings = self.text2settings()
-        offset_x = 0
-        last_line_num = 0
-        for setting in settings:
-            font = setting.font
-            slant = self.str2slant(setting.slant)
-            weight = self.str2weight(setting.weight)
-            text = self.text[setting.start:setting.end].replace('\n', ' ')
-            context.select_font_face(font, slant, weight)
-            if setting.line_num != last_line_num:
-                offset_x = 0
-                last_line_num = setting.line_num
-            tempx = START_X + offset_x
-            tempy = START_Y + line_spacing * setting.line_num
-            char_offset_x = 0
-            char_height = tempy - size / 2 - (line_spacing - size)
-            # context.set_font_matrix(cairo.Matrix(13, 0, 0, 13, 0, 0))
-            # print(context.get_font_matrix(),size)
-            # if (context.text_extents("99").width-context.text_extents("11").width)/size > 0.13:
-            # for char_index in range(text.__len__()):
-
-            # else:
-
-            print(context.text_extents("  ").width)
-            '''
-            for char_index in range(text.__len__()):
-                (x, y, width, height, dx, dy) = context.text_extents("a" + text[char_index] + "a")
-                (_, _, widtha, _, _, _) = context.text_extents("a")
-                width -= 2 * widtha
-                context.rectangle(tempx + char_offset_x, char_height, width, size)
-                context.fill()
-                char_offset_x += width
-            '''
-            context.move_to(tempx, tempy)
-            context.show_text(text)
-            offset_x += context.text_extents(text)[4]
-        surface.finish()
-        return file_name
-
-
-'''
-paragraph paragraph.chars is VGroup() of each lines and each line is VGroup() of that line's characters 
-that mean you can use it like 
-    paragraph[0:5] or paragraph.chars[0:5] to access first five lines
-    paragraph[0][0:5] or paragraph.chars[0][0:5] to access first line's first five characters
-
-paragraph or paragraph[] or paragraph.chars[][] will create problems when using Transform() because of invisible characters 
-so, before using Transform() remove invisible characters by using remove_invisible_chars()
-for example self.play(Transform(remove_invisible_chars(paragraph.chars[0:2]), remove_invisible_chars(paragraph.chars[3][0:3])))
-
-paragraph(" a b", " bcd\nefg") is same as paragraph(" a b", " bcd", "efg")
-that means paragraph[2] is "efg"
-'''
-
-
-class Paragraph(VGroup):
-    CONFIG = {
-        "line_spacing": -1,
-        "alignment": None,
-    }
-
-    def __init__(self, *text, **config):
-        Container.__init__(self, **config)
-
-        lines_str = "\n".join(list(text))
-        self.lines_text = Text(lines_str, **config)
-        lines_str_list = lines_str.split("\n")
-        self.chars = self.gen_chars(lines_str_list)
-
-        chars_lines_text_list = VGroup()
-        char_index_counter = 0
-        for line_index in range(lines_str_list.__len__()):
-            chars_lines_text_list.add(
-                self.lines_text[char_index_counter:char_index_counter + lines_str_list[line_index].__len__() + 1])
-            char_index_counter += lines_str_list[line_index].__len__() + 1
-
-        self.lines = []
-        self.lines.append([])
-        for line_no in range(chars_lines_text_list.__len__()):
-            self.lines[0].append(chars_lines_text_list[line_no])
-        self.lines_initial_positions = []
-        for line_no in range(self.lines[0].__len__()):
-            self.lines_initial_positions.append(self.lines[0][line_no].get_center())
-        self.lines.append([])
-        self.lines[1].extend([self.alignment for _ in range(chars_lines_text_list.__len__())])
-        VGroup.__init__(self, *[self.lines[0][i] for i in range(self.lines[0].__len__())], **config)
         self.move_to(np.array([0, 0, 0]))
-        if self.alignment:
-            self.set_all_lines_alignments(self.alignment)
 
-    def gen_chars(self, lines_str_list):
-        char_index_counter = 0
-        chars = VGroup()
-        for line_no in range(lines_str_list.__len__()):
-            chars.add(VGroup())
-            chars[line_no].add(
-                *self.lines_text.chars[char_index_counter:char_index_counter + lines_str_list[line_no].__len__() + 1])
-            char_index_counter += lines_str_list[line_no].__len__() + 1
-        return chars
+    def ensure_valid_file(self):
+        """Function to validate file.
+        """
 
-    def set_all_lines_alignments(self, alignment):
-        for line_no in range(0, self.lines[0].__len__()):
-            self.change_alignment_for_a_line(alignment, line_no)
-        return self
+        if self.file_name is None:
+            raise Exception("Must specify file for Code")
+        possible_paths = [
+            os.path.join(os.path.join("assets", "codes"), self.file_name),
+            self.file_name,
+        ]
+        for path in possible_paths:
+            if os.path.exists(path):
+                self.file_path = path
+                return
+        raise IOError("No file matching %s in codes directory" %
+                      self.file_name)
 
-    def set_line_alignment(self, alignment, line_no):
-        self.change_alignment_for_a_line(alignment, line_no)
-        return self
+    def gen_line_numbers(self):
+        """Function to generate line_numbers.
 
-    def set_all_lines_to_initial_positions(self):
-        self.lines[1] = [None for _ in range(self.lines[0].__len__())]
-        for line_no in range(0, self.lines[0].__len__()):
-            self[line_no].move_to(self.get_center() + self.lines_initial_positions[line_no])
-        return self
+        Returns
+        -------
+        :class:`~.Paragraph`
+            The generated line_numbers according to parameters.
+        """
+        line_numbers_array = []
+        for line_no in range(0, self.code_json.__len__()):
+            number = str(self.line_no_from + line_no)
+            line_numbers_array.append(number)
+        line_numbers = Paragraph(*[i for i in line_numbers_array], line_spacing=self.line_spacing,
+                                 alignment="right", font=self.font, stroke_width=self.stroke_width).scale(
+            self.scale_factor)
+        for i in line_numbers:
+            i.set_color(self.default_color)
+        return line_numbers
 
-    def set_line_to_initial_position(self, line_no):
-        self.lines[1][line_no] = None
-        self[line_no].move_to(self.get_center() + self.lines_initial_positions[line_no])
-        return self
+    def gen_colored_lines(self):
+        """Function to generate code.
 
-    def change_alignment_for_a_line(self, alignment, line_no):
-        self.lines[1][line_no] = alignment
-        if self.lines[1][line_no] == "center":
-            self[line_no].move_to(np.array([self.get_center()[0], self[line_no].get_center()[1], 0]))
-        elif self.lines[1][line_no] == "right":
-            self[line_no].move_to(
-                np.array([self.get_right()[0] - self[line_no].get_width() / 2, self[line_no].get_center()[1], 0]))
-        elif self.lines[1][line_no] == "left":
-            self[line_no].move_to(
-                np.array([self.get_left()[0] + self[line_no].get_width() / 2, self[line_no].get_center()[1], 0]))
+        Returns
+        -------
+        :class:`~.Paragraph`
+            The generated code according to parameters.
+        """
+        lines_text = []
+        for line_no in range(0, self.code_json.__len__()):
+            line_str = ""
+            for word_index in range(self.code_json[line_no].__len__()):
+                line_str = line_str + self.code_json[line_no][word_index][0]
+            lines_text.append(self.tab_spaces[line_no] * "\t" + line_str)
+        code = Paragraph(*[i for i in lines_text], line_spacing=self.line_spacing, tab_width=self.tab_width,
+                         font=self.font, stroke_width=self.stroke_width).scale(self.scale_factor)
+        for line_no in range(code.__len__()):
+            line = code.chars[line_no]
+            line_char_index = self.tab_spaces[line_no]
+            for word_index in range(self.code_json[line_no].__len__()):
+                line[line_char_index:line_char_index + self.code_json[line_no][word_index][0].__len__()].set_color(
+                    self.code_json[line_no][word_index][1])
+                line_char_index += self.code_json[line_no][word_index][0].__len__()
+        return code
+
+    def gen_html_string(self):
+        """Function to generate html string with code highlighted and stores in variable html_string.
+        """
+        file = open(self.file_path, "r")
+        code_str = file.read()
+        file.close()
+        self.html_string = hilite_me(code_str, self.language, self.style, self.insert_line_no,
+                                     "border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;",
+                                     self.file_path)
+
+        if self.generate_html_file:
+            os.makedirs(os.path.join("assets", "codes", "generated_html_files"), exist_ok=True)
+            file = open(os.path.join("assets", "codes", "generated_html_files", self.file_name + ".html"), "w")
+            file.write(self.html_string)
+            file.close()
+
+    def gen_code_json(self):
+        """Function to background_color, generate code_json and tab_spaces from html_string.
+        background_color is just background color of displayed code.
+        code_json is 2d array with rows as line numbers
+        and columns as a array with length 2 having text and text's color value.
+        tab_spaces is 2d array with rows as line numbers
+        and columns as corresponding number of indentation_chars in front of that line in code.
+        """
+        if self.background_color == "#111111" or \
+                self.background_color == "#272822" or \
+                self.background_color == "#202020" or \
+                self.background_color == "#000000":
+            self.default_color = "#ffffff"
+        else:
+            self.default_color = "#000000"
+        # print(self.default_color,self.background_color)
+        for i in range(3, -1, -1):
+            self.html_string = self.html_string.replace("</" + " " * i, "</")
+        for i in range(10, -1, -1):
+            self.html_string = self.html_string.replace("</span>" + " " * i, " " * i + "</span>")
+        self.html_string = self.html_string.replace("background-color:", "background:")
+
+        if self.insert_line_no:
+            start_point = self.html_string.find("</td><td><pre")
+            start_point = start_point + 9
+        else:
+            start_point = self.html_string.find("<pre")
+        self.html_string = self.html_string[start_point:]
+        # print(self.html_string)
+        lines = self.html_string.split("\n")
+        lines = lines[0:lines.__len__() - 2]
+        start_point = lines[0].find(">")
+        lines[0] = lines[0][start_point + 1:]
+        # print(lines)
+        self.code_json = []
+        self.tab_spaces = []
+        code_json_line_index = -1
+        for line_index in range(0, lines.__len__()):
+            if lines[line_index].__len__() == 0:
+                continue
+            # print(lines[line_index])
+            self.code_json.append([])
+            code_json_line_index = code_json_line_index + 1
+            if lines[line_index].startswith(self.indentation_chars):
+                start_point = lines[line_index].find("<")
+                starting_string = lines[line_index][:start_point]
+                indentation_chars_count = lines[line_index][:start_point].count(self.indentation_chars)
+                if starting_string.__len__() != indentation_chars_count * self.indentation_chars.__len__():
+                    lines[line_index] = "\t" * indentation_chars_count + starting_string[starting_string.rfind(
+                        self.indentation_chars) + self.indentation_chars.__len__():] + \
+                                        lines[line_index][start_point:]
+                else:
+                    lines[line_index] = "\t" * indentation_chars_count + lines[line_index][start_point:]
+
+            indentation_chars_count = 0
+            while lines[line_index][indentation_chars_count] == '\t':
+                indentation_chars_count = indentation_chars_count + 1
+            self.tab_spaces.append(indentation_chars_count)
+            # print(lines[line_index])
+            lines[line_index] = self.correct_non_span(lines[line_index])
+            # print(lines[line_index])
+            words = lines[line_index].split("<span")
+            for word_index in range(1, words.__len__()):
+                color_index = words[word_index].find("color:")
+                if color_index == -1:
+                    color = self.default_color
+                else:
+                    starti = words[word_index][color_index:].find("#")
+                    color = words[word_index][color_index + starti:color_index + starti + 7]
+
+                start_point = words[word_index].find(">")
+                end_point = words[word_index].find("</span>")
+                text = words[word_index][start_point + 1:end_point]
+                text = html.unescape(text)
+                if text != "":
+                    # print(text, "'" + color + "'")
+                    self.code_json[code_json_line_index].append([text, color])
+        # print(self.code_json)
+
+    def correct_non_span(self, line_str):
+        """Function put text color to those strings that don't have one according to background_color of displayed code.
+        Arguments
+        ---------
+        line_str : :class:`str`
+            Takes a string to put color to it according to background_color of displayed code.
+        """
+        words = line_str.split("</span>")
+        line_str = ""
+        for i in range(0, words.__len__()):
+            if i != words.__len__() - 1:
+                j = words[i].find("<span")
+            else:
+                j = words[i].__len__()
+            temp = ""
+            starti = -1
+            for k in range(0, j):
+                if words[i][k] == "\t" and starti == -1:
+                    continue
+                else:
+                    if starti == -1: starti = k
+                    temp = temp + words[i][k]
+            if temp != "":
+                if i != words.__len__() - 1:
+                    temp = '<span style="color:' + self.default_color + '">' + words[i][starti:j] + "</span>"
+                else:
+                    temp = '<span style="color:' + self.default_color + '">' + words[i][starti:j]
+                temp = temp + words[i][j:]
+                words[i] = temp
+            if words[i] != "":
+                line_str = line_str + words[i] + "</span>"
+        return line_str
+
+
+def hilite_me(code, language, style, insert_line_no, divstyles, file_path):
+    """Function to highlight code from string to html.
+
+    Arguments
+    ---------
+    code : :class:`str`
+        Code string.
+    language : :class:`str`
+        Code language name.
+    style : :class:`str`
+        Code style name.
+    insert_line_no : :class:`bool`
+        It defines whether insert line numbers in html file.
+    divstyles : :class:`str`
+        Some html css styles.
+    file_path : :class:`str`
+        Path of code file.
+       """
+    style = style or 'colorful'
+    defstyles = 'overflow:auto;width:auto;'
+
+    formatter = HtmlFormatter(style=style,
+                              linenos=False,
+                              noclasses=True,
+                              cssclass='',
+                              cssstyles=defstyles + divstyles,
+                              prestyles='margin: 0')
+    if language is None:
+        lexer = guess_lexer_for_filename(file_path, code)
+        html = highlight(code, lexer, formatter)
+    else:
+        html = highlight(code, get_lexer_by_name(language, **{}), formatter)
+    if insert_line_no:
+        html = insert_line_numbers(html)
+    html = "<!-- HTML generated by Code() -->" + html
+    return html
+
+
+def insert_line_numbers(html):
+    """Function put line numbers to html of highlighted code.
+
+    Arguments
+    ---------
+    html : :class:`str`
+        html string of highlighted code.
+    """
+    match = re.search('(<pre[^>]*>)(.*)(</pre>)', html, re.DOTALL)
+    if not match: return html
+
+    pre_open = match.group(1)
+    pre = match.group(2)
+    pre_close = match.group(3)
+
+    html = html.replace(pre_close, '</pre></td></tr></table>')
+    numbers = range(1, pre.count('\n') + 1)
+    format = '%' + str(len(str(numbers[-1]))) + 'i'
+    lines = '\n'.join(format % i for i in numbers)
+    html = html.replace(pre_open, '<table><tr><td>' + pre_open + lines + '</pre></td><td>' + pre_open)
+    return html
