@@ -119,8 +119,9 @@ class Code(VGroup):
         'generate_html_file': False
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, file_name=None, **kwargs):
         Container.__init__(self, **kwargs)
+        self.file_name = file_name or self.file_name
         self.ensure_valid_file()
         self.style = self.style.lower()
         self.gen_html_string()
