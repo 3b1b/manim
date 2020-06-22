@@ -28,6 +28,25 @@ from manimlib.utils.space_ops import rotate_vector
 from manimlib.utils.space_ops import center_of_mass
 
 
+class Checkmark(TextMobject):
+    CONFIG = {
+        "color": GREEN
+    }
+
+    def __init__(self, **kwargs):
+        super().__init__("\\ding{51}")
+
+
+class Exmark(TextMobject):
+    CONFIG = {
+        "color": RED
+    }
+
+    def __init__(self, **kwargs):
+        super().__init__("\\ding{55}")
+
+
+
 class Lightbulb(SVGMobject):
     CONFIG = {
         "file_name": "lightbulb",
