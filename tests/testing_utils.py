@@ -15,11 +15,11 @@ class SceneTester:
 
     Parameters 
     ----------
-    scene_object: : class:`Scene`
+    scene_object : :class:`~.Scene`
         The scene to be tested
-    config_scene : :class:`Dict`
+    config_scene : :class:`dict`
         The configuration of the scene
-    module_tested: :class:`str`
+    module_tested : :class:`str`
         The name of the module tested. i.e if we are testing functions of creation.py, the module will be "creation"
 
     Attributes
@@ -57,7 +57,13 @@ class SceneTester:
         self.scene = scene_object(**config_scene)
 
     def load_data(self):
-        """Load the np.array of the last frame of a pre-rendered scene. If not found, throw FileNotFoundError."""
+        """Load the np.array of the last frame of a pre-rendered scene. If not found, throw FileNotFoundError.
+        
+        Returns
+        -------
+        :class:`numpy.array`
+            The pre-rendered frame.
+        """
         with pytest.raises(FileNotFoundError) as e_info:
             data_loaded = np.load(os.path.join(
                 self.path_tests_data, "{}.npy".format(str(self.scene))))
@@ -67,14 +73,25 @@ class SceneTester:
         return data_loaded
 
     def test(self):
-        # self.scene.get_frame() gets the last frame of the animation (under the form of an numpy array).
+        """ Core of the test. Will compare the pre-rendered frame (get with load_data()) with the frame rendered during the test (get with scene.get_frame())"""
         test_result = np.array_equal(self.scene.get_frame(), self.load_data())
         assert(
             test_result), f"The frames don't match. {str(self.scene).replace('Test', '')} has been modified. Please ignore if it was intended"
 
 
 def get_scenes_to_test(module_name):
-    """Get all Test classes of the module from which it is called."""
+    """Get all Test classes of the module from which it is called. Used to fetch all the SceneTest of the module.
+    
+    Parameters
+    ----------
+    module_name : :class:`str`
+        The name of the module tested. 
+
+    Returns
+    -------
+    :class:`list`
+        The list of all the classes of the module. 
+    """
     return inspect.getmembers(sys.modules[module_name], lambda m: inspect.isclass(m) and m.__module__ == module_name)
 
 
@@ -85,7 +102,22 @@ def utils_test_scenes(scenes_to_test, CONFIG, module_name, caching_needed=False)
 
 
 def set_test_scene(scene_object, module_name):
-    """Function used to set up the test data for a new feature. Please refer to the wiki."""
+    """Function used to set up the test data for a new feature. This will basically set up a pre-rendered frame for a scene. This is meant to be used only 
+    when setting up tests. Please refer to the wiki.
+    
+    Parameters
+    ----------
+    scene_object : :class:`~.Scene`
+        The scene with wich we want to set up a new test. 
+    module_name : :class:`str`
+        The name of the module in which the functionnality tested is contained. For example, 'Write' is contained in the module 'creation'. This will be used in the folder architecture
+        of '/tests_data'.
+
+    Examples
+    --------
+    Normal usage::
+        set_test_scene(DotTest, "geometry")
+    """
 
     CONFIG_TEST = {
         'camera_config': {
