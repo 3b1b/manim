@@ -334,14 +334,10 @@ class NumberPlane(Axes):
 
         lines1 = VGroup()
         lines2 = VGroup()
-        ranges = (
-            np.arange(0, axis2.x_max, step),
-            np.arange(0, axis2.x_min, -step),
-        )
-        for inputs in ranges:
-            for k, x in enumerate(inputs):
+        unit_vector_axis_perp_to = axis_perpendicular_to.get_unit_vector()
+        for k, x in enumerate(np.arange(axis_perpendicular_to.x_min, axis_perpendicular_to.x_max, step)):
                 new_line = line.copy()
-                new_line.move_to(axis2.number_to_point(x))
+            new_line.shift(unit_vector_axis_perp_to * x)
                 if k % (1 + ratio) == 0:
                     lines1.add(new_line)
                 else:
