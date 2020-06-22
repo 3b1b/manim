@@ -2,7 +2,7 @@ from manim import *
 from testing_utils import utils_test_scenes, get_scenes_to_test
 
 
-#NOTE : All of those tests use cached data (in /test_cache)
+#NOTE : All of these tests use cached data (in /test_cache)
 # Cache functionality is tested within test_CLI.
 
 class TextTest(Scene):
