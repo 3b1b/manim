@@ -124,7 +124,7 @@ class Write(DrawBorderThenFill):
 class ShowIncreasingSubsets(Animation):
     CONFIG = {
         "suspend_mobject_updating": False,
-        "int_func": np.floor,
+        "int_func": np.round,
     }
 
     def __init__(self, group, **kwargs):
