@@ -7,7 +7,8 @@ def boolian_linear_combo(bools):
 
 def string_to_bools(message):
     # For easter eggs on the board
-    bits = bin(int.from_bytes(message.encode(), 'big'))[2:]
+    as_int = int.from_bytes(message.encode(), 'big')
+    bits = "{0:b}".format(as_int)
     bits = (len(message) * 8 - len(bits)) * '0' + bits
     return [bool(int(b)) for b in bits]
 
@@ -15,6 +16,23 @@ def string_to_bools(message):
 def layer_mobject(mobject, nudge=1e-6):
     for i, sm in enumerate(mobject.family_members_with_points()):
         sm.shift(i * nudge * OUT)
+
+
+def int_to_bit_coords(n, min_dim=3):
+    bits = "{0:b}".format(n)
+    bits = (min_dim - len(bits)) * '0' + bits
+    return np.array(list(map(int, bits)))
+
+
+def bit_coords_to_int(bits):
+    return sum([(2**n) * b for n, b in enumerate(reversed(bits))])
+
+
+def get_vertex_sphere(height=0.4, color=GREY, resolution=(21, 21)):
+    sphere = Sphere(resolution=resolution)
+    sphere.set_height(height)
+    sphere.set_color(color)
+    return sphere
 
 
 class Chessboard(SGroup):
@@ -277,7 +295,7 @@ class IntroducePuzzle(Scene):
         self.play(
             chessboard.restore,
             FadeIn(coins),
-            frame.set_phi, 20 * DEGREES,
+            frame.set_phi, 0 * DEGREES,
             frame.move_to, 2 * LEFT,
             run_time=3
         )
@@ -304,9 +322,61 @@ class IntroducePuzzle(Scene):
         self.play(FlipCoin(coin), FadeOut(rect))
 
 
-class FromCoinToSquareMaps(Scene):
+class PrisonerPuzzleSetting(PiCreatureScene):
     CONFIG = {
-        "camera_class": ThreeDCamera,
+        "camera_config": {
+            "background_color": GREY_E
+        }
+    }
+
+    def create_pi_creatures(self):
+        p1 = PiCreature(color=BLUE_C, height=2)
+        p2 = PiCreature(color=RED, height=2)
+        warden = PiCreature(color=GREY_BROWN, height=2.5)
+        warden.flip()
+        result = VGroup(p1, p2, warden)
+        result.arrange(RIGHT, buff=2, aligned_edge=DOWN)
+        warden.shift(RIGHT)
+        result.center().to_edge(DOWN, buff=1.5)
+
+        p1.change("sad")
+        p2.change("pleading", warden.eyes)
+        warden.change("conniving", p2.eyes)
+
+        return result
+
+    def construct(self):
+        pis = self.pi_creatures
+        p1, p2, warden = self.pi_creatures
+
+        names = VGroup(
+            TextMobject("Prisoner 1\\\\(you)"),
+            TextMobject("Prisoner 2"),
+            TextMobject("Warden"),
+        )
+        for name, pi in zip(names, pis):
+            name.match_color(pi.body)
+            name.next_to(pi, DOWN)
+
+        question = TextMobject(
+            "Why do mathematicians\\\\always set their puzzles\\\\in prisons?",
+            alignment=""
+        )
+        question.to_corner(UR)
+
+        self.play(
+            LaggedStartMap(FadeIn, pis, run_time=2, lag_ratio=0.3),
+            LaggedStartMap(FadeIn, names, run_time=2, lag_ratio=0.3),
+        )
+        self.wait(2)
+        self.play(FadeIn(question, lag_ratio=0.1))
+        self.wait(2)
+        self.play(FadeOut(question))
+        self.wait(2)
+
+
+class FromCoinToSquareMaps(ThreeDScene):
+    CONFIG = {
         "messages": [
             "Please, ",
             "go watch",
@@ -422,6 +492,8 @@ class DiagramOfProgression(ThreeDScene):
         panels[::2].shift(0.5 * LEFT)
         panels.set_width(FRAME_WIDTH - 2)
         panels.center().to_edge(DOWN)
+        p1_shift = panels[1].get_center() - panels[0].get_center()
+        panels[1].move_to(panels[0])
 
         chessboard = Chessboard()
         chessboard.set_height(0.9 * panels[0].get_height())
@@ -429,7 +501,6 @@ class DiagramOfProgression(ThreeDScene):
             chessboard,
             coin_config={
                 "disk_resolution": (2, 25),
-                # "include_labels": False,
             }
         )
         coins.flip_by_message("Tau > Pi")
@@ -542,6 +613,7 @@ class DiagramOfProgression(ThreeDScene):
             ShowCreation(key_arrow),
             FadeInFromLarge(key_square),
         )
+        panels[1].add(key_arrow, key_square)
         self.wait()
 
         self.play(FadeIn(panels[2], UP))
@@ -555,11 +627,28 @@ class DiagramOfProgression(ThreeDScene):
         self.play(FadeIn(panels[3], LEFT))
         self.wait()
 
-        self.play(FadeIn(panels[0]))
+        self.play(
+            FadeIn(panels[0], LEFT),
+            panels[1].shift, p1_shift,
+        )
         self.wait()
 
 
-class SlightTweakIsImpossible(ThreeDScene):
+class ImpossibleVariations(FromCoinToSquareMaps):
+    CONFIG = {
+        "messages": [
+            "FlipBits",
+            "BlipBits",
+            "ClipBits",
+            "ChipBits",
+            "ChipBats",
+            "ChipRats",
+            "ChipVats",
+            "ChipFats",
+            "ChapFats",
+        ]
+    }
+
     def construct(self):
         # Definitions
         frame = self.camera.frame
@@ -567,6 +656,7 @@ class SlightTweakIsImpossible(ThreeDScene):
         title.set_height(1.2)
         title.to_edge(UP)
         title.fix_in_frame()
+        messages = it.cycle(self.messages)
 
         left_board = Chessboard()
         right_board = Chessboard()
@@ -574,7 +664,7 @@ class SlightTweakIsImpossible(ThreeDScene):
             board.set_width(4.5)
             board.to_corner(DOWN + vect, buff=LARGE_BUFF)
         coins = CoinsOnBoard(left_board)
-        coins.flip_by_message("HammCode")
+        coins.flip_by_message(next(messages))
 
         arrow = Arrow(left_board.get_right(), right_board.get_left())
 
@@ -596,9 +686,45 @@ class SlightTweakIsImpossible(ThreeDScene):
         )
 
         # Flip one at a time
+        square = Square()
+        square.set_stroke(TEAL, 3)
+        square.replace(right_board[0])
+        square.move_to(right_board[0], OUT)
+        self.moving_square = square
         self.colored_square = right_board[0]
-        self.random_flips(3, left_board, coins, get_special_square)
+
+        for x in range(8):
+            self.set_board_message(next(messages), left_board, coins, get_special_square)
+            self.wait()
+
+        # To 6x6
+        to_fade = Group()
+        for grid in left_board, right_board, coins:
+            for n, mob in enumerate(grid):
+                row = n // 8
+                col = n % 8
+                if not ((0 < row < 7) and (0 < col < 7)):
+                    to_fade.add(mob)
+
+        cross = Cross(title)
+        cross.fix_in_frame()
+        cross.set_stroke(RED, 8)
+        cross.shift(2 * LEFT)
+        imp_words = TextMobject("Impossible!")
+        imp_words.fix_in_frame()
+        imp_words.next_to(title, RIGHT, buff=1.5)
+        imp_words.shift(2 * LEFT)
+        imp_words.set_height(0.7)
+        imp_words.set_color(RED)
+
+        self.play(to_fade.set_opacity, 0.05)
+        self.play(
+            title.shift, 2 * LEFT,
+            FadeIn(cross, 2 * RIGHT),
+            FadeIn(imp_words, LEFT)
+        )
         self.wait()
+        self.play(to_fade.set_opacity, 1)
 
         # Remove a square
         to_remove = Group(
@@ -609,52 +735,238 @@ class SlightTweakIsImpossible(ThreeDScene):
         remove_words.to_corner(DOWN, buff=1.5)
         remove_words.fix_in_frame()
 
-        self.play(FadeIn(remove_words, DOWN))
-        self.play(FadeOut(to_remove, 3 * IN))
-
-        # Not possible
-        cross = Cross(title)
-        cross.fix_in_frame()
-        cross.set_stroke(RED, 8)
-        imp_words = TextMobject("Impossible!")
-        imp_words.fix_in_frame()
-        imp_words.next_to(title, RIGHT, buff=1.5)
-        imp_words.shift(2 * LEFT)
-        imp_words.set_height(0.7)
-        imp_words.set_color(RED)
-
-        self.play(ShowCreation(cross))
         self.play(
-            title.shift, 2 * LEFT,
-            cross.shift, 2 * LEFT,
-            FadeIn(imp_words, LEFT)
+            FadeIn(remove_words, DOWN),
+            FadeOut(to_remove, 3 * IN),
         )
 
-        # More flips
-        self.random_flips(5, left_board, coins, get_special_square)
+    def set_board_message(self, message, left_board, coins, get_special_square):
+        new_bools = string_to_bools(message)
+        coins_to_flip = Group()
+        for coin, to_heads in zip(coins, new_bools):
+            if coin.is_heads() ^ to_heads:
+                coins_to_flip.add(coin)
+        coins_to_flip.shuffle()
+        self.play(LaggedStartMap(
+            FlipCoin, coins_to_flip,
+            lag_ratio=self.flip_lag_ratio,
+            run_time=1,
+        ))
 
-    def random_flips(self, n, left_board, coins, get_special_square):
-        for x in range(n):
-            n = random.randint(0, len(coins) - 1)
-            pre_square = Square()
-            pre_square.replace(left_board)
-            pre_square.move_to(left_board, OUT)
-            pre_square.set_stroke(BLUE, 3)
-            self.play(
-                FlipCoin(coins[n]),
-                FadeIn(pre_square)
-            )
-            new_colored_square = get_special_square()
-            pre_square.generate_target()
-            pre_square.target.replace(new_colored_square[0])
-            pre_square.target.set_fill(BLUE, 0.5)
-            pre_square.target.set_stroke(width=0)
-            self.play(
-                new_colored_square.set_color, BLUE,
-                self.colored_square.set_color, self.colored_square.original_color,
-                MoveToTarget(pre_square, remover=True)
-            )
-            self.colored_square = new_colored_square
+        new_colored_square = get_special_square()
+        self.play(
+            new_colored_square.set_color, BLUE,
+            self.colored_square.set_color, self.colored_square.original_color,
+            self.moving_square.move_to, get_special_square(), OUT,
+        )
+        self.colored_square = new_colored_square
+
+
+class ErrorCorrectionMention(Scene):
+    def construct(self):
+        # Setup board
+        message = "Do math!"
+        error_message = "Do meth!"
+        board = Chessboard()
+        board.set_width(5)
+        board.to_corner(DL)
+        coins = CoinsOnBoard(board)
+        coins.flip_by_message(message)
+        bools = coins.get_bools()
+
+        right_board = board.copy()
+        right_board.to_corner(DR)
+        right_board.set_opacity(0.5)
+        right_board[boolian_linear_combo(bools)].set_color(BLUE, 1)
+
+        arrow = Arrow(board.get_right(), right_board.get_left())
+
+        words = TextMobject("Feels a bit like ", "Error correction codes", "$\\dots$")
+        words.scale(1.2)
+        words.to_edge(UP)
+
+        self.add(board, coins, right_board)
+        self.add(arrow)
+        self.add(words)
+
+        # Go from board diagram to bit string
+        bits = VGroup()
+        for coin in coins:
+            bit = Integer(1 if coin.is_heads() else 0)
+            bit.replace(coin, dim_to_match=1)
+            bits.add(bit)
+
+            coin.generate_target()
+            coin.target.rotate(90 * DEGREES, RIGHT)
+            coin.target.set_opacity(0)
+
+        bits_rect = SurroundingRectangle(bits, buff=MED_SMALL_BUFF)
+        bits_rect.set_stroke(YELLOW, 2)
+        data_label = TextMobject("Data")
+        data_label.next_to(bits_rect, UP)
+        data_label.set_color(YELLOW)
+
+        meaning_label = TextMobject(f"``{message}''")
+        error_meaning_label = TextMobject(f"``{error_message}''")
+        for label in meaning_label, error_meaning_label:
+            label.scale(1.5)
+            label.next_to(arrow, RIGHT)
+        error_meaning_label[0][5].set_color(RED)
+
+        message_label = TextMobject("Message")
+        message_label.set_color(BLUE)
+        message_label.next_to(meaning_label, UP, buff=1.5)
+        message_label.to_edge(RIGHT, LARGE_BUFF)
+        message_arrow = Arrow(
+            message_label.get_bottom(),
+            meaning_label.get_top(),
+        )
+        message_arrow = Arrow(
+            message_label.get_left(),
+            meaning_label.get_top(),
+            path_arc=70 * DEGREES,
+        )
+
+        self.play(
+            LaggedStartMap(MoveToTarget, coins),
+            LaggedStartMap(FadeOut, board),
+            Write(bits),
+            run_time=3
+        )
+        self.play(
+            words[1].set_x, 0,
+            FadeOut(words[0], LEFT),
+            FadeOut(words[2], LEFT),
+        )
+        self.play(
+            ShowCreation(bits_rect),
+            FadeIn(data_label, DOWN)
+        )
+        self.play(
+            FadeOut(right_board),
+            FadeIn(message_label, DOWN),
+            ShowCreation(message_arrow),
+            FadeIn(meaning_label)
+        )
+        self.wait()
+
+        # Describe ECC
+        error_index = 8 * 4 + 5
+        error_bit = bits[error_index]
+        error_bit.unlock_triangulation()
+        error_bit_rect = SurroundingRectangle(error_bit)
+        error_bit_rect.set_stroke(RED, 2)
+
+        self.play(
+            FadeInFromLarge(error_bit_rect),
+            error_bit.set_value, 1 - error_bit.get_value(),
+            error_bit.set_color, RED,
+        )
+        meaning_label.save_state()
+        meaning_label.unlock_triangulation()
+        self.play(
+            Transform(meaning_label, error_meaning_label)
+        )
+        self.wait()
+
+        # Ask about correction
+        question = TextMobject("How can you\\\\detect the error?")
+        question.next_to(bits_rect, RIGHT, aligned_edge=UP)
+        self.play(Write(question))
+        self.wait(2)
+
+        ecc = VGroup()
+        for bit in int_to_bit_coords(boolian_linear_combo(bools), 6):
+            ecc.add(Integer(bit).match_height(bits[0]))
+        ecc.arrange(RIGHT, buff=0.2)
+        ecc.set_color(GREEN)
+        ecc.next_to(bits, RIGHT, MED_LARGE_BUFF, aligned_edge=DOWN)
+        ecc_rect = SurroundingRectangle(ecc, buff=MED_SMALL_BUFF)
+        ecc_rect.set_stroke(GREEN, 2)
+
+        ecc_name = words[1]
+        ecc_name.generate_target()
+        ecc_name.target[-1].set_opacity(0)
+        ecc_name.target.scale(0.75)
+        ecc_name.target.next_to(ecc_rect)
+        ecc_name.target.match_color(ecc)
+
+        frame = self.camera.frame
+
+        self.play(
+            MoveToTarget(ecc_name),
+            ShowIncreasingSubsets(ecc),
+            ShowCreation(ecc_rect),
+            ApplyMethod(frame.move_to, DOWN, run_time=2)
+        )
+        self.wait()
+
+        # Show correction at play
+        lines = VGroup()
+        for bit in bits:
+            line = Line(ecc_rect.get_top(), bit.get_center())
+            line.set_stroke(GREEN, 1, opacity=0.7)
+            lines.add(line)
+
+        alert = TexMobject("!!!")[0]
+        alert.arrange(RIGHT, buff=SMALL_BUFF)
+        alert.scale(1.5)
+        alert.set_color(RED)
+        alert.next_to(ecc_rect, UP)
+
+        self.play(LaggedStartMap(
+            ShowCreationThenFadeOut, lines,
+            lag_ratio=0.02, run_time=3
+        ))
+        self.play(FadeIn(alert, DOWN, lag_ratio=0.2))
+        self.wait()
+        self.play(ShowCreation(lines, lag_ratio=0))
+        for line in lines:
+            line.generate_target()
+            line.target.become(lines[error_index])
+        self.play(LaggedStartMap(MoveToTarget, lines, lag_ratio=0, run_time=1))
+        self.play(
+            error_bit.set_value, 0,
+            Restore(meaning_label)
+        )
+        self.play(
+            FadeOut(lines),
+            FadeOut(alert),
+            FadeOut(error_bit_rect),
+            error_bit.set_color, WHITE,
+        )
+        self.wait()
+
+        # Hamming name
+        hamming_label = TextMobject("e.g. Hamming codes")
+        hamming_label.move_to(ecc_name, LEFT)
+
+        self.play(
+            Write(hamming_label),
+            FadeOut(ecc_name, DOWN)
+        )
+        self.wait()
+
+
+class StandupMathsWrapper(Scene):
+    def construct(self):
+        fsr = FullScreenFadeRectangle()
+        fsr.set_fill(GREY_E, 1)
+        self.add(fsr)
+
+        title = TextMobject("Solution on Stand-up Maths")
+        title.scale(1.5)
+        title.to_edge(UP)
+
+        rect = ScreenRectangle(height=6)
+        rect.set_stroke(WHITE, 2)
+        rect.set_fill(BLACK, 1)
+        rect.next_to(title, DOWN)
+        rb = AnimatedBoundary(rect)
+
+        self.add(rect, rb)
+        self.play(Write(title))
+        self.wait(30)
 
 
 class TwoSquareCase(ThreeDScene):
@@ -663,6 +975,7 @@ class TwoSquareCase(ThreeDScene):
 
         # Transition to just two square
         chessboard = Chessboard()
+        chessboard.shift(2 * IN + UP)
         coins = CoinsOnBoard(chessboard)
         coins.flip_by_message("To 2 bits")
 
@@ -684,15 +997,15 @@ class TwoSquareCase(ThreeDScene):
             LaggedStartMap(
                 FadeOut, to_remove,
                 lambda m: (m, DOWN),
-                run_time=3,
+                run_time=2,
+                lag_ratio=0.01
             ),
-        )
-        self.play(
             small_group.center,
             small_group.set_height, 1.5,
             frame.set_phi, 10 * DEGREES,
+            run_time=2
         )
-        self.wait()
+        self.wait(3)
 
         coins = coin_pair
 
@@ -813,7 +1126,7 @@ class TwoSquareCase(ThreeDScene):
         )
         self.wait()
         self.play(
-            FlipCoin(coins[0]),
+            FlipCoin(coins[1]),
             FadeOut(board_rects[1]),
             FadeIn(board_rects[0]),
             state_rect.move_to, states[1],
@@ -1503,18 +1816,21 @@ class TreeOfThreeFlips(ThreeDScene):
                 FadeIn(arrow.label, lag_ratio=0.2),
             ]
         self.play(LaggedStart(*anims))
-        for i, ncs in enumerate(new_csums):
-            ncs.coins[i].flip()
-            rhs = set_rhs_target(ncs)
-            ncs.coins[i].flip()
-            self.play(
-                TransformFromCopy(csum, ncs, path_arc=30 * DEGREES)
-            )
-            self.play(
-                FlipCoin(ncs.coins[i]),
-                MoveToTarget(rhs)
-            )
+        for indices in [[0], [1, 2]]:
+            self.play(*[
+                TransformFromCopy(csum, new_csums[i], path_arc=30 * DEGREES, run_time=2)
+                for i in indices
+            ])
             self.wait()
+            for i in indices:
+                ncs = new_csums[i]
+                ncs.coins[i].flip()
+                rhs = set_rhs_target(ncs)
+                ncs.coins[i].flip()
+                self.play(
+                    FlipCoin(ncs.coins[i]),
+                    MoveToTarget(rhs)
+                )
 
         # Put key in square 2
         board = Chessboard(shape=(1, 3), square_resolution=(5, 5))
@@ -1563,9 +1879,97 @@ class TreeOfThreeFlips(ThreeDScene):
         self.wait()
 
 
+class SeventyFivePercentChance(Scene):
+    def construct(self):
+        # Setup column
+        rows = []
+        n_shown = 5
+        coins = Group()
+        nums = VGroup()
+        for n in it.chain(range(n_shown), range(64 - n_shown, 64)):
+            coin = Coin(numeric_labels=True)
+            coin.set_height(0.7)
+            if (random.random() < 0.5 or (n == 2)) and (n != 62):
+                coin.flip()
+            num = Integer(n)
+            row = Group(
+                coin,
+                TexMobject("\\cdot"),
+                num,
+                TexMobject("+"),
+            )
+            VGroup(*row[1:]).set_stroke(BLACK, 3, background=True)
+            row.arrange(RIGHT, buff=MED_SMALL_BUFF)
+            rows.append(row)
+            coins.add(coin)
+            nums.add(num)
+
+        vdots = TexMobject("\\vdots")
+        rows = Group(*rows[:n_shown], vdots, *rows[n_shown:])
+        rows.arrange(DOWN, buff=MED_SMALL_BUFF, aligned_edge=LEFT)
+        vdots.match_x(rows[0][2])
+        rows.set_height(7)
+        rows.to_edge(RIGHT)
+        rows[-1][-1].set_opacity(0)
+
+        nums = VGroup(*nums[:n_shown], vdots, *nums[n_shown:])
+        self.play(Write(nums))
+        self.wait()
+        self.play(
+            LaggedStartMap(FadeIn, rows, lag_ratio=0.1, run_time=3),
+            Animation(nums.copy(), remover=True),
+        )
+        self.wait()
+
+        # Show desired sums
+        brace = Brace(rows, LEFT)
+        b_label = brace.get_text("Sum mod 64")
+        sum_label = TextMobject("=\\, 53 (say)")
+        sum_label.next_to(b_label, DOWN)
+        want_label = TextMobject("Need to encode 55 (say)")
+        want_label.next_to(sum_label, DOWN, buff=0.25, aligned_edge=RIGHT)
+        want_label.set_color(YELLOW)
+        need_label = TextMobject("Must add 2")
+        need_label.next_to(want_label, DOWN, buff=0.25)
+        need_label.set_color(BLUE)
+
+        for label in b_label, sum_label, want_label, need_label:
+            label.set_stroke(BLACK, 7, background=True)
+
+        self.play(
+            GrowFromCenter(brace),
+            FadeIn(b_label, RIGHT)
+        )
+        self.wait(2)
+        self.play(FadeIn(sum_label, 0.25 * UP))
+        self.wait(2)
+        self.play(LaggedStart(
+            FadeIn(want_label, UP),
+            FadeIn(need_label, UP),
+            lag_ratio=0.3
+        ))
+        self.wait()
+
+        # Show attempts
+        s_rect = SurroundingRectangle(rows[2])
+
+        self.play(ShowCreation(s_rect))
+        self.wait()
+        self.play(FlipCoin(rows[2][0]))
+        self.wait(2)
+
+        self.play(
+            s_rect.move_to, rows[-2],
+            s_rect.stretch, 1.1, 0,
+        )
+        self.wait()
+        self.play(FlipCoin(rows[-2][0]))
+        self.wait()
+
+
 class ShowCube(ThreeDScene):
     def construct(self):
-        # ...
+        # Camera stuffs
         frame = self.camera.frame
         light = self.camera.light_source
         light.move_to([-10, -10, 20])
@@ -1589,6 +1993,7 @@ class ShowCube(ThreeDScene):
             width=15,
             depth=15,
         )
+        axes.apply_depth_test()
 
         # Vertices and edges
         vert_coords = [
@@ -1612,7 +2017,6 @@ class ShowCube(ThreeDScene):
                 label_2d.set_height(0.3)
                 label_2d.next_to(vert, UR, SMALL_BUFF)
                 coord_labels_2d.add(label_2d)
-        coord_labels.set_stroke(BLACK, 3, background=True)
 
         edge_indices = [
             (0, 1), (0, 2), (1, 3), (2, 3),
@@ -1625,7 +2029,7 @@ class ShowCube(ThreeDScene):
         for vert in verts:
             sphere = Sphere(
                 radius=0.1,
-                resolution=(51, 26),
+                resolution=(9, 9),
             )
             sphere.set_gloss(0.3)
             sphere.set_color(GREY)
@@ -1634,8 +2038,13 @@ class ShowCube(ThreeDScene):
 
         edges = SGroup()
         for i, j in edge_indices:
-            edge = Line3D(verts[i], verts[j])
-            edge.set_color(TEAL)
+            edge = Line3D(
+                verts[i], verts[j],
+                resolution=(5, 51),
+                width=0.04,
+                gloss=0.5,
+            )
+            edge.set_color(GREY_BROWN)
             edges.add(edge)
 
         # Setup highlight animations
@@ -1739,23 +2148,32 @@ class ShowCube(ThreeDScene):
             self.wait()
 
         # Color the corners
-        self.play(highlight(-1))
+        self.play(
+            highlight(-1),
+            edges.set_color, GREY, 0.5,
+        )
 
-        colors = [RED, GREEN, BLUE]
+        colors = [RED, GREEN, BLUE_D]
+        color_chars = ["R", "G", "B"]
+        color_labels = VGroup()
         anims = []
         for sphere, cl, coords in zip(spheres, coord_labels, vert_coords):
-            color = colors[sum([n * x for n, x in enumerate(coords)]) % 3]
-            sphere.generate_target()
-            cl.generate_target()
-            sphere.target.set_color(color)
-            cl.target.set_fill(color)
-            anims += [MoveToTarget(sphere), MoveToTarget(cl)]
-
-        self.play(
-            edges.set_color, GREY, 0.5,
-            LaggedStart(*anims, run_time=3)
-        )
-        self.wait(5)
+            index = np.dot(coords, [0, 1, 2]) % 3
+            color = colors[index]
+            color_label = TexMobject(color_chars[index])
+            color_label.rotate(PI / 2, RIGHT)
+            color_label.set_color(color)
+            color_label.next_to(cl, RIGHT, SMALL_BUFF)
+            color_label.match_depth(cl)
+            anims.append(AnimationGroup(
+                ApplyMethod(sphere.set_color, color),
+                ApplyMethod(cl.set_color, color),
+                FadeIn(color_label, LEFT)
+            ))
+            color_labels.add(color_label)
+        self.play(LaggedStart(*anims, run_time=6, lag_ratio=0.3))
+        self.wait(7)
+        self.play(FadeOut(color_labels))
 
         # Focus on (0, 0, 0)
         self.play(
@@ -1763,7 +2181,7 @@ class ShowCube(ThreeDScene):
             coord_labels[1:].set_opacity, 0.2,
             spheres[1:].set_opacity, 0.2,
         )
-        self.wait(2)
+        self.wait(6)
 
         lines = VGroup()
         for n in [1, 2, 4]:
@@ -1798,7 +2216,7 @@ class ShowCube(ThreeDScene):
                 spheres[4], coord_labels[4],
             ).set_opacity, 0.2,
         )
-        self.wait(3)
+        self.wait(6)
 
         lines = VGroup()
         curr_n = 2
@@ -1838,9 +2256,10 @@ class ShowCube(ThreeDScene):
         title.set_stroke(BLACK, 5, background=True)
         title.set_height(0.7)
         title.to_edge(UP)
+        title.shift(LEFT)
         title.fix_in_frame()
 
-        def get_coloring_animation(ns, spheres=spheres, coord_labels=coord_labels, color=colors):
+        def get_coloring_animation(ns, spheres=spheres, coord_labels=coord_labels, colors=colors):
             anims = []
             for n, sphere, cl in zip(ns, spheres, coord_labels):
                 color = colors[int(n)]
@@ -1852,7 +2271,7 @@ class ShowCube(ThreeDScene):
             return LaggedStart(*anims, run_time=1)
 
         self.play(FadeIn(title, DOWN))
-        for x in range(5):
+        for x in range(8):
             self.play(get_coloring_animation(np.random.randint(0, 3, 8)))
         self.wait()
 
@@ -1864,7 +2283,7 @@ class ShowCube(ThreeDScene):
             FadeIn(S0, DOWN),
             get_coloring_animation([0] * 8)
         )
-        self.wait(3)
+        self.wait(5)
 
         bit_sum = TexMobject("S = &(c_0 + c_1 + c_2) \\\\ &\\quad \\mod 3")
         bit_sum.to_edge(LEFT)
@@ -1875,8 +2294,14 @@ class ShowCube(ThreeDScene):
             FadeOut(S0, UP),
             get_coloring_animation([sum(coords) % 3 for coords in vert_coords])
         )
-        self.wait(3)
-        self.play(FadeOut(bit_sum, UP))
+        self.wait(6)
+        self.play(
+            FadeOut(bit_sum, UP),
+            get_coloring_animation([
+                sum([n * c for n, c in enumerate(coords)]) % 3
+                for coords in vert_coords
+            ])
+        )
 
         # Count all strategies
         count = TextMobject("$3^8$ total strategies")
@@ -1895,7 +2320,7 @@ class ShowCube(ThreeDScene):
         full_coins.flip_by_message("64^ 2^64")
 
         self.play(FadeIn(count, DOWN))
-        self.wait(10)
+        self.wait(15)
         self.remove(board, coins)
         frame.clear_updaters()
         frame.generate_target()
@@ -1904,16 +2329,34 @@ class ShowCube(ThreeDScene):
         self.play(
             count.shift, UP,
             count.set_opacity, 0.5,
-            ShowIncreasingSubsets(full_board, run_time=3),
-            ShowIncreasingSubsets(full_coins, run_time=3),
+            ShowIncreasingSubsets(full_board, run_time=4),
+            ShowIncreasingSubsets(full_coins, run_time=4),
             FadeIn(count64, DOWN),
-            MoveToTarget(frame, run_time=3)
+            MoveToTarget(frame, run_time=5)
         )
-        self.wait(3)
+
+        messages = [
+            "Or, use ",
+            "Burnside",
+            "to count",
+            "modulo  ",
+            "symmetry",
+        ]
+        for message in messages:
+            bools = string_to_bools(message)
+            to_flip = Group()
+            for head, coin in zip(bools, full_coins):
+                if head ^ coin.is_heads():
+                    to_flip.add(coin)
+            self.play(
+                LaggedStartMap(FlipCoin, to_flip, run_time=1)
+            )
+            self.wait(0.5)
 
         frame.generate_target()
         frame.target.shift(2 * DOWN)
         frame.target.set_rotation(-15 * DEGREES, 70 * DEGREES)
+        self.add(full_coins)
         self.play(
             MoveToTarget(frame, run_time=3),
             LaggedStartMap(FadeOut, full_board),
@@ -1921,25 +2364,1317 @@ class ShowCube(ThreeDScene):
             FadeOut(count),
             FadeOut(count64),
         )
+        self.play(FadeIn(color_labels))
         frame.add_updater(lambda m, dt: m.increment_theta(0.01 * dt))
-        self.wait(15)
+        self.wait(30)
 
 
 class CubeSupplement(ThreeDScene):
     def construct(self):
         # Map 8 states to square choices
         boards = Group(*[Chessboard(shape=(1, 3)) for x in range(8)])
-        boards.arrange(DOWN, buff=MED_LARGE_BUFF)
+        boards.arrange(DOWN, buff=0.5 * boards[0].get_height())
         boards.set_height(7)
         boards.to_edge(LEFT)
 
-        self.add(boards)
+        coin_sets = Group(*[
+            CoinsOnBoard(board, coin_config={"numeric_labels": True})
+            for board in boards
+        ])
+        vert_coords = [[n // 4, (n // 2) % 2, n % 2] for n in range(7, -1, -1)]
+        for coords, coins in zip(vert_coords, coin_sets):
+            coins.flip_by_bools(coords)
+
+        colors = [RED, GREEN, BLUE_D]
+        color_words = ["Red", "Green", "Blue"]
+        s_values = [sum([n * v for n, v in enumerate(cs)]) % 3 for cs in vert_coords]
+        s_labels = VGroup()
+        c_labels = VGroup()
+        s_arrows = VGroup()
+        for value, board in zip(s_values, boards):
+            arrow = Vector(RIGHT)
+            arrow.next_to(board, RIGHT, SMALL_BUFF)
+
+            label = VGroup(*[Square() for x in range(3)])
+            label.arrange(RIGHT, buff=0)
+            label.match_height(board)
+            label.next_to(arrow, RIGHT, MED_SMALL_BUFF)
+            label.set_fill(GREY_D, 1)
+            label.set_stroke(WHITE, 1)
+            label[value].set_fill(TEAL)
+            label.generate_target()
+            label.target[value].set_fill(colors[value])
+
+            c_label = TextMobject(color_words[value], color=colors[value])
+            c_label.next_to(label, RIGHT)
+
+            s_labels.add(label)
+            c_labels.add(c_label)
+            s_arrows.add(arrow)
+
+        self.play(
+            LaggedStartMap(FadeIn, boards, lag_ratio=0.25),
+            LaggedStartMap(FadeIn, coin_sets, lag_ratio=0.25),
+        )
+        self.play(
+            LaggedStartMap(GrowArrow, s_arrows, lag_ratio=0.25),
+            LaggedStartMap(FadeIn, s_labels, lambda m: (m, LEFT), lag_ratio=0.25),
+        )
+        self.wait()
 
         # Associate choices with colors
+        self.play(
+            LaggedStartMap(MoveToTarget, s_labels),
+            LaggedStartMap(FadeIn, c_labels),
+        )
+        self.wait()
 
 
+class CubeEdgeDescription(Scene):
+    CONFIG = {
+        "camera_config": {"background_color": GREY_E}
+    }
 
-        self.embed()
+    def construct(self):
+        bits = VGroup(*[
+            VGroup(*[
+                Integer(int(b))
+                for b in string_to_bools(char)
+            ]).arrange(RIGHT, buff=SMALL_BUFF)
+            for char in "hi"
+        ])
+        bits.arrange(DOWN, buff=LARGE_BUFF)
+        arrow = Arrow(
+            bits[0][7].get_bottom(),
+            bits[1][7].get_top(),
+            buff=SMALL_BUFF,
+            tip_config={"length": 0.15, "width": 0.15}
+        )
+        arrow.set_color(BLUE)
+        words = TextMobject("Bit flip")
+        words.set_color(BLUE)
+        words.next_to(arrow, LEFT)
+        bf_group = VGroup(bits, arrow, words)
+        parens = TexMobject("()")[0]
+        parens.scale(2)
+        parens.match_height(bf_group, stretch=True)
+        parens[0].next_to(bf_group, LEFT, SMALL_BUFF)
+        parens[1].next_to(bf_group, RIGHT, SMALL_BUFF)
+        bf_group.add(parens)
+        bf_group.to_edge(UP)
+
+        cube_words = TextMobject("Edge of an\\\\n-dimensional cube")
+        top_group = VGroup(
+            bf_group,
+            Vector(RIGHT),
+            cube_words
+        )
+        top_group.arrange(RIGHT)
+        top_group.to_edge(UP)
+
+        self.add(bf_group)
+        bits.unlock_triangulation()
+        self.play(
+            TransformFromCopy(*bits),
+            GrowArrow(arrow),
+            FadeIn(words, 0.25 * UP)
+        )
+        self.wait()
+        self.play(
+            GrowArrow(top_group[1]),
+            FadeIn(cube_words, LEFT)
+        )
+        self.wait()
+
+
+class EdgeColoringExample(Scene):
+    def construct(self):
+        words = VGroup(
+            TextMobject(
+                "Color edges\\\\red or blue",
+                tex_to_color_map={"red": RED, "blue": BLUE}
+            ),
+            TextMobject("Prove there is a\\\\monochromatic triangle", alignment=""),
+        )
+        words.arrange(DOWN, buff=LARGE_BUFF, aligned_edge=LEFT)
+        words.to_edge(RIGHT)
+        words.to_edge(UP, buff=LARGE_BUFF)
+
+        def get_graph(words=words):
+            points = compass_directions(6)
+            points *= 3
+            verts = VGroup(*[Dot(p, radius=0.1) for p in points])
+            verts.set_fill(GREY_B, 1)
+            edges = VGroup(*[
+                Line(p1, p2, color=random.choice([RED, BLUE]))
+                for p1, p2 in it.combinations(points, 2)
+            ])
+            graph = VGroup(verts, edges)
+            graph.set_height(6)
+            graph.next_to(words, LEFT, LARGE_BUFF)
+            graph.set_y(0)
+            graph.set_stroke(background=True)
+            return graph
+
+        graph = get_graph()
+
+        self.add(words)
+        self.add(graph)
+        self.wait()
+        for x in range(2):
+            new_graph = get_graph()
+            self.play(
+                ShowCreation(
+                    new_graph, lag_ratio=0.1,
+                    run_time=3,
+                ),
+                ApplyMethod(
+                    graph[1].set_stroke, None, 0,
+                    run_time=2,
+                )
+            )
+            graph = new_graph
+        self.wait(4)
+
+
+class GrahamsConstant(Scene):
+    def construct(self):
+        lhs = TexMobject("g_{64}", "=")
+        lhs[0][1:].scale(0.7, about_edge=DL)
+        lhs.scale(2)
+
+        rhs = VGroup()
+        for ndots in [1, 3, 6, 7, 9, 12]:
+            row = VGroup(*[
+                TexMobject("3"),
+                TexMobject("\\uparrow\\uparrow"),
+                VGroup(*[
+                    TexMobject("\\cdot") for x in range(ndots)
+                ]).arrange(RIGHT, buff=0.2),
+                TexMobject("\\uparrow\\uparrow"),
+                TexMobject("3"),
+            ])
+            row.arrange(RIGHT, buff=MED_SMALL_BUFF)
+            if ndots == 1:
+                rc = row.get_center()
+                row[:2].move_to(rc, RIGHT)
+                row[2].set_opacity(0)
+                row[3:].move_to(rc, LEFT)
+            row.add(Brace(row[1:-1], DOWN, buff=SMALL_BUFF))
+            rhs.add(row)
+        rhs[0][-1].set_opacity(0)
+        rhs.replace_submobject(3, TexMobject("\\vdots"))
+        rhs.arrange(UP)
+        rhs.next_to(lhs, RIGHT)
+
+        rbrace = Brace(rhs, RIGHT)
+        rbrace_tex = rbrace.get_text("64 times")
+
+        equation = VGroup(lhs, rhs, rbrace, rbrace_tex)
+        equation.center().to_edge(LEFT, buff=LARGE_BUFF)
+
+        self.add(lhs, rhs[0])
+        self.play(TransformFromCopy(rhs[0], rhs[1]),)
+        self.play(TransformFromCopy(rhs[1], rhs[2]))
+        self.play(
+            Write(rhs[3]),
+            TransformFromCopy(rhs[2], rhs[4]),
+        )
+        self.play(
+            TransformFromCopy(rhs[4], rhs[5]),
+            GrowFromCenter(rbrace),
+            Write(rbrace_tex)
+        )
+        self.wait()
+
+
+class AttemptAColoring(ThreeDScene):
+    def construct(self):
+        # Setup cube
+        short_vert_height = 0.3
+        tall_vert_height = 0.4
+
+        vert_coords = np.array(list(map(int_to_bit_coords, range(8))))
+        vert_coords = vert_coords - 0.5
+        vert_coords = vert_coords * 4
+        vert_coords[:, 2] *= 1.25  # Stretch in the z
+        cube = Group()
+        cube.verts = SGroup()
+        cube.edges = VGroup()
+        cube.add(cube.verts, cube.edges)
+        for n, coords in enumerate(vert_coords):
+            vert = Sphere(resolution=(21, 21))
+            vert.set_height(short_vert_height)
+            vert.rotate(90 * DEGREES, RIGHT)
+            vert.move_to(coords)
+            cube.verts.add(vert)
+            vert.edges = VGroup()
+            for m, coords2 in enumerate(vert_coords):
+                if sum(int_to_bit_coords(n ^ m)) == 1:
+                    edge = Line(coords, coords2)
+                    cube.edges.add(edge)
+                    vert.edges.add(edge)
+            vert.edges.apply_depth_test()
+
+        cube.edges.set_color(GREY)
+        cube.edges.apply_depth_test()
+
+        cube.rotate(30 * DEGREES, DOWN)
+        cube.to_edge(RIGHT)
+        cube.set_height(4)
+
+        self.play(
+            ShowCreation(cube.edges, lag_ratio=0.1),
+            LaggedStartMap(FadeInFromLarge, cube.verts, lambda m: (m, 0.2)),
+            run_time=2,
+        )
+
+        # Setup cube color
+        def get_colored_vertices(values, verts=cube.verts):
+            color_choices = [RED, GREEN, BLUE_D]
+            color_label_choices = ["R", "G", "B"]
+            vert_targets = SGroup()
+            labels = VGroup()
+            for n, vert in zip(values, verts):
+                color = color_choices[n]
+                v_target = vert.copy()
+                if n == -1:
+                    v_target.set_height(short_vert_height)
+                    v_target.set_color(GREY)
+                    label = VectorizedPoint()
+                else:
+                    v_target.set_color(color)
+                    v_target.set_height(tall_vert_height)
+                    label = TexMobject(color_label_choices[n])
+                    label.set_color(color)
+                    label.set_stroke(BLACK, 3, background=True)
+                label.next_to(vert, UR, buff=0)
+                vert_targets.add(v_target)
+                labels.add(label)
+            return vert_targets, labels
+
+        new_verts, color_labels = get_colored_vertices(np.arange(0, 8) % 3)
+        for vert, label in zip(cube.verts, color_labels):
+            vert.label = label
+
+        self.play(
+            Transform(cube.verts, new_verts),
+            Write(color_labels),
+            run_time=2,
+        )
+        self.wait()
+
+        def get_color_change_animations(values, verts=cube.verts, labels=color_labels, gcv=get_colored_vertices):
+            new_verts, new_labels = gcv(values)
+            old_labels = labels.copy()
+            labels.become(new_labels)
+            return [
+                Transform(verts, new_verts),
+                LaggedStartMap(FadeOut, old_labels, lambda m: (m, 0.5 * UP), lag_ratio=0.03),
+                LaggedStartMap(FadeIn, labels, lambda m: (m, 0.5 * DOWN), lag_ratio=0.03),
+            ]
+
+        # Prepare a few colorings
+        mod3_strategy = [
+            np.dot(int_to_bit_coords(n), [0, 1, 2]) % 3
+            for n in range(8)
+        ]
+        sum_bits = [sum(int_to_bit_coords(n)) % 3 for n in range(8)]
+
+        self.play(*get_color_change_animations(sum_bits))
+        self.wait()
+        self.play(*get_color_change_animations(mod3_strategy))
+        self.wait()
+
+        # Pull out vertices with their neighbors
+        # first just one, then all of them.
+        trees = Group()
+        tree_targets = Group()
+        for n, vert in enumerate(cube.verts):
+            tree = Group()
+            tree.root = vert.copy()
+            tree.root.origin = tree.root.get_center()
+            tree.edges = VGroup()
+            tree.leafs = Group()
+            tree.labels = Group()
+            for mask in [1, 2, 4]:
+                leaf = cube.verts[n ^ mask]
+                leaf.origin = leaf.get_center()
+                label = leaf.label.copy()
+                label.original = leaf.label
+                tree.edges.add(Line(vert.get_center(), leaf.get_center()))
+                tree.leafs.add(leaf.copy())
+                tree.labels.add(label)
+            tree.edges.apply_depth_test()
+            tree.edges.match_style(vert.edges)
+            tree.edges.save_state()
+            tree.add(tree.root, tree.edges, tree.leafs, tree.labels)
+            trees.add(tree)
+
+            tree.generate_target(use_deepcopy=True)
+            for edge, leaf, label, y in zip(tree.target.edges, tree.target.leafs, tree.target.labels, [0.4, 0, -0.4]):
+                start = vert.get_center()
+                end = start + RIGHT + y * UP
+                edge.set_points_as_corners([start, end])
+                leaf.move_to(edge.get_end())
+                label.next_to(leaf, RIGHT, buff=SMALL_BUFF)
+                label.scale(0.7)
+            tree_targets.add(tree.target)
+        tree_targets.arrange_in_grid(4, 2, buff=LARGE_BUFF)
+        tree_targets[1::2].shift(0.5 * RIGHT)
+        tree_targets.set_height(6)
+        tree_targets.center()
+        tree_targets.to_corner(DL)
+
+        self.play(
+            MoveToTarget(trees[0]),
+            run_time=3,
+        )
+        self.wait()
+        self.play(
+            LaggedStartMap(
+                MoveToTarget, trees[1:],
+                lag_ratio=0.3,
+            ),
+            run_time=6,
+        )
+        self.add(trees)
+        self.wait()
+
+        # Show what we want
+        want_rect = SurroundingRectangle(trees, buff=MED_SMALL_BUFF)
+        want_rect.set_stroke(WHITE, 1)
+        want_label = TextMobject("What we want")
+        want_label.next_to(want_rect, UP)
+
+        trees.save_state()
+        anims = []
+        for tree in trees:
+            anims.append(ApplyMethod(tree.root.set_color, GREY))
+            colors = [RED, GREEN, BLUE_D]
+            letters = ["R", "G", "B"]
+            for color, letter, leaf, label in zip(colors, letters, tree.leafs, tree.labels):
+                new_label = TextMobject(letter)
+                new_label.set_fill(color)
+                new_label.replace(label, dim_to_match=1)
+                old_label = label.copy()
+                label.become(new_label)
+                anims += [
+                    FadeIn(label, 0.1 * LEFT),
+                    FadeOut(old_label, 0.1 * RIGHT),
+                    ApplyMethod(leaf.set_color, color),
+                ]
+
+        cube.verts.generate_target()
+        cube.verts.save_state()
+        cube.verts.target.set_color(GREY)
+        for vert in cube.verts.target:
+            vert.scale(0.75)
+        self.play(
+            ShowCreation(want_rect),
+            Write(want_label),
+            LaggedStart(*anims, lag_ratio=0.001, run_time=3),
+            FadeOut(color_labels),
+            MoveToTarget(cube.verts),
+        )
+        self.add(trees)
+        trees.unlock_shader_data()
+        self.wait()
+
+        # Try to fit these back onto the cube
+        # First attempt
+        def restore_tree(tree, **kwargs):
+            anims = []
+            for mob in [tree.root, *tree.leafs]:
+                anims.append(ApplyMethod(mob.move_to, mob.origin))
+            for label in tree.labels:
+                label.generate_target()
+                label.target.replace(label.original, dim_to_match=1)
+                anims.append(MoveToTarget(label))
+            anims.append(Restore(tree.edges))
+            return AnimationGroup(*anims, **kwargs)
+
+        tree_copies = trees.deepcopy()
+        self.play(restore_tree(tree_copies[0], run_time=2))
+        self.wait()
+        self.play(restore_tree(tree_copies[1], run_time=2))
+        self.wait()
+
+        frame = self.camera.frame
+        self.play(
+            UpdateFromAlphaFunc(
+                frame,
+                lambda m, a: m.move_to(0.1 * wiggle(a, 6) * RIGHT),
+            ),
+            FadeOut(tree_copies[0]),
+            FadeOut(tree_copies[1]),
+        )
+
+        # Second attempt
+        def restore_vertex(n, verts=cube.verts, labels=color_labels):
+            return AnimationGroup(
+                Transform(verts[n], verts.saved_state[n]),
+                FadeIn(labels[n], DOWN)
+            )
+
+        for i in [0, 4, 2, 1]:
+            self.play(restore_vertex(i))
+        self.wait()
+        self.play(ShowCreationThenFadeAround(cube.verts[4]))
+        for i in [6, 5]:
+            self.play(restore_vertex(i))
+        self.wait()
+
+        q_marks = VGroup(*[TexMobject("???") for x in range(2)])
+        q_marks[0].next_to(cube.verts[7], UP, SMALL_BUFF)
+        q_marks[1].next_to(cube.verts[3], UP, SMALL_BUFF)
+        self.play(Write(q_marks))
+        self.wait()
+
+        # Mention it'll never work
+        nv_label = TextMobject("It'll never work!")
+        nv_label.set_height(0.5)
+        nv_label.next_to(cube, UP, buff=0.75)
+
+        cube_copy = cube.deepcopy()
+        self.remove(cube)
+        self.add(cube_copy)
+        new_verts, new_labels = get_colored_vertices([-1] * 8)
+        self.play(
+            Transform(cube_copy.verts, new_verts),
+            FadeOut(q_marks),
+            FadeOut(color_labels[:3]),
+            FadeOut(color_labels[4:7]),
+        )
+        self.add(cube_copy)
+        self.play(FadeIn(nv_label, DOWN))
+        for vert in cube_copy.verts:
+            vert.generate_target()
+            vert.target.scale(0.01)
+            vert.target.set_opacity(0)
+        self.play(
+            LaggedStartMap(Uncreate, cube_copy.edges),
+            LaggedStartMap(MoveToTarget, cube_copy.verts),
+        )
+
+        # Highlight symmetry
+        rects = VGroup()
+        for tree in trees:
+            t_rect = SurroundingRectangle(
+                Group(tree.leafs, tree.labels),
+                buff=SMALL_BUFF
+            )
+            t_rect.set_stroke(YELLOW, 2)
+            rects.add(t_rect)
+
+        self.play(LaggedStartMap(ShowCreationThenFadeOut, rects, lag_ratio=0.025, run_time=3))
+        self.wait()
+
+        # Show implication
+        implies = TexMobject("\\Rightarrow")
+        implies.set_height(0.7)
+        implies.next_to(want_rect, RIGHT)
+        number_labels = VGroup(*[
+            TextMobject("Number of ", f"{color} vertices")
+            for color in ["red", "green", "blue"]
+        ])
+        for color, label in zip(colors, number_labels):
+            label[1].set_color(color)
+        number_labels.set_height(0.5)
+        number_labels.arrange(DOWN, buff=1.5, aligned_edge=LEFT)
+        number_labels.next_to(implies, RIGHT, MED_LARGE_BUFF)
+
+        vert_eqs = VGroup(*[TexMobject("=") for x in range(2)])
+        vert_eqs.scale(1.5)
+        vert_eqs.rotate(90 * DEGREES)
+        vert_eqs[0].move_to(number_labels[0:2])
+        vert_eqs[1].move_to(number_labels[1:3])
+
+        rhss = VGroup()
+        for label in number_labels:
+            rhs = TexMobject("= \\frac{8}{3}")
+            rhs.scale(1.25)
+            rhs.next_to(label, RIGHT)
+            rhss.add(rhs)
+
+        self.play(
+            Write(implies),
+            FadeOut(nv_label),
+        )
+        self.play(
+            GrowFromCenter(vert_eqs),
+            FadeIn(number_labels[0], DOWN),
+            FadeIn(number_labels[1]),
+            FadeIn(number_labels[2], UP),
+        )
+        self.wait()
+        self.play(Write(rhss))
+        self.wait(2)
+        self.play(
+            LaggedStartMap(
+                FadeOut, VGroup(*number_labels, *vert_eqs, *rhss, *implies),
+            ),
+            ShowCreation(cube.edges, lag_ratio=0.1),
+            LaggedStartMap(FadeInFromLarge, cube.verts, lambda m: (m, 0.2)),
+        )
+        self.add(cube)
+        new_verts, color_labels = get_colored_vertices(mod3_strategy)
+        true_trees = trees.saved_state
+        self.play(
+            Transform(cube.verts, new_verts),
+            FadeIn(color_labels),
+            FadeOut(trees),
+            FadeOut(want_label)
+        )
+        self.play(FadeIn(true_trees))
+        self.wait()
+
+        # Count colors
+        for edge in cube.edges:
+            edge.insert_n_curves(10)
+
+        red_total = Integer(height=0.6)
+        red_total.next_to(want_rect, UP)
+        red_total.set_color(RED)
+        self.play(FadeIn(red_total))
+
+        all_label_rects = VGroup()
+        for n in range(8):
+            tree = true_trees[n]
+            vert = cube.verts[n]
+            neighbor_highlights = VGroup()
+            new_edges = VGroup()
+            label_rects = VGroup()
+            for mask, label in zip([1, 2, 4], tree.labels):
+                neighbor = cube.verts[n ^ mask]
+                edge = Line(vert, neighbor, buff=0)
+                edge.set_stroke(YELLOW, 5)
+                edge.insert_n_curves(10)
+                new_edges.add(edge)
+                if neighbor.get_color() == Color(RED):
+                    circ = Circle()
+                    circ.set_stroke(YELLOW, 3)
+                    circ.replace(neighbor)
+                    neighbor_highlights.add(circ)
+                    rect = SurroundingRectangle(label, buff=0.025)
+                    rect.set_stroke(YELLOW, 2)
+                    label_rects.add(rect)
+            new_edges.apply_depth_test()
+            new_edges.shift(0.01 * OUT)
+            new_tree_edges = tree.edges.copy()
+            new_tree_edges.set_stroke(YELLOW, 3)
+            new_tree_edges.shift(0.01 * OUT)
+
+            self.play(
+                *map(ShowCreation, [*new_edges, *new_tree_edges]),
+            )
+            for highlight, rect in zip(neighbor_highlights, label_rects):
+                self.play(
+                    FadeInFromLarge(highlight, 1.2),
+                    FadeInFromLarge(rect, 1.2),
+                    run_time=0.25
+                )
+                red_total.increment_value()
+                self.wait(0.25)
+
+            self.play(
+                FadeOut(neighbor_highlights),
+                FadeOut(new_edges),
+                FadeOut(new_tree_edges),
+            )
+            all_label_rects.add(*label_rects)
+        self.wait()
+
+        # Show count to 8
+        new_verts = get_colored_vertices([-1] * 8)[0]
+        self.play(
+            FadeOut(true_trees),
+            FadeOut(all_label_rects),
+            FadeOut(red_total),
+            FadeOut(color_labels),
+            Transform(cube.verts, new_verts),
+        )
+        self.play(FadeIn(trees))
+        label_rects = VGroup()
+        for tree in trees:
+            rect = SurroundingRectangle(tree.labels[0], buff=0.025)
+            rect.match_style(all_label_rects[0])
+            label_rects.add(rect)
+
+        self.play(
+            ShowIncreasingSubsets(label_rects, rate_func=linear),
+            UpdateFromFunc(
+                red_total, lambda m, lr=label_rects: m.set_value(len(lr))
+            )
+        )
+        self.wait()
+
+        # Show red corners
+        r_verts = SGroup(cube.verts[3], cube.verts[4]).copy()
+        r_labels = VGroup()
+        r_edge_groups = VGroup()
+        for r_vert in r_verts:
+            r_label = TexMobject("R")
+            r_label.set_color(RED)
+            r_label.next_to(r_vert, UR, buff=0)
+            r_labels.add(r_label)
+            r_vert.set_height(tall_vert_height)
+            r_vert.set_color(RED)
+            edges = VGroup()
+            for edge in r_vert.edges:
+                to_r_edge = edge.copy()
+                to_r_edge.reverse_points()
+                to_r_edge.set_stroke(YELLOW, 3)
+                to_r_edge.shift(0.01 * OUT)
+                edges.add(to_r_edge)
+            edges.apply_depth_test()
+            r_edge_groups.add(edges)
+
+        self.play(
+            LaggedStartMap(FadeInFromLarge, r_verts),
+            LaggedStartMap(FadeInFromLarge, r_labels),
+            run_time=1,
+        )
+        self.wait()
+        for edges in r_edge_groups:
+            self.play(ShowCreationThenDestruction(edges, lag_ratio=0.1))
+        self.wait()
+
+        rhs = TexMobject("=", "3", "\\, (\\text{\\# Red corners})")
+        rhs[2].set_color(RED)
+        rhs.match_height(red_total)
+        rhs[:2].match_height(red_total, about_edge=RIGHT)
+        rhs.next_to(red_total, RIGHT)
+
+        self.play(Write(rhs))
+        self.wait()
+
+        three = rhs[1]
+        three.generate_target()
+        three.target.move_to(red_total, RIGHT)
+        over = TexMobject("/")
+        over.match_height(three)
+        over.next_to(three.target, LEFT, MED_SMALL_BUFF)
+        self.play(
+            MoveToTarget(three, path_arc=90 * DEGREES),
+            red_total.next_to, over, LEFT, MED_SMALL_BUFF,
+            FadeIn(over, UR),
+            rhs[2].move_to, three, LEFT,
+        )
+        self.wait()
+
+        np_label = TextMobject("Not possible!")
+        np_label.set_height(0.6)
+        np_label.next_to(rhs, RIGHT, LARGE_BUFF)
+        self.play(Write(np_label))
+        self.wait()
+
+
+class TryTheProofYourself(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "Can you predict\\\\the proof?",
+            target_mode="hooray",
+            bubble_kwargs={
+                "height": 3,
+                "width": 3,
+            },
+        )
+        self.teacher.bubble.set_fill(opacity=0)
+        self.change_student_modes(
+            "pondering", "thinking", "confused",
+            look_at_arg=self.screen,
+        )
+        self.wait(7)
+
+
+class HighDimensionalCount(ThreeDScene):
+    def construct(self):
+        # Definitions
+        N = 6
+        colors = [RED, GREEN, BLUE_D, YELLOW, PINK, TEAL]
+        coords = np.array([0, 1, 1, 1, 0, 0])
+
+        # Add chess board
+        board = Chessboard(shape=(2, 3))
+        board.set_height(2)
+        board.to_corner(UL)
+
+        grid = NumberPlane(
+            x_range=(0, 3), y_range=(0, 2),
+            faded_line_ratio=0
+        )
+        grid.match_height(board)
+        grid.match_width(board, stretch=True)
+        grid.next_to(board, OUT, 1e-8)
+        grid.set_gloss(0.5)
+
+        coins = CoinsOnBoard(board, coin_config={"numeric_labels": True})
+        coins.flip_by_bools(coords)
+        coin_labels = VGroup()
+        for i, coin in zip(coords, coins):
+            coin_labels.add(coin.labels[1 - i])
+
+        self.play(
+            ShowCreationThenFadeOut(grid, lag_ratio=0.1),
+            FadeIn(board),
+            FadeIn(coins, lag_ratio=0.1),
+            run_time=2
+        )
+
+        # Setup corners
+        def get_vert(height=0.4, color=RED):
+            return get_vertex_sphere(height, color)
+
+        def get_vert_label(coords):
+            args = ["("]
+            for coord in coords:
+                args.append(str(coord))
+                args.append(",")
+            args[-1] = ")"
+            return TexMobject(*args)
+
+        def get_board_with_highlights(n, height=1, N=N, colors=colors):
+            board = VGroup(*[Square() for x in range(N)])
+            board.arrange_in_grid(2, 3, buff=0)
+            board.set_fill(GREY_E, 1)
+            board.set_stroke(WHITE, 1)
+            board.set_height(height)
+            board[n].set_fill(colors[n])
+            return board
+
+        vert = get_vert()
+        vert_label = get_vert_label(coords)
+        vert_board = get_board_with_highlights(0)
+        vert_label.next_to(vert, LEFT)
+        vert_board.next_to(vert_label, DOWN, MED_LARGE_BUFF)
+        neighbors = SGroup()
+        for color in colors:
+            neighbors.add(get_vert(color=color))
+        neighbors.arrange(DOWN, buff=0.75)
+        neighbors.next_to(vert, RIGHT, buff=2)
+        neighbor_labels = VGroup()
+        edges = VGroup()
+        neighbor_boards = VGroup()
+        for n, neighbor in enumerate(neighbors):
+            edge = Line(
+                vert.get_center(),
+                neighbor.get_center(),
+                buff=vert.get_height() / 2,
+            )
+            new_coords = list(coords)
+            new_coords[n] ^= 1
+            label = get_vert_label(new_coords)
+            label.next_to(neighbor, RIGHT)
+            label.add(SurroundingRectangle(label[2 * n + 1], buff=0.05))
+            n_board = get_board_with_highlights(n, height=0.7)
+            n_board.next_to(label, RIGHT)
+
+            neighbor_boards.add(n_board)
+            edges.add(edge)
+            neighbor_labels.add(label)
+
+        vertex_group = Group(
+            vert_board, vert_label, vert,
+            edges,
+            neighbors, neighbor_labels, neighbor_boards
+        )
+        vertex_group.to_corner(DL)
+
+        # Show coords with states
+        cl_mover = coin_labels.copy()
+        cl_mover.generate_target()
+        for m1, m2 in zip(cl_mover.target, vert_label[1::2]):
+            m1.replace(m2)
+        self.play(
+            MoveToTarget(cl_mover),
+        )
+        self.play(
+            FadeIn(vert_label),
+            FadeOut(cl_mover)
+        )
+        self.play(FadeIn(vert_board))
+        self.wait()
+        self.play(
+            ShowIncreasingSubsets(neighbor_labels),
+            ShowCreation(edges),
+        )
+        self.wait()
+        self.play(LaggedStartMap(
+            TransformFromCopy, neighbor_boards,
+            lambda m, b=vert_board: (b, m)
+        ))
+        self.wait()
+
+        # Show one vertex
+        self.play(FadeInFromLarge(vert))
+        self.play(LaggedStartMap(
+            TransformFromCopy, neighbors,
+            lambda m, v=vert: (v, m)
+        ))
+        self.wait()
+
+        # Isolate vertex
+        edges.apply_depth_test()
+        tree = Group(vert, edges, neighbors)
+        tree.generate_target()
+        tree.target[0].scale(0.5)
+        tree.target[2].scale(0.5)
+        tree.target[2].arrange(DOWN, buff=0)
+        tree.target[2].next_to(vert, RIGHT, MED_LARGE_BUFF)
+        for edge, nv in zip(tree.target[1], tree.target[2]):
+            new_edge = Line(
+                vert.get_center(),
+                nv.get_center(),
+            )
+            edge.become(new_edge)
+            edge.set_stroke(WHITE, 2)
+        tree.target.rotate(-90 * DEGREES)
+        tree.target.center()
+
+        short_label = vert_label[1::2]
+        short_label.generate_target()
+        short_label.target.arrange(RIGHT, buff=SMALL_BUFF)
+        short_label.target.match_width(tree.target)
+        short_label.target.next_to(tree.target, UP)
+        short_label.target.set_fill(GREY_A)
+
+        self.play(
+            MoveToTarget(tree),
+            MoveToTarget(short_label),
+            LaggedStartMap(FadeOut, Group(
+                vert_label[0::2],
+                vert_board,
+                *neighbor_labels,
+                *neighbor_boards,
+                *board,
+                *coins,
+            )),
+            run_time=2,
+        )
+        tree.add(short_label)
+
+        # Show all vertices
+        def get_bit_string(n, template=short_label):
+            bits = VGroup(*map(Integer, int_to_bit_coords(n, min_dim=6)))
+            bits.arrange(RIGHT, buff=0.075)
+            bits.match_height(template)
+            bits.set_color(GREY_A)
+            return bits
+
+        new_trees = Group()
+        for n in [0, 1, 62, 63]:
+            new_tree = tree.copy()
+            bits = get_bit_string(n)
+            bits.move_to(new_tree[3])
+            new_tree.replace_submobject(3, bits)
+            new_trees.add(new_tree)
+        for new_tree, color in zip(new_trees, [YELLOW, GREEN, RED, BLUE_D]):
+            new_tree[0].set_color(color)
+        new_trees.arrange(RIGHT, buff=MED_LARGE_BUFF)
+        new_trees.move_to(tree)
+        new_trees[:2].to_edge(LEFT)
+        new_trees[2:].to_edge(RIGHT)
+
+        dots = VGroup(*[TexMobject("\\dots") for x in range(2)])
+        dots.scale(2)
+        dots[0].move_to(Group(new_trees[1], tree))
+        dots[1].move_to(Group(new_trees[2], tree))
+
+        top_brace = Brace(new_trees, UP, buff=MED_LARGE_BUFF)
+        total_label = top_brace.get_text("$2^n$ total vertices", buff=MED_LARGE_BUFF)
+
+        low_brace = Brace(tree, DOWN)
+        neighbors_label = low_brace.get_text("n neighbors")
+
+        self.play(
+            GrowFromCenter(low_brace),
+            Write(neighbors_label, run_time=1)
+        )
+        self.wait()
+        self.play(
+            GrowFromCenter(dots),
+            GrowFromCenter(top_brace),
+            LaggedStartMap(
+                TransformFromCopy, new_trees,
+                lambda m, t=tree: (t, m)
+            ),
+            Write(total_label, run_time=1),
+            run_time=2,
+        )
+        self.wait()
+
+        # Count red neighbors
+        middle_tree = tree
+        frame = self.camera.frame
+        self.play(frame.move_to, UP)
+
+        count = Integer(1)
+        count.set_color(RED)
+        count.scale(1.5)
+        count.next_to(total_label, UP, LARGE_BUFF, aligned_edge=LEFT)
+        two_to_n_label = TexMobject("2^n")
+        two_to_n_label.scale(1.5)
+        two_to_n_label.set_color(RED)
+        two_to_n_label.move_to(count, LEFT)
+
+        n_arrows = VGroup()
+        for tree in [*new_trees[:2], middle_tree, *new_trees[2:]]:
+            arrow = Vector(
+                [-1, -2, 0],
+                tip_config={"width": 0.2, "length": 0.2}
+            )
+            arrow.match_height(tree[1])
+            arrow.next_to(tree[2][0], UR, buff=0)
+            arrow.set_color(RED)
+            n_arrows.add(arrow)
+
+        self.add(n_arrows[0], count)
+        self.wait()
+        self.add(n_arrows[1])
+        count.increment_value()
+        self.wait()
+        self.play(
+            ChangeDecimalToValue(count, 63, rate_func=rush_into),
+            LaggedStartMap(FadeIn, n_arrows[2:], lag_ratio=0.5),
+            run_time=3
+        )
+        self.remove(count)
+        self.add(two_to_n_label)
+        self.wait()
+
+        rhs = TexMobject("=", "n", "\\cdot", "(\\text{\\# Red vertices})")
+        rhs.scale(1.5)
+        rhs.next_to(two_to_n_label, RIGHT)
+        rhs.shift(0.05 * DOWN)
+        rhs.set_color_by_tex("Red", RED)
+        highlighted_edges = VGroup(*middle_tree[1], new_trees[2][1]).copy()
+        highlighted_edges.set_stroke(YELLOW, 3)
+        highlighted_edges.shift(0.01 * OUT)
+        edge_anim = ShowCreationThenFadeOut(
+            highlighted_edges, lag_ratio=0.3
+        )
+
+        self.play(edge_anim)
+        self.play(Write(rhs), run_time=1)
+        self.play(edge_anim)
+        self.wait(2)
+
+        # Conclusion
+        pairs = VGroup(VGroup(TexMobject("n"), TexMobject("2^n")))
+        pairs.set_color(YELLOW)
+        for n in range(1, 10):
+            pairs.add(VGroup(Integer(n), Integer(2**n)))
+        for pair in pairs:
+            pair.arrange(RIGHT, buff=0.75, aligned_edge=DOWN)
+            line = Line(LEFT, RIGHT)
+            line.set_stroke(WHITE, 1)
+            line.set_width(2)
+            line.next_to(pair, DOWN, aligned_edge=LEFT)
+            line.shift(SMALL_BUFF * LEFT)
+            pair.add(line)
+            pairs.add(pair)
+        pairs.arrange(DOWN, aligned_edge=LEFT, buff=0.25)
+        pairs.set_height(7)
+        pairs.to_edge(LEFT)
+        pairs.shift(UP)
+
+        marks = VGroup()
+        for n, pair in zip(it.count(1), pairs[1:]):
+            if sum(int_to_bit_coords(n)) == 1:
+                mark = Checkmark()
+            else:
+                mark = Exmark()
+            mark.move_to(pair[1], LEFT)
+            mark.shift(RIGHT)
+            marks.add(mark)
+
+        v_line = Line(UP, DOWN)
+        v_line.set_height(7)
+        v_line.set_stroke(WHITE, 1)
+        v_line.set_x((pairs[0][0].get_right() + pairs[0][1].get_left())[0] / 2)
+        v_line.match_y(pairs)
+        pairs.add(v_line)
+
+        new_trees.generate_target()
+        new_trees.target[:2].move_to(middle_tree, RIGHT)
+        shift_vect = new_trees.target[0].get_center() - new_trees[0].get_center()
+
+        self.play(
+            MoveToTarget(new_trees),
+            top_brace.match_width, new_trees.target, {"about_edge": RIGHT},
+            total_label.shift, shift_vect * 0.5,
+            n_arrows[:2].shift, shift_vect,
+            FadeOut(middle_tree, RIGHT),
+            FadeOut(n_arrows[2], RIGHT),
+            FadeOut(dots[0], 2 * RIGHT),
+            Write(pairs)
+        )
+        self.play(LaggedStartMap(
+            FadeIn, marks,
+            lambda m: (m, 0.2 * LEFT),
+            lag_ratio=0.4,
+            run_time=5,
+        ))
+        self.wait()
+
+
+class SimpleRect(Scene):
+    def construct(self):
+        rect = SurroundingRectangle(
+            VGroup(Integer(4), Integer(16), Integer(0)).arrange(RIGHT, MED_LARGE_BUFF),
+        )
+        self.play(ShowCreation(rect))
+        self.wait(2)
+        self.play(FadeOut(rect))
+
+
+class FourDCubeColoringFromTrees(ThreeDScene):
+    def construct(self):
+        # Camera stuffs
+        frame = self.camera.frame
+        light = self.camera.light_source
+        light.move_to([-25, -20, 20])
+
+        # Setup cube
+        colors = [RED, GREEN, BLUE_D, YELLOW]
+        cube = self.get_hypercube()
+        for n, vert in enumerate(cube.verts):
+            code = boolian_linear_combo(int_to_bit_coords(n, 4))
+            cube.verts[n].set_color(colors[code])
+
+        # Create trees
+        trees = Group()
+        original_trees = Group()
+        for vert in cube.verts:
+            tree = Group(
+                vert,
+                vert.edges,
+                vert.neighbors,
+            ).copy()
+            original = tree.copy()
+            original[0].set_color(GREY)
+            original[0].scale(0)
+            original_trees.add(original)
+            trees.add(tree)
+        for tree in trees:
+            tree[0].set_color(GREY)
+            tree[0].rotate(90 * DEGREES, LEFT)
+            sorted_verts = Group(*tree[2])
+            sorted_verts.submobjects.sort(key=lambda m: m.get_color().hex)
+            sorted_verts.arrange(DOWN, buff=SMALL_BUFF)
+            sorted_verts.next_to(tree[0], RIGHT, buff=0.75)
+            for edge, neighbor in zip(tree[1], tree[2]):
+                edge.become(Line3D(
+                    tree[0].get_center(),
+                    neighbor.get_center(),
+                    resolution=edge.resolution,
+                ))
+                neighbor.rotate(90 * DEGREES, LEFT)
+
+        trees.arrange_in_grid(4, 4, buff=MED_LARGE_BUFF)
+        for i in range(4):
+            trees[i::4].shift(0.5 * i * RIGHT)
+        trees.center()
+        trees.set_height(6)
+        trees.rotate(PI / 2, RIGHT)
+        trees.move_to(10 * LEFT, LEFT)
+
+        frame.set_phi(90 * DEGREES)
+        frame.move_to(5 * LEFT)
+        self.add(trees)
+        self.wait()
+
+        # Show transition
+        anims = []
+        for tree, original in zip(trees, original_trees):
+            anims.append(Transform(tree, original))
+        self.play(
+            frame.set_rotation, 20 * DEGREES, 70 * DEGREES,
+            frame.move_to, ORIGIN,
+            LaggedStart(*anims, lag_ratio=0.2),
+            run_time=8,
+        )
+        self.remove(trees)
+        self.add(cube)
+        frame.add_updater(lambda m, dt: m.increment_theta(2 * dt * DEGREES))
+        self.wait(30)
+
+    def get_hypercube(self, dim=4, width=4):
+        hc_points = self.get_hypercube_points(dim, width)
+        cube = Group()
+        cube.verts = SGroup()
+        cube.edges = SGroup()
+        cube.add(cube.verts, cube.edges)
+        for point in hc_points:
+            vert = get_vertex_sphere(resolution=(25, 13))
+            vert.rotate(PI / 2, UP)
+            vert.move_to(point)
+            cube.verts.add(vert)
+            vert.edges = SGroup()
+            vert.neighbors = SGroup()
+        for n in range(2**dim):
+            for power in range(dim):
+                k = n ^ (1 << power)
+                edge = Line3D(
+                    hc_points[n],
+                    hc_points[k],
+                    width=0.05,
+                    resolution=(31, 31)
+                )
+                cube.edges.add(edge)
+                cube.verts[n].edges.add(edge)
+                cube.verts[n].neighbors.add(cube.verts[k])
+        return cube
+
+    def get_hypercube_points(self, dim=4, width=4):
+        all_coords = [
+            int_to_bit_coords(n, dim).astype(float)
+            for n in range(2**dim)
+        ]
+        vertex_holder = Mobject()
+        vertex_holder.set_points([
+            sum([c * v for c, v in zip(reversed(coords), [RIGHT, UP, OUT])])
+            for coords in all_coords
+        ])
+        vertex_holder.center()
+        if dim == 4:
+            vertex_holder.points[8:] *= 2
+        vertex_holder.set_width(width)
+        return vertex_holder.points
+
+
+class IntroduceHypercube(FourDCubeColoringFromTrees):
+    def construct(self):
+        # Camera stuffs
+        frame = self.camera.frame
+        light = self.camera.light_source
+        light.move_to([-25, -20, 20])
+
+        # Setup cubes
+        cubes = [
+            self.get_hypercube(dim=d)
+            for d in range(5)
+        ]
+
+        def reconnect_edges(cube):
+            for vert in cube.verts:
+                for edge, neighbor in zip(vert.edges, vert.neighbors):
+                    edge.become(Line3D(
+                        vert.get_center(),
+                        neighbor.get_center(),
+                        resolution=edge.resolution
+                    ))
+
+        # Show increasing dimensions
+        label = VGroup(Integer(0), TexMobject("D"))
+        label.arrange(RIGHT, buff=SMALL_BUFF)
+        label.scale(1.5)
+        label.to_edge(UP)
+        label.fix_in_frame()
+
+        def get_cube_intro_anim(n, cubes=cubes, reconnect_edges=reconnect_edges, label=label):
+            if n == 0:
+                return GrowFromCenter(cubes[n])
+            self.remove(cubes[n - 1])
+            cubes[n].save_state()
+            for v1, v2 in zip(cubes[n].verts, it.cycle(cubes[n - 1].verts)):
+                v1.move_to(v2)
+            reconnect_edges(cubes[n])
+            if n == 1:
+                cubes[n].edges.scale(0)
+            return AnimationGroup(
+                Restore(cubes[n]),
+                ChangeDecimalToValue(label[0], n),
+            )
+
+        self.play(
+            FadeIn(label, DOWN),
+            get_cube_intro_anim(0)
+        )
+        self.wait()
+        for n in [1, 2]:
+            self.play(get_cube_intro_anim(n))
+            self.wait()
+        self.play(
+            get_cube_intro_anim(3),
+            ApplyMethod(
+                frame.set_rotation, -20 * DEGREES, 75 * DEGREES,
+                run_time=3
+            )
+        )
+        frame.add_updater(lambda m, dt: m.increment_theta(dt * DEGREES))
+        self.wait(4)
+
+        # Flatten cube
+        flat_cube = self.get_hypercube(3)
+        for n, vert in enumerate(flat_cube.verts):
+            point = vert.get_center()
+            if n < 4:
+                point *= 1.5
+            else:
+                point *= 0.75
+            point[2] = 0
+            vert.move_to(point)
+        reconnect_edges(flat_cube)
+
+        plane = NumberPlane(x_range=(-10, 10), y_range=(-10, 10), faded_line_ratio=0)
+        plane.set_opacity(0.25)
+        plane.apply_depth_test()
+        plane.axes.shift(0.01 * OUT)
+        plane.shift(0.02 * IN)
+
+        cubes[3].save_state()
+        self.add(cubes[3], plane)
+        self.play(
+            FadeIn(plane, run_time=2),
+            Transform(cubes[3], flat_cube, run_time=2),
+        )
+        self.wait(7)
+        self.play(
+            Restore(cubes[3], run_time=2),
+            FadeOut(plane)
+        )
+        self.play(get_cube_intro_anim(4), run_time=3)
+        self.wait(10)
+
+        # Highlight some neighbor groups
+        colors = [RED, GREEN, BLUE_D, YELLOW]
+        for x in range(6):
+            vert = random.choice(cubes[4].verts)
+            neighbors = vert.neighbors.copy()
+            neighbors.save_state()
+            neighbors.generate_target()
+            new_edges = VGroup()
+            for neighbor, color in zip(neighbors.target, colors):
+                neighbor.set_color(color)
+                edge = Line(
+                    vert.get_center(),
+                    neighbor.get_center(),
+                    buff=vert.get_height() / 2,
+                )
+                edge.set_stroke(color, 5)
+                new_edges.add(edge)
+            self.remove(vert.neighbors)
+            self.play(
+                ShowCreation(new_edges, lag_ratio=0.2),
+                MoveToTarget(neighbors),
+            )
+            self.wait(1)
+            self.play(
+                FadeOut(new_edges),
+                Restore(neighbors),
+            )
+            self.remove(neighbors)
+            self.add(vert.neighbors)
+
+        # Show valid coloring
+        cubes[4].generate_target()
+        for n, vert in enumerate(cubes[4].target[0]):
+            code = boolian_linear_combo(int_to_bit_coords(n, 4))
+            vert.set_color(colors[code])
+        self.play(MoveToTarget(cubes[4], lag_ratio=0.2, run_time=3))
+        self.wait(15)
 
 
 # TODO, have this read names in from a file
