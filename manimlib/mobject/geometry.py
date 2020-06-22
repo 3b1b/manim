@@ -591,18 +591,19 @@ class Arrow(Line):
         self.set_stroke_width_from_length()
 
         # So horribly confusing, must redo
-        if has_tip:
-            self.add_tip()
-            old_tips[0].points[:, :] = self.tip.points
-            self.remove(self.tip)
-            self.tip = old_tips[0]
-            self.add(self.tip)
-        if has_start_tip:
-            self.add_tip(at_start=True)
-            old_tips[1].points[:, :] = self.start_tip.points
-            self.remove(self.start_tip)
-            self.start_tip = old_tips[1]
-            self.add(self.start_tip)
+        if self.preserve_tip_size_when_scaling:
+            if has_tip:
+                self.add_tip()
+                old_tips[0].points[:, :] = self.tip.points
+                self.remove(self.tip)
+                self.tip = old_tips[0]
+                self.add(self.tip)
+            if has_start_tip:
+                self.add_tip(at_start=True)
+                old_tips[1].points[:, :] = self.start_tip.points
+                self.remove(self.start_tip)
+                self.start_tip = old_tips[1]
+                self.add(self.start_tip)
         return self
 
     def get_normal_vector(self):
