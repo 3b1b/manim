@@ -288,6 +288,7 @@ class NumberPlane(Axes):
         self.init_background_lines()
 
     def init_background_lines(self):
+        """Will init all the lines of NumberPlanes (faded or not)"""
         if self.faded_line_style is None:
             style = dict(self.background_line_style)
             # For anything numerical, like stroke_width
@@ -310,6 +311,16 @@ class NumberPlane(Axes):
         )
 
     def get_lines(self):
+        """Generate all the lines, faded and not faded. Two sets of lines are generated, parallel to the X-axis and to Y-axis.
+        
+        Returns
+        -------
+        :class:`~.VGroup`
+            First set of lines (i.e the non faded lines)
+
+        :class:`~.VGroup`
+            Second set of lines (i.e the faded lines)
+        """
         x_axis = self.get_x_axis()
         y_axis = self.get_y_axis()
         x_freq = self.x_line_frequency
@@ -327,21 +338,38 @@ class NumberPlane(Axes):
         lines2 = VGroup(*x_lines2, *y_lines2)
         return lines1, lines2
 
-    def get_lines_parallel_to_axis(self, axis1, axis2, freq, ratio):
-        line = Line(axis1.get_start(), axis1.get_end())
+    def get_lines_parallel_to_axis(self, axis_parallel_to, axis_perpendicular_to, freq, ratio):
+        """Generated a set of lines parallel to an axis.
+
+        Parameters
+        ----------
+        axis_parallel_to : :class:`~.Line`
+            The axis with which the lines will be parallel.
+
+        axis_perpendicular_to : :class:`~.Line`
+            The axis with which the lines will be perpendicular. 
+
+        Returns
+        -------
+        lines1 : :class:`~.VGroup`
+            First set of lines (i.e the non faded lines parallel to 'axis_parallel_to')
+
+        lines2 : :class:`~.VGroup`
+            Second set of lines (i.e the faded lines parallel to 'axis_parallel_to')            
+        """
+        line = Line(axis_parallel_to.get_start(), axis_parallel_to.get_end())
         dense_freq = (1 + ratio)
         step = (1 / dense_freq) * freq
-
         lines1 = VGroup()
         lines2 = VGroup()
         unit_vector_axis_perp_to = axis_perpendicular_to.get_unit_vector()
         for k, x in enumerate(np.arange(axis_perpendicular_to.x_min, axis_perpendicular_to.x_max, step)):
-                new_line = line.copy()
+            new_line = line.copy()
             new_line.shift(unit_vector_axis_perp_to * x)
-                if k % (1 + ratio) == 0:
-                    lines1.add(new_line)
-                else:
-                    lines2.add(new_line)
+            if k % (1 + ratio) == 0:
+                lines1.add(new_line)
+            else:
+                lines2.add(new_line)
         return lines1, lines2
 
     def get_center_point(self):
