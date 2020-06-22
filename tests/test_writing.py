@@ -8,16 +8,13 @@ from testing_utils import utils_test_scenes, get_scenes_to_test
 class TextTest(Scene):
     def construct(self):
         t = Text('testing', font = "Arial")
-
         self.play(Animation(t))
 
 
 class TextMobjectTest(Scene):
     def construct(self):
         constants.TEX_TEMPLATE = TexTemplate()
-
         t = TextMobject('Hello world !')
-
         self.play(Animation(t))
 
 
@@ -27,7 +24,6 @@ class TexMobjectTest(Scene):
         # i.e It will pass even if latex is not installed.
         # This is due to the fact that the latex used here has been cached (see test_cache directory)
         constants.TEX_TEMPLATE = TexTemplate()
-    
         t = TexMobject(
             "\\sum_{n=1}^\\infty "
             "\\frac{1}{n^2} = \\frac{\\pi^2}{6}"

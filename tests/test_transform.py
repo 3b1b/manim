@@ -6,7 +6,6 @@ class TransformTest(Scene):
     def construct(self):
         square = Square()
         circle = Circle()
-
         self.play(Transform(square, circle))
 
 
@@ -14,7 +13,6 @@ class TransformFromCopyTest(Scene):
     def construct(self):
         square = Square()
         circle = Circle()
-
         self.play(TransformFromCopy(square, circle))
 
 
@@ -22,7 +20,6 @@ class ClockwiseTransformTest(Scene):
     def construct(self):
         square = Square()
         circle = Circle()
-
         self.play(ClockwiseTransform(square, circle))
 
 
@@ -30,7 +27,6 @@ class CounterclockwiseTransformTest(Scene):
     def construct(self):
         square = Square()
         circle = Circle()
-
         self.play(CounterclockwiseTransform(square, circle))
 
 
@@ -39,17 +35,14 @@ class MoveToTargetTest(Scene):
         square = Square()
         square.generate_target()
         square.target.shift(3*UP)
-
         self.play(MoveToTarget(square))
 
 
 class ApplyPointwiseFunctionTest(Scene):
     def construct(self):
         square = Square()
-
         def func(p):
             return np.array([1.0, 1.0, 0.0])
-
         self.play(
             ApplyPointwiseFunction(func, square)
         )
@@ -58,21 +51,18 @@ class ApplyPointwiseFunctionTest(Scene):
 class FadeToColortTest(Scene):
     def construct(self):
         square = Square()
-
         self.play(FadeToColor(square, RED))
 
 
 class ScaleInPlaceTest(Scene):
     def construct(self):
         square = Square()
-
         self.play(ScaleInPlace(square, scale_factor=0.1))
 
 
 class ShrinkToCenterTest(Scene):
     def construct(self):
         square = Square()
-
         self.play(ShrinkToCenter(square))
 
 
@@ -80,7 +70,6 @@ class RestoreTest(Scene):
     def construct(self):
         square = Square()
         circle = Circle()
-
         self.play(Transform(square, circle))
         square.save_state()
         self.play(square.shift, UP)
@@ -91,7 +80,6 @@ class ApplyFunctionTest(Scene):
     def construct(self):
         square = Square()
         self.add(square)
-
         def apply_function(mob):
             mob.scale(2)
             mob.to_corner(UR)

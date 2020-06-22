@@ -16,10 +16,8 @@ class PlotFunctions(GraphScene):
 
     def construct(self): 
         constants.TEX_TEMPLATE = TexTemplate()
-
         self.setup_axes()
         f = self.get_graph(lambda x : x**2)
-
         self.play(Animation(f))
 
 def test_scenes(get_config_test):
