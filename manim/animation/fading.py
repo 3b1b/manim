@@ -5,6 +5,7 @@ from ..constants import DOWN
 from ..mobject.types.vectorized_mobject import VMobject
 from ..utils.bezier import interpolate
 from ..utils.rate_functions import there_and_back
+from ..logger import logger
 
 
 DEFAULT_FADE_LAG_RATIO = 0
@@ -71,6 +72,10 @@ class FadeInFromDown(FadeInFrom):
         "lag_ratio": DEFAULT_ANIMATION_LAG_RATIO,
     }
 
+    def __init__(self, mobject, **kwargs):
+        super().__init__(mobject, direction=DOWN, **kwargs)
+        logger.warning("FadeInFromDown is deprecated and will eventually disappear. Please use FadeInFrom(<mobject>, direction=DOWN, <other_args>) instead.")
+
 
 class FadeOutAndShift(FadeOut):
     CONFIG = {
@@ -96,6 +101,10 @@ class FadeOutAndShiftDown(FadeOutAndShift):
     CONFIG = {
         "direction": DOWN,
     }
+
+    def __init__(self, mobject, **kwargs):
+        super().__init__(mobject, direction=DOWN, **kwargs)
+        logger.warning("FadeOutAndShiftDown is deprecated and will eventually disappear. Please use FadeOutAndShift(<mobject>, direction=DOWN, <other_args>) instead.")
 
 
 class FadeInFromPoint(FadeIn):
