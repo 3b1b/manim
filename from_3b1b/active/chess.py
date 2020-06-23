@@ -1323,6 +1323,22 @@ class TwoSquareCase(ThreeDScene):
         self.wait()
 
 
+class IGotThis(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Pssh, I got this",
+            target_mode="tease",
+            look_at_arg=self.screen,
+            added_anims=[self.teacher.change, "happy", self.screen],
+            run_time=2,
+        )
+        self.change_student_modes(
+            "thinking", "pondering",
+            look_at_arg=self.screen
+        )
+        self.wait(6)
+
+
 class WalkingTheSquare(ThreeDScene):
     def construct(self):
         # Setup objects
@@ -1967,6 +1983,82 @@ class SeventyFivePercentChance(Scene):
         self.wait()
 
 
+class DoesFlippingAddOrSubtract(Scene):
+    def construct(self):
+        # Setup sum
+        full_sum = Group()
+        coins = Group()
+        n_shown = 5
+        for n in it.chain(range(n_shown), range(64 - n_shown, 64)):
+            coin = Coin(numeric_labels=True)
+            coin.set_height(0.7)
+            coins.add(coin)
+            if (random.random() < 0.5 or (n == 2)) and (n != 62):
+                coin.flip()
+            num = Integer(n)
+            summand = Group(
+                coin,
+                TexMobject("\\cdot"),
+                num,
+                TexMobject("+"),
+            )
+            VGroup(*summand[1:]).set_stroke(BLACK, 3, background=True)
+            summand.arrange(RIGHT, buff=MED_SMALL_BUFF)
+
+            full_sum.add(summand)
+
+        dots = TexMobject("\\dots")
+        full_sum = Group(*full_sum[:n_shown], dots, *full_sum[n_shown:])
+        full_sum.arrange(RIGHT, buff=MED_SMALL_BUFF)
+        full_sum.set_width(FRAME_WIDTH - 1)
+        full_sum[-1][-1].scale(0, about_edge=LEFT)
+        full_sum.move_to(UP)
+
+        brace = Brace(full_sum, DOWN)
+        s_label = VGroup(
+            TextMobject("Sum mod 64 = "),
+            Integer(53),
+        )
+        s_label[1].set_color(BLUE)
+        s_label[1].match_height(s_label[0])
+        s_label.arrange(RIGHT)
+        s_label.next_to(brace, DOWN)
+
+        words = TextMobject("Can't know if a flip will add or subtract")
+        words.to_edge(UP)
+
+        self.add(full_sum)
+        self.add(brace)
+        self.add(s_label)
+        self.add(words)
+        self.wait()
+
+        # Do some flips
+        s_label[1].add_updater(lambda m: m.set_value(m.get_value() % 64))
+        for x in range(10):
+            n = random.randint(-n_shown, n_shown - 1)
+            coin = coins[n]
+            n = n % 64
+            diff_label = Integer(n, include_sign=True)
+            if not coin.is_heads():
+                diff_label.set_color(GREEN)
+            else:
+                diff_label.set_color(RED)
+                diff_label.set_value(-diff_label.get_value())
+            diff_label.next_to(coin, UP, aligned_edge=LEFT)
+            self.play(
+                ChangeDecimalToValue(
+                    s_label[1],
+                    s_label[1].get_value() + n,
+                    rate_func=squish_rate_func(smooth, 0.5, 1)
+                ),
+                FlipCoin(coin),
+                FadeIn(diff_label, 0.5 * DOWN)
+            )
+            self.play(FadeOut(diff_label))
+            self.wait()
+
+
 class ShowCube(ThreeDScene):
     def construct(self):
         # Camera stuffs
@@ -2154,34 +2246,99 @@ class ShowCube(ThreeDScene):
         )
 
         colors = [RED, GREEN, BLUE_D]
-        color_chars = ["R", "G", "B"]
-        color_labels = VGroup()
-        anims = []
-        for sphere, cl, coords in zip(spheres, coord_labels, vert_coords):
-            index = np.dot(coords, [0, 1, 2]) % 3
-            color = colors[index]
-            color_label = TexMobject(color_chars[index])
-            color_label.rotate(PI / 2, RIGHT)
-            color_label.set_color(color)
-            color_label.next_to(cl, RIGHT, SMALL_BUFF)
-            color_label.match_depth(cl)
-            anims.append(AnimationGroup(
-                ApplyMethod(sphere.set_color, color),
-                ApplyMethod(cl.set_color, color),
-                FadeIn(color_label, LEFT)
-            ))
-            color_labels.add(color_label)
-        self.play(LaggedStart(*anims, run_time=6, lag_ratio=0.3))
-        self.wait(7)
-        self.play(FadeOut(color_labels))
+        title = TextMobject("Strategy", "\\, $\\Leftrightarrow$ \\,", "Coloring")
+        title[2].set_submobject_colors_by_gradient(*colors)
+        title.set_stroke(BLACK, 5, background=True)
+        title.set_height(0.7)
+        title.to_edge(UP)
+        title.shift(LEFT)
+        title.fix_in_frame()
+
+        color_label_templates = [
+            TexMobject(char, color=color).rotate(PI / 2, RIGHT).match_depth(coord_labels[0])
+            for char, color in zip("RGB", colors)
+        ]
+        coord_labels.color_labels = VGroup(*[VMobject() for cl in coord_labels])
+
+        def get_coloring_animation(ns,
+                                   spheres=spheres,
+                                   coord_labels=coord_labels,
+                                   colors=colors,
+                                   color_label_templates=color_label_templates,
+                                   ):
+            anims = []
+            new_color_labels = VGroup()
+            for n, sphere, coord_label, old_color_label in zip(ns, spheres, coord_labels, coord_labels.color_labels):
+                color = colors[int(n)]
+                sphere.generate_target()
+                coord_label.generate_target()
+                sphere.target.set_color(color)
+                coord_label.target.set_fill(color)
+                color_label = color_label_templates[n].copy()
+                color_label.next_to(coord_label, RIGHT, SMALL_BUFF)
+                anims += [
+                    MoveToTarget(sphere),
+                    MoveToTarget(coord_label),
+                    FadeIn(color_label, 0.25 * IN),
+                    FadeOut(old_color_label, 0.25 * OUT),
+                ]
+                new_color_labels.add(color_label)
+            coord_labels.color_labels = new_color_labels
+            return LaggedStart(*anims, run_time=2)
+
+        self.play(
+            FadeIn(title, DOWN),
+            get_coloring_animation(np.random.randint(0, 3, 8)),
+        )
+        self.wait()
+        for x in range(4):
+            self.play(get_coloring_animation(np.random.randint(0, 3, 8)))
+            self.wait()
+
+        # Some specific color examples
+        S0 = TexMobject("S = 0")
+        S0.to_edge(LEFT)
+        S0.shift(UP)
+        S0.fix_in_frame()
+        self.play(
+            FadeIn(S0, DOWN),
+            get_coloring_animation([0] * 8)
+        )
+        self.wait(5)
+
+        bit_sum = TexMobject("S = \\,&(c_0 + c_1 + c_2) \\\\ &\\quad \\mod 3")
+        bit_sum.scale(0.8)
+        bit_sum.to_edge(LEFT)
+        bit_sum.shift(UP)
+        bit_sum.fix_in_frame()
+        self.play(
+            FadeIn(bit_sum, DOWN),
+            FadeOut(S0, UP),
+            get_coloring_animation([sum(coords) % 3 for coords in vert_coords])
+        )
+        self.wait(6)
+
+        bit_sum_with_coefs = TexMobject(
+            "S = \\,&(0\\cdot c_0 + 1\\cdot c_1 + 2\\cdot c_2) \\\\ &\\quad \\mod 3"
+        )
+        bit_sum_with_coefs.scale(0.8)
+        bit_sum_with_coefs.move_to(bit_sum, LEFT)
+        bit_sum_with_coefs.fix_in_frame()
+        self.play(
+            FadeIn(bit_sum_with_coefs, DOWN),
+            FadeOut(bit_sum, UP),
+            get_coloring_animation([np.dot(coords, [0, 1, 2]) % 3 for coords in vert_coords])
+        )
+        self.wait(4)
 
         # Focus on (0, 0, 0)
         self.play(
-            LaggedStartMap(FlipCoin, coins),
+            FlipCoin(coins),
             coord_labels[1:].set_opacity, 0.2,
+            coord_labels.color_labels[1:].set_opacity, 0.2,
             spheres[1:].set_opacity, 0.2,
         )
-        self.wait(6)
+        self.wait(2)
 
         lines = VGroup()
         for n in [1, 2, 4]:
@@ -2192,11 +2349,9 @@ class ShowCube(ThreeDScene):
                 ShowCreationThenDestruction(line),
                 spheres[n].set_opacity, 1,
                 coord_labels[n].set_opacity, 1,
-                spheres[0].set_opacity, 0.2,
-                coord_labels[0].set_opacity, 0.2,
+                coord_labels.color_labels[n].set_opacity, 1,
                 FlipCoin(coin)
             )
-            self.wait()
             line.reverse_points()
             self.add(line, coord_labels)
             self.play(
@@ -2204,7 +2359,7 @@ class ShowCube(ThreeDScene):
                 ShowCreation(line)
             )
             lines.add(line)
-        self.wait(15)
+        self.wait(10)
 
         # Focus on (0, 1, 0)
         self.play(
@@ -2212,11 +2367,12 @@ class ShowCube(ThreeDScene):
             Uncreate(lines[1]),
             FadeOut(lines[::2]),
             Group(
-                spheres[1], coord_labels[1],
-                spheres[4], coord_labels[4],
+                spheres[0], coord_labels[0], coord_labels.color_labels[0],
+                spheres[1], coord_labels[1], coord_labels.color_labels[1],
+                spheres[4], coord_labels[4], coord_labels.color_labels[4],
             ).set_opacity, 0.2,
         )
-        self.wait(6)
+        self.wait(3)
 
         lines = VGroup()
         curr_n = 2
@@ -2229,11 +2385,9 @@ class ShowCube(ThreeDScene):
                 ShowCreationThenDestruction(line),
                 spheres[new_n].set_opacity, 1,
                 coord_labels[new_n].set_opacity, 1,
-                # spheres[curr_n].set_opacity, 0.2,
-                # coord_labels[curr_n].set_opacity, 0.2,
+                coord_labels.color_labels[new_n].set_opacity, 1,
                 FlipCoin(coin)
             )
-            self.wait()
             line.reverse_points()
             self.add(line, coord_labels)
             self.play(
@@ -2242,66 +2396,17 @@ class ShowCube(ThreeDScene):
             )
             lines.add(line)
         self.wait(10)
-
-        # Show a few more colorings
         self.play(
             LaggedStartMap(Uncreate, lines),
             spheres.set_opacity, 1,
             coord_labels.set_opacity, 1,
+            coord_labels.color_labels.set_opacity, 1,
+            FadeOut(bit_sum_with_coefs),
         )
         self.wait()
-
-        title = TextMobject("Strategy", "\\, $\\Leftrightarrow$ \\,", "Coloring")
-        title[2].set_submobject_colors_by_gradient(*colors)
-        title.set_stroke(BLACK, 5, background=True)
-        title.set_height(0.7)
-        title.to_edge(UP)
-        title.shift(LEFT)
-        title.fix_in_frame()
-
-        def get_coloring_animation(ns, spheres=spheres, coord_labels=coord_labels, colors=colors):
-            anims = []
-            for n, sphere, cl in zip(ns, spheres, coord_labels):
-                color = colors[int(n)]
-                sphere.generate_target()
-                cl.generate_target()
-                sphere.target.set_color(color)
-                cl.target.set_fill(color)
-                anims += [MoveToTarget(sphere), MoveToTarget(cl)]
-            return LaggedStart(*anims, run_time=1)
-
-        self.play(FadeIn(title, DOWN))
         for x in range(8):
             self.play(get_coloring_animation(np.random.randint(0, 3, 8)))
-        self.wait()
-
-        S0 = TexMobject("S = 0")
-        S0.to_edge(LEFT)
-        S0.shift(UP)
-        S0.fix_in_frame()
-        self.play(
-            FadeIn(S0, DOWN),
-            get_coloring_animation([0] * 8)
-        )
-        self.wait(5)
-
-        bit_sum = TexMobject("S = &(c_0 + c_1 + c_2) \\\\ &\\quad \\mod 3")
-        bit_sum.to_edge(LEFT)
-        bit_sum.shift(UP)
-        bit_sum.fix_in_frame()
-        self.play(
-            FadeIn(bit_sum, DOWN),
-            FadeOut(S0, UP),
-            get_coloring_animation([sum(coords) % 3 for coords in vert_coords])
-        )
-        self.wait(6)
-        self.play(
-            FadeOut(bit_sum, UP),
-            get_coloring_animation([
-                sum([n * c for n, c in enumerate(coords)]) % 3
-                for coords in vert_coords
-            ])
-        )
+            self.wait()
 
         # Count all strategies
         count = TextMobject("$3^8$ total strategies")
@@ -2320,7 +2425,7 @@ class ShowCube(ThreeDScene):
         full_coins.flip_by_message("64^ 2^64")
 
         self.play(FadeIn(count, DOWN))
-        self.wait(15)
+        self.wait(4)
         self.remove(board, coins)
         frame.clear_updaters()
         frame.generate_target()
@@ -2356,7 +2461,7 @@ class ShowCube(ThreeDScene):
         frame.generate_target()
         frame.target.shift(2 * DOWN)
         frame.target.set_rotation(-15 * DEGREES, 70 * DEGREES)
-        self.add(full_coins)
+        full_coins.unlock_shader_data()
         self.play(
             MoveToTarget(frame, run_time=3),
             LaggedStartMap(FadeOut, full_board),
@@ -2364,12 +2469,15 @@ class ShowCube(ThreeDScene):
             FadeOut(count),
             FadeOut(count64),
         )
-        self.play(FadeIn(color_labels))
         frame.add_updater(lambda m, dt: m.increment_theta(0.01 * dt))
         self.wait(30)
 
 
 class CubeSupplement(ThreeDScene):
+    CONFIG = {
+        "try_different_strategies": False,
+    }
+
     def construct(self):
         # Map 8 states to square choices
         boards = Group(*[Chessboard(shape=(1, 3)) for x in range(8)])
@@ -2385,32 +2493,35 @@ class CubeSupplement(ThreeDScene):
         for coords, coins in zip(vert_coords, coin_sets):
             coins.flip_by_bools(coords)
 
+        def get_choice_boards(values, boards):
+            choices = VGroup()
+            for value, board in zip(values, boards):
+                choice = VGroup(*[Square() for x in range(3)])
+                choice.arrange(RIGHT, buff=0)
+                choice.match_height(board)
+                choice.next_to(board, RIGHT, buff=1.25)
+                choice.set_fill(GREY_D, 1)
+                choice.set_stroke(WHITE, 1)
+                choice[value].set_fill(TEAL)
+                choices.add(choice)
+            return choices
+
         colors = [RED, GREEN, BLUE_D]
         color_words = ["Red", "Green", "Blue"]
         s_values = [sum([n * v for n, v in enumerate(cs)]) % 3 for cs in vert_coords]
-        s_labels = VGroup()
+        choice_boards = get_choice_boards(s_values, boards)
         c_labels = VGroup()
         s_arrows = VGroup()
-        for value, board in zip(s_values, boards):
+        for value, board, choice_board in zip(s_values, boards, choice_boards):
             arrow = Vector(RIGHT)
             arrow.next_to(board, RIGHT, SMALL_BUFF)
-
-            label = VGroup(*[Square() for x in range(3)])
-            label.arrange(RIGHT, buff=0)
-            label.match_height(board)
-            label.next_to(arrow, RIGHT, MED_SMALL_BUFF)
-            label.set_fill(GREY_D, 1)
-            label.set_stroke(WHITE, 1)
-            label[value].set_fill(TEAL)
-            label.generate_target()
-            label.target[value].set_fill(colors[value])
-
             c_label = TextMobject(color_words[value], color=colors[value])
-            c_label.next_to(label, RIGHT)
-
-            s_labels.add(label)
+            c_label.next_to(choice_board, RIGHT)
             c_labels.add(c_label)
             s_arrows.add(arrow)
+
+            choice_board.generate_target()
+            choice_board.target[value].set_fill(colors[value])
 
         self.play(
             LaggedStartMap(FadeIn, boards, lag_ratio=0.25),
@@ -2418,16 +2529,36 @@ class CubeSupplement(ThreeDScene):
         )
         self.play(
             LaggedStartMap(GrowArrow, s_arrows, lag_ratio=0.25),
-            LaggedStartMap(FadeIn, s_labels, lambda m: (m, LEFT), lag_ratio=0.25),
+            LaggedStartMap(FadeIn, choice_boards, lambda m: (m, LEFT), lag_ratio=0.25),
         )
         self.wait()
 
-        # Associate choices with colors
-        self.play(
-            LaggedStartMap(MoveToTarget, s_labels),
-            LaggedStartMap(FadeIn, c_labels),
-        )
-        self.wait()
+        # Fork
+        if self.try_different_strategies:
+            for x in range(5):
+                values = list(np.arange(8) % 3)
+                random.shuffle(values)
+                new_cboards = get_choice_boards(values, boards)
+                self.play(
+                    LaggedStartMap(FadeOut, choice_boards, lambda m: (m, 0.25 * UP)),
+                    LaggedStartMap(FadeIn, new_cboards, lambda m: (m, 0.25 * DOWN)),
+                )
+                choice_boards = new_cboards
+                self.wait(2)
+
+        else:
+            # Associate choices with colors
+            self.play(
+                LaggedStartMap(MoveToTarget, choice_boards),
+                LaggedStartMap(FadeIn, c_labels),
+            )
+            self.wait()
+
+
+class TryDifferentCaseThreeStrategies(CubeSupplement):
+    CONFIG = {
+        "try_different_strategies": True,
+    }
 
 
 class CubeEdgeDescription(Scene):
@@ -3429,6 +3560,61 @@ class SimpleRect(Scene):
         self.play(FadeOut(rect))
 
 
+class WhenIsItHopeless(Scene):
+    def construct(self):
+        boards = Group(
+            Chessboard(shape=(1, 3)),
+            Chessboard(shape=(2, 2)),
+            Chessboard(shape=(2, 3)),
+            Chessboard(shape=(2, 3)),
+            Chessboard(shape=(2, 4)),
+            Chessboard(shape=(2, 4)),
+            Chessboard(shape=(3, 3)),
+            Chessboard(shape=(3, 4)),
+            Chessboard(shape=(3, 4)),
+            Chessboard(shape=(3, 4)),
+        )
+        last_board = None
+        last_coins = None
+        last_words = None
+        for n, board in zip(it.count(3), boards):
+            board.scale(1 / board[0].get_height())
+            coins = CoinsOnBoard(board)
+            coins.flip_at_random()
+            diff = len(board) - n
+            if diff > 0:
+                board[-diff:].set_opacity(0)
+                coins[-diff:].set_opacity(0)
+
+            if sum(int_to_bit_coords(n)) == 1:
+                words = TextMobject("Maybe possible")
+                words.set_color(GREEN)
+            else:
+                words = TextMobject("Futile!")
+                words.set_color(RED)
+            words.scale(1.5)
+            words.next_to(board, UP, MED_LARGE_BUFF)
+
+            if n == 3:
+                self.play(
+                    FadeIn(board),
+                    FadeIn(coins),
+                    FadeIn(words, DOWN),
+                )
+            else:
+                self.play(
+                    ReplacementTransform(last_board, board),
+                    ReplacementTransform(last_coins, coins),
+                    FadeOut(last_words),
+                    FadeIn(words, DOWN),
+                )
+            self.wait()
+
+            last_board = board
+            last_coins = coins
+            last_words = words
+
+
 class FourDCubeColoringFromTrees(ThreeDScene):
     def construct(self):
         # Camera stuffs
@@ -3677,7 +3863,9 @@ class IntroduceHypercube(FourDCubeColoringFromTrees):
         self.wait(15)
 
 
-# TODO, have this read names in from a file
+# Animations for Matt
+
+
 class ChessEndScreen(PatreonEndScreen):
     CONFIG = {
         "scroll_time": 20,
