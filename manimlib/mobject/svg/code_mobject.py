@@ -78,7 +78,8 @@ class Code(VGroup):
         For Knowing more available options visit https://pygments.org/docs/lexers/  for 'aliases or short names'
     generate_html_file : :class:`bool`, optional (default is False)
         It defines whether to generate code highlighted html to folder assets/codes/generated_html_files.
-    Attributes (It have all Parameters as Attributes and some extra as following)
+        
+    Attributes
     ----------
     background_mobject : :class:`~.VGroup`
         To display background according to background type specified by background in Parameters.
