@@ -363,13 +363,18 @@ class NumberPlane(Axes):
         lines1 = VGroup()
         lines2 = VGroup()
         unit_vector_axis_perp_to = axis_perpendicular_to.get_unit_vector()
-        for k, x in enumerate(np.arange(axis_perpendicular_to.x_min, axis_perpendicular_to.x_max, step)):
-            new_line = line.copy()
-            new_line.shift(unit_vector_axis_perp_to * x)
-            if k % (1 + ratio) == 0:
-                lines1.add(new_line)
-            else:
-                lines2.add(new_line)
+        ranges = (
+            np.arange(0, axis_perpendicular_to.x_max, step),
+            np.arange(0, axis_perpendicular_to.x_min, -step),
+        )
+        for inputs in ranges:
+            for k, x in enumerate(inputs):
+                new_line = line.copy()
+                new_line.shift(unit_vector_axis_perp_to * x)
+                if k % (1 + ratio) == 0:
+                    lines1.add(new_line)
+                else:
+                    lines2.add(new_line)
         return lines1, lines2
 
     def get_center_point(self):
