@@ -43,41 +43,40 @@ class Code(VGroup):
     ----------
     file_name : :class:`str`
         Name of the code file to display.
-    tab_width : :class:`int`, optional (default is 3).
-        Number of space characters for a tab character.
-    line_spacing : :class:`float`, optional (default is 0.3, which means 30% of font size)
-        Amount of space between lines in respect of font size.
-    scale_factor : class:`float`, optional (default is 0.5)
-        It is a number which scales displayed code.
-    font : :class:`str`, optional (default is 'Monospac821 BT')
-         Name of text font.
-    stroke_width : class:`float`, optional (default is 0)
-        Stroke width for text. 0 is recommended.
-    margin: class :`float`, optional (default is 0.3)
-        Inner margin of text from background.
-    indentation_chars : :class:`str`, optional (default is "    ")
-        Indentation chars refers to the spaces/tabs at the beginning of given code line.
-    background : :class:`str`, optional (default is "rectangle")
-        It defines background type. Currently supports only "rectangle" and "window".
-    background_stroke_width : class:`float`, optional (default is 1)
-        It defines stroke width of background.
-    background_stroke_color : class:`str`, optional (default is WHITE)
-        It defines stroke color for background.
-    corner_radius : :class:`float`, optional (default is 0.2)
-        It defines corner radius for background.
-    insert_line_no : :class:`bool`, optional (default is True)
-        It defines whether insert line numbers in displayed code.
-    line_no_from : :class:`int`, optional (default is 1)
-        It defines starting number for counting lines.
-    line_no_buff : :class:`float`, optional (default is 0.4)
-        It defines space between line numbers and displayed code.
-    style : :class:`str`, optional (default is 'vim')
-        It defines style type of displayed code. You can see names of styles from Code.styles_list.
-    language : :class:`str`, optional (default is None, Which mean it will automatically detects the language)
-        It defines the language name of given code.
-        For Knowing more available options visit https://pygments.org/docs/lexers/  for 'aliases or short names'
-    generate_html_file : :class:`bool`, optional (default is False)
-        It defines whether to generate code highlighted html to folder assets/codes/generated_html_files.
+    tab_width : :class:`int`, optional
+        Number of space characters corresponding to a tab character. Defaults to 3.
+    line_spacing : :class:`float`, optional
+        Amount of space between lines in relation to font size. Defaults to 0.3, which means 30% of font size.
+    scale_factor : class:`float`, optional
+        A number which scales displayed code. Defaults to 0.5.
+    font : :class:`str`, optional
+         The name of the text font to be used. Defaults to `"Monospac821 BT"`.
+    stroke_width : class:`float`, optional
+        Stroke width for text. 0 is recommended, and the default. 
+    margin: class :`float`, optional
+        Inner margin of text from the background. Defaults to 0.3.
+    indentation_chars : :class:`str`, optional
+        "Indentation chars" refers to the spaces/tabs at the beginning of a given code line. Defaults to `"    "`.
+    background : :class:`str`, optional
+        Defines the background's type. Currently supports only `"rectangle"` (default) and `"window"`.
+    background_stroke_width : class:`float`, optional
+        Defines the stroke width of the background. Defaults to 1.
+    background_stroke_color : class:`str`, optional
+        Defines the stroke color for the background. Defaults to `WHITE`.
+    corner_radius : :class:`float`, optional
+        Defines the corner radius for the background. Defaults to 0.2.
+    insert_line_no : :class:`bool`, optional
+        Defines whether line numbers should be inserted in displayed code. Defaults to `True`.
+    line_no_from : :class:`int`, optional
+        Defines the first line's number in the line count. Defaults to 1.
+    line_no_buff : :class:`float`, optional
+        Defines the spacing between line numbers and displayed code. Defaults to 0.4.
+    style : :class:`str`, optional
+        Defines the style type of displayed code. You can see possible names of styles in with :attr:`styles_list`. Defaults to `"vim"`.
+    language : Optional[:class:`str`], optional
+        Specifies the programming language the given code was written in. If `None` (the default), the language will be automatically detected. For the list of possible options, visit https://pygments.org/docs/lexers/ and look for 'aliases or short names'.
+    generate_html_file : :class:`bool`, optional
+        Defines whether to generate highlighted html code to the folder `assets/codes/generated_html_files`. Defaults to `False`.
         
     Attributes
     ----------
