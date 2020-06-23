@@ -410,7 +410,8 @@ def hilite_me(code, language, style, insert_line_no, divstyles, file_path):
 
 def insert_line_numbers(html):
     """Function put line numbers to html of highlighted code.
-    Arguments
+
+    Parameters
     ---------
     html : :class:`str`
         html string of highlighted code.
