@@ -325,6 +325,7 @@ class VMobjectFromSVGPathstring(VMobject):
     CONFIG = {
         "long_lines": True,
         "should_subdivide_sharp_curves": False,
+        "should_remove_null_curves": False,
     }
 
     def __init__(self, path_string, **kwargs):
@@ -353,10 +354,11 @@ class VMobjectFromSVGPathstring(VMobject):
             if self.should_subdivide_sharp_curves:
                 # For a healthy triangulation later
                 self.subdivide_sharp_curves()
+            if self.should_remove_null_curves:
+                # Get rid of any null curves
+                self.points = self.get_points_without_null_curves()
             # SVG treats y-coordinate differently
             self.stretch(-1, 1, about_point=ORIGIN)
-            # Get rid of any null curves
-            self.points = self.get_points_without_null_curves()
             # Save to a file for future use
             np.save(filepath, self.points)
 

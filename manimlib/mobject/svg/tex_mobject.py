@@ -18,6 +18,7 @@ TEX_MOB_SCALE_FACTOR = 0.05
 class TexSymbol(VMobjectFromSVGPathstring):
     CONFIG = {
         "should_subdivide_sharp_curves": True,
+        "should_remove_null_curves": True,
     }
 
 
