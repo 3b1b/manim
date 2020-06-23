@@ -1,22 +1,18 @@
 import random
 
-from manimlib.animation.composition import LaggedStartMap
-from manimlib.animation.creation import DrawBorderThenFill
 from manimlib.animation.creation import Write
 from manimlib.animation.fading import FadeIn
-from manimlib.animation.fading import FadeOut
 from manimlib.constants import *
 from manimlib.for_3b1b_videos.pi_creature import Mortimer
 from manimlib.for_3b1b_videos.pi_creature import Randolph
-from manimlib.for_3b1b_videos.pi_creature_animations import Blink
 from manimlib.for_3b1b_videos.pi_creature_scene import PiCreatureScene
 from manimlib.mobject.geometry import DashedLine
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import Square
 from manimlib.mobject.svg.drawings import Logo
-from manimlib.mobject.svg.drawings import PatreonLogo
 from manimlib.mobject.svg.tex_mobject import TextMobject
+from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.mobject_update_utils import always_shift
 from manimlib.scene.moving_camera_scene import MovingCameraScene
@@ -88,70 +84,14 @@ class OpeningQuote(Scene):
         return author
 
 
-class PatreonThanks(Scene):
+class PatreonEndScreen(PiCreatureScene):
     CONFIG = {
-        "specific_patrons": [],
         "max_patron_group_size": 20,
         "patron_scale_val": 0.8,
-    }
-
-    def construct(self):
-        morty = Mortimer()
-        morty.next_to(ORIGIN, DOWN)
-
-        patreon_logo = PatreonLogo()
-        patreon_logo.to_edge(UP)
-
-        patrons = list(map(TextMobject, self.specific_patronds))
-        num_groups = float(len(patrons)) / self.max_patron_group_size
-        proportion_range = np.linspace(0, 1, num_groups + 1)
-        indices = (len(patrons) * proportion_range).astype('int')
-        patron_groups = [
-            VGroup(*patrons[i:j])
-            for i, j in zip(indices, indices[1:])
-        ]
-
-        for i, group in enumerate(patron_groups):
-            left_group = VGroup(*group[:len(group) / 2])
-            right_group = VGroup(*group[len(group) / 2:])
-            for subgroup, vect in (left_group, LEFT), (right_group, RIGHT):
-                subgroup.arrange(DOWN, aligned_edge=LEFT)
-                subgroup.scale(self.patron_scale_val)
-                subgroup.to_edge(vect)
-
-        last_group = None
-        for i, group in enumerate(patron_groups):
-            anims = []
-            if last_group is not None:
-                self.play(
-                    FadeOut(last_group),
-                    morty.look, UP + LEFT
-                )
-            else:
-                anims += [
-                    DrawBorderThenFill(patreon_logo),
-                ]
-            self.play(
-                LaggedStartMap(
-                    FadeIn, group,
-                    run_time=2,
-                ),
-                morty.change, "gracious", group.get_corner(UP + LEFT),
-                *anims
-            )
-            self.play(morty.look_at, group.get_corner(DOWN + LEFT))
-            self.play(morty.look_at, group.get_corner(UP + RIGHT))
-            self.play(morty.look_at, group.get_corner(DOWN + RIGHT))
-            self.play(Blink(morty))
-            last_group = group
-
-
-class PatreonEndScreen(PatreonThanks, PiCreatureScene):
-    CONFIG = {
         "n_patron_columns": 4,
         "max_patron_width": 5,
         "run_time": 20,
-        "randomize_order": True,
+        "randomize_order": False,
         "capitalize": True,
         "name_y_spacing": 0.6,
         "thanks_words": "Many thanks to this channel's supporters",
@@ -159,19 +99,83 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
     }
 
     def construct(self):
-        if self.randomize_order:
-            random.shuffle(self.specific_patrons)
-        if self.capitalize:
-            self.specific_patrons = [
-                " ".join(map(
-                    lambda s: s.capitalize(),
-                    patron.split(" ")
-                ))
-                for patron in self.specific_patrons
+        # Set the top of the screen
+        logo_box = Square(side_length=2.5)
+        logo_box.to_corner(DOWN + LEFT, buff=MED_LARGE_BUFF)
+
+        black_rect = Rectangle(
+            fill_color=BLACK,
+            fill_opacity=1,
+            stroke_width=3,
+            stroke_color=BLACK,
+            width=FRAME_WIDTH,
+            height=0.6 * FRAME_HEIGHT,
+        )
+        black_rect.to_edge(UP, buff=0)
+        line = DashedLine(FRAME_X_RADIUS * LEFT, FRAME_X_RADIUS * RIGHT)
+        line.move_to(ORIGIN)
+
+        # Add thanks
+        thanks = TextMobject(self.thanks_words)
+        thanks.scale(0.9)
+        thanks.next_to(black_rect.get_bottom(), UP, SMALL_BUFF)
+        thanks.set_color(YELLOW)
+        underline = Line(LEFT, RIGHT)
+        underline.match_width(thanks)
+        underline.scale(1.1)
+        underline.next_to(thanks, DOWN, SMALL_BUFF)
+        thanks.add(underline)
+
+        # Build name list
+        with open("manimlib/files/patrons.txt", 'r') as fp:
+            names = [
+                self.modify_patron_name(name.strip())
+                for name in fp.readlines()
             ]
 
-        # self.add_title()
-        self.scroll_through_patrons()
+        if self.randomize_order:
+            random.shuffle(names)
+        else:
+            names.sort()
+
+        name_labels = VGroup(*map(TextMobject, names))
+        name_labels.scale(self.patron_scale_val)
+        for label in name_labels:
+            if label.get_width() > self.max_patron_width:
+                label.set_width(self.max_patron_width)
+        columns = VGroup(*[
+            VGroup(*name_labels[i::self.n_patron_columns])
+            for i in range(self.n_patron_columns)
+        ])
+        column_x_spacing = 0.5 + max([c.get_width() for c in columns])
+
+        for i, column in enumerate(columns):
+            for n, name in enumerate(column):
+                name.shift(n * self.name_y_spacing * DOWN)
+                name.align_to(ORIGIN, LEFT)
+            column.move_to(i * column_x_spacing * RIGHT, UL)
+        columns.center()
+
+        max_width = FRAME_WIDTH - 1
+        if columns.get_width() > max_width:
+            columns.set_width(max_width)
+        underline.match_width(columns)
+        columns.next_to(underline, DOWN, buff=3)
+
+        # Set movement
+        columns.generate_target()
+        columns.target.to_edge(DOWN, buff=4)
+        vect = columns.target.get_center() - columns.get_center()
+        distance = get_norm(vect)
+        wait_time = self.scroll_time
+        always_shift(
+            columns,
+            direction=normalize(vect),
+            rate=(distance / wait_time)
+        )
+
+        self.add(columns, black_rect, line, thanks, self.foreground)
+        self.wait(wait_time)
 
     def create_pi_creatures(self):
         title = self.title = TextMobject("Clicky Stuffs")
@@ -188,79 +192,6 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         self.foreground = VGroup(title, randy, morty)
         return self.pi_creatures
 
-    def scroll_through_patrons(self):
-        logo_box = Square(side_length=2.5)
-        logo_box.to_corner(DOWN + LEFT, buff=MED_LARGE_BUFF)
-
-        black_rect = Rectangle(
-            fill_color=BLACK,
-            fill_opacity=1,
-            stroke_width=3,
-            stroke_color=BLACK,
-            width=FRAME_WIDTH,
-            height=0.6 * FRAME_HEIGHT,
-        )
-        black_rect.to_edge(UP, buff=0)
-        line = DashedLine(FRAME_X_RADIUS * LEFT, FRAME_X_RADIUS * RIGHT)
-        line.move_to(ORIGIN)
-
-        thanks = TextMobject(self.thanks_words)
-        thanks.scale(0.9)
-        thanks.next_to(black_rect.get_bottom(), UP, SMALL_BUFF)
-        thanks.set_color(YELLOW)
-        underline = Line(LEFT, RIGHT)
-        underline.match_width(thanks)
-        underline.scale(1.1)
-        underline.next_to(thanks, DOWN, SMALL_BUFF)
-        thanks.add(underline)
-
-        changed_patron_names = list(map(
-            self.modify_patron_name,
-            self.specific_patrons,
-        ))
-        changed_patron_names.sort()
-        patrons = VGroup(*map(
-            TextMobject,
-            changed_patron_names,
-        ))
-        patrons.scale(self.patron_scale_val)
-        for patron in patrons:
-            if patron.get_width() > self.max_patron_width:
-                patron.set_width(self.max_patron_width)
-        columns = VGroup(*[
-            VGroup(*patrons[i::self.n_patron_columns])
-            for i in range(self.n_patron_columns)
-        ])
-        column_x_spacing = 0.5 + max([c.get_width() for c in columns])
-
-        for i, column in enumerate(columns):
-            for n, name in enumerate(column):
-                name.shift(n * self.name_y_spacing * DOWN)
-                name.align_to(ORIGIN, LEFT)
-            column.move_to(i * column_x_spacing * RIGHT, UL)
-        columns.center()
-
-        max_width = FRAME_WIDTH - 1
-        if columns.get_width() > max_width:
-            columns.set_width(max_width)
-        underline.match_width(columns)
-        # thanks.to_edge(RIGHT, buff=MED_SMALL_BUFF)
-        columns.next_to(underline, DOWN, buff=4)
-
-        columns.generate_target()
-        columns.target.to_edge(DOWN, buff=4)
-        vect = columns.target.get_center() - columns.get_center()
-        distance = get_norm(vect)
-        wait_time = self.scroll_time
-        always_shift(
-            columns,
-            direction=normalize(vect),
-            rate=(distance / wait_time)
-        )
-
-        self.add(columns, black_rect, line, thanks, self.foreground)
-        self.wait(wait_time)
-
     def modify_patron_name(self, name):
         modification_map = {
             "RedAgent14": "Brian Shepetofsky",
@@ -273,7 +204,12 @@ class PatreonEndScreen(PatreonThanks, PiCreatureScene):
         }
         for n1, n2 in modification_map.items():
             if name.lower() == n1.lower():
-                return n2
+                name = n2
+        if self.capitalize:
+            name = " ".join(map(
+                lambda s: s.capitalize(),
+                name.split(" ")
+            ))
         return name
 
 
