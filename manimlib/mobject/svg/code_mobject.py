@@ -336,7 +336,7 @@ class Code(VGroup):
 
     def correct_non_span(self, line_str):
         """Function put text color to those strings that don't have one according to background_color of displayed code.
-        Arguments
+        Parameters
         ---------
         line_str : :class:`str`
             Takes a string to put color to it according to background_color of displayed code.
