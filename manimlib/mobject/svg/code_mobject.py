@@ -370,7 +370,8 @@ class Code(VGroup):
 
 def hilite_me(code, language, style, insert_line_no, divstyles, file_path):
     """Function to highlight code from string to html.
-    Arguments
+
+    Parameters
     ---------
     code : :class:`str`
         Code string.
