@@ -377,7 +377,8 @@ def hilite_me(code, language, style, insert_line_no, divstyles, file_path):
     code : :class:`str`
         Code string.
     language : :class:`str`
-        Code language name.
+        The name of the programming language the given code was written in.
+
     style : :class:`str`
         Code style name.
     insert_line_no : :class:`bool`
