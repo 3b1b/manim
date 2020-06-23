@@ -382,7 +382,7 @@ def hilite_me(code, language, style, insert_line_no, divstyles, file_path):
     style : :class:`str`
         Code style name.
     insert_line_no : :class:`bool`
-        It defines whether insert line numbers in html file.
+        Defines whether line numbers should be inserted in the html file.
     divstyles : :class:`str`
         Some html css styles.
     file_path : :class:`str`
