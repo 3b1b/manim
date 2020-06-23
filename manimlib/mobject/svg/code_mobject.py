@@ -199,6 +199,7 @@ class Code(VGroup):
 
     def gen_line_numbers(self):
         """Function to generate line_numbers.
+
         Returns
         -------
         :class:`~.Paragraph`
