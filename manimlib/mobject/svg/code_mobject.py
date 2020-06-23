@@ -38,6 +38,7 @@ or remove_invisible_chars(Code.code) or remove_invisible_chars(Code)
 
 class Code(VGroup):
     """Class Code is used to display code with color highlighted.
+    
     Parameters
     ----------
     file_name : :class:`str`
