@@ -29,7 +29,6 @@ Code is VGroup() with three things
                 first character of line number 1
             Code.code[1][0:5] Code.code.chars[1][0:5] or Code[2].chars[1][0:5]
                 first five characters of line number 1
-
 Code.code[][] Code.code.chars[][] or Code[2].chars[][] will create problems when using Transform() because of invisible characters 
 so, before using Transform() remove invisible characters by using remove_invisible_chars()
 for example self.play(Transform(remove_invisible_chars(Code.code.chars[0:2]), remove_invisible_chars(Code.code.chars[3][0:3])))
@@ -39,7 +38,6 @@ or remove_invisible_chars(Code.code) or remove_invisible_chars(Code)
 
 class Code(VGroup):
     """Class Code is used to display code with color highlighted.
-
     Parameters
     ----------
     file_name : :class:`str`
@@ -73,13 +71,12 @@ class Code(VGroup):
     line_no_buff : :class:`float`, optional (default is 0.4)
         It defines space between line numbers and displayed code.
     style : :class:`str`, optional (default is 'vim')
-        It defines style of code displayed. You can see names of styles from Code.styles_list.
+        It defines style type of displayed code. You can see names of styles from Code.styles_list.
     language : :class:`str`, optional (default is None, Which mean it will automatically detects the language)
         It defines the language name of given code.
         For Knowing more available options visit https://pygments.org/docs/lexers/  for 'aliases or short names'
     generate_html_file : :class:`bool`, optional (default is False)
         It defines whether to generate code highlighted html to folder assets/codes/generated_html_files.
-
     Attributes (It have all Parameters as Attributes and some extra as following)
     ----------
     background_mobject : :class:`~.VGroup`
@@ -200,7 +197,6 @@ class Code(VGroup):
 
     def gen_line_numbers(self):
         """Function to generate line_numbers.
-
         Returns
         -------
         :class:`~.Paragraph`
@@ -219,7 +215,6 @@ class Code(VGroup):
 
     def gen_colored_lines(self):
         """Function to generate code.
-
         Returns
         -------
         :class:`~.Paragraph`
@@ -373,7 +368,6 @@ class Code(VGroup):
 
 def hilite_me(code, language, style, insert_line_no, divstyles, file_path):
     """Function to highlight code from string to html.
-
     Arguments
     ---------
     code : :class:`str`
@@ -411,7 +405,6 @@ def hilite_me(code, language, style, insert_line_no, divstyles, file_path):
 
 def insert_line_numbers(html):
     """Function put line numbers to html of highlighted code.
-
     Arguments
     ---------
     html : :class:`str`
