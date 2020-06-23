@@ -217,6 +217,7 @@ class Code(VGroup):
 
     def gen_colored_lines(self):
         """Function to generate code.
+
         Returns
         -------
         :class:`~.Paragraph`
