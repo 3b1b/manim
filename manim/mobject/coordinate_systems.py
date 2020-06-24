@@ -358,7 +358,7 @@ class NumberPlane(Axes):
             The first (i.e the non faded lines parallel to `axis_parallel_to`) and second (i.e the faded lines parallel to `axis_parallel_to`) sets of lines, respectively.     
         """
         line = Line(axis_parallel_to.get_start(), axis_parallel_to.get_end())
-        dense_freq = (1 + ratio_faded_lines)
+        dense_freq = ratio_faded_lines
         step = (1 / dense_freq) * freq
         lines1 = VGroup()
         lines2 = VGroup()
@@ -371,7 +371,7 @@ class NumberPlane(Axes):
             for k, x in enumerate(inputs):
                 new_line = line.copy()
                 new_line.shift(unit_vector_axis_perp_to * x)
-                if k % (1 + ratio_faded_lines) == 0:
+                if k % ratio_faded_lines == 0:
                     lines1.add(new_line)
                 else:
                     lines2.add(new_line)
