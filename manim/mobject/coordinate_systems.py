@@ -335,7 +335,7 @@ class NumberPlane(Axes):
         lines2 = VGroup(*x_lines2, *y_lines2)
         return lines1, lines2
 
-    def get_lines_parallel_to_axis(self, axis_parallel_to, axis_perpendicular_to, freq, ratio):
+    def get_lines_parallel_to_axis(self, axis_parallel_to, axis_perpendicular_to, freq, ratio_faded_lines):
         """Generate a set of lines parallel to an axis.
 
         Parameters
@@ -344,7 +344,13 @@ class NumberPlane(Axes):
             The axis with which the lines will be parallel.
 
         axis_perpendicular_to : :class:`~.Line`
-            The axis with which the lines will be perpendicular. 
+            The axis with which the lines will be perpendicular.
+        
+        ratio_faded_lines : :class:`float`
+            The number of faded lines between each non-faded line. 
+
+        freq : :class:`float`
+            Frequence of non-faded lines (number of non-faded lines per graph unit).
 
         Returns
         -------
@@ -352,7 +358,7 @@ class NumberPlane(Axes):
             The first (i.e the non faded lines parallel to `axis_parallel_to`) and second (i.e the faded lines parallel to `axis_parallel_to`) sets of lines, respectively.     
         """
         line = Line(axis_parallel_to.get_start(), axis_parallel_to.get_end())
-        dense_freq = (1 + ratio)
+        dense_freq = (1 + ratio_faded_lines)
         step = (1 / dense_freq) * freq
         lines1 = VGroup()
         lines2 = VGroup()
@@ -365,7 +371,7 @@ class NumberPlane(Axes):
             for k, x in enumerate(inputs):
                 new_line = line.copy()
                 new_line.shift(unit_vector_axis_perp_to * x)
-                if k % (1 + ratio) == 0:
+                if k % (1 + ratio_faded_lines) == 0:
                     lines1.add(new_line)
                 else:
                     lines2.add(new_line)
