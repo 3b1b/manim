@@ -315,11 +315,8 @@ class NumberPlane(Axes):
         
         Returns
         -------
-        :class:`~.VGroup`
-            First set of lines (i.e the non faded lines)
-
-        :class:`~.VGroup`
-            Second set of lines (i.e the faded lines)
+        Tuple[:class:`~.VGroup`, :class:`~.VGroup`]
+            The first (i.e the non faded lines) and second (i.e the faded lines) sets of lines, respectively.
         """
         x_axis = self.get_x_axis()
         y_axis = self.get_y_axis()
@@ -339,7 +336,7 @@ class NumberPlane(Axes):
         return lines1, lines2
 
     def get_lines_parallel_to_axis(self, axis_parallel_to, axis_perpendicular_to, freq, ratio):
-        """Generated a set of lines parallel to an axis.
+        """Generate a set of lines parallel to an axis.
 
         Parameters
         ----------
@@ -351,11 +348,8 @@ class NumberPlane(Axes):
 
         Returns
         -------
-        lines1 : :class:`~.VGroup`
-            First set of lines (i.e the non faded lines parallel to 'axis_parallel_to')
-
-        lines2 : :class:`~.VGroup`
-            Second set of lines (i.e the faded lines parallel to 'axis_parallel_to')            
+        Tuple[:class:`~.VGroup`, :class:`~.VGroup`]
+            The first (i.e the non faded lines parallel to `axis_parallel_to`) and second (i.e the faded lines parallel to `axis_parallel_to`) sets of lines, respectively.     
         """
         line = Line(axis_parallel_to.get_start(), axis_parallel_to.get_end())
         dense_freq = (1 + ratio)
