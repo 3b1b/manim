@@ -25,10 +25,8 @@ class TexSymbol(VMobjectFromSVGPathstring):
 class SingleStringTexMobject(SVGMobject):
     CONFIG = {
         "template_tex_file_body": TEMPLATE_TEX_FILE_BODY,
-        "stroke_width": 0,
         "fill_opacity": 1.0,
-        "background_stroke_width": 1,
-        "background_stroke_color": BLACK,
+        "stroke_width": 0,
         "should_center": True,
         "height": None,
         "organize_left_to_right": False,
@@ -231,6 +229,10 @@ class TexMobject(SingleStringTexMobject):
                 # If the given key is a tuple
                 for tex in texs:
                     self.set_color_by_tex(tex, color, **kwargs)
+        return self
+
+    def set_bstroke(self, color=BLACK, width=4):
+        self.set_stroke(color, width, background=True)
         return self
 
     def index_of_part(self, part):
