@@ -35,6 +35,13 @@ def get_vertex_sphere(height=0.4, color=GREY, resolution=(21, 21)):
     return sphere
 
 
+def get_bit_string(bit_coords):
+    result = VGroup(*[Integer(int(b)) for b in bit_coords])
+    result.arrange(RIGHT, buff=SMALL_BUFF)
+    result.set_stroke(BLACK, 4, background=True)
+    return result
+
+
 class Chessboard(SGroup):
     CONFIG = {
         "shape": (8, 8),
@@ -55,7 +62,7 @@ class Chessboard(SGroup):
         top_square.replace(cube[0])
         cube.replace_submobject(0, top_square)
         self.add(*[cube.copy() for x in range(nc * nr)])
-        self.arrange_in_grid(buff=0)
+        self.arrange_in_grid(nr, nc, buff=0)
         self.set_height(self.height)
         self.set_depth(self.depth, stretch=True)
         for i, j in it.product(range(nr), range(nc)):
@@ -97,6 +104,7 @@ class Coin(Group):
                 label.set_height(0.8)
             labels[1].rotate(PI, RIGHT)
             labels.apply_depth_test()
+            labels.set_stroke(width=0)
             self.add(*labels)
             self.labels = labels
 
@@ -317,8 +325,14 @@ class IntroducePuzzle(Scene):
 
         coin = coins[63]
         rect = SurroundingRectangle(coin, color=TEAL)
+        rect.set_opacity(0.5)
+        rect.save_state()
+        rect.replace(chessboard)
+        rect.set_stroke(width=0)
+        rect.set_fill(opacity=0)
 
-        self.play(FadeInFromLarge(rect))
+        self.play(Restore(rect, run_time=2))
+        self.add(coin, rect)
         self.play(FlipCoin(coin), FadeOut(rect))
 
 
@@ -338,11 +352,6 @@ class PrisonerPuzzleSetting(PiCreatureScene):
         result.arrange(RIGHT, buff=2, aligned_edge=DOWN)
         warden.shift(RIGHT)
         result.center().to_edge(DOWN, buff=1.5)
-
-        p1.change("sad")
-        p2.change("pleading", warden.eyes)
-        warden.change("conniving", p2.eyes)
-
         return result
 
     def construct(self):
@@ -364,13 +373,24 @@ class PrisonerPuzzleSetting(PiCreatureScene):
         )
         question.to_corner(UR)
 
+        self.remove(warden)
+        warden.look_at(p2.eyes)
         self.play(
-            LaggedStartMap(FadeIn, pis, run_time=2, lag_ratio=0.3),
-            LaggedStartMap(FadeIn, names, run_time=2, lag_ratio=0.3),
+            LaggedStartMap(FadeIn, pis[:2], run_time=1.5, lag_ratio=0.3),
+            LaggedStartMap(FadeIn, names[:2], run_time=1.5, lag_ratio=0.3),
         )
-        self.wait(2)
+        self.play(
+            p1.change, "sad",
+            p2.change, "pleading", warden.eyes
+        )
+        self.play(
+            FadeIn(warden),
+            FadeIn(names[2]),
+        )
+        self.play(warden.change, "conniving", p2.eyes)
+        self.wait()
         self.play(FadeIn(question, lag_ratio=0.1))
-        self.wait(2)
+        self.wait(3)
         self.play(FadeOut(question))
         self.wait(2)
 
@@ -949,12 +969,16 @@ class ErrorCorrectionMention(Scene):
 
 
 class StandupMathsWrapper(Scene):
+    CONFIG = {
+        "title": "Solution on Stand-up Maths"
+    }
+
     def construct(self):
         fsr = FullScreenFadeRectangle()
         fsr.set_fill(GREY_E, 1)
         self.add(fsr)
 
-        title = TextMobject("Solution on Stand-up Maths")
+        title = TextMobject(self.title)
         title.scale(1.5)
         title.to_edge(UP)
 
@@ -969,7 +993,86 @@ class StandupMathsWrapper(Scene):
         self.wait(30)
 
 
+class ComingUpWrapper(StandupMathsWrapper):
+    CONFIG = {
+        "title": "Coming up"
+    }
+
+
+class TitleCard(Scene):
+    def construct(self):
+        n = 6
+        board = Chessboard(shape=(n, n))
+        for square in board:
+            square.set_color(interpolate_color(square.get_color(), BLACK, 0.25))
+        # board[0].set_opacity(0)
+
+        grid = NumberPlane(
+            x_range=(0, n),
+            y_range=(0, n),
+            faded_line_ratio=0
+        )
+        grid.match_height(board)
+        grid.next_to(board, OUT, 1e-8)
+        low_grid = grid.copy()
+        low_grid.next_to(board, IN, 1e-8)
+        grid.add(low_grid)
+        grid.set_stroke(GREY, width=1)
+        grid.set_gloss(0.5)
+        grid.prepare_for_nonlinear_transform(0)
+        grid.rotate(PI, RIGHT)
+
+        frame = self.camera.frame
+        frame.set_phi(45 * DEGREES)
+
+        text = TextMobject("The impossible\\\\chessboard puzzle")
+        # text.set_width(board.get_width() - 0.5)
+        text.set_width(FRAME_WIDTH - 2)
+        text.set_stroke(BLACK, 10, background=True)
+        text.fix_in_frame()
+        self.play(
+            ApplyMethod(frame.set_phi, 0, run_time=5),
+            ShowCreationThenDestruction(grid, lag_ratio=0.02, run_time=3),
+            LaggedStartMap(FadeIn, board, run_time=3, lag_ratio=0),
+            Write(text, lag_ratio=0.1, run_time=3, stroke_color=BLUE_A),
+        )
+        self.wait(2)
+
+
+class WhatAreWeDoingHere(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Wait, what are we\\\\doing here then?",
+            target_mode="sassy",
+            added_anims=[self.get_student_changes("hesitant", "angry", "sassy")],
+            run_time=2
+        )
+        self.play(self.teacher.change, "tease")
+        self.wait(6)
+
+
+class HowCanWeVisualizeSolutions(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "How can we\\\\visualize solutions",
+            bubble_kwargs={
+                "height": 3,
+                "width": 4,
+                "fill_opacity": 0,
+            },
+            added_anims=[self.get_student_changes("pondering", "thinking", "pondering")]
+        )
+        self.look_at(self.screen),
+        self.wait(1)
+        self.change_student_modes("thinking", "erm", "confused")
+        self.wait(5)
+
+
 class TwoSquareCase(ThreeDScene):
+    CONFIG = {
+        "coin_names": ["c_0", "c_1"]
+    }
+
     def construct(self):
         frame = self.camera.frame
 
@@ -1134,6 +1237,20 @@ class TwoSquareCase(ThreeDScene):
             arrows[1].match_style, arrows[3],
         )
         self.wait()
+        self.play(
+            FlipCoin(coins[0]),
+            state_rect.move_to, states[0],
+            arrows[0].match_style, arrows[1],
+            arrows[1].match_style, arrows[3],
+        )
+        self.wait()
+        self.play(
+            FlipCoin(coins[0]),
+            state_rect.move_to, states[1],
+            arrows[0].match_style, arrows[1],
+            arrows[1].match_style, arrows[0],
+        )
+        self.wait()
 
         # Erase H and T, replace with 1 and 0
         bin_states = VGroup(*[
@@ -1147,8 +1264,11 @@ class TwoSquareCase(ThreeDScene):
         bin_coins[1].flip()
         bin_coins.move_to(coins)
 
-        self.remove(coins)
-        self.add(bin_coins)
+        coins.unlock_shader_data()
+        self.play(
+            FadeOut(coins, IN),
+            FadeIn(bin_coins),
+        )
         self.play(
             LaggedStartMap(GrowFromCenter, Group(*bin_states.family_members_with_points())),
             LaggedStartMap(ApplyMethod, Group(*states.family_members_with_points()), lambda m: (m.scale, 0)),
@@ -1157,8 +1277,8 @@ class TwoSquareCase(ThreeDScene):
 
         # Add labels
         c_labels = VGroup(*[
-            TexMobject(f"c_{i}")
-            for i in range(2)
+            TexMobject(name)
+            for name in self.coin_names
         ])
         arrow_kw = {
             "tip_config": {
@@ -1283,8 +1403,13 @@ class TwoSquareCase(ThreeDScene):
         rule_arrow = Vector(1.5 * RIGHT)
         rule_arrow.next_to(rule_words, RIGHT)
         rule_arrow.set_color(BLUE)
-        rule_equation = TexMobject("S", "=", "c_1")
-        rule_equation_long = TexMobject("S", "=", "0", "\\cdot", "c_0", "+", "1", "\\cdot", "c_1")
+        rule_equation = TexMobject("S", "=", self.coin_names[1])
+        rule_equation_long = TexMobject(
+            "S", "=", "0", "\\cdot",
+            self.coin_names[0], "+", "1", "\\cdot",
+            self.coin_names[1],
+        )
+
         for equation in rule_equation, rule_equation_long:
             equation.set_color_by_tex("S", YELLOW)
             equation.set_height(0.7)
@@ -1321,6 +1446,12 @@ class TwoSquareCase(ThreeDScene):
             Restore(mid_equation),
         )
         self.wait()
+
+
+class TwoSquaresAB(TwoSquareCase):
+    CONFIG = {
+        "coin_names": ["a", "b"]
+    }
 
 
 class IGotThis(TeacherStudentsScene):
@@ -1439,8 +1570,8 @@ class WalkingTheSquare(ThreeDScene):
         key.next_to(board[0], UP, SMALL_BUFF)
 
         s_labels = VGroup(
-            TexMobject("S = 0").next_to(low_rect, UP),
-            TexMobject("S = 1").next_to(high_rect, UP),
+            TexMobject("\\text{Key} = 0").next_to(low_rect, UP, SMALL_BUFF),
+            TexMobject("\\text{Key} = 1").next_to(high_rect, UP, SMALL_BUFF),
         )
 
         self.play(
@@ -1485,6 +1616,10 @@ class WalkingTheSquare(ThreeDScene):
 
 
 class ThreeSquareCase(ThreeDScene):
+    CONFIG = {
+        "coin_names": ["c_0", "c_1", "c_2"]
+    }
+
     def construct(self):
         # Show sequence of boards
         boards = Group(
@@ -1515,10 +1650,20 @@ class ThreeSquareCase(ThreeDScene):
                 run_time=2,
             )
 
+        frame = self.camera.frame
+        frame.save_state()
+        frame.scale(0.5)
+        frame.move_to(boards[:2])
+
         self.add(board_groups[0])
         self.play(get_board_transform(0))
+        turn_animation_into_updater(Restore(frame, run_time=4))
+        self.add(frame)
         self.play(get_board_transform(1))
-        self.play(get_board_transform(2), Write(dots))
+        self.play(
+            Write(dots),
+            get_board_transform(2),
+        )
         self.wait()
 
         # Isolate 3 square board
@@ -1550,9 +1695,9 @@ class ThreeSquareCase(ThreeDScene):
 
         # Try 0*c0 + 1*c1 + 2*c2
         s_sum = TexMobject(
-            "0", "\\cdot", "c_0", "+",
-            "1", "\\cdot", "c_1", "+",
-            "2", "\\cdot", "c_2",
+            "0", "\\cdot", self.coin_names[0], "+",
+            "1", "\\cdot", self.coin_names[1], "+",
+            "2", "\\cdot", self.coin_names[2],
         )
         s_sum.set_height(0.6)
         c_sum = s_sum.copy()
@@ -1561,7 +1706,7 @@ class ThreeSquareCase(ThreeDScene):
 
         coin_copies = Group()
         for i in range(3):
-            part = c_sum.get_part_by_tex(f"c_{i}")
+            part = c_sum.get_part_by_tex(self.coin_names[i], substring=False)
             coin_copy = coins[i].copy()
             coin_copy.set_height(1.2 * c_sum[0].get_height())
             coin_copy.move_to(part)
@@ -1617,7 +1762,7 @@ class ThreeSquareCase(ThreeDScene):
 
         # Show values of S
         s_labels = VGroup(*[
-            TexMobject(f"S = {n}")
+            TexMobject(f"K = {n}")
             for n in range(3)
         ])
         for label, square in zip(s_labels, board):
@@ -1747,6 +1892,12 @@ class ThreeSquareCase(ThreeDScene):
         self.wait()
         self.play(rhs[1].set_value, 0)
         self.wait()
+
+
+class ThreeSquaresABC(ThreeSquareCase):
+    CONFIG = {
+        "coin_names": ["a", "b", "c"]
+    }
 
 
 class TreeOfThreeFlips(ThreeDScene):
@@ -1983,25 +2134,92 @@ class SeventyFivePercentChance(Scene):
         self.wait()
 
 
-class DoesFlippingAddOrSubtract(Scene):
+class ModNStrategy(ThreeDScene):
     def construct(self):
-        # Setup sum
-        full_sum = Group()
-        coins = Group()
+        # Board
         n_shown = 5
-        for n in it.chain(range(n_shown), range(64 - n_shown, 64)):
-            coin = Coin(numeric_labels=True)
-            coin.set_height(0.7)
-            coins.add(coin)
-            if (random.random() < 0.5 or (n == 2)) and (n != 62):
-                coin.flip()
+        board = Chessboard()
+        coins = CoinsOnBoard(board, coin_config={"numeric_labels": True})
+        coins.flip_by_message(r"75% odds")
+
+        nums = VGroup()
+        for n, square in enumerate(board):
             num = Integer(n)
+            num.set_height(0.4 * square.get_height())
+            num.next_to(square, OUT, buff=0)
+            nums.add(num)
+        nums.set_stroke(BLACK, 3, background=True)
+
+        coins.generate_target()
+        for coin in coins.target:
+            coin.set_opacity(0.2)
+            coin[-2:].set_opacity(0)
+
+        self.add(board)
+        self.add(coins)
+        self.wait()
+        self.play(
+            MoveToTarget(coins),
+            FadeIn(nums, lag_ratio=0.1)
+        )
+        self.wait()
+
+        # # Compress
+        # square_groups = Group(*[
+        #     Group(square, coin, num)
+        #     for square, coin, num in zip(board, coins, nums)
+        # ])
+        # segments = Group(
+        #     square_groups[:n_shown],
+        #     square_groups[n_shown:-n_shown],
+        #     square_groups[-n_shown:],
+        # )
+        # segments.generate_target()
+        # dots = TexMobject("\\cdots")
+        # dots.center()
+        # segments.target[0].next_to(dots, LEFT)
+        # segments.target[2].next_to(dots, RIGHT)
+        # segments.target[1].scale(0)
+        # segments.target[1].move_to(dots)
+
+        # self.play(
+        #     Write(dots),
+        #     MoveToTarget(segments),
+        # )
+        # self.wait()
+        # self.remove(segments[1])
+
+        # # Raise coins
+        # coins = Group(*coins[:n_shown], *coins[-n_shown:])
+        # nums = VGroup(*nums[:n_shown], *nums[-n_shown:])
+        # board = Group(*board[:n_shown], *board[-n_shown:])
+        # coins.unlock_shader_data()
+        # self.play(
+        #     coins.shift, UP,
+        #     coins.set_opacity, 1,
+        # )
+
+        # Setup sum
+        mid_coins = coins[n_shown:-n_shown]
+        mid_nums = nums[n_shown:-n_shown]
+        coins = Group(*coins[:n_shown], *coins[-n_shown:])
+        nums = VGroup(*nums[:n_shown], *nums[-n_shown:])
+        nums.generate_target()
+        coins.generate_target()
+        coins.target.set_opacity(1)
+
+        full_sum = Group()
+        to_fade_in = VGroup()
+        for num, coin in zip(nums.target, coins.target):
+            coin.set_height(0.7)
+            num.set_height(0.5)
             summand = Group(
                 coin,
                 TexMobject("\\cdot"),
                 num,
                 TexMobject("+"),
             )
+            to_fade_in.add(summand[1], summand[3])
             VGroup(*summand[1:]).set_stroke(BLACK, 3, background=True)
             summand.arrange(RIGHT, buff=MED_SMALL_BUFF)
 
@@ -2016,21 +2234,41 @@ class DoesFlippingAddOrSubtract(Scene):
 
         brace = Brace(full_sum, DOWN)
         s_label = VGroup(
-            TextMobject("Sum mod 64 = "),
+            TextMobject("Sum (mod 64) = "),
             Integer(53),
         )
         s_label[1].set_color(BLUE)
-        s_label[1].match_height(s_label[0])
+        s_label[1].match_height(s_label[0][0][0])
         s_label.arrange(RIGHT)
+        s_label[1].align_to(s_label[0][0][0], DOWN)
         s_label.next_to(brace, DOWN)
 
         words = TextMobject("Can't know if a flip will add or subtract")
         words.to_edge(UP)
 
-        self.add(full_sum)
-        self.add(brace)
-        self.add(s_label)
-        self.add(words)
+        for mob in mid_coins, mid_nums:
+            mob.generate_target()
+            mob.target.move_to(dots)
+            mob.target.scale(0)
+            mob.target.set_opacity(0)
+
+        self.play(
+            FadeOut(board, IN),
+            MoveToTarget(mid_coins, remover=True),
+            MoveToTarget(mid_nums, remover=True),
+            MoveToTarget(nums),
+            MoveToTarget(coins),
+            Write(dots),
+            FadeIn(to_fade_in, lag_ratio=0.1),
+            run_time=2
+        )
+        self.play(
+            GrowFromCenter(brace),
+            FadeIn(s_label, 0.25 * UP)
+        )
+        self.wait()
+
+        self.play(Write(words, run_time=1))
         self.wait()
 
         # Do some flips
@@ -2296,7 +2534,7 @@ class ShowCube(ThreeDScene):
             self.wait()
 
         # Some specific color examples
-        S0 = TexMobject("S = 0")
+        S0 = TexMobject("\\text{Key} = 0")
         S0.to_edge(LEFT)
         S0.shift(UP)
         S0.fix_in_frame()
@@ -2306,7 +2544,7 @@ class ShowCube(ThreeDScene):
         )
         self.wait(5)
 
-        bit_sum = TexMobject("S = \\,&(c_0 + c_1 + c_2) \\\\ &\\quad \\mod 3")
+        bit_sum = TexMobject("\\text{Key} = \\,&c_0 + c_1")
         bit_sum.scale(0.8)
         bit_sum.to_edge(LEFT)
         bit_sum.shift(UP)
@@ -2314,12 +2552,12 @@ class ShowCube(ThreeDScene):
         self.play(
             FadeIn(bit_sum, DOWN),
             FadeOut(S0, UP),
-            get_coloring_animation([sum(coords) % 3 for coords in vert_coords])
+            get_coloring_animation([sum(coords[:2]) for coords in vert_coords])
         )
         self.wait(6)
 
         bit_sum_with_coefs = TexMobject(
-            "S = \\,&(0\\cdot c_0 + 1\\cdot c_1 + 2\\cdot c_2) \\\\ &\\quad \\mod 3"
+            "\\text{Key} = \\,&(0\\cdot c_0 + 1\\cdot c_1 + 2\\cdot c_2) \\\\ &\\quad \\mod 3"
         )
         bit_sum_with_coefs.scale(0.8)
         bit_sum_with_coefs.move_to(bit_sum, LEFT)
@@ -2526,6 +2764,7 @@ class CubeSupplement(ThreeDScene):
         self.play(
             LaggedStartMap(FadeIn, boards, lag_ratio=0.25),
             LaggedStartMap(FadeIn, coin_sets, lag_ratio=0.25),
+            run_time=3
         )
         self.play(
             LaggedStartMap(GrowArrow, s_arrows, lag_ratio=0.25),
@@ -2717,6 +2956,26 @@ class GrahamsConstant(Scene):
             Write(rbrace_tex)
         )
         self.wait()
+
+
+class ThinkAboutNewTrick(PiCreatureScene, ThreeDScene):
+    def construct(self):
+        randy = self.pi_creature
+
+        board = Chessboard(shape=(1, 3))
+        board.set_height(1.5)
+        coins = CoinsOnBoard(board)
+        coins.flip_at_random()
+
+        self.add(board, coins)
+        self.play(randy.change, "confused", board)
+
+        for x in range(4):
+            self.play(FlipCoin(random.choice(coins)))
+            if x == 1:
+                self.play(randy.change, "maybe")
+            else:
+                self.wait()
 
 
 class AttemptAColoring(ThreeDScene):
@@ -3216,7 +3475,11 @@ class TryTheProofYourself(TeacherStudentsScene):
             "pondering", "thinking", "confused",
             look_at_arg=self.screen,
         )
-        self.wait(7)
+        self.wait(3)
+        self.change_student_modes("thinking", "pondering", "erm", look_at_arg=self.screen)
+        self.wait(4)
+        self.change_student_modes("tease", "pondering", "thinking", look_at_arg=self.screen)
+        self.wait(5)
 
 
 class HighDimensionalCount(ThreeDScene):
@@ -3864,9 +4127,682 @@ class IntroduceHypercube(FourDCubeColoringFromTrees):
 
 
 # Animations for Matt
+class WantAdditionToBeSubtraction(ThreeDScene):
+    def construct(self):
+        # Add sum
+        coins = CoinsOnBoard(
+            Chessboard(shape=(1, 4)),
+            coin_config={"numeric_labels": True},
+        )
+        for coin in coins[0], coins[2]:
+            coin.flip()
+
+        coefs = VGroup(*[TexMobject(f"X_{i}") for i in range(len(coins))])
+        full_sum = Group()
+        to_fade = VGroup()
+        for coin, coef in zip(coins, coefs):
+            coin.set_height(0.7)
+            coef.set_height(0.5)
+            summand = Group(coin, TexMobject("\\cdot"), coef, TexMobject("+"))
+            to_fade.add(*summand[1::2])
+            summand.arrange(RIGHT, buff=0.2)
+            full_sum.add(summand)
+        full_sum.add(TexMobject("\\dots"))
+        full_sum.arrange(RIGHT, buff=0.2)
+        to_fade.add(full_sum[-1])
+
+        some_label = TextMobject("Some kind of ``numbers''")
+        some_label.next_to(full_sum, DOWN, buff=2)
+        arrows = VGroup(*[
+            Arrow(some_label.get_top(), coef.get_bottom())
+            for coef in coefs
+        ])
+
+        for coin in coins:
+            coin.save_state()
+            coin.rotate(90 * DEGREES, UP)
+            coin.set_opacity(0)
+
+        self.play(
+            LaggedStartMap(Restore, coins, lag_ratio=0.3),
+            run_time=1
+        )
+        self.play(
+            FadeIn(to_fade),
+            LaggedStartMap(FadeInFromPoint, coefs, lambda m: (m, some_label.get_top())),
+            LaggedStartMap(GrowArrow, arrows),
+            Write(some_label, run_time=1)
+        )
+        self.wait()
+        self.play(FadeOut(some_label), FadeOut(arrows))
+
+        # Show a flip
+        add_label = TexMobject("+X_2", color=GREEN)
+        sub_label = TexMobject("-X_2", color=RED)
+        for label in add_label, sub_label:
+            label.next_to(coins[2], UR)
+            label.match_height(coefs[2])
+            self.play(
+                FlipCoin(coins[2]),
+                FadeIn(label, 0.5 * DOWN)
+            )
+            self.play(FadeOut(label))
+
+        # What we want
+        want_label = TextMobject("Want: ", "$X_i = -X_i$")
+        eq = TextMobject("$X_i + X_i = 0$")
+        want_label.next_to(full_sum, DOWN, LARGE_BUFF)
+        eq.next_to(want_label[1], DOWN, aligned_edge=LEFT)
+
+        self.play(FadeIn(want_label))
+        self.wait()
+        self.play(FadeIn(eq, UP))
+        self.wait()
+
+
+class BitVectorSum(ThreeDScene):
+    def construct(self):
+        # Setup
+        board = Chessboard(shape=(1, 4))
+        board.set_height(1)
+        coins = CoinsOnBoard(board, coin_config={"numeric_labels": True})
+        coins[2].flip()
+
+        all_coords = [np.array([b0, b1]) for b0, b1 in it.product(range(2), range(2))]
+        bit_vectors = VGroup(*[
+            IntegerMatrix(coords.reshape((2, 1))).set_height(1)
+            for coords in all_coords
+        ])
+        bit_vectors.arrange(RIGHT, buff=2)
+        bit_vectors.to_edge(UP)
+        bit_vectors.set_stroke(BLACK, 4, background=True)
+
+        arrows = VGroup(
+            Arrow(board[0].get_corner(UL), bit_vectors[0].get_corner(DR)),
+            Arrow(board[1].get_corner(UP), bit_vectors[1].get_corner(DOWN)),
+            Arrow(board[2].get_corner(UP), bit_vectors[2].get_corner(DOWN)),
+            Arrow(board[3].get_corner(UR), bit_vectors[3].get_corner(DL)),
+        )
+
+        # Show vectors
+        self.add(board)
+        self.add(coins)
+        for arrow, vector in zip(arrows, bit_vectors):
+            self.play(
+                GrowArrow(arrow),
+                FadeInFromPoint(vector, arrow.get_start()),
+            )
+            self.wait()
+
+        # Move coins
+        coin_copies = coins.copy()
+        cdots = VGroup()
+        plusses = VGroup()
+        for cc, vector in zip(coin_copies, bit_vectors):
+            dot = TexMobject("\\cdot")
+            dot.next_to(vector, LEFT, MED_SMALL_BUFF)
+            cdots.add(dot)
+            plus = TexMobject("+")
+            plus.next_to(vector, RIGHT, MED_SMALL_BUFF)
+            plusses.add(plus)
+            cc.next_to(dot, LEFT, MED_SMALL_BUFF)
+        plusses[-1].set_opacity(0)
+
+        for coin, cc, dot, plus in zip(coins, coin_copies, cdots, plusses):
+            self.play(
+                TransformFromCopy(coin, cc),
+                Write(dot),
+            )
+            self.play(Write(plus))
+        self.wait()
+
+        # Show sum
+        eq = TexMobject("=")
+        eq.move_to(plusses[-1])
+
+        def get_rhs(coins=coins, bit_vectors=bit_vectors, all_coords=all_coords, eq=eq):
+            bit_coords = sum([
+                (b * coords)
+                for coords, b in zip(all_coords, coins.get_bools())
+            ]) % 2
+            n = bit_coords_to_int(bit_coords)
+            result = bit_vectors[n].copy()
+            result.next_to(eq, RIGHT)
+            result.n = n
+            return result
+
+        def get_rhs_anim(rhs, bit_vectors=bit_vectors):
+            bv_copies = bit_vectors.copy()
+            bv_copies.generate_target()
+            for bv in bv_copies.target:
+                bv.move_to(rhs)
+                bv.set_opacity(0)
+            bv_copies.target[rhs.n].set_opacity(1)
+            return AnimationGroup(
+                MoveToTarget(bv_copies, remover=True),
+                ShowIncreasingSubsets(Group(rhs), int_func=np.floor)
+            )
+
+        rhs = get_rhs()
+
+        mod2_label = TextMobject("(Add mod 2)")
+        mod2_label.next_to(rhs, DOWN, MED_LARGE_BUFF)
+        mod2_label.to_edge(RIGHT)
+
+        self.play(
+            Write(eq),
+            get_rhs_anim(rhs),
+            FadeIn(mod2_label),
+            FadeOut(board),
+            FadeOut(coins),
+            FadeOut(arrows),
+        )
+        self.wait(2)
+
+        # Show some flips
+        for x in range(8):
+            i = random.randint(0, 3)
+            rect = SurroundingRectangle(Group(coin_copies[i], bit_vectors[i]))
+            old_rhs = rhs
+            coins[i].flip()
+            rhs = get_rhs()
+            self.play(
+                ShowCreation(rect),
+                FlipCoin(coin_copies[i]),
+                FadeOut(old_rhs, RIGHT),
+                FadeIn(rhs, LEFT),
+            )
+            self.play(FadeOut(rect))
+            self.wait(2)
+
+
+class ExampleSquareAsBinaryNumber(Scene):
+    def construct(self):
+        # Setup
+        board = Chessboard()
+        nums = VGroup()
+        bin_nums = VGroup()
+        for n, square in enumerate(board):
+            bin_num = VGroup(*[
+                Integer(int(b))
+                for b in int_to_bit_coords(n, min_dim=6)
+            ])
+            bin_num.arrange(RIGHT, buff=SMALL_BUFF)
+            bin_num.set_width((square.get_width() * 0.8))
+            num = Integer(n)
+            num.set_height(square.get_height() * 0.4)
+
+            for mob in num, bin_num:
+                mob.move_to(square, OUT)
+                mob.set_stroke(BLACK, 4, background=True)
+
+            num.generate_target()
+            num.target.replace(bin_num, stretch=True)
+            num.target.set_opacity(0)
+            bin_num.save_state()
+            bin_num.replace(num, stretch=True)
+            bin_num.set_opacity(0)
+
+            nums.add(num)
+            bin_nums.add(bin_num)
+
+        # Transform to binary
+        self.add(board, nums)
+        self.wait()
+        original_nums = nums.copy()
+        self.play(LaggedStart(*[
+            AnimationGroup(MoveToTarget(num), Restore(bin_num))
+            for num, bin_num in zip(nums, bin_nums)
+        ]), lag_ratio=0.1)
+        self.remove(nums)
+        nums = original_nums
+        self.wait(2)
+
+        self.play(
+            bin_nums.set_stroke, None, 0,
+            bin_nums.set_opacity, 0.1,
+        )
+        self.wait()
+
+        # Count
+        n = 43
+        self.play(
+            board[n].set_color, MAROON_E,
+            Animation(bin_nums[n]),
+        )
+
+        last = VMobject()
+        shown_nums = VGroup()
+        for k in [0, 8, 16, 24, 32, 40, 41, 42, 43]:
+            nums[k].set_fill(YELLOW)
+            self.add(nums[k])
+            self.play(last.set_fill, WHITE, run_time=0.5)
+            last = nums[k]
+            shown_nums.add(last)
+            if k == 40:
+                self.wait()
+        self.wait()
+        self.play(LaggedStartMap(FadeOut, shown_nums[:-1]))
+        self.wait()
+        self.play(
+            FadeOut(last),
+            bin_nums[n].set_opacity, 1,
+            bin_nums[n].set_fill, YELLOW
+        )
+        self.wait()
+
+
+class ShowCurrAndTarget(Scene):
+    CONFIG = {
+        "bit_strings": [
+            "011010",
+            "110001",
+            "101011",
+        ]
+    }
+
+    def construct(self):
+        words = VGroup(
+            TextMobject("Current: "),
+            TextMobject("Need to change:"),
+            TextMobject("Target: "),
+        )
+        words.arrange(DOWN, buff=0.75, aligned_edge=RIGHT)
+
+        def get_bit_aligned_bit_string(bit_coords):
+            result = VGroup(*[Integer(int(b)) for b in bit_coords])
+            for i, bit in enumerate(result):
+                bit.move_to(ORIGIN, LEFT)
+                bit.shift(i * RIGHT * 0.325)
+            result.set_stroke(BLACK, 4, background=True)
+            return result
+
+        bit_strings = VGroup(*[
+            get_bit_aligned_bit_string(bs)
+            for bs in self.bit_strings
+        ])
+        for word, bs in zip(words, bit_strings):
+            bs.next_to(word, RIGHT)
+
+        words[1].set_fill(YELLOW)
+        bit_strings[1].set_fill(YELLOW)
+
+        self.add(words[::2])
+        self.add(bit_strings[::2])
+        self.wait()
+        self.play(FadeIn(words[1]))
+
+        for n in reversed(range(6)):
+            rect = SurroundingRectangle(Group(
+                bit_strings[0][n],
+                bit_strings[2][n],
+                buff=0.05,
+            ))
+            rect.insert_n_curves(100)
+            rect = DashedVMobject(rect, num_dashes=40)
+            rect.set_stroke(WHITE, 2)
+            self.play(ShowCreation(rect))
+            self.wait()
+            self.play(FadeIn(bit_strings[1][n]))
+            self.play(FadeOut(rect))
+
+
+class ShowCurrAndTargetAlt(ShowCurrAndTarget):
+    CONFIG = {
+        "bit_strings": [
+            "110100",
+            "010101",
+            "100001",
+        ]
+    }
+
+
+class EulerDiagram(Scene):
+    def construct(self):
+        colors = [RED, GREEN, BLUE]
+        vects = compass_directions(3, UP)
+        circles = VGroup(*[
+            Circle(
+                radius=2,
+                fill_color=color,
+                stroke_color=color,
+                fill_opacity=0.5,
+                stroke_width=3,
+            ).shift(1.2 * vect)
+            for vect, color in zip(vects, colors)
+        ])
+        bit_coords = list(map(int_to_bit_coords, range(8)))
+        bit_strings = VGroup(*map(get_bit_string, bit_coords))
+        bit_strings.center()
+        r1 = 2.2
+        r2 = 1.4
+        bit_strings[0].next_to(circles[0], LEFT).shift(UP)
+        bit_strings[1].shift(r1 * vects[0])
+        bit_strings[2].shift(r1 * vects[1])
+        bit_strings[3].shift(r2 * (vects[0] + vects[1]))
+        bit_strings[4].shift(r1 * vects[2])
+        bit_strings[5].shift(r2 * (vects[0] + vects[2]))
+        bit_strings[6].shift(r2 * (vects[1] + vects[2]))
+
+        self.add(circles)
+
+        for circle in circles:
+            circle.save_state()
+
+        for coords, bstring in zip(bit_coords[1:], bit_strings[1:]):
+            for circ, coord in zip(circles, reversed(coords)):
+                circ.generate_target()
+                if coord:
+                    circ.target.become(circ.saved_state)
+                else:
+                    circ.target.set_opacity(0.1)
+            self.play(
+                FadeIn(bstring),
+                *map(MoveToTarget, circles),
+                run_time=0.25,
+            )
+            self.wait(0.75)
+        self.wait()
+        self.play(FadeIn(bit_strings[0], DOWN))
+        self.wait()
+
+
+class ShowBoardRegions(ThreeDScene):
+    def construct(self):
+        # Setup
+        board = Chessboard()
+        nums = VGroup()
+        pre_bin_nums = VGroup()
+        bin_nums = VGroup()
+        for n, square in enumerate(board):
+            bin_num = VGroup(*[
+                Integer(int(b), fill_color=GREY_A)
+                for b in int_to_bit_coords(n, min_dim=6)
+            ])
+            bin_num.arrange(RIGHT, buff=SMALL_BUFF)
+            bin_num.set_width((square.get_width() * 0.8))
+            num = Integer(n)
+            num.set_height(square.get_height() * 0.4)
+
+            for mob in num, bin_num:
+                mob.move_to(square, OUT)
+                mob.set_stroke(BLACK, 4, background=True)
+
+            bin_num.align_to(square, DOWN)
+            bin_num.shift(SMALL_BUFF * UP)
+
+            pre_bin_num = num.copy()
+            pre_bin_num.generate_target()
+            pre_bin_num.target.replace(bin_num, stretch=True)
+            pre_bin_num.target.set_opacity(0)
+
+            num.generate_target()
+            num.target.scale(0.7)
+            num.target.align_to(square, UP)
+            num.target.shift(SMALL_BUFF * DOWN)
+
+            bin_num.save_state()
+            bin_num.replace(num, stretch=True)
+            bin_num.set_opacity(0)
+
+            nums.add(num)
+            bin_nums.add(bin_num)
+            pre_bin_nums.add(pre_bin_num)
+
+        # Transform to binary
+        self.add(board)
+        self.play(
+            ShowIncreasingSubsets(nums, run_time=4, rate_func=bezier([0, 0, 1, 1]))
+        )
+        self.wait()
+        self.play(
+            LaggedStart(*[
+                AnimationGroup(
+                    MoveToTarget(num),
+                    MoveToTarget(pbn),
+                    Restore(bin_num),
+                )
+                for num, pbn, bin_num in zip(nums, pre_bin_nums, bin_nums)
+            ], lag_ratio=1.5 / 64),
+        )
+        self.remove(pre_bin_nums)
+        self.wait(2)
+
+        # Build groups to highlight
+        one_groups = VGroup()
+        highlights = VGroup()
+        for i in reversed(range(6)):
+            one_group = VGroup()
+            highlight = VGroup()
+            for bin_num, square in zip(bin_nums, board):
+                boundary_square = Square()
+                # boundary_square.set_stroke(YELLOW, 4)
+                boundary_square.set_stroke(BLUE, 4)
+                boundary_square.set_fill(BLUE, 0.25)
+                boundary_square.replace(square)
+                boundary_square.move_to(square, OUT)
+                bit = bin_num[i]
+                if bit.get_value() == 1:
+                    one_group.add(bit)
+                    highlight.add(boundary_square)
+            one_group.save_state()
+            one_groups.add(one_group)
+            highlights.add(highlight)
+
+        # Highlight hit_groups
+        curr_highlight = None
+        for one_group, highlight in zip(one_groups, highlights):
+            one_group.generate_target()
+            one_group.target.set_fill(YELLOW)
+            one_group.target.set_stroke(YELLOW, 2)
+            if curr_highlight is None:
+                self.play(MoveToTarget(one_group))
+                self.wait()
+                self.play(DrawBorderThenFill(highlight, lag_ratio=0.1, run_time=3))
+                curr_highlight = highlight
+            else:
+                self.play(
+                    MoveToTarget(one_group),
+                    Transform(curr_highlight, highlight)
+                )
+            self.wait()
+            self.play(Restore(one_group))
+        self.wait()
+        self.play(FadeOut(curr_highlight))
+
+
+class ShowFinalStrategy(Scene):
+    CONFIG = {
+        "show_with_lines": False,
+    }
+
+    def construct(self):
+        # Setup board and such
+        board = Chessboard()
+        board.to_edge(RIGHT)
+        coins = CoinsOnBoard(board, coin_config={"numeric_labels": True})
+        coins.flip_by_message("3b1b  :)")
+
+        encoding_lines = VGroup(*[Line(ORIGIN, 0.5 * RIGHT) for x in range(6)])
+        encoding_lines.arrange(LEFT, buff=SMALL_BUFF)
+        encoding_lines.next_to(board, LEFT, LARGE_BUFF)
+        encoding_lines.shift(UP)
+
+        code_words = TextMobject("Encoding")
+        code_words.next_to(encoding_lines, DOWN)
+
+        add_words = TextMobject("Check the parity\\\\of these coins")
+        add_words.next_to(board, LEFT, LARGE_BUFF, aligned_edge=UP)
+
+        self.add(board, coins)
+        self.add(encoding_lines)
+        self.add(code_words)
+
+        # Set up groups
+        fade_groups = Group()
+        line_groups = VGroup()
+        mover_groups = VGroup()
+        count_mobs = VGroup()
+        one_groups = VGroup()
+        bits = VGroup()
+        for i in range(6):
+            bit = Integer(0)
+            bit.next_to(encoding_lines[i], UP, SMALL_BUFF)
+            bits.add(bit)
+
+            count_mob = Integer(0)
+            count_mob.set_color(RED)
+            count_mob.next_to(add_words, DOWN, MED_SMALL_BUFF)
+            count_mobs.add(count_mob)
+
+            line_group = VGroup()
+            fade_group = Group()
+            mover_group = VGroup()
+            one_rect_group = VGroup()
+            count = 0
+            for n, coin in enumerate(coins):
+                if bool(n & (1 << i)):
+                    line_group.add(Line(
+                        coin.get_center(),
+                        bit.get_center(),
+                    ))
+                    mover_group.add(coin.labels[1 - int(coin.is_heads())].copy())
+                    if coin.is_heads():
+                        one_rect_group.add(SurroundingRectangle(coin))
+                        count += 1
+                else:
+                    fade_group.add(coin)
+            bit.set_value(count % 2)
+            fade_group.save_state()
+            line_group.set_stroke(BLUE, width=1, opacity=0.5)
+            fade_groups.add(fade_group)
+            line_groups.add(line_group)
+            mover_groups.add(mover_group)
+            one_groups.add(one_rect_group)
+
+        # Animate
+        for lines, fades, movers, og, cm, bit in zip(line_groups, fade_groups, mover_groups, one_groups, count_mobs, bits):
+            self.play(
+                FadeIn(add_words),
+                fades.set_opacity, 0.1,
+            )
+            if self.show_with_lines:
+                for mover in movers:
+                    mover.generate_target()
+                    mover.target.replace(bit)
+                    mover.target.set_opacity(0)
+                bit.save_state()
+                bit.replace(movers[0])
+                bit.set_opacity(0)
+                self.play(
+                    LaggedStartMap(ShowCreation, lines, run_time=2),
+                    LaggedStartMap(MoveToTarget, movers, lag_ratio=0.01),
+                    Restore(bit)
+                )
+                self.remove(movers)
+                self.add(bit)
+                self.play(
+                    FadeOut(lines)
+                )
+            else:
+                self.play(
+                    ShowIncreasingSubsets(og),
+                    UpdateFromFunc(cm, lambda m: m.set_value(len(og)))
+                )
+                self.play(FadeInFromPoint(bit, cm.get_center()))
+                self.play(
+                    FadeOut(og),
+                    FadeOut(cm),
+                )
+
+            self.play(
+                FadeOut(add_words),
+                Restore(fades),
+            )
+            self.remove(fades)
+            self.add(coins)
+        self.wait()
+
+
+class ShowFinalStrategyWithFadeLines(ShowFinalStrategy):
+    CONFIG = {
+        "show_with_lines": True,
+    }
+
+
+class Thumbnail(ThreeDScene):
+    def construct(self):
+        # Board
+        board = Chessboard(
+            # shape=(8, 8),
+            shape=(6, 6),
+            square_resolution=(5, 5),
+            top_square_resolution=(7, 7),
+        )
+        board.set_gloss(0.5)
+
+        coins = CoinsOnBoard(
+            board,
+            coin_config={
+                "disk_resolution": (8, 51),
+            }
+        )
+        coins.flip_by_message("(Collab)")
+
+        bools = np.array(string_to_bools("Collab"))
+        bools = bools.reshape((6, 8))[:, 2:]
+        coins.flip_by_bools(bools.flatten())
+
+        # board[0].set_opacity(0)
+        # coins[0].set_opacity(0)
+
+        # k = boolian_linear_combo(coins.get_bools())
+        k = 6
+
+        board[k].set_color(YELLOW)
+
+        self.add(board)
+        self.add(coins)
+
+        # Move them
+        Group(board, coins).shift(DOWN + 2 * RIGHT)
+
+        frame = self.camera.frame
+        frame.set_rotation(phi=50 * DEGREES)
+
+        # Title
+        title = TextMobject("Impossible")
+        title.fix_in_frame()
+        title.set_width(8)
+        title.to_edge(UP)
+        title.set_stroke(BLACK, 6, background=True)
+        self.add(title)
+
+        # Instructions
+        message = TextMobject(
+            "Flip one coin\\\\to describe a\\\\",
+            "unique square",
+            alignment="",
+        )
+        message[1].set_color(YELLOW)
+        message.scale(1.25)
+        message.to_edge(LEFT)
+        message.shift(1.25 * DOWN)
+        message.fix_in_frame()
+        arrow = Arrow(
+            message.get_corner(UR),
+            message.get_corner(UR) + 3 * RIGHT + UP,
+            path_arc=-90 * DEGREES,
+        )
+        arrow.fix_in_frame()
+        arrow.shift(1.5 * LEFT)
+        arrow.set_color(YELLOW)
+
+        self.add(message)
+        self.add(arrow)
 
 
 class ChessEndScreen(PatreonEndScreen):
     CONFIG = {
-        "scroll_time": 20,
+        "scroll_time": 25,
     }
