@@ -12,7 +12,6 @@ from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import Square
 from manimlib.mobject.svg.drawings import Logo
 from manimlib.mobject.svg.tex_mobject import TextMobject
-from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.mobject_update_utils import always_shift
 from manimlib.scene.moving_camera_scene import MovingCameraScene
@@ -90,7 +89,6 @@ class PatreonEndScreen(PiCreatureScene):
         "patron_scale_val": 0.8,
         "n_patron_columns": 4,
         "max_patron_width": 5,
-        "run_time": 20,
         "randomize_order": False,
         "capitalize": True,
         "name_y_spacing": 0.6,
@@ -164,17 +162,15 @@ class PatreonEndScreen(PiCreatureScene):
 
         # Set movement
         columns.generate_target()
-        columns.target.to_edge(DOWN, buff=4)
-        vect = columns.target.get_center() - columns.get_center()
-        distance = get_norm(vect)
+        distance = columns.get_height() + 2
         wait_time = self.scroll_time
-        always_shift(
-            columns,
-            direction=normalize(vect),
-            rate=(distance / wait_time)
-        )
+        frame = self.camera.frame
+        always_shift(frame, direction=DOWN, rate=(distance / wait_time))
 
         self.add(columns, black_rect, line, thanks, self.foreground)
+        for mob in [black_rect, line, thanks, self.foreground]:
+            mob.fix_in_frame()
+        self.add(frame)
         self.wait(wait_time)
 
     def create_pi_creatures(self):
