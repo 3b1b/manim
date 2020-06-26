@@ -101,6 +101,7 @@ class VMobject(Mobject):
             color=self.stroke_color or self.color,
             width=self.stroke_width,
             opacity=self.stroke_opacity,
+            background=self.draw_stroke_behind_fill,
         )
         self.set_gloss(self.gloss)
         return self
