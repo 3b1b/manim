@@ -91,6 +91,10 @@ def create_shader_info_id(shader_info):
     return "|".join([str(shader_info[key]) for key in SHADER_KEYS_FOR_ID])
 
 
+def refresh_shader_info_id(shader_info):
+    shader_info["id"] = create_shader_info_id(shader_info)
+
+
 def shader_info_program_id(shader_info):
     return "|".join([str(shader_info[key]) for key in ["vert", "geom", "frag"]])
 

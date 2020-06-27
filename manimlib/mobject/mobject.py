@@ -22,7 +22,7 @@ from manimlib.utils.simple_functions import get_parameters
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotation_matrix_transpose
-from manimlib.utils.shaders import create_shader_info_id
+from manimlib.utils.shaders import refresh_shader_info_id
 from manimlib.utils.shaders import get_shader_info
 from manimlib.utils.shaders import shader_info_to_id
 from manimlib.utils.shaders import is_valid_shader_info
@@ -124,7 +124,7 @@ class Mobject(Container):
         return self.family
 
     def family_members_with_points(self):
-        return [m for m in self.get_family() if m.get_num_points() > 0]
+        return [m for m in self.get_family() if m.points.size > 0]
 
     def add(self, *mobjects):
         if self in mobjects:
@@ -468,30 +468,6 @@ class Mobject(Container):
     def scale_about_point(self, scale_factor, point):
         # Redundant with default behavior of scale now.
         return self.scale(scale_factor, about_point=point)
-
-    def fix_in_frame(self, family=True):
-        mobs = self.get_family() if family else [self]
-        for mob in mobs:
-            mob.is_fixed_in_frame = True
-        return self
-
-    def unfix_from_frame(self, family=True):
-        mobs = self.get_family() if family else [self]
-        for mob in mobs:
-            mob.is_fixed_in_frame = False
-        return self
-
-    def apply_depth_test(self, family=True):
-        mobs = self.get_family() if family else [self]
-        for mob in mobs:
-            mob.depth_test = True
-        return self
-
-    def deactivate_depth_test(self, family=True):
-        mobs = self.get_family() if family else [self]
-        for mob in mobs:
-            mob.depth_test = False
-        return self
 
     # Positioning methods
 
@@ -1202,6 +1178,34 @@ class Mobject(Container):
     def cleanup_from_animation(self):
         pass
 
+    # Operations touching shader uniforms
+    def affects_shader_info_id(func):
+        def wrapper(self):
+            for mob in self.get_family():
+                func(mob)
+                mob.refresh_shader_info_template_id()
+        return wrapper
+
+    @affects_shader_info_id
+    def fix_in_frame(self):
+        self.is_fixed_in_frame = True
+        return self
+
+    @affects_shader_info_id
+    def unfix_from_frame(self):
+        self.is_fixed_in_frame = False
+        return self
+
+    @affects_shader_info_id
+    def apply_depth_test(self):
+        self.depth_test = True
+        return self
+
+    @affects_shader_info_id
+    def deactivate_depth_test(self):
+        self.depth_test = False
+        return self
+
     # For shaders
     def init_shader_data(self):
         self.shader_data = np.zeros(len(self.points), dtype=self.shader_dtype)
@@ -1213,6 +1217,10 @@ class Mobject(Container):
             depth_test=self.depth_test,
             render_primative=self.render_primative,
         )
+
+    def refresh_shader_info_template_id(self):
+        refresh_shader_info_id(self.shader_info_template)
+        return self
 
     def get_blank_shader_data_array(self, size, name="shader_data"):
         # If possible, try to populate an existing array, rather
@@ -1245,7 +1253,6 @@ class Mobject(Container):
         shader_info["raw_data"] = data.tobytes()
         shader_info["attributes"] = data.dtype.names
         shader_info["uniforms"] = self.get_shader_uniforms()
-        shader_info["id"] = create_shader_info_id(shader_info)
         return shader_info
 
     def get_shader_uniforms(self):
