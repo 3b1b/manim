@@ -3220,7 +3220,7 @@ class ReadFormula(Scene):
         self.play(Blink(randy))
         self.wait(3)
 
-class EfvgtPatreonThanks(PatreonThanks):
+class EfvgtPatreonThanks(PatreonEndScreen):
     CONFIG = {
         "specific_patrons" : [
             "Ali Yahya",
