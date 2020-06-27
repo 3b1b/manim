@@ -1,11 +1,14 @@
 import random
 
+from manimlib.animation.animation import Animation
+from manimlib.animation.composition import Succession
 from manimlib.animation.creation import Write
 from manimlib.animation.fading import FadeIn
+from manimlib.animation.transform import ApplyMethod
 from manimlib.constants import *
 from manimlib.for_3b1b_videos.pi_creature import Mortimer
 from manimlib.for_3b1b_videos.pi_creature import Randolph
-from manimlib.for_3b1b_videos.pi_creature_scene import PiCreatureScene
+from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.geometry import DashedLine
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import Rectangle
@@ -13,12 +16,9 @@ from manimlib.mobject.geometry import Square
 from manimlib.mobject.svg.drawings import Logo
 from manimlib.mobject.svg.tex_mobject import TextMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.mobject.mobject_update_utils import always_shift
 from manimlib.scene.moving_camera_scene import MovingCameraScene
 from manimlib.scene.scene import Scene
 from manimlib.utils.rate_functions import linear
-from manimlib.utils.space_ops import get_norm
-from manimlib.utils.space_ops import normalize
 
 
 class OpeningQuote(Scene):
@@ -83,7 +83,7 @@ class OpeningQuote(Scene):
         return author
 
 
-class PatreonEndScreen(PiCreatureScene):
+class PatreonEndScreen(Scene):
     CONFIG = {
         "max_patron_group_size": 20,
         "patron_scale_val": 0.8,
@@ -97,6 +97,19 @@ class PatreonEndScreen(PiCreatureScene):
     }
 
     def construct(self):
+        # Add title
+        title = self.title = TextMobject("Clicky Stuffs")
+        title.scale(1.5)
+        title.to_edge(UP, buff=MED_SMALL_BUFF)
+
+        pi_creatures = VGroup(Randolph(), Mortimer())
+        for pi, vect in zip(pi_creatures, [LEFT, RIGHT]):
+            pi.set_height(title.get_height())
+            pi.change_mode("thinking")
+            pi.look(DOWN)
+            pi.next_to(title, vect, buff=MED_LARGE_BUFF)
+        self.add(title, pi_creatures)
+
         # Set the top of the screen
         logo_box = Square(side_length=2.5)
         logo_box.to_corner(DOWN + LEFT, buff=MED_LARGE_BUFF)
@@ -165,28 +178,24 @@ class PatreonEndScreen(PiCreatureScene):
         distance = columns.get_height() + 2
         wait_time = self.scroll_time
         frame = self.camera.frame
-        always_shift(frame, direction=DOWN, rate=(distance / wait_time))
+        frame_shift = ApplyMethod(
+            frame.shift, distance * DOWN,
+            run_time=wait_time,
+            rate_func=linear,
+        )
+        blink_anims = []
+        blank_mob = Mobject()
+        for x in range(wait_time):
+            if random.random() < 0.25:
+                blink_anims.append(Blink(random.choice(pi_creatures)))
+            else:
+                blink_anims.append(Animation(blank_mob))
+        blinks = Succession(*blink_anims)
 
-        self.add(columns, black_rect, line, thanks, self.foreground)
-        for mob in [black_rect, line, thanks, self.foreground]:
-            mob.fix_in_frame()
-        self.add(frame)
-        self.wait(wait_time)
-
-    def create_pi_creatures(self):
-        title = self.title = TextMobject("Clicky Stuffs")
-        title.scale(1.5)
-        title.to_edge(UP, buff=MED_SMALL_BUFF)
-
-        randy, morty = self.pi_creatures = VGroup(Randolph(), Mortimer())
-        for pi, vect in (randy, LEFT), (morty, RIGHT):
-            pi.set_height(title.get_height())
-            pi.change_mode("thinking")
-            pi.look(DOWN)
-            pi.next_to(title, vect, buff=MED_LARGE_BUFF)
-        self.add(title, randy, morty)
-        self.foreground = VGroup(title, randy, morty)
-        return self.pi_creatures
+        static_group = VGroup(black_rect, line, thanks, pi_creatures, title)
+        static_group.fix_in_frame()
+        self.add(columns, static_group)
+        self.play(frame_shift, blinks)
 
     def modify_patron_name(self, name):
         modification_map = {
