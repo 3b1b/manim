@@ -142,9 +142,8 @@ class TexMobject(SingleStringTexMobject):
         digest_config(self, kwargs)
         tex_strings = self.break_up_tex_strings(tex_strings)
         self.tex_strings = tex_strings
-        SingleStringTexMobject.__init__(
-            self, self.arg_separator.join(tex_strings), **kwargs
-        )
+        tex_string = self.arg_separator.join(tex_strings)
+        super().__init__(tex_string, **kwargs)
         self.break_up_by_substrings()
         self.set_color_by_tex_to_color_map(self.tex_to_color_map)
 
@@ -171,6 +170,10 @@ class TexMobject(SingleStringTexMobject):
         deeper based on the structure of tex_strings (as a list
         of tex_strings)
         """
+        if len(self.tex_strings) == 1:
+            submob = self.copy()
+            self.set_submobjects([submob])
+            return self
         new_submobjects = []
         curr_index = 0
         config = dict(self.CONFIG)
