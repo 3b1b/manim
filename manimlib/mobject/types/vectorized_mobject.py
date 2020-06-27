@@ -847,6 +847,7 @@ class VMobject(Mobject):
         self.fill_data = np.zeros(len(self.points), dtype=self.fill_dtype)
         self.stroke_data = np.zeros(len(self.points), dtype=self.stroke_dtype)
         self.fill_shader_info_template = get_shader_info(
+            attributes=self.fill_data.dtype.names,
             vert_file=self.fill_vert_shader_file,
             geom_file=self.fill_geom_shader_file,
             frag_file=self.fill_frag_shader_file,
@@ -854,6 +855,7 @@ class VMobject(Mobject):
             render_primative=self.render_primative,
         )
         self.stroke_shader_info_template = get_shader_info(
+            attributes=self.stroke_data.dtype.names,
             vert_file=self.stroke_vert_shader_file,
             geom_file=self.stroke_geom_shader_file,
             frag_file=self.stroke_frag_shader_file,
@@ -881,7 +883,7 @@ class VMobject(Mobject):
             fill_opacity = submob.get_fill_opacity()
 
             if fill_opacity > 0:
-                fill_data.append(submob.get_fill_shader_data())
+                fill_data.append(submob.get_fill_shader_data().tobytes())
 
             if stroke_width > 0 and stroke_opacity > 0:
                 if submob.draw_stroke_behind_fill:
@@ -889,18 +891,18 @@ class VMobject(Mobject):
                 else:
                     data = stroke_data
                 new_data = submob.get_stroke_shader_data()
-                data.append(new_data)
+                data.append(new_data.tobytes())
 
         result = []
         if back_stroke_data:
             back_stroke_info = dict(stroke_info)  # Copy
-            back_stroke_info["data"] = np.hstack(back_stroke_data)
+            back_stroke_info["raw_data"] = b''.join(back_stroke_data)
             result.append(back_stroke_info)
         if fill_data:
-            fill_info["data"] = np.hstack(fill_data)
+            fill_info["raw_data"] = b''.join(fill_data)
             result.append(fill_info)
         if stroke_data:
-            stroke_info["data"] = np.hstack(stroke_data)
+            stroke_info["raw_data"] = b''.join(stroke_data)
             result.append(stroke_info)
         return result
 

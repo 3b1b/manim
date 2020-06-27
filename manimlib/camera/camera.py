@@ -168,6 +168,7 @@ class Camera(object):
         self.init_shaders()
         self.init_textures()
         self.init_light_source()
+        self.static_mobjects_to_shader_info_list = {}
 
     def init_frame(self):
         self.frame = CameraFrame(**self.frame_config)
@@ -316,34 +317,59 @@ class Camera(object):
             return fc + scale * np.array([(px - pw / 2), (py - ph / 2), 0])
 
     # Rendering
+    def set_mobjects_as_static(self, *mobjects):
+        for mob in mobjects:
+            info_list = mob.get_shader_info_list()
+            for info in info_list:
+                info["vbo"] = self.ctx.buffer(info["raw_data"])
+            self.static_mobjects_to_shader_info_list[id(mob)] = info_list
+
+    def release_static_mobjects(self):
+        for mob, info_list in self.static_mobjects_to_shader_info_list.items():
+            for info in info_list:
+                info["vbo"].release()
+        self.static_mobjects_to_shader_info_list = {}
+
     def capture(self, *mobjects, **kwargs):
-        self.refresh_shader_uniforms()
+        self.refresh_perspective_uniforms()
 
-        shader_infos = it.chain(*[mob.get_shader_info_list() for mob in mobjects])
-        batches = batch_by_property(shader_infos, shader_info_to_id)
+        # shader_infos = it.chain(*[mob.get_shader_info_list() for mob in mobjects])
+        # batches = batch_by_property(shader_infos, shader_info_to_id)
 
-        for info_group, sid in batches:
-            data = np.hstack([info["data"] for info in info_group])
-            shader = self.get_shader(info_group[0])
-            render_primative = int(info_group[0]["render_primative"])
-            depth_test = info_group[0]["depth_test"]
-            self.render(shader, data, render_primative, depth_test)
+        # for shader_info_group, sid in batches:
+        for mobject in mobjects:
+            try:
+                info_list = self.static_mobjects_to_shader_info_list[id(mobject)]
+            except KeyError:
+                info_list = mobject.get_shader_info_list()
 
-    def render(self, shader, data, render_primative, depth_test=False):
-        if data is None or len(data) == 0:
+            for shader_info in info_list:
+                self.render(shader_info)
+
+    def render(self, shader_info):
+        raw_data = shader_info["raw_data"]
+        if not raw_data:
             return
+
+        shader = self.get_shader(shader_info)
         if shader is None:
             return
-        if depth_test:
+        self.set_perspective_uniforms(shader)
+
+        if shader_info["depth_test"]:
             self.ctx.enable(moderngl.DEPTH_TEST)
         else:
             self.ctx.disable(moderngl.DEPTH_TEST)
 
-        vbo = self.ctx.buffer(data.tobytes())
-        vao = self.ctx.simple_vertex_array(shader, vbo, *data.dtype.names)
-        vao.render(render_primative)
-        vbo.release()
+        if "vbo" in shader_info:
+            vbo = shader_info["vbo"]
+        else:
+            vbo = self.ctx.buffer(raw_data)
+        vao = self.ctx.simple_vertex_array(shader, vbo, *shader_info["attributes"])
+        vao.render(int(shader_info["render_primative"]))
         vao.release()
+        if "vbo" not in shader_info:
+            vbo.release()
 
     # Shaders
     def init_shaders(self):
@@ -356,7 +382,6 @@ class Camera(object):
             # Create shader program for the first time, then cache
             # in the id_to_shader dictionary
             shader = self.ctx.program(**shader_info_to_program_code(shader_info))
-            self.set_shader_uniforms(shader)
             for name, path in shader_info["texture_paths"].items():
                 tid = self.get_texture_id(path)
                 shader[name].value = tid
@@ -365,10 +390,14 @@ class Camera(object):
             self.id_to_shader[sid] = shader
         return self.id_to_shader[sid]
 
-    def set_shader_uniforms(self, shader):
-        if shader is None:
-            return
+    def set_perspective_uniforms(self, shader):
+        for key, value in self.perspective_uniforms.items():
+            try:
+                shader[key].value = value
+            except KeyError:
+                pass
 
+    def refresh_perspective_uniforms(self):
         pw, ph = self.get_pixel_shape()
         fw, fh = self.frame.get_shape()
         # TODO, this should probably be a mobject uniform, with
@@ -377,23 +406,13 @@ class Camera(object):
         transform = self.frame.get_inverse_camera_position_matrix()
         light = self.light_source.get_location()
         transformed_light = np.dot(transform, [*light, 1])[:3]
-        mapping = {
+        self.perspective_uniforms = {
             'to_screen_space': tuple(transform.T.flatten()),
             'frame_shape': self.frame.get_shape(),
             'focal_distance': self.frame.get_focal_distance(),
             'anti_alias_width': anti_alias_width,
             'light_source_position': tuple(transformed_light),
         }
-
-        for key, value in mapping.items():
-            try:
-                shader[key].value = value
-            except KeyError:
-                pass
-
-    def refresh_shader_uniforms(self):
-        for sid, shader in self.id_to_shader.items():
-            self.set_shader_uniforms(shader)
 
     def init_textures(self):
         self.path_to_texture_id = {}

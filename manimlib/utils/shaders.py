@@ -15,7 +15,9 @@ from manimlib.constants import SHADER_DIR
 SHADER_INFO_KEYS = [
     # A structred array caring all of the points/color/lighting/etc. information
     # needed for the shader.
-    "data",
+    "raw_data",
+    # List of variable names corresponding to inputs of vertex shader
+    "attributes",
     # Filename of vetex shader
     "vert",
     # Filename of geometry shader, if there is one
@@ -33,11 +35,12 @@ SHADER_INFO_KEYS = [
     "render_primative",
 ]
 
-# Exclude data
-SHADER_KEYS_FOR_ID = SHADER_INFO_KEYS[1:]
+# Exclude raw_data
+SHADER_KEYS_FOR_ID = SHADER_INFO_KEYS[2:]
 
 
-def get_shader_info(data=None,
+def get_shader_info(raw_data=None,
+                    attributes=None,
                     vert_file=None,
                     geom_file=None,
                     frag_file=None,
@@ -47,7 +50,8 @@ def get_shader_info(data=None,
                     render_primative=moderngl.TRIANGLE_STRIP,
                     ):
     result = {
-        "data": data,
+        "raw_data": raw_data,
+        "attributes": attributes,
         "vert": vert_file,
         "geom": geom_file,
         "frag": frag_file,
@@ -62,9 +66,9 @@ def get_shader_info(data=None,
 
 
 def is_valid_shader_info(shader_info):
-    data = shader_info["data"]
+    raw_data = shader_info["raw_data"]
     return all([
-        data is not None and len(data) > 0,
+        raw_data is not None and len(raw_data) > 0,
         shader_info["vert"],
         shader_info["frag"],
     ])

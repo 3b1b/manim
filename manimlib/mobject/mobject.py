@@ -68,7 +68,6 @@ class Mobject(Container):
         self.time_based_updaters = []
         self.non_time_updaters = []
         self.updating_suspended = False
-        self.shader_data_is_locked = False
 
         self.reset_points()
         self.init_points()
@@ -1216,17 +1215,7 @@ class Mobject(Container):
             return new_arr
         return arr
 
-    def lock_shader_data(self):
-        self.shader_data_is_locked = False
-        self.saved_shader_info_list = self.get_shader_info_list()
-        self.shader_data_is_locked = True
-
-    def unlock_shader_data(self):
-        self.shader_data_is_locked = False
-
     def get_shader_info_list(self):
-        if self.shader_data_is_locked:
-            return self.saved_shader_info_list
         shader_infos = it.chain(
             [self.get_shader_info()],
             *[sm.get_shader_info_list() for sm in self.submobjects]
@@ -1236,14 +1225,16 @@ class Mobject(Container):
         result = []
         for info_group, sid in batches:
             shader_info = info_group[0]
-            shader_info["data"] = np.hstack([info["data"] for info in info_group])
+            shader_info["raw_data"] = b''.join([info["raw_data"] for info in info_group])
             if is_valid_shader_info(shader_info):
                 result.append(shader_info)
         return result
 
     def get_shader_info(self):
         shader_info = dict(self.shader_info_template)
-        shader_info["data"] = self.get_shader_data()
+        data = self.get_shader_data()
+        shader_info["raw_data"] = data.tobytes()
+        shader_info["attributes"] = data.dtype.names
         shader_info["uniforms"] = self.get_shader_uniforms()
         return shader_info
 

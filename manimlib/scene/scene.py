@@ -375,11 +375,10 @@ class Scene(Container):
                 continue
             if mobject.get_family_updaters():
                 continue
-            mobject.lock_shader_data()
+            self.camera.set_mobjects_as_static(mobject)
 
     def unlock_mobject_data(self):
-        for mobject in self.mobjects:
-            mobject.unlock_shader_data()
+        self.camera.release_static_mobjects()
 
     def begin_animations(self, animations):
         for animation in animations:
