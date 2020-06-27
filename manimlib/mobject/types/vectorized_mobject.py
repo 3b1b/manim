@@ -864,9 +864,6 @@ class VMobject(Mobject):
         )
 
     def get_shader_info_list(self):
-        if self.shader_data_is_locked:
-            return self.saved_shader_info_list
-
         fill_info = dict(self.fill_shader_info_template)
         stroke_info = dict(self.stroke_shader_info_template)
         fill_info["uniforms"] = self.get_shader_uniforms()
