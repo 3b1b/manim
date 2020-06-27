@@ -49,7 +49,7 @@ class SVGMobject(VMobject):
         digest_config(self, kwargs)
         self.file_name = file_name or self.file_name
         self.ensure_valid_file()
-        VMobject.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.move_into_position()
 
     def ensure_valid_file(self):
@@ -67,6 +67,14 @@ class SVGMobject(VMobject):
                 self.file_path = path
                 return
         raise IOError(f"No file matching {file_name} in image directory")
+
+    def move_into_position(self):
+        if self.should_center:
+            self.center()
+        if self.height is not None:
+            self.set_height(self.height)
+        if self.width is not None:
+            self.set_width(self.width)
 
     def init_points(self):
         doc = minidom.parse(self.file_path)
@@ -311,14 +319,6 @@ class SVGMobject(VMobject):
     def update_ref_to_element(self, defs):
         new_refs = dict([(e.getAttribute('id'), e) for e in self.get_all_childNodes_have_id(defs)])
         self.ref_to_element.update(new_refs)
-
-    def move_into_position(self):
-        if self.should_center:
-            self.center()
-        if self.height is not None:
-            self.set_height(self.height)
-        if self.width is not None:
-            self.set_width(self.width)
 
 
 class VMobjectFromSVGPathstring(VMobject):
