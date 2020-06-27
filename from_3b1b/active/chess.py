@@ -252,7 +252,6 @@ class IntroducePuzzle(Scene):
         self.wait()
         self.play(LaggedStartMap(FlipCoin, coins_to_flip, run_time=6, lag_ratio=0.1))
         self.add(coins)
-        coins.unlock_shader_data()
         self.wait()
 
         # Show key
@@ -298,7 +297,6 @@ class IntroducePuzzle(Scene):
             Rotate(key_square, PI / 2, axis=RIGHT, about_point=ks_top),
             run_time=2,
         )
-        chessboard.unlock_shader_data()
         chessboard.saved_state[k][0].match_color(key_square)
         self.play(
             chessboard.restore,
@@ -1264,7 +1262,6 @@ class TwoSquareCase(ThreeDScene):
         bin_coins[1].flip()
         bin_coins.move_to(coins)
 
-        coins.unlock_shader_data()
         self.play(
             FadeOut(coins, IN),
             FadeIn(bin_coins),
@@ -2193,7 +2190,6 @@ class ModNStrategy(ThreeDScene):
         # coins = Group(*coins[:n_shown], *coins[-n_shown:])
         # nums = VGroup(*nums[:n_shown], *nums[-n_shown:])
         # board = Group(*board[:n_shown], *board[-n_shown:])
-        # coins.unlock_shader_data()
         # self.play(
         #     coins.shift, UP,
         #     coins.set_opacity, 1,
@@ -2699,7 +2695,6 @@ class ShowCube(ThreeDScene):
         frame.generate_target()
         frame.target.shift(2 * DOWN)
         frame.target.set_rotation(-15 * DEGREES, 70 * DEGREES)
-        full_coins.unlock_shader_data()
         self.play(
             MoveToTarget(frame, run_time=3),
             LaggedStartMap(FadeOut, full_board),
@@ -3168,7 +3163,6 @@ class AttemptAColoring(ThreeDScene):
             MoveToTarget(cube.verts),
         )
         self.add(trees)
-        trees.unlock_shader_data()
         self.wait()
 
         # Try to fit these back onto the cube
