@@ -347,7 +347,7 @@ class Camera(object):
         if not raw_data:
             return
 
-        shader = self.get_shader(shader_info)
+        shader, vert_format = self.get_shader(shader_info)
         if shader is None:
             return
 
@@ -360,7 +360,11 @@ class Camera(object):
             vbo = shader_info["vbo"]
         else:
             vbo = self.ctx.buffer(raw_data)
-        vao = self.ctx.simple_vertex_array(shader, vbo, *shader_info["attributes"])
+        # vao = self.ctx.simple_vertex_array(shader, vbo, *shader_info["attributes"])
+        vao = self.ctx.vertex_array(
+            program=shader,
+            content=[(vbo, vert_format, *shader_info["attributes"])]
+        )
         vao.render(int(shader_info["render_primative"]))
         vao.release()
         if "vbo" not in shader_info:
@@ -376,18 +380,18 @@ class Camera(object):
         if sid not in self.id_to_shader:
             # Create shader program for the first time, then cache
             # in the id_to_shader dictionary
-            self.id_to_shader[sid] = self.ctx.program(
-                **shader_info_to_program_code(shader_info)
-            )
-        shader = self.id_to_shader[sid]
+            program = self.ctx.program(**shader_info_to_program_code(shader_info))
+            vert_format = moderngl.detect_format(program, shader_info["attributes"])
+            self.id_to_shader[sid] = (program, vert_format)
+        program, vert_format = self.id_to_shader[sid]
         # Set uniforms
-        self.set_perspective_uniforms(shader)
+        self.set_perspective_uniforms(program)
         for name, path in shader_info["texture_paths"].items():
             tid = self.get_texture_id(path)
-            shader[name].value = tid
+            program[name].value = tid
         for name, value in shader_info["uniforms"].items():
-            shader[name].value = value
-        return shader
+            program[name].value = value
+        return program, vert_format
 
     def set_perspective_uniforms(self, shader):
         for key, value in self.perspective_uniforms.items():
