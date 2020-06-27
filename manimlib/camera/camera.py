@@ -14,6 +14,7 @@ from manimlib.utils.bezier import interpolate
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.shaders import shader_info_to_id
+from manimlib.utils.shaders import shader_info_program_id
 from manimlib.utils.shaders import shader_info_to_program_code
 from manimlib.utils.simple_functions import clip
 from manimlib.utils.space_ops import angle_of_vector
@@ -332,11 +333,6 @@ class Camera(object):
 
     def capture(self, *mobjects, **kwargs):
         self.refresh_perspective_uniforms()
-
-        # shader_infos = it.chain(*[mob.get_shader_info_list() for mob in mobjects])
-        # batches = batch_by_property(shader_infos, shader_info_to_id)
-
-        # for shader_info_group, sid in batches:
         for mobject in mobjects:
             try:
                 info_list = self.static_mobjects_to_shader_info_list[id(mobject)]
@@ -354,7 +350,6 @@ class Camera(object):
         shader = self.get_shader(shader_info)
         if shader is None:
             return
-        self.set_perspective_uniforms(shader)
 
         if shader_info["depth_test"]:
             self.ctx.enable(moderngl.DEPTH_TEST)
@@ -377,18 +372,22 @@ class Camera(object):
         self.id_to_shader = {"": None}
 
     def get_shader(self, shader_info):
-        sid = shader_info_to_id(shader_info)
+        sid = shader_info_program_id(shader_info)
         if sid not in self.id_to_shader:
             # Create shader program for the first time, then cache
             # in the id_to_shader dictionary
-            shader = self.ctx.program(**shader_info_to_program_code(shader_info))
-            for name, path in shader_info["texture_paths"].items():
-                tid = self.get_texture_id(path)
-                shader[name].value = tid
-            for name, value in shader_info["uniforms"].items():
-                shader[name].value = value
-            self.id_to_shader[sid] = shader
-        return self.id_to_shader[sid]
+            self.id_to_shader[sid] = self.ctx.program(
+                **shader_info_to_program_code(shader_info)
+            )
+        shader = self.id_to_shader[sid]
+        # Set uniforms
+        self.set_perspective_uniforms(shader)
+        for name, path in shader_info["texture_paths"].items():
+            tid = self.get_texture_id(path)
+            shader[name].value = tid
+        for name, value in shader_info["uniforms"].items():
+            shader[name].value = value
+        return shader
 
     def set_perspective_uniforms(self, shader):
         for key, value in self.perspective_uniforms.items():
@@ -432,6 +431,7 @@ class Camera(object):
         return self.path_to_texture_id[path]
 
 
+# Mostly just defined so old scenes don't break
 class ThreeDCamera(Camera):
     CONFIG = {
         "samples": 8,

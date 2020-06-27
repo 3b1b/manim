@@ -26,6 +26,7 @@ from manimlib.utils.space_ops import earclip_triangulation
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import get_unit_normal
 from manimlib.utils.space_ops import z_to_vector
+from manimlib.utils.shaders import create_shader_info_id
 from manimlib.utils.shaders import get_shader_info
 
 
@@ -868,8 +869,9 @@ class VMobject(Mobject):
         stroke_info = dict(self.stroke_shader_info_template)
         fill_info["uniforms"] = self.get_shader_uniforms()
         stroke_info["uniforms"] = self.get_stroke_uniforms()
-        fill_info["depth_test"] = self.depth_test
-        stroke_info["depth_test"] = self.depth_test
+        for info in fill_info, stroke_info:
+            info["depth_test"] = self.depth_test
+            info["id"] = create_shader_info_id(info)
 
         back_stroke_data = []
         stroke_data = []

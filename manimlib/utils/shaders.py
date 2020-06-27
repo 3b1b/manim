@@ -12,6 +12,15 @@ from manimlib.constants import SHADER_DIR
 # to that shader
 
 
+# TODO, this should all be treated as an object
+# This object a shader program instead of the vert,
+# geom and frag file names, and it should cache those
+# programs in the way currently handled by Camera
+# It should replace the Camera.get_shader method with
+# its own get_shader_program method, which will take
+# in the camera's perspective_uniforms.
+
+
 SHADER_INFO_KEYS = [
     # A structred array caring all of the points/color/lighting/etc. information
     # needed for the shader.
@@ -60,8 +69,7 @@ def get_shader_info(raw_data=None,
         "depth_test": depth_test,
         "render_primative": str(render_primative),
     }
-    # # A unique id for a shader
-    # result["id"] = "|".join([str(result[key]) for key in SHADER_KEYS_FOR_ID])
+    result["id"] = create_shader_info_id(result)
     return result
 
 
@@ -75,15 +83,20 @@ def is_valid_shader_info(shader_info):
 
 
 def shader_info_to_id(shader_info):
+    return shader_info["id"]
+
+
+def create_shader_info_id(shader_info):
     # A unique id for a shader
     return "|".join([str(shader_info[key]) for key in SHADER_KEYS_FOR_ID])
 
 
+def shader_info_program_id(shader_info):
+    return "|".join([str(shader_info[key]) for key in ["vert", "geom", "frag"]])
+
+
 def same_shader_type(info1, info2):
-    return all([
-        info1[key] == info2[key]
-        for key in SHADER_KEYS_FOR_ID
-    ])
+    return info1["id"] == info2["id"]
 
 
 def shader_info_to_program_code(shader_info):

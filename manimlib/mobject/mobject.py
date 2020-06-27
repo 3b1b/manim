@@ -22,6 +22,7 @@ from manimlib.utils.simple_functions import get_parameters
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotation_matrix_transpose
+from manimlib.utils.shaders import create_shader_info_id
 from manimlib.utils.shaders import get_shader_info
 from manimlib.utils.shaders import shader_info_to_id
 from manimlib.utils.shaders import is_valid_shader_info
@@ -1244,6 +1245,7 @@ class Mobject(Container):
         shader_info["raw_data"] = data.tobytes()
         shader_info["attributes"] = data.dtype.names
         shader_info["uniforms"] = self.get_shader_uniforms()
+        shader_info["id"] = create_shader_info_id(shader_info)
         return shader_info
 
     def get_shader_uniforms(self):
