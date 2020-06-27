@@ -47,6 +47,9 @@ def partial_bezier_points(points, a, b):
 # Shortened version of partial_bezier_points just for quadratics,
 # since this is called a fair amount
 def partial_quadratic_bezier_points(points, a, b):
+    if a == 1:
+        return 3 * [points[-1]]
+
     def curve(t):
         return points[0] * (1 - t) * (1 - t) + 2 * points[1] * t * (1 - t) + points[2] * t * t
     # bezier(points)
