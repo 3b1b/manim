@@ -11,7 +11,6 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.bezier import interpolate
-from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.shaders import shader_info_to_id
 from manimlib.utils.shaders import shader_info_program_id
@@ -39,6 +38,7 @@ class CameraFrame(Mobject):
         self.set_height(self.frame_shape[1], stretch=True)
         self.move_to(self.center_point)
         self.euler_angles = np.array(self.euler_angles, dtype='float64')
+        self.refresh_camera_rotation_matrix()
 
     def to_default_state(self):
         self.center()
@@ -48,21 +48,22 @@ class CameraFrame(Mobject):
         return self
 
     def get_inverse_camera_position_matrix(self):
-        result = np.identity(4)
+        mat = np.identity(4)
         # First shift so that origin of real space coincides with camera origin
-        result[:3, 3] = -self.get_center().T
+        mat[:3, 3] = -self.get_center().T
         # Rotate based on camera orientation
-        result[:3, :3] = np.dot(self.get_inverse_camera_rotation_matrix(), result[:3, :3])
-        return result
+        mat[:3, :3] = np.dot(self.inverse_camera_rotation_matrix, mat[:3, :3])
+        return mat
 
-    def get_inverse_camera_rotation_matrix(self):
+    def refresh_camera_rotation_matrix(self):
         theta, phi, gamma = self.euler_angles
         quat = quaternion_mult(
             quaternion_from_angle_axis(theta, OUT, axis_normalized=True),
             quaternion_from_angle_axis(phi, RIGHT, axis_normalized=True),
             quaternion_from_angle_axis(gamma, OUT, axis_normalized=True),
         )
-        return rotation_matrix_transpose_from_quaternion(quat)
+        self.inverse_camera_rotation_matrix = rotation_matrix_transpose_from_quaternion(quat)
+        return self
 
     def rotate(self, angle, axis=OUT, **kwargs):
         curr_rot_T = self.get_inverse_camera_rotation_matrix()
@@ -80,35 +81,39 @@ class CameraFrame(Mobject):
         self.euler_angles[:] = theta, phi, gamma
         return self
 
-    def set_rotation(self, theta=0, phi=0, gamma=0):
-        self.euler_angles[:] = theta, phi, gamma
+    def set_rotation(self, theta=None, phi=None, gamma=None):
+        if theta is not None:
+            self.euler_angles[0] = theta
+        if phi is not None:
+            self.euler_angles[1] = phi
+        if gamma is not None:
+            self.euler_angles[2] = gamma
+        self.refresh_camera_rotation_matrix()
         return self
 
     def set_theta(self, theta):
-        self.euler_angles[0] = theta
+        return self.set_rotation(theta=theta)
 
     def set_phi(self, phi):
-        self.euler_angles[1] = phi
+        return self.set_rotation(phi=phi)
 
     def set_gamma(self, gamma):
-        self.euler_angles[2] = gamma
+        return self.set_rotation(phi=phi)
 
     def increment_theta(self, dtheta):
-        self.euler_angles[0] += dtheta
-        return self
+        return self.set_rotation(theta=self.euler_angles[0] + dtheta)
 
     def increment_phi(self, dphi):
-        self.euler_angles[1] = clip(self.euler_angles[1] + dphi, 0, PI)
-        return self
+        new_phi = clip(self.euler_angles[1] + dphi, 0, PI)
+        return self.set_rotation(phi=new_phi)
 
     def increment_gamma(self, dgamma):
-        self.euler_angles[2] += dgamma
-        return self
+        return self.set_rotation(theta=self.euler_angles[2] + dgamma)
 
     def get_shape(self):
         return (
-            self.points[:, 0].max() - self.points[:, 0].min(),
-            self.points[:, 1].max() - self.points[:, 1].min(),
+            self.points[2, 0] - self.points[1, 0],
+            self.points[4, 1] - self.points[3, 1],
         )
 
     def get_center(self):
@@ -221,7 +226,7 @@ class Camera(object):
     def reset_pixel_shape(self, new_width, new_height):
         self.pixel_width = new_width
         self.pixel_height = new_height
-        self.refresh_shader_uniforms()
+        self.refresh_perspective_uniforms()
 
     def get_raw_fbo_data(self, dtype='f1'):
         # Copy blocks from the fbo_msaa to the drawn fbo using Blit
