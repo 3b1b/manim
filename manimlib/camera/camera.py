@@ -124,16 +124,9 @@ class CameraFrame(Mobject):
         return self.focal_distance
 
     def interpolate(self, frame1, frame2, alpha, path_func):
-        self.euler_angles[:] = interpolate(
-            frame1.euler_angles,
-            frame2.euler_angles,
-            alpha
-        )
-        self.points = interpolate(
-            frame1.points,
-            frame2.points,
-            alpha,
-        )
+        self.euler_angles[:] = interpolate(frame1.euler_angles, frame2.euler_angles, alpha)
+        self.refresh_camera_rotation_matrix()
+        self.points = interpolate(frame1.points, frame2.points, alpha)
 
 
 class Camera(object):
@@ -324,6 +317,7 @@ class Camera(object):
 
     # Rendering
     def set_mobjects_as_static(self, *mobjects):
+        # Create vbo's holding each mobjects shader data
         for mob in mobjects:
             info_list = mob.get_shader_info_list()
             for info in info_list:
@@ -348,10 +342,6 @@ class Camera(object):
                 self.render(shader_info)
 
     def render(self, shader_info):
-        raw_data = shader_info["raw_data"]
-        if not raw_data:
-            return
-
         shader, vert_format = self.get_shader(shader_info)
         if shader is None:
             return
@@ -364,8 +354,9 @@ class Camera(object):
         if "vbo" in shader_info:
             vbo = shader_info["vbo"]
         else:
+            raw_data = shader_info["raw_data"]
             vbo = self.ctx.buffer(raw_data)
-        # vao = self.ctx.simple_vertex_array(shader, vbo, *shader_info["attributes"])
+
         vao = self.ctx.vertex_array(
             program=shader,
             content=[(vbo, vert_format, *shader_info["attributes"])]
