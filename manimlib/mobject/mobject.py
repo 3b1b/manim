@@ -67,7 +67,7 @@ class Mobject(Container):
             self.name = self.__class__.__name__
         self.time_based_updaters = []
         self.non_time_updaters = []
-        self.updating_suspended = False
+        self.check_for_updaters = False
 
         self.reset_points()
         self.init_points()
@@ -114,6 +114,7 @@ class Mobject(Container):
     def assemble_family(self):
         sub_families = [sm.get_family() for sm in self.submobjects]
         self.family = [self, *it.chain(*sub_families)]
+        self.refresh_check_for_updater_status()
         for parent in self.parents:
             parent.assemble_family()
         return self
@@ -237,7 +238,7 @@ class Mobject(Container):
     # Updating
 
     def update(self, dt=0, recursive=True):
-        if self.updating_suspended:
+        if not self.check_for_updaters:
             return self
         for updater in self.time_based_updaters:
             updater(self, dt)
@@ -274,8 +275,7 @@ class Mobject(Container):
         else:
             updater_list.insert(index, update_function)
 
-        if call_updater:
-            self.update(0)
+        self.resume_updating(call_updater=call_updater)
         return self
 
     def remove_updater(self, update_function):
@@ -290,6 +290,7 @@ class Mobject(Container):
         if recursive:
             for submob in self.submobjects:
                 submob.clear_updaters()
+        self.suspend_updating(recursive)
         return self
 
     def match_updaters(self, mobject):
@@ -299,18 +300,25 @@ class Mobject(Container):
         return self
 
     def suspend_updating(self, recursive=True):
-        self.updating_suspended = True
+        self.check_for_updaters = False
         if recursive:
             for submob in self.submobjects:
                 submob.suspend_updating(recursive)
         return self
 
-    def resume_updating(self, recursive=True):
-        self.updating_suspended = False
+    def resume_updating(self, recursive=True, call_updater=True):
+        self.refresh_check_for_updater_status()
         if recursive:
             for submob in self.submobjects:
                 submob.resume_updating(recursive)
-        self.update(dt=0, recursive=recursive)
+        for parent in self.parents:
+            parent.resume_updating(recursive=False, call_updater=False)
+        if call_updater:
+            self.update(dt=0, recursive=recursive)
+        return self
+
+    def refresh_check_for_updater_status(self):
+        self.check_for_updaters = len(self.get_family_updaters()) > 0
         return self
 
     # Transforming operations
