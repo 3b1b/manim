@@ -67,6 +67,11 @@ def interpolate(start, end, alpha):
     return (1 - alpha) * start + alpha * end
 
 
+def set_array_by_interpolation(arr, arr1, arr2, alpha):
+    arr[:] = interpolate(arr1, arr2, alpha)
+    return arr
+
+
 def integer_interpolate(start, end, alpha):
     """
     alpha is a float between 0 and 1.  This returns
