@@ -600,7 +600,7 @@ class Arrow(Line):
             R = (-b + np.sqrt(b**2 - 4 * a * c)) / (2 * a)
 
             # Find arc points
-            points1 = Arc.create_quadratic_bezier_points(path_arc, n_components=20)
+            points1 = Arc.create_quadratic_bezier_points(path_arc)
             points2 = np.array(points1[::-1])
             points1 *= (R + width / 2)
             points2 *= (R - width / 2)
