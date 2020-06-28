@@ -1,4 +1,5 @@
 import numpy as np
+import operator as op
 
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
@@ -17,6 +18,7 @@ from manimlib.utils.space_ops import find_intersection
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import normalize
 from manimlib.utils.space_ops import rotate_vector
+from manimlib.utils.space_ops import rotation_matrix_transpose
 
 
 DEFAULT_DOT_RADIUS = 0.08
@@ -200,26 +202,32 @@ class Arc(TipableVMobject):
         VMobject.__init__(self, **kwargs)
 
     def init_points(self):
-        self.set_pre_positioned_points()
+        self.set_points(Arc.create_quadratic_bezier_points(
+            angle=self.angle,
+            start_angle=self.start_angle,
+            n_components=self.n_components
+        ))
         self.scale(self.radius, about_point=ORIGIN)
         self.shift(self.arc_center)
 
-    def set_pre_positioned_points(self):
+    @staticmethod
+    def create_quadratic_bezier_points(angle, start_angle=0, n_components=8):
         samples = np.array([
-            np.cos(a) * RIGHT + np.sin(a) * UP
+            [np.cos(a), np.sin(a), 0]
             for a in np.linspace(
-                self.start_angle,
-                self.start_angle + self.angle,
-                2 * self.n_components + 1,
+                start_angle,
+                start_angle + angle,
+                2 * n_components + 1,
             )
         ])
-        theta = self.angle / self.n_components
+        theta = angle / n_components
         samples[1::2] /= np.cos(theta / 2)
 
-        self.points = np.zeros((3 * self.n_components, self.dim))
-        self.points[0::3] = samples[0:-1:2]
-        self.points[1::3] = samples[1::2]
-        self.points[2::3] = samples[2::2]
+        points = np.zeros((3 * n_components, 3))
+        points[0::3] = samples[0:-1:2]
+        points[1::3] = samples[1::2]
+        points[2::3] = samples[2::2]
+        return points
 
     def get_arc_center(self):
         """
@@ -251,7 +259,7 @@ class Arc(TipableVMobject):
 
 class ArcBetweenPoints(Arc):
     def __init__(self, start, end, angle=TAU / 4, **kwargs):
-        Arc.__init__(self, angle=angle, **kwargs)
+        super().__init__(angle=angle, **kwargs)
         if angle == 0:
             self.set_points_as_corners([LEFT, RIGHT])
         self.put_start_and_end_on(start, end)
@@ -393,22 +401,22 @@ class Line(TipableVMobject):
         VMobject.__init__(self, **kwargs)
 
     def init_points(self):
-        if self.path_arc:
-            arc = ArcBetweenPoints(
-                self.start, self.end,
-                angle=self.path_arc
-            )
-            self.set_points(arc.points)
+        self.set_points_by_ends(self.start, self.end, self.buff, self.path_arc)
+
+    def set_points_by_ends(self, start, end, buff=0, path_arc=0):
+        if path_arc:
+            self.set_points(Arc.create_quadratic_bezier_points(path_arc))
+            self.put_start_and_end_on(start, end)
         else:
-            self.set_points_as_corners([self.start, self.end])
-        self.account_for_buff()
+            self.set_points_as_corners([start, end])
+        self.account_for_buff(self.buff)
 
     def set_path_arc(self, new_value):
         self.path_arc = new_value
         self.init_points()
 
-    def account_for_buff(self):
-        if self.buff == 0:
+    def account_for_buff(self, buff):
+        if buff == 0:
             return
         #
         if self.path_arc == 0:
@@ -416,12 +424,10 @@ class Line(TipableVMobject):
         else:
             length = self.get_arc_length()
         #
-        if length < 2 * self.buff:
+        if length < 2 * buff:
             return
-        buff_proportion = self.buff / length
-        self.pointwise_become_partial(
-            self, buff_proportion, 1 - buff_proportion
-        )
+        buff_prop = buff / length
+        self.pointwise_become_partial(self, buff_prop, 1 - buff_prop)
         return self
 
     def set_start_and_end_attrs(self, start, end):
@@ -447,12 +453,8 @@ class Line(TipableVMobject):
 
     def put_start_and_end_on(self, start, end):
         curr_start, curr_end = self.get_start_and_end()
-        if np.all(curr_start == curr_end):
-            # TODO, any problems with resetting
-            # these attrs?
-            self.start = start
-            self.end = end
-            self.init_points()
+        if (curr_start == curr_end).all():
+            self.set_points_by_ends(start, end, self.path_arc)
         return super().put_start_and_end_on(start, end)
 
     def get_vector(self):
@@ -485,7 +487,7 @@ class DashedLine(Line):
     }
 
     def __init__(self, *args, **kwargs):
-        Line.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         ps_ratio = self.positive_space_ratio
         num_dashes = self.calculate_num_dashes(ps_ratio)
         dashes = DashedVMobject(
@@ -539,11 +541,7 @@ class TangentLine(Line):
         da = self.d_alpha
         a1 = clip(alpha - da, 0, 1)
         a2 = clip(alpha + da, 0, 1)
-        super().__init__(
-            vmob.point_from_proportion(a1),
-            vmob.point_from_proportion(a2),
-            **kwargs
-        )
+        super().__init__(vmob.pfp(a1), vmob.pfp(a2), **kwargs)
         self.scale(self.length / self.get_length())
 
 
@@ -554,7 +552,7 @@ class Elbow(VMobject):
     }
 
     def __init__(self, **kwargs):
-        VMobject.__init__(self, **kwargs)
+        super().__init__(self, **kwargs)
         self.set_points_as_corners([UP, UP + RIGHT, RIGHT])
         self.set_width(self.width, about_point=ORIGIN)
         self.rotate(self.angle, about_point=ORIGIN)
@@ -562,69 +560,101 @@ class Elbow(VMobject):
 
 class Arrow(Line):
     CONFIG = {
-        "stroke_width": 6,
+        "fill_color": GREY_A,
+        "fill_opacity": 1,
+        "stroke_width": 0,
         "buff": MED_SMALL_BUFF,
-        # TODO, the interface is terrible
-        "max_tip_length_to_length_ratio": 0.25,
-        "max_stroke_width_to_length_ratio": 5,
-        "preserve_tip_size_when_scaling": True,
+        "width": 0.05,
+        "tip_width_ratio": 5,
+        "tip_angle": PI / 3,
+        "max_tip_length_to_length_ratio": 0.5,
+        "max_width_to_length_ratio": 0.25,
     }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # TODO, should this be affected when
-        # Arrow.set_stroke is called?
-        self.initial_stroke_width = self.stroke_width
-        self.add_tip()
-        self.set_stroke_width_from_length()
+    def set_points_by_ends(self, start, end, buff=0, path_arc=0):
+        # Find the right tip length and width
+        vect = end - start
+        length = get_norm(vect)
+        width = self.width
+        w_ratio = self.max_width_to_length_ratio / (width / length)
+        if w_ratio < 1:
+            width *= w_ratio
 
-    def scale(self, factor, **kwargs):
-        if self.get_length() == 0:
-            return self
+        tip_width = self.tip_width_ratio * width
+        tip_length = tip_width / (2 * np.tan(self.tip_angle / 2))
+        t_ratio = self.max_tip_length_to_length_ratio / (tip_length / length)
+        if t_ratio < 1:
+            tip_length *= t_ratio
+            tip_width *= t_ratio
 
-        has_tip = self.has_tip()
-        has_start_tip = self.has_start_tip()
-        if has_tip or has_start_tip:
-            old_tips = self.pop_tips()
+        # Find points for the stem
+        if path_arc == 0:
+            points1 = (length - tip_length) * np.array([RIGHT, 0.5 * RIGHT, ORIGIN])
+            points1 += width * UP / 2
+            points2 = points1[::-1] + width * DOWN
+        else:
+            # Solve for radius so that the tip-to-tail length matches |end - start|
+            a = 2 * (1 - np.cos(path_arc))
+            b = -2 * tip_length * np.sin(path_arc)
+            c = tip_length**2 - length**2
+            R = (-b + np.sqrt(b**2 - 4 * a * c)) / (2 * a)
 
-        VMobject.scale(self, factor, **kwargs)
-        self.set_stroke_width_from_length()
+            # Find arc points
+            points1 = Arc.create_quadratic_bezier_points(path_arc, n_components=20)
+            points2 = np.array(points1[::-1])
+            points1 *= (R + width / 2)
+            points2 *= (R - width / 2)
+            if path_arc < 0:
+                tip_length *= -1
+            rot_T = rotation_matrix_transpose(PI / 2 - path_arc, OUT)
+            for points in points1, points2:
+                points[:] = np.dot(points, rot_T)
+                points += R * DOWN
 
-        # So horribly confusing, must redo
-        if self.preserve_tip_size_when_scaling:
-            if has_tip:
-                self.add_tip()
-                old_tips[0].points[:, :] = self.tip.points
-                self.remove(self.tip)
-                self.tip = old_tips[0]
-                self.add(self.tip)
-            if has_start_tip:
-                self.add_tip(at_start=True)
-                old_tips[1].points[:, :] = self.start_tip.points
-                self.remove(self.start_tip)
-                self.start_tip = old_tips[1]
-                self.add(self.start_tip)
+        self.set_points(points1)
+        # Tip
+        self.add_line_to(tip_width * UP / 2)
+        self.add_line_to(tip_length * LEFT)
+        self.tip_index = len(self.points) - 1
+        self.add_line_to(tip_width * DOWN / 2)
+        self.add_line_to(points2[0])
+        # Close it out
+        self.append_points(points2)
+        self.add_line_to(points1[0])
+
+        if length > 0:
+            self.points *= length / self.get_length()  # Final correction
+
+        self.rotate(angle_of_vector(vect) - self.get_angle())
+        self.shift(start - self.get_start())
+
+    def reset_points_around_ends(self):
+        self.set_points_by_ends(self.get_start(), self.get_end(), path_arc=self.path_arc)
         return self
 
-    def get_normal_vector(self):
-        p0, p1, p2 = self.tip.get_start_anchors()[:3]
-        return normalize(np.cross(p2 - p1, p1 - p0))
+    def get_start(self):
+        return (self.points[0] + self.points[-1]) / 2
 
-    def reset_normal_vector(self):
-        self.normal_vector = self.get_normal_vector()
+    def get_end(self):
+        return self.points[self.tip_index]
+
+    def put_start_and_end_on(self, start, end):
+        self.set_points_by_ends(start, end, buff=0, path_arc=self.path_arc)
         return self
 
-    def get_default_tip_length(self):
-        max_ratio = self.max_tip_length_to_length_ratio
-        return min(
-            self.tip_length,
-            max_ratio * self.get_length(),
-        )
+    def scale(self, *args, **kwargs):
+        super().scale(*args, **kwargs)
+        self.reset_points_around_ends()
+        return self
 
-    def set_stroke_width_from_length(self):
-        mr = self.max_stroke_width_to_length_ratio
-        width = min(self.initial_stroke_width, mr * self.get_length())
-        self.set_stroke(width=width, family=False)
+    def set_width(self, width):
+        self.width = width
+        self.reset_points_around_ends()
+        return self
+
+    def set_path_arc(self, path_arc):
+        self.path_arc = path_arc
+        self.reset_points_around_ends()
         return self
 
 
