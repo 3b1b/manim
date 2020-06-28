@@ -70,6 +70,7 @@ def get_shader_info(raw_data=None,
         "render_primative": str(render_primative),
     }
     result["id"] = create_shader_info_id(result)
+    result["prog_id"] = create_shader_info_program_id(result)
     return result
 
 
@@ -86,6 +87,10 @@ def shader_info_to_id(shader_info):
     return shader_info["id"]
 
 
+def shader_info_program_id(shader_info):
+    return shader_info["prog_id"]
+
+
 def create_shader_info_id(shader_info):
     # A unique id for a shader
     return "|".join([str(shader_info[key]) for key in SHADER_KEYS_FOR_ID])
@@ -95,7 +100,7 @@ def refresh_shader_info_id(shader_info):
     shader_info["id"] = create_shader_info_id(shader_info)
 
 
-def shader_info_program_id(shader_info):
+def create_shader_info_program_id(shader_info):
     return "|".join([str(shader_info[key]) for key in ["vert", "geom", "frag"]])
 
 

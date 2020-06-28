@@ -167,7 +167,8 @@ class Camera(object):
         self.init_shaders()
         self.init_textures()
         self.init_light_source()
-        self.static_mobjects_to_shader_info_list = {}
+        self.refresh_perspective_uniforms()
+        self.static_mobjects_to_shader_info_list = {}        
 
     def init_frame(self):
         self.frame = CameraFrame(**self.frame_config)
@@ -328,42 +329,48 @@ class Camera(object):
                 self.render(shader_info)
 
     def render(self, shader_info):
-        shader, vert_format = self.get_shader(shader_info)
-        if shader is None:
-            return
+        cached_buffers = "render_group" in shader_info
+        if cached_buffers:
+            vbo, vao, shader = shader_info["render_group"]
+        else:
+            vbo, vao, shader = self.get_render_group(shader_info)
+
+        self.set_shader_uniforms(shader, shader_info)
 
         if shader_info["depth_test"]:
             self.ctx.enable(moderngl.DEPTH_TEST)
         else:
             self.ctx.disable(moderngl.DEPTH_TEST)
 
-        if "vbo" in shader_info:
-            vbo = shader_info["vbo"]
-        else:
-            raw_data = shader_info["raw_data"]
-            vbo = self.ctx.buffer(raw_data)
+        vao.render(int(shader_info["render_primative"]))
 
+        if not cached_buffers:
+            vbo.release()
+            vao.release()
+
+    def get_render_group(self, shader_info):
+        shader, vert_format = self.get_shader(shader_info)
+        vbo = self.ctx.buffer(shader_info["raw_data"])
         vao = self.ctx.vertex_array(
             program=shader,
             content=[(vbo, vert_format, *shader_info["attributes"])]
         )
-        vao.render(int(shader_info["render_primative"]))
-        vao.release()
-        if "vbo" not in shader_info:
-            vbo.release()
+        return (vbo, vao, shader)
 
     def set_mobjects_as_static(self, *mobjects):
-        # Create vbo's holding each mobjects shader data
+        # Create buffer and array objects holding each mobjects shader data
         for mob in mobjects:
             info_list = mob.get_shader_info_list()
             for info in info_list:
-                info["vbo"] = self.ctx.buffer(info["raw_data"])
+                info["render_group"] = self.get_render_group(info)
             self.static_mobjects_to_shader_info_list[id(mob)] = info_list
 
     def release_static_mobjects(self):
         for mob, info_list in self.static_mobjects_to_shader_info_list.items():
             for info in info_list:
-                info["vbo"].release()
+                vbo, vao, shader = info["render_group"]
+                vbo.release()
+                vao.release()
         self.static_mobjects_to_shader_info_list = {}
 
     # Shaders
@@ -380,19 +387,16 @@ class Camera(object):
             vert_format = moderngl.detect_format(program, shader_info["attributes"])
             self.id_to_shader[sid] = (program, vert_format)
         program, vert_format = self.id_to_shader[sid]
-        # Set uniforms
-        self.set_perspective_uniforms(program)
-        for name, path in shader_info["texture_paths"].items():
-            tid = self.get_texture_id(path)
-            program[name].value = tid
-        for name, value in shader_info["uniforms"].items():
-            program[name].value = value
+        self.set_shader_uniforms(program, shader_info)
         return program, vert_format
 
-    def set_perspective_uniforms(self, shader):
-        for key, value in self.perspective_uniforms.items():
+    def set_shader_uniforms(self, shader, shader_info):
+        for name, path in shader_info["texture_paths"].items():
+            tid = self.get_texture_id(path)
+            shader[name].value = tid
+        for name, value in it.chain(shader_info["uniforms"].items(), self.perspective_uniforms.items()):
             try:
-                shader[key].value = value
+                shader[name].value = value
             except KeyError:
                 pass
 
