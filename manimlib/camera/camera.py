@@ -316,20 +316,6 @@ class Camera(object):
             return fc + scale * np.array([(px - pw / 2), (py - ph / 2), 0])
 
     # Rendering
-    def set_mobjects_as_static(self, *mobjects):
-        # Create vbo's holding each mobjects shader data
-        for mob in mobjects:
-            info_list = mob.get_shader_info_list()
-            for info in info_list:
-                info["vbo"] = self.ctx.buffer(info["raw_data"])
-            self.static_mobjects_to_shader_info_list[id(mob)] = info_list
-
-    def release_static_mobjects(self):
-        for mob, info_list in self.static_mobjects_to_shader_info_list.items():
-            for info in info_list:
-                info["vbo"].release()
-        self.static_mobjects_to_shader_info_list = {}
-
     def capture(self, *mobjects, **kwargs):
         self.refresh_perspective_uniforms()
         for mobject in mobjects:
@@ -365,6 +351,20 @@ class Camera(object):
         vao.release()
         if "vbo" not in shader_info:
             vbo.release()
+
+    def set_mobjects_as_static(self, *mobjects):
+        # Create vbo's holding each mobjects shader data
+        for mob in mobjects:
+            info_list = mob.get_shader_info_list()
+            for info in info_list:
+                info["vbo"] = self.ctx.buffer(info["raw_data"])
+            self.static_mobjects_to_shader_info_list[id(mob)] = info_list
+
+    def release_static_mobjects(self):
+        for mob, info_list in self.static_mobjects_to_shader_info_list.items():
+            for info in info_list:
+                info["vbo"].release()
+        self.static_mobjects_to_shader_info_list = {}
 
     # Shaders
     def init_shaders(self):
