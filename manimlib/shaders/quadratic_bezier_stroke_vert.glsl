@@ -11,8 +11,6 @@ in vec3 unit_normal;
 
 in float stroke_width;
 in vec4 color;
-in float gloss;
-in float shadow;
 
 // Bezier control point
 out vec3 bp;
@@ -22,8 +20,6 @@ out vec3 v_global_unit_normal;
 
 out float v_stroke_width;
 out vec4 v_color;
-out float v_gloss;
-out float v_shadow;
 
 const float STROKE_WIDTH_CONVERSION = 0.01;
 
@@ -40,6 +36,4 @@ void main(){
 
     v_stroke_width = STROKE_WIDTH_CONVERSION * stroke_width;
     v_color = color;
-    v_gloss = gloss;
-    v_shadow = shadow;
 }

@@ -1143,8 +1143,17 @@ class Mobject(Container):
         pass  # To implement in subclass
 
     def interpolate_light_style(self, mobject1, mobject2, alpha):
-        self.set_gloss(interpolate(mobject1.get_gloss(), mobject2.get_gloss(), alpha))
-        self.set_shadow(interpolate(mobject1.get_shadow(), mobject2.get_shadow(), alpha))
+        g0 = self.get_gloss()
+        g1 = mobject1.get_gloss()
+        g2 = mobject2.get_gloss()
+        if not (g0 == g1 == g2):
+            self.set_gloss(interpolate(g1, g2, alpha))
+
+        s0 = self.get_shadow()
+        s1 = mobject1.get_shadow()
+        s2 = mobject2.get_shadow()
+        if not (s0 == s1 == s2):
+            self.set_shadow(interpolate(s1, s2, alpha))
         return self
 
     def become_partial(self, mobject, a, b):
@@ -1258,6 +1267,8 @@ class Mobject(Container):
     def get_shader_uniforms(self):
         return {
             "is_fixed_in_frame": float(self.is_fixed_in_frame),
+            "gloss": self.gloss,
+            "shadow": self.shadow,
         }
 
     def get_shader_data(self):

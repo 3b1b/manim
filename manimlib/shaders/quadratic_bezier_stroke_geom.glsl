@@ -10,6 +10,8 @@ uniform float is_fixed_in_frame;
 uniform float anti_alias_width;
 uniform vec3 light_source_position;
 uniform float joint_type;
+uniform float gloss;
+uniform float shadow;
 
 in vec3 bp[3];
 in vec3 prev_bp[3];
@@ -18,8 +20,6 @@ in vec3 v_global_unit_normal[3];
 
 in vec4 v_color[3];
 in float v_stroke_width[3];
-in float v_gloss[3];
-in float v_shadow[3];
 
 out vec4 color;
 out float uv_stroke_width;
@@ -256,8 +256,8 @@ void main() {
             xyz_coords,
             v_global_unit_normal[index_map[i]],
             light_source_position,
-            v_gloss[index_map[i]],
-            v_shadow[index_map[i]]
+            gloss,
+            shadow
         );
         gl_Position = get_gl_Position(xyz_coords);
         EmitVertex();

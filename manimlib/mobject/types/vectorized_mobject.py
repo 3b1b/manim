@@ -12,6 +12,7 @@ from manimlib.utils.bezier import bezier
 from manimlib.utils.bezier import get_smooth_quadratic_bezier_handle_points
 from manimlib.utils.bezier import get_quadratic_approximation_of_cubic
 from manimlib.utils.bezier import interpolate
+from manimlib.utils.bezier import set_array_by_interpolation
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import partial_quadratic_bezier_points
 from manimlib.utils.color import color_to_rgba
@@ -64,9 +65,8 @@ class VMobject(Mobject):
             ('point', np.float32, (3,)),
             ('unit_normal', np.float32, (3,)),
             ('color', np.float32, (4,)),
-            ('fill_all', np.float32, (1,)),
-            ('gloss', np.float32, (1,)),
-            ('shadow', np.float32, (1,)),
+            # ('fill_all', np.float32, (1,)),
+            ('vert_index', np.float32, (1,)),
         ],
         "stroke_dtype": [
             ("point", np.float32, (3,)),
@@ -75,8 +75,6 @@ class VMobject(Mobject):
             ('unit_normal', np.float32, (3,)),
             ("stroke_width", np.float32, (1,)),
             ("color", np.float32, (4,)),
-            ("gloss", np.float32, (1,)),
-            ("shadow", np.float32, (1,)),
         ]
     }
 
@@ -828,10 +826,12 @@ class VMobject(Mobject):
             "stroke_width",
         ]
         for attr in attrs:
-            arr = getattr(self, attr)
-            m1a = getattr(mobject1, attr)
-            m2a = getattr(mobject2, attr)
-            arr[:] = interpolate(m1a, m2a, alpha)
+            set_array_by_interpolation(
+                getattr(self, attr),
+                getattr(mobject1, attr),
+                getattr(mobject2, attr),
+                alpha
+            )
 
     def pointwise_become_partial(self, vmobject, a, b):
         assert(isinstance(vmobject, VMobject))
@@ -972,8 +972,6 @@ class VMobject(Mobject):
         data["unit_normal"] = self.get_unit_normal()
         data["stroke_width"][:, 0] = stroke_width
         data["color"] = rgbas
-        data["gloss"] = self.gloss
-        data["shadow"] = self.shadow
         return data
 
     def lock_triangulation(self, family=True):
@@ -1058,12 +1056,7 @@ class VMobject(Mobject):
         data["point"] = points[tri_indices]
         data["unit_normal"] = unit_normal
         data["color"] = rgbas
-        # Assume the triangulation is such that the first n_points points
-        # are on the boundary, and the rest are in the interior
-        data["fill_all"][:len(points)] = 0
-        data["fill_all"][len(points):] = 1
-        data["gloss"] = self.gloss
-        data["shadow"] = self.shadow
+        data["vert_index"][:, 0] = tri_indices
         return data
 
 

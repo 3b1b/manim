@@ -11,15 +11,11 @@ in vec3 du_point;
 in vec3 dv_point;
 in vec2 im_coords;
 in float opacity;
-in float gloss;
-in float shadow;
 
 out vec3 xyz_coords;
 out vec3 v_normal;
 out vec2 v_im_coords;
 out float v_opacity;
-out float v_gloss;
-out float v_shadow;
 
 // These lines will get replaced
 #INSERT position_point_into_frame.glsl
@@ -31,7 +27,5 @@ void main(){
     v_normal = get_rotated_surface_unit_normal_vector(point, du_point, dv_point);
     v_im_coords = im_coords;
     v_opacity = opacity;
-    v_gloss = gloss;
-    v_shadow = shadow;
     gl_Position = get_gl_Position(xyz_coords);
 }

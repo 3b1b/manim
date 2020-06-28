@@ -35,8 +35,6 @@ class ParametricSurface(Mobject):
             ('du_point', np.float32, (3,)),
             ('dv_point', np.float32, (3,)),
             ('color', np.float32, (4,)),
-            ('gloss', np.float32, (1,)),
-            ('shadow', np.float32, (1,)),
         ]
     }
 
@@ -133,8 +131,6 @@ class ParametricSurface(Mobject):
         data["point"] = s_points[tri_indices]
         data["du_point"] = du_points[tri_indices]
         data["dv_point"] = dv_points[tri_indices]
-        data["gloss"] = self.gloss
-        data["shadow"] = self.shadow
         self.fill_in_shader_color_info(data)
         return data
 
@@ -170,8 +166,6 @@ class TexturedSurface(ParametricSurface):
             ('dv_point', np.float32, (3,)),
             ('im_coords', np.float32, (2,)),
             ('opacity', np.float32, (1,)),
-            ('gloss', np.float32, (1,)),
-            ('shadow', np.float32, (1,)),
         ]
     }
 

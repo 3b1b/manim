@@ -9,13 +9,14 @@ uniform vec2 frame_shape;
 uniform float focal_distance;
 uniform float is_fixed_in_frame;
 uniform vec3 light_source_position;
+uniform float gloss;
+uniform float shadow;
 
 in vec3 bp[3];
 in vec3 v_global_unit_normal[3];
 in vec4 v_color[3];
-in float v_fill_all[3];
-in float v_gloss[3];
-in float v_shadow[3];
+// in float v_fill_all[3];
+in float v_vert_index[3];
 
 out vec4 color;
 out float fill_all;
@@ -43,8 +44,8 @@ void emit_vertex_wrapper(vec3 point, int index){
         point,
         v_global_unit_normal[index],
         light_source_position,
-        v_gloss[index],
-        v_shadow[index]
+        gloss,
+        shadow
     );
     xyz_coords = point;
     gl_Position = get_gl_Position(xyz_coords);
@@ -109,8 +110,13 @@ void emit_pentagon(vec3[3] points, vec3 normal){
 
 
 void main(){
-    fill_all = v_fill_all[0];
-    if(fill_all == 1){
+    // If vert indices are sequential, don't fill all
+    fill_all = float(
+        (v_vert_index[1] - v_vert_index[0]) != 1.0 ||
+        (v_vert_index[2] - v_vert_index[1]) != 1.0
+    );
+
+    if(fill_all == 1.0){
         emit_simple_triangle();
         return;
     }
