@@ -638,6 +638,7 @@ class Mobject(Container):
         return self
 
     def put_start_and_end_on(self, start, end):
+        # TODO, this doesn't currently work in 3d
         curr_start, curr_end = self.get_start_and_end()
         curr_vect = curr_end - curr_start
         if np.all(curr_vect == 0):
@@ -648,8 +649,7 @@ class Mobject(Container):
             about_point=curr_start,
         )
         self.rotate(
-            angle_of_vector(target_vect) -
-            angle_of_vector(curr_vect),
+            angle_of_vector(target_vect) - angle_of_vector(curr_vect),
             about_point=curr_start
         )
         self.shift(start - curr_start)
