@@ -151,7 +151,7 @@ class VMobject(Mobject):
                 sm.set_stroke(color, width, opacity, background, family)
         self.update_rgbas_array("stroke_rgbas", color, opacity)
         if width is not None:
-            self.stroke_width = np.array(listify(width))
+            self.stroke_width = np.array(listify(width), dtype=float)
         if background is not None:
             self.draw_stroke_behind_fill = background
         return self
