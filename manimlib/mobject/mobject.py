@@ -66,10 +66,8 @@ class Mobject(Container):
         self.family = [self]
         if self.name is None:
             self.name = self.__class__.__name__
-        self.time_based_updaters = []
-        self.non_time_updaters = []
-        self.check_for_updaters = False
 
+        self.init_updaters()
         self.reset_points()
         self.init_points()
         self.init_colors()
@@ -115,7 +113,7 @@ class Mobject(Container):
     def assemble_family(self):
         sub_families = [sm.get_family() for sm in self.submobjects]
         self.family = [self, *it.chain(*sub_families)]
-        self.refresh_check_for_updater_status()
+        self.refresh_has_updater_status()
         for parent in self.parents:
             parent.assemble_family()
         return self
@@ -237,9 +235,14 @@ class Mobject(Container):
         return self.target
 
     # Updating
+    def init_updaters(self):
+        self.time_based_updaters = []
+        self.non_time_updaters = []
+        self.has_updaters = False
+        self.updating_suspended = False
 
     def update(self, dt=0, recursive=True):
-        if not self.check_for_updaters:
+        if not self.has_updaters or self.updating_suspended:
             return self
         for updater in self.time_based_updaters:
             updater(self, dt)
@@ -260,10 +263,7 @@ class Mobject(Container):
         return self.time_based_updaters + self.non_time_updaters
 
     def get_family_updaters(self):
-        return list(it.chain(*[
-            sm.get_updaters()
-            for sm in self.get_family()
-        ]))
+        return list(it.chain(*[sm.get_updaters() for sm in self.get_family()]))
 
     def add_updater(self, update_function, index=None, call_updater=True):
         if "dt" in get_parameters(update_function):
@@ -276,7 +276,9 @@ class Mobject(Container):
         else:
             updater_list.insert(index, update_function)
 
-        self.resume_updating(call_updater=call_updater)
+        self.refresh_has_updater_status()
+        if call_updater:
+            self.update()
         return self
 
     def remove_updater(self, update_function):
@@ -301,14 +303,14 @@ class Mobject(Container):
         return self
 
     def suspend_updating(self, recursive=True):
-        self.check_for_updaters = False
+        self.updating_suspended = True
         if recursive:
             for submob in self.submobjects:
                 submob.suspend_updating(recursive)
         return self
 
     def resume_updating(self, recursive=True, call_updater=True):
-        self.refresh_check_for_updater_status()
+        self.updating_suspended = False
         if recursive:
             for submob in self.submobjects:
                 submob.resume_updating(recursive)
@@ -318,8 +320,8 @@ class Mobject(Container):
             self.update(dt=0, recursive=recursive)
         return self
 
-    def refresh_check_for_updater_status(self):
-        self.check_for_updaters = len(self.get_family_updaters()) > 0
+    def refresh_has_updater_status(self):
+        self.has_updaters = len(self.get_family_updaters()) > 0
         return self
 
     # Transforming operations
