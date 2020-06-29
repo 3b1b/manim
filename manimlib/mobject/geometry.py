@@ -392,13 +392,13 @@ class Line(TipableVMobject):
     CONFIG = {
         "buff": 0,
         # Angle of arc specified here
-        "path_arc": None,
+        "path_arc": 0,
     }
 
     def __init__(self, start=LEFT, end=RIGHT, **kwargs):
         digest_config(self, kwargs)
         self.set_start_and_end_attrs(start, end)
-        VMobject.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
     def init_points(self):
         self.set_points_by_ends(self.start, self.end, self.buff, self.path_arc)
@@ -568,21 +568,21 @@ class Arrow(Line):
         "tip_width_ratio": 5,
         "tip_angle": PI / 3,
         "max_tip_length_to_length_ratio": 0.5,
-        "max_width_to_length_ratio": 0.25,
+        "max_width_to_length_ratio": 0.1,
     }
 
     def set_points_by_ends(self, start, end, buff=0, path_arc=0):
         # Find the right tip length and width
         vect = end - start
-        length = get_norm(vect)
+        length = max(get_norm(vect), 1e-8)
         width = self.width
-        w_ratio = self.max_width_to_length_ratio / (width / length)
+        w_ratio = fdiv(self.max_width_to_length_ratio, fdiv(width, length))
         if w_ratio < 1:
             width *= w_ratio
 
         tip_width = self.tip_width_ratio * width
         tip_length = tip_width / (2 * np.tan(self.tip_angle / 2))
-        t_ratio = self.max_tip_length_to_length_ratio / (tip_length / length)
+        t_ratio = fdiv(self.max_tip_length_to_length_ratio, fdiv(tip_length, length))
         if t_ratio < 1:
             tip_length *= t_ratio
             tip_width *= t_ratio
@@ -666,7 +666,7 @@ class Vector(Arrow):
     def __init__(self, direction=RIGHT, **kwargs):
         if len(direction) == 2:
             direction = np.hstack([direction, 0])
-        Arrow.__init__(self, ORIGIN, direction, **kwargs)
+        super().__init__(ORIGIN, direction, **kwargs)
 
 
 class DoubleArrow(Arrow):
