@@ -331,9 +331,9 @@ class Camera(object):
     def render(self, shader_info):
         cached_buffers = "render_group" in shader_info
         if cached_buffers:
-            vbo, vao, shader = shader_info["render_group"]
+            vbo, ibo, vao, shader = shader_info["render_group"]
         else:
-            vbo, vao, shader = self.get_render_group(shader_info)
+            vbo, ibo, vao, shader = self.get_render_group(shader_info)
 
         self.set_shader_uniforms(shader, shader_info)
 
@@ -345,17 +345,25 @@ class Camera(object):
         vao.render(int(shader_info["render_primative"]))
 
         if not cached_buffers:
-            vbo.release()
-            vao.release()
+            self.release_gl_objects(vbo, ibo, vao)
 
     def get_render_group(self, shader_info):
         shader, vert_format = self.get_shader(shader_info)
-        vbo = self.ctx.buffer(shader_info["raw_data"])
+        # vbo = self.ctx.buffer(shader_info["vert_data"].tobytes())
+        vbo = self.ctx.buffer(shader_info["vert_data"])
+
+        vert_indices = shader_info["vert_indices"]
+        if vert_indices is None:
+            ibo = None
+        else:
+            ibo = self.ctx.buffer(vert_indices.astype('i4').tobytes())
+
         vao = self.ctx.vertex_array(
             program=shader,
-            content=[(vbo, vert_format, *shader_info["attributes"])]
+            content=[(vbo, vert_format, *shader_info["attributes"])],
+            index_buffer=ibo,
         )
-        return (vbo, vao, shader)
+        return (vbo, ibo, vao, shader)
 
     def set_mobjects_as_static(self, *mobjects):
         # Create buffer and array objects holding each mobjects shader data
@@ -368,10 +376,13 @@ class Camera(object):
     def release_static_mobjects(self):
         for mob, info_list in self.static_mobjects_to_shader_info_list.items():
             for info in info_list:
-                vbo, vao, shader = info["render_group"]
-                vbo.release()
-                vao.release()
+                self.release_gl_objects(*info["render_group"][:3])
         self.static_mobjects_to_shader_info_list = {}
+
+    def release_gl_objects(self, *objs):
+        for obj in objs:
+            if obj:
+                obj.release()
 
     # Shaders
     def init_shaders(self):
@@ -387,7 +398,7 @@ class Camera(object):
             vert_format = moderngl.detect_format(program, shader_info["attributes"])
             self.id_to_shader[sid] = (program, vert_format)
         program, vert_format = self.id_to_shader[sid]
-        self.set_shader_uniforms(program, shader_info)
+        # self.set_shader_uniforms(program, shader_info)
         return program, vert_format
 
     def set_shader_uniforms(self, shader, shader_info):

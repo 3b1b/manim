@@ -22,9 +22,10 @@ from manimlib.constants import SHADER_DIR
 
 
 SHADER_INFO_KEYS = [
-    # A structred array caring all of the points/color/lighting/etc. information
-    # needed for the shader.
-    "raw_data",
+    # Vertex data for the shader (as structured array)
+    "vert_data",
+    # Index data (if applicable) for the shader
+    "index_data",
     # List of variable names corresponding to inputs of vertex shader
     "attributes",
     # Filename of vetex shader
@@ -44,11 +45,12 @@ SHADER_INFO_KEYS = [
     "render_primative",
 ]
 
-# Exclude raw_data
-SHADER_KEYS_FOR_ID = SHADER_INFO_KEYS[2:]
+# Exclude data
+SHADER_KEYS_FOR_ID = SHADER_INFO_KEYS[3:]
 
 
-def get_shader_info(raw_data=None,
+def get_shader_info(vert_data=None,
+                    vert_indices=None,
                     attributes=None,
                     vert_file=None,
                     geom_file=None,
@@ -59,7 +61,8 @@ def get_shader_info(raw_data=None,
                     render_primative=moderngl.TRIANGLE_STRIP,
                     ):
     result = {
-        "raw_data": raw_data,
+        "vert_data": vert_data,
+        "vert_indices": vert_indices,
         "attributes": attributes,
         "vert": vert_file,
         "geom": geom_file,
@@ -75,9 +78,9 @@ def get_shader_info(raw_data=None,
 
 
 def is_valid_shader_info(shader_info):
-    raw_data = shader_info["raw_data"]
+    vert_data = shader_info["vert_data"]
     return all([
-        raw_data is not None and len(raw_data) > 0,
+        vert_data is not None,
         shader_info["vert"],
         shader_info["frag"],
     ])

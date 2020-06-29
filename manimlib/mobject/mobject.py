@@ -1218,7 +1218,9 @@ class Mobject(Container):
     # For shaders
     def init_shader_data(self):
         self.shader_data = np.zeros(len(self.points), dtype=self.shader_dtype)
+        self.shader_indices = None
         self.shader_info_template = get_shader_info(
+            attributes=self.shader_data.dtype.names,
             vert_file=self.vert_shader_file,
             geom_file=self.geom_shader_file,
             frag_file=self.frag_shader_file,
@@ -1250,17 +1252,29 @@ class Mobject(Container):
 
         result = []
         for info_group, sid in batches:
-            shader_info = info_group[0]
-            shader_info["raw_data"] = b''.join([info["raw_data"] for info in info_group])
-            if is_valid_shader_info(shader_info):
-                result.append(shader_info)
+            combined_info = info_group[0]
+            if not is_valid_shader_info(combined_info):
+                continue
+            data_list = []
+            indices_list = []
+            num_verts = 0
+            for info in info_group:
+                data_list.append(info["vert_data"])
+                if info["vert_indices"] is not None:
+                    indices_list.append(info["vert_indices"] + num_verts)
+                    num_verts += len(info["vert_data"])
+            # Combine lists
+            combined_info["vert_data"] = np.hstack(data_list)
+            if combined_info["vert_indices"] is not None:
+                combined_info["vert_indices"] = np.hstack(indices_list)
+            if len(combined_info["vert_indices"]) > 0:
+                result.append(combined_info)
         return result
 
     def get_shader_info(self):
         shader_info = dict(self.shader_info_template)
-        data = self.get_shader_data()
-        shader_info["raw_data"] = data.tobytes()
-        shader_info["attributes"] = data.dtype.names
+        shader_info["vert_data"] = self.get_shader_data()
+        shader_info["vert_indices"] = self.get_shader_vert_indices()
         shader_info["uniforms"] = self.get_shader_uniforms()
         return shader_info
 
@@ -1275,6 +1289,9 @@ class Mobject(Container):
         # Typically to be implemented by subclasses
         # Must return a structured numpy array
         return self.shader_data
+
+    def get_shader_vert_indices(self):
+        return self.shader_indices
 
     # Errors
     def throw_error_if_no_points(self):

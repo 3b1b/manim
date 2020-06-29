@@ -912,31 +912,39 @@ class VMobject(Mobject):
         for info in fill_info, stroke_info:
             info["depth_test"] = self.depth_test
 
+        # Build up data lists
         back_stroke_data = []
         stroke_data = []
         fill_data = []
+        fill_vert_indices = []
+        num_fill_verts = 0  # Number of fill verts
         for submob in self.family_members_with_points():
             if submob.has_fill():
-                data = submob.get_fill_shader_data().tobytes()
-                fill_data.append(data)
-            if submob.has_stroke():
-                if submob.draw_stroke_behind_fill:
-                    data = back_stroke_data
-                else:
-                    data = stroke_data
-                new_data = submob.get_stroke_shader_data()
-                data.append(new_data.tobytes())
+                data = submob.get_fill_shader_data()
+                indices = submob.get_fill_shader_vert_indices() + num_fill_verts
+                num_fill_verts += len(data)
 
+                fill_data.append(data)
+                fill_vert_indices.append(indices)
+            if submob.has_stroke():
+                data = submob.get_stroke_shader_data()
+                if submob.draw_stroke_behind_fill:
+                    back_stroke_data.append(data)
+                else:
+                    stroke_data.append(data)
+
+        # Combine data lists
         result = []
         if back_stroke_data:
             back_stroke_info = dict(stroke_info)  # Copy
-            back_stroke_info["raw_data"] = b''.join(back_stroke_data)
+            back_stroke_info["vert_data"] = np.hstack(back_stroke_data)
             result.append(back_stroke_info)
         if fill_data:
-            fill_info["raw_data"] = b''.join(fill_data)
+            fill_info["vert_data"] = np.hstack(fill_data)
+            fill_info["vert_indices"] = np.hstack(fill_vert_indices)
             result.append(fill_info)
         if stroke_data:
-            stroke_info["raw_data"] = b''.join(stroke_data)
+            stroke_info["vert_data"] = np.hstack(stroke_data)
             result.append(stroke_info)
         return result
 
@@ -1046,18 +1054,21 @@ class VMobject(Mobject):
 
     def get_fill_shader_data(self):
         points = self.points
+        n_points = len(points)
         unit_normal = self.get_unit_normal()
-        tri_indices = self.get_triangulation(unit_normal)
 
         # TODO, best way to enable multiple colors?
         rgbas = self.get_fill_rgbas()[:1]
 
-        data = self.get_blank_shader_data_array(len(tri_indices), "fill_data")
-        data["point"] = points[tri_indices]
+        data = self.get_blank_shader_data_array(n_points, "fill_data")
+        data["point"] = points
         data["unit_normal"] = unit_normal
         data["color"] = rgbas
-        data["vert_index"][:, 0] = tri_indices
+        data["vert_index"][:, 0] = self.saved_triangulation[:n_points]
         return data
+
+    def get_fill_shader_vert_indices(self):
+        return self.get_triangulation()
 
 
 class VGroup(VMobject):
