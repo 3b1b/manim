@@ -262,7 +262,7 @@ class IntroducePuzzle(Scene):
         key.to_edge(LEFT, buff=1)
 
         k = boolian_linear_combo(head_bools) ^ 63  # To make the flip below the actual solution
-        key_cube = Cube(resolution=(6, 6))
+        key_cube = Cube(square_resolution=(6, 6))
         key_cube.match_color(chessboard[k])
         key_cube.replace(chessboard[k], stretch=True)
         chessboard.replace_submobject(k, key_cube)
