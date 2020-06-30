@@ -1,5 +1,4 @@
 import numpy as np
-import operator as op
 
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
@@ -81,7 +80,7 @@ class TipableVMobject(VMobject):
         Returns a tip that has been stylistically configured,
         but has not yet been given a position in space.
         """
-        config = self.get_style()
+        config = dict()
         config.update(self.tip_config)
         config.update(kwargs)
         return ArrowTip(**config)
@@ -682,10 +681,6 @@ class CubicBezier(VMobject):
 
 
 class Polygon(VMobject):
-    CONFIG = {
-        "color": BLUE,
-    }
-
     def __init__(self, *vertices, **kwargs):
         self.vertices = vertices
         super().__init__(**kwargs)
@@ -758,6 +753,7 @@ class Triangle(RegularPolygon):
 class ArrowTip(Triangle):
     CONFIG = {
         "fill_opacity": 1,
+        "fill_color": WHITE,
         "stroke_width": 0,
         "width": DEFAULT_ARROW_TIP_WIDTH,
         "length": DEFAULT_ARROW_TIP_LENGTH,
