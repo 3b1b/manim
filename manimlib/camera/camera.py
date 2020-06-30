@@ -317,23 +317,16 @@ class Camera(object):
     def capture(self, *mobjects, **kwargs):
         self.refresh_perspective_uniforms()
         for mobject in mobjects:
-            try:
-                rg_list = self.static_mobject_to_render_group_list[id(mobject)]
-                release_when_done = False
-            except KeyError:
-                rg_list = map(self.get_render_group, mobject.get_shader_wrapper_list())
-                release_when_done = True
+            for render_group in self.get_render_group_list(mobject):
+                self.render(render_group)
 
-            for render_group in rg_list:
-                self.render(render_group, release_when_done)
-
-    def render(self, render_group, release_when_done=True):
+    def render(self, render_group):
         shader_wrapper = render_group["shader_wrapper"]
         shader_program = render_group["prog"]
         self.set_shader_uniforms(shader_program, shader_wrapper)
         self.update_depth_test(shader_wrapper)
         render_group["vao"].render(int(shader_wrapper.render_primative))
-        if release_when_done:
+        if render_group["single_use"]:
             self.release_render_group(render_group)
 
     def update_depth_test(self, shader_wrapper):
@@ -342,21 +335,13 @@ class Camera(object):
         else:
             self.ctx.disable(moderngl.DEPTH_TEST)
 
-    def set_mobjects_as_static(self, *mobjects):
-        # Creates buffer and array objects holding each mobjects shader data
-        for mob in mobjects:
-            self.static_mobject_to_render_group_list[id(mob)] = [
-                self.get_render_group(sw)
-                for sw in mob.get_shader_wrapper_list()
-            ]
+    def get_render_group_list(self, mobject):
+        try:
+            return self.static_mobject_to_render_group_list[id(mobject)]
+        except KeyError:
+            return map(self.get_render_group, mobject.get_shader_wrapper_list())
 
-    def release_static_mobjects(self):
-        for rg_list in self.static_mobject_to_render_group_list.values():
-            for render_group in rg_list:
-                self.release_render_group(render_group)
-        self.static_mobject_to_render_group_list = {}
-
-    def get_render_group(self, shader_wrapper):
+    def get_render_group(self, shader_wrapper, single_use=True):
         # Data buffers
         vbo = self.ctx.buffer(shader_wrapper.vert_data.tobytes())
         if shader_wrapper.vert_indices is None:
@@ -377,12 +362,27 @@ class Camera(object):
             "vao": vao,
             "prog": shader_program,
             "shader_wrapper": shader_wrapper,
+            "single_use": single_use,
         }
 
     def release_render_group(self, render_group):
         for key in ["vbo", "ibo", "vao"]:
             if render_group[key] is not None:
                 render_group[key].release()
+
+    def set_mobjects_as_static(self, *mobjects):
+        # Creates buffer and array objects holding each mobjects shader data
+        for mob in mobjects:
+            self.static_mobject_to_render_group_list[id(mob)] = [
+                self.get_render_group(sw, single_use=False)
+                for sw in mob.get_shader_wrapper_list()
+            ]
+
+    def release_static_mobjects(self):
+        for rg_list in self.static_mobject_to_render_group_list.values():
+            for render_group in rg_list:
+                self.release_render_group(render_group)
+        self.static_mobject_to_render_group_list = {}
 
     # Shaders
     def init_shaders(self):
