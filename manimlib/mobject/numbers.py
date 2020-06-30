@@ -124,6 +124,8 @@ class DecimalNumber(VMobject):
         )
         new_decimal.move_to(self, self.edge_to_fix)
         new_decimal.match_style(self)
+        if self.is_fixed_in_frame:
+            new_decimal.fix_in_frame()
 
         old_family = self.get_family()
         self.set_submobjects(new_decimal.submobjects)
