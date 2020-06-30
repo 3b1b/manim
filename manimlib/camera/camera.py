@@ -12,9 +12,6 @@ from manimlib.mobject.mobject import Point
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.simple_functions import fdiv
-from manimlib.utils.shaders import shader_info_to_id
-from manimlib.utils.shaders import shader_info_program_id
-from manimlib.utils.shaders import shader_info_to_program_code
 from manimlib.utils.simple_functions import clip
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import rotation_matrix_transpose_from_quaternion
@@ -168,7 +165,7 @@ class Camera(object):
         self.init_textures()
         self.init_light_source()
         self.refresh_perspective_uniforms()
-        self.static_mobjects_to_shader_info_list = {}        
+        self.static_mobject_to_render_group_list = {}
 
     def init_frame(self):
         self.frame = CameraFrame(**self.frame_config)
@@ -321,91 +318,92 @@ class Camera(object):
         self.refresh_perspective_uniforms()
         for mobject in mobjects:
             try:
-                info_list = self.static_mobjects_to_shader_info_list[id(mobject)]
+                rg_list = self.static_mobject_to_render_group_list[id(mobject)]
+                release_when_done = False
             except KeyError:
-                info_list = mobject.get_shader_info_list()
+                rg_list = map(self.get_render_group, mobject.get_shader_wrapper_list())
+                release_when_done = True
 
-            for shader_info in info_list:
-                self.render(shader_info)
+            for render_group in rg_list:
+                self.render(render_group, release_when_done)
 
-    def render(self, shader_info):
-        cached_buffers = "render_group" in shader_info
-        if cached_buffers:
-            vbo, ibo, vao, shader = shader_info["render_group"]
-        else:
-            vbo, ibo, vao, shader = self.get_render_group(shader_info)
+    def render(self, render_group, release_when_done=True):
+        shader_wrapper = render_group["shader_wrapper"]
+        shader_program = render_group["prog"]
+        self.set_shader_uniforms(shader_program, shader_wrapper)
+        self.update_depth_test(shader_wrapper)
+        render_group["vao"].render(int(shader_wrapper.render_primative))
+        if release_when_done:
+            self.release_render_group(render_group)
 
-        self.set_shader_uniforms(shader, shader_info)
-
-        if shader_info["depth_test"]:
+    def update_depth_test(self, shader_wrapper):
+        if shader_wrapper.depth_test:
             self.ctx.enable(moderngl.DEPTH_TEST)
         else:
             self.ctx.disable(moderngl.DEPTH_TEST)
 
-        vao.render(int(shader_info["render_primative"]))
-
-        if not cached_buffers:
-            self.release_gl_objects(vbo, ibo, vao)
-
-    def get_render_group(self, shader_info):
-        shader, vert_format = self.get_shader(shader_info)
-        # vbo = self.ctx.buffer(shader_info["vert_data"].tobytes())
-        vbo = self.ctx.buffer(shader_info["vert_data"])
-
-        vert_indices = shader_info["vert_indices"]
-        if vert_indices is None:
-            ibo = None
-        else:
-            ibo = self.ctx.buffer(vert_indices.astype('i4').tobytes())
-
-        vao = self.ctx.vertex_array(
-            program=shader,
-            content=[(vbo, vert_format, *shader_info["attributes"])],
-            index_buffer=ibo,
-        )
-        return (vbo, ibo, vao, shader)
-
     def set_mobjects_as_static(self, *mobjects):
-        # Create buffer and array objects holding each mobjects shader data
+        # Creates buffer and array objects holding each mobjects shader data
         for mob in mobjects:
-            info_list = mob.get_shader_info_list()
-            for info in info_list:
-                info["render_group"] = self.get_render_group(info)
-            self.static_mobjects_to_shader_info_list[id(mob)] = info_list
+            self.static_mobject_to_render_group_list[id(mob)] = [
+                self.get_render_group(sw)
+                for sw in mob.get_shader_wrapper_list()
+            ]
 
     def release_static_mobjects(self):
-        for mob, info_list in self.static_mobjects_to_shader_info_list.items():
-            for info in info_list:
-                self.release_gl_objects(*info["render_group"][:3])
-        self.static_mobjects_to_shader_info_list = {}
+        for rg_list in self.static_mobject_to_render_group_list.values():
+            for render_group in rg_list:
+                self.release_render_group(render_group)
+        self.static_mobject_to_render_group_list = {}
 
-    def release_gl_objects(self, *objs):
-        for obj in objs:
-            if obj:
-                obj.release()
+    def get_render_group(self, shader_wrapper):
+        # Data buffers
+        vbo = self.ctx.buffer(shader_wrapper.vert_data.tobytes())
+        if shader_wrapper.vert_indices is None:
+            ibo = None
+        else:
+            ibo = self.ctx.buffer(shader_wrapper.vert_indices.astype('i4').tobytes())
+
+        # Program and vertex array
+        shader_program, vert_format = self.get_shader_program(shader_wrapper)
+        vao = self.ctx.vertex_array(
+            program=shader_program,
+            content=[(vbo, vert_format, *shader_wrapper.vert_attributes)],
+            index_buffer=ibo,
+        )
+        return {
+            "vbo": vbo,
+            "ibo": ibo,
+            "vao": vao,
+            "prog": shader_program,
+            "shader_wrapper": shader_wrapper,
+        }
+
+    def release_render_group(self, render_group):
+        for key in ["vbo", "ibo", "vao"]:
+            if render_group[key] is not None:
+                render_group[key].release()
 
     # Shaders
     def init_shaders(self):
         # Initialize with the null id going to None
-        self.id_to_shader = {"": None}
+        self.id_to_shader_program = {"": None}
 
-    def get_shader(self, shader_info):
-        sid = shader_info_program_id(shader_info)
-        if sid not in self.id_to_shader:
+    def get_shader_program(self, shader_wrapper):
+        sid = shader_wrapper.get_program_id()
+        if sid not in self.id_to_shader_program:
             # Create shader program for the first time, then cache
-            # in the id_to_shader dictionary
-            program = self.ctx.program(**shader_info_to_program_code(shader_info))
-            vert_format = moderngl.detect_format(program, shader_info["attributes"])
-            self.id_to_shader[sid] = (program, vert_format)
-        program, vert_format = self.id_to_shader[sid]
-        # self.set_shader_uniforms(program, shader_info)
-        return program, vert_format
+            # in the id_to_shader_program dictionary
+            program = self.ctx.program(**shader_wrapper.get_program_code())
+            vert_format = moderngl.detect_format(program, shader_wrapper.vert_attributes)
+            self.id_to_shader_program[sid] = (program, vert_format)
+        return self.id_to_shader_program[sid]
 
-    def set_shader_uniforms(self, shader, shader_info):
-        for name, path in shader_info["texture_paths"].items():
+    def set_shader_uniforms(self, shader, shader_wrapper):
+        for name, path in shader_wrapper.texture_paths.items():
             tid = self.get_texture_id(path)
             shader[name].value = tid
-        for name, value in it.chain(shader_info["uniforms"].items(), self.perspective_uniforms.items()):
+        for name, value in it.chain(shader_wrapper.uniforms.items(), self.perspective_uniforms.items()):
             try:
                 shader[name].value = value
             except KeyError:

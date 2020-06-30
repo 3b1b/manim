@@ -2,6 +2,8 @@ import os
 import warnings
 import re
 import moderngl
+import numpy as np
+import copy
 
 from manimlib.constants import SHADER_DIR
 
@@ -12,111 +14,97 @@ from manimlib.constants import SHADER_DIR
 # to that shader
 
 
-# TODO, this should all be treated as an object
-# This object a shader program instead of the vert,
-# geom and frag file names, and it should cache those
-# programs in the way currently handled by Camera
-# It should replace the Camera.get_shader method with
-# its own get_shader_program method, which will take
-# in the camera's perspective_uniforms.
+class ShaderWrapper(object):
+    def __init__(self,
+                 vert_data=None,
+                 vert_indices=None,
+                 vert_file=None,
+                 geom_file=None,
+                 frag_file=None,
+                 uniforms=None,  # A dictionary mapping names of uniform variables
+                 texture_paths=None,  # A dictionary mapping names to filepaths for textures.
+                 depth_test=False,
+                 render_primative=moderngl.TRIANGLE_STRIP,
+                 ):
+        self.vert_data = vert_data
+        self.vert_indices = vert_indices
+        self.vert_attributes = vert_data.dtype.names
+        self.vert_file = vert_file
+        self.geom_file = geom_file
+        self.frag_file = frag_file
+        self.uniforms = uniforms or dict()
+        self.texture_paths = texture_paths or dict()
+        self.depth_test = depth_test
+        self.render_primative = str(render_primative)
+        self.id = self.create_id()
+        self.program_id = self.create_program_id()
 
+    def copy(self):
+        result = copy.copy(self)
+        result.vert_data = np.array(self.vert_data)
+        if result.vert_indices is not None:
+            result.vert_indices = np.array(self.vert_indices)
+        if self.uniforms:
+            result.uniforms = dict(self.uniforms)
+        if self.texture_paths:
+            result.texture_paths = dict(self.texture_paths)
+        return result
 
-SHADER_INFO_KEYS = [
-    # Vertex data for the shader (as structured array)
-    "vert_data",
-    # Index data (if applicable) for the shader
-    "index_data",
-    # List of variable names corresponding to inputs of vertex shader
-    "attributes",
-    # Filename of vetex shader
-    "vert",
-    # Filename of geometry shader, if there is one
-    "geom",
-    # Filename of fragment shader
-    "frag",
-    # A dictionary mapping names of uniform variables
-    "uniforms",
-    # A dictionary mapping names (as they show up in)
-    # the shader to filepaths for textures.
-    "texture_paths",
-    # Whether or not to apply depth test
-    "depth_test",
-    # E.g. moderngl.TRIANGLE_STRIP
-    "render_primative",
-]
+    def is_valid(self):
+        return all([
+            self.vert_data is not None,
+            self.vert_file,
+            self.frag_file,
+        ])
 
-# Exclude data
-SHADER_KEYS_FOR_ID = SHADER_INFO_KEYS[3:]
+    def get_id(self):
+        return self.id
 
+    def get_program_id(self):
+        return self.program_id
 
-def get_shader_info(vert_data=None,
-                    vert_indices=None,
-                    attributes=None,
-                    vert_file=None,
-                    geom_file=None,
-                    frag_file=None,
-                    uniforms=None,
-                    texture_paths=None,
-                    depth_test=False,
-                    render_primative=moderngl.TRIANGLE_STRIP,
-                    ):
-    result = {
-        "vert_data": vert_data,
-        "vert_indices": vert_indices,
-        "attributes": attributes,
-        "vert": vert_file,
-        "geom": geom_file,
-        "frag": frag_file,
-        "uniforms": uniforms or dict(),
-        "texture_paths": texture_paths or dict(),
-        "depth_test": depth_test,
-        "render_primative": str(render_primative),
-    }
-    result["id"] = create_shader_info_id(result)
-    result["prog_id"] = create_shader_info_program_id(result)
-    return result
+    def create_id(self):
+        # A unique id for a shader
+        return "|".join(map(str, [
+            self.vert_file,
+            self.geom_file,
+            self.frag_file,
+            self.uniforms,
+            self.texture_paths,
+            self.depth_test,
+            self.render_primative,
+        ]))
 
+    def refresh_id(self):
+        self.id = self.create_id()
 
-def is_valid_shader_info(shader_info):
-    vert_data = shader_info["vert_data"]
-    return all([
-        vert_data is not None,
-        shader_info["vert"],
-        shader_info["frag"],
-    ])
+    def create_program_id(self):
+        return "|".join(map(str, [self.vert_file, self.geom_file, self.frag_file]))
 
+    def get_program_code(self):
+        return {
+            "vertex_shader": get_shader_code_from_file(self.vert_file),
+            "geometry_shader": get_shader_code_from_file(self.geom_file),
+            "fragment_shader": get_shader_code_from_file(self.frag_file),
+        }
 
-def shader_info_to_id(shader_info):
-    return shader_info["id"]
-
-
-def shader_info_program_id(shader_info):
-    return shader_info["prog_id"]
-
-
-def create_shader_info_id(shader_info):
-    # A unique id for a shader
-    return "|".join([str(shader_info[key]) for key in SHADER_KEYS_FOR_ID])
-
-
-def refresh_shader_info_id(shader_info):
-    shader_info["id"] = create_shader_info_id(shader_info)
-
-
-def create_shader_info_program_id(shader_info):
-    return "|".join([str(shader_info[key]) for key in ["vert", "geom", "frag"]])
-
-
-def same_shader_type(info1, info2):
-    return info1["id"] == info2["id"]
-
-
-def shader_info_to_program_code(shader_info):
-    return {
-        "vertex_shader": get_shader_code_from_file(shader_info["vert"]),
-        "geometry_shader": get_shader_code_from_file(shader_info["geom"]),
-        "fragment_shader": get_shader_code_from_file(shader_info["frag"]),
-    }
+    def combine_with(self, *shader_wrappers):
+        # Assume they are of the same type
+        if len(shader_wrappers) == 0:
+            return
+        if self.vert_indices is not None:
+            num_verts = len(self.vert_data)
+            indices_list = [self.vert_indices]
+            data_list = [self.vert_data]
+            for sw in shader_wrappers:
+                indices_list.append(sw.vert_indices + num_verts)
+                data_list.append(sw.vert_data)
+                num_verts += len(sw.vert_data)
+            self.vert_indices = np.hstack(indices_list)
+            self.vert_data = np.hstack(data_list)
+        else:
+            self.vert_data = np.hstack([self.vert_data, *[sw.vert_data for sw in shader_wrappers]])
+        return self
 
 
 def get_shader_code_from_file(filename):

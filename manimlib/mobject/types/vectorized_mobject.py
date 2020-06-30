@@ -27,8 +27,7 @@ from manimlib.utils.space_ops import earclip_triangulation
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import get_unit_normal
 from manimlib.utils.space_ops import z_to_vector
-from manimlib.utils.shaders import refresh_shader_info_id
-from manimlib.utils.shaders import get_shader_info
+from manimlib.utils.shaders import ShaderWrapper
 
 
 class VMobject(Mobject):
@@ -882,70 +881,67 @@ class VMobject(Mobject):
     def init_shader_data(self):
         self.fill_data = np.zeros(len(self.points), dtype=self.fill_dtype)
         self.stroke_data = np.zeros(len(self.points), dtype=self.stroke_dtype)
-        self.fill_shader_info_template = get_shader_info(
-            attributes=self.fill_data.dtype.names,
+        self.fill_shader_wrapper = ShaderWrapper(
+            vert_data=self.fill_data,
+            vert_indices=np.zeros(0, dtype='i4'),
             vert_file=self.fill_vert_shader_file,
             geom_file=self.fill_geom_shader_file,
             frag_file=self.fill_frag_shader_file,
-            depth_test=self.depth_test,
             render_primative=self.render_primative,
         )
-        self.stroke_shader_info_template = get_shader_info(
-            attributes=self.stroke_data.dtype.names,
+        self.stroke_shader_wrapper = ShaderWrapper(
+            vert_data=self.stroke_data,
             vert_file=self.stroke_vert_shader_file,
             geom_file=self.stroke_geom_shader_file,
             frag_file=self.stroke_frag_shader_file,
-            depth_test=self.depth_test,
             render_primative=self.render_primative,
         )
 
-    def refresh_shader_info_template_id(self):
-        for template in [self.fill_shader_info_template, self.stroke_shader_info_template]:
-            refresh_shader_info_id(template)
+    def refresh_shader_wrapper_id(self):
+        for wrapper in [self.fill_shader_wrapper, self.stroke_shader_wrapper]:
+            wrapper.refresh_id()
         return self
 
-    def get_shader_info_list(self):
-        fill_info = dict(self.fill_shader_info_template)
-        stroke_info = dict(self.stroke_shader_info_template)
-        fill_info["uniforms"] = self.get_shader_uniforms()
-        stroke_info["uniforms"] = self.get_stroke_uniforms()
-        for info in fill_info, stroke_info:
-            info["depth_test"] = self.depth_test
+    def get_fill_shader_wrapper(self):
+        self.fill_shader_wrapper.vert_data = self.get_fill_shader_data()
+        self.fill_shader_wrapper.vert_indices = self.get_fill_shader_vert_indices()
+        self.fill_shader_wrapper.uniforms = self.get_shader_uniforms()
+        self.fill_shader_wrapper.depth_test = self.depth_test
+        return self.fill_shader_wrapper
 
+    def get_stroke_shader_wrapper(self):
+        self.stroke_shader_wrapper.vert_data = self.get_stroke_shader_data()
+        self.stroke_shader_wrapper.uniforms = self.get_stroke_uniforms()
+        self.stroke_shader_wrapper.depth_test = self.depth_test
+        return self.stroke_shader_wrapper
+
+    def get_shader_wrapper_list(self):
         # Build up data lists
-        back_stroke_data = []
-        stroke_data = []
-        fill_data = []
-        fill_vert_indices = []
-        num_fill_verts = 0  # Number of fill verts
+        fill_shader_wrappers = []
+        stroke_shader_wrappers = []
+        back_stroke_shader_wrappers = []
         for submob in self.family_members_with_points():
             if submob.has_fill():
-                data = submob.get_fill_shader_data()
-                indices = submob.get_fill_shader_vert_indices() + num_fill_verts
-                num_fill_verts += len(data)
-
-                fill_data.append(data)
-                fill_vert_indices.append(indices)
+                fill_shader_wrappers.append(submob.get_fill_shader_wrapper())
             if submob.has_stroke():
-                data = submob.get_stroke_shader_data()
+                ssw = submob.get_stroke_shader_wrapper()
                 if submob.draw_stroke_behind_fill:
-                    back_stroke_data.append(data)
+                    back_stroke_shader_wrappers.append(ssw)
                 else:
-                    stroke_data.append(data)
+                    stroke_shader_wrappers.append(ssw)
 
         # Combine data lists
+        wrapper_lists = [
+            back_stroke_shader_wrappers,
+            fill_shader_wrappers,
+            stroke_shader_wrappers
+        ]
         result = []
-        if back_stroke_data:
-            back_stroke_info = dict(stroke_info)  # Copy
-            back_stroke_info["vert_data"] = np.hstack(back_stroke_data)
-            result.append(back_stroke_info)
-        if fill_data:
-            fill_info["vert_data"] = np.hstack(fill_data)
-            fill_info["vert_indices"] = np.hstack(fill_vert_indices)
-            result.append(fill_info)
-        if stroke_data:
-            stroke_info["vert_data"] = np.hstack(stroke_data)
-            result.append(stroke_info)
+        for wlist in wrapper_lists:
+            if wlist:
+                wrapper = wlist[0]
+                wrapper.combine_with(*wlist[1:])
+                result.append(wrapper)
         return result
 
     def get_stroke_uniforms(self):
@@ -1013,7 +1009,7 @@ class VMobject(Mobject):
             return self.saved_triangulation
 
         if len(self.points) <= 1:
-            return []
+            return np.zeros(0, dtype='i4')
 
         # Rotate points such that unit normal vector is OUT
         # TODO, 99% of the time this does nothing.  Do a check for that?

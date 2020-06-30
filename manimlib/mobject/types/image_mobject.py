@@ -30,23 +30,13 @@ class ImageMobject(Mobject):
 
     def init_points(self):
         self.points = np.array([UL, DL, UR, DR])
+        self.im_coords = np.array([(0, 0), (0, 1), (1, 0), (1, 1)])
         size = self.image.size
         self.set_width(2 * size[0] / size[1], stretch=True)
         self.set_height(self.height)
 
-        self.im_coords = np.array(
-            [(0, 0), (0, 1), (1, 0), (1, 1)]
-        )
-
     def init_colors(self):
         self.set_opacity(self.opacity)
-
-    def get_shader_data(self):
-        data = self.get_blank_shader_data_array(len(self.points))
-        data["point"] = self.points
-        data["im_coords"] = self.im_coords
-        data["opacity"] = self.opacity
-        return data
 
     def set_opacity(self, alpha, family=True):
         opacity = listify(alpha)
@@ -67,3 +57,10 @@ class ImageMobject(Mobject):
         self.opacity = interpolate(
             mobject1.opacity, mobject2.opacity, alpha
         )
+
+    def get_shader_data(self):
+        data = self.get_blank_shader_data_array(len(self.points))
+        data["point"] = self.points
+        data["im_coords"] = self.im_coords
+        data["opacity"] = self.opacity
+        return data
