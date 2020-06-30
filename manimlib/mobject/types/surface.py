@@ -3,6 +3,7 @@ import moderngl
 
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
+from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.color import color_to_rgba
 from manimlib.utils.color import rgb_to_color
@@ -123,6 +124,34 @@ class ParametricSurface(Mobject):
         self.rgbas = interpolate(mobject1.rgbas, mobject2.rgbas, alpha)
         return self
 
+    def pointwise_become_partial(self, smobject, a, b):
+        assert(isinstance(smobject, ParametricSurface))
+        self.points[:] = smobject.points[:]
+        if a <= 0 and b >= 1:
+            return self
+
+        nu, nv = smobject.resolution
+        self.points[:] = np.vstack([
+            self.get_partial_points_array(arr, a, b, (nu, nv, 3))
+            for arr in self.get_surface_points_and_nudged_points()
+        ])
+        return self
+
+    def get_partial_points_array(self, points, a, b, resolution):
+        nu, nv = resolution[:2]
+        points = points.reshape(resolution)
+        lower_index, lower_residue = integer_interpolate(0, nv - 1, a)
+        upper_index, upper_residue = integer_interpolate(0, nv - 1, b)
+        tuples = [
+            (points[:, :lower_index], lower_index, lower_residue),
+            (points[:, upper_index:], upper_index, upper_residue),
+        ]
+        for to_change, index, residue in tuples:
+            col = interpolate(points[:, index], points[:, index + 1], residue)
+            to_change[:] = np.tile(col, to_change.shape[1]).reshape(to_change.shape)
+        return points.reshape((nu * nv, *resolution[2:]))
+
+    # For shaders
     def get_shader_data(self):
         s_points, du_points, dv_points = self.get_surface_points_and_nudged_points()
         data = self.get_blank_shader_data_array(len(s_points))
@@ -212,12 +241,21 @@ class TexturedSurface(ParametricSurface):
                 sm.set_opacity(opacity, family)
         return self
 
+    def pointwise_become_partial(self, tsmobject, a, b):
+        super().pointwise_become_partial(tsmobject, a, b)
+        self.im_coords[:] = tsmobject.im_coords
+        if a <= 0 and b >= 1:
+            return self
+        nu, nv = tsmobject.resolution
+        self.im_coords[:] = self.get_partial_points_array(self.im_coords, a, b, (nu, nv, 2))
+        return self
+
     def get_shader_uniforms(self):
         result = super().get_shader_uniforms()
         result["num_textures"] = self.num_textures
         return result
 
     def fill_in_shader_color_info(self, data):
-        data["im_coords"] = self.im_coords[self.get_triangle_indices()]
+        data["im_coords"] = self.im_coords
         data["opacity"] = self.opacity
         return data
