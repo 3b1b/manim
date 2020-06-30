@@ -834,9 +834,8 @@ class VMobject(Mobject):
 
     def pointwise_become_partial(self, vmobject, a, b):
         assert(isinstance(vmobject, VMobject))
-        assert(len(self.points) >= len(vmobject.points))
+        self.points[:] = vmobject.points[:]
         if a <= 0 and b >= 1:
-            self.points[:] = vmobject.points[:]
             return self
         num_curves = self.get_num_curves()
         nppc = self.n_points_per_curve
@@ -867,7 +866,7 @@ class VMobject(Mobject):
             high_tup = partial_quadratic_bezier_points(vmobject.points[i3:i4], 0, upper_residue)
             self.points[0:i1] = low_tup[0]
             self.points[i1:i2] = low_tup
-            self.points[i2:i3] = vmobject.points[i2:i3]
+            # Keep points i2:i3 as they are
             self.points[i3:i4] = high_tup
             self.points[i4:] = high_tup[2]
         return self
