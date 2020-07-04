@@ -433,7 +433,7 @@ class Mobject(Container):
         return self
 
     def shift_onto_screen(self, **kwargs):
-        space_lengths = [FRAME_X_RADIUS, FRAME_Y_RADIUS]
+        space_lengths = [config['frame_x_radius'], config['frame_y_radius']]
         for vect in UP, DOWN, LEFT, RIGHT:
             dim = np.argmax(np.abs(vect))
             buff = kwargs.get("buff", DEFAULT_MOBJECT_TO_EDGE_BUFFER)
@@ -444,13 +444,13 @@ class Mobject(Container):
         return self
 
     def is_off_screen(self):
-        if self.get_left()[0] > FRAME_X_RADIUS:
+        if self.get_left()[0] > config['frame_x_radius']:
             return True
-        if self.get_right()[0] < -FRAME_X_RADIUS:
+        if self.get_right()[0] < -config['frame_x_radius']:
             return True
-        if self.get_bottom()[1] > FRAME_Y_RADIUS:
+        if self.get_bottom()[1] > config['frame_y_radius']:
             return True
-        if self.get_top()[1] < -FRAME_Y_RADIUS:
+        if self.get_top()[1] < -config['frame_y_radius']:
             return True
         return False
 

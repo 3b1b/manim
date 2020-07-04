@@ -1,5 +1,4 @@
 import inspect
-import itertools as it
 import os
 import platform
 import subprocess as sp

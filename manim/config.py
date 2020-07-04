@@ -114,9 +114,15 @@ def _parse_file_writer_config(config_parser, args):
         attr = getattr(args, boolean_opt)
         config[boolean_opt] = (default.getboolean(boolean_opt)
                                if attr is None else attr)
-    for str_opt in ['media_dir', 'video_dir', 'tex_dir', 'text_dir']:
+    # for str_opt in ['media_dir', 'video_dir', 'tex_dir', 'text_dir']:
+    for str_opt in ['media_dir']:
         attr = getattr(args, str_opt)
         config[str_opt] = (default[str_opt] if attr is None else attr)
+    dir_names = {'video_dir': 'videos',
+                 'tex_dir': 'Tex',
+                 'text_dir': 'texts'}
+    for name in dir_names:
+        config[name] = os.path.join(config['media_dir'], dir_names[name])
 
     # Handle the -s (--save_last_frame) flag: invalidate the -w flag
     # At this point the save_last_frame option has already been set by
@@ -270,19 +276,19 @@ def _parse_cli(arg_list, input=True):
         "--media_dir",
         help="directory to write media",
     )
-    video_group = parser.add_mutually_exclusive_group()
-    video_group.add_argument(
-        "--video_dir",
-        help="directory to write file tree for video",
-    )
-    parser.add_argument(
-        "--tex_dir",
-        help="directory to write tex",
-    )
-    parser.add_argument(
-        "--text_dir",
-        help="directory to write text",
-    )
+    # video_group = parser.add_mutually_exclusive_group()
+    # video_group.add_argument(
+    #     "--video_dir",
+    #     help="directory to write file tree for video",
+    # )
+    # parser.add_argument(
+    #     "--tex_dir",
+    #     help="directory to write tex",
+    # )
+    # parser.add_argument(
+    #     "--text_dir",
+    #     help="directory to write text",
+    # )
     parser.add_argument(
         "--tex_template",
         help="Specify a custom TeX template file",
@@ -390,6 +396,9 @@ config_files = [
 
 if _from_command_line():
     args = _parse_cli(sys.argv[1:])
+    file_config = os.path.join(os.path.dirname(args.file), 'manim.cfg')
+    if os.path.exists(file_config):
+        config_files.append(file_config)
     if args.config_file is not None:
         config_files.append(args.config_file)
 
