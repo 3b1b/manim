@@ -177,7 +177,7 @@ def _parse_file_writer_config(config_parser, args):
 def _parse_cli(arg_list, input=True):
     parser = argparse.ArgumentParser(
         description='Animation engine for explanatory math videos',
-        epilog='Made with <3 by the manim community devs'
+        epilog='Made with ❤ by the manim community devs'
     )
     if input:
         parser.add_argument(
@@ -391,16 +391,19 @@ library_wide = os.path.join(os.path.dirname(__file__), 'default.cfg')
 config_files = [
     library_wide,
     os.path.expanduser('~/.manim.cfg'),
-    os.path.join(os.getcwd(), 'manim.cfg'),
 ]
 
 if _from_command_line():
     args = _parse_cli(sys.argv[1:])
-    file_config = os.path.join(os.path.dirname(args.file), 'manim.cfg')
-    if os.path.exists(file_config):
-        config_files.append(file_config)
     if args.config_file is not None:
-        config_files.append(args.config_file)
+        if os.path.exists(args.config_file):
+            config_files.append(args.config_file)
+        else:
+            raise FileNotFoundError(f"Config file {args.config_file} doesn't exist")
+    else:
+        script_directory_file_config = os.path.join(os.path.dirname(args.file), 'manim.cfg')
+        if os.path.exists(script_directory_file_config):
+            config_files.append(script_directory_file_config)
 
 else:
     # In this case, we still need an empty args object.
