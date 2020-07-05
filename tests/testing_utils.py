@@ -43,6 +43,10 @@ class SceneTester:
             config['tex_dir'] = os.path.join(
                 self.path_tests_medias_cache, scene_object.__name__, 'Tex')
 
+        config['pixel_height'] = 480
+        config['pixel_width'] = 854
+        config['frame_rate'] = 15
+
         # By invoking this, the scene is rendered.
         self.scene = scene_object()
 
@@ -54,19 +58,31 @@ class SceneTester:
         :class:`numpy.array`
             The pre-rendered frame.
         """
-        with pytest.raises(FileNotFoundError) as e_info:
-            data_loaded = np.load(os.path.join(
-                self.path_tests_data, "{}.npy".format(str(self.scene))))
-            raise FileNotFoundError('test_data not found !')
-        assert (str(e_info.value) ==
-                'test_data not found !'), f"{str(self.scene).replace('Test', '')} does not seem have a pre-rendered frame for testing, or it has not been found."
-        return data_loaded
+        frame_data_path = os.path.join(
+            self.path_tests_data, "{}.npy".format(str(self.scene)))
+        return np.load(frame_data_path)
+
 
     def test(self):
         """Compare pre-rendered frame to the frame rendered during the test."""
-        test_result = np.array_equal(self.scene.get_frame(), self.load_data())
-        assert(
-            test_result), f"The frames don't match. {str(self.scene).replace('Test', '')} has been modified. Please ignore if it was intended"
+        frame_data = self.scene.get_frame()
+        expected_frame_data = self.load_data()
+
+        assert frame_data.shape == expected_frame_data.shape, \
+            "The frames have different shape:" \
+            + f"\nexpected_frame_data.shape = {expected_frame_data.shape}" \
+            + f"\nframe_data.shape = {frame_data.shape}"
+
+        test_result = np.array_equal(frame_data, expected_frame_data)
+        if not test_result:
+            incorrect_indices = np.argwhere(frame_data != expected_frame_data)
+            first_incorrect_index = incorrect_indices[0][:2]
+            first_incorrect_point = frame_data[tuple(first_incorrect_index)]
+            expected_point = expected_frame_data[tuple(first_incorrect_index)]
+            assert test_result, \
+                f"The frames don't match. {str(self.scene).replace('Test', '')} has been modified." \
+                + "\nPlease ignore if it was intended." \
+                + f"\nFirst unmatched index is at {first_incorrect_index}: {first_incorrect_point} != {expected_point}"
 
 
 def get_scenes_to_test(module_name):
