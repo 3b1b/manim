@@ -89,5 +89,5 @@ class ShrinkToCenterTest(Scene):
         square = Square()
         self.play(ShrinkToCenter(square))
 
-def test_scenes(get_config_test):
-    utils_test_scenes(get_scenes_to_test(__name__), get_config_test, "creation")
+def test_scenes():
+    utils_test_scenes(get_scenes_to_test(__name__), "creation")

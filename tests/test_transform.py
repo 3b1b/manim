@@ -119,5 +119,5 @@ class CyclicReplaceTest(Scene):
         self.play(CyclicReplace(square, circle))
 
 
-def test_scenes(get_config_test):
-    utils_test_scenes(get_scenes_to_test(__name__), get_config_test, "transform")
+def test_scenes():
+    utils_test_scenes(get_scenes_to_test(__name__), "transform")

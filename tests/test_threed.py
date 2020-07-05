@@ -31,5 +31,5 @@ class AmbientCameraMoveTest(ThreeDScene):
         self.play(Animation(cube))
 
 
-def test_scenes(get_config_test):
-    utils_test_scenes(get_scenes_to_test(__name__), get_config_test, "threed")
+def test_scenes():
+    utils_test_scenes(get_scenes_to_test(__name__), "threed")
