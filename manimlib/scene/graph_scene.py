@@ -34,6 +34,7 @@ class GraphScene(Scene):
         "x_leftmost_tick": None,  # Change if different from x_min
         "x_labeled_nums": None,
         "x_axis_label": "$x$",
+        "x_num_decimal_places": 0,
         "y_min": -1,
         "y_max": 10,
         "y_axis_height": 6,
@@ -41,6 +42,7 @@ class GraphScene(Scene):
         "y_bottom_tick": None,  # Change if different from y_min
         "y_labeled_nums": None,
         "y_axis_label": "$y$",
+        "y_num_decimal_places": 0,
         "axes_color": GREY,
         "graph_origin": 2.5 * DOWN + 4 * LEFT,
         "exclude_zero_label": True,
@@ -88,7 +90,8 @@ class GraphScene(Scene):
             tick_frequency=self.x_tick_frequency,
             leftmost_tick=self.x_leftmost_tick,
             numbers_with_elongated_ticks=self.x_labeled_nums,
-            color=self.axes_color
+            color=self.axes_color,
+            decimal_number_config={"num_decimal_places": self.x_num_decimal_places}
         )
         x_axis.shift(self.graph_origin - x_axis.number_to_point(0))
         if len(self.x_labeled_nums) > 0:
@@ -122,6 +125,7 @@ class GraphScene(Scene):
             color=self.axes_color,
             line_to_number_vect=LEFT,
             label_direction=LEFT,
+            decimal_number_config={"num_decimal_places": self.y_num_decimal_places}
         )
         y_axis.shift(self.graph_origin - y_axis.number_to_point(0))
         y_axis.rotate(np.pi / 2, about_point=y_axis.number_to_point(0))
