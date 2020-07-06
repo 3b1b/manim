@@ -14,7 +14,7 @@ jobs:
 
     - os: linux
       language: python
-      python: 3.7     
+      python: 3.7
       install:
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
@@ -39,7 +39,7 @@ jobs:
       language: sh
       python: 3.6
       env: PYVER="3.6.10"
-      before_install: 
+      before_install:
         - ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
         - brew install ffmpeg
         - brew cask install mactex
@@ -56,7 +56,7 @@ jobs:
       language: sh
       python: 3.7
       env: PYVER="3.7.7"
-      before_install: 
+      before_install:
         - ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
         - brew install ffmpeg
         - brew cask install mactex
@@ -73,7 +73,7 @@ jobs:
       language: sh
       python: 3.8
       env: PYVER="3.8.0" # Using Python 3.8.0 due to error with rich
-      before_install: 
+      before_install:
         - ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
         - brew install ffmpeg
         - brew cask install mactex
@@ -101,7 +101,7 @@ jobs:
         - python ./scripts/pycairoinstall.py
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .
-      script: 
+      script:
         - python -m pytest --skip_end_to_end -rs
 
     - os: windows
@@ -117,7 +117,7 @@ jobs:
         - python ./scripts/pycairoinstall.py
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .
-      script: 
+      script:
         - python -m pytest --skip_end_to_end -rs
 
     - os: windows
@@ -133,12 +133,13 @@ jobs:
         - python ./scripts/pycairoinstall.py
         - cmd.exe //c "RefreshEnv.cmd"
         - python -m pip install --user .
-      script: 
+      script:
         - python -m pytest --skip_end_to_end -rs
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then chmod +x ./.travis/osx.sh; sh ./.travis/osx.sh; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then chmod +x ./.travis/linux.sh; sh ./.travis/linux.sh; fi
+
 branches:
   only:
   - master

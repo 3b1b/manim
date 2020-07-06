@@ -1,11 +1,11 @@
 import os
 import hashlib
-
 from pathlib import Path
 
 from .. import constants
-from .. import dirs
+from ..config import file_writer_config, config
 from ..logger import logger
+
 
 def tex_hash(expression):
     id_str = str(expression)
@@ -14,11 +14,13 @@ def tex_hash(expression):
     # Truncating at 16 bytes for cleanliness
     return hasher.hexdigest()[:16]
 
+
 def tex_to_svg_file(expression, source_type):
-    tex_template = constants.TEX_TEMPLATE
+    tex_template = config['tex_template']
     tex_file = generate_tex_file(expression, tex_template, source_type)
     dvi_file = tex_to_dvi(tex_file, tex_template.use_ctex)
     return dvi_to_svg(dvi_file, use_ctex=tex_template.use_ctex)
+
 
 def generate_tex_file(expression, tex_template, source_type):
     if source_type == "text":
@@ -27,7 +29,7 @@ def generate_tex_file(expression, tex_template, source_type):
         output = tex_template.get_text_for_tex_mode(expression)
 
     result = os.path.join(
-        dirs.TEX_DIR,
+        file_writer_config['tex_dir'],
         tex_hash(output)
     ) + ".tex"
     if not os.path.exists(result):
@@ -39,11 +41,11 @@ def generate_tex_file(expression, tex_template, source_type):
     return result
 
 
-def tex_to_dvi(tex_file, use_ctex = False):
+def tex_to_dvi(tex_file, use_ctex=False):
     result = tex_file.replace(".tex", ".dvi" if not use_ctex else ".xdv")
     result = Path(result).as_posix()
     tex_file = Path(tex_file).as_posix()
-    tex_dir = Path(dirs.TEX_DIR).as_posix()
+    tex_dir = Path(file_writer_config['tex_dir']).as_posix()
     if not os.path.exists(result):
         commands = [
             "latex",
@@ -67,9 +69,10 @@ def tex_to_dvi(tex_file, use_ctex = False):
         if exit_code != 0:
             log_file = tex_file.replace(".tex", ".log")
             raise Exception(
-                ("LaTeX error converting to dvi. " if not use_ctex
-                else "XeLaTeX error converting to xdv. ") +
-                "See log output above or the log file: %s" % log_file)
+                ("LaTeX error converting to dvi. "
+                 if not use_ctex
+                 else "XeLaTeX error converting to xdv. ") +
+                f"See log output above or the log file: {log_file}")
     return result
 
 

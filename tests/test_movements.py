@@ -6,7 +6,7 @@ class HomotopyTest(Scene):
     def construct(self):
         def func(x, y, z, t):
             norm = get_norm([x, y])
-            tau = interpolate(5, -5, t) + norm/FRAME_X_RADIUS
+            tau = interpolate(5, -5, t) + norm/config['frame_x_radius']
             alpha = sigmoid(tau)
             return [x, y + 0.5*np.sin(2*np.pi*alpha)-t*SMALL_BUFF/2, z]
         square = Square()
@@ -46,5 +46,5 @@ class ShiftTest(Scene):
         self.play(square.shift, UP)
 
 
-def test_scenes(get_config_test):
-    utils_test_scenes(get_scenes_to_test(__name__), get_config_test, "movements")
+def test_scenes():
+    utils_test_scenes(get_scenes_to_test(__name__), "movements")

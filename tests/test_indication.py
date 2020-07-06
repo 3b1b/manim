@@ -73,7 +73,5 @@ class TurnInsideOutTest(Scene):
         self.add(square)
         self.play(TurnInsideOut(square))
 
-def test_scenes(get_config_test):
-    utils_test_scenes(get_scenes_to_test(__name__), get_config_test, "indication")
-
-
+def test_scenes():
+    utils_test_scenes(get_scenes_to_test(__name__), "indication")

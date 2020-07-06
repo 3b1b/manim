@@ -21,5 +21,5 @@ class ValueTrackerTest(Scene):
         line_2.rotate(theta.get_value(), about_point=ORIGIN)
 
 
-def test_scenes(get_config_test):
-    utils_test_scenes(get_scenes_to_test(__name__), get_config_test, "updaters")
+def test_scenes():
+    utils_test_scenes(get_scenes_to_test(__name__), "updaters")

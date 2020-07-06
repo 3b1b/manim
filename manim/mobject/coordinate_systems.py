@@ -2,6 +2,7 @@ import numpy as np
 import numbers
 
 from ..constants import *
+from ..config import config
 from ..mobject.functions import ParametricFunction
 from ..mobject.geometry import Arrow
 from ..mobject.geometry import Line
@@ -22,10 +23,10 @@ class CoordinateSystem():
     """
     CONFIG = {
         "dimension": 2,
-        "x_min": -FRAME_X_RADIUS,
-        "x_max": FRAME_X_RADIUS,
-        "y_min": -FRAME_Y_RADIUS,
-        "y_max": FRAME_Y_RADIUS,
+        "x_min": -config['frame_x_radius'],
+        "x_max": config['frame_x_radius'],
+        "y_min": -config['frame_y_radius'],
+        "y_max": config['frame_y_radius'],
     }
 
     def coords_to_point(self, *coords):

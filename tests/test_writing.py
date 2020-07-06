@@ -20,7 +20,7 @@ class TextMobjectTest(Scene):
 
 class TexMobjectTest(Scene):
     def construct(self):
-        #IMPORTANT NOTE : This won't test the abitilty of manim to write/cache latex. 
+        #IMPORTANT NOTE : This won't test the abitilty of manim to write/cache latex.
         # i.e It will pass even if latex is not installed.
         # This is due to the fact that the latex used here has been cached (see test_cache directory)
         constants.TEX_TEMPLATE = TexTemplate()
@@ -32,5 +32,5 @@ class TexMobjectTest(Scene):
 
 
 
-def test_scenes(get_config_test):
-    utils_test_scenes(get_scenes_to_test(__name__), get_config_test, "writing", caching_needed=True)
+def test_scenes():
+    utils_test_scenes(get_scenes_to_test(__name__), "writing", caching_needed=True)

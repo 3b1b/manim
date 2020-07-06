@@ -10,7 +10,7 @@ from colour import Color
 import numpy as np
 
 from ..constants import *
-from .. import dirs
+from ..config import config
 from ..container.container import Container
 from ..utils.color import color_gradient
 from ..utils.color import interpolate_color
@@ -111,7 +111,7 @@ class Mobject(Container):
 
     def save_image(self, name=None):
         self.get_image().save(
-            os.path.join(dirs.VIDEO_DIR, (name or str(self)) + ".png")
+            os.path.join(config['VIDEO_DIR'], (name or str(self)) + ".png")
         )
 
     def copy(self):
@@ -389,7 +389,7 @@ class Mobject(Container):
         Direction just needs to be a vector pointing towards side or
         corner in the 2d plane.
         """
-        target_point = np.sign(direction) * (FRAME_X_RADIUS, FRAME_Y_RADIUS, 0)
+        target_point = np.sign(direction) * (config['frame_x_radius'], config['frame_y_radius'], 0)
         point_to_align = self.get_critical_point(direction)
         shift_val = target_point - point_to_align - buff * np.array(direction)
         shift_val = shift_val * abs(np.sign(direction))
@@ -433,7 +433,7 @@ class Mobject(Container):
         return self
 
     def shift_onto_screen(self, **kwargs):
-        space_lengths = [FRAME_X_RADIUS, FRAME_Y_RADIUS]
+        space_lengths = [config['frame_x_radius'], config['frame_y_radius']]
         for vect in UP, DOWN, LEFT, RIGHT:
             dim = np.argmax(np.abs(vect))
             buff = kwargs.get("buff", DEFAULT_MOBJECT_TO_EDGE_BUFFER)
@@ -444,13 +444,13 @@ class Mobject(Container):
         return self
 
     def is_off_screen(self):
-        if self.get_left()[0] > FRAME_X_RADIUS:
+        if self.get_left()[0] > config['frame_x_radius']:
             return True
-        if self.get_right()[0] < -FRAME_X_RADIUS:
+        if self.get_right()[0] < -config['frame_x_radius']:
             return True
-        if self.get_bottom()[1] > FRAME_Y_RADIUS:
+        if self.get_bottom()[1] > config['frame_y_radius']:
             return True
-        if self.get_top()[1] < -FRAME_Y_RADIUS:
+        if self.get_top()[1] < -config['frame_y_radius']:
             return True
         return False
 

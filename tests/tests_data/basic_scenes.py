@@ -14,8 +14,8 @@ class SquareToCircle(Scene):
         self.play(Transform(square, circle))
         self.play(FadeOut(square))
 
-class WriteStuff(Scene): 
-    def construct(self): 
+class WriteStuff(Scene):
+    def construct(self):
         example_text = TextMobject(
             "This is a some text",
             tex_to_color_map={"text": YELLOW}
@@ -25,6 +25,6 @@ class WriteStuff(Scene):
         )
         group = VGroup(example_text, example_tex)
         group.arrange(DOWN)
-        group.set_width(FRAME_WIDTH - 2 * LARGE_BUFF)
+        group.set_width(config['frame_width'] - 2 * LARGE_BUFF)
 
         self.play(Write(example_text))
