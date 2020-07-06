@@ -9,6 +9,7 @@ from ..animation.transform import ApplyFunction
 from ..animation.transform import ApplyPointwiseFunction
 from ..animation.transform import Transform
 from ..constants import *
+from ..config import config
 from ..mobject.coordinate_systems import Axes
 from ..mobject.coordinate_systems import NumberPlane
 from ..mobject.geometry import Arrow
@@ -488,8 +489,8 @@ class VectorScene(Scene):
             vector = vector.get_end() - vector.get_start()
         elif len(vector) == 2:
             vector = np.append(np.array(vector), 0.0)
-        x_max = int(FRAME_X_RADIUS + abs(vector[0]))
-        y_max = int(FRAME_Y_RADIUS + abs(vector[1]))
+        x_max = int(config['frame_x_radius'] + abs(vector[0]))
+        y_max = int(config['frame_y_radius'] + abs(vector[1]))
         dots = VMobject(*[
             Dot(x * RIGHT + y * UP)
             for x in range(-x_max, x_max)
@@ -517,10 +518,10 @@ class LinearTransformationScene(VectorScene):
         "include_background_plane": True,
         "include_foreground_plane": True,
         "foreground_plane_kwargs": {
-            "x_max": FRAME_WIDTH / 2,
-            "x_min": -FRAME_WIDTH / 2,
-            "y_max": FRAME_WIDTH / 2,
-            "y_min": -FRAME_WIDTH / 2,
+            "x_max": config['frame_width'] / 2,
+            "x_min": -config['frame_width'] / 2,
+            "y_max": config['frame_width'] / 2,
+            "y_min": -config['frame_width'] / 2,
             "faded_line_ratio": 0
         },
         "background_plane_kwargs": {

@@ -10,6 +10,7 @@ import cairo
 import numpy as np
 
 from ..constants import *
+from ..config import config
 from ..logger import logger
 from ..mobject.types.image_mobject import AbstractImageMobject
 from ..mobject.mobject import Mobject
@@ -36,24 +37,24 @@ class Camera(object):
     self.background_image : str, optional
         The path to an image that should be the background image.
         If not set, the background is filled with `self.background_color`
-    
+
     self.pixel_height
     """
     CONFIG = {
         "background_image": None,
-        "pixel_height": DEFAULT_PIXEL_HEIGHT,
-        "pixel_width": DEFAULT_PIXEL_WIDTH,
-        "frame_rate": DEFAULT_FRAME_RATE,
+        "pixel_height": config['pixel_height'],
+        "pixel_width": config['pixel_width'],
+        "frame_rate": config['frame_rate'],
         # Note: frame height and width will be resized to match
         # the pixel aspect ratio
-        "frame_height": FRAME_HEIGHT,
-        "frame_width": FRAME_WIDTH,
+        "frame_height": config['frame_height'],
+        "frame_width": config['frame_width'],
         "frame_center": ORIGIN,
         "background_color": BLACK,
         "background_opacity": 1,
         # Points in vectorized mobjects with norm greater
         # than this value will be rescaled.
-        "max_allowable_norm": FRAME_WIDTH,
+        "max_allowable_norm": config['frame_width'],
         "image_mode": "RGBA",
         "n_channels": 4,
         "pixel_array_dtype": 'uint8',
@@ -767,7 +768,7 @@ class Camera(object):
             width * self.cairo_line_width_multiple *
             # This ensures lines have constant width
             # as you zoom in on them.
-            (self.get_frame_width() / FRAME_WIDTH)
+            (self.get_frame_width() / self.frame_width)
         )
         ctx.stroke_preserve()
         return self
