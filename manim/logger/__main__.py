@@ -20,7 +20,7 @@ def check_valid_colour(color):
         return True
     except:
         return False
-if __name__=="__main__":
+def main():
     console = Console()
     config = configparser.ConfigParser()
     config.read('manim.cfg')
@@ -54,3 +54,5 @@ if __name__=="__main__":
         with open("manim.cfg","w") as fp:
             config.write(fp)
     console.print("A file called [yellow]manim.cfg[/yellow] is created. To save your theme please save that file and each time \nplace it in you current working directory(The directory where you execute manim command) for the your theme to be displayed.")
+if __name__=="__main__":
+    main()
