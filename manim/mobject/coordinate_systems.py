@@ -311,7 +311,7 @@ class NumberPlane(Axes):
         )
 
     def get_lines(self):
-        """Generate all the lines, faded and not faded. Two sets of lines are generated, parallel to the X-axis and to Y-axis.
+        """Generate all the lines, faded and not faded. Two sets of lines are generated: one parallel to the X-axis, and parallel to the Y-axis.
         
         Returns
         -------
@@ -350,12 +350,12 @@ class NumberPlane(Axes):
             The number of faded lines between each non-faded line. 
 
         freq : :class:`float`
-            Frequence of non-faded lines (number of non-faded lines per graph unit).
+            Frequency of non-faded lines (number of non-faded lines per graph unit).
 
         Returns
         -------
         Tuple[:class:`~.VGroup`, :class:`~.VGroup`]
-            The first (i.e the non faded lines parallel to `axis_parallel_to`) and second (i.e the faded lines parallel to `axis_parallel_to`) sets of lines, respectively.     
+            The first (i.e the non-faded lines parallel to `axis_parallel_to`) and second (i.e the faded lines parallel to `axis_parallel_to`) sets of lines, respectively.     
         """
         line = Line(axis_parallel_to.get_start(), axis_parallel_to.get_end())
         dense_freq = ratio_faded_lines
