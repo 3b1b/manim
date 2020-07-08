@@ -4,7 +4,9 @@ import logging
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.theme import Theme
-from .config_utils import config_parser,successfully_read_files
+
+from .config_utils import config_parser, successfully_read_files
+
 
 def parseTheme(fp):
     config_parser.read(fp)
@@ -12,13 +14,14 @@ def parseTheme(fp):
     customTheme = Theme(theme)
     return customTheme
 
+
 try:
     customTheme = parseTheme(successfully_read_files)
     console = Console(theme=customTheme)
 except KeyError:
     console = Console()
 
-#These keywords Are Highlighted specially.
+# These keywords Are Highlighted specially.
 RichHandler.KEYWORDS = [
     "Played",
     "animations",
