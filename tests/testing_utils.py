@@ -126,29 +126,11 @@ def set_test_scene(scene_object, module_name):
         set_test_scene(DotTest, "geometry")
     """
 
-    CONFIG_TEST = {
-        'camera_config': {
-            'frame_rate': 15,
-            'pixel_height': 480,
-            'pixel_width': 854
-        },
-        'end_at_animation_number': None,
-        'file_writer_config': {
-            'file_name': None,
-            'input_file_path': 'test.py',
-            'movie_file_extension': '.mp4',
-            'png_mode': 'RGB',
-            'save_as_gif': False,
-            'save_last_frame': False,
-            'save_pngs': False,
-            'write_to_movie': False
-        },
-        'leave_progress_bars': False,
-        'skip_animations': True,
-        'start_at_animation_number': None
-    }
+    config['pixel_height'] = 480
+    config['pixel_width'] = 854
+    config['frame_rate'] = 15
 
-    scene = scene_object(**CONFIG_TEST)
+    scene = scene_object()
     data = scene.get_frame()
     path = os.path.join("manim", "tests", "tests_data",
                         "{}".format(module_name))
