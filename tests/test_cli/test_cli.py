@@ -16,7 +16,7 @@ def capture(command):
 def test_help(python_version):
     command = [python_version, "-m", "manim", "--help"]
     out, err, exitcode = capture(command)
-    assert exitcode == 0, f"Manim has been installed incorrectly. Please refer to the troubleshooting section on the wiki. Error:\n{err}"
+    assert exitcode == 0, f"Manim has been installed incorrectly. Please refer to the troubleshooting section on the wiki. Error:\n{err.decode()}"
 
 
 @pytest.mark.skip_end_to_end
