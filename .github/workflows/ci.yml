@@ -1,0 +1,55 @@
+name: CI
+on: [push]
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: [3.6, 3.7, 3.8]
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt update
+          sudo apt install -y ffmpeg
+          sudo apt-get -y install texlive texlive-latex-extra texlive-fonts-extra texlive-latex-recommended texlive-science texlive-fonts-extra tipa
+
+      - name: Install system dependencies (MacOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install openssl readline ffmpeg sox pyenv pyenv-virtualenv
+          brew cask install basictex
+          eval "$(/usr/libexec/path_helper -s)"
+          sudo tlmgr update --self
+          sudo tlmgr install standalone preview doublestroke relsize fundus-calligra wasysym physics dvisvgm.x86_64-darwin dvisvgm rsfs wasy cm-super
+          echo "::set-env name=PATH::$PATH"
+
+      - name: Install Pycairo (Non-Windows)
+        if: runner.os == 'macOS' || runner.os == 'Linux'
+        run: pip install pycairo
+
+      - name: Install Pycairo (Windows)
+        if: runner.os == 'Windows'
+        run: python ./scripts/pycairoinstall.py
+
+      - name: Install manim
+        run: pip install . pytest
+
+      - name: Run tests (Non-Windows)
+        if: runner.os == 'macOS' || runner.os == 'Linux'
+        run: pytest
+
+      - name: Run tests (Windows)
+        if: runner.os == 'Windows'
+        run: pytest --skip_end_to_end -rs
