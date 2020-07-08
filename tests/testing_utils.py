@@ -40,7 +40,7 @@ class SceneTester:
         if caching_needed:
             config['text_dir'] = os.path.join(
                 self.path_tests_medias_cache, scene_object.__name__, 'Text')
-            config['tex_dir'] = os.path.join(
+            file_writer_config['tex_dir'] = os.path.join(
                 self.path_tests_medias_cache, scene_object.__name__, 'Tex')
 
         file_writer_config['skip_animations'] = True
