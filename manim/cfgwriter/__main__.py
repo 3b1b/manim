@@ -1,7 +1,8 @@
+import configparser
+
 from rich.console import Console
 from rich.progress import track
 from rich.color import Color
-import configparser
 
 
 def check_valid_colour(color):
