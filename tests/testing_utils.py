@@ -125,7 +125,7 @@ def set_test_scene(scene_object, module_name):
     Normal usage::
         set_test_scene(DotTest, "geometry")
     """
-
+    file_writer_config['skip_animations'] = True
     config['pixel_height'] = 480
     config['pixel_width'] = 854
     config['frame_rate'] = 15
