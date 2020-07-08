@@ -6,7 +6,7 @@ import logging
 import pytest
 
 from manim import logger
-from manim import config
+from manim import config, file_writer_config
 
 
 class SceneTester:
@@ -34,8 +34,8 @@ class SceneTester:
     def __init__(self, scene_object, module_tested, caching_needed=False):
         # Disable the the logs, (--quiet is broken) TODO
         logging.disable(logging.CRITICAL)
-        self.path_tests_medias_cache = os.path.join('tests_cache', module_tested)
-        self.path_tests_data = os.path.join('tests_data', module_tested)
+        self.path_tests_medias_cache = os.path.join('tests', 'tests_cache', module_tested)
+        self.path_tests_data = os.path.join('tests', 'tests_data', module_tested)
 
         if caching_needed:
             config['text_dir'] = os.path.join(
@@ -43,6 +43,7 @@ class SceneTester:
             config['tex_dir'] = os.path.join(
                 self.path_tests_medias_cache, scene_object.__name__, 'Tex')
 
+        file_writer_config['skip_animations'] = True
         config['pixel_height'] = 480
         config['pixel_width'] = 854
         config['frame_rate'] = 15
