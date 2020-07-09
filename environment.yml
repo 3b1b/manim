@@ -10,7 +10,7 @@ dependencies:
   - numpy==1.15.0
   - pillow==5.2.0
   - scipy==1.1.0
-  - tqdm==4.24.0
+  - tqdm==4.46.1
   - opencv==3.4.2
   - pycairo==1.18.0
   - pydub==0.23.0
