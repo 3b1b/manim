@@ -1,4 +1,7 @@
+from os import path
 import configparser
+
+from .config_utils import successfully_read_files
 
 from rich.console import Console
 from rich.progress import track
@@ -26,7 +29,9 @@ def check_valid_colour(color):
 def main():
     console = Console()
     config = configparser.ConfigParser()
-    config.read("manim.cfg")
+    config.read(
+        successfully_read_files
+    )
     default = {
         "logging.keyword": "bold yellow",
         "logging.level.notset": "dim",
@@ -66,7 +71,9 @@ def main():
         with open("manim.cfg", "w") as fp:
             config.write(fp)
     console.print(
-        "A file called [yellow]manim.cfg[/yellow] is created. To save your theme please save that file and each time \nplace it in you current working directory(The directory where you execute manim command) for the your theme to be displayed."
+        """A configuration file called [yellow]manim.cfg[/yellow] has been created.
+To save your theme please save that file and each time place it in your current working directory,
+(the directory where you executed the command manim)"""
     )
 
 

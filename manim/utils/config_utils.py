@@ -14,8 +14,8 @@ import sys
 
 import colour
 
-from . import constants
-from .utils.tex import TexTemplate, TexTemplateFromFile
+from .. import constants
+from .tex import TexTemplate, TexTemplateFromFile
 
 __all__ = ["file_writer_config"]
 
@@ -345,7 +345,7 @@ def _from_command_line():
 
 
 # Config files to be parsed, in ascending priority
-library_wide = os.path.join(os.path.dirname(__file__), "default.cfg")
+library_wide = os.path.join(os.path.dirname(__file__), "../default.cfg")
 config_files = [
     library_wide,
     os.path.expanduser("~/.manim.cfg"),

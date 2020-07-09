@@ -5,10 +5,10 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.theme import Theme
 
-from .config_utils import config_parser, successfully_read_files
+from .utils.config_utils import config_parser, successfully_read_files
 
 
-def parseTheme(fp):
+def parse_theme(fp):
     config_parser.read(fp)
     theme = dict(config_parser["log.color"])
     customTheme = Theme(theme)
@@ -16,7 +16,7 @@ def parseTheme(fp):
 
 
 try:
-    customTheme = parseTheme(successfully_read_files)
+    customTheme = parse_theme(successfully_read_files)
     console = Console(theme=customTheme)
 except KeyError:
     console = Console()

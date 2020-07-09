@@ -4,7 +4,7 @@ import sys
 import colour
 
 from . import constants
-from .config_utils import (
+from .utils.config_utils import (
     _init_dirs,
     args,
     config_parser,
