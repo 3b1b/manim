@@ -192,7 +192,7 @@ def _parse_cli(arg_list, input=True):
         )
         parser.add_argument(
             "-o", "--output_file",
-            help="Specify the name of the output file, if"
+            help="Specify the name of the output file, if "
                  "it should be different from the scene class name",
             default='',
         )
