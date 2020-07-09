@@ -272,7 +272,7 @@ class Scene(object):
             times,
             total=n_iterations,
             leave=self.leave_progress_bars,
-            ascii=False if platform.system() != 'Windows' else True
+            ascii=True if platform.system() == 'Windows' else None
         )
         return time_progression
 
