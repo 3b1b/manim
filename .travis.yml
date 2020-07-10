@@ -44,7 +44,7 @@ jobs:
         - brew install ffmpeg
         - brew cask install basictex
         - eval "$(/usr/libexec/path_helper)"
-        - tlmgr install standalone preview doublestroke relsize fundus-calligra wasysym physics dvisvgm.x86_64-darwin dvisvgm rsfs wasy cm-super
+        - sudo tlmgr install standalone preview doublestroke relsize fundus-calligra wasysym physics dvisvgm.x86_64-darwin dvisvgm rsfs wasy cm-super
       install:
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
@@ -62,7 +62,7 @@ jobs:
         - brew install ffmpeg
         - brew cask install basictex
         - eval "$(/usr/libexec/path_helper)"
-        - tlmgr install standalone preview doublestroke relsize fundus-calligra wasysym physics dvisvgm.x86_64-darwin dvisvgm rsfs wasy cm-super
+        - sudo tlmgr install standalone preview doublestroke relsize fundus-calligra wasysym physics dvisvgm.x86_64-darwin dvisvgm rsfs wasy cm-super
       install:
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
