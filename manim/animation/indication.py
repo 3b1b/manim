@@ -1,6 +1,7 @@
 import numpy as np
 
 from ..constants import *
+from ..config import config
 from ..animation.animation import Animation
 from ..animation.movement import Homotopy
 from ..animation.composition import AnimationGroup
@@ -45,7 +46,7 @@ class FocusOn(Transform):
 
     def create_starting_mobject(self):
         return Dot(
-            radius=FRAME_X_RADIUS + FRAME_Y_RADIUS,
+            radius=config['frame_x_radius'] + config['frame_y_radius'],
             stroke_width=0,
             fill_color=self.color,
             fill_opacity=0,

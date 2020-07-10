@@ -177,7 +177,7 @@ def _parse_file_writer_config(config_parser, args):
 def _parse_cli(arg_list, input=True):
     parser = argparse.ArgumentParser(
         description='Animation engine for explanatory math videos',
-        epilog='Made with ❤ by the manim community devs'
+        epilog='Made with <3 by the manim community devs'
     )
     if input:
         parser.add_argument(
