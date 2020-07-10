@@ -63,7 +63,7 @@ def main():
         console.print("Enter the Style for %s" % key + ":", style=key, end="")
         temp = input()
         if temp:
-            while check_valid_colour(temp):
+            while not check_valid_colour(temp):
                 console.print(
                     "[red bold]Your Style is not valid. Try again.[/red bold]"
                 )
