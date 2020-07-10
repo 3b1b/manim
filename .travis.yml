@@ -6,6 +6,7 @@ jobs:
       python: 3.6
       env: PYVER="3.6.10"
       install:
+        - eval "$(/usr/libexec/path_helper)"
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo pytest
@@ -18,6 +19,7 @@ jobs:
       python: 3.7
       env: PYVER="3.7.7"
       install:
+        - eval "$(/usr/libexec/path_helper)"
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo pytest
@@ -30,6 +32,7 @@ jobs:
       python: 3.8
       env: PYVER="3.8.0" # Using Python 3.8.0 due to error with rich
       install:
+        - eval "$(/usr/libexec/path_helper)"
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo pytest
