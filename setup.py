@@ -6,7 +6,7 @@ setup(
     description="Animation engine for explanatory math videos",
     license="MIT",
     packages=find_namespace_packages(),
-    package_data={ "manim": ["*.tex"] },
+    package_data={ "manim": ["*.tex", "*.cfg"] },
     entry_points={
         "console_scripts": [
             "manim=manim.__main__:main",

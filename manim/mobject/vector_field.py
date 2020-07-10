@@ -5,6 +5,7 @@ from PIL import Image
 import random
 
 from ..constants import *
+from ..config import config
 from ..logger import logger
 from ..animation.composition import AnimationGroup
 from ..animation.indication import ShowPassingFlash
@@ -27,12 +28,12 @@ DEFAULT_SCALAR_FIELD_COLORS = [BLUE_E, GREEN, YELLOW, RED]
 
 def get_colored_background_image(scalar_field_func,
                                  number_to_rgb_func,
-                                 pixel_height=DEFAULT_PIXEL_HEIGHT,
-                                 pixel_width=DEFAULT_PIXEL_WIDTH):
-    ph = pixel_height
-    pw = pixel_width
-    fw = FRAME_WIDTH
-    fh = FRAME_HEIGHT
+                                 pixel_height=config['pixel_height'],
+                                 pixel_width=config['pixel_width']):
+    ph = config['pixel_height']
+    pw = config['pixel_width']
+    fw = config['frame_width']
+    fh = config['frame_height']
     points_array = np.zeros((ph, pw, 3))
     x_array = np.linspace(-fw / 2, fw / 2, pw)
     x_array = x_array.reshape((1, len(x_array)))
@@ -109,7 +110,7 @@ def move_submobjects_along_vector_field(mobject, func):
     def apply_nudge(mob, dt):
         for submob in mob:
             x, y = submob.get_center()[:2]
-            if abs(x) < FRAME_WIDTH and abs(y) < FRAME_HEIGHT:
+            if abs(x) < config['frame_width'] and abs(y) < config['frame_height']:
                 submob.shift(func(submob.get_center()) * dt)
 
     mobject.add_updater(apply_nudge)
@@ -131,10 +132,10 @@ class VectorField(VGroup):
     CONFIG = {
         "delta_x": 0.5,
         "delta_y": 0.5,
-        "x_min": int(np.floor(-FRAME_WIDTH / 2)),
-        "x_max": int(np.ceil(FRAME_WIDTH / 2)),
-        "y_min": int(np.floor(-FRAME_HEIGHT / 2)),
-        "y_max": int(np.ceil(FRAME_HEIGHT / 2)),
+        "x_min": int(np.floor(-config['frame_width'] / 2)),
+        "x_max": int(np.ceil(config['frame_width'] / 2)),
+        "y_min": int(np.floor(-config['frame_height'] / 2)),
+        "y_max": int(np.ceil(config['frame_height'] / 2)),
         "min_magnitude": 0,
         "max_magnitude": 2,
         "colors": DEFAULT_SCALAR_FIELD_COLORS,

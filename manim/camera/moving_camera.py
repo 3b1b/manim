@@ -1,8 +1,6 @@
 from ..camera.camera import Camera
-from ..constants import FRAME_HEIGHT
-from ..constants import FRAME_WIDTH
-from ..constants import ORIGIN
-from ..constants import WHITE
+from ..config import config
+from ..constants import ORIGIN, WHITE
 from ..mobject.frame import ScreenRectangle
 from ..mobject.types.vectorized_mobject import VGroup
 from ..utils.config_ops import digest_config
@@ -11,8 +9,8 @@ from ..utils.config_ops import digest_config
 # TODO, think about how to incorporate perspective
 class CameraFrame(VGroup):
     CONFIG = {
-        "width": FRAME_WIDTH,
-        "height": FRAME_HEIGHT,
+        "width": config['frame_width'],
+        "height": config['frame_height'],
         "center": ORIGIN,
     }
 
@@ -38,7 +36,7 @@ class MovingCamera(Camera):
         """
         digest_config(self, kwargs)
         if frame is None:
-            frame = ScreenRectangle(height=FRAME_HEIGHT)
+            frame = ScreenRectangle(height=config['frame_height'])
             frame.set_stroke(
                 self.default_frame_stroke_color,
                 self.default_frame_stroke_width,
