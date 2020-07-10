@@ -42,7 +42,8 @@ jobs:
       before_install:
         - ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
         - brew install ffmpeg
-        - brew cask install mactex
+        - brew cask install basictex
+        - tlmgr install standalone preview doublestroke relsize fundus-calligra wasysym physics dvisvgm.x86_64-darwin dvisvgm rsfs wasy cm-super
         - eval "$(/usr/libexec/path_helper)"
       install:
         - pip3 install --upgrade pip
