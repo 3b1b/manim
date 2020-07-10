@@ -4,6 +4,7 @@
 2. (For the maintainers of this repo) Label PRs appropriately.
 3. Link relevant issues.
 4. Ensure compatibility with the latest changes in the repo.
+5. After you've made your changes, please test them out thoroughly. If the repository has any example code or code exclusively used for testing, please test your changes against those. If you have added new features, consider writing and contributing to a test for that feature to ensure it works properly.
 
 ## Contributing to the Manim Community Fork - General instructions
 
@@ -32,6 +33,8 @@ As this is a Fork of [Manim by 3b1b](https://github.com/3b1b/manim), contributin
     Now there are three repositories that git is keeping track of: the manim community repo (referred to as "fork"), your own fork of it (referred to by git as "origin"), and your local repository.
 
 4. After that, you can make your changes to the repo's files (the code is in the `manim` directory). Then, you can commit said changes.
+
+> As stated in the General Contribution Guidelines, make sure to test your changes against the example scenes in the `example_scenes` directory and test scenes in the `tests` directory, and add a new test in the `tests` directory for your new feature if you've made one.
 
 > Note: if your Pull Request doesn't change any of the actual code, please add `[skip ci]` to your commit message for Travis to ignore it.
 
