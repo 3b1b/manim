@@ -7,6 +7,7 @@ jobs:
       env: PYVER="3.6.10"
       install:
         - eval "$(/usr/libexec/path_helper)"
+        - sudo tlmgr install standalone preview doublestroke relsize fundus-calligra wasysym physics dvisvgm.x86_64-darwin dvisvgm rsfs wasy cm-super
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo pytest
@@ -20,6 +21,7 @@ jobs:
       env: PYVER="3.7.7"
       install:
         - eval "$(/usr/libexec/path_helper)"
+        - sudo tlmgr install standalone preview doublestroke relsize fundus-calligra wasysym physics dvisvgm.x86_64-darwin dvisvgm rsfs wasy cm-super
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo pytest
@@ -33,6 +35,7 @@ jobs:
       env: PYVER="3.8.0" # Using Python 3.8.0 due to error with rich
       install:
         - eval "$(/usr/libexec/path_helper)"
+        - sudo tlmgr install standalone preview doublestroke relsize fundus-calligra wasysym physics dvisvgm.x86_64-darwin dvisvgm rsfs wasy cm-super
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo pytest
