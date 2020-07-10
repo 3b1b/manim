@@ -1,9 +1,8 @@
 """
-config.py
----------
+config_utils.py
+---------------
 
-Process the manim.cfg file and the command line arguments into a single
-config object.
+Utility functions for parsing manim config files.
 
 """
 

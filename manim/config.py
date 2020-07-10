@@ -1,3 +1,9 @@
+"""
+config.py
+---------
+Process the manim.cfg file and the command line arguments into a single
+config object.
+"""
 import os
 import sys
 

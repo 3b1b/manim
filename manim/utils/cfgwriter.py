@@ -1,3 +1,10 @@
+"""
+cfgwriter.py
+------------
+
+Inputs the configuration files while checking it is valid.
+
+"""
 from os import path
 import configparser
 
@@ -20,7 +27,7 @@ def check_valid_colour(color):
         Returns whether it is valid color or not.
     """
     try:
-        Color.parse(color) is None
+        Color.parse(color)
         return True
     except:
         return False
@@ -29,9 +36,7 @@ def check_valid_colour(color):
 def main():
     console = Console()
     config = configparser.ConfigParser()
-    config.read(
-        successfully_read_files
-    )
+    config.read( successfully_read_files )
     default = {
         "logging.keyword": "bold yellow",
         "logging.level.notset": "dim",
@@ -58,7 +63,7 @@ def main():
         console.print("Enter the Style for %s" % key + ":", style=key, end="")
         temp = input()
         if temp:
-            while check_valid_colour(temp) == False:
+            while check_valid_colour(temp):
                 console.print(
                     "[red bold]Your Style is not valid. Try again.[/red bold]"
                 )
