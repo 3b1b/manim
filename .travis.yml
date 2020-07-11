@@ -39,12 +39,10 @@ jobs:
       language: sh
       python: 3.6
       env: PYVER="3.6.10"
-      before_install:
-        - ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
-        - brew install ffmpeg
-        - brew cask install mactex
-        - eval "$(/usr/libexec/path_helper)"
       install:
+        - eval "$(/usr/libexec/path_helper)"
+        - sudo tlmgr update --self
+        - sudo tlmgr install standalone preview doublestroke relsize fundus-calligra wasysym physics dvisvgm.x86_64-darwin dvisvgm rsfs wasy cm-super
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo pytest
@@ -56,12 +54,10 @@ jobs:
       language: sh
       python: 3.7
       env: PYVER="3.7.7"
-      before_install:
-        - ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
-        - brew install ffmpeg
-        - brew cask install mactex
-        - eval "$(/usr/libexec/path_helper)"
       install:
+        - eval "$(/usr/libexec/path_helper)"
+        - sudo tlmgr update --self
+        - sudo tlmgr install standalone preview doublestroke relsize fundus-calligra wasysym physics dvisvgm.x86_64-darwin dvisvgm rsfs wasy cm-super
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo pytest
@@ -73,12 +69,10 @@ jobs:
       language: sh
       python: 3.8
       env: PYVER="3.8.0" # Using Python 3.8.0 due to error with rich
-      before_install:
-        - ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
-        - brew install ffmpeg
-        - brew cask install mactex
-        - eval "$(/usr/libexec/path_helper)"
       install:
+        - eval "$(/usr/libexec/path_helper)"
+        - sudo tlmgr update --self
+        - sudo tlmgr install standalone preview doublestroke relsize fundus-calligra wasysym physics dvisvgm.x86_64-darwin dvisvgm rsfs wasy cm-super
         - pip3 install --upgrade pip
         - pip3 install -r ./.travis/travis-requirements.txt
         - pip3 install pycairo pytest
@@ -143,6 +137,19 @@ before_install:
 branches:
   only:
   - master
+
+addons:
+  homebrew:
+    packages:
+    - openssl
+    - readline
+    - ffmpeg
+    - sox
+    - pyenv
+    - pyenv-virtualenv
+    casks:
+    - basictex
+    update: true
 
 notifications:
   email: false
