@@ -57,8 +57,12 @@ branches:
 addons:
   homebrew:
     packages:
+    - openssl
+    - readline
     - ffmpeg
     - sox
+    - pyenv
+    - pyenv-virtualenv
     casks:
     - basictex
     update: true
