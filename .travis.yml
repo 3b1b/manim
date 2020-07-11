@@ -33,7 +33,7 @@ jobs:
         - pip3 install .
       script:
         - pytest
-      
+
       # MacOS (OSX) Jobs
     - os: osx
       language: sh
@@ -79,7 +79,7 @@ jobs:
         - pip3 install .
       script:
         - pytest
-        
+
       # Windows Jobs
     - os: windows
       language: sh
@@ -129,7 +129,7 @@ jobs:
         - python -m pip install --user .
       script:
         - python -m pytest --skip_end_to_end -rs
-        
+
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "osx" ]; then chmod +x ./.travis/osx.sh; sh ./.travis/osx.sh; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then chmod +x ./.travis/linux.sh; sh ./.travis/linux.sh; fi
