@@ -133,4 +133,59 @@ class UpdatersExample(Scene):
         )
         self.wait()
 
+class VDictTest(Scene):
+    def construct(self):
+        square = Square().set_color(RED)
+        circle = Circle().set_color(YELLOW).next_to(square, UP)
+
+        # create dict from list of tuples each having key-mobject pair
+        pairs = [('s', square), ('c', circle)]
+        my_dict = VDict(*pairs, show_keys=True)
+
+        # display it just like a VGroup
+        self.play(
+            ShowCreation(my_dict)
+            )
+        self.wait()
+
+        print(my_dict.get_all_submobjects())
+
+        text = TextMobject("Some text").set_color(GREEN).next_to(square, DOWN)
+
+        #add like a VGroup
+        my_dict.add(('t', text))                        
+        self.wait()
+        
+        rect = Rectangle().next_to(text, DOWN)
+        # can also do key assignment like a python dict
+        my_dict['r'] = rect                             
+        print(my_dict.get_all_submobjects())
+
+        # access submobjects like a python dict
+        my_dict['t'].set_color(PURPLE)                  
+        self.play(my_dict['t'].scale, 3)
+        self.wait()
+
+        # also supports python dict styled reassignment
+        my_dict['t'] = TextMobject("Some other text").set_color(BLUE)
+        self.wait()
+
+        # remove submojects by key
+        my_dict.remove('t')                             
+        self.wait()
+
+        self.play(Uncreate(my_dict['s']))
+        self.wait()
+
+        self.play(FadeOut(my_dict['c']))
+        self.wait()
+
+        self.play(FadeOutAndShift(my_dict['r'], DOWN))
+        self.wait()
+
+        # iterate through all submobjects currently associated with my_dict
+        for submob in my_dict.get_all_submobjects():
+            self.play(ShowCreation(submob))
+            self.wait()
+
 # See old_projects folder for many, many more

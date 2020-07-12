@@ -906,6 +906,175 @@ class VGroup(VMobject):
         VMobject.__init__(self, **kwargs)
         self.add(*vmobjects)
 
+class VDict(VMobject):
+    """A VGroup-like class, also offering submobject access by
+    key, like a python dict
+
+    Parameters
+    ----------
+    pairs: Tuple[Hashable, :class:`~.VMobject`]
+            Each pair is a 2-element :class:`tuple` wherein the first 
+            element is the key for the mobject and the second
+            element is the actual mobject
+    show_keys : :class:`bool`, optional
+            Whether to also display the key associated with 
+            the mobject. This might be useful when debugging,
+            especially when there are a lot of mobjects in the
+            :class:`VDict`. Defaults to False
+    kwargs : Any
+            Other arguments to be passed to `Mobject` or the CONFIG.
+
+    Attributes
+    ----------
+    show_keys : :class:`bool`
+            Whether to also display the key associated with 
+            the mobject. This might be useful when debugging,
+            especially when there are a lot of mobjects in the
+            :class:`VDict`. When displayed, the key is towards
+            the left of the mobject.
+            Defaults to False
+    submob_dict : :class:`dict`
+            Is the actual python dictionary that is used to bind
+            the keys to the mobjects
+    """
+
+    def __init__(self, *pairs, show_keys=False, **kwargs):
+        if not all(isinstance(m[1], VMobject) for m in pairs):
+            raise Exception("All submobjects must be of type VMobject")
+        VMobject.__init__(self, **kwargs)
+        self.show_keys = show_keys
+        self.submob_dict = {}
+        self.add(*pairs)
+        
+
+    def add(self, *pairs):
+        """Adds the key-value pairs to the :class:`VDict` object.
+
+        Also, it internally adds the value to the `submobjects` :class:`list`
+        of :class:`~.Mobject`, which is responsible for actual on-screen display
+
+        Parameters
+        ---------
+        pairs : Tuple[Hashable, :class:`~.VMobject`]
+            Each pair is a :class:`tuple` wherein the first 
+            element is the key for the mobject and the second
+            element is the actual mobject
+
+        Returns
+        -------
+        :class:`VDict`
+            Returns the :class:`VDict` object on which this method was called
+
+        Examples
+        --------
+        Normal usage::
+            square_obj = Square()
+            my_dict.add(('s', square_obj))
+        """
+        for pair in pairs:
+            key = pair[0]
+            value = pair[1]
+            
+            mob = value
+            if self.show_keys:
+                # This import is here and not at the top to avoid circular import
+                from ...mobject.svg.tex_mobject import TextMobject
+                key_text = TextMobject(str(key)).next_to(value, LEFT)
+                mob.add(key_text)
+            
+            self.submob_dict[key] = mob
+            super().add(value)
+        return self
+
+    def remove(self, key):
+        """Removes the mobject from the :class:`VDict` object having the key `key`
+        
+        Also, it internally removes the mobject from the `submobjects` :class:`list`
+        of :class:`~.Mobject`, (which is responsible for removing it from the screen)
+
+        Parameters
+        ----------
+        key : Hashable
+            The key of the submoject to be removed
+
+        Returns
+        -------
+        :class:`VDict`
+            Returns the :class:`VDict` object on which this method was called
+
+        Examples
+        --------
+        Normal usage::
+            my_dict.remove('square')
+        """
+        if key not in self.submob_dict:
+            raise Exception("The given key '%s' is not present in the VDict" %str(key))
+        super().remove(self.submob_dict[key])
+        del self.submob_dict[key]
+        return self
+
+    def __getitem__(self, key):
+        """Overriding the [] operator for getting submobject by key
+        
+        Parameters
+        ----------
+        key : Hashable
+           The key of the submoject to be accessed
+            
+        Returns
+        -------
+        :class:`VMobject`
+           The submobject corresponding to the key `key`
+
+        Examples
+        --------
+        Normal usage::
+           self.play(ShowCreation(my_dict['s']))
+        """
+        submob = self.submob_dict[key]
+        return submob 
+
+    def __setitem__(self, key, value):
+        """Overriding the [] operator for assigning submobject like a python dict
+
+        Parameters
+        ----------
+        key : Hashable
+            The key of the submoject to be assigned
+        value : :class:`VMobject`
+            The submobject to bind the key to
+            
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        Normal usage::
+            square_obj = Square()
+            my_dict['sq'] = square_obj
+        """
+        if key in self.submob_dict:
+            self.remove(key)
+        self.add((key, value))
+
+    def get_all_submobjects(self):
+        """To get all the submobjects associated with a particular :class:`VDict` object
+        
+        Returns
+        -------
+        :class:`dict_values`
+            All the submobjects associated with the :class:`VDict` object
+
+        Examples
+        --------
+        Normal usage::
+            for submob in my_dict.get_all_submobjects():
+                self.play(ShowCreation(submob))
+        """
+        submobjects = self.submob_dict.values()
+        return submobjects
+
 
 class VectorizedPoint(VMobject):
     CONFIG = {
