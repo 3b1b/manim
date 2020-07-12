@@ -24,14 +24,14 @@ def _parse_file_writer_config(config_parser, args):
     # By default, use the CLI section of the digested .cfg files
     default = config_parser["CLI"]
 
-    # This will be the final config dict exposed to the user
-    config = {}
+    # This will be the final file_writer_config dict exposed to the user
+    fw_config = {}
 
     # Handle input files and scenes.  Note these cannot be set from
     # the .cfg files, only from CLI arguments
-    config["input_file"] = args.file
-    config["scene_names"] = args.scene_names if args.scene_names is not None else []
-    config["output_file"] = args.output_file
+    fw_config["input_file"] = args.file
+    fw_config["scene_names"] = args.scene_names if args.scene_names is not None else []
+    fw_config["output_file"] = args.output_file
 
     # Handle all options that are directly overridden by CLI
     # arguments.  Note ConfigParser options are all strings and each
@@ -50,41 +50,43 @@ def _parse_file_writer_config(config_parser, args):
         "write_all",
     ]:
         attr = getattr(args, boolean_opt)
-        config[boolean_opt] = default.getboolean(boolean_opt) if attr is None else attr
+        fw_config[boolean_opt] = (
+            default.getboolean(boolean_opt) if attr is None else attr
+        )
     # for str_opt in ['media_dir', 'video_dir', 'tex_dir', 'text_dir']:
     for str_opt in ["media_dir"]:
         attr = getattr(args, str_opt)
-        config[str_opt] = default[str_opt] if attr is None else attr
+        fw_config[str_opt] = default[str_opt] if attr is None else attr
     dir_names = {"video_dir": "videos", "tex_dir": "Tex", "text_dir": "texts"}
     for name in dir_names:
-        config[name] = os.path.join(config["media_dir"], dir_names[name])
+        fw_config[name] = os.path.join(fw_config["media_dir"], dir_names[name])
 
     # Handle the -s (--save_last_frame) flag: invalidate the -w flag
     # At this point the save_last_frame option has already been set by
     # both CLI and the cfg file, so read the config dict directly
-    if config["save_last_frame"]:
-        config["write_to_movie"] = False
+    if fw_config["save_last_frame"]:
+        fw_config["write_to_movie"] = False
 
     # Handle the -t (--transparent) flag.  This flag determines which
     # section to use from the .cfg file.
     section = config_parser["transparent"] if args.transparent else default
     for opt in ["png_mode", "movie_file_extension", "background_opacity"]:
-        config[opt] = section[opt]
+        fw_config[opt] = section[opt]
 
     # Handle the -n flag.  Read first from the cfg and then override with CLI.
     # These two are integers -- use getint()
     for opt in ["from_animation_number", "upto_animation_number"]:
-        config[opt] = default.getint(opt)
-    if config["upto_animation_number"] == -1:
-        config["upto_animation_number"] = float("inf")
+        fw_config[opt] = default.getint(opt)
+    if fw_config["upto_animation_number"] == -1:
+        fw_config["upto_animation_number"] = float("inf")
     nflag = args.from_animation_number
     if nflag is not None:
         if "," in nflag:
             start, end = nflag.split(",")
-            config["from_animation_number"] = int(start)
-            config["upto_animation_number"] = int(end)
+            fw_config["from_animation_number"] = int(start)
+            fw_config["upto_animation_number"] = int(end)
         else:
-            config["from_animation_number"] = int(nflag)
+            fw_config["from_animation_number"] = int(nflag)
 
     # Handle the --dry_run flag.  This flag determines which section
     # to use from the .cfg file.  All options involved are boolean.
@@ -97,10 +99,10 @@ def _parse_file_writer_config(config_parser, args):
             "save_as_gif",
             "write_all",
         ]:
-            config[opt] = config_parser["dry_run"].getboolean(opt)
+            fw_config[opt] = config_parser["dry_run"].getboolean(opt)
 
     # Read in the streaming section -- all values are strings
-    config["streaming"] = {
+    fw_config["streaming"] = {
         opt: config_parser["streaming"][opt]
         for opt in [
             "live_stream_name",
@@ -116,17 +118,17 @@ def _parse_file_writer_config(config_parser, args):
     }
 
     # For internal use (no CLI flag)
-    config["skip_animations"] = any(
-        [config["save_last_frame"], config["from_animation_number"]]
+    fw_config["skip_animations"] = any(
+        [fw_config["save_last_frame"], fw_config["from_animation_number"]]
     )
 
-    return config
+    return fw_config
 
 
 def _parse_cli(arg_list, input=True):
     parser = argparse.ArgumentParser(
         description="Animation engine for explanatory math videos",
-        epilog="Made with ❤ by the manim community devs",
+        epilog="Made with <3 by the manim community devs",
     )
     if input:
         parser.add_argument(

@@ -289,6 +289,7 @@ class NumberPlane(Axes):
         self.init_background_lines()
 
     def init_background_lines(self):
+        """Will init all the lines of NumberPlanes (faded or not)"""
         if self.faded_line_style is None:
             style = dict(self.background_line_style)
             # For anything numerical, like stroke_width
@@ -311,6 +312,13 @@ class NumberPlane(Axes):
         )
 
     def get_lines(self):
+        """Generate all the lines, faded and not faded. Two sets of lines are generated: one parallel to the X-axis, and parallel to the Y-axis.
+        
+        Returns
+        -------
+        Tuple[:class:`~.VGroup`, :class:`~.VGroup`]
+            The first (i.e the non faded lines) and second (i.e the faded lines) sets of lines, respectively.
+        """
         x_axis = self.get_x_axis()
         y_axis = self.get_y_axis()
         x_freq = self.x_line_frequency
@@ -328,22 +336,43 @@ class NumberPlane(Axes):
         lines2 = VGroup(*x_lines2, *y_lines2)
         return lines1, lines2
 
-    def get_lines_parallel_to_axis(self, axis1, axis2, freq, ratio):
-        line = Line(axis1.get_start(), axis1.get_end())
-        dense_freq = (1 + ratio)
-        step = (1 / dense_freq) * freq
+    def get_lines_parallel_to_axis(self, axis_parallel_to, axis_perpendicular_to, freq, ratio_faded_lines):
+        """Generate a set of lines parallel to an axis.
 
+        Parameters
+        ----------
+        axis_parallel_to : :class:`~.Line`
+            The axis with which the lines will be parallel.
+
+        axis_perpendicular_to : :class:`~.Line`
+            The axis with which the lines will be perpendicular.
+        
+        ratio_faded_lines : :class:`float`
+            The number of faded lines between each non-faded line. 
+
+        freq : :class:`float`
+            Frequency of non-faded lines (number of non-faded lines per graph unit).
+
+        Returns
+        -------
+        Tuple[:class:`~.VGroup`, :class:`~.VGroup`]
+            The first (i.e the non-faded lines parallel to `axis_parallel_to`) and second (i.e the faded lines parallel to `axis_parallel_to`) sets of lines, respectively.     
+        """
+        line = Line(axis_parallel_to.get_start(), axis_parallel_to.get_end())
+        dense_freq = ratio_faded_lines
+        step = (1 / dense_freq) * freq
         lines1 = VGroup()
         lines2 = VGroup()
+        unit_vector_axis_perp_to = axis_perpendicular_to.get_unit_vector()
         ranges = (
-            np.arange(0, axis2.x_max, step),
-            np.arange(0, axis2.x_min, -step),
+            np.arange(0, axis_perpendicular_to.x_max, step),
+            np.arange(0, axis_perpendicular_to.x_min, -step),
         )
         for inputs in ranges:
             for k, x in enumerate(inputs):
                 new_line = line.copy()
-                new_line.move_to(axis2.number_to_point(x))
-                if k % (1 + ratio) == 0:
+                new_line.shift(unit_vector_axis_perp_to * x)
+                if k % ratio_faded_lines == 0:
                     lines1.add(new_line)
                 else:
                     lines2.add(new_line)

@@ -6,7 +6,7 @@ import logging
 import pytest
 
 from manim import logger
-from manim import config
+from manim import config, file_writer_config
 
 
 class SceneTester:
@@ -34,15 +34,16 @@ class SceneTester:
     def __init__(self, scene_object, module_tested, caching_needed=False):
         # Disable the the logs, (--quiet is broken) TODO
         logging.disable(logging.CRITICAL)
-        self.path_tests_medias_cache = os.path.join('tests_cache', module_tested)
-        self.path_tests_data = os.path.join('tests_data', module_tested)
+        self.path_tests_medias_cache = os.path.join('tests', 'tests_cache', module_tested)
+        self.path_tests_data = os.path.join('tests', 'tests_data', module_tested)
 
         if caching_needed:
             config['text_dir'] = os.path.join(
                 self.path_tests_medias_cache, scene_object.__name__, 'Text')
-            config['tex_dir'] = os.path.join(
+            file_writer_config['tex_dir'] = os.path.join(
                 self.path_tests_medias_cache, scene_object.__name__, 'Tex')
 
+        file_writer_config['skip_animations'] = True
         config['pixel_height'] = 480
         config['pixel_width'] = 854
         config['frame_rate'] = 15
@@ -124,30 +125,12 @@ def set_test_scene(scene_object, module_name):
     Normal usage::
         set_test_scene(DotTest, "geometry")
     """
+    file_writer_config['skip_animations'] = True
+    config['pixel_height'] = 480
+    config['pixel_width'] = 854
+    config['frame_rate'] = 15
 
-    CONFIG_TEST = {
-        'camera_config': {
-            'frame_rate': 15,
-            'pixel_height': 480,
-            'pixel_width': 854
-        },
-        'end_at_animation_number': None,
-        'file_writer_config': {
-            'file_name': None,
-            'input_file_path': 'test.py',
-            'movie_file_extension': '.mp4',
-            'png_mode': 'RGB',
-            'save_as_gif': False,
-            'save_last_frame': False,
-            'save_pngs': False,
-            'write_to_movie': False
-        },
-        'leave_progress_bars': False,
-        'skip_animations': True,
-        'start_at_animation_number': None
-    }
-
-    scene = scene_object(**CONFIG_TEST)
+    scene = scene_object()
     data = scene.get_frame()
     path = os.path.join("manim", "tests", "tests_data",
                         "{}".format(module_name))

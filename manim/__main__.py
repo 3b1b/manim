@@ -135,7 +135,9 @@ def get_module(file_name):
             sys.exit(2)
     else:
         if os.path.exists(file_name):
-            module_name = re.sub(r"\..+$", "", file_name.replace(os.sep, "."))
+            if file_name[-3:] != ".py":
+                raise Exception(f"{file_name} is not a valid Manim python script.")
+            module_name = file_name[:-3].replace(os.sep, '.').split('.')[-1]
             spec = importlib.util.spec_from_file_location(module_name, file_name)
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)

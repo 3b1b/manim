@@ -1,7 +1,6 @@
 colour
 numpy
 Pillow
-progressbar
 scipy
 tqdm
 pycairo

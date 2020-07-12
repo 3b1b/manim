@@ -93,6 +93,7 @@ def _parse_config(config_parser, args):
         else TexTemplate()
     )
 
+
     return config
 
 
