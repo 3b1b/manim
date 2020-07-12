@@ -10,19 +10,12 @@ import sys
 import colour
 
 from . import constants
-from .utils.config_utils import (
-    _init_dirs,
-    args,
-    config_parser,
-    file_writer_config,
-    successfully_read_files,
-)
+from .utils.config_utils import _run_config, _init_dirs
+
 from .logger import logger
 from .utils.tex import TexTemplate, TexTemplateFromFile
 
 __all__ = ["config", "camera_config"]
-
-logger.info(f"Read configuration files: {successfully_read_files}")
 
 
 def _parse_config(config_parser, args):
@@ -93,11 +86,11 @@ def _parse_config(config_parser, args):
         else TexTemplate()
     )
 
-
     return config
 
 
-# this is for the user
+args, config_parser, file_writer_config, successfully_read_files = _run_config()
+logger.info(f"Read configuration files: {successfully_read_files}")
 config = _parse_config(config_parser, args)
 camera_config = config
 

@@ -16,7 +16,7 @@ import colour
 from .. import constants
 from .tex import TexTemplate, TexTemplateFromFile
 
-__all__ = ["file_writer_config"]
+__all__ = ["_run_config"]
 
 
 def _parse_file_writer_config(config_parser, args):
@@ -345,36 +345,38 @@ def _from_command_line():
     return from_cli_command or from_python_m
 
 
-# Config files to be parsed, in ascending priority
-library_wide = os.path.join(os.path.dirname(__file__), "../default.cfg")
-config_files = [
-    library_wide,
-    os.path.expanduser("~/.manim.cfg"),
-]
-
-if _from_command_line():
-    args = _parse_cli(sys.argv[1:])
-    if args.config_file is not None:
-        if os.path.exists(args.config_file):
-            config_files.append(args.config_file)
+def _run_config():
+    # Config files to be parsed, in ascending priority
+    library_wide = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "default.cfg")
+    )
+    config_files = [
+        library_wide,
+        os.path.expanduser("~/.manim.cfg"),
+    ]
+    if _from_command_line():
+        args = _parse_cli(sys.argv[1:])
+        if args.config_file is not None:
+            if os.path.exists(args.config_file):
+                config_files.append(args.config_file)
+            else:
+                raise FileNotFoundError(f"Config file {args.config_file} doesn't exist")
         else:
-            raise FileNotFoundError(f"Config file {args.config_file} doesn't exist")
+            script_directory_file_config = os.path.join(
+                os.path.dirname(args.file), "manim.cfg"
+            )
+            if os.path.exists(script_directory_file_config):
+                config_files.append(script_directory_file_config)
+
     else:
-        script_directory_file_config = os.path.join(
-            os.path.dirname(args.file), "manim.cfg"
-        )
-        if os.path.exists(script_directory_file_config):
-            config_files.append(script_directory_file_config)
+        # In this case, we still need an empty args object.
+        args = _parse_cli([], input=False)
+        # Need to populate the options left out
+        args.file, args.scene_names, args.output_file = "", "", ""
 
-else:
-    # In this case, we still need an empty args object.
-    args = _parse_cli([], input=False)
-    # Need to populate the options left out
-    args.file, args.scene_names, args.output_file = "", "", ""
+    config_parser = configparser.ConfigParser()
+    successfully_read_files = config_parser.read(config_files)
 
-config_parser = configparser.ConfigParser()
-successfully_read_files = config_parser.read(config_files)
-
-
-# this is for internal use when writing output files
-file_writer_config = _parse_file_writer_config(config_parser, args)
+    # this is for internal use when writing output files
+    file_writer_config = _parse_file_writer_config(config_parser, args)
+    return args, config_parser, file_writer_config, successfully_read_files
