@@ -44,9 +44,9 @@ try:
 except KeyError:
     console = Console()
     printf(
-        "[logging.level.critical]No cfg file found, creating one in "
+        "[logging.level.warning]No cfg file found, creating one in "
         + successfully_read_files[0]
-        + " [/logging.level.critical]"
+        + " [/logging.level.warning]"
     )
 
 # These keywords Are Highlighted specially.
