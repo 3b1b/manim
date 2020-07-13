@@ -41,7 +41,7 @@ def main():
     config.read(successfully_read_files)
     default = config["logger"]
     console.print(
-        "[yellow bold]Manim Logger Configuration Editor[/yellow bold]", justify="center"
+        "[yellow bold]Manim Configuration File Writer[/yellow bold]", justify="center"
     )
     console.print(
         "[red]The default colour is shown as input Statement.\nIf left empty default value will be assigned.[/red]"
