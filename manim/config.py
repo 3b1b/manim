@@ -10,7 +10,7 @@ import sys
 import colour
 
 from . import constants
-from .utils.config_utils import _run_config, _init_dirs
+from .utils.config_utils import _run_config, _init_dirs, _from_command_line
 
 from .logger import logger
 from .utils.tex import TexTemplate, TexTemplateFromFile
@@ -90,8 +90,8 @@ def _parse_config(config_parser, args):
 
 
 args, config_parser, file_writer_config, successfully_read_files = _run_config()
-logger.info(f"Read configuration files: {successfully_read_files}")
+if _from_command_line():
+    logger.info(f"Read configuration files: {successfully_read_files}")
+    _init_dirs(file_writer_config)
 config = _parse_config(config_parser, args)
 camera_config = config
-
-_init_dirs(file_writer_config)

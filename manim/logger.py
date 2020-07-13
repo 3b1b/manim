@@ -1,3 +1,10 @@
+"""
+logger.py
+---------
+This is the logging library for manim.
+This library uses rich for coloured log outputs.
+
+"""
 import configparser
 import logging
 
@@ -12,7 +19,13 @@ from .utils.config_utils import _run_config
 
 def parse_theme(fp):
     config_parser.read(fp)
-    theme = dict(config_parser["log.color"])
+    theme = dict(config_parser["logger"])
+    # replaces `_` by `.` as rich understands it
+    for key in theme:
+        temp = theme[key]
+        del theme[key]
+        key = key.replace("_", ".")
+        theme[key] = temp
     try:
         customTheme = Theme(theme)
     except (color.ColorParseError, errors.StyleSyntaxError):

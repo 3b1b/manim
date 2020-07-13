@@ -16,7 +16,7 @@ import colour
 from .. import constants
 from .tex import TexTemplate, TexTemplateFromFile
 
-__all__ = ["_run_config"]
+__all__ = ["_run_config", "_paths_config_file", "_from_command_line"]
 
 
 def _parse_file_writer_config(config_parser, args):
@@ -345,15 +345,37 @@ def _from_command_line():
     return from_cli_command or from_python_m
 
 
-def _run_config():
-    # Config files to be parsed, in ascending priority
+def _paths_config_file():
     library_wide = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "default.cfg")
     )
-    config_files = [
-        library_wide,
-        os.path.expanduser("~/.manim.cfg"),
-    ]
+    if sys.platform.startswith("linux"):
+        # This is for linux users
+        user_wide = os.path.expanduser(
+            os.path.join("~", ".config", "Manim", "manim.cfg")
+        )
+    elif sys.platform.startswith("darwin"):
+        # This is for MacOS users
+        user_wide = os.path.expanduser(
+            os.path.join("~", "Library", "Application Support", "Manim", "manim.cfg")
+        )
+    elif sys.platform.startswith("win32"):
+        # This is for Windows users
+        user_wide = os.path.expanduser(
+            os.path.join("~", "AppData", "Roaming", "Manim", "manim.cfg")
+        )
+    else:
+        # This is for users whose OS is unknown
+        user_wide = os.path.expanduser(
+            os.path.join("~", ".config", "Manim", "manim.cfg")
+        )
+    current_working_directory = os.path.abspath("manim.cfg")
+    return [library_wide, user_wide, current_working_directory]
+
+
+def _run_config():
+    # Config files to be parsed, in ascending priority
+    config_files = _paths_config_file()
     if _from_command_line():
         args = _parse_cli(sys.argv[1:])
         if args.config_file is not None:
