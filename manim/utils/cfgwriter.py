@@ -47,8 +47,8 @@ def main():
         "[red]The default colour is shown as input Statement.\nIf left empty default value will be assigned.[/red]"
     )
     console.print(
-        "[magenta]Please follow the link for available styles.[/magenta][link=https://rich.readthedocs.io/en/latest/style.html]docs[/link]"
-    )
+        "[magenta] For a full list of styles, visit[/magenta] https://rich.readthedocs.io/en/latest/style.html"
+        )
     for key in default:
         temp = default[key]
         del default[key]
