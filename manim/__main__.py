@@ -111,16 +111,13 @@ def get_scenes_to_render(scene_classes):
 
 
 def get_scene_classes_from_module(module):
-    if hasattr(module, "SCENES_IN_ORDER"):
-        return module.SCENES_IN_ORDER
-    else:
-        return [
-            member[1]
-            for member in inspect.getmembers(
-                module,
-                lambda x: is_child_scene(x, module)
-            )
-        ]
+    return [
+        member[1]
+        for member in inspect.getmembers(
+            module,
+            lambda x: is_child_scene(x, module)
+        )
+    ]
 
 
 def get_module(file_name):
