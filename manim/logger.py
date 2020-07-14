@@ -31,7 +31,7 @@ def parse_theme(fp):
     except (color.ColorParseError, errors.StyleSyntaxError):
         customTheme = None
         printf(
-            "[logging.level.error]Looks like your colour configuration has an error. So loading default color configuration[/logging.level.error]"
+            "[logging.level.error]It seems your colour configuration couldn't be parsed. Loading the default color configuration...[/logging.level.error]"
         )
     return customTheme
 

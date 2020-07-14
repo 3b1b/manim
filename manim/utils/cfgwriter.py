@@ -44,7 +44,7 @@ def main():
         "[yellow bold]Manim Configuration File Writer[/yellow bold]", justify="center"
     )
     console.print(
-        "[red]The default colour is shown as input Statement.\nIf left empty default value will be assigned.[/red]"
+        "[red]The default colour is used by the input statement.\nIf left empty, the default colour will be used.[/red]"
     )
     console.print(
         "[magenta] For a full list of styles, visit[/magenta] https://rich.readthedocs.io/en/latest/style.html"
@@ -73,7 +73,7 @@ def main():
         default[key] = temp
     config["logger"] = default
     console.print(
-        "Do you want it as a default for the User?(y/n)[[n]]",
+        "Do you want to save this as the default for this User?(y/n)[[n]]",
         style="dim purple",
         end="",
     )
@@ -85,22 +85,15 @@ def main():
         with open(config_paths[1], "w") as fp:
             config.write(fp)
         console.print(
-            """A configuration file called [yellow]{}[/yellow] has been created with your required changes.
-which would be used while running manim command. If you want to overide that 
-you would have to create a manim.cfg in local directory.""".format(
-                config_paths[1]
-            )
+            f"""A configuration file called [yellow]{config_paths[1]}[/yellow] has been created with your required changes.
+This will be used when running the manim command. If you want to override this config,
+you will have to create a manim.cfg in the local directory, where you want those changes to be overridden."""
         )
     else:
         with open(config_paths[2], "w") as fp:
             config.write(fp)
-        console.print(
-            """A configuration file called [yellow]{}[/yellow] has been created.
-To save your theme please save that file and each time place it in your current working directory,
-(the directory where you executed the command manim)""".format(
-                config_paths[2]
-            )
-        )
+        console.print(f"""A configuration file called [yellow]{config_paths[2]}[/yellow] has been created.
+To save your theme please save that file and place it in your current working directory, from where you run the manim command.""")
 
 
 if __name__ == "__main__":
