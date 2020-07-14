@@ -6,6 +6,7 @@ import sys
 import re
 import traceback
 import importlib.util
+import types
 
 from .config import file_writer_config
 from .scene.scene import Scene
@@ -123,7 +124,9 @@ def get_scene_classes_from_module(module):
 def get_module(file_name):
     if file_name == "-":
         module = types.ModuleType("input_scenes")
+        logger.info("Enter the code for your animation and end with an EOF (usually CTRL+D):")
         code = sys.stdin.read()
+        logger.info("Rendering animation from typed code...")
         try:
             exec(code, module.__dict__)
             return module
