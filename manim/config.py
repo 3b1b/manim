@@ -69,7 +69,7 @@ def _parse_config(config_parser, args):
 
     # Handle the --tex_template flag.  Note we accept None if the flag is absent
     filename = (
-        os.path.expanduser(args.tex_template) if args.tex_template is not None else None
+        os.path.expanduser(args.tex_template) if args.tex_template else None
     )
 
     if filename is not None and not os.access(filename, os.R_OK):
