@@ -382,6 +382,7 @@ class ComplexPlane(NumberPlane):
     CONFIG = {
         "color": BLUE,
         "line_frequency": 1,
+        "unit_size" : 1
     }
 
     def number_to_point(self, number):
