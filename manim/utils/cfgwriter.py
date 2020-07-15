@@ -15,8 +15,10 @@ from rich.progress import track
 from rich.style import Style
 from rich.errors import StyleSyntaxError
 
+INVALID_STYLE_MSG = "[red bold]Your Style is not valid. Try again.[/red bold]"
 
-def check_valid_style(style):
+
+def is_valid_style(style):
     """Checks whether the entered color is a valid color according to rich
     Parameters
     ----------
@@ -34,10 +36,36 @@ def check_valid_style(style):
         return False
 
 
+def replace_keys(default):
+    """Replaces _ to . and viceversa in a dictionary for rich
+    Parameters
+    ----------
+    default : :class:`dict`
+        The dictionary to check and replace
+    Returns
+    -------
+    :class:`dict`
+        The dictionary which is modified by replcaing _ with . and viceversa
+    """
+    for key in default:
+        if "_" in key:
+            temp = default[key]
+            del default[key]
+            key = key.replace("_", ".")
+            default[key] = temp
+        else:
+            temp = default[key]
+            del default[key]
+            key = key.replace(".", "_")
+            default[key] = temp
+    return default
+
+
 def main():
-    successfully_read_files = _run_config()[-1]
+    config_items = _run_config()
+    successfully_read_files = config_items[-1]
     console = Console()
-    config = configparser.ConfigParser()
+    config = config_items[1]
     config.read(successfully_read_files)
     default = config["logger"]
     console.print(
@@ -48,29 +76,19 @@ def main():
     )
     console.print(
         "[magenta] For a full list of styles, visit[/magenta] https://rich.readthedocs.io/en/latest/style.html"
-        )
-    for key in default:
-        temp = default[key]
-        del default[key]
-        key = key.replace("_", ".")
-        default[key] = temp
+    )
+    default = replace_keys(default)
     for key in default:
         console.print("Enter the Style for %s" % key + ":", style=key, end="")
         temp = input()
         if temp:
-            while not check_valid_style(temp):
-                console.print(
-                    "[red bold]Your Style is not valid. Try again.[/red bold]"
-                )
+            while not is_valid_style(temp):
+                console.print(INVALID_STYLE_MSG)
                 console.print("Enter the Style for %s" % key + ":", style=key, end="")
                 temp = input()
             else:
                 default[key] = temp
-    for key in default:
-        temp = default[key]
-        del default[key]
-        key = key.replace(".", "_")
-        default[key] = temp
+    default = replace_keys(default)
     config["logger"] = default
     console.print(
         "Do you want to save this as the default for this User?(y/n)[[n]]",
@@ -92,8 +110,10 @@ you will have to create a manim.cfg in the local directory, where you want those
     else:
         with open(config_paths[2], "w") as fp:
             config.write(fp)
-        console.print(f"""A configuration file called [yellow]{config_paths[2]}[/yellow] has been created.
-To save your theme please save that file and place it in your current working directory, from where you run the manim command.""")
+        console.print(
+            f"""A configuration file called [yellow]{config_paths[2]}[/yellow] has been created.
+To save your theme please save that file and place it in your current working directory, from where you run the manim command."""
+        )
 
 
 if __name__ == "__main__":

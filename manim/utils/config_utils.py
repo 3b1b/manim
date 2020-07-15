@@ -350,27 +350,23 @@ def _paths_config_file():
         os.path.join(os.path.dirname(__file__), "..", "default.cfg")
     )
     if sys.platform.startswith("linux"):
-        # This is for linux users
         user_wide = os.path.expanduser(
-            os.path.join("~", ".config", "Manim", "manim.cfg")
+            os.path.join("~", ".config", "manim", "manim.cfg")
         )
     elif sys.platform.startswith("darwin"):
-        # This is for MacOS users
         user_wide = os.path.expanduser(
             os.path.join("~", "Library", "Application Support", "Manim", "manim.cfg")
         )
     elif sys.platform.startswith("win32"):
-        # This is for Windows users
         user_wide = os.path.expanduser(
             os.path.join("~", "AppData", "Roaming", "Manim", "manim.cfg")
         )
     else:
-        # This is for users whose OS is unknown
         user_wide = os.path.expanduser(
-            os.path.join("~", ".config", "Manim", "manim.cfg")
+            os.path.join("~", ".config", "manim", "manim.cfg")
         )
-    current_working_directory = os.path.abspath("manim.cfg")
-    return [library_wide, user_wide, current_working_directory]
+    folder_wide = os.path.abspath("manim.cfg")
+    return [library_wide, user_wide, folder_wide]
 
 
 def _run_config():

@@ -15,7 +15,7 @@ from .utils.config_utils import _run_config, _init_dirs, _from_command_line
 from .logger import logger
 from .utils.tex import TexTemplate, TexTemplateFromFile
 
-__all__ = ["config", "camera_config"]
+__all__ = ["file_writer_config", "config", "camera_config"]
 
 
 def _parse_config(config_parser, args):
@@ -68,9 +68,7 @@ def _parse_config(config_parser, args):
     config["right_side"] = config["frame_x_radius"] * constants.RIGHT
 
     # Handle the --tex_template flag.  Note we accept None if the flag is absent
-    filename = (
-        os.path.expanduser(args.tex_template) if args.tex_template else None
-    )
+    filename = os.path.expanduser(args.tex_template) if args.tex_template else None
 
     if filename is not None and not os.access(filename, os.R_OK):
         # custom template not available, fallback to default
