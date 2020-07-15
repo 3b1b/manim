@@ -4,10 +4,11 @@ from shutil import rmtree
 import pytest
 
 
-def capture(command):
+def capture(command,instream=None):
     proc = subprocess.Popen(command,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
+                            stdin=instream
                             )
     out, err = proc.communicate()
     return out, err, proc.returncode
@@ -43,4 +44,18 @@ def test_WriteStuff(python_version):
     assert exitcode == 0, err
     assert os.path.exists(os.path.join(
         path_output, "videos", "basic_scenes", "480p15", "WriteStuff.mp4")), err
+    rmtree(path_output)
+
+@pytest.mark.skip_end_to_end
+def test_dash_as_name(python_version):
+    """Simulate using - as a filename. Intended to test the feature that allows end users to type manim code on the spot."""
+    path_output = os.path.join("tests_cache", "media_temp")
+    command = [python_version, "-m", "manim", "-", "-l", "--media_dir", path_output]
+    out, err, exitcode = capture(
+        command,
+        open(os.path.join(os.path.dirname(__file__), "dash_test_script.txt"))
+        )
+    assert exitcode == 0, err
+    assert os.path.exists(os.path.join(
+        path_output, "videos", "-", "480p15", "Dash_Test.mp4")), err
     rmtree(path_output)
