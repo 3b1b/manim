@@ -124,7 +124,7 @@ def get_scene_classes_from_module(module):
 def get_module(file_name):
     if file_name == "-":
         module = types.ModuleType("input_scenes")
-        logger.info("Enter the animation's code & end with an EOF (CTRL+D or CTRL+Z on Windows):")
+        logger.info("Enter the animation's code & end with an EOF (CTRL+D on Linux/Unix, CTRL+Z on Windows):")
         code = sys.stdin.read()
         if not code.startswith("from manim import"):
             logger.warn("Didn't find an import statement for Manim. Importing automatically...")
