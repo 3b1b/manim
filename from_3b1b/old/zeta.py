@@ -18,20 +18,22 @@ def d_zeta(z):
 
 class ZetaTransformationScene(ComplexTransformationScene):
     CONFIG = {
-        "anchor_density" : 35,
+        "anchor_density" : 30,
         "min_added_anchors" : 10,
         "max_added_anchors" : 300,
         "num_anchors_to_add_per_line" : 75,
         "post_transformation_stroke_width" : 2,
+        "y_min" : -4,
+        "y_max" : 4,
         "default_apply_complex_function_kwargs" : {
             "run_time" : 5,
         },
         "x_min" : 1,
-        "x_max" : int(FRAME_X_RADIUS+2),
-        "extra_lines_x_min" : -2,
+        "x_max" : 8, #9 completo
+        "extra_lines_x_min" : 1,
         "extra_lines_x_max" : 4,
-        "extra_lines_y_min" : -2,
-        "extra_lines_y_max" : 2,
+        "extra_lines_y_min" : -2, #
+        "extra_lines_y_max" : 2, #
     }
     def prepare_for_transformation(self, mob):
         for line in mob.family_members_with_points():
@@ -64,7 +66,7 @@ class ZetaTransformationScene(ComplexTransformationScene):
         self.plane.add(dense_grid)
         self.add(self.plane)
 
-    def get_dense_grid(self, step_size = 1./16):
+    def get_dense_grid(self, step_size = 1./12): #16 normal 
         epsilon = 0.1
         x_range = np.arange(
             max(self.x_min, self.extra_lines_x_min),
@@ -101,6 +103,7 @@ class ZetaTransformationScene(ComplexTransformationScene):
         dense_grid = VGroup(horiz_lines, vert_lines)
         dense_grid.set_stroke(width = 1)
         return dense_grid
+        
 
     def add_reflected_plane(self, animate = False):
         reflected_plane = self.get_reflected_plane()
@@ -116,16 +119,23 @@ class ZetaTransformationScene(ComplexTransformationScene):
             mob.set_color(
                 Color(rgb = 1-0.5*color_to_rgb(mob.get_color()))
             )
-        self.prepare_for_transformation(reflected_plane)
-        reflected_plane.submobjects = list(reversed(
-            reflected_plane.family_members_with_points()
-        ))
+        return reflected_plane
+        
+    def get_reflected_plane2(self, plane):
+        planeCopy = plane.copy()
+        reflected_plane = planeCopy.rotate(np.pi, UP, about_point = RIGHT)
+        print(reflected_plane)
+        for mob in reflected_plane.family_members_with_points():
+            mob.set_color(
+                Color(rgb = 1-0.5*color_to_rgb(mob.get_color()))
+            )
         return reflected_plane
 
     def apply_zeta_function(self, **kwargs):
         transform_kwargs = dict(self.default_apply_complex_function_kwargs)
         transform_kwargs.update(kwargs)
         self.apply_complex_function(zeta, **kwargs)
+        
 
 class TestZetaOnHalfPlane(ZetaTransformationScene):
     CONFIG = {
@@ -145,20 +155,36 @@ class TestZetaOnHalfPlane(ZetaTransformationScene):
 
 class TestZetaOnFullPlane(ZetaTransformationScene):
     def construct(self):
-        self.add_transformable_plane(animate = True)
-        self.add_extra_plane_lines_for_zeta(animate = True)
-        self.add_reflected_plane(animate = True)
+        self.add_transformable_plane()
+        prueba = self.get_dense_grid()
+        prueba2 = self.get_reflected_plane2(prueba)
+        self.plane.submobjects = [prueba, prueba2]
+        
+        #ComplexTransformationScene.add_transformable_plane(self)
+        #self.add_plane2(self)
+        #self.add_extra_plane_lines_for_zeta(animate = True)
+        #self.add_reflected_plane(animate = True)
         self.apply_zeta_function()
+        texto = TextMobject("Jan Brandon Rivera Medina")
+        texto.scale(0.8)
+        texto.to_corner(DOWN + RIGHT)
+        
+        self.play(Write(texto))
+        
+        self.wait(3)
+
 
 
 class TestZetaOnLine(ZetaTransformationScene):
     def construct(self):
-        line = Line(UP+20*LEFT, UP+20*RIGHT)
+        line = Line([1,1,0], [55,1,0])
+        line2 = Line([1,-1,0], [55,-1,0])
+        print("Hola")
+        print(line)
+        print(UP+20*RIGHT)
         self.add_transformable_plane()
-        self.plane.submobjects = [line]
+        self.plane.submobjects = [line,line2]
         self.apply_zeta_function()
-        self.wait(2)
-        self.play(ShowCreation(line, run_time = 10))
         self.wait(3)
 
 ######################
@@ -1620,7 +1646,7 @@ class VisualizingSSquared(ComplexTransformationScene):
         self.add_title()
         self.plug_in_specific_values()
         self.show_transformation()
-        self.comment_on_two_dimensions()
+        #self.comment_on_two_dimensions()
 
     def add_title(self):
         title = TexMobject("f(", "s", ") = ", "s", "^2")
