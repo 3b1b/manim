@@ -96,7 +96,7 @@ def main():
         end="",
     )
     save_to_userpath = input()
-    config_paths = _paths_config_file()
+    config_paths = _paths_config_file() + [os.path.abspath("manim.cfg")]
     if save_to_userpath.lower() == "y":
         if not os.path.exists(os.path.abspath(os.path.join(config_paths[1], ".."))):
             os.makedirs(os.path.abspath(os.path.join(config_paths[1], "..")))

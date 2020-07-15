@@ -365,8 +365,7 @@ def _paths_config_file():
         user_wide = os.path.expanduser(
             os.path.join("~", ".config", "manim", "manim.cfg")
         )
-    folder_wide = os.path.abspath("manim.cfg")
-    return [library_wide, user_wide, folder_wide]
+    return [library_wide, user_wide]
 
 
 def _run_config():
