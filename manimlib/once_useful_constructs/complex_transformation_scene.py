@@ -125,11 +125,9 @@ class ComplexTransformationScene(Scene):
         transformer, transform_kwargs = self.get_transformer(**kwargs)
         transformer.generate_target()
         # Rescale, apply function, scale back
-        transformer.target.shift(-self.background.get_center_point())
-        transformer.target.scale(1. / self.background.unit_size)
+
         transformer.target.apply_complex_function(func)
-        transformer.target.scale(self.background.unit_size)
-        transformer.target.shift(self.background.get_center_point())
+
         #
 
         for mob in transformer.target[0].family_members_with_points():
