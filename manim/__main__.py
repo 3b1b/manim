@@ -6,6 +6,7 @@ import sys
 import re
 import traceback
 import importlib.util
+import types
 
 from .config import file_writer_config
 from .scene.scene import Scene
@@ -123,7 +124,12 @@ def get_scene_classes_from_module(module):
 def get_module(file_name):
     if file_name == "-":
         module = types.ModuleType("input_scenes")
+        logger.info("Enter the animation's code & end with an EOF (CTRL+D on Linux/Unix, CTRL+Z on Windows):")
         code = sys.stdin.read()
+        if not code.startswith("from manim import"):
+            logger.warn("Didn't find an import statement for Manim. Importing automatically...")
+            code="from manim import *\n"+code
+        logger.info("Rendering animation from typed code...")
         try:
             exec(code, module.__dict__)
             return module
