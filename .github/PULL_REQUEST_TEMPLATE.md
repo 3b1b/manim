@@ -1,6 +1,6 @@
 <!--- 
 Thanks for contributing to manim!
-**Please ensure that your pull request works with the latest version of manim.**
+**Please ensure that your pull request works with the latest version of manim from this repository.**
 You should also include:
   1. The motivation for making this change (or link the relevant issues)
   2. How you tested the new behavior (e.g. a minimal working example, before/after
