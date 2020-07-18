@@ -50,6 +50,7 @@ jobs:
           tlmgr install standalone preview doublestroke ms setspace rsfs relsize ragged2e fundus-calligra microtype wasysym physics dvisvgm jknapltx wasy cm-super babel-english
           choco install --no-progress ffmpeg
           choco install --no-progress sox.portable
+          echo "::set-env name=Path::$env:Path"
 
       - name: Install Pycairo (Non-Windows)
         if: runner.os == 'macOS' || runner.os == 'Linux'
@@ -62,12 +63,5 @@ jobs:
       - name: Install manim
         run: pip install . pytest
 
-      - name: Run tests (Non-Windows)
-        if: runner.os == 'macOS' || runner.os == 'Linux'
+      - name: Run tests
         run: pytest
-
-      - name: Run tests (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          $env:Path += ";" + $env:APPDATA + "\TinyTeX\bin\win32"
-          pytest
