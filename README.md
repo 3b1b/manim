@@ -8,6 +8,9 @@
 
 Manim is an animation engine for explanatory math videos. It's used to create precise animations programmatically, as seen in the videos at [3Blue1Brown](https://www.3blue1brown.com/).
 
+This repository contains the version of manim used by 3Blue1Brown. There is also a community maintained version at https://github.com/ManimCommunity/manim/.
+To get help or to join the development effort, please join the [discord](https://discord.gg/mMRrZQW).
+
 ## Installation
 Manim runs on Python 3.7. You can install it from PyPI via pip:
 
@@ -125,7 +128,7 @@ Documentation is in progress at [eulertour.com/docs](https://www.eulertour.com/d
 Todd Zimmerman put together a [tutorial](https://talkingphysics.wordpress.com/2019/01/08/getting-started-animating-with-manim-and-python-3-7/) on getting started with manim, which has been updated to run on Python 3.7.
 
 ## Contributing
-Is always welcome. In particular, there is a dire need for tests and documentation.
+Although they are welcome, pull requests to this repository are rarely accepted. Most pull requests should be directed to the [community version](https://github.com/ManimCommunity/manim/).
 
 ## License
 All files in the directory `from_3b1b`, which by and large generate the visuals for 3b1b videos, are copyright 3Blue1Brown.
