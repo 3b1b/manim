@@ -28,6 +28,7 @@ If you don't need any of the optional sections, feel free to delete them to prev
 ## Further Comments
 <!-- Optional, any edits/updates should preferably be written here. -->
 
-
+## Acknowledgement
+- [ ] I have read the [Contributing Guidelines](https://github.com/ManimCommunity/manim/wiki/Documentation-guidelines-(WIP))
 
 <!-- Once again, thanks for helping out by contributing to manim! -->
