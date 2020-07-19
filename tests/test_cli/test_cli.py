@@ -57,5 +57,5 @@ def test_dash_as_name(python_version):
         )
     assert exitcode == 0, err
     assert os.path.exists(os.path.join(
-        path_output, "videos", "-", "480p15", "Dash_Test.mp4")), err
+        path_output, "videos", "-", "480p15", "DashAsNameTest.mp4")), err
     rmtree(path_output)

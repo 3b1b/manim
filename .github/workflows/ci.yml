@@ -3,7 +3,6 @@ on:
   push:
       branches:
         - master
-        - try-single-test
   pull_request:
       branches:
         - master
