@@ -19,8 +19,6 @@ def test_help(python_version):
     out, err, exitcode = capture(command)
     assert exitcode == 0, f"Manim has been installed incorrectly. Please refer to the troubleshooting section on the wiki. Error:\n{err.decode()}"
 
-
-@pytest.mark.skip_end_to_end
 def test_basicScene(python_version):
     """ Simulate SquareToCircle. The cache will be saved in tests_caches/media_temp (temporary directory). This is mainly intended to test the partial-movies process. """
     path_basic_scene = os.path.join("tests", "tests_data", "basic_scenes.py")
@@ -33,7 +31,6 @@ def test_basicScene(python_version):
         path_output, "videos", "basic_scenes", "480p15", "SquareToCircle.mp4")), err
     rmtree(path_output)
 
-@pytest.mark.skip_end_to_end
 def test_WriteStuff(python_version):
     """This is mainly intended to test the caching process of the tex objects"""
     path_basic_scene = os.path.join("tests", "tests_data", "basic_scenes.py")
@@ -46,7 +43,6 @@ def test_WriteStuff(python_version):
         path_output, "videos", "basic_scenes", "480p15", "WriteStuff.mp4")), err
     rmtree(path_output)
 
-@pytest.mark.skip_end_to_end
 def test_dash_as_name(python_version):
     """Simulate using - as a filename. Intended to test the feature that allows end users to type manim code on the spot."""
     path_output = os.path.join("tests_cache", "media_temp")
