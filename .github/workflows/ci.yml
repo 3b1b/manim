@@ -41,6 +41,18 @@ jobs:
           sudo tlmgr install standalone preview doublestroke relsize fundus-calligra wasysym physics dvisvgm.x86_64-darwin dvisvgm rsfs wasy cm-super
           echo "::set-env name=PATH::$PATH"
 
+      - name: Install system dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          Try {Invoke-WebRequest https://yihui.org/gh/tinytex/tools/install-windows.bat -O install_tinytex.bat}
+          Catch {Invoke-WebRequest https://raw.githubusercontent.com/yihui/tinytex/master/tools/install-windows.bat -O install_tinytex.bat}
+          Start-Process install_tinytex.bat -NoNewWindow -Wait
+          $env:Path += ";" + $env:APPDATA + "\TinyTeX\bin\win32"
+          tlmgr install standalone preview doublestroke ms setspace rsfs relsize ragged2e fundus-calligra microtype wasysym physics dvisvgm jknapltx wasy cm-super babel-english
+          choco install --no-progress ffmpeg
+          choco install --no-progress sox.portable
+          echo "::set-env name=Path::$env:Path"
+
       - name: Install Pycairo (Non-Windows)
         if: runner.os == 'macOS' || runner.os == 'Linux'
         run: pip install pycairo
@@ -52,10 +64,5 @@ jobs:
       - name: Install manim
         run: pip install . pytest
 
-      - name: Run tests (Non-Windows)
-        if: runner.os == 'macOS' || runner.os == 'Linux'
+      - name: Run tests
         run: pytest
-
-      - name: Run tests (Windows)
-        if: runner.os == 'Windows'
-        run: pytest --skip_end_to_end -rs
