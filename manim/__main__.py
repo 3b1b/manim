@@ -13,7 +13,7 @@ from .scene.scene import Scene
 from .utils.sounds import play_error_sound
 from .utils.sounds import play_finish_sound
 from . import constants
-from .logger import logger
+from .logger import logger,console
 
 
 def open_file_if_needed(file_writer):
@@ -73,10 +73,10 @@ def prompt_user_for_choice(scene_classes):
     for count, scene_class in enumerate(scene_classes):
         count += 1  # start with 1 instead of 0
         name = scene_class.__name__
-        print("%d: %s" % (count, name))
+        console.print(f"{count}: {name}", style="logging.level.info")
         num_to_class[count] = scene_class
     try:
-        user_input = input(constants.CHOOSE_NUMBER_MESSAGE)
+        user_input = console.input(f"[log.message] {constants.CHOOSE_NUMBER_MESSAGE} [/log.message]")
         return [num_to_class[int(num_str)]
                 for num_str in re.split(r"\s*,\s*", user_input.strip())]
     except KeyError:
