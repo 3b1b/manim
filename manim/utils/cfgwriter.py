@@ -15,7 +15,13 @@ from rich.progress import track
 from rich.style import Style
 from rich.errors import StyleSyntaxError
 
+__all__ = ["main"]
+
 INVALID_STYLE_MSG = "[red bold]Your Style is not valid. Try again.[/red bold]"
+INTRO_INSTRUCTIONS = """[red]The default colour is used by the input statement.
+If left empty, the default colour will be used.[/red]
+[magenta] For a full list of styles, visit[/magenta] https://rich.readthedocs.io/en/latest/style.html"""
+TITLE_TEXT = "[yellow bold]Manim Configuration File Writer[/yellow bold]"
 
 
 def is_valid_style(style):
@@ -62,21 +68,11 @@ def replace_keys(default):
 
 
 def main():
-    config_items = _run_config()
-    successfully_read_files = config_items[-1]
+    config = _run_config()[1]
     console = Console()
-    config = config_items[1]
-    config.read(successfully_read_files)
     default = config["logger"]
-    console.print(
-        "[yellow bold]Manim Configuration File Writer[/yellow bold]", justify="center"
-    )
-    console.print(
-        "[red]The default colour is used by the input statement.\nIf left empty, the default colour will be used.[/red]"
-    )
-    console.print(
-        "[magenta] For a full list of styles, visit[/magenta] https://rich.readthedocs.io/en/latest/style.html"
-    )
+    console.print(TITLE_TEXT, justify="center")
+    console.print(INTRO_INSTRUCTIONS)
     default = replace_keys(default)
     for key in default:
         console.print("Enter the Style for %s" % key + ":", style=key, end="")
