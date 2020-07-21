@@ -20,8 +20,8 @@ class ExampleFileScene(Scene):
 class ExampleClassScene(Scene):
     def construct(self):
         tpl = TexTemplate()
-        tpl.append_package(["esvect",["f"]])
-        config.register_tex_template(tpl)
+        tpl.append_package(["esvect", ["f"]])
+        config['tex_template'] = tpl
 
         #text=TextMobject(r"$\vv{vb}$")
         text = TexMobject(r"\vv{vb}")
