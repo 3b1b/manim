@@ -28,6 +28,7 @@ from manimlib.animation.rotation import *
 from manimlib.animation.specialized import *
 from manimlib.animation.transform import *
 from manimlib.animation.update import *
+from manimlib.animation.physic import *
 
 from manimlib.camera.camera import *
 from manimlib.camera.mapping_camera import *
@@ -58,6 +59,7 @@ from manimlib.mobject.types.vectorized_mobject import *
 from manimlib.mobject.mobject_update_utils import *
 from manimlib.mobject.value_tracker import *
 from manimlib.mobject.vector_field import *
+from manimlib.mobject.physic import *
 
 from manimlib.for_3b1b_videos.common_scenes import *
 from manimlib.for_3b1b_videos.pi_creature import *
@@ -82,6 +84,7 @@ from manimlib.scene.scene_from_video import *
 from manimlib.scene.three_d_scene import *
 from manimlib.scene.vector_space_scene import *
 from manimlib.scene.zoomed_scene import *
+from manimlib.scene.physic_scene import *
 
 from manimlib.utils.bezier import *
 from manimlib.utils.color import *
@@ -108,6 +111,7 @@ import re
 import string
 import sys
 import math
+import pymunk
 
 from PIL import Image
 from colour import Color

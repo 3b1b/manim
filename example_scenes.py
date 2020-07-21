@@ -133,4 +133,73 @@ class UpdatersExample(Scene):
         )
         self.wait()
 
+class PhysicExample(PhysicScene):
+    def construct(self):
+        self.set_gravity(9.8 * DOWN)
+
+        grd_body = self.space.static_body
+        grd_seg = pymunk.Segment(grd_body, (-10, -2), (10, -2), 0)
+        grd_seg.friction = 0.7
+        grd_seg.elasticity = 0.8
+        grd_shape = Line(
+            LEFT*10,
+            RIGHT*10
+        ).shift(2 * DOWN)
+
+        ground = PhysicMobject(grd_body, grd_seg, grd_shape)
+        self.add_static_obj(ground)
+        
+
+        for i in range(30):
+            mass = 10
+            r = 0.5
+            size=(r, r)
+            moment = pymunk.moment_for_box(mass, size)
+            body = pymunk.Body(mass, moment)
+            body.angle = i * 0.1
+            body.position = (i * 0.3 - 5), 4
+            box = pymunk.Poly.create_box(body, size)
+            box.friction = 0.5
+            box.elasticity = 0.8
+
+            shape = Square()
+            shape.stretch_to_fit_height(r)
+            shape.stretch_to_fit_width(r)
+            shape.set_fill(DARK_BLUE, opacity=1)
+
+            mobj = PhysicMobject(body, box, shape)
+            mobj.set_add_time(i * 0.5)
+
+            self.add_physic_obj(mobj)
+
+        self.simulate(20)
+
+class BouncingBall(PhysicScene):
+    def construct(self):
+        self.set_gravity(9*DOWN)
+
+        r = np.sqrt(2)
+        mass = 10
+
+        moment = pymunk.moment_for_circle(mass, 0, r)
+        body = pymunk.Body(mass, moment)
+        ground_body = self.space.static_body
+
+        body.position = 0, 2
+        
+        mob = Circle(radius=r)
+        mob.set_fill(RED, opacity=0.8).shift(2*UP)
+        ground_mob = Line(7 * LEFT, 7 * RIGHT).set_color(GREEN).shift(DOWN)
+
+        shape = pymunk.Circle(body, mob.radius)
+        ground_shape = pymunk.Segment(ground_body, (-7, -1), (7, -1), 0)
+        shape.friction = ground_shape.friction = 0.9
+        shape.elasticity = ground_shape.elasticity = 0.8
+        self.add(mob, ground_mob)
+        circle = PhysicMobject(body, shape, mob)
+        ground = PhysicMobject(ground_body, ground_shape, ground_mob)
+        self.add_physic_obj(circle)
+        self.add_static_obj(ground)
+        self.simulate(4)
+        
 # See old_projects folder for many, many more
