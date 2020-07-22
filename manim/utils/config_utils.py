@@ -31,7 +31,7 @@ def _parse_file_writer_config(config_parser, args):
     # Handle input files and scenes.  Note these cannot be set from
     # the .cfg files, only from CLI arguments
     # Don't set these if the end user is invoking anything unrelated to rendering.
-    min_argvs = 2 if "py" in sys.argv[0] else 4
+    min_argvs = 4 if "py" in sys.argv[0] else 2
     if len(sys.argv) < min_argvs or not(any(sys.argv[min_argvs-1] == item for item in NON_ANIM_UTILS)):
         fw_config["input_file"] = args.file
         fw_config["scene_names"] = args.scene_names if args.scene_names is not None else []
@@ -134,7 +134,8 @@ def _parse_cli(arg_list, input=True):
         description="Animation engine for explanatory math videos",
         epilog="Made with <3 by the manim community devs",
     )
-    if input:
+    min_argvs = 4 if "py" in sys.argv[0] else 2
+    if input and len(sys.argv) >= min_argvs and any(sys.argv[min_argvs-1] == item for item in NON_ANIM_UTILS):
         subparsers = parser.add_subparsers()
         cfg_related = subparsers.add_parser('cfg')
         cfg_subparsers = cfg_related.add_subparsers()
@@ -151,6 +152,7 @@ def _parse_cli(arg_list, input=True):
         cfg_export = cfg_subparsers.add_parser("export")
         cfg_export.add_argument("--dir",default=os.getcwd())
 
+    if input:
         # If the only command is manim, or if there are only rendering related commands
         if len(sys.argv) < 2 or not(any(sys.argv[1] == item for item in NON_ANIM_UTILS)):
             parser.add_argument(
@@ -394,7 +396,7 @@ def _run_config():
     config_files = _paths_config_file()
     if _from_command_line():
         args = _parse_cli(sys.argv[1:])
-        min_argvs = 2 if "py" in sys.argv[0] else 4
+        min_argvs = 4 if "py" in sys.argv[0] else 2
         if len(sys.argv) < min_argvs or not(any(sys.argv[min_argvs-1] == item for item in NON_ANIM_UTILS)):
             if args.config_file is not None:
                 if os.path.exists(args.config_file):
