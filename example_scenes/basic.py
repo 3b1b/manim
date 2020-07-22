@@ -148,7 +148,6 @@ class VDictTest(Scene):
             )
         self.wait()
 
-        print(my_dict.get_all_submobjects())
 
         text = TextMobject("Some text").set_color(GREEN).next_to(square, DOWN)
 
@@ -159,7 +158,6 @@ class VDictTest(Scene):
         rect = Rectangle().next_to(text, DOWN)
         # can also do key assignment like a python dict
         my_dict['r'] = rect                             
-        print(my_dict.get_all_submobjects())
 
         # access submobjects like a python dict
         my_dict['t'].set_color(PURPLE)                  
