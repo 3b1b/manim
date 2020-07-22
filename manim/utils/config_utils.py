@@ -142,14 +142,16 @@ def _parse_cli(arg_list, input=True):
         cfg_write.add_argument(
             "--level",
             choices=["user", "cwd"],
-            default="cwd",
+            default=None,
             help="Specify if this config is for user or just the working directory."
             )
         cfg_show = cfg_subparsers.add_parser('show')
 
         cfg_export = cfg_subparsers.add_parser("export")
         cfg_export.add_argument("--dir",default=os.getcwd())
-        if not(any(sys.argv[1] == item for item in NON_ANIM_UTILS)):
+
+        # If the only command is manim, or if there are only rendering related commands
+        if len(sys.argv) < 2 or not(any(sys.argv[1] == item for item in NON_ANIM_UTILS)):
             parser.add_argument(
                 "file", help="path to file holding the python code for the scene",
             )
