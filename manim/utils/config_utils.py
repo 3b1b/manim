@@ -31,7 +31,7 @@ def _parse_file_writer_config(config_parser, args):
     # Handle input files and scenes.  Note these cannot be set from
     # the .cfg files, only from CLI arguments
     # Don't set these if the end user is invoking anything unrelated to rendering.
-    if not(any(sys.argv[1]==item for item in NON_ANIM_UTILS)):
+    if len(sys.argv) < 2 or not(any(sys.argv[1] == item for item in NON_ANIM_UTILS)):
         fw_config["input_file"] = args.file
         fw_config["scene_names"] = args.scene_names if args.scene_names is not None else []
         fw_config["output_file"] = args.output_file
@@ -394,7 +394,7 @@ def _run_config():
     if _from_command_line():
         args = _parse_cli(sys.argv[1:])
 
-        if not(any(sys.argv[1]==item for item in NON_ANIM_UTILS)):
+        if len(sys.argv) < 2 or not(any(sys.argv[1] == item for item in NON_ANIM_UTILS)):
             if args.config_file is not None:
                 if os.path.exists(args.config_file):
                     config_files.append(args.config_file)
