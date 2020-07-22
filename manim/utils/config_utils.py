@@ -18,6 +18,7 @@ from .tex import TexTemplate, TexTemplateFromFile
 
 __all__ = ["_run_config", "_paths_config_file", "_from_command_line"]
 
+NON_ANIM_UTILS=["cfg"]
 
 def _parse_file_writer_config(config_parser, args):
     """Parse config files and CLI arguments into a single dictionary."""
@@ -29,9 +30,11 @@ def _parse_file_writer_config(config_parser, args):
 
     # Handle input files and scenes.  Note these cannot be set from
     # the .cfg files, only from CLI arguments
-    fw_config["input_file"] = args.file
-    fw_config["scene_names"] = args.scene_names if args.scene_names is not None else []
-    fw_config["output_file"] = args.output_file
+    # Don't set these if the end user is invoking anything unrelated to rendering.
+    if not(any(sys.argv[1]==item for item in NON_ANIM_UTILS)):
+        fw_config["input_file"] = args.file
+        fw_config["scene_names"] = args.scene_names if args.scene_names is not None else []
+        fw_config["output_file"] = args.output_file
 
     # Handle all options that are directly overridden by CLI
     # arguments.  Note ConfigParser options are all strings and each
@@ -131,22 +134,38 @@ def _parse_cli(arg_list, input=True):
         epilog="Made with <3 by the manim community devs",
     )
     if input:
-        parser.add_argument(
-            "file", help="path to file holding the python code for the scene",
-        )
-        parser.add_argument(
-            "scene_names",
-            nargs="*",
-            help="Name of the Scene class you want to see",
-            default=[""],
-        )
-        parser.add_argument(
-            "-o",
-            "--output_file",
-            help="Specify the name of the output file, if "
-            "it should be different from the scene class name",
-            default="",
-        )
+        subparsers = parser.add_subparsers()
+        cfg_related = subparsers.add_parser('cfg')
+        cfg_subparsers = cfg_related.add_subparsers()
+
+        cfg_write = cfg_subparsers.add_parser('write')
+        cfg_write.add_argument(
+            "--level",
+            choices=["user", "cwd"],
+            default="cwd",
+            help="Specify if this config is for user or just the working directory."
+            )
+        cfg_show = cfg_subparsers.add_parser('show')
+
+        cfg_export = cfg_subparsers.add_parser("export")
+        cfg_export.add_argument("--dir",default=os.getcwd())
+        if not(any(sys.argv[1] == item for item in NON_ANIM_UTILS)):
+            parser.add_argument(
+                "file", help="path to file holding the python code for the scene",
+            )
+            parser.add_argument(
+                "scene_names",
+                nargs="*",
+                help="Name of the Scene class you want to see",
+                default=[""],
+            )
+            parser.add_argument(
+                "-o",
+                "--output_file",
+                help="Specify the name of the output file, if "
+                "it should be different from the scene class name",
+                default="",
+            )
 
     # The following use (action='store_const', const=True) instead of
     # the built-in (action='store_true').  This is because the latter
@@ -328,7 +347,6 @@ def _init_dirs(config):
         if not os.path.exists(folder):
             os.makedirs(folder)
 
-
 def _from_command_line():
     """Determine if manim was called from the command line."""
     # Manim can be called from the command line in three different
@@ -373,17 +391,23 @@ def _run_config():
     config_files = _paths_config_file()
     if _from_command_line():
         args = _parse_cli(sys.argv[1:])
-        if args.config_file is not None:
-            if os.path.exists(args.config_file):
-                config_files.append(args.config_file)
+
+        if not(any(sys.argv[1]==item for item in NON_ANIM_UTILS)):
+            if args.config_file is not None:
+                if os.path.exists(args.config_file):
+                    config_files.append(args.config_file)
+                else:
+                    raise FileNotFoundError(f"Config file {args.config_file} doesn't exist")
             else:
-                raise FileNotFoundError(f"Config file {args.config_file} doesn't exist")
+                script_directory_file_config = os.path.join(
+                    os.path.dirname(args.file), "manim.cfg"
+                )
+                if os.path.exists(script_directory_file_config):
+                    config_files.append(script_directory_file_config)
         else:
-            script_directory_file_config = os.path.join(
-                os.path.dirname(args.file), "manim.cfg"
-            )
-            if os.path.exists(script_directory_file_config):
-                config_files.append(script_directory_file_config)
+            working_directory_file_config = os.path.join(os.getcwd(),"manim.cfg")
+            if os.path.exists(working_directory_file_config):
+                config_files.append(working_directory_file_config)
 
     else:
         # In this case, we still need an empty args object.
@@ -397,3 +421,7 @@ def _run_config():
     # this is for internal use when writing output files
     file_writer_config = _parse_file_writer_config(config_parser, args)
     return args, config_parser, file_writer_config, successfully_read_files
+
+def curr_config_dict():
+    config=_run_config()[1]
+    return {section: dict(config[section]) for section in config.sections()}
