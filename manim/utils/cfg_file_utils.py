@@ -15,7 +15,7 @@ from rich.progress import track
 from rich.style import Style
 from rich.errors import StyleSyntaxError
 
-__all__ = ["main"]
+__all__ = ["write","show","export"]
 
 INVALID_STYLE_MSG = "[red bold]Your Style is not valid. Try again.[/red bold]"
 INTRO_INSTRUCTIONS = """[red]The default colour is used by the input statement.
@@ -116,7 +116,6 @@ you will have to create a manim.cfg in the local directory, where you want those
 To save your theme please save that file and place it in your current working directory, from where you run the manim command."""
         )
 
-
 def show():
     current_config = curr_config_dict()
     for category in current_config:
@@ -138,5 +137,4 @@ def export(path):
         config.write(outpath)
         from_path = os.path.join(os.getcwd(),'manim.cfg')
         to_path = os.path.join(path,'manim.cfg')
-    console.print(
-        f"Exported Config at {from_path} to {to_path}.")
+    console.print(f"Exported final Config at {from_path} to {to_path}.")
