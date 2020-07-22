@@ -346,7 +346,7 @@ def _from_command_line():
 
 
 def _paths_config_file():
-    library_wide = os.path.relpath(
+    library_wide = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "default.cfg")
     )
     if sys.platform.startswith("linux"):
