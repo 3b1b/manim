@@ -11,7 +11,6 @@ setup(
         "console_scripts": [
             "manim=manim.__main__:main",
             "manimcm=manim.__main__:main",
-            "manim-cfg=manim.utils.cfgwriter:main",
         ]
     },
     install_requires=[

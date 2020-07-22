@@ -8,7 +8,8 @@ import traceback
 import importlib.util
 import types
 
-from .config import file_writer_config
+from .config import file_writer_config,args
+from .utils import cfg_file_utils
 from .scene.scene import Scene
 from .utils.sounds import play_error_sound
 from .utils.sounds import play_finish_sound
@@ -150,23 +151,37 @@ def get_module(file_name):
 
 
 def main():
-    module = get_module(file_writer_config["input_file"])
-    all_scene_classes = get_scene_classes_from_module(module)
-    scene_classes_to_render = get_scenes_to_render(all_scene_classes)
-    sound_on = file_writer_config["sound"]
-    for SceneClass in scene_classes_to_render:
+    if sys.argv[1:][0]=="cfg":
         try:
-            # By invoking, this renders the full scene
-            scene = SceneClass()
-            open_file_if_needed(scene.file_writer)
-            if sound_on:
-                play_finish_sound()
-        except Exception:
-            print("\n\n")
-            traceback.print_exc()
-            print("\n\n")
-            if sound_on:
-                play_error_sound()
+            subcommand = sys.argv[1:][1]
+        except IndexError:
+            raise Exception("No subcommand provided. Type manim cfg -h for a list of commands.")
+
+        if subcommand == "write":
+            cfg_file_utils.write(args.level)
+        elif subcommand == "show":
+            cfg_file_utils.show()
+        elif subcommand == "export":
+            cfg_file_utils.export(args.dir)
+
+    else:
+        module = get_module(file_writer_config["input_file"])
+        all_scene_classes = get_scene_classes_from_module(module)
+        scene_classes_to_render = get_scenes_to_render(all_scene_classes)
+        sound_on = file_writer_config["sound"]
+        for SceneClass in scene_classes_to_render:
+            try:
+                # By invoking, this renders the full scene
+                scene = SceneClass()
+                open_file_if_needed(scene.file_writer)
+                if sound_on:
+                    play_finish_sound()
+            except Exception:
+                print("\n\n")
+                traceback.print_exc()
+                print("\n\n")
+                if sound_on:
+                    play_error_sound()
 
 
 if __name__ == "__main__":
