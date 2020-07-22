@@ -1,5 +1,5 @@
 """
-cfgwriter.py
+cfg_file_utils.py
 ------------
 
 Inputs the configuration files while checking it is valid. Can be executed by `manim-cfg` command.
@@ -8,7 +8,7 @@ Inputs the configuration files while checking it is valid. Can be executed by `m
 import os
 import configparser
 
-from .config_utils import _run_config, _paths_config_file
+from .config_utils import _run_config, _paths_config_file, curr_config_dict
 
 from rich.console import Console
 from rich.progress import track
@@ -23,6 +23,7 @@ If left empty, the default colour will be used.[/red]
 [magenta] For a full list of styles, visit[/magenta] https://rich.readthedocs.io/en/latest/style.html"""
 TITLE_TEXT = "[yellow bold]Manim Configuration File Writer[/yellow bold]"
 
+console = Console()
 
 def is_valid_style(style):
     """Checks whether the entered color is a valid color according to rich
@@ -67,9 +68,8 @@ def replace_keys(default):
     return default
 
 
-def main():
+def write(level=None):
     config = _run_config()[1]
-    console = Console()
     default = config["logger"]
     console.print(TITLE_TEXT, justify="center")
     console.print(INTRO_INSTRUCTIONS)
@@ -86,20 +86,25 @@ def main():
                 default[key] = temp
     default = replace_keys(default)
     config["logger"] = default
-    console.print(
-        "Do you want to save this as the default for this User?(y/n)[[n]]",
-        style="dim purple",
-        end="",
-    )
-    save_to_userpath = input()
+
+    if level is None:
+        console.print(
+            "Do you want to save this as the default for this User?(y/n)[[n]]",
+            style="dim purple",
+            end="",
+        )
+        save_to_userpath = input()
+    else:
+        save_to_userpath = ""
+
     config_paths = _paths_config_file() + [os.path.abspath("manim.cfg")]
-    if save_to_userpath.lower() == "y":
+    if save_to_userpath.lower() == "y" or level=="user":
         if not os.path.exists(os.path.abspath(os.path.join(config_paths[1], ".."))):
             os.makedirs(os.path.abspath(os.path.join(config_paths[1], "..")))
         with open(config_paths[1], "w") as fp:
             config.write(fp)
         console.print(
-            f"""A configuration file called [yellow]{config_paths[1]}[/yellow] has been created with your required changes.
+            f"""A configuration file at [yellow]{config_paths[1]}[/yellow] has been created with your required changes.
 This will be used when running the manim command. If you want to override this config,
 you will have to create a manim.cfg in the local directory, where you want those changes to be overridden."""
         )
@@ -107,10 +112,31 @@ you will have to create a manim.cfg in the local directory, where you want those
         with open(config_paths[2], "w") as fp:
             config.write(fp)
         console.print(
-            f"""A configuration file called [yellow]{config_paths[2]}[/yellow] has been created.
+            f"""A configuration file at [yellow]{config_paths[2]}[/yellow] has been created.
 To save your theme please save that file and place it in your current working directory, from where you run the manim command."""
         )
 
 
-if __name__ == "__main__":
-    main()
+def show():
+    current_config = curr_config_dict()
+    for category in current_config:
+        console.print(f"{category}",style="bold green underline")
+        for entry in current_config[category]:
+            if category=="logger":
+                console.print(f"{entry} :",end="")
+                console.print(
+                    f" {current_config[category][entry]}",
+                    style=current_config[category][entry]
+                    )
+            else:
+                console.print(f"{entry} : {current_config[category][entry]}")
+        console.print("\n")
+
+def export(path):
+    config = _run_config()[1]
+    with open(os.path.join(path,"manim.cfg"),"w") as outpath:
+        config.write(outpath)
+        from_path = os.path.join(os.getcwd(),'manim.cfg')
+        to_path = os.path.join(path,'manim.cfg')
+    console.print(
+        f"Exported Config at {from_path} to {to_path}.")
