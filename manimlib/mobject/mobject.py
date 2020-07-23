@@ -1013,23 +1013,29 @@ class Mobject(Container):
             self.center()
         return self
 
-    def arrange_in_grid(self, n_rows=None, n_cols=None, **kwargs):
+    def arrange_in_grid(self, n_rows=None, n_cols=None,
+                        buff=MED_LARGE_BUFF,
+                        aligned_edge=ORIGIN,
+                        fill_rows_first=True):
         submobs = self.submobjects
         if n_rows is None and n_cols is None:
             n_rows = int(np.sqrt(len(submobs)))
+        if n_rows is None:
+            n_rows = len(submobs) // n_cols
+        if n_cols is None:
+            n_cols = len(submobs) // n_rows
 
-        if n_rows is not None:
-            v1 = RIGHT
-            v2 = DOWN
-            n = len(submobs) // n_rows
-        elif n_cols is not None:
-            v1 = DOWN
-            v2 = RIGHT
-            n = len(submobs) // n_cols
-        Group(*[
-            Group(*submobs[i:i + n]).arrange(v1, **kwargs)
-            for i in range(0, len(submobs), n)
-        ]).arrange(v2, **kwargs)
+        x_unit = buff + max([sm.get_width() for sm in submobs])
+        y_unit = buff + max([sm.get_height() for sm in submobs])
+
+        for index, sm in enumerate(submobs):
+            if rows_first:
+                x, y = index % n_cols, index // n_cols
+            else:
+                x, y = index // n_rows, index % n_rows
+            sm.move_to(ORIGIN, aligned_edge)
+            sm.shift(x * x_unit * RIGHT + y * y_unit * DOWN)
+        self.center()
         return self
 
     def sort(self, point_to_num_func=lambda p: p[0], submob_func=None):
