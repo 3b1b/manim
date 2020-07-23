@@ -231,29 +231,10 @@ class IntroducePlot(Scene):
     def get_axes(self, width=12, height=6):
         n_cases = len(CASE_DATA)
         axes = Axes(
-            x_min=0,
-            x_max=n_cases,
-            x_axis_config={
-                "tick_frequency": 1,
-                "include_tip": False,
-            },
-            y_min=0,
-            y_max=25000,
-            y_axis_config={
-                "unit_size": 1 / 2500,
-                "tick_frequency": 1000,
-                "include_tip": False,
-            }
-        )
-        axes.x_axis.set_width(
-            width,
-            stretch=True,
-            about_point=axes.c2p(0, 0),
-        )
-        axes.y_axis.set_height(
-            height,
-            stretch=True,
-            about_point=axes.c2p(0, 0),
+            x_range=(0, n_cases),
+            y_range=(0, 25000, 1000),
+            width=width,
+            height=height,
         )
         axes.center()
         axes.to_edge(DOWN, buff=LARGE_BUFF)
@@ -289,18 +270,21 @@ class IntroducePlot(Scene):
         axes.add(labels, extra_ticks)
 
         # Adjust y ticks
-        axes.y_axis.tick_marks.stretch(0.5, 0)
-        axes.y_axis.tick_marks[0::5].stretch(2, 0)
+        axes.y_axis.ticks.stretch(0.5, 0)
+        axes.y_axis.ticks[0::5].stretch(2, 0)
 
         # Add y_axis_labels
         def get_y_labels(axes, y_values):
             labels = VGroup()
             for y in y_values:
-                label = TextMobject(f"{y}k")
-                label.set_height(0.25)
-                tick = axes.y_axis.tick_marks[y]
-                always(label.next_to, tick, LEFT, SMALL_BUFF)
-                labels.add(label)
+                try:
+                    label = TextMobject(f"{y}k")
+                    label.set_height(0.25)
+                    tick = axes.y_axis.ticks[y]
+                    always(label.next_to, tick, LEFT, SMALL_BUFF)
+                    labels.add(label)
+                except IndexError:
+                    pass
             return labels
 
         main_labels = get_y_labels(axes, range(5, 30, 5))
@@ -311,7 +295,7 @@ class IntroducePlot(Scene):
         tiny_labels = VGroup()
         tiny_ticks = VGroup()
         for y in range(200, 1000, 200):
-            tick = axes.y_axis.tick_marks[0].copy()
+            tick = axes.y_axis.ticks[0].copy()
             point = axes.c2p(0, y)
             tick.move_to(point)
             label = Integer(y)
@@ -378,8 +362,8 @@ class Thumbnail(IntroducePlot):
         # self.add(title)
         # self.add(subtitle)
 
-        title = TextMobject("How is ", "COVID-19\\\\", "currently growing?")
-        title[1].set_color(RED)
+        title = TextMobject("The early warning\\\\of ", "COVID-19\\\\")
+        title.set_color_by_tex("COVID", RED)
         title.set_height(2.5)
         title.to_edge(UP, buff=LARGE_BUFF)
         self.add(title)
