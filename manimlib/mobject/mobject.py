@@ -1029,7 +1029,7 @@ class Mobject(Container):
         y_unit = buff + max([sm.get_height() for sm in submobs])
 
         for index, sm in enumerate(submobs):
-            if rows_first:
+            if fill_rows_first:
                 x, y = index % n_cols, index // n_cols
             else:
                 x, y = index // n_rows, index % n_rows
