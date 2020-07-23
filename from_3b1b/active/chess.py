@@ -116,6 +116,7 @@ class Coin(Group):
 
     def flip(self, axis=RIGHT):
         super().flip(axis)
+        return self
 
 
 class CoinsOnBoard(Group):
@@ -1400,9 +1401,9 @@ class TwoSquareCase(ThreeDScene):
         rule_arrow = Vector(1.5 * RIGHT)
         rule_arrow.next_to(rule_words, RIGHT)
         rule_arrow.set_color(BLUE)
-        rule_equation = TexMobject("S", "=", self.coin_names[1])
+        rule_equation = TexMobject("K", "=", self.coin_names[1])
         rule_equation_long = TexMobject(
-            "S", "=", "0", "\\cdot",
+            "K", "=", "0", "\\cdot",
             self.coin_names[0], "+", "1", "\\cdot",
             self.coin_names[1],
         )
@@ -1413,8 +1414,8 @@ class TwoSquareCase(ThreeDScene):
             equation.next_to(rule_arrow, RIGHT)
 
         s_labels = VGroup(
-            TexMobject("S", "= 0"),
-            TexMobject("S", "= 1"),
+            TexMobject("K", "= 0"),
+            TexMobject("K", "= 1"),
         )
         for label, board in zip(s_labels, small_boards):
             label.set_height(0.5)
@@ -1443,6 +1444,13 @@ class TwoSquareCase(ThreeDScene):
             Restore(mid_equation),
         )
         self.wait()
+
+        self.remove(bin_coins)
+        for mob in self.mobjects:
+            for submob in mob.get_family():
+                if isinstance(submob, TexSymbol):
+                    submob.set_stroke(BLACK, 8, background=True)
+        self.add(bin_coins)
 
 
 class TwoSquaresAB(TwoSquareCase):
@@ -1838,6 +1846,7 @@ class ThreeSquareCase(ThreeDScene):
         self.play(FadeOut(general_sum))
 
         # Walk through 010 example
+        board.flip_by_bools([False, False, True])
         self.play(
             s_labels[2].set_fill, GREY, 0.25,
             s_labels[0].set_fill, YELLOW, 1,
@@ -1895,6 +1904,38 @@ class ThreeSquaresABC(ThreeSquareCase):
     CONFIG = {
         "coin_names": ["a", "b", "c"]
     }
+
+
+class FailedMod3Addition(Scene):
+    def construct(self):
+        coin = Coin(height=0.5, numeric_labels=True)
+        csum = Group(
+            TexMobject("0 \\cdot"),
+            coin.deepcopy().flip(),
+            TexMobject(" + 1 \\cdot"),
+            coin.deepcopy().flip(),
+            TexMobject("+ 2 \\cdot"),
+            coin.deepcopy(),
+            TexMobject("="),
+            Integer(2, color=YELLOW),
+        )
+        csum.arrange(RIGHT, buff=SMALL_BUFF)
+        csum[-1].unlock_triangulation()
+        csum[-1].shift(SMALL_BUFF * RIGHT)
+        coins = csum[1:7:2]
+        csum[-1].add_updater(lambda m, coins=coins: m.set_value(coins[1].is_heads() + 2 * coins[2].is_heads()))
+
+        self.add(csum)
+
+        for coin in coins[::-1]:
+            rect = SurroundingRectangle(coin)
+            self.play(ShowCreation(rect))
+            self.play(FlipCoin(coin))
+            self.wait()
+            self.play(FlipCoin(coin), FadeOut(rect))
+        self.wait()
+
+        self.embed()
 
 
 class TreeOfThreeFlips(ThreeDScene):
@@ -2902,16 +2943,17 @@ class EdgeColoringExample(Scene):
         self.wait(4)
 
 
-class GrahamsConstant(Scene):
+class GrahamsConstantAlt(Scene):
     def construct(self):
-        lhs = TexMobject("g_{64}", "=")
-        lhs[0][1:].scale(0.7, about_edge=DL)
+        # lhs = TexMobject("g_{64}", "=")
+        # lhs[0][1:].scale(0.7, about_edge=DL)
+        lhs = TexMobject("")
         lhs.scale(2)
 
         rhs = VGroup()
         for ndots in [1, 3, 6, 7, 9, 12]:
             row = VGroup(*[
-                TexMobject("3"),
+                TexMobject("2"),
                 TexMobject("\\uparrow\\uparrow"),
                 VGroup(*[
                     TexMobject("\\cdot") for x in range(ndots)
@@ -2927,13 +2969,14 @@ class GrahamsConstant(Scene):
                 row[3:].move_to(rc, LEFT)
             row.add(Brace(row[1:-1], DOWN, buff=SMALL_BUFF))
             rhs.add(row)
-        rhs[0][-1].set_opacity(0)
+        rhs.replace_submobject(0, Integer(12))
+        # rhs[0][-1].set_opacity(0)
         rhs.replace_submobject(3, TexMobject("\\vdots"))
         rhs.arrange(UP)
         rhs.next_to(lhs, RIGHT)
 
-        rbrace = Brace(rhs, RIGHT)
-        rbrace_tex = rbrace.get_text("64 times")
+        rbrace = Brace(rhs[1:], RIGHT)
+        rbrace_tex = rbrace.get_text("7 times")
 
         equation = VGroup(lhs, rhs, rbrace, rbrace_tex)
         equation.center().to_edge(LEFT, buff=LARGE_BUFF)
@@ -4386,6 +4429,28 @@ class ExampleSquareAsBinaryNumber(Scene):
         self.wait()
 
 
+class SkipSkipYesYes(Scene):
+    def construct(self):
+        board = Chessboard()
+        board.next_to(ORIGIN, DOWN)
+        words = VGroup(
+            TextMobject("Skip"),
+            TextMobject("Skip"),
+            TextMobject("Yes"),
+            TextMobject("Yes"),
+        )
+        words.add(*words.copy())
+        words.set_width(board[0].get_width() * 0.8)
+        for word, square in zip(words, board):
+            word.move_to(square)
+            word.set_y(0, UP)
+
+        for group in words[:4], words[4:]:
+            self.play(ShowIncreasingSubsets(group, rate_func=double_smooth, run_time=2))
+            self.play(FadeOut(group))
+            self.wait()
+
+
 class ShowCurrAndTarget(Scene):
     CONFIG = {
         "bit_strings": [
@@ -4398,10 +4463,11 @@ class ShowCurrAndTarget(Scene):
     def construct(self):
         words = VGroup(
             TextMobject("Current: "),
-            TextMobject("Need to change:"),
+            TextMobject("Need to\\\\change:"),
             TextMobject("Target: "),
         )
         words.arrange(DOWN, buff=0.75, aligned_edge=RIGHT)
+        words.to_corner(UL)
 
         def get_bit_aligned_bit_string(bit_coords):
             result = VGroup(*[Integer(int(b)) for b in bit_coords])
@@ -4416,7 +4482,7 @@ class ShowCurrAndTarget(Scene):
             for bs in self.bit_strings
         ])
         for word, bs in zip(words, bit_strings):
-            bs.next_to(word, RIGHT)
+            bs.next_to(word.family_members_with_points()[-1], RIGHT, aligned_edge=DOWN)
 
         words[1].set_fill(YELLOW)
         bit_strings[1].set_fill(YELLOW)
@@ -4426,19 +4492,23 @@ class ShowCurrAndTarget(Scene):
         self.wait()
         self.play(FadeIn(words[1]))
 
+        curr_rect = None
         for n in reversed(range(6)):
             rect = SurroundingRectangle(Group(
                 bit_strings[0][n],
                 bit_strings[2][n],
                 buff=0.05,
             ))
-            rect.insert_n_curves(100)
-            rect = DashedVMobject(rect, num_dashes=40)
-            rect.set_stroke(WHITE, 2)
-            self.play(ShowCreation(rect))
-            self.wait()
+            rect.stretch(0.9, 0)
+            rect.set_stroke(WHITE, 1)
+            if curr_rect is None:
+                curr_rect = rect
+                self.play(ShowCreation(curr_rect))
+            else:
+                self.play(Transform(curr_rect, rect, run_time=0.25))
+                self.wait(0.75)
             self.play(FadeIn(bit_strings[1][n]))
-            self.play(FadeOut(rect))
+        self.play(FadeOut(curr_rect))
 
 
 class ShowCurrAndTargetAlt(ShowCurrAndTarget):
@@ -4572,7 +4642,7 @@ class ShowBoardRegions(ThreeDScene):
                 boundary_square = Square()
                 # boundary_square.set_stroke(YELLOW, 4)
                 boundary_square.set_stroke(BLUE, 4)
-                boundary_square.set_fill(BLUE, 0.25)
+                boundary_square.set_fill(BLUE, 0.5)
                 boundary_square.replace(square)
                 boundary_square.move_to(square, OUT)
                 bit = bin_num[i]
@@ -4592,9 +4662,10 @@ class ShowBoardRegions(ThreeDScene):
             if curr_highlight is None:
                 self.play(MoveToTarget(one_group))
                 self.wait()
-                self.play(DrawBorderThenFill(highlight, lag_ratio=0.1, run_time=3))
+                self.play(LaggedStartMap(DrawBorderThenFill, highlight, lag_ratio=0.1, run_time=3))
                 curr_highlight = highlight
             else:
+                self.add(one_group, curr_highlight)
                 self.play(
                     MoveToTarget(one_group),
                     Transform(curr_highlight, highlight)
@@ -4728,8 +4799,8 @@ class Thumbnail(ThreeDScene):
     def construct(self):
         # Board
         board = Chessboard(
-            # shape=(8, 8),
-            shape=(6, 6),
+            shape=(8, 8),
+            # shape=(6, 6),
             square_resolution=(5, 5),
             top_square_resolution=(7, 7),
         )
@@ -4741,11 +4812,11 @@ class Thumbnail(ThreeDScene):
                 "disk_resolution": (8, 51),
             }
         )
-        coins.flip_by_message("(Collab)")
+        coins.flip_by_message("A colab!")
 
-        bools = np.array(string_to_bools("Collab"))
-        bools = bools.reshape((6, 8))[:, 2:]
-        coins.flip_by_bools(bools.flatten())
+        # bools = np.array(string_to_bools("A colab!"))
+        # bools = bools.reshape((6, 8))[:, 2:]
+        # coins.flip_by_bools(bools.flatten())
 
         # board[0].set_opacity(0)
         # coins[0].set_opacity(0)
@@ -4765,12 +4836,12 @@ class Thumbnail(ThreeDScene):
         frame.set_rotation(phi=50 * DEGREES)
 
         # Title
-        title = TextMobject("Impossible")
+        title = TextMobject("Impossible?")
         title.fix_in_frame()
         title.set_width(8)
         title.to_edge(UP)
         title.set_stroke(BLACK, 6, background=True)
-        self.add(title)
+        # self.add(title)
 
         # Instructions
         message = TextMobject(
