@@ -206,6 +206,7 @@ class PatreonEndScreen(Scene):
             "Sansword Huang": "SansWord@TW",
             "Sunil Nagaraj": "Ubiquity Ventures",
             "Nitu Kitchloo": "Ish Kitchloo",
+            "PedroTristão": "Tristan",
         }
         for n1, n2 in modification_map.items():
             if name.lower() == n1.lower():
