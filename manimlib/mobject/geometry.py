@@ -438,8 +438,8 @@ class Line(TipableVMobject):
         # Now that we know the direction between them,
         # we can find the appropriate boundary point from
         # start and end, if they're mobjects
-        self.start = self.pointify(start, vect)
-        self.end = self.pointify(end, -vect)
+        self.start = self.pointify(start, vect) + self.buff * vect
+        self.end = self.pointify(end, -vect) - self.buff * vect
 
     def pointify(self, mob_or_point, direction=None):
         if isinstance(mob_or_point, Mobject):
@@ -626,6 +626,7 @@ class Arrow(Line):
 
         self.rotate(angle_of_vector(vect) - self.get_angle())
         self.shift(start - self.get_start())
+        self.refresh_triangulation()
 
     def reset_points_around_ends(self):
         self.set_points_by_ends(self.get_start(), self.get_end(), path_arc=self.path_arc)
