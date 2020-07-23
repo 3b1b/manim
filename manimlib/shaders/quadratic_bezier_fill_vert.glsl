@@ -6,7 +6,6 @@ uniform float is_fixed_in_frame;
 in vec3 point;
 in vec3 unit_normal;
 in vec4 color;
-// in float fill_all;  // Either 0 or 1
 in float vert_index;
 
 out vec3 bp;  // Bezier control point

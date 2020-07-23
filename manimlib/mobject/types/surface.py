@@ -44,6 +44,7 @@ class ParametricSurface(Mobject):
         self.uv_func = uv_func
         self.compute_triangle_indices()
         super().__init__(**kwargs)
+        self.sort_faces_back_to_front()
 
     def init_points(self):
         dim = self.dim
@@ -124,7 +125,7 @@ class ParametricSurface(Mobject):
         self.rgbas = interpolate(mobject1.rgbas, mobject2.rgbas, alpha)
         return self
 
-    def pointwise_become_partial(self, smobject, a, b):
+    def pointwise_become_partial(self, smobject, a, b, axis=1):
         assert(isinstance(smobject, ParametricSurface))
         self.points[:] = smobject.points[:]
         if a <= 0 and b >= 1:
@@ -132,24 +133,37 @@ class ParametricSurface(Mobject):
 
         nu, nv = smobject.resolution
         self.points[:] = np.vstack([
-            self.get_partial_points_array(arr, a, b, (nu, nv, 3))
+            self.get_partial_points_array(arr, a, b, (nu, nv, 3), axis=axis)
             for arr in self.get_surface_points_and_nudged_points()
         ])
         return self
 
-    def get_partial_points_array(self, points, a, b, resolution):
+    def get_partial_points_array(self, points, a, b, resolution, axis):
         nu, nv = resolution[:2]
         points = points.reshape(resolution)
-        lower_index, lower_residue = integer_interpolate(0, nv - 1, a)
-        upper_index, upper_residue = integer_interpolate(0, nv - 1, b)
-        tuples = [
-            (points[:, :lower_index], lower_index, lower_residue),
-            (points[:, upper_index:], upper_index, upper_residue),
-        ]
-        for to_change, index, residue in tuples:
-            col = interpolate(points[:, index], points[:, index + 1], residue)
-            to_change[:] = np.tile(col, to_change.shape[1]).reshape(to_change.shape)
+        max_index = resolution[axis] - 1
+        lower_index, lower_residue = integer_interpolate(0, max_index, a)
+        upper_index, upper_residue = integer_interpolate(0, max_index, b)
+        if axis == 0:
+            points[:lower_index] = interpolate(points[lower_index], points[lower_index + 1], lower_residue)
+            points[upper_index:] = interpolate(points[upper_index], points[upper_index + 1], upper_residue)
+        else:
+            tuples = [
+                (points[:, :lower_index], lower_index, lower_residue),
+                (points[:, upper_index:], upper_index, upper_residue),
+            ]
+            for to_change, index, residue in tuples:
+                col = interpolate(points[:, index], points[:, index + 1], residue)
+                to_change[:] = col.reshape((nu, 1, *resolution[2:]))
         return points.reshape((nu * nv, *resolution[2:]))
+
+    def sort_faces_back_to_front(self, vect=OUT):
+        tri_is = self.triangle_indices
+        indices = list(range(len(tri_is) // 3))
+        indices.sort(key=lambda i: np.dot(self.points[tri_is[3 * i]], vect))
+        for k in range(3):
+            tri_is[k::3] = tri_is[k::3][indices]
+        return self
 
     # For shaders
     def get_shader_data(self):
@@ -241,13 +255,13 @@ class TexturedSurface(ParametricSurface):
                 sm.set_opacity(opacity, family)
         return self
 
-    def pointwise_become_partial(self, tsmobject, a, b):
-        super().pointwise_become_partial(tsmobject, a, b)
+    def pointwise_become_partial(self, tsmobject, a, b, axis=1):
+        super().pointwise_become_partial(tsmobject, a, b, axis)
         self.im_coords[:] = tsmobject.im_coords
         if a <= 0 and b >= 1:
             return self
         nu, nv = tsmobject.resolution
-        self.im_coords[:] = self.get_partial_points_array(self.im_coords, a, b, (nu, nv, 2))
+        self.im_coords[:] = self.get_partial_points_array(self.im_coords, a, b, (nu, nv, 2), axis)
         return self
 
     def get_shader_uniforms(self):
