@@ -151,18 +151,19 @@ def get_module(file_name):
 
 
 def main():
-    if sys.argv[1:][0]=="cfg":
-        try:
-            subcommand = sys.argv[1:][1]
-        except IndexError:
-            raise Exception("No subcommand provided. Type manim cfg -h for a list of commands.")
+    if hasattr(args,"subcommands"):
+        if "cfg" in args.subcommands:
+            if args.cfg_subcommand is not None:
+                subcommand=args.cfg_subcommand
+                if subcommand == "write":
+                    cfg_file_utils.write(args.level)
+                elif subcommand == "show":
+                    cfg_file_utils.show()
+                elif subcommand == "export":
+                    cfg_file_utils.export(args.dir)
+            else:
+                logger.error("NO ARGUMENT PROVIDED, exiting...")
 
-        if subcommand == "write":
-            cfg_file_utils.write(args.level)
-        elif subcommand == "show":
-            cfg_file_utils.show()
-        elif subcommand == "export":
-            cfg_file_utils.export(args.dir)
 
     else:
         module = get_module(file_writer_config["input_file"])

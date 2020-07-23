@@ -30,9 +30,8 @@ def _parse_file_writer_config(config_parser, args):
 
     # Handle input files and scenes.  Note these cannot be set from
     # the .cfg files, only from CLI arguments
-    # Don't set these if the end user is invoking anything unrelated to rendering.
-    min_argvs = 4 if "py" in sys.argv[0] else 2
-    if len(sys.argv) < min_argvs or not(any(sys.argv[min_argvs-1] == item for item in NON_ANIM_UTILS)):
+    # Don't set these if the a subcommand is invoked
+    if not(hasattr(args,"subcommands")):
         fw_config["input_file"] = args.file
         fw_config["scene_names"] = args.scene_names if args.scene_names is not None else []
         fw_config["output_file"] = args.output_file
@@ -135,10 +134,12 @@ def _parse_cli(arg_list, input=True):
         epilog="Made with <3 by the manim community devs",
     )
     min_argvs = 4 if "py" in sys.argv[0] else 2
-    if input and len(sys.argv) >= min_argvs and any(sys.argv[min_argvs-1] == item for item in NON_ANIM_UTILS):
-        subparsers = parser.add_subparsers()
+    if input and (len(sys.argv) >= min_argvs-1 and # If "manim" is not the only command
+        any(a == item for a in sys.argv for item in NON_ANIM_UTILS)): # non-anim exists
+
+        subparsers = parser.add_subparsers(dest="subcommands")
         cfg_related = subparsers.add_parser('cfg')
-        cfg_subparsers = cfg_related.add_subparsers()
+        cfg_subparsers = cfg_related.add_subparsers(dest="cfg_subcommand")
 
         cfg_write = cfg_subparsers.add_parser('write')
         cfg_write.add_argument(
@@ -337,8 +338,14 @@ def _parse_cli(arg_list, input=True):
     parser.add_argument(
         "--config_file", help="Specify the configuration file",
     )
+    parsed=parser.parse_args(arg_list)
+    if hasattr(parsed,"subcommands"):
+        setattr(parsed, "cfg_subcommand",
+            cfg_related.parse_args(
+                sys.argv[min_argvs:]
+                ).cfg_subcommand)
 
-    return parser.parse_args(arg_list)
+    return parsed
 
 
 def _init_dirs(config):
@@ -396,8 +403,7 @@ def _run_config():
     config_files = _paths_config_file()
     if _from_command_line():
         args = _parse_cli(sys.argv[1:])
-        min_argvs = 4 if "py" in sys.argv[0] else 2
-        if len(sys.argv) < min_argvs or not(any(sys.argv[min_argvs-1] == item for item in NON_ANIM_UTILS)):
+        if not hasattr(args,"subcommands"):
             if args.config_file is not None:
                 if os.path.exists(args.config_file):
                     config_files.append(args.config_file)
