@@ -18,7 +18,7 @@ from .tex import TexTemplate, TexTemplateFromFile
 
 __all__ = ["_run_config", "_paths_config_file", "_from_command_line"]
 
-NON_ANIM_UTILS=["cfg"]
+NON_ANIM_UTILS=["cfg","--help","-h"]
 
 def _parse_file_writer_config(config_parser, args):
     """Parse config files and CLI arguments into a single dictionary."""
@@ -134,8 +134,9 @@ def _parse_cli(arg_list, input=True):
         epilog="Made with <3 by the manim community devs",
     )
     min_argvs = 4 if "py" in sys.argv[0] else 2
-    if input and (len(sys.argv) >= min_argvs-1 and # If "manim" is not the only command
-        any(a == item for a in sys.argv for item in NON_ANIM_UTILS)): # non-anim exists
+    if input and (len(sys.argv) > min_argvs-1 # If "manim" is not the only command
+        and any(a == item for a in sys.argv for item in NON_ANIM_UTILS) #non-anim exists
+        or len(sys.argv) == min_argvs-1):
 
         subparsers = parser.add_subparsers(dest="subcommands")
         cfg_related = subparsers.add_parser('cfg')
