@@ -10,6 +10,7 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.bezier import bezier
 from manimlib.utils.bezier import get_smooth_quadratic_bezier_handle_points
+from manimlib.utils.bezier import get_smooth_cubic_bezier_handle_points
 from manimlib.utils.bezier import get_quadratic_approximation_of_cubic
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import set_array_by_interpolation
@@ -27,7 +28,7 @@ from manimlib.utils.space_ops import earclip_triangulation
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import get_unit_normal
 from manimlib.utils.space_ops import z_to_vector
-from manimlib.utils.shaders import ShaderWrapper
+from manimlib.shader_wrapper import ShaderWrapper
 
 
 class VMobject(Mobject):
@@ -521,6 +522,8 @@ class VMobject(Mobject):
                 new_subpath = np.array(subpath)
                 if mode == "smooth":
                     new_subpath[1::nppc] = get_smooth_quadratic_bezier_handle_points(anchors)
+                    # h1, h2 = get_smooth_cubic_bezier_handle_points(anchors)
+                    # new_subpath = get_quadratic_approximation_of_cubic(anchors[:-1], h1, h2, anchors[1:])
                 elif mode == "jagged":
                     new_subpath[1::nppc] = 0.5 * (anchors[:-1] + anchors[1:])
                 submob.append_points(new_subpath)
@@ -1059,7 +1062,7 @@ class VMobject(Mobject):
         data["point"] = points
         data["unit_normal"] = unit_normal
         data["color"] = rgbas
-        data["vert_index"][:, 0] = self.saved_triangulation[:n_points]
+        data["vert_index"][:, 0] = range(n_points)
         return data
 
     def get_fill_shader_vert_indices(self):
