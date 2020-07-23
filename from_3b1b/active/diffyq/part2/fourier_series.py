@@ -18,17 +18,16 @@ class FourierCirclesScene(Scene):
         "vector_config": {
             "buff": 0,
             "max_tip_length_to_length_ratio": 0.35,
-            "tip_length": 0.15,
-            "max_stroke_width_to_length_ratio": 10,
-            "stroke_width": 2,
+            "fill_opacity": 0.75,
         },
         "circle_config": {
             "stroke_width": 1,
+            "stroke_opacity": 0.75,
         },
         "base_frequency": 1,
         "slow_factor": 0.25,
         "center_point": ORIGIN,
-        "parametric_function_step_size": 0.001,
+        "parametric_function_step_size": 0.01,
         "drawn_path_color": YELLOW,
         "drawn_path_stroke_width": 2,
     }
@@ -144,9 +143,7 @@ class FourierCirclesScene(Scene):
 
         path = ParametricCurve(
             lambda t: center + reduce(op.add, [
-                complex_to_R3(
-                    coef * np.exp(TAU * 1j * freq * t)
-                )
+                complex_to_R3(coef * np.exp(TAU * 1j * freq * t))
                 for coef, freq in zip(coefs, freqs)
             ]),
             t_min=0,
@@ -381,7 +378,7 @@ class FourierOfTexPaths(FourierOfPiSymbol, MovingCameraScene):
         "animated_name": "Abc",
         "time_per_symbol": 5,
         "slow_factor": 1 / 5,
-        "parametric_function_step_size": 0.01,
+        "parametric_function_step_size": 0.001,
     }
 
     def construct(self):
@@ -395,28 +392,31 @@ class FourierOfTexPaths(FourierOfPiSymbol, MovingCameraScene):
         frame = self.camera.frame
         frame.save_state()
 
-        vectors = VGroup(VectorizedPoint())
-        circles = VGroup(VectorizedPoint())
+        vectors = None
+        circles = None
         for path in name.family_members_with_points():
             for subpath in path.get_subpaths():
                 sp_mob = VMobject()
                 sp_mob.set_points(subpath)
+                sp_mob.set_color("#2561d9")
                 coefs = self.get_coefficients_of_path(sp_mob)
-                new_vectors = self.get_rotating_vectors(
-                    coefficients=coefs
-                )
+                new_vectors = self.get_rotating_vectors(coefficients=coefs)
                 new_circles = self.get_circles(new_vectors)
                 self.set_decreasing_stroke_widths(new_circles)
 
                 drawn_path = self.get_drawn_path(new_vectors)
                 drawn_path.clear_updaters()
                 drawn_path.set_stroke(self.name_color, 3)
+                drawn_path.set_fill(opacity=0)
 
                 static_vectors = VMobject().become(new_vectors)
                 static_circles = VMobject().become(new_circles)
-                # static_circles = new_circles.deepcopy()
-                # static_vectors.clear_updaters()
-                # static_circles.clear_updaters()
+
+                if vectors is None:
+                    vectors = static_vectors.copy()
+                    circles = static_circles.copy()
+                    vectors.scale(0)
+                    circles.scale(0)
 
                 self.play(
                     Transform(vectors, static_vectors, remover=True),
@@ -425,7 +425,7 @@ class FourierOfTexPaths(FourierOfPiSymbol, MovingCameraScene):
                     frame.move_to, path,
                 )
 
-                self.add(new_vectors, new_circles)
+                self.add(drawn_path, new_vectors, new_circles)
                 self.vector_clock.set_value(0)
                 self.play(
                     ShowCreation(drawn_path),
