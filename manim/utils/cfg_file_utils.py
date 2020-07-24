@@ -2,7 +2,8 @@
 cfg_file_utils.py
 ------------
 
-Inputs the configuration files while checking it is valid. Can be executed by `manim-cfg` command.
+General Config File Managing Utilities.
+The functions below can be called via the `manim cfg` subcommand.
 
 """
 import os
@@ -20,7 +21,7 @@ __all__ = ["write","show","export"]
 INVALID_STYLE_MSG = "[red bold]Your Style is not valid. Try again.[/red bold]"
 INTRO_INSTRUCTIONS = """[red]The default colour is used by the input statement.
 If left empty, the default colour will be used.[/red]
-[magenta] For a full list of styles, visit[/magenta] https://rich.readthedocs.io/en/latest/style.html"""
+[magenta] For a full list of styles, visit[/magenta] [green]https://rich.readthedocs.io/en/latest/style.html[/green]"""
 TITLE_TEXT = "[yellow bold]Manim Configuration File Writer[/yellow bold]"
 
 console = Console()
@@ -133,8 +134,24 @@ def show():
 
 def export(path):
     config = _run_config()[1]
-    with open(os.path.join(path,"manim.cfg"),"w") as outpath:
-        config.write(outpath)
-        from_path = os.path.join(os.getcwd(),'manim.cfg')
-        to_path = os.path.join(path,'manim.cfg')
-    console.print(f"Exported final Config at {from_path} to {to_path}.")
+    if os.path.abspath(path) == os.path.abspath(os.getcwd()):
+        console.print(
+            """You are reading the config from the same directory you are exporting to.
+This means that the exported config will overwrite the config for this directory.
+Are you sure you want to continue?[y/n]""",
+            style="red bold", end=""
+            )
+        proceed = True if input().lower()=="y" else False
+    else:
+        proceed = True
+    if proceed:
+        if not os.path.isdir(path):
+            console.print(f"Creating folder: {path}.",style="red bold")
+            os.mkdir(path)
+        with open(os.path.join(path,"manim.cfg"),"w") as outpath:
+            config.write(outpath)
+            from_path = os.path.join(os.getcwd(),'manim.cfg')
+            to_path = os.path.join(path,'manim.cfg')
+        console.print(f"Exported final Config at {from_path} to {to_path}.")
+    else:
+        console.print("Could NOT write config.", style="red bold")
