@@ -16,9 +16,9 @@ import colour
 from .. import constants
 from .tex import TexTemplate, TexTemplateFromFile
 
-__all__ = ["_run_config", "_paths_config_file", "_from_command_line", "curr_config_dict"]
+__all__ = ["_run_config", "_paths_config_file", "_from_command_line", "finalized_configs_dict"]
 
-NON_ANIM_UTILS=["cfg","--help","-h"]
+min_argvs = 4 if "py" in sys.argv[0] else 2
 
 def _parse_file_writer_config(config_parser, args):
     """Parse config files and CLI arguments into a single dictionary."""
@@ -29,8 +29,9 @@ def _parse_file_writer_config(config_parser, args):
     fw_config = {}
 
     # Handle input files and scenes.  Note these cannot be set from
-    # the .cfg files, only from CLI arguments
-    # Don't set these if the a subcommand is invoked
+    # the .cfg files, only from CLI arguments.
+    # If a subcommand is given, manim will not render a video and
+    # thus these specific input/output files are not needed.
     if not(hasattr(args,"subcommands")):
         fw_config["input_file"] = args.file
         fw_config["scene_names"] = args.scene_names if args.scene_names is not None else []
@@ -133,30 +134,28 @@ def _parse_cli(arg_list, input=True):
         description="Animation engine for explanatory math videos",
         epilog="Made with <3 by the manim community devs",
     )
-    min_argvs = 4 if "py" in sys.argv[0] else 2
-    if input and (len(sys.argv) > min_argvs-1 # If "manim" is not the only command
-        and any(a == item for a in sys.argv for item in NON_ANIM_UTILS) #non-anim exists
-        or len(sys.argv) == min_argvs-1):
-
-        subparsers = parser.add_subparsers(dest="subcommands")
-        cfg_related = subparsers.add_parser('cfg')
-        cfg_subparsers = cfg_related.add_subparsers(dest="cfg_subcommand")
-
-        cfg_write = cfg_subparsers.add_parser('write')
-        cfg_write.add_argument(
-            "--level",
-            choices=["user", "cwd"],
-            default=None,
-            help="Specify if this config is for user or just the working directory."
-            )
-        cfg_show = cfg_subparsers.add_parser('show')
-
-        cfg_export = cfg_subparsers.add_parser("export")
-        cfg_export.add_argument("--dir",default=os.getcwd())
-
     if input:
-        # If the only command is manim, or if there are only rendering related commands
-        if len(sys.argv) < 2 or not(any(sys.argv[1] == item for item in NON_ANIM_UTILS)):
+        # If the only command is `manim`, we want both subcommands like `cfg`
+        # and mandatory positional arguments like `file` to show up in the help section.
+        if len(sys.argv) == min_argvs-1 or _subcommands_exist():
+            subparsers = parser.add_subparsers(dest="subcommands")
+            cfg_related = subparsers.add_parser('cfg')
+            cfg_subparsers = cfg_related.add_subparsers(dest="cfg_subcommand")
+
+            cfg_write_parser = cfg_subparsers.add_parser('write')
+            cfg_write_parser.add_argument(
+                "--level",
+                choices=["user", "cwd"],
+                default=None,
+                help="Specify if this config is for user or just the working directory."
+                )
+            cfg_subparsers.add_parser('show')
+
+            cfg_export_parser = cfg_subparsers.add_parser("export")
+            cfg_export_parser.add_argument("--dir",default=os.getcwd())
+
+        if (len(sys.argv) == min_argvs-1 or
+            not _subcommands_exist(ignore = ["--help","-h"])):
             parser.add_argument(
                 "file", help="path to file holding the python code for the scene",
             )
@@ -434,6 +433,14 @@ def _run_config():
     file_writer_config = _parse_file_writer_config(config_parser, args)
     return args, config_parser, file_writer_config, successfully_read_files
 
-def curr_config_dict():
+def finalized_configs_dict():
     config=_run_config()[1]
     return {section: dict(config[section]) for section in config.sections()}
+
+def _subcommands_exist(ignore = []):
+    NON_ANIM_UTILS = ["cfg","--help","-h"]
+    NON_ANIM_UTILS = [util for util in NON_ANIM_UTILS if util not in ignore]
+
+    not_only_manim = len(sys.argv) > min_argvs-1
+    sub_command_exists = any(a == item for a in sys.argv for item in NON_ANIM_UTILS)
+    return not_only_manim and sub_command_exists
