@@ -320,7 +320,7 @@ def _parse_cli(arg_list, input=True):
     parser.add_argument(
         "-v", "--verbose",
         type=int,
-        help="Verbosity level",
+        help="Verbosity level. Passed on to ffmpeg, the lower the value the quieter the output",
         metavar="loglevel",
         choices=[-8, 0, 8, 16, 24, 32, 40, 48, 56]
     )

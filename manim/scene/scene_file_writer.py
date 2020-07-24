@@ -391,7 +391,7 @@ class SceneFileWriter(object):
             '-r', str(fps),  # frames per second
             '-i', '-',  # The imput comes from a pipe
             '-an',  # Tells FFMPEG not to expect any audio
-            '-loglevel', 'error',
+            '-loglevel', str(file_writer_config["verbose"]),
         ]
         # TODO, the test for a transparent background should not be based on
         # the file extension.
