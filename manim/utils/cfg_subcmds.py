@@ -1,5 +1,5 @@
 """
-cfg_file_utils.py
+cfg_subcmd.py
 ------------
 
 General Config File Managing Utilities.
@@ -9,7 +9,7 @@ The functions below can be called via the `manim cfg` subcommand.
 import os
 import configparser
 
-from .config_utils import _run_config, _paths_config_file, curr_config_dict
+from .config_utils import _run_config, _paths_config_file, finalized_configs_dict
 
 from rich.console import Console
 from rich.progress import track
@@ -118,7 +118,7 @@ To save your theme please save that file and place it in your current working di
         )
 
 def show():
-    current_config = curr_config_dict()
+    current_config = finalized_configs_dict()
     for category in current_config:
         console.print(f"{category}",style="bold green underline")
         for entry in current_config[category]:
