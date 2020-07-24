@@ -16,7 +16,7 @@ import colour
 from .. import constants
 from .tex import TexTemplate, TexTemplateFromFile
 
-__all__ = ["_run_config", "_paths_config_file", "_from_command_line"]
+__all__ = ["_run_config", "_paths_config_file", "_from_command_line", "curr_config_dict"]
 
 NON_ANIM_UTILS=["cfg","--help","-h"]
 
