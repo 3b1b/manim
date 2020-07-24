@@ -122,6 +122,9 @@ def _parse_file_writer_config(config_parser, args):
         [fw_config["save_last_frame"], fw_config["from_animation_number"]]
     )
 
+    # Read in the log level
+    verbose = getattr(args, "verbose")
+    fw_config["verbose"] = default.getint("verbose") if verbose is None else verbose
     return fw_config
 
 
@@ -314,6 +317,13 @@ def _parse_cli(arg_list, input=True):
         "--config_file", help="Specify the configuration file",
     )
 
+    parser.add_argument(
+        "-v", "--verbose",
+        type=int,
+        help="Verbosity level",
+        metavar="loglevel",
+        choices=[-8, 0, 8, 16, 24, 32, 40, 48, 56]
+    )
     return parser.parse_args(arg_list)
 
 
