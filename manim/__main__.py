@@ -9,7 +9,7 @@ import importlib.util
 import types
 
 from .config import file_writer_config,args
-from .utils import cfg_file_utils
+from .utils import cfg_subcmds
 from .scene.scene import Scene
 from .utils.sounds import play_error_sound
 from .utils.sounds import play_finish_sound
@@ -156,13 +156,13 @@ def main():
             if args.cfg_subcommand is not None:
                 subcommand=args.cfg_subcommand
                 if subcommand == "write":
-                    cfg_file_utils.write(args.level)
+                    cfg_subcmds.write(args.level)
                 elif subcommand == "show":
-                    cfg_file_utils.show()
+                    cfg_subcmds.show()
                 elif subcommand == "export":
-                    cfg_file_utils.export(args.dir)
+                    cfg_subcmds.export(args.dir)
             else:
-                logger.error("NO ARGUMENT PROVIDED, exiting...")
+                logger.error("No argument provided; Exiting...")
 
 
     else:
