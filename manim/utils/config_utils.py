@@ -133,6 +133,16 @@ def _parse_file_writer_config(config_parser, args):
     if ffmpeg is None and default.getint("ffmpeg", None) is not None:
         ffmpeg = default.getint("ffmpeg")
     fw_config["ffmpeg"] = constants.VERBOSE_FFMPEG_MAP[verbose] if ffmpeg is None else ffmpeg
+    if verbose in ["DEBUG", "INFO"]:
+        progress_bar_v = True
+    else:
+        progress_bar_v = False
+    progress_bar = getattr(args, "progress_bar")
+    if progress_bar is None:
+        progress_bar = default.get("progress_bar", None)
+    if progress_bar is not None:
+        progress_bar = True if progress_bar == "on" else False
+    fw_config["progress_bar"] = progress_bar_v if progress_bar is None else progress_bar
     return fw_config
 
 
@@ -340,6 +350,13 @@ def _parse_cli(arg_list, input=True):
         help="Log level for ffmpeg",
         metavar="loglevel",
         choices=[-8, 0, 8, 16, 24, 32, 40, 48, 56],
+    )
+    parser.add_argument(
+        "--progress_bar",
+        type=str,
+        help="Display the progress bar",
+        metavar="on/off",
+        choices=["on", "off"],
     )
     return parser.parse_args(arg_list)
 
