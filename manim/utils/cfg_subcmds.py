@@ -18,11 +18,9 @@ from rich.errors import StyleSyntaxError
 
 __all__ = ["write","show","export"]
 
-INVALID_STYLE_MSG = "[red bold]Your Style is not valid. Try again.[/red bold]"
-INTRO_INSTRUCTIONS = """[red]The default colour is used by the input statement.
+RICH_COLOUR_INSTRUCTIONS = """[red]The default colour is used by the input statement.
 If left empty, the default colour will be used.[/red]
 [magenta] For a full list of styles, visit[/magenta] [green]https://rich.readthedocs.io/en/latest/style.html[/green]"""
-TITLE_TEXT = "[yellow bold]Manim Configuration File Writer[/yellow bold]"
 
 console = Console()
 
@@ -70,23 +68,43 @@ def replace_keys(default):
 
 
 def write(level=None):
+    console.print("[yellow bold]Manim Configuration File Writer[/yellow bold]", justify="center")
     config = _run_config()[1]
-    default = config["logger"]
-    console.print(TITLE_TEXT, justify="center")
-    console.print(INTRO_INSTRUCTIONS)
-    default = replace_keys(default)
-    for key in default:
-        console.print("Enter the Style for %s" % key + ":", style=key, end="")
-        temp = input()
-        if temp:
-            while not is_valid_style(temp):
-                console.print(INVALID_STYLE_MSG)
-                console.print("Enter the Style for %s" % key + ":", style=key, end="")
+
+    for category in config:
+        console.print(f"{category}",style="bold green underline")
+        default = config[category]
+        if category == "logger":
+            console.print(RICH_COLOUR_INSTRUCTIONS)
+            default = replace_keys(default)
+            for key in default:
+                console.print(f"Enter the style for {key}:", style=key, end="")
                 temp = input()
-            else:
-                default[key] = temp
-    default = replace_keys(default)
-    config["logger"] = default
+                if temp:
+                    while not is_valid_style(temp):
+                        console.print("[red bold]Invalid style. Try again.[/red bold]")
+                        console.print(f"Enter the style for {key}:", style=key, end="")
+                        temp = input()
+                    else:
+                        default[key] = temp
+            default = replace_keys(default)
+
+        else:
+            for key in default:
+                if default[key] in ["True","False"]:
+                    console.print(
+                        f"Enter value for {key} (defaults to {default[key]}):", end="")
+                    temp = input()
+                    if temp:
+                        while not temp.lower().capitalize() in ["True","False"]:
+                            console.print(
+                                "[red bold]Invalid value. Try again.[/red bold]")
+                            console.print(
+                                f"Enter the style for {key}:", style=key, end="")
+                            temp = input()
+                        else:
+                            default[key] = temp
+        config[category] = dict(default)
 
     if level is None:
         console.print(
