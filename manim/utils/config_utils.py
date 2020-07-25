@@ -124,7 +124,15 @@ def _parse_file_writer_config(config_parser, args):
 
     # Read in the log level
     verbose = getattr(args, "verbose")
-    fw_config["verbose"] = default.getint("verbose") if verbose is None else verbose
+    verbose = default["verbose"] if verbose is None else verbose
+    fw_config["verbose"] = verbose
+    if verbose == "SILENT":
+        # SILENT is not a predefined value but by placing it higher then all the others, a quieter logger is set
+        fw_config["verbose"] = 60
+    ffmpeg = getattr(args, "ffmpeg")
+    if ffmpeg is None and default.getint("ffmpeg", None) is not None:
+        ffmpeg = default.getint("ffmpeg")
+    fw_config["ffmpeg"] = constants.VERBOSE_FFMPEG_MAP[verbose] if ffmpeg is None else ffmpeg
     return fw_config
 
 
@@ -319,10 +327,17 @@ def _parse_cli(arg_list, input=True):
 
     parser.add_argument(
         "-v", "--verbose",
-        type=int,
-        help="Verbosity level. Passed on to ffmpeg, the lower the value the quieter the output",
+        type=str,
+        help="Verbosity level. Also changes the ffmpeg log level unless the latter is specified",
         metavar="loglevel",
-        choices=[-8, 0, 8, 16, 24, 32, 40, 48, 56]
+        choices=constants.VERBOSE_CHOICES,
+    )
+    parser.add_argument(
+        "-L", "--ffmpeg",
+        type=int,
+        help="Log level for ffmpeg",
+        metavar="loglevel",
+        choices=[-8, 0, 8, 16, 24, 32, 40, 48, 56],
     )
     return parser.parse_args(arg_list)
 
