@@ -148,12 +148,11 @@ COLOR_MAP.update({name.replace("_C", ""): COLOR_MAP[name]
                   if name.endswith("_C")})
 PALETTE = list(COLOR_MAP.values())
 locals().update(COLOR_MAP)
-VERBOSE_CHOICES = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "SILENT"]
+VERBOSE_CHOICES = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 VERBOSE_FFMPEG_MAP = {
     "DEBUG": 16,
     "INFO": 16,
     "WARNING": 16,
     "ERROR": 16,
     "CRITICAL": 8,
-    "SILENT": -8,
 }

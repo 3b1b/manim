@@ -126,9 +126,6 @@ def _parse_file_writer_config(config_parser, args):
     verbose = getattr(args, "verbose")
     verbose = default["verbose"] if verbose is None else verbose
     fw_config["verbose"] = verbose
-    if verbose == "SILENT":
-        # SILENT is not a predefined value but by placing it higher then all the others, a quieter logger is set
-        fw_config["verbose"] = 60
     ffmpeg = getattr(args, "ffmpeg")
     if ffmpeg is None and default.getint("ffmpeg", None) is not None:
         ffmpeg = default.getint("ffmpeg")
