@@ -130,8 +130,7 @@ def _parse_file_writer_config(config_parser, args):
     verbose = default["verbose"] if verbose is None else verbose
     fw_config["verbose"] = verbose
     ffmpeg = getattr(args, "ffmpeg")
-    if ffmpeg is None and default.getint("ffmpeg", None) is not None:
-        ffmpeg = default.getint("ffmpeg")
+    ffmpeg = default.get("ffmpeg", None) if ffmpeg is None else ffmpeg
     fw_config["ffmpeg"] = constants.VERBOSE_FFMPEG_MAP[verbose] if ffmpeg is None else ffmpeg
     if verbose in ["DEBUG", "INFO"]:
         progress_bar_v = True
@@ -346,10 +345,11 @@ def _parse_cli(arg_list, input=True):
     )
     parser.add_argument(
         "-L", "--ffmpeg",
-        type=int,
+        type=str,
         help="Log level for ffmpeg",
         metavar="loglevel",
-        choices=[-8, 0, 8, 16, 24, 32, 40, 48, 56],
+        choices=["-8", "0", "8", "16", "24", "32", "40", "48", "56",
+                 "quiet", "panic", "fatal", "error", "warning", "info", "verbose", "debug", "trace"],
     )
     parser.add_argument(
         "--progress_bar",

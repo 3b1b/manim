@@ -150,9 +150,9 @@ PALETTE = list(COLOR_MAP.values())
 locals().update(COLOR_MAP)
 VERBOSE_CHOICES = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 VERBOSE_FFMPEG_MAP = {
-    "DEBUG": 16,
-    "INFO": 16,
-    "WARNING": 16,
-    "ERROR": 16,
-    "CRITICAL": 8,
+    "DEBUG": "error",
+    "INFO": "error",
+    "WARNING": "error",
+    "ERROR": "error",
+    "CRITICAL": "fatal",
 }
