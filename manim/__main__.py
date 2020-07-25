@@ -17,7 +17,7 @@ from .logger import logger,console
 
 
 def open_file_if_needed(file_writer):
-    if file_writer_config["quiet"]:
+    if file_writer_config["verbose"] != "DEBUG":
         curr_stdout = sys.stdout
         sys.stdout = open(os.devnull, "w")
 
@@ -56,7 +56,7 @@ def open_file_if_needed(file_writer):
                 sp.call(commands, stdout=FNULL, stderr=sp.STDOUT)
                 FNULL.close()
 
-    if file_writer_config["quiet"]:
+    if file_writer_config["verbose"] != "DEBUG":
         sys.stdout.close()
         sys.stdout = curr_stdout
 
