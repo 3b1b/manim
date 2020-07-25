@@ -680,10 +680,12 @@ class Scene(Container):
         else:
             step = 1 / self.camera.frame_rate
             times = np.arange(0, run_time, step)
+        disable = file_writer_config["verbose"] not in ["DEBUG", "INFO"]
         time_progression = ProgressDisplay(
             times, total=n_iterations,
             leave=file_writer_config['leave_progress_bars'],
-            ascii=True if platform.system() == 'Windows' else None
+            ascii=True if platform.system() == 'Windows' else None,
+            disable=disable,
         )
         return time_progression
 
