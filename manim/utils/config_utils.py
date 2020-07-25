@@ -40,7 +40,6 @@ def _parse_file_writer_config(config_parser, args):
     for boolean_opt in [
         "preview",
         "show_file_in_finder",
-        "quiet",
         "sound",
         "leave_progress_bars",
         "write_to_movie",
@@ -123,7 +122,11 @@ def _parse_file_writer_config(config_parser, args):
     )
 
     # Read in the log level
+    quiet = getattr(args, "quiet")
+    if not quiet and default.getboolean("quiet", None) is not None:
+        quiet = default.getboolean("quiet")
     verbose = getattr(args, "verbose")
+    verbose = "CRITICAL" if verbose is None and quiet else verbose
     verbose = default["verbose"] if verbose is None else verbose
     fw_config["verbose"] = verbose
     ffmpeg = getattr(args, "ffmpeg")
@@ -174,9 +177,6 @@ def _parse_cli(arg_list, input=True):
         action="store_const",
         const=True,
         help="Show the output file in finder",
-    )
-    parser.add_argument(
-        "-q", "--quiet", action="store_const", const=True, help="Quiet mode",
     )
     parser.add_argument(
         "--sound",
@@ -322,6 +322,11 @@ def _parse_cli(arg_list, input=True):
         "--config_file", help="Specify the configuration file",
     )
 
+    parser.add_argument(
+        "-q", "--quiet",
+        action="store_true",
+        help="Quiet mode. Equivalent to -v CRITICAL. It can be overridden by -v and -L",
+    )
     parser.add_argument(
         "-v", "--verbose",
         type=str,
