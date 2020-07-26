@@ -128,7 +128,7 @@ def get_module(file_name):
         logger.info("Enter the animation's code & end with an EOF (CTRL+D on Linux/Unix, CTRL+Z on Windows):")
         code = sys.stdin.read()
         if not code.startswith("from manim import"):
-            logger.warn("Didn't find an import statement for Manim. Importing automatically...")
+            logger.warning("Didn't find an import statement for Manim. Importing automatically...")
             code="from manim import *\n"+code
         logger.info("Rendering animation from typed code...")
         try:
