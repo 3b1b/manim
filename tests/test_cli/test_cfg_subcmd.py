@@ -2,7 +2,7 @@ import pytest
 import os
 import shutil
 
-from .test_cli import capture
+from test_cli import capture
 
 def test_cfg_help(python_version):
     command = [python_version, "-m", "manim", "cfg", "--help"]
