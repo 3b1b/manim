@@ -340,8 +340,9 @@ def _parse_cli(arg_list, input=True):
     parsed=parser.parse_args(arg_list)
     if hasattr(parsed,"subcommands"):
         setattr(parsed, "cfg_subcommand",
-            cfg_related.parse_args(sys.argv[min_argvs:]).cfg_subcommand
-            )
+            cfg_related.parse_args(
+                sys.argv[min_argvs -(0 if min_argvs == 2 else 1):]
+                ).cfg_subcommand)
 
     return parsed
 
@@ -404,7 +405,7 @@ def _paths_config_file():
 def _run_config():
     # Config files to be parsed, in ascending priority
     config_files = _paths_config_file()
-    if _from_command_line() or _from_dunder_main():
+    if _from_command_line()  or _from_dunder_main():
         args = _parse_cli(sys.argv[1:])
         if not hasattr(args,"subcommands"):
             if args.config_file is not None:
