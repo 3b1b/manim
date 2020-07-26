@@ -38,7 +38,7 @@ class SceneTester:
         self.path_tests_data = os.path.join('tests', 'tests_data', module_tested)
 
         if caching_needed:
-            config['text_dir'] = os.path.join(
+            file_writer_config['text_dir'] = os.path.join(
                 self.path_tests_medias_cache, scene_object.__name__, 'Text')
             file_writer_config['tex_dir'] = os.path.join(
                 self.path_tests_medias_cache, scene_object.__name__, 'Tex')
