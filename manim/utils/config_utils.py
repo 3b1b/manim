@@ -18,8 +18,7 @@ from .tex import TexTemplate, TexTemplateFromFile
 
 __all__ = ["_run_config", "_paths_config_file", "_from_command_line", "finalized_configs_dict"]
 
-min_argvs = 4 if "py" in sys.argv[0] else 2
-
+min_argvs = 3 if "-m" in sys.argv[0] else 2
 def _parse_file_writer_config(config_parser, args):
     """Parse config files and CLI arguments into a single dictionary."""
     # By default, use the CLI section of the digested .cfg files
@@ -341,9 +340,8 @@ def _parse_cli(arg_list, input=True):
     parsed=parser.parse_args(arg_list)
     if hasattr(parsed,"subcommands"):
         setattr(parsed, "cfg_subcommand",
-            cfg_related.parse_args(
-                sys.argv[min_argvs:]
-                ).cfg_subcommand)
+            cfg_related.parse_args(sys.argv[min_argvs:]).cfg_subcommand
+            )
 
     return parsed
 
@@ -374,6 +372,11 @@ def _from_command_line():
 
     return from_cli_command or from_python_m
 
+def _from_dunder_main():
+    dunder_main_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        "__main__.py")
+    return sys.argv[0]==dunder_main_path
 
 def _paths_config_file():
     library_wide = os.path.abspath(
@@ -401,7 +404,7 @@ def _paths_config_file():
 def _run_config():
     # Config files to be parsed, in ascending priority
     config_files = _paths_config_file()
-    if _from_command_line():
+    if _from_command_line() or _from_dunder_main():
         args = _parse_cli(sys.argv[1:])
         if not hasattr(args,"subcommands"):
             if args.config_file is not None:
