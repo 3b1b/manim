@@ -32,8 +32,8 @@ def test_cfg_write(python_version):
     """Simulate using the command `manim cfg write`"""
     command = [python_version, "-m", "manim","cfg","write","--level","cwd"]
 
-    """As the number of config values that `manim cfg write` increases, so must the
-    number of newlines and/or values written in write_cfg_sbcmd_input increase."""
+    """As the number of config values that `manim cfg write` can modify increases, so
+    must the number of newlines and/or values written in write_cfg_sbcmd_input increase."""
 
     out, err, exitcode = capture(
         command,
