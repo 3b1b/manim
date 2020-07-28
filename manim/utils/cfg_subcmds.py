@@ -10,6 +10,7 @@ import os
 import configparser
 
 from .config_utils import _run_config, _paths_config_file, finalized_configs_dict
+from .file_ops import guarantee_existence, open_file
 
 from rich.console import Console
 from rich.progress import track
@@ -67,73 +68,84 @@ def replace_keys(default):
     return default
 
 
-def write(level=None):
-    console.print("[yellow bold]Manim Configuration File Writer[/yellow bold]", justify="center")
+def write(level=None, openfile=False):
     config = _run_config()[1]
+    config_paths = _paths_config_file() + [os.path.abspath("manim.cfg")]
+    console.print("[yellow bold]Manim Configuration File Writer[/yellow bold]", justify="center")
 
-    for category in config:
-        console.print(f"{category}",style="bold green underline")
-        default = config[category]
-        if category == "logger":
-            console.print(RICH_COLOUR_INSTRUCTIONS)
-            default = replace_keys(default)
-            for key in default:
-                console.print(f"Enter the style for {key}:", style=key, end="")
-                temp = input()
-                if temp:
-                    while not is_valid_style(temp):
-                        console.print("[red bold]Invalid style. Try again.[/red bold]")
-                        console.print(f"Enter the style for {key}:", style=key, end="")
-                        temp = input()
-                    else:
-                        default[key] = temp
-            default = replace_keys(default)
+    USER_CONFIG_MSG = f"""A configuration file at [yellow]{config_paths[1]}[/yellow] has been created with your required changes.
+This will be used when running the manim command. If you want to override this config,
+you will have to create a manim.cfg in the local directory, where you want those changes to be overridden."""
 
-        else:
-            for key in default:
-                if default[key] in ["True","False"]:
-                    console.print(
-                        f"Enter value for {key} (defaults to {default[key]}):", end="")
+    CWD_CONFIG_MSG = f"""A configuration file at [yellow]{config_paths[2]}[/yellow] has been created.
+To save your theme please save that file and place it in your current working directory, from where you run the manim command."""
+
+    if not openfile:
+        action = "save this as"
+
+        for category in config:
+            console.print(f"{category}",style="bold green underline")
+            default = config[category]
+            if category == "logger":
+                console.print(RICH_COLOUR_INSTRUCTIONS)
+                default = replace_keys(default)
+                for key in default:
+                    console.print(f"Enter the style for {key}:", style=key, end="")
                     temp = input()
                     if temp:
-                        while not temp.lower().capitalize() in ["True","False"]:
-                            console.print(
-                                "[red bold]Invalid value. Try again.[/red bold]")
-                            console.print(
-                                f"Enter the style for {key}:", style=key, end="")
+                        while not is_valid_style(temp):
+                            console.print("[red bold]Invalid style. Try again.[/red bold]")
+                            console.print(f"Enter the style for {key}:", style=key, end="")
                             temp = input()
                         else:
                             default[key] = temp
-        config[category] = dict(default)
+                default = replace_keys(default)
+
+            else:
+                for key in default:
+                    if default[key] in ["True","False"]:
+                        console.print(
+                            f"Enter value for {key} (defaults to {default[key]}):", end="")
+                        temp = input()
+                        if temp:
+                            while not temp.lower().capitalize() in ["True","False"]:
+                                console.print(
+                                    "[red bold]Invalid value. Try again.[/red bold]")
+                                console.print(
+                                    f"Enter the style for {key}:", style=key, end="")
+                                temp = input()
+                            else:
+                                default[key] = temp
+            config[category] = dict(default)
+    else:
+        action = "open"
 
     if level is None:
         console.print(
-            "Do you want to save this as the default for this User?(y/n)[[n]]",
+            f"Do you want to {action} the default config for this User?(y/n)[[n]]",
             style="dim purple",
             end="",
         )
-        save_to_userpath = input()
+        action_to_userpath = input()
     else:
-        save_to_userpath = ""
+        action_to_userpath = ""
 
-    config_paths = _paths_config_file() + [os.path.abspath("manim.cfg")]
-    if save_to_userpath.lower() == "y" or level=="user":
-        if not os.path.exists(os.path.abspath(os.path.join(config_paths[1], os.pardir))):
-            os.makedirs(os.path.abspath(os.path.join(config_paths[1], "..")))
-        with open(config_paths[1], "w") as fp:
-            config.write(fp)
-        console.print(
-            f"""A configuration file at [yellow]{config_paths[1]}[/yellow] has been created with your required changes.
-This will be used when running the manim command. If you want to override this config,
-you will have to create a manim.cfg in the local directory, where you want those changes to be overridden."""
-        )
+    if action_to_userpath.lower() == "y" or level=="user":
+        cfg_file_path = os.path.join(
+            guarantee_existence(
+                os.path.dirname(config_paths[1])
+                ),"manim.cfg")
+        console.print(USER_CONFIG_MSG)
     else:
-        with open(config_paths[2], "w") as fp:
-            config.write(fp)
-        console.print(
-            f"""A configuration file at [yellow]{config_paths[2]}[/yellow] has been created.
-To save your theme please save that file and place it in your current working directory, from where you run the manim command."""
-        )
+        cfg_file_path = os.path.join(
+            guarantee_existence(
+                os.path.dirname(config_paths[2])
+                ),"manim.cfg")
+        console.print(CWD_CONFIG_MSG)
+    with open(cfg_file_path, "w") as fp:
+        config.write(fp)
+    if openfile:
+        open_file(cfg_file_path)
 
 def show():
     current_config = finalized_configs_dict()

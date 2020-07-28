@@ -156,7 +156,7 @@ def main():
             if args.cfg_subcommand is not None:
                 subcommand=args.cfg_subcommand
                 if subcommand == "write":
-                    cfg_subcmds.write(args.level)
+                    cfg_subcmds.write(args.level,args.open)
                 elif subcommand == "show":
                     cfg_subcmds.show()
                 elif subcommand == "export":

@@ -148,6 +148,12 @@ def _parse_cli(arg_list, input=True):
                 default=None,
                 help="Specify if this config is for user or just the working directory."
                 )
+            cfg_write_parser.add_argument(
+                "--open",
+                action="store_const",
+                const=True,
+                default = False
+            )
             cfg_subparsers.add_parser('show')
 
             cfg_export_parser = cfg_subparsers.add_parser("export")
