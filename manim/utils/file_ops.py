@@ -1,4 +1,6 @@
 import os
+import subprocess as sp
+import platform
 import numpy as np
 
 
@@ -57,3 +59,18 @@ def get_sorted_integer_files(directory,
             os.remove(full_path)
     indexed_files.sort(key=lambda p: p[0])
     return list(map(lambda p: os.path.join(directory, p[1]), indexed_files))
+
+def open_file(file_path):
+    current_os = platform.system()
+    if current_os == "Windows":
+        os.startfile(file_path)
+    else:
+        commands = []
+        if current_os == "Linux":
+            commands.append("xdg-open")
+        elif current_os.startswith("CYGWIN"):
+            commands.append("cygstart")
+        else:  # Assume macOS
+            commands.append("open")
+        commands.append(file_path)
+        sp.Popen(commands)
