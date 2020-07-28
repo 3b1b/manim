@@ -118,7 +118,7 @@ def write(level=None):
 
     config_paths = _paths_config_file() + [os.path.abspath("manim.cfg")]
     if save_to_userpath.lower() == "y" or level=="user":
-        if not os.path.exists(os.path.abspath(os.path.join(config_paths[1], ".."))):
+        if not os.path.exists(os.path.abspath(os.path.join(config_paths[1], os.pardir))):
             os.makedirs(os.path.abspath(os.path.join(config_paths[1], "..")))
         with open(config_paths[1], "w") as fp:
             config.write(fp)
