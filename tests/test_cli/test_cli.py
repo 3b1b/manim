@@ -15,7 +15,6 @@ def capture(command,instream=None):
 
 
 def test_help(python_version):
-    os.chdir(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
     command = [python_version, "-m", "manim", "--help"]
     out, err, exitcode = capture(command)
     assert exitcode == 0, f"Manim has been installed incorrectly. Please refer to the troubleshooting section on the wiki. Error:\n{err.decode()}"

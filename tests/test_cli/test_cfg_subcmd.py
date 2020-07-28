@@ -30,15 +30,23 @@ def test_cfg_export(python_version):
 
 def test_cfg_write(python_version):
     """Simulate using the command `manim cfg write`"""
+    cfgfilepath = os.path.join(os.path.dirname(__file__), "manim.cfg")
     command = [python_version, "-m", "manim","cfg","write","--level","cwd"]
 
     """As the number of config values that `manim cfg write` can modify increases, so
     must the number of newlines and/or values written in write_cfg_sbcmd_input increase."""
+    with open(cfgfilepath) as cfgfile:
+        original = cfgfile.read()
 
     out, err, exitcode = capture(
         command,
         open(os.path.join(os.path.dirname(__file__), "write_cfg_sbcmd_input.txt"))
         )
     assert exitcode == 0, err
-    with open(os.path.join(os.path.dirname(__file__), "manim.cfg")) as cfgfile:
+
+    with open(cfgfilepath,"r") as cfgfile:
         assert "sound = False" in cfgfile.read()
+
+    with open(cfgfilepath,"w") as cfgfile:
+        cfgfile.write(original)
+    os.chdir(os.path.abspath(os.path.join(__file__, os.pardir, os.pardir, os.pardir)))
