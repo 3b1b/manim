@@ -121,12 +121,16 @@ def _parse_file_writer_config(config_parser, args):
         [fw_config["save_last_frame"], fw_config["from_animation_number"]]
     )
 
-    # Read in the log level
+    # Parse the verbose flag to read in the log level
     verbose = getattr(args, "verbose")
     verbose = default["verbose"] if verbose is None else verbose
     fw_config["verbose"] = verbose
+
+    # Parse the ffmpeg log level in the config
     ffmpeg_loglevel = config_parser["ffmpeg"].get("loglevel", None)
     fw_config["ffmpeg_loglevel"] = constants.VERBOSE_FFMPEG_MAP[verbose] if ffmpeg_loglevel is None else ffmpeg_loglevel
+
+    # Parse the progress_bar flag
     progress_bar = getattr(args, "progress_bar")
     if progress_bar is None:
         progress_bar = default.getboolean("progress_bar")
