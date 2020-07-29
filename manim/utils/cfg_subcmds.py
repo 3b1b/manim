@@ -168,7 +168,7 @@ def export(path):
         console.print(
             """You are reading the config from the same directory you are exporting to.
 This means that the exported config will overwrite the config for this directory.
-Are you sure you want to continue?[y/n]""",
+Are you sure you want to continue? (y/n)""",
             style="red bold", end=""
             )
         proceed = True if input().lower()=="y" else False
