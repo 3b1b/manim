@@ -9,7 +9,7 @@ def test_cfg_help(python_version):
     """Test if Manim successfully adds configparsers when a subcommand is invoked."""
     command = f"cd {this_folder} && {python_version} -m manim cfg --help"
     out, err, exitcode = capture(command, use_shell=True)
-    assert exitcode == 0, f"The cfg subcommand is not working as intended."
+    assert exitcode == 0, f"The cfg subcommand help is not working as intended.\nError : {err}"
 
 def test_cfg_show(python_version):
     """Test if the `manim cfg show` command works as intended."""
@@ -22,7 +22,7 @@ def test_cfg_export(python_version):
     """Test if the `manim cfg export` command works as intended."""
     command = f"cd {this_folder} && {python_version} -m manim cfg export --dir temp"
     out, err, exitcode = capture(command, use_shell=True)
-    assert exitcode == 0
+    assert exitcode == 0, f"The cfg subcommand export is not working as intended.\nError : {err}"
     assert os.path.exists(os.path.join(this_folder,"temp","manim.cfg"))
     with open(os.path.join(this_folder,"temp","manim.cfg"),"r") as writtencfg:
         assert "sound = True" in writtencfg.read(), err
@@ -43,7 +43,8 @@ def test_cfg_write(python_version):
         instream=open(os.path.join(this_folder, "write_cfg_sbcmd_input.txt")),
         use_shell=True
         )
-    assert exitcode == 0, err
+    assert exitcode == 0, f"The cfg subcommand write is not working as intended.\nError : {err}"
+`
 
     with open(cfgfilepath,"r") as cfgfile:
         assert "sound = False" in cfgfile.read()
