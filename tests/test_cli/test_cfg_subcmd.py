@@ -28,7 +28,7 @@ def test_cfg_export(python_version):
         assert "sound = True" in writtencfg.read(), err
     shutil.rmtree(os.path.join(this_folder,"temp"))
 
-@pytest.mark.usefixtures("reset_config")
+@pytest.mark.usefixtures("reset_cfg_file")
 def test_cfg_write(python_version):
     """Simulate using the command `manim cfg write`"""
     cfgfilepath = os.path.join(this_folder, "manim.cfg")

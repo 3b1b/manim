@@ -32,7 +32,7 @@ def python_version():
     return "python3" if sys.platform == "darwin" else "python"
 
 @pytest.fixture
-def reset_config():
+def reset_cfg_file():
     cfgfilepath = os.path.join(os.path.dirname(__file__),"test_cli", "manim.cfg")
     with open(cfgfilepath) as cfgfile:
         original = cfgfile.read()
