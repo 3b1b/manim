@@ -441,7 +441,7 @@ class SceneFileWriter(object):
         }
         if file_writer_config['from_animation_number'] is not None:
             kwargs["min_index"] = file_writer_config['from_animation_number']
-        if file_writer_config['upto_animation_number'] is not None:
+        if file_writer_config['upto_animation_number'] not in [None, np.inf]:
             kwargs["max_index"] = file_writer_config['upto_animation_number']
         else:
             kwargs["remove_indices_greater_than"] = self.scene.num_plays - 1
