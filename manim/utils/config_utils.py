@@ -133,9 +133,7 @@ def _parse_file_writer_config(config_parser, args):
         progress_bar_v = False
     progress_bar = getattr(args, "progress_bar")
     if progress_bar is None:
-        progress_bar = default.get("progress_bar", None)
-    if progress_bar is not None:
-        progress_bar = True if progress_bar == "on" else False
+        progress_bar = default.getboolean("progress_bar", None)
     fw_config["progress_bar"] = progress_bar_v if progress_bar is None else progress_bar
     return fw_config
 
@@ -333,12 +331,19 @@ def _parse_cli(arg_list, input=True):
         metavar="loglevel",
         choices=constants.VERBOSE_CHOICES,
     )
+
+    def _str2bool(s):
+        if s == "True":
+            return True
+        elif s == "False":
+            return False
+        else:
+            raise argparse.ArgumentTypeError("True or False expected")
     parser.add_argument(
         "--progress_bar",
-        type=str,
+        type=_str2bool,
         help="Display the progress bar",
-        metavar="on/off",
-        choices=["on", "off"],
+        metavar="True/False",
     )
     return parser.parse_args(arg_list)
 
