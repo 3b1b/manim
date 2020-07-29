@@ -127,14 +127,10 @@ def _parse_file_writer_config(config_parser, args):
     fw_config["verbose"] = verbose
     ffmpeg_loglevel = config_parser["ffmpeg"].get("loglevel", None)
     fw_config["ffmpeg_loglevel"] = constants.VERBOSE_FFMPEG_MAP[verbose] if ffmpeg_loglevel is None else ffmpeg_loglevel
-    if verbose in ["DEBUG", "INFO"]:
-        progress_bar_v = True
-    else:
-        progress_bar_v = False
     progress_bar = getattr(args, "progress_bar")
     if progress_bar is None:
-        progress_bar = default.getboolean("progress_bar", None)
-    fw_config["progress_bar"] = progress_bar_v if progress_bar is None else progress_bar
+        progress_bar = default.getboolean("progress_bar")
+    fw_config["progress_bar"] = progress_bar
     return fw_config
 
 
