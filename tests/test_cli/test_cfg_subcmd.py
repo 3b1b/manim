@@ -28,6 +28,7 @@ def test_cfg_export(python_version):
         assert "sound = True" in writtencfg.read(), err
     shutil.rmtree(os.path.join(this_folder,"temp"))
 
+@pytest.mark.usefixtures("reset_config")
 def test_cfg_write(python_version):
     """Simulate using the command `manim cfg write`"""
     cfgfilepath = os.path.join(this_folder, "manim.cfg")
@@ -35,9 +36,6 @@ def test_cfg_write(python_version):
 
     """As the number of config values that `manim cfg write` can modify increases, so
     must the number of newlines and/or values written in write_cfg_sbcmd_input increase."""
-    with open(cfgfilepath) as cfgfile:
-        original = cfgfile.read()
-
     out, err, exitcode = capture(
         command,
         instream=open(os.path.join(this_folder, "write_cfg_sbcmd_input.txt")),
@@ -47,6 +45,3 @@ def test_cfg_write(python_version):
 
     with open(cfgfilepath,"r") as cfgfile:
         assert "sound = False" in cfgfile.read()
-
-    with open(cfgfilepath,"w") as cfgfile:
-        cfgfile.write(original)
