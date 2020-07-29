@@ -184,4 +184,4 @@ Are you sure you want to continue?[y/n]""",
             to_path = os.path.join(path,'manim.cfg')
         console.print(f"Exported final Config at {from_path} to {to_path}.")
     else:
-        console.print("Could NOT write config.", style="red bold")
+        console.print("Aborted...", style="red bold")

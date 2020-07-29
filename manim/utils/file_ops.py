@@ -65,12 +65,13 @@ def open_file(file_path):
     if current_os == "Windows":
         os.startfile(file_path)
     else:
-        commands = []
         if current_os == "Linux":
-            commands.append("xdg-open")
+            commands = ["xdg-open"]
         elif current_os.startswith("CYGWIN"):
-            commands.append("cygstart")
-        else:  # Assume macOS
-            commands.append("open")
+            commands = ["cygstart"]
+        elif current_os == "Darwin":
+            commands = ["open"]
+        else:
+            raise OSError("Unable to identify your operating system...")
         commands.append(file_path)
         sp.Popen(commands)
