@@ -36,8 +36,6 @@ As this is a Fork of [Manim by 3b1b](https://github.com/3b1b/manim), contributin
 
 > As stated in the General Contribution Guidelines, make sure to test your changes against the example scenes in the `example_scenes` directory and test scenes in the `tests` directory, and add a new test in the `tests` directory for your new feature if you've made one.
 
-> Note: if your Pull Request doesn't change any of the actual code, please add `[skip ci]` to your commit message for Travis to ignore it.
-
 5. Finally, instead of  typing in `git push`, enter the command below.
 
    ```sh

@@ -8,10 +8,12 @@ CLOSED_THRESHOLD = 0.001
 
 def bezier(points):
     n = len(points) - 1
-    return lambda t: sum([
-        ((1 - t)**(n - k)) * (t**k) * choose(n, k) * point
-        for k, point in enumerate(points)
-    ])
+    return lambda t: sum(
+        [
+            ((1 - t) ** (n - k)) * (t ** k) * choose(n, k) * point
+            for k, point in enumerate(points)
+        ]
+    )
 
 
 def partial_bezier_points(points, a, b):
@@ -27,18 +29,13 @@ def partial_bezier_points(points, a, b):
     if a == 1:
         return [points[-1]] * len(points)
 
-    a_to_1 = np.array([
-        bezier(points[i:])(a)
-        for i in range(len(points))
-    ])
-    end_prop = (b - a) / (1. - a)
-    return np.array([
-        bezier(a_to_1[:i + 1])(end_prop)
-        for i in range(len(points))
-    ])
+    a_to_1 = np.array([bezier(points[i:])(a) for i in range(len(points))])
+    end_prop = (b - a) / (1.0 - a)
+    return np.array([bezier(a_to_1[: i + 1])(end_prop) for i in range(len(points))])
 
 
 # Linear interpolation variants
+
 
 def interpolate(start, end, alpha):
     return (1 - alpha) * start + alpha * end
@@ -75,8 +72,7 @@ def inverse_interpolate(start, end, value):
 
 def match_interpolate(new_start, new_end, old_start, old_end, old_value):
     return interpolate(
-        new_start, new_end,
-        inverse_interpolate(old_start, old_end, old_value)
+        new_start, new_end, inverse_interpolate(old_start, old_end, old_value)
     )
 
 
@@ -116,6 +112,7 @@ def get_smooth_handle_points(points):
 
     def solve_func(b):
         return linalg.solve_banded((l, u), diag, b)
+
     use_closed_solve_function = is_closed(points)
     if use_closed_solve_function:
         # Get equations to relate first and last points
@@ -151,8 +148,7 @@ def diag_to_matrix(l_and_u, diag):
     matrix = np.zeros((dim, dim))
     for i in range(l + u + 1):
         np.fill_diagonal(
-            matrix[max(0, i - u):, max(0, u - i):],
-            diag[i, max(0, u - i):]
+            matrix[max(0, i - u) :, max(0, u - i) :], diag[i, max(0, u - i) :]
         )
     return matrix
 

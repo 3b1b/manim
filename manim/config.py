@@ -68,20 +68,18 @@ def _parse_config(config_parser, args):
     config["right_side"] = config["frame_x_radius"] * constants.RIGHT
 
     # Handle the --tex_template flag.  Note we accept None if the flag is absent
-    filename = os.path.expanduser(args.tex_template) if args.tex_template else None
+    tex_fn = os.path.expanduser(args.tex_template) if args.tex_template else None
 
-    if filename is not None and not os.access(filename, os.R_OK):
+    if tex_fn is not None and not os.access(tex_fn, os.R_OK):
         # custom template not available, fallback to default
         logger.warning(
-            f"Custom TeX template {filename} not found or not readable. "
+            f"Custom TeX template {tex_fn} not found or not readable. "
             "Falling back to the default template."
         )
-        filename = None
-    config["tex_template_file"] = filename
+        tex_fn = None
+    config["tex_template_file"] = tex_fn
     config["tex_template"] = (
-        TexTemplateFromFile(filename=filename)
-        if filename is not None
-        else TexTemplate()
+        TexTemplateFromFile(filename=tex_fn) if tex_fn is not None else TexTemplate()
     )
 
     return config

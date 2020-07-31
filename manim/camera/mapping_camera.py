@@ -13,14 +13,17 @@ class MappingCamera(Camera):
     """Camera object that allows mapping
     between objects.
     """
+
     CONFIG = {
         "mapping_func": lambda p: p,
         "min_num_curves": 50,
-        "allow_object_intrusion": False
+        "allow_object_intrusion": False,
     }
 
     def points_to_pixel_coords(self, points):
-        return Camera.points_to_pixel_coords(self, np.apply_along_axis(self.mapping_func, 1, points))
+        return Camera.points_to_pixel_coords(
+            self, np.apply_along_axis(self.mapping_func, 1, points)
+        )
 
     def capture_mobjects(self, mobjects, **kwargs):
         mobjects = self.get_mobjects_to_display(mobjects, **kwargs)
@@ -29,13 +32,13 @@ class MappingCamera(Camera):
         else:
             mobject_copies = [mobject.copy() for mobject in mobjects]
         for mobject in mobject_copies:
-            if isinstance(mobject, VMobject) and \
-                    0 < mobject.get_num_curves() < self.min_num_curves:
+            if (
+                isinstance(mobject, VMobject)
+                and 0 < mobject.get_num_curves() < self.min_num_curves
+            ):
                 mobject.insert_n_curves(self.min_num_curves)
         Camera.capture_mobjects(
-            self, mobject_copies,
-            include_submobjects=False,
-            excluded_mobjects=None,
+            self, mobject_copies, include_submobjects=False, excluded_mobjects=None,
         )
 
 
@@ -54,9 +57,12 @@ class OldMultiCamera(Camera):
                     "camera": camera_with_start_positions[0],
                     "start_x": camera_with_start_positions[1][1],
                     "start_y": camera_with_start_positions[1][0],
-                    "end_x": camera_with_start_positions[1][1] + camera_with_start_positions[0].get_pixel_width(),
-                    "end_y": camera_with_start_positions[1][0] + camera_with_start_positions[0].get_pixel_height(),
-                })
+                    "end_x": camera_with_start_positions[1][1]
+                    + camera_with_start_positions[0].get_pixel_width(),
+                    "end_y": camera_with_start_positions[1][0]
+                    + camera_with_start_positions[0].get_pixel_height(),
+                }
+            )
             for camera_with_start_positions in cameras_with_start_positions
         ]
         Camera.__init__(self, **kwargs)
@@ -66,17 +72,18 @@ class OldMultiCamera(Camera):
             shifted_camera.camera.capture_mobjects(mobjects, **kwargs)
 
             self.pixel_array[
-                shifted_camera.start_y:shifted_camera.end_y,
-                shifted_camera.start_x:shifted_camera.end_x] \
-                = shifted_camera.camera.pixel_array
+                shifted_camera.start_y : shifted_camera.end_y,
+                shifted_camera.start_x : shifted_camera.end_x,
+            ] = shifted_camera.camera.pixel_array
 
     def set_background(self, pixel_array, **kwargs):
         for shifted_camera in self.shifted_cameras:
             shifted_camera.camera.set_background(
                 pixel_array[
-                    shifted_camera.start_y:shifted_camera.end_y,
-                    shifted_camera.start_x:shifted_camera.end_x],
-                **kwargs
+                    shifted_camera.start_y : shifted_camera.end_y,
+                    shifted_camera.start_x : shifted_camera.end_x,
+                ],
+                **kwargs,
             )
 
     def set_pixel_array(self, pixel_array, **kwargs):
@@ -84,15 +91,17 @@ class OldMultiCamera(Camera):
         for shifted_camera in self.shifted_cameras:
             shifted_camera.camera.set_pixel_array(
                 pixel_array[
-                    shifted_camera.start_y:shifted_camera.end_y,
-                    shifted_camera.start_x:shifted_camera.end_x],
-                **kwargs
+                    shifted_camera.start_y : shifted_camera.end_y,
+                    shifted_camera.start_x : shifted_camera.end_x,
+                ],
+                **kwargs,
             )
 
     def init_background(self):
         Camera.init_background(self)
         for shifted_camera in self.shifted_cameras:
             shifted_camera.camera.init_background()
+
 
 # A OldMultiCamera which, when called with two full-size cameras, initializes itself
 # as a splitscreen, also taking care to resize each individual camera within it
@@ -110,7 +119,5 @@ class SplitScreenCamera(OldMultiCamera):
             camera.reset_pixel_shape(camera.get_pixel_height(), half_width)
 
         OldMultiCamera.__init__(
-            self,
-            (left_camera, (0, 0)),
-            (right_camera, (0, half_width)),
+            self, (left_camera, (0, 0)), (right_camera, (0, half_width)),
         )

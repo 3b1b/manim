@@ -34,19 +34,23 @@ class SceneTester:
     def __init__(self, scene_object, module_tested, caching_needed=False):
         # Disable the the logs, (--quiet is broken) TODO
         logging.disable(logging.CRITICAL)
-        self.path_tests_medias_cache = os.path.join('tests', 'tests_cache', module_tested)
-        self.path_tests_data = os.path.join('tests', 'tests_data', module_tested)
+        self.path_tests_medias_cache = os.path.join(
+            "tests", "tests_cache", module_tested
+        )
+        self.path_tests_data = os.path.join("tests", "tests_data", module_tested)
 
         if caching_needed:
-            config['text_dir'] = os.path.join(
-                self.path_tests_medias_cache, scene_object.__name__, 'Text')
-            file_writer_config['tex_dir'] = os.path.join(
-                self.path_tests_medias_cache, scene_object.__name__, 'Tex')
+            file_writer_config["text_dir"] = os.path.join(
+                self.path_tests_medias_cache, scene_object.__name__, "Text"
+            )
+            file_writer_config["tex_dir"] = os.path.join(
+                self.path_tests_medias_cache, scene_object.__name__, "Tex"
+            )
 
-        file_writer_config['skip_animations'] = True
-        config['pixel_height'] = 480
-        config['pixel_width'] = 854
-        config['frame_rate'] = 15
+        file_writer_config["skip_animations"] = True
+        config["pixel_height"] = 480
+        config["pixel_width"] = 854
+        config["frame_rate"] = 15
 
         # By invoking this, the scene is rendered.
         self.scene = scene_object()
@@ -60,19 +64,20 @@ class SceneTester:
             The pre-rendered frame.
         """
         frame_data_path = os.path.join(
-            self.path_tests_data, "{}.npy".format(str(self.scene)))
+            self.path_tests_data, "{}.npy".format(str(self.scene))
+        )
         return np.load(frame_data_path)
-
 
     def test(self):
         """Compare pre-rendered frame to the frame rendered during the test."""
         frame_data = self.scene.get_frame()
         expected_frame_data = self.load_data()
 
-        assert frame_data.shape == expected_frame_data.shape, \
-            "The frames have different shape:" \
-            + f"\nexpected_frame_data.shape = {expected_frame_data.shape}" \
+        assert frame_data.shape == expected_frame_data.shape, (
+            "The frames have different shape:"
+            + f"\nexpected_frame_data.shape = {expected_frame_data.shape}"
             + f"\nframe_data.shape = {frame_data.shape}"
+        )
 
         test_result = np.array_equal(frame_data, expected_frame_data)
         if not test_result:
@@ -80,10 +85,11 @@ class SceneTester:
             first_incorrect_index = incorrect_indices[0][:2]
             first_incorrect_point = frame_data[tuple(first_incorrect_index)]
             expected_point = expected_frame_data[tuple(first_incorrect_index)]
-            assert test_result, \
-                f"The frames don't match. {str(self.scene).replace('Test', '')} has been modified." \
-                + "\nPlease ignore if it was intended." \
+            assert test_result, (
+                f"The frames don't match. {str(self.scene).replace('Test', '')} has been modified."
+                + "\nPlease ignore if it was intended."
                 + f"\nFirst unmatched index is at {first_incorrect_index}: {first_incorrect_point} != {expected_point}"
+            )
 
 
 def get_scenes_to_test(module_name):
@@ -99,13 +105,15 @@ def get_scenes_to_test(module_name):
     :class:`list`
         The list of all the classes of the module.
     """
-    return inspect.getmembers(sys.modules[module_name], lambda m: inspect.isclass(m) and m.__module__ == module_name)
+    return inspect.getmembers(
+        sys.modules[module_name],
+        lambda m: inspect.isclass(m) and m.__module__ == module_name,
+    )
 
 
 def utils_test_scenes(scenes_to_test, module_name, caching_needed=False):
     for _, scene_tested in scenes_to_test:
-        SceneTester(scene_tested, module_name,
-                    caching_needed=caching_needed).test()
+        SceneTester(scene_tested, module_name, caching_needed=caching_needed).test()
 
 
 def set_test_scene(scene_object, module_name):
@@ -125,16 +133,15 @@ def set_test_scene(scene_object, module_name):
     Normal usage::
         set_test_scene(DotTest, "geometry")
     """
-    file_writer_config['skip_animations'] = True
-    config['pixel_height'] = 480
-    config['pixel_width'] = 854
-    config['frame_rate'] = 15
+    file_writer_config["skip_animations"] = True
+    config["pixel_height"] = 480
+    config["pixel_width"] = 854
+    config["frame_rate"] = 15
 
     scene = scene_object()
     data = scene.get_frame()
-    path = os.path.join("manim", "tests", "tests_data",
-                        "{}".format(module_name))
+    path = os.path.join("manim", "tests", "tests_data", "{}".format(module_name))
     if not os.path.isdir(path):
         os.makedirs(path)
     np.save(os.path.join(path, str(scene)), data)
-    logger.info('Test data saved in ' + path + '\n')
+    logger.info("Test data saved in " + path + "\n")

@@ -59,18 +59,10 @@ class SampleSpace(Rectangle):
             parts.add(part)
         return parts
 
-    def get_horizontal_division(
-        self, p_list,
-        colors=[GREEN_E, BLUE_E],
-        vect=DOWN
-    ):
+    def get_horizontal_division(self, p_list, colors=[GREEN_E, BLUE_E], vect=DOWN):
         return self.get_division_along_dimension(p_list, 1, colors, vect)
 
-    def get_vertical_division(
-        self, p_list,
-        colors=[MAROON_B, YELLOW],
-        vect=RIGHT
-    ):
+    def get_vertical_division(self, p_list, colors=[MAROON_B, YELLOW], vect=RIGHT):
         return self.get_division_along_dimension(p_list, 0, colors, vect)
 
     def divide_horizontally(self, *args, **kwargs):
@@ -82,18 +74,12 @@ class SampleSpace(Rectangle):
         self.add(self.vertical_parts)
 
     def get_subdivision_braces_and_labels(
-        self, parts, labels, direction,
-        buff=SMALL_BUFF,
-        min_num_quads=1
+        self, parts, labels, direction, buff=SMALL_BUFF, min_num_quads=1
     ):
         label_mobs = VGroup()
         braces = VGroup()
         for label, part in zip(labels, parts):
-            brace = Brace(
-                part, direction,
-                min_num_quads=min_num_quads,
-                buff=buff
-            )
+            brace = Brace(part, direction, min_num_quads=min_num_quads, buff=buff)
             if isinstance(label, Mobject):
                 label_mob = label
             else:
@@ -113,17 +99,19 @@ class SampleSpace(Rectangle):
         return VGroup(parts.braces, parts.labels)
 
     def get_side_braces_and_labels(self, labels, direction=LEFT, **kwargs):
-        assert(hasattr(self, "horizontal_parts"))
+        assert hasattr(self, "horizontal_parts")
         parts = self.horizontal_parts
-        return self.get_subdivision_braces_and_labels(parts, labels, direction, **kwargs)
+        return self.get_subdivision_braces_and_labels(
+            parts, labels, direction, **kwargs
+        )
 
     def get_top_braces_and_labels(self, labels, **kwargs):
-        assert(hasattr(self, "vertical_parts"))
+        assert hasattr(self, "vertical_parts")
         parts = self.vertical_parts
         return self.get_subdivision_braces_and_labels(parts, labels, UP, **kwargs)
 
     def get_bottom_braces_and_labels(self, labels, **kwargs):
-        assert(hasattr(self, "vertical_parts"))
+        assert hasattr(self, "vertical_parts")
         parts = self.vertical_parts
         return self.get_subdivision_braces_and_labels(parts, labels, DOWN, **kwargs)
 
@@ -223,9 +211,7 @@ class BarChart(VGroup):
     def change_bar_values(self, values):
         for bar, value in zip(self.bars, values):
             bar_bottom = bar.get_bottom()
-            bar.stretch_to_fit_height(
-                (value / self.max_value) * self.height
-            )
+            bar.stretch_to_fit_height((value / self.max_value) * self.height)
             bar.move_to(bar_bottom, DOWN)
 
     def copy(self):

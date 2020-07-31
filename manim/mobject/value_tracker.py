@@ -27,15 +27,12 @@ class ValueTracker(Mobject):
     def increment_value(self, d_value):
         self.set_value(self.get_value() + d_value)
 
-    def interpolate(self, mobject1, mobject2,
-                    alpha, path_func=straight_path):
+    def interpolate(self, mobject1, mobject2, alpha, path_func=straight_path):
         """
         Turns self into an interpolation between mobject1
         and mobject2.
         """
-        self.points = path_func(
-            mobject1.points, mobject2.points, alpha
-        )
+        self.points = path_func(mobject1.points, mobject2.points, alpha)
         return self
 
 

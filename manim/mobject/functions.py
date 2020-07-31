@@ -51,13 +51,11 @@ class ParametricFunction(VMobject):
         t_min, t_max = self.t_min, self.t_max
         dt = self.dt
 
-        discontinuities = filter(
-            lambda t: t_min <= t <= t_max,
-            self.discontinuities
-        )
+        discontinuities = filter(lambda t: t_min <= t <= t_max, self.discontinuities)
         discontinuities = np.array(list(discontinuities))
         boundary_times = [
-            self.t_min, self.t_max,
+            self.t_min,
+            self.t_max,
             *(discontinuities - dt),
             *(discontinuities + dt),
         ]
@@ -67,9 +65,7 @@ class ParametricFunction(VMobject):
             if t_range[-1] != t2:
                 t_range.append(t2)
             points = np.array([self.function(t) for t in t_range])
-            valid_indices = np.apply_along_axis(
-                np.all, 1, np.isfinite(points)
-            )
+            valid_indices = np.apply_along_axis(np.all, 1, np.isfinite(points))
             points = points[valid_indices]
             if len(points) > 0:
                 self.start_new_path(points[0])
@@ -81,20 +77,15 @@ class ParametricFunction(VMobject):
 class FunctionGraph(ParametricFunction):
     CONFIG = {
         "color": YELLOW,
-        "x_min": -config['frame_x_radius'],
-        "x_max": config['frame_x_radius'],
+        "x_min": -config["frame_x_radius"],
+        "x_max": config["frame_x_radius"],
     }
 
     def __init__(self, function, **kwargs):
         digest_config(self, kwargs)
-        self.parametric_function = \
-            lambda t: np.array([t, function(t), 0])
+        self.parametric_function = lambda t: np.array([t, function(t), 0])
         ParametricFunction.__init__(
-            self,
-            self.parametric_function,
-            t_min=self.x_min,
-            t_max=self.x_max,
-            **kwargs
+            self, self.parametric_function, t_min=self.x_min, t_max=self.x_max, **kwargs
         )
         self.function = function
 

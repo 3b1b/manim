@@ -36,6 +36,7 @@ def path_along_arc(arc_angle, axis=OUT):
             centers += np.cross(unit_axis, vects / 2.0) / np.tan(arc_angle / 2)
         rot_matrix = rotation_matrix(alpha * arc_angle, unit_axis)
         return centers + np.dot(start_points - centers, rot_matrix.T)
+
     return path
 
 
