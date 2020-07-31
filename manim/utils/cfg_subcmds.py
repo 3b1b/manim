@@ -17,13 +17,14 @@ from rich.progress import track
 from rich.style import Style
 from rich.errors import StyleSyntaxError
 
-__all__ = ["write","show","export"]
+__all__ = ["write", "show", "export"]
 
 RICH_COLOUR_INSTRUCTIONS = """[red]The default colour is used by the input statement.
 If left empty, the default colour will be used.[/red]
 [magenta] For a full list of styles, visit[/magenta] [green]https://rich.readthedocs.io/en/latest/style.html[/green]"""
 
 console = Console()
+
 
 def is_valid_style(style):
     """Checks whether the entered color is a valid color according to rich
@@ -71,7 +72,9 @@ def replace_keys(default):
 def write(level=None, openfile=False):
     config = _run_config()[1]
     config_paths = _paths_config_file() + [os.path.abspath("manim.cfg")]
-    console.print("[yellow bold]Manim Configuration File Writer[/yellow bold]", justify="center")
+    console.print(
+        "[yellow bold]Manim Configuration File Writer[/yellow bold]", justify="center"
+    )
 
     USER_CONFIG_MSG = f"""A configuration file at [yellow]{config_paths[1]}[/yellow] has been created with your required changes.
 This will be used when running the manim command. If you want to override this config,
@@ -84,7 +87,7 @@ To save your theme please save that file and place it in your current working di
         action = "save this as"
 
         for category in config:
-            console.print(f"{category}",style="bold green underline")
+            console.print(f"{category}", style="bold green underline")
             default = config[category]
             if category == "logger":
                 console.print(RICH_COLOUR_INSTRUCTIONS)
@@ -94,8 +97,12 @@ To save your theme please save that file and place it in your current working di
                     temp = input()
                     if temp:
                         while not is_valid_style(temp):
-                            console.print("[red bold]Invalid style. Try again.[/red bold]")
-                            console.print(f"Enter the style for {key}:", style=key, end="")
+                            console.print(
+                                "[red bold]Invalid style. Try again.[/red bold]"
+                            )
+                            console.print(
+                                f"Enter the style for {key}:", style=key, end=""
+                            )
                             temp = input()
                         else:
                             default[key] = temp
@@ -103,16 +110,20 @@ To save your theme please save that file and place it in your current working di
 
             else:
                 for key in default:
-                    if default[key] in ["True","False"]:
+                    if default[key] in ["True", "False"]:
                         console.print(
-                            f"Enter value for {key} (defaults to {default[key]}):", end="")
+                            f"Enter value for {key} (defaults to {default[key]}):",
+                            end="",
+                        )
                         temp = input()
                         if temp:
-                            while not temp.lower().capitalize() in ["True","False"]:
+                            while not temp.lower().capitalize() in ["True", "False"]:
                                 console.print(
-                                    "[red bold]Invalid value. Try again.[/red bold]")
+                                    "[red bold]Invalid value. Try again.[/red bold]"
+                                )
                                 console.print(
-                                    f"Enter the style for {key}:", style=key, end="")
+                                    f"Enter the style for {key}:", style=key, end=""
+                                )
                                 temp = input()
                             else:
                                 default[key] = temp
@@ -130,37 +141,37 @@ To save your theme please save that file and place it in your current working di
     else:
         action_to_userpath = ""
 
-    if action_to_userpath.lower() == "y" or level=="user":
+    if action_to_userpath.lower() == "y" or level == "user":
         cfg_file_path = os.path.join(
-            guarantee_existence(
-                os.path.dirname(config_paths[1])
-                ),"manim.cfg")
+            guarantee_existence(os.path.dirname(config_paths[1])), "manim.cfg"
+        )
         console.print(USER_CONFIG_MSG)
     else:
         cfg_file_path = os.path.join(
-            guarantee_existence(
-                os.path.dirname(config_paths[2])
-                ),"manim.cfg")
+            guarantee_existence(os.path.dirname(config_paths[2])), "manim.cfg"
+        )
         console.print(CWD_CONFIG_MSG)
     with open(cfg_file_path, "w") as fp:
         config.write(fp)
     if openfile:
         open_file(cfg_file_path)
 
+
 def show():
     current_config = finalized_configs_dict()
     for category in current_config:
-        console.print(f"{category}",style="bold green underline")
+        console.print(f"{category}", style="bold green underline")
         for entry in current_config[category]:
-            if category=="logger":
-                console.print(f"{entry} :",end="")
+            if category == "logger":
+                console.print(f"{entry} :", end="")
                 console.print(
                     f" {current_config[category][entry]}",
-                    style=current_config[category][entry]
-                    )
+                    style=current_config[category][entry],
+                )
             else:
                 console.print(f"{entry} : {current_config[category][entry]}")
         console.print("\n")
+
 
 def export(path):
     config = _run_config()[1]
@@ -169,19 +180,20 @@ def export(path):
             """You are reading the config from the same directory you are exporting to.
 This means that the exported config will overwrite the config for this directory.
 Are you sure you want to continue? (y/n)""",
-            style="red bold", end=""
-            )
-        proceed = True if input().lower()=="y" else False
+            style="red bold",
+            end="",
+        )
+        proceed = True if input().lower() == "y" else False
     else:
         proceed = True
     if proceed:
         if not os.path.isdir(path):
-            console.print(f"Creating folder: {path}.",style="red bold")
+            console.print(f"Creating folder: {path}.", style="red bold")
             os.mkdir(path)
-        with open(os.path.join(path,"manim.cfg"),"w") as outpath:
+        with open(os.path.join(path, "manim.cfg"), "w") as outpath:
             config.write(outpath)
-            from_path = os.path.join(os.getcwd(),'manim.cfg')
-            to_path = os.path.join(path,'manim.cfg')
+            from_path = os.path.join(os.getcwd(), "manim.cfg")
+            to_path = os.path.join(path, "manim.cfg")
         console.print(f"Exported final Config at {from_path} to {to_path}.")
     else:
         console.print("Aborted...", style="red bold")

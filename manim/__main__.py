@@ -8,7 +8,7 @@ import traceback
 import importlib.util
 import types
 
-from .config import file_writer_config,args
+from .config import file_writer_config, args
 from .utils import cfg_subcmds
 from .scene.scene import Scene
 from .utils.sounds import play_error_sound
@@ -157,19 +157,18 @@ def get_module(file_name):
 
 
 def main():
-    if hasattr(args,"subcommands"):
+    if hasattr(args, "subcommands"):
         if "cfg" in args.subcommands:
             if args.cfg_subcommand is not None:
-                subcommand=args.cfg_subcommand
+                subcommand = args.cfg_subcommand
                 if subcommand == "write":
-                    cfg_subcmds.write(args.level,args.open)
+                    cfg_subcmds.write(args.level, args.open)
                 elif subcommand == "show":
                     cfg_subcmds.show()
                 elif subcommand == "export":
                     cfg_subcmds.export(args.dir)
             else:
                 logger.error("No argument provided; Exiting...")
-
 
     else:
         module = get_module(file_writer_config["input_file"])

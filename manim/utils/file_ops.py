@@ -61,6 +61,7 @@ def get_sorted_integer_files(
     indexed_files.sort(key=lambda p: p[0])
     return list(map(lambda p: os.path.join(directory, p[1]), indexed_files))
 
+
 def open_file(file_path):
     current_os = platform.system()
     if current_os == "Windows":
