@@ -18,14 +18,10 @@ from manim import *
 class OpeningManimExample(Scene):
     def construct(self):
         title = TextMobject("This is some \\LaTeX")
-        basel = TexMobject(
-            "\\sum_{n=1}^\\infty "
-            "\\frac{1}{n^2} = \\frac{\\pi^2}{6}"
-        )
+        basel = TexMobject("\\sum_{n=1}^\\infty " "\\frac{1}{n^2} = \\frac{\\pi^2}{6}")
         VGroup(title, basel).arrange(DOWN)
         self.play(
-            Write(title),
-            FadeInFrom(basel, UP),
+            Write(title), FadeInFrom(basel, UP),
         )
         self.wait()
 
@@ -51,24 +47,17 @@ class OpeningManimExample(Scene):
         self.wait()
 
         grid_transform_title = TextMobject(
-            "That was a non-linear function \\\\"
-            "applied to the grid"
+            "That was a non-linear function \\\\" "applied to the grid"
         )
         grid_transform_title.move_to(grid_title, UL)
         grid.prepare_for_nonlinear_transform()
         self.play(
             grid.apply_function,
-            lambda p: p + np.array([
-                np.sin(p[1]),
-                np.sin(p[0]),
-                0,
-            ]),
+            lambda p: p + np.array([np.sin(p[1]), np.sin(p[0]), 0,]),
             run_time=3,
         )
         self.wait()
-        self.play(
-            Transform(grid_title, grid_transform_title)
-        )
+        self.play(Transform(grid_title, grid_transform_title))
         self.wait()
 
 
@@ -88,25 +77,25 @@ class SquareToCircle(Scene):
 class WarpSquare(Scene):
     def construct(self):
         square = Square()
-        self.play(ApplyPointwiseFunction(
-            lambda point: complex_to_R3(np.exp(R3_to_complex(point))),
-            square
-        ))
+        self.play(
+            ApplyPointwiseFunction(
+                lambda point: complex_to_R3(np.exp(R3_to_complex(point))), square
+            )
+        )
         self.wait()
 
 
 class WriteStuff(Scene):
     def construct(self):
         example_text = TextMobject(
-            "This is a some text",
-            tex_to_color_map={"text": YELLOW}
+            "This is a some text", tex_to_color_map={"text": YELLOW}
         )
         example_tex = TexMobject(
             "\\sum_{k=1}^\\infty {1 \\over k^2} = {\\pi^2 \\over 6}",
         )
         group = VGroup(example_text, example_tex)
         group.arrange(DOWN)
-        group.set_width(config['frame_width'] - 2 * LARGE_BUFF)
+        group.set_width(config["frame_width"] - 2 * LARGE_BUFF)
 
         self.play(Write(example_text))
         self.play(Write(example_tex))
@@ -116,10 +105,7 @@ class WriteStuff(Scene):
 class UpdatersExample(Scene):
     def construct(self):
         decimal = DecimalNumber(
-            0,
-            show_ellipsis=True,
-            num_decimal_places=3,
-            include_sign=True,
+            0, show_ellipsis=True, num_decimal_places=3, include_sign=True,
         )
         square = Square().to_edge(UP)
 
@@ -127,11 +113,10 @@ class UpdatersExample(Scene):
         decimal.add_updater(lambda d: d.set_value(square.get_center()[1]))
         self.add(square, decimal)
         self.play(
-            square.to_edge, DOWN,
-            rate_func=there_and_back,
-            run_time=5,
+            square.to_edge, DOWN, rate_func=there_and_back, run_time=5,
         )
         self.wait()
+
 
 class VDictTest(Scene):
     def construct(self):
@@ -139,51 +124,49 @@ class VDictTest(Scene):
         circle = Circle().set_color(YELLOW).next_to(square, UP)
 
         # create dict from list of tuples each having key-mobject pair
-        pairs = [('s', square), ('c', circle)]
+        pairs = [("s", square), ("c", circle)]
         my_dict = VDict(*pairs, show_keys=True)
 
         # display it just like a VGroup
-        self.play(
-            ShowCreation(my_dict)
-            )
+        self.play(ShowCreation(my_dict))
         self.wait()
-
 
         text = TextMobject("Some text").set_color(GREEN).next_to(square, DOWN)
 
-        #add like a VGroup
-        my_dict.add(('t', text))                        
+        # add like a VGroup
+        my_dict.add(("t", text))
         self.wait()
-        
+
         rect = Rectangle().next_to(text, DOWN)
         # can also do key assignment like a python dict
-        my_dict['r'] = rect                             
+        my_dict["r"] = rect
 
         # access submobjects like a python dict
-        my_dict['t'].set_color(PURPLE)                  
-        self.play(my_dict['t'].scale, 3)
+        my_dict["t"].set_color(PURPLE)
+        self.play(my_dict["t"].scale, 3)
         self.wait()
 
         # also supports python dict styled reassignment
-        my_dict['t'] = TextMobject("Some other text").set_color(BLUE)
+        my_dict["t"] = TextMobject("Some other text").set_color(BLUE)
         self.wait()
 
         # remove submojects by key
-        my_dict.remove('t')                             
+        my_dict.remove("t")
         self.wait()
 
-        self.play(Uncreate(my_dict['s']))
+        self.play(Uncreate(my_dict["s"]))
         self.wait()
 
-        self.play(FadeOut(my_dict['c']))
+        self.play(FadeOut(my_dict["c"]))
         self.wait()
 
-        self.play(FadeOutAndShift(my_dict['r'], DOWN))
+        self.play(FadeOutAndShift(my_dict["r"], DOWN))
         self.wait()
 
         # iterate through all submobjects currently associated with my_dict
         for submob in my_dict.get_all_submobjects():
             self.play(ShowCreation(submob))
             self.wait()
+
 
 # See old_projects folder for many, many more

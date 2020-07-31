@@ -11,6 +11,7 @@ class Container(object):
     """
     Base class for Scenes and Mobjects. Generic container.
     """
+
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
 
@@ -20,7 +21,8 @@ class Container(object):
         Must be implemented by subclasses.
         """
         raise Exception(
-            "Container.add is not implemented; it is up to derived classes to implement")
+            "Container.add is not implemented; it is up to derived classes to implement"
+        )
 
     def remove(self, *items):
         """
@@ -28,4 +30,5 @@ class Container(object):
         Must be implemented by subclasses.
         """
         raise Exception(
-            "Container.remove is not implemented; it is up to derived classes to implement")
+            "Container.remove is not implemented; it is up to derived classes to implement"
+        )

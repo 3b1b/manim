@@ -45,16 +45,14 @@ class TipableVMobject(VMobject):
                 to the TipableVMobject instance's tip(s), its length etc
 
     """
+
     CONFIG = {
         "tip_length": DEFAULT_ARROW_TIP_LENGTH,
         # TODO
         "normal_vector": OUT,
-        "tip_style": {
-            "fill_opacity": 1,
-            "stroke_width": 0,
-        }
+        "tip_style": {"fill_opacity": 1, "stroke_width": 0,},
     }
-    
+
     # Adding, Creating, Modifying tips
 
     def add_tip(self, tip_length=None, at_start=False):
@@ -86,10 +84,7 @@ class TipableVMobject(VMobject):
         if tip_length is None:
             tip_length = self.get_default_tip_length()
         color = self.get_color()
-        style = {
-            "fill_color": color,
-            "stroke_color": color
-        }
+        style = {"fill_color": color, "stroke_color": color}
         style.update(self.tip_style)
         tip = ArrowTip(length=tip_length, **style)
         return tip
@@ -103,10 +98,7 @@ class TipableVMobject(VMobject):
         else:
             handle = self.get_last_handle()
             anchor = self.get_end()
-        tip.rotate(
-            angle_of_vector(handle - anchor) -
-            PI - tip.get_angle()
-        )
+        tip.rotate(angle_of_vector(handle - anchor) - PI - tip.get_angle())
         tip.shift(anchor - tip.get_tip_point())
         return tip
 
@@ -117,9 +109,7 @@ class TipableVMobject(VMobject):
             return self
 
         if at_start:
-            self.put_start_and_end_on(
-                tip.get_base(), self.get_end()
-            )
+            self.put_start_and_end_on(tip.get_base(), self.get_end())
         else:
             self.put_start_and_end_on(
                 self.get_start(), tip.get_base(),
@@ -140,7 +130,6 @@ class TipableVMobject(VMobject):
 
     def has_start_tip(self):
         return hasattr(self, "start_tip") and self.start_tip in self
-
 
     # Getters
 
@@ -214,7 +203,7 @@ class Arc(TipableVMobject):
     def __init__(self, start_angle=0, angle=TAU / 4, **kwargs):
         self.start_angle = start_angle
         self.angle = angle
-        self._failed_to_get_center=False
+        self._failed_to_get_center = False
         VMobject.__init__(self, **kwargs)
 
     def generate_points(self):
@@ -223,14 +212,16 @@ class Arc(TipableVMobject):
         self.shift(self.arc_center)
 
     def set_pre_positioned_points(self):
-        anchors = np.array([
-            np.cos(a) * RIGHT + np.sin(a) * UP
-            for a in np.linspace(
-                self.start_angle,
-                self.start_angle + self.angle,
-                self.num_components,
-            )
-        ])
+        anchors = np.array(
+            [
+                np.cos(a) * RIGHT + np.sin(a) * UP
+                for a in np.linspace(
+                    self.start_angle,
+                    self.start_angle + self.angle,
+                    self.num_components,
+                )
+            ]
+        )
         # Figure out which control points will give the
         # Appropriate tangent lines to the circle
         d_theta = self.angle / (self.num_components - 1.0)
@@ -242,12 +233,10 @@ class Arc(TipableVMobject):
         handles1 = anchors[:-1] + (d_theta / 3) * tangent_vectors[:-1]
         handles2 = anchors[1:] - (d_theta / 3) * tangent_vectors[1:]
         self.set_anchors_and_handles(
-            anchors[:-1],
-            handles1, handles2,
-            anchors[1:],
+            anchors[:-1], handles1, handles2, anchors[1:],
         )
 
-    def get_arc_center(self,warning=True):
+    def get_arc_center(self, warning=True):
         """
         Looks at the normals to the first two
         anchors, and finds their intersection points
@@ -261,14 +250,11 @@ class Arc(TipableVMobject):
         n1 = rotate_vector(t1, TAU / 4)
         n2 = rotate_vector(t2, TAU / 4)
         try:
-            return line_intersection(
-                line1=(a1, a1 + n1),
-                line2=(a2, a2 + n2),
-            )
+            return line_intersection(line1=(a1, a1 + n1), line2=(a2, a2 + n2),)
         except Exception:
             if warning:
                 warnings.warn("Can't find Arc center, using ORIGIN instead")
-            self._failed_to_get_center=True
+            self._failed_to_get_center = True
             return np.array(ORIGIN)
 
     def move_arc_center_to(self, point):
@@ -276,45 +262,44 @@ class Arc(TipableVMobject):
         return self
 
     def stop_angle(self):
-        return angle_of_vector(
-            self.points[-1] - self.get_arc_center()
-        ) % TAU
+        return angle_of_vector(self.points[-1] - self.get_arc_center()) % TAU
 
 
 class ArcBetweenPoints(Arc):
     """
     Inherits from Arc and additionally takes 2 points between which the arc is spanned.
     """
+
     def __init__(self, start, end, angle=TAU / 4, radius=None, **kwargs):
         if radius is not None:
-            self.radius=radius
+            self.radius = radius
             if radius < 0:
-                sign=-2
-                radius*=(-1)
+                sign = -2
+                radius *= -1
             else:
-                sign=2
-            halfdist=np.linalg.norm(np.array(start) - np.array(end)) / 2
+                sign = 2
+            halfdist = np.linalg.norm(np.array(start) - np.array(end)) / 2
             if radius < halfdist:
-                raise ValueError("""ArcBetweenPoints called with a radius that is
-                            smaller than half the distance between the points.""")
-            arc_height=radius - math.sqrt(radius ** 2 - halfdist ** 2)
-            angle=math.acos((radius - arc_height) / radius)*sign
+                raise ValueError(
+                    """ArcBetweenPoints called with a radius that is
+                            smaller than half the distance between the points."""
+                )
+            arc_height = radius - math.sqrt(radius ** 2 - halfdist ** 2)
+            angle = math.acos((radius - arc_height) / radius) * sign
 
         Arc.__init__(
-            self,
-            angle=angle,
-            **kwargs,
+            self, angle=angle, **kwargs,
         )
         if angle == 0:
             self.set_points_as_corners([LEFT, RIGHT])
         self.put_start_and_end_on(start, end)
-        
+
         if radius is None:
-            center=self.get_arc_center(warning=False)
+            center = self.get_arc_center(warning=False)
             if not self._failed_to_get_center:
-                self.radius=np.linalg.norm(np.array(start) - np.array(center))
+                self.radius = np.linalg.norm(np.array(start) - np.array(center))
             else:
-                self.radius=math.inf
+                self.radius = math.inf
 
 
 class CurvedArrow(ArcBetweenPoints):
@@ -325,18 +310,12 @@ class CurvedArrow(ArcBetweenPoints):
 
 class CurvedDoubleArrow(CurvedArrow):
     def __init__(self, start_point, end_point, **kwargs):
-        CurvedArrow.__init__(
-            self, start_point, end_point, **kwargs
-        )
+        CurvedArrow.__init__(self, start_point, end_point, **kwargs)
         self.add_tip(at_start=True)
 
 
 class Circle(Arc):
-    CONFIG = {
-        "color": RED,
-        "close_new_points": True,
-        "anchors_span_full_range": False
-    }
+    CONFIG = {"color": RED, "close_new_points": True, "anchors_span_full_range": False}
 
     def __init__(self, **kwargs):
         Arc.__init__(self, 0, TAU, **kwargs)
@@ -349,18 +328,12 @@ class Circle(Arc):
         # TODO: Figure out and fix
         self.replace(mobject, dim_to_match, stretch)
 
-        self.set_width(
-            np.sqrt(mobject.get_width()**2 + mobject.get_height()**2)
-        )
+        self.set_width(np.sqrt(mobject.get_width() ** 2 + mobject.get_height() ** 2))
         self.scale(buffer_factor)
 
     def point_at_angle(self, angle):
-        start_angle = angle_of_vector(
-            self.points[0] - self.get_center()
-        )
-        return self.point_from_proportion(
-            (angle - start_angle) / TAU
-        )
+        start_angle = angle_of_vector(self.points[0] - self.get_center())
+        return self.point_from_proportion((angle - start_angle) / TAU)
 
 
 class Dot(Circle):
@@ -368,7 +341,7 @@ class Dot(Circle):
         "radius": DEFAULT_DOT_RADIUS,
         "stroke_width": 0,
         "fill_opacity": 1.0,
-        "color": WHITE
+        "color": WHITE,
     }
 
     def __init__(self, point=ORIGIN, **kwargs):
@@ -382,10 +355,7 @@ class SmallDot(Dot):
 
 
 class Ellipse(Circle):
-    CONFIG = {
-        "width": 2,
-        "height": 1
-    }
+    CONFIG = {"width": 2, "height": 1}
 
     def __init__(self, **kwargs):
         Circle.__init__(self, **kwargs)
@@ -422,10 +392,7 @@ class AnnularSector(Arc):
 
 
 class Sector(AnnularSector):
-    CONFIG = {
-        "outer_radius": 1,
-        "inner_radius": 0
-    }
+    CONFIG = {"outer_radius": 1, "inner_radius": 0}
 
 
 class Annulus(Circle):
@@ -461,10 +428,7 @@ class Line(TipableVMobject):
 
     def generate_points(self):
         if self.path_arc:
-            arc = ArcBetweenPoints(
-                self.start, self.end,
-                angle=self.path_arc
-            )
+            arc = ArcBetweenPoints(self.start, self.end, angle=self.path_arc)
             self.set_points(arc.points)
         else:
             self.set_points_as_corners([self.start, self.end])
@@ -486,9 +450,7 @@ class Line(TipableVMobject):
         if length < 2 * self.buff:
             return
         buff_proportion = self.buff / length
-        self.pointwise_become_partial(
-            self, buff_proportion, 1 - buff_proportion
-        )
+        self.pointwise_become_partial(self, buff_proportion, 1 - buff_proportion)
         return self
 
     def set_start_and_end_attrs(self, start, end):
@@ -536,8 +498,7 @@ class Line(TipableVMobject):
 
     def set_angle(self, angle):
         self.rotate(
-            angle - self.get_angle(),
-            about_point=self.get_start(),
+            angle - self.get_angle(), about_point=self.get_start(),
         )
 
     def set_length(self, length):
@@ -565,9 +526,7 @@ class DashedLine(Line):
         ps_ratio = self.positive_space_ratio
         num_dashes = self.calculate_num_dashes(ps_ratio)
         dashes = DashedVMobject(
-            self,
-            num_dashes=num_dashes,
-            positive_space_ratio=ps_ratio
+            self, num_dashes=num_dashes, positive_space_ratio=ps_ratio
         )
         self.clear_points()
         self.add(*dashes)
@@ -575,17 +534,12 @@ class DashedLine(Line):
     def calculate_num_dashes(self, positive_space_ratio):
         try:
             full_length = self.dash_length / positive_space_ratio
-            return int(np.ceil(
-                self.get_length() / full_length
-            ))
+            return int(np.ceil(self.get_length() / full_length))
         except ZeroDivisionError:
             return 1
 
     def calculate_positive_space_ratio(self):
-        return fdiv(
-            self.dash_length,
-            self.dash_length + self.dash_spacing,
-        )
+        return fdiv(self.dash_length, self.dash_length + self.dash_spacing,)
 
     def get_start(self):
         if len(self.submobjects) > 0:
@@ -607,10 +561,7 @@ class DashedLine(Line):
 
 
 class TangentLine(Line):
-    CONFIG = {
-        "length": 1,
-        "d_alpha": 1e-6
-    }
+    CONFIG = {"length": 1, "d_alpha": 1e-6}
 
     def __init__(self, vmob, alpha, **kwargs):
         digest_config(self, kwargs)
@@ -618,9 +569,7 @@ class TangentLine(Line):
         a1 = np.clip(alpha - da, 0, 1)
         a2 = np.clip(alpha + da, 0, 1)
         super().__init__(
-            vmob.point_from_proportion(a1),
-            vmob.point_from_proportion(a2),
-            **kwargs
+            vmob.point_from_proportion(a1), vmob.point_from_proportion(a2), **kwargs
         )
         self.scale(self.length / self.get_length())
 
@@ -692,18 +641,12 @@ class Arrow(Line):
 
     def get_default_tip_length(self):
         max_ratio = self.max_tip_length_to_length_ratio
-        return min(
-            self.tip_length,
-            max_ratio * self.get_length(),
-        )
+        return min(self.tip_length, max_ratio * self.get_length(),)
 
     def set_stroke_width_from_length(self):
         max_ratio = self.max_stroke_width_to_length_ratio
         self.set_stroke(
-            width=min(
-                self.initial_stroke_width,
-                max_ratio * self.get_length(),
-            ),
+            width=min(self.initial_stroke_width, max_ratio * self.get_length(),),
             family=False,
         )
         return self
@@ -743,9 +686,7 @@ class Polygon(VMobject):
 
     def __init__(self, *vertices, **kwargs):
         VMobject.__init__(self, **kwargs)
-        self.set_points_as_corners(
-            [*vertices, vertices[0]]
-        )
+        self.set_points_as_corners([*vertices, vertices[0]])
 
     def get_vertices(self):
         return self.get_start_anchors()
@@ -768,7 +709,7 @@ class Polygon(VMobject):
             arc = ArcBetweenPoints(
                 v2 - unit_vect1 * cut_off_length,
                 v2 + unit_vect2 * cut_off_length,
-                angle=sign * angle
+                angle=sign * angle,
             )
             arcs.append(arc)
 
@@ -780,9 +721,7 @@ class Polygon(VMobject):
             line = Line(arc1.get_end(), arc2.get_start())
             # Make sure anchors are evenly distributed
             len_ratio = line.get_length() / arc1.get_arc_length()
-            line.insert_n_curves(
-                int(arc1.get_num_curves() * len_ratio)
-            )
+            line.insert_n_curves(int(arc1.get_num_curves() * len_ratio))
             self.append_points(line.get_points())
         return self
 
@@ -861,10 +800,7 @@ class Square(Rectangle):
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
         Rectangle.__init__(
-            self,
-            height=self.side_length,
-            width=self.side_length,
-            **kwargs
+            self, height=self.side_length, width=self.side_length, **kwargs
         )
 
 

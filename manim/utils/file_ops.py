@@ -4,7 +4,7 @@ import numpy as np
 
 def add_extension_if_not_present(file_name, extension):
     # This could conceivably be smarter about handling existing differing extensions
-    if(file_name[-len(extension):] != extension):
+    if file_name[-len(extension) :] != extension:
         return file_name + extension
     else:
         return file_name
@@ -28,17 +28,18 @@ def seek_full_path_from_defaults(file_name, default_dir, extensions):
     raise IOError("File {} not Found".format(file_name))
 
 
-def get_sorted_integer_files(directory,
-                             min_index=0,
-                             max_index=np.inf,
-                             remove_non_integer_files=False,
-                             remove_indices_greater_than=None,
-                             extension=None,
-                             ):
+def get_sorted_integer_files(
+    directory,
+    min_index=0,
+    max_index=np.inf,
+    remove_non_integer_files=False,
+    remove_indices_greater_than=None,
+    extension=None,
+):
     indexed_files = []
     for file in os.listdir(directory):
-        if '.' in file:
-            index_str = file[:file.index('.')]
+        if "." in file:
+            index_str = file[: file.index(".")]
         else:
             index_str = file
 

@@ -11,7 +11,7 @@ from ..utils.simple_functions import fdiv
 
 
 def get_norm(vect):
-    return sum([x**2 for x in vect])**0.5
+    return sum([x ** 2 for x in vect]) ** 0.5
 
 
 # Quaternions
@@ -21,26 +21,22 @@ def get_norm(vect):
 def quaternion_mult(q1, q2):
     w1, x1, y1, z1 = q1
     w2, x2, y2, z2 = q2
-    return np.array([
-        w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
-        w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
-        w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2,
-        w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2,
-    ])
+    return np.array(
+        [
+            w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
+            w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
+            w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2,
+            w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2,
+        ]
+    )
 
 
 def quaternion_from_angle_axis(angle, axis):
-    return np.append(
-        np.cos(angle / 2),
-        np.sin(angle / 2) * normalize(axis)
-    )
+    return np.append(np.cos(angle / 2), np.sin(angle / 2) * normalize(axis))
 
 
 def angle_axis_from_quaternion(quaternion):
-    axis = normalize(
-        quaternion[1:],
-        fall_back=np.array([1, 0, 0])
-    )
+    axis = normalize(quaternion[1:], fall_back=np.array([1, 0, 0]))
     angle = 2 * np.arccos(quaternion[0])
     if angle > TAU / 2:
         angle = TAU - angle
@@ -62,10 +58,7 @@ def rotate_vector(vector, angle, axis=OUT):
         # Use quaternions...because why not
         quat = quaternion_from_angle_axis(angle, axis)
         quat_inv = quaternion_conjugate(quat)
-        product = reduce(
-            quaternion_mult,
-            [quat, np.append(0, vector), quat_inv]
-        )
+        product = reduce(quaternion_mult, [quat, np.append(0, vector), quat_inv])
         return product[1:]
     else:
         raise Exception("vector must be of dimension 2 or 3")
@@ -74,7 +67,7 @@ def rotate_vector(vector, angle, axis=OUT):
 def thick_diagonal(dim, thickness=2):
     row_indices = np.arange(dim).repeat(dim).reshape((dim, dim))
     col_indices = np.transpose(row_indices)
-    return (np.abs(row_indices - col_indices) < thickness).astype('uint8')
+    return (np.abs(row_indices - col_indices) < thickness).astype("uint8")
 
 
 def rotation_matrix(angle, axis):
@@ -91,7 +84,7 @@ def rotation_about_z(angle):
     return [
         [np.cos(angle), -np.sin(angle), 0],
         [np.sin(angle), np.cos(angle), 0],
-        [0, 0, 1]
+        [0, 0, 1],
     ]
 
 
@@ -113,19 +106,14 @@ def z_to_vector(vector):
             theta = -theta
     else:
         theta = 0
-    phi_down = np.array([
-        [np.cos(phi), 0, np.sin(phi)],
-        [0, 1, 0],
-        [-np.sin(phi), 0, np.cos(phi)]
-    ])
+    phi_down = np.array(
+        [[np.cos(phi), 0, np.sin(phi)], [0, 1, 0], [-np.sin(phi), 0, np.cos(phi)]]
+    )
     return np.dot(rotation_about_z(theta), phi_down)
 
 
 def angle_between(v1, v2):
-    return np.arccos(np.dot(
-        v1 / get_norm(v1),
-        v2 / get_norm(v2)
-    ))
+    return np.arccos(np.dot(v1 / get_norm(v1), v2 / get_norm(v2)))
 
 
 def angle_of_vector(vector):
@@ -143,10 +131,7 @@ def angle_between_vectors(v1, v2):
     Returns the angle between two 3D vectors.
     This angle will always be btw 0 and pi
     """
-    return np.arccos(fdiv(
-        np.dot(v1, v2),
-        get_norm(v1) * get_norm(v2)
-    ))
+    return np.arccos(fdiv(np.dot(v1, v2), get_norm(v1) * get_norm(v2)))
 
 
 def project_along_vector(point, vector):
@@ -166,11 +151,13 @@ def normalize(vect, fall_back=None):
 
 
 def cross(v1, v2):
-    return np.array([
-        v1[1] * v2[2] - v1[2] * v2[1],
-        v1[2] * v2[0] - v1[0] * v2[2],
-        v1[0] * v2[1] - v1[1] * v2[0]
-    ])
+    return np.array(
+        [
+            v1[1] * v2[2] - v1[2] * v2[1],
+            v1[2] * v2[0] - v1[0] * v2[2],
+            v1[0] * v2[1] - v1[1] * v2[0],
+        ]
+    )
 
 
 def get_unit_normal(v1, v2):
@@ -182,10 +169,7 @@ def get_unit_normal(v1, v2):
 
 def compass_directions(n=4, start_vect=RIGHT):
     angle = TAU / n
-    return np.array([
-        rotate_vector(start_vect, k * angle)
-        for k in range(n)
-    ])
+    return np.array([rotate_vector(start_vect, k * angle) for k in range(n)])
 
 
 def complex_to_R3(complex_num):

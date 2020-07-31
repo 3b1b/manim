@@ -52,15 +52,15 @@ class GraphScene(Scene):
         "default_riemann_end_color": GREEN,
         "area_opacity": 0.8,
         "num_rects": 50,
-        "include_tip": False,          # add tip at the end of the axes
-        "x_axis_visibility": True,     # show or hide the x axis
-        "y_axis_visibility": True,     # show or hide the y axis
-        "x_label_position": UP+RIGHT,  # where to place the label of the x axis
-        "y_label_position": UP+RIGHT,  # where to place the label of the y axis
-        "x_add_start": 0,              # extend the x axis to the left
-        "x_add_end": 0,                # extend the x axis to the right
-        "y_add_start": 0,              # extend the y axis to the bottom
-        "y_add_end": 0,                # extend the y axis to the top
+        "include_tip": False,  # add tip at the end of the axes
+        "x_axis_visibility": True,  # show or hide the x axis
+        "y_axis_visibility": True,  # show or hide the y axis
+        "x_label_position": UP + RIGHT,  # where to place the label of the x axis
+        "y_label_position": UP + RIGHT,  # where to place the label of the y axis
+        "x_add_start": 0,  # extend the x axis to the left
+        "x_add_end": 0,  # extend the x axis to the right
+        "y_add_start": 0,  # extend the y axis to the bottom
+        "y_add_end": 0,  # extend the y axis to the top
     }
 
     def setup(self):
@@ -101,7 +101,7 @@ class GraphScene(Scene):
             color=self.axes_color,
             include_tip=self.include_tip,
             add_start=self.x_add_start,
-            add_end=self.x_add_end
+            add_end=self.x_add_end,
         )
         x_axis.shift(self.graph_origin - x_axis.number_to_point(0))
         if len(self.x_labeled_nums) > 0:
@@ -113,7 +113,7 @@ class GraphScene(Scene):
             x_label.next_to(
                 x_axis.get_tips() if self.include_tip else x_axis.get_tick_marks(),
                 self.x_label_position,
-                buff=SMALL_BUFF
+                buff=SMALL_BUFF,
             )
             x_label.shift_onto_screen()
             x_axis.add(x_label)
@@ -138,7 +138,7 @@ class GraphScene(Scene):
             label_direction=LEFT,
             include_tip=self.include_tip,
             add_start=self.y_add_start,
-            add_end=self.y_add_end
+            add_end=self.y_add_end,
         )
         y_axis.shift(self.graph_origin - y_axis.number_to_point(0))
         y_axis.rotate(np.pi / 2, about_point=y_axis.number_to_point(0))
@@ -149,8 +149,9 @@ class GraphScene(Scene):
         if self.y_axis_label:
             y_label = TextMobject(self.y_axis_label)
             y_label.next_to(
-                y_axis.get_corner(self.y_label_position), self.y_label_position,
-                buff=SMALL_BUFF
+                y_axis.get_corner(self.y_label_position),
+                self.y_label_position,
+                buff=SMALL_BUFF,
             )
             y_label.shift_onto_screen()
             y_axis.add(y_label)
@@ -190,7 +191,7 @@ class GraphScene(Scene):
         np.ndarray
             The array of the coordinates.
         """
-        assert(hasattr(self, "x_axis") and hasattr(self, "y_axis"))
+        assert hasattr(self, "x_axis") and hasattr(self, "y_axis")
         result = self.x_axis.number_to_point(x)[0] * RIGHT
         result += self.y_axis.number_to_point(y)[1] * UP
         return result
@@ -215,16 +216,9 @@ class GraphScene(Scene):
         tuple
             The coordinates on the scene.
         """
-        return (self.x_axis.point_to_number(point),
-                self.y_axis.point_to_number(point))
+        return (self.x_axis.point_to_number(point), self.y_axis.point_to_number(point))
 
-    def get_graph(
-        self, func,
-        color=None,
-        x_min=None,
-        x_max=None,
-        **kwargs
-    ):
+    def get_graph(self, func, color=None, x_min=None, x_max=None, **kwargs):
         """
         This method gets a curve to plot on the graph.
 
@@ -266,11 +260,7 @@ class GraphScene(Scene):
                 y = self.y_max
             return self.coords_to_point(x, y)
 
-        graph = ParametricFunction(
-            parameterized_function,
-            color=color,
-            **kwargs
-        )
+        graph = ParametricFunction(parameterized_function, color=color, **kwargs)
         graph.underlying_function = func
         return graph
 
@@ -318,8 +308,9 @@ class GraphScene(Scene):
         float
             The angle of the tangent with the x axis.
         """
-        vect = self.input_to_graph_point(
-            x + dx, graph) - self.input_to_graph_point(x, graph)
+        vect = self.input_to_graph_point(x + dx, graph) - self.input_to_graph_point(
+            x, graph
+        )
         return angle_of_vector(vect)
 
     def slope_of_tangent(self, *args, **kwargs):
@@ -373,6 +364,7 @@ class GraphScene(Scene):
 
         def deriv(x):
             return self.slope_of_tangent(x, graph, dx) / self.space_unit_to_y
+
         return self.get_graph(deriv, **kwargs)
 
     def get_graph_label(
@@ -422,14 +414,10 @@ class GraphScene(Scene):
             # Search from right to left
             for x in np.linspace(self.x_max, self.x_min, 100):
                 point = self.input_to_graph_point(x, graph)
-                if point[1] < config['frame_y_radius']:
+                if point[1] < config["frame_y_radius"]:
                     break
             x_val = x
-        label.next_to(
-            self.input_to_graph_point(x_val, graph),
-            direction,
-            buff=buff
-        )
+        label.next_to(self.input_to_graph_point(x_val, graph), direction, buff=buff)
         label.shift_onto_screen()
         return label
 
@@ -446,7 +434,7 @@ class GraphScene(Scene):
         start_color=None,
         end_color=None,
         show_signed_area=True,
-        width_scale_factor=1.001
+        width_scale_factor=1.001,
     ):
         """
         This method returns the VGroup() of the Riemann Rectangles for
@@ -522,11 +510,18 @@ class GraphScene(Scene):
             else:
                 raise Exception("Invalid input sample type")
             graph_point = self.input_to_graph_point(sample_input, graph)
-            points = VGroup(*list(map(VectorizedPoint, [
-                self.coords_to_point(x, 0),
-                self.coords_to_point(x + width_scale_factor * dx, 0),
-                graph_point
-            ])))
+            points = VGroup(
+                *list(
+                    map(
+                        VectorizedPoint,
+                        [
+                            self.coords_to_point(x, 0),
+                            self.coords_to_point(x + width_scale_factor * dx, 0),
+                            graph_point,
+                        ],
+                    )
+                )
+            )
 
             rect = Rectangle()
             rect.replace(points, stretch=True)
@@ -540,13 +535,7 @@ class GraphScene(Scene):
         return rectangles
 
     def get_riemann_rectangles_list(
-        self,
-        graph,
-        n_iterations,
-        max_dx=0.5,
-        power_base=2,
-        stroke_width=1,
-        **kwargs
+        self, graph, n_iterations, max_dx=0.5, power_base=2, stroke_width=1, **kwargs
     ):
         """
         This method returns a list of multiple VGroups of Riemann
@@ -583,9 +572,9 @@ class GraphScene(Scene):
         return [
             self.get_riemann_rectangles(
                 graph=graph,
-                dx=float(max_dx) / (power_base**n),
-                stroke_width=float(stroke_width) / (power_base**n),
-                **kwargs
+                dx=float(max_dx) / (power_base ** n),
+                stroke_width=float(stroke_width) / (power_base ** n),
+                **kwargs,
             )
             for n in range(n_iterations)
         ]
@@ -615,11 +604,7 @@ class GraphScene(Scene):
         numerator = max(t_max - t_min, 0.0001)
         dx = float(numerator) / self.num_rects
         return self.get_riemann_rectangles(
-            graph,
-            x_min=t_min,
-            x_max=t_max,
-            dx=dx,
-            stroke_width=0,
+            graph, x_min=t_min, x_max=t_max, dx=dx, stroke_width=0,
         ).set_fill(opacity=self.area_opacity)
 
     def transform_between_riemann_rects(self, curr_rects, new_rects, **kwargs):
@@ -640,10 +625,7 @@ class GraphScene(Scene):
             added_anims
                 Any other animations to play simultaneously.
         """
-        transform_kwargs = {
-            "run_time": 2,
-            "lag_ratio": 0.5
-        }
+        transform_kwargs = {"run_time": 2, "lag_ratio": 0.5}
         added_anims = kwargs.get("added_anims", [])
         transform_kwargs.update(kwargs)
         curr_rects.align_submobjects(new_rects)
@@ -654,17 +636,9 @@ class GraphScene(Scene):
                 rect.set_fill(opacity=0)
             else:
                 x_coords.add(x)
-        self.play(
-            Transform(curr_rects, new_rects, **transform_kwargs),
-            *added_anims
-        )
+        self.play(Transform(curr_rects, new_rects, **transform_kwargs), *added_anims)
 
-    def get_vertical_line_to_graph(
-        self,
-        x, graph,
-        line_class=Line,
-        **line_kwargs
-    ):
+    def get_vertical_line_to_graph(self, x, graph, line_class=Line, **line_kwargs):
         """
         This method returns a Vertical line from the x-axis to
         the corresponding point on the graph/curve.
@@ -695,15 +669,11 @@ class GraphScene(Scene):
         return line_class(
             self.coords_to_point(x, 0),
             self.input_to_graph_point(x, graph),
-            **line_kwargs
+            **line_kwargs,
         )
 
     def get_vertical_lines_to_graph(
-        self, graph,
-        x_min=None,
-        x_max=None,
-        num_lines=20,
-        **kwargs
+        self, graph, x_min=None, x_max=None, num_lines=20, **kwargs
     ):
         """
         Obtains multiple lines from the x axis to the Graph/curve.
@@ -731,14 +701,17 @@ class GraphScene(Scene):
         """
         x_min = x_min or self.x_min
         x_max = x_max or self.x_max
-        return VGroup(*[
-            self.get_vertical_line_to_graph(x, graph, **kwargs)
-            for x in np.linspace(x_min, x_max, num_lines)
-        ])
+        return VGroup(
+            *[
+                self.get_vertical_line_to_graph(x, graph, **kwargs)
+                for x in np.linspace(x_min, x_max, num_lines)
+            ]
+        )
 
     def get_secant_slope_group(
         self,
-        x, graph,
+        x,
+        graph,
         dx=None,
         dx_line_color=None,
         df_line_color=None,
@@ -814,14 +787,8 @@ class GraphScene(Scene):
         p2 = self.input_to_graph_point(x + dx, graph)
         interim_point = p2[0] * RIGHT + p1[1] * UP
 
-        group.dx_line = Line(
-            p1, interim_point,
-            color=dx_line_color
-        )
-        group.df_line = Line(
-            interim_point, p2,
-            color=df_line_color
-        )
+        group.dx_line = Line(p1, interim_point, color=dx_line_color)
+        group.df_line = Line(interim_point, p2, color=df_line_color)
         group.add(group.dx_line, group.df_line)
 
         labels = VGroup()
@@ -844,17 +811,13 @@ class GraphScene(Scene):
 
         if dx_label is not None:
             group.dx_label.next_to(
-                group.dx_line,
-                np.sign(dx) * DOWN,
-                buff=group.dx_label.get_height() / 2
+                group.dx_line, np.sign(dx) * DOWN, buff=group.dx_label.get_height() / 2
             )
             group.dx_label.set_color(group.dx_line.get_color())
 
         if df_label is not None:
             group.df_label.next_to(
-                group.df_line,
-                np.sign(dx) * RIGHT,
-                buff=group.df_label.get_height() / 2
+                group.df_line, np.sign(dx) * RIGHT, buff=group.df_label.get_height() / 2
             )
             group.df_label.set_color(group.df_line.get_color())
 
@@ -868,7 +831,9 @@ class GraphScene(Scene):
 
         return group
 
-    def add_T_label(self, x_val, side=RIGHT, label=None, color=WHITE, animated=False, **kwargs):
+    def add_T_label(
+        self, x_val, side=RIGHT, label=None, color=WHITE, animated=False, **kwargs
+    ):
         """
         This method adds to the Scene:
             -- a Vertical line from the x-axis to the corresponding point on the graph/curve.
@@ -907,17 +872,14 @@ class GraphScene(Scene):
             T_label = TexMobject(label, fill_color=color)
 
         T_label.next_to(triangle, DOWN)
-        v_line = self.get_vertical_line_to_graph(
-            x_val, self.v_graph,
-            color=YELLOW
-        )
+        v_line = self.get_vertical_line_to_graph(x_val, self.v_graph, color=YELLOW)
 
         if animated:
             self.play(
                 DrawBorderThenFill(triangle),
                 ShowCreation(v_line),
                 Write(T_label, run_time=1),
-                **kwargs
+                **kwargs,
             )
 
         if np.all(side == LEFT):
@@ -930,12 +892,7 @@ class GraphScene(Scene):
             self.add(self.right_T_label_group, self.right_v_line)
 
     def get_animation_integral_bounds_change(
-        self,
-        graph,
-        new_t_min,
-        new_t_max,
-        fade_close_to_origin=True,
-        run_time=1.0
+        self, graph, new_t_min, new_t_max, fade_close_to_origin=True, run_time=1.0
     ):
         """
         This method requires a lot of prerequisites:
@@ -983,15 +940,11 @@ class GraphScene(Scene):
             t_max = interpolate(curr_t_max, new_t_max, alpha)
             new_area = self.get_area(graph, t_min, t_max)
 
-            new_left_v_line = self.get_vertical_line_to_graph(
-                t_min, graph
-            )
+            new_left_v_line = self.get_vertical_line_to_graph(t_min, graph)
             new_left_v_line.set_color(left_v_line.get_color())
             left_T_label.move_to(new_left_v_line.get_bottom(), UP)
 
-            new_right_v_line = self.get_vertical_line_to_graph(
-                t_max, graph
-            )
+            new_right_v_line = self.get_vertical_line_to_graph(t_max, graph)
             new_right_v_line.set_color(right_v_line.get_color())
             right_T_label.move_to(new_right_v_line.get_bottom(), UP)
 
@@ -1010,12 +963,13 @@ class GraphScene(Scene):
         return UpdateFromAlphaFunc(group, update_group, run_time=run_time)
 
     def animate_secant_slope_group_change(
-        self, secant_slope_group,
+        self,
+        secant_slope_group,
         target_dx=None,
         target_x=None,
         run_time=3,
         added_anims=None,
-        **anim_kwargs
+        **anim_kwargs,
     ):
         """
         This method animates the change of the secant slope group  from
@@ -1044,8 +998,7 @@ class GraphScene(Scene):
         NOTE: At least one of target_dx and target_x should be not None.
         """
         if target_dx is None and target_x is None:
-            raise Exception(
-                "At least one of target_x and target_dx must not be None")
+            raise Exception("At least one of target_x and target_dx must not be None")
         if added_anims is None:
             added_anims = []
 
@@ -1068,11 +1021,9 @@ class GraphScene(Scene):
 
         self.play(
             UpdateFromAlphaFunc(
-                secant_slope_group, update_func,
-                run_time=run_time,
-                **anim_kwargs
+                secant_slope_group, update_func, run_time=run_time, **anim_kwargs
             ),
-            *added_anims
+            *added_anims,
         )
         secant_slope_group.kwargs["x"] = target_x
         secant_slope_group.kwargs["dx"] = target_dx

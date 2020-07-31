@@ -21,7 +21,7 @@ class CameraMoveTest(ThreeDScene):
     def construct(self):
         cube = Cube()
         self.play(Animation(cube))
-        self.move_camera(phi=PI/4, theta=PI/4)
+        self.move_camera(phi=PI / 4, theta=PI / 4)
 
 
 class AmbientCameraMoveTest(ThreeDScene):

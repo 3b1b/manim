@@ -39,14 +39,12 @@ class FocusOn(Transform):
     def create_target(self):
         little_dot = Dot(radius=0)
         little_dot.set_fill(self.color, opacity=self.opacity)
-        little_dot.add_updater(
-            lambda d: d.move_to(self.focus_point)
-        )
+        little_dot.add_updater(lambda d: d.move_to(self.focus_point))
         return little_dot
 
     def create_starting_mobject(self):
         return Dot(
-            radius=config['frame_x_radius'] + config['frame_y_radius'],
+            radius=config["frame_x_radius"] + config["frame_y_radius"],
             stroke_width=0,
             fill_color=self.color,
             fill_opacity=0,
@@ -83,9 +81,7 @@ class Flash(AnimationGroup):
         self.lines = self.create_lines()
         animations = self.create_line_anims()
         super().__init__(
-            *animations,
-            group=self.lines,
-            **kwargs,
+            *animations, group=self.lines, **kwargs,
         )
 
     def create_lines(self):
@@ -101,19 +97,14 @@ class Flash(AnimationGroup):
         return lines
 
     def create_line_anims(self):
-        return [
-            ShowCreationThenDestruction(line)
-            for line in self.lines
-        ]
+        return [ShowCreationThenDestruction(line) for line in self.lines]
 
 
 class CircleIndicate(Indicate):
     CONFIG = {
         "rate_func": there_and_back,
         "remover": True,
-        "circle_config": {
-            "color": YELLOW,
-        },
+        "circle_config": {"color": YELLOW,},
     }
 
     def __init__(self, mobject, **kwargs):
@@ -164,11 +155,7 @@ class ShowCreationThenFadeOut(Succession):
     }
 
     def __init__(self, mobject, **kwargs):
-        super().__init__(
-            ShowCreation(mobject),
-            FadeOut(mobject),
-            **kwargs
-        )
+        super().__init__(ShowCreation(mobject), FadeOut(mobject), **kwargs)
 
 
 class AnimationOnSurroundingRectangle(AnimationGroup):
@@ -177,7 +164,7 @@ class AnimationOnSurroundingRectangle(AnimationGroup):
         # Function which takes in a rectangle, and spits
         # out some animation.  Could be some animation class,
         # could be something more
-        "rect_animation": Animation
+        "rect_animation": Animation,
     }
 
     def __init__(self, mobject, **kwargs):
@@ -189,33 +176,24 @@ class AnimationOnSurroundingRectangle(AnimationGroup):
         rect = self.get_rect()
         rect.add_updater(lambda r: r.move_to(mobject))
 
-        super().__init__(
-            self.rect_animation(rect, **kwargs),
-        )
+        super().__init__(self.rect_animation(rect, **kwargs),)
 
     def get_rect(self):
         return SurroundingRectangle(
-            self.mobject_to_surround,
-            **self.surrounding_rectangle_config
+            self.mobject_to_surround, **self.surrounding_rectangle_config
         )
 
 
 class ShowPassingFlashAround(AnimationOnSurroundingRectangle):
-    CONFIG = {
-        "rect_animation": ShowPassingFlash
-    }
+    CONFIG = {"rect_animation": ShowPassingFlash}
 
 
 class ShowCreationThenDestructionAround(AnimationOnSurroundingRectangle):
-    CONFIG = {
-        "rect_animation": ShowCreationThenDestruction
-    }
+    CONFIG = {"rect_animation": ShowCreationThenDestruction}
 
 
 class ShowCreationThenFadeAround(AnimationOnSurroundingRectangle):
-    CONFIG = {
-        "rect_animation": ShowCreationThenFadeOut
-    }
+    CONFIG = {"rect_animation": ShowCreationThenFadeOut}
 
 
 class ApplyWave(Homotopy):
@@ -234,7 +212,7 @@ class ApplyWave(Homotopy):
         def homotopy(x, y, z, t):
             alpha = (x - left_x) / (right_x - left_x)
             power = np.exp(2.0 * (alpha - 0.5))
-            nudge = there_and_back(t**power)
+            nudge = there_and_back(t ** power)
             return np.array([x, y, z]) + nudge * vect
 
         super().__init__(homotopy, mobject, **kwargs)
@@ -262,11 +240,11 @@ class WiggleOutThenIn(Animation):
         submobject.points[:, :] = starting_sumobject.points
         submobject.scale(
             interpolate(1, self.scale_value, there_and_back(alpha)),
-            about_point=self.get_scale_about_point()
+            about_point=self.get_scale_about_point(),
         )
         submobject.rotate(
             wiggle(alpha, self.n_wiggles) * self.rotation_angle,
-            about_point=self.get_rotate_about_point()
+            about_point=self.get_rotate_about_point(),
         )
 
 

@@ -34,18 +34,18 @@ class MoveToTargetTest(Scene):
     def construct(self):
         square = Square()
         square.generate_target()
-        square.target.shift(3*UP)
+        square.target.shift(3 * UP)
         self.play(MoveToTarget(square))
 
 
 class ApplyPointwiseFunctionTest(Scene):
     def construct(self):
         square = Square()
+
         def func(p):
             return np.array([1.0, 1.0, 0.0])
-        self.play(
-            ApplyPointwiseFunction(func, square)
-        )
+
+        self.play(ApplyPointwiseFunction(func, square))
 
 
 class FadeToColortTest(Scene):
@@ -80,18 +80,15 @@ class ApplyFunctionTest(Scene):
     def construct(self):
         square = Square()
         self.add(square)
+
         def apply_function(mob):
             mob.scale(2)
             mob.to_corner(UR)
-            mob.rotate(PI/4)
+            mob.rotate(PI / 4)
             mob.set_color(RED)
             return mob
-        self.play(
-            ApplyFunction(
-                apply_function,
-                square
-            )
-        )
+
+        self.play(ApplyFunction(apply_function, square))
 
 
 class ApplyComplexFunctionTest(Scene):

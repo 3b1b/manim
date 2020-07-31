@@ -27,7 +27,7 @@ class ThreeDCamera(Camera):
         "frame_center": ORIGIN,
         "should_apply_shading": True,
         "exponential_projection": False,
-        "max_allowable_norm": 3 * config['frame_width'],
+        "max_allowable_norm": 3 * config["frame_width"],
     }
 
     def __init__(self, *args, **kwargs):
@@ -70,7 +70,9 @@ class ThreeDCamera(Camera):
             self.gamma_tracker,
         ]
 
-    def modified_rgbas(self, vmobject, rgbas): # TODO: Write DocStrings for this method.
+    def modified_rgbas(
+        self, vmobject, rgbas
+    ):  # TODO: Write DocStrings for this method.
         if not self.should_apply_shading:
             return rgbas
         if vmobject.shade_in_3d and (vmobject.get_num_points() > 0):
@@ -94,20 +96,16 @@ class ThreeDCamera(Camera):
             return shaded_rgbas
         return rgbas
 
-    def get_stroke_rgbas(self, vmobject, background=False): #NOTE : DocStrings From parent
-        return self.modified_rgbas(
-            vmobject, vmobject.get_stroke_rgbas(background)
-        )
+    def get_stroke_rgbas(
+        self, vmobject, background=False
+    ):  # NOTE : DocStrings From parent
+        return self.modified_rgbas(vmobject, vmobject.get_stroke_rgbas(background))
 
-    def get_fill_rgbas(self, vmobject): #NOTE : DocStrings From parent
-        return self.modified_rgbas(
-            vmobject, vmobject.get_fill_rgbas()
-        )
+    def get_fill_rgbas(self, vmobject):  # NOTE : DocStrings From parent
+        return self.modified_rgbas(vmobject, vmobject.get_fill_rgbas())
 
-    def get_mobjects_to_display(self, *args, **kwargs): #NOTE : DocStrings From parent
-        mobjects = Camera.get_mobjects_to_display(
-            self, *args, **kwargs
-        )
+    def get_mobjects_to_display(self, *args, **kwargs):  # NOTE : DocStrings From parent
+        mobjects = Camera.get_mobjects_to_display(self, *args, **kwargs)
         rot_matrix = self.get_rotation_matrix()
 
         def z_key(mob):
@@ -115,10 +113,8 @@ class ThreeDCamera(Camera):
                 return np.inf
             # Assign a number to a three dimensional mobjects
             # based on how close it is to the camera
-            return np.dot(
-                mob.get_z_index_reference_point(),
-                rot_matrix.T
-            )[2]
+            return np.dot(mob.get_z_index_reference_point(), rot_matrix.T)[2]
+
         return sorted(mobjects, key=z_key)
 
     def get_phi(self):
@@ -288,10 +284,10 @@ class ThreeDCamera(Camera):
                 # the exponential helps smooth it out.
                 factor = np.exp(zs / distance)
                 lt0 = zs < 0
-                factor[lt0] = (distance / (distance - zs[lt0]))
+                factor[lt0] = distance / (distance - zs[lt0])
             else:
-                factor = (distance / (distance - zs))
-                factor[(distance - zs) < 0] = 10**6
+                factor = distance / (distance - zs)
+                factor[(distance - zs) < 0] = 10 ** 6
                 # clip_in_place(factor, 0, 10**6)
             points[:, i] *= factor
         points = points + frame_center
@@ -313,7 +309,9 @@ class ThreeDCamera(Camera):
         """
         return self.project_points(point.reshape((1, 3)))[0, :]
 
-    def transform_points_pre_display(self, mobject, points): #TODO: Write Docstrings for this Method.
+    def transform_points_pre_display(
+        self, mobject, points
+    ):  # TODO: Write Docstrings for this Method.
         points = super().transform_points_pre_display(mobject, points)
         fixed_orientation = mobject in self.fixed_orientation_mobjects
         fixed_in_frame = mobject in self.fixed_in_frame_mobjects
@@ -329,9 +327,8 @@ class ThreeDCamera(Camera):
             return self.project_points(points)
 
     def add_fixed_orientation_mobjects(
-            self, *mobjects,
-            use_static_center_func=False,
-            center_func=None):
+        self, *mobjects, use_static_center_func=False, center_func=None
+    ):
         """This method allows the mobject to have a fixed orientation,
         even when the camera moves around.
         E.G If it was passed through this method, facing the camera, it
@@ -353,7 +350,7 @@ class ThreeDCamera(Camera):
         # every single time a projetion happens
         def get_static_center_func(mobject):
             point = mobject.get_center()
-            return (lambda: point)
+            return lambda: point
 
         for mobject in mobjects:
             if center_func:

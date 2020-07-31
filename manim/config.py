@@ -79,9 +79,7 @@ def _parse_config(config_parser, args):
         tex_fn = None
     config["tex_template_file"] = tex_fn
     config["tex_template"] = (
-        TexTemplateFromFile(filename=tex_fn)
-        if tex_fn is not None
-        else TexTemplate()
+        TexTemplateFromFile(filename=tex_fn) if tex_fn is not None else TexTemplate()
     )
 
     return config
@@ -89,7 +87,9 @@ def _parse_config(config_parser, args):
 
 args, config_parser, file_writer_config, successfully_read_files = _run_config()
 if _from_command_line():
-    logger.info(f"Read configuration files: {os.path.abspath(successfully_read_files[-1])}")
+    logger.info(
+        f"Read configuration files: {os.path.abspath(successfully_read_files[-1])}"
+    )
     _init_dirs(file_writer_config)
 config = _parse_config(config_parser, args)
 camera_config = config

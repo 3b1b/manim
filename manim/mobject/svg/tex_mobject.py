@@ -17,6 +17,7 @@ TEX_MOB_SCALE_FACTOR = 0.05
 
 class TexSymbol(VMobjectFromSVGPathstring):
     """Purely a renaming of VMobjectFromSVGPathstring."""
+
     pass
 
 
@@ -35,12 +36,9 @@ class SingleStringTexMobject(SVGMobject):
 
     def __init__(self, tex_string, **kwargs):
         digest_config(self, kwargs)
-        assert(isinstance(tex_string, str))
+        assert isinstance(tex_string, str)
         self.tex_string = tex_string
-        file_name = tex_to_svg_file(
-            self.get_modified_expression(tex_string),
-            self.type
-        )
+        file_name = tex_to_svg_file(self.get_modified_expression(tex_string), self.type)
         SVGMobject.__init__(self, file_name=file_name, **kwargs)
         if self.height is None:
             self.scale(TEX_MOB_SCALE_FACTOR)
@@ -55,17 +53,20 @@ class SingleStringTexMobject(SVGMobject):
 
     def modify_special_strings(self, tex):
         tex = self.remove_stray_braces(tex)
-        should_add_filler = reduce(op.or_, [
-            # Fraction line needs something to be over
-            tex == "\\over",
-            tex == "\\overline",
-            # Makesure sqrt has overbar
-            tex == "\\sqrt",
-            # Need to add blank subscript or superscript
-            tex.endswith("_"),
-            tex.endswith("^"),
-            tex.endswith("dot"),
-        ])
+        should_add_filler = reduce(
+            op.or_,
+            [
+                # Fraction line needs something to be over
+                tex == "\\over",
+                tex == "\\overline",
+                # Makesure sqrt has overbar
+                tex == "\\sqrt",
+                # Need to add blank subscript or superscript
+                tex.endswith("_"),
+                tex.endswith("^"),
+                tex.endswith("dot"),
+            ],
+        )
         if should_add_filler:
             filler = "{\\quad}"
             tex += filler
@@ -82,10 +83,7 @@ class SingleStringTexMobject(SVGMobject):
 
         # Handle imbalanced \left and \right
         num_lefts, num_rights = [
-            len([
-                s for s in tex.split(substr)[1:]
-                if s and s[0] in "(){}[]|.\\"
-            ])
+            len([s for s in tex.split(substr)[1:] if s and s[0] in "(){}[]|.\\"])
             for substr in ("\\left", "\\right")
         ]
         if num_lefts != num_rights:
@@ -106,10 +104,7 @@ class SingleStringTexMobject(SVGMobject):
         """
         Makes TexMobject resiliant to unmatched { at start
         """
-        num_lefts, num_rights = [
-            tex.count(char)
-            for char in "{}"
-        ]
+        num_lefts, num_rights = [tex.count(char) for char in "{}"]
         while num_rights > num_lefts:
             tex = "{" + tex
             num_lefts += 1
@@ -153,16 +148,15 @@ class TexMobject(SingleStringTexMobject):
 
     def break_up_tex_strings(self, tex_strings):
         substrings_to_isolate = op.add(
-            self.substrings_to_isolate,
-            list(self.tex_to_color_map.keys())
+            self.substrings_to_isolate, list(self.tex_to_color_map.keys())
         )
         split_list = split_string_list_to_isolate_substrings(
             tex_strings, *substrings_to_isolate
         )
-        if self.arg_separator == ' ':
+        if self.arg_separator == " ":
             split_list = [str(x).strip() for x in split_list]
-        #split_list = list(map(str.strip, split_list))
-        split_list = [s for s in split_list if s != '']
+        # split_list = list(map(str.strip, split_list))
+        split_list = [s for s in split_list if s != ""]
         return split_list
 
     def break_up_by_substrings(self):
@@ -219,7 +213,7 @@ class TexMobject(SingleStringTexMobject):
         for texs, color in list(texs_to_color_map.items()):
             try:
                 # If the given key behaves like tex_strings
-                texs + ''
+                texs + ""
                 self.set_color_by_tex(texs, color, **kwargs)
             except TypeError:
                 # If the given key is a tuple
@@ -238,9 +232,7 @@ class TexMobject(SingleStringTexMobject):
         return self.index_of_part(part)
 
     def sort_alphabetically(self):
-        self.submobjects.sort(
-            key=lambda m: m.get_tex_string()
-        )
+        self.submobjects.sort(key=lambda m: m.get_tex_string())
 
 
 class TextMobject(TexMobject):
@@ -266,11 +258,7 @@ class BulletedList(TextMobject):
             dot = TexMobject("\\cdot").scale(self.dot_scale_factor)
             dot.next_to(part[0], LEFT, SMALL_BUFF)
             part.add_to_back(dot)
-        self.arrange(
-            DOWN,
-            aligned_edge=LEFT,
-            buff=self.buff
-        )
+        self.arrange(DOWN, aligned_edge=LEFT, buff=self.buff)
 
     def fade_all_but(self, index_or_string, opacity=0.5):
         arg = index_or_string
@@ -304,7 +292,7 @@ class Title(TextMobject):
     CONFIG = {
         "scale_factor": 1,
         "include_underline": True,
-        "underline_width": config['frame_width'] - 2,
+        "underline_width": config["frame_width"] - 2,
         # This will override underline_width
         "match_underline_width_to_text": False,
         "underline_buff": MED_SMALL_BUFF,
