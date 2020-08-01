@@ -10,7 +10,7 @@ import cairo
 import numpy as np
 
 from ..constants import *
-from ..config import config
+from ..config import config, camera_config
 from ..logger import logger
 from ..mobject.types.image_mobject import AbstractImageMobject
 from ..mobject.mobject import Mobject
@@ -1092,8 +1092,8 @@ class Camera(object):
         """
         # TODO: This seems...unsystematic
         big_sum = op.add(
-            PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_height"],
-            PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_width"],
+            camera_config["default_pixel_height"],
+            camera_config["default_pixel_width"],
         )
         this_sum = op.add(self.get_pixel_height(), self.get_pixel_width(),)
         factor = fdiv(big_sum, this_sum)
