@@ -1,16 +1,39 @@
 name: CI
-on:   
+on:
   push:
       branches:
         - master
   pull_request:
       branches:
         - master
+
 jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install black
+        run: pip install black
+
+      - name: Check manim formatting
+        run: black --check --diff manim
+
+      - name: Check tests formatting
+        run: black --check --diff tests
+
+      - name: Check examples formatting
+        run: black --check --diff example_scenes
+
   test:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python: [3.6, 3.7, 3.8]

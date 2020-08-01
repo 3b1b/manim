@@ -35,17 +35,14 @@ def rgba_to_color(rgba):
 
 
 def rgb_to_hex(rgb):
-    return "#" + "".join('%02x' % int(255 * x) for x in rgb)
+    return "#" + "".join("%02x" % int(255 * x) for x in rgb)
 
 
 def hex_to_rgb(hex_code):
     hex_part = hex_code[1:]
     if len(hex_part) == 3:
         "".join([2 * c for c in hex_part])
-    return np.array([
-        int(hex_part[i:i + 2], 16) / 255
-        for i in range(0, 6, 2)
-    ])
+    return np.array([int(hex_part[i : i + 2], 16) / 255 for i in range(0, 6, 2)])
 
 
 def invert_color(color):
@@ -53,7 +50,7 @@ def invert_color(color):
 
 
 def color_to_int_rgb(color):
-    return (255 * color_to_rgb(color)).astype('uint8')
+    return (255 * color_to_rgb(color)).astype("uint8")
 
 
 def color_to_int_rgba(color, opacity=1.0):
@@ -66,7 +63,7 @@ def color_gradient(reference_colors, length_of_output):
         return reference_colors[0]
     rgbs = list(map(color_to_rgb, reference_colors))
     alphas = np.linspace(0, (len(rgbs) - 1), length_of_output)
-    floors = alphas.astype('int')
+    floors = alphas.astype("int")
     alphas_mod1 = alphas % 1
     # End edge case
     alphas_mod1[-1] = 1
@@ -91,9 +88,7 @@ def average_color(*colors):
 def random_bright_color():
     color = random_color()
     curr_rgb = color_to_rgb(color)
-    new_rgb = interpolate(
-        curr_rgb, np.ones(len(curr_rgb)), 0.5
-    )
+    new_rgb = interpolate(curr_rgb, np.ones(len(curr_rgb)), 0.5)
     return Color(rgb=new_rgb)
 
 
@@ -103,7 +98,7 @@ def random_color():
 
 def get_shaded_rgb(rgb, point, unit_normal_vect, light_source):
     to_sun = normalize(light_source - point)
-    factor = 0.5 * np.dot(unit_normal_vect, to_sun)**3
+    factor = 0.5 * np.dot(unit_normal_vect, to_sun) ** 3
     if factor < 0:
         factor *= 0.5
     result = rgb + factor

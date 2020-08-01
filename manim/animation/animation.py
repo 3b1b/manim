@@ -28,7 +28,7 @@ class Animation(object):
     }
 
     def __init__(self, mobject, **kwargs):
-        assert(isinstance(mobject, Mobject))
+        assert isinstance(mobject, Mobject)
         digest_config(self, kwargs)
         self.mobject = mobject
 
@@ -73,10 +73,9 @@ class Animation(object):
         return self.mobject, self.starting_mobject
 
     def get_all_families_zipped(self):
-        return zip(*[
-            mob.family_members_with_points()
-            for mob in self.get_all_mobjects()
-        ])
+        return zip(
+            *[mob.family_members_with_points() for mob in self.get_all_mobjects()]
+        )
 
     def update_mobjects(self, dt):
         """
@@ -93,10 +92,7 @@ class Animation(object):
         # The surrounding scene typically handles
         # updating of self.mobject.  Besides, in
         # most cases its updating is suspended anyway
-        return list(filter(
-            lambda m: m is not self.mobject,
-            self.get_all_mobjects()
-        ))
+        return list(filter(lambda m: m is not self.mobject, self.get_all_mobjects()))
 
     def copy(self):
         return deepcopy(self)

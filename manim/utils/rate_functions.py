@@ -10,10 +10,7 @@ def linear(t):
 
 def smooth(t, inflection=10.0):
     error = sigmoid(-inflection / 2)
-    return np.clip(
-        (sigmoid(inflection * (t - 0.5)) - error) / (1 - 2 * error),
-        0, 1,
-    )
+    return np.clip((sigmoid(inflection * (t - 0.5)) - error) / (1 - 2 * error), 0, 1,)
 
 
 def rush_into(t, inflection=10.0):
@@ -40,8 +37,8 @@ def there_and_back(t, inflection=10.0):
     return smooth(new_t, inflection)
 
 
-def there_and_back_with_pause(t, pause_ratio=1. / 3):
-    a = 1. / pause_ratio
+def there_and_back_with_pause(t, pause_ratio=1.0 / 3):
+    a = 1.0 / pause_ratio
     if t < 0.5 - pause_ratio / 2:
         return smooth(a * t)
     elif t < 0.5 + pause_ratio / 2:
@@ -57,6 +54,7 @@ def running_start(t, pull_factor=-0.5):
 def not_quite_there(func=smooth, proportion=0.7):
     def result(t):
         return proportion * func(t)
+
     return result
 
 
@@ -77,6 +75,7 @@ def squish_rate_func(func, a=0.4, b=0.6):
             return func((t - a) / (b - a))
 
     return result
+
 
 # Stylistically, should this take parameters (with default values)?
 # Ultimately, the functionality is entirely subsumed by squish_rate_func,

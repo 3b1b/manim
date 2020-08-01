@@ -23,6 +23,7 @@ class DrawBorderThenFillTest(Scene):
 
 # NOTE : Here should be the Write Test. But for some reasons it appears that this function is untestable (see issue #157)
 
+
 class FadeOutTest(Scene):
     def construct(self):
         square = Square()
@@ -88,6 +89,7 @@ class ShrinkToCenterTest(Scene):
     def construct(self):
         square = Square()
         self.play(ShrinkToCenter(square))
+
 
 def test_scenes():
     utils_test_scenes(get_scenes_to_test(__name__), "creation")

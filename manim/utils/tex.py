@@ -1,13 +1,15 @@
 import os
 from ..utils.config_ops import digest_config
 
-class TexTemplateFromFile():
+
+class TexTemplateFromFile:
     """
     Class representing a TeX template file
     """  # TODO: attributes, dataclasses stuff
+
     CONFIG = {
         "use_ctex": False,
-        "filename" : "tex_template.tex",
+        "filename": "tex_template.tex",
         "text_to_replace": "YourTextHere",
     }
     body = ""
@@ -23,7 +25,7 @@ class TexTemplateFromFile():
         with open(self.filename, "r") as infile:
             self.body = infile.read()
 
-    def get_text_for_text_mode(self,expression):
+    def get_text_for_text_mode(self, expression):
         """Inserting expression verbatim into TeX template.
 
         Parameters
@@ -36,9 +38,7 @@ class TexTemplateFromFile():
         :class:`str`
             LaTeX code based on the template containing the given expression and ready for typesetting.
         """
-        return self.body.replace(
-            self.text_to_replace, expression
-        )
+        return self.body.replace(self.text_to_replace, expression)
 
     def get_text_for_env(self, environment, expression):
         """Inserts an expression into the TeX template, surrounded
@@ -59,11 +59,10 @@ class TexTemplateFromFile():
         begin = r"\begin{" + environment + "}"
         end = r"\end{" + environment + "}"
         return self.body.replace(
-            self.text_to_replace,
-            "{0}\n{1}\n{2}".format(begin, expression, end)
+            self.text_to_replace, "{0}\n{1}\n{2}".format(begin, expression, end)
         )
 
-    def get_text_for_tex_mode(self,expression):
+    def get_text_for_tex_mode(self, expression):
         """Inserts an expression into the TeX template, surrounded
         by `\\begin{align*} ... \\end{align*}` for math mode.
 
@@ -84,10 +83,11 @@ class TexTemplate(TexTemplateFromFile):
     """
     Class for dynamically managing a TeX template
     """  # TODO: Add attributes (when dataclasses are implemented)
+
     CONFIG = {
-        "documentclass": ["standalone",["preview"]],
+        "documentclass": ["standalone", ["preview"]],
         "common_packages": [
-            ["babel",["english"]],
+            ["babel", ["english"]],
             "amsmath",
             "amssymb",
             "dsfont",
@@ -101,10 +101,10 @@ class TexTemplate(TexTemplateFromFile):
             "ragged2e",
             "physics",
             "xcolor",
-            "microtype"
+            "microtype",
         ],
         "tex_packages": [],
-        "ctex_packages": [["ctex",["UTF8"]]],
+        "ctex_packages": [["ctex", ["UTF8"]]],
         "common_preamble_text": r"\linespread{1}" "\n",
         "tex_preamble_text": r"\DisableLigatures{encoding = *, family = *}" "\n",
         "ctex_preamble_text": "",
@@ -120,7 +120,9 @@ class TexTemplate(TexTemplateFromFile):
         """For faster access, the LaTeX template's code is cached.
         If the base file is modified, the cache needs to be rebuilt."""
         tpl = self.generate_tex_command(
-            "documentclass",required_params=[self.documentclass[0]], optional_params=self.documentclass[1]
+            "documentclass",
+            required_params=[self.documentclass[0]],
+            optional_params=self.documentclass[1],
         )
         for pkg in self.common_packages:
             tpl += self.generate_usepackage(pkg)
@@ -142,7 +144,7 @@ class TexTemplate(TexTemplateFromFile):
         tpl += f"\n{self.text_to_replace}\n"
         tpl += "\n" r"\end{document}"
 
-        self.body=tpl
+        self.body = tpl
 
     def prepend_package(self, pkg):
         """Adds a new package (or several new packages)
@@ -170,7 +172,7 @@ class TexTemplate(TexTemplateFromFile):
         self.common_packages.append(pkg)
         self.rebuild_cache()
 
-    def append_to_preamble(self,text):
+    def append_to_preamble(self, text):
         """Adds commands (e.g. macro definitions) at the end of the preamble.
 
         Parameters
@@ -194,7 +196,7 @@ class TexTemplate(TexTemplateFromFile):
         self.rebuild_cache()
         pass
 
-    def generate_tex_command(self,command, *, required_params, optional_params = []):
+    def generate_tex_command(self, command, *, required_params, optional_params=[]):
         """
         Function for creating LaTeX command strings with or without options.
         Internally used to generate `\\usepackage{...}`
@@ -222,16 +224,18 @@ class TexTemplate(TexTemplateFromFile):
         return r"\{0}{1}{2}".format(
             command,
             f"[{','.join(optional_params)}]" if optional_params else "",
-            "".join("{" + param + "}" for param in required_params)
+            "".join("{" + param + "}" for param in required_params),
         )
 
-    def generate_usepackage(self,pkg):
-        if isinstance(pkg,list):
-            return self.generate_tex_command("usepackage",required_params=[pkg[0]],optional_params=pkg[1])
+    def generate_usepackage(self, pkg):
+        if isinstance(pkg, list):
+            return self.generate_tex_command(
+                "usepackage", required_params=[pkg[0]], optional_params=pkg[1]
+            )
         else:
-            return self.generate_tex_command("usepackage",required_params=[pkg])
+            return self.generate_tex_command("usepackage", required_params=[pkg])
 
-    def get_text_for_text_mode(self,expression):
+    def get_text_for_text_mode(self, expression):
         """Inserts an expression verbatim into the TeX template.
 
         Parameters
@@ -244,9 +248,7 @@ class TexTemplate(TexTemplateFromFile):
         :class:`str`
             LaTeX code based on the template, containing the given expression and ready for typesetting
         """
-        return self.body.replace(
-            self.text_to_replace, expression
-        )
+        return self.body.replace(self.text_to_replace, expression)
 
     def get_text_for_env(self, environment, expression):
         """Inserts an expression into the TeX template, surrounded
@@ -267,11 +269,10 @@ class TexTemplate(TexTemplateFromFile):
         begin = r"\begin{" + environment + "}"
         end = r"\end{" + environment + "}"
         return self.body.replace(
-            self.text_to_replace,
-            "{0}\n{1}\n{2}".format(begin, expression, end)
+            self.text_to_replace, "{0}\n{1}\n{2}".format(begin, expression, end)
         )
 
-    def get_text_for_tex_mode(self,expression):
+    def get_text_for_tex_mode(self, expression):
         """Inserts an expression into the TeX template, surrounded
         by `\\begin{align*} ... \\end{align*}` for math mode.
 

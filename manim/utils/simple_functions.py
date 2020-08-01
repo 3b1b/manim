@@ -38,6 +38,7 @@ def get_num_args(function):
 def get_parameters(function):
     return inspect.signature(function).parameters
 
+
 # Just to have a less heavyweight name for this extremely common operation
 #
 # We may wish to have more fine-grained control over division by zero behavior
@@ -64,11 +65,7 @@ def fdiv(a, b, zero_over_zero_value=None):
     return np.true_divide(a, b, out=out, where=where)
 
 
-def binary_search(function,
-                  target,
-                  lower_bound,
-                  upper_bound,
-                  tolerance=1e-4):
+def binary_search(function, target, lower_bound, upper_bound, tolerance=1e-4):
     lh = lower_bound
     rh = upper_bound
     while abs(rh - lh) > tolerance:
