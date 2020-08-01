@@ -1092,8 +1092,7 @@ class Camera(object):
         """
         # TODO: This seems...unsystematic
         big_sum = op.add(
-            camera_config["default_pixel_height"],
-            camera_config["default_pixel_width"],
+            camera_config["default_pixel_height"], camera_config["default_pixel_width"],
         )
         this_sum = op.add(self.get_pixel_height(), self.get_pixel_width(),)
         factor = fdiv(big_sum, this_sum)
