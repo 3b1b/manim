@@ -439,10 +439,10 @@ class SceneFileWriter(object):
             "remove_non_integer_files": True,
             "extension": file_writer_config["movie_file_extension"],
         }
-        if file_writer_config['from_animation_number'] is not None:
-            kwargs["min_index"] = file_writer_config['from_animation_number']
-        if file_writer_config['upto_animation_number'] not in [None, np.inf]:
-            kwargs["max_index"] = file_writer_config['upto_animation_number']
+        if file_writer_config["from_animation_number"] is not None:
+            kwargs["min_index"] = file_writer_config["from_animation_number"]
+        if file_writer_config["upto_animation_number"] not in [None, np.inf]:
+            kwargs["max_index"] = file_writer_config["upto_animation_number"]
         else:
             kwargs["remove_indices_greater_than"] = self.scene.num_plays - 1
         partial_movie_files = get_sorted_integer_files(
