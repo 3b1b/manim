@@ -4,66 +4,39 @@ import sys
 import urllib.request
 
 if "Windows" in platform.system():
-    # In case the python version is 3.6 and the system is 32-bit, try pycairo‑1.19.1‑cp37‑cp37m‑win32.whl version of cairo
+    ver_num = "1.19.2"
+    fork = "naveen521kk"
+    # In case the python version is 3.6 and the system is 32-bit, try pycairo‑{ver_num}‑cp37‑cp37m‑win32.whl version of cairo
     if sys.version[:3] == "3.6" and platform.machine() == "x86":
-        urllib.request.urlretrieve(
-            "https://download.lfd.uci.edu/pythonlibs/w3jqiv8s/pycairo-1.19.1-cp36-cp36m-win32.whl",
-            "pycairo-1.19.1-cp36-cp36m-win32.whl",
-        )
-        os.system("pip install pycairo-1.19.1-cp36-cp36m-win32.whl")
-        os.remove("pycairo-1.19.1-cp37-cp37m-win32.whl")
+        url = f"https://github.com/{fork}/pycairo/releases/download/v{ver_num}/pycairo-{ver_num}-cp36-cp36m-win32.whl"
 
-    # In case the python version is 3.6 and the system is 64-bit, try pycairo‑1.19.1‑cp37‑cp37m‑win32.whl version of cairo
+    # In case the python version is 3.6 and the system is 64-bit, try pycairo‑{ver_num}‑cp37‑cp37m‑win32.whl version of cairo
     elif sys.version[:3] == "3.6" and platform.machine() == "AMD64":
-        urllib.request.urlretrieve(
-            "https://download.lfd.uci.edu/pythonlibs/w3jqiv8s/pycairo-1.19.1-cp36-cp36m-win_amd64.whl",
-            "pycairo-1.19.1-cp36-cp36m-win_amd64.whl",
-        )
-        print("Sucessfully downloaded Cairo for your system")
-        print("Installing Cairo")
-        os.system("pip install pycairo-1.19.1-cp36-cp36m-win_amd64.whl")
-        os.remove("pycairo-1.19.1-cp36-cp36m-win_amd64.whl")
+        url = f"https://github.com/{fork}/pycairo/releases/download/v{ver_num}/pycairo-{ver_num}-cp36-cp36m-win_amd64.whl"
 
-    # In case the python version is 3.7 and the system is 32-bit, try pycairo‑1.19.1‑cp37‑cp37m‑win32.whl version of cairo
+    # In case the python version is 3.7 and the system is 32-bit, try pycairo‑{ver_num}‑cp37‑cp37m‑win32.whl version of cairo
     elif sys.version[:3] == "3.7" and platform.machine() == "x86":
-        urllib.request.urlretrieve(
-            "https://download.lfd.uci.edu/pythonlibs/w3jqiv8s/pycairo-1.19.1-cp37-cp37m-win32.whl",
-            "pycairo-1.19.1-cp37-cp37m-win32.whl",
-        )
-        print("Sucessfully downloaded Cairo for your system")
-        print("Installing Cairo")
-        os.system("pip install pycairo-1.19.1-cp37-cp37m-win32.whl")
-        os.remove("pycairo-1.19.1-cp37-cp37m-win32.whl")
+        url = f"https://github.com/{fork}/pycairo/releases/download/v{ver_num}/pycairo-{ver_num}-cp37-cp37m-win32.whl"
 
-    # In case the python version is 3.7 and the system is AMD64, try pycairo-1.19.1-cp37-cp37m-win_amd64.whl version of cairo
+    # In case the python version is 3.7 and the system is AMD64, try pycairo-{ver_num}-cp37-cp37m-win_amd64.whl version of cairo
     elif sys.version[:3] == "3.7" and platform.machine() == "AMD64":
-        urllib.request.urlretrieve(
-            "https://download.lfd.uci.edu/pythonlibs/w3jqiv8s/pycairo-1.19.1-cp37-cp37m-win_amd64.whl",
-            "pycairo-1.19.1-cp37-cp37m-win_amd64.whl",
-        )
-        print("Sucessfully downloaded Cairo for your system")
-        print("Installing Cairo")
-        os.system("pip install pycairo-1.19.1-cp37-cp37m-win_amd64.whl")
-        os.remove("pycairo-1.19.1-cp37-cp37m-win_amd64.whl")
+        url = f"https://github.com/{fork}/pycairo/releases/download/v{ver_num}/pycairo-{ver_num}-cp37-cp37m-win_amd64.whl"
 
-    # In case the python version is 3.8 and the system is 32-bit, try pycairo-1.19.1-cp38-cp38-win32.whl version of cairo
+    # In case the python version is 3.8 and the system is 32-bit, try pycairo-{ver_num}-cp38-cp38-win32.whl version of cairo
     elif sys.version[:3] == "3.8" and platform.machine() == "x86":
-        urllib.request.urlretrieve(
-            "https://download.lfd.uci.edu/pythonlibs/w3jqiv8s/pycairo-1.19.1-cp38-cp38-win32.whl",
-            "pycairo-1.19.1-cp38-cp38-win32.whl",
-        )
-        print("Sucessfully downloaded Cairo for your system")
-        print("Installing Cairo")
-        os.system("pip install pycairo-1.19.1-cp38-cp38-win32.whl")
-        os.remove("pycairo-1.19.1-cp38-cp38-win32.whl")
+        url = f"https://github.com/{fork}/pycairo/releases/download/v{ver_num}/pycairo-{ver_num}-cp38-cp38-win32.whl"
 
-    # In case the python version is 3.8 and the system is AMD64, try pycairo-1.19.1-cp38-cp38-win_amd64.whl version of cairo
+    # In case the python version is 3.8 and the system is AMD64, try pycairo-{ver_num}-cp38-cp38-win_amd64.whl version of cairo
     elif sys.version[:3] == "3.8" and platform.machine() == "AMD64":
-        urllib.request.urlretrieve(
-            "https://download.lfd.uci.edu/pythonlibs/w3jqiv8s/pycairo-1.19.1-cp38-cp38-win_amd64.whl",
-            "pycairo-1.19.1-cp38-cp38-win_amd64.whl",
-        )
-        print("Sucessfully downloaded Cairo for your system")
-        print("Installing Cairo")
-        os.system("pip install pycairo-1.19.1-cp38-cp38-win_amd64.whl")
-        os.remove("pycairo-1.19.1-cp38-cp38-win_amd64.whl")
+        url = f"https://github.com/{fork}/pycairo/releases/download/v{ver_num}/pycairo-{ver_num}-cp38-cp38-win_amd64.whl"
+    else:
+        raise Exception("Could not find a PyCairo version for your system!")
+
+    filename = url.split("/")[-1]
+    urllib.request.urlretrieve(url, filename)
+    os.system(f"pip{sys.version[:3]} install {filename}")
+    print("Installed PyCairo.\nCleaning up...")
+    os.remove(filename)
+    print("Done.")
+else:
+    raise Exception("This script only works if your operating system is Windows.")
