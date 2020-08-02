@@ -63,6 +63,7 @@ RichHandler.KEYWORDS = [
     "module",
     "File",
     "Rendering",
+    "Rendered"
 ]
 logging.basicConfig(
     level="NOTSET",
