@@ -4,9 +4,13 @@ from shutil import rmtree
 import pytest
 
 
-def capture(command, instream=None):
+def capture(command, instream=None, use_shell=False):
     proc = subprocess.Popen(
-        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=instream
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=instream,
+        shell=use_shell,
     )
     out, err = proc.communicate()
     return out, err, proc.returncode
@@ -71,7 +75,8 @@ def test_dash_as_name(python_version):
     path_output = os.path.join("tests_cache", "media_temp")
     command = [python_version, "-m", "manim", "-", "-l", "--media_dir", path_output]
     out, err, exitcode = capture(
-        command, open(os.path.join(os.path.dirname(__file__), "dash_test_script.txt"))
+        command,
+        instream=open(os.path.join(os.path.dirname(__file__), "dash_test_script.txt")),
     )
     assert exitcode == 0, err
     assert os.path.exists(

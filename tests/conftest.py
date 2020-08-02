@@ -34,3 +34,13 @@ def pytest_collection_modifyitems(config, items):
 @pytest.fixture(scope="module")
 def python_version():
     return "python3" if sys.platform == "darwin" else "python"
+
+
+@pytest.fixture
+def reset_cfg_file():
+    cfgfilepath = os.path.join(os.path.dirname(__file__), "test_cli", "manim.cfg")
+    with open(cfgfilepath) as cfgfile:
+        original = cfgfile.read()
+    yield
+    with open(cfgfilepath, "w") as cfgfile:
+        cfgfile.write(original)

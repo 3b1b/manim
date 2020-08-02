@@ -90,8 +90,9 @@ def _parse_config(config_parser, args):
 args, config_parser, file_writer_config, successfully_read_files = _run_config()
 if _from_command_line():
     logger.info(
-        f"Read configuration files: {os.path.abspath(successfully_read_files[-1])}"
+        f"Read configuration files: {[os.path.abspath(cfgfile) for cfgfile in successfully_read_files]}"
     )
-    _init_dirs(file_writer_config)
+    if not (hasattr(args, "subcommands")):
+        _init_dirs(file_writer_config)
 config = _parse_config(config_parser, args)
 camera_config = config
