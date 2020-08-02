@@ -108,7 +108,7 @@ class Scene(Container):
         as well as the name of the scene rendered 
         (useful when using the `-a` option).
         """
-        logger.info(f"Rendered {self.__str__()}\nPlayed {self.num_plays} animations")
+        logger.info(f"Rendered {str(self)}\nPlayed {self.num_plays} animations")
 
     def set_variables_as_attrs(self, *objects, **newly_named_objects):
         """
