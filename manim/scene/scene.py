@@ -104,9 +104,11 @@ class Scene(Container):
     def print_end_message(self):
         """
         Used internally to print the number of
-        animations played after the scene ends.
+        animations played after the scene ends, 
+        as well as the name of the scene rendered 
+        (useful when using the `-a` option).
         """
-        logger.info("Played {} animations".format(self.num_plays))
+        logger.info(f"Render complete for {self.__str__()}.\nPlayed {self.num_plays} animations")
 
     def set_variables_as_attrs(self, *objects, **newly_named_objects):
         """
