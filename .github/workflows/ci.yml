@@ -3,6 +3,7 @@ on:
   push:
       branches:
         - master
+        - fix-pycairo-fix
   pull_request:
       branches:
         - master
@@ -35,7 +36,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [windows-latest]
         python: [3.6, 3.7, 3.8]
 
     steps:
