@@ -451,6 +451,18 @@ def _run_config():
         # Need to populate the options left out
         args.file, args.scene_names, args.output_file = "", "", ""
 
+    if args.config_file is not None:
+        if os.path.exists(args.config_file):
+            config_files.append(args.config_file)
+        else:
+            raise FileNotFoundError(f"Config file {args.config_file} doesn't exist")
+    else:
+        script_directory_file_config = os.path.join(
+            os.path.dirname(args.file), "manim.cfg"
+        )
+        if os.path.exists(script_directory_file_config):
+            config_files.append(script_directory_file_config)
+
     config_parser = configparser.ConfigParser()
     successfully_read_files = config_parser.read(config_files)
 

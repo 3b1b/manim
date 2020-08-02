@@ -34,6 +34,8 @@ def _parse_config(config_parser, args):
         section = config_parser["CLI"]
     config = {opt: section.getint(opt) for opt in config_parser[flag]}
 
+    config["default_pixel_height"] = default.getint("pixel_height")
+    config["default_pixel_width"] = default.getint("pixel_width")
     # The -r, --resolution flag overrides the *_quality flags
     if args.resolution is not None:
         if "," in args.resolution:
