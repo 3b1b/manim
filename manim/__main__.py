@@ -35,7 +35,7 @@ def open_file_if_needed(file_writer):
 
         for file_path in file_paths:
             if current_os == "Windows":
-                os.startfile(file_path)
+                os.startfile(os.path.dirname(file_path))
             else:
                 commands = []
                 if current_os == "Linux":
