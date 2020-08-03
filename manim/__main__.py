@@ -36,7 +36,10 @@ def open_file_if_needed(file_writer):
 
         for file_path in file_paths:
             if current_os == "Windows":
-                os.startfile(os.path.dirname(file_path))
+                if file_writer_config["preview"]:
+                    os.startfile(file_path)
+                if file_writer_config["show_file_in_finder"]:
+                    os.startfile(os.path.dirname(file_path))
             else:
                 commands = []
                 if current_os == "Linux":
