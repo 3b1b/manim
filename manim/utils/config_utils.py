@@ -328,7 +328,6 @@ def _parse_cli(arg_list, input=True):
         "-v", "--verbose",
         type=str,
         help="Verbosity level. Also changes the ffmpeg log level unless the latter is specified in the config",
-        metavar="loglevel",
         choices=constants.VERBOSE_CHOICES,
     )
 
