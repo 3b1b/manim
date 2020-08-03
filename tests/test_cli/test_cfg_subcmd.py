@@ -20,7 +20,7 @@ def test_cfg_show(python_version):
     """Test if the `manim cfg show` command works as intended."""
     command = f"cd {this_folder} && {python_version} -m manim cfg show"
     out, err, exitcode = capture(command, use_shell=True)
-    assert exitcode == 0
+    assert exitcode == 0, err
     assert f"{os.path.sep}tests{os.path.sep}".encode("utf-8") in out, err
 
 

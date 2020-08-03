@@ -93,15 +93,24 @@ To save your theme please save that file and place it in your current working di
                 console.print(RICH_COLOUR_INSTRUCTIONS)
                 default = replace_keys(default)
                 for key in default:
-                    console.print(f"Enter the style for {key}:", style=key, end="")
+                    desc = (
+                        "style" if key not in ["log.width", "log.height"] else "value"
+                    )
+                    style = key if key not in ["log.width", "log.height"] else None
+                    cond = (
+                        is_valid_style
+                        if key not in ["log.width", "log.height"]
+                        else lambda m: m.isdigit()
+                    )
+                    console.print(f"Enter the {desc} for {key}:", style=style, end="")
                     temp = input()
                     if temp:
-                        while not is_valid_style(temp):
+                        while not cond(temp):
                             console.print(
-                                "[red bold]Invalid style. Try again.[/red bold]"
+                                f"[red bold]Invalid {desc}. Try again.[/red bold]"
                             )
                             console.print(
-                                f"Enter the style for {key}:", style=key, end=""
+                                f"Enter the {desc} for {key}:", style=style, end=""
                             )
                             temp = input()
                         else:
@@ -162,7 +171,7 @@ def show():
     for category in current_config:
         console.print(f"{category}", style="bold green underline")
         for entry in current_config[category]:
-            if category == "logger":
+            if category == "logger" and entry not in ["log_width", "log_height"]:
                 console.print(f"{entry} :", end="")
                 console.print(
                     f" {current_config[category][entry]}",

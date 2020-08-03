@@ -21,28 +21,39 @@ def parse_theme(fp):
     config_parser.read(fp)
     theme = dict(config_parser["logger"])
     # replaces `_` by `.` as rich understands it
-    for key in theme:
-        temp = theme[key]
-        del theme[key]
-        key = key.replace("_", ".")
-        theme[key] = temp
+    theme = dict(
+        zip([key.replace("_", ".") for key in theme.keys()], list(theme.values()))
+    )
+
+    theme["log.width"] = None if theme["log.width"] == "-1" else int(theme["log.width"])
+
+    theme["log.height"] = (
+        None if theme["log.height"] == "-1" else int(theme["log.height"])
+    )
     try:
-        customTheme = Theme(theme)
+        customTheme = Theme(
+            {k: v for k, v in theme.items() if k not in ["log.width", "log.height"]}
+        )
     except (color.ColorParseError, errors.StyleSyntaxError):
         customTheme = None
         printf(
             "[logging.level.error]It seems your colour configuration couldn't be parsed. Loading the default color configuration...[/logging.level.error]"
         )
-    return customTheme
+    return customTheme, theme
 
 
 config_items = _run_config()
 config_parser, successfully_read_files = config_items[1], config_items[-1]
 try:
-    customTheme = parse_theme(successfully_read_files)
-    console = Console(theme=customTheme)
+    customTheme, themedict = parse_theme(successfully_read_files)
+    console = Console(
+        theme=customTheme,
+        record=True,
+        height=themedict["log.height"],
+        width=themedict["log.width"],
+    )
 except KeyError:
-    console = Console()
+    console = Console(record=True)
     printf(
         "[logging.level.warning]No cfg file found, creating one in "
         + successfully_read_files[0]
