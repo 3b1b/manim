@@ -15,6 +15,7 @@ class AbstractImageMobject(Mobject):
     """
     Automatically filters out black pixels
     """
+
     CONFIG = {
         "height": 2.0,
         "pixel_array_dtype": "uint8",
@@ -29,11 +30,7 @@ class AbstractImageMobject(Mobject):
 
     def reset_points(self):
         # Corresponding corners of image are fixed to these 3 points
-        self.points = np.array([
-            UP + LEFT,
-            UP + RIGHT,
-            DOWN + LEFT,
-        ])
+        self.points = np.array([UP + LEFT, UP + RIGHT, DOWN + LEFT,])
         self.center()
         h, w = self.get_pixel_array().shape[:2]
         self.stretch_to_fit_height(self.height)
@@ -70,8 +67,7 @@ class ImageMobject(AbstractImageMobject):
             pa = pa.repeat(3, axis=2)
         if pa.shape[2] == 3:
             alphas = 255 * np.ones(
-                list(pa.shape[:2]) + [1],
-                dtype=self.pixel_array_dtype
+                list(pa.shape[:2]) + [1], dtype=self.pixel_array_dtype
             )
             pa = np.append(pa, alphas, axis=2)
         self.pixel_array = pa
@@ -99,10 +95,11 @@ class ImageMobject(AbstractImageMobject):
         return self
 
     def interpolate_color(self, mobject1, mobject2, alpha):
-        assert(mobject1.pixel_array.shape == mobject2.pixel_array.shape)
+        assert mobject1.pixel_array.shape == mobject2.pixel_array.shape
         self.pixel_array = interpolate(
             mobject1.pixel_array, mobject2.pixel_array, alpha
         ).astype(self.pixel_array_dtype)
+
 
 # TODO, add the ability to have the dimensions/orientation of this
 # mobject more strongly tied to the frame of the camera it contains,

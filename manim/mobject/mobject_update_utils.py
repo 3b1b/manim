@@ -7,9 +7,9 @@ from ..mobject.mobject import Mobject
 
 
 def assert_is_mobject_method(method):
-    assert(inspect.ismethod(method))
+    assert inspect.ismethod(method)
     mobject = method.__self__
-    assert(isinstance(mobject, Mobject))
+    assert isinstance(mobject, Mobject)
 
 
 def always(method, *args, **kwargs):
@@ -31,10 +31,7 @@ def f_always(method, *arg_generators, **kwargs):
     func = method.__func__
 
     def updater(mob):
-        args = [
-            arg_generator()
-            for arg_generator in arg_generators
-        ]
+        args = [arg_generator() for arg_generator in arg_generators]
         func(mob, *args, **kwargs)
 
     mobject.add_updater(updater)
@@ -48,16 +45,12 @@ def always_redraw(func):
 
 
 def always_shift(mobject, direction=RIGHT, rate=0.1):
-    mobject.add_updater(
-        lambda m, dt: m.shift(dt * rate * direction)
-    )
+    mobject.add_updater(lambda m, dt: m.shift(dt * rate * direction))
     return mobject
 
 
 def always_rotate(mobject, rate=20 * DEGREES, **kwargs):
-    mobject.add_updater(
-        lambda m, dt: m.rotate(dt * rate, **kwargs)
-    )
+    mobject.add_updater(lambda m, dt: m.rotate(dt * rate, **kwargs))
     return mobject
 
 
@@ -95,6 +88,4 @@ def turn_animation_into_updater(animation, cycle=False, **kwargs):
 
 
 def cycle_animation(animation, **kwargs):
-    return turn_animation_into_updater(
-        animation, cycle=True, **kwargs
-    )
+    return turn_animation_into_updater(animation, cycle=True, **kwargs)

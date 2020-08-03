@@ -19,17 +19,11 @@ class AnimatedBoundary(VGroup):
         super().__init__(**kwargs)
         self.vmobject = vmobject
         self.boundary_copies = [
-            vmobject.copy().set_style(
-                stroke_width=0,
-                fill_opacity=0
-            )
-            for x in range(2)
+            vmobject.copy().set_style(stroke_width=0, fill_opacity=0) for x in range(2)
         ]
         self.add(*self.boundary_copies)
         self.total_time = 0
-        self.add_updater(
-            lambda m, dt: self.update_boundary_copies(dt)
-        )
+        self.add_updater(lambda m, dt: self.update_boundary_copies(dt))
 
     def update_boundary_copies(self, dt):
         # Not actual time, but something which passes at
@@ -55,10 +49,7 @@ class AnimatedBoundary(VGroup):
 
         if time >= 1:
             self.full_family_become_partial(fading, vmobject, 0, 1)
-            fading.set_stroke(
-                color=colors[index - 1],
-                width=(1 - fade_alpha) * msw
-            )
+            fading.set_stroke(color=colors[index - 1], width=(1 - fade_alpha) * msw)
 
         self.total_time += dt
 

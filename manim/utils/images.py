@@ -10,7 +10,7 @@ def get_full_raster_image_path(image_file_name):
     return seek_full_path_from_defaults(
         image_file_name,
         default_dir=os.path.join("assets", "raster_images"),
-        extensions=[".jpg", ".png", ".gif"]
+        extensions=[".jpg", ".png", ".gif"],
     )
 
 

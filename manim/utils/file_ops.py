@@ -1,10 +1,12 @@
 import os
+import subprocess as sp
+import platform
 import numpy as np
 
 
 def add_extension_if_not_present(file_name, extension):
     # This could conceivably be smarter about handling existing differing extensions
-    if(file_name[-len(extension):] != extension):
+    if file_name[-len(extension) :] != extension:
         return file_name + extension
     else:
         return file_name
@@ -28,17 +30,18 @@ def seek_full_path_from_defaults(file_name, default_dir, extensions):
     raise IOError("File {} not Found".format(file_name))
 
 
-def get_sorted_integer_files(directory,
-                             min_index=0,
-                             max_index=np.inf,
-                             remove_non_integer_files=False,
-                             remove_indices_greater_than=None,
-                             extension=None,
-                             ):
+def get_sorted_integer_files(
+    directory,
+    min_index=0,
+    max_index=np.inf,
+    remove_non_integer_files=False,
+    remove_indices_greater_than=None,
+    extension=None,
+):
     indexed_files = []
     for file in os.listdir(directory):
-        if '.' in file:
-            index_str = file[:file.index('.')]
+        if "." in file:
+            index_str = file[: file.index(".")]
         else:
             index_str = file
 
@@ -57,3 +60,20 @@ def get_sorted_integer_files(directory,
             os.remove(full_path)
     indexed_files.sort(key=lambda p: p[0])
     return list(map(lambda p: os.path.join(directory, p[1]), indexed_files))
+
+
+def open_file(file_path):
+    current_os = platform.system()
+    if current_os == "Windows":
+        os.startfile(file_path)
+    else:
+        if current_os == "Linux":
+            commands = ["xdg-open"]
+        elif current_os.startswith("CYGWIN"):
+            commands = ["cygstart"]
+        elif current_os == "Darwin":
+            commands = ["open"]
+        else:
+            raise OSError("Unable to identify your operating system...")
+        commands.append(file_path)
+        sp.Popen(commands)

@@ -18,9 +18,7 @@ class ShowPartial(Animation):
     """
 
     def interpolate_submobject(self, submob, start_submob, alpha):
-        submob.pointwise_become_partial(
-            start_submob, *self.get_bounds(alpha)
-        )
+        submob.pointwise_become_partial(start_submob, *self.get_bounds(alpha))
 
     def get_bounds(self, alpha):
         raise Exception("Not Implemented")
@@ -36,10 +34,7 @@ class ShowCreation(ShowPartial):
 
 
 class Uncreate(ShowCreation):
-    CONFIG = {
-        "rate_func": lambda t: smooth(1 - t),
-        "remover": True
-    }
+    CONFIG = {"rate_func": lambda t: smooth(1 - t), "remover": True}
 
 
 class DrawBorderThenFill(Animation):
@@ -58,9 +53,7 @@ class DrawBorderThenFill(Animation):
 
     def check_validity_of_input(self, vmobject):
         if not isinstance(vmobject, VMobject):
-            raise Exception(
-                "DrawBorderThenFill only works for VMobjects"
-            )
+            raise Exception("DrawBorderThenFill only works for VMobjects")
 
     def begin(self):
         self.outline = self.get_outline()
@@ -70,10 +63,7 @@ class DrawBorderThenFill(Animation):
         outline = self.mobject.copy()
         outline.set_fill(opacity=0)
         for sm in outline.family_members_with_points():
-            sm.set_stroke(
-                color=self.get_stroke_color(sm),
-                width=self.stroke_width
-            )
+            sm.set_stroke(color=self.get_stroke_color(sm), width=self.stroke_width)
         return outline
 
     def get_stroke_color(self, vmobject):
@@ -89,9 +79,7 @@ class DrawBorderThenFill(Animation):
     def interpolate_submobject(self, submob, start, outline, alpha):
         index, subalpha = integer_interpolate(0, 2, alpha)
         if index == 0:
-            submob.pointwise_become_partial(
-                outline, 0, subalpha
-            )
+            submob.pointwise_become_partial(outline, 0, subalpha)
             submob.match_style(outline)
         else:
             submob.interpolate(outline, start, subalpha)
@@ -140,22 +128,27 @@ class ShowIncreasingSubsets(Animation):
     def update_submobject_list(self, index):
         self.mobject.submobjects = self.all_submobs[:index]
 
+
 class AddTextLetterByLetter(ShowIncreasingSubsets):
     """
         Add a Text Object letter by letter on the scene. Use time_per_char to change frequency of appearance of the letters. 
     """
+
     CONFIG = {
         "suspend_mobject_updating": False,
         "int_func": np.ceil,
-        "rate_func" : linear,
+        "rate_func": linear,
         "time_per_char": 0.1,
     }
 
     def __init__(self, text, **kwargs):
         digest_config(self, kwargs)
-        
-        self.run_time = np.max((0.06, self.time_per_char)) * len(text) #Time_per_char must be above 0.06. Otherwise the animation doesn't finish. 
+
+        self.run_time = np.max((0.06, self.time_per_char)) * len(
+            text
+        )  # Time_per_char must be above 0.06. Otherwise the animation doesn't finish.
         super().__init__(text, **kwargs)
+
 
 class ShowSubmobjectsOneByOne(ShowIncreasingSubsets):
     CONFIG = {
@@ -186,11 +179,13 @@ class AddTextWordByWord(Succession):
     def __init__(self, text_mobject, **kwargs):
         digest_config(self, kwargs)
         tpc = self.time_per_char
-        anims = it.chain(*[
-            [
-                ShowIncreasingSubsets(word, run_time=tpc * len(word)),
-                Animation(word, run_time=0.005 * len(word)**1.5),
+        anims = it.chain(
+            *[
+                [
+                    ShowIncreasingSubsets(word, run_time=tpc * len(word)),
+                    Animation(word, run_time=0.005 * len(word) ** 1.5),
+                ]
+                for word in text_mobject
             ]
-            for word in text_mobject
-        ])
+        )
         super().__init__(*anims, **kwargs)

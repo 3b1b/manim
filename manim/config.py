@@ -34,6 +34,8 @@ def _parse_config(config_parser, args):
         section = config_parser["CLI"]
     config = {opt: section.getint(opt) for opt in config_parser[flag]}
 
+    config["default_pixel_height"] = default.getint("pixel_height")
+    config["default_pixel_width"] = default.getint("pixel_width")
     # The -r, --resolution flag overrides the *_quality flags
     if args.resolution is not None:
         if "," in args.resolution:
@@ -79,9 +81,7 @@ def _parse_config(config_parser, args):
         tex_fn = None
     config["tex_template_file"] = tex_fn
     config["tex_template"] = (
-        TexTemplateFromFile(filename=tex_fn)
-        if tex_fn is not None
-        else TexTemplate()
+        TexTemplateFromFile(filename=tex_fn) if tex_fn is not None else TexTemplate()
     )
 
     return config
@@ -90,7 +90,10 @@ def _parse_config(config_parser, args):
 args, config_parser, file_writer_config, successfully_read_files = _run_config()
 logger.setLevel(file_writer_config["verbose"])
 if _from_command_line():
-    logger.info(f"Read configuration files: {os.path.abspath(successfully_read_files[-1])}")
-    _init_dirs(file_writer_config)
+    logger.info(
+        f"Read configuration files: {[os.path.abspath(cfgfile) for cfgfile in successfully_read_files]}"
+    )
+    if not (hasattr(args, "subcommands")):
+        _init_dirs(file_writer_config)
 config = _parse_config(config_parser, args)
 camera_config = config

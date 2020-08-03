@@ -20,11 +20,7 @@ from ...utils.config_ops import digest_locals
 def string_to_numbers(num_string):
     num_string = num_string.replace("-", ",-")
     num_string = num_string.replace("e,-", "e-")
-    return [
-        float(s)
-        for s in re.split("[ ,]", num_string)
-        if s != ""
-    ]
+    return [float(s) for s in re.split("[ ,]", num_string) if s != ""]
 
 
 class SVGMobject(VMobject):
@@ -60,8 +56,7 @@ class SVGMobject(VMobject):
             if os.path.exists(path):
                 self.file_path = path
                 return
-        raise IOError("No file matching %s in image directory" %
-                      self.file_name)
+        raise IOError("No file matching %s in image directory" % self.file_name)
 
     def generate_points(self):
         doc = minidom.parse(self.file_path)
@@ -78,28 +73,27 @@ class SVGMobject(VMobject):
         result = []
         if not isinstance(element, minidom.Element):
             return result
-        if element.tagName == 'defs':
+        if element.tagName == "defs":
             self.update_ref_to_element(element)
-        elif element.tagName == 'style':
+        elif element.tagName == "style":
             pass  # TODO, handle style
-        elif element.tagName in ['g', 'svg', 'symbol']:
-            result += it.chain(*[
-                self.get_mobjects_from(child)
-                for child in element.childNodes
-            ])
-        elif element.tagName == 'path':
-            temp = element.getAttribute('d')
-            if temp != '':
+        elif element.tagName in ["g", "svg", "symbol"]:
+            result += it.chain(
+                *[self.get_mobjects_from(child) for child in element.childNodes]
+            )
+        elif element.tagName == "path":
+            temp = element.getAttribute("d")
+            if temp != "":
                 result.append(self.path_string_to_mobject(temp))
-        elif element.tagName == 'use':
+        elif element.tagName == "use":
             result += self.use_to_mobjects(element)
-        elif element.tagName == 'rect':
+        elif element.tagName == "rect":
             result.append(self.rect_to_mobject(element))
-        elif element.tagName == 'circle':
+        elif element.tagName == "circle":
             result.append(self.circle_to_mobject(element))
-        elif element.tagName == 'ellipse':
+        elif element.tagName == "ellipse":
             result.append(self.ellipse_to_mobject(element))
-        elif element.tagName in ['polygon', 'polyline']:
+        elif element.tagName in ["polygon", "polyline"]:
             result.append(self.polygon_to_mobject(element))
         else:
             pass  # TODO
@@ -125,15 +119,12 @@ class SVGMobject(VMobject):
         if ref not in self.ref_to_element:
             warnings.warn("%s not recognized" % ref)
             return VGroup()
-        return self.get_mobjects_from(
-            self.ref_to_element[ref]
-        )
+        return self.get_mobjects_from(self.ref_to_element[ref])
 
     def attribute_to_float(self, attr):
-        stripped_attr = "".join([
-            char for char in attr
-            if char in string.digits + "." + "-"
-        ])
+        stripped_attr = "".join(
+            [char for char in attr if char in string.digits + "." + "-"]
+        )
         return float(stripped_attr)
 
     def polygon_to_mobject(self, polygon_element):
@@ -148,9 +139,7 @@ class SVGMobject(VMobject):
 
     def circle_to_mobject(self, circle_element):
         x, y, r = [
-            self.attribute_to_float(
-                circle_element.getAttribute(key)
-            )
+            self.attribute_to_float(circle_element.getAttribute(key))
             if circle_element.hasAttribute(key)
             else 0.0
             for key in ("cx", "cy", "r")
@@ -159,9 +148,7 @@ class SVGMobject(VMobject):
 
     def ellipse_to_mobject(self, circle_element):
         x, y, rx, ry = [
-            self.attribute_to_float(
-                circle_element.getAttribute(key)
-            )
+            self.attribute_to_float(circle_element.getAttribute(key))
             if circle_element.hasAttribute(key)
             else 0.0
             for key in ("cx", "cy", "rx", "ry")
@@ -175,12 +162,16 @@ class SVGMobject(VMobject):
         corner_radius = rect_element.getAttribute("rx")
 
         # input preprocessing
-        if fill_color in ["", "none", "#FFF", "#FFFFFF"] or Color(fill_color) == Color(WHITE):
+        if fill_color in ["", "none", "#FFF", "#FFFFFF"] or Color(fill_color) == Color(
+            WHITE
+        ):
             opacity = 0
             fill_color = BLACK  # shdn't be necessary but avoids error msgs
         if fill_color in ["#000", "#000000"]:
             fill_color = WHITE
-        if stroke_color in ["", "none", "#FFF", "#FFFFFF"] or Color(stroke_color) == Color(WHITE):
+        if stroke_color in ["", "none", "#FFF", "#FFFFFF"] or Color(
+            stroke_color
+        ) == Color(WHITE):
             stroke_width = 0
             stroke_color = BLACK
         if stroke_color in ["#000", "#000000"]:
@@ -195,30 +186,22 @@ class SVGMobject(VMobject):
 
         if corner_radius == 0:
             mob = Rectangle(
-                width=self.attribute_to_float(
-                    rect_element.getAttribute("width")
-                ),
-                height=self.attribute_to_float(
-                    rect_element.getAttribute("height")
-                ),
-                stroke_width=stroke_width,
-                stroke_color=stroke_color,
-                fill_color=fill_color,
-                fill_opacity=opacity
-            )
-        else:
-            mob = RoundedRectangle(
-                width=self.attribute_to_float(
-                    rect_element.getAttribute("width")
-                ),
-                height=self.attribute_to_float(
-                    rect_element.getAttribute("height")
-                ),
+                width=self.attribute_to_float(rect_element.getAttribute("width")),
+                height=self.attribute_to_float(rect_element.getAttribute("height")),
                 stroke_width=stroke_width,
                 stroke_color=stroke_color,
                 fill_color=fill_color,
                 fill_opacity=opacity,
-                corner_radius=corner_radius
+            )
+        else:
+            mob = RoundedRectangle(
+                width=self.attribute_to_float(rect_element.getAttribute("width")),
+                height=self.attribute_to_float(rect_element.getAttribute("height")),
+                stroke_width=stroke_width,
+                stroke_color=stroke_color,
+                fill_color=fill_color,
+                fill_opacity=opacity,
+                corner_radius=corner_radius,
             )
 
         mob.shift(mob.get_center() - mob.get_corner(UP + LEFT))
@@ -227,21 +210,21 @@ class SVGMobject(VMobject):
     def handle_transforms(self, element, mobject):
         x, y = 0, 0
         try:
-            x = self.attribute_to_float(element.getAttribute('x'))
+            x = self.attribute_to_float(element.getAttribute("x"))
             # Flip y
-            y = -self.attribute_to_float(element.getAttribute('y'))
+            y = -self.attribute_to_float(element.getAttribute("y"))
             mobject.shift(x * RIGHT + y * UP)
         except:
             pass
 
-        transform = element.getAttribute('transform')
+        transform = element.getAttribute("transform")
 
         try:  # transform matrix
             prefix = "matrix("
             suffix = ")"
             if not transform.startswith(prefix) or not transform.endswith(suffix):
                 raise Exception()
-            transform = transform[len(prefix):-len(suffix)]
+            transform = transform[len(prefix) : -len(suffix)]
             transform = string_to_numbers(transform)
             transform = np.array(transform).reshape([3, 2])
             x = transform[2][0]
@@ -262,7 +245,7 @@ class SVGMobject(VMobject):
             suffix = ")"
             if not transform.startswith(prefix) or not transform.endswith(suffix):
                 raise Exception()
-            transform = transform[len(prefix):-len(suffix)]
+            transform = transform[len(prefix) : -len(suffix)]
             scale_values = string_to_numbers(transform)
             if len(scale_values) == 2:
                 scale_x, scale_y = scale_values
@@ -278,7 +261,7 @@ class SVGMobject(VMobject):
             suffix = ")"
             if not transform.startswith(prefix) or not transform.endswith(suffix):
                 raise Exception()
-            transform = transform[len(prefix):-len(suffix)]
+            transform = transform[len(prefix) : -len(suffix)]
             x, y = string_to_numbers(transform)
             mobject.shift(x * RIGHT + y * DOWN)
         except:
@@ -298,14 +281,16 @@ class SVGMobject(VMobject):
         all_childNodes_have_id = []
         if not isinstance(element, minidom.Element):
             return
-        if element.hasAttribute('id'):
+        if element.hasAttribute("id"):
             return [element]
         for e in element.childNodes:
             all_childNodes_have_id.append(self.get_all_childNodes_have_id(e))
         return self.flatten([e for e in all_childNodes_have_id if e])
 
     def update_ref_to_element(self, defs):
-        new_refs = dict([(e.getAttribute('id'), e) for e in self.get_all_childNodes_have_id(defs)])
+        new_refs = dict(
+            [(e.getAttribute("id"), e) for e in self.get_all_childNodes_have_id(defs)]
+        )
         self.ref_to_element.update(new_refs)
 
     def move_into_position(self):
@@ -340,10 +325,12 @@ class VMobjectFromSVGPathstring(VMobject):
 
     def generate_points(self):
         pattern = "[%s]" % ("".join(self.get_path_commands()))
-        pairs = list(zip(
-            re.findall(pattern, self.path_string),
-            re.split(pattern, self.path_string)[1:]
-        ))
+        pairs = list(
+            zip(
+                re.findall(pattern, self.path_string),
+                re.split(pattern, self.path_string)[1:],
+            )
+        )
         # Which mobject should new points be added to
         self = self
         for command, coord_string in pairs:
@@ -415,9 +402,9 @@ class VMobjectFromSVGPathstring(VMobject):
             # Add subsequent offset points relatively.
             for i in range(3, len(new_points), 3):
                 if isLower:
-                    new_points[i:i + 3] -= points[-1]
-                    new_points[i:i + 3] += new_points[i - 1]
-                self.add_cubic_bezier_curve_to(*new_points[i:i+3])
+                    new_points[i : i + 3] -= points[-1]
+                    new_points[i : i + 3] += new_points[i - 1]
+                self.add_cubic_bezier_curve_to(*new_points[i : i + 3])
 
     def string_to_points(self, coord_string):
         numbers = string_to_numbers(coord_string)

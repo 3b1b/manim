@@ -32,11 +32,7 @@ class PMobject(Mobject):
         self.points = np.append(self.points, points, axis=0)
         if rgbas is None:
             color = Color(color) if color else self.color
-            rgbas = np.repeat(
-                [color_to_rgba(color, alpha)],
-                num_new_points,
-                axis=0
-            )
+            rgbas = np.repeat([color_to_rgba(color, alpha)], num_new_points, axis=0)
         elif len(rgbas) != len(points):
             raise Exception("points and rgbas must have same shape")
         self.rgbas = np.append(self.rgbas, rgbas, axis=0)
@@ -61,22 +57,25 @@ class PMobject(Mobject):
 
     # def set_color_by_gradient(self, start_color, end_color):
     def set_color_by_gradient(self, *colors):
-        self.rgbas = np.array(list(map(
-            color_to_rgba,
-            color_gradient(colors, len(self.points))
-        )))
+        self.rgbas = np.array(
+            list(map(color_to_rgba, color_gradient(colors, len(self.points))))
+        )
         return self
 
         start_rgba, end_rgba = list(map(color_to_rgba, [start_color, end_color]))
         for mob in self.family_members_with_points():
             num_points = mob.get_num_points()
-            mob.rgbas = np.array([
-                interpolate(start_rgba, end_rgba, alpha)
-                for alpha in np.arange(num_points) / float(num_points)
-            ])
+            mob.rgbas = np.array(
+                [
+                    interpolate(start_rgba, end_rgba, alpha)
+                    for alpha in np.arange(num_points) / float(num_points)
+                ]
+            )
         return self
 
-    def set_colors_by_radial_gradient(self, center=None, radius=1, inner_color=WHITE, outer_color=BLACK):
+    def set_colors_by_radial_gradient(
+        self, center=None, radius=1, inner_color=WHITE, outer_color=BLACK
+    ):
         start_rgba, end_rgba = list(map(color_to_rgba, [start_color, end_color]))
         if center is None:
             center = self.get_center()
@@ -84,9 +83,7 @@ class PMobject(Mobject):
             num_points = mob.get_num_points()
             t = min(1, np.abs(mob.get_center() - center) / radius)
 
-            mob.rgbas = np.array(
-                [interpolate(start_rgba, end_rgba, t)] * num_points
-            )
+            mob.rgbas = np.array([interpolate(start_rgba, end_rgba, t)] * num_points)
         return self
 
     def match_colors(self, mobject):
@@ -108,9 +105,7 @@ class PMobject(Mobject):
         for mob in self.family_members_with_points():
             num_points = self.get_num_points()
             mob.apply_over_attr_arrays(
-                lambda arr: arr[
-                    np.arange(0, num_points, factor)
-                ]
+                lambda arr: arr[np.arange(0, num_points, factor)]
             )
         return self
 
@@ -119,9 +114,7 @@ class PMobject(Mobject):
         function is any map from R^3 to R
         """
         for mob in self.family_members_with_points():
-            indices = np.argsort(
-                np.apply_along_axis(function, 1, mob.points)
-            )
+            indices = np.argsort(np.apply_along_axis(function, 1, mob.points))
             mob.apply_over_attr_arrays(lambda arr: arr[indices])
         return self
 
@@ -151,11 +144,9 @@ class PMobject(Mobject):
 
     # Alignment
     def align_points_with_larger(self, larger_mobject):
-        assert(isinstance(larger_mobject, PMobject))
+        assert isinstance(larger_mobject, PMobject)
         self.apply_over_attr_arrays(
-            lambda a: stretch_array_to_length(
-                a, larger_mobject.get_num_points()
-            )
+            lambda a: stretch_array_to_length(a, larger_mobject.get_num_points())
         )
 
     def get_point_mobject(self, center=None):
@@ -164,21 +155,16 @@ class PMobject(Mobject):
         return Point(center)
 
     def interpolate_color(self, mobject1, mobject2, alpha):
-        self.rgbas = interpolate(
-            mobject1.rgbas, mobject2.rgbas, alpha
+        self.rgbas = interpolate(mobject1.rgbas, mobject2.rgbas, alpha)
+        self.set_stroke_width(
+            interpolate(
+                mobject1.get_stroke_width(), mobject2.get_stroke_width(), alpha,
+            )
         )
-        self.set_stroke_width(interpolate(
-            mobject1.get_stroke_width(),
-            mobject2.get_stroke_width(),
-            alpha,
-        ))
         return self
 
     def pointwise_become_partial(self, mobject, a, b):
-        lower_index, upper_index = [
-            int(x * mobject.get_num_points())
-            for x in (a, b)
-        ]
+        lower_index, upper_index = [int(x * mobject.get_num_points()) for x in (a, b)]
         for attr in self.get_array_attrs():
             full_array = getattr(mobject, attr)
             partial_array = full_array[lower_index:upper_index]
@@ -203,10 +189,7 @@ class Mobject1D(PMobject):
             points = [start]
         else:
             epsilon = self.epsilon / length
-            points = [
-                interpolate(start, end, t)
-                for t in np.arange(0, 1, epsilon)
-            ]
+            points = [interpolate(start, end, t) for t in np.arange(0, 1, epsilon)]
         self.add_points(points, color=color)
 
 
@@ -242,11 +225,13 @@ class PointCloudDot(Mobject1D):
         self.shift(center)
 
     def generate_points(self):
-        self.add_points([
-            r * (np.cos(theta) * RIGHT + np.sin(theta) * UP)
-            for r in np.arange(0, self.radius, self.epsilon)
-            for theta in np.arange(0, 2 * np.pi, self.epsilon / r)
-        ])
+        self.add_points(
+            [
+                r * (np.cos(theta) * RIGHT + np.sin(theta) * UP)
+                for r in np.arange(0, self.radius, self.epsilon)
+                for theta in np.arange(0, 2 * np.pi, self.epsilon / r)
+            ]
+        )
 
 
 class Point(PMobject):

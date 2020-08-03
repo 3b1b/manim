@@ -9,8 +9,8 @@ from ..utils.config_ops import digest_config
 # TODO, think about how to incorporate perspective
 class CameraFrame(VGroup):
     CONFIG = {
-        "width": config['frame_width'],
-        "height": config['frame_height'],
+        "width": config["frame_width"],
+        "height": config["frame_height"],
         "center": ORIGIN,
     }
 
@@ -36,10 +36,9 @@ class MovingCamera(Camera):
         """
         digest_config(self, kwargs)
         if frame is None:
-            frame = ScreenRectangle(height=config['frame_height'])
+            frame = ScreenRectangle(height=config["frame_height"])
             frame.set_stroke(
-                self.default_frame_stroke_color,
-                self.default_frame_stroke_width,
+                self.default_frame_stroke_color, self.default_frame_stroke_width,
             )
         self.frame = frame
         Camera.__init__(self, **kwargs)
