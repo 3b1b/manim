@@ -59,13 +59,14 @@ def _parse_file_writer_config(config_parser, args):
         "save_pngs",
         "save_as_gif",
         "write_all",
+        "log_to_file",
     ]:
         attr = getattr(args, boolean_opt)
         fw_config[boolean_opt] = (
             default.getboolean(boolean_opt) if attr is None else attr
         )
     # for str_opt in ['media_dir', 'video_dir', 'tex_dir', 'text_dir']:
-    for str_opt in ["media_dir"]:
+    for str_opt in ["media_dir", "log_dir"]:
         attr = getattr(args, str_opt)
         fw_config[str_opt] = os.path.relpath(default[str_opt]) if attr is None else attr
     dir_names = {"video_dir": "videos", "tex_dir": "Tex", "text_dir": "texts"}
@@ -269,6 +270,13 @@ def _parse_cli(arg_list, input=True):
         help="Save the video as gif",
     )
 
+    parser.add_argument(
+        "--log_to_file",
+        action="store_const",
+        const=True,
+        help="Log terminal output to file.",
+    )
+
     # The default value of the following is set in manim.cfg
     parser.add_argument(
         "-c", "--color", help="Background color",
@@ -279,6 +287,11 @@ def _parse_cli(arg_list, input=True):
     parser.add_argument(
         "--media_dir", help="directory to write media",
     )
+
+    parser.add_argument(
+        "--log_dir", help="directory to write log files to",
+    )
+
     # video_group = parser.add_mutually_exclusive_group()
     # video_group.add_argument(
     #     "--video_dir",
@@ -409,9 +422,14 @@ def _init_dirs(config):
         config["video_dir"],
         config["tex_dir"],
         config["text_dir"],
+        config["log_dir"],
     ]:
         if not os.path.exists(folder):
-            os.makedirs(folder)
+            # If log_to_file is False, ignore log_dir
+            if folder is config["log_dir"] and (not config["log_to_file"]):
+                pass
+            else:
+                os.makedirs(folder)
 
 
 def _from_command_line():
