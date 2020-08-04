@@ -21,6 +21,6 @@ setup(
         "pydub",
         "pygments",
         "pyreadline; sys_platform == 'win32'",
-        "rich",
+        "rich>=4.2.1",
     ],
 )
