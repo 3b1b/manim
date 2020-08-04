@@ -127,14 +127,11 @@ def parse_cli():
             "--tex_dir",
             help="directory to write tex",
         )
-
-        # edited by SGP
         parser.add_argument(
             "-x", "--custom_fps",
             action="store_true",
             help="custom frames per second (fps)",
         )
-        # edited by SGP 
         return parser.parse_args()
     except argparse.ArgumentError as err:
         print(str(err))
