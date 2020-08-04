@@ -139,6 +139,22 @@ LOW_QUALITY_CAMERA_CONFIG = {
     "frame_rate": 15,
 }
 
+CUSTOM_QUALITY_CAMERA_CONFIG = {
+    "pixel_height": None,
+    "pixel_width": None,
+    "frame_rate": None}
+
+def set_custom_fps(frame_rate):
+    # type filter
+    if type(frame_rate) != int:
+        raise Exception(f"Invlaid value {frame_rate} for custom frame rate. Required value is of type int!")
+
+    # value filter
+    if 0 < frame_rate <= 120:
+        CUSTOM_VIDEO_CONFIG["frame_rate"] = frame_rate
+    else:
+        raise Exception("Custom FPS has to be 0 < integer <= 120!")
+
 DEFAULT_PIXEL_HEIGHT = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_height"]
 DEFAULT_PIXEL_WIDTH = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_width"]
 DEFAULT_FRAME_RATE = 60

@@ -127,6 +127,14 @@ def parse_cli():
             "--tex_dir",
             help="directory to write tex",
         )
+
+        # edited by SGP
+        parser.add_argument(
+            "-x", "--custom_fps",
+            action="store_true",
+            help="custom frames per second (fps)",
+        )
+        # edited by SGP 
         return parser.parse_args()
     except argparse.ArgumentError as err:
         print(str(err))
@@ -208,15 +216,41 @@ def get_configuration(args):
 
 def get_camera_configuration(args):
     camera_config = {}
-    if args.low_quality:
-        camera_config.update(manimlib.constants.LOW_QUALITY_CAMERA_CONFIG)
-    elif args.medium_quality:
-        camera_config.update(manimlib.constants.MEDIUM_QUALITY_CAMERA_CONFIG)
-    elif args.high_quality:
-        camera_config.update(manimlib.constants.HIGH_QUALITY_CAMERA_CONFIG)
-    else:
-        camera_config.update(manimlib.constants.PRODUCTION_QUALITY_CAMERA_CONFIG)
+    if args.custom_fps:
+        CUSTOM_QUALITY_CONFIG = {
+            "pixel_height": None,
+            "pixel_width": None,
+            "frame_rate": manimlib.constants.CUSTOM_QUALITY_CAMERA_CONFIG["frame_rate"],
+        }
 
+        if args.low_quality:
+            CUSTOM_QUALITY_CONFIG["pixel_height"] = manimlib.constants.LOW_QUALITY_CAMERA_CONFIG["pixel_height"]
+            CUSTOM_QUALITY_CONFIG["pixel_width"] = manimlib.constants.LOW_QUALITY_CAMERA_CONFIG["pixel_width"]
+        elif args.medium_quality:
+            CUSTOM_QUALITY_CONFIG["pixel_height"] = manimlib.constants.MEDIUM_QUALITY_CAMERA_CONFIG["pixel_height"]
+            CUSTOM_QUALITY_CONFIG["pixel_width"] = manimlib.constants.MEDIUM_QUALITY_CAMERA_CONFIG["pixel_width"]
+        elif args.high_quality:
+            CUSTOM_QUALITY_CONFIG["pixel_height"] = manimlib.constants.HIGH_QUALITY_CAMERA_CONFIG["pixel_height"]
+            CUSTOM_QUALITY_CONFIG["pixel_width"] = manimlib.constants.HIGH_QUALITY_CAMERA_CONFIG["pixel_width"]
+        else:
+            CUSTOM_QUALITY_CONFIG["pixel_height"] = manimlib.constants.PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_height"]
+            CUSTOM_QUALITY_CONFIG["pixel_width"] = manimlib.constants.PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_width"]
+
+        if manimlib.constants.CUSTOM_QUALITY_CAMERA_CONFIG["frame_rate"] == None:
+            raise Exception("You need to set custom FPS using set_custom_fps(int-value) to use this parameter.")
+        
+        camera_config.update(CUSTOM_QUALITY_CONFIG)
+
+    if not args.custom_fps:
+        if args.low_quality:
+            camera_config.update(manimlib.constants.LOW_QUALITY_CAMERA_CONFIG)
+        elif args.medium_quality:
+            camera_config.update(manimlib.constants.MEDIUM_QUALITY_CAMERA_CONFIG)
+        elif args.high_quality:
+            camera_config.update(manimlib.constants.HIGH_QUALITY_CAMERA_CONFIG)
+        else:
+            camera_config.update(manimlib.constants.PRODUCTION_QUALITY_CAMERA_CONFIG)
+    
     # If the resolution was passed in via -r
     if args.resolution:
         if "," in args.resolution:
