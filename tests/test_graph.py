@@ -34,16 +34,12 @@ class NumberLineTest(GraphScene):
         "y_labeled_nums": range(-1, 2),
         "x_axis_config": {
             "x_min": -5,
-            "decimal_number_config": {
-                "num_decimal_places": 1,
-            }
+            "decimal_number_config": {"num_decimal_places": 1,},
         },
         "y_axis_config": {
             "color": RED,
-            "decimal_number_config": {
-                "num_decimal_places": 2,
-            }
-        }
+            "decimal_number_config": {"num_decimal_places": 2,},
+        },
     }
 
     def construct(self):
@@ -52,6 +48,7 @@ class NumberLineTest(GraphScene):
         f = self.get_graph(lambda x: x ** 2)
 
         self.play(Animation(f))
+
 
 def test_scenes():
     utils_test_scenes(get_scenes_to_test(__name__), "graph", caching_needed=True)
