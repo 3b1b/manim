@@ -31,14 +31,12 @@ class GraphScene(Scene):
         "x_min": -1,
         "x_max": 10,
         "x_axis_width": 9,
-        "x_tick_frequency": 1,
         "x_leftmost_tick": None,  # Change if different from x_min
         "x_labeled_nums": None,
         "x_axis_label": "$x$",
         "y_min": -1,
         "y_max": 10,
         "y_axis_height": 6,
-        "y_tick_frequency": 1,
         "y_bottom_tick": None,  # Change if different from y_min
         "y_labeled_nums": None,
         "y_axis_label": "$y$",
@@ -57,10 +55,6 @@ class GraphScene(Scene):
         "y_axis_visibility": True,  # show or hide the y axis
         "x_label_position": UP + RIGHT,  # where to place the label of the x axis
         "y_label_position": UP + RIGHT,  # where to place the label of the y axis
-        "x_add_start": 0,  # extend the x axis to the left
-        "x_add_end": 0,  # extend the x axis to the right
-        "y_add_start": 0,  # extend the y axis to the bottom
-        "y_add_end": 0,  # extend the y axis to the top
         "x_axis_config": {},
         "y_axis_config": {}
     }
@@ -100,13 +94,10 @@ class GraphScene(Scene):
             "x_min": self.x_min,
             "x_max": self.x_max,
             "unit_size": self.space_unit_to_x,
-            "tick_frequency": self.x_tick_frequency,
             "leftmost_tick": self.x_leftmost_tick,
             "numbers_with_elongated_ticks": self.x_labeled_nums,
             "color": self.axes_color,
             "include_tip": self.include_tip,
-            "add_start": self.x_add_start,
-            "add_end": self.x_add_end
         }, **self.x_axis_config)
 
         x_axis = NumberLine(
@@ -142,15 +133,12 @@ class GraphScene(Scene):
             "x_min": self.y_min,
             "x_max": self.y_max,
             "unit_size": self.space_unit_to_y,
-            "tick_frequency": self.y_tick_frequency,
             "leftmost_tick": self.y_bottom_tick,
             "numbers_with_elongated_ticks": self.y_labeled_nums,
             "color": self.axes_color,
             "line_to_number_vect": LEFT,
             "label_direction": LEFT,
             "include_tip": self.include_tip,
-            "add_start": self.y_add_start,
-            "add_end": self.y_add_end
         }, **self.y_axis_config)
 
         y_axis = NumberLine(
