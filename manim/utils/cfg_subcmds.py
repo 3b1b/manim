@@ -8,12 +8,12 @@ The functions below can be called via the `manim cfg` subcommand.
 """
 import os
 import configparser
+from ast import literal_eval
 
 from .config_utils import _run_config, _paths_config_file, finalized_configs_dict
 from .file_ops import guarantee_existence, open_file
 
 from rich.console import Console
-from rich.progress import track
 from rich.style import Style
 from rich.errors import StyleSyntaxError
 
@@ -24,6 +24,27 @@ If left empty, the default colour will be used.[/red]
 [magenta] For a full list of styles, visit[/magenta] [green]https://rich.readthedocs.io/en/latest/style.html[/green]"""
 
 console = Console()
+
+
+def value_from_string(value):
+    try:
+        value = literal_eval(value)
+    except (SyntaxError, ValueError):
+        value = value
+    return value
+
+
+def _is_expected_datatype(value, expected, style=False):
+    value = value_from_string(value)
+    expected = type(value_from_string(expected))
+
+    if isinstance(value, expected):
+        if style:
+            return is_valid_style(value)
+        else:
+            return True
+    else:
+        return False
 
 
 def is_valid_style(style):
@@ -81,7 +102,7 @@ This will be used when running the manim command. If you want to override this c
 you will have to create a manim.cfg in the local directory, where you want those changes to be overridden."""
 
     CWD_CONFIG_MSG = f"""A configuration file at [yellow]{config_paths[2]}[/yellow] has been created.
-To save your theme please save that file and place it in your current working directory, from where you run the manim command."""
+To save your config please save that file and place it in your current working directory, from where you run the manim command."""
 
     if not openfile:
         action = "save this as"
@@ -92,51 +113,45 @@ To save your theme please save that file and place it in your current working di
             if category == "logger":
                 console.print(RICH_COLOUR_INSTRUCTIONS)
                 default = replace_keys(default)
-                for key in default:
-                    desc = (
-                        "style" if key not in ["log.width", "log.height"] else "value"
-                    )
-                    style = key if key not in ["log.width", "log.height"] else None
-                    cond = (
-                        is_valid_style
-                        if key not in ["log.width", "log.height"]
-                        else lambda m: m.isdigit()
-                    )
-                    console.print(f"Enter the {desc} for {key}:", style=style, end="")
-                    temp = input()
-                    if temp:
-                        while not cond(temp):
-                            console.print(
-                                f"[red bold]Invalid {desc}. Try again.[/red bold]"
-                            )
-                            console.print(
-                                f"Enter the {desc} for {key}:", style=style, end=""
-                            )
-                            temp = input()
-                        else:
-                            default[key] = temp
-                default = replace_keys(default)
 
-            else:
-                for key in default:
-                    if default[key] in ["True", "False"]:
+            for key in default:
+                # All the cfg entries for logger need to be validated as styles,
+                # as long as they arent for setting the log width or height etc
+                if category == "logger" and key not in ["log.width", "log.height"]:
+                    desc = "style"
+                    style = default[key]
+                else:
+                    desc = "value"
+                    style = None
+
+                console.print(f"Enter the {desc} for {key} ", style=style, end="")
+                if category != "logger" or key in ["log.width", "log.height"]:
+                    defaultval = (
+                        repr(default[key])
+                        if isinstance(value_from_string(default[key]), str)
+                        else default[key]
+                    )
+                    console.print(f"(defaults to {defaultval}) :", end="")
+
+                temp = input()
+                if temp:
+                    while temp and not _is_expected_datatype(
+                        temp, default[key], bool(style)
+                    ):
                         console.print(
-                            f"Enter value for {key} (defaults to {default[key]}):",
-                            end="",
+                            f"[red bold]Invalid {desc}. Try again.[/red bold]"
+                        )
+                        console.print(
+                            f"Enter the {desc} for {key}:", style=style, end=""
                         )
                         temp = input()
-                        if temp:
-                            while not temp.lower().capitalize() in ["True", "False"]:
-                                console.print(
-                                    "[red bold]Invalid value. Try again.[/red bold]"
-                                )
-                                console.print(
-                                    f"Enter the style for {key}:", style=key, end=""
-                                )
-                                temp = input()
-                            else:
-                                default[key] = temp
+                    else:
+                        default[key] = temp
+
+            default = replace_keys(default) if category == "logger" else default
+
             config[category] = dict(default)
+
     else:
         action = "open"
 
