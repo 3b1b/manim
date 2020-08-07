@@ -27,6 +27,16 @@ console = Console()
 
 
 def value_from_string(value):
+    """Extracts the literal of proper datatype from a string.
+    Parameters
+    ----------
+    value : :class:`str`
+        The value to check get the literal from.
+    Returns
+    -------
+    Union[:class:`str`, :class:`int`, :class:`bool`]
+        Returns whether it is valid style or not according to rich.
+    """
     try:
         value = literal_eval(value)
     except (SyntaxError, ValueError):
@@ -35,6 +45,24 @@ def value_from_string(value):
 
 
 def _is_expected_datatype(value, expected, style=False):
+    """Checks whether `value` is the same datatype as `expected`,
+    and checks if it is a valid `style` if `style` is true.
+
+    Parameters
+    ----------
+    value : :class:`str`
+        The string of the value to check (obtained from reading the user input).
+    expected : :class:`str`
+        The string of the literal datatype must be matched by `value`. Obtained from
+        reading the cfg file.
+    style : Optional[:class:`bool`], optional
+        Whether or not to confirm if `value` is a style, by default False
+
+    Returns
+    -------
+    :class:`bool`
+        Whether or not `value` matches the datatype of `expected`.
+    """
     value = value_from_string(value)
     expected = type(value_from_string(expected))
 

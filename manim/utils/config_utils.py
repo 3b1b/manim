@@ -475,12 +475,12 @@ def _subcommand_name(ignore=[]):
 
     Parameters
     ----------
-    ignore : list, optional
+    ignore : Optional[:class:`list`]
         List of NON_ANIM_UTILS to ignore when searching for subcommands, by default []
 
     Returns
     -------
-    str, None
+    Union[:class:`str`, :class:`None`]
         If a subcommand is found, returns the string of its name. Returns None if no
         subcommand is found.
     """
@@ -507,6 +507,18 @@ def _subcommand_name(ignore=[]):
 
 
 def _init_cfg_subcmd(subparsers):
+    """Initialises the subparser for the `cfg` subcommand.
+
+    Parameters
+    ----------
+    subparsers : :class:`argparse._SubParsersAction`
+        The subparser object for which to add the sub-subparser for the cfg subcommand.
+
+    Returns
+    -------
+    :class:`argparse.ArgumentParser`
+        The parser that parser anything cfg subcommand related.
+    """
     cfg_related = subparsers.add_parser("cfg",)
     cfg_subparsers = cfg_related.add_subparsers(dest="cfg_subcommand")
 
