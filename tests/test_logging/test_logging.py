@@ -45,8 +45,8 @@ def test_logging_to_file(python_version):
         enc = "utf-8"
     with open(log_file_path, encoding=enc) as logfile:
         logs = logfile.read()
-    # The following regex pattern selects timestamps, file paths and all numbers..
-    pattern = r"(\[?\d+:?]?)|(\['[A-Z]?:?[\/\\].*cfg'])|([A-Z]?:?[\/\\].*mp4)"
+    # The following regex pattern selects file paths and all numbers.
+    pattern = r"(\['[A-Z]?:?[\/\\].*cfg'])|([A-Z]?:?[\/\\].*mp4)|(\d+)"
 
     logs = re.sub(pattern, lambda m: " " * len((m.group(0))), logs)
     with open(

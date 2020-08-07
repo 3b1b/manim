@@ -6,6 +6,7 @@ on:
   pull_request:
       branches:
         - master
+        - extend_subcmds
 
 jobs:
   format:
