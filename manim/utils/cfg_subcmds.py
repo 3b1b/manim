@@ -22,7 +22,7 @@ __all__ = ["write", "show", "export"]
 RICH_COLOUR_INSTRUCTIONS = """[red]The default colour is used by the input statement.
 If left empty, the default colour will be used.[/red]
 [magenta] For a full list of styles, visit[/magenta] [green]https://rich.readthedocs.io/en/latest/style.html[/green]"""
-
+RICH_NON_STYLE_ENTRIES = ["log.width", "log.height","log.timestamps"]
 console = Console()
 
 
@@ -106,7 +106,6 @@ To save your config please save that file and place it in your current working d
 
     if not openfile:
         action = "save this as"
-
         for category in config:
             console.print(f"{category}", style="bold green underline")
             default = config[category]
@@ -116,8 +115,8 @@ To save your config please save that file and place it in your current working d
 
             for key in default:
                 # All the cfg entries for logger need to be validated as styles,
-                # as long as they arent for setting the log width or height etc
-                if category == "logger" and key not in ["log.width", "log.height"]:
+                # as long as they arent setting the log width or height etc
+                if category == "logger" and key not in RICH_NON_STYLE_ENTRIES:
                     desc = "style"
                     style = default[key]
                 else:
@@ -125,7 +124,7 @@ To save your config please save that file and place it in your current working d
                     style = None
 
                 console.print(f"Enter the {desc} for {key} ", style=style, end="")
-                if category != "logger" or key in ["log.width", "log.height"]:
+                if category != "logger" or key in RICH_NON_STYLE_ENTRIES:
                     defaultval = (
                         repr(default[key])
                         if isinstance(value_from_string(default[key]), str)
@@ -183,10 +182,11 @@ To save your config please save that file and place it in your current working d
 
 def show():
     current_config = finalized_configs_dict()
+    rich_non_style_entries = [a.replace(".","_") for a in RICH_NON_STYLE_ENTRIES]
     for category in current_config:
         console.print(f"{category}", style="bold green underline")
         for entry in current_config[category]:
-            if category == "logger" and entry not in ["log_width", "log_height"]:
+            if category == "logger" and entry not in rich_non_style_entries:
                 console.print(f"{entry} :", end="")
                 console.print(
                     f" {current_config[category][entry]}",

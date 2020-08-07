@@ -30,9 +30,14 @@ def parse_theme(fp):
     theme["log.height"] = (
         None if theme["log.height"] == "-1" else int(theme["log.height"])
     )
+    theme["log.timestamps"] = False if theme["log.timestamps"] == "False" else True
     try:
         customTheme = Theme(
-            {k: v for k, v in theme.items() if k not in ["log.width", "log.height"]}
+            {
+                k: v
+                for k, v in theme.items()
+                if k not in ["log.width", "log.height", "log.timestamps"]
+            }
         )
     except (color.ColorParseError, errors.StyleSyntaxError):
         customTheme = None
@@ -80,7 +85,7 @@ logging.basicConfig(
     level="NOTSET",
     format="%(message)s",
     datefmt="[%X]",
-    handlers=[RichHandler(console=console)],
+    handlers=[RichHandler(console=console,show_time=themedict["log.timestamps"])],
 )
 
 logger = logging.getLogger("rich")
