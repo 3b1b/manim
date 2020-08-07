@@ -22,7 +22,7 @@ __all__ = ["write", "show", "export"]
 RICH_COLOUR_INSTRUCTIONS = """[red]The default colour is used by the input statement.
 If left empty, the default colour will be used.[/red]
 [magenta] For a full list of styles, visit[/magenta] [green]https://rich.readthedocs.io/en/latest/style.html[/green]"""
-RICH_NON_STYLE_ENTRIES = ["log.width", "log.height","log.timestamps"]
+RICH_NON_STYLE_ENTRIES = ["log.width", "log.height", "log.timestamps"]
 console = Console()
 
 
@@ -182,7 +182,7 @@ To save your config please save that file and place it in your current working d
 
 def show():
     current_config = finalized_configs_dict()
-    rich_non_style_entries = [a.replace(".","_") for a in RICH_NON_STYLE_ENTRIES]
+    rich_non_style_entries = [a.replace(".", "_") for a in RICH_NON_STYLE_ENTRIES]
     for category in current_config:
         console.print(f"{category}", style="bold green underline")
         for entry in current_config[category]:

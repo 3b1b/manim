@@ -3,7 +3,6 @@ on:
   push:
       branches:
         - master
-        - extend_subcmds
   pull_request:
       branches:
         - master

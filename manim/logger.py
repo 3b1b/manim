@@ -85,7 +85,7 @@ logging.basicConfig(
     level="NOTSET",
     format="%(message)s",
     datefmt="[%X]",
-    handlers=[RichHandler(console=console,show_time=themedict["log.timestamps"])],
+    handlers=[RichHandler(console=console, show_time=themedict["log.timestamps"])],
 )
 
 logger = logging.getLogger("rich")
