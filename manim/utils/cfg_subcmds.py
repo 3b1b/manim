@@ -35,7 +35,7 @@ def value_from_string(value):
     Returns
     -------
     Union[:class:`str`, :class:`int`, :class:`bool`]
-        Returns whether it is valid style or not according to rich.
+        Returns the literal of appropriate datatype.
     """
     try:
         value = literal_eval(value)
