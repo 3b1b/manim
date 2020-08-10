@@ -101,7 +101,7 @@ class GraphScene(Scene):
             color=self.axes_color,
             include_tip=self.include_tip,
             add_start=self.x_add_start,
-            add_end=self.x_add_end
+            add_end=self.x_add_end,
         )
         x_axis.shift(self.graph_origin - x_axis.number_to_point(0))
         if len(self.x_labeled_nums) > 0:
@@ -113,7 +113,7 @@ class GraphScene(Scene):
             x_label.next_to(
                 x_axis.get_tips() if self.include_tip else x_axis.get_tick_marks(),
                 self.x_label_position,
-                buff=SMALL_BUFF
+                buff=SMALL_BUFF,
             )
             x_label.shift_onto_screen()
             x_axis.add(x_label)
@@ -138,7 +138,7 @@ class GraphScene(Scene):
             label_direction=LEFT,
             include_tip=self.include_tip,
             add_start=self.y_add_start,
-            add_end=self.y_add_end
+            add_end=self.y_add_end,
         )
         y_axis.shift(self.graph_origin - y_axis.number_to_point(0))
         y_axis.rotate(np.pi / 2, about_point=y_axis.number_to_point(0))
@@ -149,8 +149,9 @@ class GraphScene(Scene):
         if self.y_axis_label:
             y_label = TextMobject(self.y_axis_label)
             y_label.next_to(
-                y_axis.get_corner(self.y_label_position), self.y_label_position,
-                buff=SMALL_BUFF
+                y_axis.get_corner(self.y_label_position),
+                self.y_label_position,
+                buff=SMALL_BUFF,
             )
             y_label.shift_onto_screen()
             y_axis.add(y_label)
@@ -215,8 +216,7 @@ class GraphScene(Scene):
         tuple
             The coordinates on the scene.
         """
-        return (self.x_axis.point_to_number(point),
-                self.y_axis.point_to_number(point))
+        return (self.x_axis.point_to_number(point), self.y_axis.point_to_number(point))
 
     def get_graph(self, func, color=None, x_min=None, x_max=None, **kwargs):
         """
@@ -422,20 +422,20 @@ class GraphScene(Scene):
         return label
 
     def get_riemann_rectangles(
-            self,
-            graph,
-            x_min=None,
-            x_max=None,
-            dx=0.1,
-            input_sample_type="left",
-            bounded_graph=None,
-            stroke_width=1,
-            stroke_color=BLACK,
-            fill_opacity=1,
-            start_color=None,
-            end_color=None,
-            show_signed_area=True,
-            width_scale_factor=1.001
+        self,
+        graph,
+        x_min=None,
+        x_max=None,
+        dx=0.1,
+        input_sample_type="left",
+        bounded_graph=None,
+        stroke_width=1,
+        stroke_color=BLACK,
+        fill_opacity=1,
+        start_color=None,
+        end_color=None,
+        show_signed_area=True,
+        width_scale_factor=1.001,
     ):
         """
         This method returns the VGroup() of the Riemann Rectangles for
@@ -515,11 +515,18 @@ class GraphScene(Scene):
                 y_point = 0
             else:
                 y_point = bounded_graph.underlying_function(x)
-            points = VGroup(*list(map(VectorizedPoint, [
-                self.coords_to_point(x, y_point),
-                self.coords_to_point(x + width_scale_factor * dx, y_point),
-                graph_point
-            ])))
+            points = VGroup(
+                *list(
+                    map(
+                        VectorizedPoint,
+                        [
+                            self.coords_to_point(x, y_point),
+                            self.coords_to_point(x + width_scale_factor * dx, y_point),
+                            graph_point,
+                        ],
+                    )
+                )
+            )
 
             rect = Rectangle()
             rect.replace(points, stretch=True)
@@ -570,14 +577,16 @@ class GraphScene(Scene):
         return [
             self.get_riemann_rectangles(
                 graph=graph,
-                dx=float(max_dx) / (power_base**n),
-                stroke_width=float(stroke_width) / (power_base**n),
-                **kwargs
+                dx=float(max_dx) / (power_base ** n),
+                stroke_width=float(stroke_width) / (power_base ** n),
+                **kwargs,
             )
             for n in range(n_iterations)
         ]
 
-    def get_area(self, graph, t_min, t_max, bounded=None,dx_scaling = 1, area_color= WHITE):
+    def get_area(
+        self, graph, t_min, t_max, bounded=None, dx_scaling=1, area_color=WHITE
+    ):
         """
         Returns a VGroup of Riemann rectangles
         sufficiently small enough to visually
@@ -601,14 +610,18 @@ class GraphScene(Scene):
         """
         numerator = max(t_max - t_min, 0.0001)
         dx = float(numerator) / self.num_rects
-        return self.get_riemann_rectangles(
-            graph,
-            x_min=t_min,
-            x_max=t_max,
-            dx=dx*dx_scaling,
-            stroke_width=0,
-            bounded_graph=bounded
-        ).set_fill(opacity=0.3).set_color(area_color)
+        return (
+            self.get_riemann_rectangles(
+                graph,
+                x_min=t_min,
+                x_max=t_max,
+                dx=dx * dx_scaling,
+                stroke_width=0,
+                bounded_graph=bounded,
+            )
+            .set_fill(opacity=0.3)
+            .set_color(area_color)
+        )
 
     def transform_between_riemann_rects(self, curr_rects, new_rects, **kwargs):
         """
