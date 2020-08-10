@@ -24,6 +24,7 @@ information here will make it easier for newcomers to get started using
    tutorial
    configuration
    reference
+   changelog
 
 * :ref:`genindex`
 * :ref:`modindex`

@@ -9,5 +9,6 @@ pygments
 pyreadline; sys_platform == 'win32'
 rich>=4.2.1
 sphinx-rtd-theme
+recommonmark>=0.5.0
 # pytest (for development only)
 # black (for development only)
