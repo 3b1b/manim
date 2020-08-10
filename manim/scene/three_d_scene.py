@@ -7,9 +7,11 @@ from ..mobject.geometry import Line
 from ..mobject.three_dimensions import Sphere
 from ..mobject.types.vectorized_mobject import VGroup
 from ..mobject.types.vectorized_mobject import VectorizedPoint
+from ..mobject.value_tracker import ValueTracker
 from ..scene.scene import Scene
 from ..utils.config_ops import digest_config
 from ..utils.config_ops import merge_dicts_recursively
+import numpy as np
 
 
 class ThreeDScene(Scene):
@@ -78,6 +80,32 @@ class ThreeDScene(Scene):
         """
         self.camera.theta_tracker.clear_updaters()
         self.remove(self.camera.theta_tracker)
+
+    def begin_3dillusion_camera_rotation(self, rate=1, origin_theta=-60 * DEGREES, origin_phi=75 * DEGREES):
+        val_tracker_theta = ValueTracker(0)
+        def uptate_theta(m, dt):
+            val_tracker_theta.increment_value(dt*rate)
+            val_for_left_right = 0.2 * np.sin(val_tracker_theta.get_value())
+            return m.set_value(origin_theta + val_for_left_right)
+        self.camera.theta_tracker.add_updater(uptate_theta)
+        self.add(self.camera.theta_tracker)
+
+        val_tracker_phi = ValueTracker(0)
+        def update_phi(m, dt):
+            val_tracker_phi.increment_value(dt*rate)
+            val_for_up_down = 0.1 * np.cos(val_tracker_phi.get_value())
+            return m.set_value(origin_phi + val_for_up_down)
+        self.camera.phi_tracker.add_updater(update_phi)
+        self.add(self.camera.phi_tracker)
+
+    def stop_3dillusion_camera_rotation(self):
+        """
+        This method stops all illusion camera rotations.
+        """
+        self.camera.theta_tracker.clear_updaters()
+        self.remove(self.camera.theta_tracker)
+        self.camera.phi_tracker.clear_updaters()
+        self.remove(self.camera.phi_tracker)
 
     def move_camera(
         self,
