@@ -1,30 +1,30 @@
-.. Manim documentation master file, created by
-   sphinx-quickstart on Mon May 27 14:19:19 2019.
+.. manim documentation master file, created by
+   sphinx-quickstart on Tue Aug  4 13:58:07 2020.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Manim's documentation!
-=================================
+Manim Community Overview
+========================
 
-These docs are generated from the master branch of the
-`Manim repo <https://github.com/3b1b/manim>`_. You can contribute by submitting
-a pull request there.
+Animating technical concepts is traditionally pretty tedious, since it can be
+difficult to make the animations precise enough to convey them accurately.
+``Manim`` uses Python to generate animations programmatically, which makes it
+possible to specify exactly how each one should run.
+
+This project is still very much a work in progress, but I hope that the
+information here will make it easier for newcomers to get started using
+``Manim``.
+
 
 .. toctree::
-    :maxdepth: 2
-    :caption: Contents
+   :maxdepth: 2
+   :caption: Documentation
 
-    about
-    installation/index
-    getting_started/index
-    coordinate
-    animation
-    constants
-
-
-Indices and tables
-==================
+   quickstart
+   tutorial
+   configuration
+   reference
+   changelog
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`

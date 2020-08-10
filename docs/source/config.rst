@@ -1,7 +1,4 @@
-Constants
-=========
-
-.. automodule:: manim.constants
+.. automodule:: manim.config
     :members:
     :undoc-members:
     :show-inheritance:
