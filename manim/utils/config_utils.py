@@ -50,7 +50,6 @@ def _parse_file_writer_config(config_parser, args):
     for boolean_opt in [
         "preview",
         "show_file_in_finder",
-        "quiet",
         "sound",
         "leave_progress_bars",
         "write_to_movie",
@@ -133,6 +132,24 @@ def _parse_file_writer_config(config_parser, args):
         [fw_config["save_last_frame"], fw_config["from_animation_number"]]
     )
 
+    # Parse the verbose flag to read in the log level
+    verbose = getattr(args, "verbose")
+    verbose = default["verbose"] if verbose is None else verbose
+    fw_config["verbose"] = verbose
+
+    # Parse the ffmpeg log level in the config
+    ffmpeg_loglevel = config_parser["ffmpeg"].get("loglevel", None)
+    fw_config["ffmpeg_loglevel"] = (
+        constants.VERBOSE_FFMPEG_MAP[verbose]
+        if ffmpeg_loglevel is None
+        else ffmpeg_loglevel
+    )
+
+    # Parse the progress_bar flag
+    progress_bar = getattr(args, "progress_bar")
+    if progress_bar is None:
+        progress_bar = default.getboolean("progress_bar")
+    fw_config["progress_bar"] = progress_bar
     return fw_config
 
 
@@ -192,9 +209,6 @@ def _parse_cli(arg_list, input=True):
         action="store_const",
         const=True,
         help="Show the output file in finder",
-    )
-    parser.add_argument(
-        "-q", "--quiet", action="store_const", const=True, help="Quiet mode",
     )
     parser.add_argument(
         "--sound",
@@ -350,6 +364,31 @@ def _parse_cli(arg_list, input=True):
     # Specify the manim.cfg file
     parser.add_argument(
         "--config_file", help="Specify the configuration file",
+    )
+
+    # Specify the verbosity
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        type=str,
+        help="Verbosity level. Also changes the ffmpeg log level unless the latter is specified in the config",
+        choices=constants.VERBOSE_CHOICES,
+    )
+
+    # Specify if the progress bar should be displayed
+    def _str2bool(s):
+        if s == "True":
+            return True
+        elif s == "False":
+            return False
+        else:
+            raise argparse.ArgumentTypeError("True or False expected")
+
+    parser.add_argument(
+        "--progress_bar",
+        type=_str2bool,
+        help="Display the progress bar",
+        metavar="True/False",
     )
     parsed = parser.parse_args(arg_list)
     if hasattr(parsed, "subcommands"):

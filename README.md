@@ -207,10 +207,10 @@ If you have installed MacTeX and are comfortable with it, do not install BasicTe
 
 ### Installing Manim-Community itself
 
-Manim runs on Python 3.7+. If you'd like to just use the library, you can install it from PyPI via pip:
+Manim-Community runs on Python 3.6+. If you'd like to just use the library, you can install it from PyPI via pip:
 
 ```sh
-pip3 install manimlib
+pip3 install manimce
 ```
 
 However, if you'd like to contribute to and/or help develop

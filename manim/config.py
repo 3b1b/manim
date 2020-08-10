@@ -88,6 +88,7 @@ def _parse_config(config_parser, args):
 
 
 args, config_parser, file_writer_config, successfully_read_files = _run_config()
+logger.setLevel(file_writer_config["verbose"])
 if _from_command_line():
     logger.info(
         f"Read configuration files: {[os.path.abspath(cfgfile) for cfgfile in successfully_read_files]}"

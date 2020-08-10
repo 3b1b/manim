@@ -681,6 +681,7 @@ class Scene(Container):
             total=n_iterations,
             leave=file_writer_config["leave_progress_bars"],
             ascii=True if platform.system() == "Windows" else None,
+            disable=not file_writer_config["progress_bar"],
         )
         return time_progression
 
