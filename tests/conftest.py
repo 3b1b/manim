@@ -4,6 +4,7 @@ import numpy as np
 import os
 import sys
 import logging
+from shutil import rmtree
 
 
 def pytest_addoption(parser):
@@ -44,3 +45,10 @@ def reset_cfg_file():
     yield
     with open(cfgfilepath, "w") as cfgfile:
         cfgfile.write(original)
+
+
+@pytest.fixture
+def clean_tests_cache():
+    yield
+    path_output = os.path.join("tests", "tests_cache", "media_temp")
+    rmtree(path_output)

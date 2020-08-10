@@ -1,7 +1,6 @@
 import subprocess
 import os
 import sys
-from shutil import rmtree
 import pytest
 import re
 
@@ -14,6 +13,7 @@ def capture(command, instream=None):
     return out, err, proc.returncode
 
 
+@pytest.mark.usefixtures("clean_tests_cache")
 def test_logging_to_file(python_version):
     """Test logging Terminal output to a log file.
     As some data will differ with each log (the timestamps, file paths, line nums etc)
@@ -21,7 +21,7 @@ def test_logging_to_file(python_version):
     whitespace.
     """
     path_basic_scene = os.path.join("tests", "tests_data", "basic_scenes.py")
-    path_output = os.path.join("tests_cache", "media_temp")
+    path_output = os.path.join("tests", "tests_cache", "media_temp")
     command = [
         python_version,
         "-m",
@@ -37,8 +37,8 @@ def test_logging_to_file(python_version):
     ]
     out, err, exitcode = capture(command)
     log_file_path = os.path.join(path_output, "logs", "SquareToCircle.log")
-    assert exitcode == 0, err
-    assert os.path.exists(log_file_path), err
+    assert exitcode == 0, err.decode()
+    assert os.path.exists(log_file_path), err.decode()
     if sys.platform.startswith("win32") or sys.platform.startswith("cygwin"):
         enc = "Windows-1252"
     else:
