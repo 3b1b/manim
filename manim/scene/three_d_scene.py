@@ -7,9 +7,11 @@ from ..mobject.geometry import Line
 from ..mobject.three_dimensions import Sphere
 from ..mobject.types.vectorized_mobject import VGroup
 from ..mobject.types.vectorized_mobject import VectorizedPoint
+from ..mobject.value_tracker import ValueTracker
 from ..scene.scene import Scene
 from ..utils.config_ops import digest_config
 from ..utils.config_ops import merge_dicts_recursively
+import numpy as np
 
 
 class ThreeDScene(Scene):
@@ -78,6 +80,38 @@ class ThreeDScene(Scene):
         """
         self.camera.theta_tracker.clear_updaters()
         self.remove(self.camera.theta_tracker)
+
+    def begin_3dillusion_camera_rotation(
+        self, rate=1, origin_theta=-60 * DEGREES, origin_phi=75 * DEGREES
+    ):
+        val_tracker_theta = ValueTracker(0)
+
+        def uptate_theta(m, dt):
+            val_tracker_theta.increment_value(dt * rate)
+            val_for_left_right = 0.2 * np.sin(val_tracker_theta.get_value())
+            return m.set_value(origin_theta + val_for_left_right)
+
+        self.camera.theta_tracker.add_updater(uptate_theta)
+        self.add(self.camera.theta_tracker)
+
+        val_tracker_phi = ValueTracker(0)
+
+        def update_phi(m, dt):
+            val_tracker_phi.increment_value(dt * rate)
+            val_for_up_down = 0.1 * np.cos(val_tracker_phi.get_value())
+            return m.set_value(origin_phi + val_for_up_down)
+
+        self.camera.phi_tracker.add_updater(update_phi)
+        self.add(self.camera.phi_tracker)
+
+    def stop_3dillusion_camera_rotation(self):
+        """
+        This method stops all illusion camera rotations.
+        """
+        self.camera.theta_tracker.clear_updaters()
+        self.remove(self.camera.theta_tracker)
+        self.camera.phi_tracker.clear_updaters()
+        self.remove(self.camera.phi_tracker)
 
     def move_camera(
         self,
@@ -239,10 +273,7 @@ class SpecialThreeDScene(ThreeDScene):
 
     CONFIG = {
         "cut_axes_at_radius": True,
-        "camera_config": {
-            "should_apply_shading": True,
-            "exponential_projection": True,
-        },
+        "camera_config": {"should_apply_shading": True, "exponential_projection": True},
         "three_d_axes_config": {
             "num_axis_pieces": 1,
             "axis_config": {
@@ -252,7 +283,7 @@ class SpecialThreeDScene(ThreeDScene):
                 "stroke_width": 2,
             },
         },
-        "sphere_config": {"radius": 2, "resolution": (24, 48),},
+        "sphere_config": {"radius": 2, "resolution": (24, 48)},
         "default_angled_camera_position": {
             "phi": 70 * DEGREES,
             "theta": -110 * DEGREES,
@@ -260,9 +291,9 @@ class SpecialThreeDScene(ThreeDScene):
         # When scene is extracted with -l flag, this
         # configuration will override the above configuration.
         "low_quality_config": {
-            "camera_config": {"should_apply_shading": False,},
-            "three_d_axes_config": {"num_axis_pieces": 1,},
-            "sphere_config": {"resolution": (12, 24),},
+            "camera_config": {"should_apply_shading": False},
+            "three_d_axes_config": {"num_axis_pieces": 1},
+            "sphere_config": {"resolution": (12, 24)},
         },
     }
 
@@ -290,13 +321,13 @@ class SpecialThreeDScene(ThreeDScene):
                 p1 = axis.number_to_point(-1)
                 p2 = axis.number_to_point(1)
                 p3 = axis.get_end()
-                new_pieces = VGroup(Line(p0, p1), Line(p1, p2), Line(p2, p3),)
+                new_pieces = VGroup(Line(p0, p1), Line(p1, p2), Line(p2, p3))
                 for piece in new_pieces:
                     piece.shade_in_3d = True
                 new_pieces.match_style(axis.pieces)
                 axis.pieces.submobjects = new_pieces.submobjects
             for tick in axis.tick_marks:
-                tick.add(VectorizedPoint(1.5 * tick.get_center(),))
+                tick.add(VectorizedPoint(1.5 * tick.get_center()))
         return axes
 
     def get_sphere(self, **kwargs):
