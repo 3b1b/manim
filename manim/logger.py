@@ -30,7 +30,7 @@ def parse_theme(fp):
     theme["log.height"] = (
         None if theme["log.height"] == "-1" else int(theme["log.height"])
     )
-    theme["log.timestamps"] = False if theme["log.timestamps"] == "False" else True
+    theme['log.timestamps'] = config_parser["logger"].getboolean('log.timestamps')
     try:
         customTheme = Theme(
             {
