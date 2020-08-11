@@ -508,7 +508,7 @@ def finalized_configs_dict():
     return {section: dict(config[section]) for section in config.sections()}
 
 
-def _subcommand_name(ignore=(,)):
+def _subcommand_name(ignore=()):
     """Goes through sys.argv to check if any subcommand has been passed,
     and returns the first such subcommand's name, if found.
 
