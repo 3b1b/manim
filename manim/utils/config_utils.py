@@ -508,13 +508,13 @@ def finalized_configs_dict():
     return {section: dict(config[section]) for section in config.sections()}
 
 
-def _subcommand_name(ignore=[]):
+def _subcommand_name(ignore=(,)):
     """Goes through sys.argv to check if any subcommand has been passed,
     and returns the first such subcommand's name, if found.
 
     Parameters
     ----------
-    ignore : Optional[:class:`list`]
+    ignore : Iterable[:class:`str`], optional
         List of NON_ANIM_UTILS to ignore when searching for subcommands, by default []
 
     Returns
