@@ -154,8 +154,14 @@ To save your config please save that file and place it in your current working d
                         else default[key]
                     )
                     console.print(f"(defaults to {defaultval}) :", end="")
-
-                temp = input()
+                try:
+                    temp = input()
+                except EOFError:
+                    raise Exception(
+                        """Not enough values in input.
+If you have added a new entry to default.cfg, have you modified _write_cfg_subcmd_input
+to account for it?"""
+                    )
                 if temp:
                     while temp and not _is_expected_datatype(
                         temp, default[key], bool(style)
