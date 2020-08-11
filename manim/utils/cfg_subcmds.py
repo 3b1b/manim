@@ -32,6 +32,7 @@ def value_from_string(value):
     ----------
     value : :class:`str`
         The value to check get the literal from.
+
     Returns
     -------
     Union[:class:`str`, :class:`int`, :class:`bool`]
@@ -40,7 +41,7 @@ def value_from_string(value):
     try:
         value = literal_eval(value)
     except (SyntaxError, ValueError):
-        value = value
+        pass
     return value
 
 
@@ -55,7 +56,7 @@ def _is_expected_datatype(value, expected, style=False):
     expected : :class:`str`
         The string of the literal datatype must be matched by `value`. Obtained from
         reading the cfg file.
-    style : Optional[:class:`bool`], optional
+    style : :class:`bool`, optional
         Whether or not to confirm if `value` is a style, by default False
 
     Returns
@@ -66,13 +67,7 @@ def _is_expected_datatype(value, expected, style=False):
     value = value_from_string(value)
     expected = type(value_from_string(expected))
 
-    if isinstance(value, expected):
-        if style:
-            return is_valid_style(value)
-        else:
-            return True
-    else:
-        return False
+    return isinstance(value, expected) and (is_valid_style(value) if style else True)
 
 
 def is_valid_style(style):
