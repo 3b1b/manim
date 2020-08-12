@@ -22,7 +22,8 @@ class Window(PygletWindow):
         self.scene = scene
         self.title = str(scene)
         # Put at the top of the screen
-        self.position = (self.position[0], 0)
+        # self.position = (self.position[0], 0)
+        self.position = (512, 0)
 
         mglw.activate_context(window=self)
         self.timer = Timer()
