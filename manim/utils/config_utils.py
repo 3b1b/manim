@@ -51,7 +51,7 @@ def _parse_file_writer_config(config_parser, args):
     # in batches, depending on their type: booleans and strings
     for boolean_opt in [
         "preview",
-        "show_file_in_finder",
+        "show_in_file_browser",
         "sound",
         "leave_progress_bars",
         "write_to_movie",
@@ -223,10 +223,10 @@ def _parse_cli(arg_list, input=True):
     )
     parser.add_argument(
         "-f",
-        "--show_file_in_finder",
+        "--show_in_file_browser",
         action="store_const",
         const=True,
-        help="Show the output file in finder",
+        help="Show the output file in the File Browser",
     )
     parser.add_argument(
         "--sound",

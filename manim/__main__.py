@@ -13,6 +13,7 @@ from .utils import cfg_subcmds
 from .scene.scene import Scene
 from .utils.sounds import play_error_sound
 from .utils.sounds import play_finish_sound
+from .utils.file_ops import open_file as open_media_file
 from . import constants
 from .logger import logger, console
 
@@ -23,7 +24,7 @@ def open_file_if_needed(file_writer):
         sys.stdout = open(os.devnull, "w")
 
     open_file = any(
-        [file_writer_config["preview"], file_writer_config["show_file_in_finder"]]
+        [file_writer_config["preview"], file_writer_config["show_in_file_browser"]]
     )
     if open_file:
         current_os = platform.system()
@@ -31,33 +32,16 @@ def open_file_if_needed(file_writer):
 
         if file_writer_config["save_last_frame"]:
             file_paths.append(file_writer.get_image_file_path())
-        if file_writer_config["write_to_movie"]:
+        if (
+            file_writer_config["write_to_movie"]
+            and not file_writer_config["save_as_gif"]
+        ):
             file_paths.append(file_writer.get_movie_file_path())
+        if file_writer_config["save_as_gif"]:
+            file_paths.append(file_writer.gif_file_path)
 
         for file_path in file_paths:
-            if current_os == "Windows":
-                if file_writer_config["preview"]:
-                    os.startfile(file_path)
-                if file_writer_config["show_file_in_finder"]:
-                    os.startfile(os.path.dirname(file_path))
-            else:
-                commands = []
-                if current_os == "Linux":
-                    commands.append("xdg-open")
-                elif current_os.startswith("CYGWIN"):
-                    commands.append("cygstart")
-                else:  # Assume macOS
-                    commands.append("open")
-
-                if file_writer_config["show_file_in_finder"]:
-                    commands.append("-R")
-
-                commands.append(file_path)
-
-                # commands.append("-g")
-                FNULL = open(os.devnull, "w")
-                sp.call(commands, stdout=FNULL, stderr=sp.STDOUT)
-                FNULL.close()
+            open_media_file(file_path, file_writer_config["show_in_file_browser"])
 
     if file_writer_config["verbose"] != "DEBUG":
         sys.stdout.close()
