@@ -52,7 +52,6 @@ def test_cfg_write(python_version):
     )
     assert (
         exitcode == 0
-    ), f"The cfg subcommand write is not working as intended.\nError : {err}"
-
+    ), f"The cfg subcommand write is not working as intended.\nError : {err.decode()}"
     with open(cfgfilepath, "r") as cfgfile:
         assert "sound = False" in cfgfile.read()

@@ -57,8 +57,11 @@ def _parse_file_writer_config(config_parser, args):
         "save_pngs",
         "save_as_gif",
         "write_all",
+        "disable_caching",
+        "flush_cache",
         "log_to_file",
     ]:
+
         attr = getattr(args, boolean_opt)
         fw_config[boolean_opt] = (
             default.getboolean(boolean_opt) if attr is None else attr
@@ -110,7 +113,8 @@ def _parse_file_writer_config(config_parser, args):
             "write_all",
         ]:
             fw_config[opt] = config_parser["dry_run"].getboolean(opt)
-
+    if not fw_config["write_to_movie"]:
+        fw_config["disable_caching"] = True
     # Read in the streaming section -- all values are strings
     fw_config["streaming"] = {
         opt: config_parser["streaming"][opt]
@@ -131,7 +135,9 @@ def _parse_file_writer_config(config_parser, args):
     fw_config["skip_animations"] = any(
         [fw_config["save_last_frame"], fw_config["from_animation_number"]]
     )
-
+    fw_config["max_files_cached"] = default.getint("max_files_cached")
+    if fw_config["max_files_cached"] == -1:
+        fw_config["max_files_cached"] = float("inf")
     # Parse the verbose flag to read in the log level
     verbose = getattr(args, "verbose")
     verbose = default["verbose"] if verbose is None else verbose
@@ -257,14 +263,24 @@ def _parse_cli(arg_list, input=True):
         const=True,
         help="Save the video as gif",
     )
-
+    parser.add_argument(
+        "--disable_caching",
+        action="store_const",
+        const=True,
+        help="Disable caching (will generate partial-movie-files anyway).",
+    )
+    parser.add_argument(
+        "--flush_cache",
+        action="store_const",
+        const=True,
+        help="Remove all cached partial-movie-files.",
+    )
     parser.add_argument(
         "--log_to_file",
         action="store_const",
         const=True,
         help="Log terminal output to file.",
     )
-
     # The default value of the following is set in manim.cfg
     parser.add_argument(
         "-c", "--color", help="Background color",

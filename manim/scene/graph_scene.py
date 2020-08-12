@@ -434,6 +434,7 @@ class GraphScene(Scene):
         x_max=None,
         dx=0.1,
         input_sample_type="left",
+        bounded_graph=None,
         stroke_width=1,
         stroke_color=BLACK,
         fill_opacity=1,
@@ -516,13 +517,17 @@ class GraphScene(Scene):
             else:
                 raise Exception("Invalid input sample type")
             graph_point = self.input_to_graph_point(sample_input, graph)
+            if bounded_graph == None:
+                y_point = 0
+            else:
+                y_point = bounded_graph.underlying_function(x)
             points = VGroup(
                 *list(
                     map(
                         VectorizedPoint,
                         [
-                            self.coords_to_point(x, 0),
-                            self.coords_to_point(x + width_scale_factor * dx, 0),
+                            self.coords_to_point(x, y_point),
+                            self.coords_to_point(x + width_scale_factor * dx, y_point),
                             graph_point,
                         ],
                     )
@@ -585,7 +590,9 @@ class GraphScene(Scene):
             for n in range(n_iterations)
         ]
 
-    def get_area(self, graph, t_min, t_max):
+    def get_area(
+        self, graph, t_min, t_max, bounded=None, dx_scaling=1, area_color=WHITE
+    ):
         """
         Returns a VGroup of Riemann rectangles
         sufficiently small enough to visually
@@ -609,9 +616,18 @@ class GraphScene(Scene):
         """
         numerator = max(t_max - t_min, 0.0001)
         dx = float(numerator) / self.num_rects
-        return self.get_riemann_rectangles(
-            graph, x_min=t_min, x_max=t_max, dx=dx, stroke_width=0,
-        ).set_fill(opacity=self.area_opacity)
+        return (
+            self.get_riemann_rectangles(
+                graph,
+                x_min=t_min,
+                x_max=t_max,
+                dx=dx * dx_scaling,
+                stroke_width=0,
+                bounded_graph=bounded,
+            )
+            .set_fill(opacity=0.3)
+            .set_color(area_color)
+        )
 
     def transform_between_riemann_rects(self, curr_rects, new_rects, **kwargs):
         """
