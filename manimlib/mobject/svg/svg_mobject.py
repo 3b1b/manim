@@ -153,8 +153,8 @@ class SVGMobject(VMobject):
     def polygon_to_mobject(self, polygon_element):
         path_string = polygon_element.getAttribute("points")
         for digit in string.digits:
-            path_string = path_string.replace(f" {digit}", f"{digit} L")
-        path_string = "M" + path_string
+            path_string = path_string.replace(f" {digit}", f"L {digit}")
+        path_string = path_string.replace("L", "M", 1)
         return self.path_string_to_mobject(path_string)
 
     def circle_to_mobject(self, circle_element):
