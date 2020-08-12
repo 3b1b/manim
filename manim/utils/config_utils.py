@@ -23,8 +23,6 @@ __all__ = [
     "finalized_configs_dict",
 ]
 
-min_argvs = 3 if "-m" in sys.argv[0] else 2
-
 
 def _parse_file_writer_config(config_parser, args):
     """Parse config files and CLI arguments into a single dictionary."""
@@ -169,29 +167,19 @@ def _parse_cli(arg_list, input=True):
     if input:
         # If the only command is `manim`, we want both subcommands like `cfg`
         # and mandatory positional arguments like `file` to show up in the help section.
-        if len(sys.argv) == min_argvs - 1 or _subcommands_exist():
+        only_manim = len(sys.argv) == 1
+
+        if only_manim or _subcommand_name():
             subparsers = parser.add_subparsers(dest="subcommands")
-            cfg_related = subparsers.add_parser("cfg")
-            cfg_subparsers = cfg_related.add_subparsers(dest="cfg_subcommand")
 
-            cfg_write_parser = cfg_subparsers.add_parser("write")
-            cfg_write_parser.add_argument(
-                "--level",
-                choices=["user", "cwd"],
-                default=None,
-                help="Specify if this config is for user or just the working directory.",
-            )
-            cfg_write_parser.add_argument(
-                "--open", action="store_const", const=True, default=False
-            )
-            cfg_subparsers.add_parser("show")
+            # More subcommands can be added here, with elif statements.
+            # If a help command is passed, we still want subcommands to show
+            # up, so we check for help commands as well before adding the
+            # subcommand's subparser.
+            if only_manim or _subcommand_name() in ["cfg", "--help", "-h"]:
+                cfg_related = _init_cfg_subcmd(subparsers)
 
-            cfg_export_parser = cfg_subparsers.add_parser("export")
-            cfg_export_parser.add_argument("--dir", default=os.getcwd())
-
-        if len(sys.argv) == min_argvs - 1 or not _subcommands_exist(
-            ignore=["--help", "-h"]
-        ):
+        if only_manim or not _subcommand_name(ignore=["--help", "-h"]):
             parser.add_argument(
                 "file", help="path to file holding the python code for the scene",
             )
@@ -420,13 +408,12 @@ def _parse_cli(arg_list, input=True):
     )
     parsed = parser.parse_args(arg_list)
     if hasattr(parsed, "subcommands"):
-        setattr(
-            parsed,
-            "cfg_subcommand",
-            cfg_related.parse_args(
-                sys.argv[min_argvs - (0 if min_argvs == 2 else 1) :]
-            ).cfg_subcommand,
-        )
+        if _subcommand_name() == "cfg":
+            setattr(
+                parsed,
+                "cfg_subcommand",
+                cfg_related.parse_args(sys.argv[2:]).cfg_subcommand,
+            )
 
     return parsed
 
@@ -537,10 +524,72 @@ def finalized_configs_dict():
     return {section: dict(config[section]) for section in config.sections()}
 
 
-def _subcommands_exist(ignore=[]):
+def _subcommand_name(ignore=()):
+    """Goes through sys.argv to check if any subcommand has been passed,
+    and returns the first such subcommand's name, if found.
+
+    Parameters
+    ----------
+    ignore : Iterable[:class:`str`], optional
+        List of NON_ANIM_UTILS to ignore when searching for subcommands, by default []
+
+    Returns
+    -------
+    Optional[:class:`str`]
+        If a subcommand is found, returns the string of its name. Returns None if no
+        subcommand is found.
+    """
     NON_ANIM_UTILS = ["cfg", "--help", "-h"]
     NON_ANIM_UTILS = [util for util in NON_ANIM_UTILS if util not in ignore]
 
-    not_only_manim = len(sys.argv) > min_argvs - 1
-    sub_command_exists = any(a == item for a in sys.argv for item in NON_ANIM_UTILS)
-    return not_only_manim and sub_command_exists
+    # If a subcommand is found, break out of the inner loop, and hit the break of the outer loop
+    # on the way out, effectively breaking out of both loops. The value of arg will be the
+    # subcommand to be taken.
+    # If no subcommand is found, none of the breaks are hit, and the else clause of the outer loop
+    # is run, setting arg to None.
+
+    for item in NON_ANIM_UTILS:
+        for arg in sys.argv:
+            if arg == item:
+                break
+        else:
+            continue
+        break
+    else:
+        arg = None
+
+    return arg
+
+
+def _init_cfg_subcmd(subparsers):
+    """Initialises the subparser for the `cfg` subcommand.
+
+    Parameters
+    ----------
+    subparsers : :class:`argparse._SubParsersAction`
+        The subparser object for which to add the sub-subparser for the cfg subcommand.
+
+    Returns
+    -------
+    :class:`argparse.ArgumentParser`
+        The parser that parser anything cfg subcommand related.
+    """
+    cfg_related = subparsers.add_parser("cfg",)
+    cfg_subparsers = cfg_related.add_subparsers(dest="cfg_subcommand")
+
+    cfg_write_parser = cfg_subparsers.add_parser("write")
+    cfg_write_parser.add_argument(
+        "--level",
+        choices=["user", "cwd"],
+        default=None,
+        help="Specify if this config is for user or just the working directory.",
+    )
+    cfg_write_parser.add_argument(
+        "--open", action="store_const", const=True, default=False
+    )
+    cfg_subparsers.add_parser("show")
+
+    cfg_export_parser = cfg_subparsers.add_parser("export")
+    cfg_export_parser.add_argument("--dir", default=os.getcwd())
+
+    return cfg_related
