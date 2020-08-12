@@ -5,6 +5,7 @@ from PIL import Image
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.bezier import interpolate
+from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.images import get_full_raster_image_path
 from manimlib.utils.iterables import listify
 
@@ -57,6 +58,22 @@ class ImageMobject(Mobject):
         self.opacity = interpolate(
             mobject1.opacity, mobject2.opacity, alpha
         )
+
+    def point_to_rgb(self, point):
+        x0, y0 = self.get_corner(UL)[:2]
+        x1, y1 = self.get_corner(DR)[:2]
+        x_alpha = inverse_interpolate(x0, x1, point[0])
+        y_alpha = inverse_interpolate(y0, y1, point[1])
+        if not (0 <= x_alpha <= 1) and (0 <= y_alpha <= 1):
+            # TODO, raise smarter exception
+            raise Exception("Cannot sample color from outside an image")
+
+        pw, ph = self.image.size
+        rgb = self.image.getpixel((
+            int((pw - 1) * x_alpha),
+            int((ph - 1) * y_alpha),
+        ))
+        return np.array(rgb) / 255
 
     def get_shader_data(self):
         data = self.get_blank_shader_data_array(len(self.points))
