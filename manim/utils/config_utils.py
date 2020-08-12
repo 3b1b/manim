@@ -519,7 +519,7 @@ def _subcommand_name(ignore=()):
 
     Returns
     -------
-    Union[:class:`str`, :class:`None`]
+    Optional[:class:`str`]
         If a subcommand is found, returns the string of its name. Returns None if no
         subcommand is found.
     """
