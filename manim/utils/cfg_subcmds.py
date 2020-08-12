@@ -159,8 +159,8 @@ To save your config please save that file and place it in your current working d
                 except EOFError:
                     raise Exception(
                         """Not enough values in input.
-If you have added a new entry to default.cfg, have you modified _write_cfg_subcmd_input
-to account for it?"""
+You may have added a new entry to default.cfg, in which case you will have to
+modify write_cfg_subcmd_input to account for it."""
                     )
                 if temp:
                     while temp and not _is_expected_datatype(
