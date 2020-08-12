@@ -24,7 +24,7 @@ def open_file_if_needed(file_writer):
         sys.stdout = open(os.devnull, "w")
 
     open_file = any(
-        [file_writer_config["preview"], file_writer_config["show_file_in_finder"]]
+        [file_writer_config["preview"], file_writer_config["show_in_file_browser"]]
     )
     if open_file:
         current_os = platform.system()
@@ -41,7 +41,7 @@ def open_file_if_needed(file_writer):
             file_paths.append(file_writer.gif_file_path)
 
         for file_path in file_paths:
-            open_media_file(file_path, file_writer_config["show_file_in_finder"])
+            open_media_file(file_path, file_writer_config["show_in_file_browser"])
 
     if file_writer_config["verbose"] != "DEBUG":
         sys.stdout.close()
