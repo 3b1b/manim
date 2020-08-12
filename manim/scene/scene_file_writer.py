@@ -497,11 +497,12 @@ class SceneFileWriter(object):
             file_writer_config["ffmpeg_loglevel"],
         ]
 
-        if self.write_to_movie:
+        if self.write_to_movie and not self.save_as_gif:
             commands += ["-c", "copy", movie_file_path]
 
         if self.save_as_gif:
             commands += [self.gif_file_path]
+
         if not self.includes_sound:
             commands.insert(-1, "-an")
 
@@ -546,7 +547,9 @@ class SceneFileWriter(object):
             shutil.move(temp_file_path, movie_file_path)
             os.remove(sound_file_path)
 
-        self.print_file_ready_message(movie_file_path)
+        self.print_file_ready_message(
+            self.gif_file_path if self.save_as_gif else movie_file_path
+        )
         if file_writer_config["write_to_movie"]:
             for file_path in partial_movie_files:
                 # We have to modify the accessed time so if we have to clean the cache we remove the one used the longest.
