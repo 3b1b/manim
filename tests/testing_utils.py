@@ -48,10 +48,11 @@ class SceneTester:
             )
 
         file_writer_config["skip_animations"] = True
+        file_writer_config["disable_caching"] = True
+        file_writer_config["write_to_movie"] = False
         config["pixel_height"] = 480
         config["pixel_width"] = 854
         config["frame_rate"] = 15
-
         # By invoking this, the scene is rendered.
         self.scene = scene_object()
 

@@ -2,6 +2,7 @@ import inspect
 import random
 import warnings
 import platform
+import copy
 
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
@@ -16,6 +17,7 @@ from ..logger import logger
 from ..mobject.mobject import Mobject
 from ..scene.scene_file_writer import SceneFileWriter
 from ..utils.iterables import list_update
+from ..utils.hashing import get_hash_from_play_call, get_hash_from_wait_call
 
 
 class Scene(Container):
@@ -55,7 +57,7 @@ class Scene(Container):
         Container.__init__(self, **kwargs)
         self.camera = self.camera_class(**camera_config)
         self.file_writer = SceneFileWriter(self, **file_writer_config,)
-
+        self.play_hashes_list = []
         self.mobjects = []
         # TODO, remove need for foreground mobjects
         self.foreground_mobjects = []
@@ -72,6 +74,9 @@ class Scene(Container):
         except EndSceneEarlyException:
             pass
         self.tear_down()
+        # We have to reset these settings in case of multiple renders.
+        file_writer_config["skip_animations"] = False
+        self.original_skipping_status = file_writer_config["skip_animations"]
         self.file_writer.finish()
         self.print_end_message()
 
@@ -372,6 +377,17 @@ class Scene(Container):
         """
         self.add(*filter(lambda m: isinstance(m, Mobject), values))
         return self
+
+    def add_mobjects_from_animations(self, animations):
+
+        curr_mobjects = self.get_mobject_family_members()
+        for animation in animations:
+            # Anything animated that's not already in the
+            # scene gets added to the scene
+            mob = animation.mobject
+            if mob not in curr_mobjects:
+                self.add(mob)
+                curr_mobjects += mob.get_family()
 
     def remove(self, *mobjects):
         """
@@ -832,6 +848,71 @@ class Scene(Container):
                 file_writer_config["skip_animations"] = True
                 raise EndSceneEarlyException()
 
+    def handle_caching_play(func):
+        """
+        Decorator that returns a wrapped version of func that will compute the hash of the play invocation.
+
+        The returned function will act according to the computed hash: either skip the animation because it's already cached, or let the invoked function play normally.
+        
+        Parameters
+        ----------
+        func : Callable[[...], None]    
+            The play like function that has to be written to the video file stream. Take the same parameters as `scene.play`.
+        """
+
+        def wrapper(self, *args, **kwargs):
+            self.revert_to_original_skipping_status()
+            animations = self.compile_play_args_to_animation_list(*args, **kwargs)
+            self.add_mobjects_from_animations(animations)
+            if not file_writer_config["disable_caching"]:
+                mobjects_on_scene = self.get_mobjects()
+                hash_play = get_hash_from_play_call(
+                    self.camera, animations, mobjects_on_scene
+                )
+                self.play_hashes_list.append(hash_play)
+                if self.file_writer.is_already_cached(hash_play):
+                    logger.info(
+                        f"Animation {self.num_plays} : Using cached data (hash : {hash_play})"
+                    )
+                    file_writer_config["skip_animations"] = True
+            else:
+                hash_play = "uncached_{:05}".format(self.num_plays)
+                self.play_hashes_list.append(hash_play)
+            func(self, *args, **kwargs)
+
+        return wrapper
+
+    def handle_caching_wait(func):
+        """
+        Decorator that returns a wrapped version of func that will compute the hash of the wait invocation.
+
+        The returned function will act according to the computed hash: either skip the animation because it's already cached, or let the invoked function play normally.
+
+        Parameters
+        ----------
+        func : Callable[[...], None]
+            The wait like function that has to be written to the video file stream. Take the same parameters as `scene.wait`.
+        """
+
+        def wrapper(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
+            self.revert_to_original_skipping_status()
+            if not file_writer_config["disable_caching"]:
+                hash_wait = get_hash_from_wait_call(
+                    self.camera, duration, stop_condition, self.get_mobjects()
+                )
+                self.play_hashes_list.append(hash_wait)
+                if self.file_writer.is_already_cached(hash_wait):
+                    logger.info(
+                        f"Wait {self.num_plays} : Using cached data (hash : {hash_wait})"
+                    )
+                    file_writer_config["skip_animations"] = True
+            else:
+                hash_wait = "uncached_{:05}".format(self.num_plays)
+                self.play_hashes_list.append(hash_wait)
+            func(self, duration, stop_condition)
+
+        return wrapper
+
     def handle_play_like_call(func):
         """
         This method is used internally to wrap the
@@ -875,16 +956,9 @@ class Scene(Container):
             List of involved animations.
 
         """
-        curr_mobjects = self.get_mobject_family_members()
         for animation in animations:
             # Begin animation
             animation.begin()
-            # Anything animated that's not already in the
-            # scene gets added to the scene
-            mob = animation.mobject
-            if mob not in curr_mobjects:
-                self.add(mob)
-                curr_mobjects += mob.get_family()
 
     def progress_through_animations(self, animations):
         """
@@ -933,6 +1007,7 @@ class Scene(Container):
         else:
             self.update_mobjects(0)
 
+    @handle_caching_play
     @handle_play_like_call
     def play(self, *args, **kwargs):
         """
@@ -1032,6 +1107,7 @@ class Scene(Container):
             time_progression.set_description("Waiting {}".format(self.num_plays))
         return time_progression
 
+    @handle_caching_wait
     @handle_play_like_call
     def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
         """
@@ -1105,8 +1181,8 @@ class Scene(Container):
         Scene
             The Scene, with skipping turned on.
         """
-        self.original_skipping_status = self.SKIP_ANIMATIONS
-        self.SKIP_ANIMATIONS = True
+        self.original_skipping_status = file_writer_config["skip_animations"]
+        file_writer_config["skip_animations"] = True
         return self
 
     def revert_to_original_skipping_status(self):
@@ -1121,7 +1197,7 @@ class Scene(Container):
             The Scene, with the original skipping status.
         """
         if hasattr(self, "original_skipping_status"):
-            self.SKIP_ANIMATIONS = self.original_skipping_status
+            file_writer_config["skip_animations"] = self.original_skipping_status
         return self
 
     def add_frames(self, *frames):
@@ -1156,7 +1232,7 @@ class Scene(Container):
         gain :
 
         """
-        if self.SKIP_ANIMATIONS:
+        if file_writer_config["skip_animations"]:
             return
         time = self.get_time() + time_offset
         self.file_writer.add_sound(sound_file, time, gain, **kwargs)
