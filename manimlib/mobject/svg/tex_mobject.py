@@ -15,6 +15,20 @@ from manimlib.utils.tex_file_writing import tex_to_svg_file
 TEX_MOB_SCALE_FACTOR = 0.05
 
 
+def fix_percent(sym):
+    sym = sym.family_members_with_points()[0]
+    # Really need to make this unneeded...
+    new_sym = sym.copy()
+    path_lengths = [len(path) for path in sym.get_subpaths()]
+    n = sum(path_lengths[:2])
+    p1 = sym.points[:n]
+    p2 = sym.points[n:]
+    sym.points = p1
+    new_sym.points = p2
+    sym.add(new_sym)
+    sym.refresh_triangulation()
+
+
 class TexSymbol(VMobjectFromSVGPathstring):
     CONFIG = {
         "should_subdivide_sharp_curves": True,
@@ -46,6 +60,9 @@ class SingleStringTexMobject(SVGMobject):
             self.scale(TEX_MOB_SCALE_FACTOR)
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
+        # TODO, this is temporary
+        if tex_string == "\\%":
+            fix_percent(self)
 
     def get_modified_expression(self, tex_string):
         result = self.alignment + " " + tex_string
