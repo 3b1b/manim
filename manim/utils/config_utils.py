@@ -462,15 +462,7 @@ def _paths_config_file():
     library_wide = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "default.cfg")
     )
-    if sys.platform.startswith("linux"):
-        user_wide = os.path.expanduser(
-            os.path.join("~", ".config", "manim", "manim.cfg")
-        )
-    elif sys.platform.startswith("darwin"):
-        user_wide = os.path.expanduser(
-            os.path.join("~", ".config", "Manim", "manim.cfg")
-        )
-    elif sys.platform.startswith("win32"):
+    if sys.platform.startswith("win32"):
         user_wide = os.path.expanduser(
             os.path.join("~", "AppData", "Roaming", "Manim", "manim.cfg")
         )
