@@ -468,7 +468,7 @@ def _paths_config_file():
         )
     elif sys.platform.startswith("darwin"):
         user_wide = os.path.expanduser(
-            os.path.join("~", "Library", "Application Support", "Manim", "manim.cfg")
+            os.path.join("~", ".config", "Manim", "manim.cfg")
         )
     elif sys.platform.startswith("win32"):
         user_wide = os.path.expanduser(
