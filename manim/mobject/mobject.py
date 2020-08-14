@@ -1,9 +1,5 @@
 """
-mobject.py
-----------
-
-Base classes for all MObjects.
-
+MObject: Base classes for all mathematical objects.
 """
 from functools import reduce
 import copy
