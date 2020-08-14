@@ -52,7 +52,7 @@ LEFT = np.array((-1.0, 0.0, 0.0))
 """One unit step in the negative X direction."""
 
 IN = np.array((0.0, 0.0, -1.0))
-"""One unit step in the nevative Z direction."""
+"""One unit step in the negative Z direction."""
 
 OUT = np.array((0.0, 0.0, 1.0))
 """One unit step in the positive Z direction."""
