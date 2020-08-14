@@ -3,12 +3,15 @@ Manim Reference
 
 This reference manual details functions, modules, and objects included in
 Manim, describing what they are and what they do.  For learning how to use
-Manim, see the quickstart and tutorial documents.
+Manim, see the :doc:`quickstart` and :doc:`tutorial` documents.
 
 
-.. toctree::
-   :maxdepth: 0
+.. currentmodule:: manim
 
-   mobject
+.. autosummary::
+   :toctree: _autosummary
+
+   container.container
+   mobject.mobject
    config
    constants

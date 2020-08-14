@@ -1,3 +1,5 @@
+# Tutorial
+
 [NOTE:] this is some text I wrote that was originally meant to be part of the
 quickstart.  However, after some thought I've decided that it's probably a bit
 too much for the quickstart, as the quickstart document is supposed to showcase
