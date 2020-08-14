@@ -414,9 +414,8 @@ class Camera(object):
         else:
             method = Mobject.get_family
         if self.use_z_index:
-            mobjects.sort(key=lambda m: m.z_index)
+            mobjects = sorted(mobjects,key=lambda m: m.z_index)
         return remove_list_redundancies(list(it.chain(*[method(m) for m in mobjects])))
-
     def get_mobjects_to_display(
         self, mobjects, include_submobjects=True, excluded_mobjects=None
     ):
