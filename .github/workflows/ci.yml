@@ -67,13 +67,17 @@ jobs:
       - name: Install system dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
-          Try {Invoke-WebRequest https://yihui.org/gh/tinytex/tools/install-windows.bat -O install_tinytex.bat}
-          Catch {Invoke-WebRequest https://raw.githubusercontent.com/yihui/tinytex/master/tools/install-windows.bat -O install_tinytex.bat}
-          Start-Process install_tinytex.bat -NoNewWindow -Wait
-          $env:Path += ";" + $env:APPDATA + "\TinyTeX\bin\win32"
+          Invoke-WebRequest https://ci.appveyor.com/api/projects/yihui/tinytex/artifacts/TinyTeX.zip?job=image:%20Visual%20Studio%202019 -O TinyTex.zip
+          Expand-Archive -LiteralPath "$PWD\TinyTex.zip" -DestinationPath "$env:APPDATA\LatexWindows"
+          $env:Path += ";" + "$env:APPDATA\LatexWindows\TinyTeX\bin\win32"
           tlmgr install standalone preview doublestroke ms setspace rsfs relsize ragged2e fundus-calligra microtype wasysym physics dvisvgm jknapltx wasy cm-super babel-english
-          choco install --no-progress ffmpeg
-          choco install --no-progress sox.portable
+          echo "Completed Latex Install Sox"
+          Invoke-WebRequest https://downloads.sourceforge.net/project/sox/sox/14.4.2/sox-14.4.2-win32.zip -SkipCertificateCheck -UserAgent "pwsh" -O SoX.zip
+          7z x "$PWD\SoX.zip" -o"$env:APPDATA\SoX"
+          $env:Path += ";" + "$env:APPDATA\SoX\sox-14.4.2"
+          Invoke-WebRequest https://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-4.3.1-win64-static.zip -O ffmpeg-4.3.1-win64-static.zip
+          7z x "$PWD\ffmpeg-4.3.1-win64-static.zip" -o"$env:APPDATA\FFmpeg"
+          $env:Path += ";" + "$env:APPDATA\FFmpeg\ffmpeg-4.3.1-win64-static\bin"
           echo "::set-env name=Path::$env:Path"
 
       - name: Install Pycairo (Non-Windows)
