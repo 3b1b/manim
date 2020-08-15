@@ -14,7 +14,7 @@ class Container(ABC):
 
     Parameters
     ----------
-    kwargs : :class:`dict`
+    kwargs : Any
         Arguments to be passed to :func:`digest_config`
     """
 
