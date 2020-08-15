@@ -1,4 +1,4 @@
-Manim Reference
+Reference
 ===============
 
 This reference manual details functions, modules, and objects included in
