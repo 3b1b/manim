@@ -35,7 +35,6 @@
       {% for class in classes %}
         {{ class }}
       {% endfor %}
-
    {% endif %}
    {% endblock %}
 
