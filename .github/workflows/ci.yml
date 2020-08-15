@@ -3,6 +3,7 @@ on:
   push:
       branches:
         - master
+        - show_cfg_in_debug_only
   pull_request:
       branches:
         - master
