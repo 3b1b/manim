@@ -138,15 +138,15 @@ def _parse_file_writer_config(config_parser, args):
     fw_config["max_files_cached"] = default.getint("max_files_cached")
     if fw_config["max_files_cached"] == -1:
         fw_config["max_files_cached"] = float("inf")
-    # Parse the verbose flag to read in the log level
-    verbose = getattr(args, "verbose")
-    verbose = default["verbose"] if verbose is None else verbose
-    fw_config["verbose"] = verbose
+    # Parse the verbosity flag to read in the log level
+    verbosity = getattr(args, "verbosity")
+    verbosity = default["verbosity"] if verbosity is None else verbosity
+    fw_config["verbosity"] = verbosity
 
     # Parse the ffmpeg log level in the config
     ffmpeg_loglevel = config_parser["ffmpeg"].get("loglevel", None)
     fw_config["ffmpeg_loglevel"] = (
-        constants.VERBOSE_FFMPEG_MAP[verbose]
+        constants.FFMPEG_VERBOSITY_MAP[verbosity]
         if ffmpeg_loglevel is None
         else ffmpeg_loglevel
     )
@@ -385,10 +385,10 @@ def _parse_cli(arg_list, input=True):
     # Specify the verbosity
     parser.add_argument(
         "-v",
-        "--verbose",
+        "--verbosity",
         type=str,
         help="Verbosity level. Also changes the ffmpeg log level unless the latter is specified in the config",
-        choices=constants.VERBOSE_CHOICES,
+        choices=constants.VERBOSITY_CHOICES,
     )
 
     # Specify if the progress bar should be displayed

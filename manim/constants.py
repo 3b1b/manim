@@ -182,11 +182,11 @@ COLOR_MAP.update(
 )
 PALETTE = list(COLOR_MAP.values())
 locals().update(COLOR_MAP)
-VERBOSE_FFMPEG_MAP = {
+FFMPEG_VERBOSITY_MAP = {
     "DEBUG": "error",
     "INFO": "error",
     "WARNING": "error",
     "ERROR": "error",
     "CRITICAL": "fatal",
 }
-VERBOSE_CHOICES = VERBOSE_FFMPEG_MAP.keys()
+VERBOSITY_CHOICES = FFMPEG_VERBOSITY_MAP.keys()
