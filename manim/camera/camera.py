@@ -414,7 +414,7 @@ class Camera(object):
         else:
             method = Mobject.get_family
         if self.use_z_index:
-            mobjects.sort(key=lambda m: m.z_index)
+            mobjects = sorted(mobjects, key=lambda m: m.z_index)
         return remove_list_redundancies(list(it.chain(*[method(m) for m in mobjects])))
 
     def get_mobjects_to_display(
@@ -439,7 +439,7 @@ class Camera(object):
         """
         if include_submobjects:
             mobjects = self.extract_mobject_family_members(
-                mobjects, only_those_with_points=True,
+                mobjects, only_those_with_points=True
             )
             if excluded_mobjects:
                 all_excluded = self.extract_mobject_family_members(excluded_mobjects)
@@ -974,9 +974,7 @@ class Camera(object):
         new_array : np.array
             The new pixel array to overlay.
         """
-        self.overlay_PIL_image(
-            pixel_array, self.get_image(new_array),
-        )
+        self.overlay_PIL_image(pixel_array, self.get_image(new_array))
 
     def overlay_PIL_image(self, pixel_array, image):
         """Overlays a PIL image on the passed pixel array.
@@ -1092,9 +1090,9 @@ class Camera(object):
         """
         # TODO: This seems...unsystematic
         big_sum = op.add(
-            camera_config["default_pixel_height"], camera_config["default_pixel_width"],
+            camera_config["default_pixel_height"], camera_config["default_pixel_width"]
         )
-        this_sum = op.add(self.get_pixel_height(), self.get_pixel_width(),)
+        this_sum = op.add(self.get_pixel_height(), self.get_pixel_width())
         factor = fdiv(big_sum, this_sum)
         return 1 + (thickness - 1) / factor
 

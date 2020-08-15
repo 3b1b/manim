@@ -1,4 +1,9 @@
+"""
+Constant definitions.
+"""
+
 import numpy as np
+
 
 # Messages
 NOT_SETTING_FONT_MSG = """
@@ -32,12 +37,25 @@ BOLD = "BOLD"
 
 # Geometry: directions
 ORIGIN = np.array((0.0, 0.0, 0.0))
+"""The center of the coordinate system."""
+
 UP = np.array((0.0, 1.0, 0.0))
+"""One unit step in the positive Y direction."""
+
 DOWN = np.array((0.0, -1.0, 0.0))
+"""One unit step in the negative Y direction."""
+
 RIGHT = np.array((1.0, 0.0, 0.0))
+"""One unit step in the positive X direction."""
+
 LEFT = np.array((-1.0, 0.0, 0.0))
+"""One unit step in the negative X direction."""
+
 IN = np.array((0.0, 0.0, -1.0))
+"""One unit step in the negative Z direction."""
+
 OUT = np.array((0.0, 0.0, 1.0))
+"""One unit step in the positive Z direction."""
 
 # Geometry: axes
 X_AXIS = np.array((1.0, 0.0, 0.0))
@@ -46,9 +64,16 @@ Z_AXIS = np.array((0.0, 0.0, 1.0))
 
 # Geometry: useful abbreviations for diagonals
 UL = UP + LEFT
+"""One step up plus one step left."""
+
 UR = UP + RIGHT
+"""One step up plus one step right."""
+
 DL = DOWN + LEFT
+"""One step down plus one step left."""
+
 DR = DOWN + RIGHT
+"""One step down plus one step right."""
 
 # Geometry
 START_X = 30
@@ -73,8 +98,13 @@ DEFAULT_STROKE_WIDTH = 4
 
 # Mathematical constants
 PI = np.pi
+"""The ratio of the circumference of a circle to its diameter."""
+
 TAU = 2 * PI
+"""The ratio of the circumference of a circle to its radius."""
+
 DEGREES = TAU / 360
+"""The exchange rate between radians and degrees."""
 
 # ffmpeg stuff
 FFMPEG_BIN = "ffmpeg"
@@ -152,11 +182,11 @@ COLOR_MAP.update(
 )
 PALETTE = list(COLOR_MAP.values())
 locals().update(COLOR_MAP)
-VERBOSE_FFMPEG_MAP = {
+FFMPEG_VERBOSITY_MAP = {
     "DEBUG": "error",
     "INFO": "error",
     "WARNING": "error",
     "ERROR": "error",
     "CRITICAL": "fatal",
 }
-VERBOSE_CHOICES = VERBOSE_FFMPEG_MAP.keys()
+VERBOSITY_CHOICES = FFMPEG_VERBOSITY_MAP.keys()

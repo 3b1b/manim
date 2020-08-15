@@ -19,7 +19,7 @@ from .logger import logger, console
 
 
 def open_file_if_needed(file_writer):
-    if file_writer_config["verbose"] != "DEBUG":
+    if file_writer_config["verbosity"] != "DEBUG":
         curr_stdout = sys.stdout
         sys.stdout = open(os.devnull, "w")
 
@@ -43,7 +43,7 @@ def open_file_if_needed(file_writer):
         for file_path in file_paths:
             open_media_file(file_path, file_writer_config["show_in_file_browser"])
 
-    if file_writer_config["verbose"] != "DEBUG":
+    if file_writer_config["verbosity"] != "DEBUG":
         sys.stdout.close()
         sys.stdout = curr_stdout
 
