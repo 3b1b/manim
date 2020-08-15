@@ -6,7 +6,7 @@ import cairo
 
 from ...constants import *
 from ...config import config, file_writer_config
-from ...container.container import Container
+from ...container import Container
 from ...logger import logger
 from ...mobject.geometry import Dot, Rectangle
 from ...mobject.svg.svg_mobject import SVGMobject

@@ -14,7 +14,7 @@ import numpy as np
 
 from ..constants import *
 from ..config import config
-from ..container.container import Container
+from ..container import Container
 from ..utils.color import color_gradient
 from ..utils.color import interpolate_color
 from ..utils.iterables import list_update

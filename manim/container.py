@@ -4,7 +4,7 @@ Abstract base class for several objects used by manim.  In particular, both
 """
 
 from abc import ABC, abstractmethod
-from ..utils.config_ops import digest_config
+from .utils.config_ops import digest_config
 
 __all__ = ["Container"]
 
