@@ -15,7 +15,7 @@ class Container(ABC):
     Parameters
     ----------
     kwargs : Any
-        Arguments to be passed to :func:`digest_config`
+        Arguments to be passed to :func:`~.digest_config`
     """
 
     def __init__(self, **kwargs):
