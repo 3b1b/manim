@@ -31,7 +31,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx_rtd_theme',
     'recommonmark',
-    'numpydoc',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.autosummary'
 ]
 
 autosummary_generate = True
