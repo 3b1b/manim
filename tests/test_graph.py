@@ -2,7 +2,7 @@ from manim import *
 from testing_utils import utils_test_scenes, get_scenes_to_test
 
 
-class PlotFunctions(GraphScene):
+class PlotFunctionsTest(GraphScene):
     CONFIG = {
         "x_min": -10,
         "x_max": 10.3,
