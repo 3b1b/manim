@@ -23,8 +23,20 @@ class Container(ABC):
 
     @abstractmethod
     def add(self, *items):
-        """Abstract method to add items to Container."""
+        """Abstract method to add items to Container.
+
+        Parameters
+        ----------
+        items : Any
+            Objects to be added.
+        """
 
     @abstractmethod
     def remove(self, *items):
-        """Abstract method to remove items from Container."""
+        """Abstract method to remove items from Container.
+
+        Parameters
+        ----------
+        items : Any
+            Objects to be added.
+        """
