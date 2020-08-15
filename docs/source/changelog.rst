@@ -1,4 +1,4 @@
-Changlog
+Changelog
 ========================
 
 the newest updates
