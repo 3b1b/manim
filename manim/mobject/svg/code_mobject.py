@@ -1,6 +1,6 @@
 import html
 from ...constants import *
-from ...container.container import Container
+from ...container import Container
 from ...mobject.geometry import RoundedRectangle
 from ...mobject.shape_matchers import SurroundingRectangle
 from ...mobject.svg.text_mobject import Paragraph

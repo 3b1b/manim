@@ -11,7 +11,7 @@ Manim, see the :doc:`quickstart` and :doc:`tutorial` documents.
 .. autosummary::
    :toctree: _autosummary
 
-   container.container
+   container
    mobject.mobject
    config
    constants

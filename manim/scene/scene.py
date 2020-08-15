@@ -12,7 +12,7 @@ from ..animation.transform import MoveToTarget, ApplyMethod
 from ..camera.camera import Camera
 from ..constants import *
 from ..config import camera_config, file_writer_config
-from ..container.container import Container
+from ..container import Container
 from ..logger import logger
 from ..mobject.mobject import Mobject
 from ..scene.scene_file_writer import SceneFileWriter
