@@ -1,5 +1,6 @@
 # Quickstart
 
+
 This document will lead you step by step through the necessary procedure to get
 `manim` up and running as soon as possible.
 
@@ -61,8 +62,8 @@ $ manim scene.py SquareToCircle -pl
 After some output, `manim` should render the scene into a .mp4 file, and open
 that file with the default movie player application.  You should see a video
 playing the following animation.
-
-![first scene output](_static/quickstart/first_scene.gif)
+/home/jan-hendrik/projects/manim-community/docs/source/_static/quickstart/first_scene.gif
+![first scene output](../_static/quickstart/first_scene.gif)
 
 If you see the video and it looks correct, congrats! You just wrote your first
 `manim` scene from scratch.  If you get an error message instead, or if do not
@@ -100,7 +101,7 @@ $ manim scene.py SquareToCircle -pl
 
 The output should look as follows.
 
-![second scene output](_static/quickstart/second_scene.gif)
+![second scene output](../_static/quickstart/second_scene.gif)
 
 This example shows one of the most basic features of `manim`: the ability to
 implement complicated and perhaps mathematically-intensive animations (such as
