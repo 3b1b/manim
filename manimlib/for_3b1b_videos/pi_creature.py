@@ -337,7 +337,7 @@ class Eyes(VMobject):
         VMobject.__init__(self, **kwargs)
         self.body = body
         eyes = self.create_eyes()
-        self.become(eyes, copy_submobjects=False)
+        self.set_submobjects(eyes.submobjects)
 
     def create_eyes(self, mode=None, thing_to_look_at=None):
         if mode is None:
@@ -372,7 +372,7 @@ class Eyes(VMobject):
             mode=mode,
             thing_to_look_at=thing_to_look_at
         )
-        self.become(new_eyes, copy_submobjects=False)
+        self.set_submobjects(new_eyes.submobjects)
         return self
 
     def look_at(self, thing_to_look_at):
