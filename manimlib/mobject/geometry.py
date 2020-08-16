@@ -468,11 +468,14 @@ class Line(TipableVMobject):
     def get_slope(self):
         return np.tan(self.get_angle())
 
-    def set_angle(self, angle):
+    def set_angle(self, angle, about_point=None):
+        if about_point is None:
+            about_point = self.get_start()
         self.rotate(
             angle - self.get_angle(),
-            about_point=self.get_start(),
+            about_point=about_point,
         )
+        return self
 
     def set_length(self, length):
         self.scale(length / self.get_length())
