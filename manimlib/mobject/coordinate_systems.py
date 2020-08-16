@@ -340,8 +340,8 @@ class ComplexPlane(NumberPlane):
         return self.point_to_number(point)
 
     def get_default_coordinate_values(self):
-        x_numbers = self.get_x_axis().get_tick_range()
-        y_numbers = self.get_y_axis().get_tick_range()
+        x_numbers = self.get_x_axis().get_tick_range()[1:]
+        y_numbers = self.get_y_axis().get_tick_range()[1:]
         y_numbers = [complex(0, y) for y in y_numbers if y != 0]
         return [*x_numbers, *y_numbers]
 
