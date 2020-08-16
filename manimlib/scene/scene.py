@@ -2,6 +2,7 @@ import inspect
 import random
 import warnings
 import platform
+from functools import wraps
 
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
@@ -841,6 +842,7 @@ class Scene(Container):
             The play() like function that can now write
             to the video file stream.
         """
+        @wraps(func)
         def wrapper(self, *args, **kwargs):
             self.update_skipping_status()
             allow_write = not self.skip_animations
