@@ -24,6 +24,7 @@ class ParametricSurface(Mobject):
         "opacity": 1.0,
         "gloss": 0.3,
         "shadow": 0.4,
+        "prefered_creation_axis": 1,
         # For du and dv steps.  Much smaller and numerical error
         # can crop up in the shaders.
         "epsilon": 1e-5,
@@ -125,7 +126,9 @@ class ParametricSurface(Mobject):
         self.rgbas = interpolate(mobject1.rgbas, mobject2.rgbas, alpha)
         return self
 
-    def pointwise_become_partial(self, smobject, a, b, axis=1):
+    def pointwise_become_partial(self, smobject, a, b, axis=None):
+        if axis is None:
+            axis = self.prefered_creation_axis
         assert(isinstance(smobject, ParametricSurface))
         self.points[:] = smobject.points[:]
         if a <= 0 and b >= 1:
