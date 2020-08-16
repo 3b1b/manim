@@ -846,10 +846,29 @@ class VMobject(Mobject):
 
 class VGroup(VMobject):
     def __init__(self, *vmobjects, **kwargs):
-        if not all([isinstance(m, VMobject) for m in vmobjects]):
-            raise Exception("All submobjects must be of type VMobject")
         VMobject.__init__(self, **kwargs)
         self.add(*vmobjects)
+
+    def add(self, *vmobjects):
+        """Checks if all passed elements are an instance of VMobject and then add them to submobjects
+
+        Parameters
+        ----------
+        vmobjects : :class:`~.VMobject`
+            List of VMobject to add
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        TypeError
+            If one element of the list is not an instance of VMobject
+        """
+        if not all(isinstance(m, VMobject) for m in vmobjects):
+            raise TypeError("All submobjects must be of type VMobject")
+        super().add(*vmobjects)
 
 
 class VDict(VMobject):
