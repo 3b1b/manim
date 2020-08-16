@@ -991,6 +991,7 @@ class VMobject(Mobject):
     def unlock_triangulation(self):
         for sm in self.get_family():
             sm.triangulation_locked = False
+        return self
 
     def refresh_triangulation(self):
         for mob in self.get_family():
