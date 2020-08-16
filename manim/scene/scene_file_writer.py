@@ -65,13 +65,18 @@ class SceneFileWriter(object):
 
         if file_writer_config["write_to_movie"]:
             if file_writer_config["video_dir"]:
-                movie_dir = guarantee_existence(
-                    os.path.join(
-                        file_writer_config["video_dir"],
-                        module_directory,
-                        self.get_resolution_directory(),
+                if not file_writer_config["custom_folders"]:
+                    movie_dir = guarantee_existence(
+                        os.path.join(
+                            file_writer_config["video_dir"],
+                            module_directory,
+                            self.get_resolution_directory(),
+                        )
                     )
-                )
+                else:
+                    movie_dir = guarantee_existence(
+                        os.path.join(file_writer_config["video_dir"])
+                    )
             self.movie_file_path = os.path.join(
                 movie_dir,
                 add_extension_if_not_present(

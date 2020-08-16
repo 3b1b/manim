@@ -74,6 +74,14 @@ def _parse_file_writer_config(config_parser, args):
     for name in dir_names:
         fw_config[name] = os.path.join(fw_config["media_dir"], dir_names[name])
 
+    # the --custom_folders flag overrides the default folder structure with the
+    # custom folders defined in the [custom_folders] section of the config file
+    fw_config["custom_folders"] = args.custom_folders
+    if fw_config["custom_folders"]:
+        fw_config["media_dir"] = config_parser["custom_folders"].get("media_dir")
+        for opt in ["video_dir", "tex_dir", "text_dir"]:
+            fw_config[opt] = config_parser["custom_folders"].get(opt)
+
     # Handle the -s (--save_last_frame) flag: invalidate the -w flag
     # At this point the save_last_frame option has already been set by
     # both CLI and the cfg file, so read the config dict directly
@@ -356,6 +364,13 @@ def _parse_cli(arg_list, input=True):
     # Specify the manim.cfg file
     parser.add_argument(
         "--config_file", help="Specify the configuration file",
+    )
+
+    # Specify whether to use the custom folders
+    parser.add_argument(
+	"--custom_folders", action="store_true",
+        help="Use the folders defined in the [custom_folders] "
+        "section of the config file to define the output folder structure",
     )
 
     # Specify the verbosity
