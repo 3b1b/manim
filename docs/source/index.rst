@@ -17,14 +17,18 @@ information here will make it easier for newcomers to get started using
 
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Documentation
 
-   quickstart
-   tutorial
-   configuration
+   installation/installation_index
    reference
-   changelog
+   examples/examples_index
+   tutorials/tutorials_index
+   contributing
+
+Navigation
+==================
 
 * :ref:`genindex`
 * :ref:`modindex`
+* :ref:`search`

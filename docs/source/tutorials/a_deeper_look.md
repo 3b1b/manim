@@ -1,4 +1,4 @@
-# Tutorial
+# A deeper look
 
 [NOTE:] this is some text I wrote that was originally meant to be part of the
 quickstart.  However, after some thought I've decided that it's probably a bit
@@ -59,8 +59,8 @@ The `-l` flag (for low quality) has been replaced by the `-k` flag, for 4K
 quality.  Manim will take considerably longer to render this file, and it will
 play it once it's done since we are using the `-p` flag.  The output should
 look like this:
+[NOTE:] Output currently removed, because on a normal non 4k screen the scene is to big to be displayed.
 
-![first scene output](_static/quickstart/first_scene_4k.gif)
 
 And the folder structure should look as follows.
 
