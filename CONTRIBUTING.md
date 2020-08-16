@@ -1,4 +1,4 @@
-# General Contribution Guidelines
+# Contributing
 
 1. If code changes are being made, please include documentation **following the guidelines in the Wiki** (typings are also welcome, but we can probably do them for you, given the documentation).
 2. (For the maintainers of this repo) Label PRs appropriately.
@@ -6,7 +6,7 @@
 4. Ensure compatibility with the latest changes in the repo.
 5. After you've made your changes, please test them out thoroughly. If the repository has any example code or code exclusively used for testing, please test your changes against those. If you have added new features, consider writing and contributing to a test for that feature to ensure it works properly.
 
-## Contributing to the Manim Community Fork - General instructions
+## General instructions
 
 As this is a Fork of [Manim by 3b1b](https://github.com/3b1b/manim), contributing can be a bit confusing. Because of that, here is a small guide on it. 
 

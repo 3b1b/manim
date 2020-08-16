@@ -240,14 +240,14 @@ def _parse_cli(arg_list, input=True):
         "--write_to_movie",
         action="store_const",
         const=True,
-        help="Render the scene as a movie file",
+        help="Render the scene as a movie file (this is on by default)",
     )
     parser.add_argument(
         "-s",
         "--save_last_frame",
         action="store_const",
         const=True,
-        help="Save the last frame (and do not save movie)",
+        help="Save the last frame only (no movie file is generated)",
     )
     parser.add_argument(
         "-g",
@@ -267,48 +267,33 @@ def _parse_cli(arg_list, input=True):
         "--disable_caching",
         action="store_const",
         const=True,
-        help="Disable caching (will generate partial-movie-files anyway).",
+        help="Disable caching (will generate partial-movie-files anyway)",
     )
     parser.add_argument(
         "--flush_cache",
         action="store_const",
         const=True,
-        help="Remove all cached partial-movie-files.",
+        help="Remove all cached partial-movie-files",
     )
     parser.add_argument(
         "--log_to_file",
         action="store_const",
         const=True,
-        help="Log terminal output to file.",
+        help="Log terminal output to file",
     )
     # The default value of the following is set in manim.cfg
     parser.add_argument(
-        "-c", "--color", help="Background color",
+        "-c", "--background_color", help="Specify background color",
     )
     parser.add_argument(
-        "--background_opacity", help="Background opacity",
+        "--background_opacity", help="Specify background opacity",
     )
     parser.add_argument(
-        "--media_dir", help="directory to write media",
+        "--media_dir", help="Directory to store media (including video files)",
     )
-
     parser.add_argument(
-        "--log_dir", help="directory to write log files to",
+        "--log_dir", help="Directory to store log files",
     )
-
-    # video_group = parser.add_mutually_exclusive_group()
-    # video_group.add_argument(
-    #     "--video_dir",
-    #     help="directory to write file tree for video",
-    # )
-    # parser.add_argument(
-    #     "--tex_dir",
-    #     help="directory to write tex",
-    # )
-    # parser.add_argument(
-    #     "--text_dir",
-    #     help="directory to write text",
-    # )
     parser.add_argument(
         "--tex_template", help="Specify a custom TeX template file",
     )
@@ -332,48 +317,39 @@ def _parse_cli(arg_list, input=True):
         "-t",
         "--transparent",
         action="store_true",
-        help="Render to a movie file with an alpha channel",
+        help="Render a scene with an alpha channel",
     )
 
     # The following are mutually exclusive and each overrides
     # FRAME_RATE, PIXEL_HEIGHT, and PIXEL_WIDTH,
     parser.add_argument(
-        "-l",
-        "--low_quality",
-        action="store_true",
-        help="Render at low quality (for fastest rendering)",
+        "-l", "--low_quality", action="store_true", help="Render at low quality",
     )
     parser.add_argument(
-        "-m",
-        "--medium_quality",
-        action="store_true",
-        help="Render at medium quality (for much faster rendering)",
+        "-m", "--medium_quality", action="store_true", help="Render at medium quality",
     )
     parser.add_argument(
-        "-e",
-        "--high_quality",
-        action="store_true",
-        help="Render at high quality (for slightly faster rendering)",
+        "-e", "--high_quality", action="store_true", help="Render at high quality",
     )
     parser.add_argument(
-        "-k",
-        "--fourk_quality",
-        action="store_true",
-        help="Render at 4K quality (slower rendering)",
+        "-k", "--fourk_quality", action="store_true", help="Render at 4K quality",
     )
 
     # This overrides any of the above
     parser.add_argument(
-        "-r", "--resolution", help='Resolution, passed as "height,width"',
+        "-r",
+        "--resolution",
+        help='Resolution, passed as "height,width". '
+        "Overrides the -l, -m, -e, and -k flags, if present",
     )
 
     # This sets FROM_ANIMATION_NUMBER and UPTO_ANIMATION_NUMBER
     parser.add_argument(
         "-n",
         "--from_animation_number",
-        help="Start rendering not from the first animation, but"
-        "from another, specified by its index.  If you pass"
-        'in two comma separated values, e.g. "3,6", it will end'
+        help="Start rendering at the specified animation index, "
+        "instead of the first animation.  If you pass in two comma "
+        "separated values, e.g. '3,6', it will end "
         "the rendering at the second value",
     )
 

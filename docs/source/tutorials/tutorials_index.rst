@@ -6,4 +6,4 @@ Tutorials
 
    quickstart
    a_deeper_look
-
+   configuration

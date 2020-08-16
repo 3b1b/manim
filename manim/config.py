@@ -45,10 +45,10 @@ def _parse_config(config_parser, args):
             height, width = int(args.resolution), int(16 * height / 9)
         config["camera_config"].update({"pixel_height": height, "pixel_width": width})
 
-    # Handle the -c (--color) flag
-    if args.color is not None:
+    # Handle the -c (--background_color) flag
+    if args.background_color is not None:
         try:
-            background_color = colour.Color(args.color)
+            background_color = colour.Color(args.background_color)
         except AttributeError as err:
             logger.warning("Please use a valid color.")
             logger.error(err)
