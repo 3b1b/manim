@@ -368,7 +368,8 @@ def _parse_cli(arg_list, input=True):
 
     # Specify whether to use the custom folders
     parser.add_argument(
-	"--custom_folders", action="store_true",
+        "--custom_folders",
+        action="store_true",
         help="Use the folders defined in the [custom_folders] "
         "section of the config file to define the output folder structure",
     )
