@@ -20,10 +20,10 @@ information here will make it easier for newcomers to get started using
    :maxdepth: 2
    :caption: Documentation
 
-   installation/installation_index
+   installation
    reference
-   examples/examples_index
-   tutorials/tutorials_index
+   examples
+   tutorials
    contributing
 
 Navigation
