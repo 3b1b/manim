@@ -54,11 +54,15 @@ class SceneFileWriter(object):
         scene_name = self.get_default_scene_name()
         if file_writer_config["save_last_frame"] or file_writer_config["save_pngs"]:
             if file_writer_config["media_dir"] != "":
-                image_dir = guarantee_existence(
-                    os.path.join(
-                        file_writer_config["media_dir"], "images", module_directory,
+                if not file_writer_config["custom_folders"]:
+                    image_dir = guarantee_existence(
+                        os.path.join(
+                            file_writer_config["images_dir"],
+                            module_directory,
+                        )
                     )
-                )
+                else:
+                    image_dir = guarantee_existence(file_writer_config["images_dir"])
             self.image_file_path = os.path.join(
                 image_dir, add_extension_if_not_present(scene_name, ".png")
             )

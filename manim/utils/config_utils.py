@@ -70,7 +70,7 @@ def _parse_file_writer_config(config_parser, args):
     for str_opt in ["media_dir", "log_dir"]:
         attr = getattr(args, str_opt)
         fw_config[str_opt] = os.path.relpath(default[str_opt]) if attr is None else attr
-    dir_names = {"video_dir": "videos", "tex_dir": "Tex", "text_dir": "texts"}
+    dir_names = {"video_dir": "videos", "images_dir": "images", "tex_dir": "Tex", "text_dir": "texts"}
     for name in dir_names:
         fw_config[name] = os.path.join(fw_config["media_dir"], dir_names[name])
 
@@ -79,7 +79,7 @@ def _parse_file_writer_config(config_parser, args):
     fw_config["custom_folders"] = args.custom_folders
     if fw_config["custom_folders"]:
         fw_config["media_dir"] = config_parser["custom_folders"].get("media_dir")
-        for opt in ["video_dir", "tex_dir", "text_dir"]:
+        for opt in ["video_dir", "images_dir", "tex_dir", "text_dir"]:
             fw_config[opt] = config_parser["custom_folders"].get(opt)
 
     # Handle the -s (--save_last_frame) flag: invalidate the -w flag
