@@ -70,7 +70,7 @@ class Mobject(Container):
 
     def add(self, *mobjects):
         if self in mobjects:
-            raise Exception("Mobject cannot contain self")
+            raise ValueError("Mobject cannot contain self")
         self.submobjects = list_update(self.submobjects, mobjects)
         return self
 
