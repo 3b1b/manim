@@ -70,7 +70,12 @@ def _parse_file_writer_config(config_parser, args):
     for str_opt in ["media_dir", "log_dir"]:
         attr = getattr(args, str_opt)
         fw_config[str_opt] = os.path.relpath(default[str_opt]) if attr is None else attr
-    dir_names = {"video_dir": "videos", "images_dir": "images", "tex_dir": "Tex", "text_dir": "texts"}
+    dir_names = {
+        "video_dir": "videos",
+        "images_dir": "images",
+        "tex_dir": "Tex",
+        "text_dir": "texts",
+    }
     for name in dir_names:
         fw_config[name] = os.path.join(fw_config["media_dir"], dir_names[name])
 

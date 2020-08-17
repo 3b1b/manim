@@ -57,8 +57,7 @@ class SceneFileWriter(object):
                 if not file_writer_config["custom_folders"]:
                     image_dir = guarantee_existence(
                         os.path.join(
-                            file_writer_config["images_dir"],
-                            module_directory,
+                            file_writer_config["images_dir"], module_directory,
                         )
                     )
                 else:
