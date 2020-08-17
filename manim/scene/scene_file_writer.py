@@ -89,9 +89,19 @@ class SceneFileWriter(object):
             self.gif_file_path = os.path.join(
                 movie_dir, add_extension_if_not_present(scene_name, GIF_FILE_EXTENSION)
             )
-            self.partial_movie_directory = guarantee_existence(
-                os.path.join(movie_dir, "partial_movie_files", scene_name,)
-            )
+            if not file_writer_config["custom_folders"]:
+                self.partial_movie_directory = guarantee_existence(
+                    os.path.join(movie_dir, "partial_movie_files", scene_name,)
+                )
+            else:
+                self.partial_movie_directory = guarantee_existence(
+                    os.path.join(
+                        file_writer_config["media_dir"],
+                        "temp_files",
+                        "partial_movie_files",
+                        scene_name,
+                    )
+                )
 
     def get_default_module_directory(self):
         """
