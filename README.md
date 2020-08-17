@@ -237,7 +237,7 @@ python3 -m pip install -r requirements.txt
 
 ## Usage
 
-To run your first example Scene, you can run the following commands:
+To run your first example Scenes, you can run the following commands:
 
 ### For users:
 
@@ -250,6 +250,11 @@ wget https://raw.github.com/ManimCommunity/manim/master/example_scenes/basic.py
 2. Run the following command:
 ```sh
 manim example_scenes/basic.py SquareToCircle -pl
+```
+
+3. Download the [custom_template.tex](https://raw.github.com/ManimCommunity/manim/blob/master/example_scenes/custom_template.tex) and [customtex.py](https://raw.github.com/ManimCommunity/manim/blob/master/example_scenes/customtex.py) example_scenes files, and run the following command:
+```sh
+manim customtex.py --tex_template custom_template.tex -pl
 ```
 
 ### For developers:
@@ -272,7 +277,7 @@ Some other useful flags include:
 * `-n <number>` to skip ahead to the `n`'th animation of a scene.
 * `-f` to show the file in finder (for OSX).
 
-You can also set `MEDIA_DIR` environment variable to specify where the image and animation files will be written.
+You can also use the `--media_dir <directory-path>` command line parameter to specify where the image and animation files will be written.
 
 ## Documentation
 Documentation is in progress at [eulertour.com/docs](https://www.eulertour.com/docs/).
