@@ -118,14 +118,14 @@ class UpdatersExample(Scene):
         self.wait()
 
 
-class VDictTest(Scene):
+class VDictExample(Scene):
     def construct(self):
         square = Square().set_color(RED)
         circle = Circle().set_color(YELLOW).next_to(square, UP)
 
         # create dict from list of tuples each having key-mobject pair
         pairs = [("s", square), ("c", circle)]
-        my_dict = VDict(*pairs, show_keys=True)
+        my_dict = VDict(pairs, show_keys=True)
 
         # display it just like a VGroup
         self.play(ShowCreation(my_dict))
@@ -133,8 +133,9 @@ class VDictTest(Scene):
 
         text = TextMobject("Some text").set_color(GREEN).next_to(square, DOWN)
 
-        # add like a VGroup
-        my_dict.add(("t", text))
+        # add a key-value pair by wrapping it in a single-element list of tuple
+        # after attrs branch is merged, it will be easier like `.add(t=text)`
+        my_dict.add([("t", text)])
         self.wait()
 
         rect = Rectangle().next_to(text, DOWN)
@@ -150,7 +151,7 @@ class VDictTest(Scene):
         my_dict["t"] = TextMobject("Some other text").set_color(BLUE)
         self.wait()
 
-        # remove submojects by key
+        # remove submoject by key
         my_dict.remove("t")
         self.wait()
 
@@ -163,10 +164,22 @@ class VDictTest(Scene):
         self.play(FadeOutAndShift(my_dict["r"], DOWN))
         self.wait()
 
-        # iterate through all submobjects currently associated with my_dict
-        for submob in my_dict.get_all_submobjects():
-            self.play(ShowCreation(submob))
-            self.wait()
+        # you can also make a VDict from an existing dict of mobjects
+        plain_dict = {
+            1: Integer(1).shift(DOWN),
+            2: Integer(2).shift(2 * DOWN),
+            3: Integer(3).shift(3 * DOWN),
+        }
+
+        vdict_from_plain_dict = VDict(plain_dict)
+        vdict_from_plain_dict.shift(1.5 * (UP + LEFT))
+        self.play(ShowCreation(vdict_from_plain_dict))
+
+        # you can even use zip
+        vdict_using_zip = VDict(zip(["s", "c", "r"], [Square(), Circle(), Rectangle()]))
+        vdict_using_zip.shift(1.5 * RIGHT)
+        self.play(ShowCreation(vdict_using_zip))
+        self.wait()
 
 
 # See old_projects folder for many, many more
