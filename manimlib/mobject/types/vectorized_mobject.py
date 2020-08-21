@@ -521,9 +521,13 @@ class VMobject(Mobject):
                 anchors = np.vstack([subpath[::nppc], subpath[-1:]])
                 new_subpath = np.array(subpath)
                 if mode == "smooth":
-                    new_subpath[1::nppc] = get_smooth_quadratic_bezier_handle_points(anchors)
-                    # h1, h2 = get_smooth_cubic_bezier_handle_points(anchors)
-                    # new_subpath = get_quadratic_approximation_of_cubic(anchors[:-1], h1, h2, anchors[1:])
+                    # TOOD, it's not clear which of the two options below should be the default,
+                    # leaving option 1 here commented out as a temporary note.
+                    # Option 1:
+                    # new_subpath[1::nppc] = get_smooth_quadratic_bezier_handle_points(anchors)
+                    # Option 2:
+                    h1, h2 = get_smooth_cubic_bezier_handle_points(anchors)
+                    new_subpath = get_quadratic_approximation_of_cubic(anchors[:-1], h1, h2, anchors[1:])
                 elif mode == "jagged":
                     new_subpath[1::nppc] = 0.5 * (anchors[:-1] + anchors[1:])
                 submob.append_points(new_subpath)
