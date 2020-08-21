@@ -636,7 +636,8 @@ class Arrow(Line):
         return self
 
     def get_start(self):
-        return (self.points[0] + self.points[-1]) / 2
+        nppc = self.n_points_per_curve
+        return (self.points[0] + self.points[-nppc]) / 2
 
     def get_end(self):
         return self.points[self.tip_index]
