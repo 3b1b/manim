@@ -58,6 +58,11 @@ import guzzle_sphinx_theme
 html_theme_path = guzzle_sphinx_theme.html_theme_path()
 html_theme = 'guzzle_sphinx_theme'
 
+# There's a standing issue with Sphinx's new-style sidebars.  This is a
+# workaround.  Taken from
+# https://github.com/guzzle/guzzle_sphinx_theme/issues/33#issuecomment-637081826
+html_sidebars = {'**': ['logo-text.html', 'globaltoc.html', 'searchbox.html']}
+
 # Register the theme as an extension to generate a sitemap.xml
 extensions.append("guzzle_sphinx_theme")
 
