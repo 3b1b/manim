@@ -2,14 +2,19 @@ from manimlib.imports import *
 
 
 MONSTER_SIZE = 808017424794512875886459904961710757005754368000000000
+BABY_MONSTER_SIZE = 4154781481226426191177580544000000
 
 
 def get_monster(height=3):
     monster = SVGMobject("monster")
     monster.set_fill(GREY_BROWN)
-    monster.set_stroke(GREY_BROWN, 0)
+    monster.set_stroke(BLACK, 0.1)
     monster.set_height(height)
     return monster
+
+
+def get_baby_monster():
+    return get_monster().stretch(0.7, 1)
 
 
 def blink_monster(monster):
@@ -28,6 +33,16 @@ def get_size_bars(mob, stroke_width=3, buff=SMALL_BUFF):
     bars[1].next_to(mob, RIGHT, buff=buff)
     bars.set_stroke(WHITE, stroke_width)
     return bars
+
+
+def get_monster_size_label():
+    size_label = TextMobject("{:,}".format(MONSTER_SIZE))[0]
+    size_parts = VGroup(*[
+        size_label[i:i + 12]
+        for i in range(0, len(size_label), 12)
+    ])
+    size_parts.arrange(DOWN, buff=SMALL_BUFF, aligned_edge=LEFT)
+    return size_label
 
 
 def get_snowflake(height=2):
@@ -141,19 +156,34 @@ def get_permutation_arrows(mobs, permutation, arc=PI / 2):
     return arrows
 
 
-def permutation_animation(mobs, perm=None, arc=PI / 2, lag_factor=3):
+def permutation_animation(mobs, perm=None, arc=PI / 2, lag_factor=3, run_time=None):
     if perm is None:
         targets = list(mobs)
         random.shuffle(targets)
     else:
         targets = [mobs[i] for i in perm]
+
+    kw = {"lag_ratio": lag_factor / len(mobs)}
+    if run_time is not None:
+        kw["run_time"] = run_time
     return LaggedStart(
         *[
             ApplyMethod(m1.move_to, m2, path_arc=arc)
             for m1, m2 in zip(mobs, targets)
         ],
-        lag_ratio=lag_factor / len(mobs),
+        **kw
     )
+
+
+def get_named_image(name, height=3):
+    image = ImageMobject(name)
+    image.set_height(height)
+
+    name = TextMobject(name)
+    name.match_width(image)
+    name.next_to(image, DOWN)
+    group = Group(image, name)
+    return group
 
 
 # Scenes
@@ -285,7 +315,7 @@ class IntroduceMonsterSize(Scene):
         jupiter.set_height(3.5)
         jupiter.to_edge(DOWN)
         jupiter.add_updater(lambda m, dt: m.rotate(-0.1 * dt, UP))
-        jupiter.set_shadow(0.8)
+        jupiter.set_shadow(0.9)
 
         self.play(
             UpdateFromAlphaFunc(jupiter, lambda m, a: m.set_opacity(a)),
@@ -360,9 +390,13 @@ class IntroduceMonsterSize(Scene):
 class IntroduceGroupTheory(Scene):
     def construct(self):
         # Title
+        over_title = TextMobject("An introduction\\\\to")
+        over_title.scale(2.5)
+        over_title.move_to(ORIGIN, DOWN)
+
         title = TextMobject("Group theory")
-        title.scale(2)
-        title.to_edge(UP)
+        title.scale(2.5)
+        title.next_to(over_title, DOWN, buff=0.5)
 
         arrows = VGroup(Vector(DOWN), Vector(UP))
         arrows.arrange(RIGHT, buff=SMALL_BUFF)
@@ -376,6 +410,14 @@ class IntroduceGroupTheory(Scene):
         sym_amb.next_to(arrows, DOWN)
         sym_amb_ghost = sym_amb.copy()
         sym_amb_ghost.set_fill(WHITE, 0.2)
+
+        self.add(over_title, title)
+        self.wait()
+        self.play(
+            title.scale, 2.0 / 2.5,
+            title.to_edge, UP,
+            FadeOut(over_title, UP)
+        )
 
         self.play(FadeIn(title, DOWN))
         self.play(
@@ -560,6 +602,15 @@ class IntroduceGroupTheory(Scene):
         )
         self.wait()
 
+        anims = []
+        for icon, deg in zip(d6_group[1:], [60, 120, 180, -120, -60]):
+            anims.append(Rotate(icon[0], deg * DEGREES))
+        for icon, deg in zip(d6_group[6:], range(0, 180, 30)):
+            anims.append(Rotate(icon[0], PI, axis=rotate_vector(RIGHT, deg * DEGREES)))
+        random.shuffle(anims)
+        self.play(LaggedStart(*anims, lag_ratio=0.3, run_time=5))
+        self.play(LaggedStart(*reversed(anims), lag_ratio=0.3, run_time=5))
+
         # Identity
         id_rect = SurroundingRectangle(d6_group[0])
         id_words = TextMobject("The do-nothing", "\\\\action", alignment="")
@@ -603,7 +654,7 @@ class IntroduceGroupTheory(Scene):
         )
         self.wait()
 
-        # Name Z2
+        # Name C2
         face_group = Group(face, face.deepcopy())
         face_group.set_height(4)
         face_group.arrange(RIGHT, buff=LARGE_BUFF)
@@ -627,7 +678,7 @@ class IntroduceGroupTheory(Scene):
         self.play(face_group[1].stretch, -1, 0)
         self.wait()
 
-        z2_name = TexMobject("Z_2")
+        z2_name = TexMobject("C_2")
         z2_name.match_color(d6_name)
         z2_name.match_height(d6_name)
         z2_name.next_to(d6_rect, DOWN, MED_LARGE_BUFF)
@@ -688,7 +739,7 @@ class ZooOfGroups(ThreeDScene):
         qubit.set_height(1)
 
         groups = Group(
-            Group(TexMobject("Z_2"), dot_pair),
+            Group(TexMobject("C_2"), dot_pair),
             Group(TexMobject("D_6"), snowflake),
             Group(TexMobject("K_4"), k4_axes),
             Group(TexMobject("Q_8"), quat_group),
@@ -741,6 +792,7 @@ class ZooOfGroups(ThreeDScene):
         )
         self.play(monster_object[-1].look_at, groups[-1][0])
         self.play(Blink(monster_object[-1]))
+        self.play(blink_monster(groups[-1][0]))
         self.wait()
 
 
@@ -902,7 +954,7 @@ class SymmetriesOfACube(ThreeDScene):
             explostion_transform()
 
         # Largest size
-        count = Integer(2949120)
+        count = Integer(188743680)
         count.fix_in_frame()
         old_counts = VGroup(label24, label48)
         old_counts.generate_target()
@@ -918,6 +970,19 @@ class SymmetriesOfACube(ThreeDScene):
         for x in range(3):
             explostion_transform()
         self.wait(2)
+
+
+class WeirdCubeSymmetryUnderbrace(Scene):
+    def construct(self):
+        brace = Brace(Line(LEFT, RIGHT).set_width(3), DOWN)
+        tex = brace.get_tex("(8^6)(6!)")
+        VGroup(brace, tex).set_color(WHITE)
+        VGroup(brace, tex).set_stroke(BLACK, 8, background=True)
+        self.play(
+            GrowFromCenter(brace),
+            FadeIn(tex, 0.25 * UP)
+        )
+        self.wait()
 
 
 class PermutationGroups(Scene):
@@ -1158,8 +1223,9 @@ class PermutationGroups(Scene):
         for dot, label in zip(dots, labels):
             dot.add(label)
 
-        for x in range(4):
+        for x in range(6):
             self.play(permutation_animation(dots, lag_factor=1))
+            self.wait(0.5)
 
         # Name S_n
         perm_label[3].generate_target()
@@ -1556,8 +1622,7 @@ class MentionGroupsInPhysics(TeacherStudentsScene):
         self.play(
             FadeIn(nt_label, DOWN),
             FadeIn(noether, DOWN),
-            FadeOut(self.teacher.bubble),
-            FadeOut(self.teacher.bubble.content),
+            FadeOut(VGroup(self.teacher.bubble, self.teacher.bubble.content)),
             self.teacher.change, "raise_right_hand",
         )
         self.change_student_modes("pondering", "pondering", "thinking", look_at_arg=nt_label)
@@ -1607,6 +1672,8 @@ class MentionGroupsInPhysics(TeacherStudentsScene):
         self.look_at(rule)
         self.wait()
         self.play(FadeIn(examples[1], UP))
+        self.wait(4)
+        self.change_student_modes("thinking", "maybe", "thinking")
         self.wait(4)
 
 
@@ -1830,6 +1897,10 @@ class ElementsAsAbstractions(TeacherStudentsScene):
             TexMobject("=").scale(2),
             rhs_icon
         )
+        group_prod.set_gloss(0)
+        for icon in group_prod[::2]:
+            icon[0].set_stroke(width=0)
+            icon[0].set_fill(GREY_A, 1)
         group_prod.arrange(RIGHT)
         group_prod.to_edge(UP)
 
@@ -2014,7 +2085,7 @@ class MultiplicationTable(Scene):
             rects = VGroup(
                 SurroundingRectangle(left_icons[i]),
                 SurroundingRectangle(top_icons[j]),
-                grid[n].copy().set_fill(YELLOW, 0.5)
+                grid[n].copy().set_fill(GREEN_E, 0.5)
             )
             rects.set_stroke(YELLOW, 2)
             self.add(rects, *self.mobjects)
@@ -2024,7 +2095,7 @@ class MultiplicationTable(Scene):
             elif sorted_index < 24:
                 self.wait(1)
             else:
-                self.wait(0.1)
+                self.wait(0.15)
             self.remove(rects)
         self.add(table_icons)
         self.wait(2)
@@ -2221,13 +2292,7 @@ class MentionTheMonster(Scene):
         self.play(blink_monster(monster))
         self.wait()
 
-        size_label = TextMobject("{:,}".format(MONSTER_SIZE))[0]
-        globals()['size_label'] = size_label
-        size_parts = VGroup(*[
-            size_label[i:i + 12]
-            for i in range(0, len(size_label), 12)
-        ])
-        size_parts.arrange(DOWN, buff=SMALL_BUFF, aligned_edge=LEFT)
+        size_label = get_monster_size_label()
         size_label.match_height(monster)
         size_label.to_edge(RIGHT, buff=LARGE_BUFF)
 
@@ -2434,6 +2499,7 @@ class QuadrupletShufflings(CubeRotations):
             dot.add(label)
 
         self.add(dots)
+        self.wait()
 
         # Permutations
         for quat in self.get_quaternions():
@@ -2441,7 +2507,7 @@ class QuadrupletShufflings(CubeRotations):
 
             arrows = get_permutation_arrows(dots, perm)
             self.play(FadeIn(arrows))
-            self.play(permutation_animation(dots, perm, lag_factor=0.2))
+            self.play(permutation_animation(dots, perm, lag_factor=0.2, run_time=1))
             self.play(FadeOut(arrows))
 
     def quaternion_to_perm(self, quat):
@@ -2460,6 +2526,56 @@ class QuadrupletShufflings(CubeRotations):
             i = np.argmin([get_norm(vect - bv) for bv in base_vects])
             perm.append(i)
         return perm
+
+
+class EightShufflingsOfOrderThree(Scene):
+    def construct(self):
+        bg_rect = FullScreenFadeRectangle()
+        bg_rect.set_fill(GREY_E, 1)
+        bg_rect.set_stroke(width=0)
+        self.add(bg_rect)
+
+        # Setup dots
+        dots_template = VGroup(*[Dot() for x in range(4)])
+        dots_template.set_height(0.5)
+        dots_template.arrange(RIGHT, buff=MED_SMALL_BUFF)
+        dots_template.set_color(GREY_B)
+
+        for n, dot in enumerate(dots_template):
+            label = Integer(n + 1)
+            label.set_height(0.25)
+            label.set_color(BLACK)
+            label.move_to(dot)
+            dot.add(label)
+
+        all_dots = VGroup(*[dots_template.copy() for x in range(8)])
+        all_dots.arrange_in_grid(4, 2, buff=1.25)
+        VGroup(all_dots[0::2], all_dots[1::2]).arrange(RIGHT, buff=2)
+
+        d_gen = iter(all_dots)
+        for trip in it.combinations(range(4), 3):
+            trip = np.array(trip)
+            perm1 = np.array(list(range(4)))
+            perm2 = np.array(list(range(4)))
+            perm1[trip] = trip[[1, 2, 0]]
+            perm2[trip] = trip[[2, 0, 1]]
+            for perm in [perm1, perm2]:
+                dots = next(d_gen)
+                arrows = get_permutation_arrows(dots, perm)
+                dots.add(arrows)
+                dots.perm = perm
+                for i in trip:
+                    dots[i].set_stroke(YELLOW, 1)
+                    dots[i][1].set_stroke(width=0)
+
+        self.play(ShowIncreasingSubsets(all_dots, run_time=4, rate_func=linear))
+        self.wait()
+        for x in range(3):
+            self.play(*[
+                permutation_animation(dots, dots.perm, lag_factor=0)
+                for dots in all_dots
+            ])
+        self.wait()
 
 
 class Isomorphism(Scene):
@@ -2674,13 +2790,14 @@ class AskAboutCubeDiagonals(QuadrupletShufflings):
 
 class S4WithMultipleChildren(Scene):
     def construct(self):
+        # Setup
         bg_rect = FullScreenFadeRectangle()
         bg_rect.set_fill(GREY_E, 1)
         self.add(bg_rect)
 
         s_rects = VGroup(*[ScreenRectangle() for x in range(3)])
-        s_rects.set_width(FRAME_WIDTH / 4)
         s_rects.arrange(RIGHT, buff=MED_LARGE_BUFF)
+        s_rects.set_width(FRAME_WIDTH - 1)
         s_rects.set_stroke(WHITE, 2)
         s_rects.set_fill(BLACK, 1)
         s_rects.move_to(DOWN)
@@ -2691,12 +2808,1667 @@ class S4WithMultipleChildren(Scene):
         s4_label.to_edge(UP)
 
         lines = VGroup(*[
-            Line(rect.get_top(), s4_label.get_bottom(), buff=SMALL_BUFF)
+            Line(rect.get_top(), s4_label.get_bottom(), buff=0.2)
             for rect in s_rects
         ])
 
-        self.play(LaggedStartMap(ShowCreation, lines))
-        self.play(FadeIn(s4, DOWN))
+        # Arising
+        self.play(LaggedStartMap(ShowCreation, lines, lag_ratio=0.5))
+        self.play(FadeIn(s4_label, DOWN))
+        self.wait(2)
+
+        # Triplets
+        three = Integer(3)
+        three.scale(2)
+        three.move_to(s4_label)
+
+        pis = VGroup(*[Randolph(color=c) for c in [BLUE_C, BLUE_E, BLUE_D]])
+        pis.arrange(RIGHT)
+        vects = VGroup(*[Vector(RIGHT) for x in range(3)])
+        vects.arrange(RIGHT, buff=SMALL_BUFF)
+        vects.rotate(30 * DEGREES)
+        vects.set_color(TEAL)
+        triangle = RegularPolygon(3)
+        triangle.set_stroke(BLUE_B, 4)
+        triangle.add(*[Dot(vert, color=BLUE_D) for vert in triangle.get_vertices()])
+        triangle.set_stroke(background=True)
+        triplets = VGroup(pis, vects, triangle)
+
+        for trip, rect in zip(triplets, s_rects):
+            trip.set_width(0.8 * rect.get_width())
+            if trip.get_height() > 0.8 * rect.get_height():
+                trip.set_height(0.8 * rect.get_height())
+            trip.move_to(rect)
+
+        self.play(
+            FadeOut(s4_label, UP),
+            FadeIn(three, DOWN),
+            LaggedStartMap(FadeIn, pis, lag_ratio=0.5, run_time=1),
+        )
+        for trip in triplets[1:]:
+            self.play(FadeIn(trip, lag_ratio=0.5))
+        self.play(Blink(pis[0]))
+        self.play(Blink(pis[2]))
+
+        # Back to s4
+        self.play(
+            FadeOut(three, DOWN),
+            FadeIn(s4_label, UP),
+            FadeOut(triplets, lag_ratio=0.2, run_time=2),
+        )
         self.wait()
 
+
+class AutQ8(Scene):
+    def construct(self):
+        tex = TexMobject("\\text{Aut}(Q_8)", tex_to_color_map={"Q_8": BLUE})
+        tex.scale(2)
+        self.play(Write(tex))
+        self.wait()
+
+
+class GroupsBeyondActions(Scene):
+    def construct(self):
+        groups = TextMobject("Groups")
+        sym_acts = TextMobject("Symmetric\\\\Actions")
+        others = TextMobject("Other things\\\\which ``multiply''")
+        VGroup(groups, sym_acts, others).scale(1.5)
+        line = Line(UP, DOWN)
+
+        sym_acts.set_color(BLUE)
+        others.set_color(interpolate_color(GREY_BROWN, WHITE, 0.5))
+
+        VGroup(
+            groups, line, sym_acts
+        ).arrange(DOWN, buff=MED_LARGE_BUFF)
+
+        line.add_updater(lambda m: m.put_start_and_end_on(
+            groups.get_bottom() + 0.3 * DOWN,
+            sym_acts.get_top() + 0.3 * UP,
+        ))
+
+        others.move_to(sym_acts)
+        others.to_edge(RIGHT)
+        others_line = Line(groups.get_bottom(), others.get_top(), buff=0.3)
+
+        self.add(groups, line, sym_acts)
+        self.wait()
+        self.play(
+            sym_acts.to_edge, LEFT, LARGE_BUFF,
+            FadeIn(others, 2 * UL),
+            ShowCreation(others_line),
+            run_time=2,
+        )
+        self.wait()
+
+
+class RAddToRMult(ExternallyAnimatedScene):
+    pass
+
+
+class AskAboutAllTheGroups(TeacherStudentsScene):
+    def construct(self):
+        # Ask
+        question = TextMobject("What are all the groups", "?")
+        self.teacher_holds_up(question)
+        self.change_student_modes("pondering", "thinking", "erm")
+        self.wait(2)
+
+        question.generate_target()
+        question.target.to_corner(UL)
+        self.teacher_says(
+            "Now you can\\\\ask something\\\\more sophisticated.",
+            target_mode="hooray",
+            added_anims=[
+                MoveToTarget(question, run_time=2),
+                self.get_student_changes(
+                    "erm", "pondering", "pondering",
+                    look_at_arg=question.target
+                )
+            ]
+        )
+        self.wait(2)
+        self.play(
+            RemovePiCreatureBubble(
+                self.teacher, target_mode="tease",
+                look_at_arg=question.get_right(),
+            ),
+            question.set_x, 0,
+        )
+
+        # Add up to isomorphism
+        caveat = TextMobject("up to \\emph{isomorphism}")
+        caveat.next_to(question, DOWN)
+        caveat.set_color(YELLOW)
+
+        self.play(
+            Write(caveat, run_time=1),
+            question[1].next_to, caveat[0][-1], RIGHT, SMALL_BUFF, DOWN,
+            question[1].match_color, caveat,
+            self.get_student_changes(*3 * ["thinking"], look_at_arg=question)
+        )
+        question.add(caveat)
+        self.wait(2)
+        self.look_at(self.screen)
+        self.wait(2)
+        self.look_at(question)
+
+        # Alt question
+        sym_question = TextMobject("What are all the\\\\", "symmetric", " things", "?")
+        self.teacher_holds_up(sym_question)
+
+        cross = Cross(sym_question)
+        self.look_at(
+            cross,
+            added_anims=[
+                ShowCreation(cross),
+                self.get_student_changes("erm", "sassy", "hesitant")
+            ]
+        )
+        self.wait()
+
+        abs_question = TextMobject("What are all the", " \\emph{ways}\\\\", "things ", "can be ", "symmetric", "?")
+        new_words = VGroup(abs_question[1], abs_question[3])
+        new_words.match_color(caveat)
+        abs_question.move_to(sym_question)
+        abs_question.shift_onto_screen()
+        self.play(
+            *[
+                ReplacementTransform(sym_question[i], abs_question[j], path_arc=10 * DEGREES)
+                for i, j in [(0, 0), (1, 4), (2, 2), (3, 5)]
+            ],
+            FadeOut(cross),
+            self.get_student_changes("happy", "thinking", "tease"),
+        )
+        self.play(
+            self.teacher.change, "speaking", abs_question,
+            Write(new_words),
+        )
+        self.look_at(abs_question)
+        self.wait(2)
+
+        # Formula
+        suggestions = VGroup(*[
+            TextMobject("Some ", word, "?", tex_to_color_map={word: color})
+            for word, color in [
+                ("formula", RED),
+                ("procedure", MAROON_B),
+                ("algorithm", PINK),
+            ]
+        ])
+        for words in suggestions:
+            words.move_to(abs_question, UP)
+            words.to_edge(LEFT, buff=LARGE_BUFF)
+
+        self.play(
+            FadeIn(suggestions[0], DOWN),
+            self.get_student_changes(*3 * ["pondering"], look_at_arg=suggestions),
+            self.teacher.change, "happy",
+        )
+        self.wait()
+        for words1, words2 in zip(suggestions, suggestions[1:]):
+            self.play(
+                FadeOut(words1[1], UP),
+                FadeIn(words2[1], DOWN),
+                ReplacementTransform(words1[2], words2[2])
+            )
+            self.remove(words1)
+            self.add(words2)
+            self.wait()
+        self.wait(3)
+        self.play(
+            FadeOut(
+                VGroup(question, abs_question, suggestions[-1]),
+                0.5 * DOWN,
+                lag_ratio=0.02,
+                run_time=2,
+            )
+        )
+
+
+class ThisQuestionIsHard(Scene):
+    def construct(self):
+        # Setup line
+        line = NumberLine(x_range=(0, 1, 0.1), width=12)
+        line.shift(UP)
+        arrows = VGroup(
+            Arrow(line.n2p(0.5), line.n2p(0), fill_color=GREEN),
+            Arrow(line.n2p(0.5), line.n2p(1), fill_color=RED),
+        )
+        arrows.shift(2.5 * DOWN)
+        words = VGroup(TextMobject("Easier"), TextMobject("Harder"))
+        for word, arrow in zip(words, arrows):
+            word.match_color(arrow)
+            word.next_to(arrow, DOWN, SMALL_BUFF)
+
+        self.add(line)
+        self.add(arrows)
+        self.add(words)
+
+        # Add problems
+        problems = VGroup(
+            TexMobject("1 + 1"),
+            VGroup(
+                TexMobject("\\frac{2^{289}+1}{2^{17}+1}=2^{a_{1}}+\\ldots+2^{a_{k}}"),
+                TexMobject("a_1 < \\ldots < a_k"),
+                TexMobject("a_1, \\dots, a_k \\in \\mathds{Z}^+"),
+            ),
+            VGroup(
+                TexMobject("{a \\over b + c} + {b \\over c + a} + {c \\over b + c} = 4"),
+                TexMobject("a, b, c \\in \\mathds{Z}^+"),
+            ),
+            VGroup(
+                TexMobject("x^n + y^n = z^n"),
+                TexMobject("x, y, z \\in \\mathds{Z}"),
+            ),
+        )
+        colors = Color(GREEN).range_to(RED, 4)
+        for prob, x, color in zip(problems, [0, 0.3, 0.7, 1], colors):
+            triangle = Triangle()
+            triangle.set_height(0.2)
+            triangle.set_stroke(width=0)
+            triangle.set_fill(color, 1)
+            triangle.move_to(line.n2p(x), UP)
+            prob.arrange(DOWN)
+            prob.scale(0.5)
+            prob.next_to(triangle, DOWN)
+            prob.add(triangle)
+            prob.set_color(color)
+
+        self.add(problems)
+
+        # Group question
+        tri = Triangle(start_angle=-90 * DEGREES)
+        tri.set_height(0.3)
+        tri.set_stroke(width=0)
+        tri.set_fill(GREY_B, 1)
+        tri.move_to(line.n2p(0.5), DOWN)
+        question = TextMobject("What are all\\\\the groups?")
+        question.next_to(tri, UP)
+
+        ext_line = line.copy()
+        ext_line.move_to(line.get_right(), LEFT)
+
+        frame = self.camera.frame
+
+        self.play(
+            DrawBorderThenFill(tri),
+            FadeIn(question, DOWN)
+        )
+        question.add(tri)
+        self.play(question.move_to, line.n2p(0.9), DOWN)
+        self.wait()
+        self.play(
+            ShowCreation(ext_line),
+            question.move_to, line.n2p(1.3), DOWN,
+            ApplyMethod(frame.scale, 1.3, {"about_edge": LEFT}, run_time=2)
+        )
+        self.wait()
+
+
+class AmbientSnowflakeSymmetries(Scene):
+    def construct(self):
+        title = TexMobject("D_6")
+        title.scale(3)
+        title.to_edge(LEFT, buff=1)
+        title.set_color(BLUE)
+        self.add(title)
+
+        snowflake = get_snowflake()
+        snowflake.set_height(5)
+        snowflake.set_stroke(width=0)
+        snowflake.move_to(2 * RIGHT)
+        self.add(snowflake)
+
+        for n in range(10):
+            if random.choice([True, False]):
+                deg = random.choice([-120, -60, 60, 120])
+                icon = get_rot_icon(deg, snowflake, snowflake.get_height())
+                anim = Rotate(snowflake, deg * DEGREES)
+            else:
+                deg = random.choice(range(30, 180, 30))
+                angle = deg * DEGREES
+                icon = get_flip_icon(angle, snowflake, mini_mob_height=snowflake.get_height())
+                anim = Rotate(snowflake, PI, axis=rotate_vector(RIGHT, angle))
+            icon.shift(snowflake.get_center() - icon[0].get_center())
+            self.play(anim, FadeIn(icon[1:]))
+            self.play(FadeOut(icon[1:]))
+
+
+class IntroduceSimpleGroups(Scene):
+    def construct(self):
+        # Setup
+        bg_rect = FullScreenFadeRectangle(fill_color=GREY_E, fill_opacity=1)
+        self.add(bg_rect)
+
+        groups = TextMobject("Groups")
+        groups.scale(2)
+        groups.to_edge(UP)
+        inf_groups = TextMobject("Infinite groups")
+        fin_groups = TextMobject("Finite groups")
+        children = VGroup(inf_groups, fin_groups)
+        children.scale(1.5)
+        children.arrange(RIGHT, buff=2)
+        children.next_to(groups, DOWN, buff=2)
+        child_lines = VGroup(*[
+            Line(groups.get_bottom(), child.get_top(), buff=0)
+            for child in children
+        ])
+        child_lines.set_stroke(WHITE, 2)
+        s_rects = VGroup(*[
+            ScreenRectangle(height=3).move_to(child)
+            for child in children
+        ])
+        s_rects.next_to(children, DOWN)
+        s_rects.set_fill(BLACK, 1)
+
+        # Introductions
+        self.add(groups)
+        self.wait()
+        self.play(
+            ShowCreation(child_lines[0]),
+            FadeIn(inf_groups, 2 * UR),
+            FadeIn(s_rects[0])
+        )
+        self.wait(2)
+        self.play(
+            ShowCreation(child_lines[1]),
+            FadeIn(fin_groups, 2 * UL),
+            FadeIn(s_rects[1]),
+        )
+        self.wait()
+
+        self.add(s_rects, fin_groups)
+        self.play(
+            Uncreate(child_lines),
+            FadeOut(inf_groups, 3 * LEFT),
+            FadeOut(s_rects[0], 3 * LEFT),
+            FadeOut(groups, 2 * UP),
+            fin_groups.move_to, groups,
+            s_rects[1].replace, bg_rect,
+            s_rects[1].set_stroke, {"width": 0},
+            run_time=2,
+        )
+        self.remove(s_rects, bg_rect)
+
+        # Comparison titles
+        bg_rects = VGroup(*[
+            Rectangle(
+                height=FRAME_HEIGHT,
+                width=FRAME_WIDTH / 3,
+                fill_color=color,
+                fill_opacity=1,
+                stroke_width=0
+            )
+            for color in [GREY_D, GREY_E, BLACK]
+        ])
+        bg_rects.arrange(RIGHT, buff=0)
+        bg_rects.center()
+
+        fin_groups.generate_target()
+        titles = VGroup(
+            TextMobject("Integers").scale(1.5),
+            TextMobject("Molecules").scale(1.5),
+            fin_groups.target,
+        )
+        sub_titles = VGroup(*[
+            TextMobject("break down into\\\\", word)
+            for word in ("primes", "atoms", "simple groups")
+        ])
+
+        for rect, title, sub_title in zip(bg_rects, titles, sub_titles):
+            title.move_to(rect, UP)
+            title.shift(0.5 * DOWN)
+            sub_title.next_to(title, DOWN)
+            sub_title[1].set_color(BLUE)
+            sub_title.align_to(sub_titles[0], UP)
+
+        # Comparison diagrams
+        H_sphere = Sphere()
+        H_sphere.set_height(0.5)
+        H_sphere.set_color(RED)
+        H_atom = Group(
+            H_sphere,
+            TextMobject("H").scale(0.5).move_to(H_sphere)
+        )
+        O_sphere = Sphere()
+        O_sphere.set_height(1)
+        O_sphere.set_color(BLUE)
+        O_atom = Group(
+            O_sphere,
+            TextMobject("O").scale(0.75).move_to(O_sphere)
+        )
+        H2O = Group(
+            O_atom.copy(),
+            H_atom.copy().move_to([-0.45, 0.35, 0]),
+            H_atom.copy().move_to([0.45, 0.35, 0]),
+        )
+
+        trees = Group(
+            VGroup(
+                Integer(60),
+                VGroup(*map(Integer, [2, 2, 3, 5])),
+            ),
+            Group(
+                H2O,
+                Group(H_atom.copy(), H_atom.copy(), O_atom.copy())
+            ),
+            VGroup(
+                TexMobject("S_4"),
+                VGroup(*[
+                    TexMobject(
+                        "C_" + str(n),
+                        fill_color=(RED_B if n == 2 else BLUE)
+                    )
+                    for n in [2, 2, 2, 3]
+                ]),
+            )
+        )
+        for tree, rect in zip(trees, bg_rects):
+            root, children = tree
+            children.arrange(RIGHT, buff=0.35)
+            children.next_to(root, DOWN, buff=1.2)
+            lines = VGroup()
+            for child in children:
+                lines.add(Line(root.get_bottom(), child.get_top(), buff=0.1))
+            tree.add(lines)
+            tree.move_to(rect)
+            tree.shift(DOWN)
+
+        # Slice screen
+        self.add(bg_rects, fin_groups)
+        for rect in bg_rects:
+            rect.save_state()
+            rect.shift(LEFT)
+            rect.set_fill(BLACK, 1)
+        self.play(
+            MoveToTarget(fin_groups),
+            LaggedStartMap(Restore, bg_rects, lag_ratio=0.3)
+        )
+
+        # Breakdowns
+        for title, sub_title, tree in zip(titles, sub_titles, trees):
+            root, children, lines = tree
+            self.play(
+                FadeIn(title),
+                FadeIn(root),
+            )
+            globals()['root'] = root
+            self.play(
+                ShowCreation(lines),
+                LaggedStart(*[
+                    GrowFromPoint(child, root)
+                    for child in children
+                ]),
+                FadeIn(sub_title)
+            )
+            self.wait()
+
+        # Theorem
+        theorem_name = TextMobject("(Jordan–Hölder Theorem)")
+        theorem_name.scale(0.7)
+        theorem_name.next_to(sub_titles[2], DOWN)
+        self.play(Write(theorem_name, run_time=1))
+        self.wait()
+
+
+class SymmetriesOfCirleAndLine(Scene):
+    def construct(self):
+        line = NumberLine((0, 100, 1))
+        line.move_to(2 * UP)
+
+        circle = Circle(radius=1)
+        circle_ticks = VGroup(*[
+            Line(0.95 * vect, 1.05 * vect)
+            for vect in compass_directions(12)
+        ])
+        circle.add(circle_ticks)
+        circle.set_stroke(BLUE, 3)
+        circle.scale(1.5)
+        circle.next_to(line, DOWN, buff=2)
+        circle.shift(RIGHT)
+
+        R_label = TexMobject("\\mathds{R}")
+        RmodZ = TexMobject("\\mathds{R} / \\mathds{Z}")
+        R_label.set_height(0.9)
+        R_label.next_to(line, UP, MED_LARGE_BUFF)
+        RmodZ.set_height(0.9)
+        RmodZ.next_to(circle, LEFT, LARGE_BUFF)
+        R_label.match_x(RmodZ)
+
+        self.add(line)
+        self.add(circle)
+        self.add(R_label)
+        self.add(RmodZ)
+
+        # Rotations and shifts
+        for n in range(10):
+            x = interpolate(-20, 20, random.random())
+            self.play(
+                line.shift, x * RIGHT,
+                Rotate(circle, -x / PI),
+                run_time=2,
+            )
+            self.wait()
+
         self.embed()
+
+
+class QuinticImpliesCyclicDecomposition(Scene):
+    def construct(self):
+        # Title
+        title = TextMobject("Quintic formula")
+        title.scale(1.5)
+        title.to_edge(UP)
+        details = TextMobject(
+            "Solve ",
+            "$a_5 x^5 + a_4 x^4 + a_3 x^3 + a_2 x^2 + a_1 x + a_0$\\\\",
+            " using only ",
+            "+, -, $\\times$, $/$, and $\\sqrt[n]{\\quad}$"
+        )
+        details[1].set_color(BLUE)
+        details[3].set_color(TEAL)
+        details.match_width(title)
+        details.scale(1.2)
+        details.next_to(title, DOWN)
+
+        self.clear()
+        self.add(title)
+        self.wait()
+        self.play(FadeIn(details, 0.5 * UP))
+        self.wait()
+
+        full_title = VGroup(title, details)
+
+        # Show Implication
+        implies = TexMobject("\\Downarrow").scale(2)
+        implies.next_to(details, DOWN, LARGE_BUFF)
+
+        s5 = TexMobject("S_5")
+        prime_children = VGroup(
+            TexMobject("C_{p_1}"),
+            TexMobject("C_{p_2}"),
+            TexMobject("\\vdots"),
+            TexMobject("C_{p_n}"),
+        )
+        prime_children.set_color(RED_B)
+
+        real_children = VGroup(
+            TexMobject("A_5"),
+            TexMobject("C_2"),
+        )
+        real_children.set_color(GREEN)
+
+        for children, buff in (prime_children, MED_LARGE_BUFF), (real_children, LARGE_BUFF):
+            children.arrange(DOWN, buff=buff, aligned_edge=LEFT)
+            children.next_to(s5, RIGHT, buff=0.5 + 0.25 * len(children))
+            children.lines = VGroup()
+            for child in children:
+                children.lines.add(
+                    Line(s5.get_right(), child.get_left(), buff=0.1)
+                )
+        prime_children[2].shift(SMALL_BUFF * RIGHT)
+
+        VGroup(
+            s5, prime_children.lines, prime_children,
+            real_children.lines, real_children,
+        ).next_to(implies, DOWN)
+
+        # Show decomps
+        implies.save_state()
+        implies.stretch(0, 1, about_edge=UP)
+        self.play(
+            Restore(implies),
+            GrowFromPoint(s5, implies.get_top()),
+        )
+        self.play(
+            LaggedStartMap(ShowCreation, prime_children.lines, lag_ratio=0.3),
+            LaggedStartMap(
+                FadeIn, prime_children,
+                lambda m: (m, s5.get_right() - m.get_center()),
+                lag_ratio=0.3,
+            )
+        )
+        self.wait()
+        self.play(
+            FadeOut(prime_children, RIGHT),
+            *[
+                ApplyMethod(line.scale, 0, {"about_point": line.get_end()}, remover=True)
+                for line in prime_children.lines
+            ],
+            LaggedStartMap(ShowCreation, real_children.lines, lag_ratio=0.3),
+            LaggedStartMap(
+                FadeIn, real_children,
+                lambda m: (m, s5.get_right() - m.get_center()),
+                lag_ratio=0.3,
+            )
+        )
+        self.play(ShowCreationThenFadeAround(real_children[0]))
+
+        # Reverse implication
+        title_rect = SurroundingRectangle(full_title)
+        title_rect.set_stroke(RED, 2)
+        not_exists = TextMobject("No\\\\such\\\\thing")
+        not_exists.match_height(title_rect)
+        not_exists.set_color(RED)
+        not_exists.next_to(title_rect, LEFT)
+        full_title.add(title_rect, not_exists)
+
+        self.play(
+            Rotate(implies, PI),
+            VFadeIn(title_rect),
+            VFadeIn(not_exists),
+            full_title.shift, 0.5 * RIGHT,
+        )
+
+
+class CommentOnNontrivialFactFromGroupDecomposition(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "I...don't\\\\get it.",
+            target_mode="confused",
+            student_index=2,
+            look_at_arg=self.screen,
+            added_anims=[self.teacher.change, "guilty"],
+        )
+        self.change_student_modes("maybe", "tired", look_at_arg=self.screen)
+        self.wait(4)
+
+        fp_words = TextMobject("Fact about\\\\polynomials")
+        fp_words.scale(1.25)
+        as_words = TextMobject("``Atomic structure''\\\\of a group")
+        as_words.scale(1.25)
+        implies = TexMobject("\\Rightarrow").scale(2)
+
+        self.teacher_holds_up(
+            fp_words,
+            added_anims=[
+                RemovePiCreatureBubble(self.students[2]),
+            ]
+        )
+        self.change_student_modes("pondering", "hesitant", "plain", look_at_arg=fp_words)
+        self.wait()
+        as_words.next_to(fp_words, LEFT, buff=1.5)
+        implies.move_to(midpoint(as_words.get_right(), fp_words.get_left()))
+
+        self.play(
+            FadeIn(as_words, RIGHT),
+            Write(implies),
+            self.get_student_changes(*3 * ["pondering"], look_at_arg=as_words)
+        )
+        self.wait(5)
+
+
+class TwoStepsToAllFiniteGroups(Scene):
+    def construct(self):
+        # List
+        title = TextMobject("How to categorize all finite groups")
+        title.scale(1.5)
+        title.add(Underline(title))
+        title.to_edge(UP)
+
+        steps = VGroup(
+            TextMobject("1. ", "Find all the ", "simple groups", "."),
+            TextMobject("2. ", "Find all the ", "ways to\\\\", "combine ", "simple groups", "."),
+        )
+        steps[1][3:].next_to(steps[1][1], DOWN, SMALL_BUFF, aligned_edge=LEFT)
+        steps.arrange(DOWN, aligned_edge=LEFT, buff=2)
+        steps.set_y(-0.5)
+        steps.to_edge(LEFT)
+        for step in steps:
+            step.set_color_by_tex("simple groups", TEAL)
+
+        self.add(title)
+        self.wait()
+        self.play(LaggedStartMap(
+            FadeIn, VGroup(steps[0][0], steps[1][0]),
+            lambda m: (m, RIGHT),
+            lag_ratio=0.4,
+        ))
+        self.wait()
+        self.play(FadeIn(steps[0][1:], lag_ratio=0.1))
+        self.wait()
+        self.play(
+            TransformFromCopy(steps[0][1], steps[1][1]),
+            TransformFromCopy(steps[0][2], steps[1][4]),
+            FadeIn(VGroup(*[steps[1][i] for i in (2, 3, 5)])),
+        )
+        self.wait()
+
+        # Periodic table
+        table = VGroup(*[
+            VGroup(*[
+                Square() for x in range(n)
+            ]).arrange(DOWN, buff=0)
+            for n in [7, 6, *[4] * 10, *[6] * 5, 7]
+        ])
+        table.arrange(RIGHT, buff=0, aligned_edge=DOWN)
+        table.set_width(4)
+        table.to_edge(RIGHT)
+        table.match_y(steps[0])
+        table.set_stroke(GREY_A, 2)
+
+        table_arrow = Arrow(
+            steps[0].get_right(), table.get_left(),
+            buff=0.5,
+        )
+
+        self.play(
+            GrowArrow(table_arrow),
+            FadeIn(table, lag_ratio=0.1, run_time=3),
+        )
+        self.wait()
+
+        # Chemistry
+        chem_words = TextMobject("All of chemistry")
+        chem_words.match_y(steps[1])
+        chem_words.match_x(table)
+        chem_words.set_color(RED)
+        chem_arrow = Arrow(
+            steps[1].get_right(), chem_words.get_left(),
+            buff=0.5
+        )
+        self.play(
+            GrowArrow(chem_arrow),
+            Write(chem_words),
+        )
+        self.wait()
+
+        # Found all simples
+        top_group = VGroup(steps[0], table_arrow, table)
+        bottom_group = VGroup(steps[1], chem_arrow, chem_words)
+        frame = self.camera.frame
+
+        top_rect = SurroundingRectangle(top_group, buff=MED_LARGE_BUFF)
+        top_rect.set_stroke(GREEN, 4)
+        check = Checkmark()
+        check.set_height(0.7)
+        check.next_to(top_rect, UP, aligned_edge=LEFT)
+        check.shift(RIGHT)
+
+        self.play(
+            frame.scale, 1.1,
+            bottom_group.shift, 0.5 * DOWN,
+            bottom_group.set_opacity, 0.5,
+            ShowCreation(top_rect),
+            FadeOut(title, UP),
+        )
+        self.play(Write(check))
+        self.wait()
+
+        proof_words = TextMobject("(prove you have them all.)")
+        proof_words.next_to(steps[0], DOWN)
+        proof_words.set_color(GREY_A)
+        self.play(Write(proof_words, run_time=2))
+        self.wait()
+
+        # What was involved
+        stats = VGroup(
+            TextMobject("1955-2004"),
+            TextMobject("$10{,}000+$ pages"),
+            TextMobject("100's of mathematicians"),
+            TextMobject("Plenty of computation"),
+        )
+        stats.arrange_in_grid(buff=1.5, aligned_edge=LEFT)
+        stats.next_to(top_rect, DOWN, buff=LARGE_BUFF)
+        for stat in stats:
+            dot = Dot()
+            dot.next_to(stat, LEFT)
+            stat.add(dot)
+
+        turn_animation_into_updater(ApplyMethod(frame.shift, DOWN, run_time=3))
+        self.add(frame)
+        for stat in stats:
+            self.play(FadeIn(stat), bottom_group.set_opacity, 0)
+            self.wait(0.5)
+        self.remove(bottom_group)
+
+        # 2004 paper mention
+        stats.generate_target()
+        stats.target.arrange(DOWN, buff=MED_LARGE_BUFF, aligned_edge=LEFT)
+        stats.target.move_to(stats, UL)
+
+        last_paper = TextMobject(
+            "The Classification of Quasithin Groups\\\\",
+            "Aschbacher and Smith (2004)\\\\",
+            "(12{,}000 pages!)",
+        )
+        last_paper.scale(0.7)
+        last_paper[:-1].set_color(YELLOW)
+        last_paper.move_to(stats, RIGHT)
+        last_paper.shift(RIGHT)
+
+        self.play(
+            FadeIn(last_paper, DOWN),
+            MoveToTarget(stats),
+        )
+        self.wait()
+
+        # Quote
+        quote = TextMobject(
+            """
+            ``...undoubtedly one of the most\\\\
+            extraordinary theorems that pure\\\\
+            mathematics has ever seen.''\\\\
+            """,
+            "-Richard Elwes",
+            alignment="",
+        )
+        quote.scale(0.9)
+        quote[0].set_color(YELLOW)
+        quote[-1].shift(MED_SMALL_BUFF * DR)
+        quote.move_to(last_paper, LEFT)
+
+        self.play(
+            FadeIn(quote),
+            FadeOut(last_paper),
+        )
+        self.wait()
+
+
+class ClassificationOfSimpleGroups(Scene):
+    def construct(self):
+        # Title
+        class_title = TextMobject("Classification of finite simple groups")
+        class_title.set_width(FRAME_WIDTH - 4)
+        class_title.add(Underline(class_title).set_color(GREY_B))
+        class_title.to_edge(UP)
+        self.add(class_title)
+
+        # 18 families
+        square_template = Square(side_length=0.3)
+        square_template.set_stroke(GREY_B, 2)
+        square_template.set_fill(BLUE_E, 0.5)
+        families_grid = VGroup(*[
+            VGroup(*[square_template.copy() for x in range(8)])
+            for y in range(18)
+        ])
+        for family in families_grid:
+            family.arrange(DOWN, buff=0)
+            dots = TexMobject("\\vdots")
+            dots.next_to(family, DOWN)
+            family.add(dots)
+        families_grid.arrange(RIGHT, buff=MED_SMALL_BUFF)
+        families_grid.to_edge(LEFT)
+        families_grid.set_y(-1)
+
+        families_title = TextMobject("18 infinite families")
+        families_title.set_color(BLUE)
+        families_title.next_to(families_grid, UP, MED_LARGE_BUFF)
+
+        self.play(
+            FadeIn(families_title),
+            FadeIn(families_grid, lag_ratio=0.1, run_time=4),
+        )
+        self.wait()
+
+        # Analogize to periodic table
+        families_grid.generate_target()
+        families_grid.save_state()
+        families_grid.target.arrange(RIGHT, buff=0)
+        families_grid.target.move_to(families_grid)
+        faders = VGroup(*[
+            column[:n]
+            for column, n in zip(families_grid.target, [
+                0, 1, *[3] * 10, *[1] * 5, 0,
+            ])
+        ])
+        faders.set_opacity(0)
+
+        self.play(MoveToTarget(families_grid, lag_ratio=0.001))
+        self.wait(2)
+        self.play(Restore(families_grid))
+
+        # Sporadic
+        sporadics = VGroup(*[square_template.copy() for x in range(26)])
+        buff = 0.1
+        sporadics[:20].arrange_in_grid(10, 2, buff=buff)
+        sporadics[20:].arrange(DOWN, buff=buff)
+        sporadics[20:].next_to(sporadics[:20], RIGHT, buff)
+        sporadics.next_to(families_grid, RIGHT, buff=1.5, aligned_edge=UP)
+        sporadics.set_fill(YELLOW_E)
+
+        pre_sporadics_title = TextMobject("26", " leftovers")
+        sporadics_title = TextMobject("26", " ``sporadic''\\\\groups")
+        for title in pre_sporadics_title, sporadics_title:
+            title.set_color(YELLOW)
+            title.next_to(sporadics, UP, MED_LARGE_BUFF)
+        sporadics_title.shift(MED_SMALL_BUFF * DOWN)
+
+        self.play(
+            FadeIn(pre_sporadics_title, DOWN),
+            ShowIncreasingSubsets(sporadics, run_time=3),
+        )
+        self.wait()
+        self.play(
+            ReplacementTransform(pre_sporadics_title[0], sporadics_title[0]),
+            FadeOut(pre_sporadics_title[1], UP),
+            FadeIn(sporadics_title[1], DOWN),
+        )
+        self.wait()
+
+        # Show prime cyclic groups
+        families_grid.save_state()
+        column = families_grid[0]
+
+        def prepare_column(column):
+            column.generate_target()
+            column.target.set_height(FRAME_HEIGHT)
+            column.target.move_to(5 * LEFT)
+            column.target.to_edge(UP)
+            column.target[-1].scale(0.5, about_point=column.target[-2].get_bottom())
+
+        prepare_column(column)
+
+        self.play(
+            MoveToTarget(column),
+            FadeOut(families_grid[1:], lag_ratio=0.1),
+            FadeOut(families_title),
+            FadeOut(class_title, UP),
+            FadeOut(sporadics, 2 * RIGHT),
+            FadeOut(sporadics_title, 2 * RIGHT),
+        )
+
+        # C5
+        c_names = VGroup(*[
+            TexMobject(f"C_{{{p}}}")
+            for p in [2, 3, 5, 7, 11, 13, 17, 19]
+        ])
+
+        def put_in_square(mob, square, factor=0.4):
+            mob.set_height(factor * square.get_height())
+            mob.move_to(square)
+
+        def put_names_in_column(names, column):
+            for name, square in zip(names, column):
+                put_in_square(name, square)
+
+        put_names_in_column(c_names, column)
+
+        self.play(FadeIn(c_names, lag_ratio=0.1))
+        self.wait()
+
+        pentagon = RegularPolygon(5)
+        pentagon.set_height(3)
+        pentagon.set_fill(TEAL_E, 0.5)
+        pentagon.set_stroke(WHITE, 1)
+        pentagon.move_to(2 * RIGHT)
+        c_names.save_state()
+        c5 = c_names[2]
+        c5.generate_target()
+        c5.target.scale(2)
+        c5.target.next_to(pentagon, UP, LARGE_BUFF)
+
+        self.play(
+            MoveToTarget(c5),
+            DrawBorderThenFill(pentagon, run_time=1),
+        )
+        pcenter = center_of_mass(pentagon.get_vertices())
+        for n in [1, -2, 2]:
+            self.play(Rotate(pentagon, n * TAU / 5, about_point=pcenter))
+            self.wait(0.5)
+        self.play(
+            Restore(c_names),
+            FadeOut(pentagon)
+        )
+
+        c_names.generate_target()
+        c_names.target.replace(families_grid.saved_state[0])
+        c_names.target.scale(0.9)
+        c_names.target.set_opacity(0)
+        families_grid[1:].fade(1)
+
+        self.play(
+            Restore(families_grid),
+            MoveToTarget(c_names, remover=True)
+        )
+
+        # Alternating
+        column = families_grid[1]
+        prepare_column(column)
+        self.play(
+            MoveToTarget(column),
+            FadeOut(families_grid[0]),
+            FadeOut(families_grid[2:], lag_ratio=0.1),
+        )
+
+        a_names = VGroup(*[
+            TexMobject(f"A_{{{n}}}")
+            for n in range(5, 5 + len(column) - 1)
+        ])
+        put_names_in_column(a_names, column)
+        self.play(FadeIn(a_names, lag_ratio=0.1))
+
+        dots = VGroup(*[Dot() for x in range(5)])
+        dots.set_height(0.5)
+        dots.arrange(RIGHT, buff=MED_LARGE_BUFF)
+        dots.set_submobject_colors_by_gradient(RED, YELLOW)
+        dots.move_to(RIGHT)
+
+        a5 = a_names[0]
+        a5.save_state()
+        a5.generate_target()
+        a5.target.scale(2)
+        a5.target.next_to(dots, UP, buff=1.5)
+
+        self.play(
+            FadeIn(dots, lag_ratio=0.1),
+            MoveToTarget(a5),
+        )
+        for x in range(5):
+            perm = list(range(5))
+            swaps = 1  # Lie
+            while swaps % 2 == 1:
+                random.shuffle(perm)
+                swaps = 0
+                for i, j in it.combinations(perm, 2):
+                    if j < i:
+                        swaps += 1
+            arrows = get_permutation_arrows(dots, perm)
+            self.play(
+                FadeIn(arrows),
+                permutation_animation(dots, perm, lag_factor=0.1),
+            )
+            self.play(FadeOut(arrows))
+        self.wait()
+
+        self.play(
+            FadeOut(dots, lag_ratio=0.1),
+            Restore(a5),
+        )
+        self.wait()
+
+        a_names.generate_target()
+        a_names.target.replace(families_grid.saved_state[1])
+        a_names.target.scale(0.9)
+        a_names.target.fade(1)
+
+        self.play(
+            Restore(families_grid),
+            MoveToTarget(a_names, remover=True),
+            FadeIn(families_title),
+            FadeIn(class_title),
+        )
+
+        # Others
+        others_rect = SurroundingRectangle(families_grid[2:])
+        others_rect.set_stroke(YELLOW, 2)
+        others_name = TextMobject("Groups of\\\\Lie type")
+        others_name.set_color(YELLOW)
+        others_name.next_to(others_rect, RIGHT)
+        self.play(ShowCreation(others_rect))
+        self.play(FadeIn(others_name))
+        self.wait()
+        self.play(FadeOut(others_name), FadeOut(others_rect))
+
+        # Back to sporadics
+        self.play(
+            ShowIncreasingSubsets(sporadics),
+            FadeIn(sporadics_title),
+        )
+        self.wait()
+
+        # Look closer at sporadics
+        sporadics.generate_target()
+        sporadics.target.rotate(PI, axis=UL)
+        sporadics.target.set_width(FRAME_WIDTH - 1)
+        sporadics.target.center().to_edge(DOWN)
+
+        sporadics_title.save_state()
+        sporadics.save_state()
+
+        self.play(
+            sporadics_title.scale, 1.25,
+            sporadics_title.center,
+            sporadics_title.to_edge, UP,
+            MoveToTarget(sporadics),
+            FadeOut(families_grid, LEFT),
+            FadeOut(families_title, LEFT),
+            FadeOut(class_title, UP),
+        )
+
+        # Monster
+        monster = get_monster()
+        put_in_square(monster, sporadics[0], 0.9)
+        monster_name = TextMobject("Monster", " group")
+        monster_name.next_to(sporadics[0], UP, LARGE_BUFF)
+        monster_name.shift_onto_screen()
+        monster_arrow = Arrow(monster_name.get_bottom(), monster.get_top())
+
+        size_label = TextMobject("{:,}".format(MONSTER_SIZE))[0]
+        size_label.scale(0.8)
+        size_label.move_to(monster_name, LEFT)
+
+        self.play(
+            sporadics[0].set_fill, {"opacity": 0},
+            FadeIn(monster)
+        )
+        self.play(
+            Write(monster_name),
+            GrowArrow(monster_arrow),
+        )
+        self.wait()
+
+        # sporadics_title.generate_target()
+        # sporadics_title.target.scale(1 / 1.5)
+        # sporadics_title.target.to_corner(UR)
+        self.play(
+            monster_name.shift, 0.6 * UP,
+            ShowIncreasingSubsets(size_label, run_time=2),
+            # MoveToTarget(sporadics_title, run_time=2, rate_func=squish_rate_func(smooth, 0.5, 1))
+        )
+        self.wait()
+
+        # Baby monster
+        full_monster_label = VGroup(monster_name, size_label)
+        full_monster_label.save_state()
+        full_monster_label.generate_target()
+        full_monster_label.target.to_edge(UP, buff=MED_SMALL_BUFF)
+        full_monster_label.target.set_opacity(0.7)
+
+        baby_name = TextMobject("Baby monster group")
+        baby_name.move_to(size_label, LEFT)
+        baby_arrow = Arrow(baby_name.get_bottom(), sporadics[1].get_corner(UR) + SMALL_BUFF * DL)
+        baby_arrow.set_stroke(BLACK, 6, background=True)
+        baby_size_label = TextMobject("{:,}".format(BABY_MONSTER_SIZE))[0]
+        baby_size_label.scale(0.8)
+        baby_size_label.move_to(baby_name, LEFT)
+
+        baby_monster = get_baby_monster()
+        baby_monster.set_width(0.9 * sporadics[1].get_width())
+        baby_monster.move_to(sporadics[1])
+        baby_monster.shift(SMALL_BUFF * DOWN)
+
+        self.remove(monster_arrow)
+        self.play(
+            MoveToTarget(full_monster_label),
+            TransformFromCopy(monster_arrow, baby_arrow),
+            FadeIn(baby_name, DOWN),
+            sporadics[1].set_fill, {"opacity": 0},
+            FadeIn(baby_monster),
+            FadeOut(sporadics_title, UP),
+        )
+        self.wait()
+        self.play(
+            baby_name.shift, 0.6 * UP,
+            ShowIncreasingSubsets(baby_size_label, run_time=2)
+        )
+        self.wait()
+
+        # 20 vs. 6
+        top_20 = sporadics[:20]
+        top_20.generate_target()
+        top_20.target.shift(2 * UP)
+        top_20.target[1:].set_fill(GREEN, 0.8)
+
+        self.play(
+            MoveToTarget(top_20),
+            MaintainPositionRelativeTo(monster, sporadics[0]),
+            MaintainPositionRelativeTo(baby_monster, sporadics[1]),
+            UpdateFromAlphaFunc(baby_monster, lambda m, a: m.set_opacity(1 - a), remover=True),
+            ApplyMethod(baby_arrow.scale, 0, {"about_point": baby_arrow.get_start()}, remover=True),
+            FadeOut(baby_size_label, UP),
+            FadeOut(baby_name, UP),
+            full_monster_label.set_fill, WHITE, 1,
+        )
+
+        monster_name.generate_target()
+        monster_name.target.arrange(DOWN, buff=MED_SMALL_BUFF, aligned_edge=LEFT)
+        monster_name.target.next_to(sporadics[0], UP, SMALL_BUFF, aligned_edge=LEFT)
+
+        happy_family_name = TextMobject("``Happy family''")
+        happy_family_name.set_height(0.7)
+        happy_family_name.to_edge(UP)
+        happy_family_name.set_color(GREEN)
+
+        self.play(
+            MoveToTarget(monster_name),
+            FadeOut(size_label, DOWN),
+            FadeIn(happy_family_name, UP),
+        )
+        self.wait()
+
+        pariahs = sporadics[20:]
+        pariahs_name = TextMobject("``Pariahs''")
+        pariahs_name.set_height(0.7)
+        pariahs_name.next_to(pariahs, UP, MED_LARGE_BUFF)
+        pariahs_name.set_color(YELLOW)
+
+        self.play(
+            FadeIn(pariahs_name, UP),
+            pariahs.set_fill, YELLOW, 0.7,
+        )
+        self.wait()
+
+
+class ImSorryWhat(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "I'm sorry, what?!",
+            target_mode="sassy",
+            look_at_arg=self.screen,
+        )
+        self.change_student_modes("angry", "maybe", "sassy", look_at_arg=self.screen)
+        self.wait(3)
+        self.change_student_modes("pleading", "confused", "erm", look_at_arg=self.screen)
+        self.wait(5)
+
+
+class TellMeTheresAChildrensBook(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Please tell me\\\\there's a children's\\\\book about this!",
+            target_mode="surprised",
+            added_anims=[self.teacher.change, "tease"]
+        )
+        self.change_student_modes("happy", "coin_flip_1", look_at_arg=self.screen)
+        self.look_at(self.screen)
+        self.wait(5)
+
+
+class AskWhatTheMonsterActsOn(Scene):
+    def construct(self):
+        # Setup
+        question = TextMobject(
+            "The monster group describes the symmetries of ",
+            "$\\underline{\\qquad\\qquad\\qquad}$",
+        )
+        question[1].set_color(YELLOW)
+        question.to_edge(UP)
+
+        monster = get_monster()
+        monster.set_height(5)
+        monster.to_corner(DL)
+
+        self.add(monster)
+        self.play(FadeIn(question, DOWN))
+        self.wait()
+
+        # Dimension counts
+        dim_words = VGroup(*[
+            TextMobject(
+                "Something in\\\\",
+                "{:,}".format(n),
+                " dimensions",
+                "?"
+            )
+            for n in [2, 3, 4, 5, 196883]
+        ])
+        dim_words.scale(1.25)
+        dim_words.to_edge(RIGHT, buff=LARGE_BUFF)
+        dim_words.set_y(1.5)
+
+        final_words = dim_words[-1]
+        dim = Integer(196883, edge_to_fix=ORIGIN)
+        dim.replace(final_words[1])
+        dim.match_style(final_words[1])
+        final_words.replace_submobject(1, dim)
+        final_words[-1].set_opacity(0)
+
+        cross = Cross(dim_words)
+        cross.set_stroke(RED, 8)
+        for dim_word in dim_words[:-1]:
+            cross.replace(dim_word[1], stretch=True)
+            self.add(dim_word)
+            self.wait()
+            self.play(ShowCreation(cross, run_time=0.5))
+            self.wait(0.5)
+            self.remove(dim_word, cross)
+
+        penult = dim_words[-2]
+        dim.set_value(0)
+        for i in 0, 2:
+            final_words[i].save_state()
+            final_words[i].replace(penult[i])
+        self.play(
+            Restore(final_words[0]),
+            Restore(final_words[2]),
+            FadeOut(penult[3]),
+            ChangingDecimal(
+                dim,
+                lambda a: interpolate(5, 196883, a),
+                run_time=8,
+                rate_func=rush_from,
+            ),
+            UpdateFromAlphaFunc(
+                Mobject(),
+                lambda m, a, fw=final_words: fw.set_color(interpolate_color(WHITE, YELLOW, a)),
+                remover=True
+            )
+        )
+        final_words.add(dim)
+        self.add(final_words)
+        self.wait()
+        self.play(blink_monster(monster))
+        self.wait()
+
+        # Elements of the monster
+        in_sym = TexMobject("\\in")
+        in_sym.scale(2.5)
+
+        monster.generate_target()
+        monster.target.center().to_edge(RIGHT)
+        in_sym.next_to(monster.target, LEFT, MED_LARGE_BUFF)
+
+        self.play(
+            MoveToTarget(monster),
+            FadeOut(question, 3 * RIGHT),
+            FadeOut(final_words, 2 * RIGHT),
+            FadeIn(in_sym, 3 * LEFT),
+        )
+
+        matrix = IntegerMatrix(
+            np.random.randint(0, 2, size=(6, 6)),
+            v_buff=0.8,
+            h_buff=0.8,
+        )
+        matrix.set_height(4)
+        matrix.next_to(in_sym, LEFT, MED_LARGE_BUFF)
+
+        mob_matrix = matrix.get_mob_matrix()
+        groups_to_dots = [
+            (mob_matrix[4, :4], TexMobject("\\vdots")),
+            (mob_matrix[:4, 4], TexMobject("\\ldots")),
+            (VGroup(mob_matrix[4, 4]), TexMobject("\\ddots")),
+        ]
+        for group, dots in groups_to_dots:
+            for elem in group:
+                dots_copy = dots.copy()
+                dots_copy.move_to(elem)
+                elem.set_submobjects(dots_copy)
+
+        braces = VGroup(
+            Brace(matrix.get_entries(), DOWN),
+            Brace(matrix.get_entries(), LEFT),
+        )
+        braces[1].shift(MED_SMALL_BUFF * LEFT)
+        for brace in braces:
+            brace.add(brace.get_text("196{,}882"))
+        braces.set_color(BLUE)
+
+        gigs_label = TextMobject("Each element $\\approx$ 4.5 Gigabytes of data!")
+        gigs_label.next_to(matrix, UP, MED_LARGE_BUFF)
+
+        self.play(Write(matrix, run_time=1))
+        self.play(
+            LaggedStartMap(GrowFromCenter, braces, lag_ratio=0.5, run_time=1),
+            FadeIn(gigs_label, DOWN)
+        )
+        self.play(blink_monster(monster))
+        self.wait()
+
+
+class MonsterQuotes(Scene):
+    def construct(self):
+        images = [
+            get_named_image("John Conway"),
+            get_named_image("Richard Borcherds"),
+        ]
+
+        quotes = [
+            TextMobject(
+                """
+                ``Nothing has given me the feeling\\\\
+                that I understand why the monster\\\\
+                is there.''\\\\
+                """,
+                alignment="",
+            ),
+            TextMobject(
+                """
+                ``The monster simple group . . . appears\\\\
+                to rely on numerous bizarre coincidences\\\\
+                to exist.''\\\\
+                """,
+                alignment="",
+            ),
+        ]
+        faders = []
+        self.clear()
+        for image, quote, color in zip(images, quotes, [YELLOW, WHITE]):
+            quote[0].set_color(color)
+
+            image.set_height(5)
+            image.to_edge(LEFT)
+            image[1].set_color(GREY_B)
+            quote.next_to(image, RIGHT, buff=1, aligned_edge=UP)
+            quote.shift(DOWN)
+            quote.shift_onto_screen()
+
+            self.play(
+                FadeIn(image, DOWN),
+                FadeIn(quote, lag_ratio=0.1, run_time=3),
+                *faders,
+            )
+            self.wait(4)
+            faders = [FadeOut(image, UP), FadeOut(quote)]
+
+
+class MonstrousMoonshine(Scene):
+    def construct(self):
+        # Time line
+        decades = list(range(1970, 2030, 10))
+        timeline = NumberLine(
+            (decades[0], decades[-1], 1),
+            numbers_with_elongated_ticks=decades,
+            tick_size=0.075,
+            width=13,
+        )
+        timeline.add_numbers(decades, number_config={"group_with_commas": False})
+        timeline.move_to(DOWN)
+        self.add(timeline)
+
+        triangle = Triangle()
+        triangle.rotate(PI)
+        triangle.set_height(0.25)
+        triangle.set_fill(BLUE_C, 1)
+        triangle.set_stroke(WHITE, 0)
+        triangle.move_to(timeline.n2p(2020), DOWN)
+        self.add(triangle)
+
+        self.play(
+            triangle.move_to, timeline.n2p(1978), DOWN,
+            run_time=3,
+        )
+
+        # McKay
+        mckay = get_named_image("John McKay")
+        mckay[0].flip()
+        mckay.next_to(triangle, UP)
+
+        self.play(FadeIn(mckay, DOWN))
+        self.wait()
+
+        theories = VGroup(
+            TextMobject("Finite group theory"),
+            TextMobject("Galois theory"),
+        )
+        theories.arrange(RIGHT, buff=1.5)
+        theories.next_to(mckay, RIGHT, LARGE_BUFF)
+        theories_line, theories_arrow = [
+            func(
+                *[theory.get_top() for theory in theories],
+                path_arc=-90 * DEGREES,
+                buff=0.2,
+            ).shift(0.25 * UP)
+            for func in [Line, Arrow]
+        ]
+        theories_line.set_stroke(BLUE_C, 6)
+        theories_arrow.set_fill(BLUE_C)
+
+        self.play(FadeIn(theories[0], LEFT))
+        self.play(
+            GrowFromPoint(theories[1], theories_line.get_start(), path_arc=-90 * DEGREES),
+            ShowCreationThenFadeOut(theories_line, run_time=2),
+            FadeIn(theories_arrow, rate_func=squish_rate_func(smooth, 0.3, 1), run_time=2)
+        )
+        self.wait()
+
+        theories_group = VGroup(theories, theories_arrow)
+
+        # j function
+        j_func = TexMobject(
+            "j(\\tau)  =q^{-1}+744+196{,}884 q+21{,}493{,}760 q^{2}+864{,}299{,}970 q^{3}+\\cdots\\\\",
+            "\\big(q = e^{2\\pi i \\tau}\\big)",
+            tex_to_color_map={
+                "\\tau": TEAL,
+                "q": BLUE,
+                "196{,}884": WHITE,
+            }
+        )
+        j_func.scale(0.7)
+        j_func[-5:].shift([-0.5, -0.25, 0])
+        j_func.next_to(mckay, RIGHT, aligned_edge=DOWN)
+        j_func.shift(0.5 * UP)
+
+        special_num = j_func.get_part_by_tex("196{,}884")
+        special_num_underline = Underline(special_num)
+        special_num_underline.set_stroke(YELLOW, 3)
+
+        self.play(
+            theories_group.scale, 0.5, {"about_edge": UL},
+            theories_group.to_edge, UP,
+            Write(j_func)
+        )
+        self.wait()
+        self.play(
+            ShowCreation(special_num_underline),
+            special_num.set_color, YELLOW,
+        )
+        self.wait()
+
+        j_coloring = ImageMobject("J_Invariant_Coloring")
+        j_coloring.set_width(FRAME_WIDTH)
+        j_coloring.to_edge(DOWN, buff=0)
+        j_coloring.set_opacity(0.25)
+        self.add(j_coloring, *self.mobjects)
+        self.play(FadeIn(j_coloring))
+        self.wait(0.5)
+        self.play(FadeOut(j_coloring), FadeOut(special_num_underline))
+        self.wait()
+
+        # Conway
+        conway = get_named_image("John Conway")
+        conway[0].flip()
+        conway.move_to(mckay)
+        conway.to_edge(RIGHT)
+        moonshine = TextMobject("Moonshine!")
+        moonshine.set_height(0.6)
+        moonshine.next_to(conway, LEFT, MED_LARGE_BUFF, aligned_edge=UP)
+        moonshine.set_color(YELLOW)
+
+        self.play(
+            FadeOut(timeline, DOWN),
+            FadeOut(triangle, DOWN),
+            j_func.to_edge, DOWN,
+            FadeOut(theories_group),
+            FadeIn(conway, DOWN),
+        )
+        self.play(Write(moonshine))
+        self.wait()
+
+        # Conjecture
+        conjecture = TextMobject("Monstrous ", "moonshine\\\\", " conjecture")
+        conjecture_icon = VGroup(
+            get_monster().set_height(1),
+            TexMobject("\\leftrightarrow"),
+            TexMobject("j(\\tau)", tex_to_color_map={"\\tau": TEAL}),
+        )
+        conjecture_icon.arrange(RIGHT, buff=SMALL_BUFF)
+        conjecture_icon.set_height(1.5)
+        conjecture_icon.next_to(timeline.n2p(1979), UP, MED_LARGE_BUFF)
+        conjecture.next_to(conjecture_icon, UP, MED_LARGE_BUFF)
+
+        self.play(
+            FadeIn(timeline, DOWN),
+            FadeIn(triangle, DOWN),
+            FadeOut(mckay, UP),
+            Transform(
+                moonshine,
+                moonshine.copy().replace(conjecture[1], stretch=True).fade(1),
+                remover=True,
+            ),
+            ReplacementTransform(
+                conjecture[1].copy().replace(moonshine, stretch=True).fade(1),
+                conjecture[1],
+            ),
+            Write(conjecture[0::2]),
+        )
+        self.play(
+            FadeIn(conjecture_icon, lag_ratio=0.1),
+            triangle.move_to, timeline.n2p(1979), DOWN,
+        )
+        self.play(blink_monster(conjecture_icon[0]))
+        self.wait()
+
+        conjecture_group = VGroup(conjecture, conjecture_icon)
+
+        # Borcherds
+        borcherds = get_named_image("Richard Borcherds")
+        borcherds.next_to(timeline.n2p(1992), UP, MED_LARGE_BUFF)
+
+        self.play(
+            conjecture_group.scale, 0.5, {"about_edge": DOWN},
+            triangle.move_to, timeline.n2p(1992), DOWN,
+            FadeOut(conway, RIGHT),
+            FadeIn(borcherds, 2 * LEFT)
+        )
+        self.wait(2)
+        self.play(
+            triangle.move_to, timeline.n2p(1998), DOWN,
+            MaintainPositionRelativeTo(borcherds, triangle),
+        )
+
+        medal = ImageMobject("Fields Medal")
+        medal.set_height(1)
+        medal.move_to(borcherds.get_corner(UR), LEFT)
+        self.play(FadeIn(medal, DOWN))
+        self.wait()
+
+
+class StringTheory(Scene):
+    def construct(self):
+        monster = get_monster()
+        monster.set_height(4)
+        arrow = TexMobject("\\leftrightarrow").scale(2)
+
+        n = 10
+        points = compass_directions(n)
+        freqs = np.random.random(n) + 0.3
+
+        string = VMobject()
+        string.set_stroke([BLUE, TEAL, BLUE, TEAL, BLUE, TEAL, BLUE], 4)
+
+        def update_string(string, points=points, freqs=freqs, sc=self):
+            for point, freq in zip(points, freqs):
+                point[:] = normalize(point) * (1 + 0.2 * np.sin(TAU * freq * sc.time))
+            string.set_points_smoothly([*points, points[0]])
+
+        string.add_updater(update_string)
+
+        arrow.next_to(string, LEFT, LARGE_BUFF)
+        monster.next_to(arrow, LEFT, LARGE_BUFF)
+        # self.camera.frame.move_to(arrow)
+        self.camera.frame.scale(0.5)
+
+        st_name = TextMobject("String theory")
+        st_name.scale(1.5)
+        st_name.next_to(string, UP, LARGE_BUFF)
+
+        sg_name = TextMobject("Sporadic groups")
+        sg_name.scale(1.5)
+        sg_name.next_to(monster, DOWN)
+
+        self.add(monster)
+        self.add(arrow)
+        self.add(string)
+        self.wait(2)
+        self.play(Write(sg_name))
+        self.play(Write(st_name))
+        for x in range(4):
+            self.play(blink_monster(monster))
+            self.wait(5)
+
+
+class MonsterThanks(PatreonEndScreen):
+    pass
