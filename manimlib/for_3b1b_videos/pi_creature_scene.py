@@ -5,6 +5,7 @@ from manimlib.animation.transform import ReplacementTransform
 from manimlib.animation.transform import Transform
 from manimlib.animation.transform import ApplyMethod
 from manimlib.animation.composition import LaggedStart
+from manimlib.animation.fading import FadeIn
 from manimlib.constants import *
 from manimlib.for_3b1b_videos.pi_creature import Mortimer
 from manimlib.for_3b1b_videos.pi_creature import PiCreature
@@ -374,12 +375,9 @@ class TeacherStudentsScene(PiCreatureScene):
     def teacher_holds_up(self, mobject, target_mode="raise_right_hand", added_anims=None, **kwargs):
         mobject.move_to(self.hold_up_spot, DOWN)
         mobject.shift_onto_screen()
-        mobject_copy = mobject.copy()
-        mobject_copy.shift(DOWN)
-        mobject_copy.fade(1)
         added_anims = added_anims or []
         self.play(
-            ReplacementTransform(mobject_copy, mobject),
+            FadeIn(mobject, DOWN),
             self.teacher.change, target_mode,
             *added_anims
         )
