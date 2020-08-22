@@ -38,7 +38,7 @@ Cairo installation
 6. Alternatively, running the command below installs pycairo.  This needs to be
    run in an elevated command prompt like Powershell.
 
-   .. code-block:: bash
+   .. code-block:: powershell
 
       (Invoke-WebRequest -Uri https://raw.githubusercontent.com/ManimCommunity/manim/master/scripts/pycairoinstall.py -UseBasicParsing).Content | py -3
 
@@ -58,22 +58,15 @@ Sox installation (optional)
 
 1. To install Sox, execute ``choco install sox.portable``.
 
-2. Add SoX to your PATH: Find the directory where SoX is installed.  This is
-   probably ``C:\Program Files (x86)\sox-(version_number)`` or ``C:\Program
-   Files\sox-(version_number)``.  Open a command prompt window by hitting the
-   Win key and typing ``cmd``. Run this command to update your PATH:
-
-   .. code-block::
-
-      setx PATH %PATH%;C:\Program Files (x86)\sox-(version_number)
-
-   Check whether you did it right by running ``refreshenv`` to update your environment
-   variable and running ``sox``.
-
+2. You can check if you did it right by running ``refreshenv`` to update your
+   environment variable and running ``sox``.
 
 LaTeX Installation
 ******************
+You can install latex by either of the two methods below. MiKTex is very large (2 GB) while TinyTex is small  (500Mb).
 
+Using MiKTex
+------------
 1. Download the MiKTex installer from `this page
    <https://miktex.org/download>`_ and execute it.
 
@@ -85,6 +78,25 @@ LaTeX Installation
 2. You can check if you did it right by running ``refreshenv`` to update your
    environment variable and running ``latex``.
 
+Using TinyTex
+-------------
+
+1. Save the batch file `install-windows.bat
+<https://yihui.org/gh/tinytex/tools/install-windows.bat>`_. (open this link and press Ctrl + S).
+
+.. note:: Please note that it requires PowerShell (at least version 3.0).
+
+2. Double click the file and it opens a command prompt. There might be an error 
+dialog or two about ``luatex.dll`` during the installation `(like this)
+<https://db.yihui.org/images/install-tl-win-lua.png>`_, but that does not seem to hurt, and click “OK”. The installation directory is ``%APPDATA%/TinyTeX``, where APPDATA is an environment variable that typically points to the path ``C:\Users\Your Name\AppData\Roaming``
+
+3.Finally, close the terminal and open a new one and type the below commands.
+
+.. code-block:: powershell
+
+      tlmgr install standalone preview doublestroke ms setspace rsfs relsize ragged2e fundus-calligra microtype wasysym physics dvisvgm jknapltx wasy cm-super babel-english
+
+4. Finally, check whether it installed properly by running an example scene.
 
 Certifying a clean install
 **************************
