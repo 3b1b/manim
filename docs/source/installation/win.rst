@@ -15,7 +15,7 @@ Cairo installation
 2. Select the download that corresponds to your PC's architechture and Python
    Version
 
-   .. image:: ../_static/installation/windows_cairo.png
+   .. image:: ../_static/windows_cairo.png
        :align: center
        :width: 400px
        :alt: windows cairo download page
@@ -77,7 +77,7 @@ LaTeX Installation
 1. Download the MiKTex installer from `this page
    <https://miktex.org/download>`_ and execute it.
 
-   .. image:: ../_static/installation/windows_miktex.png
+   .. image:: ../_static/windows_miktex.png
        :align: center
        :width: 500px
        :alt: windows latex download page
