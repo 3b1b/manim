@@ -16,3 +16,10 @@ last release, see the :doc:`changelog`.
    mobject.mobject
    config
    constants
+
+.. This is here so that sphinx doesn't complain about changelog.rst not being
+   included in any toctree
+.. toctree::
+   :hidden:
+
+   changelog

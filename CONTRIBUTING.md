@@ -62,7 +62,6 @@ confusing.  Here is a short guide on how to do it.
      git clone <your-fork-url>
      cd manim
    ```
-
 	Note: do not `git clone` the original ManimCommunity repository.  You must
     clone your own fork.  After this step, there are three different
     repositories to keep track of: the original ManimCommunity repo, your own
@@ -188,6 +187,3 @@ yet-to-be-implemented changes, please mark your PR as a draft.
 
 7. Please do as much as possible to keep issues, PRs, and development in
    general as tidy as possible.
-   
-
-   
