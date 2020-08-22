@@ -376,7 +376,7 @@ class SceneFileWriter(object):
                 self.clean_cache()
         if file_writer_config["save_last_frame"]:
             self.scene.update_frame(ignore_skipping=True)
-            self.save_final_image(self.scene.get_image())
+            self.save_final_image(self.scene.camera.get_image())
 
     def open_movie_pipe(self):
         """

@@ -150,18 +150,6 @@ class Scene(Container):
         """
         return [getattr(self, key) for key in keys]
 
-    # Only these methods should touch the camera
-    def set_camera(self, camera):
-        """
-        Sets the scene's camera to be the passed Camera Object.
-
-        Parameters
-        ----------
-        camera : Camera
-            The camera object to use.
-        """
-        self.camera = camera
-
     def get_frame(self):
         """
         Gets the current frame as NumPy array.
@@ -173,55 +161,6 @@ class Scene(Container):
             The shape of the array is height x width x 3
         """
         return np.array(self.camera.get_pixel_array())
-
-    def get_image(self):
-        """
-        Gets current frame as PIL Image
-
-        Returns
-        -------
-        PIL.Image
-            PIL Image object of current frame.
-        """
-        return self.camera.get_image()
-
-    def set_camera_pixel_array(self, pixel_array):
-        """
-        Sets the camera's pixel array to the passed pixel
-        array. Does not impact what the scene currently displays.
-
-        Parameters
-        ----------
-        pixel_array: Union[np.ndarray,list,tuple]
-            Pixel array
-        """
-        self.camera.set_pixel_array(pixel_array)
-
-    def set_camera_background(self, background):
-        """
-        Sets the camera to display a Pixel Array
-        in the background.
-
-        Parameters
-        ----------
-        background: Union[np.ndarray,list,tuple]
-            The Pixel Array of the background.
-        """
-        self.camera.set_background(background)
-
-    def reset_camera(self):
-        """
-        Resets the Camera to its original configuration.
-        """
-        self.camera.reset()
-
-    def capture_mobjects_in_camera(
-        self, mobjects, **kwargs
-    ):  # TODO Add more detail to docstring.
-        """
-        This method is used internally.
-        """
-        self.camera.capture_mobjects(mobjects, **kwargs)
 
     def update_frame(  # TODO Description in Docstring
         self,
@@ -253,16 +192,16 @@ class Scene(Container):
         if mobjects is None:
             mobjects = list_update(self.mobjects, self.foreground_mobjects,)
         if background is not None:
-            self.set_camera_pixel_array(background)
+            self.camera.set_pixel_array(background)
         else:
-            self.reset_camera()
+            self.camera.reset()
 
         kwargs["include_submobjects"] = include_submobjects
-        self.capture_mobjects_in_camera(mobjects, **kwargs)
+        self.camera.capture_mobjects(mobjects, **kwargs)
 
     def freeze_background(self):
         self.update_frame()
-        self.set_camera(Camera(self.get_frame()))
+        self.camera = Camera(self.get_frame())
         self.clear()
 
     ###
@@ -293,17 +232,6 @@ class Scene(Container):
         )
 
     ###
-
-    def get_time(self):
-        """
-        Returns time in seconds elapsed after initialisation of scene
-
-        Returns
-        -------
-        self.time : float
-            Returns time in seconds elapsed after initialisation of scene
-        """
-        return self.time
 
     def increment_time(self, d_time):
         """
@@ -1033,15 +961,6 @@ class Scene(Container):
         self.progress_through_animations(animations)
         self.finish_animations(animations)
 
-    def idle_stream(self):
-        """
-        This method is used internally to
-        idle the video file_writer until an
-        animation etc needs to be written
-        to the video file.
-        """
-        self.file_writer.idle_stream()
-
     def clean_up_animations(self, *animations):
         """
         This method cleans up and removes from the
@@ -1239,7 +1158,7 @@ class Scene(Container):
         """
         if file_writer_config["skip_animations"]:
             return
-        time = self.get_time() + time_offset
+        time = self.time + time_offset
         self.file_writer.add_sound(sound_file, time, gain, **kwargs)
 
     def show_frame(self):
@@ -1248,7 +1167,7 @@ class Scene(Container):
         of your system.
         """
         self.update_frame(ignore_skipping=True)
-        self.get_image().show()
+        self.camera.get_image().show()
 
 
 class EndSceneEarlyException(Exception):
