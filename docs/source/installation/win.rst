@@ -2,7 +2,7 @@ Windows
 =======
 
 First, you need to install Chocolatey, which is a package manager for Windows
-systems.  Please refer to `this page <https://chocolatey.org/install>`_ for
+systems.  Please refer to `this link <https://chocolatey.org/install>`_ for
 instructions.
 
 
@@ -90,5 +90,4 @@ Certifying a clean install
 **************************
 
 After making sure you have a clean install following the instructions for each
-dependency above, you can go back to installing manim itself in
-:doc:`installation_index`.
+dependency above, you can go back to :ref:`installing-manim`.

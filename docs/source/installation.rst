@@ -1,10 +1,23 @@
 Installation
 ============
 
+Manim has a few dependencies that need to be installed before it.  The
+following pages have instructions that are specific to your system.  Once you
+are done installing the dependencies, come back to this page to install manim
+itself.
+
+Installing dependencies
+***********************
+
 .. toctree::
-   :caption: Table of Contents
 
    installation/win
-   installation/ubuntu
-   installation/arch
    installation/mac
+   installation/linux
+   installation/troubleshooting
+
+
+.. _installing-manim:
+
+Installing Manim
+****************

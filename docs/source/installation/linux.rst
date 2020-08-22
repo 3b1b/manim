@@ -96,5 +96,5 @@ simply run ``sox``.
           community developers are currently working on providing a simpler,
           lighter LaTeX package for you to install.
 
-After making sure you have a clean install, you can go back to installing manim
-itself in :doc:`installation_index`.
+After making sure you have a clean install, you can go back to
+:ref:`installing-manim`.

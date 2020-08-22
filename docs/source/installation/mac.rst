@@ -66,5 +66,5 @@ installed MacTeX or BasicTeX).  If LaTeX is installed properly, you will be
 taken to a command-line program that captures your cursor. Press CTRL+C to
 exit.  To check that Sox is installed correctly, simply run ``sox``.
 
-After making sure you have a clean install, you can go back to installing manim
-itself in :doc:`installation_index`.
+After making sure you have a clean install, you can go back to
+:ref:`installing-manim`.
