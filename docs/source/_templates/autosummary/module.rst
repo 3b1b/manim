@@ -32,6 +32,7 @@
 
    .. autosummary::
       :toctree: .
+      :nosignatures:
       {% for class in classes %}
         {{ class }}
       {% endfor %}

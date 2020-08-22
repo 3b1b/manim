@@ -10,12 +10,14 @@ __all__ = ["Container"]
 
 
 class Container(ABC):
-    """Abstract base class for several manim objects.
+    """Abstract base class for several objects used by manim.  In particular, both
+    :class:`~.Scene` and :class:`~.Mobject` inherit from Container.
 
     Parameters
     ----------
     kwargs : Any
         Arguments to be passed to :func:`~.digest_config`
+
     """
 
     def __init__(self, **kwargs):

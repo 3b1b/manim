@@ -11,8 +11,8 @@
    .. autosummary::
       :nosignatures:
       :toctree: .
-      {% for item in methods %}
-      ~{{ name }}.{{ item }}
+      {% for item in methods if item != '__init__' %}
+        ~{{ name }}.{{ item }}
       {%- endfor %}
    {% endif %}
    {% endblock %}

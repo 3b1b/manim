@@ -1,11 +1,16 @@
 Reference
 ===============
 
-This reference manual details functions, modules, and objects included in
+This reference manual details modules, functions, and variables included in
 Manim, describing what they are and what they do.  For learning how to use
-Manim, see :doc:`tutorials`.  For a list of changes since the
-last release, see the :doc:`changelog`.
+Manim, see :doc:`tutorials`.  For a list of changes since the last release, see
+the :doc:`changelog`.
 
+.. warning:: The paged linked to here are currently a work in progress.
+
+
+List of Modules
+***************
 
 .. currentmodule:: manim
 
@@ -13,7 +18,7 @@ last release, see the :doc:`changelog`.
    :toctree: reference
 
    container
-   mobject.mobject
+   ~mobject.mobject
    config
    constants
 
