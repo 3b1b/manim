@@ -11,7 +11,7 @@
    .. autosummary::
       :nosignatures:
       :toctree: .
-      {% for item in methods if item != '__init__' %}
+      {% for item in methods if item != '__init__' and item not in inherited_members %}
         ~{{ name }}.{{ item }}
       {%- endfor %}
    {% endif %}

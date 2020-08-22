@@ -21,14 +21,17 @@ from ..utils.hashing import get_hash_from_play_call, get_hash_from_wait_call
 
 
 class Scene(Container):
-    """
-    A Scene can be thought of as the Canvas of your animation.
-    All of your own named Scenes will be subclasses of this Scene, or
-    other named scenes.
+    """A Scene is the canvas of your animation.
 
-    Use a construct() function to tell Manim what should go on in the Scene.
+    All of your own named Scenes will be subclasses of Scene, or other named
+    scenes.
 
-    E.G:
+    Examples
+    --------
+    Override the construct() method to tell Manim what should go on in the
+    Scene.
+
+    .. code-block:: python
 
         class MyScene(Scene):
             def construct(self):
@@ -44,6 +47,7 @@ class Scene(Container):
         num_plays : Number of play() functions in the scene.
         time: time elapsed since initialisation of scene.
         random_seed: The seed with which all random operations are done.
+
     """
 
     CONFIG = {
@@ -109,8 +113,8 @@ class Scene(Container):
     def print_end_message(self):
         """
         Used internally to print the number of
-        animations played after the scene ends, 
-        as well as the name of the scene rendered 
+        animations played after the scene ends,
+        as well as the name of the scene rendered
         (useful when using the `-a` option).
         """
         logger.info(f"Rendered {str(self)}\nPlayed {self.num_plays} animations")
@@ -227,9 +231,10 @@ class Scene(Container):
         ignore_skipping=True,
         **kwargs,
     ):
-        """
-        Parameters:
-        -----------
+        """Update the frame.
+
+        Parameters
+        ----------
         mobjects: list, optional
             list of mobjects
 
@@ -853,10 +858,10 @@ class Scene(Container):
         Decorator that returns a wrapped version of func that will compute the hash of the play invocation.
 
         The returned function will act according to the computed hash: either skip the animation because it's already cached, or let the invoked function play normally.
-        
+
         Parameters
         ----------
-        func : Callable[[...], None]    
+        func : Callable[[...], None]
             The play like function that has to be written to the video file stream. Take the same parameters as `scene.play`.
         """
 
