@@ -104,7 +104,9 @@ class SingleStringTexMobject(SVGMobject):
         """
         Makes TexMobject resiliant to unmatched { at start
         """
-        num_lefts, num_rights = [tex.count(char) for char in "{}"]
+        # "\{" does not count (it's a brace literal), but "\\{" counts (it's a new line and then brace)
+        num_lefts = tex.count("{") - tex.count("\\{") + tex.count("\\\\{")
+        num_rights = tex.count("}") - tex.count("\\}") + tex.count("\\\\}")
         while num_rights > num_lefts:
             tex = "{" + tex
             num_lefts += 1
