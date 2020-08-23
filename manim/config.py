@@ -43,7 +43,7 @@ def _parse_config(config_parser, args):
             height, width = int(height_str), int(width_str)
         else:
             height, width = int(args.resolution), int(16 * height / 9)
-        config["camera_config"].update({"pixel_height": height, "pixel_width": width})
+        config.update({"pixel_height": height, "pixel_width": width})
 
     # Handle the -c (--background_color) flag
     if args.background_color is not None:
