@@ -123,23 +123,6 @@ class Mobject(Container):
         )
 
     def copy(self):
-        # TODO, either justify reason for shallow copy, or
-        # remove this redundancy everywhere
-        # return self.deepcopy()
-
-        copy_mobject = copy.copy(self)
-        copy_mobject.points = np.array(self.points)
-        copy_mobject.submobjects = [submob.copy() for submob in self.submobjects]
-        copy_mobject.updaters = list(self.updaters)
-        family = self.get_family()
-        for attr, value in list(self.__dict__.items()):
-            if isinstance(value, Mobject) and value in family and value is not self:
-                setattr(copy_mobject, attr, value.copy())
-            if isinstance(value, np.ndarray):
-                setattr(copy_mobject, attr, np.array(value))
-        return copy_mobject
-
-    def deepcopy(self):
         return copy.deepcopy(self)
 
     def generate_target(self, use_deepcopy=False):

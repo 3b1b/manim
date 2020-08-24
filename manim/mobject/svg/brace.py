@@ -121,14 +121,6 @@ class BraceLabel(VMobject):
         self.change_label(*text)
         return self
 
-    def copy(self):
-        copy_mobject = copy.copy(self)
-        copy_mobject.brace = self.brace.copy()
-        copy_mobject.label = self.label.copy()
-        copy_mobject.submobjects = [copy_mobject.brace, copy_mobject.label]
-
-        return copy_mobject
-
 
 class BraceText(BraceLabel):
     CONFIG = {"label_constructor": TextMobject}

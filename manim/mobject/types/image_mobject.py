@@ -36,9 +36,6 @@ class AbstractImageMobject(Mobject):
         self.stretch_to_fit_height(self.height)
         self.stretch_to_fit_width(self.height * w / h)
 
-    def copy(self):
-        return self.deepcopy()
-
 
 class ImageMobject(AbstractImageMobject):
     CONFIG = {
