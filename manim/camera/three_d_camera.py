@@ -380,12 +380,12 @@ class ThreeDCamera(Camera):
 
     def remove_fixed_orientation_mobjects(self, *mobjects):
         """If a mobject was fixed in its orientation by passing it through
-        `self.add_fixed_orientation_mobjects`, then this undoes that fixing.
+        :meth:`.add_fixed_orientation_mobjects`, then this undoes that fixing.
         The Mobject will no longer have a fixed orientation.
 
-        Parameters:
-        -----------
-        *mobjects : Mobject
+        Parameters
+        ----------
+        mobjects : :class:`Mobject`
             The mobjects whose orientation need not be fixed any longer.
         """
         for mobject in self.extract_mobject_family_members(mobjects):
@@ -394,12 +394,12 @@ class ThreeDCamera(Camera):
 
     def remove_fixed_in_frame_mobjects(self, *mobjects):
         """If a mobject was fixed in frame by passing it through
-        `self.add_fixed_in_frame_mobjects`, then this undoes that fixing.
+        :meth:`.add_fixed_in_frame_mobjects`, then this undoes that fixing.
         The Mobject will no longer be fixed in frame.
 
-        Parameters:
-        -----------
-        *mobjects : Mobject
+        Parameters
+        ----------
+        mobjects : :class:`Mobject`
             The mobjects which need not be fixed in frame any longer.
         """
         for mobject in self.extract_mobject_family_members(mobjects):

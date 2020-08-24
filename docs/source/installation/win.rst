@@ -38,7 +38,7 @@ Cairo installation
 6. Alternatively, running the command below installs pycairo.  This needs to be
    run in an elevated command prompt like Powershell.
 
-   .. code-block:: powershell
+   .. code-block:: bash
 
       (Invoke-WebRequest -Uri https://raw.githubusercontent.com/ManimCommunity/manim/master/scripts/pycairoinstall.py -UseBasicParsing).Content | py -3
 
@@ -86,13 +86,13 @@ Using TinyTex
 
 .. note:: Please note that it requires PowerShell (at least version 3.0).
 
-2. Double click the file and it opens a command prompt. There might be an error 
+2. Double click the file and it opens a command prompt. There might be an error
 dialog or two about ``luatex.dll`` during the installation `(like this)
 <https://db.yihui.org/images/install-tl-win-lua.png>`_, but that does not seem to hurt, and click “OK”. The installation directory is ``%APPDATA%/TinyTeX``, where APPDATA is an environment variable that typically points to the path ``C:\Users\Your Name\AppData\Roaming``
 
 3.Finally, close the terminal and open a new one and type the below commands.
 
-.. code-block:: powershell
+.. code-block:: bash
 
       tlmgr install standalone preview doublestroke ms setspace rsfs relsize ragged2e fundus-calligra microtype wasysym physics dvisvgm jknapltx wasy cm-super babel-english
 
