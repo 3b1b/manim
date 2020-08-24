@@ -26,20 +26,20 @@ steps:
 3. Make sure you can reproduce the issue, i.e. that you have some code that
    illustrates the bug **every time** (or at least most of the time) it is
    executed.
-   
+
 4. Make sure to clarify what behavior you expected, and how the actual behavior
    differs from your expectation.
 
 5. Make sure to gather information about your environment, such as your
    operating system, python version, and any stack traces that the code may
    have generated (if applicable).
-   
+
 4. Please open an issue only after you have gathered this information.  When
    submitting an issue, make sure to follow the template (this is the default
    text you are shown when first opening the 'New Issue' page).  A community
    member will (hopefully) respond and start a conversation to address the
    issue.
-   
+
 7. Please give the community a reasonable amount of time before asking again,
    or insisting on your issue.  Keep in mind that everyone is a volunteer.  If
    you wait for a reasonable amount of time and you receive no response, feel
@@ -84,7 +84,7 @@ confusing.  Here is a short guide on how to do it.
    ```sh
    git checkout -b <branch-name> upstream/master
    ```
-   
+
    If you are starting a new branch, execute
    ```sh
    git checkout -b <new_branch-name>
@@ -125,7 +125,7 @@ confusing.  Here is a short guide on how to do it.
    instead of `3b1b/manim` as the `base repository` and your fork and branch as
    `head repository` - see the picture below.
 
-   ![pull-requests-example-manim-community](./readme-assets/pull-requests.PNG)
+   ![pull-requests-example-manim-community](./_static/pull-requests.PNG)
 
 	Once again, please make sure to follow the template (this is the default
     text you are shown when first opening the 'New Pull Request' page)
@@ -180,7 +180,7 @@ yet-to-be-implemented changes, please mark your PR as a draft.
    [these general guidelines](https://conventionalcomments.org/).  Similarly,
    when crafting commit messages, it is highly recommended that you adhere to
    [these guidelines](https://www.conventionalcommits.org/en/v1.0.0/).
-   
+
 6. If you find stale or inactive issues that seem to be irrelevant, please post
    a comment saying 'This issue should be closed', and a community developer
    will take a look.

@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 
-# Importing config should be the first thing since other modules use it
+
+# Importing the config module should be the first thing we do, since other
+# modules depend on the global config dict for initialization.  Note that the
+# global config dict is called 'config', just like the module itself.  That's
+# why we import the module first with a different name, and then the dict.
+from . import config as _config
 from .config import config
+
 from .constants import *
 
 from .animation.animation import *

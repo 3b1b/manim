@@ -64,7 +64,7 @@ List of Modules
 .. autosummary::
    :toctree: reference
 
-   config
+   _config
    constants
    container
 
