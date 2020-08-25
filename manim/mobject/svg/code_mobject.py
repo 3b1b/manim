@@ -1,4 +1,5 @@
 import html
+import os
 from ...constants import *
 from ...container import Container
 from ...mobject.geometry import RoundedRectangle
