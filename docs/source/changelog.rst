@@ -5,48 +5,92 @@ Changelog
 manimce-v1.0.0-dev
 ==================
 
-:Date: N/A
+:Date: TBD
+
+This is the first release of manimce after forking from 3b1b/manim.  As such,
+developers have focused on cleaning up and refactoring the codebase while still
+maintaining backwards compatibility wherever possible.
+
 
 New Features
--------------
-#. Add 4k rendering option
-#. Added clearer installation instructions and quick-use scripts
-#. Added tests to ensure stuff doesn’t break between commits (For developers) [Uses Github CI, and Pytest]
-#. high quality has gotten its own short argument (-e), and the quality argument explanations have been improved
-#. Implement logging with :code:`rich` and :code:`logger` instead of plain ol` prints.
-#. Add customizable left and right bracket for :code:`Matrix` mobject and :code:`set_row_colors` method for matrix mobject
-#. Added a flag :code:`dry_run`, which doesn’t write any media.
-#. Allow for running manim with :code:`python3 -m manim`
-#. Add :code:`AddTeXLetterByLetter` animation
-#. Implement a :code:`manim.cfg` config file system, where the majority of variables in :code:`constant.py` can be modified
-#. Re-add GIF export
-#. Refactored Tex Template management. You can now use custom templates with command line args!
+------------
 
+
+Command line
+^^^^^^^^^^^^
+
+#. Add 4k rendering option with the :code:`-k` option
+#. High quality rendering has gotten its own short argument (:code:`-e`)
+#. Output of 'manim --help' has been improved
+#. Implement logging with the :code:`rich` library and a :code:`logger` object instead of plain ol` prints
+#. Added a flag :code:`--dry_run`, which doesn’t write any media
+#. Allow for running manim with :code:`python3 -m manim`
+#. Refactored Tex Template management. You can now use custom templates with command line args using :code:`--tex_template`!
+#. Re-add :code:`--save_frames` flag, which will save each frame as a png
+#. Re-introduce manim feature that allows you to type manim code in :code:`stdin` if you pass a minus sign :code:`(-)` as filename
+#. Added the :code:`--custom_folders` flag which yields a simpler output folder structure
+#. Re-implement GIF export with the :code:`-i` flag (using this flag outputs ONLY a .gif file, and no .mp4 file)
+#. Added a :code:`--verbose` flag
+#. You can save the logs to a file by using :code:`--log_to_file`
+
+
+Config system
+^^^^^^^^^^^^^
+
+#. Implement a :code:`manim.cfg` config file system, that consolidates the global configuration, the command line argument parsing, and some of the constants defined in :code:`constants.py`
+#. Added utilities for manipulating Manim’s :code:`.cfg` files.
+#. Added a subcommand structure for easier use of utilities managing :code:`.cfg` files
+
+
+Mobjects, Scenes, and Animations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+#. Add customizable left and right bracket for :code:`Matrix` mobject and :code:`set_row_colors` method for matrix mobject
+#. Add :code:`AddTeXLetterByLetter` animation
 #. Enhanced GraphScene
     #. You can now add arrow tips to axes
     #. extend axes a bit at the start and/or end
     #. have invisible axes
+    #. highlight the area between two curves
+#. ThreeDScene now supports 3dillusion_camera_rotation
 #. Add :code:`z_index` for manipulating depth of Objects on scene.
-#. Add contribution guidelines (for developers)
-#. Re-add :code:`--save_frames` flag, which will save each frame as a png
-#. Add a :code:`VDict` class, which is basically to a :code:`VGroup` what a :code:`dictionary` is to a :code:`list`
-#. Re-introduce manim feature that allows you to type manim code in :code:`stdin` if you pass “-“ as filename
-#. Added utilities for manipulating Manim’s :code:`.cfg` files.
-#. Added a subcommand structure for easier use of utilities managing :code:`.cfg` files
+#. Add a :code:`VDict` class: a :code:`VDict` is to a :code:`VGroup` what a :code:`dict` is to a :code:`list`
 #. Added Scene-caching feature. Now, if a partial movie file is unchanged in your code, it isn’t rendered again! [HIGHLY UNSTABLE We're working on it ;)]
+#. Most :code:`get_` and :code:`set_` methods have been removed in favor of instance attributes and properties
+#. The :code:`Container` class has been made into an AbstractBaseClass, i.e. in cannot be instantiated.  Instead, use one of its children classes
+
+
+Documentation
+-------------
+
+#. Added clearer installation instructions, tutorials, examples, and API reference [WIP]
+
 
 Fixes
 -----
-#. Initialization of directories has been moved to config.py, and a bunch of bugs associated to file structure generation have been fixed
-#. Nonfunctional :code:`media_dir.txt` has been removed
-#. Nonfunctional if statements in :code:`scene_file_writer.py` have been removed
-#. Fix a bug where trying to render the example scenes without specifying the scene would show all scene objects in the library.
+#. Initialization of directories has been moved to :code:`config.py`, and a bunch of bugs associated to file structure generation have been fixed
+#. Nonfunctional file :code:`media_dir.txt` has been removed
+#. Nonfunctional :code:`if` statements in :code:`scene_file_writer.py` have been removed
+#. Fix a bug where trying to render the example scenes without specifying the scene would show all scene objects in the library
+#. Many :code:`Exceptions` have been replaced for more specific exception subclasses
+#. Fixed a couple of subtle bugs in :code:`ArcBetweenPoints`
+
+
+Of interest to developers
+-------------------------
+
+#. Python code formatting is now enforced by using the :code:`black` tool
+#. PRs now require two approving code reviews from community devs before they can be merged
+#. Added tests to ensure stuff doesn’t break between commits (For developers) [Uses Github CI, and Pytest]
+#. Add contribution guidelines (for developers)
+#. Added autogenerated documentation with sphinx and autodoc/autosummary [WIP]
+#. Made manim internally use relative imports
+#. Since the introduction of the :code:`TexTemplate` class, the files :code:`tex_template.tex` and :code:`ctex_template.tex` have been removed
 
 
 Other Changes
 --------------
 #. Cleanup 3b1b Specific Files
-#. Made manim internally use relative imports (For developers)
+#. Rename package from manimlib to manim
 #. Move all imports to :code:`__init__`, so :code:`from manim import *` replaces :code:`from manimlib.imports import *`
-#. Rename Folder from manimlib to manim
 #. Global dir variable handling has been removed. Instead :code:`initialize_directories`, if needed, overrides the values from the cfg files at runtime.
