@@ -1,6 +1,6 @@
 from manimlib.imports import *
 
-from active_projects.diffyq.part4.fourier_series_scenes import ComplexFourierSeriesExample
+from from_3b1b.active.diffyq.part4.fourier_series_scenes import ComplexFourierSeriesExample
 from manimlib.once_useful_constructs.fractals import HilbertCurve
 
 

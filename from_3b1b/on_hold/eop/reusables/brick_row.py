@@ -1,7 +1,7 @@
 from manimlib.imports import *
-from active_projects.eop.reusables.eop_helpers import *
-from active_projects.eop.reusables.eop_constants import *
-from active_projects.eop.reusables.upright_coins import *
+from from_3b1b.active.eop.reusables.eop_helpers import *
+from from_3b1b.active.eop.reusables.eop_constants import *
+from from_3b1b.active.eop.reusables.upright_coins import *
 
 class BrickRow(VMobject):
 

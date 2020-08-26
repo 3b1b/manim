@@ -307,7 +307,7 @@ class ShowFullStory(Scene):
     def construct(self):
         directory = os.path.join(
             MEDIA_DIR,
-            "animations/active_projects/lost_lecture/images"
+            "animations/from_3b1b.active/lost_lecture/images"
         )
         scene_names = [
             "ShowEmergingEllipse",

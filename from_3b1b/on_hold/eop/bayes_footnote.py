@@ -1,6 +1,6 @@
 from manimlib.imports import *
 
-from active_projects.eop.bayes import IntroducePokerHand
+from from_3b1b.active.eop.bayes import IntroducePokerHand
 
 SICKLY_GREEN = "#9BBD37"
 

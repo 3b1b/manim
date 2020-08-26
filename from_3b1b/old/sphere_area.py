@@ -1,5 +1,5 @@
 from manimlib.imports import *
-from active_projects.shadows import *
+from from_3b1b.active.shadows import *
 
 
 # Abstract scenes

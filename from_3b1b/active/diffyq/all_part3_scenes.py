@@ -1,8 +1,8 @@
-from active_projects.diffyq.part3.staging import *
-from active_projects.diffyq.part3.temperature_graphs import *
-from active_projects.diffyq.part3.pi_creature_scenes import *
-from active_projects.diffyq.part3.wordy_scenes import *
-from active_projects.diffyq.part3.discrete_case import *
+from from_3b1b.active.diffyq.part3.staging import *
+from from_3b1b.active.diffyq.part3.temperature_graphs import *
+from from_3b1b.active.diffyq.part3.pi_creature_scenes import *
+from from_3b1b.active.diffyq.part3.wordy_scenes import *
+from from_3b1b.active.diffyq.part3.discrete_case import *
 
 
 OUTPUT_DIRECTORY = "diffyq/part3"

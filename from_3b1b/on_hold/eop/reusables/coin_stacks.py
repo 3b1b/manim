@@ -1,6 +1,6 @@
 from mobject.geometry import *
 from mobject.svg.tex_mobject import *
-from active_projects.eop.reusables.upright_coins import *
+from from_3b1b.active.eop.reusables.upright_coins import *
 
 
 class CoinStack(VGroup):

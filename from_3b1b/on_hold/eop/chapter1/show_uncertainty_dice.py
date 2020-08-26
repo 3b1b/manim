@@ -1,5 +1,5 @@
 from manimlib.imports import *
-from active_projects.eop.reusable_imports import *
+from from_3b1b.active.eop.reusable_imports import *
 
 class ShowUncertaintyDice(Scene):
 

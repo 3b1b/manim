@@ -1,5 +1,5 @@
 from manimlib.imports import *
-from active_projects.diffyq.part2.wordy_scenes import WriteHeatEquationTemplate
+from from_3b1b.active.diffyq.part2.wordy_scenes import WriteHeatEquationTemplate
 
 
 class ReactionsToInitialHeatEquation(PiCreatureScene):

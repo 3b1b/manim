@@ -4,9 +4,9 @@ from animation.composition import *
 from mobject.geometry import Rectangle, Line
 from utils.rate_functions import *
 from for_3b1b_videos.pi_creature_scene import *
-from active_projects.eop.reusables.eop_helpers import *
-from active_projects.eop.reusables.eop_constants import *
-from active_projects.eop.reusables.coin_flipping_pi_creature import *
+from from_3b1b.active.eop.reusables.eop_helpers import *
+from from_3b1b.active.eop.reusables.eop_constants import *
+from from_3b1b.active.eop.reusables.coin_flipping_pi_creature import *
 
 
 class PiCreatureCoin(VMobject):
