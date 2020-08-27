@@ -63,6 +63,7 @@ class PiCreature(SVGMobject):
         except Exception:
             warnings.warn("No %s design with mode %s" %
                           (self.file_name_prefix, mode))
+            # TODO, this needs to change to a different, better directory
             svg_file = os.path.join(
                 FILE_DIR,
                 "PiCreatures_plain.svg",

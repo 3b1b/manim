@@ -338,15 +338,15 @@ class Camera(object):
             return
 
         ctx.new_path()
-        subpaths = vmobject.get_subpaths_from_points(points)
+        subpaths = vmobject.gen_subpaths_from_points_2d(points)
         for subpath in subpaths:
-            quads = vmobject.get_cubic_bezier_tuples_from_points(subpath)
+            quads = vmobject.gen_cubic_bezier_tuples_from_points(subpath)
             ctx.new_sub_path()
             start = subpath[0]
             ctx.move_to(*start[:2])
             for p0, p1, p2, p3 in quads:
                 ctx.curve_to(*p1[:2], *p2[:2], *p3[:2])
-            if vmobject.consider_points_equals(subpath[0], subpath[-1]):
+            if vmobject.consider_points_equals_2d(subpath[0], subpath[-1]):
                 ctx.close_path()
         return self
 
@@ -549,7 +549,7 @@ class Camera(object):
     def transform_points_pre_display(self, mobject, points):
         # Subclasses (like ThreeDCamera) may want to
         # adjust points futher before they're shown
-        if np.any(np.isnan(points)) or np.any(points == np.inf):
+        if not np.all(np.isfinite(points)):
             # TODO, print some kind of warning about
             # mobject having invalid points?
             points = np.zeros((1, 3))

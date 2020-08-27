@@ -50,6 +50,7 @@ from manimlib.mobject.svg.drawings import *
 from manimlib.mobject.svg.svg_mobject import *
 from manimlib.mobject.svg.tex_mobject import *
 from manimlib.mobject.svg.text_mobject import *
+from manimlib.mobject.svg.code_mobject import *
 from manimlib.mobject.three_d_utils import *
 from manimlib.mobject.three_dimensions import *
 from manimlib.mobject.types.image_mobject import *
@@ -87,6 +88,7 @@ from manimlib.scene.zoomed_scene import *
 from manimlib.utils.bezier import *
 from manimlib.utils.color import *
 from manimlib.utils.config_ops import *
+from manimlib.utils.debug import *
 from manimlib.utils.images import *
 from manimlib.utils.iterables import *
 from manimlib.utils.file_ops import *

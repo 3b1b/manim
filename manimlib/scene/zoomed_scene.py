@@ -11,6 +11,11 @@ from manimlib.utils.simple_functions import fdiv
 
 
 class ZoomedScene(MovingCameraScene):
+    """
+    This is a Scene with special configurations made for when
+    a particular part of the scene must be zoomed in on and displayed
+    separately.
+    """
     CONFIG = {
         "camera_class": MultiCamera,
         "zoomed_display_height": 3,
@@ -30,6 +35,10 @@ class ZoomedScene(MovingCameraScene):
     }
 
     def setup(self):
+        """
+        This method is used internally by Manim to
+        setup the scene for proper use.
+        """
         MovingCameraScene.setup(self)
         # Initialize camera and display
         zoomed_camera = MovingCamera(**self.zoomed_camera_config)
@@ -56,6 +65,16 @@ class ZoomedScene(MovingCameraScene):
         self.zoomed_display = zoomed_display
 
     def activate_zooming(self, animate=False):
+        """
+        This method is used to activate the zooming for
+        the zoomed_camera.
+        
+        Parameters
+        ----------
+        animate (bool=False)
+            Whether or not to animate the activation
+            of the zoomed camera.
+        """
         self.zoom_activated = True
         self.camera.add_image_mobject_from_camera(self.zoomed_display)
         if animate:
@@ -67,6 +86,21 @@ class ZoomedScene(MovingCameraScene):
         )
 
     def get_zoom_in_animation(self, run_time=2, **kwargs):
+        """
+        Returns the animation of camera zooming in.
+        
+        Parameters
+        ----------
+        run_time (Union[int,float=2])
+            The run_time of the animation of the camera zooming in.
+        **kwargs
+            Any valid keyword arguments of ApplyMethod()
+        
+        Returns
+        -------
+        ApplyMethod
+            The animation of the camera zooming in.
+        """
         frame = self.zoomed_camera.frame
         full_frame_height = self.camera.get_frame_height()
         full_frame_width = self.camera.get_frame_width()
@@ -78,12 +112,32 @@ class ZoomedScene(MovingCameraScene):
         return ApplyMethod(frame.restore, run_time=run_time, **kwargs)
 
     def get_zoomed_display_pop_out_animation(self, **kwargs):
+        """
+        This is the animation of the popping out of the
+        mini-display that shows the content of the zoomed
+        camera. 
+
+        Returns
+        -------
+        ApplyMethod
+            The Animation of the Zoomed Display popping out.
+        """
         display = self.zoomed_display
         display.save_state(use_deepcopy=True)
         display.replace(self.zoomed_camera.frame, stretch=True)
         return ApplyMethod(display.restore)
 
     def get_zoom_factor(self):
+        """
+        Returns the Zoom factor of the Zoomed camera.
+        Defined as the ratio between the height of the
+        zoomed camera and the height of the zoomed mini
+        display.
+        Returns
+        -------
+        float
+            The zoom factor.
+        """
         return fdiv(
             self.zoomed_camera.frame.get_height(),
             self.zoomed_display.get_height()

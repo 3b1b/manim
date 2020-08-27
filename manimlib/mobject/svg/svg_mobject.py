@@ -34,7 +34,7 @@ class SVGMobject(VMobject):
         # Must be filled in in a subclass, or when called
         "file_name": None,
         "unpack_groups": True,  # if False, creates a hierarchy of VGroups
-        "stroke_width": 0,
+        "stroke_width": DEFAULT_STROKE_WIDTH,
         "fill_opacity": 1.0,
         # "fill_color" : LIGHT_GREY,
     }
@@ -87,9 +87,9 @@ class SVGMobject(VMobject):
                 for child in element.childNodes
             ])
         elif element.tagName == 'path':
-            result.append(self.path_string_to_mobject(
-                element.getAttribute('d')
-            ))
+            temp = element.getAttribute('d')
+            if temp != '':
+                result.append(self.path_string_to_mobject(temp))
         elif element.tagName == 'use':
             result += self.use_to_mobjects(element)
         elif element.tagName == 'rect':
@@ -298,7 +298,7 @@ class SVGMobject(VMobject):
         if not isinstance(element, minidom.Element):
             return
         if element.hasAttribute('id'):
-            return element
+            return [element]
         for e in element.childNodes:
             all_childNodes_have_id.append(self.get_all_childNodes_have_id(e))
         return self.flatten([e for e in all_childNodes_have_id if e])
@@ -371,11 +371,11 @@ class VMobjectFromSVGPathstring(VMobject):
             new_points = new_points[1:]
             command = "L"
 
-            # Treat everything as relative line-to until empty
             for p in new_points:
-                # Treat as relative
-                p[0] += self.points[-1, 0]
-                p[1] += self.points[-1, 1]
+                if isLower:
+                    # Treat everything as relative line-to until empty
+                    p[0] += self.points[-1, 0]
+                    p[1] += self.points[-1, 1]
                 self.add_line_to(p)
             return
 

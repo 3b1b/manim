@@ -18,7 +18,7 @@ Directories
               Created under ``MEDIA_DIR`` by default.
     TEX_DIR
               Files written by Latex are stored here. It also acts as a cache
-              so that the files aren't rewritten each Latex is needed.
+              so that the files aren't rewritten each time Latex is needed.
 
 Those directories are created if they don't exist.
 

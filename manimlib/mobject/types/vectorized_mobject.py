@@ -595,35 +595,69 @@ class VMobject(Mobject):
             atol=self.tolerance_for_point_equality
         )
 
+    def consider_points_equals_2d(self, p0, p1):
+        """
+        Determine if two points are close enough to be considered equal.
+
+        This uses the algorithm from np.isclose(), but expanded here for the
+        2D point case. NumPy is overkill for such a small question.
+        """
+        rtol = 1.e-5  # default from np.isclose()
+        atol = self.tolerance_for_point_equality
+        if abs(p0[0] - p1[0]) > atol + rtol * abs(p1[0]):
+            return False
+        if abs(p0[1] - p1[1]) > atol + rtol * abs(p1[1]):
+            return False
+        return True
+
     # Information about line
     def get_cubic_bezier_tuples_from_points(self, points):
+        return np.array(list(self.gen_cubic_bezier_tuples_from_points(points)))
+
+    def gen_cubic_bezier_tuples_from_points(self, points):
+        """
+        Get a generator for the cubic bezier tuples of this object.
+
+        Generator to not materialize a list or np.array needlessly.
+        """
         nppcc = VMobject.CONFIG["n_points_per_cubic_curve"]
         remainder = len(points) % nppcc
         points = points[:len(points) - remainder]
-        return np.array([
+        return (
             points[i:i + nppcc]
             for i in range(0, len(points), nppcc)
-        ])
+        )
 
     def get_cubic_bezier_tuples(self):
         return self.get_cubic_bezier_tuples_from_points(
             self.get_points()
         )
 
-    def get_subpaths_from_points(self, points):
+    def _gen_subpaths_from_points(self, points, filter_func):
         nppcc = self.n_points_per_cubic_curve
-        split_indices = filter(
-            lambda n: not self.consider_points_equals(
-                points[n - 1], points[n]
-            ),
-            range(nppcc, len(points), nppcc)
-        )
+        split_indices = filter(filter_func, range(nppcc, len(points), nppcc))
         split_indices = [0] + list(split_indices) + [len(points)]
-        return [
+        return (
             points[i1:i2]
             for i1, i2 in zip(split_indices, split_indices[1:])
             if (i2 - i1) >= nppcc
-        ]
+        )
+
+    def get_subpaths_from_points(self, points):
+        return list(
+            self._gen_subpaths_from_points(
+                points,
+                lambda n: not self.consider_points_equals(
+                    points[n - 1], points[n]
+                ))
+        )
+
+    def gen_subpaths_from_points_2d(self, points):
+        return self._gen_subpaths_from_points(
+                points,
+                lambda n: not self.consider_points_equals_2d(
+                    points[n - 1], points[n]
+                ))
 
     def get_subpaths(self):
         return self.get_subpaths_from_points(self.get_points())

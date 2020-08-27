@@ -152,7 +152,7 @@ class ApplyMethod(Transform):
         method is a method of Mobject, *args are arguments for
         that method.  Key word arguments should be passed in
         as the last arg, as a dict, since **kwargs is for
-        configuration of the transform itslef
+        configuration of the transform itself
 
         Relies on the fact that mobject methods return the mobject
         """
@@ -230,7 +230,10 @@ class ApplyFunction(Transform):
         super().__init__(mobject, **kwargs)
 
     def create_target(self):
-        return self.function(self.mobject.copy())
+        target = self.function(self.mobject.copy())
+        if not isinstance(target, Mobject):
+            raise Exception("Functions passed to ApplyFunction must return object of type Mobject")
+        return target
 
 
 class ApplyMatrix(ApplyPointwiseFunction):
