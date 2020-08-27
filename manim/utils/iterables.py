@@ -41,34 +41,6 @@ def adjacent_pairs(objects):
     return adjacent_n_tuples(objects, 2)
 
 
-def batch_by_property(items, property_func):
-    """
-    Takes in a list, and returns a list of tuples, (batch, prop)
-    such that all items in a batch have the same output when
-    put into property_func, and such that chaining all these
-    batches together would give the original list (i.e. order is
-    preserved)
-    """
-    batch_prop_pairs = []
-
-    def add_batch_prop_pair(batch):
-        if len(batch) > 0:
-            batch_prop_pairs.append((batch, property_func(batch[0])))
-
-    curr_batch = []
-    curr_prop = None
-    for item in items:
-        prop = property_func(item)
-        if prop != curr_prop:
-            add_batch_prop_pair(curr_batch)
-            curr_prop = prop
-            curr_batch = [item]
-        else:
-            curr_batch.append(item)
-    add_batch_prop_pair(curr_batch)
-    return batch_prop_pairs
-
-
 def tuplify(obj):
     if isinstance(obj, str):
         return (obj,)

@@ -19,7 +19,6 @@ from ..mobject.types.vectorized_mobject import VMobject
 from ..utils.color import color_to_int_rgba
 from ..utils.config_ops import digest_config
 from ..utils.images import get_full_raster_image_path
-from ..utils.iterables import batch_by_property
 from ..utils.iterables import list_difference_update
 from ..utils.iterables import remove_list_redundancies
 from ..utils.simple_functions import fdiv
@@ -80,6 +79,18 @@ class Camera(object):
         digest_config(self, kwargs, locals())
         self.rgb_max_val = np.iinfo(self.pixel_array_dtype).max
         self.pixel_array_to_cairo_context = {}
+
+        # Contains the correct method to process a list of Mobjects of the
+        # corresponding class.  If a Mobject is not an instance of a class in
+        # this dict (or an instance of a class that inherits from a class in
+        # this dict), then it cannot be rendered.
+        self.display_funcs = {
+            VMobject: self.display_multiple_vectorized_mobjects,
+            PMobject: self.display_multiple_point_cloud_mobjects,
+            AbstractImageMobject: self.display_multiple_image_mobjects,
+            Mobject: lambda batch, pa: batch,  # Do nothing
+        }
+
         self.init_background()
         self.resize_frame_shape()
         self.reset()
@@ -90,6 +101,42 @@ class Camera(object):
         # to the aggdraw library
         self.canvas = None
         return copy.copy(self)
+
+    def type_or_raise(self, mobject):
+        """Return the type of mobject, if it is a type that can be rendered.
+
+        If `mobject` is an instance of a class that inherits from a class that
+        can be rendered, return the super class.  For example, an instance of a
+        Square is also an instance of VMobject, and these can be rendered.
+        Therefore, `type_or_raise(Square())` returns True.
+
+        Parameters
+        ----------
+        mobject : :class:`~.Mobject`
+            The object to take the type of.
+
+        Notes
+        -----
+        For a list of classes that can currently be rendered, see :meth:`display_funcs`.
+
+        Returns
+        -------
+        Type[:class:`~.Mobject`]
+            The type of mobjects, if it can be rendered.
+
+        Raises
+        ------
+        :exc:`TypeError`
+            When mobject is not an instance of a class that can be rendered.
+        """
+        # We have to check each type in turn because we are dealing with
+        # super classes.  For example, if square = Square(), then
+        # type(square) != VMobject, but isinstance(square, VMobject) == True.
+        for _type in self.display_funcs:
+            if isinstance(mobject, _type):
+                return _type
+        else:
+            raise TypeError(f"Displaying an object of class {_type} is not supported")
 
     def reset_pixel_shape(self, new_height, new_width):
         """This method resets the height and width
@@ -381,34 +428,35 @@ class Camera(object):
     ):  # TODO Write better docstrings for this method.
         return self.capture_mobjects([mobject], **kwargs)
 
-    def capture_mobjects(
-        self, mobjects, **kwargs
-    ):  # TODO Write better docstrings for this method.
+    def capture_mobjects(self, mobjects, **kwargs):
+        """Capture mobjects by printing them on :attr:`pixel_array`.
+
+        This is the essential function that converts the contents of a Scene
+        into an array, which is then converted to an image or video.
+
+        Parameters
+        ----------
+        mobjects : :class:`~.Mobject`
+            Mobjects to capture.
+
+        kwargs : Any
+            Keyword arguments to be passed to :meth:`get_mobjects_to_display`.
+
+        Notes
+        -----
+        For a list of classes that can currently be rendered, see :meth:`display_funcs`.
+
+        """
+        # The mobjects will be processed in batches (or runs) of mobjects of
+        # the same type.  That is, if the list mobjects contains objects of
+        # types [VMobject, VMobject, VMobject, PMobject, PMobject, VMobject],
+        # then they will be captured in three batches: [VMobject, VMobject,
+        # VMobject], [PMobject, PMobject], and [VMobject].  This must be done
+        # without altering their order.  it.groupby computes exactly this
+        # partition while at the same time preserving order.
         mobjects = self.get_mobjects_to_display(mobjects, **kwargs)
-
-        # Organize this list into batches of the same type, and
-        # apply corresponding function to those batches
-        type_func_pairs = [
-            (VMobject, self.display_multiple_vectorized_mobjects),
-            (PMobject, self.display_multiple_point_cloud_mobjects),
-            (AbstractImageMobject, self.display_multiple_image_mobjects),
-            (Mobject, lambda batch, pa: batch),  # Do nothing
-        ]
-
-        def get_mobject_type(mobject):
-            for mobject_type, func in type_func_pairs:
-                if isinstance(mobject, mobject_type):
-                    return mobject_type
-            raise Exception("Trying to display something which is not of type Mobject")
-
-        batch_type_pairs = batch_by_property(mobjects, get_mobject_type)
-
-        # Display in these batches
-        for batch, batch_type in batch_type_pairs:
-            # check what the type is, and call the appropriate function
-            for mobject_type, func in type_func_pairs:
-                if batch_type == mobject_type:
-                    func(batch, self.pixel_array)
+        for group_type, group in it.groupby(mobjects, self.type_or_raise):
+            self.display_funcs[group_type](list(group), self.pixel_array)
 
     # Methods associated with svg rendering
 
@@ -497,12 +545,12 @@ class Camera(object):
         """
         if len(vmobjects) == 0:
             return
-        batch_file_pairs = batch_by_property(
+        batch_file_pairs = it.groupby(
             vmobjects, lambda vm: vm.get_background_image_file()
         )
-        for batch, file_name in batch_file_pairs:
+        for file_name, batch in batch_file_pairs:
             if file_name:
-                self.display_multiple_background_colored_vmobject(batch, pixel_array)
+                self.display_multiple_background_colored_vmobjects(batch, pixel_array)
             else:
                 self.display_multiple_non_background_colored_vmobjects(
                     batch, pixel_array
@@ -714,7 +762,7 @@ class Camera(object):
             setattr(self, bcvd, BackgroundColoredVMobjectDisplayer(self))
         return getattr(self, bcvd)
 
-    def display_multiple_background_colored_vmobject(self, cvmobjects, pixel_array):
+    def display_multiple_background_colored_vmobjects(self, cvmobjects, pixel_array):
         """Displays multiple vmobjects that have the same color as the background.
 
         Parameters
@@ -1173,7 +1221,7 @@ class BackgroundColoredVMobjectDisplayer(object):
         np.array
             The pixel array with the `cvmobjects` displayed.
         """
-        batch_image_file_pairs = batch_by_property(
+        batch_image_file_pairs = it.groupby(
             cvmobjects, lambda cv: cv.get_background_image_file()
         )
         curr_array = None
