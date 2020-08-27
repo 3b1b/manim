@@ -1,5 +1,5 @@
 from manimlib.constants import *
-from manimlib.mobject.geometry import Square
+from manimlib.mobject.geometry import Square, Dot, Line
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.iterables import tuplify
@@ -122,6 +122,124 @@ class Sphere(ParametricSurface):
             np.sin(v) * np.sin(u),
             np.cos(u)
         ])
+
+class Cone(ParametricSurface):
+    CONFIG = {
+        "base_radius": 1,
+        "height": 1,
+        "direction": Z_AXIS,
+        "show_base": False,
+
+        "resolution": 24,
+        # v will stand for phi
+        "v_min": 0,
+        "v_max": TAU,
+        # u will stand for r
+        "u_min": 0,
+        # u_max is calculated as a property
+
+        "checkerboard_colors": False,
+    }
+    """
+               |\\
+               |_\\ <-- theta
+    height --> |  \\
+               |   \\ <-- r
+               |    \\
+               |     \\
+               --------
+               base_radius
+    """
+
+    def __init__(self, **kwargs):
+        ParametricSurface.__init__(
+            self, self.func, **kwargs
+        )
+        self._add_base()
+        self._rotate_to_direction()
+
+
+    @property
+    def u_max(self):
+        return np.sqrt(self.base_radius**2 + self.height**2)
+    @property
+    def theta(self):
+        return PI - np.arctan(self.base_radius / self.height)
+
+    def _add_base(self):
+        if self.show_base:
+            self.base_circle = Dot(
+                point=self.height*IN,
+                radius=self.base_radius,
+                color=self.fill_color,
+                fill_opacity=self.fill_opacity,
+            )
+            self.add(self.base_circle)
+
+    def func(self, u, v):
+        r = u
+        phi = v
+        theta = self.theta
+        return np.array([
+            r * np.sin(theta) * np.cos(phi),
+            r * np.sin(theta) * np.sin(phi),
+            r * np.cos(theta)
+        ])
+
+    def _rotate_to_direction(self):
+        x, y, z = self.direction
+
+        r = np.sqrt(x**2 + y**2 + z**2)
+        theta = np.arccos(z/r)
+
+        if x == 0:
+            if y == 0: # along the z axis
+                phi = 0
+            else:
+                phi = np.arctan(np.inf)
+                if y < 0:
+                    phi += PI
+        else:
+            phi = np.arctan(y/x)
+        if x < 0:
+            phi += PI
+
+        self.rotate(theta, Y_AXIS, about_point=ORIGIN)
+        self.rotate(phi  , Z_AXIS, about_point=ORIGIN)
+
+class Arrow3d(VGroup):
+    CONFIG = {
+        "cone_config": {
+            "height": .5,
+            "base_radius": .25,
+        },
+        "color": WHITE,
+    }
+
+    def __init__(self, start=LEFT, end=RIGHT, **kwargs):
+        VGroup.__init__(self, **kwargs)
+
+        self.line = Line(start, end)
+        self.line.set_color(self.color)
+
+        self.cone = Cone(
+            direction=self.direction,
+            **self.cone_config
+        )
+        self.cone.shift(end)
+        self.cone.set_color(self.color)
+
+        self.add(self.line, self.cone)
+
+    @property
+    def start(self):
+        return self.line.start
+    @property
+    def end(self):
+        return self.line.end
+    @property
+    def direction(self):
+        return self.end - self.start
 
 
 class Cube(VGroup):
