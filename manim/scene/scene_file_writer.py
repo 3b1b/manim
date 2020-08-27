@@ -394,8 +394,8 @@ class SceneFileWriter(object):
         self.temp_partial_movie_file_path = temp_file_path
 
         fps = self.scene.camera.frame_rate
-        height = self.scene.camera.get_pixel_height()
-        width = self.scene.camera.get_pixel_width()
+        height = self.scene.camera.pixel_height
+        width = self.scene.camera.pixel_width
 
         command = [
             FFMPEG_BIN,

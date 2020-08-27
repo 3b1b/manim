@@ -58,9 +58,9 @@ class OldMultiCamera(Camera):
                     "start_x": camera_with_start_positions[1][1],
                     "start_y": camera_with_start_positions[1][0],
                     "end_x": camera_with_start_positions[1][1]
-                    + camera_with_start_positions[0].get_pixel_width(),
+                    + camera_with_start_positions[0].pixel_width,
                     "end_y": camera_with_start_positions[1][0]
-                    + camera_with_start_positions[0].get_pixel_height(),
+                    + camera_with_start_positions[0].pixel_height,
                 }
             )
             for camera_with_start_positions in cameras_with_start_positions
@@ -113,10 +113,10 @@ class SplitScreenCamera(OldMultiCamera):
         self.left_camera = left_camera
         self.right_camera = right_camera
 
-        half_width = self.get_pixel_width() / 2
+        half_width = self.pixel_width / 2
         for camera in [self.left_camera, self.right_camera]:
             # TODO: Round up on one if width is odd
-            camera.reset_pixel_shape(camera.get_pixel_height(), half_width)
+            camera.reset_pixel_shape(camera.pixel_height, half_width)
 
         OldMultiCamera.__init__(
             self, (left_camera, (0, 0)), (right_camera, (0, half_width)),

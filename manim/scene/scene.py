@@ -160,7 +160,7 @@ class Scene(Container):
             NumPy array of pixel values of each pixel in screen.
             The shape of the array is height x width x 3
         """
-        return np.array(self.camera.get_pixel_array())
+        return np.array(self.camera.pixel_array)
 
     def update_frame(  # TODO Description in Docstring
         self,

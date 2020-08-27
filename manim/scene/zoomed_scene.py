@@ -101,8 +101,8 @@ class ZoomedScene(MovingCameraScene):
             The animation of the camera zooming in.
         """
         frame = self.zoomed_camera.frame
-        full_frame_height = self.camera.get_frame_height()
-        full_frame_width = self.camera.get_frame_width()
+        full_frame_height = self.camera.frame_height
+        full_frame_width = self.camera.frame_width
         frame.save_state()
         frame.stretch_to_fit_width(full_frame_width)
         frame.stretch_to_fit_height(full_frame_height)

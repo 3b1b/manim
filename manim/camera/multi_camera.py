@@ -43,14 +43,14 @@ class MultiCamera(MovingCamera):
     def update_sub_cameras(self):
         """ Reshape sub_camera pixel_arrays """
         for imfc in self.image_mobjects_from_cameras:
-            pixel_height, pixel_width = self.get_pixel_array().shape[:2]
+            pixel_height, pixel_width = self.pixel_array.shape[:2]
             imfc.camera.frame_shape = (
                 imfc.camera.frame.get_height(),
                 imfc.camera.frame.get_width(),
             )
             imfc.camera.reset_pixel_shape(
-                int(pixel_height * imfc.get_height() / self.get_frame_height()),
-                int(pixel_width * imfc.get_width() / self.get_frame_width()),
+                int(pixel_height * imfc.get_height() / self.frame_height),
+                int(pixel_width * imfc.get_width() / self.frame_width),
             )
 
     def reset(self):
