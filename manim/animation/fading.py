@@ -1,3 +1,4 @@
+"""Fading in and out of view."""
 from ..animation.animation import Animation
 from ..animation.animation import DEFAULT_ANIMATION_LAG_RATIO
 from ..animation.transform import Transform

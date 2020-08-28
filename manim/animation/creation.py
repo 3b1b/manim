@@ -1,3 +1,4 @@
+"""Animate the display or removal of a mobject from a scene."""
 from ..animation.animation import Animation
 from ..animation.composition import Succession
 from ..mobject.types.vectorized_mobject import VMobject
@@ -131,7 +132,7 @@ class ShowIncreasingSubsets(Animation):
 
 class AddTextLetterByLetter(ShowIncreasingSubsets):
     """
-        Add a Text Object letter by letter on the scene. Use time_per_char to change frequency of appearance of the letters. 
+        Add a Text Object letter by letter on the scene. Use time_per_char to change frequency of appearance of the letters.
     """
 
     CONFIG = {

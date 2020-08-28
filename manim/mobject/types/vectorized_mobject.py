@@ -1,3 +1,4 @@
+"""Mobjects that use vector graphics."""
 import itertools as it
 import sys
 
