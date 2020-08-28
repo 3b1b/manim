@@ -1,3 +1,4 @@
+"""A Scene is the canvas of the animation."""
 import inspect
 import random
 import warnings

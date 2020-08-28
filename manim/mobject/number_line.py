@@ -1,3 +1,4 @@
+"""Mobject representing a number line."""
 import operator as op
 
 from ..constants import *
