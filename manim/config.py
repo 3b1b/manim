@@ -6,6 +6,7 @@ config object.
 """
 import os
 import sys
+from contextlib import contextmanager
 
 import colour
 
@@ -15,7 +16,55 @@ from .utils.config_utils import _run_config, _init_dirs, _from_command_line
 from .logger import logger
 from .utils.tex import TexTemplate, TexTemplateFromFile
 
-__all__ = ["file_writer_config", "config", "camera_config"]
+__all__ = ["file_writer_config", "config", "camera_config", "tempconfig"]
+
+
+config = None
+
+
+@contextmanager
+def tempconfig(temp):
+    """Context manager that temporarily modifies the global config dict.
+
+    The code block inside the ``with`` statement will use the modified config.
+    After the code block, the config will be restored to its original value.
+
+    Parameters
+    ----------
+
+    temp : :class:`dict`
+        A dictionary whose keys will be used to temporarily update the global
+        config.
+
+    Examples
+    --------
+    Use ``with tempconfig({...})`` to temporarily change the default values of
+    certain objects.
+
+    .. code_block:: python
+
+       c = Camera()
+       c.frame_width == config['frame_width']        # -> True
+       with tempconfig({'frame_width': 100}):
+           c = Camera()
+           c.frame_width == config['frame_width']    # -> False
+           c.frame_width == 100                      # -> True
+
+    """
+    global config
+    original = config.copy()
+
+    temp = {k: v for k, v in temp.items() if k in original}
+
+    # In order to change the config that every module has acces to, use
+    # update(), DO NOT use assignment.  Assigning config = some_dict will just
+    # make the local variable named config point to a new dictionary, it will
+    # NOT change the dictionary that every module has a reference to.
+    config.update(temp)
+    try:
+        yield
+    finally:
+        config.update(original)  # update, not assignment!
 
 
 def _parse_config(config_parser, args):
