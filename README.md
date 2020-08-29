@@ -241,7 +241,7 @@ To run your first example Scenes, you can run the following commands:
 
 ### For users:
 
-1. Download the `example_scenes/basic.py` file from [GitHub](https://raw.github.com/ManimCommunity/manim/blob/master/example_scenes/basic.py), or place it manually
+1. Download the `example_scenes/basic.py` file from [GitHub](https://raw.github.com/ManimCommunity/manim/master/example_scenes/basic.py), or place it manually
 in your current working directory with
 ```sh
 wget https://raw.github.com/ManimCommunity/manim/master/example_scenes/basic.py
@@ -252,7 +252,7 @@ wget https://raw.github.com/ManimCommunity/manim/master/example_scenes/basic.py
 manim example_scenes/basic.py SquareToCircle -pl
 ```
 
-3. Download the [custom_template.tex](https://raw.github.com/ManimCommunity/manim/blob/master/example_scenes/custom_template.tex) and [customtex.py](https://raw.github.com/ManimCommunity/manim/blob/master/example_scenes/customtex.py) example_scenes files, and run the following command:
+3. Download the [custom_template.tex](https://raw.github.com/ManimCommunity/manim/master/example_scenes/custom_template.tex) and [customtex.py](https://raw.github.com/ManimCommunity/manim/master/example_scenes/customtex.py) example_scenes files, and run the following command:
 ```sh
 manim customtex.py --tex_template custom_template.tex -pl
 ```
