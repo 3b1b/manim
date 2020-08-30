@@ -29,7 +29,6 @@ author = 'The Manim Community Dev Team'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx_rtd_theme',
     'recommonmark',
     'sphinx.ext.napoleon',
     'sphinx.ext.autosummary',
