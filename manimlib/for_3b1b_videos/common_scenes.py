@@ -92,7 +92,7 @@ class PatreonEndScreen(Scene):
         "randomize_order": False,
         "capitalize": True,
         "name_y_spacing": 0.6,
-        "thanks_words": "Many thanks to this channel's supporters",
+        "thanks_words": "Funded by viewers, visit 3b1b.co/support to learn more",
         "scroll_time": 20,
     }
 
@@ -209,6 +209,7 @@ class PatreonEndScreen(Scene):
             "PedroTristão": "Tristan",
         }
         for n1, n2 in modification_map.items():
+            name = name.replace("ā", "\\={a}")
             if name.lower() == n1.lower():
                 name = n2
         if self.capitalize:

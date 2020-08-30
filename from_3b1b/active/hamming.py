@@ -2,6 +2,13 @@ from manimlib.imports import *
 from from_3b1b.active.chess import string_to_bools
 
 
+def get_background(color=GREY_E):
+    background = FullScreenRectangle()
+    background.set_fill(color, 1)
+    background.set_stroke(width=0)
+    return background
+
+
 def get_bit_grid(n_rows, n_cols, bits=None, buff=MED_SMALL_BUFF, height=4):
     bit_pair = VGroup(Integer(0), Integer(1))
     bit_mobs = VGroup(*[
@@ -47,6 +54,13 @@ def string_to_bits(message):
     return [int(b) for b in string_to_bools(message)]
 
 
+def int_to_bit_string(number, n_bits=None):
+    result = "{:b}".format(number)
+    if n_bits is not None:
+        result = (n_bits - len(result)) * "0" + result
+    return result
+
+
 def get_image_bits(image, bit_height=0.15, buff=MED_SMALL_BUFF):
     bit = Integer(0)
     small_buff = (buff / bit.get_height()) * bit_height
@@ -90,7 +104,15 @@ def get_sender_and_receiver(height=2):
 
 
 def get_ones(block):
-    return VGroup(*[bit for bit in block if get_bit_mob_value(bit) == 1])
+    result = VGroup()
+    for bit in block:
+        if isinstance(bit, Integer):
+            value = bit.get_value()
+        else:
+            value = get_bit_mob_value(bit)
+        if value == 1:
+            result.add(bit)
+    return result
 
 
 def get_one_rects(block, buff=SMALL_BUFF):
@@ -137,17 +159,21 @@ def get_grid_position_labels(boxes, height=0.25):
     return labels
 
 
+def get_bit_n_sublist(input_list, n, bit_value=1):
+    return [
+        elem
+        for i, elem in enumerate(input_list)
+        if bool(i & (1 << n)) ^ bool(1 - bit_value)
+    ]
+
+
 def get_bit_n_subgroup(mob, n, bit_value=1):
     """
     If we enumerate mob, this returns a subgroup of all elements
     whose index has a binary representation with the n'th bit
     equal to bit_value
     """
-    return VGroup(*[
-        sm
-        for i, sm in enumerate(mob)
-        if bool(i & (1 << n)) ^ bool(1 - bit_value)
-    ])
+    return VGroup(*get_bit_n_sublist(mob, n, bit_value))
 
 
 # Special animations
@@ -178,7 +204,10 @@ def toggle_bit_anim(bit, target_color=None, **kwargs):
     if target_color is not None:
         bit.set_color(target_color)
 
-    return TransformFromCopy(original, bit, path_arc=PI, **kwargs)
+    if "path_arc" not in kwargs:
+        kwargs["path_arc"] = PI
+
+    return TransformFromCopy(original, bit, **kwargs)
 
 
 def zap_anim(bit, bolt_height=0.75):
@@ -253,6 +282,18 @@ def focus_scan_anim_lines(scanim, point, final_stroke_width=1):
         MoveToTarget(line)
         for line in lines
     ])
+
+
+def get_xor(height=0.35, color=BLUE_B, stroke_width=4):
+    xor = VGroup(
+        Line(UP, DOWN),
+        Line(LEFT, RIGHT),
+        Circle(),
+    )
+    xor.set_stroke(color, stroke_width)
+    xor.set_height(height)
+    return xor
+
 
 # Scenes
 
@@ -368,11 +409,11 @@ class DiskOfBits(Scene):
         in_image = ImageMobject("Mona_Lisa")
         in_image.to_edge(LEFT)
         in_image.shift(UP)
-        in_words = TextMobject("What was\\\\saved")
+        in_words = TextMobject("What was\\\\encoded")
         in_words.next_to(in_image, DOWN)
         out_image = in_image.copy()
         out_image.to_edge(RIGHT)
-        out_words = TextMobject("What is\\\\read")
+        out_words = TextMobject("What is\\\\decoded")
         out_words.next_to(out_image, DOWN)
 
         in_arrow = Arrow(
@@ -473,6 +514,7 @@ class TripleRedundancy(Scene):
         image.set_height(6)
         image.to_edge(DOWN)
         video = ImageMobject("ZoeyInGrass")
+        video.set_opacity(0)
         sound = get_sound_wave()
         text = TextMobject(
             """
@@ -915,136 +957,6 @@ class TimeLine(Scene):
         )
         self.wait(2)
 
-        # # Show some data
-        # full_timeline = VGroup(timeline, events)
-        # full_timeline.save_state()
-        # full_timeline.generate_target()
-        # full_timeline.target.scale(0.25)
-        # full_timeline.target.to_corner(DL)
-
-        # message = "You+I=:)"
-        # alt_message = "You+I=:("
-        # bits = get_bit_grid(8, 8, bits=string_to_bits(message))
-        # bits.shift(RIGHT)
-        # bits_rect = SurroundingRectangle(bits, buff=SMALL_BUFF)
-        # bits_rect.set_stroke(WHITE, 2)
-        # bits_arrow = Vector(1.5 * LEFT)
-        # bits_arrow.next_to(bits_rect, LEFT)
-        # bits_label = TextMobject("Data")
-        # bits_label.next_to(bits_arrow, UP)
-        # message_labels = VGroup(*[
-        #     TextMobject(f"``{s}''")
-        #     for s in (message, alt_message)
-        # ])
-        # message_labels.set_color(GREEN_B)
-        # message_labels.next_to(bits_arrow, LEFT)
-
-        # image = ImageMobject("Tom_In_Bowtie")
-        # sound = get_sound_wave()
-        # code = ImageMobject("Hamming_Code_Snippet")
-        # code.set_height(1.5)
-        # file_types = Group(image, sound, code)
-        # for file in file_types:
-        #     file.next_to(bits_arrow, LEFT)
-
-        # ecc_bits = get_bit_grid(1, 6, height=bits[0].get_height())
-        # ecc_bits.next_to(bits[-1], RIGHT, MED_SMALL_BUFF)
-        # ecc_bits.set_color(YELLOW)
-        # ecc_rect = SurroundingRectangle(ecc_bits, buff=SMALL_BUFF)
-        # ecc_rect.set_stroke(YELLOW, 2)
-
-        # ecc_label = TextMobject("Some kind of\\\\redundancy")
-        # ecc_label.set_color(GREY_A)
-        # ecc_label.next_to(ecc_rect, DOWN)
-
-        # self.play(
-        #     MoveToTarget(full_timeline, run_time=3),
-        #     LaggedStartMap(FadeIn, bits, run_time=2),
-        #     ShowCreation(bits_rect, run_time=2),
-        #     Write(bits_label),
-        # )
-        # self.play(
-        #     FadeIn(message_labels[0], RIGHT),
-        #     GrowArrow(bits_arrow)
-        # )
-        # self.wait()
-        # curr_file = message_labels[0]
-        # files = [*file_types, message_labels[0]]
-        # anim_types = [image_reveal_animation, Write, FadeIn, FadeIn]
-        # for file, anim_type in zip(files, anim_types):
-        #     anim = anim_type(file)
-        #     self.add(anim.mobject, curr_file)
-        #     self.play(
-        #         anim,
-        #         FadeOut(curr_file),
-        #         run_time=1
-        #     )
-        #     self.wait()
-        #     curr_file = file
-
-        # ecc_rect.save_state()
-        # ecc_rect.stretch(0, 0, about_edge=LEFT)
-        # self.play(
-        #     LaggedStartMap(FadeIn, ecc_bits),
-        #     Restore(ecc_rect),
-        #     FadeIn(ecc_label, UP),
-        # )
-        # self.wait()
-
-        # # Show Error
-        # bolt = SVGMobject("lightning_bolt")
-        # bolt.set_height(0.5)
-        # bolt.set_color(RED)
-        # bolt.move_to(bits[-1].get_center(), DL)
-
-        # self.play(
-        #     ShowCreation(bolt),
-        #     ApplyMethod(bits[-1].set_color, RED),
-        # )
-        # self.play(
-        #     FadeOut(bolt),
-        #     toggle_bit_anim(bits[-1]),
-        # )
-        # self.play(
-        #     FadeOut(message_labels[0]),
-        #     FadeIn(message_labels[1]),
-        # )
-        # self.wait()
-
-        # # Show correction
-        # ecc_lines = VGroup(*[
-        #     Line(ecc_rect.get_top(), bit.get_center())
-        #     for bit in bits
-        # ])
-        # ecc_lines.set_stroke(YELLOW, 1)
-        # self.play(
-        #     LaggedStartMap(ShowCreationThenFadeOut, ecc_lines, lag_ratio=0.01)
-        # )
-
-        # new_rect = SurroundingRectangle(bits[-1], buff=SMALL_BUFF)
-        # self.play(TransformFromCopy(ecc_rect, new_rect))
-        # self.play(toggle_bit_anim(bits[-1]))
-        # self.play(
-        #     bits[-1].set_color, WHITE,
-        #     FadeOut(message_labels[1]),
-        #     FadeIn(message_labels[0]),
-        # )
-        # self.play(FadeOut(new_rect))
-        # self.wait()
-
-        # # Bring back time line
-        # data_pile = VGroup(
-        #     message_labels[0],
-        #     bits_arrow, bits_label, bits_rect, bits,
-        #     ecc_bits, ecc_rect, ecc_label,
-        # )
-
-        # self.play(
-        #     ApplyMethod(data_pile.scale, 0, {"about_edge": DR}, remover=True),
-        #     Restore(full_timeline, run_time=2)
-        # )
-        # self.wait()
-
         # Isolate Hamming
         hamming_word = events[0][0]
         rs_word = events[2][0]
@@ -1058,13 +970,12 @@ class TimeLine(Scene):
             FadeOut(VGroup(title, title_underline))
         )
 
-        words = TextMobject("How to invent")
-        words.match_height(hamming_word[0][0])
-        words.next_to(events[0], UP, buff=0.3)
-        words.set_color(BLUE)
+        invent_words = TextMobject("How to invent")
+        invent_words.match_height(hamming_word[0][0])
+        invent_words.next_to(events[0], UP, buff=0.3)
+        invent_words.set_color(BLUE)
 
-        self.play(Write(words))
-        hamming_word.add(words)
+        self.play(Write(invent_words))
         self.wait()
 
         hamming_word.generate_target()
@@ -1074,6 +985,7 @@ class TimeLine(Scene):
 
         self.play(
             MoveToTarget(hamming_word),
+            FadeOut(invent_words),
             hamming_arrow.put_start_and_end_on, hamming_word.target.get_bottom(), hamming_arrow.get_end(),
             hamming_arrow.set_opacity, 0.5,
             rs_word.scale, 1.5, {"about_edge": DOWN},
@@ -1081,6 +993,83 @@ class TimeLine(Scene):
             events[2][1].set_opacity, 1,
         )
         self.wait()
+
+
+class WhatCDsActuallyUse(Scene):
+    def construct(self):
+        arrow = Vector(2 * RIGHT + UP)
+        words = TextMobject("What CDs/DVDs\\\\actually use")
+        words.next_to(arrow.get_end(), RIGHT)
+        arrow.set_color(YELLOW)
+        words.set_color(YELLOW)
+
+        self.play(
+            GrowFromPoint(words, arrow.get_start()),
+            GrowArrow(arrow)
+        )
+        self.wait()
+
+
+class ListOfRelevantMathTopics(Scene):
+    def construct(self):
+        topics = VGroup(
+            TextMobject("$L^1$ norm"),
+            TextMobject("Sphere packing"),
+            TextMobject("Finite sporadic groups (see Golay codes)"),
+            TextMobject("Finite fields"),
+            TextMobject("Galois extensions"),
+            TextMobject("Lagrange interpolation (see Reed-Solomon)"),
+            TextMobject("Discrete Fourier Transform"),
+            TexMobject("\\dots")
+        )
+        topics.arrange(RIGHT, buff=LARGE_BUFF)
+        brown = interpolate_color(GREY_BROWN, WHITE, 0.25)
+        for topic, color in zip(topics, it.cycle([BLUE_C, BLUE_D, BLUE_B, brown])):
+            topic.set_color(color)
+
+        topics.move_to(ORIGIN, LEFT)
+        topics.to_edge(UP)
+        self.play(topics.shift, (topics.get_width() - 5) * LEFT, run_time=12)
+        self.wait()
+
+
+class Reinvention(TeacherStudentsScene):
+    def construct(self):
+        self.play(
+            self.teacher.change, "raise_right_hand",
+            self.get_student_changes(*3 * ["pondering"]),
+        )
+        self.wait(3)
+        self.student_says(
+            "I see where\\\\this is going",
+            student_index=0,
+            target_mode="tease",
+        )
+        self.look_at(self.students[0].bubble)
+        self.play(self.students[0].change, "thinking")
+        self.wait(6)
+
+
+class EaterWrapper(Scene):
+    def construct(self):
+        bg_rect = FullScreenRectangle()
+        bg_rect.set_fill(GREY_E, 1)
+        bg_rect.set_stroke(BLACK, 0)
+        self.add(bg_rect)
+
+        title = TextMobject("Ben Eater implementing Hamming codes")
+        title.set_width(FRAME_WIDTH - 2)
+        title.to_edge(UP)
+        self.add(title)
+
+        screen_rect = ScreenRectangle()
+        screen_rect.set_fill(BLACK, 1)
+        screen_rect.set_height(6)
+        screen_rect.next_to(title, DOWN, MED_LARGE_BUFF)
+        self.add(screen_rect)
+
+        self.add(AnimatedBoundary(screen_rect))
+        self.wait(16)
 
 
 class DataGettingZapped(Scene):
@@ -1155,18 +1144,25 @@ class DataGettingZapped(Scene):
 
 
 class AmbientErrorCorrection(Scene):
+    CONFIG = {
+        "N": 8,
+        "bit_grid_height": 7,
+    }
+
     def construct(self):
+        N = self.N
+        size = (2**(N // 2), 2**(N // 2))
         bits = get_bit_grid(
-            16, 16,
-            bits=string_to_bits("Claude Shannon was a total boss!")
+            *size,
+            bits=string_to_bits("Claude Shannon was a total boss!"),
+            height=self.bit_grid_height,
         )
-        bits.set_height(7)
         bits.move_to(2 * RIGHT)
         point = 2.5 * LEFT + 2.5 * DOWN
         last_block = VMobject()
 
         for x in range(10):
-            block = get_bit_grid(16, 16, height=7)
+            block = get_bit_grid(*size, height=self.bit_grid_height)
             block.move_to(2 * RIGHT)
             syndrome = hamming_syndrome(bit_grid_to_bits(block))
 
@@ -1176,12 +1172,13 @@ class AmbientErrorCorrection(Scene):
 
             scanim = scan_anim(
                 point, bits,
-                final_stroke_width=0.2, run_time=2, lag_factor=1,
-                show_robot=(x == 0)
+                final_stroke_width=0.2, run_time=3, lag_factor=1,
+                show_robot=(x == 0),
             )
             self.play(
                 FadeIn(block, 6 * RIGHT),
                 FadeOut(last_block, 6 * LEFT),
+                run_time=2
             )
             self.play(scanim, run_time=1)
             if syndrome:
@@ -1207,6 +1204,220 @@ class AmbientErrorCorrection(Scene):
                 self.play(FadeIn(check, 0.5 * DOWN))
                 self.play(FadeOut(check), FadeOut(scanim.mobject[0]))
             last_block = block
+
+
+class AmbientErrorCorrection6(AmbientErrorCorrection):
+    CONFIG = {
+        "N": 6
+    }
+
+
+class AmbientErrorCorrection4(AmbientErrorCorrection):
+    CONFIG = {
+        "N": 4,
+        "bit_grid_height": 5,
+    }
+
+
+class ImpossibleToReasonable(Scene):
+    def construct(self):
+        group = VGroup(
+            TextMobject("Impossible"),
+            Vector(RIGHT, color=GREY_B),
+            TextMobject("Utterly reasonable"),
+        )
+        group.arrange(RIGHT)
+        group.scale(1.5)
+        group.to_edge(UP)
+
+        line = Line(LEFT, RIGHT)
+        line.set_width(FRAME_WIDTH)
+        line.set_stroke(GREY, 2)
+        line.next_to(group, DOWN, SMALL_BUFF)
+        self.add(line)
+
+        self.play(FadeIn(group[0], 0.5 * UP))
+        self.wait()
+        self.play(
+            GrowArrow(group[1]),
+            FadeIn(group[2], LEFT),
+        )
+        self.wait()
+
+
+class HammingAtBell(Scene):
+    def construct(self):
+        # Setup
+        hamming_image = ImageMobject("Richard_Hamming")
+        hamming_name = TextMobject("Richard Hamming")
+        hamming_name.match_width(hamming_image)
+        hamming_name.next_to(hamming_image, DOWN, MED_SMALL_BUFF)
+        hamming = Group(hamming_image, hamming_name)
+        hamming.to_corner(DR)
+        hamming.shift(2 * LEFT)
+
+        bell_logo = ImageMobject("BellSystemLogo")
+        bell_logo.set_height(3)
+        bell_logo.next_to(hamming, LEFT, buff=2)
+        bell_logo.to_edge(UP)
+
+        bell_logo_outline = SVGMobject("BellSystemLogo")
+        bell_logo_outline.match_height(bell_logo)
+        bell_logo_outline.set_stroke(GREY_B, 1)
+        bell_logo_outline.set_fill(BLACK, 0)
+        bell_logo_outline.move_to(bell_logo)
+
+        punchcard = SVGMobject("punchcard")
+        punchcard.set_stroke(width=0)
+        punchcard.set_fill(GREY_B, 1)
+        punchcard.next_to(bell_logo, DOWN, LARGE_BUFF)
+        punchcard.remove(*punchcard[23:])
+
+        years = TextMobject("1940s")
+        years.scale(2)
+        years.to_edge(UP)
+
+        # Introductions
+        self.play(Write(years))
+        self.play(FadeIn(hamming[0], RIGHT))
+        self.play(Write(hamming[1]))
+        self.play(
+            FadeOut(years),
+            ShowCreationThenFadeOut(bell_logo_outline, lag_ratio=0.1, run_time=4),
+            FadeIn(bell_logo, run_time=3),
+        )
+
+        self.play(
+            FadeIn(punchcard[0]),
+            Write(punchcard[1:], lag_ratio=0.5, run_time=4)
+        )
+        self.add(punchcard)
+        self.wait()
+
+        # Zap some bits
+        random.seed(3)
+        bits = random.sample(list(punchcard[1:]), 4)
+        for bit in bits:
+            bit.generate_target()
+            bit.target.set_color(RED)
+            if random.random() < 0.5:
+                bit.target.stretch(0.2, 1, about_edge=DOWN)
+            else:
+                bit.target.shift(1.2 * bit.get_width() * LEFT)
+            self.play(
+                MoveToTarget(bit),
+                zap_anim(bit)
+            )
+        self.wait()
+
+        # Frustration
+        curse = TextMobject("\\$*@\\#*!!?!")[0]
+        curse.set_color(RED)
+        curse.next_to(hamming, UP)
+
+        self.play(ShowIncreasingSubsets(curse))
+        self.wait()
+
+
+class MultiplePerspectives(Scene):
+    def construct(self):
+        # Background
+        background = VGroup(*[
+            Rectangle().set_fill(color, 1)
+            for color in [GREY_E, BLACK, GREY_E]
+        ])
+        background.set_stroke(width=0)
+        background.arrange(RIGHT, buff=0)
+        background.set_height(FRAME_HEIGHT)
+        background.set_width(FRAME_WIDTH, stretch=True)
+        self.add(background)
+
+        # Names
+        names = VGroup(
+            TextMobject("Parity checks"),
+            TextMobject("Xor of indices"),
+            TextMobject("Matrix"),
+        )
+
+        names.set_height(0.6)
+        for name, rect in zip(names, background):
+            name.match_x(rect)
+        names[0].shift(SMALL_BUFF * DOWN)
+        names.to_edge(DOWN, buff=1)
+
+        # Objects
+        parity_groups = VGroup()
+        for n in range(4):
+            pg = VGroup(*[Square() for x in range(16)])
+            pg.arrange_in_grid(4, 4, buff=0)
+            pg.set_height(0.7)
+            pg.set_stroke(GREY_A, 2)
+            get_bit_n_subgroup(pg, n).set_fill(BLUE, 0.8)
+            parity_groups.add(pg)
+        parity_groups.arrange_in_grid(2, 2)
+
+        code = ImageMobject("Hamming_Code_Snippet")
+
+        ints = list(random.sample(list(range(16)), 4))
+        ints.sort()
+        xor_sum = reduce(op.xor, ints)
+        bits = [int_to_bit_string(n, n_bits=4) for n in [*ints, xor_sum]]
+        column = Group(*map(TextMobject, bits))
+        column.arrange(DOWN, SMALL_BUFF)
+        column[-1].set_color(YELLOW)
+        column[-1].shift(MED_SMALL_BUFF * DOWN)
+        line = Line(LEFT, RIGHT)
+        line.set_stroke(GREY_B)
+        line.set_width(column.get_width() + 0.75)
+        line.move_to(column[-2:], RIGHT)
+        xor = get_xor()
+        xor.next_to(line, UP, SMALL_BUFF, LEFT)
+        column.add(line, xor)
+        code.set_width(2 * column.get_width())
+        code.next_to(column, UP)
+        column.add(code)
+
+        matrix = IntegerMatrix(
+            [
+               [1, 1, 0, 1],
+               [1, 0, 1, 1],
+               [1, 0, 0, 0],
+               [0, 1, 1, 1],
+               [0, 1, 0, 0],
+               [0, 0, 1, 0],
+               [0, 0, 0, 1],
+            ],
+            v_buff=0.6,
+            h_buff=0.75,
+        )
+
+        objs = Group(parity_groups, column, matrix)
+
+        for name, obj in zip(names, objs):
+            obj.match_width(names[0])
+            obj.next_to(name, UP, LARGE_BUFF)
+        matrix.scale(0.7, about_edge=DOWN)
+
+        # Introduce
+        anims = []
+        for name, obj in zip(names, objs):
+            anims.append(AnimationGroup(
+                FadeIn(name, 0.25 * UP),
+                FadeIn(obj, lag_ratio=0, run_time=2),
+            ))
+        self.play(LaggedStart(*anims, lag_ratio=0.4))
+        self.wait()
+        for name, obj in zip(names, objs):
+            obj.add(name)
+        self.add(background[0])
+        self.play(
+            FadeOut(background),
+            objs[0].set_x, 0,
+            FadeOut(objs[1], 5 * RIGHT),
+            FadeOut(objs[2], 2 * RIGHT),
+            run_time=2
+        )
+        self.wait()
 
 
 class SetupSixteenBitExample(Scene):
@@ -1379,7 +1590,7 @@ class SetupSixteenBitExample(Scene):
             self.play(*anims)
 
         # Might expect them to come at the end
-        movers = [d_bits, r_bits, r_boxes]
+        movers = [d_bits, r_bits]
         for mover in movers:
             mover.save_state()
             mover.generate_target()
@@ -1387,19 +1598,24 @@ class SetupSixteenBitExample(Scene):
         for b1, b2 in zip(it.chain(d_bits.target, r_bits.target), block):
             b1.move_to(b2)
 
-        for box, bit in zip(r_boxes.target, r_bits.target):
-            box.move_to(bit)
+        for box, bit in zip(r_boxes, r_bits):
+            box.bit = bit
+            box.add_updater(lambda m: m.move_to(m.bit))
 
-        self.play(*[
-            MoveToTarget(mover, lag_ratio=0.2, run_time=3, path_arc=PI / 4)
-            for mover in movers
-        ])
+        self.add(*r_boxes)
+        self.play(
+            *[
+                MoveToTarget(mover, lag_ratio=0.1, run_time=3, path_arc=20 * DEGREES)
+                for mover in movers
+            ],
+        )
         self.wait()
 
         self.play(*[
-            Restore(mover, lag_ratio=0.2, run_time=3, path_arc=PI / 4)
+            Restore(mover, lag_ratio=0.1, run_time=3, path_arc=20 * DEGREES)
             for mover in movers
         ])
+        r_boxes.clear_updaters()
         self.wait()
 
         power_of_2_rects = VGroup(*[
@@ -1511,8 +1727,15 @@ class SenderReceiverDynamic(PiCreatureScene):
             pi.set_height(2)
             pi.next_to(word, UP)
 
-        self.add(words)
-        self.add(pis)
+        self.clear()
+        for pi in pis:
+            self.play(
+                VFadeIn(pi),
+                pi.change, "pondering", ORIGIN,
+            )
+        for word in words:
+            self.play(Write(word, run_time=1))
+        self.wait()
 
         # Message
         block = get_bit_grid(4, 4)
@@ -2053,6 +2276,71 @@ class ParityChecks(Scene):
         self.wait()
 
 
+class ChangeAnywhereToOneBit(Scene):
+    CONFIG = {
+        "random_seed": 3,
+    }
+
+    def construct(self):
+        title = VGroup(
+            TextMobject("Change anywhere"),
+            Vector(RIGHT),
+            TextMobject("One bit of information"),
+        )
+        title.arrange(RIGHT)
+        title.set_width(FRAME_WIDTH - 1)
+        title.to_edge(UP)
+        self.add(title)
+
+        grid = get_bit_grid(4, 4)
+        grid.set_height(4)
+        grid.match_x(title[0])
+        grid.set_y(-1)
+        self.add(grid)
+
+        one_rects = get_one_rects(grid)
+        self.add(one_rects)
+
+        parity_words = VGroup(
+            TextMobject("Even \\# of 1s", color=BLUE_B),
+            TextMobject("Odd \\# of 1s", color=TEAL_D),
+        )
+        parity_words.scale(1.5)
+        parity_words.arrange(DOWN, buff=MED_LARGE_BUFF, aligned_edge=RIGHT)
+        parity_words.match_x(title[2])
+        parity_words.match_y(grid)
+        self.add(parity_words)
+
+        def get_parity_rect(n, words=parity_words):
+            return SurroundingRectangle(words[n % 2])
+
+        p_rect = get_parity_rect(len(one_rects))
+        self.add(p_rect)
+
+        # Random changes
+        for x in range(10):
+            bit = random.choice(grid)
+            self.play(toggle_bit_anim(bit))
+            one_rects.set_submobjects(get_one_rects(grid))
+            p_rect.become(get_parity_rect(len(one_rects)))
+            self.wait()
+
+
+class OddNumberCountTo101(Scene):
+    def construct(self):
+        group = VGroup(
+            *[Integer(2 * n + 1) for n in range(1, 50)],
+        )
+        group.set_color(RED)
+        group.scale(2)
+        for mob in group[:2]:
+            self.add(mob)
+            self.wait()
+            self.remove(mob)
+        self.play(ShowSubmobjectsOneByOne(group[2:]), run_time=6, rate_func=bezier([0, 0, 1, 1]))
+        self.wait()
+
+
 class ComplainAboutParityCheckWeakness(TeacherStudentsScene):
     def construct(self):
         self.embed()
@@ -2094,6 +2382,144 @@ class ComplainAboutParityCheckWeakness(TeacherStudentsScene):
                 FadeOut(self.students[2].bubble.content),
             ]
         )
+        self.wait()
+
+
+class ArrayOfValidMessages(Scene):
+    def construct(self):
+        # Messages
+        title = TextMobject("All possible messages")
+        title.to_edge(UP)
+        nr = 22
+        nc = 46
+        dots = VGroup(*[Dot() for x in range(nr * nc)])
+        dots.arrange_in_grid(nr, nc)
+        dots.set_color(GREY_C)
+        dots.set_height(6)
+        dots.to_edge(DOWN)
+        shuffled_dots = dots.copy()
+        shuffled_dots.shuffle()
+
+        self.add(title)
+        self.play(Write(shuffled_dots, remover=True, run_time=6, lag_ratio=5 / len(dots)))
+        self.add(dots)
+        self.wait()
+
+        # Valid messages
+        subset = TexMobject("\\subset")
+        subset.set_height(0.4)
+        subset.to_edge(UP)
+        valid_label = TextMobject("Valid messages")
+        valid_label.set_color(YELLOW)
+        valid_label.next_to(subset, LEFT)
+
+        valid_dots = VGroup()
+        for row in range(0, nr, 3):
+            for col in range(0, nc, 3):
+                valid_dot = dots[row * nc + col]
+                valid_dot.generate_target()
+                valid_dot.target.scale(2)
+                valid_dot.target.set_color(YELLOW)
+                valid_dots.add(valid_dot)
+
+        self.play(
+            LaggedStartMap(MoveToTarget, valid_dots, run_time=3),
+            Write(subset),
+            FadeIn(valid_label, LEFT),
+            title.next_to, subset, RIGHT,
+        )
+        self.wait()
+
+        # Words analogy
+        example_words = VGroup(
+            TextMobject("Hello world", color=YELLOW),
+            TextMobject("Helho world", color=GREY_B),
+        )
+        example_words.scale(1.25)
+        index = 12 * nc + 21
+        example_dots = VGroup(dots[index], dots[index + 1]).copy()
+
+        example_groups = VGroup()
+        for word, dot in zip(example_words, example_dots):
+            arrow = Vector(0.7 * DOWN)
+            arrow.next_to(dot, UP, SMALL_BUFF)
+            word.next_to(arrow, UP, SMALL_BUFF)
+            example_group = VGroup(word, arrow, dot)
+            example_group.unlock_triangulation()
+            example_groups.add(example_group)
+
+        fade_rect = SurroundingRectangle(dots)
+        fade_rect.set_stroke(BLACK, 0)
+        fade_rect.set_fill(BLACK, 0.7)
+
+        self.play(
+            FadeIn(fade_rect),
+            FadeIn(example_groups[0])
+        )
+        self.wait()
+        self.play(
+            zap_anim(example_words[0][0][3:5]),
+            Transform(*example_groups),
+        )
+        self.wait()
+        self.play(FadeOut(example_groups[0]), FadeOut(fade_rect))
+
+        # Corrections
+        valid_centers = [vd.get_center() for vd in valid_dots]
+        lines = VGroup()
+        for dot in dots:
+            dc = dot.get_center()
+            norms = [get_norm(dc - vc) for vc in valid_centers]
+            line = Line(dc, valid_centers[np.argmin(norms)])
+            line.set_stroke(WHITE, 1)
+            lines.add(line)
+
+        shuffled_lines = VGroup(*lines)
+        shuffled_lines.shuffle()
+
+        self.play(ShowCreation(shuffled_lines, lag_ratio=10 / len(lines), run_time=5))
+        self.wait()
+
+        # Mandering path between valid messages
+        self.add(fade_rect, valid_dots)
+        self.play(FadeIn(fade_rect))
+
+        path = [RIGHT, UP, UP, RIGHT, RIGHT, RIGHT, UP, UP, RIGHT, RIGHT, DOWN]
+        dist = get_norm(dots[1].get_center() - dots[0].get_center())
+        curr = dots[index].get_center()
+        arrows = VGroup()
+        for vect in path:
+            new = curr + dist * vect
+            arrows.add(Arrow(curr, new, buff=0, fill_color=RED))
+            curr = new
+
+        for arrow in arrows:
+            self.play(GrowArrow(arrow), run_time=0.5)
+        self.wait()
+
+
+class RobustForLessThanNErrors(Scene):
+    def construct(self):
+        words = TextMobject(
+            "Robust for ", "$\\le N$", " errors",
+        )
+        words.to_edge(UP)
+        words[1].set_color(YELLOW)
+        words[2].shift(0.15 * RIGHT)
+        N = words[1][-1]
+
+        num = Integer(1)
+        num.set_color(YELLOW)
+        num.move_to(N, LEFT)
+        num.set_value(1)
+
+        self.play(Write(words, run_time=2))
+        self.wait()
+        self.remove(N)
+        self.add(num)
+        self.play(ChangeDecimalToValue(num, 20, run_time=3))
+        self.remove(num)
+        self.add(N)
         self.wait()
 
 
@@ -2254,7 +2680,7 @@ class TwentyQuestions(Scene):
         self.wait()
 
         # Scan first group
-        def get_scanim(n, boxes=boxes, block=block, **kwargs):
+        def get_sub_scanim(n, boxes=boxes, block=block, **kwargs):
             return scan_anim(
                 boxes.get_corner(DR) + UR,
                 get_bit_n_subgroup(block, n),
@@ -2263,7 +2689,7 @@ class TwentyQuestions(Scene):
                 **kwargs
             )
 
-        scanim = get_scanim(0)
+        scanim = get_sub_scanim(0)
         robot = scanim.mobject[-1]
         bangs = TexMobject("!!!")
         bangs.set_color(RED)
@@ -2281,7 +2707,7 @@ class TwentyQuestions(Scene):
         self.play(ShowCreation(q1_rect))
         self.wait()
         self.play(
-            get_scanim(0, show_robot=False),
+            get_sub_scanim(0, show_robot=False),
             FadeOut(bangs)
         )
         self.play(FadeIn(check, 0.2 * DOWN))
@@ -2394,7 +2820,7 @@ class TwentyQuestions(Scene):
         ])))
 
         # Find error in right half
-        scanim = get_scanim(1)
+        scanim = get_sub_scanim(1)
         robot = scanim.mobject[-1]
         self.play(
             zap_anim(block[6]),
@@ -2413,7 +2839,7 @@ class TwentyQuestions(Scene):
             toggle_bit_anim(block[6], target_color=WHITE),
             FadeOut(bangs),
         )
-        self.play(get_scanim(1, show_robot=False))
+        self.play(get_sub_scanim(1, show_robot=False))
         self.play(FadeIn(check, 0.2 * DOWN))
         self.wait()
         self.play(q2_rect.move_to, questions[1][1])
@@ -2947,6 +3373,2835 @@ class TwentyQuestions(Scene):
         self.wait()
 
 
+class WhatIfTheresAndArrowInECCBits(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "What if an\\\\error-correction bit\\\\needs to be corrected?",
+            bubble_kwargs={'width': 5, 'height': 4, "direction": LEFT},
+            added_anims=[self.teacher.change, "happy"]
+        )
+        self.change_student_modes("confused", "confused")
+        self.look_at(self.screen)
+        self.wait(2)
+        self.teacher_says("Try it!", target_mode="hooray")
+        self.change_student_modes(*3 * ["pondering"], look_at_arg=self.screen)
+        self.wait(2)
+        self.change_student_modes(*3 * ["thinking"], look_at_arg=self.screen)
+        self.wait(8)
+
+
+class ErrorAtECCBit(Scene):
+    def construct(self):
+        bits = get_bit_grid(4, 4, height=6)
+        toggle_bit(bits[1])
+        toggle_bit(bits[4])
+        boxes = get_bit_grid_boxes(bits)
+        pos_labels = get_grid_position_labels(boxes)
+        ecc_boxes = VGroup(*[boxes[2**n] for n in range(4)])
+        ecc_boxes.set_fill(GREEN, 0.5)
+        bangs = TextMobject("!!!")
+        bangs.set_color(RED)
+        bangs.next_to(boxes[2], UP, SMALL_BUFF)
+
+        self.add(boxes, ecc_boxes, pos_labels, bits)
+        self.wait()
+        self.play(LaggedStartMap(Rotate, ecc_boxes, lambda m: (m, PI)))
+        self.wait()
+        self.play(
+            zap_anim(bits[2]),
+            toggle_bit_anim(bits[2], target_color=RED),
+        )
+        self.play(Write(bangs))
+        self.wait()
+
+        for bit in bits:
+            bit.remove(bit[1 - get_bit_mob_value(bit)])
+        for n in range(4):
+            bits.generate_target()
+            bits.target.set_opacity(1)
+            get_bit_n_subgroup(bits.target, n, 0).set_opacity(0)
+            self.play(MoveToTarget(bits))
+            self.wait()
+        self.play(bits.set_opacity, 1)
+        self.wait()
+
+
 class HalfAsPowerful(TeacherStudentsScene):
     def construct(self):
-        pass
+        self.student_says(
+            "Shouldn't that be\\\\only half as good?",
+            target_mode="sassy",
+            added_anims=[self.teacher.change, "happy"]
+        )
+        self.change_student_modes(
+            "pondering", "pondering", look_at_arg=self.screen,
+            added_anims=[self.teacher.change, "tease"]
+        )
+        self.look_at(self.screen)
+        self.wait(8)
+
+
+class WhatAboutTwoErrors(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "What about\\\\2 errors?",
+        )
+        self.play(self.teacher.change, "guilty")
+        self.look_at(self.screen)
+        self.change_student_modes("erm", "confused")
+        self.look_at(self.screen)
+        self.wait(4)
+
+
+class BlockSize256(Scene):
+    def construct(self):
+        N = 8
+        frame = self.camera.frame
+
+        # Bit block
+        bits = string_to_bits("You decoded an easter egg. Nice!")
+        block = get_bit_grid(2**(N // 2), 2**(N // 2), bits=bits)
+        block.set_height(6)
+        block.to_edge(LEFT, buff=LARGE_BUFF)
+        boxes = get_bit_grid_boxes(block)
+
+        parity_boxes = VGroup(*[boxes[2**k] for k in range(N)])
+        parity_boxes.set_fill(GREEN, 0.8)
+
+        bit_boxes = VGroup(*[VGroup(box, bit) for bit, box in zip(block, boxes)])
+        to_fade = VGroup()
+        to_keep = VGroup()
+        for i, bb in enumerate(bit_boxes):
+            if i >= 64 or (i % 16) >= 4:
+                to_fade.add(bb.copy())
+            else:
+                to_keep.add(bb.copy())
+
+        to_fade.save_state()
+        to_fade.fade(1)
+        frame.save_state()
+        frame.replace(to_keep, dim_to_match=1)
+        frame.scale(1.2)
+
+        self.add(to_keep)
+        self.play(
+            Restore(frame),
+            Restore(to_fade, lag_ratio=0.1),
+            run_time=5,
+        )
+
+        self.clear()
+        self.add(boxes)
+        self.add(block)
+
+        # Add title
+        title = TextMobject("$256 = 2^8$ bits")
+        title.set_height(0.7)
+        title.next_to(boxes, UP, MED_LARGE_BUFF)
+        title.set_x(0)
+
+        self.play(
+            frame.move_to, 0.5 * UP,
+            Write(title)
+        )
+        self.wait()
+
+        # Parity groups
+        parity_groups = VGroup()
+        for k in range(N):
+            group = boxes.copy()
+            group.set_fill(BLACK, opacity=0)
+            group.set_stroke(GREY_B, 1)
+            group.set_height(1.5)
+            get_bit_n_subgroup(group, k).set_fill(BLUE_E, 1)
+            parity_groups.add(group)
+
+        parity_groups.arrange_in_grid(2, 4, buff=MED_LARGE_BUFF)
+        parity_groups.set_width(7)
+        VGroup(parity_groups[:4], parity_groups[4:]).arrange(DOWN, buff=1.5)
+        parity_groups.to_edge(RIGHT)
+
+        # Question labels
+        q_labels = VGroup(*[TextMobject(f"Q{i + 1}") for i in range(N)])
+        for label, group in zip(q_labels, parity_groups):
+            label.set_height(0.3)
+            label.next_to(group, UP, SMALL_BUFF)
+
+        # Add questions
+        self.play(
+            LaggedStartMap(FadeIn, q_labels, lambda m: (m, DOWN), lag_ratio=0.3, run_time=5),
+            LaggedStartMap(FadeIn, parity_groups, lambda m: (m, DOWN), lag_ratio=0.3, run_time=5),
+        )
+        self.wait()
+
+        # Isolate one square
+        pos = 69  # Why not?
+        bits = "{0:b}".format(pos)
+        bits = (N - len(bits)) * '0' + bits
+        bits = bits[::-1]
+
+        yes_no_group = VGroup()
+        boxes.save_state()
+        possible_positions = list(range(2**N))
+        for k, bit, group in zip(it.count(), bits, parity_groups):
+            bit_value = int(bit)
+            if bit_value:
+                word = TextMobject("Yes", color=GREEN)
+            else:
+                word = TextMobject("No", color=RED)
+            word.next_to(group, DOWN)
+            yes_no_group.add(word)
+
+            intersect_positions = get_bit_n_sublist(range(2**N), k, bit_value)
+            globals()['intersect_positions'] = intersect_positions
+            possible_positions = list(filter(
+                lambda i: i in intersect_positions,
+                possible_positions,
+            ))
+
+            boxes.generate_target()
+            boxes.target.match_style(boxes.saved_state)
+            globals()['possible_positions'] = possible_positions
+            globals()['boxes'] = boxes
+            VGroup(*[boxes.target[i] for i in possible_positions]).set_fill(BLUE, 1)
+
+            self.play(
+                FadeIn(word),
+                MoveToTarget(boxes)
+            )
+            self.wait()
+
+        # Highlight parity bits
+        parity_bits_label = TextMobject("8 parity bits")
+        parity_bits_label.next_to(boxes, UP, aligned_edge=LEFT)
+        parity_bits_label.set_color(GREEN)
+
+        self.play(
+            FadeIn(parity_bits_label, DOWN),
+            title.to_edge, RIGHT
+        )
+        self.add(parity_boxes, block)
+        self.play(
+            LaggedStartMap(Rotate, parity_boxes, lambda m: (m, TAU)),
+        )
+        self.add(boxes, block)
+
+        # Un-highlight isolated point
+        self.play(
+            boxes[pos].set_fill, BLACK, 0,
+            FadeOut(yes_no_group)
+        )
+
+        # Message bits
+        message_bits = VGroup(*[
+            bit
+            for i, bit in enumerate(block)
+            if i not in [2**k for k in range(N)]
+        ])
+        message_bits.shuffle()
+
+        self.play(
+            LaggedStart(*[
+                toggle_bit_anim(bit)
+                for bit in message_bits
+            ], lag_ratio=0.01, run_time=3)
+        )
+        self.wait()
+
+        # Write redundant
+        redundant_label = TextMobject("``Redundant''")
+        redundant_label.set_color(GREEN)
+        redundant_label.next_to(parity_bits_label[-1][-1], RIGHT, MED_LARGE_BUFF, DOWN)
+
+        self.play(Write(redundant_label))
+
+        block.save_state()
+        for k in range(N):
+            block.target = block.saved_state.copy()
+            get_bit_n_subgroup(block.target, k, 0).set_fill(opacity=0)
+            self.play(MoveToTarget(block))
+            self.wait(0.5)
+        self.play(Restore(block))
+        self.wait()
+
+
+class WellAlmost(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says("Well...\\\\almost", target_mode="hesitant")
+        self.change_student_modes("angry", "sassy", "confused")
+        self.wait(3)
+
+
+class ChecksSpellOutPositionInBinary(Scene):
+    def construct(self):
+        N = 4
+        pos = 7
+
+        # Setup block
+        random.seed(0)
+        bits = [random.choice([0, 1]) for n in range(2**N)]
+        bits[1] = 0
+        bits[2] = 1
+        bits[4] = 0
+        bits[8] = 0
+        block = get_bit_grid(2**(N // 2), 2**(N // 2), bits=bits)
+        block.set_height(5)
+        block.to_edge(LEFT, buff=LARGE_BUFF)
+        boxes = get_bit_grid_boxes(block)
+        VGroup(*[boxes[2**n] for n in range(N)]).set_fill(GREY_D, 1)
+
+        pos_labels = VGroup(*map(Integer, range(2**N)))
+        pos_labels.set_height(0.2)
+        for label, box, bit_label in zip(pos_labels, boxes, block):
+            label.move_to(box, DR)
+            label.shift(0.1 * UL)
+            label.set_color(GREY_A)
+            bit_label.scale(0.8)
+
+        self.add(boxes)
+        self.add(block)
+        self.add(pos_labels)
+
+        self.play(
+            zap_anim(block[pos]),
+            toggle_bit_anim(block[pos]),
+        )
+
+        # Setup questions
+        parity_groups = VGroup()
+        for n in range(N):
+            group = boxes.copy()
+            group.set_height(1)
+            group.set_width(1, stretch=True)
+            group.set_fill(BLACK, 0)
+            get_bit_n_subgroup(group, n).set_fill(BLUE_D, 1)
+            parity_groups.add(group)
+        parity_groups.arrange(DOWN, buff=MED_LARGE_BUFF)
+        parity_groups.set_height(6)
+        parity_groups.to_edge(RIGHT, buff=3)
+
+        q_labels = VGroup(*[TextMobject(f"Q{n + 1}:") for n in range(N)])
+        for label, group in zip(q_labels, parity_groups):
+            label.next_to(group, LEFT, MED_SMALL_BUFF)
+
+        self.play(
+            FadeIn(parity_groups),
+            FadeIn(q_labels),
+        )
+
+        # Binary search down
+        bits_word = "{0:b}".format(pos)
+        bits_word = (N - len(bits_word)) * '0' + bits_word
+        bits = list(map(int, bits_word[::-1]))
+
+        boxes.save_state()
+        yes_no_words = VGroup()
+        possible_positions = list(range(2**N))
+        for n, bit, group in zip(it.count(), bits, parity_groups):
+            if bit:
+                word = TextMobject("Yes", color=GREEN)
+            else:
+                word = TextMobject("No", color=RED)
+            word.next_to(group, RIGHT)
+            yes_no_words.add(word)
+
+            possible_positions = list(filter(
+                lambda i: i in get_bit_n_sublist(range(2**N), n, bit_value=bit),
+                possible_positions,
+            ))
+
+            boxes.target = boxes.saved_state.copy()
+            VGroup(*[boxes.target[i] for i in possible_positions]).set_fill(BLUE_D, 0.8)
+
+            self.play(
+                FadeIn(word, 0.5 * LEFT),
+                MoveToTarget(boxes),
+            )
+            self.wait()
+
+        # Spell answer in binary
+        binary_answers = VGroup(*[
+            Integer(bit).move_to(word).match_color(word)
+            for bit, word in zip(bits, yes_no_words)
+        ])
+
+        self.play(
+            LaggedStartMap(GrowFromCenter, binary_answers),
+            LaggedStartMap(ApplyMethod, yes_no_words, lambda m: (m.scale, 0), remover=True),
+        )
+
+        # Show value of 7
+        frame = self.camera.frame
+
+        binary_pos_label = binary_answers.copy()
+        binary_pos_label.generate_target()
+        binary_pos_label.target.arrange(LEFT, buff=SMALL_BUFF, aligned_edge=DOWN)
+
+        equation = VGroup(
+            Integer(7, color=BLUE),
+            TexMobject("\\rightarrow"),
+            binary_pos_label.target,
+        )
+        equation.arrange(RIGHT)
+        equation.to_edge(UP, buff=0)
+
+        arrow = Arrow(equation.get_left(), equation.get_right(), buff=0)
+        arrow.next_to(equation, DOWN, SMALL_BUFF)
+        trans_words = TextMobject("Decimal to binary")
+        trans_words.match_width(arrow)
+        trans_words.next_to(arrow, DOWN, SMALL_BUFF)
+
+        self.play(
+            MoveToTarget(binary_pos_label),
+            frame.move_to, 0.5 * UP
+        )
+        self.play(
+            Write(equation[:-1]),
+            Write(trans_words),
+            GrowArrow(arrow),
+            run_time=1,
+        )
+        self.wait()
+
+        bin_group = VGroup(*equation[:-1], binary_pos_label, arrow, trans_words)
+
+        # Spell out binary
+        bin_equation = TexMobject(
+            "{7} = {0} \\cdot 8 + {1} \\cdot 4 + {1} \\cdot 2 + {1} \\cdot 1",
+            tex_to_color_map={
+                "{0}": RED,
+                "{1}": GREEN,
+                "{7}": BLUE,
+            }
+        )
+        bin_equation.move_to(bin_group, UP)
+
+        bit_parts = list(it.chain(*[
+            bin_equation.get_parts_by_tex(f"{{{d}}}")
+            for d in [0, 1]
+        ]))
+
+        self.play(
+            bin_group.next_to, bin_equation, DOWN, LARGE_BUFF,
+            *[
+                ApplyMethod(m1.copy().replace, m2, {"dim_to_match": 1}, remover=True, run_time=1.5)
+                for m1, m2 in zip(binary_pos_label[::-1], bit_parts)
+            ],
+            ApplyMethod(equation[0].copy().replace, bin_equation[0], remover=True, run_time=1.5)
+        )
+        self.add(bin_equation[0], *bit_parts)
+        self.play(FadeIn(VGroup(*[
+            part
+            for part in bin_equation
+            if part.get_tex_string() not in ["{0}", "{1}", "{7}"]
+        ]), lag_ratio=0.1))
+        self.add(bin_equation)
+        self.wait()
+
+        # Error at 7
+        toggle_bit(block[pos])
+        self.play(
+            zap_anim(block[pos]),
+            toggle_bit_anim(block[pos], target_color=RED),
+        )
+        self.wait()
+
+        # Four parity checks
+        for n, label, group, word in zip(it.count(), q_labels, parity_groups, yes_no_words):
+            boxes.target = boxes.saved_state.copy()
+            get_bit_n_subgroup(boxes.target, n).set_fill(BLUE, 0.8)
+
+            rect = SurroundingRectangle(VGroup(label, group, word), buff=MED_SMALL_BUFF)
+            one_rects = get_one_rects(get_bit_n_subgroup(block, n))
+
+            self.play(
+                MoveToTarget(boxes),
+                ShowCreation(rect),
+                ShowIncreasingSubsets(one_rects)
+            )
+            self.play(
+                FadeOut(one_rects),
+                FadeOut(rect),
+            )
+            self.wait(0.5)
+        self.play(Restore(boxes))
+        self.wait()
+
+        # Other examples
+        toggle_bit(block[7])
+        block[7].set_color(WHITE)
+
+        bit_parts = VGroup(*bit_parts)
+        to_save = VGroup(
+            equation[0], bin_equation[0],
+            bit_parts, binary_pos_label, binary_answers,
+        )
+        to_save.save_state()
+
+        ns = random.sample(list(range(16)), 10)
+        for n in ns:
+            toggle_bit(block[n])
+            block[n].set_color(YELLOW)
+
+            nc1 = Integer(n)
+            nc1.replace(equation[0], 1)
+            nc1.match_color(equation[0])
+            equation[0].set_opacity(0)
+            nc2 = nc1.copy()
+            nc2.replace(bin_equation[0], 1)
+            bin_equation[0].set_fill(0)
+
+            new_bits = int_to_bit_string(n, 4)
+            new_bit_mobs = VGroup()
+            for b1, b2, b3, value in zip(reversed(bit_parts), binary_pos_label, binary_answers, reversed(new_bits)):
+                new_mob = TexMobject(value)
+                new_mob.set_color(GREEN if int(value) else RED)
+                for b in (b1, b2, b3):
+                    nmc = new_mob.copy()
+                    nmc.replace(b, 1)
+                    b.set_opacity(0)
+                    new_bit_mobs.add(nmc)
+
+            self.play(*[
+                Animation(mob, remover=True, run_time=1)
+                for mob in [new_bit_mobs, nc1, nc2]
+            ])
+
+            toggle_bit(block[n])
+            block[n].set_color(WHITE)
+
+        to_save.restore()
+        self.wait()
+
+        # Remove 7 stuff
+        self.play(
+            FadeOut(VGroup(
+                *bin_group, *bin_equation, *binary_answers
+            ), lag_ratio=0.1),
+            block[pos].set_color, WHITE,
+        )
+
+        question_group = VGroup(q_labels, parity_groups)
+
+        # Show numbers 0 through 15
+        pos_labels_movers = pos_labels.copy()
+        bin_pos_groups = VGroup()
+        arrows = VGroup()
+        bin_labels = VGroup()
+
+        for n, label in enumerate(pos_labels_movers):
+            label.scale(2)
+            arrow = TexMobject("\\rightarrow")
+            bits_word = "{0:b}".format(n)
+            bits_word = (N - len(bits_word)) * '0' + bits_word
+            bin_label = VGroup(*[TexMobject(b) for b in bits_word])
+            bin_label.arrange(RIGHT, buff=SMALL_BUFF, aligned_edge=DOWN)
+            pos_group = VGroup(label, arrow, bin_label)
+            pos_group.arrange(RIGHT, buff=MED_SMALL_BUFF)
+            bin_pos_groups.add(pos_group)
+            arrows.add(pos_group[1])
+            bin_labels.add(bin_label)
+
+        bin_pos_groups.arrange_in_grid(8, 2, fill_rows_first=False)
+        bin_pos_groups.set_height(7)
+        bin_pos_groups.to_edge(RIGHT)
+        bin_pos_groups.set_y(0.5)
+
+        self.play(
+            FadeOut(question_group),
+            FadeIn(arrows, lag_ratio=0.02),
+            TransformFromCopy(pos_labels, pos_labels_movers),
+        )
+        self.play(ShowIncreasingSubsets(bin_labels, run_time=3, rate_func=bezier([0, 0, 1, 1])))
+        self.wait()
+
+        # Put bin labels in boxes
+        for label, box in zip(bin_labels, boxes):
+            label.generate_target()
+            label.target.set_width(0.7 * box.get_width())
+            label.target.move_to(box, DOWN)
+            label.target.shift(SMALL_BUFF * UP)
+
+        for bit in block:
+            bit.generate_target()
+            bit.target.scale(0.5, about_edge=UP),
+            bit.target.fade(0.5)
+
+        kw = {
+            "run_time": 5,
+            "lag_ratio": 0.3,
+        }
+        self.play(
+            LaggedStartMap(MoveToTarget, bin_labels, **kw),
+            LaggedStartMap(FadeOut, arrows, **kw),
+            LaggedStartMap(FadeOut, pos_labels_movers, **kw),
+            LaggedStartMap(FadeOut, pos_labels, **kw),
+            LaggedStartMap(MoveToTarget, block, **kw),
+        )
+        self.wait()
+
+        # Show confusion
+        randy = Randolph()
+        randy.flip()
+        randy.to_corner(DR, buff=LARGE_BUFF)
+
+        self.play(
+            VFadeIn(randy),
+            randy.change, "maybe", boxes,
+        )
+        self.play(PiCreatureBubbleIntroduction(
+            randy, "Wait...",
+            target_mode="confused",
+            bubble_class=ThoughtBubble,
+            look_at_arg=boxes.get_top(),
+        ))
+        self.play(Blink(randy))
+        self.wait()
+
+        self.play(LaggedStart(*map(ShowCreationThenFadeAround, bin_labels), lag_ratio=0))
+        self.play(randy.change, "maybe")
+        self.play(
+            LaggedStart(*[ShowCreationThenFadeOut(SurroundingRectangle(b, color=GREEN)) for b in block], lag_ratio=0),
+            randy.look_at, boxes.get_bottom(),
+        )
+        self.play(Blink(randy))
+        self.play(
+            randy.change, 'pondering', boxes,
+            FadeOut(randy.bubble),
+            FadeOut(randy.bubble.content),
+        )
+        for x in range(2):
+            self.wait()
+            self.play(Blink(randy))
+            self.play(randy.change, "thinking")
+        self.play(FadeOut(randy))
+
+        # Go through parity group 1 (and setup others)
+        bit_arrow_groups = VGroup()
+        for n in range(N):
+            arrow_group = VGroup()
+            for bin_label in bin_labels:
+                char = bin_label[-(n + 1)]
+                arrow = Triangle(start_angle=-PI / 2)
+                arrow.stretch(0.8, 0)
+                arrow.set_height(0.8 * char.get_height())
+                arrow.next_to(char, UP, buff=0.05)
+                arrow.set_stroke(width=0)
+                if char.get_tex_string() == '0':
+                    arrow.set_fill(GREY, 1)
+                else:
+                    arrow.set_fill(BLUE, 1)
+                arrow_group.add(arrow)
+            bit_arrow_groups.add(arrow_group)
+
+        highlight_groups = VGroup()
+        for n in range(N):
+            highlight_group = boxes.copy()
+            highlight_group.set_fill(BLACK, 0)
+            get_bit_n_subgroup(highlight_group, n).set_fill(BLUE, 0.5)
+            highlight_groups.add(highlight_group)
+
+        questions = VGroup()
+        for n in range(N):
+            chars = ["\\underline{\\phantom{0}}" for x in range(4)]
+            chars[-(n + 1)] = "\\underline{1}"
+            question = TextMobject(
+                f"""
+                If there's an error, does\\\\
+                its position look like\\\\
+                """,
+                " ".join(chars),
+                "?"
+            )
+            question.scale(1.25)
+            question[1:].scale(1.5, about_edge=UP)
+            question[1:].shift(SMALL_BUFF * DOWN)
+            question[1].set_color(BLUE)
+            question.next_to(boxes, RIGHT, LARGE_BUFF)
+            questions.add(question)
+
+        self.play(
+            LaggedStartMap(FadeIn, bit_arrow_groups[0], lag_ratio=0.3, run_time=3),
+            FadeOut(block),
+        )
+        self.play(Transform(boxes, highlight_groups[0]))
+        self.wait()
+        self.play(Write(questions[0]))
+        self.wait()
+
+        # Go through parity groups 2-4
+        bit_arrows = bit_arrow_groups[0]
+        for n in range(1, N):
+            self.play(boxes.set_fill, BLACK, 0)
+            self.play(
+                Transform(bit_arrows, bit_arrow_groups[n]),
+                FadeOut(questions[n - 1])
+            )
+            self.wait()
+            self.play(
+                Transform(boxes, highlight_groups[n]),
+                FadeIn(questions[n])
+            )
+            self.wait()
+
+        # Organize questions
+        questions.generate_target()
+        questions.target.arrange(DOWN, buff=LARGE_BUFF)
+        questions.target.set_height(FRAME_HEIGHT - 1)
+        questions.target.next_to(boxes, RIGHT, buff=1.5)
+        questions.target.match_y(frame)
+        questions[:N - 1].set_opacity(0)
+
+        self.play(
+            MoveToTarget(questions),
+            Restore(boxes),
+            FadeOut(bit_arrows),
+        )
+
+        fade_anims = []
+        for n in range(N):
+            rect = SurroundingRectangle(questions[n])
+            rect.set_stroke(BLUE, 2)
+            self.play(
+                FadeIn(highlight_groups[n]),
+                FadeIn(rect),
+                *fade_anims
+            )
+            fade_anims = [
+                FadeOut(highlight_groups[n]),
+                FadeOut(rect),
+            ]
+        self.play(*fade_anims)
+
+        # Note power of 2 points
+        parity_arrows = VGroup(Vector(DOWN), Vector(DOWN), Vector(RIGHT), Vector(RIGHT))
+        parity_arrows[0].next_to(boxes[1], UP, SMALL_BUFF)
+        parity_arrows[1].next_to(boxes[2], UP, SMALL_BUFF)
+        parity_arrows[2].next_to(boxes[4], LEFT, SMALL_BUFF)
+        parity_arrows[3].next_to(boxes[8], LEFT, SMALL_BUFF)
+        parity_arrows.set_color(GREEN)
+
+        parity_groups = VGroup()
+        for n, question in enumerate(questions):
+            pg = boxes.copy()
+            pg.set_width(pg.get_height(), stretch=True)
+            pg.set_height(0.8 * question.get_height())
+            pg.set_fill(BLACK, 0)
+            get_bit_n_subgroup(pg, n).set_fill(BLUE, 0.8)
+            pg.next_to(question, RIGHT, LARGE_BUFF)
+            parity_groups.add(pg)
+
+        self.play(
+            LaggedStartMap(GrowArrow, parity_arrows),
+            ApplyMethod(frame.set_x, -1, run_time=2)
+        )
+        self.wait()
+        rects = VGroup(*[boxes[2**n].copy() for n in range(N)])
+        rects.set_fill(BLUE, 0.8)
+        self.add(rects, bin_label)
+        self.play(
+            LaggedStartMap(VFadeInThenOut, rects, lag_ratio=0.5, run_time=5),
+            LaggedStartMap(FadeIn, parity_groups, lag_ratio=0.5, run_time=5),
+        )
+        self.wait()
+        self.add(rects, bin_label)
+        self.play(
+            LaggedStartMap(VFadeInThenOut, rects, lag_ratio=0.5, run_time=5),
+        )
+        self.wait()
+
+
+class PowerOfTwoPositions(Scene):
+    def construct(self):
+        block = get_bit_grid(4, 4)
+        block.set_height(5)
+        block.to_edge(LEFT, buff=LARGE_BUFF)
+        boxes = get_bit_grid_boxes(block)
+
+        numbers = VGroup(*[
+            Integer(n).move_to(box)
+            for n, box in enumerate(boxes)
+        ])
+
+        self.add(numbers)
+        self.wait()
+        for n in range(4):
+            numbers[2**n].scale(1.5)
+            numbers[2**n].set_color(YELLOW)
+            self.wait(0.25)
+        self.wait()
+
+
+class OneGroupPerParityBit(Scene):
+    def construct(self):
+        N = 4
+        block = get_bit_grid(2**(N // 2), 2**(N // 2))
+        block.set_height(5)
+        block.to_edge(LEFT, buff=LARGE_BUFF)
+        boxes = get_bit_grid_boxes(block)
+        pos_labels = get_grid_position_labels(boxes)
+
+        for bit in block:
+            bit.scale(0.7)
+
+        parity_boxes = VGroup(*[boxes[2**n] for n in range(N)])
+        parity_boxes.set_fill(GREEN, 0.8)
+        block.save_state()
+        self.add(boxes, pos_labels, block)
+        for n in range(4):
+            block.restore()
+            get_bit_n_subgroup(block, n, 0).set_fill(opacity=0)
+            self.wait(1.5)
+
+
+class LetsWalkThroughAnExample(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Can we walk through\\\\a full example?",
+            student_index=1,
+            added_anims=[self.teacher.change, "happy"]
+        )
+        self.change_student_modes("hooray", None, "hooray")
+        self.wait(5)
+        self.teacher_says(
+            "But of\\\\course!",
+            target_mode="tease"
+        )
+        self.change_student_modes("happy", "coin_flip_1", "happy")
+        self.wait(4)
+
+
+class FullExampleWithNewEnd(Scene):
+    CONFIG = {
+        "random_seed": 3,
+    }
+
+    def construct(self):
+        # Pull bits out of an image
+        image = ImageMobject("Tom_In_Bowtie")
+        image.set_height(6)
+        image.to_edge(LEFT, buff=LARGE_BUFF)
+
+        bits = get_image_bits(image)
+        bits.match_height(image)
+        bits.generate_target()
+        bits.target.arrange_in_grid(n_cols=11, h_buff=SMALL_BUFF, v_buff=MED_SMALL_BUFF)
+        bits.target.next_to(image, RIGHT, LARGE_BUFF, UP)
+        for bit, bt in zip(bits, bits.target):
+            bit.save_state()
+            bit.target = bt
+            bit.fade(0.9)
+
+        words = TextMobject("11-bit\\\\chunks")
+        words.scale(1.5)
+        words.to_edge(RIGHT)
+        lines = VGroup()
+        for bit in bits.target[10:200:11]:
+            line = Line(RIGHT, LEFT)
+            line.set_stroke(BLUE, 1)
+            line.bit = bit
+            line.word = words[0][0]
+            line.add_updater(lambda m: m.put_start_and_end_on(
+                m.word.get_left() + SMALL_BUFF * LEFT,
+                m.bit.get_right() + SMALL_BUFF * RIGHT,
+            ))
+            lines.add(line)
+
+        self.add(image)
+        self.add(bits)
+        self.save_state()
+        self.play(
+            LaggedStartMap(
+                Succession, bits,
+                lambda m: (Restore(m), MoveToTarget(m)),
+                lag_ratio=3 / len(bits),
+            ),
+            Write(words, rate_func=squish_rate_func(smooth, 0.5, 0.7)),
+            ShowCreation(lines, lag_ratio=0.1, rate_func=squish_rate_func(smooth, 0.5, 1)),
+            run_time=8
+        )
+
+        for line, bit in zip(lines, bits[10::11]):
+            line.bit = bit
+
+        for bit in bits:
+            if bit.get_center()[1] < -FRAME_HEIGHT / 2:
+                bits.remove(bit)
+
+        self.wait()
+
+        # Show many 16 bit blocks
+        bits.generate_target()
+        bits.target.scale(1.5)
+        bits.target.arrange_in_grid(n_cols=11, h_buff=SMALL_BUFF, v_buff=LARGE_BUFF)
+        bits.target.move_to(bits, UR)
+
+        box_groups = VGroup()
+        box_arrows = VGroup()
+        for bit in bits.target[0:77:11]:
+            boxes = VGroup(*[Square() for x in range(16)])
+            boxes.arrange_in_grid(4, 4, buff=0)
+            boxes.set_height(0.8)
+            boxes.next_to(bit, LEFT, buff=1.5)
+            boxes.set_stroke(GREY_B, 2)
+            arrow = Arrow(bit.get_left(), boxes.get_right())
+            box_arrows.add(arrow)
+            box_groups.add(boxes)
+
+        self.play(
+            FadeOut(image, 2 * LEFT),
+            MoveToTarget(bits, run_time=2),
+            LaggedStartMap(FadeIn, box_groups, run_time=4),
+            LaggedStartMap(GrowArrow, box_arrows, run_time=4),
+        )
+        self.wait()
+
+        # Isolate to one box
+        first_bits = bits[:11]
+        first_boxes = box_groups[0]
+
+        first_bits.generate_target()
+        first_bits.target.set_height(0.6)
+        first_bits.target.to_edge(UP)
+        first_bits.target.set_x(-3)
+        first_boxes.generate_target()
+        first_boxes.target.set_height(5)
+        first_boxes.target.next_to(first_bits.target, DOWN, LARGE_BUFF)
+
+        self.play(
+            MoveToTarget(first_bits),
+            MoveToTarget(first_boxes),
+            LaggedStart(*map(FadeOut, [
+                *bits[11:], box_arrows, box_groups[1:],
+                *lines, words,
+            ]), lag_ratio=0.01),
+            run_time=2
+        )
+
+        bits = first_bits
+        boxes = first_boxes
+
+        # Try it yourself
+        morty = Mortimer()
+        morty.to_edge(DR)
+        self.play(
+            PiCreatureSays(morty, "Try it\\\\yourself", target_mode="hooray"),
+            VFadeIn(morty)
+        )
+        self.play(Blink(morty))
+        self.wait(2)
+        self.play(LaggedStart(
+            FadeOut(morty),
+            FadeOut(morty.bubble),
+            FadeOut(morty.bubble.content),
+        ))
+
+        # Fill block
+        N = 4
+        ecc_boxes = VGroup(*[boxes[2**n] for n in range(N)])
+        message_boxes = VGroup(*[
+            box for box in boxes[1:]
+            if box not in ecc_boxes
+        ])
+        pos_labels = get_grid_position_labels(boxes, height=0.2)
+        pos_labels.set_color(GREY_B)
+
+        self.play(
+            ecc_boxes.set_fill, GREEN, 0.7,
+            boxes[0].set_fill, YELLOW, 0.5,
+            FadeIn(pos_labels, lag_ratio=0.1)
+        )
+        self.wait()
+
+        self.play(LaggedStart(*[
+            ApplyMethod(bit.move_to, box)
+            for bit, box in zip(bits, message_boxes)
+        ], run_time=4, lag_ratio=0.3))
+        self.wait()
+
+        # Organize bits properly
+        bit_template = bits[0].copy()
+        if get_bit_mob_value(bit_template) == 1:
+            toggle_bit(bit_template)
+
+        new_bits = [None] * 16
+        for i in [0, 1, 2, 4, 8]:
+            new_bits[i] = bit_template.copy()
+            new_bits[i].move_to(boxes[i])
+
+        bits_iter = iter(bits)
+        for i, new_bit in enumerate(new_bits):
+            if new_bit is None:
+                new_bits[i] = next(bits_iter)
+
+        bits = VGroup(*new_bits)
+
+        # Show parity groups
+        boxes.save_state()
+        self.add(boxes, pos_labels, bits)
+        for bit in bits:
+            for part in bit:
+                if part.get_fill_opacity() > 0:
+                    part.set_fill(opacity=1)
+            bit.save_state()
+        VGroup(*bits[:3], bits[4], bits[8]).set_opacity(0)
+
+        for n in range(N):
+            boxes.generate_target()
+            boxes.target.set_fill(BLACK, 0)
+            get_bit_n_subgroup(boxes.target, n).set_fill(BLUE, 0.8)
+            for k in range(n):
+                boxes.target[2**k].set_fill(GREEN, 0.5)
+            one_rects = get_one_rects(get_bit_n_subgroup(bits, n))
+            counter = get_ones_counter(boxes[10:12], one_rects, buff=1.5)
+            counter.match_height(bits[0])
+
+            self.play(MoveToTarget(boxes))
+            self.add(counter)
+            self.play(ShowIncreasingSubsets(one_rects))
+            self.wait()
+            self.play(Restore(bits[2**n]))
+            if counter.get_value() % 2 == 1:
+                rect_copy = one_rects[0].copy()
+                rect_copy.move_to(bits[2**n])
+                one_rects.add(rect_copy)
+                bits[2**n][0].set_opacity(1)
+                toggle_bit(bits[2**n])
+                self.add(rect_copy)
+                self.wait()
+            self.play(
+                LaggedStartMap(FadeOut, VGroup(*one_rects, counter), run_time=1),
+            )
+        self.play(Restore(boxes))
+
+        # Final parity check
+        one_rects = get_one_rects(bits)
+        counter = get_ones_counter(boxes[10:12], one_rects, buff=1.5)
+        counter.match_height(bits[0])
+
+        self.add(counter)
+        self.play(ShowIncreasingSubsets(one_rects))
+        self.wait()
+        self.play(Restore(bits[0]))
+        self.play(LaggedStartMap(FadeOut, VGroup(*one_rects, counter)))
+        self.wait()
+
+        # Send as a message
+        block_group = VGroup(boxes, pos_labels, bits)
+        pis, names = get_sender_and_receiver()
+        randy, morty = pis
+
+        line = Line(randy.get_corner(UR), morty.get_corner(UL), buff=MED_SMALL_BUFF)
+        line.add(
+            Dot().move_to(line.get_start(), RIGHT),
+            Dot().move_to(line.get_end(), LEFT),
+        )
+        line.set_stroke(GREY, 2)
+        line_label = TextMobject("Noisy channel")
+        line_label.next_to(line, DOWN, SMALL_BUFF)
+        line_label.set_color(RED)
+
+        self.play(
+            VFadeIn(pis),
+            FadeIn(names, DOWN),
+            randy.change, "raise_right_hand",
+            block_group.set_height, 1,
+            block_group.move_to, randy.get_corner(UR), DOWN,
+            block_group.shift, 0.1 * UP,
+        )
+        self.play(
+            ShowCreation(line),
+            Write(line_label)
+        )
+        self.play(Blink(randy))
+        self.play(
+            block_group.match_x, line,
+            randy.change, "happy", morty.eyes,
+        )
+
+        # Possible changes
+        black_box = SurroundingRectangle(block_group, buff=0)
+        black_box.set_fill(GREY_D, 1)
+        black_box.set_stroke(WHITE, 2)
+        change_words = VGroup(
+            TextMobject("Maybe flip 0 bits"),
+            TextMobject("Maybe flip 1 bit"),
+            TextMobject("Maybe flip 2 bits"),
+        )
+        colors = [WHITE, RED_B, RED]
+        for word, color in zip(change_words, colors):
+            word.next_to(black_box, UP)
+            word.set_color(color)
+
+        morty_arrow = Vector(DOWN)
+        morty_arrow.next_to(morty, UP)
+
+        self.play(
+            GrowArrow(morty_arrow),
+            morty.change, "pondering", morty_arrow
+        )
+        self.play(ShowCreationThenFadeAround(morty))
+        self.play(Blink(morty))
+        self.wait()
+        self.play(
+            morty_arrow.next_to, block_group, UP,
+            FadeIn(black_box),
+            morty.look_at, black_box,
+        )
+        self.play(Blink(randy))
+        self.wait()
+        self.play(Blink(randy))
+        self.play(
+            FadeIn(change_words[0], 0.25 * DOWN),
+            FadeOut(morty_arrow, UP),
+            morty.change, "confused", change_words[0],
+        )
+        for i in [1, 2]:
+            self.play(
+                FadeIn(change_words[i], 0.25 * DOWN),
+                change_words[:i].shift, UP,
+            )
+        self.wait()
+        self.play(Blink(morty))
+
+        error_pos = 10
+        toggle_bit(bits[error_pos])
+
+        self.add(block_group, black_box)
+        self.play(
+            FadeOut(black_box),
+            FadeOut(change_words),
+        )
+        self.play(
+            block_group.set_x, line.get_end()[0],
+            morty.change, "pondering", line.get_end() + UP,
+        )
+        self.play(
+            Uncreate(line),
+            FadeOut(line_label, DOWN),
+            FadeOut(randy, DL),
+            FadeOut(morty, DR),
+            FadeOut(names, DOWN),
+            block_group.set_height, 5,
+            block_group.set_y, 0,
+            block_group.to_edge, RIGHT,
+        )
+        self.wait()
+
+        # Try it!
+        try_it_words = TextMobject("Try it\\\\yourself!")
+        try_it_words.scale(2)
+        try_it_words.next_to(boxes, LEFT, buff=2)
+        self.play(FadeIn(try_it_words, RIGHT))
+        self.wait()
+        self.play(FadeOut(try_it_words, LEFT))
+
+        # Do parity checks
+        working_grid = boxes.copy()
+        working_grid.to_edge(LEFT)
+        working_grid_words = TextMobject("Possibilities")
+        working_grid_words.set_color(BLUE)
+        working_grid_words.next_to(working_grid, UP)
+        working_grid.set_fill(BLUE, 0.7)
+        working_pos_labels = get_grid_position_labels(working_grid)
+
+        counter = Integer(0)
+        counter.set_height(0.7)
+        counter.set_color(YELLOW)
+        counter.next_to(boxes, LEFT, MED_LARGE_BUFF)
+        counter.counted = VGroup()
+        counter.add_updater(lambda m: m.set_value(len(m.counted)))
+        for n in range(N):
+            off_bits = get_bit_n_subgroup(bits, n, 0)
+            on_bits = get_bit_n_subgroup(bits, n, 1)
+            rects = get_one_rects(on_bits)
+            counter.counted = rects
+
+            self.play(FadeOut(off_bits))
+            self.add(counter)
+            self.play(ShowIncreasingSubsets(rects))
+
+            to_fade = get_bit_n_subgroup(working_grid, n, 1 - (len(rects) % 2))
+            if n == 0:
+                to_fade.set_fill(BLACK, 0)
+                self.play(
+                    FadeIn(working_grid),
+                    FadeIn(working_pos_labels),
+                    FadeIn(working_grid_words),
+                )
+            else:
+                self.play(to_fade.set_fill, BLACK, 0)
+            self.wait()
+            self.play(
+                FadeOut(counter),
+                FadeOut(rects),
+                FadeIn(off_bits),
+            )
+
+        # Move working grid
+        self.add(working_grid, block_group)
+        self.play(
+            ApplyMethod(working_grid.move_to, boxes, run_time=2),
+            FadeOut(working_grid_words),
+            FadeOut(working_pos_labels),
+        )
+
+        # Full parity check
+        rects = get_one_rects(bits)
+        counter.counted = rects
+        self.add(counter)
+        self.play(ShowIncreasingSubsets(rects))
+        self.wait()
+        self.play(FadeOut(rects), FadeOut(counter))
+
+        # Correct error bit
+        self.play(toggle_bit_anim(bits[error_pos]))
+        self.play(FadeOut(working_grid))
+        self.wait()
+
+        # Show 11 message bits
+        block_group.generate_target()
+        block_group.target.center()
+        block_group.target.to_edge(DOWN)
+        VGroup(*[
+            block_group.target[2][i]
+            for i in [0, 1, 2, 4, 8]
+        ]).set_color(GREY_C)
+        self.play(MoveToTarget(block_group))
+
+        message_bits = VGroup(*[
+            bit for i, bit in enumerate(bits)
+            if i not in [0, 1, 2, 4, 8]
+        ])
+        message_bits.generate_target()
+        message_bits.target.arrange(RIGHT, buff=SMALL_BUFF)
+        message_bits.target.to_edge(UP)
+        for mb, mt in zip(message_bits, message_bits.target):
+            mb.target = mt
+
+        self.play(LaggedStartMap(
+            MoveToTarget, message_bits,
+            lag_ratio=0.3,
+            run_time=4,
+        ))
+        self.wait()
+
+    def old_parity_checks(self):
+        questions = VGroup(*[boxes.copy() for x in range(4)])
+        questions.set_height(1)
+        questions.arrange(DOWN, buff=0.5)
+        questions.set_height(6)
+        questions.to_edge(LEFT, buff=1)
+
+        counter = Integer(0, color=YELLOW)
+        counter.match_height(bits[0])
+        counter.next_to(boxes, LEFT, LARGE_BUFF)
+
+        boxes.save_state()
+        self.add(boxes, pos_labels, bits)
+        results = VGroup()
+        for n, question in enumerate(questions):
+            question.set_fill(BLACK, 0)
+            get_bit_n_subgroup(question, n).set_fill(BLUE, 0.7)
+
+            one_rects = get_one_rects(get_bit_n_subgroup(bits, n))
+            counter.set_value(len(one_rects))
+
+            boxes.generate_target()
+            boxes.target.match_style(question)
+
+            self.play(MoveToTarget(boxes))
+            self.play(FadeIn(one_rects))
+
+            if counter.get_value() % 2 == 0:
+                result = Integer(0, color=GREEN)
+            else:
+                result = Integer(1, color=RED)
+            result.next_to(question, RIGHT)
+            results.add(result)
+
+            counter_mover = counter.copy()
+            counter_mover.generate_target()
+            counter_mover.target.replace(result, stretch=True)
+            counter_mover.target.fade(1)
+            result.save_state()
+            result.replace(counter, stretch=True)
+            result.fade(1)
+
+            self.play(
+                ReplacementTransform(boxes.copy().set_fill(opacity=0), question),
+                MoveToTarget(counter_mover, remover=True),
+                Restore(result),
+                FadeOut(one_rects),
+                FadeOut(counter),
+            )
+        self.wait()
+
+        one_rects = get_one_rects(bits)
+        counter.set_value(len(one_rects))
+        words = TextMobject("Likely one error")
+        words.next_to(counter, DOWN, LARGE_BUFF, aligned_edge=RIGHT)
+        self.play(
+            boxes.set_fill, BLACK, 0,
+            FadeIn(counter),
+            FadeIn(one_rects),
+        )
+        self.wait()
+        self.play(FadeIn(words, 0.1 * UP))
+        self.wait()
+        self.play(
+            FadeOut(VGroup(counter, words, one_rects), lag_ratio=0.2)
+        )
+
+        # Read result
+        final_result = results.copy()
+        final_result.arrange(LEFT, buff=SMALL_BUFF)
+
+        equation = VGroup(
+            final_result,
+            TexMobject("\\rightarrow"),
+            Integer(10)
+        )
+        equation.arrange(RIGHT)
+        equation.to_edge(UP)
+
+        self.play(TransformFromCopy(results, final_result, run_time=3, lag_ratio=0.3))
+        self.play(
+            Write(equation[1]),
+            FadeIn(equation[2], LEFT),
+        )
+        self.wait()
+        boxes.generate_target()
+        boxes.target[10].set_fill(BLUE, 0.7)
+        self.play(MoveToTarget(boxes))
+        self.play(toggle_bit_anim(bits[10]))
+        self.wait()
+
+        self.play(
+            LaggedStartMap(
+                FadeOut, VGroup(*equation, *questions, *results),
+                lambda m: (m, DOWN),
+            ),
+            Restore(boxes),
+        )
+
+
+class ByHandVsSoftwareVsHardware(Scene):
+    def construct(self):
+        self.add(get_background(GREY_E))
+
+        rects = VGroup(*[ScreenRectangle() for x in range(3)])
+        rects.set_stroke(GREY_B)
+        rects.set_fill(BLACK, 1)
+        rects.arrange(RIGHT, buff=MED_LARGE_BUFF)
+        rects.set_width(FRAME_WIDTH - 1)
+        rects[0].shift(UP)
+        rects[2].shift(DOWN)
+        self.add(rects)
+
+        labels = VGroup(
+            TextMobject("By hand"),
+            TextMobject("In software"),
+            TextMobject("In hardware"),
+        )
+        for label, rect in zip(labels, rects):
+            label.next_to(rect, DOWN)
+
+        randy = Randolph(height=1.25)
+        randy.next_to(rects[0], UP, SMALL_BUFF)
+
+        self.play(
+            LaggedStartMap(
+                FadeIn, labels,
+                lambda m: (m, 0.5 * UP),
+                lag_ratio=0.4,
+            ),
+            randy.change, 'thinking', rects[0],
+        )
+        self.play(Blink(randy))
+        self.wait()
+
+        randy.generate_target()
+        randy.target.next_to(rects[1], UP, SMALL_BUFF)
+        randy.target.change("hooray", rects[1])
+        self.play(
+            MoveToTarget(randy, path_arc=-45 * DEGREES)
+        )
+        self.play(Blink(randy))
+        self.play(randy.change, 'thinking', rects[1])
+        self.play(Blink(randy))
+        self.wait()
+
+
+class EndScreen(Scene):
+    def construct(self):
+        self.add(get_background(GREY_E))
+
+        rects = VGroup(*[ScreenRectangle() for x in range(2)])
+        rects.set_stroke(WHITE, 1)
+        rects.set_fill(BLACK, 1)
+        rects.set_height(3)
+        rects.arrange(RIGHT, buff=1)
+        rects.shift(UP)
+        self.add(rects)
+
+        labels = VGroup(
+            TextMobject("Part 2\\\\", "the elegance of it all"),
+            TextMobject("Ben Eater\\\\", "doing this on breadboards"),
+        )
+
+        for label, rect in zip(labels, rects):
+            label[0].scale(1.5, about_edge=DOWN)
+            label.scale(0.9)
+            label.next_to(rect, DOWN)
+
+        self.add(labels)
+
+        self.add(AnimatedBoundary(rects[0]))
+        self.wait()
+        self.add(AnimatedBoundary(rects[1]))
+        self.wait(19)
+
+
+# Part 2
+
+class Thumbnail2(Scene):
+    def construct(self):
+        # TODO, improve
+        title = TextMobject("Hamming codes\\\\", "part 2")
+        title.set_width(FRAME_WIDTH - 4)
+        title[0].set_color(BLUE)
+        title[1].set_color(GREY_B)
+        self.add(title)
+
+
+class Part1Wrapper(Scene):
+    def construct(self):
+        self.add(get_background())
+        rect = ScreenRectangle()
+        rect.set_fill(BLACK, 1)
+        rect.set_stroke(GREY_B, 2)
+        rect.set_height(6)
+        rect.to_edge(DOWN)
+        title = TextMobject("Part 1")
+        title.set_height(0.7)
+        title.to_edge(UP)
+
+        self.add(rect)
+        self.add(AnimatedBoundary(rect, max_stroke_width=2, cycle_rate=0.25))
+        self.play(Write(title))
+        self.wait(35)
+
+
+class AskHowItsImplemented(TeacherStudentsScene):
+    def construct(self):
+        self.student_says("How do you\\\\implement this?")
+        self.play(
+            self.teacher.change, "happy",
+            self.get_student_changes("pondering", "confused"),
+        )
+        self.look_at(self.screen)
+        self.wait(6)
+
+
+class ScaleUp(Scene):
+    def construct(self):
+        square_template = Square()
+        square_template.set_stroke(GREY_B, 2)
+        square_template.set_height(1)
+        zero = Integer(0)
+        one = Integer(1)
+
+        last_grid = None
+        last_parity_groups = None
+        last_words = None
+
+        for N in range(4, 13):
+            grid = VGroup(*[square_template.copy() for x in range(2**N)])
+            grid.arrange_in_grid(
+                2**int(math.floor(N / 2)),
+                2**int(math.ceil(N / 2)),
+                buff=0
+            )
+            grid.set_width(5.5)
+            if N > 8:
+                grid.set_stroke(width=1)
+            elif N > 10:
+                grid.set_stroke(width=0.25)
+            grid.set_stroke(background=True)
+
+            grid[0].set_fill(YELLOW, 0.6)
+            for n in range(N):
+                grid[2**n].set_fill(GREEN, 0.7)
+
+            parity_groups = VGroup()
+            for n in range(N):
+                group = grid.copy()
+                group.set_fill(BLACK, 0)
+                get_bit_n_subgroup(group, n).set_fill(BLUE, 0.8)
+                parity_groups.add(group)
+            parity_groups.arrange_in_grid(n_cols=2, buff=1.5)
+            parity_groups.set_width(5)
+            max_height = 7
+            if parity_groups.get_height() > max_height:
+                parity_groups.set_height(max_height)
+            parity_groups.to_edge(RIGHT, buff=0.5)
+
+            random.seed(0)
+            for square in grid:
+                bit = random.choice([zero, one]).copy()
+                bit.replace(square, dim_to_match=1)
+                bit.scale(0.5)
+                square.add(bit)
+
+            redun = "{:.3}".format((N + 1) / (2**N))
+            words = TexMobject(
+                f"""
+                {{ {{{N + 1}}} \\text{{ parity bits}}
+                \\over
+                {2**N} \\text{{ bits per block}} }}
+                \\approx {redun}
+                """,
+                tex_to_color_map={
+                    f"{{{N + 1}}}": GREEN,
+                    f"{2**N}": WHITE,
+                    f"{redun}": YELLOW,
+                },
+                fill_color=GREY_A
+            )
+            words.to_corner(UL, buff=MED_SMALL_BUFF)
+            grid.next_to(words, DOWN, aligned_edge=LEFT)
+
+            if last_grid is None:
+                self.add(grid)
+                self.add(parity_groups)
+                self.add(words)
+            else:
+                self.play(
+                    ReplacementTransform(last_grid, grid[:2**(N - 1)]),
+                    FadeIn(grid[2**(N - 1):], lag_ratio=0.1, run_time=2),
+                    FadeOut(last_parity_groups),
+                    LaggedStartMap(FadeIn, parity_groups, lag_ratio=0.2, run_time=2),
+                    FadeOut(last_words, UP),
+                    FadeIn(words, DOWN),
+                )
+            self.wait()
+
+            last_grid = grid
+            last_parity_groups = parity_groups
+            last_words = words
+
+
+class MillionRatio(Scene):
+    def construct(self):
+        # Largely copied from above
+        N = 20
+        words = TexMobject(
+            """
+            {21 \\text{ parity bits}
+            \\over
+            1{,}048{,}576 \\text{ bits per block} }
+            \\approx 0.00002
+            """,
+            tex_to_color_map={
+                "21": GREEN,
+                "1{,}048{,}576": WHITE,
+                "0.00002": YELLOW,
+            },
+            fill_color=GREY_A
+        )
+        words.to_corner(UL, buff=MED_SMALL_BUFF)
+
+        self.add(words)
+
+        st = Square()
+        st.set_stroke(GREY, 0.5)
+        grid = VGroup(*[st.copy() for x in range(2**(16))])
+        grid.arrange_in_grid(buff=0)
+        grid.set_height(6)
+        grid.next_to(words, DOWN, aligned_edge=LEFT)
+
+        self.add(grid)
+
+        k = 17
+        positions = VGroup(*[
+            TexMobject(int_to_bit_string(n, n_bits=20))
+            for n in [*range(k), *range(2**N - k // 2, 2**N)]
+        ])
+        positions.replace_submobject(-k // 2, TexMobject("\\vdots"))
+        positions.arrange(DOWN)
+        positions.set_height(7)
+        positions.to_edge(RIGHT)
+        for n in [0, 1, 2, 4, 8, 16]:
+            positions[n].set_color(GREEN_B)
+
+        brace = Brace(positions, LEFT, buff=SMALL_BUFF)
+        p_label = TextMobject("$2^{20}$\\\\positions")
+        p_label.next_to(brace, LEFT, SMALL_BUFF)
+
+        self.play(
+            ShowIncreasingSubsets(positions, run_time=3),
+            GrowFromPoint(brace, brace.get_top(), run_time=3, rate_func=squish_rate_func(smooth, 0.5, 1)),
+            FadeIn(p_label, 0.5 * RIGHT, run_time=3, rate_func=squish_rate_func(smooth, 0.5, 1)),
+        )
+        self.wait()
+
+        grid.set_stroke(background=True)
+        for n in range(16):
+            grid.set_fill(BLACK, 0)
+            get_bit_n_subgroup(grid, n).set_fill(BLUE, 0.8)
+            self.wait(0.5)
+
+
+class BurstErrors(Scene):
+    def construct(self):
+        # Setup
+        bl = 8
+        nb = 4
+
+        bits = get_bit_grid(1, bl * nb, bits=string_to_bits("3b1b"))
+        bits.set_height(0.5)
+        bits.arrange(RIGHT, buff=SMALL_BUFF)
+        bits.move_to(DOWN)
+        self.add(bits)
+
+        colors = [BLUE, YELLOW, MAROON_B, TEAL]
+        block_words = VGroup(*[
+            TextMobject(f"Block {n}", fill_color=color)
+            for n, color in zip(range(nb), colors)
+        ])
+        block_words.set_height(0.5)
+        block_words.arrange(RIGHT, buff=LARGE_BUFF)
+        block_words.move_to(2 * UP)
+        self.add(block_words)
+
+        # Add lines
+        lines = VGroup()
+        for n, bit in enumerate(bits):
+            words = block_words[n // bl]
+            line = Line()
+            line.match_color(words)
+            line.set_stroke(width=2)
+            line.words = words
+            line.bit = bit
+            bit.line = line
+            underline = Underline(bit)
+            underline.set_stroke(words.get_color(), 4)
+            bit.add(underline)
+            line.add_updater(lambda m: m.put_start_and_end_on(
+                m.words.get_bottom() + SMALL_BUFF * DOWN,
+                m.bit.get_top(),
+            ))
+            lines.add(line)
+
+        self.play(LaggedStartMap(ShowCreation, lines, suspend_mobject_updating=True))
+        self.wait()
+
+        # Show burst error
+        error_bits = bits[9:13]
+        error_words = TextMobject("Burst of errors")
+        error_words.next_to(error_bits, DOWN)
+        error_words.set_color(RED)
+        ruined_words = TextMobject("Ruined")
+        ruined_words.set_color(RED)
+        ruined_words.next_to(block_words[1], UP)
+        strike = Line(LEFT, RIGHT)
+        strike.replace(block_words[1])
+        strike.set_color(RED)
+
+        self.play(
+            LaggedStartMap(toggle_bit_anim, error_bits, target_color=RED),
+            LaggedStart(*map(zap_anim, error_bits)),
+            Write(error_words)
+        )
+        self.play(
+            ShowCreation(strike),
+            FadeIn(ruined_words, 0.5 * DOWN)
+        )
+        self.wait()
+        self.play(
+            FadeOut(ruined_words, 0.2 * UP),
+            FadeOut(error_words, 0.2 * DOWN),
+            FadeOut(strike),
+            LaggedStartMap(toggle_bit_anim, error_bits, target_color=WHITE),
+            run_time=1,
+        )
+        for bit in error_bits:
+            bit[-1].set_color(YELLOW)
+
+        # Rearrange
+        new_order = VGroup()
+        for i in range(bl):
+            for j in range(nb):
+                new_order.add(bits[bl * j + i])
+        new_order.generate_target()
+        new_order.target.arrange(RIGHT, buff=SMALL_BUFF)
+        new_order.target.replace(bits)
+
+        self.play(MoveToTarget(new_order, run_time=3, path_arc=30 * DEGREES))
+        self.wait()
+
+        # New burst
+        error_bits = new_order[9:13]
+
+        self.play(
+            LaggedStartMap(toggle_bit_anim, error_bits, target_color=RED),
+            LaggedStart(*map(zap_anim, error_bits)),
+            Write(error_words),
+        )
+        non_error_lines = VGroup()
+        for line in lines:
+            if line.bit not in error_bits:
+                non_error_lines.add(line)
+        self.play(non_error_lines.set_stroke, {"width": 1, "opacity": 0.5})
+        self.wait()
+
+        error_words = VGroup(*[TextMobject("1 error", fill_color=GREEN) for x in range(4)])
+        for ew, bw in zip(error_words, block_words):
+            ew.next_to(bw, UP, MED_LARGE_BUFF)
+
+        self.play(LaggedStartMap(FadeIn, error_words, lambda m: (m, DOWN)))
+        self.wait()
+
+
+class BinaryCounting(Scene):
+    def construct(self):
+        def get_bit_grids(bit_values):
+            left_bits = get_bit_grid(4, 1, buff=LARGE_BUFF, bits=bit_values, height=6)
+            left_bits.move_to(3 * LEFT)
+            right_bits = get_bit_grid(1, 4, buff=SMALL_BUFF, bits=bit_values, height=0.6)
+            right_bits.set_submobjects(list(reversed(right_bits)))
+            right_bits.move_to(RIGHT + 2 * UP)
+            return VGroup(left_bits, right_bits)
+
+        bit_grids = get_bit_grids([0, 0, 0, 0])
+
+        brace = Brace(bit_grids[1], UP)
+        counter = Integer(0, edge_to_fix=ORIGIN)
+        counter.match_height(bit_grids[1])
+        counter.set_color(BLUE)
+        counter.next_to(brace, UP)
+
+        boxes = VGroup(*[Square() for x in range(16)])
+        boxes.arrange_in_grid(4, 4, buff=0)
+        boxes.set_height(4)
+        boxes.next_to(bit_grids[1], DOWN, LARGE_BUFF)
+        boxes.set_stroke(GREY_B, 2)
+        pos_labels = get_grid_position_labels(boxes)
+
+        self.add(bit_grids)
+        self.add(brace)
+        self.add(counter)
+        self.add(boxes)
+        self.add(pos_labels)
+
+        for n in range(16):
+            bit_values = list(map(int, int_to_bit_string(n, n_bits=4)))
+            boxes.generate_target()
+            boxes.target.set_fill(BLACK, 0)
+            boxes.target[n].set_fill(BLUE, 0.8)
+            anims = [
+                ChangeDecimalToValue(counter, n),
+                MoveToTarget(boxes)
+            ]
+            for grid in bit_grids:
+                for bit, bv in zip(grid, reversed(bit_values)):
+                    if get_bit_mob_value(bit) != bv:
+                        anims.append(toggle_bit_anim(bit))
+            self.play(*anims, run_time=0.5)
+            self.wait()
+
+
+class ReviewOfXOR(Scene):
+    CONFIG = {
+        "random_seed": 2,
+    }
+
+    def construct(self):
+        # Setup equations
+        xor = get_xor()
+
+        equations = VGroup()
+        for n in range(4):
+            bits = list(map(int, int_to_bit_string(n, n_bits=2)))
+            equation = VGroup(
+                Integer(bits[0]),
+                xor.copy(),
+                Integer(bits[1]),
+                TexMobject("="),
+                Integer(op.xor(*bits)),
+            )
+            equation.set_height(0.6)
+            equation.arrange(RIGHT)
+            equations.add(equation)
+
+        equations.arrange(DOWN, buff=LARGE_BUFF)
+
+        # Intro xor
+        equation = equations[1]
+        equation.save_state()
+        equation.center()
+        equation[3:].set_opacity(0)
+
+        arrow = Vector(0.7 * DOWN)
+        arrow.next_to(equation[1], UP, SMALL_BUFF)
+        xor_word = TextMobject("xor")
+        xor_word_long = TextMobject("``exclusive or''")
+        xor_words = VGroup(xor_word, xor_word_long)
+        xor_words.scale(1.5)
+        xor_words.match_color(xor)
+        xor_words.next_to(arrow, UP)
+
+        self.add(equation)
+        self.play(
+            FadeIn(equation[1], 0.5 * UP),
+            GrowArrow(arrow),
+            Write(xor_word),
+        )
+        self.wait()
+        self.play(
+            xor_word.next_to, xor_word_long, UP, MED_SMALL_BUFF,
+            FadeIn(xor_word_long, DOWN),
+        )
+        self.wait()
+        self.play(
+            FadeOut(arrow),
+            xor_words.to_corner, UL,
+            Restore(equation),
+            FadeIn(equations[2], UP),
+        )
+        self.wait()
+        self.play(
+            FadeIn(equations[0], DOWN),
+            FadeIn(equations[3], UP),
+        )
+        self.wait()
+
+        # Parity of two bits
+        parity_words = TextMobject("Parity of\\\\two bits")
+        parity_words.set_color(YELLOW)
+        parity_words.scale(1.5)
+        parity_words.to_edge(RIGHT, buff=MED_LARGE_BUFF)
+
+        arrows = VGroup()
+        for equation in equations:
+            globals()['equation'] = equation
+            new_arrows = VGroup(*[
+                Arrow(equation[i].get_top(), equation[4].get_top(), path_arc=-60 * DEGREES)
+                for i in [0, 2]
+            ])
+            new_arrows.set_color(YELLOW)
+            arrows.add(new_arrows)
+
+        self.play(
+            LaggedStartMap(DrawBorderThenFill, arrows),
+            FadeIn(parity_words)
+        )
+        self.wait()
+
+        # Addition mod 2
+        mod2_words = TextMobject("Addition\\\\mod 2")
+        mod2_words.scale(1.5)
+        mod2_words.move_to(parity_words, RIGHT)
+        mod2_words.set_color(BLUE)
+
+        self.play(
+            FadeIn(mod2_words, DOWN),
+            FadeOut(parity_words, UP),
+            FadeOut(arrows)
+        )
+        self.wait()
+
+        # xor of two bit strings
+        row_len = 8
+        bit_strings = VGroup(*[
+            Integer(random.choice([0, 1]), edge_to_fix=ORIGIN)
+            for x in range(row_len * 3)
+        ])
+        bit_strings.arrange_in_grid(
+            3, row_len,
+            h_buff=SMALL_BUFF,
+            v_buff=MED_LARGE_BUFF,
+            fill_rows_first=False
+        )
+        bit_strings.scale(equation[0][0].get_height() / bit_strings[0].get_height())
+        rows = VGroup(*[bit_strings[i::3] for i in range(3)])
+        rows[0].next_to(rows[1], UP, buff=0.25)
+
+        line = Line(LEFT, RIGHT)
+        line.set_width(bit_strings.get_width() + 1)
+        line.move_to(bit_strings[-2:], RIGHT)
+        line.set_stroke(GREY_B, 3)
+        line_xor = xor.copy()
+        line_xor.set_height(0.5)
+        line_xor.next_to(line, UP, aligned_edge=LEFT)
+
+        for b1, b2, b3 in zip(*[row for row in rows]):
+            b3.set_value(b1.get_value() ^ b2.get_value())
+            b2.match_x(b1)
+            b3.match_x(b1)
+
+        equations.generate_target()
+        for n, eq in enumerate(equations.target):
+            for k, b1 in enumerate(eq[0::2]):
+                target_bit = bit_strings[3 * n + k]
+                target_bit.set_value(b1.get_value())
+                b1.become(target_bit)
+            eq[1].become(line_xor)
+            eq[3].fade(1)
+
+        self.play(
+            MoveToTarget(equations, run_time=2),
+            FadeOut(mod2_words),
+            FadeIn(bit_strings[12:], run_time=2, rate_func=squish_rate_func(smooth, 0.5, 1), lag_ratio=0.1),
+            ShowCreation(line, run_time=2, rate_func=squish_rate_func(smooth, 0.5, 1))
+        )
+        self.remove(equations)
+        self.add(bit_strings, line_xor)
+        self.wait()
+
+        # Highlight columns
+        last_rect = VMobject()
+        for b1, b2, b3 in zip(*[row for row in rows]):
+            rect = SurroundingRectangle(VGroup(b1, b2, b3), buff=SMALL_BUFF)
+            rect.set_stroke(BLUE, 2)
+            self.play(FadeIn(rect), FadeOut(last_rect))
+            last_rect = rect
+        self.play(FadeOut(last_rect))
+
+        # Add more rows
+        new_rows = VGroup(*[rows[0].copy() for x in range(3)])
+        new_rows.arrange(DOWN, buff=0.2)
+        new_rows.next_to(rows, UP, buff=0.2)
+        for row in new_rows:
+            for bit in row:
+                bit.set_value(random.choice([0, 1]))
+
+        self.play(
+            LaggedStartMap(FadeIn, new_rows, lambda m: (m, DOWN)),
+            FadeOut(xor_words),
+            FadeOut(rows[2])
+        )
+
+        # Compute parities
+        parity_words = TextMobject("Computes\\\\parity\\\\of each\\\\column", alignment="")
+        parity_words.set_color(YELLOW)
+        parity_words.to_corner(UL)
+        self.add(parity_words)
+
+        for tup in zip(*[*new_rows, *rows]):
+            rects = VGroup()
+            for bit in tup[:-1]:
+                if bit.get_value() == 1:
+                    rect = SurroundingRectangle(bit)
+                    rect.set_stroke(YELLOW, 2)
+                    rect.set_fill(YELLOW, 0.5)
+                    rects.add(rect)
+            tup[-1].set_value(len(rects) % 2)
+            tup[-1].set_color(YELLOW)
+            self.add(rects, *tup)
+            self.wait()
+            self.remove(rects)
+        self.wait()
+
+        # Simpler sum
+        self.play(FadeOut(
+            VGroup(new_rows, rows[0][4:], rows[1][4:], rows[2][4:]),
+            lag_ratio=0.1,
+        ))
+        for b1, b2, b3 in zip(*[row[:4] for row in rows]):
+            b3.set_value(b1.get_value() ^ b2.get_value())
+            self.wait(0.25)
+
+        arrows = VGroup()
+        integers = VGroup()
+        for row, n in zip(rows, [3, 5, 6]):
+            arrow = Vector(0.75 * RIGHT)
+            arrow.next_to(row[:4], RIGHT, buff=0.2)
+            integer = Integer(n)
+            integer.match_height(row[0])
+            integer.match_color(row[0])
+            integer.next_to(arrow, RIGHT, buff=0.2)
+            self.play(
+                GrowArrow(arrow),
+                FadeIn(integer, LEFT)
+            )
+
+            arrows.add(arrow)
+            integers.add(integer)
+
+
+class ButWhy(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Hang on...\\\\why?", target_mode="confused",
+            added_anims=[self.teacher.change, "tease"]
+        )
+        self.change_student_modes(
+            "maybe", "erm", "confused",
+            look_at_arg=self.screen,
+        )
+        self.wait(6)
+
+
+class WhyPointToError(Scene):
+    def construct(self):
+        rect = SurroundingRectangle(TextMobject("0000").scale(2))
+        rect.to_edge(RIGHT)
+        rect.set_stroke(RED, 3)
+        words = TextMobject("Why do these\\\\point to an error?")
+        arrow = Vector(0.7 * RIGHT)
+        arrow.next_to(rect, LEFT)
+        words.next_to(arrow, LEFT)
+        words.set_color(RED)
+
+        bit = Integer(0).scale(2)
+        bit.next_to(words, UP, buff=0.45)
+        bit.shift(1.11 * words.get_width() * LEFT)
+
+        self.play(
+            Write(words),
+            ShowCreation(rect),
+        )
+        self.play(GrowArrow(arrow))
+        self.wait()
+        self.play(
+            rect.become, SurroundingRectangle(bit).match_style(rect),
+            FadeOut(arrow)
+        )
+        self.wait()
+
+
+class SimplePointer(Scene):
+    def construct(self):
+        arrow = Arrow(ORIGIN, [-4, 1.5, 0])
+        arrow.center()
+        arrow.set_fill(GREY_B)
+        self.play(DrawBorderThenFill(arrow))
+        self.wait()
+
+
+class ArrowPair(Scene):
+    def construct(self):
+        arrows = VGroup(
+            Vector(LEFT),
+            Vector(LEFT),
+        )
+        arrows.scale(1.5)
+        arrows.arrange(DOWN, buff=2)
+        arrows[0].shift(4 * LEFT)
+        arrows.set_fill(YELLOW)
+
+        self.play(*map(GrowArrow, arrows))
+        self.wait()
+
+
+class PythonXorExample(ExternallyAnimatedScene):
+    pass
+
+
+class HammingCodesWithXOR(Scene):
+    def construct(self):
+        # Setup
+        bits = get_bit_grid(4, 4, bits=string_to_bits(":)"))
+        bits.to_edge(LEFT, buff=1.5)
+        boxes = get_bit_grid_boxes(bits)
+        block = VGroup(boxes, bits)
+        block.set_height(6)
+        for bit in bits:
+            bit.set_height(0.7)
+
+        bin_pos_labels = VGroup()
+        dec_pos_labels = VGroup()
+        for n, box, bit in zip(it.count(), boxes, bits):
+            bin_label = VGroup(
+                *[Integer(int(c)) for c in int_to_bit_string(n, n_bits=4)]
+            )
+            bin_label.arrange(RIGHT, buff=SMALL_BUFF, aligned_edge=DOWN)
+            bin_label.set_color(GREY_B)
+            bin_label.set_width(0.7 * box.get_width())
+            bin_label.move_to(box, DOWN)
+            bin_label.shift(SMALL_BUFF * UP)
+            bin_pos_labels.add(bin_label)
+
+            dec_label = Integer(n)
+            dec_label.match_height(bin_label)
+            dec_label.match_style(bin_label[0])
+            dec_label.move_to(bin_label, DR)
+            dec_pos_labels.add(dec_label)
+
+            bit.generate_target()
+            bit.target.scale(0.9)
+            bit.target.move_to(box, UP)
+            bit.target.shift(MED_SMALL_BUFF * DOWN)
+
+        # Enumerate
+        self.add(block)
+        kw = {"lag_ratio": 0.3, "run_time": 2}
+        self.play(LaggedStartMap(FadeIn, dec_pos_labels, **kw))
+        self.wait()
+        kw["lag_ratio"] = 0.1
+        self.play(
+            LaggedStartMap(FadeOut, dec_pos_labels, **kw),
+            LaggedStartMap(FadeIn, bin_pos_labels, **kw),
+            LaggedStartMap(MoveToTarget, bits, **kw),
+        )
+        self.wait()
+
+        # Highlight ones
+        summands = VGroup()
+        for bit, box, label in zip(bits, boxes, bin_pos_labels):
+            for mob in bit, box, label:
+                mob.save_state()
+                mob.generate_target()
+
+            if get_bit_mob_value(bit) == 1:
+                box.target.set_fill(BLUE, 0.7)
+                summands.add(label.copy())
+            else:
+                bit.target.fade(0.5)
+                label.target.fade(0.5)
+
+        self.play(*[
+            LaggedStartMap(MoveToTarget, mob, lag_ratio=0.02)
+            for mob in [boxes, bits, bin_pos_labels]
+        ])
+        self.wait()
+
+        # Arrange sum
+        summands.generate_target()
+        summands.target.arrange(DOWN, buff=SMALL_BUFF)
+        summands.target.set_width(1.5)
+        summands.target.set_color(WHITE)
+        summands.target.to_edge(RIGHT, buff=1.5)
+        summands.target.to_edge(UP)
+
+        line = Line(LEFT, RIGHT)
+        xor = get_xor()
+        line.set_width(summands.target.get_width() + 0.75)
+        line.next_to(summands.target, DOWN, aligned_edge=RIGHT, buff=SMALL_BUFF)
+        xor.next_to(line, UP, aligned_edge=LEFT)
+
+        self.play(
+            MoveToTarget(summands, run_time=2),
+            ShowCreation(line),
+            ShowCreation(xor),
+        )
+        self.wait()
+
+        # Perform xor
+        result = VGroup()
+        rect_columns = VGroup()
+        for tup in zip(*summands):
+            rects = get_one_rects(tup)
+            result_bit = get_bit_grid(1, 1, bits=[len(rects) % 2])[0]
+            result_bit.replace(tup[-1], dim_to_match=1)
+            result_bit.shift(1.5 * result_bit.get_height() * DOWN)
+            result_bit.set_color(YELLOW)
+
+            result.add(result_bit)
+            rect_columns.add(rects)
+
+        pre_result = VGroup()
+        for summand in summands:
+            pr = result.copy()
+            pr.save_state()
+            pr.move_to(summand)
+            pr.fade(1)
+            pre_result.add(pr)
+
+        self.play(LaggedStartMap(Restore, pre_result, lag_ratio=0.05, remover=True))
+        self.add(result)
+        self.wait()
+        self.play(ShowCreationThenFadeOut(SurroundingRectangle(result, stroke_color=BLUE)))
+        self.wait()
+
+        for n, rects, result_bit in zip(it.count(), reversed(rect_columns), reversed(result)):
+            faders = VGroup()
+            for bit_vect in [*summands, result]:
+                for k, bit in enumerate(reversed(bit_vect)):
+                    if k != n:
+                        bit.generate_target()
+                        bit.target.fade(0.7)
+                        faders.add(bit)
+            for group in bits, bin_pos_labels:
+                sg = get_bit_n_subgroup(group, n, 0)
+                sg.generate_target()
+                sg.target.fade(1)
+                faders.add(sg)
+            faders.save_state()
+
+            self.play(LaggedStartMap(MoveToTarget, faders, lag_ratio=0, run_time=1))
+
+            new_rects = VGroup()
+            for bit, pos in zip(get_bit_n_subgroup(bits, n), get_bit_n_subgroup(bin_pos_labels, n)):
+                if get_bit_mob_value(bit) == 1:
+                    nr = SurroundingRectangle(pos[3 - n], buff=0.05)
+                    nr.set_fill(YELLOW, 0.25)
+                    new_rects.add(nr)
+
+            self.play(
+                ShowIncreasingSubsets(rects),
+                ShowIncreasingSubsets(new_rects),
+            )
+            self.wait()
+            self.play(
+                faders.restore,
+                FadeOut(rects),
+                FadeOut(new_rects),
+            )
+        self.wait()
+
+        # Sender manipulations (Doing more by hand than should here...sorry)
+        parity_highlights = VGroup(*[boxes[2**n].copy() for n in range(4)])
+        parity_highlights.set_stroke(GREEN, 8)
+        parity_highlights.set_fill(BLACK, 0)
+        self.play(ShowCreation(parity_highlights))
+
+        words = TextMobject("Try to make\\\\this 0000")
+        words.set_color(GREEN)
+        words.next_to(boxes, RIGHT, MED_LARGE_BUFF)
+        words.to_edge(DOWN, buff=1)
+        arrow = Arrow(words.get_right(), result.get_left(), buff=0.1)
+        arrow.get_lp = words.get_right
+        arrow.get_rp = result.get_left
+        arrow.add_updater(lambda m: m.put_start_and_end_on(
+            m.get_lp() + SMALL_BUFF * RIGHT,
+            m.get_rp() + SMALL_BUFF * LEFT,
+        ))
+        self.play(
+            Write(words),
+            DrawBorderThenFill(arrow),
+        )
+        self.wait()
+
+        strike = Cross(summands[0])
+        strike.set_stroke(RED, 8)
+        self.play(ShowCreation(strike))
+        self.add(summands[0], strike)
+        bits[2].generate_target()
+        toggle_bit(bits[2].target)
+        bits[2].target.fade(0.5)
+        self.play(
+            boxes[2].set_fill, BLACK, 0,
+            MoveToTarget(bits[2]),
+            bin_pos_labels[2].fade, 0.5,
+            toggle_bit_anim(result[2]),
+            FadeOut(summands[0]),
+            FadeOut(strike),
+        )
+        summands.remove(summands[0])
+        self.wait()
+
+        toggle_bit(bits[8].saved_state)
+        self.play(
+            boxes[8].set_fill, BLUE, 0.7,
+            Restore(bits[8]),
+            Restore(bin_pos_labels[8]),
+        )
+        new_term = bin_pos_labels[8].copy()
+        new_term.generate_target()
+        new_term.target.set_color(WHITE)
+        new_term.target.replace(summands[2])
+        self.play(
+            MoveToTarget(new_term),
+            summands[:3].move_to, summands[1], DOWN,
+        )
+        self.play(toggle_bit_anim(result[0]))
+        self.wait()
+        summands.set_submobjects([*summands[:3], new_term, *summands[3:]])
+        self.play(FadeOut(words), FadeOut(arrow), FadeOut(parity_highlights))
+
+        # Show 0 -> 1 error
+        pos = 11
+        self.play(
+            Restore(bits[pos]),
+            Restore(bin_pos_labels[pos]),
+        )
+        self.play(toggle_bit_anim(bits[pos], target_color=RED))
+        self.wait()
+
+        new_term = bin_pos_labels[pos].copy()
+        new_term.generate_target()
+        new_term.target.set_color(RED)
+        new_term.target.replace(summands[5])
+        bottom_group = VGroup(summands[5:], xor, line, result)
+        bottom_group.save_state()
+        self.play(
+            MoveToTarget(new_term),
+            bottom_group.move_to, summands[6], UR,
+        )
+        self.wait(0.25)
+        nt_copy = new_term.copy()
+        self.play(
+            nt_copy.replace, result,
+            nt_copy.fade, 1,
+            *[
+                toggle_bit_anim(b1, path_arc=0)
+                for b1, b2 in zip(result, new_term)
+                if b2.get_value() == 1
+            ]
+        )
+        self.remove(nt_copy)
+        self.wait()
+        self.play(
+            Restore(bottom_group),
+            FadeOut(new_term),
+            toggle_bit_anim(bits[pos], target_color=WHITE)
+        )
+        self.play(
+            bits[pos].fade, 0.5,
+            bin_pos_labels[pos].fade, 0.5,
+        )
+
+        # Show 1 -> 0 error
+        pos = 6
+        self.play(
+            toggle_bit_anim(bits[pos], target_color=RED),
+            zap_anim(bits[pos]),
+        )
+        self.wait()
+
+        new_term = bin_pos_labels[pos].copy()
+        new_term.generate_target()
+        new_term.target.set_color(RED)
+        new_term.target.replace(summands[3])
+        bottom_group = VGroup(summands[3:], xor, line, result)
+        bottom_group.save_state()
+        self.play(
+            MoveToTarget(new_term),
+            bottom_group.move_to, summands[4], UR,
+        )
+
+        for bit in result:
+            bit[0].set_opacity(1)
+            bit[1].set_opacity(0)
+        nt_copy = new_term.copy()
+        self.play(
+            nt_copy.move_to, result,
+            nt_copy.fade, 1,
+            *[
+                toggle_bit_anim(b1, path_arc=0)
+                for b1, b2 in zip(result, new_term)
+                if b2.get_value() == 1
+            ]
+        )
+        self.remove(nt_copy)
+        self.wait()
+
+        brace = Brace(VGroup(summands[2], new_term), LEFT, buff=SMALL_BUFF)
+        brace_bits = summands[2].copy()
+        for bb in brace_bits:
+            bb.set_value(0)
+        brace_bits.next_to(brace, LEFT)
+        self.play(GrowFromCenter(brace))
+        self.play(
+            Transform(summands[2].copy().unlock_triangulation(), brace_bits, remover=True),
+            ReplacementTransform(new_term.copy().unlock_triangulation(), brace_bits),
+        )
+        self.wait()
+
+        arrow = Arrow(result.get_left(), bin_pos_labels[pos].get_corner(DR), path_arc=-30 * DEGREES, buff=0.1)
+        self.play(DrawBorderThenFill(arrow))
+        self.wait()
+
+        self.play(toggle_bit_anim(bits[pos], target_color=WHITE))
+        self.play(
+            Restore(bottom_group),
+            FadeOut(new_term),
+            FadeOut(brace),
+            FadeOut(brace_bits),
+            FadeOut(arrow),
+        )
+        self.wait()
+
+
+class HammingSyndromePython(ExternallyAnimatedScene):
+    pass
+
+
+class WhatAboutTwoBitDetection(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "What about\\\\detecting\\\\two bit errors?"
+        )
+        self.play(
+            self.get_student_changes("angry", "maybe", "raise_left_hand"),
+            self.teacher.change, "guilty",
+        )
+        self.look_at(self.screen)
+        self.wait(4)
+        self.play(self.teacher.change, "happy")
+        self.change_student_modes("confused", "erm", "pondering")
+        self.wait(3)
+
+
+class ConflictingViewsOnXor(TeacherStudentsScene):
+    def construct(self):
+        self.clear()
+        self.add(self.pi_creatures)
+        self.student_says(
+            "Um...can you\\\\say that again?",
+            target_mode="confused",
+            student_index=2,
+            added_anims=[self.teacher.change, "guilty"]
+        )
+        self.change_student_modes("pondering", "pondering", look_at_arg=self.screen)
+        self.wait(2)
+        self.student_says(
+            "Why didn't you\\\\just use xors\\\\from the start?",
+            target_mode="sassy",
+            student_index=1,
+        )
+        self.look_at(self.students[1].bubble)
+        self.wait(5)
+
+
+class CompareXorToParityChecks(Scene):
+    def construct(self):
+        # Title
+        bg_rect = FullScreenRectangle()
+        bg_rect.set_fill(GREY_E, 1)
+        bg_rect.set_stroke(width=0)
+        self.add(bg_rect)
+
+        title = TextMobject("One algorithm, multiple perspectives")
+        title.scale(1.5)
+        title.to_edge(UP)
+        title.add_to_back(Underline(title))
+        self.add(title)
+
+        # Options
+        rects = VGroup(*[ScreenRectangle() for x in range(3)])
+        rects.set_fill(BLACK, 1)
+        rects.set_stroke(GREY_B, 3)
+        rects.set_height(3)
+        rects.arrange(RIGHT, buff=1)
+        rects.shift(-rects[:2].get_center())
+
+        labels = VGroup(
+            TextMobject("Multiple parity checks"),
+            TextMobject("One big xor"),
+            TextMobject("Matrix product"),
+        )
+        for label, rect in zip(labels, rects):
+            label.next_to(rect, DOWN)
+        labels.set_color(BLUE)
+
+        self.add(rects[:2])
+        self.add(labels[:2])
+
+        self.play(Write(title, run_time=2))
+        self.wait(2)
+
+        # Hardware/software labels
+        hw_label = TextMobject("(nicer for hardware)")
+        sw_label = TextMobject("(nicer for software)")
+
+        for l1, l2 in zip(labels, [hw_label, sw_label]):
+            l2.next_to(l1, DOWN)
+
+        self.play(FadeIn(hw_label, 0.25 * UP))
+        self.wait()
+        self.play(FadeIn(sw_label, 0.25 * UP))
+        self.wait()
+
+        # Third view
+        icons = Group(
+            ImageMobject("ParityCheckIcon"),
+            ImageMobject("XorViewIcon"),
+        )
+        for icon, rect in zip(icons, rects):
+            icon.replace(rect)
+            icon.scale(0.95)
+
+        groups = Group(
+            Group(rects[0], labels[0], icons[0], hw_label),
+            Group(rects[1], labels[1], icons[1], sw_label),
+            Group(rects[2], labels[2]),
+        )
+        groups.generate_target()
+        groups.target[:2].arrange(DOWN, buff=LARGE_BUFF)
+        groups.target[:2].match_height(groups.target[2])
+        groups.target[2].next_to(groups.target[:2], RIGHT, LARGE_BUFF)
+        groups.target.set_height(5)
+        groups.target.center()
+        groups.target.to_edge(DOWN, buff=1)
+        groups[2].set_opacity(0)
+        self.play(MoveToTarget(groups))
+        self.wait()
+
+
+class LogTitle(Scene):
+    def construct(self):
+        title = TextMobject("$\\text{log}_2(256) = 8$ parity checks")
+        title.set_height(0.7)
+        title.to_edge(UP)
+        underline = Underline(title[0][:4])
+        underline.set_color(YELLOW)
+        self.add(title)
+        self.wait()
+        self.play(ShowCreationThenFadeOut(underline))
+        self.wait()
+
+
+class MatrixProduct(Scene):
+    def construct(self):
+        title = TextMobject("(7, 4) Hamming code")
+        title.set_height(0.7)
+        title.to_edge(UP)
+        title.set_color(GREY_A)
+
+        encoder_matrix = np.array([
+           [1, 1, 0, 1],
+           [1, 0, 1, 1],
+           [1, 0, 0, 0],
+           [0, 1, 1, 1],
+           [0, 1, 0, 0],
+           [0, 0, 1, 0],
+           [0, 0, 0, 1],
+        ])
+        message_matrix = np.array([1, 0, 1, 1]).reshape((4, 1))
+        result_matrix = np.dot(encoder_matrix, message_matrix) % 2
+
+        kw = {"v_buff": 0.6, "h_buff": 0.75}
+        encoder, message, result = [
+            IntegerMatrix(matrix, **kw)
+            for matrix in [encoder_matrix, message_matrix, result_matrix]
+        ]
+        equation = VGroup(
+            encoder, message, TexMobject("="), result
+        )
+        equation.arrange(RIGHT, buff=MED_LARGE_BUFF)
+        equation.to_edge(LEFT, buff=2)
+
+        # Labels
+        message_label = TextMobject("Content")
+        message_label.move_to(message)
+        message_label.to_edge(DOWN)
+        message_arrow = Arrow(
+            message_label.get_top(),
+            message.get_bottom(),
+        )
+        message_label.set_color(YELLOW)
+        message_arrow.set_color(YELLOW)
+
+        brace = Brace(result, RIGHT)
+        brace_text = brace.get_text("Error-resistant\\\\block")
+        brace.set_color(BLUE)
+        brace_text.set_color(BLUE)
+
+        # Animate
+        self.add(title)
+        self.add(equation)
+
+        self.play(FadeIn(message_label, UP), GrowArrow(message_arrow))
+        self.play(GrowFromCenter(brace), FadeIn(brace_text, LEFT))
+
+        equation.set_fill(opacity=0.8)
+        for n in range(encoder.mob_matrix.shape[0]):
+            row = VGroup(*encoder.mob_matrix[n, :]).copy()
+            col = VGroup(*message.elements).copy()
+            rhs = result.mob_matrix[n, 0].copy()
+
+            mult_group = VGroup(row, col, rhs)
+            mult_group.set_fill(YELLOW, 1)
+            self.play(
+                ShowIncreasingSubsets(row),
+                ShowIncreasingSubsets(col),
+                FadeIn(rhs),
+            )
+            self.wait()
+            self.remove(mult_group)
+
+
+class TooManyErrorsTripUpHamming(Scene):
+    def construct(self):
+        title = TextMobject(
+            "$>2$ Errors"," $\\Rightarrow$ ", "Invalid decoding"
+        )
+        title.set_height(0.7)
+        title[2].set_color(RED)
+        title.to_edge(UP)
+        self.add(title)
+
+        block = get_bit_grid(8, 8, bits=string_to_bits("EpicFail"), height=5.5)
+        block.next_to(title, DOWN, MED_LARGE_BUFF)
+        self.add(block)
+
+        # Animations
+        errors = random.sample(list(range(64)), 3)
+        kw = {"lag_ratio": 0.5}
+        self.play(
+            LaggedStart(*[
+                zap_anim(block[pos])
+                for pos in errors
+            ], **kw),
+            LaggedStart(*[
+                toggle_bit_anim(block[pos], target_color=RED)
+                for pos in errors
+            ], **kw),
+        )
+
+        scanim = scan_anim(block.get_corner(DR) + UR, block, run_time=5, lag_factor=1)
+        self.play(scanim)
+
+        self.play(ShowCreationThenFadeOut(Underline(title[2], color=RED)))
+        self.wait()
+
+
+class LouisPasteurQuote(Scene):
+    def construct(self):
+        quote = TextMobject("``Luck favors a\\\\prepared mind''")
+        quote.scale(2)
+        quote.set_stroke(BLACK, 8, background=True)
+        self.play(Write(quote))
+        self.wait()
+
+
+class ReedSolomonPreview(Scene):
+    def construct(self):
+        # Setup
+        title = TextMobject("Reed-Solomon basic idea")
+        title.set_height(0.5)
+        title.to_edge(UP, buff=MED_SMALL_BUFF)
+
+        axes = Axes(
+            x_range=(-1, 10, 1), y_range=(-1, 8, 1),
+            width=12,
+            height=7,
+        )
+        axes.to_edge(DOWN, buff=SMALL_BUFF)
+        axes.set_color(GREY_B)
+
+        cubic = axes.get_graph(
+            lambda x: -0.05 * x * (x - 2) * (x - 4) * (x - 8) + 2
+        )
+        cubic.set_stroke(TEAL, 3)
+
+        self.add(title)
+        self.add(axes)
+
+        # Data
+        dots = VGroup(*[
+            Dot(axes.input_to_graph_point(x, cubic))
+            for x in range(0, 8)
+        ])
+        dots[:4].set_color(YELLOW)
+        dots[4:].set_color(BLUE)
+
+        # Input words
+        input_words = TextMobject("Input data")
+        poly_words = TextMobject("Polynomial\\\\fit")
+        redundant_words = TextMobject("Redundancy")
+
+        input_words.next_to(dots[:4], UP, buff=2)
+        input_words.set_color(YELLOW)
+        input_arrows = VGroup(*[
+            Arrow(input_words.get_bottom(), dot.get_center())
+            for dot in dots[:4]
+        ])
+        input_arrows.set_fill(YELLOW)
+
+        poly_words.next_to(dots[5], LEFT)
+        poly_words.shift(0.5 * UR)
+        poly_words.match_color(cubic)
+
+        redundant_words.move_to(dots[4:].get_center(), LEFT)
+        redundant_words.shift(2 * DR + DOWN)
+        redundant_words.set_color(BLUE)
+        redundant_arrows = VGroup(*[
+            Arrow(redundant_words.get_corner(UL), dot.get_center())
+            for dot in dots[4:]
+        ])
+        redundant_arrows.set_color(BLUE)
+
+        # Animations
+        kw = {"lag_ratio": 0.5}
+        self.play(
+            FadeIn(input_words),
+            LaggedStartMap(FadeIn, dots[:4], lambda m: (m, UP), **kw),
+            LaggedStartMap(GrowArrow, input_arrows, **kw),
+        )
+        self.add(cubic, *dots[:4])
+        self.play(
+            ShowCreation(cubic),
+            Write(poly_words)
+        )
+        self.wait()
+        self.play(
+            FadeIn(redundant_words),
+            LaggedStartMap(FadeIn, dots[4:], lambda m: (m, DR), **kw),
+            LaggedStartMap(GrowArrow, redundant_arrows, **kw),
+        )
+        self.wait()
+
+        self.play(LaggedStartMap(
+            FadeOut, VGroup(*reversed(self.mobjects)),
+            lambda m: (m, 0.2 * normalize(m.get_center())),
+            lag_ratio=0.1,
+            run_time=2,
+        ))
+        self.wait()
+
+
+class HammingThinking(Scene):
+    def construct(self):
+        hamming = ImageMobject("Richard_Hamming")
+        hamming.set_height(3)
+        hamming.to_corner(DL)
+        randy = Randolph()
+        randy.set_opacity(0)
+        randy.move_to(hamming)
+
+        self.add(hamming)
+        self.wait()
+        self.play(PiCreatureBubbleIntroduction(
+            randy, "What's the most efficient\\\\I could conceivably be?",
+            bubble_class=ThoughtBubble,
+        ))
+        self.wait()
+
+
+class RandomWalks(Scene):
+    def construct(self):
+        # Setup
+        N_PATHS = 50
+        frame = self.camera.frame
+        frame.set_height(2 * FRAME_HEIGHT)
+
+        idea_spot = 10 * RIGHT + 3 * UP
+        idea_dot = Dot(idea_spot)
+        idea_dot.set_color(YELLOW)
+        bulb = Lightbulb()
+        bulb.next_to(idea_dot, UP)
+
+        start_point = 7 * LEFT + 3 * DOWN
+        start_dot = Dot(start_point, color=WHITE)
+        start_dot.scale(2)
+
+        self.add(idea_dot, bulb, start_dot)
+
+        # Paths
+        paths = VGroup(*[VGroup() for n in range(N_PATHS)])
+        for path in paths:
+            path.add(Line(start_point, start_point))
+            path.set_stroke(WHITE, 3, 0.5)
+
+        path_dots = VGroup()
+        for path in paths:
+            dot = Randolph(
+                mode="thinking", height=0.25,
+                # color=random.choice([BLUE_B, BLUE_C, BLUE_D, GREY_BROWN])
+            )
+            dot.set_stroke(BLACK, 3, background=True)
+            dot.path = path
+            dot.add_updater(lambda m: m.move_to(m.path[-1].get_end()))
+            path_dots.add(dot)
+
+        self.add(paths)
+        self.add(path_dots)
+
+        # Perform search
+        magic_path = None
+        while magic_path is None:
+            new_segments = VGroup()
+            for path in paths:
+                start = path[-1].get_end()
+
+                # Choose random direction based on loosely sniffing out idea spot
+                R_vect = start - idea_spot
+                R_vect = rotate_vector(10 * R_vect, TAU * random.random())
+                point = idea_spot + R_vect
+                to_point = point - start
+                angle = angle_of_vector(to_point)
+                if -3 * PI / 2 < angle <= -PI / 2:
+                    vect = DOWN
+                elif -PI / 2 < angle <= PI / 2:
+                    vect = RIGHT
+                elif PI / 2 < angle <= 3 * PI / 2:
+                    vect = UP
+                else:
+                    vect = LEFT
+
+                end = start + vect
+                new_segment = Line(start, end)
+                new_segment.match_style(path)
+
+                new_segments.add(new_segment)
+                path.add(new_segment)
+
+                if np.isclose(end, idea_spot).all():
+                    magic_path = path.copy()
+            self.play(
+                LaggedStartMap(ShowCreation, new_segments, lag_ratio=10 / N_PATHS),
+                run_time=0.5,
+            )
+            self.add(paths)
+
+        # Highlight magic path
+        magic_path.set_stroke(YELLOW, 5, 1)
+        self.play(
+            paths.fade, 0.7,
+            ShowCreation(magic_path, run_time=2),
+        )
+        self.wait()
+
+        fake_path = VMobject()
+        fake_path.start_new_path(start_point)
+        for segment in magic_path:
+            fake_path.add_line_to(segment.get_end())
+        fake_path.match_style(magic_path)
+
+        line = Line(start_point, idea_spot)
+        line.match_style(magic_path)
+        line.set_stroke(TEAL, 8)
+
+        self.add(fake_path, start_dot)
+        self.play(
+            ApplyMethod(magic_path.set_opacity, 0.5),
+            Transform(fake_path, line, run_time=2),
+            paths.fade, 0.5,
+            path_dots.fade, 0.5,
+        )
+        self.wait()
+
+
+class ThinkingInTermsOfBits(Scene):
+    def construct(self):
+        word = TextMobject("Information")
+        word.scale(2)
+        word.next_to(ORIGIN, LEFT, buff=0.7)
+        bits = get_bit_grid(11, 8, bits=string_to_bits("Information"))
+        bits.set_height(6)
+        bits.next_to(ORIGIN, RIGHT, buff=0.7)
+        bits.set_color(GREY_A)
+
+        for bit in bits:
+            toggle_bit(bit)
+
+        bits.shuffle()
+
+        self.add(word)
+        self.add(bits)
+        self.play(LaggedStartMap(
+            toggle_bit_anim, bits,
+            lag_ratio=5 / len(bits),
+            run_time=3,
+        ))
+        self.wait(2)
+
+
+class SimpleHoldUpBackground(TeacherStudentsScene):
+    def construct(self):
+        self.play(self.teacher.change, "raise_right_hand", 3 * UP)
+        self.change_student_modes("pondering", "thinking", "tease", look_at_arg=3 * UP)
+        self.wait(4)
+        self.change_student_modes("tease", "hesitant", "happy", look_at_arg=3 * UP)
+        self.wait(5)
+
+
+class HammingEndScreen(PatreonEndScreen):
+    CONFIG = {
+        "scroll_time": 25
+    }
