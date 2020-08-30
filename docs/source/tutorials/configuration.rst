@@ -53,7 +53,7 @@ The output looks as follows.
                 [--log_dir LOG_DIR] [--tex_template TEX_TEMPLATE] [--dry_run]
                 [-t] [-l] [-m] [-e] [-k] [-r RESOLUTION]
                 [-n FROM_ANIMATION_NUMBER] [--config_file CONFIG_FILE]
-                [-v {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
+                [--custom_folders] [-v {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                 [--progress_bar True/False]
                 {cfg} ... file [scene_names [scene_names ...]]
 
@@ -112,6 +112,9 @@ The output looks as follows.
                            rendering at the second value
      --config_file CONFIG_FILE
                            Specify the configuration file
+     --custom_folders      Use the folders defined in the [custom_folders]
+                           section of the config file to define the output folder
+                           structure
      -v {DEBUG,INFO,WARNING,ERROR,CRITICAL}, --verbosity {DEBUG,INFO,WARNING,ERROR,CRITICAL}
                            Verbosity level. Also changes the ffmpeg log level
                            unless the latter is specified in the config
