@@ -1,3 +1,6 @@
+__all__ = ["SceneFileWriter"]
+
+
 import numpy as np
 from pydub import AudioSegment
 import shutil

@@ -1,4 +1,21 @@
 """Fading in and out of view."""
+
+
+__all__ = [
+    "FadeOut",
+    "FadeIn",
+    "FadeInFrom",
+    "FadeInFromDown",
+    "FadeOutAndShift",
+    "FadeOutAndShiftDown",
+    "FadeInFromPoint",
+    "FadeInFromLarge",
+    "VFadeIn",
+    "VFadeOut",
+    "VFadeInThenOut",
+]
+
+
 from ..animation.animation import Animation
 from ..animation.animation import DEFAULT_ANIMATION_LAG_RATIO
 from ..animation.transform import Transform

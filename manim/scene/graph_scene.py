@@ -1,3 +1,5 @@
+__all__ = ["GraphScene"]
+
 import itertools as it
 
 from ..config import config

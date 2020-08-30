@@ -1,3 +1,6 @@
+__all__ = ["SurroundingRectangle", "BackgroundRectangle", "Cross", "Underline"]
+
+
 from ..constants import *
 from ..mobject.geometry import Line
 from ..mobject.geometry import Rectangle

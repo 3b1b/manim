@@ -1,4 +1,16 @@
 """Mobjects that use vector graphics."""
+
+
+__all__ = [
+    "VMobject",
+    "VGroup",
+    "VDict",
+    "VectorizedPoint",
+    "CurvesAsSubmobjects",
+    "DashedVMobject",
+]
+
+
 import itertools as it
 import sys
 
@@ -881,7 +893,7 @@ class VDict(VMobject):
     mapping_or_iterable : Union[:class:`Mapping`, Iterable[Tuple[Hashable, :class:`~.VMobject`]]], optional
             The parameter specifying the key-value mapping of keys and mobjects.
     show_keys : :class:`bool`, optional
-            Whether to also display the key associated with 
+            Whether to also display the key associated with
             the mobject. This might be useful when debugging,
             especially when there are a lot of mobjects in the
             :class:`VDict`. Defaults to False.
@@ -891,7 +903,7 @@ class VDict(VMobject):
     Attributes
     ----------
     show_keys : :class:`bool`
-            Whether to also display the key associated with 
+            Whether to also display the key associated with
             the mobject. This might be useful when debugging,
             especially when there are a lot of mobjects in the
             :class:`VDict`. When displayed, the key is towards
@@ -937,7 +949,7 @@ class VDict(VMobject):
 
     def remove(self, key):
         """Removes the mobject from the :class:`VDict` object having the key `key`
-        
+
         Also, it internally removes the mobject from the `submobjects` :class:`list`
         of :class:`~.Mobject`, (which is responsible for removing it from the screen)
 
@@ -964,12 +976,12 @@ class VDict(VMobject):
 
     def __getitem__(self, key):
         """Overriding the [] operator for getting submobject by key
-        
+
         Parameters
         ----------
         key : Hashable
            The key of the submoject to be accessed
-            
+
         Returns
         -------
         :class:`VMobject`
@@ -992,7 +1004,7 @@ class VDict(VMobject):
             The key of the submoject to be assigned
         value : :class:`VMobject`
             The submobject to bind the key to
-            
+
         Returns
         -------
         None
@@ -1009,7 +1021,7 @@ class VDict(VMobject):
 
     def get_all_submobjects(self):
         """To get all the submobjects associated with a particular :class:`VDict` object
-        
+
         Returns
         -------
         :class:`dict_values`

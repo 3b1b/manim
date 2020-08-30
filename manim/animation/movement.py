@@ -1,3 +1,12 @@
+__all__ = [
+    "Homotopy",
+    "SmoothedVectorizedHomotopy",
+    "ComplexHomotopy",
+    "PhaseFlow",
+    "MoveAlongPath",
+]
+
+
 from ..animation.animation import Animation
 from ..utils.rate_functions import linear
 

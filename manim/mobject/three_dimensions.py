@@ -1,3 +1,6 @@
+__all__ = ["ThreeDVMobject", "ParametricSurface", "Sphere", "Cube", "Prism"]
+
+
 from ..constants import *
 from ..mobject.geometry import Square
 from ..mobject.types.vectorized_mobject import VGroup

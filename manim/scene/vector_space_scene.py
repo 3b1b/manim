@@ -1,3 +1,6 @@
+__all__ = ["VectorScene", "LinearTransformationScene"]
+
+
 import numpy as np
 
 from ..animation.animation import Animation

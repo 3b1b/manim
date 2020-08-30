@@ -1,3 +1,6 @@
+__all__ = ["UpdateFromFunc", "UpdateFromAlphaFunc", "MaintainPositionRelativeTo"]
+
+
 import operator as op
 
 from ..animation.animation import Animation

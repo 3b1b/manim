@@ -1,4 +1,9 @@
 """Animate mobjects."""
+
+
+__all__ = ["Animation"]
+
+
 from copy import deepcopy
 
 import numpy as np

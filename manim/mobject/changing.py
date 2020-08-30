@@ -1,3 +1,6 @@
+__all__ = ["AnimatedBoundary", "TracedPath"]
+
+
 from ..constants import *
 from ..mobject.types.vectorized_mobject import VMobject
 from ..mobject.types.vectorized_mobject import VGroup

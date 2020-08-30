@@ -1,4 +1,9 @@
 """A Scene is the canvas of the animation."""
+
+
+__all__ = ["Scene", "EndSceneEarlyException"]
+
+
 import inspect
 import random
 import warnings

@@ -1,3 +1,17 @@
+__all__ = [
+    "VectorField",
+    "StreamLines",
+    "ShowPassingFlashWithThinningStrokeWidth",
+    "AnimatedStreamLines",
+    "get_colored_background_image",
+    "get_rgb_gradient_function",
+    "get_color_field_image_file",
+    "move_along_vector_field",
+    "move_submobjects_along_vector_field",
+    "move_points_along_vector_field",
+]
+
+
 import numpy as np
 import os
 import itertools as it

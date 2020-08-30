@@ -1,4 +1,9 @@
 """Base classes for objects that can be displayed."""
+
+
+__all__ = ["Mobject", "Group"]
+
+
 from functools import reduce
 import copy
 import itertools as it

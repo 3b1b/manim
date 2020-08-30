@@ -13,11 +13,11 @@ class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
         """
         This method is used to serialize objects to JSON format.
-        
+
         If obj is a function, then it will return a dict with two keys : 'code', for the code source, and 'nonlocals' for all nonlocalsvalues. (including nonlocals functions, that will be serialized as this is recursive.)
         if obj is a np.darray, it converts it into a list.
         if obj is an object with __dict__ attribute, it returns its __dict__.
-        Else, will let the JSONEncoder do the stuff, and throw an error if the type is not suitable for JSONEncoder. 
+        Else, will let the JSONEncoder do the stuff, and throw an error if the type is not suitable for JSONEncoder.
 
         Parameters
         ----------
@@ -61,7 +61,7 @@ class CustomEncoder(json.JSONEncoder):
         ----------
         obj : Any
             The obj to be cleaned.
-        
+
         Returns
         -------
         Any
@@ -92,7 +92,7 @@ def get_json(obj):
 
     Returns
     -------
-    :class:`str` 
+    :class:`str`
         The flattened object
     """
     return json.dumps(obj, cls=CustomEncoder)
@@ -136,7 +136,7 @@ def get_hash_from_play_call(camera_object, animations_list, current_mobjects_lis
 
     Returns
     -------
-    :class:`str` 
+    :class:`str`
         A string concatenation of the respective hashes of `camera_object`, `animations_list` and `current_mobjects_list`, separated by `_`.
     """
     camera_json = get_json(get_camera_dict_for_hashing(camera_object))
