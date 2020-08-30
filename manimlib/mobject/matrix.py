@@ -71,7 +71,7 @@ class Matrix(VMobject):
         or mobjects
         """
         VMobject.__init__(self, **kwargs)
-        matrix = np.array(matrix, ndmin=1)
+        matrix = self.matrix = np.array(matrix, ndmin=2)
         mob_matrix = self.matrix_to_mob_matrix(matrix)
         self.organize_mob_matrix(mob_matrix)
         self.elements = VGroup(*mob_matrix.flatten())
@@ -101,12 +101,19 @@ class Matrix(VMobject):
         return self
 
     def add_brackets(self):
-        bracket_pair = TexMobject("\\big[", "\\big]")
-        bracket_pair.scale(2)
-        bracket_pair.stretch_to_fit_height(
-            self.get_height() + 2 * self.bracket_v_buff
+        height = self.matrix.shape[0]
+        bracket_pair = TexMobject("".join([
+            "\\left[",
+            "\\begin{array}{c}",
+            *height * ["\\quad \\\\"],
+            "\\end{array}"
+            "\\right]",
+        ]))[0]
+        bracket_pair.set_height(
+            self.get_height() + 1 * self.bracket_v_buff
         )
-        l_bracket, r_bracket = bracket_pair.split()
+        l_bracket = bracket_pair[:len(bracket_pair) // 2]
+        r_bracket = bracket_pair[len(bracket_pair) // 2:]
         l_bracket.next_to(self, LEFT, self.bracket_h_buff)
         r_bracket.next_to(self, RIGHT, self.bracket_h_buff)
         self.add(l_bracket, r_bracket)
