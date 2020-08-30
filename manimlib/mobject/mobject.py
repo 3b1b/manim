@@ -1014,7 +1014,9 @@ class Mobject(Container):
         return self
 
     def arrange_in_grid(self, n_rows=None, n_cols=None,
-                        buff=MED_LARGE_BUFF,
+                        buff=None,
+                        h_buff=MED_LARGE_BUFF,
+                        v_buff=MED_LARGE_BUFF,
                         aligned_edge=ORIGIN,
                         fill_rows_first=True):
         submobs = self.submobjects
@@ -1024,9 +1026,12 @@ class Mobject(Container):
             n_rows = len(submobs) // n_cols
         if n_cols is None:
             n_cols = len(submobs) // n_rows
+        if buff is not None:
+            h_buff = buff
+            v_buff = buff
 
-        x_unit = buff + max([sm.get_width() for sm in submobs])
-        y_unit = buff + max([sm.get_height() for sm in submobs])
+        x_unit = h_buff + max([sm.get_width() for sm in submobs])
+        y_unit = v_buff + max([sm.get_height() for sm in submobs])
 
         for index, sm in enumerate(submobs):
             if fill_rows_first:
