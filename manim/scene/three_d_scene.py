@@ -1,3 +1,6 @@
+__all__ = ["ThreeDScene", "SpecialThreeDScene"]
+
+
 from ..animation.transform import ApplyMethod
 from ..camera.three_d_camera import ThreeDCamera
 from ..constants import DEGREES

@@ -1,3 +1,6 @@
+__all__ = ["ZoomedScene"]
+
+
 from ..animation.transform import ApplyMethod
 from ..camera.moving_camera import MovingCamera
 from ..camera.multi_camera import MultiCamera

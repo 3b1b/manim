@@ -1,3 +1,6 @@
+__all__ = ["PMobject", "Mobject1D", "Mobject2D", "PGroup", "PointCloudDot", "Point"]
+
+
 from ...constants import *
 from ...mobject.mobject import Mobject
 from ...utils.bezier import interpolate

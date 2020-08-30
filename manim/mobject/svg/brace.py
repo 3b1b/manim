@@ -1,3 +1,6 @@
+__all__ = ["Brace", "BraceLabel", "BraceText"]
+
+
 import numpy as np
 
 from ...animation.composition import AnimationGroup

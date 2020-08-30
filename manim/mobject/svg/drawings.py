@@ -1,3 +1,30 @@
+__all__ = [
+    "Lightbulb",
+    "BitcoinLogo",
+    "Guitar",
+    "Speedometer",
+    "AoPSLogo",
+    "PartyHat",
+    "Laptop",
+    "PatreonLogo",
+    "VideoIcon",
+    "VideoSeries",
+    "Headphones",
+    "Clock",
+    "ClockPassesTime",
+    "Bubble",
+    "SpeechBubble",
+    "DoubleSpeechBubble",
+    "ThoughtBubble",
+    "Car",
+    "VectorizedEarth",
+    "Logo",
+    "DeckOfCards",
+    "PlayingCard",
+    "SuitSymbol",
+]
+
+
 import itertools as it
 import string
 

@@ -1,3 +1,6 @@
+__all__ = ["SampleSpaceScene"]
+
+
 from ..animation.animation import Animation
 from ..animation.transform import MoveToTarget
 from ..animation.transform import Transform

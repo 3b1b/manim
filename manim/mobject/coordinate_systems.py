@@ -1,3 +1,6 @@
+__all__ = ["CoordinateSystem", "Axes", "ThreeDAxes", "NumberPlane", "ComplexPlane"]
+
+
 import numpy as np
 import numbers
 
@@ -280,7 +283,7 @@ class NumberPlane(Axes):
 
     def get_lines(self):
         """Generate all the lines, faded and not faded. Two sets of lines are generated: one parallel to the X-axis, and parallel to the Y-axis.
-        
+
         Returns
         -------
         Tuple[:class:`~.VGroup`, :class:`~.VGroup`]
@@ -313,9 +316,9 @@ class NumberPlane(Axes):
 
         axis_perpendicular_to : :class:`~.Line`
             The axis with which the lines will be perpendicular.
-        
+
         ratio_faded_lines : :class:`float`
-            The number of faded lines between each non-faded line. 
+            The number of faded lines between each non-faded line.
 
         freq : :class:`float`
             Frequency of non-faded lines (number of non-faded lines per graph unit).
@@ -323,7 +326,7 @@ class NumberPlane(Axes):
         Returns
         -------
         Tuple[:class:`~.VGroup`, :class:`~.VGroup`]
-            The first (i.e the non-faded lines parallel to `axis_parallel_to`) and second (i.e the faded lines parallel to `axis_parallel_to`) sets of lines, respectively.     
+            The first (i.e the non-faded lines parallel to `axis_parallel_to`) and second (i.e the faded lines parallel to `axis_parallel_to`) sets of lines, respectively.
         """
         line = Line(axis_parallel_to.get_start(), axis_parallel_to.get_end())
         dense_freq = ratio_faded_lines

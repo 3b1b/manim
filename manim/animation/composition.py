@@ -9,6 +9,8 @@ from ..utils.config_ops import digest_config
 from ..utils.iterables import remove_list_redundancies
 from ..utils.rate_functions import linear
 
+__all__ = ["AnimationGroup", "Succession", "LaggedStart", "LaggedStartMap"]
+
 
 DEFAULT_LAGGED_START_LAG_RATIO = 0.05
 

@@ -1,4 +1,9 @@
 """Mobject representing a number line."""
+
+
+__all__ = ["NumberLine", "UnitInterval"]
+
+
 import operator as op
 
 from ..constants import *

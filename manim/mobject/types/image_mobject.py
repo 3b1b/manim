@@ -1,3 +1,6 @@
+__all__ = ["AbstractImageMobject", "ImageMobject", "ImageMobjectFromCamera"]
+
+
 import numpy as np
 
 from PIL import Image

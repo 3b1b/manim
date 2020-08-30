@@ -1,3 +1,6 @@
+__all__ = ["ParametricFunction", "FunctionGraph"]
+
+
 from ..constants import *
 from ..config import config
 from ..mobject.types.vectorized_mobject import VMobject

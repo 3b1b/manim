@@ -1,4 +1,9 @@
 """Mobjects generated from an SVG file."""
+
+
+__all__ = ["SVGMobject", "VMobjectFromSVGPathstring", "string_to_numbers"]
+
+
 import itertools as it
 import re
 import os

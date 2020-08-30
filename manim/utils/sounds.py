@@ -1,3 +1,11 @@
+__all__ = [
+    "play_chord",
+    "play_error_sound",
+    "play_finish_sound",
+    "get_full_sound_file_path",
+]
+
+
 import os
 from ..utils.file_ops import seek_full_path_from_defaults
 

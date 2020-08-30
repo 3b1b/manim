@@ -1,3 +1,12 @@
+__all__ = [
+    "add_extension_if_not_present",
+    "guarantee_existence",
+    "seek_full_path_from_defaults",
+    "modify_atime",
+    "open_file",
+]
+
+
 import os
 import subprocess as sp
 import platform
@@ -32,12 +41,12 @@ def seek_full_path_from_defaults(file_name, default_dir, extensions):
 
 
 def modify_atime(file_path):
-    """Will manually change the accessed time (called `atime`) of the file, as on a lot of OS the accessed time refresh is disabled by default. 
+    """Will manually change the accessed time (called `atime`) of the file, as on a lot of OS the accessed time refresh is disabled by default.
 
     Parameters
     ----------
     file_path : :class:`str`
-        The path of the file. 
+        The path of the file.
     """
     os.utime(file_path, times=(time.time(), os.path.getmtime(file_path)))
 

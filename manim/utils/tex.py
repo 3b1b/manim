@@ -1,3 +1,6 @@
+__all__ = ["TexTemplateFromFile", "TexTemplate"]
+
+
 import os
 from ..utils.config_ops import digest_config
 
