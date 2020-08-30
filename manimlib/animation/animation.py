@@ -17,6 +17,8 @@ class Animation(object):
         "name": None,
         # Does this animation add or remove a mobject form the screen
         "remover": False,
+        # What to enter into the update function upon completion
+        "final_alpha_value": 1,
         # If 0, the animation is applied to all submobjects
         # at the same time
         # If 1, it is applied to each successively.
@@ -55,7 +57,7 @@ class Animation(object):
         self.interpolate(0)
 
     def finish(self):
-        self.interpolate(1)
+        self.interpolate(self.final_alpha_value)
         self.mobject.cleanup_from_animation()
         if self.suspend_mobject_updating:
             self.mobject.resume_updating()

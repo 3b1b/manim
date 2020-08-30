@@ -14,6 +14,8 @@ class FadeOut(Transform):
     CONFIG = {
         "remover": True,
         "lag_ratio": DEFAULT_FADE_LAG_RATIO,
+        # Put it back in original state when done
+        "final_alpha_value": 0,
     }
 
     def __init__(self, mobject, to_vect=ORIGIN, **kwargs):
@@ -26,9 +28,9 @@ class FadeOut(Transform):
         result.shift(self.to_vect)
         return result
 
-    def clean_up_from_scene(self, scene=None):
-        super().clean_up_from_scene(scene)
-        self.interpolate(0)
+    # def clean_up_from_scene(self, scene=None):
+    #     super().clean_up_from_scene(scene)
+    #     self.interpolate(0)
 
 
 class FadeIn(Transform):
@@ -113,7 +115,9 @@ class VFadeIn(Animation):
 
 class VFadeOut(VFadeIn):
     CONFIG = {
-        "remover": True
+        "remover": True,
+        # Put it back in original state when done
+        "final_alpha_value": 0,
     }
 
     def interpolate_submobject(self, submob, start, alpha):
@@ -124,4 +128,6 @@ class VFadeInThenOut(VFadeIn):
     CONFIG = {
         "rate_func": there_and_back,
         "remover": True,
+        # Put it back in original state when done
+        "final_alpha_value": 0.5,
     }
