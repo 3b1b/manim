@@ -1,0 +1,6 @@
+{
+    "windows": {
+        "sox": "sox-14.4.2-win32",
+        "ffmpeg": "ffmpeg-4.3.1-win64-static"
+    }
+}

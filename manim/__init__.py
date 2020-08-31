@@ -5,7 +5,7 @@
 # global config dict is called 'config', just like the module itself.  That's
 # why we import the module first with a different name, and then the dict.
 from . import config as _config
-from .config import config, file_writer_config, camera_config
+from .config import config, file_writer_config, camera_config, tempconfig
 
 from .constants import *
 
