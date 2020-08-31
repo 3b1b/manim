@@ -89,3 +89,7 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger("rich")
+
+# TODO : This is only temporary to keep the terminal output clean when working with ImageMobject and matplotlib plots
+logging.getLogger("PIL").setLevel(logging.INFO)
+logging.getLogger("matplotlib").setLevel(logging.INFO)
