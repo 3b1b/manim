@@ -1,272 +1,68 @@
 ![logo](logo/cropped.png)
 
 ![CI](https://github.com/ManimCommunity/manim/workflows/CI/badge.svg)
-[![Documentation](https://img.shields.io/badge/docs-EulerTour-blue.svg)](https://www.eulertour.com/docs)
+[![Documentation Status](https://readthedocs.org/projects/manimce/badge/?version=latest)](https://manimce.readthedocs.io/en/latest/?badge=latest)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](http://choosealicense.com/licenses/mit/)
 [![Manim Subreddit](https://img.shields.io/reddit/subreddit-subscribers/manim.svg?color=ff4301&label=reddit)](https://www.reddit.com/r/manim/)
 [![Manim Discord](https://img.shields.io/discord/581738731934056449.svg?label=discord)](https://discord.gg/mMRrZQW)
 
 Manim is an animation engine for explanatory math videos. It's used to create precise animations programmatically, as seen in the videos at [3Blue1Brown](https://www.3blue1brown.com/).
 
-> NOTE: This repository is maintained by the Manim Community, and is not associated with Grant Sanderson or 3Blue1Brown in any way (though we are definitely indebted to him for providing his work to the world). If you want to study how Grant makes his videos, head over to the main repository (3b1b/manim). This is a more frequently updated repository than the main one, and is recommended if you want to use Manim for your own projects.
-
+> NOTE: This repository is maintained by the Manim Community, and is not associated with Grant Sanderson or 3Blue1Brown in any way (though we are definitely indebted to him for providing his work to the world). If you want to study how Grant makes his videos, head over to his repository (3b1b/manim). This is a more frequently updated repository than that one, and is recommended if you want to use Manim for your own projects.
 
 
 ## Table of Contents:
 - [Installation](#installation)
-  * [Windows](#windows)
-    + [Cairo Installation](#cairo-installation)
-    + [FFmpeg Installation](#ffmpeg-installation)
-    + [SoX Installation](#sox-installation)
-    + [LaTeX Installation](#latex-installation)
-  * [Ubuntu/Debian](#ubuntudebian)
-    + [Cairo Installation](#cairo-installation-1)
-    + [FFmpeg Installation](#ffmpeg-installation-1)
-    + [SoX Installation](#sox-installation-1)
-    + [LaTeX Installation](#latex-installation-1)
-  * [Arch/Manjaro](#archmanjaro)
-    + [Cairo Installation](#cairo-installation-2)
-    + [FFmpeg Installation](#ffmpeg-installation-2)
-    + [SoX Installation](#sox-installation-2)
-    + [LaTeX Installation](#latex-installation-2)
-  * [Mac](#mac)
-    + [Homebrew Installation](#homebrew-installation)
-    + [Cairo Installation](#cairo-installation-3)
-    + [FFmpeg Installation](#ffmpeg-installation-3)
-    + [SoX Installation](#sox-installation-3)
-    + [LaTeX Installation](#latex-installation-3)
-  * [Installing Manim-Community itself](#installing-manim-community-itself)
 - [Usage](#usage)
 - [Documentation](#documentation)
 - [Help with Manim](#help-with-manim)
 - [Contributing](#contributing)
 - [License](#license)
 
+
 ## Installation
 
-### Windows
+Manim has a few dependencies that need to be installed before it. Please visit
+the
+[documentation](https://manimce.readthedocs.io/en/latest/installation.html)
+and follow the instructions according to your operating system.
 
-Before installing `manim-community`, there are some additional dependencies that you must have installed:
- - Cairo
- - FFmpeg
- - Sox (optional, for sound)
- - LaTeX (optional, for LaTeX)
-
-#### Cairo Installation
-1. Visit the [Download Page](https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo)
-2. Select the download that corresponds to your PC's architechture and Python Version
-
-<img style="width: 20vw;" src="./readme-assets/windows_cairo.png" />
-<br><br>
-
-> cp38 corresponds to Python 3.8, cp37 corresponds to Python 3.7, etc
-> win_amd64 corresponds to 64-bit machines, win32 corresponds to 32-bit machines
-
-3. Open up your command prompt by hitting the Win key and typing `cmd`
-
-4. Enter the directory where you install cairo by typing `cd C:\path\to\cairo` with the path being where you downloaded the `.whl` file
-
-5. Finally, run `pip3 install (cairo-file).whl`, where the file the appropriate name of the `.whl` file.
-
-6. Alternatively, Running the command below installs pycairo. This needs to be an elevated command prompt like Powershell.
-
-   ```powershell
-   (Invoke-WebRequest -Uri https://raw.githubusercontent.com/ManimCommunity/manim/master/scripts/pycairoinstall.py -UseBasicParsing).Content | py -3
-   ```
-
-   
-
-#### FFmpeg Installation
-1. To install `ffmpeg` and add it to your PATH, install [Chocolatey](https://chocolatey.org/) and run `choco install ffmpeg`
-2. You can check you did it right by running `refreshenv` to update your environment variable and running `ffmpeg`
-
-#### SoX Installation
-1. Go to the SoX [SourceForge](https://sourceforge.net/projects/sox/files/sox/) page
-2. Select the newest version, and download the `.exe` file
-
-<img style="width: 20vw;" src="./readme-assets/windows_sox.png" />
-<br><br>
-
-3. Add SoX to your PATH
-    - Find the directory where SoX is installed. By default, this is probably `C:\Program Files (x86)\sox-(version_number)` or `C:\Program Files\sox-(version_number)`
-    - Open a command prompt window by hitting the Win key and typing `cmd`
-    - Run this command to update your PATH: `setx PATH %PATH%;C:\Program Files (x86)\sox-(version_number)`
-    - Check you did it right by running `refreshenv` to update your environment variable and running `sox`
-
-#### LaTeX Installation
-1. Download the MiKTex installer from its [Download Page](https://miktex.org/download)
-2. You can check you did it right by running `refreshenv` to update your environment variable and running `latex`
-
-<img style="width: 20vw;" src="./readme-assets/windows_miktex.png" />
-<br><br>
-
-### Ubuntu/Debian
-
-Before installing `manim-community`, there are some additional dependencies that you must have installed:
- - Cairo
- - FFmpeg
- - Sox (optional, for sound)
- - LaTeX (optional, for LaTeX)
-
-#### Cairo Installation
-1. Install the `libcairo2-dev` package with your package manager: `sudo apt-get install libcairo2-dev`
-
-#### FFmpeg Installation
-1. Install the `ffmpeg` package with your package manager: `sudo apt-get install ffmpeg`
-2. You can check you did it right by running `ffmpeg -version`
-
-#### SoX Installation
-1. Install the `sox` package with your package manager: `sudo apt-get install sox`
-2. You can check you did it right by running `sox`
-
-#### LaTeX Installation
-1. Install `texlive` with your package manager by running the following commands:
-```
-sudo apt install texlive texlive-latex-extra texlive-fonts-extra texlive-latex-recommended texlive-science texlive-fonts-extra tipa
-```
-> Note: this installation may take up a lot of space. The developers are working on providing a simpler, lighter LaTeX package for you to install
-2. You can check you did it right by running `latex`
-
-### Arch/Manjaro
-
-Before installing `manim-community`, there are some additional dependencies that you must have installed:
- - Cairo
- - FFmpeg
- - Sox (optional, for sound)
- - LaTeX (optional, for LaTeX)
-
-#### Cairo Installation
-1. Install the `cairo` package with your package manager: `sudo pacman -S cairo`
-
-#### FFmpeg Installation
-1. Install the `ffmpeg` package with your package manager: `sudo pacman -S ffmpeg`
-2. You can check you did it right by running `ffmpeg -version`
-
-#### SoX Installation
-1. Install the `sox` package with your package manager: `sudo pacman -S sox`
-2. You can check you did it right by running `sox`
-
-#### LaTeX Installation
-1. Install `texlive` with your package manager by running the following commands:
-```
-sudo pacman -S texlive-most
-```
-> Note: this installation may take up a lot of space. The developers are working on providing a simpler, lighter LaTeX package for you to install
-2. You can check you did it right by running `latex`
-
-### Mac
-
-Before installing `manim-community`, there are some additional dependencies that you must have installed:
- - Homebrew
- - Cairo
- - FFmpeg
- - Sox (optional, for sound)
- - LaTeX (optional, for LaTeX)
-
-#### Homebrew Installation
-
-Homebrew is a package manager similar to `apt` on linux that allows you to install packages easily.
-If it is not installed, please install it with this command:
-
-```
-ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
-```
-
-#### Cairo Installation
-1. Run `brew install cairo`
-
-#### FFmpeg Installation
-1. Refer to the section on Brew installation to see how to install `brew`
-2. Run `brew install ffmpeg`
-3. You can check you did it right by running `ffmpeg -version`
-
-#### SoX Installation
-1. Refer to the section on Brew installation to see how to install `brew`
-2. Run `brew install sox`
-3. You can check you did it right by running `sox`
-
-#### LaTeX Installation
-1. Refer to the section on Brew installation to see how to install `brew`
-2. Run `brew cask install mactex`
-3. You can check you did it right by running `latex`
-
-> Note that MacTeX will require at least 4.5GB of hard disk space and bandwidth.
->
-> This is due to the fact that it installs every LaTeX addon package offered by [CTAN](https://ctan.org/). Only a few of these packages are required by Manim.
->
-> If you would like a smaller LaTeX install which only contains the packages needed by Manim alone, consider installing BasicTeX and suitable packages with the instructions below. This will require about 1.5 GB of space and bandwidth.
-
-If you have installed MacTeX and are comfortable with it, do not install BasicTeX.
-
-1. Refer to the section on Brew installation to see how to install `brew`
-2. Run `brew cask install basictex`
-3. Ensure that the TeXLiveManager tool `tlmgr` works, by running `tlmgr --version` in the terminal.
-4. Run `sudo tlmgr install standalone preview doublestroke relsize fundus-calligra wasysym physics dvisvgm.x86_64-darwin dvisvgm rsfs wasy cm-super`
-4. Ensure that LaTeX works by running `latex` in the Terminal.
-
-
-### Installing Manim-Community itself
-
-1. Manim-Community runs on Python 3.6+. If you'd like to just use the library, you can install it from PyPI via pip:
-
-```sh
-pip3 install manimce
-```
-
-2. However, if you'd like to contribute to and/or help develop
-`manim-community`, you can clone this branch to your local device. To do
-this, first make sure you have `git` installed. Then, clone this repo by
-executing either
-
-```sh
-git clone git@github.com:ManimCommunity/manim.git
-```
-
-or
-
-```sh
-git clone https://github.com/ManimCommunity/manim.git
-```
-
-depending on whether you want to use HTTPS or SSH. Finally, after having cloned this repo, run the
-following:
-
-```sh
-python3 -m pip install -r requirements.txt
-```
 
 ## Usage
 
-To run your first example Scenes, you can run the following commands:
+Here is an example manim script:
+```python
+class SquareToCircle(Scene):
+    def construct(self):
+        circle = Circle()
+        square = Square()
+        square.flip(RIGHT)
+        square.rotate(-3 * TAU / 8)
+        circle.set_fill(PINK, opacity=0.5)
 
-### For users:
-
-1. Download the `example_scenes/basic.py` file from [GitHub](https://raw.github.com/ManimCommunity/manim/master/example_scenes/basic.py), or place it manually
-in your current working directory with
-```sh
-wget https://raw.github.com/ManimCommunity/manim/master/example_scenes/basic.py
+        self.play(ShowCreation(square))
+        self.play(Transform(square, circle))
+        self.play(FadeOut(square))
 ```
 
-2. Run the following command:
+Save this code in a file called `example.py`.  Now open your terminal in the
+folder where you saved the file and execute
 ```sh
-manim example_scenes/basic.py SquareToCircle -pl
+manim example.py SquareToCircle -pl
 ```
 
-3. Download the [custom_template.tex](https://raw.github.com/ManimCommunity/manim/master/example_scenes/custom_template.tex) and [customtex.py](https://raw.github.com/ManimCommunity/manim/master/example_scenes/customtex.py) example_scenes files, and run the following command:
-```sh
-manim customtex.py --tex_template custom_template.tex -pl
-```
+You should see your video player pop up and play a simple scene where a square
+is transformed into a circle.  You can find some more simple examples in the
+[GitHub
+repository](https://github.com/ManimCommunity/manim/tree/master/example_scenes).
+Visit the [official
+gallery](https://manimce.readthedocs.io/en/latest/examples.html) for more
+advanced examples.
 
-### For developers:
 
-- Run the following command to install manim:
-```sh
-pip install -e .
-```
-- Then run the following command below:
-```sh
-manim example_scenes/basic.py SquareToCircle -pl
-```
+## Command line arguments
+
+The general usage of manim is as follows:
 
 ![](./readme-assets/command.png)
 
@@ -275,24 +71,31 @@ The `-p` flag in the command above is for previewing, meaning the video file wil
 Some other useful flags include:
 * `-s` to skip to the end and just show the final frame.
 * `-n <number>` to skip ahead to the `n`'th animation of a scene.
-* `-f` to show the file in finder (for OSX).
+* `-f` show the file in the file browser.
 
-You can also use the `--media_dir <directory-path>` command line parameter to specify where the image and animation files will be written.
+For a thorough list of command line arguments, visit the
+[documentation](https://manimce.readthedocs.io/en/latest/tutorials/configuration.html).
+
 
 ## Documentation
-Documentation is in progress at [eulertour.com/docs](https://www.eulertour.com/docs/).
+Documentation is in progress at [ReadTheDocs](https://manimce.readthedocs.io/en/latest/).
+
 
 ## Help with Manim
-The issues board is reserved for bugs, and future features planned for Manim. If you need help installing or using Manim, please take a look at [the Reddit Community](https://www.reddit.com/r/manim) or the [Discord Community](https://discord.gg/mMRrZQW)
+If you need help installing or using Manim, please take a look at [the Reddit
+Community](https://www.reddit.com/r/manim) or the [Discord
+Community](https://discord.gg/mMRrZQW).  For bug reports and feature requests,
+please open an issue.
+
 
 ## Contributing
-Is always welcome. In particular, there is a dire need for tests and documentation. 
+Is always welcome. In particular, there is a dire need for tests and
+documentation. For guidelines please see the
+[documentation](https://manimce.readthedocs.io/en/latest/contributing.html).
 
-For instructions, guidelines and other details, please check out the file [CONTRIBUTING.md](https://github.com/ManimCommunity/manim/blob/master/CONTRIBUTING.md).
 
 ## License
 
 The software is double-licensed under the MIT license, with copyright
 by 3blue1brown LLC (see LICENSE), and copyright by Manim Community
 Developers (see LICENSE.community).
-
