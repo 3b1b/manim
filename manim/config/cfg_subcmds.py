@@ -11,7 +11,7 @@ import configparser
 from ast import literal_eval
 
 from .config_utils import _run_config, _paths_config_file, finalized_configs_dict
-from .file_ops import guarantee_existence, open_file
+from ..utils.file_ops import guarantee_existence, open_file
 
 from rich.console import Console
 from rich.style import Style

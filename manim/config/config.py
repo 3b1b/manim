@@ -4,19 +4,22 @@ config.py
 Process the manim.cfg file and the command line arguments into a single
 config object.
 """
+
+
+__all__ = ["file_writer_config", "config", "camera_config", "tempconfig"]
+
+
 import os
 import sys
 from contextlib import contextmanager
 
 import colour
 
-from . import constants
-from .utils.config_utils import _run_config, _init_dirs, _from_command_line
+from .. import constants
+from .config_utils import _run_config, _init_dirs, _from_command_line
 
 from .logger import logger
-from .utils.tex import TexTemplate, TexTemplateFromFile
-
-__all__ = ["file_writer_config", "config", "camera_config", "tempconfig"]
+from ..utils.tex import TexTemplate, TexTemplateFromFile
 
 
 config = None

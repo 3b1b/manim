@@ -18,9 +18,8 @@ import itertools as it
 from PIL import Image
 import random
 
+from .. import config, logger
 from ..constants import *
-from ..config import config
-from ..logger import logger
 from ..animation.composition import AnimationGroup
 from ..animation.indication import ShowPassingFlash
 from ..mobject.geometry import Vector

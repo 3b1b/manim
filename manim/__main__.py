@@ -8,14 +8,12 @@ import traceback
 import importlib.util
 import types
 
-from .config import file_writer_config, args
-from .utils import cfg_subcmds
+from . import constants, logger, console, file_writer_config
+from .config.config import args
+from .config import cfg_subcmds
 from .scene.scene import Scene
-from .utils.sounds import play_error_sound
-from .utils.sounds import play_finish_sound
+from .utils.sounds import play_error_sound, play_finish_sound
 from .utils.file_ops import open_file as open_media_file
-from . import constants
-from .logger import logger, console
 
 
 def open_file_if_needed(file_writer):

@@ -5,6 +5,11 @@ This is the logging library for manim.
 This library uses rich for coloured log outputs.
 
 """
+
+
+__all__ = ['logger', 'console']
+
+
 import configparser
 import logging
 
@@ -14,7 +19,7 @@ from rich.theme import Theme
 from rich import print as printf
 from rich import errors, color
 
-from .utils.config_utils import _run_config
+from .config_utils import _run_config
 
 
 def parse_theme(fp):

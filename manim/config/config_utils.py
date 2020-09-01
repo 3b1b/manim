@@ -6,6 +6,15 @@ Utility functions for parsing manim config files.
 
 """
 
+
+__all__ = [
+    "_run_config",
+    "_paths_config_file",
+    "_from_command_line",
+    "finalized_configs_dict",
+]
+
+
 import argparse
 import configparser
 import os
@@ -14,14 +23,7 @@ import sys
 import colour
 
 from .. import constants
-from .tex import TexTemplate, TexTemplateFromFile
-
-__all__ = [
-    "_run_config",
-    "_paths_config_file",
-    "_from_command_line",
-    "finalized_configs_dict",
-]
+from ..utils.tex import TexTemplate, TexTemplateFromFile
 
 
 def _parse_file_writer_config(config_parser, args):
@@ -459,7 +461,7 @@ def _from_dunder_main():
 
 def _paths_config_file():
     library_wide = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "default.cfg")
+        os.path.join(os.path.dirname(__file__), "default.cfg")
     )
     if sys.platform.startswith("win32"):
         user_wide = os.path.expanduser(

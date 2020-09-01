@@ -1,8 +1,9 @@
 __all__ = ["GraphScene"]
 
+
 import itertools as it
 
-from ..config import config
+from .. import config
 from ..animation.creation import Write, DrawBorderThenFill, ShowCreation
 from ..animation.transform import Transform
 from ..animation.update import UpdateFromAlphaFunc
