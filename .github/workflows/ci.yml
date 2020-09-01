@@ -130,3 +130,6 @@ jobs:
 
       - name: Run tests
         run: pytest
+
+      - name: Run module doctests
+        run: pytest --doctest-modules manim

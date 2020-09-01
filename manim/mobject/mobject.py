@@ -107,6 +107,27 @@ class Mobject(Container):
         --------
         :meth:`~Mobject.remove`
 
+        Examples
+        --------
+        ::
+
+            >>> outer = Mobject()
+            >>> inner = Mobject()
+            >>> outer = outer.add(inner)
+
+        Duplicates are not added again::
+
+            >>> outer = outer.add(inner)
+            >>> len(outer.submobjects)
+            1
+
+        Adding an object to itself raises an error::
+
+            >>> outer.add(outer)
+            Traceback (most recent call last):
+            ...
+            ValueError: Mobject cannot contain self
+
         """
         if self in mobjects:
             raise ValueError("Mobject cannot contain self")
