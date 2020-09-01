@@ -4,15 +4,20 @@ import numpy as np
 import os
 import sys
 import logging
-from shutil import rmtree
 
 
 def pytest_addoption(parser):
     parser.addoption(
-        "--skip_end_to_end",
+        "--skip_slow",
         action="store_true",
         default=False,
-        help="Will skip all the end-to-end tests. Useful when ffmpeg is not installed, e.g. on Windows jobs.",
+        help="Will skip all the slow marked tests. Slow tests are arbitrarly marked as such.",
+    )
+    parser.addoption(
+        "--show_diff",
+        action="store_true",
+        default=False,
+        help="Will show a visual comparison if a graphical unit test fails.",
     )
 
 
@@ -21,18 +26,18 @@ def pytest_configure(config):
 
 
 def pytest_collection_modifyitems(config, items):
-    if not config.getoption("--skip_end_to_end"):
+    if not config.getoption("--skip_slow"):
         return
     else:
-        skip_end_to_end = pytest.mark.skip(
-            reason="End to end test skipped due to --skip_end_to_end flag"
+        slow_skip = pytest.mark.skip(
+            reason="Slow test skipped due to --disable_slow flag."
         )
         for item in items:
-            if "skip_end_to_end" in item.keywords:
-                item.add_marker(skip_end_to_end)
+            if "slow" in item.keywords:
+                item.add_marker(slow_skip)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def python_version():
     return "python3" if sys.platform == "darwin" else "python"
 
@@ -45,10 +50,3 @@ def reset_cfg_file():
     yield
     with open(cfgfilepath, "w") as cfgfile:
         cfgfile.write(original)
-
-
-@pytest.fixture
-def clean_tests_cache():
-    yield
-    path_output = os.path.join("tests", "tests_cache", "media_temp")
-    rmtree(path_output)

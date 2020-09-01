@@ -1,5 +1,0 @@
-# from manim import *
-class DashAsNameTest(Scene):
-    def construct(self):
-        self.play(ReplacementTransform(Square(),Circle()))
-        self.wait(2)
