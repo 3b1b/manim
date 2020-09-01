@@ -3,9 +3,9 @@ __all__ = ["ThreeDCamera"]
 
 import numpy as np
 
+from .. import config
 from ..camera.camera import Camera
 from ..constants import *
-from ..config import config
 from ..mobject.three_d_utils import get_3d_vmob_end_corner
 from ..mobject.three_d_utils import get_3d_vmob_end_corner_unit_normal
 from ..mobject.three_d_utils import get_3d_vmob_start_corner

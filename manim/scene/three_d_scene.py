@@ -1,10 +1,10 @@
 __all__ = ["ThreeDScene", "SpecialThreeDScene"]
 
 
+from .. import config
 from ..animation.transform import ApplyMethod
 from ..camera.three_d_camera import ThreeDCamera
 from ..constants import DEGREES
-from ..config import config
 from ..mobject.coordinate_systems import ThreeDAxes
 from ..mobject.geometry import Line
 from ..mobject.three_dimensions import Sphere

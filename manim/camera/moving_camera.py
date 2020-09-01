@@ -1,8 +1,8 @@
 __all__ = ["CameraFrame", "MovingCamera"]
 
 
+from .. import config
 from ..camera.camera import Camera
-from ..config import config
 from ..constants import ORIGIN, WHITE
 from ..mobject.frame import ScreenRectangle
 from ..mobject.types.vectorized_mobject import VGroup

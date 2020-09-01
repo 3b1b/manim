@@ -3,6 +3,8 @@ __all__ = ["VectorScene", "LinearTransformationScene"]
 
 import numpy as np
 
+from .. import config
+from ..constants import *
 from ..animation.animation import Animation
 from ..animation.creation import ShowCreation
 from ..animation.creation import Write
@@ -11,8 +13,6 @@ from ..animation.growing import GrowArrow
 from ..animation.transform import ApplyFunction
 from ..animation.transform import ApplyPointwiseFunction
 from ..animation.transform import Transform
-from ..constants import *
-from ..config import config
 from ..mobject.coordinate_systems import Axes
 from ..mobject.coordinate_systems import NumberPlane
 from ..mobject.geometry import Arrow

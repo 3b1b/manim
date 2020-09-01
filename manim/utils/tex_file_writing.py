@@ -2,9 +2,7 @@ import os
 import hashlib
 from pathlib import Path
 
-from .. import constants
-from ..config import file_writer_config, config
-from ..logger import logger
+from .. import file_writer_config, config, logger
 
 
 def tex_hash(expression):

@@ -6,7 +6,7 @@ import dis
 import numpy as np
 from types import ModuleType
 
-from ..logger import logger
+from .. import logger
 
 
 class CustomEncoder(json.JSONEncoder):

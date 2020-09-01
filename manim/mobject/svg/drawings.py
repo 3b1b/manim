@@ -28,10 +28,10 @@ __all__ = [
 import itertools as it
 import string
 
+from ... import config
 from ...animation.animation import Animation
 from ...animation.rotation import Rotating
 from ...constants import *
-from ...config import config
 from ...mobject.geometry import AnnularSector
 from ...mobject.geometry import Arc
 from ...mobject.geometry import Circle

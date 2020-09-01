@@ -23,7 +23,7 @@ from ..constants import DOWN
 from ..mobject.types.vectorized_mobject import VMobject
 from ..utils.bezier import interpolate
 from ..utils.rate_functions import there_and_back
-from ..logger import logger
+from .. import logger
 
 
 DEFAULT_FADE_LAG_RATIO = 0

@@ -6,8 +6,8 @@ __all__ = ["NumberLine", "UnitInterval"]
 
 import operator as op
 
+from .. import config
 from ..constants import *
-from ..config import config
 from ..mobject.geometry import Line
 from ..mobject.numbers import DecimalNumber
 from ..mobject.types.vectorized_mobject import VGroup

@@ -11,9 +11,8 @@ from time import sleep
 import datetime
 from PIL import Image
 
+from .. import file_writer_config, logger, console
 from ..constants import FFMPEG_BIN, GIF_FILE_EXTENSION
-from ..config import file_writer_config
-from ..logger import logger, console
 from ..utils.config_ops import digest_config
 from ..utils.file_ops import guarantee_existence
 from ..utils.file_ops import add_extension_if_not_present

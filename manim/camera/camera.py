@@ -15,9 +15,8 @@ from scipy.spatial.distance import pdist
 import cairo
 import numpy as np
 
+from .. import logger, config, camera_config
 from ..constants import *
-from ..config import config, camera_config
-from ..logger import logger
 from ..mobject.types.image_mobject import AbstractImageMobject
 from ..mobject.mobject import Mobject
 from ..mobject.types.point_cloud_mobject import PMobject

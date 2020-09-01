@@ -7,10 +7,9 @@ import copy
 import hashlib
 import cairo
 
+from ... import config, file_writer_config, logger
 from ...constants import *
-from ...config import config, file_writer_config
 from ...container import Container
-from ...logger import logger
 from ...mobject.geometry import Dot, Rectangle
 from ...mobject.svg.svg_mobject import SVGMobject
 from ...mobject.types.vectorized_mobject import VGroup

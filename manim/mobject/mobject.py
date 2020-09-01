@@ -15,8 +15,8 @@ import sys
 from colour import Color
 import numpy as np
 
+from .. import config
 from ..constants import *
-from ..config import config
 from ..container import Container
 from ..utils.color import color_gradient
 from ..utils.color import interpolate_color

@@ -4,8 +4,8 @@ __all__ = ["CoordinateSystem", "Axes", "ThreeDAxes", "NumberPlane", "ComplexPlan
 import numpy as np
 import numbers
 
+from .. import config
 from ..constants import *
-from ..config import config
 from ..mobject.functions import ParametricFunction
 from ..mobject.geometry import Arrow
 from ..mobject.geometry import Line
