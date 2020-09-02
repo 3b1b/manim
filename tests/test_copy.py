@@ -15,14 +15,16 @@ def test_mobject_copy():
         assert orig.submobjects[i] is not copy.submobjects[i]
 
 
-def test_bracelabel_copy():
+def test_bracelabel_copy(tmp_path):
     """Test that a copy is a deepcopy."""
     # For this test to work, we need to tweak some folders temporarily
     original_text_dir = file_writer_config["text_dir"]
     original_tex_dir = file_writer_config["tex_dir"]
-    mediadir = os.path.join("tests", "tests_data", "deepcopy")
+    mediadir = os.path.join(tmp_path, "deepcopy")
     file_writer_config["text_dir"] = os.path.join(mediadir, "Text")
     file_writer_config["tex_dir"] = os.path.join(mediadir, "Tex")
+    for el in ["text_dir", "tex_dir"]:
+        os.makedirs(file_writer_config[el])
 
     # Before the refactoring of Mobject.copy(), the class BraceLabel was the
     # only one to have a non-trivial definition of copy.  Here we test that it
