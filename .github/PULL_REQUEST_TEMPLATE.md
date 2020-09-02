@@ -14,6 +14,9 @@ If you don't need any of the optional sections, feel free to delete them to prev
 - Change 1
 - Change 2
 - and so on..
+
+Be sure to note your changes in the [changelog](docs/source/changelog.rst) if your
+changes warrant it!
 -->
 
 ## Motivation
