@@ -302,7 +302,7 @@ class SpecialThreeDScene(ThreeDScene):
 
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
-        if self.camera_config["pixel_width"] == config["CAMERA_CONFIG"]["PIXEL_WIDTH"]:
+        if self.camera_config["pixel_width"] == config["pixel_width"]:
             config = {}
         else:
             config = self.low_quality_config

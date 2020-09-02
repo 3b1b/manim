@@ -21,8 +21,6 @@ from ..utils.space_ops import normalize
 class NumberLine(Line):
     CONFIG = {
         "color": LIGHT_GREY,
-        "x_min": -config["frame_x_radius"],
-        "x_max": config["frame_x_radius"],
         "unit_size": 1,
         "include_ticks": True,
         "tick_size": 0.1,
@@ -49,6 +47,8 @@ class NumberLine(Line):
     }
 
     def __init__(self, **kwargs):
+        self.x_min = -config["frame_x_radius"]
+        self.x_max = config["frame_x_radius"]
         digest_config(self, kwargs)
         start = self.unit_size * self.x_min * RIGHT
         end = self.unit_size * self.x_max * RIGHT
@@ -180,11 +180,14 @@ class NumberLine(Line):
 
 class UnitInterval(NumberLine):
     CONFIG = {
-        "x_min": 0,
-        "x_max": 1,
         "unit_size": 6,
         "tick_frequency": 0.1,
         "numbers_with_elongated_ticks": [0, 1],
         "number_at_center": 0.5,
         "decimal_number_config": {"num_decimal_places": 1,},
     }
+
+    def __init__(self, **kwargs):
+        NumberLine.__init__(self, **kwargs)
+        self.x_min = 0
+        self.x_max = 1

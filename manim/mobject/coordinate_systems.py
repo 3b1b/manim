@@ -25,13 +25,16 @@ class CoordinateSystem:
     Abstract class for Axes and NumberPlane
     """
 
-    CONFIG = {
-        "dimension": 2,
-        "x_min": -config["frame_x_radius"],
-        "x_max": config["frame_x_radius"],
-        "y_min": -config["frame_y_radius"],
-        "y_max": config["frame_y_radius"],
-    }
+    def __init__(self, dim=2):
+        self.dimension = dim
+        if not hasattr(self, 'x_min'):
+            self.x_min = -config["frame_x_radius"]
+        if not hasattr(self, 'x_max'):
+            self.x_max = config["frame_x_radius"]
+        if not hasattr(self, 'y_min'):
+            self.y_min = -config["frame_y_radius"]
+        if not hasattr(self, 'y_max'):
+            self.y_max = config["frame_y_radius"]
 
     def coords_to_point(self, *coords):
         raise Exception("Not implemented")
@@ -130,16 +133,17 @@ class Axes(VGroup, CoordinateSystem):
             "exclude_zero_from_default_numbers": True,
         },
         "x_axis_config": {},
-        "y_axis_config": {"label_direction": LEFT,},
+        "y_axis_config": {"label_direction": LEFT},
         "center_point": ORIGIN,
     }
 
     def __init__(self, **kwargs):
+        CoordinateSystem.__init__(self, **kwargs)
         VGroup.__init__(self, **kwargs)
         self.x_axis = self.create_axis(self.x_min, self.x_max, self.x_axis_config)
         self.y_axis = self.create_axis(self.y_min, self.y_max, self.y_axis_config)
         self.y_axis.rotate(90 * DEGREES, about_point=ORIGIN)
-        # Add as a separate group incase various other
+        # Add as a separate group in case various other
         # mobjects are added to self, as for example in
         # NumberPlane below
         self.axes = VGroup(self.x_axis, self.y_axis)
@@ -189,11 +193,7 @@ class Axes(VGroup, CoordinateSystem):
 
 class ThreeDAxes(Axes):
     CONFIG = {
-        "dimension": 3,
-        "x_min": -5.5,
-        "x_max": 5.5,
-        "y_min": -5.5,
-        "y_max": 5.5,
+
         "z_axis_config": {},
         "z_min": -3.5,
         "z_max": 3.5,
@@ -203,7 +203,12 @@ class ThreeDAxes(Axes):
     }
 
     def __init__(self, **kwargs):
+        self.x_min = -5.5
+        self.x_max = 5.5
+        self.y_min = -5.5
+        self.y_max = 5.5
         Axes.__init__(self, **kwargs)
+        self.dimension = 3
         z_axis = self.z_axis = self.create_axis(
             self.z_min, self.z_max, self.z_axis_config
         )
@@ -245,7 +250,7 @@ class NumberPlane(Axes):
             "label_direction": DR,
             "number_scale_val": 0.5,
         },
-        "y_axis_config": {"label_direction": DR,},
+        "y_axis_config": {"label_direction": DR},
         "background_line_style": {
             "stroke_color": BLUE_D,
             "stroke_width": 2,

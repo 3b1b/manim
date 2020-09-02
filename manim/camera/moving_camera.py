@@ -12,13 +12,13 @@ from ..utils.config_ops import digest_config
 # TODO, think about how to incorporate perspective
 class CameraFrame(VGroup):
     CONFIG = {
-        "width": config["frame_width"],
-        "height": config["frame_height"],
         "center": ORIGIN,
     }
 
     def __init__(self, **kwargs):
-        pass
+        VGroup.__init__(self, **kwargs)
+        self.width = config["frame_width"]
+        self.height = config["frame_height"]
 
 
 class MovingCamera(Camera):

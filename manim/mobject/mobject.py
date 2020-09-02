@@ -15,7 +15,7 @@ import sys
 from colour import Color
 import numpy as np
 
-from .. import config
+from .. import config, file_writer_config
 from ..constants import *
 from ..container import Container
 from ..utils.color import color_gradient
@@ -198,7 +198,7 @@ class Mobject(Container):
 
     def save_image(self, name=None):
         self.get_image().save(
-            os.path.join(config["VIDEO_DIR"], (name or str(self)) + ".png")
+            os.path.join(file_writer_config["video_dir"], (name or str(self)) + ".png")
         )
 
     def copy(self):

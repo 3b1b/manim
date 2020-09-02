@@ -29,7 +29,6 @@ class ThreeDCamera(Camera):
         "light_source_start_point": 9 * DOWN + 7 * LEFT + 10 * OUT,
         "should_apply_shading": True,
         "exponential_projection": False,
-        "max_allowable_norm": 3 * config["frame_width"],
     }
 
     def __init__(self, *args, **kwargs):
@@ -43,6 +42,7 @@ class ThreeDCamera(Camera):
             Any keyword argument of Camera.
         """
         Camera.__init__(self, *args, **kwargs)
+        self.max_allowable_norm = 3 * config["frame_width"]
         self.phi_tracker = ValueTracker(self.phi)
         self.theta_tracker = ValueTracker(self.theta)
         self.distance_tracker = ValueTracker(self.distance)

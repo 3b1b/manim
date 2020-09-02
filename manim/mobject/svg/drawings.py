@@ -303,11 +303,11 @@ class PatreonLogo(SVGMobject):
 class VideoIcon(SVGMobject):
     CONFIG = {
         "file_name": "video_icon",
-        "width": config["frame_width"] / 12.0,
     }
 
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
+        self.width = config["frame_width"] / 12.0
         self.center()
         self.set_width(self.width)
         self.set_stroke(color=WHITE, width=0)

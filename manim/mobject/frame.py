@@ -21,9 +21,9 @@ class ScreenRectangle(Rectangle):
 
 
 class FullScreenRectangle(ScreenRectangle):
-    CONFIG = {
-        "height": config["frame_height"],
-    }
+    def __init__(self, **kwargs):
+        ScreenRectangle.__init__(self, **kwargs)
+        self.set_height(config["frame_height"])
 
 
 class FullScreenFadeRectangle(FullScreenRectangle):
