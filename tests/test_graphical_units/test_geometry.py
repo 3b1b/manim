@@ -29,6 +29,15 @@ class CurvedArrowTest(Scene):
         self.play(Animation(a))
 
 
+class CustomDoubleArrowTest(Scene):
+    def construct(self):
+        from manim.mobject.geometry import ArrowCircleTip, ArrowSquareFilledTip
+        a = DoubleArrow(np.array([-1, -1, 0]), np.array([1, 1, 0]),
+                                 tip_shape_start=ArrowCircleTip,
+                                 tip_shape_end=ArrowSquareFilledTip)
+        self.play(Animation(a))
+
+
 class CircleTest(Scene):
     def construct(self):
         circle = Circle()

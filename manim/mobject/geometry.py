@@ -84,43 +84,48 @@ class TipableVMobject(VMobject):
         "tip_length": DEFAULT_ARROW_TIP_LENGTH,
         # TODO
         "normal_vector": OUT,
-        "tip_style": {"fill_opacity": 1, "stroke_width": 0,},
+        "tip_style": dict(),
     }
 
     # Adding, Creating, Modifying tips
 
-    def add_tip(self, tip_length=None, at_start=False):
+    def add_tip(self, tip=None, tip_shape=None, tip_length=None, at_start=False):
         """
         Adds a tip to the TipableVMobject instance, recognising
         that the endpoints might need to be switched if it's
         a 'starting tip' or not.
         """
-        tip = self.create_tip(tip_length, at_start)
+        if tip is None:
+            tip = self.create_tip(tip_shape, tip_length, at_start)
+        else:
+            self.position_tip(tip, at_start)
         self.reset_endpoints_based_on_tip(tip, at_start)
         self.asign_tip_attr(tip, at_start)
         self.add(tip)
         return self
 
-    def create_tip(self, tip_length=None, at_start=False):
+    def create_tip(self, tip_shape=None, tip_length=None, at_start=False):
         """
         Stylises the tip, positions it spacially, and returns
         the newly instantiated tip to the caller.
         """
-        tip = self.get_unpositioned_tip(tip_length)
+        tip = self.get_unpositioned_tip(tip_shape, tip_length)
         self.position_tip(tip, at_start)
         return tip
 
-    def get_unpositioned_tip(self, tip_length=None):
+    def get_unpositioned_tip(self, tip_shape=None, tip_length=None):
         """
         Returns a tip that has been stylistically configured,
         but has not yet been given a position in space.
         """
+        if tip_shape is None:
+            tip_shape = ArrowTriangleFilledTip
         if tip_length is None:
             tip_length = self.get_default_tip_length()
         color = self.get_color()
         style = {"fill_color": color, "stroke_color": color}
         style.update(self.tip_style)
-        tip = ArrowTip(length=tip_length, **style)
+        tip = tip_shape(length=tip_length, **style)
         return tip
 
     def position_tip(self, tip, at_start=False):
@@ -132,8 +137,8 @@ class TipableVMobject(VMobject):
         else:
             handle = self.get_last_handle()
             anchor = self.get_end()
-        tip.rotate(angle_of_vector(handle - anchor) - PI - tip.get_angle())
-        tip.shift(anchor - tip.get_tip_point())
+        tip.rotate(angle_of_vector(handle - anchor) - PI - tip.tip_angle)
+        tip.shift(anchor - tip.tip_point)
         return tip
 
     def reset_endpoints_based_on_tip(self, tip, at_start):
@@ -143,10 +148,11 @@ class TipableVMobject(VMobject):
             return self
 
         if at_start:
-            self.put_start_and_end_on(tip.get_base(), self.get_end())
+            self.put_start_and_end_on(tip.base, self.get_end())
         else:
             self.put_start_and_end_on(
-                self.get_start(), tip.get_base(),
+                self.get_start(),
+                tip.base,
             )
         return self
 
@@ -267,7 +273,10 @@ class Arc(TipableVMobject):
         handles1 = anchors[:-1] + (d_theta / 3) * tangent_vectors[:-1]
         handles2 = anchors[1:] - (d_theta / 3) * tangent_vectors[1:]
         self.set_anchors_and_handles(
-            anchors[:-1], handles1, handles2, anchors[1:],
+            anchors[:-1],
+            handles1,
+            handles2,
+            anchors[1:],
         )
 
     def get_arc_center(self, warning=True):
@@ -284,7 +293,10 @@ class Arc(TipableVMobject):
         n1 = rotate_vector(t1, TAU / 4)
         n2 = rotate_vector(t2, TAU / 4)
         try:
-            return line_intersection(line1=(a1, a1 + n1), line2=(a2, a2 + n2),)
+            return line_intersection(
+                line1=(a1, a1 + n1),
+                line2=(a2, a2 + n2),
+            )
         except Exception:
             if warning:
                 warnings.warn("Can't find Arc center, using ORIGIN instead")
@@ -322,7 +334,9 @@ class ArcBetweenPoints(Arc):
             angle = math.acos((radius - arc_height) / radius) * sign
 
         Arc.__init__(
-            self, angle=angle, **kwargs,
+            self,
+            angle=angle,
+            **kwargs,
         )
         if angle == 0:
             self.set_points_as_corners([LEFT, RIGHT])
@@ -339,13 +353,18 @@ class ArcBetweenPoints(Arc):
 class CurvedArrow(ArcBetweenPoints):
     def __init__(self, start_point, end_point, **kwargs):
         ArcBetweenPoints.__init__(self, start_point, end_point, **kwargs)
-        self.add_tip()
+        self.add_tip(tip_shape=kwargs.get("tip_shape", ArrowTriangleFilledTip))
 
 
 class CurvedDoubleArrow(CurvedArrow):
     def __init__(self, start_point, end_point, **kwargs):
+        if "tip_shape_end" in kwargs:
+            kwargs["tip_shape"] = kwargs.pop("tip_shape_end")
         CurvedArrow.__init__(self, start_point, end_point, **kwargs)
-        self.add_tip(at_start=True)
+        self.add_tip(
+            at_start=True,
+            tip_shape=kwargs.get("tip_shape_start", ArrowTriangleFilledTip),
+        )
 
 
 class Circle(Arc):
@@ -532,7 +551,8 @@ class Line(TipableVMobject):
 
     def set_angle(self, angle):
         self.rotate(
-            angle - self.get_angle(), about_point=self.get_start(),
+            angle - self.get_angle(),
+            about_point=self.get_start(),
         )
 
     def set_length(self, length):
@@ -573,7 +593,10 @@ class DashedLine(Line):
             return 1
 
     def calculate_positive_space_ratio(self):
-        return fdiv(self.dash_length, self.dash_length + self.dash_spacing,)
+        return fdiv(
+            self.dash_length,
+            self.dash_length + self.dash_spacing,
+        )
 
     def get_start(self):
         if len(self.submobjects) > 0:
@@ -635,11 +658,41 @@ class Arrow(Line):
         # TODO, should this be affected when
         # Arrow.set_stroke is called?
         self.initial_stroke_width = self.stroke_width
-        self.add_tip()
+        self.add_tip(tip_shape=kwargs.get("tip_shape", ArrowTriangleFilledTip))
         self.set_stroke_width_from_length()
 
-    def scale(self, factor, **kwargs):
+    def scale(self, factor, scale_tips=False, **kwargs):
+        r"""Scale an arrow, but keep stroke width and arrow tip size fixed.
+
+        See Also
+        --------
+        :meth:`~.Mobject.scale`
+
+        Examples
+        --------
+        ::
+
+            >>> arrow = Arrow(np.array([-1, -1, 0]), np.array([1, 1, 0]), buff=0)
+            >>> scaled_arrow = arrow.scale(2)
+            >>> scaled_arrow.get_start_and_end()
+            (array([-2., -2.,  0.]), array([2., 2., 0.]))
+            >>> arrow.tip.tip_length == scaled_arrow.tip.tip_length
+            True
+
+        Manually scaling the object using the default method
+        :meth:`~.Mobject.scale` does not have the same properties::
+
+            >>> new_arrow = Arrow(np.array([-1, -1, 0]), np.array([1, 1, 0]), buff=0)
+            >>> another_scaled_arrow = VMobject.scale(new_arrow, 2)
+            >>> another_scaled_arrow.tip.tip_length == arrow.tip.tip_length
+            False
+
+        """
         if self.get_length() == 0:
+            return self
+
+        if scale_tips:
+            VMobject.scale(self, factor, **kwargs)
             return self
 
         has_tip = self.has_tip()
@@ -650,19 +703,10 @@ class Arrow(Line):
         VMobject.scale(self, factor, **kwargs)
         self.set_stroke_width_from_length()
 
-        # So horribly confusing, must redo
         if has_tip:
-            self.add_tip()
-            old_tips[0].points[:, :] = self.tip.points
-            self.remove(self.tip)
-            self.tip = old_tips[0]
-            self.add(self.tip)
+            self.add_tip(tip=old_tips[0])
         if has_start_tip:
-            self.add_tip(at_start=True)
-            old_tips[1].points[:, :] = self.start_tip.points
-            self.remove(self.start_tip)
-            self.start_tip = old_tips[1]
-            self.add(self.start_tip)
+            self.add_tip(tip=old_tips[1], at_start=True)
         return self
 
     def get_normal_vector(self):
@@ -675,12 +719,18 @@ class Arrow(Line):
 
     def get_default_tip_length(self):
         max_ratio = self.max_tip_length_to_length_ratio
-        return min(self.tip_length, max_ratio * self.get_length(),)
+        return min(
+            self.tip_length,
+            max_ratio * self.get_length(),
+        )
 
     def set_stroke_width_from_length(self):
         max_ratio = self.max_stroke_width_to_length_ratio
         self.set_stroke(
-            width=min(self.initial_stroke_width, max_ratio * self.get_length(),),
+            width=min(
+                self.initial_stroke_width,
+                max_ratio * self.get_length(),
+            ),
             family=False,
         )
         return self
@@ -699,8 +749,13 @@ class Vector(Arrow):
 
 class DoubleArrow(Arrow):
     def __init__(self, *args, **kwargs):
+        if "tip_shape_end" in kwargs:
+            kwargs["tip_shape"] = kwargs.pop("tip_shape_end")
         Arrow.__init__(self, *args, **kwargs)
-        self.add_tip(at_start=True)
+        self.add_tip(
+            at_start=True,
+            tip_shape=kwargs.get("tip_shape_start", ArrowTriangleFilledTip),
+        )
 
 
 class CubicBezier(VMobject):
@@ -778,35 +833,6 @@ class Triangle(RegularPolygon):
         RegularPolygon.__init__(self, n=3, **kwargs)
 
 
-class ArrowTip(Triangle):
-    CONFIG = {
-        "fill_opacity": 1,
-        "stroke_width": 0,
-        "length": DEFAULT_ARROW_TIP_LENGTH,
-        "start_angle": PI,
-    }
-
-    def __init__(self, **kwargs):
-        Triangle.__init__(self, **kwargs)
-        self.set_width(self.length)
-        self.set_height(self.length, stretch=True)
-
-    def get_base(self):
-        return self.point_from_proportion(0.5)
-
-    def get_tip_point(self):
-        return self.points[0]
-
-    def get_vector(self):
-        return self.get_tip_point() - self.get_base()
-
-    def get_angle(self):
-        return angle_of_vector(self.get_vector())
-
-    def get_length(self):
-        return get_norm(self.get_vector())
-
-
 class Rectangle(Polygon):
     CONFIG = {
         "color": WHITE,
@@ -842,3 +868,202 @@ class RoundedRectangle(Rectangle):
     def __init__(self, **kwargs):
         Rectangle.__init__(self, **kwargs)
         self.round_corners(self.corner_radius)
+
+
+class ArrowTip(VMobject):
+    r"""Base class for arrow tips.
+
+    See Also
+    --------
+    :class:`ArrowTriangleTip`
+    :class:`ArrowTriangleFilledTip`
+    :class:`ArrowCircleTip`
+    :class:`ArrowCircleFilledTip`
+    :class:`ArrowSquareTip`
+    :class:`ArrowSquareFilledTip`
+
+    Examples
+    --------
+    Cannot be used directly, only intended for inheritance::
+
+        >>> tip = ArrowTip()
+        Traceback (most recent call last):
+        ...
+        NotImplementedError: Has to be implemented in inheriting subclasses.
+
+    Instead, use one of the pre-defined ones, or make
+    a custom one like this::
+
+        >>> class MyCustomArrowTip(ArrowTip, RegularPolygon):
+        ...     def __init__(self, **kwargs):
+        ...         RegularPolygon.__init__(self, n=5, **kwargs)
+        ...         self.set_width(self.length)
+        ...         self.set_height(self.length, stretch=True)
+        >>> arr = Arrow(np.array([0, 0, 0]), np.array([1, 1, 0]),
+        ...             tip_shape=MyCustomArrowTip)
+        >>> isinstance(arr.tip, RegularPolygon)
+        True
+
+    Using a class inherited from :class:`ArrowTip` to get a non-filled
+    tip is a shorthand to manually specifying the arrow tip style as follows::
+
+        >>> arrow = Arrow(np.array([0, 0, 0]), np.array([1, 1, 0]),
+        ...               tip_style={'fill_opacity': 0, 'stroke_width': 3})
+
+
+    """
+    CONFIG = {
+        "fill_opacity": 0,
+        "stroke_width": 3,
+        "length": DEFAULT_ARROW_TIP_LENGTH,
+        "start_angle": PI,
+    }
+
+    def __init__(self, *args, **kwargs):
+        raise NotImplementedError("Has to be implemented in inheriting subclasses.")
+
+    @property
+    def base(self):
+        r"""The base point of the arrow tip.
+
+        This is the point connecting to the arrow line.
+
+        Examples
+        --------
+        ::
+            >>> arrow = Arrow(np.array([0, 0, 0]), np.array([2, 0, 0]), buff=0)
+            >>> arrow.tip.base.round(2) + 0.  # add 0. to avoid negative 0 in output
+            array([1.65, 0.  , 0.  ])
+
+        """
+        return self.point_from_proportion(0.5)
+
+    @property
+    def tip_point(self):
+        r"""The tip point of the arrow tip.
+
+        Examples
+        --------
+        ::
+            >>> arrow = Arrow(np.array([0, 0, 0]), np.array([2, 0, 0]), buff=0)
+            >>> arrow.tip.tip_point.round(2) + 0.
+            array([2., 0., 0.])
+
+        """
+        return self.points[0]
+
+    @property
+    def vector(self):
+        r"""The vector pointing from the base point to the tip point.
+
+        Examples
+        --------
+        ::
+            >>> arrow = Arrow(np.array([0, 0, 0]), np.array([2, 2, 0]), buff=0)
+            >>> arrow.tip.vector.round(2) + 0.
+            array([0.25, 0.25, 0.  ])
+
+        """
+        return self.tip_point - self.base
+
+    @property
+    def tip_angle(self):
+        r"""The angle of the arrow tip.
+
+        Examples
+        --------
+        ::
+            >>> arrow = Arrow(np.array([0, 0, 0]), np.array([1, 1, 0]), buff=0)
+            >>> round(arrow.tip.tip_angle, 5) == round(PI/4, 5)
+            True
+
+        """
+        return angle_of_vector(self.vector)
+
+    @property
+    def tip_length(self):
+        r"""The length of the arrow tip.
+
+        Examples
+        --------
+        ::
+            >>> arrow = Arrow(np.array([0, 0, 0]), np.array([1, 2, 0]))
+            >>> round(arrow.tip.tip_length, 3)
+            0.35
+
+        """
+        return get_norm(self.vector)
+
+
+class ArrowFilledTip(ArrowTip):
+    r"""Base class for arrow tips with filled tip.
+
+    Note
+    ----
+    In comparison to :class:`ArrowTip`, this class only provides
+    different default settings for styling arrow tips. These settings
+    (in particular `fill_opacity` and `stroke_width`) can also be
+    overridden manually.
+
+    See Also
+    --------
+    :class:`ArrowTip`
+    :class:`ArrowTriangleFilledTip`
+    :class:`ArrowCircleFilledTip`
+    :class:`ArrowSquareFilledTip`
+
+    """
+    CONFIG = {
+        "fill_opacity": 1,
+        "stroke_width": 0,
+        "length": DEFAULT_ARROW_TIP_LENGTH,
+        "start_angle": PI,
+    }
+
+
+class ArrowTriangleTip(ArrowTip, Triangle):
+    r"""Triangular arrow tip."""
+
+    def __init__(self, **kwargs):
+        digest_config(self, kwargs)
+        Triangle.__init__(self, **kwargs)
+        self.set_width(self.length)
+        self.set_height(self.length, stretch=True)
+
+
+class ArrowTriangleFilledTip(ArrowFilledTip, ArrowTriangleTip):
+    r"""Triangular arrow tip with filled tip.
+
+    This is the default arrow tip shape.
+    """
+    pass
+
+
+class ArrowCircleTip(ArrowTip, Circle):
+    r"""Circular arrow tip."""
+
+    def __init__(self, **kwargs):
+        digest_config(self, kwargs)
+        Circle.__init__(self, **kwargs)
+        self.set_width(self.length)
+        self.set_height(self.length, stretch=True)
+
+
+class ArrowCircleFilledTip(ArrowFilledTip, ArrowCircleTip):
+    r"""Circular arrow tip with filled tip."""
+    pass
+
+
+class ArrowSquareTip(ArrowTip, Square):
+    r"""Square arrow tip."""
+
+    def __init__(self, **kwargs):
+        digest_config(self, kwargs)
+        Square.__init__(self, side_length=self.length, **kwargs)
+        self.set_width(self.length)
+        self.set_height(self.length, stretch=True)
+
+
+class ArrowSquareFilledTip(ArrowFilledTip, ArrowSquareTip):
+    r"""Square arrow tip with filled tip."""
+    pass

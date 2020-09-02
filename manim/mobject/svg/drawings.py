@@ -41,8 +41,8 @@ from ...mobject.geometry import Rectangle
 from ...mobject.geometry import Square
 from ...mobject.mobject import Mobject
 from ...mobject.svg.svg_mobject import SVGMobject
-from ...mobject.svg.tex_mobject import TexMobject
-from ...mobject.svg.tex_mobject import TextMobject
+from ...mobject.svg.tex_mobject import MathTex
+from ...mobject.svg.tex_mobject import Tex
 from ...mobject.three_dimensions import Cube
 from ...mobject.types.vectorized_mobject import VGroup
 from ...mobject.types.vectorized_mobject import VMobject
@@ -111,7 +111,7 @@ class Speedometer(VMobject):
         for index, angle in enumerate(tick_angle_range):
             vect = rotate_vector(RIGHT, angle)
             tick = Line((1 - self.tick_length) * vect, vect)
-            label = TexMobject(str(10 * index))
+            label = MathTex(str(10 * index))
             label.set_height(self.tick_length)
             label.shift((1 + self.tick_length) * vect)
             self.add(tick, label)
@@ -255,7 +255,11 @@ class Laptop(VGroup):
         body.add(keyboard)
 
         screen_plate.stretch(self.screen_thickness / self.body_dimensions[2], dim=2)
-        screen = Rectangle(stroke_width=0, fill_color=BLACK, fill_opacity=1,)
+        screen = Rectangle(
+            stroke_width=0,
+            fill_color=BLACK,
+            fill_opacity=1,
+        )
         screen.replace(screen_plate, stretch=True)
         screen.scale_in_place(self.screen_width_to_screen_plate_width)
         screen.next_to(screen_plate, OUT, buff=0.1 * SMALL_BUFF)
@@ -466,7 +470,7 @@ class Bubble(SVGMobject):
         return self.content
 
     def write(self, *text):
-        self.add_content(TextMobject(*text))
+        self.add_content(Tex(*text))
         return self
 
     def resize_to_content(self):
@@ -593,7 +597,10 @@ class VectorizedEarth(SVGMobject):
     def __init__(self, **kwargs):
         SVGMobject.__init__(self, **kwargs)
         circle = Circle(
-            stroke_width=3, stroke_color=GREEN, fill_opacity=1, fill_color=BLUE_C,
+            stroke_width=3,
+            stroke_color=GREEN,
+            fill_opacity=1,
+            fill_color=BLUE_C,
         )
         circle.replace(self)
         self.add_to_back(circle)
@@ -605,8 +612,18 @@ class Logo(VMobject):
         "outer_radius": 2.0,
         "iris_background_blue": "#74C0E3",
         "iris_background_brown": "#8C6239",
-        "blue_spike_colors": ["#528EA3", "#3E6576", "#224C5B", BLACK,],
-        "brown_spike_colors": ["#754C24", "#603813", "#42210b", BLACK,],
+        "blue_spike_colors": [
+            "#528EA3",
+            "#3E6576",
+            "#224C5B",
+            BLACK,
+        ],
+        "brown_spike_colors": [
+            "#754C24",
+            "#603813",
+            "#42210b",
+            BLACK,
+        ],
         "n_spike_layers": 4,
         "n_spikes": 28,
         "spike_angle": TAU / 28,
@@ -637,13 +654,19 @@ class Logo(VMobject):
             fill_opacity=1,
             stroke_width=0,
         )
-        self.iris_background = VGroup(blue_iris_back, brown_iris_back,)
+        self.iris_background = VGroup(
+            blue_iris_back,
+            brown_iris_back,
+        )
         self.add(self.iris_background)
 
     def add_spikes(self):
         layers = VGroup()
         radii = np.linspace(
-            self.outer_radius, self.pupil_radius, self.n_spike_layers, endpoint=False,
+            self.outer_radius,
+            self.pupil_radius,
+            self.n_spike_layers,
+            endpoint=False,
         )
         radii[:2] = radii[1::-1]  # Swap first two
         if self.n_spike_layers > 2:
@@ -660,7 +683,10 @@ class Logo(VMobject):
                     fill_opacity=1,
                     stroke_width=0,
                 )
-                for vertex3 in (half_base * LEFT, ORIGIN,)
+                for vertex3 in (
+                    half_base * LEFT,
+                    ORIGIN,
+                )
             ]
             left_half_triangle = right_half_triangle.copy()
             left_half_triangle.flip(UP, about_point=ORIGIN)
@@ -678,9 +704,13 @@ class Logo(VMobject):
             else:
                 half_spikes = [
                     right_half_triangle.copy(),
-                    left_half_triangle.copy().rotate(90 * DEGREES, about_point=ORIGIN,),
+                    left_half_triangle.copy().rotate(
+                        90 * DEGREES,
+                        about_point=ORIGIN,
+                    ),
                     right_half_triangle.copy().rotate(
-                        90 * DEGREES, about_point=ORIGIN,
+                        90 * DEGREES,
+                        about_point=ORIGIN,
                     ),
                     left_half_triangle.copy(),
                 ]
@@ -872,11 +902,25 @@ class PlayingCard(VGroup):
 
     def get_number_design(self, value, symbol):
         num = int(value)
-        n_rows = {2: 2, 3: 3, 4: 2, 5: 2, 6: 3, 7: 3, 8: 3, 9: 4, 10: 4,}[num]
+        n_rows = {
+            2: 2,
+            3: 3,
+            4: 2,
+            5: 2,
+            6: 3,
+            7: 3,
+            8: 3,
+            9: 4,
+            10: 4,
+        }[num]
         n_cols = 1 if num in [2, 3] else 2
-        insertion_indices = {5: [0], 7: [0], 8: [0, 1], 9: [1], 10: [0, 2],}.get(
-            num, []
-        )
+        insertion_indices = {
+            5: [0],
+            7: [0],
+            8: [0, 1],
+            9: [1],
+            10: [0, 2],
+        }.get(num, [])
 
         top = self.get_top() + symbol.get_height() * DOWN
         bottom = self.get_bottom() + symbol.get_height() * UP
@@ -905,7 +949,7 @@ class PlayingCard(VGroup):
         return VGroup()
 
     def get_corner_numbers(self, value, symbol):
-        value_mob = TextMobject(value)
+        value_mob = Tex(value)
         width = self.get_width() / self.card_width_to_corner_num_width
         height = self.get_height() / self.card_height_to_corner_num_height
         value_mob.set_width(width)

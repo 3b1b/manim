@@ -13,8 +13,8 @@ from ..mobject.geometry import Line
 from ..mobject.geometry import Rectangle
 from ..mobject.geometry import RegularPolygon
 from ..mobject.number_line import NumberLine
-from ..mobject.svg.tex_mobject import TexMobject
-from ..mobject.svg.tex_mobject import TextMobject
+from ..mobject.svg.tex_mobject import MathTex
+from ..mobject.svg.tex_mobject import Tex
 from ..mobject.types.vectorized_mobject import VGroup
 from ..mobject.types.vectorized_mobject import VectorizedPoint
 from ..scene.scene import Scene
@@ -113,7 +113,7 @@ class GraphScene(Scene):
                 self.x_labeled_nums = [x for x in self.x_labeled_nums if x != 0]
             x_axis.add_numbers(*self.x_labeled_nums)
         if self.x_axis_label:
-            x_label = TextMobject(self.x_axis_label)
+            x_label = Tex(self.x_axis_label)
             x_label.next_to(
                 x_axis.get_tips() if self.include_tip else x_axis.get_tick_marks(),
                 self.x_label_position,
@@ -156,7 +156,7 @@ class GraphScene(Scene):
                 self.y_labeled_nums = [y for y in self.y_labeled_nums if y != 0]
             y_axis.add_numbers(*self.y_labeled_nums)
         if self.y_axis_label:
-            y_label = TextMobject(self.y_axis_label)
+            y_label = Tex(self.y_axis_label)
             y_label.next_to(
                 y_axis.get_corner(self.y_label_position),
                 self.y_label_position,
@@ -412,11 +412,11 @@ class GraphScene(Scene):
 
         Returns
         -------
-        TexMobject
+        :class:`~.MathTex`
             The LaTeX of the passed 'label' parameter
 
         """
-        label = TexMobject(label)
+        label = MathTex(label)
         color = color or graph.get_color()
         label.set_color(color)
         if x_val is None:
@@ -818,11 +818,11 @@ class GraphScene(Scene):
 
         labels = VGroup()
         if dx_label is not None:
-            group.dx_label = TexMobject(dx_label)
+            group.dx_label = MathTex(dx_label)
             labels.add(group.dx_label)
             group.add(group.dx_label)
         if df_label is not None:
-            group.df_label = TexMobject(df_label)
+            group.df_label = MathTex(df_label)
             labels.add(group.df_label)
             group.add(group.df_label)
 
@@ -863,7 +863,7 @@ class GraphScene(Scene):
         This method adds to the Scene:
             -- a Vertical line from the x-axis to the corresponding point on the graph/curve.
             -- a small vertical Triangle whose top point lies on the base of the vertical line
-            -- a TexMobject to be a label for the Line and Triangle, at the bottom of the Triangle.
+            -- a MathTex to be a label for the Line and Triangle, at the bottom of the Triangle.
         The scene needs to have the graph have the identifier/variable name self.v_graph.
 
         Parameters
@@ -892,9 +892,9 @@ class GraphScene(Scene):
         triangle.set_fill(color, 1)
         triangle.set_stroke(width=0)
         if label is None:
-            T_label = TexMobject(self.variable_point_label, fill_color=color)
+            T_label = MathTex(self.variable_point_label, fill_color=color)
         else:
-            T_label = TexMobject(label, fill_color=color)
+            T_label = MathTex(label, fill_color=color)
 
         T_label.next_to(triangle, DOWN)
         v_line = self.get_vertical_line_to_graph(x_val, self.v_graph, color=YELLOW)

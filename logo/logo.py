@@ -74,10 +74,10 @@ class Thumbnail(GraphScene):
             triangle.scale(0.1)
 
         #
-        x_label_p1 = TexMobject("a")
-        output_label_p1 = TexMobject("f(a)")
-        x_label_p2 = TexMobject("b")
-        output_label_p2 = TexMobject("f(b)")
+        x_label_p1 = MathTex("a")
+        output_label_p1 = MathTex("f(a)")
+        x_label_p2 = MathTex("b")
+        output_label_p2 = MathTex("f(b)")
         v_line_p1 = get_v_line(input_tracker_p1)
         v_line_p2 = get_v_line(input_tracker_p2)
         h_line_p1 = get_h_line(input_tracker_p1)
@@ -181,10 +181,5 @@ class Thumbnail(GraphScene):
         # adding manim
         picture = Group(*self.mobjects)
         picture.scale(0.6).to_edge(LEFT, buff=SMALL_BUFF)
-        manim = (
-            TextMobject("Manim")
-            .set_height(1.5)
-            .next_to(picture, RIGHT)
-            .shift(DOWN * 0.7)
-        )
+        manim = Tex("Manim").set_height(1.5).next_to(picture, RIGHT).shift(DOWN * 0.7)
         self.add(manim)
