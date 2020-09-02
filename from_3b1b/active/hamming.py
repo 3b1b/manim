@@ -309,29 +309,34 @@ class Thumbnail(Scene):
             phrase.set_width(12)
 
         phrases[0].to_edge(UP)
-        phrases[0].set_color(BLUE)
 
         phrases[1].set_width(10)
         phrases[1].set_color(GREY_C)
         phrases[1].next_to(phrases[0], DOWN, SMALL_BUFF)
 
         phrases[2].to_edge(DOWN, buff=MED_SMALL_BUFF)
-        phrases[2].set_color(BLUE_D)
 
-        bits = VGroup(*[
-            Integer(i)
-            for i in [
-                1, 1, 0, 1, 1, 0, 0, 1,
-                0, 1, 1, 0, 1, 1, 1, 1,
-            ]
-        ])
-        # bits[0].set_opacity(0)
-        bits.arrange_in_grid(2, 8, buff=SMALL_BUFF)
-        bits.set_width(9)
-        bits.next_to(phrases[1], DOWN)
+        phrases[0].set_color(BLUE_B)
+        phrases[2].set_color(BLUE_C)
+
+        bit_values = [
+            1, 1, 0, 1, 1, 0, 0, 1,
+            0, 1, 1, 0, 1, 1, 1, 1,
+        ]
+        bits = get_bit_grid(2, 8, bits=bit_values, buff=MED_LARGE_BUFF)
+        boxes = get_bit_grid_boxes(bits)
+        pos_labels = get_grid_position_labels(boxes)
+
+        pos_labels.set_color(GREY_B)
+        for bit, box in zip(bits, boxes):
+            bit.set_height(0.7 * box.get_height())
+
+        group = VGroup(boxes, bits, pos_labels)
+        group.set_width(10)
+        group.next_to(phrases[1], DOWN)
 
         self.add(phrases)
-        self.add(bits)
+        self.add(group)
 
 
 class DiskOfBits(Scene):
@@ -4767,12 +4772,24 @@ class EndScreen(Scene):
 
 class Thumbnail2(Scene):
     def construct(self):
-        # TODO, improve
-        title = TextMobject("Hamming codes\\\\", "part 2")
-        title.set_width(FRAME_WIDTH - 4)
-        title[0].set_color(BLUE)
-        title[1].set_color(GREY_B)
-        self.add(title)
+        code = ImageMobject("HammingCodeOneLine")
+        code.set_width(FRAME_WIDTH - 3)
+        self.add(code)
+
+        words = VGroup(
+            # TextMobject("Why one line\\\\"),
+            # TextMobject("finds bit errors"),
+            TextMobject("Hamming codes\\\\"),
+            TextMobject("in one(ish) line"),
+        )
+        words.set_width(FRAME_WIDTH - 3)
+        words[0].to_edge(UP, buff=0.5)
+        words[1].to_edge(DOWN, buff=0.5)
+
+        words[0].set_color(BLUE_C)
+        words[1].set_color(BLUE_B)
+
+        self.add(words)
 
 
 class Part1Wrapper(Scene):
