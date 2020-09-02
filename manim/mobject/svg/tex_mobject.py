@@ -1,18 +1,20 @@
 __all__ = [
     "TexSymbol",
-    "SingleStringTexMobject",
+    "SingleStringMathTex",
+    "MathTex",
+    "Tex",
+    "BulletedList",
+    "MathTexFromPresetString",
+    "Title",
     "TexMobject",
     "TextMobject",
-    "BulletedList",
-    "TexMobjectFromPresetString",
-    "Title",
 ]
 
 
 from functools import reduce
 import operator as op
 
-from ... import config
+from ... import config, logger
 from ...constants import *
 from ...mobject.geometry import Line
 from ...mobject.svg.svg_mobject import SVGMobject
@@ -32,7 +34,7 @@ class TexSymbol(VMobjectFromSVGPathstring):
     pass
 
 
-class SingleStringTexMobject(SVGMobject):
+class SingleStringMathTex(SVGMobject):
     CONFIG = {
         "stroke_width": 0,
         "fill_opacity": 1.0,
@@ -113,7 +115,7 @@ class SingleStringTexMobject(SVGMobject):
 
     def remove_stray_braces(self, tex):
         """
-        Makes TexMobject resiliant to unmatched { at start
+        Makes MathTex resilient to unmatched { at start
         """
         # "\{" does not count (it's a brace literal), but "\\{" counts (it's a new line and then brace)
         num_lefts = tex.count("{") - tex.count("\\{") + tex.count("\\\\{")
@@ -139,7 +141,7 @@ class SingleStringTexMobject(SVGMobject):
         return self
 
 
-class TexMobject(SingleStringTexMobject):
+class MathTex(SingleStringMathTex):
     CONFIG = {
         "arg_separator": " ",
         "substrings_to_isolate": [],
@@ -150,7 +152,7 @@ class TexMobject(SingleStringTexMobject):
         digest_config(self, kwargs)
         tex_strings = self.break_up_tex_strings(tex_strings)
         self.tex_strings = tex_strings
-        SingleStringTexMobject.__init__(
+        SingleStringMathTex.__init__(
             self, self.arg_separator.join(tex_strings), **kwargs
         )
         self.break_up_by_substrings()
@@ -183,13 +185,13 @@ class TexMobject(SingleStringTexMobject):
         config = dict(self.CONFIG)
         config["alignment"] = ""
         for tex_string in self.tex_strings:
-            sub_tex_mob = SingleStringTexMobject(tex_string, **config)
+            sub_tex_mob = SingleStringMathTex(tex_string, **config)
             num_submobs = len(sub_tex_mob.submobjects)
             new_index = curr_index + num_submobs
             if num_submobs == 0:
                 # For cases like empty tex_strings, we want the corresponing
-                # part of the whole TexMobject to be a VectorizedPoint
-                # positioned in the right part of the TexMobject
+                # part of the whole MathTex to be a VectorizedPoint
+                # positioned in the right part of the MathTex
                 sub_tex_mob.submobjects = [VectorizedPoint()]
                 last_submob_index = min(curr_index, len(self.submobjects) - 1)
                 sub_tex_mob.move_to(self.submobjects[last_submob_index], RIGHT)
@@ -237,7 +239,7 @@ class TexMobject(SingleStringTexMobject):
     def index_of_part(self, part):
         split_self = self.split()
         if part not in split_self:
-            raise Exception("Trying to get index of part not in TexMobject")
+            raise Exception("Trying to get index of part not in MathTex")
         return split_self.index(part)
 
     def index_of_part_by_tex(self, tex, **kwargs):
@@ -248,7 +250,7 @@ class TexMobject(SingleStringTexMobject):
         self.submobjects.sort(key=lambda m: m.get_tex_string())
 
 
-class TextMobject(TexMobject):
+class Tex(MathTex):
     CONFIG = {
         "alignment": "\\centering",
         "arg_separator": "",
@@ -256,7 +258,7 @@ class TextMobject(TexMobject):
     }
 
 
-class BulletedList(TextMobject):
+class BulletedList(Tex):
     CONFIG = {
         "buff": MED_LARGE_BUFF,
         "dot_scale_factor": 2,
@@ -266,9 +268,9 @@ class BulletedList(TextMobject):
 
     def __init__(self, *items, **kwargs):
         line_separated_items = [s + "\\\\" for s in items]
-        TextMobject.__init__(self, *line_separated_items, **kwargs)
+        Tex.__init__(self, *line_separated_items, **kwargs)
         for part in self:
-            dot = TexMobject("\\cdot").scale(self.dot_scale_factor)
+            dot = MathTex("\\cdot").scale(self.dot_scale_factor)
             dot.next_to(part[0], LEFT, SMALL_BUFF)
             part.add_to_back(dot)
         self.arrange(DOWN, aligned_edge=LEFT, buff=self.buff)
@@ -288,7 +290,7 @@ class BulletedList(TextMobject):
                 other_part.set_fill(opacity=opacity)
 
 
-class TexMobjectFromPresetString(TexMobject):
+class MathTexFromPresetString(MathTex):
     CONFIG = {
         # To be filled by subclasses
         "tex": None,
@@ -297,11 +299,11 @@ class TexMobjectFromPresetString(TexMobject):
 
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
-        TexMobject.__init__(self, self.tex, **kwargs)
+        MathTex.__init__(self, self.tex, **kwargs)
         self.set_color(self.color)
 
 
-class Title(TextMobject):
+class Title(Tex):
     CONFIG = {
         "scale_factor": 1,
         "include_underline": True,
@@ -312,7 +314,7 @@ class Title(TextMobject):
     }
 
     def __init__(self, *text_parts, **kwargs):
-        TextMobject.__init__(self, *text_parts, **kwargs)
+        Tex.__init__(self, *text_parts, **kwargs)
         self.scale(self.scale_factor)
         self.to_edge(UP)
         if self.include_underline:
@@ -324,3 +326,21 @@ class Title(TextMobject):
                 underline.set_width(self.underline_width)
             self.add(underline)
             self.underline = underline
+
+
+class TexMobject(MathTex):
+    def __init__(self, *tex_strings, **kwargs):
+        logger.warning(
+            "TexMobject has been deprecated (due to its confusing name)"
+            "in favour of MathTex. Please use MathTex instead!"
+        )
+        MathTex.__init__(self, *tex_strings, **kwargs)
+
+
+class TextMobject(Tex):
+    def __init__(self, *text_parts, **kwargs):
+        logger.warning(
+            "TextMobject has been deprecated (due to its confusing name)"
+            "in favour of Tex. Please use Tex instead!"
+        )
+        Tex.__init__(self, *text_parts, **kwargs)

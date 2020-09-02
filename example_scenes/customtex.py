@@ -11,8 +11,8 @@ class TexTemplateFromCLI(Scene):
     """
 
     def construct(self):
-        text = TexMobject(r"\vv{vb}")
-        # text=TextMobject(r"$\vv{vb}$")
+        text = MathTex(r"\vv{vb}")
+        # text=Tex(r"$\vv{vb}$")
         self.play(Write(text))
 
 
@@ -26,6 +26,6 @@ class InCodeTexTemplate(Scene):
         tpl.append_package(["esvect", ["f"]])
         config["tex_template"] = tpl
 
-        # text=TextMobject(r"$\vv{vb}$")
-        text = TexMobject(r"\vv{vb}")
+        # text=Tex(r"$\vv{vb}$")
+        text = MathTex(r"\vv{vb}")
         self.play(Write(text))

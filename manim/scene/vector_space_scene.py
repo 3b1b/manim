@@ -24,8 +24,8 @@ from ..mobject.matrix import Matrix
 from ..mobject.matrix import VECTOR_LABEL_SCALE_FACTOR
 from ..mobject.matrix import vector_coordinate_label
 from ..mobject.mobject import Mobject
-from ..mobject.svg.tex_mobject import TexMobject
-from ..mobject.svg.tex_mobject import TextMobject
+from ..mobject.svg.tex_mobject import MathTex
+from ..mobject.svg.tex_mobject import Tex
 from ..mobject.types.vectorized_mobject import VGroup
 from ..mobject.types.vectorized_mobject import VMobject
 from ..scene.scene import Scene
@@ -227,7 +227,7 @@ class VectorScene(Scene):
         **kwargs
             Any valid keyword arguments of get_vector_label:
                 vector,
-                label (str,TexMobject)
+                label (str,MathTex)
                 at_tip (bool=False),
                 direction (str="left"),
                 rotate (bool),
@@ -279,13 +279,13 @@ class VectorScene(Scene):
 
         Returns
         -------
-        TexMobject
-            The TexMobject of the label.
+        MathTex
+            The MathTex of the label.
         """
-        if not isinstance(label, TexMobject):
+        if not isinstance(label, MathTex):
             if len(label) == 1:
                 label = "\\vec{\\textbf{%s}}" % label
-            label = TexMobject(label)
+            label = MathTex(label)
             if color is None:
                 color = vector.get_color()
             label.set_color(color)
@@ -318,8 +318,8 @@ class VectorScene(Scene):
         vector : Vector
             The vector for which the label must be added.
 
-        label : TexMobject, str
-            The TexMobject/string of the label.
+        label : MathTex, str
+            The MathTex/string of the label.
 
         animate : bool, optional
             Whether or not to animate the labelling w/ Write
@@ -329,8 +329,8 @@ class VectorScene(Scene):
 
         Returns
         -------
-        TexMobject
-            The TexMobject of the label.
+        :class:`~.MathTex`
+            The MathTex of the label.
         """
         label = self.get_vector_label(vector, label, **kwargs)
         if animate:
@@ -517,9 +517,16 @@ class LinearTransformationScene(VectorScene):
         },
         "background_plane_kwargs": {
             "color": GREY,
-            "axis_config": {"stroke_color": LIGHT_GREY,},
-            "axis_config": {"color": GREY,},
-            "background_line_style": {"stroke_color": GREY, "stroke_width": 1,},
+            "axis_config": {
+                "stroke_color": LIGHT_GREY,
+            },
+            "axis_config": {
+                "color": GREY,
+            },
+            "background_line_style": {
+                "stroke_color": GREY,
+                "stroke_width": 1,
+            },
         },
         "show_coordinates": False,
         "show_basis_vectors": True,
@@ -554,7 +561,8 @@ class LinearTransformationScene(VectorScene):
             self.add_transformable_mobject(self.plane)
         if self.show_basis_vectors:
             self.basis_vectors = self.get_basis_vectors(
-                i_hat_color=self.i_hat_color, j_hat_color=self.j_hat_color,
+                i_hat_color=self.i_hat_color,
+                j_hat_color=self.j_hat_color,
             )
             self.moving_vectors += list(self.basis_vectors)
             self.i_hat, self.j_hat = self.basis_vectors
@@ -759,13 +767,13 @@ class LinearTransformationScene(VectorScene):
         vector : Vector
             The vector for which the label must be added.
 
-        label : TexMobject,str
-            The TexMobject/string of the label.
+        label : Union[:class:`~.MathTex`, :class:`str`]
+            The MathTex/string of the label.
 
-        transformation_name : str, TexMobject, optional
+        transformation_name : Union[:class:`str`, :class:`~.MathTex`], optional
             The name to give the transformation as a label.
 
-        new_label : TexMobject,str, optional
+        new_label : Union[:class:`str`, :class:`~.MathTex`], optional
             What the label should display after a Linear Transformation
 
         **kwargs
@@ -773,8 +781,8 @@ class LinearTransformationScene(VectorScene):
 
         Returns
         -------
-        TexMobject
-            The TexMobject of the label.
+        :class:`~.MathTex`
+            The MathTex of the label.
         """
         label_mob = self.label_vector(vector, label, **kwargs)
         if new_label:
@@ -799,7 +807,7 @@ class LinearTransformationScene(VectorScene):
 
         Parameters
         ----------
-        title : str,TexMobject,TextMobject
+        title : Union[:class:`str`, :class:`~.MathTex`, :class:`~.Tex`]
             What the title should be.
 
         scale_factor : int, float, optional
@@ -814,7 +822,7 @@ class LinearTransformationScene(VectorScene):
             The scene with the title added to it.
         """
         if not isinstance(title, Mobject):
-            title = TextMobject(title).scale(scale_factor)
+            title = Tex(title).scale(scale_factor)
         title.to_edge(UP)
         title.add_background_rectangle()
         if animate:

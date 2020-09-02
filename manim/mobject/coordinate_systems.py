@@ -10,7 +10,7 @@ from ..mobject.functions import ParametricFunction
 from ..mobject.geometry import Arrow
 from ..mobject.geometry import Line
 from ..mobject.number_line import NumberLine
-from ..mobject.svg.tex_mobject import TexMobject
+from ..mobject.svg.tex_mobject import MathTex
 from ..mobject.types.vectorized_mobject import VGroup
 from ..utils.config_ops import digest_config
 from ..utils.config_ops import merge_dicts_recursively
@@ -73,7 +73,7 @@ class CoordinateSystem:
         )
 
     def get_axis_label(self, label_tex, axis, edge, direction, buff=MED_SMALL_BUFF):
-        label = TexMobject(label_tex)
+        label = MathTex(label_tex)
         label.next_to(axis.get_edge_center(edge), direction, buff=buff)
         label.shift_onto_screen(buff=MED_SMALL_BUFF)
         return label

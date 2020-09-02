@@ -17,15 +17,15 @@ from manim import *
 
 class OpeningManimExample(Scene):
     def construct(self):
-        title = TextMobject("This is some \\LaTeX")
-        basel = TexMobject("\\sum_{n=1}^\\infty " "\\frac{1}{n^2} = \\frac{\\pi^2}{6}")
+        title = Tex("This is some \\LaTeX")
+        basel = MathTex("\\sum_{n=1}^\\infty " "\\frac{1}{n^2} = \\frac{\\pi^2}{6}")
         VGroup(title, basel).arrange(DOWN)
         self.play(
             Write(title), FadeInFrom(basel, UP),
         )
         self.wait()
 
-        transform_title = TextMobject("That was a transform")
+        transform_title = Tex("That was a transform")
         transform_title.to_corner(UP + LEFT)
         self.play(
             Transform(title, transform_title),
@@ -34,7 +34,7 @@ class OpeningManimExample(Scene):
         self.wait()
 
         grid = NumberPlane()
-        grid_title = TextMobject("This is a grid")
+        grid_title = Tex("This is a grid")
         grid_title.scale(1.5)
         grid_title.move_to(transform_title)
 
@@ -46,7 +46,7 @@ class OpeningManimExample(Scene):
         )
         self.wait()
 
-        grid_transform_title = TextMobject(
+        grid_transform_title = Tex(
             "That was a non-linear function \\\\" "applied to the grid"
         )
         grid_transform_title.move_to(grid_title, UL)
@@ -87,12 +87,8 @@ class WarpSquare(Scene):
 
 class WriteStuff(Scene):
     def construct(self):
-        example_text = TextMobject(
-            "This is a some text", tex_to_color_map={"text": YELLOW}
-        )
-        example_tex = TexMobject(
-            "\\sum_{k=1}^\\infty {1 \\over k^2} = {\\pi^2 \\over 6}",
-        )
+        example_text = Tex("This is a some text", tex_to_color_map={"text": YELLOW})
+        example_tex = MathTex("\\sum_{k=1}^\\infty {1 \\over k^2} = {\\pi^2 \\over 6}",)
         group = VGroup(example_text, example_tex)
         group.arrange(DOWN)
         group.set_width(config["frame_width"] - 2 * LARGE_BUFF)
@@ -131,7 +127,7 @@ class VDictExample(Scene):
         self.play(ShowCreation(my_dict))
         self.wait()
 
-        text = TextMobject("Some text").set_color(GREEN).next_to(square, DOWN)
+        text = Tex("Some text").set_color(GREEN).next_to(square, DOWN)
 
         # add a key-value pair by wrapping it in a single-element list of tuple
         # after attrs branch is merged, it will be easier like `.add(t=text)`
@@ -148,7 +144,7 @@ class VDictExample(Scene):
         self.wait()
 
         # also supports python dict styled reassignment
-        my_dict["t"] = TextMobject("Some other text").set_color(BLUE)
+        my_dict["t"] = Tex("Some other text").set_color(BLUE)
         self.wait()
 
         # remove submoject by key

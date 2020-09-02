@@ -2,7 +2,7 @@ __all__ = ["DecimalNumber", "Integer"]
 
 
 from ..constants import *
-from ..mobject.svg.tex_mobject import SingleStringTexMobject
+from ..mobject.svg.tex_mobject import SingleStringMathTex
 from ..mobject.types.vectorized_mobject import VMobject
 
 
@@ -36,18 +36,18 @@ class DecimalNumber(VMobject):
             else:
                 num_string = num_string[1:]
 
-        self.add(*[SingleStringTexMobject(char, **kwargs) for char in num_string])
+        self.add(*[SingleStringMathTex(char, **kwargs) for char in num_string])
 
         # Add non-numerical bits
         if self.show_ellipsis:
-            self.add(SingleStringTexMobject("\\dots"))
+            self.add(SingleStringMathTex("\\dots"))
 
         if num_string.startswith("-"):
             minus = self.submobjects[0]
             minus.next_to(self.submobjects[1], LEFT, buff=self.digit_to_digit_buff)
 
         if self.unit is not None:
-            self.unit_sign = SingleStringTexMobject(self.unit, color=self.color)
+            self.unit_sign = SingleStringMathTex(self.unit, color=self.color)
             self.add(self.unit_sign)
 
         self.arrange(buff=self.digit_to_digit_buff, aligned_edge=DOWN)
@@ -79,7 +79,11 @@ class DecimalNumber(VMobject):
         config = dict(
             [
                 (attr, getattr(self, attr))
-                for attr in ["include_sign", "group_with_commas", "num_decimal_places",]
+                for attr in [
+                    "include_sign",
+                    "group_with_commas",
+                    "num_decimal_places",
+                ]
             ]
         )
         config.update(kwargs)
