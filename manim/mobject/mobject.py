@@ -83,7 +83,7 @@ class Mobject(Container):
 
         Parameters
         ----------
-        mobjects : List[:class:`Mobject`]
+        mobjects : :class:`Mobject`
             The mobjects to add.
 
         Returns
@@ -146,7 +146,7 @@ class Mobject(Container):
 
         Parameters
         ----------
-        mobjects : List[:class:`Mobject`]
+        mobjects : :class:`Mobject`
             The mobjects to remove.
 
         Returns
