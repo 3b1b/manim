@@ -24,7 +24,7 @@ jobs:
 
       - name: Install black
         run: pip install black
-        
+
       - name: Get files
         id: files-changes-in-pr
         shell: powershell
@@ -35,7 +35,7 @@ jobs:
           echo "$commitEndpoint"
           $commits = Invoke-WebRequest -Uri "$commitEndpoint" | ConvertFrom-Json
           bash -c "git diff --name-only HEAD HEAD~$($commits.count)>/d/changes.txt"
-          
+
       - name: Run Black on top of latest commit
         shell: bash
         run: |
@@ -57,7 +57,7 @@ jobs:
               black $file
             fi
           done </d/changes.txt
-      
+
       - name: Check File and Report the Files Not formatted
         shell: powershell
         run: |
