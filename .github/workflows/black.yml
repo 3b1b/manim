@@ -65,7 +65,7 @@ jobs:
           $postContents = @{title="Automated PR: Autoformat with black";
           head="manimcommunity:$($pushBranch)";
           base="master";
-          body="This an automated pull requests. Files Changed are `n `n ```````n$($filechange)`n``````"
+          body="This an automated pull request. Files Changed are `n `n ```````n$($filechange)`n``````"
           } | ConvertTo-Json -Compress
           echo "$postContents"
           Invoke-WebRequest `
