@@ -59,6 +59,7 @@ Mobjects, Scenes, and Animations
 #. Most :code:`get_` and :code:`set_` methods have been removed in favor of instance attributes and properties
 #. The :code:`Container` class has been made into an AbstractBaseClass, i.e. in cannot be instantiated.  Instead, use one of its children classes
 #. The ``TextMobject`` and ``TexMobject`` objects have been deprecated, due to their confusing names, in favour of ``Tex`` and ``MathTex``. You can still, however, continue to use ``TextMobject`` and ``TexMobject``, albeit with Deprecation Warnings constantly reminding you to switch.
+#. Add a :code:`Variable` class for displaying text that continuously updates to reflect the value of a python variable.
 
 
 
