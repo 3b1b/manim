@@ -32,6 +32,8 @@ and follow the instructions according to your operating system.
 
 Here is an example manim script:
 ```python
+from manim import *
+
 class SquareToCircle(Scene):
     def construct(self):
         circle = Circle()
