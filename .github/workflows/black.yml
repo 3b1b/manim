@@ -63,7 +63,7 @@ jobs:
           $pushBranch="black-$($blackVersion)-$($date)"
           $filechange=(gc "D:/diffmod.txt").split() -join "`n`n"
           $postContents = @{title="Automated PR: Autoformat with black";
-          head="naveen521kk:$($pushBranch)";
+          head="manimcommunity:$($pushBranch)";
           base="master";
           body="This an automated pull requests. Files Changed are `n `n ```````n$($filechange)`n``````"
           } | ConvertTo-Json -Compress
@@ -71,5 +71,5 @@ jobs:
           Invoke-WebRequest `
             -Method POST `
             -Headers @{ "Accept" = "application/vnd.github.v3+json"; "Authorization"= "token $($env:access_token)"}`
-            -Uri https://api.github.com/repos/naveen521kk/manim/pulls `
+            -Uri https://api.github.com/repos/manimcommunity/manim/pulls `
             -Body "$($postContents)"
