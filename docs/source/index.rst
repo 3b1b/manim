@@ -24,6 +24,7 @@ information here will make it easier for newcomers to get started using
    reference
    examples
    tutorials
+   reporting_bugs
    contributing
 
 Navigation

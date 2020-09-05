@@ -51,6 +51,9 @@ cloned this repo, run the following:
 .. code-block:: bash
 
    python3 -m pip install -r requirements.txt
+   python3 -m pip install -e .
+
+Please see :doc:`contributing` for more details about contributing to Manim.
 
 .. warning::
     If you want to contribute to ``manim-community`` and have cloned the
