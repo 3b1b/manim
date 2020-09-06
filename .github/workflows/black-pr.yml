@@ -34,7 +34,7 @@ jobs:
           $commitEndpoint=$($payload.pull_request._links.commits.href)
           echo "$commitEndpoint"
           $commits = Invoke-WebRequest -Uri "$commitEndpoint" | ConvertFrom-Json
-          bash -c "git diff --name-only HEAD HEAD~$($commits.count)>/d/changes.txt"
+          bash -c "git diff --name-only HEAD~$($commits.count) HEAD>/d/changes.txt"
 
       - name: Run Black on top of latest commit
         shell: bash
@@ -45,14 +45,14 @@ jobs:
           content=$(</d/changes.txt)
           while read file
           do
-            if [ $(python -c "print('${file}'[-2:])") == "py" ]
+            if [[ ($(python -c "print('${file}'[-3:])") == ".py") && (-f ${file}) ]]
             then
               black --diff $file
             fi
           done </d/changes.txt
           while read file
           do
-            if [ $(python -c "print('${file}'[-2:])") == "py" ]
+            if [[ ($(python -c "print('${file}'[-3:])") == ".py") && (-f ${file}) ]]
             then
               black $file
             fi
