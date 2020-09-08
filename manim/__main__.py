@@ -111,13 +111,16 @@ def get_scene_classes_from_module(module):
 
 def get_module(file_name):
     if file_name == "-":
+        # Since this feature is used for rapid testing, using Scene Caching would be a
+        # hindrance in this case.
+        file_writer_config["disable_caching"] = True
         module = types.ModuleType("input_scenes")
         logger.info(
             "Enter the animation's code & end with an EOF (CTRL+D on Linux/Unix, CTRL+Z on Windows):"
         )
         code = sys.stdin.read()
         if not code.startswith("from manim import"):
-            logger.warn(
+            logger.warning(
                 "Didn't find an import statement for Manim. Importing automatically..."
             )
             code = "from manim import *\n" + code
