@@ -194,7 +194,7 @@ class Variable(VMobject):
         self, var, label, var_type=DecimalNumber, num_decimal_places=2, **kwargs
     ):
 
-        self.label = MathTex(label) if isinstance(label,str) else label
+        self.label = MathTex(label) if isinstance(label, str) else label
         equals = MathTex("=").next_to(self.label, RIGHT)
         self.label.add(equals)
 

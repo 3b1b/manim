@@ -42,7 +42,9 @@ class NumberLine(Line):
         "tip_height": 0.25,
         "add_start": 0,  # extend number line by this amount at its starting point
         "add_end": 0,  # extend number line by this amount at its end point
-        "decimal_number_config": {"num_decimal_places": 0,},
+        "decimal_number_config": {
+            "num_decimal_places": 0,
+        },
         "exclude_zero_from_default_numbers": False,
     }
 
@@ -84,7 +86,8 @@ class NumberLine(Line):
             ]
         )
         self.add(
-            self.tick_marks, self.big_tick_marks,
+            self.tick_marks,
+            self.big_tick_marks,
         )
 
     def get_tick(self, x, size=None):
@@ -97,7 +100,10 @@ class NumberLine(Line):
         return result
 
     def get_tick_marks(self):
-        return VGroup(*self.tick_marks, *self.big_tick_marks,)
+        return VGroup(
+            *self.tick_marks,
+            *self.big_tick_marks,
+        )
 
     def get_tick_numbers(self):
         u = -1 if self.include_tip and self.add_end == 0 else 1
@@ -140,7 +146,10 @@ class NumberLine(Line):
     def default_numbers_to_display(self):
         if self.numbers_to_show is not None:
             return self.numbers_to_show
-        numbers = np.arange(np.floor(self.leftmost_tick), np.ceil(self.x_max),)
+        numbers = np.arange(
+            np.floor(self.leftmost_tick),
+            np.ceil(self.x_max),
+        )
         if self.exclude_zero_from_default_numbers:
             numbers = numbers[numbers != 0]
         return numbers
@@ -149,7 +158,8 @@ class NumberLine(Line):
         self, number, number_config=None, scale_val=None, direction=None, buff=None
     ):
         number_config = merge_dicts_recursively(
-            self.decimal_number_config, number_config or {},
+            self.decimal_number_config,
+            number_config or {},
         )
         if scale_val is None:
             scale_val = self.number_scale_val
@@ -184,7 +194,9 @@ class UnitInterval(NumberLine):
         "tick_frequency": 0.1,
         "numbers_with_elongated_ticks": [0, 1],
         "number_at_center": 0.5,
-        "decimal_number_config": {"num_decimal_places": 1,},
+        "decimal_number_config": {
+            "num_decimal_places": 1,
+        },
     }
 
     def __init__(self, **kwargs):

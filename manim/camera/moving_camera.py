@@ -41,7 +41,8 @@ class MovingCamera(Camera):
         if frame is None:
             frame = ScreenRectangle(height=config["frame_height"])
             frame.set_stroke(
-                self.default_frame_stroke_color, self.default_frame_stroke_width,
+                self.default_frame_stroke_color,
+                self.default_frame_stroke_width,
             )
         self.frame = frame
         Camera.__init__(self, **kwargs)

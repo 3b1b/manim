@@ -59,7 +59,8 @@ class SceneFileWriter(object):
                 if not file_writer_config["custom_folders"]:
                     image_dir = guarantee_existence(
                         os.path.join(
-                            file_writer_config["images_dir"], module_directory,
+                            file_writer_config["images_dir"],
+                            module_directory,
                         )
                     )
                 else:
@@ -93,7 +94,11 @@ class SceneFileWriter(object):
             )
             if not file_writer_config["custom_folders"]:
                 self.partial_movie_directory = guarantee_existence(
-                    os.path.join(movie_dir, "partial_movie_files", scene_name,)
+                    os.path.join(
+                        movie_dir,
+                        "partial_movie_files",
+                        scene_name,
+                    )
                 )
             else:
                 self.partial_movie_directory = guarantee_existence(
@@ -252,7 +257,8 @@ class SceneFileWriter(object):
         diff = new_end - curr_end
         if diff > 0:
             segment = segment.append(
-                AudioSegment.silent(int(np.ceil(diff * 1000))), crossfade=0,
+                AudioSegment.silent(int(np.ceil(diff * 1000))),
+                crossfade=0,
             )
         self.audio_segment = segment.overlay(
             new_segment,
@@ -444,7 +450,8 @@ class SceneFileWriter(object):
         self.writing_process.stdin.close()
         self.writing_process.wait()
         shutil.move(
-            self.temp_partial_movie_file_path, self.partial_movie_file_path,
+            self.temp_partial_movie_file_path,
+            self.partial_movie_file_path,
         )
         logger.info(
             f"Animation {self.scene.num_plays} : Partial movie file written in {self.partial_movie_file_path}"
@@ -536,7 +543,8 @@ class SceneFileWriter(object):
             # Makes sure sound file length will match video file
             self.add_audio_segment(AudioSegment.silent(0))
             self.audio_segment.export(
-                sound_file_path, bitrate="312k",
+                sound_file_path,
+                bitrate="312k",
             )
             temp_file_path = movie_file_path.replace(".", "_temp.")
             commands = [

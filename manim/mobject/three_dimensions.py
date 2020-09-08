@@ -67,7 +67,13 @@ class ParametricSurface(VGroup):
                 v1, v2 = v_values[j : j + 2]
                 face = ThreeDVMobject()
                 face.set_points_as_corners(
-                    [[u1, v1, 0], [u2, v1, 0], [u2, v2, 0], [u1, v2, 0], [u1, v1, 0],]
+                    [
+                        [u1, v1, 0],
+                        [u2, v1, 0],
+                        [u2, v2, 0],
+                        [u1, v2, 0],
+                        [u1, v1, 0],
+                    ]
                 )
                 faces.add(face)
                 face.u_index = i
@@ -124,7 +130,10 @@ class Cube(VGroup):
 
     def generate_points(self):
         for vect in IN, OUT, LEFT, RIGHT, UP, DOWN:
-            face = Square(side_length=self.side_length, shade_in_3d=True,)
+            face = Square(
+                side_length=self.side_length,
+                shade_in_3d=True,
+            )
             face.flip()
             face.shift(self.side_length * OUT / 2.0)
             face.apply_matrix(z_to_vector(vect))

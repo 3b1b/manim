@@ -7,7 +7,7 @@ This library uses rich for coloured log outputs.
 """
 
 
-__all__ = ['logger', 'console']
+__all__ = ["logger", "console"]
 
 
 import configparser

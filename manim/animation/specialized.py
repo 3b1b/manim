@@ -34,7 +34,10 @@ class MoveCar(ApplyMethod):
         super().begin()
         car = self.mobject
         distance = get_norm(
-            op.sub(self.target_mobject.get_right(), self.starting_mobject.get_right(),)
+            op.sub(
+                self.target_mobject.get_right(),
+                self.starting_mobject.get_right(),
+            )
         )
         if not self.moving_forward:
             distance *= -1
@@ -67,7 +70,11 @@ class Broadcast(LaggedStart):
         digest_config(self, kwargs)
         circles = VGroup()
         for x in range(self.n_circles):
-            circle = Circle(radius=self.big_radius, stroke_color=BLACK, stroke_width=0,)
+            circle = Circle(
+                radius=self.big_radius,
+                stroke_color=BLACK,
+                stroke_width=0,
+            )
             circle.add_updater(lambda c: c.move_to(focal_point))
             circle.save_state()
             circle.set_width(self.small_radius * 2)

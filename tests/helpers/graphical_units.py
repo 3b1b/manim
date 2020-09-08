@@ -24,7 +24,7 @@ def set_test_scene(scene_object, module_name):
     Examples
     --------
     Normal usage::
-    
+
         set_test_scene(DotTest, "geometry")
     """
 

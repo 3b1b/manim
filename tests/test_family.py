@@ -37,7 +37,11 @@ def test_family():
 
 def test_overlapping_family():
     """Check that each member of the family is only gathered once."""
-    mob, child1, child2, = Mobject(), Mobject(), Mobject(),
+    mob, child1, child2, = (
+        Mobject(),
+        Mobject(),
+        Mobject(),
+    )
     gchild1, gchild2, gchild_common = Mobject(), Mobject(), Mobject()
     child1.add(gchild1, gchild_common)
     child2.add(gchild2, gchild_common)
@@ -57,7 +61,11 @@ def test_shift_family():
     """
     # Note shift() needs the mobject to have a non-empty `points` attribute, so
     # we cannot use a plain Mobject or VMobject.  We use Circle instead.
-    mob, child1, child2, = Circle(), Circle(), Circle(),
+    mob, child1, child2, = (
+        Circle(),
+        Circle(),
+        Circle(),
+    )
     gchild1, gchild2, gchild_common = Circle(), Circle(), Circle()
 
     child1.add(gchild1, gchild_common)

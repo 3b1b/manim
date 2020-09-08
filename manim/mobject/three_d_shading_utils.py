@@ -39,7 +39,8 @@ def get_3d_vmob_unit_normal(vmob, point_index):
     im1 = i - 1 if i > 0 else (n_points - 2)
     ip1 = i + 1 if i < (n_points - 1) else 1
     return get_unit_normal(
-        vmob.points[ip1] - vmob.points[i], vmob.points[im1] - vmob.points[i],
+        vmob.points[ip1] - vmob.points[i],
+        vmob.points[im1] - vmob.points[i],
     )
 
 

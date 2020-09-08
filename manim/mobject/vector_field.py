@@ -41,8 +41,8 @@ DEFAULT_SCALAR_FIELD_COLORS = [BLUE_E, GREEN, YELLOW, RED]
 
 
 def get_colored_background_image(
-        scalar_field_func,
-        number_to_rgb_func,
+    scalar_field_func,
+    number_to_rgb_func,
 ):
     ph = config["pixel_height"]
     pw = config["pixel_width"]
@@ -64,7 +64,10 @@ def get_colored_background_image(
 
 
 def get_rgb_gradient_function(
-    min_value=0, max_value=1, colors=[BLUE, RED], flip_alphas=True,  # Why?
+    min_value=0,
+    max_value=1,
+    colors=[BLUE, RED],
+    flip_alphas=True,  # Why?
 ):
     rgbs = np.array(list(map(color_to_rgb, colors)))
 
@@ -235,7 +238,9 @@ class StreamLines(VGroup):
 
         if self.color_by_arc_length:
             len_to_rgb = get_rgb_gradient_function(
-                self.min_arc_length, self.max_arc_length, colors=self.colors,
+                self.min_arc_length,
+                self.max_arc_length,
+                colors=self.colors,
             )
             for line in self:
                 arc_length = line.get_arc_length()
@@ -305,7 +310,11 @@ class AnimatedStreamLines(VGroup):
     CONFIG = {
         "lag_range": 4,
         "line_anim_class": ShowPassingFlash,
-        "line_anim_config": {"run_time": 4, "rate_func": linear, "time_width": 0.3,},
+        "line_anim_config": {
+            "run_time": 4,
+            "rate_func": linear,
+            "time_width": 0.3,
+        },
     }
 
     def __init__(self, stream_lines, **kwargs):

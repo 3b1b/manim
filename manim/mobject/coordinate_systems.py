@@ -27,13 +27,13 @@ class CoordinateSystem:
 
     def __init__(self, dim=2):
         self.dimension = dim
-        if not hasattr(self, 'x_min'):
+        if not hasattr(self, "x_min"):
             self.x_min = -config["frame_x_radius"]
-        if not hasattr(self, 'x_max'):
+        if not hasattr(self, "x_max"):
             self.x_max = config["frame_x_radius"]
-        if not hasattr(self, 'y_min'):
+        if not hasattr(self, "y_min"):
             self.y_min = -config["frame_y_radius"]
-        if not hasattr(self, 'y_max'):
+        if not hasattr(self, "y_max"):
             self.y_max = config["frame_y_radius"]
 
     def coords_to_point(self, *coords):
@@ -83,7 +83,8 @@ class CoordinateSystem:
 
     def get_axis_labels(self, x_label_tex="x", y_label_tex="y"):
         self.axis_labels = VGroup(
-            self.get_x_axis_label(x_label_tex), self.get_y_axis_label(y_label_tex),
+            self.get_x_axis_label(x_label_tex),
+            self.get_y_axis_label(y_label_tex),
         )
         return self.axis_labels
 
@@ -152,7 +153,9 @@ class Axes(VGroup, CoordinateSystem):
 
     def create_axis(self, min_val, max_val, axis_config):
         new_config = merge_dicts_recursively(
-            self.axis_config, {"x_min": min_val, "x_max": max_val}, axis_config,
+            self.axis_config,
+            {"x_min": min_val, "x_max": max_val},
+            axis_config,
         )
         return NumberLine(**new_config)
 
@@ -193,7 +196,6 @@ class Axes(VGroup, CoordinateSystem):
 
 class ThreeDAxes(Axes):
     CONFIG = {
-
         "z_axis_config": {},
         "z_min": -3.5,
         "z_max": 3.5,
@@ -230,7 +232,10 @@ class ThreeDAxes(Axes):
     def set_axis_shading(self):
         def make_func(axis):
             vect = self.light_source
-            return lambda: (axis.get_edge_center(-vect), axis.get_edge_center(vect),)
+            return lambda: (
+                axis.get_edge_center(-vect),
+                axis.get_edge_center(vect),
+            )
 
         for axis in self:
             for submob in axis.family_members_with_points():
@@ -280,10 +285,15 @@ class NumberPlane(Axes):
             self.faded_line_style = style
 
         self.background_lines, self.faded_lines = self.get_lines()
-        self.background_lines.set_style(**self.background_line_style,)
-        self.faded_lines.set_style(**self.faded_line_style,)
+        self.background_lines.set_style(
+            **self.background_line_style,
+        )
+        self.faded_lines.set_style(
+            **self.faded_line_style,
+        )
         self.add_to_back(
-            self.faded_lines, self.background_lines,
+            self.faded_lines,
+            self.background_lines,
         )
 
     def get_lines(self):
@@ -300,10 +310,16 @@ class NumberPlane(Axes):
         y_freq = self.y_line_frequency
 
         x_lines1, x_lines2 = self.get_lines_parallel_to_axis(
-            x_axis, y_axis, x_freq, self.faded_line_ratio,
+            x_axis,
+            y_axis,
+            x_freq,
+            self.faded_line_ratio,
         )
         y_lines1, y_lines2 = self.get_lines_parallel_to_axis(
-            y_axis, x_axis, y_freq, self.faded_line_ratio,
+            y_axis,
+            x_axis,
+            y_freq,
+            self.faded_line_ratio,
         )
         lines1 = VGroup(*x_lines1, *y_lines1)
         lines2 = VGroup(*x_lines2, *y_lines2)
@@ -416,7 +432,8 @@ class ComplexPlane(NumberPlane):
                 axis = self.get_y_axis()
                 value = z.imag
                 kwargs = merge_dicts_recursively(
-                    kwargs, {"number_config": {"unit": "i"}},
+                    kwargs,
+                    {"number_config": {"unit": "i"}},
                 )
             else:
                 axis = self.get_x_axis()
