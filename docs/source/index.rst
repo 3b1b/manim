@@ -18,7 +18,6 @@ information here will make it easier for newcomers to get started using
 
 .. toctree::
    :maxdepth: 2
-   :caption: Documentation
 
    installation
    reference
