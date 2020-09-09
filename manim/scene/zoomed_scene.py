@@ -126,7 +126,7 @@ class ZoomedScene(MovingCameraScene):
             The Animation of the Zoomed Display popping out.
         """
         display = self.zoomed_display
-        display.save_state(use_deepcopy=True)
+        display.save_state()
         display.replace(self.zoomed_camera.frame, stretch=True)
         return ApplyMethod(display.restore)
 
