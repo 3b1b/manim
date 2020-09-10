@@ -52,9 +52,10 @@ class CustomEncoder(json.JSONEncoder):
             return repr(obj)
         elif hasattr(obj, "__dict__"):
             temp = getattr(obj, "__dict__")
-            # MappingProxy is not supported by the Json Encoder
+            # MappingProxy is scene-caching nightmare. It contains all of the object methods and attributes. We skip it as the mechanism will at some point process the object, but instancied
+            # Indeed, there is certainly no case where scene-caching will recieve only a non instancied object, as this is never used in the library or encouraged to be used user-side.
             if isinstance(temp, MappingProxyType):
-                return dict(temp)
+                return "MappingProxy"
             return self._check_iterable(temp)
         elif isinstance(obj, np.uint8):
             return int(obj)
