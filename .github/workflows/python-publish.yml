@@ -1,0 +1,16 @@
+name: Upload Python Package
+
+on:
+  release:
+    types:
+      - created
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    #TODO: Set an API key from PyPI `PYPI_API_KEY` in secrets tab.
+    - name: Build and publish to pypi
+      uses: JRubics/poetry-publish@v1
+      with:
+        pypi_token:  ${{ secrets.PYPI_API_KEY }}

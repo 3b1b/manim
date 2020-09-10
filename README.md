@@ -1,4 +1,4 @@
-![logo](logo/cropped.png)
+![logo](https://raw.githubusercontent.com/ManimCommunity/manim/master/logo/cropped.png)
 
 ![CI](https://github.com/ManimCommunity/manim/workflows/CI/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/manimce/badge/?version=latest)](https://manimce.readthedocs.io/en/latest/?badge=latest)
@@ -55,18 +55,15 @@ manim example.py SquareToCircle -pl
 
 You should see your video player pop up and play a simple scene where a square
 is transformed into a circle.  You can find some more simple examples in the
-[GitHub
-repository](https://github.com/ManimCommunity/manim/tree/master/example_scenes).
-Visit the [official
-gallery](https://manimce.readthedocs.io/en/latest/examples.html) for more
-advanced examples.
+[GitHub repository](https://github.com/ManimCommunity/manim/tree/master/example_scenes).
+Visit the [official gallery](https://manimce.readthedocs.io/en/latest/examples.html) for more advanced examples.
 
 
 ## Command line arguments
 
 The general usage of manim is as follows:
 
-![](./readme-assets/command.png)
+![manim-illustration](https://raw.githubusercontent.com/ManimCommunity/manim/master/readme-assets/command.png)
 
 The `-p` flag in the command above is for previewing, meaning the video file will automatically open when it is done rendering. The `-l` flag is for a faster rendering at a lower quality.
 
@@ -94,6 +91,8 @@ please open an issue.
 Is always welcome. In particular, there is a dire need for tests and
 documentation. For guidelines please see the
 [documentation](https://manimce.readthedocs.io/en/latest/contributing.html).
+This project uses [Poetry](https://python-poetry.org/docs/) for management. You need to have poetry installed and available in your environment.
+You can find more information about it in its [Documentation](https://manimce.readthedocs.io/en/latest/installation/for_dev.html)
 
 
 ## License

@@ -15,6 +15,7 @@ Installing dependencies
    installation/mac
    installation/linux
    installation/troubleshooting
+   installation/for_dev
 
 
 .. _installing-manim:
@@ -50,8 +51,7 @@ cloned this repo, run the following:
 
 .. code-block:: bash
 
-   python3 -m pip install -r requirements.txt
-   python3 -m pip install -e .
+   python3 -m pip install .
 
 Please see :doc:`contributing` for more details about contributing to Manim.
 
@@ -60,4 +60,5 @@ Please see :doc:`contributing` for more details about contributing to Manim.
     repository to your local device, please uninstall the pip-installed version
     of ``manim-community``, if you had installed it previously.
     This is to avoid any accidental usage of the pip-installed version when developing
-    and testing on your local copy of the repository.
+    and testing on your local copy of the repository. This warning doesn't apply for
+	users who use [poetry](https://python-poetry.org).
