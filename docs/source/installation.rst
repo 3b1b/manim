@@ -56,9 +56,10 @@ cloned this repo, run the following:
 Please see :doc:`contributing` for more details about contributing to Manim.
 
 .. warning::
-    If you want to contribute to ``manim-community`` and have cloned the
-    repository to your local device, please uninstall the pip-installed version
-    of ``manim-community``, if you had installed it previously.
-    This is to avoid any accidental usage of the pip-installed version when developing
-    and testing on your local copy of the repository. This warning doesn't apply for
-	users who use [poetry](https://python-poetry.org).
+
+   If you want to contribute to ``manim-community`` and have cloned the
+   repository to your local device, please uninstall the pip-installed version
+   of ``manim-community``, if you had installed it previously.
+   This is to avoid any accidental usage of the pip-installed version when developing
+   and testing on your local copy of the repository. This warning doesn't apply for
+   users who use `poetry <https://python-poetry.org>`_.
