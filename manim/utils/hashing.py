@@ -41,9 +41,15 @@ class CustomEncoder(json.JSONEncoder):
                 # NOTE : All module types objects are removed, because otherwise it throws ValueError: Circular reference detected if not. TODO
                 if isinstance(cvardict[i], ModuleType):
                     del cvardict[i]
-            return self._check_iterable(
-                {"code": inspect.getsource(obj), "nonlocals": cvardict}
-            )
+            try:
+                code = inspect.getsource(obj)
+            except OSError:
+                # This happens when rendering videos included in the documentation
+                # within doctests and should be replaced by a solution avoiding
+                # hash collision (due to the same, empty, code strings) at some point.
+                # See https://github.com/ManimCommunity/manim/pull/402.
+                code = ""
+            return self._check_iterable({"code": code, "nonlocals": cvardict})
         elif isinstance(obj, np.ndarray):
             if obj.size > 1000:
                 obj = np.resize(obj, (100, 100))

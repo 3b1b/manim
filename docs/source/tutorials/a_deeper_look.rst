@@ -64,9 +64,21 @@ high quality.  Manim will take considerably longer to render this file, and it
 will play it once it's done since we are using the ``-p`` flag.  The output
 should look like this:
 
-.. image:: ../_static/quickstart/high_quality.gif
-    :align: center
-    :alt: high quality scene output
+.. manim:: SquareToCircle3
+   :quality: high
+
+   class SquareToCircle3(Scene):
+       def construct(self):
+           circle = Circle()                    # create a circle
+           circle.set_fill(PINK, opacity=0.5)   # set color and transparency
+
+           square = Square()                    # create a square
+           square.flip(RIGHT)                   # flip horizontally
+           square.rotate(-3 * TAU / 8)          # rotate a certain amount
+
+           self.play(ShowCreation(square))      # animate the creation of the square
+           self.play(Transform(square, circle)) # interpolate the square into the circle
+           self.play(FadeOut(square))           # fade out animation
 
 And the folder structure should look as follows.
 

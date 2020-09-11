@@ -9,10 +9,27 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+
+import os
+import sys
+from distutils.sysconfig import get_python_lib
+
+
+sys.path.insert(0, os.path.abspath("."))
+
+
+if os.environ.get("READTHEDOCS") == "True":
+    # we need to add ffmpeg to the path
+    site_path = get_python_lib()
+    ffmpeg_path = os.path.join(site_path, "imageio_ffmpeg", "binaries")
+    # the included binary is named ffmpeg-linux..., create a symlink
+    [ffmpeg_bin] = [
+        file for file in os.listdir(ffmpeg_path) if file.startswith("ffmpeg-")
+    ]
+    os.symlink(
+        os.path.join(ffmpeg_path, ffmpeg_bin), os.path.join(ffmpeg_path, "ffmpeg")
+    )
+    os.environ["PATH"] += os.pathsep + ffmpeg_path
 
 
 # -- Project information -----------------------------------------------------
@@ -33,6 +50,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.autosummary",
     "sphinx.ext.doctest",
+    "manim_directive",
 ]
 
 # Automatically generate stub pages when using the .. autosummary directive
@@ -68,7 +86,7 @@ extensions.append("guzzle_sphinx_theme")
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 # This specifies any additional css files that will override the theme's
-html_css_files = ['custom.css']
+html_css_files = ["custom.css"]

@@ -892,17 +892,24 @@ class ArrowTip(VMobject):
         NotImplementedError: Has to be implemented in inheriting subclasses.
 
     Instead, use one of the pre-defined ones, or make
-    a custom one like this::
+    a custom one like this:
+
+    .. manim:: CustomTipExample
+        :display_source:
 
         >>> class MyCustomArrowTip(ArrowTip, RegularPolygon):
         ...     def __init__(self, **kwargs):
         ...         RegularPolygon.__init__(self, n=5, **kwargs)
         ...         self.set_width(self.length)
         ...         self.set_height(self.length, stretch=True)
-        >>> arr = Arrow(np.array([0, 0, 0]), np.array([1, 1, 0]),
+        >>> arr = Arrow(np.array([-2, -2, 0]), np.array([2, 2, 0]),
         ...             tip_shape=MyCustomArrowTip)
         >>> isinstance(arr.tip, RegularPolygon)
         True
+        >>> from manim import Scene
+        >>> class CustomTipExample(Scene):
+        ...     def construct(self):
+        ...         self.play(ShowCreation(arr))
 
     Using a class inherited from :class:`ArrowTip` to get a non-filled
     tip is a shorthand to manually specifying the arrow tip style as follows::

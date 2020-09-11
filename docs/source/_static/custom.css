@@ -7,3 +7,20 @@ img.align-center {
     margin-bottom: 20px;
     margin-top: 20px;
 }
+
+.manim-video {
+    width: 100%;
+}
+
+.manim-example pre {
+    border-left: none;
+    margin: 0;
+    padding: 0 0 14px 0;
+}
+
+.manim-example {
+    border-left: 2px solid #eee;
+    border-radius: 4px;
+    padding: 14px 0 14px 20px;
+    margin: 20px 0;
+}
