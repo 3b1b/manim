@@ -68,6 +68,8 @@ from os.path import relpath
 
 import shutil
 
+classnamedict = {}
+
 
 class ManimDirective(Directive):
     r"""The ``.. manim::`` directive.
@@ -90,7 +92,13 @@ class ManimDirective(Directive):
     def run(self):
         from manim import config
 
+        global classnamedict
+
         clsname = self.arguments[0]
+        if clsname not in classnamedict:
+            classnamedict[clsname] = 1
+        else:
+            classnamedict[clsname] += 1
 
         display_source = "display_source" in self.options
         save_as_gif = "save_as_gif" in self.options
@@ -147,6 +155,7 @@ class ManimDirective(Directive):
         media_dir = os.path.join("source", "media")
         images_dir = os.path.join(media_dir, "images")
         video_dir = os.path.join(media_dir, "videos")
+        output_file = f"{clsname}-{classnamedict[clsname]}"
 
         file_writer_config_code = [
             f'config["frame_rate"] = {frame_rate}',
@@ -157,6 +166,7 @@ class ManimDirective(Directive):
             f'file_writer_config["video_dir"] = "{video_dir}"',
             f'file_writer_config["save_last_frame"] = {save_last_frame}',
             f'file_writer_config["save_as_gif"] = {save_as_gif}',
+            f'file_writer_config["output_file"] = "{output_file}"',
         ]
 
         user_code = self.content
@@ -175,23 +185,23 @@ class ManimDirective(Directive):
 
         # copy video file to output directory
         if not (save_as_gif or save_last_frame):
-            filename = f"{clsname}.mp4"
+            filename = f"{output_file}.mp4"
             filesrc = os.path.join(video_dir, qualitydir, filename)
             destfile = os.path.join(dest_dir, filename)
             shutil.copyfile(filesrc, destfile)
         elif save_as_gif:
-            filename = f"{clsname}.gif"
+            filename = f"{output_file}.gif"
             filesrc = os.path.join(video_dir, qualitydir, filename)
         elif save_last_frame:
-            filename = f"{clsname}.png"
+            filename = f"{output_file}.png"
             filesrc = os.path.join(images_dir, filename)
         else:
             raise ValueError("Invalid combination of render flags received.")
 
         rendered_template = jinja2.Template(TEMPLATE).render(
-            clsname=clsname,
             display_source=display_source,
             filesrc=filesrc[6:],
+            output_file=output_file,
             save_last_frame=save_last_frame,
             save_as_gif=save_as_gif,
             source_block=source_block,
@@ -211,7 +221,7 @@ def setup(app):
     setup.confdir = app.confdir
     app.add_directive("manim", ManimDirective)
 
-    metadata = {"parallel_read_safe": True, "parallel_write_safe": True}
+    metadata = {"parallel_read_safe": False, "parallel_write_safe": True}
     return metadata
 
 
@@ -227,7 +237,7 @@ TEMPLATE = r"""
 {% if not (save_as_gif or save_last_frame) %}
 .. raw:: html
 
-    <video class="manim-video" controls loop autoplay src="./{{ clsname }}.mp4"></video>
+    <video class="manim-video" controls loop autoplay src="./{{ output_file }}.mp4"></video>
 {% elif save_as_gif %}
 .. image:: {{ filesrc }}
     :align: center
