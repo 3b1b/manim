@@ -154,6 +154,12 @@ class ManimDirective(Directive):
 
         media_dir = os.path.join(setup.confdir, "media")
         images_dir = os.path.join(media_dir, "images")
+        tex_dir = os.path.join(media_dir, "tex")
+        if not os.path.exists(tex_dir):
+            os.mkdir(tex_dir)
+        text_dir = os.path.join(media_dir, "text")
+        if not os.path.exists(text_dir):
+            os.mkdir(text_dir)
         video_dir = os.path.join(media_dir, "videos")
         output_file = f"{clsname}-{classnamedict[clsname]}"
 
@@ -163,6 +169,8 @@ class ManimDirective(Directive):
             f'config["pixel_width"] = {pixel_width}',
             f'file_writer_config["media_dir"] = "{media_dir}"',
             f'file_writer_config["images_dir"] = "{images_dir}"',
+            f'file_writer_config["tex_dir"] = "{tex_dir}"',
+            f'file_writer_config["text_dir"] = "{text_dir}"',
             f'file_writer_config["video_dir"] = "{video_dir}"',
             f'file_writer_config["save_last_frame"] = {save_last_frame}',
             f'file_writer_config["save_as_gif"] = {save_as_gif}',
