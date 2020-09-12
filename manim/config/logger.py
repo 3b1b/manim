@@ -18,16 +18,33 @@ from rich.logging import RichHandler
 from rich.theme import Theme
 from rich import print as printf
 from rich import errors, color
+import json
+import copy
 
-from .config_utils import _run_config
+
+class JSONFormatter(logging.Formatter):
+    """Subclass of `:class:`logging.Formatter`, to build our own format of the logs (JSON)."""
+
+    def format(self, record):
+        record_c = copy.deepcopy(record)
+        if record_c.args:
+            for arg in record_c.args:
+                record_c.args[arg] = "<>"
+        return json.dumps(
+            {
+                "levelname": record_c.levelname,
+                "module": record_c.module,
+                "message": super().format(record_c),
+            }
+        )
 
 
-def parse_theme(fp):
-    config_parser.read(fp)
-    theme = dict(config_parser["logger"])
-    # replaces `_` by `.` as rich understands it
+def _parse_theme(config_logger):
     theme = dict(
-        zip([key.replace("_", ".") for key in theme.keys()], list(theme.values()))
+        zip(
+            [key.replace("_", ".") for key in config_logger.keys()],
+            list(config_logger.values()),
+        )
     )
 
     theme["log.width"] = None if theme["log.width"] == "-1" else int(theme["log.width"])
@@ -35,7 +52,7 @@ def parse_theme(fp):
     theme["log.height"] = (
         None if theme["log.height"] == "-1" else int(theme["log.height"])
     )
-    theme["log.timestamps"] = config_parser["logger"].getboolean("log.timestamps")
+    theme["log.timestamps"] = False
     try:
         customTheme = Theme(
             {
@@ -49,51 +66,54 @@ def parse_theme(fp):
         printf(
             "[logging.level.error]It seems your colour configuration couldn't be parsed. Loading the default color configuration...[/logging.level.error]"
         )
-    return customTheme, theme
+    return customTheme
 
 
-config_items = _run_config()
-config_parser, successfully_read_files = config_items[1], config_items[-1]
-try:
-    customTheme, themedict = parse_theme(successfully_read_files)
-    console = Console(
-        theme=customTheme,
-        record=True,
-        height=themedict["log.height"],
-        width=themedict["log.width"],
+def set_rich_logger(config_logger, verbosity):
+    """Will set the RichHandler of the logger.
+
+    Parameter
+    ----------
+    config_logger :class:
+        Config object of the logger.
+    """
+    theme = _parse_theme(config_logger)
+    global console
+    console = Console(theme=theme)
+    # These keywords Are Highlighted specially.
+    RichHandler.KEYWORDS = [
+        "Played",
+        "animations",
+        "scene",
+        "Reading",
+        "Writing",
+        "script",
+        "arguments",
+        "Invalid",
+        "Aborting",
+        "module",
+        "File",
+        "Rendering",
+        "Rendered",
+    ]
+    rich_handler = RichHandler(
+        console=console, show_time=config_logger.getboolean("log_timestamps")
     )
-except KeyError:
-    console = Console(record=True)
-    printf(
-        "[logging.level.warning]No cfg file found, creating one in "
-        + successfully_read_files[0]
-        + " [/logging.level.warning]"
-    )
+    global logger
+    rich_handler.setLevel(verbosity)
+    logger.addHandler(rich_handler)
 
-# These keywords Are Highlighted specially.
-RichHandler.KEYWORDS = [
-    "Played",
-    "animations",
-    "scene",
-    "Reading",
-    "Writing",
-    "script",
-    "arguments",
-    "Invalid",
-    "Aborting",
-    "module",
-    "File",
-    "Rendering",
-    "Rendered",
-]
-logging.basicConfig(
-    level="NOTSET",
-    format="%(message)s",
-    datefmt="[%X]",
-    handlers=[RichHandler(console=console, show_time=themedict["log.timestamps"])],
-)
 
-logger = logging.getLogger("rich")
+def set_file_logger(log_file_path):
+    file_handler = logging.FileHandler(log_file_path, mode="w")
+    file_handler.setFormatter(JSONFormatter())
+    global logger
+    logger.addHandler(file_handler)
+
+
+logger = logging.getLogger("manim")
+# The console is set to None as it will be changed by set_rich_logger.
+console = None
 
 # TODO : This is only temporary to keep the terminal output clean when working with ImageMobject and matplotlib plots
 logging.getLogger("PIL").setLevel(logging.INFO)

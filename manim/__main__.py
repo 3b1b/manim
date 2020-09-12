@@ -14,6 +14,7 @@ from .config import cfg_subcmds
 from .scene.scene import Scene
 from .utils.sounds import play_error_sound, play_finish_sound
 from .utils.file_ops import open_file as open_media_file
+from . import constants
 
 
 def open_file_if_needed(file_writer):

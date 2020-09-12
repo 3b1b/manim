@@ -69,9 +69,15 @@ def _parse_file_writer_config(config_parser, args):
             default.getboolean(boolean_opt) if attr is None else attr
         )
     # for str_opt in ['media_dir', 'video_dir', 'tex_dir', 'text_dir']:
-    for str_opt in ["media_dir", "log_dir"]:
+    for str_opt in ["media_dir"]:
         attr = getattr(args, str_opt)
         fw_config[str_opt] = os.path.relpath(default[str_opt]) if attr is None else attr
+    attr = getattr(args, "log_dir")
+    fw_config["log_dir"] = (
+        os.path.join(fw_config["media_dir"], default["log_dir"])
+        if attr is None
+        else attr
+    )
     dir_names = {
         "video_dir": "videos",
         "images_dir": "images",

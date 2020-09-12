@@ -244,7 +244,7 @@ def get_hash_from_play_call(
         for json_val in [camera_json, animations_list_json, current_mobjects_list_json]
     ]
     t_end = perf_counter()
-    logger.debug("Hashing done in {:.5f} s.".format(t_end - t_start))
+    logger.debug("Hashing done in %(time)s s.", {"time": str(t_end - t_start)[:8]})
     # This will reset ALREADY_PROCESSED_ID as all the hashing processus is finished.
     ALREADY_PROCESSED_ID = {}
     return "{}_{}_{}".format(hash_camera, hash_animations, hash_current_mobjects)
@@ -291,7 +291,7 @@ def get_hash_from_wait_call(
         # This will reset ALREADY_PROCESSED_ID as all the hashing processus is finished.
         ALREADY_PROCESSED_ID = {}
         t_end = perf_counter()
-        logger.debug("Hashing done in {:.5f} s.".format(t_end - t_start))
+        logger.debug("Hashing done in %(time)s s.", {"time": str(t_end - t_start)[:8]})
         return "{}_{}{}_{}".format(
             hash_camera,
             str(wait_time).replace(".", "-"),
@@ -300,7 +300,7 @@ def get_hash_from_wait_call(
         )
     ALREADY_PROCESSED_ID = {}
     t_end = perf_counter()
-    logger.debug("Hashing done in {:.5f} s.".format(t_end - t_start))
+    logger.debug("Hashing done in %(time)s s.", {"time": str(t_end - t_start)[:8]})
     return "{}_{}_{}".format(
         hash_camera, str(wait_time).replace(".", "-"), hash_current_mobjects
     )

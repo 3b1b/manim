@@ -454,7 +454,8 @@ class SceneFileWriter(object):
             self.partial_movie_file_path,
         )
         logger.info(
-            f"Animation {self.scene.num_plays} : Partial movie file written in {self.partial_movie_file_path}"
+            f"Animation {self.scene.num_plays} : Partial movie file written in %(path)s",
+            {"path": {self.partial_movie_file_path}},
         )
 
     def is_already_cached(self, hash_invocation):
@@ -616,21 +617,12 @@ class SceneFileWriter(object):
         for f in cached_partial_movies:
             os.remove(f)
         logger.info(
-            f"Cache flushed. {len(cached_partial_movies)} file(s) deleted in {self.partial_movie_directory}."
+            f"Cache flushed. {len(cached_partial_movies)} file(s) deleted in %(par_dir)s.",
+            {"par_dir": self.partial_movie_directory},
         )
 
     def print_file_ready_message(self, file_path):
         """
         Prints the "File Ready" message to STDOUT.
         """
-        logger.info("\nFile ready at {}\n".format(file_path))
-
-        if file_writer_config["log_to_file"]:
-            self.write_log()
-
-    def write_log(self):
-        log_file_path = os.path.join(
-            file_writer_config["log_dir"], f"{self.get_default_scene_name()}.log"
-        )
-        console.save_text(log_file_path)
-        logger.info("Log written to {}\n".format(log_file_path))
+        logger.info("\nFile ready at %(file_path)s\n", {"file_path": file_path})

@@ -18,8 +18,10 @@ import colour
 from .. import constants
 from .config_utils import _run_config, _init_dirs, _from_command_line
 
-from .logger import logger
+from .logger import set_rich_logger, set_file_logger, logger
 from ..utils.tex import TexTemplate, TexTemplateFromFile
+
+__all__ = ["file_writer_config", "config", "camera_config", "tempconfig"]
 
 
 config = None
@@ -150,3 +152,14 @@ if _from_command_line():
         _init_dirs(file_writer_config)
 config = _parse_config(config_parser, args)
 camera_config = config
+
+# Set the different loggers
+set_rich_logger(config_parser["logger"], file_writer_config["verbosity"])
+if file_writer_config["log_to_file"]:
+    # IMPORTANT note about file name : The log file name will be the scene_name get from the args (contained in file_writer_config). So it can differ from the real name of the scene.
+    log_file_path = os.path.join(
+        file_writer_config["log_dir"],
+        "".join(file_writer_config["scene_names"]) + ".log",
+    )
+    set_file_logger(log_file_path)
+    logger.info("Log file wil be saved in %(logpath)s", {"logpath": log_file_path})

@@ -816,7 +816,8 @@ class Scene(Container):
                 self.play_hashes_list.append(hash_play)
                 if self.file_writer.is_already_cached(hash_play):
                     logger.info(
-                        f"Animation {self.num_plays} : Using cached data (hash : {hash_play})"
+                        f"Animation {self.num_plays} : Using cached data (hash : %(hash_play)s)",
+                        {"hash_play": hash_play},
                     )
                     file_writer_config["skip_animations"] = True
             else:
