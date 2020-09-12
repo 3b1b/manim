@@ -4,7 +4,6 @@
 __all__ = ["Camera", "BackgroundColoredVMobjectDisplayer"]
 
 
-from functools import reduce
 import itertools as it
 import operator as op
 import time
@@ -493,7 +492,7 @@ class Camera(object):
 
         Returns
         -------
-        Cairo.Context.Context
+        cairo.Context
             The cached cairo context.
         """
         return self.pixel_array_to_cairo_context.get(id(pixel_array), None)
@@ -505,7 +504,7 @@ class Camera(object):
         ----------
         pixel_array : np.array
             The pixel array to cache
-        ctx : Cairo.Context.Context
+        ctx : cairo.Context
             The context to cache it into.
         """
         self.pixel_array_to_cairo_context[id(pixel_array)] = ctx
