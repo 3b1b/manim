@@ -152,8 +152,18 @@ class ManimDirective(Directive):
         ]
         source_block = "\n".join(source_block)
 
-        media_dir = os.path.join("source", "media")
+        media_dir = os.path.join(setup.confdir, "media")
+        if not os.path.exists(media_dir):
+            os.mkdir(media_dir)
         images_dir = os.path.join(media_dir, "images")
+        if not os.path.exists(images_dir):
+            os.mkdir(images_dir)
+        tex_dir = os.path.join(media_dir, "tex")
+        if not os.path.exists(tex_dir):
+            os.mkdir(tex_dir)
+        text_dir = os.path.join(media_dir, "text")
+        if not os.path.exists(text_dir):
+            os.mkdir(text_dir)
         video_dir = os.path.join(media_dir, "videos")
         output_file = f"{clsname}-{classnamedict[clsname]}"
 
@@ -163,6 +173,8 @@ class ManimDirective(Directive):
             f'config["pixel_width"] = {pixel_width}',
             f'file_writer_config["media_dir"] = "{media_dir}"',
             f'file_writer_config["images_dir"] = "{images_dir}"',
+            f'file_writer_config["tex_dir"] = "{tex_dir}"',
+            f'file_writer_config["text_dir"] = "{text_dir}"',
             f'file_writer_config["video_dir"] = "{video_dir}"',
             f'file_writer_config["save_last_frame"] = {save_last_frame}',
             f'file_writer_config["save_as_gif"] = {save_as_gif}',
@@ -200,7 +212,7 @@ class ManimDirective(Directive):
 
         rendered_template = jinja2.Template(TEMPLATE).render(
             display_source=display_source,
-            filesrc=filesrc[6:],
+            filesrc_rel=os.path.relpath(filesrc, setup.confdir),
             output_file=output_file,
             save_last_frame=save_last_frame,
             save_as_gif=save_as_gif,
@@ -239,10 +251,10 @@ TEMPLATE = r"""
 
     <video class="manim-video" controls loop autoplay src="./{{ output_file }}.mp4"></video>
 {% elif save_as_gif %}
-.. image:: {{ filesrc }}
+.. image:: /{{ filesrc_rel }}
     :align: center
 {% elif save_last_frame %}
-.. image:: {{ filesrc }}
+.. image:: /{{ filesrc_rel }}
     :align: center
 {% endif %}
 
