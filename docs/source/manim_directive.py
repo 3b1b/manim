@@ -153,7 +153,11 @@ class ManimDirective(Directive):
         source_block = "\n".join(source_block)
 
         media_dir = os.path.join(setup.confdir, "media")
+        if not os.path.exists(media_dir):
+            os.mkdir(media_dir)
         images_dir = os.path.join(media_dir, "images")
+        if not os.path.exists(images_dir):
+            os.mkdir(images_dir)
         tex_dir = os.path.join(media_dir, "tex")
         if not os.path.exists(tex_dir):
             os.mkdir(tex_dir)
