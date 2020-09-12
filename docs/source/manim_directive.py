@@ -152,7 +152,7 @@ class ManimDirective(Directive):
         ]
         source_block = "\n".join(source_block)
 
-        media_dir = os.path.join("source", "media")
+        media_dir = os.path.join(setup.confdir, "media")
         images_dir = os.path.join(media_dir, "images")
         video_dir = os.path.join(media_dir, "videos")
         output_file = f"{clsname}-{classnamedict[clsname]}"
@@ -200,7 +200,7 @@ class ManimDirective(Directive):
 
         rendered_template = jinja2.Template(TEMPLATE).render(
             display_source=display_source,
-            filesrc=filesrc[6:],
+            filesrc_rel=os.path.relpath(filesrc, setup.confdir),
             output_file=output_file,
             save_last_frame=save_last_frame,
             save_as_gif=save_as_gif,
@@ -239,10 +239,10 @@ TEMPLATE = r"""
 
     <video class="manim-video" controls loop autoplay src="./{{ output_file }}.mp4"></video>
 {% elif save_as_gif %}
-.. image:: {{ filesrc }}
+.. image:: /{{ filesrc_rel }}
     :align: center
 {% elif save_last_frame %}
-.. image:: {{ filesrc }}
+.. image:: /{{ filesrc_rel }}
     :align: center
 {% endif %}
 
