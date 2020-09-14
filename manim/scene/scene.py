@@ -71,6 +71,7 @@ class Scene(Container):
         )
         self.play_hashes_list = []
         self.mobjects = []
+        self.original_skipping_status = file_writer_config["skip_animations"]
         # TODO, remove need for foreground mobjects
         self.foreground_mobjects = []
         self.num_plays = 0
@@ -88,7 +89,7 @@ class Scene(Container):
         self.tear_down()
         # We have to reset these settings in case of multiple renders.
         file_writer_config["skip_animations"] = False
-        self.original_skipping_status = file_writer_config["skip_animations"]
+
         self.file_writer.finish()
         self.print_end_message()
 
@@ -785,10 +786,10 @@ class Scene(Container):
         """
 
         if file_writer_config["from_animation_number"]:
-            if self.num_plays == file_writer_config["from_animation_number"]:
-                file_writer_config["skip_animations"] = False
+            if self.num_plays < file_writer_config["from_animation_number"]:
+                file_writer_config["skip_animations"] = True
         if file_writer_config["upto_animation_number"]:
-            if self.num_plays >= file_writer_config["upto_animation_number"]:
+            if self.num_plays > file_writer_config["upto_animation_number"]:
                 file_writer_config["skip_animations"] = True
                 raise EndSceneEarlyException()
 
@@ -806,8 +807,13 @@ class Scene(Container):
 
         def wrapper(self, *args, **kwargs):
             self.revert_to_original_skipping_status()
+            self.update_skipping_status()
             animations = self.compile_play_args_to_animation_list(*args, **kwargs)
             self.add_mobjects_from_animations(animations)
+            if file_writer_config["skip_animations"]:
+                logger.debug(f"Skipping animation {self.num_plays}")
+                func(self, *args, **kwargs)
+                return
             if not file_writer_config["disable_caching"]:
                 mobjects_on_scene = self.get_mobjects()
                 hash_play = get_hash_from_play_call(
@@ -841,6 +847,7 @@ class Scene(Container):
 
         def wrapper(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
             self.revert_to_original_skipping_status()
+            self.update_skipping_status()
             if not file_writer_config["disable_caching"]:
                 hash_wait = get_hash_from_wait_call(
                     self, self.camera, duration, stop_condition, self.get_mobjects()
@@ -880,7 +887,6 @@ class Scene(Container):
         """
 
         def wrapper(self, *args, **kwargs):
-            self.update_skipping_status()
             allow_write = not file_writer_config["skip_animations"]
             self.file_writer.begin_animation(allow_write)
             func(self, *args, **kwargs)

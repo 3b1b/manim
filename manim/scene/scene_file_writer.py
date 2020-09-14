@@ -44,6 +44,7 @@ class SceneFileWriter(object):
         self.init_output_directories()
         self.init_audio()
         self.frame_count = 0
+        self.index_partial_movie_file = 0
 
     # Output directories and files
     def init_output_directories(self):
@@ -196,10 +197,11 @@ class SceneFileWriter(object):
         result = os.path.join(
             self.partial_movie_directory,
             "{}{}".format(
-                self.scene.play_hashes_list[self.scene.num_plays],
+                self.scene.play_hashes_list[self.index_partial_movie_file],
                 file_writer_config["movie_file_extension"],
             ),
         )
+        self.index_partial_movie_file += 1
         return result
 
     def get_movie_file_path(self):
