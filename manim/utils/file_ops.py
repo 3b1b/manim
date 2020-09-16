@@ -1,3 +1,5 @@
+"""Utility functions for interacting with the file system."""
+
 __all__ = [
     "add_extension_if_not_present",
     "guarantee_existence",

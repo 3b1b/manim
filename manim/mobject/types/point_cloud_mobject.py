@@ -1,3 +1,5 @@
+"""Mobjects representing point clouds."""
+
 __all__ = ["PMobject", "Mobject1D", "Mobject2D", "PGroup", "PointCloudDot", "Point"]
 
 

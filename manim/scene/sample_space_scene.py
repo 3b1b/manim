@@ -1,3 +1,5 @@
+"""A scene suitable for usage with :class:`.SampleSpace`."""
+
 __all__ = ["SampleSpaceScene"]
 
 

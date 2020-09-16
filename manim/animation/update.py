@@ -1,3 +1,5 @@
+"""Animations that update mobjects."""
+
 __all__ = ["UpdateFromFunc", "UpdateFromAlphaFunc", "MaintainPositionRelativeTo"]
 
 

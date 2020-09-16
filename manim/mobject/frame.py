@@ -1,3 +1,5 @@
+"""Special rectangles."""
+
 __all__ = [
     "ScreenRectangle",
     "FullScreenRectangle",

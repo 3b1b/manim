@@ -1,3 +1,5 @@
+"""Utility functions for shading of three-dimensional mobjects."""
+
 import numpy as np
 
 from ..constants import ORIGIN

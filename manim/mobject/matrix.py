@@ -1,3 +1,5 @@
+"""Mobjects representing matrices."""
+
 __all__ = [
     "Matrix",
     "DecimalMatrix",

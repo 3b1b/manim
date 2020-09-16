@@ -1,3 +1,5 @@
+"""Animations for highly specialiced applications."""
+
 __all__ = ["MoveCar", "Broadcast"]
 
 

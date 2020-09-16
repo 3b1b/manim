@@ -1,4 +1,4 @@
-"""A Scene is the canvas of the animation."""
+"""Basic canvas for animations."""
 
 
 __all__ = ["Scene", "EndSceneEarlyException"]

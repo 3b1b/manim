@@ -1,3 +1,5 @@
+"""Mobject representing highlighted source code listings."""
+
 __all__ = [
     "Code",
     "hilite_me",
@@ -7,7 +9,7 @@ __all__ = [
 import html
 import os
 from ...constants import *
-from ...mobject.geometry import RoundedRectangle, Dot
+from ...mobject.geometry import Dot, RoundedRectangle
 from ...mobject.shape_matchers import SurroundingRectangle
 from ...mobject.svg.text_mobject import Paragraph
 from ...mobject.types.vectorized_mobject import VGroup
@@ -19,26 +21,30 @@ from pygments.lexers import get_lexer_by_name
 from pygments.formatters.html import HtmlFormatter
 from pygments.styles import get_all_styles
 
+
 class Code(VGroup):
-    """Class Code is used to display code with color highlighted.
-    
-    Code.styles_list static variable is containing list of names of all styles
-    Code is VGroup() with three things
-        Code[0] is Code.background_mobject is a VGroup()
-            VGroup() of SurroundingRectangle() if background == "rectangle"
-            VGroup() of RoundedRectangle() and Dot() for three buttons if background == "window"
-        Code[1] is Code.line_numbers Which is a Paragraph() object, this mean you can use
-            Code.line_numbers[0] or Code.line_numbers.chars[0] or Code[1].chars[0] to access first line number
-        Code[2] is Code.code
-            Which is a Paragraph() with color highlighted, this mean you can use
-                Code.code[1] or Code.code.chars[1] or Code[2].chars[1]
-                    line number 1
-                Code.code[1][0] or Code.code.chars[1][0] or Code[2].chars[1][0]
-                    first character of line number 1
-                Code.code[1][0:5] Code.code.chars[1][0:5] or Code[2].chars[1][0:5]
-                    first five characters of line number 1
-    Code.code[][] Code.code.chars[][] or Code[2].chars[][] will create problems when using Transform() because of invisible characters
-    so, before using Transform() remove invisible characters by using remove_invisible_chars()
+    """A highlighted source code listing.
+
+    An object ``listing`` of :class:`.Code` is a :class:`.VGroup` consisting
+    of three objects:
+
+    - The background, ``listing.background_mobject``. This is either
+      a :class:`.Rectangle` (if the listing has been initialized with
+      ``background="rectangle"``, the default option) or a :class:`.VGroup`
+      resembling a window (if ``background="window"`` has been passed).
+
+    - The line numbers, ``listing.line_numbers`` (a :class:`.Paragraph`
+      object).
+
+    - The highlighted code itself, ``listing.code`` (a :class:`.Paragraph`
+      object).
+
+    .. WARNING::
+
+        Using a :class:`.Transform` on text with leading whitespace (and in
+        this particular case: code) can look
+        `weird <https://github.com/3b1b/manim/issues/1067>`_. Consider using
+        :meth:`remove_invisible_chars` to resolve this issue.
 
     Parameters
     ----------
@@ -51,49 +57,52 @@ class Code(VGroup):
     scale_factor : class:`float`, optional
         A number which scales displayed code. Defaults to 0.5.
     font : :class:`str`, optional
-         The name of the text font to be used. Defaults to `"Monospac821 BT"`.
+         The name of the text font to be used. Defaults to ``"Monospac821 BT"``.
     stroke_width : class:`float`, optional
         Stroke width for text. 0 is recommended, and the default.
     margin: class :`float`, optional
         Inner margin of text from the background. Defaults to 0.3.
     indentation_chars : :class:`str`, optional
-        "Indentation chars" refers to the spaces/tabs at the beginning of a given code line. Defaults to `"    "`.
+        "Indentation chars" refers to the spaces/tabs at the beginning of a given code line. Defaults to ``"    "`` (spaces).
     background : :class:`str`, optional
-        Defines the background's type. Currently supports only `"rectangle"` (default) and `"window"`.
+        Defines the background's type. Currently supports only ``"rectangle"`` (default) and ``"window"``.
     background_stroke_width : class:`float`, optional
         Defines the stroke width of the background. Defaults to 1.
     background_stroke_color : class:`str`, optional
-        Defines the stroke color for the background. Defaults to `WHITE`.
+        Defines the stroke color for the background. Defaults to ``WHITE``.
     corner_radius : :class:`float`, optional
         Defines the corner radius for the background. Defaults to 0.2.
     insert_line_no : :class:`bool`, optional
-        Defines whether line numbers should be inserted in displayed code. Defaults to `True`.
+        Defines whether line numbers should be inserted in displayed code. Defaults to ``True``.
     line_no_from : :class:`int`, optional
         Defines the first line's number in the line count. Defaults to 1.
     line_no_buff : :class:`float`, optional
         Defines the spacing between line numbers and displayed code. Defaults to 0.4.
     style : :class:`str`, optional
-        Defines the style type of displayed code. You can see possible names of styles in with :attr:`styles_list`. Defaults to `"vim"`.
+        Defines the style type of displayed code. You can see possible names of styles in with :attr:`styles_list`. Defaults to ``"vim"``.
     language : Optional[:class:`str`], optional
-        Specifies the programming language the given code was written in. If `None` (the default), the language will be automatically detected. For the list of possible options, visit https://pygments.org/docs/lexers/ and look for 'aliases or short names'.
+        Specifies the programming language the given code was written in. If ``None``
+        (the default), the language will be automatically detected. For the list of
+        possible options, visit https://pygments.org/docs/lexers/ and look for
+        'aliases or short names'.
     generate_html_file : :class:`bool`, optional
         Defines whether to generate highlighted html code to the folder `assets/codes/generated_html_files`. Defaults to `False`.
 
     Attributes
     ----------
     background_mobject : :class:`~.VGroup`
-        To display background according to background type specified by background in Parameters.
-        VGroup with SurroundingRectangle() if background == "rectangle"
-        VGroup with RoundedRectangle() and Dot() for three buttons if background == "window"
+        The background of the code listing.
     line_numbers : :class:`~.Paragraph`
-        To display line numbers of displayed code if insert_line_no == True.
+        The line numbers for the code listing. Empty, if
+        ``insert_line_no=False`` has been specified.
     code : :class:`~.Paragraph`
-        To display highlighted code.
+        The highlighted code.
 
     Examples
     --------
     Normal usage::
-        helloworldcpp = Code(
+
+        listing = Code(
             "helloworldcpp.cpp",
             tab_width=4,
             background_stroke_width=1,
@@ -103,9 +112,15 @@ class Code(VGroup):
             background="window",
             language="cpp",
         )
+
     Remove unwanted invisible characters::
-        self.play(Transform(remove_invisible_chars(Code.code.chars[0:2]), remove_invisible_chars(Code.code.chars[3][0:3])))
-        remove_invisible_chars(Code.code) or remove_invisible_chars(Code)
+
+        self.play(Transform(remove_invisible_chars(listing.code.chars[0:2]),
+                            remove_invisible_chars(listing.code.chars[3][0:3])))
+
+        remove_invisible_chars(listing.code)
+        remove_invisible_chars(listing)
+
     """
 
     # tuples in the form (name, aliases, filetypes, mimetypes)
@@ -294,7 +309,7 @@ class Code(VGroup):
             self.insert_line_no,
             "border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;",
             self.file_path,
-            self.line_no_from
+            self.line_no_from,
         )
 
         if self.generate_html_file:
@@ -457,7 +472,9 @@ class Code(VGroup):
         return line_str
 
 
-def hilite_me(code, language, style, insert_line_no, divstyles, file_path, line_no_from):
+def hilite_me(
+    code, language, style, insert_line_no, divstyles, file_path, line_no_from
+):
     """Function to highlight code from string to html.
 
     Parameters

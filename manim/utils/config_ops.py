@@ -1,3 +1,5 @@
+"""Utilities required by manim's CONFIG attributes."""
+
 __all__ = [
     "get_all_descendent_classes",
     "filtered_locals",

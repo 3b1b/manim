@@ -1,3 +1,11 @@
+"""Interface for writing, compiling, and converting ``.tex`` files.
+
+.. SEEALSO::
+
+    :mod:`.mobject.svg.tex_mobject`
+
+"""
+
 import os
 import hashlib
 from pathlib import Path

@@ -1,3 +1,5 @@
+"""Utility functions related to Bézier curves."""
+
 __all__ = [
     "bezier",
     "partial_bezier_points",

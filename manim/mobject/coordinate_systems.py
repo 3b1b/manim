@@ -1,3 +1,5 @@
+"""Mobjects that represent coordinate systems."""
+
 __all__ = ["CoordinateSystem", "Axes", "ThreeDAxes", "NumberPlane", "ComplexPlane"]
 
 

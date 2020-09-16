@@ -1,3 +1,5 @@
+"""A camera supporting multiple perspectives."""
+
 __all__ = ["MultiCamera"]
 
 

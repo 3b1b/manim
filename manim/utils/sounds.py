@@ -1,3 +1,5 @@
+"""Sound-related utility functions."""
+
 __all__ = [
     "play_chord",
     "play_error_sound",

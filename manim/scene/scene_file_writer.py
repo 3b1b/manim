@@ -1,3 +1,5 @@
+"""The interface between scenes and ffmpeg."""
+
 __all__ = ["SceneFileWriter"]
 
 
@@ -141,14 +143,16 @@ class SceneFileWriter(object):
         return fn if fn else self.scene.__class__.__name__
 
     def get_resolution_directory(self):
-        """
+        """Get the name of the resolution directory directly containing
+        the video file.
+
         This method gets the name of the directory that immediately contains the
-        video file. This name is <height_in_pixels_of_video>p<frame_rate>
-        E.G:
-            If you are rendering an 854x480 px animation at 15fps, the name of the directory
-            that immediately contains the video file will be
-            480p15.
-            The file structure should look something like:
+        video file. This name is ``<height_in_pixels_of_video>p<frame_rate>``.
+        For example, if you are rendering an 854x480 px animation at 15fps,
+        the name of the directory that immediately contains the video file
+        will be ``480p15``.
+
+        The file structure should look something like::
 
             MEDIA_DIR
                 |--Tex
@@ -157,9 +161,10 @@ class SceneFileWriter(object):
                 |--<name_of_file_containing_scene>
                     |--<height_in_pixels_of_video>p<frame_rate>
                         |--<scene_name>.mp4
+
         Returns
         -------
-        str
+        :class:`str`
             The name of the directory.
         """
         pixel_height = self.scene.camera.pixel_height

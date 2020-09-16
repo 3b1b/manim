@@ -1,3 +1,5 @@
+"""Operations on iterables."""
+
 __all__ = [
     "remove_list_redundancies",
     "list_update",

@@ -1,3 +1,5 @@
+"""A camera that can be positioned and oriented in three-dimensional space."""
+
 __all__ = ["ThreeDCamera"]
 
 
@@ -32,7 +34,7 @@ class ThreeDCamera(Camera):
     }
 
     def __init__(self, *args, **kwargs):
-        """Initialises the ThreeDCamera
+        """Initializes the ThreeDCamera
 
         Parameters
         ----------

@@ -1,3 +1,5 @@
+"""Animations drawing attention to particular mobjects."""
+
 __all__ = [
     "FocusOn",
     "Indicate",

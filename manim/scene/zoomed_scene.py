@@ -1,3 +1,5 @@
+"""A scene supporting zooming in on a specified section."""
+
 __all__ = ["ZoomedScene"]
 
 

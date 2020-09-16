@@ -1,3 +1,5 @@
+"""Utility functions for two- and three-dimensional vectors."""
+
 __all__ = [
     "get_norm",
     "quaternion_mult",

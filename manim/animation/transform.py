@@ -1,3 +1,5 @@
+"""Animations transforming one mobject into another."""
+
 __all__ = [
     "Transform",
     "ReplacementTransform",

@@ -1,4 +1,4 @@
-"A Camera converts the mobjects contained in a Scene into an array of pixels"
+"A camera converts the mobjects contained in a Scene into an array of pixels."
 
 
 __all__ = ["Camera", "BackgroundColoredVMobjectDisplayer"]
@@ -31,18 +31,20 @@ from ..utils.space_ops import get_norm
 
 
 class Camera(object):
-    """
-    Base Camera class.
+    """Base camera class.
+
     This is the object which takes care of what exactly is displayed
     on screen at any given moment.
 
     Some important CONFIG values and local variables to note are:
 
-    self.background_image : str, optional
+    background_image : :class:`str`, optional
         The path to an image that should be the background image.
         If not set, the background is filled with `self.background_color`
 
-    self.pixel_height
+    pixel_height : :class:`int`, optional
+        The height of the scene in pixels.
+
     """
 
     CONFIG = {

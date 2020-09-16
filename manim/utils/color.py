@@ -1,3 +1,5 @@
+"""Utility functions for conversion between color models."""
+
 __all__ = [
     "color_to_rgb",
     "color_to_rgba",

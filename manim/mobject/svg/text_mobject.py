@@ -1,4 +1,7 @@
+"""Mobjects used for displaying (non-LaTeX) text."""
+
 __all__ = ["TextSetting", "Text", "Paragraph"]
+
 
 import re
 import os
@@ -19,17 +22,17 @@ TEXT_MOB_SCALE_FACTOR = 0.05
 
 
 def remove_invisible_chars(mobject):
-    """Fuction to remove unwanted invisble characters from some mobject
+    """Function to remove unwanted invisible characters from some mobject
 
     Parameters
-    ---------
+    ----------
     mobject : :class:`~.SVGMobject`
-        Any SVGMobject from which we want to remove unwanted invisble characters.
+        Any SVGMobject from which we want to remove unwanted invisible characters.
 
     Returns
     -------
     :class:`~.SVGMobject`
-        The SVGMobject without unwanted invisble characters.
+        The SVGMobject without unwanted invisible characters.
     """
 
     iscode = False
@@ -63,14 +66,19 @@ class TextSetting(object):
 
 
 class Text(SVGMobject):
-    """ Text is used for displaying Text.
-    Text is VGroup() of each characters
-    that mean you can use it like 
-        Text[0:5] or Text.chars[0:5] to access first five characters 
-    Text[0:5] or Text or Text.chars[0:5] will create problems when using Transform() because of invisible characters 
-    so, before using Transform() remove invisible characters by using remove_invisible_chars()
-    for example self.play(Transform(remove_invisible_chars(text.chars[0:4]), remove_invisible_chars(text2.chars[0:2])))
+    """Display (non-LaTeX) text.
+
+    Text objects behave like a :class:`.VGroup`-like iterable of all characters
+    in the given text. In particular, slicing is possible.
+
+    .. WARNING::
+
+        Using a :class:`.Transform` on text with leading whitespace can look
+        `weird <https://github.com/3b1b/manim/issues/1067>`_. Consider using
+        :meth:`remove_invisible_chars` to resolve this issue.
+
     """
+
     CONFIG = {
         # Mobject
         "color": WHITE,
@@ -382,20 +390,20 @@ class TextWithBackground(Text):
 
 
 class Paragraph(VGroup):
-    """Paragraph is used to display paragraphs with more efficiency or having some extra features.
+    r"""Display a paragraph of text.
 
-    paragraph paragraph.chars is VGroup() of each lines and each line is VGroup() of that line's characters 
-    that mean you can use it like 
-        paragraph[0:5] or paragraph.chars[0:5] to access first five lines
-        paragraph[0][0:5] or paragraph.chars[0][0:5] to access first line's first five characters
-    paragraph or paragraph[] or paragraph.chars[][] will create problems when using Transform() because of invisible characters 
-    so, before using Transform() remove invisible characters by using remove_invisible_chars()
+    For a given :class:`.Paragraph` ``par``, the attribute ``par.chars`` is a
+    :class:`.VGroup` containing all the lines. In this context, every line is
+    constructed as a :class:`.VGroup` of characters contained in the line.
 
-    paragraph(" a b", " bcd\nefg") is same as paragraph(" a b", " bcd", "efg")
-    that means paragraph[2] is "efg"
+    .. WARNING::
+
+        Using a :class:`.Transform` on text with leading whitespace can look
+        `weird <https://github.com/3b1b/manim/issues/1067>`_. Consider using
+        :meth:`remove_invisible_chars` to resolve this issue.
 
     Parameters
-    ---------
+    ----------
     line_spacing : :class:`int`, optional
         Represents the spaning betweeb lines. Default to -1, which means auto.
     alignment : :class:`str`, optional
@@ -404,11 +412,17 @@ class Paragraph(VGroup):
     Examples
     --------
     Normal usage::
-        paragraph = Paragraph('this is a awesome', 'paragraph', 'With \nNewlines', '\tWith Tabs', '  With Spaces',
-                      'With Alignments',
-                      'center', "left", "right")
+
+        paragraph = Paragraph('this is a awesome', 'paragraph',
+                              'With \nNewlines', '\tWith Tabs',
+                              '  With Spaces', 'With Alignments',
+                              'center', 'left', 'right')
+
     Remove unwanted invisible characters::
-        self.play(Transform(remove_invisible_chars(paragraph.chars[0:2]), remove_invisible_chars(paragraph.chars[3][0:3]))
+
+        self.play(Transform(remove_invisible_chars(paragraph.chars[0:2]),
+                            remove_invisible_chars(paragraph.chars[3][0:3]))
+
     """
 
     CONFIG = {
@@ -457,7 +471,7 @@ class Paragraph(VGroup):
         """Function to convert plain string to 2d-VGroup of chars. 2d-VGroup mean "VGroup of VGroup".
 
         Parameters
-        ---------
+        ----------
         lines_str_list : :class:`str`
             Plain text string.
 
@@ -484,7 +498,7 @@ class Paragraph(VGroup):
         """Function to set all line's aligment to a specific value.
 
         Parameters
-        ---------
+        ----------
         alignment : :class:`str`
             Defines the alignment of paragraph. Possible values are "left", "right", "center".
         """
@@ -496,7 +510,7 @@ class Paragraph(VGroup):
         """Function to set one line's aligment to a specific value.
 
         Parameters
-        ---------
+        ----------
         alignment : :class:`str`
             Defines the alignment of paragraph. Possible values are "left", "right", "center".
         line_no : :class:`int`
@@ -506,8 +520,7 @@ class Paragraph(VGroup):
         return self
 
     def set_all_lines_to_initial_positions(self):
-        """Function to set one all lines to initial positions.
-        """
+        """Set all lines to their initial positions."""
         self.lines[1] = [None for _ in range(self.lines[0].__len__())]
         for line_no in range(0, self.lines[0].__len__()):
             self[line_no].move_to(
@@ -519,7 +532,7 @@ class Paragraph(VGroup):
         """Function to set one line to initial positions.
 
         Parameters
-        ---------
+        ----------
         line_no : :class:`int`
             Defines the line number for which we want to set given alignment.
         """
@@ -531,7 +544,7 @@ class Paragraph(VGroup):
         """Function to change one line's aligment to a specific value.
 
         Parameters
-        ---------
+        ----------
         alignment : :class:`str`
             Defines the alignment of paragraph. Possible values are "left", "right", "center".
         line_no : :class:`int`

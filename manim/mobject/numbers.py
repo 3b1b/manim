@@ -1,3 +1,5 @@
+"""Mobjects representing numbers."""
+
 __all__ = ["DecimalNumber", "Integer", "Variable"]
 
 

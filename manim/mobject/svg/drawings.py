@@ -1,3 +1,5 @@
+"""Mobjects representing predefined SVG drawings."""
+
 __all__ = [
     "Lightbulb",
     "BitcoinLogo",

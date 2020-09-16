@@ -1,3 +1,5 @@
+"""String manipulation utilities."""
+
 __all__ = [
     "to_camel_case",
     "initials",

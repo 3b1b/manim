@@ -1,3 +1,5 @@
+"""Utilities for processing custom LaTeX templates."""
+
 __all__ = ["TexTemplateFromFile", "TexTemplate"]
 
 
@@ -34,7 +36,7 @@ class TexTemplateFromFile:
         Parameters
         ----------
         expression : :class:`str`
-            String containing the expression to be typeset, e.g. `"foo"`
+            String containing the expression to be typeset, e.g. ``"foo"``
 
         Returns
         -------
@@ -44,15 +46,14 @@ class TexTemplateFromFile:
         return self.body.replace(self.text_to_replace, expression)
 
     def get_text_for_env(self, environment, expression):
-        """Inserts an expression into the TeX template, surrounded
-        by `\\begin{<environment>} ... \\end{<environment>}` for a certain environment.
+        """Inserts an expression wrapped in a given environment into the TeX template.
 
         Parameters
         ----------
         environment : :class:`str`
             The environment in which we should wrap the expression.
         expression : :class:`str`
-            The string containing the expression to be typeset, e.g. $\\sqrt{2}$
+            The string containing the expression to be typeset, e.g. ``$\\sqrt{2}$``
 
         Returns
         -------
@@ -66,13 +67,13 @@ class TexTemplateFromFile:
         )
 
     def get_text_for_tex_mode(self, expression):
-        """Inserts an expression into the TeX template, surrounded
-        by `\\begin{align*} ... \\end{align*}` for math mode.
+        """Inserts an expression within an ``align*`` environment into the TeX template.
 
         Parameters
         ----------
         expression : :class:`str`
-            The string containing the (math) expression to be typeset, e.g. $\\sqrt{2}$
+            The string containing the (math) expression to be typeset,
+            e.g. ``$\\sqrt{2}$``
 
         Returns
         -------
@@ -152,12 +153,12 @@ class TexTemplate(TexTemplateFromFile):
     def prepend_package(self, pkg):
         """Adds a new package (or several new packages)
         before all other packages. Sometimes, the order of
-        the `\\usepackage` directives is relevant.
+        the ``\\usepackage`` directives is relevant.
 
         Parameters
         ----------
         pkg : :class:`str`
-            The package name, e.g. "siunitx"
+            The package name, e.g. ``"siunitx"``
         """
         self.common_packages.insert(0, pkg)
         self.rebuild_cache()
@@ -165,12 +166,12 @@ class TexTemplate(TexTemplateFromFile):
     def append_package(self, pkg):
         """Adds a new package (or several new packages)
         after all other packages. Sometimes, the order of
-        the `\\usepackage` directives is relevant.
+        the ``\\usepackage`` directives is relevant.
 
         Parameters
         ----------
         pkg : :class:`str`
-            The package name, e.g. "siunitx"
+            The package name, e.g. ``"siunitx"``
         """
         self.common_packages.append(pkg)
         self.rebuild_cache()
@@ -181,7 +182,7 @@ class TexTemplate(TexTemplateFromFile):
         Parameters
         ----------
         text : :class:`str`
-            The text to be included, e.g. "\\newcommand{\\R}{\\mathbb{Q}}"
+            The text to be included, e.g. ``"\\newcommand{\\R}{\\mathbb{Q}}"``.
         """
         if self.use_ctex:
             self.ctex_preamble_text += text
@@ -202,20 +203,21 @@ class TexTemplate(TexTemplateFromFile):
     def generate_tex_command(self, command, *, required_params, optional_params=[]):
         """
         Function for creating LaTeX command strings with or without options.
-        Internally used to generate `\\usepackage{...}`
+        Internally used to generate ``\\usepackage`` commands.
 
         Parameters
         ----------
         command : :class:`str`
-            The command, e.g. `"usepackage"`
+            The command, e.g. ``"usepackage"``.
         required_params : Iterable[:class:`str`]
-            The required parameters of this command, each wrapped in `{}`s.
+            The required parameters of this command, each wrapped in ``{}``.
         optional_params : Iterable[:class:`str`]
-             The optional parameters of this command, each separated by a comma inside one `[]`.
+             The optional parameters of this command, each separated by a comma inside one ``[]``.
 
         Examples
         --------
         ::
+
             generate_tex_command("usepackage", required_params=["packagename"], optional_params=["option1", "option2"])
 
         Returns
@@ -242,9 +244,9 @@ class TexTemplate(TexTemplateFromFile):
         """Inserts an expression verbatim into the TeX template.
 
         Parameters
-        ----–-----
+        ----------
         expression : :class:`str`
-            The expression to be typeset, e.g. `"foo"`
+            The expression to be typeset, e.g. ``"foo"``.
 
         Returns
         -------
@@ -254,15 +256,14 @@ class TexTemplate(TexTemplateFromFile):
         return self.body.replace(self.text_to_replace, expression)
 
     def get_text_for_env(self, environment, expression):
-        """Inserts an expression into the TeX template, surrounded
-        by `\\begin{<environment>} ... \\end{<environment>}` for a certain environment.
+        """Inserts an expression wrapped in a given environment into the TeX template.
 
         Parameters
         ----------
         environment : :class:`str`
             The environment in which we should wrap the expression.
         expression : :class:`str`
-            The string containing the expression to be typeset, e.g. $\\sqrt{2}$
+            The string containing the expression to be typeset, e.g. ``"$\\sqrt{2}$"``
 
         Returns
         -------
@@ -276,13 +277,14 @@ class TexTemplate(TexTemplateFromFile):
         )
 
     def get_text_for_tex_mode(self, expression):
-        """Inserts an expression into the TeX template, surrounded
-        by `\\begin{align*} ... \\end{align*}` for math mode.
+        """Inserts an expression within an ``align*`` environment into
+        the TeX template.
 
         Parameters
         ----------
         expression : :class:`str`
-            The string containing the (math) expression to be typeset, e.g. $\\sqrt{2}$
+            The string containing the (math) expression to be typeset,
+            e.g. ``"$\\sqrt{2}$"``
 
         Returns
         -------

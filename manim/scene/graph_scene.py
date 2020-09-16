@@ -1,3 +1,5 @@
+"""A scene for plotting / graphing functions."""
+
 __all__ = ["GraphScene"]
 
 
@@ -787,17 +789,13 @@ class GraphScene(Scene):
         secant_line_length : int, float, optional
             How long the secant line should be.
 
-        Returns:
-        --------
-        VGroup
-            Resulting group is of the form VGroup(
-                dx_line,
-                df_line,
-                dx_label, (if applicable)
-                df_label, (if applicable)
-                secant_line, (if applicable)
-            )
-            with attributes of those names.
+
+        Returns
+        -------
+        :class:`.VGroup`
+            A group containing the elements ``dx_line``, ``df_line``, and
+            if applicable also ``dx_label``, ``df_label``, ``secant_line``.
+
         """
         kwargs = locals()
         kwargs.pop("self")
@@ -859,12 +857,18 @@ class GraphScene(Scene):
     def add_T_label(
         self, x_val, side=RIGHT, label=None, color=WHITE, animated=False, **kwargs
     ):
-        """
+        """Create a triangle marker with a vertical line from the x-axis
+        to ``self.v_graph`` at the given x coordinate ``x_val``.
+
         This method adds to the Scene:
-            -- a Vertical line from the x-axis to the corresponding point on the graph/curve.
-            -- a small vertical Triangle whose top point lies on the base of the vertical line
-            -- a MathTex to be a label for the Line and Triangle, at the bottom of the Triangle.
-        The scene needs to have the graph have the identifier/variable name self.v_graph.
+
+        - a Vertical line from the x-axis to the corresponding point on the graph/curve.
+        - a small vertical Triangle whose top point lies on the base of the vertical line
+        - a MathTex to be a label for the Line and Triangle, at the bottom of
+          the Triangle.
+
+        The scene needs to have the graph have the identifier/variable
+        name ``self.v_graph``.
 
         Parameters
         ----------
@@ -872,7 +876,7 @@ class GraphScene(Scene):
             The x value at which the secant enters, and intersects
             the graph for the first time.
 
-        side np.array(), optional
+        side : np.array(), optional
 
         label : str, optional
             The label to give the vertline and triangle

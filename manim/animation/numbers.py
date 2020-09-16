@@ -1,3 +1,5 @@
+"""Animations for changing numbers."""
+
 __all__ = ["ChangingDecimal", "ChangeDecimalToValue"]
 
 

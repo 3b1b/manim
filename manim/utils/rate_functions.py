@@ -1,3 +1,5 @@
+"""A selection of rate functions, i.e., *speed curves* for animations."""
+
 __all__ = [
     "linear",
     "smooth",

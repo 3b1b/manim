@@ -1,3 +1,5 @@
+"""A scene suitable for vector spaces."""
+
 __all__ = ["VectorScene", "LinearTransformationScene"]
 
 
@@ -174,20 +176,22 @@ class VectorScene(Scene):
 
         Parameters
         ----------
-        vector : Arrow
+        vector : :class:`.Arrow`
             The arrow representing the vector.
 
         **kwargs
-            Any valid keyword arguments of matrix.vector_coordinate_label
+            Any valid keyword arguments of :meth:`~.matrix.vector_coordinate_label`:
 
-            integer_labels (True) : Whether or not to round the coordinates
-                                    to integers.
-            n_dim (2) : The number of dimensions of the vector.
-            color (WHITE) : The color of the label.
+            integer_labels : :class:`bool`
+                Whether or not to round the coordinates to integers. Default: ``True``.
+            n_dim : :class:`int`
+                The number of dimensions of the vector. Default: ``2``.
+            color
+                The color of the label. Default: ``WHITE``.
 
         Returns
         -------
-        Matrix
+        :class:`.Matrix`
             The column matrix representing the vector.
         """
         coords = vector_coordinate_label(vector, **kwargs)

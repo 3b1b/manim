@@ -1,3 +1,5 @@
+"""A camera that allows mapping between objects."""
+
 __all__ = ["MappingCamera", "OldMultiCamera", "SplitScreenCamera"]
 
 

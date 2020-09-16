@@ -1,3 +1,5 @@
+"""Animations related to movement."""
+
 __all__ = [
     "Homotopy",
     "SmoothedVectorizedHomotopy",
