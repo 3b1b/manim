@@ -21,7 +21,6 @@ class ValueTracker(Mobject):
     Examples
     --------
     .. manim:: ValueTrackerExample
-        :display_source:
         :quality: low
 
         class ValueTrackerExample(Scene):

@@ -16,7 +16,6 @@ class AnimatedBoundary(VGroup):
     Examples
     --------
     .. manim:: AnimatedBoundaryExample
-        :display_source:
         :quality: low
 
         class AnimatedBoundaryExample(Scene):
@@ -90,7 +89,6 @@ class TracedPath(VMobject):
     Examples
     --------
     .. manim:: TracedPathExample
-        :display_source:
         :quality: low
 
         class TracedPathExample(Scene):

@@ -58,6 +58,7 @@ and open that file with the default movie player application.  You should see a
 video playing the following animation.
 
 .. manim:: SquareToCircle
+   :hide_source:
    :quality: low
 
    class SquareToCircle(Scene):
@@ -153,6 +154,7 @@ And render it using the following command:
 The output should look as follows.
 
 .. manim:: SquareToCircle2
+   :hide_source:
    :quality: low
 
    class SquareToCircle2(Scene):

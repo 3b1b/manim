@@ -61,7 +61,6 @@ screen, simply call the :meth:`~.Scene.remove` method from the containing
 :class:`.Scene`.
 
 .. manim:: CreatingMobjects
-   :display_source:
    :quality: medium
 
    class CreatingMobjects(Scene):
@@ -81,7 +80,6 @@ some mobjects to it.  This script generates a static picture that displays a
 circle, a square, and a triangle:
 
 .. manim:: Shapes
-   :display_source:
    :quality: medium
 
    class Shapes(Scene):
@@ -114,7 +112,6 @@ There are many other possible ways to place mobjects on the screen, for example
 ``MobjectPlacement`` uses all three.
 
 .. manim:: MobjectPlacement
-   :display_source:
    :quality: medium
 
    class MobjectPlacement(Scene):
@@ -163,7 +160,6 @@ Styling mobjects
 The following scene changes the default aesthetics of the mobjects.
 
 .. manim:: MobjectStyling
-   :display_source:
    :quality: medium
 
    class MobjectStyling(Scene):
@@ -200,7 +196,6 @@ The next scene is exactly the same as the ``MobjectStyling`` scene from the
 previous section, except for exactly one line.
 
 .. manim:: MobjectZOrder
-   :display_source:
    :quality: medium
 
    class MobjectZOrder(Scene):
@@ -234,7 +229,6 @@ At the heart of manim is animation.  Generally, you can add an animation to
 your scene by calling the :meth:`~.Scene.play` method.
 
 .. manim:: SomeAnimations
-   :display_source:
    :quality: medium
 
    class SomeAnimations(Scene):
@@ -271,7 +265,6 @@ method that changes a mobject's property can be used as an animation, through
 the use of :class:`.ApplyMethod`.
 
 .. manim:: ApplyMethodExample
-   :display_source:
    :quality: medium
 
    class ApplyMethodExample(Scene):
@@ -300,7 +293,6 @@ By default, any animation passed to :meth:`play` lasts for exactly one second.
 Use the :code:`run_time` argument to control the duration.
 
 .. manim:: RunTime
-   :display_source:
    :quality: medium
 
    class RunTime(Scene):
