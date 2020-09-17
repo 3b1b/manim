@@ -1,7 +1,7 @@
 Plotting with manim
 =================================
 
-Examples to illustrate the use of GrapheScenes in Manim
+Examples to illustrate the use of GraphScenes in manim
 
 
 .. manim:: Plot1
