@@ -1,2 +1,1 @@
 imageio-ffmpeg
--e git://github.com/ManimCommunity/manim/@master#egg=manimlib
