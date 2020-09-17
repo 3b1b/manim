@@ -8,7 +8,7 @@ instructions.
 Installing using Chocolatey
 ***************************
 
-You can install chocolatey very easily using chocolatey. Typing the command install Manim.
+You can install manim very easily using chocolatey, by typing the following command.
 
 
 .. code-block:: powershell
