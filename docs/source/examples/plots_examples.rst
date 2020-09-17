@@ -28,10 +28,8 @@ Examples to illustrate the use of GrapheScenes in Manim
 
         def construct(self):
             self.setup_axes(animate=True)
-            dot = Dot()
-            dot.move_to(self.coords_to_point(PI / 2, 20))
-            my_func = lambda x: 20 * np.sin(x)
-            func_graph = self.get_graph(my_func)
+            dot = Dot().move_to(self.coords_to_point(PI / 2, 20))
+            func_graph = self.get_graph(lambda x: 20 * np.sin(x))
             self.add(func_graph)
             self.add(dot)
 
