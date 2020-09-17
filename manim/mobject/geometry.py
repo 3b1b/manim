@@ -233,6 +233,7 @@ class TipableVMobject(VMobject):
 
 
 class Arc(TipableVMobject):
+    """A circular arc."""
     CONFIG = {
         "radius": 1.0,
         "num_components": 9,
