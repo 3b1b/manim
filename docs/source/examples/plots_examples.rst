@@ -159,7 +159,7 @@ Examples to illustrate the use of GrapheScenes in Manim
             self.add(l1, l2, l3)
 
 
-This is an parametric function
+This is a parametric function
 
 .. manim:: ParamFunc1
     :quality: medium
