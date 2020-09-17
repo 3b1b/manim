@@ -49,23 +49,55 @@ Examples to illustrate the use of GrapheScenes in Manim
             for time, dat in enumerate(data):
                 dot = Dot().move_to(self.coords_to_point(time, dat))
                 self.add(dot)
-                self.wait(1)
-                print(time)
-            self.wait()
 
 .. manim:: Plot3bGaussian
     :quality: medium
     :save_last_frame:
 
     class Plot3bGaussian(GraphScene):
+        global amp
+        global mu
+        global sig
+        amp = 5
+        mu = 3
+        sig = 1
+
+        def gaussian(self, x):
+            return amp * np.exp((-1 / 2 * ((x - mu) / sig) ** 2))
+
         def construct(self):
-            def gaussian(x):
-                mu=3; sig= 1; amp=5
-                return amp*np.exp( ( -1/2 * ( (x-mu)/sig)**2 ) )
             self.setup_axes()
-            graph = self.get_graph(gaussian, x_min=-1, x_max=10).set_stroke(width=5)
+            graph = self.get_graph(self.gaussian, x_min=-1, x_max=10).set_stroke(width=5)
             self.add(graph)
 
+.. manim:: Plot3cGaussian
+    :quality: medium
+    :save_last_frame:
+
+    class Plot3cGaussian(GraphScene):
+        def construct(self):
+            def gaussian(x):
+                amp = 5
+                mu = 3
+                sig = 1
+                return amp * np.exp((-1 / 2 * ((x - mu) / sig) ** 2))
+            self.setup_axes()
+            graph = self.get_graph(gaussian, x_min=-1, x_max=10).set_style(stroke_width=5, stroke_color=GREEN)
+            self.add(graph)
+global amp
+    global mu
+    global sig
+    amp = 5
+    mu = 3
+    sig = 1
+
+    def gaussian(self, x):
+        return amp * np.exp((-1 / 2 * ((x - mu) / sig) ** 2))
+
+    def construct(self):
+        self.setup_axes()
+        graph = self.get_graph(self.gaussian, x_min=-1, x_max=10).set_stroke(width=5)
+        self.a
 .. manim:: Plot4SinCos
     :quality: medium
     :save_last_frame:
@@ -146,7 +178,6 @@ Examples to illustrate the use of GrapheScenes in Manim
         def construct(self):
             data = [20, 0, 0, -5]
             x = [0, 8, 38, 39]
-            print(x)
             self.setup_axes(animate=True)
             dot_collection = VGroup()
             for time, val in enumerate(data):
