@@ -120,11 +120,11 @@ Examples to illustrate the use of GrapheScenes in Manim
             self.setup_axes(animate=False)
             curve1 = self.get_graph(lambda x : 4*x-x**2, x_min=0,x_max=4)
             curve2 = self.get_graph(lambda x : 0.8*x**2-3*x+4, x_min=0,x_max=4)
-            line1 = self.get_vertical_line_to_graph(2,curve1,DashedLine,color=YELLOW)
-            line2 = self.get_vertical_line_to_graph(3,curve1,DashedLine,color=YELLOW)
-            area1 = self.get_area(curve1,0.3,0.6, dx_scaling=10, area_color=BLUE)
-            area2 = self.get_area(curve2,2,3,bounded=curve1)
-            self.add(curve1,curve2,line1,line2,area1,area2)
+            line1 = self.get_vertical_line_to_graph(2, curve1, DashedLine, color=YELLOW)
+            line2 = self.get_vertical_line_to_graph(3, curve1, DashedLine, color=YELLOW)
+            area1 = self.get_area(curve1, 0.3, 0.6, dx_scaling=10, area_color=BLUE)
+            area2 = self.get_area(curve2, 2, 3, bounded=curve1)
+            self.add(curve1, curve2, line1, line2, area1, area2)
 
 .. manim:: Plot6HeatDiagram
     :quality: medium
