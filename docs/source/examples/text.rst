@@ -9,5 +9,4 @@ Text
         def construct(self):
             t = TextMobject("Hello World")
             self.add(t)
-            self.wait(1)
 
