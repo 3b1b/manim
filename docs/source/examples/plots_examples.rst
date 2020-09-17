@@ -54,20 +54,17 @@ Examples to illustrate the use of GrapheScenes in Manim
     :quality: medium
     :save_last_frame:
 
+    amp = 5
+    mu = 3
+    sig = 1
+
+    def gaussian(x):
+        return amp * np.exp((-1 / 2 * ((x - mu) / sig) ** 2))
+
     class Plot3bGaussian(GraphScene):
-        global amp
-        global mu
-        global sig
-        amp = 5
-        mu = 3
-        sig = 1
-
-        def gaussian(self, x):
-            return amp * np.exp((-1 / 2 * ((x - mu) / sig) ** 2))
-
         def construct(self):
             self.setup_axes()
-            graph = self.get_graph(self.gaussian, x_min=-1, x_max=10).set_stroke(width=5)
+            graph = self.get_graph(gaussian, x_min=-1, x_max=10).set_stroke(width=5)
             self.add(graph)
 
 .. manim:: Plot3cGaussian
