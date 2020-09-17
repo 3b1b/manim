@@ -11,8 +11,7 @@ Examples to illustrate the use of GrapheScenes in Manim
     class Plot1(GraphScene):
         def construct(self):
             self.setup_axes()
-            my_func = lambda x: np.sin(x)
-            func_graph=self.get_graph(my_func)
+            func_graph=self.get_graph(lambda x: np.sin(x))
             self.add(func_graph)
 
 .. manim:: Plot2yLabel
