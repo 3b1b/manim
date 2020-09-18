@@ -47,7 +47,7 @@ author = "The Manim Community Dev Team"
 extensions = [
     "sphinx.ext.autodoc",
     "recommonmark",
-    "sphinx.ext.napoleon",	
+    "sphinx.ext.napoleon",
     "sphinx.ext.autosummary",
     "sphinx.ext.doctest",
     "manim_directive",
