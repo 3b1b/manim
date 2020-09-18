@@ -114,7 +114,7 @@ Examples to illustrate the use of :class:`.GraphScene` in manim.
             vert_line = self.get_vertical_line_to_graph(TAU, func_graph, color=YELLOW)
             graph_lab = self.get_graph_label(func_graph, label="\\cos(x)")
             graph_lab2 = self.get_graph_label(func_graph2, label="\\sin(x)", x_val=-10, direction=UP / 2)
-            two_pi = TexMobject("x = 2 \\pi")
+            two_pi = MathTex(r"x = 2 \pi")
             label_coord = self.input_to_graph_point(TAU, func_graph)
             two_pi.next_to(label_coord, RIGHT + UP)
             self.add(func_graph, func_graph2, vert_line, graph_lab, graph_lab2, two_pi)
