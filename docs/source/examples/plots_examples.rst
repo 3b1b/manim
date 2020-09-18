@@ -39,7 +39,7 @@ Examples to illustrate the use of GraphScenes in manim
 
     class Plot3DataPoints(GraphScene):
         CONFIG = {
-            "y_axis_label": r"Concentration[$\%$]",
+            "y_axis_label": r"Concentration[\%]",
             "x_axis_label": "Time [s]",
             }
 
