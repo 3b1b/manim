@@ -22,7 +22,7 @@ Examples to illustrate the use of :class:`.GraphScene` in manim.
         CONFIG = {
             "y_min": 0,
             "y_max": 100,
-            "y_tick_frequency": 10,
+            "y_axis_config": {"tick_frequency": 10},
             "y_labeled_nums": np.arange(0, 100, 10)
         }
 
