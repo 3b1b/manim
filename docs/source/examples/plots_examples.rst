@@ -175,7 +175,7 @@ Examples to illustrate the use of :class:`.GraphScene` in manim.
             self.add(l1, l2, l3)
 
 
-This is a parametric function
+The following example illustrates how to draw parametric function plots.
 
 .. manim:: ParamFunc1
     :quality: medium
