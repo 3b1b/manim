@@ -7,7 +7,6 @@ Formulas
 
     class Formula1(Scene):
         def construct(self):
-            t = TexMobject(r"\int_a^b f'(x) dx = f(b)- f(a)")
+            t = MathTex(r"\int_a^b f'(x) dx = f(b)- f(a)")
             self.add(t)
             self.wait(1)
-
