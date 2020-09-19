@@ -1,13 +1,4 @@
 Advanced Projects
 =================================
 
-.. manim:: Projects1
-    :quality: medium
-    :save_last_frame:
-
-    class Projects1(Scene):
-        def construct(self):
-            t = TextMobject("Some advanced project")
-            self.add(t)
-            self.wait(1)
-
+This page is currently under construction. It will feature a selection of advanced projects built with manim.
