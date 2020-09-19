@@ -65,6 +65,7 @@ will play it once it's done since we are using the ``-p`` flag.  The output
 should look like this:
 
 .. manim:: SquareToCircle3
+   :hide_source:
    :quality: high
 
    class SquareToCircle3(Scene):

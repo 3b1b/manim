@@ -5,7 +5,7 @@ A directive for including Manim videos in a Sphinx document
 When rendering the HTML documentation, the ``.. manim::`` directive
 implemented here allows to include rendered videos.
 
-Its basic usage that allows processing **inline content** 
+Its basic usage that allows processing **inline content**
 looks as follows::
 
     .. manim:: MyScene
@@ -41,9 +41,9 @@ Options can be passed as follows::
 The following configuration options are supported by the
 directive:
 
-    display_source
+    hide_source
         If this flag is present without argument,
-        the source code is displayed above the rendered video.
+        the source code is not displayed above the rendered video.
 
     quality : {'low', 'medium', 'high', 'fourk'}
         Controls render quality of the video, in analogy to
@@ -80,7 +80,7 @@ class ManimDirective(Directive):
     required_arguments = 1
     optional_arguments = 0
     option_spec = {
-        "display_source": bool,
+        "hide_source": bool,
         "quality": lambda arg: directives.choice(
             arg, ("low", "medium", "high", "fourk")
         ),
@@ -100,7 +100,7 @@ class ManimDirective(Directive):
         else:
             classnamedict[clsname] += 1
 
-        display_source = "display_source" in self.options
+        hide_source = "hide_source" in self.options
         save_as_gif = "save_as_gif" in self.options
         save_last_frame = "save_last_frame" in self.options
         assert not (save_as_gif and save_last_frame)
@@ -211,7 +211,7 @@ class ManimDirective(Directive):
             raise ValueError("Invalid combination of render flags received.")
 
         rendered_template = jinja2.Template(TEMPLATE).render(
-            display_source=display_source,
+            hide_source=hide_source,
             filesrc_rel=os.path.relpath(filesrc, setup.confdir),
             output_file=output_file,
             save_last_frame=save_last_frame,
@@ -238,7 +238,7 @@ def setup(app):
 
 
 TEMPLATE = r"""
-{% if display_source %}
+{% if not hide_source %}
 .. raw:: html
 
     <div class="manim-example">
@@ -258,7 +258,7 @@ TEMPLATE = r"""
     :align: center
 {% endif %}
 
-{% if display_source %}
+{% if not hide_source %}
 .. raw:: html
 
     </div>
