@@ -1,13 +1,4 @@
 NeatProjects
 =================================
 
-.. manim:: Projects11
-    :quality: medium
-    :save_last_frame:
-
-    class Projects11(Scene):
-        def construct(self):
-            t = TextMobject("Some neat project")
-            self.add(t)
-            self.wait(1)
-
+This page is currently under construction. It will feature a selection of neat projects built with manim.
