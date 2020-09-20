@@ -87,6 +87,16 @@ Changing manim's Source Code
    with more information about how we prefer our code to be documented. The content
    of the docstrings will be rendered in the :doc:`reference manual <reference>`.
 
+   .. tip::
+
+      Use the :mod:`manim directive for Sphinx <.manim_directive>` to add examples
+      to the documentation!
+
+      .. autosummary::
+         :toctree: reference
+
+         manim_directive
+
 #. *Add new or update existing tests.*
    Depending on the changes you are making you will need to update or add new tests.
    It is strongly preferred that you include tests with your PR. Details of our testing
@@ -183,8 +193,8 @@ community wants to merge your changes! Overall, in order for your PR to be merge
 at least two approving code reviews from core community developers are required.
 
 
-Further useful guideline
-========================
+Further useful guidelines
+=========================
 
 #. When submitting a PR, please make special note of whether your proposed
    changes will result in breaking changes.
