@@ -8,6 +8,7 @@ the :doc:`changelog`.
 
 .. warning:: The pages linked to here are currently a work in progress.
 
+.. currentmodule:: manim
 
 ********************
 Mathematical Objects
@@ -16,32 +17,32 @@ Mathematical Objects
 .. autosummary::
    :toctree: reference
 
-   ~manim.mobject.changing
-   ~manim.mobject.coordinate_systems
-   ~manim.mobject.frame
-   ~manim.mobject.functions
-   ~manim.mobject.geometry
-   ~manim.mobject.matrix
-   ~manim.mobject.mobject
-   ~manim.mobject.mobject_update_utils
-   ~manim.mobject.number_line
-   ~manim.mobject.numbers
-   ~manim.mobject.probability
-   ~manim.mobject.shape_matchers
-   ~manim.mobject.three_d_shading_utils
-   ~manim.mobject.three_d_utils
-   ~manim.mobject.three_dimensions
-   ~manim.mobject.value_tracker
-   ~manim.mobject.vector_field
-   ~manim.mobject.svg.brace
-   ~manim.mobject.svg.code_mobject
-   ~manim.mobject.svg.drawings
-   ~manim.mobject.svg.svg_mobject
-   ~manim.mobject.svg.tex_mobject
-   ~manim.mobject.svg.text_mobject
-   ~manim.mobject.types.image_mobject
-   ~manim.mobject.types.point_cloud_mobject
-   ~manim.mobject.types.vectorized_mobject
+   ~mobject.changing
+   ~mobject.coordinate_systems
+   ~mobject.frame
+   ~mobject.functions
+   ~mobject.geometry
+   ~mobject.matrix
+   ~mobject.mobject
+   ~mobject.mobject_update_utils
+   ~mobject.number_line
+   ~mobject.numbers
+   ~mobject.probability
+   ~mobject.shape_matchers
+   ~mobject.three_d_shading_utils
+   ~mobject.three_d_utils
+   ~mobject.three_dimensions
+   ~mobject.value_tracker
+   ~mobject.vector_field
+   ~mobject.svg.brace
+   ~mobject.svg.code_mobject
+   ~mobject.svg.drawings
+   ~mobject.svg.svg_mobject
+   ~mobject.svg.tex_mobject
+   ~mobject.svg.text_mobject
+   ~mobject.types.image_mobject
+   ~mobject.types.point_cloud_mobject
+   ~mobject.types.vectorized_mobject
 
 
 ******
@@ -51,15 +52,15 @@ Scenes
 .. autosummary::
    :toctree: reference
 
-   ~manim.scene.graph_scene
-   ~manim.scene.moving_camera_scene
-   ~manim.scene.reconfigurable_scene
-   ~manim.scene.sample_space_scene
-   ~manim.scene.scene
-   ~manim.scene.scene_file_writer
-   ~manim.scene.three_d_scene
-   ~manim.scene.vector_space_scene
-   ~manim.scene.zoomed_scene
+   ~scene.graph_scene
+   ~scene.moving_camera_scene
+   ~scene.reconfigurable_scene
+   ~scene.sample_space_scene
+   ~scene.scene
+   ~scene.scene_file_writer
+   ~scene.three_d_scene
+   ~scene.vector_space_scene
+   ~scene.zoomed_scene
 
 
 **********
@@ -69,18 +70,18 @@ Animations
 .. autosummary::
    :toctree: reference
 
-   ~manim.animation.animation
-   ~manim.animation.composition
-   ~manim.animation.creation
-   ~manim.animation.fading
-   ~manim.animation.growing
-   ~manim.animation.indication
-   ~manim.animation.movement
-   ~manim.animation.numbers
-   ~manim.animation.rotation
-   ~manim.animation.specialized
-   ~manim.animation.transform
-   ~manim.animation.update
+   ~animation.animation
+   ~animation.composition
+   ~animation.creation
+   ~animation.fading
+   ~animation.growing
+   ~animation.indication
+   ~animation.movement
+   ~animation.numbers
+   ~animation.rotation
+   ~animation.specialized
+   ~animation.transform
+   ~animation.update
 
 
 *******
@@ -90,11 +91,11 @@ Cameras
 .. autosummary::
    :toctree: reference
 
-   ~manim.camera.camera
-   ~manim.camera.mapping_camera
-   ~manim.camera.moving_camera
-   ~manim.camera.multi_camera
-   ~manim.camera.three_d_camera
+   ~camera.camera
+   ~camera.mapping_camera
+   ~camera.moving_camera
+   ~camera.multi_camera
+   ~camera.three_d_camera
 
 
 *********
@@ -104,20 +105,20 @@ Utilities
 .. autosummary::
    :toctree: reference
 
-   ~manim.utils.bezier
-   ~manim.utils.color
-   ~manim.utils.config_ops
-   ~manim.utils.hashing
-   ~manim.utils.images
-   ~manim.utils.iterables
-   ~manim.utils.paths
-   ~manim.utils.rate_functions
-   ~manim.utils.simple_functions
-   ~manim.utils.sounds
-   ~manim.utils.space_ops
-   ~manim.utils.strings
-   ~manim.utils.tex
-   ~manim.utils.tex_file_writing
+   ~utils.bezier
+   ~utils.color
+   ~utils.config_ops
+   ~utils.hashing
+   ~utils.images
+   ~utils.iterables
+   ~utils.paths
+   ~utils.rate_functions
+   ~utils.simple_functions
+   ~utils.sounds
+   ~utils.space_ops
+   ~utils.strings
+   ~utils.tex
+   ~utils.tex_file_writing
 
 
 *************
@@ -127,10 +128,9 @@ Other modules
 .. autosummary::
    :toctree: reference
 
-   ~manim._config
-   ~manim.constants
-   ~manim.container
-   manim_directive
+   _config
+   constants
+   container
 
 
 .. This is here so that sphinx doesn't complain about changelog.rst not being

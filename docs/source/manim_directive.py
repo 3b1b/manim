@@ -72,8 +72,7 @@ classnamedict = {}
 
 
 class ManimDirective(Directive):
-    r"""The manim directive, rendering videos while building
-    the documentation.
+    r"""The ``.. manim::`` directive.
 
     See the module docstring for documentation.
     """
