@@ -15,8 +15,8 @@ refactoring code.  As our repository is a Fork of `Manim by
 confusing.  Here is a short guide on how to do it.
 
 
-Setup Manim with Version Control
-================================
+Setup Manim and version control
+===============================
 
 #. *Make a fork of this repository on Github.*
    You will need an account with Github. This will allow you to make pull requests (PR)
@@ -59,7 +59,7 @@ Setup Manim with Version Control
 You are now ready to work on manim!
 
 
-Changing manim's Source Code
+Changing manim's source code
 ============================
 
 #. *Choose the branch for your changes.*
@@ -106,7 +106,7 @@ Changing manim's Source Code
 As far as development on your local machine goes, these are the main steps you
 should follow.
 
-Polishing your Changes and Submitting them for Review
+Polishing your changes and submitting them for review
 =====================================================
 
 As soon as you are ready to share your local changes with the community
