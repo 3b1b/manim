@@ -157,7 +157,9 @@ class MathTex(SingleStringMathTex):
         SingleStringMathTex.__init__(
             self, self.arg_separator.join(tex_strings), **kwargs
         )
-        self.break_up_by_substrings()
+        config = dict(self.CONFIG)
+        config.update(kwargs)
+        self.break_up_by_substrings(config)
         self.set_color_by_tex_to_color_map(self.tex_to_color_map)
 
         if self.organize_left_to_right:
@@ -176,7 +178,7 @@ class MathTex(SingleStringMathTex):
         split_list = [s for s in split_list if s != ""]
         return split_list
 
-    def break_up_by_substrings(self):
+    def break_up_by_substrings(self, config):
         """
         Reorganize existing submojects one layer
         deeper based on the structure of tex_strings (as a list
@@ -184,8 +186,6 @@ class MathTex(SingleStringMathTex):
         """
         new_submobjects = []
         curr_index = 0
-        config = dict(self.CONFIG)
-        config["alignment"] = ""
         for tex_string in self.tex_strings:
             sub_tex_mob = SingleStringMathTex(tex_string, **config)
             num_submobs = len(sub_tex_mob.submobjects)
