@@ -1,6 +1,6 @@
 """Mobjects used for displaying (non-LaTeX) text."""
 
-__all__ = ["TextSetting", "Text", "Paragraph"]
+__all__ = ["Text", "Paragraph","PangoText"]
 
 
 import re
@@ -8,6 +8,9 @@ import os
 import copy
 import hashlib
 import cairo
+import pangocffi
+import pangocairocffi
+import cairocffi
 
 from ... import config, file_writer_config, logger
 from ...constants import *
@@ -575,3 +578,273 @@ class Paragraph(VGroup):
                     ]
                 )
             )
+
+class PangoText(SVGMobject):
+    """Display (non-LaTeX) text rendered using `Pango <https://pango.gnome.org/>`_.
+
+    Text objects behave like a :class:`.VGroup`-like iterable of all characters
+    in the given text. In particular, slicing is possible.
+
+    .. WARNING::
+
+        Using a :class:`.Transform` on text with leading whitespace can look
+        `weird <https://github.com/3b1b/manim/issues/1067>`_. Consider using
+        :meth:`remove_invisible_chars` to resolve this issue.
+
+    """
+
+    CONFIG = {
+        # Mobject
+        "color": WHITE,
+        "height": None,
+        "width": None,
+        "fill_opacity": 1,
+        "stroke_width": 0,
+        "should_center": True,
+        "unpack_groups": True,
+        # Text
+        "font": "",
+        "gradient": None,
+        "line_spacing": -1,
+        "size": 1,
+        "slant": NORMAL,
+        "weight": NORMAL,
+        "t2c": {},
+        "t2f": {},
+        "t2g": {},
+        "t2s": {},
+        "t2w": {},
+        "tab_width": 4,
+    }
+
+    def __init__(self, text, **config):
+        self.full2short(config)
+        digest_config(self, config)
+        self.original_text = text
+        text_without_tabs = text
+        if text.find("\t") != -1:
+            text_without_tabs = text.replace("\t", " " * self.tab_width)
+        self.text = text_without_tabs
+        if self.line_spacing == -1:
+            self.line_spacing = self.size + self.size * 0.3
+        else:
+            self.line_spacing = self.size + self.size * self.line_spacing
+        file_name = self.text2svg()
+        self.remove_last_M(file_name)
+        SVGMobject.__init__(self, file_name, **config)
+        self.text = text
+        self.submobjects = [*self.gen_chars()]
+        self.chars = VGroup(*self.submobjects)
+        self.text = text_without_tabs.replace(" ", "").replace("\n", "")
+        nppc = self.n_points_per_cubic_curve
+        for each in self:
+            if len(each.points) == 0:
+                continue
+            points = each.points
+            last = points[0]
+            each.clear_points()
+            for index, point in enumerate(points):
+                each.append_points([point])
+                if (
+                    index != len(points) - 1
+                    and (index + 1) % nppc == 0
+                    and any(point != points[index + 1])
+                ):
+                    each.add_line_to(last)
+                    last = points[index + 1]
+            each.add_line_to(last)
+        if self.t2c:
+            self.set_color_by_t2c()
+        if self.gradient:
+            self.set_color_by_gradient(*self.gradient)
+        if self.t2g:
+            self.set_color_by_t2g()
+        # anti-aliasing
+        if self.height is None and self.width is None:
+            self.scale(TEXT_MOB_SCALE_FACTOR)
+
+    def gen_chars(self):
+        chars = VGroup()
+        submobjects_char_index = 0
+        for char_index in range(self.text.__len__()):
+            if (
+                self.text[char_index] in [" ","\t","\n"]
+            ):
+                space = Dot(redius=0, fill_opacity=0, stroke_opacity=0)
+                if char_index == 0:
+                    space.move_to(self.submobjects[submobjects_char_index].get_center())
+                else:
+                    space.move_to(
+                        self.submobjects[submobjects_char_index - 1].get_center()
+                    )
+                chars.add(space)
+            else:
+                chars.add(self.submobjects[submobjects_char_index])
+                submobjects_char_index += 1
+        return chars
+
+    def remove_last_M(self, file_name):
+        with open(file_name, "r") as fpr:
+            content = fpr.read()
+        content = re.sub(r'Z M [^A-Za-z]*? "\/>', 'Z "/>', content)
+        with open(file_name, "w") as fpw:
+            fpw.write(content)
+
+    def find_indexes(self, word, text):
+        m = re.match(r"\[([0-9\-]{0,}):([0-9\-]{0,})\]", word)
+        if m:
+            start = int(m.group(1)) if m.group(1) != "" else 0
+            end = int(m.group(2)) if m.group(2) != "" else len(text)
+            start = len(text) + start if start < 0 else start
+            end = len(text) + end if end < 0 else end
+            return [(start, end)]
+        indexes = []
+        index = text.find(word)
+        while index != -1:
+            indexes.append((index, index + len(word)))
+            index = text.find(word, index + len(word))
+        return indexes
+
+    def full2short(self, config):
+        for kwargs in [config, self.CONFIG]:
+            if kwargs.__contains__("text2color"):
+                kwargs["t2c"] = kwargs.pop("text2color")
+            if kwargs.__contains__("text2font"):
+                kwargs["t2f"] = kwargs.pop("text2font")
+            if kwargs.__contains__("text2gradient"):
+                kwargs["t2g"] = kwargs.pop("text2gradient")
+            if kwargs.__contains__("text2slant"):
+                kwargs["t2s"] = kwargs.pop("text2slant")
+            if kwargs.__contains__("text2weight"):
+                kwargs["t2w"] = kwargs.pop("text2weight")
+
+    def set_color_by_t2c(self, t2c=None):
+        t2c = t2c if t2c else self.t2c
+        for word, color in list(t2c.items()):
+            for start, end in self.find_indexes(word, self.original_text):
+                self.chars[start:end].set_color(color)
+
+    def set_color_by_t2g(self, t2g=None):
+        t2g = t2g if t2g else self.t2g
+        for word, gradient in list(t2g.items()):
+            for start, end in self.find_indexes(word, self.original_text):
+                self.chars[start:end].set_color_by_gradient(*gradient)
+
+    def str2style(self, string):
+        if string == NORMAL:
+            return pangocffi.Style.NORMAL
+        elif string == ITALIC:
+            return pangocffi.Style.ITALIC
+        elif string == OBLIQUE:
+            return pangocffi.Style.OBLIQUE
+        else:
+            raise AttributeError("There is no Style Called %s"%string)
+
+    def str2weight(self, string):
+        if string == NORMAL:
+            return pangocffi.Weight.NORMAL
+        elif string == BOLD:
+            return pangocffi.Weight.BOLD
+        # TODO: Add other font Weights https://pangocffi.readthedocs.io/en/latest/modules.html?highlight=normal#weight
+
+    def text2hash(self):
+        settings = "PANGO" + self.font + self.slant + self.weight #to differentiate Text and PangoText
+        settings += str(self.t2f) + str(self.t2s) + str(self.t2w)
+        settings += str(self.line_spacing) + str(self.size)
+        id_str = self.text + settings
+        hasher = hashlib.sha256()
+        hasher.update(id_str.encode())
+        return hasher.hexdigest()[:16]
+
+    def text2settings(self):
+        settings = []
+        t2x = [self.t2f, self.t2s, self.t2w]
+        for i in range(len(t2x)):
+            fsw = [self.font, self.slant, self.weight]
+            if t2x[i]:
+                for word, x in list(t2x[i].items()):
+                    for start, end in self.find_indexes(word, self.text):
+                        fsw[i] = x
+                        settings.append(TextSetting(start, end, *fsw))
+        # Set All text settings(default font slant weight)
+        fsw = [self.font, self.slant, self.weight]
+        settings.sort(key=lambda setting: setting.start)
+        temp_settings = settings.copy()
+        start = 0
+        for setting in settings:
+            if setting.start != start:
+                temp_settings.append(TextSetting(start, setting.start, *fsw))
+            start = setting.end
+        if start != len(self.text):
+            temp_settings.append(TextSetting(start, len(self.text), *fsw))
+        settings = sorted(temp_settings, key=lambda setting: setting.start)
+
+        if re.search(r"\n", self.text):
+            line_num = 0
+            for start, end in self.find_indexes("\n", self.text):
+                for setting in settings:
+                    if setting.line_num == -1:
+                        setting.line_num = line_num
+                    if start < setting.end:
+                        line_num += 1
+                        new_setting = copy.copy(setting)
+                        setting.end = end
+                        new_setting.start = end
+                        new_setting.line_num = line_num
+                        settings.append(new_setting)
+                        settings.sort(key=lambda setting: setting.start)
+                        break
+        for setting in settings:
+            if setting.line_num == -1:
+                setting.line_num = 0
+        return settings
+
+    def text2svg(self):
+        # anti-aliasing
+        size = self.size * 10
+        line_spacing = self.line_spacing * 10
+
+        if self.font == "":
+            if NOT_SETTING_FONT_MSG != "":
+                print(NOT_SETTING_FONT_MSG)
+        dir_name = file_writer_config["text_dir"]
+        hash_name = self.text2hash()
+        file_name = os.path.join(dir_name, hash_name) + ".svg"
+        if os.path.exists(file_name):
+            return file_name
+        surface = cairocffi.SVGSurface(file_name, 600, 400)
+        context = cairocffi.Context(surface)
+        #real coding
+
+        #context.set_font_size(size)
+        context.move_to(START_X, START_Y)
+
+        settings = self.text2settings()
+        offset_x = 0
+        last_line_num = 0
+        for setting in settings:
+            family = setting.font
+            style = self.str2style(setting.slant)
+            weight = self.str2weight(setting.weight)
+            text = self.text[setting.start : setting.end].replace("\n", " ")
+            layout = pangocairocffi.create_layout(context)
+            layout.set_width(pangocffi.units_from_double(600))
+            fontdesc = pangocffi.FontDescription()
+            fontdesc.set_size(pangocffi.units_from_double(size))
+            if family:
+                fontdesc.set_family("sans-serif")
+            fontdesc.set_style(style)                
+            fontdesc.set_weight(weight)
+            layout.set_font_description(fontdesc)
+            if setting.line_num != last_line_num:
+                offset_x = 0
+                last_line_num = setting.line_num
+            context.move_to(
+                START_X + offset_x, START_Y + line_spacing * setting.line_num
+            )
+            layout.set_markup(text)
+            print(text)
+            pangocairocffi.show_layout(context, layout)
+            offset_x += layout.get_extents()[0].x
+        surface.finish()
+        return file_name

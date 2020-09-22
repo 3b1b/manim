@@ -16,6 +16,7 @@ eggs/
 .eggs/
 lib/
 lib64/
+windows/
 parts/
 sdist/
 var/

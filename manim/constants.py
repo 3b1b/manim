@@ -29,7 +29,7 @@ NO_SCENE_MESSAGE = """
    There are no scenes inside that module
 """
 
-# Cairo stuff
+# Cairo and Pango stuff
 NORMAL = "NORMAL"
 ITALIC = "ITALIC"
 OBLIQUE = "OBLIQUE"
