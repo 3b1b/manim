@@ -1,6 +1,6 @@
 """Mobjects used for displaying (non-LaTeX) text."""
 
-__all__ = ["Text", "Paragraph","PangoText"]
+__all__ = ["Text", "Paragraph", "PangoText", "CairoText"]
 
 
 import re
@@ -68,7 +68,7 @@ class TextSetting(object):
         self.line_num = line_num
 
 
-class Text(SVGMobject):
+class CairoText(SVGMobject):
     """Display (non-LaTeX) text.
 
     Text objects behave like a :class:`.VGroup`-like iterable of all characters
@@ -328,7 +328,7 @@ class Text(SVGMobject):
 
 
 # Following class is just a Little implementation of upcomming feautures. Ignore it for now.
-class TextWithBackground(Text):
+class TextWithBackground(CairoText):
     CONFIG = {
         "background_color": BLACK,
     }
@@ -579,6 +579,7 @@ class Paragraph(VGroup):
                 )
             )
 
+
 class PangoText(SVGMobject):
     """Display (non-LaTeX) text rendered using `Pango <https://pango.gnome.org/>`_.
 
@@ -667,19 +668,33 @@ class PangoText(SVGMobject):
         chars = VGroup()
         submobjects_char_index = 0
         for char_index in range(self.text.__len__()):
-            if (
-                self.text[char_index] in [" ","\t","\n"]
-            ):
+            if self.text[char_index] in [" ", "\t", "\n"]:
                 space = Dot(redius=0, fill_opacity=0, stroke_opacity=0)
                 if char_index == 0:
-                    space.move_to(self.submobjects[submobjects_char_index].get_center())
+                    try:
+                        space.move_to(
+                            self.submobjects[submobjects_char_index].get_center()
+                        )
+                    except IndexError as e:
+                        logger.error(e)
+                        # cause a IndexError error because pango generates a empty path which is not condidered as an mobject.
+                        # Doesn't hurt to pass like this.
+                        pass
                 else:
-                    space.move_to(
-                        self.submobjects[submobjects_char_index - 1].get_center()
-                    )
+                    try:
+                        space.move_to(
+                            self.submobjects[submobjects_char_index - 1].get_center()
+                        )
+                    except IndexError as e:  # same as above
+                        logger.error(e)
+                        pass
                 chars.add(space)
             else:
-                chars.add(self.submobjects[submobjects_char_index])
+                try:
+                    chars.add(self.submobjects[submobjects_char_index])
+                except IndexError as e:  # same as above
+                    logger.error(e)
+                    pass
                 submobjects_char_index += 1
         return chars
 
@@ -738,7 +753,7 @@ class PangoText(SVGMobject):
         elif string == OBLIQUE:
             return pangocffi.Style.OBLIQUE
         else:
-            raise AttributeError("There is no Style Called %s"%string)
+            raise AttributeError("There is no Style Called %s" % string)
 
     def str2weight(self, string):
         if string == NORMAL:
@@ -748,7 +763,9 @@ class PangoText(SVGMobject):
         # TODO: Add other font Weights https://pangocffi.readthedocs.io/en/latest/modules.html?highlight=normal#weight
 
     def text2hash(self):
-        settings = "PANGO" + self.font + self.slant + self.weight #to differentiate Text and PangoText
+        settings = (
+            "PANGO" + self.font + self.slant + self.weight
+        )  # to differentiate Text and PangoText
         settings += str(self.t2f) + str(self.t2s) + str(self.t2w)
         settings += str(self.line_spacing) + str(self.size)
         id_str = self.text + settings
@@ -803,10 +820,6 @@ class PangoText(SVGMobject):
         # anti-aliasing
         size = self.size * 10
         line_spacing = self.line_spacing * 10
-
-        if self.font == "":
-            if NOT_SETTING_FONT_MSG != "":
-                print(NOT_SETTING_FONT_MSG)
         dir_name = file_writer_config["text_dir"]
         hash_name = self.text2hash()
         file_name = os.path.join(dir_name, hash_name) + ".svg"
@@ -814,11 +827,7 @@ class PangoText(SVGMobject):
             return file_name
         surface = cairocffi.SVGSurface(file_name, 600, 400)
         context = cairocffi.Context(surface)
-        #real coding
-
-        #context.set_font_size(size)
         context.move_to(START_X, START_Y)
-
         settings = self.text2settings()
         offset_x = 0
         last_line_num = 0
@@ -833,7 +842,7 @@ class PangoText(SVGMobject):
             fontdesc.set_size(pangocffi.units_from_double(size))
             if family:
                 fontdesc.set_family("sans-serif")
-            fontdesc.set_style(style)                
+            fontdesc.set_style(style)
             fontdesc.set_weight(weight)
             layout.set_font_description(fontdesc)
             if setting.line_num != last_line_num:
@@ -842,9 +851,18 @@ class PangoText(SVGMobject):
             context.move_to(
                 START_X + offset_x, START_Y + line_spacing * setting.line_num
             )
-            layout.set_markup(text)
-            print(text)
+            layout.set_text(text)
+            logger.debug(f"Setting Text {text}")
             pangocairocffi.show_layout(context, layout)
             offset_x += layout.get_extents()[0].x
         surface.finish()
         return file_name
+
+
+class Text(CairoText):
+    def __init__(self, text, **config):
+        logger.warning(
+            "Using Text uses Cairo Toy API to Render Text."
+            "Using PangoText is recommended and soon Text would point to PangoText"
+        )
+        CairoText.__init__(self, text, **config)
