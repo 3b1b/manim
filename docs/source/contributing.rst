@@ -153,6 +153,7 @@ pull request.
 
 
 Your changes are eligible to be merged, if
+
 #. there are no merge conflicts,
 #. and if the tests in our pipeline passes.
 
