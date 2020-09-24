@@ -60,6 +60,10 @@ jobs:
           brew cask install basictex
           eval "$(/usr/libexec/path_helper -s)"
           sudo tlmgr update --self
+          brew install pkg-config
+          brew install libffi
+          brew install pango
+          brew install glib
           sudo tlmgr install standalone preview doublestroke relsize fundus-calligra wasysym physics dvisvgm.x86_64-darwin dvisvgm rsfs wasy cm-super
           echo "::add-path::$HOME/.poetry/bin"
           echo "::set-env name=PATH::$PATH"
@@ -79,6 +83,7 @@ jobs:
           $soxVersionNumber = python -c "import json;print(json.load(open('.github/manimdependency.json'))['windows']['sox'].split('-')[1])"
           $ffmpegVersion = python -c "import json;print(json.load(open('.github/manimdependency.json'))['windows']['ffmpeg'])"
           $ffmpegVersionNumber = python -c "import json;print(json.load(open('.github/manimdependency.json'))['windows']['ffmpeg'].split('-')[1])"
+          $pangoVersion = python -c "import json;print(json.load(open('.github/manimdependency.json'))['windows']['pango'])"
           $OriPath = $env:PATH
           echo "Install Tinytex"
           Invoke-WebRequest "https://ci.appveyor.com/api/projects/yihui/tinytex/artifacts/TinyTeX.zip?job=image:%20Visual%20Studio%202019" -O "$($env:TMP)\TinyTex.zip"
@@ -93,6 +98,8 @@ jobs:
           Invoke-WebRequest "https://ffmpeg.zeranoe.com/builds/win64/static/$($ffmpegVersion).zip" -O "$($env:TMP)\$($ffmpegVersion).zip"
           7z x "$($env:TMP)\$($ffmpegVersion).zip" -o"$($PWD)\ManimCache"
           Move-Item "ManimCache\ffmpeg-*" "ManimCache\FFmpeg"
+          Invoke-WebRequest "https://github.com/naveen521kk/manim-windows/releases/download/$($pangoVersion)/pango-windows-binaires-x64.zip" -O "$($env:TMP)\Pango.zip"
+          7z x "$($env:TMP)\$($Pango).zip" -o"$($PWD)\ManimCache\Pango"
 
       - name: Add Windows dependecies to path
         if: runner.os == 'Windows'
@@ -100,6 +107,7 @@ jobs:
           $env:Path += ";" + "$($PWD)\ManimCache\FFmpeg\bin"
           $env:Path += ";" + "$($PWD)\ManimCache\LatexWindows\TinyTeX\bin\win32"
           $env:Path += ";" + "$($PWD)\ManimCache\SoX"
+          $rnv:Path += ";" + "$($PWD)\ManimCache\Pango"
           $env:Path = "$env:USERPROFILE\.poetry\bin;$($env:PATH)"
           echo "::set-env name=Path::$env:Path"
 
