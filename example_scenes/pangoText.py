@@ -9,7 +9,9 @@ class PangoRendering(Scene):
         self.play(Write(morning))
         self.wait(3)
         self.clear()
-        chin = PangoText("見 角 言 谷  辛 辰 辵 邑 酉 釆 里!")
+        chin = PangoText(
+            "見 角 言 谷  辛 辰 辵 邑 酉 釆 里!", t2c={"見 角 言": BLUE}
+        )  # works same as ``Text``.
         self.play(Write(chin))
         self.wait(2)
         mess = PangoText("Multi-Language", style=BOLD)

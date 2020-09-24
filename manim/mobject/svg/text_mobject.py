@@ -583,8 +583,28 @@ class Paragraph(VGroup):
 class PangoText(SVGMobject):
     """Display (non-LaTeX) text rendered using `Pango <https://pango.gnome.org/>`_.
 
-    Text objects behave like a :class:`.VGroup`-like iterable of all characters
+    PangoText objects behave like a :class:`.VGroup`-like iterable of all characters
     in the given text. In particular, slicing is possible.
+
+    Parameters
+    ----------
+    text : :class:`str`
+        The text that need to created as mobject.
+
+    Returns
+    -------
+    :class:`PangoText`
+        The mobject like :class:`.VGroup`.
+
+    Examples
+    --------
+    .. manim:: PangoRender
+        :quality: low
+        class PangoRender(Scene):
+            def construct(self):
+                morning = PangoText("வணக்கம்", font="sans-serif")
+                self.play(Write(morning))
+                self.wait(2)
 
     .. WARNING::
 
@@ -618,7 +638,7 @@ class PangoText(SVGMobject):
         "tab_width": 4,
     }
 
-    def __init__(self, text, **config):
+    def __init__(self, text: str, **config):
         self.full2short(config)
         digest_config(self, config)
         self.original_text = text
@@ -663,7 +683,8 @@ class PangoText(SVGMobject):
         if self.height is None and self.width is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
 
-    def remove_last_M(self, file_name):
+    def remove_last_M(self, file_name: str):
+        """Internally used function. Use to format the rendered SVG files."""
         with open(file_name, "r") as fpr:
             content = fpr.read()
         content = re.sub(r'Z M [^A-Za-z]*? "\/>', 'Z "/>', content)
@@ -671,6 +692,7 @@ class PangoText(SVGMobject):
             fpw.write(content)
 
     def find_indexes(self, word, text):
+        """Internally used function. Finds the indexes of ``text`` in ``word``."""
         m = re.match(r"\[([0-9\-]{0,}):([0-9\-]{0,})\]", word)
         if m:
             start = int(m.group(1)) if m.group(1) != "" else 0
@@ -686,6 +708,13 @@ class PangoText(SVGMobject):
         return indexes
 
     def full2short(self, config):
+        """Internally used function. Fomats some exapansion to short forms.
+        text2color -> t2c
+        text2font -> t2f
+        text2gradient -> t2g
+        text2slant -> t2s
+        text2weight -> t2w
+        """
         for kwargs in [config, self.CONFIG]:
             if kwargs.__contains__("text2color"):
                 kwargs["t2c"] = kwargs.pop("text2color")
@@ -699,18 +728,21 @@ class PangoText(SVGMobject):
                 kwargs["t2w"] = kwargs.pop("text2weight")
 
     def set_color_by_t2c(self, t2c=None):
+        """Internally used function. Sets colour for specified strings."""
         t2c = t2c if t2c else self.t2c
         for word, color in list(t2c.items()):
             for start, end in self.find_indexes(word, self.original_text):
                 self.chars[start:end].set_color(color)
 
     def set_color_by_t2g(self, t2g=None):
+        """Internally used function.Sets gradient colours for specified strings. Same as ``set_color_by_t2c``."""
         t2g = t2g if t2g else self.t2g
         for word, gradient in list(t2g.items()):
             for start, end in self.find_indexes(word, self.original_text):
                 self.chars[start:end].set_color_by_gradient(*gradient)
 
     def str2style(self, string):
+        """Internally used function. Converts text to Pango Understandable Styles/"""
         if string == NORMAL:
             return pangocffi.Style.NORMAL
         elif string == ITALIC:
@@ -721,13 +753,36 @@ class PangoText(SVGMobject):
             raise AttributeError("There is no Style Called %s" % string)
 
     def str2weight(self, string):
+        """Internally used function. Convert text to Pango Understandable Weight"""
         if string == NORMAL:
             return pangocffi.Weight.NORMAL
         elif string == BOLD:
             return pangocffi.Weight.BOLD
-        # TODO: Add other font Weights https://pangocffi.readthedocs.io/en/latest/modules.html?highlight=normal#weight
+        elif string == THIN:
+            return pangocffi.Weight.THIN
+        elif string == ULTRALIGHT:
+            return pangocffi.Weight.ULTRALIGHT
+        elif string == LIGHT:
+            return pangocffi.Weight.LIGHT
+        elif string == SEMILIGHT:
+            return pangocffi.Weight.SEMILIGHT
+        elif string == BOOK:
+            return pangocffi.Weight.BOOK
+        elif string == MEDIUM:
+            return pangocffi.Weight.MEDIUM
+        elif string == SEMIBOLD:
+            return pangocffi.Weight.SEMIBOLD
+        elif string == ULTRABOLD:
+            return pangocffi.Weight.ULTRABOLD
+        elif string == HEAVY:
+            return pangocffi.Weight.HEAVY
+        elif string == ULTRAHEAVY:
+            return pangocffi.Weight.ULTRAHEAVY
 
     def text2hash(self):
+        """Internally used function.
+        Generates ``sha256`` hash for file name.
+        """
         settings = (
             "PANGO" + self.font + self.slant + self.weight
         )  # to differentiate Text and PangoText
@@ -739,6 +794,9 @@ class PangoText(SVGMobject):
         return hasher.hexdigest()[:16]
 
     def text2settings(self):
+        """Internally used function.
+        Convets the texts and styles to a setting for parsing
+        """
         settings = []
         t2x = [self.t2f, self.t2s, self.t2w]
         for i in range(len(t2x)):
@@ -782,6 +840,9 @@ class PangoText(SVGMobject):
         return settings
 
     def text2svg(self):
+        """Internally used function.
+        Convert the text to SVG using Pango
+        """
         # anti-aliasing
         size = self.size * 10
         line_spacing = self.line_spacing * 10
@@ -825,6 +886,19 @@ class PangoText(SVGMobject):
 
 
 class Text(CairoText):
+    """Display (non-LaTeX) text.
+
+    Text objects behave like a :class:`.VGroup`-like iterable of all characters
+    in the given text. In particular, slicing is possible.
+
+    .. WARNING::
+
+        Using a :class:`.Transform` on text with leading whitespace can look
+        `weird <https://github.com/3b1b/manim/issues/1067>`_. Consider using
+        :meth:`remove_invisible_chars` to resolve this issue.
+
+    """
+
     def __init__(self, text, **config):
         logger.warning(
             "Using Text uses Cairo Toy API to Render Text."
