@@ -634,7 +634,6 @@ class PangoText(SVGMobject):
         self.remove_last_M(file_name)
         SVGMobject.__init__(self, file_name, **config)
         self.text = text
-        self.submobjects = [*self.gen_chars()]
         self.chars = VGroup(*self.submobjects)
         self.text = text_without_tabs.replace(" ", "").replace("\n", "")
         nppc = self.n_points_per_cubic_curve
@@ -663,40 +662,6 @@ class PangoText(SVGMobject):
         # anti-aliasing
         if self.height is None and self.width is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
-
-    def gen_chars(self):
-        chars = VGroup()
-        submobjects_char_index = 0
-        for char_index in range(self.text.__len__()):
-            if self.text[char_index] in [" ", "\t", "\n"]:
-                space = Dot(redius=0, fill_opacity=0, stroke_opacity=0)
-                if char_index == 0:
-                    try:
-                        space.move_to(
-                            self.submobjects[submobjects_char_index].get_center()
-                        )
-                    except IndexError as e:
-                        logger.error(e)
-                        # cause a IndexError error because pango generates a empty path which is not condidered as an mobject.
-                        # Doesn't hurt to pass like this.
-                        pass
-                else:
-                    try:
-                        space.move_to(
-                            self.submobjects[submobjects_char_index - 1].get_center()
-                        )
-                    except IndexError as e:  # same as above
-                        logger.error(e)
-                        pass
-                chars.add(space)
-            else:
-                try:
-                    chars.add(self.submobjects[submobjects_char_index])
-                except IndexError as e:  # same as above
-                    logger.error(e)
-                    pass
-                submobjects_char_index += 1
-        return chars
 
     def remove_last_M(self, file_name):
         with open(file_name, "r") as fpr:
