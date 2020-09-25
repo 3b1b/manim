@@ -36,6 +36,6 @@ class PangoRendering(Scene):
         self.play(Write(arb))
         self.wait(3)
         self.clear()
-        jap = PangoText("臂猿「黛比」帶著孩子",font="sans-serif")
+        jap = PangoText("臂猿「黛比」帶著孩子", font="sans-serif")
         self.play(Write(jap))
         self.wait(3)
