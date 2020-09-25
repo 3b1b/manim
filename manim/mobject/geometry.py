@@ -439,11 +439,11 @@ class AnnularSector(Arc):
             )
             for radius in (self.inner_radius, self.outer_radius)
         ]
-        outer_arc.reverse_points()
-        self.append_points(inner_arc.points)
-        self.add_line_to(outer_arc.points[0])
+        inner_arc.reverse_points()
         self.append_points(outer_arc.points)
         self.add_line_to(inner_arc.points[0])
+        self.append_points(inner_arc.points)
+        self.add_line_to(outer_arc.points[0])
 
 
 class Sector(AnnularSector):
