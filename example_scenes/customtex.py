@@ -22,10 +22,29 @@ class InCodeTexTemplate(Scene):
     """
 
     def construct(self):
-        tpl = TexTemplate()
-        tpl.append_package(["esvect", ["f"]])
-        config["tex_template"] = tpl
+        # Create a template
+        template = TexTemplate()
+        # Other options include
+        # BasicTexTemplate()
+        # ThreeBlueOneBrownTexTemplate()
+        # ThreeBlueOneBrownCTEXTemplate()
 
-        # text=Tex(r"$\vv{vb}$")
+        # Add packages to the template
+        template.add_to_preamble(r"\usepackage{esvect}")
+
+        # Set the compiler and output format (default: latex and .dvi)
+        template.tex_compiler = "pdflatex"
+        # Alternatives are "latex", "pdflatex", "xelatex", "lualatex", "luatex"
+        template.output_format = ".pdf"
+        # alternatives are ".dvi",  ".pdf", and ".xdv"
+
+        # To use this as the default template for all Tex:
+        config["tex_template"] = template
+
         text = MathTex(r"\vv{vb}")
         self.play(Write(text))
+
+        # To use this template for a single Tex() or MathTex() object only
+        text2 = MathTex(r"f:A\rightarrow B", tex_template=template)
+        text2.shift(DOWN)
+        self.play(Write(text2))
