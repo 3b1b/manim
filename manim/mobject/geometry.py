@@ -288,6 +288,12 @@ class Arc(TipableVMobject):
         """
         # First two anchors and handles
         a1, h1, h2, a2 = self.points[:4]
+
+        if np.all(a1 == a2):
+            # For a1 and a2 to lie at the same point arc radius
+            # must be zero. Thus arc_center will also lie at
+            # that point.
+            return a1
         # Tangent vectors
         t1 = h1 - a1
         t2 = h2 - a2
@@ -439,11 +445,11 @@ class AnnularSector(Arc):
             )
             for radius in (self.inner_radius, self.outer_radius)
         ]
-        inner_arc.reverse_points()
-        self.append_points(outer_arc.points)
-        self.add_line_to(inner_arc.points[0])
+        outer_arc.reverse_points()
         self.append_points(inner_arc.points)
         self.add_line_to(outer_arc.points[0])
+        self.append_points(outer_arc.points)
+        self.add_line_to(inner_arc.points[0])
 
 
 class Sector(AnnularSector):
