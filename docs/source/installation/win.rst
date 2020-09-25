@@ -18,6 +18,27 @@ You can install manim very easily using chocolatey, by typing the following comm
 
 And then you can skip all the other steps and move to installing :ref:`latex-installation`.
 
+Pango Installation
+******************
+These steps would get you `libpango-1.0-0.dll` to your ``PATH`` along with other dependencies. You may probably have them before itself if you have installed `GTK <https://www.gtk.org/>`_ or any ``GTK`` based app like emacs. If you have it you can just add it to your path and skip these steps.
+
+1. Go to `Release Page
+   <https://github.com/ManimCommunity/manim-windows/releases/latest>`_ and download the one according 
+   to your PC architechture.
+
+	.. important:: Please download the ``zip`` file for architechtureof python installed.
+                  It is possible to have installed ``x86`` python on ``x64`` PC.
+
+2. Extract the zip file using File Explorer or 7z to the loaction you want to install.
+
+   .. code-block:: powershell
+      
+      7z x pango-windows-binaires-x64.zip -oC:\Pango
+
+3. Finally, add it `PATH variable
+   <https://www.computerhope.com/issues/ch000549.htm>`_.
+
+
 Cairo installation
 ******************
 
