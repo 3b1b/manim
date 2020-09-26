@@ -77,8 +77,7 @@ jobs:
         run: |
           $soxVersion = python -c "import json;print(json.load(open('.github/manimdependency.json'))['windows']['sox'])"
           $soxVersionNumber = python -c "import json;print(json.load(open('.github/manimdependency.json'))['windows']['sox'].split('-')[1])"
-          $ffmpegVersion = python -c "import json;print(json.load(open('.github/manimdependency.json'))['windows']['ffmpeg'])"
-          $ffmpegVersionNumber = python -c "import json;print(json.load(open('.github/manimdependency.json'))['windows']['ffmpeg'].split('-')[1])"
+          $ffmpegUrl = python -c "import json;print(json.load(open('.github/manimdependency.json'))['windows']['ffmpeg'])"
           $OriPath = $env:PATH
           echo "Install Tinytex"
           Invoke-WebRequest "https://ci.appveyor.com/api/projects/yihui/tinytex/artifacts/TinyTeX.zip?job=image:%20Visual%20Studio%202019" -O "$($env:TMP)\TinyTex.zip"
@@ -90,8 +89,8 @@ jobs:
           Invoke-WebRequest "https://downloads.sourceforge.net/project/sox/sox/$($soxVersionNumber)/$($soxVersion).zip" -UserAgent "wget" -O "$($env:TMP)\SoX.zip"
           7z x "$($env:TMP)\SoX.zip" -o"$($PWD)\ManimCache"
           Move-Item "ManimCache\sox-*" "ManimCache\SoX"
-          Invoke-WebRequest "https://ffmpeg.zeranoe.com/builds/win64/static/$($ffmpegVersion).zip" -O "$($env:TMP)\$($ffmpegVersion).zip"
-          7z x "$($env:TMP)\$($ffmpegVersion).zip" -o"$($PWD)\ManimCache"
+          Invoke-WebRequest "$ffmpegUrl" -O "$($env:TMP)\ffmpeg.zip"
+          7z x "$($env:TMP)\ffmpeg.zip" -o"$($PWD)\ManimCache"
           Move-Item "ManimCache\ffmpeg-*" "ManimCache\FFmpeg"
 
       - name: Add Windows dependecies to path
