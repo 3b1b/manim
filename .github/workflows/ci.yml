@@ -82,6 +82,7 @@ jobs:
           $soxVersion = python -c "import json;print(json.load(open('.github/manimdependency.json'))['windows']['sox'])"
           $soxVersionNumber = python -c "import json;print(json.load(open('.github/manimdependency.json'))['windows']['sox'].split('-')[1])"
           $ffmpegUrl = python -c "import json;print(json.load(open('.github/manimdependency.json'))['windows']['ffmpeg'])"
+          $pangoVersion = python -c "import json;print(json.load(open('.github/manimdependency.json'))['windows']['pango'])"
           $OriPath = $env:PATH
           echo "Install Tinytex"
           Invoke-WebRequest "https://ci.appveyor.com/api/projects/yihui/tinytex/artifacts/TinyTeX.zip?job=image:%20Visual%20Studio%202019" -O "$($env:TMP)\TinyTex.zip"
@@ -96,7 +97,7 @@ jobs:
           Invoke-WebRequest "$ffmpegUrl" -O "$($env:TMP)\ffmpeg.zip"
           7z x "$($env:TMP)\ffmpeg.zip" -o"$($PWD)\ManimCache"
           Move-Item "ManimCache\ffmpeg-*" "ManimCache\FFmpeg"
-          Invoke-WebRequest "https://github.com/naveen521kk/manim-windows/releases/download/$($pangoVersion)/pango-windows-binaires-x64.zip" -O "$($env:TMP)\Pango.zip"
+          Invoke-WebRequest "https://github.com/ManimCommunity/manim-windows/releases/download/$($pangoVersion)/pango-windows-binaires-x64.zip" -O "$($env:TMP)\Pango.zip"
           7z x "$($env:TMP)\$($Pango).zip" -o"$($PWD)\ManimCache\Pango"
 
       - name: Add Windows dependecies to path
