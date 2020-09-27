@@ -333,7 +333,7 @@ class Title(Tex):
 class TexMobject(MathTex):
     def __init__(self, *tex_strings, **kwargs):
         logger.warning(
-            "TexMobject has been deprecated (due to its confusing name)"
+            "TexMobject has been deprecated (due to its confusing name) "
             "in favour of MathTex. Please use MathTex instead!"
         )
         MathTex.__init__(self, *tex_strings, **kwargs)
@@ -342,7 +342,7 @@ class TexMobject(MathTex):
 class TextMobject(Tex):
     def __init__(self, *text_parts, **kwargs):
         logger.warning(
-            "TextMobject has been deprecated (due to its confusing name)"
+            "TextMobject has been deprecated (due to its confusing name) "
             "in favour of Tex. Please use Tex instead!"
         )
         Tex.__init__(self, *text_parts, **kwargs)
