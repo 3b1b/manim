@@ -867,7 +867,7 @@ class PangoText(SVGMobject):
             fontdesc = pangocffi.FontDescription()
             fontdesc.set_size(pangocffi.units_from_double(size))
             if family:
-                fontdesc.set_family("sans-serif")
+                fontdesc.set_family(family)
             fontdesc.set_style(style)
             fontdesc.set_weight(weight)
             layout.set_font_description(fontdesc)
