@@ -98,7 +98,8 @@ jobs:
           7z x "$($env:TMP)\ffmpeg.zip" -o"$($PWD)\ManimCache"
           Move-Item "ManimCache\ffmpeg-*" "ManimCache\FFmpeg"
           Invoke-WebRequest "https://github.com/ManimCommunity/manim-windows/releases/download/$($pangoVersion)/pango-windows-binaires-x64.zip" -O "$($env:TMP)\Pango.zip"
-          7z x "$($env:TMP)\$($Pango).zip" -o"$($PWD)\ManimCache\Pango"
+          mkdir "$($PWD)\ManimCache\Pango"
+          7z x "$($env:TMP)\Pango.zip" -o"$($PWD)\ManimCache\Pango"
 
       - name: Add Windows dependecies to path
         if: runner.os == 'Windows'
