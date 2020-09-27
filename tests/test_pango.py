@@ -122,6 +122,3 @@ def test_tabs_replace():
     surface.finish()
     b = SVGMobject(filename)
     assert len(a.submobjects) == len(b.submobjects)
-
-
-test_tabs_replace()
