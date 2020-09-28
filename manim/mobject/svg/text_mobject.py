@@ -600,6 +600,7 @@ class PangoText(SVGMobject):
     --------
     .. manim:: PangoRender
         :quality: low
+        
         class PangoRender(Scene):
             def construct(self):
                 morning = PangoText("வணக்கம்", font="sans-serif")
