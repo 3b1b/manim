@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
-from manim import Sector, ORIGIN
+from manim import Sector
 
 
 def test_get_arc_center():
-    assert np.all(Sector().get_arc_center() == ORIGIN)
+    assert np.all(Sector(arc_center=[1, 2, 0]).get_arc_center() == [1, 2, 0])
