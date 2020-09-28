@@ -11,6 +11,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
 import os
+import subprocess
 import sys
 from distutils.sysconfig import get_python_lib
 
@@ -19,8 +20,10 @@ sys.path.insert(0, os.path.abspath("."))
 
 
 if os.environ.get("READTHEDOCS") == "True":
-    # we need to add ffmpeg to the path
     site_path = get_python_lib()
+    # bindings for pangocffi need to be generated
+    subprocess.run(["python", "pangocffi/ffi_build.py"], cwd=site_path)
+    # we need to add ffmpeg to the path
     ffmpeg_path = os.path.join(site_path, "imageio_ffmpeg", "binaries")
     # the included binary is named ffmpeg-linux..., create a symlink
     [ffmpeg_bin] = [
