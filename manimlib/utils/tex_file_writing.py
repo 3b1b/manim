@@ -1,5 +1,6 @@
 import os
 import hashlib
+import subprocess
 
 from pathlib import Path
 
@@ -63,7 +64,7 @@ def tex_to_dvi(tex_file):
             ">",
             os.devnull
         ]
-        exit_code = os.system(" ".join(commands))
+        exit_code = subprocess.call(" ".join(commands))
         if exit_code != 0:
             log_file = tex_file.replace(".tex", ".log")
             raise Exception(
@@ -95,5 +96,5 @@ def dvi_to_svg(dvi_file, regen_if_exists=False):
             ">",
             os.devnull
         ]
-        os.system(" ".join(commands))
+        subprocess.call(" ".join(commands))
     return result
