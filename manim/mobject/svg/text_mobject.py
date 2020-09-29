@@ -685,7 +685,7 @@ class PangoText(SVGMobject):
             self.scale(TEXT_MOB_SCALE_FACTOR)
 
     def remove_last_M(self, file_name: str):
-        """Internally used function. Use to format the rendered SVG files."""
+        """Internally used. Use to format the rendered SVG files."""
         with open(file_name, "r") as fpr:
             content = fpr.read()
         content = re.sub(r'Z M [^A-Za-z]*? "\/>', 'Z "/>', content)
@@ -717,7 +717,7 @@ class PangoText(SVGMobject):
         text2weight -> t2w
         """
         for kwargs in [config, self.CONFIG]:
-            if kwargs.__contains__("text2color"):
+            if "text2color" in kwargs:
                 kwargs["t2c"] = kwargs.pop("text2color")
             if kwargs.__contains__("text2font"):
                 kwargs["t2f"] = kwargs.pop("text2font")
@@ -736,14 +736,14 @@ class PangoText(SVGMobject):
                 self.chars[start:end].set_color(color)
 
     def set_color_by_t2g(self, t2g=None):
-        """Internally used function.Sets gradient colours for specified strings. Same as ``set_color_by_t2c``."""
+        """Internally used. Sets gradient colors for specified strings. Behaves similarly to ``set_color_by_t2c``."""
         t2g = t2g if t2g else self.t2g
         for word, gradient in list(t2g.items()):
             for start, end in self.find_indexes(word, self.original_text):
                 self.chars[start:end].set_color_by_gradient(*gradient)
 
     def str2style(self, string):
-        """Internally used function. Converts text to Pango Understandable Styles/"""
+        """Internally used function. Converts text to Pango Understandable Styles."""
         if string == NORMAL:
             return pangocffi.Style.NORMAL
         elif string == ITALIC:
@@ -795,9 +795,7 @@ class PangoText(SVGMobject):
         return hasher.hexdigest()[:16]
 
     def text2settings(self):
-        """Internally used function.
-        Convets the texts and styles to a setting for parsing
-        """
+        """Internally used function. Converts the texts and styles to a setting for parsing."""
         settings = []
         t2x = [self.t2f, self.t2s, self.t2w]
         for i in range(len(t2x)):
@@ -807,7 +805,7 @@ class PangoText(SVGMobject):
                     for start, end in self.find_indexes(word, self.text):
                         fsw[i] = x
                         settings.append(TextSetting(start, end, *fsw))
-        # Set All text settings(default font slant weight)
+        # Set all text settings (default font, slant, weight)
         fsw = [self.font, self.slant, self.weight]
         settings.sort(key=lambda setting: setting.start)
         temp_settings = settings.copy()
