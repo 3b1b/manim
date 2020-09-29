@@ -946,6 +946,7 @@ class ArrowTip(VMobject):
         Examples
         --------
         ::
+
             >>> arrow = Arrow(np.array([0, 0, 0]), np.array([2, 0, 0]), buff=0)
             >>> arrow.tip.base.round(2) + 0.  # add 0. to avoid negative 0 in output
             array([1.65, 0.  , 0.  ])
@@ -960,6 +961,7 @@ class ArrowTip(VMobject):
         Examples
         --------
         ::
+
             >>> arrow = Arrow(np.array([0, 0, 0]), np.array([2, 0, 0]), buff=0)
             >>> arrow.tip.tip_point.round(2) + 0.
             array([2., 0., 0.])
@@ -974,6 +976,7 @@ class ArrowTip(VMobject):
         Examples
         --------
         ::
+
             >>> arrow = Arrow(np.array([0, 0, 0]), np.array([2, 2, 0]), buff=0)
             >>> arrow.tip.vector.round(2) + 0.
             array([0.25, 0.25, 0.  ])
@@ -988,6 +991,7 @@ class ArrowTip(VMobject):
         Examples
         --------
         ::
+
             >>> arrow = Arrow(np.array([0, 0, 0]), np.array([1, 1, 0]), buff=0)
             >>> round(arrow.tip.tip_angle, 5) == round(PI/4, 5)
             True
@@ -1002,6 +1006,7 @@ class ArrowTip(VMobject):
         Examples
         --------
         ::
+
             >>> arrow = Arrow(np.array([0, 0, 0]), np.array([1, 2, 0]))
             >>> round(arrow.tip.tip_length, 3)
             0.35
