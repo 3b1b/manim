@@ -97,25 +97,27 @@ from ..utils.space_ops import normalize
 
 class Colors(Enum):
     """A list of pre-defined colors.
-    
+
     Examples
     --------
     The preferred way of using these colors is
-    
+
     .. code-block:: python
+
        import manim.utils.color as C
        C.WHITE   # -> '#FFFFFF'
-       
+
     Note this way uses the name of the colors in UPPERCASE.
-    
+
     Alternatively, you can also import this Enum directly and use its members
     directly, through the use of :code:`color.value`.  Note this way uses the
     name of the colors in lowercase.
-    
+
     .. code-block:: python
+
        from manim.utils.color import Colors
        Colors.white.value   # -> '#FFFFFF'
-       
+
     """
 
     dark_blue = "#236B8E"
