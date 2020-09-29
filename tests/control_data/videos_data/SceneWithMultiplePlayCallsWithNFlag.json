@@ -1,0 +1,11 @@
+{
+    "name": "SceneWithMultiplePlayCallsWithNFlag",
+    "config": {
+        "codec_name": "h264",
+        "width": 854,
+        "height": 480,
+        "avg_frame_rate": "15/1",
+        "duration": "7.000000",
+        "nb_frames": "105"
+    }
+}

@@ -784,7 +784,6 @@ class Scene(Container):
         the number of animations that need to be played, and
         raises an EndSceneEarlyException if they don't correspond.
         """
-
         if file_writer_config["from_animation_number"]:
             if self.num_plays < file_writer_config["from_animation_number"]:
                 file_writer_config["skip_animations"] = True
@@ -848,6 +847,10 @@ class Scene(Container):
         def wrapper(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
             self.revert_to_original_skipping_status()
             self.update_skipping_status()
+            if file_writer_config["skip_animations"]:
+                logger.debug(f"Skipping wait {self.num_plays}")
+                func(self, duration, stop_condition)
+                return
             if not file_writer_config["disable_caching"]:
                 hash_wait = get_hash_from_wait_call(
                     self, self.camera, duration, stop_condition, self.get_mobjects()
