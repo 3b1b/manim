@@ -21,7 +21,7 @@ from ..mobject.types.vectorized_mobject import VGroup
 from ..mobject.types.vectorized_mobject import VectorizedPoint
 from ..scene.scene import Scene
 from ..utils.bezier import interpolate
-from ..utils.color import color_gradient
+from ..utils.color import color_gradient, GREY, BLUE, GREEN, YELLOW, BLACK, WHITE
 from ..utils.color import invert_color
 from ..utils.space_ops import angle_of_vector
 

@@ -52,7 +52,7 @@ from ..utils.space_ops import line_intersection
 from ..utils.space_ops import get_norm
 from ..utils.space_ops import normalize
 from ..utils.space_ops import rotate_vector
-
+from ..utils.color import RED, WHITE, BLUE
 
 DEFAULT_DOT_RADIUS = 0.08
 DEFAULT_SMALL_DOT_RADIUS = 0.04

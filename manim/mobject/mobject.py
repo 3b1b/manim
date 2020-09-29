@@ -18,7 +18,7 @@ import numpy as np
 from .. import config, file_writer_config
 from ..constants import *
 from ..container import Container
-from ..utils.color import color_gradient
+from ..utils.color import color_gradient, WHITE, BLACK, YELLOW_C
 from ..utils.color import interpolate_color
 from ..utils.iterables import list_update
 from ..utils.iterables import remove_list_redundancies

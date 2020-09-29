@@ -16,7 +16,7 @@ from ...mobject.geometry import Dot, Rectangle
 from ...mobject.svg.svg_mobject import SVGMobject
 from ...mobject.types.vectorized_mobject import VGroup
 from ...utils.config_ops import digest_config
-
+from ...utils.color import WHITE, BLACK
 
 TEXT_MOB_SCALE_FACTOR = 0.05
 

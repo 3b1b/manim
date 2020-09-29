@@ -8,7 +8,7 @@ from ..mobject.geometry import Line
 from ..mobject.geometry import Rectangle
 from ..mobject.types.vectorized_mobject import VGroup
 from ..mobject.types.vectorized_mobject import VMobject
-from ..utils.color import Color
+from ..utils.color import Color, YELLOW, BLACK, RED
 from ..utils.config_ops import digest_config
 
 

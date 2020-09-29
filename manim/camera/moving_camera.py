@@ -11,10 +11,11 @@ __all__ = ["CameraFrame", "MovingCamera"]
 
 from .. import config
 from ..camera.camera import Camera
-from ..constants import ORIGIN, WHITE
+from ..constants import ORIGIN
 from ..mobject.frame import ScreenRectangle
 from ..mobject.types.vectorized_mobject import VGroup
 from ..utils.config_ops import digest_config
+from ..utils.color import WHITE
 
 
 # TODO, think about how to incorporate perspective

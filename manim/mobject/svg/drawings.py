@@ -55,6 +55,7 @@ from ...utils.rate_functions import linear
 from ...utils.space_ops import angle_of_vector
 from ...utils.space_ops import complex_to_R3
 from ...utils.space_ops import rotate_vector
+from ...utils.color import YELLOW, WHITE, DARK_GREY, MAROON_B, PURPLE, GREEN, BLACK, LIGHT_GREY, GREY, BLUE_B, BLUE_D
 
 
 class Lightbulb(SVGMobject):

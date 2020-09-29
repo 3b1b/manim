@@ -24,7 +24,7 @@ from ...utils.bezier import get_smooth_handle_points
 from ...utils.bezier import interpolate
 from ...utils.bezier import integer_interpolate
 from ...utils.bezier import partial_bezier_points
-from ...utils.color import color_to_rgba
+from ...utils.color import color_to_rgba, BLACK, WHITE
 from ...utils.iterables import make_even
 from ...utils.iterables import stretch_array_to_length
 from ...utils.iterables import tuplify

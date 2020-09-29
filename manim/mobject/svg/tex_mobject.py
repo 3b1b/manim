@@ -26,6 +26,7 @@ from ...mobject.types.vectorized_mobject import VectorizedPoint
 from ...utils.config_ops import digest_config
 from ...utils.strings import split_string_list_to_isolate_substrings
 from ...utils.tex_file_writing import tex_to_svg_file
+from ...utils.color import BLACK
 
 TEX_MOB_SCALE_FACTOR = 0.05
 

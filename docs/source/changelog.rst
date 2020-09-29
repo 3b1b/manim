@@ -92,6 +92,7 @@ Of interest to developers
 #. Added logging tests tools.
 #. Added ability to save logs in json
 #. Move to Poetry.
+#. Colors have moved to an Enum
 
 Other Changes
 --------------
