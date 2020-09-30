@@ -20,6 +20,9 @@ def initialize_directories(config):
     if not (video_path_specified and config["tex_dir"]):
         if config["media_dir"]:
             MEDIA_DIR = config["media_dir"]
+        elif os.path.exists('media_dir.txt'):
+            with open('media_dir.txt') as f:
+                MEDIA_DIR = f.read()
         else:
             MEDIA_DIR = os.path.join(
                 os.path.expanduser('~'),
