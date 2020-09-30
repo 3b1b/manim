@@ -115,8 +115,8 @@ class Colors(Enum):
 
     .. code-block:: python
 
-        >>> import manim.utils.color as C
-        >>> C.WHITE
+        >>> from manim.utils.color import Colors
+        >>> Colors.white.value
         '#FFFFFF'
 
     """
