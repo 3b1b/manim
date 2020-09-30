@@ -341,7 +341,7 @@ class NumberPlane(Axes):
         for inputs in ranges:
             for k, x in enumerate(inputs):
                 new_line = line.copy()
-                new_line.move_to(axis2.number_to_point(x))
+                new_line.shift(axis2.number_to_point(x))
                 if k % (1 + ratio) == 0:
                     lines1.add(new_line)
                 else:
