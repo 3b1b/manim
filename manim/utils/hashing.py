@@ -112,7 +112,7 @@ class CustomEncoder(json.JSONEncoder):
             # A deepcopy isn't necessary as it is already recursive.
             lst_copy = copy.copy(lst)
             if isinstance(lst, tuple):
-                # NOTE : Sometimes a tuple can pass through this function. As a tuple is unmutable, we convert it to a list to be able to modify it.
+                # NOTE : Sometimes a tuple can pass through this function. As a tuple is immutable, we convert it to a list to be able to modify it.
                 # It's ok as it's a copy.
                 lst_copy = list(lst_copy)
             for i, el in enumerate(lst):
