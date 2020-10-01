@@ -77,7 +77,23 @@ Sox installation (optional)
 
 LaTeX Installation
 ******************
-You can install latex by either of the two methods below. MiKTex is very large (2 GB) while TinyTex is small  (500Mb).
+You can install latex by either of the two methods below. MiKTex is very large (2 GB) while ManimLaTeX is small  (500Mb).
+
+Using a custom distribution for Manim based on Texlive
+------------------------------------------------------
+
+This is the smallest latex distribution just enough to run Manim. Extra latex packages for fonts can be
+installed using ``tlmgr``. See https://www.tug.org/texlive/tlmgr.html for more information.
+
+1. Install chocolatey if you haven't already.
+
+2. Run the following command
+
+   .. code-block:: powershell
+      
+      choco install manim-latex
+
+3. Finally, check whether it installed properly by running an example scene.
 
 Using MiKTex
 ------------
@@ -91,26 +107,6 @@ Using MiKTex
 
 2. You can check if you did it right by running ``refreshenv`` to update your
    environment variable and running ``latex``.
-
-Using TinyTex
--------------
-
-1. Save the batch file `install-windows.bat
-<https://yihui.org/gh/tinytex/tools/install-windows.bat>`_. (open this link and press Ctrl + S).
-
-.. note:: Please note that it requires PowerShell (at least version 3.0).
-
-2. Double click the file and it opens a command prompt. There might be an error
-dialog or two about ``luatex.dll`` during the installation `(like this)
-<https://db.yihui.org/images/install-tl-win-lua.png>`_, but that does not seem to hurt, and click “OK”. The installation directory is ``%APPDATA%/TinyTeX``, where APPDATA is an environment variable that typically points to the path ``C:\Users\Your Name\AppData\Roaming``
-
-3.Finally, close the terminal and open a new one and type the below commands.
-
-.. code-block:: bash
-
-      tlmgr install standalone preview doublestroke ms setspace rsfs relsize ragged2e fundus-calligra microtype wasysym physics dvisvgm jknapltx wasy cm-super babel-english
-
-4. Finally, check whether it installed properly by running an example scene.
 
 Certifying a clean install
 **************************
