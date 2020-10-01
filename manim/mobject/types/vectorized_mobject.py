@@ -876,6 +876,14 @@ class VGroup(VMobject):
         VMobject.__init__(self, **kwargs)
         self.add(*vmobjects)
 
+    def __repr__(self):
+        return (
+            __class__.__name__
+            + "("
+            + ", ".join(str(mob) for mob in self.submobjects)
+            + ")"
+        )
+
     def add(self, *vmobjects):
         """Checks if all passed elements are an instance of VMobject and then add them to submobjects
 
@@ -933,6 +941,9 @@ class VDict(VMobject):
         self.show_keys = show_keys
         self.submob_dict = {}
         self.add(mapping_or_iterable)
+
+    def __repr__(self):
+        return __class__.__name__ + "(" + repr(self.submob_dict) + ")"
 
     def add(self, mapping_or_iterable):
         """Adds the key-value pairs to the :class:`VDict` object.
