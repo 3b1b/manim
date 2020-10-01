@@ -62,7 +62,7 @@ class Mobject(Container):
         self.generate_points()
         self.init_colors()
 
-    def __str__(self):
+    def __repr__(self):
         return str(self.name)
 
     def reset_points(self):
