@@ -350,72 +350,69 @@ class SpecialThreeDScene(ThreeDScene):
         self.set_camera_orientation(
             **self.default_angled_camera_position
         )
-        
-	def get_fixed_in_frame_labels(self,axes,x_label = "x" ,y_label = "y",z_label = "z"):
-        '''
-        This Code helps you label the axes with labels such that the labels always face towards camera and they also move with the axes. 
-        '''
-		x_axis = axes.get_x_axis()
-		y_axis = axes.get_y_axis()
-		z_axis = axes.get_z_axis()
+    
+    def get_fixed_in_frame_labels(self,axes,x_label = "x",y_label = "y",z_label = "z"):
+        x_axis = axes.get_x_axis()
+        y_axis = axes.get_y_axis()
+        z_axis = axes.get_z_axis()
 
-		x_lbl = TexMobject(x_label).next_to(x_axis.get_end(),RIGHT)
-		y_lbl = TexMobject(y_label).next_to(y_axis.get_end(),RIGHT)
-		z_lbl = TexMobject(z_label).next_to(z_axis.get_end(),RIGHT)
+        x_lbl = TexMobject(x_label).next_to(x_axis.get_end(),RIGHT)
+        y_lbl = TexMobject(y_label).next_to(y_axis.get_end(),RIGHT)
+        z_lbl = TexMobject(z_label).next_to(z_axis.get_end(),RIGHT)
 
-		def x_updater(m):
-			new_x_lbl = TexMobject(x_label)
-			new_x_lbl.next_to(x_axis.get_end(),RIGHT)
-			phi = self.camera.get_phi()
-			theta = self.camera.get_theta()
-			new_x_lbl.rotate(np.pi/2 + theta,OUT)
-			vect1 = np.array([
-								np.sin(phi)*np.cos(theta),
-								np.sin(phi)*np.sin(theta),
-								np.cos(phi)])
-			vect2 = OUT
-			axis = np.cross(vect1,vect2)
-			new_x_lbl.rotate(-phi,axis)
+        def x_updater(m):
+            new_x_lbl = TexMobject(x_label)
+            new_x_lbl.next_to(x_axis.get_end(),RIGHT)
+            phi = self.camera.get_phi()
+            theta = self.camera.get_theta()
+            new_x_lbl.rotate(np.pi/2 + theta,OUT)
+            vect1 = np.array([
+                                np.sin(phi)*np.cos(theta),
+                                np.sin(phi)*np.sin(theta),
+                                np.cos(phi)])
+            vect2 = OUT
+            axis = np.cross(vect1,vect2)
+            new_x_lbl.rotate(-phi,axis)
 
-			m.become(new_x_lbl)
+            m.become(new_x_lbl)
 
-		def y_updater(m):
-			new_y_lbl = TexMobject(y_label)
-			new_y_lbl.next_to(y_axis.get_end(),UP)
-			phi = self.camera.get_phi()
-			theta = self.camera.get_theta()
-			new_y_lbl.rotate(np.pi/2 + theta,OUT)
-			vect1 = np.array([
-								np.sin(phi)*np.cos(theta),
-								np.sin(phi)*np.sin(theta),
-								np.cos(phi)])
-			vect2 = OUT
-			axis = np.cross(vect1,vect2)
-			new_y_lbl.rotate(-phi,axis)
+        def y_updater(m):
+            new_y_lbl = TexMobject(y_label)
+            new_y_lbl.next_to(y_axis.get_end(),UP)
+            phi = self.camera.get_phi()
+            theta = self.camera.get_theta()
+            new_y_lbl.rotate(np.pi/2 + theta,OUT)
+            vect1 = np.array([
+                                np.sin(phi)*np.cos(theta),
+                                np.sin(phi)*np.sin(theta),
+                                np.cos(phi)])
+            vect2 = OUT
+            axis = np.cross(vect1,vect2)
+            new_y_lbl.rotate(-phi,axis)
 
 
-			m.become(new_y_lbl)
+            m.become(new_y_lbl)
 
-		def z_updater(m):
-			new_z_lbl = TexMobject(z_label)
-			new_z_lbl.next_to(z_axis.get_end(),ORIGIN)
-			phi = self.camera.get_phi()
-			theta = self.camera.get_theta()
-			new_z_lbl.rotate(np.pi/2 + theta,OUT)
-			vect1 = np.array([
-								np.sin(phi)*np.cos(theta),
-								np.sin(phi)*np.sin(theta),
-								np.cos(phi)])
-			vect2 = OUT
-			axis = np.cross(vect1,vect2)
-			new_z_lbl.rotate(-phi,axis)
+        def z_updater(m):
+            new_z_lbl = TexMobject(z_label)
+            new_z_lbl.next_to(z_axis.get_end(),OUT)
+            phi = self.camera.get_phi()
+            theta = self.camera.get_theta()
+            new_z_lbl.rotate(np.pi/2 + theta,OUT)
+            vect1 = np.array([
+                                np.sin(phi)*np.cos(theta),
+                                np.sin(phi)*np.sin(theta),
+                                np.cos(phi)])
+            vect2 = OUT
+            axis = np.cross(vect1,vect2)
+            new_z_lbl.rotate(-phi,axis)
 
-			m.become(new_z_lbl)		
+            m.become(new_z_lbl)     
 
-		x_lbl.add_updater(x_updater)
-		y_lbl.add_updater(y_updater)
-		z_lbl.add_updater(z_updater)
+        x_lbl.add_updater(x_updater)
+        y_lbl.add_updater(y_updater)
+        z_lbl.add_updater(z_updater)
 
-		labels = VGroup(x_lbl,y_lbl,z_lbl)
+        labels = VGroup(x_lbl,y_lbl,z_lbl)
 
-		return labels
+        return labels
