@@ -878,7 +878,7 @@ class VGroup(VMobject):
 
     def __repr__(self):
         return (
-            __class__.__name__
+            self.__class__.__name__
             + "("
             + ", ".join(str(mob) for mob in self.submobjects)
             + ")"
