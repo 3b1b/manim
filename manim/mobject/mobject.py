@@ -62,6 +62,9 @@ class Mobject(Container):
         self.generate_points()
         self.init_colors()
 
+    def __repr__(self):
+        return str(self.name)
+
     def reset_points(self):
         self.points = np.zeros((0, self.dim))
 
