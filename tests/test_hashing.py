@@ -108,3 +108,9 @@ def test_JSON_with_big_np_array():
     a = np.zeros((1000, 1000))
     o_ser = hashing.get_json(a)
     assert "TRUNCATED ARRAY" in o_ser
+
+
+def test_JSON_with_tuple():
+    o = [(1, [1])]
+    o_ser = hashing.get_json(o)
+    assert o_ser == "[[1, [1]]]"
