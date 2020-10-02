@@ -903,7 +903,6 @@ class ArrowTip(VMobject):
     a custom one like this:
 
     .. manim:: CustomTipExample
-        :quality: low
 
         >>> class MyCustomArrowTip(ArrowTip, RegularPolygon):
         ...     def __init__(self, **kwargs):

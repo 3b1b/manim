@@ -2,7 +2,6 @@ Annotations
 =================================
 
 .. manim:: AnnotateBrace
-    :quality: medium
     :save_last_frame:
 
     class AnnotateBrace(Scene):

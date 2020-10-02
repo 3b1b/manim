@@ -2,7 +2,6 @@
 =================================
 
 .. manim:: Example3DNo1
-    :quality: medium
     :save_last_frame:
 
     class Example3DNo1(ThreeDScene):
@@ -18,4 +17,65 @@
             )
             self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
             self.add(axes, sphere)
+
+.. manim:: Example3DLightSourcePosition
+    :save_last_frame:
+
+    class Example3DLightSourcePosition(ThreeDScene):
+        def construct(self):
+            axes = ThreeDAxes()
+            sphere = ParametricSurface(
+                lambda u, v: np.array([
+                    1.5 * np.cos(u) * np.cos(v),
+                    1.5 * np.cos(u) * np.sin(v),
+                    1.5 * np.sin(u)
+                ]), v_min=0, v_max=TAU, u_min=-PI / 2, u_max=PI / 2,
+                checkerboard_colors=[RED_D, RED_E], resolution=(15, 32)
+            )
+            self.camera.light_source.move_to(3*IN) # changes the source of the light
+            self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+            self.add(axes, sphere)
+
+.. manim:: Example3DNo3
+
+    class Example3DNo3(ThreeDScene):
+        def construct(self):
+            axes = ThreeDAxes()
+            circle=Circle()
+            self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+            self.add(circle,axes)
+            self.begin_ambient_camera_rotation(rate=0.1)
+            self.wait(3)
+            self.stop_ambient_camera_rotation()
+            self.move_camera(phi=75 * DEGREES, theta=30 * DEGREES)
+            self.wait()
+
+.. manim:: Example3DNo4
+
+    class Example3DNo4(ThreeDScene):
+        def construct(self):
+            axes = ThreeDAxes()
+            circle=Circle()
+            self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+            self.add(circle,axes)
+            self.begin_3dillusion_camera_rotation(rate=2)
+            self.wait(PI)
+            self.stop_3dillusion_camera_rotation()
+
+.. manim:: Example3DNo5
+    :save_last_frame:
+
+    class Example3DNo5(ThreeDScene):
+        def construct(self):
+            curve1 = ParametricFunction(
+                lambda u: np.array([
+                    1.2 * np.cos(u),
+                    1.2 * np.sin(u),
+                    u * 0.05
+                ]), color=RED, t_min=-3 * TAU, t_max=5 * TAU,
+            ).set_shade_in_3d(True)
+            axes = ThreeDAxes()
+            self.add(axes, curve1)
+            self.set_camera_orientation(phi=80 * DEGREES, theta=-60 * DEGREES)
+            self.wait()
 
