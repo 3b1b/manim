@@ -74,7 +74,7 @@ ITALIC = 'ITALIC'
 OBLIQUE = 'OBLIQUE'
 BOLD = 'BOLD'
 
-TEX_USE_CTEX = True
+TEX_USE_CTEX = False
 TEX_TEXT_TO_REPLACE = "YourTextHere"
 TEMPLATE_TEX_FILE = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
