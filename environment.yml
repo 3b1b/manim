@@ -15,5 +15,6 @@ dependencies:
   - pycairo==1.18.0
   - pydub==0.23.0
   - ffmpeg
+  - pygments==2.6.1
   - pip:
-    - pyreadline
+      - pyreadline

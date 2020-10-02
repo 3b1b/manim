@@ -12,13 +12,13 @@ This repository contains the version of manim used by 3Blue1Brown. There is also
 To get help or to join the development effort, please join the [discord](https://discord.gg/mMRrZQW).
 
 ## Installation
-Manim runs on Python 3.7. You can install it from PyPI via pip:
+Manim runs on Python 3.6 or higher version. You can install it from PyPI via pip:
 
 ```sh
 pip3 install manimlib
 ```
 
-System requirements are [cairo](https://www.cairographics.org), [ffmpeg](https://www.ffmpeg.org), [sox](http://sox.sourceforge.net), [latex](https://www.latex-project.org) (optional, if you want to use LaTeX).
+System requirements are [cairo](https://www.cairographics.org), [ffmpeg](https://www.ffmpeg.org), [sox](http://sox.sourceforge.net) (optional, if you want to play the prompt tone after running), [latex](https://www.latex-project.org) (optional, if you want to use LaTeX).
 
 You can now use it via the `manim` command. For example:
 
@@ -42,7 +42,7 @@ python3 ./manim.py example_scenes.py SquareToCircle -pl
 
 ### Directly (Windows)
 1. [Install FFmpeg](https://www.wikihow.com/Install-FFmpeg-on-Windows).
-2. [Install Cairo](https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo). For most users, ``pycairo‑1.18.0‑cp37‑cp37m‑win32.whl`` will do fine.
+2. [Install Cairo](https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo). For most users, ``pycairo‑1.18.0‑cp37‑cp37m‑win32.whl`` will do fine (you can download it or other versions from [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo)).
     ```sh
     pip3 install C:\path\to\wheel\pycairo‑1.18.0‑cp37‑cp37m‑win32.whl
     ```
@@ -50,7 +50,7 @@ python3 ./manim.py example_scenes.py SquareToCircle -pl
 
 4. [Install SoX](https://sourceforge.net/projects/sox/files/sox/).
 
-5. Install the remaining Python packages. Make sure that ``pycairo==1.17.1`` is changed to ``pycairo==1.18.0`` in requirements.txt.
+5. Install the remaining Python packages.
     ```sh
     git clone https://github.com/3b1b/manim.git
     cd manim
@@ -122,13 +122,15 @@ Look through the `old_projects` folder to see the code for previous 3b1b videos.
 While developing a scene, the `-sp` flags are helpful to just see what things look like at the end without having to generate the full animation. It can also be helpful to use the `-n` flag to skip over some number of animations.
 
 ### Documentation
-Documentation is in progress at [eulertour.com/docs](https://www.eulertour.com/docs/).
+Documentation is in progress at [eulertour.com/docs](https://www.eulertour.com/docs/). And there is also an all-in-one documentation and tutorials maintained by **@manim-kindergarten**: [manim.ml](https://manim.ml/) (in Chinese).
 
 ### Walkthrough
 Todd Zimmerman put together a [tutorial](https://talkingphysics.wordpress.com/2019/01/08/getting-started-animating-with-manim-and-python-3-7/) on getting started with manim, which has been updated to run on Python 3.7.
 
+[manim-kindergarten](https://github.com/manim-kindergarten/) wrote and collected some useful extra classes and some codes of videos in [manim_sandbox repo](https://github.com/manim-kindergarten/manim_sandbox).
+
 ## Contributing
-Although they are welcome, pull requests to this repository are rarely accepted. Most pull requests should be directed to the [community version](https://github.com/ManimCommunity/manim/).
+Only accepts pull requests that fixes bugs / fixes typos / improves existing content (for more information, see [#1243](https://github.com/3b1b/manim/issues/1243)). Most pull requests should be directed to the [community version](https://github.com/ManimCommunity/manim/).
 
 ## License
 All files in the directory `from_3b1b`, which by and large generate the visuals for 3b1b videos, are copyright 3Blue1Brown.

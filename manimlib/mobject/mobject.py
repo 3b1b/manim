@@ -272,7 +272,7 @@ class Mobject(Container):
         return self
 
     def apply_function(self, function, **kwargs):
-        # Default to applying matrix about the origin, not mobjects center
+        # Default to applying function about the origin, not mobjects center
         if len(kwargs) == 0:
             kwargs["about_point"] = ORIGIN
         self.apply_points_function_about_point(
@@ -477,7 +477,7 @@ class Mobject(Container):
         return self.rescale_to_fit(height, 1, stretch=True, **kwargs)
 
     def stretch_to_fit_depth(self, depth, **kwargs):
-        return self.rescale_to_fit(depth, 1, stretch=True, **kwargs)
+        return self.rescale_to_fit(depth, 2, stretch=True, **kwargs)
 
     def set_width(self, width, stretch=False, **kwargs):
         return self.rescale_to_fit(width, 0, stretch=stretch, **kwargs)
@@ -701,7 +701,6 @@ class Mobject(Container):
                 result, submob.get_merged_array(array_attr),
                 axis=0
             )
-            submob.get_merged_array(array_attr)
         return result
 
     def get_all_points(self):
