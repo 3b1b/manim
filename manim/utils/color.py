@@ -104,8 +104,9 @@ class Colors(Enum):
 
     .. code-block:: python
 
-       import manim.utils.color as C
-       C.WHITE   # -> '#FFFFFF'
+        >>> import manim.utils.color as C
+        >>> C.WHITE
+        '#FFFFFF'
 
     Note this way uses the name of the colors in UPPERCASE.
 
@@ -115,8 +116,9 @@ class Colors(Enum):
 
     .. code-block:: python
 
-       from manim.utils.color import Colors
-       Colors.white.value   # -> '#FFFFFF'
+        >>> from manim.utils.color import Colors
+        >>> Colors.white.value
+        '#FFFFFF'
 
     """
 
