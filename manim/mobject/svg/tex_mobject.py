@@ -48,13 +48,20 @@ class SingleStringMathTex(SVGMobject):
         "organize_left_to_right": False,
         "alignment": "",
         "type": "tex",
+        "template": None,
     }
 
     def __init__(self, tex_string, **kwargs):
         digest_config(self, kwargs)
+        if self.template is None:
+            self.template = kwargs.get("tex_template", config["tex_template"])
         assert isinstance(tex_string, str)
         self.tex_string = tex_string
-        file_name = tex_to_svg_file(self.get_modified_expression(tex_string), self.type)
+        file_name = tex_to_svg_file(
+            self.get_modified_expression(tex_string),
+            self.type,
+            tex_template=self.template,
+        )
         SVGMobject.__init__(self, file_name=file_name, **kwargs)
         if self.height is None:
             self.scale(TEX_MOB_SCALE_FACTOR)
