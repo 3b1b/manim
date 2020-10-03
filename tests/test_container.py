@@ -1,3 +1,4 @@
+from manim.mobject.value_tracker import ValueTracker
 import pytest
 from manim import Container, Mobject, Scene
 
@@ -73,3 +74,15 @@ def test_scene_remove():
     """Test Scene.remove()."""
     scene = Scene()
     container_remove(scene, lambda: scene.mobjects)
+
+def test_value_tracker_increment_value():
+    """Test ValueTracker.increment_value()"""
+    tracker = ValueTracker(0.0)
+    tracker.increment_value(10.0)
+    assert(tracker.get_value() == 10.0)
+
+def test_value_tracker_iadd():
+    """Test ValueTracker.__iadd__()"""
+    tracker = ValueTracker(0.0)
+    tracker += 10.0
+    assert(tracker.get_value() == 10.0)
