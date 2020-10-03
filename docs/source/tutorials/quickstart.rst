@@ -59,7 +59,6 @@ video playing the following animation.
 
 .. manim:: SquareToCircle
    :hide_source:
-   :quality: low
 
    class SquareToCircle(Scene):
        def construct(self):
@@ -155,7 +154,6 @@ The output should look as follows.
 
 .. manim:: SquareToCircle2
    :hide_source:
-   :quality: low
 
    class SquareToCircle2(Scene):
        def construct(self):

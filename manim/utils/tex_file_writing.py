@@ -21,11 +21,14 @@ def tex_hash(expression):
     return hasher.hexdigest()[:16]
 
 
-def tex_to_svg_file(expression, source_type):
-    tex_template = config["tex_template"]
+def tex_to_svg_file(expression, source_type, tex_template=None):
+    if tex_template is None:
+        tex_template = config["tex_template"]
     tex_file = generate_tex_file(expression, tex_template, source_type)
-    dvi_file = tex_to_dvi(tex_file, tex_template.use_ctex)
-    return dvi_to_svg(dvi_file, use_ctex=tex_template.use_ctex)
+    dvi_file = tex_to_dvi(tex_file, tex_template.use_ctex, tex_template.tex_compiler)
+    return dvi_to_svg(
+        dvi_file, use_ctex=tex_template.use_ctex, tex_compiler=tex_template.tex_compiler
+    )
 
 
 def generate_tex_file(expression, tex_template, source_type):
@@ -42,67 +45,88 @@ def generate_tex_file(expression, tex_template, source_type):
     return result
 
 
-def tex_to_dvi(tex_file, use_ctex=False):
-    result = tex_file.replace(".tex", ".dvi" if not use_ctex else ".xdv")
+def tex_compilation_command(compiler, tex_file, tex_dir):
+    if compiler["command"] in {"latex", "pdflatex", "luatex", "lualatex"}:
+        commands = [
+            compiler["command"],
+            "-interaction=batchmode",
+            f'-output-format="{compiler["output_format"][1:]}"',
+            "-halt-on-error",
+            f'-output-directory="{tex_dir}"',
+            f'"{tex_file}"',
+            ">",
+            os.devnull,
+        ]
+    elif compiler["command"] == "xelatex":
+        if compiler["output_format"] == ".xdv":
+            outflag = "-no-pdf"
+        elif compiler["output_format"] == ".pdf":
+            outflag = ""
+        else:
+            raise ValueError("xelatex output is either pdf or xdv")
+        commands = [
+            "xelatex",
+            outflag,
+            "-interaction=batchmode",
+            "-halt-on-error",
+            '-output-directory="{}"'.format(tex_dir),
+            '"{}"'.format(tex_file),
+            ">",
+            os.devnull,
+        ]
+    else:
+        raise ValueError(f"Tex compiler {compiler['command']} unknown.")
+    return " ".join(commands)
+
+
+def tex_to_dvi(tex_file, use_ctex=False, tex_compiler=None):
+    if tex_compiler is None:
+        tex_compiler = (
+            {"command": "xelatex", "output_format": ".xdv"}
+            if use_ctex
+            else {"command": "latex", "output_format": ".dvi"}
+        )
+    result = tex_file.replace(".tex", tex_compiler["output_format"])
     result = Path(result).as_posix()
     tex_file = Path(tex_file).as_posix()
     tex_dir = Path(file_writer_config["tex_dir"]).as_posix()
     if not os.path.exists(result):
-        commands = (
-            [
-                "latex",
-                "-interaction=batchmode",
-                "-halt-on-error",
-                '-output-directory="{}"'.format(tex_dir),
-                '"{}"'.format(tex_file),
-                ">",
-                os.devnull,
-            ]
-            if not use_ctex
-            else [
-                "xelatex",
-                "-no-pdf",
-                "-interaction=batchmode",
-                "-halt-on-error",
-                '-output-directory="{}"'.format(tex_dir),
-                '"{}"'.format(tex_file),
-                ">",
-                os.devnull,
-            ]
-        )
-        exit_code = os.system(" ".join(commands))
+        command = tex_compilation_command(tex_compiler, tex_file, tex_dir)
+        exit_code = os.system(command)
         if exit_code != 0:
             log_file = tex_file.replace(".tex", ".log")
-            raise Exception(
-                (
-                    "LaTeX error converting to dvi. "
-                    if not use_ctex
-                    else "XeLaTeX error converting to xdv. "
-                )
-                + f"See log output above or the log file: {log_file}"
+            raise ValueError(
+                f"{tex_compiler['command']} error converting to"
+                f" {tex_compiler['output_format'][1:]}. See log output above or"
+                f" the log file: {log_file}"
             )
     return result
 
 
-def dvi_to_svg(dvi_file, use_ctex=False, regen_if_exists=False):
+def dvi_to_svg(
+    dvi_file, use_ctex=False, tex_compiler=None, regen_if_exists=False, page=1
+):
     """
-    Converts a dvi, which potentially has multiple slides, into a
-    directory full of enumerated pngs corresponding with these slides.
-    Returns a list of PIL Image objects for these images sorted as they
-    where in the dvi
+    Converts a dvi, xdv, or pdf file into an svg using dvisvgm.
     """
-    result = dvi_file.replace(".dvi" if not use_ctex else ".xdv", ".svg")
+    if tex_compiler is None:
+        tex_compiler = (
+            {"command": "xelatex", "output_format": ".xdv"}
+            if use_ctex
+            else {"command": "latex", "output_format": ".dvi"}
+        )
+    result = dvi_file.replace(tex_compiler["output_format"], ".svg")
     result = Path(result).as_posix()
     dvi_file = Path(dvi_file).as_posix()
     if not os.path.exists(result):
         commands = [
             "dvisvgm",
+            "--pdf" if tex_compiler["output_format"] == ".pdf" else "",
+            "-p " + str(page),
             '"{}"'.format(dvi_file),
             "-n",
-            "-v",
-            "0",
-            "-o",
-            '"{}"'.format(result),
+            "-v 0",
+            "-o " + f'"{result}"',
             ">",
             os.devnull,
         ]

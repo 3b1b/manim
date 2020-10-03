@@ -29,7 +29,7 @@ from ..mobject.types.vectorized_mobject import VGroup
 from ..mobject.types.vectorized_mobject import VMobject
 from ..utils.bezier import inverse_interpolate
 from ..utils.bezier import interpolate
-from ..utils.color import color_to_rgb
+from ..utils.color import color_to_rgb, BLUE_E, GREEN, YELLOW, RED, BLUE, WHITE
 from ..utils.color import rgb_to_color
 from ..utils.config_ops import digest_config
 from ..utils.rate_functions import linear

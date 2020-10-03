@@ -65,6 +65,7 @@ from .scene.scene_file_writer import *
 
 from .utils.bezier import *
 from .utils.color import *
+from .utils import color as color
 from .utils.config_ops import *
 from .utils.debug import *
 from .utils.images import *

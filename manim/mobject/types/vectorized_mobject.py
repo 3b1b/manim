@@ -24,7 +24,7 @@ from ...utils.bezier import get_smooth_handle_points
 from ...utils.bezier import interpolate
 from ...utils.bezier import integer_interpolate
 from ...utils.bezier import partial_bezier_points
-from ...utils.color import color_to_rgba
+from ...utils.color import color_to_rgba, BLACK, WHITE
 from ...utils.iterables import make_even
 from ...utils.iterables import stretch_array_to_length
 from ...utils.iterables import tuplify
@@ -876,6 +876,14 @@ class VGroup(VMobject):
         VMobject.__init__(self, **kwargs)
         self.add(*vmobjects)
 
+    def __repr__(self):
+        return (
+            self.__class__.__name__
+            + "("
+            + ", ".join(str(mob) for mob in self.submobjects)
+            + ")"
+        )
+
     def add(self, *vmobjects):
         """Checks if all passed elements are an instance of VMobject and then add them to submobjects
 
@@ -933,6 +941,9 @@ class VDict(VMobject):
         self.show_keys = show_keys
         self.submob_dict = {}
         self.add(mapping_or_iterable)
+
+    def __repr__(self):
+        return __class__.__name__ + "(" + repr(self.submob_dict) + ")"
 
     def add(self, mapping_or_iterable):
         """Adds the key-value pairs to the :class:`VDict` object.

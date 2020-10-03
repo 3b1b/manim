@@ -21,7 +21,6 @@ class ValueTracker(Mobject):
     Examples
     --------
     .. manim:: ValueTrackerExample
-        :quality: low
 
         class ValueTrackerExample(Scene):
             def construct(self):

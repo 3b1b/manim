@@ -106,9 +106,9 @@ class ManimDirective(Directive):
         save_last_frame = "save_last_frame" in self.options
         assert not (save_as_gif and save_last_frame)
 
-        frame_rate = config["frame_rate"]
-        pixel_height = config["pixel_height"]
-        pixel_width = config["pixel_width"]
+        frame_rate = 30
+        pixel_height = 480
+        pixel_width = 854
 
         if "quality" in self.options:
             quality = self.options["quality"]

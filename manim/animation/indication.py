@@ -40,6 +40,7 @@ from ..utils.bezier import interpolate
 from ..utils.config_ops import digest_config
 from ..utils.rate_functions import there_and_back
 from ..utils.rate_functions import wiggle
+from ..utils.color import GREY, YELLOW
 
 
 class FocusOn(Transform):

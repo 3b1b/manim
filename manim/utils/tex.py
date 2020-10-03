@@ -16,6 +16,10 @@ class TexTemplateFromFile:
         "use_ctex": False,
         "filename": "tex_template.tex",
         "text_to_replace": "YourTextHere",
+        "tex_compiler": {
+            "command": "latex",
+            "output_format": ".dvi",
+        },
     }
     body = ""
 

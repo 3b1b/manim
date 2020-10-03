@@ -40,7 +40,10 @@ def open_file_if_needed(file_writer):
             file_paths.append(file_writer.gif_file_path)
 
         for file_path in file_paths:
-            open_media_file(file_path, file_writer_config["show_in_file_browser"])
+            if file_writer_config["show_in_file_browser"]:
+                open_media_file(file_path, True)
+            if file_writer_config["preview"]:
+                open_media_file(file_path, False)
 
     if file_writer_config["verbosity"] != "DEBUG":
         sys.stdout.close()

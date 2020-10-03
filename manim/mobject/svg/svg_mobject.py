@@ -287,7 +287,7 @@ class SVGMobject(VMobject):
         all_childNodes_have_id = []
         if not isinstance(element, minidom.Element):
             return
-        if element.hasAttribute("id"):
+        if element.hasAttribute("id") and element.tagName not in ("g", "defs"):
             return [element]
         for e in element.childNodes:
             all_childNodes_have_id.append(self.get_all_childNodes_have_id(e))
