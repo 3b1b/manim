@@ -3,14 +3,15 @@
 __all__ = ["Text", "Paragraph", "PangoText", "CairoText"]
 
 
-import re
-import os
 import copy
 import hashlib
+import os
+import re
+
 import cairo
-import pangocffi
-import pangocairocffi
 import cairocffi
+import pangocairocffi
+import pangocffi
 
 from ... import config, file_writer_config, logger
 from ...constants import *
@@ -390,6 +391,7 @@ class TextWithBackground(CairoText):
         surface.finish()
         return file_name
 
+
 class Paragraph(VGroup):
     r"""Display a paragraph of text.
 
@@ -637,7 +639,7 @@ class PangoText(SVGMobject):
         "tab_width": 4,
     }
 
-    def __init__(self, text: str, **config):
+    def __init__(self, text: str, **config):  # pylint: disable=redefined-outer-name
         self.full2short(config)
         digest_config(self, config)
         self.original_text = text
@@ -682,7 +684,7 @@ class PangoText(SVGMobject):
         if self.height is None and self.width is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
 
-    def remove_last_M(self, file_name: str): # pylint: disable=invalid-name
+    def remove_last_M(self, file_name: str):  # pylint: disable=invalid-name
         """Internally used. Use to format the rendered SVG files."""
         with open(file_name, "r") as fpr:
             content = fpr.read()
@@ -690,12 +692,12 @@ class PangoText(SVGMobject):
         with open(file_name, "w") as fpw:
             fpw.write(content)
 
-    def find_indexes(self, word, text):
+    def find_indexes(self, word: str, text: str):
         """Internally used function. Finds the indexes of ``text`` in ``word``."""
-        m = re.match(r"\[([0-9\-]{0,}):([0-9\-]{0,})\]", word)
-        if m:
-            start = int(m.group(1)) if m.group(1) != "" else 0
-            end = int(m.group(2)) if m.group(2) != "" else len(text)
+        temp = re.match(r"\[([0-9\-]{0,}):([0-9\-]{0,})\]", word)
+        if temp:
+            start = int(temp.group(1)) if temp.group(1) != "" else 0
+            end = int(temp.group(2)) if temp.group(2) != "" else len(text)
             start = len(text) + start if start < 0 else start
             end = len(text) + end if end < 0 else end
             return [(start, end)]
@@ -706,7 +708,7 @@ class PangoText(SVGMobject):
             index = text.find(word, index + len(word))
         return indexes
 
-    def full2short(self, config):
+    def full2short(self, config):  # pylint: disable=redefined-outer-name
         """Internally used function. Fomats some exapansion to short forms.
         text2color -> t2c
         text2font -> t2f
@@ -778,6 +780,8 @@ class PangoText(SVGMobject):
             return pangocffi.Weight.HEAVY
         elif string == ULTRAHEAVY:
             return pangocffi.Weight.ULTRAHEAVY
+        else:
+            raise AttributeError("There is no Font Weight Called %s" % string)
 
     def text2hash(self):
         """Internally used function.
@@ -794,7 +798,8 @@ class PangoText(SVGMobject):
         return hasher.hexdigest()[:16]
 
     def text2settings(self):
-        """Internally used function. Converts the texts and styles to a setting for parsing."""
+        """Internally used function. Converts the texts and styles
+        to a setting for parsing."""
         settings = []
         t2x = [self.t2f, self.t2s, self.t2w]
         for i in range(len(t2x)):
