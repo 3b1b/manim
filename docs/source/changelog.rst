@@ -62,6 +62,7 @@ Mobjects, Scenes, and Animations
 #. Add a :code:`Variable` class for displaying text that continuously updates to reflect the value of a python variable.
 #. The ``Tex`` and ``MathTex`` objects allow you to specify a custom TexTemplate using the ``template`` keyword argument.
 #. :code:`VGroup` now supports printing the class names of contained mobjects and :code:`VDict` supports printing the internal dict of mobjects
+#. :code:`ValueTracker` now supports increment using the `+=` operator (in addition to the already existing `increment_value` method)
 
 
 Documentation
