@@ -20,7 +20,6 @@ from ...mobject.svg.svg_mobject import SVGMobject
 from ...mobject.types.vectorized_mobject import VGroup
 from ...utils.config_ops import digest_config
 
-
 TEXT_MOB_SCALE_FACTOR = 0.05
 
 
@@ -391,7 +390,6 @@ class TextWithBackground(CairoText):
         surface.finish()
         return file_name
 
-
 class Paragraph(VGroup):
     r"""Display a paragraph of text.
 
@@ -684,7 +682,7 @@ class PangoText(SVGMobject):
         if self.height is None and self.width is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
 
-    def remove_last_M(self, file_name: str):
+    def remove_last_M(self, file_name: str): # pylint: disable=invalid-name
         """Internally used. Use to format the rendered SVG files."""
         with open(file_name, "r") as fpr:
             content = fpr.read()
@@ -719,13 +717,13 @@ class PangoText(SVGMobject):
         for kwargs in [config, self.CONFIG]:
             if "text2color" in kwargs:
                 kwargs["t2c"] = kwargs.pop("text2color")
-            if kwargs.__contains__("text2font"):
+            if "text2font" in kwargs:
                 kwargs["t2f"] = kwargs.pop("text2font")
-            if kwargs.__contains__("text2gradient"):
+            if "text2gradient" in kwargs:
                 kwargs["t2g"] = kwargs.pop("text2gradient")
-            if kwargs.__contains__("text2slant"):
+            if "text2slant" in kwargs:
                 kwargs["t2s"] = kwargs.pop("text2slant")
-            if kwargs.__contains__("text2weight"):
+            if "text2weight" in kwargs:
                 kwargs["t2w"] = kwargs.pop("text2weight")
 
     def set_color_by_t2c(self, t2c=None):
@@ -736,7 +734,8 @@ class PangoText(SVGMobject):
                 self.chars[start:end].set_color(color)
 
     def set_color_by_t2g(self, t2g=None):
-        """Internally used. Sets gradient colors for specified strings. Behaves similarly to ``set_color_by_t2c``."""
+        """Internally used. Sets gradient colors for specified
+        strings. Behaves similarly to ``set_color_by_t2c``."""
         t2g = t2g if t2g else self.t2g
         for word, gradient in list(t2g.items()):
             for start, end in self.find_indexes(word, self.original_text):
@@ -842,10 +841,11 @@ class PangoText(SVGMobject):
         """Internally used function.
         Convert the text to SVG using Pango
         """
-        # anti-aliasing
         size = self.size * 10
         line_spacing = self.line_spacing * 10
         dir_name = file_writer_config["text_dir"]
+        if not os.path.exists(dir_name):
+            os.makedirs(dir_name)
         hash_name = self.text2hash()
         file_name = os.path.join(dir_name, hash_name) + ".svg"
         if os.path.exists(file_name):
