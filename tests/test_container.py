@@ -73,5 +73,3 @@ def test_scene_remove():
     """Test Scene.remove()."""
     scene = Scene()
     container_remove(scene, lambda: scene.mobjects)
-
-
