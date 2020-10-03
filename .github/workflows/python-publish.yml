@@ -1,16 +1,28 @@
-name: Upload Python Package
+name: Publish Release
 
 on:
   release:
-    types:
-      - created
+    types: [released]
+
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    #TODO: Set an API key from PyPI `PYPI_API_KEY` in secrets tab.
-    - name: Build and publish to pypi
-      uses: JRubics/poetry-publish@v1
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
       with:
-        pypi_token:  ${{ secrets.PYPI_API_KEY }}
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: python -m pip install --upgrade poetry
+
+    # TODO: Set PYPI_API_TOKEN to api token from pip in secrets
+    - name: Configure pypi credentials
+      env:
+        PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+      run: poetry config http-basic.pypi __token__ "$PYPI_API_TOKEN"
+
+    - name: Publish release to pypi
+      run: poetry publish --build
