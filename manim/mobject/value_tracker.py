@@ -58,7 +58,8 @@ class ValueTracker(Mobject):
         self.set_value(self.get_value() + d_value)
 
     def __iadd__(self, d_value):
-        return ValueTracker(self.get_value() + d_value)
+        self.increment_value(d_value)
+        return self
 
     def interpolate(self, mobject1, mobject2, alpha, path_func=straight_path):
         """
