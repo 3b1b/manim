@@ -33,7 +33,6 @@ scipy = "*"
 tqdm = "*"
 pydub = "*"
 pygments = "*"
-pyreadline = { version = "*", markers = "sys_platform == 'win32'" }
 rich = ">=4.2.1"
 pycairo = [
 	{ version = "^1.19", markers = "sys_platform != 'win32'"},
