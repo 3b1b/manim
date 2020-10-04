@@ -8,7 +8,7 @@ from ..mobject.types.vectorized_mobject import VGroup
 from ..mobject.types.vectorized_mobject import VMobject
 from ..utils.iterables import tuplify
 from ..utils.space_ops import z_to_vector
-from ..utils.color import BLUE_D, BLUE , BLUE_E , LIGHT_GREY
+from ..utils.color import BLUE_D, BLUE, BLUE_E, LIGHT_GREY
 
 ##############
 

@@ -12,7 +12,7 @@ from .. import config
 from ..constants import *
 from ..mobject.geometry import Rectangle
 from ..utils.config_ops import digest_config
-from ..utils.color import  BLACK
+from ..utils.color import BLACK
 
 
 class ScreenRectangle(Rectangle):

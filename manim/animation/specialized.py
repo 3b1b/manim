@@ -13,7 +13,7 @@ from ..mobject.svg.drawings import Car
 from ..mobject.types.vectorized_mobject import VGroup
 from ..utils.config_ops import digest_config
 from ..utils.space_ops import get_norm
-from ..utils.color import  BLACK, WHITE
+from ..utils.color import BLACK, WHITE
 
 
 class MoveCar(ApplyMethod):
