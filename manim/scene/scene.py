@@ -23,6 +23,7 @@ from ..mobject.mobject import Mobject
 from ..scene.scene_file_writer import SceneFileWriter
 from ..utils.iterables import list_update
 from ..utils.hashing import get_hash_from_play_call, get_hash_from_wait_call
+from ..utils.family import extract_mobject_family_members
 from ..renderer.cairo_renderer import CairoRenderer
 
 
@@ -168,11 +169,6 @@ class Scene(Container):
         """
         return [getattr(self, key) for key in keys]
 
-    def freeze_background(self):
-        self.renderer.update_frame()
-        self.camera = Camera(self.renderer.get_frame())
-        self.clear()
-
     ###
 
     def update_mobjects(self, dt):
@@ -248,7 +244,9 @@ class Scene(Container):
         list
             List of mobject family members.
         """
-        return self.camera.extract_mobject_family_members(self.mobjects)
+        return extract_mobject_family_members(
+            self.mobjects, use_z_index=self.renderer.camera.use_z_index
+        )
 
     def add(self, *mobjects):
         """
@@ -337,7 +335,9 @@ class Scene(Container):
             The Scene mobject with restructured Mobjects.
         """
         if extract_families:
-            to_remove = self.camera.extract_mobject_family_members(to_remove)
+            to_remove = extract_mobject_family_members(
+                to_remove, use_z_index=self.renderer.camera.use_z_index
+            )
         _list = getattr(self, mobject_list_name)
         new_list = self.get_restructured_mobject_list(_list, to_remove)
         setattr(self, mobject_list_name, new_list)

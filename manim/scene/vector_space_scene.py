@@ -109,7 +109,10 @@ class VectorScene(Scene):
         axes.set_color(WHITE)
         axes.fade(axes_dimness)
         self.add(axes)
-        self.freeze_background()
+
+        self.renderer.update_frame()
+        self.renderer.camera = Camera(self.renderer.get_frame())
+        self.clear()
 
     def get_vector(self, numerical_vector, **kwargs):
         """
