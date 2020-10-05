@@ -17,9 +17,9 @@ __all__ = [
     "squish_rate_func",
     "lingering",
     "exponential_decay",
-    "ease_in_sin",
-    "ease_out_sin",
-    "ease_in_out_sin",
+    "ease_in_sine",
+    "ease_out_sine",
+    "ease_in_out_sine",
     "ease_in_quad",
     "ease_out_quad",
     "ease_in_out_quad",
@@ -151,15 +151,15 @@ def exponential_decay(t, half_life=0.1):
     return 1 - np.exp(-t / half_life)
 
 
-def ease_in_sin(t):
+def ease_in_sine(t):
     return 1 - np.cos((t * np.pi) / 2)
 
 
-def ease_out_sin(t):
+def ease_out_sine(t):
     return np.sin((t * np.pi) / 2)
 
 
-def ease_in_out_sin(t):
+def ease_in_out_sine(t):
     return -(np.cos(np.pi * t) - 1) / 2
 
 
