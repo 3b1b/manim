@@ -90,7 +90,7 @@ class Scene(Container):
     def tear_down(self):
         """
         This is meant to be implemented by any scenes which
-        are comonly subclassed, and have some common method
+        are commonly subclassed, and have some common method
         to be invoked before the scene ends.
         """
         pass
