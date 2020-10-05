@@ -23,6 +23,7 @@ from ..mobject.mobject import Mobject
 from ..scene.scene_file_writer import SceneFileWriter
 from ..utils.iterables import list_update
 from ..utils.hashing import get_hash_from_play_call, get_hash_from_wait_call
+from ..renderer.cairo_renderer import CairoRenderer
 
 
 class Scene(Container):
@@ -65,11 +66,11 @@ class Scene(Container):
     def __init__(self, **kwargs):
         Container.__init__(self, **kwargs)
         self.camera = self.camera_class(**camera_config)
-        if not self.camera.use_js_renderer:
-            self.file_writer = SceneFileWriter(
-                self,
-                **file_writer_config,
-            )
+        self.file_writer = SceneFileWriter(
+            self,
+            **file_writer_config,
+        )
+        self.renderer = CairoRenderer(self, self.camera, self.file_writer)
         self.play_hashes_list = []
 
         self.mobjects = []
@@ -167,18 +168,6 @@ class Scene(Container):
         """
         return [getattr(self, key) for key in keys]
 
-    def get_frame(self):
-        """
-        Gets the current frame as NumPy array.
-
-        Returns
-        -------
-        np.array
-            NumPy array of pixel values of each pixel in screen.
-            The shape of the array is height x width x 3
-        """
-        return np.array(self.camera.pixel_array)
-
     def update_frame(  # TODO Description in Docstring
         self,
         mobjects=None,
@@ -221,7 +210,7 @@ class Scene(Container):
 
     def freeze_background(self):
         self.update_frame()
-        self.camera = Camera(self.get_frame())
+        self.camera = Camera(self.renderer.get_frame())
         self.clear()
 
     ###
@@ -823,7 +812,7 @@ class Scene(Container):
         for t in self.get_animation_time_progression(self.animations):
             self.update_animation_to_time(t)
             self.update_frame(self.moving_mobjects, self.static_image)
-            self.add_frame(self.get_frame())
+            self.add_frame(self.renderer.get_frame())
 
     def update_animation_to_time(self, t):
         """
@@ -931,7 +920,7 @@ class Scene(Container):
         # have to be rendered every frame
         self.moving_mobjects = self.get_moving_mobjects(*self.animations)
         self.update_frame(excluded_mobjects=self.moving_mobjects)
-        self.static_image = self.get_frame()
+        self.static_image = self.renderer.get_frame()
         self.last_t = 0
         self.run_time = self.get_run_time(self.animations)
 
@@ -953,7 +942,7 @@ class Scene(Container):
             for t in time_progression:
                 self.update_animation_to_time(t)
                 self.update_frame()
-                self.add_frame(self.get_frame())
+                self.add_frame(self.renderer.get_frame())
                 if stop_condition is not None and stop_condition():
                     time_progression.close()
                     break
@@ -963,7 +952,7 @@ class Scene(Container):
         else:
             self.update_frame()
             dt = 1 / self.camera.frame_rate
-            self.add_frame(self.get_frame(), num_frames=int(duration / dt))
+            self.add_frame(self.renderer.get_frame(), num_frames=int(duration / dt))
         return self
 
     def clean_up_animations(self, *animations):
