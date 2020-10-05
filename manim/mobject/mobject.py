@@ -52,6 +52,7 @@ class Mobject(Container):
 
     def __init__(self, **kwargs):
         Container.__init__(self, **kwargs)
+        self.point_hash = None
         self.submobjects = []
         self.color = Color(self.color)
         if self.name is None:

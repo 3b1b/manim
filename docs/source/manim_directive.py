@@ -192,7 +192,7 @@ class ManimDirective(Directive):
             "from manim import *",
             *file_writer_config_code,
             *user_code,
-            f"{clsname}()",
+            f"{clsname}().render()",
         ]
         exec("\n".join(code), globals())
 

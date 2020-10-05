@@ -39,10 +39,15 @@ pycairo = [
 	{ version = "^1.19", markers = "sys_platform == 'win32'", source="testpypi" },
 ]
 dataclasses = {version = "^0.7", python = "~3.6"}
+grpcio = "*"
+grpcio-tools = "*"
+watchdog = "*"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.0"
 pylint = "*"
+guzzle_sphinx_theme = "*"
+recommonmark = "*"
 
 [tool.poetry.dev-dependencies.black]
 version = "^20.8b1"
