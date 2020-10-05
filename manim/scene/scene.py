@@ -168,48 +168,8 @@ class Scene(Container):
         """
         return [getattr(self, key) for key in keys]
 
-    def update_frame(  # TODO Description in Docstring
-        self,
-        mobjects=None,
-        background=None,
-        include_submobjects=True,
-        ignore_skipping=True,
-        **kwargs,
-    ):
-        """Update the frame.
-
-        Parameters
-        ----------
-        mobjects: list, optional
-            list of mobjects
-
-        background: np.ndarray, optional
-            Pixel Array for Background.
-
-        include_submobjects: bool, optional
-
-        ignore_skipping : bool, optional
-
-        **kwargs
-
-        """
-        if file_writer_config["skip_animations"] and not ignore_skipping:
-            return
-        if mobjects is None:
-            mobjects = list_update(
-                self.mobjects,
-                self.foreground_mobjects,
-            )
-        if background is not None:
-            self.camera.set_frame_to_background(background)
-        else:
-            self.camera.reset()
-
-        kwargs["include_submobjects"] = include_submobjects
-        self.camera.capture_mobjects(mobjects, **kwargs)
-
     def freeze_background(self):
-        self.update_frame()
+        self.renderer.update_frame()
         self.camera = Camera(self.renderer.get_frame())
         self.clear()
 
@@ -811,7 +771,7 @@ class Scene(Container):
         """
         for t in self.get_animation_time_progression(self.animations):
             self.update_animation_to_time(t)
-            self.update_frame(self.moving_mobjects, self.static_image)
+            self.renderer.update_frame(self.moving_mobjects, self.static_image)
             self.add_frame(self.renderer.get_frame())
 
     def update_animation_to_time(self, t):
@@ -919,7 +879,7 @@ class Scene(Container):
         # Paint all non-moving objects onto the screen, so they don't
         # have to be rendered every frame
         self.moving_mobjects = self.get_moving_mobjects(*self.animations)
-        self.update_frame(excluded_mobjects=self.moving_mobjects)
+        self.renderer.update_frame(excluded_mobjects=self.moving_mobjects)
         self.static_image = self.renderer.get_frame()
         self.last_t = 0
         self.run_time = self.get_run_time(self.animations)
@@ -941,7 +901,7 @@ class Scene(Container):
             # the same way Scene.play does
             for t in time_progression:
                 self.update_animation_to_time(t)
-                self.update_frame()
+                self.renderer.update_frame()
                 self.add_frame(self.renderer.get_frame())
                 if stop_condition is not None and stop_condition():
                     time_progression.close()
@@ -950,7 +910,7 @@ class Scene(Container):
             # Do nothing
             return self
         else:
-            self.update_frame()
+            self.renderer.update_frame()
             dt = 1 / self.camera.frame_rate
             self.add_frame(self.renderer.get_frame(), num_frames=int(duration / dt))
         return self
@@ -1116,7 +1076,7 @@ class Scene(Container):
         Opens the current frame in the Default Image Viewer
         of your system.
         """
-        self.update_frame(ignore_skipping=True)
+        self.renderer.update_frame(ignore_skipping=True)
         self.camera.get_image().show()
 
 
