@@ -20,8 +20,10 @@ __all__ = [
 ]
 
 
-import numpy as np
 from math import sqrt
+
+import numpy as np
+
 from ..utils.bezier import bezier
 from ..utils.simple_functions import sigmoid
 
