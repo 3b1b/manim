@@ -1,8 +1,8 @@
-from math import sqrt
-
-
 """A selection of rate functions, i.e., *speed curves* for animations.
 Please find a standard list at https://easings.net/"""
+
+
+from math import sqrt
 
 __all__ = [
     "linear",
