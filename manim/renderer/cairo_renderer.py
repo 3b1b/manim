@@ -1,6 +1,7 @@
 import numpy as np
 from .. import file_writer_config
 from ..utils.iterables import list_update
+from ..utils.exceptions import EndSceneEarlyException
 
 
 class CairoRenderer:
@@ -60,3 +61,19 @@ class CairoRenderer:
             The shape of the array is height x width x 3
         """
         return np.array(self.camera.pixel_array)
+
+    def update_skipping_status(self):
+        """
+        This method is used internally to check if the current
+        animation needs to be skipped or not. It also checks if
+        the number of animations that were played correspond to
+        the number of animations that need to be played, and
+        raises an EndSceneEarlyException if they don't correspond.
+        """
+        if file_writer_config["from_animation_number"]:
+            if self.scene.num_plays < file_writer_config["from_animation_number"]:
+                file_writer_config["skip_animations"] = True
+        if file_writer_config["upto_animation_number"]:
+            if self.scene.num_plays > file_writer_config["upto_animation_number"]:
+                file_writer_config["skip_animations"] = True
+                raise EndSceneEarlyException()

@@ -1,7 +1,7 @@
 """Basic canvas for animations."""
 
 
-__all__ = ["Scene", "EndSceneEarlyException"]
+__all__ = ["Scene"]
 
 
 import inspect
@@ -25,6 +25,7 @@ from ..utils.iterables import list_update
 from ..utils.hashing import get_hash_from_play_call, get_hash_from_wait_call
 from ..utils.family import extract_mobject_family_members
 from ..renderer.cairo_renderer import CairoRenderer
+from ..utils.exceptions import EndSceneEarlyException
 
 
 class Scene(Container):
@@ -732,22 +733,6 @@ class Scene(Container):
 
         return animations
 
-    def update_skipping_status(self):
-        """
-        This method is used internally to check if the current
-        animation needs to be skipped or not. It also checks if
-        the number of animations that were played correspond to
-        the number of animations that need to be played, and
-        raises an EndSceneEarlyException if they don't correspond.
-        """
-        if file_writer_config["from_animation_number"]:
-            if self.num_plays < file_writer_config["from_animation_number"]:
-                file_writer_config["skip_animations"] = True
-        if file_writer_config["upto_animation_number"]:
-            if self.num_plays > file_writer_config["upto_animation_number"]:
-                file_writer_config["skip_animations"] = True
-                raise EndSceneEarlyException()
-
     def begin_animations(self, animations):
         """
         This method begins the list of animations that is passed,
@@ -821,7 +806,7 @@ class Scene(Container):
 
     def cached_play(self, *args, **kwargs):
         self.revert_to_original_skipping_status()
-        self.update_skipping_status()
+        self.renderer.update_skipping_status()
         animations = self.compile_play_args_to_animation_list(*args, **kwargs)
         self.add_mobjects_from_animations(animations)
         if file_writer_config["skip_animations"]:
@@ -1078,7 +1063,3 @@ class Scene(Container):
         """
         self.renderer.update_frame(ignore_skipping=True)
         self.camera.get_image().show()
-
-
-class EndSceneEarlyException(Exception):
-    pass

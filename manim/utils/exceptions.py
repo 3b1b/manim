@@ -1,0 +1,2 @@
+class EndSceneEarlyException(Exception):
+    pass
