@@ -56,7 +56,7 @@ jobs:
       - name: Install system dependencies (MacOS)
         if: runner.os == 'macOS'
         run: |
-          brew install openssl readline ffmpeg sox pyenv pyenv-virtualenv
+          brew install openssl readline ffmpeg pyenv pyenv-virtualenv
           brew cask install basictex
           eval "$(/usr/libexec/path_helper -s)"
           sudo tlmgr update --self
@@ -70,13 +70,11 @@ jobs:
         uses: actions/cache@v2
         with:
          path: ${{ github.workspace }}\ManimCache
-         key: ${{ runner.os }}-dependencies-ffmpeg-sox-tinytex-${{ hashFiles('.github/manimdependency.json') }}-${{ steps.pip-cache-and-time.outputs.date }}
+         key: ${{ runner.os }}-dependencies-ffmpeg-tinytex-${{ hashFiles('.github/manimdependency.json') }}-${{ steps.pip-cache-and-time.outputs.date }}
 
       - name: Download system dependencies (Windows)
         if: runner.os == 'Windows' && steps.cache-windows.outputs.cache-hit != 'true'
         run: |
-          $soxVersion = python -c "import json;print(json.load(open('.github/manimdependency.json'))['windows']['sox'])"
-          $soxVersionNumber = python -c "import json;print(json.load(open('.github/manimdependency.json'))['windows']['sox'].split('-')[1])"
           $ffmpegUrl = python -c "import json;print(json.load(open('.github/manimdependency.json'))['windows']['ffmpeg'])"
           $OriPath = $env:PATH
           echo "Install Tinytex"
@@ -86,10 +84,7 @@ jobs:
           tlmgr update --self
           tlmgr install standalone preview doublestroke ms setspace rsfs relsize ragged2e fundus-calligra microtype wasysym physics dvisvgm jknapltx wasy cm-super babel-english
           $env:PATH=$OriPath
-          echo "Completed Latex Install Sox"
-          Invoke-WebRequest "https://downloads.sourceforge.net/project/sox/sox/$($soxVersionNumber)/$($soxVersion).zip" -UserAgent "wget" -O "$($env:TMP)\SoX.zip"
-          7z x "$($env:TMP)\SoX.zip" -o"$($PWD)\ManimCache"
-          Move-Item "ManimCache\sox-*" "ManimCache\SoX"
+          echo "Completed Latex"
           Invoke-WebRequest "$ffmpegUrl" -O "$($env:TMP)\ffmpeg.zip"
           7z x "$($env:TMP)\ffmpeg.zip" -o"$($PWD)\ManimCache"
           Move-Item "ManimCache\ffmpeg-*" "ManimCache\FFmpeg"
@@ -99,7 +94,6 @@ jobs:
         run: |
           $env:Path += ";" + "$($PWD)\ManimCache\FFmpeg\bin"
           $env:Path += ";" + "$($PWD)\ManimCache\LatexWindows\TinyTeX\bin\win32"
-          $env:Path += ";" + "$($PWD)\ManimCache\SoX"
           $env:Path = "$env:USERPROFILE\.poetry\bin;$($env:PATH)"
           echo "::set-env name=Path::$env:Path"
 
