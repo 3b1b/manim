@@ -34,11 +34,7 @@ tqdm = "*"
 pydub = "*"
 pygments = "*"
 rich = ">=4.2.1"
-pycairo = [
-	{ version = "^1.19", markers = "sys_platform != 'win32'"},
-	{ version = "^1.19", markers = "sys_platform == 'win32'", source="testpypi" },
-]
-dataclasses = {version = "^0.7", python = "~3.6"}
+pycairo = "^1.20"
 grpcio = "*"
 grpcio-tools = "*"
 watchdog = "*"
@@ -51,14 +47,9 @@ recommonmark = "*"
 
 [tool.poetry.dev-dependencies.black]
 version = "^20.8b1"
-allow-prereleases = true
+allow-prereleases = false
 python = "^3.6"
 markers = "platform_python_implementation == 'CPython'"
-
-[[tool.poetry.source]]
-name = "testpypi"
-url = "https://test.pypi.org/simple/"
-secondary = true
 
 [tool.pytest.ini_options]
 markers = "slow: Mark the test as slow. Can be skipped with --skip_slow"
