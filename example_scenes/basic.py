@@ -236,3 +236,5 @@ class VariableExample(Scene):
         )
         self.play(Write(on_screen_subscript_var))
         self.wait()
+
+
