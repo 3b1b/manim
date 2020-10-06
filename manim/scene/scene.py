@@ -790,6 +790,7 @@ class Scene(Container):
         for animation in animations:
             animation.finish()
             animation.clean_up_from_scene(self)
+        # TODO: This is only used in one place and should probably be removed.
         self.mobjects_from_last_animation = [anim.mobject for anim in animations]
         if file_writer_config["skip_animations"]:
             # TODO, run this call in for each animation?
@@ -920,22 +921,6 @@ class Scene(Container):
         for animation in animations:
             animation.clean_up_from_scene(self)
         return self
-
-    def get_mobjects_from_last_animation(self):
-        """
-        This method returns the mobjects from the previous
-        played animation, if any exist, and returns an empty
-        list if not.
-
-        Returns
-        --------
-        list
-            The list of mobjects from the previous animation.
-
-        """
-        if hasattr(self, "mobjects_from_last_animation"):
-            return self.mobjects_from_last_animation
-        return []
 
     def get_wait_time_progression(self, duration, stop_condition):
         """
