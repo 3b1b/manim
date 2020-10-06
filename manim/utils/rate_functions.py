@@ -5,10 +5,11 @@ Please find a standard list at https://easings.net/. Here is a picture for the n
     :alt: Non-standard rate functions
 
 
-There are primarily 3 kinds of standard easing functions
-1. Ease In - The animation has a smooth start
-2. Ease Out - The animation has a smooth end
-3. Ease In Out - The animation has a smooth start as well as smooth end
+There are primarily 3 kinds of standard easing functions:
+
+#. Ease In - The animation has a smooth start.
+#. Ease Out - The animation has a smooth end.
+#. Ease In Out - The animation has a smooth start as well as smooth end.
 
 .. manim:: RateFunctions1Example
 
