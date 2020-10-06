@@ -157,9 +157,18 @@ camera_config = config
 set_rich_logger(config_parser["logger"], file_writer_config["verbosity"])
 if file_writer_config["log_to_file"]:
     # IMPORTANT note about file name : The log file name will be the scene_name get from the args (contained in file_writer_config). So it can differ from the real name of the scene.
+    scene_name_suffix = "".join(file_writer_config["scene_names"])
+    scene_file_name = os.path.basename(args.file).split(".")[
+        0
+    ]  # takes filename and removes extension
+    log_file_name = (
+        f"{scene_file_name}_{scene_name_suffix}.log"
+        if scene_name_suffix
+        else f"{scene_file_name}.log"
+    )
     log_file_path = os.path.join(
         file_writer_config["log_dir"],
-        "".join(file_writer_config["scene_names"]) + ".log",
+        log_file_name,
     )
     set_file_logger(log_file_path)
-    logger.info("Log file wil be saved in %(logpath)s", {"logpath": log_file_path})
+    logger.info("Log file will be saved in %(logpath)s", {"logpath": log_file_path})

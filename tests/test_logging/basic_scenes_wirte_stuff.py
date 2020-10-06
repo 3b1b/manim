@@ -3,11 +3,6 @@ from manim import *
 # This module is used in the CLI tests in tests_CLi.py.
 
 
-class SquareToCircle(Scene):
-    def construct(self):
-        self.play(Transform(Square(), Circle()))
-
-
 class WriteStuff(Scene):
     def construct(self):
         example_text = Tex("This is a some text", tex_to_color_map={"text": YELLOW})
