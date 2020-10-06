@@ -126,3 +126,11 @@ JS_RENDERER_INFO = (
     "you can either start it prior to running Manim or specify the path to the "
     "executable with the --js_renderer_path flag."
 )
+
+# Video qualities
+QUALITIES = {
+    "fourk_quality": "k",
+    "high_quality": "h",
+    "medium_quality": "m",
+    "low_quality": "l",
+}

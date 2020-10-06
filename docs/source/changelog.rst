@@ -19,8 +19,6 @@ New Features
 Command line
 ^^^^^^^^^^^^
 
-#. Add 4k rendering option with the :code:`-k` option
-#. High quality rendering has gotten its own short argument (:code:`-e`)
 #. Output of 'manim --help' has been improved
 #. Implement logging with the :code:`rich` library and a :code:`logger` object instead of plain ol` prints
 #. Added a flag :code:`--dry_run`, which doesn’t write any media
@@ -33,6 +31,7 @@ Command line
 #. Added a :code:`--verbose` flag
 #. You can save the logs to a file by using :code:`--log_to_file`
 #. Add experimental javascript rendering with :code:`--use_js_renderer`
+#. Add :code:`-q/--quality [k|h|m|l]` flag and removed :code:`-m/-l` flags.
 #. Removed :code:`--sound` flag
 
 

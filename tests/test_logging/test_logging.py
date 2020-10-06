@@ -19,7 +19,7 @@ def test_logging_to_file(tmp_path, python_version):
         "manim",
         path_basic_scene,
         "SquareToCircle",
-        "-l",
+        "-ql",
         "--log_to_file",
         "-v",
         "DEBUG",
