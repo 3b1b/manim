@@ -183,12 +183,12 @@ class Variable(VMobject):
 
         # DecimalNumber type
         var = 0.5
-        on_screen_var = Variable(var, "var", num_decimal_places=3)
+        on_screen_var = Variable(var, Text("var"), num_decimal_places=3)
         # Integer type
         int_var = 0
-        on_screen_int_var = Variable(int_var, "int_var", var_type=Integer)
+        on_screen_int_var = Variable(int_var, Text("int_var"), var_type=Integer)
         # Using math mode for the label
-        on_screen_int_var = Variable(int_var, "${a}_{i}$", var_type=Integer)
+        on_screen_int_var = Variable(int_var, "{a}_{i}", var_type=Integer)
 
     """
 
