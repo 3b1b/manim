@@ -157,7 +157,7 @@ class Variable(VMobject):
     ----------
     var : Union[:class:`int`, :class:`float`]
         The python variable you need to keep track of and display.
-    label : Union[:class:`str`, :class:`~.Tex`, :class:`~.MathTex`, :class:`Text`, :class:`TexSymbol`, :class:`SingleStringMathTex`, :class:`MathTexFromPresetString`]
+    label : Union[:class:`str`, :class:`~.Tex`, :class:`~.MathTex`, :class:`~.Text`, :class:`~.TexSymbol`, :class:`~.SingleStringMathTex`, :class:`~.MathTexFromPresetString`]
         The label for your variable, for example ``x = ...``. To use math mode, for e.g.
         subscripts, superscripts, etc. simply pass in a raw string.
     var_type : Union[:class:`DecimalNumber`, :class:`Integer`], optional
