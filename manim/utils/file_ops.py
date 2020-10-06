@@ -10,10 +10,11 @@ __all__ = [
 
 
 import os
-import subprocess as sp
 import platform
 import numpy as np
 import time
+import re
+import subprocess as sp
 
 
 def add_extension_if_not_present(file_name, extension):

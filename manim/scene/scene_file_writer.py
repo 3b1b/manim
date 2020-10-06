@@ -366,7 +366,7 @@ class SceneFileWriter(object):
             self.update_frame()
             n_frames = 1
             frame = self.get_frame()
-            self.add_frames(*[frame] * n_frames)
+            self.add_frame(*[frame] * n_frames)
             b = datetime.datetime.now()
             time_diff = (b - a).total_seconds()
             frame_duration = 1 / self.scene.camera.frame_rate
