@@ -4,9 +4,8 @@ __all__ = ["DecimalNumber", "Integer", "Variable"]
 
 
 from ..constants import *
-from ..mobject.svg.tex_mobject import MathTex, SingleStringMathTex, Tex
-from ..mobject.svg.text_mobject import Text
-from ..mobject.types.vectorized_mobject import VDict, VMobject
+from ..mobject.svg.tex_mobject import MathTex, SingleStringMathTex
+from ..mobject.types.vectorized_mobject import VMobject
 from ..mobject.value_tracker import ValueTracker
 
 
@@ -158,8 +157,8 @@ class Variable(VMobject):
     ----------
     var : Union[:class:`int`, :class:`float`]
         The python variable you need to keep track of and display.
-    label : Union[:class:`str`, :class:`~.Tex`, :class:`~.MathTex`, :class:`Text`]
-        The label for your variable, for example `x = ...`. To use math mode, for e.g.
+    label : Union[:class:`str`, :class:`~.Tex`, :class:`~.MathTex`, :class:`Text`, :class:`TexSymbol`, :class:`SingleStringMathTex`, :class:`MathTexFromPresetString`]
+        The label for your variable, for example ``x = ...``. To use math mode, for e.g.
         subscripts, superscripts, etc. simply pass in a raw string.
     var_type : Union[:class:`DecimalNumber`, :class:`Integer`], optional
         The class used for displaying the number. Defaults to :class:`DecimalNumber`.
@@ -171,8 +170,8 @@ class Variable(VMobject):
 
     Attributes
     ----------
-    label : Union[:class:`str`, :class:`~.Tex`, :class:`~.MathTex`, :class:`Text`]
-        The label for your variable, for example `x = ...`.
+    label : Union[:class:`str`, :class:`~.Tex`, :class:`~.MathTex`, :class:`Text`, :class:`TexSymbol`, :class:`SingleStringMathTex`, :class:`MathTexFromPresetString`]
+        The label for your variable, for example ``x = ...``.
     tracker : :class:`~.ValueTracker`
         Useful in updating the value of your variable on-screen.
     value : Union[:class:`DecimalNumber`, :class:`Integer`]
@@ -181,6 +180,7 @@ class Variable(VMobject):
     Examples
     --------
     Normal usage::
+
         # DecimalNumber type
         var = 0.5
         on_screen_var = Variable(var, "var", num_decimal_places=3)
