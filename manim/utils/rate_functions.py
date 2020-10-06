@@ -4,7 +4,15 @@ Please find a standard list at https://easings.net/. Here is a picture for the n
 .. image:: /_static/non_standard_rate_funcs.png
     :alt: Non-standard rate functions
 
-class RateFunctions1Example(Scene):
+
+There are primarily 3 kinds of standard easing functions
+1. Ease In - The animation has a smooth start
+2. Ease Out - The animation has a smooth end
+3. Ease In Out - The animation has a smooth start as well as smooth end
+
+.. manim:: RateFunctions1Example
+
+    class RateFunctions1Example(Scene):
         def construct(self):
             line1 = Line(3*LEFT, 3*RIGHT).shift(UP).set_color(RED)
             line2 = Line(3*LEFT, 3*RIGHT).set_color(GREEN)
