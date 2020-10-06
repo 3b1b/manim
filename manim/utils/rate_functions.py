@@ -1,5 +1,6 @@
 """A selection of rate functions, i.e., *speed curves* for animations.
 Please find a standard list at https://easings.net/. Here is a picture for the non-standard ones
+
 .. image:: /_static/non_standard_rate_funcs.png
     :alt: Non-standard rate functions
 
