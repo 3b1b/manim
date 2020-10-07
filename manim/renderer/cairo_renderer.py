@@ -62,6 +62,24 @@ class CairoRenderer:
         """
         return np.array(self.camera.pixel_array)
 
+    def add_frame(self, frame, num_frames=1):
+        """
+        Adds a frame to the video_file_stream
+
+        Parameters
+        ----------
+        frame : numpy.ndarray
+            The frame to add, as a pixel array.
+        num_frames: int
+            The number of times to add frame.
+        """
+        dt = 1 / self.camera.frame_rate
+        self.scene.increment_time(num_frames * dt)
+        if file_writer_config["skip_animations"]:
+            return
+        for _ in range(num_frames):
+            self.file_writer.write_frame(frame)
+
     def update_skipping_status(self):
         """
         This method is used internally to check if the current

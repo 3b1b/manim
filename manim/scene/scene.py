@@ -757,7 +757,7 @@ class Scene(Container):
         for t in self.get_animation_time_progression(self.animations):
             self.update_animation_to_time(t)
             self.renderer.update_frame(self.moving_mobjects, self.static_image)
-            self.add_frame(self.renderer.get_frame())
+            self.renderer.add_frame(self.renderer.get_frame())
 
     def update_animation_to_time(self, t):
         """
@@ -804,6 +804,21 @@ class Scene(Container):
     def play(self, *args, **kwargs):
         self.cached_play(*args, **kwargs)
         self.num_plays += 1
+
+    def revert_to_original_skipping_status(self):
+        """
+        Forces the scene to go back to its original skipping status,
+        by setting skip_animations to whatever it reads
+        from original_skipping_status.
+
+        Returns
+        -------
+        Scene
+            The Scene, with the original skipping status.
+        """
+        if hasattr(self, "original_skipping_status"):
+            file_writer_config["skip_animations"] = self.original_skipping_status
+        return self
 
     def cached_play(self, *args, **kwargs):
         self.revert_to_original_skipping_status()
@@ -888,7 +903,7 @@ class Scene(Container):
             for t in time_progression:
                 self.update_animation_to_time(t)
                 self.renderer.update_frame()
-                self.add_frame(self.renderer.get_frame())
+                self.renderer.add_frame(self.renderer.get_frame())
                 if stop_condition is not None and stop_condition():
                     time_progression.close()
                     break
@@ -898,7 +913,9 @@ class Scene(Container):
         else:
             self.renderer.update_frame()
             dt = 1 / self.camera.frame_rate
-            self.add_frame(self.renderer.get_frame(), num_frames=int(duration / dt))
+            self.renderer.add_frame(
+                self.renderer.get_frame(), num_frames=int(duration / dt)
+            )
         return self
 
     def clean_up_animations(self, *animations):
@@ -970,39 +987,6 @@ class Scene(Container):
             The maximum wait time in seconds, if the stop_condition is never fulfilled.
         """
         self.wait(max_time, stop_condition=stop_condition)
-
-    def revert_to_original_skipping_status(self):
-        """
-        Forces the scene to go back to its original skipping status,
-        by setting skip_animations to whatever it reads
-        from original_skipping_status.
-
-        Returns
-        -------
-        Scene
-            The Scene, with the original skipping status.
-        """
-        if hasattr(self, "original_skipping_status"):
-            file_writer_config["skip_animations"] = self.original_skipping_status
-        return self
-
-    def add_frame(self, frame, num_frames=1):
-        """
-        Adds a frame to the video_file_stream
-
-        Parameters
-        ----------
-        frame : numpy.ndarray
-            The frame to add, as a pixel array.
-        num_frames: int
-            The number of times to add frame.
-        """
-        dt = 1 / self.camera.frame_rate
-        self.increment_time(num_frames * dt)
-        if file_writer_config["skip_animations"]:
-            return
-        for _ in range(num_frames):
-            self.file_writer.write_frame(frame)
 
     def add_sound(self, sound_file, time_offset=0, gain=None, **kwargs):
         """
