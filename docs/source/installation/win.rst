@@ -31,12 +31,12 @@ path and skip these steps.
    <https://github.com/ManimCommunity/manim-windows/releases/latest>`_ 
    and download the one according to your PC architechture.
 
-	.. important:: Please download the ``zip`` file for architechture of python installed.
-                  It is possible to have installed ``x86`` python on ``x64`` PC.
+   .. important:: Please download the ``zip`` file for architechture of python installed.
+                  It is possible to have installed ``x86`` python installed on ``x64`` PC.
 
 2. Extract the zip file using File Explorer or 7z to the loaction you want to install.
 
-   .. code-block:: powershell
+   .. code-block:: bash
       
       7z x pango-windows-binaires-x64.zip -oC:\Pango
 
