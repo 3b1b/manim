@@ -156,11 +156,11 @@ camera_config = config
 # Set the different loggers
 set_rich_logger(config_parser["logger"], file_writer_config["verbosity"])
 if file_writer_config["log_to_file"]:
-    # IMPORTANT note about file name : The log file name will be the scene_name get from the args (contained in file_writer_config). So it can differ from the real name of the scene.
+    # Note about log_file_name : The log file name will be the <name_of_animation_file>_<name_of_scene>.log
+    # get from the args (contained in file_writer_config). So it can differ from the real name of the scene.
+    # <name_of_scene> would only appear if scene name was provided on manim call
     scene_name_suffix = "".join(file_writer_config["scene_names"])
-    scene_file_name = os.path.basename(args.file).split(".")[
-        0
-    ]  # takes filename and removes extension
+    scene_file_name = os.path.basename(args.file).split(".")[0]
     log_file_name = (
         f"{scene_file_name}_{scene_name_suffix}.log"
         if scene_name_suffix
