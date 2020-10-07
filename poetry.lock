@@ -85,7 +85,6 @@ colorama = ["colorama (>=0.4.3)"]
 d = ["aiohttp (>=3.3.2)", "aiohttp-cors"]
 
 [[package]]
-<<<<<<< HEAD
 name = "cairocffi"
 version = "1.1.0"
 description = "cffi-based cairo bindings for Python"
@@ -102,6 +101,14 @@ test = ["pytest-runner", "pytest-cov", "pytest-flake8", "pytest-isort"]
 xcb = ["xcffib (>=0.3.2)"]
 
 [[package]]
+name = "certifi"
+version = "2020.6.20"
+description = "Python package for providing Mozilla's CA Bundle."
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "cffi"
 version = "1.14.3"
 description = "Foreign Function Interface for Python calling C code."
@@ -112,14 +119,6 @@ python-versions = "*"
 [package.dependencies]
 pycparser = "*"
 
-=======
-name = "certifi"
-version = "2020.6.20"
-description = "Python package for providing Mozilla's CA Bundle."
-category = "dev"
-optional = false
-python-versions = "*"
-
 [[package]]
 name = "chardet"
 version = "3.0.4"
@@ -128,7 +127,6 @@ category = "dev"
 optional = false
 python-versions = "*"
 
->>>>>>> de75f5d35d90bc38b44ba13b421306e535046bf3
 [[package]]
 name = "click"
 version = "7.1.2"
@@ -340,7 +338,7 @@ six = "*"
 
 [[package]]
 name = "pangocairocffi"
-version = "0.3.1"
+version = "0.3.2"
 description = "CFFI-based pango-cairo bindings for Python"
 category = "main"
 optional = false
@@ -350,11 +348,6 @@ python-versions = ">=3.5"
 cairocffi = ">=1.0.2"
 cffi = ">=1.1.0"
 pangocffi = ">=0.4.0"
-
-[package.source]
-type = "legacy"
-url = "https://test.pypi.org/simple"
-reference = "testpypi"
 
 [[package]]
 name = "pangocffi"
@@ -714,7 +707,7 @@ python-versions = "*"
 
 [[package]]
 name = "tqdm"
-version = "4.50.0"
+version = "4.50.1"
 description = "Fast, Extensible Progress Meter"
 category = "main"
 optional = false
@@ -789,11 +782,7 @@ testing = ["pytest (>=3.5,<3.7.3 || >3.7.3)", "pytest-checkdocs (>=1.2.3)", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-<<<<<<< HEAD
-content-hash = "27f6f74e6cede608a7ce20c7aa0b5be2e13b4f59a056c373ccbbb21a957061a4"
-=======
-content-hash = "0d8691d803291046a8bacdbce81b5fab45e490e3a70fc5c38dc8aeb4e4754a3d"
->>>>>>> de75f5d35d90bc38b44ba13b421306e535046bf3
+content-hash = "19fad3a14d174f8365b3941c9d1fc44037855d5eaabff297313d65bbea223c38"
 
 [metadata.files]
 alabaster = [
@@ -823,9 +812,12 @@ babel = [
 black = [
     {file = "black-20.8b1.tar.gz", hash = "sha256:1c02557aa099101b9d21496f8a914e9ed2222ef70336404eeeac8edba836fbea"},
 ]
-<<<<<<< HEAD
 cairocffi = [
     {file = "cairocffi-1.1.0.tar.gz", hash = "sha256:f1c0c5878f74ac9ccb5d48b2601fcc75390c881ce476e79f4cfedd288b1b05db"},
+]
+certifi = [
+    {file = "certifi-2020.6.20-py2.py3-none-any.whl", hash = "sha256:8fc0819f1f30ba15bdb34cceffb9ef04d99f420f68eb75d901e9560b8749fc41"},
+    {file = "certifi-2020.6.20.tar.gz", hash = "sha256:5930595817496dd21bb8dc35dad090f1c2cd0adfaf21204bf6732ca5d8ee34d3"},
 ]
 cffi = [
     {file = "cffi-1.14.3-2-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:3eeeb0405fd145e714f7633a5173318bd88d8bbfc3dd0a5751f8c4f70ae629bc"},
@@ -864,15 +856,10 @@ cffi = [
     {file = "cffi-1.14.3-cp39-cp39-win32.whl", hash = "sha256:d80998ed59176e8cba74028762fbd9b9153b9afc71ea118e63bbf5d4d0f9552b"},
     {file = "cffi-1.14.3-cp39-cp39-win_amd64.whl", hash = "sha256:c150eaa3dadbb2b5339675b88d4573c1be3cb6f2c33a6c83387e10cc0bf05bd3"},
     {file = "cffi-1.14.3.tar.gz", hash = "sha256:f92f789e4f9241cd262ad7a555ca2c648a98178a953af117ef7fad46aa1d5591"},
-=======
-certifi = [
-    {file = "certifi-2020.6.20-py2.py3-none-any.whl", hash = "sha256:8fc0819f1f30ba15bdb34cceffb9ef04d99f420f68eb75d901e9560b8749fc41"},
-    {file = "certifi-2020.6.20.tar.gz", hash = "sha256:5930595817496dd21bb8dc35dad090f1c2cd0adfaf21204bf6732ca5d8ee34d3"},
 ]
 chardet = [
     {file = "chardet-3.0.4-py2.py3-none-any.whl", hash = "sha256:fc323ffcaeaed0e0a02bf4d117757b98aed530d9ed4531e3e15460124c106691"},
     {file = "chardet-3.0.4.tar.gz", hash = "sha256:84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae"},
->>>>>>> de75f5d35d90bc38b44ba13b421306e535046bf3
 ]
 click = [
     {file = "click-7.1.2-py2.py3-none-any.whl", hash = "sha256:dacca89f4bfadd5de3d7489b7c8a566eee0d3676333fbb50030263894c38c0dc"},
@@ -1106,7 +1093,7 @@ packaging = [
     {file = "packaging-20.4.tar.gz", hash = "sha256:4357f74f47b9c12db93624a82154e9b120fa8293699949152b22065d556079f8"},
 ]
 pangocairocffi = [
-    {file = "pangocairocffi-0.3.1.tar.gz", hash = "sha256:3e8462aa7e21cfb0e4570d8ccd3a25372d85955fd45f56cc2dfb786dd2f4c338"},
+    {file = "pangocairocffi-0.3.2.tar.gz", hash = "sha256:ab0364646032533a2fe78c50727da436ee3aeb533f6da0524605c346c739d85c"},
 ]
 pangocffi = [
     {file = "pangocffi-0.6.0.tar.gz", hash = "sha256:bce26a098d0ce77bc5e9b6ce0cd0aa256e0abdaef22b2e667d80ad57ed4c4c1c"},
@@ -1316,8 +1303,8 @@ toml = [
     {file = "toml-0.10.1.tar.gz", hash = "sha256:926b612be1e5ce0634a2ca03470f95169cf16f939018233a670519cb4ac58b0f"},
 ]
 tqdm = [
-    {file = "tqdm-4.50.0-py2.py3-none-any.whl", hash = "sha256:2dd75fdb764f673b8187643496fcfbeac38348015b665878e582b152f3391cdb"},
-    {file = "tqdm-4.50.0.tar.gz", hash = "sha256:93b7a6a9129fce904f6df4cf3ae7ff431d779be681a95c3344c26f3e6c09abfa"},
+    {file = "tqdm-4.50.1-py2.py3-none-any.whl", hash = "sha256:5313148c57fcca7df562187903cf9cfa30fe1df2fe0641ea6ddb8ef9e841a137"},
+    {file = "tqdm-4.50.1.tar.gz", hash = "sha256:b04bbbc52a7f1e3665eaa310f34c6ebbdf058bd3f6251fd64c6ab831817121ea"},
 ]
 typed-ast = [
     {file = "typed_ast-1.4.1-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:73d785a950fc82dd2a25897d525d003f6378d1cb23ab305578394694202a58c3"},
