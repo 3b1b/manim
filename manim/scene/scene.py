@@ -971,22 +971,6 @@ class Scene(Container):
         """
         self.wait(max_time, stop_condition=stop_condition)
 
-    def force_skipping(self):
-        """
-        This forces the skipping of animations,
-        by setting original_skipping_status to
-        whatever skip_animations was, and setting
-        skip_animations to True.
-
-        Returns
-        -------
-        Scene
-            The Scene, with skipping turned on.
-        """
-        self.original_skipping_status = file_writer_config["skip_animations"]
-        file_writer_config["skip_animations"] = True
-        return self
-
     def revert_to_original_skipping_status(self):
         """
         Forces the scene to go back to its original skipping status,
