@@ -135,8 +135,11 @@ def _parse_config(config_parser, args):
     config["left_side"] = config["frame_x_radius"] * constants.LEFT
     config["right_side"] = config["frame_x_radius"] * constants.RIGHT
 
-    # Handle the --tex_template flag.  Note we accept None if the flag is absent
-    tex_fn = os.path.expanduser(args.tex_template) if args.tex_template else None
+    # Handle the --tex_template flag, if the flag is absent read it from the config.
+    if args.tex_template:
+        tex_fn = os.path.expanduser(args.tex_template)
+    else:
+        tex_fn = default["tex_template"] if default["tex_template"] != "" else None
 
     if tex_fn is not None and not os.access(tex_fn, os.R_OK):
         # custom template not available, fallback to default

@@ -30,6 +30,7 @@ Command line
 #. Re-implement GIF export with the :code:`-i` flag (using this flag outputs ONLY a .gif file, and no .mp4 file)
 #. Added a :code:`--verbose` flag
 #. You can save the logs to a file by using :code:`--log_to_file`
+#. Read :code:`tex_template` from config file if not specified by :code:`--tex_template`.
 #. Add experimental javascript rendering with :code:`--use_js_renderer`
 #. Add :code:`-q/--quality [k|h|m|l]` flag and removed :code:`-m/-l` flags.
 #. Removed :code:`--sound` flag
