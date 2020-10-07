@@ -77,6 +77,7 @@ class GraphicalUnitTester:
 
         # By invoking this, the scene is rendered.
         self.scene = scene_object()
+        self.scene.render()
 
     def _load_data(self):
         """Load the np.array of the last frame of a pre-rendered scene. If not found, throw FileNotFoundError.

@@ -13,8 +13,7 @@ __all__ = [
 
 import itertools as it
 import sys
-
-from colour import Color
+import colour
 
 from ...constants import *
 from ...mobject.mobject import Mobject
@@ -211,20 +210,28 @@ class VMobject(Mobject):
             self.color_using_background_image(background_image_file)
         return self
 
-    def get_style(self):
-        return {
-            "fill_color": self.get_fill_colors(),
-            "fill_opacity": self.get_fill_opacities(),
-            "stroke_color": self.get_stroke_colors(),
-            "stroke_width": self.get_stroke_width(),
+    def get_style(self, simple=False):
+        ret = {
             "stroke_opacity": self.get_stroke_opacity(),
-            "background_stroke_color": self.get_stroke_colors(background=True),
-            "background_stroke_width": self.get_stroke_width(background=True),
-            "background_stroke_opacity": self.get_stroke_opacity(background=True),
-            "sheen_factor": self.get_sheen_factor(),
-            "sheen_direction": self.get_sheen_direction(),
-            "background_image_file": self.get_background_image_file(),
+            "stroke_width": self.get_stroke_width(),
         }
+
+        if simple:
+            ret["fill_color"] = colour.rgb2hex(self.get_fill_color().get_rgb())
+            ret["fill_opacity"] = self.get_fill_opacity()
+            ret["stroke_color"] = colour.rgb2hex(self.get_stroke_color().get_rgb())
+        else:
+            ret["fill_color"] = self.get_fill_colors()
+            ret["fill_opacity"] = self.get_fill_opacities()
+            ret["stroke_color"] = self.get_stroke_colors()
+            ret["background_stroke_color"] = self.get_stroke_colors(background=True)
+            ret["background_stroke_width"] = self.get_stroke_width(background=True)
+            ret["background_stroke_opacity"] = self.get_stroke_opacity(background=True)
+            ret["sheen_factor"] = self.get_sheen_factor()
+            ret["sheen_direction"] = self.get_sheen_direction()
+            ret["background_image_file"] = self.get_background_image_file()
+
+        return ret
 
     def match_style(self, vmobject, family=True):
         self.set_style(**vmobject.get_style(), family=False)
@@ -290,7 +297,7 @@ class VMobject(Mobject):
         return self.get_fill_opacities()[0]
 
     def get_fill_colors(self):
-        return [Color(rgb=rgba[:3]) for rgba in self.get_fill_rgbas()]
+        return [colour.Color(rgb=rgba[:3]) for rgba in self.get_fill_rgbas()]
 
     def get_fill_opacities(self):
         return self.get_fill_rgbas()[:, 3]
@@ -319,7 +326,9 @@ class VMobject(Mobject):
         return self.get_stroke_opacities(background)[0]
 
     def get_stroke_colors(self, background=False):
-        return [Color(rgb=rgba[:3]) for rgba in self.get_stroke_rgbas(background)]
+        return [
+            colour.Color(rgb=rgba[:3]) for rgba in self.get_stroke_rgbas(background)
+        ]
 
     def get_stroke_opacities(self, background=False):
         return self.get_stroke_rgbas(background)[:, 3]

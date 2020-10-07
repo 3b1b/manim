@@ -1,7 +1,6 @@
 {
-  "windows": {
-    "sox": "sox-14.4.2-win32",
-    "ffmpeg": "https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-4.3.1-2020-09-16-full_build.zip",
-    "pango": "v0.1.0"
-  }
+    "windows": {
+        "ffmpeg": "https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-4.3.1-2020-09-21-full_build.zip",
+        "pango": "v0.1.0"
+    }
 }

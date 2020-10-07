@@ -16,7 +16,12 @@ from contextlib import contextmanager
 import colour
 
 from .. import constants
-from .config_utils import _run_config, _init_dirs, _from_command_line
+from .config_utils import (
+    _determine_quality,
+    _run_config,
+    _init_dirs,
+    _from_command_line,
+)
 
 from .logger import set_rich_logger, set_file_logger, logger
 from ..utils.tex import TexTemplate, TexTemplateFromFile
@@ -80,13 +85,11 @@ def _parse_config(config_parser, args):
     # Handle the *_quality flags.  These determine the section to read
     # and are stored in 'camera_config'.  Note the highest resolution
     # passed as argument will be used.
-    for flag in ["fourk_quality", "high_quality", "medium_quality", "low_quality"]:
-        if getattr(args, flag):
-            section = config_parser[flag]
-            break
-    else:
-        section = config_parser["CLI"]
-    config = {opt: section.getint(opt) for opt in config_parser[flag]}
+    quality = _determine_quality(args)
+    section = config_parser[quality if quality != "production" else "CLI"]
+
+    # Loop over low quality for the keys, could be any quality really
+    config = {opt: section.getint(opt) for opt in config_parser["low_quality"]}
 
     config["default_pixel_height"] = default.getint("pixel_height")
     config["default_pixel_width"] = default.getint("pixel_width")
@@ -111,6 +114,14 @@ def _parse_config(config_parser, args):
     else:
         background_color = colour.Color(default["background_color"])
     config["background_color"] = background_color
+
+    config["use_js_renderer"] = args.use_js_renderer or default.getboolean(
+        "use_js_renderer"
+    )
+
+    config["js_renderer_path"] = args.js_renderer_path or default.get(
+        "js_renderer_path"
+    )
 
     # Set the rest of the frame properties
     config["frame_height"] = 8.0
@@ -144,6 +155,8 @@ def _parse_config(config_parser, args):
 
 args, config_parser, file_writer_config, successfully_read_files = _run_config()
 logger.setLevel(file_writer_config["verbosity"])
+set_rich_logger(config_parser["logger"], file_writer_config["verbosity"])
+
 if _from_command_line():
     logger.debug(
         f"Read configuration files: {[os.path.abspath(cfgfile) for cfgfile in successfully_read_files]}"
@@ -151,10 +164,10 @@ if _from_command_line():
     if not (hasattr(args, "subcommands")):
         _init_dirs(file_writer_config)
 config = _parse_config(config_parser, args)
+if config["use_js_renderer"]:
+    file_writer_config["disable_caching"] = True
 camera_config = config
 
-# Set the different loggers
-set_rich_logger(config_parser["logger"], file_writer_config["verbosity"])
 if file_writer_config["log_to_file"]:
     # IMPORTANT note about file name : The log file name will be the scene_name get from the args (contained in file_writer_config). So it can differ from the real name of the scene.
     log_file_path = os.path.join(

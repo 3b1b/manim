@@ -20,6 +20,7 @@ And then you can skip all the other steps and move to installing :ref:`latex-ins
 
 Pango Installation
 ******************
+
 These steps would get you `libpango-1.0-0.dll` to your ``PATH`` along 
 with other dependencies. You may probably have them before itself if 
 you have installed `GTK <https://www.gtk.org/>`_ or any ``GTK`` 
@@ -43,43 +44,6 @@ path and skip these steps.
    <https://www.computerhope.com/issues/ch000549.htm>`_.
 
 
-Cairo installation
-******************
-
-1. Visit the `Download Page
-   <https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo>`_.
-
-2. Select the download that corresponds to your PC's architechture and Python
-   Version
-
-   .. image:: ../_static/windows_cairo.png
-       :align: center
-       :width: 400px
-       :alt: windows cairo download page
-
-   .. note:: ``cp38`` corresponds to Python 3.8, ``cp37`` corresponds to Python
-             3.7, etc. ``win_amd64`` corresponds to 64-bit machines, ``win32``
-             corresponds to 32-bit machines.
-
-3. Open up your command prompt by hitting the Win key and typing ``cmd``.
-
-4. Enter the directory where you want to install cairo by typing ``cd
-   C:\path\to\cairo`` with the path being where you downloaded the ``.whl``
-   file in step 2.
-
-5. Finally, run ``pip(pyversion) install (cairo-file).whl``, where
-   ``pyversion`` is the python version you are using.  For example, if you are
-   using python3.7, you should run ``pip3.7 install (cairo-file).whl``.
-
-
-6. Alternatively, running the command below installs pycairo.  This needs to be
-   run in an elevated command prompt like Powershell.
-
-   .. code-block:: bash
-
-      (Invoke-WebRequest -Uri https://raw.githubusercontent.com/ManimCommunity/manim/master/scripts/pycairoinstall.py -UseBasicParsing).Content | py -3
-
-
 FFmpeg installation
 *******************
 
@@ -89,14 +53,6 @@ FFmpeg installation
 2. You can check if you did it right by running ``refreshenv`` to update your
    environment variable and running ``ffmpeg``.
 
-
-Sox installation (optional)
-***************************
-
-1. To install Sox, execute ``choco install sox.portable``.
-
-2. You can check if you did it right by running ``refreshenv`` to update your
-   environment variable and running ``sox``.
 
 .. _latex-installation:
 

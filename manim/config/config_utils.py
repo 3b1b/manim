@@ -17,13 +17,11 @@ __all__ = [
 
 import argparse
 import configparser
+import logging
 import os
 import sys
 
-import colour
-
 from .. import constants
-from ..utils.tex import TexTemplate, TexTemplateFromFile
 
 
 def _parse_file_writer_config(config_parser, args):
@@ -52,7 +50,6 @@ def _parse_file_writer_config(config_parser, args):
     for boolean_opt in [
         "preview",
         "show_in_file_browser",
-        "sound",
         "leave_progress_bars",
         "write_to_movie",
         "save_last_frame",
@@ -237,12 +234,6 @@ def _parse_cli(arg_list, input=True):
         help="Show the output file in the File Browser",
     )
     parser.add_argument(
-        "--sound",
-        action="store_const",
-        const=True,
-        help="Play a success/failure sound",
-    )
-    parser.add_argument(
         "--leave_progress_bars",
         action="store_const",
         const=True,
@@ -349,28 +340,52 @@ def _parse_cli(arg_list, input=True):
     # The following are mutually exclusive and each overrides
     # FRAME_RATE, PIXEL_HEIGHT, and PIXEL_WIDTH,
     parser.add_argument(
-        "-l",
+        "-q",
+        "--quality",
+        choices=constants.QUALITIES.values(),
+        help="Render at specific quality, short form of the --*_quality flags",
+    )
+    parser.add_argument(
         "--low_quality",
         action="store_true",
         help="Render at low quality",
     )
     parser.add_argument(
-        "-m",
         "--medium_quality",
         action="store_true",
         help="Render at medium quality",
     )
     parser.add_argument(
-        "-e",
         "--high_quality",
         action="store_true",
         help="Render at high quality",
     )
     parser.add_argument(
-        "-k",
         "--fourk_quality",
         action="store_true",
         help="Render at 4K quality",
+    )
+
+    # Deprecated quality flags
+    parser.add_argument(
+        "-l",
+        action="store_true",
+        help="DEPRECATED: USE -ql or --quality l",
+    )
+    parser.add_argument(
+        "-m",
+        action="store_true",
+        help="DEPRECATED: USE -qm or --quality m",
+    )
+    parser.add_argument(
+        "-e",
+        action="store_true",
+        help="DEPRECATED: USE -qh or --quality h",
+    )
+    parser.add_argument(
+        "-k",
+        action="store_true",
+        help="DEPRECATED: USE -qk or --quality k",
     )
 
     # This overrides any of the above
@@ -378,7 +393,7 @@ def _parse_cli(arg_list, input=True):
         "-r",
         "--resolution",
         help='Resolution, passed as "height,width". '
-        "Overrides the -l, -m, -e, and -k flags, if present",
+        "Overrides any quality flags, if present",
     )
 
     # This sets FROM_ANIMATION_NUMBER and UPTO_ANIMATION_NUMBER
@@ -389,6 +404,18 @@ def _parse_cli(arg_list, input=True):
         "instead of the first animation.  If you pass in two comma "
         "separated values, e.g. '3,6', it will end "
         "the rendering at the second value",
+    )
+
+    parser.add_argument(
+        "--use_js_renderer",
+        help="Render animations using the javascript frontend",
+        action="store_const",
+        const=True,
+    )
+
+    parser.add_argument(
+        "--js_renderer_path",
+        help="Path to the javascript frontend",
     )
 
     # Specify the manim.cfg file
@@ -612,3 +639,27 @@ def _init_cfg_subcmd(subparsers):
     cfg_export_parser.add_argument("--dir", default=os.getcwd())
 
     return cfg_related
+
+
+def _determine_quality(args):
+    old_qualities = {
+        "k": "fourk_quality",
+        "e": "high_quality",
+        "m": "medium_quality",
+        "l": "low_quality",
+    }
+
+    for quality in constants.QUALITIES.keys():
+        if getattr(args, quality) or (
+            hasattr(args, "quality") and args.quality == constants.QUALITIES[quality]
+        ):
+            return quality
+
+    for quality in old_qualities.keys():
+        if getattr(args, quality):
+            logging.getLogger("manim").warning(
+                f"Option -{quality} is deprecated please use the --quality/-q flag."
+            )
+            return old_qualities[quality]
+
+    return "production"

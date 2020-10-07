@@ -104,12 +104,6 @@ class Camera(object):
         # corresponding class.  If a Mobject is not an instance of a class in
         # this dict (or an instance of a class that inherits from a class in
         # this dict), then it cannot be rendered.
-        self.display_funcs = {
-            VMobject: self.display_multiple_vectorized_mobjects,
-            PMobject: self.display_multiple_point_cloud_mobjects,
-            AbstractImageMobject: self.display_multiple_image_mobjects,
-            Mobject: lambda batch, pa: batch,  # Do nothing
-        }
 
         self.init_background()
         self.resize_frame_shape()
@@ -149,6 +143,12 @@ class Camera(object):
         :exc:`TypeError`
             When mobject is not an instance of a class that can be rendered.
         """
+        self.display_funcs = {
+            VMobject: self.display_multiple_vectorized_mobjects,
+            PMobject: self.display_multiple_point_cloud_mobjects,
+            AbstractImageMobject: self.display_multiple_image_mobjects,
+            Mobject: lambda batch, pa: batch,  # Do nothing
+        }
         # We have to check each type in turn because we are dealing with
         # super classes.  For example, if square = Square(), then
         # type(square) != VMobject, but isinstance(square, VMobject) == True.
@@ -357,6 +357,9 @@ class Camera(object):
         """ ""
         self.set_pixel_array(self.background)
         return self
+
+    def set_frame_to_background(self, background):
+        self.set_pixel_array(background)
 
     ####
 

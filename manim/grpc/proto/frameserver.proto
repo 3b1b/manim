@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package frameserver;
+
+service FrameServer {
+    // Updates the scene to the specified animation offset and returns a
+    // serialization of the frame at that time.
+    rpc GetFrameAtTime (FrameRequest) returns (FrameResponse);
+
+    // Used to signal to the renderer that manim is running.
+    rpc RendererStatus (RendererStatusRequest) returns (RendererStatusResponse);
+
+    rpc UpdateSceneLocation (SceneLocationRequest) returns (SceneLocationResponse);
+}
+
+message FrameRequest {
+    int64 animation_index = 1;
+    float animation_offset = 2;
+}
+
+message Style {
+    string fill_color = 1;
+    float fill_opacity = 2;
+    string stroke_color = 3;
+    float stroke_opacity = 4;
+    float stroke_width = 5;
+}
+
+message Point {
+    float x = 1;
+    float y = 2;
+    float z = 3;
+}
+
+message MobjectData {
+    int64 id = 1;
+    repeated Point points = 2;
+    Style style = 3;
+    bool needs_redraw = 4;
+}
+
+message FrameResponse {
+    repeated MobjectData mobjects = 1;
+    bool frame_pending = 2;
+    bool animation_finished = 3;
+    bool scene_finished = 4;
+    float duration = 5;
+    string animation_name = 6;
+}
+
+message RendererStatusRequest {}
+message RendererStatusResponse {
+    string scene_name = 1;
+}
+
+message SceneLocationRequest {}
+message SceneLocationResponse {}
