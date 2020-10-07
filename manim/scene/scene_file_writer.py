@@ -25,7 +25,7 @@ from ..utils.sounds import get_full_sound_file_path
 class SceneFileWriter(object):
     """
     SceneFileWriter is the object that actually writes the animations
-    played, into video files, using FFMPEG, and Sox, if sound is needed.
+    played, into video files, using FFMPEG.
     This is mostly for Manim's internal use. You will rarely, if ever,
     have to use the methods for this class, unless tinkering with the very
     fabric of Manim's reality.

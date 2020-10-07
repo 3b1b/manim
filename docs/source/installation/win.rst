@@ -28,14 +28,6 @@ FFmpeg installation
    environment variable and running ``ffmpeg``.
 
 
-Sox installation (optional)
-***************************
-
-1. To install Sox, execute ``choco install sox.portable``.
-
-2. You can check if you did it right by running ``refreshenv`` to update your
-   environment variable and running ``sox``.
-
 .. _latex-installation:
 
 LaTeX Installation

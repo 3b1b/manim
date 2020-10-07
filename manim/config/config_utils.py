@@ -50,7 +50,6 @@ def _parse_file_writer_config(config_parser, args):
     for boolean_opt in [
         "preview",
         "show_in_file_browser",
-        "sound",
         "leave_progress_bars",
         "write_to_movie",
         "save_last_frame",
@@ -233,12 +232,6 @@ def _parse_cli(arg_list, input=True):
         action="store_const",
         const=True,
         help="Show the output file in the File Browser",
-    )
-    parser.add_argument(
-        "--sound",
-        action="store_const",
-        const=True,
-        help="Play a success/failure sound",
     )
     parser.add_argument(
         "--leave_progress_bars",

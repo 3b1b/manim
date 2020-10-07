@@ -17,7 +17,6 @@ from .utils.module_ops import (
     get_scenes_to_render,
 )
 from .scene.scene import Scene
-from .utils.sounds import play_error_sound, play_finish_sound
 from .utils.file_ops import open_file as open_media_file
 from .grpc.impl import frame_server_impl
 
@@ -73,7 +72,6 @@ def main():
         module = get_module(file_writer_config["input_file"])
         all_scene_classes = get_scene_classes_from_module(module)
         scene_classes_to_render = get_scenes_to_render(all_scene_classes)
-        sound_on = file_writer_config["sound"]
         for SceneClass in scene_classes_to_render:
             try:
                 if camera_config["use_js_renderer"]:
@@ -82,15 +80,10 @@ def main():
                     scene = SceneClass()
                     scene.render()
                     open_file_if_needed(scene.file_writer)
-                    if sound_on:
-                        play_finish_sound()
             except Exception:
                 print("\n\n")
                 traceback.print_exc()
                 print("\n\n")
-            if not camera_config["use_js_renderer"]:
-                if sound_on:
-                    play_error_sound()
 
 
 if __name__ == "__main__":

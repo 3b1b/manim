@@ -32,6 +32,7 @@ Command line
 #. You can save the logs to a file by using :code:`--log_to_file`
 #. Add experimental javascript rendering with :code:`--use_js_renderer`
 #. Add :code:`-q/--quality [k|h|m|l]` flag and removed :code:`-m/-l` flags.
+#. Removed :code:`--sound` flag
 
 
 Config system

@@ -46,7 +46,7 @@ The output looks as follows.
 .. testoutput::
    :options: -ELLIPSIS, +NORMALIZE_WHITESPACE
 
-   usage: manim [-h] [-o OUTPUT_FILE] [-p] [-f] [--sound] [--leave_progress_bars] [-a] [-w] [-s] [-g] [-i] [--disable_caching] [--flush_cache] [--log_to_file] [-c BACKGROUND_COLOR]
+   usage: manim [-h] [-o OUTPUT_FILE] [-p] [-f] [--leave_progress_bars] [-a] [-w] [-s] [-g] [-i] [--disable_caching] [--flush_cache] [--log_to_file] [-c BACKGROUND_COLOR]
              [--background_opacity BACKGROUND_OPACITY] [--media_dir MEDIA_DIR] [--log_dir LOG_DIR] [--tex_template TEX_TEMPLATE] [--dry_run] [-t] [-q {k,h,m,l}] [--low_quality] [--medium_quality]
              [--high_quality] [--fourk_quality] [-r RESOLUTION] [-n FROM_ANIMATION_NUMBER] [--use_js_renderer] [--js_renderer_path JS_RENDERER_PATH] [--config_file CONFIG_FILE] [--custom_folders]
              [-v {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [--progress_bar True/False]
@@ -66,7 +66,6 @@ optional arguments:
   -p, --preview         Automatically open the saved file once its done
   -f, --show_in_file_browser
                         Show the output file in the File Browser
-  --sound               Play a success/failure sound
   --leave_progress_bars
                         Leave progress bars displayed in terminal
   -a, --write_all       Write all the scenes from a file
