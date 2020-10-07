@@ -95,3 +95,11 @@ class CairoRenderer:
             if self.scene.num_plays > file_writer_config["upto_animation_number"]:
                 file_writer_config["skip_animations"] = True
                 raise EndSceneEarlyException()
+
+    def show_frame(self):
+        """
+        Opens the current frame in the Default Image Viewer
+        of your system.
+        """
+        self.update_frame(ignore_skipping=True)
+        self.camera.get_image().show()

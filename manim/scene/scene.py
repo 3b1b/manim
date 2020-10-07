@@ -1008,11 +1008,3 @@ class Scene(Container):
             return
         time = self.time + time_offset
         self.file_writer.add_sound(sound_file, time, gain, **kwargs)
-
-    def show_frame(self):
-        """
-        Opens the current frame in the Default Image Viewer
-        of your system.
-        """
-        self.renderer.update_frame(ignore_skipping=True)
-        self.camera.get_image().show()
