@@ -29,11 +29,23 @@ NO_SCENE_MESSAGE = """
    There are no scenes inside that module
 """
 
-# Cairo stuff
+# Cairo and Pango stuff
 NORMAL = "NORMAL"
 ITALIC = "ITALIC"
 OBLIQUE = "OBLIQUE"
 BOLD = "BOLD"
+# Only for Pango from below
+THIN = "THIN"
+ULTRALIGHT = "ULTRALIGHT"
+LIGHT = "LIGHT"
+SEMILIGHT = "SEMILIGHT"
+BOOK = "BOOK"
+MEDIUM = "MEDIUM"
+SEMIBOLD = "SEMIBOLD"
+ULTRABOLD = "ULTRABOLD"
+HEAVY = "HEAVY"
+ULTRAHEAVY = "ULTRAHEAVY"
+
 
 # Geometry: directions
 ORIGIN = np.array((0.0, 0.0, 0.0))

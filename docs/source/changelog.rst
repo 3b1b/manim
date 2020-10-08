@@ -66,6 +66,7 @@ Mobjects, Scenes, and Animations
 #. :code:`VGroup` now supports printing the class names of contained mobjects and :code:`VDict` supports printing the internal dict of mobjects
 #. :code:`Scene` now renders when :code:`Scene.render()` is called rather than upon instantiation.
 #. :code:`ValueTracker` now supports increment using the `+=` operator (in addition to the already existing `increment_value` method)
+#. Add :class:`PangoText` for rendering texts using Pango.
 
 
 Documentation

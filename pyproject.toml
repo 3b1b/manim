@@ -38,6 +38,9 @@ pycairo = "^1.20"
 grpcio = "*"
 grpcio-tools = "*"
 watchdog = "*"
+pangocffi = "^0.6.0"
+pangocairocffi = "^0.3.0"
+cairocffi = "^1.1.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.0"
