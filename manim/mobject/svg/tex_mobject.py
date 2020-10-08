@@ -49,19 +49,20 @@ class SingleStringMathTex(SVGMobject):
         "organize_left_to_right": False,
         "alignment": "",
         "tex_environment": "align*",
-        "template": None,
+        "tex_template": None,
     }
 
     def __init__(self, tex_string, **kwargs):
         digest_config(self, kwargs)
-        if self.template is None:
-            self.template = kwargs.get("tex_template", config["tex_template"])
+        if self.tex_template is None:
+            self.tex_template = kwargs.get("tex_template", config["tex_template"])
+
         assert isinstance(tex_string, str)
         self.tex_string = tex_string
         file_name = tex_to_svg_file(
             self.get_modified_expression(tex_string),
             environment=self.tex_environment,
-            tex_template=self.template,
+            tex_template=self.tex_template,
         )
         SVGMobject.__init__(self, file_name=file_name, **kwargs)
         if self.height is None:

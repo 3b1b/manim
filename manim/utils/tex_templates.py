@@ -242,7 +242,7 @@ americantypewriter.add_to_preamble(
 """
 )
 americantypewriter.tex_compiler = "xelatex"
-
+americantypewriter.output_format = ".xdv"
 
 # Minion Pro and Myriad Pro (and TX fonts symbols)
 mpmptx = BasicTexTemplate()
@@ -260,6 +260,7 @@ mpmptx.add_to_preamble(
 """
 )
 mpmptx.tex_compiler = "xelatex"
+mpmptx.output_format = ".xdv"
 
 
 # New Century Schoolbook (Symbol Greek, PX math symbols)
@@ -362,6 +363,7 @@ applechancery.add_to_preamble(
 """
 )
 applechancery.tex_compiler = "xelatex"
+applechancery.output_format = ".xdv"
 
 
 # Zapf Chancery
@@ -392,6 +394,7 @@ italicverdana.add_to_preamble(
 """
 )
 italicverdana.tex_compiler = "xelatex"
+italicverdana.output_format = ".xdv"
 
 
 # URW Zapf Chancery (CM Greek)
@@ -428,6 +431,7 @@ comicsansms.add_to_preamble(
 """
 )
 comicsansms.tex_compiler = "xelatex"
+comicsansms.output_format = ".xdv"
 
 
 # GFS Didot (Italic)
@@ -469,6 +473,7 @@ mptx.add_to_preamble(
 """
 )
 mptx.tex_compiler = "xelatex"
+mptx.output_format = ".xdv"
 
 
 # GNU FreeSerif and FreeSans
@@ -553,6 +558,7 @@ italicbaskerville.add_to_preamble(
 """
 )
 italicbaskerville.tex_compiler = "xelatex"
+italicbaskerville.output_format = ".xdv"
 
 
 # ECF JD (with TX fonts)
@@ -597,6 +603,7 @@ papyrus.add_to_preamble(
 """
 )
 papyrus.tex_compiler = "xelatex"
+papyrus.output_format = ".xdv"
 
 
 # GNU FreeSerif (and TX fonts symbols)
@@ -710,6 +717,7 @@ chalkboardse.add_to_preamble(
 """
 )
 chalkboardse.tex_compiler = "xelatex"
+chalkboardse.output_format = ".xdv"
 
 
 # Noteworthy Light
@@ -797,6 +805,7 @@ brushscriptxpx.add_to_document(
 """
 )
 brushscriptxpx.tex_compiler = "xelatex"
+brushscriptxpx.output_format = ".xdv"
 
 
 # URW Avant Garde (Symbol Greek)
@@ -838,7 +847,7 @@ italichelveticaf.add_to_preamble(
 )
 
 
-class TexFontTemplateCollection(object):
+class TexFontTemplates(object):
     """A list of Tex templates for the fonts described at http://jf.burnol.free.fr/showcase.html"""
 
     american_typewriter = americantypewriter  # "American Typewriter"
@@ -897,6 +906,3 @@ class TexFontTemplateCollection(object):
     vollkorn_fourier_it = italicvollkornf  # "Vollkorn with Fourier (Italic)"
     vollkorn = vollkorntx  # "Vollkorn (TX fonts for Greek and math symbols)"
     zapf_chancery = zapfchancery  # "Zapf Chancery"
-
-
-TexFontTemplates = TexFontTemplateCollection()

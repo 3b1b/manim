@@ -5,15 +5,20 @@ __all__ = [
     "TexTemplateFromFile",
     "BasicTexTemplate",
     "ThreeBlueOneBrownTexTemplate",
-    "ThreeBlueOneBrownCTEXTemplate",
+    "CTEXTemplate",
 ]
 
 
 import os
 
-threeblueonebrown_tex_template_body = r"""
-\documentclass[preview]{standalone}
 
+class TexTemplate:
+    """
+    Class representing a TeX template to be used for creating Tex() and MathTex() objects.
+    """
+
+    default_documentclass = r"\documentclass[preview]{standalone}"
+    default_preamble = r"""
 \usepackage[english]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -33,73 +38,105 @@ threeblueonebrown_tex_template_body = r"""
 \usepackage{microtype}
 \DisableLigatures{encoding = *, family = * }
 \linespread{1}
-
-\begin{document}
-
-YourTextHere
-
-\end{document}       
 """
+    default_placeholder_text = "YourTextHere"
+    default_tex_compiler = "latex"
+    default_output_format = ".dvi"
+    default_post_doc_commands = ""
 
+    def __init__(
+        self,
+        tex_compiler=None,
+        output_format=None,
+        documentclass=None,
+        preamble=None,
+        placeholder_text=None,
+        post_doc_commands=None,
+        **kwargs
+    ):
+        self.tex_compiler = (
+            tex_compiler
+            if tex_compiler is not None
+            else TexTemplate.default_tex_compiler
+        )
+        self.output_format = (
+            output_format
+            if output_format is not None
+            else TexTemplate.default_output_format
+        )
+        self.documentclass = (
+            documentclass
+            if documentclass is not None
+            else TexTemplate.default_documentclass
+        )
+        self.preamble = (
+            preamble if preamble is not None else TexTemplate.default_preamble
+        )
+        self.placeholder_text = (
+            placeholder_text
+            if placeholder_text is not None
+            else TexTemplate.default_placeholder_text
+        )
+        self.post_doc_commands = (
+            post_doc_commands
+            if post_doc_commands is not None
+            else TexTemplate.default_post_doc_commands
+        )
+        self.rebuild()
 
-class TexTemplate:
-    """
-    Class representing a TeX template to be used for creating Tex() and MathTex() objects.
-    """
+    def rebuild(self):
+        self.body = (
+            self.documentclass
+            + "\n"
+            + self.preamble
+            + "\n"
+            + r"\begin{document}"
+            + "\n"
+            + self.post_doc_commands
+            + "\n"
+            + self.placeholder_text
+            + "\n"
+            + r"\end{document}"
+            + "\n"
+        )
 
-    tex_compiler = None
-    output_format = None
-    body = None
-    has_environment = False
-
-    def __init__(self, **kwargs):
-        if self.tex_compiler is None:
-            self.tex_compiler = kwargs.pop("tex_compiler", "latex")
-        if self.output_format is None:
-            self.output_format = kwargs.pop("output_format", ".dvi")
-        self.prepare_template_body()
-
-    def prepare_template_body(self):
-        self.body = threeblueonebrown_tex_template_body
+    def prepend_to_preamble(self, txt):
+        # Adds txt to the TeX template preamble just after the \documentclass
+        self.preamble = txt + "\n" + self.preamble
+        self.rebuild()
 
     def add_to_preamble(self, txt):
         # Adds txt to the TeX template preamble just before \begin{document}
-        self.body = self.body.replace("\\begin{document}", txt + "\n\\begin{document}")
+        self.preamble += "\n" + txt
+        self.rebuild()
 
     def add_to_document(self, txt):
         # Adds txt to the TeX template just after \begin{document}
-        self.body = self.body.replace(
-            "\\begin{document}", "\\begin{document}\n" + txt + "\n"
-        )
+        self.post_doc_commands += "\n" + txt + "\n"
+        self.rebuild()
 
     def get_texcode_for_expression(self, expression):
         # Inserts expression verbatim into TeX template.
-        return self.body.replace("YourTextHere", expression)
+        return self.body.replace(self.placeholder_text, expression)
 
     def get_texcode_for_expression_in_env(self, expression, environment):
         # Inserts expression into TeX template wrapped in \begin{environemnt} and \end{environment}
         begin = r"\begin{" + environment + "}"
         end = r"\end{" + environment + "}"
         return self.body.replace(
-            "YourTextHere", "{0}\n{1}\n{2}".format(begin, expression, end)
+            self.placeholder_text, "{0}\n{1}\n{2}".format(begin, expression, end)
         )
 
 
 class BasicTexTemplate(TexTemplate):
-    def prepare_template_body(self):
-        self.body = r"""
-\documentclass[preview]{standalone}
-
+    def __init__(self, *args, **kwargs):
+        basic_headers = r"""
 \usepackage[english]{babel}
 \usepackage{amsmath}
-\usepackage{amssymb}
-
-\begin{document}
-
-YourTextHere
-
-\end{document}        
+\usepackage{amssymb}      
 """
+        preamble = kwargs.pop("preamble", basic_headers)
+        super().__init__(*args, preamble=preamble, **kwargs)
 
 
 class ThreeBlueOneBrownTexTemplate(TexTemplate):
@@ -107,31 +144,49 @@ class ThreeBlueOneBrownTexTemplate(TexTemplate):
     The default TeX template from the 3b1b version of manim
     """
 
-    def prepare_template_body(self):
-        self.body = threeblueonebrown_tex_template_body
+    pass
 
 
-class ThreeBlueOneBrownCTEXTemplate(ThreeBlueOneBrownTexTemplate):
+class CTEXTemplate(TexTemplate):
     """
     The default TeX template from the 3b1b version of manim with the use_ctex option
     """
 
     def __init__(self, **kwargs):
-        self.tex_compiler = kwargs.pop("tex_compiler", "xelatex")
-        self.output_format = kwargs.pop("output_format", ".xdv")
-        super().__init__(**kwargs)
-
-    def prepare_template_body(self):
-        self.body = threeblueonebrown_tex_template_body.replace(
+        tex_compiler = kwargs.pop("tex_compiler", "xelatex")
+        output_format = kwargs.pop("output_format", ".xdv")
+        preamble = TexTemplate.default_preamble.replace(
             r"\DisableLigatures{encoding = *, family = * }", r"\usepackage[UTF8]{ctex}"
+        )
+        super().__init__(
+            tex_compiler=tex_compiler,
+            output_format=output_format,
+            preamble=preamble,
+            **kwargs
         )
 
 
 class TexTemplateFromFile(TexTemplate):
+    """
+    A TexTemplate object created from a template file (default: tex_template.tex)
+    """
+
     def __init__(self, **kwargs):
         self.template_file = kwargs.pop("filename", "tex_template.tex")
         super().__init__(**kwargs)
 
-    def prepare_template_body(self):
+    def rebuild(self):
         with open(self.template_file, "r") as infile:
             self.body = infile.read()
+
+    def file_not_mutable():
+        raise Exception("Cannot modify TexTemplate when using a template file.")
+
+    def prepend_to_preamble(self, txt):
+        self.file_not_mutable()
+
+    def add_to_preamble(self, txt):
+        self.file_not_mutable()
+
+    def add_to_document(self, txt):
+        self.file_not_mutable()
