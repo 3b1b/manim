@@ -343,6 +343,7 @@ def _parse_cli(arg_list, input=True):
         "-q",
         "--quality",
         choices=constants.QUALITIES.values(),
+        default=constants.DEFAULT_QUALITY_SHORT,
         help="Render at specific quality, short form of the --*_quality flags",
     )
     parser.add_argument(
@@ -359,6 +360,11 @@ def _parse_cli(arg_list, input=True):
         "--high_quality",
         action="store_true",
         help="Render at high quality",
+    )
+    parser.add_argument(
+        "--production_quality",
+        action="store_true",
+        help="Render at default production quality",
     )
     parser.add_argument(
         "--fourk_quality",
@@ -650,7 +656,10 @@ def _determine_quality(args):
     }
 
     for quality in constants.QUALITIES.keys():
-        if getattr(args, quality) or (
+        if quality == constants.DEFAULT_QUALITY:
+            # Skip so we prioritize anything that overwrites the default quality.
+            pass
+        elif getattr(args, quality) or (
             hasattr(args, "quality") and args.quality == constants.QUALITIES[quality]
         ):
             return quality
@@ -662,4 +671,4 @@ def _determine_quality(args):
             )
             return old_qualities[quality]
 
-    return "production"
+    return constants.DEFAULT_QUALITY

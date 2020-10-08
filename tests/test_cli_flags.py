@@ -3,10 +3,11 @@ from manim.config.config_utils import _determine_quality, _parse_cli
 
 
 def test_quality_flags():
-    # Assert that quality is None when not specifying it
+    # Assert that quality is the default when not specifying it
     parsed = _parse_cli([], False)
 
-    assert not parsed.quality
+    assert parsed.quality == constants.DEFAULT_QUALITY_SHORT
+    assert _determine_quality(parsed) == constants.DEFAULT_QUALITY
 
     for quality in constants.QUALITIES.keys():
         # Assert that quality is properly set when using -q*
@@ -41,4 +42,4 @@ def test_quality_flags():
         parsed = _parse_cli([], False)
 
         assert not getattr(parsed, quality)
-        assert "production" == _determine_quality(parsed)
+        assert _determine_quality(parsed) == constants.DEFAULT_QUALITY

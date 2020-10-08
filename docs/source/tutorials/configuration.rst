@@ -47,8 +47,8 @@ The output looks as follows.
    :options: -ELLIPSIS, +NORMALIZE_WHITESPACE
 
    usage: manim [-h] [-o OUTPUT_FILE] [-p] [-f] [--leave_progress_bars] [-a] [-w] [-s] [-g] [-i] [--disable_caching] [--flush_cache] [--log_to_file] [-c BACKGROUND_COLOR]
-             [--background_opacity BACKGROUND_OPACITY] [--media_dir MEDIA_DIR] [--log_dir LOG_DIR] [--tex_template TEX_TEMPLATE] [--dry_run] [-t] [-q {k,h,m,l}] [--low_quality] [--medium_quality]
-             [--high_quality] [--fourk_quality] [-r RESOLUTION] [-n FROM_ANIMATION_NUMBER] [--use_js_renderer] [--js_renderer_path JS_RENDERER_PATH] [--config_file CONFIG_FILE] [--custom_folders]
+             [--background_opacity BACKGROUND_OPACITY] [--media_dir MEDIA_DIR] [--log_dir LOG_DIR] [--tex_template TEX_TEMPLATE] [--dry_run] [-t] [-q {k,p,h,m,l}] [--low_quality] [--medium_quality]
+             [--high_quality] [--production_quality] [--fourk_quality] [-r RESOLUTION] [-n FROM_ANIMATION_NUMBER] [--use_js_renderer] [--js_renderer_path JS_RENDERER_PATH] [--config_file CONFIG_FILE] [--custom_folders]
              [-v {DEBUG,INFO,WARNING,ERROR,CRITICAL}] [--progress_bar True/False]
              {cfg} ... file [scene_names [scene_names ...]]
 
@@ -88,11 +88,12 @@ optional arguments:
                         Specify a custom TeX template file
   --dry_run             Do a dry run (render scenes but generate no output files)
   -t, --transparent     Render a scene with an alpha channel
-  -q {k,h,m,l}, --quality {k,h,m,l}
+  -q {k,p,h,m,l}, --quality {k,p,h,m,l}
                         Render at specific quality, short form of the --*_quality flags
   --low_quality         Render at low quality
   --medium_quality      Render at medium quality
   --high_quality        Render at high quality
+  --production_quality  Render at default production quality
   --fourk_quality       Render at 4K quality
   -r RESOLUTION, --resolution RESOLUTION
                         Resolution, passed as "height,width". Overrides any quality flags, if present

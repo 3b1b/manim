@@ -86,7 +86,7 @@ def _parse_config(config_parser, args):
     # and are stored in 'camera_config'.  Note the highest resolution
     # passed as argument will be used.
     quality = _determine_quality(args)
-    section = config_parser[quality if quality != "production" else "CLI"]
+    section = config_parser[quality if quality != constants.DEFAULT_QUALITY else "CLI"]
 
     # Loop over low quality for the keys, could be any quality really
     config = {opt: section.getint(opt) for opt in config_parser["low_quality"]}
