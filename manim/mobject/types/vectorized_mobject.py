@@ -973,6 +973,7 @@ class VDict(VMobject):
         Examples
         --------
         Normal usage::
+
             square_obj = Square()
             my_dict.add([('s', square_obj)])
         """
@@ -1000,6 +1001,7 @@ class VDict(VMobject):
         Examples
         --------
         Normal usage::
+
             my_dict.remove('square')
         """
         if key not in self.submob_dict:
@@ -1024,6 +1026,7 @@ class VDict(VMobject):
         Examples
         --------
         Normal usage::
+
            self.play(ShowCreation(my_dict['s']))
         """
         submob = self.submob_dict[key]
@@ -1046,6 +1049,7 @@ class VDict(VMobject):
         Examples
         --------
         Normal usage::
+
             square_obj = Square()
             my_dict['sq'] = square_obj
         """
@@ -1064,6 +1068,7 @@ class VDict(VMobject):
         Examples
         --------
         Normal usage::
+
             for submob in my_dict.get_all_submobjects():
                 self.play(ShowCreation(submob))
         """
@@ -1093,6 +1098,7 @@ class VDict(VMobject):
         Examples
         --------
         Normal usage::
+
             square_obj = Square()
             self.add_key_value_pair('s', square_obj)
 
