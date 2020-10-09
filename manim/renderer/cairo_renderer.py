@@ -1,5 +1,5 @@
 import numpy as np
-from .. import camera_config, file_writer_config, logger
+from .. import config, camera_config, file_writer_config, logger
 from ..utils.iterables import list_update
 from ..utils.exceptions import EndSceneEarlyException
 from ..utils.hashing import get_hash_from_play_call, get_hash_from_wait_call
@@ -88,7 +88,25 @@ class CairoRenderer:
 
     def __init__(self, scene, camera):
         self.camera = camera
+
+        # All of the following are set to EITHER the value passed via kwargs,
+        # OR the value stored in the global config dict at the time of
+        # _instance construction_.  Before, they were in the CONFIG dict, which
+        # is a class attribute and is defined at the time of _class
+        # definition_.  This did not allow for creating two Cameras with
+        # different configurations in the same session.
+        self.video_quality_config = {}
+        for attr in [
+            "pixel_height",
+            "pixel_width",
+            "frame_height",
+            "frame_width",
+            "frame_rate",
+        ]:
+            self.video_quality_config[attr] = camera_config.get(attr, config[attr])
+
         self.file_writer = SceneFileWriter(
+            self.video_quality_config,
             scene,
             **file_writer_config,
         )
@@ -220,4 +238,6 @@ class CairoRenderer:
     def finish(self):
         file_writer_config["skip_animations"] = False
         self.file_writer.finish()
+        if file_writer_config["save_last_frame"]:
+            self.file_writer.save_final_image(self.camera.get_image())
         logger.info(f"Rendered {str(self.scene)}\nPlayed {self.num_plays} animations")

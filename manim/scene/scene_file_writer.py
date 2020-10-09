@@ -39,8 +39,9 @@ class SceneFileWriter(object):
             The file-type extension of the outputted video.
     """
 
-    def __init__(self, scene, **kwargs):
+    def __init__(self, video_quality_config, scene, **kwargs):
         digest_config(self, kwargs)
+        self.video_quality_config = video_quality_config
         self.scene = scene
         self.stream_lock = False
         self.init_output_directories()
@@ -167,8 +168,8 @@ class SceneFileWriter(object):
         :class:`str`
             The name of the directory.
         """
-        pixel_height = self.scene.camera.pixel_height
-        frame_rate = self.scene.camera.frame_rate
+        pixel_height = self.video_quality_config["pixel_height"]
+        frame_rate = self.video_quality_config["frame_rate"]
         return "{}p{}".format(pixel_height, frame_rate)
 
     # Directory getters
@@ -369,7 +370,7 @@ class SceneFileWriter(object):
             self.add_frame(*[frame] * n_frames)
             b = datetime.datetime.now()
             time_diff = (b - a).total_seconds()
-            frame_duration = 1 / self.scene.camera.frame_rate
+            frame_duration = 1 / self.video_quality_config["frame_rate"]
             if time_diff < frame_duration:
                 sleep(frame_duration - time_diff)
 
@@ -389,9 +390,6 @@ class SceneFileWriter(object):
                 self.flush_cache_directory()
             else:
                 self.clean_cache()
-        if file_writer_config["save_last_frame"]:
-            self.scene.update_frame(ignore_skipping=True)
-            self.save_final_image(self.scene.camera.get_image())
 
     def open_movie_pipe(self):
         """
@@ -408,9 +406,9 @@ class SceneFileWriter(object):
         self.partial_movie_file_path = file_path
         self.temp_partial_movie_file_path = temp_file_path
 
-        fps = self.scene.camera.frame_rate
-        height = self.scene.camera.pixel_height
-        width = self.scene.camera.pixel_width
+        fps = self.video_quality_config["frame_rate"]
+        height = self.video_quality_config["pixel_height"]
+        width = self.video_quality_config["pixel_width"]
 
         command = [
             FFMPEG_BIN,
