@@ -50,29 +50,28 @@ class TexFontTemplateLibrary(Scene):
             self.wait(1)
             self.play(FadeOut(x))
 
-            # Please Note: 
+            # Please Note:
             # Many of these templates require that specific fonts
             # are installed on your local machine.
             # For example, choosing the template TexFontTemplates.chalkduster will
             # not compile if the chalkduster font is not installed.
-            # 
-            # This scene will only render those Templates that do not cause a TeX 
+            #
+            # This scene will only render those Templates that do not cause a TeX
             # compilation error on your system. Some of the ones that do render,
-            # may render incorrectly. This is beyond the scope of manim. 
+            # may render incorrectly. This is beyond the scope of manim.
             # Feel free to experiment.
-
 
         examples = [
             TexFontTemplates.american_typewriter,  # "American Typewriter"
-            TexFontTemplates.antykwa, # "Antykwa Półtawskiego (TX Fonts for Greek and math symbols)"
-            TexFontTemplates.apple_chancery, # "Apple Chancery"
+            TexFontTemplates.antykwa,  # "Antykwa Półtawskiego (TX Fonts for Greek and math symbols)"
+            TexFontTemplates.apple_chancery,  # "Apple Chancery"
             TexFontTemplates.auriocus_kalligraphicus,  # "Auriocus Kalligraphicus (Symbol Greek)"
             TexFontTemplates.baskervald_adf_fourier,  # "Baskervald ADF with Fourier"
-            TexFontTemplates.baskerville_it, # "Baskerville (Italic)"
+            TexFontTemplates.baskerville_it,  # "Baskerville (Italic)"
             TexFontTemplates.biolinum,  # "Biolinum"
-            TexFontTemplates.brushscriptx, # "BrushScriptX-Italic (PX math and Greek)"
-            TexFontTemplates.chalkboard_se, # "Chalkboard SE"
-            TexFontTemplates.chalkduster, # "Chalkduster"
+            TexFontTemplates.brushscriptx,  # "BrushScriptX-Italic (PX math and Greek)"
+            TexFontTemplates.chalkboard_se,  # "Chalkboard SE"
+            TexFontTemplates.chalkduster,  # "Chalkduster"
             TexFontTemplates.comfortaa,  # "Comfortaa"
             TexFontTemplates.comic_sans,  # "Comic Sans MS"
             TexFontTemplates.droid_sans,  # "Droid Sans"
@@ -122,7 +121,7 @@ class TexFontTemplateLibrary(Scene):
         for font in examples:
             try:
                 write_one_line(font)
-            except: 
+            except:
                 print("FAILURE on ", font.description, " - skipping.")
 
         self.play(
