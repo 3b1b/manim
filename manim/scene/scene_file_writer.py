@@ -37,6 +37,9 @@ class SceneFileWriter(object):
             The PIL image mode to use when outputting PNGs
         "movie_file_extension" (str=".mp4")
             The file-type extension of the outputted video.
+        "partial_movie_files"
+            List of all the partial-movie files.
+
     """
 
     def __init__(self, scene, **kwargs):
@@ -46,7 +49,7 @@ class SceneFileWriter(object):
         self.init_output_directories()
         self.init_audio()
         self.frame_count = 0
-        self.index_partial_movie_file = 0
+        self.partial_movie_files = []
 
     # Output directories and files
     def init_output_directories(self):
@@ -113,6 +116,29 @@ class SceneFileWriter(object):
                     )
                 )
 
+    def add_partial_movie_file(self, hash_animation):
+        """Adds a new partial movie file path to scene.partial_movie_files from an hash. This method will compute the path from the hash.
+
+        Parameters
+        ----------
+        hash_animation : str
+            Hash of the animation.
+        """
+
+        # None has to be added to partial_movie_files to keep the right index with scene.num_plays.
+        # i.e if an animation is skipped, scene.num_plays is still incremented and we add an element to partial_movie_file be even with num_plays.
+        if hash_animation is None:
+            self.partial_movie_files.append(None)
+            return
+        new_partial_movie_file = os.path.join(
+            self.partial_movie_directory,
+            "{}{}".format(
+                hash_animation,
+                file_writer_config["movie_file_extension"],
+            ),
+        )
+        self.partial_movie_files.append(new_partial_movie_file)
+
     def get_default_module_directory(self):
         """
         This method gets the name of the directory containing
@@ -149,7 +175,7 @@ class SceneFileWriter(object):
         This method gets the name of the directory that immediately contains the
         video file. This name is ``<height_in_pixels_of_video>p<frame_rate>``.
         For example, if you are rendering an 854x480 px animation at 15fps,
-        the name of the directory that immediately contains the video file
+        the name of the directory that immediately contains the video,  file
         will be ``480p15``.
 
         The file structure should look something like::
@@ -185,29 +211,6 @@ class SceneFileWriter(object):
             The path of the directory.
         """
         return self.image_file_path
-
-    def get_next_partial_movie_path(self):
-        """
-        Manim renders each play-like call in a short partial
-        video file. All such files are then concatenated with
-        the help of FFMPEG.
-
-        This method returns the path of the next partial movie.
-
-        Returns
-        -------
-        str
-            The path of the next partial movie.
-        """
-        result = os.path.join(
-            self.partial_movie_directory,
-            "{}{}".format(
-                self.scene.play_hashes_list[self.index_partial_movie_file],
-                file_writer_config["movie_file_extension"],
-            ),
-        )
-        self.index_partial_movie_file += 1
-        return result
 
     def get_movie_file_path(self):
         """
@@ -399,7 +402,9 @@ class SceneFileWriter(object):
         FFMPEG and begin writing to FFMPEG's input
         buffer.
         """
-        file_path = self.get_next_partial_movie_path()
+        file_path = self.partial_movie_files[self.scene.num_plays]
+
+        # TODO #486 Why does ffmpeg need temp files ?
         temp_file_path = (
             os.path.splitext(file_path)[0]
             + "_temp"
@@ -497,20 +502,19 @@ class SceneFileWriter(object):
         # cuts at all the places you might want.  But for viewing
         # the scene as a whole, one of course wants to see it as a
         # single piece.
-        partial_movie_files = [
-            os.path.join(
-                self.partial_movie_directory,
-                "{}{}".format(hash_play, file_writer_config["movie_file_extension"]),
-            )
-            for hash_play in self.scene.play_hashes_list
-        ]
-        if len(partial_movie_files) == 0:
-            logger.error("No animations in this scene")
-            return
+        partial_movie_files = [el for el in self.partial_movie_files if el is not None]
+        # NOTE : Here we should do a check and raise an exeption if partial movie file is empty.
+        # We can't, as a lot of stuff (in particular, in tests) use scene initialization, and this error would be raised as it's just
+        # an empty scene initialized.
+
         # Write a file partial_file_list.txt containing all
         # partial movie files. This is used by FFMPEG.
         file_list = os.path.join(
             self.partial_movie_directory, "partial_movie_file_list.txt"
+        )
+        logger.debug(
+            f"Partial movie files to combine ({len(partial_movie_files)} files): %(p)s",
+            {"p": partial_movie_files[:5]},
         )
         with open(file_list, "w") as fp:
             fp.write("# This file is used internally by FFMPEG.\n")
