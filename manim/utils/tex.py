@@ -155,13 +155,13 @@ class CTEXTemplate(TexTemplate):
     def __init__(self, **kwargs):
         tex_compiler = kwargs.pop("tex_compiler", "xelatex")
         output_format = kwargs.pop("output_format", ".xdv")
-        preamble = TexTemplate.default_preamble.replace(
+        ctexpreamble = TexTemplate.default_preamble.replace(
             r"\DisableLigatures{encoding = *, family = * }", r"\usepackage[UTF8]{ctex}"
         )
         super().__init__(
             tex_compiler=tex_compiler,
             output_format=output_format,
-            preamble=preamble,
+            preamble=ctexpreamble,
             **kwargs
         )
 

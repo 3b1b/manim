@@ -7,6 +7,7 @@ Examples
    examples/annotations
    examples/plots
    examples/text
+   examples/tex
    examples/formulas
    examples/3d
    examples/camera_settings
