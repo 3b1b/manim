@@ -50,22 +50,29 @@ class TexFontTemplateLibrary(Scene):
             self.wait(1)
             self.play(FadeOut(x))
 
-            # Please Note: The entries that are commented out
-            # require that the fonts in question are installed on your local machine.
+            # Please Note: 
+            # Many of these templates require that specific fonts
+            # are installed on your local machine.
             # For example, choosing the template TexFontTemplates.chalkduster will
             # not compile if the chalkduster font is not installed.
+            # 
+            # This scene will only render those Templates that do not cause a TeX 
+            # compilation error on your system. Some of the ones that do render,
+            # may render incorrectly. This is beyond the scope of manim. 
+            # Feel free to experiment.
+
 
         examples = [
-            # TexFontTemplates.american_typewriter,  # "American Typewriter"
-            # TexFontTemplates.antykwa, # "Antykwa Półtawskiego (TX Fonts for Greek and math symbols)"
-            # TexFontTemplates.apple_chancery, # "Apple Chancery"
+            TexFontTemplates.american_typewriter,  # "American Typewriter"
+            TexFontTemplates.antykwa, # "Antykwa Półtawskiego (TX Fonts for Greek and math symbols)"
+            TexFontTemplates.apple_chancery, # "Apple Chancery"
             TexFontTemplates.auriocus_kalligraphicus,  # "Auriocus Kalligraphicus (Symbol Greek)"
             TexFontTemplates.baskervald_adf_fourier,  # "Baskervald ADF with Fourier"
-            # TexFontTemplates.baskerville_it, # "Baskerville (Italic)"
+            TexFontTemplates.baskerville_it, # "Baskerville (Italic)"
             TexFontTemplates.biolinum,  # "Biolinum"
-            # TexFontTemplates.brushscriptx, # "BrushScriptX-Italic (PX math and Greek)"
-            # TexFontTemplates.chalkboard_se, # "Chalkboard SE"
-            # TexFontTemplates.chalkduster, # "Chalkduster"
+            TexFontTemplates.brushscriptx, # "BrushScriptX-Italic (PX math and Greek)"
+            TexFontTemplates.chalkboard_se, # "Chalkboard SE"
+            TexFontTemplates.chalkduster, # "Chalkduster"
             TexFontTemplates.comfortaa,  # "Comfortaa"
             TexFontTemplates.comic_sans,  # "Comic Sans MS"
             TexFontTemplates.droid_sans,  # "Droid Sans"
@@ -91,13 +98,13 @@ class TexFontTemplateLibrary(Scene):
             TexFontTemplates.latin_modern_tw,  # "Latin Modern Typewriter Proportional"
             TexFontTemplates.libertine,  # "Libertine"
             TexFontTemplates.libris_adf_fourier,  # "Libris ADF with Fourier"
-            # TexFontTemplates.minion_pro_myriad_pro,  # "Minion Pro and Myriad Pro (and TX fonts symbols)"
-            # TexFontTemplates.minion_pro_tx,  # "Minion Pro (and TX fonts symbols)"
+            TexFontTemplates.minion_pro_myriad_pro,  # "Minion Pro and Myriad Pro (and TX fonts symbols)"
+            TexFontTemplates.minion_pro_tx,  # "Minion Pro (and TX fonts symbols)"
             TexFontTemplates.new_century_schoolbook,  # "New Century Schoolbook (Symbol Greek)"
             TexFontTemplates.new_century_schoolbook_px,  # "New Century Schoolbook (Symbol Greek, PX math symbols)"
-            # TexFontTemplates.noteworthy_light,  # "Noteworthy Light"
+            TexFontTemplates.noteworthy_light,  # "Noteworthy Light"
             TexFontTemplates.palatino,  # "Palatino (Symbol Greek)"
-            # TexFontTemplates.papyrus,  # "Papyrus"
+            TexFontTemplates.papyrus,  # "Papyrus"
             TexFontTemplates.romande_adf_fourier_it,  # "Romande ADF with Fourier (Italic)"
             TexFontTemplates.slitex,  # "SliTeX (Euler Greek)"
             TexFontTemplates.times_fourier_it,  # "Times with Fourier (Italic)"
@@ -105,18 +112,18 @@ class TexFontTemplateLibrary(Scene):
             TexFontTemplates.urw_zapf_chancery,  # "URW Zapf Chancery (CM Greek)"
             TexFontTemplates.venturis_adf_fourier_it,  # "Venturis ADF with Fourier (Italic)"
             TexFontTemplates.verdana_it,  # "Verdana (Italic)"
-            # TexFontTemplates.vollkorn_fourier_it,  # "Vollkorn with Fourier (Italic)"
-            # TexFontTemplates.vollkorn,  # "Vollkorn (TX fonts for Greek and math symbols)"
+            TexFontTemplates.vollkorn_fourier_it,  # "Vollkorn with Fourier (Italic)"
+            TexFontTemplates.vollkorn,  # "Vollkorn (TX fonts for Greek and math symbols)"
             TexFontTemplates.zapf_chancery,  # "Zapf Chancery"
         ]
 
         self.add(Tex("Tex Font Template Example").to_edge(UL))
 
         for font in examples:
-            print(
-                "Compiling tex for: ", font.description
-            )  # To help you figure out which examples to comment out.
-            write_one_line(font)
+            try:
+                write_one_line(font)
+            except: 
+                print("FAILURE on ", font.description, " - skipping.")
 
         self.play(
             ShowCreation(
