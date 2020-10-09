@@ -113,7 +113,9 @@ class TexFontTemplateLibrary(Scene):
         self.add(Tex("Tex Font Template Example").to_edge(UL))
 
         for font in examples:
-            print("Compiling tex for: ", font.description)
+            print(
+                "Compiling tex for: ", font.description
+            )  # To help you figure out which examples to comment out.
             write_one_line(font)
 
         self.play(

@@ -4,8 +4,6 @@ __all__ = [
     "TexTemplate",
     "TexTemplateFromFile",
     "BasicTexTemplate",
-    "ThreeBlueOneBrownTexTemplate",
-    "CTEXTemplate",
 ]
 
 
@@ -101,26 +99,26 @@ class TexTemplate:
         )
 
     def prepend_to_preamble(self, txt):
-        # Adds txt to the TeX template preamble just after the \documentclass
+        """Adds txt to the TeX template preamble just after the \documentclass"""
         self.preamble = txt + "\n" + self.preamble
         self.rebuild()
 
     def add_to_preamble(self, txt):
-        # Adds txt to the TeX template preamble just before \begin{document}
+        """Adds txt to the TeX template preamble just before \begin{document}"""
         self.preamble += "\n" + txt
         self.rebuild()
 
     def add_to_document(self, txt):
-        # Adds txt to the TeX template just after \begin{document}
+        """Adds txt to the TeX template just after \begin{document}"""
         self.post_doc_commands += "\n" + txt + "\n"
         self.rebuild()
 
     def get_texcode_for_expression(self, expression):
-        # Inserts expression verbatim into TeX template.
+        """Inserts expression verbatim into TeX template."""
         return self.body.replace(self.placeholder_text, expression)
 
     def get_texcode_for_expression_in_env(self, expression, environment):
-        # Inserts expression into TeX template wrapped in \begin{environemnt} and \end{environment}
+        """Inserts expression into TeX template wrapped in \begin{environemnt} and \end{environment}"""
         begin = r"\begin{" + environment + "}"
         end = r"\end{" + environment + "}"
         return self.body.replace(
@@ -129,6 +127,8 @@ class TexTemplate:
 
 
 class BasicTexTemplate(TexTemplate):
+    """A simple Tex Template with only basic AMS packages"""
+
     def __init__(self, *args, **kwargs):
         basic_headers = r"""
 \usepackage[english]{babel}
@@ -137,33 +137,6 @@ class BasicTexTemplate(TexTemplate):
 """
         preamble = kwargs.pop("preamble", basic_headers)
         super().__init__(*args, preamble=preamble, **kwargs)
-
-
-class ThreeBlueOneBrownTexTemplate(TexTemplate):
-    """
-    The default TeX template from the 3b1b version of manim
-    """
-
-    pass
-
-
-class CTEXTemplate(TexTemplate):
-    """
-    The default TeX template from the 3b1b version of manim with the use_ctex option
-    """
-
-    def __init__(self, **kwargs):
-        tex_compiler = kwargs.pop("tex_compiler", "xelatex")
-        output_format = kwargs.pop("output_format", ".xdv")
-        ctexpreamble = TexTemplate.default_preamble.replace(
-            r"\DisableLigatures{encoding = *, family = * }", r"\usepackage[UTF8]{ctex}"
-        )
-        super().__init__(
-            tex_compiler=tex_compiler,
-            output_format=output_format,
-            preamble=ctexpreamble,
-            **kwargs
-        )
 
 
 class TexTemplateFromFile(TexTemplate):

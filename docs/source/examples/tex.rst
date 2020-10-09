@@ -51,7 +51,7 @@ LaTeX
 
     class Example5bLaTeX(Scene):
         def construct(self):
-            TemplateForFrenchCursive = TexTemplate(
+            templateForFrenchCursive = TexTemplate(
                 preamble=r"""
     \usepackage[english]{babel}
     \usepackage{amsmath}
@@ -60,7 +60,7 @@ LaTeX
     \usepackage[default]{frcursive}
     \usepackage[eulergreek,noplusnominus,noequal,nohbar,nolessnomore,noasterisk]{mathastext}
     """)
-            tex = Tex('Hello \LaTeX', tex_template=TemplateForFrenchCursive).scale(3)
+            tex = Tex('Hello \LaTeX', tex_template=templateForFrenchCursive).scale(3)
             self.add(tex)
 
 .. manim:: Example6LaTeX
@@ -68,7 +68,7 @@ LaTeX
 
     class Example6LaTeX(Scene):
         def construct(self):
-            tex = Tex('Hello 你好 \LaTeX', tex_template=CTEXTemplate()).scale(3)
+            tex = Tex('Hello 你好 \LaTeX', tex_template=TexTemplateLibrary.ctex).scale(3)
             self.add(tex)
 
 

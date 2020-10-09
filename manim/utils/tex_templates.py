@@ -1,13 +1,48 @@
 # -*- coding: utf-8 -*-
 """A library of LaTeX templates."""
 __all__ = [
+    "TexTemplateLibrary",
     "TexFontTemplates",
 ]
 
 from .tex import *
 
+# This file makes TexTemplateLibrary and TexFontTemplates available for use in manim Tex and MathTex objects.
+
+
+# TexTemplateLibrary
 #
-# This file makes TexFontTemplates available for use in manim Tex and MathTex objects.
+class TexTemplateLibrary(object):
+    """
+    A collection of basic TeX templates
+
+    Usage
+    -----
+    As a value for the keyword argument tex_template of Tex() and MathTex() mobjects
+        Tex("My TeX code", tex_template=TexTemplateLibrary.ctex)
+
+    """
+
+    default = TexTemplate()
+    """ The default TeX template in manim """
+
+    threeb1b = TexTemplate()
+    """ The default TeX template in manim as used by 3b1b """
+
+    ctex = TexTemplate(
+        tex_compiler="xelatex",
+        output_format=".xdv",
+        preamble=TexTemplate.default_preamble.replace(
+            r"\DisableLigatures{encoding = *, family = * }", r"\usepackage[UTF8]{ctex}"
+        ),
+    )
+    """ The TeX template in manim as used by 3b1b when using the use_ctex flag """
+
+    simple = BasicTexTemplate()
+    """ A simple TeX template with only basic AMS packages loaded """
+
+
+# TexFontTemplates
 #
 # TexFontTemplates takes a font_id and returns the appropriate TexTemplate()
 # Usage:
@@ -848,61 +883,117 @@ italichelveticaf.add_to_preamble(
 
 
 class TexFontTemplates(object):
-    """A list of Tex templates for the fonts described at http://jf.burnol.free.fr/showcase.html"""
+    """
+    A collection of TeX templates for the fonts described at http://jf.burnol.free.fr/showcase.html
 
-    american_typewriter = americantypewriter  # "American Typewriter"
-    antykwa = aptxgm  # "Antykwa Półtawskiego (TX Fonts for Greek and math symbols)"
-    apple_chancery = applechancery  # "Apple Chancery"
-    auriocus_kalligraphicus = aksg  # "Auriocus Kalligraphicus (Symbol Greek)"
-    baskervald_adf_fourier = baskervaldadff  # "Baskervald ADF with Fourier"
-    baskerville_it = italicbaskerville  # "Baskerville (Italic)"
-    biolinum = biolinum  # "Biolinum"
-    brushscriptx = brushscriptxpx  # "BrushScriptX-Italic (PX math and Greek)"
-    chalkboard_se = chalkboardse  # "Chalkboard SE"
-    chalkduster = chalkduster  # "Chalkduster"
-    comfortaa = comfortaa  # "Comfortaa"
-    comic_sans = comicsansms  # "Comic Sans MS"
-    droid_sans = droidsans  # "Droid Sans"
-    droid_sans_it = italicdroidsans  # "Droid Sans (Italic)"
-    droid_serif = droidserif  # "Droid Serif"
-    droid_serif_px_it = italicdroidserifpx  # "Droid Serif (PX math symbols) (Italic)"
-    ecf_augie = ecfaugieeg  # "ECF Augie (Euler Greek)"
-    ecf_jd = ecfjdtx  # "ECF JD (with TX fonts)"
-    ecf_skeetch = ecfscmg  # "ECF Skeetch (CM Greek)"
-    ecf_tall_paul = ecftallpaul  # "ECF Tall Paul (with Symbol font)"
-    ecf_webster = ecfwebstertx  # "ECF Webster (with TX fonts)"
-    electrum_adf = electrumadfcm  # "Electrum ADF (CM Greek)"
-    epigrafica = epigrafica  # Epigrafica
-    fourier_utopia = fufug  # "Fourier Utopia (Fourier upright Greek)"
-    french_cursive = fceg  # "French Cursive (Euler Greek)"
-    gfs_bodoni = gfsbodoni  # "GFS Bodoni"
-    gfs_didot = italicgfsdidot  # "GFS Didot (Italic)"
-    gfs_neoHellenic = gfsneohellenic  # "GFS NeoHellenic"
-    gnu_freesans_tx = gnufstx  # "GNU FreeSerif (and TX fonts symbols)"
-    gnu_freeserif_freesans = gnufsfs  # "GNU FreeSerif and FreeSans"
-    helvetica_fourier_it = italichelveticaf  # "Helvetica with Fourier (Italic)"
-    latin_modern_tw_it = (
-        italiclmtpcm  # "Latin Modern Typewriter Proportional (CM Greek) (Italic)"
-    )
-    latin_modern_tw = lmtp  # "Latin Modern Typewriter Proportional"
-    libertine = libertine  # "Libertine"
-    libris_adf_fourier = librisadff  # "Libris ADF with Fourier"
-    minion_pro_myriad_pro = mpmptx  # "Minion Pro and Myriad Pro (and TX fonts symbols)"
-    minion_pro_tx = mptx  # "Minion Pro (and TX fonts symbols)"
-    new_century_schoolbook = ncssg  # "New Century Schoolbook (Symbol Greek)"
-    new_century_schoolbook_px = (
-        ncssgpxm  # "New Century Schoolbook (Symbol Greek, PX math symbols)"
-    )
-    noteworthy_light = noteworthylight  # "Noteworthy Light"
-    palatino = palatinosg  # "Palatino (Symbol Greek)"
-    papyrus = papyrus  # "Papyrus"
-    romande_adf_fourier_it = italicromandeadff  # "Romande ADF with Fourier (Italic)"
-    slitex = slitexeg  # "SliTeX (Euler Greek)"
-    times_fourier_it = italictimesf  # "Times with Fourier (Italic)"
-    urw_avant_garde = urwagsg  # "URW Avant Garde (Symbol Greek)"
-    urw_zapf_chancery = urwzccmg  # "URW Zapf Chancery (CM Greek)"
-    venturis_adf_fourier_it = italicvanturisadff  # "Venturis ADF with Fourier (Italic)"
-    verdana_it = italicverdana  # "Verdana (Italic)"
-    vollkorn_fourier_it = italicvollkornf  # "Vollkorn with Fourier (Italic)"
-    vollkorn = vollkorntx  # "Vollkorn (TX fonts for Greek and math symbols)"
-    zapf_chancery = zapfchancery  # "Zapf Chancery"
+    Usage
+    -----
+    As a value for the keyword argument tex_template of Tex() and MathTex() mobjects
+        Tex("My TeX code", tex_template=TexFontTemplates.comic_sans)
+
+    """
+
+    american_typewriter = americantypewriter
+    """American Typewriter"""
+    antykwa = aptxgm
+    """Antykwa Półtawskiego (TX Fonts for Greek and math symbols)"""
+    apple_chancery = applechancery
+    """Apple Chancery"""
+    auriocus_kalligraphicus = aksg
+    """Auriocus Kalligraphicus (Symbol Greek)"""
+    baskervald_adf_fourier = baskervaldadff
+    """Baskervald ADF with Fourier"""
+    baskerville_it = italicbaskerville
+    """Baskerville (Italic)"""
+    biolinum = biolinum
+    """Biolinum"""
+    brushscriptx = brushscriptxpx
+    """BrushScriptX-Italic (PX math and Greek)"""
+    chalkboard_se = chalkboardse
+    """Chalkboard SE"""
+    chalkduster = chalkduster
+    """Chalkduster"""
+    comfortaa = comfortaa
+    """Comfortaa"""
+    comic_sans = comicsansms
+    """Comic Sans MS"""
+    droid_sans = droidsans
+    """Droid Sans"""
+    droid_sans_it = italicdroidsans
+    """Droid Sans (Italic)"""
+    droid_serif = droidserif
+    """Droid Serif"""
+    droid_serif_px_it = italicdroidserifpx
+    """Droid Serif (PX math symbols) (Italic)"""
+    ecf_augie = ecfaugieeg
+    """ECF Augie (Euler Greek)"""
+    ecf_jd = ecfjdtx
+    """ECF JD (with TX fonts)"""
+    ecf_skeetch = ecfscmg
+    """ECF Skeetch (CM Greek)"""
+    ecf_tall_paul = ecftallpaul
+    """ECF Tall Paul (with Symbol font)"""
+    ecf_webster = ecfwebstertx
+    """ECF Webster (with TX fonts)"""
+    electrum_adf = electrumadfcm
+    """Electrum ADF (CM Greek)"""
+    epigrafica = epigrafica
+    """ Epigrafica """
+    fourier_utopia = fufug
+    """Fourier Utopia (Fourier upright Greek)"""
+    french_cursive = fceg
+    """French Cursive (Euler Greek)"""
+    gfs_bodoni = gfsbodoni
+    """GFS Bodoni"""
+    gfs_didot = italicgfsdidot
+    """GFS Didot (Italic)"""
+    gfs_neoHellenic = gfsneohellenic
+    """GFS NeoHellenic"""
+    gnu_freesans_tx = gnufstx
+    """GNU FreeSerif (and TX fonts symbols)"""
+    gnu_freeserif_freesans = gnufsfs
+    """GNU FreeSerif and FreeSans"""
+    helvetica_fourier_it = italichelveticaf
+    """Helvetica with Fourier (Italic)"""
+    latin_modern_tw_it = italiclmtpcm
+    """Latin Modern Typewriter Proportional (CM Greek) (Italic)"""
+    latin_modern_tw = lmtp
+    """Latin Modern Typewriter Proportional"""
+    libertine = libertine
+    """Libertine"""
+    libris_adf_fourier = librisadff
+    """Libris ADF with Fourier"""
+    minion_pro_myriad_pro = mpmptx
+    """Minion Pro and Myriad Pro (and TX fonts symbols)"""
+    minion_pro_tx = mptx
+    """Minion Pro (and TX fonts symbols)"""
+    new_century_schoolbook = ncssg
+    """New Century Schoolbook (Symbol Greek)"""
+    new_century_schoolbook_px = ncssgpxm
+    """New Century Schoolbook (Symbol Greek, PX math symbols)"""
+    noteworthy_light = noteworthylight
+    """Noteworthy Light"""
+    palatino = palatinosg
+    """Palatino (Symbol Greek)"""
+    papyrus = papyrus
+    """Papyrus"""
+    romande_adf_fourier_it = italicromandeadff
+    """Romande ADF with Fourier (Italic)"""
+    slitex = slitexeg
+    """SliTeX (Euler Greek)"""
+    times_fourier_it = italictimesf
+    """Times with Fourier (Italic)"""
+    urw_avant_garde = urwagsg
+    """URW Avant Garde (Symbol Greek)"""
+    urw_zapf_chancery = urwzccmg
+    """URW Zapf Chancery (CM Greek)"""
+    venturis_adf_fourier_it = italicvanturisadff
+    """Venturis ADF with Fourier (Italic)"""
+    verdana_it = italicverdana
+    """Verdana (Italic)"""
+    vollkorn_fourier_it = italicvollkornf
+    """Vollkorn with Fourier (Italic)"""
+    vollkorn = vollkorntx
+    """Vollkorn (TX fonts for Greek and math symbols)"""
+    zapf_chancery = zapfchancery
+    """Zapf Chancery"""
