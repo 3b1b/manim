@@ -18,8 +18,7 @@ nolessnomore,noasterisk]{mathastext}
 
 
 def FrenchCursive(*tex_strings, **kwargs):
-    template = kwargs.pop("tex_template", TemplateForFrenchCursive)
-    return Tex(*tex_strings, tex_template=template, **kwargs)
+    return Tex(*tex_strings, tex_template=TemplateForFrenchCursive, **kwargs)
 
 
 class TexFontTemplateManual(Scene):
