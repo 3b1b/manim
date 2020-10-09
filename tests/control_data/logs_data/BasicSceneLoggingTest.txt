@@ -3,4 +3,4 @@
 {"levelname": "DEBUG", "module": "hashing", "message": "Hashing done in <> s."}
 {"levelname": "INFO", "module": "scene_file_writer", "message": "Animation 0 : Partial movie file written in <>"}
 {"levelname": "INFO", "module": "scene_file_writer", "message": "\nFile ready at <>\n"}
-{"levelname": "INFO", "module": "scene", "message": "Rendered SquareToCircle\nPlayed 1 animations"}
+{"levelname": "INFO", "module": "cairo_renderer", "message": "Rendered SquareToCircle\nPlayed 1 animations"}

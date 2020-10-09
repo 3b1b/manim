@@ -202,7 +202,7 @@ class SceneFileWriter(object):
         result = os.path.join(
             self.partial_movie_directory,
             "{}{}".format(
-                self.scene.play_hashes_list[self.index_partial_movie_file],
+                self.scene.renderer.play_hashes_list[self.index_partial_movie_file],
                 file_writer_config["movie_file_extension"],
             ),
         )
@@ -461,7 +461,7 @@ class SceneFileWriter(object):
             self.partial_movie_file_path,
         )
         logger.info(
-            f"Animation {self.scene.num_plays} : Partial movie file written in %(path)s",
+            f"Animation {self.scene.renderer.num_plays} : Partial movie file written in %(path)s",
             {"path": {self.partial_movie_file_path}},
         )
 
@@ -502,7 +502,7 @@ class SceneFileWriter(object):
                 self.partial_movie_directory,
                 "{}{}".format(hash_play, file_writer_config["movie_file_extension"]),
             )
-            for hash_play in self.scene.play_hashes_list
+            for hash_play in self.scene.renderer.play_hashes_list
         ]
         if len(partial_movie_files) == 0:
             logger.error("No animations in this scene")
