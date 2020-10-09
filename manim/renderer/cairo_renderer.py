@@ -86,9 +86,7 @@ class CairoRenderer:
     time: time elapsed since initialisation of scene.
     """
 
-    def __init__(self, scene, camera_class):
-        self.camera = camera_class(**camera_config)
-
+    def __init__(self, scene, camera_class, **kwargs):
         # All of the following are set to EITHER the value passed via kwargs,
         # OR the value stored in the global config dict at the time of
         # _instance construction_.  Before, they were in the CONFIG dict, which
@@ -103,8 +101,8 @@ class CairoRenderer:
             "frame_width",
             "frame_rate",
         ]:
-            self.video_quality_config[attr] = camera_config.get(attr, config[attr])
-
+            self.video_quality_config[attr] = kwargs.get(attr, config[attr])
+        self.camera = camera_class(self.video_quality_config, **camera_config)
         self.file_writer = SceneFileWriter(
             self.video_quality_config,
             scene,
