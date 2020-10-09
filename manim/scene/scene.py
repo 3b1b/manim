@@ -65,8 +65,7 @@ class Scene(Container):
 
     def __init__(self, **kwargs):
         Container.__init__(self, **kwargs)
-        self.camera = self.camera_class(**camera_config)
-        self.renderer = CairoRenderer(self, self.camera)
+        self.renderer = CairoRenderer(self, self.camera_class)
 
         self.mobjects = []
         # TODO, remove need for foreground mobjects
@@ -556,7 +555,7 @@ class Scene(Container):
         if file_writer_config["skip_animations"] and not override_skip_animations:
             times = [run_time]
         else:
-            step = 1 / self.camera.frame_rate
+            step = 1 / self.renderer.camera.frame_rate
             times = np.arange(0, run_time, step)
         time_progression = ProgressDisplay(
             times,
@@ -819,7 +818,7 @@ class Scene(Container):
             return self
         else:
             self.renderer.update_frame()
-            dt = 1 / self.camera.frame_rate
+            dt = 1 / self.renderer.camera.frame_rate
             self.renderer.add_frame(
                 self.renderer.get_frame(), num_frames=int(duration / dt)
             )

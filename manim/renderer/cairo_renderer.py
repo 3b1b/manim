@@ -86,8 +86,8 @@ class CairoRenderer:
     time: time elapsed since initialisation of scene.
     """
 
-    def __init__(self, scene, camera):
-        self.camera = camera
+    def __init__(self, scene, camera_class):
+        self.camera = camera_class(**camera_config)
 
         # All of the following are set to EITHER the value passed via kwargs,
         # OR the value stored in the global config dict at the time of
