@@ -79,7 +79,7 @@ def main():
                 else:
                     scene = SceneClass()
                     scene.render()
-                    open_file_if_needed(scene.file_writer)
+                    open_file_if_needed(scene.renderer.file_writer)
             except Exception:
                 print("\n\n")
                 traceback.print_exc()

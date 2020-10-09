@@ -4,6 +4,7 @@ from ..utils.iterables import list_update
 from ..utils.exceptions import EndSceneEarlyException
 from ..utils.hashing import get_hash_from_play_call, get_hash_from_wait_call
 from ..constants import DEFAULT_WAIT_TIME
+from ..scene.scene_file_writer import SceneFileWriter
 
 
 def handle_caching_play(func):
@@ -85,9 +86,12 @@ class CairoRenderer:
     time: time elapsed since initialisation of scene.
     """
 
-    def __init__(self, scene, camera, file_writer):
+    def __init__(self, scene, camera):
         self.camera = camera
-        self.file_writer = file_writer
+        self.file_writer = SceneFileWriter(
+            scene,
+            **file_writer_config,
+        )
         self.scene = scene
         self.original_skipping_status = file_writer_config["skip_animations"]
         self.play_hashes_list = []

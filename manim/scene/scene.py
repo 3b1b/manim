@@ -66,11 +66,7 @@ class Scene(Container):
     def __init__(self, **kwargs):
         Container.__init__(self, **kwargs)
         self.camera = self.camera_class(**camera_config)
-        self.file_writer = SceneFileWriter(
-            self,
-            **file_writer_config,
-        )
-        self.renderer = CairoRenderer(self, self.camera, self.file_writer)
+        self.renderer = CairoRenderer(self, self.camera)
 
         self.mobjects = []
         # TODO, remove need for foreground mobjects
@@ -920,4 +916,4 @@ class Scene(Container):
         if file_writer_config["skip_animations"]:
             return
         time = self.time + time_offset
-        self.file_writer.add_sound(sound_file, time, gain, **kwargs)
+        self.renderer.file_writer.add_sound(sound_file, time, gain, **kwargs)
