@@ -252,9 +252,11 @@ def get_hash_from_play_call(
     ]
     t_end = perf_counter()
     logger.debug("Hashing done in %(time)s s.", {"time": str(t_end - t_start)[:8]})
+    hash_complete = f"{hash_camera}_{hash_animations}_{hash_current_mobjects}"
     # This will reset ALREADY_PROCESSED_ID as all the hashing processus is finished.
     ALREADY_PROCESSED_ID = {}
-    return "{}_{}_{}".format(hash_camera, hash_animations, hash_current_mobjects)
+    logger.debug("Hash generated :  %(h)s", {"h": hash_complete})
+    return hash_complete
 
 
 def get_hash_from_wait_call(
@@ -299,15 +301,15 @@ def get_hash_from_wait_call(
         ALREADY_PROCESSED_ID = {}
         t_end = perf_counter()
         logger.debug("Hashing done in %(time)s s.", {"time": str(t_end - t_start)[:8]})
-        return "{}_{}{}_{}".format(
-            hash_camera,
-            str(wait_time).replace(".", "-"),
-            hash_function,
-            hash_current_mobjects,
-        )
+        hash_complete = f"{hash_camera}_{str(wait_time).replace('.', '-')}{hash_function}_{hash_current_mobjects}"
+        logger.debug("Hash generated :  %(h)s", {"h": hash_complete})
+        return hash_complete
     ALREADY_PROCESSED_ID = {}
     t_end = perf_counter()
     logger.debug("Hashing done in %(time)s s.", {"time": str(t_end - t_start)[:8]})
-    return "{}_{}_{}".format(
-        hash_camera, str(wait_time).replace(".", "-"), hash_current_mobjects
+    hash_complete = (
+        f"{hash_camera}_{str(wait_time).replace('.', '-')}_{hash_current_mobjects}"
     )
+
+    logger.debug("Hash generated :  %(h)s", {"h": hash_complete})
+    return hash_complete

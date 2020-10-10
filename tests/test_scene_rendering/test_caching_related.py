@@ -4,7 +4,7 @@ import subprocess
 from manim import file_writer_config
 
 from ..utils.commands import capture
-from ..utils.video_tester import video_comparison
+from ..utils.video_tester import *
 
 
 @video_comparison(
@@ -20,7 +20,7 @@ def test_wait_skip(tmp_path, manim_cfg_file, simple_scenes_path):
         "manim",
         simple_scenes_path,
         scene_name,
-        "-ql",
+        "-l",
         "--media_dir",
         str(tmp_path),
         "-n",
@@ -43,7 +43,7 @@ def test_play_skip(tmp_path, manim_cfg_file, simple_scenes_path):
         "manim",
         simple_scenes_path,
         scene_name,
-        "-ql",
+        "-l",
         "--media_dir",
         str(tmp_path),
         "-n",
