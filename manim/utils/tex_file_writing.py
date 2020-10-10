@@ -22,6 +22,7 @@ def tex_hash(expression):
 
 
 def tex_to_svg_file(expression, environment=None, tex_template=None):
+    """Takes a tex expression and returns the svg version of the compiled tex"""
     if tex_template is None:
         tex_template = config["tex_template"]
     tex_file = generate_tex_file(expression, environment, tex_template)
@@ -32,6 +33,8 @@ def tex_to_svg_file(expression, environment=None, tex_template=None):
 
 
 def generate_tex_file(expression, environment, tex_template):
+    """Takes a tex expression (and an optional tex environment),
+    and returns a fully formed tex file ready for compilation."""
     if environment is not None:
         output = tex_template.get_texcode_for_expression_in_env(expression, environment)
     else:
@@ -46,6 +49,7 @@ def generate_tex_file(expression, environment, tex_template):
 
 
 def tex_compilation_command(tex_compiler, output_format, tex_file, tex_dir):
+    """Prepares the tex compilation command with all necessary cli flags"""
     if tex_compiler in {"latex", "pdflatex", "luatex", "lualatex"}:
         commands = [
             tex_compiler,
@@ -80,6 +84,7 @@ def tex_compilation_command(tex_compiler, output_format, tex_file, tex_dir):
 
 
 def tex_to_dvi(tex_file, tex_compiler, output_format):
+    """Compiles a tex_file into a .dvi or a .xdv or a .pdf"""
     result = tex_file.replace(".tex", output_format)
     result = Path(result).as_posix()
     tex_file = Path(tex_file).as_posix()
@@ -100,9 +105,7 @@ def tex_to_dvi(tex_file, tex_compiler, output_format):
 
 
 def dvi_to_svg(dvi_file, extension, regen_if_exists=False, page=1):
-    """
-    Converts a dvi, xdv, or pdf file into an svg using dvisvgm.
-    """
+    """Converts a .dvi, .xdv, or .pdf file into an svg using dvisvgm."""
     result = dvi_file.replace(extension, ".svg")
     result = Path(result).as_posix()
     dvi_file = Path(dvi_file).as_posix()

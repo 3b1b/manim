@@ -11,7 +11,7 @@ import os
 
 
 class TexTemplate:
-    """A TeX template to be used for creating Tex() and MathTex() objects."""
+    """TeX templates are used for creating Tex() and MathTex() objects."""
 
     default_documentclass = r"\documentclass[preview]{standalone}"
     default_preamble = r"""
@@ -138,9 +138,7 @@ class BasicTexTemplate(TexTemplate):
 
 
 class TexTemplateFromFile(TexTemplate):
-    """
-    A TexTemplate object created from a template file (default: tex_template.tex)
-    """
+    """A TexTemplate object created from a template file (default: tex_template.tex)"""
 
     def __init__(self, **kwargs):
         self.template_file = kwargs.pop("filename", "tex_template.tex")
