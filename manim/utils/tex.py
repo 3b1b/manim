@@ -11,8 +11,7 @@ import os
 
 
 class TexTemplate:
-    """
-    Class representing a TeX template to be used for creating Tex() and MathTex() objects.
+    """A TeX template to be used for creating Tex() and MathTex() objects."""
     """
 
     default_documentclass = r"\documentclass[preview]{standalone}"
