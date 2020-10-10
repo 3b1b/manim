@@ -81,7 +81,7 @@ def handle_caching_wait(func):
             return
         if not file_writer_config["disable_caching"]:
             hash_wait = get_hash_from_wait_call(
-                self, self.camera, duration, stop_condition, self.get_mobjects()
+                self, self.camera, duration, stop_condition, self.scene.get_mobjects()
             )
             if self.file_writer.is_already_cached(hash_wait):
                 logger.info(
@@ -172,7 +172,7 @@ class CairoRenderer:
     def play(self, *args, **kwargs):
         self.scene.play_internal(*args, **kwargs)
 
-    @handle_caching_play
+    @handle_caching_wait
     @handle_play_like_call
     def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
         self.scene.wait_internal(duration=duration, stop_condition=stop_condition)
