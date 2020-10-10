@@ -670,7 +670,7 @@ class Mobject(Container):
 
     def set_submobject_colors_by_gradient(self, *colors):
         if len(colors) == 0:
-            raise Exception("Need at least one color")
+            raise ValueError("Need at least one color")
         elif len(colors) == 1:
             return self.set_color(*colors)
 
@@ -1182,6 +1182,6 @@ class Group(Mobject):
 
     def __init__(self, *mobjects, **kwargs):
         if not all([isinstance(m, Mobject) for m in mobjects]):
-            raise Exception("All submobjects must be of type Mobject")
+            raise TypeError("All submobjects must be of type Mobject")
         Mobject.__init__(self, **kwargs)
         self.add(*mobjects)

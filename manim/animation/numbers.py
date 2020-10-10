@@ -23,7 +23,7 @@ class ChangingDecimal(Animation):
 
     def check_validity_of_input(self, decimal_mob):
         if not isinstance(decimal_mob, DecimalNumber):
-            raise Exception("ChangingDecimal can only take " "in a DecimalNumber")
+            raise TypeError("ChangingDecimal can only take " "in a DecimalNumber")
 
     def yell_about_depricated_configuration(self, **kwargs):
         # Obviously this would optimally be removed at
