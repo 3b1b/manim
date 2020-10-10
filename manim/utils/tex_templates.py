@@ -14,7 +14,7 @@ from .tex import *
 #
 class TexTemplateLibrary(object):
     """
-    A collection of basic TeX templates
+    A collection of basic TeX template objects
 
     Usage
     -----
@@ -24,10 +24,10 @@ class TexTemplateLibrary(object):
     """
 
     default = TexTemplate()
-    """ The default TeX template in manim """
+    """ An instance of the default TeX template in manim """
 
     threeb1b = TexTemplate()
-    """ The default TeX template in manim as used by 3b1b """
+    """ An instance of the default TeX template used by 3b1b """
 
     ctex = TexTemplate(
         tex_compiler="xelatex",
@@ -36,10 +36,10 @@ class TexTemplateLibrary(object):
             r"\DisableLigatures{encoding = *, family = * }", r"\usepackage[UTF8]{ctex}"
         ),
     )
-    """ The TeX template in manim as used by 3b1b when using the use_ctex flag """
+    """ An instance of the TeX template used by 3b1b when using the use_ctex flag """
 
     simple = BasicTexTemplate()
-    """ A simple TeX template with only basic AMS packages loaded """
+    """ An instance of a simple TeX template with only basic AMS packages loaded """
 
 
 # TexFontTemplates
