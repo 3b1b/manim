@@ -12,7 +12,6 @@ import os
 
 class TexTemplate:
     """A TeX template to be used for creating Tex() and MathTex() objects."""
-    """
 
     default_documentclass = r"\documentclass[preview]{standalone}"
     default_preamble = r"""
