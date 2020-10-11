@@ -55,7 +55,7 @@ class CairoRenderer:
     time: time elapsed since initialisation of scene.
     """
 
-    def __init__(self, scene, camera_class, **kwargs):
+    def __init__(self, camera_class, **kwargs):
         # All of the following are set to EITHER the value passed via kwargs,
         # OR the value stored in the global config dict at the time of
         # _instance construction_.  Before, they were in the CONFIG dict, which
@@ -72,15 +72,18 @@ class CairoRenderer:
         ]:
             self.video_quality_config[attr] = kwargs.get(attr, config[attr])
         self.camera = camera_class(self.video_quality_config, **camera_config)
-        self.file_writer = SceneFileWriter(
-            self.video_quality_config,
-            scene,
-            **file_writer_config,
-        )
         self.original_skipping_status = file_writer_config["skip_animations"]
         self.animations_hashes = []
         self.num_plays = 0
         self.time = 0
+
+    def init_file_writer(self, scene_name):
+        self.file_writer = SceneFileWriter(
+            self,
+            self.video_quality_config,
+            scene_name,
+            **file_writer_config,
+        )
 
     @manage_scene_reference
     @handle_caching_play

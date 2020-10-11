@@ -65,7 +65,8 @@ class Scene(Container):
 
     def __init__(self, **kwargs):
         Container.__init__(self, **kwargs)
-        self.renderer = CairoRenderer(self, self.camera_class)
+        self.renderer = CairoRenderer(self.camera_class)
+        self.renderer.init_file_writer(self.__class__.__name__)
 
         self.mobjects = []
         # TODO, remove need for foreground mobjects
