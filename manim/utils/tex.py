@@ -97,26 +97,75 @@ class TexTemplate:
         )
 
     def prepend_to_preamble(self, txt):
-        """Adds txt to the TeX template preamble just after the \documentclass"""
+        """Adds txt to the TeX template preamble just after the \documentclass
+
+        Parameters
+        ----------
+        txt : :class:`str`
+            String containing the text to be added, e.g. ``\\usepackage{siunitx}``
+        Returns
+        -------
+        None
+        """
         self.preamble = txt + "\n" + self.preamble
         self.rebuild()
 
     def add_to_preamble(self, txt):
-        """Adds txt to the TeX template preamble just before \begin{document}"""
+        """Adds txt to the TeX template preamble just before \begin{document}
+
+        Parameters
+        ----------
+        txt : :class:`str`
+            String containing the text to be added, e.g. ``\\usepackage{hyperref}``
+        Returns
+        -------
+        None
+        """
         self.preamble += "\n" + txt
         self.rebuild()
 
     def add_to_document(self, txt):
-        """Adds txt to the TeX template just after \begin{document}"""
+        """Adds txt to the TeX template just after \begin{document}
+
+        Parameters
+        ----------
+        txt : :class:`str`
+            String containing the text to be added.
+        Returns
+        -------
+        None
+        """
         self.post_doc_commands += "\n" + txt + "\n"
         self.rebuild()
 
     def get_texcode_for_expression(self, expression):
-        """Inserts expression verbatim into TeX template."""
+        """Inserts expression verbatim into TeX template.
+
+        Parameters
+        ----------
+        expression : :class:`str`
+            The string containing the expression to be typeset, e.g. ``$\\sqrt{2}$``
+        Returns
+        -------
+        :class:`str`
+            LaTeX code based on template, containing the given expression and ready for typesetting
+        """
         return self.body.replace(self.placeholder_text, expression)
 
     def get_texcode_for_expression_in_env(self, expression, environment):
-        """Inserts expression into TeX template wrapped in \begin{environemnt} and \end{environment}"""
+        """Inserts expression into TeX template wrapped in \begin{environemnt} and \end{environment}
+
+        Parameters
+        ----------
+        expression : :class:`str`
+            The string containing the expression to be typeset, e.g. ``$\\sqrt{2}$``
+        environment : :class:`str`
+            The string containing the environment in which the expression should be typeset, e.g. ``align*``
+        Returns
+        -------
+        :class:`str`
+            LaTeX code based on template, containing the given expression inside its environment, ready for typesetting
+        """
         begin = r"\begin{" + environment + "}"
         end = r"\end{" + environment + "}"
         return self.body.replace(
