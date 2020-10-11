@@ -761,10 +761,10 @@ class Scene(Container):
             self.update_mobjects(0)
 
     def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
-        self.renderer.wait(duration=duration, stop_condition=stop_condition)
+        self.renderer.wait(self, duration=duration, stop_condition=stop_condition)
 
     def play(self, *args, **kwargs):
-        self.renderer.play(*args, **kwargs)
+        self.renderer.play(self, *args, **kwargs)
 
     def play_internal(self, *args, **kwargs):
         """

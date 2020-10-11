@@ -8,6 +8,15 @@ from ..scene.scene_file_writer import SceneFileWriter
 from ..utils.caching import handle_caching_play, handle_caching_wait
 
 
+def manage_scene_reference(func):
+    def wrapper(self, scene, *args, **kwargs):
+        setattr(self, "temp_scene_ref", scene)
+        func(self, *args, **kwargs)
+        delattr(self, "temp_scene_ref")
+
+    return wrapper
+
+
 def handle_play_like_call(func):
     """
     This method is used internally to wrap the
@@ -74,11 +83,13 @@ class CairoRenderer:
         self.num_plays = 0
         self.time = 0
 
+    @manage_scene_reference
     @handle_caching_play
     @handle_play_like_call
     def play(self, *args, **kwargs):
         self.scene.play_internal(*args, **kwargs)
 
+    @manage_scene_reference
     @handle_caching_wait
     @handle_play_like_call
     def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
