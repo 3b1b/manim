@@ -15,21 +15,21 @@ def handle_caching_play(func):
         The play like function that has to be written to the video file stream. Take the same parameters as `scene.play`.
     """
 
-    def wrapper(self, *args, **kwargs):
+    def wrapper(self, scene, *args, **kwargs):
         self.revert_to_original_skipping_status()
         self.update_skipping_status()
-        animations = self.scene.compile_play_args_to_animation_list(*args, **kwargs)
-        self.scene.add_mobjects_from_animations(animations)
+        animations = scene.compile_play_args_to_animation_list(*args, **kwargs)
+        scene.add_mobjects_from_animations(animations)
         if file_writer_config["skip_animations"]:
             logger.debug(f"Skipping animation {self.num_plays}")
-            func(self, *args, **kwargs)
+            func(self, scene, *args, **kwargs)
             # If the animation is skipped, we mark its hash as None.
             # When sceneFileWriter will start combining partial movie files, it won't take into account None hashes.
             self.animations_hashes.append(None)
             self.file_writer.add_partial_movie_file(None)
             return
         if not file_writer_config["disable_caching"]:
-            mobjects_on_scene = self.scene.get_mobjects()
+            mobjects_on_scene = scene.get_mobjects()
             hash_play = get_hash_from_play_call(
                 self, self.camera, animations, mobjects_on_scene
             )
@@ -47,7 +47,7 @@ def handle_caching_play(func):
             "List of the first few animation hashes of the scene: %(h)s",
             {"h": str(self.animations_hashes[:5])},
         )
-        func(self, *args, **kwargs)
+        func(self, scene, *args, **kwargs)
 
     return wrapper
 
@@ -64,12 +64,12 @@ def handle_caching_wait(func):
         The wait like function that has to be written to the video file stream. Take the same parameters as `scene.wait`.
     """
 
-    def wrapper(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
+    def wrapper(self, scene, duration=DEFAULT_WAIT_TIME, stop_condition=None):
         self.revert_to_original_skipping_status()
         self.update_skipping_status()
         if file_writer_config["skip_animations"]:
             logger.debug(f"Skipping wait {self.num_plays}")
-            func(self, duration, stop_condition)
+            func(self, scene, duration, stop_condition)
             # If the animation is skipped, we mark its hash as None.
             # When sceneFileWriter will start combining partial movie files, it won't take into account None hashes.
             self.animations_hashes.append(None)
@@ -77,7 +77,7 @@ def handle_caching_wait(func):
             return
         if not file_writer_config["disable_caching"]:
             hash_wait = get_hash_from_wait_call(
-                self, self.camera, duration, stop_condition, self.scene.get_mobjects()
+                self, self.camera, duration, stop_condition, scene.get_mobjects()
             )
             if self.file_writer.is_already_cached(hash_wait):
                 logger.info(
@@ -92,6 +92,6 @@ def handle_caching_wait(func):
             "Animations hashes list of the scene : (concatened to 5) %(h)s",
             {"h": str(self.animations_hashes[:5])},
         )
-        func(self, duration, stop_condition)
+        func(self, scene, duration, stop_condition)
 
     return wrapper

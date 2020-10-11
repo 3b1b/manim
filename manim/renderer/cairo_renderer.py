@@ -9,11 +9,9 @@ from ..utils.caching import handle_caching_play, handle_caching_wait
 from ..camera.camera import Camera
 
 
-def manage_scene_reference(func):
+def pass_scene_reference(func):
     def wrapper(self, scene, *args, **kwargs):
-        setattr(self, "scene", scene)
-        func(self, *args, **kwargs)
-        delattr(self, "scene")
+        func(self, scene, *args, **kwargs)
 
     return wrapper
 
@@ -39,10 +37,10 @@ def handle_play_like_call(func):
         to the video file stream.
     """
 
-    def wrapper(self, *args, **kwargs):
+    def wrapper(self, scene, *args, **kwargs):
         allow_write = not file_writer_config["skip_animations"]
         self.file_writer.begin_animation(allow_write)
-        func(self, *args, **kwargs)
+        func(self, scene, *args, **kwargs)
         self.file_writer.end_animation(allow_write)
         self.num_plays += 1
 
@@ -88,17 +86,17 @@ class CairoRenderer:
             **file_writer_config,
         )
 
-    @manage_scene_reference
+    @pass_scene_reference
     @handle_caching_play
     @handle_play_like_call
-    def play(self, *args, **kwargs):
-        self.scene.play_internal(*args, **kwargs)
+    def play(self, scene, *args, **kwargs):
+        scene.play_internal(*args, **kwargs)
 
-    @manage_scene_reference
+    @pass_scene_reference
     @handle_caching_wait
     @handle_play_like_call
-    def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
-        self.scene.wait_internal(duration=duration, stop_condition=stop_condition)
+    def wait(self, scene, duration=DEFAULT_WAIT_TIME, stop_condition=None):
+        scene.wait_internal(duration=duration, stop_condition=stop_condition)
 
     def update_frame(  # TODO Description in Docstring
         self,
