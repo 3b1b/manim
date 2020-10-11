@@ -47,7 +47,7 @@ def tex_to_svg_file(expression, environment=None, tex_template=None):
     return convert_to_svg(dvi_file, tex_template.output_format)
 
 
-def generate_tex_file(expression, environment, tex_template):
+def generate_tex_file(expression, environment=None, tex_template=None):
     """Takes a tex expression (and an optional tex environment),
     and returns a fully formed tex file ready for compilation.
 
