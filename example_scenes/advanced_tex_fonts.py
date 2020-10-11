@@ -22,8 +22,9 @@ def FrenchCursive(*tex_strings, **kwargs):
 
 
 class TexFontTemplateManual(Scene):
-    """ An example scene that uses a manually defined TexTemplate() object to create 
-    LaTeX output in French Cursive font """
+    """An example scene that uses a manually defined TexTemplate() object to create
+    LaTeX output in French Cursive font"""
+
     def construct(self):
         self.add(Tex("Tex Font Example").to_edge(UL))
         self.play(ShowCreation(FrenchCursive("$f: A \\longrightarrow B$").shift(UP)))
@@ -45,8 +46,9 @@ class TexFontTemplateManual(Scene):
 
 
 class TexFontTemplateLibrary(Scene):
-    """ An example scene that uses TexTemplate objects from the TexFontTemplates collection 
-    to create sample LaTeX output in every font that will compile on the local system """
+    """An example scene that uses TexTemplate objects from the TexFontTemplates collection
+    to create sample LaTeX output in every font that will compile on the local system"""
+
     def construct(self):
         def write_one_line(template):
             x = Tex(template.description, tex_template=template).shift(UP)
