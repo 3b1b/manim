@@ -119,7 +119,7 @@ class TexTemplate:
         self.rebuild()
 
     def add_to_document(self, txt):
-        """Adds txt to the TeX template just after \\begin{document}
+        """Adds txt to the TeX template just after \\begin{document}, e.g. ``\\boldmath``
 
         Parameters
         ----------
