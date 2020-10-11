@@ -10,9 +10,9 @@ from ..utils.caching import handle_caching_play, handle_caching_wait
 
 def manage_scene_reference(func):
     def wrapper(self, scene, *args, **kwargs):
-        setattr(self, "temp_scene_ref", scene)
+        setattr(self, "scene", scene)
         func(self, *args, **kwargs)
-        delattr(self, "temp_scene_ref")
+        delattr(self, "scene")
 
     return wrapper
 
@@ -77,7 +77,6 @@ class CairoRenderer:
             scene,
             **file_writer_config,
         )
-        self.scene = scene
         self.original_skipping_status = file_writer_config["skip_animations"]
         self.animations_hashes = []
         self.num_plays = 0
@@ -97,6 +96,7 @@ class CairoRenderer:
 
     def update_frame(  # TODO Description in Docstring
         self,
+        scene,
         mobjects=None,
         background=None,
         include_submobjects=True,
@@ -124,8 +124,8 @@ class CairoRenderer:
             return
         if mobjects is None:
             mobjects = list_update(
-                self.scene.mobjects,
-                self.scene.foreground_mobjects,
+                scene.mobjects,
+                scene.foreground_mobjects,
             )
         if background is not None:
             self.camera.set_frame_to_background(background)
@@ -209,4 +209,3 @@ class CairoRenderer:
         self.file_writer.finish()
         if file_writer_config["save_last_frame"]:
             self.file_writer.save_final_image(self.camera.get_image())
-        logger.info(f"Rendered {str(self.scene)}\nPlayed {self.num_plays} animations")

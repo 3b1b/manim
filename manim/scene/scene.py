@@ -86,6 +86,9 @@ class Scene(Container):
             pass
         self.tear_down()
         self.renderer.finish()
+        logger.info(
+            f"Rendered {str(self)}\nPlayed {self.renderer.num_plays} animations"
+        )
 
     def setup(self):
         """
@@ -718,7 +721,7 @@ class Scene(Container):
         """
         for t in self.get_animation_time_progression(self.animations):
             self.update_animation_to_time(t)
-            self.renderer.update_frame(self.moving_mobjects, self.static_image)
+            self.renderer.update_frame(self, self.moving_mobjects, self.static_image)
             self.renderer.add_frame(self.renderer.get_frame())
 
     def update_animation_to_time(self, t):
@@ -786,7 +789,7 @@ class Scene(Container):
         # Paint all non-moving objects onto the screen, so they don't
         # have to be rendered every frame
         self.moving_mobjects = self.get_moving_mobjects(*self.animations)
-        self.renderer.update_frame(excluded_mobjects=self.moving_mobjects)
+        self.renderer.update_frame(self, excluded_mobjects=self.moving_mobjects)
         self.static_image = self.renderer.get_frame()
         self.last_t = 0
         self.run_time = self.get_run_time(self.animations)
@@ -808,7 +811,7 @@ class Scene(Container):
             # the same way Scene.play does
             for t in time_progression:
                 self.update_animation_to_time(t)
-                self.renderer.update_frame()
+                self.renderer.update_frame(self)
                 self.renderer.add_frame(self.renderer.get_frame())
                 if stop_condition is not None and stop_condition():
                     time_progression.close()
@@ -817,7 +820,7 @@ class Scene(Container):
             # Do nothing
             return self
         else:
-            self.renderer.update_frame()
+            self.renderer.update_frame(self)
             dt = 1 / self.renderer.camera.frame_rate
             self.renderer.add_frame(
                 self.renderer.get_frame(), num_frames=int(duration / dt)
