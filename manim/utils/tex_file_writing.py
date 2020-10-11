@@ -41,10 +41,10 @@ def tex_to_svg_file(expression, environment=None, tex_template=None):
     if tex_template is None:
         tex_template = config["tex_template"]
     tex_file = generate_tex_file(expression, environment, tex_template)
-    dvi_file = tex_to_dvi(
+    dvi_file = compile_tex(
         tex_file, tex_template.tex_compiler, tex_template.output_format
     )
-    return dvi_to_svg(dvi_file, tex_template.output_format)
+    return convert_to_svg(dvi_file, tex_template.output_format)
 
 
 def generate_tex_file(expression, environment, tex_template):
@@ -129,7 +129,7 @@ def tex_compilation_command(tex_compiler, output_format, tex_file, tex_dir):
     return " ".join(commands)
 
 
-def tex_to_dvi(tex_file, tex_compiler, output_format):
+def compile_tex(tex_file, tex_compiler, output_format):
     """Compiles a tex_file into a .dvi or a .xdv or a .pdf
 
     Parameters
@@ -164,7 +164,7 @@ def tex_to_dvi(tex_file, tex_compiler, output_format):
     return result
 
 
-def dvi_to_svg(dvi_file, extension, regen_if_exists=False, page=1):
+def convert_to_svg(dvi_file, extension, regen_if_exists=False, page=1):
     """Converts a .dvi, .xdv, or .pdf file into an svg using dvisvgm.
 
     Parameters
