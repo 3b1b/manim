@@ -7,7 +7,7 @@ import pytest
 import warnings
 from platform import system
 
-from manim import config, file_writer_config
+from manim import config, file_writer_config, CairoRenderer
 
 
 class GraphicalUnitTester:
@@ -75,7 +75,6 @@ class GraphicalUnitTester:
         ]:
             os.makedirs(dir_temp)
 
-        # By invoking this, the scene is rendered.
         self.scene = scene_object()
         self.scene.render()
 

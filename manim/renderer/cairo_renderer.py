@@ -6,6 +6,7 @@ from ..utils.hashing import get_hash_from_play_call, get_hash_from_wait_call
 from ..constants import DEFAULT_WAIT_TIME
 from ..scene.scene_file_writer import SceneFileWriter
 from ..utils.caching import handle_caching_play, handle_caching_wait
+from ..camera.camera import Camera
 
 
 def manage_scene_reference(func):
@@ -55,13 +56,14 @@ class CairoRenderer:
     time: time elapsed since initialisation of scene.
     """
 
-    def __init__(self, camera_class, **kwargs):
+    def __init__(self, camera_class=None, **kwargs):
         # All of the following are set to EITHER the value passed via kwargs,
         # OR the value stored in the global config dict at the time of
         # _instance construction_.  Before, they were in the CONFIG dict, which
         # is a class attribute and is defined at the time of _class
         # definition_.  This did not allow for creating two Cameras with
         # different configurations in the same session.
+        self.file_writer = None
         self.video_quality_config = {}
         for attr in [
             "pixel_height",
@@ -71,17 +73,18 @@ class CairoRenderer:
             "frame_rate",
         ]:
             self.video_quality_config[attr] = kwargs.get(attr, config[attr])
-        self.camera = camera_class(self.video_quality_config, **camera_config)
+        camera_cls = camera_class if camera_class is not None else Camera
+        self.camera = camera_cls(self.video_quality_config, **camera_config)
         self.original_skipping_status = file_writer_config["skip_animations"]
         self.animations_hashes = []
         self.num_plays = 0
         self.time = 0
 
-    def init_file_writer(self, scene_name):
+    def init(self, scene):
         self.file_writer = SceneFileWriter(
             self,
             self.video_quality_config,
-            scene_name,
+            scene.__class__.__name__,
             **file_writer_config,
         )
 

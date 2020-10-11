@@ -19,6 +19,7 @@ from .utils.module_ops import (
 from .scene.scene import Scene
 from .utils.file_ops import open_file as open_media_file
 from .grpc.impl import frame_server_impl
+from .renderer.cairo_renderer import CairoRenderer
 
 
 def open_file_if_needed(file_writer):
