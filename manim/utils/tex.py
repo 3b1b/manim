@@ -3,7 +3,6 @@
 __all__ = [
     "TexTemplate",
     "TexTemplateFromFile",
-    "BasicTexTemplate",
 ]
 
 
@@ -164,19 +163,6 @@ class TexTemplate:
         return self.body.replace(
             self.placeholder_text, "{0}\n{1}\n{2}".format(begin, expression, end)
         )
-
-
-class BasicTexTemplate(TexTemplate):
-    """A simple Tex Template with only basic AMS packages"""
-
-    def __init__(self, *args, **kwargs):
-        basic_headers = r"""
-\usepackage[english]{babel}
-\usepackage{amsmath}
-\usepackage{amssymb}      
-"""
-        preamble = kwargs.pop("preamble", basic_headers)
-        super().__init__(*args, preamble=preamble, **kwargs)
 
 
 class TexTemplateFromFile(TexTemplate):
