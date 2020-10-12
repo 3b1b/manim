@@ -47,7 +47,19 @@ class TexFontTemplateManual(Scene):
 
 class TexFontTemplateLibrary(Scene):
     """An example scene that uses TexTemplate objects from the TexFontTemplates collection
-    to create sample LaTeX output in every font that will compile on the local system"""
+    to create sample LaTeX output in every font that will compile on the local system.
+
+    Please Note:
+    Many of the in the TexFontTemplates collection require that specific fonts
+    are installed on your local machine.
+    For example, choosing the template TexFontTemplates.comic_sans will
+    not compile if the Comic Sans Micrososft font is not installed.
+
+    This scene will only render those Templates that do not cause a TeX
+    compilation error on your system. Furthermore, some of the ones that do render,
+    may still render incorrectly. This is beyond the scope of manim.
+    Feel free to experiment.
+    """
 
     def construct(self):
         def write_one_line(template):
@@ -55,17 +67,6 @@ class TexFontTemplateLibrary(Scene):
             self.play(ShowCreation(x))
             self.wait(1)
             self.play(FadeOut(x))
-
-            # Please Note:
-            # Many of these templates require that specific fonts
-            # are installed on your local machine.
-            # For example, choosing the template TexFontTemplates.chalkduster will
-            # not compile if the chalkduster font is not installed.
-            #
-            # This scene will only render those Templates that do not cause a TeX
-            # compilation error on your system. Some of the ones that do render,
-            # may render incorrectly. This is beyond the scope of manim.
-            # Feel free to experiment.
 
         examples = [
             TexFontTemplates.american_typewriter,  # "American Typewriter"

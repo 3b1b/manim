@@ -905,6 +905,15 @@ class TexFontTemplates(object):
     As a value for the keyword argument tex_template of Tex() and MathTex() mobjects
         ``Tex("My TeX code", tex_template=TexFontTemplates.comic_sans)``
 
+    Notes
+    ------
+    Many of these templates require that specific fonts
+    are installed on your local machine.
+    For example, choosing the template TexFontTemplates.comic_sans will
+    not compile if the Comic Sans Microsoft font is not installed.
+
+    To experiment, try to render the TexFontTemplateLibrary example scene:
+         ``manim path/to/manim/example_scenes/advanced_tex_fonts.py TexFontTemplateLibrary -p -ql``
     """
 
     american_typewriter = americantypewriter
