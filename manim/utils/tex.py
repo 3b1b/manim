@@ -77,7 +77,7 @@ class TexTemplate:
             if post_doc_commands is not None
             else TexTemplate.default_post_doc_commands
         )
-        self._rebuild\(\)
+        self._rebuild()
 
     def _rebuild(self):
         """ Assembles a fully formed tex document (documentclass, preamble, body ...) and stores it as self.body """
@@ -109,7 +109,7 @@ class TexTemplate:
             self.preamble = txt + "\n" + self.preamble
         else:
             self.preamble += "\n" + txt
-        self._rebuild\(\)
+        self._rebuild()
 
     def add_to_document(self, txt):
         """Adds txt to the TeX template just after \\begin{document}, e.g. ``\\boldmath``
@@ -120,7 +120,7 @@ class TexTemplate:
             String containing the text to be added.
         """
         self.post_doc_commands += "\n" + txt + "\n"
-        self._rebuild\(\)
+        self._rebuild()
 
     def get_texcode_for_expression(self, expression):
         """Inserts expression verbatim into TeX template.
@@ -166,7 +166,7 @@ class TexTemplateFromFile(TexTemplate):
         self.template_file = kwargs.pop("filename", "tex_template.tex")
         super().__init__(**kwargs)
 
-    def rebuild(self):
+    def _rebuild(self):
         with open(self.template_file, "r") as infile:
             self.body = infile.read()
 
