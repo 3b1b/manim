@@ -582,7 +582,7 @@ class Paragraph(VGroup):
 
 
 class PangoText(SVGMobject):
-    """Display (non-LaTeX) text rendered using `Pango <https://pango.gnome.org/>`_.
+    r"""Display (non-LaTeX) text rendered using `Pango <https://pango.gnome.org/>`_.
 
     PangoText objects behave like a :class:`.VGroup`-like iterable of all characters
     in the given text. In particular, slicing is possible.
@@ -598,7 +598,28 @@ class PangoText(SVGMobject):
         The mobject like :class:`.VGroup`.
 
     Examples
-    --------
+    ---------
+    .. manim:: MultipleFonts
+        :save_last_frame:
+
+        class MultipleFonts(Scene):
+            def construct(self):
+                morning = PangoText("வணக்கம்", font="sans-serif")
+                chin = PangoText(
+                    "見 角 言 谷  辛 辰 辵 邑 酉 釆 里!", t2c={"見 角 言": BLUE}
+                )  # works same as ``Text``.
+                mess = PangoText("Multi-Language", style=BOLD)
+                russ = PangoText("Здравствуйте मस नम म ", font="sans-serif")
+                hin = PangoText("नमस्ते", font="sans-serif")
+                arb = PangoText(
+                    "صباح الخير \n تشرفت بمقابلتك", font="sans-serif"
+                )  # don't mix RTL and LTR languages nothing shows up then ;-)
+                japanese = PangoText("臂猿「黛比」帶著孩子", font="sans-serif")
+                self.add(morning,chin,mess,russ,hin,arb,japanese)
+                for i,mobj in enumerate(self.mobjects):
+                    mobj.shift(DOWN*(i-3))
+
+
     .. manim:: PangoRender
         :quality: low
 
