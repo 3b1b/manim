@@ -42,15 +42,11 @@ python3 ./manim.py example_scenes.py SquareToCircle -pl
 
 ### Directly (Windows)
 1. [Install FFmpeg](https://www.wikihow.com/Install-FFmpeg-on-Windows).
-2. [Install Cairo](https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo). For most users, ``pycairo‑1.18.0‑cp37‑cp37m‑win32.whl`` will do fine (you can download it or other versions from [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo)).
-    ```sh
-    pip3 install C:\path\to\wheel\pycairo‑1.18.0‑cp37‑cp37m‑win32.whl
-    ```
-3. Install a LaTeX distribution. [MiKTeX](https://miktex.org/download) is recommended.
+2. Install a LaTeX distribution. [MiKTeX](https://miktex.org/download) is recommended.
 
-4. [Install SoX](https://sourceforge.net/projects/sox/files/sox/).
+3. [Install SoX](https://sourceforge.net/projects/sox/files/sox/).
 
-5. Install the remaining Python packages.
+4. Install the remaining Python packages.
     ```sh
     git clone https://github.com/3b1b/manim.git
     cd manim
