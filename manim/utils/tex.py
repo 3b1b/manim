@@ -80,7 +80,7 @@ class TexTemplate:
         self._rebuild()
 
     def _rebuild(self):
-        """ Assembles a fully formed tex document (documentclass, preamble, body ...) and stores it as self.body """
+        """Rebuilds the entire TeX template text from ``\\documentclass`` to ``\\end{document}`` according to all settings and choices."""
         self.body = (
             self.documentclass
             + "\n"
@@ -133,7 +133,7 @@ class TexTemplate:
         Returns
         -------
         :class:`str`
-            LaTeX code based on template, containing the given expression and ready for typesetting
+            LaTeX code based on current template, containing the given ``expression`` and ready for typesetting
         """
         return self.body.replace(self.placeholder_text, expression)
 

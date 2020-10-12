@@ -12,7 +12,7 @@ from .tex import *
 
 
 def _new_ams_template():
-    # Returns a simple Tex Template with only basic AMS packages
+    """ Returns a simple Tex Template with only basic AMS packages """
     preamble = r"""
 \usepackage[english]{babel}
 \usepackage{amsmath}
