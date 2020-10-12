@@ -804,7 +804,7 @@ class Scene(Container):
                     I think you may have invoked a method
                     you meant to pass in as a Scene.play argument
                     """
-                    )
+                )
             else:
                 raise ValueError("Invalid play arguments")
         compile_method(state)
