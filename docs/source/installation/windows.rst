@@ -41,9 +41,6 @@ Installing python packages and manim
 Make sure you can start pip using ``pip`` in your commandline. Then do
 ``pip install pyreadline`` for the ``readline`` package.
 
-Grab the pycairo wheel binary ``pycairo‑1.18.0‑cp37‑cp37m‑win32.whl`` from https://www.lfd.uci.edu/~gohlke/pythonlibs/#pycairo
-and install it via ``python -m pip install C:\absolute\path\to\the\whl\file``
-
 clone the manim repository if you have git ``git clone https://github.com/3b1b/manim`` or download the zip file from
 the repository page with ``Clone or download`` button and unzip it.
 
