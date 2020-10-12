@@ -116,7 +116,7 @@ class TexTemplate:
 
         Parameters
         ----------
-        txt : :class:`string`
+        txt : :class:`str`
             String containing the text to be added.
         """
         self.post_doc_commands += "\n" + txt + "\n"
@@ -127,12 +127,12 @@ class TexTemplate:
 
         Parameters
         ----------
-        expression : :class:`string`
+        expression : :class:`str`
             The string containing the expression to be typeset, e.g. ``$\\sqrt{2}$``
 
         Returns
         -------
-        :class:`string`
+        :class:`str`
             LaTeX code based on current template, containing the given ``expression`` and ready for typesetting
         """
         return self.body.replace(self.placeholder_text, expression)
@@ -142,14 +142,14 @@ class TexTemplate:
 
         Parameters
         ----------
-        expression : :class:`string`
+        expression : :class:`str`
             The string containing the expression to be typeset, e.g. ``$\\sqrt{2}$``
         environment : :class:`str`
             The string containing the environment in which the expression should be typeset, e.g. ``align*``
 
         Returns
         -------
-        :class:`string`
+        :class:`str`
             LaTeX code based on template, containing the given expression inside its environment, ready for typesetting
         """
         begin = r"\begin{" + environment + "}"
