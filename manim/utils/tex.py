@@ -103,37 +103,28 @@ class TexTemplate:
         ----------
         txt : :class:`str`
             String containing the text to be added, e.g. ``\\usepackage{siunitx}``
-        Returns
-        -------
-        None
         """
         self.preamble = txt + "\n" + self.preamble
         self.rebuild()
 
     def add_to_preamble(self, txt):
-        """Adds txt to the TeX template preamble just before \begin{document}
+        """Adds txt to the TeX template preamble just before \\begin{document}
 
         Parameters
         ----------
         txt : :class:`str`
             String containing the text to be added, e.g. ``\\usepackage{hyperref}``
-        Returns
-        -------
-        None
         """
         self.preamble += "\n" + txt
         self.rebuild()
 
     def add_to_document(self, txt):
-        """Adds txt to the TeX template just after \begin{document}
+        """Adds txt to the TeX template just after \\begin{document}, e.g. ``\\boldmath``
 
         Parameters
         ----------
         txt : :class:`str`
             String containing the text to be added.
-        Returns
-        -------
-        None
         """
         self.post_doc_commands += "\n" + txt + "\n"
         self.rebuild()
@@ -145,6 +136,7 @@ class TexTemplate:
         ----------
         expression : :class:`str`
             The string containing the expression to be typeset, e.g. ``$\\sqrt{2}$``
+
         Returns
         -------
         :class:`str`
@@ -161,6 +153,7 @@ class TexTemplate:
             The string containing the expression to be typeset, e.g. ``$\\sqrt{2}$``
         environment : :class:`str`
             The string containing the environment in which the expression should be typeset, e.g. ``align*``
+
         Returns
         -------
         :class:`str`
