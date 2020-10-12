@@ -98,9 +98,7 @@ class Thumbnail(GraphScene):
         graph_dot_p2.move_to(get_graph_point(input_tracker_p2))
 
         #
-        self.play(
-            ShowCreation(graph),
-        )
+        self.play(ShowCreation(graph))
         # Animacion del punto a
         self.add_foreground_mobject(graph_dot_p1)
         self.add_foreground_mobject(graph_dot_p2)
