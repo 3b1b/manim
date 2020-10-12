@@ -63,7 +63,7 @@ def generate_tex_file(expression, environment=None, tex_template=None):
     Returns
     -------
     :class:`string`
-        Path to generated TeX file 
+        Path to generated TeX file
     """
     if tex_template is None:
         tex_template = config["tex_template"]
@@ -178,7 +178,7 @@ def convert_to_svg(dvi_file, extension, regen_if_exists=False, page=1):
     extension : :class:`str`
         String containing the file extension and thus indicating the file type, e.g. ``.dvi`` or ``.pdf``
     regen_if_exists : Optional[:class:`bool`], optional
-        Setting if SVG has to be regenerated even if it already exists. 
+        Setting if SVG has to be regenerated even if it already exists.
     page : Optional[:class:`int`], optional
         Page to be converted if input file is multi-page.
 
