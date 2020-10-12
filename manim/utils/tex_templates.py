@@ -897,10 +897,13 @@ class TexFontTemplates(object):
     """
     A collection of TeX templates for the fonts described at http://jf.burnol.free.fr/showcase.html
 
+    These templates are specifically designed to allow you to typeset formulae and mathematics using
+    different fonts. They are based on the mathastext LaTeX package.
+
     Usage
     -----
     As a value for the keyword argument tex_template of Tex() and MathTex() mobjects
-        Tex("My TeX code", tex_template=TexFontTemplates.comic_sans)
+        ``Tex("My TeX code", tex_template=TexFontTemplates.comic_sans)``
 
     """
 
