@@ -62,7 +62,7 @@ def generate_tex_file(expression, environment=None, tex_template=None):
 
     Returns
     -------
-    :class:`string`
+    :class:`str`
         Path to generated TeX file
     """
     if tex_template is None:
