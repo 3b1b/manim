@@ -95,26 +95,19 @@ class TexTemplate:
             + "\n"
         )
 
-    def prepend_to_preamble(self, txt):
-        """Adds txt to the TeX template preamble just after the \documentclass
-
-        Parameters
-        ----------
-        txt : :class:`str`
-            String containing the text to be added, e.g. ``\\usepackage{siunitx}``
-        """
-        self.preamble = txt + "\n" + self.preamble
-        self.rebuild()
-
-    def add_to_preamble(self, txt):
-        """Adds txt to the TeX template preamble just before \\begin{document}
-
+    def add_to_preamble(self, txt, prepend=False):
+        """Adds stuff to the TeX template's preamble (e.g. definitions, packages). Text can be inserted at the beginning or at the end of the preamble.
         Parameters
         ----------
         txt : :class:`str`
             String containing the text to be added, e.g. ``\\usepackage{hyperref}``
+        prepend : Optional[:class:`bool`], optional
+            Whether the text should be added at the beginning of the preample, i.e. right after ``\\documentclass``. Default is to add it at the end of the preample, i.e. right before ``\\begin{document}``
         """
-        self.preamble += "\n" + txt
+        if prepend:
+            self.preamble = txt + "\n" + self.preamble
+        else:
+            self.preamble += "\n" + txt
         self.rebuild()
 
     def add_to_document(self, txt):

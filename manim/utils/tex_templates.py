@@ -11,7 +11,7 @@ from .tex import *
 # This file makes TexTemplateLibrary and TexFontTemplates available for use in manim Tex and MathTex objects.
 
 
-def BasicTexTemplate():
+def _new_ams_template():
     # Returns a simple Tex Template with only basic AMS packages
     preamble = r"""
 \usepackage[english]{babel}
@@ -49,7 +49,7 @@ class TexTemplateLibrary(object):
     )
     """ An instance of the TeX template used by 3b1b when using the use_ctex flag """
 
-    simple = BasicTexTemplate()
+    simple = _new_ams_template()
     """ An instance of a simple TeX template with only basic AMS packages loaded """
 
 
@@ -135,7 +135,7 @@ class TexTemplateLibrary(object):
 #
 
 # Latin Modern Typewriter Proportional
-lmtp = BasicTexTemplate()
+lmtp = _new_ams_template()
 lmtp.description = "Latin Modern Typewriter Proportional"
 lmtp.add_to_preamble(
     r"""
@@ -151,7 +151,7 @@ lmtp.add_to_preamble(
 
 
 # Fourier Utopia (Fourier upright Greek)
-fufug = BasicTexTemplate()
+fufug = _new_ams_template()
 fufug.description = "Fourier Utopia (Fourier upright Greek)"
 fufug.add_to_preamble(
     r"""
@@ -163,7 +163,7 @@ fufug.add_to_preamble(
 
 
 # Droid Serif
-droidserif = BasicTexTemplate()
+droidserif = _new_ams_template()
 droidserif.description = "Droid Serif"
 droidserif.add_to_preamble(
     r"""
@@ -176,7 +176,7 @@ droidserif.add_to_preamble(
 
 
 # Droid Sans
-droidsans = BasicTexTemplate()
+droidsans = _new_ams_template()
 droidsans.description = "Droid Sans"
 droidsans.add_to_preamble(
     r"""
@@ -189,7 +189,7 @@ droidsans.add_to_preamble(
 
 
 # New Century Schoolbook (Symbol Greek)
-ncssg = BasicTexTemplate()
+ncssg = _new_ams_template()
 ncssg.description = "New Century Schoolbook (Symbol Greek)"
 ncssg.add_to_preamble(
     r"""
@@ -202,7 +202,7 @@ ncssg.add_to_preamble(
 
 
 # French Cursive (Euler Greek)
-fceg = BasicTexTemplate()
+fceg = _new_ams_template()
 fceg.description = "French Cursive (Euler Greek)"
 fceg.add_to_preamble(
     r"""
@@ -215,7 +215,7 @@ nolessnomore,noasterisk]{mathastext}
 
 
 # Auriocus Kalligraphicus (Symbol Greek)
-aksg = BasicTexTemplate()
+aksg = _new_ams_template()
 aksg.description = "Auriocus Kalligraphicus (Symbol Greek)"
 aksg.add_to_preamble(
     r"""
@@ -228,7 +228,7 @@ aksg.add_to_preamble(
 
 
 # Palatino (Symbol Greek)
-palatinosg = BasicTexTemplate()
+palatinosg = _new_ams_template()
 palatinosg.description = "Palatino (Symbol Greek)"
 palatinosg.add_to_preamble(
     r"""
@@ -240,7 +240,7 @@ palatinosg.add_to_preamble(
 
 
 # Comfortaa
-comfortaa = BasicTexTemplate()
+comfortaa = _new_ams_template()
 comfortaa.description = "Comfortaa"
 comfortaa.add_to_preamble(
     r"""
@@ -253,7 +253,7 @@ comfortaa.add_to_preamble(
 
 
 # ECF Augie (Euler Greek)
-ecfaugieeg = BasicTexTemplate()
+ecfaugieeg = _new_ams_template()
 ecfaugieeg.description = "ECF Augie (Euler Greek)"
 ecfaugieeg.add_to_preamble(
     r"""
@@ -264,7 +264,7 @@ ecfaugieeg.add_to_preamble(
 
 
 # Electrum ADF (CM Greek)
-electrumadfcm = BasicTexTemplate()
+electrumadfcm = _new_ams_template()
 electrumadfcm.description = "Electrum ADF (CM Greek)"
 electrumadfcm.add_to_preamble(
     r"""
@@ -278,7 +278,7 @@ electrumadfcm.add_to_preamble(
 
 
 # American Typewriter
-americantypewriter = BasicTexTemplate()
+americantypewriter = _new_ams_template()
 americantypewriter.description = "American Typewriter"
 americantypewriter.add_to_preamble(
     r"""
@@ -291,7 +291,7 @@ americantypewriter.tex_compiler = "xelatex"
 americantypewriter.output_format = ".xdv"
 
 # Minion Pro and Myriad Pro (and TX fonts symbols)
-mpmptx = BasicTexTemplate()
+mpmptx = _new_ams_template()
 mpmptx.description = "Minion Pro and Myriad Pro (and TX fonts symbols)"
 mpmptx.add_to_preamble(
     r"""
@@ -310,7 +310,7 @@ mpmptx.output_format = ".xdv"
 
 
 # New Century Schoolbook (Symbol Greek, PX math symbols)
-ncssgpxm = BasicTexTemplate()
+ncssgpxm = _new_ams_template()
 ncssgpxm.description = "New Century Schoolbook (Symbol Greek, PX math symbols)"
 ncssgpxm.add_to_preamble(
     r"""
@@ -324,7 +324,7 @@ ncssgpxm.add_to_preamble(
 
 
 # Vollkorn (TX fonts for Greek and math symbols)
-vollkorntx = BasicTexTemplate()
+vollkorntx = _new_ams_template()
 vollkorntx.description = "Vollkorn (TX fonts for Greek and math symbols)"
 vollkorntx.add_to_preamble(
     r"""
@@ -338,7 +338,7 @@ vollkorntx.add_to_preamble(
 
 
 # Libertine
-libertine = BasicTexTemplate()
+libertine = _new_ams_template()
 libertine.description = "Libertine"
 libertine.add_to_preamble(
     r"""
@@ -351,7 +351,7 @@ libertine.add_to_preamble(
 
 
 # SliTeX (Euler Greek)
-slitexeg = BasicTexTemplate()
+slitexeg = _new_ams_template()
 slitexeg.description = "SliTeX (Euler Greek)"
 slitexeg.add_to_preamble(
     r"""
@@ -365,7 +365,7 @@ slitexeg.add_to_preamble(
 
 
 # ECF Webster (with TX fonts)
-ecfwebstertx = BasicTexTemplate()
+ecfwebstertx = _new_ams_template()
 ecfwebstertx.description = "ECF Webster (with TX fonts)"
 ecfwebstertx.add_to_preamble(
     r"""
@@ -385,7 +385,7 @@ ecfwebstertx.add_to_document(
 
 
 # Romande ADF with Fourier (Italic)
-italicromandeadff = BasicTexTemplate()
+italicromandeadff = _new_ams_template()
 italicromandeadff.description = "Romande ADF with Fourier (Italic)"
 italicromandeadff.add_to_preamble(
     r"""
@@ -399,7 +399,7 @@ italicromandeadff.add_to_preamble(
 
 
 # Apple Chancery
-applechancery = BasicTexTemplate()
+applechancery = _new_ams_template()
 applechancery.description = "Apple Chancery"
 applechancery.add_to_preamble(
     r"""
@@ -413,7 +413,7 @@ applechancery.output_format = ".xdv"
 
 
 # Zapf Chancery
-zapfchancery = BasicTexTemplate()
+zapfchancery = _new_ams_template()
 zapfchancery.description = "Zapf Chancery"
 zapfchancery.add_to_preamble(
     r"""
@@ -430,7 +430,7 @@ zapfchancery.add_to_preamble(
 
 
 # Verdana (Italic)
-italicverdana = BasicTexTemplate()
+italicverdana = _new_ams_template()
 italicverdana.description = "Verdana (Italic)"
 italicverdana.add_to_preamble(
     r"""
@@ -444,7 +444,7 @@ italicverdana.output_format = ".xdv"
 
 
 # URW Zapf Chancery (CM Greek)
-urwzccmg = BasicTexTemplate()
+urwzccmg = _new_ams_template()
 urwzccmg.description = "URW Zapf Chancery (CM Greek)"
 urwzccmg.add_to_preamble(
     r"""
@@ -467,7 +467,7 @@ urwzccmg.add_to_document(
 
 
 # Comic Sans MS
-comicsansms = BasicTexTemplate()
+comicsansms = _new_ams_template()
 comicsansms.description = "Comic Sans MS"
 comicsansms.add_to_preamble(
     r"""
@@ -481,7 +481,7 @@ comicsansms.output_format = ".xdv"
 
 
 # GFS Didot (Italic)
-italicgfsdidot = BasicTexTemplate()
+italicgfsdidot = _new_ams_template()
 italicgfsdidot.description = "GFS Didot (Italic)"
 italicgfsdidot.add_to_preamble(
     r"""
@@ -494,7 +494,7 @@ italicgfsdidot.add_to_preamble(
 
 
 # Chalkduster
-chalkduster = BasicTexTemplate()
+chalkduster = _new_ams_template()
 chalkduster.description = "Chalkduster"
 chalkduster.add_to_preamble(
     r"""
@@ -508,7 +508,7 @@ chalkduster.output_format = ".pdf"
 
 
 # Minion Pro (and TX fonts symbols)
-mptx = BasicTexTemplate()
+mptx = _new_ams_template()
 mptx.description = "Minion Pro (and TX fonts symbols)"
 mptx.add_to_preamble(
     r"""
@@ -523,7 +523,7 @@ mptx.output_format = ".xdv"
 
 
 # GNU FreeSerif and FreeSans
-gnufsfs = BasicTexTemplate()
+gnufsfs = _new_ams_template()
 gnufsfs.description = "GNU FreeSerif and FreeSans"
 gnufsfs.add_to_preamble(
     r"""
@@ -551,7 +551,7 @@ gnufsfs.tex_compiler = "xelatex"
 gnufsfs.output_format = ".pdf"
 
 # GFS NeoHellenic
-gfsneohellenic = BasicTexTemplate()
+gfsneohellenic = _new_ams_template()
 gfsneohellenic.description = "GFS NeoHellenic"
 gfsneohellenic.add_to_preamble(
     r"""
@@ -565,7 +565,7 @@ gfsneohellenic.add_to_preamble(
 
 
 # ECF Tall Paul (with Symbol font)
-ecftallpaul = BasicTexTemplate()
+ecftallpaul = _new_ams_template()
 ecftallpaul.description = "ECF Tall Paul (with Symbol font)"
 ecftallpaul.add_to_preamble(
     r"""
@@ -581,7 +581,7 @@ ecftallpaul.add_to_preamble(
 
 
 # Droid Sans (Italic)
-italicdroidsans = BasicTexTemplate()
+italicdroidsans = _new_ams_template()
 italicdroidsans.description = "Droid Sans (Italic)"
 italicdroidsans.add_to_preamble(
     r"""
@@ -594,7 +594,7 @@ italicdroidsans.add_to_preamble(
 
 
 # Baskerville (Italic)
-italicbaskerville = BasicTexTemplate()
+italicbaskerville = _new_ams_template()
 italicbaskerville.description = "Baskerville (Italic)"
 italicbaskerville.add_to_preamble(
     r"""
@@ -608,7 +608,7 @@ italicbaskerville.output_format = ".xdv"
 
 
 # ECF JD (with TX fonts)
-ecfjdtx = BasicTexTemplate()
+ecfjdtx = _new_ams_template()
 ecfjdtx.description = "ECF JD (with TX fonts)"
 ecfjdtx.add_to_preamble(
     r"""
@@ -625,7 +625,7 @@ ecfjdtx.add_to_document(
 
 
 # Antykwa Półtawskiego (TX Fonts for Greek and math symbols)
-aptxgm = BasicTexTemplate()
+aptxgm = _new_ams_template()
 aptxgm.description = "Antykwa Półtawskiego (TX Fonts for Greek and math symbols)"
 aptxgm.add_to_preamble(
     r"""
@@ -639,7 +639,7 @@ aptxgm.add_to_preamble(
 
 
 # Papyrus
-papyrus = BasicTexTemplate()
+papyrus = _new_ams_template()
 papyrus.description = "Papyrus"
 papyrus.add_to_preamble(
     r"""
@@ -653,7 +653,7 @@ papyrus.output_format = ".xdv"
 
 
 # GNU FreeSerif (and TX fonts symbols)
-gnufstx = BasicTexTemplate()
+gnufstx = _new_ams_template()
 gnufstx.description = "GNU FreeSerif (and TX fonts symbols)"
 gnufstx.add_to_preamble(
     r"""
@@ -672,7 +672,7 @@ gnufstx.output_format = ".pdf"
 
 
 # ECF Skeetch (CM Greek)
-ecfscmg = BasicTexTemplate()
+ecfscmg = _new_ams_template()
 ecfscmg.description = "ECF Skeetch (CM Greek)"
 ecfscmg.add_to_preamble(
     r"""
@@ -687,7 +687,7 @@ ecfscmg.add_to_preamble(
 
 
 # Latin Modern Typewriter Proportional (CM Greek) (Italic)
-italiclmtpcm = BasicTexTemplate()
+italiclmtpcm = _new_ams_template()
 italiclmtpcm.description = "Latin Modern Typewriter Proportional (CM Greek) (Italic)"
 italiclmtpcm.add_to_preamble(
     r"""
@@ -701,7 +701,7 @@ italiclmtpcm.add_to_preamble(
 
 
 # Baskervald ADF with Fourier
-baskervaldadff = BasicTexTemplate()
+baskervaldadff = _new_ams_template()
 baskervaldadff.description = "Baskervald ADF with Fourier"
 baskervaldadff.add_to_preamble(
     r"""
@@ -713,7 +713,7 @@ baskervaldadff.add_to_preamble(
 
 
 # Droid Serif (PX math symbols) (Italic)
-italicdroidserifpx = BasicTexTemplate()
+italicdroidserifpx = _new_ams_template()
 italicdroidserifpx.description = "Droid Serif (PX math symbols) (Italic)"
 italicdroidserifpx.add_to_preamble(
     r"""
@@ -727,7 +727,7 @@ italicdroidserifpx.add_to_preamble(
 
 
 # Biolinum
-biolinum = BasicTexTemplate()
+biolinum = _new_ams_template()
 biolinum.description = "Biolinum"
 biolinum.add_to_preamble(
     r"""
@@ -741,7 +741,7 @@ biolinum.add_to_preamble(
 
 
 # Vollkorn with Fourier (Italic)
-italicvollkornf = BasicTexTemplate()
+italicvollkornf = _new_ams_template()
 italicvollkornf.description = "Vollkorn with Fourier (Italic)"
 italicvollkornf.add_to_preamble(
     r"""
@@ -753,7 +753,7 @@ italicvollkornf.add_to_preamble(
 
 
 # Chalkboard SE
-chalkboardse = BasicTexTemplate()
+chalkboardse = _new_ams_template()
 chalkboardse.description = "Chalkboard SE"
 chalkboardse.add_to_preamble(
     r"""
@@ -767,7 +767,7 @@ chalkboardse.output_format = ".xdv"
 
 
 # Noteworthy Light
-noteworthylight = BasicTexTemplate()
+noteworthylight = _new_ams_template()
 noteworthylight.description = "Noteworthy Light"
 noteworthylight.add_to_preamble(
     r"""
@@ -779,7 +779,7 @@ noteworthylight.add_to_preamble(
 
 
 # Epigrafica
-epigrafica = BasicTexTemplate()
+epigrafica = _new_ams_template()
 epigrafica.description = "Epigrafica"
 epigrafica.add_to_preamble(
     r"""
@@ -793,7 +793,7 @@ epigrafica.add_to_preamble(
 
 
 # Libris ADF with Fourier
-librisadff = BasicTexTemplate()
+librisadff = _new_ams_template()
 librisadff.description = "Libris ADF with Fourier"
 librisadff.add_to_preamble(
     r"""
@@ -807,7 +807,7 @@ librisadff.add_to_preamble(
 
 
 # Venturis ADF with Fourier (Italic)
-italicvanturisadff = BasicTexTemplate()
+italicvanturisadff = _new_ams_template()
 italicvanturisadff.description = "Venturis ADF with Fourier (Italic)"
 italicvanturisadff.add_to_preamble(
     r"""
@@ -819,7 +819,7 @@ italicvanturisadff.add_to_preamble(
 
 
 # GFS Bodoni
-gfsbodoni = BasicTexTemplate()
+gfsbodoni = _new_ams_template()
 gfsbodoni.description = "GFS Bodoni"
 gfsbodoni.add_to_preamble(
     r"""
@@ -833,7 +833,7 @@ gfsbodoni.add_to_preamble(
 
 
 # BrushScriptX-Italic (PX math and Greek)
-brushscriptxpx = BasicTexTemplate()
+brushscriptxpx = _new_ams_template()
 brushscriptxpx.description = "BrushScriptX-Italic (PX math and Greek)"
 brushscriptxpx.add_to_preamble(
     r"""
@@ -855,7 +855,7 @@ brushscriptxpx.output_format = ".xdv"
 
 
 # URW Avant Garde (Symbol Greek)
-urwagsg = BasicTexTemplate()
+urwagsg = _new_ams_template()
 urwagsg.description = "URW Avant Garde (Symbol Greek)"
 urwagsg.add_to_preamble(
     r"""
@@ -868,7 +868,7 @@ urwagsg.add_to_preamble(
 
 
 # Times with Fourier (Italic)
-italictimesf = BasicTexTemplate()
+italictimesf = _new_ams_template()
 italictimesf.description = "Times with Fourier (Italic)"
 italictimesf.add_to_preamble(
     r"""
@@ -880,7 +880,7 @@ italictimesf.add_to_preamble(
 
 
 # Helvetica with Fourier (Italic)
-italichelveticaf = BasicTexTemplate()
+italichelveticaf = _new_ams_template()
 italichelveticaf.description = "Helvetica with Fourier (Italic)"
 italichelveticaf.add_to_preamble(
     r"""
