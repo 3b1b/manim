@@ -11,17 +11,14 @@ from .tex import *
 # This file makes TexTemplateLibrary and TexFontTemplates available for use in manim Tex and MathTex objects.
 
 
-class BasicTexTemplate(TexTemplate):
-    """A simple Tex Template with only basic AMS packages"""
-
-    def __init__(self, *args, **kwargs):
-        basic_headers = r"""
+def BasicTexTemplate():
+    """ Returns a simple Tex Template with only basic AMS packages"""
+    preamble = r"""
 \usepackage[english]{babel}
 \usepackage{amsmath}
 \usepackage{amssymb}
 """
-        preamble = kwargs.pop("preamble", basic_headers)
-        super().__init__(*args, preamble=preamble, **kwargs)
+    return TexTemplate(preamble=preamble)
 
 
 # TexTemplateLibrary
