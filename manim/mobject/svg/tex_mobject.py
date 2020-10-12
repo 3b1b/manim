@@ -152,6 +152,21 @@ class SingleStringMathTex(SVGMobject):
 
 
 class MathTex(SingleStringMathTex):
+    """
+    A class for displaying mathematical formulas with Latex syntax.
+
+
+    Examples
+    --------
+    .. manim:: Formula1
+        :save_last_frame:
+
+        class Formula1(Scene):
+            def construct(self):
+                t = MathTex(r"\int_a^b f'(x) dx = f(b)- f(a)")
+                self.add(t)
+    """
+
     CONFIG = {
         "arg_separator": " ",
         "substrings_to_isolate": [],
