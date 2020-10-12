@@ -197,7 +197,7 @@ NeatProjects
             self.wait()
 
 
-.. manim:: ExampleArrow
+.. manim:: VariableExample
     :quality: low
 
     class VariableExample(Scene):
