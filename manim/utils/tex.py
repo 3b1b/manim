@@ -172,10 +172,7 @@ class TexTemplateFromFile(TexTemplate):
     def file_not_mutable():
         raise Exception("Cannot modify TexTemplate when using a template file.")
 
-    def prepend_to_preamble(self, txt):
-        self.file_not_mutable()
-
-    def add_to_preamble(self, txt):
+    def add_to_preamble(self, txt, prepend=False):
         self.file_not_mutable()
 
     def add_to_document(self, txt):

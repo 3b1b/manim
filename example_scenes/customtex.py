@@ -34,7 +34,7 @@ class InCodeTexTemplate(Scene):
         myTemplate.tex_compiler = "pdflatex"
         myTemplate.output_format = ".pdf"
 
-        # To use this template in a Tex() or MathTex object
+        # To use this template in a Tex() or MathTex() object
         # use the keyword argument tex_template
         text = MathTex(r"\vv{vb}", tex_template=myTemplate)
         self.play(Write(text))
