@@ -208,8 +208,9 @@ class CairoRenderer:
             file_writer_config["skip_animations"] = self.original_skipping_status
         return self
 
-    def finish(self):
+    def finish(self, scene):
         file_writer_config["skip_animations"] = False
         self.file_writer.finish()
         if file_writer_config["save_last_frame"]:
+            self.update_frame(scene, ignore_skipping=True)
             self.file_writer.save_final_image(self.camera.get_image())

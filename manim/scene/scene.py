@@ -89,7 +89,7 @@ class Scene(Container):
         except EndSceneEarlyException:
             pass
         self.tear_down()
-        self.renderer.finish()
+        self.renderer.finish(self)
         logger.info(
             f"Rendered {str(self)}\nPlayed {self.renderer.num_plays} animations"
         )
