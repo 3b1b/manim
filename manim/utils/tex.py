@@ -100,7 +100,7 @@ class TexTemplate:
         """Adds stuff to the TeX template's preamble (e.g. definitions, packages). Text can be inserted at the beginning or at the end of the preamble.
         Parameters
         ----------
-        txt : :class:`str`
+        txt : :class:`string`
             String containing the text to be added, e.g. ``\\usepackage{hyperref}``
         prepend : Optional[:class:`bool`], optional
             Whether the text should be added at the beginning of the preample, i.e. right after ``\\documentclass``. Default is to add it at the end of the preample, i.e. right before ``\\begin{document}``
@@ -116,7 +116,7 @@ class TexTemplate:
 
         Parameters
         ----------
-        txt : :class:`str`
+        txt : :class:`string`
             String containing the text to be added.
         """
         self.post_doc_commands += "\n" + txt + "\n"
@@ -127,12 +127,12 @@ class TexTemplate:
 
         Parameters
         ----------
-        expression : :class:`str`
+        expression : :class:`string`
             The string containing the expression to be typeset, e.g. ``$\\sqrt{2}$``
 
         Returns
         -------
-        :class:`str`
+        :class:`string`
             LaTeX code based on current template, containing the given ``expression`` and ready for typesetting
         """
         return self.body.replace(self.placeholder_text, expression)
@@ -142,14 +142,14 @@ class TexTemplate:
 
         Parameters
         ----------
-        expression : :class:`str`
+        expression : :class:`string`
             The string containing the expression to be typeset, e.g. ``$\\sqrt{2}$``
         environment : :class:`str`
             The string containing the environment in which the expression should be typeset, e.g. ``align*``
 
         Returns
         -------
-        :class:`str`
+        :class:`string`
             LaTeX code based on template, containing the given expression inside its environment, ready for typesetting
         """
         begin = r"\begin{" + environment + "}"

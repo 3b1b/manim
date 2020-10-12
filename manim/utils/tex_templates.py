@@ -27,10 +27,11 @@ class TexTemplateLibrary(object):
     """
     A collection of basic TeX template objects
 
-    Usage
-    -----
-    As a value for the keyword argument tex_template of Tex() and MathTex() mobjects
-        Tex("My TeX code", tex_template=TexTemplateLibrary.ctex)
+    Examples
+    --------
+    Normal usage as a value for the keyword argument tex_template of Tex() and MathTex() mobjects::
+
+        ``Tex("My TeX code", tex_template=TexTemplateLibrary.ctex)``
 
     """
 
@@ -900,9 +901,10 @@ class TexFontTemplates(object):
     These templates are specifically designed to allow you to typeset formulae and mathematics using
     different fonts. They are based on the mathastext LaTeX package.
 
-    Usage
-    -----
-    As a value for the keyword argument tex_template of Tex() and MathTex() mobjects
+    Examples
+    ---------
+    Normal usage as a value for the keyword argument tex_template of Tex() and MathTex() mobjects::
+
         ``Tex("My TeX code", tex_template=TexFontTemplates.comic_sans)``
 
     Notes
