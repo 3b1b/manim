@@ -26,7 +26,7 @@ class TexTemplate:
         Text in the document that will be replaced by the expression to be rendered
     post_doc_commands : Optional[:class:`str`], optional
         Text (definitions, commands) to be inserted at right after ``\\begin{document}``, e.g. ``\\boldmath``
-    
+
     Attributes
     ----------
     tex_compiler : :class:`str`
