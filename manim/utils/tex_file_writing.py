@@ -168,7 +168,7 @@ def compile_tex(tex_file, tex_compiler, output_format):
     return result
 
 
-def convert_to_svg(dvi_file, extension, regen_if_exists=False, page=1):
+def convert_to_svg(dvi_file, extension, page=1):
     """Converts a .dvi, .xdv, or .pdf file into an svg using dvisvgm.
 
     Parameters
@@ -177,8 +177,6 @@ def convert_to_svg(dvi_file, extension, regen_if_exists=False, page=1):
         File name of the input file to be converted.
     extension : :class:`str`
         String containing the file extension and thus indicating the file type, e.g. ``.dvi`` or ``.pdf``
-    regen_if_exists : Optional[:class:`bool`], optional
-        Setting if SVG has to be regenerated even if it already exists.
     page : Optional[:class:`int`], optional
         Page to be converted if input file is multi-page.
 
