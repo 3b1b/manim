@@ -46,18 +46,11 @@ To install LaTeX:
 Fedora/CentOS/RHEL
 *************
 
-Before installing anything, make sure that your system is up to date.
-
-.. code-block:: bash
-
-   sudo apt update
-   sudo apt upgrade
-
 To install cairo:
 
 .. code-block:: bash
 
-  sudo yum install cairo-devel
+  sudo dnf install cairo-devel
 
 To install ffmpeg:
 
