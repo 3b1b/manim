@@ -10,7 +10,38 @@ import os
 
 
 class TexTemplate:
-    """TeX templates are used for creating Tex() and MathTex() objects."""
+    """TeX templates are used for creating Tex() and MathTex() objects.
+
+    Parameters
+    ----------
+    tex_compiler : Optional[:class:`str`], optional
+        The TeX compiler to be used, e.g. ``latex``, ``pdflatex`` or ``lualatex``
+    output_format : Optional[:class:`str`], optional
+        The output format resulting from compilation, e.g. ``.dvi`` or ``.pdf``
+    documentclass : Optional[:class:`str`], optional
+        The command defining the documentclass, e.g. ``\\documentclass[preview]{standalone}``
+    preamble : Optional[:class:`str`], optional
+        The document's preample, i.e. the part between ``\\documentclass`` and ``\\begin{document}``
+    placeholder_text : Optional[:class:`str`], optional
+        Text in the document that will be replaced by the expression to be rendered
+    post_doc_commands : Optional[:class:`str`], optional
+        Text (definitions, commands) to be inserted at right after ``\\begin{document}``, e.g. ``\\boldmath``
+    
+    Attributes
+    ----------
+    tex_compiler : :class:`str`
+        The TeX compiler to be used, e.g. ``latex``, ``pdflatex`` or ``lualatex``
+    output_format : :class:`str`
+        The output format resulting from compilation, e.g. ``.dvi`` or ``.pdf``
+    documentclass : :class:`str`
+        The command defining the documentclass, e.g. ``\\documentclass[preview]{standalone}``
+    preamble : :class:`str`
+        The document's preample, i.e. the part between ``\\documentclass`` and ``\\begin{document}``
+    placeholder_text : :class:`str`
+        Text in the document that will be replaced by the expression to be rendered
+    post_doc_commands : :class:`str`
+        Text (definitions, commands) to be inserted at right after ``\\begin{document}``, e.g. ``\\boldmath``
+    """
 
     default_documentclass = r"\documentclass[preview]{standalone}"
     default_preamble = r"""
@@ -160,7 +191,41 @@ class TexTemplate:
 
 
 class TexTemplateFromFile(TexTemplate):
-    """A TexTemplate object created from a template file (default: tex_template.tex)"""
+    """A TexTemplate object created from a template file (default: tex_template.tex)
+
+    Parameters
+    ----------
+    tex_compiler : Optional[:class:`str`], optional
+        The TeX compiler to be used, e.g. ``latex``, ``pdflatex`` or ``lualatex``
+    output_format : Optional[:class:`str`], optional
+        The output format resulting from compilation, e.g. ``.dvi`` or ``.pdf``
+    documentclass : Optional[:class:`str`], optional
+        The command defining the documentclass, e.g. ``\\documentclass[preview]{standalone}``
+    preamble : Optional[:class:`str`], optional
+        The document's preample, i.e. the part between ``\\documentclass`` and ``\\begin{document}``
+    placeholder_text : Optional[:class:`str`], optional
+        Text in the document that will be replaced by the expression to be rendered
+    post_doc_commands : Optional[:class:`str`], optional
+        Text (definitions, commands) to be inserted at right after ``\\begin{document}``, e.g. ``\\boldmath``
+    kwargs : :class:`str`
+        The kwargs specified can only be strings.
+
+    Other Parameters
+    ----------------
+    tex_filename : Optional[:class:`str`], optional
+        Path to a valid TeX template file
+
+    Attributes
+    ----------
+    template_file : :class:`str`
+        Path to a valid TeX template file
+    body : :class:`str`
+        Content of the TeX template file
+    tex_compiler : :class:`str`
+        The TeX compiler to be used, e.g. ``latex``, ``pdflatex`` or ``lualatex``
+    output_format : :class:`str`
+        The output format resulting from compilation, e.g. ``.dvi`` or ``.pdf``
+    """
 
     def __init__(self, **kwargs):
         self.template_file = kwargs.pop("filename", "tex_template.tex")
