@@ -11,6 +11,10 @@ There are primarily 3 kinds of standard easing functions:
 #. Ease Out - The animation has a smooth end.
 #. Ease In Out - The animation has a smooth start as well as smooth end.
 
+.. note:: The standard functions are not exported, so to use them you do something like this:
+    rate_func=rate_functions.ease_in_sine
+    On the other hand, the non-standard functions, which are used more commonly, are exported and can be used directly.
+
 .. manim:: RateFunctions1Example
 
     class RateFunctions1Example(Scene):
@@ -33,9 +37,9 @@ There are primarily 3 kinds of standard easing functions:
                 Write(VGroup(label1, label2, label3)),
             )
             self.play(
-                MoveAlongPath(dot1, line1, rate_func=ease_in_sine),
-                MoveAlongPath(dot2, line2, rate_func=ease_out_sine),
-                MoveAlongPath(dot3, line3, rate_func=ease_in_out_sine),
+                MoveAlongPath(dot1, line1, rate_func=rate_functions.ease_in_sine),
+                MoveAlongPath(dot2, line2, rate_func=rate_functions.ease_out_sine),
+                MoveAlongPath(dot3, line3, rate_func=rate_functions.ease_in_out_sine),
                 run_time=7
             )
             self.wait()

@@ -74,6 +74,7 @@ from .utils.iterables import *
 from .utils.file_ops import *
 from .utils.paths import *
 from .utils.rate_functions import *
+from .utils import rate_functions
 from .utils.simple_functions import *
 from .utils.sounds import *
 from .utils.space_ops import *
