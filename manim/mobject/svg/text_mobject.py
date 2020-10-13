@@ -75,11 +75,16 @@ class CairoText(SVGMobject):
     Text objects behave like a :class:`.VGroup`-like iterable of all characters
     in the given text. In particular, slicing is possible.
 
+
+
     .. WARNING::
 
         Using a :class:`.Transform` on text with leading whitespace can look
         `weird <https://github.com/3b1b/manim/issues/1067>`_. Consider using
         :meth:`remove_invisible_chars` to resolve this issue.
+
+
+
 
     """
 
@@ -582,7 +587,7 @@ class Paragraph(VGroup):
 
 
 class PangoText(SVGMobject):
-    """Display (non-LaTeX) text rendered using `Pango <https://pango.gnome.org/>`_.
+    r"""Display (non-LaTeX) text rendered using `Pango <https://pango.gnome.org/>`_.
 
     PangoText objects behave like a :class:`.VGroup`-like iterable of all characters
     in the given text. In particular, slicing is possible.
@@ -598,7 +603,28 @@ class PangoText(SVGMobject):
         The mobject like :class:`.VGroup`.
 
     Examples
-    --------
+    ---------
+    .. manim:: MultipleFonts
+        :save_last_frame:
+
+        class MultipleFonts(Scene):
+            def construct(self):
+                morning = PangoText("வணக்கம்", font="sans-serif")
+                chin = PangoText(
+                    "見 角 言 谷  辛 辰 辵 邑 酉 釆 里!", t2c={"見 角 言": BLUE}
+                )  # works same as ``Text``.
+                mess = PangoText("Multi-Language", style=BOLD)
+                russ = PangoText("Здравствуйте मस नम म ", font="sans-serif")
+                hin = PangoText("नमस्ते", font="sans-serif")
+                arb = PangoText(
+                    "صباح الخير \n تشرفت بمقابلتك", font="sans-serif"
+                )  # don't mix RTL and LTR languages nothing shows up then ;-)
+                japanese = PangoText("臂猿「黛比」帶著孩子", font="sans-serif")
+                self.add(morning,chin,mess,russ,hin,arb,japanese)
+                for i,mobj in enumerate(self.mobjects):
+                    mobj.shift(DOWN*(i-3))
+
+
     .. manim:: PangoRender
         :quality: low
 
@@ -895,6 +921,51 @@ class Text(CairoText):
 
     Text objects behave like a :class:`.VGroup`-like iterable of all characters
     in the given text. In particular, slicing is possible.
+
+        Examples
+    --------
+    .. manim:: Example1Text
+        :save_last_frame:
+
+        class Example1Text(Scene):
+            def construct(self):
+                text = Text('Hello world').scale(3)
+                self.add(text)
+
+    .. manim:: TextColorExample
+        :save_last_frame:
+
+        class TextColorExample(Scene):
+            def construct(self):
+                text1 = Text('Hello world', color=BLUE).scale(3)
+                text2 = Text('Hello world', gradient=(BLUE, GREEN)).scale(3).next_to(text1, DOWN)
+                self.add(text1, text2)
+
+    .. manim:: TextItalicAndBoldExample
+        :save_last_frame:
+
+        class TextItalicAndBoldExample(Scene):
+            def construct(self):
+                text0 = Text('Hello world', slant=ITALIC)
+                text1 = Text('Hello world', t2s={'world':ITALIC})
+                text2 = Text('Hello world', weight=BOLD)
+                text3 = Text('Hello world', t2w={'world':BOLD})
+                self.add(text0,text1, text2,text3)
+                for i,mobj in enumerate(self.mobjects):
+                    mobj.shift(DOWN*(i-1))
+
+
+    .. manim:: TextMoreCustomization
+            :save_last_frame:
+
+            class TextMoreCustomization(Scene):
+                def construct(self):
+                    text1 = Text(
+                        'Google',
+                        t2c={'[:1]': '#3174f0', '[1:2]': '#e53125',
+                             '[2:3]': '#fbb003', '[3:4]': '#3174f0',
+                             '[4:5]': '#269a43', '[5:]': '#e53125'}, size=1.2).scale(3)
+                    self.add(text1)
 
     .. WARNING::
 

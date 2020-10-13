@@ -1,21 +1,14 @@
 Formulas
 =================================
 
-.. manim:: Formula1
-    :save_last_frame:
 
-    class Formula1(Scene):
-        def construct(self):
-            t = MathTex(r"\int_a^b f'(x) dx = f(b)- f(a)")
-            self.add(t)
-            self.wait(1)
 
 
 .. manim:: MoveFrameBox
 
     class MoveFrameBox(Scene):
         def construct(self):
-            text=TexMobject(
+            text=MathTex(
                 "\\frac{d}{dx}f(x)g(x)=","f(x)\\frac{d}{dx}g(x)","+",
                 "g(x)\\frac{d}{dx}f(x)"
             )
@@ -35,7 +28,7 @@ Formulas
 
     class MoveBraces(Scene):
         def construct(self):
-            text=TexMobject(
+            text=MathTex(
                 "\\frac{d}{dx}f(x)g(x)=",       #0
                 "f(x)\\frac{d}{dx}g(x)",        #1
                 "+",                            #2
