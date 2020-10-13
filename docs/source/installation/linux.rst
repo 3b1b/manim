@@ -10,7 +10,7 @@ instructions in `Certifying a clean install`_.
 The two necessary dependencies are cairo and ffmpeg.  LaTeX is strongly
 recommended, as it is necessary to have access to the ``Tex`` and ``MathTex`` classes.
 
-Ubuntu/Debian
+Ubuntu/Mint/Debian
 *************
 
 Before installing anything, make sure that your system is up to date.
@@ -45,6 +45,12 @@ To install LaTeX:
 
 Arch/Manjaro
 ************
+
+Before installing anything, make sure that your system is up to date.
+
+.. code-block:: bash
+
+   sudo pacman -Syu
 
 To install cairo:
 
