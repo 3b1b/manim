@@ -1,7 +1,4 @@
-import subprocess
 import os
-import sys
-import pytest
 import re
 
 from ..utils.commands import capture
