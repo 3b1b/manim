@@ -1,7 +1,8 @@
 import logging
 from contextlib import contextmanager
 
-from .utils import make_config_parser, make_logger, make_config, make_file_writer_config
+from .logger import make_logger
+from .utils import make_config_parser, make_config, make_file_writer_config
 
 __all__ = [
     "logger",

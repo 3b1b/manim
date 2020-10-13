@@ -14,7 +14,8 @@ import logging
 import colour
 
 from manim import constants, logger, config, file_writer_config
-from .utils import make_config_parser, JSONFormatter
+from .utils import make_config_parser
+from .logger import JSONFormatter
 from ..utils.tex import TexTemplate, TexTemplateFromFile
 
 
