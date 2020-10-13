@@ -103,7 +103,7 @@ class Scene(Container):
                 self,
                 **file_writer_config,
             )
-        self.play_hashes_list = []
+        self.animations_hashes = []
 
         self.mobjects = []
         self.original_skipping_status = file_writer_config["skip_animations"]
@@ -852,13 +852,16 @@ class Scene(Container):
             if file_writer_config["skip_animations"]:
                 logger.debug(f"Skipping animation {self.num_plays}")
                 func(self, *args, **kwargs)
+                # If the animation is skipped, we mark its hash as None.
+                # When sceneFileWriter will start combining partial movie files, it won't take into account None hashes.
+                self.animations_hashes.append(None)
+                self.file_writer.add_partial_movie_file(None)
                 return
             if not file_writer_config["disable_caching"]:
                 mobjects_on_scene = self.get_mobjects()
                 hash_play = get_hash_from_play_call(
                     self, self.camera, animations, mobjects_on_scene
                 )
-                self.play_hashes_list.append(hash_play)
                 if self.file_writer.is_already_cached(hash_play):
                     logger.info(
                         f"Animation {self.num_plays} : Using cached data (hash : %(hash_play)s)",
@@ -867,7 +870,12 @@ class Scene(Container):
                     file_writer_config["skip_animations"] = True
             else:
                 hash_play = "uncached_{:05}".format(self.num_plays)
-                self.play_hashes_list.append(hash_play)
+            self.animations_hashes.append(hash_play)
+            self.file_writer.add_partial_movie_file(hash_play)
+            logger.debug(
+                "List of the first few animation hashes of the scene: %(h)s",
+                {"h": str(self.animations_hashes[:5])},
+            )
             func(self, *args, **kwargs)
 
         return wrapper
@@ -890,12 +898,15 @@ class Scene(Container):
             if file_writer_config["skip_animations"]:
                 logger.debug(f"Skipping wait {self.num_plays}")
                 func(self, duration, stop_condition)
+                # If the animation is skipped, we mark its hash as None.
+                # When sceneFileWriter will start combining partial movie files, it won't take into account None hashes.
+                self.animations_hashes.append(None)
+                self.file_writer.add_partial_movie_file(None)
                 return
             if not file_writer_config["disable_caching"]:
                 hash_wait = get_hash_from_wait_call(
                     self, self.camera, duration, stop_condition, self.get_mobjects()
                 )
-                self.play_hashes_list.append(hash_wait)
                 if self.file_writer.is_already_cached(hash_wait):
                     logger.info(
                         f"Wait {self.num_plays} : Using cached data (hash : {hash_wait})"
@@ -903,7 +914,12 @@ class Scene(Container):
                     file_writer_config["skip_animations"] = True
             else:
                 hash_wait = "uncached_{:05}".format(self.num_plays)
-                self.play_hashes_list.append(hash_wait)
+            self.animations_hashes.append(hash_wait)
+            self.file_writer.add_partial_movie_file(hash_wait)
+            logger.debug(
+                "Animations hashes list of the scene : (concatened to 5) %(h)s",
+                {"h": str(self.animations_hashes[:5])},
+            )
             func(self, duration, stop_condition)
 
         return wrapper

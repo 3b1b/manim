@@ -29,8 +29,8 @@ Advanced Projects
 
         def add_x_labels(self):
             x_labels = [
-                TexMobject("\pi"), TexMobject("2 \pi"),
-                TexMobject("3 \pi"), TexMobject("4 \pi"),
+                MathTex("\pi"), MathTex("2 \pi"),
+                MathTex("3 \pi"), MathTex("4 \pi"),
             ]
 
             for i in range(len(x_labels)):
