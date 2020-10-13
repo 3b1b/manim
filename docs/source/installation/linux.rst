@@ -43,6 +43,35 @@ To install LaTeX:
           distributions or distributions that use the ``apt`` package manager.
 
 
+Fedora/CentOS/RHEL
+*************
+
+Before installing anything, make sure that your system is up to date.
+
+.. code-block:: bash
+
+   sudo apt update
+   sudo apt upgrade
+
+To install cairo:
+
+.. code-block:: bash
+
+  sudo yum install cairo-devel
+
+To install ffmpeg:
+
+.. code-block:: bash
+
+   sudo dnf install ffmpeg
+
+To install LaTeX:
+
+.. code-block:: bash
+
+   sudo dnf install texlive-scheme-medium
+
+
 Arch/Manjaro
 ************
 
