@@ -184,7 +184,7 @@ def convert_to_svg(dvi_file, extension, page=1):
     -------
     :class:`str`
         Path to generated SVG file.
-        """
+    """
     result = dvi_file.replace(extension, ".svg")
     result = Path(result).as_posix()
     dvi_file = Path(dvi_file).as_posix()
