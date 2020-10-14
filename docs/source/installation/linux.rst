@@ -117,7 +117,7 @@ If you don't have python3-pip installed, install it:
 
 .. code-block:: bash
    
-   sudo apt install python-pip
+   sudo pacman -S python-pip
 
 
 .. note:: These instructions are also valid for other Arch-based
