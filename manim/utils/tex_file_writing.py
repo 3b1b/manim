@@ -37,7 +37,11 @@ def generate_tex_file(expression, tex_template, source_type):
     elif source_type == "tex":
         output = tex_template.get_text_for_tex_mode(expression)
 
-    result = os.path.join(file_writer_config["tex_dir"], tex_hash(output)) + ".tex"
+    tex_dir = file_writer_config["tex_dir"]
+    if not os.path.exists(tex_dir):
+        os.makedirs(tex_dir)
+
+    result = os.path.join(tex_dir, tex_hash(output)) + ".tex"
     if not os.path.exists(result):
         logger.info('Writing "%s" to %s' % ("".join(expression), result))
         with open(result, "w", encoding="utf-8") as outfile:
