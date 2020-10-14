@@ -30,7 +30,7 @@ def tex_to_svg_file(expression, environment=None, tex_template=None):
         String containing the TeX expression to be rendered, e.g. ``\\sqrt{2}`` or ``foo``
     environment : Optional[:class:`str`], optional
         The string containing the environment in which the expression should be typeset, e.g. ``align*``
-    tex_template : Optional[:class:`TexTemplate`], optional
+    tex_template : Optional[:class:`~.TexTemplate`], optional
         Template class used to typesetting. If not set, use default template set via `config["tex_template"]`
 
     Returns
