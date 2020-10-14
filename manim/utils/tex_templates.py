@@ -36,7 +36,7 @@ class TexTemplateLibrary(object):
     """
 
     default = TexTemplate()
-    """ An instance of the default TeX template in manim """
+    """An instance of the default TeX template in manim"""
 
     threeb1b = TexTemplate()
     """ An instance of the default TeX template used by 3b1b """
