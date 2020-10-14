@@ -39,6 +39,11 @@ To install LaTeX:
    sudo apt install texlive texlive-latex-extra texlive-fonts-extra \
    texlive-latex-recommended texlive-science texlive-fonts-extra tipa
 
+If you don't have python3-pip installed, install it:
+
+.. code-block:: bash
+   sudo apt install python3-pip
+  
 .. note:: These instructions are also valid for other Debian-based
           distributions or distributions that use the ``apt`` package manager.
 
