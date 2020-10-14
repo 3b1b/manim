@@ -6,6 +6,7 @@ import inspect
 import os
 import sys
 import types
+import re
 
 
 def get_module(file_name):

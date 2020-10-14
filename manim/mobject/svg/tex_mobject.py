@@ -27,6 +27,7 @@ from ...utils.config_ops import digest_config
 from ...utils.strings import split_string_list_to_isolate_substrings
 from ...utils.tex_file_writing import tex_to_svg_file
 from ...utils.color import BLACK
+from ...utils.tex import TexTemplate
 
 TEX_MOB_SCALE_FACTOR = 0.05
 
@@ -57,20 +58,21 @@ class SingleStringMathTex(SVGMobject):
         "height": None,
         "organize_left_to_right": False,
         "alignment": "",
-        "type": "tex",
-        "template": None,
+        "tex_environment": "align*",
+        "tex_template": None,
     }
 
     def __init__(self, tex_string, **kwargs):
         digest_config(self, kwargs)
-        if self.template is None:
-            self.template = kwargs.get("tex_template", config["tex_template"])
+        if self.tex_template is None:
+            self.tex_template = kwargs.get("tex_template", config["tex_template"])
+
         assert isinstance(tex_string, str)
         self.tex_string = tex_string
         file_name = tex_to_svg_file(
             self.get_modified_expression(tex_string),
-            self.type,
-            tex_template=self.template,
+            environment=self.tex_environment,
+            tex_template=self.tex_template,
         )
         SVGMobject.__init__(self, file_name=file_name, **kwargs)
         if self.height is None:
@@ -190,6 +192,7 @@ class MathTex(SingleStringMathTex):
         "arg_separator": " ",
         "substrings_to_isolate": [],
         "tex_to_color_map": {},
+        "tex_environment": "align*",
     }
 
     def __init__(self, *tex_strings, **kwargs):
@@ -310,7 +313,7 @@ class Tex(MathTex):
     CONFIG = {
         "alignment": "\\centering",
         "arg_separator": "",
-        "type": "text",
+        "tex_environment": None,
     }
 
 
