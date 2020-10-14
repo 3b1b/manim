@@ -54,9 +54,23 @@ To install cairo:
 
 To install ffmpeg:
 
+Add RPMfusion repository if it's not already added:
+
+.. code-block:: bash
+
+   sudo dnf -y install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+
+Install ffmpeg from RPMfusion repository:
+
 .. code-block:: bash
 
    sudo dnf install ffmpeg
+
+Install python development headers in order to successfully build pycairo wheel:
+
+.. code-block:: bash
+
+   sudo dnf install python3-devel
 
 To install LaTeX:
 
