@@ -48,7 +48,7 @@ class TexTemplateLibrary(object):
             r"\DisableLigatures{encoding = *, family = * }", r"\usepackage[UTF8]{ctex}"
         ),
     )
-    """ An instance of the TeX template used by 3b1b when using the use_ctex flag """
+    """An instance of the TeX template used by 3b1b when using the use_ctex flag"""
 
     simple = _new_ams_template()
     """ An instance of a simple TeX template with only basic AMS packages loaded """
