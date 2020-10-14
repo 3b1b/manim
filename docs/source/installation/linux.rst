@@ -113,6 +113,12 @@ To install LaTeX:
 
    sudo pacman -S texlive-most
 
+If you don't have python3-pip installed, install it:
+
+.. code-block:: bash
+   
+   sudo apt install python-pip
+
 
 .. note:: These instructions are also valid for other Arch-based
           distributions or distributions that use the ``pacman`` package
