@@ -8,10 +8,10 @@ from functools import reduce
 import copy
 import itertools as it
 import operator as op
-import os
 import random
 import sys
 
+from pathlib import Path
 from colour import Color
 import numpy as np
 
@@ -199,7 +199,7 @@ class Mobject(Container):
 
     def save_image(self, name=None):
         self.get_image().save(
-            os.path.join(file_writer_config["video_dir"], (name or str(self)) + ".png")
+            Path(file_writer_config["video_dir"]).joinpath((name or str(self)) + ".png")
         )
 
     def copy(self):
