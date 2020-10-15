@@ -1,4 +1,4 @@
-Shapes & Images
+Shapes, Images and Positions
 =================================
 
 .. manim:: Example1Shape
@@ -41,3 +41,6 @@ Shapes & Images
             # img_mobject = ImageMobject("<your image address>")
             img_mobject.scale(3)
             self.add(img_mobject)
+
+
+Note: Here can come the UnitDot Example.
