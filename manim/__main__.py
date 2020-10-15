@@ -74,9 +74,6 @@ def main():
         config.digest_args(args)
         init_dirs(config)
 
-        if file_writer_config["log_to_file"]:
-            set_file_logger()
-
         module = get_module(config["input_file"])
         all_scene_classes = get_scene_classes_from_module(module)
         scene_classes_to_render = get_scenes_to_render(all_scene_classes)

@@ -110,7 +110,7 @@ class SceneFileWriter(object):
             else:
                 self.partial_movie_directory = guarantee_existence(
                     os.path.join(
-                        file_writer_config["media_dir"],
+                        config["media_dir"],
                         "temp_files",
                         "partial_movie_files",
                         scene_name,

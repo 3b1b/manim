@@ -50,11 +50,11 @@ def make_logger(parser, verbosity):
     rich_handler = RichHandler(
         console=console, show_time=parser.getboolean("log_timestamps")
     )
-    rich_handler.setLevel(verbosity)
 
     # finally, the logger
     logger = logging.getLogger("manim")
     logger.addHandler(rich_handler)
+    logger.setLevel(verbosity)
 
     return logger, console
 
@@ -86,6 +86,29 @@ def parse_theme(config_logger):
         customTheme = None
 
     return customTheme
+
+
+def set_file_logger(config, verbosity):
+    # Note: The log file name will be
+    # <name_of_animation_file>_<name_of_scene>.log, gotten from
+    # file_writer_config.  So it can differ from the real name of the scene.
+    # <name_of_scene> would only appear if scene name was provided when manim
+    # was called.
+    scene_name_suffix = "".join(config["scene_names"])
+    scene_file_name = os.path.basename(config["input_file"]).split(".")[0]
+    log_file_name = (
+        f"{scene_file_name}_{scene_name_suffix}.log"
+        if scene_name_suffix
+        else f"{scene_file_name}.log"
+    )
+    log_file_path = os.path.join(config["log_dir"], log_file_name)
+    file_handler = logging.FileHandler(log_file_path, mode="w")
+    file_handler.setFormatter(JSONFormatter())
+
+    logger = logging.getLogger('manim')
+    logger.addHandler(file_handler)
+    logger.info("Log file will be saved in %(logpath)s", {"logpath": log_file_path})
+    logger.setLevel(verbosity)
 
 
 class JSONFormatter(logging.Formatter):
