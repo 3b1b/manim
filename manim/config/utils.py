@@ -571,7 +571,7 @@ class ManimConfig(MutableMapping):
     )
 
     skip_animations = property(
-        lambda self: any([self.save_last_frame, self.from_animation_number]),
+        lambda self: self._d['skip_animations'],
         lambda self, val: self._set_boolean('skip_animations', val),
         doc=('Set to less than the number of animations to skip '
              'animations. Use -1 to avoid skipping.')
