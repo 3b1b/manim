@@ -1,8 +1,7 @@
 import numpy as np
-from .. import config, camera_config, file_writer_config, logger
+from .. import config, camera_config, file_writer_config
 from ..utils.iterables import list_update
 from ..utils.exceptions import EndSceneEarlyException
-from ..utils.hashing import get_hash_from_play_call, get_hash_from_wait_call
 from ..constants import DEFAULT_WAIT_TIME
 from ..scene.scene_file_writer import SceneFileWriter
 from ..utils.caching import handle_caching_play, handle_caching_wait

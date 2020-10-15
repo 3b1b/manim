@@ -1,5 +1,5 @@
 import pytest
-from manim import Container, Mobject, Scene, CairoRenderer
+from manim import Container, Mobject, Scene
 
 
 def test_ABC():

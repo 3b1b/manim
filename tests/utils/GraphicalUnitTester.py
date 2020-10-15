@@ -1,13 +1,8 @@
-import numpy as np
 import os
-import sys
-import inspect
 import logging
-import pytest
-import warnings
-from platform import system
+import numpy as np
 
-from manim import config, file_writer_config, CairoRenderer
+from manim import config, file_writer_config
 
 
 class GraphicalUnitTester:

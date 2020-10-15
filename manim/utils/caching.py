@@ -4,15 +4,18 @@ from ..constants import DEFAULT_WAIT_TIME
 
 
 def handle_caching_play(func):
-    """
-    Decorator that returns a wrapped version of func that will compute the hash of the play invocation.
+    """Decorator that returns a wrapped version of func that will compute
+    the hash of the play invocation.
 
-    The returned function will act according to the computed hash: either skip the animation because it's already cached, or let the invoked function play normally.
+    The returned function will act according to the computed hash: either skip
+    the animation because it's already cached, or let the invoked function
+    play normally.
 
     Parameters
     ----------
     func : Callable[[...], None]
-        The play like function that has to be written to the video file stream. Take the same parameters as `scene.play`.
+        The play like function that has to be written to the video file stream.
+        Take the same parameters as `scene.play`.
     """
 
     def wrapper(self, scene, *args, **kwargs):
@@ -53,15 +56,17 @@ def handle_caching_play(func):
 
 
 def handle_caching_wait(func):
-    """
-    Decorator that returns a wrapped version of func that will compute the hash of the wait invocation.
+    """Decorator that returns a wrapped version of func that will compute the hash of
+    the wait invocation.
 
-    The returned function will act according to the computed hash: either skip the animation because it's already cached, or let the invoked function play normally.
+    The returned function will act according to the computed hash: either skip the
+    animation because it's already cached, or let the invoked function play normally.
 
     Parameters
     ----------
     func : Callable[[...], None]
-        The wait like function that has to be written to the video file stream. Take the same parameters as `scene.wait`.
+        The wait like function that has to be written to the video file stream.
+        Take the same parameters as `scene.wait`.
     """
 
     def wrapper(self, scene, duration=DEFAULT_WAIT_TIME, stop_condition=None):
@@ -89,7 +94,7 @@ def handle_caching_wait(func):
         self.animations_hashes.append(hash_wait)
         self.file_writer.add_partial_movie_file(hash_wait)
         logger.debug(
-            "Animations hashes list of the scene : (concatened to 5) %(h)s",
+            "List of the first few animation hashes of the scene: %(h)s",
             {"h": str(self.animations_hashes[:5])},
         )
         func(self, scene, duration, stop_condition)

@@ -1,14 +1,9 @@
-import inspect
 import os
 import platform
-import subprocess as sp
 import sys
-import re
 import traceback
-import importlib.util
-import types
 
-from . import constants, logger, console, file_writer_config
+from . import logger, file_writer_config
 from .config.config import camera_config, args
 from .config import cfg_subcmds
 from .utils.module_ops import (
@@ -16,10 +11,8 @@ from .utils.module_ops import (
     get_scene_classes_from_module,
     get_scenes_to_render,
 )
-from .scene.scene import Scene
 from .utils.file_ops import open_file as open_media_file
 from .grpc.impl import frame_server_impl
-from .renderer.cairo_renderer import CairoRenderer
 
 
 def open_file_if_needed(file_writer):
