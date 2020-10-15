@@ -1,7 +1,7 @@
 """Basic canvas for animations."""
 
 
-__all__ = ["Scene", "EndSceneEarlyException"]
+__all__ = ["Scene"]
 
 
 import inspect
@@ -23,39 +23,9 @@ from ..mobject.mobject import Mobject
 from ..scene.scene_file_writer import SceneFileWriter
 from ..utils.iterables import list_update
 from ..utils.hashing import get_hash_from_play_call, get_hash_from_wait_call
-
-
-def handle_play_like_call(func):
-    """
-    This method is used internally to wrap the
-    passed function, into a function that
-    actually writes to the video stream.
-    Simultaneously, it also adds to the number
-    of animations played.
-
-    Parameters
-    ----------
-    func : function
-        The play() like function that has to be
-        written to the video file stream.
-
-    Returns
-    -------
-    function
-        The play() like function that can now write
-        to the video file stream.
-    """
-
-    def wrapper(self, *args, **kwargs):
-        allow_write = not file_writer_config["skip_animations"]
-        if not self.camera.use_js_renderer:
-            self.file_writer.begin_animation(allow_write)
-        func(self, *args, **kwargs)
-        if not self.camera.use_js_renderer:
-            self.file_writer.end_animation(allow_write)
-        self.num_plays += 1
-
-    return wrapper
+from ..utils.family import extract_mobject_family_members
+from ..renderer.cairo_renderer import CairoRenderer
+from ..utils.exceptions import EndSceneEarlyException
 
 
 class Scene(Container):
@@ -82,8 +52,6 @@ class Scene(Container):
         file_writer : The object that writes the animations in the scene to a video file.
         mobjects : The list of mobjects present in the scene.
         foreground_mobjects : List of mobjects explicitly in the foreground.
-        num_plays : Number of play() functions in the scene.
-        time: time elapsed since initialisation of scene.
         random_seed: The seed with which all random operations are done.
 
     """
@@ -95,23 +63,17 @@ class Scene(Container):
         "random_seed": 0,
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, renderer=None, **kwargs):
         Container.__init__(self, **kwargs)
-        self.camera = self.camera_class(**camera_config)
-        if not self.camera.use_js_renderer:
-            self.file_writer = SceneFileWriter(
-                self,
-                **file_writer_config,
-            )
-        self.animations_hashes = []
+        if renderer is None:
+            self.renderer = CairoRenderer(camera_class=self.camera_class)
+        else:
+            self.renderer = renderer
+        self.renderer.init(self)
 
         self.mobjects = []
-        self.original_skipping_status = file_writer_config["skip_animations"]
         # TODO, remove need for foreground mobjects
         self.foreground_mobjects = []
-        self.num_plays = 0
-        self.time = 0
-        self.original_skipping_status = file_writer_config["skip_animations"]
         if self.random_seed is not None:
             random.seed(self.random_seed)
             np.random.seed(self.random_seed)
@@ -126,13 +88,11 @@ class Scene(Container):
             self.construct()
         except EndSceneEarlyException:
             pass
-
         self.tear_down()
-        # We have to reset these settings in case of multiple renders.
-        file_writer_config["skip_animations"] = False
-
-        self.file_writer.finish()
-        self.print_end_message()
+        self.renderer.finish(self)
+        logger.info(
+            f"Rendered {str(self)}\nPlayed {self.renderer.num_plays} animations"
+        )
 
     def setup(self):
         """
@@ -159,15 +119,6 @@ class Scene(Container):
 
     def __str__(self):
         return self.__class__.__name__
-
-    def print_end_message(self):
-        """
-        Used internally to print the number of
-        animations played after the scene ends,
-        as well as the name of the scene rendered
-        (useful when using the `-a` option).
-        """
-        logger.info(f"Rendered {str(self)}\nPlayed {self.num_plays} animations")
 
     def set_variables_as_attrs(self, *objects, **newly_named_objects):
         """
@@ -200,63 +151,6 @@ class Scene(Container):
         """
         return [getattr(self, key) for key in keys]
 
-    def get_frame(self):
-        """
-        Gets the current frame as NumPy array.
-
-        Returns
-        -------
-        np.array
-            NumPy array of pixel values of each pixel in screen.
-            The shape of the array is height x width x 3
-        """
-        return np.array(self.camera.pixel_array)
-
-    def update_frame(  # TODO Description in Docstring
-        self,
-        mobjects=None,
-        background=None,
-        include_submobjects=True,
-        ignore_skipping=True,
-        **kwargs,
-    ):
-        """Update the frame.
-
-        Parameters
-        ----------
-        mobjects: list, optional
-            list of mobjects
-
-        background: np.ndarray, optional
-            Pixel Array for Background.
-
-        include_submobjects: bool, optional
-
-        ignore_skipping : bool, optional
-
-        **kwargs
-
-        """
-        if file_writer_config["skip_animations"] and not ignore_skipping:
-            return
-        if mobjects is None:
-            mobjects = list_update(
-                self.mobjects,
-                self.foreground_mobjects,
-            )
-        if background is not None:
-            self.camera.set_frame_to_background(background)
-        else:
-            self.camera.reset()
-
-        kwargs["include_submobjects"] = include_submobjects
-        self.camera.capture_mobjects(mobjects, **kwargs)
-
-    def freeze_background(self):
-        self.update_frame()
-        self.camera = Camera(self.get_frame())
-        self.clear()
-
     ###
 
     def update_mobjects(self, dt):
@@ -285,18 +179,6 @@ class Scene(Container):
         )
 
     ###
-
-    def increment_time(self, d_time):
-        """
-        Increments the time elapsed after intialisation of scene by
-        passed "d_time".
-
-        Parameters
-        ----------
-        d_time : int or float
-            Time in seconds to increment by.
-        """
-        self.time += d_time
 
     ###
 
@@ -332,7 +214,9 @@ class Scene(Container):
         list
             List of mobject family members.
         """
-        return self.camera.extract_mobject_family_members(self.mobjects)
+        return extract_mobject_family_members(
+            self.mobjects, use_z_index=self.renderer.camera.use_z_index
+        )
 
     def add(self, *mobjects):
         """
@@ -421,7 +305,9 @@ class Scene(Container):
             The Scene mobject with restructured Mobjects.
         """
         if extract_families:
-            to_remove = self.camera.extract_mobject_family_members(to_remove)
+            to_remove = extract_mobject_family_members(
+                to_remove, use_z_index=self.renderer.camera.use_z_index
+            )
         _list = getattr(self, mobject_list_name)
         new_list = self.get_restructured_mobject_list(_list, to_remove)
         setattr(self, mobject_list_name, new_list)
@@ -676,7 +562,7 @@ class Scene(Container):
         if file_writer_config["skip_animations"] and not override_skip_animations:
             times = [run_time]
         else:
-            step = 1 / self.camera.frame_rate
+            step = 1 / self.renderer.camera.frame_rate
             times = np.arange(0, run_time, step)
         time_progression = ProgressDisplay(
             times,
@@ -729,7 +615,7 @@ class Scene(Container):
         time_progression.set_description(
             "".join(
                 [
-                    "Animation {}: ".format(self.num_plays),
+                    "Animation {}: ".format(self.renderer.num_plays),
                     str(animations[0]),
                     (", etc." if len(animations) > 1 else ""),
                 ]
@@ -816,114 +702,6 @@ class Scene(Container):
 
         return animations
 
-    def update_skipping_status(self):
-        """
-        This method is used internally to check if the current
-        animation needs to be skipped or not. It also checks if
-        the number of animations that were played correspond to
-        the number of animations that need to be played, and
-        raises an EndSceneEarlyException if they don't correspond.
-        """
-        if file_writer_config["from_animation_number"]:
-            if self.num_plays < file_writer_config["from_animation_number"]:
-                file_writer_config["skip_animations"] = True
-        if file_writer_config["upto_animation_number"]:
-            if self.num_plays > file_writer_config["upto_animation_number"]:
-                file_writer_config["skip_animations"] = True
-                raise EndSceneEarlyException()
-
-    def handle_caching_play(func):
-        """
-        Decorator that returns a wrapped version of func that will compute the hash of the play invocation.
-
-        The returned function will act according to the computed hash: either skip the animation because it's already cached, or let the invoked function play normally.
-
-        Parameters
-        ----------
-        func : Callable[[...], None]
-            The play like function that has to be written to the video file stream. Take the same parameters as `scene.play`.
-        """
-
-        def wrapper(self, *args, **kwargs):
-            self.revert_to_original_skipping_status()
-            self.update_skipping_status()
-            animations = self.compile_play_args_to_animation_list(*args, **kwargs)
-            self.add_mobjects_from_animations(animations)
-            if file_writer_config["skip_animations"]:
-                logger.debug(f"Skipping animation {self.num_plays}")
-                func(self, *args, **kwargs)
-                # If the animation is skipped, we mark its hash as None.
-                # When sceneFileWriter will start combining partial movie files, it won't take into account None hashes.
-                self.animations_hashes.append(None)
-                self.file_writer.add_partial_movie_file(None)
-                return
-            if not file_writer_config["disable_caching"]:
-                mobjects_on_scene = self.get_mobjects()
-                hash_play = get_hash_from_play_call(
-                    self, self.camera, animations, mobjects_on_scene
-                )
-                if self.file_writer.is_already_cached(hash_play):
-                    logger.info(
-                        f"Animation {self.num_plays} : Using cached data (hash : %(hash_play)s)",
-                        {"hash_play": hash_play},
-                    )
-                    file_writer_config["skip_animations"] = True
-            else:
-                hash_play = "uncached_{:05}".format(self.num_plays)
-            self.animations_hashes.append(hash_play)
-            self.file_writer.add_partial_movie_file(hash_play)
-            logger.debug(
-                "List of the first few animation hashes of the scene: %(h)s",
-                {"h": str(self.animations_hashes[:5])},
-            )
-            func(self, *args, **kwargs)
-
-        return wrapper
-
-    def handle_caching_wait(func):
-        """
-        Decorator that returns a wrapped version of func that will compute the hash of the wait invocation.
-
-        The returned function will act according to the computed hash: either skip the animation because it's already cached, or let the invoked function play normally.
-
-        Parameters
-        ----------
-        func : Callable[[...], None]
-            The wait like function that has to be written to the video file stream. Take the same parameters as `scene.wait`.
-        """
-
-        def wrapper(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
-            self.revert_to_original_skipping_status()
-            self.update_skipping_status()
-            if file_writer_config["skip_animations"]:
-                logger.debug(f"Skipping wait {self.num_plays}")
-                func(self, duration, stop_condition)
-                # If the animation is skipped, we mark its hash as None.
-                # When sceneFileWriter will start combining partial movie files, it won't take into account None hashes.
-                self.animations_hashes.append(None)
-                self.file_writer.add_partial_movie_file(None)
-                return
-            if not file_writer_config["disable_caching"]:
-                hash_wait = get_hash_from_wait_call(
-                    self, self.camera, duration, stop_condition, self.get_mobjects()
-                )
-                if self.file_writer.is_already_cached(hash_wait):
-                    logger.info(
-                        f"Wait {self.num_plays} : Using cached data (hash : {hash_wait})"
-                    )
-                    file_writer_config["skip_animations"] = True
-            else:
-                hash_wait = "uncached_{:05}".format(self.num_plays)
-            self.animations_hashes.append(hash_wait)
-            self.file_writer.add_partial_movie_file(hash_wait)
-            logger.debug(
-                "Animations hashes list of the scene : (concatened to 5) %(h)s",
-                {"h": str(self.animations_hashes[:5])},
-            )
-            func(self, duration, stop_condition)
-
-        return wrapper
-
     def begin_animations(self, animations):
         """
         This method begins the list of animations that is passed,
@@ -947,8 +725,8 @@ class Scene(Container):
         """
         for t in self.get_animation_time_progression(self.animations):
             self.update_animation_to_time(t)
-            self.update_frame(self.moving_mobjects, self.static_image)
-            self.add_frame(self.get_frame())
+            self.renderer.update_frame(self, self.moving_mobjects, self.static_image)
+            self.renderer.add_frame(self.renderer.get_frame())
 
     def update_animation_to_time(self, t):
         """
@@ -981,6 +759,7 @@ class Scene(Container):
         for animation in animations:
             animation.finish()
             animation.clean_up_from_scene(self)
+        # TODO: This is only used in one place and should probably be removed.
         self.mobjects_from_last_animation = [anim.mobject for anim in animations]
         if file_writer_config["skip_animations"]:
             # TODO, run this call in for each animation?
@@ -988,9 +767,13 @@ class Scene(Container):
         else:
             self.update_mobjects(0)
 
-    @handle_caching_play
-    @handle_play_like_call
+    def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
+        self.renderer.wait(self, duration=duration, stop_condition=stop_condition)
+
     def play(self, *args, **kwargs):
+        self.renderer.play(self, *args, **kwargs)
+
+    def play_internal(self, *args, **kwargs):
         """
         This method is used to prep the animations for rendering,
         apply the arguments and parameters required to them,
@@ -1010,14 +793,43 @@ class Scene(Container):
         # Paint all non-moving objects onto the screen, so they don't
         # have to be rendered every frame
         self.moving_mobjects = self.get_moving_mobjects(*self.animations)
-        self.update_frame(excluded_mobjects=self.moving_mobjects)
-        self.static_image = self.get_frame()
+        self.renderer.update_frame(self, excluded_mobjects=self.moving_mobjects)
+        self.static_image = self.renderer.get_frame()
         self.last_t = 0
         self.run_time = self.get_run_time(self.animations)
 
         self.progress_through_animations()
 
         self.finish_animations(self.animations)
+
+    def wait_internal(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
+        self.update_mobjects(dt=0)  # Any problems with this?
+        self.animations = []
+        self.duration = duration
+        self.stop_condition = stop_condition
+        self.last_t = 0
+
+        if self.should_update_mobjects():
+            time_progression = self.get_wait_time_progression(duration, stop_condition)
+            # TODO, be smart about setting a static image
+            # the same way Scene.play does
+            for t in time_progression:
+                self.update_animation_to_time(t)
+                self.renderer.update_frame(self)
+                self.renderer.add_frame(self.renderer.get_frame())
+                if stop_condition is not None and stop_condition():
+                    time_progression.close()
+                    break
+        elif self.skip_animations:
+            # Do nothing
+            return self
+        else:
+            self.renderer.update_frame(self)
+            dt = 1 / self.renderer.camera.frame_rate
+            self.renderer.add_frame(
+                self.renderer.get_frame(), num_frames=int(duration / dt)
+            )
+        return self
 
     def clean_up_animations(self, *animations):
         """
@@ -1039,22 +851,6 @@ class Scene(Container):
         for animation in animations:
             animation.clean_up_from_scene(self)
         return self
-
-    def get_mobjects_from_last_animation(self):
-        """
-        This method returns the mobjects from the previous
-        played animation, if any exist, and returns an empty
-        list if not.
-
-        Returns
-        --------
-        list
-            The list of mobjects from the previous animation.
-
-        """
-        if hasattr(self, "mobjects_from_last_animation"):
-            return self.mobjects_from_last_animation
-        return []
 
     def get_wait_time_progression(self, duration, stop_condition):
         """
@@ -1086,54 +882,10 @@ class Scene(Container):
             )
         else:
             time_progression = self.get_time_progression(duration)
-            time_progression.set_description("Waiting {}".format(self.num_plays))
+            time_progression.set_description(
+                "Waiting {}".format(self.renderer.num_plays)
+            )
         return time_progression
-
-    @handle_caching_wait
-    @handle_play_like_call
-    def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
-        """
-        This method is used to wait, and do nothing to the scene, for some
-        duration.
-        Updaters stop updating, nothing happens.
-
-        Parameters
-        ----------
-        duration : float or int, optional
-            The duration of wait time.
-        stop_condition :
-            A function that determines whether to stop waiting or not.
-
-        Returns
-        -------
-        Scene
-            The scene, after waiting.
-        """
-        self.update_mobjects(dt=0)  # Any problems with this?
-        self.animations = []
-        self.duration = duration
-        self.stop_condition = stop_condition
-        self.last_t = 0
-
-        if self.should_update_mobjects():
-            time_progression = self.get_wait_time_progression(duration, stop_condition)
-            # TODO, be smart about setting a static image
-            # the same way Scene.play does
-            for t in time_progression:
-                self.update_animation_to_time(t)
-                self.update_frame()
-                self.add_frame(self.get_frame())
-                if stop_condition is not None and stop_condition():
-                    time_progression.close()
-                    break
-        elif self.skip_animations:
-            # Do nothing
-            return self
-        else:
-            self.update_frame()
-            dt = 1 / self.camera.frame_rate
-            self.add_frame(self.get_frame(), num_frames=int(duration / dt))
-        return self
 
     def wait_until(self, stop_condition, max_time=60):
         """
@@ -1150,55 +902,6 @@ class Scene(Container):
             The maximum wait time in seconds, if the stop_condition is never fulfilled.
         """
         self.wait(max_time, stop_condition=stop_condition)
-
-    def force_skipping(self):
-        """
-        This forces the skipping of animations,
-        by setting original_skipping_status to
-        whatever skip_animations was, and setting
-        skip_animations to True.
-
-        Returns
-        -------
-        Scene
-            The Scene, with skipping turned on.
-        """
-        self.original_skipping_status = file_writer_config["skip_animations"]
-        file_writer_config["skip_animations"] = True
-        return self
-
-    def revert_to_original_skipping_status(self):
-        """
-        Forces the scene to go back to its original skipping status,
-        by setting skip_animations to whatever it reads
-        from original_skipping_status.
-
-        Returns
-        -------
-        Scene
-            The Scene, with the original skipping status.
-        """
-        if hasattr(self, "original_skipping_status"):
-            file_writer_config["skip_animations"] = self.original_skipping_status
-        return self
-
-    def add_frame(self, frame, num_frames=1):
-        """
-        Adds a frame to the video_file_stream
-
-        Parameters
-        ----------
-        frame : numpy.ndarray
-            The frame to add, as a pixel array.
-        num_frames: int
-            The number of times to add frame.
-        """
-        dt = 1 / self.camera.frame_rate
-        self.increment_time(num_frames * dt)
-        if file_writer_config["skip_animations"]:
-            return
-        for _ in range(num_frames):
-            self.file_writer.write_frame(frame)
 
     def add_sound(self, sound_file, time_offset=0, gain=None, **kwargs):
         """
@@ -1219,16 +922,4 @@ class Scene(Container):
         if file_writer_config["skip_animations"]:
             return
         time = self.time + time_offset
-        self.file_writer.add_sound(sound_file, time, gain, **kwargs)
-
-    def show_frame(self):
-        """
-        Opens the current frame in the Default Image Viewer
-        of your system.
-        """
-        self.update_frame(ignore_skipping=True)
-        self.camera.get_image().show()
-
-
-class EndSceneEarlyException(Exception):
-    pass
+        self.renderer.file_writer.add_sound(sound_file, time, gain, **kwargs)

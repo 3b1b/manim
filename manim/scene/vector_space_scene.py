@@ -109,7 +109,10 @@ class VectorScene(Scene):
         axes.set_color(WHITE)
         axes.fade(axes_dimness)
         self.add(axes)
-        self.freeze_background()
+
+        self.renderer.update_frame()
+        self.renderer.camera = Camera(self.renderer.get_frame())
+        self.clear()
 
     def get_vector(self, numerical_vector, **kwargs):
         """
@@ -404,7 +407,7 @@ class VectorScene(Scene):
             ),
             FadeOut(array.get_brackets()),
         )
-        y_coord, brackets = self.get_mobjects_from_last_animation()
+        y_coord, brackets = self.mobjects_from_last_animation
         self.play(ShowCreation(y_line))
         self.play(ShowCreation(arrow))
         self.wait()
