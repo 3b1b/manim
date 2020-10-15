@@ -10,7 +10,7 @@ import os
 import hashlib
 from pathlib import Path
 
-from .. import file_writer_config, config, logger
+from .. import config, logger
 
 
 def tex_hash(expression):
@@ -37,7 +37,7 @@ def generate_tex_file(expression, tex_template, source_type):
     elif source_type == "tex":
         output = tex_template.get_text_for_tex_mode(expression)
 
-    result = os.path.join(file_writer_config["tex_dir"], tex_hash(output)) + ".tex"
+    result = os.path.join(config["tex_dir"], tex_hash(output)) + ".tex"
     if not os.path.exists(result):
         logger.info('Writing "%s" to %s' % ("".join(expression), result))
         with open(result, "w", encoding="utf-8") as outfile:
@@ -89,7 +89,7 @@ def tex_to_dvi(tex_file, use_ctex=False, tex_compiler=None):
     result = tex_file.replace(".tex", tex_compiler["output_format"])
     result = Path(result).as_posix()
     tex_file = Path(tex_file).as_posix()
-    tex_dir = Path(file_writer_config["tex_dir"]).as_posix()
+    tex_dir = Path(config["tex_dir"]).as_posix()
     if not os.path.exists(result):
         command = tex_compilation_command(tex_compiler, tex_file, tex_dir)
         exit_code = os.system(command)

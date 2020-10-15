@@ -6,7 +6,10 @@ Functions to create and set the config.
 
 """
 
+import os
 import sys
+import copy
+import logging
 import configparser
 from pathlib import Path
 from collections.abc import Mapping, MutableMapping
@@ -42,138 +45,40 @@ def make_config_parser():
     return parser
 
 
-def make_config(parser):
-    """Parse config files into a single dictionary exposed to the user."""
-    # By default, use the CLI section of the digested .cfg files
-    default = parser["CLI"]
-
-    # Loop over [low_quality] for the keys, but get the values from [CLI]
-    config = {opt: default.getint(opt) for opt in parser["low_quality"]}
-
-    # Set the rest of the frame properties
-    config["default_pixel_height"] = default.getint("pixel_height")
-    config["default_pixel_width"] = default.getint("pixel_width")
-    config["background_color"] = colour.Color(default["background_color"])
-    config["frame_height"] = 8.0
-    config["frame_width"] = (
-        config["frame_height"] * config["pixel_width"] / config["pixel_height"]
-    )
-    config["frame_y_radius"] = config["frame_height"] / 2
-    config["frame_x_radius"] = config["frame_width"] / 2
-    config["top"] = config["frame_y_radius"] * constants.UP
-    config["bottom"] = config["frame_y_radius"] * constants.DOWN
-    config["left_side"] = config["frame_x_radius"] * constants.LEFT
-    config["right_side"] = config["frame_x_radius"] * constants.RIGHT
-
-    # Tex template
-    tex_fn = None if not default["tex_template"] else default["tex_template"]
-    if tex_fn is not None and not os.access(tex_fn, os.R_OK):
-        # custom template not available, fallback to default
-        logging.getLogger("manim").warning(
-            f"Custom TeX template {tex_fn} not found or not readable. "
-            "Falling back to the default template."
-        )
-        tex_fn = None
-    config["tex_template_file"] = tex_fn
-    config["tex_template"] = (
-        TexTemplate() if not tex_fn else TexTemplateFromFile(filename=tex_fn)
-    )
-
-    # Choose the renderer
-    config["use_js_renderer"] = default.getboolean("use_js_renderer")
-    config["js_renderer_path"] = default.get("js_renderer_path")
-
-    return config
-
-
-def make_file_writer_config(parser, config):
-    """Parse config files into a single dictionary used internally."""
-    # By default, use the CLI section of the digested .cfg files
-    default = parser["CLI"]
-
-    # This will be the final file_writer_config dict exposed to the user
-    fw_config = {}
-
-    # These may be overriden by CLI arguments
-    fw_config["input_file"] = ""
-    fw_config["scene_names"] = ""
-    fw_config["output_file"] = ""
-    fw_config["custom_folders"] = False
-
-    # Note ConfigParser options are all strings and each needs to be converted
-    # to the appropriate type.
-    for boolean_opt in [
-        "preview",
-        "show_in_file_browser",
-        "leave_progress_bars",
-        "write_to_movie",
-        "save_last_frame",
-        "save_pngs",
-        "save_as_gif",
-        "write_all",
-        "disable_caching",
-        "flush_cache",
-        "log_to_file",
-        "progress_bar",
-    ]:
-        fw_config[boolean_opt] = default.getboolean(boolean_opt)
-
-    for str_opt in [
-        "png_mode",
-        "movie_file_extension",
-        "background_opacity",
-    ]:
-        fw_config[str_opt] = default.get(str_opt)
-
-    for int_opt in [
-        "from_animation_number",
-        "upto_animation_number",
-    ]:
-        fw_config[int_opt] = default.getint(int_opt)
-    if fw_config["upto_animation_number"] == -1:
-        fw_config["upto_animation_number"] = float("inf")
-
-    # for str_opt in ['media_dir', 'video_dir', 'tex_dir', 'text_dir']:
-    for str_opt in ["media_dir", "log_dir"]:
-        fw_config[str_opt] = Path(default[str_opt]).relative_to(".")
-    dir_names = {
-        "video_dir": "videos",
-        "images_dir": "images",
-        "tex_dir": "Tex",
-        "text_dir": "texts",
-    }
-    for name in dir_names:
-        fw_config[name] = fw_config["media_dir"] / dir_names[name]
-
-    if not fw_config["write_to_movie"]:
-        fw_config["disable_caching"] = True
-
-    if config["use_js_renderer"]:
-        file_writer_config["disable_caching"] = True
-
-    # Read in the streaming section -- all values are strings
-    fw_config["streaming"] = {
-        opt: parser["streaming"].get(opt) for opt in parser["streaming"]
+def determine_quality(args):
+    old_qualities = {
+        "k": "fourk_quality",
+        "e": "high_quality",
+        "m": "medium_quality",
+        "l": "low_quality",
     }
 
-    # For internal use (no CLI flag)
-    fw_config["skip_animations"] = fw_config["save_last_frame"]
-    fw_config["max_files_cached"] = default.getint("max_files_cached")
-    if fw_config["max_files_cached"] == -1:
-        fw_config["max_files_cached"] = float("inf")
+    for quality in constants.QUALITIES:
+        if quality == constants.DEFAULT_QUALITY:
+            # Skip so we prioritize anything that overwrites the default quality.
+            pass
+        elif getattr(args, quality, None) or (
+            hasattr(args, "quality") and args.quality == constants.QUALITIES[quality]
+        ):
+            return quality
 
-    # Parse the verbosity flag to read in the log level
-    fw_config["verbosity"] = default["verbosity"]
+    for quality in old_qualities:
+        if getattr(args, quality, None):
+            logging.getLogger('manim').warning(
+                f"Option -{quality} is deprecated please use the --quality/-q flag."
+            )
+            return old_qualities[quality]
 
-    # Parse the ffmpeg log level in the config
-    ffmpeg_loglevel = parser["ffmpeg"].get("loglevel", None)
-    fw_config["ffmpeg_loglevel"] = (
-        constants.FFMPEG_VERBOSITY_MAP[fw_config["verbosity"]]
-        if ffmpeg_loglevel is None
-        else ffmpeg_loglevel
-    )
+    return constants.DEFAULT_QUALITY
 
-    return fw_config
+
+_QUAL = {
+    'low_quality': {'pixel_height': 480, 'pixel_width': 854, 'frame_rate': 15},
+    'medium_quality': {'pixel_height': 720, 'pixel_width': 1280, 'frame_rate': 30},
+    'high_quality': {'pixel_height': 1080, 'pixel_width': 1920, 'frame_rate': 60},
+    'production_quality': {'pixel_height': 1440, 'pixel_width': 2560, 'frame_rate': 60},
+    '4k_quality': {'pixel_height': 2160, 'pixel_width': 3840, 'frame_rate': 60},
+}
 
 
 class ManimConfig(MutableMapping):
@@ -193,6 +98,7 @@ class ManimConfig(MutableMapping):
         'from_animation_number',
         'images_dir',
         'input_file',
+        'js_renderer_path',
         'leave_progress_bars',
         'log_dir',
         'log_to_file',
@@ -215,6 +121,7 @@ class ManimConfig(MutableMapping):
         'tex_template_file',
         'text_dir',
         'upto_animation_number',
+        'use_js_renderer',
         'verbosity',
         'video_dir',
         'write_all',
@@ -233,18 +140,25 @@ class ManimConfig(MutableMapping):
     def __len__(self):
         return len(self._d)
 
+    def __contains__(self, key):
+        try:
+            self.__getitem__(key)
+            return True
+        except AttributeError:
+            return False
+
     def __getitem__(self, key):
         return getattr(self, key)
 
     def __setitem__(self, key, val):
-        getattr(ManimConfigDict, key).fset(self, val)   # fset is the property's setter
+        getattr(ManimConfig, key).fset(self, val)   # fset is the property's setter
 
     # don't allow to delete anything
     def __delitem__(self, key):
-        raise AttributeError("'ManimConfigDict' object does not support item deletion")
+        raise AttributeError("'ManimConfig' object does not support item deletion")
 
     def __delattr__(self, key):
-        raise AttributeError("'ManimConfigDict' object does not support item deletion")
+        raise AttributeError("'ManimConfig' object does not support item deletion")
 
     # helper type-checking methods
     def _set_from_list(self, key, val, values):
@@ -283,6 +197,7 @@ class ManimConfig(MutableMapping):
 
     # builders
     def digest_parser(self, parser):
+        # boolean keys
         for key in [
                 'write_to_movie',
                 'save_last_frame',
@@ -299,9 +214,11 @@ class ManimConfig(MutableMapping):
                 'flush_cache',
                 'custom_folders',
                 'skip_animations',
+                'use_js_renderer',
         ]:
             setattr(self, key, parser['CLI'].getboolean(key, fallback=False))
 
+        # int keys
         for key in [
                 'from_animation_number',
                 'upto_animation_number',
@@ -312,6 +229,7 @@ class ManimConfig(MutableMapping):
         ]:
             setattr(self, key, parser['CLI'].getint(key))
 
+        # str keys
         for key in [
                 'verbosity',
                 'media_dir',
@@ -325,15 +243,19 @@ class ManimConfig(MutableMapping):
                 'png_mode',
                 'movie_file_extension',
                 'background_color',
+                'js_renderer_path',
         ]:
             setattr(self, key, parser['CLI'].get(key, fallback='', raw=True))
 
-        for key in [
-                'background_opacity',
-                'frame_height',
-                'frame_width',
-        ]:
+        # float keys
+        for key in ['background_opacity']:
             setattr(self, key, parser['CLI'].getfloat(key))
+
+        # other logic
+        self["frame_height"] = 8.0
+        self["frame_width"] = (
+            self["frame_height"] * self["pixel_width"] / self["pixel_height"]
+        )
 
         val = parser['CLI'].get('tex_template_file')
         if val:
@@ -364,23 +286,33 @@ class ManimConfig(MutableMapping):
                 "write_all",
                 "disable_caching",
                 "flush_cache",
-                "log_to_file",
                 "transparent",
-                "dry_run",
-                "media_dir",
                 "scene_names",
+                "verbosity",
+                "dry_run",      # always set this one last
+        ]:
+            if hasattr(args, key):
+                attr = getattr(args, key)
+                # if attr is None, then no argument was passed and we should
+                # not change the current config
+                if attr is not None:
+                    self[key] = attr
+
+        for key in [
+                "media_dir",    # always set this one first
+                "dry_run",
                 "video_dir",
                 "images_dir",
                 "tex_dir",
                 "text_dir",
                 "log_dir",
                 "custom_folders",
-                "verbosity",
+                "log_to_file",  # always set this one last
         ]:
             if hasattr(args, key):
                 attr = getattr(args, key)
-                # if attr is None, then no argument was passed and we should not
-                # change the current config
+                # if attr is None, then no argument was passed and we should
+                # not change the current config
                 if attr is not None:
                     self[key] = attr
 
@@ -397,6 +329,9 @@ class ManimConfig(MutableMapping):
                 self.upto_animation_number = int(end)
             else:
                 self.from_animation_number = int(nflag)
+
+        # Handle the quality flags
+        self.quality = determine_quality(args)
 
         # Handle the -r flag.
         rflag = args.resolution
@@ -456,11 +391,18 @@ class ManimConfig(MutableMapping):
         doc='Whether to leave the progress bar for each animations'
     )
 
-    log_to_file = property(
-        lambda self: self._d['log_to_file'],
-        lambda self, val: self._set_boolean('log_to_file', val),
-        doc='Whether to save logs to a file'
-    )
+    @property
+    def log_to_file(self):
+        """Whether to save logs to a file"""
+        return self._d['log_to_file']
+
+    @log_to_file.setter
+    def log_to_file(self,  val):
+        self._set_boolean('log_to_file', val)
+        if val:
+            if not os.path.exists(self['log_dir']):
+                os.makedirs(self['log_dir'])
+            set_file_logger(self, self['verbosity'])
 
     sound = property(
         lambda self: self._d['sound'],
@@ -488,7 +430,7 @@ class ManimConfig(MutableMapping):
 
     save_pngs = property(
         lambda self: self._d['save_pngs'],
-        lambda self, val: (print(f'setting to {val}'), self._set_boolean('save_pngs', val)),
+        lambda self, val: self._set_boolean('save_pngs', val),
         doc='Whether to save all frames in the scene as images files'
     )
 
@@ -498,13 +440,19 @@ class ManimConfig(MutableMapping):
         doc='Whether to save the rendered scene in .gif format.'
     )
 
-    verbosity = property(
-        lambda self: self._d['verbosity'],
-        lambda self, val: self._set_from_list(
-            'verbosity', val, ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
-        ),
-        doc='Verbosity level of the logger.'
-    )
+    @property
+    def verbosity(self):
+        return self._d['verbosity']
+
+    @verbosity.setter
+    def verbosity(self, val):
+        """Verbosity level of the logger."""
+        self._set_from_list(
+            'verbosity',
+            val,
+            ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+        )
+        logging.getLogger('manim').setLevel(val)
 
     ffmpeg_loglevel = property(
         lambda self: self._d['ffmpeg_loglevel'],
@@ -660,7 +608,7 @@ class ManimConfig(MutableMapping):
 
     @property
     def quality(self):
-        f"""Video quality ({list(_QUAL.keys())})"""
+        """Video quality."""
         q = {
             'pixel_width': self.pixel_width,
             'pixel_height': self.pixel_height,
@@ -675,8 +623,8 @@ class ManimConfig(MutableMapping):
     @quality.setter
     def quality(self, qual):
         if qual not in _QUAL:
-            raise KeyError(f'quality must be one of {list(self._qual.keys())}')
-        self.frame_size = _QUAL[qual]['width'], _QUAL[qual]['height']
+            raise KeyError(f'quality must be one of {list(_QUAL.keys())}')
+        self.frame_size = _QUAL[qual]['pixel_width'], _QUAL[qual]['pixel_height']
         self.frame_rate = _QUAL[qual]['frame_rate']
 
     @property
@@ -699,11 +647,11 @@ class ManimConfig(MutableMapping):
     def dry_run(self):
         """Whether dry run is enabled."""
         return (
-            self.write_to_movie == False
-            and self.write_all == False
-            and self.save_last_frame == False
-            and self.save_pngs == False
-            and self.save_as_gif == False
+            self.write_to_movie is False
+            and self.write_all is False
+            and self.save_last_frame is False
+            and self.save_pngs is False
+            and self.save_as_gif is False
         )
 
     @dry_run.setter
@@ -724,10 +672,26 @@ class ManimConfig(MutableMapping):
         else:
             raise ValueError(f'dry_run must be boolean')
 
+    @property
+    def use_js_renderer(self):
+        self._d['use_js_renderer']
+
+    @use_js_renderer.setter
+    def use_js_renderer(self, val):
+        self._d['use_js_renderer'] = val
+        if val:
+            self["disable_caching"] = True
+
+    js_renderer_path = property(
+        lambda self: self._d['js_renderer_path'],
+        lambda self, val: self._d.__setitem__('js_renderer_path', Path(val)),
+        doc='Path to JS renderer.'
+    )
+
     media_dir = property(
         lambda self: self._d['media_dir'],
         lambda self, val: self._d.__setitem__('media_dir', Path(val)),
-        doc='Main output directory, relative to execcution directory.'
+        doc='Main output directory, relative to execution directory.'
     )
 
     def _get_dir(self, key):
@@ -822,7 +786,7 @@ class ManimConfig(MutableMapping):
     def tex_template_file(self, val):
         if val:
             if not os.access(val, os.R_OK):
-                logging.getLogger("rich").warning(f"Custom TeX template {val} not found or not readable.")
+                logging.getLogger("manim").warning(f"Custom TeX template {val} not found or not readable.")
             else:
                 self._d["tex_template_file"] = Path(val)
                 self._tex_template = TexTemplateFromFile(filename=val)
@@ -865,8 +829,8 @@ class ManimFrame(Mapping):
     }
 
     def __init__(self, c):
-        if not isinstance(c, ManimConfigDict):
-            raise TypeError("argument must be instance of 'ManimConfigDict'")
+        if not isinstance(c, ManimConfig):
+            raise TypeError("argument must be instance of 'ManimConfig'")
         # need to use __dict__ directly because setting attributes is not
         # allowed (see __setattr__)
         self.__dict__['_c'] = c

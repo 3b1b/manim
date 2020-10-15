@@ -1,6 +1,4 @@
-from .. import constants
-from ..config import file_writer_config
-from .. import logger, console
+from .. import constants, logger, console, config
 import importlib.util
 import inspect
 import os
@@ -62,10 +60,10 @@ def get_scenes_to_render(scene_classes):
     if not scene_classes:
         logger.error(constants.NO_SCENE_MESSAGE)
         return []
-    if file_writer_config["write_all"]:
+    if config["write_all"]:
         return scene_classes
     result = []
-    for scene_name in file_writer_config["scene_names"]:
+    for scene_name in config["scene_names"]:
         found = False
         for scene_class in scene_classes:
             if scene_class.__name__ == scene_name:

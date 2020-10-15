@@ -148,5 +148,5 @@ QUALITIES = {
     "low_quality": "l",
 }
 
-DEFAULT_QUALITY = "production_quality"
+DEFAULT_QUALITY = "high_quality"
 DEFAULT_QUALITY_SHORT = QUALITIES[DEFAULT_QUALITY]

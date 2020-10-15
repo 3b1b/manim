@@ -6,6 +6,7 @@ Functions to create and set the logger.
 
 """
 
+import os
 import logging
 import json
 import copy

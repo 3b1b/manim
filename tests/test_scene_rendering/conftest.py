@@ -2,9 +2,6 @@ import pytest
 import os
 
 
-from manim import file_writer_config
-
-
 @pytest.fixture
 def manim_cfg_file():
     return os.path.join(os.path.dirname(__file__), "manim.cfg")

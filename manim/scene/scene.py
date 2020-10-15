@@ -13,7 +13,7 @@ import copy
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
 
-from .. import camera_config, file_writer_config, logger
+from .. import config, logger
 from ..animation.animation import Animation
 from ..animation.transform import MoveToTarget, ApplyMethod
 from ..camera.camera import Camera
@@ -47,11 +47,11 @@ def handle_play_like_call(func):
     """
 
     def wrapper(self, *args, **kwargs):
-        allow_write = not file_writer_config["skip_animations"]
-        if not self.camera.use_js_renderer:
+        allow_write = not config["skip_animations"]
+        if not config.use_js_renderer:
             self.file_writer.begin_animation(allow_write)
         func(self, *args, **kwargs)
-        if not self.camera.use_js_renderer:
+        if not config.use_js_renderer:
             self.file_writer.end_animation(allow_write)
         self.num_plays += 1
 
@@ -97,21 +97,18 @@ class Scene(Container):
 
     def __init__(self, **kwargs):
         Container.__init__(self, **kwargs)
-        self.camera = self.camera_class(**camera_config)
-        if not self.camera.use_js_renderer:
-            self.file_writer = SceneFileWriter(
-                self,
-                **file_writer_config,
-            )
+        self.camera = self.camera_class()
+        if not config.use_js_renderer:
+            self.file_writer = SceneFileWriter(self)
         self.animations_hashes = []
 
         self.mobjects = []
-        self.original_skipping_status = file_writer_config["skip_animations"]
+        self.original_skipping_status = config["skip_animations"]
         # TODO, remove need for foreground mobjects
         self.foreground_mobjects = []
         self.num_plays = 0
         self.time = 0
-        self.original_skipping_status = file_writer_config["skip_animations"]
+        self.original_skipping_status = config["skip_animations"]
         if self.random_seed is not None:
             random.seed(self.random_seed)
             np.random.seed(self.random_seed)
@@ -129,7 +126,7 @@ class Scene(Container):
 
         self.tear_down()
         # We have to reset these settings in case of multiple renders.
-        file_writer_config["skip_animations"] = False
+        config["skip_animations"] = False
 
         self.file_writer.finish()
         self.print_end_message()
@@ -237,7 +234,7 @@ class Scene(Container):
         **kwargs
 
         """
-        if file_writer_config["skip_animations"] and not ignore_skipping:
+        if config["skip_animations"] and not ignore_skipping:
             return
         if mobjects is None:
             mobjects = list_update(
@@ -673,7 +670,7 @@ class Scene(Container):
         ProgressDisplay
             The CommandLine Progress Bar.
         """
-        if file_writer_config["skip_animations"] and not override_skip_animations:
+        if config["skip_animations"] and not override_skip_animations:
             times = [run_time]
         else:
             step = 1 / self.camera.frame_rate
@@ -681,9 +678,9 @@ class Scene(Container):
         time_progression = ProgressDisplay(
             times,
             total=n_iterations,
-            leave=file_writer_config["leave_progress_bars"],
+            leave=config["leave_progress_bars"],
             ascii=True if platform.system() == "Windows" else None,
-            disable=not file_writer_config["progress_bar"],
+            disable=not config["progress_bar"],
         )
         return time_progression
 
@@ -824,12 +821,12 @@ class Scene(Container):
         the number of animations that need to be played, and
         raises an EndSceneEarlyException if they don't correspond.
         """
-        if file_writer_config["from_animation_number"]:
-            if self.num_plays < file_writer_config["from_animation_number"]:
-                file_writer_config["skip_animations"] = True
-        if file_writer_config["upto_animation_number"]:
-            if self.num_plays > file_writer_config["upto_animation_number"]:
-                file_writer_config["skip_animations"] = True
+        if config["from_animation_number"]:
+            if self.num_plays < config["from_animation_number"]:
+                config["skip_animations"] = True
+        if config["upto_animation_number"]:
+            if self.num_plays > config["upto_animation_number"]:
+                config["skip_animations"] = True
                 raise EndSceneEarlyException()
 
     def handle_caching_play(func):
@@ -849,7 +846,7 @@ class Scene(Container):
             self.update_skipping_status()
             animations = self.compile_play_args_to_animation_list(*args, **kwargs)
             self.add_mobjects_from_animations(animations)
-            if file_writer_config["skip_animations"]:
+            if config["skip_animations"]:
                 logger.debug(f"Skipping animation {self.num_plays}")
                 func(self, *args, **kwargs)
                 # If the animation is skipped, we mark its hash as None.
@@ -857,7 +854,7 @@ class Scene(Container):
                 self.animations_hashes.append(None)
                 self.file_writer.add_partial_movie_file(None)
                 return
-            if not file_writer_config["disable_caching"]:
+            if not config["disable_caching"]:
                 mobjects_on_scene = self.get_mobjects()
                 hash_play = get_hash_from_play_call(
                     self, self.camera, animations, mobjects_on_scene
@@ -867,7 +864,7 @@ class Scene(Container):
                         f"Animation {self.num_plays} : Using cached data (hash : %(hash_play)s)",
                         {"hash_play": hash_play},
                     )
-                    file_writer_config["skip_animations"] = True
+                    config["skip_animations"] = True
             else:
                 hash_play = "uncached_{:05}".format(self.num_plays)
             self.animations_hashes.append(hash_play)
@@ -895,7 +892,7 @@ class Scene(Container):
         def wrapper(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
             self.revert_to_original_skipping_status()
             self.update_skipping_status()
-            if file_writer_config["skip_animations"]:
+            if config["skip_animations"]:
                 logger.debug(f"Skipping wait {self.num_plays}")
                 func(self, duration, stop_condition)
                 # If the animation is skipped, we mark its hash as None.
@@ -903,7 +900,7 @@ class Scene(Container):
                 self.animations_hashes.append(None)
                 self.file_writer.add_partial_movie_file(None)
                 return
-            if not file_writer_config["disable_caching"]:
+            if not config["disable_caching"]:
                 hash_wait = get_hash_from_wait_call(
                     self, self.camera, duration, stop_condition, self.get_mobjects()
                 )
@@ -911,7 +908,7 @@ class Scene(Container):
                     logger.info(
                         f"Wait {self.num_plays} : Using cached data (hash : {hash_wait})"
                     )
-                    file_writer_config["skip_animations"] = True
+                    config["skip_animations"] = True
             else:
                 hash_wait = "uncached_{:05}".format(self.num_plays)
             self.animations_hashes.append(hash_wait)
@@ -982,7 +979,7 @@ class Scene(Container):
             animation.finish()
             animation.clean_up_from_scene(self)
         self.mobjects_from_last_animation = [anim.mobject for anim in animations]
-        if file_writer_config["skip_animations"]:
+        if config["skip_animations"]:
             # TODO, run this call in for each animation?
             self.update_mobjects(self.get_run_time(animations))
         else:
@@ -1163,8 +1160,8 @@ class Scene(Container):
         Scene
             The Scene, with skipping turned on.
         """
-        self.original_skipping_status = file_writer_config["skip_animations"]
-        file_writer_config["skip_animations"] = True
+        self.original_skipping_status = config["skip_animations"]
+        config["skip_animations"] = True
         return self
 
     def revert_to_original_skipping_status(self):
@@ -1179,7 +1176,7 @@ class Scene(Container):
             The Scene, with the original skipping status.
         """
         if hasattr(self, "original_skipping_status"):
-            file_writer_config["skip_animations"] = self.original_skipping_status
+            config["skip_animations"] = self.original_skipping_status
         return self
 
     def add_frame(self, frame, num_frames=1):
@@ -1195,7 +1192,7 @@ class Scene(Container):
         """
         dt = 1 / self.camera.frame_rate
         self.increment_time(num_frames * dt)
-        if file_writer_config["skip_animations"]:
+        if config["skip_animations"]:
             return
         for _ in range(num_frames):
             self.file_writer.write_frame(frame)
@@ -1216,7 +1213,7 @@ class Scene(Container):
         gain :
 
         """
-        if file_writer_config["skip_animations"]:
+        if config["skip_animations"]:
             return
         time = self.time + time_offset
         self.file_writer.add_sound(sound_file, time, gain, **kwargs)
