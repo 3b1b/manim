@@ -263,7 +263,7 @@ class SceneFileWriter(object):
         if time is None:
             time = curr_end
         if time < 0:
-            raise Exception("Adding sound at timestamp < 0")
+            raise ValueError("Adding sound at timestamp < 0")
 
         new_end = time + new_segment.duration_seconds
         diff = new_end - curr_end

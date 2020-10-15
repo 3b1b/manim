@@ -37,7 +37,7 @@ class ShowPartial(Animation):
         submob.pointwise_become_partial(start_submob, *self.get_bounds(alpha))
 
     def get_bounds(self, alpha):
-        raise Exception("Not Implemented")
+        raise NotImplementedError()
 
 
 class ShowCreation(ShowPartial):
@@ -69,7 +69,7 @@ class DrawBorderThenFill(Animation):
 
     def check_validity_of_input(self, vmobject):
         if not isinstance(vmobject, VMobject):
-            raise Exception("DrawBorderThenFill only works for VMobjects")
+            raise TypeError("DrawBorderThenFill only works for VMobjects")
 
     def begin(self):
         self.outline = self.get_outline()

@@ -286,7 +286,7 @@ class MathTex(SingleStringMathTex):
     def index_of_part(self, part):
         split_self = self.split()
         if part not in split_self:
-            raise Exception("Trying to get index of part not in MathTex")
+            raise ValueError("Trying to get index of part not in MathTex")
         return split_self.index(part)
 
     def index_of_part_by_tex(self, tex, **kwargs):
@@ -341,7 +341,7 @@ class BulletedList(Tex):
         elif isinstance(arg, int):
             part = self.submobjects[arg]
         else:
-            raise Exception("Expected int or string, got {0}".format(arg))
+            raise TypeError("Expected int or string, got {0}".format(arg))
         for other_part in self.submobjects:
             if other_part is part:
                 other_part.set_fill(opacity=1)

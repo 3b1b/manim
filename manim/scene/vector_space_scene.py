@@ -871,7 +871,7 @@ class LinearTransformationScene(VectorScene):
             new_matrix[:2, :2] = transposed_matrix
             transposed_matrix = new_matrix
         elif transposed_matrix.shape != (3, 3):
-            raise Exception("Matrix has bad dimensions")
+            raise ValueError("Matrix has bad dimensions")
         return lambda point: np.dot(point, transposed_matrix)
 
     def get_piece_movement(self, pieces):

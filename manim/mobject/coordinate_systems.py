@@ -41,10 +41,10 @@ class CoordinateSystem:
             self.y_max = config["frame_y_radius"]
 
     def coords_to_point(self, *coords):
-        raise Exception("Not implemented")
+        raise NotImplementedError()
 
     def point_to_coords(self, point):
-        raise Exception("Not implemented")
+        raise NotImplementedError()
 
     def c2p(self, *coords):
         """Abbreviation for coords_to_point"""
@@ -55,7 +55,7 @@ class CoordinateSystem:
         return self.point_to_coords(point)
 
     def get_axes(self):
-        raise Exception("Not implemented")
+        raise NotImplementedError()
 
     def get_axis(self, index):
         return self.get_axes()[index]
