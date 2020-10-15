@@ -19,21 +19,6 @@ from .logger import JSONFormatter
 from ..utils.tex import TexTemplate, TexTemplateFromFile
 
 
-def init_dirs(config):
-    for folder in [
-        config["media_dir"],
-        config["video_dir"],
-        config["tex_dir"],
-        config["text_dir"],
-        config["log_dir"],
-    ]:
-        if not os.path.exists(folder):
-            if folder == config["log_dir"] and (not config["log_to_file"]):
-                pass
-            else:
-                os.makedirs(folder)
-
-
 def _find_subcommand(args):
     """Return the subcommand that has been passed, if any.
 

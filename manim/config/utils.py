@@ -19,6 +19,22 @@ import colour
 
 from .. import constants
 from ..utils.tex import TexTemplate, TexTemplateFromFile
+from .logger import set_file_logger
+
+
+def init_dirs(config):
+    for folder in [
+        config["media_dir"],
+        config["video_dir"],
+        config["tex_dir"],
+        config["text_dir"],
+        config["log_dir"],
+    ]:
+        if not os.path.exists(folder):
+            if folder == config["log_dir"] and (not config["log_to_file"]):
+                pass
+            else:
+                os.makedirs(folder)
 
 
 def config_file_paths():
