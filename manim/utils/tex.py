@@ -123,6 +123,7 @@ class TexTemplate:
             + "\n"
             + self.placeholder_text
             + "\n"
+            + "\n"
             + r"\end{document}"
             + "\n"
         )
