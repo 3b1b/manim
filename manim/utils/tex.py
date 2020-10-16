@@ -62,7 +62,7 @@ class TexTemplate:
 \usepackage{physics}
 \usepackage{xcolor}
 \usepackage{microtype}
-\DisableLigatures{encoding = *, family = *}
+\DisableLigatures{encoding = *, family = * }
 \linespread{1}
 """
     default_placeholder_text = "YourTextHere"
