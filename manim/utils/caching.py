@@ -36,16 +36,21 @@ def handle_caching_play(func):
             hash_play = get_hash_from_play_call(
                 self, self.camera, animations, mobjects_on_scene
             )
-            if self.file_writer.is_already_cached(hash_play):
-                logger.info(
-                    f"Animation {self.num_plays} : Using cached data (hash : %(hash_play)s)",
-                    {"hash_play": hash_play},
-                )
-                file_writer_config["skip_animations"] = True
+            if file_writer_config["write_to_movie"]:
+                if self.file_writer.is_already_cached(hash_play):
+                    logger.info(
+                        f"Animation {self.num_plays} : Using cached data (hash : %(hash_play)s)",
+                        {"hash_play": hash_play},
+                    )
+                    file_writer_config["skip_animations"] = True
         else:
             hash_play = "uncached_{:05}".format(self.num_plays)
         self.animations_hashes.append(hash_play)
-        self.file_writer.add_partial_movie_file(hash_play)
+        if (
+            not file_writer_config["disable_caching"]
+            and file_writer_config["write_to_movie"]
+        ):
+            self.file_writer.add_partial_movie_file(hash_play)
         logger.debug(
             "List of the first few animation hashes of the scene: %(h)s",
             {"h": str(self.animations_hashes[:5])},
@@ -84,15 +89,20 @@ def handle_caching_wait(func):
             hash_wait = get_hash_from_wait_call(
                 self, self.camera, duration, stop_condition, scene.get_mobjects()
             )
-            if self.file_writer.is_already_cached(hash_wait):
-                logger.info(
-                    f"Wait {self.num_plays} : Using cached data (hash : {hash_wait})"
-                )
-                file_writer_config["skip_animations"] = True
+            if file_writer_config["write_to_movie"]:
+                if self.file_writer.is_already_cached(hash_wait):
+                    logger.info(
+                        f"Wait {self.num_plays} : Using cached data (hash : {hash_wait})"
+                    )
+                    file_writer_config["skip_animations"] = True
         else:
             hash_wait = "uncached_{:05}".format(self.num_plays)
         self.animations_hashes.append(hash_wait)
-        self.file_writer.add_partial_movie_file(hash_wait)
+        if (
+            not file_writer_config["disable_caching"]
+            and file_writer_config["write_to_movie"]
+        ):
+            self.file_writer.add_partial_movie_file(hash_wait)
         logger.debug(
             "List of the first few animation hashes of the scene: %(h)s",
             {"h": str(self.animations_hashes[:5])},

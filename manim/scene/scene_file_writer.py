@@ -544,8 +544,11 @@ class SceneFileWriter(object):
         if not self.includes_sound:
             commands.insert(-1, "-an")
 
-        combine_process = subprocess.Popen(commands)
-        combine_process.wait()
+        try:
+            subprocess.check_call(commands)
+        except subprocess.CalledProcessError as exc:
+            logger.error(f"FFMPEG returned with code {exc.returncode}")
+            raise exc
 
         if self.includes_sound:
             sound_file_path = movie_file_path.replace(
@@ -582,7 +585,12 @@ class SceneFileWriter(object):
                 # "-shortest",
                 temp_file_path,
             ]
-            subprocess.call(commands)
+            try:
+                subprocess.check_call(commands)
+            except subprocess.CalledProcessError as exc:
+                logger.error(f"FFMPEG returned with code {exc.returncode}")
+                raise exc
+
             shutil.move(temp_file_path, movie_file_path)
             os.remove(sound_file_path)
 
