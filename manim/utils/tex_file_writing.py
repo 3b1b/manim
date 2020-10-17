@@ -205,4 +205,14 @@ def convert_to_svg(dvi_file, extension, page=1):
             os.devnull,
         ]
         os.system(" ".join(commands))
+
+    # if the file does not exist now, this means conversion failed
+    if not os.path.exists(result):
+        raise ValueError(
+            f"Your installation does not support converting {extension} files to SVG."
+            f" Consider updating dvisvgm to at least version 2.4."
+            f" If this does not solve the problem, please refer to our troubleshooting guide at:"
+            f" https://manimce.readthedocs.io/en/latest/installation/troubleshooting.html"
+        )
+
     return result
