@@ -1,7 +1,7 @@
 Shapes, Images and Positions
 =================================
 
-.. manim:: Example1Shape
+.. manim:: GeometricShapesExample
     :save_last_frame:
 
     class Example1Shape(Scene):
@@ -17,7 +17,30 @@ Shapes, Images and Positions
             self.wait(1)
 
 
-.. manim:: Example1ImageFromArray
+.. manim:: ShapesExample
+    
+    class ShapesExample(Scene):
+        
+        def construct(self):
+            
+            circle = Circle(radius= 1, color=BLUE)
+            
+            dot = Dot()
+            dot2= dot.copy().shift(RIGHT)
+            self.add(dot)
+            
+            line=Line(np.array([3,0,0]),np.array([5,0,0]))
+            self.add(line)
+            
+            
+            self.play(GrowFromCenter(circle))
+            self.play(Transform(dot,dot2))
+            self.play(MoveAlongPath(dot,circle), run_time= 2, rate_func=linear)
+            self.play(Rotating(dot, about_point=np.array((2, 0, 0.))), run_time=1.5)
+            self.wait()
+
+
+.. manim:: ImageFromArrayExample
     :save_last_frame:
 
     class Example1ImageFromArray(Scene):
@@ -28,7 +51,20 @@ Shapes, Images and Positions
             self.add(image)
 
 
-.. manim:: Example2ImageFromFile
+.. manim:: GradientImageFromArrayExample
+    :save_last_frame:
+    
+    class ImageFromGradient(Scene):
+        def construct(self):
+            n = 256
+            imageArray = np.uint8([[i*256/n for i in range(0,n)]  for j in range(0,n)])
+            image = ImageMobject(imageArray).scale(2)
+            image.next_to(ORIGIN,LEFT, SMALL_BUFF)
+            self.add(image)
+            self.wait(1)
+
+
+.. manim:: ImageFromFileExample
     :save_last_frame:
 
     class Example2ImageFromFile(Scene):
@@ -61,42 +97,6 @@ Shapes, Images and Positions
             
             self.add(circles_group)
             self.wait(2)
-
-
-.. manim:: ImageFromGradient
-    :save_last_frame:
-    
-    class ImageFromGradient(Scene):
-        def construct(self):
-            n = 256
-            imageArray = np.uint8([[i*256/n for i in range(0,n)]  for j in range(0,n)])
-            image = ImageMobject(imageArray).scale(2)
-            image.next_to(ORIGIN,LEFT, SMALL_BUFF)
-            self.add(image)
-            self.wait(1)
-
-
-.. manim:: ShapesExample
-    
-    class ShapesExample(Scene):
-        
-        def construct(self):
-            
-            circle = Circle(radius= 1, color=BLUE)
-            
-            dot = Dot()
-            dot2= dot.copy().shift(RIGHT)
-            self.add(dot)
-            
-            line=Line(np.array([3,0,0]),np.array([5,0,0]))
-            self.add(line)
-            
-            
-            self.play(GrowFromCenter(circle))
-            self.play(Transform(dot,dot2))
-            self.play(MoveAlongPath(dot,circle), run_time= 2, rate_func=linear)
-            self.play(Rotating(dot, about_point=np.array((2, 0, 0.))), run_time=1.5)
-            self.wait()
 
 
 .. manim:: InterpolationExample
