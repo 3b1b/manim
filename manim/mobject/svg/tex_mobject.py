@@ -52,7 +52,7 @@ class SingleStringMathTex(SVGMobject):
     CONFIG = {
         "stroke_width": 0,
         "fill_opacity": 1.0,
-        "background_stroke_width": 1,
+        "background_stroke_width": 0,
         "background_stroke_color": BLACK,
         "should_center": True,
         "height": None,
