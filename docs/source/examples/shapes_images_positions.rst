@@ -4,7 +4,7 @@ Shapes, Images and Positions
 .. manim:: GeometricShapesExample
     :save_last_frame:
 
-    class Example1Shape(Scene):
+    class GeometricShapesExample(Scene):
         def construct(self):
             d = Dot()
             c = Circle()
@@ -43,7 +43,7 @@ Shapes, Images and Positions
 .. manim:: ImageFromArrayExample
     :save_last_frame:
 
-    class Example1ImageFromArray(Scene):
+    class ImageFromArrayExample(Scene):
         def construct(self):
             image = ImageMobject(np.uint8([[0, 100, 30, 200],
                                            [255, 0, 5, 33]]))
@@ -54,7 +54,7 @@ Shapes, Images and Positions
 .. manim:: GradientImageFromArrayExample
     :save_last_frame:
     
-    class ImageFromGradient(Scene):
+    class GradientImageFromArrayExample(Scene):
         def construct(self):
             n = 256
             imageArray = np.uint8([[i*256/n for i in range(0,n)]  for j in range(0,n)])
@@ -67,7 +67,7 @@ Shapes, Images and Positions
 .. manim:: ImageFromFileExample
     :save_last_frame:
 
-    class Example2ImageFromFile(Scene):
+    class ImageFromFileExample(Scene):
         def construct(self):
             # Use PIL when you want to import an image from the web
             import requests
