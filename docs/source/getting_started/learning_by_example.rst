@@ -42,7 +42,7 @@ in manim directory.
     * ``-l`` for rendering video in lower resolution (which renders faster)
     * ``-s`` to show the last frame of the video.
 
-  Run ``manim -h`` all the available flags (``python -m manim -h`` if you installed it to a venv)
+  Run ``manim -h`` to show all the available flags (``python -m manim -h`` use this command if you installed it to a venv)
 
 
 Let's step through each line of ``SquareToCircle``
