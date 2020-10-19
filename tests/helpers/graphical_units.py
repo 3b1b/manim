@@ -40,6 +40,7 @@ def set_test_scene(scene_object, module_name):
         file_writer_config["text_dir"] = os.path.join(tmpdir, "text")
         file_writer_config["tex_dir"] = os.path.join(tmpdir, "tex")
         scene = scene_object()
+        scene.render()
         data = scene.get_frame()
 
     tests_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
