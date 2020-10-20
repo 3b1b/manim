@@ -83,8 +83,13 @@ class CairoText(SVGMobject):
         `weird <https://github.com/3b1b/manim/issues/1067>`_. Consider using
         :meth:`remove_invisible_chars` to resolve this issue.
 
+    Tests
+    -----
 
+    Check whether writing text works::
 
+        >>> Text('The horse does not eat cucumber salad.')
+        Text('The horse does not eat cucumber salad.')
 
     """
 
@@ -157,6 +162,9 @@ class CairoText(SVGMobject):
         # anti-aliasing
         if self.height is None and self.width is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
+
+    def __repr__(self):
+        return f"Text({repr(self.original_text)})"
 
     def gen_chars(self):
         chars = VGroup()
@@ -299,9 +307,13 @@ class CairoText(SVGMobject):
         line_spacing = self.line_spacing * 10
 
         if self.font == "":
-            if NOT_SETTING_FONT_MSG != "":
-                print(NOT_SETTING_FONT_MSG)
+            if NOT_SETTING_FONT_MSG:
+                logger.warning(NOT_SETTING_FONT_MSG)
+
         dir_name = file_writer_config["text_dir"]
+        if not os.path.exists(dir_name):
+            os.makedirs(dir_name)
+
         hash_name = self.text2hash()
         file_name = os.path.join(dir_name, hash_name) + ".svg"
         if os.path.exists(file_name):
@@ -327,71 +339,6 @@ class CairoText(SVGMobject):
             context.move_to(
                 START_X + offset_x, START_Y + line_spacing * setting.line_num
             )
-            context.show_text(text)
-            offset_x += context.text_extents(text)[4]
-        surface.finish()
-        return file_name
-
-
-# Following class is just a Little implementation of upcomming feautures. Ignore it for now.
-class TextWithBackground(CairoText):
-    CONFIG = {
-        "background_color": BLACK,
-    }
-
-    def __init__(self, text, **config):
-        Text.__init__(self, text, **config)
-        # self.text_backgrounds = self.gen_text_backgrounds(text)
-
-    def gen_text_backgrounds(self, text):
-        text_with_visible_chars = text.replace(" ", "").replace("\t", "")
-        text_list = text_with_visible_chars.split("\n")
-        text_backgrounds = VGroup()
-        start_i = 0
-        for line_no in range(text_list.__len__()):
-            rect_counts = len(text_list[line_no])
-            text_backgrounds.add(*self[start_i:rect_counts])
-            start_i += 2 * rect_counts
-        text_backgrounds.set_color(self.background_color)
-
-        return text_backgrounds
-
-    def text2svg1(self):
-        # anti-aliasing
-        size = self.size * 10
-        line_spacing = self.line_spacing * 10
-
-        if self.font == "":
-            if NOT_SETTING_FONT_MSG != "":
-                logger.warning(NOT_SETTING_FONT_MSG)
-        dir_name = consts.TEXT_DIR
-        hash_name = self.text2hash()
-        file_name = os.path.join(dir_name, hash_name) + ".svg"
-        # if os.path.exists(file_name):
-        # return file_name
-
-        surface = cairo.SVGSurface(file_name, 600, 400)
-        context = cairo.Context(surface)
-        context.set_font_size(size)
-        context.move_to(START_X, START_Y)
-
-        settings = self.text2settings()
-        offset_x = 0
-        last_line_num = 0
-        for setting in settings:
-            font = setting.font
-            slant = self.str2slant(setting.slant)
-            weight = self.str2weight(setting.weight)
-            text = self.text[setting.start : setting.end].replace("\n", " ")
-            context.select_font_face(font, slant, weight)
-            if setting.line_num != last_line_num:
-                offset_x = 0
-                last_line_num = setting.line_num
-            tempx = START_X + offset_x
-            tempy = START_Y + line_spacing * setting.line_num
-            char_offset_x = 0
-            char_height = tempy - size / 2 - (line_spacing - size)
-            context.move_to(tempx, tempy)
             context.show_text(text)
             offset_x += context.text_extents(text)[4]
         surface.finish()
@@ -634,6 +581,14 @@ class PangoText(SVGMobject):
                 self.play(Write(morning))
                 self.wait(2)
 
+    Tests
+    -----
+
+    Check that the creation of :class:`~.PangoText` works::
+
+        >>> PangoText('The horse does not eat cucumber salad.')
+        Text('The horse does not eat cucumber salad.')
+
     .. WARNING::
 
         Using a :class:`.Transform` on text with leading whitespace can look
@@ -710,6 +665,9 @@ class PangoText(SVGMobject):
         # anti-aliasing
         if self.height is None and self.width is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
+
+    def __repr__(self):
+        return f"Text({repr(self.original_text)})"
 
     def remove_last_M(self, file_name: str):  # pylint: disable=invalid-name
         """Internally used. Use to format the rendered SVG files."""
@@ -922,7 +880,7 @@ class Text(CairoText):
     Text objects behave like a :class:`.VGroup`-like iterable of all characters
     in the given text. In particular, slicing is possible.
 
-        Examples
+    Examples
     --------
     .. manim:: Example1Text
         :save_last_frame:

@@ -1,11 +1,6 @@
-import numpy as np
 import os
-import sys
-import inspect
 import logging
-import pytest
-import warnings
-from platform import system
+import numpy as np
 
 from manim import config, file_writer_config
 
@@ -75,7 +70,6 @@ class GraphicalUnitTester:
         ]:
             os.makedirs(dir_temp)
 
-        # By invoking this, the scene is rendered.
         self.scene = scene_object()
         self.scene.render()
 
@@ -128,7 +122,7 @@ class GraphicalUnitTester:
 
     def test(self, show_diff=False):
         """Compare pre-rendered frame to the frame rendered during the test."""
-        frame_data = self.scene.get_frame()
+        frame_data = self.scene.renderer.get_frame()
         expected_frame_data = self._load_data()
 
         assert frame_data.shape == expected_frame_data.shape, (

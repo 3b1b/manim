@@ -8,10 +8,10 @@ from functools import reduce
 import copy
 import itertools as it
 import operator as op
-import os
 import random
 import sys
 
+from pathlib import Path
 from colour import Color
 import numpy as np
 
@@ -199,7 +199,7 @@ class Mobject(Container):
 
     def save_image(self, name=None):
         self.get_image().save(
-            os.path.join(file_writer_config["video_dir"], (name or str(self)) + ".png")
+            Path(file_writer_config["video_dir"]).joinpath((name or str(self)) + ".png")
         )
 
     def copy(self):
@@ -670,7 +670,7 @@ class Mobject(Container):
 
     def set_submobject_colors_by_gradient(self, *colors):
         if len(colors) == 0:
-            raise Exception("Need at least one color")
+            raise ValueError("Need at least one color")
         elif len(colors) == 1:
             return self.set_color(*colors)
 
@@ -1182,6 +1182,6 @@ class Group(Mobject):
 
     def __init__(self, *mobjects, **kwargs):
         if not all([isinstance(m, Mobject) for m in mobjects]):
-            raise Exception("All submobjects must be of type Mobject")
+            raise TypeError("All submobjects must be of type Mobject")
         Mobject.__init__(self, **kwargs)
         self.add(*mobjects)
