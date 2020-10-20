@@ -6,7 +6,6 @@ Examples
    examples/shapes_images_positions
    examples/annotations
    examples/plots
-   examples/text
    examples/tex
    examples/formulas
    examples/3d
