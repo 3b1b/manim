@@ -11,7 +11,7 @@ The two necessary dependencies are cairo and ffmpeg.  LaTeX is strongly
 recommended, as it is necessary to have access to the ``Tex`` and ``MathTex`` classes.
 
 Ubuntu/Mint/Debian
-*************
+******************
 
 Before installing anything, make sure that your system is up to date.
 
@@ -50,7 +50,7 @@ If you don't have python3-pip installed, install it:
 
 
 Fedora/CentOS/RHEL
-*************
+******************
 
 To install cairo:
 
