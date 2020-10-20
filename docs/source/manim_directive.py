@@ -106,7 +106,7 @@ class ManimDirective(Directive):
         save_last_frame = "save_last_frame" in self.options
         write_to_movie = not save_last_frame
         assert not (save_as_gif and save_last_frame)
-        
+
         frame_rate = 30
         pixel_height = 480
         pixel_width = 854

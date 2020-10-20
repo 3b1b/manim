@@ -484,14 +484,14 @@ class SceneFileWriter(object):
         :class:`bool`
             Whether the file exists.
         """
-        if hasattr(self,'partial_movie_directory'):
+        if hasattr(self, "partial_movie_directory"):
             path = os.path.join(
                 self.partial_movie_directory,
                 "{}{}".format(hash_invocation, self.movie_file_extension),
             )
             return os.path.exists(path)
         else:
-            return False # If there is no partial movie directory, then the file is not cached
+            return False  # If there is no partial movie directory, then the file is not cached
 
     def combine_movie_files(self):
         """
