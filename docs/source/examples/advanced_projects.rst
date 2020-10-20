@@ -19,7 +19,7 @@ Advanced Projects
             transform_title.to_corner(UP + LEFT)
             self.play(
                 Transform(title, transform_title),
-                LaggedStart(*map(FadeOutAndShiftDown, basel)),
+                LaggedStart(*map(lambda obj: FadeOutAndShift(obj,direction=DOWN), basel)),
             )
             self.wait()
 
@@ -31,7 +31,7 @@ Advanced Projects
             self.add(grid, grid_title)  # Make sure title is on top of grid
             self.play(
                 FadeOut(title),
-                FadeInFromDown(grid_title),
+                FadeInFrom(grid_title,direction=DOWN),
                 ShowCreation(grid, run_time=3, lag_ratio=0.1),
             )
             self.wait()

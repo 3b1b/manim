@@ -170,8 +170,8 @@ so one can use all functionality that were used before in the MovingCameraScene 
             image = ImageMobject(np.uint8([[0, 100, 30, 200],
                                            [255, 0, 5, 33]]))
             image.set_height(7)
-            frame_text = TextMobject("Frame", color=PURPLE).scale(1.4)
-            zoomed_camera_text = TextMobject("Zoomed camera", color=RED).scale(1.4)
+            frame_text = Text("Frame", color=PURPLE).scale(1.4)
+            zoomed_camera_text = Text("Zoomed camera", color=RED).scale(1.4)
 
             self.add(image, dot)
             zoomed_camera = self.zoomed_camera
