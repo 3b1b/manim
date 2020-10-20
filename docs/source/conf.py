@@ -39,7 +39,7 @@ if os.environ.get("READTHEDOCS") == "True":
 
 # -- Project information -----------------------------------------------------
 
-project = "manim"
+project = "Manim"
 copyright = "2020, The Manim Community Dev Team"
 author = "The Manim Community Dev Team"
 
