@@ -14,7 +14,7 @@ Shapes, Images and Positions
             s.next_to(c, LEFT)
             t.next_to(c, DOWN)
             self.add(d, c, s, t)
-            self.wait(1)
+            self.wait()
 
 
 .. manim:: ShapesExample
@@ -57,11 +57,9 @@ Shapes, Images and Positions
     class GradientImageFromArrayExample(Scene):
         def construct(self):
             n = 256
-            imageArray = np.uint8([[i*256/n for i in range(0,n)]  for j in range(0,n)])
+            imageArray = np.uint8([[i*256/n for i in range(0,n)]  for _ in range(0,n)])
             image = ImageMobject(imageArray).scale(2)
-            image.next_to(ORIGIN,LEFT, SMALL_BUFF)
             self.add(image)
-            self.wait(1)
 
 
 .. manim:: ImageFromFileExample
@@ -72,7 +70,7 @@ Shapes, Images and Positions
             # Use PIL when you want to import an image from the web
             import requests
             from PIL import Image
-            img = Image.open(requests.get("https://raw.githubusercontent.com/ManimCommunity/manim/master/logo/cropped.png",
+            img = Image.open(requests.get("https://raw.githubusercontent.com/ManimCommunity/manim/master/logo/logoWAlpha.png",
                                           stream=True).raw)
             img_mobject = ImageMobject(img)
             # this line, when you want to import your Image on your machine
@@ -96,7 +94,6 @@ Shapes, Images and Positions
                          for rad,col in zip(radius,colors)])
             
             self.add(circles_group)
-            self.wait(2)
 
 
 .. manim:: InterpolationExample
@@ -154,6 +151,7 @@ Shapes, Images and Positions
 
 
 .. manim:: SplineExample
+    :save_last_frame:
     
     class SplineExample(Scene):
         def construct(self):
@@ -216,18 +214,10 @@ Shapes, Images and Positions
                 dest_line1_point2 )
           
             
-            start=VGroup(Line(destination_dot1.get_center(), destination_dot2.get_center()),
-                         destination_dot1.copy(),
-                         destination_dot2.copy())
-            start.scale(0.5)
+            mobjects= VGroup(Lp1s1, Lp2s2,dest_line1,dest_line2,destination_dot1,destination_dot2)
             
-            end= VGroup(Lp1s1, Lp2s2,dest_line1,dest_line2,destination_dot1,destination_dot2)
-            end.scale(2)
-            
-            self.add(start)
-            self.wait()
-            self.play(ClockwiseTransform(start,end), run_time=3)
-            self.wait()
+            mobjects.scale(2)
+            self.add(mobjects)
 
 Note: Here can come the UnitDot Example.
 
