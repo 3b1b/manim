@@ -1,10 +1,10 @@
 Shapes, Images and Positions
 =================================
 
-.. manim:: GeometricShapesExample
+.. manim:: GeometricShapes
     :save_last_frame:
 
-    class GeometricShapesExample(Scene):
+    class GeometricShapes(Scene):
         def construct(self):
             d = Dot()
             c = Circle()
@@ -17,9 +17,9 @@ Shapes, Images and Positions
             self.wait()
 
 
-.. manim:: ShapesExample
+.. manim:: PointMovingOnShapes
     
-    class ShapesExample(Scene):
+    class PointMovingOnShapes(Scene):
         
         def construct(self):
             
@@ -40,21 +40,10 @@ Shapes, Images and Positions
             self.wait()
 
 
-.. manim:: ImageFromArrayExample
-    :save_last_frame:
-
-    class ImageFromArrayExample(Scene):
-        def construct(self):
-            image = ImageMobject(np.uint8([[0, 100, 30, 200],
-                                           [255, 0, 5, 33]]))
-            image.set_height(7)
-            self.add(image)
-
-
-.. manim:: GradientImageFromArrayExample
+.. manim:: GradientImageFromArray
     :save_last_frame:
     
-    class GradientImageFromArrayExample(Scene):
+    class GradientImageFromArray(Scene):
         def construct(self):
             n = 256
             imageArray = np.uint8([[i*256/n for i in range(0,n)]  for _ in range(0,n)])
@@ -62,15 +51,15 @@ Shapes, Images and Positions
             self.add(image)
 
 
-.. manim:: ImageFromFileExample
+.. manim:: ImageFromFile
     :save_last_frame:
 
-    class ImageFromFileExample(Scene):
+    class ImageFromFile(Scene):
         def construct(self):
             # Use PIL when you want to import an image from the web
             import requests
             from PIL import Image
-            img = Image.open(requests.get("https://raw.githubusercontent.com/ManimCommunity/manim/master/logo/logoWAlpha.png",
+            img = Image.open(requests.get("https://raw.githubusercontent.com/ManimCommunity/manim/master/logo/logoBAlpha.png",
                                           stream=True).raw)
             img_mobject = ImageMobject(img)
             # this line, when you want to import your Image on your machine
@@ -79,10 +68,10 @@ Shapes, Images and Positions
             self.add(img_mobject)
 
 
-.. manim:: ArcShapeExample
+.. manim:: ArcShapeIris
     :save_last_frame:
     
-    class ArcShapeExample(Scene):
+    class ArcShapeIris(Scene):
         def construct(self):
             colors = [DARK_BLUE , DARK_BROWN, BLUE_E, BLUE_D, BLUE_A, TEAL_B, GREEN_B, YELLOW_E]
             radius = [1+rad*0.1 for rad in range(len(colors))]
@@ -96,10 +85,10 @@ Shapes, Images and Positions
             self.add(circles_group)
 
 
-.. manim:: InterpolationExample
+.. manim:: DotInterpolation
     :save_last_frame:
     
-    class InterpolationExample(Scene):
+    class DotInterpolation(Scene):
         def construct(self):
             dotL = Dot(color=DARK_GREY)
             dotL.shift(2*RIGHT)
@@ -111,9 +100,9 @@ Shapes, Images and Positions
             self.add(dotL, dotR, dotMiddle)
 
 
-.. manim:: MoveAroundExample
+.. manim:: MovingAround
     
-    class MoveAroundExample(Scene):
+    class MovingAround(Scene):
         def construct(self):
             square = Square(color=BLUE,fill_opacity=1)
             
@@ -123,10 +112,10 @@ Shapes, Images and Positions
             self.play(square.rotate,0.4)
 
 
-.. manim:: TextAlignementExample
+.. manim:: TextAlignement
     :save_last_frame:
     
-    class TextAlignementExample(Scene):
+    class TextAlignement(Scene):
           def construct(self):
               title=PangoText("K-means clustering and Logistic Regression", color=WHITE)
               title.scale_in_place(0.75)
@@ -150,10 +139,10 @@ Shapes, Images and Positions
               self.add(x)
 
 
-.. manim:: SplineExample
+.. manim:: BezierSpline
     :save_last_frame:
     
-    class SplineExample(Scene):
+    class BezierSpline(Scene):
         def construct(self):
             
             np.random.seed(42)

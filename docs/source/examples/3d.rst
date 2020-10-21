@@ -1,10 +1,10 @@
 3D Scenes
 =================================
 
-.. manim:: ThreeDSphereExample
+.. manim:: ThreeDSphere
     :save_last_frame:
 
-    class ThreeDSphereExample(ThreeDScene):
+    class ThreeDSphere(ThreeDScene):
         def construct(self):
             axes = ThreeDAxes()
             sphere = ParametricSurface(
@@ -18,10 +18,10 @@
             self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
             self.add(axes, sphere)
 
-.. manim:: ThreeDLightSourcePositionExample
+.. manim:: ThreeDLightSourcePosition
     :save_last_frame:
 
-    class ThreeDLightSourcePositionExample(ThreeDScene):
+    class ThreeDLightSourcePosition(ThreeDScene):
         def construct(self):
             axes = ThreeDAxes()
             sphere = ParametricSurface(
@@ -36,9 +36,9 @@
             self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
             self.add(axes, sphere)
 
-.. manim:: ThreeDCameraRotationExample
+.. manim:: ThreeDCameraRotation
 
-    class ThreeDCameraRotationExample(ThreeDScene):
+    class ThreeDCameraRotation(ThreeDScene):
         def construct(self):
             axes = ThreeDAxes()
             circle=Circle()
@@ -50,9 +50,9 @@
             self.move_camera(phi=75 * DEGREES, theta=30 * DEGREES)
             self.wait()
 
-.. manim:: ThreeDCameraIllusionRotationExample
+.. manim:: ThreeDCameraIllusionRotation
 
-    class ThreeDCameraIllusionRotationExample(ThreeDScene):
+    class ThreeDCameraIllusionRotation(ThreeDScene):
         def construct(self):
             axes = ThreeDAxes()
             circle=Circle()
@@ -62,10 +62,10 @@
             self.wait(PI)
             self.stop_3dillusion_camera_rotation()
 
-.. manim:: ThreeDParametricSpringExample
+.. manim:: ThreeDParametricSpring
     :save_last_frame:
 
-    class ThreeDParametricSpringExample(ThreeDScene):
+    class ThreeDParametricSpring(ThreeDScene):
         def construct(self):
             curve1 = ParametricFunction(
                 lambda u: np.array([
@@ -79,9 +79,9 @@
             self.set_camera_orientation(phi=80 * DEGREES, theta=-60 * DEGREES)
             self.wait()
 
-.. manim:: ThreeDFunctionExample
+.. manim:: ThreeDFunctionPlot
     
-    class ThreeDFunctionExample(ThreeDScene):
+    class ThreeDFunctionPlot(ThreeDScene):
     
         def construct(self):
             

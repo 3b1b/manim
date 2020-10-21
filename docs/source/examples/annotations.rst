@@ -1,10 +1,10 @@
 Annotations
 =================================
 
-.. manim:: AnnotateBrace
+.. manim:: BraceAnnotation
     :save_last_frame:
 
-    class AnnotateBrace(Scene):
+    class BraceAnnotation(Scene):
         def construct(self):
             dot = Dot([0, 0, 0])
             dot2 = Dot([2, 1, 0])
@@ -15,11 +15,11 @@ Annotations
             b2text = b2.get_tex("x-x_1")
             self.add(dot, dot2, line, b1, b2, b1text, b2text)
 
-.. manim:: ExampleArrow
+.. manim:: VectorArrow
     :quality: medium
     :save_last_frame:
 
-    class ExampleArrow(Scene):
+    class VectorArrow(Scene):
         def construct(self):
             dot = Dot(ORIGIN)
             arrow = Arrow(ORIGIN, [2, 2, 0], buff=0)
@@ -28,13 +28,13 @@ Annotations
             tip_text = Text('(2, 2)').next_to(arrow.get_end(), RIGHT)
             self.add(numberplane, dot, arrow, origin_text, tip_text)
 
-.. manim:: ExampleArrowTips
+.. manim:: ArrowTipsShowcase
     :quality: medium
     :save_last_frame:
 
     from manim.mobject.geometry import ArrowTriangleTip, ArrowSquareTip, ArrowSquareFilledTip,\
                                        ArrowCircleTip, ArrowCircleFilledTip
-    class ExampleArrowTips(Scene):
+    class ArrowTipsShowcase(Scene):
         def construct(self):
             a00 = Arrow(start=[-2, 3, 0], end=[2, 3, 0], color=YELLOW)
             a11 = Arrow(start=[-2, 2, 0], end=[2, 2, 0], tip_shape=ArrowTriangleTip)

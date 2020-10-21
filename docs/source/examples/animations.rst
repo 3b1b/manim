@@ -10,9 +10,9 @@ Some more examples will come soon here!
 Updaters
 ##########
 
-.. manim:: RotationUpdaterExample
+.. manim:: RotationUpdater
 
-    class RotationUpdaterExample(Scene):
+    class RotationUpdater(Scene):
         def construct(self):
             def my_rotation_updater(mobj,dt):
                 mobj.rotate_about_origin(dt)
@@ -22,9 +22,9 @@ Updaters
             self.add(line_reference, line_moving)
             self.wait(PI)
 
-.. manim:: RotationUpdater2Example
+.. manim:: RotationUpdater2
 
-    class RotationUpdater2Example(Scene):
+    class RotationUpdater2(Scene):
         def construct(self):
             def updater_forth(mobj, dt):
                 mobj.rotate_about_origin(dt)
@@ -41,9 +41,9 @@ Updaters
             line_moving.remove_updater(updater_back)
             self.wait(0.5)
 
-.. manim:: NumberLinePointerExample
+.. manim:: NumberLinePointer
 
-    class NumberLinePointerExample(Scene):
+    class NumberLinePointer(Scene):
         def construct(self):
             number_line = NumberLine()  ##with all your parameters and stuff
             pointer = Vector(DOWN)
@@ -59,9 +59,9 @@ Updaters
             self.play(pointer_value.set_value, 3)
             self.wait()
 
-.. manim:: SnakeExample
+.. manim:: PointWithTrace
 
-    class SnakeExample(Scene):
+    class PointWithTrace(Scene):
         def construct(self):
             path = VMobject()
             dot = Dot()
@@ -78,9 +78,9 @@ Updaters
             self.play(dot.shift, LEFT)
             self.wait()
 
-.. manim:: ValTracker1Example
+.. manim:: PointMovingWithValTracker
 
-    class ValTracker1Example(Scene):
+    class PointMovingWithValTracker(Scene):
         def construct(self):
             dot_disp = Dot().set_color(RED)
             self.add(dot_disp)
@@ -93,9 +93,9 @@ Updaters
             self.play(val_tracker.set_value, tick_end, rate_func=linear)
             self.wait()
 
-.. manim:: ValTracker2Example
+.. manim:: RotationValTracker
 
-    class ValTracker2Example(Scene):
+    class RotationValTracker(Scene):
         def construct(self):
             tick_start = 0
             tick_end = 2 * PI
@@ -108,9 +108,9 @@ Updaters
             self.add(line_reference, line_moving)
             self.play(val_tracker.set_value, tick_end, run_time=PI)
 
-.. manim:: PlaneFadeOutExample
+.. manim:: PlaneFadeOut
       
-    class PlaneFadeOutExample(Scene):
+    class PlaneFadeOut(Scene):
         
         def construct(self):
             
@@ -131,9 +131,9 @@ Updaters
             self.play(FadeOut(sq1),FadeOut(sq2),FadeOut(sq3))
             self.wait()
 
-.. manim:: FadeInAndOutExample
+.. manim:: FadeInAndOut
     
-    class FadeInAndOutExample(Scene):
+    class FadeInAndOut(Scene):
         def construct(self):
             square = Square(color=BLUE).shift(2*UP)
             
