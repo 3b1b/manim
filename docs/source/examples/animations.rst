@@ -111,24 +111,22 @@ Updaters
 .. manim:: PlaneFadeOut
       
     class PlaneFadeOut(Scene):
-        
         def construct(self):
-            
-            sq2= Square()
-            
-            sq1= Square()
-            sq1.next_to(sq2,LEFT)
-            
-            sq3= Square()
-            sq3.next_to(sq2,RIGHT)
-            
+            sq2 = Square()
+
+            sq1 = Square()
+            sq1.next_to(sq2, LEFT)
+
+            sq3 = Square()
+            sq3.next_to(sq2, RIGHT)
+
             circ = Circle()
-            circ.next_to(sq2,DOWN)
-            
-            self.add(sq1,sq2,sq3,circ)
+            circ.next_to(sq2, DOWN)
+
+            self.add(sq1, sq2, sq3, circ)
             self.wait()
-            
-            self.play(FadeOut(sq1),FadeOut(sq2),FadeOut(sq3))
+
+            self.play(FadeOut(sq1), FadeOut(sq2), FadeOut(sq3))
             self.wait()
 
 .. manim:: FadeInAndOut
@@ -144,5 +142,4 @@ Updaters
             annotation.become(Text('Fade Out', height=.8))
             self.add(annotation)
             self.play(FadeOut(square))
-
 
