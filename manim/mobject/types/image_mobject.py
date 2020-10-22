@@ -71,7 +71,7 @@ class ImageMobject(AbstractImageMobject):
                   # Use PIL when you want to import an image from the web
                   import requests
                   from PIL import Image
-                  img = Image.open(requests.get("https://raw.githubusercontent.com/ManimCommunity/manim/master/logo/logoB.png",
+                  img = Image.open(requests.get("https://raw.githubusercontent.com/ManimCommunity/manim/master/logo/cropped.png",
                                                 stream=True).raw)
                   img_mobject = ImageMobject(img)
                   # this line, when you want to import your Image on your machine
