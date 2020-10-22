@@ -25,6 +25,7 @@ information here will make it easier for newcomers to get started using
    tutorials
    reporting_bugs
    contributing
+   changelog
 
 Navigation
 ==================
