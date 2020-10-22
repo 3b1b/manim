@@ -2,8 +2,8 @@
 Changelog
 *********
 
-manimce-v1.0.0-dev
-==================
+manimce-v0.1.0
+==============
 
 :Date: TBD
 
