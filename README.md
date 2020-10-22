@@ -1,4 +1,4 @@
-![logo](https://raw.githubusercontent.com/ManimCommunity/manim/master/logo/banner.svg)
+![logo](https://raw.githubusercontent.com/ManimCommunity/manim/master/logo/banner.png)
 
 ![CI](https://github.com/ManimCommunity/manim/workflows/CI/badge.svg)
 [![Documentation Status](https://readthedocs.org/projects/manimce/badge/?version=latest)](https://manimce.readthedocs.io/en/latest/?badge=latest)
