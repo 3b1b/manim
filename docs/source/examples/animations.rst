@@ -133,13 +133,11 @@ Updaters
     
     class FadeInAndOut(Scene):
         def construct(self):
-            square = Square(color=BLUE).shift(2*UP)
-            
-            annotation = Text('Fade In', height=.8)
+            square = Square(color=BLUE).shift(2 * UP)
+            annotation = Text("Fade In", height=0.8)
             self.add(annotation)
             self.play(FadeIn(square))
-            
-            annotation.become(Text('Fade Out', height=.8))
+
+            annotation.become(Text("Fade Out", height=0.8))
             self.add(annotation)
             self.play(FadeOut(square))
-

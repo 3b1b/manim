@@ -192,12 +192,12 @@ so one can use all functionality that were used before in the MovingCameraScene 
 
             frame_text.next_to(frame, DOWN)
 
-            self.play(ShowCreation(frame), FadeInFrom(frame_text,direction=DOWN))
+            self.play(ShowCreation(frame), FadeInFrom(frame_text, direction=DOWN))
             self.activate_zooming()
 
             self.play(self.get_zoomed_display_pop_out_animation(), unfold_camera)
             zoomed_camera_text.next_to(zoomed_display_frame, DOWN)
-            self.play(FadeInFrom(zoomed_camera_text,direction=DOWN))
+            self.play(FadeInFrom(zoomed_camera_text, direction=DOWN))
             # Scale in        x   y  z
             scale_factor = [0.5, 1.5, 0]
             self.play(
