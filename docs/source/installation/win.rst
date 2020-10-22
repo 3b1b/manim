@@ -8,8 +8,8 @@ instructions.
 Installing using Chocolatey
 ***************************
 
-.. important:: This is an outdated version. Please use other installation using 
-               a problem on this package is fixed. More inforation about this problem 
+.. important:: This is an outdated version. We are currently not able to update this package, though we are working on it. Please use other installation methods until
+               this problem is fixed. More inforation about this problem 
                is on _`this chat 
                <https://discord.com/channels/581738731934056449/581738732646957057/768900904887123988>`_.
 
