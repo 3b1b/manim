@@ -308,7 +308,7 @@ class CairoText(SVGMobject):
 
         if self.font == "":
             logger.warning(
-                "You haven't set font, non-english characters may not be rendered"
+                "You haven't set a font, non-english characters may not be rendered correctly"
             )
 
         dir_name = file_writer_config["text_dir"]
