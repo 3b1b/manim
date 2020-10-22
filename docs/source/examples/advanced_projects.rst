@@ -31,7 +31,7 @@ Advanced Projects
             self.add(grid, grid_title)  # Make sure title is on top of grid
             self.play(
                 FadeOut(title),
-                FadeInFrom(grid_title,direction=DOWN),
+                FadeInFrom(grid_title, direction=DOWN),
                 ShowCreation(grid, run_time=3, lag_ratio=0.1),
             )
             self.wait()
