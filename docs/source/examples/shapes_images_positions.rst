@@ -20,7 +20,6 @@ Shapes, Images and Positions
 .. manim:: PointMovingOnShapes
     
     class PointMovingOnShapes(Scene):
-        
         def construct(self):
             
             circle = Circle(radius= 1, color=BLUE)
@@ -46,7 +45,9 @@ Shapes, Images and Positions
     class GradientImageFromArray(Scene):
         def construct(self):
             n = 256
-            imageArray = np.uint8([[i*256/n for i in range(0,n)]  for _ in range(0,n)])
+            imageArray = np.uint8(
+                [[i * 256 / n for i in range(0, n)] for _ in range(0, n)]
+            )
             image = ImageMobject(imageArray).scale(2)
             self.add(image)
 
@@ -59,8 +60,7 @@ Shapes, Images and Positions
             # Use PIL when you want to import an image from the web
             import requests
             from PIL import Image
-            img = Image.open(requests.get("https://raw.githubusercontent.com/ManimCommunity/manim/master/logo/cropped.png",
-                                          stream=True).raw)
+            img = Image.open("../logo/cropped.png")
             img_mobject = ImageMobject(img)
             # this line, when you want to import your Image on your machine
             # img_mobject = ImageMobject("<your image address>")
