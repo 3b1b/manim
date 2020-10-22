@@ -208,6 +208,4 @@ Shapes, Images and Positions
             mobjects.scale(2)
             self.add(mobjects)
 
-Note: Here can come the UnitDot Example.
-
 
