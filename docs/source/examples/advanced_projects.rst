@@ -19,7 +19,7 @@ Advanced Projects
             transform_title.to_corner(UP + LEFT)
             self.play(
                 Transform(title, transform_title),
-                LaggedStart(*map(lambda obj: FadeOutAndShift(obj,direction=DOWN), basel)),
+                LaggedStart(*map(lambda obj: FadeOutAndShift(obj, direction=DOWN), basel)),
             )
             self.wait()
 
