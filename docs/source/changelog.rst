@@ -2,10 +2,10 @@
 Changelog
 *********
 
-manimce-v1.0.0-dev
-==================
+v0.1.0
+======
 
-:Date: TBD
+:Date: October 21, 2020
 
 This is the first release of manimce after forking from 3b1b/manim.  As such,
 developers have focused on cleaning up and refactoring the codebase while still
