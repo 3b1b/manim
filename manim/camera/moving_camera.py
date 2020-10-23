@@ -11,10 +11,11 @@ __all__ = ["CameraFrame", "MovingCamera"]
 
 from .. import config
 from ..camera.camera import Camera
-from ..constants import ORIGIN, WHITE
+from ..constants import ORIGIN
 from ..mobject.frame import ScreenRectangle
 from ..mobject.types.vectorized_mobject import VGroup
 from ..utils.config_ops import digest_config
+from ..utils.color import WHITE
 
 
 # TODO, think about how to incorporate perspective
@@ -45,7 +46,7 @@ class MovingCamera(Camera):
         "default_frame_stroke_width": 0,
     }
 
-    def __init__(self, frame=None, **kwargs):
+    def __init__(self, video_quality_config, frame=None, **kwargs):
         """
         frame is a Mobject, (should almost certainly be a rectangle)
         determining which region of space the camera displys
@@ -58,7 +59,7 @@ class MovingCamera(Camera):
                 self.default_frame_stroke_width,
             )
         self.frame = frame
-        Camera.__init__(self, **kwargs)
+        Camera.__init__(self, video_quality_config, **kwargs)
 
     # TODO, make these work for a rotated frame
     @property

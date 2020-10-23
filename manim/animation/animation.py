@@ -8,6 +8,7 @@ from copy import deepcopy
 
 import numpy as np
 
+from .. import logger
 from ..mobject.mobject import Mobject
 from ..utils.config_ops import digest_config
 from ..utils.rate_functions import smooth
@@ -117,6 +118,10 @@ class Animation(object):
         This method shouldn't exist, but it's here to
         keep many old scenes from breaking
         """
+        logger.warning(
+            "animation.update() has been deprecated. "
+            "Please use animation.interpolate() instead."
+        )
         self.interpolate(alpha)
 
     def interpolate_mobject(self, alpha):

@@ -118,6 +118,7 @@ Utilities
    ~utils.space_ops
    ~utils.strings
    ~utils.tex
+   ~utils.tex_templates
    ~utils.tex_file_writing
 
 
@@ -131,11 +132,3 @@ Other modules
    _config
    constants
    container
-
-
-.. This is here so that sphinx doesn't complain about changelog.rst not being
-   included in any toctree
-.. toctree::
-   :hidden:
-
-   changelog

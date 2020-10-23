@@ -16,6 +16,7 @@ from ..utils.config_ops import digest_config
 from ..utils.config_ops import merge_dicts_recursively
 from ..utils.simple_functions import fdiv
 from ..utils.space_ops import normalize
+from ..utils.color import LIGHT_GREY
 
 
 class NumberLine(Line):

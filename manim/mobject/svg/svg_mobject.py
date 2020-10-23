@@ -287,7 +287,7 @@ class SVGMobject(VMobject):
         all_childNodes_have_id = []
         if not isinstance(element, minidom.Element):
             return
-        if element.hasAttribute("id"):
+        if element.hasAttribute("id") and element.tagName not in ("g", "defs"):
             return [element]
         for e in element.childNodes:
             all_childNodes_have_id.append(self.get_all_childNodes_have_id(e))
@@ -396,7 +396,7 @@ class VMobjectFromSVGPathstring(VMobject):
             # TODO, this is a suboptimal approximation
             new_points = np.append([new_points[0]], new_points, axis=0)
         elif command == "A":  # elliptical Arc
-            raise Exception("Not implemented")
+            raise NotImplementedError()
         elif command == "Z":  # closepath
             return
 

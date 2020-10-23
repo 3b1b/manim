@@ -55,6 +55,19 @@ from ...utils.rate_functions import linear
 from ...utils.space_ops import angle_of_vector
 from ...utils.space_ops import complex_to_R3
 from ...utils.space_ops import rotate_vector
+from ...utils.color import (
+    YELLOW,
+    WHITE,
+    DARK_GREY,
+    MAROON_B,
+    PURPLE,
+    GREEN,
+    BLACK,
+    LIGHT_GREY,
+    GREY,
+    BLUE_B,
+    BLUE_D,
+)
 
 
 class Lightbulb(SVGMobject):
@@ -988,7 +1001,7 @@ class SuitSymbol(SVGMobject):
             "clubs": self.black,
         }
         if suit_name not in suits_to_colors:
-            raise Exception("Invalid suit name")
+            raise ValueError("Invalid suit name")
         SVGMobject.__init__(self, file_name=suit_name, **kwargs)
 
         color = suits_to_colors[suit_name]

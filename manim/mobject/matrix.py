@@ -22,6 +22,7 @@ from ..mobject.svg.tex_mobject import MathTex
 from ..mobject.svg.tex_mobject import Tex
 from ..mobject.types.vectorized_mobject import VGroup
 from ..mobject.types.vectorized_mobject import VMobject
+from ..utils.color import WHITE
 
 VECTOR_LABEL_SCALE_FACTOR = 0.8
 

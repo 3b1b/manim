@@ -21,6 +21,8 @@ from .animation.specialized import *
 from .animation.transform import *
 from .animation.update import *
 
+from .renderer.cairo_renderer import *
+
 from .camera.camera import *
 from .camera.mapping_camera import *
 from .camera.moving_camera import *
@@ -56,6 +58,7 @@ from .mobject.vector_field import *
 from .scene.graph_scene import *
 from .scene.moving_camera_scene import *
 from .scene.reconfigurable_scene import *
+from .scene.js_scene import *
 from .scene.scene import *
 from .scene.sample_space_scene import *
 from .scene.three_d_scene import *
@@ -65,6 +68,7 @@ from .scene.scene_file_writer import *
 
 from .utils.bezier import *
 from .utils.color import *
+from .utils import color as color
 from .utils.config_ops import *
 from .utils.debug import *
 from .utils.images import *
@@ -72,8 +76,10 @@ from .utils.iterables import *
 from .utils.file_ops import *
 from .utils.paths import *
 from .utils.rate_functions import *
+from .utils import rate_functions
 from .utils.simple_functions import *
 from .utils.sounds import *
 from .utils.space_ops import *
 from .utils.strings import *
 from .utils.tex import *
+from .utils.tex_templates import *

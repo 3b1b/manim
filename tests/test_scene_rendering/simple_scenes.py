@@ -15,3 +15,15 @@ class SceneWithMultipleCalls(Scene):
         for i in range(10):
             number.become(Integer(i))
             self.play(Animation(number))
+
+
+class SceneWithMultipleWaitCalls(Scene):
+    def construct(self):
+        self.play(ShowCreation(Square()))
+        self.wait(1)
+        self.play(ShowCreation(Square().shift(DOWN)))
+        self.wait(1)
+        self.play(ShowCreation(Square().shift(2 * DOWN)))
+        self.wait(1)
+        self.play(ShowCreation(Square().shift(3 * DOWN)))
+        self.wait(1)

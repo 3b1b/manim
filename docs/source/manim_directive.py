@@ -72,7 +72,8 @@ classnamedict = {}
 
 
 class ManimDirective(Directive):
-    r"""The ``.. manim::`` directive.
+    r"""The manim directive, rendering videos while building
+    the documentation.
 
     See the module docstring for documentation.
     """
@@ -105,9 +106,9 @@ class ManimDirective(Directive):
         save_last_frame = "save_last_frame" in self.options
         assert not (save_as_gif and save_last_frame)
 
-        frame_rate = config["frame_rate"]
-        pixel_height = config["pixel_height"]
-        pixel_width = config["pixel_width"]
+        frame_rate = 30
+        pixel_height = 480
+        pixel_width = 854
 
         if "quality" in self.options:
             quality = self.options["quality"]
@@ -171,14 +172,14 @@ class ManimDirective(Directive):
             f'config["frame_rate"] = {frame_rate}',
             f'config["pixel_height"] = {pixel_height}',
             f'config["pixel_width"] = {pixel_width}',
-            f'file_writer_config["media_dir"] = "{media_dir}"',
-            f'file_writer_config["images_dir"] = "{images_dir}"',
-            f'file_writer_config["tex_dir"] = "{tex_dir}"',
-            f'file_writer_config["text_dir"] = "{text_dir}"',
-            f'file_writer_config["video_dir"] = "{video_dir}"',
+            f'file_writer_config["media_dir"] = r"{media_dir}"',
+            f'file_writer_config["images_dir"] = r"{images_dir}"',
+            f'file_writer_config["tex_dir"] = r"{tex_dir}"',
+            f'file_writer_config["text_dir"] = r"{text_dir}"',
+            f'file_writer_config["video_dir"] = r"{video_dir}"',
             f'file_writer_config["save_last_frame"] = {save_last_frame}',
             f'file_writer_config["save_as_gif"] = {save_as_gif}',
-            f'file_writer_config["output_file"] = "{output_file}"',
+            f'file_writer_config["output_file"] = r"{output_file}"',
         ]
 
         user_code = self.content
@@ -191,7 +192,7 @@ class ManimDirective(Directive):
             "from manim import *",
             *file_writer_config_code,
             *user_code,
-            f"{clsname}()",
+            f"{clsname}().render()",
         ]
         exec("\n".join(code), globals())
 

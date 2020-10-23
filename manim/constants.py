@@ -29,11 +29,23 @@ NO_SCENE_MESSAGE = """
    There are no scenes inside that module
 """
 
-# Cairo stuff
+# Cairo and Pango stuff
 NORMAL = "NORMAL"
 ITALIC = "ITALIC"
 OBLIQUE = "OBLIQUE"
 BOLD = "BOLD"
+# Only for Pango from below
+THIN = "THIN"
+ULTRALIGHT = "ULTRALIGHT"
+LIGHT = "LIGHT"
+SEMILIGHT = "SEMILIGHT"
+BOOK = "BOOK"
+MEDIUM = "MEDIUM"
+SEMIBOLD = "SEMIBOLD"
+ULTRABOLD = "ULTRABOLD"
+HEAVY = "HEAVY"
+ULTRAHEAVY = "ULTRAHEAVY"
+
 
 # Geometry: directions
 ORIGIN = np.array((0.0, 0.0, 0.0))
@@ -112,76 +124,6 @@ FFMPEG_BIN = "ffmpeg"
 # gif stuff
 GIF_FILE_EXTENSION = ".gif"
 
-# Colors
-COLOR_MAP = {
-    "DARK_BLUE": "#236B8E",
-    "DARK_BROWN": "#8B4513",
-    "LIGHT_BROWN": "#CD853F",
-    "BLUE_E": "#1C758A",
-    "BLUE_D": "#29ABCA",
-    "BLUE_C": "#58C4DD",
-    "BLUE_B": "#9CDCEB",
-    "BLUE_A": "#C7E9F1",
-    "TEAL_E": "#49A88F",
-    "TEAL_D": "#55C1A7",
-    "TEAL_C": "#5CD0B3",
-    "TEAL_B": "#76DDC0",
-    "TEAL_A": "#ACEAD7",
-    "GREEN_E": "#699C52",
-    "GREEN_D": "#77B05D",
-    "GREEN_C": "#83C167",
-    "GREEN_B": "#A6CF8C",
-    "GREEN_A": "#C9E2AE",
-    "YELLOW_E": "#E8C11C",
-    "YELLOW_D": "#F4D345",
-    "YELLOW_C": "#FFFF00",
-    "YELLOW_B": "#FFEA94",
-    "YELLOW_A": "#FFF1B6",
-    "GOLD_E": "#C78D46",
-    "GOLD_D": "#E1A158",
-    "GOLD_C": "#F0AC5F",
-    "GOLD_B": "#F9B775",
-    "GOLD_A": "#F7C797",
-    "RED_E": "#CF5044",
-    "RED_D": "#E65A4C",
-    "RED_C": "#FC6255",
-    "RED_B": "#FF8080",
-    "RED_A": "#F7A1A3",
-    "MAROON_E": "#94424F",
-    "MAROON_D": "#A24D61",
-    "MAROON_C": "#C55F73",
-    "MAROON_B": "#EC92AB",
-    "MAROON_A": "#ECABC1",
-    "PURPLE_E": "#644172",
-    "PURPLE_D": "#715582",
-    "PURPLE_C": "#9A72AC",
-    "PURPLE_B": "#B189C6",
-    "PURPLE_A": "#CAA3E8",
-    "WHITE": "#FFFFFF",
-    "BLACK": "#000000",
-    "LIGHT_GRAY": "#BBBBBB",
-    "LIGHT_GREY": "#BBBBBB",
-    "GRAY": "#888888",
-    "GREY": "#888888",
-    "DARK_GREY": "#444444",
-    "DARK_GRAY": "#444444",
-    "DARKER_GREY": "#222222",
-    "DARKER_GRAY": "#222222",
-    "GREY_BROWN": "#736357",
-    "PINK": "#D147BD",
-    "LIGHT_PINK": "#DC75CD",
-    "GREEN_SCREEN": "#00FF00",
-    "ORANGE": "#FF862F",
-}
-COLOR_MAP.update(
-    {
-        name.replace("_C", ""): COLOR_MAP[name]
-        for name in COLOR_MAP
-        if name.endswith("_C")
-    }
-)
-PALETTE = list(COLOR_MAP.values())
-locals().update(COLOR_MAP)
 FFMPEG_VERBOSITY_MAP = {
     "DEBUG": "error",
     "INFO": "error",
@@ -190,3 +132,21 @@ FFMPEG_VERBOSITY_MAP = {
     "CRITICAL": "fatal",
 }
 VERBOSITY_CHOICES = FFMPEG_VERBOSITY_MAP.keys()
+JS_RENDERER_INFO = (
+    "The Electron frontend to Manim is hosted at "
+    "https://github.com/ManimCommunity/manim-renderer. After cloning and building it, "
+    "you can either start it prior to running Manim or specify the path to the "
+    "executable with the --js_renderer_path flag."
+)
+
+# Video qualities
+QUALITIES = {
+    "fourk_quality": "k",
+    "production_quality": "p",
+    "high_quality": "h",
+    "medium_quality": "m",
+    "low_quality": "l",
+}
+
+DEFAULT_QUALITY = "production_quality"
+DEFAULT_QUALITY_SHORT = QUALITIES[DEFAULT_QUALITY]

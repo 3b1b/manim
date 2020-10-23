@@ -123,19 +123,22 @@ Once you are done with :ref:`install-manim-poetry`, you can run manim's test sui
 .. important:: You should always run the test suite before making a PR. For other contributing guidelines, see `the guide for contributions to manim <../contributing.html>`_.
 
 
-Code Formatting Using Poetry
-****************************
+Code Formatting and Linting Using Poetry
+****************************************
 
-Once you are done with :ref:`install-manim-poetry`, you can run the code formatter ``black`` by activating a shell using ``poetry shell`` and then running the command ``black manim``. Or alternatively just use the command ``poetry run black manim``. 
+Once you are done with :ref:`install-manim-poetry`, you can run the code formatter ``black`` by activating a shell using ``poetry shell`` and then running the command ``black manim``. Or alternatively just use the command ``poetry run black manim``.
+
+You can see linting information for a given file or directory by either running ``poetry shell`` followed by ``pylint <path>`` or with ``poetry run pylint <path>``. Note that unlike ``black``, ``pylint`` cannot make code changes automatically.
 
 .. code-block:: bash
 
    poetry shell
-   black
+   black manim
+   pylint manim
 
 .. note:: Here, the word ``manim``, as used in the commands ``black manim`` or ``poetry run black manim``, refers to the folder which ``black`` is to format. You can also reformat the files containing the test suite by running the command ``black tests``.
 
-For example, if you have written some new example and want to format it use the below command
+For example, if you have written some new example and want to format it and see lint information use the commands below.
 
 .. code-block:: bash
 

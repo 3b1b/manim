@@ -8,13 +8,12 @@ import operator as op
 from ..animation.composition import LaggedStart
 from ..animation.transform import ApplyMethod
 from ..animation.transform import Restore
-from ..constants import WHITE
-from ..constants import BLACK
 from ..mobject.geometry import Circle
 from ..mobject.svg.drawings import Car
 from ..mobject.types.vectorized_mobject import VGroup
 from ..utils.config_ops import digest_config
 from ..utils.space_ops import get_norm
+from ..utils.color import BLACK, WHITE
 
 
 class MoveCar(ApplyMethod):
@@ -30,7 +29,7 @@ class MoveCar(ApplyMethod):
 
     def check_if_input_is_car(self, car):
         if not isinstance(car, Car):
-            raise Exception("MoveCar must take in Car object")
+            raise TypeError("MoveCar must take in Car object")
 
     def begin(self):
         super().begin()

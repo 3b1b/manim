@@ -111,6 +111,11 @@ class CustomEncoder(json.JSONEncoder):
             # We have to make a copy, as we don't want to touch to the original list
             # A deepcopy isn't necessary as it is already recursive.
             lst_copy = copy.copy(lst)
+            if isinstance(lst, tuple):
+                # NOTE: Sometimes a tuple can pass through this function. As a tuple
+                # is immutable, we convert it to a list to be able to modify it.
+                # It's ok as it is a copy.
+                lst_copy = list(lst_copy)
             for i, el in enumerate(lst):
                 if not isinstance(lst, tuple):
                     lst_copy[i] = self._handle_already_processed(
@@ -247,9 +252,11 @@ def get_hash_from_play_call(
     ]
     t_end = perf_counter()
     logger.debug("Hashing done in %(time)s s.", {"time": str(t_end - t_start)[:8]})
+    hash_complete = f"{hash_camera}_{hash_animations}_{hash_current_mobjects}"
     # This will reset ALREADY_PROCESSED_ID as all the hashing processus is finished.
     ALREADY_PROCESSED_ID = {}
-    return "{}_{}_{}".format(hash_camera, hash_animations, hash_current_mobjects)
+    logger.debug("Hash generated :  %(h)s", {"h": hash_complete})
+    return hash_complete
 
 
 def get_hash_from_wait_call(
@@ -294,15 +301,15 @@ def get_hash_from_wait_call(
         ALREADY_PROCESSED_ID = {}
         t_end = perf_counter()
         logger.debug("Hashing done in %(time)s s.", {"time": str(t_end - t_start)[:8]})
-        return "{}_{}{}_{}".format(
-            hash_camera,
-            str(wait_time).replace(".", "-"),
-            hash_function,
-            hash_current_mobjects,
-        )
+        hash_complete = f"{hash_camera}_{str(wait_time).replace('.', '-')}{hash_function}_{hash_current_mobjects}"
+        logger.debug("Hash generated :  %(h)s", {"h": hash_complete})
+        return hash_complete
     ALREADY_PROCESSED_ID = {}
     t_end = perf_counter()
     logger.debug("Hashing done in %(time)s s.", {"time": str(t_end - t_start)[:8]})
-    return "{}_{}_{}".format(
-        hash_camera, str(wait_time).replace(".", "-"), hash_current_mobjects
+    hash_complete = (
+        f"{hash_camera}_{str(wait_time).replace('.', '-')}_{hash_current_mobjects}"
     )
+
+    logger.debug("Hash generated :  %(h)s", {"h": hash_complete})
+    return hash_complete

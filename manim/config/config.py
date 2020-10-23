@@ -16,7 +16,12 @@ from contextlib import contextmanager
 import colour
 
 from .. import constants
-from .config_utils import _run_config, _init_dirs, _from_command_line
+from .config_utils import (
+    _determine_quality,
+    _run_config,
+    _init_dirs,
+    _from_command_line,
+)
 
 from .logger import set_rich_logger, set_file_logger, logger
 from ..utils.tex import TexTemplate, TexTemplateFromFile
@@ -80,13 +85,11 @@ def _parse_config(config_parser, args):
     # Handle the *_quality flags.  These determine the section to read
     # and are stored in 'camera_config'.  Note the highest resolution
     # passed as argument will be used.
-    for flag in ["fourk_quality", "high_quality", "medium_quality", "low_quality"]:
-        if getattr(args, flag):
-            section = config_parser[flag]
-            break
-    else:
-        section = config_parser["CLI"]
-    config = {opt: section.getint(opt) for opt in config_parser[flag]}
+    quality = _determine_quality(args)
+    section = config_parser[quality if quality != constants.DEFAULT_QUALITY else "CLI"]
+
+    # Loop over low quality for the keys, could be any quality really
+    config = {opt: section.getint(opt) for opt in config_parser["low_quality"]}
 
     config["default_pixel_height"] = default.getint("pixel_height")
     config["default_pixel_width"] = default.getint("pixel_width")
@@ -112,6 +115,14 @@ def _parse_config(config_parser, args):
         background_color = colour.Color(default["background_color"])
     config["background_color"] = background_color
 
+    config["use_js_renderer"] = args.use_js_renderer or default.getboolean(
+        "use_js_renderer"
+    )
+
+    config["js_renderer_path"] = args.js_renderer_path or default.get(
+        "js_renderer_path"
+    )
+
     # Set the rest of the frame properties
     config["frame_height"] = 8.0
     config["frame_width"] = (
@@ -124,8 +135,11 @@ def _parse_config(config_parser, args):
     config["left_side"] = config["frame_x_radius"] * constants.LEFT
     config["right_side"] = config["frame_x_radius"] * constants.RIGHT
 
-    # Handle the --tex_template flag.  Note we accept None if the flag is absent
-    tex_fn = os.path.expanduser(args.tex_template) if args.tex_template else None
+    # Handle the --tex_template flag, if the flag is absent read it from the config.
+    if args.tex_template:
+        tex_fn = os.path.expanduser(args.tex_template)
+    else:
+        tex_fn = default["tex_template"] if default["tex_template"] != "" else None
 
     if tex_fn is not None and not os.access(tex_fn, os.R_OK):
         # custom template not available, fallback to default
@@ -144,6 +158,8 @@ def _parse_config(config_parser, args):
 
 args, config_parser, file_writer_config, successfully_read_files = _run_config()
 logger.setLevel(file_writer_config["verbosity"])
+set_rich_logger(config_parser["logger"], file_writer_config["verbosity"])
+
 if _from_command_line():
     logger.debug(
         f"Read configuration files: {[os.path.abspath(cfgfile) for cfgfile in successfully_read_files]}"
@@ -151,15 +167,24 @@ if _from_command_line():
     if not (hasattr(args, "subcommands")):
         _init_dirs(file_writer_config)
 config = _parse_config(config_parser, args)
+if config["use_js_renderer"]:
+    file_writer_config["disable_caching"] = True
 camera_config = config
 
-# Set the different loggers
-set_rich_logger(config_parser["logger"], file_writer_config["verbosity"])
 if file_writer_config["log_to_file"]:
-    # IMPORTANT note about file name : The log file name will be the scene_name get from the args (contained in file_writer_config). So it can differ from the real name of the scene.
+    # Note about log_file_name : The log file name will be the <name_of_animation_file>_<name_of_scene>.log
+    # get from the args (contained in file_writer_config). So it can differ from the real name of the scene.
+    # <name_of_scene> would only appear if scene name was provided on manim call
+    scene_name_suffix = "".join(file_writer_config["scene_names"])
+    scene_file_name = os.path.basename(args.file).split(".")[0]
+    log_file_name = (
+        f"{scene_file_name}_{scene_name_suffix}.log"
+        if scene_name_suffix
+        else f"{scene_file_name}.log"
+    )
     log_file_path = os.path.join(
         file_writer_config["log_dir"],
-        "".join(file_writer_config["scene_names"]) + ".log",
+        log_file_name,
     )
     set_file_logger(log_file_path)
-    logger.info("Log file wil be saved in %(logpath)s", {"logpath": log_file_path})
+    logger.info("Log file will be saved in %(logpath)s", {"logpath": log_file_path})

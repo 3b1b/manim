@@ -26,6 +26,8 @@ from ...mobject.types.vectorized_mobject import VectorizedPoint
 from ...utils.config_ops import digest_config
 from ...utils.strings import split_string_list_to_isolate_substrings
 from ...utils.tex_file_writing import tex_to_svg_file
+from ...utils.color import BLACK
+from ...utils.tex import TexTemplate
 
 TEX_MOB_SCALE_FACTOR = 0.05
 
@@ -37,28 +39,49 @@ class TexSymbol(VMobjectFromSVGPathstring):
 
 
 class SingleStringMathTex(SVGMobject):
+    """Elementary building block for rendering text with LaTeX.
+
+    Tests
+    -----
+    Check that creating a :class:`~.SingleStringMathTex` object works::
+
+        >>> SingleStringMathTex('Test')
+        SingleStringMathTex('Test')
+    """
+
     CONFIG = {
         "stroke_width": 0,
         "fill_opacity": 1.0,
-        "background_stroke_width": 1,
+        "background_stroke_width": 0,
         "background_stroke_color": BLACK,
         "should_center": True,
         "height": None,
         "organize_left_to_right": False,
         "alignment": "",
-        "type": "tex",
+        "tex_environment": "align*",
+        "tex_template": None,
     }
 
     def __init__(self, tex_string, **kwargs):
         digest_config(self, kwargs)
+        if self.tex_template is None:
+            self.tex_template = kwargs.get("tex_template", config["tex_template"])
+
         assert isinstance(tex_string, str)
         self.tex_string = tex_string
-        file_name = tex_to_svg_file(self.get_modified_expression(tex_string), self.type)
+        file_name = tex_to_svg_file(
+            self.get_modified_expression(tex_string),
+            environment=self.tex_environment,
+            tex_template=self.tex_template,
+        )
         SVGMobject.__init__(self, file_name=file_name, **kwargs)
         if self.height is None:
             self.scale(TEX_MOB_SCALE_FACTOR)
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
+
+    def __repr__(self):
+        return f"{type(self).__name__}({repr(self.tex_string)})"
 
     def get_modified_expression(self, tex_string):
         result = self.alignment + " " + tex_string
@@ -144,10 +167,32 @@ class SingleStringMathTex(SVGMobject):
 
 
 class MathTex(SingleStringMathTex):
+    """A string compiled with LaTeX in math mode.
+
+    Examples
+    --------
+    .. manim:: Formula
+        :save_last_frame:
+
+        class Formula(Scene):
+            def construct(self):
+                t = MathTex(r"\int_a^b f'(x) dx = f(b)- f(a)")
+                self.add(t)
+
+    Tests
+    -----
+    Check that creating a :class:`~.MathTex` works::
+
+        >>> MathTex('a^2 + b^2 = c^2')
+        MathTex('a^2 + b^2 = c^2')
+
+    """
+
     CONFIG = {
         "arg_separator": " ",
         "substrings_to_isolate": [],
         "tex_to_color_map": {},
+        "tex_environment": "align*",
     }
 
     def __init__(self, *tex_strings, **kwargs):
@@ -157,7 +202,9 @@ class MathTex(SingleStringMathTex):
         SingleStringMathTex.__init__(
             self, self.arg_separator.join(tex_strings), **kwargs
         )
-        self.break_up_by_substrings()
+        config = dict(self.CONFIG)
+        config.update(kwargs)
+        self.break_up_by_substrings(config)
         self.set_color_by_tex_to_color_map(self.tex_to_color_map)
 
         if self.organize_left_to_right:
@@ -176,7 +223,7 @@ class MathTex(SingleStringMathTex):
         split_list = [s for s in split_list if s != ""]
         return split_list
 
-    def break_up_by_substrings(self):
+    def break_up_by_substrings(self, config):
         """
         Reorganize existing submojects one layer
         deeper based on the structure of tex_strings (as a list
@@ -184,8 +231,6 @@ class MathTex(SingleStringMathTex):
         """
         new_submobjects = []
         curr_index = 0
-        config = dict(self.CONFIG)
-        config["alignment"] = ""
         for tex_string in self.tex_strings:
             sub_tex_mob = SingleStringMathTex(tex_string, **config)
             num_submobs = len(sub_tex_mob.submobjects)
@@ -241,7 +286,7 @@ class MathTex(SingleStringMathTex):
     def index_of_part(self, part):
         split_self = self.split()
         if part not in split_self:
-            raise Exception("Trying to get index of part not in MathTex")
+            raise ValueError("Trying to get index of part not in MathTex")
         return split_self.index(part)
 
     def index_of_part_by_tex(self, tex, **kwargs):
@@ -253,10 +298,22 @@ class MathTex(SingleStringMathTex):
 
 
 class Tex(MathTex):
+    r"""A string compiled with LaTeX in normal mode.
+
+    Tests
+    -----
+
+    Check whether writing a LaTeX string works::
+
+        >>> Tex('The horse does not eat cucumber salad.')
+        Tex('The horse does not eat cucumber salad.')
+
+    """
+
     CONFIG = {
         "alignment": "\\centering",
         "arg_separator": "",
-        "type": "text",
+        "tex_environment": None,
     }
 
 
@@ -284,7 +341,7 @@ class BulletedList(Tex):
         elif isinstance(arg, int):
             part = self.submobjects[arg]
         else:
-            raise Exception("Expected int or string, got {0}".format(arg))
+            raise TypeError("Expected int or string, got {0}".format(arg))
         for other_part in self.submobjects:
             if other_part is part:
                 other_part.set_fill(opacity=1)
@@ -333,7 +390,7 @@ class Title(Tex):
 class TexMobject(MathTex):
     def __init__(self, *tex_strings, **kwargs):
         logger.warning(
-            "TexMobject has been deprecated (due to its confusing name)"
+            "TexMobject has been deprecated (due to its confusing name) "
             "in favour of MathTex. Please use MathTex instead!"
         )
         MathTex.__init__(self, *tex_strings, **kwargs)
@@ -342,7 +399,7 @@ class TexMobject(MathTex):
 class TextMobject(Tex):
     def __init__(self, *text_parts, **kwargs):
         logger.warning(
-            "TextMobject has been deprecated (due to its confusing name)"
+            "TextMobject has been deprecated (due to its confusing name) "
             "in favour of Tex. Please use Tex instead!"
         )
         Tex.__init__(self, *text_parts, **kwargs)

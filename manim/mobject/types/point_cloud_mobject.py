@@ -6,7 +6,7 @@ __all__ = ["PMobject", "Mobject1D", "Mobject2D", "PGroup", "PointCloudDot", "Poi
 from ...constants import *
 from ...mobject.mobject import Mobject
 from ...utils.bezier import interpolate
-from ...utils.color import color_gradient
+from ...utils.color import color_gradient, YELLOW_C, WHITE, BLACK, YELLOW
 from ...utils.color import color_to_rgba
 from ...utils.color import rgba_to_color
 from ...utils.config_ops import digest_config
@@ -39,7 +39,7 @@ class PMobject(Mobject):
             color = Color(color) if color else self.color
             rgbas = np.repeat([color_to_rgba(color, alpha)], num_new_points, axis=0)
         elif len(rgbas) != len(points):
-            raise Exception("points and rgbas must have same shape")
+            raise ValueError("points and rgbas must have same shape")
         self.rgbas = np.append(self.rgbas, rgbas, axis=0)
         return self
 
@@ -214,7 +214,7 @@ class Mobject2D(PMobject):
 class PGroup(PMobject):
     def __init__(self, *pmobs, **kwargs):
         if not all([isinstance(m, PMobject) for m in pmobs]):
-            raise Exception("All submobjects must be of type PMobject")
+            raise ValueError("All submobjects must be of type PMobject")
         super().__init__(**kwargs)
         self.add(*pmobs)
 

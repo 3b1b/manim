@@ -11,7 +11,7 @@ from ...constants import *
 from ...mobject.mobject import Mobject
 from ...mobject.shape_matchers import SurroundingRectangle
 from ...utils.bezier import interpolate
-from ...utils.color import color_to_int_rgb
+from ...utils.color import color_to_int_rgb, WHITE
 from ...utils.config_ops import digest_config
 from ...utils.images import get_full_raster_image_path
 
@@ -27,7 +27,7 @@ class AbstractImageMobject(Mobject):
     }
 
     def get_pixel_array(self):
-        raise Exception("Not implemented")
+        raise NotImplementedError()
 
     def set_color(self):
         # Likely to be implemented in subclasses, but no obgligation

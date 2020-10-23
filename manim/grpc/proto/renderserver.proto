@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package renderserver;
+
+service RenderServer {
+    // Used to signal that a new animation is ready to be animated.
+    rpc AnimationStatus (EmptyRequest) returns (EmptyResponse);
+
+    // Used to signal when manim starts and stops.
+    rpc ManimStatus (ManimStatusRequest) returns (ManimStatusResponse);
+
+    rpc UpdateScene (UpdateSceneRequest) returns (UpdateSceneResponse);
+
+    rpc NewScene (NewSceneRequest) returns (EmptyResponse);
+
+    rpc SceneFinished (EmptyRequest) returns (EmptyResponse);
+}
+
+message EmptyRequest {}
+message EmptyResponse {}
+
+message NewSceneRequest {
+    string name = 1;
+}
+
+message NewSceneResponse {}
+
+message Animation {
+    string name = 1;
+    float duration = 2;
+}
+
+message AnimationStatusRequest {}
+message AnimationStatusResponse {}
+
+message ManimStatusRequest {
+    // The name of the scene whose frames are currently being served. This is
+    // only seen if a javascript renderer is running prior to manim being
+    // started.
+    string scene_name = 1;
+
+    // Indicates that the current Scene is finished.
+    bool scene_finished = 2;
+
+    // Indicates that the Animations have been updated and should be changed.
+    repeated Animation animations = 3;
+}
+message ManimStatusResponse {}
+
+message UpdateSceneRequest {}
+message UpdateSceneResponse {}

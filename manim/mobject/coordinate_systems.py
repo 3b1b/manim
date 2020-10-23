@@ -18,6 +18,8 @@ from ..utils.config_ops import digest_config
 from ..utils.config_ops import merge_dicts_recursively
 from ..utils.simple_functions import binary_search
 from ..utils.space_ops import angle_of_vector
+from ..utils.color import LIGHT_GREY, WHITE, BLUE_D, BLUE
+
 
 # TODO: There should be much more code reuse between Axes, NumberPlane and GraphScene
 
@@ -39,10 +41,10 @@ class CoordinateSystem:
             self.y_max = config["frame_y_radius"]
 
     def coords_to_point(self, *coords):
-        raise Exception("Not implemented")
+        raise NotImplementedError()
 
     def point_to_coords(self, point):
-        raise Exception("Not implemented")
+        raise NotImplementedError()
 
     def c2p(self, *coords):
         """Abbreviation for coords_to_point"""
@@ -53,7 +55,7 @@ class CoordinateSystem:
         return self.point_to_coords(point)
 
     def get_axes(self):
-        raise Exception("Not implemented")
+        raise NotImplementedError()
 
     def get_axis(self, index):
         return self.get_axes()[index]
@@ -141,7 +143,7 @@ class Axes(VGroup, CoordinateSystem):
     }
 
     def __init__(self, **kwargs):
-        CoordinateSystem.__init__(self, **kwargs)
+        CoordinateSystem.__init__(self)
         VGroup.__init__(self, **kwargs)
         self.x_axis = self.create_axis(self.x_min, self.x_max, self.x_axis_config)
         self.y_axis = self.create_axis(self.y_min, self.y_max, self.y_axis_config)

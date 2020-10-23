@@ -21,7 +21,7 @@ from ..mobject.types.vectorized_mobject import VGroup
 from ..mobject.types.vectorized_mobject import VectorizedPoint
 from ..scene.scene import Scene
 from ..utils.bezier import interpolate
-from ..utils.color import color_gradient
+from ..utils.color import color_gradient, GREY, BLUE, GREEN, YELLOW, BLACK, WHITE
 from ..utils.color import invert_color
 from ..utils.space_ops import angle_of_vector
 
@@ -520,7 +520,7 @@ class GraphScene(Scene):
             elif input_sample_type == "center":
                 sample_input = x + 0.5 * dx
             else:
-                raise Exception("Invalid input sample type")
+                raise ValueError("Invalid input sample type")
             graph_point = self.input_to_graph_point(sample_input, graph)
             if bounded_graph == None:
                 y_point = 0
@@ -1027,7 +1027,7 @@ class GraphScene(Scene):
         NOTE: At least one of target_dx and target_x should be not None.
         """
         if target_dx is None and target_x is None:
-            raise Exception("At least one of target_x and target_dx must not be None")
+            raise ValueError("At least one of target_x and target_dx must not be None")
         if added_anims is None:
             added_anims = []
 
