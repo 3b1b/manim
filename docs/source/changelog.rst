@@ -2,8 +2,30 @@
 Changelog
 *********
 
+
+v0.2.0
+==================
+
+:Date: TBD
+
+Changes since Manim Community release v0.1.0
+
+
+
+Mobjects, Scenes, and Animations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+#. The ``alignment`` attribute to Tex and MathTex has been removed in favour of ``tex_environment``.
+
+
+
+
+
+
+
+
 v0.1.0
-======
+==================
 
 :Date: October 21, 2020
 
@@ -20,7 +42,7 @@ Command line
 ^^^^^^^^^^^^
 
 #. Output of 'manim --help' has been improved
-#. Implement logging with the :code:`rich` library and a :code:`logger` object instead of plain ol` prints
+#. Implement logging with the :code:`rich` library and a :code:`logger` object instead of plain ol' prints
 #. Added a flag :code:`--dry_run`, which doesn’t write any media
 #. Allow for running manim with :code:`python3 -m manim`
 #. Refactored Tex Template management. You can now use custom templates with command line args using :code:`--tex_template`!
@@ -107,3 +129,6 @@ Other Changes
 #. Rename package from manimlib to manim
 #. Move all imports to :code:`__init__`, so :code:`from manim import *` replaces :code:`from manimlib.imports import *`
 #. Global dir variable handling has been removed. Instead :code:`initialize_directories`, if needed, overrides the values from the cfg files at runtime.
+
+
+
