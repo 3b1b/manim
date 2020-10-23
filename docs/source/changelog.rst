@@ -40,8 +40,6 @@ Config system
 #. Implement a :code:`manim.cfg` config file system, that consolidates the global configuration, the command line argument parsing, and some of the constants defined in :code:`constants.py`
 #. Added utilities for manipulating Manim’s :code:`.cfg` files.
 #. Added a subcommand structure for easier use of utilities managing :code:`.cfg` files
-#. Added utilities for manipulating Manim’s :code:`.cfg` files.
-#. Added a subcommand structure for easier use of utilities managing :code:`.cfg` files	#. Added a subcommand structure for easier use of utilities managing :code:`.cfg` files
 #. Also some Variables changed to the new config system:
     #. `FRAME_HEIGHT` to `config["frame_width"]`
     #. `TOP` to `config["frame_height"] / 2 * UP`
