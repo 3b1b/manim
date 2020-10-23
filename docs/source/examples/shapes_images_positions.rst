@@ -14,7 +14,6 @@ Shapes, Images and Positions
             s.next_to(c, LEFT)
             t.next_to(c, DOWN)
             self.add(d, c, s, t)
-            self.wait(1)
 
 .. manim:: Example1ImageFromArray
     :save_last_frame:
