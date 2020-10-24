@@ -64,6 +64,16 @@ Config system
 #. Implement a :code:`manim.cfg` config file system, that consolidates the global configuration, the command line argument parsing, and some of the constants defined in :code:`constants.py`
 #. Added utilities for manipulating Manim’s :code:`.cfg` files.
 #. Added a subcommand structure for easier use of utilities managing :code:`.cfg` files
+#. Also some variables have been moved from ``constants.py`` to the new config system:
+
+    #. ``FRAME_HEIGHT`` to ``config["frame_width"]``
+    #. ``TOP`` to ``config["frame_height"] / 2 * UP``
+    #. ``BOTTOM`` to ``config["frame_height"] / 2 * DOWN``
+    #. ``LEFT_SIDE`` to ``config["frame_width"] / 2 * LEFT``
+    #. ``RIGHT_SIDE`` to ``config["frame_width"] / 2 * RIGHT``
+    #. ``self.camera.frame_rate`` to ``config["frame_rate"]``
+
+
 
 
 Mobjects, Scenes, and Animations
@@ -72,6 +82,7 @@ Mobjects, Scenes, and Animations
 #. Add customizable left and right bracket for :code:`Matrix` mobject and :code:`set_row_colors` method for matrix mobject
 #. Add :code:`AddTeXLetterByLetter` animation
 #. Enhanced GraphScene
+
     #. You can now add arrow tips to axes
     #. extend axes a bit at the start and/or end
     #. have invisible axes
