@@ -307,9 +307,8 @@ class CairoText(SVGMobject):
         line_spacing = self.line_spacing * 10
 
         if self.font == "":
-            logger.warning(
-                "You haven't set a font, non-english characters may not be rendered correctly"
-            )
+            if NOT_SETTING_FONT_MSG:
+                logger.warning(NOT_SETTING_FONT_MSG)
 
         dir_name = file_writer_config["text_dir"]
         if not os.path.exists(dir_name):
@@ -935,5 +934,8 @@ class Text(CairoText):
     """
 
     def __init__(self, text, **config):
-        logger.warning("Text currently uses Cairo Toy API, but will soon use PangoText")
+        logger.warning(
+            "Using Text uses Cairo Toy API to Render Text."
+            "Using PangoText is recommended and soon Text would point to PangoText"
+        )
         CairoText.__init__(self, text, **config)

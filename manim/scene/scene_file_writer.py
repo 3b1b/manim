@@ -77,48 +77,46 @@ class SceneFileWriter(object):
             )
 
         if file_writer_config["write_to_movie"]:
-            pass
-        if file_writer_config["video_dir"]:
+            if file_writer_config["video_dir"]:
+                if not file_writer_config["custom_folders"]:
+                    movie_dir = guarantee_existence(
+                        os.path.join(
+                            file_writer_config["video_dir"],
+                            module_directory,
+                            self.get_resolution_directory(),
+                        )
+                    )
+                else:
+                    movie_dir = guarantee_existence(
+                        os.path.join(file_writer_config["video_dir"])
+                    )
+            self.movie_file_path = os.path.join(
+                movie_dir,
+                add_extension_if_not_present(
+                    default_name, file_writer_config["movie_file_extension"]
+                ),
+            )
+            self.gif_file_path = os.path.join(
+                movie_dir,
+                add_extension_if_not_present(default_name, GIF_FILE_EXTENSION),
+            )
             if not file_writer_config["custom_folders"]:
-                movie_dir = guarantee_existence(
+                self.partial_movie_directory = guarantee_existence(
                     os.path.join(
-                        file_writer_config["video_dir"],
-                        module_directory,
-                        self.get_resolution_directory(),
+                        movie_dir,
+                        "partial_movie_files",
+                        default_name,
                     )
                 )
             else:
-                movie_dir = guarantee_existence(
-                    os.path.join(file_writer_config["video_dir"])
+                self.partial_movie_directory = guarantee_existence(
+                    os.path.join(
+                        file_writer_config["media_dir"],
+                        "temp_files",
+                        "partial_movie_files",
+                        default_name,
+                    )
                 )
-        self.movie_file_path = os.path.join(
-            movie_dir,
-            add_extension_if_not_present(
-                default_name, file_writer_config["movie_file_extension"]
-            ),
-        )
-        self.gif_file_path = os.path.join(
-            movie_dir,
-            add_extension_if_not_present(default_name, GIF_FILE_EXTENSION),
-        )
-        # The partial movie directory has to be set even if we do not write to movie
-        if not file_writer_config["custom_folders"]:
-            self.partial_movie_directory = guarantee_existence(
-                os.path.join(
-                    movie_dir,
-                    "partial_movie_files",
-                    default_name,
-                )
-            )
-        else:
-            self.partial_movie_directory = guarantee_existence(
-                os.path.join(
-                    file_writer_config["media_dir"],
-                    "temp_files",
-                    "partial_movie_files",
-                    default_name,
-                )
-            )
 
     def add_partial_movie_file(self, hash_animation):
         """Adds a new partial movie file path to scene.partial_movie_files from an hash. This method will compute the path from the hash.
@@ -484,14 +482,11 @@ class SceneFileWriter(object):
         :class:`bool`
             Whether the file exists.
         """
-        if hasattr(self, "partial_movie_directory"):
-            path = os.path.join(
-                self.partial_movie_directory,
-                "{}{}".format(hash_invocation, self.movie_file_extension),
-            )
-            return os.path.exists(path)
-        else:
-            return False  # If there is no partial movie directory, then the file is not cached
+        path = os.path.join(
+            self.partial_movie_directory,
+            "{}{}".format(hash_invocation, self.movie_file_extension),
+        )
+        return os.path.exists(path)
 
     def combine_movie_files(self):
         """
