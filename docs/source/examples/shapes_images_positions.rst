@@ -49,22 +49,6 @@ Shapes, Images and Positions
             self.add(image)
 
 
-.. manim:: ImageFromFile
-    :save_last_frame:
-
-    class ImageFromFile(Scene):
-        def construct(self):
-            # Use PIL when you want to import an image from the web
-            import requests
-            from PIL import Image
-            img = Image.open("../logo/cropped.png")
-            img_mobject = ImageMobject(img)
-            # this line, when you want to import your Image on your machine
-            # img_mobject = ImageMobject("<your image address>")
-            img_mobject.scale(3)
-            self.add(img_mobject)
-
-
 .. manim:: ArcShapeIris
     :save_last_frame:
     
