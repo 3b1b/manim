@@ -60,6 +60,9 @@ Mobjects, Scenes, and Animations
 #. Add customizable left and right bracket for :code:`Matrix` mobject and :code:`set_row_colors` method for matrix mobject
 #. Add :code:`AddTeXLetterByLetter` animation
 #. Enhanced GraphScene
+```suggestion
+Mobjects, Scenes, and Animations
+```
     #. You can now add arrow tips to axes
     #. extend axes a bit at the start and/or end
     #. have invisible axes
