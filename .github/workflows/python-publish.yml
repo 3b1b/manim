@@ -35,7 +35,7 @@ jobs:
         tag_act: ${{ github.ref }}
       run: |
           ref_tag=$(python -c "print('${tag_act}'.split('/')[-1])")
-          res=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${access_token}" https://api.github.com/repos/ManimCommunity/manim-windows/releases/tags/${ref_tag})
+          res=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${access_token}" https://api.github.com/repos/ManimCommunity/manim/releases/tags/${ref_tag})
           upload_url=$(python -c "import json;print(json.loads('''${res}''')['upload_url'])")
           echo "::set-output name=upload_url::${upload_url}"
 
