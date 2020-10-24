@@ -14,8 +14,6 @@ Shapes, Images and Positions
             s.next_to(c, LEFT)
             t.next_to(c, DOWN)
             self.add(d, c, s, t)
-            self.wait()
-
 
 .. manim:: PointMovingOnShapes
     

@@ -52,12 +52,11 @@ class SingleStringMathTex(SVGMobject):
     CONFIG = {
         "stroke_width": 0,
         "fill_opacity": 1.0,
-        "background_stroke_width": 1,
+        "background_stroke_width": 0,
         "background_stroke_color": BLACK,
         "should_center": True,
         "height": None,
         "organize_left_to_right": False,
-        "alignment": "",
         "tex_environment": "align*",
         "tex_template": None,
     }
@@ -84,7 +83,7 @@ class SingleStringMathTex(SVGMobject):
         return f"{type(self).__name__}({repr(self.tex_string)})"
 
     def get_modified_expression(self, tex_string):
-        result = self.alignment + " " + tex_string
+        result = tex_string
         result = result.strip()
         result = self.modify_special_strings(result)
         return result
@@ -311,9 +310,8 @@ class Tex(MathTex):
     """
 
     CONFIG = {
-        "alignment": "\\centering",
         "arg_separator": "",
-        "tex_environment": None,
+        "tex_environment": "center",
     }
 
 
@@ -322,7 +320,7 @@ class BulletedList(Tex):
         "buff": MED_LARGE_BUFF,
         "dot_scale_factor": 2,
         # Have to include because of handle_multiple_args implementation
-        "alignment": "",
+        "tex_environment": None,
     }
 
     def __init__(self, *items, **kwargs):

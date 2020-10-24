@@ -29,7 +29,6 @@ Mathematical Objects
    ~mobject.numbers
    ~mobject.probability
    ~mobject.shape_matchers
-   ~mobject.three_d_shading_utils
    ~mobject.three_d_utils
    ~mobject.three_dimensions
    ~mobject.value_tracker

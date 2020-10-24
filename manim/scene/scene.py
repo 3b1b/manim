@@ -530,6 +530,23 @@ class Scene(Container):
                 return mobjects[i:]
         return []
 
+    def get_moving_and_static_mobjects(self, animations):
+        all_mobjects = list_update(self.mobjects, self.foreground_mobjects)
+        all_mobject_families = extract_mobject_family_members(
+            all_mobjects,
+            use_z_index=self.renderer.camera.use_z_index,
+            only_those_with_points=True,
+        )
+        moving_mobjects = self.get_moving_mobjects(*animations)
+        all_moving_mobject_families = extract_mobject_family_members(
+            moving_mobjects,
+            use_z_index=self.renderer.camera.use_z_index,
+        )
+        static_mobjects = filter(
+            lambda m: m not in all_moving_mobject_families, all_mobject_families
+        )
+        return all_moving_mobject_families, static_mobjects
+
     def get_time_progression(
         self, run_time, n_iterations=None, override_skip_animations=False
     ):
@@ -611,7 +628,8 @@ class Scene(Container):
         ProgressDisplay
             The CommandLine Progress Bar.
         """
-        time_progression = self.get_time_progression(self.run_time)
+        run_time = self.get_run_time(animations)
+        time_progression = self.get_time_progression(run_time)
         time_progression.set_description(
             "".join(
                 [
@@ -702,76 +720,11 @@ class Scene(Container):
 
         return animations
 
-    def begin_animations(self, animations):
-        """
-        This method begins the list of animations that is passed,
-        and adds any mobjects involved (if not already present)
-        to the scene again.
-
-        Parameters
-        ----------
-        animations : list
-            List of involved animations.
-
-        """
-        for animation in animations:
-            # Begin animation
-            animation.begin()
-
-    def progress_through_animations(self):
-        """
-        This method progresses through each animation
-        in the list passed and and updates the frames as required.
-        """
-        for t in self.get_animation_time_progression(self.animations):
-            self.update_animation_to_time(t)
-            self.renderer.update_frame(self, self.moving_mobjects, self.static_image)
-            self.renderer.add_frame(self.renderer.get_frame())
-
-    def update_animation_to_time(self, t):
-        """
-        Updates the current animation to the specified time.
-
-        Parameters
-        ----------
-        t : int
-            Offset from the start of the animation to which to update the current
-            animation.
-        """
-        dt = t - self.last_t
-        self.last_t = t
-        for animation in self.animations:
-            animation.update_mobjects(dt)
-            alpha = t / animation.run_time
-            animation.interpolate(alpha)
-        self.update_mobjects(dt)
-
-    def finish_animations(self, animations):
-        """
-        This function cleans up after the end
-        of each animation in the passed list.
-
-        Parameters
-        ----------
-        animations : list
-            list of animations to finish.
-        """
-        for animation in animations:
-            animation.finish()
-            animation.clean_up_from_scene(self)
-        # TODO: This is only used in one place and should probably be removed.
-        self.mobjects_from_last_animation = [anim.mobject for anim in animations]
-        if file_writer_config["skip_animations"]:
-            # TODO, run this call in for each animation?
-            self.update_mobjects(self.get_run_time(animations))
-        else:
-            self.update_mobjects(0)
+    def play(self, *args, **kwargs):
+        self.renderer.play(self, *args, **kwargs)
 
     def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
         self.renderer.wait(self, duration=duration, stop_condition=stop_condition)
-
-    def play(self, *args, **kwargs):
-        self.renderer.play(self, *args, **kwargs)
 
     def play_internal(self, *args, **kwargs):
         """
@@ -789,69 +742,59 @@ class Scene(Container):
         if len(args) == 0:
             warnings.warn("Called Scene.play with no animations")
             return
-        self.animations = self.compile_play_args_to_animation_list(*args, **kwargs)
-        self.begin_animations(self.animations)
+
+        animations = self.compile_play_args_to_animation_list(*args, **kwargs)
+        for animation in animations:
+            animation.begin()
 
         # Paint all non-moving objects onto the screen, so they don't
         # have to be rendered every frame
-        self.moving_mobjects = self.get_moving_mobjects(*self.animations)
-        self.renderer.update_frame(self, excluded_mobjects=self.moving_mobjects)
-        self.static_image = self.renderer.get_frame()
-        self.last_t = 0
-        self.run_time = self.get_run_time(self.animations)
+        moving_mobjects, static_mobjects = self.get_moving_and_static_mobjects(
+            animations
+        )
+        self.renderer.save_static_mobject_data(self, static_mobjects)
 
-        self.progress_through_animations()
+        last_t = 0
+        for t in self.get_animation_time_progression(animations):
+            dt = t - last_t
+            last_t = t
+            for animation in animations:
+                animation.update_mobjects(dt)
+                alpha = t / animation.run_time
+                animation.interpolate(alpha)
+            self.update_mobjects(dt)
+            self.renderer.update_frame(self, moving_mobjects)
+            self.renderer.add_frame(self.renderer.get_frame())
 
-        self.finish_animations(self.animations)
+        for animation in animations:
+            animation.finish()
+            animation.clean_up_from_scene(self)
 
     def wait_internal(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
         self.update_mobjects(dt=0)  # Any problems with this?
-        self.animations = []
         self.duration = duration
         self.stop_condition = stop_condition
-        self.last_t = 0
+        last_t = 0
 
         if self.should_update_mobjects():
             time_progression = self.get_wait_time_progression(duration, stop_condition)
             # TODO, be smart about setting a static image
             # the same way Scene.play does
             for t in time_progression:
-                self.update_animation_to_time(t)
+                dt = t - last_t
+                last_t = t
+                self.update_mobjects(dt)
                 self.renderer.update_frame(self)
                 self.renderer.add_frame(self.renderer.get_frame())
                 if stop_condition is not None and stop_condition():
                     time_progression.close()
                     break
-        elif self.skip_animations:
-            # Do nothing
-            return self
         else:
             self.renderer.update_frame(self)
             dt = 1 / self.renderer.camera.frame_rate
             self.renderer.add_frame(
                 self.renderer.get_frame(), num_frames=int(duration / dt)
             )
-        return self
-
-    def clean_up_animations(self, *animations):
-        """
-        This method cleans up and removes from the
-        scene all the animations that were passed
-
-        Parameters
-        ----------
-        *animations : Animation
-            Animation to clean up.
-
-        Returns
-        -------
-        Scene
-            The scene with the animations
-            cleaned up.
-
-        """
-        for animation in animations:
-            animation.clean_up_from_scene(self)
         return self
 
     def get_wait_time_progression(self, duration, stop_condition):

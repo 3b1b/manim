@@ -7,6 +7,7 @@ __all__ = [
 
 
 import os
+import re
 
 
 class TexTemplate:
@@ -130,6 +131,7 @@ class TexTemplate:
 
     def add_to_preamble(self, txt, prepend=False):
         """Adds stuff to the TeX template's preamble (e.g. definitions, packages). Text can be inserted at the beginning or at the end of the preamble.
+
         Parameters
         ----------
         txt : :class:`string`
@@ -169,6 +171,44 @@ class TexTemplate:
         """
         return self.body.replace(self.placeholder_text, expression)
 
+    def _texcode_for_environment(self, environment):
+        """Processes the tex_environment string to return the correct ``\\begin{environment}[extra]{extra}`` and
+        ``\\end{environment}`` strings
+
+        Parameters
+        ----------
+        environment : :class:`str`
+            The tex_environment as a string. Acceptable formats include:
+            ``{align*}``, ``align*``, ``{tabular}[t]{cccl}``, ``tabular}{cccl``, ``\\begin{tabular}[t]{cccl}``.
+
+        Returns
+        -------
+        Tuple[:class:`str`, :class:`str`]
+            A pair of strings representing the opening and closing of the tex environment, e.g.
+            ``\\begin{tabular}{cccl}`` and ``\\end{tabular}``
+        """
+
+        # If the environment starts with \begin, remove it
+        if environment[0:6] == r"\begin":
+            environment = environment[6:]
+
+        # If environment begins with { strip it
+        if environment[0] == r"{":
+            environment = environment[1:]
+
+        # The \begin command takes everything and closes with a brace
+        begin = r"\begin{" + environment
+        if (
+            begin[-1] != r"}" and begin[-1] != r"]"
+        ):  # If it doesn't end on } or ], assume missing }
+            begin += r"}"
+
+        # While the \end command terminates at the first closing brace
+        split_at_brace = re.split(r"}", environment, 1)
+        end = r"\end{" + split_at_brace[0] + r"}"
+
+        return begin, end
+
     def get_texcode_for_expression_in_env(self, expression, environment):
         """Inserts expression into TeX template wrapped in \begin{environemnt} and \end{environment}
 
@@ -184,8 +224,7 @@ class TexTemplate:
         :class:`str`
             LaTeX code based on template, containing the given expression inside its environment, ready for typesetting
         """
-        begin = r"\begin{" + environment + "}"
-        end = r"\end{" + environment + "}"
+        begin, end = self._texcode_for_environment(environment)
         return self.body.replace(
             self.placeholder_text, "{0}\n{1}\n{2}".format(begin, expression, end)
         )
@@ -236,7 +275,7 @@ class TexTemplateFromFile(TexTemplate):
         with open(self.template_file, "r") as infile:
             self.body = infile.read()
 
-    def file_not_mutable():
+    def file_not_mutable(self):
         raise Exception("Cannot modify TexTemplate when using a template file.")
 
     def add_to_preamble(self, txt, prepend=False):
