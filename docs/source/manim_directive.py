@@ -104,7 +104,6 @@ class ManimDirective(Directive):
         hide_source = "hide_source" in self.options
         save_as_gif = "save_as_gif" in self.options
         save_last_frame = "save_last_frame" in self.options
-        write_to_movie = not save_last_frame
         assert not (save_as_gif and save_last_frame)
 
         frame_rate = 30
@@ -179,7 +178,6 @@ class ManimDirective(Directive):
             f'file_writer_config["text_dir"] = r"{text_dir}"',
             f'file_writer_config["video_dir"] = r"{video_dir}"',
             f'file_writer_config["save_last_frame"] = {save_last_frame}',
-            f'file_writer_config["write_to_movie"] = {write_to_movie}',
             f'file_writer_config["save_as_gif"] = {save_as_gif}',
             f'file_writer_config["output_file"] = r"{output_file}"',
         ]
