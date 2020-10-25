@@ -19,7 +19,7 @@ from ...utils.module_ops import (
     get_scene_classes_from_module,
     get_scenes_to_render,
 )
-from ...config.logger import logger
+from ... import logger
 from ...constants import JS_RENDERER_INFO
 
 

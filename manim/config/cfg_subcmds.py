@@ -6,24 +6,22 @@ General Config File Managing Utilities.
 The functions below can be called via the `manim cfg` subcommand.
 
 """
+
 import os
-import configparser
 from ast import literal_eval
 
-from .config_utils import _run_config, _paths_config_file, finalized_configs_dict
-from ..utils.file_ops import guarantee_existence, open_file
-
-from rich.console import Console
-from rich.style import Style
-from rich.errors import StyleSyntaxError
+from manim import logger, console, config
+from manim.config.utils import config_file_paths, make_config_parser
+from manim.utils.file_ops import guarantee_existence, open_file
 
 __all__ = ["write", "show", "export"]
 
-RICH_COLOUR_INSTRUCTIONS = """[red]The default colour is used by the input statement.
+RICH_COLOUR_INSTRUCTIONS = """
+[red]The default colour is used by the input statement.
 If left empty, the default colour will be used.[/red]
-[magenta] For a full list of styles, visit[/magenta] [green]https://rich.readthedocs.io/en/latest/style.html[/green]"""
+[magenta] For a full list of styles, visit[/magenta] [green]https://rich.readthedocs.io/en/latest/style.html[/green]
+"""
 RICH_NON_STYLE_ENTRIES = ["log.width", "log.height", "log.timestamps"]
-console = Console()
 
 
 def value_from_string(value):
@@ -114,8 +112,7 @@ def replace_keys(default):
 
 
 def write(level=None, openfile=False):
-    config = _run_config()[1]
-    config_paths = _paths_config_file() + [os.path.abspath("manim.cfg")]
+    config_paths = config_file_paths()
     console.print(
         "[yellow bold]Manim Configuration File Writer[/yellow bold]", justify="center"
     )
@@ -127,11 +124,12 @@ you will have to create a manim.cfg in the local directory, where you want those
     CWD_CONFIG_MSG = f"""A configuration file at [yellow]{config_paths[2]}[/yellow] has been created.
 To save your config please save that file and place it in your current working directory, from where you run the manim command."""
 
+    parser = make_config_parser()
     if not openfile:
         action = "save this as"
-        for category in config:
+        for category in parser:
             console.print(f"{category}", style="bold green underline")
-            default = config[category]
+            default = parser[category]
             if category == "logger":
                 console.print(RICH_COLOUR_INSTRUCTIONS)
                 default = replace_keys(default)
@@ -178,7 +176,7 @@ modify write_cfg_subcmd_input to account for it."""
 
             default = replace_keys(default) if category == "logger" else default
 
-            config[category] = dict(default)
+            parser[category] = dict(default)
 
     else:
         action = "open"
@@ -194,40 +192,37 @@ modify write_cfg_subcmd_input to account for it."""
         action_to_userpath = ""
 
     if action_to_userpath.lower() == "y" or level == "user":
-        cfg_file_path = os.path.join(
-            guarantee_existence(os.path.dirname(config_paths[1])), "manim.cfg"
-        )
+        cfg_file_path = config_paths[1]
+        guarantee_existence(config_paths[1].parents[0])
         console.print(USER_CONFIG_MSG)
     else:
-        cfg_file_path = os.path.join(
-            guarantee_existence(os.path.dirname(config_paths[2])), "manim.cfg"
-        )
+        cfg_file_path = config_paths[2]
+        guarantee_existence(config_paths[2].parents[0])
         console.print(CWD_CONFIG_MSG)
     with open(cfg_file_path, "w") as fp:
-        config.write(fp)
+        parser.write(fp)
     if openfile:
         open_file(cfg_file_path)
 
 
 def show():
-    current_config = finalized_configs_dict()
+    parser = make_config_parser()
     rich_non_style_entries = [a.replace(".", "_") for a in RICH_NON_STYLE_ENTRIES]
-    for category in current_config:
+    for category in parser:
         console.print(f"{category}", style="bold green underline")
-        for entry in current_config[category]:
+        for entry in parser[category]:
             if category == "logger" and entry not in rich_non_style_entries:
                 console.print(f"{entry} :", end="")
                 console.print(
-                    f" {current_config[category][entry]}",
-                    style=current_config[category][entry],
+                    f" {parser[category][entry]}",
+                    style=parser[category][entry],
                 )
             else:
-                console.print(f"{entry} : {current_config[category][entry]}")
+                console.print(f"{entry} : {parser[category][entry]}")
         console.print("\n")
 
 
 def export(path):
-    config = _run_config()[1]
     if os.path.abspath(path) == os.path.abspath(os.getcwd()):
         console.print(
             """You are reading the config from the same directory you are exporting to.

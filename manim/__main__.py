@@ -3,16 +3,16 @@ import platform
 import sys
 import traceback
 
-from . import logger, file_writer_config
-from .config.config import camera_config, args
-from .config import cfg_subcmds
-from .utils.module_ops import (
+from manim import constants, logger, console, config, file_writer_config
+from manim import Scene
+from manim.utils.module_ops import (
     get_module,
     get_scene_classes_from_module,
     get_scenes_to_render,
 )
-from .utils.file_ops import open_file as open_media_file
-from .grpc.impl import frame_server_impl
+from manim.utils.file_ops import open_file as open_media_file
+from manim.grpc.impl import frame_server_impl
+from manim.config.main_utils import *
 
 
 def open_file_if_needed(file_writer):
@@ -49,26 +49,38 @@ def open_file_if_needed(file_writer):
 
 
 def main():
-    if hasattr(args, "subcommands"):
-        if "cfg" in args.subcommands:
-            if args.cfg_subcommand is not None:
-                subcommand = args.cfg_subcommand
-                if subcommand == "write":
+    args = parse_args(sys.argv)
+
+    if hasattr(args, "cmd"):
+        if args.cmd == "cfg":
+            if args.subcmd:
+                from manim.config import cfg_subcmds
+
+                if args.subcmd == "write":
                     cfg_subcmds.write(args.level, args.open)
-                elif subcommand == "show":
+                elif args.subcmd == "show":
                     cfg_subcmds.show()
-                elif subcommand == "export":
+                elif args.subcmd == "export":
                     cfg_subcmds.export(args.dir)
             else:
-                logger.error("No argument provided; Exiting...")
+                logger.error("No subcommand provided; Exiting...")
+
+        # elif args.cmd == "some_other_cmd":
+        #     something_else_here()
 
     else:
+        update_config_with_cli(args)
+        init_dirs(file_writer_config)
+
+        if file_writer_config["log_to_file"]:
+            set_file_logger()
+
         module = get_module(file_writer_config["input_file"])
         all_scene_classes = get_scene_classes_from_module(module)
         scene_classes_to_render = get_scenes_to_render(all_scene_classes)
         for SceneClass in scene_classes_to_render:
             try:
-                if camera_config["use_js_renderer"]:
+                if config["use_js_renderer"]:
                     frame_server_impl.get(SceneClass).start()
                 else:
                     scene = SceneClass()
