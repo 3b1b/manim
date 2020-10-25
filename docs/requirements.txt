@@ -1,3 +1,4 @@
 Sphinx==3.1.2
 guzzle-sphinx-theme
 recommonmark>=0.5.0
+sphinx-copybutton

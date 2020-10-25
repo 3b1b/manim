@@ -28,3 +28,8 @@ img {
     padding: 14px 0 14px 20px;
     margin: 20px 0;
 }
+
+div.example-reference {
+    background-color: #dff0d8;
+    border: 1px solid #3c763d;
+}
