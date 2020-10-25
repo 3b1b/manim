@@ -4,19 +4,19 @@ Plotting with manim
 Examples to illustrate the use of :class:`.GraphScene` in manim.
 
 
-.. manim:: Plot1
+.. manim:: FunctionPlot
     :save_last_frame:
 
-    class Plot1(GraphScene):
+    class FunctionPlot(GraphScene):
         def construct(self):
             self.setup_axes()
             func_graph=self.get_graph(lambda x: np.sin(x))
             self.add(func_graph)
 
-.. manim:: Plot2yLabelNumbers
+.. manim:: FunctionPlotWithLabbeledYAxe
     :save_last_frame:
 
-    class Plot2yLabelNumbers(GraphScene):
+    class FunctionPlotWithLabbeledYAxe(GraphScene):
         CONFIG = {
             "y_min": 0,
             "y_max": 100,
@@ -30,10 +30,10 @@ Examples to illustrate the use of :class:`.GraphScene` in manim.
             func_graph = self.get_graph(lambda x: 20 * np.sin(x))
             self.add(dot,func_graph)
 
-.. manim:: Plot3DataPoints
+.. manim:: SequencePlot
     :save_last_frame:
 
-    class Plot3DataPoints(GraphScene):
+    class SequencePlot(GraphScene):
         CONFIG = {
             "y_axis_label": r"Concentration [\%]",
             "x_axis_label": "Time [s]",
@@ -46,7 +46,7 @@ Examples to illustrate the use of :class:`.GraphScene` in manim.
                 dot = Dot().move_to(self.coords_to_point(time, dat))
                 self.add(dot)
 
-.. manim:: Plot3bGaussian
+.. manim:: GaussianFunctionPlot1
     :save_last_frame:
 
     amp = 5
@@ -56,16 +56,17 @@ Examples to illustrate the use of :class:`.GraphScene` in manim.
     def gaussian(x):
         return amp * np.exp((-1 / 2 * ((x - mu) / sig) ** 2))
 
-    class Plot3bGaussian(GraphScene):
+    class GaussianFunctionPlot1(GraphScene):
         def construct(self):
             self.setup_axes()
-            graph = self.get_graph(gaussian, x_min=-1, x_max=10).set_stroke(width=5)
+            graph = self.get_graph(gaussian, x_min=-1, x_max=10)
+            graph.set_stroke(width=5)
             self.add(graph)
 
-.. manim:: Plot3cGaussian
+.. manim:: GaussianFunctionPlot2
     :save_last_frame:
 
-    class Plot3cGaussian(GraphScene):
+    class GaussianFunctionPlot2(GraphScene):
         def construct(self):
             def gaussian(x):
                 amp = 5
@@ -78,10 +79,10 @@ Examples to illustrate the use of :class:`.GraphScene` in manim.
             self.add(graph)
 
 
-.. manim:: Plot4SinCos
+.. manim:: SinAndCosFunctionPlot
     :save_last_frame:
 
-    class Plot4SinCos(GraphScene):
+    class SinAndCosFunctionPlot(GraphScene):
         CONFIG = {
             "x_min": -10,
             "x_max": 10.3,
@@ -107,10 +108,10 @@ Examples to illustrate the use of :class:`.GraphScene` in manim.
             two_pi.next_to(label_coord, RIGHT + UP)
             self.add(func_graph, func_graph2, vert_line, graph_lab, graph_lab2, two_pi)
 
-.. manim:: Plot5Area
+.. manim:: GraphAreaPlot
     :save_last_frame:
 
-    class Plot5Area(GraphScene):
+    class GraphAreaPlot(GraphScene):
         CONFIG = {
             "x_min" : 0,
             "x_max" : 5,
@@ -130,10 +131,10 @@ Examples to illustrate the use of :class:`.GraphScene` in manim.
             area2 = self.get_area(curve2, 2, 3, bounded=curve1)
             self.add(curve1, curve2, line1, line2, area1, area2)
 
-.. manim:: Plot6HeatDiagram
+.. manim:: HeatDiagramPlot
     :save_last_frame:
 
-    class Plot6HeatDiagram(GraphScene):
+    class HeatDiagramPlot(GraphScene):
         CONFIG = {
             "y_axis_label": r"T[$^\circ C$]",
             "x_axis_label": r"$\Delta Q$",

@@ -1,18 +1,18 @@
 Camera Settings
 =================================
 
-.. manim:: Example1
+.. manim:: ChangingCameraWidth
 
-    class Example1(MovingCameraScene):
+    class ChangingCameraWidth(MovingCameraScene):
         def construct(self):
             text = Text("Hello World")
             self.add(text)
             self.play(self.camera_frame.set_width, text.get_width() * 1.2)
             self.wait()
 
-.. manim:: Example2a
+.. manim:: ChangingCameraWidthAndRestore
 
-    class Example2a(MovingCameraScene):
+    class ChangingCameraWidthAndRestore(MovingCameraScene):
         def construct(self):
             text = Text("Hello World").set_color(BLUE)
             self.add(text)
@@ -21,9 +21,9 @@ Camera Settings
             self.wait(0.3)
             self.play(Restore(self.camera_frame))
 
-.. manim:: Example2b
+.. manim:: ChangingCameraWidthAndRevert
 
-    class Example2b(MovingCameraScene):
+    class ChangingCameraWidthAndRevert(MovingCameraScene):
         def construct(self):
             text = Text("Hello World").set_color(BLUE)
             self.add(text)
@@ -32,20 +32,21 @@ Camera Settings
             self.play(self.camera_frame.set_width, 14)
 
 
-.. manim:: Example3
+.. manim:: MovingCameraCenter
 
-    class Example3(MovingCameraScene):
+    class MovingCameraCenter(MovingCameraScene):
         def construct(self):
             s = Square(color=RED, fill_opacity=0.5).move_to(2 * LEFT)
             t = Triangle(color=GREEN, fill_opacity=0.5).move_to(2 * RIGHT)
+            self.wait(0.3)
             self.add(s, t)
             self.play(self.camera_frame.move_to, s)
             self.wait(0.3)
             self.play(self.camera_frame.move_to, t)
 
-.. manim:: Example4
+.. manim:: MovingAndZoomingCamera
 
-    class Example4(MovingCameraScene):
+    class MovingAndZoomingCamera(MovingCameraScene):
         def construct(self):
             s = Square(color=BLUE, fill_opacity=0.5).move_to(2 * LEFT)
             t = Triangle(color=YELLOW, fill_opacity=0.5).move_to(2 * RIGHT)
@@ -59,9 +60,9 @@ Camera Settings
             self.play(self.camera_frame.move_to, ORIGIN,
                       self.camera_frame.set_width,14)
 
-.. manim:: Example5
+.. manim:: MovingCameraOnGraph
 
-    class Example5(GraphScene, MovingCameraScene):
+    class MovingCameraOnGraph(GraphScene, MovingCameraScene):
         def setup(self):
             GraphScene.setup(self)
             MovingCameraScene.setup(self)
@@ -81,9 +82,9 @@ Camera Settings
             self.play(Restore(self.camera_frame))
             self.wait()
 
-.. manim:: Example6
+.. manim:: FollowingGraphCamera
 
-    class Example6(GraphScene, MovingCameraScene):
+    class FollowingGraphCamera(GraphScene, MovingCameraScene):
         def setup(self):
             GraphScene.setup(self)
             MovingCameraScene.setup(self)
@@ -115,9 +116,9 @@ Camera Settings
 Note: ZoomedScene is derived class of MovingCameraScene,
 so one can use all functionality that were used before in the MovingCameraScene examples.
 
-.. manim:: ExampleZoom1
+.. manim:: UseZoomedScene
 
-    class ExampleZoom1(ZoomedScene):
+    class UseZoomedScene(ZoomedScene):
         def construct(self):
             dot = Dot().set_color(GREEN)
             self.add(dot)
@@ -126,9 +127,9 @@ so one can use all functionality that were used before in the MovingCameraScene 
             self.wait(1)
             self.play(dot.shift, LEFT)
 
-.. manim:: ExampleZoom2
+.. manim:: ChangingZoomScale
 
-    class ExampleZoom2(ZoomedScene):
+    class ChangingZoomScale(ZoomedScene):
         CONFIG = {
             "zoom_factor": 0.3,
             "zoomed_display_height": 1,
@@ -151,9 +152,9 @@ so one can use all functionality that were used before in the MovingCameraScene 
             self.play(self.zoomed_camera.frame.shift, 0.5 * DOWN)
 
 
-.. manim:: ExampleZoom3
+.. manim:: MovingZoomedSceneAround
 
-    class ExampleZoom3(ZoomedScene):
+    class MovingZoomedSceneAround(ZoomedScene):
     # contributed by TheoremofBeethoven, www.youtube.com/c/TheoremofBeethoven
         CONFIG = {
             "zoom_factor": 0.3,
@@ -170,8 +171,8 @@ so one can use all functionality that were used before in the MovingCameraScene 
             image = ImageMobject(np.uint8([[0, 100, 30, 200],
                                            [255, 0, 5, 33]]))
             image.set_height(7)
-            frame_text = TextMobject("Frame", color=PURPLE).scale(1.4)
-            zoomed_camera_text = TextMobject("Zoomed camera", color=RED).scale(1.4)
+            frame_text = Text("Frame", color=PURPLE).scale(1.4)
+            zoomed_camera_text = Text("Zoomed camera", color=RED).scale(1.4)
 
             self.add(image, dot)
             zoomed_camera = self.zoomed_camera
@@ -191,12 +192,12 @@ so one can use all functionality that were used before in the MovingCameraScene 
 
             frame_text.next_to(frame, DOWN)
 
-            self.play(ShowCreation(frame), FadeInFromDown(frame_text))
+            self.play(ShowCreation(frame), FadeInFrom(frame_text, direction=DOWN))
             self.activate_zooming()
 
             self.play(self.get_zoomed_display_pop_out_animation(), unfold_camera)
             zoomed_camera_text.next_to(zoomed_display_frame, DOWN)
-            self.play(FadeInFromDown(zoomed_camera_text))
+            self.play(FadeInFrom(zoomed_camera_text, direction=DOWN))
             # Scale in        x   y  z
             scale_factor = [0.5, 1.5, 0]
             self.play(

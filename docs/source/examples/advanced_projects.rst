@@ -1,10 +1,10 @@
 Advanced Projects
 =================================
 
-.. manim:: OpeningManimExample
+.. manim:: OpeningManim
     :ref_classes: Tex MathTex NumberPlane
 
-    class OpeningManimExample(Scene):
+    class OpeningManim(Scene):
         def construct(self):
             title = Tex("This is some \\LaTeX")
             basel = MathTex("\\sum_{n=1}^\\infty " "\\frac{1}{n^2} = \\frac{\\pi^2}{6}")
@@ -19,7 +19,7 @@ Advanced Projects
             transform_title.to_corner(UP + LEFT)
             self.play(
                 Transform(title, transform_title),
-                LaggedStart(*map(FadeOutAndShiftDown, basel)),
+                LaggedStart(*map(lambda obj: FadeOutAndShift(obj, direction=DOWN), basel)),
             )
             self.wait()
 
@@ -31,7 +31,7 @@ Advanced Projects
             self.add(grid, grid_title)  # Make sure title is on top of grid
             self.play(
                 FadeOut(title),
-                FadeInFromDown(grid_title),
+                FadeInFrom(grid_title, direction=DOWN),
                 ShowCreation(grid, run_time=3, lag_ratio=0.1),
             )
             self.wait()
@@ -104,10 +104,10 @@ Advanced Projects
             self.play(Write(example_tex))
             self.wait()
 
-.. manim:: UpdatersExample
+.. manim:: SquareMovingWithUpdaters
     :quality: low
 
-    class UpdatersExample(Scene):
+    class SquareMovingWithUpdaters(Scene):
         def construct(self):
             decimal = DecimalNumber(
                 0,
@@ -129,10 +129,10 @@ Advanced Projects
             self.wait()
 
 
-.. manim:: VDictExample
+.. manim:: ShapesWithVDics
     :quality: low
 
-    class VDictExample(Scene):
+    class ShapesWithVDics(Scene):
         def construct(self):
             square = Square().set_color(RED)
             circle = Circle().set_color(YELLOW).next_to(square, UP)
@@ -196,10 +196,10 @@ Advanced Projects
             self.wait()
 
 
-.. manim:: VariableExample
+.. manim:: VariablesWithValueTracker
     :quality: low
 
-    class VariableExample(Scene):
+    class VariablesWithValueTracker(Scene):
         def construct(self):
             var = 0.5
             on_screen_var = Variable(var, Text("var"), num_decimal_places=3)
@@ -242,9 +242,9 @@ Advanced Projects
             self.play(Write(on_screen_subscript_var))
             self.wait()
 
-.. manim:: ExampleSineCurve
+.. manim:: SineCurvePlot
 
-    class ExampleSineCurve(Scene):
+    class SineCurvePlot(Scene):
         # contributed by heejin_park, https://infograph.tistory.com/230
         def construct(self):
             self.show_axis()

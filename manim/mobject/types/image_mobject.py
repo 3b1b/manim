@@ -49,6 +49,22 @@ class AbstractImageMobject(Mobject):
 
 
 class ImageMobject(AbstractImageMobject):
+    """Displays an Image from a numpy array or a file.
+
+    Example
+    -------
+    .. manim:: ImageFromArray
+        :save_last_frame:
+
+        class ImageFromArray(Scene):
+            def construct(self):
+                image = ImageMobject(np.uint8([[0, 100, 30, 200],
+                                               [255, 0, 5, 33]]))
+                image.set_height(7)
+                self.add(image)
+
+    """
+
     CONFIG = {
         "invert": False,
         "image_mode": "RGBA",

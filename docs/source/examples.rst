@@ -1,5 +1,5 @@
 Example Gallery
-============
+===============
 
 .. toctree::
 
