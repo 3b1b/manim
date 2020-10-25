@@ -264,7 +264,7 @@ def color_to_rgb(color):
     elif isinstance(color, Color):
         return np.array(color.get_rgb())
     else:
-        raise Exception("Invalid color type")
+        raise ValueError("Invalid color type")
 
 
 def color_to_rgba(color, alpha=1):

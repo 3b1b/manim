@@ -4,9 +4,9 @@ Formulas
 
 
 
-.. manim:: MoveFrameBox
+.. manim:: MovingFrameBox
 
-    class MoveFrameBox(Scene):
+    class MovingFrameBox(Scene):
         def construct(self):
             text=MathTex(
                 "\\frac{d}{dx}f(x)g(x)=","f(x)\\frac{d}{dx}g(x)","+",
@@ -24,9 +24,9 @@ Formulas
             )
             self.wait()
 
-.. manim:: MoveBraces
+.. manim:: MovingBraces
 
-    class MoveBraces(Scene):
+    class MovingBraces(Scene):
         def construct(self):
             text=MathTex(
                 "\\frac{d}{dx}f(x)g(x)=",       #0

@@ -109,7 +109,6 @@ class JsScene(scene.Scene):
                     logger.error(e)
             self.animation_finished.wait()
 
-    @scene.handle_play_like_call
     def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
         self.update_mobjects(dt=0)  # Any problems with this?
         self.animations = []

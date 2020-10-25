@@ -10,8 +10,8 @@ instructions in `Certifying a clean install`_.
 The two necessary dependencies are cairo and ffmpeg.  LaTeX is strongly
 recommended, as it is necessary to have access to the ``Tex`` and ``MathTex`` classes.
 
-Ubuntu/Debian
-*************
+Ubuntu/Mint/Debian
+******************
 
 Before installing anything, make sure that your system is up to date.
 
@@ -39,12 +39,56 @@ To install LaTeX:
    sudo apt install texlive texlive-latex-extra texlive-fonts-extra \
    texlive-latex-recommended texlive-science texlive-fonts-extra tipa
 
+If you don't have python3-pip installed, install it:
+
+.. code-block:: bash
+   
+   sudo apt install python3-pip
+  
 .. note:: These instructions are also valid for other Debian-based
           distributions or distributions that use the ``apt`` package manager.
 
 
+Fedora/CentOS/RHEL
+******************
+
+To install cairo:
+
+.. code-block:: bash
+
+  sudo dnf install cairo-devel
+
+To install ffmpeg, you have to add RPMfusion repository (If it's not already added). Please follow the instructions for your specific distribution in the following URL:
+
+https://rpmfusion.org/Configuration/
+
+Install ffmpeg from RPMfusion repository:
+
+.. code-block:: bash
+
+   sudo dnf install ffmpeg
+
+Install python development headers in order to successfully build pycairo wheel:
+
+.. code-block:: bash
+
+   sudo dnf install python3-devel
+
+To install LaTeX:
+
+.. code-block:: bash
+
+   sudo dnf install texlive-scheme-medium
+
+
 Arch/Manjaro
 ************
+
+Before installing anything, make sure that your system is up to date.
+
+.. code-block:: bash
+
+   sudo pacman -Syu
 
 To install cairo:
 
@@ -64,6 +108,12 @@ To install LaTeX:
 .. code-block:: bash
 
    sudo pacman -S texlive-most
+
+If you don't have python-pip installed, install it:
+
+.. code-block:: bash
+   
+   sudo pacman -S python-pip
 
 
 .. note:: These instructions are also valid for other Arch-based

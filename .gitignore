@@ -58,6 +58,7 @@ docs/_build/
 docs/build/
 docs/source/_autosummary/
 docs/source/reference/
+docs/source/_build/
 
 # PyBuilder
 target/

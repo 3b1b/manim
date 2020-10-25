@@ -1,12 +1,7 @@
-import inspect
 import os
 import platform
-import subprocess as sp
 import sys
-import re
 import traceback
-import importlib.util
-import types
 
 from manim import constants, logger, console, config, file_writer_config
 from manim import Scene
@@ -90,7 +85,7 @@ def main():
                 else:
                     scene = SceneClass()
                     scene.render()
-                    open_file_if_needed(scene.file_writer)
+                    open_file_if_needed(scene.renderer.file_writer)
             except Exception:
                 print("\n\n")
                 traceback.print_exc()
