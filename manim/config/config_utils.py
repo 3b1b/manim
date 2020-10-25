@@ -494,15 +494,15 @@ def _init_dirs(config):
 def _from_command_line():
     """Determine if manim was called from the command line."""
     # Manim can be called from the command line in three different
-    # ways.  The first two involve using the manim or manimcm commands.
+    # ways.  The first two involve using the manim or manimce commands.
     # Note that some Windows CLIs replace those commands with the path
     # to their executables, so we must check for this as well
     prog = os.path.split(sys.argv[0])[-1]
-    from_cli_command = prog in ["manim", "manim.exe", "manimcm", "manimcm.exe"]
+    from_cli_command = prog in ["manim", "manim.exe", "manimce", "manimce.exe"]
 
     # The third way involves using `python -m manim ...`.  In this
     # case, the CLI arguments passed to manim do not include 'manim',
-    # 'manimcm', or even 'python'.  However, the -m flag will always
+    # 'manimce', or even 'python'.  However, the -m flag will always
     # be the first argument.
     from_python_m = sys.argv[0] == "-m"
 

@@ -60,7 +60,7 @@ markers = "slow: Mark the test as slow. Can be skipped with --skip_slow"
 [tool.poetry.plugins]
 [tool.poetry.plugins."console_scripts"]
 "manim" = "manim.__main__:main"
-"manimcm" = "manim.__main__:main"
+"manimce" = "manim.__main__:main"
 
 [build-system]
 requires = ["poetry>=0.12"]
