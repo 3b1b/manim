@@ -125,6 +125,8 @@ class SceneFileWriter(object):
         hash_animation : str
             Hash of the animation.
         """
+        if not hasattr(self, 'partial_movie_directory'):
+            return
 
         # None has to be added to partial_movie_files to keep the right index with scene.num_plays.
         # i.e if an animation is skipped, scene.num_plays is still incremented and we add an element to partial_movie_file be even with num_plays.
