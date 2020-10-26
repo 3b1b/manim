@@ -15,10 +15,10 @@ def set_test_scene(scene_object, module_name):
     Parameters
     ----------
     scene_object : :class:`~.Scene`
-        The scene with wich we want to set up a new test.
+        The scene with which we want to set up a new test.
     module_name : :class:`str`
-        The name of the module in which the functionnality tested is contained. For example, 'Write' is contained in the module 'creation'. This will be used in the folder architecture
-        of '/tests_data'.
+        The name of the module in which the functionality tested is contained. For example, ``Write`` is contained in the module ``creation``. This will be used in the folder architecture
+        of ``/tests_data``.
 
     Examples
     --------
@@ -53,5 +53,5 @@ def set_test_scene(scene_object, module_name):
     path = os.path.join(path_control_data, module_name)
     if not os.path.isdir(path):
         os.makedirs(path)
-    np.save(os.path.join(path, str(scene)), data)
+    np.savez_compressed(os.path.join(path, str(scene)), frame_data=data)
     logger.info(f"Test data for {str(scene)} saved in {path}\n")
