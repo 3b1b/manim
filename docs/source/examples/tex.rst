@@ -76,7 +76,7 @@ We can use any standard LaTeX commands in the AMS maths packages. For example th
             tex = Tex(r'$\mathtt{Hello}$ \LaTeX').scale(3)
             self.add(tex)
 
-On the manim side, the :class:`~.Tex` class also accepts attributes to change the appearance of the output. 
+On the manim side, the :class:`~.Tex` class also accepts attributes to change the appearance of the output.
 This is very similar to the :class:`~.Text` class. For example, the ``color`` keyword changes the color of the TeX mobject:
 
 .. manim:: LaTeXAttributes
@@ -89,7 +89,7 @@ This is very similar to the :class:`~.Text` class. For example, the ``color`` ke
 
 Extra LaTeX Packages
 +++++++++++++++++++++
-Some commands require special packages to be loaded into the TeX template. For example, 
+Some commands require special packages to be loaded into the TeX template. For example,
 to use the ``mathscr`` script, we need to add the ``mathrsfs`` package. Since this package isn't loaded
 into manim's tex template by default, we add it manually:
 
@@ -120,7 +120,7 @@ in this example where we set the color of the ``\bigstar`` using :func:`~.set_co
 
 LaTeX Maths Fonts - The Template Library
 ++++++++++++++++++++++++++++++++++++++++++++
-Changing fonts in LaTeX when typesetting mathematical formulae is a little bit more tricky than 
+Changing fonts in LaTeX when typesetting mathematical formulae is a little bit more tricky than
 with regular text. It requires changing the template that is used to compile the tex code.
 Manim comes with a collection of :class:`~.TexFontTemplates` ready for you to use. These templates will all work
 in maths mode:
@@ -133,10 +133,10 @@ in maths mode:
             tex = Tex(r'$f: A \rightarrow B$', tex_template=TexFontTemplates.french_cursive).scale(3)
             self.add(tex)
 
-Manim also has a :class:`~.TexTemplateLibrary` containing the TeX templates used by 3Blue1Brown. One example 
+Manim also has a :class:`~.TexTemplateLibrary` containing the TeX templates used by 3Blue1Brown. One example
 is the ctex template, used for typesetting Chinese. For this to work, the ctex LaTeX package
 must be installed on your system. Furthermore, if you are only typesetting Text, you probably do not
-need :class:`~.Tex` at all, and should use :class:`~.Text` or :class:`~.PangoText` instead. 
+need :class:`~.Tex` at all, and should use :class:`~.Text` or :class:`~.PangoText` instead.
 
 .. manim:: LaTeXTemplateLibrary
     :save_last_frame:
