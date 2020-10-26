@@ -92,7 +92,7 @@ def rotate_vector(vector, angle, axis=OUT):
         product = reduce(quaternion_mult, [quat, np.append(0, vector), quat_inv])
         return product[1:]
     else:
-        raise Exception("vector must be of dimension 2 or 3")
+        raise ValueError("vector must be of dimension 2 or 3")
 
 
 def thick_diagonal(dim, thickness=2):
@@ -238,7 +238,7 @@ def line_intersection(line1, line2):
 
     div = det(x_diff, y_diff)
     if div == 0:
-        raise Exception("Lines do not intersect")
+        raise ValueError("Lines do not intersect")
     d = (det(*line1), det(*line2))
     x = det(d, x_diff) / div
     y = det(d, y_diff) / div

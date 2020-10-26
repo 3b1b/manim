@@ -1,6 +1,6 @@
 """Mobjects used for displaying (non-LaTeX) text."""
 
-__all__ = ["Text", "Paragraph", "PangoText", "CairoText"]
+__all__ = ["Text", "Paragraph", "CairoText"]
 
 
 import copy
@@ -83,8 +83,13 @@ class CairoText(SVGMobject):
         `weird <https://github.com/3b1b/manim/issues/1067>`_. Consider using
         :meth:`remove_invisible_chars` to resolve this issue.
 
+    Tests
+    -----
 
+    Check whether writing text works::
 
+        >>> Text('The horse does not eat cucumber salad.')
+        Text('The horse does not eat cucumber salad.')
 
     """
 
@@ -157,6 +162,9 @@ class CairoText(SVGMobject):
         # anti-aliasing
         if self.height is None and self.width is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
+
+    def __repr__(self):
+        return f"Text({repr(self.original_text)})"
 
     def gen_chars(self):
         chars = VGroup()
@@ -299,9 +307,13 @@ class CairoText(SVGMobject):
         line_spacing = self.line_spacing * 10
 
         if self.font == "":
-            if NOT_SETTING_FONT_MSG != "":
-                print(NOT_SETTING_FONT_MSG)
+            if NOT_SETTING_FONT_MSG:
+                logger.warning(NOT_SETTING_FONT_MSG)
+
         dir_name = config["text_dir"]
+        if not os.path.exists(dir_name):
+            os.makedirs(dir_name)
+
         hash_name = self.text2hash()
         file_name = os.path.join(dir_name, hash_name) + ".svg"
         if os.path.exists(file_name):
@@ -327,71 +339,6 @@ class CairoText(SVGMobject):
             context.move_to(
                 START_X + offset_x, START_Y + line_spacing * setting.line_num
             )
-            context.show_text(text)
-            offset_x += context.text_extents(text)[4]
-        surface.finish()
-        return file_name
-
-
-# Following class is just a Little implementation of upcomming feautures. Ignore it for now.
-class TextWithBackground(CairoText):
-    CONFIG = {
-        "background_color": BLACK,
-    }
-
-    def __init__(self, text, **config):
-        Text.__init__(self, text, **config)
-        # self.text_backgrounds = self.gen_text_backgrounds(text)
-
-    def gen_text_backgrounds(self, text):
-        text_with_visible_chars = text.replace(" ", "").replace("\t", "")
-        text_list = text_with_visible_chars.split("\n")
-        text_backgrounds = VGroup()
-        start_i = 0
-        for line_no in range(text_list.__len__()):
-            rect_counts = len(text_list[line_no])
-            text_backgrounds.add(*self[start_i:rect_counts])
-            start_i += 2 * rect_counts
-        text_backgrounds.set_color(self.background_color)
-
-        return text_backgrounds
-
-    def text2svg1(self):
-        # anti-aliasing
-        size = self.size * 10
-        line_spacing = self.line_spacing * 10
-
-        if self.font == "":
-            if NOT_SETTING_FONT_MSG != "":
-                logger.warning(NOT_SETTING_FONT_MSG)
-        dir_name = consts.TEXT_DIR
-        hash_name = self.text2hash()
-        file_name = os.path.join(dir_name, hash_name) + ".svg"
-        # if os.path.exists(file_name):
-        # return file_name
-
-        surface = cairo.SVGSurface(file_name, 600, 400)
-        context = cairo.Context(surface)
-        context.set_font_size(size)
-        context.move_to(START_X, START_Y)
-
-        settings = self.text2settings()
-        offset_x = 0
-        last_line_num = 0
-        for setting in settings:
-            font = setting.font
-            slant = self.str2slant(setting.slant)
-            weight = self.str2weight(setting.weight)
-            text = self.text[setting.start : setting.end].replace("\n", " ")
-            context.select_font_face(font, slant, weight)
-            if setting.line_num != last_line_num:
-                offset_x = 0
-                last_line_num = setting.line_num
-            tempx = START_X + offset_x
-            tempy = START_Y + line_spacing * setting.line_num
-            char_offset_x = 0
-            char_height = tempy - size / 2 - (line_spacing - size)
-            context.move_to(tempx, tempy)
             context.show_text(text)
             offset_x += context.text_extents(text)[4]
         surface.finish()
@@ -586,10 +533,10 @@ class Paragraph(VGroup):
             )
 
 
-class PangoText(SVGMobject):
+class Text(SVGMobject):
     r"""Display (non-LaTeX) text rendered using `Pango <https://pango.gnome.org/>`_.
 
-    PangoText objects behave like a :class:`.VGroup`-like iterable of all characters
+    Text objects behave like a :class:`.VGroup`-like iterable of all characters
     in the given text. In particular, slicing is possible.
 
     Parameters
@@ -599,27 +546,74 @@ class PangoText(SVGMobject):
 
     Returns
     -------
-    :class:`PangoText`
+    :class:`Text`
         The mobject like :class:`.VGroup`.
 
     Examples
     ---------
+
+    .. manim:: Example1Text
+        :save_last_frame:
+
+        class Example1Text(Scene):
+            def construct(self):
+                text = Text('Hello world').scale(3)
+                self.add(text)
+
+    .. manim:: TextColorExample
+        :save_last_frame:
+
+        class TextColorExample(Scene):
+            def construct(self):
+                text1 = Text('Hello world', color=BLUE).scale(3)
+                text2 = Text('Hello world', gradient=(BLUE, GREEN)).scale(3).next_to(text1, DOWN)
+                self.add(text1, text2)
+
+    .. manim:: TextItalicAndBoldExample
+        :save_last_frame:
+
+        class TextItalicAndBoldExample(Scene):
+            def construct(self):
+                text0 = Text('Hello world', slant=ITALIC)
+                text1 = Text('Hello world', t2s={'world':ITALIC})
+                text2 = Text('Hello world', weight=BOLD)
+                text3 = Text('Hello world', t2w={'world':BOLD})
+                self.add(text0,text1, text2,text3)
+                for i,mobj in enumerate(self.mobjects):
+                    mobj.shift(DOWN*(i-1))
+
+
+    .. manim:: TextMoreCustomization
+            :save_last_frame:
+
+            class TextMoreCustomization(Scene):
+                def construct(self):
+                    text1 = Text(
+                        'Google',
+                        t2c={'[:1]': '#3174f0', '[1:2]': '#e53125',
+                             '[2:3]': '#fbb003', '[3:4]': '#3174f0',
+                             '[4:5]': '#269a43', '[5:]': '#e53125'}, size=1.2).scale(3)
+                    self.add(text1)
+
+    As :class:`Text` uses Pango to render text, rendering non-English
+    characters is easily possible:
+
     .. manim:: MultipleFonts
         :save_last_frame:
 
         class MultipleFonts(Scene):
             def construct(self):
-                morning = PangoText("வணக்கம்", font="sans-serif")
-                chin = PangoText(
+                morning = Text("வணக்கம்", font="sans-serif")
+                chin = Text(
                     "見 角 言 谷  辛 辰 辵 邑 酉 釆 里!", t2c={"見 角 言": BLUE}
                 )  # works same as ``Text``.
-                mess = PangoText("Multi-Language", style=BOLD)
-                russ = PangoText("Здравствуйте मस नम म ", font="sans-serif")
-                hin = PangoText("नमस्ते", font="sans-serif")
-                arb = PangoText(
+                mess = Text("Multi-Language", style=BOLD)
+                russ = Text("Здравствуйте मस नम म ", font="sans-serif")
+                hin = Text("नमस्ते", font="sans-serif")
+                arb = Text(
                     "صباح الخير \n تشرفت بمقابلتك", font="sans-serif"
                 )  # don't mix RTL and LTR languages nothing shows up then ;-)
-                japanese = PangoText("臂猿「黛比」帶著孩子", font="sans-serif")
+                japanese = Text("臂猿「黛比」帶著孩子", font="sans-serif")
                 self.add(morning,chin,mess,russ,hin,arb,japanese)
                 for i,mobj in enumerate(self.mobjects):
                     mobj.shift(DOWN*(i-3))
@@ -630,9 +624,17 @@ class PangoText(SVGMobject):
 
         class PangoRender(Scene):
             def construct(self):
-                morning = PangoText("வணக்கம்", font="sans-serif")
+                morning = Text("வணக்கம்", font="sans-serif")
                 self.play(Write(morning))
                 self.wait(2)
+
+    Tests
+    -----
+
+    Check that the creation of :class:`~.Text` works::
+
+        >>> Text('The horse does not eat cucumber salad.')
+        Text('The horse does not eat cucumber salad.')
 
     .. WARNING::
 
@@ -667,6 +669,10 @@ class PangoText(SVGMobject):
     }
 
     def __init__(self, text: str, **config):  # pylint: disable=redefined-outer-name
+        logger.info(
+            "Text now uses Pango for rendering. "
+            "In case of problems, the old implementation is available as CairoText."
+        )
         self.full2short(config)
         digest_config(self, config)
         self.original_text = text
@@ -710,6 +716,9 @@ class PangoText(SVGMobject):
         # anti-aliasing
         if self.height is None and self.width is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
+
+    def __repr__(self):
+        return f"Text({repr(self.original_text)})"
 
     def remove_last_M(self, file_name: str):  # pylint: disable=invalid-name
         """Internally used. Use to format the rendered SVG files."""
@@ -816,7 +825,7 @@ class PangoText(SVGMobject):
         """
         settings = (
             "PANGO" + self.font + self.slant + self.weight
-        )  # to differentiate Text and PangoText
+        )  # to differentiate Text and CairoText
         settings += str(self.t2f) + str(self.t2s) + str(self.t2w)
         settings += str(self.line_spacing) + str(self.size)
         id_str = self.text + settings
@@ -914,70 +923,3 @@ class PangoText(SVGMobject):
             offset_x += layout.get_extents()[0].x
         surface.finish()
         return file_name
-
-
-class Text(CairoText):
-    """Display (non-LaTeX) text.
-
-    Text objects behave like a :class:`.VGroup`-like iterable of all characters
-    in the given text. In particular, slicing is possible.
-
-        Examples
-    --------
-    .. manim:: Example1Text
-        :save_last_frame:
-
-        class Example1Text(Scene):
-            def construct(self):
-                text = Text('Hello world').scale(3)
-                self.add(text)
-
-    .. manim:: TextColorExample
-        :save_last_frame:
-
-        class TextColorExample(Scene):
-            def construct(self):
-                text1 = Text('Hello world', color=BLUE).scale(3)
-                text2 = Text('Hello world', gradient=(BLUE, GREEN)).scale(3).next_to(text1, DOWN)
-                self.add(text1, text2)
-
-    .. manim:: TextItalicAndBoldExample
-        :save_last_frame:
-
-        class TextItalicAndBoldExample(Scene):
-            def construct(self):
-                text0 = Text('Hello world', slant=ITALIC)
-                text1 = Text('Hello world', t2s={'world':ITALIC})
-                text2 = Text('Hello world', weight=BOLD)
-                text3 = Text('Hello world', t2w={'world':BOLD})
-                self.add(text0,text1, text2,text3)
-                for i,mobj in enumerate(self.mobjects):
-                    mobj.shift(DOWN*(i-1))
-
-
-    .. manim:: TextMoreCustomization
-            :save_last_frame:
-
-            class TextMoreCustomization(Scene):
-                def construct(self):
-                    text1 = Text(
-                        'Google',
-                        t2c={'[:1]': '#3174f0', '[1:2]': '#e53125',
-                             '[2:3]': '#fbb003', '[3:4]': '#3174f0',
-                             '[4:5]': '#269a43', '[5:]': '#e53125'}, size=1.2).scale(3)
-                    self.add(text1)
-
-    .. WARNING::
-
-        Using a :class:`.Transform` on text with leading whitespace can look
-        `weird <https://github.com/3b1b/manim/issues/1067>`_. Consider using
-        :meth:`remove_invisible_chars` to resolve this issue.
-
-    """
-
-    def __init__(self, text, **config):
-        logger.warning(
-            "Using Text uses Cairo Toy API to Render Text."
-            "Using PangoText is recommended and soon Text would point to PangoText"
-        )
-        CairoText.__init__(self, text, **config)

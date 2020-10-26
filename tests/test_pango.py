@@ -1,4 +1,4 @@
-"""Tests :class:`PangoText` by comparing SVG files created.
+"""Tests :class:`Text` by comparing SVG files created.
 """
 import os
 import re
@@ -6,7 +6,7 @@ import re
 import cairocffi
 import pangocairocffi
 import pangocffi
-from manim import START_X, START_Y, PangoText, SVGMobject
+from manim import START_X, START_Y, Text, SVGMobject
 
 RTL_TEXT: str = """صباح الخير
 مرحبا جميعا"""
@@ -27,9 +27,9 @@ def remove_last_M(file_path: str) -> None:  # pylint: disable=invalid-name
 
 
 def compare_SVGObject_with_PangoText(  # pylint: disable=invalid-name
-    text: PangoText, svg_path: str
+    text: Text, svg_path: str
 ) -> bool:
-    """Checks for the path_string formed by PangoText and Formed SVG file.
+    """Checks for the path_string formed by Text and Formed SVG file.
     Uses SVGMobject as it parses the SVG and returns the path_string
     """
     remove_last_M(svg_path)  # to prevent issue displaying
@@ -53,7 +53,7 @@ def test_general_text_svgobject() -> None:
     """
     text = "hello"
     size = 1
-    temp_pango_text = PangoText(text, size=size)
+    temp_pango_text = Text(text, size=size)
     surface = cairocffi.SVGSurface(filename, WIDTH, HEIGTH)
     context = cairocffi.Context(surface)
     context.move_to(START_X, START_Y)
@@ -73,7 +73,7 @@ def test_rtl_text_to_svgobject() -> None:
     called using ``SVGMobject``"""
     size = 1
     text = RTL_TEXT.replace("\n", "")
-    temp_pango_text = PangoText(text, size=1)
+    temp_pango_text = Text(text, size=1)
     surface = cairocffi.SVGSurface(filename, WIDTH, HEIGTH)
     context = cairocffi.Context(surface)
     context.move_to(START_X, START_Y)
@@ -93,7 +93,7 @@ def test_font_face() -> None:
     size = 1
     text = RTL_TEXT.replace("\n", "")
     font_face = "sans"
-    temp_pango_text = PangoText(text, size=1, font=font_face)
+    temp_pango_text = Text(text, size=1, font=font_face)
     surface = cairocffi.SVGSurface(filename, WIDTH, HEIGTH)
     context = cairocffi.Context(surface)
     context.move_to(START_X, START_Y)
@@ -111,7 +111,7 @@ def test_font_face() -> None:
 
 def test_whether_svg_file_created() -> None:
     """Checks Whether SVG file is created in desired location"""
-    temp_pango_text = PangoText("hello", size=1)
+    temp_pango_text = Text("hello", size=1)
     theo_path = os.path.abspath(
         os.path.join(folder, temp_pango_text.text2hash() + ".svg")
     )
@@ -123,7 +123,7 @@ def test_tabs_replace() -> None:
     """Checks whether are there in end svg image.
     Pango should handle tabs and line breaks."""
     size = 1
-    temp_pango_text = PangoText("hello\thi\nf")
+    temp_pango_text = Text("hello\thi\nf")
     assert temp_pango_text.text == "hellohif"
     surface = cairocffi.SVGSurface(filename, WIDTH, HEIGTH)
     context = cairocffi.Context(surface)

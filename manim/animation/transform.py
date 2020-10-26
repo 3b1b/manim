@@ -84,7 +84,7 @@ class Transform(Animation):
     def check_target_mobject_validity(self):
         if self.target_mobject is None:
             message = "{}.create_target not properly implemented"
-            raise Exception(message.format(self.__class__.__name__))
+            raise NotImplementedError(message.format(self.__class__.__name__))
 
     def clean_up_from_scene(self, scene):
         super().clean_up_from_scene(scene)
@@ -157,7 +157,7 @@ class MoveToTarget(Transform):
 
     def check_validity_of_input(self, mobject):
         if not hasattr(mobject, "target"):
-            raise Exception(
+            raise ValueError(
                 "MoveToTarget called on mobject" "without attribute 'target'"
             )
 
@@ -179,7 +179,7 @@ class ApplyMethod(Transform):
 
     def check_validity_of_input(self, method):
         if not inspect.ismethod(method):
-            raise Exception(
+            raise ValueError(
                 "Whoops, looks like you accidentally invoked "
                 "the method you want to animate"
             )
@@ -244,7 +244,7 @@ class ApplyFunction(Transform):
     def create_target(self):
         target = self.function(self.mobject.copy())
         if not isinstance(target, Mobject):
-            raise Exception(
+            raise TypeError(
                 "Functions passed to ApplyFunction must return object of type Mobject"
             )
         return target
@@ -266,7 +266,7 @@ class ApplyMatrix(ApplyPointwiseFunction):
             new_matrix[:2, :2] = matrix
             matrix = new_matrix
         elif matrix.shape != (3, 3):
-            raise Exception("Matrix has bad dimensions")
+            raise ValueError("Matrix has bad dimensions")
         return matrix
 
 

@@ -27,6 +27,7 @@ from ...utils.config_ops import digest_config
 from ...utils.strings import split_string_list_to_isolate_substrings
 from ...utils.tex_file_writing import tex_to_svg_file
 from ...utils.color import BLACK
+from ...utils.tex import TexTemplate
 
 TEX_MOB_SCALE_FACTOR = 0.05
 
@@ -38,29 +39,39 @@ class TexSymbol(VMobjectFromSVGPathstring):
 
 
 class SingleStringMathTex(SVGMobject):
+    """Elementary building block for rendering text with LaTeX.
+
+    Tests
+    -----
+    Check that creating a :class:`~.SingleStringMathTex` object works::
+
+        >>> SingleStringMathTex('Test')
+        SingleStringMathTex('Test')
+    """
+
     CONFIG = {
         "stroke_width": 0,
         "fill_opacity": 1.0,
-        "background_stroke_width": 1,
+        "background_stroke_width": 0,
         "background_stroke_color": BLACK,
         "should_center": True,
         "height": None,
         "organize_left_to_right": False,
-        "alignment": "",
-        "type": "tex",
-        "template": None,
+        "tex_environment": "align*",
+        "tex_template": None,
     }
 
     def __init__(self, tex_string, **kwargs):
         digest_config(self, kwargs)
-        if self.template is None:
-            self.template = kwargs.get("tex_template", config["tex_template"])
+        if self.tex_template is None:
+            self.tex_template = kwargs.get("tex_template", config["tex_template"])
+
         assert isinstance(tex_string, str)
         self.tex_string = tex_string
         file_name = tex_to_svg_file(
             self.get_modified_expression(tex_string),
-            self.type,
-            tex_template=self.template,
+            environment=self.tex_environment,
+            tex_template=self.tex_template,
         )
         SVGMobject.__init__(self, file_name=file_name, **kwargs)
         if self.height is None:
@@ -68,8 +79,11 @@ class SingleStringMathTex(SVGMobject):
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
 
+    def __repr__(self):
+        return f"{type(self).__name__}({repr(self.tex_string)})"
+
     def get_modified_expression(self, tex_string):
-        result = self.alignment + " " + tex_string
+        result = tex_string
         result = result.strip()
         result = self.modify_special_strings(result)
         return result
@@ -152,25 +166,32 @@ class SingleStringMathTex(SVGMobject):
 
 
 class MathTex(SingleStringMathTex):
-    """
-    A class for displaying mathematical formulas with Latex syntax.
-
+    """A string compiled with LaTeX in math mode.
 
     Examples
     --------
-    .. manim:: Formula1
+    .. manim:: Formula
         :save_last_frame:
 
-        class Formula1(Scene):
+        class Formula(Scene):
             def construct(self):
                 t = MathTex(r"\int_a^b f'(x) dx = f(b)- f(a)")
                 self.add(t)
+
+    Tests
+    -----
+    Check that creating a :class:`~.MathTex` works::
+
+        >>> MathTex('a^2 + b^2 = c^2')
+        MathTex('a^2 + b^2 = c^2')
+
     """
 
     CONFIG = {
         "arg_separator": " ",
         "substrings_to_isolate": [],
         "tex_to_color_map": {},
+        "tex_environment": "align*",
     }
 
     def __init__(self, *tex_strings, **kwargs):
@@ -264,7 +285,7 @@ class MathTex(SingleStringMathTex):
     def index_of_part(self, part):
         split_self = self.split()
         if part not in split_self:
-            raise Exception("Trying to get index of part not in MathTex")
+            raise ValueError("Trying to get index of part not in MathTex")
         return split_self.index(part)
 
     def index_of_part_by_tex(self, tex, **kwargs):
@@ -276,10 +297,21 @@ class MathTex(SingleStringMathTex):
 
 
 class Tex(MathTex):
+    r"""A string compiled with LaTeX in normal mode.
+
+    Tests
+    -----
+
+    Check whether writing a LaTeX string works::
+
+        >>> Tex('The horse does not eat cucumber salad.')
+        Tex('The horse does not eat cucumber salad.')
+
+    """
+
     CONFIG = {
-        "alignment": "\\centering",
         "arg_separator": "",
-        "type": "text",
+        "tex_environment": "center",
     }
 
 
@@ -288,7 +320,7 @@ class BulletedList(Tex):
         "buff": MED_LARGE_BUFF,
         "dot_scale_factor": 2,
         # Have to include because of handle_multiple_args implementation
-        "alignment": "",
+        "tex_environment": None,
     }
 
     def __init__(self, *items, **kwargs):
@@ -307,7 +339,7 @@ class BulletedList(Tex):
         elif isinstance(arg, int):
             part = self.submobjects[arg]
         else:
-            raise Exception("Expected int or string, got {0}".format(arg))
+            raise TypeError("Expected int or string, got {0}".format(arg))
         for other_part in self.submobjects:
             if other_part is part:
                 other_part.set_fill(opacity=1)

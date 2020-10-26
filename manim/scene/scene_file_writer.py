@@ -42,24 +42,25 @@ class SceneFileWriter(object):
 
     """
 
-    def __init__(self, scene, **kwargs):
+    def __init__(self, renderer, video_quality_config, scene_name, **kwargs):
         digest_config(self, kwargs)
-        self.scene = scene
+        self.renderer = renderer
+        self.video_quality_config = video_quality_config
         self.stream_lock = False
-        self.init_output_directories()
+        self.init_output_directories(scene_name)
         self.init_audio()
         self.frame_count = 0
         self.partial_movie_files = []
 
     # Output directories and files
-    def init_output_directories(self):
+    def init_output_directories(self, scene_name):
         """
         This method initialises the directories to which video
         files will be written to and read from (within MEDIA_DIR).
         If they don't already exist, they will be created.
         """
         module_directory = self.get_default_module_directory()
-        scene_name = self.get_default_scene_name()
+        default_name = self.get_default_scene_name(scene_name)
         if config["save_last_frame"] or config["save_pngs"]:
             if config["media_dir"] != "":
                 if not config["custom_folders"]:
@@ -72,7 +73,7 @@ class SceneFileWriter(object):
                 else:
                     image_dir = guarantee_existence(config["images_dir"])
             self.image_file_path = os.path.join(
-                image_dir, add_extension_if_not_present(scene_name, ".png")
+                image_dir, add_extension_if_not_present(default_name, ".png")
             )
 
         if config["write_to_movie"]:
@@ -91,18 +92,19 @@ class SceneFileWriter(object):
             self.movie_file_path = os.path.join(
                 movie_dir,
                 add_extension_if_not_present(
-                    scene_name, config["movie_file_extension"]
+                    default_name, config["movie_file_extension"]
                 ),
             )
             self.gif_file_path = os.path.join(
-                movie_dir, add_extension_if_not_present(scene_name, GIF_FILE_EXTENSION)
+                movie_dir,
+                add_extension_if_not_present(default_name, GIF_FILE_EXTENSION),
             )
             if not config["custom_folders"]:
                 self.partial_movie_directory = guarantee_existence(
                     os.path.join(
                         movie_dir,
                         "partial_movie_files",
-                        scene_name,
+                        default_name,
                     )
                 )
             else:
@@ -111,7 +113,7 @@ class SceneFileWriter(object):
                         config["media_dir"],
                         "temp_files",
                         "partial_movie_files",
-                        scene_name,
+                        default_name,
                     )
                 )
 
@@ -154,7 +156,7 @@ class SceneFileWriter(object):
         root, _ = os.path.splitext(filename)
         return root
 
-    def get_default_scene_name(self):
+    def get_default_scene_name(self, scene_name):
         """
         This method returns the default scene name
         which is the value of "output_file", if it exists and
@@ -167,7 +169,7 @@ class SceneFileWriter(object):
             The default scene name.
         """
         fn = config["output_file"]
-        return fn if fn else self.scene.__class__.__name__
+        return fn if fn else scene_name
 
     def get_resolution_directory(self):
         """Get the name of the resolution directory directly containing
@@ -194,8 +196,8 @@ class SceneFileWriter(object):
         :class:`str`
             The name of the directory.
         """
-        pixel_height = self.scene.camera.pixel_height
-        frame_rate = self.scene.camera.frame_rate
+        pixel_height = self.video_quality_config["pixel_height"]
+        frame_rate = self.video_quality_config["frame_rate"]
         return "{}p{}".format(pixel_height, frame_rate)
 
     # Directory getters
@@ -262,7 +264,7 @@ class SceneFileWriter(object):
         if time is None:
             time = curr_end
         if time < 0:
-            raise Exception("Adding sound at timestamp < 0")
+            raise ValueError("Adding sound at timestamp < 0")
 
         new_end = time + new_segment.duration_seconds
         diff = new_end - curr_end
@@ -373,7 +375,7 @@ class SceneFileWriter(object):
             self.add_frame(*[frame] * n_frames)
             b = datetime.datetime.now()
             time_diff = (b - a).total_seconds()
-            frame_duration = 1 / self.scene.camera.frame_rate
+            frame_duration = 1 / self.video_quality_config["frame_rate"]
             if time_diff < frame_duration:
                 sleep(frame_duration - time_diff)
 
@@ -393,9 +395,6 @@ class SceneFileWriter(object):
                 self.flush_cache_directory()
             else:
                 self.clean_cache()
-        if config["save_last_frame"]:
-            self.scene.update_frame(ignore_skipping=False)
-            self.save_final_image(self.scene.camera.get_image())
 
     def open_movie_pipe(self):
         """
@@ -403,7 +402,7 @@ class SceneFileWriter(object):
         FFMPEG and begin writing to FFMPEG's input
         buffer.
         """
-        file_path = self.partial_movie_files[self.scene.num_plays]
+        file_path = self.partial_movie_files[self.renderer.num_plays]
 
         # TODO #486 Why does ffmpeg need temp files ?
         temp_file_path = (
@@ -412,9 +411,9 @@ class SceneFileWriter(object):
         self.partial_movie_file_path = file_path
         self.temp_partial_movie_file_path = temp_file_path
 
-        fps = self.scene.camera.frame_rate
-        height = self.scene.camera.pixel_height
-        width = self.scene.camera.pixel_width
+        fps = self.video_quality_config["frame_rate"]
+        height = self.video_quality_config["pixel_height"]
+        width = self.video_quality_config["pixel_width"]
 
         command = [
             FFMPEG_BIN,
@@ -465,7 +464,7 @@ class SceneFileWriter(object):
             self.partial_movie_file_path,
         )
         logger.info(
-            f"Animation {self.scene.num_plays} : Partial movie file written in %(path)s",
+            f"Animation {self.renderer.num_plays} : Partial movie file written in %(path)s",
             {"path": {self.partial_movie_file_path}},
         )
 

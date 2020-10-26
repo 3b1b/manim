@@ -1001,7 +1001,7 @@ class SuitSymbol(SVGMobject):
             "clubs": self.black,
         }
         if suit_name not in suits_to_colors:
-            raise Exception("Invalid suit name")
+            raise ValueError("Invalid suit name")
         SVGMobject.__init__(self, file_name=suit_name, **kwargs)
 
         color = suits_to_colors[suit_name]

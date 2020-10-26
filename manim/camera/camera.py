@@ -28,6 +28,7 @@ from ..utils.iterables import remove_list_redundancies
 from ..utils.simple_functions import fdiv
 from ..utils.space_ops import angle_of_vector
 from ..utils.space_ops import get_norm
+from ..utils.family import extract_mobject_family_members
 
 
 class Camera(object):
@@ -65,7 +66,7 @@ class Camera(object):
         "use_z_index": True,
     }
 
-    def __init__(self, background=None, **kwargs):
+    def __init__(self, video_quality_config, background=None, **kwargs):
         """Initialises the Camera.
 
         Parameters
@@ -363,33 +364,6 @@ class Camera(object):
 
     ####
 
-    # TODO, it's weird that this is part of camera.
-    # Clearly it should live elsewhere.
-    def extract_mobject_family_members(self, mobjects, only_those_with_points=False):
-        """Returns a list of the types of mobjects and
-        their family members present.
-
-        Parameters
-        ----------
-        mobjects : Mobject
-            The Mobjects currently in the Scene
-        only_those_with_points : bool, optional
-            Whether or not to only do this for
-            those mobjects that have points. By default False
-
-        Returns
-        -------
-        list
-            list of the mobjects and family members.
-        """
-        if only_those_with_points:
-            method = Mobject.family_members_with_points
-        else:
-            method = Mobject.get_family
-        if self.use_z_index:
-            mobjects = sorted(mobjects, key=lambda m: m.z_index)
-        return remove_list_redundancies(list(it.chain(*[method(m) for m in mobjects])))
-
     def get_mobjects_to_display(
         self, mobjects, include_submobjects=True, excluded_mobjects=None
     ):
@@ -411,11 +385,13 @@ class Camera(object):
             list of mobjects
         """
         if include_submobjects:
-            mobjects = self.extract_mobject_family_members(
-                mobjects, only_those_with_points=True
+            mobjects = extract_mobject_family_members(
+                mobjects, use_z_index=self.use_z_index, only_those_with_points=True
             )
             if excluded_mobjects:
-                all_excluded = self.extract_mobject_family_members(excluded_mobjects)
+                all_excluded = extract_mobject_family_members(
+                    excluded_mobjects, use_z_index=self.use_z_index
+                )
                 mobjects = list_difference_update(mobjects, all_excluded)
         return mobjects
 

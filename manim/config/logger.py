@@ -90,10 +90,9 @@ def parse_theme(config_logger):
 
 def set_file_logger(config, verbosity):
     # Note: The log file name will be
-    # <name_of_animation_file>_<name_of_scene>.log, gotten from
-    # file_writer_config.  So it can differ from the real name of the scene.
-    # <name_of_scene> would only appear if scene name was provided when manim
-    # was called.
+    # <name_of_animation_file>_<name_of_scene>.log, gotten from config.  So it
+    # can differ from the real name of the scene.  <name_of_scene> would only
+    # appear if scene name was provided when manim was called.
     scene_name_suffix = "".join(config["scene_names"])
     scene_file_name = os.path.basename(config["input_file"]).split(".")[0]
     log_file_name = (

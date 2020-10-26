@@ -97,7 +97,7 @@ class FrameServer(frameserver_pb2_grpc.FrameServerServicer):
                 selected_scene.static_image,
             )
             serialized_mobject_list, duration = selected_scene.add_frame(
-                selected_scene.get_frame()
+                selected_scene.renderer.get_frame()
             )
             resp = list_to_frame_response(
                 selected_scene, duration, serialized_mobject_list

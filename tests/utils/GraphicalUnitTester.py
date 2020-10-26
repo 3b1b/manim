@@ -1,11 +1,6 @@
-import numpy as np
 import os
-import sys
-import inspect
 import logging
-import pytest
-import warnings
-from platform import system
+import numpy as np
 
 from manim import config
 
@@ -71,7 +66,6 @@ class GraphicalUnitTester:
         ]:
             os.makedirs(dir_temp)
 
-        # By invoking this, the scene is rendered.
         self.scene = scene_object()
         self.scene.render()
 
@@ -84,9 +78,9 @@ class GraphicalUnitTester:
             The pre-rendered frame.
         """
         frame_data_path = os.path.join(
-            os.path.join(self.path_control_data, "{}.npy".format(str(self.scene)))
+            os.path.join(self.path_control_data, "{}.npz".format(str(self.scene)))
         )
-        return np.load(frame_data_path)
+        return np.load(frame_data_path)["frame_data"]
 
     def _show_diff_helper(self, frame_data, expected_frame_data):
         """Will visually display with matplotlib differences between frame generared and the one expected."""
@@ -124,7 +118,7 @@ class GraphicalUnitTester:
 
     def test(self, show_diff=False):
         """Compare pre-rendered frame to the frame rendered during the test."""
-        frame_data = self.scene.get_frame()
+        frame_data = self.scene.renderer.get_frame()
         expected_frame_data = self._load_data()
 
         assert frame_data.shape == expected_frame_data.shape, (

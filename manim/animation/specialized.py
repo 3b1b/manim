@@ -29,7 +29,7 @@ class MoveCar(ApplyMethod):
 
     def check_if_input_is_car(self, car):
         if not isinstance(car, Car):
-            raise Exception("MoveCar must take in Car object")
+            raise TypeError("MoveCar must take in Car object")
 
     def begin(self):
         super().begin()

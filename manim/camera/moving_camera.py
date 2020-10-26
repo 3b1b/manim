@@ -46,7 +46,7 @@ class MovingCamera(Camera):
         "default_frame_stroke_width": 0,
     }
 
-    def __init__(self, frame=None, **kwargs):
+    def __init__(self, video_quality_config, frame=None, **kwargs):
         """
         frame is a Mobject, (should almost certainly be a rectangle)
         determining which region of space the camera displys
@@ -59,7 +59,7 @@ class MovingCamera(Camera):
                 self.default_frame_stroke_width,
             )
         self.frame = frame
-        Camera.__init__(self, **kwargs)
+        Camera.__init__(self, video_quality_config, **kwargs)
 
     # TODO, make these work for a rotated frame
     @property
