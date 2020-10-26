@@ -62,9 +62,7 @@ class GraphicalUnitTester:
         config["save_last_frame"] = True
         config["write_to_movie"] = False
         config["disable_caching"] = True
-        config["pixel_height"] = 480
-        config["pixel_width"] = 854
-        config["frame_rate"] = 15
+        config["quality"] = "low_quality"
 
         for dir_temp in [
             self.path_tests_medias_cache,
