@@ -86,9 +86,7 @@ class SceneFileWriter(object):
                         )
                     )
                 else:
-                    movie_dir = guarantee_existence(
-                        os.path.join(config["video_dir"])
-                    )
+                    movie_dir = guarantee_existence(os.path.join(config["video_dir"]))
 
             self.movie_file_path = os.path.join(
                 movie_dir,
@@ -125,7 +123,7 @@ class SceneFileWriter(object):
         hash_animation : str
             Hash of the animation.
         """
-        if not hasattr(self, 'partial_movie_directory'):
+        if not hasattr(self, "partial_movie_directory"):
             return
 
         # None has to be added to partial_movie_files to keep the right index with scene.num_plays.
@@ -409,9 +407,7 @@ class SceneFileWriter(object):
 
         # TODO #486 Why does ffmpeg need temp files ?
         temp_file_path = (
-            os.path.splitext(file_path)[0]
-            + "_temp"
-            + config["movie_file_extension"]
+            os.path.splitext(file_path)[0] + "_temp" + config["movie_file_extension"]
         )
         self.partial_movie_file_path = file_path
         self.temp_partial_movie_file_path = temp_file_path
@@ -486,11 +482,11 @@ class SceneFileWriter(object):
         :class:`bool`
             Whether the file exists.
         """
-        if not hasattr(self, 'partial_movie_directory'):
+        if not hasattr(self, "partial_movie_directory"):
             return False
         path = os.path.join(
             self.partial_movie_directory,
-            "{}{}".format(hash_invocation, config['movie_file_extension']),
+            "{}{}".format(hash_invocation, config["movie_file_extension"]),
         )
         return os.path.exists(path)
 
@@ -541,10 +537,10 @@ class SceneFileWriter(object):
             config["ffmpeg_loglevel"].lower(),
         ]
 
-        if config['write_to_movie'] and not config['save_as_gif']:
+        if config["write_to_movie"] and not config["save_as_gif"]:
             commands += ["-c", "copy", movie_file_path]
 
-        if config['save_as_gif']:
+        if config["save_as_gif"]:
             commands += [self.gif_file_path]
 
         if not self.includes_sound:
@@ -553,7 +549,7 @@ class SceneFileWriter(object):
         try:
             subprocess.check_call(commands)
         except subprocess.CalledProcessError as exc:
-            logger.error(f'FFMPEG returned with code {exc.returncode}')
+            logger.error(f"FFMPEG returned with code {exc.returncode}")
             raise exc
 
         if self.includes_sound:
@@ -596,7 +592,7 @@ class SceneFileWriter(object):
             os.remove(sound_file_path)
 
         self.print_file_ready_message(
-            self.gif_file_path if config['save_as_gif'] else movie_file_path
+            self.gif_file_path if config["save_as_gif"] else movie_file_path
         )
         if config["write_to_movie"]:
             for file_path in partial_movie_files:

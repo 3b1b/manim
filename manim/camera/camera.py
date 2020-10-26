@@ -89,6 +89,7 @@ class Camera(object):
             "frame_height",
             "frame_width",
             "frame_rate",
+            "background_color",
         ]:
             setattr(self, attr, kwargs.get(attr, config[attr]))
 

@@ -105,7 +105,7 @@ def set_file_logger(config, verbosity):
     file_handler = logging.FileHandler(log_file_path, mode="w")
     file_handler.setFormatter(JSONFormatter())
 
-    logger = logging.getLogger('manim')
+    logger = logging.getLogger("manim")
     logger.addHandler(file_handler)
     logger.info("Log file will be saved in %(logpath)s", {"logpath": log_file_path})
     logger.setLevel(verbosity)
