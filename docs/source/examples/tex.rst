@@ -4,8 +4,8 @@ Text and LaTeX
 
 Text
 --------------
-The simplest way to add text to you animation is to use the :class:`~.Text` class. It uses the Cairo library to render text.
-A newer addition to manim is the :class:`~.PangoText` class, which uses the Pango library.
+The simplest way to add text to you animation is to use the :class:`~.Text` class. It uses the Pango library to render text.
+With Pango, you are also able to render non-English alphabets like `你好` or  `こんにちは` or `안녕하세요` or `مرحبا بالعالم`.
 
 The Text() mobject
 +++++++++++++++++++
@@ -19,11 +19,6 @@ The Text() mobject
             self.add(text)
 
 For more examples, see: :class:`~.Text`.
-
-The PangoText() mobject
-+++++++++++++++++++++++
-
-The :class:`~.PangoText` mobject uses the Pango library to render text. Use this whenever you want to use non-English alphabets like `你好` or  `こんにちは` or `안녕하세요` or `مرحبا بالعالم`.
 
 
 LaTeX
@@ -42,7 +37,7 @@ Just as you can use :class:`~.Text` to add text to your videos, you can use :cla
             self.add(tex)
 
 Note that we are using a raw string (``r'---'``) instead of a regular string (``'---'``).
-This is because TeX code uses a lot of special characters - like ``\`` for example - 
+This is because TeX code uses a lot of special characters - like ``\`` for example -
 that have special meaning within a regular python string. An alternative would have
 been to write ``\\`` as in ``Tex('\\LaTeX')``.
 
