@@ -108,5 +108,5 @@ def test_s_flag(tmp_path, manim_cfg_file, simple_scenes_path):
     is_empty = not any((tmp_path / 'videos').iterdir())
     assert is_empty, 'running manim with -s flag rendered a video'
 
-    is_empty = not any((tmp_path / 'images').iterdir())
+    is_empty = not any((tmp_path / 'images' / 'simple_scenes').iterdir())
     assert not is_empty, 'running manim with -s flag did not render an image'
