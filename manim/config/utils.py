@@ -305,7 +305,7 @@ class ManimConfig(MutableMapping):
                 "transparent",
                 "scene_names",
                 "verbosity",
-                "dry_run",      # always set this one last
+
         ]:
             if hasattr(args, key):
                 attr = getattr(args, key)
@@ -314,9 +314,13 @@ class ManimConfig(MutableMapping):
                 if attr is not None:
                     self[key] = attr
 
+        # dry_run is special because it can only be set to True
+        if hasattr(args, 'dry_run'):
+            if getattr(args, 'dry_run'):
+                self['dry_run'] = True
+
         for key in [
                 "media_dir",    # always set this one first
-                "dry_run",
                 "video_dir",
                 "images_dir",
                 "tex_dir",
@@ -672,21 +676,17 @@ class ManimConfig(MutableMapping):
 
     @dry_run.setter
     def dry_run(self, val):
-        if val in [True, False]:
-            if val:    # dry run
-                self.write_to_movie = False
-                self.write_all = False
-                self.save_last_frame = False
-                self.save_pngs = False
-                self.save_as_gif = False
-            else:      # set to default
-                self.write_to_movie = True
-                self.write_all = False
-                self.save_last_frame = False
-                self.save_pngs = False
-                self.save_as_gif = False
+        if val:
+            self.write_to_movie = False
+            self.write_all = False
+            self.save_last_frame = False
+            self.save_pngs = False
+            self.save_as_gif = False
         else:
-            raise ValueError(f'dry_run must be boolean')
+            raise ValueError('It is unclear what it means to set dry_run to '
+                             'False.  Instead, try setting each option '
+                             'individually. (write_to_movie, write_alll, '
+                             'save_last_frame, save_pngs, or save_as_gif)')
 
     @property
     def use_js_renderer(self):
