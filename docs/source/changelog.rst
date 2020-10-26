@@ -16,7 +16,7 @@ Mobjects, Scenes, and Animations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #. The ``alignment`` attribute to Tex and MathTex has been removed in favour of ``tex_environment``.
-
+#. :class:`~.Text` now uses Pango for rendering. ``PangoText`` has been removed. The old implementation is still available as a fallback as :class:`~.CairoText`.
 
 
 

@@ -825,7 +825,7 @@ class Text(SVGMobject):
         """
         settings = (
             "PANGO" + self.font + self.slant + self.weight
-        )  # to differentiate Text and PangoText
+        )  # to differentiate Text and CairoText
         settings += str(self.t2f) + str(self.t2s) + str(self.t2w)
         settings += str(self.line_spacing) + str(self.size)
         id_str = self.text + settings
