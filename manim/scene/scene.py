@@ -103,12 +103,10 @@ class Scene(Container):
         self.animations_hashes = []
 
         self.mobjects = []
-        self.original_skipping_status = config["skip_animations"]
         # TODO, remove need for foreground mobjects
         self.foreground_mobjects = []
         self.num_plays = 0
         self.time = 0
-        self.original_skipping_status = config["skip_animations"]
         if self.random_seed is not None:
             random.seed(self.random_seed)
             np.random.seed(self.random_seed)
@@ -119,6 +117,7 @@ class Scene(Container):
         """
         Render this Scene.
         """
+        self.original_skipping_status = config["skip_animations"]
         try:
             self.construct()
         except EndSceneEarlyException:
@@ -126,7 +125,7 @@ class Scene(Container):
 
         self.tear_down()
         # We have to reset these settings in case of multiple renders.
-        config["skip_animations"] = False
+        config["skip_animations"] = self.original_skipping_status
 
         self.file_writer.finish()
         self.print_end_message()
