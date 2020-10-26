@@ -16,7 +16,7 @@ Shapes, Images and Positions
             self.add(d, c, s, t)
 
 .. manim:: PointMovingOnShapes
-    
+
     class PointMovingOnShapes(Scene):
         def construct(self):
             circle = Circle(radius=1, color=BLUE)
@@ -36,7 +36,7 @@ Shapes, Images and Positions
 
 .. manim:: GradientImageFromArray
     :save_last_frame:
-    
+
     class GradientImageFromArray(Scene):
         def construct(self):
             n = 256
@@ -49,7 +49,7 @@ Shapes, Images and Positions
 
 .. manim:: ArcShapeIris
     :save_last_frame:
-    
+
     class ArcShapeIris(Scene):
         def construct(self):
             colors = [DARK_BLUE, DARK_BROWN, BLUE_E, BLUE_D, BLUE_A, TEAL_B, GREEN_B, YELLOW_E]
@@ -58,32 +58,32 @@ Shapes, Images and Positions
             circles_group = VGroup()
 
             # zip(radius, color) makes the iterator [(radius[i], color[i]) for i in range(radius)]
-            circles_group.add(*[Circle(radius=rad, stroke_width=10, color=col) 
+            circles_group.add(*[Circle(radius=rad, stroke_width=10, color=col)
                                 for rad, col in zip(radius, colors)])
             self.add(circles_group)
 
 
 .. manim:: DotInterpolation
     :save_last_frame:
-    
+
     class DotInterpolation(Scene):
         def construct(self):
             dotL = Dot(color=DARK_GREY)
             dotL.shift(2 * RIGHT)
             dotR = Dot(color=WHITE)
             dotR.shift(2 * LEFT)
-            
+
             dotMiddle = VMobject().interpolate(dotL, dotR, alpha=0.3)
-            
+
             self.add(dotL, dotR, dotMiddle)
 
 
 .. manim:: MovingAround
-    
+
     class MovingAround(Scene):
         def construct(self):
             square = Square(color=BLUE, fill_opacity=1)
-            
+
             self.play(square.shift, LEFT)
             self.play(square.set_fill, ORANGE)
             self.play(square.scale, 0.3)
@@ -92,7 +92,7 @@ Shapes, Images and Positions
 
 .. manim:: TextAlignement
     :save_last_frame:
-    
+
     class TextAlignement(Scene):
         def construct(self):
             title = Text("K-means clustering and Logistic Regression", color=WHITE)
@@ -119,7 +119,7 @@ Shapes, Images and Positions
 
 .. manim:: BezierSpline
     :save_last_frame:
-    
+
     class BezierSpline(Scene):
         def construct(self):
             np.random.seed(42)
