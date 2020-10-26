@@ -486,6 +486,8 @@ class SceneFileWriter(object):
         :class:`bool`
             Whether the file exists.
         """
+        if not hasattr(self, 'partial_movie_directory'):
+            return False
         path = os.path.join(
             self.partial_movie_directory,
             "{}{}".format(hash_invocation, config['movie_file_extension']),

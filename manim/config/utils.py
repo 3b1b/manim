@@ -815,8 +815,6 @@ class ManimFrame(Mapping):
     _OPTS = {
         'pixel_width',
         'pixel_height',
-        'pixel_width',
-        'pixel_height',
         'aspect_ratio',
         'frame_height',
         'frame_width',

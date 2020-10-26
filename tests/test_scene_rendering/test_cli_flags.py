@@ -64,6 +64,31 @@ def test_n_flag(tmp_path, simple_scenes_path):
     assert exit_code == 0, err
 
 
+def test_s_flag_no_animations(tmp_path, manim_cfg_file, simple_scenes_path):
+    scene_name = "NoAnimations"
+    command = [
+        "python",
+        "-m",
+        "manim",
+        simple_scenes_path,
+        scene_name,
+        "-ql",
+        "-s",
+        "--media_dir",
+        str(tmp_path),
+    ]
+    out, err, exit_code = capture(command)
+    assert exit_code == 0, err
+
+    print(list((tmp_path / 'images' / 'simple_scenes').iterdir()))
+
+    is_empty = not any((tmp_path / 'videos').iterdir())
+    assert is_empty, 'running manim with -s flag rendered a video'
+
+    is_empty = not any((tmp_path / 'images' / 'simple_scenes').iterdir())
+    assert not is_empty, 'running manim with -s flag did not render an image'
+
+
 def test_s_flag(tmp_path, manim_cfg_file, simple_scenes_path):
     scene_name = "SquareToCircle"
     command = [
