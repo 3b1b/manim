@@ -128,6 +128,6 @@ Other modules
 .. autosummary::
    :toctree: reference
 
-   _config
+   config
    constants
    container
