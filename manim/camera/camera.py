@@ -52,7 +52,6 @@ class Camera(object):
         # Note: frame height and width will be resized to match
         # the pixel aspect ratio
         "frame_center": ORIGIN,
-        "background_color": BLACK,
         "background_opacity": 1,
         # Points in vectorized mobjects with norm greater
         # than this value will be rescaled.

@@ -305,7 +305,7 @@ class ManimConfig(MutableMapping):
                 "transparent",
                 "scene_names",
                 "verbosity",
-
+                "background_color",
         ]:
             if hasattr(args, key):
                 attr = getattr(args, key)
