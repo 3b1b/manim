@@ -2,6 +2,7 @@ import pytest
 
 from pathlib import Path
 
+
 @pytest.fixture
 def manim_cfg_file():
     return str(Path(__file__).parent / "manim.cfg")
