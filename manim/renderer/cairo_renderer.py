@@ -76,7 +76,6 @@ class CairoRenderer:
         self.animations_hashes = []
         self.num_plays = 0
         self.time = 0
-        self.static_mobject_data = None
 
     def init(self, scene):
         self.file_writer = SceneFileWriter(
@@ -102,6 +101,7 @@ class CairoRenderer:
         self,
         scene,
         mobjects=None,
+        background=None,
         include_submobjects=True,
         ignore_skipping=True,
         **kwargs,
@@ -130,8 +130,8 @@ class CairoRenderer:
                 scene.mobjects,
                 scene.foreground_mobjects,
             )
-        if self.static_mobject_data is not None:
-            self.camera.set_frame_to_background(self.static_mobject_data)
+        if background is not None:
+            self.camera.set_frame_to_background(background)
         else:
             self.camera.reset()
 
@@ -149,10 +149,6 @@ class CairoRenderer:
             The shape of the array is height x width x 3
         """
         return np.array(self.camera.pixel_array)
-
-    def save_static_mobject_data(self, scene, static_mobjects):
-        self.update_frame(scene, static_mobjects)
-        self.static_mobject_data = self.get_frame()
 
     def add_frame(self, frame, num_frames=1):
         """
