@@ -20,12 +20,13 @@ information here will make it easier for newcomers to get started using
    :maxdepth: 2
 
    installation
-   reference
-   examples
    tutorials
+   examples
+   changelog
+   reference
    reporting_bugs
    contributing
-   changelog
+
 
 Navigation
 ==================
