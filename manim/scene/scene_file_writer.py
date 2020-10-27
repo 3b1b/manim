@@ -196,8 +196,8 @@ class SceneFileWriter(object):
         :class:`str`
             The name of the directory.
         """
-        pixel_height = self.video_quality_config["pixel_height"]
-        frame_rate = self.video_quality_config["frame_rate"]
+        pixel_height = config["pixel_height"]
+        frame_rate = config["frame_rate"]
         return "{}p{}".format(pixel_height, frame_rate)
 
     # Directory getters
@@ -375,7 +375,7 @@ class SceneFileWriter(object):
             self.add_frame(*[frame] * n_frames)
             b = datetime.datetime.now()
             time_diff = (b - a).total_seconds()
-            frame_duration = 1 / self.video_quality_config["frame_rate"]
+            frame_duration = 1 / config["frame_rate"]
             if time_diff < frame_duration:
                 sleep(frame_duration - time_diff)
 
@@ -411,9 +411,9 @@ class SceneFileWriter(object):
         self.partial_movie_file_path = file_path
         self.temp_partial_movie_file_path = temp_file_path
 
-        fps = self.video_quality_config["frame_rate"]
-        height = self.video_quality_config["pixel_height"]
-        width = self.video_quality_config["pixel_width"]
+        fps = config["frame_rate"]
+        height = config["pixel_height"]
+        width = config["pixel_width"]
 
         command = [
             FFMPEG_BIN,
