@@ -74,7 +74,8 @@ def determine_quality(args):
             # Skip so we prioritize anything that overwrites the default quality.
             pass
         elif getattr(args, quality, None) or (
-            hasattr(args, "quality") and args.quality == constants.QUALITIES[quality]["flag"]
+            hasattr(args, "quality")
+            and args.quality == constants.QUALITIES[quality]["flag"]
         ):
             return quality
 
