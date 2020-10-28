@@ -1,7 +1,7 @@
 """Animate mobjects."""
 
 
-__all__ = ["Animation"]
+__all__ = ["Animation", "Wait"]
 
 
 from copy import deepcopy
@@ -165,3 +165,25 @@ class Animation(object):
 
     def is_remover(self):
         return self.remover
+
+
+class Wait(Animation):
+    def __init__(self, stop_condition=None, **kwargs):
+        digest_config(self, kwargs)
+        self.mobject = None
+        self.stop_condition = stop_condition
+
+    def begin(self):
+        pass
+
+    def finish(self):
+        pass
+
+    def clean_up_from_scene(self, scene):
+        pass
+
+    def update_mobjects(self, dt):
+        pass
+
+    def interpolate(self, alpha):
+        pass

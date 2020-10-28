@@ -4,7 +4,7 @@ from ..utils.iterables import list_update
 from ..utils.exceptions import EndSceneEarlyException
 from ..constants import DEFAULT_WAIT_TIME
 from ..scene.scene_file_writer import SceneFileWriter
-from ..utils.caching import handle_caching_play, handle_caching_wait
+from ..utils.caching import handle_caching_play
 from ..camera.camera import Camera
 
 
@@ -90,12 +90,6 @@ class CairoRenderer:
     @handle_play_like_call
     def play(self, scene, *args, **kwargs):
         scene.play_internal(*args, **kwargs)
-
-    @pass_scene_reference
-    @handle_caching_wait
-    @handle_play_like_call
-    def wait(self, scene, duration=DEFAULT_WAIT_TIME, stop_condition=None):
-        scene.wait_internal(duration=duration, stop_condition=stop_condition)
 
     def update_frame(  # TODO Description in Docstring
         self,
