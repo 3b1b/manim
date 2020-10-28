@@ -12,6 +12,7 @@ import _thread as thread
 from time import sleep
 import datetime
 from PIL import Image
+from pathlib import Path
 
 from .. import config, logger, console
 from ..constants import FFMPEG_BIN, GIF_FILE_EXTENSION
@@ -98,10 +99,11 @@ class SceneFileWriter(object):
                     default_name, config["movie_file_extension"]
                 ),
             )
-            self.gif_file_path = os.path.join(
-                movie_dir,
-                add_extension_if_not_present(default_name, GIF_FILE_EXTENSION),
-            )
+            if config['save_as_gif']:
+                self.gif_file_path = os.path.join(
+                    movie_dir,
+                    add_extension_if_not_present(default_name, GIF_FILE_EXTENSION),
+                )
             if not config["custom_folders"]:
                 self.partial_movie_directory = guarantee_existence(
                     os.path.join(
@@ -172,7 +174,7 @@ class SceneFileWriter(object):
             The default scene name.
         """
         fn = config["output_file"]
-        return fn if fn else scene_name
+        return fn if fn else Path(scene_name)
 
     def get_resolution_directory(self):
         """Get the name of the resolution directory directly containing

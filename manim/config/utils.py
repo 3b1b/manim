@@ -743,13 +743,13 @@ class ManimConfig(MutableMapping):
 
     js_renderer_path = property(
         lambda self: self._d["js_renderer_path"],
-        lambda self, val: self._d.__setitem__("js_renderer_path", Path(val)),
+        lambda self, val: self._d.__setitem__("js_renderer_path", val),
         doc="Path to JS renderer.",
     )
 
     media_dir = property(
-        lambda self: self._d["media_dir"],
-        lambda self, val: self._d.__setitem__("media_dir", Path(val)),
+        lambda self: Path(self._d["media_dir"]),
+        lambda self, val: self._d.__setitem__("media_dir", val),
         doc="Main output directory, relative to execution directory.",
     )
 
@@ -766,35 +766,42 @@ class ManimConfig(MutableMapping):
         ]
         dirs.remove(key)
         dirs = {k: self._d[k] for k in dirs}
-        return self._d[key].format(**dirs)
+        path = self._d[key].format(**dirs)
+        return Path(path) if path else None
+
+    def _set_dir(self, key, val):
+        if isinstance(val, Path):
+            self._d.__setitem__(key, str(val))
+        else:
+            self._d.__setitem__(key, val)
 
     log_dir = property(
         lambda self: self._get_dir("log_dir"),
-        lambda self, val: self._d.__setitem__("log_dir", val),
+        lambda self, val: self._set_dir("log_dir", val),
         doc="Directory to place logs",
     )
 
     video_dir = property(
         lambda self: self._get_dir("video_dir"),
-        lambda self, val: self._d.__setitem__("video_dir", val),
+        lambda self, val: self._set_dir("video_dir", val),
         doc="Directory to place videos",
     )
 
     images_dir = property(
         lambda self: self._get_dir("images_dir"),
-        lambda self, val: self._d.__setitem__("images_dir", val),
+        lambda self, val: self._set_dir("images_dir", val),
         doc="Directory to place images",
     )
 
     text_dir = property(
         lambda self: self._get_dir("text_dir"),
-        lambda self, val: self._d.__setitem__("text_dir", val),
+        lambda self, val: self._set_dir("text_dir", val),
         doc="Directory to place text",
     )
 
     tex_dir = property(
         lambda self: self._get_dir("tex_dir"),
-        lambda self, val: self._d.__setitem__("tex_dir", val),
+        lambda self, val: self._set_dir("tex_dir", val),
         doc="Directory to place tex",
     )
 
@@ -806,13 +813,13 @@ class ManimConfig(MutableMapping):
 
     input_file = property(
         lambda self: self._get_dir("input_file"),
-        lambda self, val: self._d.__setitem__("input_file", val),
+        lambda self, val: self._set_dir("input_file", val),
         doc="Input file name.",
     )
 
     output_file = property(
         lambda self: self._get_dir("output_file"),
-        lambda self, val: self._d.__setitem__("output_file", val),
+        lambda self, val: self._set_dir("output_file", val),
         doc="Output file name.",
     )
 

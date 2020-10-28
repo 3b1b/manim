@@ -1,5 +1,7 @@
-import pytest
+import tempfile
+from pathlib import Path
 import numpy as np
+
 from manim import config, tempconfig, Scene, Square, WHITE
 
 
