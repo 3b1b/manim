@@ -47,8 +47,23 @@ def config_file_paths():
     return [library_wide, user_wide, folder_wide]
 
 
-def make_config_parser():
-    """Make a ConfigParser object and load the .cfg files."""
+def make_config_parser(custom_file=None):
+    """Make a ConfigParser object and load the .cfg files.
+
+    Parameters
+    ----------
+    custom_file : str
+
+        Path to a custom config file.  If used, the folder-wide file in the
+        relevant directory will be ignored, if it exists.  If None, the
+        folder-wide file will be used, if it exists.
+
+    Notes
+    -----
+    The folder-wide file can be ignored by passing custom_file.  However, the
+    user-wide and library-wide config files cannot be ignored.
+
+    """
     library_wide, user_wide, folder_wide = config_file_paths()
     # From the documentation: "An application which requires initial values to
     # be loaded from a file should load the required file or files using
@@ -56,8 +71,10 @@ def make_config_parser():
     # https://docs.python.org/3/library/configparser.html#configparser.ConfigParser.read
     parser = configparser.ConfigParser()
     with open(library_wide) as file:
-        parser.read_file(file)
-    parser.read([user_wide, folder_wide])
+        parser.read_file(file)  # necessary file
+
+    other_files = [user_wide, custom_file if custom_file else folder_wide]
+    parser.read(other_files)    # optional files
     return parser
 
 
@@ -138,7 +155,6 @@ class ManimConfig(MutableMapping):
 
     def __init__(self, parser):
         self._d = {k: None for k in self._OPTS}
-        self._parser = parser
         self.digest_parser(parser)
 
     # behave like a dict
@@ -269,6 +285,8 @@ class ManimConfig(MutableMapping):
 
     # builders
     def digest_parser(self, parser):
+        self._parser = parser
+
         # boolean keys
         for key in [
             "write_to_movie",
@@ -340,6 +358,11 @@ class ManimConfig(MutableMapping):
         return self
 
     def digest_args(self, args):
+        # if a config file has been passed, digest it first so that other CLI
+        # flags supersede it
+        if args.config_file:
+            self.digest_file(args.config_file)
+
         self.input_file = args.file
         self.scene_names = args.scene_names if args.scene_names is not None else []
         self.output_file = args.output_file
@@ -429,8 +452,9 @@ class ManimConfig(MutableMapping):
     def digest_dict(self, _dict):
         return self
 
-    def digest_file(self, filename, cascade=True):
-        return self
+    def digest_file(self, filename):
+        if filename:
+            self.digest_parser(make_config_parser(filename))
 
     # config options are properties
     preview = property(
