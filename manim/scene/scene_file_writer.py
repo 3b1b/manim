@@ -60,7 +60,7 @@ class SceneFileWriter(object):
         files will be written to and read from (within MEDIA_DIR).
         If they don't already exist, they will be created.
         """
-        if config['dry_run']:
+        if config["dry_run"]:
             return
 
         if config["input_file"]:
@@ -102,7 +102,7 @@ class SceneFileWriter(object):
                     default_name, config["movie_file_extension"]
                 ),
             )
-            if config['save_as_gif']:
+            if config["save_as_gif"]:
                 self.gif_file_path = os.path.join(
                     movie_dir,
                     add_extension_if_not_present(default_name, GIF_FILE_EXTENSION),

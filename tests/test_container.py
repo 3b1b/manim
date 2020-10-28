@@ -10,7 +10,7 @@ def test_ABC():
     # The following should work without raising exceptions
     Mobject()
 
-    with tempconfig({'dry_run': True}):
+    with tempconfig({"dry_run": True}):
         Scene()
 
 
@@ -67,7 +67,7 @@ def test_mobject_remove():
 
 def test_scene_add_remove():
     """Test Scene.add() and Scene.remove()."""
-    with tempconfig({'dry_run': True}):
+    with tempconfig({"dry_run": True}):
         scene = Scene()
         container_add(scene, lambda: scene.mobjects)
         scene = Scene()

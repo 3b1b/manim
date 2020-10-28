@@ -74,7 +74,7 @@ def make_config_parser(custom_file=None):
         parser.read_file(file)  # necessary file
 
     other_files = [user_wide, custom_file if custom_file else folder_wide]
-    parser.read(other_files)    # optional files
+    parser.read(other_files)  # optional files
     return parser
 
 
@@ -192,7 +192,6 @@ class ManimConfig(MutableMapping):
             _dict = {k: v for k, v in obj.items() if k not in self._d}
             for k, v in _dict.items():
                 self[k] = v
-
 
     # don't allow to delete anything
     def __delitem__(self, key):
