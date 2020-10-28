@@ -653,7 +653,7 @@ class Scene(Container):
         ProgressDisplay
             The CommandLine Progress Bar.
         """
-        if file_writer_config["skip_animations"] and not override_skip_animations:
+        if config["skip_animations"] and not override_skip_animations:
             times = [run_time]
         else:
             step = 1 / self.renderer.camera.frame_rate
@@ -661,9 +661,9 @@ class Scene(Container):
         time_progression = ProgressDisplay(
             times,
             total=n_iterations,
-            leave=file_writer_config["leave_progress_bars"],
+            leave=config["leave_progress_bars"],
             ascii=True if platform.system() == "Windows" else None,
-            disable=not file_writer_config["progress_bar"],
+            disable=not config["progress_bar"],
         )
         return time_progression
 
