@@ -10,9 +10,9 @@ the :doc:`changelog`.
 
 .. currentmodule:: manim
 
-********************
-Mathematical Objects
-********************
+********
+Mobjects
+********
 
 .. autosummary::
    :toctree: reference

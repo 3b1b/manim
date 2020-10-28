@@ -2,34 +2,150 @@ td {
     padding: 0px 10px 0px 10px;
 }
 
+a {
+    color: #b0604b;
+}
+
+a:hover {
+    color: #ad9088;
+}
+
+p {
+    color: #353535;
+}
+
+.sidebar-toc ul li a:hover {
+    background-color: #e07a5f;
+}
+
+.text-logo {
+    background-color: #87c2a5;
+}
+
+h1 {
+    background-color: #e3f1ea;
+    border-bottom: 1px solid #87c2a5;
+}
+
 img.align-center {
     width: 100%;
     margin-bottom: 20px;
     margin-top: 20px;
 }
+
 img {
     display: block;
     max-width: 100%;
     height: auto;
 }
-.manim-video {
-    width: 100%;
+
+div.highlight {
+    background-color: #fafafa;
+    margin: 8px 0;
 }
 
-.manim-example pre {
-    border-left: none;
-    margin: 0;
-    padding: 0 0 14px 0;
+div.highlight pre {
+    background-color: inherit;
+    border-color: #525893;
+}
+
+.footer-relations a.btn.btn-default {
+    display: flex;
+    align-items: center;
+    background-image: none;
+    color: #b0604b;
+    border-color: #b0604b;
+}
+
+.footer-relations .pull-left a.btn.btn-default::before {
+    font-family: 'Glyphicons Halflings';
+    content: "\e079";
+    margin-right: 4px;
+    margin-left: -2px;
+}
+
+.footer-relations .pull-right a.btn.btn-default::after {
+    font-family: 'Glyphicons Halflings';
+    content: "\e080";
+    margin-left: 4px;
+    margin-right: -2px;
+}
+
+.footer-relations a.btn.btn-default:hover {
+    background-image: none;
+    background-color: #b0604b;
+    color: #fff;
+    border-color: #b0604b;
+    transition: all 0.3s ease;
+    text-shadow: none;
+}
+
+.manim-video {
+    width: 100%;
+    padding: 8px 0;
+    outline: 0;
 }
 
 .manim-example {
-    border-left: 2px solid #eee;
-    border-radius: 4px;
-    padding: 14px 0 14px 20px;
-    margin: 20px 0;
+    background-color: #525893;
+    margin-bottom: 50px;
+    box-shadow: 2px 2px 4px #ddd;
 }
 
-div.example-reference {
-    background-color: #dff0d8;
-    border: 1px solid #3c763d;
+.manim-example .manim-video {
+    padding: 0;
+}
+
+.manim-example img {
+    margin-bottom: 0;
+}
+
+.example-header {
+    font-size: 18px;
+    font-weight: bold;
+    padding: 8px 16px;
+    color: white;
+}
+
+.manim-example .highlight {
+    background-color: #fafafa;
+    border: 2px solid #525893;
+    padding: 8px 8px 16px 8px;
+    margin: 0;
+}
+
+.manim-example .highlight pre {
+    background-color: inherit;
+    border-left: none;
+    margin: 0;
+    padding: 0 6px 0 6px;
+}
+
+.manim-example .admonition {
+    margin-top: 0;
+    padding: 12px 20px;
+}
+
+.manim-example .admonition-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: white;
+}
+
+.manim-example .example-reference {
+    border: none;
+    background-color: inherit;
+}
+
+.manim-example .example-reference p:not(:first-child) {
+    margin-bottom: 0;
+}
+
+.manim-example .copybtn {
+    margin-right: 6px;
+    font-size: 18px;
+}
+
+.manim-example .copybtn:hover {
+    cursor: pointer;
 }

@@ -119,6 +119,18 @@ class CyclicReplaceTest(Scene):
         self.play(CyclicReplace(square, circle))
 
 
+class FadeInAndOutTest(Scene):
+    def construct(self):
+        square = Square(color=BLUE).shift(2 * UP)
+        annotation = Square(color=BLUE)
+        self.add(annotation)
+        self.play(FadeIn(square))
+
+        annotation.become(Square(color=RED).rotate(PI / 4))
+        self.add(annotation)
+        self.play(FadeOut(square))
+
+
 MODULE_NAME = "transform"
 
 

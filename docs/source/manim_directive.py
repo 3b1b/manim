@@ -251,6 +251,7 @@ class ManimDirective(Directive):
             raise ValueError("Invalid combination of render flags received.")
 
         rendered_template = jinja2.Template(TEMPLATE).render(
+            clsname=clsname,
             hide_source=hide_source,
             filesrc_rel=os.path.relpath(filesrc, setup.confdir),
             output_file=output_file,
@@ -284,8 +285,6 @@ TEMPLATE = r"""
 
     <div class="manim-example">
 
-{{ source_block }}
-{{ ref_block }}
 {% endif %}
 
 {% if not (save_as_gif or save_last_frame) %}
@@ -299,10 +298,16 @@ TEMPLATE = r"""
 .. image:: /{{ filesrc_rel }}
     :align: center
 {% endif %}
-
 {% if not hide_source %}
 .. raw:: html
 
-    </div>
+    <div class="example-header">{{ clsname }}</div>
+
+{{ source_block }}
+{{ ref_block }}
 {% endif %}
+
+.. raw:: html
+
+    </div>
 """
