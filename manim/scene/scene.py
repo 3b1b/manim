@@ -14,7 +14,7 @@ from tqdm import tqdm as ProgressDisplay
 import numpy as np
 
 from .. import config, logger
-from ..animation.animation import Animation
+from ..animation.animation import Animation, Wait
 from ..animation.transform import MoveToTarget, ApplyMethod
 from ..camera.camera import Camera
 from ..constants import *
@@ -154,8 +154,6 @@ class Scene(Container):
         """
         return [getattr(self, key) for key in keys]
 
-    ###
-
     def update_mobjects(self, dt):
         """
         Begins updating all mobjects in the Scene.
@@ -180,10 +178,6 @@ class Scene(Container):
         return self.always_update_mobjects or any(
             [mob.has_time_based_updater() for mob in self.get_mobject_family_members()]
         )
-
-    ###
-
-    ###
 
     def get_top_level_mobjects(self):
         """
@@ -258,7 +252,7 @@ class Scene(Container):
             # Anything animated that's not already in the
             # scene gets added to the scene
             mob = animation.mobject
-            if mob not in curr_mobjects:
+            if mob is not None and mob not in curr_mobjects:
                 self.add(mob)
                 curr_mobjects += mob.get_family()
 
@@ -551,100 +545,6 @@ class Scene(Container):
         )
         return all_moving_mobject_families, stationary_mobjects
 
-    def get_time_progression(
-        self, run_time, n_iterations=None, override_skip_animations=False
-    ):
-        """
-        You will hardly use this when making your own animations.
-        This method is for Manim's internal use.
-
-        Returns a CommandLine ProgressBar whose fill_time
-        is dependent on the run_time of an animation,
-        the iterations to perform in that animation
-        and a bool saying whether or not to consider
-        the skipped animations.
-
-        Parameters
-        ----------
-        run_time: float
-            The run_time of the animation.
-
-        n_iterations: int, optional
-            The number of iterations in the animation.
-
-        override_skip_animations: bool, optional
-            Whether or not to show skipped animations in the progress bar.
-
-        Returns
-        ------
-        ProgressDisplay
-            The CommandLine Progress Bar.
-        """
-        if config["skip_animations"] and not override_skip_animations:
-            times = [run_time]
-        else:
-            step = 1 / self.renderer.camera.frame_rate
-            times = np.arange(0, run_time, step)
-        time_progression = ProgressDisplay(
-            times,
-            total=n_iterations,
-            leave=config["leave_progress_bars"],
-            ascii=True if platform.system() == "Windows" else None,
-            disable=not config["progress_bar"],
-        )
-        return time_progression
-
-    def get_run_time(self, animations):
-        """
-        Gets the total run time for a list of animations.
-
-        Parameters
-        ----------
-        animations: list of Animation
-            A list of the animations whose total
-            run_time is to be calculated.
-
-        Returns
-        ------
-        float
-            The total run_time of all of the animations in the list.
-        """
-
-        return np.max([animation.run_time for animation in animations])
-
-    def get_animation_time_progression(self, animations):
-        """
-        You will hardly use this when making your own animations.
-        This method is for Manim's internal use.
-
-        Uses get_time_progression to obtaina
-        CommandLine ProgressBar whose fill_time is
-        dependent on the qualities of the passed Animation,
-
-        Parameters
-        ----------
-        animations : list of Animation
-            The list of animations to get
-            the time progression for.
-
-        Returns
-        ------
-        ProgressDisplay
-            The CommandLine Progress Bar.
-        """
-        run_time = self.get_run_time(animations)
-        time_progression = self.get_time_progression(run_time)
-        time_progression.set_description(
-            "".join(
-                [
-                    "Animation {}: ".format(self.renderer.num_plays),
-                    str(animations[0]),
-                    (", etc." if len(animations) > 1 else ""),
-                ]
-            )
-        )
-        return time_progression
-
     def compile_play_args_to_animation_list(self, *args, **kwargs):
         """
         Each arg can either be an animation, or a mobject method
@@ -724,83 +624,81 @@ class Scene(Container):
 
         return animations
 
-    def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
-        self.renderer.wait(self, duration=duration, stop_condition=stop_condition)
-
-    def play(self, *args, **kwargs):
-        self.renderer.play(self, *args, **kwargs)
-
-    def play_internal(self, *args, **kwargs):
+    def get_time_progression(
+        self, run_time, n_iterations=None, override_skip_animations=False
+    ):
         """
-        This method is used to prep the animations for rendering,
-        apply the arguments and parameters required to them,
-        render them, and write them to the video file.
+        You will hardly use this when making your own animations.
+        This method is for Manim's internal use.
+
+        Returns a CommandLine ProgressBar whose ``fill_time``
+        is dependent on the ``run_time`` of an animation,
+        the iterations to perform in that animation
+        and a bool saying whether or not to consider
+        the skipped animations.
 
         Parameters
         ----------
-        args
-            Animation or mobject with mobject method and params
-        kwargs
-            named parameters affecting what was passed in ``args`` e.g. ``run_time``, ``lag_ratio`` etc.
+        run_time : float
+            The ``run_time`` of the animation.
+
+        n_iterations : int, optional
+            The number of iterations in the animation.
+
+        override_skip_animations : bool, optional
+            Whether or not to show skipped animations in the progress bar.
+
+        Returns
+        -------
+        ProgressDisplay
+            The CommandLine Progress Bar.
         """
-        if len(args) == 0:
-            warnings.warn("Called Scene.play with no animations")
-            return
-
-        animations = self.compile_play_args_to_animation_list(*args, **kwargs)
-        for animation in animations:
-            animation.begin()
-
-        # Paint all non-moving objects onto the screen, so they don't
-        # have to be rendered every frame
-        moving_mobjects, stationary_mobjects = self.get_moving_and_stationary_mobjects(
-            animations
-        )
-        self.renderer.update_frame(self, mobjects=stationary_mobjects)
-        self.static_image = self.renderer.get_frame()
-
-        last_t = 0
-        for t in self.get_animation_time_progression(animations):
-            dt = t - last_t
-            last_t = t
-            for animation in animations:
-                animation.update_mobjects(dt)
-                alpha = t / animation.run_time
-                animation.interpolate(alpha)
-            self.update_mobjects(dt)
-            self.renderer.update_frame(self, moving_mobjects, self.static_image)
-            self.renderer.add_frame(self.renderer.get_frame())
-
-        for animation in animations:
-            animation.finish()
-            animation.clean_up_from_scene(self)
-
-    def wait_internal(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
-        self.update_mobjects(dt=0)  # Any problems with this?
-        self.duration = duration
-        self.stop_condition = stop_condition
-        last_t = 0
-
-        if self.should_update_mobjects():
-            time_progression = self.get_wait_time_progression(duration, stop_condition)
-            # TODO, be smart about setting a static image
-            # the same way Scene.play does
-            for t in time_progression:
-                dt = t - last_t
-                last_t = t
-                self.update_mobjects(dt)
-                self.renderer.update_frame(self)
-                self.renderer.add_frame(self.renderer.get_frame())
-                if stop_condition is not None and stop_condition():
-                    time_progression.close()
-                    break
+        if file_writer_config["skip_animations"] and not override_skip_animations:
+            times = [run_time]
         else:
-            self.renderer.update_frame(self)
-            dt = 1 / self.renderer.camera.frame_rate
-            self.renderer.add_frame(
-                self.renderer.get_frame(), num_frames=int(duration / dt)
+            step = 1 / self.renderer.camera.frame_rate
+            times = np.arange(0, run_time, step)
+        time_progression = ProgressDisplay(
+            times,
+            total=n_iterations,
+            leave=file_writer_config["leave_progress_bars"],
+            ascii=True if platform.system() == "Windows" else None,
+            disable=not file_writer_config["progress_bar"],
+        )
+        return time_progression
+
+    def get_animation_time_progression(self, animations):
+        """
+        You will hardly use this when making your own animations.
+        This method is for Manim's internal use.
+
+        Uses :func:`~.get_time_progression` to obtain a
+        CommandLine ProgressBar whose ``fill_time`` is
+        dependent on the qualities of the passed Animation,
+
+        Parameters
+        ----------
+        animations : List[:class:`~.Animation`, ...]
+            The list of animations to get
+            the time progression for.
+
+        Returns
+        -------
+        ProgressDisplay
+            The CommandLine Progress Bar.
+        """
+        run_time = self.get_run_time(animations)
+        time_progression = self.get_time_progression(run_time)
+        time_progression.set_description(
+            "".join(
+                [
+                    "Animation {}: ".format(self.renderer.num_plays),
+                    str(animations[0]),
+                    (", etc." if len(animations) > 1 else ""),
+                ]
             )
-        return self
+        )
+        return time_progression
 
     def get_wait_time_progression(self, duration, stop_condition):
         """
@@ -809,7 +707,7 @@ class Scene(Container):
 
         Parameters
         ----------
-        duration: int or float
+        duration : int or float
             duration of wait time
 
         stop_condition : function
@@ -837,6 +735,30 @@ class Scene(Container):
             )
         return time_progression
 
+    def get_run_time(self, animations):
+        """
+        Gets the total run time for a list of animations.
+
+        Parameters
+        ----------
+        animations : List[:class:`Animation`, ...]
+            A list of the animations whose total
+            ``run_time`` is to be calculated.
+
+        Returns
+        -------
+        float
+            The total ``run_time`` of all of the animations in the list.
+        """
+
+        return np.max([animation.run_time for animation in animations])
+
+    def play(self, *args, **kwargs):
+        self.renderer.play(self, *args, **kwargs)
+
+    def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
+        self.play(Wait(duration=duration, stop_condition=stop_condition))
+
     def wait_until(self, stop_condition, max_time=60):
         """
         Like a wrapper for wait().
@@ -852,6 +774,84 @@ class Scene(Container):
             The maximum wait time in seconds, if the stop_condition is never fulfilled.
         """
         self.wait(max_time, stop_condition=stop_condition)
+
+    def play_internal(self, *args, **kwargs):
+        """
+        This method is used to prep the animations for rendering,
+        apply the arguments and parameters required to them,
+        render them, and write them to the video file.
+
+        Parameters
+        ----------
+        *args : Animation or mobject with mobject method and params
+        **kwargs : named parameters affecting what was passed in *args e.g
+            run_time, lag_ratio etc.
+        """
+        if len(args) == 0:
+            warnings.warn("Called Scene.play with no animations")
+            return
+
+        animations = self.compile_play_args_to_animation_list(*args, **kwargs)
+        if (
+            len(animations) == 1
+            and isinstance(animations[0], Wait)
+            and not self.should_update_mobjects()
+        ):
+            self.add_static_frames(animations[0].duration)
+            return
+
+        moving_mobjects = None
+        static_mobjects = None
+        duration = None
+        stop_condition = None
+        time_progression = None
+        if len(animations) == 1 and isinstance(animations[0], Wait):
+            # TODO, be smart about setting a static image
+            # the same way Scene.play does
+            duration = animations[0].duration
+            stop_condition = animations[0].stop_condition
+            self.static_image = None
+            time_progression = self.get_wait_time_progression(duration, stop_condition)
+        else:
+            # Paint all non-moving objects onto the screen, so they don't
+            # have to be rendered every frame
+            (
+                moving_mobjects,
+                stationary_mobjects,
+            ) = self.get_moving_and_stationary_mobjects(animations)
+            self.renderer.update_frame(self, mobjects=stationary_mobjects)
+            self.static_image = self.renderer.get_frame()
+            time_progression = self.get_animation_time_progression(animations)
+
+        for animation in animations:
+            animation.begin()
+
+        last_t = 0
+        for t in time_progression:
+            dt = t - last_t
+            last_t = t
+            for animation in animations:
+                animation.update_mobjects(dt)
+                alpha = t / animation.run_time
+                animation.interpolate(alpha)
+            self.update_mobjects(dt)
+            self.renderer.update_frame(self, moving_mobjects, self.static_image)
+            self.renderer.add_frame(self.renderer.get_frame())
+            if stop_condition is not None and stop_condition():
+                time_progression.close()
+                break
+
+        for animation in animations:
+            animation.finish()
+            animation.clean_up_from_scene(self)
+
+    def add_static_frames(self, duration):
+        self.renderer.update_frame(self)
+        dt = 1 / self.renderer.camera.frame_rate
+        self.renderer.add_frame(
+            self.renderer.get_frame(),
+            num_frames=int(duration / dt),
+        )
 
     def add_sound(self, sound_file, time_offset=0, gain=None, **kwargs):
         """
