@@ -63,7 +63,10 @@ class SceneFileWriter(object):
         if config['dry_run']:
             return
 
-        module_directory = self.get_default_module_directory()
+        if config["input_file"]:
+            module_directory = config["input_file"].stem
+        else:
+            module_directory = ""
         default_name = self.get_default_scene_name(scene_name)
         if config["save_last_frame"] or config["save_pngs"]:
             if config["media_dir"] != "":
@@ -146,20 +149,6 @@ class SceneFileWriter(object):
             ),
         )
         self.partial_movie_files.append(new_partial_movie_file)
-
-    def get_default_module_directory(self):
-        """
-        This method gets the name of the directory containing
-        the file that has the Scene that is being rendered.
-
-        Returns
-        -------
-        str
-            The name of the directory.
-        """
-        filename = os.path.basename(config["input_file"])
-        root, _ = os.path.splitext(filename)
-        return root
 
     def get_default_scene_name(self, scene_name):
         """
