@@ -53,7 +53,6 @@ class Camera(object):
         # Note: frame height and width will be resized to match
         # the pixel aspect ratio
         "frame_center": ORIGIN,
-        "background_opacity": 1,
         # Points in vectorized mobjects with norm greater
         # than this value will be rescaled.
         "image_mode": "RGBA",
@@ -91,6 +90,7 @@ class Camera(object):
             "frame_width",
             "frame_rate",
             "background_color",
+            "background_opacity",
         ]:
             setattr(self, attr, kwargs.get(attr, config[attr]))
 

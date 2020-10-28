@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from manim import config, tempconfig
+from manim import config, tempconfig, Scene, Square, WHITE
 
 
 def test_tempconfig():
@@ -24,3 +24,37 @@ def test_tempconfig():
             assert np.allclose(config[k], v)
         else:
             assert config[k] == v
+
+
+class MyScene(Scene):
+    def construct(self):
+        self.add(Square())
+        self.wait(1)
+
+
+def test_transparent():
+    """Test the 'transparent' config option."""
+    orig_verbosity = config["verbosity"]
+    config["verbosity"] = "ERROR"
+
+    scene = MyScene()
+    scene.render()
+    frame = scene.renderer.get_frame()
+    assert np.allclose(frame[0, 0], [0, 0, 0, 255])
+
+    with tempconfig({"transparent": True}):
+        scene = MyScene()
+        scene.render()
+        frame = scene.renderer.get_frame()
+        assert np.allclose(frame[0, 0], [0, 0, 0, 0])
+
+    config["verbosity"] = orig_verbosity
+
+
+def test_background_color():
+    """Test the 'background_color' config option."""
+    with tempconfig({"background_color": WHITE, "verbosity": "ERROR"}):
+        scene = MyScene()
+        scene.render()
+        frame = scene.renderer.get_frame()
+        assert np.allclose(frame[0, 0], [255, 255, 255, 255])

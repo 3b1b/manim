@@ -432,22 +432,10 @@ class SceneFileWriter(object):
             "-loglevel",
             config["ffmpeg_loglevel"].lower(),
         ]
-        # TODO, the test for a transparent background should not be based on
-        # the file extension.
-        if config["movie_file_extension"] == ".mov":
-            # This is if the background of the exported
-            # video should be transparent.
-            command += [
-                "-vcodec",
-                "qtrle",
-            ]
+        if config["transparent"]:
+            command += ["-vcodec", "qtrle"]
         else:
-            command += [
-                "-vcodec",
-                "libx264",
-                "-pix_fmt",
-                "yuv420p",
-            ]
+            command += ["-vcodec", "libx264", "-pix_fmt", "yuv420p"]
         command += [temp_file_path]
         self.writing_process = subprocess.Popen(command, stdin=subprocess.PIPE)
 
