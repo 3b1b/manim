@@ -75,6 +75,7 @@ def make_config_parser(custom_file=None):
 
     other_files = [user_wide, custom_file if custom_file else folder_wide]
     parser.read(other_files)  # optional files
+
     return parser
 
 
