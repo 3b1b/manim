@@ -74,7 +74,7 @@ def determine_quality(args):
             # Skip so we prioritize anything that overwrites the default quality.
             pass
         elif getattr(args, quality, None) or (
-            hasattr(args, "quality") and args.quality == constants.QUALITIES[quality]
+            hasattr(args, "quality") and args.quality == constants.QUALITIES[quality]["flag"]
         ):
             return quality
 
@@ -86,15 +86,6 @@ def determine_quality(args):
             return old_qualities[quality]
 
     return constants.DEFAULT_QUALITY
-
-
-_QUAL = {
-    "low_quality": {"pixel_height": 480, "pixel_width": 854, "frame_rate": 15},
-    "medium_quality": {"pixel_height": 720, "pixel_width": 1280, "frame_rate": 30},
-    "high_quality": {"pixel_height": 1080, "pixel_width": 1920, "frame_rate": 60},
-    "production_quality": {"pixel_height": 1440, "pixel_width": 2560, "frame_rate": 60},
-    "4k_quality": {"pixel_height": 2160, "pixel_width": 3840, "frame_rate": 60},
-}
 
 
 class ManimConfig(MutableMapping):
@@ -689,23 +680,21 @@ class ManimConfig(MutableMapping):
     @property
     def quality(self):
         """Video quality."""
-        q = {
-            "pixel_width": self.pixel_width,
-            "pixel_height": self.pixel_height,
-            "frame_rate": self.frame_rate,
-        }
-        for qual in _QUAL:
-            if q == _QUAL[qual]:
+        keys = ["pixel_width", "pixel_height", "frame_rate"]
+        q = {k: self[k] for k in keys}
+        for qual in constants.QUALITIES:
+            if all([q[k] == constants.QUALITIES[qual][k] for k in keys]):
                 return qual
         else:
             return None
 
     @quality.setter
     def quality(self, qual):
-        if qual not in _QUAL:
-            raise KeyError(f"quality must be one of {list(_QUAL.keys())}")
-        self.frame_size = _QUAL[qual]["pixel_width"], _QUAL[qual]["pixel_height"]
-        self.frame_rate = _QUAL[qual]["frame_rate"]
+        if qual not in constants.QUALITIES:
+            raise KeyError(f"quality must be one of {list(constants.QUALITIES.keys())}")
+        q = constants.QUALITIES[qual]
+        self.frame_size = q["pixel_width"], q["pixel_height"]
+        self.frame_rate = q["frame_rate"]
 
     @property
     def transparent(self):

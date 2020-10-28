@@ -12,26 +12,26 @@ def test_quality_flags():
 
     for quality in constants.QUALITIES.keys():
         # Assert that quality is properly set when using -q*
-        arguments = f"manim -q{constants.QUALITIES[quality]} dummy_filename".split()
+        arguments = f'manim -q{constants.QUALITIES[quality]["flag"]} dummy_filename'.split()
         parsed = parse_args(arguments)
 
-        assert parsed.quality == constants.QUALITIES[quality]
+        assert parsed.quality == constants.QUALITIES[quality]["flag"]
         assert quality == determine_quality(parsed)
 
         # Assert that quality is properly set when using -q *
-        arguments = f"manim -q {constants.QUALITIES[quality]} dummy_filename".split()
+        arguments = f'manim -q {constants.QUALITIES[quality]["flag"]} dummy_filename'.split()
         parsed = parse_args(arguments)
 
-        assert parsed.quality == constants.QUALITIES[quality]
+        assert parsed.quality == constants.QUALITIES[quality]["flag"]
         assert quality == determine_quality(parsed)
 
         # Assert that quality is properly set when using --quality *
         arguments = (
-            f"manim --quality {constants.QUALITIES[quality]} dummy_filename".split()
+            f'manim --quality {constants.QUALITIES[quality]["flag"]} dummy_filename'.split()
         )
         parsed = parse_args(arguments)
 
-        assert parsed.quality == constants.QUALITIES[quality]
+        assert parsed.quality == constants.QUALITIES[quality]["flag"]
         assert quality == determine_quality(parsed)
 
         # Assert that quality is properly set when using -*_quality
