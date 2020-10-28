@@ -153,9 +153,11 @@ class ManimConfig(MutableMapping):
         "write_to_movie",
     }
 
-    def __init__(self, parser):
+    def __init__(self, parser=None):
         self._d = {k: None for k in self._OPTS}
-        self.digest_parser(parser)
+        self._parser = parser
+        if parser:
+            self.digest_parser(parser)
 
     # behave like a dict
     def __iter__(self):
@@ -177,6 +179,21 @@ class ManimConfig(MutableMapping):
     def __setitem__(self, key, val):
         getattr(ManimConfig, key).fset(self, val)  # fset is the property's setter
 
+    def update(self, obj):
+        if isinstance(obj, ManimConfig):
+            self._d.update(obj._d)
+
+        elif isinstance(obj, dict):
+            # First update the underlying _d, then update other properties
+            _dict = {k: v for k, v in obj.items() if k in self._d}
+            for k, v in _dict.items():
+                self[k] = v
+
+            _dict = {k: v for k, v in obj.items() if k not in self._d}
+            for k, v in _dict.items():
+                self[k] = v
+
+
     # don't allow to delete anything
     def __delitem__(self, key):
         raise AttributeError("'ManimConfig' object does not support item deletion")
@@ -192,58 +209,8 @@ class ManimConfig(MutableMapping):
         return copy.deepcopy(self)
 
     def __deepcopy__(self, memo):
-        c = ManimConfig(self._parser)
-
-        for opt in [
-            "background_color",
-            "background_opacity",
-            "custom_folders",
-            "disable_caching",
-            "ffmpeg_loglevel",
-            "flush_cache",
-            "frame_height",
-            "frame_rate",
-            "frame_width",
-            "from_animation_number",
-            "js_renderer_path",
-            "leave_progress_bars",
-            "log_to_file",
-            "max_files_cached",
-            "movie_file_extension",
-            "pixel_height",
-            "pixel_width",
-            "png_mode",
-            "preview",
-            "progress_bar",
-            "save_as_gif",
-            "save_last_frame",
-            "save_pngs",
-            "scene_names",
-            "show_in_file_browser",
-            "skip_animations",
-            "sound",
-            "tex_template_file",
-            "upto_animation_number",
-            "use_js_renderer",
-            "verbosity",
-            "write_all",
-            "write_to_movie",
-        ]:
-            setattr(c, opt, getattr(self, opt))
-
-        # setattr() on the following options actually returns something
-        # different to their stored value, so we need to get the actual value
-        for opt in [
-            "media_dir",
-            "input_file",
-            "images_dir",
-            "log_dir",
-            "tex_dir",
-            "text_dir",
-            "video_dir",
-        ]:
-            c._d[opt] = self._d[opt]
-
+        c = ManimConfig()
+        c._d = copy.deepcopy(self._d, memo)
         return c
 
     # helper type-checking methods
@@ -450,11 +417,11 @@ class ManimConfig(MutableMapping):
         return self
 
     def digest_dict(self, _dict):
-        return self
+        pass
 
     def digest_file(self, filename):
         if filename:
-            self.digest_parser(make_config_parser(filename))
+            return self.digest_parser(make_config_parser(filename))
 
     # config options are properties
     preview = property(

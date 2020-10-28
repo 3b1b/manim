@@ -59,6 +59,9 @@ class SceneFileWriter(object):
         files will be written to and read from (within MEDIA_DIR).
         If they don't already exist, they will be created.
         """
+        if config['dry_run']:
+            return
+
         module_directory = self.get_default_module_directory()
         default_name = self.get_default_scene_name(scene_name)
         if config["save_last_frame"] or config["save_pngs"]:

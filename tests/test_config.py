@@ -37,12 +37,13 @@ def test_transparent():
     orig_verbosity = config["verbosity"]
     config["verbosity"] = "ERROR"
 
-    scene = MyScene()
-    scene.render()
-    frame = scene.renderer.get_frame()
+    with tempconfig({'dry_run': True}):
+        scene = MyScene()
+        scene.render()
+        frame = scene.renderer.get_frame()
     assert np.allclose(frame[0, 0], [0, 0, 0, 255])
 
-    with tempconfig({"transparent": True}):
+    with tempconfig({"transparent": True, 'dry_run': True}):
         scene = MyScene()
         scene.render()
         frame = scene.renderer.get_frame()
@@ -53,8 +54,43 @@ def test_transparent():
 
 def test_background_color():
     """Test the 'background_color' config option."""
-    with tempconfig({"background_color": WHITE, "verbosity": "ERROR"}):
+    with tempconfig({"background_color": WHITE, "verbosity": "ERROR", "dry_run": True}):
         scene = MyScene()
         scene.render()
         frame = scene.renderer.get_frame()
         assert np.allclose(frame[0, 0], [255, 255, 255, 255])
+
+
+def test_digest_file():
+    """Test that a config file can be digested programatically."""
+    assert config['media_dir'] == Path('media')
+    assert config['video_dir'] == Path('media/videos')
+
+    with tempconfig({}):
+        temp_cfg = tempfile.NamedTemporaryFile()
+        with open(temp_cfg.name, 'w') as file:
+            file.write("""
+                       [CLI]
+                       media_dir = this_is_my_favorite_path
+                       video_dir = {media_dir}/videos
+                       """
+            )
+        config.digest_file(temp_cfg.name)
+        assert config['media_dir'] == Path('this_is_my_favorite_path')
+        assert config['video_dir'] == Path('this_is_my_favorite_path/videos')
+
+    assert config['media_dir'] == Path('media')
+    assert config['video_dir'] == Path('media/videos')
+
+
+def test_temporary_dry_run():
+    """Test that tempconfig correctly restores after setting dry_run."""
+    assert config["write_to_movie"]
+    assert not config["save_last_frame"]
+
+    with tempconfig({"dry_run": True}):
+        assert not config["write_to_movie"]
+        assert not config["save_last_frame"]
+
+    assert config["write_to_movie"]
+    assert not config["save_last_frame"]

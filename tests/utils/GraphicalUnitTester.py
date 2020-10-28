@@ -2,7 +2,7 @@ import os
 import logging
 import numpy as np
 
-from manim import config
+from manim import config, tempconfig
 
 
 class GraphicalUnitTester:
@@ -54,8 +54,6 @@ class GraphicalUnitTester:
         config["tex_dir"] = os.path.join(self.path_tests_medias_cache, "Tex")
 
         config["skip_animations"] = True
-        config["save_last_frame"] = True
-        config["write_to_movie"] = False
         config["disable_caching"] = True
         config["quality"] = "low_quality"
 
@@ -66,8 +64,9 @@ class GraphicalUnitTester:
         ]:
             os.makedirs(dir_temp)
 
-        self.scene = scene_object()
-        self.scene.render()
+        with tempconfig({"dry_run": True}):
+            self.scene = scene_object()
+            self.scene.render()
 
     def _load_data(self):
         """Load the np.array of the last frame of a pre-rendered scene. If not found, throw FileNotFoundError.
