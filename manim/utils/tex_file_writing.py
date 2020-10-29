@@ -72,7 +72,7 @@ def generate_tex_file(expression, environment=None, tex_template=None):
     else:
         output = tex_template.get_texcode_for_expression(expression)
 
-    tex_dir = config["tex_dir"]
+    tex_dir = config.get_dir("tex_dir")
     if not os.path.exists(tex_dir):
         os.makedirs(tex_dir)
 
@@ -156,7 +156,7 @@ def compile_tex(tex_file, tex_compiler, output_format):
     result = tex_file.replace(".tex", output_format)
     result = Path(result).as_posix()
     tex_file = Path(tex_file).as_posix()
-    tex_dir = Path(config["tex_dir"]).as_posix()
+    tex_dir = Path(config.get_dir("tex_dir")).as_posix()
     if not os.path.exists(result):
         command = tex_compilation_command(
             tex_compiler, output_format, tex_file, tex_dir

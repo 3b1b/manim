@@ -753,7 +753,7 @@ class ManimConfig(MutableMapping):
         doc="Main output directory, relative to execution directory.",
     )
 
-    def _get_dir(self, key):
+    def get_dir(self, key, **kwargs):
         dirs = [
             "media_dir",
             "video_dir",
@@ -764,9 +764,23 @@ class ManimConfig(MutableMapping):
             "input_file",
             "output_file",
         ]
-        dirs.remove(key)
-        dirs = {k: self._d[k] for k in dirs}
-        path = self._d[key].format(**dirs)
+        if key not in dirs:
+            raise KeyError('must pass one of '
+                           '{media,video,images,text,tex,log}_dir '
+                           'or {input,output}_file')
+
+        dirs.remove(key)        # a path cannot contain itself
+        dir_args = {k: self._d[k] for k in dirs}
+
+        qual = constants.QUALITIES[self.quality]
+        qual_arg = f'{qual["pixel_height"]}p{qual["frame_rate"]}'
+
+        try:
+            path = self._d[key].format(quality=qual_arg, **dir_args, **kwargs)
+        except KeyError as exc:
+            raise KeyError(f'{key} requires the following keyword arguments: '
+                           + " ".join(exc.args)) from exc
+
         return Path(path) if path else None
 
     def _set_dir(self, key, val):
@@ -776,31 +790,31 @@ class ManimConfig(MutableMapping):
             self._d.__setitem__(key, val)
 
     log_dir = property(
-        lambda self: self._get_dir("log_dir"),
+        lambda self: self._d["log_dir"],
         lambda self, val: self._set_dir("log_dir", val),
         doc="Directory to place logs",
     )
 
     video_dir = property(
-        lambda self: self._get_dir("video_dir"),
+        lambda self: self._d["video_dir"],
         lambda self, val: self._set_dir("video_dir", val),
         doc="Directory to place videos",
     )
 
     images_dir = property(
-        lambda self: self._get_dir("images_dir"),
+        lambda self: self._d["images_dir"],
         lambda self, val: self._set_dir("images_dir", val),
         doc="Directory to place images",
     )
 
     text_dir = property(
-        lambda self: self._get_dir("text_dir"),
+        lambda self: self._d["text_dir"],
         lambda self, val: self._set_dir("text_dir", val),
         doc="Directory to place text",
     )
 
     tex_dir = property(
-        lambda self: self._get_dir("tex_dir"),
+        lambda self: self._d["tex_dir"],
         lambda self, val: self._set_dir("tex_dir", val),
         doc="Directory to place tex",
     )
@@ -812,13 +826,13 @@ class ManimConfig(MutableMapping):
     )
 
     input_file = property(
-        lambda self: self._get_dir("input_file"),
+        lambda self: self._d["input_file"],
         lambda self, val: self._set_dir("input_file", val),
         doc="Input file name.",
     )
 
     output_file = property(
-        lambda self: self._get_dir("output_file"),
+        lambda self: self._d["output_file"],
         lambda self, val: self._set_dir("output_file", val),
         doc="Output file name.",
     )

@@ -65,9 +65,6 @@ def test_background_color():
 
 def test_digest_file(tmp_path):
     """Test that a config file can be digested programatically."""
-    assert config["media_dir"] == Path("media")
-    assert config["video_dir"] == Path("media/videos")
-
     with tempconfig({}):
         tmp_cfg = tempfile.NamedTemporaryFile("w", dir=tmp_path, delete=False)
         tmp_cfg.write(
@@ -80,11 +77,8 @@ def test_digest_file(tmp_path):
         tmp_cfg.close()
         config.digest_file(tmp_cfg.name)
 
-        assert config["media_dir"] == Path("this_is_my_favorite_path")
-        assert config["video_dir"] == Path("this_is_my_favorite_path/videos")
-
-    assert config["media_dir"] == Path("media")
-    assert config["video_dir"] == Path("media/videos")
+        assert config.get_dir("media_dir") == Path("this_is_my_favorite_path")
+        assert config.get_dir("video_dir") == Path("this_is_my_favorite_path/videos")
 
 
 def test_temporary_dry_run():
