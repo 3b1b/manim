@@ -64,6 +64,7 @@ def test_n_flag(tmp_path, simple_scenes_path):
     assert exit_code == 0, err
 
 
+@pytest.mark.slow
 def test_s_flag_no_animations(tmp_path, manim_cfg_file, simple_scenes_path):
     scene_name = "NoAnimations"
     command = [
@@ -87,6 +88,7 @@ def test_s_flag_no_animations(tmp_path, manim_cfg_file, simple_scenes_path):
     assert not is_empty, "running manim with -s flag did not render an image"
 
 
+@pytest.mark.slow
 def test_s_flag(tmp_path, manim_cfg_file, simple_scenes_path):
     scene_name = "SquareToCircle"
     command = [
@@ -108,3 +110,28 @@ def test_s_flag(tmp_path, manim_cfg_file, simple_scenes_path):
 
     is_empty = not any((tmp_path / "images" / "simple_scenes").iterdir())
     assert not is_empty, "running manim with -s flag did not render an image"
+
+
+@pytest.mark.slow
+def test_custom_folders(tmp_path, manim_cfg_file, simple_scenes_path):
+    scene_name = "SquareToCircle"
+    command = [
+        "python",
+        "-m",
+        "manim",
+        simple_scenes_path,
+        scene_name,
+        "-ql",
+        "-s",
+        "--media_dir",
+        str(tmp_path),
+        "--custom_folders"
+    ]
+    out, err, exit_code = capture(command)
+    assert exit_code == 0, err
+
+    exists = (tmp_path / "videos").exists()
+    assert not exists, "--custom_folders produced a 'videos/' dir"
+
+    exists = (tmp_path / "SquareToCircle.png").exists()
+    assert exists, "--custom_folders did not produce the output file"

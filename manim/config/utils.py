@@ -411,8 +411,11 @@ class ManimConfig(MutableMapping):
 
         # Handle --custom_folders
         if args.custom_folders:
-            for opt in ["media_dir", "video_dir", "text_dir", "tex_dir", "log_dir"]:
+            for opt in ["media_dir", "video_dir", "images_dir", "text_dir", "tex_dir", "log_dir"]:
                 self[opt] = self._parser["custom_folders"].get(opt, raw=True)
+            # --media_dir overrides the deaful.cfg file
+            if hasattr(args, "media_dir"):
+                self.media_dir = args.media_dir
 
         return self
 
