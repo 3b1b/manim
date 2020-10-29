@@ -14,7 +14,7 @@ import os
 import subprocess
 import sys
 from distutils.sysconfig import get_python_lib
-
+from pathlib import Path
 
 sys.path.insert(0, os.path.abspath("."))
 
@@ -80,6 +80,7 @@ import guzzle_sphinx_theme
 
 html_theme_path = guzzle_sphinx_theme.html_theme_path()
 html_theme = "guzzle_sphinx_theme"
+html_favicon = Path("_static/favicon.ico")
 
 # There's a standing issue with Sphinx's new-style sidebars.  This is a
 # workaround.  Taken from
