@@ -753,16 +753,18 @@ class ManimConfig(MutableMapping):
                            'or {input,output}_file')
 
         dirs.remove(key)        # a path cannot contain itself
-        dir_args = {k: self._d[k] for k in dirs}
 
-        qual = constants.QUALITIES[self.quality]
-        qual_arg = f'{qual["pixel_height"]}p{qual["frame_rate"]}'
+        all_args = {k: self._d[k] for k in dirs}
+        all_args.update(kwargs)
+        all_args['quality'] = f'{self.pixel_height}p{self.frame_rate}'
 
         try:
-            path = self._d[key].format(quality=qual_arg, **dir_args, **kwargs)
+            path = self._d[key].format(**all_args)
         except KeyError as exc:
-            raise KeyError(f'{key} requires the following keyword arguments: '
-                           + " ".join(exc.args)) from exc
+            raise KeyError(f'{key} {self._d[key]} requires the following '
+                           + 'keyword arguments: '
+                           + " ".join(exc.args)
+                           + f'but quality is {self.quality}') from exc
 
         return Path(path) if path else None
 

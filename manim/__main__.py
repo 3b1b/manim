@@ -12,7 +12,6 @@ from manim.utils.module_ops import (
 )
 from manim.utils.file_ops import open_file as open_media_file
 from manim.grpc.impl import frame_server_impl
-from manim.config.utils import init_dirs
 from manim.config.main_utils import *
 
 
