@@ -22,21 +22,6 @@ from ..utils.tex import TexTemplate, TexTemplateFromFile
 from .logger import set_file_logger
 
 
-def init_dirs(config):
-    for folder in [
-        config["media_dir"],
-        config["video_dir"],
-        config["tex_dir"],
-        config["text_dir"],
-        config["log_dir"],
-    ]:
-        if not os.path.exists(folder):
-            if folder == config["log_dir"] and (not config["log_to_file"]):
-                pass
-            else:
-                os.makedirs(folder)
-
-
 def config_file_paths():
     library_wide = Path.resolve(Path(__file__).parent / "default.cfg")
     if sys.platform.startswith("win32"):
@@ -409,7 +394,7 @@ class ManimConfig(MutableMapping):
             for opt in ["media_dir", "video_dir", "images_dir", "text_dir", "tex_dir", "log_dir"]:
                 self[opt] = self._parser["custom_folders"].get(opt, raw=True)
             # --media_dir overrides the deaful.cfg file
-            if hasattr(args, "media_dir"):
+            if hasattr(args, "media_dir") and args.media_dir:
                 self.media_dir = args.media_dir
 
         return self
@@ -746,8 +731,8 @@ class ManimConfig(MutableMapping):
     )
 
     media_dir = property(
-        lambda self: Path(self._d["media_dir"]),
-        lambda self, val: self._d.__setitem__("media_dir", val),
+        lambda self: self._d["media_dir"],
+        lambda self, val: self._set_dir("media_dir", val),
         doc="Main output directory, relative to execution directory.",
     )
 
