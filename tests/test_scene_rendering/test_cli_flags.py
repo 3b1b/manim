@@ -1,3 +1,4 @@
+import imageio
 import pytest
 
 from ..utils.video_tester import *
@@ -61,3 +62,29 @@ def test_n_flag(tmp_path, simple_scenes_path):
     ]
     _, err, exit_code = capture(command)
     assert exit_code == 0, err
+
+
+def test_r_flag(tmp_path, manim_cfg_file, simple_scenes_path):
+    scene_name = "SquareToCircle"
+    command = [
+        "python",
+        "-m",
+        "manim",
+        simple_scenes_path,
+        scene_name,
+        "-ql",
+        "-s",
+        "--media_dir",
+        str(tmp_path),
+        "-r",
+        "100, 200",
+    ]
+    out, err, exit_code = capture(command)
+    assert exit_code == 0, err
+
+    is_not_empty = any((tmp_path / "images").iterdir())
+    assert is_not_empty, "running manim with -s, -r flag did not render a file"
+
+    filename = tmp_path / "images" / "simple_scenes" / "SquareToCircle.png"
+    array = imageio.imread(filename)
+    assert array.shape == (100, 200, 4)
