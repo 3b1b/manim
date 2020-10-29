@@ -1,4 +1,4 @@
-import imageio
+import matplotlib.pyplot as plt
 import pytest
 
 from ..utils.video_tester import *
@@ -24,6 +24,7 @@ def test_basic_scene_with_default_values(tmp_path, manim_cfg_file, simple_scenes
     assert exit_code == 0, err
 
 
+@pytest.mark.slow
 @video_comparison(
     "SquareToCircleWithlFlag.json", "videos/simple_scenes/480p15/SquareToCircle.mp4"
 )
@@ -64,6 +65,7 @@ def test_n_flag(tmp_path, simple_scenes_path):
     assert exit_code == 0, err
 
 
+@pytest.mark.slow
 def test_r_flag(tmp_path, manim_cfg_file, simple_scenes_path):
     scene_name = "SquareToCircle"
     command = [
@@ -86,5 +88,5 @@ def test_r_flag(tmp_path, manim_cfg_file, simple_scenes_path):
     assert is_not_empty, "running manim with -s, -r flag did not render a file"
 
     filename = tmp_path / "images" / "simple_scenes" / "SquareToCircle.png"
-    array = imageio.imread(filename)
-    assert array.shape == (100, 200, 4)
+    image = plt.imread(filename)
+    assert image.shape == (100, 200, 4)
