@@ -13,7 +13,7 @@ import cairocffi
 import pangocairocffi
 import pangocffi
 
-from ... import config, file_writer_config, logger
+from ... import config, logger
 from ...constants import *
 from ...container import Container
 from ...mobject.geometry import Dot, Rectangle
@@ -310,7 +310,7 @@ class CairoText(SVGMobject):
             if NOT_SETTING_FONT_MSG:
                 logger.warning(NOT_SETTING_FONT_MSG)
 
-        dir_name = file_writer_config["text_dir"]
+        dir_name = config["text_dir"]
         if not os.path.exists(dir_name):
             os.makedirs(dir_name)
 
@@ -884,7 +884,7 @@ class Text(SVGMobject):
         """
         size = self.size * 10
         line_spacing = self.line_spacing * 10
-        dir_name = file_writer_config["text_dir"]
+        dir_name = config["text_dir"]
         if not os.path.exists(dir_name):
             os.makedirs(dir_name)
         hash_name = self.text2hash()

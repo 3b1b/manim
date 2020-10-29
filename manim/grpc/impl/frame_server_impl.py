@@ -1,5 +1,4 @@
-from ...config import camera_config
-from ...config import file_writer_config
+from ...config import config
 from ...scene import scene
 from ..gen import frameserver_pb2
 from ..gen import frameserver_pb2_grpc
@@ -53,7 +52,7 @@ class FrameServer(frameserver_pb2_grpc.FrameServerServicer):
             except grpc._channel._InactiveRpcError:
                 logger.warning(f"No frontend was detected at localhost:50052.")
                 try:
-                    sp.Popen(camera_config["js_renderer_path"])
+                    sp.Popen(config["js_renderer_path"])
                 except PermissionError:
                     logger.info(JS_RENDERER_INFO)
                     self.server.stop(None)
@@ -194,7 +193,7 @@ class UpdateFrontendHandler(FileSystemEventHandler):
 
     def on_modified(self, event):
         super().on_modified(event)
-        module = get_module(file_writer_config["input_file"])
+        module = get_module(config["input_file"])
         all_scene_classes = get_scene_classes_from_module(module)
         scene_classes_to_render = get_scenes_to_render(all_scene_classes)
         scene_class = scene_classes_to_render[0]
@@ -250,7 +249,7 @@ class UpdateFrontendHandler(FileSystemEventHandler):
             try:
                 stub.ManimStatus(request)
             except grpc._channel._InactiveRpcError:
-                sp.Popen(camera_config["js_renderer_path"])
+                sp.Popen(config["js_renderer_path"])
 
 
 def get(scene_class):

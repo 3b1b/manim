@@ -1,5 +1,5 @@
 import pytest
-from manim import Container, Mobject, Scene, file_writer_config
+from manim import Container, Mobject, Scene, tempconfig
 
 
 def test_ABC():
@@ -9,7 +9,9 @@ def test_ABC():
 
     # The following should work without raising exceptions
     Mobject()
-    Scene()
+
+    with tempconfig({"dry_run": True}):
+        Scene()
 
 
 def container_add(obj, get_submobjects):
@@ -63,13 +65,10 @@ def test_mobject_remove():
     container_remove(obj, lambda: obj.submobjects)
 
 
-def test_scene_add():
-    """Test Scene.add()."""
-    scene = Scene()
-    container_add(scene, lambda: scene.mobjects)
-
-
-def test_scene_remove():
-    """Test Scene.remove()."""
-    scene = Scene()
-    container_remove(scene, lambda: scene.mobjects)
+def test_scene_add_remove():
+    """Test Scene.add() and Scene.remove()."""
+    with tempconfig({"dry_run": True}):
+        scene = Scene()
+        container_add(scene, lambda: scene.mobjects)
+        scene = Scene()
+        container_remove(scene, lambda: scene.mobjects)

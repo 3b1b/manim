@@ -1,45 +1,66 @@
 """
 logger.py
 ---------
-This is the logging library for manim.
-This library uses rich for coloured log outputs.
+
+Functions to create and set the logger.
 
 """
 
-
-__all__ = ["logger", "console"]
-
-
+import os
 import logging
-
-from rich.console import Console
-from rich.logging import RichHandler
-from rich.theme import Theme
-from rich.traceback import install
-from rich import print as printf
-from rich import errors, color
 import json
 import copy
 
 
-class JSONFormatter(logging.Formatter):
-    """Subclass of `:class:`logging.Formatter`, to build our own format of the logs (JSON)."""
+from rich.console import Console
+from rich.logging import RichHandler
+from rich.theme import Theme
+from rich import print as printf
+from rich import errors, color
 
-    def format(self, record):
-        record_c = copy.deepcopy(record)
-        if record_c.args:
-            for arg in record_c.args:
-                record_c.args[arg] = "<>"
-        return json.dumps(
-            {
-                "levelname": record_c.levelname,
-                "module": record_c.module,
-                "message": super().format(record_c),
-            }
-        )
+HIGHLIGHTED_KEYWORDS = [  # these keywords are highlighted specially
+    "Played",
+    "animations",
+    "scene",
+    "Reading",
+    "Writing",
+    "script",
+    "arguments",
+    "Invalid",
+    "Aborting",
+    "module",
+    "File",
+    "Rendering",
+    "Rendered",
+]
+
+WRONG_COLOR_CONFIG_MSG = """
+[logging.level.error]Your colour configuration couldn't be parsed.
+Loading the default color configuration.[/logging.level.error]
+"""
 
 
-def _parse_theme(config_logger):
+def make_logger(parser, verbosity):
+    """Make the manim logger and the console."""
+    # Throughout the codebase, use Console.print() instead of print()
+    theme = parse_theme(parser)
+    console = Console(theme=theme)
+
+    # set the rich handler
+    RichHandler.KEYWORDS = HIGHLIGHTED_KEYWORDS
+    rich_handler = RichHandler(
+        console=console, show_time=parser.getboolean("log_timestamps")
+    )
+
+    # finally, the logger
+    logger = logging.getLogger("manim")
+    logger.addHandler(rich_handler)
+    logger.setLevel(verbosity)
+
+    return logger, console
+
+
+def parse_theme(config_logger):
     theme = dict(
         zip(
             [key.replace("_", ".") for key in config_logger.keys()],
@@ -62,59 +83,46 @@ def _parse_theme(config_logger):
             }
         )
     except (color.ColorParseError, errors.StyleSyntaxError):
+        printf(WRONG_COLOR_CONFIG_MSG)
         customTheme = None
-        printf(
-            "[logging.level.error]It seems your colour configuration couldn't be parsed. Loading the default color configuration...[/logging.level.error]"
-        )
+
     return customTheme
 
 
-def set_rich_logger(config_logger, verbosity):
-    """Will set the RichHandler of the logger.
-
-    Parameter
-    ----------
-    config_logger :class:
-        Config object of the logger.
-    """
-    theme = _parse_theme(config_logger)
-    global console
-    console = Console(theme=theme)
-    # These keywords Are Highlighted specially.
-    RichHandler.KEYWORDS = [
-        "Played",
-        "animations",
-        "scene",
-        "Reading",
-        "Writing",
-        "script",
-        "arguments",
-        "Invalid",
-        "Aborting",
-        "module",
-        "File",
-        "Rendering",
-        "Rendered",
-    ]
-    rich_handler = RichHandler(
-        console=console, show_time=config_logger.getboolean("log_timestamps")
+def set_file_logger(config, verbosity):
+    # Note: The log file name will be
+    # <name_of_animation_file>_<name_of_scene>.log, gotten from config.  So it
+    # can differ from the real name of the scene.  <name_of_scene> would only
+    # appear if scene name was provided when manim was called.
+    scene_name_suffix = "".join(config["scene_names"])
+    scene_file_name = os.path.basename(config["input_file"]).split(".")[0]
+    log_file_name = (
+        f"{scene_file_name}_{scene_name_suffix}.log"
+        if scene_name_suffix
+        else f"{scene_file_name}.log"
     )
-    global logger
-    rich_handler.setLevel(verbosity)
-    logger.addHandler(rich_handler)
-
-
-def set_file_logger(log_file_path):
+    log_file_path = os.path.join(config["log_dir"], log_file_name)
     file_handler = logging.FileHandler(log_file_path, mode="w")
     file_handler.setFormatter(JSONFormatter())
-    global logger
+
+    logger = logging.getLogger("manim")
     logger.addHandler(file_handler)
+    logger.info("Log file will be saved in %(logpath)s", {"logpath": log_file_path})
+    logger.setLevel(verbosity)
 
 
-logger = logging.getLogger("manim")
-# The console is set to None as it will be changed by set_rich_logger.
-console = None
-install()
-# TODO : This is only temporary to keep the terminal output clean when working with ImageMobject and matplotlib plots
-logging.getLogger("PIL").setLevel(logging.INFO)
-logging.getLogger("matplotlib").setLevel(logging.INFO)
+class JSONFormatter(logging.Formatter):
+    """Subclass of `:class:`logging.Formatter`, to build our own format of the logs (JSON)."""
+
+    def format(self, record):
+        record_c = copy.deepcopy(record)
+        if record_c.args:
+            for arg in record_c.args:
+                record_c.args[arg] = "<>"
+        return json.dumps(
+            {
+                "levelname": record_c.levelname,
+                "module": record_c.module,
+                "message": super().format(record_c),
+            }
+        )

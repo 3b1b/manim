@@ -141,12 +141,37 @@ JS_RENDERER_INFO = (
 
 # Video qualities
 QUALITIES = {
-    "fourk_quality": "k",
-    "production_quality": "p",
-    "high_quality": "h",
-    "medium_quality": "m",
-    "low_quality": "l",
+    "fourk_quality": {
+        "flag": "k",
+        "pixel_height": 2160,
+        "pixel_width": 3840,
+        "frame_rate": 60,
+    },
+    "production_quality": {
+        "flag": "p",
+        "pixel_height": 1440,
+        "pixel_width": 2560,
+        "frame_rate": 60,
+    },
+    "high_quality": {
+        "flag": "h",
+        "pixel_height": 1080,
+        "pixel_width": 1920,
+        "frame_rate": 60,
+    },
+    "medium_quality": {
+        "flag": "m",
+        "pixel_height": 720,
+        "pixel_width": 1280,
+        "frame_rate": 30,
+    },
+    "low_quality": {
+        "flag": "l",
+        "pixel_height": 480,
+        "pixel_width": 854,
+        "frame_rate": 15,
+    },
 }
 
-DEFAULT_QUALITY = "production_quality"
-DEFAULT_QUALITY_SHORT = QUALITIES[DEFAULT_QUALITY]
+DEFAULT_QUALITY = "high_quality"
+DEFAULT_QUALITY_SHORT = QUALITIES[DEFAULT_QUALITY]["flag"]
