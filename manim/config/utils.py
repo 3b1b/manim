@@ -365,12 +365,7 @@ class ManimConfig(MutableMapping):
 
         for key in [
             "media_dir",  # always set this one first
-            "video_dir",
-            "images_dir",
-            "tex_dir",
-            "text_dir",
             "log_dir",
-            "custom_folders",
             "log_to_file",  # always set this one last
         ]:
             if hasattr(args, key):
