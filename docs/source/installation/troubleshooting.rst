@@ -3,6 +3,39 @@ Troubleshooting
 
 List of known installation problems.
 
+ModuleNotFoundError: No module named '[...]._generated.ffi'?
+------------------------------------------------------------
+
+Fresh installations of the pip packages ``cairocffi``, ``pangocffi``,
+and ``pangocairocffi`` sometimes fail to generate the corresponding ffi bindings.
+In this case, trying to run Manim leads to a ``ModuleNotFoundError`` that
+references a non-existing ``_generated.ffi`` module.
+
+To resolve this issue, either install the afflicted package again using a
+modified call to pip, namely:
+
+.. code-block:: bash
+
+  pip install --no-binary :all: -U cairocffi
+  pip install --no-binary :all: -U pangocffi
+  pip install --no-binary :all: -U pangocairocffi
+
+In case you are installing Manim within a virtualenv, make sure to call
+that particular virtualenv's ``pip``.
+
+Alternatively, you can also trigger building the bindings yourself.
+To do so, switch to your Python's ``site-packages`` directory and
+run:
+
+.. code-block:: bash
+
+  python cairocffi/ffi_build.py
+  python pangocffi/ffi_build.py
+  python pangocairocffi/ffi_build.py
+
+This should generate the missing ``_generated.ffi`` modules.
+
+
 Some letters are missing from TextMobject/TexMobject output?
 ------------------------------------------------------------
 
@@ -15,7 +48,7 @@ uses. Which can be done by running:
 
 
 .. _dvisvgm-troubleshoot:
-  
+
 Installation does not support converting PDF to SVG?
 ----------------------------------------------------
 
@@ -54,7 +87,7 @@ As soon as you have found the library, try (on Mac OS or Linux)
   export LIBS=<path to your library including the file name>
   dvisvgm -l
 
-or (on Windows)  
+or (on Windows)
 
 .. code-block:: bat
 
@@ -64,14 +97,14 @@ or (on Windows)
 
 You should now see ``ps    dvips PostScript specials`` in the output. Refer to your operating system's documentation in order to find out how you can set or export the environment variable ``LIBGS`` automatically whenever you open a shell.
 
-As a last check, you can run 
+As a last check, you can run
 
 .. code-block:: bash
 
   dvisvgm -V1
 
 while still having ``LIBGS`` set to the correct path, of course. If ``dvisvgm`` can find your Ghostscript installation, it will be shown in the output together with the version number.
-  
+
 If you do not have the necessary library on your system, please refer to your operating system's documentation in order to find out where you can get it and how you have to install it.
 
 If you are unable to solve your problem, check out the `dvisvgm FAQ <https://dvisvgm.de/FAQ/>`_.
