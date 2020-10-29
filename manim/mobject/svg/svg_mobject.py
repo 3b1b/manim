@@ -62,7 +62,10 @@ class SVGMobject(VMobject):
             if os.path.exists(path):
                 self.file_path = path
                 return
-        raise IOError("No file matching %s in image directory" % self.file_name)
+        error = "From: {}, could not find {} at either of these locations: {}".format(
+            os.getcwd(), self.file_name, possible_paths
+        )
+        raise IOError(error)
 
     def generate_points(self):
         doc = minidom.parse(self.file_path)

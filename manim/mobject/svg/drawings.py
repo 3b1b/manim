@@ -340,7 +340,7 @@ class VideoSeries(VGroup):
         videos = [VideoIcon() for x in range(self.num_videos)]
         VGroup.__init__(self, *videos, **kwargs)
         self.arrange()
-        self.set_width(config["frame_width"] - config["med_large_buff"])
+        self.set_width(config["frame_width"] - constants.MED_LARGE_BUFF)
         self.set_color_by_gradient(*self.gradient_colors)
 
 

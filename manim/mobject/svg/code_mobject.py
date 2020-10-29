@@ -240,9 +240,10 @@ class Code(VGroup):
             if os.path.exists(path):
                 self.file_path = path
                 return
-        raise IOError(
-            "File %s not found. Please specify a correct file path" % self.file_name
+        error = "From: {}, could not find {} at either of these locations: {}".format(
+            os.getcwd(), self.file_name, possible_paths
         )
+        raise IOError(error)
 
     def gen_line_numbers(self):
         """Function to generate line_numbers.
