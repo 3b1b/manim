@@ -27,3 +27,10 @@ class SceneWithMultipleWaitCalls(Scene):
         self.wait(1)
         self.play(ShowCreation(Square().shift(3 * DOWN)))
         self.wait(1)
+
+
+class NoAnimations(Scene):
+    def construct(self):
+        dot = Dot().set_color(GREEN)
+        self.add(dot)
+        self.wait(1)

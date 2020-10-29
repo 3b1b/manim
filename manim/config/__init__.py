@@ -1,14 +1,14 @@
 import logging
 from contextlib import contextmanager
 
-from .utils import make_config_parser, make_logger, make_config, make_file_writer_config
+from .logger import make_logger
+from .utils import make_config_parser, ManimConfig, ManimFrame
 
 __all__ = [
     "logger",
     "console",
     "config",
-    "file_writer_config",
-    "camera_config",
+    "frame",
     "tempconfig",
 ]
 
@@ -22,9 +22,8 @@ logger, console = make_logger(parser["logger"], parser["CLI"]["verbosity"])
 logging.getLogger("PIL").setLevel(logging.INFO)
 logging.getLogger("matplotlib").setLevel(logging.INFO)
 
-config = make_config(parser)
-camera_config = config
-file_writer_config = make_file_writer_config(parser, config)
+config = ManimConfig(parser)
+frame = ManimFrame(config)
 
 
 # This has to go here because it needs access to this module's config

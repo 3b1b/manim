@@ -14,7 +14,7 @@ from scipy.spatial.distance import pdist
 import cairo
 import numpy as np
 
-from .. import logger, config, camera_config
+from .. import logger, config
 from ..constants import *
 from ..mobject.types.image_mobject import AbstractImageMobject
 from ..mobject.mobject import Mobject
@@ -53,8 +53,6 @@ class Camera(object):
         # Note: frame height and width will be resized to match
         # the pixel aspect ratio
         "frame_center": ORIGIN,
-        "background_color": BLACK,
-        "background_opacity": 1,
         # Points in vectorized mobjects with norm greater
         # than this value will be rescaled.
         "image_mode": "RGBA",
@@ -91,6 +89,8 @@ class Camera(object):
             "frame_height",
             "frame_width",
             "frame_rate",
+            "background_color",
+            "background_opacity",
         ]:
             setattr(self, attr, kwargs.get(attr, config[attr]))
 
@@ -1039,9 +1039,7 @@ class Camera(object):
 
         """
         # TODO: This seems...unsystematic
-        big_sum = op.add(
-            camera_config["default_pixel_height"], camera_config["default_pixel_width"]
-        )
+        big_sum = op.add(config["default_pixel_height"], config["default_pixel_width"])
         this_sum = op.add(self.pixel_height, self.pixel_width)
         factor = fdiv(big_sum, this_sum)
         return 1 + (thickness - 1) / factor

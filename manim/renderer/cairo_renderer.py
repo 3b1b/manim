@@ -1,5 +1,5 @@
 import numpy as np
-from .. import config, camera_config, file_writer_config
+from .. import config
 from ..utils.iterables import list_update
 from ..utils.exceptions import EndSceneEarlyException
 from ..constants import DEFAULT_WAIT_TIME
@@ -37,7 +37,7 @@ def handle_play_like_call(func):
     """
 
     def wrapper(self, scene, *args, **kwargs):
-        allow_write = not file_writer_config["skip_animations"]
+        allow_write = not config["skip_animations"]
         self.file_writer.begin_animation(allow_write)
         func(self, scene, *args, **kwargs)
         self.file_writer.end_animation(allow_write)
@@ -71,8 +71,8 @@ class CairoRenderer:
         ]:
             self.video_quality_config[attr] = kwargs.get(attr, config[attr])
         camera_cls = camera_class if camera_class is not None else Camera
-        self.camera = camera_cls(self.video_quality_config, **camera_config)
-        self.original_skipping_status = file_writer_config["skip_animations"]
+        self.camera = camera_cls(self.video_quality_config)
+        self.original_skipping_status = config["skip_animations"]
         self.animations_hashes = []
         self.num_plays = 0
         self.time = 0
@@ -82,7 +82,6 @@ class CairoRenderer:
             self,
             self.video_quality_config,
             scene.__class__.__name__,
-            **file_writer_config,
         )
 
     @pass_scene_reference
@@ -117,7 +116,7 @@ class CairoRenderer:
         **kwargs
 
         """
-        if file_writer_config["skip_animations"] and not ignore_skipping:
+        if config["skip_animations"] and not ignore_skipping:
             return
         if mobjects is None:
             mobjects = list_update(
@@ -157,7 +156,7 @@ class CairoRenderer:
         """
         dt = 1 / self.camera.frame_rate
         self.time += num_frames * dt
-        if file_writer_config["skip_animations"]:
+        if config["skip_animations"]:
             return
         for _ in range(num_frames):
             self.file_writer.write_frame(frame)
@@ -178,12 +177,12 @@ class CairoRenderer:
         the number of animations that need to be played, and
         raises an EndSceneEarlyException if they don't correspond.
         """
-        if file_writer_config["from_animation_number"]:
-            if self.num_plays < file_writer_config["from_animation_number"]:
-                file_writer_config["skip_animations"] = True
-        if file_writer_config["upto_animation_number"]:
-            if self.num_plays > file_writer_config["upto_animation_number"]:
-                file_writer_config["skip_animations"] = True
+        if config["from_animation_number"]:
+            if self.num_plays < config["from_animation_number"]:
+                config["skip_animations"] = True
+        if config["upto_animation_number"]:
+            if self.num_plays > config["upto_animation_number"]:
+                config["skip_animations"] = True
                 raise EndSceneEarlyException()
 
     def revert_to_original_skipping_status(self):
@@ -198,12 +197,12 @@ class CairoRenderer:
             The Scene, with the original skipping status.
         """
         if hasattr(self, "original_skipping_status"):
-            file_writer_config["skip_animations"] = self.original_skipping_status
+            config["skip_animations"] = self.original_skipping_status
         return self
 
     def finish(self, scene):
-        file_writer_config["skip_animations"] = False
+        config["skip_animations"] = False
         self.file_writer.finish()
-        if file_writer_config["save_last_frame"]:
-            self.update_frame(scene, ignore_skipping=True)
+        if config["save_last_frame"]:
+            self.update_frame(scene, ignore_skipping=False)
             self.file_writer.save_final_image(self.camera.get_image())

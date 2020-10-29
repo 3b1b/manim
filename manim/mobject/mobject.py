@@ -15,7 +15,7 @@ from pathlib import Path
 from colour import Color
 import numpy as np
 
-from .. import config, file_writer_config
+from .. import config
 from ..constants import *
 from ..container import Container
 from ..utils.color import color_gradient, WHITE, BLACK, YELLOW_C
@@ -199,7 +199,7 @@ class Mobject(Container):
 
     def save_image(self, name=None):
         self.get_image().save(
-            Path(file_writer_config["video_dir"]).joinpath((name or str(self)) + ".png")
+            Path(config["video_dir"]).joinpath((name or str(self)) + ".png")
         )
 
     def copy(self):

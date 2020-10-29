@@ -2,7 +2,7 @@ import os
 import logging
 import numpy as np
 
-from manim import config, file_writer_config
+from manim import config, tempconfig
 
 
 class GraphicalUnitTester:
@@ -47,31 +47,26 @@ class GraphicalUnitTester:
             tests_directory, "control_data", "graphical_units_data", module_tested
         )
 
-        # IMPORTANT NOTE : The graphical units tests don't use for now any custom manim.cfg,
-        # since it is impossible to manually select a manim.cfg from a python file. (see issue #293)
-        file_writer_config["text_dir"] = os.path.join(
-            self.path_tests_medias_cache, "Text"
-        )
-        file_writer_config["tex_dir"] = os.path.join(
-            self.path_tests_medias_cache, "Tex"
-        )
+        # IMPORTANT NOTE : The graphical units tests don't use for now any
+        # custom manim.cfg, since it is impossible to manually select a
+        # manim.cfg from a python file. (see issue #293)
+        config["text_dir"] = os.path.join(self.path_tests_medias_cache, "Text")
+        config["tex_dir"] = os.path.join(self.path_tests_medias_cache, "Tex")
 
-        file_writer_config["skip_animations"] = True
-        file_writer_config["write_to_movie"] = False
-        file_writer_config["disable_caching"] = True
-        config["pixel_height"] = 480
-        config["pixel_width"] = 854
-        config["frame_rate"] = 15
+        config["skip_animations"] = True
+        config["disable_caching"] = True
+        config["quality"] = "low_quality"
 
         for dir_temp in [
             self.path_tests_medias_cache,
-            file_writer_config["text_dir"],
-            file_writer_config["tex_dir"],
+            config["text_dir"],
+            config["tex_dir"],
         ]:
             os.makedirs(dir_temp)
 
-        self.scene = scene_object()
-        self.scene.render()
+        with tempconfig({"dry_run": True}):
+            self.scene = scene_object()
+            self.scene.render()
 
     def _load_data(self):
         """Load the np.array of the last frame of a pre-rendered scene. If not found, throw FileNotFoundError.

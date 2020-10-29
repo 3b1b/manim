@@ -13,7 +13,7 @@ import copy
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
 
-from .. import camera_config, file_writer_config, logger
+from .. import config, logger
 from ..animation.animation import Animation, Wait
 from ..animation.transform import MoveToTarget, ApplyMethod
 from ..camera.camera import Camera
@@ -84,11 +84,14 @@ class Scene(Container):
         """
         Render this Scene.
         """
+        self.original_skipping_status = config["skip_animations"]
         try:
             self.construct()
         except EndSceneEarlyException:
             pass
         self.tear_down()
+        # We have to reset these settings in case of multiple renders.
+        config["skip_animations"] = self.original_skipping_status
         self.renderer.finish(self)
         logger.info(
             f"Rendered {str(self)}\nPlayed {self.renderer.num_plays} animations"
@@ -650,7 +653,7 @@ class Scene(Container):
         ProgressDisplay
             The CommandLine Progress Bar.
         """
-        if file_writer_config["skip_animations"] and not override_skip_animations:
+        if config["skip_animations"] and not override_skip_animations:
             times = [run_time]
         else:
             step = 1 / self.renderer.camera.frame_rate
@@ -658,9 +661,9 @@ class Scene(Container):
         time_progression = ProgressDisplay(
             times,
             total=n_iterations,
-            leave=file_writer_config["leave_progress_bars"],
+            leave=config["leave_progress_bars"],
             ascii=True if platform.system() == "Windows" else None,
-            disable=not file_writer_config["progress_bar"],
+            disable=not config["progress_bar"],
         )
         return time_progression
 
@@ -866,7 +869,7 @@ class Scene(Container):
         gain :
 
         """
-        if file_writer_config["skip_animations"]:
+        if config["skip_animations"]:
             return
         time = self.time + time_offset
         self.renderer.file_writer.add_sound(sound_file, time, gain, **kwargs)
