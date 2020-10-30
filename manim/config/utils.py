@@ -394,13 +394,13 @@ class ManimConfig(MutableMapping):
         # Handle --custom_folders
         if args.custom_folders:
             for opt in [
-                    "media_dir",
-                    "video_dir",
-                    "images_dir",
-                    "text_dir",
-                    "tex_dir",
-                    "log_dir",
-                    "partial_movie_dir",
+                "media_dir",
+                "video_dir",
+                "images_dir",
+                "text_dir",
+                "tex_dir",
+                "log_dir",
+                "partial_movie_dir",
             ]:
                 self[opt] = self._parser["custom_folders"].get(opt, raw=True)
             # --media_dir overrides the deaful.cfg file
@@ -759,24 +759,28 @@ class ManimConfig(MutableMapping):
             "partial_movie_dir",
         ]
         if key not in dirs:
-            raise KeyError('must pass one of '
-                           '{media,video,images,text,tex,log}_dir '
-                           'or {input,output}_file')
+            raise KeyError(
+                "must pass one of "
+                "{media,video,images,text,tex,log}_dir "
+                "or {input,output}_file"
+            )
 
-        dirs.remove(key)        # a path cannot contain itself
+        dirs.remove(key)  # a path cannot contain itself
 
         all_args = {k: self._d[k] for k in dirs}
         all_args.update(kwargs)
-        all_args['quality'] = f'{self.pixel_height}p{self.frame_rate}'
+        all_args["quality"] = f"{self.pixel_height}p{self.frame_rate}"
 
         path = self._d[key]
-        while '{' in path:
+        while "{" in path:
             try:
                 path = path.format(**all_args)
             except KeyError as exc:
-                raise KeyError(f'{key} {self._d[key]} requires the following '
-                               + 'keyword arguments: '
-                               + " ".join(exc.args)) from exc
+                raise KeyError(
+                    f"{key} {self._d[key]} requires the following "
+                    + "keyword arguments: "
+                    + " ".join(exc.args)
+                ) from exc
 
         return Path(path) if path else None
 

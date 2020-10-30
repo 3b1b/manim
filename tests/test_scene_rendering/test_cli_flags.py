@@ -125,7 +125,7 @@ def test_custom_folders(tmp_path, manim_cfg_file, simple_scenes_path):
         "-s",
         "--media_dir",
         str(tmp_path),
-        "--custom_folders"
+        "--custom_folders",
     ]
     out, err, exit_code = capture(command)
     assert exit_code == 0, err

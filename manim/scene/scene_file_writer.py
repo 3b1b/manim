@@ -63,7 +63,7 @@ class SceneFileWriter(object):
         exist, they will be created.
 
         """
-        if config["dry_run"]:   # in dry-run mode there is no output
+        if config["dry_run"]:  # in dry-run mode there is no output
             return
 
         if config["input_file"]:
@@ -104,9 +104,9 @@ class SceneFileWriter(object):
 
             self.partial_movie_directory = guarantee_existence(
                 config.get_dir(
-                    'partial_movie_dir',
+                    "partial_movie_dir",
                     scene_name=default_name,
-                    module_name=module_name
+                    module_name=module_name,
                 )
             )
 
