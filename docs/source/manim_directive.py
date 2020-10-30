@@ -224,7 +224,7 @@ class ManimDirective(Directive):
         # copy video file to output directory
         if not (save_as_gif or save_last_frame):
             filename = f"{output_file}.mp4"
-            filesrc = config.get_dir('video_dir') / filename
+            filesrc = config.get_dir("video_dir") / filename
             destfile = os.path.join(dest_dir, filename)
             shutil.copyfile(filesrc, destfile)
         elif save_as_gif:
@@ -232,7 +232,7 @@ class ManimDirective(Directive):
             filesrc = os.path.join(video_dir, qualitydir, filename)
         elif save_last_frame:
             filename = f"{output_file}.png"
-            filesrc = config.get_dir('images_dir') / filename
+            filesrc = config.get_dir("images_dir") / filename
         else:
             raise ValueError("Invalid combination of render flags received.")
 
