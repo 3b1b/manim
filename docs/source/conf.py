@@ -80,7 +80,7 @@ import guzzle_sphinx_theme
 
 html_theme_path = guzzle_sphinx_theme.html_theme_path()
 html_theme = "guzzle_sphinx_theme"
-html_favicon = Path("_static/favicon.ico")
+html_favicon = str(Path("_static/favicon.ico"))
 
 # There's a standing issue with Sphinx's new-style sidebars.  This is a
 # workaround.  Taken from
