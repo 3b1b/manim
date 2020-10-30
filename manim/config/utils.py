@@ -116,6 +116,7 @@ class ManimConfig(MutableMapping):
         "max_files_cached",
         "media_dir",
         "movie_file_extension",
+        "partial_movie_dir",
         "pixel_height",
         "pixel_width",
         "png_mode",
@@ -280,6 +281,7 @@ class ManimConfig(MutableMapping):
             "images_dir",
             "text_dir",
             "tex_dir",
+            "partial_movie_dir",
             "input_file",
             "output_file",
             "png_mode",
@@ -391,7 +393,15 @@ class ManimConfig(MutableMapping):
 
         # Handle --custom_folders
         if args.custom_folders:
-            for opt in ["media_dir", "video_dir", "images_dir", "text_dir", "tex_dir", "log_dir"]:
+            for opt in [
+                    "media_dir",
+                    "video_dir",
+                    "images_dir",
+                    "text_dir",
+                    "tex_dir",
+                    "log_dir",
+                    "partial_movie_dir",
+            ]:
                 self[opt] = self._parser["custom_folders"].get(opt, raw=True)
             # --media_dir overrides the deaful.cfg file
             if hasattr(args, "media_dir") and args.media_dir:
@@ -746,6 +756,7 @@ class ManimConfig(MutableMapping):
             "log_dir",
             "input_file",
             "output_file",
+            "partial_movie_dir",
         ]
         if key not in dirs:
             raise KeyError('must pass one of '
@@ -758,13 +769,14 @@ class ManimConfig(MutableMapping):
         all_args.update(kwargs)
         all_args['quality'] = f'{self.pixel_height}p{self.frame_rate}'
 
-        try:
-            path = self._d[key].format(**all_args)
-        except KeyError as exc:
-            raise KeyError(f'{key} {self._d[key]} requires the following '
-                           + 'keyword arguments: '
-                           + " ".join(exc.args)
-                           + f'but quality is {self.quality}') from exc
+        path = self._d[key]
+        while '{' in path:
+            try:
+                path = path.format(**all_args)
+            except KeyError as exc:
+                raise KeyError(f'{key} {self._d[key]} requires the following '
+                               + 'keyword arguments: '
+                               + " ".join(exc.args)) from exc
 
         return Path(path) if path else None
 
@@ -802,6 +814,12 @@ class ManimConfig(MutableMapping):
         lambda self: self._d["tex_dir"],
         lambda self, val: self._set_dir("tex_dir", val),
         doc="Directory to place tex",
+    )
+
+    partial_movie_dir = property(
+        lambda self: self._d["partial_movie_dir"],
+        lambda self, val: self._set_dir("partial_movie_dir", val),
+        doc="Directory to place partial movie files",
     )
 
     custom_folders = property(

@@ -102,23 +102,13 @@ class SceneFileWriter(object):
                     add_extension_if_not_present(default_name, GIF_FILE_EXTENSION),
                 )
 
-            if not config["custom_folders"]:
-                self.partial_movie_directory = guarantee_existence(
-                    os.path.join(
-                        movie_dir,
-                        "partial_movie_files",
-                        default_name,
-                    )
+            self.partial_movie_directory = guarantee_existence(
+                config.get_dir(
+                    'partial_movie_dir',
+                    scene_name=default_name,
+                    module_name=module_name
                 )
-            else:
-                self.partial_movie_directory = guarantee_existence(
-                    os.path.join(
-                        config.get_dir("media_dir"),
-                        "temp_files",
-                        "partial_movie_files",
-                        default_name,
-                    )
-                )
+            )
 
     def add_partial_movie_file(self, hash_animation):
         """Adds a new partial movie file path to scene.partial_movie_files from an hash. This method will compute the path from the hash.
