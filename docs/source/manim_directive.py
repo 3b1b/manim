@@ -73,6 +73,7 @@ from docutils.parsers.rst import directives, Directive
 import jinja2
 import os
 from os.path import relpath
+from pathlib import Path
 from typing import List
 
 import shutil
@@ -192,20 +193,15 @@ class ManimDirective(Directive):
         ]
         source_block = "\n".join(source_block)
 
-        media_dir = os.path.join(setup.confdir, "media")
-        if not os.path.exists(media_dir):
-            os.mkdir(media_dir)
-        images_dir = os.path.join(media_dir, "images")
-        if not os.path.exists(images_dir):
-            os.mkdir(images_dir)
-        video_dir = os.path.join(media_dir, "videos")
+        config.media_dir = Path(setup.confdir) / "media"
+        config.images_dir = "{media_dir}/images"
+        config.video_dir = "{media_dir}/videos/{quality}"
         output_file = f"{clsname}-{classnamedict[clsname]}"
 
         config_code = [
             f'config["frame_rate"] = {frame_rate}',
             f'config["pixel_height"] = {pixel_height}',
             f'config["pixel_width"] = {pixel_width}',
-            f'config["media_dir"] = r"{media_dir}"',
             f'config["save_last_frame"] = {save_last_frame}',
             f'config["save_as_gif"] = {save_as_gif}',
             f'config["output_file"] = r"{output_file}"',
@@ -228,7 +224,7 @@ class ManimDirective(Directive):
         # copy video file to output directory
         if not (save_as_gif or save_last_frame):
             filename = f"{output_file}.mp4"
-            filesrc = os.path.join(video_dir, qualitydir, filename)
+            filesrc = config.get_dir('video_dir') / filename
             destfile = os.path.join(dest_dir, filename)
             shutil.copyfile(filesrc, destfile)
         elif save_as_gif:
@@ -236,7 +232,7 @@ class ManimDirective(Directive):
             filesrc = os.path.join(video_dir, qualitydir, filename)
         elif save_last_frame:
             filename = f"{output_file}.png"
-            filesrc = os.path.join(images_dir, filename)
+            filesrc = config.get_dir('images_dir') / filename
         else:
             raise ValueError("Invalid combination of render flags received.")
 
