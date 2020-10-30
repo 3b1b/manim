@@ -370,8 +370,6 @@ class Code(VGroup):
         self.tab_spaces = []
         code_json_line_index = -1
         for line_index in range(0, lines.__len__()):
-            if lines[line_index].__len__() == 0:
-                continue
             # print(lines[line_index])
             self.code_json.append([])
             code_json_line_index = code_json_line_index + 1
@@ -398,8 +396,9 @@ class Code(VGroup):
                         "\t" * indentation_chars_count + lines[line_index][start_point:]
                     )
             indentation_chars_count = 0
-            while lines[line_index][indentation_chars_count] == "\t":
-                indentation_chars_count = indentation_chars_count + 1
+            if lines[line_index]:
+                while lines[line_index][indentation_chars_count] == "\t":
+                    indentation_chars_count = indentation_chars_count + 1
             self.tab_spaces.append(indentation_chars_count)
             # print(lines[line_index])
             lines[line_index] = self.correct_non_span(lines[line_index])
