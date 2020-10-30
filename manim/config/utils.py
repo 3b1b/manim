@@ -401,9 +401,9 @@ class ManimConfig(MutableMapping):
         rflag = args.resolution
         if rflag is not None:
             try:
-                w, h = rflag.split(",")
-                self.pixel_width = int(w)
+                h, w = rflag.split(",")
                 self.pixel_height = int(h)
+                self.pixel_width = int(w)
             except ValueError:
                 raise ValueError(
                     f'invalid argument {rflag} for -r flag (must have a comma ",")'
