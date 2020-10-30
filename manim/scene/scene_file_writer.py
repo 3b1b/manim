@@ -53,48 +53,42 @@ class SceneFileWriter(object):
         self.frame_count = 0
         self.partial_movie_files = []
 
-    # Output directories and files
     def init_output_directories(self, scene_name):
+        """Initialise output directories.
+
+        Notes
+        -----
+        The directories are read from ``config``, for example
+        ``config['media_dir']``.  If the target directories don't already
+        exist, they will be created.
+
         """
-        This method initialises the directories to which video
-        files will be written to and read from (within MEDIA_DIR).
-        If they don't already exist, they will be created.
-        """
-        if config["dry_run"]:
+        if config["dry_run"]:  # in dry-run mode there is no output
             return
 
         if config["input_file"]:
-            module_directory = config["input_file"].stem
+            module_name = config.get_dir("input_file").stem
         else:
-            module_directory = ""
-        default_name = self.get_default_scene_name(scene_name)
+            module_name = ""
+
+        if config["output_file"]:
+            default_name = config.get_dir("output_file")
+        else:
+            default_name = Path(scene_name)
+
         if config["save_last_frame"] or config["save_pngs"]:
-            if config["media_dir"] != "":
-                if not config["custom_folders"]:
-                    image_dir = guarantee_existence(
-                        os.path.join(
-                            config["images_dir"],
-                            module_directory,
-                        )
-                    )
-                else:
-                    image_dir = guarantee_existence(config["images_dir"])
+            if config["media_dir"]:
+                image_dir = guarantee_existence(
+                    config.get_dir("images_dir", module_name=module_name)
+                )
             self.image_file_path = os.path.join(
                 image_dir, add_extension_if_not_present(default_name, ".png")
             )
 
         if config["write_to_movie"]:
-            if config["video_dir"]:
-                if not config["custom_folders"]:
-                    movie_dir = guarantee_existence(
-                        os.path.join(
-                            config["video_dir"],
-                            module_directory,
-                            self.get_resolution_directory(),
-                        )
-                    )
-                else:
-                    movie_dir = guarantee_existence(os.path.join(config["video_dir"]))
+            movie_dir = guarantee_existence(
+                config.get_dir("video_dir", module_name=module_name)
+            )
 
             self.movie_file_path = os.path.join(
                 movie_dir,
@@ -107,23 +101,14 @@ class SceneFileWriter(object):
                     movie_dir,
                     add_extension_if_not_present(default_name, GIF_FILE_EXTENSION),
                 )
-            if not config["custom_folders"]:
-                self.partial_movie_directory = guarantee_existence(
-                    os.path.join(
-                        movie_dir,
-                        "partial_movie_files",
-                        default_name,
-                    )
+
+            self.partial_movie_directory = guarantee_existence(
+                config.get_dir(
+                    "partial_movie_dir",
+                    scene_name=default_name,
+                    module_name=module_name,
                 )
-            else:
-                self.partial_movie_directory = guarantee_existence(
-                    os.path.join(
-                        config["media_dir"],
-                        "temp_files",
-                        "partial_movie_files",
-                        default_name,
-                    )
-                )
+            )
 
     def add_partial_movie_file(self, hash_animation):
         """Adds a new partial movie file path to scene.partial_movie_files from an hash. This method will compute the path from the hash.
@@ -149,21 +134,6 @@ class SceneFileWriter(object):
             ),
         )
         self.partial_movie_files.append(new_partial_movie_file)
-
-    def get_default_scene_name(self, scene_name):
-        """
-        This method returns the default scene name
-        which is the value of "output_file", if it exists and
-        the actual name of the class that inherited from
-        Scene in your animation script, if "output_file" is None.
-
-        Returns
-        -------
-        str
-            The default scene name.
-        """
-        fn = config["output_file"]
-        return fn if fn else Path(scene_name)
 
     def get_resolution_directory(self):
         """Get the name of the resolution directory directly containing
@@ -193,32 +163,6 @@ class SceneFileWriter(object):
         pixel_height = config["pixel_height"]
         frame_rate = config["frame_rate"]
         return "{}p{}".format(pixel_height, frame_rate)
-
-    # Directory getters
-    def get_image_file_path(self):
-        """
-        This returns the directory path to which any images will be
-        written to.
-        It is usually named "images", but can be changed by changing
-        "image_file_path".
-
-        Returns
-        -------
-        str
-            The path of the directory.
-        """
-        return self.image_file_path
-
-    def get_movie_file_path(self):
-        """
-        Returns the final path of the written video file.
-
-        Returns
-        -------
-        str
-            The path of the movie file.
-        """
-        return self.movie_file_path
 
     # Sound
     def init_audio(self):
@@ -353,7 +297,7 @@ class SceneFileWriter(object):
         image : np.array
             The pixel array of the image to save.
         """
-        file_path = self.get_image_file_path()
+        file_path = self.image_file_path
         image.save(file_path)
         self.print_file_ready_message(file_path)
 
@@ -504,7 +448,7 @@ class SceneFileWriter(object):
                 if os.name == "nt":
                     pf_path = pf_path.replace("\\", "/")
                 fp.write("file 'file:{}'\n".format(pf_path))
-        movie_file_path = self.get_movie_file_path()
+        movie_file_path = self.movie_file_path
         commands = [
             FFMPEG_BIN,
             "-y",  # overwrite output file if it exists
@@ -615,7 +559,5 @@ class SceneFileWriter(object):
         )
 
     def print_file_ready_message(self, file_path):
-        """
-        Prints the "File Ready" message to STDOUT.
-        """
+        """Prints the "File Ready" message to STDOUT."""
         logger.info("\nFile ready at %(file_path)s\n", {"file_path": file_path})

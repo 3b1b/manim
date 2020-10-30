@@ -22,21 +22,6 @@ from ..utils.tex import TexTemplate, TexTemplateFromFile
 from .logger import set_file_logger
 
 
-def init_dirs(config):
-    for folder in [
-        config["media_dir"],
-        config["video_dir"],
-        config["tex_dir"],
-        config["text_dir"],
-        config["log_dir"],
-    ]:
-        if not os.path.exists(folder):
-            if folder == config["log_dir"] and (not config["log_to_file"]):
-                pass
-            else:
-                os.makedirs(folder)
-
-
 def config_file_paths():
     library_wide = Path.resolve(Path(__file__).parent / "default.cfg")
     if sys.platform.startswith("win32"):
@@ -131,6 +116,7 @@ class ManimConfig(MutableMapping):
         "max_files_cached",
         "media_dir",
         "movie_file_extension",
+        "partial_movie_dir",
         "pixel_height",
         "pixel_width",
         "png_mode",
@@ -295,6 +281,7 @@ class ManimConfig(MutableMapping):
             "images_dir",
             "text_dir",
             "tex_dir",
+            "partial_movie_dir",
             "input_file",
             "output_file",
             "png_mode",
@@ -365,12 +352,7 @@ class ManimConfig(MutableMapping):
 
         for key in [
             "media_dir",  # always set this one first
-            "video_dir",
-            "images_dir",
-            "tex_dir",
-            "text_dir",
             "log_dir",
-            "custom_folders",
             "log_to_file",  # always set this one last
         ]:
             if hasattr(args, key):
@@ -411,8 +393,19 @@ class ManimConfig(MutableMapping):
 
         # Handle --custom_folders
         if args.custom_folders:
-            for opt in ["media_dir", "video_dir", "text_dir", "tex_dir", "log_dir"]:
+            for opt in [
+                "media_dir",
+                "video_dir",
+                "images_dir",
+                "text_dir",
+                "tex_dir",
+                "log_dir",
+                "partial_movie_dir",
+            ]:
                 self[opt] = self._parser["custom_folders"].get(opt, raw=True)
+            # --media_dir overrides the deaful.cfg file
+            if hasattr(args, "media_dir") and args.media_dir:
+                self.media_dir = args.media_dir
 
         return self
 
@@ -748,12 +741,12 @@ class ManimConfig(MutableMapping):
     )
 
     media_dir = property(
-        lambda self: Path(self._d["media_dir"]),
-        lambda self, val: self._d.__setitem__("media_dir", val),
+        lambda self: self._d["media_dir"],
+        lambda self, val: self._set_dir("media_dir", val),
         doc="Main output directory, relative to execution directory.",
     )
 
-    def _get_dir(self, key):
+    def get_dir(self, key, **kwargs):
         dirs = [
             "media_dir",
             "video_dir",
@@ -763,10 +756,32 @@ class ManimConfig(MutableMapping):
             "log_dir",
             "input_file",
             "output_file",
+            "partial_movie_dir",
         ]
-        dirs.remove(key)
-        dirs = {k: self._d[k] for k in dirs}
-        path = self._d[key].format(**dirs)
+        if key not in dirs:
+            raise KeyError(
+                "must pass one of "
+                "{media,video,images,text,tex,log}_dir "
+                "or {input,output}_file"
+            )
+
+        dirs.remove(key)  # a path cannot contain itself
+
+        all_args = {k: self._d[k] for k in dirs}
+        all_args.update(kwargs)
+        all_args["quality"] = f"{self.pixel_height}p{self.frame_rate}"
+
+        path = self._d[key]
+        while "{" in path:
+            try:
+                path = path.format(**all_args)
+            except KeyError as exc:
+                raise KeyError(
+                    f"{key} {self._d[key]} requires the following "
+                    + "keyword arguments: "
+                    + " ".join(exc.args)
+                ) from exc
+
         return Path(path) if path else None
 
     def _set_dir(self, key, val):
@@ -776,33 +791,39 @@ class ManimConfig(MutableMapping):
             self._d.__setitem__(key, val)
 
     log_dir = property(
-        lambda self: self._get_dir("log_dir"),
+        lambda self: self._d["log_dir"],
         lambda self, val: self._set_dir("log_dir", val),
         doc="Directory to place logs",
     )
 
     video_dir = property(
-        lambda self: self._get_dir("video_dir"),
+        lambda self: self._d["video_dir"],
         lambda self, val: self._set_dir("video_dir", val),
         doc="Directory to place videos",
     )
 
     images_dir = property(
-        lambda self: self._get_dir("images_dir"),
+        lambda self: self._d["images_dir"],
         lambda self, val: self._set_dir("images_dir", val),
         doc="Directory to place images",
     )
 
     text_dir = property(
-        lambda self: self._get_dir("text_dir"),
+        lambda self: self._d["text_dir"],
         lambda self, val: self._set_dir("text_dir", val),
         doc="Directory to place text",
     )
 
     tex_dir = property(
-        lambda self: self._get_dir("tex_dir"),
+        lambda self: self._d["tex_dir"],
         lambda self, val: self._set_dir("tex_dir", val),
         doc="Directory to place tex",
+    )
+
+    partial_movie_dir = property(
+        lambda self: self._d["partial_movie_dir"],
+        lambda self, val: self._set_dir("partial_movie_dir", val),
+        doc="Directory to place partial movie files",
     )
 
     custom_folders = property(
@@ -812,13 +833,13 @@ class ManimConfig(MutableMapping):
     )
 
     input_file = property(
-        lambda self: self._get_dir("input_file"),
+        lambda self: self._d["input_file"],
         lambda self, val: self._set_dir("input_file", val),
         doc="Input file name.",
     )
 
     output_file = property(
-        lambda self: self._get_dir("output_file"),
+        lambda self: self._d["output_file"],
         lambda self, val: self._set_dir("output_file", val),
         doc="Output file name.",
     )

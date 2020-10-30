@@ -101,7 +101,9 @@ def set_file_logger(config, verbosity):
         if scene_name_suffix
         else f"{scene_file_name}.log"
     )
-    log_file_path = os.path.join(config["log_dir"], log_file_name)
+    log_file_path = config.get_dir("log_dir") / log_file_name
+    log_file_path.parent.mkdir(parents=True, exist_ok=True)
+
     file_handler = logging.FileHandler(log_file_path, mode="w")
     file_handler.setFormatter(JSONFormatter())
 
