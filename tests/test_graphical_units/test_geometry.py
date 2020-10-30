@@ -54,6 +54,12 @@ class DotTest(Scene):
         self.play(Animation(dot))
 
 
+class AnnotationDotTest(Scene):
+    def construct(self):
+        adot = AnnotationDot()
+        self.play(Animation(adot))
+
+
 class EllipseTest(Scene):
     def construct(self):
         e = Ellipse()
