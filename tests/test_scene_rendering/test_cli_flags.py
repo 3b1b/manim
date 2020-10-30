@@ -1,5 +1,6 @@
-import matplotlib.pyplot as plt
 import pytest
+import numpy as np
+from PIL import Image
 from pathlib import Path
 
 from ..utils.video_tester import *
@@ -139,5 +140,4 @@ def test_r_flag(tmp_path, manim_cfg_file, simple_scenes_path):
     assert is_not_empty, "running manim with -s, -r flag did not render a file"
 
     filename = tmp_path / "images" / "simple_scenes" / "SquareToCircle.png"
-    image = plt.imread(filename)
-    assert image.shape == (100, 200, 4)
+    assert np.asarray(Image.open(filename)).shape == (100, 200, 4)
