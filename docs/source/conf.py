@@ -62,6 +62,10 @@ extensions = [
 # Automatically generate stub pages when using the .. autosummary directive
 autosummary_generate = True
 
+# controls whether functions documented by the autofunction directive
+# appear with their full module names
+add_module_names = False
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 

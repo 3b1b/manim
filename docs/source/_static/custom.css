@@ -14,6 +14,10 @@ p {
     color: #353535;
 }
 
+dl.function {
+    border-bottom: 1px solid #ccc;
+}
+
 .sidebar-toc ul li a:hover {
     background-color: #e07a5f;
 }
@@ -47,6 +51,11 @@ div.highlight {
 div.highlight pre {
     background-color: inherit;
     border-color: #525893;
+}
+
+div.seealso {
+    background-color: #d9edf7;
+    border: 1px solid #525893;
 }
 
 .footer-relations a.btn.btn-default {
