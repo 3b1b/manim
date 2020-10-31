@@ -15,17 +15,6 @@
    {% endif %}
    {% endblock %}
 
-   {% block functions %}
-   {% if functions %}
-   .. rubric:: {{ _('Functions') }}
-
-   .. autosummary::
-   {% for item in functions %}
-      {{ item }}
-   {%- endfor %}
-   {% endif %}
-   {% endblock %}
-
    {% block classes %}
    {% if classes %}
    .. rubric:: Classes
@@ -36,6 +25,16 @@
       {% for class in classes %}
         {{ class }}
       {% endfor %}
+   {% endif %}
+   {% endblock %}
+
+   {% block functions %}
+   {% if functions %}
+   .. rubric:: {{ _('Functions') }}
+
+   {% for item in functions %}
+   .. autofunction:: {{ item }}
+   {%- endfor %}
    {% endif %}
    {% endblock %}
 
