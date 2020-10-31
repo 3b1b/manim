@@ -43,7 +43,7 @@ class BackgroundRectangle(SurroundingRectangle):
         self.set_fill(opacity=b * self.original_fill_opacity)
         return self
 
-    def set_style_data(
+    def set_style(
         self,
         stroke_color=None,
         stroke_width=None,
@@ -52,7 +52,7 @@ class BackgroundRectangle(SurroundingRectangle):
         family=True,
     ):
         # Unchangable style, except for fill_opacity
-        VMobject.set_style_data(
+        VMobject.set_style(
             self,
             stroke_color=BLACK,
             stroke_width=0,
