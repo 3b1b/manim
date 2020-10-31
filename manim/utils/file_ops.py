@@ -32,14 +32,13 @@ def guarantee_existence(path):
 def seek_full_path_from_defaults(file_name, default_dir, extensions):
     possible_paths = [file_name]
     possible_paths += [
-        os.path.join(default_dir, file_name + extension)
-        for extension in ["", *extensions]
+        Path(default_dir) / f"{file_name}{extension}" for extension in ["", *extensions]
     ]
     for path in possible_paths:
         if os.path.exists(path):
             return path
     error = "From: {}, could not find {} at either of these locations: {}".format(
-        os.getcwd(), self.file_name, possible_paths
+        os.getcwd(), file_name, possible_paths
     )
     raise IOError(error)
 
