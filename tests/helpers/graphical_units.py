@@ -30,6 +30,7 @@ def set_test_scene(scene_object, module_name):
     config["skip_animations"] = True
     config["write_to_movie"] = False
     config["disable_caching"] = True
+    config["save_last_frame"] = True
     config["pixel_height"] = 480
     config["pixel_width"] = 854
     config["frame_rate"] = 15
