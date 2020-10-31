@@ -53,6 +53,11 @@ div.highlight pre {
     border-color: #525893;
 }
 
+div.seealso {
+    background-color: #d9edf7;
+    border: 1px solid #525893;
+}
+
 .footer-relations a.btn.btn-default {
     display: flex;
     align-items: center;
