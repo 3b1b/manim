@@ -21,7 +21,7 @@ If you are a Windows developer and want to use PowerShell, you can use the below
 	
 	  (Invoke-WebRequest -Uri https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py -UseBasicParsing).Content | python
 
-.. note:: Poetry can be installed by other ways also, such as with ``pip``. See `<https://python-poetry.org/docs/#alternative-installation-methods-not-recommended>`_.
+.. note:: Poetry can be installed by other ways also, such as with ``pip``. See `<https://python-poetry.org/docs/#alternative-installation-methods-not-recommended>`_. If you are using MacOS with the Homebrew package manager, you can also install poetry with ``brew install poetry``.
 
 It will add it to ``PATH`` variable automatically. In order to make sure you have poetry installed correctly, try running:
 
