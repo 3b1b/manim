@@ -229,7 +229,7 @@ class ManimDirective(Directive):
             shutil.copyfile(filesrc, destfile)
         elif save_as_gif:
             filename = f"{output_file}.gif"
-            filesrc = os.path.join(video_dir, qualitydir, filename)
+            filesrc = config.get_dir("video_dir") / filename
         elif save_last_frame:
             filename = f"{output_file}.png"
             filesrc = config.get_dir("images_dir") / filename
@@ -238,6 +238,7 @@ class ManimDirective(Directive):
 
         rendered_template = jinja2.Template(TEMPLATE).render(
             clsname=clsname,
+            clsname_lowercase=clsname.lower(),
             hide_source=hide_source,
             filesrc_rel=os.path.relpath(filesrc, setup.confdir),
             output_file=output_file,
@@ -276,18 +277,20 @@ TEMPLATE = r"""
 {% if not (save_as_gif or save_last_frame) %}
 .. raw:: html
 
-    <video class="manim-video" controls loop autoplay src="./{{ output_file }}.mp4"></video>
+    <video id="{{ clsname_lowercase }}" class="manim-video" controls loop autoplay src="./{{ output_file }}.mp4"></video>
 {% elif save_as_gif %}
 .. image:: /{{ filesrc_rel }}
     :align: center
+    :name: {{ clsname_lowercase }}
 {% elif save_last_frame %}
 .. image:: /{{ filesrc_rel }}
     :align: center
+    :name: {{ clsname_lowercase }}
 {% endif %}
 {% if not hide_source %}
 .. raw:: html
 
-    <div class="example-header">{{ clsname }}</div>
+    <h5 class="example-header">{{ clsname }}<a class="headerlink" href="#{{ clsname_lowercase }}">¶</a></h5>
 
 {{ source_block }}
 {{ ref_block }}
