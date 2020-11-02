@@ -29,7 +29,6 @@ Annotations
             self.add(numberplane, dot, arrow, origin_text, tip_text)
 
 .. manim:: UsefulAnnotations
-    :quality: medium
     :save_last_frame:
 
     class UsefulAnnotations(Scene):
