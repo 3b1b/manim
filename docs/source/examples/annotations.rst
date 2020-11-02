@@ -16,7 +16,6 @@ Annotations
             self.add(dot, dot2, line, b1, b2, b1text, b2text)
 
 .. manim:: VectorArrow
-    :quality: medium
     :save_last_frame:
 
     class VectorArrow(Scene):
@@ -28,8 +27,23 @@ Annotations
             tip_text = Text('(2, 2)').next_to(arrow.get_end(), RIGHT)
             self.add(numberplane, dot, arrow, origin_text, tip_text)
 
+.. manim:: UsefulAnnotations
+    :save_last_frame:
+
+    class UsefulAnnotations(Scene):
+        def construct(self):
+            m0 = SmallDot()
+            m1 = AnnotationDot()
+            m2 = LabeledDot("ii")
+            m3 = LabeledDot(MathTex(r"\alpha").set_color(ORANGE))
+            m4 = CurvedArrow(ORIGIN, 2*LEFT)
+            m5 = CurvedDoubleArrow(ORIGIN, 2*RIGHT)
+
+            self.add(m0, m1, m2, m3, m4, m5)
+            for i, mobj in enumerate(self.mobjects):
+                mobj.shift(DOWN * (i-3))
+
 .. manim:: ArrowTipsShowcase
-    :quality: medium
     :save_last_frame:
 
     from manim.mobject.geometry import ArrowTriangleTip, ArrowSquareTip, ArrowSquareFilledTip,\
