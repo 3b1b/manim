@@ -16,7 +16,6 @@ Annotations
             self.add(dot, dot2, line, b1, b2, b1text, b2text)
 
 .. manim:: VectorArrow
-    :quality: medium
     :save_last_frame:
 
     class VectorArrow(Scene):
@@ -45,7 +44,6 @@ Annotations
                 mobj.shift(DOWN * (i-3))
 
 .. manim:: ArrowTipsShowcase
-    :quality: medium
     :save_last_frame:
 
     from manim.mobject.geometry import ArrowTriangleTip, ArrowSquareTip, ArrowSquareFilledTip,\
