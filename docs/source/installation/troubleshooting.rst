@@ -84,14 +84,14 @@ As soon as you have found the library, try (on Mac OS or Linux)
 
 .. code-block:: bash
 
-  export LIBS=<path to your library including the file name>
+  export LIBGS=<path to your library including the file name>
   dvisvgm -l
 
 or (on Windows)
 
 .. code-block:: bat
 
-  set LIBS=<path to your library including the file name>
+  set LIBGS=<path to your library including the file name>
   dvisvgm -l
 
 
