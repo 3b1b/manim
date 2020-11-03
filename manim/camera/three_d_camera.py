@@ -18,6 +18,7 @@ from ..utils.color import get_shaded_rgb
 from ..utils.simple_functions import clip_in_place
 from ..utils.space_ops import rotation_about_z
 from ..utils.space_ops import rotation_matrix
+from ..utils.family import extract_mobject_family_members
 
 
 class ThreeDCamera(Camera):
@@ -367,7 +368,7 @@ class ThreeDCamera(Camera):
         **mobjects : Mobject
             The mobject to fix in frame.
         """
-        for mobject in self.extract_mobject_family_members(mobjects):
+        for mobject in extract_mobject_family_members(mobjects):
             self.fixed_in_frame_mobjects.add(mobject)
 
     def remove_fixed_orientation_mobjects(self, *mobjects):
