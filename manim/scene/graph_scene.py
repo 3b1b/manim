@@ -117,11 +117,10 @@ class GraphScene(Scene):
         if self.x_axis_label:
             x_label = Tex(self.x_axis_label)
             x_label.next_to(
-                x_axis.get_tips() if self.include_tip else x_axis.get_tick_marks(),
+                x_axis.get_corner(self.x_label_position),
                 self.x_label_position,
                 buff=SMALL_BUFF,
             )
-            x_label.shift_onto_screen()
             x_axis.add(x_label)
             self.x_axis_label_mob = x_label
 
@@ -164,7 +163,6 @@ class GraphScene(Scene):
                 self.y_label_position,
                 buff=SMALL_BUFF,
             )
-            y_label.shift_onto_screen()
             y_axis.add(y_label)
             self.y_axis_label_mob = y_label
 
