@@ -165,7 +165,7 @@ class ThreeDScene(Scene):
                 anims.append(ApplyMethod(tracker.set_value, value, **kwargs))
         if frame_center is not None:
             anims.append(
-                ApplyMethod(self.renderer.camera.frame_center.move_to, frame_center)
+                ApplyMethod(self.renderer.camera._frame_center.move_to, frame_center)
             )
 
         self.play(*anims + added_anims)
