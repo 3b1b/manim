@@ -263,10 +263,6 @@ def _parse_args_no_subcmd(args):
         help="Specify background color",
     )
     parser.add_argument(
-        "--background_opacity",
-        help="Specify background opacity",
-    )
-    parser.add_argument(
         "--media_dir",
         help="Directory to store media (including video files)",
     )
