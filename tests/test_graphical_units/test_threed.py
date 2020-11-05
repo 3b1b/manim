@@ -42,6 +42,7 @@ class FixedInFrameMObjectTest(ThreeDScene):
         self.add_fixed_in_frame_mobjects(circ)
         circ.to_corner(UL)
         self.add(axes)
+        self.wait()
 
 MODULE_NAME = "threed"
 
