@@ -17,7 +17,6 @@ from .animation.indication import *
 from .animation.movement import *
 from .animation.numbers import *
 from .animation.rotation import *
-from .animation.specialized import *
 from .animation.transform import *
 from .animation.update import *
 
@@ -41,7 +40,6 @@ from .mobject.numbers import *
 from .mobject.probability import *
 from .mobject.shape_matchers import *
 from .mobject.svg.brace import *
-from .mobject.svg.drawings import *
 from .mobject.svg.svg_mobject import *
 from .mobject.svg.tex_mobject import *
 from .mobject.svg.text_mobject import *
