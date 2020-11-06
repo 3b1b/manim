@@ -3,7 +3,7 @@
 
 __all__ = ["Camera", "BackgroundColoredVMobjectDisplayer"]
 
-
+from functools import reduce
 import itertools as it
 import operator as op
 import time
@@ -1039,7 +1039,7 @@ class Camera(object):
 
         """
         # TODO: This seems...unsystematic
-        big_sum = op.add(config["default_pixel_height"], config["default_pixel_width"])
+        big_sum = op.add(config["pixel_height"], config["pixel_width"])
         this_sum = op.add(self.pixel_height, self.pixel_width)
         factor = fdiv(big_sum, this_sum)
         return 1 + (thickness - 1) / factor
