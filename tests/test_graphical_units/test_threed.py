@@ -44,6 +44,7 @@ class FixedInFrameMObjectTest(ThreeDScene):
         self.add(axes)
         self.wait()
 
+
 MODULE_NAME = "threed"
 
 
