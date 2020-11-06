@@ -1,7 +1,7 @@
 
 3D Scenes
 =================================
-.. manim:: ThreeDSphere
+.. manim:: FixedInFrameMObjectTest
     :save_last_frame:
     class FixedInFrameMObjectTest(ThreeDScene):
         def construct(self):
