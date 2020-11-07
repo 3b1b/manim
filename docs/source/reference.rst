@@ -35,7 +35,6 @@ Mobjects
    ~mobject.vector_field
    ~mobject.svg.brace
    ~mobject.svg.code_mobject
-   ~mobject.svg.drawings
    ~mobject.svg.svg_mobject
    ~mobject.svg.tex_mobject
    ~mobject.svg.text_mobject
@@ -78,7 +77,6 @@ Animations
    ~animation.movement
    ~animation.numbers
    ~animation.rotation
-   ~animation.specialized
    ~animation.transform
    ~animation.update
 
