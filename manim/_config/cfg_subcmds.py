@@ -11,7 +11,7 @@ import os
 from ast import literal_eval
 
 from manim import logger, console, config
-from manim.config.utils import config_file_paths, make_config_parser
+from manim._config.utils import config_file_paths, make_config_parser
 from manim.utils.file_ops import guarantee_existence, open_file
 
 __all__ = ["write", "show", "export"]

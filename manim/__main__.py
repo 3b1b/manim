@@ -12,7 +12,7 @@ from manim.utils.module_ops import (
 )
 from manim.utils.file_ops import open_file as open_media_file
 from manim.grpc.impl import frame_server_impl
-from manim.config.main_utils import *
+from manim._config.main_utils import parse_args
 
 
 def open_file_if_needed(file_writer):

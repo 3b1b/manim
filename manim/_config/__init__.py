@@ -1,7 +1,9 @@
+"""Set the global config and logger."""
+
 import logging
 from contextlib import contextmanager
 
-from .logger import make_logger
+from .logger_utils import make_logger
 from .utils import make_config_parser, ManimConfig, ManimFrame
 
 __all__ = [
@@ -22,38 +24,39 @@ logger, console = make_logger(parser["logger"], parser["CLI"]["verbosity"])
 logging.getLogger("PIL").setLevel(logging.INFO)
 logging.getLogger("matplotlib").setLevel(logging.INFO)
 
-config = ManimConfig(parser)
+config = ManimConfig().digest_parser(parser)
 frame = ManimFrame(config)
 
 
 # This has to go here because it needs access to this module's config
 @contextmanager
 def tempconfig(temp):
-    """Context manager that temporarily modifies the global config dict.
+    """Context manager that temporarily modifies the global ``config`` object.
 
-    The code block inside the ``with`` statement will use the modified config.
-    After the code block, the config will be restored to its original value.
+    Inside the ``with`` statement, the modified config will be used.  After
+    context manager exits, the config will be restored to its original state.
 
     Parameters
     ----------
-
-    temp : :class:`dict`
-        A dictionary whose keys will be used to temporarily update the global
-        config.
+    temp : Union[:class:`ManimConfig`, :class:`dict`]
+        Object whose keys will be used to temporarily update the global
+        ``config``.
 
     Examples
     --------
+
     Use ``with tempconfig({...})`` to temporarily change the default values of
-    certain objects.
+    certain config options.
 
-    .. code_block:: python
+    .. code-block:: python
 
-       c = Camera()
-       c.frame_width == config['frame_width']        # -> True
-       with tempconfig({'frame_width': 100}):
-           c = Camera()
-           c.frame_width == config['frame_width']    # -> False
-           c.frame_width == 100                      # -> True
+       >>> config['frame_height']
+       8.0
+       >>> with tempconfig({'frame_height': 100.0}):
+       ...     print(config['frame_height'])
+       100.0
+       >>> config['frame_height']
+       8.0
 
     """
     global config

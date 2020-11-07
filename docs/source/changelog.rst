@@ -11,6 +11,16 @@ v0.2.0
 Changes since Manim Community release v0.1.0
 
 
+Configuration
+^^^^^^^^^^^^^
+
+#. The global ``config`` dict has been replaced by a global ``config`` instance
+   of the new class :class:`~.ManimConfig`.  This class has a dict-like API, so
+   this should not break user code, only make it more robust.  See the
+   Configuration tutorial for details.
+
+
+
 
 Mobjects, Scenes, and Animations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -142,6 +152,3 @@ Other Changes
 #. Rename package from manimlib to manim
 #. Move all imports to :code:`__init__`, so :code:`from manim import *` replaces :code:`from manimlib.imports import *`
 #. Global dir variable handling has been removed. Instead :code:`initialize_directories`, if needed, overrides the values from the cfg files at runtime.
-
-
-

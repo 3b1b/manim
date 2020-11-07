@@ -1,8 +1,12 @@
-"""
-utils.py
---------
+"""Utilities to create and set the config.
 
-Functions to create and set the config.
+The main class exported by this module is :class:`ManimConfig`.  This class
+contains all configuration options, including frame geometry (e.g. frame
+height/width, frame rate), output (e.g. directories, logging), styling
+(e.g. background color, transparency), and general behavior (e.g. writing a
+movie vs writing a single frame).
+
+See :doc:`tutorials/configuration` for an introduction to Manim's configuration system.
 
 """
 
@@ -19,10 +23,43 @@ import colour
 
 from .. import constants
 from ..utils.tex import TexTemplate, TexTemplateFromFile
-from .logger import set_file_logger
+from .logger_utils import set_file_logger
 
 
 def config_file_paths():
+    """The paths where ``.cfg`` files will be searched for.
+
+    When manim is first imported, it processes any ``.cfg`` files it finds.  This
+    function returns the locations in which these files are searched for.  In
+    ascending order of precedence, these are: the library-wide config file, the
+    user-wide config file, and the folder-wide config file.
+
+    The library-wide config file determines manim's default behavior.  The
+    user-wide config file is stored in the user's home folder, and determines
+    the behavior of manim whenever the user invokes it from anywhere in the
+    system.  The folder-wide config file only affects scenes that are in the
+    same folder.  The latter two files are optional.
+
+    These files, if they exist, are meant to loaded into a single
+    :class:`configparser.ConfigParser` object, and then processed by
+    :class:`ManimConfig`.
+
+    Returns
+    -------
+    List[:class:`Path`]
+        List of paths which may contain ``.cfg`` files, in ascending order of
+        precedence.
+
+    See Also
+    --------
+    :func:`make_config_parser`, :meth:`ManimConfig.digest_file`,
+    :meth:`ManimConfig.digest_parser`
+
+    Notes
+    -----
+    The location of the user-wide config file is OS-specific.
+
+    """
     library_wide = Path.resolve(Path(__file__).parent / "default.cfg")
     if sys.platform.startswith("win32"):
         user_wide = Path.home() / "AppData" / "Roaming" / "Manim" / "manim.cfg"
@@ -33,20 +70,31 @@ def config_file_paths():
 
 
 def make_config_parser(custom_file=None):
-    """Make a ConfigParser object and load the .cfg files.
+    """Make a :class:`ConfigParser` object and load any ``.cfg`` files.
+
+    The user-wide file, if it exists, overrides the library-wide file.  The
+    folder-wide file, if it exists, overrides the other two.
+
+    The folder-wide file can be ignored by passing ``custom_file``.  However,
+    the user-wide and library-wide config files cannot be ignored.
 
     Parameters
     ----------
-    custom_file : str
-
+    custom_file : :class:`str`
         Path to a custom config file.  If used, the folder-wide file in the
         relevant directory will be ignored, if it exists.  If None, the
         folder-wide file will be used, if it exists.
 
-    Notes
-    -----
-    The folder-wide file can be ignored by passing custom_file.  However, the
-    user-wide and library-wide config files cannot be ignored.
+    Returns
+    -------
+    :class:`ConfigParser`
+        A parser containing the config options found in the .cfg files that
+        were found.  It is guaranteed to contain at least the config options
+        found in the library-wide file.
+
+    See Also
+    --------
+    :func:`config_file_paths`
 
     """
     library_wide, user_wide, folder_wide = config_file_paths()
@@ -64,7 +112,7 @@ def make_config_parser(custom_file=None):
     return parser
 
 
-def determine_quality(args):
+def _determine_quality(args):
     old_qualities = {
         "k": "fourk_quality",
         "e": "high_quality",
@@ -93,6 +141,108 @@ def determine_quality(args):
 
 
 class ManimConfig(MutableMapping):
+    """Dict-like class storing all config options.
+
+    The global ``config`` object is an instance of this class, and acts as a
+    single source of truth for all of the library's customizable behavior.
+
+    The global ``config`` object is capable of digesting different types of
+    sources and converting them into a uniform interface.  These sources are
+    (in ascending order of precedence): configuration files, command line
+    arguments, and programmatic changes.  Regardless of how the user chooses to
+    set a config option, she can access its current value using
+    :class:`ManimConfig`'s attributes and properties.
+
+    Notes
+    -----
+    Each config option is implemented as a property of this class.
+
+    Each config option can be set via a config file, using the full name of the
+    property.  If a config option has an associated CLI flag, then the flag is
+    equal to the full name of the property.  Those that admit an alternative
+    flag or no flag at all are documented in the individual property's
+    docstring.
+
+    Examples
+    --------
+    Each config option allows for dict syntax and attribute syntax.  For
+    example, the following two lines are equivalent,
+
+    .. code-block:: python
+
+       >>> from manim import config, WHITE
+       >>> config.background_color = WHITE
+       >>> config['background_color'] = WHITE
+
+    The former is preferred; the latter is provided mostly for backwards
+    compatibility.
+
+    The config options are designed to keep internal consistency.  For example,
+    setting ``frame_y_radius`` will affect ``frame_height``:
+
+    .. code-block:: python
+
+        >>> config.frame_height
+        8.0
+        >>> config.frame_y_radius = 5.0
+        >>> config.frame_height
+        10.0
+
+    There are many ways of interacting with config options.  Take for example
+    the config option ``background_color``.  There are three ways to change it:
+    via a config file, via CLI flags, or programmatically.
+
+    To set the background color via a config file, save the following
+    ``manim.cfg`` file with the following contents.
+
+    .. code-block::
+
+       [CLI]
+       background_color = WHITE
+
+    In order to have this ``.cfg`` file apply to a manim scene, it needs to be
+    placed in the same directory as the script,
+
+    .. code-block:: bash
+
+          project/
+          ├─scene.py
+          └─manim.cfg
+
+    Now, when the user executes
+
+    .. code-block:: bash
+
+        manim scene.py
+
+    the background of the scene will be set to ``WHITE``.  This applies regardless
+    of where the manim command is invoked from.
+
+    Command line arguments override ``.cfg`` files.  In the previous example,
+    executing
+
+    .. code-block:: bash
+
+        manim scene.py -c BLUE
+
+    will set the background color to BLUE, regardless of the conents of
+    ``manim.cfg``.
+
+    Finally, any programmatic changes made within the scene script itself will
+    override the command line arguments.  For example, if ``scene.py`` contains
+    the following
+
+    .. code-block:: python
+
+        from manim import *
+        config.background_color = RED
+        class MyScene(Scene):
+            # ...
+
+    the background color will be set to RED, regardless of the contents of
+    ``manim.cfg`` or the CLI arguments used when invoking manim.
+
+    """
 
     _OPTS = {
         "background_color",
@@ -140,11 +290,8 @@ class ManimConfig(MutableMapping):
         "write_to_movie",
     }
 
-    def __init__(self, parser=None):
+    def __init__(self):
         self._d = {k: None for k in self._OPTS}
-        self._parser = parser
-        if parser:
-            self.digest_parser(parser)
 
     # behave like a dict
     def __iter__(self):
@@ -167,6 +314,33 @@ class ManimConfig(MutableMapping):
         getattr(ManimConfig, key).fset(self, val)  # fset is the property's setter
 
     def update(self, obj):
+        """Digest the options found in another :class:`ManimConfig` or in a dict.
+
+        Similar to :meth:`dict.update`, replaces the values of this object with
+        those of ``obj``.
+
+        Parameters
+        ----------
+        obj : Union[:class:`ManimConfig`, :class:`dict`]
+            The object to copy values from.
+
+        Returns
+        -------
+        None
+
+        Raises
+        -----
+        :class:`AttributeError`
+            If ``obj`` is a dict but contains keys that do not belong to any
+            config options.
+
+        See Also
+        --------
+        :meth:`~ManimConfig.digest_file`, :meth:`~ManimConfig.digest_args`,
+        :meth:`~ManimConfig.digest_parser`
+
+        """
+
         if isinstance(obj, ManimConfig):
             self._d.update(obj._d)
 
@@ -189,30 +363,54 @@ class ManimConfig(MutableMapping):
 
     # copy functions
     def copy(self):
+        """Deepcopy the contents of this ManimConfig.
+
+        Returns
+        -------
+        :class:`ManimConfig`
+            A copy of this object containing no shared references.
+
+        See Also
+        --------
+        :func:`tempconfig`
+
+        Notes
+        -----
+        This is the main mechanism behind :func:`tempconfig`.
+
+        """
         return copy.deepcopy(self)
 
     def __copy__(self):
+        """See ManimConfig.copy()."""
         return copy.deepcopy(self)
 
     def __deepcopy__(self, memo):
+        """See ManimConfig.copy()."""
         c = ManimConfig()
+        # Deepcopying the underlying dict is enough because all properties
+        # either read directly from it or compute their value on the fly from
+        # vaulues read directly from it.
         c._d = copy.deepcopy(self._d, memo)
         return c
 
     # helper type-checking methods
     def _set_from_list(self, key, val, values):
+        """Set ``key`` to ``val`` if ``val`` is contained in ``values``."""
         if val in values:
             self._d[key] = val
         else:
             raise ValueError(f"attempted to set {key} to {val}; must be in {values}")
 
     def _set_boolean(self, key, val):
+        """Set ``key`` to ``val`` if ``val`` is Boolean."""
         if val in [True, False]:
             self._d[key] = val
         else:
             raise ValueError(f"{key} must be boolean")
 
     def _set_str(self, key, val):
+        """Set ``key`` to ``val`` if ``val`` is a string."""
         if isinstance(val, str):
             self._d[key] = val
         elif not val:
@@ -221,12 +419,14 @@ class ManimConfig(MutableMapping):
             raise ValueError(f"{key} must be str or falsy value")
 
     def _set_between(self, key, val, lo, hi):
+        """Set ``key`` to ``val`` if lo <= val <= hi."""
         if lo <= val <= hi:
             self._d[key] = val
         else:
             raise ValueError(f"{key} must be {lo} <= {key} <= {hi}")
 
     def _set_pos_number(self, key, val, allow_inf):
+        """Set ``key`` to ``val`` if ``val`` is a positive integer."""
         if isinstance(val, int) and val > -1:
             self._d[key] = val
         elif allow_inf and (val == -1 or val == float("inf")):
@@ -238,6 +438,55 @@ class ManimConfig(MutableMapping):
 
     # builders
     def digest_parser(self, parser):
+        """Process the config options present in a :class:`ConfigParser` object.
+
+        This method processes arbitrary parsers, not only those read from a
+        single file, whereas :meth:`~ManimConfig.digest_file` can only process one
+        file at a time.
+
+        Parameters
+        ----------
+        parser : :class:`ConfigParser`
+            An object reflecting the contents of one or many ``.cfg`` files.  In
+            particular, it may reflect the contents of mulitple files that have
+            been parsed in a cascading fashion.
+
+        Returns
+        -------
+        self : :class:`ManimConfig`
+            This object, after processing the contents of ``parser``.
+
+        See Also
+        --------
+        :func:`make_config_parser`, :meth:`~.ManimConfig.digest_file`,
+        :meth:`~.ManimConfig.digest_args`,
+
+        Notes
+        -----
+        If there are multiple ``.cfg`` files to process, it is always more
+        efficient to parse them into a single :class:`ConfigParser` object
+        first, and then call this function once (instead of calling
+        :meth:`~.ManimConfig.digest_file` multiple times).
+
+        Examples
+        --------
+        To digest the config options set in two files, first create a
+        ConfigParser and parse both files and then digest the parser:
+
+        .. code-block:: python
+
+            parser = configparser.ConfigParser()
+            parser.read([file1, file2])
+            config = ManimConfig().digest_parser(parser)
+
+        In fact, the global ``config`` object is initialized like so:
+
+        .. code-block:: python
+
+            parser = make_config_parser()
+            config = ManimConfig().digest_parser(parser)
+
+        """
         self._parser = parser
 
         # boolean keys
@@ -312,6 +561,30 @@ class ManimConfig(MutableMapping):
         return self
 
     def digest_args(self, args):
+        """Process the config options present in CLI arguments.
+
+        Parameters
+        ----------
+        args : :class:`argparse.Namespace`
+            An object returned by :func:`.main_utils.parse_args()`.
+
+        Returns
+        -------
+        self : :class:`ManimConfig`
+            This object, after processing the contents of ``parser``.
+
+        See Also
+        --------
+        :func:`.main_utils.parse_args()`, :meth:`~.ManimConfig.digest_parser`,
+        :meth:`~.ManimConfig.digest_file`
+
+        Notes
+        -----
+        If ``args.config_file`` is a non-empty string, ``ManimConfig`` tries to digest the
+        contents of said file with :meth:`~ManimConfig.digest_file` before
+        digesting any other CLI arguments.
+
+        """
         # if a config file has been passed, digest it first so that other CLI
         # flags supersede it
         if args.config_file:
@@ -377,7 +650,7 @@ class ManimConfig(MutableMapping):
                 self.from_animation_number = int(nflag)
 
         # Handle the quality flags
-        self.quality = determine_quality(args)
+        self.quality = _determine_quality(args)
 
         # Handle the -r flag.
         rflag = args.resolution
@@ -409,10 +682,37 @@ class ManimConfig(MutableMapping):
 
         return self
 
-    def digest_dict(self, _dict):
-        pass
-
     def digest_file(self, filename):
+        """Process the config options present in a ``.cfg`` file.
+
+        This method processes a single ``.cfg`` file, whereas
+        :meth:`~ManimConfig.digest_parser` can process arbitrary parsers, built
+        perhaps from multiple ``.cfg`` files.
+
+        Parameters
+        ----------
+        filename : :class:`str`
+            Path to the ``.cfg`` file.
+
+        Returns
+        -------
+        self : :class:`ManimConfig`
+            This object, after processing the contents of ``filename``.
+
+        See Also
+        --------
+        :meth:`~ManimConfig.digest_file`, :meth:`~ManimConfig.digest_args`,
+        :func:`make_config_parser`
+
+        Notes
+        -----
+        If there are multiple ``.cfg`` files to process, it is always more
+        efficient to parse them into a single :class:`ConfigParser` object
+        first and digesting them with one call to
+        :meth:`~ManimConfig.digest_parser`, instead of calling this method
+        multiple times.
+
+        """
         if filename:
             return self.digest_parser(make_config_parser(filename))
 
@@ -420,30 +720,30 @@ class ManimConfig(MutableMapping):
     preview = property(
         lambda self: self._d["preview"],
         lambda self, val: self._set_boolean("preview", val),
-        doc="Whether to play the movie once it is done rendering",
+        doc="Whether to play the rendered movie (-p).",
     )
 
     show_in_file_browser = property(
         lambda self: self._d["show_in_file_browser"],
         lambda self, val: self._set_boolean("show_in_file_browser", val),
-        doc="Whether to show the rendered file in the file browser",
+        doc="Whether to show the output file in the file browser (-f).",
     )
 
     progress_bar = property(
         lambda self: self._d["progress_bar"],
         lambda self, val: self._set_boolean("progress_bar", val),
-        doc="Whether to show progress bars while rendering animations",
+        doc="Whether to show progress bars while rendering animations.",
     )
 
     leave_progress_bars = property(
         lambda self: self._d["leave_progress_bars"],
         lambda self, val: self._set_boolean("leave_progress_bars", val),
-        doc="Whether to leave the progress bar for each animations",
+        doc="Whether to leave the progress bar for each animation.",
     )
 
     @property
     def log_to_file(self):
-        """Whether to save logs to a file"""
+        """Whether to save logs to a file."""
         return self._d["log_to_file"]
 
     @log_to_file.setter
@@ -457,41 +757,42 @@ class ManimConfig(MutableMapping):
     sound = property(
         lambda self: self._d["sound"],
         lambda self, val: self._set_boolean("sound", val),
-        doc="Whether to play a sound to notify when a scene is rendered",
+        doc="Whether to play a sound to notify when a scene is rendered (no flag).",
     )
 
     write_to_movie = property(
         lambda self: self._d["write_to_movie"],
         lambda self, val: self._set_boolean("write_to_movie", val),
-        doc="Whether to render the scene to a movie file",
+        doc="Whether to render the scene to a movie file (-w).",
     )
 
     save_last_frame = property(
         lambda self: self._d["save_last_frame"],
         lambda self, val: self._set_boolean("save_last_frame", val),
-        doc="Whether to save the last frame of the scene as an image file",
+        doc="Whether to save the last frame of the scene as an image file (-s).",
     )
 
     write_all = property(
         lambda self: self._d["write_all"],
         lambda self, val: self._set_boolean("write_all", val),
-        doc="Whether to render all scenes in the input file",
+        doc="Whether to render all scenes in the input file (-a).",
     )
 
     save_pngs = property(
         lambda self: self._d["save_pngs"],
         lambda self, val: self._set_boolean("save_pngs", val),
-        doc="Whether to save all frames in the scene as images files",
+        doc="Whether to save all frames in the scene as images files (-g).",
     )
 
     save_as_gif = property(
         lambda self: self._d["save_as_gif"],
         lambda self, val: self._set_boolean("save_as_gif", val),
-        doc="Whether to save the rendered scene in .gif format.",
+        doc="Whether to save the rendered scene in .gif format (-i).",
     )
 
     @property
     def verbosity(self):
+        """Logger verbosity; "DEBUG", "INFO", "WARNING", "ERROR", or "CRITICAL" (-v)."""
         return self._d["verbosity"]
 
     @verbosity.setter
@@ -509,36 +810,36 @@ class ManimConfig(MutableMapping):
         lambda self, val: self._set_from_list(
             "ffmpeg_loglevel", val, ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         ),
-        doc="Verbosity level of ffmpeg.",
+        doc="Verbosity level of ffmpeg (no flag).",
     )
 
     pixel_width = property(
         lambda self: self._d["pixel_width"],
         lambda self, val: self._set_pos_number("pixel_width", val, False),
-        doc="Frame width in pixels",
+        doc="Frame width in pixels (--resolution, -r).",
     )
 
     pixel_height = property(
         lambda self: self._d["pixel_height"],
         lambda self, val: self._set_pos_number("pixel_height", val, False),
-        doc="Frame height in pixels",
+        doc="Frame height in pixels (--resolution, -r).",
     )
 
     aspect_ratio = property(
         lambda self: self._d["pixel_width"] / self._d["pixel_height"],
-        doc="Aspect ratio (width / height) in pixels",
+        doc="Aspect ratio (width / height) in pixels (--resolution, -r).",
     )
 
     frame_height = property(
         lambda self: self._d["frame_height"],
         lambda self, val: self._d.__setitem__("frame_height", val),
-        doc="Frame height in logical units",
+        doc="Frame height in logical units (no flag).",
     )
 
     frame_width = property(
         lambda self: self._d["frame_width"],
         lambda self, val: self._d.__setitem__("frame_width", val),
-        doc="Frame width in logical units",
+        doc="Frame width in logical units (no flag).",
     )
 
     frame_y_radius = property(
@@ -547,7 +848,7 @@ class ManimConfig(MutableMapping):
             self._d.__setitem__("frame_y_radius", val)
             or self._d.__setitem__("frame_height", 2 * val)
         ),
-        doc="Half the frame height",
+        doc="Half the frame height (no flag).",
     )
 
     frame_x_radius = property(
@@ -556,87 +857,81 @@ class ManimConfig(MutableMapping):
             self._d.__setitem__("frame_x_radius", val)
             or self._d.__setitem__("frame_width", 2 * val)
         ),
-        doc="Half the frame width",
+        doc="Half the frame width (no flag).",
     )
 
     top = property(
         lambda self: self.frame_y_radius * constants.UP,
-        doc="One unit step in the positive vertical direction",
+        doc="Coordinate at the center top of the frame.",
     )
 
     bottom = property(
         lambda self: self.frame_y_radius * constants.DOWN,
-        doc="One unit step in the negative vertical direction",
+        doc="Coordinate at the center bottom of the frame.",
     )
 
     left_side = property(
         lambda self: self.frame_x_radius * constants.LEFT,
-        doc="One unit step in the negative horizontal direction",
+        doc="Coordinate at the middle left of the frame.",
     )
 
     right_side = property(
         lambda self: self.frame_x_radius * constants.RIGHT,
-        doc="One unit step in the positive horizontal direction",
+        doc="Coordinate at the middle right of the frame.",
     )
 
     frame_rate = property(
         lambda self: self._d["frame_rate"],
         lambda self, val: self._d.__setitem__("frame_rate", val),
-        doc="Frame rate in fps (rames per second)",
+        doc="Frame rate in frames per second (-q).",
     )
 
     background_color = property(
         lambda self: self._d["background_color"],
         lambda self, val: self._d.__setitem__("background_color", colour.Color(val)),
-        doc="Background color of the scene.",
+        doc="Background color of the scene (-c).",
     )
 
     from_animation_number = property(
         lambda self: self._d["from_animation_number"],
         lambda self, val: self._d.__setitem__("from_animation_number", val),
-        doc="Set to a number greater than 1 to skip animations.",
+        doc="Start rendering animations at this number (-n).",
     )
 
     upto_animation_number = property(
         lambda self: self._d["upto_animation_number"],
         lambda self, val: self._set_pos_number("upto_animation_number", val, True),
-        doc=(
-            "Set to less than the number of animations to skip "
-            "animations. Use -1 to avoid skipping."
-        ),
+        doc="Stop rendering animations at this nmber.  Use -1 to avoid skipping (-n).",
     )
 
     skip_animations = property(
         lambda self: self._d["skip_animations"],
         lambda self, val: self._set_boolean("skip_animations", val),
-        doc=(
-            "Set to less than the number of animations to skip "
-            "animations. Use -1 to avoid skipping."
-        ),
+        doc="Whether to skip the next animation.  Internal use only.",
     )
 
     max_files_cached = property(
         lambda self: self._d["max_files_cached"],
         lambda self, val: self._set_pos_number("max_files_cached", val, True),
-        doc="Maximum number of files cached. Use -1 for infinity.",
+        doc="Maximum number of files cached.  Use -1 for infinity (no flag).",
     )
 
     flush_cache = property(
         lambda self: self._d["flush_cache"],
         lambda self, val: self._set_boolean("flush_cache", val),
-        doc="whether to delete all the cached partial movie files.",
+        doc="Whether to delete all the cached partial movie files.",
     )
 
     disable_caching = property(
         lambda self: self._d["disable_caching"],
         lambda self, val: self._set_boolean("disable_caching", val),
-        doc="whether to use scene caching.",
+        doc="Whether to use scene caching.",
     )
 
     png_mode = property(
         lambda self: self._d["png_mode"],
         lambda self, val: self._set_from_list("png_mode", val, ["RGB", "RGBA"]),
-        doc="Either RGA (no transparency) or RGBA (with transparency).",
+        doc="Either RGA (no transparency) or RGBA (with transparency) (no flag).",
     )
 
     movie_file_extension = property(
@@ -644,7 +939,7 @@ class ManimConfig(MutableMapping):
         lambda self, val: self._set_from_list(
             "movie_file_extension", val, [".mp4", ".mov"]
         ),
-        doc="Either .mp4 or .mov.",
+        doc="Either .mp4 or .mov (no flag).",
     )
 
     background_opacity = property(
@@ -659,12 +954,12 @@ class ManimConfig(MutableMapping):
             self._d.__setitem__("pixel_width", tup[0])
             or self._d.__setitem__("pixel_height", tup[1])
         ),
-        doc="",
+        doc="Tuple with (pixel width, pixel height) (no flag).",
     )
 
     @property
     def quality(self):
-        """Video quality."""
+        """Video quality (-q)."""
         keys = ["pixel_width", "pixel_height", "frame_rate"]
         q = {k: self[k] for k in keys}
         for qual in constants.QUALITIES:
@@ -683,7 +978,7 @@ class ManimConfig(MutableMapping):
 
     @property
     def transparent(self):
-        """Whether the background opacity is 0.0."""
+        """Whether the background opacity is 0.0 (-t)."""
         return self._d["background_opacity"] == 0.0
 
     @transparent.setter
@@ -726,6 +1021,7 @@ class ManimConfig(MutableMapping):
 
     @property
     def use_js_renderer(self):
+        """Whether to use JS renderer or not (default)."""
         self._d["use_js_renderer"]
 
     @use_js_renderer.setter
@@ -743,10 +1039,119 @@ class ManimConfig(MutableMapping):
     media_dir = property(
         lambda self: self._d["media_dir"],
         lambda self, val: self._set_dir("media_dir", val),
-        doc="Main output directory, relative to execution directory.",
+        doc="Main output directory.  See :meth:`ManimConfig.get_dir`.",
     )
 
     def get_dir(self, key, **kwargs):
+        """Resolve a config option that stores a directory.
+
+        Config options that store directories may depend on one another.  This
+        method is used to provide the actual directory to the end user.
+
+        Parameters
+        ----------
+        key : :class:`str`
+            The config option to be resolved.  Must be an option ending in
+            ``'_dir'``, for example ``'media_dir'`` or ``'video_dir'``.
+
+        kwargs : :class:`str`
+            Any strings to be used when resolving the directory.
+
+        Returns
+        -------
+        :class:`pathlib.Path`
+            Path to the requested directory.  If the path resolves to the empty
+            string, return ``None`` instead.
+
+        Raises
+        ------
+        :class:`KeyError`
+            When ``key`` is not a config option that stores a directory and
+            thus :meth:`~ManimConfig.get_dir` is not appropriate; or when
+            ``key`` is appropriate but there is not enough information to
+            resolve the directory.
+
+        Notes
+        -----
+        Standard :meth:`str.format` syntax is used to resolve the paths so the
+        paths may contain arbitrary placeholders using f-string notation.
+        However, these will require ``kwargs`` to contain the required values.
+
+        Examples
+        --------
+
+        The value of ``config.tex_dir`` is ``'{media_dir}/Tex'`` by default,
+        i.e. it is a subfolder of wherever ``config.media_dir`` is located.  In
+        order to get the *actual* directory, use :meth:`~ManimConfig.get_dir`.
+
+        .. code-block:: python
+
+            >>> from manim import config
+            >>> config.tex_dir
+            '{media_dir}/Tex'
+            >>> config.media_dir
+            './media'
+            >>> config.get_dir("tex_dir").as_posix()
+            'media/Tex'
+
+        Resolving directories is done in a lazy way, at the last possible
+        moment, to reflect any changes in other config options:
+
+        .. code-block:: python
+
+            >>> config.media_dir = 'my_media_dir'
+            >>> config.get_dir("tex_dir").as_posix()
+            'my_media_dir/Tex'
+
+        Some directories depend on information that is not available to
+        :class:`ManimConfig`. For example, the default value of `video_dir`
+        includes the name of the input file and the video quality
+        (e.g. 480p15). This informamtion has to be supplied via ``kwargs``:
+
+        .. code-block:: python
+
+            >>> config.video_dir
+            '{media_dir}/videos/{module_name}/{quality}'
+            >>> config.get_dir("video_dir")
+            Traceback (most recent call last):
+            KeyError: 'video_dir {media_dir}/videos/{module_name}/{quality} requires the following keyword arguments: module_name'
+            >>> config.get_dir("video_dir", module_name="myfile").as_posix()
+            'my_media_dir/videos/myfile/1080p60'
+
+        Note the quality does not need to be passed as keyword argument since
+        :class:`ManimConfig` does store information about quality.
+
+        Directories may be recursively defined.  For example, the config option
+        ``partial_movie_dir`` depends on ``video_dir``, which in turn depends
+        on ``media_dir``:
+
+        .. code-block:: python
+
+            >>> config.partial_movie_dir
+            '{video_dir}/partial_movie_files/{scene_name}'
+            >>> config.get_dir("partial_movie_dir")
+            Traceback (most recent call last):
+            KeyError: 'partial_movie_dir {video_dir}/partial_movie_files/{scene_name} requires the following keyword arguments: scene_name'
+            >>> config.get_dir("partial_movie_dir", module_name="myfile", scene_name="myscene").as_posix()
+            'my_media_dir/videos/myfile/1080p60/partial_movie_files/myscene'
+
+        Standard f-string syntax is used.  Arbitrary names can be used when
+        defining directories, as long as the corresponding values are passed to
+        :meth:`ManimConfig.get_dir` via ``kwargs``.
+
+        .. code-block:: python
+
+            >>> config.media_dir = "{dir1}/{dir2}"
+            >>> config.get_dir("media_dir")
+            Traceback (most recent call last):
+            KeyError: 'media_dir {dir1}/{dir2} requires the following keyword arguments: dir1'
+            >>> config.get_dir("media_dir", dir1='foo', dir2='bar').as_posix()
+            'foo/bar'
+            >>> config.media_dir = "./media"
+            >>> config.get_dir("media_dir").as_posix()
+            'media'
+
+        """
         dirs = [
             "media_dir",
             "video_dir",
@@ -793,43 +1198,43 @@ class ManimConfig(MutableMapping):
     log_dir = property(
         lambda self: self._d["log_dir"],
         lambda self, val: self._set_dir("log_dir", val),
-        doc="Directory to place logs",
+        doc="Directory to place logs.  See :meth:`ManimConfig.get_dir`.",
     )
 
     video_dir = property(
         lambda self: self._d["video_dir"],
         lambda self, val: self._set_dir("video_dir", val),
-        doc="Directory to place videos",
+        doc="Directory to place videos (no flag).  See :meth:`ManimConfig.get_dir`.",
     )
 
     images_dir = property(
         lambda self: self._d["images_dir"],
         lambda self, val: self._set_dir("images_dir", val),
-        doc="Directory to place images",
+        doc="Directory to place images (no flag).  See :meth:`ManimConfig.get_dir`.",
     )
 
     text_dir = property(
         lambda self: self._d["text_dir"],
         lambda self, val: self._set_dir("text_dir", val),
-        doc="Directory to place text",
+        doc="Directory to place text (no flag).  See :meth:`ManimConfig.get_dir`.",
     )
 
     tex_dir = property(
         lambda self: self._d["tex_dir"],
         lambda self, val: self._set_dir("tex_dir", val),
-        doc="Directory to place tex",
+        doc="Directory to place tex (no flag).  See :meth:`ManimConfig.get_dir`.",
     )
 
     partial_movie_dir = property(
         lambda self: self._d["partial_movie_dir"],
         lambda self, val: self._set_dir("partial_movie_dir", val),
-        doc="Directory to place partial movie files",
+        doc="Directory to place partial movie files (no flag).  See :meth:`ManimConfig.get_dir`.",
     )
 
     custom_folders = property(
         lambda self: self._d["custom_folders"],
         lambda self, val: self._set_boolean("custom_folders", val),
-        doc="Whether to use custom folders.",
+        doc="Whether to use custom folder output.",
     )
 
     input_file = property(
@@ -841,7 +1246,7 @@ class ManimConfig(MutableMapping):
     output_file = property(
         lambda self: self._d["output_file"],
         lambda self, val: self._set_dir("output_file", val),
-        doc="Output file name.",
+        doc="Output file name (-o).",
     )
 
     scene_names = property(
@@ -852,6 +1257,7 @@ class ManimConfig(MutableMapping):
 
     @property
     def tex_template(self):
+        """Template used when rendering Tex.  See :class:`.TexTemplate`."""
         if not hasattr(self, "_tex_template") or not self._tex_template:
             fn = self._d["tex_template_file"]
             if fn:
@@ -867,6 +1273,7 @@ class ManimConfig(MutableMapping):
 
     @property
     def tex_template_file(self):
+        """File to read Tex template from (no flag).  See :class:`.TexTemplateFromFile`."""
         return self._d["tex_template_file"]
 
     @tex_template_file.setter

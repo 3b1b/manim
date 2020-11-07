@@ -1,4 +1,4 @@
-from ...config import config
+from ... import config
 from ...scene import scene
 from ..gen import frameserver_pb2
 from ..gen import frameserver_pb2_grpc

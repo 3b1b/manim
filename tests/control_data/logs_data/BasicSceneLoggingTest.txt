@@ -1,4 +1,4 @@
-{"levelname": "INFO", "module": "logger", "message": "Log file will be saved in <>"}
+{"levelname": "INFO", "module": "logger_utils", "message": "Log file will be saved in <>"}
 {"levelname": "DEBUG", "module": "hashing", "message": "Hashing ..."}
 {"levelname": "DEBUG", "module": "hashing", "message": "Hashing done in <> s."}
 {"levelname": "DEBUG", "module": "hashing", "message": "Hash generated :  <>"}
