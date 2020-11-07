@@ -27,8 +27,7 @@ class AbstractImageMobject(Mobject):
     ----------
     scale_to_resolution : :class:`int`
         At this resolution the image is placed pixel by pixel onto the screen, so it will look the sharpest and best.
-        This is a custom parameter of ImageMobject so that rendering a scene with the `--quality low` flag for faster rendering and testing won't effect the position of the image on the screen.
-        Calculated by `height = image_height / scale_to_resolution * config["frame_height"]`
+        This is a custom parameter of ImageMobject so that rendering a scene with e.g. the ``--quality low`` or ``--quality medium`` flag for faster rendering won't effect the position of the image on the screen.
     """
 
     CONFIG = {
@@ -74,8 +73,7 @@ class ImageMobject(AbstractImageMobject):
         ----------
         scale_to_resolution : :class:`int`
             At this resolution the image is placed pixel by pixel onto the screen, so it will look the sharpest and best.
-            This is a custom parameter of ImageMobject so that rendering a scene with the `--quality low` flag for faster rendering and testing won't effect the position of the image on the screen.
-            Calculated by `height = image_height / scale_to_resolution * config["frame_height"]`
+            This is a custom parameter of ImageMobject so that rendering a scene with e.g. the ``--quality low`` or ``--quality medium`` flag for faster rendering won't effect the position of the image on the screen.
 
 
 
