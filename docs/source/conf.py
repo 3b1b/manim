@@ -56,6 +56,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.autosummary",
     "sphinx.ext.doctest",
+    "sphinx.ext.extlinks",
     "sphinxext.opengraph",
     "manim_directive",
 ]
@@ -102,6 +103,12 @@ html_static_path = ["_static"]
 
 # This specifies any additional css files that will override the theme's
 html_css_files = ["custom.css"]
+
+# external links
+extlinks = {
+    "issue": ("https://github.com/ManimCommunity/manim/issues/%s", "issue "),
+    "pr": ("https://github.com/ManimCommunity/manim/pull/%s", "pull request "),
+}
 
 # opengraph settings
 ogp_image = "https://www.manim.community/logo.png"

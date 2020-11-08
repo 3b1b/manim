@@ -20,6 +20,11 @@ Configuration
    Configuration tutorial for details.
 
 
+Documentation
+^^^^^^^^^^^^^
+
+#. Add ``:issue:`` and ``:pr:`` directives for simplifying linking to issues and
+   pull requests on GitHub (via :pr:`685`).
 
 
 Mobjects, Scenes, and Animations
