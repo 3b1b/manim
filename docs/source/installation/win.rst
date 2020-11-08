@@ -8,19 +8,15 @@ instructions.
 Installing using Chocolatey
 ***************************
 
-.. important:: This is an outdated version. We are currently not able to update this package, though we are working on it. Please use other installation methods until
-               this problem is fixed. More inforation about this problem 
-               is on _`this chat 
-               <https://discord.com/channels/581738731934056449/581738732646957057/768900904887123988>`_.
-
 You can install manim very easily using chocolatey, by typing the following command.
 
 .. code-block:: powershell
 
-      choco install manim
+      choco install manimce
 
 
 And then you can skip all the other steps and move to installing :ref:`latex-installation`.
+Please see :ref:`troubleshooting` section for details about OSError.
 
 Pango Installation
 ******************
