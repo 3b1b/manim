@@ -800,6 +800,9 @@ class Scene(Container):
             self.add_static_frames(animations[0].duration)
             return
 
+        for animation in animations:
+            animation.begin()
+
         moving_mobjects = None
         static_mobjects = None
         duration = None
@@ -822,9 +825,6 @@ class Scene(Container):
             self.renderer.update_frame(self, mobjects=stationary_mobjects)
             self.static_image = self.renderer.get_frame()
             time_progression = self.get_animation_time_progression(animations)
-
-        for animation in animations:
-            animation.begin()
 
         last_t = 0
         for t in time_progression:
