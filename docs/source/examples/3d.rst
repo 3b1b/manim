@@ -1,8 +1,10 @@
 
 3D Scenes
 =================================
+
 .. manim:: FixedInFrameMObjectTest
     :save_last_frame:
+    
     class FixedInFrameMObjectTest(ThreeDScene):
         def construct(self):
             axes = ThreeDAxes()
