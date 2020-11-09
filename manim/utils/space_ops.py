@@ -252,3 +252,31 @@ def get_winding_number(points):
         d_angle = ((d_angle + PI) % TAU) - PI
         total_angle += d_angle
     return total_angle / TAU
+
+
+def shoelace(x_y):
+    """2D implementation of the shoelace formula.
+
+    Returns
+    -------
+    :class:`float`
+        Returns signed area.
+    """
+    x = x_y[:, 0]
+    y = x_y[:, 1]
+    area = 0.5 * np.array(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
+    return area
+
+
+def shoelace_direction(x_y):
+    """
+    Uses the area determined by the shoelace method to determine whether
+    the input set of points is directed clockwise or counterclockwise.
+
+    Returns
+    -------
+    :class:`str`
+        Either ``"CW"`` or ``"CCW"``.
+    """
+    area = shoelace(x_y)
+    return "CW" if area > 0 else "CCW"

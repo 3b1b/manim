@@ -30,6 +30,7 @@ from ...utils.iterables import tuplify
 from ...utils.simple_functions import clip_in_place
 from ...utils.space_ops import rotate_vector
 from ...utils.space_ops import get_norm
+from ...utils.space_ops import shoelace_direction
 
 # TODO
 # - Change cubic curve groups to have 4 points instead of 3
@@ -878,6 +879,68 @@ class VMobject(Mobject):
         vmob = self.copy()
         vmob.pointwise_become_partial(self, a, b)
         return vmob
+
+    def get_direction(self):
+        """Uses :func:`~.space_ops.shoelace_direction` to calculate the direction.
+        The direction of points determines in which direction the
+        object is drawn, clockwise or counterclockwise.
+
+        Examples
+        --------
+        The default direction of a :class:`~.Circle` is counterclockwise::
+
+        >>> from manim import Circle
+        >>> Circle().get_direction()
+        'CCW'
+
+        Returns
+        -------
+        :class:`str`
+            Either `"CW"` or `"CCW"`.
+        """
+        return shoelace_direction(self.get_start_anchors())
+
+    def reverse_direction(self):
+        """Reverts the point direction by inverting the point order.
+
+        Returns
+        -------
+        :class:`VMobject`
+            Returns self.
+
+        Examples
+        --------
+        .. manim:: ChangeOfDirection
+
+            class ChangeOfDirection(Scene):
+                def construct(self):
+                    ccw = RegularPolygon(5)
+                    ccw.shift(LEFT).rotate
+                    cw = RegularPolygon(5)
+                    cw.shift(RIGHT).reverse_direction()
+
+                    self.play(ShowCreation(ccw), ShowCreation(cw),
+                    run_time=4)
+        """
+        self.points = self.points[::-1]
+        return self
+
+    def force_direction(self, target_direction):
+        """Makes sure that points are either directed clockwise or
+        counterclockwise.
+
+        Parameters
+        ----------
+        target_direction : :class:`str`
+            Either ``"CW"`` or ``"CCW"``.
+        """
+        if target_direction not in ("CW", "CCW"):
+            raise ValueError('Invalid input for force_direction. Use "CW" or "CCW"')
+        if self.get_direction() != target_direction:
+            # Since we already assured the input is CW or CCW,
+            # and the directions don't match, we just reverse
+            self.reverse_direction()
+            return self
 
 
 class VGroup(VMobject):
