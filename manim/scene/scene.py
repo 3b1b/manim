@@ -123,21 +123,6 @@ class Scene(Container):
     def __str__(self):
         return self.__class__.__name__
 
-    def set_variables_as_attrs(self, *objects, **newly_named_objects):
-        """
-        This method is slightly hacky, making it a little easier
-        for certain methods (typically subroutines of construct)
-        to share local variables.
-        """
-        caller_locals = inspect.currentframe().f_back.f_locals
-        for key, value in list(caller_locals.items()):
-            for o in objects:
-                if value is o:
-                    setattr(self, key, value)
-        for key, value in list(newly_named_objects.items()):
-            setattr(self, key, value)
-        return self
-
     def get_attrs(self, *keys):
         """
         Gets attributes of a scene given the attribute's identifier/name.
