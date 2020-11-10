@@ -1,3 +1,5 @@
+"""A camera supporting multiple perspectives."""
+
 __all__ = ["MultiCamera"]
 
 
@@ -12,7 +14,9 @@ class MultiCamera(MovingCamera):
         "allow_cameras_to_capture_their_own_display": False,
     }
 
-    def __init__(self, *image_mobjects_from_cameras, **kwargs):
+    def __init__(
+        self, video_quality_config, image_mobjects_from_cameras=None, **kwargs
+    ):
         """Initalises the MultiCamera
 
         Parameters:
@@ -23,9 +27,10 @@ class MultiCamera(MovingCamera):
             Any valid keyword arguments of MovingCamera.
         """
         self.image_mobjects_from_cameras = []
-        for imfc in image_mobjects_from_cameras:
-            self.add_image_mobject_from_camera(imfc)
-        MovingCamera.__init__(self, **kwargs)
+        if image_mobjects_from_cameras is not None:
+            for imfc in image_mobjects_from_cameras:
+                self.add_image_mobject_from_camera(imfc)
+        MovingCamera.__init__(self, video_quality_config, **kwargs)
 
     def add_image_mobject_from_camera(self, image_mobject_from_camera):
         """Adds an ImageMobject that's been obtained from the camera

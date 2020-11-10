@@ -1,0 +1,147 @@
+
+3D Scenes
+=================================
+
+.. manim:: FixedInFrameMObjectTest
+    :save_last_frame:
+    
+    class FixedInFrameMObjectTest(ThreeDScene):
+        def construct(self):
+            axes = ThreeDAxes()
+            self.set_camera_orientation(phi=75 * DEGREES, theta=-45 * DEGREES)
+            text3d = Text("This is a 3D text")
+            self.add_fixed_in_frame_mobjects(text3d)
+            text3d.to_corner(UL)
+            self.add(axes)
+            self.wait()
+
+
+.. manim:: ThreeDSphere
+    :save_last_frame:
+
+    class ThreeDSphere(ThreeDScene):
+        def construct(self):
+            axes = ThreeDAxes()
+            sphere = ParametricSurface(
+                lambda u, v: np.array([
+                    1.5 * np.cos(u) * np.cos(v),
+                    1.5 * np.cos(u) * np.sin(v),
+                    1.5 * np.sin(u)
+                ]), v_min=0, v_max=TAU, u_min=-PI / 2, u_max=PI / 2,
+                checkerboard_colors=[RED_D, RED_E], resolution=(15, 32)
+            )
+            self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+            self.add(axes, sphere)
+
+.. manim:: ThreeDLightSourcePosition
+    :save_last_frame:
+
+    class ThreeDLightSourcePosition(ThreeDScene):
+        def construct(self):
+            axes = ThreeDAxes()
+            sphere = ParametricSurface(
+                lambda u, v: np.array([
+                    1.5 * np.cos(u) * np.cos(v),
+                    1.5 * np.cos(u) * np.sin(v),
+                    1.5 * np.sin(u)
+                ]), v_min=0, v_max=TAU, u_min=-PI / 2, u_max=PI / 2,
+                checkerboard_colors=[RED_D, RED_E], resolution=(15, 32)
+            )
+            self.renderer.camera.light_source.move_to(3*IN) # changes the source of the light
+            self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+            self.add(axes, sphere)
+
+.. manim:: ThreeDCameraRotation
+
+    class ThreeDCameraRotation(ThreeDScene):
+        def construct(self):
+            axes = ThreeDAxes()
+            circle=Circle()
+            self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+            self.add(circle,axes)
+            self.begin_ambient_camera_rotation(rate=0.1)
+            self.wait(3)
+            self.stop_ambient_camera_rotation()
+            self.move_camera(phi=75 * DEGREES, theta=30 * DEGREES)
+            self.wait()
+
+.. manim:: ThreeDCameraIllusionRotation
+
+    class ThreeDCameraIllusionRotation(ThreeDScene):
+        def construct(self):
+            axes = ThreeDAxes()
+            circle=Circle()
+            self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+            self.add(circle,axes)
+            self.begin_3dillusion_camera_rotation(rate=2)
+            self.wait(PI)
+            self.stop_3dillusion_camera_rotation()
+
+.. manim:: ThreeDParametricSpring
+    :save_last_frame:
+
+    class ThreeDParametricSpring(ThreeDScene):
+        def construct(self):
+            curve1 = ParametricFunction(
+                lambda u: np.array([
+                    1.2 * np.cos(u),
+                    1.2 * np.sin(u),
+                    u * 0.05
+                ]), color=RED, t_min=-3 * TAU, t_max=5 * TAU,
+            ).set_shade_in_3d(True)
+            axes = ThreeDAxes()
+            self.add(axes, curve1)
+            self.set_camera_orientation(phi=80 * DEGREES, theta=-60 * DEGREES)
+            self.wait()
+
+.. manim:: ThreeDFunctionPlot
+    
+    class ThreeDFunctionPlot(ThreeDScene):
+        def construct(self):
+            resolution_fa = 22
+            self.set_camera_orientation(phi=75 * DEGREES, theta=-30 * DEGREES)
+
+            def param_plane(u, v):
+                x = u
+                y = v
+                z = 0
+                return np.array([x, y, z])
+
+            plane = ParametricSurface(
+                param_plane,
+                resolution=(resolution_fa, resolution_fa),
+                v_min=-2,
+                v_max=+2,
+                u_min=-2,
+                u_max=+2,
+            )
+            plane.scale_about_point(2, ORIGIN)
+
+            def param_gauss(u, v):
+                x = u
+                y = v
+                d = np.sqrt(x * x + y * y)
+                sigma, mu = 0.4, 0.0
+                z = np.exp(-((d - mu) ** 2 / (2.0 * sigma ** 2)))
+                return np.array([x, y, z])
+
+            gauss_plane = ParametricSurface(
+                param_gauss,
+                resolution=(resolution_fa, resolution_fa),
+                v_min=-2,
+                v_max=+2,
+                u_min=-2,
+                u_max=+2,
+            )
+
+            gauss_plane.scale_about_point(2, ORIGIN)
+            gauss_plane.set_style(fill_opacity=1)
+            gauss_plane.set_style(stroke_color=GREEN)
+            gauss_plane.set_fill_by_checkerboard(GREEN, BLUE, opacity=0.1)
+
+            axes = ThreeDAxes()
+
+            self.add(axes)
+            self.play(Write(plane))
+            self.play(Transform(plane, gauss_plane))
+            self.wait()

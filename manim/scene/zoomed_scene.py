@@ -1,3 +1,5 @@
+"""A scene supporting zooming in on a specified section."""
+
 __all__ = ["ZoomedScene"]
 
 
@@ -45,7 +47,7 @@ class ZoomedScene(MovingCameraScene):
         """
         MovingCameraScene.setup(self)
         # Initialize camera and display
-        zoomed_camera = MovingCamera(**self.zoomed_camera_config)
+        zoomed_camera = MovingCamera({}, **self.zoomed_camera_config)
         zoomed_display = ImageMobjectFromCamera(
             zoomed_camera, **self.zoomed_camera_image_mobject_config
         )
@@ -79,12 +81,13 @@ class ZoomedScene(MovingCameraScene):
             of the zoomed camera.
         """
         self.zoom_activated = True
-        self.camera.add_image_mobject_from_camera(self.zoomed_display)
+        self.renderer.camera.add_image_mobject_from_camera(self.zoomed_display)
         if animate:
             self.play(self.get_zoom_in_animation())
             self.play(self.get_zoomed_display_pop_out_animation())
         self.add_foreground_mobjects(
-            self.zoomed_camera.frame, self.zoomed_display,
+            self.zoomed_camera.frame,
+            self.zoomed_display,
         )
 
     def get_zoom_in_animation(self, run_time=2, **kwargs):
@@ -125,7 +128,7 @@ class ZoomedScene(MovingCameraScene):
             The Animation of the Zoomed Display popping out.
         """
         display = self.zoomed_display
-        display.save_state(use_deepcopy=True)
+        display.save_state()
         display.replace(self.zoomed_camera.frame, stretch=True)
         return ApplyMethod(display.restore)
 

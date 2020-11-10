@@ -1,3 +1,5 @@
+"""A scene for plotting / graphing functions."""
+
 __all__ = ["GraphScene"]
 
 
@@ -19,7 +21,7 @@ from ..mobject.types.vectorized_mobject import VGroup
 from ..mobject.types.vectorized_mobject import VectorizedPoint
 from ..scene.scene import Scene
 from ..utils.bezier import interpolate
-from ..utils.color import color_gradient
+from ..utils.color import color_gradient, GREY, BLUE, GREEN, YELLOW, BLACK, WHITE
 from ..utils.color import invert_color
 from ..utils.space_ops import angle_of_vector
 
@@ -115,11 +117,10 @@ class GraphScene(Scene):
         if self.x_axis_label:
             x_label = Tex(self.x_axis_label)
             x_label.next_to(
-                x_axis.get_tips() if self.include_tip else x_axis.get_tick_marks(),
+                x_axis.get_corner(self.x_label_position),
                 self.x_label_position,
                 buff=SMALL_BUFF,
             )
-            x_label.shift_onto_screen()
             x_axis.add(x_label)
             self.x_axis_label_mob = x_label
 
@@ -162,7 +163,6 @@ class GraphScene(Scene):
                 self.y_label_position,
                 buff=SMALL_BUFF,
             )
-            y_label.shift_onto_screen()
             y_axis.add(y_label)
             self.y_axis_label_mob = y_label
 
@@ -518,7 +518,7 @@ class GraphScene(Scene):
             elif input_sample_type == "center":
                 sample_input = x + 0.5 * dx
             else:
-                raise Exception("Invalid input sample type")
+                raise ValueError("Invalid input sample type")
             graph_point = self.input_to_graph_point(sample_input, graph)
             if bounded_graph == None:
                 y_point = 0
@@ -787,17 +787,13 @@ class GraphScene(Scene):
         secant_line_length : int, float, optional
             How long the secant line should be.
 
-        Returns:
-        --------
-        VGroup
-            Resulting group is of the form VGroup(
-                dx_line,
-                df_line,
-                dx_label, (if applicable)
-                df_label, (if applicable)
-                secant_line, (if applicable)
-            )
-            with attributes of those names.
+
+        Returns
+        -------
+        :class:`.VGroup`
+            A group containing the elements ``dx_line``, ``df_line``, and
+            if applicable also ``dx_label``, ``df_label``, ``secant_line``.
+
         """
         kwargs = locals()
         kwargs.pop("self")
@@ -859,12 +855,18 @@ class GraphScene(Scene):
     def add_T_label(
         self, x_val, side=RIGHT, label=None, color=WHITE, animated=False, **kwargs
     ):
-        """
+        """Create a triangle marker with a vertical line from the x-axis
+        to ``self.v_graph`` at the given x coordinate ``x_val``.
+
         This method adds to the Scene:
-            -- a Vertical line from the x-axis to the corresponding point on the graph/curve.
-            -- a small vertical Triangle whose top point lies on the base of the vertical line
-            -- a MathTex to be a label for the Line and Triangle, at the bottom of the Triangle.
-        The scene needs to have the graph have the identifier/variable name self.v_graph.
+
+        - a Vertical line from the x-axis to the corresponding point on the graph/curve.
+        - a small vertical Triangle whose top point lies on the base of the vertical line
+        - a MathTex to be a label for the Line and Triangle, at the bottom of
+          the Triangle.
+
+        The scene needs to have the graph have the identifier/variable
+        name ``self.v_graph``.
 
         Parameters
         ----------
@@ -872,7 +874,7 @@ class GraphScene(Scene):
             The x value at which the secant enters, and intersects
             the graph for the first time.
 
-        side np.array(), optional
+        side : np.array(), optional
 
         label : str, optional
             The label to give the vertline and triangle
@@ -1023,7 +1025,7 @@ class GraphScene(Scene):
         NOTE: At least one of target_dx and target_x should be not None.
         """
         if target_dx is None and target_x is None:
-            raise Exception("At least one of target_x and target_dx must not be None")
+            raise ValueError("At least one of target_x and target_dx must not be None")
         if added_anims is None:
             added_anims = []
 

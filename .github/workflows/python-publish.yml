@@ -1,0 +1,51 @@
+name: Publish Release
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: python -m pip install --upgrade poetry
+
+    # TODO: Set PYPI_API_TOKEN to api token from pip in secrets
+    - name: Configure pypi credentials
+      env:
+        PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+      run: poetry config http-basic.pypi __token__ "$PYPI_API_TOKEN"
+
+    - name: Publish release to pypi
+      run: poetry publish --build
+
+    - name: Get Upload URL
+      id: create_release
+      shell: bash
+      env:
+        access_token: ${{ secrets.GITHUB_TOKEN }}
+        tag_act: ${{ github.ref }}
+      run: |
+          ref_tag=$(python -c "print('${tag_act}'.split('/')[-1])")
+          res=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${access_token}" https://api.github.com/repos/ManimCommunity/manim/releases/tags/${ref_tag})
+          upload_url=$(python -c "import json;print(json.loads('''${res}''')['upload_url'])")
+          echo "::set-output name=upload_url::${upload_url}"
+
+    - name: Upload Release Asset
+      id: upload-release
+      uses: actions/upload-release-asset@v1
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: dist/*.tar.gz
+          asset_name: manimce-${{ steps.tag.outputs.tag }}.tar.gz
+          asset_content_type: application/gzip

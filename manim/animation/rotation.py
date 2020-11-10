@@ -1,3 +1,5 @@
+"""Animations related to rotation."""
+
 __all__ = ["Rotating", "Rotate"]
 
 

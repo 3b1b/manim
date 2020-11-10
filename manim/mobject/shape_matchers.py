@@ -1,3 +1,5 @@
+"""Mobjects used to mark and annotate other mobjects."""
+
 __all__ = ["SurroundingRectangle", "BackgroundRectangle", "Cross", "Underline"]
 
 
@@ -6,7 +8,7 @@ from ..mobject.geometry import Line
 from ..mobject.geometry import Rectangle
 from ..mobject.types.vectorized_mobject import VGroup
 from ..mobject.types.vectorized_mobject import VMobject
-from ..utils.color import Color
+from ..utils.color import Color, YELLOW, BLACK, RED
 from ..utils.config_ops import digest_config
 
 
@@ -41,7 +43,7 @@ class BackgroundRectangle(SurroundingRectangle):
         self.set_fill(opacity=b * self.original_fill_opacity)
         return self
 
-    def set_style_data(
+    def set_style(
         self,
         stroke_color=None,
         stroke_width=None,
@@ -50,7 +52,7 @@ class BackgroundRectangle(SurroundingRectangle):
         family=True,
     ):
         # Unchangable style, except for fill_opacity
-        VMobject.set_style_data(
+        VMobject.set_style(
             self,
             stroke_color=BLACK,
             stroke_width=0,
@@ -71,7 +73,9 @@ class Cross(VGroup):
 
     def __init__(self, mobject, **kwargs):
         VGroup.__init__(
-            self, Line(UP + LEFT, DOWN + RIGHT), Line(UP + RIGHT, DOWN + LEFT),
+            self,
+            Line(UP + LEFT, DOWN + RIGHT),
+            Line(UP + RIGHT, DOWN + LEFT),
         )
         self.replace(mobject, stretch=True)
         self.set_stroke(self.stroke_color, self.stroke_width)

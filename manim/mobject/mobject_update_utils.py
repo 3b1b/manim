@@ -1,3 +1,5 @@
+"""Utility functions for continuous animation of mobjects."""
+
 __all__ = [
     "assert_is_mobject_method",
     "always",

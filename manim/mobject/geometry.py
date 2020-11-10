@@ -1,6 +1,5 @@
 """Mobjects that are simple geometric shapes."""
 
-
 __all__ = [
     "TipableVMobject",
     "Arc",
@@ -9,6 +8,8 @@ __all__ = [
     "CurvedDoubleArrow",
     "Circle",
     "Dot",
+    "AnnotationDot",
+    "LabeledDot",
     "SmallDot",
     "Ellipse",
     "AnnularSector",
@@ -31,7 +32,6 @@ __all__ = [
     "RoundedRectangle",
 ]
 
-
 import warnings
 import numpy as np
 import math
@@ -52,7 +52,7 @@ from ..utils.space_ops import line_intersection
 from ..utils.space_ops import get_norm
 from ..utils.space_ops import normalize
 from ..utils.space_ops import rotate_vector
-
+from ..utils.color import *
 
 DEFAULT_DOT_RADIUS = 0.08
 DEFAULT_SMALL_DOT_RADIUS = 0.04
@@ -150,10 +150,7 @@ class TipableVMobject(VMobject):
         if at_start:
             self.put_start_and_end_on(tip.base, self.get_end())
         else:
-            self.put_start_and_end_on(
-                self.get_start(),
-                tip.base,
-            )
+            self.put_start_and_end_on(self.get_start(), tip.base)
         return self
 
     def asign_tip_attr(self, tip, at_start):
@@ -233,6 +230,8 @@ class TipableVMobject(VMobject):
 
 
 class Arc(TipableVMobject):
+    """A circular arc."""
+
     CONFIG = {
         "radius": 1.0,
         "num_components": 9,
@@ -256,9 +255,7 @@ class Arc(TipableVMobject):
             [
                 np.cos(a) * RIGHT + np.sin(a) * UP
                 for a in np.linspace(
-                    self.start_angle,
-                    self.start_angle + self.angle,
-                    self.num_components,
+                    self.start_angle, self.start_angle + self.angle, self.num_components
                 )
             ]
         )
@@ -272,12 +269,7 @@ class Arc(TipableVMobject):
         # Use tangent vectors to deduce anchors
         handles1 = anchors[:-1] + (d_theta / 3) * tangent_vectors[:-1]
         handles2 = anchors[1:] - (d_theta / 3) * tangent_vectors[1:]
-        self.set_anchors_and_handles(
-            anchors[:-1],
-            handles1,
-            handles2,
-            anchors[1:],
-        )
+        self.set_anchors_and_handles(anchors[:-1], handles1, handles2, anchors[1:])
 
     def get_arc_center(self, warning=True):
         """
@@ -286,6 +278,12 @@ class Arc(TipableVMobject):
         """
         # First two anchors and handles
         a1, h1, h2, a2 = self.points[:4]
+
+        if np.all(a1 == a2):
+            # For a1 and a2 to lie at the same point arc radius
+            # must be zero. Thus arc_center will also lie at
+            # that point.
+            return a1
         # Tangent vectors
         t1 = h1 - a1
         t2 = h2 - a2
@@ -293,10 +291,7 @@ class Arc(TipableVMobject):
         n1 = rotate_vector(t1, TAU / 4)
         n2 = rotate_vector(t2, TAU / 4)
         try:
-            return line_intersection(
-                line1=(a1, a1 + n1),
-                line2=(a2, a2 + n2),
-            )
+            return line_intersection(line1=(a1, a1 + n1), line2=(a2, a2 + n2))
         except Exception:
             if warning:
                 warnings.warn("Can't find Arc center, using ORIGIN instead")
@@ -333,11 +328,7 @@ class ArcBetweenPoints(Arc):
             arc_height = radius - math.sqrt(radius ** 2 - halfdist ** 2)
             angle = math.acos((radius - arc_height) / radius) * sign
 
-        Arc.__init__(
-            self,
-            angle=angle,
-            **kwargs,
-        )
+        Arc.__init__(self, angle=angle, **kwargs)
         if angle == 0:
             self.set_points_as_corners([LEFT, RIGHT])
         self.put_start_and_end_on(start, end)
@@ -402,9 +393,77 @@ class Dot(Circle):
 
 
 class SmallDot(Dot):
+    """
+    A dot with small radius
+    """
+
+    CONFIG = {"radius": DEFAULT_SMALL_DOT_RADIUS}
+
+
+class AnnotationDot(Dot):
+    """
+    A dot with bigger radius and bold stroke to annotate scenes.
+    """
+
     CONFIG = {
-        "radius": DEFAULT_SMALL_DOT_RADIUS,
+        "radius": DEFAULT_DOT_RADIUS * 1.3,
+        "stroke_width": 5,
+        "stroke_color": WHITE,
+        "fill_color": BLUE,
     }
+
+
+class LabeledDot(Dot):
+    """A :class:`Dot` containing a label in its center.
+
+    Parameters
+    ----------
+    label : Union[:class:`str`, :class:`~.SingleStringMathTex`, :class:`~.Text`, :class:`~.Tex`]
+        The label of the :class:`Dot`. This is rendered as :class:`~.MathTex`
+        by default (i.e., when passing a :class:`str`), but other classes
+        representing rendered strings like :class:`~.Text` or :class:`~.Tex`
+        can be passed as well.
+
+    radius : :class:`float`
+        The radius of the :class:`Dot`. If ``None`` (the default), the radius
+        is calculated based on the size of the ``label``.
+
+    Examples
+    --------
+
+    .. manim:: SeveralLabeledDots
+        :save_last_frame:
+
+        class SeveralLabeledDots(Scene):
+            def construct(self):
+                sq = Square(fill_color=RED, fill_opacity=1)
+                self.add(sq)
+                dot1 = LabeledDot(Tex("42", color=RED))
+                dot2 = LabeledDot(MathTex("a", color=GREEN))
+                dot3 = LabeledDot(Text("ii", color=BLUE))
+                dot4 = LabeledDot("3")
+                dot1.next_to(sq, UL)
+                dot2.next_to(sq, UR)
+                dot3.next_to(sq, DL)
+                dot4.next_to(sq, DR)
+                self.add(dot1, dot2, dot3, dot4)
+    """
+
+    def __init__(self, label, radius=None, **kwargs) -> None:
+        if isinstance(label, str):
+            from manim import MathTex
+
+            rendered_label = MathTex(label, color=BLACK)
+        else:
+            rendered_label = label
+
+        if radius is None:
+            radius = (
+                0.1 + max(rendered_label.get_width(), rendered_label.get_height()) / 2
+            )
+        Dot.__init__(self, radius=radius, **kwargs)
+        rendered_label.move_to(self.get_center())
+        self.add(rendered_label)
 
 
 class Ellipse(Circle):
@@ -469,10 +528,7 @@ class Annulus(Circle):
 
 
 class Line(TipableVMobject):
-    CONFIG = {
-        "buff": 0,
-        "path_arc": None,  # angle of arc specified here
-    }
+    CONFIG = {"buff": 0, "path_arc": None}  # angle of arc specified here
 
     def __init__(self, start=LEFT, end=RIGHT, **kwargs):
         digest_config(self, kwargs)
@@ -550,10 +606,7 @@ class Line(TipableVMobject):
         return np.tan(self.get_angle())
 
     def set_angle(self, angle):
-        self.rotate(
-            angle - self.get_angle(),
-            about_point=self.get_start(),
-        )
+        self.rotate(angle - self.get_angle(), about_point=self.get_start())
 
     def set_length(self, length):
         self.scale(length / self.get_length())
@@ -593,10 +646,7 @@ class DashedLine(Line):
             return 1
 
     def calculate_positive_space_ratio(self):
-        return fdiv(
-            self.dash_length,
-            self.dash_length + self.dash_spacing,
-        )
+        return fdiv(self.dash_length, self.dash_length + self.dash_spacing)
 
     def get_start(self):
         if len(self.submobjects) > 0:
@@ -632,10 +682,7 @@ class TangentLine(Line):
 
 
 class Elbow(VMobject):
-    CONFIG = {
-        "width": 0.2,
-        "angle": 0,
-    }
+    CONFIG = {"width": 0.2, "angle": 0}
 
     def __init__(self, **kwargs):
         VMobject.__init__(self, **kwargs)
@@ -719,27 +766,19 @@ class Arrow(Line):
 
     def get_default_tip_length(self):
         max_ratio = self.max_tip_length_to_length_ratio
-        return min(
-            self.tip_length,
-            max_ratio * self.get_length(),
-        )
+        return min(self.tip_length, max_ratio * self.get_length())
 
     def set_stroke_width_from_length(self):
         max_ratio = self.max_stroke_width_to_length_ratio
         self.set_stroke(
-            width=min(
-                self.initial_stroke_width,
-                max_ratio * self.get_length(),
-            ),
+            width=min(self.initial_stroke_width, max_ratio * self.get_length()),
             family=False,
         )
         return self
 
 
 class Vector(Arrow):
-    CONFIG = {
-        "buff": 0,
-    }
+    CONFIG = {"buff": 0}
 
     def __init__(self, direction=RIGHT, **kwargs):
         if len(direction) == 2:
@@ -765,9 +804,7 @@ class CubicBezier(VMobject):
 
 
 class Polygon(VMobject):
-    CONFIG = {
-        "color": BLUE,
-    }
+    CONFIG = {"color": BLUE}
 
     def __init__(self, *vertices, **kwargs):
         VMobject.__init__(self, **kwargs)
@@ -812,9 +849,7 @@ class Polygon(VMobject):
 
 
 class RegularPolygon(Polygon):
-    CONFIG = {
-        "start_angle": None,
-    }
+    CONFIG = {"start_angle": None}
 
     def __init__(self, n=6, **kwargs):
         digest_config(self, kwargs, locals())
@@ -849,9 +884,7 @@ class Rectangle(Polygon):
 
 
 class Square(Rectangle):
-    CONFIG = {
-        "side_length": 2.0,
-    }
+    CONFIG = {"side_length": 2.0}
 
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
@@ -861,9 +894,7 @@ class Square(Rectangle):
 
 
 class RoundedRectangle(Rectangle):
-    CONFIG = {
-        "corner_radius": 0.5,
-    }
+    CONFIG = {"corner_radius": 0.5}
 
     def __init__(self, **kwargs):
         Rectangle.__init__(self, **kwargs)
@@ -892,17 +923,23 @@ class ArrowTip(VMobject):
         NotImplementedError: Has to be implemented in inheriting subclasses.
 
     Instead, use one of the pre-defined ones, or make
-    a custom one like this::
+    a custom one like this:
+
+    .. manim:: CustomTipExample
 
         >>> class MyCustomArrowTip(ArrowTip, RegularPolygon):
         ...     def __init__(self, **kwargs):
         ...         RegularPolygon.__init__(self, n=5, **kwargs)
         ...         self.set_width(self.length)
         ...         self.set_height(self.length, stretch=True)
-        >>> arr = Arrow(np.array([0, 0, 0]), np.array([1, 1, 0]),
+        >>> arr = Arrow(np.array([-2, -2, 0]), np.array([2, 2, 0]),
         ...             tip_shape=MyCustomArrowTip)
         >>> isinstance(arr.tip, RegularPolygon)
         True
+        >>> from manim import Scene
+        >>> class CustomTipExample(Scene):
+        ...     def construct(self):
+        ...         self.play(ShowCreation(arr))
 
     Using a class inherited from :class:`ArrowTip` to get a non-filled
     tip is a shorthand to manually specifying the arrow tip style as follows::
@@ -931,6 +968,7 @@ class ArrowTip(VMobject):
         Examples
         --------
         ::
+
             >>> arrow = Arrow(np.array([0, 0, 0]), np.array([2, 0, 0]), buff=0)
             >>> arrow.tip.base.round(2) + 0.  # add 0. to avoid negative 0 in output
             array([1.65, 0.  , 0.  ])
@@ -945,6 +983,7 @@ class ArrowTip(VMobject):
         Examples
         --------
         ::
+
             >>> arrow = Arrow(np.array([0, 0, 0]), np.array([2, 0, 0]), buff=0)
             >>> arrow.tip.tip_point.round(2) + 0.
             array([2., 0., 0.])
@@ -959,6 +998,7 @@ class ArrowTip(VMobject):
         Examples
         --------
         ::
+
             >>> arrow = Arrow(np.array([0, 0, 0]), np.array([2, 2, 0]), buff=0)
             >>> arrow.tip.vector.round(2) + 0.
             array([0.25, 0.25, 0.  ])
@@ -973,6 +1013,7 @@ class ArrowTip(VMobject):
         Examples
         --------
         ::
+
             >>> arrow = Arrow(np.array([0, 0, 0]), np.array([1, 1, 0]), buff=0)
             >>> round(arrow.tip.tip_angle, 5) == round(PI/4, 5)
             True
@@ -987,6 +1028,7 @@ class ArrowTip(VMobject):
         Examples
         --------
         ::
+
             >>> arrow = Arrow(np.array([0, 0, 0]), np.array([1, 2, 0]))
             >>> round(arrow.tip.tip_length, 3)
             0.35

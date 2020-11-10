@@ -1,14 +1,32 @@
-__all__ = ["AnimatedBoundary", "TracedPath"]
+"""Animation of a mobject boundary and tracing of points."""
 
+__all__ = ["AnimatedBoundary", "TracedPath"]
 
 from ..constants import *
 from ..mobject.types.vectorized_mobject import VMobject
 from ..mobject.types.vectorized_mobject import VGroup
 from ..utils.rate_functions import smooth
 from ..utils.space_ops import get_norm
+from ..utils.color import BLUE_D, BLUE_B, BLUE_E, GREY_BROWN, WHITE
 
 
 class AnimatedBoundary(VGroup):
+    """Boundary of a :class:`.VMobject` with animated color change.
+
+    Examples
+    --------
+    .. manim:: AnimatedBoundaryExample
+
+        class AnimatedBoundaryExample(Scene):
+            def construct(self):
+                text = Text("So shiny!")
+                boundary = AnimatedBoundary(text, colors=[RED, GREEN, BLUE],
+                                            cycle_rate=3)
+                self.add(text, boundary)
+                self.wait(2)
+
+    """
+
     CONFIG = {
         "colors": [BLUE_D, BLUE_B, BLUE_E, GREY_BROWN],
         "max_stroke_width": 3,
@@ -65,6 +83,24 @@ class AnimatedBoundary(VGroup):
 
 
 class TracedPath(VMobject):
+    """Traces the path of a point returned by a function call.
+
+    Examples
+    --------
+    .. manim:: TracedPathExample
+
+        class TracedPathExample(Scene):
+            def construct(self):
+                circ = Circle(Color=RED).shift(4*LEFT)
+                dot = Dot(color=RED).move_to(circ.get_start())
+                rolling_circle = VGroup(circ, dot)
+                trace = TracedPath(circ.get_start)
+                rolling_circle.add_updater(lambda m: m.rotate(-0.3))
+                self.add(trace, rolling_circle)
+                self.play(rolling_circle.shift, 8*RIGHT, run_time=4, rate_func=linear)
+
+    """
+
     CONFIG = {
         "stroke_width": 2,
         "stroke_color": WHITE,

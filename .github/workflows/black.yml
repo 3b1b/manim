@@ -1,8 +1,6 @@
 name: black
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 0 * * *"
 
 jobs:
   format:
@@ -24,14 +22,12 @@ jobs:
       - name: Black
         run: |
           black manim tests example_scenes
-
       - name: Check for modified files
         shell: bash
         id: git-check
         run: |
           echo ::set-output name=modified::$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi)
-          echo ::set-output name=filechange::$(git ls-files -m)
-
+          git ls-files -m>/d/diffmod.txt
       - name: Print Black Version if Failed
         shell: bash
         if: steps.git-check.outputs.modified == 'true'
@@ -45,7 +41,6 @@ jobs:
           git checkout -B "$pushBranch"
           git add .
           git commit -m "Running Black On Master"
-
       - name: Push branch
         if: steps.git-check.outputs.modified == 'true'
         shell: bash
@@ -55,25 +50,24 @@ jobs:
           date=$(python -c "import time;print(time.localtime().tm_mday)")
           pushBranch="black-${blackVersion}-${date}"
           git push -u origin "${pushBranch}" --force
-
       - name: Make a PR
         if: steps.git-check.outputs.modified == 'true'
         env:
           access_token: ${{ secrets.GITHUB_TOKEN }}
-          file_change: ${{ steps.git-check.outputs.filechange }}
         run: |
           $blackVer = black --version
           $blackVersion = python -c "print('$($blackVer)'.split()[2])"
           $date = python -c "import time;print(time.localtime().tm_mday)"
           $pushBranch="black-$($blackVersion)-$($date)"
+          $filechange=(gc "D:/diffmod.txt").split() -join "`n`n"
           $postContents = @{title="Automated PR: Autoformat with black";
-          head="ManimCommunity:$($pushBranch)";
+          head="manimcommunity:$($pushBranch)";
           base="master";
-          body="This an automated pull requests. Files Changed are `n `n ```````n$($env:file_change)`n``````"
+          body="This an automated pull request. Files Changed are `n `n ```````n$($filechange)`n``````"
           } | ConvertTo-Json -Compress
           echo "$postContents"
           Invoke-WebRequest `
             -Method POST `
             -Headers @{ "Accept" = "application/vnd.github.v3+json"; "Authorization"= "token $($env:access_token)"}`
-            -Uri https://api.github.com/repos/ManimCommunity/manim/pulls `
+            -Uri https://api.github.com/repos/manimcommunity/manim/pulls `
             -Body "$($postContents)"

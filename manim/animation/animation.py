@@ -1,13 +1,14 @@
 """Animate mobjects."""
 
 
-__all__ = ["Animation"]
+__all__ = ["Animation", "Wait"]
 
 
 from copy import deepcopy
 
 import numpy as np
 
+from .. import logger
 from ..mobject.mobject import Mobject
 from ..utils.config_ops import digest_config
 from ..utils.rate_functions import smooth
@@ -117,6 +118,10 @@ class Animation(object):
         This method shouldn't exist, but it's here to
         keep many old scenes from breaking
         """
+        logger.warning(
+            "animation.update() has been deprecated. "
+            "Please use animation.interpolate() instead."
+        )
         self.interpolate(alpha)
 
     def interpolate_mobject(self, alpha):
@@ -160,3 +165,25 @@ class Animation(object):
 
     def is_remover(self):
         return self.remover
+
+
+class Wait(Animation):
+    def __init__(self, stop_condition=None, **kwargs):
+        digest_config(self, kwargs)
+        self.mobject = None
+        self.stop_condition = stop_condition
+
+    def begin(self):
+        pass
+
+    def finish(self):
+        pass
+
+    def clean_up_from_scene(self, scene):
+        pass
+
+    def update_mobjects(self, dt):
+        pass
+
+    def interpolate(self, alpha):
+        pass

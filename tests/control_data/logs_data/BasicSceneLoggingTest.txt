@@ -1,0 +1,9 @@
+{"levelname": "INFO", "module": "logger_utils", "message": "Log file will be saved in <>"}
+{"levelname": "DEBUG", "module": "hashing", "message": "Hashing ..."}
+{"levelname": "DEBUG", "module": "hashing", "message": "Hashing done in <> s."}
+{"levelname": "DEBUG", "module": "hashing", "message": "Hash generated :  <>"}
+{"levelname": "DEBUG", "module": "caching", "message": "List of the first few animation hashes of the scene: <>"}
+{"levelname": "INFO", "module": "scene_file_writer", "message": "Animation 0 : Partial movie file written in <>"}
+{"levelname": "DEBUG", "module": "scene_file_writer", "message": "Partial movie files to combine (1 files): <>"}
+{"levelname": "INFO", "module": "scene_file_writer", "message": "\nFile ready at <>\n"}
+{"levelname": "INFO", "module": "scene", "message": "Rendered SquareToCircle\nPlayed 1 animations"}

@@ -13,8 +13,7 @@ __all__ = [
 
 import itertools as it
 import sys
-
-from colour import Color
+import colour
 
 from ...constants import *
 from ...mobject.mobject import Mobject
@@ -24,13 +23,14 @@ from ...utils.bezier import get_smooth_handle_points
 from ...utils.bezier import interpolate
 from ...utils.bezier import integer_interpolate
 from ...utils.bezier import partial_bezier_points
-from ...utils.color import color_to_rgba
+from ...utils.color import color_to_rgba, BLACK, WHITE
 from ...utils.iterables import make_even
 from ...utils.iterables import stretch_array_to_length
 from ...utils.iterables import tuplify
 from ...utils.simple_functions import clip_in_place
 from ...utils.space_ops import rotate_vector
 from ...utils.space_ops import get_norm
+from ...utils.space_ops import shoelace_direction
 
 # TODO
 # - Change cubic curve groups to have 4 points instead of 3
@@ -211,20 +211,28 @@ class VMobject(Mobject):
             self.color_using_background_image(background_image_file)
         return self
 
-    def get_style(self):
-        return {
-            "fill_color": self.get_fill_colors(),
-            "fill_opacity": self.get_fill_opacities(),
-            "stroke_color": self.get_stroke_colors(),
-            "stroke_width": self.get_stroke_width(),
+    def get_style(self, simple=False):
+        ret = {
             "stroke_opacity": self.get_stroke_opacity(),
-            "background_stroke_color": self.get_stroke_colors(background=True),
-            "background_stroke_width": self.get_stroke_width(background=True),
-            "background_stroke_opacity": self.get_stroke_opacity(background=True),
-            "sheen_factor": self.get_sheen_factor(),
-            "sheen_direction": self.get_sheen_direction(),
-            "background_image_file": self.get_background_image_file(),
+            "stroke_width": self.get_stroke_width(),
         }
+
+        if simple:
+            ret["fill_color"] = colour.rgb2hex(self.get_fill_color().get_rgb())
+            ret["fill_opacity"] = self.get_fill_opacity()
+            ret["stroke_color"] = colour.rgb2hex(self.get_stroke_color().get_rgb())
+        else:
+            ret["fill_color"] = self.get_fill_colors()
+            ret["fill_opacity"] = self.get_fill_opacities()
+            ret["stroke_color"] = self.get_stroke_colors()
+            ret["background_stroke_color"] = self.get_stroke_colors(background=True)
+            ret["background_stroke_width"] = self.get_stroke_width(background=True)
+            ret["background_stroke_opacity"] = self.get_stroke_opacity(background=True)
+            ret["sheen_factor"] = self.get_sheen_factor()
+            ret["sheen_direction"] = self.get_sheen_direction()
+            ret["background_image_file"] = self.get_background_image_file()
+
+        return ret
 
     def match_style(self, vmobject, family=True):
         self.set_style(**vmobject.get_style(), family=False)
@@ -290,7 +298,7 @@ class VMobject(Mobject):
         return self.get_fill_opacities()[0]
 
     def get_fill_colors(self):
-        return [Color(rgb=rgba[:3]) for rgba in self.get_fill_rgbas()]
+        return [colour.Color(rgb=rgba[:3]) for rgba in self.get_fill_rgbas()]
 
     def get_fill_opacities(self):
         return self.get_fill_rgbas()[:, 3]
@@ -319,7 +327,9 @@ class VMobject(Mobject):
         return self.get_stroke_opacities(background)[0]
 
     def get_stroke_colors(self, background=False):
-        return [Color(rgb=rgba[:3]) for rgba in self.get_stroke_rgbas(background)]
+        return [
+            colour.Color(rgb=rgba[:3]) for rgba in self.get_stroke_rgbas(background)
+        ]
 
     def get_stroke_opacities(self, background=False):
         return self.get_stroke_rgbas(background)[:, 3]
@@ -462,7 +472,7 @@ class VMobject(Mobject):
             handle2, new_anchor = points
         else:
             name = sys._getframe(0).f_code.co_name
-            raise Exception("Only call {} with 1 or 2 points".format(name))
+            raise ValueError("Only call {} with 1 or 2 points".format(name))
 
         if self.has_new_path_started():
             self.add_line_to(new_anchor)
@@ -870,11 +880,81 @@ class VMobject(Mobject):
         vmob.pointwise_become_partial(self, a, b)
         return vmob
 
+    def get_direction(self):
+        """Uses :func:`~.space_ops.shoelace_direction` to calculate the direction.
+        The direction of points determines in which direction the
+        object is drawn, clockwise or counterclockwise.
+
+        Examples
+        --------
+        The default direction of a :class:`~.Circle` is counterclockwise::
+
+        >>> from manim import Circle
+        >>> Circle().get_direction()
+        'CCW'
+
+        Returns
+        -------
+        :class:`str`
+            Either `"CW"` or `"CCW"`.
+        """
+        return shoelace_direction(self.get_start_anchors())
+
+    def reverse_direction(self):
+        """Reverts the point direction by inverting the point order.
+
+        Returns
+        -------
+        :class:`VMobject`
+            Returns self.
+
+        Examples
+        --------
+        .. manim:: ChangeOfDirection
+
+            class ChangeOfDirection(Scene):
+                def construct(self):
+                    ccw = RegularPolygon(5)
+                    ccw.shift(LEFT).rotate
+                    cw = RegularPolygon(5)
+                    cw.shift(RIGHT).reverse_direction()
+
+                    self.play(ShowCreation(ccw), ShowCreation(cw),
+                    run_time=4)
+        """
+        self.points = self.points[::-1]
+        return self
+
+    def force_direction(self, target_direction):
+        """Makes sure that points are either directed clockwise or
+        counterclockwise.
+
+        Parameters
+        ----------
+        target_direction : :class:`str`
+            Either ``"CW"`` or ``"CCW"``.
+        """
+        if target_direction not in ("CW", "CCW"):
+            raise ValueError('Invalid input for force_direction. Use "CW" or "CCW"')
+        if self.get_direction() != target_direction:
+            # Since we already assured the input is CW or CCW,
+            # and the directions don't match, we just reverse
+            self.reverse_direction()
+            return self
+
 
 class VGroup(VMobject):
     def __init__(self, *vmobjects, **kwargs):
         VMobject.__init__(self, **kwargs)
         self.add(*vmobjects)
+
+    def __repr__(self):
+        return (
+            self.__class__.__name__
+            + "("
+            + ", ".join(str(mob) for mob in self.submobjects)
+            + ")"
+        )
 
     def add(self, *vmobjects):
         """Checks if all passed elements are an instance of VMobject and then add them to submobjects
@@ -934,6 +1014,9 @@ class VDict(VMobject):
         self.submob_dict = {}
         self.add(mapping_or_iterable)
 
+    def __repr__(self):
+        return __class__.__name__ + "(" + repr(self.submob_dict) + ")"
+
     def add(self, mapping_or_iterable):
         """Adds the key-value pairs to the :class:`VDict` object.
 
@@ -953,6 +1036,7 @@ class VDict(VMobject):
         Examples
         --------
         Normal usage::
+
             square_obj = Square()
             my_dict.add([('s', square_obj)])
         """
@@ -980,6 +1064,7 @@ class VDict(VMobject):
         Examples
         --------
         Normal usage::
+
             my_dict.remove('square')
         """
         if key not in self.submob_dict:
@@ -1004,6 +1089,7 @@ class VDict(VMobject):
         Examples
         --------
         Normal usage::
+
            self.play(ShowCreation(my_dict['s']))
         """
         submob = self.submob_dict[key]
@@ -1026,6 +1112,7 @@ class VDict(VMobject):
         Examples
         --------
         Normal usage::
+
             square_obj = Square()
             my_dict['sq'] = square_obj
         """
@@ -1044,6 +1131,7 @@ class VDict(VMobject):
         Examples
         --------
         Normal usage::
+
             for submob in my_dict.get_all_submobjects():
                 self.play(ShowCreation(submob))
         """
@@ -1073,6 +1161,7 @@ class VDict(VMobject):
         Examples
         --------
         Normal usage::
+
             square_obj = Square()
             self.add_key_value_pair('s', square_obj)
 

@@ -1,3 +1,5 @@
+"""A collection of simple functions."""
+
 __all__ = [
     "sigmoid",
     "choose_using_cache",

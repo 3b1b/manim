@@ -1,0 +1,68 @@
+[tool.poetry]
+name = "manimce"
+version = "0.1.0"
+description = "Animation engine for explanatory math videos."
+authors = ["The Manim Community Developers","3b1b <grant@3blue1brown.com>"]
+license="MIT"
+readme="README.md"
+repository="https://github.com/manimcommunity/manim"
+documentation="https://manimce.readthedocs.io/en/latest/"
+classifiers= [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Multimedia :: Graphics",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Natural Language :: English",
+    ]
+exclude = ["scripts/","logo/","readme-assets/"]
+packages = [
+    { include = "manim" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+colour = "*"
+numpy = "*"
+Pillow = "*"
+progressbar = "*"
+scipy = "*"
+tqdm = "*"
+pydub = "*"
+pygments = "*"
+rich = "^6.0"
+pycairo = "^1.20"
+grpcio = "*"
+grpcio-tools = "*"
+watchdog = "*"
+pangocffi = "^0.6.0"
+pangocairocffi = "^0.3.0"
+cairocffi = "^1.1.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.0"
+pylint = "*"
+guzzle_sphinx_theme = "*"
+recommonmark = "*"
+matplotlib = "^3.3.2"
+
+[tool.poetry.dev-dependencies.black]
+version = "^20.8b1"
+allow-prereleases = false
+python = "^3.6"
+markers = "platform_python_implementation == 'CPython'"
+
+[tool.pytest.ini_options]
+markers = "slow: Mark the test as slow. Can be skipped with --skip_slow"
+
+[tool.poetry.plugins]
+[tool.poetry.plugins."console_scripts"]
+"manim" = "manim.__main__:main"
+"manimce" = "manim.__main__:main"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"

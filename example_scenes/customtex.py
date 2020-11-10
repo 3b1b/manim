@@ -12,8 +12,8 @@ class TexTemplateFromCLI(Scene):
 
     def construct(self):
         text = MathTex(r"\vv{vb}")
-        # text=Tex(r"$\vv{vb}$")
         self.play(Write(text))
+        self.wait(1)
 
 
 class InCodeTexTemplate(Scene):
@@ -22,10 +22,20 @@ class InCodeTexTemplate(Scene):
     """
 
     def construct(self):
-        tpl = TexTemplate()
-        tpl.append_package(["esvect", ["f"]])
-        config["tex_template"] = tpl
+        # Create a new template
+        myTemplate = TexTemplate()
 
-        # text=Tex(r"$\vv{vb}$")
-        text = MathTex(r"\vv{vb}")
+        # Add packages to the template
+        myTemplate.add_to_preamble(r"\usepackage{esvect}")
+
+        # Set the compiler and output format (default: latex and .dvi)
+        # possible tex compilers: "latex", "pdflatex", "xelatex", "lualatex", "luatex"
+        # possible output formats: ".dvi",  ".pdf", and ".xdv"
+        myTemplate.tex_compiler = "pdflatex"
+        myTemplate.output_format = ".pdf"
+
+        # To use this template in a Tex() or MathTex() object
+        # use the keyword argument tex_template
+        text = MathTex(r"\vv{vb}", tex_template=myTemplate)
         self.play(Write(text))
+        self.wait(1)

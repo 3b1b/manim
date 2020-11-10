@@ -1,7 +1,8 @@
+"""Debugging utilities."""
+
 __all__ = ["print_family", "get_submobject_index_labels"]
 
-
-from ..constants import BLACK
+from .color import BLACK
 from ..mobject.numbers import Integer
 from ..mobject.types.vectorized_mobject import VGroup
 

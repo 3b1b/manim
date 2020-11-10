@@ -32,9 +32,13 @@ class CurvedArrowTest(Scene):
 class CustomDoubleArrowTest(Scene):
     def construct(self):
         from manim.mobject.geometry import ArrowCircleTip, ArrowSquareFilledTip
-        a = DoubleArrow(np.array([-1, -1, 0]), np.array([1, 1, 0]),
-                                 tip_shape_start=ArrowCircleTip,
-                                 tip_shape_end=ArrowSquareFilledTip)
+
+        a = DoubleArrow(
+            np.array([-1, -1, 0]),
+            np.array([1, 1, 0]),
+            tip_shape_start=ArrowCircleTip,
+            tip_shape_end=ArrowSquareFilledTip,
+        )
         self.play(Animation(a))
 
 
@@ -48,6 +52,12 @@ class DotTest(Scene):
     def construct(self):
         dot = Dot()
         self.play(Animation(dot))
+
+
+class AnnotationDotTest(Scene):
+    def construct(self):
+        adot = AnnotationDot()
+        self.play(Animation(adot))
 
 
 class EllipseTest(Scene):

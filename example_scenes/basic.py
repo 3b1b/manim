@@ -3,12 +3,11 @@
 from manim import *
 
 # To watch one of these scenes, run the following:
-# python -m manim example_scenes.py SquareToCircle -pl
+# python --quality m manim example_scenes.py SquareToCircle -p
 #
-# Use the flat -l for a faster rendering at a lower
-# quality.
+# Use the flag --quality l for a faster rendering at a lower quality.
 # Use -s to skip to the end and just save the final frame
-# Use the -p to have the animation (or image, if -s was
+# Use the -p to have preview of the animation (or image, if -s was
 # used) pop up once done.
 # Use -n <number> to skip ahead to the n'th animation of a scene.
 # Use -r <number> to specify a resolution (for example, -r 1080
@@ -21,7 +20,8 @@ class OpeningManimExample(Scene):
         basel = MathTex("\\sum_{n=1}^\\infty " "\\frac{1}{n^2} = \\frac{\\pi^2}{6}")
         VGroup(title, basel).arrange(DOWN)
         self.play(
-            Write(title), FadeInFrom(basel, UP),
+            Write(title),
+            FadeInFrom(basel, UP),
         )
         self.wait()
 
@@ -53,7 +53,14 @@ class OpeningManimExample(Scene):
         grid.prepare_for_nonlinear_transform()
         self.play(
             grid.apply_function,
-            lambda p: p + np.array([np.sin(p[1]), np.sin(p[0]), 0,]),
+            lambda p: p
+            + np.array(
+                [
+                    np.sin(p[1]),
+                    np.sin(p[0]),
+                    0,
+                ]
+            ),
             run_time=3,
         )
         self.wait()
@@ -88,7 +95,9 @@ class WarpSquare(Scene):
 class WriteStuff(Scene):
     def construct(self):
         example_text = Tex("This is a some text", tex_to_color_map={"text": YELLOW})
-        example_tex = MathTex("\\sum_{k=1}^\\infty {1 \\over k^2} = {\\pi^2 \\over 6}",)
+        example_tex = MathTex(
+            "\\sum_{k=1}^\\infty {1 \\over k^2} = {\\pi^2 \\over 6}",
+        )
         group = VGroup(example_text, example_tex)
         group.arrange(DOWN)
         group.set_width(config["frame_width"] - 2 * LARGE_BUFF)
@@ -101,7 +110,10 @@ class WriteStuff(Scene):
 class UpdatersExample(Scene):
     def construct(self):
         decimal = DecimalNumber(
-            0, show_ellipsis=True, num_decimal_places=3, include_sign=True,
+            0,
+            show_ellipsis=True,
+            num_decimal_places=3,
+            include_sign=True,
         )
         square = Square().to_edge(UP)
 
@@ -109,73 +121,12 @@ class UpdatersExample(Scene):
         decimal.add_updater(lambda d: d.set_value(square.get_center()[1]))
         self.add(square, decimal)
         self.play(
-            square.to_edge, DOWN, rate_func=there_and_back, run_time=5,
+            square.to_edge,
+            DOWN,
+            rate_func=there_and_back,
+            run_time=5,
         )
         self.wait()
 
 
-class VDictExample(Scene):
-    def construct(self):
-        square = Square().set_color(RED)
-        circle = Circle().set_color(YELLOW).next_to(square, UP)
-
-        # create dict from list of tuples each having key-mobject pair
-        pairs = [("s", square), ("c", circle)]
-        my_dict = VDict(pairs, show_keys=True)
-
-        # display it just like a VGroup
-        self.play(ShowCreation(my_dict))
-        self.wait()
-
-        text = Tex("Some text").set_color(GREEN).next_to(square, DOWN)
-
-        # add a key-value pair by wrapping it in a single-element list of tuple
-        # after attrs branch is merged, it will be easier like `.add(t=text)`
-        my_dict.add([("t", text)])
-        self.wait()
-
-        rect = Rectangle().next_to(text, DOWN)
-        # can also do key assignment like a python dict
-        my_dict["r"] = rect
-
-        # access submobjects like a python dict
-        my_dict["t"].set_color(PURPLE)
-        self.play(my_dict["t"].scale, 3)
-        self.wait()
-
-        # also supports python dict styled reassignment
-        my_dict["t"] = Tex("Some other text").set_color(BLUE)
-        self.wait()
-
-        # remove submoject by key
-        my_dict.remove("t")
-        self.wait()
-
-        self.play(Uncreate(my_dict["s"]))
-        self.wait()
-
-        self.play(FadeOut(my_dict["c"]))
-        self.wait()
-
-        self.play(FadeOutAndShift(my_dict["r"], DOWN))
-        self.wait()
-
-        # you can also make a VDict from an existing dict of mobjects
-        plain_dict = {
-            1: Integer(1).shift(DOWN),
-            2: Integer(2).shift(2 * DOWN),
-            3: Integer(3).shift(3 * DOWN),
-        }
-
-        vdict_from_plain_dict = VDict(plain_dict)
-        vdict_from_plain_dict.shift(1.5 * (UP + LEFT))
-        self.play(ShowCreation(vdict_from_plain_dict))
-
-        # you can even use zip
-        vdict_using_zip = VDict(zip(["s", "c", "r"], [Square(), Circle(), Rectangle()]))
-        vdict_using_zip.shift(1.5 * RIGHT)
-        self.play(ShowCreation(vdict_using_zip))
-        self.wait()
-
-
-# See old_projects folder for many, many more
+# See many more examples at https://manimce.readthedocs.io/en/latest/examples.html

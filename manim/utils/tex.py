@@ -1,292 +1,285 @@
-__all__ = ["TexTemplateFromFile", "TexTemplate"]
+"""Utilities for processing LaTeX templates."""
+
+__all__ = [
+    "TexTemplate",
+    "TexTemplateFromFile",
+]
 
 
 import os
-from ..utils.config_ops import digest_config
+import re
 
 
-class TexTemplateFromFile:
+class TexTemplate:
+    """TeX templates are used for creating Tex() and MathTex() objects.
+
+    Parameters
+    ----------
+    tex_compiler : Optional[:class:`str`], optional
+        The TeX compiler to be used, e.g. ``latex``, ``pdflatex`` or ``lualatex``
+    output_format : Optional[:class:`str`], optional
+        The output format resulting from compilation, e.g. ``.dvi`` or ``.pdf``
+    documentclass : Optional[:class:`str`], optional
+        The command defining the documentclass, e.g. ``\\documentclass[preview]{standalone}``
+    preamble : Optional[:class:`str`], optional
+        The document's preample, i.e. the part between ``\\documentclass`` and ``\\begin{document}``
+    placeholder_text : Optional[:class:`str`], optional
+        Text in the document that will be replaced by the expression to be rendered
+    post_doc_commands : Optional[:class:`str`], optional
+        Text (definitions, commands) to be inserted at right after ``\\begin{document}``, e.g. ``\\boldmath``
+
+    Attributes
+    ----------
+    tex_compiler : :class:`str`
+        The TeX compiler to be used, e.g. ``latex``, ``pdflatex`` or ``lualatex``
+    output_format : :class:`str`
+        The output format resulting from compilation, e.g. ``.dvi`` or ``.pdf``
+    documentclass : :class:`str`
+        The command defining the documentclass, e.g. ``\\documentclass[preview]{standalone}``
+    preamble : :class:`str`
+        The document's preample, i.e. the part between ``\\documentclass`` and ``\\begin{document}``
+    placeholder_text : :class:`str`
+        Text in the document that will be replaced by the expression to be rendered
+    post_doc_commands : :class:`str`
+        Text (definitions, commands) to be inserted at right after ``\\begin{document}``, e.g. ``\\boldmath``
     """
-    Class representing a TeX template file
-    """  # TODO: attributes, dataclasses stuff
 
-    CONFIG = {
-        "use_ctex": False,
-        "filename": "tex_template.tex",
-        "text_to_replace": "YourTextHere",
-    }
-    body = ""
+    default_documentclass = r"\documentclass[preview]{standalone}"
+    default_preamble = r"""
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{dsfont}
+\usepackage{setspace}
+\usepackage{tipa}
+\usepackage{relsize}
+\usepackage{textcomp}
+\usepackage{mathrsfs}
+\usepackage{calligra}
+\usepackage{wasysym}
+\usepackage{ragged2e}
+\usepackage{physics}
+\usepackage{xcolor}
+\usepackage{microtype}
+\DisableLigatures{encoding = *, family = * }
+\linespread{1}
+"""
+    default_placeholder_text = "YourTextHere"
+    default_tex_compiler = "latex"
+    default_output_format = ".dvi"
+    default_post_doc_commands = ""
+
+    def __init__(
+        self,
+        tex_compiler=None,
+        output_format=None,
+        documentclass=None,
+        preamble=None,
+        placeholder_text=None,
+        post_doc_commands=None,
+        **kwargs
+    ):
+        self.tex_compiler = (
+            tex_compiler
+            if tex_compiler is not None
+            else TexTemplate.default_tex_compiler
+        )
+        self.output_format = (
+            output_format
+            if output_format is not None
+            else TexTemplate.default_output_format
+        )
+        self.documentclass = (
+            documentclass
+            if documentclass is not None
+            else TexTemplate.default_documentclass
+        )
+        self.preamble = (
+            preamble if preamble is not None else TexTemplate.default_preamble
+        )
+        self.placeholder_text = (
+            placeholder_text
+            if placeholder_text is not None
+            else TexTemplate.default_placeholder_text
+        )
+        self.post_doc_commands = (
+            post_doc_commands
+            if post_doc_commands is not None
+            else TexTemplate.default_post_doc_commands
+        )
+        self._rebuild()
+
+    def _rebuild(self):
+        """Rebuilds the entire TeX template text from ``\\documentclass`` to ``\\end{document}`` according to all settings and choices."""
+        self.body = (
+            self.documentclass
+            + "\n"
+            + self.preamble
+            + "\n"
+            + r"\begin{document}"
+            + "\n"
+            + self.post_doc_commands
+            + "\n"
+            + self.placeholder_text
+            + "\n"
+            + "\n"
+            + r"\end{document}"
+            + "\n"
+        )
+
+    def add_to_preamble(self, txt, prepend=False):
+        """Adds stuff to the TeX template's preamble (e.g. definitions, packages). Text can be inserted at the beginning or at the end of the preamble.
+
+        Parameters
+        ----------
+        txt : :class:`string`
+            String containing the text to be added, e.g. ``\\usepackage{hyperref}``
+        prepend : Optional[:class:`bool`], optional
+            Whether the text should be added at the beginning of the preample, i.e. right after ``\\documentclass``. Default is to add it at the end of the preample, i.e. right before ``\\begin{document}``
+        """
+        if prepend:
+            self.preamble = txt + "\n" + self.preamble
+        else:
+            self.preamble += "\n" + txt
+        self._rebuild()
+
+    def add_to_document(self, txt):
+        """Adds txt to the TeX template just after \\begin{document}, e.g. ``\\boldmath``
+
+        Parameters
+        ----------
+        txt : :class:`str`
+            String containing the text to be added.
+        """
+        self.post_doc_commands += "\n" + txt + "\n"
+        self._rebuild()
+
+    def get_texcode_for_expression(self, expression):
+        """Inserts expression verbatim into TeX template.
+
+        Parameters
+        ----------
+        expression : :class:`str`
+            The string containing the expression to be typeset, e.g. ``$\\sqrt{2}$``
+
+        Returns
+        -------
+        :class:`str`
+            LaTeX code based on current template, containing the given ``expression`` and ready for typesetting
+        """
+        return self.body.replace(self.placeholder_text, expression)
+
+    def _texcode_for_environment(self, environment):
+        """Processes the tex_environment string to return the correct ``\\begin{environment}[extra]{extra}`` and
+        ``\\end{environment}`` strings
+
+        Parameters
+        ----------
+        environment : :class:`str`
+            The tex_environment as a string. Acceptable formats include:
+            ``{align*}``, ``align*``, ``{tabular}[t]{cccl}``, ``tabular}{cccl``, ``\\begin{tabular}[t]{cccl}``.
+
+        Returns
+        -------
+        Tuple[:class:`str`, :class:`str`]
+            A pair of strings representing the opening and closing of the tex environment, e.g.
+            ``\\begin{tabular}{cccl}`` and ``\\end{tabular}``
+        """
+
+        # If the environment starts with \begin, remove it
+        if environment[0:6] == r"\begin":
+            environment = environment[6:]
+
+        # If environment begins with { strip it
+        if environment[0] == r"{":
+            environment = environment[1:]
+
+        # The \begin command takes everything and closes with a brace
+        begin = r"\begin{" + environment
+        if (
+            begin[-1] != r"}" and begin[-1] != r"]"
+        ):  # If it doesn't end on } or ], assume missing }
+            begin += r"}"
+
+        # While the \end command terminates at the first closing brace
+        split_at_brace = re.split(r"}", environment, 1)
+        end = r"\end{" + split_at_brace[0] + r"}"
+
+        return begin, end
+
+    def get_texcode_for_expression_in_env(self, expression, environment):
+        """Inserts expression into TeX template wrapped in \begin{environemnt} and \end{environment}
+
+        Parameters
+        ----------
+        expression : :class:`str`
+            The string containing the expression to be typeset, e.g. ``$\\sqrt{2}$``
+        environment : :class:`str`
+            The string containing the environment in which the expression should be typeset, e.g. ``align*``
+
+        Returns
+        -------
+        :class:`str`
+            LaTeX code based on template, containing the given expression inside its environment, ready for typesetting
+        """
+        begin, end = self._texcode_for_environment(environment)
+        return self.body.replace(
+            self.placeholder_text, "{0}\n{1}\n{2}".format(begin, expression, end)
+        )
+
+
+class TexTemplateFromFile(TexTemplate):
+    """A TexTemplate object created from a template file (default: tex_template.tex)
+
+    Parameters
+    ----------
+    tex_compiler : Optional[:class:`str`], optional
+        The TeX compiler to be used, e.g. ``latex``, ``pdflatex`` or ``lualatex``
+    output_format : Optional[:class:`str`], optional
+        The output format resulting from compilation, e.g. ``.dvi`` or ``.pdf``
+    documentclass : Optional[:class:`str`], optional
+        The command defining the documentclass, e.g. ``\\documentclass[preview]{standalone}``
+    preamble : Optional[:class:`str`], optional
+        The document's preample, i.e. the part between ``\\documentclass`` and ``\\begin{document}``
+    placeholder_text : Optional[:class:`str`], optional
+        Text in the document that will be replaced by the expression to be rendered
+    post_doc_commands : Optional[:class:`str`], optional
+        Text (definitions, commands) to be inserted at right after ``\\begin{document}``, e.g. ``\\boldmath``
+    kwargs : :class:`str`
+        The kwargs specified can only be strings.
+
+    Other Parameters
+    ----------------
+    tex_filename : Optional[:class:`str`], optional
+        Path to a valid TeX template file
+
+    Attributes
+    ----------
+    template_file : :class:`str`
+        Path to a valid TeX template file
+    body : :class:`str`
+        Content of the TeX template file
+    tex_compiler : :class:`str`
+        The TeX compiler to be used, e.g. ``latex``, ``pdflatex`` or ``lualatex``
+    output_format : :class:`str`
+        The output format resulting from compilation, e.g. ``.dvi`` or ``.pdf``
+    """
 
     def __init__(self, **kwargs):
-        digest_config(self, kwargs)
-        self.rebuild_cache()
+        self.template_file = kwargs.pop("filename", "tex_template.tex")
+        super().__init__(**kwargs)
 
-    def rebuild_cache(self):
-        """For faster access, the LaTeX template's code is cached.
-        If the base file is modified, the cache needs to be rebuilt.
-        """
-        with open(self.filename, "r") as infile:
+    def _rebuild(self):
+        with open(self.template_file, "r") as infile:
             self.body = infile.read()
 
-    def get_text_for_text_mode(self, expression):
-        """Inserting expression verbatim into TeX template.
+    def file_not_mutable(self):
+        raise Exception("Cannot modify TexTemplate when using a template file.")
 
-        Parameters
-        ----------
-        expression : :class:`str`
-            String containing the expression to be typeset, e.g. `"foo"`
+    def add_to_preamble(self, txt, prepend=False):
+        self.file_not_mutable()
 
-        Returns
-        -------
-        :class:`str`
-            LaTeX code based on the template containing the given expression and ready for typesetting.
-        """
-        return self.body.replace(self.text_to_replace, expression)
-
-    def get_text_for_env(self, environment, expression):
-        """Inserts an expression into the TeX template, surrounded
-        by `\\begin{<environment>} ... \\end{<environment>}` for a certain environment.
-
-        Parameters
-        ----------
-        environment : :class:`str`
-            The environment in which we should wrap the expression.
-        expression : :class:`str`
-            The string containing the expression to be typeset, e.g. $\\sqrt{2}$
-
-        Returns
-        -------
-        :class:`str`
-            LaTeX code based on template, containing the given expression and ready for typesetting
-        """
-        begin = r"\begin{" + environment + "}"
-        end = r"\end{" + environment + "}"
-        return self.body.replace(
-            self.text_to_replace, "{0}\n{1}\n{2}".format(begin, expression, end)
-        )
-
-    def get_text_for_tex_mode(self, expression):
-        """Inserts an expression into the TeX template, surrounded
-        by `\\begin{align*} ... \\end{align*}` for math mode.
-
-        Parameters
-        ----------
-        expression : :class:`str`
-            The string containing the (math) expression to be typeset, e.g. $\\sqrt{2}$
-
-        Returns
-        -------
-        :class:`str`
-            LaTeX code based on template, containing the given expression and ready for typesetting
-        """
-        return self.get_text_for_env("align*", expression)
-
-
-class TexTemplate(TexTemplateFromFile):
-    """
-    Class for dynamically managing a TeX template
-    """  # TODO: Add attributes (when dataclasses are implemented)
-
-    CONFIG = {
-        "documentclass": ["standalone", ["preview"]],
-        "common_packages": [
-            ["babel", ["english"]],
-            "amsmath",
-            "amssymb",
-            "dsfont",
-            "setspace",
-            "tipa",
-            "relsize",
-            "textcomp",
-            "mathrsfs",
-            "calligra",
-            "wasysym",
-            "ragged2e",
-            "physics",
-            "xcolor",
-            "microtype",
-        ],
-        "tex_packages": [["inputenc", ["utf8"]], ["fontenc", ["T1"]]],
-        "ctex_packages": [["ctex", ["UTF8"]]],
-        "common_preamble_text": r"\linespread{1}" "\n",
-        "tex_preamble_text": r"\DisableLigatures{encoding = *, family = *}" "\n",
-        "ctex_preamble_text": "",
-        "document_prefix": "",
-        "document_suffix": "",
-    }
-
-    def __init__(self, **kwargs):
-        digest_config(self, kwargs)
-        self.rebuild_cache()
-
-    def rebuild_cache(self):
-        """For faster access, the LaTeX template's code is cached.
-        If the base file is modified, the cache needs to be rebuilt."""
-        tpl = self.generate_tex_command(
-            "documentclass",
-            required_params=[self.documentclass[0]],
-            optional_params=self.documentclass[1],
-        )
-        for pkg in self.common_packages:
-            tpl += self.generate_usepackage(pkg)
-
-        if self.use_ctex:
-            for pkg in self.ctex_packages:
-                tpl += self.generate_usepackage(pkg)
-        else:
-            for pkg in self.tex_packages:
-                tpl += self.generate_usepackage(pkg)
-
-        tpl += self.common_preamble_text
-        if self.use_ctex:
-            tpl += self.ctex_preamble_text
-        else:
-            tpl += self.tex_preamble_text
-
-        tpl += "\n" r"\begin{document}" "\n"
-        tpl += f"\n{self.text_to_replace}\n"
-        tpl += "\n" r"\end{document}"
-
-        self.body = tpl
-
-    def prepend_package(self, pkg):
-        """Adds a new package (or several new packages)
-        before all other packages. Sometimes, the order of
-        the `\\usepackage` directives is relevant.
-
-        Parameters
-        ----------
-        pkg : :class:`str`
-            The package name, e.g. "siunitx"
-        """
-        self.common_packages.insert(0, pkg)
-        self.rebuild_cache()
-
-    def append_package(self, pkg):
-        """Adds a new package (or several new packages)
-        after all other packages. Sometimes, the order of
-        the `\\usepackage` directives is relevant.
-
-        Parameters
-        ----------
-        pkg : :class:`str`
-            The package name, e.g. "siunitx"
-        """
-        self.common_packages.append(pkg)
-        self.rebuild_cache()
-
-    def append_to_preamble(self, text):
-        """Adds commands (e.g. macro definitions) at the end of the preamble.
-
-        Parameters
-        ----------
-        text : :class:`str`
-            The text to be included, e.g. "\\newcommand{\\R}{\\mathbb{Q}}"
-        """
-        if self.use_ctex:
-            self.ctex_preamble_text += text
-        else:
-            self.tex_preamble_text += text
-        self.rebuild_cache()
-        pass
-
-    def clear_preamble(self):
-        """Removes custom definitions from the LaTeX preamble.
-        This does not affect the imported packages or documentclass."""
-        self.common_preamble_text = ""
-        self.ctex_preamble_text = ""
-        self.tex_preamble_text = ""
-        self.rebuild_cache()
-        pass
-
-    def generate_tex_command(self, command, *, required_params, optional_params=[]):
-        """
-        Function for creating LaTeX command strings with or without options.
-        Internally used to generate `\\usepackage{...}`
-
-        Parameters
-        ----------
-        command : :class:`str`
-            The command, e.g. `"usepackage"`
-        required_params : Iterable[:class:`str`]
-            The required parameters of this command, each wrapped in `{}`s.
-        optional_params : Iterable[:class:`str`]
-             The optional parameters of this command, each separated by a comma inside one `[]`.
-
-        Examples
-        --------
-        ::
-            generate_tex_command("usepackage", required_params=["packagename"], optional_params=["option1", "option2"])
-
-        Returns
-        -------
-        :class:`str`
-            The generated command.
-        """
-        optional_params = list(optional_params)  # so we can measure its length
-        return r"\{0}{1}{2}".format(
-            command,
-            f"[{','.join(optional_params)}]" if optional_params else "",
-            "".join("{" + param + "}" for param in required_params),
-        )
-
-    def generate_usepackage(self, pkg):
-        if isinstance(pkg, list):
-            return self.generate_tex_command(
-                "usepackage", required_params=[pkg[0]], optional_params=pkg[1]
-            )
-        else:
-            return self.generate_tex_command("usepackage", required_params=[pkg])
-
-    def get_text_for_text_mode(self, expression):
-        """Inserts an expression verbatim into the TeX template.
-
-        Parameters
-        ----–-----
-        expression : :class:`str`
-            The expression to be typeset, e.g. `"foo"`
-
-        Returns
-        -------
-        :class:`str`
-            LaTeX code based on the template, containing the given expression and ready for typesetting
-        """
-        return self.body.replace(self.text_to_replace, expression)
-
-    def get_text_for_env(self, environment, expression):
-        """Inserts an expression into the TeX template, surrounded
-        by `\\begin{<environment>} ... \\end{<environment>}` for a certain environment.
-
-        Parameters
-        ----------
-        environment : :class:`str`
-            The environment in which we should wrap the expression.
-        expression : :class:`str`
-            The string containing the expression to be typeset, e.g. $\\sqrt{2}$
-
-        Returns
-        -------
-        :class:`str`
-            LaTeX code based on template, containing the given expression and ready for typesetting
-        """
-        begin = r"\begin{" + environment + "}"
-        end = r"\end{" + environment + "}"
-        return self.body.replace(
-            self.text_to_replace, "{0}\n{1}\n{2}".format(begin, expression, end)
-        )
-
-    def get_text_for_tex_mode(self, expression):
-        """Inserts an expression into the TeX template, surrounded
-        by `\\begin{align*} ... \\end{align*}` for math mode.
-
-        Parameters
-        ----------
-        expression : :class:`str`
-            The string containing the (math) expression to be typeset, e.g. $\\sqrt{2}$
-
-        Returns
-        -------
-        :class:`str`
-            LaTeX code based on template, containing the given expression and ready for typesetting
-        """
-        return self.get_text_for_env("align*", expression)
+    def add_to_document(self, txt):
+        self.file_not_mutable()

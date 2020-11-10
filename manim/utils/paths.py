@@ -1,3 +1,5 @@
+"""Functions determining transformation paths between sets of points."""
+
 __all__ = [
     "straight_path",
     "path_along_arc",

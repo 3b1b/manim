@@ -8,17 +8,17 @@ from functools import reduce
 import copy
 import itertools as it
 import operator as op
-import os
 import random
 import sys
 
+from pathlib import Path
 from colour import Color
 import numpy as np
 
-from .. import config, file_writer_config
+from .. import config
 from ..constants import *
 from ..container import Container
-from ..utils.color import color_gradient
+from ..utils.color import color_gradient, WHITE, BLACK, YELLOW_C
 from ..utils.color import interpolate_color
 from ..utils.iterables import list_update
 from ..utils.iterables import remove_list_redundancies
@@ -52,6 +52,7 @@ class Mobject(Container):
 
     def __init__(self, **kwargs):
         Container.__init__(self, **kwargs)
+        self.point_hash = None
         self.submobjects = []
         self.color = Color(self.color)
         if self.name is None:
@@ -62,7 +63,7 @@ class Mobject(Container):
         self.generate_points()
         self.init_colors()
 
-    def __str__(self):
+    def __repr__(self):
         return str(self.name)
 
     def reset_points(self):
@@ -198,7 +199,7 @@ class Mobject(Container):
 
     def save_image(self, name=None):
         self.get_image().save(
-            os.path.join(file_writer_config["video_dir"], (name or str(self)) + ".png")
+            Path(config.get_dir("video_dir")).joinpath((name or str(self)) + ".png")
         )
 
     def copy(self):
@@ -608,7 +609,8 @@ class Mobject(Container):
             raise Exception("Cannot position endpoints of closed loop")
         target_vect = np.array(end) - np.array(start)
         self.scale(
-            get_norm(target_vect) / get_norm(curr_vect), about_point=curr_start,
+            get_norm(target_vect) / get_norm(curr_vect),
+            about_point=curr_start,
         )
         self.rotate(
             angle_of_vector(target_vect) - angle_of_vector(curr_vect),
@@ -668,7 +670,7 @@ class Mobject(Container):
 
     def set_submobject_colors_by_gradient(self, *colors):
         if len(colors) == 0:
-            raise Exception("Need at least one color")
+            raise ValueError("Need at least one color")
         elif len(colors) == 1:
             return self.set_color(*colors)
 
@@ -717,14 +719,12 @@ class Mobject(Container):
 
     ##
 
-    def save_state(self, use_deepcopy=False):
+    def save_state(self):
         if hasattr(self, "saved_state"):
             # Prevent exponential growth of data
             self.saved_state = None
-        if use_deepcopy:
-            self.saved_state = self.deepcopy()
-        else:
-            self.saved_state = self.copy()
+        self.saved_state = self.copy()
+
         return self
 
     def restore(self):
@@ -917,7 +917,9 @@ class Mobject(Container):
 
     def match_coord(self, mobject, dim, direction=ORIGIN):
         return self.set_coord(
-            mobject.get_coord(dim, direction), dim=dim, direction=direction,
+            mobject.get_coord(dim, direction),
+            dim=dim,
+            direction=direction,
         )
 
     def match_x(self, mobject, direction=ORIGIN):
@@ -1180,6 +1182,6 @@ class Group(Mobject):
 
     def __init__(self, *mobjects, **kwargs):
         if not all([isinstance(m, Mobject) for m in mobjects]):
-            raise Exception("All submobjects must be of type Mobject")
+            raise TypeError("All submobjects must be of type Mobject")
         Mobject.__init__(self, **kwargs)
         self.add(*mobjects)

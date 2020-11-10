@@ -1,3 +1,5 @@
+"""Utility functions for two- and three-dimensional vectors."""
+
 __all__ = [
     "get_norm",
     "quaternion_mult",
@@ -90,7 +92,7 @@ def rotate_vector(vector, angle, axis=OUT):
         product = reduce(quaternion_mult, [quat, np.append(0, vector), quat_inv])
         return product[1:]
     else:
-        raise Exception("vector must be of dimension 2 or 3")
+        raise ValueError("vector must be of dimension 2 or 3")
 
 
 def thick_diagonal(dim, thickness=2):
@@ -236,7 +238,7 @@ def line_intersection(line1, line2):
 
     div = det(x_diff, y_diff)
     if div == 0:
-        raise Exception("Lines do not intersect")
+        raise ValueError("Lines do not intersect")
     d = (det(*line1), det(*line2))
     x = det(d, x_diff) / div
     y = det(d, y_diff) / div
@@ -250,3 +252,31 @@ def get_winding_number(points):
         d_angle = ((d_angle + PI) % TAU) - PI
         total_angle += d_angle
     return total_angle / TAU
+
+
+def shoelace(x_y):
+    """2D implementation of the shoelace formula.
+
+    Returns
+    -------
+    :class:`float`
+        Returns signed area.
+    """
+    x = x_y[:, 0]
+    y = x_y[:, 1]
+    area = 0.5 * np.array(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
+    return area
+
+
+def shoelace_direction(x_y):
+    """
+    Uses the area determined by the shoelace method to determine whether
+    the input set of points is directed clockwise or counterclockwise.
+
+    Returns
+    -------
+    :class:`str`
+        Either ``"CW"`` or ``"CCW"``.
+    """
+    area = shoelace(x_y)
+    return "CW" if area > 0 else "CCW"

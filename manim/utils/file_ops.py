@@ -1,3 +1,5 @@
+"""Utility functions for interacting with the file system."""
+
 __all__ = [
     "add_extension_if_not_present",
     "guarantee_existence",
@@ -8,16 +10,15 @@ __all__ = [
 
 
 import os
-import subprocess as sp
 import platform
-import numpy as np
 import time
+import subprocess as sp
+from pathlib import Path
 
 
 def add_extension_if_not_present(file_name, extension):
-    # This could conceivably be smarter about handling existing differing extensions
-    if file_name[-len(extension) :] != extension:
-        return file_name + extension
+    if file_name.suffix != extension:
+        return file_name.with_suffix(extension)
     else:
         return file_name
 
@@ -31,13 +32,15 @@ def guarantee_existence(path):
 def seek_full_path_from_defaults(file_name, default_dir, extensions):
     possible_paths = [file_name]
     possible_paths += [
-        os.path.join(default_dir, file_name + extension)
-        for extension in ["", *extensions]
+        Path(default_dir) / f"{file_name}{extension}" for extension in ["", *extensions]
     ]
     for path in possible_paths:
         if os.path.exists(path):
             return path
-    raise IOError("File {} not Found".format(file_name))
+    error = "From: {}, could not find {} at either of these locations: {}".format(
+        os.getcwd(), file_name, possible_paths
+    )
+    raise IOError(error)
 
 
 def modify_atime(file_path):

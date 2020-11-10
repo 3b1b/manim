@@ -1,3 +1,5 @@
+"""Mobjects representing objects from probability theory and statistics."""
+
 __all__ = ["SampleSpace", "BarChart"]
 
 
@@ -9,7 +11,16 @@ from ..mobject.svg.brace import Brace
 from ..mobject.svg.tex_mobject import MathTex
 from ..mobject.svg.tex_mobject import Tex
 from ..mobject.types.vectorized_mobject import VGroup
-from ..utils.color import color_gradient
+from ..utils.color import (
+    color_gradient,
+    DARK_GREY,
+    LIGHT_GREY,
+    GREEN_E,
+    BLUE_E,
+    MAROON_B,
+    YELLOW,
+    BLUE,
+)
 from ..utils.iterables import tuplify
 
 EPSILON = 0.0001

@@ -1,0 +1,70 @@
+name: black-check
+on:
+  pull_request:
+      branches:
+        - master
+
+jobs:
+  check-format:
+    runs-on: windows-latest
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Checkout the repository
+        shell: bash
+        run: |
+          prnum=$(python -c "import json;print(json.load(open(r'${GITHUB_EVENT_PATH}'))['number'])")
+          git init
+          git remote add origin https://github.com/ManimCommunity/manim.git
+          git fetch origin pull/${prnum}/head:pr-${prnum}
+          git checkout pr-${prnum}
+
+      - name: Install black
+        run: pip install black
+
+      - name: Get files
+        id: files-changes-in-pr
+        shell: powershell
+        run: |
+          #echo "$(gc "$env:GITHUB_EVENT_PATH")"
+          $payload = gc "$env:GITHUB_EVENT_PATH" | ConvertFrom-Json
+          $commitEndpoint=$($payload.pull_request._links.commits.href)
+          echo "$commitEndpoint"
+          $commits = Invoke-WebRequest -Uri "$commitEndpoint" | ConvertFrom-Json
+          bash -c "git diff --name-only HEAD~$($commits.count) HEAD>/d/changes.txt"
+
+      - name: Run Black on top of latest commit
+        shell: bash
+        run: |
+          printf "Checking Files"
+          printf $(</d/changes.txt)
+          printf "\n"
+          content=$(</d/changes.txt)
+          while read file
+          do
+            if [[ ($(python -c "print('${file}'[-3:])") == ".py") && (-f ${file}) ]]
+            then
+              black --diff $file
+            fi
+          done </d/changes.txt
+          while read file
+          do
+            if [[ ($(python -c "print('${file}'[-3:])") == ".py") && (-f ${file}) ]]
+            then
+              black $file
+            fi
+          done </d/changes.txt
+
+      - name: Check File and Report the Files Not formatted
+        shell: powershell
+        run: |
+          if ( $(bash -c "git diff --name-only") -eq "" -or $(bash -c "git diff --name-only") -eq $null ){
+            echo 'All files Changed are formatted Correctly'
+          } else {
+            echo 'These files need formatting.'
+            echo "The Filed changed are `n`n $(git ls-files -m)"
+            exit 1
+          }

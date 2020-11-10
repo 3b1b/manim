@@ -1,7 +1,7 @@
-"""A Scene is the canvas of the animation."""
+"""Basic canvas for animations."""
 
 
-__all__ = ["Scene", "EndSceneEarlyException"]
+__all__ = ["Scene"]
 
 
 import inspect
@@ -13,16 +13,19 @@ import copy
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
 
-from .. import camera_config, file_writer_config, logger
-from ..animation.animation import Animation
+from .. import config, logger
+from ..animation.animation import Animation, Wait
 from ..animation.transform import MoveToTarget, ApplyMethod
 from ..camera.camera import Camera
 from ..constants import *
 from ..container import Container
 from ..mobject.mobject import Mobject
 from ..scene.scene_file_writer import SceneFileWriter
-from ..utils.iterables import list_update
+from ..utils.iterables import list_update, list_difference_update
 from ..utils.hashing import get_hash_from_play_call, get_hash_from_wait_call
+from ..utils.family import extract_mobject_family_members
+from ..renderer.cairo_renderer import CairoRenderer
+from ..utils.exceptions import EndSceneEarlyException
 
 
 class Scene(Container):
@@ -49,8 +52,6 @@ class Scene(Container):
         file_writer : The object that writes the animations in the scene to a video file.
         mobjects : The list of mobjects present in the scene.
         foreground_mobjects : List of mobjects explicitly in the foreground.
-        num_plays : Number of play() functions in the scene.
-        time: time elapsed since initialisation of scene.
         random_seed: The seed with which all random operations are done.
 
     """
@@ -62,32 +63,39 @@ class Scene(Container):
         "random_seed": 0,
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, renderer=None, **kwargs):
         Container.__init__(self, **kwargs)
-        self.camera = self.camera_class(**camera_config)
-        self.file_writer = SceneFileWriter(self, **file_writer_config,)
-        self.play_hashes_list = []
+        if renderer is None:
+            self.renderer = CairoRenderer(camera_class=self.camera_class)
+        else:
+            self.renderer = renderer
+        self.renderer.init(self)
+
         self.mobjects = []
         # TODO, remove need for foreground mobjects
         self.foreground_mobjects = []
-        self.num_plays = 0
-        self.time = 0
-        self.original_skipping_status = file_writer_config["skip_animations"]
         if self.random_seed is not None:
             random.seed(self.random_seed)
             np.random.seed(self.random_seed)
 
         self.setup()
+
+    def render(self):
+        """
+        Render this Scene.
+        """
+        self.original_skipping_status = config["skip_animations"]
         try:
             self.construct()
         except EndSceneEarlyException:
             pass
         self.tear_down()
         # We have to reset these settings in case of multiple renders.
-        file_writer_config["skip_animations"] = False
-        self.original_skipping_status = file_writer_config["skip_animations"]
-        self.file_writer.finish()
-        self.print_end_message()
+        config["skip_animations"] = self.original_skipping_status
+        self.renderer.finish(self)
+        logger.info(
+            f"Rendered {str(self)}\nPlayed {self.renderer.num_plays} animations"
+        )
 
     def setup(self):
         """
@@ -115,30 +123,6 @@ class Scene(Container):
     def __str__(self):
         return self.__class__.__name__
 
-    def print_end_message(self):
-        """
-        Used internally to print the number of
-        animations played after the scene ends,
-        as well as the name of the scene rendered
-        (useful when using the `-a` option).
-        """
-        logger.info(f"Rendered {str(self)}\nPlayed {self.num_plays} animations")
-
-    def set_variables_as_attrs(self, *objects, **newly_named_objects):
-        """
-        This method is slightly hacky, making it a little easier
-        for certain methods (typically subroutines of construct)
-        to share local variables.
-        """
-        caller_locals = inspect.currentframe().f_back.f_locals
-        for key, value in list(caller_locals.items()):
-            for o in objects:
-                if value is o:
-                    setattr(self, key, value)
-        for key, value in list(newly_named_objects.items()):
-            setattr(self, key, value)
-        return self
-
     def get_attrs(self, *keys):
         """
         Gets attributes of a scene given the attribute's identifier/name.
@@ -154,62 +138,6 @@ class Scene(Container):
             List of attributes of the passed identifiers.
         """
         return [getattr(self, key) for key in keys]
-
-    def get_frame(self):
-        """
-        Gets the current frame as NumPy array.
-
-        Returns
-        -------
-        np.array
-            NumPy array of pixel values of each pixel in screen.
-            The shape of the array is height x width x 3
-        """
-        return np.array(self.camera.pixel_array)
-
-    def update_frame(  # TODO Description in Docstring
-        self,
-        mobjects=None,
-        background=None,
-        include_submobjects=True,
-        ignore_skipping=True,
-        **kwargs,
-    ):
-        """Update the frame.
-
-        Parameters
-        ----------
-        mobjects: list, optional
-            list of mobjects
-
-        background: np.ndarray, optional
-            Pixel Array for Background.
-
-        include_submobjects: bool, optional
-
-        ignore_skipping : bool, optional
-
-        **kwargs
-
-        """
-        if file_writer_config["skip_animations"] and not ignore_skipping:
-            return
-        if mobjects is None:
-            mobjects = list_update(self.mobjects, self.foreground_mobjects,)
-        if background is not None:
-            self.camera.set_pixel_array(background)
-        else:
-            self.camera.reset()
-
-        kwargs["include_submobjects"] = include_submobjects
-        self.camera.capture_mobjects(mobjects, **kwargs)
-
-    def freeze_background(self):
-        self.update_frame()
-        self.camera = Camera(self.get_frame())
-        self.clear()
-
-    ###
 
     def update_mobjects(self, dt):
         """
@@ -235,22 +163,6 @@ class Scene(Container):
         return self.always_update_mobjects or any(
             [mob.has_time_based_updater() for mob in self.get_mobject_family_members()]
         )
-
-    ###
-
-    def increment_time(self, d_time):
-        """
-        Increments the time elapsed after intialisation of scene by
-        passed "d_time".
-
-        Parameters
-        ----------
-        d_time : int or float
-            Time in seconds to increment by.
-        """
-        self.time += d_time
-
-    ###
 
     def get_top_level_mobjects(self):
         """
@@ -284,7 +196,9 @@ class Scene(Container):
         list
             List of mobject family members.
         """
-        return self.camera.extract_mobject_family_members(self.mobjects)
+        return extract_mobject_family_members(
+            self.mobjects, use_z_index=self.renderer.camera.use_z_index
+        )
 
     def add(self, *mobjects):
         """
@@ -323,7 +237,7 @@ class Scene(Container):
             # Anything animated that's not already in the
             # scene gets added to the scene
             mob = animation.mobject
-            if mob not in curr_mobjects:
+            if mob is not None and mob not in curr_mobjects:
                 self.add(mob)
                 curr_mobjects += mob.get_family()
 
@@ -373,7 +287,9 @@ class Scene(Container):
             The Scene mobject with restructured Mobjects.
         """
         if extract_families:
-            to_remove = self.camera.extract_mobject_family_members(to_remove)
+            to_remove = extract_mobject_family_members(
+                to_remove, use_z_index=self.renderer.camera.use_z_index
+            )
         _list = getattr(self, mobject_list_name)
         new_list = self.get_restructured_mobject_list(_list, to_remove)
         setattr(self, mobject_list_name, new_list)
@@ -596,99 +512,23 @@ class Scene(Container):
                 return mobjects[i:]
         return []
 
-    def get_time_progression(
-        self, run_time, n_iterations=None, override_skip_animations=False
-    ):
-        """
-        You will hardly use this when making your own animations.
-        This method is for Manim's internal use.
-
-        Returns a CommandLine ProgressBar whose fill_time
-        is dependent on the run_time of an animation,
-        the iterations to perform in that animation
-        and a bool saying whether or not to consider
-        the skipped animations.
-
-        Parameters
-        ----------
-        run_time: float
-            The run_time of the animation.
-
-        n_iterations: int, optional
-            The number of iterations in the animation.
-
-        override_skip_animations: bool, optional
-            Whether or not to show skipped animations in the progress bar.
-
-        Returns
-        ------
-        ProgressDisplay
-            The CommandLine Progress Bar.
-        """
-        if file_writer_config["skip_animations"] and not override_skip_animations:
-            times = [run_time]
-        else:
-            step = 1 / self.camera.frame_rate
-            times = np.arange(0, run_time, step)
-        time_progression = ProgressDisplay(
-            times,
-            total=n_iterations,
-            leave=file_writer_config["leave_progress_bars"],
-            ascii=True if platform.system() == "Windows" else None,
-            disable=not file_writer_config["progress_bar"],
+    def get_moving_and_stationary_mobjects(self, animations):
+        moving_mobjects = self.get_moving_mobjects(*animations)
+        all_mobjects = list_update(self.mobjects, self.foreground_mobjects)
+        all_mobject_families = extract_mobject_family_members(
+            all_mobjects,
+            use_z_index=self.renderer.camera.use_z_index,
+            only_those_with_points=True,
         )
-        return time_progression
-
-    def get_run_time(self, animations):
-        """
-        Gets the total run time for a list of animations.
-
-        Parameters
-        ----------
-        animations: list of Animation
-            A list of the animations whose total
-            run_time is to be calculated.
-
-        Returns
-        ------
-        float
-            The total run_time of all of the animations in the list.
-        """
-
-        return np.max([animation.run_time for animation in animations])
-
-    def get_animation_time_progression(self, animations):
-        """
-        You will hardly use this when making your own animations.
-        This method is for Manim's internal use.
-
-        Uses get_time_progression to obtaina
-        CommandLine ProgressBar whose fill_time is
-        dependent on the qualities of the passed Animation,
-
-        Parameters
-        ----------
-        animations : list of Animation
-            The list of animations to get
-            the time progression for.
-
-        Returns
-        ------
-        ProgressDisplay
-            The CommandLine Progress Bar.
-        """
-        run_time = self.get_run_time(animations)
-        time_progression = self.get_time_progression(run_time)
-        time_progression.set_description(
-            "".join(
-                [
-                    "Animation {}: ".format(self.num_plays),
-                    str(animations[0]),
-                    (", etc." if len(animations) > 1 else ""),
-                ]
-            )
+        moving_mobjects = self.get_moving_mobjects(*animations)
+        all_moving_mobject_families = extract_mobject_family_members(
+            moving_mobjects,
+            use_z_index=self.renderer.camera.use_z_index,
         )
-        return time_progression
+        stationary_mobjects = list_difference_update(
+            all_mobject_families, all_moving_mobject_families
+        )
+        return all_moving_mobject_families, stationary_mobjects
 
     def compile_play_args_to_animation_list(self, *args, **kwargs):
         """
@@ -752,14 +592,14 @@ class Scene(Container):
             elif state["curr_method"] is not None:
                 state["method_args"].append(arg)
             elif isinstance(arg, Mobject):
-                raise Exception(
+                raise ValueError(
                     """
                     I think you may have invoked a method
                     you meant to pass in as a Scene.play argument
-                """
+                    """
                 )
             else:
-                raise Exception("Invalid play arguments")
+                raise ValueError("Invalid play arguments")
         compile_method(state)
 
         for animation in animations:
@@ -769,239 +609,81 @@ class Scene(Container):
 
         return animations
 
-    def update_skipping_status(self):
+    def get_time_progression(
+        self, run_time, n_iterations=None, override_skip_animations=False
+    ):
         """
-        This method is used internally to check if the current
-        animation needs to be skipped or not. It also checks if
-        the number of animations that were played correspond to
-        the number of animations that need to be played, and
-        raises an EndSceneEarlyException if they don't correspond.
-        """
+        You will hardly use this when making your own animations.
+        This method is for Manim's internal use.
 
-        if file_writer_config["from_animation_number"]:
-            if self.num_plays == file_writer_config["from_animation_number"]:
-                file_writer_config["skip_animations"] = False
-        if file_writer_config["upto_animation_number"]:
-            if self.num_plays >= file_writer_config["upto_animation_number"]:
-                file_writer_config["skip_animations"] = True
-                raise EndSceneEarlyException()
-
-    def handle_caching_play(func):
-        """
-        Decorator that returns a wrapped version of func that will compute the hash of the play invocation.
-
-        The returned function will act according to the computed hash: either skip the animation because it's already cached, or let the invoked function play normally.
+        Returns a CommandLine ProgressBar whose ``fill_time``
+        is dependent on the ``run_time`` of an animation,
+        the iterations to perform in that animation
+        and a bool saying whether or not to consider
+        the skipped animations.
 
         Parameters
         ----------
-        func : Callable[[...], None]
-            The play like function that has to be written to the video file stream. Take the same parameters as `scene.play`.
-        """
+        run_time : float
+            The ``run_time`` of the animation.
 
-        def wrapper(self, *args, **kwargs):
-            self.revert_to_original_skipping_status()
-            animations = self.compile_play_args_to_animation_list(*args, **kwargs)
-            self.add_mobjects_from_animations(animations)
-            if not file_writer_config["disable_caching"]:
-                mobjects_on_scene = self.get_mobjects()
-                hash_play = get_hash_from_play_call(
-                    self.camera, animations, mobjects_on_scene
-                )
-                self.play_hashes_list.append(hash_play)
-                if self.file_writer.is_already_cached(hash_play):
-                    logger.info(
-                        f"Animation {self.num_plays} : Using cached data (hash : {hash_play})"
-                    )
-                    file_writer_config["skip_animations"] = True
-            else:
-                hash_play = "uncached_{:05}".format(self.num_plays)
-                self.play_hashes_list.append(hash_play)
-            func(self, *args, **kwargs)
+        n_iterations : int, optional
+            The number of iterations in the animation.
 
-        return wrapper
-
-    def handle_caching_wait(func):
-        """
-        Decorator that returns a wrapped version of func that will compute the hash of the wait invocation.
-
-        The returned function will act according to the computed hash: either skip the animation because it's already cached, or let the invoked function play normally.
-
-        Parameters
-        ----------
-        func : Callable[[...], None]
-            The wait like function that has to be written to the video file stream. Take the same parameters as `scene.wait`.
-        """
-
-        def wrapper(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
-            self.revert_to_original_skipping_status()
-            if not file_writer_config["disable_caching"]:
-                hash_wait = get_hash_from_wait_call(
-                    self.camera, duration, stop_condition, self.get_mobjects()
-                )
-                self.play_hashes_list.append(hash_wait)
-                if self.file_writer.is_already_cached(hash_wait):
-                    logger.info(
-                        f"Wait {self.num_plays} : Using cached data (hash : {hash_wait})"
-                    )
-                    file_writer_config["skip_animations"] = True
-            else:
-                hash_wait = "uncached_{:05}".format(self.num_plays)
-                self.play_hashes_list.append(hash_wait)
-            func(self, duration, stop_condition)
-
-        return wrapper
-
-    def handle_play_like_call(func):
-        """
-        This method is used internally to wrap the
-        passed function, into a function that
-        actually writes to the video stream.
-        Simultaneously, it also adds to the number
-        of animations played.
-
-        Parameters
-        ----------
-        func : function
-            The play() like function that has to be
-            written to the video file stream.
+        override_skip_animations : bool, optional
+            Whether or not to show skipped animations in the progress bar.
 
         Returns
         -------
-        function
-            The play() like function that can now write
-            to the video file stream.
+        ProgressDisplay
+            The CommandLine Progress Bar.
         """
-
-        def wrapper(self, *args, **kwargs):
-            self.update_skipping_status()
-            allow_write = not file_writer_config["skip_animations"]
-            self.file_writer.begin_animation(allow_write)
-            func(self, *args, **kwargs)
-            self.file_writer.end_animation(allow_write)
-            self.num_plays += 1
-
-        return wrapper
-
-    def begin_animations(self, animations):
-        """
-        This method begins the list of animations that is passed,
-        and adds any mobjects involved (if not already present)
-        to the scene again.
-
-        Parameters
-        ----------
-        animations : list
-            List of involved animations.
-
-        """
-        for animation in animations:
-            # Begin animation
-            animation.begin()
-
-    def progress_through_animations(self, animations):
-        """
-        This method progresses through each animation
-        in the list passed and and updates the frames as required.
-
-        Parameters
-        ----------
-        animations : list
-            List of involved animations.
-        """
-        # Paint all non-moving objects onto the screen, so they don't
-        # have to be rendered every frame
-        moving_mobjects = self.get_moving_mobjects(*animations)
-        self.update_frame(excluded_mobjects=moving_mobjects)
-        static_image = self.get_frame()
-        last_t = 0
-        for t in self.get_animation_time_progression(animations):
-            dt = t - last_t
-            last_t = t
-            for animation in animations:
-                animation.update_mobjects(dt)
-                alpha = t / animation.run_time
-                animation.interpolate(alpha)
-            self.update_mobjects(dt)
-            self.update_frame(moving_mobjects, static_image)
-            self.add_frames(self.get_frame())
-
-    def finish_animations(self, animations):
-        """
-        This function cleans up after the end
-        of each animation in the passed list.
-
-        Parameters
-        ----------
-        animations : list
-            list of animations to finish.
-        """
-        for animation in animations:
-            animation.finish()
-            animation.clean_up_from_scene(self)
-        self.mobjects_from_last_animation = [anim.mobject for anim in animations]
-        if file_writer_config["skip_animations"]:
-            # TODO, run this call in for each animation?
-            self.update_mobjects(self.get_run_time(animations))
+        if config["skip_animations"] and not override_skip_animations:
+            times = [run_time]
         else:
-            self.update_mobjects(0)
+            step = 1 / self.renderer.camera.frame_rate
+            times = np.arange(0, run_time, step)
+        time_progression = ProgressDisplay(
+            times,
+            total=n_iterations,
+            leave=config["leave_progress_bars"],
+            ascii=True if platform.system() == "Windows" else None,
+            disable=not config["progress_bar"],
+        )
+        return time_progression
 
-    @handle_caching_play
-    @handle_play_like_call
-    def play(self, *args, **kwargs):
+    def get_animation_time_progression(self, animations):
         """
-        This method is used to prep the animations for rendering,
-        apply the arguments and parameters required to them,
-        render them, and write them to the video file.
+        You will hardly use this when making your own animations.
+        This method is for Manim's internal use.
+
+        Uses :func:`~.get_time_progression` to obtain a
+        CommandLine ProgressBar whose ``fill_time`` is
+        dependent on the qualities of the passed Animation,
 
         Parameters
         ----------
-        *args : Animation or mobject with mobject method and params
-        **kwargs : named parameters affecting what was passed in *args e.g run_time, lag_ratio etc.
-        """
-        if len(args) == 0:
-            warnings.warn("Called Scene.play with no animations")
-            return
-        animations = self.compile_play_args_to_animation_list(*args, **kwargs)
-        self.begin_animations(animations)
-        self.progress_through_animations(animations)
-        self.finish_animations(animations)
-
-    def clean_up_animations(self, *animations):
-        """
-        This method cleans up and removes from the
-        scene all the animations that were passed
-
-        Parameters
-        ----------
-        *animations : Animation
-            Animation to clean up.
+        animations : List[:class:`~.Animation`, ...]
+            The list of animations to get
+            the time progression for.
 
         Returns
         -------
-        Scene
-            The scene with the animations
-            cleaned up.
-
+        ProgressDisplay
+            The CommandLine Progress Bar.
         """
-        for animation in animations:
-            animation.clean_up_from_scene(self)
-        return self
-
-    def get_mobjects_from_last_animation(self):
-        """
-        This method returns the mobjects from the previous
-        played animation, if any exist, and returns an empty
-        list if not.
-
-        Returns
-        --------
-        list
-            The list of mobjects from the previous animation.
-
-        """
-        if hasattr(self, "mobjects_from_last_animation"):
-            return self.mobjects_from_last_animation
-        return []
+        run_time = self.get_run_time(animations)
+        time_progression = self.get_time_progression(run_time)
+        time_progression.set_description(
+            "".join(
+                [
+                    "Animation {}: ".format(self.renderer.num_plays),
+                    str(animations[0]),
+                    (", etc." if len(animations) > 1 else ""),
+                ]
+            )
+        )
+        return time_progression
 
     def get_wait_time_progression(self, duration, stop_condition):
         """
@@ -1010,7 +692,7 @@ class Scene(Container):
 
         Parameters
         ----------
-        duration: int or float
+        duration : int or float
             duration of wait time
 
         stop_condition : function
@@ -1033,54 +715,34 @@ class Scene(Container):
             )
         else:
             time_progression = self.get_time_progression(duration)
-            time_progression.set_description("Waiting {}".format(self.num_plays))
+            time_progression.set_description(
+                "Waiting {}".format(self.renderer.num_plays)
+            )
         return time_progression
 
-    @handle_caching_wait
-    @handle_play_like_call
-    def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
+    def get_run_time(self, animations):
         """
-        This method is used to wait, and do nothing to the scene, for some
-        duration.
-        Updaters stop updating, nothing happens.
+        Gets the total run time for a list of animations.
 
         Parameters
         ----------
-        duration : float or int, optional
-            The duration of wait time.
-        stop_condition :
-            A function that determines whether to stop waiting or not.
+        animations : List[:class:`Animation`, ...]
+            A list of the animations whose total
+            ``run_time`` is to be calculated.
 
         Returns
         -------
-        Scene
-            The scene, after waiting.
+        float
+            The total ``run_time`` of all of the animations in the list.
         """
-        self.update_mobjects(dt=0)  # Any problems with this?
-        if self.should_update_mobjects():
-            time_progression = self.get_wait_time_progression(duration, stop_condition)
-            # TODO, be smart about setting a static image
-            # the same way Scene.play does
-            last_t = 0
-            for t in time_progression:
-                dt = t - last_t
-                last_t = t
-                self.update_mobjects(dt)
-                self.update_frame()
-                self.add_frames(self.get_frame())
-                if stop_condition is not None and stop_condition():
-                    time_progression.close()
-                    break
-        elif file_writer_config["skip_animations"]:
-            # Do nothing
-            return self
-        else:
-            self.update_frame()
-            dt = 1 / self.camera.frame_rate
-            n_frames = int(duration / dt)
-            frame = self.get_frame()
-            self.add_frames(*[frame] * n_frames)
-        return self
+
+        return np.max([animation.run_time for animation in animations])
+
+    def play(self, *args, **kwargs):
+        self.renderer.play(self, *args, **kwargs)
+
+    def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
+        self.play(Wait(duration=duration, stop_condition=stop_condition))
 
     def wait_until(self, stop_condition, max_time=60):
         """
@@ -1098,52 +760,83 @@ class Scene(Container):
         """
         self.wait(max_time, stop_condition=stop_condition)
 
-    def force_skipping(self):
+    def play_internal(self, *args, **kwargs):
         """
-        This forces the skipping of animations,
-        by setting original_skipping_status to
-        whatever skip_animations was, and setting
-        skip_animations to True.
-
-        Returns
-        -------
-        Scene
-            The Scene, with skipping turned on.
-        """
-        self.original_skipping_status = file_writer_config["skip_animations"]
-        file_writer_config["skip_animations"] = True
-        return self
-
-    def revert_to_original_skipping_status(self):
-        """
-        Forces the scene to go back to its original skipping status,
-        by setting skip_animations to whatever it reads
-        from original_skipping_status.
-
-        Returns
-        -------
-        Scene
-            The Scene, with the original skipping status.
-        """
-        if hasattr(self, "original_skipping_status"):
-            file_writer_config["skip_animations"] = self.original_skipping_status
-        return self
-
-    def add_frames(self, *frames):
-        """
-        Adds a frame to the video_file_stream
+        This method is used to prep the animations for rendering,
+        apply the arguments and parameters required to them,
+        render them, and write them to the video file.
 
         Parameters
         ----------
-        *frames : numpy.ndarray
-            The frames to add, as pixel arrays.
+        *args : Animation or mobject with mobject method and params
+        **kwargs : named parameters affecting what was passed in *args e.g
+            run_time, lag_ratio etc.
         """
-        dt = 1 / self.camera.frame_rate
-        self.increment_time(len(frames) * dt)
-        if file_writer_config["skip_animations"]:
+        if len(args) == 0:
+            warnings.warn("Called Scene.play with no animations")
             return
-        for frame in frames:
-            self.file_writer.write_frame(frame)
+
+        animations = self.compile_play_args_to_animation_list(*args, **kwargs)
+        if (
+            len(animations) == 1
+            and isinstance(animations[0], Wait)
+            and not self.should_update_mobjects()
+        ):
+            self.add_static_frames(animations[0].duration)
+            return
+
+        for animation in animations:
+            animation.begin()
+
+        moving_mobjects = None
+        static_mobjects = None
+        duration = None
+        stop_condition = None
+        time_progression = None
+        if len(animations) == 1 and isinstance(animations[0], Wait):
+            # TODO, be smart about setting a static image
+            # the same way Scene.play does
+            duration = animations[0].duration
+            stop_condition = animations[0].stop_condition
+            self.static_image = None
+            time_progression = self.get_wait_time_progression(duration, stop_condition)
+        else:
+            # Paint all non-moving objects onto the screen, so they don't
+            # have to be rendered every frame
+            (
+                moving_mobjects,
+                stationary_mobjects,
+            ) = self.get_moving_and_stationary_mobjects(animations)
+            self.renderer.update_frame(self, mobjects=stationary_mobjects)
+            self.static_image = self.renderer.get_frame()
+            time_progression = self.get_animation_time_progression(animations)
+
+        last_t = 0
+        for t in time_progression:
+            dt = t - last_t
+            last_t = t
+            for animation in animations:
+                animation.update_mobjects(dt)
+                alpha = t / animation.run_time
+                animation.interpolate(alpha)
+            self.update_mobjects(dt)
+            self.renderer.update_frame(self, moving_mobjects, self.static_image)
+            self.renderer.add_frame(self.renderer.get_frame())
+            if stop_condition is not None and stop_condition():
+                time_progression.close()
+                break
+
+        for animation in animations:
+            animation.finish()
+            animation.clean_up_from_scene(self)
+
+    def add_static_frames(self, duration):
+        self.renderer.update_frame(self)
+        dt = 1 / self.renderer.camera.frame_rate
+        self.renderer.add_frame(
+            self.renderer.get_frame(),
+            num_frames=int(duration / dt),
+        )
 
     def add_sound(self, sound_file, time_offset=0, gain=None, **kwargs):
         """
@@ -1161,19 +854,7 @@ class Scene(Container):
         gain :
 
         """
-        if file_writer_config["skip_animations"]:
+        if config["skip_animations"]:
             return
         time = self.time + time_offset
-        self.file_writer.add_sound(sound_file, time, gain, **kwargs)
-
-    def show_frame(self):
-        """
-        Opens the current frame in the Default Image Viewer
-        of your system.
-        """
-        self.update_frame(ignore_skipping=True)
-        self.camera.get_image().show()
-
-
-class EndSceneEarlyException(Exception):
-    pass
+        self.renderer.file_writer.add_sound(sound_file, time, gain, **kwargs)

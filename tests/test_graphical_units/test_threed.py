@@ -24,7 +24,7 @@ class CameraMoveTest(ThreeDScene):
     def construct(self):
         cube = Cube()
         self.play(Animation(cube))
-        self.move_camera(phi=PI / 4, theta=PI / 4)
+        self.move_camera(phi=PI / 4, theta=PI / 4, frame_center=[0, 0, -1])
 
 
 class AmbientCameraMoveTest(ThreeDScene):
@@ -32,6 +32,17 @@ class AmbientCameraMoveTest(ThreeDScene):
         cube = Cube()
         self.begin_ambient_camera_rotation(rate=0.5)
         self.play(Animation(cube))
+
+
+class FixedInFrameMObjectTest(ThreeDScene):
+    def construct(self):
+        axes = ThreeDAxes()
+        self.set_camera_orientation(phi=75 * DEGREES, theta=-45 * DEGREES)
+        circ = Circle()
+        self.add_fixed_in_frame_mobjects(circ)
+        circ.to_corner(UL)
+        self.add(axes)
+        self.wait()
 
 
 MODULE_NAME = "threed"

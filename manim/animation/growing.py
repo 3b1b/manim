@@ -1,3 +1,5 @@
+"""Animations that grow mobjects."""
+
 __all__ = [
     "GrowFromPoint",
     "GrowFromCenter",

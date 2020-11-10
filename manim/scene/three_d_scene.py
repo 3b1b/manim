@@ -1,3 +1,5 @@
+"""A scene suitable for rendering three-dimensional objects and animations."""
+
 __all__ = ["ThreeDScene", "SpecialThreeDScene"]
 
 
@@ -51,13 +53,13 @@ class ThreeDScene(Scene):
             The rotation of the camera about the vector from the ORIGIN to the Camera.
         """
         if phi is not None:
-            self.camera.set_phi(phi)
+            self.renderer.camera.set_phi(phi)
         if theta is not None:
-            self.camera.set_theta(theta)
+            self.renderer.camera.set_theta(theta)
         if distance is not None:
-            self.camera.set_distance(distance)
+            self.renderer.camera.set_distance(distance)
         if gamma is not None:
-            self.camera.set_gamma(gamma)
+            self.renderer.camera.set_gamma(gamma)
 
     def begin_ambient_camera_rotation(self, rate=0.02):
         """
@@ -72,17 +74,17 @@ class ThreeDScene(Scene):
         """
         # TODO, use a ValueTracker for rate, so that it
         # can begin and end smoothly
-        self.camera.theta_tracker.add_updater(
+        self.renderer.camera.theta_tracker.add_updater(
             lambda m, dt: m.increment_value(rate * dt)
         )
-        self.add(self.camera.theta_tracker)
+        self.add(self.renderer.camera.theta_tracker)
 
     def stop_ambient_camera_rotation(self):
         """
         This method stops all ambient camera rotation.
         """
-        self.camera.theta_tracker.clear_updaters()
-        self.remove(self.camera.theta_tracker)
+        self.renderer.camera.theta_tracker.clear_updaters()
+        self.remove(self.renderer.camera.theta_tracker)
 
     def begin_3dillusion_camera_rotation(
         self, rate=1, origin_theta=-60 * DEGREES, origin_phi=75 * DEGREES
@@ -94,8 +96,8 @@ class ThreeDScene(Scene):
             val_for_left_right = 0.2 * np.sin(val_tracker_theta.get_value())
             return m.set_value(origin_theta + val_for_left_right)
 
-        self.camera.theta_tracker.add_updater(uptate_theta)
-        self.add(self.camera.theta_tracker)
+        self.renderer.camera.theta_tracker.add_updater(uptate_theta)
+        self.add(self.renderer.camera.theta_tracker)
 
         val_tracker_phi = ValueTracker(0)
 
@@ -104,17 +106,17 @@ class ThreeDScene(Scene):
             val_for_up_down = 0.1 * np.cos(val_tracker_phi.get_value())
             return m.set_value(origin_phi + val_for_up_down)
 
-        self.camera.phi_tracker.add_updater(update_phi)
-        self.add(self.camera.phi_tracker)
+        self.renderer.camera.phi_tracker.add_updater(update_phi)
+        self.add(self.renderer.camera.phi_tracker)
 
     def stop_3dillusion_camera_rotation(self):
         """
         This method stops all illusion camera rotations.
         """
-        self.camera.theta_tracker.clear_updaters()
-        self.remove(self.camera.theta_tracker)
-        self.camera.phi_tracker.clear_updaters()
-        self.remove(self.camera.phi_tracker)
+        self.renderer.camera.theta_tracker.clear_updaters()
+        self.remove(self.renderer.camera.theta_tracker)
+        self.renderer.camera.phi_tracker.clear_updaters()
+        self.remove(self.renderer.camera.phi_tracker)
 
     def move_camera(
         self,
@@ -153,16 +155,18 @@ class ThreeDScene(Scene):
         """
         anims = []
         value_tracker_pairs = [
-            (phi, self.camera.phi_tracker),
-            (theta, self.camera.theta_tracker),
-            (distance, self.camera.distance_tracker),
-            (gamma, self.camera.gamma_tracker),
+            (phi, self.renderer.camera.phi_tracker),
+            (theta, self.renderer.camera.theta_tracker),
+            (distance, self.renderer.camera.distance_tracker),
+            (gamma, self.renderer.camera.gamma_tracker),
         ]
         for value, tracker in value_tracker_pairs:
             if value is not None:
                 anims.append(ApplyMethod(tracker.set_value, value, **kwargs))
         if frame_center is not None:
-            anims.append(ApplyMethod(self.camera.frame_center.move_to, frame_center))
+            anims.append(
+                ApplyMethod(self.renderer.camera._frame_center.move_to, frame_center)
+            )
 
         self.play(*anims + added_anims)
 
@@ -177,7 +181,7 @@ class ThreeDScene(Scene):
             The animations whose mobjects will be checked.
         """
         moving_mobjects = Scene.get_moving_mobjects(self, *animations)
-        camera_mobjects = self.camera.get_value_trackers()
+        camera_mobjects = self.renderer.camera.get_value_trackers()
         if any([cm in moving_mobjects for cm in camera_mobjects]):
             return self.mobjects
         return moving_mobjects
@@ -201,7 +205,7 @@ class ThreeDScene(Scene):
                 center_func : function
         """
         self.add(*mobjects)
-        self.camera.add_fixed_orientation_mobjects(*mobjects, **kwargs)
+        self.renderer.camera.add_fixed_orientation_mobjects(*mobjects, **kwargs)
 
     def add_fixed_in_frame_mobjects(self, *mobjects):
         """
@@ -216,7 +220,7 @@ class ThreeDScene(Scene):
             The Mobjects whose orientation must be fixed.
         """
         self.add(*mobjects)
-        self.camera.add_fixed_in_frame_mobjects(*mobjects)
+        self.renderer.camera.add_fixed_in_frame_mobjects(*mobjects)
 
     def remove_fixed_orientation_mobjects(self, *mobjects):
         """
@@ -230,7 +234,7 @@ class ThreeDScene(Scene):
         *mobjects : Mobjects
             The Mobjects whose orientation must be unfixed.
         """
-        self.camera.remove_fixed_orientation_mobjects(*mobjects)
+        self.renderer.camera.remove_fixed_orientation_mobjects(*mobjects)
 
     def remove_fixed_in_frame_mobjects(self, *mobjects):
         """
@@ -243,7 +247,7 @@ class ThreeDScene(Scene):
         *mobjects : Mobjects
             The Mobjects whose position and orientation must be unfixed.
         """
-        self.camera.remove_fixed_in_frame_mobjects(*mobjects)
+        self.renderer.camera.remove_fixed_in_frame_mobjects(*mobjects)
 
     ##
     def set_to_default_angled_camera_orientation(self, **kwargs):
@@ -263,15 +267,16 @@ class ThreeDScene(Scene):
 
 
 class SpecialThreeDScene(ThreeDScene):
-    """
-    This is basically ThreeDScene++ .
-    It has some extra configuration for
-    axes, spheres, lower quality etc.
+    """An extension of :class:`ThreeDScene` with more settings.
 
-    Some key differences are:
-        The camera shades applicable 3DMobjects by default,
-        except if rendering in low quality.
-        Some default params for Spheres and Axes have been added.
+    It has some extra configuration for axes, spheres,
+    and an override for low quality rendering. Further key differences
+    are:
+
+    * The camera shades applicable 3DMobjects by default,
+      except if rendering in low quality.
+    * Some default params for Spheres and Axes have been added.
+
     """
 
     CONFIG = {
@@ -302,7 +307,7 @@ class SpecialThreeDScene(ThreeDScene):
 
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
-        if self.camera_config["pixel_width"] == config["pixel_width"]:
+        if self.renderer.camera_config["pixel_width"] == config["pixel_width"]:
             config = {}
         else:
             config = self.low_quality_config
@@ -310,12 +315,12 @@ class SpecialThreeDScene(ThreeDScene):
         ThreeDScene.__init__(self, **config)
 
     def get_axes(self):
-        """
-        Returns a set of 3D Axes.
+        """Return a set of 3D axes.
 
         Returns
         -------
-        ThreeDAxes
+        :class:`.ThreeDAxes`
+            A set of 3D axes.
         """
         axes = ThreeDAxes(**self.three_d_axes_config)
         for axis in axes:
@@ -335,18 +340,16 @@ class SpecialThreeDScene(ThreeDScene):
 
     def get_sphere(self, **kwargs):
         """
-        Returns a sphere with the passed **kwargs
-        as properties.
+        Returns a sphere with the passed keyword arguments as properties.
 
         Parameters
         ----------
         **kwargs
-            Some valid kwargs are:
-                Any param of a Sphere or ParametricSurface.
+            Any valid parameter of :class:`.Sphere` or :class:`.ParametricSurface`.
 
         Returns
         -------
-        Sphere
+        :class:`.Sphere`
             The sphere object.
         """
         config = merge_dicts_recursively(self.sphere_config, kwargs)
