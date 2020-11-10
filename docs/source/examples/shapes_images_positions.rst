@@ -51,6 +51,68 @@ Shapes, Images and Positions
             self.wait()
 
 
+.. manim:: ManimCELogo
+    :save_last_frame:
+
+    class ManimCELogo(Scene):
+        def construct(self):
+            logo_green = "#87c2a5"
+            logo_blue = "#525893"
+            logo_red = "#e07a5f"
+            ds_m = MathTex(r"\mathbb{M}", z_index=20).scale(7)
+            ds_m.shift(2.25*LEFT + 1.5*UP)
+            circle = Circle(color=logo_green,
+                            fill_opacity=1,
+                            z_index=7)
+            square = Square(color=logo_blue,
+                            fill_opacity=1,
+                            z_index=5)
+            triangle = Triangle(color=logo_red,
+                                fill_opacity=1,
+                                z_index=3)
+            circle.shift(LEFT)
+            square.shift(UP)
+            triangle.shift(RIGHT)
+            self.add(triangle, square, circle, ds_m) # Order matters
+            self.wait()
+
+Download the resource for the following example `here <https://github.com/ManimCommunity/manim/blob/master/docs/source/_static/manim-logo-sidebar.svg>`_ 
+
+.. manim:: ManimCELogoFromSVG
+
+    class ManimCELogoFromSVG(Scene):
+        def construct(self):
+            v_image = SVGMobject(file_name="manim-logo-sidebar.svg")
+            self.add(v_image)
+
+            # Custom colors can be defined with hex strings
+            logo_blue, logo_green, logo_red = "#525893", "#87C2A5", "#E07A5F"
+
+            # An SVG file with multiple objects can be decomposed into
+            # their subcomponents
+            triangle = v_image.submobjects[0]
+            square = v_image.submobjects[1]
+            circle = v_image.submobjects[2]
+            m = v_image.submobjects[3]
+
+            self.play(
+                ApplyMethod(triangle.set_fill, logo_red),
+                ApplyMethod(square.set_fill, logo_blue),
+                ApplyMethod(circle.set_fill, logo_green),
+                ApplyMethod(m.set_fill, WHITE, opacity=1),
+            )
+            self.wait()
+
+Download the resource for the following example `here <https://github.com/ManimCommunity/manim/blob/master/docs/source/_static/favicon.ico>`_ 
+
+.. manim:: ManimCELogoFromImage
+    :save_last_frame:
+
+    class ManimCELogoFromImage(Scene):
+        def construct(self):
+            image = ImageMobject(filename_or_array="favicon.ico")
+            self.add(image)
+
 .. manim:: GradientImageFromArray
     :save_last_frame:
 

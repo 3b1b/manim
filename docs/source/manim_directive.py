@@ -197,6 +197,7 @@ class ManimDirective(Directive):
         config.images_dir = "{media_dir}/images"
         config.video_dir = "{media_dir}/videos/{quality}"
         output_file = f"{clsname}-{classnamedict[clsname]}"
+        config.assets_dir = Path("_static")
 
         config_code = [
             f'config["frame_rate"] = {frame_rate}',

@@ -115,6 +115,7 @@ class ImageMobject(AbstractImageMobject):
         AbstractImageMobject.__init__(self, scale_to_resolution, **kwargs)
 
     def change_to_rgba_array(self):
+        """Converts an RGB array into RGBA with the alpha value opacity maxed."""
         pa = self.pixel_array
         if len(pa.shape) == 2:
             pa = pa.reshape(list(pa.shape) + [1])
@@ -128,6 +129,7 @@ class ImageMobject(AbstractImageMobject):
         self.pixel_array = pa
 
     def get_pixel_array(self):
+        """A simple getter method."""
         return self.pixel_array
 
     def set_color(self, color, alpha=None, family=True):
@@ -141,15 +143,47 @@ class ImageMobject(AbstractImageMobject):
         return self
 
     def set_opacity(self, alpha):
+        """Sets the image's opacity.
+
+        Parameters
+        ----------
+        alpha : float
+            The alpha value of the object, 1 being opaque and 0 being
+            transparent.
+        """
         self.pixel_array[:, :, 3] = int(255 * alpha)
         return self
 
     def fade(self, darkness=0.5, family=True):
+        """Sets the image's opacity using a 1 - alpha relationship.
+
+        Parameters
+        ----------
+        darkness : float
+            The alpha value of the object, 1 being transparent and 0 being
+            opaque.
+        family : Boolean
+            Whether the submobjects of the ImageMobject should be affected.
+        """
         self.set_opacity(1 - darkness)
         super().fade(darkness, family)
         return self
 
     def interpolate_color(self, mobject1, mobject2, alpha):
+        """Interpolates an array of pixel color values into another array of
+        equal size.
+
+        Parameters
+        ----------
+        mobject1 : ImageMobject
+            The ImageMobject to tranform from.
+
+        mobject1 : ImageMobject
+
+            The ImageMobject to tranform into.
+        alpha : float
+            Used to track the lerp relationship. Not opacity related.
+        """
         assert mobject1.pixel_array.shape == mobject2.pixel_array.shape, (
             f"Mobject pixel array shapes incompatible for interpolation.\n"
             f"Mobject 1 ({mobject1}) : {mobject1.pixel_array.shape}\n"
