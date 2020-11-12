@@ -55,7 +55,6 @@ class Broadcast(LaggedStart):
         "n_circles": 5,
         "start_stroke_width": 8,
         "color": WHITE,
-        "remover": True,
         "lag_ratio": 0.2,
         "run_time": 3,
         "remover": True,

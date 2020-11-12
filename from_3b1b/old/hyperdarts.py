@@ -1188,7 +1188,7 @@ class SamplingFourRandomNumbers(Scene):
     def construct(self):
         texs = ["x_0", "y_0", "x_1", "y_1", "x_2", "y_2"][:self.n_terms]
         colors = [BLUE, YELLOW, BLUE_B, YELLOW_B, BLUE_A, YELLOW_A][:self.n_terms]
-        t2c = dict([(t, c) for t, c in zip(texs, colors)])
+        t2c = dict(list(zip(texs, colors)))
 
         # Title
         if self.include_title:

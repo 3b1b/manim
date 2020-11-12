@@ -254,9 +254,7 @@ class IntroducePokerHand(PiCreatureScene, SampleSpaceScene):
             FadeIn(sample_space),
             ReplacementTransform(percentage, top_label)
         )
-        self.play(*list(map(GrowFromCenter, [
-            brace for brace in braces
-        ])))
+        self.play(*list(map(GrowFromCenter, list(braces))))
         self.wait(2)
         self.play(Write(bottom_label))
         self.wait(2)

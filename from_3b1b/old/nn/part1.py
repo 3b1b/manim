@@ -4125,7 +4125,6 @@ class NeuronIsFunction(MoreHonestMNistNetworkPreview):
         self.answer_rect = answer_rect
         self.curr_image = image
         self.image_rect = image_rect
-        return
 
 class ComplicationIsReassuring(TeacherStudentsScene):
     def construct(self):

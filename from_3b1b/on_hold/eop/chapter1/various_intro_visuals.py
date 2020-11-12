@@ -81,9 +81,7 @@ class VisualCovariance(Scene):
         self.add(x_axis, y_axis)
 
 
-        random_pairs = [ (p1, p2) for (p1, p2) in
-            it.combinations(cloud, 2)
-        ]
+        random_pairs = list(it.combinations(cloud, 2))
         np.random.shuffle(random_pairs)
 
 

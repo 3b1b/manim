@@ -143,7 +143,7 @@ class ThreeDScene(Scene):
         """
         moving_mobjects = Scene.get_moving_mobjects(self, *animations)
         camera_mobjects = self.camera.get_value_trackers()
-        if any([cm in moving_mobjects for cm in camera_mobjects]):
+        if any(cm in moving_mobjects for cm in camera_mobjects):
             return self.mobjects
         return moving_mobjects
 

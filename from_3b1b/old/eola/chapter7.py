@@ -1812,7 +1812,7 @@ class GeneralTwoDOneDMatrixMultiplication(TwoDOneDMatrixMultiplication):
     def construct(self):
         TwoDOneDMatrixMultiplication.construct(self)
         everything = VGroup(*self.get_mobjects())
-        to_fade = [m for m in everything if isinstance(m, Brace) or isinstance(m, TextMobject)]
+        to_fade = [m for m in everything if isinstance(m, (Brace, TextMobject))]
 
         u = Matrix(self.matrix[0])
         v = Matrix(self.vector)

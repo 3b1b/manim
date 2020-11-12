@@ -97,7 +97,7 @@ class BrickRow(VMobject):
     def get_outcome_rects_for_level(self, r, inset = False, with_labels = False):
 
         centers = self.get_outcome_centers_for_level(r)
-        if inset == True:
+        if inset is True:
             outcome_width = self.outcome_shrinkage_factor_x * float(self.width) / (2 ** r)
             outcome_height = self.outcome_shrinkage_factor_y * self.height
         else:
@@ -121,7 +121,7 @@ class BrickRow(VMobject):
         rects.move_to(self.get_center())
 
 
-        if with_labels == False:
+        if with_labels is False:
             return rects
 
         # else

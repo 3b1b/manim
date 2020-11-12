@@ -753,7 +753,7 @@ class IntroduceLedgerSystem(LedgerScene):
         self.wait(3)
 
     def tally_it_all_up(self):
-        accounts = dict()
+        accounts = {}
         names = "alice", "bob", "charlie", "you"
         for name in names:
             accounts[name] = 0

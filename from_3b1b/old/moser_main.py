@@ -773,10 +773,7 @@ class EulersFormula(GraphScene):
     def __init__(self, *args, **kwargs):
         GraphScene.__init__(self, *args, **kwargs)
         terms = "V - E + F =2".split(" ")
-        form = dict([
-            (key, mob)
-            for key, mob in zip(terms, TexMobjects(terms))
-        ])
+        form = dict(list(zip(terms, TexMobjects(terms))))
         for mob in list(form.values()):
             mob.shift((0, FRAME_Y_RADIUS-0.7, 0))
         formula = Mobject(*[form[k] for k in list(form.keys()) if k != "=2"])
@@ -1095,7 +1092,7 @@ class ApplyEulerToMoser(CircleScene):
             for line in self.lines + self.circle_pieces
         ])
         self.wait()
-        all_mobs = [mob for mob in self.mobjects]
+        all_mobs = list(self.mobjects)
         self.remove(*all_mobs)
         self.add(*[d[1] for d in [V, minus, E, plus, F, equals, two]])
         V[1].set_color("white")

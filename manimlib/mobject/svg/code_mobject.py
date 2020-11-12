@@ -139,7 +139,7 @@ class Code(VGroup):
         for line_no in range(0, self.code_json.__len__()):
             number = str(self.line_no_from + line_no)
             line_numbers_array.append(number)
-        line_numbers = Paragraph(*[i for i in line_numbers_array], line_spacing=self.line_spacing,
+        line_numbers = Paragraph(*list(line_numbers_array), line_spacing=self.line_spacing,
                             alignment="right", font=self.font, stroke_width=self.stroke_width).scale(self.scale_factor)
         return line_numbers
 
@@ -150,7 +150,7 @@ class Code(VGroup):
             for word_index in range(self.code_json[line_no].__len__()):
                 line_str = line_str + self.code_json[line_no][word_index][0]
             lines_text.append(self.tab_spaces[line_no] * "\t" + line_str)
-        code = Paragraph(*[i for i in lines_text], line_spacing=self.line_spacing, tab_width=self.tab_width,
+        code = Paragraph(*list(lines_text), line_spacing=self.line_spacing, tab_width=self.tab_width,
                     alignment="left", font=self.font, stroke_width=self.stroke_width).scale(self.scale_factor)
         for line_no in range(code.__len__()):
             line = code[line_no]

@@ -1732,7 +1732,7 @@ class IntroduceConcentricRings(CircleScene):
         moving_rings.target.set_stroke(width = 0)
         plusses = VGroup(*[TexMobject("+") for ring in moving_rings])
         area_sum = VGroup(*it.chain(*list(zip(
-            [ring for ring in moving_rings.target],
+            list(moving_rings.target),
             plusses
         ))))
         dots_equals_area = TexMobject("\\dots", "=", "\\pi R^2")

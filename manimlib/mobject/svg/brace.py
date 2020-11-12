@@ -89,7 +89,7 @@ class BraceLabel(VMobject):
             obj = VMobject(*obj)
         self.brace = Brace(obj, brace_direction, **kwargs)
 
-        if isinstance(text, tuple) or isinstance(text, list):
+        if isinstance(text, (tuple, list)):
             self.label = self.label_constructor(*text, **kwargs)
         else:
             self.label = self.label_constructor(str(text))

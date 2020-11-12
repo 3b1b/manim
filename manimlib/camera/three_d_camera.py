@@ -37,7 +37,7 @@ class ThreeDCamera(Camera):
         self.gamma_tracker = ValueTracker(self.gamma)
         self.light_source = Point(self.light_source_start_point)
         self.frame_center = Point(self.frame_center)
-        self.fixed_orientation_mobjects = dict()
+        self.fixed_orientation_mobjects = {}
         self.fixed_in_frame_mobjects = set()
         self.reset_rotation_matrix()
 

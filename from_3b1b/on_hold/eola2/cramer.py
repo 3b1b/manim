@@ -603,10 +603,7 @@ class SetupSimpleSystemOfEquations(LinearTransformationScene):
                 args += [str(abs(row[i])), chars[i], sign]
             args.append(str(num))
             line = TexMobject(*args)
-            line.set_color_by_tex_to_color_map(dict([
-                (char, color)
-                for char, color in zip(chars, colors)
-            ]))
+            line.set_color_by_tex_to_color_map(dict(list(zip(chars, colors))))
             system.add(line)
             system.matrix_elements.add(*line[0:-1:3])
             system.unknowns.add(*line[1:-1:3])

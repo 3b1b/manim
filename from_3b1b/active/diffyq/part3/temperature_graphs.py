@@ -113,7 +113,7 @@ class TemperatureGraphScene(SpecialThreeDScene):
         return axes
 
     def get_time_slice_graph(self, axes, func, t, **kwargs):
-        config = dict()
+        config = {}
         config.update(self.default_graph_style)
         config.update({
             "t_min": axes.x_min,

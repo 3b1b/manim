@@ -812,7 +812,7 @@ class NudgeSideLengthOfCube(Scene):
         "allow_recursion" : True,
     }
     def construct(self):
-        self.states = dict()
+        self.states = {}
         if self.allow_recursion:
             self.alt_scene = self.__class__(
                 skip_animations = True,
