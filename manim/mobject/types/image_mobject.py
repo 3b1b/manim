@@ -187,7 +187,7 @@ class ImageMobject(AbstractImageMobject):
         assert mobject1.pixel_array.shape == mobject2.pixel_array.shape, (
             f"Mobject pixel array shapes incompatible for interpolation.\n"
             f"Mobject 1 ({mobject1}) : {mobject1.pixel_array.shape}\n"
-            f"Mobject 2 ({mobject2}) : {mobject1.pixel_array.shape}"
+            f"Mobject 2 ({mobject2}) : {mobject2.pixel_array.shape}"
         )
         self.pixel_array = interpolate(
             mobject1.pixel_array, mobject2.pixel_array, alpha
@@ -229,7 +229,7 @@ class ImageMobjectFromCamera(AbstractImageMobject):
         assert mobject1.pixel_array.shape == mobject2.pixel_array.shape, (
             f"Mobject pixel array shapes incompatible for interpolation.\n"
             f"Mobject 1 ({mobject1}) : {mobject1.pixel_array.shape}\n"
-            f"Mobject 2 ({mobject2}) : {mobject1.pixel_array.shape}"
+            f"Mobject 2 ({mobject2}) : {mobject2.pixel_array.shape}"
         )
         self.pixel_array = interpolate(
             mobject1.pixel_array, mobject2.pixel_array, alpha
