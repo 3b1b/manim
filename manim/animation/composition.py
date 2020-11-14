@@ -42,10 +42,14 @@ class AnimationGroup(Animation):
     def get_all_mobjects(self):
         return self.group
 
+    def get_run_time(self):
+        if super().get_run_time() is None:
+            self.init_run_time()
+        return super().get_run_time()
+
     def begin(self):
         for anim in self.animations:
             anim.begin()
-        # self.init_run_time()
 
     def finish(self):
         for anim in self.animations:
@@ -107,23 +111,41 @@ class Succession(AnimationGroup):
     def begin(self):
         assert len(self.animations) > 0
         self.init_run_time()
-        self.active_animation = self.animations[0]
-        self.active_animation.begin()
+        self.update_active_animation(0)
 
     def finish(self):
-        self.active_animation.finish()
+        while self.active_animation is not None:
+            self.next_animation()
 
     def update_mobjects(self, dt):
-        self.active_animation.update_mobjects(dt)
+        if self.active_animation:
+            self.active_animation.update_mobjects(dt)
+
+    def update_active_animation(self, index):
+        self.active_index = index
+        if index >= len(self.animations):
+            self.active_animation = None
+            self.active_start_time = None
+            self.active_end_time = None
+        else:
+            self.active_animation = self.animations[index]
+            self.active_animation.begin()
+            self.active_start_time = self.anims_with_timings[index][1]
+            self.active_end_time = self.anims_with_timings[index][2]
+
+    def next_animation(self):
+        self.active_animation.finish()
+        self.update_active_animation(self.active_index + 1)
 
     def interpolate(self, alpha):
-        index, subalpha = integer_interpolate(0, len(self.animations), alpha)
-        animation = self.animations[index]
-        if animation is not self.active_animation:
-            self.active_animation.finish()
-            animation.begin()
-            self.active_animation = animation
-        animation.interpolate(subalpha)
+        current_time = interpolate(0, self.run_time, alpha)
+        while self.active_end_time is not None and current_time >= self.active_end_time:
+            self.next_animation()
+        if self.active_animation:
+            elapsed = current_time - self.active_start_time
+            active_run_time = self.active_animation.get_run_time()
+            subalpha = elapsed / active_run_time if active_run_time != 0.0 else 1.0
+            self.active_animation.interpolate(subalpha)
 
 
 class LaggedStart(AnimationGroup):

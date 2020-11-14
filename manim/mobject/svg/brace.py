@@ -1,6 +1,6 @@
 """Mobject representing curly braces."""
 
-__all__ = ["Brace", "BraceLabel", "BraceText"]
+__all__ = ["Brace", "BraceLabel", "BraceText", "BraceBetweenPoints"]
 
 
 import numpy as np
@@ -12,11 +12,42 @@ from ...animation.growing import GrowFromCenter
 from ...mobject.svg.tex_mobject import MathTex
 from ...mobject.svg.tex_mobject import Tex
 from ...mobject.types.vectorized_mobject import VMobject
+from ...mobject.geometry import Line
 from ...utils.config_ops import digest_config
 from ...utils.space_ops import get_norm
 
 
 class Brace(MathTex):
+    """Takes a mobject and draws a brace adjacent to it.
+
+    Passing a direction vector determines the direction from which the
+    brace is drawn. By default it is drawn from below.
+
+    Parameters
+    ----------
+    mobject : :class:`~.Mobject`
+        The mobject adjacent to which the brace is placed.
+    direction : Optional[Union[:class:`list`, :class:`numpy.array`]]
+        The direction from which the brace faces the mobject.
+
+    See Also
+    --------
+    :class:`BraceBetweenPoints`
+
+    Examples
+    --------
+    .. manim:: BraceExample
+
+        class BraceExample(Scene):
+            def construct(self):
+                circle = Circle()
+                brace = Brace(circle, direction=RIGHT)
+                self.play(ShowCreation(circle))
+                self.play(ShowCreation(brace))
+                self.wait(2)
+
+    """
+
     CONFIG = {
         "buff": 0.2,
         "width_multiplier": 2,
@@ -129,3 +160,42 @@ class BraceLabel(VMobject):
 
 class BraceText(BraceLabel):
     CONFIG = {"label_constructor": Tex}
+
+
+class BraceBetweenPoints(Brace):
+    """Similar to Brace, but instead of taking a mobject it uses 2
+    points to place the brace.
+
+    A fitting direction for the brace is
+    computed, but it still can be manually overridden.
+    If the points go from left to right, the brace is drawn from below.
+    Swapping the points places the brace on the opposite side.
+
+    Parameters
+    ----------
+    point_1 : Union[:class:`list`, :class:`numpy.array`]
+        The first point.
+    point_2 : Union[:class:`list`, :class:`numpy.array`]
+        The second point.
+    direction : Optional[Union[:class:`list`, :class:`numpy.array`]]
+        The direction from which the brace faces towards the points.
+
+    Examples
+    --------
+        .. manim:: BraceBPExample
+
+            class BraceBPExample(Scene):
+                def construct(self):
+                    p1 = [0,0,0]
+                    p2 = [1,2,0]
+                    brace = BraceBetweenPoints(p1,p2)
+                    self.play(ShowCreation(NumberPlane()))
+                    self.play(ShowCreation(brace))
+                    self.wait(2)
+    """
+
+    def __init__(self, point_1, point_2, direction=ORIGIN, **kwargs):
+        if all(direction == ORIGIN):
+            line_vector = np.array(point_2) - np.array(point_1)
+            direction = np.array([line_vector[1], -line_vector[0], 0])
+        Brace.__init__(self, Line(point_1, point_2), direction=direction, **kwargs)

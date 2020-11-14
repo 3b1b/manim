@@ -11,8 +11,12 @@ from manim.utils.module_ops import (
     get_scenes_to_render,
 )
 from manim.utils.file_ops import open_file as open_media_file
-from manim.grpc.impl import frame_server_impl
 from manim._config.main_utils import parse_args
+
+try:
+    from manim.grpc.impl import frame_server_impl
+except ImportError:
+    frame_server_impl = None
 
 
 def open_file_if_needed(file_writer):
@@ -72,6 +76,10 @@ def main():
         for SceneClass in scene_classes_to_render:
             try:
                 if config["use_js_renderer"]:
+                    if frame_server_impl is None:
+                        raise ImportError(
+                            "Dependencies for JS renderer is not installed."
+                        )
                     frame_server_impl.get(SceneClass).start()
                 else:
                     scene = SceneClass()

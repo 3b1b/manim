@@ -1,14 +1,16 @@
 @ECHO OFF
 
-pushd %~dp0
+pushd %~dp0\source
 
 REM Command file for Sphinx documentation
 
 if "%SPHINXBUILD%" == "" (
 	set SPHINXBUILD=sphinx-build
 )
-set SOURCEDIR=source
-set BUILDDIR=build
+
+REM The paths are taken from the source directory
+set SOURCEDIR=.
+set BUILDDIR=..\build
 
 if "%1" == "" goto help
 

@@ -30,7 +30,7 @@ can install it from PyPI via pip:
 
    pip install manimce
 
-You can replace ``pip`` with ``pip3`` is you need to in your system.
+You can replace ``pip`` with ``pip3`` if you need to in your system.
 
 Alternatively, you can work with Manim using our Docker image that can be
 found at `Docker Hub <https://hub.docker.com/r/manimcommunity/manim>`_.
