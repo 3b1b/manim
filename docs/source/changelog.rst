@@ -36,7 +36,7 @@ Mobjects, Scenes, and Animations
    (a bigger dot with bolder stroke) and :class:`~.LabeledDot` (a dot containing a
    label).
 #. Scene.set_variables_as_attrs has been removed (via :pr:`692`).
-
+#. Ensure that the axes for graphs (:class:`GraphScene`) always intersect (:pr:`580`).
 
 
 
