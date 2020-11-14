@@ -112,7 +112,7 @@ jobs:
 
       - name: Install manim
         run: |
-          poetry install
+          poetry install -E js_renderer
 
       - name: Run tests
         run: poetry run pytest

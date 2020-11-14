@@ -10,6 +10,10 @@ v0.2.0
 
 Changes since Manim Community release v0.1.0
 
+Fixes
+^^^^^
+
+#. JsRender is optional to install. (via :pr:`697`).
 
 Configuration
 ^^^^^^^^^^^^^
