@@ -1,6 +1,8 @@
 FROM python:3.7-slim
 
-RUN apt-get update -q \
+ARG MANIM_VERSION=stable
+
+RUN apt-get update -qq \
     && apt-get install --no-install-recommends -y \
         ffmpeg \
         gcc \
@@ -23,15 +25,9 @@ RUN wget -O /tmp/install-tl-unx.tar.gz http://mirror.ctan.org/systems/texlive/tl
         setspace standalone tipa wasy wasysym xcolor xkeyval
 
 # clone and build manim
-RUN git clone --depth 1 --branch v0.1.0 https://github.com/ManimCommunity/manim.git /opt/manim
+RUN git clone --depth 1 --branch ${MANIM_VERSION} https://github.com/ManimCommunity/manim.git /opt/manim
 WORKDIR /opt/manim
 RUN pip install --no-cache .
-
-# ensure ffi bindings are generated correctly
-WORKDIR /usr/local/lib/python3.7/site-packages
-RUN python cairocffi/ffi_build.py \
-    && python pangocffi/ffi_build.py \
-    && python pangocairocffi/ffi_build.py
 
 # create working directory for user to mount local directory into
 WORKDIR /manim
