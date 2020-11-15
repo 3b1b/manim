@@ -3,39 +3,6 @@ Troubleshooting
 
 List of known installation problems.
 
-ModuleNotFoundError: No module named '[...]._generated.ffi'?
-------------------------------------------------------------
-
-Fresh installations of the pip packages ``cairocffi``, ``pangocffi``,
-and ``pangocairocffi`` sometimes fail to generate the corresponding ffi bindings.
-In this case, trying to run Manim leads to a ``ModuleNotFoundError`` that
-references a non-existing ``_generated.ffi`` module.
-
-To resolve this issue, either install the afflicted package again using a
-modified call to pip, namely:
-
-.. code-block:: bash
-
-  pip install --no-binary :all: -U cairocffi
-  pip install --no-binary :all: -U pangocffi
-  pip install --no-binary :all: -U pangocairocffi
-
-In case you are installing Manim within a virtualenv, make sure to call
-that particular virtualenv's ``pip``.
-
-Alternatively, you can also trigger building the bindings yourself.
-To do so, switch to your Python's ``site-packages`` directory and
-run:
-
-.. code-block:: bash
-
-  python cairocffi/ffi_build.py
-  python pangocffi/ffi_build.py
-  python pangocairocffi/ffi_build.py
-
-This should generate the missing ``_generated.ffi`` modules.
-
-
 (Windows) OSError: dlopen() failed to load a library: pango?
 ------------------------------------------------------------
 
