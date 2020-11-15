@@ -41,7 +41,8 @@ Mobjects, Scenes, and Animations
    label).
 #. Scene.set_variables_as_attrs has been removed (via :pr:`692`).
 #. Ensure that the axes for graphs (:class:`GraphScene`) always intersect (:pr:`580`).
-
+#. Now Mobject.add_updater does not call the newly-added updater by default
+   (use ``call_updater=True`` instead) (via :pr:`710`)
 
 
 
