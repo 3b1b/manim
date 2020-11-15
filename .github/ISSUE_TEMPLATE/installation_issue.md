@@ -1,45 +1,28 @@
 ---
-name: Manim bug
-about: Report a bug or unexpected behavior when running Manim
+name: Installation issue
+about: Report issues with the installation process of Manim
 title: ""
-labels: bug
+labels: bug, installation
 assignees: ''
 
 ---
 
-## Description of bug / unexpected behavior
+#### Preliminaries
+
+- [ ] I have followed the latest version of the
+      [installation instructions](https://docs.manim.community/en/latest/installation.html).
+- [ ] I have checked the [troubleshooting page](https://docs.manim.community/en/latest/installation/troubleshooting.html) and my problem is either not mentioned there,
+      or the solution given there does not help.
+
+## Description of error
 <!-- Add a clear and concise description of the problem you encountered. -->
 
 
-## Expected behavior
-<!-- Add a clear and concise description of what you expected to happen. -->
+## Installation logs
+<!-- Please paste the **full** terminal output; we can only help to identify the issue
+     when we receive all required information. -->
 
-
-## How to reproduce the issue
-<!-- Provide a piece of code illustrating the undesired behavior. -->
-
-<details><summary>Code for reproducing the problem</summary>
-
-```py
-Paste your code here.
-```
-
-</details>
-
-
-## Additional media files
-<!-- Paste in the files manim produced on rendering the code above. Note that GitHub doesn't allow posting videos, so you may need to convert it to a GIF or use the `-i` rendering option. -->
-
-<details><summary>Images/GIFs</summary>
-
-<!-- PASTE MEDIA HERE -->
-
-</details>
-
-
-## Logs
 <details><summary>Terminal output</summary>
-<!-- Add "-v DEBUG" when calling manim to generate more detailed logs -->
 
 ```
 PASTE HERE OR PROVIDE LINK TO https://pastebin.com/ OR SIMILAR
