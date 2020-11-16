@@ -61,6 +61,10 @@ extensions = [
 # Automatically generate stub pages when using the .. autosummary directive
 autosummary_generate = True
 
+# generate documentation from type hints
+autodoc_typehints = "description"
+autoclass_content = "both"
+
 # controls whether functions documented by the autofunction directive
 # appear with their full module names
 add_module_names = False
