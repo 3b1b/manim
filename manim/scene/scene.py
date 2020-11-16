@@ -80,6 +80,10 @@ class Scene(Container):
 
         self.setup()
 
+    @property
+    def camera(self):
+        return self.renderer.camera
+
     def render(self):
         """
         Render this Scene.
