@@ -6,7 +6,7 @@ import re
 import cairocffi
 import pangocairocffi
 import pangocffi
-from manim import START_X, START_Y, Text, SVGMobject
+from manim import START_X, START_Y, Text, SVGMobject, ITALIC
 
 RTL_TEXT: str = """صباح الخير
 مرحبا جميعا"""
@@ -134,6 +134,22 @@ def test_tabs_replace() -> None:
     fontdesc.set_size(pangocffi.units_from_double(size * 10))
     layout.set_font_description(fontdesc)
     layout.set_text("hellohif")
+    pangocairocffi.show_layout(context, layout)
+    surface.finish()
+    assert compare_SVGObject_with_PangoText(temp_pango_text, filename)
+
+def check_t2s() -> None:
+    size = 1
+    temp_pango_text=Text('Helloworld', t2s={'world':ITALIC})
+    surface = cairocffi.SVGSurface(filename, WIDTH, HEIGTH)
+    context = cairocffi.Context(surface)
+    context.move_to(START_X, START_Y)
+    layout = pangocairocffi.create_layout(context)
+    layout.set_width(pangocffi.units_from_double(WIDTH))
+    fontdesc = pangocffi.FontDescription()
+    fontdesc.set_size(pangocffi.units_from_double(size * 10))
+    layout.set_font_description(fontdesc)
+    layout.set_markup('Hello<span style="italic">world</span>') # yay, pango markup
     pangocairocffi.show_layout(context, layout)
     surface.finish()
     assert compare_SVGObject_with_PangoText(temp_pango_text, filename)

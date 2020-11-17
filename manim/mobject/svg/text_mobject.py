@@ -921,6 +921,6 @@ class Text(SVGMobject):
             layout.set_text(text)
             logger.debug(f"Setting Text {text}")
             pangocairocffi.show_layout(context, layout)
-            offset_x = pangocffi.units_to_double(layout.get_size()[0])
+            offset_x += pangocffi.units_to_double(layout.get_size()[0])
         surface.finish()
         return file_name
