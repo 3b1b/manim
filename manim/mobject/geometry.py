@@ -1,4 +1,25 @@
-"""Mobjects that are simple geometric shapes."""
+r"""Mobjects that are simple geometric shapes.
+
+Examples
+--------
+
+.. manim:: UsefulAnnotations
+    :save_last_frame:
+
+    class UsefulAnnotations(Scene):
+        def construct(self):
+            m0 = SmallDot()
+            m1 = AnnotationDot()
+            m2 = LabeledDot("ii")
+            m3 = LabeledDot(MathTex(r"\alpha").set_color(ORANGE))
+            m4 = CurvedArrow(ORIGIN, 2*LEFT)
+            m5 = CurvedDoubleArrow(ORIGIN, 2*RIGHT)
+
+            self.add(m0, m1, m2, m3, m4, m5)
+            for i, mobj in enumerate(self.mobjects):
+                mobj.shift(DOWN * (i-3))
+
+"""
 
 __all__ = [
     "TipableVMobject",
@@ -947,6 +968,27 @@ class ArrowTip(VMobject):
         >>> arrow = Arrow(np.array([0, 0, 0]), np.array([1, 1, 0]),
         ...               tip_style={'fill_opacity': 0, 'stroke_width': 3})
 
+    The following example illustrates the usage of all of the predefined
+    arrow tips.
+
+    .. manim:: ArrowTipsShowcase
+        :save_last_frame:
+
+        from manim.mobject.geometry import ArrowTriangleTip, ArrowSquareTip, ArrowSquareFilledTip,\
+                                        ArrowCircleTip, ArrowCircleFilledTip
+        class ArrowTipsShowcase(Scene):
+            def construct(self):
+                a00 = Arrow(start=[-2, 3, 0], end=[2, 3, 0], color=YELLOW)
+                a11 = Arrow(start=[-2, 2, 0], end=[2, 2, 0], tip_shape=ArrowTriangleTip)
+                a12 = Arrow(start=[-2, 1, 0], end=[2, 1, 0])
+                a21 = Arrow(start=[-2, 0, 0], end=[2, 0, 0], tip_shape=ArrowSquareTip)
+                a22 = Arrow([-2, -1, 0], [2, -1, 0], tip_shape=ArrowSquareFilledTip)
+                a31 = Arrow([-2, -2, 0], [2, -2, 0], tip_shape=ArrowCircleTip)
+                a32 = Arrow([-2, -3, 0], [2, -3, 0], tip_shape=ArrowCircleFilledTip)
+                b11 = a11.copy().scale(0.5, scale_tips=True).next_to(a11, RIGHT)
+                b12 = a12.copy().scale(0.5, scale_tips=True).next_to(a12, RIGHT)
+                b21 = a21.copy().scale(0.5, scale_tips=True).next_to(a21, RIGHT)
+                self.add(a00, a11, a12, a21, a22, a31, a32, b11, b12, b21)
 
     """
     CONFIG = {

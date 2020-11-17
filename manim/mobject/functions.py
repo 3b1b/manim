@@ -13,6 +13,40 @@ import math
 
 
 class ParametricFunction(VMobject):
+    """A parametric curve.
+
+    Examples
+    --------
+
+    .. manim:: PlotParametricFunction
+        :save_last_frame:
+
+        class PlotParametricFunction(Scene):
+            def func(self, t):
+                return np.array((np.sin(2 * t), np.sin(3 * t), 0))
+
+            def construct(self):
+                func = ParametricFunction(self.func, t_max = TAU, fill_opacity=0).set_color(RED)
+                self.add(func.scale(3))
+
+    .. manim:: ThreeDParametricSpring
+        :save_last_frame:
+
+        class ThreeDParametricSpring(ThreeDScene):
+            def construct(self):
+                curve1 = ParametricFunction(
+                    lambda u: np.array([
+                        1.2 * np.cos(u),
+                        1.2 * np.sin(u),
+                        u * 0.05
+                    ]), color=RED, t_min=-3 * TAU, t_max=5 * TAU,
+                ).set_shade_in_3d(True)
+                axes = ThreeDAxes()
+                self.add(axes, curve1)
+                self.set_camera_orientation(phi=80 * DEGREES, theta=-60 * DEGREES)
+                self.wait()
+    """
+
     CONFIG = {
         "t_min": 0,
         "t_max": 1,

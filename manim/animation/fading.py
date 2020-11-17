@@ -30,6 +30,31 @@ DEFAULT_FADE_LAG_RATIO = 0
 
 
 class FadeOut(Transform):
+    """A transform fading out the given mobject.
+
+    Examples
+    --------
+
+    .. manim:: PlaneFadeOut
+
+        class PlaneFadeOut(Scene):
+            def construct(self):
+                sq1 = Square()
+                sq2 = Square()
+                sq3 = Square()
+                sq1.next_to(sq2, LEFT)
+                sq3.next_to(sq2, RIGHT)
+                circ = Circle()
+                circ.next_to(sq2, DOWN)
+
+                self.add(sq1, sq2, sq3, circ)
+                self.wait()
+
+                self.play(FadeOut(sq1), FadeOut(sq2), FadeOut(sq3))
+                self.wait()
+
+    """
+
     CONFIG = {
         "remover": True,
         "lag_ratio": DEFAULT_FADE_LAG_RATIO,

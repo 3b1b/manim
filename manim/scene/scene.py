@@ -541,7 +541,7 @@ class Scene(Container):
         by a dict of kwargs for that method).
         This animation list is built by going through the args list,
         and each animation is simply added, but when a mobject method
-        s hit, a MoveToTarget animation is built using the args that
+        is hit, a MoveToTarget animation is built using the args that
         follow up until either another animation is hit, another method
         is hit, or the args list runs out.
 

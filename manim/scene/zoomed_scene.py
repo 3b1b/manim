@@ -1,4 +1,45 @@
-"""A scene supporting zooming in on a specified section."""
+"""A scene supporting zooming in on a specified section.
+
+
+Examples
+--------
+
+.. manim:: UseZoomedScene
+
+    class UseZoomedScene(ZoomedScene):
+        def construct(self):
+            dot = Dot().set_color(GREEN)
+            self.add(dot)
+            self.wait(1)
+            self.activate_zooming(animate=False)
+            self.wait(1)
+            self.play(dot.shift, LEFT)
+
+.. manim:: ChangingZoomScale
+
+    class ChangingZoomScale(ZoomedScene):
+        CONFIG = {
+            "zoom_factor": 0.3,
+            "zoomed_display_height": 1,
+            "zoomed_display_width": 3,
+            "image_frame_stroke_width": 20,
+            "zoomed_camera_config": {
+                "default_frame_stroke_width": 3,
+            },
+        }
+        def construct(self):
+            dot = Dot().set_color(GREEN)
+            sq = Circle(fill_opacity=1, radius=0.2).next_to(dot, RIGHT)
+            self.add(dot, sq)
+            self.wait(1)
+            self.activate_zooming(animate=False)
+            self.wait(1)
+            self.play(dot.shift, LEFT * 0.3)
+
+            self.play(self.zoomed_camera.frame.scale, 4)
+            self.play(self.zoomed_camera.frame.shift, 0.5 * DOWN)
+
+"""
 
 __all__ = ["ZoomedScene"]
 

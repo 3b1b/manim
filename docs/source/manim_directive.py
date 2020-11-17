@@ -114,6 +114,7 @@ class ManimDirective(Directive):
         ),
         "save_as_gif": bool,
         "save_last_frame": bool,
+        "ref_modules": lambda arg: process_name_list(arg, "mod"),
         "ref_classes": lambda arg: process_name_list(arg, "class"),
         "ref_functions": lambda arg: process_name_list(arg, "func"),
     }
@@ -134,10 +135,13 @@ class ManimDirective(Directive):
         save_as_gif = "save_as_gif" in self.options
         save_last_frame = "save_last_frame" in self.options
         assert not (save_as_gif and save_last_frame)
-        if "ref_classes" in self.options or "ref_functions" in self.options:
-            ref_classes = self.options.get("ref_classes", [])
-            ref_functions = self.options.get("ref_functions", [])
-            ref_content = ref_classes + ref_functions
+
+        ref_content = (
+            self.options.get("ref_modules", [])
+            + self.options.get("ref_classes", [])
+            + self.options.get("ref_functions", [])
+        )
+        if ref_content:
             ref_block = f"""
 .. admonition:: Example References
     :class: example-reference
