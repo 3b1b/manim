@@ -138,9 +138,10 @@ def test_tabs_replace() -> None:
     surface.finish()
     assert compare_SVGObject_with_PangoText(temp_pango_text, filename)
 
+
 def check_t2s() -> None:
     size = 1
-    temp_pango_text=Text('Helloworld', t2s={'world':ITALIC})
+    temp_pango_text = Text("Helloworld", t2s={"world": ITALIC})
     surface = cairocffi.SVGSurface(filename, WIDTH, HEIGTH)
     context = cairocffi.Context(surface)
     context.move_to(START_X, START_Y)
@@ -149,7 +150,7 @@ def check_t2s() -> None:
     fontdesc = pangocffi.FontDescription()
     fontdesc.set_size(pangocffi.units_from_double(size * 10))
     layout.set_font_description(fontdesc)
-    layout.set_markup('Hello<span style="italic">world</span>') # yay, pango markup
+    layout.set_markup('Hello<span style="italic">world</span>')  # yay, pango markup
     pangocairocffi.show_layout(context, layout)
     surface.finish()
     assert compare_SVGObject_with_PangoText(temp_pango_text, filename)

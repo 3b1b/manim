@@ -917,7 +917,7 @@ class Text(SVGMobject):
             context.move_to(
                 START_X + offset_x, START_Y + line_spacing * setting.line_num
             )
-            pangocairocffi.update_layout(context,layout)
+            pangocairocffi.update_layout(context, layout)
             layout.set_text(text)
             logger.debug(f"Setting Text {text}")
             pangocairocffi.show_layout(context, layout)
