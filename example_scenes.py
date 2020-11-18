@@ -114,6 +114,12 @@ class WriteStuff(Scene):
 
 
 class UpdatersExample(Scene):
+    CONFIG={
+        "camera_config": {
+            "background_image": r"media/bg.png",
+        },
+    }
+
     def construct(self):
         decimal = DecimalNumber(
             0,

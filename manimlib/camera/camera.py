@@ -16,7 +16,7 @@ from manimlib.mobject.types.point_cloud_mobject import PMobject
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.color import color_to_int_rgba
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.images import get_full_raster_image_path
+from manimlib.utils.images import get_full_raster_image_path, resize_and_crop
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.iterables import list_difference_update
 from manimlib.utils.iterables import remove_list_redundancies
@@ -121,8 +121,7 @@ class Camera(object):
         if self.background_image is not None:
             path = get_full_raster_image_path(self.background_image)
             image = Image.open(path).convert(self.image_mode)
-            # TODO, how to gracefully handle backgrounds
-            # with different sizes?
+            image = resize_and_crop(image, (width, height))
             self.background = np.array(image)[:height, :width]
             self.background = self.background.astype(self.pixel_array_dtype)
         else:
