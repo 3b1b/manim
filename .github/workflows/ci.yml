@@ -51,7 +51,7 @@ jobs:
           sudo apt update
           sudo apt install -y ffmpeg
           sudo apt-get -y install texlive texlive-latex-extra texlive-fonts-extra texlive-latex-recommended texlive-science texlive-fonts-extra tipa
-          echo "::add-path::$HOME/.poetry/bin"
+          echo "$HOME/.poetry/bin" >> $GITHUB_PATH
 
       - name: Install system dependencies (MacOS)
         if: runner.os == 'macOS'
@@ -65,8 +65,8 @@ jobs:
           brew install pango
           brew install glib
           sudo tlmgr install standalone preview doublestroke relsize fundus-calligra wasysym physics dvisvgm.x86_64-darwin dvisvgm rsfs wasy cm-super
-          echo "::add-path::$HOME/.poetry/bin"
-          echo "::set-env name=PATH::$PATH"
+          echo "/Library/TeX/texbin" >> $GITHUB_PATH
+          echo "$HOME/.poetry/bin" >> $GITHUB_PATH
 
       - name: Cache Windows
         id: cache-windows
@@ -106,9 +106,9 @@ jobs:
         run: |
           $env:Path += ";" + "$($PWD)\ManimCache\FFmpeg\bin"
           $env:Path += ";" + "$($PWD)\ManimCache\LatexWindows\TinyTeX\bin\win32"
-          $env:Path += ";" + "$($PWD)\ManimCache\Pango\pango"          
+          $env:Path += ";" + "$($PWD)\ManimCache\Pango\pango"
           $env:Path = "$env:USERPROFILE\.poetry\bin;$($env:PATH)"
-          echo "::set-env name=Path::$env:Path"
+          echo "$env:Path" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Install manim
         run: |

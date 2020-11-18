@@ -4,6 +4,73 @@
 
     :mod:`.moving_camera`
 
+
+Examples
+--------
+
+.. manim:: ChangingCameraWidthAndRestore
+
+    class ChangingCameraWidthAndRestore(MovingCameraScene):
+        def construct(self):
+            text = Text("Hello World").set_color(BLUE)
+            self.add(text)
+            self.camera_frame.save_state()
+            self.play(self.camera_frame.set_width, text.get_width() * 1.2)
+            self.wait(0.3)
+            self.play(Restore(self.camera_frame))
+
+
+.. manim:: MovingCameraCenter
+
+    class MovingCameraCenter(MovingCameraScene):
+        def construct(self):
+            s = Square(color=RED, fill_opacity=0.5).move_to(2 * LEFT)
+            t = Triangle(color=GREEN, fill_opacity=0.5).move_to(2 * RIGHT)
+            self.wait(0.3)
+            self.add(s, t)
+            self.play(self.camera_frame.move_to, s)
+            self.wait(0.3)
+            self.play(self.camera_frame.move_to, t)
+
+
+.. manim:: MovingAndZoomingCamera
+
+    class MovingAndZoomingCamera(MovingCameraScene):
+        def construct(self):
+            s = Square(color=BLUE, fill_opacity=0.5).move_to(2 * LEFT)
+            t = Triangle(color=YELLOW, fill_opacity=0.5).move_to(2 * RIGHT)
+            self.add(s, t)
+            self.play(self.camera_frame.move_to, s,
+                      self.camera_frame.set_width,s.get_width()*2)
+            self.wait(0.3)
+            self.play(self.camera_frame.move_to, t,
+                      self.camera_frame.set_width,t.get_width()*2)
+
+            self.play(self.camera_frame.move_to, ORIGIN,
+                      self.camera_frame.set_width,14)
+
+.. manim:: MovingCameraOnGraph
+
+    class MovingCameraOnGraph(GraphScene, MovingCameraScene):
+        def setup(self):
+            GraphScene.setup(self)
+            MovingCameraScene.setup(self)
+        def construct(self):
+            self.camera_frame.save_state()
+            self.setup_axes(animate=False)
+            graph = self.get_graph(lambda x: np.sin(x),
+                                   color=WHITE,
+                                   x_min=0,
+                                   x_max=3 * PI
+                                   )
+            dot_at_start_graph = Dot().move_to(graph.points[0])
+            dot_at_end_grap = Dot().move_to(graph.points[-1])
+            self.add(graph, dot_at_end_grap, dot_at_start_graph)
+            self.play(self.camera_frame.scale, 0.5, self.camera_frame.move_to, dot_at_start_graph)
+            self.play(self.camera_frame.move_to, dot_at_end_grap)
+            self.play(Restore(self.camera_frame))
+            self.wait()
+
 """
 
 __all__ = ["MovingCameraScene"]

@@ -1,4 +1,44 @@
-"""A scene for plotting / graphing functions."""
+"""A scene for plotting / graphing functions.
+
+Examples
+--------
+
+.. manim:: FunctionPlotWithLabbeledYAxis
+    :save_last_frame:
+
+    class FunctionPlotWithLabbeledYAxis(GraphScene):
+        CONFIG = {
+            "y_min": 0,
+            "y_max": 100,
+            "y_axis_config": {"tick_frequency": 10},
+            "y_labeled_nums": np.arange(0, 100, 10)
+        }
+
+        def construct(self):
+            self.setup_axes()
+            dot = Dot().move_to(self.coords_to_point(PI / 2, 20))
+            func_graph = self.get_graph(lambda x: 20 * np.sin(x))
+            self.add(dot,func_graph)
+
+
+.. manim:: GaussianFunctionPlot
+    :save_last_frame:
+
+    amp = 5
+    mu = 3
+    sig = 1
+
+    def gaussian(x):
+        return amp * np.exp((-1 / 2 * ((x - mu) / sig) ** 2))
+
+    class GaussianFunctionPlot(GraphScene):
+        def construct(self):
+            self.setup_axes()
+            graph = self.get_graph(gaussian, x_min=-1, x_max=10)
+            graph.set_stroke(width=5)
+            self.add(graph)
+
+"""
 
 __all__ = ["GraphScene"]
 
@@ -205,6 +245,26 @@ class GraphScene(Scene):
         -------
         np.ndarray
             The array of the coordinates.
+
+        Examples
+        --------
+
+        .. manim:: SequencePlot
+            :save_last_frame:
+
+            class SequencePlot(GraphScene):
+                CONFIG = {
+                    "y_axis_label": r"Concentration [\%]",
+                    "x_axis_label": "Time [s]",
+                    }
+
+                def construct(self):
+                    data = [1, 2, 2, 4, 4, 1, 3]
+                    self.setup_axes()
+                    for time, dat in enumerate(data):
+                        dot = Dot().move_to(self.coords_to_point(time, dat))
+                        self.add(dot)
+
         """
         assert hasattr(self, "x_axis") and hasattr(self, "y_axis")
         result = self.x_axis.number_to_point(x)[0] * RIGHT
