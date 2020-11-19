@@ -131,7 +131,7 @@ class Animation(object):
             self.interpolate_submobject(*mobs, sub_alpha)
 
     def interpolate_submobject(self, submobject, starting_sumobject, alpha):
-        # Typically ipmlemented by subclass
+        # Typically implemented by subclass
         pass
 
     def get_sub_alpha(self, alpha, index, num_submobjects):
