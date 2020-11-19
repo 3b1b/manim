@@ -107,6 +107,9 @@ def parse_args(args):
     if args[0] == "python" and args[1] == "-m":
         args = args[2:]
 
+    if len(args) == 1:
+        return _parse_args_no_subcmd(args)
+
     subcmd = _find_subcommand(args)
     if subcmd == "cfg":
         return _parse_args_cfg_subcmd(args)
