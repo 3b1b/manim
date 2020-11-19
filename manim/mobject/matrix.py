@@ -144,7 +144,7 @@ class Matrix(VMobject):
             Each VGroup contains a row of the matrix.
         """
         return VGroup(
-            *[VGroup(*self.mob_matrix[i, :]) for i in range(self.mob_matrix.shape[1])]
+            *[VGroup(*self.mob_matrix[i, :]) for i in range(self.mob_matrix.shape[0])]
         )
 
     def set_row_colors(self, *colors):

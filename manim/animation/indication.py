@@ -148,6 +148,23 @@ class CircleIndicate(Indicate):
 
 
 class ShowPassingFlash(ShowPartial):
+    """Show only a sliver of the VMobject each frame.
+
+    Examples
+    --------
+    .. manim:: ShowPassingFlashScene
+
+        class ShowPassingFlashScene(Scene):
+            def construct(self):
+                self.play(ShowPassingFlash(Square()))
+
+
+    See Also
+    --------
+    :class:`~.ShowCreation`
+
+    """
+
     CONFIG = {
         "time_width": 0.1,
         "remover": True,
