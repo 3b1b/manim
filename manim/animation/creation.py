@@ -29,18 +29,49 @@ import itertools as it
 
 
 class ShowPartial(Animation):
+    """Abstract class for Animations that show the VMobject partially.
+
+    Raises
+    ------
+    :class:`TypeError`
+        If ``mobject`` is not an instance of :class:`~.VMobject`.
+
+    See Also
+    --------
+    :class:`ShowCreation`, :class:`~.ShowPassingFlash`
+
     """
-    Abstract class for ShowCreation and ShowPassingFlash
-    """
+
+    def __init__(self, mobject, **kwargs):
+        if not isinstance(mobject, VMobject):
+            raise TypeError("This Animation only works on vectorized mobjects")
+        super().__init__(mobject, **kwargs)
 
     def interpolate_submobject(self, submob, start_submob, alpha):
         submob.pointwise_become_partial(start_submob, *self.get_bounds(alpha))
 
     def get_bounds(self, alpha):
-        raise NotImplementedError()
+        raise NotImplementedError("Please use ShowCreation or ShowPassingFlash")
 
 
 class ShowCreation(ShowPartial):
+    """Incrementally shows the VMobject.
+
+    Examples
+    --------
+    .. manim:: ShowCreationScene
+
+        class ShowCreationScene(Scene):
+            def construct(self):
+                self.play(ShowCreation(Square()))
+
+
+    See Also
+    --------
+    :class:`~.ShowPassingFlash`
+
+    """
+
     CONFIG = {
         "lag_ratio": 1,
     }
