@@ -124,7 +124,7 @@ class FrameServer(frameserver_pb2_grpc.FrameServerServicer):
                     frame_response.frame_pending = True
                     selected_scene.renderer_waiting = True
                 return frame_response
-            elif selected_scene.skip_animations:
+            elif selected_scene.renderer.skip_animations:
                 # Do nothing
                 return
             else:

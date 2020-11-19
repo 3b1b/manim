@@ -18,6 +18,9 @@ Fixes
 Configuration
 ^^^^^^^^^^^^^
 
+#. Removed the ``skip_animations`` config option and added the
+   ``Renderer.skip_animations`` attribute instead (via :pr:`696`).
+
 #. The global ``config`` dict has been replaced by a global ``config`` instance
    of the new class :class:`~.ManimConfig`.  This class has a dict-like API, so
    this should not break user code, only make it more robust.  See the

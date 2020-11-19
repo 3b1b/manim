@@ -23,11 +23,9 @@ def set_test_scene(scene_object, module_name):
     Examples
     --------
     Normal usage::
-
         set_test_scene(DotTest, "geometry")
-    """
 
-    config["skip_animations"] = True
+    """
     config["write_to_movie"] = False
     config["disable_caching"] = True
     config["save_last_frame"] = True
@@ -39,7 +37,7 @@ def set_test_scene(scene_object, module_name):
         os.makedirs(os.path.join(tmpdir, "tex"))
         config["text_dir"] = os.path.join(tmpdir, "text")
         config["tex_dir"] = os.path.join(tmpdir, "tex")
-        scene = scene_object()
+        scene = scene_object(skip_animations=True)
         scene.render()
         data = scene.renderer.get_frame()
 

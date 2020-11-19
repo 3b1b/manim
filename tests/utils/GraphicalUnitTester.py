@@ -53,7 +53,6 @@ class GraphicalUnitTester:
         config["text_dir"] = os.path.join(self.path_tests_medias_cache, "Text")
         config["tex_dir"] = os.path.join(self.path_tests_medias_cache, "Tex")
 
-        config["skip_animations"] = True
         config["disable_caching"] = True
         config["quality"] = "low_quality"
 
@@ -65,7 +64,7 @@ class GraphicalUnitTester:
             os.makedirs(dir_temp)
 
         with tempconfig({"dry_run": True}):
-            self.scene = scene_object()
+            self.scene = scene_object(skip_animations=True)
             self.scene.render()
 
     def _load_data(self):
