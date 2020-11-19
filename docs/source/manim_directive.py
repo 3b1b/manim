@@ -155,10 +155,10 @@ class ManimDirective(Directive):
         if "quality" in self.options:
             quality = f'{self.options["quality"]}_quality'
         else:
-            quality = 'test_quality'
-        frame_rate = QUALITIES[quality]['frame_rate']
-        pixel_height = QUALITIES[quality]['pixel_height']
-        pixel_width = QUALITIES[quality]['pixel_width']
+            quality = "test_quality"
+        frame_rate = QUALITIES[quality]["frame_rate"]
+        pixel_height = QUALITIES[quality]["pixel_height"]
+        pixel_width = QUALITIES[quality]["pixel_width"]
         qualitydir = f"{pixel_height}p{frame_rate}"
 
         state_machine = self.state_machine
