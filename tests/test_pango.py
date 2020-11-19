@@ -139,7 +139,7 @@ def test_tabs_replace() -> None:
     assert compare_SVGObject_with_PangoText(temp_pango_text, filename)
 
 
-def check_t2s() -> None:
+def test_t2s() -> None:
     size = 1
     temp_pango_text = Text("Helloworld", t2s={"world": ITALIC})
     surface = cairocffi.SVGSurface(filename, WIDTH, HEIGTH)
