@@ -78,6 +78,8 @@ from typing import List
 
 import shutil
 
+from manim import QUALITIES
+
 classnamedict = {}
 
 
@@ -150,29 +152,13 @@ class ManimDirective(Directive):
         else:
             ref_block = ""
 
-        frame_rate = 30
-        pixel_height = 480
-        pixel_width = 854
-
         if "quality" in self.options:
-            quality = self.options["quality"]
-            if quality == "low":
-                pixel_height = 480
-                pixel_width = 854
-                frame_rate = 15
-            elif quality == "medium":
-                pixel_height = 720
-                pixel_width = 1280
-                frame_rate = 30
-            elif quality == "high":
-                pixel_height = 1440
-                pixel_width = 2560
-                frame_rate = 60
-            elif quality == "fourk":
-                pixel_height = 2160
-                pixel_width = 3840
-                frame_rate = 60
-
+            quality = f'{self.options["quality"]}_quality'
+        else:
+            quality = 'test_quality'
+        frame_rate = QUALITIES[quality]['frame_rate']
+        pixel_height = QUALITIES[quality]['pixel_height']
+        pixel_width = QUALITIES[quality]['pixel_width']
         qualitydir = f"{pixel_height}p{frame_rate}"
 
         state_machine = self.state_machine

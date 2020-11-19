@@ -171,6 +171,12 @@ QUALITIES = {
         "pixel_width": 854,
         "frame_rate": 15,
     },
+    "test_quality": {
+        "flag": None,
+        "pixel_height": 480,
+        "pixel_width": 854,
+        "frame_rate": 30,
+    },
 }
 
 DEFAULT_QUALITY = "high_quality"

@@ -314,7 +314,11 @@ def _parse_args_no_subcmd(args):
     parser.add_argument(
         "-q",
         "--quality",
-        choices=[constants.QUALITIES[q]["flag"] for q in constants.QUALITIES],
+        choices=[
+            constants.QUALITIES[q]["flag"]
+            for q in constants.QUALITIES
+            if constants.QUALITIES[q]["flag"]
+        ],
         default=constants.DEFAULT_QUALITY_SHORT,
         help="Render at specific quality, short form of the --*_quality flags",
     )
