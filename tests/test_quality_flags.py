@@ -11,6 +11,9 @@ def test_quality_flags():
     assert _determine_quality(parsed) == constants.DEFAULT_QUALITY
 
     for quality in constants.QUALITIES.keys():
+        if not constants.QUALITIES[quality]["flag"]:
+            continue
+
         flag = constants.QUALITIES[quality]["flag"]
         # Assert that quality is properly set when using -q*
         arguments = f"manim -q{flag} dummy_filename".split()
