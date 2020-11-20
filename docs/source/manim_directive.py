@@ -87,7 +87,7 @@ def process_name_list(option_input: str, reference_type: str) -> List[str]:
     r"""Reformats a string of space separated class names
     as a list of strings containing valid Sphinx references.
 
-    TESTS
+    Tests
     -----
 
     ::

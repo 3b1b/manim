@@ -1,22 +1,22 @@
-*********
+#########
 Changelog
-*********
+#########
 
-
+******
 v0.2.0
-==================
+******
 
 :Date: TBD
 
 Changes since Manim Community release v0.1.0
 
 Fixes
-^^^^^
+=====
 
 #. JsRender is optional to install. (via :pr:`697`).
 
 Configuration
-^^^^^^^^^^^^^
+=============
 
 #. Removed the ``skip_animations`` config option and added the
    ``Renderer.skip_animations`` attribute instead (via :pr:`696`).
@@ -28,14 +28,14 @@ Configuration
 
 
 Documentation
-^^^^^^^^^^^^^
+=============
 
 #. Add ``:issue:`` and ``:pr:`` directives for simplifying linking to issues and
    pull requests on GitHub (via :pr:`685`).
 
 
 Mobjects, Scenes, and Animations
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+================================
 
 #. The ``alignment`` attribute to Tex and MathTex has been removed in favour of ``tex_environment``.
 #. :class:`~.Text` now uses Pango for rendering. ``PangoText`` has been removed. The old implementation is still available as a fallback as :class:`~.CairoText`.
@@ -48,9 +48,9 @@ Mobjects, Scenes, and Animations
    (use ``call_updater=True`` instead) (via :pr:`710`)
 
 
-
+******
 v0.1.0
-==================
+******
 
 :Date: October 21, 2020
 
@@ -60,11 +60,10 @@ maintaining backwards compatibility wherever possible.
 
 
 New Features
-------------
-
+============
 
 Command line
-^^^^^^^^^^^^
+------------
 
 #. Output of 'manim --help' has been improved
 #. Implement logging with the :code:`rich` library and a :code:`logger` object instead of plain ol' prints
@@ -84,7 +83,7 @@ Command line
 
 
 Config system
-^^^^^^^^^^^^^
+-------------
 
 #. Implement a :code:`manim.cfg` config file system, that consolidates the global configuration, the command line argument parsing, and some of the constants defined in :code:`constants.py`
 #. Added utilities for manipulating Manim’s :code:`.cfg` files.
@@ -102,7 +101,7 @@ Config system
 
 
 Mobjects, Scenes, and Animations
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------------
 
 #. Add customizable left and right bracket for :code:`Matrix` mobject and :code:`set_row_colors` method for matrix mobject
 #. Add :code:`AddTeXLetterByLetter` animation
@@ -129,13 +128,14 @@ Mobjects, Scenes, and Animations
 
 
 Documentation
--------------
+=============
 
 #. Added clearer installation instructions, tutorials, examples, and API reference [WIP]
 
 
 Fixes
------
+=====
+
 #. Initialization of directories has been moved to :code:`config.py`, and a bunch of bugs associated to file structure generation have been fixed
 #. Nonfunctional file :code:`media_dir.txt` has been removed
 #. Nonfunctional :code:`if` statements in :code:`scene_file_writer.py` have been removed
@@ -145,7 +145,7 @@ Fixes
 
 
 Of interest to developers
--------------------------
+=========================
 
 #. Python code formatting is now enforced by using the :code:`black` tool
 #. PRs now require two approving code reviews from community devs before they can be merged
@@ -160,7 +160,8 @@ Of interest to developers
 #. Colors have moved to an Enum
 
 Other Changes
---------------
+=============
+
 #. Cleanup 3b1b Specific Files
 #. Rename package from manimlib to manim
 #. Move all imports to :code:`__init__`, so :code:`from manim import *` replaces :code:`from manimlib.imports import *`
