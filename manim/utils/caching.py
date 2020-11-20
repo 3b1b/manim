@@ -19,11 +19,11 @@ def handle_caching_play(func):
     """
 
     def wrapper(self, scene, *args, **kwargs):
-        self.revert_to_original_skipping_status()
+        self.skip_animations = self.original_skipping_status
         self.update_skipping_status()
         animations = scene.compile_play_args_to_animation_list(*args, **kwargs)
         scene.add_mobjects_from_animations(animations)
-        if config["skip_animations"]:
+        if self.skip_animations:
             logger.debug(f"Skipping animation {self.num_plays}")
             func(self, scene, *args, **kwargs)
             # If the animation is skipped, we mark its hash as None.
@@ -41,7 +41,7 @@ def handle_caching_play(func):
                     f"Animation {self.num_plays} : Using cached data (hash : %(hash_play)s)",
                     {"hash_play": hash_play},
                 )
-                config["skip_animations"] = True
+                self.skip_animations = True
         else:
             hash_play = "uncached_{:05}".format(self.num_plays)
         self.animations_hashes.append(hash_play)

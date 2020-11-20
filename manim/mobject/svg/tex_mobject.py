@@ -27,7 +27,7 @@ Anything enclosed in ``$`` signs is interpreted as maths-mode:
 
     class HelloTex(Scene):
         def construct(self):
-            tex = Tex(r'$\xrightarrow{Hello}$ \LaTeX').scale(3)
+            tex = Tex(r'$\xrightarrow{x^2y^3}$ \LaTeX').scale(3)
             self.add(tex)
 
 Whereas in a :class:`~.MathTex` mobject everything is math-mode by default.
@@ -61,14 +61,14 @@ Whereas in a :class:`~.MathTex` mobject everything is math-mode by default.
 
 LaTeX commands and keyword arguments
 ++++++++++++++++++++++++++++++++++++
-We can use any standard LaTeX commands in the AMS maths packages. For example the ``mathtt`` text type.
+We can use any standard LaTeX commands in the AMS maths packages. For example the ``mathtt`` math-text type, or the ``looparrowright`` arrow.
 
 .. manim:: AMSLaTeX
     :save_last_frame:
 
     class AMSLaTeX(Scene):
         def construct(self):
-            tex = Tex(r'$\mathtt{Hello}$ \LaTeX').scale(3)
+            tex = Tex(r'$\mathtt{H} \looparrowright$ \LaTeX').scale(3)
             self.add(tex)
 
 On the manim side, the :class:`~.Tex` class also accepts attributes to change the appearance of the output.
@@ -125,7 +125,7 @@ in maths mode:
 
     class LaTeXMathFonts(Scene):
         def construct(self):
-            tex = Tex(r'$f: A \rightarrow B$', tex_template=TexFontTemplates.french_cursive).scale(3)
+            tex = Tex(r'$x^2 + y^2 = z^2$', tex_template=TexFontTemplates.french_cursive).scale(3)
             self.add(tex)
 
 Manim also has a :class:`~.TexTemplateLibrary` containing the TeX templates used by 3Blue1Brown. One example
