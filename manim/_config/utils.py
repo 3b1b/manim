@@ -126,6 +126,7 @@ def _determine_quality(args):
             pass
         elif getattr(args, quality, None) or (
             hasattr(args, "quality")
+            and args.quality is not None
             and args.quality == constants.QUALITIES[quality]["flag"]
         ):
             return quality
