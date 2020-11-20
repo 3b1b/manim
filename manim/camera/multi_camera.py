@@ -19,11 +19,11 @@ class MultiCamera(MovingCamera):
     ):
         """Initalises the MultiCamera
 
-        Parameters:
-        -----------
-        *image_mobjects_from_cameras : ImageMobject
+        Parameters
+        ----------
+        image_mobjects_from_cameras : ImageMobject
 
-        **kwargs
+        kwargs
             Any valid keyword arguments of MovingCamera.
         """
         self.image_mobjects_from_cameras = []
@@ -34,7 +34,7 @@ class MultiCamera(MovingCamera):
 
     def add_image_mobject_from_camera(self, image_mobject_from_camera):
         """Adds an ImageMobject that's been obtained from the camera
-        into the list `self.image_mobject_from_cameras`
+        into the list ``self.image_mobject_from_cameras``
 
         Parameters
         ----------

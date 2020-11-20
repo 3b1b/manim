@@ -16,19 +16,19 @@ You can install manim very easily using chocolatey, by typing the following comm
 
 
 And then you can skip all the other steps and move to installing :ref:`latex-installation`.
-Please see :ref:`troubleshooting` section for details about OSError.
+Please see :doc:`troubleshooting` section for details about OSError.
 
 Pango Installation
 ******************
 
-These steps would get you `libpango-1.0-0.dll` to your ``PATH`` along 
-with other dependencies. You may probably have them before itself if 
-you have installed `GTK <https://www.gtk.org/>`_ or any ``GTK`` 
-based app like emacs. If you have it you can just add it to your 
+These steps would get you `libpango-1.0-0.dll` to your ``PATH`` along
+with other dependencies. You may probably have them before itself if
+you have installed `GTK <https://www.gtk.org/>`_ or any ``GTK``
+based app like emacs. If you have it you can just add it to your
 path and skip these steps.
 
 1. Go to `Release Page
-   <https://github.com/ManimCommunity/manim-windows/releases/latest>`_ 
+   <https://github.com/ManimCommunity/manim-windows/releases/latest>`_
    and download the one according to your PC architechture.
 
    .. important:: Please download the ``zip`` file for architechture of python installed.
@@ -37,7 +37,7 @@ path and skip these steps.
 2. Extract the zip file using File Explorer or 7z to the loaction you want to install.
 
    .. code-block:: bash
-      
+
       7z x pango-windows-binaires-x64.zip -oC:\Pango
 
 3. Finally, add it `PATH variable
@@ -71,7 +71,7 @@ installed using ``tlmgr``. See https://www.tug.org/texlive/tlmgr.html for more i
 2. Run the following command
 
    .. code-block:: powershell
-      
+
       choco install manim-latex
 
 3. Finally, check whether it installed properly by running an example scene.

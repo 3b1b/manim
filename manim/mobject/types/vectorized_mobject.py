@@ -889,14 +889,14 @@ class VMobject(Mobject):
         --------
         The default direction of a :class:`~.Circle` is counterclockwise::
 
-        >>> from manim import Circle
-        >>> Circle().get_direction()
-        'CCW'
+            >>> from manim import Circle
+            >>> Circle().get_direction()
+            'CCW'
 
         Returns
         -------
         :class:`str`
-            Either `"CW"` or `"CCW"`.
+            Either ``"CW"`` or ``"CCW"``.
         """
         return shoelace_direction(self.get_start_anchors())
 

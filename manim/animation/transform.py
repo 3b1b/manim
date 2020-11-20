@@ -165,9 +165,9 @@ class MoveToTarget(Transform):
 class ApplyMethod(Transform):
     def __init__(self, method, *args, **kwargs):
         """
-        method is a method of Mobject, *args are arguments for
+        method is a method of Mobject, ``args`` are arguments for
         that method.  Key word arguments should be passed in
-        as the last arg, as a dict, since **kwargs is for
+        as the last arg, as a dict, since ``kwargs`` is for
         configuration of the transform itself
 
         Relies on the fact that mobject methods return the mobject

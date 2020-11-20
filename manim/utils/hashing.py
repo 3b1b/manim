@@ -177,7 +177,7 @@ class CustomEncoder(json.JSONEncoder):
 def get_json(obj):
     """Recursively serialize `object` to JSON using the :class:`CustomEncoder` class.
 
-    Paramaters
+    Parameters
     ----------
     dict_config : :class:`dict`
         The dict to flatten

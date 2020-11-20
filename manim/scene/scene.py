@@ -770,9 +770,11 @@ class Scene(Container):
 
         Parameters
         ----------
-        *args : Animation or mobject with mobject method and params
-        **kwargs : named parameters affecting what was passed in *args e.g
-            run_time, lag_ratio etc.
+        args
+            Animation or mobject with mobject method and params
+        kwargs
+            named parameters affecting what was passed in ``args``,
+            e.g. ``run_time``, ``lag_ratio`` and so on.
         """
         if len(args) == 0:
             warnings.warn("Called Scene.play with no animations")

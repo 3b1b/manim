@@ -6,7 +6,7 @@ height/width, frame rate), output (e.g. directories, logging), styling
 (e.g. background color, transparency), and general behavior (e.g. writing a
 movie vs writing a single frame).
 
-See :doc:`tutorials/configuration` for an introduction to Manim's configuration system.
+See :doc:`/tutorials/configuration` for an introduction to Manim's configuration system.
 
 """
 
