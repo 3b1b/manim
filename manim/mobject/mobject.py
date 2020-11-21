@@ -96,6 +96,9 @@ class Mobject(Container):
         ------
         :class:`ValueError`
             When a mobject tries to add itself.
+        :class:`TypeError`
+            When trying to add an object that is not an instance of :class:`Mobject`.
+
 
         Notes
         -----
@@ -130,8 +133,11 @@ class Mobject(Container):
             ValueError: Mobject cannot contain self
 
         """
-        if self in mobjects:
-            raise ValueError("Mobject cannot contain self")
+        for m in mobjects:
+            if not isinstance(m, Mobject):
+                raise TypeError("All submobjects must be of type Mobject")
+            if m is self:
+                raise ValueError("Mobject cannot contain self")
         self.submobjects = list_update(self.submobjects, mobjects)
         return self
 
@@ -1242,7 +1248,5 @@ class Group(Mobject):
     """Groups together multiple Mobjects."""
 
     def __init__(self, *mobjects, **kwargs):
-        if not all([isinstance(m, Mobject) for m in mobjects]):
-            raise TypeError("All submobjects must be of type Mobject")
         Mobject.__init__(self, **kwargs)
         self.add(*mobjects)

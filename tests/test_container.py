@@ -58,6 +58,10 @@ def test_mobject_add():
     with pytest.raises(ValueError):
         obj.add(obj)
 
+    # can only add Mobjects
+    with pytest.raises(TypeError):
+        obj.add("foo")
+
 
 def test_mobject_remove():
     """Test Mobject.remove()."""
