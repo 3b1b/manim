@@ -544,10 +544,10 @@ class ManimConfig(MutableMapping):
 
         # float keys
         for key in [
-                "background_opacity",
-                # the next two are floats but have their own logic, applied later
-                # "frame_width",
-                # "frame_height",
+            "background_opacity",
+            # the next two are floats but have their own logic, applied later
+            # "frame_width",
+            # "frame_height",
         ]:
             setattr(self, key, parser["CLI"].getfloat(key))
 
