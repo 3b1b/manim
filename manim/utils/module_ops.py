@@ -9,7 +9,7 @@ import re
 
 
 def get_module(file_name):
-    if file_name == "-":
+    if str(file_name) == "-":
         module = types.ModuleType("input_scenes")
         logger.info(
             "Enter the animation's code & end with an EOF (CTRL+D on Linux/Unix, CTRL+Z on Windows):"
