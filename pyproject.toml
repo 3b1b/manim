@@ -67,6 +67,6 @@ markers = "slow: Mark the test as slow. Can be skipped with --skip_slow"
 "manimce" = "manim.__main__:main"
 
 [build-system]
-requires = ["poetry_core>=1.0.0"]
+requires = ["setuptools","poetry_core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
