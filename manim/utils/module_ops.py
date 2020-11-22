@@ -36,6 +36,7 @@ def get_module(file_name):
             spec = importlib.util.spec_from_file_location(module_name, file_name)
             module = importlib.util.module_from_spec(spec)
             sys.modules[module_name] = module
+            sys.path.insert(0, str(file_name.parent.absolute()))
             spec.loader.exec_module(module)
             return module
         else:
