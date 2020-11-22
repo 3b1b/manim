@@ -1146,7 +1146,7 @@ class VDict(VMobject):
 
         Parameters
         ----------
-        key : Hashable
+        key : :class:`typing.Hashable`
             The key of the submoject to be removed.
 
         Returns
@@ -1167,11 +1167,11 @@ class VDict(VMobject):
         return self
 
     def __getitem__(self, key):
-        """Overriding the [] operator for getting submobject by key
+        """Override the [] operator for item retrieval.
 
         Parameters
         ----------
-        key : Hashable
+        key : :class:`typing.Hashable`
            The key of the submoject to be accessed
 
         Returns
@@ -1189,11 +1189,11 @@ class VDict(VMobject):
         return submob
 
     def __setitem__(self, key, value):
-        """Overriding the [] operator for assigning submobject like a python dict
+        """Override the [] operator for item assignment.
 
         Parameters
         ----------
-        key : Hashable
+        key : :class:`typing.Hashable`
             The key of the submoject to be assigned
         value : :class:`VMobject`
             The submobject to bind the key to
@@ -1212,6 +1212,62 @@ class VDict(VMobject):
         if key in self.submob_dict:
             self.remove(key)
         self.add([(key, value)])
+
+    def __delitem__(self, key):
+        """Override the del operator for deleting an item.
+
+        Parameters
+        ----------
+        key : :class:`typing.Hashable`
+            The key of the submoject to be deleted
+
+        Returns
+        -------
+        None
+
+        Examples
+        --------
+        ::
+
+            >>> from manim import *
+            >>> my_dict = VDict({'sq': Square()})
+            >>> 'sq' in my_dict
+            True
+            >>> del my_dict['sq']
+            >>> 'sq' in my_dict
+            False
+
+        Notes
+        -----
+        Removing an item from a VDict does not remove that item from any Scene
+        that the VDict is part of.
+
+        """
+        del self.submob_dict[key]
+
+    def __contains__(self, key):
+        """Override the in operator.
+
+        Parameters
+        ----------
+        key : :class:`typing.Hashable`
+            The key to check membership of.
+
+        Returns
+        -------
+        :class:`bool`
+
+        Examples
+        --------
+        ::
+
+            >>> from manim import *
+            >>> my_dict = VDict({'sq': Square()})
+            >>> 'sq' in my_dict
+            True
+
+        """
+        return key in self.submob_dict
 
     def get_all_submobjects(self):
         """To get all the submobjects associated with a particular :class:`VDict` object
@@ -1237,7 +1293,7 @@ class VDict(VMobject):
 
         Parameters
         ----------
-        key : Hashable
+        key : :class:`typing.Hashable`
             The key of the submobject to be added.
         value : :class:`~.VMobject`
             The mobject associated with the key
