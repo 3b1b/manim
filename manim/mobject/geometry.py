@@ -395,7 +395,7 @@ class Circle(Arc):
         self.replace(mobject, dim_to_match, stretch)
 
         self.set_width(np.sqrt(mobject.get_width() ** 2 + mobject.get_height() ** 2))
-        self.scale(buffer_factor)
+        return self.scale(buffer_factor)
 
     def point_at_angle(self, angle):
         start_angle = angle_of_vector(self.points[0] - self.get_center())
@@ -628,10 +628,10 @@ class Line(TipableVMobject):
         return np.tan(self.get_angle())
 
     def set_angle(self, angle):
-        self.rotate(angle - self.get_angle(), about_point=self.get_start())
+        return self.rotate(angle - self.get_angle(), about_point=self.get_start())
 
     def set_length(self, length):
-        self.scale(length / self.get_length())
+        return self.scale(length / self.get_length())
 
     def set_opacity(self, opacity, family=True):
         # Overwrite default, which would set
