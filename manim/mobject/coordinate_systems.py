@@ -14,7 +14,6 @@ from ..mobject.geometry import Line
 from ..mobject.number_line import NumberLine
 from ..mobject.svg.tex_mobject import MathTex
 from ..mobject.types.vectorized_mobject import VGroup
-from ..utils.config_ops import digest_config
 from ..utils.config_ops import merge_dicts_recursively
 from ..utils.simple_functions import binary_search
 from ..utils.space_ops import angle_of_vector

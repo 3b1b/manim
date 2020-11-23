@@ -10,7 +10,7 @@ The functions below can be called via the `manim cfg` subcommand.
 import os
 from ast import literal_eval
 
-from manim import logger, console, config
+from manim import console, config
 from manim._config.utils import config_file_paths, make_config_parser
 from manim.utils.file_ops import guarantee_existence, open_file
 

@@ -1,16 +1,9 @@
 """Utilities called from ``__main__.py`` to interact with the config."""
 
 import os
-import sys
 import argparse
-import logging
 
-import colour
-
-from manim import constants, logger, config
-from .utils import make_config_parser
-from .logger_utils import JSONFormatter
-from ..utils.tex import TexTemplate, TexTemplateFromFile
+from manim import constants
 
 
 __all__ = ["parse_args"]

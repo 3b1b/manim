@@ -3,7 +3,6 @@ import numpy as np
 
 from ..animation.animation import Animation
 from ..mobject.mobject import Group
-from ..utils.bezier import integer_interpolate
 from ..utils.bezier import interpolate
 from ..utils.config_ops import digest_config
 from ..utils.iterables import remove_list_redundancies

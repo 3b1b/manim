@@ -20,11 +20,10 @@ from ..mobject.types.image_mobject import AbstractImageMobject
 from ..mobject.mobject import Mobject
 from ..mobject.types.point_cloud_mobject import PMobject
 from ..mobject.types.vectorized_mobject import VMobject
-from ..utils.color import color_to_int_rgba, BLACK
+from ..utils.color import color_to_int_rgba
 from ..utils.config_ops import digest_config
 from ..utils.images import get_full_raster_image_path
 from ..utils.iterables import list_difference_update
-from ..utils.iterables import remove_list_redundancies
 from ..utils.simple_functions import fdiv
 from ..utils.space_ops import angle_of_vector
 from ..utils.space_ops import get_norm

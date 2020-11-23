@@ -1,6 +1,5 @@
 from .. import config, logger
-from ..utils.hashing import get_hash_from_play_call, get_hash_from_wait_call
-from ..constants import DEFAULT_WAIT_TIME
+from ..utils.hashing import get_hash_from_play_call
 
 
 def handle_caching_play(func):

@@ -8,13 +8,12 @@ from pydub import AudioSegment
 import shutil
 import subprocess
 import os
-import _thread as thread
 from time import sleep
 import datetime
 from PIL import Image
 from pathlib import Path
 
-from .. import config, logger, console
+from .. import config, logger
 from ..constants import FFMPEG_BIN, GIF_FILE_EXTENSION
 from ..utils.config_ops import digest_config
 from ..utils.file_ops import guarantee_existence

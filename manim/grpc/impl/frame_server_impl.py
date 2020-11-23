@@ -1,12 +1,10 @@
 from ... import config
-from ...scene import scene
 from ..gen import frameserver_pb2
 from ..gen import frameserver_pb2_grpc
 from ..gen import renderserver_pb2
 from ..gen import renderserver_pb2_grpc
 from concurrent import futures
-from google.protobuf import json_format
-from watchdog.events import LoggingEventHandler, FileSystemEventHandler
+from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 import grpc
 import subprocess as sp

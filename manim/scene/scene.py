@@ -8,21 +8,18 @@ import inspect
 import random
 import warnings
 import platform
-import copy
 
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
 
 from .. import config, logger
 from ..animation.animation import Animation, Wait
-from ..animation.transform import MoveToTarget, ApplyMethod
+from ..animation.transform import MoveToTarget
 from ..camera.camera import Camera
 from ..constants import *
 from ..container import Container
 from ..mobject.mobject import Mobject
-from ..scene.scene_file_writer import SceneFileWriter
 from ..utils.iterables import list_update, list_difference_update
-from ..utils.hashing import get_hash_from_play_call, get_hash_from_wait_call
 from ..utils.family import extract_mobject_family_members
 from ..renderer.cairo_renderer import CairoRenderer
 from ..utils.exceptions import EndSceneEarlyException

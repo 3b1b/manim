@@ -2,7 +2,6 @@ import numpy as np
 from .. import config
 from ..utils.iterables import list_update
 from ..utils.exceptions import EndSceneEarlyException
-from ..constants import DEFAULT_WAIT_TIME
 from ..scene.scene_file_writer import SceneFileWriter
 from ..utils.caching import handle_caching_play
 from ..camera.camera import Camera

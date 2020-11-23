@@ -1,10 +1,8 @@
 import os
-import platform
 import sys
 import traceback
 
-from manim import constants, logger, console, config
-from manim import Scene
+from manim import logger, config
 from manim.utils.module_ops import (
     get_module,
     get_scene_classes_from_module,
