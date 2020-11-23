@@ -51,7 +51,7 @@ def main():
     if hasattr(args, "cmd"):
         if args.cmd == "cfg":
             if args.subcmd:
-                from manim.config import cfg_subcmds
+                from manim._config import cfg_subcmds
 
                 if args.subcmd == "write":
                     cfg_subcmds.write(args.level, args.open)
