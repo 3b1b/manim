@@ -6081,11 +6081,16 @@ class HammingThinking(Scene):
 
 
 class RandomWalks(Scene):
+    CONFIG = {
+        "random_seed": 1,
+    }
+
     def construct(self):
         # Setup
-        N_PATHS = 50
+        N_PATHS = 25
         frame = self.camera.frame
         frame.set_height(2 * FRAME_HEIGHT)
+        frame.shift(2 * RIGHT)
 
         idea_spot = 10 * RIGHT + 3 * UP
         idea_dot = Dot(idea_spot)
@@ -6107,10 +6112,11 @@ class RandomWalks(Scene):
 
         path_dots = VGroup()
         for path in paths:
-            dot = Randolph(
-                mode="thinking", height=0.25,
-                # color=random.choice([BLUE_B, BLUE_C, BLUE_D, GREY_BROWN])
-            )
+            # dot = Randolph(
+            #     mode="thinking", height=0.25,
+            #     # color=random.choice([BLUE_B, BLUE_C, BLUE_D, GREY_BROWN])
+            # )
+            dot = Dot(color=BLUE)
             dot.set_stroke(BLACK, 3, background=True)
             dot.path = path
             dot.add_updater(lambda m: m.move_to(m.path[-1].get_end()))
@@ -6181,7 +6187,7 @@ class RandomWalks(Scene):
             paths.fade, 0.5,
             path_dots.fade, 0.5,
         )
-        self.wait()
+        self.wait(4)
 
 
 class ThinkingInTermsOfBits(Scene):
