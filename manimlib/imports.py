@@ -75,7 +75,6 @@ from manimlib.scene.reconfigurable_scene import *
 from manimlib.scene.scene import *
 from manimlib.scene.sample_space_scene import *
 from manimlib.scene.graph_scene import *
-from manimlib.scene.scene_from_video import *
 from manimlib.scene.three_d_scene import *
 from manimlib.scene.vector_space_scene import *
 from manimlib.scene.zoomed_scene import *

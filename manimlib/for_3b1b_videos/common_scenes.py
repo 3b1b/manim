@@ -8,6 +8,7 @@ from manimlib.animation.transform import ApplyMethod
 from manimlib.constants import *
 from manimlib.for_3b1b_videos.pi_creature import Mortimer
 from manimlib.for_3b1b_videos.pi_creature import Randolph
+from manimlib.mobject.coordinate_systems import NumberPlane
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.geometry import DashedLine
 from manimlib.mobject.geometry import Line
@@ -272,7 +273,7 @@ class Banner(Scene):
         "pi_bottom": 0.25 * DOWN,
         "use_date": False,
         "date": "Sunday, February 3rd",
-        "message_scale_val": 0.9,
+        "message_height": 0.4,
         "add_supporter_note": False,
         "pre_date_text": "Next video on ",
     }
@@ -286,6 +287,13 @@ class Banner(Scene):
         Scene.__init__(self, **kwargs)
 
     def construct(self):
+        # Background
+        plane = NumberPlane(x_range=(0, 14, 0.5), y_range=(0, 8, 0.5))
+        plane.axes.set_stroke(BLUE, 1)
+        plane.fade(0.5)
+        self.add(plane)
+
+        # Pis
         pis = self.get_pis()
         pis.set_height(self.pi_height)
         pis.arrange(RIGHT, aligned_edge=DOWN)
@@ -293,14 +301,19 @@ class Banner(Scene):
         self.pis = pis
         self.add(pis)
 
+        plane.move_to(pis.get_bottom() + SMALL_BUFF * DOWN)
+
+        # Message
         if self.use_date:
             message = self.get_date_message()
         else:
             message = self.get_probabalistic_message()
-        message.scale(self.message_scale_val)
+        message.set_height(self.message_height)
         message.next_to(pis, DOWN)
+        message.set_stroke(BLACK, 5, background=True)
         self.add(message)
 
+        # Suppoerter note
         if self.add_supporter_note:
             note = self.get_supporter_note()
             note.scale(0.5)
@@ -325,8 +338,8 @@ class Banner(Scene):
 
     def get_probabalistic_message(self):
         return TextMobject(
-            "New video every ", "Sunday ",
-            "(with probability 0.3)",
+            "New video every day ",
+            "(with probability 0.05)",
             tex_to_color_map={"Sunday": YELLOW},
         )
 
