@@ -174,14 +174,13 @@ class Scene(Container):
         """
         # Return only those which are not in the family
         # of another mobject from the scene
-        mobjects = self.get_mobjects()
-        families = [m.get_family() for m in mobjects]
+        families = [m.get_family() for m in self.mobjects]
 
         def is_top_level(mobject):
             num_families = sum([(mobject in family) for family in families])
             return num_families == 1
 
-        return list(filter(is_top_level, mobjects))
+        return list(filter(is_top_level, self.mobjects))
 
     def get_mobject_family_members(self):
         """
@@ -218,15 +217,6 @@ class Scene(Container):
         mobjects = [*mobjects, *self.foreground_mobjects]
         self.restructure_mobjects(to_remove=mobjects)
         self.mobjects += mobjects
-        return self
-
-    def add_mobjects_among(self, values):
-        """
-        This is meant mostly for quick prototyping,
-        e.g. to add all mobjects defined up to a point,
-        call self.add_mobjects_among(locals().values())
-        """
-        self.add(*filter(lambda m: isinstance(m, Mobject), values))
         return self
 
     def add_mobjects_from_animations(self, animations):
@@ -456,30 +446,6 @@ class Scene(Container):
         self.foreground_mobjects = []
         return self
 
-    def get_mobjects(self):
-        """
-        Returns all the mobjects in self.mobjects
-
-        Returns
-        ------
-        list
-            The list of self.mobjects .
-        """
-        return list(self.mobjects)
-
-    def get_mobject_copies(self):
-        """
-        Returns a copy of all mobjects present in
-        self.mobjects .
-
-        Returns
-        ------
-        list
-            A list of the copies of all the mobjects
-            in self.mobjects
-        """
-        return [m.copy() for m in self.mobjects]
-
     def get_moving_mobjects(self, *animations):
         """
         Gets all moving mobjects in the passed animation(s).
@@ -651,7 +617,7 @@ class Scene(Container):
         )
         return time_progression
 
-    def get_animation_time_progression(self, animations):
+    def _get_animation_time_progression(self, animations):
         """
         You will hardly use this when making your own animations.
         This method is for Manim's internal use.
@@ -684,7 +650,7 @@ class Scene(Container):
         )
         return time_progression
 
-    def get_wait_time_progression(self, duration, stop_condition):
+    def _get_wait_time_progression(self, duration, stop_condition):
         """
         This method is used internally to obtain the CommandLine
         Progressbar for when self.wait() is called in a scene.
@@ -800,7 +766,7 @@ class Scene(Container):
             duration = animations[0].duration
             stop_condition = animations[0].stop_condition
             self.static_image = None
-            time_progression = self.get_wait_time_progression(duration, stop_condition)
+            time_progression = self._get_wait_time_progression(duration, stop_condition)
         else:
             # Paint all non-moving objects onto the screen, so they don't
             # have to be rendered every frame
@@ -810,7 +776,7 @@ class Scene(Container):
             ) = self.get_moving_and_stationary_mobjects(animations)
             self.renderer.update_frame(self, mobjects=stationary_mobjects)
             self.static_image = self.renderer.get_frame()
-            time_progression = self.get_animation_time_progression(animations)
+            time_progression = self._get_animation_time_progression(animations)
 
         last_t = 0
         for t in time_progression:
