@@ -46,10 +46,10 @@ class CameraFrame(Mobject):
 
     def get_inverse_camera_position_matrix(self):
         mat = np.identity(4)
-        # First shift so that origin of real space coincides with camera origin
+        # Shift so that origin of real space coincides with camera origin
         mat[:3, 3] = -self.get_center().T
         # Rotate based on camera orientation
-        mat[:3, :3] = np.dot(self.inverse_camera_rotation_matrix, mat[:3, :3])
+        mat[:3, :4] = np.dot(self.inverse_camera_rotation_matrix, mat[:3, :4])
         return mat
 
     def refresh_camera_rotation_matrix(self):
