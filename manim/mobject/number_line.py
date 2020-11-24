@@ -23,6 +23,7 @@ class NumberLine(Line):
     CONFIG = {
         "color": LIGHT_GREY,
         "unit_size": 1,
+        "width": None,  # overrides unit_size if a value is passed
         "include_ticks": True,
         "tick_size": 0.1,
         "tick_frequency": 1,
@@ -58,6 +59,9 @@ class NumberLine(Line):
         Line.__init__(
             self, start - self.add_start * RIGHT, end + self.add_end * RIGHT, **kwargs
         )
+        if self.width is not None:
+            self.set_width(self.width)
+            self.unit_size = self.get_unit_size()
         self.shift(-self.number_to_point(self.number_at_center))
 
         self.init_leftmost_tick()
@@ -142,7 +146,7 @@ class NumberLine(Line):
         return self.point_to_number(point)
 
     def get_unit_size(self):
-        return (self.x_max - self.x_min) / self.get_length()
+        return self.get_length() / (self.x_max - self.x_min)
 
     def default_numbers_to_display(self):
         if self.numbers_to_show is not None:
