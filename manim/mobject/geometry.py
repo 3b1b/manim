@@ -53,6 +53,7 @@ __all__ = [
     "Rectangle",
     "Square",
     "RoundedRectangle",
+    "Cutout",
 ]
 
 import warnings
@@ -1390,3 +1391,49 @@ class ArrowSquareTip(ArrowTip, Square):
 class ArrowSquareFilledTip(ArrowFilledTip, ArrowSquareTip):
     r"""Square arrow tip with filled tip."""
     pass
+
+
+class Cutout(VMobject):
+    """A shape with smaller cutouts.
+
+    .. warning::
+
+        Technically, this class behaves similar to a symmetric difference: if
+        parts of the ``mobjects`` are not located within the ``main_shape``,
+        these parts will be added to the resulting :class:`~.VMobject`.
+
+    Parameters
+    ----------
+    main_shape : :class:`~.VMobject`
+        The primary shape from which cutouts are made.
+    mobjects : :class:`~.VMobject`
+        The smaller shapes which are to be cut out of the ``main_shape``.
+    kwargs
+        Further keyword arguments that are passed to the constructor of
+        :class:`~.VMobject`.
+
+    Examples
+    --------
+    .. manim:: CutoutExample
+
+        class CutoutExample(Scene):
+            def construct(self):
+                s1 = Square().scale(2.5)
+                s2 = Triangle().shift(DOWN + RIGHT).scale(0.5)
+                s3 = Square().shift(UP + RIGHT).scale(0.5)
+                s4 = RegularPolygon(5).shift(DOWN + LEFT).scale(0.5)
+                s5 = RegularPolygon(6).shift(UP + LEFT).scale(0.5)
+                c = Cutout(s1, s2, s3, s4, s5, fill_opacity=1, color=BLUE, stroke_color=RED)
+                self.play(Write(c), run_time=4)
+                self.wait()
+    """
+
+    def __init__(self, main_shape, *mobjects, **kwargs):
+        VMobject.__init__(self, **kwargs)
+        self.append_points(main_shape.get_points())
+        if main_shape.get_direction() == "CW":
+            sub_direction = "CCW"
+        else:
+            sub_direction = "CW"
+        for mobject in mobjects:
+            self.append_points(mobject.force_direction(sub_direction).get_points())

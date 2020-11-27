@@ -46,6 +46,10 @@ Mobjects, Scenes, and Animations
 #. Ensure that the axes for graphs (:class:`GraphScene`) always intersect (:pr:`580`).
 #. Now Mobject.add_updater does not call the newly-added updater by default
    (use ``call_updater=True`` instead) (via :pr:`710`)
+#. VMobject now has methods to determine and change the direction of the points (via :pr:`647`).
+#. Added BraceBetweenPoints (via :pr:`693`).
+#. Added ArcPolygon and ArcPolygonFromArcs (via :pr:`707`).
+#. Added Cutout (via :pr:`760`).
 
 
 ******

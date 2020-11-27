@@ -940,7 +940,7 @@ class VMobject(Mobject):
             # Since we already assured the input is CW or CCW,
             # and the directions don't match, we just reverse
             self.reverse_direction()
-            return self
+        return self
 
 
 class VGroup(VMobject):
