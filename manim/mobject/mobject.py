@@ -704,7 +704,7 @@ class Mobject(Container):
         if family:
             for submob in self.submobjects:
                 submob.set_color(color, family=family)
-        self.color = color
+        self.color = Color(color)
         return self
 
     def set_color_by_gradient(self, *colors):

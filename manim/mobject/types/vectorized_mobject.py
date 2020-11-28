@@ -252,6 +252,7 @@ class VMobject(Mobject):
     def set_color(self, color, family=True):
         self.set_fill(color, family=family)
         self.set_stroke(color, family=family)
+        self.color = colour.Color(color)
         return self
 
     def set_opacity(self, opacity, family=True):
