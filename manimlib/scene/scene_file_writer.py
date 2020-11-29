@@ -149,7 +149,7 @@ class SceneFileWriter(object):
             that immediately contains the video file will be
             480p15.
             The file structure should look something like:
-            
+
             MEDIA_DIR
                 |--Tex
                 |--texts
@@ -175,7 +175,7 @@ class SceneFileWriter(object):
         written to.
         It is usually named "images", but can be changed by changing
         "image_file_path".
-        
+
         Returns
         -------
         str
@@ -186,7 +186,7 @@ class SceneFileWriter(object):
     def get_next_partial_movie_path(self):
         """
         Manim renders each play-like call in a short partial
-        video file. All such files are then concatenated with 
+        video file. All such files are then concatenated with
         the help of FFMPEG.
 
         This method returns the path of the next partial movie.
@@ -233,9 +233,9 @@ class SceneFileWriter(object):
                           time=None,
                           gain_to_background=None):
         """
-        This method adds an audio segment from an 
+        This method adds an audio segment from an
         AudioSegment type object and suitable parameters.
-        
+
         Parameters
         ----------
         new_segment (AudioSegment)
@@ -277,7 +277,7 @@ class SceneFileWriter(object):
         ----------
         sound_file (str)
             The path to the sound file.
-        
+
         time (Union[float, int])
             The timestamp at which the audio should be added.
 
@@ -496,6 +496,19 @@ class SceneFileWriter(object):
 
         combine_process = subprocess.Popen(commands)
         combine_process.wait()
+
+        mp4fpsmod_file_path = os.path.join(
+            os.getcwd(),
+            'mp4fpsmod.exe' if os.name == 'nt' else 'mp4fpsmod'
+        )
+
+        fix_timestamps_process = subprocess.Popen([
+            mp4fpsmod_file_path,
+            '--fps', '0:' + str(self.scene.camera.frame_rate),
+            '--timescale', '15360',
+            movie_file_path, '--inplace'
+        ])
+        fix_timestamps_process.wait()
 
         if self.includes_sound:
             sound_file_path = movie_file_path.replace(
