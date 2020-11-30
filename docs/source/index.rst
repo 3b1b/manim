@@ -15,6 +15,11 @@ This project is still very much a work in progress, but I hope that the
 information here will make it easier for newcomers to get started using
 ``Manim``.
 
+.. tip:: 
+
+    All content of the docs is licensed under the MIT license. Especially for the examples
+    you encounter: Feel free to use this code in your own projects!
+
 
 .. toctree::
    :maxdepth: 2
