@@ -546,7 +546,7 @@ class LinearTransformationScene(VectorScene):
             "x_min": -config["frame_width"] / 2,
             "y_max": config["frame_width"] / 2,
             "y_min": -config["frame_width"] / 2,
-            "faded_line_ratio": 0,
+            "faded_line_ratio": 1,
         }
 
     def setup(self):
