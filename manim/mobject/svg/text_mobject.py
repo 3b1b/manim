@@ -400,11 +400,6 @@ class Paragraph(VGroup):
         `weird <https://github.com/3b1b/manim/issues/1067>`_. Consider using
         :meth:`remove_invisible_chars` to resolve this issue.
 
-    .. note::
-
-        Due to issues with the Pango-powered :class:`.Text`, this class uses
-        :class:`.CairoText`.
-
     Parameters
     ----------
     line_spacing : :class:`int`, optional
@@ -437,7 +432,7 @@ class Paragraph(VGroup):
         VGroup.__init__(self, **config)
 
         lines_str = "\n".join(list(text))
-        self.lines_text = CairoText(lines_str, **config)
+        self.lines_text = Text(lines_str, **config)
         lines_str_list = lines_str.split("\n")
         self.chars = self.gen_chars(lines_str_list)
 
