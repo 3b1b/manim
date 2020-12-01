@@ -54,6 +54,7 @@ import cairo
 import cairocffi
 import pangocairocffi
 import pangocffi
+from xml.sax.saxutils import escape
 
 from ... import config, logger
 from ...constants import *
@@ -709,7 +710,9 @@ class Text(SVGMobject):
         "tab_width": 4,
     }
 
-    def __init__(self, text: str, **config):  # pylint: disable=redefined-outer-name
+    def __init__(
+        self, text: str, disable_ligaratures: bool = False, **config
+    ):  # pylint: disable=redefined-outer-name
         logger.info(
             "Text now uses Pango for rendering. "
             "In case of problems, the old implementation is available as CairoText."
@@ -717,6 +720,7 @@ class Text(SVGMobject):
         self.full2short(config)
         digest_config(self, config)
         self.original_text = text
+        self.disable_ligaratures = disable_ligaratures
         text_without_tabs = text
         if text.find("\t") != -1:
             text_without_tabs = text.replace("\t", " " * self.tab_width)
@@ -729,6 +733,11 @@ class Text(SVGMobject):
         self.remove_last_M(file_name)
         SVGMobject.__init__(self, file_name, **config)
         self.text = text
+        print("hi")
+        if self.disable_ligaratures:
+            print("yes")
+            self.submobjects = [*self.gen_chars()]
+        self.chars = VGroup(*self.submobjects)
         self.chars = VGroup(*self.submobjects)
         self.text = text_without_tabs.replace(" ", "").replace("\n", "")
         nppc = self.n_points_per_cubic_curve
@@ -760,6 +769,28 @@ class Text(SVGMobject):
 
     def __repr__(self):
         return f"Text({repr(self.original_text)})"
+
+    def gen_chars(self):
+        chars = VGroup()
+        submobjects_char_index = 0
+        for char_index in range(self.text.__len__()):
+            if (
+                self.text[char_index] == " "
+                or self.text[char_index] == "\t"
+                or self.text[char_index] == "\n"
+            ):
+                space = Dot(redius=0, fill_opacity=0, stroke_opacity=0)
+                if char_index == 0:
+                    space.move_to(self.submobjects[submobjects_char_index].get_center())
+                else:
+                    space.move_to(
+                        self.submobjects[submobjects_char_index - 1].get_center()
+                    )
+                chars.add(space)
+            else:
+                chars.add(self.submobjects[submobjects_char_index])
+                submobjects_char_index += 1
+        return chars
 
     def remove_last_M(self, file_name: str):  # pylint: disable=invalid-name
         """Internally used. Use to format the rendered SVG files."""
@@ -926,6 +957,7 @@ class Text(SVGMobject):
         size = self.size * 10
         line_spacing = self.line_spacing * 10
         dir_name = config.get_dir("text_dir")
+        disable_liga = self.disable_ligaratures
         if not os.path.exists(dir_name):
             os.makedirs(dir_name)
         hash_name = self.text2hash()
@@ -959,7 +991,11 @@ class Text(SVGMobject):
                 START_X + offset_x, START_Y + line_spacing * setting.line_num
             )
             pangocairocffi.update_layout(context, layout)
-            layout.set_text(text)
+            if disable_liga:
+                text = escape(text)
+                layout.set_markup(f"<span font_features='liga=0'>{text}</span>")
+            else:
+                layout.set_text(text)
             logger.debug(f"Setting Text {text}")
             pangocairocffi.show_layout(context, layout)
             offset_x += pangocffi.units_to_double(layout.get_size()[0])

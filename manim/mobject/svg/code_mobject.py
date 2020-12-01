@@ -262,6 +262,7 @@ class Code(VGroup):
             line_spacing=self.line_spacing,
             alignment="right",
             font=self.font,
+            disable_ligaratures=True,
             stroke_width=self.stroke_width
         ).scale(self.scale_factor)
         for i in line_numbers:
@@ -287,6 +288,7 @@ class Code(VGroup):
             line_spacing=self.line_spacing,
             tab_width=self.tab_width,
             font=self.font,
+            disable_ligaratures=True,
             stroke_width=self.stroke_width
         ).scale(self.scale_factor)
         for line_no in range(code.__len__()):
@@ -304,7 +306,6 @@ class Code(VGroup):
         """Function to generate html string with code highlighted and stores in variable html_string."""
         file = open(self.file_path, "r")
         code_str = file.read()
-        file.close()
         self.html_string = hilite_me(
             code_str,
             self.language,
