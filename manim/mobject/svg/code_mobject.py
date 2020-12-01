@@ -306,6 +306,7 @@ class Code(VGroup):
         """Function to generate html string with code highlighted and stores in variable html_string."""
         file = open(self.file_path, "r")
         code_str = file.read()
+        file.close()
         self.html_string = hilite_me(
             code_str,
             self.language,

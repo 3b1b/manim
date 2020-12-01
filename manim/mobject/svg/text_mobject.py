@@ -733,9 +733,7 @@ class Text(SVGMobject):
         self.remove_last_M(file_name)
         SVGMobject.__init__(self, file_name, **config)
         self.text = text
-        print("hi")
         if self.disable_ligaratures:
-            print("yes")
             self.submobjects = [*self.gen_chars()]
         self.chars = VGroup(*self.submobjects)
         self.chars = VGroup(*self.submobjects)
