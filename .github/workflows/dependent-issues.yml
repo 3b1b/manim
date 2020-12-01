@@ -2,9 +2,8 @@ name: Dependent Issues
 
 on:
   issues:
-  pull_request:
   schedule:
-    - cron: '0 0 * * *' # schedule daily check
+    - cron: '0/30 * * * *' # schedule daily check
 
 jobs:
   check:
@@ -25,4 +24,3 @@ jobs:
           # (Optional) A comma-separated list of keywords. Default
           # "depends on, blocked by"
           keywords: depends on, blocked by
-          
