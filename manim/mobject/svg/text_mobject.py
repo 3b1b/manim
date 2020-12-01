@@ -711,7 +711,7 @@ class Text(SVGMobject):
     }
 
     def __init__(
-        self, text: str, disable_ligaratures: bool = False, **config
+        self, text: str, disable_ligatures: bool = False, **config
     ):  # pylint: disable=redefined-outer-name
         logger.info(
             "Text now uses Pango for rendering. "
@@ -720,7 +720,7 @@ class Text(SVGMobject):
         self.full2short(config)
         digest_config(self, config)
         self.original_text = text
-        self.disable_ligaratures = disable_ligaratures
+        self.disable_ligatures = disable_ligatures
         text_without_tabs = text
         if text.find("\t") != -1:
             text_without_tabs = text.replace("\t", " " * self.tab_width)
@@ -733,7 +733,7 @@ class Text(SVGMobject):
         self.remove_last_M(file_name)
         SVGMobject.__init__(self, file_name, **config)
         self.text = text
-        if self.disable_ligaratures:
+        if self.disable_ligatures:
             self.submobjects = [*self.gen_chars()]
         self.chars = VGroup(*self.submobjects)
         self.chars = VGroup(*self.submobjects)
@@ -955,7 +955,7 @@ class Text(SVGMobject):
         size = self.size * 10
         line_spacing = self.line_spacing * 10
         dir_name = config.get_dir("text_dir")
-        disable_liga = self.disable_ligaratures
+        disable_liga = self.disable_ligatures
         if not os.path.exists(dir_name):
             os.makedirs(dir_name)
         hash_name = self.text2hash()

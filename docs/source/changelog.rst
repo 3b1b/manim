@@ -50,7 +50,7 @@ Mobjects, Scenes, and Animations
 #. Added BraceBetweenPoints (via :pr:`693`).
 #. Added ArcPolygon and ArcPolygonFromArcs (via :pr:`707`).
 #. Added Cutout (via :pr:`760`).
-#. Add ``disable_ligaratures`` to Text ( :class:`Text` ). (via :pr:`804`)
+#. Add ``disable_ligatures`` to Text ( :class:`Text` ). (via :pr:`804`)
 
 
 ******
