@@ -2,11 +2,36 @@
 Changelog
 #########
 
-******
-v0.2.0
-******
+.. contents:: Release history
+   :depth: 1
+   :local:
+   :backlinks: none
+
+
+****************
+Upcoming release
+****************
 
 :Date: TBD
+
+Changes since the latest released version.
+
+New Features
+============
+
+- There is nothing here yet, check back later.
+
+Bugfixes
+========
+
+- There is nothing here yet, check back later.
+
+
+******
+v0.1.1
+******
+
+:Date: December 1, 2020
 
 Changes since Manim Community release v0.1.0
 
@@ -14,17 +39,23 @@ Fixes
 =====
 
 #. JsRender is optional to install. (via :pr:`697`).
+#. Allow importing modules from the same directory as the input
+   file when using ``manim`` from the command line (via :pr:`724`).
+#. Remove some unnecessary or unpythonic methods from :class:`~.Scene`
+   (``get_mobjects``, ``add_mobjects_among``, ``get_mobject_copies``),
+   via :pr:`758`.
+#. Fix formatting of :class:`~.Code` (via :pr:`798`).
 
 Configuration
 =============
 
 #. Removed the ``skip_animations`` config option and added the
    ``Renderer.skip_animations`` attribute instead (via :pr:`696`).
-
 #. The global ``config`` dict has been replaced by a global ``config`` instance
    of the new class :class:`~.ManimConfig`.  This class has a dict-like API, so
    this should not break user code, only make it more robust.  See the
    Configuration tutorial for details.
+#. Added the option to configure a directory for external assets (via :pr:`649`).
 
 
 Documentation
@@ -32,6 +63,8 @@ Documentation
 
 #. Add ``:issue:`` and ``:pr:`` directives for simplifying linking to issues and
    pull requests on GitHub (via :pr:`685`).
+#. Add a ``skip-manim`` tag for skipping the ``.. manim::`` directive when
+   building the documentation locally (via :pr:`796`).
 
 
 Mobjects, Scenes, and Animations
@@ -39,7 +72,7 @@ Mobjects, Scenes, and Animations
 
 #. The ``alignment`` attribute to Tex and MathTex has been removed in favour of ``tex_environment``.
 #. :class:`~.Text` now uses Pango for rendering. ``PangoText`` has been removed. The old implementation is still available as a fallback as :class:`~.CairoText`.
-#. **New**: Variations of :class:`~.Dot` have been added as :class:`~.AnnotationDot`
+#. Variations of :class:`~.Dot` have been added as :class:`~.AnnotationDot`
    (a bigger dot with bolder stroke) and :class:`~.LabeledDot` (a dot containing a
    label).
 #. Scene.set_variables_as_attrs has been removed (via :pr:`692`).
@@ -50,6 +83,10 @@ Mobjects, Scenes, and Animations
 #. Added BraceBetweenPoints (via :pr:`693`).
 #. Added ArcPolygon and ArcPolygonFromArcs (via :pr:`707`).
 #. Added Cutout (via :pr:`760`).
+#. Added :class:`~.ManimBanner` for a animated version of our logo and banner (via :pr:`729`)
+#. The background color of a scene can now be changed reliably by setting, e.g.,
+   ``self.camera.background_color = RED`` (via :pr:`716`).
+
 
 
 ******
