@@ -5,7 +5,7 @@ import numpy as np
 from .. import constants, config
 
 
-__all__ = ['Pixels', 'Degrees', 'Munits', 'Percent']
+__all__ = ["Pixels", "Degrees", "Munits", "Percent"]
 
 
 class _PixelUnits:
