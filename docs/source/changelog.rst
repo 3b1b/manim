@@ -19,7 +19,7 @@ Changes since the latest released version.
 New Features
 ============
 
-- There is nothing here yet, check back later.
+- Added a creation animation for our banner, :meth:`~.ManimBanner.create` (via :pr:`814`).
 
 Bugfixes
 ========

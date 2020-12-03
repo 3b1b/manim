@@ -2,13 +2,17 @@
 
 __all__ = ["ManimBanner"]
 
-from ..constants import LEFT, UP, RIGHT, DOWN, ORIGIN
+import numpy as np
+
+from ..constants import LEFT, UP, RIGHT, DOWN, ORIGIN, TAU
 from ..animation.composition import AnimationGroup, Succession
 from ..animation.fading import FadeIn
 from ..animation.transform import ApplyMethod
 from ..mobject.geometry import Circle, Square, Triangle
+from ..mobject.value_tracker import ValueTracker
 from ..mobject.svg.tex_mobject import Tex, MathTex
 from ..mobject.types.vectorized_mobject import VGroup
+from ..utils.space_ops import normalize
 from ..utils.tex_templates import TexFontTemplates
 
 
@@ -41,10 +45,12 @@ class ManimBanner(VGroup):
         class BannerLightBackground(Scene):
             def construct(self):
                 self.camera.background_color = "#ece6e2"
-                banner = ManimBanner(dark_theme=False).scale(0.5).to_corner(UR)
-                self.play(FadeIn(banner))
-                self.play(banner.expand())
-                self.play(FadeOut(banner))
+                banner_large = ManimBanner(dark_theme=False).scale(0.7)
+                banner_small = ManimBanner(dark_theme=False).scale(0.35)
+                banner_small.next_to(banner_large, DOWN)
+                self.play(banner_large.create(), banner_small.create())
+                self.play(banner_large.expand(), banner_small.expand())
+                self.play(FadeOut(banner_large), FadeOut(banner_small))
 
     """
 
@@ -105,6 +111,53 @@ class ManimBanner(VGroup):
         if self.anim not in self.submobjects:
             self.anim.scale(scale_factor, **kwargs)
         return super().scale(scale_factor, **kwargs)
+
+    def create(self):
+        """The creation animation for Manim's logo.
+
+        Returns
+        -------
+        :class:`~.AnimationGroup`
+            An animation to be used in a :meth:`.Scene.play` call.
+        """
+        shape_center = VGroup(self.circle, self.square, self.triangle).get_center()
+
+        spiral_run_time = 2.1
+        expansion_factor = 8 * self.scale_factor
+
+        tracker = ValueTracker(0)
+
+        for mob in [self.circle, self.square, self.triangle]:
+            mob.final_position = mob.get_center()
+            mob.initial_position = (
+                mob.final_position
+                + (mob.final_position - shape_center) * expansion_factor
+            )
+            mob.initial_to_final_distance = np.linalg.norm(
+                mob.final_position - mob.initial_position
+            )
+            mob.move_to(mob.initial_position)
+            mob.current_time = 0
+            mob.starting_mobject = mob.copy()
+
+            def updater(mob, dt):
+                mob.become(mob.starting_mobject)
+                direction = shape_center - mob.get_center()
+                mob.shift(
+                    normalize(direction, fall_back=direction)
+                    * mob.initial_to_final_distance
+                    * tracker.get_value()
+                )
+                mob.rotate(TAU * tracker.get_value(), about_point=shape_center)
+                mob.rotate(-TAU * tracker.get_value())
+
+            mob.add_updater(updater)
+
+        spin_animation = ApplyMethod(tracker.set_value, 1, run_time=spiral_run_time)
+
+        return AnimationGroup(
+            FadeIn(self, run_time=spiral_run_time / 2), spin_animation
+        )
 
     def expand(self) -> Succession:
         """An animation that expands Manim's logo into its banner.
