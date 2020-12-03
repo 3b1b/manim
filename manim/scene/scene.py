@@ -53,14 +53,17 @@ class Scene(Container):
 
     """
 
-    CONFIG = {
-        "camera_class": Camera,
-        "always_update_mobjects": False,
-        "random_seed": 0,
-    }
-
-    def __init__(self, renderer=None, **kwargs):
-        Container.__init__(self, **kwargs)
+    def __init__(
+        self,
+        renderer=None,
+        camera_class=Camera,
+        always_update_mobjects=False,
+        random_seed=0,
+        **kwargs,
+    ):
+        self.camera_class = camera_class
+        self.always_update_mobjects = always_update_mobjects
+        self.random_seed = random_seed
         if renderer is None:
             self.renderer = CairoRenderer(
                 camera_class=self.camera_class,
@@ -76,6 +79,8 @@ class Scene(Container):
         if self.random_seed is not None:
             random.seed(self.random_seed)
             np.random.seed(self.random_seed)
+
+        Container.__init__(self, **kwargs)
 
     @property
     def camera(self):

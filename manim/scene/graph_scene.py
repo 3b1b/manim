@@ -7,12 +7,15 @@ Examples
     :save_last_frame:
 
     class FunctionPlotWithLabbeledYAxis(GraphScene):
-        CONFIG = {
-            "y_min": 0,
-            "y_max": 100,
-            "y_axis_config": {"tick_frequency": 10},
-            "y_labeled_nums": np.arange(0, 100, 10)
-        }
+        def __init__(self, **kwargs):
+            GraphScene.__init__(
+                self,
+                y_min=0,
+                y_max=100,
+                y_axis_config={"tick_frequency": 10},
+                y_labeled_nums=np.arange(0, 100, 10),
+                **kwargs
+            )
 
         def construct(self):
             self.setup_axes()
@@ -72,37 +75,69 @@ from ..utils.space_ops import angle_of_vector
 
 
 class GraphScene(Scene):
-    CONFIG = {
-        "x_min": -1,
-        "x_max": 10,
-        "x_axis_width": 9,
-        "x_leftmost_tick": None,  # Change if different from x_min
-        "x_labeled_nums": None,
-        "x_axis_label": "$x$",
-        "y_min": -1,
-        "y_max": 10,
-        "y_axis_height": 6,
-        "y_bottom_tick": None,  # Change if different from y_min
-        "y_labeled_nums": None,
-        "y_axis_label": "$y$",
-        "axes_color": GREY,
-        "graph_origin": 2.5 * DOWN + 4 * LEFT,
-        "exclude_zero_label": True,
-        "default_graph_colors": [BLUE, GREEN, YELLOW],
-        "default_derivative_color": GREEN,
-        "default_input_color": YELLOW,
-        "default_riemann_start_color": BLUE,
-        "default_riemann_end_color": GREEN,
-        "area_opacity": 0.8,
-        "num_rects": 50,
-        "include_tip": False,  # add tip at the end of the axes
-        "x_axis_visibility": True,  # show or hide the x axis
-        "y_axis_visibility": True,  # show or hide the y axis
-        "x_label_position": UP + RIGHT,  # where to place the label of the x axis
-        "y_label_position": UP + RIGHT,  # where to place the label of the y axis
-        "x_axis_config": {},
-        "y_axis_config": {},
-    }
+    def __init__(
+        self,
+        x_min=-1,
+        x_max=10,
+        x_axis_width=9,
+        x_leftmost_tick=None,  # Change if different from x_min
+        x_labeled_nums=None,
+        x_axis_label="$x$",
+        y_min=-1,
+        y_max=10,
+        y_axis_height=6,
+        y_bottom_tick=None,  # Change if different from y_min
+        y_labeled_nums=None,
+        y_axis_label="$y$",
+        axes_color=GREY,
+        graph_origin=2.5 * DOWN + 4 * LEFT,
+        exclude_zero_label=True,
+        default_graph_colors=[BLUE, GREEN, YELLOW],
+        default_derivative_color=GREEN,
+        default_input_color=YELLOW,
+        default_riemann_start_color=BLUE,
+        default_riemann_end_color=GREEN,
+        area_opacity=0.8,
+        num_rects=50,
+        include_tip=False,  # add tip at the end of the axes
+        x_axis_visibility=True,  # show or hide the x axis
+        y_axis_visibility=True,  # show or hide the y axis
+        x_label_position=UP + RIGHT,  # where to place the label of the x axis
+        y_label_position=UP + RIGHT,  # where to place the label of the y axis
+        x_axis_config={},
+        y_axis_config={},
+        **kwargs,
+    ):
+        self.x_min = x_min
+        self.x_max = x_max
+        self.x_axis_width = x_axis_width
+        self.x_leftmost_tick = x_leftmost_tick
+        self.x_labeled_nums = x_labeled_nums
+        self.x_axis_label = x_axis_label
+        self.y_min = y_min
+        self.y_max = y_max
+        self.y_axis_height = y_axis_height
+        self.y_bottom_tick = y_bottom_tick
+        self.y_labeled_nums = y_labeled_nums
+        self.y_axis_label = y_axis_label
+        self.axes_color = axes_color
+        self.graph_origin = graph_origin
+        self.exclude_zero_label = exclude_zero_label
+        self.default_graph_colors = default_graph_colors
+        self.default_derivative_color = default_derivative_color
+        self.default_input_color = default_input_color
+        self.default_riemann_start_color = default_riemann_start_color
+        self.default_riemann_end_color = default_riemann_end_color
+        self.area_opacity = area_opacity
+        self.num_rects = num_rects
+        self.include_tip = include_tip
+        self.x_axis_visibility = x_axis_visibility
+        self.y_axis_visibility = y_axis_visibility
+        self.x_label_position = x_label_position
+        self.y_label_position = y_label_position
+        self.x_axis_config = x_axis_config
+        self.y_axis_config = y_axis_config
+        super().__init__(**kwargs)
 
     def setup(self):
         """
@@ -185,7 +220,6 @@ class GraphScene(Scene):
                 "leftmost_tick": self.y_bottom_tick,
                 "numbers_with_elongated_ticks": self.y_labeled_nums,
                 "color": self.axes_color,
-                "line_to_number_vect": LEFT,
                 "label_direction": LEFT,
                 "include_tip": self.include_tip,
             },
@@ -253,10 +287,13 @@ class GraphScene(Scene):
             :save_last_frame:
 
             class SequencePlot(GraphScene):
-                CONFIG = {
-                    "y_axis_label": r"Concentration [\%]",
-                    "x_axis_label": "Time [s]",
-                    }
+                def __init__(self, **kwargs):
+                    GraphScene.__init__(
+                        self,
+                        y_axis_label=r"Concentration [\\%]",
+                        x_axis_label="Time [s]",
+                        **kwargs
+                    )
 
                 def construct(self):
                     data = [1, 2, 2, 4, 4, 1, 3]

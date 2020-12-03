@@ -113,6 +113,7 @@ class GraphicalUnitTester:
         ax.set_title("Differences summary : (red = got, green = expected)")
 
         plt.show()
+        plt.savefig(f"{self.scene}.png")
 
     def test(self, show_diff=False):
         """Compare pre-rendered frame to the frame rendered during the test."""

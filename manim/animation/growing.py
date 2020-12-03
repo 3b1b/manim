@@ -14,12 +14,9 @@ from ..constants import PI
 
 
 class GrowFromPoint(Transform):
-    CONFIG = {
-        "point_color": None,
-    }
-
-    def __init__(self, mobject, point, **kwargs):
+    def __init__(self, mobject, point, point_color=None, **kwargs):
         self.point = point
+        self.point_color = point_color
         super().__init__(mobject, **kwargs)
 
     def create_target(self):
@@ -35,9 +32,9 @@ class GrowFromPoint(Transform):
 
 
 class GrowFromCenter(GrowFromPoint):
-    def __init__(self, mobject, **kwargs):
+    def __init__(self, mobject, point_color=None, **kwargs):
         point = mobject.get_center()
-        super().__init__(mobject, point, **kwargs)
+        super().__init__(mobject, point, point_color=point_color, **kwargs)
 
 
 class GrowFromEdge(GrowFromPoint):
@@ -53,6 +50,5 @@ class GrowArrow(GrowFromPoint):
 
 
 class SpinInFromNothing(GrowFromCenter):
-    CONFIG = {
-        "path_arc": PI,
-    }
+    def __init__(self, mobject, path_arc=PI, **kwargs):
+        super().__init__(mobject, path_arc=path_arc, **kwargs)

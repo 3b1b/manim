@@ -162,7 +162,6 @@ __all__ = [
     "MathTex",
     "Tex",
     "BulletedList",
-    "MathTexFromPresetString",
     "Title",
     "TexMobject",
     "TextMobject",
@@ -179,7 +178,6 @@ from ...mobject.svg.svg_mobject import SVGMobject
 from ...mobject.svg.svg_mobject import VMobjectFromSVGPathstring
 from ...mobject.types.vectorized_mobject import VGroup
 from ...mobject.types.vectorized_mobject import VectorizedPoint
-from ...utils.config_ops import digest_config
 from ...utils.strings import split_string_list_to_isolate_substrings
 from ...utils.tex_file_writing import tex_to_svg_file
 from ...utils.color import BLACK
@@ -205,22 +203,31 @@ class SingleStringMathTex(SVGMobject):
         SingleStringMathTex('Test')
     """
 
-    CONFIG = {
-        "stroke_width": 0,
-        "fill_opacity": 1.0,
-        "background_stroke_width": 0,
-        "background_stroke_color": BLACK,
-        "should_center": True,
-        "height": None,
-        "organize_left_to_right": False,
-        "tex_environment": "align*",
-        "tex_template": None,
-    }
-
-    def __init__(self, tex_string, **kwargs):
-        digest_config(self, kwargs)
-        if self.tex_template is None:
-            self.tex_template = kwargs.get("tex_template", config["tex_template"])
+    def __init__(
+        self,
+        tex_string,
+        stroke_width=0,
+        fill_opacity=1.0,
+        background_stroke_width=0,
+        background_stroke_color=BLACK,
+        should_center=True,
+        height=None,
+        organize_left_to_right=False,
+        tex_environment="align*",
+        tex_template=None,
+        **kwargs,
+    ):
+        self.stroke_width = stroke_width
+        self.fill_opacity = fill_opacity
+        self.background_stroke_width = background_stroke_width
+        self.background_stroke_color = background_stroke_color
+        self.should_center = should_center
+        self.height = height
+        self.organize_left_to_right = organize_left_to_right
+        self.tex_environment = tex_environment
+        if tex_template is None:
+            tex_template = config["tex_template"]
+        self.tex_template = tex_template
 
         assert isinstance(tex_string, str)
         self.tex_string = tex_string
@@ -229,7 +236,17 @@ class SingleStringMathTex(SVGMobject):
             environment=self.tex_environment,
             tex_template=self.tex_template,
         )
-        SVGMobject.__init__(self, file_name=file_name, **kwargs)
+        SVGMobject.__init__(
+            self,
+            file_name=file_name,
+            should_center=self.should_center,
+            stroke_width=self.stroke_width,
+            height=self.height,
+            fill_opacity=self.fill_opacity,
+            background_stroke_width=self.background_stroke_width,
+            background_stroke_color=self.background_stroke_color,
+            **kwargs,
+        )
         if self.height is None:
             self.scale(TEX_MOB_SCALE_FACTOR)
         if self.organize_left_to_right:
@@ -322,7 +339,7 @@ class SingleStringMathTex(SVGMobject):
 
 
 class MathTex(SingleStringMathTex):
-    """A string compiled with LaTeX in math mode.
+    r"""A string compiled with LaTeX in math mode.
 
     Examples
     --------
@@ -343,23 +360,34 @@ class MathTex(SingleStringMathTex):
 
     """
 
-    CONFIG = {
-        "arg_separator": " ",
-        "substrings_to_isolate": [],
-        "tex_to_color_map": {},
-        "tex_environment": "align*",
-    }
-
-    def __init__(self, *tex_strings, **kwargs):
-        digest_config(self, kwargs)
+    def __init__(
+        self,
+        *tex_strings,
+        arg_separator=" ",
+        substrings_to_isolate=None,
+        tex_to_color_map=None,
+        tex_environment="align*",
+        **kwargs,
+    ):
+        self.tex_template = kwargs.pop("tex_template", config["tex_template"])
+        self.arg_separator = arg_separator
+        self.substrings_to_isolate = (
+            [] if substrings_to_isolate is None else substrings_to_isolate
+        )
+        self.tex_to_color_map = tex_to_color_map
+        if self.tex_to_color_map is None:
+            self.tex_to_color_map = {}
+        self.tex_environment = tex_environment
         tex_strings = self.break_up_tex_strings(tex_strings)
         self.tex_strings = tex_strings
         SingleStringMathTex.__init__(
-            self, self.arg_separator.join(tex_strings), **kwargs
+            self,
+            self.arg_separator.join(tex_strings),
+            tex_environment=self.tex_environment,
+            tex_template=self.tex_template,
+            **kwargs,
         )
-        config = dict(self.CONFIG)
-        config.update(kwargs)
-        self.break_up_by_substrings(config)
+        self.break_up_by_substrings()
         self.set_color_by_tex_to_color_map(self.tex_to_color_map)
 
         if self.organize_left_to_right:
@@ -378,7 +406,7 @@ class MathTex(SingleStringMathTex):
         split_list = [s for s in split_list if s != ""]
         return split_list
 
-    def break_up_by_substrings(self, config):
+    def break_up_by_substrings(self):
         """
         Reorganize existing submojects one layer
         deeper based on the structure of tex_strings (as a list
@@ -387,7 +415,11 @@ class MathTex(SingleStringMathTex):
         new_submobjects = []
         curr_index = 0
         for tex_string in self.tex_strings:
-            sub_tex_mob = SingleStringMathTex(tex_string, **config)
+            sub_tex_mob = SingleStringMathTex(
+                tex_string,
+                tex_environment=self.tex_environment,
+                tex_template=self.tex_template,
+            )
             num_submobs = len(sub_tex_mob.submobjects)
             new_index = curr_index + num_submobs
             if num_submobs == 0:
@@ -465,21 +497,30 @@ class Tex(MathTex):
 
     """
 
-    CONFIG = {
-        "arg_separator": "",
-        "tex_environment": "center",
-    }
+    def __init__(
+        self, *tex_strings, arg_separator="", tex_environment="center", **kwargs
+    ):
+        MathTex.__init__(
+            self,
+            *tex_strings,
+            arg_separator=arg_separator,
+            tex_environment=tex_environment,
+            **kwargs,
+        )
 
 
 class BulletedList(Tex):
-    CONFIG = {
-        "buff": MED_LARGE_BUFF,
-        "dot_scale_factor": 2,
-        # Have to include because of handle_multiple_args implementation
-        "tex_environment": None,
-    }
-
-    def __init__(self, *items, **kwargs):
+    def __init__(
+        self,
+        *items,
+        buff=MED_LARGE_BUFF,
+        dot_scale_factor=2,
+        tex_environment=None,
+        **kwargs,
+    ):
+        self.buff = buff
+        self.dot_scale_factor = dot_scale_factor
+        self.tex_environment = tex_environment
         line_separated_items = [s + "\\\\" for s in items]
         Tex.__init__(self, *line_separated_items, **kwargs)
         for part in self:
@@ -503,29 +544,20 @@ class BulletedList(Tex):
                 other_part.set_fill(opacity=opacity)
 
 
-class MathTexFromPresetString(MathTex):
-    CONFIG = {
-        # To be filled by subclasses
-        "tex": None,
-        "color": None,
-    }
-
-    def __init__(self, **kwargs):
-        digest_config(self, kwargs)
-        MathTex.__init__(self, self.tex, **kwargs)
-        self.set_color(self.color)
-
-
 class Title(Tex):
-    CONFIG = {
-        "scale_factor": 1,
-        "include_underline": True,
-        # This will override underline_width
-        "match_underline_width_to_text": False,
-        "underline_buff": MED_SMALL_BUFF,
-    }
-
-    def __init__(self, *text_parts, **kwargs):
+    def __init__(
+        self,
+        *text_parts,
+        scale_factor=1,
+        include_underline=True,
+        match_underline_width_to_text=False,
+        underline_buff=MED_SMALL_BUFF,
+        **kwargs,
+    ):
+        self.scale_factor = scale_factor
+        self.include_underline = include_underline
+        self.match_underline_width_to_text = match_underline_width_to_text
+        self.underline_buff = underline_buff
         Tex.__init__(self, *text_parts, **kwargs)
         self.underline_width = config["frame_width"] - 2
         self.scale(self.scale_factor)

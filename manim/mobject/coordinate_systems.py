@@ -130,18 +130,26 @@ class CoordinateSystem:
 
 
 class Axes(VGroup, CoordinateSystem):
-    CONFIG = {
-        "axis_config": {
-            "color": LIGHT_GREY,
-            "include_tip": True,
-            "exclude_zero_from_default_numbers": True,
-        },
-        "x_axis_config": {},
-        "y_axis_config": {"label_direction": LEFT},
-        "center_point": ORIGIN,
-    }
-
-    def __init__(self, **kwargs):
+    def __init__(
+        self,
+        axis_config=None,
+        x_axis_config=None,
+        y_axis_config={"label_direction": LEFT},
+        center_point=ORIGIN,
+        **kwargs
+    ):
+        if axis_config is None:
+            axis_config = {
+                "color": LIGHT_GREY,
+                "include_tip": True,
+                "exclude_zero_from_default_numbers": True,
+            }
+        self.axis_config = axis_config
+        if x_axis_config is None:
+            x_axis_config = {}
+        self.x_axis_config = x_axis_config
+        self.y_axis_config = y_axis_config
+        self.center_point = center_point
         CoordinateSystem.__init__(self)
         VGroup.__init__(self, **kwargs)
         self.x_axis = self.create_axis(self.x_min, self.x_max, self.x_axis_config)
@@ -150,7 +158,7 @@ class Axes(VGroup, CoordinateSystem):
         # Add as a separate group in case various other
         # mobjects are added to self, as for example in
         # NumberPlane below
-        self.axes = VGroup(self.x_axis, self.y_axis)
+        self.axes = VGroup(self.x_axis, self.y_axis, dim=self.dim)
         self.add(*self.axes)
         self.shift(self.center_point)
 
@@ -198,16 +206,24 @@ class Axes(VGroup, CoordinateSystem):
 
 
 class ThreeDAxes(Axes):
-    CONFIG = {
-        "z_axis_config": {},
-        "z_min": -3.5,
-        "z_max": 3.5,
-        "z_normal": DOWN,
-        "num_axis_pieces": 20,
-        "light_source": 9 * DOWN + 7 * LEFT + 10 * OUT,
-    }
-
-    def __init__(self, **kwargs):
+    def __init__(
+        self,
+        z_axis_config=None,
+        z_min=-3.5,
+        z_max=3.5,
+        z_normal=DOWN,
+        num_axis_pieces=20,
+        light_source=9 * DOWN + 7 * LEFT + 10 * OUT,
+        **kwargs
+    ):
+        if z_axis_config is None:
+            z_axis_config = {}
+        self.z_axis_config = z_axis_config
+        self.z_min = z_min
+        self.z_max = z_max
+        self.z_normal = z_normal
+        self.num_axis_pieces = num_axis_pieces
+        self.light_source = light_source
         self.x_min = -5.5
         self.x_max = 5.5
         self.y_min = -5.5
@@ -248,32 +264,53 @@ class ThreeDAxes(Axes):
 
 
 class NumberPlane(Axes):
-    CONFIG = {
-        "axis_config": {
-            "stroke_color": WHITE,
-            "stroke_width": 2,
-            "include_ticks": False,
-            "include_tip": False,
-            "line_to_number_buff": SMALL_BUFF,
-            "label_direction": DR,
-            "number_scale_val": 0.5,
-        },
-        "y_axis_config": {"label_direction": DR},
-        "background_line_style": {
-            "stroke_color": BLUE_D,
-            "stroke_width": 2,
-            "stroke_opacity": 1,
-        },
-        # Defaults to a faded version of line_config
-        "faded_line_style": None,
-        "x_line_frequency": 1,
-        "y_line_frequency": 1,
-        "faded_line_ratio": 1,
-        "make_smooth_after_applying_functions": True,
-    }
+    def __init__(
+        self,
+        axis_config=None,
+        y_axis_config=None,
+        background_line_style=None,
+        faded_line_style=None,
+        x_line_frequency=1,
+        y_line_frequency=1,
+        faded_line_ratio=1,
+        make_smooth_after_applying_functions=True,
+        **kwargs
+    ):
+        if axis_config is None:
+            axis_config = {
+                "stroke_color": WHITE,
+                "stroke_width": 2,
+                "include_ticks": False,
+                "include_tip": False,
+                "line_to_number_buff": SMALL_BUFF,
+                "label_direction": DR,
+                "number_scale_val": 0.5,
+            }
+        self.axis_config = axis_config
+        if y_axis_config is None:
+            y_axis_config = {"label_direction": DR}
+        self.y_axis_config = y_axis_config
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        if background_line_style is None:
+            background_line_style = {
+                "stroke_color": BLUE_D,
+                "stroke_width": 2,
+                "stroke_opacity": 1,
+            }
+        self.background_line_style = background_line_style
+
+        # Defaults to a faded version of line_config
+        self.faded_line_style = faded_line_style
+        self.x_line_frequency = x_line_frequency
+        self.y_line_frequency = y_line_frequency
+        self.faded_line_ratio = faded_line_ratio
+        self.make_smooth_after_applying_functions = make_smooth_after_applying_functions
+
+        super().__init__(
+            axis_config=self.axis_config,
+            y_axis_config=self.y_axis_config,
+            **kwargs,
+        )
         self.init_background_lines()
 
     def init_background_lines(self):
@@ -400,10 +437,13 @@ class NumberPlane(Axes):
 
 
 class ComplexPlane(NumberPlane):
-    CONFIG = {
-        "color": BLUE,
-        "line_frequency": 1,
-    }
+    def __init__(self, color=BLUE, x_line_frequency=1, y_line_frequency=1, **kwargs):
+        super().__init__(
+            color=color,
+            x_line_frequency=x_line_frequency,
+            y_line_frequency=y_line_frequency,
+            **kwargs,
+        )
 
     def number_to_point(self, number):
         number = complex(number)

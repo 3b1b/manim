@@ -32,8 +32,8 @@ There are primarily 3 kinds of standard easing functions:
             label3 = Tex("Ease In Out").next_to(line3, RIGHT)
 
             self.play(
-                FadeIn(VGroup(line1, line2, line3), 
-                FadeIn(VGroup(dot1, dot2, dot3))),
+                FadeIn(VGroup(line1, line2, line3)),
+                FadeIn(VGroup(dot1, dot2, dot3)),
                 Write(VGroup(label1, label2, label3)),
             )
             self.play(

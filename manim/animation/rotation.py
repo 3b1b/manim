@@ -12,14 +12,22 @@ from ..utils.rate_functions import linear
 
 
 class Rotating(Animation):
-    CONFIG = {
-        "axis": OUT,
-        "radians": TAU,
-        "run_time": 5,
-        "rate_func": linear,
-        "about_point": None,
-        "about_edge": None,
-    }
+    def __init__(
+        self,
+        mobject,
+        axis=OUT,
+        radians=TAU,
+        about_point=None,
+        about_edge=None,
+        run_time=5,
+        rate_func=linear,
+        **kwargs
+    ):
+        self.axis = axis
+        self.radians = radians
+        self.about_point = about_point
+        self.about_edge = about_edge
+        super().__init__(mobject, run_time=run_time, rate_func=rate_func, **kwargs)
 
     def interpolate_mobject(self, alpha):
         self.mobject.become(self.starting_mobject)
@@ -32,18 +40,17 @@ class Rotating(Animation):
 
 
 class Rotate(Transform):
-    CONFIG = {
-        "about_point": None,
-        "about_edge": None,
-    }
-
-    def __init__(self, mobject, angle=PI, axis=OUT, **kwargs):
+    def __init__(
+        self, mobject, angle=PI, axis=OUT, about_point=None, about_edge=None, **kwargs
+    ):
         if "path_arc" not in kwargs:
             kwargs["path_arc"] = angle
         if "path_arc_axis" not in kwargs:
             kwargs["path_arc_axis"] = axis
         self.angle = angle
         self.axis = axis
+        self.about_edge = about_edge
+        self.about_point = about_point
         super().__init__(mobject, **kwargs)
 
     def create_target(self):

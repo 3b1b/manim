@@ -13,7 +13,6 @@ from ...mobject.svg.tex_mobject import MathTex
 from ...mobject.svg.tex_mobject import Tex
 from ...mobject.types.vectorized_mobject import VMobject
 from ...mobject.geometry import Line
-from ...utils.config_ops import digest_config
 from ...utils.space_ops import get_norm
 
 
@@ -48,16 +47,21 @@ class Brace(MathTex):
 
     """
 
-    CONFIG = {
-        "buff": 0.2,
-        "width_multiplier": 2,
-        "max_num_quads": 15,
-        "min_num_quads": 0,
-        "background_stroke_width": 0,
-    }
-
-    def __init__(self, mobject, direction=DOWN, **kwargs):
-        digest_config(self, kwargs, locals())
+    def __init__(
+        self,
+        mobject,
+        direction=DOWN,
+        buff=0.2,
+        width_multiplier=2,
+        max_num_quads=15,
+        min_num_quads=0,
+        background_stroke_width=0,
+        **kwargs
+    ):
+        self.width_multiplier = width_multiplier
+        self.max_num_quads = max_num_quads
+        self.min_num_quads = min_num_quads
+        self.buff = buff
         angle = -np.arctan2(*direction[:2]) + np.pi
         mobject.rotate(-angle, about_point=ORIGIN)
         left = mobject.get_corner(DOWN + LEFT)
@@ -71,7 +75,9 @@ class Brace(MathTex):
             self.max_num_quads,
         )
         tex_string = "\\underbrace{%s}" % (num_quads * "\\qquad")
-        MathTex.__init__(self, tex_string, **kwargs)
+        MathTex.__init__(
+            self, tex_string, background_stroke_width=background_stroke_width, **kwargs
+        )
         self.tip_point_index = np.argmin(self.get_all_points()[:, 1])
         self.stretch_to_fit_width(target_width)
         self.shift(left - self.get_corner(UP + LEFT) + self.buff * DOWN)
@@ -110,12 +116,17 @@ class Brace(MathTex):
 
 
 class BraceLabel(VMobject):
-    CONFIG = {
-        "label_constructor": MathTex,
-        "label_scale": 1,
-    }
-
-    def __init__(self, obj, text, brace_direction=DOWN, **kwargs):
+    def __init__(
+        self,
+        obj,
+        text,
+        brace_direction=DOWN,
+        label_constructor=MathTex,
+        label_scale=1,
+        **kwargs
+    ):
+        self.label_constructor = label_constructor
+        self.label_scale = label_scale
         VMobject.__init__(self, **kwargs)
         self.brace_direction = brace_direction
         if isinstance(obj, list):
@@ -159,7 +170,8 @@ class BraceLabel(VMobject):
 
 
 class BraceText(BraceLabel):
-    CONFIG = {"label_constructor": Tex}
+    def __init__(self, obj, text, label_constructor=Tex, **kwargs):
+        super().__init__(obj, text, label_constructor=label_constructor, **kwargs)
 
 
 class BraceBetweenPoints(Brace):

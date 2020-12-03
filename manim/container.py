@@ -8,7 +8,7 @@ __all__ = ["Container"]
 
 
 from abc import ABC, abstractmethod
-from .utils.config_ops import digest_config
+from . import logger
 
 
 class Container(ABC):
@@ -18,12 +18,17 @@ class Container(ABC):
     Parameters
     ----------
     kwargs : Any
-        Arguments to be passed to :func:`~.digest_config`
 
     """
 
     def __init__(self, **kwargs):
-        digest_config(self, kwargs)
+        if kwargs:
+            logger.debug("Container received extra kwargs: %s", kwargs)
+
+        if hasattr(self, "CONFIG"):
+            logger.error(
+                "CONFIG has been removed from ManimCommunity. Please use keyword arguments instead."
+            )
 
     @abstractmethod
     def add(self, *items):

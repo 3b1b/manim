@@ -11,11 +11,6 @@ You haven't set font.
 If you are not using English, this may cause text rendering problem.
 You set font like:
 text = Text('your text', font='your font')
-or:
-class MyText(Text):
-    CONFIG = {
-        'font': 'My Font'
-    }
 """
 SCENE_NOT_FOUND_MESSAGE = """
    {} is not in the script

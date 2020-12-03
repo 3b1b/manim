@@ -15,7 +15,6 @@ from pathlib import Path
 
 from .. import config, logger
 from ..constants import FFMPEG_BIN, GIF_FILE_EXTENSION
-from ..utils.config_ops import digest_config
 from ..utils.file_ops import guarantee_existence
 from ..utils.file_ops import add_extension_if_not_present
 from ..utils.file_ops import modify_atime
@@ -42,10 +41,8 @@ class SceneFileWriter(object):
 
     """
 
-    def __init__(self, renderer, video_quality_config, scene_name, **kwargs):
-        digest_config(self, kwargs)
+    def __init__(self, renderer, scene_name, **kwargs):
         self.renderer = renderer
-        self.video_quality_config = video_quality_config
         self.stream_lock = False
         self.init_output_directories(scene_name)
         self.init_audio()
@@ -306,10 +303,13 @@ class SceneFileWriter(object):
         """
         while self.stream_lock:
             a = datetime.datetime.now()
-            self.update_frame()
+            # self.update_frame()
+            self.renderer.update_frame()
             n_frames = 1
-            frame = self.get_frame()
-            self.add_frame(*[frame] * n_frames)
+            # frame = self.get_frame()
+            frame = self.renderer.get_frame()
+            # self.add_frame(*[frame] * n_frames)
+            self.renderer.add_frame(*[frame] * n_frames)
             b = datetime.datetime.now()
             time_diff = (b - a).total_seconds()
             frame_duration = 1 / config["frame_rate"]

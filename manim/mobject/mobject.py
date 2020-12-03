@@ -42,26 +42,21 @@ class Mobject(Container):
 
     """
 
-    CONFIG = {
-        "color": WHITE,
-        "name": None,
-        "dim": 3,
-        "target": None,
-        "z_index": 0,
-    }
-
-    def __init__(self, **kwargs):
-        Container.__init__(self, **kwargs)
+    def __init__(self, color=WHITE, name=None, dim=3, target=None, z_index=0, **kwargs):
+        self.color = color
+        self.name = self.__class__.__name__ if name is None else name
+        self.dim = dim
+        self.target = target
+        self.z_index = z_index
         self.point_hash = None
         self.submobjects = []
         self.color = Color(self.color)
-        if self.name is None:
-            self.name = self.__class__.__name__
         self.updaters = []
         self.updating_suspended = False
         self.reset_points()
         self.generate_points()
         self.init_colors()
+        Container.__init__(self, **kwargs)
 
     def __repr__(self):
         return str(self.name)
@@ -214,7 +209,7 @@ class Mobject(Container):
     def generate_target(self, use_deepcopy=False):
         self.target = None  # Prevent exponential explosion
         if use_deepcopy:
-            self.target = self.deepcopy()
+            self.target = copy.deepcopy(self)
         else:
             self.target = self.copy()
         return self.target

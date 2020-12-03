@@ -64,25 +64,37 @@ def vector_coordinate_label(vector_mob, integer_labels=True, n_dim=2, color=WHIT
 
 
 class Matrix(VMobject):
-    CONFIG = {
-        "v_buff": 0.8,
-        "h_buff": 1.3,
-        "bracket_h_buff": MED_SMALL_BUFF,
-        "bracket_v_buff": MED_SMALL_BUFF,
-        "add_background_rectangles_to_entries": False,
-        "include_background_rectangle": False,
-        "element_to_mobject": MathTex,
-        "element_to_mobject_config": {},
-        "element_alignment_corner": DR,
-        "left_bracket": "\\big[",
-        "right_bracket": "\\big]",
-    }
-
-    def __init__(self, matrix, **kwargs):
+    def __init__(
+        self,
+        matrix,
+        v_buff=0.8,
+        h_buff=1.3,
+        bracket_h_buff=MED_SMALL_BUFF,
+        bracket_v_buff=MED_SMALL_BUFF,
+        add_background_rectangles_to_entries=False,
+        include_background_rectangle=False,
+        element_to_mobject=MathTex,
+        element_to_mobject_config={},
+        element_alignment_corner=DR,
+        left_bracket="\\big[",
+        right_bracket="\\big]",
+        **kwargs
+    ):
         """
         Matrix can either either include numbres, tex_strings,
         or mobjects
         """
+        self.v_buff = v_buff
+        self.h_buff = h_buff
+        self.bracket_h_buff = bracket_h_buff
+        self.bracket_v_buff = bracket_v_buff
+        self.add_background_rectangles_to_entries = add_background_rectangles_to_entries
+        self.include_background_rectangle = include_background_rectangle
+        self.element_to_mobject = element_to_mobject
+        self.element_to_mobject_config = element_to_mobject_config
+        self.element_alignment_corner = element_alignment_corner
+        self.left_bracket = left_bracket
+        self.right_bracket = right_bracket
         VMobject.__init__(self, **kwargs)
         matrix = np.array(matrix, ndmin=1)
         mob_matrix = self.matrix_to_mob_matrix(matrix)
@@ -181,22 +193,28 @@ class Matrix(VMobject):
 
 
 class DecimalMatrix(Matrix):
-    CONFIG = {
-        "element_to_mobject": DecimalNumber,
-        "element_to_mobject_config": {"num_decimal_places": 1},
-    }
+    def __init__(
+        self,
+        element_to_mobject=DecimalNumber,
+        element_to_mobject_config={"num_decimal_places": 1},
+        **kwargs
+    ):
+        Matrix.__init__(
+            self,
+            element_to_mobject=element_to_mobject,
+            element_to_mobject_config=element_to_mobject_config,
+            **kwargs
+        )
 
 
 class IntegerMatrix(Matrix):
-    CONFIG = {
-        "element_to_mobject": Integer,
-    }
+    def __init__(self, element_to_mobject=Integer, **kwargs):
+        Matrix.__init__(self, element_to_mobject=element_to_mobject, **kwargs)
 
 
 class MobjectMatrix(Matrix):
-    CONFIG = {
-        "element_to_mobject": lambda m: m,
-    }
+    def __init__(self, element_to_mobject=lambda m: m, **kwargs):
+        Matrix.__init__(self, element_to_mobject=element_to_mobject, **kwargs)
 
 
 def get_det_text(
