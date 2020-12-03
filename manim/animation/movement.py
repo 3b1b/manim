@@ -14,18 +14,16 @@ from ..utils.rate_functions import linear
 
 
 class Homotopy(Animation):
-    CONFIG = {
-        "run_time": 3,
-        "apply_function_kwargs": {},
-    }
-
-    def __init__(self, homotopy, mobject, **kwargs):
+    def __init__(
+        self, homotopy, mobject, run_time=3, apply_function_kwargs={}, **kwargs
+    ):
         """
         Homotopy is a function from
         (x, y, z, t) to (x', y', z')
         """
         self.homotopy = homotopy
-        super().__init__(mobject, **kwargs)
+        self.apply_function_kwargs = apply_function_kwargs
+        super().__init__(mobject, run_time=run_time, **kwargs)
 
     def function_at_time_t(self, t):
         return lambda p: self.homotopy(*p, t)
@@ -57,15 +55,23 @@ class ComplexHomotopy(Homotopy):
 
 
 class PhaseFlow(Animation):
-    CONFIG = {
-        "virtual_time": 1,
-        "rate_func": linear,
-        "suspend_mobject_updating": False,
-    }
-
-    def __init__(self, function, mobject, **kwargs):
+    def __init__(
+        self,
+        function,
+        mobject,
+        virtual_time=1,
+        suspend_mobject_updating=False,
+        rate_func=linear,
+        **kwargs
+    ):
+        self.virtual_time = virtual_time
         self.function = function
-        super().__init__(mobject, **kwargs)
+        super().__init__(
+            mobject,
+            suspend_mobject_updating=suspend_mobject_updating,
+            rate_func=rate_func,
+            **kwargs
+        )
 
     def interpolate_mobject(self, alpha):
         if hasattr(self, "last_alpha"):
@@ -75,13 +81,11 @@ class PhaseFlow(Animation):
 
 
 class MoveAlongPath(Animation):
-    CONFIG = {
-        "suspend_mobject_updating": False,
-    }
-
-    def __init__(self, mobject, path, **kwargs):
+    def __init__(self, mobject, path, suspend_mobject_updating=False, **kwargs):
         self.path = path
-        super().__init__(mobject, **kwargs)
+        super().__init__(
+            mobject, suspend_mobject_updating=suspend_mobject_updating, **kwargs
+        )
 
     def interpolate_mobject(self, alpha):
         point = self.path.point_from_proportion(alpha)

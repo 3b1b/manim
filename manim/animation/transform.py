@@ -33,7 +33,6 @@ from ..constants import OUT
 from ..constants import DEGREES
 from ..mobject.mobject import Group
 from ..mobject.mobject import Mobject
-from ..utils.config_ops import digest_config
 from ..utils.paths import path_along_arc
 from ..utils.paths import straight_path
 from ..utils.rate_functions import smooth
@@ -41,19 +40,25 @@ from ..utils.rate_functions import squish_rate_func
 
 
 class Transform(Animation):
-    CONFIG = {
-        "path_arc": 0,
-        "path_arc_axis": OUT,
-        "path_func": None,
-        "replace_mobject_with_target_in_scene": False,
-    }
-
-    def __init__(self, mobject, target_mobject=None, **kwargs):
-        super().__init__(mobject, **kwargs)
+    def __init__(
+        self,
+        mobject,
+        target_mobject=None,
+        path_func=None,
+        path_arc=0,
+        path_arc_axis=OUT,
+        replace_mobject_with_target_in_scene=False,
+        **kwargs
+    ):
+        self.path_arc = path_arc
+        self.path_func = path_func
+        self.path_arc_axis = path_arc_axis
+        self.replace_mobject_with_target_in_scene = replace_mobject_with_target_in_scene
         self.target_mobject = target_mobject
-        self.init_path_func()
+        super().__init__(mobject, **kwargs)
+        self._init_path_func()
 
-    def init_path_func(self):
+    def _init_path_func(self):
         if self.path_func is not None:
             return
         elif self.path_arc == 0:
@@ -125,9 +130,10 @@ class Transform(Animation):
 
 
 class ReplacementTransform(Transform):
-    CONFIG = {
-        "replace_mobject_with_target_in_scene": True,
-    }
+    def __init__(self, mobject, target_mobject, **kwargs):
+        super().__init__(
+            mobject, target_mobject, replace_mobject_with_target_in_scene=True, **kwargs
+        )
 
 
 class TransformFromCopy(Transform):
@@ -143,11 +149,13 @@ class TransformFromCopy(Transform):
 
 
 class ClockwiseTransform(Transform):
-    CONFIG = {"path_arc": -np.pi}
+    def __init__(self, mobject, target_mobject, path_arc=-np.pi, **kwargs):
+        super().__init__(mobject, target_mobject, path_arc=path_arc, **kwargs)
 
 
 class CounterclockwiseTransform(Transform):
-    CONFIG = {"path_arc": np.pi}
+    def __init__(self, mobject, target_mobject, path_arc=np.pi, **kwargs):
+        super().__init__(mobject, target_mobject, path_arc=path_arc, **kwargs)
 
 
 class MoveToTarget(Transform):
@@ -220,10 +228,10 @@ class ApplyPointwiseFunction(ApplyMethod):
 
     """
 
-    CONFIG = {"run_time": DEFAULT_POINTWISE_FUNCTION_RUN_TIME}
-
-    def __init__(self, function, mobject, **kwargs):
-        super().__init__(mobject.apply_function, function, **kwargs)
+    def __init__(
+        self, function, mobject, run_time=DEFAULT_POINTWISE_FUNCTION_RUN_TIME, **kwargs
+    ):
+        super().__init__(mobject.apply_function, function, run_time=run_time, **kwargs)
 
 
 class ApplyPointwiseFunctionToCenter(ApplyPointwiseFunction):
@@ -296,23 +304,19 @@ class ApplyComplexFunction(ApplyMethod):
         method = mobject.apply_complex_function
         super().__init__(method, function, **kwargs)
 
-    def init_path_func(self):
+    def _init_path_func(self):
         func1 = self.function(complex(1))
         self.path_arc = np.log(func1).imag
-        super().init_path_func()
+        super()._init_path_func()
 
 
 ###
 
 
 class CyclicReplace(Transform):
-    CONFIG = {
-        "path_arc": 90 * DEGREES,
-    }
-
-    def __init__(self, *mobjects, **kwargs):
+    def __init__(self, *mobjects, path_arc=90 * DEGREES, **kwargs):
         self.group = Group(*mobjects)
-        super().__init__(self.group, **kwargs)
+        super().__init__(self.group, path_arc=path_arc, **kwargs)
 
     def create_target(self):
         target = self.group.copy()
@@ -328,10 +332,11 @@ class Swap(CyclicReplace):
 
 # TODO, this may be depricated...worth reimplementing?
 class TransformAnimations(Transform):
-    CONFIG = {"rate_func": squish_rate_func(smooth)}
-
-    def __init__(self, start_anim, end_anim, **kwargs):
-        digest_config(self, kwargs, locals())
+    def __init__(
+        self, start_anim, end_anim, rate_func=squish_rate_func(smooth), **kwargs
+    ):
+        self.start_anim = start_anim
+        self.end_anim = end_anim
         if "run_time" in kwargs:
             self.run_time = kwargs.pop("run_time")
         else:
@@ -348,7 +353,9 @@ class TransformAnimations(Transform):
                 if hasattr(anim, "target_mobject"):
                     anim.starting_mobject.align_data(anim.target_mobject)
 
-        Transform.__init__(self, start_anim.mobject, end_anim.mobject, **kwargs)
+        super().__init__(
+            start_anim.mobject, end_anim.mobject, rate_func=rate_func, **kwargs
+        )
         # Rewire starting and ending mobjects
         start_anim.mobject = self.starting_mobject
         end_anim.mobject = self.target_mobject

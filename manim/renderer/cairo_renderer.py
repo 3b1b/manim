@@ -54,22 +54,10 @@ class CairoRenderer:
     def __init__(self, camera_class=None, skip_animations=False, **kwargs):
         # All of the following are set to EITHER the value passed via kwargs,
         # OR the value stored in the global config dict at the time of
-        # _instance construction_.  Before, they were in the CONFIG dict, which
-        # is a class attribute and is defined at the time of _class
-        # definition_.  This did not allow for creating two Cameras with
-        # different configurations in the same session.
+        # _instance construction_.
         self.file_writer = None
-        self.video_quality_config = {}
-        for attr in [
-            "pixel_height",
-            "pixel_width",
-            "frame_height",
-            "frame_width",
-            "frame_rate",
-        ]:
-            self.video_quality_config[attr] = kwargs.get(attr, config[attr])
         camera_cls = camera_class if camera_class is not None else Camera
-        self.camera = camera_cls(self.video_quality_config)
+        self.camera = camera_cls()
         self.original_skipping_status = skip_animations
         self.skip_animations = skip_animations
         self.animations_hashes = []
@@ -79,7 +67,6 @@ class CairoRenderer:
     def init(self, scene):
         self.file_writer = SceneFileWriter(
             self,
-            self.video_quality_config,
             scene.__class__.__name__,
         )
 

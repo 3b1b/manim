@@ -4,7 +4,6 @@ import numpy as np
 from ..animation.animation import Animation
 from ..mobject.mobject import Group
 from ..utils.bezier import interpolate
-from ..utils.config_ops import digest_config
 from ..utils.iterables import remove_list_redundancies
 from ..utils.rate_functions import linear
 
@@ -15,28 +14,24 @@ DEFAULT_LAGGED_START_LAG_RATIO = 0.05
 
 
 class AnimationGroup(Animation):
-    CONFIG = {
-        # If None, this defaults to the sum of all
-        # internal animations
-        "run_time": None,
-        "rate_func": linear,
-        # If 0, all animations are played at once.
-        # If 1, all are played successively.
-        # If >0 and <1, they start at lagged times
-        # from one and other.
-        "lag_ratio": 0,
-        "group": None,
-    }
-
-    def __init__(self, *animations, **kwargs):
-        digest_config(self, kwargs)
+    def __init__(
+        self,
+        *animations,
+        group=None,
+        run_time=None,
+        rate_func=linear,
+        lag_ratio=0,
+        **kwargs
+    ):
         self.animations = animations
+        self.group = group
         if self.group is None:
             self.group = Group(
                 *remove_list_redundancies([anim.mobject for anim in animations])
             )
+        super().__init__(self.group, rate_func=rate_func, lag_ratio=lag_ratio, **kwargs)
+        self.run_time = run_time
         self.init_run_time()
-        Animation.__init__(self, self.group, **kwargs)
 
     def get_all_mobjects(self):
         return self.group
@@ -68,8 +63,7 @@ class AnimationGroup(Animation):
             self.max_end_time = np.max([awt[2] for awt in self.anims_with_timings])
         else:
             self.max_end_time = 0
-        if self.run_time is None:
-            self.run_time = self.max_end_time
+        self.run_time = self.max_end_time if self.run_time is None else self.run_time
 
     def build_animations_with_timings(self):
         """
@@ -103,9 +97,8 @@ class AnimationGroup(Animation):
 
 
 class Succession(AnimationGroup):
-    CONFIG = {
-        "lag_ratio": 1,
-    }
+    def __init__(self, *animations, lag_ratio=1, **kwargs):
+        super().__init__(*animations, lag_ratio=lag_ratio, **kwargs)
 
     def begin(self):
         assert len(self.animations) > 0
@@ -148,17 +141,12 @@ class Succession(AnimationGroup):
 
 
 class LaggedStart(AnimationGroup):
-    CONFIG = {
-        "lag_ratio": DEFAULT_LAGGED_START_LAG_RATIO,
-    }
+    def __init__(self, *animations, lag_ratio=DEFAULT_LAGGED_START_LAG_RATIO, **kwargs):
+        super().__init__(*animations, lag_ratio=lag_ratio, **kwargs)
 
 
 class LaggedStartMap(LaggedStart):
-    CONFIG = {
-        "run_time": 2,
-    }
-
-    def __init__(self, AnimationClass, mobject, arg_creator=None, **kwargs):
+    def __init__(self, AnimationClass, mobject, arg_creator=None, run_time=2, **kwargs):
         args_list = []
         for submob in mobject:
             if arg_creator:
@@ -169,4 +157,4 @@ class LaggedStartMap(LaggedStart):
         if "lag_ratio" in anim_kwargs:
             anim_kwargs.pop("lag_ratio")
         animations = [AnimationClass(*args, **anim_kwargs) for args in args_list]
-        super().__init__(*animations, **kwargs)
+        super().__init__(*animations, run_time=run_time, **kwargs)

@@ -11,15 +11,15 @@ from ..utils.bezier import interpolate
 
 
 class ChangingDecimal(Animation):
-    CONFIG = {
-        "suspend_mobject_updating": False,
-    }
-
-    def __init__(self, decimal_mob, number_update_func, **kwargs):
+    def __init__(
+        self, decimal_mob, number_update_func, suspend_mobject_updating=False, **kwargs
+    ):
         self.check_validity_of_input(decimal_mob)
         self.yell_about_depricated_configuration(**kwargs)
         self.number_update_func = number_update_func
-        super().__init__(decimal_mob, **kwargs)
+        super().__init__(
+            decimal_mob, suspend_mobject_updating=suspend_mobject_updating, **kwargs
+        )
 
     def check_validity_of_input(self, decimal_mob):
         if not isinstance(decimal_mob, DecimalNumber):

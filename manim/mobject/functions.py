@@ -6,7 +6,6 @@ __all__ = ["ParametricFunction", "FunctionGraph"]
 from .. import config
 from ..constants import *
 from ..mobject.types.vectorized_mobject import VMobject
-from ..utils.config_ops import digest_config
 from ..utils.color import YELLOW
 
 import math
@@ -47,18 +46,22 @@ class ParametricFunction(VMobject):
                 self.wait()
     """
 
-    CONFIG = {
-        "t_min": 0,
-        "t_max": 1,
-        "step_size": 0.01,  # Use "auto" (lowercase) for automatic step size
-        "dt": 1e-8,
-        # TODO, be smarter about figuring these out?
-        "discontinuities": [],
-    }
-
-    def __init__(self, function=None, **kwargs):
-        # either get a function from __init__ or from CONFIG
-        self.function = function or self.function
+    def __init__(
+        self,
+        function=None,
+        t_min=0,
+        t_max=1,
+        step_size=0.01,
+        dt=1e-8,
+        discontinuities=None,
+        **kwargs
+    ):
+        self.function = function
+        self.t_min = t_min
+        self.t_max = t_max
+        self.step_size = step_size
+        self.dt = dt
+        self.discontinuities = [] if discontinuities is None else discontinuities
         VMobject.__init__(self, **kwargs)
 
     def get_function(self):
@@ -116,12 +119,7 @@ class ParametricFunction(VMobject):
 
 
 class FunctionGraph(ParametricFunction):
-    CONFIG = {
-        "color": YELLOW,
-    }
-
-    def __init__(self, function, **kwargs):
-        digest_config(self, kwargs)
+    def __init__(self, function, color=YELLOW, **kwargs):
         self.x_min = -config["frame_x_radius"]
         self.x_max = config["frame_x_radius"]
         self.parametric_function = lambda t: np.array([t, function(t), 0])

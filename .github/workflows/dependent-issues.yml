@@ -2,8 +2,18 @@ name: Dependent Issues
 
 on:
   issues:
+    types:
+      - opened
+      - edited
+      - reopened
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
   schedule:
-    - cron: '0/30 * * * *' # schedule daily check
+    - cron: '0 0 * * *' # schedule daily check
 
 jobs:
   check:

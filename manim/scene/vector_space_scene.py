@@ -49,7 +49,9 @@ Z_COLOR = BLUE_D
 # Also, methods I would have thought of as getters, like coords_to_vector, are
 # actually doing a lot of animating.
 class VectorScene(Scene):
-    CONFIG = {"basis_vector_stroke_width": 6}
+    def __init__(self, basis_vector_stroke_width=6, **kwargs):
+        Scene.__init__(self, **kwargs)
+        self.basis_vector_stroke_width = basis_vector_stroke_width
 
     def add_plane(self, animate=False, **kwargs):
         """
@@ -514,10 +516,11 @@ class LinearTransformationScene(VectorScene):
     especially suitable for showing Linear Transformations.
     """
 
-    CONFIG = {
-        "include_background_plane": True,
-        "include_foreground_plane": True,
-        "background_plane_kwargs": {
+    def __init__(
+        self,
+        include_background_plane=True,
+        include_foreground_plane=True,
+        background_plane_kwargs={
             "color": GREY,
             "axis_config": {
                 "stroke_color": LIGHT_GREY,
@@ -530,17 +533,28 @@ class LinearTransformationScene(VectorScene):
                 "stroke_width": 1,
             },
         },
-        "show_coordinates": False,
-        "show_basis_vectors": True,
-        "basis_vector_stroke_width": 6,
-        "i_hat_color": X_COLOR,
-        "j_hat_color": Y_COLOR,
-        "leave_ghost_vectors": False,
-        "t_matrix": [[3, 0], [1, 2]],
-    }
-
-    def __init__(self, **kwargs):
+        show_coordinates=False,
+        show_basis_vectors=True,
+        basis_vector_stroke_width=6,
+        i_hat_color=X_COLOR,
+        j_hat_color=Y_COLOR,
+        leave_ghost_vectors=False,
+        t_matrix=[[3, 0], [1, 2]],
+        **kwargs
+    ):
         VectorScene.__init__(self, **kwargs)
+
+        self.include_background_plane = include_background_plane
+        self.include_foreground_plane = include_foreground_plane
+        self.background_plane_kwargs = background_plane_kwargs
+        self.show_coordinates = show_coordinates
+        self.show_basis_vectors = show_basis_vectors
+        self.basis_vector_stroke_width = basis_vector_stroke_width
+        self.i_hat_color = i_hat_color
+        self.j_hat_color = j_hat_color
+        self.leave_ghost_vectors = leave_ghost_vectors
+        self.t_matrix = t_matrix
+
         self.foreground_plane_kwargs = {
             "x_max": config["frame_width"] / 2,
             "x_min": -config["frame_width"] / 2,

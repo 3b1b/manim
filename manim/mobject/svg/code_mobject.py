@@ -126,34 +126,57 @@ class Code(VGroup):
     """
 
     # tuples in the form (name, aliases, filetypes, mimetypes)
-    # 'language' of CONFIG is aliases or short names
+    # 'language' is aliases or short names
     # For more information about pygments.lexers visit https://pygments.org/docs/lexers/
     # from pygments.lexers import get_all_lexers
     # all_lexers = get_all_lexers()
     styles_list = list(get_all_styles())
     # For more information about pygments.styles visit https://pygments.org/docs/styles/
-    CONFIG = {
-        "tab_width": 3,
-        "line_spacing": 0.3,
-        "scale_factor": 0.5,
-        "font": "Monospac821 BT",
-        "stroke_width": 0,
-        "margin": 0.3,
-        "indentation_chars": "    ",
-        "background": "rectangle",  # or window
-        "background_stroke_width": 1,
-        "background_stroke_color": WHITE,
-        "corner_radius": 0.2,
-        "insert_line_no": True,
-        "line_no_from": 1,
-        "line_no_buff": 0.4,
-        "style": "vim",
-        "language": None,
-        "generate_html_file": False,
-    }
 
-    def __init__(self, file_name=None, **kwargs):
-        VGroup.__init__(self, **kwargs)
+    def __init__(
+        self,
+        file_name=None,
+        tab_width=3,
+        line_spacing=0.3,
+        scale_factor=0.5,
+        font="Monospac821 BT",
+        stroke_width=0,
+        margin=0.3,
+        indentation_chars="    ",
+        background="rectangle",  # or window
+        background_stroke_width=1,
+        background_stroke_color=WHITE,
+        corner_radius=0.2,
+        insert_line_no=True,
+        line_no_from=1,
+        line_no_buff=0.4,
+        style="vim",
+        language=None,
+        generate_html_file=False,
+        **kwargs
+    ):
+        VGroup.__init__(
+            self,
+            stroke_width=stroke_width,
+            background_stroke_color=background_stroke_color,
+            background_stroke_width=background_stroke_width,
+            **kwargs
+        )
+        self.tab_width = tab_width
+        self.line_spacing = line_spacing
+        self.scale_factor = scale_factor
+        self.font = font
+        self.margin = margin
+        self.indentation_chars = indentation_chars
+        self.background = background
+        self.corner_radius = corner_radius
+        self.insert_line_no = insert_line_no
+        self.line_no_from = line_no_from
+        self.line_no_buff = line_no_buff
+        self.style = style
+        self.language = language
+        self.generate_html_file = generate_html_file
+
         self.file_name = file_name or self.file_name
         self.ensure_valid_file()
         self.style = self.style.lower()

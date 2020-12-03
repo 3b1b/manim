@@ -15,7 +15,6 @@ from pathlib import Path
 
 from .. import config, logger
 from ..constants import FFMPEG_BIN, GIF_FILE_EXTENSION
-from ..utils.config_ops import digest_config
 from ..utils.file_ops import guarantee_existence
 from ..utils.file_ops import add_extension_if_not_present
 from ..utils.file_ops import modify_atime
@@ -42,10 +41,8 @@ class SceneFileWriter(object):
 
     """
 
-    def __init__(self, renderer, video_quality_config, scene_name, **kwargs):
-        digest_config(self, kwargs)
+    def __init__(self, renderer, scene_name, **kwargs):
         self.renderer = renderer
-        self.video_quality_config = video_quality_config
         self.stream_lock = False
         self.init_output_directories(scene_name)
         self.init_audio()
@@ -306,10 +303,13 @@ class SceneFileWriter(object):
         """
         while self.stream_lock:
             a = datetime.datetime.now()
-            self.update_frame()
+            # self.update_frame()
+            self.renderer.update_frame()
             n_frames = 1
-            frame = self.get_frame()
-            self.add_frame(*[frame] * n_frames)
+            # frame = self.get_frame()
+            frame = self.renderer.get_frame()
+            # self.add_frame(*[frame] * n_frames)
+            self.renderer.add_frame(*[frame] * n_frames)
             b = datetime.datetime.now()
             time_diff = (b - a).total_seconds()
             frame_duration = 1 / config["frame_rate"]
@@ -340,13 +340,7 @@ class SceneFileWriter(object):
         buffer.
         """
         file_path = self.partial_movie_files[self.renderer.num_plays]
-
-        # TODO #486 Why does ffmpeg need temp files ?
-        temp_file_path = (
-            os.path.splitext(file_path)[0] + "_temp" + config["movie_file_extension"]
-        )
         self.partial_movie_file_path = file_path
-        self.temp_partial_movie_file_path = temp_file_path
 
         fps = config["frame_rate"]
         height = config["pixel_height"]
@@ -373,21 +367,16 @@ class SceneFileWriter(object):
             command += ["-vcodec", "qtrle"]
         else:
             command += ["-vcodec", "libx264", "-pix_fmt", "yuv420p"]
-        command += [temp_file_path]
+        command += [file_path]
         self.writing_process = subprocess.Popen(command, stdin=subprocess.PIPE)
 
     def close_movie_pipe(self):
         """
-        Used internally by Manim to gracefully stop writing to FFMPEG's
-        input buffer, and move the temporary files into their permananant
-        locations
+        Used internally by Manim to gracefully stop writing to FFMPEG's input buffer
         """
         self.writing_process.stdin.close()
         self.writing_process.wait()
-        shutil.move(
-            self.temp_partial_movie_file_path,
-            self.partial_movie_file_path,
-        )
+
         logger.info(
             f"Animation {self.renderer.num_plays} : Partial movie file written in %(path)s",
             {"path": {self.partial_movie_file_path}},

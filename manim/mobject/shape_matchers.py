@@ -9,34 +9,39 @@ from ..mobject.geometry import Rectangle
 from ..mobject.types.vectorized_mobject import VGroup
 from ..mobject.types.vectorized_mobject import VMobject
 from ..utils.color import Color, YELLOW, BLACK, RED
-from ..utils.config_ops import digest_config
 
 
 class SurroundingRectangle(Rectangle):
-    CONFIG = {
-        "color": YELLOW,
-        "buff": SMALL_BUFF,
-    }
-
-    def __init__(self, mobject, **kwargs):
-        digest_config(self, kwargs)
+    def __init__(self, mobject, color=YELLOW, buff=SMALL_BUFF, **kwargs):
+        self.color = color
+        self.buff = buff
         kwargs["width"] = mobject.get_width() + 2 * self.buff
         kwargs["height"] = mobject.get_height() + 2 * self.buff
-        Rectangle.__init__(self, **kwargs)
+        Rectangle.__init__(self, color=color, **kwargs)
         self.move_to(mobject)
 
 
 class BackgroundRectangle(SurroundingRectangle):
-    CONFIG = {
-        "color": BLACK,
-        "stroke_width": 0,
-        "stroke_opacity": 0,
-        "fill_opacity": 0.75,
-        "buff": 0,
-    }
-
-    def __init__(self, mobject, **kwargs):
-        SurroundingRectangle.__init__(self, mobject, **kwargs)
+    def __init__(
+        self,
+        mobject,
+        color=BLACK,
+        stroke_width=0,
+        stroke_opacity=0,
+        fill_opacity=0.75,
+        buff=0,
+        **kwargs
+    ):
+        SurroundingRectangle.__init__(
+            self,
+            mobject,
+            color=color,
+            stroke_width=stroke_width,
+            stroke_opacity=stroke_opacity,
+            fill_opacity=fill_opacity,
+            buff=buff,
+            **kwargs
+        )
         self.original_fill_opacity = self.fill_opacity
 
     def pointwise_become_partial(self, mobject, a, b):
@@ -66,12 +71,9 @@ class BackgroundRectangle(SurroundingRectangle):
 
 
 class Cross(VGroup):
-    CONFIG = {
-        "stroke_color": RED,
-        "stroke_width": 6,
-    }
-
-    def __init__(self, mobject, **kwargs):
+    def __init__(self, mobject, stroke_color=RED, stroke_width=6, **kwargs):
+        self.stroke_color = stroke_color
+        self.stroke_width = stroke_width
         VGroup.__init__(
             self,
             Line(UP + LEFT, DOWN + RIGHT),
@@ -82,11 +84,7 @@ class Cross(VGroup):
 
 
 class Underline(Line):
-    CONFIG = {
-        "buff": SMALL_BUFF,
-    }
-
-    def __init__(self, mobject, **kwargs):
-        super().__init__(LEFT, RIGHT, **kwargs)
+    def __init__(self, mobject, buff=SMALL_BUFF, **kwargs):
+        super().__init__(LEFT, RIGHT, buff=buff, **kwargs)
         self.match_width(mobject)
         self.next_to(mobject, DOWN, buff=self.buff)

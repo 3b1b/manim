@@ -27,16 +27,26 @@ EPSILON = 0.0001
 
 
 class SampleSpace(Rectangle):
-    CONFIG = {
-        "height": 3,
-        "width": 3,
-        "fill_color": DARK_GREY,
-        "fill_opacity": 1,
-        "stroke_width": 0.5,
-        "stroke_color": LIGHT_GREY,
-        ##
-        "default_label_scale_val": 1,
-    }
+    def __init__(
+        self,
+        height=3,
+        width=3,
+        fill_color=DARK_GREY,
+        fill_opacity=1,
+        stroke_width=0.5,
+        stroke_color=LIGHT_GREY,
+        default_label_scale_val=1,
+    ):
+        Rectangle.__init__(
+            self,
+            height=height,
+            width=width,
+            fill_color=fill_color,
+            fill_opacity=fill_opacity,
+            stroke_width=stroke_width,
+            stroke_color=stroke_color,
+        )
+        self.default_label_scale_val = default_label_scale_val
 
     def add_title(self, title="Sample space", buff=MED_SMALL_BUFF):
         # TODO, should this really exist in SampleSpaceScene
@@ -147,23 +157,37 @@ class SampleSpace(Rectangle):
 
 
 class BarChart(VGroup):
-    CONFIG = {
-        "height": 4,
-        "width": 6,
-        "n_ticks": 4,
-        "tick_width": 0.2,
-        "label_y_axis": True,
-        "y_axis_label_height": 0.25,
-        "max_value": 1,
-        "bar_colors": [BLUE, YELLOW],
-        "bar_fill_opacity": 0.8,
-        "bar_stroke_width": 3,
-        "bar_names": [],
-        "bar_label_scale_val": 0.75,
-    }
-
-    def __init__(self, values, **kwargs):
+    def __init__(
+        self,
+        values,
+        height=4,
+        width=6,
+        n_ticks=4,
+        tick_width=0.2,
+        label_y_axis=True,
+        y_axis_label_height=0.25,
+        max_value=1,
+        bar_colors=[BLUE, YELLOW],
+        bar_fill_opacity=0.8,
+        bar_stroke_width=3,
+        bar_names=[],
+        bar_label_scale_val=0.75,
+        **kwargs
+    ):
         VGroup.__init__(self, **kwargs)
+        self.height = height
+        self.width = width
+        self.n_ticks = n_ticks
+        self.tick_width = tick_width
+        self.label_y_axis = label_y_axis
+        self.y_axis_label_height = y_axis_label_height
+        self.max_value = max_value
+        self.bar_colors = bar_colors
+        self.bar_fill_opacity = bar_fill_opacity
+        self.bar_stroke_width = bar_stroke_width
+        self.bar_names = bar_names
+        self.bar_label_scale_val = bar_label_scale_val
+
         if self.max_value is None:
             self.max_value = max(values)
 

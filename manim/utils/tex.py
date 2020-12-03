@@ -209,7 +209,7 @@ class TexTemplate:
         return begin, end
 
     def get_texcode_for_expression_in_env(self, expression, environment):
-        """Inserts expression into TeX template wrapped in \begin{environemnt} and \end{environment}
+        r"""Inserts expression into TeX template wrapped in \begin{environemnt} and \end{environment}
 
         Parameters
         ----------

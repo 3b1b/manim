@@ -11,9 +11,9 @@ class ReconfigurableScene(Scene):
     Note, this seems to no longer work as intented.
     """
 
-    CONFIG = {
-        "allow_recursion": True,
-    }
+    def __init__(self, allow_recursion=True, **kwargs):
+        Scene.__init__(self, **kwargs)
+        self.allow_recursion = allow_recursion
 
     def setup(self):
         self.states = []

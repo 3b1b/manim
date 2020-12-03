@@ -28,39 +28,46 @@ from ..utils.exceptions import EndSceneEarlyException
 class Scene(Container):
     """A Scene is the canvas of your animation.
 
-    All of your own named Scenes will be subclasses of Scene, or other named
-    scenes.
+    The primary role of :class:`Scene` is to provide the user with tools to manage
+    mobjects and animations.  Generally speaking, a manim script consists of a class
+    that derives from :class:`Scene` whose :meth:`Scene.construct` method is overriden
+    by the user's code.
+
+    Mobjects are displayed on screen by calling :meth:`Scene.add` and removed from
+    screen by calling :meth:`Scene.remove`.  All mobjects currently on screen are kept
+    in :attr:`Scene.mobjects`.  Animations are played by calling :meth:`Scene.play`.
+
+    A :class:`Scene` is rendered internally by calling :meth:`Scene.render`.  This in
+    turn calls :meth:`Scene.setup`, :meth:`Scene.construct`, and
+    :meth:`Scene.tear_down`, in that order.
+
+    It is not recommended to override the ``__init__`` method in user Scenes.  For code
+    that should be ran before a Scene is rendered, use :meth:`Scene.setup` instead.
+
 
     Examples
     --------
-    Override the construct() method to tell Manim what should go on in the
-    Scene.
+    Override the :meth:`Scene.construct` method with your code.
 
     .. code-block:: python
 
         class MyScene(Scene):
             def construct(self):
-                self.play(
-                    Write(Text("Hello World!"))
-                )
-
-    Some important variables to note are:
-        camera: The camera object to be used for the scene.
-        file_writer : The object that writes the animations in the scene to a video file.
-        mobjects : The list of mobjects present in the scene.
-        foreground_mobjects : List of mobjects explicitly in the foreground.
-        random_seed: The seed with which all random operations are done.
+                self.play(Write(Text("Hello World!")))
 
     """
 
-    CONFIG = {
-        "camera_class": Camera,
-        "always_update_mobjects": False,
-        "random_seed": 0,
-    }
-
-    def __init__(self, renderer=None, **kwargs):
-        Container.__init__(self, **kwargs)
+    def __init__(
+        self,
+        renderer=None,
+        camera_class=Camera,
+        always_update_mobjects=False,
+        random_seed=0,
+        **kwargs,
+    ):
+        self.camera_class = camera_class
+        self.always_update_mobjects = always_update_mobjects
+        self.random_seed = random_seed
         if renderer is None:
             self.renderer = CairoRenderer(
                 camera_class=self.camera_class,
@@ -76,6 +83,8 @@ class Scene(Container):
         if self.random_seed is not None:
             random.seed(self.random_seed)
             np.random.seed(self.random_seed)
+
+        Container.__init__(self, **kwargs)
 
     @property
     def camera(self):
@@ -113,9 +122,35 @@ class Scene(Container):
         pass
 
     def construct(self):
-        """
-        The primary method for constructing (i.e adding content to)
-        the Scene.
+        """Add content to the Scene.
+
+        From within :meth:`Scene.construct`, display mobjects on screen by calling
+        :meth:`Scene.add` and remove them from screen by calling :meth:`Scene.remove`.
+        All mobjects currently on screen are kept in :attr:`Scene.mobjects`.  Play
+        animations by calling :meth:`Scene.play`.
+
+        Notes
+        -----
+        Initialization code should go in :meth:`Scene.setup`.  Termination code should
+        go in :meth:`Scene.tear_down`.
+
+        Examples
+        --------
+        A typical manim script includes a class derived from :class:`Scene` with an
+        overriden :meth:`Scene.contruct` method:
+
+        .. code-block:: python
+
+            class MyScene(Scene):
+                def construct(self):
+                    self.play(Write(Text("Hello World!")))
+
+        See Also
+        --------
+        :meth:`Scene.setup`
+        :meth:`Scene.render`
+        :meth:`Scene.tear_down`
+
         """
         pass  # To be implemented in subclasses
 

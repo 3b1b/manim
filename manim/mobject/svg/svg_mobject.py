@@ -20,8 +20,6 @@ from ...mobject.geometry import RoundedRectangle
 from ...mobject.types.vectorized_mobject import VGroup
 from ...mobject.types.vectorized_mobject import VMobject
 from ...utils.color import *
-from ...utils.config_ops import digest_config
-from ...utils.config_ops import digest_locals
 
 
 def string_to_numbers(num_string):
@@ -72,23 +70,26 @@ class SVGMobject(VMobject):
         Specifies the opacity of the image. `1` is opaque, `0` is transparent. Defaults to `1`.
     """
 
-    CONFIG = {
-        "should_center": True,
-        "height": 2,
-        "width": None,
-        # Must be filled in in a subclass, or when called
-        "file_name": None,
-        "unpack_groups": True,  # if False, creates a hierarchy of VGroups
-        "stroke_width": DEFAULT_STROKE_WIDTH,
-        "fill_opacity": 1.0,
-        # "fill_color" : LIGHT_GREY,
-    }
-
-    def __init__(self, file_name=None, **kwargs):
-        digest_config(self, kwargs)
+    def __init__(
+        self,
+        file_name=None,
+        should_center=True,
+        height=2,
+        width=None,
+        unpack_groups=True,  # if False, creates a hierarchy of VGroups
+        stroke_width=DEFAULT_STROKE_WIDTH,
+        fill_opacity=1.0,
+        **kwargs
+    ):
         self.file_name = file_name or self.file_name
         self.ensure_valid_file()
-        VMobject.__init__(self, **kwargs)
+        self.should_center = should_center
+        self.height = height
+        self.width = width
+        self.unpack_groups = unpack_groups
+        VMobject.__init__(
+            self, fill_opacity=fill_opacity, stroke_width=stroke_width, **kwargs
+        )
         self.move_into_position()
 
     def ensure_valid_file(self):
@@ -520,7 +521,7 @@ class SVGMobject(VMobject):
 
 class VMobjectFromSVGPathstring(VMobject):
     def __init__(self, path_string, **kwargs):
-        digest_locals(self)
+        self.path_string = path_string
         VMobject.__init__(self, **kwargs)
 
     def get_path_commands(self):

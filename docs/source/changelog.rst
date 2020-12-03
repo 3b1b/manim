@@ -19,13 +19,17 @@ Changes since the latest released version.
 New Features
 ============
 
-- There is nothing here yet, check back later.
+- Added a creation animation for our banner, :meth:`~.ManimBanner.create` (via :pr:`814`).
 
 Bugfixes
 ========
 
 #. Add ``disable_ligatures`` to Text ( :class:`Text` ). (via :pr:`804`)
 
+Other Changes
+=============
+
+#. Removed temp partial movie file from SceneFileWriter (ffmpeg directly renders partial movie files instead of temp files)
 
 ******
 v0.1.1
