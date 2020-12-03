@@ -3,8 +3,8 @@
 - **Getting help:** [Manim Documentation](https://docs.manim.community) and [further helpful resources](https://manim.community)
 
 # Supported tags
-- `v0.1.0`, `latest` -- the latest released version
-- `stable` -- a more recent version corresponding to [the stable branch](https://github.com/ManimCommunity/manim/tree/stable)
+- `v0.1.1`, `stable`, `latest` -- the latest released version
+- `v0.1.0`
 - `experimental` -- the most recent version corresponding to [the master branch](https://github.com/ManimCommunity/manim)
 
 # What is Manim?
