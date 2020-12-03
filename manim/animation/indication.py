@@ -177,7 +177,7 @@ class ShowPassingFlash(ShowPartial):
         self.time_width = time_width
         super().__init__(mobject, remover=remover, **kwargs)
 
-    def get_bounds(self, alpha):
+    def _get_bounds(self, alpha):
         tw = self.time_width
         upper = interpolate(0, 1 + tw, alpha)
         lower = upper - tw
