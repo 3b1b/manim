@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "manimce"
-version = "0.1.0"
+name = "manim"
+version = "0.1.1"
 description = "Animation engine for explanatory math videos."
 authors = ["The Manim Community Developers","3b1b <grant@3blue1brown.com>"]
 license="MIT"

@@ -128,7 +128,7 @@ class ManimBanner(VGroup):
             An animation to be used in a :meth:`.Scene.play` call.
 
         """
-        m_shape_offset = 5.7 * self.scale_factor
+        m_shape_offset = 6.25 * self.scale_factor
         m_anim_buff = 0.06
         self.add(self.anim)
         self.anim.next_to(self.M, buff=m_anim_buff).shift(

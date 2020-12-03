@@ -68,7 +68,9 @@ directive:
         that is rendered in a reference block after the source code.
 
 """
+from docutils import nodes
 from docutils.parsers.rst import directives, Directive
+from docutils.statemachine import StringList
 
 import jinja2
 import os
@@ -81,6 +83,18 @@ import shutil
 from manim import QUALITIES
 
 classnamedict = {}
+
+
+class skip_manim_node(nodes.Admonition, nodes.Element):
+    pass
+
+
+def visit(self, node, name=""):
+    self.visit_admonition(node, name)
+
+
+def depart(self, node):
+    self.depart_admonition(node)
 
 
 def process_name_list(option_input: str, reference_type: str) -> List[str]:
@@ -123,6 +137,13 @@ class ManimDirective(Directive):
     final_argument_whitespace = True
 
     def run(self):
+        if "skip-manim" in self.state.document.settings.env.app.builder.tags.tags:
+            node = skip_manim_node()
+            self.state.nested_parse(
+                StringList(self.content[0]), self.content_offset, node
+            )
+            return [node]
+
         from manim import config
 
         global classnamedict
@@ -248,9 +269,12 @@ class ManimDirective(Directive):
 def setup(app):
     import manim
 
+    app.add_node(skip_manim_node, html=(visit, depart))
+
     setup.app = app
     setup.config = app.config
     setup.confdir = app.confdir
+
     app.add_directive("manim", ManimDirective)
 
     metadata = {"parallel_read_safe": False, "parallel_write_safe": True}

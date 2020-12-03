@@ -11,7 +11,6 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
 import os
-import subprocess
 import sys
 from distutils.sysconfig import get_python_lib
 from pathlib import Path
