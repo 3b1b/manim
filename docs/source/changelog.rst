@@ -26,6 +26,10 @@ Bugfixes
 
 - There is nothing here yet, check back later.
 
+Other Changes
+=============
+
+#. Removed temp partial movie file from SceneFileWriter (ffmpeg directly renders partial movie files instead of temp files)
 
 ******
 v0.1.1

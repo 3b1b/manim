@@ -340,13 +340,7 @@ class SceneFileWriter(object):
         buffer.
         """
         file_path = self.partial_movie_files[self.renderer.num_plays]
-
-        # TODO #486 Why does ffmpeg need temp files ?
-        temp_file_path = (
-            os.path.splitext(file_path)[0] + "_temp" + config["movie_file_extension"]
-        )
         self.partial_movie_file_path = file_path
-        self.temp_partial_movie_file_path = temp_file_path
 
         fps = config["frame_rate"]
         height = config["pixel_height"]
@@ -373,21 +367,16 @@ class SceneFileWriter(object):
             command += ["-vcodec", "qtrle"]
         else:
             command += ["-vcodec", "libx264", "-pix_fmt", "yuv420p"]
-        command += [temp_file_path]
+        command += [file_path]
         self.writing_process = subprocess.Popen(command, stdin=subprocess.PIPE)
 
     def close_movie_pipe(self):
         """
-        Used internally by Manim to gracefully stop writing to FFMPEG's
-        input buffer, and move the temporary files into their permananant
-        locations
+        Used internally by Manim to gracefully stop writing to FFMPEG's input buffer
         """
         self.writing_process.stdin.close()
         self.writing_process.wait()
-        shutil.move(
-            self.temp_partial_movie_file_path,
-            self.partial_movie_file_path,
-        )
+
         logger.info(
             f"Animation {self.renderer.num_plays} : Partial movie file written in %(path)s",
             {"path": {self.partial_movie_file_path}},
