@@ -1,7 +1,7 @@
 from manim import *
 import pkg_resources
 
-version_num = pkg_resources.get_distribution("manimce").version
+version_num = pkg_resources.get_distribution("manim").version
 
 
 class TwitterScene(Scene):

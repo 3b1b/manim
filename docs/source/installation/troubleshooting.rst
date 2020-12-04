@@ -24,7 +24,7 @@ provided for the Pango binaries to the directory Manim is installed to.
 For a more global solution (try at your own risk!), try renaming the
 file ``zlib1.dll`` located at ``C:\Program Files\Intel\Wifi\bin`` to
 something like ``zlib1.dll.bak`` -- and then try installing Manim again
-(either using ``pip install manimce`` or with Chocolatey). Ensure that
+(either using ``pip install manim`` or with Chocolatey). Ensure that
 you are able to revert this name change in case you run into troubles
 with your WiFi (we did not get any reports about such a problem, however).
 

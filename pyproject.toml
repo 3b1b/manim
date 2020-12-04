@@ -69,4 +69,3 @@ markers = "slow: Mark the test as slow. Can be skipped with --skip_slow"
 [build-system]
 requires = ["setuptools","poetry_core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-
