@@ -16,6 +16,7 @@ Installing dependencies
    installation/linux
    installation/troubleshooting
    installation/for_dev
+   installation/plugins
 
 
 .. _installing-manim:
