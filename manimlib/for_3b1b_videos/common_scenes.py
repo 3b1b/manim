@@ -208,6 +208,7 @@ class PatreonEndScreen(Scene):
             "Sunil Nagaraj": "Ubiquity Ventures",
             "Nitu Kitchloo": "Ish Kitchloo",
             "PedroTristão": "Tristan",
+            "Nipun Ramakrishnan": "Reducible",
         }
         for n1, n2 in modification_map.items():
             name = name.replace("ā", "\\={a}")
