@@ -24,7 +24,7 @@ New Features
 Bugfixes
 ========
 
-#. Add ``disable_ligatures`` to Text ( :class:`Text` ). (via :pr:`804`)
+- There is nothing here yet, check back later.
 
 Other Changes
 =============
@@ -90,6 +90,7 @@ Mobjects, Scenes, and Animations
 #. Added :class:`~.ManimBanner` for a animated version of our logo and banner (via :pr:`729`)
 #. The background color of a scene can now be changed reliably by setting, e.g.,
    ``self.camera.background_color = RED`` (via :pr:`716`).
+
 
 
 ******
