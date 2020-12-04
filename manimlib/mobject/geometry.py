@@ -566,7 +566,7 @@ class Arrow(Line):
         "fill_opacity": 1,
         "stroke_width": 0,
         "buff": MED_SMALL_BUFF,
-        "width": 0.05,
+        "thickness": 0.05,
         "tip_width_ratio": 5,
         "tip_angle": PI / 3,
         "max_tip_length_to_length_ratio": 0.5,
@@ -574,15 +574,15 @@ class Arrow(Line):
     }
 
     def set_points_by_ends(self, start, end, buff=0, path_arc=0):
-        # Find the right tip length and width
+        # Find the right tip length and thickness
         vect = end - start
         length = max(get_norm(vect), 1e-8)
-        width = self.width
-        w_ratio = fdiv(self.max_width_to_length_ratio, fdiv(width, length))
+        thickness = self.thickness
+        w_ratio = fdiv(self.max_width_to_length_ratio, fdiv(thickness, length))
         if w_ratio < 1:
-            width *= w_ratio
+            thickness *= w_ratio
 
-        tip_width = self.tip_width_ratio * width
+        tip_width = self.tip_width_ratio * thickness
         tip_length = tip_width / (2 * np.tan(self.tip_angle / 2))
         t_ratio = fdiv(self.max_tip_length_to_length_ratio, fdiv(tip_length, length))
         if t_ratio < 1:
@@ -592,8 +592,8 @@ class Arrow(Line):
         # Find points for the stem
         if path_arc == 0:
             points1 = (length - tip_length) * np.array([RIGHT, 0.5 * RIGHT, ORIGIN])
-            points1 += width * UP / 2
-            points2 = points1[::-1] + width * DOWN
+            points1 += thickness * UP / 2
+            points2 = points1[::-1] + thickness * DOWN
         else:
             # Solve for radius so that the tip-to-tail length matches |end - start|
             a = 2 * (1 - np.cos(path_arc))
@@ -604,8 +604,8 @@ class Arrow(Line):
             # Find arc points
             points1 = Arc.create_quadratic_bezier_points(path_arc)
             points2 = np.array(points1[::-1])
-            points1 *= (R + width / 2)
-            points2 *= (R - width / 2)
+            points1 *= (R + thickness / 2)
+            points2 *= (R - thickness / 2)
             if path_arc < 0:
                 tip_length *= -1
             rot_T = rotation_matrix_transpose(PI / 2 - path_arc, OUT)
@@ -651,8 +651,8 @@ class Arrow(Line):
         self.reset_points_around_ends()
         return self
 
-    def set_width(self, width):
-        self.width = width
+    def set_thickness(self, thickness):
+        self.thickness = thickness
         self.reset_points_around_ends()
         return self
 
