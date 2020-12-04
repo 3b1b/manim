@@ -335,24 +335,23 @@ A list of all config options
 
    from manim._config import ManimConfig
    from inspect import getmembers
-   sorted([n for n, _ in getmembers(ManimConfig, lambda v: isinstance(v, property))])
+   print(sorted([n for n, _ in getmembers(ManimConfig, lambda v: isinstance(v, property))]))
 
 .. testoutput::
    :options: -ELLIPSIS, +NORMALIZE_WHITESPACE
 
-   ['aspect_ratio', 'background_color', 'background_opacity', 'bottom',
-   'custom_folders', 'disable_caching', 'dry_run', 'ffmpeg_loglevel',
-   'flush_cache', 'frame_height', 'frame_rate', 'frame_size', 'frame_width',
-   'frame_x_radius', 'frame_y_radius', 'from_animation_number', 'images_dir',
-   'input_file', 'js_renderer_path', 'leave_progress_bars', 'left_side',
-   'log_dir', 'log_to_file', 'max_files_cached', 'media_dir',
-   'movie_file_extension', 'output_file', 'partial_movie_dir', 'pixel_height',
-   'pixel_width', 'png_mode', 'preview', 'progress_bar', 'quality',
-   'right_side', 'save_as_gif', 'save_last_frame', 'save_pngs', 'scene_names',
-   'show_in_file_browser', 'skip_animations', 'sound', 'tex_dir',
+   ['aspect_ratio', 'assets_dir', 'background_color', 'background_opacity', 'bottom',
+   'custom_folders', 'disable_caching', 'dry_run', 'ffmpeg_loglevel', 'flush_cache',
+   'frame_height', 'frame_rate', 'frame_size', 'frame_width', 'frame_x_radius',
+   'frame_y_radius', 'from_animation_number', 'images_dir', 'input_file',
+   'js_renderer_path', 'leave_progress_bars', 'left_side', 'log_dir', 'log_to_file',
+   'max_files_cached', 'media_dir', 'movie_file_extension', 'output_file',
+   'partial_movie_dir', 'pixel_height', 'pixel_width', 'png_mode', 'preview',
+   'progress_bar', 'quality', 'right_side', 'save_as_gif', 'save_last_frame',
+   'save_pngs', 'scene_names', 'show_in_file_browser', 'sound', 'tex_dir',
    'tex_template', 'tex_template_file', 'text_dir', 'top', 'transparent',
-   'upto_animation_number', 'use_js_renderer', 'verbosity', 'video_dir',
-   'write_all', 'write_to_movie']
+   'upto_animation_number', 'use_js_renderer', 'verbosity', 'video_dir', 'write_all',
+   'write_to_movie']
 
 
 A list of all CLI flags
@@ -362,24 +361,21 @@ A list of all CLI flags
    :hide:
 
    import subprocess
-   result = subprocess.run(['manim', '-h'], stdout=subprocess.PIPE)
+   import os
+   is_windows = os.name == 'nt'
+   result = subprocess.run(['manim', '-h'], shell=is_windows, stdout=subprocess.PIPE)
    print(result.stdout.decode('utf-8'))
 
 .. testoutput::
    :options: -ELLIPSIS, +NORMALIZE_WHITESPACE
 
-   usage: manim [-h] [-o OUTPUT_FILE] [-p] [-f] [--leave_progress_bars] [-a] [-w] [-s] [-g] [-i] [--disable_caching] [--flush_cache] [--log_to_file] [-c BACKGROUND_COLOR]
-                [--background_opacity BACKGROUND_OPACITY] [--media_dir MEDIA_DIR] [--log_dir LOG_DIR] [--tex_template TEX_TEMPLATE] [--dry_run] [-t] [-q {k,p,h,m,l}]
-                [--low_quality] [--medium_quality] [--high_quality] [--production_quality] [--fourk_quality] [-l] [-m] [-e] [-k] [-r RESOLUTION] [-n FROM_ANIMATION_NUMBER]
-                [--use_js_renderer] [--js_renderer_path JS_RENDERER_PATH] [--config_file CONFIG_FILE] [--custom_folders] [-v {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
-                [--progress_bar True/False]
-                {cfg} ... file [scene_names [scene_names ...]]
+   usage: manim file [flags] [scene [scene ...]]
+          manim {cfg,init} [opts]
 
    Animation engine for explanatory math videos
 
    positional arguments:
-     {cfg}
-     file                  path to file holding the python code for the scene
+     file                  Path to file holding the python code for the scene
      scene_names           Name of the Scene class you want to see
 
    optional arguments:
@@ -389,6 +385,7 @@ A list of all CLI flags
      -p, --preview         Automatically open the saved file once its done
      -f, --show_in_file_browser
                            Show the output file in the File Browser
+     --sound               Play a success/failure sound
      --leave_progress_bars
                            Leave progress bars displayed in terminal
      -a, --write_all       Write all the scenes from a file
@@ -402,8 +399,6 @@ A list of all CLI flags
      --log_to_file         Log terminal output to file
      -c BACKGROUND_COLOR, --background_color BACKGROUND_COLOR
                            Specify background color
-     --background_opacity BACKGROUND_OPACITY
-                           Specify background opacity
      --media_dir MEDIA_DIR
                            Directory to store media (including video files)
      --log_dir LOG_DIR     Directory to store log files
@@ -423,7 +418,7 @@ A list of all CLI flags
      -e                    DEPRECATED: USE -qh or --quality h
      -k                    DEPRECATED: USE -qk or --quality k
      -r RESOLUTION, --resolution RESOLUTION
-                           Resolution, passed as "height,width". Overrides any quality flags, if present
+                           Resolution, passed as "height,width". Overrides the -l, -m, -e, and -k flags, if present
      -n FROM_ANIMATION_NUMBER, --from_animation_number FROM_ANIMATION_NUMBER
                            Start rendering at the specified animation index, instead of the first animation. If you pass in two comma separated values, e.g. '3,6', it will end
                            the rendering at the second value

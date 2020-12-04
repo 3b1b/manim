@@ -119,3 +119,6 @@ jobs:
 
       - name: Run module doctests
         run: poetry run pytest --doctest-modules manim
+
+      - name: Run doctests in rst files
+        run: cd docs && pip install -r requirements.txt && poetry run make doctest O=-tskip-manim

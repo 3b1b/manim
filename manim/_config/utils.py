@@ -1194,7 +1194,7 @@ class ManimConfig(MutableMapping):
     assets_dir = property(
         lambda self: self._d["assets_dir"],
         lambda self, val: self._set_dir("assets_dir", val),
-        doc="Directory to locate video assets.",
+        doc="Directory to locate video assets (no flag).",
     )
 
     log_dir = property(
