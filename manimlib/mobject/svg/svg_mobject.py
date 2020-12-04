@@ -22,6 +22,34 @@ from manimlib.utils.color import *
 from manimlib.utils.config_ops import digest_config
 
 
+def check_and_fix_percent_bug(sym):
+    # This is an ugly patch addressing something which should be
+    # addressed at a deeper level.
+    # The svg path for percent symbols have a known bug, so this
+    # checks if the symbol is (probably) a percentage sign, and
+    # splits it so that it's displayed properly.
+    if len(sym.points) not in [315, 483] or len(sym.get_subpaths()) != 4:
+        return
+
+    sym = sym.family_members_with_points()[0]
+    new_sym = VMobject()
+    path_lengths = [len(path) for path in sym.get_subpaths()]
+    if len(sym.points) == 315:
+        n = sum(path_lengths[:2])
+        p1 = sym.points[:n]
+        p2 = sym.points[n:]
+    elif len(sym.points) == 483:
+        p1 = np.vstack([
+            sym.points[:path_lengths[0]],
+            sym.points[-path_lengths[3]:]
+        ])
+        p2 = sym.points[path_lengths[0]:sum(path_lengths[:3])]
+    sym.points = p1
+    new_sym.points = p2
+    sym.add(new_sym)
+    sym.refresh_triangulation()
+
+
 def string_to_numbers(num_string):
     num_string = num_string.replace("-", ",-")
     num_string = num_string.replace("e,-", "e-")
@@ -361,6 +389,7 @@ class VMobjectFromSVGPathstring(VMobject):
             self.stretch(-1, 1, about_point=ORIGIN)
             # Save to a file for future use
             np.save(filepath, self.points)
+        check_and_fix_percent_bug(self)
 
     def get_commands_and_coord_strings(self):
         all_commands = list(self.get_command_to_function_map().keys())

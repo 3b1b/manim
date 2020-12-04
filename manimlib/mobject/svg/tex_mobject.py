@@ -12,21 +12,7 @@ from manimlib.utils.strings import split_string_list_to_isolate_substrings
 from manimlib.utils.tex_file_writing import tex_to_svg_file
 
 
-TEX_MOB_SCALE_FACTOR = 0.05
-
-
-def fix_percent(sym):
-    sym = sym.family_members_with_points()[0]
-    # Really need to make this unneeded...
-    new_sym = sym.copy()
-    path_lengths = [len(path) for path in sym.get_subpaths()]
-    n = sum(path_lengths[:2])
-    p1 = sym.points[:n]
-    p2 = sym.points[n:]
-    sym.points = p1
-    new_sym.points = p2
-    sym.add(new_sym)
-    sym.refresh_triangulation()
+SCALE_FACTOR_PER_FONT_POINT = 0.001
 
 
 class TexSymbol(VMobjectFromSVGPathstring):
@@ -42,6 +28,7 @@ class SingleStringTexMobject(SVGMobject):
         "fill_opacity": 1.0,
         "stroke_width": 0,
         "should_center": True,
+        "font_size": 48,
         "height": None,
         "organize_left_to_right": False,
         "alignment": "",
@@ -57,12 +44,9 @@ class SingleStringTexMobject(SVGMobject):
         )
         SVGMobject.__init__(self, file_name=file_name, **kwargs)
         if self.height is None:
-            self.scale(TEX_MOB_SCALE_FACTOR)
+            self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
-        # TODO, this is temporary
-        if tex_string == "\\%":
-            fix_percent(self)
 
     def get_modified_expression(self, tex_string):
         result = self.alignment + " " + tex_string
@@ -177,7 +161,6 @@ class TexMobject(SingleStringTexMobject):
         )
         if self.arg_separator == ' ':
             split_list = [str(x).strip() for x in split_list]
-        #split_list = list(map(str.strip, split_list))
         split_list = [s for s in split_list if s != '']
         return split_list
 
