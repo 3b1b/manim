@@ -24,7 +24,7 @@ class ShaderWrapper(object):
                  uniforms=None,  # A dictionary mapping names of uniform variables
                  texture_paths=None,  # A dictionary mapping names to filepaths for textures.
                  depth_test=False,
-                 render_primative=moderngl.TRIANGLE_STRIP,
+                 render_primitive=moderngl.TRIANGLE_STRIP,
                  ):
         self.vert_data = vert_data
         self.vert_indices = vert_indices
@@ -35,7 +35,7 @@ class ShaderWrapper(object):
         self.uniforms = uniforms or dict()
         self.texture_paths = texture_paths or dict()
         self.depth_test = depth_test
-        self.render_primative = str(render_primative)
+        self.render_primitive = str(render_primitive)
         self.id = self.create_id()
         self.program_id = self.create_program_id()
 
@@ -72,7 +72,7 @@ class ShaderWrapper(object):
             self.uniforms,
             self.texture_paths,
             self.depth_test,
-            self.render_primative,
+            self.render_primitive,
         ]))
 
     def refresh_id(self):
