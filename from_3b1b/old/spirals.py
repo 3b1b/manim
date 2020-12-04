@@ -961,7 +961,7 @@ class CountSpirals(IntroducePrimePatterns):
             run_time=0,
         )
 
-        spiral_lines = self.get_all_primative_arithmetic_lines(
+        spiral_lines = self.get_all_primitive_arithmetic_lines(
             44, self.small_n_primes, INV_7_MOD_44,
         )
         spiral_lines.set_stroke(YELLOW, 2, opacity=0.5)
@@ -986,7 +986,7 @@ class CountSpirals(IntroducePrimePatterns):
         )
         self.wait()
 
-    def get_all_primative_arithmetic_lines(self, N, max_val, mult_factor):
+    def get_all_primitive_arithmetic_lines(self, N, max_val, mult_factor):
         lines = VGroup()
         for r in range(1, N):
             if get_gcd(N, r) == 1:
@@ -1024,7 +1024,7 @@ class CountRays(CountSpirals):
             run_time=0,
         )
 
-        spiral_lines = self.get_all_primative_arithmetic_lines(
+        spiral_lines = self.get_all_primitive_arithmetic_lines(
             710, self.big_n_primes, INV_113_MOD_710,
         )
         spiral_lines.set_stroke(YELLOW, 2, opacity=0.5)
