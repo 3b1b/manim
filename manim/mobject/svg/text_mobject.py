@@ -723,7 +723,7 @@ class Text(SVGMobject):
         text: str,
         fill_opacity: int = 1,
         stroke_width: int = 0,
-        color=WHITE,  # what should be this type?
+        color: str = WHITE,
         size: int = 1,
         line_spacing: int = -1,
         font: str = "",
