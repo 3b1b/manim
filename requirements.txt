@@ -1,14 +1,14 @@
 argparse==1.4.0
-cairo==1.19.1
+pycairo==1.19.1
 colour==0.1.5
 numpy==1.16.4
 Pillow==5.2.0
 progressbar==2.5
-scipy==1.5.0
+scipy==1.5.4
 tqdm==4.24.0
 mapbox-earcut==0.12.10
-moderngl==5.6.2
-moderngl_window==2.2.3
+moderngl==5.5.4
+moderngl_window==2.3.0
 pydub==0.23.0
 PyOpenGL==3.1.5
 pyreadline==2.1; sys_platform == 'win32'
