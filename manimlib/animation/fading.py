@@ -1,5 +1,4 @@
 from manimlib.animation.animation import Animation
-from manimlib.animation.animation import DEFAULT_ANIMATION_LAG_RATIO
 from manimlib.animation.transform import Transform
 from manimlib.constants import ORIGIN
 from manimlib.constants import DOWN
@@ -10,37 +9,21 @@ from manimlib.utils.rate_functions import there_and_back
 DEFAULT_FADE_LAG_RATIO = 0
 
 
-class FadeOut(Transform):
-    CONFIG = {
-        "remover": True,
-        "lag_ratio": DEFAULT_FADE_LAG_RATIO,
-        # Put it back in original state when done
-        "final_alpha_value": 0,
-    }
-
-    def __init__(self, mobject, to_vect=ORIGIN, **kwargs):
-        self.to_vect = to_vect
-        super().__init__(mobject, **kwargs)
-
-    def create_target(self):
-        result = self.mobject.copy()
-        result.set_opacity(0)
-        result.shift(self.to_vect)
-        return result
-
-    # def clean_up_from_scene(self, scene=None):
-    #     super().clean_up_from_scene(scene)
-    #     self.interpolate(0)
-
-
-class FadeIn(Transform):
+class Fade(Transform):
     CONFIG = {
         "lag_ratio": DEFAULT_FADE_LAG_RATIO,
     }
 
-    def __init__(self, mobject, from_vect=ORIGIN, **kwargs):
-        self.from_vect = from_vect
+    def __init__(self, mobject, shift=ORIGIN, scale=1, **kwargs):
+        self.shift_vect = shift
+        self.scale_factor = scale
         super().__init__(mobject, **kwargs)
+
+
+class FadeIn(Fade):
+    CONFIG = {
+        "lag_ratio": DEFAULT_FADE_LAG_RATIO,
+    }
 
     def create_target(self):
         return self.mobject
@@ -48,8 +31,24 @@ class FadeIn(Transform):
     def create_starting_mobject(self):
         start = super().create_starting_mobject()
         start.set_opacity(0)
-        start.shift(self.from_vect)
+        start.scale(1.0 / self.scale_factor)
+        start.shift(-self.shift_vect)
         return start
+
+
+class FadeOut(Fade):
+    CONFIG = {
+        "remover": True,
+        # Put it back in original state when done
+        "final_alpha_value": 0,
+    }
+
+    def create_target(self):
+        result = self.mobject.copy()
+        result.set_opacity(0)
+        result.shift(self.shift_vect)
+        result.scale(self.scale_factor)
+        return result
 
 
 # Below will be deprecated
@@ -77,7 +76,7 @@ class FadeOutAndShiftDown(FadeOut):
 
 class FadeInFromPoint(FadeIn):
     def __init__(self, mobject, point, **kwargs):
-        super().__init__(mobject, point - mobject.get_center(), **kwargs)
+        super().__init__(mobject, shift=mobject.get_center() - point, **kwargs)
 
 
 class FadeInFromLarge(FadeIn):
