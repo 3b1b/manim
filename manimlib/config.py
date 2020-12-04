@@ -232,8 +232,8 @@ def get_configuration(args):
     config["camera_config"] = get_camera_configuration(args)
     config["window_config"] = {
         "size": (
-            config["camera_config"]["pixel_width"],
-            config["camera_config"]["pixel_height"],
+            manimlib.constants.DEFAULT_WINDOW_WIDTH,
+            manimlib.constants.DEFAULT_WINDOW_HEIGHT,
         )
     }
 
