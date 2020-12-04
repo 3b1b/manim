@@ -59,7 +59,7 @@ class VMobject(Mobject):
         "fill_frag_shader_file": "quadratic_bezier_fill_frag.glsl",
         # Could also be Bevel, Miter, Round
         "joint_type": "auto",
-        "render_primative": moderngl.TRIANGLES,
+        "render_primitive": moderngl.TRIANGLES,
         "triangulation_locked": False,
         "fill_dtype": [
             ('point', np.float32, (3,)),
@@ -893,14 +893,14 @@ class VMobject(Mobject):
             vert_file=self.fill_vert_shader_file,
             geom_file=self.fill_geom_shader_file,
             frag_file=self.fill_frag_shader_file,
-            render_primative=self.render_primative,
+            render_primitive=self.render_primitive,
         )
         self.stroke_shader_wrapper = ShaderWrapper(
             vert_data=self.stroke_data,
             vert_file=self.stroke_vert_shader_file,
             geom_file=self.stroke_geom_shader_file,
             frag_file=self.stroke_frag_shader_file,
-            render_primative=self.render_primative,
+            render_primitive=self.render_primitive,
         )
 
     def refresh_shader_wrapper_id(self):

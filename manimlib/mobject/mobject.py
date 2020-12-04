@@ -45,7 +45,7 @@ class Mobject(Container):
         "vert_shader_file": "",
         "geom_shader_file": "",
         "frag_shader_file": "",
-        "render_primative": moderngl.TRIANGLE_STRIP,
+        "render_primitive": moderngl.TRIANGLE_STRIP,
         "texture_paths": None,
         "depth_test": False,
         # If true, the mobject will not get rotated according to camera position
@@ -1239,7 +1239,7 @@ class Mobject(Container):
             frag_file=self.frag_shader_file,
             texture_paths=self.texture_paths,
             depth_test=self.depth_test,
-            render_primative=self.render_primative,
+            render_primitive=self.render_primitive,
         )
 
     def refresh_shader_wrapper_id(self):

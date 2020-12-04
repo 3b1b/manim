@@ -325,7 +325,7 @@ class Camera(object):
         shader_program = render_group["prog"]
         self.set_shader_uniforms(shader_program, shader_wrapper)
         self.update_depth_test(shader_wrapper)
-        render_group["vao"].render(int(shader_wrapper.render_primative))
+        render_group["vao"].render(int(shader_wrapper.render_primitive))
         if render_group["single_use"]:
             self.release_render_group(render_group)
 

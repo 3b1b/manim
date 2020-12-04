@@ -28,7 +28,7 @@ class ParametricSurface(Mobject):
         # For du and dv steps.  Much smaller and numerical error
         # can crop up in the shaders.
         "epsilon": 1e-5,
-        "render_primative": moderngl.TRIANGLES,
+        "render_primitive": moderngl.TRIANGLES,
         "depth_test": True,
         "vert_shader_file": "surface_vert.glsl",
         "frag_shader_file": "surface_frag.glsl",
