@@ -14,7 +14,7 @@ __all__ = [
 ]
 
 from typing import Callable
-import numpy.typing as npt
+
 import numpy as np
 import os
 import itertools as it
@@ -71,10 +71,10 @@ def get_rgb_gradient_function(
     max_value: int = 1,
     colors: list = [BLUE, RED],
     flip_alphas: bool = True,  # Why?
-) -> Callable[[npt.ArrayLike], float]:
+) -> Callable[[np.ndarray], float]:
     rgbs = np.array(list(map(color_to_rgb, colors)))
 
-    def func(values: npt.ArrayLike):
+    def func(values: np.ndarray):
         alphas = inverse_interpolate(min_value, max_value, np.array(values))
         alphas = np.clip(alphas, 0, 1)
         # if flip_alphas:
@@ -91,7 +91,7 @@ def get_rgb_gradient_function(
 
 
 def get_color_field_image_file(
-    scalar_func: Callable[[npt.ArrayLike], np.ndarray],
+    scalar_func: Callable[[np.ndarray], np.ndarray],
     min_value: int = 0,
     max_value: int = 2,
     colors: list = DEFAULT_SCALAR_FIELD_COLORS,

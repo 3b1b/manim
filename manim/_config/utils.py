@@ -21,7 +21,6 @@ from pathlib import Path
 
 import colour
 import numpy as np
-import numpy.typing as npt
 
 from .. import constants
 from ..utils.tex import TexTemplate, TexTemplateFromFile
@@ -1315,7 +1314,7 @@ class ManimFrame(Mapping):
         "left_side",
         "right_side",
     }
-    _CONSTANTS: dict[str, npt.ArrayLike] = {
+    _CONSTANTS: dict[str, np.ndarray] = {
         "UP": np.array((0.0, 1.0, 0.0)),
         "DOWN": np.array((0.0, -1.0, 0.0)),
         "RIGHT": np.array((1.0, 0.0, 0.0)),
