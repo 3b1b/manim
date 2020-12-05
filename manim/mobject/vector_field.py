@@ -91,7 +91,7 @@ def get_rgb_gradient_function(
 
 
 def get_color_field_image_file(
-    scalar_func: Callable[[npt.ArrayLike],np.ndarray],
+    scalar_func: Callable[[npt.ArrayLike], np.ndarray],
     min_value: int = 0,
     max_value: int = 2,
     colors: list = DEFAULT_SCALAR_FIELD_COLORS,

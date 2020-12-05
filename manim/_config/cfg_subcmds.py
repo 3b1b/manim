@@ -19,15 +19,15 @@ from rich.style import Style
 
 __all__ = ["write", "show", "export"]
 
-RICH_COLOUR_INSTRUCTIONS:str = """
+RICH_COLOUR_INSTRUCTIONS: str = """
 [red]The default colour is used by the input statement.
 If left empty, the default colour will be used.[/red]
 [magenta] For a full list of styles, visit[/magenta] [green]https://rich.readthedocs.io/en/latest/style.html[/green]
 """
-RICH_NON_STYLE_ENTRIES:str = ["log.width", "log.height", "log.timestamps"]
+RICH_NON_STYLE_ENTRIES: str = ["log.width", "log.height", "log.timestamps"]
 
 
-def value_from_string(value:str) -> Union[str,int,bool]:
+def value_from_string(value: str) -> Union[str, int, bool]:
     """Extracts the literal of proper datatype from a string.
     Parameters
     ----------
@@ -46,7 +46,7 @@ def value_from_string(value:str) -> Union[str,int,bool]:
     return value
 
 
-def _is_expected_datatype(value:str, expected:str, style:bool=False) -> bool:
+def _is_expected_datatype(value: str, expected: str, style: bool = False) -> bool:
     """Checks whether `value` is the same datatype as `expected`,
     and checks if it is a valid `style` if `style` is true.
 
@@ -71,7 +71,7 @@ def _is_expected_datatype(value:str, expected:str, style:bool=False) -> bool:
     return isinstance(value, expected) and (is_valid_style(value) if style else True)
 
 
-def is_valid_style(style:str) -> bool:
+def is_valid_style(style: str) -> bool:
     """Checks whether the entered color is a valid color according to rich
     Parameters
     ----------
@@ -89,7 +89,7 @@ def is_valid_style(style:str) -> bool:
         return False
 
 
-def replace_keys(default:dict) -> dict:
+def replace_keys(default: dict) -> dict:
     """Replaces _ to . and viceversa in a dictionary for rich
     Parameters
     ----------
@@ -114,7 +114,7 @@ def replace_keys(default:dict) -> dict:
     return default
 
 
-def write(level:str=None, openfile:bool=False)-> None:
+def write(level: str = None, openfile: bool = False) -> None:
     config_paths = config_file_paths()
     console.print(
         "[yellow bold]Manim Configuration File Writer[/yellow bold]", justify="center"

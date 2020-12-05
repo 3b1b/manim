@@ -31,7 +31,9 @@ frame = ManimFrame(config)
 
 # This has to go here because it needs access to this module's config
 @contextmanager
-def tempconfig(temp:Union[ManimConfig,dict]) -> Generator[int, float, None]: #doubtful
+def tempconfig(
+    temp: Union[ManimConfig, dict]
+) -> Generator[int, float, None]:  # doubtful
     """Context manager that temporarily modifies the global ``config`` object.
 
     Inside the ``with`` statement, the modified config will be used.  After

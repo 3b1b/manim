@@ -9,7 +9,7 @@ from manim import constants
 __all__ = ["parse_args"]
 
 
-def _find_subcommand(args:list) -> typing.Union[str,None]:
+def _find_subcommand(args: list) -> typing.Union[str, None]:
     """Return the subcommand that has been passed, if any.
 
     Parameters
@@ -40,7 +40,7 @@ def _find_subcommand(args:list) -> typing.Union[str,None]:
         return None
 
 
-def _init_cfg_subcmd(subparsers:argparse._SubParsersAction) -> argparse.ArgumentParser:
+def _init_cfg_subcmd(subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:
     """Initialises the subparser for the `cfg` subcommand.
 
     Parameters
@@ -74,7 +74,7 @@ def _init_cfg_subcmd(subparsers:argparse._SubParsersAction) -> argparse.Argument
     return cfg_related
 
 
-def _str2bool(s:str) -> bool:
+def _str2bool(s: str) -> bool:
     """Helper function that handles boolean CLI arguments."""
     if s == "True":
         return True
@@ -84,7 +84,7 @@ def _str2bool(s:str) -> bool:
         raise argparse.ArgumentTypeError("True or False expected")
 
 
-def parse_args(args:list)->argparse.Namespace:
+def parse_args(args: list) -> argparse.Namespace:
     """Parse CLI arguments.
 
     Parameters
@@ -115,7 +115,7 @@ def parse_args(args:list)->argparse.Namespace:
         return _parse_args_no_subcmd(args)
 
 
-def _parse_args_cfg_subcmd(args:list) -> argparse.Namespace:
+def _parse_args_cfg_subcmd(args: list) -> argparse.Namespace:
     """Parse arguments of the form 'manim cfg <subcmd> <args>'."""
     parser = argparse.ArgumentParser(
         description="Animation engine for explanatory math videos",
@@ -153,7 +153,7 @@ def _parse_args_cfg_subcmd(args:list) -> argparse.Namespace:
     return parsed
 
 
-def _parse_args_plugins(args:list) -> argparse.Namespace:
+def _parse_args_plugins(args: list) -> argparse.Namespace:
     """Parse arguments of the form 'manim plugins <args>'."""
     parser = argparse.ArgumentParser(
         description="Utility command for managing plugins",
@@ -173,7 +173,7 @@ def _parse_args_plugins(args:list) -> argparse.Namespace:
     return parsed
 
 
-def _parse_args_no_subcmd(args:list)->argparse.Namespace:
+def _parse_args_no_subcmd(args: list) -> argparse.Namespace:
     """Parse arguments of the form 'manim <args>', when no command is present."""
     parser = argparse.ArgumentParser(
         description="Animation engine for explanatory math videos",

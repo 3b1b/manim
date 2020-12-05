@@ -53,7 +53,7 @@ def partial_bezier_points(points, a, b):
 # Linear interpolation variants
 
 
-def interpolate(start:int, end:int, alpha:float) -> float:
+def interpolate(start: int, end: int, alpha: float) -> float:
     return (1 - alpha) * start + alpha * end
 
 
