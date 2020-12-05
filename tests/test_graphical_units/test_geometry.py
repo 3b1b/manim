@@ -126,6 +126,15 @@ class RoundedRectangleTest(Scene):
         self.play(Animation(a))
 
 
+class ArrangeTest(Scene):
+    def construct(self):
+        s1 = Square()
+        s2 = Square()
+        x = VGroup(s1, s2).set_x(0).arrange(buff=1.4)
+        self.add(x)
+        self.wait()
+
+
 MODULE_NAME = "geometry"
 
 

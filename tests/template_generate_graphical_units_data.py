@@ -7,12 +7,12 @@ from tests.helpers.graphical_units import set_test_scene
 # More about graphical unit tests: https://github.com/ManimCommunity/manim/wiki/Testing#graphical-unit-test
 
 
-class YourClassHere(Scene):
+class YourClassTest(Scene):  # e.g. RoundedRectangleTest
     def construct(self):
         circle = Circle()
         self.play(Animation(circle))
 
 
 set_test_scene(
-    YourClassHere, "<module_name>"
-)  # <module_name> can be e.g.  "geometry" or "movements"
+    YourClassTest, "INSERT_MODULE_NAME"
+)  # INSERT_MODULE_NAME can be e.g.  "geometry" or "movements"
