@@ -10,11 +10,13 @@ format.
 
 """
 
+from manim._config.utils import ManimConfig
 import os
 import logging
 import json
 import copy
-
+import configparser
+import typing
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.theme import Theme
@@ -43,7 +45,9 @@ Loading the default color configuration.[/logging.level.error]
 """
 
 
-def make_logger(parser, verbosity):
+def make_logger(
+    parser: configparser.ConfigParser, verbosity: str
+) -> typing.Tuple[logging.Logger, Console]:
     """Make the manim logger and console.
 
     Parameters
@@ -70,7 +74,7 @@ def make_logger(parser, verbosity):
     configuring the logger at the top level.
 
     """
-    # Throughout the codebase, use Console.print() instead of print()
+    # Throughout the codebase, use console.print() instead of print()
     theme = parse_theme(parser)
     console = Console(theme=theme)
 
@@ -88,7 +92,7 @@ def make_logger(parser, verbosity):
     return logger, console
 
 
-def parse_theme(parser):
+def parse_theme(parser: configparser.ConfigParser) -> Theme:
     """Configure the rich style of logger and console output.
 
     Parameters
@@ -128,7 +132,7 @@ def parse_theme(parser):
     return custom_theme
 
 
-def set_file_logger(config, verbosity):
+def set_file_logger(config: ManimConfig, verbosity: str) -> None:
     """Add a file handler to manim logger.
 
     The path to the file is built using ``config.log_dir``.
@@ -179,7 +183,7 @@ class JSONFormatter(logging.Formatter):
 
     """
 
-    def format(self, record):
+    def format(self, record: dict) -> str:
         """Format the record in a custom JSON format."""
         record_c = copy.deepcopy(record)
         if record_c.args:

@@ -9,22 +9,25 @@ The functions below can be called via the `manim cfg` subcommand.
 
 import os
 from ast import literal_eval
+from typing import Union
 
-from manim import console, config
+from manim import config, console
 from manim._config.utils import config_file_paths, make_config_parser
 from manim.utils.file_ops import guarantee_existence, open_file
+from rich.errors import StyleSyntaxError
+from rich.style import Style
 
 __all__ = ["write", "show", "export"]
 
-RICH_COLOUR_INSTRUCTIONS = """
+RICH_COLOUR_INSTRUCTIONS:str = """
 [red]The default colour is used by the input statement.
 If left empty, the default colour will be used.[/red]
 [magenta] For a full list of styles, visit[/magenta] [green]https://rich.readthedocs.io/en/latest/style.html[/green]
 """
-RICH_NON_STYLE_ENTRIES = ["log.width", "log.height", "log.timestamps"]
+RICH_NON_STYLE_ENTRIES:str = ["log.width", "log.height", "log.timestamps"]
 
 
-def value_from_string(value):
+def value_from_string(value:str) -> Union[str,int,bool]:
     """Extracts the literal of proper datatype from a string.
     Parameters
     ----------
@@ -43,7 +46,7 @@ def value_from_string(value):
     return value
 
 
-def _is_expected_datatype(value, expected, style=False):
+def _is_expected_datatype(value:str, expected:str, style:bool=False) -> bool:
     """Checks whether `value` is the same datatype as `expected`,
     and checks if it is a valid `style` if `style` is true.
 
@@ -68,7 +71,7 @@ def _is_expected_datatype(value, expected, style=False):
     return isinstance(value, expected) and (is_valid_style(value) if style else True)
 
 
-def is_valid_style(style):
+def is_valid_style(style:str) -> bool:
     """Checks whether the entered color is a valid color according to rich
     Parameters
     ----------
@@ -86,7 +89,7 @@ def is_valid_style(style):
         return False
 
 
-def replace_keys(default):
+def replace_keys(default:dict) -> dict:
     """Replaces _ to . and viceversa in a dictionary for rich
     Parameters
     ----------
@@ -111,7 +114,7 @@ def replace_keys(default):
     return default
 
 
-def write(level=None, openfile=False):
+def write(level:str=None, openfile:bool=False)-> None:
     config_paths = config_file_paths()
     console.print(
         "[yellow bold]Manim Configuration File Writer[/yellow bold]", justify="center"
@@ -205,7 +208,7 @@ modify write_cfg_subcmd_input to account for it."""
         open_file(cfg_file_path)
 
 
-def show():
+def show() -> None:
     parser = make_config_parser()
     rich_non_style_entries = [a.replace(".", "_") for a in RICH_NON_STYLE_ENTRIES]
     for category in parser:

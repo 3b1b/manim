@@ -16,7 +16,7 @@ __all__ = [
 
 from scipy import linalg
 import numpy as np
-
+from typing import Union
 from ..utils.simple_functions import choose
 
 CLOSED_THRESHOLD = 0.001
@@ -53,7 +53,7 @@ def partial_bezier_points(points, a, b):
 # Linear interpolation variants
 
 
-def interpolate(start, end, alpha):
+def interpolate(start:int, end:int, alpha:float) -> float:
     return (1 - alpha) * start + alpha * end
 
 
@@ -82,7 +82,7 @@ def mid(start, end):
     return (start + end) / 2.0
 
 
-def inverse_interpolate(start, end, value):
+def inverse_interpolate(start, end, value) -> np.ndarray:
     return np.true_divide(value - start, end - start)
 
 

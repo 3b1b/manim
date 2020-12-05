@@ -2,9 +2,10 @@
 
 import logging
 from contextlib import contextmanager
+from typing import Generator, Union
 
 from .logger_utils import make_logger
-from .utils import make_config_parser, ManimConfig, ManimFrame
+from .utils import ManimConfig, ManimFrame, make_config_parser
 
 __all__ = [
     "logger",
@@ -30,7 +31,7 @@ frame = ManimFrame(config)
 
 # This has to go here because it needs access to this module's config
 @contextmanager
-def tempconfig(temp):
+def tempconfig(temp:Union[ManimConfig,dict]) -> Generator[int, float, None]: #doubtful
     """Context manager that temporarily modifies the global ``config`` object.
 
     Inside the ``with`` statement, the modified config will be used.  After

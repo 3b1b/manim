@@ -13,7 +13,8 @@ __all__ = [
     "move_points_along_vector_field",
 ]
 
-
+from typing import Callable
+import numpy.typing as npt
 import numpy as np
 import os
 import itertools as it
@@ -34,17 +35,18 @@ from ..utils.color import rgb_to_color
 from ..utils.rate_functions import linear
 from ..utils.simple_functions import sigmoid
 from ..utils.space_ops import get_norm
+from ..mobject.mobject import Mobject
 
 # from ..utils.space_ops import normalize
 
 
-DEFAULT_SCALAR_FIELD_COLORS = [BLUE_E, GREEN, YELLOW, RED]
+DEFAULT_SCALAR_FIELD_COLORS: list = [BLUE_E, GREEN, YELLOW, RED]
 
 
 def get_colored_background_image(
-    scalar_field_func,
-    number_to_rgb_func,
-):
+    scalar_field_func: Callable,  # TODO: What is taken as parameters?
+    number_to_rgb_func: Callable,
+) -> Image:
     ph = config["pixel_height"]
     pw = config["pixel_width"]
     fw = config["frame_width"]
@@ -65,14 +67,14 @@ def get_colored_background_image(
 
 
 def get_rgb_gradient_function(
-    min_value=0,
-    max_value=1,
-    colors=[BLUE, RED],
-    flip_alphas=True,  # Why?
-):
+    min_value: int = 0,
+    max_value: int = 1,
+    colors: list = [BLUE, RED],
+    flip_alphas: bool = True,  # Why?
+) -> Callable[[npt.ArrayLike], float]:
     rgbs = np.array(list(map(color_to_rgb, colors)))
 
-    def func(values):
+    def func(values: npt.ArrayLike):
         alphas = inverse_interpolate(min_value, max_value, np.array(values))
         alphas = np.clip(alphas, 0, 1)
         # if flip_alphas:
@@ -89,8 +91,11 @@ def get_rgb_gradient_function(
 
 
 def get_color_field_image_file(
-    scalar_func, min_value=0, max_value=2, colors=DEFAULT_SCALAR_FIELD_COLORS
-):
+    scalar_func: Callable[[npt.ArrayLike],np.ndarray],
+    min_value: int = 0,
+    max_value: int = 2,
+    colors: list = DEFAULT_SCALAR_FIELD_COLORS,
+) -> str:
     # try_hash
     np.random.seed(0)
     sample_inputs = 5 * np.random.random(size=(10, 3)) - 10
@@ -110,12 +115,12 @@ def get_color_field_image_file(
     return full_path
 
 
-def move_along_vector_field(mobject, func):
+def move_along_vector_field(mobject: Mobject, func: Callable) -> Mobject:
     mobject.add_updater(lambda m, dt: m.shift(func(m.get_center()) * dt))
     return mobject
 
 
-def move_submobjects_along_vector_field(mobject, func):
+def move_submobjects_along_vector_field(mobject: Mobject, func: Callable) -> Mobject:
     def apply_nudge(mob, dt):
         for submob in mob:
             x, y = submob.get_center()[:2]
@@ -126,7 +131,7 @@ def move_submobjects_along_vector_field(mobject, func):
     return mobject
 
 
-def move_points_along_vector_field(mobject, func):
+def move_points_along_vector_field(mobject: Mobject, func: Callable) -> Mobject:
     def apply_nudge(self, dt):
         self.mobject.apply_function(lambda p: p + func(p) * dt)
 
@@ -140,7 +145,7 @@ def move_points_along_vector_field(mobject, func):
 class VectorField(VGroup):
     def __init__(
         self,
-        func,
+        func: Callable,
         delta_x=0.5,
         delta_y=0.5,
         min_magnitude=0,
