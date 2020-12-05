@@ -975,6 +975,31 @@ class VGroup(VMobject):
     Examples
     --------
 
+    To add :class:`~.VMobject`s to a :class:`~.VGroup`, you can either use the
+    :meth:`~.VGroup.add` method, or use the `+` and `+=` operators. Similarly, you
+    can subtract elements of a VGroup via :meth:`~.VGroup.remove` method, or
+    `-` and `-=` operators:
+
+        >>> from manim import Triangle, Square, VGroup
+        >>> vg = VGroup()
+        >>> triangle, square = Triangle(), Square()
+        >>> vg.add(triangle)
+        VGroup(Triangle)
+        >>> vg + square   # a new VGroup is constructed
+        VGroup(Triangle, Square)
+        >>> vg            # not modified
+        VGroup(Triangle)
+        >>> vg += square; vg  # modifies vg
+        VGroup(Triangle, Square)
+        >>> vg.remove(triangle)
+        VGroup(Square)
+        >>> vg - square; # a new VGroup is constructed
+        VGroup()
+        >>> vg   # not modified
+        VGroup(Square)
+        >>> vg -= square; vg # modifies vg
+        VGroup()
+
     .. manim:: ArcShapeIris
         :save_last_frame:
 
@@ -1014,16 +1039,61 @@ class VGroup(VMobject):
 
         Returns
         -------
-        None
+        :class:`VGroup`
 
         Raises
         ------
         TypeError
             If one element of the list is not an instance of VMobject
+
+        Examples
+        --------
+        .. manim:: AddToVGroup
+
+            class AddToVGroup(Scene):
+                def construct(self):
+                    circle_red = Circle(color=RED)
+                    circle_green = Circle(color=GREEN)
+                    circle_blue = Circle(color=BLUE)
+                    circle_red.shift(LEFT)
+                    circle_blue.shift(RIGHT)
+                    gr = VGroup(circle_red, circle_green)
+                    gr2 = VGroup(circle_blue) # Constructor uses add directly
+                    self.add(gr,gr2)
+                    self.wait()
+                    gr += gr2 # Add group to another
+                    self.play(
+                        gr.shift, DOWN,
+                    )
+                    gr -= gr2 # Remove group
+                    self.play( # Animate groups separately
+                        gr.shift, LEFT,
+                        gr2.shift, UP,
+                    )
+                    self.play( #Animate groups without modification
+                        (gr+gr2).shift, RIGHT
+                    )
+                    self.play( # Animate group without component
+                        (gr-circle_red).shift, RIGHT
+                    )
         """
         if not all(isinstance(m, VMobject) for m in vmobjects):
             raise TypeError("All submobjects must be of type VMobject")
-        super().add(*vmobjects)
+        return super().add(*vmobjects)
+
+    def __add__(self, vmobject):
+        return VGroup(*self.submobjects, vmobject)
+
+    def __iadd__(self, vmobject):
+        return self.add(vmobject)
+
+    def __sub__(self, vmobject):
+        copy = VGroup(*self.submobjects)
+        copy.remove(vmobject)
+        return copy
+
+    def __isub__(self, vmobject):
+        return self.remove(vmobject)
 
 
 class VDict(VMobject):

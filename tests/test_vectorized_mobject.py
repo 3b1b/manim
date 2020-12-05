@@ -31,6 +31,60 @@ def test_vgroup_add():
         obj.add(obj)
 
 
+def test_vgroup_add_dunder():
+    """Test the VGroup __add__ magic method."""
+    obj = VGroup()
+    assert len(obj.submobjects) == 0
+    obj + VMobject()
+    assert len(obj.submobjects) == 0
+    obj += VMobject()
+    assert len(obj.submobjects) == 1
+    with pytest.raises(TypeError):
+        obj += Mobject()
+    assert len(obj.submobjects) == 1
+    with pytest.raises(TypeError):
+        # If only one of the added object is not an instance of VMobject, none of them should be added
+        obj += (VMobject(), Mobject())
+    assert len(obj.submobjects) == 1
+    with pytest.raises(Exception):  # TODO change this to ValueError once #307 is merged
+        # a Mobject cannot contain itself
+        obj += obj
+
+
+def test_vgroup_remove():
+    """Test the VGroup remove method."""
+    a = VMobject()
+    c = VMobject()
+    b = VGroup(c)
+    obj = VGroup(a, b)
+    assert len(obj.submobjects) == 2
+    assert len(b.submobjects) == 1
+    obj.remove(a)
+    b.remove(c)
+    assert len(obj.submobjects) == 1
+    assert len(b.submobjects) == 0
+    obj.remove(b)
+    assert len(obj.submobjects) == 0
+
+
+def test_vgroup_remove_dunder():
+    """Test the VGroup __sub__ magic method."""
+    a = VMobject()
+    c = VMobject()
+    b = VGroup(c)
+    obj = VGroup(a, b)
+    assert len(obj.submobjects) == 2
+    assert len(b.submobjects) == 1
+    assert len((obj - a)) == 1
+    assert len(obj.submobjects) == 2
+    obj -= a
+    b -= c
+    assert len(obj.submobjects) == 1
+    assert len(b.submobjects) == 0
+    obj -= b
+    assert len(obj.submobjects) == 0
+
+
 def test_vdict_init():
     """Test the VDict instantiation."""
     # Test empty VDict
