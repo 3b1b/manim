@@ -370,7 +370,7 @@ A list of all CLI flags
    :options: -ELLIPSIS, +NORMALIZE_WHITESPACE
 
    usage: manim file [flags] [scene [scene ...]]
-          manim {cfg,init} [opts]
+          manim {cfg,init,plugins} [opts]
 
    Animation engine for explanatory math videos
 
