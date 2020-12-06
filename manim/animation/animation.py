@@ -8,6 +8,7 @@ import typing
 from copy import deepcopy
 
 import numpy as np
+
 if typing.TYPE_CHECKING:
     from manim.scene.scene import Scene
 
@@ -50,8 +51,10 @@ class Animation:
 
         if hasattr(self, "CONFIG"):
             logger.error(
-                ("CONFIG has been removed from ManimCommunity.",
-                "Please use keyword arguments instead.")
+                (
+                    "CONFIG has been removed from ManimCommunity.",
+                    "Please use keyword arguments instead.",
+                )
             )
 
     def _typecheck_input(self, mobject: Mobject) -> None:
@@ -86,7 +89,7 @@ class Animation:
         if self.suspend_mobject_updating:
             self.mobject.resume_updating()
 
-    def clean_up_from_scene(self, scene: 'Scene') -> None:
+    def clean_up_from_scene(self, scene: "Scene") -> None:
         if self.is_remover():
             scene.remove(self.mobject)
 
@@ -207,7 +210,7 @@ class Wait(Animation):
     def finish(self) -> None:
         pass
 
-    def clean_up_from_scene(self, scene: 'Scene') -> None:
+    def clean_up_from_scene(self, scene: "Scene") -> None:
         pass
 
     def update_mobjects(self, dt: int) -> None:
