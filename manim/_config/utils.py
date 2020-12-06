@@ -9,7 +9,7 @@ movie vs writing a single frame).
 See :doc:`/tutorials/configuration` for an introduction to Manim's configuration system.
 
 """
-
+import argparse
 import configparser
 import copy
 import logging
@@ -315,7 +315,7 @@ class ManimConfig(MutableMapping):
     def __setitem__(self, key, val) -> None:  # what is the type here?
         getattr(ManimConfig, key).fset(self, val)  # fset is the property's setter
 
-    def update(self, obj: typing.Union[ManimConfig, dict]) -> None:
+    def update(self, obj: typing.Union['ManimConfig', dict]) -> None:
         """Digest the options found in another :class:`ManimConfig` or in a dict.
 
         Similar to :meth:`dict.update`, replaces the values of this object with
@@ -364,7 +364,7 @@ class ManimConfig(MutableMapping):
         raise AttributeError("'ManimConfig' object does not support item deletion")
 
     # copy functions
-    def copy(self) -> ManimConfig:
+    def copy(self) -> 'ManimConfig':
         """Deepcopy the contents of this ManimConfig.
 
         Returns
@@ -383,11 +383,11 @@ class ManimConfig(MutableMapping):
         """
         return copy.deepcopy(self)
 
-    def __copy__(self) -> ManimConfig:
+    def __copy__(self) -> 'ManimConfig':
         """See ManimConfig.copy()."""
         return copy.deepcopy(self)
 
-    def __deepcopy__(self, memo) -> ManimConfig:  # typing?
+    def __deepcopy__(self, memo) -> 'ManimConfig':  # typing?
         """See ManimConfig.copy()."""
         c = ManimConfig()
         # Deepcopying the underlying dict is enough because all properties
@@ -445,7 +445,7 @@ class ManimConfig(MutableMapping):
             )
 
     # builders
-    def digest_parser(self, parser: configparser.ConfigParser) -> ManimConfig:
+    def digest_parser(self, parser: configparser.ConfigParser) -> 'ManimConfig':
         """Process the config options present in a :class:`ConfigParser` object.
 
         This method processes arbitrary parsers, not only those read from a
@@ -568,7 +568,7 @@ class ManimConfig(MutableMapping):
 
         return self
 
-    def digest_args(self, args: argparse.Namespace) -> ManimConfig:
+    def digest_args(self, args: argparse.Namespace) -> 'ManimConfig':
         """Process the config options present in CLI arguments.
 
         Parameters
@@ -690,7 +690,7 @@ class ManimConfig(MutableMapping):
 
         return self
 
-    def digest_file(self, filename: str) -> ManimConfig:
+    def digest_file(self, filename: str) -> 'ManimConfig':
         """Process the config options present in a ``.cfg`` file.
 
         This method processes a single ``.cfg`` file, whereas
@@ -1301,7 +1301,7 @@ class ManimConfig(MutableMapping):
 
 
 class ManimFrame(Mapping):
-    _OPTS: set[str] = {
+    _OPTS: typing.Set[str] = {
         "pixel_width",
         "pixel_height",
         "aspect_ratio",
@@ -1314,7 +1314,7 @@ class ManimFrame(Mapping):
         "left_side",
         "right_side",
     }
-    _CONSTANTS: dict[str, np.ndarray] = {
+    _CONSTANTS: typing.Dict[str, np.ndarray] = {
         "UP": np.array((0.0, 1.0, 0.0)),
         "DOWN": np.array((0.0, -1.0, 0.0)),
         "RIGHT": np.array((1.0, 0.0, 0.0)),

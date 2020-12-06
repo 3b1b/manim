@@ -9,20 +9,22 @@ Both ``logger`` and ``console`` use the ``rich`` library to produce rich text
 format.
 
 """
-
-from manim._config.utils import ManimConfig
-import os
-import logging
-import json
-import copy
 import configparser
+import copy
+import json
+import logging
+import os
 import typing
+from typing import TYPE_CHECKING
+
+from rich import color, errors
+from rich import print as printf
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.theme import Theme
-from rich import print as printf
-from rich import errors, color
 
+if TYPE_CHECKING:
+    from manim._config.utils import ManimConfig
 HIGHLIGHTED_KEYWORDS = [  # these keywords are highlighted specially
     "Played",
     "animations",
@@ -132,7 +134,7 @@ def parse_theme(parser: configparser.ConfigParser) -> Theme:
     return custom_theme
 
 
-def set_file_logger(config: ManimConfig, verbosity: str) -> None:
+def set_file_logger(config: "ManimConfig", verbosity: str) -> None:
     """Add a file handler to manim logger.
 
     The path to the file is built using ``config.log_dir``.
