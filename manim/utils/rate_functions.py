@@ -1,5 +1,6 @@
 """A selection of rate functions, i.e., *speed curves* for animations.
-Please find a standard list at https://easings.net/. Here is a picture for the non-standard ones
+Please find a standard list at https://easings.net/. Here is a picture
+for the non-standard ones
 
 .. image:: /_static/non_standard_rate_funcs.png
     :alt: Non-standard rate functions
@@ -64,6 +65,7 @@ __all__ = [
 ]
 
 
+import typing
 from math import sqrt
 
 import numpy as np
@@ -72,11 +74,11 @@ from ..utils.bezier import bezier
 from ..utils.simple_functions import sigmoid
 
 
-def linear(t):
+def linear(t: typing.Union[np.ndarray, float]) -> typing.Union[np.ndarray, float]:
     return t
 
 
-def smooth(t, inflection=10.0):
+def smooth(t: float, inflection: typing.Optional[float] = 10.0) -> np.ndarray:
     error = sigmoid(-inflection / 2)
     return np.clip(
         (sigmoid(inflection * (t - 0.5)) - error) / (1 - 2 * error),
@@ -85,31 +87,31 @@ def smooth(t, inflection=10.0):
     )
 
 
-def rush_into(t, inflection=10.0):
+def rush_into(t: float, inflection: float = 10.0) -> np.ndarray:
     return 2 * smooth(t / 2.0, inflection)
 
 
-def rush_from(t, inflection=10.0):
+def rush_from(t: float, inflection: float = 10.0) -> np.ndarray:
     return 2 * smooth(t / 2.0 + 0.5, inflection) - 1
 
 
-def slow_into(t):
+def slow_into(t: np.ndarray) -> np.ndarray:
     return np.sqrt(1 - (1 - t) * (1 - t))
 
 
-def double_smooth(t):
+def double_smooth(t: float) -> np.ndarray:
     if t < 0.5:
         return 0.5 * smooth(2 * t)
     else:
         return 0.5 * (1 + smooth(2 * t - 1))
 
 
-def there_and_back(t, inflection=10.0):
+def there_and_back(t: float, inflection: float = 10.0) -> np.ndarray:
     new_t = 2 * t if t < 0.5 else 2 * (1 - t)
     return smooth(new_t, inflection)
 
 
-def there_and_back_with_pause(t, pause_ratio=1.0 / 3):
+def there_and_back_with_pause(t: float, pause_ratio: float = 1.0 / 3) -> np.ndarray:
     a = 1.0 / pause_ratio
     if t < 0.5 - pause_ratio / 2:
         return smooth(a * t)
@@ -119,22 +121,31 @@ def there_and_back_with_pause(t, pause_ratio=1.0 / 3):
         return smooth(a - a * t)
 
 
-def running_start(t, pull_factor=-0.5):
+def running_start(t: float, pull_factor: float = -0.5) -> typing.Iterable:
     return bezier([0, 0, pull_factor, pull_factor, 1, 1, 1])(t)
 
 
-def not_quite_there(func=smooth, proportion=0.7):
+def not_quite_there(
+    func: typing.Callable[[float, typing.Optional[float]], np.ndarray] = smooth,
+    proportion: float = 0.7,
+) -> typing.Callable[[float], np.ndarray]:
     def result(t):
         return proportion * func(t)
 
     return result
 
 
-def wiggle(t, wiggles=2):
+def wiggle(t: float, wiggles: float = 2) -> np.ndarray:
     return there_and_back(t) * np.sin(wiggles * np.pi * t)
 
 
-def squish_rate_func(func, a=0.4, b=0.6):
+def squish_rate_func(
+    func: typing.Callable[
+        [float],
+    ],
+    a: float = 0.4,
+    b: float = 0.6,
+) -> typing.Callable[[float],]:  # what is func return type?
     def result(t):
         if a == b:
             return a
@@ -155,7 +166,7 @@ def squish_rate_func(func, a=0.4, b=0.6):
 # "lingering", different from squish_rate_func's default params
 
 
-def lingering(t):
+def lingering(t: float) -> typing.Callable:  # not sure of return type
     return squish_rate_func(lambda t: t, 0, 0.8)(t)
 
 

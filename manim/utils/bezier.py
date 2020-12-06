@@ -14,15 +14,19 @@ __all__ = [
 ]
 
 
-from scipy import linalg
+import typing
+
 import numpy as np
-from typing import Union
+from scipy import linalg
+
 from ..utils.simple_functions import choose
 
-CLOSED_THRESHOLD = 0.001
+CLOSED_THRESHOLD: float = 0.001
 
 
-def bezier(points):
+def bezier(
+    points: np.ndarray,
+) -> typing.Callable[[float], typing.Union[int, typing.Iterable]]:
     n = len(points) - 1
     return lambda t: sum(
         [
@@ -32,7 +36,7 @@ def bezier(points):
     )
 
 
-def partial_bezier_points(points, a, b):
+def partial_bezier_points(points: np.ndarray, a: float, b: float) -> np.ndarray:
     """
     Given an array of points which define
     a bezier curve, and two numbers 0<=a<b<=1,
@@ -57,7 +61,7 @@ def interpolate(start: int, end: int, alpha: float) -> float:
     return (1 - alpha) * start + alpha * end
 
 
-def integer_interpolate(start, end, alpha):
+def integer_interpolate(start: float, end: float, alpha: float) -> int:
     """
     alpha is a float between 0 and 1.  This returns
     an integer between start and end (inclusive) representing
@@ -78,15 +82,17 @@ def integer_interpolate(start, end, alpha):
     return (value, residue)
 
 
-def mid(start, end):
+def mid(start: float, end: float) -> float:
     return (start + end) / 2.0
 
 
-def inverse_interpolate(start, end, value) -> np.ndarray:
+def inverse_interpolate(start: float, end: float, value: float) -> np.ndarray:
     return np.true_divide(value - start, end - start)
 
 
-def match_interpolate(new_start, new_end, old_start, old_end, old_value):
+def match_interpolate(
+    new_start: float, new_end: float, old_start: float, old_end: float, old_value: float
+) -> np.ndarray:
     return interpolate(
         new_start, new_end, inverse_interpolate(old_start, old_end, old_value)
     )
@@ -95,7 +101,9 @@ def match_interpolate(new_start, new_end, old_start, old_end, old_value):
 # Figuring out which bezier curves most smoothly connect a sequence of points
 
 
-def get_smooth_handle_points(points):
+def get_smooth_handle_points(
+    points: np.ndarray,
+) -> typing.Tuple[np.ndarray, np.ndarray]:
     points = np.array(points)
     num_handles = len(points) - 1
     dim = points.shape[1]
@@ -126,7 +134,7 @@ def get_smooth_handle_points(points):
     b[0] = points[0]
     b[-1] = points[-1]
 
-    def solve_func(b):
+    def solve_func(b: np.ndarray) -> np.ndarray:
         return linalg.solve_banded((l, u), diag, b)
 
     use_closed_solve_function = is_closed(points)
@@ -141,7 +149,7 @@ def get_smooth_handle_points(points):
         b[0] = 2 * points[0]
         b[-1] = np.zeros(dim)
 
-        def closed_curve_solve_func(b):
+        def closed_curve_solve_func(b: np.ndarray) -> np.ndarray:
             return linalg.solve(matrix, b)
 
     handle_pairs = np.zeros((2 * num_handles, dim))
@@ -153,7 +161,7 @@ def get_smooth_handle_points(points):
     return handle_pairs[0::2], handle_pairs[1::2]
 
 
-def diag_to_matrix(l_and_u, diag):
+def diag_to_matrix(l_and_u: typing.Tuple[int, int], diag: np.ndarray) -> np.ndarray:
     """
     Converts array whose rows represent diagonal
     entries of a matrix into the matrix itself.
@@ -169,5 +177,5 @@ def diag_to_matrix(l_and_u, diag):
     return matrix
 
 
-def is_closed(points):
+def is_closed(points: typing.Iterator[np.ndarray, np.ndarray]) -> bool:
     return np.allclose(points[0], points[-1])
