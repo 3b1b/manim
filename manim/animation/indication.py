@@ -18,34 +18,40 @@ __all__ = [
 ]
 
 
+import typing
+
 import numpy as np
 
 from .. import config
-from ..constants import *
 from ..animation.animation import Animation
-from ..animation.movement import Homotopy
-from ..animation.composition import AnimationGroup
-from ..animation.composition import Succession
-from ..animation.creation import ShowCreation
-from ..animation.creation import ShowPartial
+from ..animation.composition import AnimationGroup, Succession
+from ..animation.creation import ShowCreation, ShowPartial
 from ..animation.fading import FadeOut
+from ..animation.movement import Homotopy
 from ..animation.transform import Transform
-from ..mobject.types.vectorized_mobject import VMobject
-from ..mobject.geometry import Circle
-from ..mobject.geometry import Dot
+from ..constants import *
+from ..mobject.geometry import Circle, Dot, Line
 from ..mobject.shape_matchers import SurroundingRectangle
-from ..mobject.types.vectorized_mobject import VGroup
-from ..mobject.geometry import Line
+from ..mobject.types.vectorized_mobject import VGroup, VMobject
 from ..utils.bezier import interpolate
-from ..utils.rate_functions import there_and_back
-from ..utils.rate_functions import wiggle
 from ..utils.color import GREY, YELLOW
+from ..utils.rate_functions import there_and_back, wiggle
+
+if typing.TYPE_CHECKING:
+    from ..mobject.geometry import Dot
+    from ..mobject.mobject import Mobject
 
 
 class FocusOn(Transform):
     def __init__(
-        self, focus_point, opacity=0.2, color=GREY, run_time=2, remover=True, **kwargs
-    ):
+        self,
+        focus_point: np.ndarray,
+        opacity: float = 0.2,
+        color: str = GREY,
+        run_time: float = 2,
+        remover: bool = True,
+        **kwargs
+    ) -> None:
         self.focus_point = focus_point
         self.color = color
         self.opacity = opacity
@@ -53,13 +59,13 @@ class FocusOn(Transform):
         # and create_starting_mobject handle the meat
         super().__init__(VMobject(), run_time=run_time, remover=remover, **kwargs)
 
-    def create_target(self):
+    def create_target(self) -> "Dot":
         little_dot = Dot(radius=0)
         little_dot.set_fill(self.color, opacity=self.opacity)
         little_dot.add_updater(lambda d: d.move_to(self.focus_point))
         return little_dot
 
-    def create_starting_mobject(self):
+    def create_starting_mobject(self) -> "Dot":
         return Dot(
             radius=config["frame_x_radius"] + config["frame_y_radius"],
             stroke_width=0,
@@ -71,17 +77,19 @@ class FocusOn(Transform):
 class Indicate(Transform):
     def __init__(
         self,
-        mobject,
-        scale_factor=1.2,
-        color=YELLOW,
-        rate_func=there_and_back,
+        mobject: "Mobject",
+        scale_factor: float = 1.2,
+        color: str = YELLOW,
+        rate_func: typing.Callable[
+            [float, typing.Optional[float]], np.ndarray
+        ] = there_and_back,
         **kwargs
-    ):
+    ) -> None:
         self.color = color
         self.scale_factor = scale_factor
         super().__init__(mobject, rate_func=rate_func, **kwargs)
 
-    def create_target(self):
+    def create_target(self) -> "Mobject":
         target = self.mobject.copy()
         target.scale_in_place(self.scale_factor)
         target.set_color(self.color)
@@ -91,15 +99,15 @@ class Indicate(Transform):
 class Flash(AnimationGroup):
     def __init__(
         self,
-        point,
-        line_length=0.2,
-        num_lines=12,
-        flash_radius=0.3,
-        line_stroke_width=3,
-        color=YELLOW,
-        run_time=1,
+        point: np.ndarray,
+        line_length: typing.Optional[float] = 0.2,
+        num_lines: typing.Optional[int] = 12,
+        flash_radius: typing.Optional[float] = 0.3,
+        line_stroke_width: typing.Optional[int] = 3,
+        color: typing.Optional[str] = YELLOW,
+        run_time: typing.Optional[int] = 1,
         **kwargs
-    ):
+    ) -> None:
         self.point = point
         self.color = color
         self.line_length = line_length
@@ -116,7 +124,7 @@ class Flash(AnimationGroup):
             **kwargs,
         )
 
-    def create_lines(self):
+    def create_lines(self) -> VGroup:
         lines = VGroup()
         for angle in np.arange(0, TAU, TAU / self.num_lines):
             line = Line(ORIGIN, self.line_length * RIGHT)
@@ -128,7 +136,7 @@ class Flash(AnimationGroup):
         lines.add_updater(lambda l: l.move_to(self.point))
         return lines
 
-    def create_line_anims(self):
+    def create_line_anims(self) -> typing.Iterable["ShowCreationThenDestruction"]:
         return [ShowCreationThenDestruction(line) for line in self.lines]
 
 
