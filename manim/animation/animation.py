@@ -8,7 +8,8 @@ import typing
 from copy import deepcopy
 
 import numpy as np
-from manim.scene.scene import Scene
+if typing.TYPE_CHECKING:
+    from manim.scene.scene import Scene
 
 from .. import logger
 from ..mobject.mobject import Mobject
@@ -85,7 +86,7 @@ class Animation:
         if self.suspend_mobject_updating:
             self.mobject.resume_updating()
 
-    def clean_up_from_scene(self, scene: Scene) -> None:
+    def clean_up_from_scene(self, scene: 'Scene') -> None:
         if self.is_remover():
             scene.remove(self.mobject)
 
@@ -206,7 +207,7 @@ class Wait(Animation):
     def finish(self) -> None:
         pass
 
-    def clean_up_from_scene(self, scene: Scene) -> None:
+    def clean_up_from_scene(self, scene: 'Scene') -> None:
         pass
 
     def update_mobjects(self, dt: int) -> None:
