@@ -177,5 +177,5 @@ def diag_to_matrix(l_and_u: typing.Tuple[int, int], diag: np.ndarray) -> np.ndar
     return matrix
 
 
-def is_closed(points: typing.Iterator[np.ndarray, np.ndarray]) -> bool:
+def is_closed(points: typing.Tuple[np.ndarray, np.ndarray]) -> bool:
     return np.allclose(points[0], points[-1])

@@ -140,12 +140,10 @@ def wiggle(t: float, wiggles: float = 2) -> np.ndarray:
 
 
 def squish_rate_func(
-    func: typing.Callable[
-        [float],
-    ],
+    func: typing.Callable[[float],typing.Any],
     a: float = 0.4,
     b: float = 0.6,
-) -> typing.Callable[[float],]:  # what is func return type?
+) -> typing.Callable[[float],typing.Any]:  # what is func return type?
     def result(t):
         if a == b:
             return a
