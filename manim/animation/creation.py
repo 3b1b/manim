@@ -143,7 +143,7 @@ class ShowCreation(ShowPartial):
 
     """
 
-    def __init__(self, mobject: VMobject, lag_ratio: float = 1, **kwargs) -> None:
+    def __init__(self, mobject: VMobject, lag_ratio: float = 1.0, **kwargs) -> None:
         super().__init__(mobject, lag_ratio=lag_ratio, **kwargs)
 
     def _get_bounds(self, alpha: float) -> typing.Tuple[int, float]:

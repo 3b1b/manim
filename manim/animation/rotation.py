@@ -19,11 +19,11 @@ class Rotating(Animation):
     def __init__(
         self,
         mobject: "Mobject",
-        axis: typing.Optional[np.ndarray] = OUT,
-        radians: typing.Optional[np.ndarray] = TAU,
+        axis: np.ndarray = OUT,
+        radians: np.ndarray = TAU,
         about_point: typing.Optional[np.ndarray] = None,
         about_edge: typing.Optional[np.ndarray] = None,
-        run_time: typing.Optional[float] = 5,
+        run_time: float = 5,
         rate_func: typing.Callable[
             [typing.Union[np.ndarray, float]], typing.Union[np.ndarray, float]
         ] = linear,
@@ -49,8 +49,8 @@ class Rotate(Transform):
     def __init__(
         self,
         mobject: "Mobject",
-        angle: typing.Optional[np.ndarray] = PI,
-        axis: typing.Optional[np.ndarray] = OUT,
+        angle: np.ndarray = PI,
+        axis: np.ndarray = OUT,
         about_point: typing.Optional[np.ndarray] = None,
         about_edge: typing.Optional[np.ndarray] = None,
         **kwargs

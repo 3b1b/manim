@@ -212,7 +212,7 @@ class ApplyMethod(Transform):
             )
         assert isinstance(method.__self__, Mobject)
 
-    def create_target(self):  # what is returned?
+    def create_target(self) -> Mobject:
         method = self.method
         # Make sure it's a list so that args.pop() works
         args = list(self.method_args)

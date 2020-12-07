@@ -59,7 +59,5 @@ class GrowArrow(GrowFromPoint):
 
 
 class SpinInFromNothing(GrowFromCenter):
-    def __init__(
-        self, mobject: "Mobject", path_arc: typing.Optional[float] = PI, **kwargs
-    ) -> None:
+    def __init__(self, mobject: "Mobject", path_arc: float = PI, **kwargs) -> None:
         super().__init__(mobject, path_arc=path_arc, **kwargs)

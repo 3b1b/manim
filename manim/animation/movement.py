@@ -27,7 +27,7 @@ class Homotopy(Animation):
             [float, float, float, float], typing.Tuple[float, float, float]
         ],
         mobject: "Mobject",
-        run_time: typing.Optional[float] = 3,
+        run_time: float = 3,
         apply_function_kwargs: typing.Optional[typing.Dict[str, typing.Any]] = None,
         **kwargs
     ) -> None:
@@ -86,12 +86,10 @@ class PhaseFlow(Animation):
         self,
         function: typing.Callable[[np.ndarray], np.ndarray],
         mobject: "Mobject",
-        virtual_time: typing.Optional[float] = 1,
-        suspend_mobject_updating: typing.Optional[bool] = False,
-        rate_func: typing.Optional[
-            typing.Callable[
-                [typing.Union[np.ndarray, float]], typing.Union[np.ndarray, float]
-            ]
+        virtual_time: float = 1,
+        suspend_mobject_updating: bool = False,
+        rate_func: typing.Callable[
+            [typing.Union[np.ndarray, float]], typing.Union[np.ndarray, float]
         ] = linear,
         **kwargs
     ) -> None:

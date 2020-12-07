@@ -100,12 +100,12 @@ class Flash(AnimationGroup):
     def __init__(
         self,
         point: np.ndarray,
-        line_length: typing.Optional[float] = 0.2,
-        num_lines: typing.Optional[int] = 12,
-        flash_radius: typing.Optional[float] = 0.3,
-        line_stroke_width: typing.Optional[int] = 3,
-        color: typing.Optional[str] = YELLOW,
-        run_time: typing.Optional[int] = 1,
+        line_length: float = 0.2,
+        num_lines: int = 12,
+        flash_radius: float = 0.3,
+        line_stroke_width: int = 3,
+        color: str = YELLOW,
+        run_time: int = 1,
         **kwargs
     ) -> None:
         self.point = point

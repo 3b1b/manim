@@ -78,7 +78,7 @@ def linear(t: typing.Union[np.ndarray, float]) -> typing.Union[np.ndarray, float
     return t
 
 
-def smooth(t: float, inflection: typing.Optional[float] = 10.0) -> np.ndarray:
+def smooth(t: float, inflection: float = 10.0) -> np.ndarray:
     error = sigmoid(-inflection / 2)
     return np.clip(
         (sigmoid(inflection * (t - 0.5)) - error) / (1 - 2 * error),
@@ -106,7 +106,7 @@ def double_smooth(t: float) -> np.ndarray:
         return 0.5 * (1 + smooth(2 * t - 1))
 
 
-def there_and_back(t: float, inflection: typing.Optional[float] = 10.0) -> np.ndarray:
+def there_and_back(t: float, inflection: float = 10.0) -> np.ndarray:
     new_t = 2 * t if t < 0.5 else 2 * (1 - t)
     return smooth(new_t, inflection)
 

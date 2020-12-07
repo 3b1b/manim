@@ -113,7 +113,7 @@ def make_config_parser(custom_file: str = None) -> configparser.ConfigParser:
     return parser
 
 
-def _determine_quality(args) -> str:  # what is args type??
+def _determine_quality(args: argparse.Namespace) -> str:
     old_qualities = {
         "k": "fourk_quality",
         "e": "high_quality",
@@ -312,7 +312,7 @@ class ManimConfig(MutableMapping):
     def __getitem__(self, key) -> typing.Any:
         return getattr(self, key)
 
-    def __setitem__(self, key, val) -> None:  # what is the type here?
+    def __setitem__(self, key: str, val: typing.Any) -> None:
         getattr(ManimConfig, key).fset(self, val)  # fset is the property's setter
 
     def update(self, obj: typing.Union["ManimConfig", dict]) -> None:
@@ -357,10 +357,10 @@ class ManimConfig(MutableMapping):
                 self[k] = v
 
     # don't allow to delete anything
-    def __delitem__(self, key):  # typing?
+    def __delitem__(self, key: str):
         raise AttributeError("'ManimConfig' object does not support item deletion")
 
-    def __delattr__(self, key):  # typing?
+    def __delattr__(self, key: str):
         raise AttributeError("'ManimConfig' object does not support item deletion")
 
     # copy functions
@@ -387,7 +387,7 @@ class ManimConfig(MutableMapping):
         """See ManimConfig.copy()."""
         return copy.deepcopy(self)
 
-    def __deepcopy__(self, memo) -> "ManimConfig":  # typing?
+    def __deepcopy__(self, memo: typing.Dict[str, typing.Any]) -> "ManimConfig":
         """See ManimConfig.copy()."""
         c = ManimConfig()
         # Deepcopying the underlying dict is enough because all properties
@@ -397,9 +397,7 @@ class ManimConfig(MutableMapping):
         return c
 
     # helper type-checking methods
-    def _set_from_list(
-        self, key: str, val: typing.Union[str, int], values: list
-    ) -> None:  # correct?
+    def _set_from_list(self, key: str, val: typing.Any, values: list) -> None:
         """Set ``key`` to ``val`` if ``val`` is contained in ``values``."""
         if val in values:
             self._d[key] = val
@@ -413,7 +411,7 @@ class ManimConfig(MutableMapping):
         else:
             raise ValueError(f"{key} must be boolean")
 
-    def _set_str(self, key: typing.Union[str, int], val: typing.Any) -> None:
+    def _set_str(self, key: str, val: typing.Any) -> None:
         """Set ``key`` to ``val`` if ``val`` is a string."""
         if isinstance(val, str):
             self._d[key] = val
@@ -422,18 +420,14 @@ class ManimConfig(MutableMapping):
         else:
             raise ValueError(f"{key} must be str or falsy value")
 
-    def _set_between(
-        self, key: typing.Union[str, int], val: int, lo: int, hi: int
-    ) -> None:
+    def _set_between(self, key: str, val: float, lo: float, hi: float) -> None:
         """Set ``key`` to ``val`` if lo <= val <= hi."""
         if lo <= val <= hi:
             self._d[key] = val
         else:
             raise ValueError(f"{key} must be {lo} <= {key} <= {hi}")
 
-    def _set_pos_number(
-        self, key: typing.Union[str, int], val: int, allow_inf: bool
-    ) -> None:
+    def _set_pos_number(self, key: str, val: int, allow_inf: bool) -> None:
         """Set ``key`` to ``val`` if ``val`` is a positive integer."""
         if isinstance(val, int) and val > -1:
             self._d[key] = val
@@ -1192,7 +1186,7 @@ class ManimConfig(MutableMapping):
 
         return Path(path) if path else None
 
-    def _set_dir(self, key: typing.Union[str, int], val: typing.Union[str, Path]):
+    def _set_dir(self, key: str, val: typing.Union[str, Path]):
         if isinstance(val, Path):
             self._d.__setitem__(key, str(val))
         else:
