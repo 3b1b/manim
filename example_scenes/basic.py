@@ -129,4 +129,4 @@ class UpdatersExample(Scene):
         self.wait()
 
 
-# See many more examples at https://manimce.readthedocs.io/en/latest/examples.html
+# See many more examples at https://docs.manim.community/en/latest/examples.html
