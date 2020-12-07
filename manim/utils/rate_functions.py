@@ -168,81 +168,81 @@ def lingering(t: float) -> typing.Callable:  # not sure of return type
     return squish_rate_func(lambda t: t, 0, 0.8)(t)
 
 
-def exponential_decay(t, half_life=0.1):
+def exponential_decay(t:np.ndarray, half_life:float=0.1) -> np.ndarray:
     # The half-life should be rather small to minimize
     # the cut-off error at the end
     return 1 - np.exp(-t / half_life)
 
 
-def ease_in_sine(t):
+def ease_in_sine(t:np.ndarray) -> float:
     return 1 - np.cos((t * np.pi) / 2)
 
 
-def ease_out_sine(t):
+def ease_out_sine(t:np.ndarray) -> float:
     return np.sin((t * np.pi) / 2)
 
 
-def ease_in_out_sine(t):
+def ease_in_out_sine(t:np.ndarray) -> float:
     return -(np.cos(np.pi * t) - 1) / 2
 
 
-def ease_in_quad(t):
+def ease_in_quad(t:float) -> float:
     return t * t
 
 
-def ease_out_quad(t):
+def ease_out_quad(t:float) -> float:
     return 1 - (1 - t) * (1 - t)
 
 
-def ease_in_out_quad(t):
+def ease_in_out_quad(t:float) -> float:
     return 2 * t * t if t < 0.5 else 1 - pow(-2 * t + 2, 2) / 2
 
 
-def ease_in_cubic(t):
+def ease_in_cubic(t:float) -> float:
     return t * t * t
 
 
-def ease_out_cubic(t):
+def ease_out_cubic(t:float) -> float:
     return 1 - pow(1 - t, 3)
 
 
-def ease_in_out_cubic(t):
+def ease_in_out_cubic(t:float) -> float:
     return 4 * t * t * t if t < 0.5 else 1 - pow(-2 * t + 2, 3) / 2
 
 
-def ease_in_quart(t):
+def ease_in_quart(t:float) -> float:
     return t * t * t * t
 
 
-def ease_out_quart(t):
+def ease_out_quart(t:float ) -> float:
     return 1 - pow(1 - t, 4)
 
 
-def ease_in_out_quart(t):
+def ease_in_out_quart(t:float) -> float:
     return 8 * t * t * t * t if t < 0.5 else 1 - pow(-2 * t + 2, 4) / 2
 
 
-def ease_in_quint(t):
+def ease_in_quint(t:float) -> float:
     return t * t * t * t * t
 
 
-def ease_out_quint(t):
+def ease_out_quint(t:float) -> float:
     return 1 - pow(1 - t, 5)
 
 
-def ease_in_out_quint(t):
+def ease_in_out_quint(t:float) -> float:
     return 16 * t * t * t * t * t if t < 0.5 else 1 - pow(-2 * t + 2, 5) / 2
 
 
-def ease_in_expo(t):
+def ease_in_expo(t:float) -> float:
     return 0 if t == 0 else pow(2, 10 * t - 10)
 
 
-def ease_out_expo(t):
+def ease_out_expo(t:float) -> float:
     return 1 if t == 1 else 1 - pow(2, -10 * t)
 
 
-def ease_in_out_expo(t):
+def ease_in_out_expo(t:float) -> float:
     if t == 0:
         return 0
     elif t == 1:
@@ -253,15 +253,15 @@ def ease_in_out_expo(t):
         return 2 - pow(2, -20 * t + 10) / 2
 
 
-def ease_in_circ(t):
+def ease_in_circ(t:float) -> float:
     return 1 - sqrt(1 - pow(t, 2))
 
 
-def ease_out_circ(t):
+def ease_out_circ(t:float) -> float:
     return sqrt(1 - pow(t - 1, 2))
 
 
-def ease_in_out_circ(t):
+def ease_in_out_circ(t:float)-> float:
     return (
         (1 - sqrt(1 - pow(2 * t, 2))) / 2
         if t < 0.5
@@ -269,19 +269,19 @@ def ease_in_out_circ(t):
     )
 
 
-def ease_in_back(t):
+def ease_in_back(t:float) ->float:
     c1 = 1.70158
     c3 = c1 + 1
     return c3 * t * t * t - c1 * t * t
 
 
-def ease_out_back(t):
+def ease_out_back(t:float) -> float:
     c1 = 1.70158
     c3 = c1 + 1
     return 1 + c3 * pow(t - 1, 3) + c1 * pow(t - 1, 2)
 
 
-def ease_in_out_back(t):
+def ease_in_out_back(t:float) -> float:
     c1 = 1.70158
     c2 = c1 * 1.525
     return (
@@ -291,7 +291,7 @@ def ease_in_out_back(t):
     )
 
 
-def ease_in_elastic(t):
+def ease_in_elastic(t:float) -> float:
     c4 = (2 * np.pi) / 3
     if t == 0:
         return 0
@@ -301,7 +301,7 @@ def ease_in_elastic(t):
         return -pow(2, 10 * t - 10) * np.sin((t * 10 - 10.75) * c4)
 
 
-def ease_out_elastic(t):
+def ease_out_elastic(t:float) -> float:
     c4 = (2 * np.pi) / 3
     if t == 0:
         return 0
@@ -311,7 +311,7 @@ def ease_out_elastic(t):
         return pow(2, -10 * t) * np.sin((t * 10 - 0.75) * c4) + 1
 
 
-def ease_in_out_elastic(t):
+def ease_in_out_elastic(t:float) -> float:
     c5 = (2 * np.pi) / 4.5
     if t == 0:
         return 0
@@ -323,11 +323,11 @@ def ease_in_out_elastic(t):
         return (pow(2, -20 * t + 10) * np.sin((20 * t - 11.125) * c5)) / 2 + 1
 
 
-def ease_in_bounce(t):
+def ease_in_bounce(t:float) -> float:
     return 1 - ease_out_bounce(1 - t)
 
 
-def ease_out_bounce(t):
+def ease_out_bounce(t:float) -> float:
     n1 = 7.5625
     d1 = 2.75
 
@@ -341,7 +341,7 @@ def ease_out_bounce(t):
         return n1 * (t - 2.625 / d1) * t + 0.984375
 
 
-def ease_in_out_bounce(t):
+def ease_in_out_bounce(t:float) -> float:
     c1 = 1.70158
     c2 = c1 * 1.525
     return (

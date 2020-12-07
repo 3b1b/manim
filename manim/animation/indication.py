@@ -143,22 +143,24 @@ class Flash(AnimationGroup):
 class CircleIndicate(Indicate):
     def __init__(
         self,
-        mobject,
-        circle_config={"color": YELLOW},
-        rate_func=there_and_back,
-        remover=True,
+        mobject: "Mobject",
+        circle_config: typing.Dict[str, typing.Any] = {"color": YELLOW},
+        rate_func: typing.Callable[
+            [float, typing.Optional[float]], np.ndarray
+        ] = there_and_back,
+        remover: bool = True,
         **kwargs
-    ):
+    ) -> None:
         self.circle_config = circle_config
         circle = self.get_circle(mobject)
         super().__init__(circle, rate_func=rate_func, remover=remover, **kwargs)
 
-    def get_circle(self, mobject):
+    def get_circle(self, mobject: "Mobject") -> Circle:
         circle = Circle(**self.circle_config)
         circle.add_updater(lambda c: c.surround(mobject))
         return circle
 
-    def interpolate_mobject(self, alpha):
+    def interpolate_mobject(self, alpha: float) -> None:
         super().interpolate_mobject(alpha)
         self.mobject.set_stroke(opacity=alpha)
 
@@ -181,11 +183,17 @@ class ShowPassingFlash(ShowPartial):
 
     """
 
-    def __init__(self, mobject, time_width=0.1, remover=True, **kwargs):
+    def __init__(
+        self,
+        mobject: "Mobject",
+        time_width: float = 0.1,
+        remover: bool = True,
+        **kwargs
+    ) -> None:
         self.time_width = time_width
         super().__init__(mobject, remover=remover, **kwargs)
 
-    def _get_bounds(self, alpha):
+    def _get_bounds(self, alpha: float) -> typing.Tuple[float]:
         tw = self.time_width
         upper = interpolate(0, 1 + tw, alpha)
         lower = upper - tw
@@ -193,19 +201,21 @@ class ShowPassingFlash(ShowPartial):
         lower = max(lower, 0)
         return (lower, upper)
 
-    def finish(self):
+    def finish(self) -> None:
         super().finish()
         for submob, start in self.get_all_families_zipped():
             submob.pointwise_become_partial(start, 0, 1)
 
 
 class ShowCreationThenDestruction(ShowPassingFlash):
-    def __init__(self, mobject, time_width=2.0, run_time=1, **kwargs):
+    def __init__(
+        self, mobject: "Mobject", time_width: float = 2.0, run_time: float = 1, **kwargs
+    ) -> None:
         super().__init__(mobject, time_width=time_width, run_time=run_time, **kwargs)
 
 
 class ShowCreationThenFadeOut(Succession):
-    def __init__(self, mobject, remover=True, **kwargs):
+    def __init__(self, mobject: "Mobject", remover: bool = True, **kwargs) -> None:
         super().__init__(
             ShowCreation(mobject), FadeOut(mobject), remover=remover, **kwargs
         )
@@ -214,11 +224,11 @@ class ShowCreationThenFadeOut(Succession):
 class AnimationOnSurroundingRectangle(AnimationGroup):
     def __init__(
         self,
-        mobject,
-        rect_animation=Animation,
-        surrounding_rectangle_config={},
+        mobject: "Mobject",
+        rect_animation: Animation = Animation,
+        surrounding_rectangle_config: typing.Dict[str, typing.Any] = {},
         **kwargs
-    ):
+    ) -> None:
         # Callable which takes in a rectangle, and spits out some animation.  Could be
         # some animation class, could be something more
         self.rect_animation = rect_animation
@@ -232,36 +242,57 @@ class AnimationOnSurroundingRectangle(AnimationGroup):
             self.rect_animation(rect, **kwargs),
         )
 
-    def get_rect(self):
+    def get_rect(self) -> SurroundingRectangle:
         return SurroundingRectangle(
             self.mobject_to_surround, **self.surrounding_rectangle_config
         )
 
 
 class ShowPassingFlashAround(AnimationOnSurroundingRectangle):
-    def __init__(self, mobject, rect_animation=ShowPassingFlash, **kwargs):
+    def __init__(
+        self, mobject: "Mobject", rect_animation: Animation = ShowPassingFlash, **kwargs
+    ) -> None:
         super().__init__(mobject, rect_animation=rect_animation, **kwargs)
 
 
 class ShowCreationThenDestructionAround(AnimationOnSurroundingRectangle):
-    def __init__(self, mobject, rect_animation=ShowCreationThenDestruction, **kwargs):
+    def __init__(
+        self,
+        mobject: "Mobject",
+        rect_animation: Animation = ShowCreationThenDestruction,
+        **kwargs
+    ) -> None:
         super().__init__(mobject, rect_animation=rect_animation, **kwargs)
 
 
 class ShowCreationThenFadeAround(AnimationOnSurroundingRectangle):
-    def __init__(self, mobject, rect_animation=ShowCreationThenFadeOut, **kwargs):
+    def __init__(
+        self,
+        mobject: "Mobject",
+        rect_animation: Animation = ShowCreationThenFadeOut,
+        **kwargs
+    ) -> None:
         super().__init__(mobject, rect_animation=rect_animation, **kwargs)
 
 
 class ApplyWave(Homotopy):
-    def __init__(self, mobject, direction=UP, amplitude=0.2, run_time=1, **kwargs):
+    def __init__(
+        self,
+        mobject: "Mobject",
+        direction: np.ndarray = UP,
+        amplitude: float = 0.2,
+        run_time: float = 1,
+        **kwargs
+    ) -> None:
         self.direction = direction
         self.amplitude = amplitude
         left_x = mobject.get_left()[0]
         right_x = mobject.get_right()[0]
         vect = self.amplitude * self.direction
 
-        def homotopy(x, y, z, t):
+        def homotopy(
+            x: float, y: float, z: float, t: float
+        ) -> typing.Tuple[float, float, float]:
             alpha = (x - left_x) / (right_x - left_x)
             power = np.exp(2.0 * (alpha - 0.5))
             nudge = there_and_back(t ** power)
@@ -273,15 +304,15 @@ class ApplyWave(Homotopy):
 class WiggleOutThenIn(Animation):
     def __init__(
         self,
-        mobject,
-        scale_value=1.1,
-        rotation_angle=0.01 * TAU,
-        n_wiggles=6,
-        scale_about_point=None,
-        rotate_about_point=None,
-        run_time=2,
+        mobject: "Mobject",
+        scale_value: float = 1.1,
+        rotation_angle: float = 0.01 * TAU,
+        n_wiggles: int = 6,
+        scale_about_point: typing.Optional[np.ndarray] = None,
+        rotate_about_point: typing.Optional[np.ndarray] = None,
+        run_time: float = 2,
         **kwargs
-    ):
+    ) -> None:
         self.scale_value = scale_value
         self.rotation_angle = rotation_angle
         self.n_wiggles = n_wiggles
@@ -289,15 +320,17 @@ class WiggleOutThenIn(Animation):
         self.rotate_about_point = rotate_about_point
         super().__init__(mobject, run_time=run_time, **kwargs)
 
-    def get_scale_about_point(self):
+    def get_scale_about_point(self) -> np.ndarray:
         if self.scale_about_point is None:
             return self.mobject.get_center()
 
-    def get_rotate_about_point(self):
+    def get_rotate_about_point(self) -> np.ndarray:
         if self.rotate_about_point is None:
             return self.mobject.get_center()
 
-    def interpolate_submobject(self, submobject, starting_sumobject, alpha):
+    def interpolate_submobject(
+        self, submobject: "Mobject", starting_sumobject: "Mobject", alpha: float
+    ) -> None:
         submobject.points[:, :] = starting_sumobject.points
         submobject.scale(
             interpolate(1, self.scale_value, there_and_back(alpha)),
@@ -310,8 +343,8 @@ class WiggleOutThenIn(Animation):
 
 
 class TurnInsideOut(Transform):
-    def __init__(self, mobject, path_arc=TAU / 4, **kwargs):
+    def __init__(self, mobject: "Mobject", path_arc: float = TAU / 4, **kwargs) -> None:
         super().__init__(mobject, path_arc=path_arc, **kwargs)
 
-    def create_target(self):
+    def create_target(self) -> "Mobject":
         return self.mobject.copy().reverse_points()
