@@ -164,7 +164,7 @@ def squish_rate_func(
 # "lingering", different from squish_rate_func's default params
 
 
-def lingering(t: float) -> typing.Callable:  # not sure of return type
+def lingering(t: float) -> float:  # not sure of return type
     return squish_rate_func(lambda t: t, 0, 0.8)(t)
 
 

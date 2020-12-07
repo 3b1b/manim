@@ -17,7 +17,7 @@ from ..mobject.mobject import Mobject
 from ..utils.rate_functions import smooth
 
 DEFAULT_ANIMATION_RUN_TIME: float = 1.0
-DEFAULT_ANIMATION_LAG_RATIO: float = 0
+DEFAULT_ANIMATION_LAG_RATIO: float = 0.0
 
 
 class Animation:
