@@ -156,7 +156,7 @@ class FadeOutAndShiftDown(FadeOutAndShift):
 
 class FadeInFromPoint(FadeIn):
     def __init__(
-        self, mobject: "Mobject", point: typing.Union[Mobject, np.ndarray], **kwargs
+        self, mobject: "Mobject", point: typing.Union["Mobject", np.ndarray], **kwargs
     ) -> None:
         self.point = point
         super().__init__(mobject, **kwargs)
