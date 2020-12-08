@@ -49,6 +49,8 @@ import copy
 import hashlib
 import os
 import re
+from typing import Dict
+from xml.sax.saxutils import escape
 
 import cairo
 import cairocffi
@@ -433,11 +435,6 @@ class Paragraph(VGroup):
         `weird <https://github.com/3b1b/manim/issues/1067>`_. Consider using
         :meth:`remove_invisible_chars` to resolve this issue.
 
-    .. note::
-
-        Due to issues with the Pango-powered :class:`.Text`, this class uses
-        :class:`.CairoText`.
-
     Parameters
     ----------
     line_spacing : :class:`int`, optional
@@ -467,7 +464,7 @@ class Paragraph(VGroup):
         VGroup.__init__(self, **config)
 
         lines_str = "\n".join(list(text))
-        self.lines_text = CairoText(lines_str, **config)
+        self.lines_text = Text(lines_str, **config)
         lines_str_list = lines_str.split("\n")
         self.chars = self.gen_chars(lines_str_list)
 
@@ -724,28 +721,30 @@ class Text(SVGMobject):
     def __init__(
         self,
         text: str,
-        fill_opacity=1,
-        stroke_width=0,
-        color=WHITE,
-        size=1,
-        line_spacing=-1,
-        font="",
+        fill_opacity: int = 1,
+        stroke_width: int = 0,
+        color: str = WHITE,
+        size: int = 1,
+        line_spacing: int = -1,
+        font: str = "",
         slant=NORMAL,
         weight=NORMAL,
-        t2c=None,
-        t2f=None,
-        t2g=None,
-        t2s=None,
-        t2w=None,
-        gradient=None,
-        tab_width=4,
+        t2c: Dict[str, str] = None,
+        t2f: Dict[str, str] = None,
+        t2g: Dict[str, tuple] = None,
+        t2s: Dict[str, str] = None,
+        t2w: Dict[str, str] = None,
+        gradient: tuple = None,
+        tab_width: int = 4,
         # Mobject
-        height=None,
-        width=None,
-        should_center=True,
-        unpack_groups=True,
+        height: int = None,
+        width: int = None,
+        should_center: bool = True,
+        unpack_groups: bool = True,
+        disable_ligatures: bool = False,
         **kwargs,
     ):
+
         logger.info(
             "Text now uses Pango for rendering. "
             "In case of problems, the old implementation is available as CairoText."
@@ -780,6 +779,7 @@ class Text(SVGMobject):
         self.t2w = t2w
 
         self.original_text = text
+        self.disable_ligatures = disable_ligatures
         text_without_tabs = text
         if text.find("\t") != -1:
             text_without_tabs = text.replace("\t", " " * self.tab_width)
@@ -803,6 +803,9 @@ class Text(SVGMobject):
             **kwargs,
         )
         self.text = text
+        if self.disable_ligatures:
+            self.submobjects = [*self.gen_chars()]
+        self.chars = VGroup(*self.submobjects)
         self.chars = VGroup(*self.submobjects)
         self.text = text_without_tabs.replace(" ", "").replace("\n", "")
         nppc = self.n_points_per_cubic_curve
@@ -834,6 +837,24 @@ class Text(SVGMobject):
 
     def __repr__(self):
         return f"Text({repr(self.original_text)})"
+
+    def gen_chars(self):
+        chars = VGroup()
+        submobjects_char_index = 0
+        for char_index in range(self.text.__len__()):
+            if self.text[char_index] in (" ", "\t", "\n"):
+                space = Dot(redius=0, fill_opacity=0, stroke_opacity=0)
+                if char_index == 0:
+                    space.move_to(self.submobjects[submobjects_char_index].get_center())
+                else:
+                    space.move_to(
+                        self.submobjects[submobjects_char_index - 1].get_center()
+                    )
+                chars.add(space)
+            else:
+                chars.add(self.submobjects[submobjects_char_index])
+                submobjects_char_index += 1
+        return chars
 
     def remove_last_M(self, file_name: str):  # pylint: disable=invalid-name
         """Internally used. Use to format the rendered SVG files."""
@@ -999,6 +1020,7 @@ class Text(SVGMobject):
         size = self.size * 10
         line_spacing = self.line_spacing * 10
         dir_name = config.get_dir("text_dir")
+        disable_liga = self.disable_ligatures
         if not os.path.exists(dir_name):
             os.makedirs(dir_name)
         hash_name = self.text2hash()
@@ -1032,7 +1054,11 @@ class Text(SVGMobject):
                 START_X + offset_x, START_Y + line_spacing * setting.line_num
             )
             pangocairocffi.update_layout(context, layout)
-            layout.set_text(text)
+            if disable_liga:
+                text = escape(text)
+                layout.set_markup(f"<span font_features='liga=0'>{text}</span>")
+            else:
+                layout.set_text(text)
             logger.debug(f"Setting Text {text}")
             pangocairocffi.show_layout(context, layout)
             offset_x += pangocffi.units_to_double(layout.get_size()[0])
