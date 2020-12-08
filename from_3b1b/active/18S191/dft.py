@@ -237,7 +237,7 @@ class IntroduceDFT(Scene):
         )
         self.wait()
 
-        def change_signal(new_signal):
+        def change_signal(new_signal, omega=1):
             side_vectors.generate_target()
             vectors.generate_target()
             for x, sv, v in zip(it.count(), side_vectors.target, vectors.target):
@@ -247,7 +247,7 @@ class IntroduceDFT(Scene):
                 )
                 v.put_start_and_end_on(
                     plane.n2p(0),
-                    plane.n2p(new_signal[x] * zeta**(-x)),
+                    plane.n2p(new_signal[x] * zeta**(-omega * x)),
                 )
             self.play(
                 MoveToTarget(vectors),
@@ -321,13 +321,31 @@ class IntroduceDFT(Scene):
         )
         self.wait()
 
+        # Show cos(2x) example
+        cos2x_signal = np.cos(2 * np.arange(0, TAU, TAU / N)) + 1.5
+        sin2x_signal = np.sin(2 * np.arange(0, TAU, TAU / N)) + 1.5
+
+        VGroup(side_axes, side_vectors).shift(DOWN)
+        self.play(
+            FadeIn(side_axes),
+            FadeIn(side_vectors),
+        )
+        self.wait()
+        change_signal(cos2x_signal, omega=2)
+        self.wait()
+        change_signal(sin2x_signal, omega=2)
+        self.wait()
+        change_signal(signal, omega=2)
+        self.play(*map(FadeOut, (side_axes, side_vectors)))
+        self.wait()
+
         # Show general formula
         dots = TexMobject("\\vdots")
         dots.next_to(lhs2[:-1], DOWN, MED_LARGE_BUFF)
 
         formula = TexMobject(
-            "\\hat s[\\omega] = "
-            "\\sum_{n=0}^{N - 1} s[n] \\zeta^{\\omega \\cdot n}"
+            "\\hat s[f] = "
+            "\\sum_{n=0}^{N - 1} s[n] \\zeta^{f \\cdot n}"
         )
         formula.next_to(dots, DOWN)
         formula.align_to(lhs2, LEFT)
@@ -340,10 +358,10 @@ class IntroduceDFT(Scene):
 
         # Cycle through
         omega_label = VGroup(
-            TexMobject("\\omega = ", font_size=72),
+            TexMobject("f = ", font_size=72),
             Integer(2),
         )
-        omega_label.arrange(RIGHT, aligned_edge=DOWN)
+        omega_label.arrange(RIGHT)
         omega_label.next_to(plane, LEFT, MED_LARGE_BUFF, aligned_edge=DOWN)
 
         self.play(FadeIn(omega_label))
