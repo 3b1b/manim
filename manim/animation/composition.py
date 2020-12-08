@@ -10,6 +10,9 @@ from ..utils.bezier import interpolate
 from ..utils.iterables import remove_list_redundancies
 from ..utils.rate_functions import linear
 
+if typing.TYPE_CHECKING:
+    from ..mobject.types.vectorized_mobject import VGroup
+
 __all__ = ["AnimationGroup", "Succession", "LaggedStart", "LaggedStartMap"]
 
 
@@ -20,8 +23,8 @@ class AnimationGroup(Animation):
     def __init__(
         self,
         *animations: Animation,
-        group: Group = None,
-        run_time=None,
+        group: typing.Union[Group, "VGroup"] = None,
+        run_time: float = None,
         rate_func: typing.Callable[[float], float] = linear,
         lag_ratio: float = 0,
         **kwargs
