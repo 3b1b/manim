@@ -448,7 +448,11 @@ class Line(TipableVMobject):
                 return mob.get_center()
             else:
                 return mob.get_boundary_point(direction)
-        return mob_or_point
+        else:
+            point = mob_or_point
+            result = np.zeros(self.dim)
+            result[:len(point)] = point
+            return result
 
     def put_start_and_end_on(self, start, end):
         curr_start, curr_end = self.get_start_and_end()
