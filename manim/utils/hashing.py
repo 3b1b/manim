@@ -243,9 +243,7 @@ def get_hash_from_play_call(
     t_start = perf_counter()
     camera_json = get_json(get_camera_dict_for_hashing(camera_object))
     animations_list_json = [get_json(x) for x in sorted(animations_list, key=str)]
-    current_mobjects_list_json = [
-        get_json(x) for x in sorted(current_mobjects_list, key=str)
-    ]
+    current_mobjects_list_json = [get_json(x) for x in current_mobjects_list]
     hash_camera, hash_animations, hash_current_mobjects = [
         zlib.crc32(repr(json_val).encode())
         for json_val in [camera_json, animations_list_json, current_mobjects_list_json]
@@ -290,9 +288,7 @@ def get_hash_from_wait_call(
     # We add the scene object within the ALREADY_PROCESSED_ID, as we don't want to process because pretty much all of its attributes will be soon or later processed (in one of the three hashes).
     ALREADY_PROCESSED_ID = {id(scene_object): scene_object}
     camera_json = get_json(get_camera_dict_for_hashing(camera_object))
-    current_mobjects_list_json = [
-        get_json(x) for x in sorted(current_mobjects_list, key=str)
-    ]
+    current_mobjects_list_json = [get_json(x) for x in current_mobjects_list]
     hash_current_mobjects = zlib.crc32(repr(current_mobjects_list_json).encode())
     hash_camera = zlib.crc32(repr(camera_json).encode())
     if stop_condition_function is not None:
