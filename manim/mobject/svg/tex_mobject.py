@@ -217,12 +217,6 @@ class SingleStringMathTex(SVGMobject):
         tex_template=None,
         **kwargs,
     ):
-        self.stroke_width = stroke_width
-        self.fill_opacity = fill_opacity
-        self.background_stroke_width = background_stroke_width
-        self.background_stroke_color = background_stroke_color
-        self.should_center = should_center
-        self.height = height
         self.organize_left_to_right = organize_left_to_right
         self.tex_environment = tex_environment
         if tex_template is None:
@@ -239,12 +233,12 @@ class SingleStringMathTex(SVGMobject):
         SVGMobject.__init__(
             self,
             file_name=file_name,
-            should_center=self.should_center,
-            stroke_width=self.stroke_width,
-            height=self.height,
-            fill_opacity=self.fill_opacity,
-            background_stroke_width=self.background_stroke_width,
-            background_stroke_color=self.background_stroke_color,
+            should_center=should_center,
+            stroke_width=stroke_width,
+            height=height,
+            fill_opacity=fill_opacity,
+            background_stroke_width=background_stroke_width,
+            background_stroke_color=background_stroke_color,
             **kwargs,
         )
         if self.height is None:
@@ -311,9 +305,13 @@ class SingleStringMathTex(SVGMobject):
         return tex
 
     def remove_stray_braces(self, tex):
+        r"""
+        Makes :class:`~.MathTex` resilient to unmatched braces.
+
+        This is important when the braces in the TeX code are spread over
+        multiple arguments as in, e.g., ``MathTex(r"e^{i", r"\tau} = 1")``.
         """
-        Makes MathTex resilient to unmatched { at start
-        """
+
         # "\{" does not count (it's a brace literal), but "\\{" counts (it's a new line and then brace)
         num_lefts = tex.count("{") - tex.count("\\{") + tex.count("\\\\{")
         num_rights = tex.count("}") - tex.count("\\}") + tex.count("\\\\}")
