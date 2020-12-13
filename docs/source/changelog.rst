@@ -14,22 +14,8 @@ Upcoming release
 
 :Date: TBD
 
-Changes since the latest released version.
+Changes for the upcoming release are tracked `in our GitHub wiki <https://github.com/ManimCommunity/manim/wiki/Changelog-for-next-release>`_.
 
-New Features
-============
-
-- Added a creation animation for our banner, :meth:`~.ManimBanner.create` (via :pr:`814`).
-
-Bugfixes
-========
-
-- There is nothing here yet, check back later.
-
-Other Changes
-=============
-
-#. Removed temp partial movie file from SceneFileWriter (ffmpeg directly renders partial movie files instead of temp files)
 
 ******
 v0.1.1
