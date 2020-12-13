@@ -1229,8 +1229,21 @@ class Mobject(Container):
 
     def become(self, mobject, copy_submobjects=True):
         """
-        Edit points, colors and submobjects to be idential
+        Edit points, colors and submobjects to be identical
         to another mobject
+
+        Examples
+        --------
+        .. manim:: BecomeScene
+
+            class BecomeScene(Scene):
+                def construct(self):
+                    circ= Circle(fill_color=RED)
+                    square = Square(fill_color=BLUE)
+                    self.add(circ)
+                    self.wait(0.5)
+                    circ.become(square)
+                    self.wait(0.5)
         """
         self.align_data(mobject)
         for sm1, sm2 in zip(self.get_family(), mobject.get_family()):

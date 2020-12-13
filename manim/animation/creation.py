@@ -153,6 +153,14 @@ class ShowCreation(ShowPartial):
 class Uncreate(ShowCreation):
     """Like :class:`ShowCreation` but in reverse.
 
+    Examples
+    --------
+    .. manim:: ShowUncreate
+
+        class ShowUncreate(Scene):
+            def construct(self):
+                self.play(Uncreate(Square()))
+
     See Also
     --------
     :class:`ShowCreation`
@@ -172,7 +180,16 @@ class Uncreate(ShowCreation):
 
 
 class DrawBorderThenFill(Animation):
-    """Draw the border first and then show the fill."""
+    """Draw the border first and then show the fill.
+
+    Examples
+    --------
+    .. manim:: ShowDrawBorderThenFill
+
+        class ShowDrawBorderThenFill(Scene):
+            def construct(self):
+                self.play(DrawBorderThenFill(Square(fill_opacity=1, fill_color=ORANGE)))
+    """
 
     def __init__(
         self,
@@ -230,7 +247,16 @@ class DrawBorderThenFill(Animation):
 
 
 class Write(DrawBorderThenFill):
-    """Simulate hand-writing a :class:`~.Text` or hand-drawing a :class:`~.VMobject`."""
+    """Simulate hand-writing a :class:`~.Text` or hand-drawing a :class:`~.VMobject`.
+
+    Examples
+    --------
+    .. manim:: ShowWrite
+
+        class ShowWrite(Scene):
+            def construct(self):
+                self.play(Write(Text("Hello").scale(3)))
+    """
 
     def __init__(
         self,
@@ -263,7 +289,20 @@ class Write(DrawBorderThenFill):
 
 
 class ShowIncreasingSubsets(Animation):
-    """Show one submobject at a time, leaving all previous ones displayed on screen."""
+    """Show one submobject at a time, leaving all previous ones displayed on screen.
+
+    Examples
+    --------
+
+    .. manim:: ShowIncreasingSubsetsScene
+
+        class ShowIncreasingSubsetsScene(Scene):
+            def construct(self):
+                p = VGroup(Dot(), Square(), Triangle())
+                self.add(p)
+                self.play(ShowIncreasingSubsets(p))
+                self.wait()
+    """
 
     def __init__(
         self,
@@ -294,6 +333,10 @@ class AddTextLetterByLetter(ShowIncreasingSubsets):
     ----------
     time_per_char : :class:`float`
         Frequency of appearance of the letters.
+
+    .. tip::
+
+        This is currently only possible for class:`~.Text` and not for class:`~.MathTex`
 
     """
 
@@ -344,7 +387,7 @@ class ShowSubmobjectsOneByOne(ShowIncreasingSubsets):
 
 # TODO, this is broken...
 class AddTextWordByWord(Succession):
-    """Show a :class:`~.Text` word by word on the scene."""
+    """Show a :class:`~.Text` word by word on the scene. Note: currently broken."""
 
     def __init__(
         self,

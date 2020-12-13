@@ -174,8 +174,9 @@ class ShowPassingFlash(ShowPartial):
 
         class ShowPassingFlashScene(Scene):
             def construct(self):
-                self.play(ShowPassingFlash(Square()))
-
+                p = RegularPolygon(5)
+                self.add(p)
+                self.play(ShowPassingFlash(p.copy().set_color(YELLOW)))
 
     See Also
     --------

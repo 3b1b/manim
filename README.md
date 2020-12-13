@@ -32,7 +32,7 @@ Manim is an animation engine for explanatory math videos. It's used to create pr
 
 ## Installation
 
-Manim requires a few dependencies that must be installed prior to using it. Please visit the [documentation](https://docs.manim.community/en/latest/installation.html) and follow the appropriate instructions for your operating system.
+Manim requires a few dependencies that must be installed prior to using it. Please visit the [Documentation](https://docs.manim.community/en/latest/installation.html) and follow the appropriate instructions for your operating system.
 
 Once the dependencies have been installed, run the following in a terminal window:
 
