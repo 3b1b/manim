@@ -207,7 +207,11 @@ class CairoText(SVGMobject):
             height=height,
             width=width,
             unpack_groups=unpack_groups,
-            color=color ** config,
+            color=color,
+            fill_opacity=fill_opacity,
+            stroke_width=stroke_width,
+            should_center=should_center,
+            **kwargs,
         )
         self.text = text
         self.submobjects = [*self.gen_chars()]
