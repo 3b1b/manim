@@ -195,12 +195,14 @@ class Matrix(VMobject):
 class DecimalMatrix(Matrix):
     def __init__(
         self,
+        matrix,
         element_to_mobject=DecimalNumber,
         element_to_mobject_config={"num_decimal_places": 1},
         **kwargs
     ):
         Matrix.__init__(
             self,
+            matrix,
             element_to_mobject=element_to_mobject,
             element_to_mobject_config=element_to_mobject_config,
             **kwargs
@@ -208,13 +210,13 @@ class DecimalMatrix(Matrix):
 
 
 class IntegerMatrix(Matrix):
-    def __init__(self, element_to_mobject=Integer, **kwargs):
-        Matrix.__init__(self, element_to_mobject=element_to_mobject, **kwargs)
+    def __init__(self, matrix, element_to_mobject=Integer, **kwargs):
+        Matrix.__init__(self, matrix, element_to_mobject=element_to_mobject, **kwargs)
 
 
 class MobjectMatrix(Matrix):
-    def __init__(self, element_to_mobject=lambda m: m, **kwargs):
-        Matrix.__init__(self, element_to_mobject=element_to_mobject, **kwargs)
+    def __init__(self, matrix, element_to_mobject=lambda m: m, **kwargs):
+        Matrix.__init__(self, matrix, element_to_mobject=element_to_mobject, **kwargs)
 
 
 def get_det_text(
