@@ -16,7 +16,7 @@ class DecimalNumber(VMobject):
         "unit": None,  # Aligned to bottom unless it starts with "^"
         "include_background_rectangle": False,
         "edge_to_fix": LEFT,
-        "height": 0.4,
+        "font_size": 48,
     }
 
     def __init__(self, number=0, **kwargs):
@@ -37,11 +37,11 @@ class DecimalNumber(VMobject):
             else:
                 num_string = num_string[1:]
 
-        self.add(*map(SingleStringTexMobject, num_string))
+        self.add(*map(self.string_to_mob, num_string))
 
         # Add non-numerical bits
         if self.show_ellipsis:
-            self.add(SingleStringTexMobject("\\dots"))
+            self.add(self.string_to_mob("\\dots"))
 
         if num_string.startswith("-"):
             minus = self.submobjects[0]
@@ -51,7 +51,7 @@ class DecimalNumber(VMobject):
             )
 
         if self.unit is not None:
-            self.unit_sign = SingleStringTexMobject(self.unit, color=self.color)
+            self.unit_sign = self.string_to_mob(self.unit)
             self.add(self.unit_sign)
 
         self.arrange(
@@ -71,11 +71,13 @@ class DecimalNumber(VMobject):
             self.unit_sign.align_to(self, UP)
 
         # Styling
-        self.set_height(self.height)
         self.init_colors()
 
         if self.include_background_rectangle:
             self.add_background_rectangle()
+
+    def string_to_mob(self, tex_string):
+        return SingleStringTexMobject(tex_string, font_size=self.font_size)
 
     def get_formatter(self, **kwargs):
         """
