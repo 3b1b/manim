@@ -45,7 +45,7 @@ def stage_scenes(module_name):
     animation_dir = os.path.join(
         os.path.expanduser('~'),
         "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder/videos",
-        "hamming", "1440p60"
+        "med_test", "1440p60"
     )
     # 
     files = os.listdir(animation_dir)
