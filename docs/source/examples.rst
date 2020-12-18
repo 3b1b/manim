@@ -49,18 +49,6 @@ Basic Concepts
             self.add(logo)
 
 
-.. manim:: GradientImageFromArray
-    :save_last_frame:
-    :ref_classes: ImageMobject
-
-    class GradientImageFromArray(Scene):
-        def construct(self):
-            n = 256
-            imageArray = np.uint8(
-                [[i * 256 / n for i in range(0, n)] for _ in range(0, n)]
-            )
-            image = ImageMobject(imageArray).scale(2)
-            self.add(image)
 
 .. manim:: BraceAnnotation
     :save_last_frame:
@@ -90,6 +78,19 @@ Basic Concepts
             origin_text = Text('(0, 0)').next_to(dot, DOWN)
             tip_text = Text('(2, 2)').next_to(arrow.get_end(), RIGHT)
             self.add(numberplane, dot, arrow, origin_text, tip_text)
+
+.. manim:: GradientImageFromArray
+    :save_last_frame:
+    :ref_classes: ImageMobject
+
+    class GradientImageFromArray(Scene):
+        def construct(self):
+            n = 256
+            imageArray = np.uint8(
+                [[i * 256 / n for i in range(0, n)] for _ in range(0, n)]
+            )
+            image = ImageMobject(imageArray).scale(2)
+            self.add(image)
 
 .. manim:: BezierSpline
     :save_last_frame:

@@ -710,6 +710,20 @@ class Line(TipableVMobject):
 
 
 class DashedLine(Line):
+    """A dashed Line.
+
+    Examples
+    --------
+    .. manim:: DashedLineExample
+        :save_last_frame:
+
+        class DashedLineExample(Scene):
+            def construct(self):
+                dashed_line = DashedLine(config.frame_width/2*LEFT, 4*RIGHT)
+                self.add(dashed_line)
+
+    """
+
     def __init__(
         self,
         *args,
