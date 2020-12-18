@@ -250,7 +250,7 @@ class Mobject(Container):
         )
         return self
 
-    def rotate_about_origin(self, angle, axis=OUT, axes=[]):
+    def rotate_about_origin(self, angle, axis=OUT):
         return self.rotate(angle, axis, about_point=ORIGIN)
 
     def rotate(self, angle, axis=OUT, **kwargs):
