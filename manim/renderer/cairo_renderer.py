@@ -63,8 +63,9 @@ class CairoRenderer:
         self.animations_hashes = []
         self.num_plays = 0
         self.time = 0
+        self.static_image = None
 
-    def init(self, scene):
+    def init_scene(self, scene):
         self.file_writer = SceneFileWriter(
             self,
             scene.__class__.__name__,
@@ -74,13 +75,13 @@ class CairoRenderer:
     @handle_caching_play
     @handle_play_like_call
     def play(self, scene, *args, **kwargs):
-        scene.play_internal(*args, **kwargs)
+        if scene.compile_animation_data(*args, **kwargs):
+            scene.play_internal()
 
     def update_frame(  # TODO Description in Docstring
         self,
         scene,
         mobjects=None,
-        background=None,
         include_submobjects=True,
         ignore_skipping=True,
         **kwargs,
@@ -109,13 +110,17 @@ class CairoRenderer:
                 scene.mobjects,
                 scene.foreground_mobjects,
             )
-        if background is not None:
-            self.camera.set_frame_to_background(background)
+        if self.static_image is not None:
+            self.camera.set_frame_to_background(self.static_image)
         else:
             self.camera.reset()
 
         kwargs["include_submobjects"] = include_submobjects
         self.camera.capture_mobjects(mobjects, **kwargs)
+
+    def render(self, scene, moving_mobjects):
+        self.update_frame(scene, moving_mobjects)
+        self.add_frame(self.get_frame())
 
     def get_frame(self):
         """
@@ -155,6 +160,11 @@ class CairoRenderer:
         self.update_frame(ignore_skipping=True)
         self.camera.get_image().show()
 
+    def save_static_frame_data(self, scene, static_mobjects):
+        self.update_frame(scene, mobjects=static_mobjects)
+        self.static_image = self.get_frame()
+        return self.static_image
+
     def update_skipping_status(self):
         """
         This method is used internally to check if the current
@@ -171,8 +181,7 @@ class CairoRenderer:
                 self.skip_animations = True
                 raise EndSceneEarlyException()
 
-    def finish(self, scene):
-        self.skip_animations = self.original_skipping_status
+    def scene_finished(self, scene):
         self.file_writer.finish()
         if config["save_last_frame"]:
             self.update_frame(scene, ignore_skipping=False)

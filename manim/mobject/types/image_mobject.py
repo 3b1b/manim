@@ -3,6 +3,7 @@
 __all__ = ["AbstractImageMobject", "ImageMobject", "ImageMobjectFromCamera"]
 
 import pathlib
+import colour
 
 import numpy as np
 
@@ -92,12 +93,14 @@ class ImageMobject(AbstractImageMobject):
         image_mode="RGBA",
         **kwargs,
     ):
+        self.opacity = 0
         self.invert = invert
         self.image_mode = image_mode
         if isinstance(filename_or_array, (str, pathlib.PurePath)):
             path = get_full_raster_image_path(filename_or_array)
             image = Image.open(path).convert(self.image_mode)
             self.pixel_array = np.array(image)
+            self.path = path
         else:
             self.pixel_array = np.array(filename_or_array)
         self.pixel_array_dtype = kwargs.get("pixel_array_dtype", "uint8")
@@ -144,6 +147,7 @@ class ImageMobject(AbstractImageMobject):
             transparent.
         """
         self.pixel_array[:, :, 3] = int(255 * alpha)
+        self.opacity = alpha
         return self
 
     def fade(self, darkness=0.5, family=True):
@@ -184,6 +188,12 @@ class ImageMobject(AbstractImageMobject):
         self.pixel_array = interpolate(
             mobject1.pixel_array, mobject2.pixel_array, alpha
         ).astype(self.pixel_array_dtype)
+
+    def get_style(self):
+        return {
+            "fill_color": colour.rgb2hex(self.color.get_rgb()),
+            "fill_opacity": self.opacity,
+        }
 
 
 # TODO, add the ability to have the dimensions/orientation of this

@@ -3,19 +3,39 @@ syntax = "proto3";
 package frameserver;
 
 service FrameServer {
-    // Updates the scene to the specified animation offset and returns a
-    // serialization of the frame at that time.
+    // Returns a serialization of the scene at the specified time.
     rpc GetFrameAtTime (FrameRequest) returns (FrameResponse);
 
-    // Used to signal to the renderer that manim is running.
-    rpc RendererStatus (RendererStatusRequest) returns (RendererStatusResponse);
+    // Returns a list of the names and durations of all animations in the scene.
+    rpc FetchSceneData (EmptyRequest) returns (FetchSceneDataResponse);
+}
 
-    rpc UpdateSceneLocation (SceneLocationRequest) returns (SceneLocationResponse);
+message FetchSceneDataResponse {
+    Scene scene = 1;
+}
+
+message Scene {
+    string name = 1;
+    repeated Animation animations = 2;
+}
+
+message Animation {
+    string name = 1;
+    float duration = 2;
 }
 
 message FrameRequest {
-    int64 animation_index = 1;
-    float animation_offset = 2;
+    float time_offset = 1;
+    int32 start_index = 2;
+    int32 end_index = 3;
+    int32 image_index = 4;
+
+    enum PreviewMode {
+      ALL = 0;
+      ANIMATION_RANGE = 1;
+      IMAGE = 2;
+    }
+    PreviewMode preview_mode = 5;
 }
 
 message Style {
@@ -34,9 +54,26 @@ message Point {
 
 message MobjectData {
     int64 id = 1;
-    repeated Point points = 2;
-    Style style = 3;
-    bool needs_redraw = 4;
+    Style style = 2;
+    enum MobjectType {
+        VMOBJECT = 0;
+        IMAGE_MOBJECT = 1;
+    }
+    MobjectType type = 3;
+    VMobjectData vectorized_mobject_data = 4;
+    ImageMobjectData image_mobject_data = 5;
+}
+
+message VMobjectData {
+    repeated Point points = 1;
+    bool needs_redraw = 2;
+}
+
+message ImageMobjectData {
+    string path = 1;
+    float height = 2;
+    float width = 3;
+    Point center = 4;
 }
 
 message FrameResponse {
@@ -45,13 +82,10 @@ message FrameResponse {
     bool animation_finished = 3;
     bool scene_finished = 4;
     float duration = 5;
-    string animation_name = 6;
+    repeated string animations = 6;
+    int32 animation_index = 7;
+    float animation_offset = 8;
 }
 
-message RendererStatusRequest {}
-message RendererStatusResponse {
-    string scene_name = 1;
-}
-
-message SceneLocationRequest {}
-message SceneLocationResponse {}
+message EmptyRequest {}
+message EmptyResponse {}

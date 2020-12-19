@@ -105,3 +105,13 @@ def prompt_user_for_choice(scene_classes):
         sys.exit(2)
     except EOFError:
         sys.exit(1)
+
+
+def scene_classes_from_file(file_path, require_single_scene=False):
+    module = get_module(file_path)
+    all_scene_classes = get_scene_classes_from_module(module)
+    scene_classes_to_render = get_scenes_to_render(all_scene_classes)
+    if require_single_scene:
+        assert len(scene_classes_to_render) == 1
+        return scene_classes_to_render[0]
+    return scene_classes_to_render

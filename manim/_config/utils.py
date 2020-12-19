@@ -612,6 +612,7 @@ class ManimConfig(MutableMapping):
             "scene_names",
             "verbosity",
             "background_color",
+            "use_js_renderer",
         ]:
             if hasattr(args, key):
                 attr = getattr(args, key)
@@ -1018,7 +1019,7 @@ class ManimConfig(MutableMapping):
     @property
     def use_js_renderer(self):
         """Whether to use JS renderer or not (default)."""
-        self._d["use_js_renderer"]
+        return self._d["use_js_renderer"]
 
     @use_js_renderer.setter
     def use_js_renderer(self, val: bool) -> None:
