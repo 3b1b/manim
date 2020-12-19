@@ -33,7 +33,7 @@ class Population(VGroup):
         self.arrange_in_grid()
 
 
-def get_covid_clipboard():
+def get_covid_clipboard(disease_name="SARS\\\\CoV-2", color=GREEN):
     clipboard = SVGMobject("clipboard")
     clipboard.set_stroke(width=0)
     clipboard.set_fill(interpolate_color(GREY_BROWN, WHITE, 0.5), 1)
@@ -41,13 +41,13 @@ def get_covid_clipboard():
 
     result = TextMobject(
         "+\\\\",
-        "SARS\\\\CoV-2\\\\",
+        disease_name + "\\\\",
         "Detected"
     )
     result[0].scale(1.5, about_edge=DOWN)
-    result[0].set_fill(GREEN)
-    result[0].set_stroke(GREEN, 2)
-    result[-1].set_fill(GREEN)
+    result[0].set_fill(color)
+    result[0].set_stroke(color, 2)
+    result[-1].set_fill(color)
     result.set_width(clipboard.get_width() * 0.7)
     result.move_to(clipboard)
     result.shift(0.2 * DOWN)
@@ -56,6 +56,310 @@ def get_covid_clipboard():
 
 
 # Scenes
+class MathAsDesign(Scene):
+    def construct(self):
+        # Setup
+        design_word = TextMobject("Designed?", font_size=72)
+        design_word.to_edge(UP)
+
+        e_formula = TexMobject(
+            "e", "^{\\pi", "i}", "=", "-1",
+            font_size=96,
+        )
+        e_formula[1].set_color(GREY_B)
+        e_formula[2].set_color(YELLOW)
+        e_formula[4].set_color(BLUE)
+
+        l_formula = TexMobject(
+            "\\sum_{n = 0}^{\\infty} \\frac{(-1)^n}{2n + 1} = \\frac{\\pi}{4}",
+            font_size=72,
+        )
+
+        buff = 1.5
+        formulas = VGroup(e_formula, l_formula)
+        formulas.arrange(DOWN, buff=buff)
+        formulas.next_to(design_word, DOWN, buff=buff)
+
+        original_ly = l_formula.get_y()
+        l_formula.center()
+
+        self.play(Write(l_formula, run_time=1))
+        self.wait()
+        self.play(FadeIn(design_word, 0.2 * UP, scale=1.1))
+        self.wait()
+
+        alt_l_formula = VGroup(
+            VGroup(
+                TexMobject("\\pm").set_height(0.8),
+                TexMobject("k \\text{ odd}", font_size=36)
+            ).arrange(DOWN, SMALL_BUFF),
+            TexMobject("\\frac{1}{k}"),
+            TexMobject("="),
+            VGroup(
+                Sector(
+                    angle=PI / 2,
+                    fill_color=BLUE,
+                    fill_opacity=1,
+                    stroke_color=WHITE,
+                    stroke_width=2,
+                ),
+                Sector(
+                    start_angle=PI / 2, angle=3 * PI / 2,
+                    fill_color=GREY_E,
+                    fill_opacity=1,
+                    stroke_color=WHITE,
+                    stroke_width=2,
+                ),
+            ).set_height(1)
+        )
+        alt_l_formula.arrange(RIGHT)
+        alt_l_formula.match_height(l_formula)
+        alt_l_formula.next_to(l_formula.get_center(), RIGHT, LARGE_BUFF)
+
+        self.play(
+            l_formula.next_to, l_formula.get_center(), LEFT, LARGE_BUFF,
+            FadeIn(alt_l_formula, shift=2 * RIGHT)
+        )
+        self.wait(2)
+
+        # Euler's formula
+        e_formula.next_to(e_formula.get_y() * UP, LEFT, buff=1.5)
+        self.play(
+            l_formula.scale, 0.7,
+            l_formula.set_y, original_ly,
+            alt_l_formula.scale, 0.7,
+            alt_l_formula.set_y, original_ly,
+            FadeIn(e_formula, scale=1.1)
+        )
+
+        alt_e_formula = VGroup(
+            TextMobject("exp", font_size=96),
+            TexMobject("(", font_size=96),
+            Arrow(0.5 * RIGHT, 0.5 * LEFT, path_arc=PI, buff=0, color=GREY_B),
+            Dot(radius=0.05, color=WHITE),
+            Vector(0.75 * UP, fill_color=YELLOW),
+            TexMobject(")", font_size=96),
+            TexMobject("=", font_size=96),
+            Vector(LEFT, fill_color=BLUE),
+        )
+        alt_e_formula.arrange(RIGHT, buff=MED_SMALL_BUFF)
+        alt_e_formula[0].shift(0.15 * RIGHT)
+        alt_e_formula[4:].shift(0.15 * LEFT)
+        alt_e_formula.scale(0.8)
+        alt_e_formula.next_to(e_formula.get_y() * UP, RIGHT, buff=1.0)
+        alt_e_formula.shift(0.2 * DOWN)
+
+        anims = []
+        for i, j in enumerate([0, 2, 4, 6, 7]):
+            src = e_formula[i].copy()
+            dst = alt_e_formula[j]
+            src.generate_target()
+            src.target.replace(dst, stretch=True)
+            src.target.set_opacity(0)
+            dst.save_state()
+            dst.replace(src, stretch=True)
+            dst.set_opacity(0)
+            anims.append(MoveToTarget(src, remover=True))
+            anims.append(Restore(dst))
+        anims.extend([
+            FadeIn(alt_e_formula[1], shift=0.5 * UP, scale=3),
+            FadeIn(alt_e_formula[5], shift=0.5 * UP, scale=3),
+            GrowFromPoint(alt_e_formula[3], e_formula[1:3].get_center()),
+        ])
+
+        self.play(*anims)
+        self.wait()
+
+
+class BayesRuleAndMedicalTests(Scene):
+    def construct(self):
+        # Add title
+        title = TextMobject("Bayes' rule", font_size=72)
+        title.to_edge(UP)
+        h_line = Underline(title)
+        h_line.scale(1.5)
+        h_line.set_stroke(GREY_B, 2)
+
+        self.add(title)
+        self.wait()
+
+        # Show rule
+        formula = TexMobject(
+            "P(H|E) = {P(H)P(E|H) \\over P(E)}",
+            tex_to_color_map={
+                "H": YELLOW,
+                "E": BLUE,
+            },
+            font_size=60
+        )
+
+        h_part = formula.get_part_by_tex("H")
+        hyp_word = TextMobject("Hypothesis", color=YELLOW)
+        hyp_word.next_to(h_part, UP, LARGE_BUFF)
+        hyp_arrow = Arrow(hyp_word.get_bottom(), h_part.get_top(), buff=0.1)
+
+        e_part = formula.get_part_by_tex("E")
+        ev_word = TextMobject("Evidence", color=BLUE)
+        ev_word.next_to(e_part, DOWN, LARGE_BUFF)
+        ev_arrow = Arrow(ev_word.get_top(), e_part.get_bottom(), buff=0.1)
+
+        self.play(
+            ShowCreation(h_line),
+            FadeIn(formula, scale=1.1),
+        )
+        self.play(
+            LaggedStart(
+                FadeIn(hyp_word, shift=0.25 * UP, scale=1.1),
+                FadeIn(ev_word, shift=0.25 * DOWN, scale=1.1),
+            ),
+            LaggedStart(
+                GrowArrow(hyp_arrow),
+                GrowArrow(ev_arrow),
+            ),
+        )
+        self.wait()
+        formula_annoations = VGroup(hyp_word, hyp_arrow, ev_word, ev_arrow)
+
+        # Randys
+        pis = VGroup(Randolph(), Randolph())
+        pis.set_height(2)
+        pis[1].flip()
+        pis[1].set_color(TEAL_E)
+        pis.arrange(RIGHT, buff=5)
+        pis.to_corner(DL)
+
+        self.play(
+            VFadeIn(pis[0]),
+            pis[0].change, "hooray", formula
+        )
+        self.play(Blink(pis[0]))
+        self.play(
+            VFadeIn(pis[1]),
+            pis[1].change, "maybe", formula
+        )
+        self.play(Blink(pis[1]))
+        self.wait()
+
+        # Sweep aside
+        title.add(h_line)
+        formula.generate_target()
+        formula.target.scale(0.6)
+        formula.target.to_corner(DR)
+
+        self.play(
+            VFadeOut(formula_annoations),
+            MaintainPositionRelativeTo(formula_annoations, formula),
+            MoveToTarget(formula),
+            title.scale, 0.7,
+            title.next_to, formula.target, UP,
+            FadeOut(pis, DOWN),
+        )
+
+        # Mention paradox
+        paradox_name = TextMobject("Medical Test Paradox")
+        paradox_name.to_corner(UL)
+        paradox_name.shift(MED_SMALL_BUFF * DOWN)
+        paradox_line = Underline(paradox_name)
+        paradox_line.set_stroke(GREY_B, 2)
+
+        self.play(
+            FadeIn(paradox_name, lag_ratio=0.1),
+            ShowCreation(paradox_line),
+        )
+        self.wait()
+
+        # Show high accuracy
+        accuracy_words = TextMobject("High accuracy")
+        accuracy_words.next_to(paradox_line, DOWN, MED_LARGE_BUFF)
+        accuracy_words.set_color(GREEN)
+
+        population = Population(100)
+        population.arrange_in_grid(buff=LARGE_BUFF)
+        population.set_height(5)
+        population.next_to(accuracy_words, DOWN)
+
+        marks = VGroup()
+        for icon in population:
+            icon.generate_target()
+            if random.random() < 0.05:
+                mark = Exmark()
+                icon.target.set_opacity(0.5)
+            else:
+                mark = Checkmark()
+            mark.set_height(icon.get_height() / 2)
+            mark.move_to(icon.get_corner(UL))
+            marks.add(mark)
+
+        self.play(
+            FadeIn(accuracy_words),
+            FadeIn(population, lag_ratio=0.01)
+        )
+        self.play(
+            ShowIncreasingSubsets(marks, run_time=2),
+            LaggedStartMap(MoveToTarget, population, run_time=2),
+        )
+        self.wait()
+
+        # Show test result
+        randy = Randolph(height=2)
+        randy.move_to(DOWN)
+        clipboard = get_covid_clipboard("Virus", color=YELLOW)
+        clipboard.set_height(2)
+        clipboard.next_to(randy.get_corner(UR), RIGHT)
+
+        self.play(
+            VFadeIn(randy),
+            randy.change, "guilty", clipboard,
+            FadeIn(clipboard, shift=0.25 * UL, scale=1.5)
+        )
+        self.play(randy.change, "horrified", clipboard)
+        self.play(Blink(randy))
+        self.wait()
+
+        # Show low predictive value
+        prob_expression = TexMobject(
+            "P(\\text{Sick} | +) = ",
+            tex_to_color_map={
+                "+": YELLOW,
+                "\\text{Sick}": GREY_A,
+            }
+        )
+        prob = DecimalNumber(0.9, font_size=60)
+        prob.next_to(prob_expression, RIGHT)
+        prob.set_color(WHITE)
+        prob.set_opacity(0)
+        prob_expression.add(prob)
+        p_line = Underline(prob)
+        p_line.shift(0.1 * DOWN)
+        p_line.scale(1.5)
+        p_line.set_stroke(WHITE, 2)
+        prob_expression.add(p_line)
+        prob_expression.next_to(VGroup(randy, clipboard), UP)
+
+        self.play(
+            FadeIn(prob_expression),
+            randy.change, "pondering", prob_expression
+        )
+        self.play(
+            ChangeDecimalToValue(prob, 0.09),
+            UpdateFromAlphaFunc(prob, lambda m, a: m.set_opacity(a)),
+            run_time=2
+        )
+        self.play(Blink(randy))
+        self.play(
+            randy.change, "confused", prob,
+            ChangeDecimalToValue(prob, 0.01),
+        )
+        self.play(Blink(randy))
+        self.wait()
+
+        # Get rid of medical test stuff
+
+        # Mention Bayes factors
+
+        self.embed()
+
+
 class SamplePopulationBreastCancer(Scene):
     def construct(self):
         # Introduce population
@@ -523,8 +827,10 @@ class AskWhatTheParadoxIs(TeacherStudentsScene):
         # Image
         image = ImageMobject("ppv_image")
         image.replace(self.screen)
+        image.set_opacity(0)
         outline = SurroundingRectangle(image, buff=0)
         outline.set_stroke(WHITE, 2)
+        outline.set_fill(BLACK, 1)
         image = Group(outline, image)
         image.set_height(3.5, about_edge=UL)
 
@@ -571,7 +877,7 @@ class AskWhatTheParadoxIs(TeacherStudentsScene):
 
         globals()['top_words'] = top_words
         self.play(
-            TransformFromCopy(lower_words, top_words),
+            TransformFromCopy(lower_words, top_words[0]),
             RemovePiCreatureBubble(
                 self.teacher, target_mode="raise_right_hand",
                 look_at_arg=top_words,
@@ -632,12 +938,12 @@ class MedicalTestsMatter(Scene):
         self.play(
             FadeIn(question, shift=0.25 * UP),
             DrawBorderThenFill(q_arrow),
+            randy.change, "confused",
         )
-        self.play(randy.change, "confused")
         self.play(randy.look_at, clipboard.get_top())
         self.play(Blink(randy))
         self.play(randy.look_at, clipboard.get_center())
-        self.wait()
+        self.wait(3)
 
 
 class GigerenzerSession(Scene):
@@ -826,7 +1132,7 @@ class GigerenzerSession(Scene):
         dots.arrange_in_grid(25, 40, buff=SMALL_BUFF)
         dots.set_height(4)
         dots.to_corner(UR)
-        dots.set_fill(GREY_B)
+        dots.set_fill(GREY_D)
         VGroup(*random.sample(list(dots), 10)).set_fill(YELLOW)
 
         cross = Cross(dots)
@@ -1319,6 +1625,120 @@ class GoalsOfEstimation(TeacherStudentsScene):
         self.wait(3)
 
 
+class QuickEstimatesAndMisconceptions(Scene):
+    def construct(self):
+        titles = VGroup(
+            TextMobject("Quick\\\\estimations"),
+            TextMobject("Combating\\\\misconceptions"),
+        )
+        for title, u in zip(titles, [-1, 1]):
+            title.set_x(u * FRAME_WIDTH / 4)
+        titles.to_edge(UP, buff=MED_SMALL_BUFF)
+
+        circles = VGroup(
+            Circle(color=BLUE),
+            Circle(color=RED),
+        )
+        circles[1].flip()
+        circles.set_height(4)
+        circles.set_stroke(width=3)
+        circles.set_fill(opacity=0.5)
+
+        for circle, title, u in zip(circles, titles, [-1, 1]):
+            circle.set_x(u)
+            title.set_color(
+                interpolate_color(circle.get_color(), WHITE, 0.5)
+            )
+            title.next_to(circle, UP)
+            title.shift(u * RIGHT)
+
+        self.play(
+            LaggedStartMap(FadeIn, titles, shift=0.2 * UP),
+            LaggedStartMap(DrawBorderThenFill, circles),
+            run_time=1.5,
+        )
+        self.wait()
+
+        arrow = TexMobject("\\leftrightarrow", font_size=72)
+        arrow.move_to(circles)
+        self.play(
+            circles[0].next_to, arrow, LEFT,
+            circles[1].next_to, arrow, RIGHT,
+            titles[0].shift, 0.7 * LEFT,
+            titles[1].shift, 0.7 * RIGHT,
+            GrowFromCenter(arrow),
+        )
+        self.wait(2)
+        self.play(
+            FadeOut(arrow, DOWN),
+            circles[0].shift, 2.0 * RIGHT,
+            circles[1].shift, 2.0 * LEFT,
+            titles[0].shift, 1.0 * RIGHT,
+            titles[1].shift, 1.0 * LEFT,
+        )
+        self.wait()
+
+        titles[1].save_state()
+        self.play(
+            FadeOut(titles[0]),
+            FadeOut(circles[0]),
+            titles[1].match_x, circles[1]
+        )
+        self.wait()
+
+        circles[0].save_state()
+        titles[0].save_state()
+        circles[0].next_to(circles[1], LEFT, MED_LARGE_BUFF)
+        titles[0].next_to(circles[0], UP)
+
+        self.play(
+            FadeIn(titles[0]),
+            FadeIn(circles[0]),
+        )
+        self.wait()
+
+        bayes_factor = TextMobject("Bayes\\\\factor", font_size=72)
+        bayes_factor.move_to(circles[0])
+
+        self.play(Write(bayes_factor))
+        self.wait()
+        restoration_group = VGroup(circles[0], titles[0], titles[1])
+        self.add(restoration_group, bayes_factor)
+        self.play(
+            bayes_factor.move_to, VGroup(circles[0].saved_state, circles[1]),
+            LaggedStartMap(Restore, restoration_group)
+        )
+        self.wait()
+
+
+class WhatDoYouTellThem(Scene):
+    def construct(self):
+        text = TextMobject("What do you tell them?", font_size=72)
+        text.set_color(BLUE)
+        self.play(Write(text))
+        self.wait(5)
+
+
+class AccuracyImage(Scene):
+    def construct(self):
+        sens = 90
+        spec = 91
+        stats = VGroup(
+            TextMobject("Sensitivity: ", f"{sens}\\%"),
+            TextMobject("Specificity: ", f"{spec}\\%"),
+        )
+        stats.arrange(DOWN, buff=0.25, aligned_edge=LEFT)
+        for stat, color in zip(stats, [GREEN_B, GREY_B]):
+            stat[0].set_color(color)
+            stat[1].align_to(stats[0][1], LEFT)
+
+        rect = SurroundingRectangle(stats, buff=0.2)
+        rect.set_fill(GREY_E, 1)
+        rect.set_stroke(GREY_B, 2)
+        stats.add_to_back(rect)
+        self.add(stats)
+
+
 class SamplePopulation10PercentPrevalence(Scene):
     def construct(self):
         # Setup test accuracy figures
@@ -1516,6 +1936,22 @@ class SamplePopulation10PercentPrevalence(Scene):
         self.wait()
 
 
+class NinePercentOfNinety(Scene):
+    def construct(self):
+        mob = TexMobject("(0.09)(90) = 8.1", tex_to_color_map={"8.1": GREEN})
+        mob.scale(2)
+        self.add(mob)
+
+
+class MoreExamples(TeacherStudentsScene):
+    def construct(self):
+        self.teacher_says(
+            "More examples!", target_mode="hooray",
+            added_anims=[self.get_student_changes("tired", "erm", "happy", run_time=2)]
+        )
+        self.wait(3)
+
+
 class SamplePopulationOneInThousandPrevalence(Scene):
     def construct(self):
         # Add prevalence title
@@ -1535,7 +1971,7 @@ class SamplePopulationOneInThousandPrevalence(Scene):
 
         # Show population
         dots1k, dots10k = [
-            VGroup(*(Dot() for x in range(n))).set_fill(GREY_B)
+            VGroup(*(Dot() for x in range(n))).set_fill(GREY_D)
             for n in [1000, 10000]
         ]
         dots1k[:1].set_fill(YELLOW)
@@ -1644,15 +2080,19 @@ class SamplePopulationOneInThousandPrevalence(Scene):
             case.add(case.box)
 
         # Organize false positives
+        center = fp_cases.get_center()
+        fp_cases.sort(lambda p: get_norm(p - center))
         fp_cases.generate_target()
         fp_cases.target.arrange_in_grid(
             buff=fp_cases[0].get_width() / 4,
         )
         fp_cases.target.set_height(6)
         fp_cases.target.to_corner(DR)
+        new_center = fp_cases.target.get_center()
+        fp_cases.target.sort(lambda p: get_norm(p - new_center))
 
         self.play(
-            MoveToTarget(fp_cases, run_time=2),
+            MoveToTarget(fp_cases, run_time=4),
             FadeOut(tn_cases, run_time=1),
             FadeOut(cancer_cases[9]),
         )
@@ -1670,31 +2110,34 @@ class SamplePopulationOneInThousandPrevalence(Scene):
         final_frac.next_to(tp_cases, DOWN, LARGE_BUFF)
         final_frac.to_edge(LEFT, LARGE_BUFF)
 
-        self.play(Write(final_frac))
+        self.play(FadeIn(final_frac, lag_ratio=0.2))
         self.wait()
 
 
-class ShowUpdatingPrior(Scene):
+class AltShowUpdatingPrior(Scene):
     def construct(self):
+        N = 100
+        post_denom = 11
+        N_str = "{:,}".format(N)
+
         # Show prior
         woman = WomanIcon()
-        globals()['woman'] = woman
-        population = VGroup(*[woman.copy() for x in range(1000)])
+        population = VGroup(*[woman.copy() for x in range(N)])
         population.arrange_in_grid()
         population.set_fill(GREY)
         population[0].set_fill(YELLOW)
         population.set_height(5)
 
-        prior_prob = TextMobject("1", " in ", "1,000")
+        prior_prob = TextMobject("1", " in ", N_str)
         prior_prob.set_color_by_tex("1", YELLOW)
-        prior_prob.set_color_by_tex("1,000", GREY_B)
+        prior_prob.set_color_by_tex(N_str, GREY_B)
         prior_prob.next_to(population, UP, MED_LARGE_BUFF)
         prior_brace = Brace(prior_prob, UP, buff=SMALL_BUFF)
         prior_words = prior_brace.get_text("Prior")
         prior_words.add_updater(lambda m: m.next_to(prior_brace, UP, SMALL_BUFF))
 
-        thousand_part = prior_prob.get_part_by_tex("1,000")
-        pop_count = Integer(1000, edge_to_fix=UL)
+        thousand_part = prior_prob.get_part_by_tex(N_str)
+        pop_count = Integer(N, edge_to_fix=UL)
         pop_count.replace(thousand_part)
         pop_count.match_color(thousand_part)
         pop_count.set_value(0)
@@ -1703,8 +2146,6 @@ class ShowUpdatingPrior(Scene):
         VGroup(population, prior_prob, prior_brace, prior_words).to_corner(UL)
 
         self.add(prior_prob)
-        self.add(prior_brace)
-        self.add(prior_words)
 
         # Before word
         before_words = TextMobject(
@@ -1713,14 +2154,22 @@ class ShowUpdatingPrior(Scene):
         )
         before_words.set_color(BLUE_B)
         before_words.next_to(prior_words, RIGHT, buff=3, aligned_edge=UP)
-        before_arrow = Arrow(before_words[0][0].get_left(), prior_words.get_right())
-        before_arrow.match_color(before_words)
+        before_arrow1 = Arrow(before_words[0][0].get_left(), prior_prob.get_right() + MED_SMALL_BUFF * RIGHT)
+        before_arrow2 = Arrow(before_words[0][0].get_left(), prior_words.get_right())
+        before_arrow1.match_color(before_words)
+        before_arrow2.match_color(before_words)
 
         self.play(
             FadeIn(before_words, lag_ratio=0.1),
-            GrowArrow(before_arrow),
+            GrowArrow(before_arrow1),
             ShowIncreasingSubsets(population, run_time=2),
             ChangeDecimalToValue(pop_count, len(population), run_time=2),
+        )
+        self.wait()
+        self.play(
+            GrowFromCenter(prior_brace),
+            FadeIn(prior_words, shift=0.5 * UP),
+            ReplacementTransform(before_arrow1, before_arrow2)
         )
         self.wait()
 
@@ -1735,7 +2184,7 @@ class ShowUpdatingPrior(Scene):
         low_update_words.next_to(update_arrow, DOWN, MED_SMALL_BUFF)
 
         # Posterior
-        post_pop = population[:100].copy()
+        post_pop = population[:post_denom].copy()
         post_pop.arrange_in_grid(
             buff=get_norm(population[1].get_left() - population[0].get_right())
         )
@@ -1757,28 +2206,31 @@ class ShowUpdatingPrior(Scene):
         give_pop_plusses(post_pop)
 
         post_prob = prior_prob.copy()
-        post_prob[2].set_value(100)
+        post_prob[2].set_value(post_denom)
         post_prob.next_to(post_pop, UP, buff=MED_LARGE_BUFF)
 
         roughly = TextMobject("(roughly)", font_size=24)
         roughly.next_to(post_prob, RIGHT, buff=0.2)
 
-        self.add(post_prob)
         post_prob[2].set_value(0)
         self.play(
             FadeIn(update_words, lag_ratio=0.2),
             FadeOut(before_words),
-            ReplacementTransform(before_arrow, update_arrow, path_arc=30 * DEGREES),
-            ShowIncreasingSubsets(post_pop, run_time=2),
-            ChangeDecimalToValue(post_prob[2], 100, run_time=2),
+            ReplacementTransform(before_arrow2, update_arrow, path_arc=30 * DEGREES),
+            FadeIn(low_update_words, lag_ratio=0.2),
+        )
+        self.add(post_prob)
+        self.play(
+            ShowIncreasingSubsets(post_pop, run_time=1),
+            ChangeDecimalToValue(post_prob[2], post_denom, run_time=1),
             FadeIn(roughly),
         )
-        self.play(FadeIn(low_update_words, lag_ratio=0.2))
         self.wait()
 
         post_brace = Brace(post_prob, UP, buff=SMALL_BUFF)
         post_words = post_brace.get_text("Posterior")
         post_words.add_updater(lambda m: m.next_to(post_brace, UP, SMALL_BUFF))
+        post_words.update(0)
 
         self.play(
             GrowFromCenter(post_brace),
@@ -1792,72 +2244,7 @@ class ShowUpdatingPrior(Scene):
         )
         post_group.save_state()
 
-        # Prior and prevalence
-        eq = TextMobject(
-            "Prior = Prevalence",
-            tex_to_color_map={
-                "Prior": YELLOW,
-                "Prevalence": WHITE,
-            }
-        )
-        strike = Line(eq.get_left(), eq.get_right())
-        strike.set_stroke(RED, 4)
-        not_words = TextMobject("Not necessarily!")
-        not_words.set_color(RED)
-        not_words.match_width(eq)
-        not_words.next_to(eq, DOWN, MED_LARGE_BUFF)
-
-        factors = VGroup(
-            TextMobject("Prevalence"),
-            TextMobject("Symptoms"),
-            TextMobject("Contacts\\\\(if contagious)"),
-        )
-        factors.arrange(DOWN, buff=MED_LARGE_BUFF, aligned_edge=LEFT)
-        factors.shift(eq[2].get_center() - factors[0].get_center())
-
-        eq[0].generate_target()
-        eq[0].target.match_y(factors[1])
-        eq[0].target.shift(0.25 * LEFT)
-        arrows = VGroup(*(
-            Arrow(
-                factor.get_left(), eq[0].target.get_corner(RIGHT + u * UP),
-                buff=0.1,
-                max_tip_length_to_length_ratio=0.25,
-            )
-            for u, factor in zip([1, 0, -1], factors)
-        ))
-
-        self.play(
-            TransformFromCopy(prior_words[0], eq[0])
-        )
-        self.play(Write(eq[1:], run_time=1))
-        self.wait()
-        self.play(
-            ShowCreation(strike),
-            FadeIn(not_words, shift=0.2 * DOWN, rate_func=squish_rate_func(smooth, 0.3, 1))
-        )
-        self.wait()
-
-        eq[1].unlock_triangulation()
-        self.play(
-            Uncreate(strike),
-            MoveToTarget(eq[0]),
-            ReplacementTransform(eq[1], arrows),
-            LaggedStartMap(FadeIn, factors[1:], shift=0.25 * DOWN),
-            FadeOut(not_words, shift=DOWN)
-        )
-        self.remove(eq[2])
-        self.add(factors)
-        self.wait()
-        self.play(
-            LaggedStartMap(
-                FadeOut, VGroup(
-                    eq[0], *arrows, *factors,
-                ),
-                shift=DOWN,
-            )
-        )
-
+        return
         # Change prior and posterior
         pop100, pop11, pop10, pop2 = pops = [
             VGroup(*[woman.copy() for x in range(n)])
@@ -1931,7 +2318,7 @@ class ContrastThreeContexts(Scene):
         screens.set_fill(BLACK, 1)
         screens.arrange(DOWN, buff=LARGE_BUFF)
         screens.set_height(FRAME_HEIGHT - 1)
-        screens.to_edge(RIGHT)
+        screens.next_to(ORIGIN, RIGHT)
 
         self.add(screens)
 
@@ -2010,7 +2397,8 @@ class ContrastThreeContexts(Scene):
         positive_results.set_opacity(0)
         for screen, result in zip(screens, positive_results.target):
             result.set_height(screen.get_height() * 0.5)
-            result.next_to(screen, LEFT, aligned_edge=DOWN)
+            result.next_to(screen, RIGHT, aligned_edge=DOWN)
+            result.shift(0.25 * UP)
 
         self.add(words[2])
         self.play(MoveToTarget(positive_results))
@@ -2040,7 +2428,7 @@ class ContrastThreeContexts(Scene):
             TextMobject("Test", " accuracy"),
             TextMobject("\\emph{alone} ", "does not"),
             TextMobject("determine", "."),
-            TextMobject("", "your chances"),
+            TextMobject("\\,", "your chances"),
         )
         ta_words[2][1].set_opacity(0)
         ta_words[1].set_color_by_tex("not", RED)
@@ -2076,8 +2464,8 @@ class ContrastThreeContexts(Scene):
         self.play(
             ReplacementTransform(ta_words[0], up_words[0]),
             ReplacementTransform(ta_words[2], up_words[1]),
-            FadeIn(up_words[2], scale=2),
-            ReplacementTransform(ta_words[3], up_words[2]),
+            FadeIn(up_words[2][0], scale=2),
+            ReplacementTransform(ta_words[3][1], up_words[2][1]),
             FadeOut(ta_words[1], scale=0.5),
         )
         self.play(Write(up_words[3]))
@@ -2099,6 +2487,24 @@ class ContrastThreeContexts(Scene):
             underlines,
             run_time=2,
             rate_func=double_smooth,
+        ))
+        self.wait()
+
+        # Show updates
+        arrows = VGroup(*(
+            Arrow(
+                pl.get_corner(UR), prob.get_corner(UL),
+                buff=0.1,
+                path_arc=-45 * DEGREES,
+            )
+            for pl, prob in zip(prevalence_labels, probs)
+        ))
+        arrows.set_color(RED)
+
+        self.play(LaggedStartMap(
+            GrowArrow, arrows,
+            lag_ratio=0.5,
+            path_arc=-45 * DEGREES,
         ))
         self.wait()
 
@@ -2197,41 +2603,53 @@ class BayesFactor(Scene):
         )
 
         # Draw groups
-        self.play(
+        self.play(LaggedStart(
             FadeIn(with_bc_label),
             ShowCreation(bc_rect),
             ShowIncreasingSubsets(bc_pop),
-        )
-        self.play(
-            MoveToTarget(bc_pop),
-            FadeIn(bc_signs, lag_ratio=0.02),
-            GrowFromCenter(sens_brace),
-            FadeIn(sens_word, shift=0.2 * LEFT)
-        )
-        self.play(
-            GrowFromCenter(fnr_brace),
-            FadeIn(fnr_word, shift=0.2 * LEFT)
-        )
-        self.wait()
-
-        self.play(
             FadeIn(without_bc_label),
             ShowCreation(nc_rect),
             ShowIncreasingSubsets(nc_pop),
-        )
-        self.play(
+        ))
+        self.play(LaggedStart(
+            MoveToTarget(bc_pop),
+            FadeIn(bc_signs, lag_ratio=0.02),
+            GrowFromCenter(sens_brace),
+            FadeIn(sens_word, shift=0.2 * LEFT),
+            GrowFromCenter(fnr_brace),
+            FadeIn(fnr_word, shift=0.2 * LEFT),
+        ))
+        self.play(LaggedStart(
             MoveToTarget(nc_pop),
             FadeIn(nc_signs, lag_ratio=0.02),
             GrowFromCenter(spec_brace),
-            FadeIn(spec_word, shift=0.2 * RIGHT)
-        )
-        self.play(
+            FadeIn(spec_word, shift=0.2 * RIGHT),
             GrowFromCenter(fpr_brace),
-            FadeIn(fpr_word, shift=0.2 * RIGHT)
-        )
+            FadeIn(fpr_word, shift=0.2 * RIGHT),
+        ))
         self.wait()
 
         groups = VGroup(bc_group, nc_group)
+
+        # Highlight relevant parts
+        fade_rects = VGroup(*(BackgroundRectangle(group) for group in groups))
+        fade_rects.set_fill(BLACK, 0.8)
+
+        self.play(FadeIn(fade_rects[1]))
+        self.play(LaggedStart(*(
+            ShowCreationThenFadeOut(Underline(word))
+            for word in [sens_word, fnr_word]
+        ), lag_ratio=0.4))
+        self.play(
+            FadeIn(fade_rects[0]),
+            FadeOut(fade_rects[1]),
+        )
+        self.play(LaggedStart(*(
+            ShowCreationThenFadeOut(Underline(word))
+            for word in [spec_word, fpr_word]
+        ), lag_ratio=0.4))
+        self.wait()
+        self.play(FadeOut(fade_rects[0]))
 
         # None of these are your answer
         title = TexMobject(
@@ -2298,13 +2716,16 @@ class BayesFactor(Scene):
         frac[0].replace(sens_word)
         frac[2].replace(fpr_word)
 
-        self.play(ShowCreationThenFadeAround(frac[0]))
-        self.play(Restore(frac[0]))
+        s_rect = SurroundingRectangle(frac[0])
+        self.play(ShowCreation(s_rect))
         self.play(
+            Restore(frac[0]),
+            s_rect.move_to, frac[0].saved_state,
+            s_rect.set_opacity, 0,
             Write(frac[1]),
             Restore(frac[2]),
         )
-        self.wait()
+        self.wait(2)
         self.play(Write(mid_rhs))
         self.wait()
         self.play(Write(rhs))
@@ -2332,7 +2753,36 @@ class BayesFactor(Scene):
             FadeIn(bf_name, DOWN),
             FadeOut(lr_name, DOWN),
         )
-        self.wait()
+        self.wait(5)
+
+
+class RuleOfThumb(Scene):
+    def construct(self):
+        tex_to_color_map = {
+            "+": GREEN,
+            "\\text{Cancer}": YELLOW,
+            "\\text{No cancer}": GREY_B,
+            "=": WHITE,
+            "\\over": WHITE,
+            "{90\\%": GREEN,
+            "9\\%}": GREEN,
+            "1\\%}": TEAL,
+            "10": WHITE,
+        }
+        bf_computation = TexMobject(
+            """
+            {
+            P(+ \\, | \\, \\text{Cancer}) \\over
+            P(+ \\, | \\, \\text{No cancer})
+            } =
+            {90\\% \\over 9\\%} = 10
+            """,
+            tex_to_color_map=tex_to_color_map
+        )
+
+        bf_computation.to_edge(LEFT)
+
+        self.add(bf_computation)
 
 
 class ProbabilityVsOdds(Scene):
@@ -2647,9 +3097,796 @@ class ProbabilityVsOdds(Scene):
         self.wait()
 
 
-class NewSceneName(Scene):
+class OddsComments(Scene):
     def construct(self):
-        pass
+        morty = Mortimer()
+        morty.to_corner(DR)
+        randy = Randolph()
+        randy.next_to(morty, LEFT, buff=2)
+
+        self.play(FadeIn(morty))
+        self.play(
+            PiCreatureSays(
+                morty,
+                "The chances are\\\\1 to 1",
+                run_time=1
+            ),
+            FadeIn(randy)
+        )
+        self.play(Blink(morty))
+        self.play(
+            PiCreatureSays(randy, "The chances are\\\\2 to 1", run_time=1),
+            RemovePiCreatureBubble(morty, target_mode="happy")
+        )
+        self.play(Blink(morty))
+        self.play(Blink(randy))
+        self.wait()
+
+
+class NewSnazzyBayesRuleSteps(Scene):
+    def construct(self):
+        # Add title
+        title = TextMobject(
+            "Bayes' rule, the snazzy way",
+            font_size=72
+        )
+        title.to_edge(UP)
+        title.set_stroke(BLACK, 2, background=True)
+        underline = Underline(title)
+        underline.scale(1.2)
+        underline.shift(0.2 * UP)
+        underline.set_stroke(GREY, 3)
+        self.add(underline, title)
+
+        # Completely accurate
+        accurate_words = TextMobject(
+            *"Completely accurate\\\\ Not even approximating things".split(" "),
+            font_size=72,
+            arg_separator=" "
+        )
+        accurate_words.set_color(BLUE)
+        for word in accurate_words:
+            self.add(word)
+            self.wait(0.05 * len(word))
+
+        # Population
+        population = VGroup(*(
+            WomanIcon()
+            for x in range(100)
+        ))
+        population.arrange_in_grid(h_buff=1, v_buff=0.5, fill_rows_first=False)
+        population.set_height(5)
+        population.to_corner(DR)
+        population[0].set_color(YELLOW)
+
+        # Step labels
+        step_labels = VGroup(
+            TextMobject("Step 1)"),
+            TextMobject("Step 2)"),
+            TextMobject("Step 3)"),
+        )
+        step_labels.arrange(DOWN, buff=1.5, aligned_edge=LEFT)
+        step_labels.next_to(title, DOWN, MED_LARGE_BUFF)
+        step_labels.to_edge(LEFT)
+
+        step1, step2, step3 = steps = VGroup(
+            TextMobject("Express the prior with odds"),
+            TextMobject("Compute Bayes' factor"),
+            TextMobject("Multiply"),
+        )
+
+        colors = [YELLOW, GREEN, BLUE]
+        for step, label, color in zip(steps, step_labels, colors):
+            step.set_color(color)
+            step.next_to(label, RIGHT)
+
+        self.play(
+            LaggedStartMap(FadeIn, step_labels, shift=0.5 * RIGHT),
+            LaggedStartMap(FadeIn, steps, shift=RIGHT),
+            FadeOut(accurate_words),
+        )
+        self.wait()
+
+        # Step 2 details
+        tex_to_color_map = {
+            "+": GREEN,
+            "\\text{Cancer}": YELLOW,
+            "\\text{No cancer}": GREY_B,
+            "=": WHITE,
+            "\\over": WHITE,
+            "{90\\%": GREEN,
+            "9\\%}": GREEN,
+            "1\\%}": TEAL,
+            "10": WHITE,
+        }
+        bf_computation = TexMobject(
+            """
+            {
+            P(+ \\, | \\, \\text{Cancer}) \\over
+            P(+ \\, | \\, \\text{No cancer})
+            } =
+            {90\\% \\over 9\\%} = 10
+            """,
+            tex_to_color_map=tex_to_color_map
+        )
+        bf_computation[-1].scale(1.2)
+        bf_computation.scale(0.6)
+        bf_computation.next_to(step2, DOWN, aligned_edge=LEFT)
+        bf_computation.save_state()
+        bf_computation.scale(1.5)
+        bf_computation.next_to(steps[1], RIGHT, LARGE_BUFF)
+
+        lr_words = TextMobject("``Likelihood ratio''", font_size=30)
+        lr_words.next_to(bf_computation[-1], RIGHT, MED_LARGE_BUFF, DOWN)
+        lr_words.set_color(GREY_A)
+
+        sens_part = bf_computation.get_part_by_tex("90\\%")
+        sens_word = TextMobject("Sensitivity")
+        sens_word.next_to(sens_part, UP, buff=1)
+        sens_arrow = Arrow(sens_word.get_bottom(), sens_part.get_top(), buff=0.1)
+
+        fpr_part = bf_computation.get_part_by_tex("9\\%")
+        fpr_word = TextMobject("FPR")
+        fpr_word.next_to(fpr_part, DOWN, buff=1)
+        fpr_arrow = Arrow(fpr_word.get_top(), fpr_part.get_bottom(), buff=0.1)
+
+        self.play(FadeIn(bf_computation, lag_ratio=0.1))
+        self.wait()
+        self.play(
+            Indicate(sens_part),
+            FadeIn(sens_word),
+            GrowArrow(sens_arrow)
+        )
+        self.wait()
+        self.play(
+            Indicate(fpr_part),
+            FadeIn(fpr_word),
+            GrowArrow(fpr_arrow),
+        )
+        self.wait(2)
+        self.play(
+            Restore(bf_computation),
+            FadeOut(VGroup(sens_word, sens_arrow, fpr_word, fpr_arrow))
+        )
+
+        # Step 1 details
+        step1_subtext = TextMobject("E.g.", " 1\\% ", " $\\rightarrow$ ", "1:99")
+        step1_subtext.set_color(GREY_A)
+        step1_subtext.scale(0.9)
+        step1_subtext.next_to(step1, DOWN, aligned_edge=LEFT)
+
+        step1_subtext.unlock_triangulation()
+        self.play(
+            FadeIn(step1_subtext[:2]),
+            ShowIncreasingSubsets(population),
+        )
+        self.wait()
+        self.play(
+            TransformFromCopy(step1_subtext[1], step1_subtext[3]),
+            Write(step1_subtext[2]),
+        )
+        self.play(ShowCreationThenFadeAround(step1_subtext[3]))
+        self.wait()
+
+        # Step 3
+        multiplication = TexMobject(
+            "(", "1:99", ")", "\\times", "10",
+            "=", "10:99",
+            "\\rightarrow", "{10 \\over 109}",
+            "\\approx", "{1 \\over 11}",
+            font_size=36,
+        )
+        multiplication.next_to(step3, DOWN, aligned_edge=LEFT)
+        multiplication.unlock_triangulation()
+
+        odds_rect = SurroundingRectangle(step1_subtext[-1], color=YELLOW)
+        bf_rect = SurroundingRectangle(bf_computation[-1], color=GREEN)
+        self.play(
+            ShowCreation(odds_rect),
+            ShowCreation(bf_rect),
+        )
+        self.play(
+            Write(VGroup(*(multiplication[i] for i in [0, 2, 3]))),
+            TransformFromCopy(step1_subtext[-1], multiplication[1]),
+            odds_rect.move_to, multiplication[1],
+            odds_rect.set_opacity, 0,
+            TransformFromCopy(bf_computation[-1], multiplication[4]),
+            bf_rect.move_to, multiplication[4],
+            bf_rect.set_opacity, 0,
+        )
+        self.remove(odds_rect, bf_rect)
+        self.wait()
+
+        self.play(
+            FadeIn(multiplication.get_part_by_tex("=")),
+            TransformFromCopy(
+                multiplication.get_part_by_tex("1:99"),
+                multiplication.get_part_by_tex("10:99"),
+                path_arc=30 * DEGREES,
+            ),
+        )
+        self.wait()
+        self.play(
+            FadeIn(multiplication.get_part_by_tex("\\rightarrow")),
+            FadeIn(multiplication.get_part_by_tex("10 \\over 109")),
+        )
+        self.play(
+            FadeIn(multiplication.get_part_by_tex("\\approx")),
+            FadeIn(multiplication.get_part_by_tex("1 \\over 11")),
+        )
+        self.wait()
+
+        # 10% prior example
+        prior_odds = step1_subtext[1:]
+        alt_prior_odds = TexMobject(
+            "10\\%", "\\rightarrow", "\\text{1:9}"
+        )
+        alt_prior_odds.match_height(prior_odds)
+        alt_prior_odds.move_to(prior_odds, LEFT)
+        alt_prior_odds.match_style(prior_odds)
+
+        self.play(
+            FadeOut(multiplication, shift=DOWN),
+            FadeOut(prior_odds, shift=DOWN),
+        )
+        self.play(
+            FadeIn(alt_prior_odds[0], scale=2),
+        )
+        self.play(
+            population[:10].set_color, YELLOW,
+            LaggedStartMap(
+                ShowCreationThenFadeOut,
+                VGroup(*(
+                    SurroundingRectangle(person, buff=0.05)
+                    for person in population[:10]
+                ))
+            )
+        )
+        self.wait()
+        self.play(
+            Write(alt_prior_odds[1]),
+            FadeIn(alt_prior_odds[2], shift=0.5 * RIGHT)
+        )
+        self.wait()
+
+        new_multiplication = TexMobject(
+            "(1:9)", "\\times", "10",
+            "=", "10:9",
+            "\\rightarrow", "{10 \\over 19}",
+            "\\approx", "0.53",
+            font_size=36,
+        )
+        new_multiplication.move_to(multiplication, LEFT)
+        rects = VGroup(
+            SurroundingRectangle(alt_prior_odds.get_part_by_tex("1:9"), color=YELLOW),
+            SurroundingRectangle(bf_computation.get_part_by_tex("10"), color=GREEN),
+            SurroundingRectangle(new_multiplication.get_part_by_tex("10:9"), color=RED),
+        )
+
+        self.play(
+            FadeIn(rects[:2], lag_ratio=0.6, run_time=1.5)
+        )
+        self.play(
+            ReplacementTransform(rects[0], rects[2]),
+            ReplacementTransform(rects[1], rects[2]),
+            FadeIn(new_multiplication[:5]),
+        )
+        self.wait()
+
+        alt_rhs = TexMobject("> 1:1", font_size=36)
+        alt_rhs.next_to(new_multiplication[4], RIGHT)
+        self.play(
+            FadeOut(rects[2]),
+            Write(alt_rhs)
+        )
+        self.wait()
+
+        self.play(
+            FadeOut(alt_rhs, shift=0.5 * UP),
+            FadeIn(new_multiplication[5:7], shift=0.5 * UP),
+        )
+        self.wait()
+        self.play(Write(new_multiplication[7:]))
+        self.wait()
+
+        # Return to original prior
+        self.play(
+            FadeOut(new_multiplication, shift=DOWN),
+            FadeOut(alt_prior_odds, shift=DOWN),
+            FadeIn(prior_odds, shift=DOWN)
+        )
+        self.play(population[1:].set_color, GREY_B)
+        self.play(Indicate(population[0], color=RED))
+        self.play(LaggedStartMap(
+            Indicate, population[1:], color=GREY_A,
+            lag_ratio=0.01
+        ))
+        self.wait()
+
+        # Change test accuracy
+        new_bf_computation = TexMobject(
+            """
+            {
+            P(+ \\, | \\, \\text{Cancer}) \\over
+            P(+ \\, | \\, \\text{No cancer})
+            } =
+            {90\\% \\over 1\\%} = 90
+            """,
+            tex_to_color_map=tex_to_color_map
+        )
+        new_bf_computation.replace(bf_computation)
+        new_bf_computation[-2:].scale(1.5, about_edge=LEFT)
+
+        rects = VGroup(*(
+            SurroundingRectangle(bf_computation[i:j], buff=0.05)
+            for (i, j) in [(5, 8), (14, 15)]
+        ))
+        rects.set_color(RED)
+
+        self.play(ShowCreation(rects))
+        self.wait()
+        self.play(
+            FadeOut(bf_computation),
+            FadeIn(new_bf_computation[:-2])
+        )
+        self.play(FadeOut(rects))
+        self.wait()
+        self.play(Write(new_bf_computation[-2:]))
+        self.wait()
+
+        # New posterior (largely copy-pasted)
+        final_multiplication = TexMobject(
+            "(1:99)", "\\times", "90",
+            "=", "90:99",
+            "\\rightarrow", "{90 \\over 189}",
+            "\\approx", "0.48",
+            font_size=36,
+        )
+        final_multiplication.move_to(multiplication, LEFT)
+        rects = VGroup(
+            SurroundingRectangle(step1_subtext.get_part_by_tex("1:99"), color=YELLOW),
+            SurroundingRectangle(new_bf_computation.get_parts_by_tex("90")[1], color=GREEN),
+            SurroundingRectangle(final_multiplication.get_part_by_tex("90:99"), color=RED),
+        )
+
+        self.play(
+            FadeIn(rects[:2], lag_ratio=0.6, run_time=1.5)
+        )
+        self.play(
+            ReplacementTransform(rects[0], rects[2]),
+            ReplacementTransform(rects[1], rects[2]),
+            FadeIn(final_multiplication[:5]),
+        )
+        self.wait()
+
+        alt_rhs = TexMobject("< 1:1", font_size=36)
+        alt_rhs.next_to(final_multiplication[4], RIGHT)
+        self.play(
+            FadeOut(rects[2]),
+            Write(alt_rhs)
+        )
+        self.wait()
+
+        self.play(
+            FadeOut(alt_rhs, shift=0.5 * UP),
+            FadeIn(final_multiplication[5:7], shift=0.5 * UP),
+        )
+        self.wait()
+        self.play(Write(final_multiplication[7:]))
+        self.wait()
+
+
+class AskWhyItWorks(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Huh?  Why does\\\\that work?",
+            target_mode="confused",
+        )
+        self.change_student_modes(
+            "pondering", "erm", "confused",
+            look_at_arg=self.screen,
+        )
+        self.play(self.teacher.change, "happy")
+        self.wait(3)
+
+
+class WhyTheBayesFactorTrickWorks(Scene):
+    def construct(self):
+        # Setup before and after
+        titles = VGroup(
+            TextMobject("Before test"),
+            TextMobject("After test"),
+        )
+        titles.scale(1.25)
+        for title, u in zip(titles, [-1, 1]):
+            title.set_x(u * FRAME_WIDTH / 4)
+            title.to_edge(UP, buff=MED_SMALL_BUFF)
+        h_line = Line(LEFT, RIGHT)
+        h_line.set_width(FRAME_WIDTH)
+        h_line.next_to(titles, DOWN)
+        h_line.set_x(0)
+        v_line = Line(UP, DOWN).set_height(FRAME_HEIGHT)
+        lines = VGroup(h_line, v_line)
+        lines.set_stroke(GREY, 2)
+
+        self.add(titles)
+        self.add(lines)
+
+        # Show population before
+        population = VGroup(*(WomanIcon() for x in range(100)))
+        population.arrange_in_grid(h_buff=0.7, fill_rows_first=False)
+        population.set_height(5)
+        population[:10].set_fill(YELLOW)
+        population[:10].shift(MED_SMALL_BUFF * LEFT)
+        population.match_x(titles[0])
+        population.to_edge(DOWN, buff=MED_LARGE_BUFF)
+
+        w_tex = "(\\text{\\# With})"
+        wo_tex = "(\\text{\\# Without})"
+        t2c = {
+            w_tex: YELLOW,
+            wo_tex: GREY_B,
+        }
+        odds = TexMobject(w_tex, ":", wo_tex, tex_to_color_map=t2c)
+        odds.next_to(population, UP, buff=MED_LARGE_BUFF)
+        odds.match_x(titles[0])
+
+        self.add(population)
+        self.add(odds)
+        self.play(
+            ShowCreationThenDestruction(Underline(odds[0])),
+            LaggedStartMap(
+                ShowCreationThenFadeOut,
+                VGroup(*(
+                    SurroundingRectangle(icon, stroke_width=1, buff=0.05)
+                    for icon in population[:10]
+                ))
+            ),
+        )
+        self.play(
+            ShowCreationThenDestruction(Underline(odds[2])),
+            LaggedStartMap(
+                ShowCreationThenFadeOut,
+                VGroup(*(
+                    SurroundingRectangle(icon, color=GREY, stroke_width=1, buff=0.05)
+                    for icon in population[10:]
+                )),
+                lag_ratio=0.01
+            ),
+        )
+        self.wait()
+
+        # Turn odds into fraction
+        frac = TexMobject(
+            w_tex, "\\over", wo_tex, tex_to_color_map=t2c,
+            font_size=36
+        )
+        frac.next_to(h_line, DOWN, MED_LARGE_BUFF)
+        frac.match_x(titles[0])
+
+        self.play(
+            ReplacementTransform(odds, frac),
+            population.set_height, 4.5,
+            population.next_to, frac, DOWN, MED_LARGE_BUFF,
+        )
+        self.wait()
+
+        # Show filtration
+        pop_copy = population.copy()
+        pop_copy.match_x(titles[1])
+
+        tp_cases = pop_copy[:9]
+        fn_cases = pop_copy[9:10]
+        fp_cases = pop_copy[10::10]
+        tn_cases = VGroup(*(
+            case
+            for case in pop_copy[10:]
+            if case not in fp_cases
+        ))
+
+        VGroup(fn_cases, tn_cases).set_opacity(0.1)
+        VGroup(tp_cases, tp_cases).set_stroke(GREEN, 3, background=True)
+
+        pos_boxes = VGroup()
+        for case in it.chain(tp_cases, fp_cases):
+            box = SurroundingRectangle(case, buff=0.025)
+            box.set_stroke(GREEN, 0)
+            plus = TexMobject("+", font_size=24)
+            plus.move_to(box.get_corner(UR))
+            plus.shift(DR * plus.get_height() / 4)
+            plus.set_color(GREEN)
+            box.add(plus)
+            pos_boxes.add(box)
+
+        self.play(
+            TransformFromCopy(population, pop_copy),
+            path_arc=30 * DEGREES
+        )
+        self.play(LaggedStartMap(DrawBorderThenFill, pos_boxes))
+        self.wait()
+
+        # Final fraction
+        t2c.update({
+            "\\text{Cancer}": YELLOW,
+            "\\text{No cancer}": GREY,
+            "+": GREEN,
+            "\\cdot": WHITE,
+        })
+        final_frac = TexMobject(
+            w_tex, "\\cdot P(+ \\,|\\, \\text{Cancer})",
+            "\\over",
+            wo_tex, "\\cdot P(+ \\,|\\, \\text{No cancer})",
+            tex_to_color_map=t2c,
+            font_size=36,
+        )
+        final_frac.match_x(pop_copy)
+        final_frac.match_y(frac)
+
+        left_brace = Brace(tp_cases, LEFT)
+        right_brace = Brace(fp_cases, RIGHT, min_num_quads=1)
+        big_left_brace = Brace(VGroup(tp_cases, fn_cases), LEFT)
+        big_right_brace = Brace(VGroup(fp_cases, tn_cases), RIGHT)
+        big_left_brace.set_opacity(0)
+        big_right_brace.set_opacity(0)
+
+        self.play(*(
+            TransformFromCopy(
+                frac.get_part_by_tex(tex),
+                final_frac.get_part_by_tex(tex)
+            )
+            for tex in (w_tex, "\\over")
+        ))
+        self.wait()
+        self.play(
+            TransformFromCopy(big_left_brace, left_brace),
+            Write(final_frac[1:7])
+        )
+        self.wait()
+        self.play(*(
+            TransformFromCopy(
+                frac.get_part_by_tex(tex),
+                final_frac.get_part_by_tex(tex)
+            )
+            for tex in (wo_tex,)
+        ))
+        self.play(
+            TransformFromCopy(big_right_brace, right_brace),
+            Write(final_frac[9:])
+        )
+        self.wait()
+        self.add(final_frac)
+
+        # Circle likelihood ratio
+        likelihood_ratio = VGroup(
+            final_frac[2:7],
+            final_frac[10:]
+        )
+        lr_rect = SurroundingRectangle(likelihood_ratio)
+        lr_rect.set_stroke(BLUE, 3)
+
+        self.play(ShowCreation(lr_rect))
+        self.wait()
+
+
+class ReframeWhatTestsDo(TeacherStudentsScene):
+    def construct(self):
+        # Question
+        question = TextMobject("What do tests tell you?")
+        self.teacher_holds_up(question)
+        self.wait()
+
+        question.generate_target()
+        question.target.set_height(0.6)
+        question.target.center()
+        question.target.to_edge(UP)
+        self.play(
+            MoveToTarget(question),
+            *[
+                ApplyMethod(pi.change, "pondering", question.target)
+                for pi in self.pi_creatures
+            ]
+        )
+        self.wait(2)
+
+        # Possible answers
+        answers = VGroup(
+            TextMobject("Tests", " determine", " if you have", " a disease."),
+            TextMobject("Tests", " determine", " your chances of having", " a disease."),
+            TextMobject("Tests", " update", " your chances of having", " a disease."),
+        )
+        students = self.students
+        answers.set_color(BLUE_C)
+        answers.arrange(DOWN)
+        answers.next_to(question, DOWN, MED_LARGE_BUFF)
+
+        answers[1][2].set_fill(GREY_A)
+        answers[2][2].set_fill(GREY_A)
+        answers[2][1].set_fill(YELLOW)
+
+        def add_strike_anim(words):
+            strike = Line()
+            strike.replace(words, dim_to_match=0)
+            strike.set_stroke(RED, 5)
+            anim = ShowCreation(strike)
+            words.add(strike)
+            return anim
+
+        self.play(
+            GrowFromPoint(answers[0], students[0].get_corner(UR)),
+            students[0].change, "raise_right_hand", answers[0],
+            students[1].change, "sassy", students[0].eyes,
+            students[2].change, "sassy", students[0].eyes,
+        )
+        self.wait()
+        self.play(
+            add_strike_anim(answers[0]),
+            students[0].change, "guilty",
+        )
+        self.wait()
+
+        answers[1][2].save_state()
+        answers[1][2].replace(answers[0][2], stretch=True)
+        answers[1][2].set_opacity(0)
+        self.play(
+            TransformFromCopy(
+                answers[0][:2],
+                answers[1][:2],
+            ),
+            TransformFromCopy(
+                answers[0][3],
+                answers[1][3],
+            ),
+            Restore(answers[1][2]),
+            students[0].set_opacity, 0.5,
+            students[0].change, "pondering", answers[1],
+            students[1].change, "raise_right_hand", answers[1],
+            students[2].change, "pondering", answers[1],
+        )
+        self.wait(2)
+        self.play(
+            add_strike_anim(answers[1]),
+            students[1].change, "guilty",
+        )
+        self.wait(2)
+
+        answers[2][1].save_state()
+        answers[2][1].replace(answers[1][1], stretch=True)
+        answers[2][1].set_opacity(0)
+        self.play(
+            *(
+                TransformFromCopy(
+                    answers[1][i],
+                    answers[2][i],
+                )
+                for i in [0, 2, 3]
+            ),
+            Restore(answers[2][1]),
+            students[0].change, "pondering", answers[1],
+            students[1].set_opacity, 0.5,
+            students[1].change, "pondering", answers[1],
+            students[2].change, "raise_left_hand", answers[1],
+        )
+        self.play(
+            self.teacher.change, "happy", students[2].eyes,
+        )
+        self.wait()
+
+        # The fundamental reframing
+        new_title = TextMobject(
+            "The Fundamental Reframing",
+            font_size=72,
+        )
+        new_title.add(Underline(new_title))
+        new_title.to_edge(UP)
+
+        self.play(
+            Write(new_title),
+            FadeOut(question),
+            self.students[2].change, "hooray", new_title,
+            answers.shift, 0.5 * DOWN,
+        )
+        self.wait(3)
+
+
+class PrevalenceVsPrior(Scene):
+    def construct(self):
+        # Prior and prevalence
+        eq = TextMobject(
+            "Prevalence = Prior",
+            tex_to_color_map={
+                "Prevalence": WHITE,
+                "Prior": YELLOW,
+            }
+        )
+        eq.shift(UP)
+        prior = eq[2]
+        prev = eq[0]
+
+        strike = Line(eq.get_left(), eq.get_right())
+        strike.set_stroke(RED, 4)
+        not_words = TextMobject("Not necessarily!")
+        not_words.set_color(RED)
+        not_words.match_width(eq)
+        not_words.next_to(eq, DOWN, MED_LARGE_BUFF)
+
+        factors = VGroup(
+            TextMobject("Prevalence"),
+            TextMobject("Symptoms"),
+            TextMobject("Contacts\\\\", "(if contagious)"),
+        )
+        factors.arrange(DOWN, buff=MED_LARGE_BUFF, aligned_edge=LEFT)
+        factors.shift(prev.get_center() - factors[0].get_center())
+
+        prior.generate_target()
+        prior.target.match_y(factors[1])
+        prior.target.shift(0.5 * RIGHT)
+        arrows = VGroup(*(
+            Arrow(
+                factor.get_right(), prior.target.get_corner(LEFT + u * UP),
+                buff=0.1,
+                max_tip_length_to_length_ratio=0.25,
+            )
+            for u, factor in zip([1, 0, -1], factors)
+        ))
+
+        population = Population(100)
+        population.set_height(7)
+        population.to_edge(LEFT)
+        population.set_fill(GREY_C)
+        random.choice(population).set_color(YELLOW)
+
+        self.play(Write(prev))
+        self.play(ShowIncreasingSubsets(population, run_time=3))
+        self.wait()
+        self.play(Write(eq[1:]))
+        self.wait()
+
+        self.play(
+            ShowCreation(strike),
+            FadeIn(not_words, shift=0.2 * DOWN, rate_func=squish_rate_func(smooth, 0.3, 1))
+        )
+        self.wait()
+
+        eq[1].unlock_triangulation()
+        self.play(
+            Uncreate(strike),
+            MoveToTarget(prior),
+            ReplacementTransform(eq[1], arrows),
+            LaggedStartMap(FadeIn, factors[1:], shift=0.25 * DOWN),
+            FadeOut(not_words, shift=DOWN)
+        )
+        self.remove(prev)
+        self.add(factors)
+        self.wait()
+
+        # Symptoms
+        randy = Randolph(height=1.5)
+        randy.to_corner(UR)
+        randy.shift(LEFT)
+
+        self.play(FadeIn(randy))
+        self.play(
+            ShowCreationThenFadeOut(Underline(factors[1], color=RED)),
+            randy.change, "sick",
+            randy.set_color, SICKLY_GREEN,
+        )
+        self.wait()
+
+        # Contagion (implicit)
+        self.play(
+            ShowCreationThenFadeOut(Underline(factors[2][0], color=RED)),
+            ShowCreationThenFadeOut(Underline(factors[2][1], color=RED)),
+        )
+        self.wait()
+
+        self.play(
+            LaggedStartMap(
+                FadeOut, VGroup(
+                    randy, prior, *arrows, *factors,
+                ),
+                shift=DOWN,
+            )
+        )
 
 
 # Everything above has been combed through after the rewrite
@@ -2779,130 +4016,6 @@ class OldBayesFactorCode(Scene):
             FadeOut(boxes, shift=2 * RIGHT),
         )
         self.wait()
-
-
-
-class ReframeWhatTestsDo(TeacherStudentsScene):
-    def construct(self):
-        # Question
-        question = TextMobject("What do tests tell you?")
-        self.teacher_holds_up(question)
-        self.wait()
-
-        question.generate_target()
-        question.target.set_height(0.6)
-        question.target.center()
-        question.target.to_edge(UP)
-        self.play(
-            MoveToTarget(question),
-            *[
-                ApplyMethod(pi.change, "pondering", question.target)
-                for pi in self.pi_creatures
-            ]
-        )
-        self.wait(2)
-
-        # Possible answers
-        answers = VGroup(
-            TextMobject("Tests", " determine", " if you have", " a disease."),
-            TextMobject("Tests", " determine", " your chances of having", " a disease."),
-            TextMobject("Tests", " update", " your chances of having", " a disease."),
-        )
-        students = self.students
-        answers.set_color(BLUE_C)
-        answers.arrange(DOWN)
-        answers.next_to(question, DOWN, MED_LARGE_BUFF)
-
-        answers[1][2].set_fill(GREY_A)
-        answers[2][2].set_fill(GREY_A)
-        answers[2][1].set_fill(YELLOW)
-
-        def add_strike_anim(words):
-            strike = Line()
-            strike.replace(words, dim_to_match=0)
-            strike.set_stroke(RED, 5)
-            anim = ShowCreation(strike)
-            words.add(strike)
-            return anim
-
-        self.play(
-            GrowFromPoint(answers[0], students[0].get_corner(UR)),
-            students[0].change, "raise_right_hand", answers[0],
-            students[1].change, "sassy", students[0].eyes,
-            students[2].change, "sassy", students[0].eyes,
-        )
-        self.wait()
-        self.play(
-            add_strike_anim(answers[0]),
-            students[0].change, "guilty",
-        )
-        self.wait()
-
-        answers[1][2].save_state()
-        answers[1][2].replace(answers[0][2], stretch=True)
-        answers[1][2].set_opacity(0)
-        self.play(
-            TransformFromCopy(
-                answers[0][:2],
-                answers[1][:2],
-            ),
-            TransformFromCopy(
-                answers[0][3],
-                answers[1][3],
-            ),
-            Restore(answers[1][2]),
-            students[0].set_opacity, 0.5,
-            students[0].change, "pondering", answers[1],
-            students[1].change, "raise_right_hand", answers[1],
-            students[2].change, "pondering", answers[1],
-        )
-        self.wait(2)
-        self.play(
-            add_strike_anim(answers[1]),
-            students[1].change, "guilty",
-        )
-        self.wait(2)
-
-        answers[2][1].save_state()
-        answers[2][1].replace(answers[1][1], stretch=True)
-        answers[2][1].set_opacity(0)
-        self.play(
-            TransformFromCopy(
-                answers[1][:1],
-                answers[2][:1],
-            ),
-            TransformFromCopy(
-                answers[1][2:],
-                answers[2][2:],
-            ),
-            Restore(answers[2][1]),
-            students[0].change, "pondering", answers[1],
-            students[1].set_opacity, 0.5,
-            students[1].change, "pondering", answers[1],
-            students[2].change, "raise_left_hand", answers[1],
-        )
-        self.play(
-            self.teacher.change, "happy", students[2].eyes,
-        )
-        self.wait()
-
-        # The fundamental reframing
-        new_title = TextMobject(
-            "The Fundamental Reframing",
-            font_size=72,
-        )
-        new_title.add(Underline(new_title))
-        new_title.to_edge(UP)
-
-        self.play(
-            Write(new_title),
-            FadeOut(question),
-            self.students[2].change, "hooray", new_title,
-            answers.shift, 0.5 * DOWN,
-        )
-        self.wait(3)
-
-
 
 class AskAboutHowItsSoLow(TeacherStudentsScene):
     def construct(self):
@@ -3161,200 +4274,6 @@ class BayesTheorem(Scene):
         self.play(Blink(randy))
         self.wait()
 
-class SnazzyBayesRuleSteps(Scene):
-    def construct(self):
-        # Add title
-        title = TextMobject(
-            "Bayes' rule, the snazzy way",
-            font_size=72
-        )
-        title.to_edge(UP)
-        title.set_stroke(BLACK, 2, background=True)
-        underline = Underline(title)
-        underline.scale(1.2)
-        underline.shift(0.2 * UP)
-        underline.set_stroke(GREY, 3)
-        self.add(underline, title)
-        self.play(ShowCreation(underline))
-
-        # Step labels
-        step_labels = VGroup(
-            TextMobject("Step 1)"),
-            TextMobject("Step 2)"),
-            TextMobject("Step 3)"),
-        )
-        step_labels.arrange(DOWN, buff=1.5, aligned_edge=LEFT)
-        step_labels.next_to(title, DOWN, MED_LARGE_BUFF)
-        step_labels.to_edge(LEFT)
-
-        self.play(
-            LaggedStartMap(FadeIn, step_labels, scale=1.2)
-        )
-
-        # Step 1
-        step1 = TextMobject("Express the prior with odds")
-        step1.set_color(YELLOW)
-        step1_subtext = TextMobject("E.g.", " 1\\% ", " $\\rightarrow$ ", "1:99")
-        step1_subtext.set_color(GREY_A)
-        step1_subtext.scale(0.9)
-        step1.next_to(step_labels[0], RIGHT)
-        step1_subtext.next_to(step1, DOWN, aligned_edge=LEFT)
-
-        population = VGroup(*(
-            WomanIcon()
-            for x in range(100)
-        ))
-        population.arrange_in_grid(h_buff=1, v_buff=0.5, fill_rows_first=False)
-        population.set_height(5)
-        population.to_corner(DR)
-        population[0].set_color(YELLOW)
-
-        self.play(
-            ShowIncreasingSubsets(population),
-            Write(step1)
-        )
-        self.wait()
-        step1_subtext.unlock_triangulation()
-        self.play(FadeIn(step1_subtext[:2]))
-        self.play(
-            TransformFromCopy(step1_subtext[1], step1_subtext[3]),
-            Write(step1_subtext[2]),
-        )
-        self.wait()
-
-        # Step 2
-        step2 = TextMobject("Compute Bayes' factor")
-        step2.set_color(GREEN)
-        step2.next_to(step_labels[1], RIGHT)
-
-        bf_computation = TexMobject(
-            """
-            {
-            P(+ \\, | \\, \\text{Cancer}) \\over
-            P(+ \\, | \\, \\text{No cancer})
-            } =
-            {90\\% \\over 9\\%} = 10
-            """,
-            tex_to_color_map={
-                "+": GREEN,
-                "\\text{Cancer}": YELLOW,
-                "\\text{No cancer}": GREY_B,
-                "{90\\%": GREEN,
-                "9\\%}": GREEN,
-                "10": WHITE,
-            }
-        )
-        bf_computation[-1].scale(1.2)
-        bf_computation.scale(0.6)
-        bf_computation.next_to(step2, DOWN, aligned_edge=LEFT)
-
-        lr_words = TextMobject("``Likelihood ratio''", font_size=30)
-        lr_words.next_to(bf_computation[-1], RIGHT, MED_LARGE_BUFF, DOWN)
-        lr_words.set_color(GREY_A)
-
-        self.play(Write(step2, run_time=1))
-        self.play(FadeIn(bf_computation, lag_ratio=0.1))
-        self.wait()
-        self.play(Write(lr_words, run_time=1))
-        self.wait()
-
-        # Step 3
-        step3 = TextMobject("Multiply")
-        step3.set_color(BLUE)
-        step3.next_to(step_labels[2], RIGHT)
-
-        multiplication = TexMobject(
-            "(1:99)", "\\times", "10",
-            "=", "10:99",
-            "\\rightarrow", "{10 \\over 109}",
-            "\\approx", "{1 \\over 11}",
-            font_size=36,
-        )
-        multiplication.next_to(step3, DOWN, aligned_edge=LEFT)
-        multiplication.unlock_triangulation()
-
-        self.play(
-            Write(step3, run_time=1),
-            FadeIn(multiplication[:3])
-        )
-        self.wait()
-        self.play(
-            FadeIn(multiplication.get_part_by_tex("=")),
-            TransformFromCopy(
-                multiplication.get_part_by_tex("1:99"),
-                multiplication.get_part_by_tex("10:99"),
-            ),
-        )
-        self.wait()
-        self.play(
-            FadeIn(multiplication.get_part_by_tex("\\rightarrow")),
-            FadeIn(multiplication.get_part_by_tex("10 \\over 109")),
-        )
-        self.play(
-            FadeIn(multiplication.get_part_by_tex("\\approx")),
-            FadeIn(multiplication.get_part_by_tex("1 \\over 11")),
-        )
-        self.wait()
-
-        # Alt example
-        prior_odds = step1_subtext[1:]
-        alt_prior_odds = TexMobject(
-            "10\\%", "\\rightarrow", "\\text{1:9}"
-        )
-        alt_prior_odds.match_height(prior_odds)
-        alt_prior_odds.move_to(prior_odds, LEFT)
-        alt_prior_odds.match_style(prior_odds)
-
-        self.play(
-            FadeOut(multiplication),
-            FadeOut(prior_odds, shift=UP),
-            FadeIn(alt_prior_odds, shift=UP),
-        )
-        self.play(
-            population[:10].set_color, YELLOW,
-            LaggedStartMap(
-                ShowCreationThenFadeOut,
-                VGroup(*(
-                    SurroundingRectangle(person, buff=0.05)
-                    for person in population[:10]
-                ))
-            )
-        )
-        self.wait()
-
-        new_multiplication = TexMobject(
-            "(1:9)", "\\times", "10",
-            "=", "10:9",
-            "\\rightarrow", "{10 \\over 19}",
-            "\\approx", "0.53",
-            font_size=36,
-        )
-        new_multiplication.move_to(multiplication, LEFT)
-        rects = VGroup(
-            SurroundingRectangle(alt_prior_odds.get_part_by_tex("1:9")),
-            SurroundingRectangle(bf_computation.get_part_by_tex("10")),
-            SurroundingRectangle(new_multiplication.get_part_by_tex("10:9")),
-        )
-        rects.set_color(RED)
-
-        self.play(
-            FadeIn(rects[:2], lag_ratio=0.6, run_time=1.5)
-        )
-        self.wait()
-        self.play(
-            ReplacementTransform(rects[0], rects[2]),
-            ReplacementTransform(rects[1], rects[2]),
-            FadeIn(new_multiplication[:5]),
-        )
-        self.wait()
-        self.play(
-            FadeOut(rects[2]),
-            FadeIn(new_multiplication[5:7]),
-        )
-        self.wait()
-        self.play(Write(new_multiplication[7:]))
-        self.wait()
-
 
 class CompressedBayesFactorSteps(Scene):
     def construct(self):
@@ -3370,198 +4289,6 @@ class CompressedBayesFactorSteps(Scene):
         steps.set_width(FRAME_WIDTH - 2)
 
         self.add(steps)
-
-
-class AskWhyItWorks(TeacherStudentsScene):
-    def construct(self):
-        self.student_says(
-            "Huh?  Why does\\\\that work?",
-            target_mode="confused",
-        )
-        self.change_student_modes(
-            "pondering", "erm", "confused",
-            look_at_arg=self.screen,
-        )
-        self.play(self.teacher.change, "happy")
-        self.wait(3)
-
-
-class WhyTheBayesFactorTrickWorks(Scene):
-    def construct(self):
-        # Setup before and after
-        titles = VGroup(
-            TextMobject("Before test"),
-            TextMobject("After test"),
-        )
-        titles.scale(1.25)
-        for title, u in zip(titles, [-1, 1]):
-            title.set_x(u * FRAME_WIDTH / 4)
-            title.to_edge(UP, buff=MED_SMALL_BUFF)
-        h_line = Line(LEFT, RIGHT)
-        h_line.set_width(FRAME_WIDTH)
-        h_line.next_to(titles, DOWN)
-        h_line.set_x(0)
-        v_line = Line(UP, DOWN).set_height(FRAME_HEIGHT)
-        lines = VGroup(h_line, v_line)
-        lines.set_stroke(GREY, 2)
-
-        self.add(titles)
-        self.add(lines)
-
-        # Show population before
-        population = VGroup(*(WomanIcon() for x in range(100)))
-        population.arrange_in_grid(h_buff=0.7, fill_rows_first=False)
-        population.set_height(5)
-        population[:10].set_fill(YELLOW)
-        population[:10].shift(MED_SMALL_BUFF * LEFT)
-        population.match_x(titles[0])
-        population.to_edge(DOWN, buff=MED_LARGE_BUFF)
-
-        w_tex = "(\\text{\\# With})"
-        wo_tex = "(\\text{\\# Without})"
-        t2c = {
-            w_tex: YELLOW,
-            wo_tex: GREY_B,
-        }
-        odds = TexMobject(w_tex, ":", wo_tex, tex_to_color_map=t2c)
-        odds.next_to(population, UP, buff=MED_LARGE_BUFF)
-        odds.match_x(titles[0])
-
-        self.add(population)
-        self.add(odds)
-        self.play(
-            ShowCreationThenDestruction(Underline(odds[0])),
-            LaggedStartMap(
-                ShowCreationThenFadeOut,
-                VGroup(*(
-                    SurroundingRectangle(icon, stroke_width=1, buff=0.05)
-                    for icon in population[:10]
-                ))
-            ),
-        )
-        self.play(
-            ShowCreationThenDestruction(Underline(odds[2])),
-            LaggedStartMap(
-                ShowCreationThenFadeOut,
-                VGroup(*(
-                    SurroundingRectangle(icon, color=GREY, stroke_width=1, buff=0.05)
-                    for icon in population[10:]
-                )),
-                lag_ratio=0.01
-            ),
-        )
-        self.wait()
-
-        # Turn odds into fraction
-        frac = TexMobject(
-            w_tex, "\\over", wo_tex, tex_to_color_map=t2c,
-            font_size=36
-        )
-        frac.next_to(h_line, DOWN, MED_LARGE_BUFF)
-        frac.match_x(titles[0])
-
-        self.play(
-            ReplacementTransform(odds, frac),
-            population.set_height, 4.5,
-            population.next_to, frac, DOWN, MED_LARGE_BUFF,
-        )
-        self.wait()
-
-        # Show filtration
-        pop_copy = population.copy()
-        pop_copy.match_x(titles[1])
-
-        tp_cases = pop_copy[:9]
-        fn_cases = pop_copy[9:10]
-        fp_cases = pop_copy[10::10]
-        tn_cases = VGroup(*(
-            case
-            for case in pop_copy[10:]
-            if case not in fp_cases
-        ))
-
-        VGroup(fn_cases, tn_cases).set_opacity(0.1)
-        VGroup(tp_cases, tp_cases).set_stroke(GREEN, 3, background=True)
-
-        pos_boxes = VGroup()
-        for case in it.chain(tp_cases, fp_cases):
-            box = SurroundingRectangle(case, buff=0.025)
-            box.set_stroke(GREEN, 0)
-            plus = TexMobject("+", font_size=24)
-            plus.move_to(box.get_corner(UR))
-            plus.shift(DR * plus.get_height() / 4)
-            plus.set_color(GREEN)
-            box.add(plus)
-            pos_boxes.add(box)
-
-        self.play(
-            TransformFromCopy(population, pop_copy),
-            path_arc=30 * DEGREES
-        )
-        self.play(LaggedStartMap(DrawBorderThenFill, pos_boxes))
-        self.wait()
-
-        # Final fraction
-        t2c.update({
-            "\\text{Cancer}": YELLOW,
-            "\\text{No cancer}": GREY,
-            "+": GREEN,
-            "\\cdot": WHITE,
-        })
-        final_frac = TexMobject(
-            w_tex, "\\cdot P(+ \\,|\\, \\text{Cancer})",
-            "\\over",
-            wo_tex, "\\cdot P(+ \\,|\\, \\text{No cancer})",
-            tex_to_color_map=t2c,
-            font_size=36,
-        )
-        final_frac.match_x(pop_copy)
-        final_frac.match_y(frac)
-
-        left_brace = Brace(tp_cases, LEFT)
-        right_brace = Brace(fp_cases, RIGHT, min_num_quads=1)
-        big_left_brace = Brace(VGroup(tp_cases, fn_cases), LEFT)
-        big_right_brace = Brace(VGroup(fp_cases, tn_cases), RIGHT)
-        big_left_brace.set_opacity(0)
-        big_right_brace.set_opacity(0)
-
-        self.play(*(
-            TransformFromCopy(
-                frac.get_part_by_tex(tex),
-                final_frac.get_part_by_tex(tex)
-            )
-            for tex in (w_tex, "\\over")
-        ))
-        self.wait()
-        self.play(
-            TransformFromCopy(big_left_brace, left_brace),
-            Write(final_frac[1:7])
-        )
-        self.wait()
-        self.play(*(
-            TransformFromCopy(
-                frac.get_part_by_tex(tex),
-                final_frac.get_part_by_tex(tex)
-            )
-            for tex in (wo_tex,)
-        ))
-        self.play(
-            TransformFromCopy(big_right_brace, right_brace),
-            Write(final_frac[9:])
-        )
-        self.wait()
-        self.add(final_frac)
-
-        # Circle likelihood ratio
-        likelihood_ratio = VGroup(
-            final_frac[2:7],
-            final_frac[10:]
-        )
-        lr_rect = SurroundingRectangle(likelihood_ratio)
-        lr_rect.set_stroke(BLUE, 3)
-
-        self.play(ShowCreation(lr_rect))
-        self.wait()
 
 
 class LookOverTweet(Scene):
