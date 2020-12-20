@@ -17,7 +17,7 @@ class ChangingDecimal(Animation):
         decimal_mob: DecimalNumber,
         number_update_func: typing.Callable[[float], float],
         suspend_mobject_updating: typing.Optional[bool] = False,
-        **kwargs
+        **kwargs,
     ) -> None:
         self.check_validity_of_input(decimal_mob)
         self.yell_about_depricated_configuration(**kwargs)
@@ -36,14 +36,12 @@ class ChangingDecimal(Animation):
         for attr in ["tracked_mobject", "position_update_func"]:
             if attr in kwargs:
                 warnings.warn(
-                    """
-                    Don't use {} for ChangingDecimal,
+                    f"""
+                    Don't use {attr} for ChangingDecimal,
                     that functionality has been depricated
                     and you should use a mobject updater
                     instead
-                """.format(
-                        attr
-                    )
+                """
                 )
 
     def interpolate_mobject(self, alpha: float) -> None:

@@ -78,7 +78,7 @@ class TexTemplate:
         preamble=None,
         placeholder_text=None,
         post_doc_commands=None,
-        **kwargs
+        **kwargs,
     ):
         self.tex_compiler = (
             tex_compiler
@@ -224,9 +224,7 @@ class TexTemplate:
             LaTeX code based on template, containing the given expression inside its environment, ready for typesetting
         """
         begin, end = self._texcode_for_environment(environment)
-        return self.body.replace(
-            self.placeholder_text, "{0}\n{1}\n{2}".format(begin, expression, end)
-        )
+        return self.body.replace(self.placeholder_text, f"{begin}\n{expression}\n{end}")
 
 
 class TexTemplateFromFile(TexTemplate):

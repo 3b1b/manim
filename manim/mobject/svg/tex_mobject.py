@@ -534,7 +534,7 @@ class BulletedList(Tex):
         elif isinstance(arg, int):
             part = self.submobjects[arg]
         else:
-            raise TypeError("Expected int or string, got {0}".format(arg))
+            raise TypeError(f"Expected int or string, got {arg}")
         for other_part in self.submobjects:
             if other_part is part:
                 other_part.set_fill(opacity=1)

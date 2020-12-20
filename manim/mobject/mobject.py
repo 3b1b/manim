@@ -1254,9 +1254,10 @@ class Mobject(Container):
     # Errors
     def throw_error_if_no_points(self):
         if self.has_no_points():
-            message = "Cannot call Mobject.{} " + "for a Mobject with no points"
             caller_name = sys._getframe(1).f_code.co_name
-            raise Exception(message.format(caller_name))
+            raise Exception(
+                f"Cannot call Mobject.{caller_name} for a Mobject with no points"
+            )
 
     # About z-index
     def set_z_index(self, z_index_value):

@@ -703,20 +703,20 @@ class Scene(Container):
             if stop_condition is not None:
                 time_progression = self.get_time_progression(
                     duration,
-                    "Waiting for {}".format(stop_condition.__name__),
+                    f"Waiting for {stop_condition.__name__}",
                     n_iterations=-1,  # So it doesn't show % progress
                     override_skip_animations=True,
                 )
             else:
                 time_progression = self.get_time_progression(
-                    duration, "Waiting {}".format(self.renderer.num_plays)
+                    duration, f"Waiting {self.renderer.num_plays}"
                 )
         else:
             time_progression = self.get_time_progression(
                 duration,
                 "".join(
                     [
-                        "Animation {}: ".format(self.renderer.num_plays),
+                        f"Animation {self.renderer.num_plays}: ",
                         str(animations[0]),
                         (", etc." if len(animations) > 1 else ""),
                     ]

@@ -124,10 +124,7 @@ class SceneFileWriter(object):
             return
         new_partial_movie_file = os.path.join(
             self.partial_movie_directory,
-            "{}{}".format(
-                hash_animation,
-                config["movie_file_extension"],
-            ),
+            f"{hash_animation}{config['movie_file_extension']}",
         )
         self.partial_movie_files.append(new_partial_movie_file)
 
@@ -158,7 +155,7 @@ class SceneFileWriter(object):
         """
         pixel_height = config["pixel_height"]
         frame_rate = config["frame_rate"]
-        return "{}p{}".format(pixel_height, frame_rate)
+        return f"{pixel_height}p{frame_rate}"
 
     # Sound
     def init_audio(self):
@@ -399,7 +396,7 @@ class SceneFileWriter(object):
             return False
         path = os.path.join(
             self.partial_movie_directory,
-            "{}{}".format(hash_invocation, config["movie_file_extension"]),
+            f"{hash_invocation}{config['movie_file_extension']}",
         )
         return os.path.exists(path)
 
@@ -435,7 +432,7 @@ class SceneFileWriter(object):
             for pf_path in partial_movie_files:
                 if os.name == "nt":
                     pf_path = pf_path.replace("\\", "/")
-                fp.write("file 'file:{}'\n".format(pf_path))
+                fp.write(f"file 'file:{pf_path}'\n")
         movie_file_path = self.movie_file_path
         commands = [
             FFMPEG_BIN,

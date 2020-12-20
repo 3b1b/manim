@@ -79,7 +79,7 @@ class SVGMobject(VMobject):
         unpack_groups=True,  # if False, creates a hierarchy of VGroups
         stroke_width=DEFAULT_STROKE_WIDTH,
         fill_opacity=1.0,
-        **kwargs
+        **kwargs,
     ):
         self.file_name = file_name or self.file_name
         self.ensure_valid_file()
@@ -120,9 +120,7 @@ class SVGMobject(VMobject):
             if os.path.exists(path):
                 self.file_path = path
                 return
-        error = "From: {}, could not find {} at either of these locations: {}".format(
-            os.getcwd(), self.file_name, possible_paths
-        )
+        error = f"From: {os.getcwd()}, could not find {self.file_name} at either of these locations: {possible_paths}"
         raise IOError(error)
 
     def generate_points(self):

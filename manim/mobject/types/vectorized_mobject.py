@@ -73,7 +73,7 @@ class VMobject(Mobject):
         # varying zoom levels?
         tolerance_for_point_equality=1e-6,
         n_points_per_cubic_curve=4,
-        **kwargs
+        **kwargs,
     ):
         self.fill_color = fill_color
         self.fill_opacity = fill_opacity
@@ -495,7 +495,7 @@ class VMobject(Mobject):
             handle2, new_anchor = points
         else:
             name = sys._getframe(0).f_code.co_name
-            raise ValueError("Only call {} with 1 or 2 points".format(name))
+            raise ValueError(f"Only call {name} with 1 or 2 points")
 
         if self.has_new_path_started():
             self.add_line_to(new_anchor)
@@ -1431,7 +1431,7 @@ class VectorizedPoint(VMobject):
         stroke_width=0,
         artificial_width=0.01,
         artificial_height=0.01,
-        **kwargs
+        **kwargs,
     ):
         self.artificial_width = artificial_width
         self.artificial_height = artificial_height
@@ -1440,7 +1440,7 @@ class VectorizedPoint(VMobject):
             color=color,
             fill_opacity=fill_opacity,
             stroke_width=stroke_width,
-            **kwargs
+            **kwargs,
         )
         self.set_points(np.array([location]))
 
