@@ -33,20 +33,21 @@ class Population(VGroup):
         self.arrange_in_grid()
 
 
-def get_covid_clipboard(disease_name="SARS\\\\CoV-2", color=GREEN):
+def get_covid_clipboard(disease_name="SARS\\\\CoV-2", sign="+", report="Detected", color=GREEN):
     clipboard = SVGMobject("clipboard")
     clipboard.set_stroke(width=0)
     clipboard.set_fill(interpolate_color(GREY_BROWN, WHITE, 0.5), 1)
     clipboard.set_width(2.5)
 
     result = TextMobject(
-        "+\\\\",
+        sign + "\\\\",
         disease_name + "\\\\",
-        "Detected"
+        report,
     )
-    result[0].scale(1.5, about_edge=DOWN)
+    result[0].scale(1.5, about_point=result[1].get_top())
     result[0].set_fill(color)
     result[0].set_stroke(color, 2)
+    result[2].set_width(1.2 * result[1].get_width())
     result[-1].set_fill(color)
     result.set_width(clipboard.get_width() * 0.7)
     result.move_to(clipboard)
@@ -56,6 +57,41 @@ def get_covid_clipboard(disease_name="SARS\\\\CoV-2", color=GREEN):
 
 
 # Scenes
+class Thumbnail(Scene):
+    def construct(self):
+        title = TextMobject("The Bayes Factor", font_size=96)
+        title.to_edge(UP)
+        self.add(title)
+
+        factor = TexMobject(
+            "{P(+ \\,|\\, \\text{Virus}) \\over P(+ \\,|\\, \\text{No virus})}",
+            tex_to_color_map={
+                "+": GREEN,
+                "\\text{Virus}": YELLOW,
+                "\\text{No virus}": GREY_B,
+            }
+        )
+        factor.scale(2)
+        rect = SurroundingRectangle(factor, buff=MED_SMALL_BUFF)
+        rect.set_stroke(TEAL, 2)
+        factor.add(rect)
+        self.add(factor)
+
+        clipboard = get_covid_clipboard("Virus")
+        clipboard[2].scale(0.8)
+        clipboard.set_height(4)
+        clipboard.next_to(factor, LEFT, LARGE_BUFF)
+        VGroup(clipboard, factor).next_to(title, DOWN, buff=1.0)
+
+        self.add(clipboard)
+
+        brace = Brace(factor, DOWN)
+        brace.add(brace.get_text("The one number\\\\you want to know"))
+        self.add(brace)
+
+        self.embed()
+
+
 class MathAsDesign(Scene):
     def construct(self):
         # Setup
@@ -290,6 +326,8 @@ class BayesRuleAndMedicalTests(Scene):
             mark.move_to(icon.get_corner(UL))
             marks.add(mark)
 
+        accuracy_group = VGroup(accuracy_words, population, marks)
+
         self.play(
             FadeIn(accuracy_words),
             FadeIn(population, lag_ratio=0.01)
@@ -353,11 +391,132 @@ class BayesRuleAndMedicalTests(Scene):
         self.play(Blink(randy))
         self.wait()
 
+        predictive_group = VGroup(
+            randy, clipboard,
+            prob_expression, prob,
+        )
+
+        # Accurate does not imply predictive
+        implication = TextMobject(
+            "Accurate ", "$\\Rightarrow$", " Predictive",
+        )
+        implication.set_color_by_tex("Accurate", GREEN)
+        implication.set_color_by_tex("Predictive", YELLOW)
+        implication.next_to(paradox_line, DOWN)
+
+        strike = Line(DL, UR).replace(implication[1], stretch=True)
+        strike.set_stroke(RED, 4)
+
+        self.play(
+            FadeIn(implication, scale=1.1),
+            accuracy_group.scale, 0.8, {"about_edge": DOWN},
+            randy.change, 'pondering', implication,
+        )
+        self.play(ShowCreation(strike))
+        self.wait()
+        implication.add(strike)
+
+        paradox_group = VGroup(paradox_name, paradox_line, implication)
+
         # Get rid of medical test stuff
+        p_rect = SurroundingRectangle(paradox_group, buff=MED_SMALL_BUFF)
+        p_rect.set_stroke(WHITE, 2)
+        p_rect.set_fill(GREY_E, 1)
+        self.add(p_rect, paradox_group),
+        self.play(
+            FadeOut(accuracy_group, DL),
+            FadeOut(predictive_group, 2 * DL),
+            VGroup(title, formula).to_edge, UP,
+            DrawBorderThenFill(p_rect)
+        )
+        paradox_group.add_to_back(p_rect)
+        self.wait()
 
-        # Mention Bayes factors
+        # Alternate framing
+        odds_formula = TexMobject(
+            "O(H|E) = O(H){P(E|H) \\over P(E|\\neg H)}",
+            tex_to_color_map={
+                "H": YELLOW,
+                "E": BLUE,
+                "\\neg": RED,
+            }
+        )
+        odds_formula.match_height(formula)
+        odds_formula.next_to(formula, DOWN, LARGE_BUFF)
+        odds_formula.shift_onto_screen()
 
-        self.embed()
+        bf_rect = SurroundingRectangle(odds_formula[7:], buff=0.025)
+        bf_rect.set_stroke(TEAL, 2)
+        bf_name = TextMobject("Bayes\\\\factor", font_size=36)
+        bf_name.match_color(bf_rect)
+        bf_name.next_to(bf_rect, DOWN, SMALL_BUFF)
+        odds_formula.add(bf_rect, bf_name)
+
+        arrow = Vector(1.5 * RIGHT)
+        arrow.next_to(odds_formula[0], LEFT)
+
+        self.play(
+            paradox_group.next_to, arrow, LEFT,
+            GrowArrow(arrow),
+            FadeIn(odds_formula, DOWN)
+        )
+        self.wait()
+
+        # Question the formulas
+        morty = Mortimer(height=2)
+        morty.to_corner(DR)
+
+        self.play(FadeIn(morty))
+        self.play(morty.change, "hesitant", formula)
+        self.play(Blink(morty))
+        self.wait()
+        formulas = VGroup(formula, odds_formula)
+        self.play(
+            LaggedStart(
+                *(
+                    ShowCreationThenFadeOut(Underline(mob, color=GREY_BROWN))
+                    for mob in formulas
+                ),
+                lag_ratio=0.3
+            ),
+            morty.change, "raise_right_hand", formula,
+        )
+        self.play(Blink(morty))
+        self.wait()
+
+        mover = VGroup(paradox_group, title, formula, odds_formula, arrow)
+        bubbles = VGroup(*(ThoughtBubble(height=1, width=1) for x in range(2)))
+        bubbles.set_fill(GREY_E, 1)
+        for bubble, form in zip(bubbles, formulas):
+            bubble.move_to(form, RIGHT)
+
+        self.play(
+            morty.change, "raise_left_hand", bubble,
+            mover.to_edge, LEFT,
+            LaggedStartMap(DrawBorderThenFill, bubbles, lag_ratio=0.7, run_time=2),
+        )
+        self.play(Blink(morty))
+        self.wait()
+
+        self.play(
+            Rotate(arrow, PI),
+            morty.change, "pondering", paradox_group,
+        )
+        arrow2 = Arrow(formula.get_left(), paradox_group.get_corner(UR))
+        self.play(GrowArrow(arrow2))
+        self.play(Blink(morty))
+        self.wait(2)
+
+        self.play(
+            LaggedStart(*(
+                FadeOut(mob, RIGHT)
+                for mob in [arrow2, arrow, title, formula, odds_formula, *bubbles]
+            )),
+            morty.change, "raise_right_hand",
+            paradox_group.next_to, morty.get_corner(UR), UP,
+            paradox_group.shift_onto_screen,
+        )
+        self.wait()
 
 
 class SamplePopulationBreastCancer(Scene):
@@ -820,6 +979,43 @@ class SamplePopulationBreastCancer(Scene):
             rate_func=there_and_back_with_pause,
             run_time=3
         )
+
+
+class LearnAboutPositiveResult(Scene):
+    def construct(self):
+        doctors = VGroup(
+            SVGMobject("female_doctor"),
+            SVGMobject("male_doctor"),
+        )
+        for doc in doctors:
+            doc.remove(doc[0])
+            doc.set_height(3)
+        doctors.set_stroke(width=0)
+        doctors.set_fill(GREY_C)
+        doctors.set_gloss(0.5)
+        doctors.arrange(RIGHT, buff=3)
+        doctors.move_to(DOWN)
+
+        self.add(doctors)
+
+        bubbles = VGroup(*(ThoughtBubble(height=2, width=2) for x in range(2)))
+        bubbles[1].flip()
+        for bubble, doc in zip(bubbles, doctors):
+            bubble.pin_to(doc)
+            icon = WomanIcon()
+            icon.set_height(0.5)
+            bubble.add_content(icon)
+            bubble.add(icon)
+
+        self.play(LaggedStartMap(FadeIn, bubbles))
+
+        clipboard = get_covid_clipboard("Cancer")
+        clipboard.move_to(DOWN)
+        clipboard[2].set_opacity(0)
+
+        self.play(FadeIn(clipboard, UP))
+        self.play(clipboard[2].set_opacity, 1)
+        self.wait()
 
 
 class AskWhatTheParadoxIs(TeacherStudentsScene):
@@ -2303,7 +2499,7 @@ class AltShowUpdatingPrior(Scene):
         self.wait(2)
 
 
-class ContrastThreeContexts(Scene):
+class NewContrastThreeContexts(Scene):
     def construct(self):
         # Background
         bg_rect = FullScreenFadeRectangle()
@@ -2397,7 +2593,7 @@ class ContrastThreeContexts(Scene):
         positive_results.set_opacity(0)
         for screen, result in zip(screens, positive_results.target):
             result.set_height(screen.get_height() * 0.5)
-            result.next_to(screen, RIGHT, aligned_edge=DOWN)
+            result.next_to(screen, RIGHT, MED_LARGE_BUFF, aligned_edge=DOWN)
             result.shift(0.25 * UP)
 
         self.add(words[2])
@@ -2411,7 +2607,7 @@ class ContrastThreeContexts(Scene):
         ))
         probs.set_fill(GREEN)
 
-        self.play(
+        result_change_anims = [
             ChangeDecimalToValue(probs[0], 1),
             ChangeDecimalToValue(probs[1], 9),
             ChangeDecimalToValue(probs[2], 53),
@@ -2419,9 +2615,43 @@ class ContrastThreeContexts(Scene):
                 Mobject(),
                 lambda m, a, probs=probs: probs.set_opacity(a),
                 remover=True,
-            )
+            ),
+        ]
+
+        # Odds
+        prior_probs = VGroup(*(pl[1] for pl in prevalence_labels))
+        prior_odds = VGroup(
+            TextMobject("1:999"),
+            TextMobject("1:99"),
+            TextMobject("1:9"),
         )
-        self.wait()
+        prior_odds.set_color(YELLOW)
+        for po, pp in zip(prior_odds, prior_probs):
+            po.match_height(pp)
+            po.scale(0.8)
+            po.move_to(pp, LEFT)
+
+        post_odds = VGroup(
+            TextMobject("10:999"),
+            TextMobject("10:99"),
+            TextMobject("10:9"),
+        )
+        for po, prob in zip(post_odds, probs):
+            po.match_color(prob)
+            po.match_height(prob)
+            po.scale(0.8)
+            po.move_to(prob, LEFT)
+
+        # Show updates
+        arrows = VGroup(*(
+            Arrow(
+                prior.get_corner(UR), post.get_corner(UL),
+                buff=0.1,
+                path_arc=-45 * DEGREES,
+            )
+            for prior, post in zip(prior_odds, post_odds)
+        ))
+        arrows.set_color(BLUE)
 
         # What test accuracy does
         ta_words = VGroup(
@@ -2450,6 +2680,7 @@ class ContrastThreeContexts(Scene):
             group.set_stroke(BLACK, 3, background=True)
 
         words[0][1].unlock_triangulation()
+        self.play(*result_change_anims)
         self.play(
             FadeOut(words[0][0]),
             FadeOut(words[1][0]),
@@ -2460,6 +2691,14 @@ class ContrastThreeContexts(Scene):
         )
         self.add(ta_words)
         self.wait()
+
+        self.play(
+            FadeOut(prior_probs, 0.25 * UP),
+            FadeOut(probs, 0.25 * UP),
+            FadeIn(prior_odds, 0.25 * UP),
+            FadeIn(post_odds, 0.25 * UP),
+        )
+
         ta_words.unlock_triangulation()
         self.play(
             ReplacementTransform(ta_words[0], up_words[0]),
@@ -2468,44 +2707,10 @@ class ContrastThreeContexts(Scene):
             ReplacementTransform(ta_words[3][1], up_words[2][1]),
             FadeOut(ta_words[1], scale=0.5),
         )
-        self.play(Write(up_words[3]))
-        self.wait()
-
-        underlines = VGroup()
-        for word in up_words:
-            line = Underline(word)
-            line.set_y(word[0][0].get_bottom()[1])
-            line.shift(SMALL_BUFF * DOWN)
-            underlines.add(line)
-        underlines.set_stroke(BLUE, 3)
-        shifted_underlines = underlines.copy().shift(SMALL_BUFF * DOWN)
-        shifted_underlines.set_stroke(BLUE_E, 3)
-        underlines.add(*shifted_underlines)
-
-        self.add(underlines, up_words)
-        self.play(ShowCreation(
-            underlines,
-            run_time=2,
-            rate_func=double_smooth,
-        ))
-        self.wait()
-
-        # Show updates
-        arrows = VGroup(*(
-            Arrow(
-                pl.get_corner(UR), prob.get_corner(UL),
-                buff=0.1,
-                path_arc=-45 * DEGREES,
-            )
-            for pl, prob in zip(prevalence_labels, probs)
-        ))
-        arrows.set_color(RED)
-
-        self.play(LaggedStartMap(
-            GrowArrow, arrows,
-            lag_ratio=0.5,
-            path_arc=-45 * DEGREES,
-        ))
+        self.play(
+            Write(up_words[3]),
+            LaggedStartMap(DrawBorderThenFill, arrows),
+        )
         self.wait()
 
 
@@ -2758,7 +2963,8 @@ class BayesFactor(Scene):
 
 class RuleOfThumb(Scene):
     def construct(self):
-        tex_to_color_map = {
+        # Add Bayes factor
+        t2c = {
             "+": GREEN,
             "\\text{Cancer}": YELLOW,
             "\\text{No cancer}": GREY_B,
@@ -2767,22 +2973,183 @@ class RuleOfThumb(Scene):
             "{90\\%": GREEN,
             "9\\%}": GREEN,
             "1\\%}": TEAL,
-            "10": WHITE,
+            "{10}": GREEN,
         }
-        bf_computation = TexMobject(
+        frac_part = TexMobject(
             """
-            {
-            P(+ \\, | \\, \\text{Cancer}) \\over
-            P(+ \\, | \\, \\text{No cancer})
-            } =
-            {90\\% \\over 9\\%} = 10
+            {P(+ \\, | \\, \\text{Cancer}) \\over
+            P(+ \\, | \\, \\text{No cancer})}
             """,
-            tex_to_color_map=tex_to_color_map
+            tex_to_color_map=t2c
         )
+        frac_part.add(SurroundingRectangle(
+            frac_part, buff=0.1, stroke_width=1, stroke_color=GREY_B
+        ))
+        ex_part = TexMobject(
+            "\\text{e.g. } {90\\% \\over 9\\%} = {10}",
+            tex_to_color_map=t2c
+        )
+        ex_part.next_to(frac_part, RIGHT, LARGE_BUFF)
 
-        bf_computation.to_edge(LEFT)
+        brace = Brace(frac_part, UP, buff=SMALL_BUFF)
+        bf_label = brace.get_text("Bayes factor")
+        bf_label.set_color(GREEN)
 
-        self.add(bf_computation)
+        bf_group = VGroup(frac_part, ex_part, brace, bf_label)
+        bf_group.to_corner(DL)
+
+        self.add(bf_group)
+
+        # Lightbulb
+        bulb = Lightbulb()
+        condition = TextMobject("If Prior $\\ll$ 1 \\dots", tex_to_color_map={"Prior": YELLOW})
+        condition.next_to(bulb, RIGHT, buff=MED_LARGE_BUFF, aligned_edge=DOWN)
+        bulb_group = VGroup(bulb, condition)
+        bulb_group.center().to_edge(UP)
+
+        self.play(DrawBorderThenFill(bulb, run_time=1))
+        self.play(FadeIn(condition, lag_ratio=0.1))
+        self.wait()
+
+        # Equation
+        equation = TextMobject(
+            "Posterior", " $\\approx$ ",
+            "(", "Prior", ")", "(", "Bayes factor", ")",
+            tex_to_color_map={
+                "Prior": YELLOW,
+                "Bayes factor": GREEN,
+            }
+        )
+        equation.next_to(bulb_group, DOWN, LARGE_BUFF)
+
+        self.play(Write(equation[:2]), run_time=1)
+        self.wait()
+        self.play(
+            FadeIn(equation.get_parts_by_tex("(")),
+            FadeIn(equation.get_parts_by_tex(")")),
+            TransformFromCopy(
+                condition.get_part_by_tex("Prior"),
+                equation.get_part_by_tex("Prior")
+            ),
+            TransformFromCopy(
+                bf_label[0],
+                equation.get_part_by_tex("Bayes factor"),
+            ),
+        )
+        self.wait()
+
+        # 1% example
+        ex_rhs = TexMobject(
+            "\\left({1 \\over 100}\\right)({10}) = {1 \\over 10}",
+            tex_to_color_map={
+                "1 \\over 100": YELLOW,
+                "{10}": GREEN,
+            }
+        )
+        ex_rhs.next_to(equation, DOWN, MED_LARGE_BUFF)
+        ex_rhs.shift(RIGHT)
+
+        ex_lhs = TexMobject("{1 \\over 11} \\approx")
+        ex_lhs.next_to(ex_rhs, LEFT)
+
+        self.play(FadeIn(ex_rhs, DOWN))
+        self.wait()
+        self.play(Write(ex_lhs))
+        self.wait()
+
+        # 10% example
+        randy = Randolph(height=2)
+        randy.next_to(bf_label, UP, SMALL_BUFF)
+
+        self.play(
+            FadeOut(ex_lhs), FadeOut(ex_rhs),
+            VFadeIn(randy),
+            randy.change, "hesitant",
+        )
+        self.play(Blink(randy))
+        self.wait()
+
+        ex2_rhs = TexMobject(
+            "(10\\%)({10}) = 100\\%",
+            tex_to_color_map={
+                "10\\%": YELLOW,
+                "{10}": GREEN,
+                "=": WHITE,
+            }
+        )
+        ex2_rhs.move_to(ex_rhs, LEFT)
+        ex2_rhs.shift(0.15 * RIGHT)
+
+        eq_index = ex2_rhs.index_of_part_by_tex("=")
+        self.play(
+            Write(ex2_rhs[:eq_index]),
+            randy.change, "confused",
+        )
+        self.play(Blink(randy))
+        self.play(Write(ex2_rhs[eq_index:]))
+        self.wait()
+        self.play(Blink(randy))
+
+        ex2_lhs = TexMobject("53\\%", "\\approx")
+        ex2_lhs.next_to(ex2_rhs, LEFT)
+        ex2_lhs.align_to(equation.get_part_by_tex("\\approx"), RIGHT)
+        approx_part = ex2_lhs.get_part_by_tex("\\approx")
+        approx_part.scale(1.2, about_edge=DL)
+        strike = Line(DL, UR).replace(approx_part, stretch=True)
+        strike.set_stroke(RED, 6)
+        strike.stretch(0.7, 0)
+        strike.stretch(1.5, 1)
+
+        self.play(
+            Write(ex2_lhs, run_time=1),
+            randy.look_at, ex2_lhs,
+        )
+        self.play(
+            randy.change, "sad", ex2_lhs,
+            ShowCreation(strike, run_time=0.3)
+        )
+        self.play(Blink(randy))
+        self.wait()
+        self.play(
+            randy.change, "tired", ex2_lhs,
+        )
+        self.play(Blink(randy))
+        self.wait()
+
+        ex2 = VGroup(ex2_lhs, strike, ex2_rhs)
+
+        # This statement is actually true
+        morty = Mortimer()
+        morty.replace(randy, dim_to_match=1)
+        morty.to_edge(RIGHT, buff=1.5)
+
+        self.play(
+            VFadeIn(morty),
+            morty.change, "tease", equation,
+            FadeOut(ex2, UP),
+            FadeOut(VGroup(bulb, condition), UP),
+            equation.match_y, randy,
+            randy.change, "erm",
+        )
+        self.play(Blink(morty))
+
+        eq = TexMobject("=")
+        approx = equation.get_part_by_tex("\\approx")
+        eq.replace(approx)
+
+        self.play(
+            PiCreatureSays(
+                morty, "This equation\\\\is precisely true!",
+                bubble_kwargs={"height": 2, "width": 3},
+                look_at_arg=randy.eyes,
+            ),
+            GrowFromPoint(eq, morty.get_corner(UL)),
+            FadeOut(approx, 0.25 * DL),
+            randy.change, "confused", morty.eyes,
+        )
+        self.play(Blink(randy))
+        self.play(Blink(morty))
+        self.wait(3)
 
 
 class ProbabilityVsOdds(Scene):
@@ -3889,6 +4256,1010 @@ class PrevalenceVsPrior(Scene):
         )
 
 
+class WhatAboutANegativeResult(Scene):
+    def construct(self):
+        # Test results
+        h_line = Line(LEFT, RIGHT)
+        h_line.set_width(FRAME_WIDTH)
+        h_line.set_stroke(GREY_B, 2)
+
+        randys = VGroup(Randolph(), Randolph())
+        randys.set_height(2)
+        clipboards = VGroup(
+            get_covid_clipboard("Cancer", "+", "Detected", GREEN),
+            get_covid_clipboard("Cancer", "$-$", "Not Detected", RED),
+        )
+
+        for randy, clipboard, y in zip(randys, clipboards, [2, -2]):
+            randy.set_y(y)
+            randy.to_edge(LEFT)
+            clipboard.match_height(randy)
+            clipboard.next_to(randy, RIGHT)
+
+        self.add(randys, h_line)
+        self.play(
+            FadeIn(clipboards[0], LEFT),
+            randys[0].change, "horrified", clipboards[0],
+            randys[1].change, "guilty", clipboards[0],
+        )
+        self.play(Blink(randys[0]))
+        self.play(
+            FadeIn(clipboards[1], LEFT),
+            randys[1].change, "hooray", clipboards[1]
+        )
+        self.play(Blink(randys[1]))
+        self.wait()
+
+        # Formulas
+        t2c = {
+            "+": GREEN,
+            "-": RED,
+            "=": WHITE,
+            "\\approx": WHITE,
+            "\\over": WHITE,
+            "\\text{Cancer}": YELLOW,
+            "\\text{No cancer}": GREY_B,
+            "90\\%": GREEN,
+            "9\\%": GREEN_D,
+            "10\\%": RED_D,
+            "91\\%": RED,
+        }
+        equations = VGroup(
+            TexMobject(
+                "={P(+ \\,|\\, \\text{Cancer}) \\over P(+ \\,|\\, \\text{No cancer})}",
+                "={90\\% \\over 9\\%} = 10",
+                tex_to_color_map=t2c,
+            ),
+            TexMobject(
+                "={P(- \\,|\\, \\text{Cancer}) \\over P(- \\,|\\, \\text{No cancer})}",
+                "={10\\% \\over 91\\%} \\approx {1 \\over 9}",
+                tex_to_color_map=t2c,
+            ),
+        )
+
+        for equation, clipboard in zip(equations, clipboards):
+            bf = TextMobject("Bayes\\\\Factor")
+            bf.next_to(equation, LEFT)
+            equation.add_to_back(bf)
+            equation.next_to(clipboard, RIGHT, MED_LARGE_BUFF)
+
+        self.play(
+            *(
+                FadeIn(equation, lag_ratio=0.1, run_time=2)
+                for equation in equations
+            ),
+            randys[0].change, "pondering", equations[0],
+            randys[1].change, "thinking", equations[0],
+        )
+        self.wait()
+
+        # Highlight parts
+        eq = equations[1]
+        frac_parts = VGroup(eq[2:7], eq[8:13])
+        rects = VGroup(*(
+            SurroundingRectangle(part, buff=0.1, stroke_color=TEAL, stroke_width=3)
+            for part in frac_parts
+        ))
+
+        self.play(ShowCreationThenFadeOut(rects[0]))
+        self.wait()
+        self.play(ShowCreationThenFadeOut(rects[1]))
+        self.wait()
+
+        fnr = eq.get_part_by_tex("10\\%")
+        fnr_word = TextMobject("FNR", font_size=36)
+        fnr_word.next_to(fnr, UP, buff=0.8)
+        fnr_arrow = Arrow(fnr_word.get_bottom(), fnr.get_top(), buff=0.1)
+
+        spec = eq.get_part_by_tex("91\\%")
+        spec_word = TextMobject("Specificity", font_size=36)
+        spec_word.next_to(spec, DOWN, buff=0.8)
+        spec_arrow = Arrow(spec_word.get_top(), spec.get_bottom(), buff=0.1)
+
+        self.play(
+            FadeIn(fnr_word, 0.5 * UP),
+            GrowArrow(fnr_arrow),
+        )
+        self.play(
+            FadeIn(spec_word, 0.5 * DOWN),
+            GrowArrow(spec_arrow),
+        )
+        self.wait()
+        for randy in randys:
+            self.play(Blink(randy))
+        self.wait()
+
+
+class BayesTheorem(Scene):
+    def construct(self):
+        # Add title
+        title = TextMobject("The usual version of Bayes' rule", font_size=60)
+        title.to_edge(UP, buff=MED_SMALL_BUFF)
+        title_line = Underline(title)
+        title_line.set_stroke(GREY, 2)
+        title_line.shift(SMALL_BUFF * UP)
+        title.add(title_line)
+
+        # Population
+        prior = 1 / 12
+        sensitivity = 0.8
+        specificity = 0.9
+
+        rects = VGroup(*[Square() for x in range(4)])
+        rects.set_stroke(WHITE, 2)
+        rects[:2].set_stroke(YELLOW)
+        rects.set_fill(GREY_D, 1)
+        rects.set_height(3)
+        rects.set_width(3, stretch=True)
+        rects.move_to(3.5 * LEFT + DOWN)
+
+        rects[:2].stretch(prior, 0, about_edge=LEFT)
+        rects[2:].stretch(1 - prior, 0, about_edge=RIGHT)
+        rects[0].stretch(sensitivity, 1, about_edge=UP)
+        rects[1].stretch(1 - sensitivity, 1, about_edge=DOWN)
+        rects[2].stretch(1 - specificity, 1, about_edge=UP)
+        rects[3].stretch(specificity, 1, about_edge=DOWN)
+
+        rects[0].set_fill(GREEN_D)
+        rects[1].set_fill(interpolate_color(RED_E, BLACK, 0.5))
+        rects[2].set_fill(GREEN_E, 0.75)
+        rects[3].set_fill(interpolate_color(RED_E, BLACK, 0.75))
+
+        icons = VGroup(*(WomanIcon() for x in range(120)))
+        icons.arrange_in_grid(
+            10, 12,
+            h_buff=1, v_buff=0.5,
+            fill_rows_first=False,
+        )
+        icons.replace(rects, dim_to_match=1)
+        icons.scale(0.98)
+        icons.set_fill(GREY_C)
+        icons[:10].set_fill(YELLOW)
+
+        # Add terminology
+        t2c = {
+            "\\text{Disease}": YELLOW,
+            "\\text{D}": YELLOW,
+            "\\text{$\\neg$D}": GREY_B,
+            "\\text{Not sick}": GREY_B,
+            "{+}": GREEN,
+            "{-}": RED,
+            "\\text{Prior}": YELLOW,
+            "\\text{Sensitivity}": GREEN,
+            "\\text{FPR}": GREEN_D,
+            "\\text{TP}": GREEN,
+            "\\text{FP}": GREEN_D,
+            "(": WHITE,
+            ")": WHITE,
+            "\\over": WHITE,
+        }
+        kw = {
+            "tex_to_color_map": t2c,
+            "font_size": 30,
+        }
+
+        braces = VGroup(
+            Brace(rects[1], DOWN, buff=SMALL_BUFF),
+            *(
+                Brace(rect, u * RIGHT, buff=SMALL_BUFF)
+                for rect, u in zip(rects, [-1, -1, 1, 1])
+            )
+        )
+        braces.set_fill(GREY_B)
+        terms = VGroup(
+            TextMobject("Prior"),
+            TextMobject("Sens."),
+            TextMobject("FNR"),
+            TextMobject("FPR"),
+            TextMobject("Spec."),
+        )
+        terms[0].set_color(YELLOW)
+        symbols = VGroup(
+            TexMobject("P(\\text{D})", **kw),
+            TexMobject("P({+} | \\text{D})", **kw),
+            TexMobject("P({-} | \\text{D})", **kw),
+            TexMobject("P({+} | \\text{$\\neg$D})", **kw),
+            TexMobject("P({-} | \\text{$\\neg$D})", **kw),
+        )
+        for term, symbol, brace in zip(terms, symbols, braces):
+            term.scale(0.75)
+            term.next_to(brace, brace.direction, buff=SMALL_BUFF)
+            symbol.next_to(brace, brace.direction, buff=SMALL_BUFF)
+
+        pop_group = VGroup(rects, icons, braces, symbols)
+        pop_group.save_state()
+        pop_group.set_height(5)
+        pop_group.center().to_edge(DOWN)
+
+        # Formula with jargon
+        lhs = TexMobject("P(\\text{Disease} \\text{ given } {+})", **kw)
+        lhs.scale(48 / 30)
+
+        term_formula = TexMobject(
+            """
+            {(\\text{Prior})(\\text{Sensitivity})
+            \\over
+            (\\text{Prior})(\\text{Sensitivity})
+            +
+            (1 - \\text{Prior})(\\text{FPR})
+            """,
+            **kw,
+        )
+
+        tp_formula = TexMobject("{\\text{TP} \\over \\text{TP} + \\text{FP}}", **kw)
+        tp_formula.scale(1.25)
+
+        prob_formula = TexMobject(
+            """
+            P(\\text{D}) P({+} \\,|\\, \\text{D})
+            \\over
+            P(\\text{D}) P({+} \\,|\\, \\text{D})
+            +
+            """,
+            """
+            P(\\text{$\\neg$D}) P({+} \\,|\\, \\text{$\\neg$D})
+            """,
+            **kw
+        )
+        simple_prob_formula = TexMobject(
+            "P(\\text{D}) P({+} \\,|\\, \\text{D}) \\over P({+})",
+            **kw
+        )
+        simple_prob_formula.scale(48 / 30)
+
+        equals = VGroup(*(TexMobject("=") for x in range(4)))
+        equals[2:].scale(1.5).rotate(90 * DEGREES)
+
+        formula = VGroup(lhs, equals[0], tp_formula, equals[1], term_formula)
+        formula.arrange(RIGHT)
+        formula.next_to(title, DOWN, MED_LARGE_BUFF)
+
+        prob_group = VGroup(
+            equals[2], prob_formula, equals[3], simple_prob_formula,
+        )
+        prob_group.arrange(DOWN, buff=0.35)
+        prob_group.next_to(term_formula, DOWN, buff=0.35)
+
+        # Show population
+        self.add(title)
+        self.play(FadeIn(lhs, DL))
+        self.play(Write(equals[0]))
+        self.wait()
+        self.play(ShowIncreasingSubsets(icons, run_time=2))
+        self.add(*pop_group)
+        self.play(
+            FadeIn(rects),
+            LaggedStartMap(GrowFromCenter, braces),
+            LaggedStartMap(FadeIn, symbols),
+            run_time=1,
+        )
+        self.wait()
+
+        pop_to_fade = VGroup(*icons[8:])
+        pop_to_fade.remove(*icons[10::10])
+        self.play(
+            FadeIn(tp_formula),
+            pop_to_fade.set_opacity, 0.1,
+            symbols.set_opacity, 0.25,
+            braces.set_fill, GREY_E, 1,
+        )
+        self.wait()
+
+        # Show formula piece by piece
+        prob_formula.save_state()
+        prob_formula.move_to(term_formula, LEFT)
+
+        srkw = {"buff": 0.025}
+        blank_rects = VGroup(
+            SurroundingRectangle(VGroup(prob_formula[0:10]), **srkw),
+            SurroundingRectangle(VGroup(prob_formula[11:21]), **srkw),
+            SurroundingRectangle(VGroup(prob_formula[22:]), **srkw),
+        )
+        blank_rects.set_stroke(GREEN, 2)
+        blank_rects.set_fill(GREEN, 0.2)
+
+        self.play(
+            Write(equals[1]),
+            LaggedStartMap(FadeIn, VGroup(
+                prob_formula.get_part_by_tex("\\over"),
+                prob_formula[21],
+                *blank_rects
+            ))
+        )
+        self.wait()
+        self.play(
+            symbols[0].set_opacity, 1,
+            braces[0].set_fill, GREY_B,
+            FadeIn(prob_formula[0:4]),
+        )
+        self.wait()
+        self.play(
+            symbols[1].set_opacity, 1,
+            braces[1].set_fill, GREY_B,
+            FadeIn(prob_formula[4:10]),
+        )
+        self.wait()
+        self.play(
+            TransformFromCopy(prob_formula[0:10], prob_formula[11:21])
+        )
+        self.wait()
+        self.play(
+            FadeIn(prob_formula[22:26])
+        )
+        self.wait()
+        self.play(
+            FadeIn(prob_formula[26:]),
+            braces[3].set_fill, GREY_B,
+            symbols[3].set_opacity, 1,
+        )
+        self.wait()
+        self.play(FadeOut(blank_rects))
+        self.wait()
+
+        # Words over symbols
+        self.play(
+            pop_group.replace, pop_group.saved_state,
+            Restore(prob_formula),
+            FadeIn(term_formula, scale=2),
+            FadeIn(equals[2], DOWN),
+        )
+        terms[2::2].set_opacity(0.2)
+        self.play(
+            FadeOut(symbols),
+            FadeIn(terms),
+        )
+        self.wait()
+
+        # Show confused
+        randy = Randolph(height=2)
+        randy.to_edge(DOWN)
+        randy.shift(RIGHT)
+
+        self.play(
+            VFadeIn(randy),
+            randy.change, 'maybe', prob_formula
+        )
+        self.play(Blink(randy))
+        self.play(randy.change, 'confused', prob_formula)
+        self.wait()
+        self.play(Blink(randy))
+        self.wait()
+        self.play(
+            randy.change, 'pondering', pop_group,
+        )
+        self.play(Blink(randy))
+        self.wait()
+
+        # Show simplify denominator
+        denom_rects = VGroup(
+            SurroundingRectangle(prob_formula[11:], buff=0.025),
+            SurroundingRectangle(simple_prob_formula[11:], buff=0.05),
+        )
+        denom_rects.set_stroke(GREY_B, 2)
+
+        self.play(
+            ShowCreation(denom_rects[0]),
+            randy.look_at, denom_rects[0],
+        )
+        self.wait()
+        self.play(
+            TransformFromCopy(*denom_rects),
+            FadeIn(simple_prob_formula, DOWN),
+            FadeIn(equals[3], DOWN),
+            randy.change, 'erm', simple_prob_formula
+        )
+        self.play(FadeOut(denom_rects))
+        self.play(Blink(randy))
+        self.wait()
+        self.play(randy.change, "thinking")
+        self.play(Blink(randy))
+        self.wait()
+
+        self.play(ShowCreation(denom_rects[1]))
+        self.play(
+            TransformFromCopy(*reversed(denom_rects)),
+            randy.change, "sassy", denom_rects[0],
+        )
+        self.wait()
+        self.play(Blink(randy))
+        self.wait()
+
+
+class ContrastTwoFormulas(Scene):
+    def construct(self):
+        # Talk through odds formula
+        t2c = {
+            "\\text{D}": YELLOW,
+            "\\text{$\\neg$D}": GREY_B,
+            "{+}": GREEN,
+            "(": WHITE,
+            ")": WHITE,
+            "\\over": WHITE,
+            "O": WHITE,
+            "=": WHITE,
+            "\\text{Prior}": YELLOW,
+            "\\text{Sensitivity}": GREEN,
+            "\\text{Sens.}": GREEN,
+            "\\text{FPR}": GREEN_D,
+        }
+        kw = {"tex_to_color_map": t2c}
+
+        odds_formula = TexMobject(
+            "O(\\text{D} | {+}) ="
+            "O(\\text{D})"
+            "{P({+} | \\text{D}) \\over P({+} | \\text{$\\neg$D})}",
+            **kw
+        )
+        odds_formula.scale(1.25)
+        bf_part = odds_formula[11:]
+        post_part = odds_formula[:6]
+        prior_part = odds_formula[7:11]
+
+        post_words = TextMobject(
+            "Odds of having the disease\\\\ \\emph{given} a positive test result",
+            tex_to_color_map={
+                "disease": YELLOW,
+                "positive": GREEN,
+            }
+        )
+        post_words.next_to(post_part, UP, buff=1.5)
+        post_words.shift(LEFT)
+        post_arrow = Arrow(post_words.get_bottom(), post_part[:2].get_top(), buff=0.2)
+        prior_words = TextMobject("Prior odds")
+        prior_words.next_to(prior_part, DOWN, buff=1.5)
+        prior_words.shift(LEFT)
+        prior_arrow = Arrow(prior_words.get_top(), prior_part[:2].get_bottom(), buff=0.2)
+
+        bf_rect = SurroundingRectangle(bf_part, buff=0.1)
+        bf_rect.set_stroke(TEAL, 2)
+        bf_words = TextMobject("Bayes factor")
+        bf_words.next_to(bf_rect, UP)
+        bf_words.match_color(bf_rect)
+
+        self.play(Write(odds_formula))
+        self.wait()
+        self.play(
+            FadeIn(post_words, lag_ratio=0.1),
+            GrowArrow(post_arrow),
+        )
+        self.wait()
+        self.play(
+            FadeIn(prior_words),
+            GrowArrow(prior_arrow),
+        )
+        self.wait()
+        VGroup(bf_rect, bf_words).shift(SMALL_BUFF * RIGHT)
+        self.play(
+            FadeIn(bf_words, 0.25 * UP),
+            ShowCreation(bf_rect),
+            bf_part.shift, SMALL_BUFF * RIGHT,
+        )
+        self.wait()
+
+        # Sweep aside
+        to_fade = VGroup(post_words, post_arrow, prior_words, prior_arrow)
+        odds_formula.add(bf_rect, bf_words)
+
+        v_line = Line(UP, DOWN).set_height(FRAME_HEIGHT)
+        v_line.set_stroke(GREY_B, 2)
+
+        titles = VGroup(
+            TextMobject("Using probability"),
+            TextMobject("Using odds"),
+        )
+        titles.scale(1.25)
+        for title, u in zip(titles, [-1, 1]):
+            title.set_x(u * FRAME_WIDTH / 4)
+        titles.to_edge(UP)
+
+        self.play(
+            ShowCreation(v_line),
+            FadeOut(to_fade, shift=UR, scale=0.5),
+            odds_formula.scale, 0.7,
+            odds_formula.next_to, titles[1], DOWN, LARGE_BUFF,
+            FadeIn(titles[0], LEFT),
+            FadeIn(titles[1], RIGHT),
+        )
+        self.wait()
+
+        # Contrast with usual formula
+        prob_formula = TexMobject(
+            """
+            P(\\text{D} | {+}) =
+            {P(\\text{D}) P({+} \\,|\\, \\text{D})
+            \\over
+            P(\\text{D}) P({+} \\,|\\, \\text{D})
+            +
+            P(\\text{$\\neg$D}) P({+} \\,|\\, \\text{$\\neg$D})}
+            """,
+            **kw
+        )
+        prob_rhs = prob_formula[7:]
+        prob_formula.set_width(FRAME_WIDTH / 2 - 1)
+        prob_formula.set_x(-FRAME_WIDTH / 4)
+        prob_formula.match_y(bf_part)
+
+        self.play(FadeIn(prob_formula, shift=0.25 * DOWN, scale=1.2))
+        self.wait()
+
+        # Use term-based formulas
+        term_formula = TexMobject(
+            """
+            {(\\text{Prior})(\\text{Sensitivity})
+            \\over
+            (\\text{Prior})(\\text{Sensitivity})
+            +
+            (1 - \\text{Prior})(\\text{FPR})
+            """,
+            **kw
+        )
+        term_formula.replace(prob_rhs, 0)
+        bf_terms = TexMobject(
+            "\\text{Sensitivity} \\over \\text{FPR}",
+            **kw
+        )
+        bf_terms.replace(bf_part, 0)
+
+        self.play(
+            FadeOut(prob_rhs, 0.5 * UP),
+            FadeIn(term_formula, 0.5 * UP),
+            FadeOut(bf_part, 0.5 * UP),
+            FadeIn(bf_terms, 0.5 * UP),
+        )
+        self.wait()
+
+        # Comment on prior/test separation
+        kw2 = {
+            "tex_to_color_map": {
+                "Prior": YELLOW,
+                "test accuracy": GREEN,
+                "separate": GREY_A,
+                "intermingled": GREY_A,
+            }
+        }
+        pt_comments = VGroup(
+            TextMobject("Prior and test accuracy\\\\are intermingled", **kw2),
+            TextMobject("Prior and test accuracy\\\\are separate", **kw2),
+        )
+        for comment, formula in zip(pt_comments, [prob_formula, odds_formula]):
+            comment.match_x(formula)
+        pt_comments.set_y(-2)
+
+        self.play(Write(pt_comments[1], run_time=1))
+        self.play(
+            VGroup(bf_terms, bf_rect, bf_words).shift, 0.25 * UR,
+            prior_part.shift, 0.25 * UL,
+            rate_func=there_and_back_with_pause,
+            run_time=2,
+        )
+        self.wait()
+        self.play(
+            TransformFromCopy(pt_comments[1][:-1], pt_comments[0][:-1], path_arc=-20 * DEGREES),
+            GrowFromPoint(pt_comments[0][-1], pt_comments[1][-1].get_left(), path_arc=20 * DEGREES),
+            run_time=1,
+        )
+        words_to_move = VGroup(
+            *term_formula.get_parts_by_tex("\\text{Prior}"),
+            *term_formula.get_parts_by_tex("\\text{Sensitivity}"),
+            *term_formula.get_parts_by_tex("\\text{FPR}"),
+        )
+        self.play(LaggedStart(*(
+            ApplyMethod(
+                part.shift, 0.25 * vect,
+                rate_func=there_and_back_with_pause,
+                run_time=2,
+            )
+            for part, vect in zip(words_to_move, [UP, DOWN, DOWN, UP, DOWN, DOWN])
+        ), lag_ratio=0.05))
+        self.wait()
+
+        # Comment on multiple updates
+        kw["tex_to_color_map"].update({
+            "{E_1}": GREEN,
+            "{E_2}": BLUE,
+        })
+        mult_formula = TexMobject(
+            "O(\\text{D} | {E_1}, {E_2}) =",
+            "O(\\text{D})\\,\\,",
+            "{P({E_1} | \\text{D}) \\over P({E_1} | \\text{$\\neg$D})}\\,\\,",
+            "{P({E_2} | \\text{D}, {E_1}) \\over P({E_2} | \\text{$\\neg$D}, {E_1})}",
+            **kw
+        )
+        mult_formula.set_width(FRAME_WIDTH / 2 - 1)
+        mult_formula.next_to(odds_formula, DOWN, buff=1.5)
+
+        new_bf_parts = VGroup(mult_formula[14:27], mult_formula[27:])
+        new_bf_rects = VGroup(*(
+            SurroundingRectangle(part, buff=0.05)
+            for part in new_bf_parts
+        ))
+        new_bf_rects[0].set_stroke(GREEN, 2)
+        new_bf_rects[1].set_stroke(BLUE, 2)
+        new_bf_labels = VGroup()
+        for n, rect in zip(it.count(1), new_bf_rects):
+            words = TextMobject(f"Bayes\\\\Factor {n}", font_size=28)
+            parens = TexMobject(*"()")
+            parens.set_height(1.2 * words.get_height(), stretch=True)
+            parens[0].next_to(words, LEFT, buff=0)
+            parens[1].next_to(words, RIGHT, buff=0)
+            words.add(parens)
+            words.match_color(rect)
+            words.next_to(rect, UP, MED_SMALL_BUFF)
+            new_bf_labels.add(words)
+            words.save_state()
+
+        new_bf_labels.match_y(new_bf_parts)
+        for part in new_bf_parts:
+            part.save_state()
+            part.set_color(BLACK)
+
+        clipboards = VGroup(*(
+            get_covid_clipboard("Disease").set_height(1.5).next_to(rect, DOWN)
+            for rect in new_bf_rects
+        ))
+        sick_randy = Randolph(height=1.5)
+        sick_randy.move_to(clipboards[1])
+
+        self.play(
+            FadeOut(pt_comments),
+            FadeIn(mult_formula, lag_ratio=0.1),
+            FadeIn(new_bf_labels, lag_ratio=0.1),
+            FadeIn(new_bf_rects, lag_ratio=0.1),
+        )
+        self.wait()
+        self.play(
+            LaggedStartMap(FadeIn, clipboards, shift=0.5 * DOWN, lag_ratio=0.3)
+        )
+        self.wait()
+        self.play(
+            FadeIn(sick_randy, 0.5 * DOWN),
+            FadeOut(clipboards[1], 0.5 * DOWN),
+        )
+        self.play(
+            sick_randy.change, "sick",
+            sick_randy.set_color, SICKLY_GREEN,
+        )
+        self.play(Blink(sick_randy))
+        self.wait()
+        for i in (0, 1):
+            new_bf_parts[i].restore()
+            self.play(
+                Restore(new_bf_labels[i]),
+                FadeIn(new_bf_parts[i]),
+                sick_randy.look_at, new_bf_labels[i],
+            )
+            self.wait()
+        self.play(Blink(sick_randy))
+        self.wait()
+
+        to_fade = VGroup(mult_formula, new_bf_labels, new_bf_rects, clipboards[0], sick_randy)
+        self.play(LaggedStartMap(FadeOut, to_fade, shift=DOWN))
+
+        # Comment
+        randy = Randolph(height=1.5)
+        morty = Mortimer(height=1.5)
+        pis = VGroup(randy, morty)
+        pis.arrange(RIGHT, buff=2)
+        pis.to_corner(DR)
+        pis.to_edge(DOWN)
+
+        self.play(FadeIn(pis))
+        self.play(PiCreatureSays(
+            randy, "How accurate is\\\\the test?",
+            bubble_kwargs={"height": 2, "width": 3},
+            content_introduction_class=FadeIn,
+            bubble_creation_class=FadeIn,
+            target_mode="raise_left_hand",
+            look_at_arg=morty.eyes,
+            run_time=1,
+        ))
+        content = TextMobject("Bayes factor 100", tex_to_color_map={"$+$": GREEN})
+        self.play(PiCreatureSays(
+            morty, content,
+            target_mode="hooray",
+            bubble_kwargs={"height": 2, "width": 3},
+            content_introduction_class=FadeIn,
+            bubble_creation_class=FadeIn,
+            look_at_arg=randy.eyes,
+            run_time=1
+        ))
+        for x in range(2):
+            self.play(Blink(randy))
+            self.play(Blink(morty))
+            self.wait()
+
+
+class ConfusedByFPR(Scene):
+    def construct(self):
+        # Background
+        br = FullScreenFadeRectangle()
+        br.set_fill(GREY_E, 1)
+        self.add(br)
+
+        # State FPR
+        randy = Randolph(height=2.5, color=BLUE_C)
+        randy.to_corner(DL, buff=LARGE_BUFF)
+
+        clipboard = get_covid_clipboard("Cancer")
+        clipboard.set_height(2)
+        clipboard.next_to(randy.get_corner(UR), RIGHT)
+
+        doctor = SVGMobject("female_doctor")
+        doctor.remove(doctor[0])
+        doctor.set_stroke(width=0)
+        doctor.set_fill(GREY_B)
+        doctor.set_height(2.5)
+        doctor.to_corner(DR, buff=LARGE_BUFF)
+
+        fpr_words = TextMobject(
+            "This test's\\\\false positive rate\\\\is 9\\%",
+            tex_to_color_map={
+                "false positive rate": GREEN,
+                "9\\%": WHITE,
+            }
+        )
+        bubble = SpeechBubble(height=3, width=4)
+        bubble.pin_to(doctor)
+        bubble.add_content(fpr_words)
+
+        self.add(randy)
+        self.add(doctor)
+        self.play(
+            FadeIn(clipboard, LEFT),
+            randy.change, "guilty"
+        )
+        self.play(
+            DrawBorderThenFill(bubble),
+            Write(fpr_words)
+        )
+        self.play(Blink(randy))
+        self.wait()
+
+        # Misinterpret
+        false_prob = TexMobject(
+            "P(\\text{Test is false}) = 9\\%",
+            tex_to_color_map={"9\\%": WHITE}
+        )
+        thought_bubble = ThoughtBubble(height=3, width=4)
+        thought_bubble.pin_to(randy)
+        thought_bubble.add_content(false_prob)
+        cross = Cross(thought_bubble[-1])
+
+        self.play(
+            randy.change, 'confused', false_prob,
+            DrawBorderThenFill(thought_bubble),
+            FadeIn(false_prob),
+            clipboard.shift, DOWN,
+        )
+        self.play(Blink(randy))
+        self.play(
+            ShowCreation(cross),
+            randy.change, "maybe", cross,
+        )
+        self.wait()
+
+        # Sweep away
+        self.play(
+            randy.change, "hesitant",
+            LaggedStartMap(
+                FadeOut, VGroup(thought_bubble, false_prob, cross),
+                scale=0.5,
+                run_time=1,
+            )
+        )
+
+        # Mention Bayes factor instead
+        bf_words = TextMobject(
+            "This test's\\\\positive Bayes factor\\\\is 10",
+            tex_to_color_map={
+                "positive Bayes factor": YELLOW,
+                "10": WHITE,
+            }
+        )
+        bf_words.replace(fpr_words, 1)
+        anims = []
+        for m1, m2 in zip(fpr_words, bf_words):
+            m1.generate_target()
+            m1.target.replace(m2, stretch=True)
+            m1.target.set_opacity(0)
+            anims.append(MoveToTarget(m1, remover=True))
+
+            m2.save_state()
+            m2.replace(m1, stretch=True)
+            m2.set_opacity(0)
+            anims.append(Restore(m2))
+
+        self.play(*anims)
+        self.play(randy.change, "pondering")
+        self.play(Blink(randy))
+        self.wait()
+
+
+class ShowContrastingMethods(Scene):
+    def construct(self):
+        # Prepare stats
+        stats = VGroup(
+            TextMobject("Prior: ", "2\\%"),
+            TextMobject("Sensitivity: ", "90\\%"),
+            TextMobject("Specificity: ", "99\\%"),
+        )
+        stats.arrange(DOWN, aligned_edge=LEFT)
+        colors = [YELLOW, GREEN, BLUE]
+        for stat, color in zip(stats, colors):
+            stat[0].set_color(color)
+            stat[1].align_to(stats[-1][1], LEFT)
+
+        stat_rect = SurroundingRectangle(stats, buff=0.2)
+        stat_rect.set_fill(GREY_E, 1)
+        stat_rect.set_stroke(WHITE, 2)
+        stats.add_to_back(stat_rect)
+        stats.set_height(1.5)
+
+        # Setup division
+        h_line = Line(LEFT, RIGHT)
+        h_line.set_width(FRAME_WIDTH)
+        h_line.set_stroke(GREY, 2)
+
+        titles = VGroup(
+            TextMobject("Using odds"),
+            TextMobject("Using probability"),
+        )
+        titles.set_fill(GREY_A)
+        titles[0].to_edge(UP)
+        titles[1].next_to(ORIGIN, DOWN, MED_SMALL_BUFF)
+        for title in titles:
+            line = Underline(title)
+            line.shift(0.1 * UP)
+            line.set_stroke(GREY_B, 2)
+            title.add(line)
+
+        stats_pair = VGroup(stats, stats.copy())
+        anims = []
+        for sp, u in zip(stats_pair, [1, -1]):
+            y = u * FRAME_HEIGHT / 4
+            sp.set_y(y)
+            sp.shift(0.5 * DOWN)
+            sp.to_edge(LEFT)
+            anims.append(FadeIn(sp, shift=y * UP))
+
+        self.play(
+            ShowCreation(h_line),
+            FadeIn(titles),
+            *anims
+        )
+
+        # Bayes factor method
+        prior_odds = TextMobject("Prior odds = ", "2:99")
+        bf_eq = VGroup(
+            TextMobject("Bayes\\\\Factor"),
+            TexMobject(
+                "= {90\\% \\over 1\\%} = 90",
+                tex_to_color_map={"90\\%": GREEN, "1\\%": BLUE}
+            ),
+        )
+        bf_eq.arrange(RIGHT, buff=SMALL_BUFF)
+
+        steps = VGroup(prior_odds, bf_eq)
+        steps.scale(0.9)
+        steps.arrange(DOWN, buff=0.75, aligned_edge=LEFT)
+        steps.next_to(stats, RIGHT, buff=1.0)
+
+        p_rect = SurroundingRectangle(stats[1][1], buff=0.05)
+        ss_rect = SurroundingRectangle(VGroup(stats[2][1], stats[3][1]), buff=0.05)
+        ss_rect.set_stroke(GREEN)
+        p_rect.match_width(ss_rect, stretch=True, about_edge=LEFT)
+
+        p_arrow = Arrow(p_rect.get_right(), prior_odds.get_left(), buff=0.1)
+        p_arrow.match_color(p_rect)
+        ss_arrow = Arrow(ss_rect.get_right(), bf_eq.get_left(), buff=0.1)
+        ss_arrow.match_color(ss_rect)
+
+        ans = TexMobject("\\text{180:99} \\approx 2:1 \\rightarrow {2 \\over 3}")
+        ans.scale(0.9)
+        ans.next_to(steps, RIGHT, buff=1.0)
+        globals()['ans'] = ans
+        ans_arrows = VGroup(*(
+            Arrow(step.get_right(), ans.get_left(), buff=0.1)
+            for step in steps
+        ))
+
+        # PPV formula
+        ppv_formula = TexMobject(
+            """
+            \\text{PPV} = 
+            {(0.02)(0.9) \\over (0.02)(0.9) + (1 - 0.02)(0.01)}
+            \\approx 0.647
+            """,
+            tex_to_color_map={
+                "0.02": YELLOW,
+                "0.9": GREEN,
+                "0.01": BLUE,
+            }
+        )
+        ppv_formula.scale(0.9)
+        ppv_formula.next_to(stats_pair[1], RIGHT, LARGE_BUFF)
+
+        self.play(
+            FadeIn(steps, RIGHT),
+            ShowCreation(p_rect),
+            ShowCreation(ss_rect),
+            GrowArrow(p_arrow),
+            GrowArrow(ss_arrow),
+        )
+        self.play(
+            FadeIn(ppv_formula, RIGHT)
+        )
+        self.play(
+            *map(GrowArrow, ans_arrows),
+            FadeIn(ans, RIGHT)
+        )
+        self.wait()
+
+
+class FailedPromises(TeacherStudentsScene):
+    def construct(self):
+        self.student_says(
+            "Are you still doing\\\\``Probabilities\\\\of probabilities''?",
+            bubble_kwargs={
+                "height": 3.5,
+                "width": 4.5,
+            },
+            student_index=0,
+            target_mode="sassy",
+            added_anims=[self.teacher.change, "guilty"]
+        )
+        self.students[0].bubble = None
+        self.student_says(
+            "And what about\\\\Differential equations?",
+            bubble_kwargs={
+                "height": 3,
+                "width": 4,
+                "direction": LEFT,
+            },
+            student_index=2,
+            target_mode="angry",
+            added_anims=[self.students[1].change, "hesitant"],
+        )
+        self.wait(3)
+
+
+class MentionPart2(Scene):
+    def construct(self):
+        self.add(FullScreenFadeRectangle(fill_color=GREY_E, fill_opacity=1))
+
+        tweet = ImageMobject("twitter_covid_test_poll")
+        tweet.set_height(5)
+        tweet.to_edge(LEFT)
+
+        words = TextMobject(
+            "Possible follow-up\\\\breaking this down",
+            alignment="",
+            font_size=60
+        )
+        words.to_edge(RIGHT)
+        words.align_to(tweet, UP)
+        arrow = Arrow(words.get_bottom() + SMALL_BUFF * DOWN, tweet.get_right(), path_arc=-45 * DEGREES)
+
+        low_words = TextMobject("How would you answer?")
+        low_words.match_x(words)
+        low_words.align_to(tweet, DOWN)
+        low_words.set_color(BLUE)
+
+        self.add(words)
+
+        self.play(
+            FadeIn(tweet, shift=LEFT, scale=1.2),
+            DrawBorderThenFill(arrow),
+        )
+        self.wait()
+        self.play(Write(low_words, run_time=1))
+        self.wait()
+
+
+class EndScreen(PatreonEndScreen):
+    pass
+
+
 # Everything above has been combed through after the rewrite
 
 class OldBayesFactorCode(Scene):
@@ -4017,6 +5388,7 @@ class OldBayesFactorCode(Scene):
         )
         self.wait()
 
+
 class AskAboutHowItsSoLow(TeacherStudentsScene):
     def construct(self):
         question = TextMobject(
@@ -4110,168 +5482,6 @@ class HighlightBayesFactorOverlay(Scene):
         self.play(
             ShowCreation(rect),
         )
-        self.wait()
-
-
-class BayesTheorem(Scene):
-    def construct(self):
-        # Add title
-        title = TextMobject("Bayes' theorem", font_size=72)
-        title.to_edge(UP, buff=MED_SMALL_BUFF)
-        title.add(Underline(title))
-        self.add(title)
-
-        # Draw rectangle
-        prior = 1 / 12
-        sensitivity = 0.8
-        specificity = 0.9
-
-        rects = VGroup(*[Square() for x in range(4)])
-        # rects[0::2].set_stroke(GREEN, 3)
-        # rects[1::2].set_stroke(RED, 3)
-        rects.set_stroke(WHITE, 2)
-        rects[:2].set_stroke(YELLOW)
-        rects.set_fill(GREY_D, 1)
-        rects.set_height(3)
-        rects.set_width(3, stretch=True)
-        rects.move_to(3.5 * LEFT)
-
-        rects[:2].stretch(prior, 0, about_edge=LEFT)
-        rects[2:].stretch(1 - prior, 0, about_edge=RIGHT)
-        rects[0].stretch(sensitivity, 1, about_edge=UP)
-        rects[1].stretch(1 - sensitivity, 1, about_edge=DOWN)
-        rects[2].stretch(1 - specificity, 1, about_edge=UP)
-        rects[3].stretch(specificity, 1, about_edge=DOWN)
-
-        rects[0].set_fill(GREEN_D)
-        rects[1].set_fill(interpolate_color(RED_E, BLACK, 0.5))
-        rects[2].set_fill(GREEN_E)
-        rects[3].set_fill(interpolate_color(RED_E, BLACK, 0.75))
-
-        icons = VGroup(*(WomanIcon() for x in range(120)))
-        icons.arrange_in_grid(
-            10, 12,
-            h_buff=1, v_buff=0.5,
-            fill_rows_first=False,
-        )
-        icons.replace(rects, dim_to_match=1)
-        icons.scale(0.98)
-        icons[:10].set_fill(YELLOW)
-
-        # Add terminology
-        braces = VGroup(
-            Brace(rects[1], DOWN, buff=SMALL_BUFF),
-            *(
-                Brace(rect, u * RIGHT, buff=SMALL_BUFF)
-                for rect, u in zip(rects, [-1, -1, 1, 1])
-            )
-        )
-        braces.set_fill(GREY_B)
-        terms = VGroup(
-            TextMobject("Prior"),
-            TextMobject("Sensitivity"),
-            TextMobject("False\\\\negative\\\\rate"),
-            TextMobject("False\\\\positive\\\\rate"),
-            TextMobject("Specificity"),
-        )
-        terms[0].set_color(YELLOW)
-        for term, brace in zip(terms, braces):
-            term.scale(0.5)
-            term.next_to(brace, brace.direction, buff=SMALL_BUFF)
-
-        # Formula with jargon
-        lhs = TexMobject(
-            "P(",
-            "\\text{Sick}",
-            "\\text{ given }",
-            "\\text{+}",
-            ")"
-        )
-        lhs.set_color_by_tex("Sick", YELLOW)
-        lhs.set_color_by_tex("+", GREEN)
-        lhs.set_x(3.5)
-        lhs.set_y(2)
-
-        equals = TexMobject("=")
-        equals.rotate(PI / 2)
-        equals.scale(1.5)
-
-        term_formula = TexMobject(
-            """
-            {(\\text{Prior})(\\text{Sensitivity})
-            \\over
-            (\\text{Prior})(\\text{Sensitivity})
-            +
-            (1 - \\text{Prior})(\\text{FPR})
-            """,
-            font_size=30,
-            tex_to_color_map={
-                "\\text{Prior}": YELLOW,
-                "\\text{Sensitivity}": GREEN,
-                "\\text{FPR}": GREEN_D,
-            }
-        )
-
-        eq2 = equals.copy()
-
-        prob_formula = TexMobject(
-            """
-            P(\\text{Sick}) P(\\text{+} \\text{ given } \\text{Sick})
-            \\over
-            P(\\text{+})
-            """,
-            tex_to_color_map={
-                "\\text{Sick}": YELLOW,
-                "\\text{+}": GREEN,
-            },
-            font_size=30
-        )
-
-        formula = VGroup(lhs, equals, term_formula, eq2, prob_formula)
-        formula.arrange(DOWN, buff=0.35)
-        formula.to_edge(RIGHT)
-
-        # Animations
-        rects.set_opacity(0)
-        rects.submobjects.reverse()
-        icons.save_state()
-        icons.set_height(6)
-        icons.center().to_edge(DOWN)
-
-        self.add(icons)
-        self.wait()
-        self.play(Restore(icons))
-        self.add(rects, icons)
-        self.play(
-            rects.set_opacity, 1,
-            icons.set_opacity, 0.1,
-            LaggedStartMap(GrowFromCenter, braces),
-            LaggedStartMap(FadeIn, terms),
-        )
-        self.wait()
-        self.play(LaggedStartMap(FadeIn, formula, scale=1.2, run_time=2))
-        self.wait()
-
-        # Show confused
-        randy = Randolph(height=1.5)
-        randy.to_edge(DOWN)
-
-        self.play(FadeIn(randy))
-        self.play(randy.change, 'maybe', formula)
-        self.play(Blink(randy))
-        self.play(randy.change, 'confused', formula)
-        self.wait()
-        self.play(Blink(randy))
-        self.wait()
-
-        # Back to population
-        self.add(rects, icons)
-        self.play(
-            icons.set_opacity, 1,
-            rects.set_opacity, 0.5,
-            randy.change, "pondering", icons,
-        )
-        self.play(Blink(randy))
         self.wait()
 
 
