@@ -46,12 +46,6 @@ class FadeInFromTest(Scene):
         self.play(FadeInFrom(square, direction=UP))
 
 
-class FadeInFromDownTest(Scene):
-    def construct(self):
-        square = Square()
-        self.play(FadeInFromDown(square))
-
-
 class FadeOutAndShiftTest(Scene):
     def construct(self):
         square = Square()
