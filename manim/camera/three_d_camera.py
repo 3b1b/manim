@@ -8,16 +8,17 @@ import numpy as np
 from .. import config
 from ..camera.camera import Camera
 from ..constants import *
-from ..mobject.three_d_utils import get_3d_vmob_end_corner
-from ..mobject.three_d_utils import get_3d_vmob_end_corner_unit_normal
-from ..mobject.three_d_utils import get_3d_vmob_start_corner
-from ..mobject.three_d_utils import get_3d_vmob_start_corner_unit_normal
+from ..mobject.three_d_utils import (
+    get_3d_vmob_end_corner,
+    get_3d_vmob_end_corner_unit_normal,
+    get_3d_vmob_start_corner,
+    get_3d_vmob_start_corner_unit_normal,
+)
 from ..mobject.types.point_cloud_mobject import Point
 from ..mobject.value_tracker import ValueTracker
 from ..utils.color import get_shaded_rgb
-from ..utils.space_ops import rotation_about_z
-from ..utils.space_ops import rotation_matrix
 from ..utils.family import extract_mobject_family_members
+from ..utils.space_ops import rotation_about_z, rotation_matrix
 
 
 class ThreeDCamera(Camera):
