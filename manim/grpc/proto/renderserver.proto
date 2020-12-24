@@ -16,6 +16,7 @@ message UpdateSceneDataRequest {
 message Scene {
     string name = 1;
     repeated Animation animations = 2;
+    string background_color = 3;
 }
 
 message Animation {

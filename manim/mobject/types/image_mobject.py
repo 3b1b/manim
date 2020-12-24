@@ -93,7 +93,8 @@ class ImageMobject(AbstractImageMobject):
         image_mode="RGBA",
         **kwargs,
     ):
-        self.opacity = 0
+        self.fill_opacity = 1
+        self.stroke_opacity = 1
         self.invert = invert
         self.image_mode = image_mode
         if isinstance(filename_or_array, (str, pathlib.PurePath)):
@@ -147,7 +148,8 @@ class ImageMobject(AbstractImageMobject):
             transparent.
         """
         self.pixel_array[:, :, 3] = int(255 * alpha)
-        self.opacity = alpha
+        self.fill_opacity = alpha
+        self.stroke_opacity = alpha
         return self
 
     def fade(self, darkness=0.5, family=True):
@@ -185,6 +187,12 @@ class ImageMobject(AbstractImageMobject):
             f"Mobject 1 ({mobject1}) : {mobject1.pixel_array.shape}\n"
             f"Mobject 2 ({mobject2}) : {mobject2.pixel_array.shape}"
         )
+        self.fill_opacity = interpolate(
+            mobject1.fill_opacity, mobject2.fill_opacity, alpha
+        )
+        self.stroke_opacity = interpolate(
+            mobject1.stroke_opacity, mobject2.stroke_opacity, alpha
+        )
         self.pixel_array = interpolate(
             mobject1.pixel_array, mobject2.pixel_array, alpha
         ).astype(self.pixel_array_dtype)
@@ -192,7 +200,7 @@ class ImageMobject(AbstractImageMobject):
     def get_style(self):
         return {
             "fill_color": colour.rgb2hex(self.color.get_rgb()),
-            "fill_opacity": self.opacity,
+            "fill_opacity": self.fill_opacity,
         }
 
 

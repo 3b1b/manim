@@ -18,7 +18,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
     syntax="proto3",
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
-    serialized_pb=b'\n\x12renderserver.proto\x12\x0crenderserver"f\n\x16UpdateSceneDataRequest\x12"\n\x05scene\x18\x01 \x01(\x0b\x32\x13.renderserver.Scene\x12\x11\n\texception\x18\x02 \x01(\t\x12\x15\n\rhas_exception\x18\x03 \x01(\x08"B\n\x05Scene\x12\x0c\n\x04name\x18\x01 \x01(\t\x12+\n\nanimations\x18\x02 \x03(\x0b\x32\x17.renderserver.Animation"+\n\tAnimation\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x10\n\x08\x64uration\x18\x02 \x01(\x02"\x0e\n\x0c\x45mptyRequest"\x0f\n\rEmptyResponse2d\n\x0cRenderServer\x12T\n\x0fUpdateSceneData\x12$.renderserver.UpdateSceneDataRequest\x1a\x1b.renderserver.EmptyResponseb\x06proto3',
+    serialized_pb=b'\n\x12renderserver.proto\x12\x0crenderserver"f\n\x16UpdateSceneDataRequest\x12"\n\x05scene\x18\x01 \x01(\x0b\x32\x13.renderserver.Scene\x12\x11\n\texception\x18\x02 \x01(\t\x12\x15\n\rhas_exception\x18\x03 \x01(\x08"\\\n\x05Scene\x12\x0c\n\x04name\x18\x01 \x01(\t\x12+\n\nanimations\x18\x02 \x03(\x0b\x32\x17.renderserver.Animation\x12\x18\n\x10\x62\x61\x63kground_color\x18\x03 \x01(\t"+\n\tAnimation\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x10\n\x08\x64uration\x18\x02 \x01(\x02"\x0e\n\x0c\x45mptyRequest"\x0f\n\rEmptyResponse2d\n\x0cRenderServer\x12T\n\x0fUpdateSceneData\x12$.renderserver.UpdateSceneDataRequest\x1a\x1b.renderserver.EmptyResponseb\x06proto3',
 )
 
 
@@ -147,6 +147,25 @@ _SCENE = _descriptor.Descriptor(
             file=DESCRIPTOR,
             create_key=_descriptor._internal_create_key,
         ),
+        _descriptor.FieldDescriptor(
+            name="background_color",
+            full_name="renderserver.Scene.background_color",
+            index=2,
+            number=3,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=b"".decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
     ],
     extensions=[],
     nested_types=[],
@@ -157,7 +176,7 @@ _SCENE = _descriptor.Descriptor(
     extension_ranges=[],
     oneofs=[],
     serialized_start=140,
-    serialized_end=206,
+    serialized_end=232,
 )
 
 
@@ -216,8 +235,8 @@ _ANIMATION = _descriptor.Descriptor(
     syntax="proto3",
     extension_ranges=[],
     oneofs=[],
-    serialized_start=208,
-    serialized_end=251,
+    serialized_start=234,
+    serialized_end=277,
 )
 
 
@@ -237,8 +256,8 @@ _EMPTYREQUEST = _descriptor.Descriptor(
     syntax="proto3",
     extension_ranges=[],
     oneofs=[],
-    serialized_start=253,
-    serialized_end=267,
+    serialized_start=279,
+    serialized_end=293,
 )
 
 
@@ -258,8 +277,8 @@ _EMPTYRESPONSE = _descriptor.Descriptor(
     syntax="proto3",
     extension_ranges=[],
     oneofs=[],
-    serialized_start=269,
-    serialized_end=284,
+    serialized_start=295,
+    serialized_end=310,
 )
 
 _UPDATESCENEDATAREQUEST.fields_by_name["scene"].message_type = _SCENE
@@ -334,8 +353,8 @@ _RENDERSERVER = _descriptor.ServiceDescriptor(
     index=0,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
-    serialized_start=286,
-    serialized_end=386,
+    serialized_start=312,
+    serialized_end=412,
     methods=[
         _descriptor.MethodDescriptor(
             name="UpdateSceneData",
