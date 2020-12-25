@@ -1,5 +1,6 @@
 import numpy as np
 import os
+from screeninfo import get_monitors
 
 MEDIA_DIR = ""
 VIDEO_DIR = ""
@@ -153,9 +154,12 @@ DEFAULT_PIXEL_HEIGHT = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_height"]
 DEFAULT_PIXEL_WIDTH = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_width"]
 DEFAULT_FRAME_RATE = 60
 
-DEFAULT_WINDOW_WIDTH = 896
-DEFAULT_WINDOW_HEIGHT = 504
-DEFAULT_WINDOW_POSITION = (897, 0)
+# Default to putting window in the
+# upper right of screen
+monitor = get_monitors()[0]
+DEFAULT_WINDOW_WIDTH = monitor.width / 2
+DEFAULT_WINDOW_HEIGHT = DEFAULT_WINDOW_WIDTH * 9 / 16
+DEFAULT_WINDOW_POSITION = (DEFAULT_WINDOW_WIDTH, 0)
 
 DEFAULT_STROKE_WIDTH = 4
 
