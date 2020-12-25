@@ -59,7 +59,93 @@ def get_covid_clipboard(disease_name="SARS\\\\CoV-2", sign="+", report="Detected
 # Scenes
 class Thumbnail(Scene):
     def construct(self):
-        title = TextMobject("The Bayes Factor", font_size=96)
+        self.clear()
+        # New
+        bg = FullScreenFadeRectangle()
+        bg.set_fill(BLACK, 1)
+        bg.set_gloss(0.2)
+        self.add(bg)
+
+        pre_pop = VGroup(*(WomanIcon() for x in range(5 * 6)))
+        pre_pop.arrange_in_grid(5, 6, fill_rows_first=False)
+        pre_pop.set_height(4)
+        pre_pop[:5].shift(MED_LARGE_BUFF * LEFT)
+        pre_pop[:5].set_fill(YELLOW)
+        pre_pop[5:].set_fill(GREY_C)
+
+        post_pop = pre_pop.copy()
+        post_pop.set_opacity(0.1)
+        for icon in (*post_pop[:4], *post_pop[5::5]):
+            rect = SurroundingRectangle(icon, buff=0.01)
+            rect.set_stroke(GREEN, 5)
+            icon.set_opacity(1)
+            plus = TexMobject("+")
+            plus.set_color(GREEN)
+            plus.set_width(rect.get_width() / 2)
+            plus.move_to(rect.get_corner(UR))
+            plus.shift(0.05 * UR)
+            icon.set_stroke(BLACK, 2, background=True)
+            icon.push_self_into_submobjects()
+            icon.add_to_back(rect, plus)
+            icon.set_stroke(background=True)
+
+        for pop in pre_pop, post_pop:
+            colon = TexMobject(":", font_size=96)
+            colon.move_to(pop[:10])
+            pop.add(colon)
+
+        arrow = Arrow(LEFT, RIGHT, thickness=0.1)
+        arrow.scale(1.75)
+
+        group = VGroup(pre_pop, arrow, post_pop)
+        group.arrange(RIGHT, buff=1.0)
+        group.to_edge(UP)
+        post_pop.align_to(pre_pop, DOWN)
+
+        self.add(group)
+
+        clipboard = get_covid_clipboard("Virus")
+        clipboard[2][0].set_stroke(GREEN, 8)
+        clipboard[2].scale(0.9)
+        clipboard.set_width(arrow.get_width() * 1.0)
+        clipboard.next_to(arrow, UP)
+        VGroup(clipboard, arrow).shift_onto_screen(buff=MED_SMALL_BUFF)
+        self.add(clipboard)
+
+        # Or try something else...
+        self.remove(group)
+        randy = Randolph(color=SICKLY_GREEN, mode="sick")
+        randy.set_height(4)
+        randy.next_to(ORIGIN, RIGHT, buff=0.5).to_edge(UP)
+        clipboard.set_height(4)
+        clipboard.next_to(ORIGIN, LEFT, buff=0.5).to_edge(UP)
+        self.add(randy)
+        self.add(clipboard)
+        #
+
+        new_bayes_rule = TextMobject(
+            "Post = (Prior)(Bayes factor)",
+            tex_to_color_map={
+                "(Prior)": YELLOW,
+                "(Bayes factor)": BLUE,
+            }
+        )
+        new_bayes_rule.set_width(FRAME_WIDTH - 1)
+        new_bayes_rule.move_to(2 * DOWN)
+
+        self.add(new_bayes_rule)
+
+        new_rule_words = TextMobject("Bayes rule redesigned")
+        new_rule_words.scale(1.75)
+        new_rule_words.next_to(new_bayes_rule, DOWN, MED_LARGE_BUFF)
+        new_rule_words.set_fill(GREY_A)
+        self.add(new_rule_words)
+
+        self.embed()
+        return
+
+        # Old
+        title = TextMobject("Interpreting medical tests", font_size=90)
         title.to_edge(UP)
         self.add(title)
 
@@ -73,20 +159,26 @@ class Thumbnail(Scene):
         )
         factor.scale(2)
         rect = SurroundingRectangle(factor, buff=MED_SMALL_BUFF)
-        rect.set_stroke(TEAL, 2)
+        rect.set_stroke(BLUE, 3)
         factor.add(rect)
         self.add(factor)
 
         clipboard = get_covid_clipboard("Virus")
-        clipboard[2].scale(0.8)
+        clipboard[2][0].set_stroke(GREEN, 8)
+        clipboard[2].scale(0.9)
         clipboard.set_height(4)
         clipboard.next_to(factor, LEFT, LARGE_BUFF)
-        VGroup(clipboard, factor).next_to(title, DOWN, buff=1.0)
+        VGroup(clipboard, factor).next_to(title, DOWN, buff=0.7)
 
         self.add(clipboard)
 
-        brace = Brace(factor, DOWN)
-        brace.add(brace.get_text("The one number\\\\you want to know"))
+        brace = Brace(factor, DOWN, buff=0.4)
+        brace.stretch(1.5, 1, about_edge=UP)
+        text = brace.get_text("How much your belief should change", buff=0.4)
+        text.scale(1.5, about_edge=UP)
+        text.shift_onto_screen()
+        text.match_color(rect)
+        brace.add(text)
         self.add(brace)
 
         self.embed()
@@ -207,18 +299,282 @@ class MathAsDesign(Scene):
         self.wait()
 
 
-class BayesRuleAndMedicalTests(Scene):
+class NewBayesRuleAndMedicalTests(Scene):
     def construct(self):
-        # Add title
-        title = TextMobject("Bayes' rule", font_size=72)
-        title.to_edge(UP)
-        h_line = Underline(title)
-        h_line.scale(1.5)
-        h_line.set_stroke(GREY_B, 2)
+        # Mention paradox
+        paradox_name = TextMobject("Medical Test Paradox", font_size=60)
+        paradox_name.to_corner(UL)
+        paradox_name.shift(MED_SMALL_BUFF * DOWN)
+        paradox_line = Underline(paradox_name)
+        paradox_line.set_stroke(GREY_B, 2)
 
-        self.add(title)
+        clipboard = get_covid_clipboard("Virus", color=BLUE)
+        clipboard.set_height(3)
+        clipboard.next_to(paradox_line, DOWN, LARGE_BUFF)
+        clipboard[2][0].shift(SMALL_BUFF * DOWN)
+        clipboard[2][0].set_stroke(BLUE, 4)
+        clipboard[2].set_opacity(0)
+
+        self.play(
+            FadeIn(paradox_name, lag_ratio=0.1),
+            ShowCreation(paradox_line),
+            FadeIn(clipboard, DOWN),
+        )
+        clipboard[2].set_opacity(1)
+        self.play(
+            Write(clipboard[2], run_time=1)
+        )
         self.wait()
 
+        # Show Bayes rule
+        bayes_title = TextMobject("Bayes' rule", font_size=60)
+        bayes_title.move_to(paradox_name, UL)
+        bayes_title.to_edge(RIGHT, buff=1.5)
+        bayes_underline = Underline(bayes_title)
+        bayes_underline.scale(1.5)
+        bayes_underline.set_stroke(GREY_B, 2)
+        bayes_underline.match_y(paradox_line)
+
+        formula = TexMobject(
+            "P(H|E) = {P(H)P(E|H) \\over P(E)}",
+            tex_to_color_map={
+                "H": YELLOW,
+                "E": BLUE,
+            },
+        )
+        formula.next_to(bayes_underline, DOWN, buff=LARGE_BUFF)
+
+        self.play(
+            Write(bayes_title, run_time=1),
+            GrowFromCenter(bayes_underline),
+            FadeIn(formula, shift=0.5 * DOWN, scale=1.2)
+        )
+        self.wait()
+
+        # Show high accuracy
+        accuracy_words = TextMobject("High accuracy")
+        accuracy_words.next_to(paradox_line, DOWN, MED_LARGE_BUFF)
+        accuracy_words.set_color(GREEN)
+
+        population = Population(100)
+        population.arrange_in_grid(buff=LARGE_BUFF)
+        population.set_height(5)
+        population.next_to(accuracy_words, DOWN)
+
+        marks = VGroup()
+        for icon in population:
+            icon.generate_target()
+            if random.random() < 0.025:
+                mark = Exmark()
+                icon.target.set_opacity(0.5)
+            else:
+                mark = Checkmark()
+            mark.set_height(icon.get_height() / 2)
+            mark.move_to(icon.get_corner(UL))
+            marks.add(mark)
+
+        accuracy_group = VGroup(accuracy_words, population, marks)
+
+        self.play(
+            FadeIn(accuracy_words),
+            FadeIn(population, lag_ratio=0.01),
+            clipboard.scale, 0.5,
+            clipboard.to_corner, DR,
+        )
+        self.play(
+            ShowIncreasingSubsets(marks, run_time=2),
+            LaggedStartMap(MoveToTarget, population, run_time=2),
+        )
+        self.wait()
+
+        # Show test result
+        randy = Randolph(height=2)
+        randy.next_to(population, RIGHT, MED_LARGE_BUFF, aligned_edge=DOWN)
+        clipboard.generate_target()
+        clipboard.target.set_height(2)
+        clipboard.target.next_to(randy.get_corner(UR), RIGHT)
+
+        self.play(
+            VFadeIn(randy),
+            randy.change, "guilty", clipboard.target,
+            MoveToTarget(clipboard),
+            formula.match_width, bayes_underline,
+            formula.next_to, bayes_underline, DOWN, MED_SMALL_BUFF,
+        )
+        self.play(randy.change, "horrified", clipboard)
+        self.play(Blink(randy))
+        self.wait()
+
+        # Show low predictive value
+        prob_expression = TexMobject(
+            "P(\\text{Sick} \\text{ given } +) = ",
+            tex_to_color_map={
+                "+": BLUE,
+                "\\text{Sick}": YELLOW,
+            }
+        )
+        prob = DecimalNumber(0.9, font_size=60)
+        prob.next_to(prob_expression, RIGHT)
+        prob.set_color(WHITE)
+        prob.set_opacity(0)
+        prob_expression.add(prob)
+        p_line = Underline(prob)
+        p_line.shift(0.1 * DOWN)
+        p_line.scale(1.5)
+        p_line.set_stroke(WHITE, 2)
+        prob_expression.add(p_line)
+        prob_expression.next_to(VGroup(randy, clipboard), UP, aligned_edge=LEFT)
+
+        self.play(
+            FadeIn(prob_expression),
+            randy.change, "pondering", prob_expression
+        )
+        self.play(
+            ChangeDecimalToValue(prob, 0.09),
+            UpdateFromAlphaFunc(prob, lambda m, a: m.set_opacity(a)),
+            run_time=2
+        )
+        self.play(Blink(randy))
+        self.play(
+            randy.change, "confused", prob,
+            ChangeDecimalToValue(prob, 0.01),
+        )
+        self.play(Blink(randy))
+        self.wait()
+
+        predictive_group = VGroup(
+            randy, clipboard,
+            prob_expression, prob,
+        )
+
+        # Accurate does not imply predictive
+        implication = TextMobject(
+            "Accurate ", "$\\Rightarrow$", " Predictive",
+        )
+        implication.set_color_by_tex("Accurate", GREEN)
+        implication.set_color_by_tex("Predictive", YELLOW)
+        implication.match_width(paradox_line)
+        implication.next_to(paradox_line, DOWN)
+
+        strike = Line(DL, UR).replace(implication[1], stretch=True)
+        strike.set_stroke(RED, 4)
+
+        self.play(
+            FadeIn(implication, scale=1.1),
+            accuracy_group.scale, 0.8, {"about_edge": DOWN},
+            randy.change, 'pondering', implication,
+        )
+        self.play(ShowCreation(strike))
+        self.wait()
+        implication.add(strike)
+
+        paradox_group = VGroup(paradox_name, paradox_line, implication)
+
+        # Get rid of medical test stuff
+        p_rect = SurroundingRectangle(paradox_group, buff=MED_SMALL_BUFF)
+        p_rect.set_stroke(WHITE, 2)
+        p_rect.set_fill(GREY_E, 1)
+        self.add(p_rect, paradox_group),
+        self.play(
+            FadeOut(accuracy_group, DL),
+            FadeOut(predictive_group, 2 * DL),
+            DrawBorderThenFill(p_rect)
+        )
+        paradox_group.add_to_back(p_rect)
+        self.wait()
+
+        # Alternate framing
+        odds_formula = TexMobject(
+            "O(H|E) = O(H){P(E|H) \\over P(E|\\neg H)}",
+            tex_to_color_map={
+                "H": YELLOW,
+                "E": BLUE,
+                "\\neg": RED,
+            }
+        )
+        odds_formula.match_height(formula)
+        odds_formula.next_to(formula, DOWN, LARGE_BUFF)
+        odds_formula.shift_onto_screen()
+
+        bf_rect = SurroundingRectangle(odds_formula[7:], buff=0.025)
+        bf_rect.set_stroke(TEAL, 2)
+        bf_name = TextMobject("Bayes\\\\factor", font_size=36)
+        bf_name.match_color(bf_rect)
+        bf_name.next_to(bf_rect, DOWN, buff=0.2)
+        odds_formula.add(bf_rect, bf_name)
+
+        arrow = Vector(1.5 * RIGHT)
+        arrow.next_to(formula, LEFT)
+
+        self.play(
+            paradox_group.next_to, arrow, LEFT,
+            GrowArrow(arrow),
+        )
+        self.wait()
+
+        self.play(
+            VGroup(paradox_group, arrow).next_to, odds_formula[0], LEFT,
+            FadeIn(odds_formula, DOWN)
+        )
+        self.wait()
+
+        # Reflections on this formula
+        morty = Mortimer(height=2.2)
+        morty.to_corner(DR)
+        morty.shift(2 * LEFT)
+        randy = Randolph(height=2)
+        randy.next_to(morty, LEFT, LARGE_BUFF, aligned_edge=DOWN)
+
+        bubble = ThoughtBubble()
+        bubble.pin_to(morty)
+
+        self.play(
+            LaggedStart(*(
+                ShowCreationThenFadeOut(SurroundingRectangle(mob, color=BLUE))
+                for mob in (formula, odds_formula)
+            ), lag_ratio=0.4, run_time=3),
+            VFadeIn(randy),
+            randy.change, "confused", formula,
+        )
+        self.play(Blink(randy))
+        self.wait()
+
+        self.add(bubble, odds_formula)
+        odds_formula.save_state()
+        self.play(
+            VFadeIn(morty),
+            morty.change, "maybe", bubble[-1],
+            randy.look_at, bubble,
+            FadeIn(bubble, lag_ratio=0.5),
+            odds_formula.move_to, bubble.get_bubble_center(),
+            odds_formula.shift, 0.2 * LEFT + 0.1 * DOWN,
+            FadeOut(arrow, scale=0.5),
+            paradox_group.scale, 0.5,
+            paradox_group.to_corner, DL,
+        )
+        self.play(Blink(morty))
+        self.play(Blink(randy))
+        self.wait(2)
+        self.play(randy.change, "pondering")
+        self.play(Blink(randy))
+        self.wait()
+
+        paradox_group.generate_target()
+        paradox_group.target.scale(1.5)
+        paradox_group.target.next_to(randy.get_corner(UL), UP)
+        paradox_group.target.shift(LEFT)
+        self.play(
+            FadeOut(bubble, lag_ratio=0.4),
+            Restore(odds_formula),
+            morty.change, 'tease', paradox_group.target,
+            randy.change, 'raise_left_hand', paradox_group.target,
+            MoveToTarget(paradox_group),
+        )
+        self.play(Blink(morty))
+        self.wait()
+        return
+
+        # Unprocessed
         # Show rule
         formula = TexMobject(
             "P(H|E) = {P(H)P(E|H) \\over P(E)}",
@@ -291,181 +647,7 @@ class BayesRuleAndMedicalTests(Scene):
             FadeOut(pis, DOWN),
         )
 
-        # Mention paradox
-        paradox_name = TextMobject("Medical Test Paradox")
-        paradox_name.to_corner(UL)
-        paradox_name.shift(MED_SMALL_BUFF * DOWN)
-        paradox_line = Underline(paradox_name)
-        paradox_line.set_stroke(GREY_B, 2)
-
-        self.play(
-            FadeIn(paradox_name, lag_ratio=0.1),
-            ShowCreation(paradox_line),
-        )
-        self.wait()
-
-        # Show high accuracy
-        accuracy_words = TextMobject("High accuracy")
-        accuracy_words.next_to(paradox_line, DOWN, MED_LARGE_BUFF)
-        accuracy_words.set_color(GREEN)
-
-        population = Population(100)
-        population.arrange_in_grid(buff=LARGE_BUFF)
-        population.set_height(5)
-        population.next_to(accuracy_words, DOWN)
-
-        marks = VGroup()
-        for icon in population:
-            icon.generate_target()
-            if random.random() < 0.05:
-                mark = Exmark()
-                icon.target.set_opacity(0.5)
-            else:
-                mark = Checkmark()
-            mark.set_height(icon.get_height() / 2)
-            mark.move_to(icon.get_corner(UL))
-            marks.add(mark)
-
-        accuracy_group = VGroup(accuracy_words, population, marks)
-
-        self.play(
-            FadeIn(accuracy_words),
-            FadeIn(population, lag_ratio=0.01)
-        )
-        self.play(
-            ShowIncreasingSubsets(marks, run_time=2),
-            LaggedStartMap(MoveToTarget, population, run_time=2),
-        )
-        self.wait()
-
-        # Show test result
-        randy = Randolph(height=2)
-        randy.move_to(DOWN)
-        clipboard = get_covid_clipboard("Virus", color=YELLOW)
-        clipboard.set_height(2)
-        clipboard.next_to(randy.get_corner(UR), RIGHT)
-
-        self.play(
-            VFadeIn(randy),
-            randy.change, "guilty", clipboard,
-            FadeIn(clipboard, shift=0.25 * UL, scale=1.5)
-        )
-        self.play(randy.change, "horrified", clipboard)
-        self.play(Blink(randy))
-        self.wait()
-
-        # Show low predictive value
-        prob_expression = TexMobject(
-            "P(\\text{Sick} | +) = ",
-            tex_to_color_map={
-                "+": YELLOW,
-                "\\text{Sick}": GREY_A,
-            }
-        )
-        prob = DecimalNumber(0.9, font_size=60)
-        prob.next_to(prob_expression, RIGHT)
-        prob.set_color(WHITE)
-        prob.set_opacity(0)
-        prob_expression.add(prob)
-        p_line = Underline(prob)
-        p_line.shift(0.1 * DOWN)
-        p_line.scale(1.5)
-        p_line.set_stroke(WHITE, 2)
-        prob_expression.add(p_line)
-        prob_expression.next_to(VGroup(randy, clipboard), UP)
-
-        self.play(
-            FadeIn(prob_expression),
-            randy.change, "pondering", prob_expression
-        )
-        self.play(
-            ChangeDecimalToValue(prob, 0.09),
-            UpdateFromAlphaFunc(prob, lambda m, a: m.set_opacity(a)),
-            run_time=2
-        )
-        self.play(Blink(randy))
-        self.play(
-            randy.change, "confused", prob,
-            ChangeDecimalToValue(prob, 0.01),
-        )
-        self.play(Blink(randy))
-        self.wait()
-
-        predictive_group = VGroup(
-            randy, clipboard,
-            prob_expression, prob,
-        )
-
-        # Accurate does not imply predictive
-        implication = TextMobject(
-            "Accurate ", "$\\Rightarrow$", " Predictive",
-        )
-        implication.set_color_by_tex("Accurate", GREEN)
-        implication.set_color_by_tex("Predictive", YELLOW)
-        implication.next_to(paradox_line, DOWN)
-
-        strike = Line(DL, UR).replace(implication[1], stretch=True)
-        strike.set_stroke(RED, 4)
-
-        self.play(
-            FadeIn(implication, scale=1.1),
-            accuracy_group.scale, 0.8, {"about_edge": DOWN},
-            randy.change, 'pondering', implication,
-        )
-        self.play(ShowCreation(strike))
-        self.wait()
-        implication.add(strike)
-
-        paradox_group = VGroup(paradox_name, paradox_line, implication)
-
-        # Get rid of medical test stuff
-        p_rect = SurroundingRectangle(paradox_group, buff=MED_SMALL_BUFF)
-        p_rect.set_stroke(WHITE, 2)
-        p_rect.set_fill(GREY_E, 1)
-        self.add(p_rect, paradox_group),
-        self.play(
-            FadeOut(accuracy_group, DL),
-            FadeOut(predictive_group, 2 * DL),
-            VGroup(title, formula).to_edge, UP,
-            DrawBorderThenFill(p_rect)
-        )
-        paradox_group.add_to_back(p_rect)
-        self.wait()
-
-        # Alternate framing
-        odds_formula = TexMobject(
-            "O(H|E) = O(H){P(E|H) \\over P(E|\\neg H)}",
-            tex_to_color_map={
-                "H": YELLOW,
-                "E": BLUE,
-                "\\neg": RED,
-            }
-        )
-        odds_formula.match_height(formula)
-        odds_formula.next_to(formula, DOWN, LARGE_BUFF)
-        odds_formula.shift_onto_screen()
-
-        bf_rect = SurroundingRectangle(odds_formula[7:], buff=0.025)
-        bf_rect.set_stroke(TEAL, 2)
-        bf_name = TextMobject("Bayes\\\\factor", font_size=36)
-        bf_name.match_color(bf_rect)
-        bf_name.next_to(bf_rect, DOWN, SMALL_BUFF)
-        odds_formula.add(bf_rect, bf_name)
-
-        arrow = Vector(1.5 * RIGHT)
-        arrow.next_to(odds_formula[0], LEFT)
-
-        self.play(
-            paradox_group.next_to, arrow, LEFT,
-            GrowArrow(arrow),
-            FadeIn(odds_formula, DOWN)
-        )
-        self.wait()
-
         # Question the formulas
-        morty = Mortimer(height=2)
-        morty.to_corner(DR)
-
         self.play(FadeIn(morty))
         self.play(morty.change, "hesitant", formula)
         self.play(Blink(morty))
