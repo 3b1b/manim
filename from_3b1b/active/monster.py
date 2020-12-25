@@ -195,8 +195,15 @@ class Thumbnail(Scene):
         monster.to_edge(LEFT)
         monster.set_gloss(0.2)
 
-        words = TextMobject("The\\\\Monster", alignment="")
+        words = VGroup(
+            TextMobject("The"),
+            TextMobject("196,883"),
+            TextMobject("Dimensional", font_size=36),
+            TextMobject("Monster"),
+        )
         words.scale(3)
+        words.arrange(DOWN, buff=0.75, aligned_edge=LEFT)
+        words.set_stroke(BLACK, 3, background=True)
         words.to_edge(RIGHT)
 
         self.add(monster)
