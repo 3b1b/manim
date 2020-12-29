@@ -114,6 +114,7 @@ class ParametricSurface(VGroup):
         for face in self:
             c_index = (face.u_index + face.v_index) % n_colors
             face.set_fill(colors[c_index], opacity=opacity)
+        return self
 
 
 # Specific shapes
