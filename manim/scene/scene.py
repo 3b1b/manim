@@ -319,6 +319,11 @@ class Scene(Container):
         mobjects = [*mobjects, *self.foreground_mobjects]
         self.restructure_mobjects(to_remove=mobjects)
         self.mobjects += mobjects
+        if self.moving_mobjects:
+            self.restructure_mobjects(
+                to_remove=mobjects, mobject_list_name="moving_mobjects"
+            )
+            self.moving_mobjects += mobjects
         return self
 
     def add_mobjects_from_animations(self, animations):

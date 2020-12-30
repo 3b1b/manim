@@ -24,6 +24,15 @@ class ValueTrackerTest(Scene):
         line_2.rotate(theta.get_value(), about_point=ORIGIN)
 
 
+class UpdateSceneDuringAnimationTest(Scene):
+    def construct(self):
+        def f(mob):
+            self.add(Square())
+
+        s = Circle().add_updater(f)
+        self.play(ShowCreation(s))
+
+
 MODULE_NAME = "updaters"
 
 
