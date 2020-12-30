@@ -204,10 +204,10 @@ Animations
         def construct(self):
             square = Square(color=BLUE, fill_opacity=1)
 
-            self.play(square.shift, LEFT)
-            self.play(square.set_fill, ORANGE)
-            self.play(square.scale, 0.3)
-            self.play(square.rotate, 0.4)
+            self.play(square.animate.shift(LEFT))
+            self.play(square.animate.set_fill(ORANGE))
+            self.play(square.animate.scale(0.3))
+            self.play(square.animate.rotate(0.4))
 
 .. manim:: MovingFrameBox
     :ref_modules: manim.mobject.svg.tex_mobject
@@ -268,8 +268,8 @@ Animations
             self.add(path, dot)
             self.play(Rotating(dot, radians=PI, about_point=RIGHT, run_time=2))
             self.wait()
-            self.play(dot.shift, UP)
-            self.play(dot.shift, LEFT)
+            self.play(dot.animate.shift(UP))
+            self.play(dot.animate.shift(LEFT))
             self.wait()
 
 
@@ -394,9 +394,9 @@ Special Camera Settings
             moving_dot = Dot().move_to(graph.points[0]).set_color(ORANGE)
 
             dot_at_start_graph = Dot().move_to(graph.points[0])
-            dot_at_end_grap = Dot().move_to(graph.points[-1])
-            self.add(graph, dot_at_end_grap, dot_at_start_graph, moving_dot)
-            self.play( self.camera_frame.scale,0.5,self.camera_frame.move_to,moving_dot)
+            dot_at_end_graph = Dot().move_to(graph.points[-1])
+            self.add(graph, dot_at_end_graph, dot_at_start_graph, moving_dot)
+            self.play(self.camera_frame.animate.scale(0.5),self.camera_frame.animate.move_to(moving_dot))
 
             def update_curve(mob):
                 mob.move_to(moving_dot.get_center())
@@ -462,15 +462,15 @@ Special Camera Settings
             # Scale in        x   y  z
             scale_factor = [0.5, 1.5, 0]
             self.play(
-                frame.scale, scale_factor,
-                zoomed_display.scale, scale_factor,
+                frame.animate.scale(scale_factor),
+                zoomed_display.animate.scale(scale_factor),
                 FadeOut(zoomed_camera_text),
                 FadeOut(frame_text)
             )
             self.wait()
             self.play(ScaleInPlace(zoomed_display, 2))
             self.wait()
-            self.play(frame.shift, 2.5 * DOWN)
+            self.play(frame.animate.shift(2.5 * DOWN))
             self.wait()
             self.play(self.get_zoomed_display_pop_out_animation(), unfold_camera, rate_func=lambda t: smooth(1 - t))
             self.play(Uncreate(zoomed_display_frame), FadeOut(frame))
@@ -640,14 +640,15 @@ Advanced Projects
             grid_transform_title.move_to(grid_title, UL)
             grid.prepare_for_nonlinear_transform()
             self.play(
-                grid.apply_function,
-                lambda p: p
-                          + np.array(
-                    [
-                        np.sin(p[1]),
-                        np.sin(p[0]),
-                        0,
-                    ]
+                grid.animate.apply_function(
+                    lambda p: p
+                              + np.array(
+                        [
+                            np.sin(p[1]),
+                            np.sin(p[0]),
+                            0,
+                        ]
+                    )
                 ),
                 run_time=3,
             )

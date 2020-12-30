@@ -31,8 +31,7 @@ class DecimalNumber(VMobject):
                 decimal.add_updater(lambda d: d.set_value(square.get_center()[1]))
                 self.add(square, decimal)
                 self.play(
-                    square.to_edge,
-                    DOWN,
+                    square.animate.to_edge(DOWN),
                     rate_func=there_and_back,
                     run_time=5,
                 )
@@ -261,7 +260,7 @@ class Variable(VMobject):
                 self.wait()
                 var_tracker = on_screen_var.tracker
                 var = 10.5
-                self.play(var_tracker.set_value, var)
+                self.play(var_tracker.animate.set_value(var))
                 self.wait()
 
                 int_var = 0
@@ -275,7 +274,7 @@ class Variable(VMobject):
                 self.wait()
                 var_tracker = on_screen_int_var.tracker
                 var = 10.5
-                self.play(var_tracker.set_value, var)
+                self.play(var_tracker.animate.set_value(var))
                 self.wait()
 
                 # If you wish to have a somewhat more complicated label for your

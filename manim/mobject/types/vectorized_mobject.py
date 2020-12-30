@@ -1063,18 +1063,18 @@ class VGroup(VMobject):
                     self.wait()
                     gr += gr2 # Add group to another
                     self.play(
-                        gr.shift, DOWN,
+                        gr.animate.shift(DOWN),
                     )
                     gr -= gr2 # Remove group
                     self.play( # Animate groups separately
-                        gr.shift, LEFT,
-                        gr2.shift, UP,
+                        gr.animate.shift(LEFT),
+                        gr2.animate.shift(UP),
                     )
                     self.play( #Animate groups without modification
-                        (gr+gr2).shift, RIGHT
+                        (gr+gr2).animate.shift(RIGHT)
                     )
                     self.play( # Animate group without component
-                        (gr-circle_red).shift, RIGHT
+                        (gr-circle_red).animate.shift(RIGHT)
                     )
         """
         if not all(isinstance(m, VMobject) for m in vmobjects):
@@ -1156,7 +1156,7 @@ class VDict(VMobject):
 
                 # access submobjects like a python dict
                 my_dict["t"].set_color(PURPLE)
-                self.play(my_dict["t"].scale, 3)
+                self.play(my_dict["t"].animate.scale(3))
                 self.wait()
 
                 # also supports python dict styled reassignment

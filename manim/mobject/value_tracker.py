@@ -36,9 +36,9 @@ class ValueTracker(Mobject):
                             )
                 )
                 self.add(number_line, pointer,label)
-                self.play(pointer_value.set_value, 5)
+                self.play(pointer_value.animate.set_value(5)),
                 self.wait()
-                self.play(pointer_value.set_value, 3)
+                self.play(pointer_value.animate.set_value(3))
 
     """
 

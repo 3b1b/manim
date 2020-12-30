@@ -128,10 +128,6 @@ class Animation:
     def copy(self) -> "Animation":
         return deepcopy(self)
 
-    def update_config(self, **kwargs: typing.Dict[str, typing.Any]) -> "Animation":
-        self.__dict__.update(kwargs)
-        return self
-
     # Methods for interpolation, the mean of an Animation
     def interpolate(self, alpha: float) -> None:
         alpha = np.clip(alpha, 0, 1)

@@ -20,7 +20,7 @@ def handle_caching_play(func):
     def wrapper(self, scene, *args, **kwargs):
         self.skip_animations = self.original_skipping_status
         self.update_skipping_status()
-        animations = scene.compile_play_args_to_animation_list(*args, **kwargs)
+        animations = scene.compile_animations(*args, **kwargs)
         scene.add_mobjects_from_animations(animations)
         if self.skip_animations:
             logger.debug(f"Skipping animation {self.num_plays}")

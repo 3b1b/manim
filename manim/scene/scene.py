@@ -17,11 +17,11 @@ import numpy as np
 
 from .. import config, logger
 from ..animation.animation import Animation, Wait
-from ..animation.transform import MoveToTarget
+from ..animation.transform import MoveToTarget, _MethodAnimation
 from ..camera.camera import Camera
 from ..constants import *
 from ..container import Container
-from ..mobject.mobject import Mobject
+from ..mobject.mobject import Mobject, _AnimationBuilder
 from ..utils.iterables import list_update, list_difference_update
 from ..utils.family import extract_mobject_family_members
 from ..renderer.cairo_renderer import CairoRenderer
@@ -596,83 +596,32 @@ class Scene(Container):
         )
         return all_moving_mobject_families, static_mobjects
 
-    def compile_play_args_to_animation_list(self, *args, **kwargs):
+    def compile_animations(self, *animations, **play_kwargs):
         """
-        Each arg can either be an animation, or a mobject method
-        followed by that methods arguments (and potentially follow
-        by a dict of kwargs for that method).
-        This animation list is built by going through the args list,
-        and each animation is simply added, but when a mobject method
-        is hit, a MoveToTarget animation is built using the args that
-        follow up until either another animation is hit, another method
-        is hit, or the args list runs out.
+        Creates _MethodAnimations from any _AnimationBuilders and updates animation
+        kwargs with kwargs passed to play().
 
         Parameters
         ----------
-        *args : Animation or method of a mobject, which is followed by that method's arguments
+        *animations : Tuple[:class:`Animation`]
+            Animations to be played.
 
-        **kwargs : any named arguments like run_time or lag_ratio.
+        **play_kwargs
+            Configuration for the call to play().
 
         Returns
         -------
-        list : list of animations with the parameters applied to them.
+        Tuple[:class:`Animation`]
+            Animations to be played.
         """
-        animations = []
-        state = {
-            "curr_method": None,
-            "last_method": None,
-            "method_args": [],
-        }
-
-        def compile_method(state):
-            if state["curr_method"] is None:
-                return
-            mobject = state["curr_method"].__self__
-            if state["last_method"] and state["last_method"].__self__ is mobject:
-                animations.pop()
-                # method should already have target then.
-            else:
-                mobject.generate_target()
-            #
-            if len(state["method_args"]) > 0 and isinstance(
-                state["method_args"][-1], dict
-            ):
-                method_kwargs = state["method_args"].pop()
-            else:
-                method_kwargs = {}
-            state["curr_method"].__func__(
-                mobject.target, *state["method_args"], **method_kwargs
-            )
-            animations.append(MoveToTarget(mobject))
-            state["last_method"] = state["curr_method"]
-            state["curr_method"] = None
-            state["method_args"] = []
-
-        for arg in args:
-            if isinstance(arg, Animation):
-                compile_method(state)
-                animations.append(arg)
-            elif inspect.ismethod(arg):
-                compile_method(state)
-                state["curr_method"] = arg
-            elif state["curr_method"] is not None:
-                state["method_args"].append(arg)
-            elif isinstance(arg, Mobject):
-                raise ValueError(
-                    """
-                    I think you may have invoked a method
-                    you meant to pass in as a Scene.play argument
-                    """
-                )
-            else:
-                raise ValueError("Invalid play arguments")
-        compile_method(state)
-
         for animation in animations:
-            # This is where kwargs to play like run_time and rate_func
-            # get applied to all animations
-            animation.update_config(**kwargs)
-
+            if inspect.ismethod(animation):
+                raise TypeError(
+                    "Passing mobject methods to Scene.play is no longer supported. Use "
+                    "Mobject.animate instead."
+                )
+            for k, v in play_kwargs.items():
+                setattr(animation, k, v)
         return animations
 
     def _get_animation_time_progression(self, animations, duration):
@@ -814,15 +763,15 @@ class Scene(Container):
         """
         self.wait(max_time, stop_condition=stop_condition)
 
-    def compile_animation_data(self, *args, skip_rendering=False, **kwargs):
-        if len(args) == 0:
+    def compile_animation_data(self, *animations, skip_rendering=False, **play_kwargs):
+        if len(animations) == 0:
             warnings.warn("Called Scene.play with no animations")
             return None
 
-        self.last_t = 0
-        self.animations = self.compile_play_args_to_animation_list(*args, **kwargs)
+        self.animations = self.compile_animations(*animations, **play_kwargs)
         self.add_mobjects_from_animations(self.animations)
 
+        self.last_t = 0
         self.stop_condition = None
         self.moving_mobjects = None
         self.static_mobjects = None
