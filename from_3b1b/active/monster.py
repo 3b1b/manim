@@ -197,12 +197,11 @@ class Thumbnail(Scene):
 
         words = VGroup(
             TextMobject("The"),
-            TextMobject("196,883"),
-            TextMobject("Dimensional", font_size=36),
             TextMobject("Monster"),
+            TextMobject("Group"),
         )
-        words.scale(3)
-        words.arrange(DOWN, buff=0.75, aligned_edge=LEFT)
+        words.scale(3.5)
+        words.arrange(DOWN, buff=0.5, aligned_edge=LEFT)
         words.set_stroke(BLACK, 3, background=True)
         words.to_edge(RIGHT)
 
