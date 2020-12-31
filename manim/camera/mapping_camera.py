@@ -8,7 +8,6 @@ import numpy as np
 from ..camera.camera import Camera
 from ..mobject.types.vectorized_mobject import VMobject
 from ..utils.config_ops import DictAsObject
-from ..utils.config_ops import digest_config
 
 # TODO: Add an attribute to mobjects under which they can specify that they should just
 # map their centers but remain otherwise undistorted (useful for labels, etc.)
@@ -19,11 +18,17 @@ class MappingCamera(Camera):
     between objects.
     """
 
-    CONFIG = {
-        "mapping_func": lambda p: p,
-        "min_num_curves": 50,
-        "allow_object_intrusion": False,
-    }
+    def __init__(
+        self,
+        mapping_func=lambda p: p,
+        min_num_curves=50,
+        allow_object_intrusion=False,
+        **kwargs
+    ):
+        self.mapping_func = mapping_func
+        self.min_num_curves = min_num_curves
+        self.allow_object_intrusion = allow_object_intrusion
+        Camera.__init__(self, **kwargs)
 
     def points_to_pixel_coords(self, points):
         return Camera.points_to_pixel_coords(
@@ -117,7 +122,7 @@ class OldMultiCamera(Camera):
 
 class SplitScreenCamera(OldMultiCamera):
     def __init__(self, left_camera, right_camera, **kwargs):
-        digest_config(self, kwargs)
+        Camera.__init__(self, **kwargs)  # to set attributes such as pixel_width
         self.left_camera = left_camera
         self.right_camera = right_camera
 

@@ -68,7 +68,9 @@ directive:
         that is rendered in a reference block after the source code.
 
 """
+from docutils import nodes
 from docutils.parsers.rst import directives, Directive
+from docutils.statemachine import StringList
 
 import jinja2
 import os
@@ -78,14 +80,28 @@ from typing import List
 
 import shutil
 
+from manim import QUALITIES
+
 classnamedict = {}
+
+
+class skip_manim_node(nodes.Admonition, nodes.Element):
+    pass
+
+
+def visit(self, node, name=""):
+    self.visit_admonition(node, name)
+
+
+def depart(self, node):
+    self.depart_admonition(node)
 
 
 def process_name_list(option_input: str, reference_type: str) -> List[str]:
     r"""Reformats a string of space separated class names
     as a list of strings containing valid Sphinx references.
 
-    TESTS
+    Tests
     -----
 
     ::
@@ -121,6 +137,13 @@ class ManimDirective(Directive):
     final_argument_whitespace = True
 
     def run(self):
+        if "skip-manim" in self.state.document.settings.env.app.builder.tags.tags:
+            node = skip_manim_node()
+            self.state.nested_parse(
+                StringList(self.content[0]), self.content_offset, node
+            )
+            return [node]
+
         from manim import config
 
         global classnamedict
@@ -150,29 +173,13 @@ class ManimDirective(Directive):
         else:
             ref_block = ""
 
-        frame_rate = 30
-        pixel_height = 480
-        pixel_width = 854
-
         if "quality" in self.options:
-            quality = self.options["quality"]
-            if quality == "low":
-                pixel_height = 480
-                pixel_width = 854
-                frame_rate = 15
-            elif quality == "medium":
-                pixel_height = 720
-                pixel_width = 1280
-                frame_rate = 30
-            elif quality == "high":
-                pixel_height = 1440
-                pixel_width = 2560
-                frame_rate = 60
-            elif quality == "fourk":
-                pixel_height = 2160
-                pixel_width = 3840
-                frame_rate = 60
-
+            quality = f'{self.options["quality"]}_quality'
+        else:
+            quality = "example_quality"
+        frame_rate = QUALITIES[quality]["frame_rate"]
+        pixel_height = QUALITIES[quality]["pixel_height"]
+        pixel_width = QUALITIES[quality]["pixel_width"]
         qualitydir = f"{pixel_height}p{frame_rate}"
 
         state_machine = self.state_machine
@@ -262,9 +269,12 @@ class ManimDirective(Directive):
 def setup(app):
     import manim
 
+    app.add_node(skip_manim_node, html=(visit, depart))
+
     setup.app = app
     setup.config = app.config
     setup.confdir = app.confdir
+
     app.add_directive("manim", ManimDirective)
 
     metadata = {"parallel_read_safe": False, "parallel_write_safe": True}

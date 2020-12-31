@@ -16,7 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python: [3.6, 3.7, 3.8]
+        python: [3.7, 3.8, 3.9]
 
     steps:
       - name: Checkout the repository
@@ -119,3 +119,6 @@ jobs:
 
       - name: Run module doctests
         run: poetry run pytest --doctest-modules manim
+
+      - name: Run doctests in rst files
+        run: cd docs && pip install -r requirements.txt && poetry run make doctest O=-tskip-manim

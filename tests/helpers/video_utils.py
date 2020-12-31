@@ -4,7 +4,7 @@ import os
 import subprocess
 import json
 
-from manim.config.logger import logger
+from manim import logger
 
 
 def capture(command):

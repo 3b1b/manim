@@ -4,7 +4,9 @@ Example Gallery
 
 This gallery contains a collection of best practice code snippets
 together with their corresponding video/image output, illustrating
-different functionalities all across the library. Enjoy this taste of Manim!
+different functionalities all across the library.
+These are all under the MIT licence, so feel free to copy & paste them to your projects.
+Enjoy this taste of Manim!
 
 .. tip::
 
@@ -47,18 +49,6 @@ Basic Concepts
             self.add(logo)
 
 
-.. manim:: GradientImageFromArray
-    :save_last_frame:
-    :ref_classes: ImageMobject
-
-    class GradientImageFromArray(Scene):
-        def construct(self):
-            n = 256
-            imageArray = np.uint8(
-                [[i * 256 / n for i in range(0, n)] for _ in range(0, n)]
-            )
-            image = ImageMobject(imageArray).scale(2)
-            self.add(image)
 
 .. manim:: BraceAnnotation
     :save_last_frame:
@@ -88,6 +78,19 @@ Basic Concepts
             origin_text = Text('(0, 0)').next_to(dot, DOWN)
             tip_text = Text('(2, 2)').next_to(arrow.get_end(), RIGHT)
             self.add(numberplane, dot, arrow, origin_text, tip_text)
+
+.. manim:: GradientImageFromArray
+    :save_last_frame:
+    :ref_classes: ImageMobject
+
+    class GradientImageFromArray(Scene):
+        def construct(self):
+            n = 256
+            imageArray = np.uint8(
+                [[i * 256 / n for i in range(0, n)] for _ in range(0, n)]
+            )
+            image = ImageMobject(imageArray).scale(2)
+            self.add(image)
 
 .. manim:: BezierSpline
     :save_last_frame:
@@ -201,10 +204,10 @@ Animations
         def construct(self):
             square = Square(color=BLUE, fill_opacity=1)
 
-            self.play(square.shift, LEFT)
-            self.play(square.set_fill, ORANGE)
-            self.play(square.scale, 0.3)
-            self.play(square.rotate, 0.4)
+            self.play(square.animate.shift(LEFT))
+            self.play(square.animate.set_fill(ORANGE))
+            self.play(square.animate.scale(0.3))
+            self.play(square.animate.rotate(0.4))
 
 .. manim:: MovingFrameBox
     :ref_modules: manim.mobject.svg.tex_mobject
@@ -258,15 +261,15 @@ Animations
             dot = Dot()
             path.set_points_as_corners([dot.get_center(), dot.get_center()])
             def update_path(path):
-                previus_path = path.copy()
-                previus_path.add_points_as_corners([dot.get_center()])
-                path.become(previus_path)
+                previous_path = path.copy()
+                previous_path.add_points_as_corners([dot.get_center()])
+                path.become(previous_path)
             path.add_updater(update_path)
             self.add(path, dot)
             self.play(Rotating(dot, radians=PI, about_point=RIGHT, run_time=2))
             self.wait()
-            self.play(dot.shift, UP)
-            self.play(dot.shift, LEFT)
+            self.play(dot.animate.shift(UP))
+            self.play(dot.animate.shift(LEFT))
             self.wait()
 
 
@@ -280,17 +283,20 @@ Plotting with Manim
     :ref_functions: GraphScene.setup_axes GraphScene.get_graph GraphScene.get_vertical_line_to_graph GraphScene.input_to_graph_point
 
     class SinAndCosFunctionPlot(GraphScene):
-        CONFIG = {
-            "x_min": -10,
-            "x_max": 10.3,
-            "num_graph_anchor_points": 100,
-            "y_min": -1.5,
-            "y_max": 1.5,
-            "graph_origin": ORIGIN,
-            "function_color": RED,
-            "axes_color": GREEN,
-            "x_labeled_nums": range(-10, 12, 2),
-        }
+        def __init__(self, **kwargs):
+            GraphScene.__init__(
+                self,
+                x_min=-10,
+                x_max=10.3,
+                num_graph_anchor_points=100,
+                y_min=-1.5,
+                y_max=1.5,
+                graph_origin=ORIGIN,
+                axes_color=GREEN,
+                x_labeled_nums=range(-10, 12, 2),
+                **kwargs
+            )
+            self.function_color = RED
 
         def construct(self):
             self.setup_axes(animate=False)
@@ -311,15 +317,16 @@ Plotting with Manim
     :ref_functions: GraphScene.setup_axes GraphScene.get_graph GraphScene.get_vertical_line_to_graph GraphScene.get_area
 
     class GraphAreaPlot(GraphScene):
-        CONFIG = {
-            "x_min" : 0,
-            "x_max" : 5,
-            "y_min" : 0,
-            "y_max" : 6,
-            "y_tick_frequency" : 1,
-            "x_tick_frequency" : 1,
-            "x_labeled_nums" : [0,2,3]
-        }
+        def __init__(self, **kwargs):
+            GraphScene.__init__(
+                self,
+                x_min=0,
+                x_max=5,
+                y_min=0,
+                y_max=6,
+                x_labeled_nums=[0,2,3],
+                **kwargs)
+        
         def construct(self):
             self.setup_axes()
             curve1 = self.get_graph(lambda x: 4 * x - x ** 2, x_min=0, x_max=4)
@@ -336,16 +343,18 @@ Plotting with Manim
     :ref_functions: GraphScene.setup_axes GraphScene.coords_to_point
 
     class HeatDiagramPlot(GraphScene):
-        CONFIG = {
-            "y_axis_label": r"T[$^\circ C$]",
-            "x_axis_label": r"$\Delta Q$",
-            "y_min": -8,
-            "y_max": 30,
-            "x_min": 0,
-            "x_max": 40,
-            "y_labeled_nums": np.arange(-5, 34, 5),
-            "x_labeled_nums": np.arange(0, 40, 5),
-        }
+        def __init__(self, **kwargs):
+            GraphScene.__init__(
+                self,
+                y_axis_label=r"T[$^\circ C$]",
+                x_axis_label=r"$\Delta Q$",
+                y_min=-8,
+                y_max=30,
+                x_min=0,
+                x_max=40,
+                y_labeled_nums=np.arange(-5, 34, 5),
+                x_labeled_nums=np.arange(0, 40, 5),
+                **kwargs)
 
         def construct(self):
             data = [20, 0, 0, -5]
@@ -385,9 +394,9 @@ Special Camera Settings
             moving_dot = Dot().move_to(graph.points[0]).set_color(ORANGE)
 
             dot_at_start_graph = Dot().move_to(graph.points[0])
-            dot_at_end_grap = Dot().move_to(graph.points[-1])
-            self.add(graph, dot_at_end_grap, dot_at_start_graph, moving_dot)
-            self.play( self.camera_frame.scale,0.5,self.camera_frame.move_to,moving_dot)
+            dot_at_end_graph = Dot().move_to(graph.points[-1])
+            self.add(graph, dot_at_end_graph, dot_at_start_graph, moving_dot)
+            self.play(self.camera_frame.animate.scale(0.5),self.camera_frame.animate.move_to(moving_dot))
 
             def update_curve(mob):
                 mob.move_to(moving_dot.get_center())
@@ -405,15 +414,18 @@ Special Camera Settings
 
     class MovingZoomedSceneAround(ZoomedScene):
     # contributed by TheoremofBeethoven, www.youtube.com/c/TheoremofBeethoven
-        CONFIG = {
-            "zoom_factor": 0.3,
-            "zoomed_display_height": 1,
-            "zoomed_display_width": 6,
-            "image_frame_stroke_width": 20,
-            "zoomed_camera_config": {
-                "default_frame_stroke_width": 3,
-            },
-        }
+        def __init__(self, **kwargs):
+            ZoomedScene.__init__(
+                self,
+                zoom_factor=0.3,
+                zoomed_display_height=1,
+                zoomed_display_width=6,
+                image_frame_stroke_width=20,
+                zoomed_camera_config={
+                    "default_frame_stroke_width": 3,
+                    },
+                **kwargs
+            )
 
         def construct(self):
             dot = Dot().shift(UL * 2)
@@ -450,15 +462,15 @@ Special Camera Settings
             # Scale in        x   y  z
             scale_factor = [0.5, 1.5, 0]
             self.play(
-                frame.scale, scale_factor,
-                zoomed_display.scale, scale_factor,
+                frame.animate.scale(scale_factor),
+                zoomed_display.animate.scale(scale_factor),
                 FadeOut(zoomed_camera_text),
                 FadeOut(frame_text)
             )
             self.wait()
             self.play(ScaleInPlace(zoomed_display, 2))
             self.wait()
-            self.play(frame.shift, 2.5 * DOWN)
+            self.play(frame.animate.shift(2.5 * DOWN))
             self.wait()
             self.play(self.get_zoomed_display_pop_out_animation(), unfold_camera, rate_func=lambda t: smooth(1 - t))
             self.play(Uncreate(zoomed_display_frame), FadeOut(frame))
@@ -628,14 +640,15 @@ Advanced Projects
             grid_transform_title.move_to(grid_title, UL)
             grid.prepare_for_nonlinear_transform()
             self.play(
-                grid.apply_function,
-                lambda p: p
-                          + np.array(
-                    [
-                        np.sin(p[1]),
-                        np.sin(p[0]),
-                        0,
-                    ]
+                grid.animate.apply_function(
+                    lambda p: p
+                              + np.array(
+                        [
+                            np.sin(p[1]),
+                            np.sin(p[0]),
+                            0,
+                        ]
+                    )
                 ),
                 run_time=3,
             )

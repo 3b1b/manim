@@ -6,12 +6,15 @@ from ..utils.GraphicalUnitTester import GraphicalUnitTester
 
 
 class PlotFunctions(GraphScene):
-    CONFIG = {
-        "graph_origin": ORIGIN,
-        "function_color": RED,
-        "axes_color": GREEN,
-        "x_labeled_nums": range(-10, 12, 2),
-    }
+    def __init__(self, **kwargs):
+        GraphScene.__init__(
+            self,
+            graph_origin=ORIGIN,
+            function_color=RED,
+            axes_color=GREEN,
+            x_labeled_nums=range(-10, 12, 2),
+            **kwargs
+        )
 
     def construct(self):
         self.x_min = -10

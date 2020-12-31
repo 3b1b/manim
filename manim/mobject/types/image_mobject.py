@@ -3,6 +3,7 @@
 __all__ = ["AbstractImageMobject", "ImageMobject", "ImageMobjectFromCamera"]
 
 import pathlib
+import colour
 
 import numpy as np
 
@@ -14,7 +15,6 @@ from ...mobject.mobject import Mobject
 from ...mobject.shape_matchers import SurroundingRectangle
 from ...utils.bezier import interpolate
 from ...utils.color import color_to_int_rgb, WHITE
-from ...utils.config_ops import digest_config
 from ...utils.images import get_full_raster_image_path
 from manim.constants import QUALITIES, DEFAULT_QUALITY
 
@@ -30,14 +30,9 @@ class AbstractImageMobject(Mobject):
         This is a custom parameter of ImageMobject so that rendering a scene with e.g. the ``--quality low`` or ``--quality medium`` flag for faster rendering won't effect the position of the image on the screen.
     """
 
-    CONFIG = {
-        "pixel_array_dtype": "uint8",
-    }
-
-    def __init__(self, scale_to_resolution, **kwargs):
-        digest_config(self, kwargs)
+    def __init__(self, scale_to_resolution, pixel_array_dtype="uint8", **kwargs):
+        self.pixel_array_dtype = pixel_array_dtype
         self.scale_to_resolution = scale_to_resolution
-
         Mobject.__init__(self, **kwargs)
 
     def get_pixel_array(self):
@@ -70,11 +65,10 @@ class ImageMobject(AbstractImageMobject):
     """Displays an Image from a numpy array or a file.
 
     Parameters
-        ----------
-        scale_to_resolution : :class:`int`
-            At this resolution the image is placed pixel by pixel onto the screen, so it will look the sharpest and best.
-            This is a custom parameter of ImageMobject so that rendering a scene with e.g. the ``--quality low`` or ``--quality medium`` flag for faster rendering won't effect the position of the image on the screen.
-
+    ----------
+    scale_to_resolution : :class:`int`
+        At this resolution the image is placed pixel by pixel onto the screen, so it will look the sharpest and best.
+        This is a custom parameter of ImageMobject so that rendering a scene with e.g. the ``--quality low`` or ``--quality medium`` flag for faster rendering won't effect the position of the image on the screen.
 
 
     Example
@@ -91,24 +85,26 @@ class ImageMobject(AbstractImageMobject):
 
     """
 
-    CONFIG = {
-        "invert": False,
-        "image_mode": "RGBA",
-    }
-
     def __init__(
         self,
         filename_or_array,
         scale_to_resolution=QUALITIES[DEFAULT_QUALITY]["pixel_height"],
+        invert=False,
+        image_mode="RGBA",
         **kwargs,
     ):
-        digest_config(self, kwargs)
+        self.fill_opacity = 1
+        self.stroke_opacity = 1
+        self.invert = invert
+        self.image_mode = image_mode
         if isinstance(filename_or_array, (str, pathlib.PurePath)):
             path = get_full_raster_image_path(filename_or_array)
             image = Image.open(path).convert(self.image_mode)
             self.pixel_array = np.array(image)
+            self.path = path
         else:
             self.pixel_array = np.array(filename_or_array)
+        self.pixel_array_dtype = kwargs.get("pixel_array_dtype", "uint8")
         self.change_to_rgba_array()
         if self.invert:
             self.pixel_array[:, :, :3] = 255 - self.pixel_array[:, :, :3]
@@ -152,6 +148,8 @@ class ImageMobject(AbstractImageMobject):
             transparent.
         """
         self.pixel_array[:, :, 3] = int(255 * alpha)
+        self.fill_opacity = alpha
+        self.stroke_opacity = alpha
         return self
 
     def fade(self, darkness=0.5, family=True):
@@ -189,9 +187,21 @@ class ImageMobject(AbstractImageMobject):
             f"Mobject 1 ({mobject1}) : {mobject1.pixel_array.shape}\n"
             f"Mobject 2 ({mobject2}) : {mobject2.pixel_array.shape}"
         )
+        self.fill_opacity = interpolate(
+            mobject1.fill_opacity, mobject2.fill_opacity, alpha
+        )
+        self.stroke_opacity = interpolate(
+            mobject1.stroke_opacity, mobject2.stroke_opacity, alpha
+        )
         self.pixel_array = interpolate(
             mobject1.pixel_array, mobject2.pixel_array, alpha
         ).astype(self.pixel_array_dtype)
+
+    def get_style(self):
+        return {
+            "fill_color": colour.rgb2hex(self.color.get_rgb()),
+            "fill_opacity": self.fill_opacity,
+        }
 
 
 # TODO, add the ability to have the dimensions/orientation of this
@@ -200,16 +210,15 @@ class ImageMobject(AbstractImageMobject):
 
 
 class ImageMobjectFromCamera(AbstractImageMobject):
-    CONFIG = {
-        "default_display_frame_config": {
-            "stroke_width": 3,
-            "stroke_color": WHITE,
-            "buff": 0,
-        }
-    }
-
-    def __init__(self, camera, **kwargs):
+    def __init__(self, camera, default_display_frame_config=None, **kwargs):
         self.camera = camera
+        if default_display_frame_config is None:
+            default_display_frame_config = {
+                "stroke_width": 3,
+                "stroke_color": WHITE,
+                "buff": 0,
+            }
+        self.default_display_frame_config = default_display_frame_config
         self.pixel_array = self.camera.pixel_array
         AbstractImageMobject.__init__(self, scale_to_resolution=False, **kwargs)
 

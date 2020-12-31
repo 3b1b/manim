@@ -549,7 +549,7 @@ gnufsfs.add_to_preamble(
 """
 )
 gnufsfs.tex_compiler = "xelatex"
-gnufsfs.output_format = ".pdf"
+gnufsfs.output_format = ".xdv"
 
 # GFS NeoHellenic
 gfsneohellenic = _new_ams_template()

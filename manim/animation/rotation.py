@@ -2,26 +2,40 @@
 
 __all__ = ["Rotating", "Rotate"]
 
+import typing
+
+import numpy as np
 
 from ..animation.animation import Animation
 from ..animation.transform import Transform
-from ..constants import OUT
-from ..constants import PI
-from ..constants import TAU
+from ..constants import OUT, PI, TAU
 from ..utils.rate_functions import linear
+
+if typing.TYPE_CHECKING:
+    from ..mobject.mobject import Mobject
 
 
 class Rotating(Animation):
-    CONFIG = {
-        "axis": OUT,
-        "radians": TAU,
-        "run_time": 5,
-        "rate_func": linear,
-        "about_point": None,
-        "about_edge": None,
-    }
+    def __init__(
+        self,
+        mobject: "Mobject",
+        axis: np.ndarray = OUT,
+        radians: np.ndarray = TAU,
+        about_point: typing.Optional[np.ndarray] = None,
+        about_edge: typing.Optional[np.ndarray] = None,
+        run_time: float = 5,
+        rate_func: typing.Callable[
+            [typing.Union[np.ndarray, float]], typing.Union[np.ndarray, float]
+        ] = linear,
+        **kwargs
+    ) -> None:
+        self.axis = axis
+        self.radians = radians
+        self.about_point = about_point
+        self.about_edge = about_edge
+        super().__init__(mobject, run_time=run_time, rate_func=rate_func, **kwargs)
 
-    def interpolate_mobject(self, alpha):
+    def interpolate_mobject(self, alpha: float) -> None:
         self.mobject.become(self.starting_mobject)
         self.mobject.rotate(
             alpha * self.radians,
@@ -32,21 +46,26 @@ class Rotating(Animation):
 
 
 class Rotate(Transform):
-    CONFIG = {
-        "about_point": None,
-        "about_edge": None,
-    }
-
-    def __init__(self, mobject, angle=PI, axis=OUT, **kwargs):
+    def __init__(
+        self,
+        mobject: "Mobject",
+        angle: np.ndarray = PI,
+        axis: np.ndarray = OUT,
+        about_point: typing.Optional[np.ndarray] = None,
+        about_edge: typing.Optional[np.ndarray] = None,
+        **kwargs
+    ) -> None:
         if "path_arc" not in kwargs:
             kwargs["path_arc"] = angle
         if "path_arc_axis" not in kwargs:
             kwargs["path_arc_axis"] = axis
         self.angle = angle
         self.axis = axis
+        self.about_edge = about_edge
+        self.about_point = about_point
         super().__init__(mobject, **kwargs)
 
-    def create_target(self):
+    def create_target(self) -> "Mobject":
         target = self.mobject.copy()
         target.rotate(
             self.angle,

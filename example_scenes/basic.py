@@ -52,14 +52,15 @@ class OpeningManimExample(Scene):
         grid_transform_title.move_to(grid_title, UL)
         grid.prepare_for_nonlinear_transform()
         self.play(
-            grid.apply_function,
-            lambda p: p
-            + np.array(
-                [
-                    np.sin(p[1]),
-                    np.sin(p[0]),
-                    0,
-                ]
+            grid.animate.apply_function(
+                lambda p: p
+                + np.array(
+                    [
+                        np.sin(p[1]),
+                        np.sin(p[0]),
+                        0,
+                    ]
+                )
             ),
             run_time=3,
         )
@@ -121,12 +122,11 @@ class UpdatersExample(Scene):
         decimal.add_updater(lambda d: d.set_value(square.get_center()[1]))
         self.add(square, decimal)
         self.play(
-            square.to_edge,
-            DOWN,
+            square.animate.to_edge(DOWN),
             rate_func=there_and_back,
             run_time=5,
         )
         self.wait()
 
 
-# See many more examples at https://manimce.readthedocs.io/en/latest/examples.html
+# See many more examples at https://docs.manim.community/en/latest/examples.html

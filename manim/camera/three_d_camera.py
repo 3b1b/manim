@@ -8,33 +8,33 @@ import numpy as np
 from .. import config
 from ..camera.camera import Camera
 from ..constants import *
-from ..mobject.three_d_utils import get_3d_vmob_end_corner
-from ..mobject.three_d_utils import get_3d_vmob_end_corner_unit_normal
-from ..mobject.three_d_utils import get_3d_vmob_start_corner
-from ..mobject.three_d_utils import get_3d_vmob_start_corner_unit_normal
+from ..mobject.three_d_utils import (
+    get_3d_vmob_end_corner,
+    get_3d_vmob_end_corner_unit_normal,
+    get_3d_vmob_start_corner,
+    get_3d_vmob_start_corner_unit_normal,
+)
 from ..mobject.types.point_cloud_mobject import Point
 from ..mobject.value_tracker import ValueTracker
 from ..utils.color import get_shaded_rgb
-from ..utils.simple_functions import clip_in_place
-from ..utils.space_ops import rotation_about_z
-from ..utils.space_ops import rotation_matrix
 from ..utils.family import extract_mobject_family_members
+from ..utils.space_ops import rotation_about_z, rotation_matrix
 
 
 class ThreeDCamera(Camera):
-    CONFIG = {
-        "shading_factor": 0.2,
-        "distance": 20.0,
-        "default_distance": 5.0,
-        "phi": 0,  # Angle off z axis
-        "theta": -90 * DEGREES,  # Rotation about z axis
-        "gamma": 0,  # Rotation about normal vector to camera
-        "light_source_start_point": 9 * DOWN + 7 * LEFT + 10 * OUT,
-        "should_apply_shading": True,
-        "exponential_projection": False,
-    }
-
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        distance=20.0,
+        shading_factor=0.2,
+        default_distance=5.0,
+        light_source_start_point=9 * DOWN + 7 * LEFT + 10 * OUT,
+        should_apply_shading=True,
+        exponential_projection=False,
+        phi=0,
+        theta=-90 * DEGREES,
+        gamma=0,
+        **kwargs
+    ):
         """Initializes the ThreeDCamera
 
         Parameters
@@ -44,14 +44,23 @@ class ThreeDCamera(Camera):
         *kwargs
             Any keyword argument of Camera.
         """
-        Camera.__init__(self, *args, **kwargs)
+        self._frame_center = Point(kwargs.get("frame_center", ORIGIN))
+        super().__init__(**kwargs)
+        self.distance = distance
+        self.phi = phi
+        self.theta = theta
+        self.gamma = gamma
+        self.shading_factor = shading_factor
+        self.default_distance = default_distance
+        self.light_source_start_point = light_source_start_point
+        self.light_source = Point(self.light_source_start_point)
+        self.should_apply_shading = should_apply_shading
+        self.exponential_projection = exponential_projection
         self.max_allowable_norm = 3 * config["frame_width"]
         self.phi_tracker = ValueTracker(self.phi)
         self.theta_tracker = ValueTracker(self.theta)
         self.distance_tracker = ValueTracker(self.distance)
         self.gamma_tracker = ValueTracker(self.gamma)
-        self.light_source = Point(self.light_source_start_point)
-        self._frame_center = Point(kwargs.get("frame_center", ORIGIN))
         self.fixed_orientation_mobjects = dict()
         self.fixed_in_frame_mobjects = set()
         self.reset_rotation_matrix()
@@ -83,9 +92,7 @@ class ThreeDCamera(Camera):
             self.gamma_tracker,
         ]
 
-    def modified_rgbas(
-        self, vmobject, rgbas
-    ):  # TODO: Write DocStrings for this method.
+    def modified_rgbas(self, vmobject, rgbas):
         if not self.should_apply_shading:
             return rgbas
         if vmobject.shade_in_3d and (vmobject.get_num_points() > 0):
@@ -281,7 +288,6 @@ class ThreeDCamera(Camera):
             else:
                 factor = distance / (distance - zs)
                 factor[(distance - zs) < 0] = 10 ** 6
-                # clip_in_place(factor, 0, 10**6)
             points[:, i] *= factor
         points = points + frame_center
         return points

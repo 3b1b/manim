@@ -13,6 +13,7 @@ __all__ = [
     "move_points_along_vector_field",
 ]
 
+from typing import Callable
 
 import numpy as np
 import os
@@ -31,21 +32,21 @@ from ..utils.bezier import inverse_interpolate
 from ..utils.bezier import interpolate
 from ..utils.color import color_to_rgb, BLUE_E, GREEN, YELLOW, RED, BLUE, WHITE
 from ..utils.color import rgb_to_color
-from ..utils.config_ops import digest_config
 from ..utils.rate_functions import linear
 from ..utils.simple_functions import sigmoid
 from ..utils.space_ops import get_norm
+from ..mobject.mobject import Mobject
 
 # from ..utils.space_ops import normalize
 
 
-DEFAULT_SCALAR_FIELD_COLORS = [BLUE_E, GREEN, YELLOW, RED]
+DEFAULT_SCALAR_FIELD_COLORS: list = [BLUE_E, GREEN, YELLOW, RED]
 
 
 def get_colored_background_image(
-    scalar_field_func,
-    number_to_rgb_func,
-):
+    scalar_field_func: Callable,  # TODO: What is taken as parameters?
+    number_to_rgb_func: Callable,
+) -> Image:
     ph = config["pixel_height"]
     pw = config["pixel_width"]
     fw = config["frame_width"]
@@ -66,14 +67,14 @@ def get_colored_background_image(
 
 
 def get_rgb_gradient_function(
-    min_value=0,
-    max_value=1,
-    colors=[BLUE, RED],
-    flip_alphas=True,  # Why?
-):
+    min_value: int = 0,
+    max_value: int = 1,
+    colors: list = [BLUE, RED],
+    flip_alphas: bool = True,  # Why?
+) -> Callable[[np.ndarray], float]:
     rgbs = np.array(list(map(color_to_rgb, colors)))
 
-    def func(values):
+    def func(values: np.ndarray):
         alphas = inverse_interpolate(min_value, max_value, np.array(values))
         alphas = np.clip(alphas, 0, 1)
         # if flip_alphas:
@@ -90,8 +91,11 @@ def get_rgb_gradient_function(
 
 
 def get_color_field_image_file(
-    scalar_func, min_value=0, max_value=2, colors=DEFAULT_SCALAR_FIELD_COLORS
-):
+    scalar_func: Callable[[np.ndarray], np.ndarray],
+    min_value: int = 0,
+    max_value: int = 2,
+    colors: list = DEFAULT_SCALAR_FIELD_COLORS,
+) -> str:
     # try_hash
     np.random.seed(0)
     sample_inputs = 5 * np.random.random(size=(10, 3)) - 10
@@ -111,12 +115,12 @@ def get_color_field_image_file(
     return full_path
 
 
-def move_along_vector_field(mobject, func):
+def move_along_vector_field(mobject: Mobject, func: Callable) -> Mobject:
     mobject.add_updater(lambda m, dt: m.shift(func(m.get_center()) * dt))
     return mobject
 
 
-def move_submobjects_along_vector_field(mobject, func):
+def move_submobjects_along_vector_field(mobject: Mobject, func: Callable) -> Mobject:
     def apply_nudge(mob, dt):
         for submob in mob:
             x, y = submob.get_center()[:2]
@@ -127,7 +131,7 @@ def move_submobjects_along_vector_field(mobject, func):
     return mobject
 
 
-def move_points_along_vector_field(mobject, func):
+def move_points_along_vector_field(mobject: Mobject, func: Callable) -> Mobject:
     def apply_nudge(self, dt):
         self.mobject.apply_function(lambda p: p + func(p) * dt)
 
@@ -139,19 +143,30 @@ def move_points_along_vector_field(mobject, func):
 
 
 class VectorField(VGroup):
-    CONFIG = {
-        "delta_x": 0.5,
-        "delta_y": 0.5,
-        "min_magnitude": 0,
-        "max_magnitude": 2,
-        "colors": DEFAULT_SCALAR_FIELD_COLORS,
+    def __init__(
+        self,
+        func: Callable,
+        delta_x=0.5,
+        delta_y=0.5,
+        min_magnitude=0,
+        max_magnitude=2,
+        colors=DEFAULT_SCALAR_FIELD_COLORS,
         # Takes in actual norm, spits out displayed norm
-        "length_func": lambda norm: 0.45 * sigmoid(norm),
-        "opacity": 1.0,
-        "vector_config": {},
-    }
-
-    def __init__(self, func, **kwargs):
+        length_func=lambda norm: 0.45 * sigmoid(norm),
+        opacity=1.0,
+        vector_config=None,
+        **kwargs
+    ):
+        self.delta_x = delta_x
+        self.delta_y = delta_y
+        self.min_magnitude = min_magnitude
+        self.max_magnitude = max_magnitude
+        self.colors = colors
+        self.length_func = length_func
+        self.opacity = opacity
+        if vector_config is None:
+            vector_config = {}
+        self.vector_config = vector_config
         VGroup.__init__(self, **kwargs)
         self.x_min = int(np.floor(-config["frame_width"] / 2))
         self.x_max = int(np.ceil(config["frame_width"] / 2))
@@ -185,43 +200,63 @@ class VectorField(VGroup):
 
 
 class StreamLines(VGroup):
-    CONFIG = {
-        # TODO, this is an awkward way to inherit
-        # defaults to a method.
-        "start_points_generator_config": {},
+    def __init__(
+        self,
+        func,
+        start_points_generator_config={},
         # Config for choosing start points
-        "x_min": -8,
-        "x_max": 8,
-        "y_min": -5,
-        "y_max": 5,
-        "delta_x": 0.5,
-        "delta_y": 0.5,
-        "n_repeats": 1,
-        "noise_factor": None,
+        x_min=-8,
+        x_max=8,
+        y_min=-5,
+        y_max=5,
+        delta_x=0.5,
+        delta_y=0.5,
+        n_repeats=1,
+        noise_factor=None,
         # Config for drawing lines
-        "dt": 0.05,
-        "virtual_time": 3,
-        "n_anchors_per_line": 100,
-        "stroke_width": 1,
-        "stroke_color": WHITE,
-        "color_by_arc_length": True,
+        dt=0.05,
+        virtual_time=3,
+        n_anchors_per_line=100,
+        stroke_width=1,
+        stroke_color=WHITE,
+        color_by_arc_length=True,
         # Min and max arc lengths meant to define
         # the color range, should color_by_arc_length be True
-        "min_arc_length": 0,
-        "max_arc_length": 12,
-        "color_by_magnitude": False,
+        min_arc_length=0,
+        max_arc_length=12,
+        color_by_magnitude=False,
         # Min and max magnitudes meant to define
         # the color range, should color_by_magnitude be True
-        "min_magnitude": 0.5,
-        "max_magnitude": 1.5,
-        "colors": DEFAULT_SCALAR_FIELD_COLORS,
-        "cutoff_norm": 15,
-    }
-
-    def __init__(self, func, **kwargs):
-        VGroup.__init__(self, **kwargs)
+        min_magnitude=0.5,
+        max_magnitude=1.5,
+        colors=DEFAULT_SCALAR_FIELD_COLORS,
+        cutoff_norm=15,
+        **kwargs
+    ):
+        VGroup.__init__(
+            self, stroke_color=stroke_color, stroke_width=stroke_width, **kwargs
+        )
         self.func = func
-        dt = self.dt
+        self.start_points_generator_config = start_points_generator_config
+        self.x_min = x_min
+        self.x_max = x_max
+        self.y_min = y_min
+        self.y_max = y_max
+        self.delta_x = delta_x
+        self.delta_y = delta_y
+        self.n_repeats = n_repeats
+        self.noise_factor = noise_factor
+        self.dt = dt
+        self.virtual_time = virtual_time
+        self.n_anchors_per_line = n_anchors_per_line
+        self.color_by_arc_length = color_by_arc_length
+        self.min_arc_length = min_arc_length
+        self.max_arc_length = max_arc_length
+        self.color_by_magnitude = color_by_magnitude
+        self.min_magnitude = min_magnitude
+        self.max_magnitude = max_magnitude
+        self.colors = colors
+        self.cutoff_norm = cutoff_norm
 
         start_points = self.get_start_points(**self.start_points_generator_config)
         for point in start_points:
@@ -284,10 +319,10 @@ class StreamLines(VGroup):
 # varying in response to a changing vector field, and still
 # animate the resulting flow
 class ShowPassingFlashWithThinningStrokeWidth(AnimationGroup):
-    CONFIG = {"n_segments": 10, "time_width": 0.1, "remover": True}
-
-    def __init__(self, vmobject, **kwargs):
-        digest_config(self, kwargs)
+    def __init__(self, vmobject, n_segments=10, time_width=0.1, remover=True, **kwargs):
+        self.n_segments = n_segments
+        self.time_width = time_width
+        self.remover = remover
         max_stroke_width = vmobject.get_stroke_width()
         max_time_width = kwargs.pop("time_width", self.time_width)
         AnimationGroup.__init__(
@@ -309,19 +344,23 @@ class ShowPassingFlashWithThinningStrokeWidth(AnimationGroup):
 # TODO, this is untested after turning it from a
 # ContinualAnimation into a VGroup
 class AnimatedStreamLines(VGroup):
-    CONFIG = {
-        "lag_range": 4,
-        "line_anim_class": ShowPassingFlash,
-        "line_anim_config": {
+    def __init__(
+        self,
+        stream_lines,
+        lag_range=4,
+        line_anim_class=ShowPassingFlash,
+        line_anim_config={
             "run_time": 4,
             "rate_func": linear,
             "time_width": 0.3,
         },
-    }
-
-    def __init__(self, stream_lines, **kwargs):
+        **kwargs
+    ):
         VGroup.__init__(self, **kwargs)
         self.stream_lines = stream_lines
+        self.lag_range = lag_range
+        self.line_anim_class = line_anim_class
+        self.line_anim_config = line_anim_config
         for line in stream_lines:
             line.anim = self.line_anim_class(line, **self.line_anim_config)
             line.anim.begin()

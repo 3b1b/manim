@@ -16,6 +16,7 @@ Installing dependencies
    installation/linux
    installation/troubleshooting
    installation/for_dev
+   installation/plugins
 
 
 .. _installing-manim:
@@ -28,7 +29,7 @@ can install it from PyPI via pip:
 
 .. code-block:: bash
 
-   pip install manimce
+   pip install manim
 
 You can replace ``pip`` with ``pip3`` if you need to in your system.
 

@@ -59,7 +59,13 @@ def always_redraw(func):
 
 
 def always_shift(mobject, direction=RIGHT, rate=0.1):
-    mobject.add_updater(lambda m, dt: m.shift(dt * rate * direction))
+    def normalize(v):
+        norm = np.linalg.norm(v)
+        if norm == 0:
+            return v
+        return v / norm
+
+    mobject.add_updater(lambda m, dt: m.shift(dt * rate * normalize(direction)))
     return mobject
 
 

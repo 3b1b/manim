@@ -2,7 +2,6 @@ import numpy as np
 from .. import config
 from ..utils.iterables import list_update
 from ..utils.exceptions import EndSceneEarlyException
-from ..constants import DEFAULT_WAIT_TIME
 from ..scene.scene_file_writer import SceneFileWriter
 from ..utils.caching import handle_caching_play
 from ..camera.camera import Camera
@@ -37,10 +36,9 @@ def handle_play_like_call(func):
     """
 
     def wrapper(self, scene, *args, **kwargs):
-        allow_write = not config["skip_animations"]
-        self.file_writer.begin_animation(allow_write)
+        self.file_writer.begin_animation(not self.skip_animations)
         func(self, scene, *args, **kwargs)
-        self.file_writer.end_animation(allow_write)
+        self.file_writer.end_animation(not self.skip_animations)
         self.num_plays += 1
 
     return wrapper
@@ -53,34 +51,23 @@ class CairoRenderer:
     time: time elapsed since initialisation of scene.
     """
 
-    def __init__(self, camera_class=None, **kwargs):
+    def __init__(self, camera_class=None, skip_animations=False, **kwargs):
         # All of the following are set to EITHER the value passed via kwargs,
         # OR the value stored in the global config dict at the time of
-        # _instance construction_.  Before, they were in the CONFIG dict, which
-        # is a class attribute and is defined at the time of _class
-        # definition_.  This did not allow for creating two Cameras with
-        # different configurations in the same session.
+        # _instance construction_.
         self.file_writer = None
-        self.video_quality_config = {}
-        for attr in [
-            "pixel_height",
-            "pixel_width",
-            "frame_height",
-            "frame_width",
-            "frame_rate",
-        ]:
-            self.video_quality_config[attr] = kwargs.get(attr, config[attr])
         camera_cls = camera_class if camera_class is not None else Camera
-        self.camera = camera_cls(self.video_quality_config)
-        self.original_skipping_status = config["skip_animations"]
+        self.camera = camera_cls()
+        self.original_skipping_status = skip_animations
+        self.skip_animations = skip_animations
         self.animations_hashes = []
         self.num_plays = 0
         self.time = 0
+        self.static_image = None
 
-    def init(self, scene):
+    def init_scene(self, scene):
         self.file_writer = SceneFileWriter(
             self,
-            self.video_quality_config,
             scene.__class__.__name__,
         )
 
@@ -88,13 +75,13 @@ class CairoRenderer:
     @handle_caching_play
     @handle_play_like_call
     def play(self, scene, *args, **kwargs):
-        scene.play_internal(*args, **kwargs)
+        if scene.compile_animation_data(*args, **kwargs):
+            scene.play_internal()
 
     def update_frame(  # TODO Description in Docstring
         self,
         scene,
         mobjects=None,
-        background=None,
         include_submobjects=True,
         ignore_skipping=True,
         **kwargs,
@@ -116,20 +103,24 @@ class CairoRenderer:
         **kwargs
 
         """
-        if config["skip_animations"] and not ignore_skipping:
+        if self.skip_animations and not ignore_skipping:
             return
         if mobjects is None:
             mobjects = list_update(
                 scene.mobjects,
                 scene.foreground_mobjects,
             )
-        if background is not None:
-            self.camera.set_frame_to_background(background)
+        if self.static_image is not None:
+            self.camera.set_frame_to_background(self.static_image)
         else:
             self.camera.reset()
 
         kwargs["include_submobjects"] = include_submobjects
         self.camera.capture_mobjects(mobjects, **kwargs)
+
+    def render(self, scene, moving_mobjects):
+        self.update_frame(scene, moving_mobjects)
+        self.add_frame(self.get_frame())
 
     def get_frame(self):
         """
@@ -156,7 +147,7 @@ class CairoRenderer:
         """
         dt = 1 / self.camera.frame_rate
         self.time += num_frames * dt
-        if config["skip_animations"]:
+        if self.skip_animations:
             return
         for _ in range(num_frames):
             self.file_writer.write_frame(frame)
@@ -169,6 +160,11 @@ class CairoRenderer:
         self.update_frame(ignore_skipping=True)
         self.camera.get_image().show()
 
+    def save_static_frame_data(self, scene, static_mobjects):
+        self.update_frame(scene, mobjects=static_mobjects)
+        self.static_image = self.get_frame()
+        return self.static_image
+
     def update_skipping_status(self):
         """
         This method is used internally to check if the current
@@ -179,29 +175,13 @@ class CairoRenderer:
         """
         if config["from_animation_number"]:
             if self.num_plays < config["from_animation_number"]:
-                config["skip_animations"] = True
+                self.skip_animations = True
         if config["upto_animation_number"]:
             if self.num_plays > config["upto_animation_number"]:
-                config["skip_animations"] = True
+                self.skip_animations = True
                 raise EndSceneEarlyException()
 
-    def revert_to_original_skipping_status(self):
-        """
-        Forces the scene to go back to its original skipping status,
-        by setting skip_animations to whatever it reads
-        from original_skipping_status.
-
-        Returns
-        -------
-        Scene
-            The Scene, with the original skipping status.
-        """
-        if hasattr(self, "original_skipping_status"):
-            config["skip_animations"] = self.original_skipping_status
-        return self
-
-    def finish(self, scene):
-        config["skip_animations"] = False
+    def scene_finished(self, scene):
         self.file_writer.finish()
         if config["save_last_frame"]:
             self.update_frame(scene, ignore_skipping=False)

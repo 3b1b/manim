@@ -27,7 +27,7 @@ Anything enclosed in ``$`` signs is interpreted as maths-mode:
 
     class HelloTex(Scene):
         def construct(self):
-            tex = Tex(r'$\xrightarrow{Hello}$ \LaTeX').scale(3)
+            tex = Tex(r'$\xrightarrow{x^2y^3}$ \LaTeX').scale(3)
             self.add(tex)
 
 Whereas in a :class:`~.MathTex` mobject everything is math-mode by default.
@@ -61,14 +61,14 @@ Whereas in a :class:`~.MathTex` mobject everything is math-mode by default.
 
 LaTeX commands and keyword arguments
 ++++++++++++++++++++++++++++++++++++
-We can use any standard LaTeX commands in the AMS maths packages. For example the ``mathtt`` text type.
+We can use any standard LaTeX commands in the AMS maths packages. For example the ``mathtt`` math-text type, or the ``looparrowright`` arrow.
 
 .. manim:: AMSLaTeX
     :save_last_frame:
 
     class AMSLaTeX(Scene):
         def construct(self):
-            tex = Tex(r'$\mathtt{Hello}$ \LaTeX').scale(3)
+            tex = Tex(r'$\mathtt{H} \looparrowright$ \LaTeX').scale(3)
             self.add(tex)
 
 On the manim side, the :class:`~.Tex` class also accepts attributes to change the appearance of the output.
@@ -125,7 +125,7 @@ in maths mode:
 
     class LaTeXMathFonts(Scene):
         def construct(self):
-            tex = Tex(r'$f: A \rightarrow B$', tex_template=TexFontTemplates.french_cursive).scale(3)
+            tex = Tex(r'$x^2 + y^2 = z^2$', tex_template=TexFontTemplates.french_cursive).scale(3)
             self.add(tex)
 
 Manim also has a :class:`~.TexTemplateLibrary` containing the TeX templates used by 3Blue1Brown. One example
@@ -162,7 +162,6 @@ __all__ = [
     "MathTex",
     "Tex",
     "BulletedList",
-    "MathTexFromPresetString",
     "Title",
     "TexMobject",
     "TextMobject",
@@ -179,7 +178,6 @@ from ...mobject.svg.svg_mobject import SVGMobject
 from ...mobject.svg.svg_mobject import VMobjectFromSVGPathstring
 from ...mobject.types.vectorized_mobject import VGroup
 from ...mobject.types.vectorized_mobject import VectorizedPoint
-from ...utils.config_ops import digest_config
 from ...utils.strings import split_string_list_to_isolate_substrings
 from ...utils.tex_file_writing import tex_to_svg_file
 from ...utils.color import BLACK
@@ -205,22 +203,25 @@ class SingleStringMathTex(SVGMobject):
         SingleStringMathTex('Test')
     """
 
-    CONFIG = {
-        "stroke_width": 0,
-        "fill_opacity": 1.0,
-        "background_stroke_width": 0,
-        "background_stroke_color": BLACK,
-        "should_center": True,
-        "height": None,
-        "organize_left_to_right": False,
-        "tex_environment": "align*",
-        "tex_template": None,
-    }
-
-    def __init__(self, tex_string, **kwargs):
-        digest_config(self, kwargs)
-        if self.tex_template is None:
-            self.tex_template = kwargs.get("tex_template", config["tex_template"])
+    def __init__(
+        self,
+        tex_string,
+        stroke_width=0,
+        fill_opacity=1.0,
+        background_stroke_width=0,
+        background_stroke_color=BLACK,
+        should_center=True,
+        height=None,
+        organize_left_to_right=False,
+        tex_environment="align*",
+        tex_template=None,
+        **kwargs,
+    ):
+        self.organize_left_to_right = organize_left_to_right
+        self.tex_environment = tex_environment
+        if tex_template is None:
+            tex_template = config["tex_template"]
+        self.tex_template = tex_template
 
         assert isinstance(tex_string, str)
         self.tex_string = tex_string
@@ -229,7 +230,17 @@ class SingleStringMathTex(SVGMobject):
             environment=self.tex_environment,
             tex_template=self.tex_template,
         )
-        SVGMobject.__init__(self, file_name=file_name, **kwargs)
+        SVGMobject.__init__(
+            self,
+            file_name=file_name,
+            should_center=should_center,
+            stroke_width=stroke_width,
+            height=height,
+            fill_opacity=fill_opacity,
+            background_stroke_width=background_stroke_width,
+            background_stroke_color=background_stroke_color,
+            **kwargs,
+        )
         if self.height is None:
             self.scale(TEX_MOB_SCALE_FACTOR)
         if self.organize_left_to_right:
@@ -294,9 +305,13 @@ class SingleStringMathTex(SVGMobject):
         return tex
 
     def remove_stray_braces(self, tex):
+        r"""
+        Makes :class:`~.MathTex` resilient to unmatched braces.
+
+        This is important when the braces in the TeX code are spread over
+        multiple arguments as in, e.g., ``MathTex(r"e^{i", r"\tau} = 1")``.
         """
-        Makes MathTex resilient to unmatched { at start
-        """
+
         # "\{" does not count (it's a brace literal), but "\\{" counts (it's a new line and then brace)
         num_lefts = tex.count("{") - tex.count("\\{") + tex.count("\\\\{")
         num_rights = tex.count("}") - tex.count("\\}") + tex.count("\\\\}")
@@ -314,7 +329,7 @@ class SingleStringMathTex(SVGMobject):
     def path_string_to_mobject(self, path_string):
         # Overwrite superclass default to use
         # specialized path_string mobject
-        return TexSymbol(path_string)
+        return TexSymbol(path_string, z_index=self.z_index)
 
     def organize_submobjects_left_to_right(self):
         self.sort(lambda p: p[0])
@@ -322,7 +337,7 @@ class SingleStringMathTex(SVGMobject):
 
 
 class MathTex(SingleStringMathTex):
-    """A string compiled with LaTeX in math mode.
+    r"""A string compiled with LaTeX in math mode.
 
     Examples
     --------
@@ -343,23 +358,34 @@ class MathTex(SingleStringMathTex):
 
     """
 
-    CONFIG = {
-        "arg_separator": " ",
-        "substrings_to_isolate": [],
-        "tex_to_color_map": {},
-        "tex_environment": "align*",
-    }
-
-    def __init__(self, *tex_strings, **kwargs):
-        digest_config(self, kwargs)
+    def __init__(
+        self,
+        *tex_strings,
+        arg_separator=" ",
+        substrings_to_isolate=None,
+        tex_to_color_map=None,
+        tex_environment="align*",
+        **kwargs,
+    ):
+        self.tex_template = kwargs.pop("tex_template", config["tex_template"])
+        self.arg_separator = arg_separator
+        self.substrings_to_isolate = (
+            [] if substrings_to_isolate is None else substrings_to_isolate
+        )
+        self.tex_to_color_map = tex_to_color_map
+        if self.tex_to_color_map is None:
+            self.tex_to_color_map = {}
+        self.tex_environment = tex_environment
         tex_strings = self.break_up_tex_strings(tex_strings)
         self.tex_strings = tex_strings
         SingleStringMathTex.__init__(
-            self, self.arg_separator.join(tex_strings), **kwargs
+            self,
+            self.arg_separator.join(tex_strings),
+            tex_environment=self.tex_environment,
+            tex_template=self.tex_template,
+            **kwargs,
         )
-        config = dict(self.CONFIG)
-        config.update(kwargs)
-        self.break_up_by_substrings(config)
+        self.break_up_by_substrings()
         self.set_color_by_tex_to_color_map(self.tex_to_color_map)
 
         if self.organize_left_to_right:
@@ -378,7 +404,7 @@ class MathTex(SingleStringMathTex):
         split_list = [s for s in split_list if s != ""]
         return split_list
 
-    def break_up_by_substrings(self, config):
+    def break_up_by_substrings(self):
         """
         Reorganize existing submojects one layer
         deeper based on the structure of tex_strings (as a list
@@ -387,7 +413,12 @@ class MathTex(SingleStringMathTex):
         new_submobjects = []
         curr_index = 0
         for tex_string in self.tex_strings:
-            sub_tex_mob = SingleStringMathTex(tex_string, **config)
+            sub_tex_mob = SingleStringMathTex(
+                tex_string,
+                tex_environment=self.tex_environment,
+                tex_template=self.tex_template,
+                z_index=self.z_index,
+            )
             num_submobs = len(sub_tex_mob.submobjects)
             new_index = curr_index + num_submobs
             if num_submobs == 0:
@@ -465,21 +496,30 @@ class Tex(MathTex):
 
     """
 
-    CONFIG = {
-        "arg_separator": "",
-        "tex_environment": "center",
-    }
+    def __init__(
+        self, *tex_strings, arg_separator="", tex_environment="center", **kwargs
+    ):
+        MathTex.__init__(
+            self,
+            *tex_strings,
+            arg_separator=arg_separator,
+            tex_environment=tex_environment,
+            **kwargs,
+        )
 
 
 class BulletedList(Tex):
-    CONFIG = {
-        "buff": MED_LARGE_BUFF,
-        "dot_scale_factor": 2,
-        # Have to include because of handle_multiple_args implementation
-        "tex_environment": None,
-    }
-
-    def __init__(self, *items, **kwargs):
+    def __init__(
+        self,
+        *items,
+        buff=MED_LARGE_BUFF,
+        dot_scale_factor=2,
+        tex_environment=None,
+        **kwargs,
+    ):
+        self.buff = buff
+        self.dot_scale_factor = dot_scale_factor
+        self.tex_environment = tex_environment
         line_separated_items = [s + "\\\\" for s in items]
         Tex.__init__(self, *line_separated_items, **kwargs)
         for part in self:
@@ -495,7 +535,7 @@ class BulletedList(Tex):
         elif isinstance(arg, int):
             part = self.submobjects[arg]
         else:
-            raise TypeError("Expected int or string, got {0}".format(arg))
+            raise TypeError(f"Expected int or string, got {arg}")
         for other_part in self.submobjects:
             if other_part is part:
                 other_part.set_fill(opacity=1)
@@ -503,29 +543,20 @@ class BulletedList(Tex):
                 other_part.set_fill(opacity=opacity)
 
 
-class MathTexFromPresetString(MathTex):
-    CONFIG = {
-        # To be filled by subclasses
-        "tex": None,
-        "color": None,
-    }
-
-    def __init__(self, **kwargs):
-        digest_config(self, kwargs)
-        MathTex.__init__(self, self.tex, **kwargs)
-        self.set_color(self.color)
-
-
 class Title(Tex):
-    CONFIG = {
-        "scale_factor": 1,
-        "include_underline": True,
-        # This will override underline_width
-        "match_underline_width_to_text": False,
-        "underline_buff": MED_SMALL_BUFF,
-    }
-
-    def __init__(self, *text_parts, **kwargs):
+    def __init__(
+        self,
+        *text_parts,
+        scale_factor=1,
+        include_underline=True,
+        match_underline_width_to_text=False,
+        underline_buff=MED_SMALL_BUFF,
+        **kwargs,
+    ):
+        self.scale_factor = scale_factor
+        self.include_underline = include_underline
+        self.match_underline_width_to_text = match_underline_width_to_text
+        self.underline_buff = underline_buff
         Tex.__init__(self, *text_parts, **kwargs)
         self.underline_width = config["frame_width"] - 2
         self.scale(self.scale_factor)

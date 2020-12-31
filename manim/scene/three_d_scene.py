@@ -14,7 +14,6 @@ from ..mobject.types.vectorized_mobject import VGroup
 from ..mobject.types.vectorized_mobject import VectorizedPoint
 from ..mobject.value_tracker import ValueTracker
 from ..scene.scene import Scene
-from ..utils.config_ops import digest_config
 from ..utils.config_ops import merge_dicts_recursively
 import numpy as np
 
@@ -25,14 +24,23 @@ class ThreeDScene(Scene):
     make it suitable for Three Dimensional Scenes.
     """
 
-    CONFIG = {
-        "camera_class": ThreeDCamera,
-        "ambient_camera_rotation": None,
-        "default_angled_camera_orientation_kwargs": {
-            "phi": 70 * DEGREES,
-            "theta": -135 * DEGREES,
-        },
-    }
+    def __init__(
+        self,
+        camera_class=ThreeDCamera,
+        ambient_camera_rotation=None,
+        default_angled_camera_orientation_kwargs=None,
+        **kwargs,
+    ):
+        self.ambient_camera_rotation = ambient_camera_rotation
+        if default_angled_camera_orientation_kwargs is None:
+            default_angled_camera_orientation_kwargs = {
+                "phi": 70 * DEGREES,
+                "theta": -135 * DEGREES,
+            }
+        self.default_angled_camera_orientation_kwargs = (
+            default_angled_camera_orientation_kwargs
+        )
+        super().__init__(camera_class=camera_class, **kwargs)
 
     def set_camera_orientation(self, phi=None, theta=None, distance=None, gamma=None):
         """
@@ -61,7 +69,7 @@ class ThreeDScene(Scene):
         if gamma is not None:
             self.renderer.camera.set_gamma(gamma)
 
-    def begin_ambient_camera_rotation(self, rate=0.02):
+    def begin_ambient_camera_rotation(self, rate=0.02, about="theta"):
         """
         This method begins an ambient rotation of the camera about the Z_AXIS,
         in the anticlockwise direction
@@ -71,20 +79,38 @@ class ThreeDScene(Scene):
         rate : int or float, optional
             The rate at which the camera should rotate about the Z_AXIS.
             Negative rate means clockwise rotation.
+        about: (str)
+            one of 3 options: ["theta", "phi", "gamma"]. defaults to theta.
         """
         # TODO, use a ValueTracker for rate, so that it
         # can begin and end smoothly
-        self.renderer.camera.theta_tracker.add_updater(
-            lambda m, dt: m.increment_value(rate * dt)
-        )
-        self.add(self.renderer.camera.theta_tracker)
+        if about.lower() == "phi":
+            x = self.renderer.camera.phi_tracker
+        elif about.lower() == "gamma":
+            x = self.renderer.camera.gamma_tracker
+        elif about.lower() == "theta":
+            x = self.renderer.camera.theta_tracker
+        else:
+            raise ValueError("Invalid ambient rotation angle.")
 
-    def stop_ambient_camera_rotation(self):
+        x.add_updater(lambda m, dt: m.increment_value(rate * dt))
+        self.add(x)
+
+    def stop_ambient_camera_rotation(self, about="theta"):
         """
         This method stops all ambient camera rotation.
         """
-        self.renderer.camera.theta_tracker.clear_updaters()
-        self.remove(self.renderer.camera.theta_tracker)
+        if about.lower() == "phi":
+            x = self.renderer.camera.phi_tracker
+        elif about.lower() == "gamma":
+            x = self.renderer.camera.gamma_tracker
+        elif about.lower() == "theta":
+            x = self.renderer.camera.theta_tracker
+        else:
+            raise ValueError("Invalid ambient rotation angle.")
+
+        x.clear_updaters()
+        self.remove(x)
 
     def begin_3dillusion_camera_rotation(
         self, rate=1, origin_theta=-60 * DEGREES, origin_phi=75 * DEGREES
@@ -261,7 +287,9 @@ class ThreeDScene(Scene):
             Some recognised kwargs are phi, theta, distance, gamma,
             which have the same meaning as the parameters in set_camera_orientation.
         """
-        config = dict(self.default_camera_orientation_kwargs)
+        config = dict(
+            self.default_camera_orientation_kwargs
+        )  # Where doe this come from?
         config.update(kwargs)
         self.set_camera_orientation(**config)
 
@@ -279,10 +307,11 @@ class SpecialThreeDScene(ThreeDScene):
 
     """
 
-    CONFIG = {
-        "cut_axes_at_radius": True,
-        "camera_config": {"should_apply_shading": True, "exponential_projection": True},
-        "three_d_axes_config": {
+    def __init__(
+        self,
+        cut_axes_at_radius=True,
+        camera_config={"should_apply_shading": True, "exponential_projection": True},
+        three_d_axes_config={
             "num_axis_pieces": 1,
             "axis_config": {
                 "unit_size": 2,
@@ -291,28 +320,32 @@ class SpecialThreeDScene(ThreeDScene):
                 "stroke_width": 2,
             },
         },
-        "sphere_config": {"radius": 2, "resolution": (24, 48)},
-        "default_angled_camera_position": {
+        sphere_config={"radius": 2, "resolution": (24, 48)},
+        default_angled_camera_position={
             "phi": 70 * DEGREES,
             "theta": -110 * DEGREES,
         },
         # When scene is extracted with -l flag, this
         # configuration will override the above configuration.
-        "low_quality_config": {
+        low_quality_config={
             "camera_config": {"should_apply_shading": False},
             "three_d_axes_config": {"num_axis_pieces": 1},
             "sphere_config": {"resolution": (12, 24)},
         },
-    }
-
-    def __init__(self, **kwargs):
-        digest_config(self, kwargs)
+        **kwargs,
+    ):
+        self.cut_axes_at_radius = cut_axes_at_radius
+        self.camera_config = camera_config
+        self.three_d_axes_config = three_d_axes_config
+        self.sphere_config = sphere_config
+        self.default_angled_camera_position = default_angled_camera_position
+        self.low_quality_config = low_quality_config
         if self.renderer.camera_config["pixel_width"] == config["pixel_width"]:
-            config = {}
+            _config = {}
         else:
-            config = self.low_quality_config
-        config = merge_dicts_recursively(config, kwargs)
-        ThreeDScene.__init__(self, **config)
+            _config = self.low_quality_config
+        _config = merge_dicts_recursively(_config, kwargs)
+        ThreeDScene.__init__(self, **_config)
 
     def get_axes(self):
         """Return a set of 3D axes.

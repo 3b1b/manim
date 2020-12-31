@@ -9,15 +9,14 @@ from ...utils.bezier import interpolate
 from ...utils.color import color_gradient, YELLOW_C, WHITE, BLACK, YELLOW
 from ...utils.color import color_to_rgba
 from ...utils.color import rgba_to_color
-from ...utils.config_ops import digest_config
 from ...utils.iterables import stretch_array_to_length
 from ...utils.space_ops import get_norm
 
 
 class PMobject(Mobject):
-    CONFIG = {
-        "stroke_width": DEFAULT_STROKE_WIDTH,
-    }
+    def __init__(self, stroke_width=DEFAULT_STROKE_WIDTH, **kwargs):
+        self.stroke_width = stroke_width
+        super().__init__(**kwargs)
 
     def reset_points(self):
         self.rgbas = np.zeros((0, 4))
@@ -180,14 +179,10 @@ class PMobject(Mobject):
 
 # TODO, Make the two implementations bellow non-redundant
 class Mobject1D(PMobject):
-    CONFIG = {
-        "density": DEFAULT_POINT_DENSITY_1D,
-    }
-
-    def __init__(self, **kwargs):
-        digest_config(self, kwargs)
+    def __init__(self, density=DEFAULT_POINT_DENSITY_1D, **kwargs):
+        self.density = density
         self.epsilon = 1.0 / self.density
-        Mobject.__init__(self, **kwargs)
+        PMobject.__init__(self, **kwargs)
 
     def add_line(self, start, end, color=None):
         start, end = list(map(np.array, [start, end]))
@@ -201,14 +196,10 @@ class Mobject1D(PMobject):
 
 
 class Mobject2D(PMobject):
-    CONFIG = {
-        "density": DEFAULT_POINT_DENSITY_2D,
-    }
-
-    def __init__(self, **kwargs):
-        digest_config(self, kwargs)
+    def __init__(self, density=DEFAULT_POINT_DENSITY_2D, **kwargs):
+        self.density = density
         self.epsilon = 1.0 / self.density
-        Mobject.__init__(self, **kwargs)
+        PMobject.__init__(self, **kwargs)
 
 
 class PGroup(PMobject):
@@ -220,15 +211,24 @@ class PGroup(PMobject):
 
 
 class PointCloudDot(Mobject1D):
-    CONFIG = {
-        "radius": 0.075,
-        "stroke_width": 2,
-        "density": DEFAULT_POINT_DENSITY_1D,
-        "color": YELLOW,
-    }
-
-    def __init__(self, center=ORIGIN, **kwargs):
-        Mobject1D.__init__(self, **kwargs)
+    def __init__(
+        self,
+        center=ORIGIN,
+        radius=0.075,
+        stroke_width=2,
+        density=DEFAULT_POINT_DENSITY_1D,
+        color=YELLOW,
+        **kwargs
+    ):
+        self.radius = radius
+        Mobject1D.__init__(
+            self,
+            radius=radius,
+            stroke_width=stroke_width,
+            density=density,
+            color=color,
+            **kwargs
+        )
         self.shift(center)
 
     def generate_points(self):
@@ -242,10 +242,6 @@ class PointCloudDot(Mobject1D):
 
 
 class Point(PMobject):
-    CONFIG = {
-        "color": BLACK,
-    }
-
-    def __init__(self, location=ORIGIN, **kwargs):
-        PMobject.__init__(self, **kwargs)
+    def __init__(self, location=ORIGIN, color=BLACK, **kwargs):
+        PMobject.__init__(self, color=color, **kwargs)
         self.add_points([location])

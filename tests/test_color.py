@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from manim import Camera, Scene, tempconfig, config
+from manim import Mobject, VMobject, Camera, Scene, tempconfig, config, WHITE, BLACK
 
 
 def test_import_color():
@@ -24,3 +24,15 @@ def test_background_color():
     S.camera.background_opacity = 0.5
     S.renderer.update_frame(S)
     assert np.all(S.renderer.get_frame()[0, 0] == np.array([187, 255, 187, 127]))
+
+
+def test_set_color():
+    m = Mobject()
+    assert m.color.hex == "#fff"
+    m.set_color(BLACK)
+    assert m.color.hex == "#000"
+
+    m = VMobject()
+    assert m.color.hex == "#fff"
+    m.set_color(BLACK)
+    assert m.color.hex == "#000"

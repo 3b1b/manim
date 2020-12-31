@@ -2,13 +2,14 @@ from .. import constants, logger, console, config
 import importlib.util
 import inspect
 import os
+from pathlib import Path
 import sys
 import types
 import re
 
 
 def get_module(file_name):
-    if file_name == "-":
+    if str(file_name) == "-":
         module = types.ModuleType("input_scenes")
         logger.info(
             "Enter the animation's code & end with an EOF (CTRL+D on Linux/Unix, CTRL+Z on Windows):"
@@ -27,7 +28,7 @@ def get_module(file_name):
             logger.error(f"Failed to render scene: {str(e)}")
             sys.exit(2)
     else:
-        if os.path.exists(file_name):
+        if Path(file_name).exists():
             ext = file_name.suffix
             if ext != ".py":
                 raise ValueError(f"{file_name} is not a valid Manim python script.")
@@ -35,6 +36,7 @@ def get_module(file_name):
             spec = importlib.util.spec_from_file_location(module_name, file_name)
             module = importlib.util.module_from_spec(spec)
             sys.modules[module_name] = module
+            sys.path.insert(0, str(file_name.parent.absolute()))
             spec.loader.exec_module(module)
             return module
         else:
@@ -103,3 +105,13 @@ def prompt_user_for_choice(scene_classes):
         sys.exit(2)
     except EOFError:
         sys.exit(1)
+
+
+def scene_classes_from_file(file_path, require_single_scene=False):
+    module = get_module(file_path)
+    all_scene_classes = get_scene_classes_from_module(module)
+    scene_classes_to_render = get_scenes_to_render(all_scene_classes)
+    if require_single_scene:
+        assert len(scene_classes_to_render) == 1
+        return scene_classes_to_render[0]
+    return scene_classes_to_render

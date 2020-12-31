@@ -14,30 +14,45 @@ from ..utils.color import BLUE_D, BLUE, BLUE_E, LIGHT_GREY
 
 
 class ThreeDVMobject(VMobject):
-    CONFIG = {
-        "shade_in_3d": True,
-    }
+    def __init__(self, shade_in_3d=True, **kwargs):
+        super().__init__(shade_in_3d=shade_in_3d, **kwargs)
 
 
 class ParametricSurface(VGroup):
-    CONFIG = {
-        "u_min": 0,
-        "u_max": 1,
-        "v_min": 0,
-        "v_max": 1,
-        "resolution": 32,
-        "surface_piece_config": {},
-        "fill_color": BLUE_D,
-        "fill_opacity": 1.0,
-        "checkerboard_colors": [BLUE_D, BLUE_E],
-        "stroke_color": LIGHT_GREY,
-        "stroke_width": 0.5,
-        "should_make_jagged": False,
-        "pre_function_handle_to_anchor_scale_factor": 0.00001,
-    }
-
-    def __init__(self, func, **kwargs):
+    def __init__(
+        self,
+        func,
+        u_min=0,
+        u_max=1,
+        v_min=0,
+        v_max=1,
+        resolution=32,
+        surface_piece_config={},
+        fill_color=BLUE_D,
+        fill_opacity=1.0,
+        checkerboard_colors=[BLUE_D, BLUE_E],
+        stroke_color=LIGHT_GREY,
+        stroke_width=0.5,
+        should_make_jagged=False,
+        pre_function_handle_to_anchor_scale_factor=0.00001,
+        **kwargs
+    ):
         VGroup.__init__(self, **kwargs)
+        self.u_min = u_min
+        self.u_max = u_max
+        self.v_min = v_min
+        self.v_max = v_max
+        self.resolution = resolution
+        self.surface_piece_config = surface_piece_config
+        self.fill_color = fill_color
+        self.fill_opacity = fill_opacity
+        self.checkerboard_colors = checkerboard_colors
+        self.stroke_color = stroke_color
+        self.stroke_width = stroke_width
+        self.should_make_jagged = should_make_jagged
+        self.pre_function_handle_to_anchor_scale_factor = (
+            pre_function_handle_to_anchor_scale_factor
+        )
         self.func = func
         self.setup_in_uv_space()
         self.apply_function(lambda p: func(p[0], p[1]))
@@ -99,36 +114,58 @@ class ParametricSurface(VGroup):
         for face in self:
             c_index = (face.u_index + face.v_index) % n_colors
             face.set_fill(colors[c_index], opacity=opacity)
+        return self
 
 
 # Specific shapes
 
 
 class Sphere(ParametricSurface):
-    CONFIG = {
-        "resolution": (12, 24),
-        "radius": 1,
-        "u_min": 0.001,
-        "u_max": PI - 0.001,
-        "v_min": 0,
-        "v_max": TAU,
-    }
-
-    def __init__(self, **kwargs):
-        ParametricSurface.__init__(self, self.func, **kwargs)
+    def __init__(
+        self,
+        radius=1,
+        resolution=(12, 24),
+        u_min=0.001,
+        u_max=PI - 0.001,
+        v_min=0,
+        v_max=TAU,
+        **kwargs
+    ):
+        ParametricSurface.__init__(
+            self,
+            self.func,
+            resolution=resolution,
+            u_min=u_min,
+            u_max=u_max,
+            v_min=v_min,
+            v_max=v_max,
+            **kwargs
+        )
+        self.radius = radius
         self.scale(self.radius)
 
-    def func(self, u, v):
+    def func(
+        self, u, v
+    ):  # FIXME: An attribute defined in manim.mobject.three_dimensions line 56 hides this method
         return np.array([np.cos(v) * np.sin(u), np.sin(v) * np.sin(u), np.cos(u)])
 
 
 class Cube(VGroup):
-    CONFIG = {
-        "fill_opacity": 0.75,
-        "fill_color": BLUE,
-        "stroke_width": 0,
-        "side_length": 2,
-    }
+    def __init__(
+        self,
+        side_length=2,
+        fill_opacity=0.75,
+        fill_color=BLUE,
+        stroke_width=0,
+        **kwargs
+    ):
+        self.side_length = side_length
+        super().__init__(
+            fill_color=fill_color,
+            fill_opacity=fill_opacity,
+            stroke_width=stroke_width,
+            **kwargs
+        )
 
     def generate_points(self):
         for vect in IN, OUT, LEFT, RIGHT, UP, DOWN:
@@ -144,7 +181,9 @@ class Cube(VGroup):
 
 
 class Prism(Cube):
-    CONFIG = {"dimensions": [3, 2, 1]}
+    def __init__(self, dimensions=[3, 2, 1], **kwargs):
+        self.dimensions = dimensions
+        Cube.__init__(self, **kwargs)
 
     def generate_points(self):
         Cube.generate_points(self)

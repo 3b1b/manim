@@ -6,30 +6,27 @@ from ..utils.GraphicalUnitTester import GraphicalUnitTester
 
 
 class AxesTest(GraphScene):
-    CONFIG = {
-        "x_min": -5,
-        "x_max": 5,
-        "y_min": -3,
-        "y_max": 3,
-        "x_axis_config": {
+    def construct(self):
+        self.x_min = -5
+        self.x_max = 5
+        self.y_min = -3
+        self.y_max = 3
+        self.x_axis_config = {
             "add_start": 0.5,
             "add_end": 0.5,
             "include_tip": True,
-        },
-        "y_axis_config": {
+        }
+        self.y_axis_config = {
             "add_start": 0.25,
             "add_end": 0.5,
             "include_tip": True,
-        },
-        "x_axis_visibility": True,
-        "y_axis_visibility": True,
-        "y_label_position": UP,
-        "x_label_position": RIGHT,
-        "graph_origin": ORIGIN,
-        "axes_color": WHITE,
-    }
-
-    def construct(self):
+        }
+        self.x_axis_visibility = True
+        self.y_axis_visibility = True
+        self.y_label_position = UP
+        self.x_label_position = RIGHT
+        self.graph_origin = ORIGIN
+        self.axes_color = WHITE
         self.setup_axes(animate=True)
 
 

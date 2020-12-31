@@ -43,13 +43,13 @@ class RotateTest(Scene):
 class MoveToTest(Scene):
     def construct(self):
         square = Square()
-        self.play(square.move_to, np.array([1.0, 1.0, 0.0]))
+        self.play(square.animate.move_to(np.array([1.0, 1.0, 0.0])))
 
 
 class ShiftTest(Scene):
     def construct(self):
         square = Square()
-        self.play(square.shift, UP)
+        self.play(square.animate.shift(UP))
 
 
 MODULE_NAME = "movements"

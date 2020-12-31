@@ -1,22 +1,15 @@
 """Utilities called from ``__main__.py`` to interact with the config."""
 
 import os
-import sys
 import argparse
-import logging
-
-import colour
-
-from manim import constants, logger, config
-from .utils import make_config_parser
-from .logger_utils import JSONFormatter
-from ..utils.tex import TexTemplate, TexTemplateFromFile
+import typing
+from manim import constants
 
 
 __all__ = ["parse_args"]
 
 
-def _find_subcommand(args):
+def _find_subcommand(args: list) -> typing.Union[str, None]:
     """Return the subcommand that has been passed, if any.
 
     Parameters
@@ -26,7 +19,7 @@ def _find_subcommand(args):
 
     Returns
     -------
-    Optional[:class:`str`]
+    typing.Union[:class:`str`,None]
         If a subcommand is found, returns the string of its name.  Returns None
         otherwise.
 
@@ -38,7 +31,8 @@ def _find_subcommand(args):
     """
     subcmd = args[1]
     if subcmd in [
-        "cfg"
+        "cfg",
+        "plugins",
         # , 'init',
     ]:
         return subcmd
@@ -46,7 +40,7 @@ def _find_subcommand(args):
         return None
 
 
-def _init_cfg_subcmd(subparsers):
+def _init_cfg_subcmd(subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:
     """Initialises the subparser for the `cfg` subcommand.
 
     Parameters
@@ -80,7 +74,7 @@ def _init_cfg_subcmd(subparsers):
     return cfg_related
 
 
-def _str2bool(s):
+def _str2bool(s: str) -> bool:
     """Helper function that handles boolean CLI arguments."""
     if s == "True":
         return True
@@ -90,7 +84,7 @@ def _str2bool(s):
         raise argparse.ArgumentTypeError("True or False expected")
 
 
-def parse_args(args):
+def parse_args(args: list) -> argparse.Namespace:
     """Parse CLI arguments.
 
     Parameters
@@ -113,13 +107,15 @@ def parse_args(args):
     subcmd = _find_subcommand(args)
     if subcmd == "cfg":
         return _parse_args_cfg_subcmd(args)
+    elif subcmd == "plugins":
+        return _parse_args_plugins(args)
     # elif subcmd == some_other_future_subcmd:
     #     return _parse_args_some_other_subcmd(args)
     elif subcmd is None:
         return _parse_args_no_subcmd(args)
 
 
-def _parse_args_cfg_subcmd(args):
+def _parse_args_cfg_subcmd(args: list) -> argparse.Namespace:
     """Parse arguments of the form 'manim cfg <subcmd> <args>'."""
     parser = argparse.ArgumentParser(
         description="Animation engine for explanatory math videos",
@@ -157,14 +153,34 @@ def _parse_args_cfg_subcmd(args):
     return parsed
 
 
-def _parse_args_no_subcmd(args):
+def _parse_args_plugins(args: list) -> argparse.Namespace:
+    """Parse arguments of the form 'manim plugins <args>'."""
+    parser = argparse.ArgumentParser(
+        description="Utility command for managing plugins",
+        prog="manim plugins",
+        epilog="Made with <3 by the manim community devs",
+        usage=("%(prog)s -h -l"),
+    )
+
+    parser.add_argument(
+        "-l",
+        "--list",
+        action="store_true",
+        help="Lists all available plugins",
+    )
+    parsed = parser.parse_args(args[2:])
+    parsed.cmd = "plugins"
+    return parsed
+
+
+def _parse_args_no_subcmd(args: list) -> argparse.Namespace:
     """Parse arguments of the form 'manim <args>', when no command is present."""
     parser = argparse.ArgumentParser(
         description="Animation engine for explanatory math videos",
         prog="manim",
         usage=(
             "%(prog)s file [flags] [scene [scene ...]]\n"
-            "       %(prog)s {cfg,init} [opts]"
+            "       %(prog)s {cfg,init,plugins} [opts]\n"
         ),
         epilog="Made with <3 by the manim community devs",
     )
@@ -317,7 +333,11 @@ def _parse_args_no_subcmd(args):
     parser.add_argument(
         "-q",
         "--quality",
-        choices=[constants.QUALITIES[q]["flag"] for q in constants.QUALITIES],
+        choices=[
+            constants.QUALITIES[q]["flag"]
+            for q in constants.QUALITIES
+            if constants.QUALITIES[q]["flag"]
+        ],
         default=constants.DEFAULT_QUALITY_SHORT,
         help="Render at specific quality, short form of the --*_quality flags",
     )

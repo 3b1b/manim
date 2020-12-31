@@ -9,47 +9,72 @@ __all__ = [
 ]
 
 
+import typing
+
+import numpy as np
+
 from ..animation.animation import Animation
 from ..utils.rate_functions import linear
 
+if typing.TYPE_CHECKING:
+    from ..mobject.mobject import Mobject
+
 
 class Homotopy(Animation):
-    CONFIG = {
-        "run_time": 3,
-        "apply_function_kwargs": {},
-    }
-
-    def __init__(self, homotopy, mobject, **kwargs):
+    def __init__(
+        self,
+        homotopy: typing.Callable[
+            [float, float, float, float], typing.Tuple[float, float, float]
+        ],
+        mobject: "Mobject",
+        run_time: float = 3,
+        apply_function_kwargs: typing.Optional[typing.Dict[str, typing.Any]] = None,
+        **kwargs
+    ) -> None:
         """
         Homotopy is a function from
         (x, y, z, t) to (x', y', z')
         """
         self.homotopy = homotopy
-        super().__init__(mobject, **kwargs)
+        self.apply_function_kwargs = (
+            apply_function_kwargs if apply_function_kwargs is not None else {}
+        )
+        super().__init__(mobject, run_time=run_time, **kwargs)
 
-    def function_at_time_t(self, t):
+    def function_at_time_t(self, t: float) -> typing.Tuple[float, float, float]:
         return lambda p: self.homotopy(*p, t)
 
-    def interpolate_submobject(self, submob, start, alpha):
-        submob.points = start.points
-        submob.apply_function(
+    def interpolate_submobject(
+        self, submobject: "Mobject", starting_sumobject: "Mobject", alpha: float
+    ) -> None:
+        submobject.points = starting_sumobject.points
+        submobject.apply_function(
             self.function_at_time_t(alpha), **self.apply_function_kwargs
         )
 
 
 class SmoothedVectorizedHomotopy(Homotopy):
-    def interpolate_submobject(self, submob, start, alpha):
-        Homotopy.interpolate_submobject(self, submob, start, alpha)
-        submob.make_smooth()
+    def interpolate_submobject(
+        self, submobject: "Mobject", starting_sumobject: "Mobject", alpha: float
+    ) -> None:
+        Homotopy.interpolate_submobject(self, submobject, starting_sumobject, alpha)
+        submobject.make_smooth()
 
 
 class ComplexHomotopy(Homotopy):
-    def __init__(self, complex_homotopy, mobject, **kwargs):
+    def __init__(
+        self,
+        complex_homotopy: typing.Callable[[complex], float],
+        mobject: "Mobject",
+        **kwargs
+    ) -> None:
         """
-        Complex Hootopy a function Cx[0, 1] to C
+        Complex Homotopy a function Cx[0, 1] to C
         """
 
-        def homotopy(x, y, z, t):
+        def homotopy(
+            x: float, y: float, z: float, t: float
+        ) -> typing.Tuple[float, float, float]:
             c = complex_homotopy(complex(x, y), t)
             return (c.real, c.imag, z)
 
@@ -57,17 +82,27 @@ class ComplexHomotopy(Homotopy):
 
 
 class PhaseFlow(Animation):
-    CONFIG = {
-        "virtual_time": 1,
-        "rate_func": linear,
-        "suspend_mobject_updating": False,
-    }
-
-    def __init__(self, function, mobject, **kwargs):
+    def __init__(
+        self,
+        function: typing.Callable[[np.ndarray], np.ndarray],
+        mobject: "Mobject",
+        virtual_time: float = 1,
+        suspend_mobject_updating: bool = False,
+        rate_func: typing.Callable[
+            [typing.Union[np.ndarray, float]], typing.Union[np.ndarray, float]
+        ] = linear,
+        **kwargs
+    ) -> None:
+        self.virtual_time = virtual_time
         self.function = function
-        super().__init__(mobject, **kwargs)
+        super().__init__(
+            mobject,
+            suspend_mobject_updating=suspend_mobject_updating,
+            rate_func=rate_func,
+            **kwargs
+        )
 
-    def interpolate_mobject(self, alpha):
+    def interpolate_mobject(self, alpha: float) -> None:
         if hasattr(self, "last_alpha"):
             dt = self.virtual_time * (alpha - self.last_alpha)
             self.mobject.apply_function(lambda p: p + dt * self.function(p))
@@ -75,14 +110,33 @@ class PhaseFlow(Animation):
 
 
 class MoveAlongPath(Animation):
-    CONFIG = {
-        "suspend_mobject_updating": False,
-    }
+    """Make one mobject move along the path of another mobject.
+    Example
+    --------
+    .. manim:: MoveAlongPathExample
 
-    def __init__(self, mobject, path, **kwargs):
+        class MoveAlongPathExample(Scene):
+            def construct(self):
+                d1 = Dot().set_color(ORANGE)
+                l1 = Line(LEFT, RIGHT)
+                l2 = VMobject()
+                self.add(d1, l1, l2)
+                l2.add_updater(lambda x: x.become(Line(LEFT, d1.get_center()).set_color(ORANGE)))
+                self.play(MoveAlongPath(d1, l1), rate_func=linear)
+    """
+
+    def __init__(
+        self,
+        mobject: "Mobject",
+        path: np.ndarray,
+        suspend_mobject_updating: typing.Optional[bool] = False,
+        **kwargs
+    ) -> None:
         self.path = path
-        super().__init__(mobject, **kwargs)
+        super().__init__(
+            mobject, suspend_mobject_updating=suspend_mobject_updating, **kwargs
+        )
 
-    def interpolate_mobject(self, alpha):
+    def interpolate_mobject(self, alpha: float) -> None:
         point = self.path.point_from_proportion(alpha)
         self.mobject.move_to(point)

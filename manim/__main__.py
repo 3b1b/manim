@@ -1,14 +1,13 @@
 import os
-import platform
 import sys
 import traceback
 
-from manim import constants, logger, console, config
-from manim import Scene
+from manim import logger, config
 from manim.utils.module_ops import (
     get_module,
     get_scene_classes_from_module,
     get_scenes_to_render,
+    scene_classes_from_file,
 )
 from manim.utils.file_ops import open_file as open_media_file
 from manim._config.main_utils import parse_args
@@ -53,7 +52,7 @@ def main():
     if hasattr(args, "cmd"):
         if args.cmd == "cfg":
             if args.subcmd:
-                from manim.config import cfg_subcmds
+                from manim._config import cfg_subcmds
 
                 if args.subcmd == "write":
                     cfg_subcmds.write(args.level, args.open)
@@ -64,31 +63,41 @@ def main():
             else:
                 logger.error("No subcommand provided; Exiting...")
 
+        elif args.cmd == "plugins":
+            from manim.plugins import plugins_flags
+
+            if args.list:
+                plugins_flags.list_plugins()
+            elif not args.list:
+                logger.error("No flag provided; Exiting...")
+
         # elif args.cmd == "some_other_cmd":
         #     something_else_here()
 
     else:
         config.digest_args(args)
-
-        module = get_module(config.get_dir("input_file"))
-        all_scene_classes = get_scene_classes_from_module(module)
-        scene_classes_to_render = get_scenes_to_render(all_scene_classes)
-        for SceneClass in scene_classes_to_render:
+        input_file = config.get_dir("input_file")
+        if config["use_js_renderer"]:
             try:
-                if config["use_js_renderer"]:
-                    if frame_server_impl is None:
-                        raise ImportError(
-                            "Dependencies for JS renderer is not installed."
-                        )
-                    frame_server_impl.get(SceneClass).start()
-                else:
-                    scene = SceneClass()
-                    scene.render()
-                    open_file_if_needed(scene.renderer.file_writer)
+                if frame_server_impl is None:
+                    raise ImportError("Dependencies for JS renderer is not installed.")
+                server = frame_server_impl.get(input_file)
+                server.start()
+                server.wait_for_termination()
             except Exception:
                 print("\n\n")
                 traceback.print_exc()
                 print("\n\n")
+        else:
+            for SceneClass in scene_classes_from_file(input_file):
+                try:
+                    scene = SceneClass()
+                    scene.render()
+                    open_file_if_needed(scene.renderer.file_writer)
+                except Exception:
+                    print("\n\n")
+                    traceback.print_exc()
+                    print("\n\n")
 
 
 if __name__ == "__main__":

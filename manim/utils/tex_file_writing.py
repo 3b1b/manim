@@ -126,8 +126,8 @@ def tex_compilation_command(tex_compiler, output_format, tex_file, tex_dir):
             outflag,
             "-interaction=batchmode",
             "-halt-on-error",
-            '-output-directory="{}"'.format(tex_dir),
-            '"{}"'.format(tex_file),
+            f'-output-directory="{tex_dir}"',
+            f'"{tex_file}"',
             ">",
             os.devnull,
         ]
@@ -197,7 +197,7 @@ def convert_to_svg(dvi_file, extension, page=1):
             "dvisvgm",
             "--pdf" if extension == ".pdf" else "",
             "-p " + str(page),
-            '"{}"'.format(dvi_file),
+            f'"{dvi_file}"',
             "-n",
             "-v 0",
             "-o " + f'"{result}"',
@@ -212,7 +212,7 @@ def convert_to_svg(dvi_file, extension, page=1):
             f"Your installation does not support converting {extension} files to SVG."
             f" Consider updating dvisvgm to at least version 2.4."
             f" If this does not solve the problem, please refer to our troubleshooting guide at:"
-            f" https://manimce.readthedocs.io/en/latest/installation/troubleshooting.html"
+            f" https://docs.manim.community/en/latest/installation/troubleshooting.html"
         )
 
     return result

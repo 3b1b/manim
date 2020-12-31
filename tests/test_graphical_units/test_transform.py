@@ -75,7 +75,7 @@ class RestoreTest(Scene):
         circle = Circle()
         self.play(Transform(square, circle))
         square.save_state()
-        self.play(square.shift, UP)
+        self.play(square.animate.shift(UP))
         self.play(Restore(square))
 
 

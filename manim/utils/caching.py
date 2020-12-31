@@ -1,6 +1,5 @@
 from .. import config, logger
-from ..utils.hashing import get_hash_from_play_call, get_hash_from_wait_call
-from ..constants import DEFAULT_WAIT_TIME
+from ..utils.hashing import get_hash_from_play_call
 
 
 def handle_caching_play(func):
@@ -19,11 +18,11 @@ def handle_caching_play(func):
     """
 
     def wrapper(self, scene, *args, **kwargs):
-        self.revert_to_original_skipping_status()
+        self.skip_animations = self.original_skipping_status
         self.update_skipping_status()
-        animations = scene.compile_play_args_to_animation_list(*args, **kwargs)
+        animations = scene.compile_animations(*args, **kwargs)
         scene.add_mobjects_from_animations(animations)
-        if config["skip_animations"]:
+        if self.skip_animations:
             logger.debug(f"Skipping animation {self.num_plays}")
             func(self, scene, *args, **kwargs)
             # If the animation is skipped, we mark its hash as None.
@@ -32,7 +31,7 @@ def handle_caching_play(func):
             self.file_writer.add_partial_movie_file(None)
             return
         if not config["disable_caching"]:
-            mobjects_on_scene = scene.get_mobjects()
+            mobjects_on_scene = scene.mobjects
             hash_play = get_hash_from_play_call(
                 self, self.camera, animations, mobjects_on_scene
             )
@@ -41,9 +40,9 @@ def handle_caching_play(func):
                     f"Animation {self.num_plays} : Using cached data (hash : %(hash_play)s)",
                     {"hash_play": hash_play},
                 )
-                config["skip_animations"] = True
+                self.skip_animations = True
         else:
-            hash_play = "uncached_{:05}".format(self.num_plays)
+            hash_play = f"uncached_{self.num_plays:05}"
         self.animations_hashes.append(hash_play)
         self.file_writer.add_partial_movie_file(hash_play)
         logger.debug(
