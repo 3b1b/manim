@@ -1,9 +1,9 @@
 from functools import reduce
 
 from manimlib.constants import *
-from manimlib.for_3b1b_videos.pi_creature import PiCreature
-from manimlib.for_3b1b_videos.pi_creature import Randolph
-from manimlib.for_3b1b_videos.pi_creature import get_all_pi_creature_modes
+# from manimlib.for_3b1b_videos.pi_creature import PiCreature
+# from manimlib.for_3b1b_videos.pi_creature import Randolph
+# from manimlib.for_3b1b_videos.pi_creature import get_all_pi_creature_modes
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.geometry import Polygon
 from manimlib.mobject.geometry import RegularPolygon

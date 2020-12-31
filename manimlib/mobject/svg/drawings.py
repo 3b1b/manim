@@ -582,7 +582,7 @@ class Car(SVGMobject):
         self.set_stroke(color=WHITE, width=0)
         self.set_fill(self.color, opacity=1)
 
-        from manimlib.for_3b1b_videos.pi_creature import Randolph
+        from videos.characters.pi_creature import Randolph
         randy = Randolph(mode="happy")
         randy.set_height(0.6 * self.get_height())
         randy.stretch(0.8, 0)
@@ -1016,7 +1016,7 @@ class PlayingCard(VGroup):
         return design
 
     def get_face_card_design(self, value, symbol):
-        from manimlib.for_3b1b_videos.pi_creature import PiCreature
+        from videos.characters.pi_creature import PiCreature
         sub_rect = Rectangle(
             stroke_color=BLACK,
             fill_opacity=0,
