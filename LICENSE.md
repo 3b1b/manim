@@ -1,7 +1,3 @@
-All files of this project under the directory "from_3b1b" are copyright 3Blue1Brown LLC and used by permission for this project only.
-
-Any other file of this project is available under the MIT license as follow:
-
 MIT License
 
 Copyright (c) 2018 3Blue1Brown LLC
