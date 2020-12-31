@@ -39,6 +39,7 @@ manimpango = "^0.1.4"
 grpcio =  { version = "1.33.*", optional = true }
 grpcio-tools = { version = "1.33.*", optional = true }
 watchdog = { version = "*", optional = true }
+networkx = "^2.5"
 
 [tool.poetry.extras]
 js_renderer = ["grpcio","grpcio-tools","watchdog"]

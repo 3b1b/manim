@@ -30,7 +30,7 @@ class AxesTest(GraphScene):
         self.setup_axes(animate=True)
 
 
-MODULE_NAME = "graph"
+MODULE_NAME = "plot"
 
 
 @pytest.mark.slow

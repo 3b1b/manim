@@ -22,6 +22,7 @@ Mobjects
    ~mobject.frame
    ~mobject.functions
    ~mobject.geometry
+   ~mobject.graph
    ~mobject.logo
    ~mobject.matrix
    ~mobject.mobject

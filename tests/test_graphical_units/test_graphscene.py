@@ -29,7 +29,7 @@ class PlotFunctions(GraphScene):
         self.play(Animation(f))
 
 
-MODULE_NAME = "graph"
+MODULE_NAME = "plot"
 
 
 @pytest.mark.slow
