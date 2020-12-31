@@ -53,18 +53,15 @@ from typing import Dict
 from xml.sax.saxutils import escape
 
 import cairo
-import cairocffi
-import pangocairocffi
-import pangocffi
+import manimpango
+from manimpango import PangoUtils, TextSetting, MarkupUtils
 
 from ... import config, logger
 from ...constants import *
 from ...mobject.geometry import Dot
 from ...mobject.svg.svg_mobject import SVGMobject
 from ...mobject.types.vectorized_mobject import VGroup
-from ...utils.color import WHITE
-from ...utils.color import Colors
-
+from ...utils.color import WHITE, Colors
 
 TEXT_MOB_SCALE_FACTOR = 0.05
 
@@ -101,68 +98,6 @@ def remove_invisible_chars(mobject):
         code.code = mobject_without_dots
         return code
     return mobject_without_dots
-
-
-class PangoUtils:
-    @staticmethod
-    def str2style(string: str) -> pangocffi.Style:
-        """Internally used function. Converts text to Pango Understandable Styles."""
-        if string == NORMAL:
-            return pangocffi.Style.NORMAL
-        elif string == ITALIC:
-            return pangocffi.Style.ITALIC
-        elif string == OBLIQUE:
-            return pangocffi.Style.OBLIQUE
-        else:
-            raise AttributeError("There is no Style Called %s" % string)
-
-    @staticmethod
-    def str2weight(string: str) -> pangocffi.Weight:
-        """Internally used function. Convert text to Pango Understandable Weight"""
-        if string == NORMAL:
-            return pangocffi.Weight.NORMAL
-        elif string == BOLD:
-            return pangocffi.Weight.BOLD
-        elif string == THIN:
-            return pangocffi.Weight.THIN
-        elif string == ULTRALIGHT:
-            return pangocffi.Weight.ULTRALIGHT
-        elif string == LIGHT:
-            return pangocffi.Weight.LIGHT
-        elif string == SEMILIGHT:
-            return pangocffi.Weight.SEMILIGHT
-        elif string == BOOK:
-            return pangocffi.Weight.BOOK
-        elif string == MEDIUM:
-            return pangocffi.Weight.MEDIUM
-        elif string == SEMIBOLD:
-            return pangocffi.Weight.SEMIBOLD
-        elif string == ULTRABOLD:
-            return pangocffi.Weight.ULTRABOLD
-        elif string == HEAVY:
-            return pangocffi.Weight.HEAVY
-        elif string == ULTRAHEAVY:
-            return pangocffi.Weight.ULTRAHEAVY
-        else:
-            raise AttributeError("There is no Font Weight Called %s" % string)
-
-    @staticmethod
-    def remove_last_M(file_name: str) -> None:
-        with open(file_name, "r") as fpr:
-            content = fpr.read()
-        content = re.sub(r'Z M [^A-Za-z]*? "\/>', 'Z "/>', content)
-        with open(file_name, "w") as fpw:
-            fpw.write(content)
-
-
-class TextSetting(object):
-    def __init__(self, start, end, font, slant, weight, line_num=-1):
-        self.start = start
-        self.end = end
-        self.font = font
-        self.slant = slant
-        self.weight = weight
-        self.line_num = line_num
 
 
 class CairoText(SVGMobject):
@@ -448,7 +383,7 @@ class CairoText(SVGMobject):
         offset_x = 0
         last_line_num = 0
         for setting in settings:
-            font = setting.font
+            font = setting.font.decode("utf-8")
             slant = self.str2slant(setting.slant)
             weight = self.str2weight(setting.weight)
             text = self.text[setting.start : setting.end].replace("\n", " ")
@@ -1012,45 +947,22 @@ class Text(SVGMobject):
         file_name = os.path.join(dir_name, hash_name) + ".svg"
         if os.path.exists(file_name):
             return file_name
-        surface = cairocffi.SVGSurface(file_name, 600, 400)
-        context = cairocffi.Context(surface)
-        context.move_to(START_X, START_Y)
         settings = self.text2settings()
-        offset_x = 0
-        last_line_num = 0
-        layout = pangocairocffi.create_layout(context)
-        layout.set_width(pangocffi.units_from_double(600))
-        for setting in settings:
-            family = setting.font
-            style = PangoUtils.str2style(setting.slant)
-            weight = PangoUtils.str2weight(setting.weight)
-            text = self.text[setting.start : setting.end].replace("\n", " ")
-            fontdesc = pangocffi.FontDescription()
-            fontdesc.set_size(pangocffi.units_from_double(size))
-            if family:
-                fontdesc.set_family(family)
-            fontdesc.set_style(style)
-            fontdesc.set_weight(weight)
-            layout.set_font_description(fontdesc)
-            if setting.line_num != last_line_num:
-                offset_x = 0
-                last_line_num = setting.line_num
-            context.move_to(
-                START_X + offset_x, START_Y + line_spacing * setting.line_num
-            )
-            pangocairocffi.update_layout(context, layout)
-            if disable_liga:
-                text = escape(text)
-                layout.set_markup(
-                    f"<span font_features='liga=0,dlig=0,clig=0,hlig=0'>{text}</span>"
-                )
-            else:
-                layout.set_text(text)
-            logger.debug(f"Setting Text {text}")
-            pangocairocffi.show_layout(context, layout)
-            offset_x += pangocffi.units_to_double(layout.get_size()[0])
-        surface.finish()
-        return file_name
+        width = 600
+        height = 400
+
+        return manimpango.text2svg(
+            settings,
+            size,
+            line_spacing,
+            disable_liga,
+            file_name,
+            START_X,
+            START_Y,
+            width,
+            height,
+            self.text,
+        )
 
 
 class MarkupText(SVGMobject):
@@ -1360,32 +1272,22 @@ class MarkupText(SVGMobject):
         file_name = os.path.join(dir_name, hash_name) + ".svg"
         if os.path.exists(file_name):
             return file_name
-        surface = cairocffi.SVGSurface(file_name, 600, 400)
-        context = cairocffi.Context(surface)
-        context.move_to(START_X, START_Y)
-        layout = pangocairocffi.create_layout(context)
-        layout.set_width(pangocffi.units_from_double(600))
 
-        fontdesc = pangocffi.FontDescription()
-        fontdesc.set_size(pangocffi.units_from_double(size))
-        if self.font:
-            fontdesc.set_family(self.font)
-        fontdesc.set_style(PangoUtils.str2style(self.slant))
-        fontdesc.set_weight(PangoUtils.str2weight(self.weight))
-        layout.set_font_description(fontdesc)
-
-        context.move_to(START_X, START_Y)
-        pangocairocffi.update_layout(context, layout)
-        if disable_liga:
-            layout.set_markup(
-                f"<span font_features='liga=0,dlig=0,clig=0,hlig=0'>{self.text}</span>"
-            )
-        else:
-            layout.set_markup(self.text)
         logger.debug(f"Setting Text {self.text}")
-        pangocairocffi.show_layout(context, layout)
-        surface.finish()
-        return file_name
+        return MarkupUtils.text2svg(
+            self.text,
+            self.font,
+            self.slant,
+            self.weight,
+            size,
+            line_spacing,
+            disable_liga,
+            file_name,
+            START_X,
+            START_Y,
+            600,  # width
+            400,  # height
+        )
 
     def _count_real_chars(self, s):
         """Counts characters that will be displayed.

@@ -26,9 +26,6 @@ COPY . /opt/manim
 WORKDIR /opt/manim
 RUN pip install --no-cache .
 
-# ensure that ffi bindings are generated
-RUN python -c "import pangocairocffi"
-
 # create working directory for user to mount local directory into
 WORKDIR /manim
 RUN chmod 666 /manim

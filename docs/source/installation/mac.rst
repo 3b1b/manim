@@ -15,16 +15,6 @@ To install cairo:
 
    brew install cairo
 
-To install Pango and it dependencies:
-
-.. code-block:: bash
-
-   brew install pkg-config
-   brew install libffi
-   brew install pango
-   brew install glib
-
-
 To install ffmpeg:
 
 .. code-block:: bash
