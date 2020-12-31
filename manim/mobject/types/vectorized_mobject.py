@@ -1500,9 +1500,16 @@ class DashedVMobject(VMobject):
             full_d_alpha = 1.0 / num_dashes
             partial_d_alpha = full_d_alpha * ps_ratio
 
+            # Shifts the alphas and removes the last dash
+            # to give closed shapes even spacing
+            if vmobject.is_closed():
+                alphas += partial_d_alpha / 2
+                np.delete(alphas, -1)
+
             # Rescale so that the last point of vmobject will
             # be the end of the last dash
-            alphas /= 1 - full_d_alpha + partial_d_alpha
+            else:
+                alphas /= 1 - full_d_alpha + partial_d_alpha
 
             self.add(
                 *[
