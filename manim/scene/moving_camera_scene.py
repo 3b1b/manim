@@ -40,14 +40,11 @@ Examples
             s = Square(color=BLUE, fill_opacity=0.5).move_to(2 * LEFT)
             t = Triangle(color=YELLOW, fill_opacity=0.5).move_to(2 * RIGHT)
             self.add(s, t)
-            self.play(self.camera_frame.animate.move_to(s),
-                      self.camera_frame.animate.set_width(s.get_width()*2))
+            self.play(self.camera_frame.animate.move_to(s).set_width(s.get_width()*2))
             self.wait(0.3)
-            self.play(self.camera_frame.animate.move_to(t),
-                      self.camera_frame.animate.set_width(t.get_width()*2))
+            self.play(self.camera_frame.animate.move_to(t).set_width(t.get_width()*2))
 
-            self.play(self.camera_frame.animate.move_to(ORIGIN),
-                      self.camera_frame.animate.set_width(14))
+            self.play(self.camera_frame.animate.move_to(ORIGIN).set_width(14))
 
 .. manim:: MovingCameraOnGraph
 
@@ -66,7 +63,7 @@ Examples
             dot_at_start_graph = Dot().move_to(graph.points[0])
             dot_at_end_graph = Dot().move_to(graph.points[-1])
             self.add(graph, dot_at_end_graph, dot_at_start_graph)
-            self.play(self.camera_frame.animate.scale(0.5), self.camera_frame.animate.move_to(dot_at_start_graph))
+            self.play(self.camera_frame.animate.scale(0.5).move_to(dot_at_start_graph))
             self.play(self.camera_frame.animate.move_to(dot_at_end_graph))
             self.play(Restore(self.camera_frame))
             self.wait()

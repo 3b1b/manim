@@ -601,32 +601,39 @@ class Scene(Container):
         )
         return all_moving_mobject_families, static_mobjects
 
-    def compile_animations(self, *animations, **play_kwargs):
+    def compile_animations(self, *args, **kwargs):
         """
         Creates _MethodAnimations from any _AnimationBuilders and updates animation
         kwargs with kwargs passed to play().
-
         Parameters
         ----------
         *animations : Tuple[:class:`Animation`]
             Animations to be played.
-
         **play_kwargs
             Configuration for the call to play().
-
         Returns
         -------
         Tuple[:class:`Animation`]
             Animations to be played.
         """
-        for animation in animations:
-            if inspect.ismethod(animation):
+        animations = []
+        for arg in args:
+            if isinstance(arg, _AnimationBuilder):
+                animations.append(arg.build())
+            elif isinstance(arg, Animation):
+                animations.append(arg)
+            elif inspect.ismethod(arg):
                 raise TypeError(
-                    "Passing mobject methods to Scene.play is no longer supported. Use "
+                    "Passing Mobject methods to Scene.play is no longer supported. Use "
                     "Mobject.animate instead."
                 )
-            for k, v in play_kwargs.items():
+            else:
+                raise TypeError(f"Unexpected argument {arg} passed to Scene.play().")
+
+        for animation in animations:
+            for k, v in kwargs.items():
                 setattr(animation, k, v)
+
         return animations
 
     def _get_animation_time_progression(self, animations, duration):

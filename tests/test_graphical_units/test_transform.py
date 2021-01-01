@@ -131,6 +131,11 @@ class FadeInAndOutTest(Scene):
         self.play(FadeOut(square))
 
 
+class AnimationBuilderTest(Scene):
+    def construct(self):
+        self.play(Square().animate.shift(RIGHT).rotate(PI / 4))
+
+
 MODULE_NAME = "transform"
 
 

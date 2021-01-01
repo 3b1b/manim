@@ -396,7 +396,7 @@ Special Camera Settings
             dot_at_start_graph = Dot().move_to(graph.points[0])
             dot_at_end_graph = Dot().move_to(graph.points[-1])
             self.add(graph, dot_at_end_graph, dot_at_start_graph, moving_dot)
-            self.play(self.camera_frame.animate.scale(0.5),self.camera_frame.animate.move_to(moving_dot))
+            self.play(self.camera_frame.animate.scale(0.5).move_to(moving_dot))
 
             def update_curve(mob):
                 mob.move_to(moving_dot.get_center())
