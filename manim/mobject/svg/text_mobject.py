@@ -14,10 +14,10 @@ Examples
             text = Text('Hello world').scale(3)
             self.add(text)
 
-.. manim:: TextAlignement
+.. manim:: TextAlignment
     :save_last_frame:
 
-    class TextAlignement(Scene):
+    class TextAlignment(Scene):
         def construct(self):
             title = Text("K-means clustering and Logistic Regression", color=WHITE)
             title.scale_in_place(0.75)
@@ -412,7 +412,7 @@ class Paragraph(VGroup):
     Parameters
     ----------
     line_spacing : :class:`int`, optional
-        Represents the spaning betweeb lines. Default to -1, which means auto.
+        Represents the spacing between lines. Default to -1, which means auto.
     alignment : :class:`str`, optional
         Defines the alignment of paragraph. Default to "left". Possible values are "left", "right", "center"
 
@@ -499,7 +499,7 @@ class Paragraph(VGroup):
         return chars
 
     def set_all_lines_alignments(self, alignment):
-        """Function to set all line's aligment to a specific value.
+        """Function to set all line's alignment to a specific value.
 
         Parameters
         ----------
@@ -511,7 +511,7 @@ class Paragraph(VGroup):
         return self
 
     def set_line_alignment(self, alignment, line_no):
-        """Function to set one line's aligment to a specific value.
+        """Function to set one line's alignment to a specific value.
 
         Parameters
         ----------
@@ -545,7 +545,7 @@ class Paragraph(VGroup):
         return self
 
     def change_alignment_for_a_line(self, alignment, line_no):
-        """Function to change one line's aligment to a specific value.
+        """Function to change one line's alignment to a specific value.
 
         Parameters
         ----------
@@ -840,7 +840,7 @@ class Text(SVGMobject):
         return indexes
 
     # def full2short(self, kwargs):
-    #     """Internally used function. Fomats some exapansion to short forms.
+    #     """Internally used function. Formats some expansion to short forms.
     #     text2color -> t2c
     #     text2font -> t2f
     #     text2gradient -> t2g

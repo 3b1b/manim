@@ -8,7 +8,7 @@ from ..scene.scene import Scene
 
 class ReconfigurableScene(Scene):
     """
-    Note, this seems to no longer work as intented.
+    Note, this seems to no longer work as intended.
     """
 
     def __init__(self, allow_recursion=True, **kwargs):

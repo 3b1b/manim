@@ -197,7 +197,7 @@ class SVGMobject(VMobject):
         Returns
         -------
         List[VMobject]
-            A list of VMobject reprsented by the group.
+            A list of VMobject represented by the group.
         """
         mob = VGroup(*self.get_mobjects_from(g_element))
         self.handle_transforms(g_element, mob)
@@ -346,7 +346,7 @@ class SVGMobject(VMobject):
             WHITE
         ):
             opacity = 0
-            fill_color = BLACK  # shdn't be necessary but avoids error msgs
+            fill_color = BLACK  # shouldn't be necessary but avoids error msgs
         if fill_color in ["#000", "#000000"]:
             fill_color = WHITE
         if stroke_color in ["", "none", "#FFF", "#FFFFFF"] or Color(
@@ -388,7 +388,7 @@ class SVGMobject(VMobject):
         return mob
 
     def handle_transforms(self, element, mobject):
-        """Applies the SVG transform to the specified mobject. Tranforms include:
+        """Applies the SVG transform to the specified mobject. Transforms include:
         ``rotate``, ``translate``, ``scale``, and ``skew``.
 
         Parameters

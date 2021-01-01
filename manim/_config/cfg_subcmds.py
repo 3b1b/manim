@@ -90,7 +90,7 @@ def is_valid_style(style: str) -> bool:
 
 
 def replace_keys(default: dict) -> dict:
-    """Replaces _ to . and viceversa in a dictionary for rich
+    """Replaces _ to . and vice versa in a dictionary for rich
     Parameters
     ----------
     default : :class:`dict`
@@ -98,7 +98,7 @@ def replace_keys(default: dict) -> dict:
     Returns
     -------
     :class:`dict`
-        The dictionary which is modified by replcaing _ with . and viceversa
+        The dictionary which is modified by replacing _ with . and vice versa
     """
     for key in default:
         if "_" in key:

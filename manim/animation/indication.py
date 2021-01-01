@@ -330,9 +330,9 @@ class WiggleOutThenIn(Animation):
             return self.mobject.get_center()
 
     def interpolate_submobject(
-        self, submobject: "Mobject", starting_sumobject: "Mobject", alpha: float
+        self, submobject: "Mobject", starting_submobject: "Mobject", alpha: float
     ) -> None:
-        submobject.points[:, :] = starting_sumobject.points
+        submobject.points[:, :] = starting_submobject.points
         submobject.scale(
             interpolate(1, self.scale_value, there_and_back(alpha)),
             about_point=self.get_scale_about_point(),

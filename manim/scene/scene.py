@@ -33,7 +33,7 @@ class Scene(Container):
 
     The primary role of :class:`Scene` is to provide the user with tools to manage
     mobjects and animations.  Generally speaking, a manim script consists of a class
-    that derives from :class:`Scene` whose :meth:`Scene.construct` method is overriden
+    that derives from :class:`Scene` whose :meth:`Scene.construct` method is overridden
     by the user's code.
 
     Mobjects are displayed on screen by calling :meth:`Scene.add` and removed from
@@ -175,7 +175,7 @@ class Scene(Container):
     def setup(self):
         """
         This is meant to be implemented by any scenes which
-        are comonly subclassed, and have some common setup
+        are commonly subclassed, and have some common setup
         involved before the construct method is called.
         """
         pass
@@ -183,7 +183,7 @@ class Scene(Container):
     def tear_down(self):
         """
         This is meant to be implemented by any scenes which
-        are comonly subclassed, and have some common method
+        are commonly subclassed, and have some common method
         to be invoked before the scene ends.
         """
         pass
@@ -204,7 +204,7 @@ class Scene(Container):
         Examples
         --------
         A typical manim script includes a class derived from :class:`Scene` with an
-        overriden :meth:`Scene.contruct` method:
+        overridden :meth:`Scene.contruct` method:
 
         .. code-block:: python
 

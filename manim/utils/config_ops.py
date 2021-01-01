@@ -1,4 +1,4 @@
-"""Utilities that mught be useful for configuration dictionaries."""
+"""Utilities that might be useful for configuration dictionaries."""
 
 __all__ = [
     "merge_dicts_recursively",

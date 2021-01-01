@@ -117,12 +117,12 @@ class ThreeDScene(Scene):
     ):
         val_tracker_theta = ValueTracker(0)
 
-        def uptate_theta(m, dt):
+        def update_theta(m, dt):
             val_tracker_theta.increment_value(dt * rate)
             val_for_left_right = 0.2 * np.sin(val_tracker_theta.get_value())
             return m.set_value(origin_theta + val_for_left_right)
 
-        self.renderer.camera.theta_tracker.add_updater(uptate_theta)
+        self.renderer.camera.theta_tracker.add_updater(update_theta)
         self.add(self.renderer.camera.theta_tracker)
 
         val_tracker_phi = ValueTracker(0)
@@ -237,7 +237,7 @@ class ThreeDScene(Scene):
         """
         This method is used to prevent the rotation and movement
         of mobjects as the camera moves around. The mobject is
-        essentially overlayed, and is not impacted by the camera's
+        essentially overlaid, and is not impacted by the camera's
         movement in any way.
 
         Parameters

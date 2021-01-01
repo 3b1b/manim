@@ -332,7 +332,7 @@ class SceneFileWriter(object):
 
     def open_movie_pipe(self):
         """
-        Used internally by Manim to initalise
+        Used internally by Manim to initialise
         FFMPEG and begin writing to FFMPEG's input
         buffer.
         """
@@ -355,7 +355,7 @@ class SceneFileWriter(object):
             "-r",
             str(fps),  # frames per second
             "-i",
-            "-",  # The imput comes from a pipe
+            "-",  # The input comes from a pipe
             "-an",  # Tells FFMPEG not to expect any audio
             "-loglevel",
             config["ffmpeg_loglevel"].lower(),
@@ -413,7 +413,7 @@ class SceneFileWriter(object):
         # viewing the scene as a whole, one of course wants to see it as a
         # single piece.
         partial_movie_files = [el for el in self.partial_movie_files if el is not None]
-        # NOTE : Here we should do a check and raise an exeption if partial
+        # NOTE : Here we should do a check and raise an exception if partial
         # movie file is empty.  We can't, as a lot of stuff (in particular, in
         # tests) use scene initialization, and this error would be raised as
         # it's just an empty scene initialized.

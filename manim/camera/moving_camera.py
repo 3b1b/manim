@@ -45,7 +45,7 @@ class MovingCamera(Camera):
     ):
         """
         frame is a Mobject, (should almost certainly be a rectangle)
-        determining which region of space the camera displys
+        determining which region of space the camera displays
         """
         self.fixed_dimension = fixed_dimension
         self.default_frame_stroke_color = default_frame_stroke_color
@@ -165,7 +165,7 @@ class MovingCamera(Camera):
 
     def get_mobjects_indicating_movement(self):
         """
-        Returns all mobjets whose movement implies that the camera
+        Returns all mobjects whose movement implies that the camera
         should think of all other mobjects on the screen as moving
 
         Returns

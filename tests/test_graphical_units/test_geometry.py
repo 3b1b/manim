@@ -90,7 +90,7 @@ class LineTest(Scene):
         self.play(Animation(a))
 
 
-class Elbowtest(Scene):
+class ElbowTest(Scene):
     def construct(self):
         a = Elbow()
         self.play(Animation(a))

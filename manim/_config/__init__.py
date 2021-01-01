@@ -65,7 +65,7 @@ def tempconfig(temp: Union[ManimConfig, dict]) -> _GeneratorContextManager:
 
     temp = {k: v for k, v in temp.items() if k in original}
 
-    # In order to change the config that every module has acces to, use
+    # In order to change the config that every module has access to, use
     # update(), DO NOT use assignment.  Assigning config = some_dict will just
     # make the local variable named config point to a new dictionary, it will
     # NOT change the dictionary that every module has a reference to.

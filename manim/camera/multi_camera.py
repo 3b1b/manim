@@ -16,7 +16,7 @@ class MultiCamera(MovingCamera):
         allow_cameras_to_capture_their_own_display=False,
         **kwargs
     ):
-        """Initalises the MultiCamera
+        """Initialises the MultiCamera
 
         Parameters
         ----------
@@ -85,7 +85,7 @@ class MultiCamera(MovingCamera):
         MovingCamera.capture_mobjects(self, mobjects, **kwargs)
 
     def get_mobjects_indicating_movement(self):
-        """Returns all mobjets whose movement implies that the camera
+        """Returns all mobjects whose movement implies that the camera
         should think of all other mobjects on the screen as moving
 
         Returns

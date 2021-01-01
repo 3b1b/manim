@@ -3,10 +3,10 @@
 Examples
 --------
 
-.. manim:: FunctionPlotWithLabbeledYAxis
+.. manim:: FunctionPlotWithLabelledYAxis
     :save_last_frame:
 
-    class FunctionPlotWithLabbeledYAxis(GraphScene):
+    class FunctionPlotWithLabelledYAxis(GraphScene):
         def __init__(self, **kwargs):
             GraphScene.__init__(
                 self,
@@ -379,7 +379,7 @@ class GraphScene(Scene):
     def input_to_graph_point(self, x, graph):
         """
         This method returns a coordinate on the curve
-        given an x_value and a the graoh-curve for which
+        given an x_value and a the graph-curve for which
         the corresponding y value should be found.
 
         Parameters
@@ -427,7 +427,7 @@ class GraphScene(Scene):
 
     def slope_of_tangent(self, *args, **kwargs):
         """
-        Returns the slople of the tangent to the plotted curve
+        Returns the slope of the tangent to the plotted curve
         at a particular x-value.
 
         Parameters
@@ -656,7 +656,7 @@ class GraphScene(Scene):
     ):
         """
         This method returns a list of multiple VGroups of Riemann
-        Rectangles. The inital VGroups are relatively inaccurate,
+        Rectangles. The initial VGroups are relatively inaccurate,
         but the closer you get to the end the more accurate the Riemann
         rectangles become
 
@@ -980,7 +980,7 @@ class GraphScene(Scene):
         side : np.array(), optional
 
         label : str, optional
-            The label to give the vertline and triangle
+            The label to give the vertical line and triangle
 
         color : str, optional
             The hex color of the label.

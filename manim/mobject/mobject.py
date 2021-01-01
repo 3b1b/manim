@@ -1283,7 +1283,7 @@ class Mobject(Container):
 
             class BecomeScene(Scene):
                 def construct(self):
-                    circ= Circle(fill_color=RED)
+                    circ = Circle(fill_color=RED)
                     square = Square(fill_color=BLUE)
                     self.add(circ)
                     self.wait(0.5)

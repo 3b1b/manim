@@ -485,7 +485,7 @@ class VMobject(Mobject):
 
     def add_smooth_curve_to(self, *points):
         """
-        If two points are passed in, the first is intepretted
+        If two points are passed in, the first is interpreted
         as a handle, the second as an anchor
         """
         if len(points) == 1:
@@ -744,7 +744,7 @@ class VMobject(Mobject):
 
         for mob in self, vmobject:
             # If there are no points, add one to
-            # whereever the "center" is
+            # wherever the "center" is
             if mob.has_no_points():
                 mob.start_new_path(mob.get_center())
             # If there's only one point, turn it into
@@ -1163,7 +1163,7 @@ class VDict(VMobject):
                 my_dict["t"] = Tex("Some other text").set_color(BLUE)
                 self.wait()
 
-                # remove submoject by key
+                # remove submobject by key
                 my_dict.remove("t")
                 self.wait()
 

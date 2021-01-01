@@ -4,7 +4,7 @@ Configuration
 Manim provides an extensive configuration system that allows it to adapt to
 many different use cases.  There are many configuration options that can be
 configured at different times during the scene rendering process.  Each option
-can be configured programatically via `the ManimConfig class`_, or at the time
+can be configured programmatically via `the ManimConfig class`_, or at the time
 of command invocation via `command line arguments`_, or at the time the library
 is first imported via `the config files`_.
 

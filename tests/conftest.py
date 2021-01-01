@@ -11,7 +11,7 @@ def pytest_addoption(parser):
         "--skip_slow",
         action="store_true",
         default=False,
-        help="Will skip all the slow marked tests. Slow tests are arbitrarly marked as such.",
+        help="Will skip all the slow marked tests. Slow tests are arbitrarily marked as such.",
     )
     parser.addoption(
         "--show_diff",

@@ -81,7 +81,7 @@ class Matrix(VMobject):
         **kwargs
     ):
         """
-        Matrix can either either include numbres, tex_strings,
+        Matrix can either either include numbers, tex_strings,
         or mobjects
         """
         self.v_buff = v_buff

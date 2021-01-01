@@ -9,15 +9,15 @@ from manim import *
 # Use -s to skip to the end and just save the final frame
 # Use the -p to have preview of the animation (or image, if -s was
 # used) pop up once done.
-# Use -n <number> to skip ahead to the n'th animation of a scene.
+# Use -n <number> to skip ahead to the nth animation of a scene.
 # Use -r <number> to specify a resolution (for example, -r 1080
 # for a 1920x1080 video)
 
 
-class OpeningManimExample(Scene):
+class OpeningManim(Scene):
     def construct(self):
-        title = Tex("This is some \\LaTeX")
-        basel = MathTex("\\sum_{n=1}^\\infty " "\\frac{1}{n^2} = \\frac{\\pi^2}{6}")
+        title = Tex(r"This is some \LaTeX")
+        basel = MathTex(r"\sum_{n=1}^\infty \frac{1}{n^2} = \frac{\pi^2}{6}")
         VGroup(title, basel).arrange(DOWN)
         self.play(
             Write(title),
@@ -29,7 +29,7 @@ class OpeningManimExample(Scene):
         transform_title.to_corner(UP + LEFT)
         self.play(
             Transform(title, transform_title),
-            LaggedStart(*map(FadeOutAndShiftDown, basel)),
+            LaggedStart(*[FadeOutAndShift(obj, direction=DOWN) for obj in basel]),
         )
         self.wait()
 
@@ -41,13 +41,13 @@ class OpeningManimExample(Scene):
         self.add(grid, grid_title)  # Make sure title is on top of grid
         self.play(
             FadeOut(title),
-            FadeInFromDown(grid_title),
+            FadeInFrom(grid_title, direction=DOWN),
             ShowCreation(grid, run_time=3, lag_ratio=0.1),
         )
         self.wait()
 
         grid_transform_title = Tex(
-            "That was a non-linear function \\\\" "applied to the grid"
+            r"That was a non-linear function \\ applied to the grid"
         )
         grid_transform_title.move_to(grid_title, UL)
         grid.prepare_for_nonlinear_transform()

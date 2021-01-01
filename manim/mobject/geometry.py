@@ -134,7 +134,7 @@ class TipableVMobject(VMobject):
 
     def create_tip(self, tip_shape=None, tip_length=None, at_start=False):
         """
-        Stylises the tip, positions it spacially, and returns
+        Stylises the tip, positions it spatially, and returns
         the newly instantiated tip to the caller.
         """
         tip = self.get_unpositioned_tip(tip_shape, tip_length)
@@ -298,7 +298,7 @@ class Arc(TipableVMobject):
         # Appropriate tangent lines to the circle
         d_theta = self.angle / (self.num_components - 1.0)
         tangent_vectors = np.zeros(anchors.shape)
-        # Rotate all 90 degress, via (x, y) -> (-y, x)
+        # Rotate all 90 degrees, via (x, y) -> (-y, x)
         tangent_vectors[:, 1] = anchors[:, 0]
         tangent_vectors[:, 0] = -anchors[:, 1]
         # Use tangent vectors to deduce anchors
@@ -407,7 +407,7 @@ class Circle(Arc):
 
     def surround(self, mobject, dim_to_match=0, stretch=False, buffer_factor=1.2):
         # Ignores dim_to_match and stretch; result will always be a circle
-        # TODO: Perhaps create an ellipse class to handle singele-dimension stretching
+        # TODO: Perhaps create an ellipse class to handle single-dimension stretching
 
         # Something goes wrong here when surrounding lines?
         # TODO: Figure out and fix
@@ -816,12 +816,12 @@ class Arrow(Line):
         self.preserve_tip_size_when_scaling = (
             preserve_tip_size_when_scaling  # is this used anywhere
         )
-        tipp_shape = kwargs.pop("tip_shape", ArrowTriangleFilledTip)
+        tip_shape = kwargs.pop("tip_shape", ArrowTriangleFilledTip)
         Line.__init__(self, *args, buff=buff, stroke_width=stroke_width, **kwargs)
         # TODO, should this be affected when
         # Arrow.set_stroke is called?
         self.initial_stroke_width = self.stroke_width
-        self.add_tip(tip_shape=tipp_shape)
+        self.add_tip(tip_shape=tip_shape)
         self.set_stroke_width_from_length()
 
     def scale(self, factor, scale_tips=False, **kwargs):

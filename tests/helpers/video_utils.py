@@ -38,7 +38,7 @@ def get_config_from_video(path_to_video):
 
 def save_control_data_from_video(path_to_video, name):
     """Helper used to set up a new test that will compare videos. This will create a new .json file in control_data/videos_data that contains
-    informations tested of the video, including its hash. Refer to the wiki for more informations.
+    information tested of the video, including its hash. Refer to the wiki for more informations.
 
     Parameters
     ----------

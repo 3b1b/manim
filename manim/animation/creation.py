@@ -106,10 +106,10 @@ class ShowPartial(Animation):
         super().__init__(mobject, **kwargs)
 
     def interpolate_submobject(
-        self, submobject: Mobject, starting_sumobject: Mobject, alpha: float
+        self, submobject: Mobject, starting_submobject: Mobject, alpha: float
     ) -> None:
         submobject.pointwise_become_partial(
-            starting_sumobject, *self._get_bounds(alpha)
+            starting_submobject, *self._get_bounds(alpha)
         )
 
     def _get_bounds(self, alpha: float) -> None:
@@ -236,14 +236,14 @@ class DrawBorderThenFill(Animation):
         return [*super().get_all_mobjects(), self.outline]
 
     def interpolate_submobject(
-        self, submobject: Mobject, starting_sumobject: Mobject, outline, alpha: float
+        self, submobject: Mobject, starting_submobject: Mobject, outline, alpha: float
     ) -> None:  # Fixme: not matching the parent class? What is outline doing here?
         index, subalpha = integer_interpolate(0, 2, alpha)
         if index == 0:
             submobject.pointwise_become_partial(outline, 0, subalpha)
             submobject.match_style(outline)
         else:
-            submobject.interpolate(outline, starting_sumobject, subalpha)
+            submobject.interpolate(outline, starting_submobject, subalpha)
 
 
 class Write(DrawBorderThenFill):

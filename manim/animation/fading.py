@@ -189,13 +189,13 @@ class VFadeIn(Animation):
         )
 
     def interpolate_submobject(
-        self, submobject: "Mobject", starting_sumobject: "Mobject", alpha: float
+        self, submobject: "Mobject", starting_submobject: "Mobject", alpha: float
     ) -> None:
         submobject.set_stroke(
-            opacity=interpolate(0, starting_sumobject.get_stroke_opacity(), alpha)
+            opacity=interpolate(0, starting_submobject.get_stroke_opacity(), alpha)
         )
         submobject.set_fill(
-            opacity=interpolate(0, starting_sumobject.get_fill_opacity(), alpha)
+            opacity=interpolate(0, starting_submobject.get_fill_opacity(), alpha)
         )
 
 
@@ -204,9 +204,9 @@ class VFadeOut(VFadeIn):
         super().__init__(mobject, remover=remover, **kwargs)
 
     def interpolate_submobject(
-        self, submobject: "Mobject", starting_sumobject: "Mobject", alpha: float
+        self, submobject: "Mobject", starting_submobject: "Mobject", alpha: float
     ) -> None:
-        super().interpolate_submobject(submobject, starting_sumobject, 1 - alpha)
+        super().interpolate_submobject(submobject, starting_submobject, 1 - alpha)
 
 
 class VFadeInThenOut(VFadeIn):

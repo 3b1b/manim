@@ -37,7 +37,7 @@ def always(method, *args, **kwargs):
 def f_always(method, *arg_generators, **kwargs):
     """
     More functional version of always, where instead
-    of taking in args, it takes in functions which ouput
+    of taking in args, it takes in functions which output
     the relevant arguments.
     """
     assert_is_mobject_method(method)
@@ -80,7 +80,7 @@ def turn_animation_into_updater(animation, cycle=False, **kwargs):
     the interpolation and update functions of the animation
 
     If cycle is True, this repeats over and over.  Otherwise,
-    the updater will be popped uplon completion
+    the updater will be popped upon completion
     """
     mobject = animation.mobject
     animation.update_config(**kwargs)

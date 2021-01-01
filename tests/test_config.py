@@ -64,7 +64,7 @@ def test_background_color():
 
 
 def test_digest_file(tmp_path):
-    """Test that a config file can be digested programatically."""
+    """Test that a config file can be digested programmatically."""
     with tempconfig({}):
         tmp_cfg = tempfile.NamedTemporaryFile("w", dir=tmp_path, delete=False)
         tmp_cfg.write(

@@ -1073,7 +1073,7 @@ class LinearTransformationScene(VectorScene):
 
         added_anims : list, optional
             Any other animations that need to be played
-            simulataneously with this.
+            simultaneously with this.
 
         **kwargs
             Any valid keyword argument of a self.play() call.

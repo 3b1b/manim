@@ -23,7 +23,7 @@ import numpy as np
 def remove_list_redundancies(l):
     """
     Used instead of list(set(l)) to maintain order
-    Keeps the last occurance of each element
+    Keeps the last occurrence of each element
     """
     reversed_result = []
     used = set()

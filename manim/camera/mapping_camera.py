@@ -117,7 +117,7 @@ class OldMultiCamera(Camera):
 
 
 # A OldMultiCamera which, when called with two full-size cameras, initializes itself
-# as a splitscreen, also taking care to resize each individual camera within it
+# as a split screen, also taking care to resize each individual camera within it
 
 
 class SplitScreenCamera(OldMultiCamera):

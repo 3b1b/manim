@@ -21,7 +21,7 @@ class TexTemplate:
     documentclass : Optional[:class:`str`], optional
         The command defining the documentclass, e.g. ``\\documentclass[preview]{standalone}``
     preamble : Optional[:class:`str`], optional
-        The document's preample, i.e. the part between ``\\documentclass`` and ``\\begin{document}``
+        The document's preamble, i.e. the part between ``\\documentclass`` and ``\\begin{document}``
     placeholder_text : Optional[:class:`str`], optional
         Text in the document that will be replaced by the expression to be rendered
     post_doc_commands : Optional[:class:`str`], optional
@@ -239,7 +239,7 @@ class TexTemplateFromFile(TexTemplate):
     documentclass : Optional[:class:`str`], optional
         The command defining the documentclass, e.g. ``\\documentclass[preview]{standalone}``
     preamble : Optional[:class:`str`], optional
-        The document's preample, i.e. the part between ``\\documentclass`` and ``\\begin{document}``
+        The document's preamble, i.e. the part between ``\\documentclass`` and ``\\begin{document}``
     placeholder_text : Optional[:class:`str`], optional
         Text in the document that will be replaced by the expression to be rendered
     post_doc_commands : Optional[:class:`str`], optional

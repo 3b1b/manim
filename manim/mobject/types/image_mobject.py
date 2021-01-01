@@ -39,7 +39,7 @@ class AbstractImageMobject(Mobject):
         raise NotImplementedError()
 
     def set_color(self):
-        # Likely to be implemented in subclasses, but no obgligation
+        # Likely to be implemented in subclasses, but no obligation
         pass
 
     def reset_points(self):
@@ -174,11 +174,11 @@ class ImageMobject(AbstractImageMobject):
         Parameters
         ----------
         mobject1 : ImageMobject
-            The ImageMobject to tranform from.
+            The ImageMobject to transform from.
 
         mobject1 : ImageMobject
 
-            The ImageMobject to tranform into.
+            The ImageMobject to transform into.
         alpha : float
             Used to track the lerp relationship. Not opacity related.
         """
