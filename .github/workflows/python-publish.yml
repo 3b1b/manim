@@ -25,7 +25,9 @@ jobs:
       run: poetry config http-basic.pypi __token__ "$PYPI_API_TOKEN"
 
     - name: Publish release to pypi
-      run: poetry publish --build
+      run: |
+        poetry publish --build
+        poetry build
 
     - name: Get Upload URL
       id: create_release
