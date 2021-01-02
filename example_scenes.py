@@ -3,13 +3,10 @@
 from manimlib.imports import *
 
 # To watch one of these scenes, run the following:
-# python -m manim example_scenes.py SquareToCircle -pl
-#
-# Use the flat -l for a faster rendering at a lower
-# quality.
+# python -m manim example_scenes.py SquareToCircle
 # Use -s to skip to the end and just save the final frame
-# Use the -p to have the animation (or image, if -s was
-# used) pop up once done.
+# Use -w to write the animation to a file
+# Use -o to write it to a file and open it once done
 # Use -n <number> to skip ahead to the n'th animation of a scene.
 # Use -r <number> to specify a resolution (for example, -r 1080
 # for a 1920x1080 video)
@@ -133,4 +130,4 @@ class UpdatersExample(Scene):
         )
         self.wait()
 
-# See old_projects folder for many, many more
+# See https://github.com/3b1b/videos for many, many more
