@@ -5,6 +5,7 @@ numpy==1.16.4
 Pillow==5.2.0
 progressbar==2.5
 scipy==1.5.4
+sympy==1.7.1
 tqdm==4.24.0
 mapbox-earcut==0.12.10
 moderngl==5.5.4
