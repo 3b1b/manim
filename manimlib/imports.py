@@ -100,6 +100,7 @@ import re
 import string
 import sys
 import math
+import sympy
 
 from PIL import Image
 from colour import Color

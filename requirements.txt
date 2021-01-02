@@ -5,6 +5,7 @@ numpy
 Pillow
 progressbar
 scipy
+sympy
 tqdm
 mapbox-earcut
 moderngl
@@ -13,4 +14,3 @@ pydub
 PyOpenGL
 screeninfo
 pyreadline; sys_platform == 'win32'
-

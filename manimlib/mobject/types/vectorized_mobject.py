@@ -440,7 +440,7 @@ class VMobject(Mobject):
 
     def add_smooth_curve_to(self, point):
         if self.has_new_path_started():
-            self.add_line_to(anchor)
+            self.add_line_to(point)
         else:
             self.throw_error_if_no_points()
             new_handle = self.get_reflection_of_last_handle()
