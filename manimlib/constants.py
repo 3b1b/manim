@@ -29,7 +29,7 @@ def initialize_directories(config):
                 "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
             )
         if not os.path.isdir(MEDIA_DIR):
-            MEDIA_DIR = "./media"
+            MEDIA_DIR = os.path.join(os.getcwd(), "media")
         print(
             f"Media will be written to {MEDIA_DIR + os.sep}. You can change "
             "this behavior with the --media_dir flag."
@@ -159,7 +159,7 @@ DEFAULT_FRAME_RATE = 60
 monitor = get_monitors()[0]
 DEFAULT_WINDOW_WIDTH = monitor.width / 2
 DEFAULT_WINDOW_HEIGHT = DEFAULT_WINDOW_WIDTH * 9 / 16
-DEFAULT_WINDOW_POSITION = (DEFAULT_WINDOW_WIDTH, 0)
+DEFAULT_WINDOW_POSITION = (int(DEFAULT_WINDOW_WIDTH), 0)
 
 DEFAULT_STROKE_WIDTH = 4
 
