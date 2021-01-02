@@ -1,14 +1,16 @@
-argparse==1.4.0
-pycairo==1.19.1
-colour==0.1.5
-numpy==1.16.4
-Pillow==5.2.0
-progressbar==2.5
-scipy==1.5.4
-tqdm==4.24.0
-mapbox-earcut==0.12.10
-moderngl==5.5.4
-moderngl_window==2.3.0
-pydub==0.23.0
-PyOpenGL==3.1.5
-pyreadline==2.1; sys_platform == 'win32'
+argparse
+pycairo
+colour
+numpy
+Pillow
+progressbar
+scipy
+tqdm
+mapbox-earcut
+moderngl
+moderngl_window
+pydub
+PyOpenGL
+screeninfo
+pyreadline; sys_platform == 'win32'
+
