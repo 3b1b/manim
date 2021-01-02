@@ -29,7 +29,7 @@ def initialize_directories(config):
                 "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
             )
         if not os.path.isdir(MEDIA_DIR):
-            MEDIA_DIR = "./media"
+            MEDIA_DIR = os.path.join(os.getcwd(), "media")
         print(
             f"Media will be written to {MEDIA_DIR + os.sep}. You can change "
             "this behavior with the --media_dir flag."
