@@ -303,3 +303,36 @@ class Graph(VMobject):
 
     def __repr__(self: "Graph") -> str:
         return f"Graph on {len(self.vertices)} vertices and {len(self.edges)} edges"
+
+    @staticmethod
+    def from_networkx(nxgraph: nx.classes.graph.Graph, **kwargs) -> "Graph":
+        """Build a :class:`~.Graph` from a given ``networkx`` graph.
+
+        Parameters
+        ----------
+
+        nxgraph
+            A ``networkx`` graph.
+        **kwargs
+            Keywords to be passed to the constructor of :class:`~.Graph`.
+
+        Examples
+        --------
+
+        .. manim:: ImportNetworkxGraph
+
+            import networkx as nx
+
+            nxgraph = nx.erdos_renyi_graph(14, 0.5)
+
+            class ImportNetworkxGraph(Scene):
+                def construct(self):
+                    G = Graph.from_networkx(nxgraph, layout="spring", layout_scale=3.5)
+                    self.play(ShowCreation(G))
+                    self.play(*[G[v].animate.move_to(5*RIGHT*np.cos(ind/7 * PI) +
+                                                     3*UP*np.sin(ind/7 * PI))
+                                for ind, v in enumerate(G.vertices)])
+                    self.play(Uncreate(G))
+
+        """
+        return Graph(list(nxgraph.nodes), list(nxgraph.edges), **kwargs)
