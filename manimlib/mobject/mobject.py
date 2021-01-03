@@ -2,14 +2,12 @@ from functools import reduce
 import copy
 import itertools as it
 import operator as op
-import os
 import random
 import sys
 import moderngl
 
 import numpy as np
 
-import manimlib.constants as consts
 from manimlib.constants import *
 from manimlib.container.container import Container
 from manimlib.utils.color import color_gradient
