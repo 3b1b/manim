@@ -13,6 +13,7 @@ from manimlib.animation.animation import Animation
 from manimlib.animation.transform import MoveToTarget
 from manimlib.mobject.mobject import Point
 from manimlib.camera.camera import Camera
+from manimlib.config import get_custom_defaults
 from manimlib.constants import *
 from manimlib.container.container import Container
 from manimlib.mobject.mobject import Mobject
@@ -574,3 +575,9 @@ class Scene(Container):
 
 class EndSceneEarlyException(Exception):
     pass
+
+
+class BlankScene(Scene):
+    def construct(self):
+        exec(get_custom_defaults()["universal_import_line"])
+        self.embed()

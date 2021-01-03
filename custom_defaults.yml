@@ -25,6 +25,7 @@ tex:
   # executable: "xelatex -no-pdf"
   # template_file: "ctex_template.tex"
   # intermediate_filetype: "xdv"
+universal_import_line: "from manimlib.imports import *"
 style:
   background_color: "#333333"
 quality:

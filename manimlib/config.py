@@ -143,15 +143,17 @@ def get_manim_dir():
 
 
 def get_module(file_name):
-    if file_name == "-":
-        module = types.ModuleType("input_scenes")
-        code = "from manimlib.imports import *\n\n" + sys.stdin.read()
-        try:
-            exec(code, module.__dict__)
-            return module
-        except Exception as e:
-            print(f"Failed to render scene: {str(e)}")
-            sys.exit(2)
+    # if file_name == "-":
+    #     module = types.ModuleType("input_scenes")
+    #     code = "from manimlib.imports import *\n\n" + sys.stdin.read()
+    #     try:
+    #         exec(code, module.__dict__)
+    #         return module
+    #     except Exception as e:
+    #         print(f"Failed to render scene: {str(e)}")
+    #         sys.exit(2)
+    if file_name is None:
+        return None
     else:
         module_name = file_name.replace(os.sep, ".").replace(".py", "")
         spec = importlib.util.spec_from_file_location(module_name, file_name)
@@ -187,7 +189,7 @@ def get_configuration(args):
         "mirror_module_path": custom_defaults["directories"]["mirror_module_path"],
         "output_directory": args.video_dir or custom_defaults["directories"]["output"],
         "file_name": args.file_name,
-        "input_file_path": args.file,
+        "input_file_path": args.file or "",
         "open_file_upon_completion": args.open,
         "show_file_location_upon_completion": args.finder,
         "quiet": args.quiet,

@@ -1,8 +1,10 @@
 import inspect
 import itertools as it
 import sys
+import logging
 
 from manimlib.scene.scene import Scene
+from manimlib.scene.scene import BlankScene
 import manimlib.constants
 
 
@@ -43,10 +45,6 @@ def prompt_user_for_choice(scene_classes):
 
 
 def get_scenes_to_render(scene_classes, config):
-    if len(scene_classes) == 0:
-        print(manimlib.constants.NO_SCENE_MESSAGE)
-        return []
-
     scene_kwargs = dict([
         (key, config[key])
         for key in [
@@ -61,6 +59,10 @@ def get_scenes_to_render(scene_classes, config):
         ]
     ])
 
+    if len(config["scene_names"]) == 0:
+        # If no module or scenes were passed in, just run the blank scene
+        return [BlankScene(**scene_kwargs)]
+
     if config["write_all"]:
         return [sc(**scene_kwargs) for sc in scene_classes]
 
@@ -74,7 +76,8 @@ def get_scenes_to_render(scene_classes, config):
                 found = True
                 break
         if not found and (scene_name != ""):
-            print(
+            logging.log(
+                logging.ERROR,
                 manimlib.constants.SCENE_NOT_FOUND_MESSAGE.format(
                     scene_name
                 ),
@@ -87,6 +90,9 @@ def get_scenes_to_render(scene_classes, config):
 
 
 def get_scene_classes_from_module(module):
+    if module is None:
+        # If no module was passed in, just run the blank scene
+        return []
     if hasattr(module, "SCENES_IN_ORDER"):
         return module.SCENES_IN_ORDER
     else:
