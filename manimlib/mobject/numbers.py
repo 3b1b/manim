@@ -11,7 +11,7 @@ class DecimalNumber(VMobject):
         "num_decimal_places": 2,
         "include_sign": False,
         "group_with_commas": True,
-        "digit_to_digit_buff": 0.1,
+        "digit_buff_per_font_unit": 0.001,
         "show_ellipsis": False,
         "unit": None,  # Aligned to bottom unless it starts with "^"
         "include_background_rectangle": False,
@@ -47,7 +47,7 @@ class DecimalNumber(VMobject):
             minus = self.submobjects[0]
             minus.next_to(
                 self.submobjects[1], LEFT,
-                buff=self.digit_to_digit_buff
+                buff=self.digit_buff_per_font_unit * self.font_size,
             )
 
         if self.unit is not None:
@@ -55,7 +55,7 @@ class DecimalNumber(VMobject):
             self.add(self.unit_sign)
 
         self.arrange(
-            buff=self.digit_to_digit_buff,
+            buff=self.digit_buff_per_font_unit * self.font_size,
             aligned_edge=DOWN
         )
 
