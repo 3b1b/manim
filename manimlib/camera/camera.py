@@ -130,8 +130,8 @@ class Camera(object):
     CONFIG = {
         "background_image": None,
         "frame_config": {},
-        "pixel_height": DEFAULT_PIXEL_HEIGHT,
         "pixel_width": DEFAULT_PIXEL_WIDTH,
+        "pixel_height": DEFAULT_PIXEL_HEIGHT,
         "frame_rate": DEFAULT_FRAME_RATE,
         # Note: frame height and width will be resized to match
         # the pixel aspect ratio
