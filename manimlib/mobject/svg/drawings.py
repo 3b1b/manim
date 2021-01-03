@@ -132,7 +132,7 @@ class Laptop(VGroup):
         },
         "fill_opacity": 1,
         "stroke_width": 0,
-        "body_color": LIGHT_GREY,
+        "body_color": GREY_B,
         "shaded_body_color": GREY,
         "open_angle": np.pi / 4,
     }

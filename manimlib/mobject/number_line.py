@@ -12,7 +12,7 @@ from manimlib.utils.space_ops import normalize
 
 class NumberLine(Line):
     CONFIG = {
-        "color": LIGHT_GREY,
+        "color": GREY_B,
         "stroke_width": 2,
         # List of 2 or 3 elements, x_min, x_max, step_size
         "x_range": [-8, 8, 1],

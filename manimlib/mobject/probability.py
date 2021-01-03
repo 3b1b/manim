@@ -16,10 +16,10 @@ class SampleSpace(Rectangle):
     CONFIG = {
         "height": 3,
         "width": 3,
-        "fill_color": DARK_GREY,
+        "fill_color": GREY_D,
         "fill_opacity": 1,
         "stroke_width": 0.5,
-        "stroke_color": LIGHT_GREY,
+        "stroke_color": GREY_B,
         ##
         "default_label_scale_val": 1,
     }

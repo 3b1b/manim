@@ -288,7 +288,7 @@ class LinearTransformationScene(VectorScene):
         "background_plane_kwargs": {
             "color": GREY,
             "axis_config": {
-                "stroke_color": LIGHT_GREY,
+                "stroke_color": GREY_B,
             },
             "axis_config": {
                 "color": GREY,
