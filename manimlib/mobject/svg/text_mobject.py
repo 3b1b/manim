@@ -12,6 +12,9 @@ from manimlib.utils.config_ops import digest_config
 TEXT_MOB_SCALE_FACTOR = 0.05
 
 
+# Warning, these classes are currently based on an old rendering mode
+# not supported in this version of manim
+
 class TextSetting(object):
     def __init__(self, start, end, font, slant, weight, line_num=-1):
         self.start = start
@@ -205,7 +208,7 @@ class Text(SVGMobject):
 
         dir_name = consts.TEXT_DIR
         hash_name = self.text2hash()
-        file_name = os.path.join(dir_name, hash_name)+'.svg'
+        file_name = os.path.join(dir_name, hash_name) +'.svg'
         if os.path.exists(file_name):
             return file_name
 
@@ -227,7 +230,7 @@ class Text(SVGMobject):
             if setting.line_num != last_line_num:
                 offset_x = 0
                 last_line_num = setting.line_num
-            context.move_to(START_X + offset_x, START_Y + lsh*setting.line_num)
+            context.move_to(START_X + offset_x, START_Y + lsh * setting.line_num)
             context.show_text(text)
             offset_x += context.text_extents(text)[4]
 
