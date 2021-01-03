@@ -1,9 +1,12 @@
 import argparse
 import colour
-import importlib.util
+import inspect
+import importlib
 import os
 import sys
 import types
+import yaml
+from screeninfo import get_monitors
 
 import manimlib.constants
 
@@ -23,69 +26,74 @@ def parse_cli():
             help="Name of the Scene class you want to see",
         )
         parser.add_argument(
-            "-p", "--preview",
-            action="store_true",
-            help="Automatically open the saved file once its done",
-        ),
-        parser.add_argument(
             "-w", "--write_file",
             action="store_true",
             help="Render the scene as a movie file",
-        ),
+        )
         parser.add_argument(
             "-s", "--skip_animations",
             action="store_true",
             help="Save the last frame",
-        ),
+        )
         parser.add_argument(
             "-l", "--low_quality",
             action="store_true",
             help="Render at a low quality (for faster rendering)",
-        ),
+        )
         parser.add_argument(
             "-m", "--medium_quality",
             action="store_true",
             help="Render at a medium quality",
-        ),
+        )
         parser.add_argument(
-            "--high_quality",
+            "--hd",
             action="store_true",
-            help="Render at a high quality",
-        ),
+            help="Render at a 1080p",
+        )
+        parser.add_argument(
+            "--uhd",
+            action="store_true",
+            help="Render at a 4k",
+        )
+        parser.add_argument(
+            "-f", "--full_screen",
+            action="store_true",
+            help="Show window in full screen",
+        )
         parser.add_argument(
             "-g", "--save_pngs",
             action="store_true",
             help="Save each frame as a png",
-        ),
+        )
         parser.add_argument(
             "-i", "--save_as_gif",
             action="store_true",
             help="Save the video as gif",
-        ),
-        parser.add_argument(
-            "-f", "--show_file_in_finder",
-            action="store_true",
-            help="Show the output file in finder",
-        ),
+        )
         parser.add_argument(
             "-t", "--transparent",
             action="store_true",
             help="Render to a movie file with an alpha channel",
-        ),
+        )
         parser.add_argument(
             "-q", "--quiet",
             action="store_true",
             help="",
-        ),
+        )
         parser.add_argument(
             "-a", "--write_all",
             action="store_true",
             help="Write all the scenes from a file",
-        ),
+        )
         parser.add_argument(
             "-o", "--open",
             action="store_true",
             help="Automatically open the saved file once its done",
+        )
+        parser.add_argument(
+            "--finder",
+            action="store_true",
+            help="Show the output file in finder",
         )
         parser.add_argument(
             "--file_name",
@@ -100,7 +108,11 @@ def parse_cli():
         )
         parser.add_argument(
             "-r", "--resolution",
-            help="Resolution, passed as \"height,width\"",
+            help="Resolution, passed as \"WxH\", e.g. \"1920x1080\"",
+        )
+        parser.add_argument(
+            "--frame_rate",
+            help="Frame rate, as an integer",
         )
         parser.add_argument(
             "-c", "--color",
@@ -115,24 +127,19 @@ def parse_cli():
             "--media_dir",
             help="directory to write media",
         )
-        video_group = parser.add_mutually_exclusive_group()
-        video_group.add_argument(
-            "--video_dir",
-            help="directory to write file tree for video",
-        )
-        video_group.add_argument(
-            "--video_output_dir",
-            help="directory to write video",
-        )
         parser.add_argument(
-            "--tex_dir",
-            help="directory to write tex",
+            "--video_dir",
+            help="directory to write video",
         )
         args = parser.parse_args()
         return args
     except argparse.ArgumentError as err:
         print(str(err))
         sys.exit(2)
+
+
+def get_manim_dir():
+    return os.path.dirname(inspect.getabsfile(importlib.import_module("manim")))
 
 
 def get_module(file_name):
@@ -153,17 +160,23 @@ def get_module(file_name):
         return module
 
 
+def get_custom_defaults():
+    # See if there's a custom_defaults file in current directory,
+    # otherwise fall back on the one in manimlib
+    filename = "custom_defaults.yml"
+    if not os.path.exists(filename):
+        filename = os.path.join(get_manim_dir(), filename)
+
+    with open(filename, "r") as file:
+        custom_defaults = yaml.safe_load(file)
+    return custom_defaults
+
+
 def get_configuration(args):
-    module = get_module(args.file)
+    custom_defaults = get_custom_defaults()
 
-    write_file = any([
-        args.write_file,
-        args.open,
-        args.show_file_in_finder,
-    ])
-
+    write_file = any([args.write_file, args.open, args.finder])
     file_writer_config = {
-        # By default, write to file
         "write_to_movie": not args.skip_animations and write_file,
         "save_last_frame": args.skip_animations and write_file,
         "save_pngs": args.save_pngs,
@@ -171,43 +184,43 @@ def get_configuration(args):
         # If -t is passed in (for transparent), this will be RGBA
         "png_mode": "RGBA" if args.transparent else "RGB",
         "movie_file_extension": ".mov" if args.transparent else ".mp4",
+        "mirror_module_path": custom_defaults["directories"]["mirror_module_path"],
+        "output_directory": args.video_dir or custom_defaults["directories"]["output"],
         "file_name": args.file_name,
         "input_file_path": args.file,
         "open_file_upon_completion": args.open,
-        "show_file_location_upon_completion": args.show_file_in_finder,
+        "show_file_location_upon_completion": args.finder,
         "quiet": args.quiet,
     }
-    if hasattr(module, "OUTPUT_DIRECTORY"):
-        file_writer_config["output_directory"] = module.OUTPUT_DIRECTORY
 
-    # If preview wasn't set, but there is no filewriting, preview anyway
-    # so that the user sees something
-    if not (args.preview or write_file):
-        args.preview = True
-
+    module = get_module(args.file)
     config = {
         "module": module,
         "scene_names": args.scene_names,
-        "preview": args.preview,
         "file_writer_config": file_writer_config,
         "quiet": args.quiet or args.write_all,
         "write_all": args.write_all,
         "start_at_animation_number": args.start_at_animation_number,
+        "preview": not write_file,
         "end_at_animation_number": None,
         "leave_progress_bars": args.leave_progress_bars,
-        "media_dir": args.media_dir,
-        "video_dir": args.video_dir,
-        "video_output_dir": args.video_output_dir,
-        "tex_dir": args.tex_dir,
     }
 
     # Camera configuration
-    config["camera_config"] = get_camera_configuration(args)
+    config["camera_config"] = get_camera_configuration(args, custom_defaults)
+
+    # Default to putting window in the upper right of screen,
+    # but make it full screen if -f is passed in
+    monitor = get_monitors()[0]
+    if args.full_screen:
+        window_width = monitor.width
+    else:
+        window_width = monitor.width / 2
+    window_height = window_width * 9 / 16
+    window_position = (int(monitor.width - window_width), 0)
     config["window_config"] = {
-        "size": (
-            manimlib.constants.DEFAULT_WINDOW_WIDTH,
-            manimlib.constants.DEFAULT_WINDOW_HEIGHT,
-        )
+        "size": (window_width, window_height),
+        "position": window_position,
     }
 
     # Arguments related to skipping
@@ -227,40 +240,39 @@ def get_configuration(args):
     return config
 
 
-def get_camera_configuration(args):
+def get_camera_configuration(args, custom_defaults):
     camera_config = {}
     if args.low_quality:
         camera_config.update(manimlib.constants.LOW_QUALITY_CAMERA_CONFIG)
     elif args.medium_quality:
         camera_config.update(manimlib.constants.MEDIUM_QUALITY_CAMERA_CONFIG)
-    elif args.high_quality:
+    elif args.hd:
         camera_config.update(manimlib.constants.HIGH_QUALITY_CAMERA_CONFIG)
-    elif args.preview:  # Without a quality specified, preview at medium quality
-        camera_config.update(manimlib.constants.MEDIUM_QUALITY_CAMERA_CONFIG)
-    else:  # Without anything specified, render to production quality
-        camera_config.update(manimlib.constants.PRODUCTION_QUALITY_CAMERA_CONFIG)
-
-    # If the resolution was passed in via -r
-    if args.resolution:
-        if "," in args.resolution:
-            height_str, width_str = args.resolution.split(",")
-            height = int(height_str)
+    elif args.uhd:
+        camera_config.update(manimlib.constants.UHD_QUALITY_CAMERA_CONFIG)
+    else:  # No preset quality specified
+        resolution = args.resolution or custom_defaults["quality"]["resolution"]
+        if "x" in resolution:
+            width_str, height_str = resolution.split("x")
             width = int(width_str)
+            height = int(height_str)
         else:
-            height = int(args.resolution)
+            height = int(resolution)
             width = int(16 * height / 9)
+        frame_rate = args.frame_rate or custom_defaults["quality"]["frame_rate"]
         camera_config.update({
-            "pixel_height": height,
             "pixel_width": width,
+            "pixel_height": height,
+            "frame_rate": frame_rate,
         })
 
-    if args.color:
-        try:
-            camera_config["background_color"] = colour.Color(args.color)
-        except AttributeError as err:
-            print("Please use a valid color")
-            print(err)
-            sys.exit(2)
+    try:
+        bg_color = args.color or custom_defaults["style"]["background_color"]
+        camera_config["background_color"] = colour.Color(bg_color)
+    except AttributeError as err:
+        print("Please use a valid color")
+        print(err)
+        sys.exit(2)
 
     # If rendering a transparent image/move, make sure the
     # scene has a background opacity of 0

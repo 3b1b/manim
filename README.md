@@ -68,7 +68,7 @@ Some useful flags include:
 * `-n <number>` to skip ahead to the `n`'th animation of a scene.
 * `-f` to show the file in finder (for OSX).
 
-Set `MEDIA_DIR` environment variable to specify where the image and animation files will be written.
+Take a look at custom_defaults.yml for further configuration.  For example, there you can specify where videos should be output to, where manim should look for image files and sounds you want to read in, and other defaults regarding style and video quality.  If you have a file name "custom_defaults.yml" in the same directory where you are calling manim, it will look to the configuration of that file instead of the one in manim itself.
 
 Look through [https://github.com/3b1b/videos](https://github.com/3b1b/videos) to see the code for previous 3b1b videos. Note, however, that developments are often made to the library without considering backwards compatibility with those old projects. To run an old project with a guarantee that it will work, you will have to go back to the commit which completed that project.
 

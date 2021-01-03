@@ -6,7 +6,6 @@ import os
 import sys
 import platform
 
-import manimlib.constants as consts
 from manimlib.constants import FFMPEG_BIN
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.file_ops import guarantee_existence
@@ -24,11 +23,14 @@ class SceneFileWriter(object):
         "save_last_frame": False,
         "movie_file_extension": ".mp4",
         "gif_file_extension": ".gif",
-        # Previous output_file_name
-        # TODO, address this in extract_scene et. al.
-        "file_name": None,
+        # Should the path of output files mirror the directory
+        # structure of the module holding the scene?
+        "mirror_module_path": False,
+        # What python file is generating this scene
         "input_file_path": "",
+        # Where should this be written
         "output_directory": None,
+        "file_name": None,
         "open_file_upon_completion": False,
         "show_file_location_upon_completion": False,
         "quiet": False,
@@ -42,55 +44,33 @@ class SceneFileWriter(object):
 
     # Output directories and files
     def init_output_directories(self):
-        module_directory = self.output_directory or self.get_default_module_directory()
+        out_dir = self.output_directory
+        if self.mirror_module_path:
+            module_dir = self.get_default_module_directory()
+            out_dir = os.path.join(out_dir, module_dir)
+
         scene_name = self.file_name or self.get_default_scene_name()
         if self.save_last_frame:
-            if consts.VIDEO_DIR != "":
-                image_dir = guarantee_existence(os.path.join(
-                    consts.VIDEO_DIR,
-                    module_directory,
-                    "images",
-                ))
-            else:
-                image_dir = guarantee_existence(os.path.join(
-                    consts.VIDEO_OUTPUT_DIR,
-                    "images",
-                ))
-            self.image_file_path = os.path.join(
-                image_dir,
-                add_extension_if_not_present(scene_name, ".png")
-            )
+            image_dir = guarantee_existence(os.path.join(out_dir, "images"))
+            image_file = add_extension_if_not_present(scene_name, ".png")
+            self.image_file_path = os.path.join(image_dir, image_file)
         if self.write_to_movie:
-            if consts.VIDEO_DIR != "":
-                movie_dir = guarantee_existence(os.path.join(
-                    consts.VIDEO_DIR,
-                    module_directory,
-                    self.get_resolution_directory(),
-                ))
-            else:
-                movie_dir = guarantee_existence(consts.VIDEO_OUTPUT_DIR)
-            self.movie_file_path = os.path.join(
-                movie_dir,
-                add_extension_if_not_present(
-                    scene_name, self.movie_file_extension
-                )
-            )
-            self.gif_file_path = os.path.join(
-                movie_dir,
-                add_extension_if_not_present(
-                    scene_name, self.gif_file_extension
-                )
+            movie_dir = guarantee_existence(os.path.join(out_dir, "videos"))
+            movie_file = add_extension_if_not_present(scene_name, self.movie_file_extension)
+            self.movie_file_path = os.path.join(movie_dir, movie_file)
+            self.gif_file_path = self.movie_file_path.replace(
+                self.movie_file_extension,
+                self.gif_file_extension,
             )
             self.partial_movie_directory = guarantee_existence(os.path.join(
-                movie_dir,
-                "partial_movie_files",
-                scene_name,
+                movie_dir, "partial_movie_files", scene_name,
             ))
 
     def get_default_module_directory(self):
-        filename = os.path.basename(self.input_file_path)
-        root, _ = os.path.splitext(filename)
-        return root
+        path, _ = os.path.splitext(self.input_file_path)
+        if path.startswith("_"):
+            path = path[1:]
+        return path
 
     def get_default_scene_name(self):
         if self.file_name is None:

@@ -2,14 +2,10 @@ import moderngl_window as mglw
 from moderngl_window.context.pyglet.window import Window as PygletWindow
 from moderngl_window.timers.clock import Timer
 
-from manimlib.constants import DEFAULT_WINDOW_WIDTH
-from manimlib.constants import DEFAULT_WINDOW_HEIGHT
-from manimlib.constants import DEFAULT_WINDOW_POSITION
 from manimlib.utils.config_ops import digest_config
 
 
 class Window(PygletWindow):
-    size = (DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)
     fullscreen = False
     resizable = True
     gl_version = (3, 3)
@@ -18,11 +14,12 @@ class Window(PygletWindow):
     cursor = True
 
     def __init__(self, scene, **kwargs):
-        digest_config(self, kwargs)
         super().__init__(**kwargs)
+        digest_config(self, kwargs)
         self.scene = scene
         self.title = str(scene)
-        self.position = DEFAULT_WINDOW_POSITION
+        if "position" in kwargs:
+            self.position = kwargs["position"]
 
         mglw.activate_context(window=self)
         self.timer = Timer()

@@ -1,170 +1,9 @@
 import numpy as np
-import os
-from screeninfo import get_monitors
 
-MEDIA_DIR = ""
-VIDEO_DIR = ""
-VIDEO_OUTPUT_DIR = ""
-TEX_DIR = ""
-TEXT_DIR = ""
-MOBJECT_POINTS_DIR = ""
-
-
-def initialize_directories(config):
-    global MEDIA_DIR
-    global VIDEO_DIR
-    global VIDEO_OUTPUT_DIR
-    global TEX_DIR
-    global TEXT_DIR
-    global MOBJECT_POINTS_DIR
-
-    video_path_specified = config["video_dir"] or config["video_output_dir"]
-
-    if not (video_path_specified and config["tex_dir"]):
-        if config["media_dir"]:
-            MEDIA_DIR = config["media_dir"]
-        else:
-            MEDIA_DIR = os.path.join(
-                os.path.expanduser('~'),
-                "Dropbox (3Blue1Brown)/3Blue1Brown Team Folder"
-            )
-        if not os.path.isdir(MEDIA_DIR):
-            MEDIA_DIR = os.path.join(os.getcwd(), "media")
-        print(
-            f"Media will be written to {MEDIA_DIR + os.sep}. You can change "
-            "this behavior with the --media_dir flag."
-        )
-    else:
-        if config["media_dir"]:
-            print(
-                "Ignoring --media_dir, since both --tex_dir and a video "
-                "directory were both passed"
-            )
-
-    TEX_DIR = config["tex_dir"] or os.path.join(MEDIA_DIR, "Tex")
-    TEXT_DIR = os.path.join(MEDIA_DIR, "texts")
-    MOBJECT_POINTS_DIR = os.path.join(MEDIA_DIR, "mobject_points")
-    if not video_path_specified:
-        VIDEO_DIR = os.path.join(MEDIA_DIR, "videos")
-        VIDEO_OUTPUT_DIR = os.path.join(MEDIA_DIR, "videos")
-    elif config["video_output_dir"]:
-        VIDEO_OUTPUT_DIR = config["video_output_dir"]
-    else:
-        VIDEO_DIR = config["video_dir"]
-
-    for folder in [VIDEO_DIR, VIDEO_OUTPUT_DIR, TEX_DIR, TEXT_DIR, MOBJECT_POINTS_DIR]:
-        if folder != "" and not os.path.exists(folder):
-            os.makedirs(folder)
-
-
-NOT_SETTING_FONT_MSG = '''
-Warning:
-You haven't set font.
-If you are not using English, this may cause text rendering problem.
-You set font like:
-text = Text('your text', font='your font')
-or:
-class MyText(Text):
-    CONFIG = {
-        'font': 'My Font'
-    }
-'''
-START_X = 30
-START_Y = 20
-NORMAL = 'NORMAL'
-ITALIC = 'ITALIC'
-OBLIQUE = 'OBLIQUE'
-BOLD = 'BOLD'
-
-TEX_USE_CTEX = False
-TEX_TEXT_TO_REPLACE = "YourTextHere"
-TEMPLATE_TEX_FILE = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    "tex_template.tex" if not TEX_USE_CTEX else "ctex_template.tex"
-)
-with open(TEMPLATE_TEX_FILE, "r") as infile:
-    TEMPLATE_TEXT_FILE_BODY = infile.read()
-    TEMPLATE_TEX_FILE_BODY = TEMPLATE_TEXT_FILE_BODY.replace(
-        TEX_TEXT_TO_REPLACE,
-        "\\begin{align*}\n" + TEX_TEXT_TO_REPLACE + "\n\\end{align*}",
-    )
-
-
-SHADER_DIR = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    "shaders"
-)
-
-HELP_MESSAGE = """
-   Usage:
-   python extract_scene.py <module> [<scene name>]
-   -p preview in low quality
-   -s show and save picture of last frame
-   -w write result to file [this is default if nothing else is stated]
-   -o <file_name> write to a different file_name
-   -l use low quality
-   -m use medium quality
-   -a run and save every scene in the script, or all args for the given scene
-   -q don't print progress
-   -f when writing to a movie file, export the frames in png sequence
-   -t use transperency when exporting images
-   -n specify the number of the animation to start from
-   -r specify a resolution
-   -c specify a background color
-"""
-SCENE_NOT_FOUND_MESSAGE = """
-   {} is not in the script
-"""
-CHOOSE_NUMBER_MESSAGE = """
-Choose number corresponding to desired scene/arguments.
-(Use comma separated list for multiple entries)
-Choice(s): """
-INVALID_NUMBER_MESSAGE = "Fine then, if you don't want to give a valid number I'll just quit"
-
-NO_SCENE_MESSAGE = """
-   There are no scenes inside that module
-"""
-
-# There might be other configuration than pixel shape later...
-PRODUCTION_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 1440,
-    "pixel_width": 2560,
-    "frame_rate": 60,
-}
-
-HIGH_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 1080,
-    "pixel_width": 1920,
-    "frame_rate": 60,
-}
-
-MEDIUM_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 720,
-    "pixel_width": 1280,
-    "frame_rate": 30,
-}
-
-LOW_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 480,
-    "pixel_width": 854,
-    "frame_rate": 15,
-}
-
-DEFAULT_PIXEL_HEIGHT = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_height"]
-DEFAULT_PIXEL_WIDTH = PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_width"]
-DEFAULT_FRAME_RATE = 60
-
-# Default to putting window in the
-# upper right of screen
-monitor = get_monitors()[0]
-DEFAULT_WINDOW_WIDTH = monitor.width / 2
-DEFAULT_WINDOW_HEIGHT = DEFAULT_WINDOW_WIDTH * 9 / 16
-DEFAULT_WINDOW_POSITION = (int(DEFAULT_WINDOW_WIDTH), 0)
-
-DEFAULT_STROKE_WIDTH = 4
-
+# Sizes relevant to default camera frame
+ASPECT_RATIO = 16.0 / 9.0
 FRAME_HEIGHT = 8.0
-FRAME_WIDTH = FRAME_HEIGHT * DEFAULT_PIXEL_WIDTH / DEFAULT_PIXEL_HEIGHT
+FRAME_WIDTH = FRAME_HEIGHT * ASPECT_RATIO
 FRAME_Y_RADIUS = FRAME_HEIGHT / 2
 FRAME_X_RADIUS = FRAME_WIDTH / 2
 
@@ -209,6 +48,72 @@ TAU = 2 * PI
 DEGREES = TAU / 360
 
 FFMPEG_BIN = "ffmpeg"
+
+# Related to Text
+NOT_SETTING_FONT_MSG = '''
+Warning:
+You haven't set font.
+If you are not using English, this may cause text rendering problem.
+You set font like:
+text = Text('your text', font='your font')
+or:
+class MyText(Text):
+    CONFIG = {
+        'font': 'My Font'
+    }
+'''
+START_X = 30
+START_Y = 20
+NORMAL = 'NORMAL'
+ITALIC = 'ITALIC'
+OBLIQUE = 'OBLIQUE'
+BOLD = 'BOLD'
+
+
+SCENE_NOT_FOUND_MESSAGE = """
+   {} is not in the script
+"""
+CHOOSE_NUMBER_MESSAGE = """
+Choose number corresponding to desired scene/arguments.
+(Use comma separated list for multiple entries)
+Choice(s): """
+INVALID_NUMBER_MESSAGE = "Fine then, if you don't want to give a valid number I'll just quit"
+
+NO_SCENE_MESSAGE = """
+   There are no scenes inside that module
+"""
+
+LOW_QUALITY_CAMERA_CONFIG = {
+    "pixel_height": 480,
+    "pixel_width": 854,
+    "frame_rate": 15,
+}
+
+MEDIUM_QUALITY_CAMERA_CONFIG = {
+    "pixel_height": 720,
+    "pixel_width": 1280,
+    "frame_rate": 30,
+}
+
+HIGH_QUALITY_CAMERA_CONFIG = {
+    "pixel_height": 1080,
+    "pixel_width": 1920,
+    "frame_rate": 60,
+}
+
+UHD_QUALITY_CAMERA_CONFIG = {
+    "pixel_height": 2160,
+    "pixel_width": 3840,
+    "frame_rate": 60,
+}
+
+# TOOD, remove these
+DEFAULT_PIXEL_HEIGHT = UHD_QUALITY_CAMERA_CONFIG["pixel_height"]
+DEFAULT_PIXEL_WIDTH = UHD_QUALITY_CAMERA_CONFIG["pixel_width"]
+DEFAULT_FRAME_RATE = 60
+
+DEFAULT_STROKE_WIDTH = 4
+
 
 # Colors
 COLOR_MAP = {
@@ -281,18 +186,3 @@ PALETTE = list(COLOR_MAP.values())
 locals().update(COLOR_MAP)
 for name in [s for s in list(COLOR_MAP.keys()) if s.endswith("_C")]:
     locals()[name.replace("_C", "")] = locals()[name]
-
-# Streaming related configuration
-LIVE_STREAM_NAME = "LiveStream"
-TWITCH_STREAM_KEY = "YOUR_STREAM_KEY"
-STREAMING_PROTOCOL = "tcp"
-STREAMING_IP = "127.0.0.1"
-STREAMING_PORT = "2000"
-STREAMING_CLIENT = "ffplay"
-STREAMING_URL = f"{STREAMING_PROTOCOL}://{STREAMING_IP}:{STREAMING_PORT}?listen"
-STREAMING_CONSOLE_BANNER = """
-Manim is now running in streaming mode. Stream animations by passing
-them to manim.play(), e.g.
->>> c = Circle()
->>> manim.play(ShowCreation(c))
-"""

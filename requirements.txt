@@ -12,5 +12,6 @@ moderngl
 moderngl_window
 pydub
 PyOpenGL
+pyyaml
 screeninfo
 pyreadline; sys_platform == 'win32'

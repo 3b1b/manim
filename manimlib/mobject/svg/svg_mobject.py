@@ -11,7 +11,6 @@ from manimlib.constants import DEFAULT_STROKE_WIDTH
 from manimlib.constants import ORIGIN, UP, DOWN, LEFT, RIGHT
 from manimlib.constants import BLACK
 from manimlib.constants import WHITE
-import manimlib.constants as consts
 
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.geometry import Rectangle
@@ -20,6 +19,8 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.color import *
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.directories import get_mobject_data_dir
+from manimlib.utils.images import get_full_vector_image_path
 
 
 def check_and_fix_percent_bug(sym):
@@ -76,25 +77,12 @@ class SVGMobject(VMobject):
     def __init__(self, file_name=None, **kwargs):
         digest_config(self, kwargs)
         self.file_name = file_name or self.file_name
-        self.ensure_valid_file()
-        super().__init__(**kwargs)
-        self.move_into_position()
-
-    def ensure_valid_file(self):
-        file_name = self.file_name
         if file_name is None:
             raise Exception("Must specify file for SVGMobject")
-        possible_paths = [
-            os.path.join(os.path.join("assets", "svg_images"), file_name),
-            os.path.join(os.path.join("assets", "svg_images"), file_name + ".svg"),
-            os.path.join(os.path.join("assets", "svg_images"), file_name + ".xdv"),
-            file_name,
-        ]
-        for path in possible_paths:
-            if os.path.exists(path):
-                self.file_path = path
-                return
-        raise IOError(f"No file matching {file_name} in image directory")
+        self.file_path = get_full_vector_image_path(file_name)
+
+        super().__init__(**kwargs)
+        self.move_into_position()
 
     def move_into_position(self):
         if self.should_center:
@@ -363,14 +351,9 @@ class VMobjectFromSVGPathstring(VMobject):
     def init_points(self):
         # TODO, move this caching operation
         # higher up to Mobject somehow.
-        hasher = hashlib.sha256()
-        hasher.update(self.path_string.encode())
+        hasher = hashlib.sha256(self.path_string.encode())
         path_hash = hasher.hexdigest()[:16]
-
-        filepath = os.path.join(
-            consts.MOBJECT_POINTS_DIR,
-            f"{path_hash}.npy"
-        )
+        filepath = os.path.join(get_mobject_data_dir(), f"{path_hash}.npy")
 
         if os.path.exists(filepath):
             self.points = np.load(filepath)

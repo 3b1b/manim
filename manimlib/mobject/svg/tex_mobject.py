@@ -1,5 +1,6 @@
 from functools import reduce
 import operator as op
+from tqdm import tqdm as ProgressDisplay
 
 from manimlib.constants import *
 from manimlib.mobject.geometry import Line
@@ -10,6 +11,7 @@ from manimlib.mobject.types.vectorized_mobject import VectorizedPoint
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.strings import split_string_list_to_isolate_substrings
 from manimlib.utils.tex_file_writing import tex_to_svg_file
+from manimlib.utils.tex_file_writing import get_tex_config
 
 
 SCALE_FACTOR_PER_FONT_POINT = 0.001
@@ -24,7 +26,6 @@ class TexSymbol(VMobjectFromSVGPathstring):
 
 class SingleStringTexMobject(SVGMobject):
     CONFIG = {
-        "template_tex_file_body": TEMPLATE_TEX_FILE_BODY,
         "fill_opacity": 1.0,
         "stroke_width": 0,
         "should_center": True,
@@ -32,6 +33,7 @@ class SingleStringTexMobject(SVGMobject):
         "height": None,
         "organize_left_to_right": False,
         "alignment": "",
+        "math_mode": True,
     }
 
     def __init__(self, tex_string, **kwargs):
@@ -39,14 +41,24 @@ class SingleStringTexMobject(SVGMobject):
         assert(isinstance(tex_string, str))
         self.tex_string = tex_string
         file_name = tex_to_svg_file(
-            self.get_modified_expression(tex_string),
-            self.template_tex_file_body
+            self.get_tex_file_body(tex_string),
         )
         SVGMobject.__init__(self, file_name=file_name, **kwargs)
         if self.height is None:
             self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
+
+    def get_tex_file_body(self, tex_string):
+        new_tex = self.get_modified_expression(tex_string)
+        if self.math_mode:
+            new_tex = "\\begin{align*}\n" + new_tex + "\n\\end{align*}"
+
+        tex_config = get_tex_config()
+        return tex_config["tex_body"].replace(
+            tex_config["text_to_replace"],
+            new_tex
+        )
 
     def get_modified_expression(self, tex_string):
         result = self.alignment + " " + tex_string
@@ -144,9 +156,14 @@ class TexMobject(SingleStringTexMobject):
         tex_strings = self.break_up_tex_strings(tex_strings)
         self.tex_strings = tex_strings
         tex_string = self.arg_separator.join(tex_strings)
-        super().__init__(tex_string, **kwargs)
-        self.break_up_by_substrings()
-        self.set_color_by_tex_to_color_map(self.tex_to_color_map)
+
+        # Display progress
+        progression = ProgressDisplay(range(1), total=-1, leave=False)
+        progression.set_description(f"Writing \"{tex_string}\"")
+        for x in progression:
+            super().__init__(tex_string, **kwargs)
+            self.break_up_by_substrings()
+            self.set_color_by_tex_to_color_map(self.tex_to_color_map)
 
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
@@ -256,7 +273,7 @@ class TexMobject(SingleStringTexMobject):
 
 class TextMobject(TexMobject):
     CONFIG = {
-        "template_tex_file_body": TEMPLATE_TEXT_FILE_BODY,
+        "math_mode": False,
         "alignment": "\\centering",
         "arg_separator": "",
     }
@@ -266,8 +283,6 @@ class BulletedList(TextMobject):
     CONFIG = {
         "buff": MED_LARGE_BUFF,
         "dot_scale_factor": 2,
-        # Have to include because of handle_multiple_args implementation
-        "template_tex_file_body": TEMPLATE_TEXT_FILE_BODY,
         "alignment": "",
     }
 

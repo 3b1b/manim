@@ -1,0 +1,32 @@
+directories:
+  # Set this to true if you want the path to video files
+  # to match the directory structure of the path to the
+  # sourcecode generating that video
+  mirror_module_path: False
+  # Where should manim output video and image files?
+  output: ""
+  # If you want to use images, manim will look to these folders to find them
+  raster_images: ""
+  vector_images: ""
+  # If you want to use sounds, manim will look here to find it.
+  sounds: ""
+  # Manim often generates tex_files or other kinds of serialized data
+  # to keep from having to generate the same thing too many times.  By
+  # default, these will be stored at tempfile.gettempdir(), e.g. this might
+  # return whatever is at to the TMPDIR environment variable.  If you want to
+  # specify them elsewhere,
+  temporary_storage: ""
+tex:
+  executable: "latex"
+  template_file: "tex_template.tex" 
+  intermediate_filetype: "dvi"
+  text_to_replace: "[tex_expression]"
+  # # For ctex, use the following configuration
+  # executable: "xelatex -no-pdf"
+  # template_file: "ctex_template.tex"
+  # intermediate_filetype: "xdv"
+style:
+  background_color: "#333333"
+quality:
+  resolution: "1920x1080"
+  frame_rate: 30

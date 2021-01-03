@@ -5,7 +5,7 @@ import moderngl
 import numpy as np
 import copy
 
-from manimlib.constants import SHADER_DIR
+from manimlib.utils.directories import get_shader_dir
 
 # Mobjects that should be rendered with
 # the same shader will be organized and
@@ -111,7 +111,7 @@ def get_shader_code_from_file(filename):
     if not filename:
         return None
 
-    filepath = os.path.join(SHADER_DIR, filename)
+    filepath = os.path.join(get_shader_dir(), filename)
     if not os.path.exists(filepath):
         warnings.warn(f"No file at {filepath}")
         return
