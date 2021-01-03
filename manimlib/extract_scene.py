@@ -104,7 +104,3 @@ def main(config):
     all_scene_classes = get_scene_classes_from_module(module)
     scenes = get_scenes_to_render(all_scene_classes, config)
     return scenes
-
-
-if __name__ == "__main__":
-    main()
