@@ -1,7 +1,6 @@
 from manimlib.animation.animation import Animation
 from manimlib.animation.transform import Transform
 from manimlib.constants import ORIGIN
-from manimlib.constants import DOWN
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.rate_functions import there_and_back
 
@@ -51,48 +50,12 @@ class FadeOut(Fade):
         return result
 
 
-# Below will be deprecated
-
-
-class FadeInFromDown(FadeIn):
-    """
-    Identical to FadeIn, just with a name that
-    communicates the default
-    """
-
-    def __init__(self, mobject, **kwargs):
-        super().__init__(mobject, DOWN, **kwargs)
-
-
-class FadeOutAndShiftDown(FadeOut):
-    """
-    Identical to FadeOut, just with a name that
-    communicates the default
-    """
-
-    def __init__(self, mobject, **kwargs):
-        super().__init__(mobject, DOWN, **kwargs)
-
-
 class FadeInFromPoint(FadeIn):
     def __init__(self, mobject, point, **kwargs):
         super().__init__(mobject, shift=mobject.get_center() - point, **kwargs)
 
 
-class FadeInFromLarge(FadeIn):
-    CONFIG = {
-        "scale_factor": 2,
-    }
-
-    def __init__(self, mobject, scale_factor=2, **kwargs):
-        if scale_factor is not None:
-            self.scale_factor = scale_factor
-        super().__init__(mobject, **kwargs)
-
-    def create_starting_mobject(self):
-        start = super().create_starting_mobject()
-        start.scale(self.scale_factor)
-        return start
+# Below will be deprecated
 
 
 class VFadeIn(Animation):
