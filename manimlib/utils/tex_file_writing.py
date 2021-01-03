@@ -2,6 +2,7 @@ import logging
 import sys
 import os
 import hashlib
+from contextlib import contextmanager
 
 from manimlib.utils.directories import get_tex_dir
 from manimlib.config import get_manim_dir
@@ -112,3 +113,13 @@ def dvi_to_svg(dvi_file, regen_if_exists=False):
         ]
         os.system(" ".join(commands))
     return result
+
+
+# TODO, perhaps this should live elsewhere
+@contextmanager
+def display_during_execution(message):
+    try:
+        print(message, end="\r")
+        yield
+    finally:
+        print(" " * len(message), end="\r")

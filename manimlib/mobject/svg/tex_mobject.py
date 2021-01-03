@@ -1,6 +1,5 @@
 from functools import reduce
 import operator as op
-from tqdm import tqdm as ProgressDisplay
 
 from manimlib.constants import *
 from manimlib.mobject.geometry import Line
@@ -12,6 +11,7 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.strings import split_string_list_to_isolate_substrings
 from manimlib.utils.tex_file_writing import tex_to_svg_file
 from manimlib.utils.tex_file_writing import get_tex_config
+from manimlib.utils.tex_file_writing import display_during_execution
 
 
 SCALE_FACTOR_PER_FONT_POINT = 0.001
@@ -156,17 +156,13 @@ class TexMobject(SingleStringTexMobject):
         tex_strings = self.break_up_tex_strings(tex_strings)
         self.tex_strings = tex_strings
         tex_string = self.arg_separator.join(tex_strings)
-
-        # Display progress
-        progression = ProgressDisplay(range(1), total=-1, leave=False)
-        progression.set_description(f"Writing \"{tex_string}\"")
-        for x in progression:
+        with display_during_execution(f" Writing \"{tex_string}\""):
             super().__init__(tex_string, **kwargs)
             self.break_up_by_substrings()
             self.set_color_by_tex_to_color_map(self.tex_to_color_map)
 
-        if self.organize_left_to_right:
-            self.organize_submobjects_left_to_right()
+            if self.organize_left_to_right:
+                self.organize_submobjects_left_to_right()
 
     def break_up_tex_strings(self, tex_strings):
         substrings_to_isolate = op.add(
