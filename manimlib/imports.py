@@ -78,6 +78,7 @@ from manimlib.utils.bezier import *
 from manimlib.utils.color import *
 from manimlib.utils.config_ops import *
 from manimlib.utils.debug import *
+from manimlib.utils.directories import *
 from manimlib.utils.images import *
 from manimlib.utils.iterables import *
 from manimlib.utils.file_ops import *
