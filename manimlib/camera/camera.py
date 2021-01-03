@@ -447,5 +447,5 @@ class Camera(object):
 # Mostly just defined so old scenes don't break
 class ThreeDCamera(Camera):
     CONFIG = {
-        "samples": 8,
+        "samples": 4,
     }
