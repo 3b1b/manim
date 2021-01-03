@@ -1,11 +1,16 @@
 import inspect
-import itertools as it
 import sys
 import logging
 
 from manimlib.scene.scene import Scene
-from manimlib.scene.scene import BlankScene
+from manimlib.config import get_custom_defaults
 import manimlib.constants
+
+
+class BlankScene(Scene):
+    def construct(self):
+        exec(get_custom_defaults()["universal_import_line"])
+        self.embed()
 
 
 def is_child_scene(obj, module):
@@ -21,31 +26,29 @@ def is_child_scene(obj, module):
 
 
 def prompt_user_for_choice(scene_classes):
-    num_to_class = {}
-    for count, scene_class in zip(it.count(1), scene_classes):
+    name_to_class = {}
+    for scene_class in scene_classes:
         name = scene_class.__name__
-        print("%d: %s" % (count, name))
-        num_to_class[count] = scene_class
+        print(name)
+        name_to_class[name] = scene_class
     try:
-        user_input = input(manimlib.constants.CHOOSE_NUMBER_MESSAGE)
+        user_input = input(
+            "\nThat module has mulziple scenes, which "
+            "ones would you like to render?\n Scene Name: "
+        )
         return [
-            num_to_class[int(num_str)]
-            for num_str in user_input.split(",")
+            name_to_class[user_input]
+            for num_str in user_input.replace(" ", "").split(",")
         ]
     except KeyError:
-        print(manimlib.constants.INVALID_NUMBER_MESSAGE)
+        logging.log(logging.ERROR, "Invalid scene")
         sys.exit(2)
-        user_input = input(manimlib.constants.CHOOSE_NUMBER_MESSAGE)
-        return [
-            num_to_class[int(num_str)]
-            for num_str in user_input.split(",")
-        ]
     except EOFError:
         sys.exit(1)
 
 
-def get_scenes_to_render(scene_classes, config):
-    scene_kwargs = dict([
+def get_scene_config(config):
+    return dict([
         (key, config[key])
         for key in [
             "window_config",
@@ -59,19 +62,17 @@ def get_scenes_to_render(scene_classes, config):
         ]
     ])
 
-    if len(config["scene_names"]) == 0:
-        # If no module or scenes were passed in, just run the blank scene
-        return [BlankScene(**scene_kwargs)]
 
+def get_scenes_to_render(scene_classes, scene_config, config):
     if config["write_all"]:
-        return [sc(**scene_kwargs) for sc in scene_classes]
+        return [sc(**scene_config) for sc in scene_classes]
 
     result = []
     for scene_name in config["scene_names"]:
         found = False
         for scene_class in scene_classes:
             if scene_class.__name__ == scene_name:
-                scene = scene_class(**scene_kwargs)
+                scene = scene_class(**scene_config)
                 result.append(scene)
                 found = True
                 break
@@ -85,14 +86,14 @@ def get_scenes_to_render(scene_classes, config):
             )
     if result:
         return result
-    result = [scene_classes[0]] if len(scene_classes) == 1 else prompt_user_for_choice(scene_classes)
-    return [scene_class(**scene_kwargs) for scene_class in result]
+    if len(scene_classes) == 1:
+        result = [scene_classes[0]]
+    else:
+        result = prompt_user_for_choice(scene_classes)
+    return [scene_class(**scene_config) for scene_class in result]
 
 
 def get_scene_classes_from_module(module):
-    if module is None:
-        # If no module was passed in, just run the blank scene
-        return []
     if hasattr(module, "SCENES_IN_ORDER"):
         return module.SCENES_IN_ORDER
     else:
@@ -107,6 +108,11 @@ def get_scene_classes_from_module(module):
 
 def main(config):
     module = config["module"]
+    scene_config = get_scene_config(config)
+    if module is None:
+        # If no module was passed in, just play the blank scene
+        return [BlankScene(**scene_config)]
+
     all_scene_classes = get_scene_classes_from_module(module)
-    scenes = get_scenes_to_render(all_scene_classes, config)
+    scenes = get_scenes_to_render(all_scene_classes, scene_config, config)
     return scenes

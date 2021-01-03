@@ -575,9 +575,3 @@ class Scene(Container):
 
 class EndSceneEarlyException(Exception):
     pass
-
-
-class BlankScene(Scene):
-    def construct(self):
-        exec(get_custom_defaults()["universal_import_line"])
-        self.embed()
