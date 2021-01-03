@@ -11,7 +11,7 @@ class DecimalNumber(VMobject):
         "num_decimal_places": 2,
         "include_sign": False,
         "group_with_commas": True,
-        "digit_to_digit_buff": 0.05,
+        "digit_to_digit_buff": 0.1,
         "show_ellipsis": False,
         "unit": None,  # Aligned to bottom unless it starts with "^"
         "include_background_rectangle": False,
@@ -118,12 +118,13 @@ class DecimalNumber(VMobject):
     def set_value(self, number, **config):
         full_config = dict(self.CONFIG)
         full_config.update(self.initial_config)
+        full_config["font_size"] = self.font_size
         full_config.update(config)
         new_decimal = DecimalNumber(number, **full_config)
-        # Make sure last digit has constant height
-        new_decimal.scale(
-            self[-1].get_height() / new_decimal[-1].get_height()
-        )
+        # # Make sure last digit has constant height
+        # new_decimal.scale(
+        #     self[-1].get_height() / new_decimal[-1].get_height()
+        # )
         new_decimal.move_to(self, self.edge_to_fix)
         new_decimal.match_style(self)
         if self.is_fixed_in_frame:
@@ -137,6 +138,10 @@ class DecimalNumber(VMobject):
             mob.points[:] = 0
         self.number = number
         return self
+
+    def scale(self, scale_factor, **kwargs):
+        super().scale(scale_factor, **kwargs)
+        self.font_size *= scale_factor
 
     def get_value(self):
         return self.number
