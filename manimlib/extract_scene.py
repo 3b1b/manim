@@ -4,7 +4,6 @@ import logging
 
 from manimlib.scene.scene import Scene
 from manimlib.config import get_custom_defaults
-import manimlib.constants
 
 
 class BlankScene(Scene):
@@ -79,9 +78,7 @@ def get_scenes_to_render(scene_classes, scene_config, config):
         if not found and (scene_name != ""):
             logging.log(
                 logging.ERROR,
-                manimlib.constants.SCENE_NOT_FOUND_MESSAGE.format(
-                    scene_name
-                ),
+                f"No scene named {scene_name} found",
                 file=sys.stderr
             )
     if result:
