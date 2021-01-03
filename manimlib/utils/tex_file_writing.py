@@ -44,19 +44,29 @@ def tex_hash(tex_file_content):
 
 
 def tex_to_svg_file(tex_file_content):
-    directory = get_tex_dir()
-    tex_file = generate_tex_file(tex_file_content, directory)
-    dvi_file = tex_to_dvi(tex_file)
-    return dvi_to_svg(dvi_file)
+    svg_file = os.path.join(
+        get_tex_dir(), tex_hash(tex_file_content) + ".svg"
+    )
+    if not os.path.exists(svg_file):
+        # If svg doesn't exist, create it
+        tex_to_svg(tex_file_content, svg_file)
+    return svg_file
 
 
-def generate_tex_file(tex_file_content, directory):
-    file_name = f"{tex_hash(tex_file_content)}.tex"
-    path = os.path.join(directory, file_name)
-    if not os.path.exists(path):
-        with open(path, "w", encoding="utf-8") as outfile:
-            outfile.write(tex_file_content)
-    return path
+def tex_to_svg(tex_file_content, svg_file):
+    tex_file = svg_file.replace(".svg", ".tex")
+    with open(tex_file, "w", encoding="utf-8") as outfile:
+        outfile.write(tex_file_content)
+    svg_file = dvi_to_svg(tex_to_dvi(tex_file))
+
+    # Cleanup superfluous documents
+    tex_dir, name = os.path.split(svg_file)
+    stem, end = name.split(".")
+    for file in filter(lambda s: s.startswith(stem), os.listdir(tex_dir)):
+        if not file.endswith(end):
+            os.remove(os.path.join(tex_dir, file))
+
+    return svg_file
 
 
 def tex_to_dvi(tex_file):
