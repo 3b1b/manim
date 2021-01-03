@@ -176,22 +176,6 @@ class Mobject(Container):
             setattr(self, attr, func(getattr(self, attr)))
         return self
 
-    # Displaying
-
-    def get_image(self, camera=None):
-        # TODO, this doesn't...you know, seem to actually work
-        camera.clear()
-        camera.capture(self)
-        return camera.get_image()
-
-    def show(self, camera):
-        self.get_image(camera).show()
-
-    def save_image(self, name=None):
-        self.get_image().save(
-            os.path.join(consts.VIDEO_DIR, (name or str(self)) + ".png")
-        )
-
     def copy(self):
         # TODO, either justify reason for shallow copy, or
         # remove this redundancy everywhere
