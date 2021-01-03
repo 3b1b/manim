@@ -132,7 +132,7 @@ class Camera(object):
         "frame_config": {},
         "pixel_height": DEFAULT_PIXEL_HEIGHT,
         "pixel_width": DEFAULT_PIXEL_WIDTH,
-        "frame_rate": DEFAULT_FRAME_RATE,  # TODO, move this elsewhere
+        "frame_rate": DEFAULT_FRAME_RATE,
         # Note: frame height and width will be resized to match
         # the pixel aspect ratio
         "background_color": BLACK,
