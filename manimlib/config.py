@@ -4,11 +4,8 @@ import inspect
 import importlib
 import os
 import sys
-import types
 import yaml
 from screeninfo import get_monitors
-
-import manimlib.constants
 
 
 def parse_cli():
@@ -143,15 +140,6 @@ def get_manim_dir():
 
 
 def get_module(file_name):
-    # if file_name == "-":
-    #     module = types.ModuleType("input_scenes")
-    #     code = "from manimlib.imports import *\n\n" + sys.stdin.read()
-    #     try:
-    #         exec(code, module.__dict__)
-    #         return module
-    #     except Exception as e:
-    #         print(f"Failed to render scene: {str(e)}")
-    #         sys.exit(2)
     if file_name is None:
         return None
     else:
@@ -244,29 +232,32 @@ def get_configuration(args):
 
 def get_camera_configuration(args, custom_defaults):
     camera_config = {}
+    camera_qualities = get_custom_defaults()["camera_qualities"]
     if args.low_quality:
-        camera_config.update(manimlib.constants.LOW_QUALITY_CAMERA_CONFIG)
+        quality = camera_qualities["low"]
     elif args.medium_quality:
-        camera_config.update(manimlib.constants.MEDIUM_QUALITY_CAMERA_CONFIG)
+        quality = camera_qualities["medium"]
     elif args.hd:
-        camera_config.update(manimlib.constants.HIGH_QUALITY_CAMERA_CONFIG)
+        quality = camera_qualities["high"]
     elif args.uhd:
-        camera_config.update(manimlib.constants.UHD_QUALITY_CAMERA_CONFIG)
-    else:  # No preset quality specified
-        resolution = args.resolution or custom_defaults["quality"]["resolution"]
-        if "x" in resolution:
-            width_str, height_str = resolution.split("x")
-            width = int(width_str)
-            height = int(height_str)
-        else:
-            height = int(resolution)
-            width = int(16 * height / 9)
-        frame_rate = args.frame_rate or custom_defaults["quality"]["frame_rate"]
-        camera_config.update({
-            "pixel_width": width,
-            "pixel_height": height,
-            "frame_rate": frame_rate,
-        })
+        quality = camera_qualities["ultra_high"]
+    else:
+        quality = camera_qualities[camera_qualities["default_quality"]]
+
+    if args.resolution:
+        quality["resolution"] = args.resolution
+    if args.frame_rate:
+        quality["frame_rate"] = int(args.frame_rate)
+
+    width_str, height_str = quality["resolution"].split("x")
+    width = int(width_str)
+    height = int(height_str)
+
+    camera_config.update({
+        "pixel_width": width,
+        "pixel_height": height,
+        "frame_rate": quality["frame_rate"],
+    })
 
     try:
         bg_color = args.color or custom_defaults["style"]["background_color"]

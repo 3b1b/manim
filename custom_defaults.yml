@@ -28,6 +28,17 @@ tex:
 universal_import_line: "from manimlib.imports import *"
 style:
   background_color: "#333333"
-quality:
-  resolution: "1920x1080"
-  frame_rate: 30
+camera_qualities:
+  low:
+    resolution: "854x480"
+    frame_rate: 15
+  medium:
+    resolution: "1280x720"
+    frame_rate: 30
+  high:
+    resolution: "1920x1080"
+    frame_rate: 30
+  ultra_high:
+    resolution: "3840x2160"
+    frame_rate: 60
+  default_quality: "high"

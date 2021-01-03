@@ -73,31 +73,6 @@ ITALIC = 'ITALIC'
 OBLIQUE = 'OBLIQUE'
 BOLD = 'BOLD'
 
-
-LOW_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 480,
-    "pixel_width": 854,
-    "frame_rate": 15,
-}
-
-MEDIUM_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 720,
-    "pixel_width": 1280,
-    "frame_rate": 30,
-}
-
-HIGH_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 1080,
-    "pixel_width": 1920,
-    "frame_rate": 60,
-}
-
-UHD_QUALITY_CAMERA_CONFIG = {
-    "pixel_height": 2160,
-    "pixel_width": 3840,
-    "frame_rate": 60,
-}
-
 DEFAULT_STROKE_WIDTH = 4
 
 # Colors
