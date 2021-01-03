@@ -9,9 +9,9 @@ import moderngl
 import numpy as np
 
 from manimlib.constants import *
-from manimlib.container.container import Container
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import interpolate_color
+from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.iterables import list_update
 from manimlib.utils.bezier import interpolate
@@ -26,7 +26,7 @@ from manimlib.shader_wrapper import ShaderWrapper
 # TODO: Explain array_attrs
 # TODO: Incorporate shader defaults
 
-class Mobject(Container):
+class Mobject(object):
     """
     Mathematical Object
     """
@@ -55,7 +55,7 @@ class Mobject(Container):
     }
 
     def __init__(self, **kwargs):
-        Container.__init__(self, **kwargs)
+        digest_config(self, kwargs)
         self.submobjects = []
         self.parents = []
         self.family = [self]

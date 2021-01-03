@@ -15,15 +15,15 @@ from manimlib.mobject.mobject import Point
 from manimlib.camera.camera import Camera
 from manimlib.config import get_custom_defaults
 from manimlib.constants import *
-from manimlib.container.container import Container
 from manimlib.mobject.mobject import Mobject
 from manimlib.scene.scene_file_writer import SceneFileWriter
+from manimlib.utils.config_ops import digest_config
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import restructure_list_to_exclude_certain_family_members
 from manimlib.window import Window
 
 
-class Scene(Container):
+class Scene(object):
     CONFIG = {
         "window_config": {},
         "camera_class": Camera,
@@ -40,7 +40,7 @@ class Scene(Container):
     }
 
     def __init__(self, **kwargs):
-        Container.__init__(self, **kwargs)
+        digest_config(self, kwargs)
         if self.preview:
             self.window = Window(self, **self.window_config)
             self.camera_config["ctx"] = self.window.ctx
