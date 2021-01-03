@@ -49,6 +49,7 @@ Manim is an extremely versatile package. The following is an example `Scene` you
 ```python
 from manim import *
 
+
 class SquareToCircle(Scene):
     def construct(self):
         circle = Circle()
