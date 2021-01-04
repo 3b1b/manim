@@ -40,14 +40,13 @@ class Transform(Animation):
             )
 
     def begin(self):
-        # Use a copy of target_mobject for the align_data
-        # call so that the actual target_mobject stays
-        # preserved.
         self.target_mobject = self.create_target()
         self.check_target_mobject_validity()
+        # Use a copy of target_mobject for the align_data
+        # call so that the actual target_mobject stays
+        # preserved, since calling allign_data will potentailly
+        # change the structure of both arguments
         self.target_copy = self.target_mobject.copy()
-        # Note, this potentially changes the structure
-        # of both mobject and target_mobject
         self.mobject.align_data(self.target_copy)
         super().begin()
 
@@ -58,9 +57,8 @@ class Transform(Animation):
 
     def check_target_mobject_validity(self):
         if self.target_mobject is None:
-            message = "{}.create_target not properly implemented"
             raise Exception(
-                message.format(self.__class__.__name__)
+                f"{self.__class__.__name__}.create_target not properly implemented"
             )
 
     def clean_up_from_scene(self, scene):
