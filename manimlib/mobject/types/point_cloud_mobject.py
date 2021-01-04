@@ -8,10 +8,6 @@ from manimlib.utils.iterables import stretch_array_to_length
 
 
 class PMobject(Mobject):
-    CONFIG = {
-        "stroke_width": DEFAULT_STROKE_WIDTH,
-    }
-
     def reset_points(self):
         self.rgbas = np.zeros((0, 4))
         self.points = np.zeros((0, 3))
@@ -19,6 +15,11 @@ class PMobject(Mobject):
 
     def get_array_attrs(self):
         return Mobject.get_array_attrs(self) + ["rgbas"]
+
+    def set_points(self, points):
+        self.points = points
+        self.rgbas = stretch_array_to_length(self.rgbas, len(points))
+        return self
 
     def add_points(self, points, rgbas=None, color=None, alpha=1):
         """
@@ -40,22 +41,24 @@ class PMobject(Mobject):
         self.rgbas = np.vstack([self.rgbas, rgbas])
         return self
 
-    def set_color(self, color=YELLOW_C, family=True):
+    def set_color(self, color, family=True):
         rgba = color_to_rgba(color)
         mobs = self.family_members_with_points() if family else [self]
         for mob in mobs:
             mob.rgbas[:, :] = rgba
-        self.color = color
         return self
 
-    def get_stroke_width(self):
-        return self.stroke_width
-
-    def set_stroke_width(self, width, family=True):
+    def set_opacity(self, opacity, family=True):
         mobs = self.family_members_with_points() if family else [self]
         for mob in mobs:
-            mob.stroke_width = width
+            mob.rgbas[:, 3] = opacity
         return self
+
+    def get_color(self):
+        return rgba_to_color(self.rgbas[0, :])
+
+    def get_all_rgbas(self):
+        return self.get_merged_array("rgbas")
 
     # def set_color_by_gradient(self, start_color, end_color):
     def set_color_by_gradient(self, *colors):
@@ -87,9 +90,8 @@ class PMobject(Mobject):
             )
         return self
 
-    def match_colors(self, mobject):
-        Mobject.align_data(self, mobject)
-        self.rgbas = np.array(mobject.rgbas)
+    def match_colors(self, pmobject):
+        self.rgbas[:] = stretch_array_to_length(pmobject.rgbas, len(self.points))
         return self
 
     def filter_out(self, condition):
@@ -123,15 +125,6 @@ class PMobject(Mobject):
             mob.apply_over_attr_arrays(lambda arr: arr[indices])
         return self
 
-    def fade_to(self, color, alpha):
-        self.rgbas = interpolate(self.rgbas, color_to_rgba(color), alpha)
-        for mob in self.submobjects:
-            mob.fade_to(color, alpha)
-        return self
-
-    def get_all_rgbas(self):
-        return self.get_merged_array("rgbas")
-
     def ingest_submobjects(self):
         attrs = self.get_array_attrs()
         arrays = list(map(self.get_merged_array, attrs))
@@ -139,9 +132,6 @@ class PMobject(Mobject):
             setattr(self, attr, array)
         self.set_submobjects([])
         return self
-
-    def get_color(self):
-        return rgba_to_color(self.rgbas[0, :])
 
     def point_from_proportion(self, alpha):
         index = alpha * (self.get_num_points() - 1)
@@ -157,23 +147,14 @@ class PMobject(Mobject):
         )
 
     def interpolate_color(self, mobject1, mobject2, alpha):
-        self.rgbas = interpolate(
-            mobject1.rgbas, mobject2.rgbas, alpha
-        )
-        self.set_stroke_width(interpolate(
-            mobject1.get_stroke_width(),
-            mobject2.get_stroke_width(),
-            alpha,
-        ))
+        self.rgbas = interpolate(mobject1.rgbas, mobject2.rgbas, alpha)
         return self
 
-    def pointwise_become_partial(self, mobject, a, b):
-        lower_index, upper_index = [
-            int(x * mobject.get_num_points())
-            for x in (a, b)
-        ]
+    def pointwise_become_partial(self, pmobject, a, b):
+        lower_index = int(a * pmobject.get_num_points())
+        upper_index = int(b * pmobject.get_num_points())
         for attr in self.get_array_attrs():
-            full_array = getattr(mobject, attr)
+            full_array = getattr(pmobject, attr)
             partial_array = full_array[lower_index:upper_index]
             setattr(self, attr, partial_array)
 
