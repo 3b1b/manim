@@ -1176,9 +1176,6 @@ class Mobject(object):
             sm1.interpolate_color(sm1, sm2, 1)
         return self
 
-    def prepare_for_animation(self):
-        pass
-
     def cleanup_from_animation(self):
         pass
 
