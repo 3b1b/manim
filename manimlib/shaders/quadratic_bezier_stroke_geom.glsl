@@ -7,7 +7,10 @@ layout (triangle_strip, max_vertices = 5) out;
 uniform vec2 frame_shape;
 uniform float focal_distance;
 uniform float is_fixed_in_frame;
+
 uniform float anti_alias_width;
+
+//Needed for lighting
 uniform vec3 light_source_position;
 uniform float joint_type;
 uniform float gloss;
