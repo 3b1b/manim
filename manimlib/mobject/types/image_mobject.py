@@ -27,7 +27,7 @@ class ImageMobject(Mobject):
         path = get_full_raster_image_path(filename)
         self.image = Image.open(path)
         self.texture_paths = {"Texture": path}
-        Mobject.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
     def init_points(self):
         self.points = np.array([UL, DL, UR, DR])
