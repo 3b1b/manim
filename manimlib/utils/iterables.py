@@ -81,10 +81,7 @@ def listify(obj):
 
 
 def stretch_array_to_length(nparray, length):
-    curr_len = len(nparray)
-    if curr_len > length:
-        raise Warning("Trying to stretch array to a length shorter than its own")
-    indices = np.arange(0, curr_len, curr_len / length).astype(int)
+    indices = np.arange(length) * len(nparray) // length
     return nparray[indices]
 
 
