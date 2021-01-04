@@ -7,13 +7,11 @@ from manimlib.constants import ORIGIN
 from manimlib.mobject.types.point_cloud_mobject import PMobject
 from manimlib.mobject.geometry import DEFAULT_DOT_RADIUS
 from manimlib.utils.bezier import interpolate
-from manimlib.utils.color import color_to_rgba
 from manimlib.utils.iterables import stretch_array_to_length
 
 
 class DotCloud(PMobject):
     CONFIG = {
-        "radii": DEFAULT_DOT_RADIUS,
         "color": GREY_C,
         "opacity": 1,
         "vert_shader_file": "true_dot_vert.glsl",
@@ -28,17 +26,11 @@ class DotCloud(PMobject):
     }
 
     def __init__(self, points=[[ORIGIN]], radii=DEFAULT_DOT_RADIUS, **kwargs):
-        self.radii = np.repeat([radii], len(points))
-        self.points = np.array(points)
         super().__init__(**kwargs)
-
-    def init_points(self):
-        pass
-
-    def init_colors(self):
-        self.rgbas = np.zeros((len(self.points), 4))
-        self.rgbas[:] = color_to_rgba(self.color, self.opacity)
-        return self
+        self.rgbas = np.zeros((len(points), 4))
+        self.radii = np.full((len(points), 1), radii)
+        self.points = np.array(points)
+        self.set_color(self.color)
 
     def set_points(self, points):
         super().set_points(points)
