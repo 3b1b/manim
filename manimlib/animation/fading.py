@@ -64,6 +64,7 @@ class FadeTransform(Transform):
 
     def __init__(self, mobject, target_mobject, **kwargs):
         self.to_add_on_completion = target_mobject
+        mobject.save_state()
         super().__init__(
             Group(mobject, target_mobject.copy()),
             **kwargs
@@ -96,6 +97,7 @@ class FadeTransform(Transform):
     def clean_up_from_scene(self, scene):
         Animation.clean_up_from_scene(self, scene)
         scene.remove(self.mobject)
+        self.mobject[0].restore()
         scene.add(self.to_add_on_completion)
 
 
