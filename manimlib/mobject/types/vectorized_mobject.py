@@ -22,6 +22,7 @@ from manimlib.utils.iterables import make_even
 from manimlib.utils.iterables import stretch_array_to_length
 from manimlib.utils.iterables import stretch_array_to_length_with_interpolation
 from manimlib.utils.iterables import listify
+from manimlib.utils.paths import straight_path
 from manimlib.utils.space_ops import angle_between_vectors
 from manimlib.utils.space_ops import cross2d
 from manimlib.utils.space_ops import earclip_triangulation
@@ -882,6 +883,12 @@ class VMobject(Mobject):
         vmob = self.copy()
         vmob.pointwise_become_partial(self, a, b)
         return vmob
+
+    def interpolate(self, mobject1, mobject2, alpha, path_func=straight_path):
+        super().interpolate(mobject1, mobject2, alpha, path_func)
+        if not np.all(mobject1.get_triangulation() == mobject2.get_triangulation()):
+            self.refresh_triangulation()
+        return self
 
     # For shaders
     def init_shader_data(self):
