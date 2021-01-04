@@ -32,7 +32,6 @@ class Mobject(object):
     """
     CONFIG = {
         "color": WHITE,
-        "name": None,
         "dim": 3,
         # Lighting parameters
         # Positive gloss up to 1 makes it reflect the light.
@@ -59,11 +58,9 @@ class Mobject(object):
         self.submobjects = []
         self.parents = []
         self.family = [self]
-        if self.name is None:
-            self.name = self.__class__.__name__
 
         self.init_updaters()
-        self.reset_points()
+        self.points = np.zeros((0, self.dim))
         self.init_points()
         self.init_colors()
         self.init_shader_data()
@@ -74,7 +71,7 @@ class Mobject(object):
             self.apply_depth_test()
 
     def __str__(self):
-        return str(self.name)
+        return self.__class__.__name__
 
     def reset_points(self):
         self.points = np.zeros((0, self.dim))
