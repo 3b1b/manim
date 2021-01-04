@@ -306,11 +306,7 @@ class Bubble(SVGMobject):
         digest_config(self, kwargs, locals())
         if self.file_name is None:
             raise Exception("Must invoke Bubble subclass")
-        try:
-            SVGMobject.__init__(self, **kwargs)
-        except IOError:
-            self.file_name = os.path.join(FILE_DIR, self.file_name)
-            SVGMobject.__init__(self, **kwargs)
+        SVGMobject.__init__(self, self.file_name, **kwargs)
         self.center()
         self.stretch_to_fit_height(self.height)
         self.stretch_to_fit_width(self.width)
