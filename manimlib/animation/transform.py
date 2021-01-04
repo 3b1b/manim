@@ -8,7 +8,6 @@ from manimlib.constants import OUT
 from manimlib.constants import DEGREES
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
-from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.paths import path_along_arc
 from manimlib.utils.paths import straight_path
