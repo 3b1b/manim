@@ -442,12 +442,16 @@ class Line(TipableVMobject):
         self.end = self.pointify(end, -vect) - self.buff * vect
 
     def pointify(self, mob_or_point, direction=None):
+        """
+        Take an argument passed into Line (or subclass) and turn
+        it into a 3d point.
+        """
         if isinstance(mob_or_point, Mobject):
             mob = mob_or_point
             if direction is None:
                 return mob.get_center()
             else:
-                return mob.get_boundary_point(direction)
+                return mob.get_bounding_box_point_by_direction(direction)
         else:
             point = mob_or_point
             result = np.zeros(self.dim)

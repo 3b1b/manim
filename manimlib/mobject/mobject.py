@@ -19,6 +19,7 @@ from manimlib.utils.paths import straight_path
 from manimlib.utils.simple_functions import get_parameters
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import get_norm
+from manimlib.utils.space_ops import normalize
 from manimlib.utils.space_ops import rotation_matrix_transpose
 from manimlib.shader_wrapper import ShaderWrapper
 
@@ -836,8 +837,20 @@ class Mobject(object):
 
     def get_boundary_point(self, direction):
         all_points = self.get_points_defining_boundary()
-        index = np.argmax(np.dot(all_points, np.array(direction).T))
+        boundary_directions = all_points - self.get_center()
+        norms = np.linalg.norm(boundary_directions, axis=1)
+        boundary_directions /= np.repeat(norms, 3).reshape((len(norms), 3))
+        index = np.argmax(np.dot(boundary_directions, np.array(direction).T))
         return all_points[index]
+
+    def get_bounding_box_point_by_direction(self, direction):
+        dl, center, ur = self.get_bounding_box()
+        corner_vect = (ur - center)
+        return center + direction / np.max(np.abs(np.true_divide(
+            direction, corner_vect,
+            out=np.zeros(len(direction)),
+            where=((corner_vect) != 0)
+        )))
 
     def get_top(self):
         return self.get_edge_center(UP)
