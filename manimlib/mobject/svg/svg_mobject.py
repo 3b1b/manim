@@ -5,6 +5,7 @@ import warnings
 
 from xml.dom import minidom
 
+from manimlib.utils.arcs_bezier import arc_to_bezier
 from manimlib.constants import *
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.geometry import Rectangle
@@ -402,7 +403,22 @@ class VMobjectFromSVGPathstring(VMobject):
             # TODO, this is a suboptimal approximation
             new_points = np.append([new_points[0]], new_points, axis=0)
         elif command == "A":  # elliptical Arc
-            raise Exception("Not implemented")
+            previous_point = self.points[-1]
+            arc_parameters = string_to_numbers(coord_string)
+            curves = arc_to_bezier(
+                px = previous_point[0],
+                py = previous_point[1],
+                rx = arc_parameters[0],
+                ry = arc_parameters[1],
+                xAxisRotation = arc_parameters[2],
+                largeArcFlag = arc_parameters[3],
+                sweepFlag = arc_parameters[4],
+                cx = arc_parameters[5],
+                cy = arc_parameters[6]
+            )
+            for curve in curves:
+                self.add_cubic_bezier_curve_to(*curve)
+            return
         elif command == "Z":  # closepath
             return
 
