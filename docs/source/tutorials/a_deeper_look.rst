@@ -14,14 +14,14 @@ At this point, you have just executed the following command.
 
 .. code-block:: bash
 
-   $ manim scene.py SquareToCircle -pl
+   $ manim scene.py SquareToCircle -pql
 
 Let's dissect what just happened step by step.  First, this command executes
 manim on the file ``scene.py``, which contains our animation code.  Further,
 this command tells manim exactly which ``Scene`` to be rendered, in this case
 it is ``SquareToCircle``.  This is necessary because a single scene file may
 contain more than one scene.  Next, the flag `-p` tells manim to play the scene
-once it's rendered, and the `-l` flag tells manim to render the scene in low
+once it's rendered, and the `-ql` flag tells manim to render the scene in low
 quality.
 
 After the video is rendered, you will see that manim has generated some new
@@ -57,9 +57,9 @@ the following command,
 
 .. code-block:: bash
 
-   $ manim scene.py SquareToCircle -pe
+   $ manim scene.py SquareToCircle -pqh
 
-The ``-l`` flag (for low quality) has been replaced by the ``-e`` flag, for
+The ``-ql`` flag (for low quality) has been replaced by the ``-qh`` flag, for
 high quality.  Manim will take considerably longer to render this file, and it
 will play it once it's done since we are using the ``-p`` flag.  The output
 should look like this:
@@ -132,7 +132,7 @@ The corresponding folder structure looks like this:
      └─Tex
 
 Saving the last frame with ``-s`` can be combined with the flags for different
-resolutions, e.g. ``-s -l``, ``-s -e``
+resolutions, e.g. ``-s -ql``, ``-s -qh``
 
 
 
@@ -144,16 +144,16 @@ When executing the command
 
 .. code-block:: bash
 
-   $ manim scene.py SquareToCircle -pl
+   $ manim scene.py SquareToCircle -pql
 
 it was necessary to specify which ``Scene`` class to render.  This is because a
 single file can contain more than one ``Scene`` class.  If your file contains
 multiple ``Scene`` classes, and you want to render them all, you can use the
 ``-a`` flag.
 
-As discussed previously, the ``-l`` specifies low render quality.  This does
+As discussed previously, the ``-ql`` specifies low render quality.  This does
 not look very good, but is very useful for rapid prototyping and testing.  The
-other options that specify render quality are ``-m``, ``-e``, and ``-k`` for
+other options that specify render quality are ``-qm``, ``-qh``, and ``-qk`` for
 medium, high, and 4k quality, respectively.
 
 The ``-p`` flag plays the animation once it is rendered.  If you want to open
