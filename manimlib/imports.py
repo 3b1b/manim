@@ -27,6 +27,7 @@ from manimlib.animation.numbers import *
 from manimlib.animation.rotation import *
 from manimlib.animation.specialized import *
 from manimlib.animation.transform import *
+from manimlib.animation.transform_matching_parts import *
 from manimlib.animation.update import *
 
 from manimlib.camera.camera import *
