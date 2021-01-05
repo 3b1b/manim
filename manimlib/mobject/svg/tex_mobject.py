@@ -219,11 +219,10 @@ class TexMobject(SingleStringTexMobject):
             else:
                 return tex1 == tex2
 
-        return VGroup(*[
-            m
-            for m in self.submobjects
-            if isinstance(m, SingleStringTexMobject) and test(tex, m.get_tex_string())
-        ])
+        return VGroup(*filter(
+            lambda m: isinstance(m, SingleStringTexMobject) and test(tex, m.get_tex_string()),
+            self.submobjects
+        ))
 
     def get_part_by_tex(self, tex, **kwargs):
         all_parts = self.get_parts_by_tex(tex, **kwargs)
@@ -247,24 +246,33 @@ class TexMobject(SingleStringTexMobject):
                     self.set_color_by_tex(tex, color, **kwargs)
         return self
 
-    def set_bstroke(self, color=BLACK, width=4):
-        self.set_stroke(color, width, background=True)
-        return self
+    def index_of_part(self, part, start=0):
+        return self.submobjects.index(part, start)
 
-    def index_of_part(self, part):
-        split_self = self.split()
-        if part not in split_self:
-            raise Exception("Trying to get index of part not in TexMobject")
-        return split_self.index(part)
-
-    def index_of_part_by_tex(self, tex, **kwargs):
+    def index_of_part_by_tex(self, tex, start=0, **kwargs):
         part = self.get_part_by_tex(tex, **kwargs)
-        return self.index_of_part(part)
+        return self.index_of_part(part, start)
+
+    def slice_by_tex(self, start_tex=None, stop_tex=None, **kwargs):
+        if start_tex is None:
+            start_index = 0
+        else:
+            start_index = self.index_of_part_by_tex(start_tex, **kwargs)
+
+        if stop_tex is None:
+            return self[start_index:]
+        else:
+            stop_index = self.index_of_part_by_tex(stop_tex, start=start_index, **kwargs)
+            return self[start_index:stop_index]
 
     def sort_alphabetically(self):
         self.submobjects.sort(
             key=lambda m: m.get_tex_string()
         )
+
+    def set_bstroke(self, color=BLACK, width=4):
+        self.set_stroke(color, width, background=True)
+        return self
 
 
 class TextMobject(TexMobject):
