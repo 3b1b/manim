@@ -19,7 +19,6 @@ from manimlib.utils.paths import straight_path
 from manimlib.utils.simple_functions import get_parameters
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import get_norm
-from manimlib.utils.space_ops import normalize
 from manimlib.utils.space_ops import rotation_matrix_transpose
 from manimlib.shader_wrapper import ShaderWrapper
 
@@ -1036,9 +1035,10 @@ class Mobject(object):
         return self
 
     def sort(self, point_to_num_func=lambda p: p[0], submob_func=None):
-        if submob_func is None:
-            submob_func = lambda m: point_to_num_func(m.get_center())
-        self.submobjects.sort(key=submob_func)
+        if submob_func is not None:
+            self.submobjects.sort(key=submob_func)
+        else:
+            self.submobjects.sort(key=lambda m: point_to_num_func(m.get_center()))
         return self
 
     def shuffle(self, recursive=False):
