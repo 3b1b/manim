@@ -103,7 +103,7 @@ class FadeTransform(Transform):
 
 class FadeTransformPieces(FadeTransform):
     def begin(self):
-        self.mobject[0].align_data(self.mobject[1])
+        self.mobject[0].align_submobjects(self.mobject[1])
         super().begin()
 
     def ghost_to(self, source, target):
