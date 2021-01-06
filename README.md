@@ -21,10 +21,10 @@ If you want to hack on manimlib itself, clone this repository and in that direct
 
 ```sh
 # Install python requirements
-python3 -m pip install -r requirements.txt
+pip3 install -r requirements.txt
 
 # Try it out
-python3 ./manim.py example_scenes.py SquareToCircle
+python3 -m manim example_scenes.py OpeningManimExample
 ```
 
 ### Directly (Windows)
@@ -35,13 +35,13 @@ python3 ./manim.py example_scenes.py SquareToCircle
     git clone https://github.com/3b1b/manim.git
     cd manim
     pip3 install -r requirements.txt
-    python3 manim.py example_scenes.py SquareToCircle
+    python3 manim.py example_scenes.py OpeningManimExample
     ```
 
 
 ## Anaconda Install
 
-* Install latex as above. 
+* Install latex as above.
 * Create a conda environment using `conda env create -f environment.yml`
 
 
@@ -50,14 +50,14 @@ After installing `virtualenv` and `virtualenvwrapper`
 ```sh
 git clone https://github.com/3b1b/manim.git
 mkvirtualenv -a manim -r requirements.txt manim
-python3 -m manim example_scenes.py SquareToCircle
+python3 -m manim example_scenes.py OpeningManimExample
 ```
 
 
 ## Using manim
 Try running the following:
 ```sh
-python3 -m manim example_scenes.py SquareToCircle
+python3 -m manim example_scenes.py OpeningManimExample
 ```
 This should pop up a window playing a simple scene.
 
@@ -65,8 +65,9 @@ Some useful flags include:
 * `-w` to write the scene to a file
 * `-o` to write the scene to a file and open the result
 * `-s` to skip to the end and just show the final frame.
+    * `-so` will asve the final frame to an image and show it
 * `-n <number>` to skip ahead to the `n`'th animation of a scene.
-* `-f` to show the file in finder (for OSX).
+* `-f` to make the playback window fullscreen
 
 Take a look at custom_defaults.yml for further configuration.  For example, there you can specify where videos should be output to, where manim should look for image files and sounds you want to read in, and other defaults regarding style and video quality.  If you have a file name "custom_defaults.yml" in the same directory where you are calling manim, it will look to the configuration of that file instead of the one in manim itself.
 
