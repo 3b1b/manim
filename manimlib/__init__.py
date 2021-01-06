@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import manimlib.config
-import manimlib.constants
 import manimlib.extract_scene
 
 
