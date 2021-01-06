@@ -1,8 +1,8 @@
 import inspect
 import random
-import warnings
 import platform
 import itertools as it
+import logging
 
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
@@ -44,8 +44,6 @@ class Scene(object):
         if self.preview:
             self.window = Window(self, **self.window_config)
             self.camera_config["ctx"] = self.window.ctx
-            self.virtual_animation_start_time = 0
-            self.real_animation_start_time = time.time()
         else:
             self.window = None
 
@@ -56,7 +54,6 @@ class Scene(object):
         self.time = 0
         self.skip_time = 0
         self.original_skipping_status = self.skip_animations
-        self.time_of_last_frame = time.time()
 
         # Items associated with interaction
         self.mouse_point = Point()
@@ -64,12 +61,15 @@ class Scene(object):
         self.zoom_on_scroll = False
         self.quit_interaction = False
 
-        # Much nice to work with deterministic scenes
+        # Much nicer to work with deterministic scenes
         if self.random_seed is not None:
             random.seed(self.random_seed)
             np.random.seed(self.random_seed)
 
     def run(self):
+        self.virtual_animation_start_time = 0
+        self.real_animation_start_time = time.time()
+
         self.setup()
         try:
             self.construct()
@@ -134,6 +134,10 @@ class Scene(object):
     def get_image(self):
         return self.camera.get_image()
 
+    def show(self):
+        self.update_frame(ignore_skipping=True)
+        self.get_image().show()
+
     def update_frame(self, dt=0, ignore_skipping=False):
         self.increment_time(dt)
         self.update_mobjects(dt)
@@ -156,8 +160,7 @@ class Scene(object):
         if not self.skip_animations:
             self.file_writer.write_frame(self.camera)
 
-    ###
-
+    # Related to updating
     def update_mobjects(self, dt):
         for mobject in self.mobjects:
             mobject.update(dt)
@@ -168,15 +171,14 @@ class Scene(object):
             for mob in self.mobjects
         ])
 
-    ###
-
+    # Related to time
     def get_time(self):
         return self.time
 
     def increment_time(self, dt):
         self.time += dt
 
-    ###
+    # Related to internal mobject organization
     def get_top_level_mobjects(self):
         # Return only those which are not in the family
         # of another mobject from the scene
@@ -240,6 +242,21 @@ class Scene(object):
     def get_mobject_copies(self):
         return [m.copy() for m in self.mobjects]
 
+    # Related to skipping
+    def update_skipping_status(self):
+        if self.start_at_animation_number is not None:
+            if self.num_plays == self.start_at_animation_number:
+                self.stop_skipping()
+        if self.end_at_animation_number is not None:
+            if self.num_plays >= self.end_at_animation_number:
+                raise EndSceneEarlyException()
+
+    def stop_skipping(self):
+        if self.skip_animations:
+            self.skip_animations = False
+            self.skip_time += self.time
+
+    # Methods associated with running animations
     def get_time_progression(self, run_time, n_iterations=None, override_skip_animations=False):
         if self.skip_animations and not override_skip_animations:
             times = [run_time]
@@ -264,6 +281,23 @@ class Scene(object):
             f"Animation {self.num_plays}: {animations[0]}",
             ", etc." if len(animations) > 1 else "",
         ]))
+        return time_progression
+
+    def get_wait_time_progression(self, duration, stop_condition):
+        if stop_condition is not None:
+            time_progression = self.get_time_progression(
+                duration,
+                n_iterations=-1,  # So it doesn't show % progress
+                override_skip_animations=True
+            )
+            time_progression.set_description(
+                "Waiting for {}".format(stop_condition.__name__)
+            )
+        else:
+            time_progression = self.get_time_progression(duration)
+            time_progression.set_description(
+                "Waiting {}".format(self.num_plays)
+            )
         return time_progression
 
     def anims_from_play_args(self, *args, **kwargs):
@@ -333,20 +367,6 @@ class Scene(object):
 
         return animations
 
-    def update_skipping_status(self):
-        if self.start_at_animation_number is not None:
-            if self.num_plays == self.start_at_animation_number:
-                self.stop_skipping()
-        if self.end_at_animation_number is not None:
-            if self.num_plays >= self.end_at_animation_number:
-                raise EndSceneEarlyException()
-
-    def stop_skipping(self):
-        if self.skip_animations:
-            self.skip_animations = False
-            self.skip_time += self.time
-
-    # Methods associated with running animations
     def handle_play_like_call(func):
         def wrapper(self, *args, **kwargs):
             self.update_skipping_status()
@@ -389,9 +409,8 @@ class Scene(object):
             # animated mobjects that are in the family of
             # those on screen, this can result in a restructuring
             # of the scene.mobjects list, which is usually desired.
-            mob = animation.mobject
-            if mob not in self.mobjects:
-                self.add(mob)
+            if animation.mobject not in self.mobjects:
+                self.add(animation.mobject)
 
     def progress_through_animations(self, animations):
         last_t = 0
@@ -409,9 +428,6 @@ class Scene(object):
         for animation in animations:
             animation.finish()
             animation.clean_up_from_scene(self)
-        self.mobjects_from_last_animation = [
-            anim.mobject for anim in animations
-        ]
         if self.skip_animations:
             self.update_mobjects(self.get_run_time(animations))
         else:
@@ -420,7 +436,10 @@ class Scene(object):
     @handle_play_like_call
     def play(self, *args, **kwargs):
         if len(args) == 0:
-            warnings.warn("Called Scene.play with no animations")
+            logging.log(
+                logging.WARNING,
+                "Called Scene.play with no animations"
+            )
             return
         animations = self.anims_from_play_args(*args, **kwargs)
         self.lock_static_mobject_data(*animations)
@@ -428,33 +447,6 @@ class Scene(object):
         self.progress_through_animations(animations)
         self.finish_animations(animations)
         self.unlock_mobject_data()
-
-    def clean_up_animations(self, *animations):
-        for animation in animations:
-            animation.clean_up_from_scene(self)
-        return self
-
-    def get_mobjects_from_last_animation(self):
-        if hasattr(self, "mobjects_from_last_animation"):
-            return self.mobjects_from_last_animation
-        return []
-
-    def get_wait_time_progression(self, duration, stop_condition):
-        if stop_condition is not None:
-            time_progression = self.get_time_progression(
-                duration,
-                n_iterations=-1,  # So it doesn't show % progress
-                override_skip_animations=True
-            )
-            time_progression.set_description(
-                "Waiting for {}".format(stop_condition.__name__)
-            )
-        else:
-            time_progression = self.get_time_progression(duration)
-            time_progression.set_description(
-                "Waiting {}".format(self.num_plays)
-            )
-        return time_progression
 
     @handle_play_like_call
     def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
@@ -500,10 +492,6 @@ class Scene(object):
             return
         time = self.get_time() + time_offset
         self.file_writer.add_sound(sound_file, time, gain, **kwargs)
-
-    def show(self):
-        self.update_frame(ignore_skipping=True)
-        self.get_image().show()
 
     # Helpers for interactive development
     def save_state(self):
