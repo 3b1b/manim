@@ -33,7 +33,7 @@ class SingleStringTexMobject(SVGMobject):
         "font_size": 48,
         "height": None,
         "organize_left_to_right": False,
-        "alignment": "",
+        "alignment": "",  # Could be "\\centering",
         "math_mode": True,
     }
 
@@ -233,7 +233,7 @@ class TexMobject(SingleStringTexMobject):
         return self
 
     def set_color_by_tex_to_color_map(self, tex_to_color_map, **kwargs):
-        for texs, color in list(tex_to_color_map.items()):
+        for tex, color in list(tex_to_color_map.items()):
             self.set_color_by_tex(tex, color, **kwargs)
         return self
 
@@ -267,7 +267,6 @@ class TexMobject(SingleStringTexMobject):
 class TextMobject(TexMobject):
     CONFIG = {
         "math_mode": False,
-        "alignment": "\\centering",
         "arg_separator": "",
     }
 
