@@ -207,8 +207,8 @@ class SurfaceExample(Scene):
         # the light.  These can be either urls, or paths to a local file
         # in whatever you've set as the iamge directory in
         # the custom_defaults.yml file
-        day_texture = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Blue_Marble_2002.png/1280px-Blue_Marble_2002.png"
-        night_texture = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/The_earth_at_night.jpg/1280px-The_earth_at_night.jpg"
+        day_texture = "https://upload.wikimedia.org/wikipedia/commons/4/4d/Whole_world_-_land_and_oceans.jpg"
+        night_texture = "https://upload.wikimedia.org/wikipedia/commons/b/ba/The_earth_at_night.jpg"
         surfaces = [
             TexturedSurface(surface, day_texture, night_texture)
             for surface in [sphere, torus1, torus2]
