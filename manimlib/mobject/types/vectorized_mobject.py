@@ -329,6 +329,11 @@ class VMobject(Mobject):
             return alphas[0] > 0
         return alphas.any()
 
+    def get_opacity(self):
+        if self.has_fill():
+            return self.get_fill_opacity()
+        return self.get_stroke_opacity()
+
     # TODO, this currently does nothing
     def color_using_background_image(self, background_image_file):
         self.background_image_file = background_image_file
