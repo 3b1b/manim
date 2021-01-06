@@ -30,8 +30,7 @@ class ParametricSurface(Mobject):
         "epsilon": 1e-5,
         "render_primitive": moderngl.TRIANGLES,
         "depth_test": True,
-        "vert_shader_file": "surface_vert.glsl",
-        "frag_shader_file": "surface_frag.glsl",
+        "shader_folder": "surface",
         "shader_dtype": [
             ('point', np.float32, (3,)),
             ('du_point', np.float32, (3,)),
@@ -201,8 +200,7 @@ class SGroup(ParametricSurface):
 
 class TexturedSurface(ParametricSurface):
     CONFIG = {
-        "vert_shader_file": "textured_surface_vert.glsl",
-        "frag_shader_file": "textured_surface_frag.glsl",
+        "shader_folder": "textured_surface",
         "shader_dtype": [
             ('point', np.float32, (3,)),
             ('du_point', np.float32, (3,)),

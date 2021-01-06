@@ -14,9 +14,7 @@ class DotCloud(PMobject):
     CONFIG = {
         "color": GREY_C,
         "opacity": 1,
-        "vert_shader_file": "true_dot_vert.glsl",
-        "geom_shader_file": "true_dot_geom.glsl",
-        "frag_shader_file": "true_dot_frag.glsl",
+        "shader_folder": "true_dot",
         "render_primitive": moderngl.POINTS,
         "shader_dtype": [
             ('point', np.float32, (3,)),

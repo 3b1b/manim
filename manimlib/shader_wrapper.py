@@ -1,11 +1,12 @@
 import os
-import warnings
+import logging
 import re
 import moderngl
 import numpy as np
 import copy
 
 from manimlib.utils.directories import get_shader_dir
+from manimlib.utils.file_ops import seek_full_path_from_defaults
 
 # Mobjects that should be rendered with
 # the same shader will be organized and
@@ -18,9 +19,7 @@ class ShaderWrapper(object):
     def __init__(self,
                  vert_data=None,
                  vert_indices=None,
-                 vert_file=None,
-                 geom_file=None,
-                 frag_file=None,
+                 shader_folder=None,
                  uniforms=None,  # A dictionary mapping names of uniform variables
                  texture_paths=None,  # A dictionary mapping names to filepaths for textures.
                  depth_test=False,
@@ -29,9 +28,7 @@ class ShaderWrapper(object):
         self.vert_data = vert_data
         self.vert_indices = vert_indices
         self.vert_attributes = vert_data.dtype.names
-        self.vert_file = vert_file
-        self.geom_file = geom_file
-        self.frag_file = frag_file
+        self.shader_folder = shader_folder
         self.uniforms = uniforms or dict()
         self.texture_paths = texture_paths or dict()
         self.depth_test = depth_test
@@ -53,8 +50,7 @@ class ShaderWrapper(object):
     def is_valid(self):
         return all([
             self.vert_data is not None,
-            self.vert_file,
-            self.frag_file,
+            self.shader_folder,
         ])
 
     def get_id(self):
@@ -66,9 +62,7 @@ class ShaderWrapper(object):
     def create_id(self):
         # A unique id for a shader
         return "|".join(map(str, [
-            self.vert_file,
-            self.geom_file,
-            self.frag_file,
+            self.shader_folder,
             self.uniforms,
             self.texture_paths,
             self.depth_test,
@@ -79,13 +73,18 @@ class ShaderWrapper(object):
         self.id = self.create_id()
 
     def create_program_id(self):
-        return "|".join(map(str, [self.vert_file, self.geom_file, self.frag_file]))
+        return self.shader_folder
 
     def get_program_code(self):
+        def get_code(name):
+            return get_shader_code_from_file(
+                os.path.join(self.shader_folder, f"{name}.glsl")
+            )
+
         return {
-            "vertex_shader": get_shader_code_from_file(self.vert_file),
-            "geometry_shader": get_shader_code_from_file(self.geom_file),
-            "fragment_shader": get_shader_code_from_file(self.frag_file),
+            "vertex_shader": get_code("vert"),
+            "geometry_shader": get_code("geom"),
+            "fragment_shader": get_code("frag"),
         }
 
     def combine_with(self, *shader_wrappers):
@@ -111,10 +110,14 @@ def get_shader_code_from_file(filename):
     if not filename:
         return None
 
-    filepath = os.path.join(get_shader_dir(), filename)
-    if not os.path.exists(filepath):
-        warnings.warn(f"No file at {filepath}")
-        return
+    try:
+        filepath = seek_full_path_from_defaults(
+            filename,
+            directories=[get_shader_dir(), "/"],
+            extensions=[],
+        )
+    except IOError:
+        return None
 
     with open(filepath, "r") as f:
         result = f.read()
@@ -125,6 +128,8 @@ def get_shader_code_from_file(filename):
     # Replace "#INSERT " lines with relevant code
     insertions = re.findall(r"^#INSERT .*\.glsl$", result, flags=re.MULTILINE)
     for line in insertions:
-        inserted_code = get_shader_code_from_file(line.replace("#INSERT ", ""))
+        inserted_code = get_shader_code_from_file(
+            os.path.join("inserts", line.replace("#INSERT ", ""))
+        )
         result = result.replace(line, inserted_code)
     return result

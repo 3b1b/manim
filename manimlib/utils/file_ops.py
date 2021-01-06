@@ -16,10 +16,11 @@ def guarantee_existence(path):
     return os.path.abspath(path)
 
 
-def seek_full_path_from_defaults(file_name, default_dir, extensions):
+def seek_full_path_from_defaults(file_name, directories, extensions):
     possible_paths = [file_name]
     possible_paths += [
-        os.path.join(default_dir, file_name + extension)
+        os.path.join(directory, file_name + extension)
+        for directory in directories
         for extension in ["", *extensions]
     ]
     for path in possible_paths:

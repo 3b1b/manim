@@ -209,10 +209,10 @@ class SurfaceExample(Scene):
         # https://commons.wikimedia.org/wiki/File:The_earth_at_night.jpg
         # and make sure they are available in whatever folder manim
         # looks for images, then uncomment the lines below
-        surfaces = [
-            TexturedSurface(surface, "EarthTextureMap", "NightEarthTextureMap")
-            for surface in [sphere, torus1, torus2]
-        ]
+        # surfaces = [
+        #     TexturedSurface(surface, "EarthTextureMap", "NightEarthTextureMap")
+        #     for surface in [sphere, torus1, torus2]
+        # ]
 
         for mob in surfaces:
             mob.mesh = SurfaceMesh(mob)

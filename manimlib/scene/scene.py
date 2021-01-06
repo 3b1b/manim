@@ -13,8 +13,7 @@ from manimlib.animation.animation import Animation
 from manimlib.animation.transform import MoveToTarget
 from manimlib.mobject.mobject import Point
 from manimlib.camera.camera import Camera
-from manimlib.config import get_custom_defaults
-from manimlib.constants import *
+from manimlib.constants import DEFAULT_WAIT_TIME
 from manimlib.mobject.mobject import Mobject
 from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.config_ops import digest_config

@@ -39,9 +39,10 @@ class Mobject(object):
         # Positive shadow up to 1 makes a side opposite the light darker
         "shadow": 0.0,
         # For shaders
-        "vert_shader_file": "",
-        "geom_shader_file": "",
-        "frag_shader_file": "",
+        "shader_folder": "",
+        # "vert_shader_file": "",
+        # "geom_shader_file": "",
+        # "frag_shader_file": "",
         "render_primitive": moderngl.TRIANGLE_STRIP,
         "texture_paths": None,
         "depth_test": False,
@@ -1222,9 +1223,7 @@ class Mobject(object):
         self.shader_indices = None
         self.shader_wrapper = ShaderWrapper(
             vert_data=self.shader_data,
-            vert_file=self.vert_shader_file,
-            geom_file=self.geom_shader_file,
-            frag_file=self.frag_shader_file,
+            shader_folder=self.shader_folder,
             texture_paths=self.texture_paths,
             depth_test=self.depth_test,
             render_primitive=self.render_primitive,

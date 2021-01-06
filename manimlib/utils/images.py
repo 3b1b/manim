@@ -10,7 +10,7 @@ from manimlib.utils.directories import get_vector_image_dir
 def get_full_raster_image_path(image_file_name):
     return seek_full_path_from_defaults(
         image_file_name,
-        default_dir=get_raster_image_dir(),
+        directories=[get_raster_image_dir()],
         extensions=[".jpg", ".png", ".gif"]
     )
 
@@ -18,7 +18,7 @@ def get_full_raster_image_path(image_file_name):
 def get_full_vector_image_path(image_file_name):
     return seek_full_path_from_defaults(
         image_file_name,
-        default_dir=get_vector_image_dir(),
+        directories=[get_vector_image_dir()],
         extensions=[".svg", ".xdv"],
     )
 

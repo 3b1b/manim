@@ -14,8 +14,7 @@ class ImageMobject(Mobject):
     CONFIG = {
         "height": 4,
         "opacity": 1,
-        "vert_shader_file": "image_vert.glsl",
-        "frag_shader_file": "image_frag.glsl",
+        "shader_folder": "image",
         "shader_dtype": [
             ('point', np.float32, (3,)),
             ('im_coords', np.float32, (2,)),

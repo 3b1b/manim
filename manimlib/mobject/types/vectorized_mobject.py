@@ -52,12 +52,14 @@ class VMobject(Mobject):
         "n_points_per_curve": 3,
         "long_lines": False,
         # For shaders
-        "stroke_vert_shader_file": "quadratic_bezier_stroke_vert.glsl",
-        "stroke_geom_shader_file": "quadratic_bezier_stroke_geom.glsl",
-        "stroke_frag_shader_file": "quadratic_bezier_stroke_frag.glsl",
-        "fill_vert_shader_file": "quadratic_bezier_fill_vert.glsl",
-        "fill_geom_shader_file": "quadratic_bezier_fill_geom.glsl",
-        "fill_frag_shader_file": "quadratic_bezier_fill_frag.glsl",
+        "stroke_shader_folder": "quadratic_bezier_stroke",
+        # "stroke_vert_shader_file": "quadratic_bezier_stroke_vert.glsl",
+        # "stroke_geom_shader_file": "quadratic_bezier_stroke_geom.glsl",
+        # "stroke_frag_shader_file": "quadratic_bezier_stroke_frag.glsl",
+        "fill_shader_folder": "quadratic_bezier_fill",
+        # "fill_vert_shader_file": "quadratic_bezier_fill_vert.glsl",
+        # "fill_geom_shader_file": "quadratic_bezier_fill_geom.glsl",
+        # "fill_frag_shader_file": "quadratic_bezier_fill_frag.glsl",
         # Could also be Bevel, Miter, Round
         "joint_type": "auto",
         "render_primitive": moderngl.TRIANGLES,
@@ -903,16 +905,12 @@ class VMobject(Mobject):
         self.fill_shader_wrapper = ShaderWrapper(
             vert_data=self.fill_data,
             vert_indices=np.zeros(0, dtype='i4'),
-            vert_file=self.fill_vert_shader_file,
-            geom_file=self.fill_geom_shader_file,
-            frag_file=self.fill_frag_shader_file,
+            shader_folder=self.fill_shader_folder,
             render_primitive=self.render_primitive,
         )
         self.stroke_shader_wrapper = ShaderWrapper(
             vert_data=self.stroke_data,
-            vert_file=self.stroke_vert_shader_file,
-            geom_file=self.stroke_geom_shader_file,
-            frag_file=self.stroke_frag_shader_file,
+            shader_folder=self.stroke_shader_folder,
             render_primitive=self.render_primitive,
         )
 
