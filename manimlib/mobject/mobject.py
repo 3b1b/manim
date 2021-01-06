@@ -680,10 +680,20 @@ class Mobject(object):
         return self
 
     def get_color(self):
-        raise Exception("Not implemented")
+        # Subclasses will implement this differently, but here it
+        # just returns the first opacity offered by a submobject
+        if self.submobjects:
+            return self.submobjects[0].get_color()
+        else:
+            return self.color
 
     def get_opacity(self):
-        raise Exception("Not implemented")
+        # Subclasses will implement this differently, but here it
+        # just returns the first opacity offered by a submobject
+        if self.submobjects:
+            return self.submobjects[0].get_opacity()
+        else:
+            return 1
 
     def set_color_by_gradient(self, *colors):
         self.set_submobject_colors_by_gradient(*colors)
@@ -1130,7 +1140,12 @@ class Mobject(object):
         for submob, sf in zip(self.submobjects, split_factors):
             new_submobs.append(submob)
             for k in range(1, sf):
-                new_submobs.append(submob.copy().fade(1))
+                new_submob = submob.copy()
+                # If the submobject is at all transparent, then
+                # make the copy completely transparent
+                if submob.get_opacity() < 1:
+                    new_submob.set_opacity(0)
+                new_submobs.append(new_submob)
         self.set_submobjects(new_submobs)
         return self
 
