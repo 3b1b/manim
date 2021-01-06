@@ -565,6 +565,7 @@ class VMobject(Mobject):
         Mobject.apply_function(self, function)
         if self.make_smooth_after_applying_functions:
             self.make_smooth()
+        self.refresh_triangulation()
         return self
 
     def flip(self, *args, **kwargs):
