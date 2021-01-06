@@ -1,3 +1,5 @@
+import numpy as np
+
 from manimlib.animation.animation import Animation
 from manimlib.animation.transform import Transform
 from manimlib.mobject.mobject import Group
@@ -53,7 +55,22 @@ class FadeOut(Fade):
 
 class FadeInFromPoint(FadeIn):
     def __init__(self, mobject, point, **kwargs):
-        super().__init__(mobject, shift=mobject.get_center() - point, **kwargs)
+        super().__init__(
+            mobject,
+            shift=mobject.get_center() - point,
+            scale=np.inf,
+            **kwargs,
+        )
+
+
+class FadeOutToPoint(FadeOut):
+    def __init__(self, mobject, point, **kwargs):
+        super().__init__(
+            mobject,
+            shift=point - mobject.get_center(),
+            scale=0,
+            **kwargs,
+        )
 
 
 class FadeTransform(Transform):
