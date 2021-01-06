@@ -8,8 +8,6 @@ from manimlib.imports import *
 # Use -w to write the animation to a file
 # Use -o to write it to a file and open it once done
 # Use -n <number> to skip ahead to the n'th animation of a scene.
-# Use -r <number> to specify a resolution (for example, -r 1080
-# for a 1920x1080 video)
 
 
 class OpeningManimExample(Scene):
