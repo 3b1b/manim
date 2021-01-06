@@ -57,8 +57,6 @@ class Scene(object):
         # Items associated with interaction
         self.mouse_point = Point()
         self.mouse_drag_point = Point()
-        self.zoom_on_scroll = False
-        self.quit_interaction = False
 
         # Much nicer to work with deterministic scenes
         if self.random_seed is not None:
@@ -101,7 +99,7 @@ class Scene(object):
         # the hood calling the pyglet event loop
         self.quit_interaction = False
         self.lock_static_mobject_data()
-        while not self.window.is_closing and not self.quit_interaction:
+        while not (self.window.is_closing or self.quit_interaction):
             self.update_frame()
         if self.window.is_closing:
             self.window.destroy()
@@ -517,9 +515,15 @@ class Scene(object):
 
     def on_mouse_drag(self, point, d_point, buttons, modifiers):
         self.mouse_drag_point.move_to(point)
-        # Only if 3d rotation is enabled?
-        self.camera.frame.increment_theta(-d_point[0])
-        self.camera.frame.increment_phi(d_point[1])
+        frame = self.camera.frame
+        if self.window.is_key_pressed(ord("d")):
+            frame.increment_theta(-d_point[0])
+            frame.increment_phi(d_point[1])
+        elif self.window.is_key_pressed(ord("s")):
+            transform = frame.get_inverse_camera_position_matrix()
+            shift = np.dot(transform[:3, :3].T, d_point)
+            shift *= frame.get_height()
+            frame.shift(-shift)
 
     def on_mouse_press(self, point, button, mods):
         pass
@@ -528,22 +532,16 @@ class Scene(object):
         pass
 
     def on_mouse_scroll(self, point, offset):
-        frame = self.camera.frame
-        if self.zoom_on_scroll:
+        if self.window.is_key_pressed(ord("z")):
             factor = 1 + np.arctan(10 * offset[1])
-            frame.scale(factor, about_point=point)
-        else:
-            frame.shift(-30 * offset)
+            self.camera.frame.scale(factor, about_point=point)
 
     def on_key_release(self, symbol, modifiers):
-        if chr(symbol) == "z":
-            self.zoom_on_scroll = False
+        pass
 
     def on_key_press(self, symbol, modifiers):
         if chr(symbol) == "r":
             self.camera.frame.to_default_state()
-        elif chr(symbol) == "z":
-            self.zoom_on_scroll = True
         elif chr(symbol) == "q":
             self.quit_interaction = True
 
