@@ -328,7 +328,7 @@ class Mobject(object):
         Otherwise, if about_point is given a value, scaling is done with
         respect to that point.
         """
-        self.apply_points_function_about_point(
+        self.apply_points_function(
             lambda points: scale_factor * points,
             **kwargs
         )
@@ -339,7 +339,7 @@ class Mobject(object):
 
     def rotate(self, angle, axis=OUT, **kwargs):
         rot_matrix_T = rotation_matrix_transpose(angle, axis)
-        self.apply_points_function_about_point(
+        self.apply_points_function(
             lambda points: np.dot(points, rot_matrix_T),
             **kwargs
         )
@@ -352,14 +352,14 @@ class Mobject(object):
         def func(points):
             points[:, dim] *= factor
             return points
-        self.apply_points_function_about_point(func, **kwargs)
+        self.apply_points_function(func, **kwargs)
         return self
 
     def apply_function(self, function, **kwargs):
         # Default to applying matrix about the origin, not mobjects center
         if len(kwargs) == 0:
             kwargs["about_point"] = ORIGIN
-        self.apply_points_function_about_point(
+        self.apply_points_function(
             lambda points: np.array([function(p) for p in points]),
             **kwargs
         )
@@ -381,7 +381,7 @@ class Mobject(object):
         full_matrix = np.identity(self.dim)
         matrix = np.array(matrix)
         full_matrix[:matrix.shape[0], :matrix.shape[1]] = matrix
-        self.apply_points_function_about_point(
+        self.apply_points_function(
             lambda points: np.dot(points, full_matrix.T),
             **kwargs
         )
@@ -427,7 +427,7 @@ class Mobject(object):
     # Note, much of these are now redundant with default behavior of
     # above methods
 
-    def apply_points_function_about_point(self, func, about_point=None, about_edge=None):
+    def apply_points_function(self, func, about_point=None, about_edge=None):
         if about_point is None:
             if about_edge is None:
                 about_edge = ORIGIN
