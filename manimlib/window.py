@@ -21,6 +21,8 @@ class Window(PygletWindow):
         if "position" in kwargs:
             self.position = kwargs["position"]
 
+        self.pressed_keys = set()
+
         mglw.activate_context(window=self)
         self.timer = Timer()
         self.config = mglw.WindowConfig(ctx=self.ctx, wnd=self, timer=self.timer)
@@ -58,13 +60,15 @@ class Window(PygletWindow):
         offset = self.pixel_coords_to_space_coords(x_offset, y_offset, relative=True)
         self.scene.on_mouse_scroll(point, offset)
 
-    def on_key_release(self, symbol, modifiers):
-        super().on_key_release(symbol, modifiers)
-        self.scene.on_key_release(symbol, modifiers)
-
     def on_key_press(self, symbol, modifiers):
+        self.pressed_keys.add(symbol)  # Modifiers?
         super().on_key_press(symbol, modifiers)
         self.scene.on_key_press(symbol, modifiers)
+
+    def on_key_release(self, symbol, modifiers):
+        self.pressed_keys.difference_update({symbol})  # Modifiers?
+        super().on_key_release(symbol, modifiers)
+        self.scene.on_key_release(symbol, modifiers)
 
     def on_resize(self, width: int, height: int):
         super().on_resize(width, height)
@@ -81,3 +85,6 @@ class Window(PygletWindow):
     def on_close(self):
         super().on_close()
         self.scene.on_close()
+
+    def is_key_pressed(self, symbol):
+        return (symbol in self.pressed_keys)
