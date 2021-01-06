@@ -121,10 +121,6 @@ def parse_cli():
             help="Leave progress bars displayed in terminal",
         )
         parser.add_argument(
-            "--media_dir",
-            help="directory to write media",
-        )
-        parser.add_argument(
             "--video_dir",
             help="directory to write video",
         )
