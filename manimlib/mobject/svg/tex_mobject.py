@@ -1,5 +1,7 @@
 from functools import reduce
 import operator as op
+import re
+import itertools as it
 
 from manimlib.constants import *
 from manimlib.mobject.geometry import Line
@@ -8,7 +10,6 @@ from manimlib.mobject.svg.svg_mobject import VMobjectFromSVGPathstring
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VectorizedPoint
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.strings import split_string_list_to_isolate_substrings
 from manimlib.utils.tex_file_writing import tex_to_svg_file
 from manimlib.utils.tex_file_writing import get_tex_config
 from manimlib.utils.tex_file_writing import display_during_execution
@@ -147,17 +148,19 @@ class SingleStringTexMobject(SVGMobject):
 class TexMobject(SingleStringTexMobject):
     CONFIG = {
         "arg_separator": " ",
+        # Note, use of substrings_to_isolate is largely rendered
+        # moot by the fact that you can surround such strings in
+        # {{ and }} as needed.
         "substrings_to_isolate": [],
         "tex_to_color_map": {},
     }
 
     def __init__(self, *tex_strings, **kwargs):
         digest_config(self, kwargs)
-        tex_strings = self.break_up_tex_strings(tex_strings)
-        self.tex_strings = tex_strings
-        tex_string = self.arg_separator.join(tex_strings)
-        with display_during_execution(f" Writing \"{tex_string}\""):
-            super().__init__(tex_string, **kwargs)
+        self.tex_strings = self.break_up_tex_strings(tex_strings)
+        full_string = self.arg_separator.join(self.tex_strings)
+        with display_during_execution(f" Writing \"{full_string}\""):
+            super().__init__(full_string, **kwargs)
             self.break_up_by_substrings()
             self.set_color_by_tex_to_color_map(self.tex_to_color_map)
 
@@ -165,17 +168,20 @@ class TexMobject(SingleStringTexMobject):
                 self.organize_submobjects_left_to_right()
 
     def break_up_tex_strings(self, tex_strings):
-        substrings_to_isolate = op.add(
-            self.substrings_to_isolate,
-            list(self.tex_to_color_map.keys())
-        )
-        split_list = split_string_list_to_isolate_substrings(
-            tex_strings, *substrings_to_isolate
-        )
-        if self.arg_separator == ' ':
-            split_list = [str(x).strip() for x in split_list]
-        split_list = [s for s in split_list if s != '']
-        return split_list
+        # Separate out anything surrounded in double braces
+        pattern = "{{|}}"
+        # Separate out any strings specified in the substrings_to_isolate
+        # or tex_to_color_map lists.
+        for ss in it.chain(self.substrings_to_isolate, self.tex_to_color_map.keys()):
+            pattern += "|({})".format(re.escape(ss))
+
+        pieces = []
+        for s in tex_strings:
+            pieces.extend(filter(
+                lambda s: bool(s),
+                re.split(pattern, s)
+            ))
+        return pieces
 
     def break_up_by_substrings(self):
         """
@@ -192,18 +198,12 @@ class TexMobject(SingleStringTexMobject):
         config = dict(self.CONFIG)
         config["alignment"] = ""
         for tex_string in self.tex_strings:
+            if len(tex_string.strip()) == 0:
+                continue
             sub_tex_mob = SingleStringTexMobject(tex_string, **config)
             num_submobs = len(sub_tex_mob.submobjects)
             new_index = curr_index + num_submobs
-            if num_submobs == 0:
-                # For cases like empty tex_strings, we want the corresponing
-                # part of the whole TexMobject to be a VectorizedPoint
-                # positioned in the right part of the TexMobject
-                sub_tex_mob.set_submobjects([VectorizedPoint()])
-                last_submob_index = min(curr_index, len(self.submobjects) - 1)
-                sub_tex_mob.move_to(self.submobjects[last_submob_index], RIGHT)
-            else:
-                sub_tex_mob.set_submobjects(self.submobjects[curr_index:new_index])
+            sub_tex_mob.set_submobjects(self.submobjects[curr_index:new_index])
             new_submobjects.append(sub_tex_mob)
             curr_index = new_index
         self.set_submobjects(new_submobjects)
@@ -229,21 +229,12 @@ class TexMobject(SingleStringTexMobject):
         return all_parts[0] if all_parts else None
 
     def set_color_by_tex(self, tex, color, **kwargs):
-        parts_to_color = self.get_parts_by_tex(tex, **kwargs)
-        for part in parts_to_color:
-            part.set_color(color)
+        self.get_parts_by_tex(tex, **kwargs).set_color(color)
         return self
 
-    def set_color_by_tex_to_color_map(self, texs_to_color_map, **kwargs):
-        for texs, color in list(texs_to_color_map.items()):
-            try:
-                # If the given key behaves like tex_strings
-                texs + ''
-                self.set_color_by_tex(texs, color, **kwargs)
-            except TypeError:
-                # If the given key is a tuple
-                for tex in texs:
-                    self.set_color_by_tex(tex, color, **kwargs)
+    def set_color_by_tex_to_color_map(self, tex_to_color_map, **kwargs):
+        for texs, color in list(tex_to_color_map.items()):
+            self.set_color_by_tex(tex, color, **kwargs)
         return self
 
     def index_of_part(self, part, start=0):
@@ -266,9 +257,7 @@ class TexMobject(SingleStringTexMobject):
             return self[start_index:stop_index]
 
     def sort_alphabetically(self):
-        self.submobjects.sort(
-            key=lambda m: m.get_tex_string()
-        )
+        self.submobjects.sort(key=lambda m: m.get_tex_string())
 
     def set_bstroke(self, color=BLACK, width=4):
         self.set_stroke(color, width, background=True)
