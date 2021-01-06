@@ -299,11 +299,7 @@ class Camera(object):
         self.frame.set_width(frame_width)
 
     def pixel_coords_to_space_coords(self, px, py, relative=False):
-        # pw, ph = self.fbo.size
-        # Bad hack, not sure why this is needed.
-        pw, ph = self.get_pixel_shape()
-        pw //= 2
-        ph //= 2
+        pw, ph = self.fbo.size
         fw, fh = self.get_frame_shape()
         fc = self.get_frame_center()
         if relative:
