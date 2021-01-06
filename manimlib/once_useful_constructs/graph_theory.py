@@ -256,7 +256,7 @@ class DiscreteGraphScene(Scene):
             for vertex in self.vertices
         ] + [
             ApplyMethod(
-                edge.scale_in_place,
+                edge.scale,
                 (edge.get_length() - diameter) / edge.get_length()
             )
             for edge in self.edges

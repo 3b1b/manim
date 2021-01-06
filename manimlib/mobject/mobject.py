@@ -423,10 +423,6 @@ class Mobject(object):
             mob.apply_over_attr_arrays(lambda arr: np.vstack([arr] * count))
         return self
 
-    # In place operations.
-    # Note, much of these are now redundant with default behavior of
-    # above methods
-
     def apply_points_function(self, func, about_point=None, about_edge=None):
         if about_point is None:
             if about_edge is None:
@@ -437,18 +433,6 @@ class Mobject(object):
             mob.points[:] = func(mob.points)
             mob.points += about_point
         return self
-
-    def rotate_in_place(self, angle, axis=OUT):
-        # redundant with default behavior of rotate now.
-        return self.rotate(angle, axis=axis)
-
-    def scale_in_place(self, scale_factor, **kwargs):
-        # Redundant with default behavior of scale now.
-        return self.scale(scale_factor, **kwargs)
-
-    def scale_about_point(self, scale_factor, point):
-        # Redundant with default behavior of scale now.
-        return self.scale(scale_factor, about_point=point)
 
     # Positioning methods
 
@@ -615,7 +599,7 @@ class Mobject(object):
                  buff=MED_SMALL_BUFF):
         self.replace(mobject, dim_to_match, stretch)
         length = mobject.length_over_dim(dim_to_match)
-        self.scale_in_place((length + buff) / length)
+        self.scale((length + buff) / length)
         return self
 
     def put_start_and_end_on(self, start, end):

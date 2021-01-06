@@ -61,7 +61,7 @@ class Indicate(Transform):
 
     def create_target(self):
         target = self.mobject.copy()
-        target.scale_in_place(self.scale_factor)
+        target.scale(self.scale_factor)
         target.set_color(self.color)
         return target
 

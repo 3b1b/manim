@@ -172,7 +172,7 @@ class Laptop(VGroup):
             fill_opacity=1,
         )
         screen.replace(screen_plate, stretch=True)
-        screen.scale_in_place(self.screen_width_to_screen_plate_width)
+        screen.scale(self.screen_width_to_screen_plate_width)
         screen.next_to(screen_plate, OUT, buff=0.1 * SMALL_BUFF)
         screen_plate.add(screen)
         screen_plate.next_to(body, UP, buff=0)
