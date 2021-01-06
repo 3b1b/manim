@@ -25,12 +25,16 @@ def get_directories():
     return PRE_COMPUTED_DIRS
 
 
+def get_temp_dir():
+    return get_directories()["temporary_storage"]
+
+
 def get_tex_dir():
-    return guarantee_existence(os.path.join(get_directories()["temporary_storage"], "Tex"))
+    return guarantee_existence(os.path.join(get_temp_dir(), "Tex"))
 
 
 def get_mobject_data_dir():
-    return guarantee_existence(os.path.join(get_directories()["temporary_storage"], "mobject_data"))
+    return guarantee_existence(os.path.join(get_temp_dir(), "mobject_data"))
 
 
 def get_output_dir():

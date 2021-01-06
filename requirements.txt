@@ -15,3 +15,5 @@ PyOpenGL
 pyyaml
 screeninfo
 pyreadline; sys_platform == 'win32'
+tempfile
+validators

@@ -1,12 +1,11 @@
 import os
-import logging
 import re
 import moderngl
 import numpy as np
 import copy
 
 from manimlib.utils.directories import get_shader_dir
-from manimlib.utils.file_ops import seek_full_path_from_defaults
+from manimlib.utils.file_ops import find_file
 
 # Mobjects that should be rendered with
 # the same shader will be organized and
@@ -111,7 +110,7 @@ def get_shader_code_from_file(filename):
         return None
 
     try:
-        filepath = seek_full_path_from_defaults(
+        filepath = find_file(
             filename,
             directories=[get_shader_dir(), "/"],
             extensions=[],

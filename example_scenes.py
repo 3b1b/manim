@@ -202,17 +202,17 @@ class SurfaceExample(Scene):
         torus1 = Torus(r1=1, r2=1)
         torus2 = Torus(r1=3, r2=1)
         sphere = Sphere(radius=3, resolution=torus1.resolution)
-        surfaces = [sphere, torus1, torus2]
-        # If you want these to be textured with pictures of, say, earth,
-        # find images for the texture maps you want, perhaps
-        # https://en.wikipedia.org/wiki/File:Blue_Marble_2002.png and
-        # https://commons.wikimedia.org/wiki/File:The_earth_at_night.jpg
-        # and make sure they are available in whatever folder manim
-        # looks for images, then uncomment the lines below
-        # surfaces = [
-        #     TexturedSurface(surface, "EarthTextureMap", "NightEarthTextureMap")
-        #     for surface in [sphere, torus1, torus2]
-        # ]
+        # You can texture a surface with up to two images, which will
+        # be interpreted as the side towards the light, and away from
+        # the light.  These can be either urls, or paths to a local file
+        # in whatever you've set as the iamge directory in
+        # the custom_defaults.yml file
+        day_texture = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Blue_Marble_2002.png/1280px-Blue_Marble_2002.png"
+        night_texture = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/The_earth_at_night.jpg/1280px-The_earth_at_night.jpg"
+        surfaces = [
+            TexturedSurface(surface, day_texture, night_texture)
+            for surface in [sphere, torus1, torus2]
+        ]
 
         for mob in surfaces:
             mob.mesh = SurfaceMesh(mob)
