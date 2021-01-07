@@ -68,13 +68,14 @@ class SingleStringTexMobject(SVGMobject):
         return result
 
     def modify_special_strings(self, tex):
-        tex = self.remove_stray_braces(tex)
+        tex = tex.strip()
         should_add_filler = reduce(op.or_, [
             # Fraction line needs something to be over
             tex == "\\over",
             tex == "\\overline",
             # Makesure sqrt has overbar
             tex == "\\sqrt",
+            tex == "\\sqrt{",
             # Need to add blank subscript or superscript
             tex.endswith("_"),
             tex.endswith("^"),
@@ -93,6 +94,8 @@ class SingleStringTexMobject(SVGMobject):
         # To keep files from starting with a line break
         if tex.startswith("\\\\"):
             tex = tex.replace("\\\\", "\\quad\\\\")
+
+        tex = self.balance_braces(tex)
 
         # Handle imbalanced \left and \right
         num_lefts, num_rights = [
@@ -116,14 +119,11 @@ class SingleStringTexMobject(SVGMobject):
                 tex = ""
         return tex
 
-    def remove_stray_braces(self, tex):
+    def balance_braces(self, tex):
         """
         Makes TexMobject resiliant to unmatched { at start
         """
-        num_lefts, num_rights = [
-            tex.count(char)
-            for char in "{}"
-        ]
+        num_lefts, num_rights = [tex.count(char) for char in "{}"]
         while num_rights > num_lefts:
             tex = "{" + tex
             num_lefts += 1
@@ -148,10 +148,10 @@ class SingleStringTexMobject(SVGMobject):
 class TexMobject(SingleStringTexMobject):
     CONFIG = {
         "arg_separator": " ",
-        # Note, use of substrings_to_isolate is largely rendered
+        # Note, use of isolate is largely rendered
         # moot by the fact that you can surround such strings in
         # {{ and }} as needed.
-        "substrings_to_isolate": [],
+        "isolate": [],
         "tex_to_color_map": {},
     }
 
@@ -170,9 +170,9 @@ class TexMobject(SingleStringTexMobject):
     def break_up_tex_strings(self, tex_strings):
         # Separate out anything surrounded in double braces
         pattern = "{{|}}"
-        # Separate out any strings specified in the substrings_to_isolate
+        # Separate out any strings specified in the isolate
         # or tex_to_color_map lists.
-        for ss in it.chain(self.substrings_to_isolate, self.tex_to_color_map.keys()):
+        for ss in it.chain(self.isolate, self.tex_to_color_map.keys()):
             pattern += "|({})".format(re.escape(ss))
 
         pieces = []
@@ -202,9 +202,11 @@ class TexMobject(SingleStringTexMobject):
             if len(tex_string) == 0:
                 continue
             sub_tex_mob = SingleStringTexMobject(tex_string, **config)
-            num_submobs = len(sub_tex_mob.submobjects)
+            num_submobs = len(sub_tex_mob)
+            if num_submobs == 0:
+                continue
             new_index = curr_index + num_submobs
-            sub_tex_mob.set_submobjects(self.submobjects[curr_index:new_index])
+            sub_tex_mob.set_submobjects(self[curr_index:new_index])
             new_submobjects.append(sub_tex_mob)
             curr_index = new_index
         self.set_submobjects(new_submobjects)
