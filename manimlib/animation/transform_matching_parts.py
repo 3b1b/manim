@@ -132,4 +132,4 @@ class TransformMatchingTex(TransformMatchingParts):
 
     @staticmethod
     def get_mobject_key(mobject):
-        return mobject.get_tex_string()
+        return mobject.get_tex()

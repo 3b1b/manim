@@ -132,7 +132,7 @@ class SingleStringTexMobject(SVGMobject):
             num_rights += 1
         return tex
 
-    def get_tex_string(self):
+    def get_tex(self):
         return self.tex_string
 
     def path_string_to_mobject(self, path_string):
@@ -222,7 +222,7 @@ class TexMobject(SingleStringTexMobject):
                 return tex1 == tex2
 
         return VGroup(*filter(
-            lambda m: isinstance(m, SingleStringTexMobject) and test(tex, m.get_tex_string()),
+            lambda m: isinstance(m, SingleStringTexMobject) and test(tex, m.get_tex()),
             self.submobjects
         ))
 
@@ -259,7 +259,7 @@ class TexMobject(SingleStringTexMobject):
             return self[start_index:stop_index]
 
     def sort_alphabetically(self):
-        self.submobjects.sort(key=lambda m: m.get_tex_string())
+        self.submobjects.sort(key=lambda m: m.get_tex())
 
     def set_bstroke(self, color=BLACK, width=4):
         self.set_stroke(color, width, background=True)

@@ -408,7 +408,7 @@ class LinearTransformationScene(VectorScene):
         else:
             label_mob.target_text = "%s(%s)" % (
                 transformation_name,
-                label_mob.get_tex_string()
+                label_mob.get_tex()
             )
         label_mob.vector = vector
         label_mob.kwargs = kwargs
