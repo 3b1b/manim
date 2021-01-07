@@ -5,6 +5,7 @@ import operator as op
 import random
 import sys
 import moderngl
+import logging
 
 import numpy as np
 
@@ -580,7 +581,7 @@ class Mobject(object):
 
     def replace(self, mobject, dim_to_match=0, stretch=False):
         if not mobject.get_num_points() and not mobject.submobjects:
-            raise Warning("Attempting to replace mobject with no points")
+            self.scale(0)
             return self
         if stretch:
             for i in range(self.dim):
