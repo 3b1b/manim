@@ -169,19 +169,18 @@ class TexMobject(SingleStringTexMobject):
 
     def break_up_tex_strings(self, tex_strings):
         # Separate out anything surrounded in double braces
-        pattern = "{{|}}"
+        patterns = ["{{", "}}"]
         # Separate out any strings specified in the isolate
         # or tex_to_color_map lists.
-        for ss in it.chain(self.isolate, self.tex_to_color_map.keys()):
-            pattern += "|({})".format(re.escape(ss))
-
+        patterns.extend([
+            "({})".format(re.escape(ss))
+            for ss in it.chain(self.isolate, self.tex_to_color_map.keys())
+        ])
+        pattern = "|".join(patterns)
         pieces = []
         for s in tex_strings:
-            pieces.extend(filter(
-                lambda s: bool(s),
-                re.split(pattern, s)
-            ))
-        return pieces
+            pieces.extend(re.split(pattern, s))
+        return list(filter(lambda s: s, pieces))
 
     def break_up_by_substrings(self):
         """
