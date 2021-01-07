@@ -16,6 +16,7 @@ class TransformMatchingParts(AnimationGroup):
     CONFIG = {
         "mobject_type": Mobject,
         "group_type": Group,
+        "transform_mismatches": False,
         "fade_transform_mismatches": False,
     }
 
@@ -41,6 +42,8 @@ class TransformMatchingParts(AnimationGroup):
         for key in set(target_map).difference(source_map):
             fade_target.add(target_map[key])
 
+        if self.transform_mismatches:
+            anims.append(Transform(fade_source, fade_target, **kwargs))
         if self.fade_transform_mismatches:
             anims.append(FadeTransformPieces(fade_source, fade_target, **kwargs))
         else:
