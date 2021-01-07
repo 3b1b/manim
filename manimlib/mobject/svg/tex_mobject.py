@@ -198,7 +198,8 @@ class TexMobject(SingleStringTexMobject):
         config = dict(self.CONFIG)
         config["alignment"] = ""
         for tex_string in self.tex_strings:
-            if len(tex_string.strip()) == 0:
+            tex_string = tex_string.strip()
+            if len(tex_string) == 0:
                 continue
             sub_tex_mob = SingleStringTexMobject(tex_string, **config)
             num_submobs = len(sub_tex_mob.submobjects)
