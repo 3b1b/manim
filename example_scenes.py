@@ -112,7 +112,7 @@ class SquareToCircle(Scene):
 class TexTransformExample(Scene):
     def construct(self):
         kw = {
-            "substrings_to_isolate": ["B", "C", "="]
+            "isolate": ["B", "C", "=", "(", ")"]
         }
         lines = VGroup(
             # Surrounding substrings with double braces
@@ -123,11 +123,10 @@ class TexTransformExample(Scene):
             TexMobject("{{A^2}} + {{B^2}} = {{C^2}}"),
             TexMobject("{{A^2}} = {{C^2}} - {{B^2}}"),
             # Alternatively, you can pass in the keyword argument
-            # substrings_to_isolate with a list of strings that
-            # should be broken out as their own submobject.  So
-            # both lines below are equivalent to what you'd get
-            # by wrapping every instance of "B", "C" and "=" with
-            # double braces
+            # isolate with a list of strings that should be out as
+            # their own submobject.  So both lines below are equivalent
+            # to what you'd get by wrapping every instance of "B", "C"
+            # "=", "(" and ")" with double braces
             TexMobject("{{A^2}} = (C + B)(C - B)", **kw),
             TexMobject("A = \\sqrt{(C + B)(C - B)}", **kw)
         )
@@ -139,6 +138,7 @@ class TexTransformExample(Scene):
                 "C": GREEN,
             })
 
+        play_kw = {"run_time": 2}
         self.add(lines[0])
         # The animation TransformMatchingTex will line up parts
         # of the source and target which have matching tex strings.
@@ -150,58 +150,65 @@ class TexTransformExample(Scene):
                 lines[0].copy(), lines[1],
                 path_arc=90 * DEGREES,
             ),
+            **play_kw
         )
         self.wait()
 
         # Now, we could try this again on the next line...
         self.play(
             TransformMatchingTex(lines[1].copy(), lines[2]),
+            **play_kw
         )
         self.wait()
         # ...and this looks nice enough, but since there's no tex
         # in lines[2] which matches "C^2" or "B^2", those terms fade
         # out to nothing while the C and B terms fade in from nothing.
-        # If, however, we want the C to go to C, and B to go to B, but
-        # we don't want to think about breaking up the tex string
-        # differently, we could instead try TransformMatchingShapes,
-        # which will line up parts of the source and target which
-        # have matching shapes, regardless of where they fall in the
-        # mobject family heirarchies.
-        self.play(FadeOut(lines[2]))
-        self.play(
-            TransformMatchingShapes(lines[1].copy(), lines[2]),
-        )
-        # That's almost what we want, but if you were finicky you
-        # might complain that all the exponents from lines[1] got
-        # to the 2 in A^2, since that's the only part of lines[2]
-        # which matches the shape of a 2.  In this case, one option
-        # would be to use TransformMatchingTex on the left-hand-side,
-        # but TransformMatchingShapes on the right-hand-side
-        eq_index = lines[1].index_of_part_by_tex("=")
+        # If, however, we want the C^2 to go to C, and B^2 to go to B,
+        # we can specify that with a key map.
         self.play(FadeOut(lines[2]))
         self.play(
             TransformMatchingTex(
-                lines[1][:eq_index].copy(),
-                lines[2][:eq_index],
+                lines[1].copy(), lines[2],
+                key_map={
+                    "C^2": "C",
+                    "B^2": "B",
+                }
             ),
-            TransformMatchingShapes(
-                lines[1][eq_index:].copy(),
-                lines[2][eq_index:],
-            ),
+            **play_kw
         )
         self.wait()
 
         # And to finish off, a simple TransformMatchingShapes will do,
         # though maybe we really want that exponent from A^2 to turn
-        # into the square root, so we set fade_transform_mismatches to
-        # True so that parts with mis-matching shapes transform into
-        # each other.
+        # into the square root, we could use a key_map again.  Or,
+        # if we set fade_transform_mismatches to True, then it will
+        # line up mismatching submobjects and have them transform
+        # into each other
         self.play(
-            TransformMatchingShapes(
+            TransformMatchingTex(
                 lines[2].copy(), lines[3],
                 fade_transform_mismatches=True,
             ),
+            **play_kw
         )
+        self.wait(3)
+        self.play(FadeOut(lines, RIGHT))
+
+        # Alternatively, if you don't want to think about breaking up
+        # the tex strings deliberately, you can TransformMatchingShapes,
+        # which will try to line up all pieces of a source mobject with
+        # those of a target, regardless of the submobject hierarchy in
+        # each one, according to whether those pieces have the same
+        # shape (as best it can).
+        source = TextMobject("the morse code")
+        target = TextMobject("here come dots")
+
+        self.play(Write(source))
+        self.wait()
+        kw = {"run_time": 3, "path_arc": PI / 2}
+        self.play(TransformMatchingShapes(source, target, **kw))
+        self.wait()
+        self.play(TransformMatchingShapes(target, source, **kw))
         self.wait()
 
 
