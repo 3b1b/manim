@@ -18,25 +18,44 @@ class TransformMatchingParts(AnimationGroup):
         "group_type": Group,
         "transform_mismatches": False,
         "fade_transform_mismatches": False,
+        "key_map": dict(),
     }
 
     def __init__(self, mobject, target_mobject, **kwargs):
         digest_config(self, kwargs)
-        assert(isinstance(mobject, VMobject) and isinstance(target_mobject, VMobject))
+        assert(isinstance(mobject, self.mobject_type))
+        assert(isinstance(target_mobject, self.mobject_type))
         source_map = self.get_shape_map(mobject)
         target_map = self.get_shape_map(target_mobject)
 
-        transform_source = VGroup()
-        transform_target = VGroup()
-        fade_source = VGroup()
-        fade_target = VGroup()
-
+        # Create two mobjects whose submobjects all match each other
+        # according to whatever keys are used for source_map and
+        # target_map
+        transform_source = self.group_type()
+        transform_target = self.group_type()
         kwargs["final_alpha_value"] = 0
         for key in set(source_map).intersection(target_map):
             transform_source.add(source_map[key])
             transform_target.add(target_map[key])
         anims = [Transform(transform_source, transform_target, **kwargs)]
+        # User can manually specify when one part should transform
+        # into another despite not matching by using key_map
+        key_mapped_source = self.group_type()
+        key_mapped_target = self.group_type()
+        for key1, key2 in self.key_map.items():
+            if key1 in source_map and key2 in target_map:
+                key_mapped_source.add(source_map[key1])
+                key_mapped_target.add(target_map[key2])
+                source_map.pop(key1, None)
+                target_map.pop(key2, None)
+        if len(key_mapped_source) > 0:
+            anims.append(FadeTransformPieces(
+                key_mapped_source,
+                key_mapped_target,
+            ))
 
+        fade_source = self.group_type()
+        fade_target = self.group_type()
         for key in set(source_map).difference(target_map):
             fade_source.add(source_map[key])
         for key in set(target_map).difference(source_map):
@@ -75,11 +94,13 @@ class TransformMatchingParts(AnimationGroup):
         scene.remove(self.to_remove)
         scene.add(self.to_add)
 
-    def get_mobject_parts(self, mobject):
+    @staticmethod
+    def get_mobject_parts(mobject):
         # To be implemented in subclass
         return mobject
 
-    def get_mobject_key(self, mobject):
+    @staticmethod
+    def get_mobject_key(mobject):
         # To be implemented in subclass
         return hash(mobject)
 
@@ -90,10 +111,12 @@ class TransformMatchingShapes(TransformMatchingParts):
         "group_type": VGroup,
     }
 
-    def get_mobject_parts(self, mobject):
+    @staticmethod
+    def get_mobject_parts(mobject):
         return mobject.family_members_with_points()
 
-    def get_mobject_key(self, mobject):
+    @staticmethod
+    def get_mobject_key(mobject):
         return hash(mobject.get_triangulation().tobytes())
 
 
@@ -103,8 +126,10 @@ class TransformMatchingTex(TransformMatchingParts):
         "group_type": VGroup,
     }
 
-    def get_mobject_parts(self, mobject):
+    @staticmethod
+    def get_mobject_parts(mobject):
         return mobject.submobjects
 
-    def get_mobject_key(self, mobject):
+    @staticmethod
+    def get_mobject_key(mobject):
         return mobject.get_tex_string()
