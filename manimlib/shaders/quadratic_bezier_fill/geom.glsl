@@ -29,9 +29,8 @@ out vec2 uv_coords;
 out vec2 uv_b2;
 out float bezier_degree;
 
-// To my knowledge, there is no notion of #include for shaders,
-// so to share functionality between this and others, the caller
-// in manim replaces this line with the contents of named file
+
+// Analog of import for manim only
 #INSERT quadratic_bezier_geometry_functions.glsl
 #INSERT get_gl_Position.glsl
 #INSERT get_unit_normal.glsl

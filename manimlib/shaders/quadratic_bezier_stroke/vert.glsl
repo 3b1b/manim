@@ -23,9 +23,6 @@ out vec4 v_color;
 
 const float STROKE_WIDTH_CONVERSION = 0.01;
 
-// To my knowledge, there is no notion of #include for shaders,
-// so to share functionality between this and others, the caller
-// replaces this line with the contents of named file
 #INSERT position_point_into_frame.glsl
 
 void main(){

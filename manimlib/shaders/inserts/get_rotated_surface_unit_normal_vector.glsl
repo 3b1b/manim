@@ -1,4 +1,5 @@
-// Only inlucde in an environment with to_screen_space defined
+// Assumes the following uniforms exist in the surrounding context:
+// uniform mat4 to_screen_space;
 
 vec3 get_rotated_surface_unit_normal_vector(vec3 point, vec3 du_point, vec3 dv_point){
     // normal = get_unit_normal(point, du_point, dv_point);

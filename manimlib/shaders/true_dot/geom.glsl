@@ -18,7 +18,6 @@ out float radius;
 out vec2 center;
 out vec2 point;
 
-// Imports
 #INSERT get_gl_Position.glsl
 
 void main() {

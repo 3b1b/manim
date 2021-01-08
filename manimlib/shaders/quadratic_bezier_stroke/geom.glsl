@@ -47,9 +47,6 @@ const float BEVEL_JOINT = 2;
 const float MITER_JOINT = 3;
 
 
-// To my knowledge, there is no notion of #include for shaders,
-// so to share functionality between this and others, the caller
-// replaces this line with the contents of named file
 #INSERT quadratic_bezier_geometry_functions.glsl
 #INSERT get_gl_Position.glsl
 #INSERT get_unit_normal.glsl

@@ -78,9 +78,7 @@ float modify_distance_for_endpoints(vec2 p, float dist, float t){
     return dist;
 }
 
-// To my knowledge, there is no notion of #include for shaders,
-// so to share functionality between this and others, the caller
-// replaces this line with the contents of named file
+
 #INSERT quadratic_bezier_distance.glsl
 
 
@@ -92,6 +90,4 @@ void main() {
 
     frag_color = color;
     frag_color.a *= smoothstep(0.5, -0.5, signed_dist / uv_anti_alias_width);
-
-    // frag_color.a += 0.3;
 }

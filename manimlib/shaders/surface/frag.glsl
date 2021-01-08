@@ -1,8 +1,5 @@
 #version 330
 
-// in vec4 v_color;
-// out vec4 frag_color;
-
 uniform vec3 light_source_position;
 uniform float gloss;
 uniform float shadow;

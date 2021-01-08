@@ -1,6 +1,3 @@
-// This file is not a shader, it's just a set of
-// functions meant to be inserted into other shaders.
-
 float cross2d(vec2 v, vec2 w){
     return v.x * w.y - w.x * v.y;
 }

@@ -14,9 +14,7 @@ out vec4 v_color;
 // out float v_fill_all;
 out float v_vert_index;
 
-// To my knowledge, there is no notion of #include for shaders,
-// so to share functionality between this and others, the caller
-// replaces this line with the contents of named file
+// Analog of import for manim only
 #INSERT position_point_into_frame.glsl
 
 void main(){

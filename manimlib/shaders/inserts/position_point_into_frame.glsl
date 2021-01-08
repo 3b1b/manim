@@ -1,4 +1,4 @@
-// Must be used in an environment with the following uniforms:
+// Assumes the following uniforms exist in the surrounding context:
 // uniform mat4 to_screen_space;
 // uniform float is_fixed_in_frame;
 

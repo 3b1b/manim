@@ -1,6 +1,3 @@
-// This file is not a shader, it's just a set of
-// functions meant to be inserted into other shaders.
-
 // Must be inserted in a context with a definition for modify_distance_for_endpoints
 
 // All of this is with respect to a curve that's been rotated/scaled
