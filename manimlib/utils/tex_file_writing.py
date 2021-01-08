@@ -128,8 +128,10 @@ def dvi_to_svg(dvi_file, regen_if_exists=False):
 # TODO, perhaps this should live elsewhere
 @contextmanager
 def display_during_execution(message):
+    # Only show top line
+    to_print = message.split("\n")[0]
     try:
-        print(message, end="\r")
+        print(to_print, end="\r")
         yield
     finally:
-        print(" " * len(message), end="\r")
+        print(" " * len(to_print), end="\r")
