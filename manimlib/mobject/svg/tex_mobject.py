@@ -8,7 +8,6 @@ from manimlib.mobject.geometry import Line
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.svg.svg_mobject import VMobjectFromSVGPathstring
 from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.mobject.types.vectorized_mobject import VectorizedPoint
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.tex_file_writing import tex_to_svg_file
 from manimlib.utils.tex_file_writing import get_tex_config
