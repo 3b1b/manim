@@ -247,8 +247,8 @@ class NumberPlane(Axes):
         "make_smooth_after_applying_functions": True,
     }
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, x_range=None, y_range=None, **kwargs):
+        super().__init__(x_range, y_range, **kwargs)
         self.init_background_lines()
 
     def init_background_lines(self):
