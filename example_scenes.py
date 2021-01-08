@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from manimlib.imports import *
 
 # To watch one of these scenes, run the following:
@@ -32,11 +30,15 @@ class OpeningManimExample(Scene):
         )
         self.wait()
 
-        fade_comment = TextMobject("""
-            You probably don't want to over use\\\\
+        fade_comment = TextMobject(
+            """
+            You probably don't want to overuse\\\\
             Transforms, though, a simple fade often\\\\
             looks nicer.
-        """)
+            """,
+            font_size=36,
+            color=GREY_B,
+        )
         fade_comment.next_to(
             transform_title, DOWN,
             buff=LARGE_BUFF,
@@ -45,7 +47,7 @@ class OpeningManimExample(Scene):
         self.play(FadeIn(fade_comment, shift=DOWN))
         self.wait(3)
 
-        grid = NumberPlane()
+        grid = NumberPlane((-10, 10), (-5, 5))
         grid_title = TextMobject(
             "But manim is for illustrating math, not text",
         )
@@ -61,19 +63,35 @@ class OpeningManimExample(Scene):
         )
         self.wait()
 
+        matrix = [[1, 1], [0, 1]]
+        linear_transform_title = VGroup(
+            TextMobject("This is what the matrix"),
+            IntegerMatrix(matrix, include_background_rectangle=True),
+            TextMobject("looks like")
+        )
+        linear_transform_title.arrange(RIGHT)
+        linear_transform_title.to_edge(UP)
+
+        self.play(
+            FadeOut(grid_title),
+            FadeIn(linear_transform_title),
+        )
+        self.play(grid.apply_matrix, matrix, run_time=3)
+        self.wait()
+
         grid_transform_title = TextMobject(
-            "This is a non-linear function applied to the grid"
+            "And this is a nonlinear transformation"
         )
         grid_transform_title.set_stroke(BLACK, 5, background=True)
         grid_transform_title.to_edge(UP)
-        grid.prepare_for_nonlinear_transform()
+        grid.prepare_for_nonlinear_transform(100)
         self.play(
             ApplyPointwiseFunction(
                 lambda p: p + np.array([np.sin(p[1]), np.sin(p[0]), 0]),
                 grid,
                 run_time=5,
             ),
-            FadeOut(grid_title),
+            FadeOut(linear_transform_title),
             FadeIn(grid_transform_title),
         )
         self.wait()
@@ -261,8 +279,8 @@ class SurfaceExample(Scene):
         # the light.  These can be either urls, or paths to a local file
         # in whatever you've set as the iamge directory in
         # the custom_defaults.yml file
-        day_texture = "https://upload.wikimedia.org/wikipedia/commons/4/4d/Whole_world_-_land_and_oceans.jpg"
-        night_texture = "https://upload.wikimedia.org/wikipedia/commons/b/ba/The_earth_at_night.jpg"
+        day_texture = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Whole_world_-_land_and_oceans.jpg/1280px-Whole_world_-_land_and_oceans.jpg"
+        night_texture = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/The_earth_at_night.jpg/1280px-The_earth_at_night.jpg"
         surfaces = [
             TexturedSurface(surface, day_texture, night_texture)
             for surface in [sphere, torus1, torus2]
