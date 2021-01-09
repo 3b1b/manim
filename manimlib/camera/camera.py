@@ -26,7 +26,7 @@ class CameraFrame(Mobject):
         "center_point": ORIGIN,
         # Theta, phi, gamma
         "euler_angles": [0, 0, 0],
-        "focal_distance": 15,
+        "focal_distance": 2,
     }
 
     def init_points(self):
@@ -118,7 +118,7 @@ class CameraFrame(Mobject):
         return self.points[0]
 
     def get_focal_distance(self):
-        return self.focal_distance
+        return self.focal_distance * self.get_height()
 
     def interpolate(self, frame1, frame2, alpha, path_func):
         self.euler_angles[:] = interpolate(frame1.euler_angles, frame2.euler_angles, alpha)
