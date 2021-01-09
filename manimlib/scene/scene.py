@@ -19,7 +19,6 @@ from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import restructure_list_to_exclude_certain_family_members
-from manimlib.utils.space_ops import get_norm
 from manimlib.window import Window
 
 
