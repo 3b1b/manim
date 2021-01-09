@@ -5,7 +5,6 @@ import operator as op
 import random
 import sys
 import moderngl
-import logging
 
 import numpy as np
 
