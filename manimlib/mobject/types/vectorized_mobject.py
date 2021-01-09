@@ -62,6 +62,7 @@ class VMobject(Mobject):
         # "fill_frag_shader_file": "quadratic_bezier_fill_frag.glsl",
         # Could also be Bevel, Miter, Round
         "joint_type": "auto",
+        "flat_stroke": True,
         "render_primitive": moderngl.TRIANGLES,
         "triangulation_locked": False,
         "fill_dtype": [
@@ -106,6 +107,7 @@ class VMobject(Mobject):
             background=self.draw_stroke_behind_fill,
         )
         self.set_gloss(self.gloss)
+        self.set_flat_stroke(self.flat_stroke)
         return self
 
     def generate_rgba_array(self, color, opacity):
@@ -335,6 +337,16 @@ class VMobject(Mobject):
         if self.has_fill():
             return self.get_fill_opacity()
         return self.get_stroke_opacity()
+
+    def set_flat_stroke(self, flat_stroke=True, family=True):
+        self.flat_stroke = flat_stroke
+        if family:
+            for submob in self.submobjects:
+                submob.set_flat_stroke(flat_stroke, family)
+        return self
+
+    def get_flat_stroke(self):
+        return self.flat_stroke
 
     # TODO, this currently does nothing
     def color_using_background_image(self, background_image_file):
@@ -970,6 +982,7 @@ class VMobject(Mobject):
         }
         result = super().get_shader_uniforms()
         result["joint_type"] = j_map[self.joint_type]
+        result["flat_stroke"] = float(self.flat_stroke)
         return result
 
     def get_stroke_shader_data(self):
