@@ -5,6 +5,7 @@ __all__ = ["Animation", "Wait"]
 
 
 import typing
+from typing import Union
 from copy import deepcopy
 
 import numpy as np
@@ -13,7 +14,7 @@ if typing.TYPE_CHECKING:
     from manim.scene.scene import Scene
 
 from .. import logger
-from ..mobject.mobject import Mobject
+from ..mobject.mobject import Mobject, _AnimationBuilder
 from ..utils.rate_functions import smooth
 
 DEFAULT_ANIMATION_RUN_TIME: float = 1.0
@@ -35,7 +36,7 @@ class Animation:
         name: str = None,
         remover: bool = False,  # remove a mobject from the screen?
         suspend_mobject_updating: bool = True,
-        **kwargs
+        **kwargs,
     ) -> None:
         self._typecheck_input(mobject)
         self.run_time = run_time
@@ -66,7 +67,10 @@ class Animation:
     def __str__(self) -> str:
         if self.name:
             return self.name
-        return self.__class__.__name__ + str(self.mobject)
+        return f"{self.__class__.__name__}({str(self.mobject)})"
+
+    def __repr__(self) -> str:
+        return str(self)
 
     def begin(self) -> None:
         # This is called right as an animation is being
@@ -189,6 +193,42 @@ class Animation:
 
     def is_remover(self) -> bool:
         return self.remover
+
+
+def prepare_animation(anim: Union["Animation", "_AnimationBuilder"]) -> "Animation":
+    r"""Returns either an unchanged animation, or the animation built
+    from a passed animation factory.
+
+    Examples
+    --------
+
+    ::
+
+        >>> from manim import Square, FadeIn
+        >>> s = Square()
+        >>> prepare_animation(FadeIn(s))
+        FadeIn(Square)
+
+    ::
+
+        >>> prepare_animation(s.animate.scale(2).rotate(42))
+        _MethodAnimation(Square)
+
+    ::
+
+        >>> prepare_animation(42)
+        Traceback (most recent call last):
+        ...
+        TypeError: Object 42 cannot be converted to an animation
+
+    """
+    if isinstance(anim, _AnimationBuilder):
+        return anim.build()
+
+    if isinstance(anim, Animation):
+        return anim
+
+    raise TypeError(f"Object {anim} cannot be converted to an animation")
 
 
 class Wait(Animation):

@@ -16,7 +16,7 @@ from tqdm import tqdm
 import numpy as np
 
 from .. import config, logger
-from ..animation.animation import Animation, Wait
+from ..animation.animation import Animation, Wait, prepare_animation
 from ..animation.transform import MoveToTarget, _MethodAnimation
 from ..camera.camera import Camera
 from ..constants import *
@@ -618,17 +618,18 @@ class Scene(Container):
         """
         animations = []
         for arg in args:
-            if isinstance(arg, _AnimationBuilder):
-                animations.append(arg.build())
-            elif isinstance(arg, Animation):
-                animations.append(arg)
-            elif inspect.ismethod(arg):
-                raise TypeError(
-                    "Passing Mobject methods to Scene.play is no longer supported. Use "
-                    "Mobject.animate instead."
-                )
-            else:
-                raise TypeError(f"Unexpected argument {arg} passed to Scene.play().")
+            try:
+                animations.append(prepare_animation(arg))
+            except TypeError:
+                if inspect.ismethod(arg):
+                    raise TypeError(
+                        "Passing Mobject methods to Scene.play is no longer"
+                        " supported. Use Mobject.animate instead."
+                    )
+                else:
+                    raise TypeError(
+                        f"Unexpected argument {arg} passed to Scene.play()."
+                    )
 
         for animation in animations:
             for k, v in kwargs.items():

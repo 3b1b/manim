@@ -3,7 +3,7 @@ import typing
 
 import numpy as np
 
-from ..animation.animation import Animation
+from ..animation.animation import Animation, prepare_animation
 from ..mobject.mobject import Group, Mobject
 from ..scene.scene import Scene
 from ..utils.bezier import interpolate
@@ -29,7 +29,7 @@ class AnimationGroup(Animation):
         lag_ratio: float = 0,
         **kwargs
     ) -> None:
-        self.animations = animations
+        self.animations = [prepare_animation(anim) for anim in animations]
         self.group = group
         if self.group is None:
             self.group = Group(
