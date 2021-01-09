@@ -216,7 +216,8 @@ void main() {
     for(int i = 0; i < 3; i++){
         float sf = perspective_scale_factor(controls[i].z, focal_distance);
         if(bool(flat_stroke)){
-            sf *= abs(dot(v_global_unit_normal[i], vec3(0.0, 0.0, 1.0)));
+            vec3 to_cam = normalize(vec3(0.0, 0.0, focal_distance) - controls[i]);
+            sf *= abs(dot(v_global_unit_normal[i], to_cam));
         }
         scaled_strokes[i] = v_stroke_width[i] * sf;
     }
