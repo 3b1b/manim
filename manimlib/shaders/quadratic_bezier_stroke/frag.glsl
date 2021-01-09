@@ -44,7 +44,9 @@ float modify_distance_for_endpoints(vec2 p, float dist, float t){
             // Dist for intersection of two lines
             float bevel_d = max(abs(p.y), abs((rot * p).y));
             // Dist for union of this intersection with the real curve
-            return min(dist, bevel_d);
+            // intersected with radius 2 away from curve to smooth out
+            // really sharp corners
+            return max(min(dist, bevel_d), dist / 2);
         }
         // Otherwise, start will be rounded off
     }else if(t == 1){
@@ -71,7 +73,7 @@ float modify_distance_for_endpoints(vec2 p, float dist, float t){
                 abs(cross2d(p - uv_b2, v21_unit)),
                 abs(cross2d((rot * (p - uv_b2)), v21_unit))
             );
-            return min(dist, bevel_d);
+            return max(min(dist, bevel_d), dist / 2);
         }
         // Otherwise, end will be rounded off
     }
