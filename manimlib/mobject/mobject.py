@@ -1001,8 +1001,11 @@ class Mobject(object):
 
     def arrange_in_grid(self, n_rows=None, n_cols=None,
                         buff=None,
-                        h_buff=MED_LARGE_BUFF,
-                        v_buff=MED_LARGE_BUFF,
+                        h_buff=None,
+                        v_buff=None,
+                        buff_ratio=None,
+                        h_buff_ratio=0.5,
+                        v_buff_ratio=0.5,
                         aligned_edge=ORIGIN,
                         fill_rows_first=True):
         submobs = self.submobjects
@@ -1012,9 +1015,18 @@ class Mobject(object):
             n_rows = len(submobs) // n_cols
         if n_cols is None:
             n_cols = len(submobs) // n_rows
+
         if buff is not None:
             h_buff = buff
             v_buff = buff
+        else:
+            if buff_ratio is not None:
+                v_buff_ratio = buff_ratio
+                h_buff_ratio = buff_ratio
+            if h_buff is None:
+                h_buff = h_buff_ratio * self[0].get_width()
+            if v_buff is None:
+                v_buff = v_buff_ratio * self[0].get_height()
 
         x_unit = h_buff + max([sm.get_width() for sm in submobs])
         y_unit = v_buff + max([sm.get_height() for sm in submobs])
@@ -1028,6 +1040,19 @@ class Mobject(object):
             sm.shift(x * x_unit * RIGHT + y * y_unit * DOWN)
         self.center()
         return self
+
+    def get_grid(self, n_rows, n_cols, height=None, **kwargs):
+        """
+        Returns a new mobject containing multiple copies of this one
+        arranged in a grid
+        """
+        grid = self.get_group_class()(
+            *(self.copy() for n in range(n_rows * n_cols))
+        )
+        grid.arrange_in_grid(n_rows, n_cols, **kwargs)
+        if height is not None:
+            grid.set_height(height)
+        return grid
 
     def sort(self, point_to_num_func=lambda p: p[0], submob_func=None):
         if submob_func is not None:
