@@ -11,7 +11,6 @@ in float vert_index;
 out vec3 bp;  // Bezier control point
 out vec3 v_global_unit_normal;
 out vec4 v_color;
-// out float v_fill_all;
 out float v_vert_index;
 
 // Analog of import for manim only
@@ -21,6 +20,5 @@ void main(){
     bp = position_point_into_frame(point);
     v_global_unit_normal = normalize(to_screen_space * vec4(unit_normal, 0)).xyz;
     v_color = color;
-    // v_fill_all = fill_all;
     v_vert_index = vert_index;
 }

@@ -4,10 +4,12 @@ layout (triangles) in;
 layout (triangle_strip, max_vertices = 5) out;
 
 uniform float anti_alias_width;
+
 // Needed for get_gl_Position
 uniform vec2 frame_shape;
 uniform float focal_distance;
 uniform float is_fixed_in_frame;
+// Needed for add_light
 uniform vec3 light_source_position;
 uniform float gloss;
 uniform float shadow;
@@ -15,7 +17,6 @@ uniform float shadow;
 in vec3 bp[3];
 in vec3 v_global_unit_normal[3];
 in vec4 v_color[3];
-// in float v_fill_all[3];
 in float v_vert_index[3];
 
 out vec4 color;
@@ -71,10 +72,10 @@ void emit_pentagon(vec3[3] points, vec3 normal){
     vec3 p0_perp = cross(t01, normal);
     vec3 p2_perp = cross(t12, normal);
 
-    bool fill_in = orientation > 0;
+    bool fill_inside = orientation > 0;
     float aaw = anti_alias_width;
     vec3 corners[5];
-    if(fill_in){
+    if(fill_inside){
         // Note, straight lines will also fall into this case, and since p0_perp and p2_perp
         // will point to the right of the curve, it's just what we want
         corners = vec3[5](
