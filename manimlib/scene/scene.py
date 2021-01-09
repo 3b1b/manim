@@ -19,6 +19,7 @@ from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import restructure_list_to_exclude_certain_family_members
+from manimlib.utils.space_ops import get_norm
 from manimlib.window import Window
 
 
@@ -519,11 +520,6 @@ class Scene(object):
         if self.window.is_key_pressed(ord("d")):
             frame.increment_theta(-d_point[0])
             frame.increment_phi(d_point[1])
-        elif self.window.is_key_pressed(ord("s")):
-            transform = frame.get_inverse_camera_position_matrix()
-            shift = np.dot(transform[:3, :3].T, d_point)
-            shift *= frame.get_height()
-            frame.shift(-shift)
 
     def on_mouse_press(self, point, button, mods):
         pass
@@ -532,9 +528,15 @@ class Scene(object):
         pass
 
     def on_mouse_scroll(self, point, offset):
+        frame = self.camera.frame
         if self.window.is_key_pressed(ord("z")):
             factor = 1 + np.arctan(10 * offset[1])
-            self.camera.frame.scale(factor, about_point=point)
+            frame.scale(factor, about_point=point)
+        elif self.window.is_key_pressed(ord("s")):
+            transform = frame.get_inverse_camera_position_matrix()
+            shift = np.dot(transform[:3, :3].T, offset)
+            shift *= 10 * frame.get_height()
+            frame.shift(-shift)
 
     def on_key_release(self, symbol, modifiers):
         pass
