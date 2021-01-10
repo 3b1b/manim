@@ -160,7 +160,7 @@ def get_colormap_code(colormap="viridis"):
         for n in np.linspace(0, len(rgbs) - 1, 9)
     ]
     data = ",".join(
-        "vec3({}, {}, {}),".format(*color)
+        "vec3({}, {}, {})".format(*color)
         for color in sparse_rgbs
     )
     return f"vec3[9]({data})"
