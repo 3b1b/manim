@@ -7,6 +7,7 @@ dependencies:
   - pip
   - pip:
     - pyreadline
+    - matplotlib
     - mapbox-earcut
     - moderngl_window
     - screeninfo

@@ -3,8 +3,8 @@ import re
 import moderngl
 import numpy as np
 import copy
+from matplotlib.cm import get_cmap
 
-from manimlib.constants import COLORMAPS
 from manimlib.utils.directories import get_shader_dir
 from manimlib.utils.file_ops import find_file
 
@@ -122,6 +122,8 @@ class ShaderWrapper(object):
         return self
 
 
+# Helper functions related to shader code
+
 def get_shader_code_from_file(filename):
     if not filename:
         return None
@@ -153,8 +155,9 @@ def get_shader_code_from_file(filename):
 
 def get_colormap_code(colormap="viridis"):
     code = """
-        const vec3[9] COLOR_MAP_DATA = vec3[9](// INSERT DATA //);
-
+        const vec3[9] COLOR_MAP_DATA = vec3[9](
+            // INSERT DATA //
+        );
         vec3 colormap(float value, float min_val, float max_val){
             float alpha = smoothstep(min_val, max_val, value);
             int disc_alpha = min(int(alpha * 8), 7);
@@ -165,10 +168,14 @@ def get_colormap_code(colormap="viridis"):
             );
         }
     """
-    data = COLORMAPS[colormap]
+    colors = get_cmap(colormap).colors
+    sparse_colors = [
+        colors[int(n)]
+        for n in np.linspace(0, len(colors) - 1, 9)
+    ]
     insertion = "".join(
-        "vec3({}, {}, {}),".format(*vect)
-        for vect in data
+        "vec3({}, {}, {}),".format(*color)
+        for color in sparse_colors
     )
     insertion = insertion[:-1]  # Remove final comma
     return code.replace("// INSERT DATA //", insertion)
