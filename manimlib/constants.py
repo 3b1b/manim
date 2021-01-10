@@ -136,3 +136,17 @@ PALETTE = list(COLOR_MAP.values())
 locals().update(COLOR_MAP)
 for name in [s for s in list(COLOR_MAP.keys()) if s.endswith("_C")]:
     locals()[name.replace("_C", "")] = locals()[name]
+
+COLORMAPS = {
+    # From https://bids.github.io/colormap/
+    "viridis": [[0.267004, 0.004874, 0.329415],
+                [0.279574, 0.170599, 0.479997],
+                [0.231674, 0.318106, 0.544834],
+                [0.174274, 0.445044, 0.557792],
+                [0.128729, 0.563265, 0.551229],
+                [0.153894, 0.680203, 0.504172],
+                [0.360741, 0.785964, 0.387814],
+                [0.668054, 0.861999, 0.196293],
+                [0.993248, 0.906157, 0.143936]],
+    # TODO, add other options based on colormap
+}

@@ -21,6 +21,7 @@ from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotation_matrix_transpose
 from manimlib.shader_wrapper import ShaderWrapper
+from manimlib.shader_wrapper import get_colormap_code
 
 
 # TODO: Explain array_attrs
@@ -1242,7 +1243,52 @@ class Mobject(object):
         self.depth_test = False
         return self
 
-    # For shaders
+    # Shader code manipulation
+    def replace_shader_code(self, old, new):
+        for wrapper in self.get_shader_wrapper_list():
+            wrapper.replace_code(old, new)
+        return self
+
+    def refresh_shader_code(self):
+        for wrapper in self.get_shader_wrapper_list():
+            wrapper.init_program_code()
+            wrapper.refresh_id()
+        return self
+
+    def set_color_by_code(self, glsl_code):
+        """
+        Takes a snippet of code and inserts it into a
+        context which has the following variables:
+        vec4 color, vec3 point, vec3 unit_normal.
+        The code should change the color variable
+        """
+        self.replace_shader_code(
+            "///// INSERT COLOR FUNCTION HERE /////",
+            glsl_code
+        )
+        return self
+
+    def set_color_by_xyz_func(self, glsl_snippet,
+                              min_value=-5.0, max_value=5.0,
+                              colormap="viridis"):
+        """
+        Pass in a glsl expression in terms of x, y and z which returns
+        a float.
+        """
+        for char in "xyz":
+            glsl_snippet = glsl_snippet.replace(char, "point." + char)
+        self.replace_shader_code(
+            "///// INSERT COLOR_MAP FUNCTION HERE /////",
+            get_colormap_code(colormap)
+        )
+        self.set_color_by_code(
+            "color.rgb = colormap({}, {}, {});".format(
+                glsl_snippet, float(min_value), float(max_value)
+            )
+        )
+        return self
+
+    # For shader data
     def init_shader_data(self):
         self.shader_data = np.zeros(len(self.points), dtype=self.shader_dtype)
         self.shader_indices = None

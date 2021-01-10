@@ -4,6 +4,7 @@ import moderngl
 import numpy as np
 import copy
 
+from manimlib.constants import COLORMAPS
 from manimlib.utils.directories import get_shader_dir
 from manimlib.utils.file_ops import find_file
 
@@ -32,8 +33,8 @@ class ShaderWrapper(object):
         self.texture_paths = texture_paths or dict()
         self.depth_test = depth_test
         self.render_primitive = str(render_primitive)
-        self.id = self.create_id()
-        self.program_id = self.create_program_id()
+        self.init_program_code()
+        self.refresh_id()
 
     def copy(self):
         result = copy.copy(self)
@@ -49,7 +50,8 @@ class ShaderWrapper(object):
     def is_valid(self):
         return all([
             self.vert_data is not None,
-            self.shader_folder,
+            self.program_code["vertex_shader"] is not None,
+            self.program_code["fragment_shader"] is not None,
         ])
 
     def get_id(self):
@@ -61,7 +63,7 @@ class ShaderWrapper(object):
     def create_id(self):
         # A unique id for a shader
         return "|".join(map(str, [
-            self.shader_folder,
+            self.program_id,
             self.uniforms,
             self.texture_paths,
             self.depth_test,
@@ -69,22 +71,37 @@ class ShaderWrapper(object):
         ]))
 
     def refresh_id(self):
+        self.program_id = self.create_program_id()
         self.id = self.create_id()
 
     def create_program_id(self):
-        return self.shader_folder
+        return hash("".join((
+            self.program_code[f"{name}_shader"] or ""
+            for name in ("vertex", "geometry", "fragment")
+        )))
 
-    def get_program_code(self):
+    def init_program_code(self):
         def get_code(name):
             return get_shader_code_from_file(
                 os.path.join(self.shader_folder, f"{name}.glsl")
             )
 
-        return {
+        self.program_code = {
             "vertex_shader": get_code("vert"),
             "geometry_shader": get_code("geom"),
             "fragment_shader": get_code("frag"),
         }
+
+    def get_program_code(self):
+        return self.program_code
+
+    def replace_code(self, old, new):
+        code_map = self.program_code
+        for (name, code) in code_map.items():
+            if code_map[name] is None:
+                continue
+            code_map[name] = re.sub(old, new, code_map[name])
+        self.refresh_id()
 
     def combine_with(self, *shader_wrappers):
         # Assume they are of the same type
@@ -132,3 +149,26 @@ def get_shader_code_from_file(filename):
         )
         result = result.replace(line, inserted_code)
     return result
+
+
+def get_colormap_code(colormap="viridis"):
+    code = """
+        const vec3[9] COLOR_MAP_DATA = vec3[9](// INSERT DATA //);
+
+        vec3 colormap(float value, float min_val, float max_val){
+            float alpha = smoothstep(min_val, max_val, value);
+            int disc_alpha = min(int(alpha * 8), 7);
+            return mix(
+                COLOR_MAP_DATA[disc_alpha],
+                COLOR_MAP_DATA[disc_alpha + 1],
+                8.0 * alpha - disc_alpha
+            );
+        }
+    """
+    data = COLORMAPS[colormap]
+    insertion = "".join(
+        "vec3({}, {}, {}),".format(*vect)
+        for vect in data
+    )
+    insertion = insertion[:-1]  # Remove final comma
+    return code.replace("// INSERT DATA //", insertion)

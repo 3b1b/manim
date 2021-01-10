@@ -1,12 +1,23 @@
-vec4 add_light(vec4 raw_color, vec3 point, vec3 unit_normal, vec3 light_coords, float gloss, float shadow){
-    if(gloss == 0.0 && shadow == 0.0) return raw_color;
+///// INSERT COLOR_MAP FUNCTION HERE /////
+
+vec4 add_light(vec4 color,
+               vec3 point,
+               vec3 unit_normal,
+               vec3 light_coords,
+               float gloss,
+               float shadow){
+    ///// INSERT COLOR FUNCTION HERE /////
+    // The line above may be replaced by arbitrary code snippets, as per
+    // the method Mobject.set_color_by_code
+    if(gloss == 0.0 && shadow == 0.0) return color;
 
     // TODO, do we actually want this?  It effectively treats surfaces as two-sided
     if(unit_normal.z < 0){
-        unit_normal *= -1;
+            unit_normal *= -1;
     }
 
-    float camera_distance = 6;  // TODO, read this in as a uniform?
+    // TODO, read this in as a uniform?
+    float camera_distance = 6;  
     // Assume everything has already been rotated such that camera is in the z-direction
     vec3 to_camera = vec3(0, 0, camera_distance) - point;
     vec3 to_light = light_coords - point;
@@ -16,7 +27,7 @@ vec4 add_light(vec4 raw_color, vec3 point, vec3 unit_normal, vec3 light_coords, 
     float dp2 = dot(normalize(to_light), unit_normal);
     float darkening = mix(1, max(dp2, 0), shadow);
     return vec4(
-        darkening * mix(raw_color.rgb, vec3(1.0), shine),
-        raw_color.a
+            darkening * mix(color.rgb, vec3(1.0), shine),
+            color.a
     );
 }
