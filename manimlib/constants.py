@@ -53,6 +53,13 @@ DEGREES = TAU / 360
 
 FFMPEG_BIN = "ffmpeg"
 
+JOINT_TYPE_MAP = {
+    "auto": 0,
+    "round": 1,
+    "bevel": 2,
+    "miter": 3,
+}
+
 # Related to Text
 NOT_SETTING_FONT_MSG = '''
 Warning:
