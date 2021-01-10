@@ -154,28 +154,13 @@ def get_shader_code_from_file(filename):
 
 
 def get_colormap_code(colormap="viridis"):
-    code = """
-        const vec3[9] COLOR_MAP_DATA = vec3[9](
-            // INSERT DATA //
-        );
-        vec3 colormap(float value, float min_val, float max_val){
-            float alpha = smoothstep(min_val, max_val, value);
-            int disc_alpha = min(int(alpha * 8), 7);
-            return mix(
-                COLOR_MAP_DATA[disc_alpha],
-                COLOR_MAP_DATA[disc_alpha + 1],
-                8.0 * alpha - disc_alpha
-            );
-        }
-    """
-    colors = get_cmap(colormap).colors
-    sparse_colors = [
-        colors[int(n)]
-        for n in np.linspace(0, len(colors) - 1, 9)
+    rgbs = get_cmap(colormap).colors  # Make more general?
+    sparse_rgbs = [
+        rgbs[int(n)]
+        for n in np.linspace(0, len(rgbs) - 1, 9)
     ]
-    insertion = "".join(
+    data = ",".join(
         "vec3({}, {}, {}),".format(*color)
-        for color in sparse_colors
+        for color in sparse_rgbs
     )
-    insertion = insertion[:-1]  # Remove final comma
-    return code.replace("// INSERT DATA //", insertion)
+    return f"vec3[9]({data})"

@@ -1277,13 +1277,10 @@ class Mobject(object):
         """
         for char in "xyz":
             glsl_snippet = glsl_snippet.replace(char, "point." + char)
-        self.replace_shader_code(
-            "///// INSERT COLOR_MAP FUNCTION HERE /////",
-            get_colormap_code(colormap)
-        )
         self.set_color_by_code(
-            "color.rgb = colormap({}, {}, {});".format(
-                glsl_snippet, float(min_value), float(max_value)
+            "color.rgb = float_to_color({}, {}, {}, {});".format(
+                glsl_snippet, float(min_value), float(max_value),
+                get_colormap_code(colormap)
             )
         )
         return self
