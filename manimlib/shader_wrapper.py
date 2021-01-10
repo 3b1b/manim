@@ -3,7 +3,6 @@ import re
 import moderngl
 import numpy as np
 import copy
-from matplotlib.cm import get_cmap
 
 from manimlib.utils.directories import get_shader_dir
 from manimlib.utils.file_ops import find_file
@@ -153,14 +152,9 @@ def get_shader_code_from_file(filename):
     return result
 
 
-def get_colormap_code(colormap="viridis"):
-    rgbs = get_cmap(colormap).colors  # Make more general?
-    sparse_rgbs = [
-        rgbs[int(n)]
-        for n in np.linspace(0, len(rgbs) - 1, 9)
-    ]
+def get_colormap_code(rgb_list):
     data = ",".join(
-        "vec3({}, {}, {})".format(*color)
-        for color in sparse_rgbs
+        "vec3({}, {}, {})".format(*rgb)
+        for rgb in rgb_list
     )
-    return f"vec3[9]({data})"
+    return f"vec3[{len(rgb_list)}]({data})"

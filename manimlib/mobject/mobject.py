@@ -11,6 +11,7 @@ import numpy as np
 from manimlib.constants import *
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import interpolate_color
+from manimlib.utils.color import get_colormap_list
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.iterables import list_update
@@ -1275,12 +1276,17 @@ class Mobject(object):
         Pass in a glsl expression in terms of x, y and z which returns
         a float.
         """
+        # TODO, add a version of this which changes the point data instead
+        # of the shader code
         for char in "xyz":
             glsl_snippet = glsl_snippet.replace(char, "point." + char)
+        rgb_list = get_colormap_list(colormap)
         self.set_color_by_code(
             "color.rgb = float_to_color({}, {}, {}, {});".format(
-                glsl_snippet, float(min_value), float(max_value),
-                get_colormap_code(colormap)
+                glsl_snippet,
+                float(min_value),
+                float(max_value),
+                get_colormap_code(rgb_list)
             )
         )
         return self

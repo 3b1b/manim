@@ -2,6 +2,7 @@ import random
 
 from colour import Color
 import numpy as np
+from matplotlib.cm import get_cmap
 
 from manimlib.constants import PALETTE
 from manimlib.constants import WHITE
@@ -112,3 +113,11 @@ def get_shaded_rgb(rgb, point, unit_normal_vect, light_source):
     result = rgb + factor
     clip_in_place(rgb + factor, 0, 1)
     return result
+
+
+def get_colormap_list(map_name="viridis", n_colors=9):
+    rgbs = get_cmap(map_name).colors  # Make more general?
+    return [
+        rgbs[int(n)]
+        for n in np.linspace(0, len(rgbs) - 1, n_colors)
+    ]
