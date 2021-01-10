@@ -10,10 +10,10 @@ in vec4 v_color;
 
 out vec4 frag_color;
 
-#INSERT add_light.glsl
+#INSERT finalize_color.glsl
 
 void main() {
-    frag_color = add_light(
+    frag_color = finalize_color(
         v_color,
         xyz_coords,
         normalize(v_normal),

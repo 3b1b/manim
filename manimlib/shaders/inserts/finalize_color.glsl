@@ -6,9 +6,6 @@ vec4 add_light(vec4 color,
                vec3 light_coords,
                float gloss,
                float shadow){
-    ///// INSERT COLOR FUNCTION HERE /////
-    // The line above may be replaced by arbitrary code snippets, as per
-    // the method Mobject.set_color_by_code
     if(gloss == 0.0 && shadow == 0.0) return color;
 
     // TODO, do we actually want this?  It effectively treats surfaces as two-sided
@@ -38,6 +35,8 @@ vec4 finalize_color(vec4 color,
                     vec3 light_coords,
                     float gloss,
                     float shadow){
-    // Put insertion here instead
+    ///// INSERT COLOR FUNCTION HERE /////
+    // The line above may be replaced by arbitrary code snippets, as per
+    // the method Mobject.set_color_by_code
     return add_light(color, point, unit_normal, light_coords, gloss, shadow);
 }

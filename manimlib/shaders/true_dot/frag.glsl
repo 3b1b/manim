@@ -12,7 +12,7 @@ in vec2 point;
 
 out vec4 frag_color;
 
-#INSERT add_light.glsl
+#INSERT finalize_color.glsl
 
 void main() {
     vec2 diff = point - center;
@@ -22,7 +22,7 @@ void main() {
         discard;
     }
     vec3 normal = vec3(diff / radius, sqrt(1 - (dist * dist) / (radius * radius)));
-    frag_color = add_light(
+    frag_color = finalize_color(
         color,
         vec3(point.xy, 0.0),
         normal,

@@ -14,7 +14,7 @@ in float v_opacity;
 
 out vec4 frag_color;
 
-#INSERT add_light.glsl
+#INSERT finalize_color.glsl
 
 const float dark_shift = 0.2;
 
@@ -30,7 +30,7 @@ void main() {
         color = mix(dark_color, color, alpha);
     }
 
-    frag_color = add_light(
+    frag_color = finalize_color(
         color,
         xyz_coords,
         normalize(v_normal),

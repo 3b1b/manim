@@ -9,7 +9,7 @@ uniform float anti_alias_width;
 uniform vec2 frame_shape;
 uniform float focal_distance;
 uniform float is_fixed_in_frame;
-// Needed for add_light
+// Needed for finalize_color
 uniform vec3 light_source_position;
 uniform float gloss;
 uniform float shadow;
@@ -35,11 +35,11 @@ out float bezier_degree;
 #INSERT quadratic_bezier_geometry_functions.glsl
 #INSERT get_gl_Position.glsl
 #INSERT get_unit_normal.glsl
-#INSERT add_light.glsl
+#INSERT finalize_color.glsl
 
 
 void emit_vertex_wrapper(vec3 point, int index){
-    color = add_light(
+    color = finalize_color(
         v_color[index],
         point,
         v_global_unit_normal[index],

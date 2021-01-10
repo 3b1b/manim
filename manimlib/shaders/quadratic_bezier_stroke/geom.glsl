@@ -52,7 +52,7 @@ const float PI = 3.141592653;
 #INSERT quadratic_bezier_geometry_functions.glsl
 #INSERT get_gl_Position.glsl
 #INSERT get_unit_normal.glsl
-#INSERT add_light.glsl
+#INSERT finalize_color.glsl
 
 
 void flatten_points(in vec3[3] points, out vec2[3] flat_points){
@@ -254,7 +254,7 @@ void main() {
         // Apply some lighting to the color before sending out.
         // vec3 xyz_coords = vec3(corners[i], controls[index_map[i]].z);
         vec3 xyz_coords = vec3(corners[i], controls[index_map[i]].z);
-        color = add_light(
+        color = finalize_color(
             v_color[index_map[i]],
             xyz_coords,
             v_global_unit_normal[index_map[i]],
