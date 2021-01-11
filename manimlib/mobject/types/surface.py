@@ -173,7 +173,7 @@ class ParametricSurface(Mobject):
     # For shaders
     def get_shader_data(self):
         s_points, du_points, dv_points = self.get_surface_points_and_nudged_points()
-        data = self.get_blank_shader_data_array(len(s_points))
+        data = self.get_resized_shader_data_array(len(s_points))
         data["point"] = s_points
         data["du_point"] = du_points
         data["dv_point"] = dv_points
@@ -274,7 +274,7 @@ class TexturedSurface(ParametricSurface):
         result["num_textures"] = self.num_textures
         return result
 
-    def fill_in_shader_color_info(self, data):
-        data["im_coords"] = self.data["im_coords"]
-        data["opacity"] = self.data["opacity"]
-        return data
+    def fill_in_shader_color_info(self, shader_data):
+        shader_data["im_coords"] = self.data["im_coords"]
+        shader_data["opacity"] = self.data["opacity"]
+        return shader_data

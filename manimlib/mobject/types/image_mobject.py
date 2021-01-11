@@ -4,10 +4,8 @@ from PIL import Image
 
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
-from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.images import get_full_raster_image_path
-from manimlib.utils.iterables import listify
 
 
 class ImageMobject(Mobject):
@@ -28,35 +26,24 @@ class ImageMobject(Mobject):
         self.texture_paths = {"Texture": path}
         super().__init__(**kwargs)
 
+    def init_data(self):
+        self.data = {
+            "points": np.array([UL, DL, UR, DR]),
+            "im_coords": np.array([(0, 0), (0, 1), (1, 0), (1, 1)]),
+            "opacity": np.array([[self.opacity]], dtype=np.float32),
+        }
+
     def init_points(self):
-        self.points = np.array([UL, DL, UR, DR])
-        self.im_coords = np.array([(0, 0), (0, 1), (1, 0), (1, 1)])
         size = self.image.size
         self.set_width(2 * size[0] / size[1], stretch=True)
         self.set_height(self.height)
 
-    def init_colors(self):
-        self.set_opacity(self.opacity)
-
-    def set_opacity(self, alpha, family=True):
-        opacity = listify(alpha)
-        diff = 4 - len(opacity)
-        opacity += [opacity[-1]] * diff
-        self.opacity = np.array(opacity).reshape((4, 1))
-
-        if family:
-            for sm in self.submobjects:
-                sm.set_opacity(alpha)
-
-    def fade(self, darkness=0.5, family=True):
-        self.set_opacity(1 - darkness, family)
+    def set_opacity(self, opacity, family=True):
+        # TODO, account for opacity coming in as an array
+        mobs = self.get_family() if family else [self]
+        for mob in mobs:
+            mob.data["opacity"][:, 0] = opacity
         return self
-
-    def interpolate_color(self, mobject1, mobject2, alpha):
-        # TODO, transition between actual images?
-        self.opacity = interpolate(
-            mobject1.opacity, mobject2.opacity, alpha
-        )
 
     def point_to_rgb(self, point):
         x0, y0 = self.get_corner(UL)[:2]
@@ -75,8 +62,7 @@ class ImageMobject(Mobject):
         return np.array(rgb) / 255
 
     def get_shader_data(self):
-        data = self.get_blank_shader_data_array(len(self.points))
-        data["point"] = self.points
-        data["im_coords"] = self.im_coords
-        data["opacity"] = self.opacity
+        data = super().get_shader_data()
+        data["im_coords"] = self.data["im_coords"]
+        data["opacity"] = self.data["opacity"]
         return data

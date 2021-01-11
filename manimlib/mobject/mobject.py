@@ -102,6 +102,11 @@ class Mobject(object):
         self.resize_points(len(points))
         self.data["points"][:] = points
 
+    def append_points(self, new_points):
+        self.resize_points(self.get_num_points() + len(new_points))
+        self.data["points"][-len(new_points):] = new_points
+        return self
+
     def get_points(self):
         return self.data["points"]
 
@@ -748,6 +753,7 @@ class Mobject(object):
                 submob.fade_to(color, alpha)
         return self
 
+    # TODO, get rid of this
     def fade(self, darkness=0.5, family=True):
         if family:
             for submob in self.submobjects:
@@ -1147,7 +1153,7 @@ class Mobject(object):
     def push_self_into_submobjects(self):
         copy = self.deepcopy()
         copy.set_submobjects([])
-        self.reset_points()
+        self.resize_points(0)
         self.add(copy)
         return self
 
@@ -1329,15 +1335,12 @@ class Mobject(object):
         self.shader_wrapper.refresh_id()
         return self
 
-    def get_blank_shader_data_array(self, size, name="shader_data"):
+    def get_resized_shader_data_array(self, size):
         # If possible, try to populate an existing array, rather
         # than recreating it each frame
-        arr = getattr(self, name)
-        if arr.size != size:
-            new_arr = resize_array(arr, size)
-            setattr(self, name, new_arr)
-            return new_arr
-        return arr
+        if self.shader_data.size != size:
+            self.shader_data = resize_array(self.shader_data, size)
+        return self.shader_data
 
     def get_shader_wrapper(self):
         self.shader_wrapper.vert_data = self.get_shader_data()
@@ -1364,8 +1367,9 @@ class Mobject(object):
         return result
 
     def get_shader_data(self):
-        # May be different for subclasses
-        return self.shader_data
+        data = self.get_resized_shader_data_array(self.get_num_points())
+        data["point"] = self.data["points"]
+        return data
 
     def get_shader_uniforms(self):
         return {
