@@ -3,10 +3,8 @@ import moderngl
 import numbers
 
 from manimlib.constants import GREY_C
-from manimlib.constants import ORIGIN
 from manimlib.mobject.types.point_cloud_mobject import PMobject
 from manimlib.mobject.geometry import DEFAULT_DOT_RADIUS
-from manimlib.utils.bezier import interpolate
 from manimlib.utils.iterables import resize_preserving_order
 
 
@@ -14,6 +12,7 @@ class DotCloud(PMobject):
     CONFIG = {
         "color": GREY_C,
         "opacity": 1,
+        "radii": DEFAULT_DOT_RADIUS,
         "shader_folder": "true_dot",
         "render_primitive": moderngl.POINTS,
         "shader_dtype": [
@@ -23,26 +22,28 @@ class DotCloud(PMobject):
         ],
     }
 
-    def __init__(self, points=[[ORIGIN]], radii=DEFAULT_DOT_RADIUS, **kwargs):
+    def __init__(self, points=None, **kwargs):
         super().__init__(**kwargs)
-        self.rgbas = np.zeros((len(points), 4))
-        self.radii = np.full((len(points), 1), radii)
-        self.points = np.array(points)
-        self.set_color(self.color)
+        if points:
+            self.set_points(points)
 
-    def set_points(self, points):
-        super().set_points(points)
-        self.radii = resize_preserving_order(self.radii, len(points))
-        return self
+    def init_data(self):
+        self.data = {
+            "points": np.zeros((1, 3)),
+            "rgbas": np.zeros((1, 4)),
+            "radii": np.zeros((1, 1))
+        }
+        self.set_radii(self.radii)
 
     def set_points_by_grid(self, n_rows, n_cols, height=None, width=None):
+        # TODO, add buff/hbuff/vbuff args...
         new_points = np.zeros((n_rows * n_cols, 3))
         new_points[:, 0] = np.tile(range(n_cols), n_rows)
         new_points[:, 1] = np.repeat(range(n_rows), n_cols)
         new_points[:, 2] = 0
         self.set_points(new_points)
 
-        radius = self.radii[0]
+        radius = self.data["radii"].max()
         if height is None:
             height = n_rows * 3 * radius
         if width is None:
@@ -55,26 +56,19 @@ class DotCloud(PMobject):
         return self
 
     def set_radii(self, radii):
-        if isinstance(radii, numbers.Number):
-            self.radii[:] = radii
-        else:
-            self.radii = resize_preserving_order(radii, len(self.points))
+        if not isinstance(radii, numbers.Number):
+            radii = resize_preserving_order(radii, self.get_num_points())
+        self.data["radii"][:, 0] = radii
         return self
 
     def scale(self, scale_factor, scale_radii=True, **kwargs):
         super().scale(scale_factor, **kwargs)
         if scale_radii:
-            self.radii *= scale_factor
-        return self
-
-    def interpolate(self, mobject1, mobject2, alpha, *args, **kwargs):
-        super().interpolate(mobject1, mobject2, alpha, *args, **kwargs)
-        self.radii = interpolate(mobject1.radii, mobject2.radii, alpha)
+            self.data["radii"] *= scale_factor
         return self
 
     def get_shader_data(self):
-        data = self.get_blank_shader_data_array(len(self.points))
-        data["point"] = self.points
-        data["radius"] = self.radii.reshape((len(self.radii), 1))
-        data["color"] = self.rgbas
+        data = super().get_shader_data()
+        data["radius"] = self.data["radii"]
+        data["color"] = self.data["rgbas"]
         return data
