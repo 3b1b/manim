@@ -304,14 +304,6 @@ class VMobject(Mobject):
         self.set_points(new_points)
         return self
 
-    def append_points(self, new_points):
-        # TODO, check that number new points is a multiple of 4?
-        # or else that if self.get_num_points() % 4 == 1, then
-        # len(new_points) % 4 == 3?
-        self.resize_points(self.get_num_points() + len(new_points))
-        self.data["points"][-len(new_points):] = new_points
-        return self
-
     def start_new_path(self, point):
         assert(self.get_num_points() % self.n_points_per_curve == 0)
         self.append_points([point])
@@ -868,12 +860,12 @@ class VMobject(Mobject):
         return result
 
     def get_stroke_shader_data(self):
-        points = self.get_points()
         if len(self.stroke_data) != len(points):
             self.stroke_data = resize_array(self.stroke_data, len(points))
         # TODO, account for when self.data["stroke_width"] and self.data["stroke_rgba"]
         # have length greater than 1
 
+        points = self.get_points()
         nppc = self.n_points_per_curve
         self.stroke_data["point"] = points
         self.stroke_data["prev_point"][:nppc] = points[-nppc:]
