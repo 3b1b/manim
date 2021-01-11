@@ -881,5 +881,5 @@ class Scene(Container):
         """
         if self.renderer.skip_animations:
             return
-        time = self.time + time_offset
+        time = self.renderer.time + time_offset
         self.renderer.file_writer.add_sound(sound_file, time, gain, **kwargs)
