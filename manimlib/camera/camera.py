@@ -30,7 +30,7 @@ class CameraFrame(Mobject):
     }
 
     def init_points(self):
-        self.points = np.array([ORIGIN, LEFT, RIGHT, DOWN, UP])
+        self.set_points([ORIGIN, LEFT, RIGHT, DOWN, UP])
         self.set_width(self.frame_shape[0], stretch=True)
         self.set_height(self.frame_shape[1], stretch=True)
         self.move_to(self.center_point)
@@ -108,14 +108,19 @@ class CameraFrame(Mobject):
         return self.set_rotation(theta=self.euler_angles[2] + dgamma)
 
     def get_shape(self):
-        return (
-            self.points[2, 0] - self.points[1, 0],
-            self.points[4, 1] - self.points[3, 1],
-        )
+        return (self.get_width(), self.get_height())
 
     def get_center(self):
         # Assumes first point is at the center
-        return self.points[0]
+        return self.get_points()[0]
+
+    def get_width(self):
+        points = self.get_points()
+        return points[2, 0] - points[1, 0]
+
+    def get_height(self):
+        points = self.get_points()
+        return points[4, 1] - points[3, 1]
 
     def get_focal_distance(self):
         return self.focal_distance * self.get_height()
@@ -123,7 +128,8 @@ class CameraFrame(Mobject):
     def interpolate(self, frame1, frame2, alpha, path_func):
         self.euler_angles[:] = interpolate(frame1.euler_angles, frame2.euler_angles, alpha)
         self.refresh_camera_rotation_matrix()
-        self.points = interpolate(frame1.points, frame2.points, alpha)
+        # TODO, can probably safely call super
+        self.set_points(interpolate(frame1.get_points(), frame2.get_points(), alpha))
 
 
 class Camera(object):

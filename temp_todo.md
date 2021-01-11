@@ -1,0 +1,8 @@
+- Write init_data
+- Write set_points
+- Write get_all_points_arrays
+- Write get_primary_points_array
+- Write stretch data array method
+- Replace all .points with .data["point"]
+- Change setting/getting colors based on rgba arrays
+- 

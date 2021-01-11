@@ -81,6 +81,7 @@ def listify(obj):
 
 
 def stretch_array_to_length(nparray, length):
+    # TODO, rename to "resize"?
     indices = np.arange(length) * len(nparray) // length
     return nparray[indices]
 

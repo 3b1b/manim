@@ -165,10 +165,10 @@ class TipableVMobject(VMobject):
         return self.tip_length
 
     def get_first_handle(self):
-        return self.points[1]
+        return self.get_points()[1]
 
     def get_last_handle(self):
-        return self.points[-2]
+        return self.get_points()[-2]
 
     def get_end(self):
         if self.has_tip():
@@ -234,7 +234,7 @@ class Arc(TipableVMobject):
         anchors, and finds their intersection points
         """
         # First two anchors and handles
-        a1, h, a2 = self.points[:3]
+        a1, h, a2 = self.get_points()[:3]
         # Tangent vectors
         t1 = h - a1
         t2 = h - a2
@@ -354,10 +354,10 @@ class AnnularSector(Arc):
             for radius in (self.inner_radius, self.outer_radius)
         ]
         outer_arc.reverse_points()
-        self.append_points(inner_arc.points)
-        self.add_line_to(outer_arc.points[0])
-        self.append_points(outer_arc.points)
-        self.add_line_to(inner_arc.points[0])
+        self.append_points(inner_arc.get_points())
+        self.add_line_to(outer_arc.get_points()[0])
+        self.append_points(outer_arc.get_points())
+        self.add_line_to(inner_arc.get_points()[0])
 
 
 class Sector(AnnularSector):
@@ -382,8 +382,8 @@ class Annulus(Circle):
         outer_circle = Circle(radius=self.outer_radius)
         inner_circle = Circle(radius=self.inner_radius)
         inner_circle.reverse_points()
-        self.append_points(outer_circle.points)
-        self.append_points(inner_circle.points)
+        self.append_points(outer_circle.get_points())
+        self.append_points(inner_circle.get_points())
         self.shift(self.arc_center)
 
 
@@ -534,10 +534,10 @@ class DashedLine(Line):
             return Line.get_end(self)
 
     def get_first_handle(self):
-        return self.submobjects[0].points[1]
+        return self.submobjects[0].get_points()[1]
 
     def get_last_handle(self):
-        return self.submobjects[-1].points[-2]
+        return self.submobjects[-1].get_points()[-2]
 
 
 class TangentLine(Line):
@@ -625,7 +625,7 @@ class Arrow(Line):
         # Tip
         self.add_line_to(tip_width * UP / 2)
         self.add_line_to(tip_length * LEFT)
-        self.tip_index = len(self.points) - 1
+        self.tip_index = len(self.get_points()) - 1
         self.add_line_to(tip_width * DOWN / 2)
         self.add_line_to(points2[0])
         # Close it out
@@ -633,7 +633,7 @@ class Arrow(Line):
         self.add_line_to(points1[0])
 
         if length > 0:
-            self.points *= length / self.get_length()  # Final correction
+            self.scale(length / self.get_length())  # Final correction
 
         self.rotate(angle_of_vector(vect) - self.get_angle())
         self.shift(start - self.get_start())
@@ -645,10 +645,11 @@ class Arrow(Line):
 
     def get_start(self):
         nppc = self.n_points_per_curve
-        return (self.points[0] + self.points[-nppc]) / 2
+        points = self.get_points()
+        return (points[0] + points[-nppc]) / 2
 
     def get_end(self):
-        return self.points[self.tip_index]
+        return self.get_points()[self.tip_index]
 
     def put_start_and_end_on(self, start, end):
         self.set_points_by_ends(start, end, buff=0, path_arc=self.path_arc)
@@ -732,7 +733,7 @@ class Polygon(VMobject):
         # To ensure that we loop through starting with last
         arcs = [arcs[-1], *arcs[:-1]]
         for arc1, arc2 in adjacent_pairs(arcs):
-            self.append_points(arc1.points)
+            self.append_points(arc1.get_points())
             line = Line(arc1.get_end(), arc2.get_start())
             # Make sure anchors are evenly distributed
             len_ratio = line.get_length() / arc1.get_arc_length()
@@ -783,7 +784,7 @@ class ArrowTip(Triangle):
         return self.point_from_proportion(0.5)
 
     def get_tip_point(self):
-        return self.points[0]
+        return self.get_points()[0]
 
     def get_vector(self):
         return self.get_tip_point() - self.get_base()

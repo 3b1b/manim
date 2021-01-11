@@ -29,24 +29,25 @@ def check_and_fix_percent_bug(sym):
     # The svg path for percent symbols have a known bug, so this
     # checks if the symbol is (probably) a percentage sign, and
     # splits it so that it's displayed properly.
-    if len(sym.points) not in [315, 324, 468, 483] or len(sym.get_subpaths()) != 4:
+    if len(sym.get_points()) not in [315, 324, 468, 483] or len(sym.get_subpaths()) != 4:
         return
 
     sym = sym.family_members_with_points()[0]
     new_sym = VMobject()
     path_lengths = [len(path) for path in sym.get_subpaths()]
-    if len(sym.points) in [315, 324]:
+    sym_points = sym.get_points()
+    if len(sym_points) in [315, 324]:
         n = sum(path_lengths[:2])
-        p1 = sym.points[:n]
-        p2 = sym.points[n:]
-    elif len(sym.points) in [468, 483]:
+        p1 = sym_points[:n]
+        p2 = sym_points[n:]
+    elif len(sym_points) in [468, 483]:
         p1 = np.vstack([
-            sym.points[:path_lengths[0]],
-            sym.points[-path_lengths[3]:]
+            sym_points[:path_lengths[0]],
+            sym_points[-path_lengths[3]:]
         ])
-        p2 = sym.points[path_lengths[0]:sum(path_lengths[:3])]
-    sym.points = p1
-    new_sym.points = p2
+        p2 = sym_points[path_lengths[0]:sum(path_lengths[:3])]
+    sym.set_points(p1)
+    new_sym.set_points(p2)
     sym.add(new_sym)
     sym.refresh_triangulation()
 
@@ -280,7 +281,7 @@ class SVGMobject(VMobject):
             matrix[:, 1] *= -1
 
             for mob in mobject.family_members_with_points():
-                mob.points = np.dot(mob.points, matrix)
+                mob.set_points(np.dot(mob.get_points(), matrix))
             mobject.shift(x * RIGHT + y * UP)
         except:
             pass
@@ -356,7 +357,7 @@ class VMobjectFromSVGPathstring(VMobject):
         filepath = os.path.join(get_mobject_data_dir(), f"{path_hash}.npy")
 
         if os.path.exists(filepath):
-            self.points = np.load(filepath)
+            self.set_points(np.load(filepath))
         else:
             self.relative_point = np.array(ORIGIN)
             for command, coord_string in self.get_commands_and_coord_strings():
@@ -367,11 +368,11 @@ class VMobjectFromSVGPathstring(VMobject):
                 self.subdivide_sharp_curves()
             if self.should_remove_null_curves:
                 # Get rid of any null curves
-                self.points = self.get_points_without_null_curves()
+                self.set_points(self.get_points_without_null_curves())
             # SVG treats y-coordinate differently
             self.stretch(-1, 1, about_point=ORIGIN)
             # Save to a file for future use
-            np.save(filepath, self.points)
+            np.save(filepath, self.get_points())
         check_and_fix_percent_bug(self)
 
     def get_commands_and_coord_strings(self):
@@ -399,11 +400,11 @@ class VMobjectFromSVGPathstring(VMobject):
                 command = "l"
             if command.islower():
                 leftover_points -= self.relative_point
-                self.relative_point = self.points[-1]
+                self.relative_point = self.get_last_point()
             self.handle_command(command, leftover_points)
         else:
             # Command is over, reset for future relative commands
-            self.relative_point = self.points[-1]
+            self.relative_point = self.get_last_point()
 
     def string_to_points(self, command, coord_string):
         numbers = string_to_numbers(coord_string)

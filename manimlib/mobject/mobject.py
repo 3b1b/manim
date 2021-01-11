@@ -63,7 +63,7 @@ class Mobject(object):
         self.family = [self]
 
         self.init_updaters()
-        self.points = np.zeros((0, self.dim))
+        self.init_data()
         self.init_points()
         self.init_colors()
         self.init_shader_data()
@@ -76,9 +76,6 @@ class Mobject(object):
     def __str__(self):
         return self.__class__.__name__
 
-    def reset_points(self):
-        self.points = np.zeros((0, self.dim))
-
     def init_colors(self):
         # For subclasses
         pass
@@ -86,6 +83,37 @@ class Mobject(object):
     def init_points(self):
         # Typically implemented in subclass, unless purposefully left blank
         pass
+
+    # To sort out later
+    def init_data(self):
+        self.data = np.zeros(0, dtype=self.shader_dtype)
+
+    def resize_data(self, new_length):
+        if new_length != len(self.data):
+            self.data = np.resize(self.data, new_length)
+
+    def set_points(self, points):
+        self.resize_data(len(points))
+        self.data["point"] = points
+
+    def get_points(self):
+        return self.data["point"]
+
+    def get_all_point_arrays(self):
+        return [self.data["point"]]
+
+    def get_all_data_arrays(self):
+        return [self.data]
+
+    def get_data_array_attrs(self):
+        return ["data"]
+
+    def clear_points(self):
+        self.resize_data(0)
+
+    def get_num_points(self):
+        return len(self.data)
+    #
 
     # Family matters
     def __getitem__(self, value):
@@ -102,7 +130,7 @@ class Mobject(object):
         return len(self.split())
 
     def split(self):
-        result = [self] if len(self.points) > 0 else []
+        result = [self] if self.get_num_points() > 0 else []
         return result + self.submobjects
 
     def assemble_family(self):
@@ -117,7 +145,7 @@ class Mobject(object):
         return self.family
 
     def family_members_with_points(self):
-        return [m for m in self.get_family() if m.points.size > 0]
+        return [m for m in self.get_family() if m.has_points()]
 
     def add(self, *mobjects):
         if self in mobjects:
@@ -184,7 +212,8 @@ class Mobject(object):
         copy_mobject = copy.copy(self)
         self.parents = parents
 
-        copy_mobject.points = np.array(self.points)
+        for attr in self.get_data_array_attrs():
+            setattr(copy_mobject, attr, getattr(self, attr).copy())
         copy_mobject.submobjects = []
         copy_mobject.add(*[sm.copy() for sm in self.submobjects])
         copy_mobject.match_updaters(self)
@@ -307,10 +336,6 @@ class Mobject(object):
         return self
 
     # Transforming operations
-    def set_points(self, points):
-        self.points = np.array(points)
-        return self
-
     def apply_to_family(self, func):
         for mob in self.family_members_with_points():
             func(mob)
@@ -318,7 +343,8 @@ class Mobject(object):
     def shift(self, *vectors):
         total_vector = reduce(op.add, vectors)
         for mob in self.get_family():
-            mob.points += total_vector
+            for arr in mob.get_all_point_arrays():
+                arr += total_vector
         return self
 
     def scale(self, scale_factor, **kwargs):
@@ -403,14 +429,14 @@ class Mobject(object):
 
     def wag(self, direction=RIGHT, axis=DOWN, wag_factor=1.0):
         for mob in self.family_members_with_points():
-            alphas = np.dot(mob.points, np.transpose(axis))
+            alphas = np.dot(mob.get_points(), np.transpose(axis))
             alphas -= min(alphas)
             alphas /= max(alphas)
             alphas = alphas**wag_factor
-            mob.points += np.dot(
+            mob.set_points(mob.get_points() + np.dot(
                 alphas.reshape((len(alphas), 1)),
                 np.array(direction).reshape((1, mob.dim))
-            )
+            ))
         return self
 
     def reverse_points(self):
@@ -432,9 +458,8 @@ class Mobject(object):
                 about_edge = ORIGIN
             about_point = self.get_bounding_box_point(about_edge)
         for mob in self.family_members_with_points():
-            mob.points -= about_point
-            mob.points[:] = func(mob.points)
-            mob.points += about_point
+            for arr in mob.get_all_point_arrays():
+                arr[:] = func(arr - about_point) + about_point
         return self
 
     # Positioning methods
@@ -782,21 +807,18 @@ class Mobject(object):
         else:
             return getattr(self, array_attr)
 
-    def get_all_points(self):
+    def get_all_points(self):  # TODO, use get_all_point_arrays?
         if self.submobjects:
             return np.vstack([
-                sm.points for sm in self.get_family()
+                sm.get_points() for sm in self.get_family()
             ])
         else:
-            return self.points
+            return self.get_points()
 
     # Getters
 
     def get_points_defining_boundary(self):
         return self.get_all_points()
-
-    def get_num_points(self):
-        return len(self.points)
 
     def get_bounding_box_point(self, direction):
         result = np.zeros(self.dim)
@@ -896,11 +918,11 @@ class Mobject(object):
 
     def get_start(self):
         self.throw_error_if_no_points()
-        return np.array(self.points[0])
+        return np.array(self.get_points()[0])
 
     def get_end(self):
         self.throw_error_if_no_points()
-        return np.array(self.points[-1])
+        return np.array(self.get_points()[-1])
 
     def get_start_and_end(self):
         return self.get_start(), self.get_end()
@@ -929,7 +951,7 @@ class Mobject(object):
         return z_index_group.get_center()
 
     def has_points(self):
-        return len(self.points) > 0
+        return self.get_num_points() > 0
 
     def has_no_points(self):
         return not self.has_points()
@@ -1166,9 +1188,14 @@ class Mobject(object):
         Turns self into an interpolation between mobject1
         and mobject2.
         """
-        self.points[:] = path_func(mobject1.points, mobject2.points, alpha)
-        self.interpolate_color(mobject1, mobject2, alpha)
-        self.interpolate_light_style(mobject1, mobject2, alpha)
+        mobs = [self, mobject1, mobject2]
+        # for arr, arr1, arr2 in zip(*(m.get_all_data_arrays() for m in mobs)):
+        #     arr[:] = interpolate(arr1, arr2, alpha)
+        # if path_func is not straight_path:
+        for arr, arr1, arr2 in zip(*(m.get_all_point_arrays() for m in mobs)):
+            arr[:] = path_func(arr1, arr2, alpha)
+        # self.interpolate_color(mobject1, mobject2, alpha)
+        self.interpolate_light_style(mobject1, mobject2, alpha)  # TODO, interpolate uniforms instaed
         return self
 
     def interpolate_color(self, mobject1, mobject2, alpha):
@@ -1209,8 +1236,8 @@ class Mobject(object):
         """
         self.align_submobjects(mobject)
         for sm1, sm2 in zip(self.get_family(), mobject.get_family()):
-            sm1.set_points(sm2.points)
-            sm1.interpolate_color(sm1, sm2, 1)
+            for arr1, arr2 in zip(sm1.get_all_data_arrays(), sm2.get_all_data_arrays()):
+                arr1[:] = arr2
         return self
 
     def cleanup_from_animation(self):
@@ -1293,10 +1320,9 @@ class Mobject(object):
 
     # For shader data
     def init_shader_data(self):
-        self.shader_data = np.zeros(len(self.points), dtype=self.shader_dtype)
         self.shader_indices = None
         self.shader_wrapper = ShaderWrapper(
-            vert_data=self.shader_data,
+            vert_data=self.data,
             shader_folder=self.shader_folder,
             texture_paths=self.texture_paths,
             depth_test=self.depth_test,
@@ -1307,18 +1333,18 @@ class Mobject(object):
         self.shader_wrapper.refresh_id()
         return self
 
-    def get_blank_shader_data_array(self, size, name="shader_data"):
-        # If possible, try to populate an existing array, rather
-        # than recreating it each frame
-        arr = getattr(self, name)
-        if arr.size != size:
-            new_arr = np.resize(arr, size)
-            setattr(self, name, new_arr)
-            return new_arr
-        return arr
+    # def get_blank_shader_data_array(self, size, name="data"):
+    #     # If possible, try to populate an existing array, rather
+    #     # than recreating it each frame
+    #     arr = getattr(self, name)
+    #     if arr.size != size:
+    #         new_arr = np.resize(arr, size)
+    #         setattr(self, name, new_arr)
+    #         return new_arr
+    #     return arr
 
     def get_shader_wrapper(self):
-        self.shader_wrapper.vert_data = self.get_shader_data()
+        self.shader_wrapper.vert_data = self.data  # TODO
         self.shader_wrapper.vert_indices = self.get_shader_vert_indices()
         self.shader_wrapper.uniforms = self.get_shader_uniforms()
         self.shader_wrapper.depth_test = self.depth_test
@@ -1347,11 +1373,6 @@ class Mobject(object):
             "gloss": self.gloss,
             "shadow": self.shadow,
         }
-
-    def get_shader_data(self):
-        # Typically to be implemented by subclasses
-        # Must return a structured numpy array
-        return self.shader_data
 
     def get_shader_vert_indices(self):
         return self.shader_indices
@@ -1390,10 +1411,10 @@ class Point(Mobject):
         return self.artificial_height
 
     def get_location(self):
-        return np.array(self.points[0])
+        return np.array(self.get_points()[0])
 
     def get_bounding_box_point(self, *args, **kwargs):
         return self.get_location()
 
     def set_location(self, new_loc):
-        self.points = np.array(new_loc, ndmin=2, dtype=float)
+        self.set_points(np.array(new_loc, ndmin=2, dtype=float))

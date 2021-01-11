@@ -64,7 +64,14 @@ def partial_quadratic_bezier_points(points, a, b):
 # Linear interpolation variants
 
 def interpolate(start, end, alpha):
-    return (1 - alpha) * start + alpha * end
+    try:
+        return (1 - alpha) * start + alpha * end
+    except TypeError:
+        print(type(start), start.dtype)
+        print(type(end), start.dtype)
+        print(alpha)
+        import sys
+        sys.exit(2)
 
 
 def set_array_by_interpolation(arr, arr1, arr2, alpha):
