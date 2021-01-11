@@ -44,7 +44,12 @@ class ParametricSurface(Mobject):
         self.uv_func = uv_func
         self.compute_triangle_indices()
         super().__init__(**kwargs)
-        self.sort_faces_back_to_front()
+
+    def init_data(self):
+        self.data = {
+            "points": np.zeros((0, 3)),
+            "rgba": np.zeros((1, 4)),
+        }
 
     def init_points(self):
         dim = self.dim
@@ -65,7 +70,10 @@ class ParametricSurface(Mobject):
         # infinitesimal nudged values alongside the original values.  This way, one
         # can perform all the manipulations they'd like to the surface, and normals
         # are still easily recoverable.
-        self.points = np.vstack(point_lists)
+        self.set_points(np.vstack(point_lists))
+
+    def init_colors(self):
+        self.set_color(self.color, self.opacity)
 
     def compute_triangle_indices(self):
         # TODO, if there is an event which changes
@@ -88,13 +96,10 @@ class ParametricSurface(Mobject):
     def get_triangle_indices(self):
         return self.triangle_indices
 
-    def init_colors(self):
-        self.rgbas = np.zeros((1, 4))
-        self.set_color(self.color, self.opacity)
-
     def get_surface_points_and_nudged_points(self):
-        k = len(self.points) // 3
-        return self.points[:k], self.points[k:2 * k], self.points[2 * k:]
+        points = self.get_points()
+        k = len(points) // 3
+        return points[:k], points[k:2 * k], points[2 * k:]
 
     def get_unit_normals(self):
         s_points, du_points, dv_points = self.get_surface_points_and_nudged_points()
@@ -104,40 +109,38 @@ class ParametricSurface(Mobject):
         )
         return normalize_along_axis(normals, 1)
 
-    def set_color(self, color, opacity=1.0, family=True):
+    def set_color(self, color, opacity=None, family=True):
         # TODO, allow for multiple colors
+        if opacity is None:
+            opacity = self.data["rgba"][0, 3]
         rgba = color_to_rgba(color, opacity)
         mobs = self.get_family() if family else [self]
         for mob in mobs:
-            mob.rgbas[:] = rgba
+            mob.data["rgba"][:] = rgba
         return self
 
     def get_color(self):
-        return rgb_to_color(self.rgbas[0, :3])
+        return rgb_to_color(self.data["rgba"][0, :3])
 
     def set_opacity(self, opacity, family=True):
         mobs = self.get_family() if family else [self]
         for mob in mobs:
-            mob.rgbas[:, 3] = opacity
-        return self
-
-    def interpolate_color(self, mobject1, mobject2, alpha):
-        self.rgbas = interpolate(mobject1.rgbas, mobject2.rgbas, alpha)
+            mob.data["rgba"][:, 3] = opacity
         return self
 
     def pointwise_become_partial(self, smobject, a, b, axis=None):
         if axis is None:
             axis = self.prefered_creation_axis
         assert(isinstance(smobject, ParametricSurface))
-        self.points[:] = smobject.points[:]
         if a <= 0 and b >= 1:
+            self.set_points(smobject.points)
             return self
 
         nu, nv = smobject.resolution
-        self.points[:] = np.vstack([
+        self.set_points(np.vstack([
             self.get_partial_points_array(arr, a, b, (nu, nv, 3), axis=axis)
-            for arr in self.get_surface_points_and_nudged_points()
-        ])
+            for arr in smobject.get_surface_points_and_nudged_points()
+        ]))
         return self
 
     def get_partial_points_array(self, points, a, b, resolution, axis):
@@ -178,7 +181,8 @@ class ParametricSurface(Mobject):
         return data
 
     def fill_in_shader_color_info(self, data):
-        data["color"] = self.rgbas
+        # TODO, what if len(self.data["rgba"]) > 1?
+        data["color"] = self.data["rgba"]
         return data
 
     def get_shader_vert_indices(self):
@@ -195,7 +199,7 @@ class SGroup(ParametricSurface):
         self.add(*parametric_surfaces)
 
     def init_points(self):
-        self.points = np.zeros((0, 3))
+        pass  # Needed?
 
 
 class TexturedSurface(ParametricSurface):
@@ -229,40 +233,40 @@ class TexturedSurface(ParametricSurface):
         self.u_range = uv_surface.u_range
         self.v_range = uv_surface.v_range
         self.resolution = uv_surface.resolution
+        self.gloss = self.uv_surface.gloss
         super().__init__(self.uv_func, **kwargs)
 
-    def init_points(self):
-        self.points = self.uv_surface.points
-        # Init im_coords
+    def init_data(self):
         nu, nv = self.uv_surface.resolution
-        u_range = np.linspace(0, 1, nu)
-        v_range = np.linspace(1, 0, nv)  # Reverse y-direction
-        uv_grid = np.array([[u, v] for u in u_range for v in v_range])
-        self.im_coords = uv_grid
+        self.data = {
+            "points": self.uv_surface.get_points(),
+            "im_coords": np.array([
+                [u, v]
+                for u in np.linspace(0, 1, nu)
+                for v in np.linspace(1, 0, nv)  # Reverse y-direction
+            ]),
+            "opacity": np.array([self.uv_surface.data["rgba"][:, 3]]),
+        }
 
     def init_colors(self):
-        self.opacity = self.uv_surface.rgbas[:, 3]
-        self.gloss = self.uv_surface.gloss
-
-    def interpolate_color(self, mobject1, mobject2, alpha):
-        # TODO, handle multiple textures
-        self.opacity = interpolate(mobject1.opacity, mobject2.opacity, alpha)
-        return self
+        pass
 
     def set_opacity(self, opacity, family=True):
-        self.opacity = opacity
-        if family:
-            for sm in self.submobjects:
-                sm.set_opacity(opacity, family)
+        mobs = self.get_family() if family else [self]
+        for mob in mobs:
+            mob.data["opacity"][:] = opacity
         return self
 
     def pointwise_become_partial(self, tsmobject, a, b, axis=1):
         super().pointwise_become_partial(tsmobject, a, b, axis)
-        self.im_coords[:] = tsmobject.im_coords
+        im_coords = self.data["im_coords"]
+        im_coords[:] = tsmobject.data["im_coords"]
         if a <= 0 and b >= 1:
             return self
         nu, nv = tsmobject.resolution
-        self.im_coords[:] = self.get_partial_points_array(self.im_coords, a, b, (nu, nv, 2), axis)
+        im_coords[:] = self.get_partial_points_array(
+            im_coords, a, b, (nu, nv, 2), axis
+        )
         return self
 
     def get_shader_uniforms(self):
@@ -271,6 +275,6 @@ class TexturedSurface(ParametricSurface):
         return result
 
     def fill_in_shader_color_info(self, data):
-        data["im_coords"] = self.im_coords
-        data["opacity"] = self.opacity
+        data["im_coords"] = self.data["im_coords"]
+        data["opacity"] = self.data["opacity"]
         return data

@@ -4,7 +4,7 @@ from manimlib.utils.bezier import interpolate
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import color_to_rgba
 from manimlib.utils.color import rgba_to_color
-from manimlib.utils.iterables import stretch_array_to_length
+from manimlib.utils.iterables import resize_preserving_order
 
 
 class PMobject(Mobject):
@@ -18,7 +18,7 @@ class PMobject(Mobject):
 
     def set_points(self, points):
         self.points = points
-        self.rgbas = stretch_array_to_length(self.rgbas, len(points))
+        self.rgbas = resize_preserving_order(self.rgbas, len(points))
         return self
 
     def add_points(self, points, rgbas=None, color=None, alpha=1):
@@ -91,7 +91,7 @@ class PMobject(Mobject):
         return self
 
     def match_colors(self, pmobject):
-        self.rgbas[:] = stretch_array_to_length(pmobject.rgbas, len(self.points))
+        self.rgbas[:] = resize_preserving_order(pmobject.rgbas, len(self.points))
         return self
 
     def filter_out(self, condition):
@@ -138,14 +138,6 @@ class PMobject(Mobject):
         return self.points[index]
 
     # Alignment
-    def align_points_with_larger(self, larger_mobject):
-        assert(isinstance(larger_mobject, PMobject))
-        self.apply_over_attr_arrays(
-            lambda a: stretch_array_to_length(
-                a, larger_mobject.get_num_points()
-            )
-        )
-
     def interpolate_color(self, mobject1, mobject2, alpha):
         self.rgbas = interpolate(mobject1.rgbas, mobject2.rgbas, alpha)
         return self

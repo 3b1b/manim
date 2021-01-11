@@ -24,7 +24,7 @@ class Rotating(Animation):
 
     def interpolate_mobject(self, alpha):
         for sm1, sm2 in self.get_all_families_zipped():
-            sm1.points[:] = sm2.points
+            sm1.set_points(sm2.get_points())
         self.mobject.rotate(
             alpha * self.angle,
             axis=self.axis,

@@ -310,8 +310,7 @@ class Dot(Circle):
     }
 
     def __init__(self, point=ORIGIN, **kwargs):
-        Circle.__init__(self, arc_center=point, **kwargs)
-        self.lock_triangulation()
+        super().__init__(arc_center=point, **kwargs)
 
 
 class SmallDot(Dot):
@@ -327,7 +326,7 @@ class Ellipse(Circle):
     }
 
     def __init__(self, **kwargs):
-        Circle.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.set_width(self.width, stretch=True)
         self.set_height(self.height, stretch=True)
 

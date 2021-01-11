@@ -2,7 +2,6 @@ import itertools as it
 import operator as op
 import moderngl
 
-from colour import Color
 from functools import reduce
 
 from manimlib.constants import *
@@ -17,10 +16,12 @@ from manimlib.utils.bezier import set_array_by_interpolation
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import partial_quadratic_bezier_points
 from manimlib.utils.color import color_to_rgba
+from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import rgb_to_hex
 from manimlib.utils.iterables import make_even
-from manimlib.utils.iterables import stretch_array_to_length
-from manimlib.utils.iterables import stretch_array_to_length_with_interpolation
+from manimlib.utils.iterables import resize_array
+from manimlib.utils.iterables import resize_preserving_order
+from manimlib.utils.iterables import resize_with_interpolation
 from manimlib.utils.iterables import listify
 from manimlib.utils.paths import straight_path
 from manimlib.utils.space_ops import angle_between_vectors
@@ -77,68 +78,27 @@ class VMobject(Mobject):
 
     def __init__(self, **kwargs):
         self.unit_normal_locked = False
-        self.triangulation_locked = False
+        self.needs_new_triangulation = True
         super().__init__(**kwargs)
         self.lock_unit_normal(family=False)
-        self.lock_triangulation(family=False)
 
     def get_group_class(self):
         return VGroup
 
-    # To sort out later
     def init_data(self):
-        self.fill_data = np.zeros(0, dtype=self.fill_dtype)
-        self.stroke_data = np.zeros(0, dtype=self.stroke_dtype)
-
-    def resize_data(self, new_length):
-        self.stroke_data = np.resize(self.stroke_data, new_length)
-        self.fill_data = np.resize(self.fill_data, new_length)
-        self.fill_data["vert_index"][:, 0] = range(new_length)
+        self.data = {
+            "points": np.zeros((0, 3)),
+            "fill_rgba": np.zeros((1, 4)),
+            "stroke_rgba": np.zeros((1, 4)),
+            "stroke_width": np.zeros((1, 1)),
+        }
 
     def set_points(self, points):
-        if len(points) != len(self.stroke_data):
-            self.resize_data(len(points))
-
-        nppc = self.n_points_per_curve
-        self.stroke_data["point"] = points
-        self.stroke_data["prev_point"][:nppc] = points[-nppc:]
-        self.stroke_data["prev_point"][nppc:] = points[:-nppc]
-        self.stroke_data["next_point"][:-nppc] = points[nppc:]
-        self.stroke_data["next_point"][-nppc:] = points[:nppc]
-
-        self.fill_data["point"] = points
-
-        # # TODO, only do conditionally
-        # unit_normal = self.get_unit_normal()
-        # self.stroke_data["unit_normal"] = unit_normal
-        # self.fill_data["unit_normal"] = unit_normal
-
-        # self.refresh_triangulation()
-
-    def get_points(self):
-        return self.stroke_data["point"]
-
-    def get_all_point_arrays(self):
-        return [
-            self.fill_data["point"],
-            self.stroke_data["point"],
-            self.stroke_data["prev_point"],
-            self.stroke_data["next_point"],
-        ]
-
-    def get_all_data_arrays(self):
-        return [self.fill_data, self.stroke_data]
-
-    def get_data_array_attrs(self):
-        return ["fill_data", "stroke_data"]
-
-    def get_num_points(self):
-        return len(self.stroke_data)
+        super().set_points(points)
+        self.refresh_triangulation()
 
     # Colors
     def init_colors(self):
-        self.fill_rgbas = np.zeros((1, 4))
-        self.stroke_rgbas = np.zeros((1, 4))
         self.set_fill(
             color=self.fill_color or self.color,
             opacity=self.fill_opacity,
@@ -153,69 +113,45 @@ class VMobject(Mobject):
         self.set_flat_stroke(self.flat_stroke)
         return self
 
-    def generate_rgba_array(self, color, opacity):
-        """
-        First arg can be either a color, or a tuple/list of colors.
-        Likewise, opacity can either be a float, or a tuple of floats.
-        """
-        colors = listify(color)
-        opacities = listify(opacity)
-        return np.array([
-            color_to_rgba(c, o)
-            for c, o in zip(*make_even(colors, opacities))
-        ])
-
-    def update_rgbas_array(self, array_name, color, opacity):
-        rgbas = self.generate_rgba_array(color or BLACK, opacity or 0)
-        # Match up current rgbas array with the newly calculated
-        # one. 99% of the time they'll be the same.
-        curr_rgbas = getattr(self, array_name)
-        if len(curr_rgbas) < len(rgbas):
-            curr_rgbas = stretch_array_to_length(curr_rgbas, len(rgbas))
-            setattr(self, array_name, curr_rgbas)
-        elif len(rgbas) < len(curr_rgbas):
-            rgbas = stretch_array_to_length(rgbas, len(curr_rgbas))
-        # Only update rgb if color was not None, and only
-        # update alpha channel if opacity was passed in
-        if color is not None:
-            curr_rgbas[:, :3] = rgbas[:, :3]
-        if opacity is not None:
-            curr_rgbas[:, 3] = rgbas[:, 3]
+    def set_rgba_array(self, name, color, opacity, family=True):
+        # TODO, account for if color or opacity are tuples
+        rgb = color_to_rgb(color) if color else None
+        mobs = self.get_family() if family else [self]
+        for mob in mobs:
+            if rgb is not None:
+                mob.data[name][:, :3] = rgb
+            if opacity is not None:
+                mob.data[name][:, 3] = opacity
         return self
 
     def set_fill(self, color=None, opacity=None, family=True):
-        if family:
-            for sm in self.submobjects:
-                sm.set_fill(color, opacity, family)
-        self.update_rgbas_array("fill_rgbas", color, opacity)
-        return self
+        self.set_rgba_array('fill_rgba', color, opacity, family)
 
-    def set_stroke(self, color=None, width=None, opacity=None,
-                   background=None, family=True):
-        if family:
-            for sm in self.submobjects:
-                sm.set_stroke(color, width, opacity, background, family)
-        self.update_rgbas_array("stroke_rgbas", color, opacity)
-        if width is not None:
-            self.stroke_width = np.array(listify(width), dtype=float)
-        if background is not None:
-            self.draw_stroke_behind_fill = background
+    def set_stroke(self, color=None, width=None, opacity=None, background=None, family=True):
+        self.set_rgba_array('stroke_rgba', color, opacity, family)
+
+        mobs = self.get_family() if family else [self]
+        for mob in mobs:
+            if width is not None:
+                # TODO, account for if width is an array
+                mob.data['stroke_width'][:] = width
+            if background is not None:
+                mob.draw_stroke_behind_fill = background
         return self
 
     def set_style(self,
                   fill_color=None,
                   fill_opacity=None,
-                  fill_rgbas=None,
+                  fill_rgba=None,
                   stroke_color=None,
                   stroke_opacity=None,
-                  stroke_rgbas=None,
+                  stroke_rgba=None,
                   stroke_width=None,
                   gloss=None,
                   shadow=None,
-                  background_image_file=None,
                   family=True):
-        if fill_rgbas is not None:
-            self.fill_rgbas = np.array(fill_rgbas)
+        if fill_rgba is not None:
+            self.data['fill_rgba'] = resize_with_interpolation(fill_rgba, len(fill_rgba))
         else:
             self.set_fill(
                 color=fill_color,
@@ -223,10 +159,9 @@ class VMobject(Mobject):
                 family=family
             )
 
-        if stroke_rgbas is not None:
-            self.stroke_rgbas = np.array(stroke_rgbas)
-            if stroke_width is not None:
-                self.stroke_width = np.array(listify(stroke_width))
+        if stroke_rgba is not None:
+            self.data['stroke_rgba'] = resize_with_interpolation(stroke_rgba, len(fill_rgba))
+            self.set_stroke(width=stroke_width)
         else:
             self.set_stroke(
                 color=stroke_color,
@@ -239,31 +174,19 @@ class VMobject(Mobject):
             self.set_gloss(gloss, family=family)
         if shadow is not None:
             self.set_shadow(shadow, family=family)
-        if background_image_file:
-            self.color_using_background_image(background_image_file)
         return self
 
     def get_style(self):
         return {
-            "fill_rgbas": self.get_fill_rgbas(),
-            "stroke_rgbas": self.get_stroke_rgbas(),
-            "stroke_width": self.stroke_width,
+            "fill_rgba": self.data['fill_rgba'],
+            "stroke_rgba": self.data['stroke_rgba'],
+            "stroke_width": self.data['stroke_width'],
             "gloss": self.get_gloss(),
             "shadow": self.get_shadow(),
-            "background_image_file": self.get_background_image_file(),
         }
 
     def match_style(self, vmobject, family=True):
-        for name, value in vmobject.get_style().items():
-            if isinstance(value, np.ndarray):
-                curr = getattr(self, name)
-                if curr.size == value.size:
-                    curr[:] = value[:]
-                else:
-                    setattr(self, name, np.array(value))
-            else:
-                setattr(self, name, value)
-
+        self.set_style(**vmobject.get_style(), family=False)
         if family:
             # Does its best to match up submobject lists, and
             # match styles accordingly
@@ -299,12 +222,29 @@ class VMobject(Mobject):
         super().fade(darkness, family)
         return self
 
-    def get_fill_rgbas(self):
-        try:
-            return self.fill_rgbas
-        except AttributeError:
-            return np.zeros((1, 4))
+    def get_fill_colors(self):
+        return [
+            rgb_to_hex(rgba[:3])
+            for rgba in self.data['fill_rgba']
+        ]
 
+    def get_fill_opacities(self):
+        return self.data['fill_rgba'][:, 3]
+
+    def get_stroke_colors(self):
+        return [
+            rgb_to_hex(rgba[:3])
+            for rgba in self.data['stroke_rgba']
+        ]
+
+    def get_stroke_opacities(self):
+        return self.data['stroke_rgba'][:, 3]
+
+    def get_stroke_widths(self):
+        return self.data['stroke_width']
+
+    # TODO, it's weird for these to return the first of various lists
+    # rather than the full information
     def get_fill_color(self):
         """
         If there are multiple colors (for gradient)
@@ -319,62 +259,25 @@ class VMobject(Mobject):
         """
         return self.get_fill_opacities()[0]
 
-    def get_fill_colors(self):
-        return [
-            Color(rgb=rgba[:3])
-            for rgba in self.get_fill_rgbas()
-        ]
-
-    def get_fill_opacities(self):
-        return self.get_fill_rgbas()[:, 3]
-
-    def get_stroke_rgbas(self):
-        try:
-            return self.stroke_rgbas
-        except AttributeError:
-            return np.zeros((1, 4))
-
-    # TODO, it's weird for these to return the first of various lists
-    # rather than the full information
     def get_stroke_color(self):
         return self.get_stroke_colors()[0]
 
     def get_stroke_width(self):
-        return self.stroke_width[0]
+        return self.get_stroke_widths()[0]
 
     def get_stroke_opacity(self):
         return self.get_stroke_opacities()[0]
 
-    def get_stroke_colors(self):
-        return [
-            rgb_to_hex(rgba[:3])
-            for rgba in self.get_stroke_rgbas()
-        ]
-
-    def get_stroke_opacities(self):
-        return self.get_stroke_rgbas()[:, 3]
-
     def get_color(self):
-        if np.all(self.get_fill_opacities() == 0):
+        if self.has_stroke():
             return self.get_stroke_color()
         return self.get_fill_color()
 
     def has_stroke(self):
-        if len(self.stroke_width) == 1:
-            if self.stroke_width == 0:
-                return False
-        elif not self.stroke_width.any():
-            return False
-        alphas = self.stroke_rgbas[:, 3]
-        if len(alphas) == 1:
-            return alphas[0] > 0
-        return alphas.any()
+        return any(self.get_stroke_widths()) and any(self.get_stroke_opacities())
 
     def has_fill(self):
-        alphas = self.fill_rgbas[:, 3]
-        if len(alphas) == 1:
-            return alphas[0] > 0
-        return alphas.any()
+        return any(self.get_fill_opacities())
 
     def get_opacity(self):
         if self.has_fill():
@@ -382,44 +285,13 @@ class VMobject(Mobject):
         return self.get_stroke_opacity()
 
     def set_flat_stroke(self, flat_stroke=True, family=True):
-        self.flat_stroke = flat_stroke
-        if family:
-            for submob in self.submobjects:
-                submob.set_flat_stroke(flat_stroke, family)
+        mobs = self.get_family() if family else [self]
+        for mob in mobs:
+            mob.flat_stroke = flat_stroke
         return self
 
     def get_flat_stroke(self):
         return self.flat_stroke
-
-    # TODO, this currently does nothing
-    def color_using_background_image(self, background_image_file):
-        self.background_image_file = background_image_file
-        self.set_color(WHITE)
-        for submob in self.submobjects:
-            submob.color_using_background_image(background_image_file)
-        return self
-
-    def get_background_image_file(self):
-        return self.background_image_file
-
-    def match_background_image_file(self, vmobject):
-        self.color_using_background_image(vmobject.get_background_image_file())
-        return self
-
-    def stretched_style_array_matching_points(self, array):
-        new_len = self.get_num_points()
-        long_arr = stretch_array_to_length_with_interpolation(
-            array, 1 + 2 * (new_len // 3)
-        )
-        shape = array.shape
-        if len(shape) > 1:
-            result = np.zeros((new_len, shape[1]))
-        else:
-            result = np.zeros(new_len)
-        result[0::3] = long_arr[0:-1:2]
-        result[1::3] = long_arr[1::2]
-        result[2::3] = long_arr[2::2]
-        return result
 
     # Points
     def set_anchors_and_handles(self, anchors1, handles, anchors2):
@@ -436,7 +308,8 @@ class VMobject(Mobject):
         # TODO, check that number new points is a multiple of 4?
         # or else that if self.get_num_points() % 4 == 1, then
         # len(new_points) % 4 == 3?
-        self.set_points(np.vstack([self.get_points(), new_points]))
+        self.resize_points(self.get_num_points() + len(new_points))
+        self.data["points"][-len(new_points):] = new_points
         return self
 
     def start_new_path(self, point):
@@ -784,7 +657,6 @@ class VMobject(Mobject):
 
     # Alignment
     def align_points(self, vmobject):
-        self.align_rgbas(vmobject)
         if self.get_num_points() == len(vmobject.get_points()):
             return
 
@@ -871,39 +743,20 @@ class VMobject(Mobject):
                 new_points += partial_quadratic_bezier_points(group, a1, a2)
         return np.vstack(new_points)
 
-    def align_rgbas(self, vmobject):
-        attrs = ["fill_rgbas", "stroke_rgbas"]
-        for attr in attrs:
-            a1 = getattr(self, attr)
-            a2 = getattr(vmobject, attr)
-            if len(a1) > len(a2):
-                new_a2 = stretch_array_to_length(a2, len(a1))
-                setattr(vmobject, attr, new_a2)
-            elif len(a2) > len(a1):
-                new_a1 = stretch_array_to_length(a1, len(a2))
-                setattr(self, attr, new_a1)
+    def interpolate(self, mobject1, mobject2, alpha, *args, **kwargs):
+        super().interpolate(mobject1, mobject2, alpha, *args, **kwargs)
+        if self.has_fill():
+            tri1 = mobject1.get_triangulation()
+            tri2 = mobject2.get_triangulation()
+            if len(tri1) != len(tri1) or not all(tri1 == tri2):
+                self.refresh_triangulation()
         return self
-
-    def interpolate_color(self, mobject1, mobject2, alpha):
-        attrs = [
-            "fill_rgbas",
-            "stroke_rgbas",
-            "stroke_width",
-        ]
-        for attr in attrs:
-            set_array_by_interpolation(
-                getattr(self, attr),
-                getattr(mobject1, attr),
-                getattr(mobject2, attr),
-                alpha
-            )
 
     def pointwise_become_partial(self, vmobject, a, b):
         assert(isinstance(vmobject, VMobject))
-        self.set_points(vmobject.get_points())
         if a <= 0 and b >= 1:
             return self
-        num_curves = self.get_num_curves()
+        num_curves = vmobject.get_num_curves()
         nppc = self.n_points_per_curve
 
         # Partial curve includes three portions:
@@ -918,26 +771,26 @@ class VMobject(Mobject):
         i3 = nppc * upper_index
         i4 = nppc * (upper_index + 1)
 
-        points = self.get_points()
         vm_points = vmobject.get_points()
+        new_points = vm_points.copy()
         if num_curves == 0:
-            points[:] = 0
+            new_points[:] = 0
             return self
         if lower_index == upper_index:
             tup = partial_quadratic_bezier_points(vm_points[i1:i2], lower_residue, upper_residue)
-            points[:i1] = tup[0]
-            points[i1:i4] = tup
-            points[i4:] = tup[2]
-            points[nppc:] = points[nppc - 1]
+            new_points[:i1] = tup[0]
+            new_points[i1:i4] = tup
+            new_points[i4:] = tup[2]
+            new_points[nppc:] = new_points[nppc - 1]
         else:
             low_tup = partial_quadratic_bezier_points(vm_points[i1:i2], lower_residue, 1)
             high_tup = partial_quadratic_bezier_points(vm_points[i3:i4], 0, upper_residue)
-            points[0:i1] = low_tup[0]
-            points[i1:i2] = low_tup
-            # Keep points i2:i3 as they are
-            points[i3:i4] = high_tup
-            points[i4:] = high_tup[2]
-        self.set_points(points)
+            new_points[0:i1] = low_tup[0]
+            new_points[i1:i2] = low_tup
+            # Keep new_points i2:i3 as they are
+            new_points[i3:i4] = high_tup
+            new_points[i4:] = high_tup[2]
+        self.set_points(new_points)
         return self
 
     def get_subcurve(self, a, b):
@@ -945,14 +798,10 @@ class VMobject(Mobject):
         vmob.pointwise_become_partial(self, a, b)
         return vmob
 
-    def interpolate(self, mobject1, mobject2, alpha, path_func=straight_path):
-        super().interpolate(mobject1, mobject2, alpha, path_func)
-        if not np.all(mobject1.get_triangulation() == mobject2.get_triangulation()):
-            self.refresh_triangulation()
-        return self
-
     # For shaders
     def init_shader_data(self):
+        self.fill_data = np.zeros(0, dtype=self.fill_dtype)
+        self.stroke_data = np.zeros(0, dtype=self.stroke_dtype)
         self.fill_shader_wrapper = ShaderWrapper(
             vert_data=self.fill_data,
             vert_indices=np.zeros(0, dtype='i4'),
@@ -1019,39 +868,27 @@ class VMobject(Mobject):
         return result
 
     def get_stroke_shader_data(self):
-        # TODO, make even simpler after fixing colors
-        rgbas = self.get_stroke_rgbas()
-        if len(rgbas) > 1:
-            rgbas = self.stretched_style_array_matching_points(rgbas)
+        points = self.get_points()
+        if len(self.stroke_data) != len(points):
+            self.stroke_data = resize_array(self.stroke_data, len(points))
+        # TODO, account for when self.data["stroke_width"] and self.data["stroke_rgba"]
+        # have length greater than 1
 
-        stroke_width = self.stroke_width
-        if len(stroke_width) > 1:
-            stroke_width = self.stretched_style_array_matching_points(stroke_width)
+        nppc = self.n_points_per_curve
+        self.stroke_data["point"] = points
+        self.stroke_data["prev_point"][:nppc] = points[-nppc:]
+        self.stroke_data["prev_point"][nppc:] = points[:-nppc]
+        self.stroke_data["next_point"][:-nppc] = points[nppc:]
+        self.stroke_data["next_point"][-nppc:] = points[:nppc]
 
-        data = self.stroke_data
-        data["stroke_width"][:, 0] = stroke_width
-        data["color"] = rgbas
-        return data
-
-    def lock_triangulation(self, family=True):
-        mobs = self.get_family() if family else [self]
-        for mob in mobs:
-            mob.triangulation_locked = False
-            mob.saved_triangulation = mob.get_triangulation()
-            mob.triangulation_locked = True
-        return self
-
-    def unlock_triangulation(self):
-        for sm in self.get_family():
-            sm.triangulation_locked = False
-        return self
+        self.stroke_data["unit_normal"] = self.get_unit_normal()
+        self.stroke_data["stroke_width"] = self.data["stroke_width"]
+        self.stroke_data["color"] = self.data["stroke_rgba"]
+        return self.stroke_data
 
     def refresh_triangulation(self):
         for mob in self.get_family():
-            if mob.triangulation_locked:
-                mob.triangulation_locked = False
-                mob.saved_triangulation = mob.get_triangulation()
-                mob.triangulation_locked = True
+            mob.needs_new_triangulation = True
         return self
 
     def get_triangulation(self, normal_vector=None):
@@ -1061,13 +898,14 @@ class VMobject(Mobject):
         if normal_vector is None:
             normal_vector = self.get_unit_normal()
 
-        if self.triangulation_locked:
-            return self.saved_triangulation
+        if not self.needs_new_triangulation:
+            return self.saved_traignulation
 
         points = self.get_points()
 
         if len(points) <= 1:
-            return np.zeros(0, dtype='i4')
+            self.saved_traignulation == np.zeros(0, dtype='i4')
+            return self.saved_traignulation
 
         # Rotate points such that unit normal vector is OUT
         # TODO, 99% of the time this does nothing.  Do a check for that?
@@ -1104,14 +942,20 @@ class VMobject(Mobject):
         inner_tri_indices = inner_vert_indices[earclip_triangulation(inner_verts, rings)]
 
         tri_indices = np.hstack([indices, inner_tri_indices])
+        self.saved_traignulation = tri_indices
+        self.needs_new_triangulation = False
         return tri_indices
 
     def get_fill_shader_data(self):
-        # TODO, make simpler
-        rgbas = self.get_fill_rgbas()[:1]
-        data = self.fill_data
-        data["color"] = rgbas
-        return data
+        points = self.get_points()
+        if len(self.fill_data) != len(points):
+            self.fill_data = resize_array(self.fill_data, len(points))
+            self.fill_data["vert_index"][:, 0] = range(len(points))
+
+        self.fill_data["point"] = points
+        self.fill_data["unit_normal"] = self.get_unit_normal()
+        self.fill_data["color"] = self.data["fill_rgba"]
+        return self.fill_data
 
     def get_fill_shader_vert_indices(self):
         return self.get_triangulation()
@@ -1121,11 +965,11 @@ class VGroup(VMobject):
     def __init__(self, *vmobjects, **kwargs):
         if not all([isinstance(m, VMobject) for m in vmobjects]):
             raise Exception("All submobjects must be of type VMobject")
-        VMobject.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.add(*vmobjects)
 
 
-class VectorizedPoint(VMobject, Point):
+class VectorizedPoint(Point, VMobject):
     CONFIG = {
         "color": BLACK,
         "fill_opacity": 0,
@@ -1135,13 +979,13 @@ class VectorizedPoint(VMobject, Point):
     }
 
     def __init__(self, location=ORIGIN, **kwargs):
-        VMobject.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.set_points(np.array([location]))
 
 
 class CurvesAsSubmobjects(VGroup):
     def __init__(self, vmobject, **kwargs):
-        VGroup.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         for tup in vmobject.get_bezier_tuples():
             part = VMobject()
             part.set_points(tup)
@@ -1157,7 +1001,7 @@ class DashedVMobject(VMobject):
     }
 
     def __init__(self, vmobject, **kwargs):
-        VMobject.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         num_dashes = self.num_dashes
         ps_ratio = self.positive_space_ratio
         if num_dashes > 0:

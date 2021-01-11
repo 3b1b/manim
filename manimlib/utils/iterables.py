@@ -80,15 +80,23 @@ def listify(obj):
         return [obj]
 
 
-def stretch_array_to_length(nparray, length):
-    # TODO, rename to "resize"?
+def resize_array(nparray, length):
+    return np.resize(nparray, (length, *nparray.shape[1:]))
+
+
+def resize_preserving_order(nparray, length):
+    if len(nparray) == 0:
+        return np.zeros((length, *nparray.shape[1:]))
+    if len(nparray) == length:
+        return nparray
     indices = np.arange(length) * len(nparray) // length
     return nparray[indices]
 
 
-def stretch_array_to_length_with_interpolation(nparray, length):
-    curr_len = len(nparray)
-    cont_indices = np.linspace(0, curr_len - 1, length)
+def resize_with_interpolation(nparray, length):
+    if len(nparray) == length:
+        return nparray
+    cont_indices = np.linspace(0, len(nparray) - 1, length)
     return np.array([
         (1 - a) * nparray[lh] + a * nparray[rh]
         for ci in cont_indices

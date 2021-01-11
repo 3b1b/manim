@@ -74,8 +74,8 @@ def interpolate(start, end, alpha):
         sys.exit(2)
 
 
-def set_array_by_interpolation(arr, arr1, arr2, alpha):
-    arr[:] = interpolate(arr1, arr2, alpha)
+def set_array_by_interpolation(arr, arr1, arr2, alpha, interp_func=interpolate):
+    arr[:] = interp_func(arr1, arr2, alpha)
     return arr
 
 

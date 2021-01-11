@@ -281,6 +281,7 @@ class SVGMobject(VMobject):
             matrix[:, 1] *= -1
 
             for mob in mobject.family_members_with_points():
+                # TODO, directly apply matrix?
                 mob.set_points(np.dot(mob.get_points(), matrix))
             mobject.shift(x * RIGHT + y * UP)
         except:

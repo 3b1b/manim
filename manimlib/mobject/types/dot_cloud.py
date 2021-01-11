@@ -7,7 +7,7 @@ from manimlib.constants import ORIGIN
 from manimlib.mobject.types.point_cloud_mobject import PMobject
 from manimlib.mobject.geometry import DEFAULT_DOT_RADIUS
 from manimlib.utils.bezier import interpolate
-from manimlib.utils.iterables import stretch_array_to_length
+from manimlib.utils.iterables import resize_preserving_order
 
 
 class DotCloud(PMobject):
@@ -32,7 +32,7 @@ class DotCloud(PMobject):
 
     def set_points(self, points):
         super().set_points(points)
-        self.radii = stretch_array_to_length(self.radii, len(points))
+        self.radii = resize_preserving_order(self.radii, len(points))
         return self
 
     def set_points_by_grid(self, n_rows, n_cols, height=None, width=None):
@@ -58,7 +58,7 @@ class DotCloud(PMobject):
         if isinstance(radii, numbers.Number):
             self.radii[:] = radii
         else:
-            self.radii = stretch_array_to_length(radii, len(self.points))
+            self.radii = resize_preserving_order(radii, len(self.points))
         return self
 
     def scale(self, scale_factor, scale_radii=True, **kwargs):
