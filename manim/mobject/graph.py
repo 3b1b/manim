@@ -49,7 +49,7 @@ class Graph(VMobject):
         is set to ``True``. Has no effect for other values of ``labels``.
     layout
         Either one of ``"spring"`` (the default), ``"circular"``, ``"kamada_kawai"``,
-        ``"planar"``, ``"random"``, ``"shell"``, ``"spectral"``, and ``"spiral"``
+        ``"planar"``, ``"random"``, ``"shell"``, ``"spectral"``, ``"spiral"``, and ``"partite"``
         for automatic vertex positioning using ``networkx``
         (see `their documentation <https://networkx.org/documentation/stable/reference/drawing.html#module-networkx.drawing.layout>`_
         for more details), or a dictionary specifying a coordinate (value)
@@ -158,6 +158,27 @@ class Graph(VMobject):
                                        (4, 7): {"stroke_color": RED}})
                 self.add(g)
 
+    You can also lay out a partite graph on columns by specifying
+    a list of the vertices on each side and choosing the partite layout.
+
+    .. note::
+
+        All vertices in your graph which are not listed in any of the partitions
+        are collected in their own partition and rendered in the rightmost column.
+
+    .. manim:: PartiteGraph
+        :save_last_frame:
+
+        import networkx as nx
+
+        class PartiteGraph(Scene):
+            def construct(self):
+                G = nx.Graph()
+                G.add_nodes_from([0, 1, 2, 3])
+                G.add_edges_from([(0, 2), (0,3), (1, 2)])
+                graph = Graph(list(G.nodes), list(G.edges), layout="partite", partitions=[[0, 1]])
+                self.play(ShowCreation(graph))
+
     """
 
     def __init__(
@@ -172,6 +193,7 @@ class Graph(VMobject):
         vertex_type: "Mobject" = Dot,
         vertex_config: Union[dict, None] = None,
         edge_type: "Mobject" = Line,
+        partitions: Union[List[List[Hashable]], None] = None,
         edge_config: Union[dict, None] = None,
     ) -> None:
         VMobject.__init__(self)
@@ -188,6 +210,7 @@ class Graph(VMobject):
             "random": nx.layout.random_layout,
             "shell": nx.layout.shell_layout,
             "spectral": nx.layout.spectral_layout,
+            "partite": nx.layout.multipartite_layout,
             "spiral": nx.layout.spiral_layout,
             "spring": nx.layout.spring_layout,
         }
@@ -198,6 +221,23 @@ class Graph(VMobject):
         if isinstance(layout, dict):
             self._layout = layout
         elif layout in automatic_layouts and layout != "random":
+            if layout == "partite":
+                if partitions is None or len(partitions) == 0:
+                    raise ValueError(
+                        "The partite layout requires the 'partitions' parameter to contain the partition of the vertices"
+                    )
+                partition_count = len(partitions)
+                for i in range(partition_count):
+                    for v in partitions[i]:
+                        if nx_graph.nodes[v] is None:
+                            raise ValueError(
+                                "The partition must contain arrays of vertices in the graph"
+                            )
+                        nx_graph.nodes[v]["subset"] = i
+                # Add missing vertices to their own side
+                for v in nx_graph.nodes:
+                    if "subset" not in nx_graph.nodes[v]:
+                        nx_graph.nodes[v]["subset"] = partition_count
             self._layout = automatic_layouts[layout](
                 nx_graph, scale=layout_scale, **layout_config
             )
