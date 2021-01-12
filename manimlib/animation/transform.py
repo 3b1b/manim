@@ -92,7 +92,7 @@ class Transform(Animation):
 
     def get_all_families_zipped(self):
         return zip(*[
-            mob.family_members_with_points()
+            mob.get_family()
             for mob in [
                 self.mobject,
                 self.starting_mobject,

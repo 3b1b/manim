@@ -1200,6 +1200,8 @@ class Mobject(object):
         for key in self.data:
             if key in self.locked_data_keys:
                 continue
+            if len(self.data[key]) == 0:
+                continue
             func = path_func if key == "points" else interpolate
             self.data[key][:] = func(
                 mobject1.data[key],

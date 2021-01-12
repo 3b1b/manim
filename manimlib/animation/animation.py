@@ -77,7 +77,7 @@ class Animation(object):
 
     def get_all_families_zipped(self):
         return zip(*[
-            mob.family_members_with_points()
+            mob.get_family()
             for mob in self.get_all_mobjects()
         ])
 
