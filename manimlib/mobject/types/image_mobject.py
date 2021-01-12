@@ -38,10 +38,9 @@ class ImageMobject(Mobject):
         self.set_width(2 * size[0] / size[1], stretch=True)
         self.set_height(self.height)
 
-    def set_opacity(self, opacity, family=True):
+    def set_opacity(self, opacity, recurse=True):
         # TODO, account for opacity coming in as an array
-        mobs = self.get_family() if family else [self]
-        for mob in mobs:
+        for mob in self.get_family(recurse):
             mob.data["opacity"][:, 0] = opacity
         return self
 

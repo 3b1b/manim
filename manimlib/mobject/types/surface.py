@@ -221,9 +221,8 @@ class TexturedSurface(ParametricSurface):
     def init_colors(self):
         pass
 
-    def set_opacity(self, opacity, family=True):
-        mobs = self.get_family() if family else [self]
-        for mob in mobs:
+    def set_opacity(self, opacity, recurse=True):
+        for mob in self.get_family(recurse):
             mob.data["opacity"][:] = opacity
         return self
 

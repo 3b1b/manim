@@ -144,8 +144,8 @@ class Mobject(object):
             parent.assemble_family()
         return self
 
-    def get_family(self):
-        return self.family
+    def get_family(self, recurse=True):
+        return self.family if recurse else [self]
 
     def family_members_with_points(self):
         return [m for m in self.get_family() if m.has_points()]
@@ -672,31 +672,30 @@ class Mobject(object):
         return self
 
     # Color functions
-    def set_rgba_array(self, color=None, opacity=None, name="rgbas", family=True):
+    def set_rgba_array(self, color=None, opacity=None, name="rgbas", recurse=True):
         # TODO, account for if color or opacity are tuples
         rgb = color_to_rgb(color) if color else None
-        mobs = self.get_family() if family else [self]
-        for mob in mobs:
+        for mob in self.get_family(recurse):
             if rgb is not None:
                 mob.data[name][:, :3] = rgb
             if opacity is not None:
                 mob.data[name][:, 3] = opacity
         return self
 
-    def set_color(self, color, opacity=None, family=True):
-        self.set_rgba_array(color, opacity, family=False)
+    def set_color(self, color, opacity=None, recurse=True):
+        self.set_rgba_array(color, opacity, recurse=False)
         # Recurse to submobjects differently from how set_rgba_array
         # in case they implement set_color differently
-        if family:
+        if recurse:
             for submob in self.submobjects:
-                submob.set_color(color, family=True)
+                submob.set_color(color, recurse=True)
         return self
 
-    def set_opacity(self, opacity, family=True):
-        self.set_rgba_array(color=None, opacity=opacity, family=False)
-        if family:
+    def set_opacity(self, opacity, recurse=True):
+        self.set_rgba_array(color=None, opacity=opacity, recurse=False)
+        if recurse:
             for submob in self.submobjects:
-                submob.set_opacity(opacity, family=True)
+                submob.set_opacity(opacity, recurse=True)
         return self
 
     def get_color(self):
@@ -719,30 +718,26 @@ class Mobject(object):
         new_colors = color_gradient(colors, len(mobs))
 
         for mob, color in zip(mobs, new_colors):
-            mob.set_color(color, family=False)
+            mob.set_color(color, recurse=False)
         return self
 
-    def fade(self, darkness=0.5, family=True):
-        self.set_opacity(1.0 - darkness, family=family)
+    def fade(self, darkness=0.5, recurse=True):
+        self.set_opacity(1.0 - darkness, recurse=recurse)
 
     def get_gloss(self):
         return self.gloss
 
-    def set_gloss(self, gloss, family=True):
-        self.gloss = gloss
-        if family:
-            for submob in self.submobjects:
-                submob.set_gloss(gloss, family)
+    def set_gloss(self, gloss, recurse=True):
+        for mob in self.get_family(recurse):
+            mob.gloss = gloss
         return self
 
     def get_shadow(self):
         return self.shadow
 
-    def set_shadow(self, shadow, family=True):
-        self.shadow = shadow
-        if family:
-            for submob in self.submobjects:
-                submob.set_shadow(shadow, family)
+    def set_shadow(self, shadow, recurse=True):
+        for mob in self.get_family(recurse):
+            mob.shadow = shadow
         return self
 
     ##
@@ -1050,10 +1045,10 @@ class Mobject(object):
             self.submobjects.sort(key=lambda m: point_to_num_func(m.get_center()))
         return self
 
-    def shuffle(self, recursive=False):
-        if recursive:
+    def shuffle(self, recurse=False):
+        if recurse:
             for submob in self.submobjects:
-                submob.shuffle(recursive=True)
+                submob.shuffle(recurse=True)
         random.shuffle(self.submobjects)
         return self
 
