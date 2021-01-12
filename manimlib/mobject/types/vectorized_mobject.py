@@ -72,11 +72,10 @@ class VMobject(Mobject):
     }
 
     def __init__(self, **kwargs):
-        self.unit_normal_locked = False
         self.needs_new_triangulation = True
         self.triangulation = np.zeros(0, dtype='i4')
         super().__init__(**kwargs)
-        self.lock_unit_normal(recurse=False)
+        self.refresh_unit_normal()
 
     def get_group_class(self):
         return VGroup
@@ -87,6 +86,7 @@ class VMobject(Mobject):
             "fill_rgba": np.zeros((1, 4)),
             "stroke_rgba": np.zeros((1, 4)),
             "stroke_width": np.zeros((1, 1)),
+            "unit_normal": np.zeros((1, 3))
         }
 
     def set_points(self, points):
@@ -593,9 +593,9 @@ class VMobject(Mobject):
             sum((p0[:, 0] + p1[:, 0]) * (p1[:, 1] - p0[:, 1])),  # Add up (x1 + x2)*(y2 - y1)
         ])
 
-    def get_unit_normal(self):
-        if self.unit_normal_locked:
-            return self.saved_unit_normal
+    def get_unit_normal(self, recompute=False):
+        if not recompute:
+            return self.data["unit_normal"]
 
         if self.get_num_points() < 3:
             return OUT
@@ -611,23 +611,9 @@ class VMobject(Mobject):
                 points[2] - points[1],
             )
 
-    def lock_unit_normal(self, recurse=True):
-        for mob in self.get_family(recurse):
-            mob.unit_normal_locked = False
-            mob.saved_unit_normal = mob.get_unit_normal()
-            mob.unit_normal_locked = True
-        return self
-
-    def unlock_unit_normal(self):
-        for mob in self.get_family():
-            self.unit_normal_locked = False
-        return self
-
     def refresh_unit_normal(self):
         for mob in self.get_family():
-            mob.unit_normal_locked = False
-            mob.saved_unit_normal = mob.get_unit_normal()
-            mob.unit_normal_locked = True
+            mob.data["unit_normal"][:] = mob.get_unit_normal(recompute=True)
         return self
 
     # Alignment
@@ -846,19 +832,18 @@ class VMobject(Mobject):
         if len(self.stroke_data) != len(points):
             self.stroke_data = resize_array(self.stroke_data, len(points))
 
-        self.check_color_alignment(self.stroke_data, "stroke_rgba")
-        self.check_color_alignment(self.stroke_data, "stroke_width")
+        if "points" not in self.locked_data_keys:
+            nppc = self.n_points_per_curve
+            self.stroke_data["point"] = points
+            self.stroke_data["prev_point"][:nppc] = points[-nppc:]
+            self.stroke_data["prev_point"][nppc:] = points[:-nppc]
+            self.stroke_data["next_point"][:-nppc] = points[nppc:]
+            self.stroke_data["next_point"][-nppc:] = points[:nppc]
 
-        nppc = self.n_points_per_curve
-        self.stroke_data["point"] = points
-        self.stroke_data["prev_point"][:nppc] = points[-nppc:]
-        self.stroke_data["prev_point"][nppc:] = points[:-nppc]
-        self.stroke_data["next_point"][:-nppc] = points[nppc:]
-        self.stroke_data["next_point"][-nppc:] = points[:nppc]
+        self.read_data_to_shader(self.stroke_data, "color", "stroke_rgba", True)
+        self.read_data_to_shader(self.stroke_data, "stroke_width", "stroke_width", True)
+        self.read_data_to_shader(self.stroke_data, "unit_normal", "unit_normal")
 
-        self.stroke_data["unit_normal"] = self.get_unit_normal()
-        self.stroke_data["stroke_width"] = self.data["stroke_width"]
-        self.stroke_data["color"] = self.data["stroke_rgba"]
         return self.stroke_data
 
     def refresh_triangulation(self):
@@ -928,12 +913,15 @@ class VMobject(Mobject):
             self.fill_data = resize_array(self.fill_data, len(points))
             self.fill_data["vert_index"][:, 0] = range(len(points))
 
-        self.check_color_alignment(self.fill_data, "fill_rgba")
+        self.read_data_to_shader(self.fill_data, "point", "points")
+        self.read_data_to_shader(self.fill_data, "color", "fill_rgba", True)
+        self.read_data_to_shader(self.fill_data, "unit_normal", "unit_normal")
 
-        self.fill_data["point"] = points
-        self.fill_data["unit_normal"] = self.get_unit_normal()
-        self.fill_data["color"] = self.data["fill_rgba"]
         return self.fill_data
+
+    def refresh_shader_data(self):
+        self.get_fill_shader_data()
+        self.get_stroke_shader_data()
 
     def get_fill_shader_vert_indices(self):
         return self.get_triangulation()

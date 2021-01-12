@@ -149,17 +149,17 @@ class ParametricSurface(Mobject):
     # For shaders
     def get_shader_data(self):
         s_points, du_points, dv_points = self.get_surface_points_and_nudged_points()
-        data = self.get_resized_shader_data_array(len(s_points))
-        data["point"] = s_points
-        data["du_point"] = du_points
-        data["dv_point"] = dv_points
-        self.fill_in_shader_color_info(data)
-        return data
+        shader_data = self.get_resized_shader_data_array(len(s_points))
+        if "points" not in self.locked_data_keys:
+            shader_data["point"] = s_points
+            shader_data["du_point"] = du_points
+            shader_data["dv_point"] = dv_points
+        self.fill_in_shader_color_info(shader_data)
+        return shader_data
 
-    def fill_in_shader_color_info(self, data):
-        self.check_color_alignment(data, "rgbas")
-        data["color"] = self.data["rgbas"]
-        return data
+    def fill_in_shader_color_info(self, shader_data):
+        self.read_data_to_shader(shader_data, "color", "rgbas", check_alignment=True)
+        return shader_data
 
     def get_shader_vert_indices(self):
         return self.get_triangle_indices()
@@ -250,7 +250,6 @@ class TexturedSurface(ParametricSurface):
         return result
 
     def fill_in_shader_color_info(self, shader_data):
-        self.check_color_alignment(shader_data, "opacity")
-        shader_data["im_coords"] = self.data["im_coords"]
-        shader_data["opacity"] = self.data["opacity"]
+        self.read_data_to_shader(shader_data, "opacity", "opacity", check_alignment=True)
+        self.read_data_to_shader(shader_data, "im_coords", "im_coords", check_alignment=True)
         return shader_data

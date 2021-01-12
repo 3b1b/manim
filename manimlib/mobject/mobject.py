@@ -65,6 +65,7 @@ class Mobject(object):
         self.submobjects = []
         self.parents = []
         self.family = [self]
+        self.locked_data_keys = set()
 
         self.init_data()
         self.init_updaters()
@@ -738,11 +739,12 @@ class Mobject(object):
         elif len(colors) == 1:
             return self.set_color(*colors)
 
-        mobs = self.family_members_with_points()
+        # mobs = self.family_members_with_points()
+        mobs = self.submobjects
         new_colors = color_gradient(colors, len(mobs))
 
         for mob, color in zip(mobs, new_colors):
-            mob.set_color(color, recurse=False)
+            mob.set_color(color)
         return self
 
     def fade(self, darkness=0.5, recurse=True):
@@ -1000,6 +1002,7 @@ class Mobject(object):
         return Group
 
     # Submobject organization
+
     def arrange(self, direction=RIGHT, center=True, **kwargs):
         for m1, m2 in zip(self.submobjects, self.submobjects[1:]):
             m2.next_to(m1, direction, **kwargs)
@@ -1077,6 +1080,7 @@ class Mobject(object):
         return self
 
     # Just here to keep from breaking old scenes.
+
     def arrange_submobjects(self, *args, **kwargs):
         return self.arrange(*args, **kwargs)
 
@@ -1087,9 +1091,12 @@ class Mobject(object):
         return self.shuffle(*args, **kwargs)
 
     # Alignment
+
+    def align_data_and_family(self, mobject):
+        self.align_family(mobject)
+        self.align_data(mobject)
+
     def align_data(self, mobject):
-        self.null_point_align(mobject)  # Needed?
-        self.align_submobjects(mobject)
         for mob1, mob2 in zip(self.get_family(), mobject.get_family()):
             # Separate out how points are treated so that subclasses
             # can handle that case differently if they choose
@@ -1097,6 +1104,8 @@ class Mobject(object):
             for key in mob1.data:
                 if key == "points":
                     continue
+                mob1.check_data_alignment(mob1.get_points()[:, 0], key)
+                mob2.check_data_alignment(mob2.get_points()[:, 0], key)
                 arr1 = mob1.data[key]
                 arr2 = mob2.data[key]
                 if len(arr2) > len(arr1):
@@ -1106,11 +1115,12 @@ class Mobject(object):
 
     def align_points(self, mobject):
         max_len = max(self.get_num_points(), mobject.get_num_points())
-        self.resize_points(max_len, resize_func=resize_preserving_order)
-        mobject.resize_points(max_len, resize_func=resize_preserving_order)
+        for mob in (self, mobject):
+            mob.resize_points(max_len, resize_func=resize_preserving_order)
         return self
 
-    def align_submobjects(self, mobject):
+    def align_family(self, mobject):
+        self.null_point_align(mobject)  # Needed?
         mob1 = self
         mob2 = mobject
         n1 = len(mob1.submobjects)
@@ -1119,7 +1129,7 @@ class Mobject(object):
         mob2.add_n_more_submobjects(max(0, n1 - n2))
         # Recurse
         for sm1, sm2 in zip(mob1.submobjects, mob2.submobjects):
-            sm1.align_submobjects(sm2)
+            sm1.align_family(sm2)
         return self
 
     def null_point_align(self, mobject):
@@ -1178,6 +1188,8 @@ class Mobject(object):
         and mobject2.
         """
         for key in self.data:
+            if key in self.locked_data_keys:
+                continue
             func = path_func if key == "points" else interpolate
             self.data[key][:] = func(
                 mobject1.data[key],
@@ -1220,7 +1232,7 @@ class Mobject(object):
         Edit points, colors and submobjects to be idential
         to another mobject
         """
-        self.align_submobjects(mobject)
+        self.align_family(mobject)
         for sm1, sm2 in zip(self.get_family(), mobject.get_family()):
             sm1.set_data(sm2.data)
         return self
@@ -1228,7 +1240,35 @@ class Mobject(object):
     def cleanup_from_animation(self):
         pass
 
+    # ...
+    def lock_data(self, keys):
+        """
+        To speed up some animations, particularly transformations,
+        it can be handy to acknowledge which pieces of data
+        won't change during the animation so that calls to
+        interpolate can skip this, and so that it's not
+        read into the shader_wrapper objects needlessly
+        """
+        if self.has_updaters:
+            return
+        # Be sure shader data has most up to date information
+        self.refresh_shader_data()
+        self.locked_data_keys = set(keys)
+
+    def lock_matching_data(self, mobject1, mobject2):
+        for sm, sm1, sm2 in zip(self.get_family(), mobject1.get_family(), mobject2.get_family()):
+            sm.lock_data([
+                key for key in sm.data
+                if np.all(sm1.data[key] == sm2.data[key])
+            ])
+        return self
+
+    def unlock_data(self):
+        for mob in self.get_family():
+            mob.locked_data_keys = set()
+
     # Operations touching shader uniforms
+
     def affects_shader_info_id(func):
         def wrapper(self):
             for mob in self.get_family():
@@ -1257,6 +1297,7 @@ class Mobject(object):
         return self
 
     # Shader code manipulation
+
     def replace_shader_code(self, old, new):
         for wrapper in self.get_shader_wrapper_list():
             wrapper.replace_code(old, new)
@@ -1304,6 +1345,7 @@ class Mobject(object):
         return self
 
     # For shader data
+
     def init_shader_data(self):
         self.shader_data = np.zeros(len(self.get_points()), dtype=self.shader_dtype)
         self.shader_indices = None
@@ -1318,13 +1360,6 @@ class Mobject(object):
     def refresh_shader_wrapper_id(self):
         self.shader_wrapper.refresh_id()
         return self
-
-    def get_resized_shader_data_array(self, size):
-        # If possible, try to populate an existing array, rather
-        # than recreating it each frame
-        if self.shader_data.size != size:
-            self.shader_data = resize_array(self.shader_data, size)
-        return self.shader_data
 
     def get_shader_wrapper(self):
         self.shader_wrapper.vert_data = self.get_shader_data()
@@ -1350,20 +1385,38 @@ class Mobject(object):
                 result.append(shader_wrapper)
         return result
 
-    def check_color_alignment(self, shader_data, name="rgbas"):
-        # The rgba arrays are meant to be broadcast into shader data,
-        # which can be done if their length is eithe 1
-        # or the sane as the number of points
-        if len(self.data[name]) not in [1, len(shader_data)]:
-            self.data[name] = resize_with_interpolation(
-                self.data[name], len(shader_data)
+    def check_data_alignment(self, array, data_key):
+        # Makes sure that self.data[key] can be brodcast into
+        # the given array, meaning its length has to be either 1
+        # or the length of the array
+        d_len = len(self.data[data_key])
+        if d_len != 1 and d_len != len(array):
+            self.data[data_key] = resize_with_interpolation(
+                self.data[data_key], len(array)
             )
         return self
 
+    def get_resized_shader_data_array(self, length):
+        # If possible, try to populate an existing array, rather
+        # than recreating it each frame
+        if len(self.shader_data) != length:
+            self.shader_data = resize_array(self.shader_data, length)
+        return self.shader_data
+
+    def read_data_to_shader(self, shader_data, shader_data_key, data_key, check_alignment=False):
+        if data_key in self.locked_data_keys:
+            return
+        if check_alignment:
+            self.check_data_alignment(shader_data, data_key)
+        shader_data[shader_data_key] = self.data[data_key]
+
     def get_shader_data(self):
-        data = self.get_resized_shader_data_array(self.get_num_points())
-        data["point"] = self.data["points"]
-        return data
+        shader_data = self.get_resized_shader_data_array(self.get_num_points())
+        self.read_data_to_shader(shader_data, "point", "points")
+        return shader_data
+
+    def refresh_shader_data(self):
+        self.get_shader_data()
 
     def get_shader_uniforms(self):
         return {
@@ -1376,6 +1429,7 @@ class Mobject(object):
         return self.shader_indices
 
     # Errors
+
     def throw_error_if_no_points(self):
         if self.has_no_points():
             message = "Cannot call Mobject.{} " +\

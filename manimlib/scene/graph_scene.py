@@ -307,7 +307,7 @@ class GraphScene(Scene):
         }
         added_anims = kwargs.get("added_anims", [])
         transform_kwargs.update(kwargs)
-        curr_rects.align_submobjects(new_rects)
+        curr_rects.align_family(new_rects)
         x_coords = set()  # Keep track of new repetitions
         for rect in curr_rects:
             x = rect.get_center()[0]

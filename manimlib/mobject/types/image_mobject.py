@@ -61,8 +61,7 @@ class ImageMobject(Mobject):
         return np.array(rgb) / 255
 
     def get_shader_data(self):
-        data = super().get_shader_data()
-        self.check_color_alignment(data, "opacity")
-        data["im_coords"] = self.data["im_coords"]
-        data["opacity"] = self.data["opacity"]
-        return data
+        shader_data = super().get_shader_data()
+        self.read_data_to_shader(shader_data, "im_coords", "im_coords")
+        self.read_data_to_shader(shader_data, "opacity", "opacity", check_alignment=True)
+        return shader_data

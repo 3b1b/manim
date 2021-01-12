@@ -42,13 +42,20 @@ class Transform(Animation):
     def begin(self):
         self.target_mobject = self.create_target()
         self.check_target_mobject_validity()
-        # Use a copy of target_mobject for the align_data
+        # Use a copy of target_mobject for the align_data_and_family
         # call so that the actual target_mobject stays
         # preserved, since calling allign_data will potentailly
         # change the structure of both arguments
         self.target_copy = self.target_mobject.copy()
-        self.mobject.align_data(self.target_copy)
+        self.mobject.align_data_and_family(self.target_copy)
         super().begin()
+        self.mobject.lock_matching_data(
+            self.starting_mobject,
+            self.target_copy,
+        )
+
+    def finish(self):
+        self.mobject.unlock_data()
 
     def create_target(self):
         # Has no meaningful effect here, but may be useful
@@ -302,10 +309,10 @@ class TransformAnimations(Transform):
             anim.set_run_time(self.run_time)
 
         if start_anim.starting_mobject.get_num_points() != end_anim.starting_mobject.get_num_points():
-            start_anim.starting_mobject.align_data(end_anim.starting_mobject)
+            start_anim.starting_mobject.align_data_and_family(end_anim.starting_mobject)
             for anim in start_anim, end_anim:
                 if hasattr(anim, "target_mobject"):
-                    anim.starting_mobject.align_data(anim.target_mobject)
+                    anim.starting_mobject.align_data_and_family(anim.target_mobject)
 
         Transform.__init__(self, start_anim.mobject,
                            end_anim.mobject, **kwargs)
