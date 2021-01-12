@@ -67,7 +67,6 @@ from manimlib.once_useful_constructs.graph_theory import *
 from manimlib.once_useful_constructs.light import *
 
 from manimlib.scene.graph_scene import *
-from manimlib.scene.moving_camera_scene import *
 from manimlib.scene.reconfigurable_scene import *
 from manimlib.scene.scene import *
 from manimlib.scene.sample_space_scene import *
