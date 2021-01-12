@@ -81,6 +81,8 @@ def listify(obj):
 
 
 def resize_array(nparray, length):
+    if len(nparray) == length:
+        return nparray
     return np.resize(nparray, (length, *nparray.shape[1:]))
 
 
