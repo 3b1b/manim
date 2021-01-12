@@ -224,7 +224,12 @@ class TexturedSurface(ParametricSurface):
             "opacity": np.array([self.uv_surface.data["rgbas"][:, 3]]),
         }
 
+    def init_uniforms(self):
+        super().init_uniforms()
+        self.uniforms["num_textures"] = self.num_textures
+
     def init_colors(self):
+        # Don't call ParametricSurface color init
         pass
 
     def set_opacity(self, opacity, recurse=True):
@@ -243,11 +248,6 @@ class TexturedSurface(ParametricSurface):
             im_coords, a, b, (nu, nv, 2), axis
         )
         return self
-
-    def get_shader_uniforms(self):
-        result = super().get_shader_uniforms()
-        result["num_textures"] = self.num_textures
-        return result
 
     def fill_in_shader_color_info(self, shader_data):
         self.read_data_to_shader(shader_data, "opacity", "opacity")

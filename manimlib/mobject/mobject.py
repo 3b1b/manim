@@ -68,24 +68,29 @@ class Mobject(object):
         self.locked_data_keys = set()
 
         self.init_data()
+        self.init_uniforms()
         self.init_updaters()
         self.init_points()
         self.init_colors()
         self.init_shader_data()
 
-        if self.is_fixed_in_frame:
-            self.fix_in_frame()
         if self.depth_test:
             self.apply_depth_test()
 
     def __str__(self):
         return self.__class__.__name__
 
-    # Related to data dict
     def init_data(self):
         self.data = {
             "points": np.zeros((0, 3)),
             "rgbas": np.zeros((1, 4)),
+        }
+
+    def init_uniforms(self):
+        self.uniforms = {
+            "is_fixed_in_frame": float(self.is_fixed_in_frame),
+            "gloss": self.gloss,
+            "shadow": self.shadow,
         }
 
     def init_colors(self):
@@ -94,6 +99,8 @@ class Mobject(object):
     def init_points(self):
         # Typically implemented in subclass, unlpess purposefully left blank
         pass
+
+    # Related to data dict
 
     def set_data(self, data):
         for key in data:
@@ -225,6 +232,9 @@ class Mobject(object):
         copy_mobject.data = dict(self.data)
         for key in self.data:
             copy_mobject.data[key] = self.data[key].copy()
+
+        copy_mobject.uniforms = dict(self.uniforms)
+
         copy_mobject.submobjects = []
         copy_mobject.add(*[sm.copy() for sm in self.submobjects])
         copy_mobject.match_updaters(self)
@@ -751,19 +761,19 @@ class Mobject(object):
         self.set_opacity(1.0 - darkness, recurse=recurse)
 
     def get_gloss(self):
-        return self.gloss
+        return self.uniforms["gloss"]
 
     def set_gloss(self, gloss, recurse=True):
         for mob in self.get_family(recurse):
-            mob.gloss = gloss
+            mob.uniforms["gloss"] = gloss
         return self
 
     def get_shadow(self):
-        return self.shadow
+        return self.uniforms["shadow"]
 
     def set_shadow(self, shadow, recurse=True):
         for mob in self.get_family(recurse):
-            mob.shadow = shadow
+            mob.uniforms["shadow"] = shadow
         return self
 
     ##
@@ -1196,21 +1206,12 @@ class Mobject(object):
                 mobject2.data[key],
                 alpha
             )
-        self.interpolate_light_style(mobject1, mobject2, alpha)  # TODO, interpolate uniforms instaed
-        return self
-
-    def interpolate_light_style(self, mobject1, mobject2, alpha):
-        g0 = self.get_gloss()
-        g1 = mobject1.get_gloss()
-        g2 = mobject2.get_gloss()
-        if not (g0 == g1 == g2):
-            self.set_gloss(interpolate(g1, g2, alpha))
-
-        s0 = self.get_shadow()
-        s1 = mobject1.get_shadow()
-        s2 = mobject2.get_shadow()
-        if not (s0 == s1 == s2):
-            self.set_shadow(interpolate(s1, s2, alpha))
+        for key in self.uniforms:
+            self.uniforms[key] = interpolate(
+                mobject1.uniforms[key],
+                mobject2.uniforms[key],
+                alpha
+            )
         return self
 
     def become_partial(self, mobject, a, b):
@@ -1278,12 +1279,12 @@ class Mobject(object):
 
     @affects_shader_info_id
     def fix_in_frame(self):
-        self.is_fixed_in_frame = True
+        self.uniforms["is_fixed_in_frame"] = 1.0
         return self
 
     @affects_shader_info_id
     def unfix_from_frame(self):
-        self.is_fixed_in_frame = False
+        self.uniforms["is_fixed_in_frame"] = 0.0
         return self
 
     @affects_shader_info_id
@@ -1418,11 +1419,7 @@ class Mobject(object):
         self.get_shader_data()
 
     def get_shader_uniforms(self):
-        return {
-            "is_fixed_in_frame": float(self.is_fixed_in_frame),
-            "gloss": self.gloss,
-            "shadow": self.shadow,
-        }
+        return self.uniforms
 
     def get_shader_vert_indices(self):
         return self.shader_indices
