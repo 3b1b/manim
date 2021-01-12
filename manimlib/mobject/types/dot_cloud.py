@@ -70,5 +70,5 @@ class DotCloud(PMobject):
     def get_shader_data(self):
         shader_data = super().get_shader_data()
         self.read_data_to_shader(shader_data, "radius", "radii")
-        self.read_data_to_shader(shader_data, "color", "rgbas", check_alignment=True)
+        self.read_data_to_shader(shader_data, "color", "rgbas")
         return shader_data

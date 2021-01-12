@@ -158,7 +158,7 @@ class ParametricSurface(Mobject):
         return shader_data
 
     def fill_in_shader_color_info(self, shader_data):
-        self.read_data_to_shader(shader_data, "color", "rgbas", check_alignment=True)
+        self.read_data_to_shader(shader_data, "color", "rgbas")
         return shader_data
 
     def get_shader_vert_indices(self):
@@ -250,6 +250,6 @@ class TexturedSurface(ParametricSurface):
         return result
 
     def fill_in_shader_color_info(self, shader_data):
-        self.read_data_to_shader(shader_data, "opacity", "opacity", check_alignment=True)
-        self.read_data_to_shader(shader_data, "im_coords", "im_coords", check_alignment=True)
+        self.read_data_to_shader(shader_data, "opacity", "opacity")
+        self.read_data_to_shader(shader_data, "im_coords", "im_coords")
         return shader_data

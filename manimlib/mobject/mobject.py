@@ -1403,11 +1403,10 @@ class Mobject(object):
             self.shader_data = resize_array(self.shader_data, length)
         return self.shader_data
 
-    def read_data_to_shader(self, shader_data, shader_data_key, data_key, check_alignment=False):
+    def read_data_to_shader(self, shader_data, shader_data_key, data_key):
         if data_key in self.locked_data_keys:
             return
-        if check_alignment:
-            self.check_data_alignment(shader_data, data_key)
+        self.check_data_alignment(shader_data, data_key)
         shader_data[shader_data_key] = self.data[data_key]
 
     def get_shader_data(self):

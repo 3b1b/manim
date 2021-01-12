@@ -840,8 +840,8 @@ class VMobject(Mobject):
             self.stroke_data["next_point"][:-nppc] = points[nppc:]
             self.stroke_data["next_point"][-nppc:] = points[:nppc]
 
-        self.read_data_to_shader(self.stroke_data, "color", "stroke_rgba", True)
-        self.read_data_to_shader(self.stroke_data, "stroke_width", "stroke_width", True)
+        self.read_data_to_shader(self.stroke_data, "color", "stroke_rgba")
+        self.read_data_to_shader(self.stroke_data, "stroke_width", "stroke_width")
         self.read_data_to_shader(self.stroke_data, "unit_normal", "unit_normal")
 
         return self.stroke_data
@@ -914,7 +914,7 @@ class VMobject(Mobject):
             self.fill_data["vert_index"][:, 0] = range(len(points))
 
         self.read_data_to_shader(self.fill_data, "point", "points")
-        self.read_data_to_shader(self.fill_data, "color", "fill_rgba", True)
+        self.read_data_to_shader(self.fill_data, "color", "fill_rgba")
         self.read_data_to_shader(self.fill_data, "unit_normal", "unit_normal")
 
         return self.fill_data

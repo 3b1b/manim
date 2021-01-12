@@ -63,5 +63,5 @@ class ImageMobject(Mobject):
     def get_shader_data(self):
         shader_data = super().get_shader_data()
         self.read_data_to_shader(shader_data, "im_coords", "im_coords")
-        self.read_data_to_shader(shader_data, "opacity", "opacity", check_alignment=True)
+        self.read_data_to_shader(shader_data, "opacity", "opacity")
         return shader_data
