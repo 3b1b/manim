@@ -78,7 +78,7 @@ class Matrix(VMobject):
         element_alignment_corner=DR,
         left_bracket="\\big[",
         right_bracket="\\big]",
-        **kwargs
+        **kwargs,
     ):
         """
         Matrix can either either include numbers, tex_strings,
@@ -96,7 +96,11 @@ class Matrix(VMobject):
         self.left_bracket = left_bracket
         self.right_bracket = right_bracket
         VMobject.__init__(self, **kwargs)
-        matrix = np.array(matrix, ndmin=1)
+        if len(matrix.shape) < 2:
+            raise ValueError(
+                f"{self.__str__()} class requires a two-dimensional array!"
+            )
+        matrix = np.array(matrix)
         mob_matrix = self.matrix_to_mob_matrix(matrix)
         self.organize_mob_matrix(mob_matrix)
         self.elements = VGroup(*mob_matrix.flatten())
@@ -198,14 +202,14 @@ class DecimalMatrix(Matrix):
         matrix,
         element_to_mobject=DecimalNumber,
         element_to_mobject_config={"num_decimal_places": 1},
-        **kwargs
+        **kwargs,
     ):
         Matrix.__init__(
             self,
             matrix,
             element_to_mobject=element_to_mobject,
             element_to_mobject_config=element_to_mobject_config,
-            **kwargs
+            **kwargs,
         )
 
 
