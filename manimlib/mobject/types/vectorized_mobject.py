@@ -595,7 +595,7 @@ class VMobject(Mobject):
 
     def get_unit_normal(self, recompute=False):
         if not recompute:
-            return self.data["unit_normal"]
+            return self.data["unit_normal"][0]
 
         if self.get_num_points() < 3:
             return OUT
