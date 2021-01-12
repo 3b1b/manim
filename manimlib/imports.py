@@ -73,7 +73,6 @@ from manimlib.scene.sample_space_scene import *
 from manimlib.scene.graph_scene import *
 from manimlib.scene.three_d_scene import *
 from manimlib.scene.vector_space_scene import *
-from manimlib.scene.zoomed_scene import *
 
 from manimlib.utils.bezier import *
 from manimlib.utils.color import *
