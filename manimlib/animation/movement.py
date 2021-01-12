@@ -20,7 +20,7 @@ class Homotopy(Animation):
         return lambda p: self.homotopy(*p, t)
 
     def interpolate_submobject(self, submob, start, alpha):
-        submob.points = start.points
+        submob.match_points(start)
         submob.apply_function(
             self.function_at_time_t(alpha),
             **self.apply_function_kwargs

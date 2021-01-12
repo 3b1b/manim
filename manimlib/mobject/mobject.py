@@ -111,6 +111,9 @@ class Mobject(object):
         self.data["points"][-len(new_points):] = new_points
         return self
 
+    def match_points(self, mobject):
+        self.set_points(mobject.get_points())
+
     def get_points(self):
         return self.data["points"]
 

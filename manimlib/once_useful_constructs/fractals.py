@@ -326,7 +326,7 @@ class FractalCurve(VMobject):
                     self, *alpha_pair
                 )
                 self.add(submobject)
-            self.points = np.zeros((0, 3))
+            self.set_points(np.zeros((0, 3)))
 
     def init_colors(self):
         VMobject.init_colors(self)

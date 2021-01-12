@@ -104,7 +104,7 @@ class ParametricSurface(Mobject):
             axis = self.prefered_creation_axis
         assert(isinstance(smobject, ParametricSurface))
         if a <= 0 and b >= 1:
-            self.set_points(smobject.points)
+            self.match_points(smobject)
             return self
 
         nu, nv = smobject.resolution
@@ -136,7 +136,12 @@ class ParametricSurface(Mobject):
     def sort_faces_back_to_front(self, vect=OUT):
         tri_is = self.triangle_indices
         indices = list(range(len(tri_is) // 3))
-        indices.sort(key=lambda i: np.dot(self.points[tri_is[3 * i]], vect))
+        points = self.get_points()
+
+        def index_dot(index):
+            return np.dot(points[tri_is[3 * index]], vect)
+
+        indices.sort(key=index_dot)
         for k in range(3):
             tri_is[k::3] = tri_is[k::3][indices]
         return self

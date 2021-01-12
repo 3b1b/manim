@@ -89,10 +89,10 @@ class TracedPath(VMobject):
             self.add_line_to(new_point)
         else:
             # Set the end to be the new point
-            self.points[-1] = new_point
+            self.get_points()[-1] = new_point
 
             # Second to last point
             nppcc = self.n_points_per_cubic_curve
-            dist = get_norm(new_point - self.points[-nppcc])
+            dist = get_norm(new_point - self.get_points()[-nppcc])
             if dist >= self.min_distance_to_new_point:
                 self.add_line_to(new_point)

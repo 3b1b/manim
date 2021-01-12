@@ -45,7 +45,7 @@ class PMobject(Mobject):
     def set_color_by_gradient(self, *colors):
         self.data["rgbas"] = np.array(list(map(
             color_to_rgba,
-            color_gradient(colors, len(self.points))
+            color_gradient(colors, self.get_num_points())
         )))
         return self
 

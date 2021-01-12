@@ -56,9 +56,9 @@ class Text(SVGMobject):
 
         nppc = self.n_points_per_curve
         for each in self:
-            if len(each.points) == 0:
+            if len(each.get_points()) == 0:
                 continue
-            points = each.points
+            points = each.get_points()
             last = points[0]
             each.clear_points()
             for index, point in enumerate(points):

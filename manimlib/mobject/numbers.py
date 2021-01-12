@@ -121,21 +121,11 @@ class DecimalNumber(VMobject):
         full_config["font_size"] = self.font_size
         full_config.update(config)
         new_decimal = DecimalNumber(number, **full_config)
-        # # Make sure last digit has constant height
-        # new_decimal.scale(
-        #     self[-1].get_height() / new_decimal[-1].get_height()
-        # )
         new_decimal.move_to(self, self.edge_to_fix)
         new_decimal.match_style(self)
         if self.is_fixed_in_frame:
             new_decimal.fix_in_frame()
-
-        old_family = self.get_family()
         self.set_submobjects(new_decimal.submobjects)
-        for mob in old_family:
-            # Dumb hack...due to how scene handles families
-            # of animated mobjects
-            mob.points[:] = 0
         self.number = number
         return self
 
