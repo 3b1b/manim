@@ -107,12 +107,14 @@ def resize_with_interpolation(nparray, length):
 
 
 def make_even(iterable_1, iterable_2):
-    list_1 = list(iterable_1)
-    list_2 = list(iterable_2)
-    length = max(len(list_1), len(list_2))
+    len1 = len(iterable_1)
+    len2 = len(iterable_2)
+    if len1 == len2:
+        return iterable_1, iterable_2
+    new_len = max(len1, len2)
     return (
-        [list_1[(n * len(list_1)) // length] for n in range(length)],
-        [list_2[(n * len(list_2)) // length] for n in range(length)]
+        [iterable_1[(n * len1) // new_len] for n in range(new_len)],
+        [iterable_2[(n * len2) // new_len] for n in range(new_len)]
     )
 
 

@@ -7,6 +7,7 @@ from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.images import get_full_raster_image_path
+from manimlib.utils.iterables import listify
 from manimlib.utils.space_ops import normalize_along_axis
 
 
@@ -151,7 +152,7 @@ class ParametricSurface(Mobject):
         return data
 
     def fill_in_shader_color_info(self, data):
-        # TODO, what if len(self.data["rgba"]) > 1?
+        self.check_color_alignment(data, "rgbas")
         data["color"] = self.data["rgbas"]
         return data
 
@@ -215,7 +216,7 @@ class TexturedSurface(ParametricSurface):
                 for u in np.linspace(0, 1, nu)
                 for v in np.linspace(1, 0, nv)  # Reverse y-direction
             ]),
-            "opacity": np.array([self.uv_surface.data["rgba"][:, 3]]),
+            "opacity": np.array([self.uv_surface.data["rgbas"][:, 3]]),
         }
 
     def init_colors(self):
@@ -223,7 +224,7 @@ class TexturedSurface(ParametricSurface):
 
     def set_opacity(self, opacity, recurse=True):
         for mob in self.get_family(recurse):
-            mob.data["opacity"][:] = opacity
+            mob.data["opacity"] = np.array([[o] for o in listify(opacity)])
         return self
 
     def pointwise_become_partial(self, tsmobject, a, b, axis=1):
@@ -244,6 +245,7 @@ class TexturedSurface(ParametricSurface):
         return result
 
     def fill_in_shader_color_info(self, shader_data):
+        self.check_color_alignment(shader_data, "opacity")
         shader_data["im_coords"] = self.data["im_coords"]
         shader_data["opacity"] = self.data["opacity"]
         return shader_data

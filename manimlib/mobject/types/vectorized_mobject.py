@@ -14,12 +14,11 @@ from manimlib.utils.bezier import get_quadratic_approximation_of_cubic
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import partial_quadratic_bezier_points
-from manimlib.utils.color import color_to_rgba
-from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import rgb_to_hex
 from manimlib.utils.iterables import make_even
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_with_interpolation
+from manimlib.utils.iterables import listify
 from manimlib.utils.space_ops import angle_between_vectors
 from manimlib.utils.space_ops import cross2d
 from manimlib.utils.space_ops import earclip_triangulation
@@ -120,7 +119,9 @@ class VMobject(Mobject):
 
         if width is not None:
             for mob in self.get_family(recurse):
-                mob.data['stroke_width'][:] = width
+                mob.data['stroke_width'] = np.array([
+                    [width] for width in listify(width)
+                ])
 
         if background is not None:
             for mob in self.get_family(recurse):
@@ -844,8 +845,9 @@ class VMobject(Mobject):
         points = self.get_points()
         if len(self.stroke_data) != len(points):
             self.stroke_data = resize_array(self.stroke_data, len(points))
-        # TODO, account for when self.data["stroke_width"] and self.data["stroke_rgba"]
-        # have length greater than 1
+
+        self.check_color_alignment(self.stroke_data, "stroke_rgba")
+        self.check_color_alignment(self.stroke_data, "stroke_width")
 
         nppc = self.n_points_per_curve
         self.stroke_data["point"] = points
@@ -925,6 +927,8 @@ class VMobject(Mobject):
         if len(self.fill_data) != len(points):
             self.fill_data = resize_array(self.fill_data, len(points))
             self.fill_data["vert_index"][:, 0] = range(len(points))
+
+        self.check_color_alignment(self.fill_data, "fill_rgba")
 
         self.fill_data["point"] = points
         self.fill_data["unit_normal"] = self.get_unit_normal()

@@ -18,6 +18,9 @@ from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.iterables import list_update
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_preserving_order
+from manimlib.utils.iterables import resize_with_interpolation
+from manimlib.utils.iterables import make_even
+from manimlib.utils.iterables import listify
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.paths import straight_path
 from manimlib.utils.simple_functions import get_parameters
@@ -673,13 +676,31 @@ class Mobject(object):
 
     # Color functions
     def set_rgba_array(self, color=None, opacity=None, name="rgbas", recurse=True):
-        # TODO, account for if color or opacity are tuples
-        rgb = color_to_rgb(color) if color else None
-        for mob in self.get_family(recurse):
-            if rgb is not None:
-                mob.data[name][:, :3] = rgb
-            if opacity is not None:
-                mob.data[name][:, 3] = opacity
+        if color is not None:
+            rgbs = np.array([color_to_rgb(c) for c in listify(color)])
+        if opacity is not None:
+            opacities = listify(opacity)
+
+        # Color only
+        if color is not None and opacity is None:
+            for mob in self.get_family(recurse):
+                mob.data[name] = resize_array(mob.data[name], len(rgbs))
+                mob.data[name][:, :3] = rgbs
+
+        # Opacity only
+        if color is None and opacity is not None:
+            for mob in self.get_family(recurse):
+                mob.data[name] = resize_array(mob.data[name], len(opacities))
+                mob.data[name][:, 3] = opacities
+
+        # Color and opacity
+        if color is not None and opacity is not None:
+            rgbas = np.array([
+                [*rgb, o]
+                for rgb, o in zip(*make_even(rgbs, opacities))
+            ])
+            for mob in self.get_family(recurse):
+                mob.data[name] = rgbas
         return self
 
     def set_color(self, color, opacity=None, recurse=True):
@@ -1325,6 +1346,16 @@ class Mobject(object):
             if len(shader_wrapper.vert_data) > 0:
                 result.append(shader_wrapper)
         return result
+
+    def check_color_alignment(self, shader_data, name="rgbas"):
+        # The rgba arrays are meant to be broadcast into shader data,
+        # which can be done if their length is eithe 1
+        # or the sane as the number of points
+        if len(self.data[name]) not in [1, len(shader_data)]:
+            self.data[name] = resize_with_interpolation(
+                self.data[name], len(shader_data)
+            )
+        return self
 
     def get_shader_data(self):
         data = self.get_resized_shader_data_array(self.get_num_points())

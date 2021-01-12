@@ -6,6 +6,7 @@ from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.images import get_full_raster_image_path
+from manimlib.utils.iterables import listify
 
 
 class ImageMobject(Mobject):
@@ -39,9 +40,8 @@ class ImageMobject(Mobject):
         self.set_height(self.height)
 
     def set_opacity(self, opacity, recurse=True):
-        # TODO, account for opacity coming in as an array
         for mob in self.get_family(recurse):
-            mob.data["opacity"][:, 0] = opacity
+            mob.data["opacity"] = np.array([[o] for o in listify(opacity)])
         return self
 
     def point_to_rgb(self, point):
@@ -62,6 +62,7 @@ class ImageMobject(Mobject):
 
     def get_shader_data(self):
         data = super().get_shader_data()
+        self.check_color_alignment(data, "opacity")
         data["im_coords"] = self.data["im_coords"]
         data["opacity"] = self.data["opacity"]
         return data
