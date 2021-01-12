@@ -12,7 +12,6 @@ from manimlib.utils.bezier import get_smooth_quadratic_bezier_handle_points
 from manimlib.utils.bezier import get_smooth_cubic_bezier_handle_points
 from manimlib.utils.bezier import get_quadratic_approximation_of_cubic
 from manimlib.utils.bezier import interpolate
-from manimlib.utils.bezier import set_array_by_interpolation
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import partial_quadratic_bezier_points
 from manimlib.utils.color import color_to_rgba
@@ -20,10 +19,7 @@ from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import rgb_to_hex
 from manimlib.utils.iterables import make_even
 from manimlib.utils.iterables import resize_array
-from manimlib.utils.iterables import resize_preserving_order
 from manimlib.utils.iterables import resize_with_interpolation
-from manimlib.utils.iterables import listify
-from manimlib.utils.paths import straight_path
 from manimlib.utils.space_ops import angle_between_vectors
 from manimlib.utils.space_ops import cross2d
 from manimlib.utils.space_ops import earclip_triangulation
@@ -79,6 +75,7 @@ class VMobject(Mobject):
     def __init__(self, **kwargs):
         self.unit_normal_locked = False
         self.needs_new_triangulation = True
+        self.triangulation = np.zeros(0, dtype='i4')
         super().__init__(**kwargs)
         self.lock_unit_normal(family=False)
 
@@ -94,8 +91,10 @@ class VMobject(Mobject):
         }
 
     def set_points(self, points):
+        old_points = self.get_points()
         super().set_points(points)
-        self.refresh_triangulation()
+        if not np.all(points == old_points):
+            self.refresh_triangulation()
 
     # Colors
     def init_colors(self):
@@ -113,29 +112,20 @@ class VMobject(Mobject):
         self.set_flat_stroke(self.flat_stroke)
         return self
 
-    def set_rgba_array(self, name, color, opacity, family=True):
-        # TODO, account for if color or opacity are tuples
-        rgb = color_to_rgb(color) if color else None
-        mobs = self.get_family() if family else [self]
-        for mob in mobs:
-            if rgb is not None:
-                mob.data[name][:, :3] = rgb
-            if opacity is not None:
-                mob.data[name][:, 3] = opacity
-        return self
-
     def set_fill(self, color=None, opacity=None, family=True):
-        self.set_rgba_array('fill_rgba', color, opacity, family)
+        self.set_rgba_array(color, opacity, 'fill_rgba', family)
 
     def set_stroke(self, color=None, width=None, opacity=None, background=None, family=True):
-        self.set_rgba_array('stroke_rgba', color, opacity, family)
+        self.set_rgba_array(color, opacity, 'stroke_rgba', family)
 
-        mobs = self.get_family() if family else [self]
-        for mob in mobs:
-            if width is not None:
-                # TODO, account for if width is an array
+        if width is not None:
+            mobs = self.get_family() if family else [self]
+            for mob in mobs:
                 mob.data['stroke_width'][:] = width
-            if background is not None:
+
+        if background is not None:
+            mobs = self.get_family() if family else [self]
+            for mob in mobs:
                 mob.draw_stroke_behind_fill = background
         return self
 
@@ -740,7 +730,7 @@ class VMobject(Mobject):
         if self.has_fill():
             tri1 = mobject1.get_triangulation()
             tri2 = mobject2.get_triangulation()
-            if len(tri1) != len(tri1) or not all(tri1 == tri2):
+            if len(tri1) != len(tri1) or not np.all(tri1 == tri2):
                 self.refresh_triangulation()
         return self
 
@@ -860,12 +850,12 @@ class VMobject(Mobject):
         return result
 
     def get_stroke_shader_data(self):
+        points = self.get_points()
         if len(self.stroke_data) != len(points):
             self.stroke_data = resize_array(self.stroke_data, len(points))
         # TODO, account for when self.data["stroke_width"] and self.data["stroke_rgba"]
         # have length greater than 1
 
-        points = self.get_points()
         nppc = self.n_points_per_curve
         self.stroke_data["point"] = points
         self.stroke_data["prev_point"][:nppc] = points[-nppc:]
@@ -891,13 +881,14 @@ class VMobject(Mobject):
             normal_vector = self.get_unit_normal()
 
         if not self.needs_new_triangulation:
-            return self.saved_traignulation
+            return self.triangulation
 
         points = self.get_points()
 
         if len(points) <= 1:
-            self.saved_traignulation == np.zeros(0, dtype='i4')
-            return self.saved_traignulation
+            self.triangulation = np.zeros(0, dtype='i4')
+            self.needs_new_triangulation = False
+            return self.triangulation
 
         # Rotate points such that unit normal vector is OUT
         # TODO, 99% of the time this does nothing.  Do a check for that?
@@ -934,7 +925,7 @@ class VMobject(Mobject):
         inner_tri_indices = inner_vert_indices[earclip_triangulation(inner_verts, rings)]
 
         tri_indices = np.hstack([indices, inner_tri_indices])
-        self.saved_traignulation = tri_indices
+        self.triangulation = tri_indices
         self.needs_new_triangulation = False
         return tri_indices
 

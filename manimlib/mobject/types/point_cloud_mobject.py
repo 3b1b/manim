@@ -2,8 +2,6 @@ from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import color_to_rgba
-from manimlib.utils.color import color_to_rgb
-from manimlib.utils.color import rgba_to_color
 from manimlib.utils.iterables import resize_with_interpolation
 from manimlib.utils.iterables import resize_array
 
@@ -19,9 +17,6 @@ class PMobject(Mobject):
             "rgbas": np.zeros((0, 4)),
         }
 
-    def init_colors(self):
-        self.set_color(self.color, self.opacity)
-
     def resize_points(self, size, resize_func=resize_array):
         for key in self.data:
             if len(self.data[key]) != size:
@@ -33,36 +28,19 @@ class PMobject(Mobject):
         points must be a Nx3 numpy array, as must rgbas if it is not None
         """
         self.append_points(points)
+        # rgbas array will have been resized with points
         if color is not None:
             if opacity is None:
                 opacity = self.data["rgbas"][-1, 3]
-            rgbas = np.repeat(
+            new_rgbas = np.repeat(
                 [color_to_rgba(color, opacity)],
                 len(points),
                 axis=0
             )
         elif rgbas is not None:
-            self.data["rgbas"][-len(rgbas):] = rgbas
+            new_rgbas = rgbas
+        self.data["rgbas"][-len(new_rgbas):] = new_rgbas
         return self
-
-    def set_color(self, color, opacity=None, family=True):
-        rgb = color_to_rgb(color)
-        mobs = self.get_family() if family else [self]
-        for mob in mobs:
-            mob.data["rgbas"][:, :3] = rgb
-
-        if opacity is not None:
-            self.set_opacity(opacity)
-        return self
-
-    def set_opacity(self, opacity, family=True):
-        mobs = self.get_family() if family else [self]
-        for mob in mobs:
-            mob.data["rgbas"][:, 3] = opacity
-        return self
-
-    def get_color(self):
-        return rgba_to_color(self.data["rgbas"][0])
 
     def set_color_by_gradient(self, *colors):
         self.data["rgbas"] = np.array(list(map(

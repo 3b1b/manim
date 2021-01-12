@@ -10,15 +10,15 @@ import numpy as np
 
 from manimlib.constants import *
 from manimlib.utils.color import color_gradient
-from manimlib.utils.color import interpolate_color
 from manimlib.utils.color import get_colormap_list
+from manimlib.utils.color import rgb_to_hex
+from manimlib.utils.color import color_to_rgb
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.iterables import list_update
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_preserving_order
 from manimlib.utils.bezier import interpolate
-from manimlib.utils.bezier import set_array_by_interpolation
 from manimlib.utils.paths import straight_path
 from manimlib.utils.simple_functions import get_parameters
 from manimlib.utils.space_ops import angle_of_vector
@@ -37,6 +37,7 @@ class Mobject(object):
     """
     CONFIG = {
         "color": WHITE,
+        "opacity": 1,
         "dim": 3,  # TODO, get rid of this
         # Lighting parameters
         # Positive gloss up to 1 makes it reflect the light.
@@ -76,19 +77,19 @@ class Mobject(object):
     def __str__(self):
         return self.__class__.__name__
 
-    def init_colors(self):
-        # For subclasses
-        pass
-
-    def init_points(self):
-        # Typically implemented in subclass, unless purposefully left blank
-        pass
-
     # Related to data dict
     def init_data(self):
         self.data = {
             "points": np.zeros((0, 3)),
+            "rgbas": np.zeros((1, 4)),
         }
+
+    def init_colors(self):
+        self.set_color(self.color, self.opacity)
+
+    def init_points(self):
+        # Typically implemented in subclass, unlpess purposefully left blank
+        pass
 
     def set_data(self, data):
         for key in data:
@@ -248,7 +249,6 @@ class Mobject(object):
         return self.target
 
     # Updating
-
     def init_updaters(self):
         self.time_based_updaters = []
         self.non_time_updaters = []
@@ -465,7 +465,6 @@ class Mobject(object):
         return self
 
     # Positioning methods
-
     def center(self):
         self.shift(-self.get_center())
         return self
@@ -673,48 +672,41 @@ class Mobject(object):
         return self
 
     # Color functions
+    def set_rgba_array(self, color=None, opacity=None, name="rgbas", family=True):
+        # TODO, account for if color or opacity are tuples
+        rgb = color_to_rgb(color) if color else None
+        mobs = self.get_family() if family else [self]
+        for mob in mobs:
+            if rgb is not None:
+                mob.data[name][:, :3] = rgb
+            if opacity is not None:
+                mob.data[name][:, 3] = opacity
+        return self
 
-    def set_color(self, color, family=True):
-        # Here it just recurses to submobjects, but in subclasses this
-        # should be further implemented based on the the inner workings
-        # of color
+    def set_color(self, color, opacity=None, family=True):
+        self.set_rgba_array(color, opacity, family=False)
+        # Recurse to submobjects differently from how set_rgba_array
+        # in case they implement set_color differently
         if family:
             for submob in self.submobjects:
-                submob.set_color(color, family=family)
+                submob.set_color(color, family=True)
         return self
 
     def set_opacity(self, opacity, family=True):
-        # Here it just recurses to submobjects, but in subclasses this
-        # should be further implemented based on the the inner workings
-        # of color
+        self.set_rgba_array(color=None, opacity=opacity, family=False)
         if family:
             for submob in self.submobjects:
-                submob.set_opacity(opacity, family=family)
+                submob.set_opacity(opacity, family=True)
         return self
 
     def get_color(self):
-        # Subclasses will implement this differently, but here it
-        # just returns the first opacity offered by a submobject
-        if self.submobjects:
-            return self.submobjects[0].get_color()
-        else:
-            return self.color
+        return rgb_to_hex(self.data["rgbas"][0, :3])
 
     def get_opacity(self):
-        # Subclasses will implement this differently, but here it
-        # just returns the first opacity offered by a submobject
-        if self.submobjects:
-            return self.submobjects[0].get_opacity()
-        else:
-            return 1
+        return self.data["rgbas"][0, 3]
 
     def set_color_by_gradient(self, *colors):
         self.set_submobject_colors_by_gradient(*colors)
-        return self
-
-    def set_colors_by_radial_gradient(self, center=None, radius=1, inner_color=WHITE, outer_color=BLACK):
-        self.set_submobject_colors_by_radial_gradient(
-            center, radius, inner_color, outer_color)
         return self
 
     def set_submobject_colors_by_gradient(self, *colors):
@@ -730,35 +722,8 @@ class Mobject(object):
             mob.set_color(color, family=False)
         return self
 
-    def set_submobject_colors_by_radial_gradient(self, center=None, radius=1, inner_color=WHITE, outer_color=BLACK):
-        if center is None:
-            center = self.get_center()
-
-        for mob in self.family_members_with_points():
-            t = get_norm(mob.get_center() - center) / radius
-            t = min(t, 1)
-            mob_color = interpolate_color(inner_color, outer_color, t)
-            mob.set_color(mob_color, family=False)
-
-        return self
-
-    def fade_to(self, color, alpha, family=True):
-        if self.get_num_points() > 0:
-            new_color = interpolate_color(
-                self.get_color(), color, alpha
-            )
-            self.set_color(new_color, family=False)
-        if family:
-            for submob in self.submobjects:
-                submob.fade_to(color, alpha)
-        return self
-
-    # TODO, get rid of this
     def fade(self, darkness=0.5, family=True):
-        if family:
-            for submob in self.submobjects:
-                submob.fade(darkness, family)
-        return self
+        self.set_opacity(1.0 - darkness, family=family)
 
     def get_gloss(self):
         return self.gloss

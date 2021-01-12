@@ -5,8 +5,6 @@ from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
-from manimlib.utils.color import color_to_rgba
-from manimlib.utils.color import rgb_to_color
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.images import get_full_raster_image_path
 from manimlib.utils.space_ops import normalize_along_axis
@@ -45,12 +43,6 @@ class ParametricSurface(Mobject):
         self.compute_triangle_indices()
         super().__init__(**kwargs)
 
-    def init_data(self):
-        self.data = {
-            "points": np.zeros((0, 3)),
-            "rgba": np.zeros((1, 4)),
-        }
-
     def init_points(self):
         dim = self.dim
         nu, nv = self.resolution
@@ -71,9 +63,6 @@ class ParametricSurface(Mobject):
         # can perform all the manipulations they'd like to the surface, and normals
         # are still easily recoverable.
         self.set_points(np.vstack(point_lists))
-
-    def init_colors(self):
-        self.set_color(self.color, self.opacity)
 
     def compute_triangle_indices(self):
         # TODO, if there is an event which changes
@@ -108,25 +97,6 @@ class ParametricSurface(Mobject):
             (dv_points - s_points) / self.epsilon,
         )
         return normalize_along_axis(normals, 1)
-
-    def set_color(self, color, opacity=None, family=True):
-        # TODO, allow for multiple colors
-        if opacity is None:
-            opacity = self.data["rgba"][0, 3]
-        rgba = color_to_rgba(color, opacity)
-        mobs = self.get_family() if family else [self]
-        for mob in mobs:
-            mob.data["rgba"][:] = rgba
-        return self
-
-    def get_color(self):
-        return rgb_to_color(self.data["rgba"][0, :3])
-
-    def set_opacity(self, opacity, family=True):
-        mobs = self.get_family() if family else [self]
-        for mob in mobs:
-            mob.data["rgba"][:, 3] = opacity
-        return self
 
     def pointwise_become_partial(self, smobject, a, b, axis=None):
         if axis is None:
@@ -182,7 +152,7 @@ class ParametricSurface(Mobject):
 
     def fill_in_shader_color_info(self, data):
         # TODO, what if len(self.data["rgba"]) > 1?
-        data["color"] = self.data["rgba"]
+        data["color"] = self.data["rgbas"]
         return data
 
     def get_shader_vert_indices(self):
