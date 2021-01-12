@@ -47,7 +47,7 @@ class DecimalNumber(VMobject):
             minus = self.submobjects[0]
             minus.next_to(
                 self.submobjects[1], LEFT,
-                buff=self.digit_buff_per_font_unit * self.font_size,
+                buff=self.digit_buff_per_font_unit * self.get_font_size(),
             )
 
         if self.unit is not None:
@@ -55,7 +55,7 @@ class DecimalNumber(VMobject):
             self.add(self.unit_sign)
 
         self.arrange(
-            buff=self.digit_buff_per_font_unit * self.font_size,
+            buff=self.digit_buff_per_font_unit * self.get_font_size(),
             aligned_edge=DOWN
         )
 
@@ -76,8 +76,15 @@ class DecimalNumber(VMobject):
         if self.include_background_rectangle:
             self.add_background_rectangle()
 
+    def init_data(self):
+        super().init_data()
+        self.data["font_size"] = np.array([self.font_size], dtype=float)
+
+    def get_font_size(self):
+        return self.data["font_size"][0]
+
     def string_to_mob(self, tex_string):
-        return SingleStringTexMobject(tex_string, font_size=self.font_size)
+        return SingleStringTexMobject(tex_string, font_size=self.get_font_size())
 
     def get_formatter(self, **kwargs):
         """
@@ -118,7 +125,7 @@ class DecimalNumber(VMobject):
     def set_value(self, number, **config):
         full_config = dict(self.CONFIG)
         full_config.update(self.initial_config)
-        full_config["font_size"] = self.font_size
+        full_config["font_size"] = self.get_font_size()
         full_config.update(config)
         new_decimal = DecimalNumber(number, **full_config)
         new_decimal.move_to(self, self.edge_to_fix)
@@ -131,7 +138,8 @@ class DecimalNumber(VMobject):
 
     def scale(self, scale_factor, **kwargs):
         super().scale(scale_factor, **kwargs)
-        self.font_size *= scale_factor
+        self.data["font_size"] *= scale_factor
+        return self
 
     def get_value(self):
         return self.number
