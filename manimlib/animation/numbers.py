@@ -1,5 +1,3 @@
-import warnings
-
 from manimlib.animation.animation import Animation
 from manimlib.mobject.numbers import DecimalNumber
 from manimlib.utils.bezier import interpolate
@@ -11,30 +9,9 @@ class ChangingDecimal(Animation):
     }
 
     def __init__(self, decimal_mob, number_update_func, **kwargs):
-        self.check_validity_of_input(decimal_mob)
-        self.yell_about_depricated_configuration(**kwargs)
+        assert(isinstance(decimal_mob, DecimalNumber))
         self.number_update_func = number_update_func
         super().__init__(decimal_mob, **kwargs)
-
-    def check_validity_of_input(self, decimal_mob):
-        if not isinstance(decimal_mob, DecimalNumber):
-            raise Exception(
-                "ChangingDecimal can only take "
-                "in a DecimalNumber"
-            )
-
-    def yell_about_depricated_configuration(self, **kwargs):
-        # Obviously this would optimally be removed at
-        # some point.
-        for attr in ["tracked_mobject", "position_update_func"]:
-            if attr in kwargs:
-                warnings.warn("""
-                    Don't use {} for ChangingDecimal,
-                    that functionality has been depricated
-                    and you should use a mobject updater
-                    instead
-                """.format(attr)
-            )
 
     def interpolate_mobject(self, alpha):
         self.mobject.set_value(
