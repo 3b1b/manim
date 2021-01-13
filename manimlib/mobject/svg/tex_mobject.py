@@ -6,6 +6,7 @@ import itertools as it
 from manimlib.constants import *
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.svg.svg_mobject import SVGMobject
+from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.svg.svg_mobject import VMobjectFromSVGPathstring
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import digest_config
@@ -17,14 +18,10 @@ from manimlib.utils.tex_file_writing import display_during_execution
 SCALE_FACTOR_PER_FONT_POINT = 0.001
 
 
-class TexSymbol(VMobjectFromSVGPathstring):
-    CONFIG = {
-        "should_subdivide_sharp_curves": True,
-        "should_remove_null_curves": True,
-    }
+tex_string_to_summobject_map = {}
 
 
-class SingleStringTexMobject(SVGMobject):
+class SingleStringTexMobject(VMobject):
     CONFIG = {
         "fill_opacity": 1.0,
         "stroke_width": 0,
@@ -37,13 +34,27 @@ class SingleStringTexMobject(SVGMobject):
     }
 
     def __init__(self, tex_string, **kwargs):
-        digest_config(self, kwargs)
+        super().__init__(**kwargs)
         assert(isinstance(tex_string, str))
         self.tex_string = tex_string
-        file_name = tex_to_svg_file(
-            self.get_tex_file_body(tex_string),
-        )
-        SVGMobject.__init__(self, file_name=file_name, **kwargs)
+        if tex_string not in tex_string_to_summobject_map:
+            full_tex = self.get_tex_file_body(tex_string)
+            filename = tex_to_svg_file(full_tex)
+            svg_mob = SVGMobject(
+                filename,
+                height=None,
+                path_string_config={
+                    "should_subdivide_sharp_curves": True,
+                    "should_remove_null_curves": True,
+                }
+            )
+            tex_string_to_summobject_map[tex_string] = svg_mob.submobjects
+
+        self.add(*(
+            sm.copy()
+            for sm in tex_string_to_summobject_map[tex_string]
+        ))
+
         if self.height is None:
             self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)
         if self.organize_left_to_right:
@@ -133,11 +144,6 @@ class SingleStringTexMobject(SVGMobject):
 
     def get_tex(self):
         return self.tex_string
-
-    def path_string_to_mobject(self, path_string):
-        # Overwrite superclass default to use
-        # specialized path_string mobject
-        return TexSymbol(path_string)
 
     def organize_submobjects_left_to_right(self):
         self.sort(lambda p: p[0])
