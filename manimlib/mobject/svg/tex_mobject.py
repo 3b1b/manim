@@ -7,7 +7,6 @@ from manimlib.constants import *
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.mobject.svg.svg_mobject import VMobjectFromSVGPathstring
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.tex_file_writing import tex_to_svg_file
@@ -54,6 +53,7 @@ class SingleStringTexMobject(VMobject):
             sm.copy()
             for sm in tex_string_to_mob_map[tex_string]
         ))
+        self.init_colors()
 
         if self.height is None:
             self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)
