@@ -753,8 +753,9 @@ class ManimConfig(MutableMapping):
     def log_to_file(self, val: str) -> None:
         self._set_boolean("log_to_file", val)
         if val:
-            if not os.path.exists(self["log_dir"]):
-                os.makedirs(self["log_dir"])
+            log_dir = self.get_dir("log_dir")
+            if not os.path.exists(log_dir):
+                os.makedirs(log_dir)
             set_file_logger(self, self["verbosity"])
 
     sound = property(
