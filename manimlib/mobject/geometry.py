@@ -632,14 +632,17 @@ class Arrow(Line):
         self.add_line_to(points1[0])
 
         if length > 0:
-            self.scale(length / self.get_length())  # Final correction
+            # Final correction
+            super().scale(length / self.get_length())
 
         self.rotate(angle_of_vector(vect) - self.get_angle())
         self.shift(start - self.get_start())
         self.refresh_triangulation()
 
     def reset_points_around_ends(self):
-        self.set_points_by_ends(self.get_start(), self.get_end(), path_arc=self.path_arc)
+        self.set_points_by_ends(
+            self.get_start(), self.get_end(), path_arc=self.path_arc
+        )
         return self
 
     def get_start(self):
