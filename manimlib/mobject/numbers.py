@@ -21,8 +21,12 @@ class DecimalNumber(VMobject):
 
     def __init__(self, number=0, **kwargs):
         super().__init__(**kwargs)
+        self.set_submobjects_from_number(number)
+        self.init_colors()
+
+    def set_submobjects_from_number(self, number):
         self.number = number
-        self.initial_config = kwargs
+        self.set_submobjects([])
 
         if isinstance(number, complex):
             formatter = self.get_complex_formatter()
@@ -69,9 +73,6 @@ class DecimalNumber(VMobject):
                 self[i].shift(self[i].get_height() * DOWN / 2)
         if self.unit and self.unit.startswith("^"):
             self.unit_sign.align_to(self, UP)
-
-        # Styling
-        self.init_colors()
 
         if self.include_background_rectangle:
             self.add_background_rectangle()
@@ -122,18 +123,12 @@ class DecimalNumber(VMobject):
             "i"
         ])
 
-    def set_value(self, number, **config):
-        full_config = dict(self.CONFIG)
-        full_config.update(self.initial_config)
-        full_config["font_size"] = self.get_font_size()
-        full_config.update(config)
-        new_decimal = DecimalNumber(number, **full_config)
-        new_decimal.move_to(self, self.edge_to_fix)
-        new_decimal.match_style(self)
-        if self.is_fixed_in_frame:
-            new_decimal.fix_in_frame()
-        self.set_submobjects(new_decimal.submobjects)
-        self.number = number
+    def set_value(self, number):
+        move_to_point = self.get_edge_center(self.edge_to_fix)
+        style = self.get_style()
+        self.set_submobjects_from_number(number)
+        self.move_to(move_to_point, self.edge_to_fix)
+        self.set_style(**style)
         return self
 
     def scale(self, scale_factor, **kwargs):
