@@ -29,19 +29,7 @@ class DecimalNumber(VMobject):
         self.number = number
         self.set_submobjects([])
 
-        if isinstance(number, complex):
-            formatter = self.get_complex_formatter()
-        else:
-            formatter = self.get_formatter()
-        num_string = formatter.format(number)
-
-        rounded_num = np.round(number, self.num_decimal_places)
-        if num_string.startswith("-") and rounded_num == 0:
-            if self.include_sign:
-                num_string = "+" + num_string[1:]
-            else:
-                num_string = num_string[1:]
-
+        num_string = self.get_num_string(number)
         self.add(*map(self.string_to_mob, num_string))
 
         # Add non-numerical bits
@@ -78,6 +66,21 @@ class DecimalNumber(VMobject):
         if self.include_background_rectangle:
             self.add_background_rectangle()
 
+    def get_num_string(self, number):
+        if isinstance(number, complex):
+            formatter = self.get_complex_formatter()
+        else:
+            formatter = self.get_formatter()
+        num_string = formatter.format(number)
+
+        rounded_num = np.round(number, self.num_decimal_places)
+        if num_string.startswith("-") and rounded_num == 0:
+            if self.include_sign:
+                num_string = "+" + num_string[1:]
+            else:
+                num_string = num_string[1:]
+        return num_string
+
     def init_data(self):
         super().init_data()
         self.data["font_size"] = np.array([self.font_size], dtype=float)
@@ -88,7 +91,7 @@ class DecimalNumber(VMobject):
     def string_to_mob(self, tex_string):
         # Could just call SingleStringTexMobject, and there is
         # some code repetition here by looking to the same cache,
-        # but it means keeps things from initializing a new object
+        # but it keeps things from initializing a new object
         # more than is necessary
         if tex_string in tex_string_to_mob_map:
             result = tex_string_to_mob_map[tex_string].copy()
