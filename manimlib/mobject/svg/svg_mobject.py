@@ -73,6 +73,7 @@ class SVGMobject(VMobject):
         # TODO, style components should be read in, not defaulted
         "stroke_width": DEFAULT_STROKE_WIDTH,
         "fill_opacity": 1.0,
+        "path_string_config": {}
     }
 
     def __init__(self, file_name=None, **kwargs):
@@ -148,7 +149,10 @@ class SVGMobject(VMobject):
         return mob.submobjects
 
     def path_string_to_mobject(self, path_string):
-        return VMobjectFromSVGPathstring(path_string)
+        return VMobjectFromSVGPathstring(
+            path_string,
+            **self.path_string_config,
+        )
 
     def use_to_mobjects(self, use_element):
         # Remove initial "#" character
