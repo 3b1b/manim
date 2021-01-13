@@ -715,6 +715,7 @@ class VMobject(Mobject):
     def pointwise_become_partial(self, vmobject, a, b):
         assert(isinstance(vmobject, VMobject))
         if a <= 0 and b >= 1:
+            self.become(vmobject)
             return self
         num_curves = vmobject.get_num_curves()
         nppc = self.n_points_per_curve
