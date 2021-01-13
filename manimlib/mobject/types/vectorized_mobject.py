@@ -822,7 +822,7 @@ class VMobject(Mobject):
         return result
 
     def get_stroke_uniforms(self):
-        result = super().get_shader_uniforms()
+        result = dict(super().get_shader_uniforms())
         result["joint_type"] = JOINT_TYPE_MAP[self.joint_type]
         result["flat_stroke"] = float(self.flat_stroke)
         return result
