@@ -105,18 +105,22 @@ class Mobject(object):
     def set_data(self, data):
         for key in data:
             self.data[key] = data[key].copy()
+        return self
 
     def set_uniforms(self, uniforms):
         for key in uniforms:
             self.uniforms[key] = uniforms[key]  # Copy?
+        return self
 
     def resize_points(self, new_length, resize_func=resize_array):
         if new_length != len(self.data["points"]):
             self.data["points"] = resize_func(self.data["points"], new_length)
+        return self
 
     def set_points(self, points):
         self.resize_points(len(points))
         self.data["points"][:] = points
+        return self
 
     def append_points(self, new_points):
         self.resize_points(self.get_num_points() + len(new_points))
@@ -1132,28 +1136,16 @@ class Mobject(object):
         return self
 
     def align_family(self, mobject):
-        self.null_point_align(mobject)  # Needed?
         mob1 = self
         mob2 = mobject
         n1 = len(mob1.submobjects)
         n2 = len(mob2.submobjects)
-        mob1.add_n_more_submobjects(max(0, n2 - n1))
-        mob2.add_n_more_submobjects(max(0, n1 - n2))
+        if n1 != n2:
+            mob1.add_n_more_submobjects(max(0, n2 - n1))
+            mob2.add_n_more_submobjects(max(0, n1 - n2))
         # Recurse
         for sm1, sm2 in zip(mob1.submobjects, mob2.submobjects):
             sm1.align_family(sm2)
-        return self
-
-    def null_point_align(self, mobject):
-        """
-        If a mobject with points is being aligned to
-        one without, treat both as groups, and push
-        the one with points into its own submobjects
-        list.
-        """
-        for m1, m2 in (self, mobject), (mobject, self):
-            if m1.has_no_points() and m2.has_points():
-                m2.push_self_into_submobjects()
         return self
 
     def push_self_into_submobjects(self):
@@ -1165,13 +1157,14 @@ class Mobject(object):
 
     def add_n_more_submobjects(self, n):
         if n == 0:
-            return
+            return self
 
         curr = len(self.submobjects)
         if curr == 0:
             # If empty, simply add n point mobjects
+            center = self.get_center()
             self.set_submobjects([
-                self.copy().scale(0)
+                self.copy().set_points([center])
                 for k in range(n)
             ])
             return
