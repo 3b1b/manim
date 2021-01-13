@@ -714,7 +714,7 @@ class Mobject(object):
                 for rgb, o in zip(*make_even(rgbs, opacities))
             ])
             for mob in self.get_family(recurse):
-                mob.data[name] = rgbas
+                mob.data[name] = rgbas.copy()
         return self
 
     def set_color(self, color, opacity=None, recurse=True):
