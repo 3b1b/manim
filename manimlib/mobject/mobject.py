@@ -1243,7 +1243,8 @@ class Mobject(object):
     def cleanup_from_animation(self):
         pass
 
-    # ...
+    # Locking data
+
     def lock_data(self, keys):
         """
         To speed up some animations, particularly transformations,
