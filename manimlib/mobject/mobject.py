@@ -1107,6 +1107,8 @@ class Mobject(object):
         self.align_data(mobject)
 
     def align_data(self, mobject):
+        # In case any data arrays get resized when aligned to shader data
+        self.refresh_shader_data()
         for mob1, mob2 in zip(self.get_family(), mobject.get_family()):
             # Separate out how points are treated so that subclasses
             # can handle that case differently if they choose
@@ -1114,8 +1116,6 @@ class Mobject(object):
             for key in mob1.data:
                 if key == "points":
                     continue
-                mob1.check_data_alignment(mob1.get_points()[:, 0], key)
-                mob2.check_data_alignment(mob2.get_points()[:, 0], key)
                 arr1 = mob1.data[key]
                 arr2 = mob2.data[key]
                 if len(arr2) > len(arr1):
