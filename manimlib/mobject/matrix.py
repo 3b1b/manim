@@ -1,4 +1,5 @@
 import numpy as np
+import itertools as it
 
 from manimlib.constants import *
 from manimlib.mobject.numbers import DecimalNumber
@@ -74,7 +75,8 @@ class Matrix(VMobject):
         matrix = self.matrix = np.array(matrix, ndmin=2)
         mob_matrix = self.matrix_to_mob_matrix(matrix)
         self.organize_mob_matrix(mob_matrix)
-        self.elements = VGroup(*mob_matrix.flatten())
+        # self.elements = VGroup(*mob_matrix.flatten())
+        self.elements = VGroup(*it.chain(*mob_matrix))
         self.add(self.elements)
         self.add_brackets()
         self.center()
@@ -86,9 +88,13 @@ class Matrix(VMobject):
             self.add_background_rectangle()
 
     def matrix_to_mob_matrix(self, matrix):
-        return np.vectorize(self.element_to_mobject)(
-            matrix, **self.element_to_mobject_config
-        )
+        return [
+            [
+                self.element_to_mobject(item, **self.element_to_mobject_config)
+                for item in row
+            ]
+            for row in matrix
+        ]
 
     def organize_mob_matrix(self, matrix):
         for i, row in enumerate(matrix):
@@ -122,8 +128,8 @@ class Matrix(VMobject):
 
     def get_columns(self):
         return VGroup(*[
-            VGroup(*self.mob_matrix[:, i])
-            for i in range(self.mob_matrix.shape[1])
+            VGroup(*[row[i] for row in self.mob_matrix])
+            for i in range(len(self.mob_matrix[0]))
         ])
 
     def set_column_colors(self, *colors):
@@ -141,7 +147,7 @@ class Matrix(VMobject):
         return self.mob_matrix
 
     def get_entries(self):
-        return VGroup(*self.get_mob_matrix().flatten())
+        return self.elements
 
     def get_brackets(self):
         return self.brackets
