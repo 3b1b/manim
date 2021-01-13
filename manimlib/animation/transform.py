@@ -55,6 +55,7 @@ class Transform(Animation):
         )
 
     def finish(self):
+        super().finish()
         self.mobject.unlock_data()
 
     def create_target(self):
