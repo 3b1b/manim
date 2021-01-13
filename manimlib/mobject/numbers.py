@@ -1,5 +1,7 @@
 from manimlib.constants import *
 from manimlib.mobject.svg.tex_mobject import SingleStringTexMobject
+from manimlib.mobject.svg.tex_mobject import tex_string_to_mob_map
+from manimlib.mobject.svg.tex_mobject import SCALE_FACTOR_PER_FONT_POINT
 from manimlib.mobject.types.vectorized_mobject import VMobject
 
 
@@ -85,7 +87,16 @@ class DecimalNumber(VMobject):
         return self.data["font_size"][0]
 
     def string_to_mob(self, tex_string):
-        return SingleStringTexMobject(tex_string, font_size=self.get_font_size())
+        # Could just call SingleStringTexMobject, and there is
+        # some code repetition here by looking to the same cache,
+        # but it means keeps things from initializing a new object
+        # more than is necessary
+        if tex_string in tex_string_to_mob_map:
+            result = tex_string_to_mob_map[tex_string].copy()
+            result.scale(self.get_font_size() * SCALE_FACTOR_PER_FONT_POINT)
+            return result
+        else:
+            return SingleStringTexMobject(tex_string, font_size=self.get_font_size())
 
     def get_formatter(self, **kwargs):
         """

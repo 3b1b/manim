@@ -18,7 +18,7 @@ from manimlib.utils.tex_file_writing import display_during_execution
 SCALE_FACTOR_PER_FONT_POINT = 0.001
 
 
-tex_string_to_summobject_map = {}
+tex_string_to_mob_map = {}
 
 
 class SingleStringTexMobject(VMobject):
@@ -37,7 +37,7 @@ class SingleStringTexMobject(VMobject):
         super().__init__(**kwargs)
         assert(isinstance(tex_string, str))
         self.tex_string = tex_string
-        if tex_string not in tex_string_to_summobject_map:
+        if tex_string not in tex_string_to_mob_map:
             full_tex = self.get_tex_file_body(tex_string)
             filename = tex_to_svg_file(full_tex)
             svg_mob = SVGMobject(
@@ -48,11 +48,11 @@ class SingleStringTexMobject(VMobject):
                     "should_remove_null_curves": True,
                 }
             )
-            tex_string_to_summobject_map[tex_string] = svg_mob.submobjects
+            tex_string_to_mob_map[tex_string] = svg_mob
 
         self.add(*(
             sm.copy()
-            for sm in tex_string_to_summobject_map[tex_string]
+            for sm in tex_string_to_mob_map[tex_string]
         ))
 
         if self.height is None:
