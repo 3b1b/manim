@@ -104,7 +104,7 @@ class Mobject(object):
 
     def set_data(self, data):
         for key in data:
-            self.data[key] = data[key]
+            self.data[key] = data[key].copy()
 
     def resize_points(self, new_length, resize_func=resize_array):
         if new_length != len(self.data["points"]):
@@ -134,11 +134,10 @@ class Mobject(object):
 
     # Family matters
     def __getitem__(self, value):
-        self_list = self.split()
         if isinstance(value, slice):
             GroupClass = self.get_group_class()
-            return GroupClass(*self_list.__getitem__(value))
-        return self_list.__getitem__(value)
+            return GroupClass(*self.split().__getitem__(value))
+        return self.split().__getitem__(value)
 
     def __iter__(self):
         return iter(self.split())
@@ -147,8 +146,7 @@ class Mobject(object):
         return len(self.split())
 
     def split(self):
-        result = [self] if self.get_num_points() > 0 else []
-        return result + self.submobjects
+        return self.submobjects
 
     def assemble_family(self):
         sub_families = [sm.get_family() for sm in self.submobjects]
