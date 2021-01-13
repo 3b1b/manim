@@ -5,7 +5,6 @@ from manimlib.mobject.svg.tex_mobject import SCALE_FACTOR_PER_FONT_POINT
 from manimlib.mobject.types.vectorized_mobject import VMobject
 
 
-# TODO, have this cache TexMobjects
 class DecimalNumber(VMobject):
     CONFIG = {
         "stroke_width": 0,
