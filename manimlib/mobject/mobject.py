@@ -106,6 +106,10 @@ class Mobject(object):
         for key in data:
             self.data[key] = data[key].copy()
 
+    def set_uniforms(self, uniforms):
+        for key in uniforms:
+            self.uniforms[key] = uniforms[key]  # Copy?
+
     def resize_points(self, new_length, resize_func=resize_array):
         if new_length != len(self.data["points"]):
             self.data["points"] = resize_func(self.data["points"], new_length)
@@ -1236,6 +1240,7 @@ class Mobject(object):
         self.align_family(mobject)
         for sm1, sm2 in zip(self.get_family(), mobject.get_family()):
             sm1.set_data(sm2.data)
+            sm1.set_uniforms(sm2.uniforms)
         return self
 
     def cleanup_from_animation(self):
@@ -1349,6 +1354,7 @@ class Mobject(object):
     # For shader data
 
     def init_shader_data(self):
+        # TODO, only call this when needed?
         self.shader_data = np.zeros(len(self.get_points()), dtype=self.shader_dtype)
         self.shader_indices = None
         self.shader_wrapper = ShaderWrapper(
