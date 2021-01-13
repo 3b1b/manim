@@ -389,9 +389,7 @@ class Scene(object):
             for anim in animations
         ]))
         for mobject in self.mobjects:
-            if mobject in movers:
-                continue
-            if mobject.get_family_updaters():
+            if mobject in movers or mobject.get_family_updaters():
                 continue
             self.camera.set_mobjects_as_static(mobject)
 
