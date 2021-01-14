@@ -817,12 +817,12 @@ class Mobject(object):
             return self.get_points()
 
     def get_bounding_box_point(self, direction):
-        result = np.zeros(self.dim)
         bb = self.get_bounding_box()
-        result[direction < 0] = bb[0, direction < 0]
-        result[direction == 0] = bb[1, direction == 0]
-        result[direction > 0] = bb[2, direction > 0]
-        return result
+        indices = (np.sign(direction) + 1).astype(int)
+        return np.array([
+            bb[indices[i]][i]
+            for i in range(3)
+        ])
 
     def get_bounding_box(self):
         if not self.needs_new_bounding_box:
@@ -865,7 +865,7 @@ class Mobject(object):
         return self.get_bounding_box_point(direction)
 
     def get_center(self):
-        return self.get_bounding_box_point(ORIGIN)
+        return self.get_bounding_box()[1]
 
     def get_center_of_mass(self):
         return self.get_all_points().mean(0)
