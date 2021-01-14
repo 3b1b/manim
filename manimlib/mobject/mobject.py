@@ -170,6 +170,7 @@ class Mobject(object):
         sub_families = [sm.get_family() for sm in self.submobjects]
         self.family = [self, *it.chain(*sub_families)]
         self.refresh_has_updater_status()
+        self.refresh_bounding_box()
         for parent in self.parents:
             parent.assemble_family()
         return self
@@ -215,7 +216,6 @@ class Mobject(object):
     def set_submobjects(self, submobject_list):
         self.remove(*self.submobjects)
         self.add(*submobject_list)
-        self.refresh_bounding_box()
         return self
 
     def digest_mobject_attrs(self):
@@ -241,11 +241,14 @@ class Mobject(object):
         for key in self.data:
             copy_mobject.data[key] = self.data[key].copy()
 
+        # TODO, are uniforms ever numpy arrays?
         copy_mobject.uniforms = dict(self.uniforms)
 
         copy_mobject.submobjects = []
         copy_mobject.add(*[sm.copy() for sm in self.submobjects])
         copy_mobject.match_updaters(self)
+
+        copy_mobject.needs_new_bounding_box = self.needs_new_bounding_box
 
         # Make sure any mobject or numpy array attributes are copied
         family = self.get_family()
@@ -360,7 +363,7 @@ class Mobject(object):
         return self
 
     def refresh_has_updater_status(self):
-        self.has_updaters = len(self.get_family_updaters()) > 0
+        self.has_updaters = any(mob.get_updaters() for mob in self.get_family())
         return self
 
     # Transforming operations
@@ -825,7 +828,15 @@ class Mobject(object):
         if not self.needs_new_bounding_box:
             return self.data["bounding_box"]
 
-        all_points = self.get_all_points()
+        # all_points = self.get_all_points()
+        all_points = np.vstack([
+            self.get_points(),
+            *(
+                mob.get_bounding_box()
+                for mob in self.get_family()[1:]
+                if mob.has_points()
+            )
+        ])
         if len(all_points) == 0:
             self.data["bounding_box"] = np.zeros((3, self.dim))
         else:
