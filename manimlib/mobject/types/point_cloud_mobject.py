@@ -11,13 +11,8 @@ class PMobject(Mobject):
         "opacity": 1.0,
     }
 
-    def init_data(self):
-        self.data = {
-            "points": np.zeros((0, 3)),
-            "rgbas": np.zeros((0, 4)),
-        }
-
     def resize_points(self, size, resize_func=resize_array):
+        # TODO
         for key in self.data:
             if len(self.data[key]) != size:
                 self.data[key] = resize_array(self.data[key], size)

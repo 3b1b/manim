@@ -213,24 +213,25 @@ class TexturedSurface(ParametricSurface):
         super().__init__(self.uv_func, **kwargs)
 
     def init_data(self):
+        super().init_data()
+        self.data["im_coords"] = np.zeros((0, 2))
+        self.data["opacity"] = np.zeros((0, 1))
+
+    def init_points(self):
         nu, nv = self.uv_surface.resolution
-        self.data = {
-            "points": self.uv_surface.get_points(),
-            "im_coords": np.array([
-                [u, v]
-                for u in np.linspace(0, 1, nu)
-                for v in np.linspace(1, 0, nv)  # Reverse y-direction
-            ]),
-            "opacity": np.array([self.uv_surface.data["rgbas"][:, 3]]),
-        }
+        self.set_points(self.uv_surface.get_points())
+        self.data["im_coords"] = np.array([
+            [u, v]
+            for u in np.linspace(0, 1, nu)
+            for v in np.linspace(1, 0, nv)  # Reverse y-direction
+        ])
 
     def init_uniforms(self):
         super().init_uniforms()
         self.uniforms["num_textures"] = self.num_textures
 
     def init_colors(self):
-        # Don't call ParametricSurface color init
-        pass
+        self.data["opacity"] = np.array([self.uv_surface.data["rgbas"][:, 3]])
 
     def set_opacity(self, opacity, recurse=True):
         for mob in self.get_family(recurse):

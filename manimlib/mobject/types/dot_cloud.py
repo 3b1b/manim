@@ -4,15 +4,17 @@ import numbers
 
 from manimlib.constants import GREY_C
 from manimlib.mobject.types.point_cloud_mobject import PMobject
-from manimlib.mobject.geometry import DEFAULT_DOT_RADIUS
 from manimlib.utils.iterables import resize_preserving_order
+
+
+DEFAULT_DOT_CLOUD_RADIUS = 0.05
 
 
 class DotCloud(PMobject):
     CONFIG = {
         "color": GREY_C,
         "opacity": 1,
-        "radii": DEFAULT_DOT_RADIUS,
+        "radii": DEFAULT_DOT_CLOUD_RADIUS,
         "shader_folder": "true_dot",
         "render_primitive": moderngl.POINTS,
         "shader_dtype": [
@@ -24,15 +26,12 @@ class DotCloud(PMobject):
 
     def __init__(self, points=None, **kwargs):
         super().__init__(**kwargs)
-        if points:
+        if points is not None:
             self.set_points(points)
 
     def init_data(self):
-        self.data = {
-            "points": np.zeros((1, 3)),
-            "rgbas": np.zeros((1, 4)),
-            "radii": np.zeros((1, 1))
-        }
+        super().init_data()
+        self.data["radii"] = np.zeros((1, 1))
         self.set_radii(self.radii)
 
     def set_points_by_grid(self, n_rows, n_cols, height=None, width=None):

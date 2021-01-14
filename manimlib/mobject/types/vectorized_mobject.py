@@ -81,19 +81,21 @@ class VMobject(Mobject):
         return VGroup
 
     def init_data(self):
-        self.data = {
-            "points": np.zeros((0, 3)),
+        super().init_data()
+        self.data.pop("rgbas")
+        self.data.update({
             "fill_rgba": np.zeros((1, 4)),
             "stroke_rgba": np.zeros((1, 4)),
             "stroke_width": np.zeros((1, 1)),
             "unit_normal": np.zeros((1, 3))
-        }
+        })
 
     def set_points(self, points):
         old_points = self.get_points()
         super().set_points(points)
         if not np.all(points == old_points):
             self.refresh_triangulation()
+        return self
 
     # Colors
     def init_colors(self):
