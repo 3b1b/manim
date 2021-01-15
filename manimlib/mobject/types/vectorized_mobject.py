@@ -580,7 +580,7 @@ class VMobject(Mobject):
         # the polygon formed by the anchor points, pointing
         # in a direction perpendicular to the polygon according
         # to the right hand rule.
-        if self.has_no_points():
+        if not self.has_points():
             return np.zeros(3)
 
         nppc = self.n_points_per_curve
@@ -626,7 +626,7 @@ class VMobject(Mobject):
         for mob in self, vmobject:
             # If there are no points, add one to
             # where the "center" is
-            if mob.has_no_points():
+            if not mob.has_points():
                 mob.start_new_path(mob.get_center())
             # If there's only one point, turn it into
             # a null curve

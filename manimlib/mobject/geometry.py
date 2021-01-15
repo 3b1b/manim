@@ -450,7 +450,7 @@ class Line(TipableVMobject):
             if direction is None:
                 return mob.get_center()
             else:
-                return mob.get_bounding_box_point_by_direction(direction)
+                return mob.get_continuous_bounding_box_point(direction)
         else:
             point = mob_or_point
             result = np.zeros(self.dim)

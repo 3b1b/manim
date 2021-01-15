@@ -57,7 +57,6 @@ class Animation(object):
 
     def finish(self):
         self.interpolate(self.final_alpha_value)
-        self.mobject.cleanup_from_animation()
         if self.suspend_mobject_updating:
             self.mobject.resume_updating()
 

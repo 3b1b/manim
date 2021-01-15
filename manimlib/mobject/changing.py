@@ -84,7 +84,7 @@ class TracedPath(VMobject):
 
     def update_path(self):
         new_point = self.traced_point_func()
-        if self.has_no_points():
+        if not self.has_points():
             self.start_new_path(new_point)
             self.add_line_to(new_point)
         else:
