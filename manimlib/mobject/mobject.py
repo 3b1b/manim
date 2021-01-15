@@ -911,7 +911,7 @@ class Mobject(object):
 
     # Background rectangle
 
-    def add_background_rectangle(self, color=BLACK, opacity=0.75, **kwargs):
+    def add_background_rectangle(self, color=None, opacity=0.75, **kwargs):
         # TODO, this does not behave well when the mobject has points,
         # since it gets displayed on top
         from manimlib.mobject.shape_matchers import BackgroundRectangle
