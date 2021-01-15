@@ -9,7 +9,7 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.directories import get_text_dir
 
 
-TEXT_MOB_SCALE_FACTOR = 0.05
+TEXT_MOB_SCALE_FACTOR = 0.001048
 
 
 # Warning, these classes are currently based on an old rendering mode
@@ -36,6 +36,7 @@ class Text(SVGMobject):
         'gradient': None,
         'lsh': -1,
         'size': 1,
+        'font_size': 48,
         'slant': NORMAL,
         'weight': NORMAL,
         't2c': {},
@@ -64,7 +65,7 @@ class Text(SVGMobject):
 
         # anti-aliasing
         if self.height is None:
-            self.scale(TEXT_MOB_SCALE_FACTOR)
+            self.scale(TEXT_MOB_SCALE_FACTOR * self.font_size)
 
     def remove_last_M(self, file_name):
         with open(file_name, 'r') as fpr:

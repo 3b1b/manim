@@ -108,13 +108,13 @@ class TextExample(Scene):
     def construct(self):
         # To run this scene properly, you should have "Consolas" font in your computer
         # for full usage, you can see https://github.com/3b1b/manim/pull/680
-        text = Text("Here is a text", font="Consolas", size=2)
+        text = Text("Here is a text", font="Consolas", font_size=90)
         difference = Text(
             """
             The most important difference between Text and TextMobject is that\n
             you can change the font more easily, but can't use the LaTeX gramma
             """,
-            font="Arial", size=0.5,
+            font="Arial", font_size=24,
             # t2c is a dict that you can choose color for different text
             t2c={"Text": BLUE, "TextMobject": BLUE, "LaTeX": ORANGE}
         )
