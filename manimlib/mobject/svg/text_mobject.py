@@ -3,7 +3,6 @@ import os
 import copy
 import hashlib
 import cairo
-import manimlib.constants as consts
 from manimlib.constants import *
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.utils.config_ops import digest_config
@@ -29,7 +28,7 @@ class TextSetting(object):
 class Text(SVGMobject):
     CONFIG = {
         # Mobject
-        'color': consts.WHITE,
+        'color': WHITE,
         'height': None,
         'stroke_width': 0,
         # Text
