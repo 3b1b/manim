@@ -57,7 +57,7 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           brew install openssl readline ffmpeg pyenv pyenv-virtualenv
-          brew cask install basictex
+          brew install --cask basictex
           eval "$(/usr/libexec/path_helper -s)"
           sudo tlmgr update --self
           brew install pkg-config
