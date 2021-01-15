@@ -95,7 +95,7 @@ class CameraFrame(Mobject):
         return self.set_rotation(phi=phi)
 
     def set_gamma(self, gamma):
-        return self.set_rotation(phi=phi)
+        return self.set_rotation(gamma=gamma)
 
     def increment_theta(self, dtheta):
         return self.set_rotation(theta=self.euler_angles[0] + dtheta)
