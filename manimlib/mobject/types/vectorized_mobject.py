@@ -90,13 +90,6 @@ class VMobject(Mobject):
             "unit_normal": np.zeros((1, 3))
         })
 
-    def set_points(self, points):
-        old_points = self.get_points()
-        super().set_points(points)
-        if not np.all(points == old_points):
-            self.refresh_triangulation()
-        return self
-
     # Colors
     def init_colors(self):
         self.set_fill(
@@ -458,19 +451,6 @@ class VMobject(Mobject):
             self.resize_data(len(self.get_points() - 1))
         self.append_points(new_points)
 
-    # TODO, how to be smart about tangents here?
-    def apply_function(self, function):
-        Mobject.apply_function(self, function)
-        if self.make_smooth_after_applying_functions:
-            self.make_smooth()
-        self.refresh_triangulation()
-        return self
-
-    def flip(self, *args, **kwargs):
-        super().flip(*args, **kwargs)
-        self.refresh_unit_normal()
-        self.refresh_triangulation()
-
     #
     def consider_points_equals(self, p0, p1):
         return get_norm(p1 - p0) < self.tolerance_for_point_equality
@@ -761,6 +741,98 @@ class VMobject(Mobject):
         vmob.pointwise_become_partial(self, a, b)
         return vmob
 
+    # Related to triangulation
+
+    def refresh_triangulation(self):
+        for mob in self.get_family():
+            mob.needs_new_triangulation = True
+        return self
+
+    def get_triangulation(self, normal_vector=None):
+        # Figure out how to triangulate the interior to know
+        # how to send the points as to the vertex shader.
+        # First triangles come directly from the points
+        if normal_vector is None:
+            normal_vector = self.get_unit_normal()
+
+        if not self.needs_new_triangulation:
+            return self.triangulation
+
+        points = self.get_points()
+
+        if len(points) <= 1:
+            self.triangulation = np.zeros(0, dtype='i4')
+            self.needs_new_triangulation = False
+            return self.triangulation
+
+        # Rotate points such that unit normal vector is OUT
+        # TODO, 99% of the time this does nothing.  Do a check for that?
+        points = np.dot(points, z_to_vector(normal_vector))
+        indices = np.arange(len(points), dtype=int)
+
+        b0s = points[0::3]
+        b1s = points[1::3]
+        b2s = points[2::3]
+        v01s = b1s - b0s
+        v12s = b2s - b1s
+
+        crosses = cross2d(v01s, v12s)
+        convexities = np.sign(crosses)
+
+        atol = self.tolerance_for_point_equality
+        end_of_loop = np.zeros(len(b0s), dtype=bool)
+        end_of_loop[:-1] = (np.abs(b2s[:-1] - b0s[1:]) > atol).any(1)
+        end_of_loop[-1] = True
+
+        concave_parts = convexities < 0
+
+        # These are the vertices to which we'll apply a polygon triangulation
+        inner_vert_indices = np.hstack([
+            indices[0::3],
+            indices[1::3][concave_parts],
+            indices[2::3][end_of_loop],
+        ])
+        inner_vert_indices.sort()
+        rings = np.arange(1, len(inner_vert_indices) + 1)[inner_vert_indices % 3 == 2]
+
+        # Triangulate
+        inner_verts = points[inner_vert_indices]
+        inner_tri_indices = inner_vert_indices[earclip_triangulation(inner_verts, rings)]
+
+        tri_indices = np.hstack([indices, inner_tri_indices])
+        self.triangulation = tri_indices
+        self.needs_new_triangulation = False
+        return tri_indices
+
+    def triggers_refreshed_triangulation(func):
+        def wrapper(self, *args, **kwargs):
+            old_points = self.get_points()
+            func(self, *args, **kwargs)
+            if not np.all(self.get_points() == old_points):
+                self.refresh_triangulation()
+                self.refresh_unit_normal()
+        return wrapper
+
+    @triggers_refreshed_triangulation
+    def set_points(self, points):
+        super().set_points(points)
+
+    @triggers_refreshed_triangulation
+    def set_data(self, data):
+        super().set_data(data)
+
+    # TODO, how to be smart about tangents here?
+    @triggers_refreshed_triangulation
+    def apply_function(self, function):
+        super().apply_function(function)
+        if self.make_smooth_after_applying_functions:
+            self.make_smooth()
+        return self
+
+    @triggers_refreshed_triangulation
+    def flip(self, *args, **kwargs):
+        super().flip(*args, **kwargs)
+
     # For shaders
     def init_shader_data(self):
         self.fill_data = np.zeros(0, dtype=self.fill_dtype)
@@ -848,67 +920,6 @@ class VMobject(Mobject):
         self.read_data_to_shader(self.stroke_data, "unit_normal", "unit_normal")
 
         return self.stroke_data
-
-    def refresh_triangulation(self):
-        for mob in self.get_family():
-            mob.needs_new_triangulation = True
-        return self
-
-    def get_triangulation(self, normal_vector=None):
-        # Figure out how to triangulate the interior to know
-        # how to send the points as to the vertex shader.
-        # First triangles come directly from the points
-        if normal_vector is None:
-            normal_vector = self.get_unit_normal()
-
-        if not self.needs_new_triangulation:
-            return self.triangulation
-
-        points = self.get_points()
-
-        if len(points) <= 1:
-            self.triangulation = np.zeros(0, dtype='i4')
-            self.needs_new_triangulation = False
-            return self.triangulation
-
-        # Rotate points such that unit normal vector is OUT
-        # TODO, 99% of the time this does nothing.  Do a check for that?
-        points = np.dot(points, z_to_vector(normal_vector))
-        indices = np.arange(len(points), dtype=int)
-
-        b0s = points[0::3]
-        b1s = points[1::3]
-        b2s = points[2::3]
-        v01s = b1s - b0s
-        v12s = b2s - b1s
-
-        crosses = cross2d(v01s, v12s)
-        convexities = np.sign(crosses)
-
-        atol = self.tolerance_for_point_equality
-        end_of_loop = np.zeros(len(b0s), dtype=bool)
-        end_of_loop[:-1] = (np.abs(b2s[:-1] - b0s[1:]) > atol).any(1)
-        end_of_loop[-1] = True
-
-        concave_parts = convexities < 0
-
-        # These are the vertices to which we'll apply a polygon triangulation
-        inner_vert_indices = np.hstack([
-            indices[0::3],
-            indices[1::3][concave_parts],
-            indices[2::3][end_of_loop],
-        ])
-        inner_vert_indices.sort()
-        rings = np.arange(1, len(inner_vert_indices) + 1)[inner_vert_indices % 3 == 2]
-
-        # Triangulate
-        inner_verts = points[inner_vert_indices]
-        inner_tri_indices = inner_vert_indices[earclip_triangulation(inner_verts, rings)]
-
-        tri_indices = np.hstack([indices, inner_tri_indices])
-        self.triangulation = tri_indices
-        self.needs_new_triangulation = False
-        return tri_indices
 
     def get_fill_shader_data(self):
         points = self.get_points()
