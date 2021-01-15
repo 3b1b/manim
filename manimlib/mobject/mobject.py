@@ -141,9 +141,12 @@ class Mobject(object):
             about_point = self.get_bounding_box_point(about_edge)
 
         for mob in self.get_family():
-            arrs = [mob.get_points()]
+            arrs = []
+            if mob.has_points():
+                arrs.append(mob.get_points())
             if works_on_bounding_box:
                 arrs.append(mob.get_bounding_box())
+
             for arr in arrs:
                 if about_point is None:
                     arr[:] = func(arr)
