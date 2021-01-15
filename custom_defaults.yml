@@ -27,6 +27,7 @@ tex:
   # intermediate_filetype: "xdv"
 universal_import_line: "from manimlib.imports import *"
 style:
+  font: "Consolas"
   background_color: "#333333"
 camera_qualities:
   low:

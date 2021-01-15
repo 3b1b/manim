@@ -77,6 +77,7 @@ from manimlib.scene.vector_space_scene import *
 from manimlib.utils.bezier import *
 from manimlib.utils.color import *
 from manimlib.utils.config_ops import *
+from manimlib.utils.customization import *
 from manimlib.utils.debug import *
 from manimlib.utils.directories import *
 from manimlib.utils.images import *
