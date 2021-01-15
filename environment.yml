@@ -17,7 +17,11 @@ dependencies:
     - Pillow
     - progressbar
     - scipy
+    - sympy
     - tqdm
     - moderngl
     - pydub
+    - pyyaml
+    - validators
+    - ipython
 
