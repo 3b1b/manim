@@ -3,13 +3,13 @@ import os
 import copy
 import hashlib
 import cairo
-import manimlib.constants as consts
 from manimlib.constants import *
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.directories import get_text_dir
 
 
-TEXT_MOB_SCALE_FACTOR = 0.05
+TEXT_MOB_SCALE_FACTOR = 0.001048
 
 
 # Warning, these classes are currently based on an old rendering mode
@@ -28,13 +28,15 @@ class TextSetting(object):
 class Text(SVGMobject):
     CONFIG = {
         # Mobject
-        'color': consts.WHITE,
+        'color': WHITE,
         'height': None,
+        'stroke_width': 0,
         # Text
         'font': '',
         'gradient': None,
         'lsh': -1,
         'size': 1,
+        'font_size': 48,
         'slant': NORMAL,
         'weight': NORMAL,
         't2c': {},
@@ -54,20 +56,6 @@ class Text(SVGMobject):
         self.remove_last_M(file_name)
         SVGMobject.__init__(self, file_name, **config)
 
-        nppc = self.n_points_per_curve
-        for each in self:
-            if len(each.get_points()) == 0:
-                continue
-            points = each.get_points()
-            last = points[0]
-            each.clear_points()
-            for index, point in enumerate(points):
-                each.append_points([point])
-                if index != len(points) - 1 and (index + 1) % nppc == 0 and any(point != points[index+1]):
-                    each.add_line_to(last)
-                    last = points[index + 1]
-            each.add_line_to(last)
-
         if self.t2c:
             self.set_color_by_t2c()
         if self.gradient:
@@ -77,7 +65,7 @@ class Text(SVGMobject):
 
         # anti-aliasing
         if self.height is None:
-            self.scale(TEXT_MOB_SCALE_FACTOR)
+            self.scale(TEXT_MOB_SCALE_FACTOR * self.font_size)
 
     def remove_last_M(self, file_name):
         with open(file_name, 'r') as fpr:
@@ -206,7 +194,7 @@ class Text(SVGMobject):
         if self.font == '':
             print(NOT_SETTING_FONT_MSG)
 
-        dir_name = consts.TEXT_DIR
+        dir_name = get_text_dir()
         hash_name = self.text2hash()
         file_name = os.path.join(dir_name, hash_name) +'.svg'
         if os.path.exists(file_name):

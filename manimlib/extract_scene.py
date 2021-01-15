@@ -79,7 +79,6 @@ def get_scenes_to_render(scene_classes, scene_config, config):
             logging.log(
                 logging.ERROR,
                 f"No scene named {scene_name} found",
-                file=sys.stderr
             )
     if result:
         return result
