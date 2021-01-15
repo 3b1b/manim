@@ -7,6 +7,7 @@ import manimlib.constants as consts
 from manimlib.constants import *
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.directories import get_text_dir
 
 
 TEXT_MOB_SCALE_FACTOR = 0.05
@@ -30,6 +31,7 @@ class Text(SVGMobject):
         # Mobject
         'color': consts.WHITE,
         'height': None,
+        'stroke_width': 0,
         # Text
         'font': '',
         'gradient': None,
@@ -51,22 +53,7 @@ class Text(SVGMobject):
         self.lsh = self.size if self.lsh == -1 else self.lsh
 
         file_name = self.text2svg()
-        self.remove_last_M(file_name)
         SVGMobject.__init__(self, file_name, **config)
-
-        nppc = self.n_points_per_curve
-        for each in self:
-            if len(each.get_points()) == 0:
-                continue
-            points = each.get_points()
-            last = points[0]
-            each.clear_points()
-            for index, point in enumerate(points):
-                each.append_points([point])
-                if index != len(points) - 1 and (index + 1) % nppc == 0 and any(point != points[index+1]):
-                    each.add_line_to(last)
-                    last = points[index + 1]
-            each.add_line_to(last)
 
         if self.t2c:
             self.set_color_by_t2c()
@@ -78,13 +65,6 @@ class Text(SVGMobject):
         # anti-aliasing
         if self.height is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
-
-    def remove_last_M(self, file_name):
-        with open(file_name, 'r') as fpr:
-            content = fpr.read()
-        content = re.sub(r'Z M [^A-Za-z]*? "\/>', 'Z "/>', content)
-        with open(file_name, 'w') as fpw:
-            fpw.write(content)
 
     def find_indexes(self, word):
         m = re.match(r'\[([0-9\-]{0,}):([0-9\-]{0,})\]', word)
@@ -206,7 +186,7 @@ class Text(SVGMobject):
         if self.font == '':
             print(NOT_SETTING_FONT_MSG)
 
-        dir_name = consts.TEXT_DIR
+        dir_name = get_text_dir()
         hash_name = self.text2hash()
         file_name = os.path.join(dir_name, hash_name) +'.svg'
         if os.path.exists(file_name):

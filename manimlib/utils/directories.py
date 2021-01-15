@@ -33,6 +33,10 @@ def get_tex_dir():
     return guarantee_existence(os.path.join(get_temp_dir(), "Tex"))
 
 
+def get_text_dir():
+    return guarantee_existence(os.path.join(get_temp_dir(), "Text"))
+
+
 def get_mobject_data_dir():
     return guarantee_existence(os.path.join(get_temp_dir(), "mobject_data"))
 
