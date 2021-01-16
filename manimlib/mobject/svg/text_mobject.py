@@ -4,6 +4,7 @@ import copy
 import hashlib
 import cairo
 from manimlib.constants import *
+from manimlib.mobject.geometry import Dot, Rectangle
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.customization import get_customization
@@ -12,9 +13,6 @@ from manimlib.utils.directories import get_text_dir
 
 TEXT_MOB_SCALE_FACTOR = 0.001048
 
-
-# Warning, these classes are currently based on an old rendering mode
-# not supported in this version of manim
 
 class TextSetting(object):
     def __init__(self, start, end, font, slant, weight, line_num=-1):
@@ -38,6 +36,7 @@ class Text(SVGMobject):
         'lsh': -1,
         'size': 1,
         'font_size': 48,
+        'tab_width': 4,
         'slant': NORMAL,
         'weight': NORMAL,
         't2c': {},
@@ -48,14 +47,19 @@ class Text(SVGMobject):
     }
 
     def __init__(self, text, **config):
-        self.text = text
         self.full2short(config)
         digest_config(self, config)
         self.lsh = self.size if self.lsh == -1 else self.lsh
-
+        text_without_tabs = text
+        if text.find('\t') != -1:
+            text_without_tabs = text.replace('\t', ' ' * self.tab_width)
+        self.text = text_without_tabs
         file_name = self.text2svg()
         self.remove_last_M(file_name)
+        self.remove_empty_path(file_name)
         SVGMobject.__init__(self, file_name, **config)
+        self.text = text
+        self.apply_space_chars()
 
         if self.t2c:
             self.set_color_by_t2c()
@@ -68,10 +72,27 @@ class Text(SVGMobject):
         if self.height is None:
             self.scale(TEXT_MOB_SCALE_FACTOR * self.font_size)
 
+    def apply_space_chars(self):
+        for char_index in range(self.text.__len__()):
+            if self.text[char_index] == " " or self.text[char_index] == "\t" or self.text[char_index] == "\n":
+                space = Dot(redius=0, fill_opacity=0, stroke_opacity=0)
+                if char_index == 0:
+                    space.move_to(self.submobjects[char_index].get_center())
+                else:
+                    space.move_to(self.submobjects[char_index - 1].get_center())
+                self.submobjects.insert(char_index, space)
+
     def remove_last_M(self, file_name):
         with open(file_name, 'r') as fpr:
             content = fpr.read()
         content = re.sub(r'Z M [^A-Za-z]*? "\/>', 'Z "/>', content)
+        with open(file_name, 'w') as fpw:
+            fpw.write(content)
+
+    def remove_empty_path(self, file_name):
+        with open(file_name, 'r') as fpr:
+            content = fpr.read()
+        content = re.sub(r'<path .*?d=""/>', '', content)
         with open(file_name, 'w') as fpw:
             fpw.write(content)
 

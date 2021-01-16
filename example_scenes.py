@@ -125,6 +125,7 @@ class TextExample(Scene):
 
         fonts = Text(
             "And you can also set the font according to different words",
+            font="Arial",
             t2f={"font": "Consolas", "words": "Consolas"},
             t2c={"font": BLUE, "words": GREEN}
         )
