@@ -24,4 +24,5 @@ dependencies:
     - pyyaml
     - validators
     - ipython
+    - PyOpenGL
 
