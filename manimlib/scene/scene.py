@@ -539,9 +539,14 @@ class Scene(object):
         pass
 
     def on_key_press(self, symbol, modifiers):
-        if chr(symbol) == "r":
+        try:
+            char = chr(symbol)
+        except OverflowError:
+            print(" Warning: The value of the pressed key is too large.")
+            return
+        if char == "r":
             self.camera.frame.to_default_state()
-        elif chr(symbol) == "q":
+        elif char == "q":
             self.quit_interaction = True
 
     def on_resize(self, width: int, height: int):
