@@ -6,6 +6,7 @@ import cairo
 from manimlib.constants import *
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.customization import get_customization
 from manimlib.utils.directories import get_text_dir
 
 
@@ -135,7 +136,7 @@ class Text(SVGMobject):
         settings = self.font + self.slant + self.weight
         settings += str(self.t2f) + str(self.t2s) + str(self.t2w)
         settings += str(self.lsh) + str(self.size)
-        id_str = self.text+settings
+        id_str = self.text + settings
         hasher = hashlib.sha256()
         hasher.update(id_str.encode())
         return hasher.hexdigest()[:16]
@@ -192,11 +193,11 @@ class Text(SVGMobject):
         lsh = self.lsh * 10
 
         if self.font == '':
-            print(NOT_SETTING_FONT_MSG)
+            self.font = get_customization()['style']['font']
 
         dir_name = get_text_dir()
         hash_name = self.text2hash()
-        file_name = os.path.join(dir_name, hash_name) +'.svg'
+        file_name = os.path.join(dir_name, hash_name) + '.svg'
         if os.path.exists(file_name):
             return file_name
 

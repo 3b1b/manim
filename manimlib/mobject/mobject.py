@@ -1,7 +1,5 @@
-from functools import reduce
 import copy
 import itertools as it
-import operator as op
 import random
 import sys
 import moderngl
@@ -30,9 +28,6 @@ from manimlib.utils.space_ops import rotation_matrix_transpose
 from manimlib.shader_wrapper import ShaderWrapper
 from manimlib.shader_wrapper import get_colormap_code
 
-
-# TODO: Explain array_attrs
-# TODO: Incorporate shader defaults
 
 class Mobject(object):
     """
@@ -146,9 +141,12 @@ class Mobject(object):
             about_point = self.get_bounding_box_point(about_edge)
 
         for mob in self.get_family():
-            arrs = [mob.get_points()]
+            arrs = []
+            if mob.has_points():
+                arrs.append(mob.get_points())
             if works_on_bounding_box:
                 arrs.append(mob.get_bounding_box())
+
             for arr in arrs:
                 if about_point is None:
                     arr[:] = func(arr)
@@ -298,6 +296,84 @@ class Mobject(object):
         self.set_submobjects(list_update(self.submobjects, mobject_attrs))
         return self
 
+    # Submobject organization
+
+    def arrange(self, direction=RIGHT, center=True, **kwargs):
+        for m1, m2 in zip(self.submobjects, self.submobjects[1:]):
+            m2.next_to(m1, direction, **kwargs)
+        if center:
+            self.center()
+        return self
+
+    def arrange_in_grid(self, n_rows=None, n_cols=None,
+                        buff=None,
+                        h_buff=None,
+                        v_buff=None,
+                        buff_ratio=None,
+                        h_buff_ratio=0.5,
+                        v_buff_ratio=0.5,
+                        aligned_edge=ORIGIN,
+                        fill_rows_first=True):
+        submobs = self.submobjects
+        if n_rows is None and n_cols is None:
+            n_rows = int(np.sqrt(len(submobs)))
+        if n_rows is None:
+            n_rows = len(submobs) // n_cols
+        if n_cols is None:
+            n_cols = len(submobs) // n_rows
+
+        if buff is not None:
+            h_buff = buff
+            v_buff = buff
+        else:
+            if buff_ratio is not None:
+                v_buff_ratio = buff_ratio
+                h_buff_ratio = buff_ratio
+            if h_buff is None:
+                h_buff = h_buff_ratio * self[0].get_width()
+            if v_buff is None:
+                v_buff = v_buff_ratio * self[0].get_height()
+
+        x_unit = h_buff + max([sm.get_width() for sm in submobs])
+        y_unit = v_buff + max([sm.get_height() for sm in submobs])
+
+        for index, sm in enumerate(submobs):
+            if fill_rows_first:
+                x, y = index % n_cols, index // n_cols
+            else:
+                x, y = index // n_rows, index % n_rows
+            sm.move_to(ORIGIN, aligned_edge)
+            sm.shift(x * x_unit * RIGHT + y * y_unit * DOWN)
+        self.center()
+        return self
+
+    def get_grid(self, n_rows, n_cols, height=None, **kwargs):
+        """
+        Returns a new mobject containing multiple copies of this one
+        arranged in a grid
+        """
+        grid = self.get_group_class()(
+            *(self.copy() for n in range(n_rows * n_cols))
+        )
+        grid.arrange_in_grid(n_rows, n_cols, **kwargs)
+        if height is not None:
+            grid.set_height(height)
+        return grid
+
+    def sort(self, point_to_num_func=lambda p: p[0], submob_func=None):
+        if submob_func is not None:
+            self.submobjects.sort(key=submob_func)
+        else:
+            self.submobjects.sort(key=lambda m: point_to_num_func(m.get_center()))
+        return self
+
+    def shuffle(self, recurse=False):
+        if recurse:
+            for submob in self.submobjects:
+                submob.shuffle(recurse=True)
+        random.shuffle(self.submobjects)
+        return self
+
     # Copying
 
     def copy(self):
@@ -373,16 +449,16 @@ class Mobject(object):
         self.has_updaters = False
         self.updating_suspended = False
 
-    def update(self, dt=0, recursive=True):
+    def update(self, dt=0, recurse=True):
         if not self.has_updaters or self.updating_suspended:
             return self
         for updater in self.time_based_updaters:
             updater(self, dt)
         for updater in self.non_time_updaters:
             updater(self)
-        if recursive:
+        if recurse:
             for submob in self.submobjects:
-                submob.update(dt, recursive)
+                submob.update(dt, recurse)
         return self
 
     def get_time_based_updaters(self):
@@ -419,13 +495,13 @@ class Mobject(object):
                 updater_list.remove(update_function)
         return self
 
-    def clear_updaters(self, recursive=True):
+    def clear_updaters(self, recurse=True):
         self.time_based_updaters = []
         self.non_time_updaters = []
-        if recursive:
+        if recurse:
             for submob in self.submobjects:
                 submob.clear_updaters()
-        self.suspend_updating(recursive)
+        self.suspend_updating(recurse)
         return self
 
     def match_updaters(self, mobject):
@@ -434,22 +510,22 @@ class Mobject(object):
             self.add_updater(updater)
         return self
 
-    def suspend_updating(self, recursive=True):
+    def suspend_updating(self, recurse=True):
         self.updating_suspended = True
-        if recursive:
+        if recurse:
             for submob in self.submobjects:
-                submob.suspend_updating(recursive)
+                submob.suspend_updating(recurse)
         return self
 
-    def resume_updating(self, recursive=True, call_updater=True):
+    def resume_updating(self, recurse=True, call_updater=True):
         self.updating_suspended = False
-        if recursive:
+        if recurse:
             for submob in self.submobjects:
-                submob.resume_updating(recursive)
+                submob.resume_updating(recurse)
         for parent in self.parents:
-            parent.resume_updating(recursive=False, call_updater=False)
+            parent.resume_updating(recurse=False, call_updater=False)
         if call_updater:
-            self.update(dt=0, recursive=recursive)
+            self.update(dt=0, recurse=recurse)
         return self
 
     def refresh_has_updater_status(self):
@@ -744,30 +820,6 @@ class Mobject(object):
         self.shift(start - curr_start)
         return self
 
-    # Background rectangle
-
-    def add_background_rectangle(self, color=BLACK, opacity=0.75, **kwargs):
-        # TODO, this does not behave well when the mobject has points,
-        # since it gets displayed on top
-        from manimlib.mobject.shape_matchers import BackgroundRectangle
-        self.background_rectangle = BackgroundRectangle(
-            self, color=color,
-            fill_opacity=opacity,
-            **kwargs
-        )
-        self.add_to_back(self.background_rectangle)
-        return self
-
-    def add_background_rectangle_to_submobjects(self, **kwargs):
-        for submobject in self.submobjects:
-            submobject.add_background_rectangle(**kwargs)
-        return self
-
-    def add_background_rectangle_to_family_members_with_points(self, **kwargs):
-        for mob in self.family_members_with_points():
-            mob.add_background_rectangle(**kwargs)
-        return self
-
     # Color functions
 
     def set_rgba_array(self, color=None, opacity=None, name="rgbas", recurse=True):
@@ -855,6 +907,30 @@ class Mobject(object):
     def set_shadow(self, shadow, recurse=True):
         for mob in self.get_family(recurse):
             mob.uniforms["shadow"] = shadow
+        return self
+
+    # Background rectangle
+
+    def add_background_rectangle(self, color=None, opacity=0.75, **kwargs):
+        # TODO, this does not behave well when the mobject has points,
+        # since it gets displayed on top
+        from manimlib.mobject.shape_matchers import BackgroundRectangle
+        self.background_rectangle = BackgroundRectangle(
+            self, color=color,
+            fill_opacity=opacity,
+            **kwargs
+        )
+        self.add_to_back(self.background_rectangle)
+        return self
+
+    def add_background_rectangle_to_submobjects(self, **kwargs):
+        for submobject in self.submobjects:
+            submobject.add_background_rectangle(**kwargs)
+        return self
+
+    def add_background_rectangle_to_family_members_with_points(self, **kwargs):
+        for mob in self.family_members_with_points():
+            mob.add_background_rectangle(**kwargs)
         return self
 
     # Getters
@@ -1036,84 +1112,6 @@ class Mobject(object):
 
     def get_group_class(self):
         return Group
-
-    # Submobject organization
-
-    def arrange(self, direction=RIGHT, center=True, **kwargs):
-        for m1, m2 in zip(self.submobjects, self.submobjects[1:]):
-            m2.next_to(m1, direction, **kwargs)
-        if center:
-            self.center()
-        return self
-
-    def arrange_in_grid(self, n_rows=None, n_cols=None,
-                        buff=None,
-                        h_buff=None,
-                        v_buff=None,
-                        buff_ratio=None,
-                        h_buff_ratio=0.5,
-                        v_buff_ratio=0.5,
-                        aligned_edge=ORIGIN,
-                        fill_rows_first=True):
-        submobs = self.submobjects
-        if n_rows is None and n_cols is None:
-            n_rows = int(np.sqrt(len(submobs)))
-        if n_rows is None:
-            n_rows = len(submobs) // n_cols
-        if n_cols is None:
-            n_cols = len(submobs) // n_rows
-
-        if buff is not None:
-            h_buff = buff
-            v_buff = buff
-        else:
-            if buff_ratio is not None:
-                v_buff_ratio = buff_ratio
-                h_buff_ratio = buff_ratio
-            if h_buff is None:
-                h_buff = h_buff_ratio * self[0].get_width()
-            if v_buff is None:
-                v_buff = v_buff_ratio * self[0].get_height()
-
-        x_unit = h_buff + max([sm.get_width() for sm in submobs])
-        y_unit = v_buff + max([sm.get_height() for sm in submobs])
-
-        for index, sm in enumerate(submobs):
-            if fill_rows_first:
-                x, y = index % n_cols, index // n_cols
-            else:
-                x, y = index // n_rows, index % n_rows
-            sm.move_to(ORIGIN, aligned_edge)
-            sm.shift(x * x_unit * RIGHT + y * y_unit * DOWN)
-        self.center()
-        return self
-
-    def get_grid(self, n_rows, n_cols, height=None, **kwargs):
-        """
-        Returns a new mobject containing multiple copies of this one
-        arranged in a grid
-        """
-        grid = self.get_group_class()(
-            *(self.copy() for n in range(n_rows * n_cols))
-        )
-        grid.arrange_in_grid(n_rows, n_cols, **kwargs)
-        if height is not None:
-            grid.set_height(height)
-        return grid
-
-    def sort(self, point_to_num_func=lambda p: p[0], submob_func=None):
-        if submob_func is not None:
-            self.submobjects.sort(key=submob_func)
-        else:
-            self.submobjects.sort(key=lambda m: point_to_num_func(m.get_center()))
-        return self
-
-    def shuffle(self, recurse=False):
-        if recurse:
-            for submob in self.submobjects:
-                submob.shuffle(recurse=True)
-        random.shuffle(self.submobjects)
-        return self
 
     # Alignment
 

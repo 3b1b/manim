@@ -310,22 +310,33 @@ class SurfaceExample(Scene):
     }
 
     def construct(self):
+        surface_text = Text("For 3d scenes, try using surfaces")
+        surface_text.fix_in_frame()
+        surface_text.to_edge(UP)
+        self.add(surface_text)
+        self.wait(0.1)
+
         torus1 = Torus(r1=1, r2=1)
         torus2 = Torus(r1=3, r2=1)
         sphere = Sphere(radius=3, resolution=torus1.resolution)
         # You can texture a surface with up to two images, which will
         # be interpreted as the side towards the light, and away from
         # the light.  These can be either urls, or paths to a local file
-        # in whatever you've set as the iamge directory in
+        # in whatever you've set as the image directory in
         # the custom_defaults.yml file
+
+        # day_texture = "EarthTextureMap"
+        # night_texture = "NightEarthTextureMap"
         day_texture = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Whole_world_-_land_and_oceans.jpg/1280px-Whole_world_-_land_and_oceans.jpg"
         night_texture = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/The_earth_at_night.jpg/1280px-The_earth_at_night.jpg"
+
         surfaces = [
             TexturedSurface(surface, day_texture, night_texture)
             for surface in [sphere, torus1, torus2]
         ]
 
         for mob in surfaces:
+            mob.shift(IN)
             mob.mesh = SurfaceMesh(mob)
             mob.mesh.set_stroke(BLUE, 1, opacity=0.5)
 
@@ -365,12 +376,23 @@ class SurfaceExample(Scene):
         frame.add_updater(lambda m, dt: m.increment_theta(-0.1 * dt))
 
         # Play around with where the light is
+        light_text = Text("You can move around the light source")
+        light_text.move_to(surface_text)
+        light_text.fix_in_frame()
+
+        self.play(FadeTransform(surface_text, light_text))
         light = self.camera.light_source
         self.add(light)
         light.save_state()
         self.play(light.move_to, 3 * IN, run_time=5)
         self.play(light.shift, 10 * OUT, run_time=5)
-        self.wait(4)
+
+        drag_text = Text("Try clicking and dragging while pressing d")
+        drag_text.move_to(light_text)
+        drag_text.fix_in_frame()
+
+        self.play(FadeTransform(light_text, drag_text))
+        self.wait()
 
 
 # See https://github.com/3b1b/videos for many, many more
