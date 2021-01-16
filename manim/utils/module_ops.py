@@ -8,7 +8,7 @@ import types
 import re
 
 
-def get_module(file_name):
+def get_module(file_name: Path):
     if str(file_name) == "-":
         module = types.ModuleType("input_scenes")
         logger.info(
