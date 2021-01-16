@@ -73,14 +73,17 @@ class Text(SVGMobject):
             self.scale(TEXT_MOB_SCALE_FACTOR * self.font_size)
 
     def apply_space_chars(self):
+        submobs = self.submobjects.copy()
         for char_index in range(self.text.__len__()):
             if self.text[char_index] == " " or self.text[char_index] == "\t" or self.text[char_index] == "\n":
-                space = Dot(redius=0, fill_opacity=0, stroke_opacity=0)
+                space = Dot(radius=0, fill_opacity=0, stroke_opacity=0)
                 if char_index == 0:
-                    space.move_to(self.submobjects[char_index].get_center())
+                    space.move_to(submobs[char_index].get_center())
                 else:
-                    space.move_to(self.submobjects[char_index - 1].get_center())
-                self.submobjects.insert(char_index, space)
+                    space.move_to(submobs[char_index - 1].get_center())
+                # self.submobjects.insert(char_index, space)
+                submobs.insert(char_index, space)
+        self.set_submobjects(submobs)
 
     def remove_last_M(self, file_name):
         with open(file_name, 'r') as fpr:
