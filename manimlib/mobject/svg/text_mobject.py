@@ -27,23 +27,23 @@ class TextSetting(object):
 class Text(SVGMobject):
     CONFIG = {
         # Mobject
-        'color': WHITE,
-        'height': None,
-        'stroke_width': 0,
+        "color": WHITE,
+        "height": None,
+        "stroke_width": 0,
         # Text
-        'font': '',
-        'gradient': None,
-        'lsh': -1,
-        'size': 1,
-        'font_size': 48,
-        'tab_width': 4,
-        'slant': NORMAL,
-        'weight': NORMAL,
-        't2c': {},
-        't2f': {},
-        't2g': {},
-        't2s': {},
-        't2w': {},
+        "font": '',
+        "gradient": None,
+        "lsh": -1,
+        "size": 1,
+        "font_size": 48,
+        "tab_width": 4,
+        "slant": NORMAL,
+        "weight": NORMAL,
+        "t2c": {},
+        "t2f": {},
+        "t2g": {},
+        "t2s": {},
+        "t2w": {},
     }
 
     def __init__(self, text, **config):
