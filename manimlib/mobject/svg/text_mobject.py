@@ -81,7 +81,6 @@ class Text(SVGMobject):
                     space.move_to(submobs[char_index].get_center())
                 else:
                     space.move_to(submobs[char_index - 1].get_center())
-                # self.submobjects.insert(char_index, space)
                 submobs.insert(char_index, space)
         self.set_submobjects(submobs)
 
