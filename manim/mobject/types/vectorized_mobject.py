@@ -1029,6 +1029,12 @@ class VGroup(VMobject):
             + ")"
         )
 
+    def __str__(self):
+        return (
+            f"{self.__class__.__name__} of {len(self.submobjects)} "
+            f"submobject{'s' if len(self.submobjects) > 0 else ''}"
+        )
+
     def add(self, *vmobjects):
         """Checks if all passed elements are an instance of VMobject and then add them to submobjects
 

@@ -722,6 +722,7 @@ class Scene(Container):
             times = np.arange(0, run_time, step)
         time_progression = tqdm(
             times,
+            desc=description,
             total=n_iterations,
             leave=config["leave_progress_bars"],
             ascii=True if platform.system() == "Windows" else None,
