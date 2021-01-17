@@ -211,6 +211,10 @@ class ThreeDAxes(Axes):
         z_axis_config=None,
         z_min=-3.5,
         z_max=3.5,
+        x_min=-5.5,
+        x_max=5.5,
+        y_min=-5.5,
+        y_max=5.5,
         z_normal=DOWN,
         num_axis_pieces=20,
         light_source=9 * DOWN + 7 * LEFT + 10 * OUT,
@@ -224,10 +228,10 @@ class ThreeDAxes(Axes):
         self.z_normal = z_normal
         self.num_axis_pieces = num_axis_pieces
         self.light_source = light_source
-        self.x_min = -5.5
-        self.x_max = 5.5
-        self.y_min = -5.5
-        self.y_max = 5.5
+        self.x_min = x_min
+        self.x_max = x_max
+        self.y_min = y_min
+        self.y_max = y_max
         Axes.__init__(self, **kwargs)
         self.dimension = 3
         z_axis = self.z_axis = self.create_axis(
