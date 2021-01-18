@@ -7,6 +7,8 @@ import sys
 import yaml
 from screeninfo import get_monitors
 
+from manimlib.utils.config_ops import merge_dicts_recursively
+
 
 def parse_cli():
     try:
@@ -147,14 +149,22 @@ def get_module(file_name):
 
 
 def get_custom_defaults():
-    # See if there's a custom_defaults file in current directory,
-    # otherwise fall back on the one in manimlib
     filename = "custom_defaults.yml"
-    if not os.path.exists(filename):
-        filename = os.path.join(get_manim_dir(), filename)
-
-    with open(filename, "r") as file:
+    manim_defaults_file = os.path.join(get_manim_dir(), filename)
+    with open(manim_defaults_file, "r") as file:
         custom_defaults = yaml.safe_load(file)
+
+    # See if there's a custom_defaults file in current directory,
+    # and if so, it further updates the defaults based on it.
+    if os.path.exists(filename):
+        with open(filename, "r") as file:
+            local_defaults = yaml.safe_load(file)
+        if local_defaults:
+            custom_defaults = merge_dicts_recursively(
+                custom_defaults,
+                local_defaults,
+            )
+
     return custom_defaults
 
 

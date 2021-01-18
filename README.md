@@ -21,10 +21,10 @@ If you want to hack on manimlib itself, clone this repository and in that direct
 
 ```sh
 # Install python requirements
-pip3 install -r requirements.txt
+pip install -r requirements.txt
 
 # Try it out
-python3 -m manim example_scenes.py OpeningManimExample
+python -m manim example_scenes.py OpeningManimExample
 ```
 
 ### Directly (Windows)
@@ -34,8 +34,8 @@ python3 -m manim example_scenes.py OpeningManimExample
     ```sh
     git clone https://github.com/3b1b/manim.git
     cd manim
-    pip3 install -r requirements.txt
-    python3 manim.py example_scenes.py OpeningManimExample
+    pip install -r requirements.txt
+    python manim.py example_scenes.py OpeningManimExample
     ```
 
 
@@ -50,14 +50,14 @@ After installing `virtualenv` and `virtualenvwrapper`
 ```sh
 git clone https://github.com/3b1b/manim.git
 mkvirtualenv -a manim -r requirements.txt manim
-python3 -m manim example_scenes.py OpeningManimExample
+python -m manim example_scenes.py OpeningManimExample
 ```
 
 
 ## Using manim
 Try running the following:
 ```sh
-python3 -m manim example_scenes.py OpeningManimExample
+python -m manim example_scenes.py OpeningManimExample
 ```
 This should pop up a window playing a simple scene.
 
@@ -65,11 +65,11 @@ Some useful flags include:
 * `-w` to write the scene to a file
 * `-o` to write the scene to a file and open the result
 * `-s` to skip to the end and just show the final frame.
-    * `-so` will asve the final frame to an image and show it
+    * `-so` will save the final frame to an image and show it
 * `-n <number>` to skip ahead to the `n`'th animation of a scene.
 * `-f` to make the playback window fullscreen
 
-Take a look at custom_defaults.yml for further configuration.  For example, there you can specify where videos should be output to, where manim should look for image files and sounds you want to read in, and other defaults regarding style and video quality.  If you have a file name "custom_defaults.yml" in the same directory where you are calling manim, it will look to the configuration of that file instead of the one in manim itself.
+Take a look at custom_defaults.yml for further configuration.  To add your customization, you can either edit this file, or add another file by the same name "custom_defaults.yml" to whatever directory you are running manim from.  For example [this is the one](https://github.com/3b1b/videos/blob/master/custom_defaults.yml) for 3blue1brown videos.  There you can specify where videos should be output to, where manim should look for image files and sounds you want to read in, and other defaults regarding style and video quality.
 
 Look through [https://github.com/3b1b/videos](https://github.com/3b1b/videos) to see the code for previous 3b1b videos. Note, however, that developments are often made to the library without considering backwards compatibility with those old projects. To run an old project with a guarantee that it will work, you will have to go back to the commit which completed that project.
 

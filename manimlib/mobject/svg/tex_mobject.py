@@ -28,7 +28,7 @@ class SingleStringTex(VMobject):
         "font_size": 48,
         "height": None,
         "organize_left_to_right": False,
-        "alignment": "",  # Could be "\\centering",
+        "alignment": "\\centering",
         "math_mode": True,
     }
 
