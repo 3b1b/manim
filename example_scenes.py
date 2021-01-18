@@ -22,18 +22,18 @@ class OpeningManimExample(Scene):
         )
         self.wait()
 
-        transform_title = TextMobject("That was a transform")
-        transform_title.to_corner(UP + LEFT)
+        transform_title = Text("That was a transform")
+        transform_title.to_corner(UL)
         self.play(
             Transform(title, transform_title),
             LaggedStartMap(FadeOut, basel, shift=DOWN),
         )
         self.wait()
 
-        fade_comment = TextMobject(
+        fade_comment = Text(
             """
-            You probably don't want to overuse\\\\
-            Transforms, though, a simple fade often\\\\
+            You probably don't want to overuse
+            Transforms, though, a simple fade often
             looks nicer.
             """,
             font_size=36,
@@ -48,7 +48,7 @@ class OpeningManimExample(Scene):
         self.wait(3)
 
         grid = NumberPlane((-10, 10), (-5, 5))
-        grid_title = TextMobject(
+        grid_title = Text(
             "But manim is for illustrating math, not text",
         )
         grid_title.to_edge(UP)
@@ -65,9 +65,9 @@ class OpeningManimExample(Scene):
 
         matrix = [[1, 1], [0, 1]]
         linear_transform_title = VGroup(
-            TextMobject("This is what the matrix"),
+            Text("This is what the matrix"),
             IntegerMatrix(matrix, include_background_rectangle=True),
-            TextMobject("looks like")
+            Text("looks like")
         )
         linear_transform_title.arrange(RIGHT)
         linear_transform_title.to_edge(UP)
@@ -79,7 +79,7 @@ class OpeningManimExample(Scene):
         self.play(grid.apply_matrix, matrix, run_time=3)
         self.wait()
 
-        grid_transform_title = TextMobject(
+        grid_transform_title = Text(
             "And this is a nonlinear transformation"
         )
         grid_transform_title.set_stroke(BLACK, 5, background=True)
