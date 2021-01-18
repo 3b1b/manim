@@ -8,7 +8,7 @@ from manimlib.constants import *
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.matrix import Matrix
-from manimlib.mobject.svg.tex_mobject import TexMobject
+from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.scene.scene import Scene
 
@@ -48,7 +48,7 @@ class NumericalMatrixMultiplication(Scene):
                     for c in range(k)
                     for prefix in ["" if c == 0 else "+"]
                 ]
-                mob_matrix[a][b] = TexMobject(parts, next_to_buff=0.1)
+                mob_matrix[a][b] = Tex(parts, next_to_buff=0.1)
         return Matrix(mob_matrix)
 
     def add_lines(self, left, right):
@@ -80,7 +80,7 @@ class NumericalMatrixMultiplication(Scene):
         self.show_frame()
 
     def organize_matrices(self, left, right, result):
-        equals = TexMobject("=")
+        equals = Tex("=")
         everything = VGroup(left, right, equals, result)
         everything.arrange()
         everything.set_width(FRAME_WIDTH - 1)

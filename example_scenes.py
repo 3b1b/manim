@@ -10,8 +10,8 @@ from manimlib.imports import *
 
 class OpeningManimExample(Scene):
     def construct(self):
-        title = TextMobject("This is some \\LaTeX")
-        basel = TexMobject(
+        title = TexText("This is some \\LaTeX")
+        basel = Tex(
             "\\sum_{n=1}^\\infty "
             "\\frac{1}{n^2} = \\frac{\\pi^2}{6}"
         )
@@ -111,12 +111,12 @@ class TextExample(Scene):
         text = Text("Here is a text", font="Consolas", font_size=90)
         difference = Text(
             """
-            The most important difference between Text and TextMobject is that\n
-            you can change the font more easily, but can't use the LaTeX gramma
+            The most important difference between Text and TexText is that\n
+            you can change the font more easily, but can't use the LaTeX grammar
             """,
             font="Arial", font_size=24,
             # t2c is a dict that you can choose color for different text
-            t2c={"Text": BLUE, "TextMobject": BLUE, "LaTeX": ORANGE}
+            t2c={"Text": BLUE, "TexText": BLUE, "LaTeX": ORANGE}
         )
         VGroup(text, difference).arrange(DOWN, buff=1)
         self.play(Write(text))
@@ -175,18 +175,18 @@ class TexTransformExample(Scene):
         lines = VGroup(
             # Surrounding substrings with double braces
             # will ensure that those parts are separated
-            # out in the TexMobject.  For example, here the
-            # TexMobject will have 5 submobjects, corresponding
+            # out in the Tex.  For example, here the
+            # Tex will have 5 submobjects, corresponding
             # to the strings [A^2, +, B^2, =, C^2]
-            TexMobject("{{A^2}} + {{B^2}} = {{C^2}}"),
-            TexMobject("{{A^2}} = {{C^2}} - {{B^2}}"),
+            Tex("{{A^2}} + {{B^2}} = {{C^2}}"),
+            Tex("{{A^2}} = {{C^2}} - {{B^2}}"),
             # Alternatively, you can pass in the keyword argument
             # isolate with a list of strings that should be out as
             # their own submobject.  So both lines below are equivalent
             # to what you'd get by wrapping every instance of "B", "C"
             # "=", "(" and ")" with double braces
-            TexMobject("{{A^2}} = (C + B)(C - B)", **kw),
-            TexMobject("A = \\sqrt{(C + B)(C - B)}", **kw)
+            Tex("{{A^2}} = (C + B)(C - B)", **kw),
+            Tex("A = \\sqrt{(C + B)(C - B)}", **kw)
         )
         lines.arrange(DOWN, buff=LARGE_BUFF)
         for line in lines:
@@ -258,8 +258,8 @@ class TexTransformExample(Scene):
         # those of a target, regardless of the submobject hierarchy in
         # each one, according to whether those pieces have the same
         # shape (as best it can).
-        source = TextMobject("the morse code")
-        target = TextMobject("here come dots")
+        source = TexText("the morse code")
+        target = TexText("here come dots")
 
         self.play(Write(source))
         self.wait()

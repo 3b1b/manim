@@ -9,8 +9,8 @@ from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import Square
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.svg.svg_mobject import SVGMobject
-from manimlib.mobject.svg.tex_mobject import TexMobject
-from manimlib.mobject.svg.tex_mobject import TextMobject
+from manimlib.mobject.svg.tex_mobject import Tex
+from manimlib.mobject.svg.tex_mobject import TexText
 from manimlib.mobject.three_dimensions import Cube
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
@@ -21,7 +21,7 @@ from manimlib.utils.space_ops import complex_to_R3
 from manimlib.utils.space_ops import rotate_vector
 
 
-class Checkmark(TextMobject):
+class Checkmark(TexText):
     CONFIG = {
         "color": GREEN
     }
@@ -30,7 +30,7 @@ class Checkmark(TextMobject):
         super().__init__("\\ding{51}")
 
 
-class Exmark(TextMobject):
+class Exmark(TexText):
     CONFIG = {
         "color": RED
     }
@@ -71,7 +71,7 @@ class Speedometer(VMobject):
         for index, angle in enumerate(tick_angle_range):
             vect = rotate_vector(RIGHT, angle)
             tick = Line((1 - self.tick_length) * vect, vect)
-            label = TexMobject(str(10 * index))
+            label = Tex(str(10 * index))
             label.set_height(self.tick_length)
             label.shift((1 + self.tick_length) * vect)
             self.add(tick, label)
@@ -365,7 +365,7 @@ class Bubble(SVGMobject):
         return self.content
 
     def write(self, *text):
-        self.add_content(TextMobject(*text))
+        self.add_content(TexText(*text))
         return self
 
     def resize_to_content(self):

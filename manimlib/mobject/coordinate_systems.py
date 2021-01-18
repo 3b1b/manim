@@ -6,7 +6,7 @@ from manimlib.mobject.functions import ParametricCurve
 from manimlib.mobject.geometry import Arrow
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.number_line import NumberLine
-from manimlib.mobject.svg.tex_mobject import TexMobject
+from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import merge_dicts_recursively
 from manimlib.utils.simple_functions import binary_search
@@ -69,7 +69,7 @@ class CoordinateSystem():
         )
 
     def get_axis_label(self, label_tex, axis, edge, direction, buff=MED_SMALL_BUFF):
-        label = TexMobject(label_tex)
+        label = Tex(label_tex)
         label.next_to(
             axis.get_edge_center(edge), direction,
             buff=buff

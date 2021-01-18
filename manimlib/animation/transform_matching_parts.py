@@ -8,7 +8,7 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.mobject.svg.tex_mobject import TexMobject
+from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.utils.config_ops import digest_config
 
 
@@ -122,7 +122,7 @@ class TransformMatchingShapes(TransformMatchingParts):
 
 class TransformMatchingTex(TransformMatchingParts):
     CONFIG = {
-        "mobject_type": TexMobject,
+        "mobject_type": Tex,
         "group_type": VGroup,
     }
 
