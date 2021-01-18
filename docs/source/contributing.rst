@@ -2,12 +2,14 @@
 Contributing
 ############
 
-Thank you for contributing to Manim!  However you have decided to contribute or
-interact with the community, please always be civil and respect other members
-of the community.  Manim is a free open source software for mathematical
-animations, and as such we welcome **everyone** who is interested in
-mathematics, pedagogy, computer animations, open-source, software development,
-and beyond.  Manim accepts contributions of many kinds, detailed below.
+Thank you for contributing to Manim! However you have decided to contribute
+or interact with the community, please always be civil and respect other
+members of the community. If you haven't read our :doc:`code of
+conduct<conduct>`, do so here. Manim is a free open source software for
+mathematical animations, and as such we welcome **everyone** who is
+interested in mathematics, pedagogy, computer animations, open-source,
+software development, and beyond. Manim accepts contributions of many kinds,
+detailed below.
 
 Many ways of contributing will involve writing, reading, testing, or
 refactoring code.  As our repository is a Fork of `Manim by

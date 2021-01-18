@@ -103,6 +103,10 @@ Contributions to Manim are always welcome. In particular, there is a dire need f
 
 Most developers on the project use [Poetry](https://python-poetry.org/docs/) for management. You'll want to have poetry installed and available in your environment. You can learn more `poetry` and how to use it at its [documentation](https://docs.manim.community/en/latest/installation/for_dev.html).
 
+## Code of Conduct
+
+Our full code of conduct, and how we enforce it, can be read on [our website](https://docs.manim.community/en/latest/conduct.html).
+
 ## License
 
 The software is double-licensed under the MIT license, with copyright by 3blue1brown LLC (see LICENSE), and copyright by Manim Community Developers (see LICENSE.community).
