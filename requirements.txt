@@ -16,3 +16,4 @@ screeninfo
 pyreadline; sys_platform == 'win32'
 validators
 ipython
+PyOpenGL

@@ -61,24 +61,12 @@ JOINT_TYPE_MAP = {
 }
 
 # Related to Text
-NOT_SETTING_FONT_MSG = '''
-Warning:
-You haven't set font.
-If you are not using English, this may cause text rendering problem.
-You set font like:
-text = Text('your text', font='your font')
-or:
-class MyText(Text):
-    CONFIG = {
-        'font': 'My Font'
-    }
-'''
 START_X = 30
 START_Y = 20
-NORMAL = 'NORMAL'
-ITALIC = 'ITALIC'
-OBLIQUE = 'OBLIQUE'
-BOLD = 'BOLD'
+NORMAL = "NORMAL"
+ITALIC = "ITALIC"
+OBLIQUE = "OBLIQUE"
+BOLD = "BOLD"
 
 DEFAULT_STROKE_WIDTH = 4
 
