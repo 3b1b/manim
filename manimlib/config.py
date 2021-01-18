@@ -203,7 +203,23 @@ def get_configuration(args):
     else:
         window_width = monitor.width / 2
     window_height = window_width * 9 / 16
-    window_position = (int(monitor.width - window_width), 0)
+    custom_position = custom_defaults["window_position"]
+    if "," in custom_position:
+        posx, posy = map(int, custom_position.split(","))
+    else:
+        if custom_position[1] == "L":
+            posx = 0
+        elif custom_position[1] == "O":
+            posx = int((monitor.width - window_width) / 2)
+        elif custom_position[1] == "R":
+            posx = int(monitor.width - window_width)
+        if custom_position[0] == "U":
+            posy = 0
+        elif custom_position[0] == "O":
+            posy = int((monitor.height - window_height) / 2)
+        elif custom_position[0] == "D":
+            posy = int(monitor.height - window_height)
+    window_position = (posx, posy)
     config["window_config"] = {
         "size": (window_width, window_height),
         "position": window_position,
