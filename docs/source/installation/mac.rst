@@ -25,7 +25,7 @@ To install LaTeX:
 
 .. code-block:: bash
 
-   brew cask install mactex
+   brew install --cask mactex
 
 .. warning:: Note that MacTeX will require at least 4.5GB of hard disk space.
 	     This is due to the fact that it installs every LaTeX addon package
@@ -40,7 +40,7 @@ To install LaTeX:
 
 .. code-block:: bash
 
-   brew cask install basictex
+   brew install --cask basictex
 
 Ensure that the TeXLiveManager tool ``tlmgr`` works, by running ``tlmgr
 --version`` in the terminal.  Now run
