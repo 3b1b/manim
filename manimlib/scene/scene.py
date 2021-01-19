@@ -519,9 +519,12 @@ class Scene(object):
             frame.increment_theta(-d_point[0])
             frame.increment_phi(d_point[1])
         elif self.window.is_key_pressed(ord("s")):
+            shift = -d_point
+            shift[0] *= frame.get_width() / 2
+            shift[1] *= frame.get_height() / 2
             transform = frame.get_inverse_camera_rotation_matrix()
-            shift = np.dot(np.transpose(transform), d_point)
-            frame.shift(-frame.get_height() * shift / 2)
+            shift = np.dot(np.transpose(transform), shift)
+            frame.shift(shift)
 
     def on_mouse_drag(self, point, d_point, buttons, modifiers):
         self.mouse_drag_point.move_to(point)
@@ -537,6 +540,10 @@ class Scene(object):
         if self.window.is_key_pressed(ord("z")):
             factor = 1 + np.arctan(10 * offset[1])
             frame.scale(factor, about_point=point)
+        else:
+            transform = frame.get_inverse_camera_rotation_matrix()
+            shift = np.dot(np.transpose(transform), offset)
+            frame.shift(-20.0 * shift)
 
     def on_key_release(self, symbol, modifiers):
         pass
