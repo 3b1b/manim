@@ -1,7 +1,6 @@
 #version 330
 
-uniform mat4 to_screen_space;
-uniform float is_fixed_in_frame;
+#INSERT camera_uniform_declarations.glsl
 
 in vec4 color;
 in float fill_all;  // Either 0 or 1e

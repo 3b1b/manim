@@ -510,13 +510,17 @@ class Scene(object):
     # Event handling
     def on_mouse_motion(self, point, d_point):
         self.mouse_point.move_to(point)
-
-    def on_mouse_drag(self, point, d_point, buttons, modifiers):
-        self.mouse_drag_point.move_to(point)
         frame = self.camera.frame
         if self.window.is_key_pressed(ord("d")):
             frame.increment_theta(-d_point[0])
             frame.increment_phi(d_point[1])
+        elif self.window.is_key_pressed(ord("s")):
+            transform = frame.get_inverse_camera_rotation_matrix()
+            shift = np.dot(np.transpose(transform), d_point)
+            frame.shift(-frame.get_height() * shift / 2)
+
+    def on_mouse_drag(self, point, d_point, buttons, modifiers):
+        self.mouse_drag_point.move_to(point)
 
     def on_mouse_press(self, point, button, mods):
         pass
@@ -529,11 +533,6 @@ class Scene(object):
         if self.window.is_key_pressed(ord("z")):
             factor = 1 + np.arctan(10 * offset[1])
             frame.scale(factor, about_point=point)
-        elif self.window.is_key_pressed(ord("s")):
-            transform = frame.get_inverse_camera_position_matrix()
-            shift = np.dot(transform[:3, :3].T, offset)
-            shift *= 10 * frame.get_height()
-            frame.shift(-shift)
 
     def on_key_release(self, symbol, modifiers):
         pass

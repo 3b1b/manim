@@ -1283,6 +1283,7 @@ class Mobject(object):
             for mob in self.get_family():
                 func(mob)
                 mob.refresh_shader_wrapper_id()
+            return self
         return wrapper
 
     @affects_shader_info_id

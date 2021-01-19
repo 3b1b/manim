@@ -343,7 +343,7 @@ class SurfaceExample(Scene):
 
         # Set perspective
         frame = self.camera.frame
-        frame.set_rotation(
+        frame.set_euler_angles(
             theta=-30 * DEGREES,
             phi=70 * DEGREES,
         )
@@ -388,7 +388,7 @@ class SurfaceExample(Scene):
         self.play(light.move_to, 3 * IN, run_time=5)
         self.play(light.shift, 10 * OUT, run_time=5)
 
-        drag_text = Text("Try clicking and dragging while pressing d")
+        drag_text = Text("Try moving the mouse while pressing d or s")
         drag_text.move_to(light_text)
         drag_text.fix_in_frame()
 

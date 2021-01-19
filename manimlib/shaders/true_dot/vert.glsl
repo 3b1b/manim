@@ -1,10 +1,6 @@
 #version 330
 
-uniform vec2 frame_shape;
-uniform float anti_alias_width;
-uniform mat4 to_screen_space;
-uniform float is_fixed_in_frame;
-uniform float focal_distance;
+#INSERT camera_uniform_declarations.glsl
 
 in vec3 point;
 in float radius;
