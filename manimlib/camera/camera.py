@@ -131,6 +131,10 @@ class CameraFrame(Mobject):
     def get_focal_distance(self):
         return self.focal_distance * self.get_height()
 
+    def interpolate(self, *args, **kwargs):
+        super().interpolate(*args, **kwargs)
+        self.refresh_rotation_matrix()
+
 
 class Camera(object):
     CONFIG = {
