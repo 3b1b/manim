@@ -42,21 +42,26 @@ Examples
 
 """
 
-__all__ = ["Text", "Paragraph", "CairoText", "MarkupText"]
+__all__ = ["Text", "Paragraph", "CairoText", "MarkupText", "register_font"]
 
 
 import copy
 import hashlib
 import os
 import re
+import sys
+import typing
+from contextlib import contextmanager
+from pathlib import Path
 from typing import Dict
 from xml.sax.saxutils import escape
 
 import cairo
 import manimpango
-from manimpango import PangoUtils, TextSetting, MarkupUtils
+from manimpango import MarkupUtils, PangoUtils, TextSetting
 
 from ... import config, logger
+from ..._config.utils import ManimConfig
 from ...constants import *
 from ...mobject.geometry import Dot
 from ...mobject.svg.svg_mobject import SVGMobject
@@ -712,11 +717,6 @@ class Text(SVGMobject):
         disable_ligatures: bool = False,
         **kwargs,
     ):
-
-        logger.info(
-            "Text now uses Pango for rendering. "
-            "In case of problems, the old implementation is available as CairoText."
-        )
         self.size = size
         self.line_spacing = line_spacing
         self.font = font
@@ -1387,3 +1387,74 @@ class MarkupText(SVGMobject):
 
     def __repr__(self):
         return f"MarkupText({repr(self.original_text)})"
+
+
+@contextmanager
+def register_font(font_file: typing.Union[str, Path]):
+    """Temporarily add a font file to Pango's search path.
+
+    This searches for the font_file at various places. The order it searches it described below.
+
+    1. Absolute path.
+    2. In ``assets/fonts`` folder.
+    3. In ``font/`` folder.
+    4. In the same directory.
+
+    Parameters
+    ----------
+    font_file :
+        The font file to add.
+
+    Examples
+    --------
+    Use ``with register_font(...)`` to add a font file to search
+    path.
+
+    .. code-block:: python
+
+        with register_font("path/to/font_file.ttf"):
+           a = Text("Hello", font="Custom Font Name")
+
+    Raises
+    ------
+    FileNotFoundError:
+        If the font doesn't exists.
+
+    AttributeError:
+        If this method is used on macOS.
+
+    Notes
+    -----
+    This method of adding font files also works with :class:`CairoText`.
+
+    .. important ::
+
+        This method isn't available for macOS. Using this
+        method on macOS will raise an :class:`AttributeError`.
+    """
+
+    input_folder = Path(config.input_file).parent.resolve()
+    possible_paths = [
+        Path(font_file),
+        input_folder / "assets/fonts" / font_file,
+        input_folder / "fonts" / font_file,
+        input_folder / font_file,
+    ]
+    for path in possible_paths:
+        path = path.resolve()
+        if path.exists():
+            file_path = path
+            logger.debug("Found file at %s", file_path.absolute())
+            break
+    else:
+        error = f"Can't find {font_file}." f"Tried these : {possible_paths}"
+        raise FileNotFoundError(error)
+
+    try:
+        assert manimpango.register_font(str(file_path))
+        yield
+    finally:
+        if sys.platform.startswith("linux"):
+            manimpango.unregister_font()
+        else:
+            manimpango.unregister_font(str(file_path))

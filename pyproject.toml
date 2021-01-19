@@ -34,7 +34,7 @@ pydub = "*"
 pygments = "*"
 rich = "^6.0"
 pycairo = "^1.19"
-manimpango = "^0.1.6"
+manimpango = "^0.1.7"
 grpcio =  { version = "1.33.*", optional = true }
 grpcio-tools = { version = "1.33.*", optional = true }
 watchdog = { version = "*", optional = true }

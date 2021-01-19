@@ -793,7 +793,7 @@ js_renderer = ["grpcio", "grpcio-tools", "watchdog"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "af98b54d9cd5f91415486f64c21093ef124aeff9634e593237effefd8dd4114a"
+content-hash = "5a0c8d8c8c581f09f6a663c3d793a85673d6897e4cd2778b42bd44ba6e65e189"
 
 [metadata.files]
 alabaster = [
