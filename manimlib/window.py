@@ -21,14 +21,14 @@ class Window(PygletWindow):
         self.scene = scene
         self.title = str(scene)
         self.pressed_keys = set()
-        self.position = self.get_position()
+        self.position = self.find_initial_position()
 
         mglw.activate_context(window=self)
         self.timer = Timer()
         self.config = mglw.WindowConfig(ctx=self.ctx, wnd=self, timer=self.timer)
         self.timer.start()
 
-    def get_position(self):
+    def find_initial_position(self):
         custom_position = get_customization()["window_position"]
         monitor = get_monitors()[0]
         window_width, window_height = self.size
