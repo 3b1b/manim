@@ -118,9 +118,13 @@ class Scene(object):
         shell = InteractiveShellEmbed()
         # Have the frame update after each command
         shell.events.register('post_run_cell', lambda *a, **kw: self.update_frame())
-        # Stack depth of 2 means the shell will use
-        # the namespace of the caller, not this method
-        shell(stack_depth=2)
+        # Use the locals of the caller as the local namespace
+        # once embeded, and add a few custom shortcuts
+        local_ns = inspect.currentframe().f_back.f_locals
+        local_ns["touch"] = self.interact
+        for term in ("play", "add", "remove", "clear"):
+            local_ns[term] = getattr(self, term)
+        shell(local_ns=local_ns, stack_depth=2)
         # End scene when exiting an embed.
         raise EndSceneEarlyException()
 
