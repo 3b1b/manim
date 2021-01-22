@@ -1,7 +1,6 @@
 #version 330
 
-uniform mat4 to_screen_space;
-uniform float is_fixed_in_frame;
+#INSERT camera_uniform_declarations.glsl
 
 in vec3 point;
 in vec3 unit_normal;
@@ -18,7 +17,7 @@ out float v_vert_index;
 
 void main(){
     bp = position_point_into_frame(point);
-    v_global_unit_normal = normalize(to_screen_space * vec4(unit_normal, 0)).xyz;
+    v_global_unit_normal = rotate_point_into_frame(unit_normal);
     v_color = color;
     v_vert_index = vert_index;
 }

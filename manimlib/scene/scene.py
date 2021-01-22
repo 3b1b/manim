@@ -118,9 +118,13 @@ class Scene(object):
         shell = InteractiveShellEmbed()
         # Have the frame update after each command
         shell.events.register('post_run_cell', lambda *a, **kw: self.update_frame())
-        # Stack depth of 2 means the shell will use
-        # the namespace of the caller, not this method
-        shell(stack_depth=2)
+        # Use the locals of the caller as the local namespace
+        # once embeded, and add a few custom shortcuts
+        local_ns = inspect.currentframe().f_back.f_locals
+        local_ns["touch"] = self.interact
+        for term in ("play", "add", "remove", "clear"):
+            local_ns[term] = getattr(self, term)
+        shell(local_ns=local_ns, stack_depth=2)
         # End scene when exiting an embed.
         raise EndSceneEarlyException()
 
@@ -510,13 +514,20 @@ class Scene(object):
     # Event handling
     def on_mouse_motion(self, point, d_point):
         self.mouse_point.move_to(point)
-
-    def on_mouse_drag(self, point, d_point, buttons, modifiers):
-        self.mouse_drag_point.move_to(point)
         frame = self.camera.frame
         if self.window.is_key_pressed(ord("d")):
             frame.increment_theta(-d_point[0])
             frame.increment_phi(d_point[1])
+        elif self.window.is_key_pressed(ord("s")):
+            shift = -d_point
+            shift[0] *= frame.get_width() / 2
+            shift[1] *= frame.get_height() / 2
+            transform = frame.get_inverse_camera_rotation_matrix()
+            shift = np.dot(np.transpose(transform), shift)
+            frame.shift(shift)
+
+    def on_mouse_drag(self, point, d_point, buttons, modifiers):
+        self.mouse_drag_point.move_to(point)
 
     def on_mouse_press(self, point, button, mods):
         pass
@@ -529,11 +540,10 @@ class Scene(object):
         if self.window.is_key_pressed(ord("z")):
             factor = 1 + np.arctan(10 * offset[1])
             frame.scale(factor, about_point=point)
-        elif self.window.is_key_pressed(ord("s")):
-            transform = frame.get_inverse_camera_position_matrix()
-            shift = np.dot(transform[:3, :3].T, offset)
-            shift *= 10 * frame.get_height()
-            frame.shift(-shift)
+        else:
+            transform = frame.get_inverse_camera_rotation_matrix()
+            shift = np.dot(np.transpose(transform), offset)
+            frame.shift(-20.0 * shift)
 
     def on_key_release(self, symbol, modifiers):
         pass

@@ -1,7 +1,6 @@
 #version 330
 
-uniform mat4 to_screen_space;
-uniform float is_fixed_in_frame;
+#INSERT camera_uniform_declarations.glsl
 
 in vec3 point;
 in vec3 prev_point;
@@ -28,7 +27,7 @@ void main(){
     bp = position_point_into_frame(point);
     prev_bp = position_point_into_frame(prev_point);
     next_bp = position_point_into_frame(next_point);
-    v_global_unit_normal = normalize(to_screen_space * vec4(unit_normal, 0)).xyz;
+    v_global_unit_normal = rotate_point_into_frame(unit_normal);
 
     v_stroke_width = STROKE_WIDTH_CONVERSION * stroke_width;
     v_color = color;

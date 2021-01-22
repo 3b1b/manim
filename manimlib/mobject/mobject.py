@@ -1145,8 +1145,14 @@ class Mobject(object):
     def align_family(self, mobject):
         mob1 = self
         mob2 = mobject
-        n1 = len(mob1.submobjects)
-        n2 = len(mob2.submobjects)
+        n1 = len(mob1)
+        n2 = len(mob2)
+        while n1 == 1 and n2 > 1:
+            mob1.set_submobjects(mob1[0].submobjects)
+            n1 = len(mob1)
+        while n2 == 1 and n1 > 1:
+            mob2.set_submobjects(mob2[0].submobjects)
+            n2 = len(mob2)
         if n1 != n2:
             mob1.add_n_more_submobjects(max(0, n2 - n1))
             mob2.add_n_more_submobjects(max(0, n1 - n2))
@@ -1169,9 +1175,10 @@ class Mobject(object):
         curr = len(self.submobjects)
         if curr == 0:
             # If empty, simply add n point mobjects
-            center = self.get_center()
+            null_mob = self.copy()
+            null_mob.set_points([self.get_center()])
             self.set_submobjects([
-                self.copy().set_points([center])
+                null_mob.copy()
                 for k in range(n)
             ])
             return self
@@ -1276,6 +1283,7 @@ class Mobject(object):
             for mob in self.get_family():
                 func(mob)
                 mob.refresh_shader_wrapper_id()
+            return self
         return wrapper
 
     @affects_shader_info_id

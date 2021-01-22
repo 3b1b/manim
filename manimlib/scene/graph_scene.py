@@ -9,8 +9,8 @@ from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import RegularPolygon
 from manimlib.mobject.number_line import NumberLine
-from manimlib.mobject.svg.tex_mobject import TexMobject
-from manimlib.mobject.svg.tex_mobject import TextMobject
+from manimlib.mobject.svg.tex_mobject import Tex
+from manimlib.mobject.svg.tex_mobject import TexText
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VectorizedPoint
 from manimlib.scene.scene import Scene
@@ -84,7 +84,7 @@ class GraphScene(Scene):
                 self.x_labeled_nums = [x for x in self.x_labeled_nums if x != 0]
             x_axis.add_numbers(*self.x_labeled_nums)
         if self.x_axis_label:
-            x_label = TextMobject(self.x_axis_label)
+            x_label = TexText(self.x_axis_label)
             x_label.next_to(
                 x_axis.get_tick_marks(), UP + RIGHT,
                 buff=SMALL_BUFF
@@ -118,7 +118,7 @@ class GraphScene(Scene):
                 self.y_labeled_nums = [y for y in self.y_labeled_nums if y != 0]
             y_axis.add_numbers(*self.y_labeled_nums)
         if self.y_axis_label:
-            y_label = TextMobject(self.y_axis_label)
+            y_label = TexText(self.y_axis_label)
             y_label.next_to(
                 y_axis.get_corner(UP + RIGHT), UP + RIGHT,
                 buff=SMALL_BUFF
@@ -201,7 +201,7 @@ class GraphScene(Scene):
         buff=MED_SMALL_BUFF,
         color=None,
     ):
-        label = TexMobject(label)
+        label = Tex(label)
         color = color or graph.get_color()
         label.set_color(color)
         if x_val is None:
@@ -395,11 +395,11 @@ class GraphScene(Scene):
 
         labels = VGroup()
         if dx_label is not None:
-            group.dx_label = TexMobject(dx_label)
+            group.dx_label = Tex(dx_label)
             labels.add(group.dx_label)
             group.add(group.dx_label)
         if df_label is not None:
-            group.df_label = TexMobject(df_label)
+            group.df_label = Tex(df_label)
             labels.add(group.df_label)
             group.add(group.df_label)
 
@@ -444,9 +444,9 @@ class GraphScene(Scene):
         triangle.set_fill(color, 1)
         triangle.set_stroke(width=0)
         if label is None:
-            T_label = TexMobject(self.variable_point_label, fill_color=color)
+            T_label = Tex(self.variable_point_label, fill_color=color)
         else:
-            T_label = TexMobject(label, fill_color=color)
+            T_label = Tex(label, fill_color=color)
 
         T_label.next_to(triangle, DOWN)
         v_line = self.get_vertical_line_to_graph(

@@ -4,7 +4,7 @@ import copy
 import hashlib
 import cairo
 from manimlib.constants import *
-from manimlib.mobject.geometry import Dot, Rectangle
+from manimlib.mobject.geometry import Dot
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.customization import get_customization

@@ -7,6 +7,8 @@ import sys
 import yaml
 from screeninfo import get_monitors
 
+from manimlib.utils.config_ops import merge_dicts_recursively
+
 
 def parse_cli():
     try:
@@ -147,14 +149,22 @@ def get_module(file_name):
 
 
 def get_custom_defaults():
-    # See if there's a custom_defaults file in current directory,
-    # otherwise fall back on the one in manimlib
     filename = "custom_defaults.yml"
-    if not os.path.exists(filename):
-        filename = os.path.join(get_manim_dir(), filename)
-
-    with open(filename, "r") as file:
+    manim_defaults_file = os.path.join(get_manim_dir(), filename)
+    with open(manim_defaults_file, "r") as file:
         custom_defaults = yaml.safe_load(file)
+
+    # See if there's a custom_defaults file in current directory,
+    # and if so, it further updates the defaults based on it.
+    if os.path.exists(filename):
+        with open(filename, "r") as file:
+            local_defaults = yaml.safe_load(file)
+        if local_defaults:
+            custom_defaults = merge_dicts_recursively(
+                custom_defaults,
+                local_defaults,
+            )
+
     return custom_defaults
 
 
@@ -198,31 +208,12 @@ def get_configuration(args):
     # Default to putting window in the upper right of screen,
     # but make it full screen if -f is passed in
     monitor = get_monitors()[0]
-    if args.full_screen:
-        window_width = monitor.width
-    else:
-        window_width = monitor.width / 2
-    window_height = window_width * 9 / 16
-    custom_position = custom_defaults["window_position"]
-    if "," in custom_position:
-        posx, posy = map(int, custom_position.split(","))
-    else:
-        if custom_position[1] == "L":
-            posx = 0
-        elif custom_position[1] == "O":
-            posx = int((monitor.width - window_width) / 2)
-        elif custom_position[1] == "R":
-            posx = int(monitor.width - window_width)
-        if custom_position[0] == "U":
-            posy = 0
-        elif custom_position[0] == "O":
-            posy = int((monitor.height - window_height) / 2)
-        elif custom_position[0] == "D":
-            posy = int(monitor.height - window_height)
-    window_position = (posx, posy)
+    window_width = monitor.width
+    if not args.full_screen:
+        window_width //= 2
+    window_height = window_width * 9 // 16
     config["window_config"] = {
         "size": (window_width, window_height),
-        "position": window_position,
     }
 
     # Arguments related to skipping

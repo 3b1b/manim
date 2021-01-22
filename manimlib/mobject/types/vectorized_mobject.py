@@ -816,10 +816,12 @@ class VMobject(Mobject):
     @triggers_refreshed_triangulation
     def set_points(self, points):
         super().set_points(points)
+        return self
 
     @triggers_refreshed_triangulation
     def set_data(self, data):
         super().set_data(data)
+        return self
 
     # TODO, how to be smart about tangents here?
     @triggers_refreshed_triangulation
@@ -832,6 +834,7 @@ class VMobject(Mobject):
     @triggers_refreshed_triangulation
     def flip(self, *args, **kwargs):
         super().flip(*args, **kwargs)
+        return self
 
     # For shaders
     def init_shader_data(self):

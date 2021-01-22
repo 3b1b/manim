@@ -4,14 +4,14 @@ from manimlib.animation.composition import AnimationGroup
 from manimlib.constants import *
 from manimlib.animation.fading import FadeIn
 from manimlib.animation.growing import GrowFromCenter
-from manimlib.mobject.svg.tex_mobject import TexMobject
-from manimlib.mobject.svg.tex_mobject import TextMobject
+from manimlib.mobject.svg.tex_mobject import Tex
+from manimlib.mobject.svg.tex_mobject import TexText
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.space_ops import get_norm
 
 
-class Brace(TexMobject):
+class Brace(Tex):
     CONFIG = {
         "buff": 0.2,
         "width_multiplier": 2,
@@ -34,7 +34,7 @@ class Brace(TexMobject):
             self.min_num_quads, self.max_num_quads
         )
         tex_string = "\\underbrace{%s}" % (num_quads * "\\qquad")
-        TexMobject.__init__(self, tex_string, **kwargs)
+        Tex.__init__(self, tex_string, **kwargs)
         self.tip_point_index = np.argmin(self.get_all_points()[:, 1])
         self.stretch_to_fit_width(target_width)
         self.shift(left - self.get_corner(UP + LEFT) + self.buff * DOWN)
@@ -56,12 +56,12 @@ class Brace(TexMobject):
         return self
 
     def get_text(self, *text, **kwargs):
-        text_mob = TextMobject(*text)
+        text_mob = TexText(*text)
         self.put_at_tip(text_mob, **kwargs)
         return text_mob
 
     def get_tex(self, *tex, **kwargs):
-        tex_mob = TexMobject(*tex)
+        tex_mob = Tex(*tex)
         self.put_at_tip(tex_mob, **kwargs)
         return tex_mob
 
@@ -78,7 +78,7 @@ class Brace(TexMobject):
 
 class BraceLabel(VMobject):
     CONFIG = {
-        "label_constructor": TexMobject,
+        "label_constructor": Tex,
         "label_scale": 1,
     }
 
@@ -135,5 +135,5 @@ class BraceLabel(VMobject):
 
 class BraceText(BraceLabel):
     CONFIG = {
-        "label_constructor": TextMobject
+        "label_constructor": TexText
     }

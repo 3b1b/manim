@@ -1,8 +1,10 @@
 import moderngl_window as mglw
 from moderngl_window.context.pyglet.window import Window as PygletWindow
 from moderngl_window.timers.clock import Timer
+from screeninfo import get_monitors
 
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.customization import get_customization
 
 
 class Window(PygletWindow):
@@ -18,15 +20,32 @@ class Window(PygletWindow):
         digest_config(self, kwargs)
         self.scene = scene
         self.title = str(scene)
-        if "position" in kwargs:
-            self.position = kwargs["position"]
-
         self.pressed_keys = set()
+        self.position = self.find_initial_position()
 
         mglw.activate_context(window=self)
         self.timer = Timer()
         self.config = mglw.WindowConfig(ctx=self.ctx, wnd=self, timer=self.timer)
         self.timer.start()
+
+    def find_initial_position(self):
+        custom_position = get_customization()["window_position"]
+        monitor = get_monitors()[0]
+        window_width, window_height = self.size
+        # Position might be specified with a string of the form
+        # x,y for integers x and y
+        if "," in custom_position:
+            return tuple(map(int, custom_position.split(",")))
+
+        # Alternatively, it might be specified with a string like
+        # UR, OO, DL, etc. specifiying what corner it should go to
+        char_to_n = {"L": 0, "U": 0, "O": 1, "R": 2, "D": 2}
+        width_diff = monitor.width - window_width
+        height_diff = monitor.height - window_height
+        return (
+            char_to_n[custom_position[1]] * width_diff // 2,
+            char_to_n[custom_position[0]] * height_diff // 2,
+        )
 
     # Delegate event handling to scene
     def pixel_coords_to_space_coords(self, px, py, relative=False):

@@ -20,7 +20,7 @@ SCALE_FACTOR_PER_FONT_POINT = 0.001
 tex_string_to_mob_map = {}
 
 
-class SingleStringTexMobject(VMobject):
+class SingleStringTex(VMobject):
     CONFIG = {
         "fill_opacity": 1.0,
         "stroke_width": 0,
@@ -28,7 +28,7 @@ class SingleStringTexMobject(VMobject):
         "font_size": 48,
         "height": None,
         "organize_left_to_right": False,
-        "alignment": "",  # Could be "\\centering",
+        "alignment": "\\centering",
         "math_mode": True,
     }
 
@@ -131,7 +131,7 @@ class SingleStringTexMobject(VMobject):
 
     def balance_braces(self, tex):
         """
-        Makes TexMobject resiliant to unmatched { at start
+        Makes Tex resiliant to unmatched { at start
         """
         num_lefts, num_rights = [tex.count(char) for char in "{}"]
         while num_rights > num_lefts:
@@ -150,7 +150,7 @@ class SingleStringTexMobject(VMobject):
         return self
 
 
-class TexMobject(SingleStringTexMobject):
+class Tex(SingleStringTex):
     CONFIG = {
         "arg_separator": " ",
         # Note, use of isolate is largely rendered
@@ -205,7 +205,7 @@ class TexMobject(SingleStringTexMobject):
             tex_string = tex_string.strip()
             if len(tex_string) == 0:
                 continue
-            sub_tex_mob = SingleStringTexMobject(tex_string, **config)
+            sub_tex_mob = SingleStringTex(tex_string, **config)
             num_submobs = len(sub_tex_mob)
             if num_submobs == 0:
                 continue
@@ -227,7 +227,7 @@ class TexMobject(SingleStringTexMobject):
                 return tex1 == tex2
 
         return VGroup(*filter(
-            lambda m: isinstance(m, SingleStringTexMobject) and test(tex, m.get_tex()),
+            lambda m: isinstance(m, SingleStringTex) and test(tex, m.get_tex()),
             self.submobjects
         ))
 
@@ -271,14 +271,14 @@ class TexMobject(SingleStringTexMobject):
         return self
 
 
-class TextMobject(TexMobject):
+class TexText(Tex):
     CONFIG = {
         "math_mode": False,
         "arg_separator": "",
     }
 
 
-class BulletedList(TextMobject):
+class BulletedList(TexText):
     CONFIG = {
         "buff": MED_LARGE_BUFF,
         "dot_scale_factor": 2,
@@ -287,9 +287,9 @@ class BulletedList(TextMobject):
 
     def __init__(self, *items, **kwargs):
         line_separated_items = [s + "\\\\" for s in items]
-        TextMobject.__init__(self, *line_separated_items, **kwargs)
+        TexText.__init__(self, *line_separated_items, **kwargs)
         for part in self:
-            dot = TexMobject("\\cdot").scale(self.dot_scale_factor)
+            dot = Tex("\\cdot").scale(self.dot_scale_factor)
             dot.next_to(part[0], LEFT, SMALL_BUFF)
             part.add_to_back(dot)
         self.arrange(
@@ -313,7 +313,7 @@ class BulletedList(TextMobject):
                 other_part.set_fill(opacity=opacity)
 
 
-class TexMobjectFromPresetString(TexMobject):
+class TexFromPresetString(Tex):
     CONFIG = {
         # To be filled by subclasses
         "tex": None,
@@ -322,11 +322,11 @@ class TexMobjectFromPresetString(TexMobject):
 
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
-        TexMobject.__init__(self, self.tex, **kwargs)
+        Tex.__init__(self, self.tex, **kwargs)
         self.set_color(self.color)
 
 
-class Title(TextMobject):
+class Title(TexText):
     CONFIG = {
         "scale_factor": 1,
         "include_underline": True,
@@ -337,7 +337,7 @@ class Title(TextMobject):
     }
 
     def __init__(self, *text_parts, **kwargs):
-        TextMobject.__init__(self, *text_parts, **kwargs)
+        TexText.__init__(self, *text_parts, **kwargs)
         self.scale(self.scale_factor)
         self.to_edge(UP)
         if self.include_underline:

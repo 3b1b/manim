@@ -1,9 +1,8 @@
 // Assumes the following uniforms exist in the surrounding context:
-// uniform mat4 to_screen_space;
+// uniform vec3 camera_center;
+// uniform mat3 camera_rotation;
 
 vec3 get_rotated_surface_unit_normal_vector(vec3 point, vec3 du_point, vec3 dv_point){
-    // normal = get_unit_normal(point, du_point, dv_point);
-    // return normalize((to_screen_space * vec4(normal, 0.0)).xyz);
     vec3 cp = cross(
         (du_point - point),
         (dv_point - point)
@@ -13,6 +12,5 @@ vec3 get_rotated_surface_unit_normal_vector(vec3 point, vec3 du_point, vec3 dv_p
         vec3 v2 = dv_point - point;
         cp = cross(cross(v2, point), v2);
     }
-    // The zero is deliberate, as we only want to rotate and not shift
-    return normalize((to_screen_space * vec4(cp, 0.0)).xyz);
+    return normalize(rotate_point_into_frame(cp));
 }

@@ -1,8 +1,6 @@
 #version 330
 
-uniform mat4 to_screen_space;
-uniform float is_fixed_in_frame;
-uniform vec3 light_source_position;
+#INSERT camera_uniform_declarations.glsl
 
 in vec2 uv_coords;
 in vec2 uv_b2;

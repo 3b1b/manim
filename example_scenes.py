@@ -10,8 +10,8 @@ from manimlib.imports import *
 
 class OpeningManimExample(Scene):
     def construct(self):
-        title = TextMobject("This is some \\LaTeX")
-        basel = TexMobject(
+        title = TexText("This is some \\LaTeX")
+        basel = Tex(
             "\\sum_{n=1}^\\infty "
             "\\frac{1}{n^2} = \\frac{\\pi^2}{6}"
         )
@@ -22,18 +22,18 @@ class OpeningManimExample(Scene):
         )
         self.wait()
 
-        transform_title = TextMobject("That was a transform")
-        transform_title.to_corner(UP + LEFT)
+        transform_title = Text("That was a transform")
+        transform_title.to_corner(UL)
         self.play(
             Transform(title, transform_title),
             LaggedStartMap(FadeOut, basel, shift=DOWN),
         )
         self.wait()
 
-        fade_comment = TextMobject(
+        fade_comment = Text(
             """
-            You probably don't want to overuse\\\\
-            Transforms, though, a simple fade often\\\\
+            You probably don't want to overuse
+            Transforms, though, a simple fade often
             looks nicer.
             """,
             font_size=36,
@@ -48,7 +48,7 @@ class OpeningManimExample(Scene):
         self.wait(3)
 
         grid = NumberPlane((-10, 10), (-5, 5))
-        grid_title = TextMobject(
+        grid_title = Text(
             "But manim is for illustrating math, not text",
         )
         grid_title.to_edge(UP)
@@ -65,9 +65,9 @@ class OpeningManimExample(Scene):
 
         matrix = [[1, 1], [0, 1]]
         linear_transform_title = VGroup(
-            TextMobject("This is what the matrix"),
+            Text("This is what the matrix"),
             IntegerMatrix(matrix, include_background_rectangle=True),
-            TextMobject("looks like")
+            Text("looks like")
         )
         linear_transform_title.arrange(RIGHT)
         linear_transform_title.to_edge(UP)
@@ -79,7 +79,7 @@ class OpeningManimExample(Scene):
         self.play(grid.apply_matrix, matrix, run_time=3)
         self.wait()
 
-        grid_transform_title = TextMobject(
+        grid_transform_title = Text(
             "And this is a nonlinear transformation"
         )
         grid_transform_title.set_stroke(BLACK, 5, background=True)
@@ -111,12 +111,12 @@ class TextExample(Scene):
         text = Text("Here is a text", font="Consolas", font_size=90)
         difference = Text(
             """
-            The most important difference between Text and TextMobject is that\n
-            you can change the font more easily, but can't use the LaTeX gramma
+            The most important difference between Text and TexText is that\n
+            you can change the font more easily, but can't use the LaTeX grammar
             """,
             font="Arial", font_size=24,
             # t2c is a dict that you can choose color for different text
-            t2c={"Text": BLUE, "TextMobject": BLUE, "LaTeX": ORANGE}
+            t2c={"Text": BLUE, "TexText": BLUE, "LaTeX": ORANGE}
         )
         VGroup(text, difference).arrange(DOWN, buff=1)
         self.play(Write(text))
@@ -175,18 +175,18 @@ class TexTransformExample(Scene):
         lines = VGroup(
             # Surrounding substrings with double braces
             # will ensure that those parts are separated
-            # out in the TexMobject.  For example, here the
-            # TexMobject will have 5 submobjects, corresponding
+            # out in the Tex.  For example, here the
+            # Tex will have 5 submobjects, corresponding
             # to the strings [A^2, +, B^2, =, C^2]
-            TexMobject("{{A^2}} + {{B^2}} = {{C^2}}"),
-            TexMobject("{{A^2}} = {{C^2}} - {{B^2}}"),
+            Tex("{{A^2}} + {{B^2}} = {{C^2}}"),
+            Tex("{{A^2}} = {{C^2}} - {{B^2}}"),
             # Alternatively, you can pass in the keyword argument
             # isolate with a list of strings that should be out as
             # their own submobject.  So both lines below are equivalent
             # to what you'd get by wrapping every instance of "B", "C"
             # "=", "(" and ")" with double braces
-            TexMobject("{{A^2}} = (C + B)(C - B)", **kw),
-            TexMobject("A = \\sqrt{(C + B)(C - B)}", **kw)
+            Tex("{{A^2}} = (C + B)(C - B)", **kw),
+            Tex("A = \\sqrt{(C + B)(C - B)}", **kw)
         )
         lines.arrange(DOWN, buff=LARGE_BUFF)
         for line in lines:
@@ -258,8 +258,8 @@ class TexTransformExample(Scene):
         # those of a target, regardless of the submobject hierarchy in
         # each one, according to whether those pieces have the same
         # shape (as best it can).
-        source = TextMobject("the morse code")
-        target = TextMobject("here come dots")
+        source = TexText("the morse code")
+        target = TexText("here come dots")
 
         self.play(Write(source))
         self.wait()
@@ -343,7 +343,7 @@ class SurfaceExample(Scene):
 
         # Set perspective
         frame = self.camera.frame
-        frame.set_rotation(
+        frame.set_euler_angles(
             theta=-30 * DEGREES,
             phi=70 * DEGREES,
         )
@@ -388,7 +388,7 @@ class SurfaceExample(Scene):
         self.play(light.move_to, 3 * IN, run_time=5)
         self.play(light.shift, 10 * OUT, run_time=5)
 
-        drag_text = Text("Try clicking and dragging while pressing d")
+        drag_text = Text("Try moving the mouse while pressing d or s")
         drag_text.move_to(light_text)
         drag_text.fix_in_frame()
 
