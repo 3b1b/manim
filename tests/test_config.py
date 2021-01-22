@@ -72,6 +72,7 @@ def test_digest_file(tmp_path):
             [CLI]
             media_dir = this_is_my_favorite_path
             video_dir = {media_dir}/videos
+            frame_height = 10
             """
         )
         tmp_cfg.close()
@@ -79,6 +80,49 @@ def test_digest_file(tmp_path):
 
         assert config.get_dir("media_dir") == Path("this_is_my_favorite_path")
         assert config.get_dir("video_dir") == Path("this_is_my_favorite_path/videos")
+
+
+def test_frame_size(tmp_path):
+    """Test that the frame size can be set via config file."""
+    assert np.allclose(config.aspect_ratio, config.pixel_width / config.pixel_height)
+    assert np.allclose(config.frame_height, 8.0)
+
+    with tempconfig({}):
+        tmp_cfg = tempfile.NamedTemporaryFile("w", dir=tmp_path, delete=False)
+        tmp_cfg.write(
+            """
+            [CLI]
+            pixel_height = 10
+            pixel_width = 10
+            """
+        )
+        tmp_cfg.close()
+        config.digest_file(tmp_cfg.name)
+
+        # aspect ratio is set using pixel measurements
+        assert np.allclose(config.aspect_ratio, 1.0)
+        # if not specified in the cfg file, frame_width is set using the aspect ratio
+        assert np.allclose(config.frame_height, 8.0)
+        assert np.allclose(config.frame_width, 8.0)
+
+    with tempconfig({}):
+        tmp_cfg = tempfile.NamedTemporaryFile("w", dir=tmp_path, delete=False)
+        tmp_cfg.write(
+            """
+            [CLI]
+            pixel_height = 10
+            pixel_width = 10
+            frame_height = 10
+            frame_width = 10
+            """
+        )
+        tmp_cfg.close()
+        config.digest_file(tmp_cfg.name)
+
+        assert np.allclose(config.aspect_ratio, 1.0)
+        # if both are specified in the cfg file, the aspect ratio is ignored
+        assert np.allclose(config.frame_height, 10.0)
+        assert np.allclose(config.frame_width, 10.0)
 
 
 def test_temporary_dry_run():

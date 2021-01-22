@@ -517,6 +517,7 @@ class ManimConfig(MutableMapping):
             "upto_animation_number",
             "frame_rate",
             "max_files_cached",
+            # the next two must be set BEFORE digesting frame_width and frame_height
             "pixel_height",
             "pixel_width",
         ]:
@@ -543,15 +544,23 @@ class ManimConfig(MutableMapping):
             setattr(self, key, parser["CLI"].get(key, fallback="", raw=True))
 
         # float keys
-        for key in ["background_opacity"]:
+        for key in [
+            "background_opacity",
+            # the next two are floats but have their own logic, applied later
+            # "frame_width",
+            # "frame_height",
+        ]:
             setattr(self, key, parser["CLI"].getfloat(key))
 
-        # other logic
-        self["frame_height"] = 8.0
-        self["frame_width"] = (
-            self["frame_height"] * self["pixel_width"] / self["pixel_height"]
-        )
+        # the next two must be set AFTER digesting pixel_width and pixel_height
+        self["frame_height"] = parser["CLI"].getfloat("frame_height", 8.0)
+        width = parser["CLI"].getfloat("frame_width", None)
+        if width is None:
+            self["frame_width"] = self["frame_height"] * self["aspect_ratio"]
+        else:
+            self["frame_width"] = width
 
+        # other logic
         val = parser["CLI"].get("tex_template_file")
         if val:
             setattr(self, "tex_template_file", val)
