@@ -66,6 +66,7 @@ class Scene(object):
     def run(self):
         self.virtual_animation_start_time = 0
         self.real_animation_start_time = time.time()
+        self.file_writer.begin()
 
         self.setup()
         try:

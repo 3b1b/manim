@@ -174,6 +174,7 @@ def get_configuration(args):
     write_file = any([args.write_file, args.open, args.finder])
     file_writer_config = {
         "write_to_movie": not args.skip_animations and write_file,
+        "break_into_partial_movies": custom_defaults["break_into_partial_movies"],
         "save_last_frame": args.skip_animations and write_file,
         "save_pngs": args.save_pngs,
         "save_as_gif": args.save_as_gif,
