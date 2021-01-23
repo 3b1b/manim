@@ -36,5 +36,9 @@ def get_vector_image_dir():
     return get_directories()["vector_images"]
 
 
+def get_sound_dir():
+    return get_directories()["sounds"]
+
+
 def get_shader_dir():
     return get_directories()["shaders"]
