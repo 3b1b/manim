@@ -31,6 +31,7 @@ jobs:
     - name: Build document with Sphinx
       run: |
         cd docs
+        export PATH="$PATH:/home/runner/.local/bin"
         make html
         
     - name: Deploy to GitHub pages
