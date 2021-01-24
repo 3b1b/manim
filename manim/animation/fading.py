@@ -117,7 +117,7 @@ class FadeIn(Transform):
         start = super().create_starting_mobject()
         start.fade(1)
         if isinstance(start, VMobject):
-            start.set_stroke(width=0)
+            start.set_stroke(opacity=0)
             start.set_fill(opacity=0)
         return start
 

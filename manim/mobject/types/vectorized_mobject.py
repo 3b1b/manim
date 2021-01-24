@@ -171,6 +171,8 @@ class VMobject(Mobject):
             for submobject in self.submobjects:
                 submobject.set_fill(color, opacity, family)
         self.update_rgbas_array("fill_rgbas", color, opacity)
+        if opacity is not None:
+            self.fill_opacity = opacity
         return self
 
     def set_stroke(
@@ -188,6 +190,8 @@ class VMobject(Mobject):
         self.update_rgbas_array(array_name, color, opacity)
         if width is not None:
             setattr(self, width_name, width)
+        if opacity is not None:
+            self.stroke_opacity = opacity
         return self
 
     def set_background_stroke(self, **kwargs):
