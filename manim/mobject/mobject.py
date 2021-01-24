@@ -1,7 +1,7 @@
 """Base classes for objects that can be displayed."""
 
 
-__all__ = ["Mobject", "Group"]
+__all__ = ["Mobject", "Group", "override_animate"]
 
 
 from functools import reduce
@@ -27,7 +27,6 @@ from ..utils.simple_functions import get_parameters
 from ..utils.space_ops import angle_of_vector
 from ..utils.space_ops import get_norm
 from ..utils.space_ops import rotation_matrix
-
 
 # TODO: Explain array_attrs
 
@@ -74,6 +73,11 @@ class Mobject(Container):
             make use of method chaining for ``animate``, meaning::
 
                 self.play(my_mobject.animate.shift(RIGHT).rotate(PI))
+
+        .. seealso::
+
+            :meth:`~.Mobject.override_animate`
+
 
         Examples
         --------
@@ -1343,21 +1347,94 @@ class Group(Mobject):
 
 
 class _AnimationBuilder:
-    def __init__(self, mobject, generate_target=True):
+    def __init__(self, mobject):
         self.mobject = mobject
-        if generate_target:
-            self.mobject.generate_target()
+        self.overridden_animation = None
+        self.mobject.generate_target()
 
     def __getattr__(self, method_name):
         method = getattr(self.mobject.target, method_name)
 
+        if self.overridden_animation:
+            raise NotImplementedError(
+                "Method chaining is currently not supported for "
+                "overridden animations"
+            )
+
         def update_target(*method_args, **method_kwargs):
-            method(*method_args, **method_kwargs)
-            return _AnimationBuilder(self.mobject, generate_target=False)
+            if hasattr(method, "_override_animate"):
+                self.overridden_animation = method._override_animate(
+                    self.mobject, *method_args, **method_kwargs
+                )
+            else:
+                method(*method_args, **method_kwargs)
+            return self
 
         return update_target
 
     def build(self):
         from ..animation.transform import _MethodAnimation
 
+        if self.overridden_animation:
+            return self.overridden_animation
+
         return _MethodAnimation(self.mobject)
+
+
+def override_animate(method):
+    r"""Decorator for overriding method animations.
+
+    This allows to specify a method (returning an :class:`~.Animation`)
+    which is called when the decorated method is used with the ``.animate`` syntax
+    for animating the application of a method.
+
+    .. seealso::
+
+        :prop:`~.Mobject.animate`
+
+    .. note::
+
+        Overridden methods cannot be combined with normal or other overridden
+        methods using method chaining with the ``.animate`` syntax.
+
+
+    Examples
+    --------
+
+    .. manim:: AnimationOverrideExample
+
+        from manim import Circle, Scene, ShowCreation, Text, Uncreate, VGroup
+
+        class CircleWithContent(VGroup):
+            def __init__(self, content):
+                super().__init__()
+                self.circle = Circle()
+                self.content = content
+                self.add(self.circle, content)
+                content.move_to(self.circle.get_center())
+
+            def clear_content(self):
+                self.remove(self.content)
+                self.content = None
+
+            @override_animate(clear_content)
+            def _clear_content_animation(self):
+                anim = Uncreate(self.content)
+                self.clear_content()
+                return anim
+
+        class AnimationOverrideExample(Scene):
+            def construct(self):
+                t = Text("hello!")
+                my_mobject = CircleWithContent(t)
+                self.play(ShowCreation(my_mobject))
+                self.play(my_mobject.animate.clear_content())
+                self.wait()
+
+    """
+
+    def decorator(animation_method):
+        method._override_animate = animation_method
+        return animation_method
+
+    return decorator
