@@ -1,9 +1,6 @@
 name: docs
 
-on:
-    push:
-      paths:
-        - 'docs/*'
+on: push
 
 jobs:
   docs:
@@ -32,11 +29,12 @@ jobs:
       run: |
         cd docs
         export PATH="$PATH:/home/runner/.local/bin"
+        export SPHINXBUILD="python3 -m sphinx"
         make html
         
     - name: Deploy to GitHub pages
-      uses: JamesIves/github-pages-deploy-action@master
-      env:
+      uses: JamesIves/github-pages-deploy-action@3.7.1
+      with:
         ACCESS_TOKEN: ${{ secrets.DOC_DEPLOY_TOKEN }}
         BRANCH: gh-pages
         FOLDER: docs/build/html
