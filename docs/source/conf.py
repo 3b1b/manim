@@ -1,5 +1,6 @@
 import os
 import sys
+sys.path.insert(0, os.path.abspath("."))
 sys.path.insert(0, os.path.abspath('../../'))
 
 
@@ -7,7 +8,7 @@ project = 'manim'
 copyright = '- This document has been placed in the public domain.'
 author = 'TonyCrane'
 
-release = '0.1'
+release = ''
 
 extensions = [
     'sphinx.ext.todo',
@@ -18,6 +19,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.napoleon',
     'sphinx_copybutton',
+    'manim_example_ext'
 ]
 
 autoclass_content = 'both'
@@ -28,6 +30,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 pygments_style = 'default'
 
+html_static_path = ["_static"]
+html_css_files = ["custom.css"]
 html_theme = 'furo'  # pip install furo==2020.10.5b9
 # html_favicon = '../../logo/graph.png'
 html_logo = '../../logo/transparent_graph.png'
