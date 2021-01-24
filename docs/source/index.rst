@@ -8,9 +8,10 @@ at `3Blue1Brown <https://www.3blue1brown.com/>`_.
 
 .. toctree::
    :maxdepth: 2
+   :caption: Getting Started
 
-   install/index
-   quickstart/index
+   getting_started/install/index
+   getting_started/quickstart/index
 
 
 
