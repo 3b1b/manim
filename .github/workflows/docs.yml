@@ -1,0 +1,41 @@
+name: docs
+
+on:
+    push:
+      paths:
+        - 'docs/*'
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    name: build up document and deploy
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    
+    - name: Install sphinx
+      run: |
+        pip3 install --upgrade pip
+        sudo apt install python3-setuptools
+        cd ..
+        git clone https://github.com/sphinx-doc/sphinx
+        cd sphinx
+        pip3 install .
+        pip3 install sphinx_rtd_theme
+    
+    - name: Install manim env
+      run: |
+        pip3 install -r requirements.txt
+    
+    - name: Build document with Sphinx
+      run: |
+        cd docs
+        make html
+        
+    - name: Deploy to GitHub pages
+      uses: JamesIves/github-pages-deploy-action@master
+      env:
+        ACCESS_TOKEN: ${{ secrets.DOC_DEPLOY_TOKEN }}
+        BRANCH: gh-pages
+        FOLDER: docs/build/html
