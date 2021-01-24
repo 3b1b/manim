@@ -1126,7 +1126,7 @@ class Mobject(object):
             # Separate out how points are treated so that subclasses
             # can handle that case differently if they choose
             mob1.align_points(mob2)
-            for key in mob1.data:
+            for key in mob1.data.keys() & mob2.data.keys():
                 if key == "points":
                     continue
                 arr1 = mob1.data[key]
@@ -1209,6 +1209,8 @@ class Mobject(object):
                 continue
             if len(self.data[key]) == 0:
                 continue
+            if key not in mobject1.data or key not in mobject2.data:
+                continue
 
             if key in ("points", "bounding_box"):
                 func = path_func
@@ -1266,10 +1268,11 @@ class Mobject(object):
 
     def lock_matching_data(self, mobject1, mobject2):
         for sm, sm1, sm2 in zip(self.get_family(), mobject1.get_family(), mobject2.get_family()):
-            sm.lock_data([
-                key for key in sm.data
-                if np.all(sm1.data[key] == sm2.data[key])
-            ])
+            keys = sm.data.keys() & sm1.data.keys() & sm2.data.keys()
+            sm.lock_data(list(filter(
+                lambda key: np.all(sm1.data[key] == sm2.data[key]),
+                keys,
+            )))
         return self
 
     def unlock_data(self):
