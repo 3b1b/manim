@@ -23,7 +23,6 @@ class SceneFileWriter(object):
         "png_mode": "RGBA",
         "save_last_frame": False,
         "movie_file_extension": ".mp4",
-        "gif_file_extension": ".gif",
         # Should the path of output files mirror the directory
         # structure of the module holding the scene?
         "mirror_module_path": False,
@@ -60,10 +59,6 @@ class SceneFileWriter(object):
             movie_dir = guarantee_existence(os.path.join(out_dir, "videos"))
             movie_file = add_extension_if_not_present(scene_name, self.movie_file_extension)
             self.movie_file_path = os.path.join(movie_dir, movie_file)
-            self.gif_file_path = self.movie_file_path.replace(
-                self.movie_file_extension,
-                self.gif_file_extension,
-            )
             if self.break_into_partial_movies:
                 self.partial_movie_directory = guarantee_existence(os.path.join(
                     movie_dir, "partial_movie_files", scene_name,
@@ -158,24 +153,12 @@ class SceneFileWriter(object):
         if self.break_into_partial_movies and self.write_to_movie:
             self.close_movie_pipe()
 
-    def write_frame(self, camera):
-        if self.write_to_movie:
-            raw_bytes = camera.get_raw_fbo_data()
-            self.writing_process.stdin.write(raw_bytes)
-
-    def save_final_image(self, image):
-        file_path = self.get_image_file_path()
-        image.save(file_path)
-        self.print_file_ready_message(file_path)
-
     def finish(self):
         if self.write_to_movie:
-            if not self.break_into_partial_movies:
-                self.close_movie_pipe()
-            if self.writing_process is not None:
-                self.writing_process.terminate()
             if self.break_into_partial_movies:
                 self.combine_movie_files()
+            else:
+                self.close_movie_pipe()
             if self.includes_sound:
                 self.add_sound_to_video()
             self.print_file_ready_message(self.get_movie_file_path())
@@ -187,7 +170,8 @@ class SceneFileWriter(object):
 
     def open_movie_pipe(self, file_path):
         stem, ext = os.path.splitext(file_path)
-        temp_file_path = stem + "_temp" + ext
+        self.final_file_path = file_path
+        self.temp_file_path = stem + "_temp" + ext
 
         fps = self.scene.camera.frame_rate
         width, height = self.scene.camera.get_pixel_shape()
@@ -204,30 +188,32 @@ class SceneFileWriter(object):
             '-an',  # Tells FFMPEG not to expect any audio
             '-loglevel', 'error',
         ]
-        # TODO, the test for a transparent background should not be based on
-        # the file extension.
         if self.movie_file_extension == ".mov":
             # This is if the background of the exported
             # video should be transparent.
             command += [
                 '-vcodec', 'qtrle',
             ]
+        elif self.movie_file_extension == ".gif":
+            command += []
         else:
             command += [
                 '-vcodec', 'libx264',
                 '-pix_fmt', 'yuv420p',
             ]
-        command += [temp_file_path]
+        command += [self.temp_file_path]
         self.writing_process = sp.Popen(command, stdin=sp.PIPE)
-        self.temp_file_path = temp_file_path
+
+    def write_frame(self, camera):
+        if self.write_to_movie:
+            raw_bytes = camera.get_raw_fbo_data()
+            self.writing_process.stdin.write(raw_bytes)
 
     def close_movie_pipe(self):
         self.writing_process.stdin.close()
         self.writing_process.wait()
-        shutil.move(
-            self.temp_file_path,
-            self.temp_file_path.replace("_temp", ""),
-        )
+        self.writing_process.terminate()
+        shutil.move(self.temp_file_path, self.final_file_path)
 
     def combine_movie_files(self):
         kwargs = {
@@ -307,6 +293,11 @@ class SceneFileWriter(object):
         sp.call(commands)
         shutil.move(temp_file_path, movie_file_path)
         os.remove(sound_file_path)
+
+    def save_final_image(self, image):
+        file_path = self.get_image_file_path()
+        image.save(file_path)
+        self.print_file_ready_message(file_path)
 
     def print_file_ready_message(self, file_path):
         print(f"\nFile ready at {file_path}\n")

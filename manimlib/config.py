@@ -65,7 +65,7 @@ def parse_cli():
             help="Save each frame as a png",
         )
         parser.add_argument(
-            "-i", "--save_as_gif",
+            "-i", "--gif",
             action="store_true",
             help="Save the video as gif",
         )
@@ -172,15 +172,21 @@ def get_configuration(args):
     custom_defaults = get_custom_defaults()
 
     write_file = any([args.write_file, args.open, args.finder])
+    if args.transparent:
+        file_ext = ".mov"
+    elif args.gif:
+        file_ext = ".gif"
+    else:
+        file_ext = ".mp4"
+
     file_writer_config = {
         "write_to_movie": not args.skip_animations and write_file,
         "break_into_partial_movies": custom_defaults["break_into_partial_movies"],
         "save_last_frame": args.skip_animations and write_file,
         "save_pngs": args.save_pngs,
-        "save_as_gif": args.save_as_gif,
         # If -t is passed in (for transparent), this will be RGBA
         "png_mode": "RGBA" if args.transparent else "RGB",
-        "movie_file_extension": ".mov" if args.transparent else ".mp4",
+        "movie_file_extension": file_ext,
         "mirror_module_path": custom_defaults["directories"]["mirror_module_path"],
         "output_directory": args.video_dir or custom_defaults["directories"]["output"],
         "file_name": args.file_name,
