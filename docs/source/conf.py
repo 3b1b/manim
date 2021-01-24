@@ -17,7 +17,7 @@ extensions = [
     'sphinx.ext.autodoc', 
     'sphinx.ext.coverage',
     'sphinx.ext.napoleon',
-    'sphinx_rtd_theme'
+    'sphinx_copybutton',
 ]
 
 autoclass_content = 'both'
@@ -28,11 +28,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 pygments_style = 'default'
 
-# html_static_path = ['assets']
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'furo'  # pip install furo==2020.10.5b9
 # html_favicon = '../../logo/graph.png'
 html_logo = '../../logo/transparent_graph.png'
 html_theme_options = {
-    'logo_only': True,
-    'style_nav_header_background': '#343131',
+    "sidebar_hide_name": True,
 }

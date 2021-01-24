@@ -15,11 +15,8 @@ jobs:
       run: |
         pip3 install --upgrade pip
         sudo apt install python3-setuptools
-        cd ..
-        git clone https://github.com/sphinx-doc/sphinx
-        cd sphinx
-        pip3 install .
-        pip3 install sphinx_rtd_theme
+        pip3 install furo==2020.10.5b9
+        pip3 install sphinx-copybutton
     
     - name: Install manim env
       run: |
