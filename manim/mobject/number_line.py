@@ -172,6 +172,9 @@ class NumberLine(Line):
     def get_unit_size(self):
         return self.get_length() / (self.x_max - self.x_min)
 
+    def get_unit_vector(self):
+        return super().get_unit_vector() * self.unit_size
+
     def default_numbers_to_display(self):
         if self.numbers_to_show is not None:
             return self.numbers_to_show
