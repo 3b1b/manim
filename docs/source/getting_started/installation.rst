@@ -24,6 +24,9 @@ that directory execute:
    # Try it out
    python -m manim example_scenes.py OpeningManimExample
 
+If you run the above command and no error message appears, 
+then you have successfully installed all the environments required by manim.
+
 Directly (Windows)
 ------------------
 

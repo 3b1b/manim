@@ -1,9 +1,8 @@
-Quick Start
-===========
-
+Example Scenes
+==============
 
 .. manim-example:: WarpSquare
-   :media: ../../_static/example_scenes/WarpSquare.mp4
+   :media: ../_static/example_scenes/WarpSquare.mp4
 
    class WarpSquare(Scene):
        def construct(self):
