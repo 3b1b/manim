@@ -11,16 +11,11 @@ jobs:
     - name: Checkout
       uses: actions/checkout@master
     
-    - name: Install sphinx
+    - name: Install sphinx and manim env
       run: |
         pip3 install --upgrade pip
         sudo apt install python3-setuptools
-        pip3 install furo==2020.10.5b9
-        pip3 install jinja2
-        pip3 install sphinx-copybutton
-    
-    - name: Install manim env
-      run: |
+        pip3 install -r docs/requirements.txt
         pip3 install -r requirements.txt
     
     - name: Build document with Sphinx

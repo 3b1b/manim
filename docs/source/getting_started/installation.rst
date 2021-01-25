@@ -3,10 +3,12 @@ Installation
 
 Manim runs on Python 3.8.
 
-System requirements are `FFmpeg <https://ffmpeg.org/>`__,
-`OpenGL <https://www.opengl.org//>`__ and
-`latex <https://www.latex-project.org>`__ (optional, if you want to use
-LaTeX).
+System requirements are：
+
+- `FFmpeg <https://ffmpeg.org/>`__
+- `OpenGL <https://www.opengl.org//>`__ (included in python package ``PyOpenGL``)
+- `LaTeX <https://www.latex-project.org>`__ (optional, if you want to use LaTeX)
+- `cairo <https://www.cairographics.org/>`_ (included in python package ``pycairo``. optional, if you want to use ``Text`` in manim)
 
 Directly
 --------
@@ -26,9 +28,9 @@ Directly (Windows)
 ------------------
 
 1. `Install
-   FFmpeg <https://www.wikihow.com/Install-FFmpeg-on-Windows>`__.
+   FFmpeg <https://www.wikihow.com/Install-FFmpeg-on-Windows>`__, and make sure that its path is in the PATH environment variable.
 2. Install a LaTeX distribution.
-   `MiKTeX <https://miktex.org/download>`__ is recommended.
+   `TeXLive-full <http://tug.org/texlive/>`__ is recommended.
 3. Install the remaining Python packages.
 
 .. code:: sh  
@@ -39,16 +41,21 @@ Directly (Windows)
    python manim.py example_scenes.py OpeningManimExample
 
 For Anaconda
-----------------
+------------
 
--  Install latex as above.
+-  Install FFmpeg and LaTeX as above.
 -  Create a conda environment using
-   ``conda env create -f environment.yml``
+
+.. code-block:: sh
+   
+   git clone https://github.com/3b1b/manim.git
+   cd manim 
+   conda env create -f environment.yml
 
 Using virtualenv and virtualenvwrapper
-----------------------------------------------
+--------------------------------------
 
-After installing virtualenv and virtualenvwrapper
+After installing ``virtualenv`` and ``virtualenvwrapper``
 
 .. code:: sh
 

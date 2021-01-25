@@ -31,13 +31,5 @@ at `3Blue1Brown <https://www.3blue1brown.com/>`_.
    :caption: Development
 
    development/changelog
-   development/contribution
+   development/contributing
    development/about
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`

@@ -1,3 +1,11 @@
+span.caption-text {
+    font-size: larger;
+}
+
+span.pre {
+    font-size: initial;
+}
+
 .highlight-python.notranslate {
     margin-top: 0em;
 }
