@@ -3,8 +3,38 @@ Manim Installation For Developers
 
 	This documentation is for developers who want to contribute to ``ManimCommunity/manim``.
 
-Installing Poetry
-*****************
+
+
+Manim Installation For Developers with pip
+******************************************
+
+If you'd like to contribute to and/or help develop the community maintained
+version of ``manim``, you can clone this repository to your local device.  To do this,
+first make sure you have ``git`` installed.
+
+.. code-block:: bash
+
+   git clone https://github.com/ManimCommunity/manim.git
+
+Finally, after having cloned this repo, run the following:
+
+.. code-block:: bash
+
+   python3 -m pip install .
+
+Please see :doc:`contributing` for more details about contributing to Manim.
+
+.. warning::
+
+   If you want to contribute to ``manim-community`` and have cloned the
+   repository to your local device, please uninstall the pip-installed version
+   of ``manim-community``, if you had installed it previously.
+   This is to avoid any accidental usage of the pip-installed version when developing
+   and testing on your local copy of the repository. This warning doesn't apply for
+   users who use `poetry <https://python-poetry.org>`_ (chapter below.)
+
+Manim Installation For Developers with poetry
+*********************************************
 
 Poetry can be easily installed in any OS by just running the below command.
 
@@ -143,4 +173,3 @@ For example, if you have written some new example and want to format it and see 
 .. code-block:: bash
 
     poetry run black example_scenes
-
