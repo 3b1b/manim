@@ -23,12 +23,6 @@ at `3Blue1Brown <https://www.3blue1brown.com/>`_.
 
    documentation/constants
    documentation/custom_default
-   documentation/mobject/index
-   documentation/animation/index
-   documentation/camera/index
-   documentation/scene/index
-   documentation/utils/index
-   documentation/shaders/index
 
 .. toctree::
    :maxdepth: 2

@@ -21,8 +21,8 @@ span.pre {
 }
 
 .manim-example {
-    background-color: #58C4DD;
-    margin-bottom: 50px;
+    background-color: #333333;
+    margin-bottom: 10px;
     box-shadow: 2px 2px 4px #ddd;
 }
 
@@ -48,7 +48,7 @@ h5.example-header {
 
 .manim-example .highlight {
     background-color: #fafafa;
-    border: 2px solid #58C4DD;
+    border: 2px solid #333333;
     padding: 8px 8px 10px 8px;
     font-size: large;
     margin: 0;
