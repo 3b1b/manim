@@ -33,7 +33,7 @@ pygments_style = 'default'
 html_static_path = ["_static"]
 html_css_files = ["custom.css", "colors.css"]
 html_theme = 'furo'  # pip install furo==2020.10.5b9
-# html_favicon = '../../logo/graph.png'
+html_favicon = '_static/icon.png'
 html_logo = '../../logo/transparent_graph.png'
 html_theme_options = {
     "sidebar_hide_name": True,
