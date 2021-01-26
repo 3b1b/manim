@@ -21,31 +21,31 @@ There are many class inheritance relationships in ``manimlib/mobject/geometry.py
 
 .. code-block:: python
 
-    # Line 699
-    class Polygon(VMobject):
+    # Line 279
+    class Circle(Arc):
         CONFIG = {
-            "color": BLUE,
+            "color": RED,
+            "close_new_points": True,
+            "anchors_span_full_range": False
         }
 
 .. code-block:: python
 
-    # Line 801
-    class Rectangle(Polygon):
+    # Line 304
+    class Dot(Circle):
         CONFIG = {
-            "color": WHITE,
-            "height": 2.0,
-            "width": 4.0,
-            "mark_paths_closed": True,
-            "close_new_points": True,
+            "radius": DEFAULT_DOT_RADIUS,
+            "stroke_width": 0,
+            "fill_opacity": 1.0,
+            "color": WHITE
         }
 
-The ``Polygon`` class uses the key-value pair ``"color": BLUE`` in the ``CONFIG`` 
+The ``Circle`` class uses the key-value pair ``"color": RED`` in the ``CONFIG`` 
 dictionary to add the attribute ``self.color``.
 
-At the same time, the ``Rectangle`` class also contains the key ``color`` in the 
+At the same time, the ``Dot`` class also contains the key ``color`` in the 
 ``CONFIG`` dictionary, but the value is different. At this time, the priority will 
-modify the attribute ``self.color`` to  ``WHITE``. And it also set some unique attributes 
-through the key-value pair ``"height": 2.0"``, etc., which is convenient for later use.
+modify the attribute ``self.color`` to  ``WHITE``. 
 
 CONFIG nesting
 --------------

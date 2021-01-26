@@ -23,7 +23,7 @@ About this documentation
 ------------------------
 
 This documentation is based on the version in `3b1b/manim <https://github.com/3b1b/manim>`_. 
-Created by `TonyCrane <https://github.com/TonyCrane>`_ and in production.
+Created by `TonyCrane <https://github.com/TonyCrane>`_ ("鹤翔万里" in Chinese) and in production.
 
 Among them, the ``manim_example_ext`` extension for Sphinx refers to 
 `the documentation of ManimCommunity <https://docs.manim.community/>`_.
