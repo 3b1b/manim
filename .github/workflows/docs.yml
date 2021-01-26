@@ -1,6 +1,9 @@
 name: docs
 
-on: push
+on: 
+  push:
+    paths:
+      - 'docs/'
 
 jobs:
   docs:
