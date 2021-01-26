@@ -16,7 +16,7 @@ Directly
 If you want to hack on manimlib itself, clone this repository and in
 that directory execute:
 
-.. code:: sh
+.. code-block:: sh
 
    # Install python requirements
    pip install -r requirements.txt
@@ -36,7 +36,7 @@ Directly (Windows)
    `TeXLive-full <http://tug.org/texlive/>`__ is recommended.
 3. Install the remaining Python packages.
 
-.. code:: sh  
+.. code-block:: sh  
 
    git clone https://github.com/3b1b/manim.git
    cd manim  
@@ -60,7 +60,7 @@ Using virtualenv and virtualenvwrapper
 
 After installing ``virtualenv`` and ``virtualenvwrapper``
 
-.. code:: sh
+.. code-block:: sh
 
    git clone https://github.com/3b1b/manim.git
    mkvirtualenv -a manim -r requirements.txt manim

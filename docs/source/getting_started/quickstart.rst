@@ -11,13 +11,13 @@ directory structure:
     :emphasize-lines: 8
 
     manim/
-      ├── manimlib/
-      │   ├── animation/
-      │   ├── ...
-      │   └── window.py
-      ├── custom_default.yml
-      ├── manim.py
-      └── start.py
+    ├── manimlib/
+    │   ├── animation/
+    │   ├── ...
+    │   └── window.py
+    ├── custom_default.yml
+    ├── manim.py
+    └── start.py
 
 And paste the following code (I will explain the function of each line in detail later):
 
@@ -75,7 +75,7 @@ Next, let's take a detailed look at what each row does.
     
 This will import all the classes that may be used when using manim.
 
-**Line 2**:
+**Line 3**:
 
 .. code-block:: python
     
@@ -252,6 +252,5 @@ You succeeded!
 
 After reading the above content, you already know how to use manim. 
 Below you can see some examples, in the :doc:`example_scenes` page. 
-But before that, you'd better have a look at the :doc:`cli_flags` and the
-:doc:`configuration` of manim.
+But before that, you'd better have a look at the :doc:`configuration` of manim.
 

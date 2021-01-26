@@ -12,9 +12,10 @@ at `3Blue1Brown <https://www.3blue1brown.com/>`_.
 
    getting_started/installation
    getting_started/quickstart
-   getting_started/cli_flags
    getting_started/configuration
    getting_started/example_scenes
+   getting_started/config
+   getting_started/structure
 
 .. toctree::
    :maxdepth: 2
