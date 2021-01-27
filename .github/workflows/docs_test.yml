@@ -1,14 +1,14 @@
-name: docs
+name: docs_test
 
 on: 
-  push:
+  pull_request:
     paths:
       - 'docs/**'
 
 jobs:
-  docs:
+  docs_test:
     runs-on: ubuntu-latest
-    name: build up document and deploy
+    name: Test document for pull requests
 
     steps:
     - name: Checkout
@@ -27,10 +27,3 @@ jobs:
         export PATH="$PATH:/home/runner/.local/bin"
         export SPHINXBUILD="python3 -m sphinx"
         make html
-        
-    - name: Deploy to GitHub pages
-      uses: JamesIves/github-pages-deploy-action@3.7.1
-      with:
-        ACCESS_TOKEN: ${{ secrets.DOC_DEPLOY_TOKEN }}
-        BRANCH: gh-pages
-        FOLDER: docs/build/html
