@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from manim.mobject.mobject import override_animate
 from manim.mobject.types.vectorized_mobject import VGroup
@@ -45,3 +46,31 @@ def test_overridden_animate():
     anim = dots_with_line.animate.remove_line().build()
     assert len(dots_with_line.submobjects) == 2
     assert type(anim) is Uncreate
+
+
+def test_chaining_overridden_animate():
+    class DotsWithLine(VGroup):
+        def __init__(self):
+            super().__init__()
+            self.left_dot = Dot().shift((-1, 0, 0))
+            self.right_dot = Dot().shift((1, 0, 0))
+            self.line = Line(self.left_dot, self.right_dot)
+            self.add(self.left_dot, self.right_dot, self.line)
+
+        def remove_line(self):
+            self.remove(self.line)
+
+        @override_animate(remove_line)
+        def _remove_line_animation(self):
+            self.remove_line()
+            return Uncreate(self.line)
+
+    with pytest.raises(
+        NotImplementedError, match="not supported for overridden animations"
+    ):
+        DotsWithLine().animate.shift((1, 0, 0)).remove_line()
+
+    with pytest.raises(
+        NotImplementedError, match="not supported for overridden animations"
+    ):
+        DotsWithLine().animate.remove_line().shift((1, 0, 0))
