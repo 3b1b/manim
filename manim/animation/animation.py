@@ -60,7 +60,7 @@ class Animation:
 
     def _typecheck_input(self, mobject: Mobject) -> None:
         if mobject is None:
-            logger.warning("creating dummy animation")
+            logger.debug("creating dummy animation")
         elif not isinstance(mobject, Mobject):
             raise TypeError("Animation only works on Mobjects")
 

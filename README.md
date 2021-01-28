@@ -72,6 +72,9 @@ manim example.py SquareToCircle -p -ql
 You should see your native video player program pop up and play a simple scene in which a square is transformed into a circle. You may find some more simple examples within this
 [GitHub repository](master/example_scenes). You can also visit the [official gallery](https://docs.manim.community/en/latest/examples.html) for more advanced examples.
 
+Manim also ships with a `%%manim` IPython magic which allows to use it conveniently in JupyterLab (as well as classic Jupyter) notebooks. See the
+[corresponding documentation](https://docs.manim.community/en/latest/reference/manim.utils.ipython_magic.ManimMagic.html) for some guidance.
+
 ## Command line arguments
 
 The general usage of Manim is as follows:

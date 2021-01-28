@@ -23,6 +23,13 @@ Every file containing code that produces a video with manim will be stored
 here, as well as any output files that manim produces and configuration files
 that manim needs.
 
+.. note::
+
+   In case you like to work with Jupyterlab / Jupyter notebooks, there is good news:
+   Manim ships with a ``%%manim`` IPython magic command which makes it easy to use
+   in such a setting as well. Find out more in the
+   :meth:`corresponding documentation <manim.utils.ipython_magic.ManimMagic.manim>`.
+
 
 Your first Scene
 ****************

@@ -121,6 +121,7 @@ Utilities
    ~utils.color
    ~utils.config_ops
    ~utils.hashing
+   ~utils.ipython_magic
    ~utils.images
    ~utils.iterables
    ~utils.paths

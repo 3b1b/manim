@@ -545,4 +545,5 @@ class SceneFileWriter(object):
 
     def print_file_ready_message(self, file_path):
         """Prints the "File Ready" message to STDOUT."""
+        config["output_file"] = file_path
         logger.info("\nFile ready at %(file_path)s\n", {"file_path": file_path})
