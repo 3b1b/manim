@@ -52,7 +52,9 @@ class Mobject(object):
         # Must match in attributes of vert shader
         "shader_dtype": [
             ('point', np.float32, (3,)),
-        ]
+        ],
+        # Event listener
+        "listen_to_events": False
     }
 
     def __init__(self, **kwargs):
@@ -214,6 +216,14 @@ class Mobject(object):
             for parent in self.parents:
                 parent.refresh_bounding_box()
         return self
+
+    def is_point_touching(self, point, buff=MED_SMALL_BUFF):
+        self.refresh_bounding_box()
+        bb = self.get_bounding_box()
+        if np.all(point >= (bb[0] - buff)) and np.all(point <= (bb[2] + buff)):
+            return True
+        else:
+            return False
 
     # Family matters
 
@@ -1433,6 +1443,41 @@ class Mobject(object):
 
     def get_shader_vert_indices(self):
         return self.shader_indices
+
+    # Event Handlers
+    """ 
+        Event handling follows the Event Bubbling model of DOM in javascript.
+        Return false to stop the event bubbling.
+        To learn more visit https://www.quirksmode.org/js/events_order.html
+    """
+
+    def on_mouse_motion(self, point, d_point):
+        # To be implemented in subclasses
+        pass
+
+    def on_mouse_drag(self, point, d_point, buttons, modifiers):
+        # To be implemented in subclasses
+        pass
+
+    def on_mouse_press(self, point, button, mods):
+        # To be implemented in subclasses
+        pass
+
+    def on_mouse_release(self, point, button, mods):
+        # To be implemented in subclasses
+        pass
+
+    def on_mouse_scroll(self, point, offset):
+        # To be implemented in subclasses
+        pass
+
+    def on_key_release(self, symbol, modifiers):
+        # To be implemented in subclasses
+        pass
+
+    def on_key_press(self, symbol, modifiers):
+        # To be implemented in subclasses
+        pass
 
     # Errors
 
