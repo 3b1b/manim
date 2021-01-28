@@ -1,0 +1,349 @@
+<!doctype html>
+<html class="no-js">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Example Scenes" href="example_scenes.html" /><link rel="prev" title="Quick Start" href="quickstart.html" />
+
+    <link rel="shortcut icon" href="../_static/icon.png"/><meta name="generator" content="sphinx-3.4.3, furo 2020.10.05.beta9"/>
+        <title>CLI flags and configuration - manim  documentation</title>
+      <link rel="stylesheet" href="../_static/copybutton.css" />
+    <link rel="stylesheet" href="../_static/custom.css" />
+    <link rel="stylesheet" href="../_static/colors.css" />
+    <link rel="stylesheet" href="../_static/styles/default.css?a9708e2a7d9505cc0ea411ce">
+    <link rel="stylesheet" href="../_static/pygments.css?a9708e2a7d9505cc0ea411ce">
+    
+<style>
+  :root {
+    --color-code-background: #f8f8f8;
+    --color-code-foreground: #000000;
+  
+  }
+</style>
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script><script src="../_static/jquery.js"></script>
+      <script src="../_static/underscore.js"></script>
+      
+        <script src="../_static/doctools.js" defer></script>
+      
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script src="../_static/scripts/main.js?a9708e2a7d9505cc0ea411ce"></script></head>
+  <body dir="">
+    
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke-width="1.5" stroke="#101010" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z"/>
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="10" y1="12" x2="20" y2="12" />
+      <line x1="6" y1="18" x2="20" y2="18" />
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      class="feather feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      class="feather feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+
+<div class="page">
+  <header class="mobile-header">
+    <label class="header-left nav-overlay-icon" for="__navigation">
+      <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+    </label>
+    <div class="header-center"><div class="brand">manim  documentation</div></div>
+    <div class="header-right"></div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand centered" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../_static/transparent_graph.png" alt="Logo"/>
+  </div>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html">
+  <input class="sidebar-search" placeholder="Search" name="q">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form><div class="sidebar-tree sidebar-scroll">
+  <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">CLI flags and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_scenes.html">Example Scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">CONFIG dictionary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structure.html">Manim’s structure</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/constants.html">constants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/custom_default.html">custom_default</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/about.html">About</a></li>
+</ul>
+
+</div>
+      </div>
+      
+    </div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <article role="main">
+        <label class="toc-overlay-icon" for="__toc">
+          <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+        </label>
+        <div class="section" id="cli-flags-and-configuration">
+<h1>CLI flags and configuration<a class="headerlink" href="#cli-flags-and-configuration" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="command-line-interface">
+<h2>Command Line Interface<a class="headerlink" href="#command-line-interface" title="Permalink to this headline">¶</a></h2>
+<p>To run manim, you need to enter the directory at the same level as <code class="docutils literal notranslate"><span class="pre">manim.py</span></code>
+and enter the command in the following format into terminal:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python manim.py &lt;code&gt;.py &lt;Scene&gt; &lt;flags&gt;
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;code&gt;.py</span></code> : The python file you wrote. Needs to be at the same level as <code class="docutils literal notranslate"><span class="pre">manim.py</span></code>, otherwise you need to use an absolute path or a relative path.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;Scene&gt;</span></code> : The scene you want to render here. If it is not written or written incorrectly, it will list all for you to choose. And if there is only one <code class="docutils literal notranslate"><span class="pre">Scene</span></code> in the file, this class will be rendered directly.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;flags&gt;</span></code> : CLI flags.</p></li>
+</ul>
+<div class="section" id="some-useful-flags">
+<h3>Some useful flags<a class="headerlink" href="#some-useful-flags" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-w</span></code> to write the scene to a file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-o</span></code> to write the scene to a file and open the result.</p></li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">-s</span></code> to skip to the end and just show the final frame.</dt><dd><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">-so</span></code> will save the final frame to an image and show it.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">&lt;number&gt;</span></code> to skip ahead to the <code class="docutils literal notranslate"><span class="pre">n</span></code>’th animation of a scene.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-f</span></code> to make the playback window fullscreen.</p></li>
+</ul>
+</div>
+<div class="section" id="all-supported-flags">
+<h3>All supported flags<a class="headerlink" href="#all-supported-flags" title="Permalink to this headline">¶</a></h3>
+<div class="table-wrapper"><table class="docutils align-default">
+<colgroup>
+<col style="width: 23%"/>
+<col style="width: 2%"/>
+<col style="width: 75%"/>
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>flag</p></th>
+<th class="head"><p>abbr</p></th>
+<th class="head"><p>function</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--help</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-h</span></code></p></td>
+<td><p>Show the help message and exit</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--write_file</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-w</span></code></p></td>
+<td><p>Render the scene as a movie file</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--skip_animations</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-s</span></code></p></td>
+<td><p>Skip to the last frame</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--low_quality</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-l</span></code></p></td>
+<td><p>Render at a low quality (for faster rendering)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--medium_quality</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-m</span></code></p></td>
+<td><p>Render at a medium quality</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--hd</span></code></p></td>
+<td></td>
+<td><p>Render at a 1080p quality</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--uhd</span></code></p></td>
+<td></td>
+<td><p>Render at a 4k quality</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--full_screen</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-f</span></code></p></td>
+<td><p>Show window in full screen</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--save_pngs</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-g</span></code></p></td>
+<td><p>Save each frame as a png</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--save_as_gif</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-i</span></code></p></td>
+<td><p>Save the video as gif</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--transparent</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-t</span></code></p></td>
+<td><p>Render to a movie file with an alpha channel</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--quiet</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-q</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--write_all</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-a</span></code></p></td>
+<td><p>Write all the scenes from a file</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--open</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-o</span></code></p></td>
+<td><p>Automatically open the saved file once its done</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--finder</span></code></p></td>
+<td></td>
+<td><p>Show the output file in finder</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--file_name</span> <span class="pre">FILE_NAME</span></code></p></td>
+<td></td>
+<td><p>Name for the movie or image file</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--start_at_animation_number</span> <span class="pre">START_AT_ANIMATION_NUMBER</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-n</span></code></p></td>
+<td><p>Start rendering not from the first animation, but from another, specified by its index. If you passin two comma separated values, e.g. “3,6”, it will end the rendering at the second value.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--resolution</span> <span class="pre">RESOLUTION</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-r</span></code></p></td>
+<td><p>Resolution, passed as “WxH”, e.g. “1920x1080”</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--frame_rate</span> <span class="pre">FRAME_RATE</span></code></p></td>
+<td></td>
+<td><p>Frame rate, as an integer</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--color</span> <span class="pre">COLOR</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-c</span></code></p></td>
+<td><p>Background color</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--leave_progress_bars</span></code></p></td>
+<td></td>
+<td><p>Leave progress bars displayed in terminal</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--video_dir</span> <span class="pre">VIDEO_DIR</span></code></p></td>
+<td></td>
+<td><p>directory to write video</p></td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+<div class="section" id="custom-default">
+<h2>custom_default<a class="headerlink" href="#custom-default" title="Permalink to this headline">¶</a></h2>
+<p>In order to perform more configuration (about directories, etc.) and permanently
+change the default value (you don’t have to add flags to the command every time),
+you can modify <code class="docutils literal notranslate"><span class="pre">custom_default.yml</span></code>. The meaning of each option is in
+page <a class="reference internal" href="../documentation/custom_default.html"><span class="doc">custom_default</span></a>.</p>
+<p>You can also use different <code class="docutils literal notranslate"><span class="pre">custom_default.yml</span></code> for different directories, such as
+following the directory structure:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>manim/
+├── manimlib/
+│   ├── animation/
+│   ├── ...
+│   └── window.py
+├── project/
+│   ├── code.py
+│   └── custom_default.yml
+├── custom_default.yml
+└── manim.py
+</pre></div>
+</div>
+<p>When you enter the <code class="docutils literal notranslate"><span class="pre">project/</span></code> folder and run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">../manim.py</span> <span class="pre">code.py</span> <span class="pre">&lt;Scene&gt;</span></code>,
+it will overwrite <code class="docutils literal notranslate"><span class="pre">manim/custom_default.yml</span></code> with <code class="docutils literal notranslate"><span class="pre">custom_default.yml</span></code>
+in the <code class="docutils literal notranslate"><span class="pre">project</span></code> folder.</p>
+</div>
+</div>
+
+      </article>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="example_scenes.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Example Scenes</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="quickstart.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Quick Start</div>
+                
+              </div>
+            </a>
+        </div>
+
+        <div class="related-information">
+          <span class="copyright">Copyright &copy; - This document has been placed in the public domain.</span> |
+          Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using
+          <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+          <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            Contents
+          </span>
+        </div>
+        <div class="toc-tree">
+          <ul>
+<li><a class="reference internal" href="#">CLI flags and configuration</a><ul>
+<li><a class="reference internal" href="#command-line-interface">Command Line Interface</a><ul>
+<li><a class="reference internal" href="#some-useful-flags">Some useful flags</a></li>
+<li><a class="reference internal" href="#all-supported-flags">All supported flags</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#custom-default">custom_default</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+      
+      
+    </aside>
+  </main>
+</div>
+  </body>
+</html>

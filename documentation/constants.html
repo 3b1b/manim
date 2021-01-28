@@ -1,0 +1,348 @@
+<!doctype html>
+<html class="no-js">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="custom_default" href="custom_default.html" /><link rel="prev" title="Manim’s structure" href="../getting_started/structure.html" />
+
+    <link rel="shortcut icon" href="../_static/icon.png"/><meta name="generator" content="sphinx-3.4.3, furo 2020.10.05.beta9"/>
+        <title>constants - manim  documentation</title>
+      <link rel="stylesheet" href="../_static/copybutton.css" />
+    <link rel="stylesheet" href="../_static/custom.css" />
+    <link rel="stylesheet" href="../_static/colors.css" />
+    <link rel="stylesheet" href="../_static/styles/default.css?bf9f2d50ea905777e0ba87ae">
+    <link rel="stylesheet" href="../_static/pygments.css?bf9f2d50ea905777e0ba87ae">
+    
+<style>
+  :root {
+    --color-code-background: #f8f8f8;
+    --color-code-foreground: #000000;
+  
+  }
+</style>
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script><script src="../_static/jquery.js"></script>
+      <script src="../_static/underscore.js"></script>
+      
+        <script src="../_static/doctools.js" defer></script>
+      
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script src="../_static/scripts/main.js?bf9f2d50ea905777e0ba87ae"></script></head>
+  <body dir="">
+    
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke-width="1.5" stroke="#101010" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z"/>
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="10" y1="12" x2="20" y2="12" />
+      <line x1="6" y1="18" x2="20" y2="18" />
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      class="feather feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      class="feather feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+
+<div class="page">
+  <header class="mobile-header">
+    <label class="header-left nav-overlay-icon" for="__navigation">
+      <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+    </label>
+    <div class="header-center"><div class="brand">manim  documentation</div></div>
+    <div class="header-right"></div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand centered" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../_static/transparent_graph.png" alt="Logo"/>
+  </div>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html">
+  <input class="sidebar-search" placeholder="Search" name="q">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form><div class="sidebar-tree sidebar-scroll">
+  <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/configuration.html">CLI flags and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/example_scenes.html">Example Scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/config.html">CONFIG dictionary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/structure.html">Manim’s structure</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">constants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_default.html">custom_default</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/about.html">About</a></li>
+</ul>
+
+</div>
+      </div>
+      
+    </div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <article role="main">
+        <label class="toc-overlay-icon" for="__toc">
+          <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+        </label>
+        <div class="section" id="constants">
+<h1>constants<a class="headerlink" href="#constants" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">constants.py</span></code> in the <code class="docutils literal notranslate"><span class="pre">manimlib</span></code> folder defines the constants
+needed when running manim. Some constants are not explained here because
+they are only used inside manim.</p>
+<div class="section" id="frame-and-pixel-shape">
+<h2>Frame and pixel shape<a class="headerlink" href="#frame-and-pixel-shape" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ASPECT_RATIO</span> <span class="o">=</span> <span class="mf">16.0</span> <span class="o">/</span> <span class="mf">9.0</span>
+<span class="n">FRAME_HEIGHT</span> <span class="o">=</span> <span class="mf">8.0</span>
+<span class="n">FRAME_WIDTH</span> <span class="o">=</span> <span class="n">FRAME_HEIGHT</span> <span class="o">*</span> <span class="n">ASPECT_RATIO</span>
+<span class="n">FRAME_Y_RADIUS</span> <span class="o">=</span> <span class="n">FRAME_HEIGHT</span> <span class="o">/</span> <span class="mi">2</span>
+<span class="n">FRAME_X_RADIUS</span> <span class="o">=</span> <span class="n">FRAME_WIDTH</span> <span class="o">/</span> <span class="mi">2</span>
+
+<span class="n">DEFAULT_PIXEL_HEIGHT</span> <span class="o">=</span> <span class="mi">1080</span>
+<span class="n">DEFAULT_PIXEL_WIDTH</span> <span class="o">=</span> <span class="mi">1920</span>
+<span class="n">DEFAULT_FRAME_RATE</span> <span class="o">=</span> <span class="mi">30</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="buffs">
+<h2>Buffs<a class="headerlink" href="#buffs" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">SMALL_BUFF</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">MED_SMALL_BUFF</span> <span class="o">=</span> <span class="mf">0.25</span>
+<span class="n">MED_LARGE_BUFF</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="n">LARGE_BUFF</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="n">DEFAULT_MOBJECT_TO_EDGE_BUFFER</span> <span class="o">=</span> <span class="n">MED_LARGE_BUFF</span>    <span class="c1"># Distance between object and edge</span>
+<span class="n">DEFAULT_MOBJECT_TO_MOBJECT_BUFFER</span> <span class="o">=</span> <span class="n">MED_SMALL_BUFF</span> <span class="c1"># Distance between objects</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="run-times">
+<h2>Run times<a class="headerlink" href="#run-times" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">DEFAULT_POINTWISE_FUNCTION_RUN_TIME</span> <span class="o">=</span> <span class="mf">3.0</span>
+<span class="n">DEFAULT_WAIT_TIME</span> <span class="o">=</span> <span class="mf">1.0</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="coordinates">
+<h2>Coordinates<a class="headerlink" href="#coordinates" title="Permalink to this headline">¶</a></h2>
+<p>manim uses three-dimensional coordinates and uses the type of <code class="docutils literal notranslate"><span class="pre">ndarray</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ORIGIN</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">))</span>
+<span class="n">UP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">))</span>
+<span class="n">DOWN</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">0.</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">))</span>
+<span class="n">RIGHT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">))</span>
+<span class="n">LEFT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">))</span>
+<span class="n">IN</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.</span><span class="p">))</span>
+<span class="n">OUT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">))</span>
+<span class="n">X_AXIS</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">))</span>
+<span class="n">Y_AXIS</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">))</span>
+<span class="n">Z_AXIS</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">))</span>
+
+<span class="c1"># Useful abbreviations for diagonals</span>
+<span class="n">UL</span> <span class="o">=</span> <span class="n">UP</span> <span class="o">+</span> <span class="n">LEFT</span>
+<span class="n">UR</span> <span class="o">=</span> <span class="n">UP</span> <span class="o">+</span> <span class="n">RIGHT</span>
+<span class="n">DL</span> <span class="o">=</span> <span class="n">DOWN</span> <span class="o">+</span> <span class="n">LEFT</span>
+<span class="n">DR</span> <span class="o">=</span> <span class="n">DOWN</span> <span class="o">+</span> <span class="n">RIGHT</span>
+
+<span class="n">TOP</span> <span class="o">=</span> <span class="n">FRAME_Y_RADIUS</span> <span class="o">*</span> <span class="n">UP</span>
+<span class="n">BOTTOM</span> <span class="o">=</span> <span class="n">FRAME_Y_RADIUS</span> <span class="o">*</span> <span class="n">DOWN</span>
+<span class="n">LEFT_SIDE</span> <span class="o">=</span> <span class="n">FRAME_X_RADIUS</span> <span class="o">*</span> <span class="n">LEFT</span>
+<span class="n">RIGHT_SIDE</span> <span class="o">=</span> <span class="n">FRAME_X_RADIUS</span> <span class="o">*</span> <span class="n">RIGHT</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="mathematical-constant">
+<h2>Mathematical constant<a class="headerlink" href="#mathematical-constant" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">PI</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+<span class="n">TAU</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">PI</span>
+<span class="n">DEGREES</span> <span class="o">=</span> <span class="n">TAU</span> <span class="o">/</span> <span class="mi">360</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="text">
+<h2>Text<a class="headerlink" href="#text" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">START_X</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="n">START_Y</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">NORMAL</span> <span class="o">=</span> <span class="s2">"NORMAL"</span>
+<span class="n">ITALIC</span> <span class="o">=</span> <span class="s2">"ITALIC"</span>
+<span class="n">OBLIQUE</span> <span class="o">=</span> <span class="s2">"OBLIQUE"</span>
+<span class="n">BOLD</span> <span class="o">=</span> <span class="s2">"BOLD"</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="stroke-width">
+<h2>Stroke width<a class="headerlink" href="#stroke-width" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">DEFAULT_STROKE_WIDTH</span> <span class="o">=</span> <span class="mi">4</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="colours">
+<h2>Colours<a class="headerlink" href="#colours" title="Permalink to this headline">¶</a></h2>
+<p>Here are the preview of default colours. (Modified from
+<a class="reference external" href="https://elteoremadebeethoven.github.io/manim_3feb_docs.github.io/html/_static/colors/colors.html">elteoremadebeethoven</a>)</p>
+<h3>BLUE</h3>
+<div class="colors BLUE_E"><p class="color-text">BLUE_E</p></div>
+<div class="colors BLUE_D"><p class="color-text">BLUE_D</p></div>
+<div class="colors BLUE_C"><p class="color-text">BLUE_C</p></div>
+<div class="colors BLUE_B"><p class="color-text">BLUE_B</p></div>
+<div class="colors BLUE_A"><p class="color-text">BLUE_A</p></div>
+<h3 style="margin-top: 6em">TEAL</h3>
+<div class="colors TEAL_E"><p class="color-text">TEAL_E</p></div>
+<div class="colors TEAL_D"><p class="color-text">TEAL_D</p></div>
+<div class="colors TEAL_C"><p class="color-text">TEAL_C</p></div>
+<div class="colors TEAL_B"><p class="color-text">TEAL_B</p></div>
+<div class="colors TEAL_A"><p class="color-text">TEAL_A</p></div>
+<h3 style="margin-top: 6em">GREEN</h3>
+<div class="colors GREEN_E"><p class="color-text">GREEN_E</p></div>
+<div class="colors GREEN_D"><p class="color-text">GREEN_D</p></div>
+<div class="colors GREEN_C"><p class="color-text">GREEN_C</p></div>
+<div class="colors GREEN_B"><p class="color-text">GREEN_B</p></div>
+<div class="colors GREEN_A"><p class="color-text">GREEN_A</p></div>
+<h3 style="margin-top: 6em">YELLOW</h3>
+<div class="colors YELLOW_E"><p class="color-text">YELLOW_E</p></div>
+<div class="colors YELLOW_D"><p class="color-text">YELLOW_D</p></div>
+<div class="colors YELLOW_C"><p class="color-text">YELLOW_C</p></div>
+<div class="colors YELLOW_B"><p class="color-text">YELLOW_B</p></div>
+<div class="colors YELLOW_A"><p class="color-text">YELLOW_A</p></div>
+<h3 style="margin-top: 6em">GOLD</h3>
+<div class="colors GOLD_E"><p class="color-text">GOLD_E</p></div>
+<div class="colors GOLD_D"><p class="color-text">GOLD_D</p></div>
+<div class="colors GOLD_C"><p class="color-text">GOLD_C</p></div>
+<div class="colors GOLD_B"><p class="color-text">GOLD_B</p></div>
+<div class="colors GOLD_A"><p class="color-text">GOLD_A</p></div>
+<h3 style="margin-top: 6em">RED</h3>
+<div class="colors RED_E"><p class="color-text">RED_E</p></div>
+<div class="colors RED_D"><p class="color-text">RED_D</p></div>
+<div class="colors RED_C"><p class="color-text">RED_C</p></div>
+<div class="colors RED_B"><p class="color-text">RED_B</p></div>
+<div class="colors RED_A"><p class="color-text">RED_A</p></div>
+<h3 style="margin-top: 6em">MAROON</h3>
+<div class="colors MAROON_E"><p class="color-text">MAROON_E</p></div>
+<div class="colors MAROON_D"><p class="color-text">MAROON_D</p></div>
+<div class="colors MAROON_C"><p class="color-text">MAROON_C</p></div>
+<div class="colors MAROON_B"><p class="color-text">MAROON_B</p></div>
+<div class="colors MAROON_A"><p class="color-text">MAROON_A</p></div>
+<h3 style="margin-top: 6em">PURPLE</h3>
+<div class="colors PURPLE_E"><p class="color-text">PURPLE_E</p></div>
+<div class="colors PURPLE_D"><p class="color-text">PURPLE_D</p></div>
+<div class="colors PURPLE_C"><p class="color-text">PURPLE_C</p></div>
+<div class="colors PURPLE_B"><p class="color-text">PURPLE_B</p></div>
+<div class="colors PURPLE_A"><p class="color-text">PURPLE_A</p></div>
+<h3 style="margin-top: 6em">GREY</h3>
+<div class="colors GREY_E"><p class="color-text">GREY_E</p></div>
+<div class="colors GREY_D"><p class="color-text">GREY_D</p></div>
+<div class="colors GREY_C"><p class="color-text">GREY_C</p></div>
+<div class="colors GREY_B"><p class="color-text">GREY_B</p></div>
+<div class="colors GREY_A"><p class="color-text">GREY_A</p></div>
+<h3 style="margin-top: 6em">Others</h3>
+<div class="colors WHITE"><p class="color-text" style="color: BLACK">WHITE</p></div>
+<div class="colors BLACK"><p class="color-text">BLACK</p></div>
+<div class="colors GREY_BROWN"><p class="color-text-small">GREY_BROWN</p></div>
+<div class="colors DARK_BROWN"><p class="color-text-small">DARK_BROWN</p></div>
+<div class="colors LIGHT_BROWN"><p class="color-text-small">LIGHT_BROWN</p></div>
+<div class="colors PINK"><p class="color-text">PINK</p></div>
+<div class="colors LIGHT_PINK"><p class="color-text-small">LIGHT_PINK</p></div>
+<div class="colors GREEN_SCREEN"><p class="color-text-small">GREEN_SCREEN</p></div>
+<div class="colors ORANGE"><p class="color-text">ORANGE</p></div></div>
+</div>
+
+      </article>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="custom_default.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">custom_default</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../getting_started/structure.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Manim’s structure</div>
+                
+              </div>
+            </a>
+        </div>
+
+        <div class="related-information">
+          <span class="copyright">Copyright &copy; - This document has been placed in the public domain.</span> |
+          Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using
+          <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+          <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            Contents
+          </span>
+        </div>
+        <div class="toc-tree">
+          <ul>
+<li><a class="reference internal" href="#">constants</a><ul>
+<li><a class="reference internal" href="#frame-and-pixel-shape">Frame and pixel shape</a></li>
+<li><a class="reference internal" href="#buffs">Buffs</a></li>
+<li><a class="reference internal" href="#run-times">Run times</a></li>
+<li><a class="reference internal" href="#coordinates">Coordinates</a></li>
+<li><a class="reference internal" href="#mathematical-constant">Mathematical constant</a></li>
+<li><a class="reference internal" href="#text">Text</a></li>
+<li><a class="reference internal" href="#stroke-width">Stroke width</a></li>
+<li><a class="reference internal" href="#colours">Colours</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+      
+      
+    </aside>
+  </main>
+</div>
+  </body>
+</html>

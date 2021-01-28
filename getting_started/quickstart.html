@@ -1,0 +1,390 @@
+<!doctype html>
+<html class="no-js">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="CLI flags and configuration" href="configuration.html" /><link rel="prev" title="Installation" href="installation.html" />
+
+    <link rel="shortcut icon" href="../_static/icon.png"/><meta name="generator" content="sphinx-3.4.3, furo 2020.10.05.beta9"/>
+        <title>Quick Start - manim  documentation</title>
+      <link rel="stylesheet" href="../_static/copybutton.css" />
+    <link rel="stylesheet" href="../_static/custom.css" />
+    <link rel="stylesheet" href="../_static/colors.css" />
+    <link rel="stylesheet" href="../_static/styles/default.css?db0976617da4ac1310cb186e">
+    <link rel="stylesheet" href="../_static/pygments.css?db0976617da4ac1310cb186e">
+    
+<style>
+  :root {
+    --color-code-background: #f8f8f8;
+    --color-code-foreground: #000000;
+  
+  }
+</style>
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script><script src="../_static/jquery.js"></script>
+      <script src="../_static/underscore.js"></script>
+      
+        <script src="../_static/doctools.js" defer></script>
+      
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script src="../_static/scripts/main.js?db0976617da4ac1310cb186e"></script></head>
+  <body dir="">
+    
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke-width="1.5" stroke="#101010" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z"/>
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="10" y1="12" x2="20" y2="12" />
+      <line x1="6" y1="18" x2="20" y2="18" />
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      class="feather feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      class="feather feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+
+<div class="page">
+  <header class="mobile-header">
+    <label class="header-left nav-overlay-icon" for="__navigation">
+      <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+    </label>
+    <div class="header-center"><div class="brand">manim  documentation</div></div>
+    <div class="header-right"></div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand centered" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../_static/transparent_graph.png" alt="Logo"/>
+  </div>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html">
+  <input class="sidebar-search" placeholder="Search" name="q">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form><div class="sidebar-tree sidebar-scroll">
+  <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">CLI flags and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_scenes.html">Example Scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">CONFIG dictionary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structure.html">Manim’s structure</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/constants.html">constants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/custom_default.html">custom_default</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/about.html">About</a></li>
+</ul>
+
+</div>
+      </div>
+      
+    </div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <article role="main">
+        <label class="toc-overlay-icon" for="__toc">
+          <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+        </label>
+        <div class="section" id="quick-start">
+<h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h1>
+<p>After installing the manim environment according to the instructions on the
+<a class="reference internal" href="installation.html"><span class="doc">Installation</span></a> page, you can try to make a scene yourself from scratch.</p>
+<p>First, create a new <code class="docutils literal notranslate"><span class="pre">.py</span></code> file (such as <code class="docutils literal notranslate"><span class="pre">start.py</span></code>) according to the following
+directory structure:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>manim/
+├── manimlib/
+│   ├── animation/
+│   ├── ...
+│   └── window.py
+├── custom_default.yml
+├── manim.py
+<span class="hll">└── start.py
+</span></pre></div>
+</div>
+<p>And paste the following code (I will explain the function of each line in detail later):</p>
+<div class="highlight-python notranslate"><div class="table-wrapper"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">manimlib.imports</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="k">class</span> <span class="nc">SquareToCircle</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">circle</span> <span class="o">=</span> <span class="n">Circle</span><span class="p">()</span>
+        <span class="n">circle</span><span class="o">.</span><span class="n">set_fill</span><span class="p">(</span><span class="n">BLUE</span><span class="p">,</span> <span class="n">opacity</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">circle</span><span class="o">.</span><span class="n">set_stroke</span><span class="p">(</span><span class="n">BLUE_E</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">circle</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div></div>
+<p>And run this command:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python manim.py start.py SquareToCircle
+</pre></div>
+</div>
+<p>A window will pop up on the screen. And then you can :</p>
+<ul class="simple">
+<li><p>scroll the middle mouse button to move the screen up and down</p></li>
+<li><p>hold down the <kbd class="kbd docutils literal notranslate">z</kbd> on the keyboard while scrolling the middle mouse button to zoom the screen</p></li>
+<li><p>hold down the <kbd class="kbd docutils literal notranslate">s</kbd> key on the keyboard and move the mouse to pan the screen</p></li>
+<li><p>hold down the <kbd class="kbd docutils literal notranslate">d</kbd> key on the keyboard and move the mouse to change the three-dimensional perspective.</p></li>
+</ul>
+<p>Finally, you can close the window and exit the program by pressing <kbd class="kbd docutils literal notranslate">q</kbd>.</p>
+<p>Run this command again:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python manim.py start.py SquareToCircle -os
+</pre></div>
+</div>
+<p>At this time, no window will pop up. When the program is finished, this rendered
+image will be automatically opened (saved in the subdirectory <code class="docutils literal notranslate"><span class="pre">images/</span></code> of the same
+level directory of <code class="docutils literal notranslate"><span class="pre">start.py</span></code> by default):</p>
+<img alt="../_images/SquareToCircle.png" class="align-center" src="../_images/SquareToCircle.png"/>
+<div class="section" id="make-an-image">
+<h2>Make an image<a class="headerlink" href="#make-an-image" title="Permalink to this headline">¶</a></h2>
+<p>Next, let’s take a detailed look at what each row does.</p>
+<p><strong>Line 1</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">manimlib.imports</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<p>This will import all the classes that may be used when using manim.</p>
+<p><strong>Line 3</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">SquareToCircle</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
+</pre></div>
+</div>
+<p>Create a <code class="xref py py-class docutils literal notranslate"><span class="pre">Scene</span></code> subclass <code class="docutils literal notranslate"><span class="pre">SquareToCircle</span></code>, which will be
+the scene you write and render.</p>
+<p><strong>Line 4</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</pre></div>
+</div>
+<p>Write the <code class="docutils literal notranslate"><span class="pre">construct()</span></code> method, the content of which will determine
+how to create the mobjects in the screen and what operations need to be performed.</p>
+<p><strong>Line 5</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">circle</span> <span class="o">=</span> <span class="n">Circle</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Create a circle (an instance of the <code class="xref py py-class docutils literal notranslate"><span class="pre">Circle</span></code> class), called <code class="docutils literal notranslate"><span class="pre">circle</span></code></p>
+<p><strong>Line 6~7</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">circle</span><span class="o">.</span><span class="n">set_fill</span><span class="p">(</span><span class="n">BLUE</span><span class="p">,</span> <span class="n">opacity</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">circle</span><span class="o">.</span><span class="n">set_stroke</span><span class="p">(</span><span class="n">BLUE_E</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Set the circle style by calling the circle’s method.</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">.set_fill()</span></code> method sets the fill color of this circle to blue (<code class="docutils literal notranslate"><span class="pre">BLUE</span></code>, defined in <a class="reference internal" href="../documentation/constants.html"><span class="doc">constants</span></a>), and the fill transparency to 0.5.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">.set_stroke()</span></code> method sets the stroke color of this circle to dark blue (<code class="docutils literal notranslate"><span class="pre">BLUE_E</span></code>, defined in <a class="reference internal" href="../documentation/constants.html"><span class="doc">constants</span></a>), and the stroke width to 4.</p></li>
+</ul>
+<p><strong>Line 9</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">circle</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Add this circle to the screen through the <code class="docutils literal notranslate"><span class="pre">.add()</span></code> method of <code class="xref py py-class docutils literal notranslate"><span class="pre">Scene</span></code>.</p>
+</div>
+<div class="section" id="add-animations">
+<h2>Add animations<a class="headerlink" href="#add-animations" title="Permalink to this headline">¶</a></h2>
+<p>Let’s change some codes and add some animations to make videos instead of just pictures.</p>
+<div class="highlight-python notranslate"><div class="table-wrapper"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">manimlib.imports</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="k">class</span> <span class="nc">SquareToCircle</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">circle</span> <span class="o">=</span> <span class="n">Circle</span><span class="p">()</span>
+        <span class="n">circle</span><span class="o">.</span><span class="n">set_fill</span><span class="p">(</span><span class="n">BLUE</span><span class="p">,</span> <span class="n">opacity</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">circle</span><span class="o">.</span><span class="n">set_stroke</span><span class="p">(</span><span class="n">BLUE_E</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        <span class="n">square</span> <span class="o">=</span> <span class="n">Square</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">ShowCreation</span><span class="p">(</span><span class="n">square</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">ReplacementTransform</span><span class="p">(</span><span class="n">square</span><span class="p">,</span> <span class="n">circle</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div></div>
+<p>Run this command this time:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python manim.py start.py SquareToCircle
+</pre></div>
+</div>
+<p>The pop-up window will play animations of drawing a square and transforming
+it into a circle. If you want to save this video, run:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python manim.py start.py SquareToCircle -ow
+</pre></div>
+</div>
+<p>This time there will be no pop-up window, but the video file (saved in the subdirectory
+<code class="docutils literal notranslate"><span class="pre">videos/</span></code> of the same level directory of <code class="docutils literal notranslate"><span class="pre">start.py</span></code> by default) will be automatically
+opened after the operation is over:</p>
+<video autoplay="" class="manim-video" controls="" loop="" src="../_static/quickstart/SquareToCircle.mp4"></video><p>Let’s take a look at the code this time. The first 7 lines are the same as the previous
+ones, and the 8th line is similar to the 5th line, which creates an instance of the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Square</span></code> class and named it <code class="docutils literal notranslate"><span class="pre">square</span></code>.</p>
+<p><strong>Line 10</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">ShowCreation</span><span class="p">(</span><span class="n">square</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>An animation is played through <code class="xref py py-class docutils literal notranslate"><span class="pre">Scene</span></code>’s <code class="docutils literal notranslate"><span class="pre">.play()</span></code> method. <code class="xref py py-class docutils literal notranslate"><span class="pre">ShowCreation</span></code>
+is an animation that shows the process of creating a given mobject.
+<code class="docutils literal notranslate"><span class="pre">self.play(ShowCreation(square))</span></code> is to play the animation of creating <code class="docutils literal notranslate"><span class="pre">square</span></code>.</p>
+<p><strong>Line 11</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Use <code class="xref py py-class docutils literal notranslate"><span class="pre">Scene</span></code>’s <code class="docutils literal notranslate"><span class="pre">.wait()</span></code> method to pause (default 1s), you can pass in
+parameters to indicate the pause time (for example, <code class="docutils literal notranslate"><span class="pre">self.wait(3)</span></code> means pause for 3s).</p>
+<p><strong>Line 12</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">ReplacementTransform</span><span class="p">(</span><span class="n">square</span><span class="p">,</span> <span class="n">circle</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Play the animation that transforms <code class="docutils literal notranslate"><span class="pre">square</span></code> into <code class="docutils literal notranslate"><span class="pre">circle</span></code>.
+<code class="docutils literal notranslate"><span class="pre">ReplacementTransform(A,</span> <span class="pre">B)</span></code> means to transform A into B’s pattern and replace A with B.</p>
+<p><strong>Line 13</strong>: Same as line 11, pause for 1s.</p>
+</div>
+<div class="section" id="enable-interaction">
+<h2>Enable interaction<a class="headerlink" href="#enable-interaction" title="Permalink to this headline">¶</a></h2>
+<p>Interaction is a new feature of the new version. You can add the following line
+at the end of the code to enable interaction:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">embed</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Then run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">manim.py</span> <span class="pre">start.py</span> <span class="pre">SquareToCircle</span></code>.</p>
+<p>After the previous animation is executed, the ipython terminal will be opened on
+the command line. After that, you can continue to write code in it, and the statement
+you entered will be executed immediately after pressing <kbd class="kbd docutils literal notranslate">Enter</kbd>.</p>
+<p>For example: input the following lines (without comment lines) into it respectively
+(<code class="docutils literal notranslate"><span class="pre">self.play</span></code> can be abbreviated as <code class="docutils literal notranslate"><span class="pre">play</span></code> in this mode):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Stretched 4 times in the vertical direction</span>
+<span class="n">play</span><span class="p">(</span><span class="n">circle</span><span class="o">.</span><span class="n">stretch</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="p">{</span><span class="s2">"dim"</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span>
+<span class="c1"># Rotate the ellipse 90°</span>
+<span class="n">play</span><span class="p">(</span><span class="n">Rotate</span><span class="p">(</span><span class="n">circle</span><span class="p">,</span> <span class="n">TAU</span> <span class="o">/</span> <span class="mi">4</span><span class="p">))</span>
+<span class="c1"># Move 2 units to the right and shrink to 1/4 of the original</span>
+<span class="n">play</span><span class="p">(</span><span class="n">circle</span><span class="o">.</span><span class="n">shift</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">RIGHT</span><span class="p">,</span> <span class="n">circle</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span>
+<span class="c1"># Insert 10 curves into circle for non-linear transformation (no animation will play)</span>
+<span class="n">circle</span><span class="o">.</span><span class="n">insert_n_curves</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="c1"># Apply a complex transformation of f(z)=z^2 to all points on the circle</span>
+<span class="n">play</span><span class="p">(</span><span class="n">circle</span><span class="o">.</span><span class="n">apply_complex_function</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="c1"># Close the window and exit the program</span>
+<span class="nb">exit</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You will get an animation similar to the following:</p>
+<video autoplay="" class="manim-video" controls="" loop="" src="../_static/quickstart/SquareToCircleEmbed.mp4"></video><p>If you want to enter the interactive mode directly, you don’t have to write an
+empty scene containing only <code class="docutils literal notranslate"><span class="pre">self.embed()</span></code>, you can directly run the following command
+(this will enter the ipython terminal while the window pops up):</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python manim.py
+</pre></div>
+</div>
+</div>
+<div class="section" id="you-succeeded">
+<h2>You succeeded!<a class="headerlink" href="#you-succeeded" title="Permalink to this headline">¶</a></h2>
+<p>After reading the above content, you already know how to use manim.
+Below you can see some examples, in the <a class="reference internal" href="example_scenes.html"><span class="doc">Example Scenes</span></a> page.
+But before that, you’d better have a look at the <a class="reference internal" href="configuration.html"><span class="doc">CLI flags and configuration</span></a> of manim.</p>
+</div>
+</div>
+
+      </article>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="configuration.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">CLI flags and configuration</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="installation.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Installation</div>
+                
+              </div>
+            </a>
+        </div>
+
+        <div class="related-information">
+          <span class="copyright">Copyright &copy; - This document has been placed in the public domain.</span> |
+          Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using
+          <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+          <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            Contents
+          </span>
+        </div>
+        <div class="toc-tree">
+          <ul>
+<li><a class="reference internal" href="#">Quick Start</a><ul>
+<li><a class="reference internal" href="#make-an-image">Make an image</a></li>
+<li><a class="reference internal" href="#add-animations">Add animations</a></li>
+<li><a class="reference internal" href="#enable-interaction">Enable interaction</a></li>
+<li><a class="reference internal" href="#you-succeeded">You succeeded!</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+      
+      
+    </aside>
+  </main>
+</div>
+  </body>
+</html>

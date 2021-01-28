@@ -1,0 +1,307 @@
+<!doctype html>
+<html class="no-js">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="constants" href="../documentation/constants.html" /><link rel="prev" title="CONFIG dictionary" href="config.html" />
+
+    <link rel="shortcut icon" href="../_static/icon.png"/><meta name="generator" content="sphinx-3.4.3, furo 2020.10.05.beta9"/>
+        <title>Manim’s structure - manim  documentation</title>
+      <link rel="stylesheet" href="../_static/copybutton.css" />
+    <link rel="stylesheet" href="../_static/custom.css" />
+    <link rel="stylesheet" href="../_static/colors.css" />
+    <link rel="stylesheet" href="../_static/styles/default.css?4d50c159ed3f981a5cad9420">
+    <link rel="stylesheet" href="../_static/pygments.css?4d50c159ed3f981a5cad9420">
+    
+<style>
+  :root {
+    --color-code-background: #f8f8f8;
+    --color-code-foreground: #000000;
+  
+  }
+</style>
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script><script src="../_static/jquery.js"></script>
+      <script src="../_static/underscore.js"></script>
+      
+        <script src="../_static/doctools.js" defer></script>
+      
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script src="../_static/scripts/main.js?4d50c159ed3f981a5cad9420"></script></head>
+  <body dir="">
+    
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke-width="1.5" stroke="#101010" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z"/>
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="10" y1="12" x2="20" y2="12" />
+      <line x1="6" y1="18" x2="20" y2="18" />
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      class="feather feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      class="feather feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+
+<div class="page">
+  <header class="mobile-header">
+    <label class="header-left nav-overlay-icon" for="__navigation">
+      <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+    </label>
+    <div class="header-center"><div class="brand">manim  documentation</div></div>
+    <div class="header-right"></div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand centered" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../_static/transparent_graph.png" alt="Logo"/>
+  </div>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html">
+  <input class="sidebar-search" placeholder="Search" name="q">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form><div class="sidebar-tree sidebar-scroll">
+  <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">CLI flags and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_scenes.html">Example Scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">CONFIG dictionary</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Manim’s structure</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/constants.html">constants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/custom_default.html">custom_default</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/about.html">About</a></li>
+</ul>
+
+</div>
+      </div>
+      
+    </div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <article role="main">
+        <label class="toc-overlay-icon" for="__toc">
+          <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+        </label>
+        <div class="section" id="manim-s-structure">
+<h1>Manim’s structure<a class="headerlink" href="#manim-s-structure" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="manim-s-directory-structure">
+<h2>Manim’s directory structure<a class="headerlink" href="#manim-s-directory-structure" title="Permalink to this headline">¶</a></h2>
+<p>The manim directory looks very complicated, with a lot of files,
+but the structure is clear.</p>
+<p>Below is the directory structure of manim:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>├── manim.py              # Manim command entry
+├── custom_default.yml    # Default configuration
+└── manimlib/ # manim library
+    ├── __init__.py          # run from here
+    ├── config.py            # Process CLI flags
+    ├── constants.py         # Defined some constants
+    ├── extract_scene.py     # Extract and run the scene
+    ├── imports.py           # Import all required files in manimlib
+    ├── shader_wrapper.py    # Shaders' Wrapper for convenient control
+    ├── window.py            # Playback window
+    ├── tex_templates/ # Templates preset for LaTeX
+    │   ├── tex_templates.tex   # Tex template (will be compiled with latex, default)
+    │   └── ctex_templates.tex  # Tex template that support Chinese (will be compiled with xelatex)
+    ├── camera/
+    │   └── camera.py        # Including Camera and CameraFrame
+    ├── scene/
+    │   ├── scene_file_writer.py     # Used to write scene to video file
+    │   ├── scene.py                 # The basic Scene class
+    │   ├── three_d_scene.py         # Three-dimensional scene
+    │   ├── graph_scene.py           # GraphScene (with coordinate axis)
+    │   ├── reconfigurable_scene.py
+    │   ├── sample_space_scene.py    # Probability related sample space scene
+    │   └── vector_space_scene.py    # Vector field scene
+    ├── animation/
+    │   ├── animation.py     # The basic class of animation
+    │   ├── composition.py   # Animation group
+    │   ├── creation.py      # Animation related to Create
+    │   ├── fading.py        # Fade related animation
+    │   ├── growing.py       # Animation related to Grow
+    │   ├── indication.py    # Some animations for emphasis
+    │   ├── movement.py      # Animation related to movement
+    │   ├── numbers.py       # Realize changes to DecimalNumber
+    │   ├── rotation.py      # Animation related to rotation
+    │   ├── specialized.py   # Some uncommon animations for special projects
+    │   ├── transform_matching_parts.py # Transform which can automatically match parts
+    │   ├── transform.py     # Some Transforms
+    │   └── update.py        # Realize update from function
+    ├── mobject/
+    │   ├── mobject.py       # The basic class of all math object
+    │   ├── types/ # 4 types of mobject
+    │   │   ├── dot_cloud.py            # Dot cloud (an subclass of PMobject)
+    │   │   ├── image_mobject.py        # Insert pictures
+    │   │   ├── point_cloud_mobject.py  # PMobject (mobject composed of points)
+    │   │   ├── surface.py              # ParametricSurface
+    │   │   └── vectorized_mobject.py   # VMobject (vectorized mobject)
+    │   ├── svg/ # mobject related to svg
+    │   │   ├── svg_mobject.py          # SVGMobject
+    │   │   ├── brace.py                # Brace
+    │   │   ├── drawings.py             # Some special mobject of svg image
+    │   │   ├── tex_mobject.py          # Tex and TexText implemented by LaTeX
+    │   │   └── text_mobject.py         # Text implemented by cairo
+    │   ├── changing.py             # Dynamically changing mobject
+    │   ├── coordinate_systems.py   # coordinate system
+    │   ├── frame.py                # mobject related to frame
+    │   ├── functions.py            # ParametricFunction
+    │   ├── geometry.py             # geometry mobjects
+    │   ├── matrix.py               # matrix
+    │   ├── mobject_update_utils.py # some defined updater
+    │   ├── number_line.py          # Number line
+    │   ├── numbers.py              # Numbers that can be changed
+    │   ├── probability.py          # mobject related to probability
+    │   ├── shape_matchers.py       # mobject adapted to the size of other objects
+    │   ├── three_dimensions.py     # Three-dimensional objects
+    │   ├── value_tracker.py        # ValueTracker which storage number
+    │   └── vector_field.py         # VectorField
+    ├── once_useful_constructs/  # 3b1b's Common scenes written for some videos
+    │   └── ...
+    ├── shaders/ # GLSL scripts for rendering
+    │   ├── simple_vert.glsl    # a simple glsl script for position
+    │   ├── insert/ # glsl scripts to be inserted in other glsl scripts
+    │   │   ├── NOTE.md   # explain how to insert glsl scripts
+    │   │   └── ...       # useful scripts
+    │   ├── image/ # glsl for images
+    │   │   └── ... # containing shaders for vertex and fragment
+    │   ├── quadratic_bezier_fill/ # glsl for the fill of quadratic bezier curve
+    │   │   └── ... # containing shaders for vertex, fragment and geometry
+    │   ├── quadratic_bezier_stroke/ # glsl for the stroke of quadratic bezier curve
+    │   │   └── ... # containing shaders for vertex, fragment and geometry
+    │   ├── surface/ # glsl for surfaces
+    │   │   └── ... # containing shaders for vertex and fragment
+    │   ├── textured_surface/ # glsl for textured_surface
+    │   │   └── ... # containing shaders for vertex and fragment
+    │   └── true_dot/ # glsl for a dot
+    │       └── ... # containing shaders for vertex, fragment and geometry
+    └── utils/ # Some useful utility functions
+        ├── bezier.py             # For bezier curve
+        ├── color.py              # For color
+        ├── config_ops.py         # Process CONFIG
+        ├── customization.py      # Read from custom_default.yml
+        ├── debug.py              # Utilities for debugging in program
+        ├── family_ops.py         # Process family members
+        ├── file_ops.py           # Process files and directories
+        ├── images.py             # Read image
+        ├── iterables.py          # Functions related to list/dictionary processing
+        ├── paths.py              # Curve path
+        ├── rate_functions.py     # Some defined rate_functions
+        ├── simple_functions.py   # Some commonly used functions
+        ├── sounds.py             # Process sounds
+        ├── space_ops.py          # Space coordinate calculation
+        ├── strings.py            # Process strings
+        └── tex_file_writing.py   # Use LaTeX to write strings as svg
+</pre></div>
+</div>
+</div>
+<div class="section" id="inheritance-structure-of-manim-s-classes">
+<h2>Inheritance structure of manim’s classes<a class="headerlink" href="#inheritance-structure-of-manim-s-classes" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://github.com/3b1b/manim/files/5824383/manim_shaders_structure.pdf">Here</a>
+is a pdf showed inheritance structure of manim’s classes, large,
+but basically all classes have included:</p>
+<img alt="../_images/manim_shaders_structure.png" src="../_images/manim_shaders_structure.png"/>
+</div>
+<div class="section" id="manim-execution-process">
+<h2>Manim execution process<a class="headerlink" href="#manim-execution-process" title="Permalink to this headline">¶</a></h2>
+<img alt="../_images/manim_shaders_process_en.png" src="../_images/manim_shaders_process_en.png"/>
+</div>
+</div>
+
+      </article>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../documentation/constants.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">constants</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="config.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">CONFIG dictionary</div>
+                
+              </div>
+            </a>
+        </div>
+
+        <div class="related-information">
+          <span class="copyright">Copyright &copy; - This document has been placed in the public domain.</span> |
+          Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using
+          <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+          <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            Contents
+          </span>
+        </div>
+        <div class="toc-tree">
+          <ul>
+<li><a class="reference internal" href="#">Manim’s structure</a><ul>
+<li><a class="reference internal" href="#manim-s-directory-structure">Manim’s directory structure</a></li>
+<li><a class="reference internal" href="#inheritance-structure-of-manim-s-classes">Inheritance structure of manim’s classes</a></li>
+<li><a class="reference internal" href="#manim-execution-process">Manim execution process</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+      
+      
+    </aside>
+  </main>
+</div>
+  </body>
+</html>

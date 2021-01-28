@@ -1,0 +1,62 @@
+p {
+    font-size: initial;
+}
+
+span.caption-text {
+    font-size: larger;
+}
+
+span.pre {
+    font-size: initial;
+}
+
+.highlight-python.notranslate {
+    margin-top: 0em;
+}
+
+.manim-video {
+    width: 99.9%;
+    padding: 8px 0;
+    outline: 0;
+}
+
+.manim-example {
+    background-color: #333333;
+    margin-bottom: 10px;
+    box-shadow: 2px 2px 4px #ddd;
+}
+
+.manim-example .manim-video {
+    padding: 0;
+}
+
+.manim-example img {
+    margin-bottom: 0;
+}
+
+h5.example-header {
+    font-size: 18px;
+    font-weight: bold;
+    padding: 8px 16px;
+    color: white;
+    margin: 0;
+    font-family: inherit;
+    text-transform: none;
+    margin-top: -0.4em;
+    margin-bottom: -0.2em;
+}
+
+.manim-example .highlight {
+    background-color: #fafafa;
+    border: 2px solid #333333;
+    padding: 8px 8px 10px 8px;
+    font-size: large;
+    margin: 0;
+}
+
+.manim-example .highlight pre {
+    background-color: inherit;
+    border-left: none;
+    margin: 0;
+    padding: 0 6px 0 6px;
+}
