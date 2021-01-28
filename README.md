@@ -3,6 +3,7 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](http://choosealicense.com/licenses/mit/)
 [![Manim Subreddit](https://img.shields.io/reddit/subreddit-subscribers/manim.svg?color=ff4301&label=reddit)](https://www.reddit.com/r/manim/)
 [![Manim Discord](https://img.shields.io/discord/581738731934056449.svg?label=discord)](https://discord.gg/mMRrZQW)
+[![docs](https://github.com/3b1b/manim/workflows/docs/badge.svg)](https://3b1b.github.io/manim/)
 
 Manim is an animation engine for explanatory math videos. It's used to create precise animations programmatically, as seen in the videos at [3Blue1Brown](https://www.3blue1brown.com/).
 
@@ -11,7 +12,8 @@ This repository contains the version of manim used by 3Blue1Brown.  There is als
 ## Installation
 Manim runs on Python 3.8.
 
-System requirements are [FFmpeg](https://ffmpeg.org/), [OpenGL](https://www.opengl.org//) and [latex](https://www.latex-project.org) (optional, if you want to use LaTeX).
+System requirements are [FFmpeg](https://ffmpeg.org/), [OpenGL](https://www.opengl.org//), [LaTeX](https://www.latex-project.org) (optional, if you want to use LaTeX)
+and [cairo](https://www.cairographics.org/) (optional, if you want to use Text).
 
 For more options, take a look at the [Using manim](#using-manim) sections further below.
 
@@ -24,7 +26,7 @@ If you want to hack on manimlib itself, clone this repository and in that direct
 pip install -r requirements.txt
 
 # Try it out
-python -m manim example_scenes.py OpeningManimExample
+python manim.py example_scenes.py OpeningManimExample
 ```
 
 ### Directly (Windows)
@@ -74,7 +76,7 @@ Take a look at custom_defaults.yml for further configuration.  To add your custo
 Look through [https://github.com/3b1b/videos](https://github.com/3b1b/videos) to see the code for previous 3b1b videos. Note, however, that developments are often made to the library without considering backwards compatibility with those old projects. To run an old project with a guarantee that it will work, you will have to go back to the commit which completed that project.
 
 ### Documentation
-Documentation is in progress at [eulertour.com/docs](https://www.eulertour.com/docs/). And there is also an all-in-one documentation and tutorials maintained by **@manim-kindergarten**: [manim.ml](https://manim.ml/) (in Chinese).
+Documentation is in progress at [3b1b.github.io/manim](https://3b1b.github.io/manim/). And there is also a Chinese version maintained by **@manim-kindergarten**: [manim.ml](https://manim.ml/) (in Chinese).
 
 ### Walkthrough
 Todd Zimmerman put together a [tutorial](https://talkingphysics.wordpress.com/2019/01/08/getting-started-animating-with-manim-and-python-3-7/) on getting started with manim, which has been updated to run on Python 3.7.
