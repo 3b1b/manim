@@ -35,12 +35,13 @@ pygments = "*"
 rich = "^6.0"
 pycairo = "^1.19"
 manimpango = "^0.1.7"
+networkx = "^2.5"
+setuptools = "*"
+importlib-metadata = {version = "^1.0", python = "<3.8"}
 grpcio =  { version = "1.33.*", optional = true }
 grpcio-tools = { version = "1.33.*", optional = true }
 watchdog = { version = "*", optional = true }
-networkx = "^2.5"
 jupyterlab = { version = "^3.0", optional = true }
-importlib-metadata = {version = "^1.0", python = "<3.8"}
 
 [tool.poetry.extras]
 js_renderer = ["grpcio","grpcio-tools","watchdog"]

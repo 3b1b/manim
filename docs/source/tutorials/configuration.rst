@@ -353,12 +353,12 @@ A list of all config options
    'frame_y_radius', 'from_animation_number', 'images_dir', 'input_file',
    'js_renderer_path', 'leave_progress_bars', 'left_side', 'log_dir', 'log_to_file',
    'max_files_cached', 'media_dir', 'movie_file_extension', 'output_file',
-   'partial_movie_dir', 'pixel_height', 'pixel_width', 'png_mode', 'preview',
-   'progress_bar', 'quality', 'right_side', 'save_as_gif', 'save_last_frame',
+   'partial_movie_dir', 'pixel_height', 'pixel_width', 'plugins', 'png_mode',
+   'preview', 'progress_bar', 'quality', 'right_side', 'save_as_gif', 'save_last_frame',
    'save_pngs', 'scene_names', 'show_in_file_browser', 'sound', 'tex_dir',
    'tex_template', 'tex_template_file', 'text_dir', 'top', 'transparent',
-   'upto_animation_number', 'use_js_renderer', 'verbosity', 'video_dir', 'write_all',
-   'write_to_movie']
+   'upto_animation_number', 'use_js_renderer', 'verbosity', 'video_dir',
+   'write_all', 'write_to_movie']
 
 
 A list of all CLI flags

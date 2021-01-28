@@ -39,7 +39,10 @@ def pytest_collection_modifyitems(config, items):
 
 @pytest.fixture(scope="session")
 def python_version():
-    return "python3" if sys.platform == "darwin" else "python"
+    # use the same python executable as it is running currently
+    # rather than randomly calling using python or python3, which
+    # may create problems.
+    return sys.executable
 
 
 @pytest.fixture
