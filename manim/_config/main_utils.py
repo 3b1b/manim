@@ -124,7 +124,7 @@ def _parse_args_cfg_subcmd(args: list) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Animation engine for explanatory math videos",
         prog="manim cfg",
-        epilog="Made with <3 by the manim community devs",
+        epilog="Made with <3 by the ManimCommunity devs",
     )
     subparsers = parser.add_subparsers(help="subcommand", dest="subcmd")
 
@@ -162,7 +162,7 @@ def _parse_args_plugins(args: list) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Utility command for managing plugins",
         prog="manim plugins",
-        epilog="Made with <3 by the manim community devs",
+        epilog="Made with <3 by the ManimCommunity devs",
         usage=("%(prog)s -h -l"),
     )
 
@@ -186,7 +186,7 @@ def _parse_args_no_subcmd(args: list) -> argparse.Namespace:
             "%(prog)s file [flags] [scene [scene ...]]\n"
             "       %(prog)s {cfg,init,plugins} [opts]\n"
         ),
-        epilog="Made with <3 by the manim community devs",
+        epilog="Made with <3 by the ManimCommunity devs",
     )
 
     parser.add_argument(

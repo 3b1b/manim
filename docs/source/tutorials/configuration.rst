@@ -441,4 +441,4 @@ A list of all CLI flags
      --progress_bar True/False
                            Display the progress bar
 
-   Made with <3 by the manim community devs
+   Made with <3 by the ManimCommunity devs

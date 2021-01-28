@@ -43,7 +43,7 @@ your available plugins, see the following help output:
     -h, --help    show this help message and exit
     -l, --list    Lists all available plugins
 
-    Made with <3 by the manim community devs
+    Made with <3 by the ManimCommunity devs
 
 You can list plugins as such:
 
