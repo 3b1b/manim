@@ -290,6 +290,21 @@ def find_intersection(p0, v0, p1, v1, threshold=1e-5):
     return p0 + ratio * v0
 
 
+def get_closest_point_on_line(a, b, p):
+    """
+        It returns point x such that
+        x is on line ab and xp is perpendicular to ab.
+        If x lies beyond ab line, then it returns nearest edge(a or b).
+    """
+    # x = b + t*(a-b) = t*a + (1-t)*b
+    t = np.dot(p - b, a - b) / np.dot(a - b, a - b)
+    if t < 0:
+        t = 0
+    if t > 1:
+        t = 1
+    return ((t * a) + ((1 - t) * b))
+
+
 def get_winding_number(points):
     total_angle = 0
     for p1, p2 in adjacent_pairs(points):
