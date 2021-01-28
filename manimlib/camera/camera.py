@@ -353,7 +353,11 @@ class Camera(object):
         if shader_wrapper.vert_indices is None:
             ibo = None
         else:
-            ibo = self.ctx.buffer(shader_wrapper.vert_indices.astype('i4').tobytes())
+            vert_index_data = shader_wrapper.vert_indices.astype('i4').tobytes()
+            if vert_index_data:
+                ibo = self.ctx.buffer(vert_index_data)
+            else:
+                ibo = None
 
         # Program and vertex array
         shader_program, vert_format = self.get_shader_program(shader_wrapper)
