@@ -3,7 +3,8 @@
 import os
 import argparse
 import typing
-from manim import constants
+import sys
+from manim import constants, __version__
 
 
 __all__ = ["parse_args"]
@@ -109,6 +110,9 @@ def parse_args(args: list) -> argparse.Namespace:
         return _parse_args_cfg_subcmd(args)
     elif subcmd == "plugins":
         return _parse_args_plugins(args)
+    elif args[1] == "--version":
+        print(f"Manim Community Edition v{ __version__ }")
+        sys.exit()
     # elif subcmd == some_other_future_subcmd:
     #     return _parse_args_some_other_subcmd(args)
     elif subcmd is None:
@@ -443,6 +447,12 @@ def _parse_args_no_subcmd(args: list) -> argparse.Namespace:
             "the latter is specified in the config"
         ),
         choices=constants.VERBOSITY_CHOICES,
+    )
+
+    parser.add_argument(
+        "--version",
+        action="store_true",
+        help="Print the current version of Manim you are using",
     )
 
     # Specify if the progress bar should be displayed

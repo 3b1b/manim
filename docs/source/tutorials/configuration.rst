@@ -437,6 +437,7 @@ A list of all CLI flags
      --custom_folders      Use the folders defined in the [custom_folders] section of the config file to define the output folder structure
      -v {DEBUG,INFO,WARNING,ERROR,CRITICAL}, --verbosity {DEBUG,INFO,WARNING,ERROR,CRITICAL}
                            Verbosity level. Also changes the ffmpeg log level unless the latter is specified in the config
+     --version             Print the current version of Manim you are using
      --progress_bar True/False
                            Display the progress bar
 
