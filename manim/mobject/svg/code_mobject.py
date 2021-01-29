@@ -292,7 +292,7 @@ class Code(VGroup):
                 return
         error = (
             f"From: {os.getcwd()}, could not find {self.file_name} at either "
-            + "of these locations: {possible_paths}"
+            + f"of these locations: {possible_paths}"
         )
         raise IOError(error)
 
