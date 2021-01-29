@@ -57,6 +57,9 @@ class Scene(object):
         # Items associated with interaction
         self.mouse_point = Point()
         self.mouse_drag_point = Point()
+        
+        self.mob_listners = []
+        self.mobjects_to_drag = []
 
         # Much nicer to work with deterministic scenes
         if self.random_seed is not None:
@@ -205,6 +208,9 @@ class Scene(object):
         """
         self.remove(*new_mobjects)
         self.mobjects += new_mobjects
+        for new_mob in new_mobjects:
+            for mob_listner in filter(lambda mob: mob.listen_to_events, reversed(new_mob.get_family())):
+                self.mob_listners.insert(0, mob_listner)
         return self
 
     def add_mobjects_among(self, values):
@@ -232,6 +238,9 @@ class Scene(object):
     def bring_to_back(self, *mobjects):
         self.remove(*mobjects)
         self.mobjects = list(mobjects) + self.mobjects
+        for new_mob in reversed(mobjects):
+            for mob_listner in filter(lambda mob: mob.listen_to_events, reversed(new_mob.get_family())):
+                self.mob_listners.append(mob_listner)
         return self
 
     def clear(self):
@@ -519,10 +528,7 @@ class Scene(object):
             in reversed order. So the top most mobject's event is called first.
             This helps in event bubbling.
         """
-        return filter(
-            lambda mob: mob.listen_to_events,
-            reversed(self.get_mobject_family_members())
-        )
+        return self.mob_listners
 
     def on_mouse_motion(self, point, d_point):
         self.mouse_point.move_to(point)
@@ -548,8 +554,7 @@ class Scene(object):
     def on_mouse_drag(self, point, d_point, buttons, modifiers):
         self.mouse_drag_point.move_to(point)
 
-        for mob_listener in self.get_event_listeners_mobjects():
-            if mob_listener.is_point_touching(point):
+        for mob_listener in self.mobjects_to_drag:
                 propagate_event = mob_listener.on_mouse_drag(point, d_point, buttons, modifiers)
                 if propagate_event is not None and propagate_event is False:
                     return
@@ -557,11 +562,17 @@ class Scene(object):
     def on_mouse_press(self, point, button, mods):
         for mob_listener in self.get_event_listeners_mobjects():
             if mob_listener.is_point_touching(point):
+                self.mobjects_to_drag.append(mob_listener)
+
+        for mob_listener in self.get_event_listeners_mobjects():
+            if mob_listener.is_point_touching(point):
                 propagate_event = mob_listener.on_mouse_press(point, button, mods)
                 if propagate_event is not None and propagate_event is False:
                     return
 
     def on_mouse_release(self, point, button, mods):
+        self.mobjects_to_drag = []
+
         for mob_listener in self.get_event_listeners_mobjects():
             if mob_listener.is_point_touching(point):
                 propagate_event = mob_listener.on_mouse_release(point, button, mods)
