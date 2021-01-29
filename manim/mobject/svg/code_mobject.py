@@ -206,7 +206,8 @@ class Code(VGroup):
             raise ValueError(
                 "Neither a code file nor a code string have been specified."
             )
-        self.style = self.style.lower()
+        if isinstance(self.style, str):
+            self.style = self.style.lower()
         self.gen_html_string()
         strati = self.html_string.find("background:")
         self.background_color = self.html_string[strati + 12 : strati + 19]
