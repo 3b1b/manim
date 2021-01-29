@@ -1454,7 +1454,4 @@ def register_font(font_file: typing.Union[str, Path]):
         assert manimpango.register_font(str(file_path))
         yield
     finally:
-        if sys.platform.startswith("linux"):
-            manimpango.unregister_font()
-        else:
-            manimpango.unregister_font(str(file_path))
+        manimpango.unregister_font(str(file_path))
