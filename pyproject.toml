@@ -44,7 +44,7 @@ watchdog = { version = "*", optional = true }
 jupyterlab = { version = "^3.0", optional = true }
 
 [tool.poetry.extras]
-js_renderer = ["grpcio","grpcio-tools","watchdog"]
+webgl_renderer = ["grpcio","grpcio-tools","watchdog"]
 jupyterlab = ["jupyterlab"]
 
 [tool.poetry.dev-dependencies]

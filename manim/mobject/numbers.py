@@ -3,6 +3,9 @@
 __all__ = ["DecimalNumber", "Integer", "Variable"]
 
 
+import copy
+import uuid
+from ..utils.family import extract_mobject_family_members
 from ..constants import *
 from ..mobject.svg.tex_mobject import MathTex, SingleStringMathTex
 from ..mobject.types.vectorized_mobject import VMobject
@@ -169,6 +172,20 @@ class DecimalNumber(VMobject):
         full_config.update(self.initial_config)
         full_config.update(config)
         new_decimal = DecimalNumber(number, **full_config)
+
+        if hasattr(self, "original_id"):
+            if not hasattr(self, "generated_original_ids"):
+                self.generated_original_ids = []
+            new_submobjects = extract_mobject_family_members(
+                new_decimal, only_those_with_points=True
+            )
+            while len(self.generated_original_ids) < len(new_submobjects):
+                self.generated_original_ids.append(str(uuid.uuid4()))
+            for new_submobject, generated_id in zip(
+                new_submobjects, self.generated_original_ids
+            ):
+                new_submobject.original_id = generated_id
+
         # Make sure last digit has constant height
         new_decimal.scale(self[-1].get_height() / new_decimal[-1].get_height())
         new_decimal.move_to(self, self.edge_to_fix)

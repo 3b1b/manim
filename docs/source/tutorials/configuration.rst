@@ -351,14 +351,14 @@ A list of all config options
    'custom_folders', 'disable_caching', 'dry_run', 'ffmpeg_loglevel', 'flush_cache',
    'frame_height', 'frame_rate', 'frame_size', 'frame_width', 'frame_x_radius',
    'frame_y_radius', 'from_animation_number', 'images_dir', 'input_file',
-   'js_renderer_path', 'leave_progress_bars', 'left_side', 'log_dir', 'log_to_file',
+   'leave_progress_bars', 'left_side', 'log_dir', 'log_to_file',
    'max_files_cached', 'media_dir', 'movie_file_extension', 'output_file',
    'partial_movie_dir', 'pixel_height', 'pixel_width', 'plugins', 'png_mode',
    'preview', 'progress_bar', 'quality', 'right_side', 'save_as_gif', 'save_last_frame',
    'save_pngs', 'scene_names', 'show_in_file_browser', 'sound', 'tex_dir',
    'tex_template', 'tex_template_file', 'text_dir', 'top', 'transparent',
-   'upto_animation_number', 'use_js_renderer', 'verbosity', 'video_dir',
-   'write_all', 'write_to_movie']
+   'upto_animation_number', 'use_webgl_renderer', 'verbosity', 'video_dir',
+   'webgl_renderer_path', 'webgl_updater_fps', 'write_all', 'write_to_movie']
 
 
 A list of all CLI flags
@@ -429,9 +429,11 @@ A list of all CLI flags
      -n FROM_ANIMATION_NUMBER, --from_animation_number FROM_ANIMATION_NUMBER
                            Start rendering at the specified animation index, instead of the first animation. If you pass in two comma separated values, e.g. '3,6', it will end
                            the rendering at the second value
-     --use_js_renderer     Render animations using the javascript frontend
-     --js_renderer_path JS_RENDERER_PATH
-                           Path to the javascript frontend
+     --use_webgl_renderer     Render animations using the WebGL frontend
+     --webgl_renderer_path WEBGL_RENDERER_PATH
+                           Path to the WebGL frontend
+     --webgl_updater_fps WEBGL_UPDATER_FPS
+                           Frame rate to use when generating keyframe data for animations that use updaters while using the WebGL frontend
      --config_file CONFIG_FILE
                            Specify the configuration file
      --custom_folders      Use the folders defined in the [custom_folders] section of the config file to define the output folder structure

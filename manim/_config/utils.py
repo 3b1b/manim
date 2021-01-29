@@ -262,7 +262,7 @@ class ManimConfig(MutableMapping):
         "from_animation_number",
         "images_dir",
         "input_file",
-        "js_renderer_path",
+        "webgl_renderer_path",
         "leave_progress_bars",
         "log_dir",
         "log_to_file",
@@ -286,7 +286,8 @@ class ManimConfig(MutableMapping):
         "tex_template_file",
         "text_dir",
         "upto_animation_number",
-        "use_js_renderer",
+        "use_webgl_renderer",
+        "webgl_updater_fps",
         "verbosity",
         "video_dir",
         "write_all",
@@ -508,7 +509,7 @@ class ManimConfig(MutableMapping):
             "disable_caching",
             "flush_cache",
             "custom_folders",
-            "use_js_renderer",
+            "use_webgl_renderer",
         ]:
             setattr(self, key, parser["CLI"].getboolean(key, fallback=False))
 
@@ -521,6 +522,7 @@ class ManimConfig(MutableMapping):
             # the next two must be set BEFORE digesting frame_width and frame_height
             "pixel_height",
             "pixel_width",
+            "webgl_updater_fps",
         ]:
             setattr(self, key, parser["CLI"].getint(key))
 
@@ -540,7 +542,7 @@ class ManimConfig(MutableMapping):
             "png_mode",
             "movie_file_extension",
             "background_color",
-            "js_renderer_path",
+            "webgl_renderer_path",
         ]:
             setattr(self, key, parser["CLI"].get(key, fallback="", raw=True))
 
@@ -623,7 +625,8 @@ class ManimConfig(MutableMapping):
             "scene_names",
             "verbosity",
             "background_color",
-            "use_js_renderer",
+            "use_webgl_renderer",
+            "webgl_updater_fps",
         ]:
             if hasattr(args, key):
                 attr = getattr(args, key)
@@ -1029,20 +1032,26 @@ class ManimConfig(MutableMapping):
             )
 
     @property
-    def use_js_renderer(self):
-        """Whether to use JS renderer or not (default)."""
-        return self._d["use_js_renderer"]
+    def use_webgl_renderer(self):
+        """Whether to use WebGL renderer or not (default)."""
+        return self._d["use_webgl_renderer"]
 
-    @use_js_renderer.setter
-    def use_js_renderer(self, val: bool) -> None:
-        self._d["use_js_renderer"] = val
+    @use_webgl_renderer.setter
+    def use_webgl_renderer(self, val: bool) -> None:
+        self._d["use_webgl_renderer"] = val
         if val:
             self["disable_caching"] = True
 
-    js_renderer_path = property(
-        lambda self: self._d["js_renderer_path"],
-        lambda self, val: self._d.__setitem__("js_renderer_path", val),
-        doc="Path to JS renderer.",
+    webgl_renderer_path = property(
+        lambda self: self._d["webgl_renderer_path"],
+        lambda self, val: self._d.__setitem__("webgl_renderer_path", val),
+        doc="Path to WebGL renderer.",
+    )
+
+    webgl_updater_fps = property(
+        lambda self: self._d["webgl_updater_fps"],
+        lambda self, val: self._d.__setitem__("webgl_updater_fps", val),
+        doc="Frame rate to use when generating keyframe data for animations that use updaters while using the WebGL frontend.",
     )
 
     media_dir = property(

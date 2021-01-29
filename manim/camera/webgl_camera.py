@@ -2,7 +2,7 @@ from .camera import Camera
 import copy
 
 
-class JsCamera(Camera):
+class WebGLCamera(Camera):
     def __init__(self, **kwargs):
         super().__init__(self, **kwargs)
         self.serialized_frame = []

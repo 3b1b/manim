@@ -106,6 +106,15 @@ class Mobject(Container):
         """
         return _AnimationBuilder(self)
 
+    def __deepcopy__(self, clone_from_id):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        clone_from_id[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, copy.deepcopy(v, clone_from_id))
+        result.original_id = str(id(self))
+        return result
+
     def __repr__(self):
         return str(self.name)
 
@@ -1352,9 +1361,11 @@ class _AnimationBuilder:
         self.overridden_animation = None
         self.mobject.generate_target()
         self.is_chaining = False
+        self.methods = []
 
     def __getattr__(self, method_name):
         method = getattr(self.mobject.target, method_name)
+        self.methods.append(method)
         has_overridden_animation = hasattr(method, "_override_animate")
 
         if (self.is_chaining and has_overridden_animation) or self.overridden_animation:
@@ -1381,7 +1392,7 @@ class _AnimationBuilder:
         if self.overridden_animation:
             return self.overridden_animation
 
-        return _MethodAnimation(self.mobject)
+        return _MethodAnimation(self.mobject, self.methods)
 
 
 def override_animate(method):

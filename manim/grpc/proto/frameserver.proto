@@ -23,20 +23,32 @@ message Scene {
 message Animation {
     string name = 1;
     float duration = 2;
+    string easing_function = 3;
+
+    message AttributeTweenData {
+        string attribute = 1;
+        repeated float start_data = 2;
+        repeated float end_data = 3;
+    }
+    repeated AttributeTweenData attribute_tween_data = 4;
+
+    message MobjectTweenData {
+        string id = 1;
+        repeated float root_mobject_offset = 2;
+    }
+    repeated MobjectTweenData mobject_tween_data = 5;
+    repeated string flickered_mobject_ids = 6;
+}
+
+message Updater {
+    repeated string flickered_mobject_ids = 1;
 }
 
 message FrameRequest {
-    float time_offset = 1;
-    int32 start_index = 2;
-    int32 end_index = 3;
-    int32 image_index = 4;
-
-    enum PreviewMode {
-      ALL = 0;
-      ANIMATION_RANGE = 1;
-      IMAGE = 2;
-    }
-    PreviewMode preview_mode = 5;
+    int32 end_index = 1;
+    bool first_request = 2;
+    int32 animation_index = 3;
+    float animation_offset = 4;
 }
 
 message Style {
@@ -54,7 +66,7 @@ message Point {
 }
 
 message MobjectData {
-    int64 id = 1;
+    string id = 1;
     Style style = 2;
     enum MobjectType {
         VMOBJECT = 0;
@@ -63,6 +75,7 @@ message MobjectData {
     MobjectType type = 3;
     VMobjectData vectorized_mobject_data = 4;
     ImageMobjectData image_mobject_data = 5;
+    repeated float root_mobject_offset = 6;
 }
 
 message VMobjectData {
@@ -77,15 +90,20 @@ message ImageMobjectData {
     Point center = 4;
 }
 
+message FrameData {
+    repeated string remove = 1;
+    repeated MobjectData add = 2;
+    repeated MobjectData update = 3;
+}
+
 message FrameResponse {
-    repeated MobjectData mobjects = 1;
-    bool frame_pending = 2;
-    bool animation_finished = 3;
-    bool scene_finished = 4;
-    float duration = 5;
-    repeated string animations = 6;
-    int32 animation_index = 7;
-    float animation_offset = 8;
+    FrameData frame_data = 1;
+    bool scene_finished = 2;
+    repeated Animation animations = 3;
+    repeated Updater updaters = 4;
+    int32 animation_index = 5;
+    float animation_offset = 6;
+    bool all_animations_tweened = 7;
 }
 
 message EmptyRequest {}

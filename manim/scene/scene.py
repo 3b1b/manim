@@ -112,6 +112,7 @@ class Scene(Container):
             if k == "camera_class":
                 setattr(result, k, v)
             setattr(result, k, copy.deepcopy(v, clone_from_id))
+        result.mobject_updater_lists = []
 
         # Update updaters
         for mobject in self.mobjects:
@@ -153,7 +154,10 @@ class Scene(Container):
                     tuple(cloned_closure),
                 )
                 cloned_updaters.append(cloned_updater)
-            clone_from_id[id(mobject)].updaters = cloned_updaters
+            mobject_clone = clone_from_id[id(mobject)]
+            mobject_clone.updaters = cloned_updaters
+            if len(cloned_updaters) > 0:
+                result.mobject_updater_lists.append((mobject_clone, cloned_updaters))
         return result
 
     def render(self):
@@ -607,9 +611,9 @@ class Scene(Container):
         kwargs with kwargs passed to play().
         Parameters
         ----------
-        *animations : Tuple[:class:`Animation`]
+        *args : Tuple[:class:`Animation`]
             Animations to be played.
-        **play_kwargs
+        **kwargs
             Configuration for the call to play().
         Returns
         -------
