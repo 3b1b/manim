@@ -29,14 +29,14 @@ def check_and_fix_percent_bug(sym):
     # The svg path for percent symbols have a known bug, so this
     # checks if the symbol is (probably) a percentage sign, and
     # splits it so that it's displayed properly.
-    if len(sym.get_points()) not in [315, 324, 468, 483] or len(sym.get_subpaths()) != 4:
+    if len(sym.get_points()) not in [315, 324, 372, 468, 483] or len(sym.get_subpaths()) != 4:
         return
 
     sym = sym.family_members_with_points()[0]
     new_sym = VMobject()
     path_lengths = [len(path) for path in sym.get_subpaths()]
     sym_points = sym.get_points()
-    if len(sym_points) in [315, 324]:
+    if len(sym_points) in [315, 324, 372]:
         n = sum(path_lengths[:2])
         p1 = sym_points[:n]
         p2 = sym_points[n:]

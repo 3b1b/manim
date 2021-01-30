@@ -218,12 +218,8 @@ class Mobject(object):
         return self
 
     def is_point_touching(self, point, buff=MED_SMALL_BUFF):
-        self.refresh_bounding_box()
         bb = self.get_bounding_box()
-        if np.all(point >= (bb[0] - buff)) and np.all(point <= (bb[2] + buff)):
-            return True
-        else:
-            return False
+        return np.all(point >= (bb[0] - buff)) and np.all(point <= (bb[2] + buff))
 
     # Family matters
 

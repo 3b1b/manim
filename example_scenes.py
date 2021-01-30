@@ -414,7 +414,7 @@ class ControlsExample(Scene):
         def text_updater(old_text):
             assert(isinstance(old_text, Text))
             new_text = Text(self.textbox.get_value(), size=old_text.size)
-            new_text.align_data_and_family(old_text)
+            # new_text.align_data_and_family(old_text)
             new_text.move_to(old_text)
             if self.checkbox.get_value():
                 new_text.set_fill(
@@ -424,14 +424,13 @@ class ControlsExample(Scene):
             else:
                 new_text.set_opacity(0)
             old_text.become(new_text)
-        
+
         text.add_updater(text_updater)
 
         self.add(MotionMobject(text))
 
         self.textbox.set_value("Manim")
-        self.wait(60)
-        self.embed()
+        # self.embed()
 
 
 # See https://github.com/3b1b/videos for many, many more

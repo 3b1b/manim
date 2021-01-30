@@ -25,4 +25,5 @@ dependencies:
     - validators
     - ipython
     - PyOpenGL
+    - pycairo
 

@@ -26,9 +26,10 @@ class MotionMobject(Mobject):
         super().__init__(**kwargs)
         assert(isinstance(mobject, Mobject))
         self.mobject = mobject
-        self.mobject.add_updater(lambda mob: None) # To avoid locking it as static mobject
         self.mobject.listen_to_events = True
         self.mobject.on_mouse_drag = self.mob_on_mouse_drag
+        # To avoid locking it as static mobject
+        self.mobject.add_updater(lambda mob: None)
         self.add(mobject)
 
     def mob_on_mouse_drag(self, point, d_point, buttons, modifiers):
@@ -38,7 +39,7 @@ class MotionMobject(Mobject):
 
 class Button(Mobject):
     """
-        Pass any mobject and register an on_click method 
+        Pass any mobject and register an on_click method
     """
 
     def __init__(self, mobject, on_click, **kwargs):
@@ -65,7 +66,8 @@ class ContolMobject(ValueTracker):
         super().__init__(value=value, **kwargs)
         self.add(*mobjects)
 
-        self.add_updater(lambda mob: None) # To avoid lock_static_mobject_data while waiting in scene
+        # To avoid lock_static_mobject_data while waiting in scene
+        self.add_updater(lambda mob: None)
         self.fix_in_frame()
 
     def set_value(self, value):
@@ -80,6 +82,7 @@ class ContolMobject(ValueTracker):
     def set_value_anim(self, value):
         # To be implemented in subclasses
         pass
+
 
 class EnableDisableButton(ContolMobject):
     CONFIG = {
@@ -99,12 +102,12 @@ class EnableDisableButton(ContolMobject):
         super().__init__(value, self.box, **kwargs)
 
     def assert_value(self, value):
-        assert(value == True or value == False)
+        assert(isinstance(value, bool))
 
     def set_value_anim(self, value):
-        if value == True:
+        if value:
             self.box.set_fill(self.enable_color)
-        elif value == False:
+        else:
             self.box.set_fill(self.disable_color)
 
     def toggle_value(self):
@@ -142,15 +145,15 @@ class Checkbox(ContolMobject):
         super().__init__(value, self.box, self.box_content, **kwargs)
 
     def assert_value(self, value):
-        assert(value == True or value == False)
+        assert(isinstance(value, bool))
 
     def toggle_value(self):
         super().set_value(not self.get_value())
 
     def set_value_anim(self, value):
-        if value == True:
+        if value:
             self.box_content.become(self.get_checkmark())
-        elif value == False:
+        else:
             self.box_content.become(self.get_cross())
 
     def on_mouse_press(self, point, button, mods):
@@ -190,7 +193,6 @@ class LinearNumberSlider(ContolMobject):
         "listen_to_events": False,
 
         "value_type": np.float64,
-        
         "min_value": -10.0,
         "max_value": 10.0,
         "step": 1.0,
@@ -246,6 +248,7 @@ class LinearNumberSlider(ContolMobject):
         value_nearest_to_step = self.min_value + no_of_steps * self.step
         return value_nearest_to_step
 
+
 class ColorSliders(Group):
     CONFIG = {
         "sliders_kwargs": {},
@@ -266,7 +269,7 @@ class ColorSliders(Group):
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
 
-        rgb_kwargs = {"value": self.default_rgb_value,"min_value": 0, "max_value": 255, "step": 1}
+        rgb_kwargs = {"value": self.default_rgb_value, "min_value": 0, "max_value": 255, "step": 1}
         a_kwargs = {"value": self.default_a_value, "min_value": 0, "max_value": 1, "step": 0.04}
 
         self.r_slider = LinearNumberSlider(**self.sliders_kwargs, **rgb_kwargs)
@@ -380,12 +383,16 @@ class Textbox(ContolMobject):
         self.update_text(value)
 
     def update_text(self, value):
-        self.remove(self.text)
-        self.text.__init__(value, **self.text_kwargs)
-        self.text.set_width(self.box.get_width() - 2*self.text_buff, stretch=True)
-        self.text.add_updater(lambda mob: mob.move_to(self.box))
-        self.text.fix_in_frame()
-        self.add(self.text)
+        text = self.text
+        self.remove(text)
+        text.__init__(value, **self.text_kwargs)
+        height = text.get_height()
+        text.set_width(self.box.get_width() - 2 * self.text_buff)
+        if text.get_height() > height:
+            text.set_height(height)
+        text.add_updater(lambda mob: mob.move_to(self.box))
+        text.fix_in_frame()
+        self.add(text)
 
     def active_anim(self, isActive):
         if isActive:
@@ -413,12 +420,14 @@ class Textbox(ContolMobject):
             elif symbol == PygletWindowKeys.TAB:
                 new_value = old_value + '\t'
             elif symbol == PygletWindowKeys.BACKSPACE:
-                new_value = old_value[:-1] or ''       
+                new_value = old_value[:-1] or ''
             self.set_value(new_value)
             return False
 
+
 class ControlPanel(Group):
-    CONFIG = {        
+    CONFIG = {
+        "listen_to_events": True,
         "panel_kwargs": {
             "width": FRAME_WIDTH / 4,
             "height": MED_SMALL_BUFF + FRAME_HEIGHT,
@@ -482,7 +491,7 @@ class ControlPanel(Group):
             direction=UP,
             buff=MED_SMALL_BUFF
         )
-        
+
         self.controls.set_x(controls_old_x)
 
     def add_controls(self, *new_controls):
@@ -516,4 +525,3 @@ class ControlPanel(Group):
         factor = 10 * offset[1]
         self.controls.set_y(self.controls.get_y() + factor)
         return False
-
