@@ -78,7 +78,7 @@ class FrameServer(frameserver_pb2_grpc.FrameServerServicer):
             try:
                 sp.Popen(config["webgl_renderer_path"])
             except PermissionError:
-                logger.info(JS_RENDERER_INFO)
+                logger.info(WEBGL_RENDERER_INFO)
                 self.server.stop(None)
                 return
 
