@@ -16,6 +16,81 @@ import networkx as nx
 import numpy as np
 
 
+def _determine_graph_layout(
+    nx_graph: nx.classes.graph.Graph,
+    layout: Union[str, dict] = "spring",
+    layout_scale: float = 2,
+    layout_config: Union[dict, None] = None,
+    partitions: Union[List[List[Hashable]], None] = None,
+    root_vertex: Union[Hashable, None] = None,
+) -> dict:
+    automatic_layouts = {
+        "circular": nx.layout.circular_layout,
+        "kamada_kawai": nx.layout.kamada_kawai_layout,
+        "planar": nx.layout.planar_layout,
+        "random": nx.layout.random_layout,
+        "shell": nx.layout.shell_layout,
+        "spectral": nx.layout.spectral_layout,
+        "partite": nx.layout.multipartite_layout,
+        "tree": _tree_layout,
+        "spiral": nx.layout.spiral_layout,
+        "spring": nx.layout.spring_layout,
+    }
+
+    custom_layouts = ["random", "partite", "tree"]
+
+    if layout_config is None:
+        layout_config = {}
+
+    if isinstance(layout, dict):
+        return layout
+    elif layout in automatic_layouts and layout not in custom_layouts:
+        auto_layout = automatic_layouts[layout](
+            nx_graph, scale=layout_scale, **layout_config
+        )
+        return dict([(k, np.append(v, [0])) for k, v in auto_layout.items()])
+    elif layout == "tree":
+        return _tree_layout(
+            nx_graph,
+            root_vertex=root_vertex,
+            scale=layout_scale,
+        )
+    elif layout == "partite":
+        if partitions is None or len(partitions) == 0:
+            raise ValueError(
+                "The partite layout requires the 'partitions' parameter to contain the partition of the vertices"
+            )
+        partition_count = len(partitions)
+        for i in range(partition_count):
+            for v in partitions[i]:
+                if nx_graph.nodes[v] is None:
+                    raise ValueError(
+                        "The partition must contain arrays of vertices in the graph"
+                    )
+                nx_graph.nodes[v]["subset"] = i
+        # Add missing vertices to their own side
+        for v in nx_graph.nodes:
+            if "subset" not in nx_graph.nodes[v]:
+                nx_graph.nodes[v]["subset"] = partition_count
+
+        auto_layout = automatic_layouts["partite"](
+            nx_graph, scale=layout_scale, **layout_config
+        )
+        return dict([(k, np.append(v, [0])) for k, v in auto_layout.items()])
+    elif layout == "random":
+        # the random layout places coordinates in [0, 1)
+        # we need to rescale manually afterwards...
+        auto_layout = automatic_layouts["random"](nx_graph, **layout_config)
+        for k, v in auto_layout.items():
+            auto_layout[k] = 2 * layout_scale * (v - np.array([0.5, 0.5]))
+        return dict([(k, np.append(v, [0])) for k, v in auto_layout.items()])
+    else:
+        raise ValueError(
+            f"The layout '{layout}' is neither a recognized automatic layout, "
+            "nor a vertex placement dictionary."
+        )
+
+
 def _tree_layout(
     G: nx.classes.graph.Graph,
     root_vertex: Union[Hashable, None],
@@ -289,77 +364,14 @@ class Graph(VMobject):
         nx_graph.add_edges_from(edges)
         self._graph = nx_graph
 
-        automatic_layouts = {
-            "circular": nx.layout.circular_layout,
-            "kamada_kawai": nx.layout.kamada_kawai_layout,
-            "planar": nx.layout.planar_layout,
-            "random": nx.layout.random_layout,
-            "shell": nx.layout.shell_layout,
-            "spectral": nx.layout.spectral_layout,
-            "partite": nx.layout.multipartite_layout,
-            "tree": _tree_layout,
-            "spiral": nx.layout.spiral_layout,
-            "spring": nx.layout.spring_layout,
-        }
-
-        custom_layouts = ["random", "partite", "tree"]
-
-        if layout_config is None:
-            layout_config = {}
-
-        if isinstance(layout, dict):
-            self._layout = layout
-        elif layout in automatic_layouts and layout not in custom_layouts:
-            self._layout = automatic_layouts[layout](
-                nx_graph, scale=layout_scale, **layout_config
-            )
-            self._layout = dict(
-                [(k, np.append(v, [0])) for k, v in self._layout.items()]
-            )
-        elif layout == "tree":
-            self._layout = automatic_layouts[layout](
-                nx_graph,
-                root_vertex=root_vertex,
-                scale=layout_scale,
-            )
-        elif layout == "partite":
-            if partitions is None or len(partitions) == 0:
-                raise ValueError(
-                    "The partite layout requires the 'partitions' parameter to contain the partition of the vertices"
-                )
-            partition_count = len(partitions)
-            for i in range(partition_count):
-                for v in partitions[i]:
-                    if nx_graph.nodes[v] is None:
-                        raise ValueError(
-                            "The partition must contain arrays of vertices in the graph"
-                        )
-                    nx_graph.nodes[v]["subset"] = i
-            # Add missing vertices to their own side
-            for v in nx_graph.nodes:
-                if "subset" not in nx_graph.nodes[v]:
-                    nx_graph.nodes[v]["subset"] = partition_count
-
-            self._layout = automatic_layouts["partite"](
-                nx_graph, scale=layout_scale, **layout_config
-            )
-            self._layout = dict(
-                [(k, np.append(v, [0])) for k, v in self._layout.items()]
-            )
-        elif layout == "random":
-            # the random layout places coordinates in [0, 1)
-            # we need to rescale manually afterwards...
-            self._layout = automatic_layouts["random"](nx_graph, **layout_config)
-            for k, v in self._layout.items():
-                self._layout[k] = 2 * layout_scale * (v - np.array([0.5, 0.5]))
-            self._layout = dict(
-                [(k, np.append(v, [0])) for k, v in self._layout.items()]
-            )
-        else:
-            raise ValueError(
-                f"The layout '{layout}' is neither a recognized automatic layout, "
-                "nor a vertex placement dictionary."
-            )
+        self._layout = _determine_graph_layout(
+            nx_graph,
+            layout=layout,
+            layout_scale=layout_scale,
+            layout_config=layout_config,
+            partitions=partitions,
+            root_vertex=root_vertex,
+        )
 
         if isinstance(labels, dict):
             self._labels = labels
@@ -475,3 +487,43 @@ class Graph(VMobject):
 
         """
         return Graph(list(nxgraph.nodes), list(nxgraph.edges), **kwargs)
+
+    def change_layout(
+        self,
+        layout: Union[str, dict] = "spring",
+        layout_scale: float = 2,
+        layout_config: Union[dict, None] = None,
+        partitions: Union[List[List[Hashable]], None] = None,
+        root_vertex: Union[Hashable, None] = None,
+    ) -> "Graph":
+        """Change the layout of this graph.
+
+        See the documentation of :class:`~.Graph` for details about the
+        keyword arguments.
+
+        Examples
+        --------
+
+        .. manim:: ChangeGraphLayout
+
+            class ChangeGraphLayout(Scene):
+                def construct(self):
+                    G = Graph([1, 2, 3, 4, 5], [(1, 2), (2, 3), (3, 4), (4, 5)],
+                              layout={1: [-2, 0, 0], 2: [-1, 0, 0], 3: [0, 0, 0],
+                                      4: [1, 0, 0], 5: [2, 0, 0]}
+                              )
+                    self.play(ShowCreation(G))
+                    self.play(G.animate.change_layout("circular"))
+                    self.wait()
+        """
+        self._layout = _determine_graph_layout(
+            self._graph,
+            layout=layout,
+            layout_scale=layout_scale,
+            layout_config=layout_config,
+            partitions=partitions,
+            root_vertex=root_vertex,
+        )
+        for v in self.vertices:
+            self[v].move_to(self._layout[v])
+        return self
