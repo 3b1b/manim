@@ -35,6 +35,15 @@ Then, to render a scene `CircleToSquare` in a file `test_scenes.py`, call
 $ docker exec -it --user="$(id -u):$(id -g)" my-manim-container manim test.py CircleToSquare -qm
 ```
 
+## Jupyterlab
+Another alternative is to use the docker image to spin up a local webserver running
+JupyterLab in whose Python kernel manim is installed and can be accessed via the `%%manim` cell magic.
+To use JupyterLab, run
+```
+$ docker run -it -p 8888:8888 manimcommunity/manim jupyter lab --ip=0.0.0.0
+```
+and then follow the instructions in the terminal.
+
 # Important notes
 When executing `manim` within a Docker container, several command line flags (in particular `-p` (preview file) and `-f` (show output file in the file browser)) are not supported.
 

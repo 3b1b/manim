@@ -16,6 +16,10 @@ Enjoy this taste of Manim!
    the modules :mod:`~.tex_mobject`, :mod:`~.geometry`, :mod:`~.moving_camera_scene`,
    and many more.
 
+   Check out our `interactive Jupyter environment <https://mybinder.org/v2/gist/behackl/725d956ec80969226b7bf9b4aef40b78/HEAD?filepath=basic%20example%20scenes.ipynb>`_
+   which allows running the examples online, without requiring a local
+   installation.
+
    Also, visit our `Twitter <https://twitter.com/manim_community/>`_ for more
    *manimations*!
 
