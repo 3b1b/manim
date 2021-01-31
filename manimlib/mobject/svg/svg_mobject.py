@@ -354,8 +354,10 @@ class VMobjectFromSVGPathstring(VMobject):
         super().__init__(**kwargs)
 
     def init_points(self):
-        # TODO, move this caching operation
-        # higher up to Mobject somehow.
+        # After a given svg_path has been converted into points, the result
+        # will be saved to a file, as will the trianulgation of the path,
+        # so that future calls for the same path don't need to retrace
+        # the same computation.
         hasher = hashlib.sha256(self.path_string.encode())
         path_hash = hasher.hexdigest()[:16]
         points_filepath = os.path.join(get_mobject_data_dir(), f"{path_hash}_points.npy")
