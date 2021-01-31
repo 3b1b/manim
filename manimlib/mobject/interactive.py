@@ -22,21 +22,19 @@ class MotionMobject(Mobject):
         You could hold and drag this object to any position
     """
 
-    CONFIG = {
-        "listen_to_events": True
-    }
-
     def __init__(self, mobject, **kwargs):
         super().__init__(**kwargs)
+        assert(isinstance(mobject, Mobject))
         self.mobject = mobject
+        self.mobject.listen_to_events = True
+        self.mobject.on_mouse_drag = self.mob_on_mouse_drag
         # To avoid locking it as static mobject
         self.mobject.add_updater(lambda mob: None)
         self.add(mobject)
 
-    def on_mouse_drag(self, point, d_point, buttons, modifiers):
-        if self.mobject.is_point_touching(point):
-            self.mobject.move_to(point)
-            return False
+    def mob_on_mouse_drag(self, point, d_point, buttons, modifiers):
+        self.mobject.move_to(point)
+        return False
 
 
 class Button(Mobject):
@@ -44,19 +42,17 @@ class Button(Mobject):
         Pass any mobject and register an on_click method
     """
 
-    CONFIG = {
-        "listen_to_events": True
-    }
-
     def __init__(self, mobject, on_click, **kwargs):
         super().__init__(**kwargs)
-        self.mobject, self.on_click = mobject, on_click
+        self.on_click = on_click
+        self.mobject = mobject
+        self.mobject.listen_to_events = True
+        self.mobject.on_mouse_press = self.mob_on_mouse_press
         self.add(self.mobject)
 
-    def on_mouse_press(self, point, button, mods):
-        if self.mobject.is_point_touching(point):
-            self.on_click()
-            return False
+    def mob_on_mouse_press(self, point, button, mods):
+        self.on_click()
+        return False
 
 
 # Controls
@@ -193,6 +189,9 @@ class Checkbox(ContolMobject):
 
 class LinearNumberSlider(ContolMobject):
     CONFIG = {
+        # Since, only slider circle listnes to drag event
+        "listen_to_events": False,
+
         "value_type": np.float64,
         "min_value": -10.0,
         "max_value": 10.0,
@@ -222,6 +221,9 @@ class LinearNumberSlider(ContolMobject):
         self.slider_axis.set_opacity(0.0)
         self.slider.move_to(self.slider_axis)
 
+        self.slider.listen_to_events = True
+        self.slider.on_mouse_drag = self.slider_on_mouse_drag
+
         super().__init__(value, self.bar, self.slider, self.slider_axis, ** kwargs)
 
     def assert_value(self, value):
@@ -231,10 +233,9 @@ class LinearNumberSlider(ContolMobject):
         prop = (value - self.min_value) / (self.max_value - self.min_value)
         self.slider.move_to(self.slider_axis.point_from_proportion(prop))
 
-    def on_mouse_drag(self, point, d_point, buttons, modifiers):
-        if self.slider.is_point_touching(point):
-            self.set_value(self.get_value_from_point(point))
-            return False
+    def slider_on_mouse_drag(self, point, d_point, buttons, modifiers):
+        self.set_value(self.get_value_from_point(point))
+        return False
 
     # Helper Methods
 
@@ -371,6 +372,8 @@ class Textbox(ContolMobject):
         digest_config(self, kwargs)
         self.isActive = self.isInitiallyActive
         self.box = Rectangle(**self.box_kwargs)
+        self.box.listen_to_events = True
+        self.box.on_mouse_press = self.box_on_mouse_press
         self.text = Text(value, **self.text_kwargs)
         super().__init__(value, self.box, self.text, **kwargs)
         self.update_text(value)
@@ -397,11 +400,10 @@ class Textbox(ContolMobject):
         else:
             self.box.set_stroke(self.deactive_color)
 
-    def on_mouse_press(self, point, button, mods):
-        if self.box.is_point_touching(point):
-            self.isActive = not self.isActive
-            self.active_anim(self.isActive)
-            return False
+    def box_on_mouse_press(self, point, button, mods):
+        self.isActive = not self.isActive
+        self.active_anim(self.isActive)
+        return False
 
     def on_key_press(self, symbol, modifiers):
         char = chr(symbol)
@@ -425,7 +427,6 @@ class Textbox(ContolMobject):
 
 class ControlPanel(Group):
     CONFIG = {
-        "listen_to_events": True,
         "panel_kwargs": {
             "width": FRAME_WIDTH / 4,
             "height": MED_SMALL_BUFF + FRAME_HEIGHT,
@@ -451,6 +452,8 @@ class ControlPanel(Group):
         self.panel = Rectangle(**self.panel_kwargs)
         self.panel.to_corner(UP + LEFT, buff=0)
         self.panel.shift(self.panel.get_height() * UP)
+        self.panel.listen_to_events = True
+        self.panel.on_mouse_scroll = self.panel_on_mouse_scroll
 
         self.panel_opener_rect = Rectangle(**self.opener_kwargs)
         self.panel_info_text = Text(**self.opener_text_kwargs)
@@ -458,6 +461,8 @@ class ControlPanel(Group):
 
         self.panel_opener = Group(self.panel_opener_rect, self.panel_info_text)
         self.panel_opener.next_to(self.panel, DOWN, aligned_edge=DOWN)
+        self.panel_opener.listen_to_events = True
+        self.panel_opener.on_mouse_drag = self.panel_opener_on_mouse_drag
 
         self.controls = Group(*controls)
         self.controls.arrange(DOWN, center=False, aligned_edge=ORIGIN)
@@ -510,14 +515,12 @@ class ControlPanel(Group):
         self.move_panel_and_controls_to_panel_opener()
         return self
 
-    def on_mouse_drag(self, point, d_point, buttons, modifiers):
-        if self.panel_opener.is_point_touching(point):
-            self.panel_opener.match_y(Dot(point))
-            self.move_panel_and_controls_to_panel_opener()
-            return False
+    def panel_opener_on_mouse_drag(self, point, d_point, buttons, modifiers):
+        self.panel_opener.match_y(Dot(point))
+        self.move_panel_and_controls_to_panel_opener()
+        return False
 
-    def on_mouse_scroll(self, point, offset):
-        if self.panel.is_point_touching(point):
-            factor = 10 * offset[1]
-            self.controls.set_y(self.controls.get_y() + factor)
-            return False
+    def panel_on_mouse_scroll(self, point, offset):
+        factor = 10 * offset[1]
+        self.controls.set_y(self.controls.get_y() + factor)
+        return False
