@@ -27,6 +27,18 @@ CLOSED_THRESHOLD: float = 0.001
 def bezier(
     points: np.ndarray,
 ) -> typing.Callable[[float], typing.Union[int, typing.Iterable]]:
+    """Classic implementation of a bezier curve.
+
+    Parameters
+    ----------
+    points : np.ndarray
+        points defining the desired bezier curve.
+
+    Returns
+    -------
+    typing.Callable[[float], typing.Union[int, typing.Iterable]]
+        function describing the bezier curve.
+    """
     n = len(points) - 1
     return lambda t: sum(
         [
@@ -37,14 +49,24 @@ def bezier(
 
 
 def partial_bezier_points(points: np.ndarray, a: float, b: float) -> np.ndarray:
-    """
-    Given an array of points which define
-    a bezier curve, and two numbers 0<=a<b<=1,
-    return an array of the same size, which
-    describes the portion of the original bezier
-    curve on the interval [a, b].
+    """Given an array of points which define bezier curve, and two numbers 0<=a<b<=1, return an array of the same size,
+    which describes the portion of the original bezier curve on the interval [a, b].
 
     This algorithm is pretty nifty, and pretty dense.
+
+    Parameters
+    ----------
+    points : np.ndarray
+        set of points defining the bezier curve.
+    a : float
+        lower bound of the desired partial bezier curve.
+    b : float
+        upper bound of the desired partial bezier curve.
+
+    Returns
+    -------
+    np.ndarray
+        Set of points defining the partial bezier curve.
     """
     if a == 1:
         return [points[-1]] * len(points)
@@ -104,6 +126,19 @@ def match_interpolate(
 def get_smooth_handle_points(
     points: np.ndarray,
 ) -> typing.Tuple[np.ndarray, np.ndarray]:
+    """Given some anchors (points), compute handles so the resulting bezier curve is smooth.
+
+    Parameters
+    ----------
+    points : np.ndarray
+        Anchors.
+
+    Returns
+    -------
+    typing.Tuple[np.ndarray, np.ndarray]
+        Computed handles.
+    """
+    # NOTE points here are anchors.
     points = np.array(points)
     num_handles = len(points) - 1
     dim = points.shape[1]

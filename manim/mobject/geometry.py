@@ -919,6 +919,7 @@ class CubicBezier(VMobject):
 class Polygon(VMobject):
     def __init__(self, *vertices, color=BLUE, **kwargs):
         VMobject.__init__(self, color=color, **kwargs)
+        # There are actually four corners, and the first one is repeated twice to form the four vertices.
         self.set_points_as_corners([*vertices, vertices[0]])
 
     def get_vertices(self):
