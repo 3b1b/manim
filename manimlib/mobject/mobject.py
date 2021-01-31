@@ -1248,6 +1248,7 @@ class Mobject(object):
         for sm1, sm2 in zip(self.get_family(), mobject.get_family()):
             sm1.set_data(sm2.data)
             sm1.set_uniforms(sm2.uniforms)
+        self.refresh_bounding_box(recurse_down=True)
         return self
 
     # Locking data
