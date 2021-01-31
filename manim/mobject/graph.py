@@ -431,14 +431,11 @@ class Graph(VMobject):
         self.add(*self.vertices.values())
         self.add(*self.edges.values())
 
-        for (u, v), edge in self.edges.items():
+        def update_edges(graph):
+            for (u, v), edge in graph.edges.items():
+                edge.put_start_and_end_on(graph[u].get_center(), graph[v].get_center())
 
-            def update_edge(e, u=u, v=v):
-                e.set_start_and_end_attrs(self[u].get_center(), self[v].get_center())
-                e.generate_points()
-
-            update_edge(edge)
-            edge.add_updater(update_edge)
+        self.add_updater(update_edges)
 
     def __getitem__(self: "Graph", v: Hashable) -> "Mobject":
         return self.vertices[v]
