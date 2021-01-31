@@ -28,28 +28,57 @@ SquareToCircle
 This scene is what we wrote in :doc:`quickstart`.
 No more explanation here
 
-WarpSquare
-----------
+AnimatingMethods
+----------------
 
-.. manim-example:: WarpSquare
-   :media: ../_static/example_scenes/WarpSquare.mp4
+.. manim-example:: AnimatingMethods
+    :media: ../_static/example_scenes/AnimatingMethods.mp4
 
-   class WarpSquare(Scene):
-       def construct(self):
-           square = Square()
-           self.play(square.apply_complex_function, np.exp)
-           self.wait()
+    class AnimatingMethods(Scene):
+        def construct(self):
+            grid = Tex(r"\pi").get_grid(10, 10, height=4)
+            self.add(grid)
 
-The new usage in this scene is ``self.play(square.apply_complex_function, np.exp)``, 
-which shows an animation of applying a complex function :math:`f(z)=e^z` to a square. 
-It is equivalent to transforming the original square into the result after 
-applying a function.
+            # If you pass in a mobject method to the scene's "play" function,
+            # it will apply an animation interpolating between the mobject's
+            # initial state and whatever happens when you apply that method.
+            # For example, calling grid.shift(2 * LEFT) would shift it two units
+            # to the left, but the following line animates that motion.
+            self.play(grid.shift, 2 * LEFT)
+            # The same applies for any method, including those setting colors.
+            self.play(grid.set_submobject_colors_by_gradient, BLUE, GREEN)
+            self.play(grid.set_height, TAU - MED_SMALL_BUFF)
+            self.wait()
+
+            # The method Mobject.apply_complex_function lets you apply arbitrary
+            # complex functions, treating the points defining the mobject as
+            # complex numbers.
+            self.play(grid.apply_complex_function, np.exp, run_time=5)
+            self.wait()
+
+            # Even more generally, you could apply Mobject.apply_function,
+            # which takes in functions form R^3 to R^3
+            self.play(
+                grid.apply_function,
+                lambda p: [
+                    p[0] + 0.5 * math.sin(p[1]),
+                    p[1] + 0.5 * math.sin(p[0]),
+                    p[2]
+                ],
+                run_time=5,
+            )
+            self.wait()
+
+The new usage in this scene is ``.get_grid()`` and ``self.play(mob.method, args)``.
+
+- ``.get_grid()`` method will return a new mobject containing multiple copies of this one arranged in a grid.
+- ``self.play(mob.method, args)`` animate the method, and the details are in the comments above.
 
 TextExample
 -----------
 
 .. manim-example:: TextExample
-   :media: ../_static/example_scenes/TextExample.mp4
+    :media: ../_static/example_scenes/TextExample.mp4
 
     class TextExample(Scene):
         def construct(self):
@@ -99,7 +128,7 @@ TexTransformExample
 -------------------
 
 .. manim-example:: TexTransformExample
-   :media: ../_static/example_scenes/TexTransformExample.mp4
+    :media: ../_static/example_scenes/TexTransformExample.mp4
 
     class TexTransformExample(Scene):
         def construct(self):
@@ -220,7 +249,7 @@ UpdatersExample
 ---------------
 
 .. manim-example:: UpdatersExample
-   :media: ../_static/example_scenes/UpdatersExample.mp4
+    :media: ../_static/example_scenes/UpdatersExample.mp4
 
     class UpdatersExample(Scene):
         def construct(self):
@@ -289,10 +318,11 @@ UpdatersExample
             )
             self.wait(4 * PI)
 
-The new classes and usage in this scene are ``DecimalNumber``, ``.to_edge()``, 
-``.center()``, ``always_become()``, ``always()``, ``f_always()``, ``.set_y()`` and ``.add_updater()``.
+The new classes and usage in this scene are ``always_redraw()``, ``DecimalNumber``, ``.to_edge()``, 
+``.center()``, ``always()``, ``f_always()``, ``.set_y()`` and ``.add_updater()``.
 
-- ``DecimalNumber`` is a variable number, speed it up by breaking it into ``Tex`` characters.
+- ``always_redraw()`` function create a new mobject every frame.
+- ``DecimalNumber`` is a variable number, speed it up by breaking it into ``Text`` characters.
 - ``.to_edge()`` means to place the object on the edge of the screen.
 - ``.center()`` means to place the object in the center of the screen.
 - ``always(f, x)`` means that a certain function (``f(x)``) is executed every frame.
@@ -304,7 +334,7 @@ SurfaceExample
 --------------
 
 .. manim-example:: SurfaceExample
-   :media: ../_static/example_scenes/SurfaceExample.mp4
+    :media: ../_static/example_scenes/SurfaceExample.mp4
 
     class SurfaceExample(Scene):
         CONFIG = {
@@ -405,7 +435,7 @@ OpeningManimExample
 -------------------
 
 .. manim-example:: OpeningManimExample
-   :media: ../_static/example_scenes/OpeningManimExample.mp4
+    :media: ../_static/example_scenes/OpeningManimExample.mp4
 
     class OpeningManimExample(Scene):
         def construct(self):
