@@ -62,6 +62,10 @@ custom_default
     The directory for storing vector images to be used in the code (including 
     ``.svg`` and ``.xdv``), which will be read by ``SVGMobject``.
 
+- ``sounds``
+    The directory for storing sound files to be used in ``Scene.add_sound()`` (
+    including ``.wav`` and ``.mp3``).
+
 - ``temporary_storage``
     The directory for storing temporarily generated cache files, including 
     ``Tex`` cache, ``Text`` cache and storage of object points.
@@ -103,6 +107,16 @@ Import line that need to execute when entering interactive mode directly.
 The relative position of the playback window on the display (two characters, 
 the first character means upper(U) / middle(O) / lower(D), the second character 
 means left(L) / middle(O) / right(R)).
+
+``break_into_partial_movies``
+-----------------------------
+
+If this is set to ``True``, then many small files will be written corresponding 
+to each ``Scene.play`` and ``Scene.wait`` call, and these files will then be combined
+to form the full scene.  
+
+Sometimes video-editing is made easier when working with the broken up scene, which
+effectively has cuts at all the places you might want.
 
 ``camera_qualities``
 --------------------
