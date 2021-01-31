@@ -427,7 +427,6 @@ class Textbox(ContolMobject):
 
 class ControlPanel(Group):
     CONFIG = {
-        "listen_to_events": True,
         "panel_kwargs": {
             "width": FRAME_WIDTH / 4,
             "height": MED_SMALL_BUFF + FRAME_HEIGHT,
