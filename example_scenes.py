@@ -97,10 +97,62 @@ class OpeningManimExample(Scene):
         self.wait()
 
 
-class WarpSquare(Scene):
+class SquareToCircle(Scene):
     def construct(self):
+        circle = Circle()
+        circle.set_fill(BLUE, opacity=0.5)
+        circle.set_stroke(BLUE_E, width=4)
         square = Square()
-        self.play(square.apply_complex_function, np.exp)
+
+        self.play(ShowCreation(square))
+        self.wait()
+        self.play(ReplacementTransform(square, circle))
+        self.wait()
+
+        # This opens an iPython termnial where you can keep writing
+        # lines as if they were part of this construct method
+        self.embed()
+        # Try typing the following lines
+        # self.play(circle.stretch, 4, {"dim": 0})
+        # self.play(Rotate(circle, TAU / 4))
+        # self.play(circle.shift, 2 * RIGHT, circle.scale, 0.25)
+        # circle.insert_n_curves(10)
+        # self.play(circle.apply_complex_function, lambda z: z**2)
+
+
+class AnimatingMethods(Scene):
+    def construct(self):
+        grid = Tex(r"\pi").get_grid(10, 10, height=4)
+        self.add(grid)
+
+        # If you pass in a mobject method to the scene's "play" function,
+        # it will apply an animation interpolating between the mobject's
+        # initial state and whatever happens when you apply that method.
+        # For example, calling grid.shift(2 * LEFT) would shift it two units
+        # to the left, but the following line animates that motion.
+        self.play(grid.shift, 2 * LEFT)
+        # The same applies for any method, including those setting colors.
+        self.play(grid.set_submobject_colors_by_gradient, BLUE, GREEN)
+        self.play(grid.set_height, TAU - MED_SMALL_BUFF)
+        self.wait()
+
+        # The method Mobject.apply_complex_function lets you apply arbitrary
+        # complex functions, treating the points defining the mobject as
+        # complex numbers.
+        self.play(grid.apply_complex_function, np.exp, run_time=5)
+        self.wait()
+
+        # Even more generally, you could apply Mobject.apply_function,
+        # which takes in functions form R^3 to R^3
+        self.play(
+            grid.apply_function,
+            lambda p: [
+                p[0] + 0.5 * math.sin(p[1]),
+                p[1] + 0.5 * math.sin(p[0]),
+                p[2]
+            ],
+            run_time=5,
+        )
         self.wait()
 
 
@@ -144,34 +196,9 @@ class TextExample(Scene):
         self.wait()
 
 
-class SquareToCircle(Scene):
-    def construct(self):
-        circle = Circle()
-        circle.set_fill(BLUE, opacity=0.5)
-        circle.set_stroke(BLUE_E, width=4)
-        square = Square()
-
-        self.play(ShowCreation(square))
-        self.wait()
-        self.play(ReplacementTransform(square, circle))
-        self.wait()
-
-        # This opens an iPython termnial where you can keep writing
-        # lines as if they were part of this construct method
-        self.embed()
-        # Try typing the following lines
-        # self.play(circle.stretch, 4, {"dim": 0})
-        # self.play(Rotate(circle, TAU / 4))
-        # self.play(circle.shift, 2 * RIGHT, circle.scale, 0.25)
-        # circle.insert_n_curves(10)
-        # self.play(circle.apply_complex_function, lambda z: z**2)
-
-
 class TexTransformExample(Scene):
     def construct(self):
-        kw = {
-            "isolate": ["B", "C", "=", "(", ")"]
-        }
+        to_isolate = ["B", "C", "=", "(", ")"]
         lines = VGroup(
             # Surrounding substrings with double braces
             # will ensure that those parts are separated
@@ -181,12 +208,12 @@ class TexTransformExample(Scene):
             Tex("{{A^2}} + {{B^2}} = {{C^2}}"),
             Tex("{{A^2}} = {{C^2}} - {{B^2}}"),
             # Alternatively, you can pass in the keyword argument
-            # isolate with a list of strings that should be out as
+            # "isolate" with a list of strings that should be out as
             # their own submobject.  So both lines below are equivalent
             # to what you'd get by wrapping every instance of "B", "C"
             # "=", "(" and ")" with double braces
-            Tex("{{A^2}} = (C + B)(C - B)", **kw),
-            Tex("A = \\sqrt{(C + B)(C - B)}", **kw)
+            Tex("{{A^2}} = (C + B)(C - B)", isolate=to_isolate),
+            Tex("A = \\sqrt{(C + B)(C - B)}", isolate=to_isolate)
         )
         lines.arrange(DOWN, buff=LARGE_BUFF)
         for line in lines:
@@ -236,16 +263,23 @@ class TexTransformExample(Scene):
         )
         self.wait()
 
-        # And to finish off, a simple TransformMatchingShapes will do,
-        # though maybe we really want that exponent from A^2 to turn
-        # into the square root, we could use a key_map again.  Or,
-        # if we set fade_transform_mismatches to True, then it will
-        # line up mismatching submobjects and have them transform
-        # into each other
+        # And to finish off, a simple TransformMatchingShapes would work
+        # just fine.  But perhaps we want that exponent on A^2 to transform into
+        # the square root symbol.  At the moment, lines[2] treats the expression
+        # A^2 as a unit, so we might create a new version of the same line which
+        # separates out just the A.  This way, when TransformMatchingTex lines up
+        # all matching parts, the only mismatch will be between the "^2" from
+        # new_line2 and the "\sqrt" from the final line.  By passing in,
+        # transform_mismatches=True, it will transform this "^2" part into
+        # the "\sqrt" part.
+        new_line2 = Tex("{{A}}^2 = (C + B)(C - B)", isolate=to_isolate)
+        new_line2.replace(lines[2])
+        new_line2.match_style(lines[2])
+
         self.play(
             TransformMatchingTex(
-                lines[2].copy(), lines[3],
-                fade_transform_mismatches=True,
+                new_line2, lines[3],
+                transform_mismatches=True,
             ),
             **play_kw
         )
@@ -258,8 +292,8 @@ class TexTransformExample(Scene):
         # those of a target, regardless of the submobject hierarchy in
         # each one, according to whether those pieces have the same
         # shape (as best it can).
-        source = TexText("the morse code")
-        target = TexText("here come dots")
+        source = Text("the morse code", height=1)
+        target = Text("here come dots", height=1)
 
         self.play(Write(source))
         self.wait()
@@ -272,37 +306,70 @@ class TexTransformExample(Scene):
 
 class UpdatersExample(Scene):
     def construct(self):
-        decimal = DecimalNumber(
-            0,
-            show_ellipsis=True,
-            num_decimal_places=3,
-            include_sign=True,
-        )
         square = Square()
-        square.to_edge(UP)
+        square.set_fill(BLUE_E, 1)
+
+        # On all all frames, the constructor Brace(square, UP) will
+        # be called, and the mobject brace will set its data to match
+        # that of the newly constructed object
+        brace = always_redraw(Brace, square, UP)
+
+        text, number = label = VGroup(
+            Text("Width = "),
+            DecimalNumber(
+                0,
+                show_ellipsis=True,
+                num_decimal_places=2,
+                include_sign=True,
+            )
+        )
+        label.arrange(RIGHT)
 
         # This ensures that the method deicmal.next_to(square)
         # is called on every frame
-        always(decimal.next_to, square)
-        # This ensures thst decimal.set_value(square.get_y()) is
-        # called every frame
-        f_always(decimal.set_value, square.get_y)
+        always(label.next_to, brace, UP)
+        # You could also write the following equivalent line
+        # label.add_updater(lambda m: m.next_to(brace, UP))
 
-        self.add(square, decimal)
+        # If the argument itself might change, you can use f_always,
+        # for which the arguments following the initial Mobject method
+        # should be functions returning arguments to that method.
+        # The following line ensures thst decimal.set_value(square.get_y())
+        # is called every frame
+        f_always(number.set_value, square.get_width)
+        # You could also write the following equivalent line
+        # number.add_updater(lambda m: m.set_value(square.get_width()))
+
+        self.add(square, brace, label)
+
+        # Notice that the brace and label track with the square
         self.play(
-            square.to_edge, DOWN,
+            square.scale, 2,
+            rate_func=there_and_back,
+            run_time=2,
+        )
+        self.wait()
+        self.play(
+            square.set_width, 5, {"stretch": True},
             run_time=3,
         )
-        self.play(square.center)
+        self.wait()
+        self.play(
+            square.set_width, 2,
+            run_time=3
+        )
         self.wait()
 
-        # You can also add any function generally to a Mobject's
-        # list of 'updaters'.
+        # In general, you can alway call Mobject.add_updater, and pass in
+        # a function that you want to be called on every frame.  The function
+        # should take in either one argument, the mobject, or two arguments,
+        # the mobject and the amount of time since the last frame.
         now = self.time
+        w0 = square.get_width()
         square.add_updater(
-            lambda m: m.set_y(math.sin(self.time - now))
+            lambda m: m.set_width(w0 * math.cos(self.time - now))
         )
-        self.wait(10)
+        self.wait(4 * PI)
 
 
 class SurfaceExample(Scene):
@@ -430,7 +497,7 @@ class ControlsExample(Scene):
         self.add(MotionMobject(text))
 
         self.textbox.set_value("Manim")
-        # self.embed()
+        self.embed()
 
 
 # See https://github.com/3b1b/videos for many, many more

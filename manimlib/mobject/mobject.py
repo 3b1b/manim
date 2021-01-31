@@ -1153,12 +1153,6 @@ class Mobject(object):
         mob2 = mobject
         n1 = len(mob1)
         n2 = len(mob2)
-        while n1 == 1 and n2 > 1:
-            mob1.set_submobjects(mob1[0].submobjects)
-            n1 = len(mob1)
-        while n2 == 1 and n1 > 1:
-            mob2.set_submobjects(mob2[0].submobjects)
-            n2 = len(mob2)
         if n1 != n2:
             mob1.add_n_more_submobjects(max(0, n2 - n1))
             mob2.add_n_more_submobjects(max(0, n1 - n2))
@@ -1254,6 +1248,7 @@ class Mobject(object):
         for sm1, sm2 in zip(self.get_family(), mobject.get_family()):
             sm1.set_data(sm2.data)
             sm1.set_uniforms(sm2.uniforms)
+        self.refresh_bounding_box(recurse_down=True)
         return self
 
     # Locking data

@@ -1,45 +1,51 @@
 import numpy as np
+import math
 
 from manimlib.animation.composition import AnimationGroup
 from manimlib.constants import *
 from manimlib.animation.fading import FadeIn
 from manimlib.animation.growing import GrowFromCenter
 from manimlib.mobject.svg.tex_mobject import Tex
+from manimlib.mobject.svg.tex_mobject import SingleStringTex
 from manimlib.mobject.svg.tex_mobject import TexText
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.space_ops import get_norm
 
 
-class Brace(Tex):
+class Brace(SingleStringTex):
     CONFIG = {
         "buff": 0.2,
-        "width_multiplier": 2,
-        "max_num_quads": 15,
-        "min_num_quads": 0,
-        "background_stroke_width": 0,
+        "tex_string": r"\underbrace{\qquad}"
     }
 
     def __init__(self, mobject, direction=DOWN, **kwargs):
         digest_config(self, kwargs, locals())
-        angle = -np.arctan2(*direction[:2]) + np.pi
+        angle = -math.atan2(*direction[:2]) + PI
         mobject.rotate(-angle, about_point=ORIGIN)
         left = mobject.get_corner(DOWN + LEFT)
         right = mobject.get_corner(DOWN + RIGHT)
         target_width = right[0] - left[0]
 
-        # Adding int(target_width) qquads gives approximately the right width
-        num_quads = np.clip(
-            int(self.width_multiplier * target_width),
-            self.min_num_quads, self.max_num_quads
-        )
-        tex_string = "\\underbrace{%s}" % (num_quads * "\\qquad")
-        Tex.__init__(self, tex_string, **kwargs)
+        super().__init__(self.tex_string, **kwargs)
         self.tip_point_index = np.argmin(self.get_all_points()[:, 1])
-        self.stretch_to_fit_width(target_width)
+        self.set_initial_width(target_width)
         self.shift(left - self.get_corner(UP + LEFT) + self.buff * DOWN)
         for mob in mobject, self:
             mob.rotate(angle, about_point=ORIGIN)
+
+    def set_initial_width(self, width):
+        width_diff = width - self.get_width()
+        if width_diff > 0:
+            for tip, rect, vect in [(self[0], self[1], RIGHT), (self[5], self[4], LEFT)]:
+                rect.set_width(
+                    width_diff / 2 + rect.get_width(),
+                    about_edge=vect, stretch=True
+                )
+                tip.shift(-width_diff / 2 * vect)
+        else:
+            self.set_width(width, stretch=True)
+        return self
 
     def put_at_tip(self, mob, use_next_to=True, **kwargs):
         if use_next_to:

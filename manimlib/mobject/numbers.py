@@ -1,8 +1,10 @@
 from manimlib.constants import *
 from manimlib.mobject.svg.tex_mobject import SingleStringTex
-from manimlib.mobject.svg.tex_mobject import tex_string_to_mob_map
-from manimlib.mobject.svg.tex_mobject import SCALE_FACTOR_PER_FONT_POINT
+from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VMobject
+
+
+string_to_mob_map = {}
 
 
 class DecimalNumber(VMobject):
@@ -34,17 +36,9 @@ class DecimalNumber(VMobject):
 
         # Add non-numerical bits
         if self.show_ellipsis:
-            self.add(self.string_to_mob("\\dots"))
-
-        if num_string.startswith("-"):
-            minus = self.submobjects[0]
-            minus.next_to(
-                self.submobjects[1], LEFT,
-                buff=self.digit_buff_per_font_unit * self.get_font_size(),
-            )
-
+            self.add(self.string_to_mob("..."))
         if self.unit is not None:
-            self.unit_sign = self.string_to_mob(self.unit)
+            self.unit_sign = self.string_to_mob(self.unit, SingleStringTex)
             self.add(self.unit_sign)
 
         self.arrange(
@@ -55,7 +49,7 @@ class DecimalNumber(VMobject):
         # Handle alignment of parts that should be aligned
         # to the bottom
         for i, c in enumerate(num_string):
-            if c == "-" and len(num_string) > i + 1:
+            if c == "–" and len(num_string) > i + 1:
                 self[i].align_to(self[i + 1], UP)
                 self[i].shift(self[i + 1].get_height() * DOWN / 2)
             elif c == ",":
@@ -79,6 +73,7 @@ class DecimalNumber(VMobject):
                 num_string = "+" + num_string[1:]
             else:
                 num_string = num_string[1:]
+        num_string = num_string.replace("-", "–")
         return num_string
 
     def init_data(self):
@@ -88,17 +83,12 @@ class DecimalNumber(VMobject):
     def get_font_size(self):
         return self.data["font_size"][0]
 
-    def string_to_mob(self, tex_string):
-        # Could just call SingleStringTex, and there is
-        # some code repetition here by looking to the same cache,
-        # but it keeps things from initializing a new object
-        # more than is necessary
-        if tex_string in tex_string_to_mob_map:
-            result = tex_string_to_mob_map[tex_string].copy()
-            result.scale(self.get_font_size() * SCALE_FACTOR_PER_FONT_POINT)
-            return result
-        else:
-            return SingleStringTex(tex_string, font_size=self.get_font_size())
+    def string_to_mob(self, string, mob_class=Text):
+        if string not in string_to_mob_map:
+            string_to_mob_map[string] = mob_class(string, font_size=1)
+        mob = string_to_mob_map[string].copy()
+        mob.scale(self.get_font_size())
+        return mob
 
     def get_formatter(self, **kwargs):
         """
