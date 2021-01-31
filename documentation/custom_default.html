@@ -3,13 +3,13 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Changelog" href="../development/changelog.html" /><link rel="prev" title="constants" href="constants.html" />
 
-    <link rel="shortcut icon" href="../_static/icon.png"/><meta name="generator" content="sphinx-3.4.3, furo 2020.10.05.beta9"/>
+    <link rel="shortcut icon" href="../_static/icon.png"/><meta name="generator" content="sphinx-3.0.3, furo 2020.10.05.beta9"/>
         <title>custom_default - manim  documentation</title>
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="../_static/custom.css" />
     <link rel="stylesheet" href="../_static/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?d487b8f48ba7bdb05e3f028e">
-    <link rel="stylesheet" href="../_static/pygments.css?d487b8f48ba7bdb05e3f028e">
+    <link rel="stylesheet" href="../_static/styles/default.css?145fb45fc8f5e5fabee336eb">
+    <link rel="stylesheet" href="../_static/pygments.css?145fb45fc8f5e5fabee336eb">
     
 <style>
   :root {
@@ -23,9 +23,10 @@
       
         <script src="../_static/doctools.js" defer></script>
       
+        <script src="../_static/language_data.js" defer></script>
+      
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script src="../_static/scripts/main.js?d487b8f48ba7bdb05e3f028e"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?145fb45fc8f5e5fabee336eb"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -184,6 +185,12 @@ file and saved the last frame, then the final directory structure will be like:<
 </dl>
 </li>
 <li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">sounds</span></code></dt><dd><p>The directory for storing sound files to be used in <code class="docutils literal notranslate"><span class="pre">Scene.add_sound()</span></code> (
+including <code class="docutils literal notranslate"><span class="pre">.wav</span></code> and <code class="docutils literal notranslate"><span class="pre">.mp3</span></code>).</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">temporary_storage</span></code></dt><dd><p>The directory for storing temporarily generated cache files, including
 <code class="docutils literal notranslate"><span class="pre">Tex</span></code> cache, <code class="docutils literal notranslate"><span class="pre">Text</span></code> cache and storage of object points.</p>
 </dd>
@@ -242,6 +249,14 @@ is recommended)</p>
 <p>The relative position of the playback window on the display (two characters,
 the first character means upper(U) / middle(O) / lower(D), the second character
 means left(L) / middle(O) / right(R)).</p>
+</div>
+<div class="section" id="break-into-partial-movies">
+<h2><code class="docutils literal notranslate"><span class="pre">break_into_partial_movies</span></code><a class="headerlink" href="#break-into-partial-movies" title="Permalink to this headline">¶</a></h2>
+<p>If this is set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, then many small files will be written corresponding
+to each <code class="docutils literal notranslate"><span class="pre">Scene.play</span></code> and <code class="docutils literal notranslate"><span class="pre">Scene.wait</span></code> call, and these files will then be combined
+to form the full scene.</p>
+<p>Sometimes video-editing is made easier when working with the broken up scene, which
+effectively has cuts at all the places you might want.</p>
 </div>
 <div class="section" id="camera-qualities">
 <h2><code class="docutils literal notranslate"><span class="pre">camera_qualities</span></code><a class="headerlink" href="#camera-qualities" title="Permalink to this headline">¶</a></h2>
@@ -328,6 +343,7 @@ means left(L) / middle(O) / right(R)).</p>
 <li><a class="reference internal" href="#universal-import-line"><code class="docutils literal notranslate"><span class="pre">universal_import_line</span></code></a></li>
 <li><a class="reference internal" href="#style"><code class="docutils literal notranslate"><span class="pre">style</span></code></a></li>
 <li><a class="reference internal" href="#window-position"><code class="docutils literal notranslate"><span class="pre">window_position</span></code></a></li>
+<li><a class="reference internal" href="#break-into-partial-movies"><code class="docutils literal notranslate"><span class="pre">break_into_partial_movies</span></code></a></li>
 <li><a class="reference internal" href="#camera-qualities"><code class="docutils literal notranslate"><span class="pre">camera_qualities</span></code></a></li>
 </ul>
 </li>

@@ -3,13 +3,13 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="CONFIG dictionary" href="config.html" /><link rel="prev" title="CLI flags and configuration" href="configuration.html" />
 
-    <link rel="shortcut icon" href="../_static/icon.png"/><meta name="generator" content="sphinx-3.4.3, furo 2020.10.05.beta9"/>
+    <link rel="shortcut icon" href="../_static/icon.png"/><meta name="generator" content="sphinx-3.0.3, furo 2020.10.05.beta9"/>
         <title>Example Scenes - manim  documentation</title>
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="../_static/custom.css" />
     <link rel="stylesheet" href="../_static/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?afd8525437fa3c429ef1fa69">
-    <link rel="stylesheet" href="../_static/pygments.css?afd8525437fa3c429ef1fa69">
+    <link rel="stylesheet" href="../_static/styles/default.css?45a401f3adc6249c2e4af26e">
+    <link rel="stylesheet" href="../_static/pygments.css?45a401f3adc6249c2e4af26e">
     
 <style>
   :root {
@@ -23,9 +23,10 @@
       
         <script src="../_static/doctools.js" defer></script>
       
+        <script src="../_static/language_data.js" defer></script>
+      
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script src="../_static/scripts/main.js?afd8525437fa3c429ef1fa69"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?45a401f3adc6249c2e4af26e"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -143,19 +144,49 @@ the simplest and one by one.</p>
 </div><p>This scene is what we wrote in <a class="reference internal" href="quickstart.html"><span class="doc">Quick Start</span></a>.
 No more explanation here</p>
 </div>
-<div class="section" id="warpsquare">
-<h2>WarpSquare<a class="headerlink" href="#warpsquare" title="Permalink to this headline">¶</a></h2>
-<div class="manim-example"><video autoplay="" class="manim-video" controls="" id="warpsquare" loop="" src="../_static/example_scenes/WarpSquare.mp4"></video><h5 class="example-header">WarpSquare<a class="headerlink" href="#warpsquare">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">WarpSquare</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
+<div class="section" id="animatingmethods">
+<h2>AnimatingMethods<a class="headerlink" href="#animatingmethods" title="Permalink to this headline">¶</a></h2>
+<div class="manim-example"><video autoplay="" class="manim-video" controls="" id="animatingmethods" loop="" src="../_static/example_scenes/AnimatingMethods.mp4"></video><h5 class="example-header">AnimatingMethods<a class="headerlink" href="#animatingmethods">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">AnimatingMethods</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">square</span> <span class="o">=</span> <span class="n">Square</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">square</span><span class="o">.</span><span class="n">apply_complex_function</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">)</span>
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">Tex</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\pi"</span><span class="p">)</span><span class="o">.</span><span class="n">get_grid</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+
+        <span class="c1"># If you pass in a mobject method to the scene's "play" function,</span>
+        <span class="c1"># it will apply an animation interpolating between the mobject's</span>
+        <span class="c1"># initial state and whatever happens when you apply that method.</span>
+        <span class="c1"># For example, calling grid.shift(2 * LEFT) would shift it two units</span>
+        <span class="c1"># to the left, but the following line animates that motion.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">shift</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">LEFT</span><span class="p">)</span>
+        <span class="c1"># The same applies for any method, including those setting colors.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">set_submobject_colors_by_gradient</span><span class="p">,</span> <span class="n">BLUE</span><span class="p">,</span> <span class="n">GREEN</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">set_height</span><span class="p">,</span> <span class="n">TAU</span> <span class="o">-</span> <span class="n">MED_SMALL_BUFF</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+        <span class="c1"># The method Mobject.apply_complex_function lets you apply arbitrary</span>
+        <span class="c1"># complex functions, treating the points defining the mobject as</span>
+        <span class="c1"># complex numbers.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">apply_complex_function</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">,</span> <span class="n">run_time</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+        <span class="c1"># Even more generally, you could apply Mobject.apply_function,</span>
+        <span class="c1"># which takes in functions form R^3 to R^3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
+            <span class="n">grid</span><span class="o">.</span><span class="n">apply_function</span><span class="p">,</span>
+            <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="p">[</span>
+                <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="p">],</span>
+            <span class="n">run_time</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
 </pre></div>
 </div>
-</div><p>The new usage in this scene is <code class="docutils literal notranslate"><span class="pre">self.play(square.apply_complex_function,</span> <span class="pre">np.exp)</span></code>,
-which shows an animation of applying a complex function <span class="math notranslate nohighlight">\(f(z)=e^z\)</span> to a square.
-It is equivalent to transforming the original square into the result after
-applying a function.</p>
+</div><p>The new usage in this scene is <code class="docutils literal notranslate"><span class="pre">.get_grid()</span></code> and <code class="docutils literal notranslate"><span class="pre">self.play(mob.method,</span> <span class="pre">args)</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">.get_grid()</span></code> method will return a new mobject containing multiple copies of this one arranged in a grid.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">self.play(mob.method,</span> <span class="pre">args)</span></code> animate the method, and the details are in the comments above.</p></li>
+</ul>
 </div>
 <div class="section" id="textexample">
 <h2>TextExample<a class="headerlink" href="#textexample" title="Permalink to this headline">¶</a></h2>
@@ -394,10 +425,11 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">PI</span><span class="p">)</span>
 </pre></div>
 </div>
-</div><p>The new classes and usage in this scene are <code class="docutils literal notranslate"><span class="pre">DecimalNumber</span></code>, <code class="docutils literal notranslate"><span class="pre">.to_edge()</span></code>,
-<code class="docutils literal notranslate"><span class="pre">.center()</span></code>, <code class="docutils literal notranslate"><span class="pre">always_become()</span></code>, <code class="docutils literal notranslate"><span class="pre">always()</span></code>, <code class="docutils literal notranslate"><span class="pre">f_always()</span></code>, <code class="docutils literal notranslate"><span class="pre">.set_y()</span></code> and <code class="docutils literal notranslate"><span class="pre">.add_updater()</span></code>.</p>
+</div><p>The new classes and usage in this scene are <code class="docutils literal notranslate"><span class="pre">always_redraw()</span></code>, <code class="docutils literal notranslate"><span class="pre">DecimalNumber</span></code>, <code class="docutils literal notranslate"><span class="pre">.to_edge()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.center()</span></code>, <code class="docutils literal notranslate"><span class="pre">always()</span></code>, <code class="docutils literal notranslate"><span class="pre">f_always()</span></code>, <code class="docutils literal notranslate"><span class="pre">.set_y()</span></code> and <code class="docutils literal notranslate"><span class="pre">.add_updater()</span></code>.</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">DecimalNumber</span></code> is a variable number, speed it up by breaking it into <code class="docutils literal notranslate"><span class="pre">Tex</span></code> characters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">always_redraw()</span></code> function create a new mobject every frame.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DecimalNumber</span></code> is a variable number, speed it up by breaking it into <code class="docutils literal notranslate"><span class="pre">Text</span></code> characters.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">.to_edge()</span></code> means to place the object on the edge of the screen.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">.center()</span></code> means to place the object in the center of the screen.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">always(f,</span> <span class="pre">x)</span></code> means that a certain function (<code class="docutils literal notranslate"><span class="pre">f(x)</span></code>) is executed every frame.</p></li>
@@ -650,7 +682,7 @@ usage of manim. For more examples, see <a class="reference external" href="https
           <ul>
 <li><a class="reference internal" href="#">Example Scenes</a><ul>
 <li><a class="reference internal" href="#squaretocircle">SquareToCircle</a></li>
-<li><a class="reference internal" href="#warpsquare">WarpSquare</a></li>
+<li><a class="reference internal" href="#animatingmethods">AnimatingMethods</a></li>
 <li><a class="reference internal" href="#textexample">TextExample</a></li>
 <li><a class="reference internal" href="#textransformexample">TexTransformExample</a></li>
 <li><a class="reference internal" href="#updatersexample">UpdatersExample</a></li>
