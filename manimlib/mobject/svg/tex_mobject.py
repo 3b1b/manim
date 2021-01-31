@@ -37,18 +37,18 @@ class SingleStringTex(VMobject):
         assert(isinstance(tex_string, str))
         self.tex_string = tex_string
         if tex_string not in tex_string_to_mob_map:
-            full_tex = self.get_tex_file_body(tex_string)
-            filename = tex_to_svg_file(full_tex)
-            svg_mob = SVGMobject(
-                filename,
-                height=None,
-                path_string_config={
-                    "should_subdivide_sharp_curves": True,
-                    "should_remove_null_curves": True,
-                }
-            )
-            tex_string_to_mob_map[tex_string] = svg_mob
-
+            with display_during_execution(f" Writing \"{tex_string}\""):
+                full_tex = self.get_tex_file_body(tex_string)
+                filename = tex_to_svg_file(full_tex)
+                svg_mob = SVGMobject(
+                    filename,
+                    height=None,
+                    path_string_config={
+                        "should_subdivide_sharp_curves": True,
+                        "should_remove_null_curves": True,
+                    }
+                )
+                tex_string_to_mob_map[tex_string] = svg_mob
         self.add(*(
             sm.copy()
             for sm in tex_string_to_mob_map[tex_string]
@@ -164,13 +164,12 @@ class Tex(SingleStringTex):
         digest_config(self, kwargs)
         self.tex_strings = self.break_up_tex_strings(tex_strings)
         full_string = self.arg_separator.join(self.tex_strings)
-        with display_during_execution(f" Writing \"{full_string}\""):
-            super().__init__(full_string, **kwargs)
-            self.break_up_by_substrings()
-            self.set_color_by_tex_to_color_map(self.tex_to_color_map)
+        super().__init__(full_string, **kwargs)
+        self.break_up_by_substrings()
+        self.set_color_by_tex_to_color_map(self.tex_to_color_map)
 
-            if self.organize_left_to_right:
-                self.organize_submobjects_left_to_right()
+        if self.organize_left_to_right:
+            self.organize_submobjects_left_to_right()
 
     def break_up_tex_strings(self, tex_strings):
         # Separate out anything surrounded in double braces
