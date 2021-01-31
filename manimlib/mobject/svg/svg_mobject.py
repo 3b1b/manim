@@ -355,9 +355,8 @@ class VMobjectFromSVGPathstring(VMobject):
 
     def init_points(self):
         # After a given svg_path has been converted into points, the result
-        # will be saved to a file, as will the trianulgation of the path,
-        # so that future calls for the same path don't need to retrace
-        # the same computation.
+        # will be saved to a file so that future calls for the same path
+        # don't need to retrace the same computation.
         hasher = hashlib.sha256(self.path_string.encode())
         path_hash = hasher.hexdigest()[:16]
         points_filepath = os.path.join(get_mobject_data_dir(), f"{path_hash}_points.npy")
@@ -365,8 +364,6 @@ class VMobjectFromSVGPathstring(VMobject):
 
         if os.path.exists(points_filepath) and os.path.exists(tris_filepath):
             self.set_points(np.load(points_filepath))
-            self.triangulation = np.load(tris_filepath)
-            self.needs_new_triangulation = False
         else:
             self.relative_point = np.array(ORIGIN)
             for command, coord_string in self.get_commands_and_coord_strings():
@@ -382,7 +379,6 @@ class VMobjectFromSVGPathstring(VMobject):
             self.stretch(-1, 1, about_point=ORIGIN)
             # Save to a file for future use
             np.save(points_filepath, self.get_points())
-            np.save(tris_filepath, self.get_triangulation())
         check_and_fix_percent_bug(self)
 
     def get_commands_and_coord_strings(self):
