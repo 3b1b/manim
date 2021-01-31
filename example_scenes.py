@@ -169,9 +169,7 @@ class SquareToCircle(Scene):
 
 class TexTransformExample(Scene):
     def construct(self):
-        kw = {
-            "isolate": ["B", "C", "=", "(", ")"]
-        }
+        to_isolate = ["B", "C", "=", "(", ")"]
         lines = VGroup(
             # Surrounding substrings with double braces
             # will ensure that those parts are separated
@@ -181,12 +179,12 @@ class TexTransformExample(Scene):
             Tex("{{A^2}} + {{B^2}} = {{C^2}}"),
             Tex("{{A^2}} = {{C^2}} - {{B^2}}"),
             # Alternatively, you can pass in the keyword argument
-            # isolate with a list of strings that should be out as
+            # "isolate" with a list of strings that should be out as
             # their own submobject.  So both lines below are equivalent
             # to what you'd get by wrapping every instance of "B", "C"
             # "=", "(" and ")" with double braces
-            Tex("{{A^2}} = (C + B)(C - B)", **kw),
-            Tex("A = \\sqrt{(C + B)(C - B)}", **kw)
+            Tex("{{A^2}} = (C + B)(C - B)", isolate=to_isolate),
+            Tex("A = \\sqrt{(C + B)(C - B)}", isolate=to_isolate)
         )
         lines.arrange(DOWN, buff=LARGE_BUFF)
         for line in lines:
@@ -236,16 +234,23 @@ class TexTransformExample(Scene):
         )
         self.wait()
 
-        # And to finish off, a simple TransformMatchingShapes will do,
-        # though maybe we really want that exponent from A^2 to turn
-        # into the square root, we could use a key_map again.  Or,
-        # if we set fade_transform_mismatches to True, then it will
-        # line up mismatching submobjects and have them transform
-        # into each other
+        # And to finish off, a simple TransformMatchingShapes would work
+        # just fine.  But perhaps we want that exponent on A^2 to transform into
+        # the square root symbol.  At the moment, lines[2] treats the expression
+        # A^2 as a unit, so we might create a new version of the same line which
+        # separates out just the A.  This way, when TransformMatchingTex lines up
+        # all matching parts, the only mismatch will be between the "^2" from
+        # new_line2 and the "\sqrt" from the final line.  By passing in,
+        # transform_mismatches=True, it will transform this "^2" part into
+        # the "\sqrt" part.
+        new_line2 = Tex("{{A}}^2 = (C + B)(C - B)", isolate=to_isolate)
+        new_line2.replace(lines[2])
+        new_line2.match_style(lines[2])
+
         self.play(
             TransformMatchingTex(
-                lines[2].copy(), lines[3],
-                fade_transform_mismatches=True,
+                new_line2, lines[3],
+                transform_mismatches=True,
             ),
             **play_kw
         )
@@ -258,8 +263,8 @@ class TexTransformExample(Scene):
         # those of a target, regardless of the submobject hierarchy in
         # each one, according to whether those pieces have the same
         # shape (as best it can).
-        source = TexText("the morse code")
-        target = TexText("here come dots")
+        source = Text("the morse code", height=1)
+        target = Text("here come dots", height=1)
 
         self.play(Write(source))
         self.wait()

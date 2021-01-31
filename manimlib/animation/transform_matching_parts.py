@@ -1,3 +1,5 @@
+import numpy as np
+
 from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.fading import FadeTransformPieces
 from manimlib.animation.fading import FadeInFromPoint
@@ -62,7 +64,7 @@ class TransformMatchingParts(AnimationGroup):
             fade_target.add(target_map[key])
 
         if self.transform_mismatches:
-            anims.append(Transform(fade_source, fade_target, **kwargs))
+            anims.append(Transform(fade_source.copy(), fade_target, **kwargs))
         if self.fade_transform_mismatches:
             anims.append(FadeTransformPieces(fade_source, fade_target, **kwargs))
         else:
@@ -117,7 +119,12 @@ class TransformMatchingShapes(TransformMatchingParts):
 
     @staticmethod
     def get_mobject_key(mobject):
-        return hash(mobject.get_triangulation().tobytes())
+        mobject.save_state()
+        mobject.center()
+        mobject.set_height(1)
+        result = hash(np.round(mobject.get_points(), 3).tobytes())
+        mobject.restore()
+        return result
 
 
 class TransformMatchingTex(TransformMatchingParts):
