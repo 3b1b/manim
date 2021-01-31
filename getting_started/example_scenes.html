@@ -8,8 +8,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="../_static/custom.css" />
     <link rel="stylesheet" href="../_static/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?59e57e02facdc773dadfcc40">
-    <link rel="stylesheet" href="../_static/pygments.css?59e57e02facdc773dadfcc40">
+    <link rel="stylesheet" href="../_static/styles/default.css?91e5691214934ea810d71707">
+    <link rel="stylesheet" href="../_static/pygments.css?91e5691214934ea810d71707">
     
 <style>
   :root {
@@ -25,7 +25,7 @@
       
         <script src="../_static/clipboard.min.js"></script>
         <script src="../_static/copybutton.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script src="../_static/scripts/main.js?59e57e02facdc773dadfcc40"></script></head>
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script><script src="../_static/scripts/main.js?91e5691214934ea810d71707"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -209,14 +209,22 @@ applying a function.</p>
 <h2>TexTransformExample<a class="headerlink" href="#textransformexample" title="Permalink to this headline">¶</a></h2>
 <div class="manim-example"><video autoplay="" class="manim-video" controls="" id="textransformexample" loop="" src="../_static/example_scenes/TexTransformExample.mp4"></video><h5 class="example-header">TexTransformExample<a class="headerlink" href="#textransformexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">TexTransformExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">kw</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">"isolate"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"B"</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">,</span> <span class="s2">"="</span><span class="p">,</span> <span class="s2">"("</span><span class="p">,</span> <span class="s2">")"</span><span class="p">]</span>
-        <span class="p">}</span>
+        <span class="n">to_isolate</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"B"</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">,</span> <span class="s2">"="</span><span class="p">,</span> <span class="s2">"("</span><span class="p">,</span> <span class="s2">")"</span><span class="p">]</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="n">VGroup</span><span class="p">(</span>
+            <span class="c1"># Surrounding substrings with double braces</span>
+            <span class="c1"># will ensure that those parts are separated</span>
+            <span class="c1"># out in the Tex.  For example, here the</span>
+            <span class="c1"># Tex will have 5 submobjects, corresponding</span>
+            <span class="c1"># to the strings [A^2, +, B^2, =, C^2]</span>
             <span class="n">Tex</span><span class="p">(</span><span class="s2">"{{A^2}} + {{B^2}} = {{C^2}}"</span><span class="p">),</span>
             <span class="n">Tex</span><span class="p">(</span><span class="s2">"{{A^2}} = {{C^2}} - {{B^2}}"</span><span class="p">),</span>
-            <span class="n">Tex</span><span class="p">(</span><span class="s2">"{{A^2}} = (C + B)(C - B)"</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">),</span>
-            <span class="n">Tex</span><span class="p">(</span><span class="s2">"A = </span><span class="se">\\</span><span class="s2">sqrt{(C + B)(C - B)}"</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+            <span class="c1"># Alternatively, you can pass in the keyword argument</span>
+            <span class="c1"># "isolate" with a list of strings that should be out as</span>
+            <span class="c1"># their own submobject.  So both lines below are equivalent</span>
+            <span class="c1"># to what you'd get by wrapping every instance of "B", "C"</span>
+            <span class="c1"># "=", "(" and ")" with double braces</span>
+            <span class="n">Tex</span><span class="p">(</span><span class="s2">"{{A^2}} = (C + B)(C - B)"</span><span class="p">,</span> <span class="n">isolate</span><span class="o">=</span><span class="n">to_isolate</span><span class="p">),</span>
+            <span class="n">Tex</span><span class="p">(</span><span class="s2">"A = </span><span class="se">\\</span><span class="s2">sqrt{(C + B)(C - B)}"</span><span class="p">,</span> <span class="n">isolate</span><span class="o">=</span><span class="n">to_isolate</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="n">lines</span><span class="o">.</span><span class="n">arrange</span><span class="p">(</span><span class="n">DOWN</span><span class="p">,</span> <span class="n">buff</span><span class="o">=</span><span class="n">LARGE_BUFF</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
@@ -228,6 +236,11 @@ applying a function.</p>
 
         <span class="n">play_kw</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"run_time"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="c1"># The animation TransformMatchingTex will line up parts</span>
+        <span class="c1"># of the source and target which have matching tex strings.</span>
+        <span class="c1"># Here, giving it a little path_arc makes each part sort of</span>
+        <span class="c1"># rotate into their final positions, which feels appropriate</span>
+        <span class="c1"># for the idea of rearranging an equation</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
             <span class="n">TransformMatchingTex</span><span class="p">(</span>
                 <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
@@ -237,11 +250,17 @@ applying a function.</p>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
 
+        <span class="c1"># Now, we could try this again on the next line...</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
             <span class="n">TransformMatchingTex</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span>
             <span class="o">**</span><span class="n">play_kw</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="c1"># ...and this looks nice enough, but since there's no tex</span>
+        <span class="c1"># in lines[2] which matches "C^2" or "B^2", those terms fade</span>
+        <span class="c1"># out to nothing while the C and B terms fade in from nothing.</span>
+        <span class="c1"># If, however, we want the C^2 to go to C, and B^2 to go to B,</span>
+        <span class="c1"># we can specify that with a key map.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">FadeOut</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
             <span class="n">TransformMatchingTex</span><span class="p">(</span>
@@ -255,18 +274,37 @@ applying a function.</p>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
 
+        <span class="c1"># And to finish off, a simple TransformMatchingShapes would work</span>
+        <span class="c1"># just fine.  But perhaps we want that exponent on A^2 to transform into</span>
+        <span class="c1"># the square root symbol.  At the moment, lines[2] treats the expression</span>
+        <span class="c1"># A^2 as a unit, so we might create a new version of the same line which</span>
+        <span class="c1"># separates out just the A.  This way, when TransformMatchingTex lines up</span>
+        <span class="c1"># all matching parts, the only mismatch will be between the "^2" from</span>
+        <span class="c1"># new_line2 and the "\sqrt" from the final line.  By passing in,</span>
+        <span class="c1"># transform_mismatches=True, it will transform this "^2" part into</span>
+        <span class="c1"># the "\sqrt" part.</span>
+        <span class="n">new_line2</span> <span class="o">=</span> <span class="n">Tex</span><span class="p">(</span><span class="s2">"{{A}}^2 = (C + B)(C - B)"</span><span class="p">,</span> <span class="n">isolate</span><span class="o">=</span><span class="n">to_isolate</span><span class="p">)</span>
+        <span class="n">new_line2</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">new_line2</span><span class="o">.</span><span class="n">match_style</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
             <span class="n">TransformMatchingTex</span><span class="p">(</span>
-                <span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">lines</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
-                <span class="n">fade_transform_mismatches</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                <span class="n">new_line2</span><span class="p">,</span> <span class="n">lines</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+                <span class="n">transform_mismatches</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
             <span class="p">),</span>
             <span class="o">**</span><span class="n">play_kw</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">FadeOut</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span> <span class="n">RIGHT</span><span class="p">))</span>
 
-        <span class="n">source</span> <span class="o">=</span> <span class="n">TexText</span><span class="p">(</span><span class="s2">"the morse code"</span><span class="p">)</span>
-        <span class="n">target</span> <span class="o">=</span> <span class="n">TexText</span><span class="p">(</span><span class="s2">"here come dots"</span><span class="p">)</span>
+        <span class="c1"># Alternatively, if you don't want to think about breaking up</span>
+        <span class="c1"># the tex strings deliberately, you can TransformMatchingShapes,</span>
+        <span class="c1"># which will try to line up all pieces of a source mobject with</span>
+        <span class="c1"># those of a target, regardless of the submobject hierarchy in</span>
+        <span class="c1"># each one, according to whether those pieces have the same</span>
+        <span class="c1"># shape (as best it can).</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">"the morse code"</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">"here come dots"</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">Write</span><span class="p">(</span><span class="n">source</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
@@ -290,35 +328,74 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
 <h2>UpdatersExample<a class="headerlink" href="#updatersexample" title="Permalink to this headline">¶</a></h2>
 <div class="manim-example"><video autoplay="" class="manim-video" controls="" id="updatersexample" loop="" src="../_static/example_scenes/UpdatersExample.mp4"></video><h5 class="example-header">UpdatersExample<a class="headerlink" href="#updatersexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">UpdatersExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">decimal</span> <span class="o">=</span> <span class="n">DecimalNumber</span><span class="p">(</span>
-            <span class="mi">0</span><span class="p">,</span>
-            <span class="n">show_ellipsis</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-            <span class="n">num_decimal_places</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-            <span class="n">include_sign</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
-        <span class="p">)</span>
         <span class="n">square</span> <span class="o">=</span> <span class="n">Square</span><span class="p">()</span>
-        <span class="n">square</span><span class="o">.</span><span class="n">to_edge</span><span class="p">(</span><span class="n">UP</span><span class="p">)</span>
+        <span class="n">square</span><span class="o">.</span><span class="n">set_fill</span><span class="p">(</span><span class="n">BLUE_E</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
-        <span class="n">always</span><span class="p">(</span><span class="n">decimal</span><span class="o">.</span><span class="n">next_to</span><span class="p">,</span> <span class="n">square</span><span class="p">)</span>
-        <span class="n">f_always</span><span class="p">(</span><span class="n">decimal</span><span class="o">.</span><span class="n">set_value</span><span class="p">,</span> <span class="n">square</span><span class="o">.</span><span class="n">get_y</span><span class="p">)</span>
+        <span class="c1"># On all all frames, the constructor Brace(square, UP) will</span>
+        <span class="c1"># be called, and the mobject brace will set its data to match</span>
+        <span class="c1"># that of the newly constructed object</span>
+        <span class="n">brace</span> <span class="o">=</span> <span class="n">always_redraw</span><span class="p">(</span><span class="n">Brace</span><span class="p">,</span> <span class="n">square</span><span class="p">,</span> <span class="n">UP</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">square</span><span class="p">,</span> <span class="n">decimal</span><span class="p">)</span>
+        <span class="n">text</span><span class="p">,</span> <span class="n">number</span> <span class="o">=</span> <span class="n">label</span> <span class="o">=</span> <span class="n">VGroup</span><span class="p">(</span>
+            <span class="n">Text</span><span class="p">(</span><span class="s2">"Width = "</span><span class="p">),</span>
+            <span class="n">DecimalNumber</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span>
+                <span class="n">show_ellipsis</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                <span class="n">num_decimal_places</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">include_sign</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">label</span><span class="o">.</span><span class="n">arrange</span><span class="p">(</span><span class="n">RIGHT</span><span class="p">)</span>
+
+        <span class="c1"># This ensures that the method deicmal.next_to(square)</span>
+        <span class="c1"># is called on every frame</span>
+        <span class="n">always</span><span class="p">(</span><span class="n">label</span><span class="o">.</span><span class="n">next_to</span><span class="p">,</span> <span class="n">brace</span><span class="p">,</span> <span class="n">UP</span><span class="p">)</span>
+        <span class="c1"># You could also write the following equivalent line</span>
+        <span class="c1"># label.add_updater(lambda m: m.next_to(brace, UP))</span>
+
+        <span class="c1"># If the argument itself might change, you can use f_always,</span>
+        <span class="c1"># for which the arguments following the initial Mobject method</span>
+        <span class="c1"># should be functions returning arguments to that method.</span>
+        <span class="c1"># The following line ensures thst decimal.set_value(square.get_y())</span>
+        <span class="c1"># is called every frame</span>
+        <span class="n">f_always</span><span class="p">(</span><span class="n">number</span><span class="o">.</span><span class="n">set_value</span><span class="p">,</span> <span class="n">square</span><span class="o">.</span><span class="n">get_width</span><span class="p">)</span>
+        <span class="c1"># You could also write the following equivalent line</span>
+        <span class="c1"># number.add_updater(lambda m: m.set_value(square.get_width()))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">square</span><span class="p">,</span> <span class="n">brace</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+
+        <span class="c1"># Notice that the brace and label track with the square</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
-            <span class="n">square</span><span class="o">.</span><span class="n">to_edge</span><span class="p">,</span> <span class="n">DOWN</span><span class="p">,</span>
+            <span class="n">square</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="n">rate_func</span><span class="o">=</span><span class="n">there_and_back</span><span class="p">,</span>
+            <span class="n">run_time</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
+            <span class="n">square</span><span class="o">.</span><span class="n">set_width</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="p">{</span><span class="s2">"stretch"</span><span class="p">:</span> <span class="bp">True</span><span class="p">},</span>
             <span class="n">run_time</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">square</span><span class="o">.</span><span class="n">center</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
+            <span class="n">square</span><span class="o">.</span><span class="n">set_width</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="n">run_time</span><span class="o">=</span><span class="mi">3</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
 
+        <span class="c1"># In general, you can alway call Mobject.add_updater, and pass in</span>
+        <span class="c1"># a function that you want to be called on every frame.  The function</span>
+        <span class="c1"># should take in either one argument, the mobject, or two arguments,</span>
+        <span class="c1"># the mobject and the amount of time since the last frame.</span>
         <span class="n">now</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span>
+        <span class="n">w0</span> <span class="o">=</span> <span class="n">square</span><span class="o">.</span><span class="n">get_width</span><span class="p">()</span>
         <span class="n">square</span><span class="o">.</span><span class="n">add_updater</span><span class="p">(</span>
-            <span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">set_y</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">-</span> <span class="n">now</span><span class="p">))</span>
+            <span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">set_width</span><span class="p">(</span><span class="n">w0</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">-</span> <span class="n">now</span><span class="p">))</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">PI</span><span class="p">)</span>
 </pre></div>
 </div>
 </div><p>The new classes and usage in this scene are <code class="docutils literal notranslate"><span class="pre">DecimalNumber</span></code>, <code class="docutils literal notranslate"><span class="pre">.to_edge()</span></code>,
-<code class="docutils literal notranslate"><span class="pre">.center()</span></code>, <code class="docutils literal notranslate"><span class="pre">always()</span></code>, <code class="docutils literal notranslate"><span class="pre">f_always()</span></code>, <code class="docutils literal notranslate"><span class="pre">.set_y()</span></code> and <code class="docutils literal notranslate"><span class="pre">.add_updater()</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">.center()</span></code>, <code class="docutils literal notranslate"><span class="pre">always_become()</span></code>, <code class="docutils literal notranslate"><span class="pre">always()</span></code>, <code class="docutils literal notranslate"><span class="pre">f_always()</span></code>, <code class="docutils literal notranslate"><span class="pre">.set_y()</span></code> and <code class="docutils literal notranslate"><span class="pre">.add_updater()</span></code>.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">DecimalNumber</span></code> is a variable number, speed it up by breaking it into <code class="docutils literal notranslate"><span class="pre">Tex</span></code> characters.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">.to_edge()</span></code> means to place the object on the edge of the screen.</p></li>
