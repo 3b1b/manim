@@ -97,10 +97,62 @@ class OpeningManimExample(Scene):
         self.wait()
 
 
-class WarpSquare(Scene):
+class SquareToCircle(Scene):
     def construct(self):
+        circle = Circle()
+        circle.set_fill(BLUE, opacity=0.5)
+        circle.set_stroke(BLUE_E, width=4)
         square = Square()
-        self.play(square.apply_complex_function, np.exp)
+
+        self.play(ShowCreation(square))
+        self.wait()
+        self.play(ReplacementTransform(square, circle))
+        self.wait()
+
+        # This opens an iPython termnial where you can keep writing
+        # lines as if they were part of this construct method
+        self.embed()
+        # Try typing the following lines
+        # self.play(circle.stretch, 4, {"dim": 0})
+        # self.play(Rotate(circle, TAU / 4))
+        # self.play(circle.shift, 2 * RIGHT, circle.scale, 0.25)
+        # circle.insert_n_curves(10)
+        # self.play(circle.apply_complex_function, lambda z: z**2)
+
+
+class AnimatingMethods(Scene):
+    def construct(self):
+        grid = Tex(r"\pi").get_grid(10, 10, height=4)
+        self.add(grid)
+
+        # If you pass in a mobject method to the scene's "play" function,
+        # it will apply an animation interpolating between the mobject's
+        # initial state and whatever happens when you apply that method.
+        # For example, calling grid.shift(2 * LEFT) would shift it two units
+        # to the left, but the following line animates that motion.
+        self.play(grid.shift, 2 * LEFT)
+        # The same applies for any method, including those setting colors.
+        self.play(grid.set_submobject_colors_by_gradient, BLUE, GREEN)
+        self.play(grid.set_height, TAU - MED_SMALL_BUFF)
+        self.wait()
+
+        # The method Mobject.apply_complex_function lets you apply arbitrary
+        # complex functions, treating the points defining the mobject as
+        # complex numbers.
+        self.play(grid.apply_complex_function, np.exp, run_time=5)
+        self.wait()
+
+        # Even more generally, you could apply Mobject.apply_function,
+        # which takes in functions form R^3 to R^3
+        self.play(
+            grid.apply_function,
+            lambda p: [
+                p[0] + 0.5 * math.sin(p[1]),
+                p[1] + 0.5 * math.sin(p[0]),
+                p[2]
+            ],
+            run_time=5,
+        )
         self.wait()
 
 
@@ -142,29 +194,6 @@ class TextExample(Scene):
         self.wait()
         self.play(Write(slant))
         self.wait()
-
-
-class SquareToCircle(Scene):
-    def construct(self):
-        circle = Circle()
-        circle.set_fill(BLUE, opacity=0.5)
-        circle.set_stroke(BLUE_E, width=4)
-        square = Square()
-
-        self.play(ShowCreation(square))
-        self.wait()
-        self.play(ReplacementTransform(square, circle))
-        self.wait()
-
-        # This opens an iPython termnial where you can keep writing
-        # lines as if they were part of this construct method
-        self.embed()
-        # Try typing the following lines
-        # self.play(circle.stretch, 4, {"dim": 0})
-        # self.play(Rotate(circle, TAU / 4))
-        # self.play(circle.shift, 2 * RIGHT, circle.scale, 0.25)
-        # circle.insert_n_curves(10)
-        # self.play(circle.apply_complex_function, lambda z: z**2)
 
 
 class TexTransformExample(Scene):
