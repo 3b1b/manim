@@ -36,15 +36,7 @@ class DecimalNumber(VMobject):
 
         # Add non-numerical bits
         if self.show_ellipsis:
-            self.add(self.string_to_mob("\\dots", SingleStringTex))
-
-        if num_string.startswith("-"):
-            minus = self.submobjects[0]
-            minus.next_to(
-                self.submobjects[1], LEFT,
-                buff=self.digit_buff_per_font_unit * self.get_font_size(),
-            )
-
+            self.add(self.string_to_mob("..."))
         if self.unit is not None:
             self.unit_sign = self.string_to_mob(self.unit, SingleStringTex)
             self.add(self.unit_sign)
