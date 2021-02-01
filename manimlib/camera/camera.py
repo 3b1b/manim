@@ -1,41 +1,150 @@
-from functools import reduce
-import itertools as it
-import operator as op
-import time
-import copy
+import moderngl
+from colour import Color
+import OpenGL.GL as gl
 
 from PIL import Image
-from scipy.spatial.distance import pdist
-import cairo
 import numpy as np
+import itertools as it
 
 from manimlib.constants import *
-from manimlib.mobject.types.image_mobject import AbstractImageMobject
 from manimlib.mobject.mobject import Mobject
-from manimlib.mobject.types.point_cloud_mobject import PMobject
-from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.color import color_to_int_rgba
+from manimlib.mobject.mobject import Point
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.images import get_full_raster_image_path
-from manimlib.utils.iterables import batch_by_property
-from manimlib.utils.iterables import list_difference_update
-from manimlib.utils.iterables import remove_list_redundancies
 from manimlib.utils.simple_functions import fdiv
+from manimlib.utils.simple_functions import clip
 from manimlib.utils.space_ops import angle_of_vector
-from manimlib.utils.space_ops import get_norm
+from manimlib.utils.space_ops import rotation_matrix_transpose_from_quaternion
+from manimlib.utils.space_ops import rotation_matrix_transpose
+from manimlib.utils.space_ops import quaternion_from_angle_axis
+from manimlib.utils.space_ops import quaternion_mult
+
+
+class CameraFrame(Mobject):
+    CONFIG = {
+        "frame_shape": (FRAME_WIDTH, FRAME_HEIGHT),
+        "center_point": ORIGIN,
+        # Theta, phi, gamma
+        "euler_angles": [0, 0, 0],
+        "focal_distance": 2,
+    }
+
+    def init_data(self):
+        super().init_data()
+        self.data["euler_angles"] = np.array(self.euler_angles, dtype=float)
+        self.refresh_rotation_matrix()
+
+    def init_points(self):
+        self.set_points([ORIGIN, LEFT, RIGHT, DOWN, UP])
+        self.set_width(self.frame_shape[0], stretch=True)
+        self.set_height(self.frame_shape[1], stretch=True)
+        self.move_to(self.center_point)
+
+    def to_default_state(self):
+        self.center()
+        self.set_height(FRAME_HEIGHT)
+        self.set_width(FRAME_WIDTH)
+        self.set_euler_angles(0, 0, 0)
+        return self
+
+    def get_euler_angles(self):
+        return self.data["euler_angles"]
+
+    def get_inverse_camera_rotation_matrix(self):
+        return self.inverse_camera_rotation_matrix
+
+    def refresh_rotation_matrix(self):
+        # Rotate based on camera orientation
+        theta, phi, gamma = self.get_euler_angles()
+        quat = quaternion_mult(
+            quaternion_from_angle_axis(theta, OUT, axis_normalized=True),
+            quaternion_from_angle_axis(phi, RIGHT, axis_normalized=True),
+            quaternion_from_angle_axis(gamma, OUT, axis_normalized=True),
+        )
+        self.inverse_camera_rotation_matrix = rotation_matrix_transpose_from_quaternion(quat)
+
+    def rotate(self, angle, axis=OUT, **kwargs):
+        curr_rot_T = self.get_inverse_camera_rotation_matrix()
+        added_rot_T = rotation_matrix_transpose(angle, axis)
+        new_rot_T = np.dot(curr_rot_T, added_rot_T)
+        Fz = new_rot_T[2]
+        phi = np.arccos(Fz[2])
+        theta = angle_of_vector(Fz[:2]) + PI / 2
+        partial_rot_T = np.dot(
+            rotation_matrix_transpose(phi, RIGHT),
+            rotation_matrix_transpose(theta, OUT),
+        )
+        gamma = angle_of_vector(np.dot(partial_rot_T, new_rot_T.T)[:, 0])
+        self.set_euler_angles(theta, phi, gamma)
+        return self
+
+    def set_euler_angles(self, theta=None, phi=None, gamma=None):
+        if theta is not None:
+            self.data["euler_angles"][0] = theta
+        if phi is not None:
+            self.data["euler_angles"][1] = phi
+        if gamma is not None:
+            self.data["euler_angles"][2] = gamma
+        self.refresh_rotation_matrix()
+        return self
+
+    def set_theta(self, theta):
+        return self.set_euler_angles(theta=theta)
+
+    def set_phi(self, phi):
+        return self.set_euler_angles(phi=phi)
+
+    def set_gamma(self, gamma):
+        return self.set_euler_angles(gamma=gamma)
+
+    def increment_theta(self, dtheta):
+        self.data["euler_angles"][0] += dtheta
+        self.refresh_rotation_matrix()
+        return self
+
+    def increment_phi(self, dphi):
+        phi = self.data["euler_angles"][1]
+        new_phi = clip(phi + dphi, 0, PI)
+        self.data["euler_angles"][1] = new_phi
+        self.refresh_rotation_matrix()
+        return self
+
+    def increment_gamma(self, dgamma):
+        self.data["euler_angles"][2] += dgamma
+        self.refresh_rotation_matrix()
+        return self
+
+    def get_shape(self):
+        return (self.get_width(), self.get_height())
+
+    def get_center(self):
+        # Assumes first point is at the center
+        return self.get_points()[0]
+
+    def get_width(self):
+        points = self.get_points()
+        return points[2, 0] - points[1, 0]
+
+    def get_height(self):
+        points = self.get_points()
+        return points[4, 1] - points[3, 1]
+
+    def get_focal_distance(self):
+        return self.focal_distance * self.get_height()
+
+    def interpolate(self, *args, **kwargs):
+        super().interpolate(*args, **kwargs)
+        self.refresh_rotation_matrix()
 
 
 class Camera(object):
     CONFIG = {
         "background_image": None,
-        "pixel_height": DEFAULT_PIXEL_HEIGHT,
+        "frame_config": {},
         "pixel_width": DEFAULT_PIXEL_WIDTH,
+        "pixel_height": DEFAULT_PIXEL_HEIGHT,
         "frame_rate": DEFAULT_FRAME_RATE,
         # Note: frame height and width will be resized to match
         # the pixel aspect ratio
-        "frame_height": FRAME_HEIGHT,
-        "frame_width": FRAME_WIDTH,
-        "frame_center": ORIGIN,
         "background_color": BLACK,
         "background_opacity": 1,
         # Points in vectorized mobjects with norm greater
@@ -44,57 +153,141 @@ class Camera(object):
         "image_mode": "RGBA",
         "n_channels": 4,
         "pixel_array_dtype": 'uint8',
-        # z_buff_func is only used if the flag above is set to True.
-        # round z coordinate to nearest hundredth when comparring
-        "z_buff_func": lambda m: np.round(m.get_center()[2], 2),
-        "cairo_line_width_multiple": 0.01,
+        "light_source_position": [-10, 10, 10],
+        # Measured in pixel widths, used for vector graphics
+        "anti_alias_width": 1.5,
+        # Although vector graphics handle antialiasing fine
+        # without multisampling, for 3d scenes one might want
+        # to set samples to be greater than 0.
+        "samples": 0,
     }
 
-    def __init__(self, background=None, **kwargs):
+    def __init__(self, ctx=None, **kwargs):
         digest_config(self, kwargs, locals())
         self.rgb_max_val = np.iinfo(self.pixel_array_dtype).max
-        self.pixel_array_to_cairo_context = {}
-        self.init_background()
-        self.resize_frame_shape()
-        self.reset()
+        self.background_rgba = [
+            *Color(self.background_color).get_rgb(),
+            self.background_opacity
+        ]
+        self.init_frame()
+        self.init_context(ctx)
+        self.init_shaders()
+        self.init_textures()
+        self.init_light_source()
+        self.refresh_perspective_uniforms()
+        self.static_mobject_to_render_group_list = {}
 
-    def __deepcopy__(self, memo):
-        # This is to address a strange bug where deepcopying
-        # will result in a segfault, which is somehow related
-        # to the aggdraw library
-        self.canvas = None
-        return copy.copy(self)
+    def init_frame(self):
+        self.frame = CameraFrame(**self.frame_config)
 
-    def reset_pixel_shape(self, new_height, new_width):
+    def init_context(self, ctx=None):
+        if ctx is None:
+            ctx = moderngl.create_standalone_context()
+            fbo = self.get_fbo(ctx, 0)
+        else:
+            fbo = ctx.detect_framebuffer()
+
+        # For multisample antialiasing
+        fbo_msaa = self.get_fbo(ctx, self.samples)
+        fbo_msaa.use()
+
+        ctx.enable(moderngl.BLEND)
+        ctx.blend_func = (
+            moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA,
+            moderngl.ONE, moderngl.ONE
+        )
+
+        self.ctx = ctx
+        self.fbo = fbo
+        self.fbo_msaa = fbo_msaa
+
+    def init_light_source(self):
+        self.light_source = Point(self.light_source_position)
+
+    # Methods associated with the frame buffer
+    def get_fbo(self, ctx, samples=0):
+        pw = self.pixel_width
+        ph = self.pixel_height
+        return ctx.framebuffer(
+            color_attachments=ctx.texture(
+                (pw, ph),
+                components=self.n_channels,
+                samples=samples,
+            ),
+            depth_attachment=ctx.depth_renderbuffer(
+                (pw, ph),
+                samples=samples
+            )
+        )
+
+    def clear(self):
+        self.fbo.clear(*self.background_rgba)
+        self.fbo_msaa.clear(*self.background_rgba)
+
+    def reset_pixel_shape(self, new_width, new_height):
         self.pixel_width = new_width
         self.pixel_height = new_height
-        self.init_background()
-        self.resize_frame_shape()
-        self.reset()
+        self.refresh_perspective_uniforms()
 
-    def get_pixel_height(self):
-        return self.pixel_height
+    def get_raw_fbo_data(self, dtype='f1'):
+        # Copy blocks from the fbo_msaa to the drawn fbo using Blit
+        pw, ph = (self.pixel_width, self.pixel_height)
+        gl.glBindFramebuffer(gl.GL_READ_FRAMEBUFFER, self.fbo_msaa.glo)
+        gl.glBindFramebuffer(gl.GL_DRAW_FRAMEBUFFER, self.fbo.glo)
+        gl.glBlitFramebuffer(0, 0, pw, ph, 0, 0, pw, ph, gl.GL_COLOR_BUFFER_BIT, gl.GL_LINEAR)
+        return self.fbo.read(
+            viewport=self.fbo.viewport,
+            components=self.n_channels,
+            dtype=dtype,
+        )
+
+    def get_image(self, pixel_array=None):
+        return Image.frombytes(
+            'RGBA',
+            self.get_pixel_shape(),
+            self.get_raw_fbo_data(),
+            'raw', 'RGBA', 0, -1
+        )
+
+    def get_pixel_array(self):
+        raw = self.get_raw_fbo_data(dtype='f4')
+        flat_arr = np.frombuffer(raw, dtype='f4')
+        arr = flat_arr.reshape([*self.fbo.size, self.n_channels])
+        # Convert from float
+        return (self.rgb_max_val * arr).astype(self.pixel_array_dtype)
+
+    # Needed?
+    def get_texture(self):
+        texture = self.ctx.texture(
+            size=self.fbo.size,
+            components=4,
+            data=self.get_raw_fbo_data(),
+            dtype='f4'
+        )
+        return texture
+
+    # Getting camera attributes
+    def get_pixel_shape(self):
+        return self.fbo.viewport[2:4]
+        # return (self.pixel_width, self.pixel_height)
 
     def get_pixel_width(self):
-        return self.pixel_width
+        return self.get_pixel_shape()[0]
+
+    def get_pixel_height(self):
+        return self.get_pixel_shape()[1]
 
     def get_frame_height(self):
-        return self.frame_height
+        return self.frame.get_height()
 
     def get_frame_width(self):
-        return self.frame_width
+        return self.frame.get_width()
+
+    def get_frame_shape(self):
+        return (self.get_frame_width(), self.get_frame_height())
 
     def get_frame_center(self):
-        return self.frame_center
-
-    def set_frame_height(self, frame_height):
-        self.frame_height = frame_height
-
-    def set_frame_width(self, frame_width):
-        self.frame_width = frame_width
-
-    def set_frame_center(self, frame_center):
-        self.frame_center = frame_center
+        return self.frame.get_center()
 
     def resize_frame_shape(self, fixed_dimension=0):
         """
@@ -112,601 +305,161 @@ class Camera(object):
             frame_height = frame_width / aspect_ratio
         else:
             frame_width = aspect_ratio * frame_height
-        self.set_frame_height(frame_height)
-        self.set_frame_width(frame_width)
+        self.frame.set_height(frame_height)
+        self.frame.set_width(frame_width)
 
-    def init_background(self):
-        height = self.get_pixel_height()
-        width = self.get_pixel_width()
-        if self.background_image is not None:
-            path = get_full_raster_image_path(self.background_image)
-            image = Image.open(path).convert(self.image_mode)
-            # TODO, how to gracefully handle backgrounds
-            # with different sizes?
-            self.background = np.array(image)[:height, :width]
-            self.background = self.background.astype(self.pixel_array_dtype)
-        else:
-            background_rgba = color_to_int_rgba(
-                self.background_color, self.background_opacity
-            )
-            self.background = np.zeros(
-                (height, width, self.n_channels),
-                dtype=self.pixel_array_dtype
-            )
-            self.background[:, :] = background_rgba
-
-    def get_image(self, pixel_array=None):
-        if pixel_array is None:
-            pixel_array = self.pixel_array
-        return Image.fromarray(
-            pixel_array,
-            mode=self.image_mode
-        )
-
-    def get_pixel_array(self):
-        return self.pixel_array
-
-    def convert_pixel_array(self, pixel_array, convert_from_floats=False):
-        retval = np.array(pixel_array)
-        if convert_from_floats:
-            retval = np.apply_along_axis(
-                lambda f: (f * self.rgb_max_val).astype(self.pixel_array_dtype),
-                2,
-                retval
-            )
-        return retval
-
-    def set_pixel_array(self, pixel_array, convert_from_floats=False):
-        converted_array = self.convert_pixel_array(
-            pixel_array, convert_from_floats)
-        if not (hasattr(self, "pixel_array") and self.pixel_array.shape == converted_array.shape):
-            self.pixel_array = converted_array
-        else:
-            # Set in place
-            self.pixel_array[:, :, :] = converted_array[:, :, :]
-
-    def set_background(self, pixel_array, convert_from_floats=False):
-        self.background = self.convert_pixel_array(
-            pixel_array, convert_from_floats)
-
-    # TODO, this should live in utils, not as a method of Camera
-    def make_background_from_func(self, coords_to_colors_func):
-        """
-        Sets background by using coords_to_colors_func to determine each pixel's color. Each input
-        to coords_to_colors_func is an (x, y) pair in space (in ordinary space coordinates; not
-        pixel coordinates), and each output is expected to be an RGBA array of 4 floats.
-        """
-
-        print("Starting set_background; for reference, the current time is ", time.strftime("%H:%M:%S"))
-        coords = self.get_coords_of_all_pixels()
-        new_background = np.apply_along_axis(
-            coords_to_colors_func,
-            2,
-            coords
-        )
-        print("Ending set_background; for reference, the current time is ", time.strftime("%H:%M:%S"))
-
-        return self.convert_pixel_array(new_background, convert_from_floats=True)
-
-    def set_background_from_func(self, coords_to_colors_func):
-        self.set_background(
-            self.make_background_from_func(coords_to_colors_func))
-
-    def reset(self):
-        self.set_pixel_array(self.background)
-        return self
-
-    ####
-
-    # TODO, it's weird that this is part of camera.
-    # Clearly it should live elsewhere.
-    def extract_mobject_family_members(
-            self, mobjects,
-            only_those_with_points=False):
-        if only_those_with_points:
-            method = Mobject.family_members_with_points
-        else:
-            method = Mobject.get_family
-        return remove_list_redundancies(list(
-            it.chain(*[method(m) for m in mobjects])
-        ))
-
-    def get_mobjects_to_display(
-            self, mobjects,
-            include_submobjects=True,
-            excluded_mobjects=None):
-        if include_submobjects:
-            mobjects = self.extract_mobject_family_members(
-                mobjects, only_those_with_points=True,
-            )
-            if excluded_mobjects:
-                all_excluded = self.extract_mobject_family_members(
-                    excluded_mobjects
-                )
-                mobjects = list_difference_update(mobjects, all_excluded)
-        return mobjects
-
-    def is_in_frame(self, mobject):
+    def pixel_coords_to_space_coords(self, px, py, relative=False):
+        pw, ph = self.fbo.size
+        fw, fh = self.get_frame_shape()
         fc = self.get_frame_center()
-        fh = self.get_frame_height()
-        fw = self.get_frame_width()
-        return not reduce(op.or_, [
-            mobject.get_right()[0] < fc[0] - fw,
-            mobject.get_bottom()[1] > fc[1] + fh,
-            mobject.get_left()[0] > fc[0] + fw,
-            mobject.get_top()[1] < fc[1] - fh,
-        ])
-
-    def capture_mobject(self, mobject, **kwargs):
-        return self.capture_mobjects([mobject], **kwargs)
-
-    def capture_mobjects(self, mobjects, **kwargs):
-        mobjects = self.get_mobjects_to_display(mobjects, **kwargs)
-
-        # Organize this list into batches of the same type, and
-        # apply corresponding function to those batches
-        type_func_pairs = [
-            (VMobject, self.display_multiple_vectorized_mobjects),
-            (PMobject, self.display_multiple_point_cloud_mobjects),
-            (AbstractImageMobject, self.display_multiple_image_mobjects),
-            (Mobject, lambda batch, pa: batch),  # Do nothing
-        ]
-
-        def get_mobject_type(mobject):
-            for mobject_type, func in type_func_pairs:
-                if isinstance(mobject, mobject_type):
-                    return mobject_type
-            raise Exception(
-                "Trying to display something which is not of type Mobject"
-            )
-        batch_type_pairs = batch_by_property(mobjects, get_mobject_type)
-
-        # Display in these batches
-        for batch, batch_type in batch_type_pairs:
-            # check what the type is, and call the appropriate function
-            for mobject_type, func in type_func_pairs:
-                if batch_type == mobject_type:
-                    func(batch, self.pixel_array)
-
-    # Methods associated with svg rendering
-
-    def get_cached_cairo_context(self, pixel_array):
-        return self.pixel_array_to_cairo_context.get(
-            id(pixel_array), None
-        )
-
-    def cache_cairo_context(self, pixel_array, ctx):
-        self.pixel_array_to_cairo_context[id(pixel_array)] = ctx
-
-    def get_cairo_context(self, pixel_array):
-        cached_ctx = self.get_cached_cairo_context(pixel_array)
-        if cached_ctx:
-            return cached_ctx
-        pw = self.get_pixel_width()
-        ph = self.get_pixel_height()
-        fw = self.get_frame_width()
-        fh = self.get_frame_height()
-        fc = self.get_frame_center()
-        surface = cairo.ImageSurface.create_for_data(
-            pixel_array,
-            cairo.FORMAT_ARGB32,
-            pw, ph
-        )
-        ctx = cairo.Context(surface)
-        ctx.scale(pw, ph)
-        ctx.set_matrix(cairo.Matrix(
-            fdiv(pw, fw), 0,
-            0, -fdiv(ph, fh),
-            (pw / 2) - fc[0] * fdiv(pw, fw),
-            (ph / 2) + fc[1] * fdiv(ph, fh),
-        ))
-        self.cache_cairo_context(pixel_array, ctx)
-        return ctx
-
-    def display_multiple_vectorized_mobjects(self, vmobjects, pixel_array):
-        if len(vmobjects) == 0:
-            return
-        batch_file_pairs = batch_by_property(
-            vmobjects,
-            lambda vm: vm.get_background_image_file()
-        )
-        for batch, file_name in batch_file_pairs:
-            if file_name:
-                self.display_multiple_background_colored_vmobject(batch, pixel_array)
-            else:
-                self.display_multiple_non_background_colored_vmobjects(batch, pixel_array)
-
-    def display_multiple_non_background_colored_vmobjects(self, vmobjects, pixel_array):
-        ctx = self.get_cairo_context(pixel_array)
-        for vmobject in vmobjects:
-            self.display_vectorized(vmobject, ctx)
-
-    def display_vectorized(self, vmobject, ctx):
-        self.set_cairo_context_path(ctx, vmobject)
-        self.apply_stroke(ctx, vmobject, background=True)
-        self.apply_fill(ctx, vmobject)
-        self.apply_stroke(ctx, vmobject)
-        return self
-
-    def set_cairo_context_path(self, ctx, vmobject):
-        points = self.transform_points_pre_display(
-            vmobject, vmobject.points
-        )
-        # TODO, shouldn't this be handled in transform_points_pre_display?
-        # points = points - self.get_frame_center()
-        if len(points) == 0:
-            return
-
-        ctx.new_path()
-        subpaths = vmobject.gen_subpaths_from_points_2d(points)
-        for subpath in subpaths:
-            quads = vmobject.gen_cubic_bezier_tuples_from_points(subpath)
-            ctx.new_sub_path()
-            start = subpath[0]
-            ctx.move_to(*start[:2])
-            for p0, p1, p2, p3 in quads:
-                ctx.curve_to(*p1[:2], *p2[:2], *p3[:2])
-            if vmobject.consider_points_equals_2d(subpath[0], subpath[-1]):
-                ctx.close_path()
-        return self
-
-    def set_cairo_context_color(self, ctx, rgbas, vmobject):
-        if len(rgbas) == 1:
-            # Use reversed rgb because cairo surface is
-            # encodes it in reverse order
-            ctx.set_source_rgba(
-                *rgbas[0][2::-1], rgbas[0][3]
-            )
+        if relative:
+            return 2 * np.array([px / pw, py / ph, 0])
         else:
-            points = vmobject.get_gradient_start_and_end_points()
-            points = self.transform_points_pre_display(
-                vmobject, points
-            )
-            pat = cairo.LinearGradient(*it.chain(*[
-                point[:2] for point in points
-            ]))
-            step = 1.0 / (len(rgbas) - 1)
-            offsets = np.arange(0, 1 + step, step)
-            for rgba, offset in zip(rgbas, offsets):
-                pat.add_color_stop_rgba(
-                    offset, *rgba[2::-1], rgba[3]
-                )
-            ctx.set_source(pat)
-        return self
+            # Only scale wrt one axis
+            scale = fh / ph
+            return fc + scale * np.array([(px - pw / 2), (py - ph / 2), 0])
 
-    def apply_fill(self, ctx, vmobject):
-        self.set_cairo_context_color(
-            ctx, self.get_fill_rgbas(vmobject), vmobject
-        )
-        ctx.fill_preserve()
-        return self
+    # Rendering
+    def capture(self, *mobjects, **kwargs):
+        self.refresh_perspective_uniforms()
+        for mobject in mobjects:
+            for render_group in self.get_render_group_list(mobject):
+                self.render(render_group)
 
-    def apply_stroke(self, ctx, vmobject, background=False):
-        width = vmobject.get_stroke_width(background)
-        if width == 0:
-            return self
-        self.set_cairo_context_color(
-            ctx,
-            self.get_stroke_rgbas(vmobject, background=background),
-            vmobject
-        )
-        ctx.set_line_width(
-            width * self.cairo_line_width_multiple *
-            # This ensures lines have constant width
-            # as you zoom in on them.
-            (self.get_frame_width() / FRAME_WIDTH)
-        )
-        ctx.stroke_preserve()
-        return self
+    def render(self, render_group):
+        shader_wrapper = render_group["shader_wrapper"]
+        shader_program = render_group["prog"]
+        self.set_shader_uniforms(shader_program, shader_wrapper)
+        self.update_depth_test(shader_wrapper)
+        render_group["vao"].render(int(shader_wrapper.render_primitive))
+        if render_group["single_use"]:
+            self.release_render_group(render_group)
 
-    def get_stroke_rgbas(self, vmobject, background=False):
-        return vmobject.get_stroke_rgbas(background)
+    def update_depth_test(self, shader_wrapper):
+        if shader_wrapper.depth_test:
+            self.ctx.enable(moderngl.DEPTH_TEST)
+        else:
+            self.ctx.disable(moderngl.DEPTH_TEST)
 
-    def get_fill_rgbas(self, vmobject):
-        return vmobject.get_fill_rgbas()
+    def get_render_group_list(self, mobject):
+        try:
+            return self.static_mobject_to_render_group_list[id(mobject)]
+        except KeyError:
+            return map(self.get_render_group, mobject.get_shader_wrapper_list())
 
-    def get_background_colored_vmobject_displayer(self):
-        # Quite wordy to type out a bunch
-        bcvd = "background_colored_vmobject_displayer"
-        if not hasattr(self, bcvd):
-            setattr(self, bcvd, BackgroundColoredVMobjectDisplayer(self))
-        return getattr(self, bcvd)
-
-    def display_multiple_background_colored_vmobject(self, cvmobjects, pixel_array):
-        displayer = self.get_background_colored_vmobject_displayer()
-        cvmobject_pixel_array = displayer.display(*cvmobjects)
-        self.overlay_rgba_array(pixel_array, cvmobject_pixel_array)
-        return self
-
-    # Methods for other rendering
-
-    def display_multiple_point_cloud_mobjects(self, pmobjects, pixel_array):
-        for pmobject in pmobjects:
-            self.display_point_cloud(
-                pmobject,
-                pmobject.points,
-                pmobject.rgbas,
-                self.adjusted_thickness(pmobject.stroke_width),
-                pixel_array,
-            )
-
-    def display_point_cloud(self, pmobject, points, rgbas, thickness, pixel_array):
-        if len(points) == 0:
-            return
-        pixel_coords = self.points_to_pixel_coords(
-            pmobject, points
-        )
-        pixel_coords = self.thickened_coordinates(
-            pixel_coords, thickness
-        )
-        rgba_len = pixel_array.shape[2]
-
-        rgbas = (self.rgb_max_val * rgbas).astype(self.pixel_array_dtype)
-        target_len = len(pixel_coords)
-        factor = target_len // len(rgbas)
-        rgbas = np.array([rgbas] * factor).reshape((target_len, rgba_len))
-
-        on_screen_indices = self.on_screen_pixels(pixel_coords)
-        pixel_coords = pixel_coords[on_screen_indices]
-        rgbas = rgbas[on_screen_indices]
-
-        ph = self.get_pixel_height()
-        pw = self.get_pixel_width()
-
-        flattener = np.array([1, pw], dtype='int')
-        flattener = flattener.reshape((2, 1))
-        indices = np.dot(pixel_coords, flattener)[:, 0]
-        indices = indices.astype('int')
-
-        new_pa = pixel_array.reshape((ph * pw, rgba_len))
-        new_pa[indices] = rgbas
-        pixel_array[:, :] = new_pa.reshape((ph, pw, rgba_len))
-
-    def display_multiple_image_mobjects(self, image_mobjects, pixel_array):
-        for image_mobject in image_mobjects:
-            self.display_image_mobject(image_mobject, pixel_array)
-
-    def display_image_mobject(self, image_mobject, pixel_array):
-        corner_coords = self.points_to_pixel_coords(
-            image_mobject, image_mobject.points
-        )
-        ul_coords, ur_coords, dl_coords = corner_coords
-        right_vect = ur_coords - ul_coords
-        down_vect = dl_coords - ul_coords
-        center_coords = ul_coords + (right_vect + down_vect) / 2
-
-        sub_image = Image.fromarray(
-            image_mobject.get_pixel_array(),
-            mode="RGBA"
-        )
-
-        # Reshape
-        pixel_width = max(int(pdist([ul_coords, ur_coords])), 1)
-        pixel_height = max(int(pdist([ul_coords, dl_coords])), 1)
-        sub_image = sub_image.resize(
-            (pixel_width, pixel_height), resample=Image.BICUBIC
-        )
-
-        # Rotate
-        angle = angle_of_vector(right_vect)
-        adjusted_angle = -int(360 * angle / TAU)
-        if adjusted_angle != 0:
-            sub_image = sub_image.rotate(
-                adjusted_angle, resample=Image.BICUBIC, expand=1
-            )
-
-        # TODO, there is no accounting for a shear...
-
-        # Paste into an image as large as the camear's pixel array
-        full_image = Image.fromarray(
-            np.zeros((self.get_pixel_height(), self.get_pixel_width())),
-            mode="RGBA"
-        )
-        new_ul_coords = center_coords - np.array(sub_image.size) / 2
-        new_ul_coords = new_ul_coords.astype(int)
-        full_image.paste(
-            sub_image,
-            box=(
-                new_ul_coords[0],
-                new_ul_coords[1],
-                new_ul_coords[0] + sub_image.size[0],
-                new_ul_coords[1] + sub_image.size[1],
-            )
-        )
-        # Paint on top of existing pixel array
-        self.overlay_PIL_image(pixel_array, full_image)
-
-    def overlay_rgba_array(self, pixel_array, new_array):
-        self.overlay_PIL_image(
-            pixel_array,
-            self.get_image(new_array),
-        )
-
-    def overlay_PIL_image(self, pixel_array, image):
-        pixel_array[:, :] = np.array(
-            Image.alpha_composite(
-                self.get_image(pixel_array),
-                image
-            ),
-            dtype='uint8'
-        )
-
-    def adjust_out_of_range_points(self, points):
-        if not np.any(points > self.max_allowable_norm):
-            return points
-        norms = np.apply_along_axis(get_norm, 1, points)
-        violator_indices = norms > self.max_allowable_norm
-        violators = points[violator_indices, :]
-        violator_norms = norms[violator_indices]
-        reshaped_norms = np.repeat(
-            violator_norms.reshape((len(violator_norms), 1)),
-            points.shape[1], 1
-        )
-        rescaled = self.max_allowable_norm * violators / reshaped_norms
-        points[violator_indices] = rescaled
-        return points
-
-    def transform_points_pre_display(self, mobject, points):
-        # Subclasses (like ThreeDCamera) may want to
-        # adjust points futher before they're shown
-        if not np.all(np.isfinite(points)):
-            # TODO, print some kind of warning about
-            # mobject having invalid points?
-            points = np.zeros((1, 3))
-        return points
-
-    def points_to_pixel_coords(self, mobject, points):
-        points = self.transform_points_pre_display(
-            mobject, points
-        )
-        shifted_points = points - self.get_frame_center()
-
-        result = np.zeros((len(points), 2))
-        pixel_height = self.get_pixel_height()
-        pixel_width = self.get_pixel_width()
-        frame_height = self.get_frame_height()
-        frame_width = self.get_frame_width()
-        width_mult = pixel_width / frame_width
-        width_add = pixel_width / 2
-        height_mult = pixel_height / frame_height
-        height_add = pixel_height / 2
-        # Flip on y-axis as you go
-        height_mult *= -1
-
-        result[:, 0] = shifted_points[:, 0] * width_mult + width_add
-        result[:, 1] = shifted_points[:, 1] * height_mult + height_add
-        return result.astype('int')
-
-    def on_screen_pixels(self, pixel_coords):
-        return reduce(op.and_, [
-            pixel_coords[:, 0] >= 0,
-            pixel_coords[:, 0] < self.get_pixel_width(),
-            pixel_coords[:, 1] >= 0,
-            pixel_coords[:, 1] < self.get_pixel_height(),
-        ])
-
-    def adjusted_thickness(self, thickness):
-        # TODO: This seems...unsystematic
-        big_sum = op.add(
-            PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_height"],
-            PRODUCTION_QUALITY_CAMERA_CONFIG["pixel_width"],
-        )
-        this_sum = op.add(
-            self.get_pixel_height(),
-            self.get_pixel_width(),
-        )
-        factor = fdiv(big_sum, this_sum)
-        return 1 + (thickness - 1) / factor
-
-    def get_thickening_nudges(self, thickness):
-        thickness = int(thickness)
-        _range = list(range(-thickness // 2 + 1, thickness // 2 + 1))
-        return np.array(list(it.product(_range, _range)))
-
-    def thickened_coordinates(self, pixel_coords, thickness):
-        nudges = self.get_thickening_nudges(thickness)
-        pixel_coords = np.array([
-            pixel_coords + nudge
-            for nudge in nudges
-        ])
-        size = pixel_coords.size
-        return pixel_coords.reshape((size // 2, 2))
-
-    # TODO, reimplement using cairo matrix
-    def get_coords_of_all_pixels(self):
-        # These are in x, y order, to help me keep things straight
-        full_space_dims = np.array([
-            self.get_frame_width(),
-            self.get_frame_height()
-        ])
-        full_pixel_dims = np.array([
-            self.get_pixel_width(),
-            self.get_pixel_height()
-        ])
-
-        # These are addressed in the same y, x order as in pixel_array, but the values in them
-        # are listed in x, y order
-        uncentered_pixel_coords = np.indices(
-            [self.get_pixel_height(), self.get_pixel_width()]
-        )[::-1].transpose(1, 2, 0)
-        uncentered_space_coords = fdiv(
-            uncentered_pixel_coords * full_space_dims,
-            full_pixel_dims)
-        # Could structure above line's computation slightly differently, but figured (without much
-        # thought) multiplying by frame_shape first, THEN dividing by pixel_shape, is probably
-        # better than the other order, for avoiding underflow quantization in the division (whereas
-        # overflow is unlikely to be a problem)
-
-        centered_space_coords = (
-            uncentered_space_coords - fdiv(full_space_dims, 2)
-        )
-
-        # Have to also flip the y coordinates to account for pixel array being listed in
-        # top-to-bottom order, opposite of screen coordinate convention
-        centered_space_coords = centered_space_coords * (1, -1)
-
-        return centered_space_coords
-
-
-class BackgroundColoredVMobjectDisplayer(object):
-    def __init__(self, camera):
-        self.camera = camera
-        self.file_name_to_pixel_array_map = {}
-        self.pixel_array = np.array(camera.get_pixel_array())
-        self.reset_pixel_array()
-
-    def reset_pixel_array(self):
-        self.pixel_array[:, :] = 0
-
-    def resize_background_array(
-        self, background_array,
-        new_width, new_height,
-        mode="RGBA"
-    ):
-        image = Image.fromarray(background_array)
-        image = image.convert(mode)
-        resized_image = image.resize((new_width, new_height))
-        return np.array(resized_image)
-
-    def resize_background_array_to_match(self, background_array, pixel_array):
-        height, width = pixel_array.shape[:2]
-        mode = "RGBA" if pixel_array.shape[2] == 4 else "RGB"
-        return self.resize_background_array(background_array, width, height, mode)
-
-    def get_background_array(self, file_name):
-        if file_name in self.file_name_to_pixel_array_map:
-            return self.file_name_to_pixel_array_map[file_name]
-        full_path = get_full_raster_image_path(file_name)
-        image = Image.open(full_path)
-        back_array = np.array(image)
-
-        pixel_array = self.pixel_array
-        if not np.all(pixel_array.shape == back_array.shape):
-            back_array = self.resize_background_array_to_match(
-                back_array, pixel_array
-            )
-
-        self.file_name_to_pixel_array_map[file_name] = back_array
-        return back_array
-
-    def display(self, *cvmobjects):
-        batch_image_file_pairs = batch_by_property(
-            cvmobjects, lambda cv: cv.get_background_image_file()
-        )
-        curr_array = None
-        for batch, image_file in batch_image_file_pairs:
-            background_array = self.get_background_array(image_file)
-            pixel_array = self.pixel_array
-            self.camera.display_multiple_non_background_colored_vmobjects(
-                batch, pixel_array
-            )
-            new_array = np.array(
-                (background_array * pixel_array.astype('float') / 255),
-                dtype=self.camera.pixel_array_dtype
-            )
-            if curr_array is None:
-                curr_array = new_array
+    def get_render_group(self, shader_wrapper, single_use=True):
+        # Data buffers
+        vbo = self.ctx.buffer(shader_wrapper.vert_data.tobytes())
+        if shader_wrapper.vert_indices is None:
+            ibo = None
+        else:
+            vert_index_data = shader_wrapper.vert_indices.astype('i4').tobytes()
+            if vert_index_data:
+                ibo = self.ctx.buffer(vert_index_data)
             else:
-                curr_array = np.maximum(curr_array, new_array)
-            self.reset_pixel_array()
-        return curr_array
+                ibo = None
+
+        # Program and vertex array
+        shader_program, vert_format = self.get_shader_program(shader_wrapper)
+        vao = self.ctx.vertex_array(
+            program=shader_program,
+            content=[(vbo, vert_format, *shader_wrapper.vert_attributes)],
+            index_buffer=ibo,
+        )
+        return {
+            "vbo": vbo,
+            "ibo": ibo,
+            "vao": vao,
+            "prog": shader_program,
+            "shader_wrapper": shader_wrapper,
+            "single_use": single_use,
+        }
+
+    def release_render_group(self, render_group):
+        for key in ["vbo", "ibo", "vao"]:
+            if render_group[key] is not None:
+                render_group[key].release()
+
+    def set_mobjects_as_static(self, *mobjects):
+        # Creates buffer and array objects holding each mobjects shader data
+        for mob in mobjects:
+            self.static_mobject_to_render_group_list[id(mob)] = [
+                self.get_render_group(sw, single_use=False)
+                for sw in mob.get_shader_wrapper_list()
+            ]
+
+    def release_static_mobjects(self):
+        for rg_list in self.static_mobject_to_render_group_list.values():
+            for render_group in rg_list:
+                self.release_render_group(render_group)
+        self.static_mobject_to_render_group_list = {}
+
+    # Shaders
+    def init_shaders(self):
+        # Initialize with the null id going to None
+        self.id_to_shader_program = {"": None}
+
+    def get_shader_program(self, shader_wrapper):
+        sid = shader_wrapper.get_program_id()
+        if sid not in self.id_to_shader_program:
+            # Create shader program for the first time, then cache
+            # in the id_to_shader_program dictionary
+            program = self.ctx.program(**shader_wrapper.get_program_code())
+            vert_format = moderngl.detect_format(program, shader_wrapper.vert_attributes)
+            self.id_to_shader_program[sid] = (program, vert_format)
+        return self.id_to_shader_program[sid]
+
+    def set_shader_uniforms(self, shader, shader_wrapper):
+        for name, path in shader_wrapper.texture_paths.items():
+            tid = self.get_texture_id(path)
+            shader[name].value = tid
+        for name, value in it.chain(shader_wrapper.uniforms.items(), self.perspective_uniforms.items()):
+            try:
+                shader[name].value = value
+            except KeyError:
+                pass
+
+    def refresh_perspective_uniforms(self):
+        frame = self.frame
+        pw, ph = self.get_pixel_shape()
+        fw, fh = frame.get_shape()
+        # TODO, this should probably be a mobject uniform, with
+        # the camera taking care of the conversion factor
+        anti_alias_width = self.anti_alias_width / (ph / fh)
+        # Orient light
+        rotation = frame.get_inverse_camera_rotation_matrix()
+        light_pos = self.light_source.get_location()
+        light_pos = np.dot(rotation, light_pos)
+
+        self.perspective_uniforms = {
+            "frame_shape": frame.get_shape(),
+            "anti_alias_width": anti_alias_width,
+            "camera_center": tuple(frame.get_center()),
+            "camera_rotation": tuple(np.array(rotation).T.flatten()),
+            "light_source_position": tuple(light_pos),
+            "focal_distance": frame.get_focal_distance(),
+        }
+
+    def init_textures(self):
+        self.path_to_texture_id = {}
+
+    def get_texture_id(self, path):
+        if path not in self.path_to_texture_id:
+            # A way to increase tid's sequentially
+            tid = len(self.path_to_texture_id)
+            im = Image.open(path)
+            texture = self.ctx.texture(
+                size=im.size,
+                components=len(im.getbands()),
+                data=im.tobytes(),
+            )
+            texture.use(location=tid)
+            self.path_to_texture_id[path] = tid
+        return self.path_to_texture_id[path]
+
+
+# Mostly just defined so old scenes don't break
+class ThreeDCamera(Camera):
+    CONFIG = {
+        "samples": 4,
+    }

@@ -32,7 +32,7 @@ class GrowFromCenter(GrowFromPoint):
 
 class GrowFromEdge(GrowFromPoint):
     def __init__(self, mobject, edge, **kwargs):
-        point = mobject.get_critical_point(edge)
+        point = mobject.get_bounding_box_point(edge)
         super().__init__(mobject, point, **kwargs)
 
 

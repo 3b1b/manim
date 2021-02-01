@@ -1,20 +1,29 @@
-name: manim
+name: manim_shaders
 channels:
   - defaults
   - conda-forge
 dependencies:
   - python=3.7
-  - cairo
-  - ffmpeg
-  - colour==0.1.5
-  - numpy==1.15.0
-  - pillow==5.2.0
-  - scipy==1.1.0
-  - tqdm==4.24.0
-  - opencv==3.4.2
-  - pycairo==1.18.0
-  - pydub==0.23.0
-  - ffmpeg
-  - pygments==2.6.1
+  - pip
   - pip:
-      - pyreadline
+    - pyreadline
+    - matplotlib
+    - mapbox-earcut
+    - moderngl_window
+    - screeninfo
+    - argparse
+    - colour
+    - numpy
+    - Pillow
+    - progressbar
+    - scipy
+    - sympy
+    - tqdm
+    - moderngl
+    - pydub
+    - pyyaml
+    - validators
+    - ipython
+    - PyOpenGL
+    - pycairo
+

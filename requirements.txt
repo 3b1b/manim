@@ -4,9 +4,17 @@ numpy
 Pillow
 progressbar
 scipy
+sympy
 tqdm
-opencv-python
-pycairo
+mapbox-earcut
+matplotlib
+moderngl
+moderngl_window
 pydub
-pygments
+pyyaml
+screeninfo
 pyreadline; sys_platform == 'win32'
+validators
+ipython
+PyOpenGL
+pycairo

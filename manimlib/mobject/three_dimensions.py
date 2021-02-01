@@ -1,148 +1,189 @@
+import math
+
 from manimlib.constants import *
-from manimlib.mobject.geometry import Square
+from manimlib.mobject.types.surface import ParametricSurface
+from manimlib.mobject.types.surface import SGroup
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.iterables import tuplify
+from manimlib.utils.config_ops import digest_config
+from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import z_to_vector
 
-##############
 
-
-class ThreeDVMobject(VMobject):
+class SurfaceMesh(VGroup):
     CONFIG = {
-        "shade_in_3d": True,
+        "resolution": (21, 21),
+        "stroke_width": 1,
+        "normal_nudge": 1e-2,
+        "depth_test": True,
+        "flat_stroke": False,
     }
 
+    def __init__(self, uv_surface, **kwargs):
+        if not isinstance(uv_surface, ParametricSurface):
+            raise Exception("uv_surface must be of type ParametricSurface")
+        self.uv_surface = uv_surface
+        super().__init__(**kwargs)
 
-class ParametricSurface(VGroup):
-    CONFIG = {
-        "u_min": 0,
-        "u_max": 1,
-        "v_min": 0,
-        "v_max": 1,
-        "resolution": 32,
-        "surface_piece_config": {},
-        "fill_color": BLUE_D,
-        "fill_opacity": 1.0,
-        "checkerboard_colors": [BLUE_D, BLUE_E],
-        "stroke_color": LIGHT_GREY,
-        "stroke_width": 0.5,
-        "should_make_jagged": False,
-        "pre_function_handle_to_anchor_scale_factor": 0.00001,
-    }
+    def init_points(self):
+        uv_surface = self.uv_surface
 
-    def __init__(self, func, **kwargs):
-        VGroup.__init__(self, **kwargs)
-        self.func = func
-        self.setup_in_uv_space()
-        self.apply_function(lambda p: func(p[0], p[1]))
-        if self.should_make_jagged:
-            self.make_jagged()
+        full_nu, full_nv = uv_surface.resolution
+        part_nu, part_nv = self.resolution
+        u_indices = np.linspace(0, full_nu, part_nu).astype(int)
+        v_indices = np.linspace(0, full_nv, part_nv).astype(int)
 
-    def get_u_values_and_v_values(self):
-        res = tuplify(self.resolution)
-        if len(res) == 1:
-            u_res = v_res = res[0]
-        else:
-            u_res, v_res = res
-        u_min = self.u_min
-        u_max = self.u_max
-        v_min = self.v_min
-        v_max = self.v_max
+        points, du_points, dv_points = uv_surface.get_surface_points_and_nudged_points()
+        normals = uv_surface.get_unit_normals()
+        nudge = 1e-2
+        nudged_points = points + nudge * normals
 
-        u_values = np.linspace(u_min, u_max, u_res + 1)
-        v_values = np.linspace(v_min, v_max, v_res + 1)
-
-        return u_values, v_values
-
-    def setup_in_uv_space(self):
-        u_values, v_values = self.get_u_values_and_v_values()
-        faces = VGroup()
-        for i in range(len(u_values) - 1):
-            for j in range(len(v_values) - 1):
-                u1, u2 = u_values[i:i + 2]
-                v1, v2 = v_values[j:j + 2]
-                face = ThreeDVMobject()
-                face.set_points_as_corners([
-                    [u1, v1, 0],
-                    [u2, v1, 0],
-                    [u2, v2, 0],
-                    [u1, v2, 0],
-                    [u1, v1, 0],
-                ])
-                faces.add(face)
-                face.u_index = i
-                face.v_index = j
-                face.u1 = u1
-                face.u2 = u2
-                face.v1 = v1
-                face.v2 = v2
-        faces.set_fill(
-            color=self.fill_color,
-            opacity=self.fill_opacity
-        )
-        faces.set_stroke(
-            color=self.stroke_color,
-            width=self.stroke_width,
-            opacity=self.stroke_opacity,
-        )
-        self.add(*faces)
-        if self.checkerboard_colors:
-            self.set_fill_by_checkerboard(*self.checkerboard_colors)
-
-    def set_fill_by_checkerboard(self, *colors, opacity=None):
-        n_colors = len(colors)
-        for face in self:
-            c_index = (face.u_index + face.v_index) % n_colors
-            face.set_fill(colors[c_index], opacity=opacity)
+        for ui in u_indices:
+            path = VMobject()
+            full_ui = full_nv * ui
+            path.set_points_smoothly(nudged_points[full_ui:full_ui + full_nv])
+            self.add(path)
+        for vi in v_indices:
+            path = VMobject()
+            path.set_points_smoothly(nudged_points[vi::full_nv])
+            self.add(path)
 
 
-# Specific shapes
+# Sphere, cylinder, cube, prism
 
-
-class Sphere(ParametricSurface):
-    CONFIG = {
-        "resolution": (12, 24),
-        "radius": 1,
-        "u_min": 0.001,
-        "u_max": PI - 0.001,
-        "v_min": 0,
-        "v_max": TAU,
-    }
-
+class ArglessSurface(ParametricSurface):
     def __init__(self, **kwargs):
-        ParametricSurface.__init__(
-            self, self.func, **kwargs
-        )
-        self.scale(self.radius)
+        super().__init__(self.uv_func, **kwargs)
 
-    def func(self, u, v):
-        return np.array([
-            np.cos(v) * np.sin(u),
-            np.sin(v) * np.sin(u),
-            np.cos(u)
+    def uv_func(self, u, v):
+        # To be implemented by a subclass
+        return [u, v, 0]
+
+
+class Sphere(ArglessSurface):
+    CONFIG = {
+        "resolution": (101, 51),
+        "radius": 1,
+        "u_range": (0, TAU),
+        "v_range": (0, PI),
+    }
+
+    def uv_func(self, u, v):
+        return self.radius * np.array([
+            np.cos(u) * np.sin(v),
+            np.sin(u) * np.sin(v),
+            -np.cos(v)
         ])
 
 
-class Cube(VGroup):
+class Torus(ArglessSurface):
     CONFIG = {
-        "fill_opacity": 0.75,
-        "fill_color": BLUE,
-        "stroke_width": 0,
+        "u_range": (0, TAU),
+        "v_range": (0, TAU),
+        "r1": 3,
+        "r2": 1,
+    }
+
+    def uv_func(self, u, v):
+        P = np.array([math.cos(u), math.sin(u), 0])
+        return (self.r1 - self.r2 * math.cos(v)) * P - math.sin(v) * OUT
+
+
+class Cylinder(ArglessSurface):
+    CONFIG = {
+        "height": 2,
+        "radius": 1,
+        "axis": OUT,
+        "u_range": (0, TAU),
+        "v_range": (-1, 1),
+        "resolution": (101, 11),
+    }
+
+    def init_points(self):
+        super().init_points()
+        self.scale(self.radius)
+        self.set_depth(self.height, stretch=True)
+        self.apply_matrix(z_to_vector(self.axis))
+        return self
+
+    def uv_func(self, u, v):
+        return [np.cos(u), np.sin(u), v]
+
+
+class Line3D(Cylinder):
+    CONFIG = {
+        "width": 0.05,
+        "resolution": (21, 25)
+    }
+
+    def __init__(self, start, end, **kwargs):
+        digest_config(self, kwargs)
+        axis = end - start
+        super().__init__(
+            height=get_norm(axis),
+            radius=self.width / 2,
+            axis=axis
+        )
+        self.shift((start + end) / 2)
+
+
+class Disk3D(ArglessSurface):
+    CONFIG = {
+        "radius": 1,
+        "u_range": (0, 1),
+        "v_range": (0, TAU),
+        "resolution": (2, 25),
+    }
+
+    def init_points(self):
+        super().init_points()
+        self.scale(self.radius)
+
+    def uv_func(self, u, v):
+        return [
+            u * np.cos(v),
+            u * np.sin(v),
+            0
+        ]
+
+
+class Square3D(ArglessSurface):
+    CONFIG = {
+        "side_length": 2,
+        "u_range": (-1, 1),
+        "v_range": (-1, 1),
+        "resolution": (2, 2),
+    }
+
+    def init_points(self):
+        super().init_points()
+        self.scale(self.side_length / 2)
+
+    def uv_func(self, u, v):
+        return [u, v, 0]
+
+
+class Cube(SGroup):
+    CONFIG = {
+        # "fill_color": BLUE,
+        # "fill_opacity": 1,
+        # "stroke_width": 1,
+        # "stroke_color": BLACK,
+        "color": BLUE,
+        "opacity": 1,
+        "gloss": 0.5,
+        "square_resolution": (2, 2),
         "side_length": 2,
     }
 
-    def generate_points(self):
-        for vect in IN, OUT, LEFT, RIGHT, UP, DOWN:
-            face = Square(
-                side_length=self.side_length,
-                shade_in_3d=True,
-            )
-            face.flip()
-            face.shift(self.side_length * OUT / 2.0)
+    def init_points(self):
+        for vect in [OUT, RIGHT, UP, LEFT, DOWN, IN]:
+            face = Square3D(resolution=self.square_resolution)
+            face.shift(OUT)
             face.apply_matrix(z_to_vector(vect))
-
             self.add(face)
+        self.set_height(self.side_length)
+        # self.set_color(self.color, self.opacity, self.gloss)
 
 
 class Prism(Cube):
@@ -150,7 +191,7 @@ class Prism(Cube):
         "dimensions": [3, 2, 1]
     }
 
-    def generate_points(self):
-        Cube.generate_points(self)
+    def init_points(self):
+        Cube.init_points(self)
         for dim, value in enumerate(self.dimensions):
             self.rescale_to_fit(value, dim, stretch=True)

@@ -1,5 +1,6 @@
 import os
-from manimlib.utils.file_ops import seek_full_path_from_defaults
+from manimlib.utils.file_ops import find_file
+from manimlib.utils.directories import get_sound_dir
 
 
 def play_chord(*nums):
@@ -19,7 +20,7 @@ def play_chord(*nums):
     ]
     try:
         os.system(" ".join(commands))
-    except:
+    except Exception:
         pass
 
 
@@ -32,8 +33,8 @@ def play_finish_sound():
 
 
 def get_full_sound_file_path(sound_file_name):
-    return seek_full_path_from_defaults(
+    return find_file(
         sound_file_name,
-        default_dir=os.path.join("assets", "sounds"),
+        directories=[get_sound_dir()],
         extensions=[".wav", ".mp3"]
     )

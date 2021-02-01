@@ -1,9 +1,10 @@
 import numpy as np
+import math
 
 from manimlib.constants import OUT
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.space_ops import get_norm
-from manimlib.utils.space_ops import rotation_matrix
+from manimlib.utils.space_ops import rotation_matrix_transpose
 
 STRAIGHT_PATH_THRESHOLD = 0.01
 
@@ -33,9 +34,10 @@ def path_along_arc(arc_angle, axis=OUT):
         vects = end_points - start_points
         centers = start_points + 0.5 * vects
         if arc_angle != np.pi:
-            centers += np.cross(unit_axis, vects / 2.0) / np.tan(arc_angle / 2)
-        rot_matrix = rotation_matrix(alpha * arc_angle, unit_axis)
-        return centers + np.dot(start_points - centers, rot_matrix.T)
+            centers += np.cross(unit_axis, vects / 2.0) / math.tan(arc_angle / 2)
+        rot_matrix_T = rotation_matrix_transpose(alpha * arc_angle, unit_axis)
+        return centers + np.dot(start_points - centers, rot_matrix_T)
+
     return path
 
 

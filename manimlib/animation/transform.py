@@ -40,16 +40,23 @@ class Transform(Animation):
             )
 
     def begin(self):
-        # Use a copy of target_mobject for the align_data
-        # call so that the actual target_mobject stays
-        # preserved.
         self.target_mobject = self.create_target()
         self.check_target_mobject_validity()
+        # Use a copy of target_mobject for the align_data_and_family
+        # call so that the actual target_mobject stays
+        # preserved, since calling allign_data will potentailly
+        # change the structure of both arguments
         self.target_copy = self.target_mobject.copy()
-        # Note, this potentially changes the structure
-        # of both mobject and target_mobject
-        self.mobject.align_data(self.target_copy)
+        self.mobject.align_data_and_family(self.target_copy)
         super().begin()
+        self.mobject.lock_matching_data(
+            self.starting_mobject,
+            self.target_copy,
+        )
+
+    def finish(self):
+        super().finish()
+        self.mobject.unlock_data()
 
     def create_target(self):
         # Has no meaningful effect here, but may be useful
@@ -58,9 +65,8 @@ class Transform(Animation):
 
     def check_target_mobject_validity(self):
         if self.target_mobject is None:
-            message = "{}.create_target not properly implemented"
             raise Exception(
-                message.format(self.__class__.__name__)
+                f"{self.__class__.__name__}.create_target not properly implemented"
             )
 
     def clean_up_from_scene(self, scene):
@@ -87,7 +93,7 @@ class Transform(Animation):
 
     def get_all_families_zipped(self):
         return zip(*[
-            mob.family_members_with_points()
+            mob.get_family()
             for mob in [
                 self.mobject,
                 self.starting_mobject,
@@ -96,10 +102,7 @@ class Transform(Animation):
         ])
 
     def interpolate_submobject(self, submob, start, target_copy, alpha):
-        submob.interpolate(
-            start, target_copy,
-            alpha, self.path_func
-        )
+        submob.interpolate(start, target_copy, alpha, self.path_func)
         return self
 
 
@@ -152,7 +155,7 @@ class ApplyMethod(Transform):
         method is a method of Mobject, *args are arguments for
         that method.  Key word arguments should be passed in
         as the last arg, as a dict, since **kwargs is for
-        configuration of the transform itself
+        configuration of the transform itslef
 
         Relies on the fact that mobject methods return the mobject
         """
@@ -307,10 +310,10 @@ class TransformAnimations(Transform):
             anim.set_run_time(self.run_time)
 
         if start_anim.starting_mobject.get_num_points() != end_anim.starting_mobject.get_num_points():
-            start_anim.starting_mobject.align_data(end_anim.starting_mobject)
+            start_anim.starting_mobject.align_data_and_family(end_anim.starting_mobject)
             for anim in start_anim, end_anim:
                 if hasattr(anim, "target_mobject"):
-                    anim.starting_mobject.align_data(anim.target_mobject)
+                    anim.starting_mobject.align_data_and_family(anim.target_mobject)
 
         Transform.__init__(self, start_anim.mobject,
                            end_anim.mobject, **kwargs)

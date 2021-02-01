@@ -2,7 +2,7 @@ import numpy as np
 
 from manimlib.animation.animation import Animation
 from manimlib.constants import *
-from manimlib.mobject.svg.tex_mobject import TexMobject
+from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.scene.scene import Scene
 
 
@@ -66,7 +66,7 @@ class RearrangeEquation(Scene):
         """
         num_start_terms = len(start_terms)
         all_mobs = np.array(
-            TexMobject(start_terms).split() + TexMobject(end_terms).split())
+            Tex(start_terms).split() + Tex(end_terms).split())
         all_terms = np.array(start_terms + end_terms)
         for term in set(all_terms):
             matches = all_terms == term
@@ -86,7 +86,7 @@ class FlipThroughSymbols(Animation):
     }
 
     def __init__(self, tex_list, **kwargs):
-        mobject = TexMobject(self.curr_tex).shift(start_center)
+        mobject = Tex(self.curr_tex).shift(start_center)
         Animation.__init__(self, mobject, **kwargs)
 
     def interpolate_mobject(self, alpha):
@@ -94,7 +94,7 @@ class FlipThroughSymbols(Animation):
 
         if new_tex != self.curr_tex:
             self.curr_tex = new_tex
-            self.mobject = TexMobject(new_tex).shift(self.start_center)
+            self.mobject = Tex(new_tex).shift(self.start_center)
         if not all(self.start_center == self.end_center):
             self.mobject.center().shift(
                 (1 - alpha) * self.start_center + alpha * self.end_center

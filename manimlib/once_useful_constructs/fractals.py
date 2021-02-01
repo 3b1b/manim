@@ -1,9 +1,9 @@
 from functools import reduce
 
 from manimlib.constants import *
-from manimlib.for_3b1b_videos.pi_creature import PiCreature
-from manimlib.for_3b1b_videos.pi_creature import Randolph
-from manimlib.for_3b1b_videos.pi_creature import get_all_pi_creature_modes
+# from manimlib.for_3b1b_videos.pi_creature import PiCreature
+# from manimlib.for_3b1b_videos.pi_creature import Randolph
+# from manimlib.for_3b1b_videos.pi_creature import get_all_pi_creature_modes
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.geometry import Polygon
 from manimlib.mobject.geometry import RegularPolygon
@@ -62,11 +62,11 @@ def fractalification_iteration(vmobject, dimension=1.05, num_inserted_anchors_ra
             new_anchors += [p1] + inserted_points
         new_anchors.append(original_anchors[-1])
         vmobject.set_points_as_corners(new_anchors)
-    vmobject.submobjects = [
+    vmobject.set_submobjects([
         fractalification_iteration(
             submob, dimension, num_inserted_anchors_range)
         for submob in vmobject.submobjects
-    ]
+    ])
     return vmobject
 
 
@@ -84,12 +84,12 @@ class SelfSimilarFractal(VMobject):
         VMobject.init_colors(self)
         self.set_color_by_gradient(*self.colors)
 
-    def generate_points(self):
+    def init_points(self):
         order_n_self = self.get_order_n_self(self.order)
         if self.order == 0:
-            self.submobjects = [order_n_self]
+            self.set_submobjects([order_n_self])
         else:
-            self.submobjects = order_n_self.submobjects
+            self.set_submobjects(order_n_self.submobjects)
         return self
 
     def get_order_n_self(self, order):
@@ -210,7 +210,7 @@ class PiCreatureFractal(VMobject):
             pi.set_color(color)
             pi.set_stroke(color, width=0)
 
-    def generate_points(self):
+    def init_points(self):
         random.seed(self.random_seed)
         modes = get_all_pi_creature_modes()
         seed = PiCreature(mode=self.start_mode)
@@ -315,7 +315,7 @@ class FractalCurve(VMobject):
         },
     }
 
-    def generate_points(self):
+    def init_points(self):
         points = self.get_anchor_points()
         self.set_points_as_corners(points)
         if not self.monochromatic:
@@ -326,7 +326,7 @@ class FractalCurve(VMobject):
                     self, *alpha_pair
                 )
                 self.add(submobject)
-            self.points = np.zeros((0, 3))
+            self.set_points(np.zeros((0, 3)))
 
     def init_colors(self):
         VMobject.init_colors(self)

@@ -1,5 +1,5 @@
 """
-I won't pretend like this is best practice, but in creating animations for a video,
+I won't pretend like this is best practice, by in creating animations for a video,
 it can be very nice to simply have all of the Mobjects, Animations, Scenes, etc.
 of manim available without having to worry about what namespace they come from.
 
@@ -27,12 +27,10 @@ from manimlib.animation.numbers import *
 from manimlib.animation.rotation import *
 from manimlib.animation.specialized import *
 from manimlib.animation.transform import *
+from manimlib.animation.transform_matching_parts import *
 from manimlib.animation.update import *
 
 from manimlib.camera.camera import *
-from manimlib.camera.mapping_camera import *
-from manimlib.camera.moving_camera import *
-from manimlib.camera.three_d_camera import *
 
 from manimlib.mobject.coordinate_systems import *
 from manimlib.mobject.changing import *
@@ -45,25 +43,21 @@ from manimlib.mobject.number_line import *
 from manimlib.mobject.numbers import *
 from manimlib.mobject.probability import *
 from manimlib.mobject.shape_matchers import *
+from manimlib.mobject.interactive import *
 from manimlib.mobject.svg.brace import *
 from manimlib.mobject.svg.drawings import *
 from manimlib.mobject.svg.svg_mobject import *
 from manimlib.mobject.svg.tex_mobject import *
 from manimlib.mobject.svg.text_mobject import *
-from manimlib.mobject.svg.code_mobject import *
-from manimlib.mobject.three_d_utils import *
 from manimlib.mobject.three_dimensions import *
 from manimlib.mobject.types.image_mobject import *
 from manimlib.mobject.types.point_cloud_mobject import *
+from manimlib.mobject.types.surface import *
 from manimlib.mobject.types.vectorized_mobject import *
+from manimlib.mobject.types.dot_cloud import *
 from manimlib.mobject.mobject_update_utils import *
 from manimlib.mobject.value_tracker import *
 from manimlib.mobject.vector_field import *
-
-from manimlib.for_3b1b_videos.common_scenes import *
-from manimlib.for_3b1b_videos.pi_creature import *
-from manimlib.for_3b1b_videos.pi_creature_animations import *
-from manimlib.for_3b1b_videos.pi_creature_scene import *
 
 from manimlib.once_useful_constructs.arithmetic import *
 from manimlib.once_useful_constructs.combinatorics import *
@@ -74,20 +68,19 @@ from manimlib.once_useful_constructs.graph_theory import *
 from manimlib.once_useful_constructs.light import *
 
 from manimlib.scene.graph_scene import *
-from manimlib.scene.moving_camera_scene import *
 from manimlib.scene.reconfigurable_scene import *
 from manimlib.scene.scene import *
 from manimlib.scene.sample_space_scene import *
 from manimlib.scene.graph_scene import *
-from manimlib.scene.scene_from_video import *
 from manimlib.scene.three_d_scene import *
 from manimlib.scene.vector_space_scene import *
-from manimlib.scene.zoomed_scene import *
 
 from manimlib.utils.bezier import *
 from manimlib.utils.color import *
 from manimlib.utils.config_ops import *
+from manimlib.utils.customization import *
 from manimlib.utils.debug import *
+from manimlib.utils.directories import *
 from manimlib.utils.images import *
 from manimlib.utils.iterables import *
 from manimlib.utils.file_ops import *
@@ -110,6 +103,7 @@ import re
 import string
 import sys
 import math
+import sympy
 
 from PIL import Image
 from colour import Color

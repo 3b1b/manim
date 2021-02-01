@@ -61,7 +61,7 @@ class Indicate(Transform):
 
     def create_target(self):
         target = self.mobject.copy()
-        target.scale_in_place(self.scale_factor)
+        target.scale(self.scale_factor)
         target.set_color(self.color)
         return target
 
@@ -94,8 +94,10 @@ class Flash(AnimationGroup):
             line.shift((self.flash_radius - self.line_length) * RIGHT)
             line.rotate(angle, about_point=ORIGIN)
             lines.add(line)
-        lines.set_color(self.color)
-        lines.set_stroke(width=3)
+        lines.set_stroke(
+            color=self.color,
+            width=self.line_stroke_width
+        )
         lines.add_updater(lambda l: l.move_to(self.point))
         return lines
 
@@ -258,7 +260,7 @@ class WiggleOutThenIn(Animation):
             return self.mobject.get_center()
 
     def interpolate_submobject(self, submobject, starting_sumobject, alpha):
-        submobject.points[:, :] = starting_sumobject.points
+        submobject.match_points(starting_sumobject)
         submobject.scale(
             interpolate(1, self.scale_value, there_and_back(alpha)),
             about_point=self.get_scale_about_point()

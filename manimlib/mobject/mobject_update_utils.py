@@ -1,9 +1,9 @@
 import inspect
-import numpy as np
 
 from manimlib.constants import DEGREES
 from manimlib.constants import RIGHT
 from manimlib.mobject.mobject import Mobject
+from manimlib.utils.simple_functions import clip
 
 
 def assert_is_mobject_method(method):
@@ -41,9 +41,9 @@ def f_always(method, *arg_generators, **kwargs):
     return mobject
 
 
-def always_redraw(func):
-    mob = func()
-    mob.add_updater(lambda m: mob.become(func()))
+def always_redraw(func, *args, **kwargs):
+    mob = func(*args, **kwargs)
+    mob.add_updater(lambda m: mob.become(func(*args, **kwargs)))
     return mob
 
 
@@ -81,7 +81,7 @@ def turn_animation_into_updater(animation, cycle=False, **kwargs):
         if cycle:
             alpha = time_ratio % 1
         else:
-            alpha = np.clip(time_ratio, 0, 1)
+            alpha = clip(time_ratio, 0, 1)
             if alpha >= 1:
                 animation.finish()
                 m.remove_updater(update)

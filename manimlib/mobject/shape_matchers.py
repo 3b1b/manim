@@ -4,6 +4,7 @@ from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.color import Color
+from manimlib.utils.customization import get_customization
 from manimlib.utils.config_ops import digest_config
 
 
@@ -23,15 +24,16 @@ class SurroundingRectangle(Rectangle):
 
 class BackgroundRectangle(SurroundingRectangle):
     CONFIG = {
-        "color": BLACK,
         "stroke_width": 0,
         "stroke_opacity": 0,
         "fill_opacity": 0.75,
         "buff": 0
     }
 
-    def __init__(self, mobject, **kwargs):
-        SurroundingRectangle.__init__(self, mobject, **kwargs)
+    def __init__(self, mobject, color=None, **kwargs):
+        if color is None:
+            color = get_customization()['style']['background_color']
+        SurroundingRectangle.__init__(self, mobject, color=color, **kwargs)
         self.original_fill_opacity = self.fill_opacity
 
     def pointwise_become_partial(self, mobject, a, b):

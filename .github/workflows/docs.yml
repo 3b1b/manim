@@ -1,0 +1,36 @@
+name: docs
+
+on: 
+  push:
+    paths:
+      - 'docs/**'
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    name: build up document and deploy
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    
+    - name: Install sphinx and manim env
+      run: |
+        pip3 install --upgrade pip
+        sudo apt install python3-setuptools
+        pip3 install -r docs/requirements.txt
+        pip3 install -r requirements.txt
+    
+    - name: Build document with Sphinx
+      run: |
+        cd docs
+        export PATH="$PATH:/home/runner/.local/bin"
+        export SPHINXBUILD="python3 -m sphinx"
+        make html
+        
+    - name: Deploy to GitHub pages
+      uses: JamesIves/github-pages-deploy-action@3.7.1
+      with:
+        ACCESS_TOKEN: ${{ secrets.DOC_DEPLOY_TOKEN }}
+        BRANCH: gh-pages
+        FOLDER: docs/build/html

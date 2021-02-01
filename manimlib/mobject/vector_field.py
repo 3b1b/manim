@@ -145,7 +145,7 @@ class VectorField(VGroup):
     }
 
     def __init__(self, func, **kwargs):
-        VGroup.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.func = func
         self.rgb_gradient_function = get_rgb_gradient_function(
             self.min_magnitude,
