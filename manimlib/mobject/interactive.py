@@ -57,7 +57,7 @@ class Button(Mobject):
 
 # Controls
 
-class ContolMobject(ValueTracker):
+class ControlMobject(ValueTracker):
     CONFIG = {
         "listen_to_events": True
     }
@@ -84,7 +84,7 @@ class ContolMobject(ValueTracker):
         pass
 
 
-class EnableDisableButton(ContolMobject):
+class EnableDisableButton(ControlMobject):
     CONFIG = {
         "value_type": np.dtype(bool),
         "rect_kwargs": {
@@ -118,7 +118,7 @@ class EnableDisableButton(ContolMobject):
         return False
 
 
-class Checkbox(ContolMobject):
+class Checkbox(ControlMobject):
     CONFIG = {
         "value_type": np.dtype(bool),
         "rect_kwargs": {
@@ -187,7 +187,7 @@ class Checkbox(ContolMobject):
         return cross
 
 
-class LinearNumberSlider(ContolMobject):
+class LinearNumberSlider(ControlMobject):
     CONFIG = {
         # Since, only slider circle listnes to drag event
         "listen_to_events": False,
@@ -349,7 +349,7 @@ class ColorSliders(Group):
         return rgba[3]
 
 
-class Textbox(ContolMobject):
+class Textbox(ControlMobject):
     CONFIG = {
         "value_type": np.dtype(object),
 
