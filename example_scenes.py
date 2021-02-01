@@ -497,7 +497,8 @@ class ControlsExample(Scene):
         self.add(MotionMobject(text))
 
         self.textbox.set_value("Manim")
-        self.embed()
+        # self.wait(60)
+        # self.embed()
 
 
 # See https://github.com/3b1b/videos for many, many more
