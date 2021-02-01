@@ -12,6 +12,7 @@ class ParametricFunction(VMobject):
         "dt": 1e-8,
         # TODO, be smarter about figuring these out?
         "discontinuities": [],
+        "smoothing": True,
     }
 
     def __init__(self, function=None, **kwargs):
@@ -73,7 +74,8 @@ class ParametricFunction(VMobject):
             if len(points) > 0:
                 self.start_new_path(points[0])
                 self.add_points_as_corners(points[1:])
-        self.make_smooth()
+        if self.smoothing:
+            self.make_smooth()
         return self
 
 
