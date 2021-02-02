@@ -361,16 +361,15 @@ def earclip_triangulation(verts, rings):
     n = len(verts)
     # Establish where loop indices should be connected
     loop_connections = dict()
-    # for e0, e1 in zip(rings, rings[1:]):
-    e0 = rings[0]
-    for e1 in rings[1:]:
-        # Find closet pair of points with the first
-        # coming from the current ring, and the second
-        # coming from the next ring
+    end0 = rings[0]
+    for end1 in rings[1:]:
+        # Find the closet pair of points with the first
+        # from the current ring, and the second from the
+        # next ring
         index_pairs = [
             (i, j)
-            for i in range(0, e0)
-            for j in range(e0, e1)
+            for i in range(0, end0)
+            for j in range(end0, end1)
             if i not in loop_connections
             if j not in loop_connections
         ]
@@ -383,14 +382,15 @@ def earclip_triangulation(verts, rings):
         # it's treated as a single highly-convex ring
         loop_connections[i] = j
         loop_connections[j] = i
-        e0 = e1
+        end0 = end1
 
     # Setup linked list
     after = []
-    e0 = 0
-    for e1 in rings:
-        after.extend([*range(e0 + 1, e1), e0])
-        e0 = e1
+    end0 = 0
+    for end1 in rings:
+        after.extend(range(end0 + 1, end1))
+        after.append(end0)
+        end0 = end1
 
     # Find an ordering of indices walking around the polygon
     indices = []
