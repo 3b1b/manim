@@ -18,6 +18,72 @@ Changes for the upcoming release are tracked `in our GitHub wiki <https://github
 
 
 ******
+v0.3.0
+******
+
+:Date: February 1, 2021
+
+The changes since Manim Community release v0.2.0 are listed below.
+
+
+New Features
+============
+
+- :pr:`945`: :meth:`~.Graph.change_layout` method for :class:`~.Graph` mobject
+- :pr:`943`: IPython %%manim magic
+- :pr:`970`: Added ``--version`` command line flag
+- :pr:`948`: Allow passing a code string to :class:`~.Code`
+- :pr:`917`: Allow overriding new-style method animations
+- :pr:`756`: Allow setting frame_height and frame_width via config file
+- :pr:`939`: Added custom font files support
+- :pr:`892`: Added ManimCommunity colors
+- :pr:`922`: Tree layout for Graph mobject
+- :pr:`935`: Added code of conduct
+- :pr:`916`: Multi-column layout for partite graphs
+- :pr:`742`: Units: Pixels, Munits, Percent in :mod:`~.utils.unit`
+- :pr:`893`: Convenience method :meth:`~.Graph.from_networkx` for creating a graph from a networkx graph
+
+Bugfixes and Enhancements
+=========================
+
+- :pr:`988`: Fix Windows CI pipeline by adding missing LaTeX package
+- :pr:`961`: Added typings and docs for vectorized mobjects and bezier related functions
+- :pr:`977`: JupyterLab docker image and documentation for manim and IPython
+- :pr:`985`: Fix variable name for webgl renderer
+- :pr:`954`: Fix edges lagging behind vertices in animations of graphs
+- :pr:`980`: Allow usage of custom Pygments styles in Code
+- :pr:`952`: Allow passing tween information to the WebGL frontend
+- :pr:`978`: Fix ``possible_paths`` not printing in ``code_mobject``
+- :pr:`976`: Update ``ManimPango``
+- :pr:`967`: Automatically import plugins
+- :pr:`971`: Make ManimCommunity look consistent
+- :pr:`957`: Raise ``NotImplementedError`` when trying to chain overridden method animations
+- :pr:`947`: Several fixes and improvements for :class:`~.PointCloundDot`
+- :pr:`923`: Documentation: move installation instructions for developers to page for developers
+- :pr:`964`: Added unit test for :class:`~.NumberLine`'s unit vector
+- :pr:`960`: Magnitude of :class:`~.NumberLine`'s unit vector should be ``unit_size``, not 1
+- :pr:`958`: Fix code formatting in ``utils/debug.py``
+- :pr:`953`: Update license year
+- :pr:`944`: Interpolate stroke opacity in :class:`~.FadeIn` and update ``stroke_opacity`` and ``fill_opacity`` in :meth:`~.VMobject.set_stroke` and :meth:`~.VMobject.set_fill`
+- :pr:`865`: Rename ``get_submobject_index_labels`` to ``index_labels``
+- :pr:`941`: Added keyword arguments ``x_min``, ``x_max``, ``y_min``, ``y_max`` to :class:`~.ThreeDAxes`
+- :pr:`886`: Let the render progress bar show details about the rendered animation again
+- :pr:`936`: Fix :class:`~.BulletedList` TeX environment problem and add a typing to ``get_module``
+- :pr:`938`: Remove dependency on progressbar
+- :pr:`937`: Change 'brew cask install' to 'brew install --cask' for CI pipeline
+- :pr:`933`: Make matrix work with lists again
+- :pr:`932`: Correctly parse ``log_dir`` option
+- :pr:`920`: Raise error if markup in :class:`~.MarkupText` is invalid
+- :pr:`929`: Raise an error if a :class:`~.Matrix` object is created with < 2-dimensional input
+- :pr:`907`: Make Scene.add_sound work again (when running with ``--disable_caching``)
+- :pr:`906`: Allow new-style method animation to be used in animation groups
+- :pr:`908`: Removed deprecated command line arguments from documentation
+- :pr:`903`: Tiny grammar improvements
+- :pr:`904`: Added blank line between imports and class example
+- :pr:`898`: CI: fix publish workflow
+
+
+******
 v0.2.0
 ******
 
