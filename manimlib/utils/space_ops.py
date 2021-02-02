@@ -349,29 +349,41 @@ def norm_squared(v):
 
 # TODO, fails for polygons drawn over themselves
 def earclip_triangulation(verts, rings):
+    """
+    Returns a list of indices giving a triangulation
+    of a polygon, potentially with holes
+
+    - verts is an NxM numpy array of points with M > 2
+
+    - rings is a list of indices indicating where
+    the ends of new paths are
+    """
     n = len(verts)
     # Establish where loop indices should be connected
     loop_connections = dict()
-    for e0, e1 in zip(rings, rings[1:]):
-        temp_i = e0
-        # Find closet point in the first ring (j) to
-        # the first index of this ring (i)
-        norms = np.array([
-            [j, norm_squared(verts[temp_i] - verts[j])]
-            for j in range(0, rings[0])
-            if j not in loop_connections
-        ])
-        j = int(norms[norms[:, 1].argmin()][0])
-        # Find i closest to this j
-        norms = np.array([
-            [i, norm_squared(verts[i] - verts[j])]
-            for i in range(e0, e1)
+    # for e0, e1 in zip(rings, rings[1:]):
+    e0 = rings[0]
+    for e1 in rings[1:]:
+        # Find closet pair of points with the first
+        # coming from the current ring, and the second
+        # coming from the next ring
+        index_pairs = [
+            (i, j)
+            for i in range(0, e0)
+            for j in range(e0, e1)
             if i not in loop_connections
-        ])
-        i = int(norms[norms[:, 1].argmin()][0])
+            if j not in loop_connections
+        ]
+        i, j = index_pairs[np.argmin([
+            norm_squared(verts[i] - verts[j])
+            for i, j in index_pairs
+        ])]
 
+        # Connect the polygon at these points so that
+        # it's treated as a single highly-convex ring
         loop_connections[i] = j
         loop_connections[j] = i
+        e0 = e1
 
     # Setup linked list
     after = []
@@ -397,87 +409,3 @@ def earclip_triangulation(verts, rings):
 
     meta_indices = earcut(verts[indices, :2], [len(indices)])
     return [indices[mi] for mi in meta_indices]
-
-
-def old_earclip_triangulation(verts, rings, orientation):
-    n = len(verts)
-    assert(n in rings)
-    result = []
-
-    # Establish where loop indices should be connected
-    loop_connections = dict()
-    e0 = 0
-    for e1 in rings:
-        norms = np.array([
-            [i, j, get_norm(verts[i] - verts[j])]
-            for i in range(e0, e1)
-            for j in it.chain(range(0, e0), range(e1, n))
-        ])
-        if len(norms) == 0:
-            continue
-        i, j = norms[np.argmin(norms[:, 2])][:2].astype(int)
-        loop_connections[i] = j
-        loop_connections[j] = i
-        e0 = e1
-
-    # Setup bidirectional linked list
-    before = []
-    after = []
-    e0 = 0
-    for e1 in rings:
-        after += [*range(e0 + 1, e1), e0]
-        before += [e1 - 1, *range(e0, e1 - 1)]
-        e0 = e1
-
-    # Initialize edge triangles
-    edge_tris = []
-    i = 0
-    starting = True
-    while (i != 0 or starting):
-        starting = False
-        if i in loop_connections:
-            j = loop_connections[i]
-            edge_tris.append([before[i], i, j])
-            edge_tris.append([i, j, after[j]])
-            i = after[j]
-        else:
-            edge_tris.append([before[i], i, after[i]])
-            i = after[i]
-
-    # Set up a test for whether or not three indices
-    # form an ear of the polygon, meaning a convex corner
-    # which doesn't contain any other vertices
-    indices = list(range(n))
-
-    def is_ear(*tri_indices):
-        tri = [verts[i] for i in tri_indices]
-        v1 = tri[1] - tri[0]
-        v2 = tri[2] - tri[1]
-        cross = v1[0] * v2[1] - v2[0] * v1[1]
-        if orientation * cross < 0:
-            return False
-        for j in indices:
-            if j in tri_indices:
-                continue
-            elif is_inside_triangle(verts[j], *tri):
-                return False
-        return True
-
-    # Loop through and clip off all the ears
-    n_failures = 0
-    i = 0
-    while n_failures < len(edge_tris):
-        n = len(edge_tris)
-        edge_tri = edge_tris[i % n]
-        if is_ear(*edge_tri):
-            result.extend(edge_tri)
-            edge_tris[(i - 1) % n][2] = edge_tri[2]
-            edge_tris[(i + 1) % n][0] = edge_tri[0]
-            if edge_tri[1] in indices:
-                indices.remove(edge_tri[1])
-            edge_tris.remove(edge_tri)
-            n_failures = 0
-        else:
-            n_failures += 1
-            i += 1
-    return result
