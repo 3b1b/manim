@@ -28,7 +28,15 @@ pip install -r requirements.txt
 # Try it out
 python manim.py example_scenes.py OpeningManimExample
 ```
-
+### Mac OSX
+1. Install [FFmpeg],[LaTeX],[cairo](if you only want to run on CPU) in commandline using homebrew.
+  ```sh
+   brew install ffmpeg mactex cairo
+   ```
+2. Install manim using this command if you dont want to tinker with code.(virtualenv wrapper is recommended)
+  ```sh
+   pip3 install manimlib
+   ```
 ### Directly (Windows)
 1. [Install FFmpeg](https://www.wikihow.com/Install-FFmpeg-on-Windows).
 2. Install a LaTeX distribution. [MiKTeX](https://miktex.org/download) is recommended.
