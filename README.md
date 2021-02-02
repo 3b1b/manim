@@ -31,16 +31,16 @@ python manim.py example_scenes.py OpeningManimExample
 ### Mac OSX
 1. Install FFmpeg,LaTeX,cairo in terminal using homebrew.
   ```sh
-   brew install ffmpeg mactex cairo
-   ```
+  brew install ffmpeg mactex cairo
+  ```
    
 2. Install latest version of manim using this command if you dont want to tinker with code.(virtualenv wrapper is recommended)
   ```sh
-   git clone https://github.com/3b1b/manim.git
-   cd manim
-   pip install -r requirements.txt
-   python manim.py example_scenes.py OpeningManimExample
-   ```
+  git clone https://github.com/3b1b/manim.git
+  cd manim
+  pip install -r requirements.txt
+  python manim.py example_scenes.py OpeningManimExample
+  ```
 
 ### Directly (Windows)
 1. [Install FFmpeg](https://www.wikihow.com/Install-FFmpeg-on-Windows).
