@@ -19,6 +19,8 @@ from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import restructure_list_to_exclude_certain_family_members
+from manimlib.event_handler.event_type import EventType
+from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.window import Window
 
 
@@ -513,25 +515,14 @@ class Scene(object):
         self.mobjects = mobjects
 
     # Event handling
-    def get_event_listeners_mobjects(self):
-        """ 
-            This method returns all the mobjects that listen to events
-            in reversed order. So the top most mobject's event is called first.
-            This helps in event bubbling.
-        """
-        return filter(
-            lambda mob: mob.listen_to_events,
-            reversed(self.get_mobject_family_members())
-        )
 
     def on_mouse_motion(self, point, d_point):
         self.mouse_point.move_to(point)
 
-        for mob_listener in self.get_event_listeners_mobjects():
-            if mob_listener.is_point_touching(point):
-                propagate_event = mob_listener.on_mouse_motion(point, d_point)
-                if propagate_event is not None and propagate_event is False:
-                    return
+        event_data = {"point": point, "d_point": d_point}
+        propagate_event = EVENT_DISPATCHER.dispatch(EventType.MouseMotionEvent, **event_data)
+        if propagate_event is not None and propagate_event is False:
+            return
 
         frame = self.camera.frame
         if self.window.is_key_pressed(ord("d")):
@@ -548,32 +539,28 @@ class Scene(object):
     def on_mouse_drag(self, point, d_point, buttons, modifiers):
         self.mouse_drag_point.move_to(point)
 
-        for mob_listener in self.get_event_listeners_mobjects():
-            if mob_listener.is_point_touching(point):
-                propagate_event = mob_listener.on_mouse_drag(point, d_point, buttons, modifiers)
-                if propagate_event is not None and propagate_event is False:
-                    return
+        event_data = {"point": point, "d_point": d_point, "buttons": buttons, "modifiers": modifiers}
+        propagate_event = EVENT_DISPATCHER.dispatch(EventType.MouseDragEvent, **event_data)
+        if propagate_event is not None and propagate_event is False:
+            return
 
     def on_mouse_press(self, point, button, mods):
-        for mob_listener in self.get_event_listeners_mobjects():
-            if mob_listener.is_point_touching(point):
-                propagate_event = mob_listener.on_mouse_press(point, button, mods)
-                if propagate_event is not None and propagate_event is False:
-                    return
+        event_data = {"point": point, "button": button, "mods": mods}
+        propagate_event = EVENT_DISPATCHER.dispatch(EventType.MousePressEvent, **event_data)
+        if propagate_event is not None and propagate_event is False:
+            return
 
     def on_mouse_release(self, point, button, mods):
-        for mob_listener in self.get_event_listeners_mobjects():
-            if mob_listener.is_point_touching(point):
-                propagate_event = mob_listener.on_mouse_release(point, button, mods)
-                if propagate_event is not None and propagate_event is False:
-                    return
+        event_data = {"point": point, "button": button, "mods": mods}
+        propagate_event = EVENT_DISPATCHER.dispatch(EventType.MouseReleaseEvent, **event_data)
+        if propagate_event is not None and propagate_event is False:
+            return
 
     def on_mouse_scroll(self, point, offset):
-        for mob_listener in self.get_event_listeners_mobjects():
-            if mob_listener.is_point_touching(point):
-                propagate_event = mob_listener.on_mouse_scroll(point, offset)
-                if propagate_event is not None and propagate_event is False:
-                    return
+        event_data = {"point": point, "offset": offset}
+        propagate_event = EVENT_DISPATCHER.dispatch(EventType.MouseScrollEvent, **event_data)
+        if propagate_event is not None and propagate_event is False:
+            return
 
         frame = self.camera.frame
         if self.window.is_key_pressed(ord("z")):
@@ -585,10 +572,10 @@ class Scene(object):
             frame.shift(-20.0 * shift)
 
     def on_key_release(self, symbol, modifiers):
-        for mob_listener in self.get_event_listeners_mobjects():
-            propagate_event = mob_listener.on_key_release(symbol, modifiers)
-            if propagate_event is not None and propagate_event is False:
-                return
+        event_data = {"symbol": symbol, "modifiers": modifiers}
+        propagate_event = EVENT_DISPATCHER.dispatch(EventType.KeyReleaseEvent, **event_data)
+        if propagate_event is not None and propagate_event is False:
+            return
 
     def on_key_press(self, symbol, modifiers):
         try:
@@ -597,10 +584,10 @@ class Scene(object):
             print(" Warning: The value of the pressed key is too large.")
             return
 
-        for mob_listener in self.get_event_listeners_mobjects():
-            propagate_event = mob_listener.on_key_press(symbol, modifiers)
-            if propagate_event is not None and propagate_event is False:
-                return
+        event_data = {"symbol": symbol, "modifiers": modifiers}
+        propagate_event = EVENT_DISPATCHER.dispatch(EventType.KeyPressEvent, **event_data)
+        if propagate_event is not None and propagate_event is False:
+            return
 
         if char == "r":
             self.camera.frame.to_default_state()

@@ -1,9 +1,18 @@
-Thanks for contributing to manim!
+<!-- Thanks for contributing to manim!
+    Please ensure that your pull request works with the latest version of manim.
+-->
 
-**Please ensure that your pull request works with the latest version of manim.**
-You should also include:
+## Motivation
+<!-- Outline your motivation: In what way do your changes improve the library? -->
 
-1. The motivation for making this change (or link the relevant issues)
-2. How you tested the new behavior (e.g. a minimal working example, before/after
-screenshots, gifs, commands, etc.) This is rather informal at the moment, but
-the goal is to show us how you know the pull request works as intended.
+## Proposed changes
+<!-- What you changed in those files -->
+- 
+- 
+- 
+
+## Test
+<!-- How do you test your changes -->
+**Code**:
+
+**Result**:

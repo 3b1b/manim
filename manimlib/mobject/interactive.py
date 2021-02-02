@@ -22,50 +22,43 @@ class MotionMobject(Mobject):
         You could hold and drag this object to any position
     """
 
-    CONFIG = {
-        "listen_to_events": True
-    }
-
     def __init__(self, mobject, **kwargs):
         super().__init__(**kwargs)
+        assert(isinstance(mobject, Mobject))
         self.mobject = mobject
+        self.mobject.add_mouse_drag_listner(self.mob_on_mouse_drag)
         # To avoid locking it as static mobject
         self.mobject.add_updater(lambda mob: None)
         self.add(mobject)
 
-    def on_mouse_drag(self, point, d_point, buttons, modifiers):
-        if self.mobject.is_point_touching(point):
-            self.mobject.move_to(point)
-            return False
+    def mob_on_mouse_drag(self, mob, event_data):
+        mob.move_to(event_data["point"])
+        return False
 
 
 class Button(Mobject):
     """
         Pass any mobject and register an on_click method
-    """
 
-    CONFIG = {
-        "listen_to_events": True
-    }
+        The on_click method takes mobject as argument like updater
+    """
 
     def __init__(self, mobject, on_click, **kwargs):
         super().__init__(**kwargs)
-        self.mobject, self.on_click = mobject, on_click
+        assert(isinstance(mobject, Mobject))
+        self.on_click = on_click
+        self.mobject = mobject
+        self.mobject.add_mouse_press_listner(self.mob_on_mouse_press)
         self.add(self.mobject)
 
-    def on_mouse_press(self, point, button, mods):
-        if self.mobject.is_point_touching(point):
-            self.on_click()
-            return False
+    def mob_on_mouse_press(self, mob, event_data):
+        self.on_click(mob)
+        return False
 
 
 # Controls
 
-class ContolMobject(ValueTracker):
-    CONFIG = {
-        "listen_to_events": True
-    }
-
+class ControlMobject(ValueTracker):
     def __init__(self, value, *mobjects, **kwargs):
         super().__init__(value=value, **kwargs)
         self.add(*mobjects)
@@ -88,7 +81,7 @@ class ContolMobject(ValueTracker):
         pass
 
 
-class EnableDisableButton(ContolMobject):
+class EnableDisableButton(ControlMobject):
     CONFIG = {
         "value_type": np.dtype(bool),
         "rect_kwargs": {
@@ -104,6 +97,7 @@ class EnableDisableButton(ContolMobject):
         digest_config(self, kwargs)
         self.box = Rectangle(**self.rect_kwargs)
         super().__init__(value, self.box, **kwargs)
+        self.add_mouse_press_listner(self.on_mouse_press)
 
     def assert_value(self, value):
         assert(isinstance(value, bool))
@@ -117,12 +111,12 @@ class EnableDisableButton(ContolMobject):
     def toggle_value(self):
         super().set_value(not self.get_value())
 
-    def on_mouse_press(self, point, button, mods):
-        self.toggle_value()
+    def on_mouse_press(self, mob, event_data):
+        mob.toggle_value()
         return False
 
 
-class Checkbox(ContolMobject):
+class Checkbox(ControlMobject):
     CONFIG = {
         "value_type": np.dtype(bool),
         "rect_kwargs": {
@@ -147,6 +141,7 @@ class Checkbox(ContolMobject):
         self.box = Rectangle(**self.rect_kwargs)
         self.box_content = self.get_checkmark() if value else self.get_cross()
         super().__init__(value, self.box, self.box_content, **kwargs)
+        self.add_mouse_press_listner(self.on_mouse_press)
 
     def assert_value(self, value):
         assert(isinstance(value, bool))
@@ -160,8 +155,8 @@ class Checkbox(ContolMobject):
         else:
             self.box_content.become(self.get_cross())
 
-    def on_mouse_press(self, point, button, mods):
-        self.toggle_value()
+    def on_mouse_press(self, mob, event_data):
+        mob.toggle_value()
         return False
 
     # Helper methods
@@ -191,7 +186,7 @@ class Checkbox(ContolMobject):
         return cross
 
 
-class LinearNumberSlider(ContolMobject):
+class LinearNumberSlider(ControlMobject):
     CONFIG = {
         "value_type": np.float64,
         "min_value": -10.0,
@@ -222,6 +217,8 @@ class LinearNumberSlider(ContolMobject):
         self.slider_axis.set_opacity(0.0)
         self.slider.move_to(self.slider_axis)
 
+        self.slider.add_mouse_drag_listner(self.slider_on_mouse_drag)
+
         super().__init__(value, self.bar, self.slider, self.slider_axis, ** kwargs)
 
     def assert_value(self, value):
@@ -231,10 +228,9 @@ class LinearNumberSlider(ContolMobject):
         prop = (value - self.min_value) / (self.max_value - self.min_value)
         self.slider.move_to(self.slider_axis.point_from_proportion(prop))
 
-    def on_mouse_drag(self, point, d_point, buttons, modifiers):
-        if self.slider.is_point_touching(point):
-            self.set_value(self.get_value_from_point(point))
-            return False
+    def slider_on_mouse_drag(self, mob, event_data):
+        self.set_value(self.get_value_from_point(event_data["point"]))
+        return False
 
     # Helper Methods
 
@@ -348,7 +344,7 @@ class ColorSliders(Group):
         return rgba[3]
 
 
-class Textbox(ContolMobject):
+class Textbox(ControlMobject):
     CONFIG = {
         "value_type": np.dtype(object),
 
@@ -371,10 +367,12 @@ class Textbox(ContolMobject):
         digest_config(self, kwargs)
         self.isActive = self.isInitiallyActive
         self.box = Rectangle(**self.box_kwargs)
+        self.box.add_mouse_press_listner(self.box_on_mouse_press)
         self.text = Text(value, **self.text_kwargs)
         super().__init__(value, self.box, self.text, **kwargs)
         self.update_text(value)
         self.active_anim(self.isActive)
+        self.add_key_press_listner(self.on_key_press)
 
     def set_value_anim(self, value):
         self.update_text(value)
@@ -397,16 +395,17 @@ class Textbox(ContolMobject):
         else:
             self.box.set_stroke(self.deactive_color)
 
-    def on_mouse_press(self, point, button, mods):
-        if self.box.is_point_touching(point):
-            self.isActive = not self.isActive
-            self.active_anim(self.isActive)
-            return False
+    def box_on_mouse_press(self, mob, event_data):
+        self.isActive = not self.isActive
+        self.active_anim(self.isActive)
+        return False
 
-    def on_key_press(self, symbol, modifiers):
+    def on_key_press(self, mob, event_data):
+        symbol = event_data["symbol"]
+        modifiers = event_data["modifiers"]
         char = chr(symbol)
-        if self.isActive:
-            old_value = self.get_value()
+        if mob.isActive:
+            old_value = mob.get_value()
             new_value = old_value
             if char.isalnum():
                 if (modifiers & PygletWindowKeys.MOD_SHIFT) or (modifiers & PygletWindowKeys.MOD_CAPSLOCK):
@@ -419,13 +418,12 @@ class Textbox(ContolMobject):
                 new_value = old_value + '\t'
             elif symbol == PygletWindowKeys.BACKSPACE:
                 new_value = old_value[:-1] or ''
-            self.set_value(new_value)
+            mob.set_value(new_value)
             return False
 
 
 class ControlPanel(Group):
     CONFIG = {
-        "listen_to_events": True,
         "panel_kwargs": {
             "width": FRAME_WIDTH / 4,
             "height": MED_SMALL_BUFF + FRAME_HEIGHT,
@@ -451,6 +449,7 @@ class ControlPanel(Group):
         self.panel = Rectangle(**self.panel_kwargs)
         self.panel.to_corner(UP + LEFT, buff=0)
         self.panel.shift(self.panel.get_height() * UP)
+        self.panel.add_mouse_scroll_listner(self.panel_on_mouse_scroll)
 
         self.panel_opener_rect = Rectangle(**self.opener_kwargs)
         self.panel_info_text = Text(**self.opener_text_kwargs)
@@ -458,6 +457,7 @@ class ControlPanel(Group):
 
         self.panel_opener = Group(self.panel_opener_rect, self.panel_info_text)
         self.panel_opener.next_to(self.panel, DOWN, aligned_edge=DOWN)
+        self.panel_opener.add_mouse_drag_listner(self.panel_opener_on_mouse_drag)
 
         self.controls = Group(*controls)
         self.controls.arrange(DOWN, center=False, aligned_edge=ORIGIN)
@@ -510,14 +510,14 @@ class ControlPanel(Group):
         self.move_panel_and_controls_to_panel_opener()
         return self
 
-    def on_mouse_drag(self, point, d_point, buttons, modifiers):
-        if self.panel_opener.is_point_touching(point):
-            self.panel_opener.match_y(Dot(point))
-            self.move_panel_and_controls_to_panel_opener()
-            return False
+    def panel_opener_on_mouse_drag(self, mob, event_data):
+        point = event_data["point"]
+        self.panel_opener.match_y(Dot(point))
+        self.move_panel_and_controls_to_panel_opener()
+        return False
 
-    def on_mouse_scroll(self, point, offset):
-        if self.panel.is_point_touching(point):
-            factor = 10 * offset[1]
-            self.controls.set_y(self.controls.get_y() + factor)
-            return False
+    def panel_on_mouse_scroll(self, mob, event_data):
+        offset = event_data["offset"]
+        factor = 10 * offset[1]
+        self.controls.set_y(self.controls.get_y() + factor)
+        return False
