@@ -1,4 +1,4 @@
-from manimlib.event.event_dispatcher import EventDispatcher
+from manimlib.event_handler.event_dispatcher import EventDispatcher
 
 
 # This is supposed to be a Singleton
