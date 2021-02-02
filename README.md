@@ -29,7 +29,7 @@ pip install -r requirements.txt
 python manim.py example_scenes.py OpeningManimExample
 ```
 ### Mac OSX
-1. Install FFmpeg,LaTeX,cairo in terminal using homebrew.
+1. Install FFmpeg, LaTeX, Cairo in terminal using homebrew.
   ```sh
   brew install ffmpeg mactex cairo
   ```
