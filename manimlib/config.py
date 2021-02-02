@@ -134,7 +134,9 @@ def parse_cli():
 
 
 def get_manim_dir():
-    return os.path.dirname(inspect.getabsfile(importlib.import_module("manim")))
+    manimlib_module = importlib.import_module("manimlib")
+    manimlib_dir = os.path.dirname(inspect.getabsfile(manimlib_module))
+    return os.path.abspath(os.path.join(manimlib_dir, ".."))
 
 
 def get_module(file_name):
