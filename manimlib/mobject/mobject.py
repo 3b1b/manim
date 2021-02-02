@@ -27,6 +27,9 @@ from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotation_matrix_transpose
 from manimlib.shader_wrapper import ShaderWrapper
 from manimlib.shader_wrapper import get_colormap_code
+from manimlib.event_handler import EVENT_DISPATCHER
+from manimlib.event_handler.event_listner import EventListner
+from manimlib.event_handler.event_type import EventType
 
 
 class Mobject(object):
@@ -68,6 +71,7 @@ class Mobject(object):
         self.init_data()
         self.init_uniforms()
         self.init_updaters()
+        self.init_event_listners()
         self.init_points()
         self.init_colors()
         self.init_shader_data()
@@ -1440,35 +1444,81 @@ class Mobject(object):
         Event handling follows the Event Bubbling model of DOM in javascript.
         Return false to stop the event bubbling.
         To learn more visit https://www.quirksmode.org/js/events_order.html
+
+        Event Callback Argument is a callable function taking two arguments:
+            1. Mobject
+            2. EventData
     """
 
-    def on_mouse_motion(self, point, d_point):
-        # To be implemented in subclasses
-        pass
+    def init_event_listners(self):
+        self.event_listners = []
 
-    def on_mouse_drag(self, point, d_point, buttons, modifiers):
-        # To be implemented in subclasses
-        pass
+    def add_event_listner(self, event_type, event_callback):
+        event_listner = EventListner(self, event_type, event_callback)
+        self.event_listners.append(event_listner)
+        EVENT_DISPATCHER.add_listner(event_listner)
+        return self
 
-    def on_mouse_press(self, point, button, mods):
-        # To be implemented in subclasses
-        pass
+    def remove_event_listner(self, event_type, event_callback):
+        event_listner = EventListner(self, event_type, event_callback)
+        while event_listner in self.event_listners:
+            self.event_listners.remove(event_listner)
+        EVENT_DISPATCHER.remove_listner(event_listner)
+        return self
 
-    def on_mouse_release(self, point, button, mods):
-        # To be implemented in subclasses
-        pass
+    def clear_event_listners(self, recurse=True):
+        self.event_listners = []
+        if recurse:
+            for submob in self.submobjects:
+                submob.clear_event_listners(recurse=recurse)
+        return self
 
-    def on_mouse_scroll(self, point, offset):
-        # To be implemented in subclasses
-        pass
+    def get_event_listners(self):
+        return self.event_listners
+    
+    def get_family_event_listners(self):
+        return list(it.chain(*[sm.get_event_listners() for sm in self.get_family()]))
 
-    def on_key_release(self, symbol, modifiers):
-        # To be implemented in subclasses
-        pass
+    def get_has_event_listner(self):
+        return any(
+            mob.get_event_listners()
+            for mob in self.get_family()
+        )
 
-    def on_key_press(self, symbol, modifiers):
-        # To be implemented in subclasses
-        pass
+    def add_mouse_motion_listner(self, callback):
+        self.add_event_listner(EventType.MouseMotionEvent, callback)
+    def remove_mouse_motion_listner(self, callback):
+        self.remove_event_listner(EventType.MouseMotionEvent, callback)
+
+    def add_mouse_press_listner(self, callback):
+        self.add_event_listner(EventType.MousePressEvent, callback)
+    def remove_mouse_press_listner(self, callback):
+        self.remove_event_listner(EventType.MousePressEvent, callback)
+
+    def add_mouse_release_listner(self, callback):
+        self.add_event_listner(EventType.MouseReleaseEvent, callback)
+    def remove_mouse_release_listner(self, callback):
+        self.remove_event_listner(EventType.MouseReleaseEvent, callback)
+
+    def add_mouse_drag_listner(self, callback):
+        self.add_event_listner(EventType.MouseDragEvent, callback)
+    def remove_mouse_drag_listner(self, callback):
+        self.remove_event_listner(EventType.MouseDragEvent, callback)
+
+    def add_mouse_scroll_listner(self, callback):
+        self.add_event_listner(EventType.MouseScrollEvent, callback)
+    def remove_mouse_scroll_listner(self, callback):
+        self.remove_event_listner(EventType.MouseScrollEvent, callback)
+
+    def add_key_press_listner(self, callback):
+        self.add_event_listner(EventType.KeyPressEvent, callback)
+    def remove_key_press_listner(self, callback):
+        self.remove_event_listner(EventType.KeyPressEvent, callback)
+
+    def add_key_release_listner(self, callback):
+        self.add_event_listner(EventType.KeyReleaseEvent, callback)
+    def remove_key_release_listner(self, callback):
+        self.remove_event_listner(EventType.KeyReleaseEvent, callback)
 
     # Errors
 
