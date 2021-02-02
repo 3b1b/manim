@@ -1,4 +1,8 @@
-![logo](logo/cropped.png)
+<p align="center">
+    <a href="https://github.com/3b1b/manim">
+        <img src="https://raw.githubusercontent.com/3b1b/manim/master/logo/cropped.png">
+    </a>
+</p>
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](http://choosealicense.com/licenses/mit/)
 [![Manim Subreddit](https://img.shields.io/reddit/subreddit-subscribers/manim.svg?color=ff4301&label=reddit)](https://www.reddit.com/r/manim/)
