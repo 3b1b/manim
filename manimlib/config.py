@@ -152,7 +152,7 @@ def get_module(file_name):
 
 def get_custom_defaults():
     filename = "custom_defaults.yml"
-    manim_defaults_file = os.path.join(get_manim_dir(), filename)
+    manim_defaults_file = os.path.join(get_manim_dir(), "manimlib", "defaults.yml")
     with open(manim_defaults_file, "r") as file:
         custom_defaults = yaml.safe_load(file)
 
