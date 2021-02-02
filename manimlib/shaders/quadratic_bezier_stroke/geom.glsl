@@ -66,7 +66,7 @@ void flatten_points(in vec3[3] points, out vec2[3] flat_points){
 float angle_between_vectors(vec2 v1, vec2 v2){
     float v1_norm = length(v1);
     float v2_norm = length(v2);
-    if(v1_norm == 0 || v2_norm == 0) return 0.0;
+    if(v1_norm == 0 || v2_norm == 0) return 0;
     float dp = dot(v1, v2) / (v1_norm * v2_norm);
     float angle = acos(clamp(dp, -1.0, 1.0));
     float sn = sign(cross2d(v1, v2));

@@ -51,7 +51,7 @@ float sdf(){
     float sgn = orientation * sign(v2);
     float Fp = (p.x * p.x - p.y);
     if(sgn * Fp < 0){
-        return 0.0;
+        return 0;
     }else{
         return min_dist_to_curve(uv_coords, uv_b2, bezier_degree);
     }
