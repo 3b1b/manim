@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Ask A Question
+    url: https://github.com/3b1b/manim/discussions/categories/q-a
+    about: Please ask questions you encountered here.
