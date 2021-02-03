@@ -1,4 +1,5 @@
 import numpy as np
+import itertools as it
 import math
 from mapbox_earcut import triangulate_float32 as earcut
 
@@ -347,54 +348,64 @@ def norm_squared(v):
 
 
 # TODO, fails for polygons drawn over themselves
-def earclip_triangulation(verts, rings):
+def earclip_triangulation(verts, ring_ends):
     """
     Returns a list of indices giving a triangulation
     of a polygon, potentially with holes
 
     - verts is a numpy array of points
 
-    - rings is a list of indices indicating where
+    - ring_ends is a list of indices indicating where
     the ends of new paths are
     """
-    n = len(verts)
-    # Establish where loop indices should be connected
+
+    # First, connect all the rings so that the polygon
+    # with holes is instead treated as a (very convex)
+    # polygon with one edge.  Do this by drawing connections
+    # between rings close to each other
+    rings = [
+        list(range(e0, e1))
+        for e0, e1 in zip([0, *ring_ends], ring_ends)
+    ]
+    attached_rings = rings[:1]
+    detached_rings = rings[1:]
     loop_connections = dict()
-    end0 = rings[0]
-    for end1 in rings[1:]:
-        # Find a close pair of points connecting the current
-        # ring to the next ring
 
-        # Ignore indices already used for prior connections
-        i_range = list(filter(
-            lambda i: i not in loop_connections,
-            range(0, end0)
-        ))
-        j_range = list(range(end0, end1))
+    while detached_rings:
+        i_range, j_range = [
+            list(filter(
+                # Ignore indices that are already being
+                # used to draw some connection
+                lambda i: i not in loop_connections,
+                it.chain(*ring_group)
+            ))
+            for ring_group in (attached_rings, detached_rings)
+        ]
 
-        # Closet point on the first ring to the first point
-        # of the second ring
-        i = i_range[np.argmin([
-            norm_squared(verts[i] - verts[end0])
-            for i in i_range
-        ])]
-        # Closet point of the second ring to the aforementioned
-        # point of the first ring
-        j = j_range[np.argmin([
-            norm_squared(verts[i] - verts[j])
-            for j in j_range
-        ])]
+        # Closet point on the atttached rings to the first point
+        # of the detached rings
+        i = min(i_range, key=lambda i: norm_squared(verts[i] - verts[j_range[0]]))
+        # Closet point of the detached rings to the aforementioned
+        # point of the attached rings
+        j = min(j_range, key=lambda j: norm_squared(verts[i] - verts[j]))
 
-        # Connect the polygon at these points so that
-        # it's treated as a single highly-convex ring
+        # Remember to connect the polygon at these points
         loop_connections[i] = j
         loop_connections[j] = i
-        end0 = end1
+
+        # Move the ring which j belongs to from the
+        # attached list to the detached list
+        new_ring = next(filter(
+            lambda ring: ring[0] <= j < ring[-1],
+            detached_rings
+        ))
+        detached_rings.remove(new_ring)
+        attached_rings.append(new_ring)
 
     # Setup linked list
     after = []
     end0 = 0
-    for end1 in rings:
+    for end1 in ring_ends:
         after.extend(range(end0 + 1, end1))
         after.append(end0)
         end0 = end1
@@ -402,7 +413,7 @@ def earclip_triangulation(verts, rings):
     # Find an ordering of indices walking around the polygon
     indices = []
     i = 0
-    for x in range(n + len(rings) - 1):
+    for x in range(len(verts) + len(ring_ends) - 1):
         # starting = False
         if i in loop_connections:
             j = loop_connections[i]
