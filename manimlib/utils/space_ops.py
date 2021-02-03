@@ -1,6 +1,5 @@
 import numpy as np
 import math
-import itertools as it
 from mapbox_earcut import triangulate_float32 as earcut
 
 from manimlib.constants import RIGHT
@@ -376,11 +375,11 @@ def earclip_triangulation(verts, rings):
 
         i = filtered_i[np.argmin([
             # It's slightly faster to use L-infinity norm
-            max(abs(verts[i] - verts[end0]))
+            norm_squared(verts[i] - verts[end0])
             for i in filtered_i
         ])]
         j = filtered_j[np.argmin([
-            max(abs(verts[i] - verts[j]))
+            norm_squared(verts[i] - verts[j])
             for j in filtered_j
         ])]
 
