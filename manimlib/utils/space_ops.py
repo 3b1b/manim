@@ -366,16 +366,22 @@ def earclip_triangulation(verts, rings):
         # Find the closet pair of points with the first
         # from the current ring, and the second from the
         # next ring
-        index_pairs = [
-            (i, j)
-            for i in range(0, end0)
-            for j in range(end0, end1)
-            if i not in loop_connections
-            if j not in loop_connections
+        filtered_i, filtered_j = [
+            list(filter(
+                lambda i: i not in loop_connections,
+                indices
+            ))
+            for indices in (range(0, end0), range(end0, end1))
         ]
-        i, j = index_pairs[np.argmin([
-            norm_squared(verts[i] - verts[j])
-            for i, j in index_pairs
+
+        i = filtered_i[np.argmin([
+            # It's slightly faster to use L-infinity norm
+            max(abs(verts[i] - verts[end0]))
+            for i in filtered_i
+        ])]
+        j = filtered_j[np.argmin([
+            max(abs(verts[i] - verts[j]))
+            for j in filtered_j
         ])]
 
         # Connect the polygon at these points so that
