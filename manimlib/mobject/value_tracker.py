@@ -5,7 +5,7 @@ from manimlib.mobject.mobject import Mobject
 
 class ValueTracker(Mobject):
     """
-    Note meant to be displayed.  Instead the position encodes some
+    Not meant to be displayed.  Instead the position encodes some
     number, often one which another animation or continual_animation
     uses for its update function, and by treating it as a mobject it can
     still be animated and manipulated just like anything else.
