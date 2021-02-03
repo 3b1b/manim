@@ -1002,7 +1002,7 @@ class Mobject(object):
 
     def length_over_dim(self, dim):
         bb = self.get_bounding_box()
-        return (bb[2] - bb[0])[dim]
+        return abs((bb[2] - bb[0])[dim])
 
     def get_width(self):
         return self.length_over_dim(0)
