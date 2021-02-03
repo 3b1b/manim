@@ -70,6 +70,10 @@ class DrawBorderThenFill(Animation):
         super().__init__(vmobject, **kwargs)
 
     def begin(self):
+        # Trigger triangulation calculation
+        for submob in self.mobject.get_family():
+            submob.get_triangulation()
+
         self.outline = self.get_outline()
         super().begin()
         self.mobject.match_style(self.outline)
@@ -103,6 +107,7 @@ class DrawBorderThenFill(Animation):
             submob.set_data(outline.data)
             submob.unlock_data()
             submob.lock_matching_data(submob, start)
+            submob.needs_new_triangulation = False
             self.sm_to_index[hash(submob)] = 1
 
         if index == 0:
