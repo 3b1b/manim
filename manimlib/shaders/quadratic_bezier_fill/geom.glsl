@@ -121,11 +121,11 @@ void main(){
         return;
     }
 
-    vec3 local_unit_normal = get_unit_normal(vec3[3](bp[0], bp[1], bp[2]));
-    orientation = sign(dot(v_global_unit_normal[0], local_unit_normal));
-
     vec3 new_bp[3];
     bezier_degree = get_reduced_control_points(vec3[3](bp[0], bp[1], bp[2]), new_bp);
+    vec3 local_unit_normal = get_unit_normal(new_bp);
+    orientation = sign(dot(v_global_unit_normal[0], local_unit_normal));
+
     if(bezier_degree >= 1){
         emit_pentagon(new_bp, local_unit_normal);
     }
