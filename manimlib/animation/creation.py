@@ -79,6 +79,10 @@ class DrawBorderThenFill(Animation):
         self.mobject.match_style(self.outline)
         self.mobject.lock_matching_data(self.mobject, self.outline)
 
+    def finish(self):
+        super().finish()
+        self.mobject.unlock_data()
+
     def get_outline(self):
         outline = self.mobject.copy()
         outline.set_fill(opacity=0)
