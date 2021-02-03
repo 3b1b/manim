@@ -1,6 +1,5 @@
 import numpy as np
 import moderngl
-import numbers
 
 from manimlib.constants import GREY_C
 from manimlib.mobject.types.point_cloud_mobject import PMobject
@@ -16,7 +15,7 @@ class DotCloud(PMobject):
     CONFIG = {
         "color": GREY_C,
         "opacity": 1,
-        "radii": DEFAULT_DOT_CLOUD_RADIUS,
+        "radius": DEFAULT_DOT_CLOUD_RADIUS,
         "shader_folder": "true_dot",
         "render_primitive": moderngl.POINTS,
         "shader_dtype": [
@@ -34,7 +33,7 @@ class DotCloud(PMobject):
     def init_data(self):
         super().init_data()
         self.data["radii"] = np.zeros((1, 1))
-        self.set_radii(self.radii)
+        self.set_radius(self.radius)
 
     def to_grid(self, n_rows, n_cols, n_layers=1,
                 buff_ratio=None,
@@ -58,24 +57,37 @@ class DotCloud(PMobject):
         radius = self.get_radius()
         ns = [n_cols, n_rows, n_layers]
         brs = [h_buff_ratio, v_buff_ratio, d_buff_ratio]
+        self.set_radius(0)
         for n, br, dim in zip(ns, brs, range(3)):
             self.rescale_to_fit(2 * radius * (1 + br) * (n - 1), dim, stretch=True)
+        self.set_radius(radius)
         if height is not None:
             self.set_height(height)
         self.center()
         return self
 
     def set_radii(self, radii):
-        if not isinstance(radii, numbers.Number):
-            radii = resize_preserving_order(radii, len(self.data["radii"]))
-        self.data["radii"][:] = radii
+        self.data["radii"][:] = resize_preserving_order(radii, len(self.data["radii"]))
+        self.refresh_bounding_box()
         return self
 
     def get_radii(self):
         return self.data["radii"]
 
+    def set_radius(self, radius):
+        self.data["radii"][:] = radius
+        self.refresh_bounding_box()
+        return self
+
     def get_radius(self):
         return self.get_radii().max()
+
+    def compute_bounding_box(self):
+        bb = super().compute_bounding_box()
+        radius = self.get_radius()
+        bb[0] += np.full((3,), -radius)
+        bb[2] += np.full((3,), radius)
+        return bb
 
     def scale(self, scale_factor, scale_radii=True, **kwargs):
         super().scale(scale_factor, **kwargs)
