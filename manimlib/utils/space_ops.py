@@ -343,7 +343,7 @@ def is_inside_triangle(p, a, b, c):
 
 
 def norm_squared(v):
-    return sum(v * v)
+    return v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
 
 
 # TODO, fails for polygons drawn over themselves
@@ -352,7 +352,7 @@ def earclip_triangulation(verts, rings):
     Returns a list of indices giving a triangulation
     of a polygon, potentially with holes
 
-    - verts is an NxM numpy array of points with M > 2
+    - verts is a numpy array of points
 
     - rings is a list of indices indicating where
     the ends of new paths are
@@ -362,25 +362,27 @@ def earclip_triangulation(verts, rings):
     loop_connections = dict()
     end0 = rings[0]
     for end1 in rings[1:]:
-        # Find the closet pair of points with the first
-        # from the current ring, and the second from the
-        # next ring
-        filtered_i, filtered_j = [
-            list(filter(
-                lambda i: i not in loop_connections,
-                indices
-            ))
-            for indices in (range(0, end0), range(end0, end1))
-        ]
+        # Find a close pair of points connecting the current
+        # ring to the next ring
 
-        i = filtered_i[np.argmin([
-            # It's slightly faster to use L-infinity norm
+        # Ignore indices already used for prior connections
+        i_range = list(filter(
+            lambda i: i not in loop_connections,
+            range(0, end0)
+        ))
+        j_range = list(range(end0, end1))
+
+        # Closet point on the first ring to the first point
+        # of the second ring
+        i = i_range[np.argmin([
             norm_squared(verts[i] - verts[end0])
-            for i in filtered_i
+            for i in i_range
         ])]
-        j = filtered_j[np.argmin([
+        # Closet point of the second ring to the aforementioned
+        # point of the first ring
+        j = j_range[np.argmin([
             norm_squared(verts[i] - verts[j])
-            for j in filtered_j
+            for j in j_range
         ])]
 
         # Connect the polygon at these points so that
