@@ -37,7 +37,7 @@ class NumberLine(Line):
             "num_decimal_places": 0,
             "height": 0.25,
         },
-        "exclude_zero_from_default_numbers": False,
+        "numbers_to_exclude": None
     }
 
     def __init__(self, x_range=None, **kwargs):
@@ -70,7 +70,7 @@ class NumberLine(Line):
         if self.include_ticks:
             self.add_ticks()
         if self.include_numbers:
-            self.add_numbers()
+            self.add_numbers(excluding=self.numbers_to_exclude)
 
     def get_tick_range(self):
         if self.include_tip:
