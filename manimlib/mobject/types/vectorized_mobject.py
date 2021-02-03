@@ -765,9 +765,9 @@ class VMobject(Mobject):
             self.needs_new_triangulation = False
             return self.triangulation
 
-        # Rotate points such that unit normal vector is OUT
-        # TODO, 99% of the time this does nothing.  Do a check for that?
-        points = np.dot(points, z_to_vector(normal_vector))
+        if not np.isclose(normal_vector, OUT).all():
+            # Rotate points such that unit normal vector is OUT
+            points = np.dot(points, z_to_vector(normal_vector))
         indices = np.arange(len(points), dtype=int)
 
         b0s = points[0::3]
@@ -797,7 +797,9 @@ class VMobject(Mobject):
 
         # Triangulate
         inner_verts = points[inner_vert_indices]
-        inner_tri_indices = inner_vert_indices[earclip_triangulation(inner_verts, rings)]
+        inner_tri_indices = inner_vert_indices[
+            earclip_triangulation(inner_verts, rings)
+        ]
 
         tri_indices = np.hstack([indices, inner_tri_indices])
         self.triangulation = tri_indices
