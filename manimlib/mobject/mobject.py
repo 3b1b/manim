@@ -1440,7 +1440,7 @@ class Mobject(object):
         return self.shader_indices
 
     # Event Handlers
-    """ 
+    """
         Event handling follows the Event Bubbling model of DOM in javascript.
         Return false to stop the event bubbling.
         To learn more visit https://www.quirksmode.org/js/events_order.html
@@ -1475,7 +1475,7 @@ class Mobject(object):
 
     def get_event_listners(self):
         return self.event_listners
-    
+
     def get_family_event_listners(self):
         return list(it.chain(*[sm.get_event_listners() for sm in self.get_family()]))
 
@@ -1487,36 +1487,43 @@ class Mobject(object):
 
     def add_mouse_motion_listner(self, callback):
         self.add_event_listner(EventType.MouseMotionEvent, callback)
+
     def remove_mouse_motion_listner(self, callback):
         self.remove_event_listner(EventType.MouseMotionEvent, callback)
 
     def add_mouse_press_listner(self, callback):
         self.add_event_listner(EventType.MousePressEvent, callback)
+
     def remove_mouse_press_listner(self, callback):
         self.remove_event_listner(EventType.MousePressEvent, callback)
 
     def add_mouse_release_listner(self, callback):
         self.add_event_listner(EventType.MouseReleaseEvent, callback)
+
     def remove_mouse_release_listner(self, callback):
         self.remove_event_listner(EventType.MouseReleaseEvent, callback)
 
     def add_mouse_drag_listner(self, callback):
         self.add_event_listner(EventType.MouseDragEvent, callback)
+
     def remove_mouse_drag_listner(self, callback):
         self.remove_event_listner(EventType.MouseDragEvent, callback)
 
     def add_mouse_scroll_listner(self, callback):
         self.add_event_listner(EventType.MouseScrollEvent, callback)
+
     def remove_mouse_scroll_listner(self, callback):
         self.remove_event_listner(EventType.MouseScrollEvent, callback)
 
     def add_key_press_listner(self, callback):
         self.add_event_listner(EventType.KeyPressEvent, callback)
+
     def remove_key_press_listner(self, callback):
         self.remove_event_listner(EventType.KeyPressEvent, callback)
 
     def add_key_release_listner(self, callback):
         self.add_event_listner(EventType.KeyReleaseEvent, callback)
+
     def remove_key_release_listner(self, callback):
         self.remove_event_listner(EventType.KeyReleaseEvent, callback)
 
