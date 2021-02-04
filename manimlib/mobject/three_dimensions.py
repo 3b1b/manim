@@ -1,7 +1,7 @@
 import math
 
 from manimlib.constants import *
-from manimlib.mobject.types.surface import ParametricSurface
+from manimlib.mobject.types.surface import Surface
 from manimlib.mobject.types.surface import SGroup
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
@@ -20,8 +20,8 @@ class SurfaceMesh(VGroup):
     }
 
     def __init__(self, uv_surface, **kwargs):
-        if not isinstance(uv_surface, ParametricSurface):
-            raise Exception("uv_surface must be of type ParametricSurface")
+        if not isinstance(uv_surface, Surface):
+            raise Exception("uv_surface must be of type Surface")
         self.uv_surface = uv_surface
         super().__init__(**kwargs)
 
@@ -49,18 +49,9 @@ class SurfaceMesh(VGroup):
             self.add(path)
 
 
-# Sphere, cylinder, cube, prism
+# 3D shapes
 
-class ArglessSurface(ParametricSurface):
-    def __init__(self, **kwargs):
-        super().__init__(self.uv_func, **kwargs)
-
-    def uv_func(self, u, v):
-        # To be implemented by a subclass
-        return [u, v, 0]
-
-
-class Sphere(ArglessSurface):
+class Sphere(Surface):
     CONFIG = {
         "resolution": (101, 51),
         "radius": 1,
@@ -76,7 +67,7 @@ class Sphere(ArglessSurface):
         ])
 
 
-class Torus(ArglessSurface):
+class Torus(Surface):
     CONFIG = {
         "u_range": (0, TAU),
         "v_range": (0, TAU),
@@ -89,7 +80,7 @@ class Torus(ArglessSurface):
         return (self.r1 - self.r2 * math.cos(v)) * P - math.sin(v) * OUT
 
 
-class Cylinder(ArglessSurface):
+class Cylinder(Surface):
     CONFIG = {
         "height": 2,
         "radius": 1,
@@ -127,7 +118,7 @@ class Line3D(Cylinder):
         self.shift((start + end) / 2)
 
 
-class Disk3D(ArglessSurface):
+class Disk3D(Surface):
     CONFIG = {
         "radius": 1,
         "u_range": (0, 1),
@@ -147,7 +138,7 @@ class Disk3D(ArglessSurface):
         ]
 
 
-class Square3D(ArglessSurface):
+class Square3D(Surface):
     CONFIG = {
         "side_length": 2,
         "u_range": (-1, 1),

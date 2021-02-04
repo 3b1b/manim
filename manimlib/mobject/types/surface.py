@@ -5,19 +5,18 @@ from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.images import get_full_raster_image_path
 from manimlib.utils.iterables import listify
 from manimlib.utils.space_ops import normalize_along_axis
 
 
-class ParametricSurface(Mobject):
+class Surface(Mobject):
     CONFIG = {
         "u_range": (0, 1),
         "v_range": (0, 1),
         # Resolution counts number of points sampled, which for
-        # each coordinate is one more than the the number of rows/columns
-        # of approximating squares
+        # each coordinate is one more than the the number of
+        # rows/columns of approximating squares
         "resolution": (101, 101),
         "color": GREY,
         "opacity": 1.0,
@@ -38,11 +37,13 @@ class ParametricSurface(Mobject):
         ]
     }
 
-    def __init__(self, uv_func, **kwargs):
-        digest_config(self, kwargs)
-        self.uv_func = uv_func
-        self.compute_triangle_indices()
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.compute_triangle_indices()
+
+    def uv_func(self, u, v):
+        # To be implemented in subclasses
+        return (u, v, 0.0)
 
     def init_points(self):
         dim = self.dim
@@ -102,7 +103,7 @@ class ParametricSurface(Mobject):
     def pointwise_become_partial(self, smobject, a, b, axis=None):
         if axis is None:
             axis = self.prefered_creation_axis
-        assert(isinstance(smobject, ParametricSurface))
+        assert(isinstance(smobject, Surface))
         if a <= 0 and b >= 1:
             self.match_points(smobject)
             return self
@@ -165,7 +166,16 @@ class ParametricSurface(Mobject):
         return self.get_triangle_indices()
 
 
-class SGroup(ParametricSurface):
+class ParametricSurface(Surface):
+    def __init__(self, uv_func, **kwargs):
+        self.passed_uv_func = uv_func
+        super().__init__(**kwargs)
+
+    def uv_func(self, u, v):
+        return self.passed_uv_func(u, v)
+
+
+class SGroup(Surface):
     CONFIG = {
         "resolution": (0, 0),
     }
@@ -178,7 +188,7 @@ class SGroup(ParametricSurface):
         pass  # Needed?
 
 
-class TexturedSurface(ParametricSurface):
+class TexturedSurface(Surface):
     CONFIG = {
         "shader_folder": "textured_surface",
         "shader_dtype": [
@@ -191,8 +201,8 @@ class TexturedSurface(ParametricSurface):
     }
 
     def __init__(self, uv_surface, image_file, dark_image_file=None, **kwargs):
-        if not isinstance(uv_surface, ParametricSurface):
-            raise Exception("uv_surface must be of type ParametricSurface")
+        if not isinstance(uv_surface, Surface):
+            raise Exception("uv_surface must be of type Surface")
         # Set texture information
         if dark_image_file is None:
             dark_image_file = image_file
@@ -210,7 +220,7 @@ class TexturedSurface(ParametricSurface):
         self.v_range = uv_surface.v_range
         self.resolution = uv_surface.resolution
         self.gloss = self.uv_surface.gloss
-        super().__init__(self.uv_func, **kwargs)
+        super().__init__(**kwargs)
 
     def init_data(self):
         super().init_data()
