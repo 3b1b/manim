@@ -125,7 +125,7 @@ class Scene(object):
         # once embeded, and add a few custom shortcuts
         local_ns = inspect.currentframe().f_back.f_locals
         local_ns["touch"] = self.interact
-        for term in ("play", "add", "remove", "clear", "save_state", "restore"):
+        for term in ("play", "wait", "add", "remove", "clear", "save_state", "restore"):
             local_ns[term] = getattr(self, term)
         shell(local_ns=local_ns, stack_depth=2)
         # End scene when exiting an embed.

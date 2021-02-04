@@ -190,10 +190,12 @@ class Mobject(object):
         return self.get_num_points() > 0
 
     def get_bounding_box(self):
-        if not self.needs_new_bounding_box:
-            return self.data["bounding_box"]
+        if self.needs_new_bounding_box:
+            self.data["bounding_box"] = self.compute_bounding_box()
+            self.needs_new_bounding_box = False
+        return self.data["bounding_box"]
 
-        # all_points = self.get_all_points()
+    def compute_bounding_box(self):
         all_points = np.vstack([
             self.get_points(),
             *(
@@ -203,15 +205,13 @@ class Mobject(object):
             )
         ])
         if len(all_points) == 0:
-            self.data["bounding_box"] = np.zeros((3, self.dim))
+            return np.zeros((3, self.dim))
         else:
             # Lower left and upper right corners
             mins = all_points.min(0)
             maxs = all_points.max(0)
             mids = (mins + maxs) / 2
-            self.data["bounding_box"] = np.array([mins, mids, maxs])
-        self.needs_new_bounding_box = False
-        return self.data["bounding_box"]
+            return np.array([mins, mids, maxs])
 
     def refresh_bounding_box(self, recurse_down=False, recurse_up=True):
         for mob in self.get_family(recurse_down):
@@ -1002,7 +1002,7 @@ class Mobject(object):
 
     def length_over_dim(self, dim):
         bb = self.get_bounding_box()
-        return (bb[2] - bb[0])[dim]
+        return abs((bb[2] - bb[0])[dim])
 
     def get_width(self):
         return self.length_over_dim(0)

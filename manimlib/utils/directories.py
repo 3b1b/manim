@@ -23,6 +23,9 @@ def get_text_dir():
 def get_mobject_data_dir():
     return guarantee_existence(os.path.join(get_temp_dir(), "mobject_data"))
 
+def get_downloads_dir():
+    return guarantee_existence(os.path.join(get_temp_dir(), "manim_downloads"))
+
 
 def get_output_dir():
     return guarantee_existence(get_directories()["output"])

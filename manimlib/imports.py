@@ -1,5 +1,5 @@
 """
-I won't pretend like this is best practice, by in creating animations for a video,
+I won't pretend like this is best practice, but in creating animations for a video,
 it can be very nice to simply have all of the Mobjects, Animations, Scenes, etc.
 of manim available without having to worry about what namespace they come from.
 

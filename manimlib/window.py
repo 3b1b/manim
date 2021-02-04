@@ -12,7 +12,6 @@ class Window(PygletWindow):
     resizable = True
     gl_version = (3, 3)
     vsync = True
-    samples = 1
     cursor = True
 
     def __init__(self, scene, **kwargs):

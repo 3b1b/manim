@@ -25,7 +25,7 @@ class OpeningManimExample(Scene):
         transform_title = Text("That was a transform")
         transform_title.to_corner(UL)
         self.play(
-            Transform(title, transform_title),
+            Transform(title[0], transform_title),
             LaggedStartMap(FadeOut, basel, shift=DOWN),
         )
         self.wait()
