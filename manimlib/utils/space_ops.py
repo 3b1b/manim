@@ -382,12 +382,18 @@ def earclip_triangulation(verts, ring_ends):
             for ring_group in (attached_rings, detached_rings)
         ]
 
-        # Closet point on the atttached rings to the first point
+        # Closet point on the atttached rings to an estimated midpoint
         # of the detached rings
-        i = min(i_range, key=lambda i: norm_squared(verts[i] - verts[j_range[0]]))
+        tmp_j_vert = midpoint(
+            verts[j_range[0]],
+            verts[j_range[len(j_range) // 2]]
+        )
+        i = min(i_range, key=lambda i: norm_squared(verts[i] - tmp_j_vert))
         # Closet point of the detached rings to the aforementioned
         # point of the attached rings
         j = min(j_range, key=lambda j: norm_squared(verts[i] - verts[j]))
+        # Recalculate i based on new j
+        i = min(i_range, key=lambda i: norm_squared(verts[i] - verts[j]))
 
         # Remember to connect the polygon at these points
         loop_connections[i] = j
