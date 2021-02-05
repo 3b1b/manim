@@ -2,8 +2,6 @@ import inspect
 import sys
 import logging
 
-from numpy.lib.shape_base import split
-
 from manimlib.scene.scene import Scene
 from manimlib.config import get_custom_defaults
 
