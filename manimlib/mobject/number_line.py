@@ -35,7 +35,7 @@ class NumberLine(Line):
         },
         "decimal_number_config": {
             "num_decimal_places": 0,
-            "height": 0.25,
+            "font_size": 36,
         },
         "numbers_to_exclude": None
     }
