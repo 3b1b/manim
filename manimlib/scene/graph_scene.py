@@ -82,7 +82,7 @@ class GraphScene(Scene):
         if len(self.x_labeled_nums) > 0:
             if self.exclude_zero_label:
                 self.x_labeled_nums = [x for x in self.x_labeled_nums if x != 0]
-            x_axis.add_numbers(*self.x_labeled_nums)
+            x_axis.add_numbers(self.x_labeled_nums)
         if self.x_axis_label:
             x_label = TexText(self.x_axis_label)
             x_label.next_to(
@@ -116,7 +116,7 @@ class GraphScene(Scene):
         if len(self.y_labeled_nums) > 0:
             if self.exclude_zero_label:
                 self.y_labeled_nums = [y for y in self.y_labeled_nums if y != 0]
-            y_axis.add_numbers(*self.y_labeled_nums)
+            y_axis.add_numbers(self.y_labeled_nums)
         if self.y_axis_label:
             y_label = TexText(self.y_axis_label)
             y_label.next_to(
