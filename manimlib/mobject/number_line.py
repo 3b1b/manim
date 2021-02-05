@@ -99,7 +99,7 @@ class NumberLine(Line):
         return result
 
     def get_tick_marks(self):
-        return self.tick_marks
+        return self.ticks
 
     def number_to_point(self, number):
         alpha = float(number - self.x_min) / (self.x_max - self.x_min)
