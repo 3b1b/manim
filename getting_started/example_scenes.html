@@ -8,8 +8,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="../_static/custom.css" />
     <link rel="stylesheet" href="../_static/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?45a401f3adc6249c2e4af26e">
-    <link rel="stylesheet" href="../_static/pygments.css?45a401f3adc6249c2e4af26e">
+    <link rel="stylesheet" href="../_static/styles/default.css?be02277c5a58c0a098bdb8c2">
+    <link rel="stylesheet" href="../_static/pygments.css?be02277c5a58c0a098bdb8c2">
     
 <style>
   :root {
@@ -26,7 +26,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?45a401f3adc6249c2e4af26e"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?be02277c5a58c0a098bdb8c2"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -541,91 +541,61 @@ the related usage has been briefly described in the notes.</p>
 <h2>OpeningManimExample<a class="headerlink" href="#openingmanimexample" title="Permalink to this headline">¶</a></h2>
 <div class="manim-example"><video autoplay="" class="manim-video" controls="" id="openingmanimexample" loop="" src="../_static/example_scenes/OpeningManimExample.mp4"></video><h5 class="example-header">OpeningManimExample<a class="headerlink" href="#openingmanimexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">OpeningManimExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">title</span> <span class="o">=</span> <span class="n">TexText</span><span class="p">(</span><span class="s2">"This is some </span><span class="se">\\</span><span class="s2">LaTeX"</span><span class="p">)</span>
-        <span class="n">basel</span> <span class="o">=</span> <span class="n">Tex</span><span class="p">(</span>
-            <span class="s2">"</span><span class="se">\\</span><span class="s2">sum_{n=1}^</span><span class="se">\\</span><span class="s2">infty "</span>
-            <span class="s2">"</span><span class="se">\\</span><span class="s2">frac{1}{n^2} = </span><span class="se">\\</span><span class="s2">frac{</span><span class="se">\\</span><span class="s2">pi^2}{6}"</span>
-        <span class="p">)</span>
-        <span class="n">VGroup</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">basel</span><span class="p">)</span><span class="o">.</span><span class="n">arrange</span><span class="p">(</span><span class="n">DOWN</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
-            <span class="n">Write</span><span class="p">(</span><span class="n">title</span><span class="p">),</span>
-            <span class="n">FadeIn</span><span class="p">(</span><span class="n">basel</span><span class="p">,</span> <span class="n">UP</span><span class="p">),</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="n">intro_words</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">"""</span>
+<span class="s2">            The original motivation for manim was to</span>
+<span class="s2">            better illustrate mathematical functions</span>
+<span class="s2">            as transformations.</span>
+<span class="s2">        """</span><span class="p">)</span>
+        <span class="n">intro_words</span><span class="o">.</span><span class="n">to_edge</span><span class="p">(</span><span class="n">UP</span><span class="p">)</span>
 
-        <span class="n">transform_title</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">"That was a transform"</span><span class="p">)</span>
-        <span class="n">transform_title</span><span class="o">.</span><span class="n">to_corner</span><span class="p">(</span><span class="n">UL</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
-            <span class="n">Transform</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">transform_title</span><span class="p">),</span>
-            <span class="n">LaggedStartMap</span><span class="p">(</span><span class="n">FadeOut</span><span class="p">,</span> <span class="n">basel</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="n">DOWN</span><span class="p">),</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">Write</span><span class="p">(</span><span class="n">intro_words</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 
-        <span class="n">fade_comment</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span>
-            <span class="sd">"""</span>
-<span class="sd">            You probably don't want to overuse</span>
-<span class="sd">            Transforms, though, a simple fade often</span>
-<span class="sd">            looks nicer.</span>
-<span class="sd">            """</span><span class="p">,</span>
-            <span class="n">font_size</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span>
-            <span class="n">color</span><span class="o">=</span><span class="n">GREY_B</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">fade_comment</span><span class="o">.</span><span class="n">next_to</span><span class="p">(</span>
-            <span class="n">transform_title</span><span class="p">,</span> <span class="n">DOWN</span><span class="p">,</span>
-            <span class="n">buff</span><span class="o">=</span><span class="n">LARGE_BUFF</span><span class="p">,</span>
-            <span class="n">aligned_edge</span><span class="o">=</span><span class="n">LEFT</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">FadeIn</span><span class="p">(</span><span class="n">fade_comment</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="n">DOWN</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-
+        <span class="c1"># Linear transform</span>
         <span class="n">grid</span> <span class="o">=</span> <span class="n">NumberPlane</span><span class="p">((</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
-        <span class="n">grid_title</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span>
-            <span class="s2">"But manim is for illustrating math, not text"</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">grid_title</span><span class="o">.</span><span class="n">to_edge</span><span class="p">(</span><span class="n">UP</span><span class="p">)</span>
-        <span class="n">grid_title</span><span class="o">.</span><span class="n">add_background_rectangle</span><span class="p">()</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">grid_title</span><span class="p">)</span>  <span class="c1"># Make sure title is on top of grid</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
-            <span class="n">FadeOut</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="n">LEFT</span><span class="p">),</span>
-            <span class="n">FadeOut</span><span class="p">(</span><span class="n">fade_comment</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="n">LEFT</span><span class="p">),</span>
-            <span class="n">FadeIn</span><span class="p">(</span><span class="n">grid_title</span><span class="p">),</span>
-            <span class="n">ShowCreation</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">run_time</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">lag_ratio</span><span class="o">=</span><span class="mf">0.1</span><span class="p">),</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
-
         <span class="n">matrix</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
-        <span class="n">linear_transform_title</span> <span class="o">=</span> <span class="n">VGroup</span><span class="p">(</span>
+        <span class="n">linear_transform_words</span> <span class="o">=</span> <span class="n">VGroup</span><span class="p">(</span>
             <span class="n">Text</span><span class="p">(</span><span class="s2">"This is what the matrix"</span><span class="p">),</span>
             <span class="n">IntegerMatrix</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">include_background_rectangle</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
             <span class="n">Text</span><span class="p">(</span><span class="s2">"looks like"</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="n">linear_transform_title</span><span class="o">.</span><span class="n">arrange</span><span class="p">(</span><span class="n">RIGHT</span><span class="p">)</span>
-        <span class="n">linear_transform_title</span><span class="o">.</span><span class="n">to_edge</span><span class="p">(</span><span class="n">UP</span><span class="p">)</span>
+        <span class="n">linear_transform_words</span><span class="o">.</span><span class="n">arrange</span><span class="p">(</span><span class="n">RIGHT</span><span class="p">)</span>
+        <span class="n">linear_transform_words</span><span class="o">.</span><span class="n">to_edge</span><span class="p">(</span><span class="n">UP</span><span class="p">)</span>
+        <span class="n">linear_transform_words</span><span class="o">.</span><span class="n">set_stroke</span><span class="p">(</span><span class="n">BLACK</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
-            <span class="n">FadeOut</span><span class="p">(</span><span class="n">grid_title</span><span class="p">),</span>
-            <span class="n">FadeIn</span><span class="p">(</span><span class="n">linear_transform_title</span><span class="p">),</span>
+            <span class="n">ShowCreation</span><span class="p">(</span><span class="n">grid</span><span class="p">),</span>
+            <span class="n">FadeTransform</span><span class="p">(</span><span class="n">intro_words</span><span class="p">,</span> <span class="n">linear_transform_words</span><span class="p">)</span>
         <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">apply_matrix</span><span class="p">,</span> <span class="n">matrix</span><span class="p">,</span> <span class="n">run_time</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
 
-        <span class="n">grid_transform_title</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span>
-            <span class="s2">"And this is a nonlinear transformation"</span>
-        <span class="p">)</span>
-        <span class="n">grid_transform_title</span><span class="o">.</span><span class="n">set_stroke</span><span class="p">(</span><span class="n">BLACK</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-        <span class="n">grid_transform_title</span><span class="o">.</span><span class="n">to_edge</span><span class="p">(</span><span class="n">UP</span><span class="p">)</span>
-        <span class="n">grid</span><span class="o">.</span><span class="n">prepare_for_nonlinear_transform</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+        <span class="c1"># Complex map</span>
+        <span class="n">c_grid</span> <span class="o">=</span> <span class="n">ComplexPlane</span><span class="p">()</span>
+        <span class="n">moving_c_grid</span> <span class="o">=</span> <span class="n">c_grid</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">moving_c_grid</span><span class="o">.</span><span class="n">prepare_for_nonlinear_transform</span><span class="p">()</span>
+        <span class="n">c_grid</span><span class="o">.</span><span class="n">set_stroke</span><span class="p">(</span><span class="n">BLUE_E</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">c_grid</span><span class="o">.</span><span class="n">add_coordinate_labels</span><span class="p">(</span><span class="n">number_config</span><span class="o">=</span><span class="p">{</span><span class="s2">"font_size"</span><span class="p">:</span> <span class="mi">36</span><span class="p">})</span>
+        <span class="n">complex_map_words</span> <span class="o">=</span> <span class="n">TexText</span><span class="p">(</span><span class="s2">"""</span>
+<span class="s2">            Or thinking of the plane as $</span><span class="se">\\</span><span class="s2">mathds{C}$,</span><span class="se">\\\\</span><span class="s2"></span>
+<span class="s2">            this is the map $z </span><span class="se">\\</span><span class="s2">rightarrow z^2$</span>
+<span class="s2">        """</span><span class="p">)</span>
+        <span class="n">complex_map_words</span><span class="o">.</span><span class="n">to_corner</span><span class="p">(</span><span class="n">UR</span><span class="p">)</span>
+        <span class="n">complex_map_words</span><span class="o">.</span><span class="n">set_stroke</span><span class="p">(</span><span class="n">BLACK</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
-            <span class="n">ApplyPointwiseFunction</span><span class="p">(</span>
-                <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">p</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="mi">0</span><span class="p">]),</span>
-                <span class="n">grid</span><span class="p">,</span>
-                <span class="n">run_time</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
-            <span class="p">),</span>
-            <span class="n">FadeOut</span><span class="p">(</span><span class="n">linear_transform_title</span><span class="p">),</span>
-            <span class="n">FadeIn</span><span class="p">(</span><span class="n">grid_transform_title</span><span class="p">),</span>
+            <span class="n">FadeOut</span><span class="p">(</span><span class="n">grid</span><span class="p">),</span>
+            <span class="n">Write</span><span class="p">(</span><span class="n">c_grid</span><span class="p">,</span> <span class="n">run_time</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+            <span class="n">FadeIn</span><span class="p">(</span><span class="n">moving_c_grid</span><span class="p">),</span>
+            <span class="n">FadeTransform</span><span class="p">(</span><span class="n">linear_transform_words</span><span class="p">,</span> <span class="n">complex_map_words</span><span class="p">),</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
+            <span class="n">moving_c_grid</span><span class="o">.</span><span class="n">apply_complex_function</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">run_time</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 </pre></div>
 </div>
 </div><p>This scene is a comprehensive application of a two-dimensional scene.</p>
