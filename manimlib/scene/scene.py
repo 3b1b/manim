@@ -3,6 +3,7 @@ import random
 import platform
 import itertools as it
 import logging
+from functools import wraps
 
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
@@ -372,6 +373,7 @@ class Scene(object):
         return animations
 
     def handle_play_like_call(func):
+        @wraps(func)
         def wrapper(self, *args, **kwargs):
             self.update_skipping_status()
             should_write = not self.skip_animations

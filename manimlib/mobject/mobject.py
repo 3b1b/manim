@@ -3,6 +3,7 @@ import itertools as it
 import random
 import sys
 import moderngl
+from functools import wraps
 
 import numpy as np
 
@@ -1287,6 +1288,7 @@ class Mobject(object):
     # Operations touching shader uniforms
 
     def affects_shader_info_id(func):
+        @wraps(func)
         def wrapper(self):
             for mob in self.get_family():
                 func(mob)

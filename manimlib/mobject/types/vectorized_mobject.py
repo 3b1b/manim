@@ -2,7 +2,7 @@ import itertools as it
 import operator as op
 import moderngl
 
-from functools import reduce
+from functools import reduce, wraps
 
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
@@ -807,6 +807,7 @@ class VMobject(Mobject):
         return tri_indices
 
     def triggers_refreshed_triangulation(func):
+        @wraps(func)
         def wrapper(self, *args, **kwargs):
             old_points = self.get_points()
             func(self, *args, **kwargs)
