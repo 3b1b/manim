@@ -437,93 +437,64 @@ OpeningManimExample
 .. manim-example:: OpeningManimExample
     :media: ../_static/example_scenes/OpeningManimExample.mp4
 
+
     class OpeningManimExample(Scene):
         def construct(self):
-            title = TexText("This is some \\LaTeX")
-            basel = Tex(
-                "\\sum_{n=1}^\\infty "
-                "\\frac{1}{n^2} = \\frac{\\pi^2}{6}"
-            )
-            VGroup(title, basel).arrange(DOWN)
-            self.play(
-                Write(title),
-                FadeIn(basel, UP),
-            )
-            self.wait()
+            intro_words = Text("""
+                The original motivation for manim was to
+                better illustrate mathematical functions
+                as transformations.
+            """)
+            intro_words.to_edge(UP)
 
-            transform_title = Text("That was a transform")
-            transform_title.to_corner(UL)
-            self.play(
-                Transform(title, transform_title),
-                LaggedStartMap(FadeOut, basel, shift=DOWN),
-            )
-            self.wait()
+            self.play(Write(intro_words))
+            self.wait(2)
 
-            fade_comment = Text(
-                """
-                You probably don't want to overuse
-                Transforms, though, a simple fade often
-                looks nicer.
-                """,
-                font_size=36,
-                color=GREY_B,
-            )
-            fade_comment.next_to(
-                transform_title, DOWN,
-                buff=LARGE_BUFF,
-                aligned_edge=LEFT
-            )
-            self.play(FadeIn(fade_comment, shift=DOWN))
-            self.wait(3)
-
+            # Linear transform
             grid = NumberPlane((-10, 10), (-5, 5))
-            grid_title = Text(
-                "But manim is for illustrating math, not text",
-            )
-            grid_title.to_edge(UP)
-            grid_title.add_background_rectangle()
-
-            self.add(grid, grid_title)  # Make sure title is on top of grid
-            self.play(
-                FadeOut(title, shift=LEFT),
-                FadeOut(fade_comment, shift=LEFT),
-                FadeIn(grid_title),
-                ShowCreation(grid, run_time=3, lag_ratio=0.1),
-            )
-            self.wait()
-
             matrix = [[1, 1], [0, 1]]
-            linear_transform_title = VGroup(
+            linear_transform_words = VGroup(
                 Text("This is what the matrix"),
                 IntegerMatrix(matrix, include_background_rectangle=True),
                 Text("looks like")
             )
-            linear_transform_title.arrange(RIGHT)
-            linear_transform_title.to_edge(UP)
+            linear_transform_words.arrange(RIGHT)
+            linear_transform_words.to_edge(UP)
+            linear_transform_words.set_stroke(BLACK, 10, background=True)
 
             self.play(
-                FadeOut(grid_title),
-                FadeIn(linear_transform_title),
+                ShowCreation(grid),
+                FadeTransform(intro_words, linear_transform_words)
             )
+            self.wait()
             self.play(grid.apply_matrix, matrix, run_time=3)
             self.wait()
 
-            grid_transform_title = Text(
-                "And this is a nonlinear transformation"
-            )
-            grid_transform_title.set_stroke(BLACK, 5, background=True)
-            grid_transform_title.to_edge(UP)
-            grid.prepare_for_nonlinear_transform(100)
+            # Complex map
+            c_grid = ComplexPlane()
+            moving_c_grid = c_grid.copy()
+            moving_c_grid.prepare_for_nonlinear_transform()
+            c_grid.set_stroke(BLUE_E, 1)
+            c_grid.add_coordinate_labels(number_config={"font_size": 36})
+            complex_map_words = TexText("""
+                Or thinking of the plane as $\\mathds{C}$,\\\\
+                this is the map $z \\rightarrow z^2$
+            """)
+            complex_map_words.to_corner(UR)
+            complex_map_words.set_stroke(BLACK, 5, background=True)
+
             self.play(
-                ApplyPointwiseFunction(
-                    lambda p: p + np.array([np.sin(p[1]), np.sin(p[0]), 0]),
-                    grid,
-                    run_time=5,
-                ),
-                FadeOut(linear_transform_title),
-                FadeIn(grid_transform_title),
+                FadeOut(grid),
+                Write(c_grid, run_time=3),
+                FadeIn(moving_c_grid),
+                FadeTransform(linear_transform_words, complex_map_words),
             )
             self.wait()
+            self.play(
+                moving_c_grid.apply_complex_function, lambda z: z**2,
+                run_time=6,
+            )
+            self.wait(2)
 
 This scene is a comprehensive application of a two-dimensional scene.
 
