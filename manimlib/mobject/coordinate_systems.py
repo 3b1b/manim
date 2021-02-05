@@ -316,6 +316,7 @@ class NumberPlane(Axes):
             num_curves = mob.get_num_curves()
             if num_inserted_curves > num_curves:
                 mob.insert_n_curves(num_inserted_curves - num_curves)
+            mob.make_smooth_after_applying_functions = True
         return self
 
 
