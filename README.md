@@ -5,9 +5,11 @@
 [![Manim Discord](https://img.shields.io/discord/581738731934056449.svg?label=discord)](https://discord.gg/mMRrZQW)
 [![docs](https://github.com/3b1b/manim/workflows/docs/badge.svg)](https://3b1b.github.io/manim/)
 
-Manim is an animation engine for explanatory math videos. It's used to create precise animations programmatically, as seen in the videos at [3Blue1Brown](https://www.3blue1brown.com/).
+Manim is an engine for precise programatic animations, designed for creating explanatory math videos.
 
-This repository contains the version of manim used by 3Blue1Brown.  There is also a community maintained version at https://github.com/ManimCommunity/manim/. To get help or to join the development effort, please join the discord.
+Note, there are two versions of manim.  This repository began as a personal project by the author of [3Blue1Brown](https://www.3blue1brown.com/) for the purpose of animating those videos, with video-specific code available [here](https://github.com/3b1b/videos).  In 2020 a group of devlopers forked it into what is now the [community edition](https://github.com/ManimCommunity/manim/), with a goal of being more stable, better tested, quicker to respond to community contributions, and all around friendlier to get started with.  You can engage with that community by joining the discord.
+
+Since the fork, this version has evolved to work on top of OpenGL, and allows real-time rendering to an interactive window before scenes are finalized and written to a file.
 
 ## Installation
 Manim runs on Python 3.8.
@@ -86,19 +88,16 @@ Some useful flags include:
 
 Take a look at custom_defaults.yml for further configuration.  To add your customization, you can either edit this file, or add another file by the same name "custom_defaults.yml" to whatever directory you are running manim from.  For example [this is the one](https://github.com/3b1b/videos/blob/master/custom_defaults.yml) for 3blue1brown videos.  There you can specify where videos should be output to, where manim should look for image files and sounds you want to read in, and other defaults regarding style and video quality.
 
-Look through [https://github.com/3b1b/videos](https://github.com/3b1b/videos) to see the code for previous 3b1b videos. Note, however, that developments are often made to the library without considering backwards compatibility with those old projects. To run an old project with a guarantee that it will work, you will have to go back to the commit which completed that project.
+Look through the [example scenes](https://3b1b.github.io/manim/getting_started/example_scenes.html) to get a sense of how it is used, and feel free to look through the code behind [3blue1brown videos](https://github.com/3b1b/videos) for a much larger set of example. Note, however, that developments are often made to the library without considering backwards compatibility with those old videos. To run an old project with a guarantee that it will work, you will have to go back to the commit which completed that project.
 
 ### Documentation
 Documentation is in progress at [3b1b.github.io/manim](https://3b1b.github.io/manim/). And there is also a Chinese version maintained by **@manim-kindergarten**: [manim.ml](https://manim.ml/) (in Chinese).
-
-### Walkthrough
-Todd Zimmerman put together a [tutorial](https://talkingphysics.wordpress.com/2019/01/08/getting-started-animating-with-manim-and-python-3-7/) on getting started with manim, which has been updated to run on Python 3.7.
 
 [manim-kindergarten](https://github.com/manim-kindergarten/) wrote and collected some useful extra classes and some codes of videos in [manim_sandbox repo](https://github.com/manim-kindergarten/manim_sandbox).
 
 
 ## Contributing
-Is always welcome. In particular, there is a dire need for tests and documentation.
+Is always welcome.  As mentioned above, the [community edition](https://github.com/ManimCommunity/manim) has the most active ecosystem for contributions, with testing and continuous integration, but pull requests are welcome here too.  Please explain the motivation for a given change and examples of its effect.
 
 
 ## License
