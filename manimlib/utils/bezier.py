@@ -115,30 +115,28 @@ def match_interpolate(new_start, new_end, old_start, old_end, old_value):
     )
 
 
-# Figuring out which bezier curves most smoothly connect a sequence of points
 def get_smooth_quadratic_bezier_handle_points(points):
-    n = len(points)
-    # Top matrix sets the constraint h_i + h_{i + 1} = 2 * P_i
-    top_mat = np.zeros((n - 2, n - 1))
-    np.fill_diagonal(top_mat, 1)
-    np.fill_diagonal(top_mat[:, 1:], 1)
+    """
+    Figuring out which bezier curves most smoothly connect a sequence of points.
 
-    # Lower matrix sets the constraint that 2(h1 - h0)= p2 - p0 and 2(h_{n-1}- h_{n-2}) = p_n - p_{n-2}
-    low_mat = np.zeros((2, n - 1))
-    low_mat[0, :2] = [-2, 2]
-    low_mat[1, -2:] = [-2, 2]
+    Given three successive points, P0, P1 and P2, you can compute that by defining
+    h = (1/4) P0 + P1 - (1/4)P2, the bezier curve defined by (P0, h, P1) will pass
+    through the point P2.
 
-    # Use the pseudoinverse to find a near solution to these constraints
-    full_mat = np.vstack([top_mat, low_mat])
-    full_mat_pinv = np.linalg.pinv(full_mat)
-
-    rhs = np.vstack([
-        2 * points[1:-1],
-        [points[2] - points[0]],
-        [points[-1] - points[-3]],
-    ])
-
-    return np.dot(full_mat_pinv, rhs)
+    So for a given set of four successive points, P0, P1, P2, P3, if we want to add
+    a handle point h between P1 and P2 so that the quadratic bezier (P1, h, P2) is
+    part of a smooth curve passing through all four points, we calculate one solution
+    for h that would produce a parbola passing through P3, call it smooth_to_right, and
+    another that would produce a parabola passing through P0, call it smooth_to_left,
+    and use the midpoint between the two.
+    """
+    smooth_to_right, smooth_to_left = [
+        0.25 * ps[0:-2] + ps[1:-1] - 0.25 * ps[2:]
+        for ps in (points, points[::-1])
+    ]
+    handles = 0.5 * np.vstack([smooth_to_right, [smooth_to_left[0]]])
+    handles += 0.5 * np.vstack([smooth_to_right[0], smooth_to_left[::-1]])
+    return handles
 
 
 def get_smooth_cubic_bezier_handle_points(points):
@@ -259,7 +257,7 @@ def get_quadratic_approximation_of_cubic(a0, h0, h1, a1):
     ti_min_in_range = has_infl & (0 < ti_min) & (ti_min < 1)
     ti_max_in_range = has_infl & (0 < ti_max) & (ti_max < 1)
 
-    # Choose a value of t which is starts as 0.5,
+    # Choose a value of t which starts at 0.5,
     # but is updated to one of the inflection points
     # if they lie between 0 and 1
 
