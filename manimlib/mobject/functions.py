@@ -6,7 +6,6 @@ from manimlib.utils.config_ops import digest_config
 class ParametricCurve(VMobject):
     CONFIG = {
         "t_range": [0, 1, 0.1],
-        "min_samples": 10,
         "epsilon": 1e-8,
         # TODO, automatically figure out discontinuities
         "discontinuities": [],
