@@ -57,6 +57,7 @@ class NumberLine(Line):
         super().__init__(self.x_min * RIGHT, self.x_max * RIGHT, **kwargs)
         if self.width:
             self.set_width(self.width)
+            self.unit_size = self.get_unit_size()
         else:
             self.scale(self.unit_size)
         self.center()
@@ -123,7 +124,7 @@ class NumberLine(Line):
         return self.point_to_number(point)
 
     def get_unit_size(self):
-        return (self.x_max - self.x_min) / self.get_length()
+        return self.get_length() / (self.x_max - self.x_min)
 
     def get_number_mobject(self, x,
                            number_config=None,
