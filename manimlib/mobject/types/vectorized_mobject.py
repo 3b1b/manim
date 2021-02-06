@@ -845,9 +845,9 @@ class VMobject(Mobject):
 
     # TODO, how to be smart about tangents here?
     @triggers_refreshed_triangulation
-    def apply_function(self, function):
-        super().apply_function(function)
-        if self.make_smooth_after_applying_functions:
+    def apply_function(self, function, make_smooth=False, **kwargs):
+        super().apply_function(function, **kwargs)
+        if self.make_smooth_after_applying_functions or make_smooth:
             self.make_approximately_smooth()
         return self
 
