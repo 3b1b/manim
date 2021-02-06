@@ -636,6 +636,10 @@ class Arrow(Line):
             super().scale(length / self.get_length())
 
         self.rotate(angle_of_vector(vect) - self.get_angle())
+        self.rotate(
+            PI / 2 - np.arccos(normalize(vect)[2]),
+            axis=rotate_vector(self.get_unit_vector(), -PI / 2),
+        )
         self.shift(start - self.get_start())
         self.refresh_triangulation()
 
