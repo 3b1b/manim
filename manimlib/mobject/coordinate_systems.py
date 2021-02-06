@@ -5,14 +5,17 @@ from manimlib.constants import *
 from manimlib.mobject.functions import ParametricCurve
 from manimlib.mobject.geometry import Arrow
 from manimlib.mobject.geometry import Line
+from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.number_line import NumberLine
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import merge_dicts_recursively
 from manimlib.utils.simple_functions import binary_search
 from manimlib.utils.space_ops import angle_of_vector
+from manimlib.utils.space_ops import get_norm
+from manimlib.utils.space_ops import rotate_vector
 
-# TODO: There should be much more code reuse between Axes, NumberPlane and GraphScene
+EPSILON = 1e-8
 
 
 class CoordinateSystem():
@@ -25,6 +28,7 @@ class CoordinateSystem():
         "y_range": [-4, 4, 1],
         "width": None,
         "height": None,
+        "num_sampled_graph_points_per_tick": 5,
     }
 
     def coords_to_point(self, *coords):
@@ -84,12 +88,21 @@ class CoordinateSystem():
         )
         return self.axis_labels
 
+    # Useful for graphing
     def get_graph(self, function, x_range=None, **kwargs):
-        if x_range is None:
-            x_range = self.x_range
+        t_range = list(self.x_range)
+        if x_range is not None:
+            for i in range(len(x_range)):
+                t_range[i] = x_range[i]
+        # For axes, the third coordinate of x_range indicates
+        # tick frequency.  But for functions, it indicates a
+        # sample frequency
+        if x_range is None or len(x_range) < 3:
+            t_range[2] /= self.num_sampled_graph_points_per_tick
+
         graph = ParametricCurve(
-            lambda t: self.coords_to_point(t, function(t)),
-            t_range=x_range,
+            lambda t: self.c2p(t, function(t)),
+            t_range=t_range,
             **kwargs
         )
         graph.underlying_function = function
@@ -121,6 +134,111 @@ class CoordinateSystem():
             else:
                 return None
 
+    def itgp(self, x, graph):
+        """
+        Alias for input_to_graph_point
+        """
+        return self.input_to_graph_point(x, graph)
+
+    def get_graph_label(self,
+                        graph,
+                        label="f(x)",
+                        x=None,
+                        direction=RIGHT,
+                        buff=MED_SMALL_BUFF,
+                        color=None):
+        label = Tex(label)
+        if color is None:
+            label.match_color(graph)
+        if x is None:
+            # Searching from the right, find a point
+            # whose y value is in bounds
+            max_y = FRAME_Y_RADIUS - label.get_height()
+            for x0 in np.arange(*self.x_range)[-1::-1]:
+                if abs(self.itgp(x0, graph)[1]) < max_y:
+                    x = x0
+                    break
+            if x is None:
+                x = self.x_range[1]
+
+        point = self.input_to_graph_point(x, graph)
+        angle = self.angle_of_tangent(x, graph)
+        normal = rotate_vector(RIGHT, angle + 90 * DEGREES)
+        if normal[1] < 0:
+            normal *= -1
+        label.next_to(point, normal, buff=buff)
+        label.shift_onto_screen()
+        return label
+
+    def get_vertical_line_to_graph(self, x, graph, line_func=Line):
+        return line_func(
+            self.coords_to_point(x, 0),
+            self.input_to_graph_point(x, graph),
+        )
+
+    # For calculus
+    def angle_of_tangent(self, x, graph, dx=EPSILON):
+        p0 = self.input_to_graph_point(x, graph)
+        p1 = self.input_to_graph_point(x + dx, graph)
+        return angle_of_vector(p1 - p0)
+
+    def slope_of_tangent(self, x, graph, **kwargs):
+        return np.tan(self.angle_of_tangent(x, graph, **kwargs))
+
+    def get_tangent_line(self, x, graph, length=5, line_func=Line):
+        line = line_func(LEFT, RIGHT)
+        line.set_width(length)
+        line.rotate(self.angle_of_tangent(x, graph))
+        line.move_to(self.input_to_graph_point(x, graph))
+        return line
+
+    def get_riemann_rectangles(self,
+                               graph,
+                               x_range=None,
+                               dx=None,
+                               input_sample_type="left",
+                               stroke_width=1,
+                               stroke_color=BLACK,
+                               fill_opacity=1,
+                               colors=(BLUE, GREEN),
+                               show_signed_area=True):
+        if x_range is None:
+            x_range = self.x_range[:2]
+        if dx is None:
+            dx = self.x_range[2]
+        if len(x_range) < 3:
+            x_range = [*x_range, dx]
+
+        rects = []
+        xs = np.arange(*x_range)
+        for x0, x1 in zip(xs, xs[1:]):
+            if input_sample_type == "left":
+                sample = x0
+            elif input_sample_type == "right":
+                sample = x1
+            elif input_sample_type == "center":
+                sample = 0.5 * x0 + 0.5 * x1
+            else:
+                raise Exception("Invalid input sample type")
+            height = get_norm(
+                self.itgp(sample, graph) - self.c2p(sample, 0)
+            )
+            rect = Rectangle(width=x1 - x0, height=height)
+            rect.move_to(self.c2p(x0, 0), DL)
+            rects.append(rect)
+        result = VGroup(*rects)
+        result.set_submobject_colors_by_gradient(*colors)
+        result.set_style(
+            stroke_width=stroke_width,
+            stroke_color=stroke_color,
+            fill_opacity=fill_opacity,
+        )
+        return result
+
+    def get_area_under_graph(self, graph, x_range, fill_color=BLUE, fill_opacity=1):
+        # TODO
+        pass
+
 
 class Axes(VGroup, CoordinateSystem):
     CONFIG = {
@@ -135,15 +253,18 @@ class Axes(VGroup, CoordinateSystem):
 
     def __init__(self, x_range=None, y_range=None, **kwargs):
         VGroup.__init__(self, **kwargs)
+        if x_range is not None:
+            for i in range(len(x_range)):
+                self.x_range[i] = x_range[i]
+        if y_range is not None:
+            for i in range(len(y_range)):
+                self.y_range[i] = y_range[i]
+
         self.x_axis = self.create_axis(
-            x_range or self.x_range,
-            self.x_axis_config,
-            self.width,
+            self.x_range, self.x_axis_config, self.width,
         )
         self.y_axis = self.create_axis(
-            y_range or self.y_range,
-            self.y_axis_config,
-            self.height
+            self.y_range, self.y_axis_config, self.height
         )
         self.y_axis.rotate(90 * DEGREES, about_point=ORIGIN)
         # Add as a separate group in case various other
@@ -162,7 +283,7 @@ class Axes(VGroup, CoordinateSystem):
 
     def coords_to_point(self, *coords):
         origin = self.x_axis.number_to_point(0)
-        result = np.array(origin)
+        result = origin.copy()
         for axis, coord in zip(self.get_axes(), coords):
             result += (axis.number_to_point(coord) - origin)
         return result
