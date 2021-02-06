@@ -147,15 +147,18 @@ class CoordinateSystem():
                         direction=RIGHT,
                         buff=MED_SMALL_BUFF,
                         color=None):
-        label = Tex(label)
+        if isinstance(label, str):
+            label = Tex(label)
         if color is None:
             label.match_color(graph)
         if x is None:
             # Searching from the right, find a point
             # whose y value is in bounds
             max_y = FRAME_Y_RADIUS - label.get_height()
-            for x0 in np.arange(*self.x_range)[-1::-1]:
-                if abs(self.itgp(x0, graph)[1]) < max_y:
+            max_x = FRAME_X_RADIUS - label.get_width()
+            for x0 in np.arange(*self.x_range)[::-1]:
+                pt = self.itgp(x0, graph)
+                if abs(pt[0]) < max_x and abs(pt[1]) < max_y:
                     x = x0
                     break
             if x is None:
