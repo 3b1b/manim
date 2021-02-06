@@ -45,7 +45,7 @@ class OpeningManimExample(Scene):
         moving_c_grid = c_grid.copy()
         moving_c_grid.prepare_for_nonlinear_transform()
         c_grid.set_stroke(BLUE_E, 1)
-        c_grid.add_coordinate_labels(number_config={"font_size": 36})
+        c_grid.add_coordinate_labels(font_size=24)
         complex_map_words = TexText("""
             Or thinking of the plane as $\\mathds{C}$,\\\\
             this is the map $z \\rightarrow z^2$
@@ -107,7 +107,6 @@ class InteractiveDevlopment(Scene):
 
         # In principle you can customize a scene
         always(circle.move_to, self.mouse_point)
-
 
 
 class AnimatingMethods(Scene):

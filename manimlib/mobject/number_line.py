@@ -127,11 +127,9 @@ class NumberLine(Line):
         return self.get_length() / (self.x_max - self.x_min)
 
     def get_number_mobject(self, x,
-                           number_config=None,
                            direction=None,
-                           buff=None):
-        if number_config is None:
-            number_config = {}
+                           buff=None,
+                           **number_config):
         number_config = merge_dicts_recursively(
             self.decimal_number_config, number_config
         )

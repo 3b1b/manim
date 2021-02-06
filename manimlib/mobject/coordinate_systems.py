@@ -297,11 +297,17 @@ class Axes(VGroup, CoordinateSystem):
     def get_axes(self):
         return self.axes
 
-    def add_coordinate_labels(self, x_values=None, y_values=None):
+    def add_coordinate_labels(self,
+                              x_values=None,
+                              y_values=None,
+                              excluding=[0],
+                              **kwargs):
         axes = self.get_axes()
         self.coordinate_labels = VGroup()
         for axis, values in zip(axes, [x_values, y_values]):
-            numbers = axis.add_numbers(values, excluding=[0])
+            numbers = axis.add_numbers(
+                values, excluding=excluding, **kwargs
+            )
             self.coordinate_labels.add(numbers)
         return self.coordinate_labels
 
@@ -350,9 +356,6 @@ class NumberPlane(Axes):
             "include_tip": False,
             "line_to_number_buff": SMALL_BUFF,
             "line_to_number_direction": DL,
-            "decimal_number_config": {
-                "height": 0.2,
-            }
         },
         "y_axis_config": {
             "line_to_number_direction": DL,
@@ -477,10 +480,7 @@ class ComplexPlane(NumberPlane):
             if abs(z.imag) > abs(z.real):
                 axis = self.get_y_axis()
                 value = z.imag
-                kwargs = merge_dicts_recursively(
-                    kwargs,
-                    {"number_config": {"unit": "i"}},
-                )
+                kwargs["unit"] = "i"
             else:
                 axis = self.get_x_axis()
                 value = z.real
