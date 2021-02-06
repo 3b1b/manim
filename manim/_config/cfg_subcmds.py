@@ -238,11 +238,12 @@ Are you sure you want to continue? (y/n)""",
     else:
         proceed = True
     if proceed:
+        parser = make_config_parser()
         if not os.path.isdir(path):
             console.print(f"Creating folder: {path}.", style="red bold")
             os.mkdir(path)
         with open(os.path.join(path, "manim.cfg"), "w") as outpath:
-            config.write(outpath)
+            parser.write(outpath)
             from_path = os.path.join(os.getcwd(), "manim.cfg")
             to_path = os.path.join(path, "manim.cfg")
         console.print(f"Exported final Config at {from_path} to {to_path}.")
