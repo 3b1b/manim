@@ -1,7 +1,6 @@
 from manimlib.constants import *
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.space_ops import get_norm
 
 
 class ParametricCurve(VMobject):
@@ -11,7 +10,6 @@ class ParametricCurve(VMobject):
         "epsilon": 1e-8,
         # TODO, automatically figure out discontinuities
         "discontinuities": [],
-        "smoothing": True,
     }
 
     def __init__(self, t_func, t_range=None, **kwargs):
@@ -42,8 +40,7 @@ class ParametricCurve(VMobject):
             points = np.array([self.t_func(t) for t in t_range])
             self.start_new_path(points[0])
             self.add_points_as_corners(points[1:])
-        if self.smoothing:
-            self.make_smooth()
+        self.make_smooth(true_smooth=False)
         return self
 
 

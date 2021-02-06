@@ -9,6 +9,7 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.bezier import bezier
 from manimlib.utils.bezier import get_smooth_quadratic_bezier_handle_points
+from manimlib.utils.bezier import get_smooth_cubic_bezier_handle_points
 from manimlib.utils.bezier import get_quadratic_approximation_of_cubic
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import integer_interpolate
@@ -402,13 +403,13 @@ class VMobject(Mobject):
         ])
         return self
 
-    def set_points_smoothly(self, points):
+    def set_points_smoothly(self, points, true_smooth=False):
         self.set_points_as_corners(points)
-        self.make_smooth()
+        self.make_smooth(true_smooth)
         return self
 
     def change_anchor_mode(self, mode):
-        assert(mode in ["jagged", "smooth"])
+        assert(mode in ["jagged", "approx_smooth", "true_smooth"])
         nppc = self.n_points_per_curve
         for submob in self.family_members_with_points():
             subpaths = submob.get_subpaths()
@@ -416,17 +417,27 @@ class VMobject(Mobject):
             for subpath in subpaths:
                 anchors = np.vstack([subpath[::nppc], subpath[-1:]])
                 new_subpath = np.array(subpath)
-                if mode == "smooth":
+                if mode == "approx_smooth":
                     new_subpath[1::nppc] = get_smooth_quadratic_bezier_handle_points(anchors)
+                elif mode == "true_smooth":
+                    h1, h2 = get_smooth_cubic_bezier_handle_points(anchors)
+                    new_subpath = get_quadratic_approximation_of_cubic(anchors[:-1], h1, h2, anchors[1:])
                 elif mode == "jagged":
                     new_subpath[1::nppc] = 0.5 * (anchors[:-1] + anchors[1:])
                 submob.append_points(new_subpath)
             submob.refresh_triangulation()
         return self
 
-    def make_smooth(self):
-        # TODO, Change this to not rely on a cubic-to-quadratic conversion
-        return self.change_anchor_mode("smooth")
+    def make_smooth(self, true_smooth=True):
+        """
+        If true_smooth is set to True, the number of points
+        in the mobject will double, but the effect will be
+        a genuinely smooth (C2) curve.  Otherwise, it may not
+        becomes perfectly smooth, but the number of points
+        will stay the same.
+        """
+        mode = "true_smooth" if true_smooth else "approx_smooth"
+        return self.change_anchor_mode(mode)
 
     def make_jagged(self):
         return self.change_anchor_mode("jagged")
@@ -824,7 +835,7 @@ class VMobject(Mobject):
     def apply_function(self, function):
         super().apply_function(function)
         if self.make_smooth_after_applying_functions:
-            self.make_smooth()
+            self.make_smooth(true_smooth=False)
         return self
 
     @triggers_refreshed_triangulation
