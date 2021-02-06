@@ -405,11 +405,11 @@ class VMobject(Mobject):
 
     def set_points_smoothly(self, points, true_smooth=False):
         self.set_points_as_corners(points)
-        self.make_smooth(true_smooth)
+        self.make_smooth()
         return self
 
     def change_anchor_mode(self, mode):
-        assert(mode in ["jagged", "approx_smooth", "true_smooth"])
+        assert(mode in ("jagged", "approx_smooth", "true_smooth"))
         nppc = self.n_points_per_curve
         for submob in self.family_members_with_points():
             subpaths = submob.get_subpaths()
@@ -428,23 +428,35 @@ class VMobject(Mobject):
             submob.refresh_triangulation()
         return self
 
-    def make_smooth(self, true_smooth=True):
+    def make_smooth(self):
         """
-        If true_smooth is set to True, the number of points
-        in the mobject will double, but the effect will be
-        a genuinely smooth (C2) curve.  Otherwise, it may not
-        becomes perfectly smooth, but the number of points
-        will stay the same.
+        This will double the number of points in the mobject,
+        so should not be called repeatedly.  It also means
+        transforming between states before and after calling
+        this might have strange artifacts
         """
-        mode = "true_smooth" if true_smooth else "approx_smooth"
-        return self.change_anchor_mode(mode)
+        self.change_anchor_mode("true_smooth")
+        return self
+
+    def make_approximately_smooth(self):
+        """
+        Unlike make_smooth, this will not change the number of
+        points, but it also does not result in a perfectly smooth
+        curve.  It's most useful when the points have been
+        sampled at a not-too-low rate from a continuous function,
+        as in the case of ParametricCurve
+        """
+        self.change_anchor_mode("approx_smooth")
+        return self
 
     def make_jagged(self):
-        return self.change_anchor_mode("jagged")
+        self.change_anchor_mode("jagged")
+        return self
 
     def add_subpath(self, points):
         assert(len(points) % self.n_points_per_curve == 0)
         self.append_points(points)
+        return self
 
     def append_vectorized_mobject(self, vectorized_mobject):
         new_points = list(vectorized_mobject.get_points())
@@ -454,6 +466,7 @@ class VMobject(Mobject):
             # a new path
             self.resize_data(len(self.get_points() - 1))
         self.append_points(new_points)
+        return self
 
     #
     def consider_points_equals(self, p0, p1):
@@ -835,7 +848,7 @@ class VMobject(Mobject):
     def apply_function(self, function):
         super().apply_function(function)
         if self.make_smooth_after_applying_functions:
-            self.make_smooth(true_smooth=False)
+            self.make_approximately_smooth()
         return self
 
     @triggers_refreshed_triangulation

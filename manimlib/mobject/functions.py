@@ -40,7 +40,7 @@ class ParametricCurve(VMobject):
             points = np.array([self.t_func(t) for t in t_range])
             self.start_new_path(points[0])
             self.add_points_as_corners(points[1:])
-        self.make_smooth(true_smooth=False)
+        self.make_approximately_smooth()
         return self
 
 

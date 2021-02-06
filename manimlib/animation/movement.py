@@ -30,7 +30,7 @@ class Homotopy(Animation):
 class SmoothedVectorizedHomotopy(Homotopy):
     def interpolate_submobject(self, submob, start, alpha):
         Homotopy.interpolate_submobject(self, submob, start, alpha)
-        submob.make_smooth()
+        submob.make_approximately_smooth()
 
 
 class ComplexHomotopy(Homotopy):
