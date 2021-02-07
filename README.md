@@ -29,10 +29,12 @@ If you want to hack on manimlib itself, clone this repository and in that direct
 
 ```sh
 # Install python requirements
-pip install -r requirements.txt
+pip install -e .
 
 # Try it out
-python manim.py example_scenes.py OpeningManimExample
+manimgl example_scenes.py OpeningManimExample
+# or
+manim-render example_scenes.py OpeningManimExample
 ```
 ### Mac OSX
 1. Install FFmpeg, LaTeX, Cairo in terminal using homebrew.
@@ -44,8 +46,8 @@ python manim.py example_scenes.py OpeningManimExample
     ```sh
     git clone https://github.com/3b1b/manim.git
     cd manim
-    pip install -r requirements.txt
-    python manim.py example_scenes.py OpeningManimExample
+    pip install -e .
+    manimgl example_scenes.py OpeningManimExample
     ```
 
 ### Directly (Windows)
@@ -55,8 +57,8 @@ python manim.py example_scenes.py OpeningManimExample
     ```sh
     git clone https://github.com/3b1b/manim.git
     cd manim
-    pip install -r requirements.txt
-    python manim.py example_scenes.py OpeningManimExample
+    pip install -e .
+    manimgl example_scenes.py OpeningManimExample
     ```
 
 
@@ -78,7 +80,7 @@ python -m manim example_scenes.py OpeningManimExample
 ## Using manim
 Try running the following:
 ```sh
-python -m manim example_scenes.py OpeningManimExample
+manimgl example_scenes.py OpeningManimExample
 ```
 This should pop up a window playing a simple scene.
 
