@@ -145,5 +145,7 @@ dmypy.json
 # Custom exclusions:
 .DS_Store
 
-# 
+# For manim
 /videos
+/custom_defaults.yml
+/manimlib/defaults.yml
