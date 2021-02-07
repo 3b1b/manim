@@ -19,10 +19,12 @@ that directory execute:
 .. code-block:: sh
 
    # Install python requirements
-   pip install -r requirements.txt
+   pip install -e .
 
    # Try it out
-   python -m manim example_scenes.py OpeningManimExample
+   manimgl example_scenes.py OpeningManimExample
+   # or
+   manim-render example_scenes.py OpeningManimExample
 
 If you run the above command and no error message appears, 
 then you have successfully installed all the environments required by manim.
@@ -40,8 +42,8 @@ Directly (Windows)
 
    git clone https://github.com/3b1b/manim.git
    cd manim  
-   pip install -r requirements.txt  
-   python manim.py example_scenes.py OpeningManimExample
+   pip install -e . 
+   manimgl example_scenes.py OpeningManimExample
 
 For Anaconda
 ------------

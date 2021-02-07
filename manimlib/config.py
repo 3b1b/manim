@@ -8,6 +8,7 @@ import yaml
 from screeninfo import get_monitors
 
 from manimlib.utils.config_ops import merge_dicts_recursively
+from manimlib.utils.init_config import init_customization
 
 
 def parse_cli():
@@ -99,6 +100,11 @@ def parse_cli():
             help="Name for the movie or image file",
         )
         parser.add_argument(
+            "--config",
+            action="store_true",
+            help="Guide for automatic configuration",
+        )
+        parser.add_argument(
             "-n", "--start_at_animation_number",
             help="Start rendering not from the first animation, but"
                  "from another, specified by its index.  If you pass"
@@ -150,28 +156,39 @@ def get_module(file_name):
         return module
 
 
-def get_custom_defaults():
-    filename = "custom_defaults.yml"
-    manim_defaults_file = os.path.join(get_manim_dir(), "manimlib", "defaults.yml")
-    with open(manim_defaults_file, "r") as file:
-        custom_defaults = yaml.safe_load(file)
+def get_custom_config():
+    filename = "custom_config.yml"
+    global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
 
-    # See if there's a custom_defaults file in current directory,
-    # and if so, it further updates the defaults based on it.
-    if os.path.exists(filename):
+    if not (os.path.exists(global_defaults_file) or os.path.exists(filename)):
+        print("There is no configuration file detected. Initial configuration:\n")
+        init_customization()
+
+    if os.path.exists(global_defaults_file):
+        with open(global_defaults_file, "r") as file:
+            config = yaml.safe_load(file)
+
+        if os.path.exists(filename):
+            with open(filename, "r") as file:
+                local_defaults = yaml.safe_load(file)
+            if local_defaults:
+                config = merge_dicts_recursively(
+                    config,
+                    local_defaults,
+                )
+
+    else:
         with open(filename, "r") as file:
-            local_defaults = yaml.safe_load(file)
-        if local_defaults:
-            custom_defaults = merge_dicts_recursively(
-                custom_defaults,
-                local_defaults,
-            )
+            config = yaml.safe_load(file)
 
-    return custom_defaults
+    # See if there's a custom_config file in current directory,
+    # and if so, it further updates the defaults based on it.
+    
+    return config
 
 
 def get_configuration(args):
-    custom_defaults = get_custom_defaults()
+    custom_config = get_custom_config()
 
     write_file = any([args.write_file, args.open, args.finder])
     if args.transparent:
@@ -183,14 +200,14 @@ def get_configuration(args):
 
     file_writer_config = {
         "write_to_movie": not args.skip_animations and write_file,
-        "break_into_partial_movies": custom_defaults["break_into_partial_movies"],
+        "break_into_partial_movies": custom_config["break_into_partial_movies"],
         "save_last_frame": args.skip_animations and write_file,
         "save_pngs": args.save_pngs,
         # If -t is passed in (for transparent), this will be RGBA
         "png_mode": "RGBA" if args.transparent else "RGB",
         "movie_file_extension": file_ext,
-        "mirror_module_path": custom_defaults["directories"]["mirror_module_path"],
-        "output_directory": args.video_dir or custom_defaults["directories"]["output"],
+        "mirror_module_path": custom_config["directories"]["mirror_module_path"],
+        "output_directory": args.video_dir or custom_config["directories"]["output"],
         "file_name": args.file_name,
         "input_file_path": args.file or "",
         "open_file_upon_completion": args.open,
@@ -212,7 +229,7 @@ def get_configuration(args):
     }
 
     # Camera configuration
-    config["camera_config"] = get_camera_configuration(args, custom_defaults)
+    config["camera_config"] = get_camera_configuration(args, custom_config)
 
     # Default to putting window in the upper right of screen,
     # but make it full screen if -f is passed in
@@ -242,9 +259,9 @@ def get_configuration(args):
     return config
 
 
-def get_camera_configuration(args, custom_defaults):
+def get_camera_configuration(args, custom_config):
     camera_config = {}
-    camera_qualities = get_custom_defaults()["camera_qualities"]
+    camera_qualities = get_custom_config()["camera_qualities"]
     if args.low_quality:
         quality = camera_qualities["low"]
     elif args.medium_quality:
@@ -272,7 +289,7 @@ def get_camera_configuration(args, custom_defaults):
     })
 
     try:
-        bg_color = args.color or custom_defaults["style"]["background_color"]
+        bg_color = args.color or custom_config["style"]["background_color"]
         camera_config["background_color"] = colour.Color(bg_color)
     except AttributeError as err:
         print("Please use a valid color")
