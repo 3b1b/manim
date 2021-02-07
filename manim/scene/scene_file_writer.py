@@ -445,6 +445,7 @@ class SceneFileWriter(object):
             file_list,
             "-loglevel",
             config["ffmpeg_loglevel"].lower(),
+            "-nostdin",
         ]
 
         if config["write_to_movie"] and not config["save_as_gif"]:
