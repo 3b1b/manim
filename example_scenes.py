@@ -1,4 +1,4 @@
-from manimlib.imports import *
+from manimlib import *
 
 # To watch one of these scenes, run the following:
 # python -m manim example_scenes.py SquareToCircle
