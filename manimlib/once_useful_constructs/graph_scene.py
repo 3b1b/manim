@@ -19,10 +19,9 @@ from manimlib.utils.color import color_gradient
 from manimlib.utils.color import invert_color
 from manimlib.utils.space_ops import angle_of_vector
 
-# TODO, this should probably reimplemented entirely, especially so as to
-# better reuse code from mobject/coordinate_systems.
-# Also, I really dislike how the configuration is set up, this
-# is way too messy to work with.
+# TODO, this class should be deprecated, with all its
+# functionality moved to Axes and handled at the mobject
+# level rather than the scene level
 
 
 class GraphScene(Scene):
@@ -82,7 +81,7 @@ class GraphScene(Scene):
         if len(self.x_labeled_nums) > 0:
             if self.exclude_zero_label:
                 self.x_labeled_nums = [x for x in self.x_labeled_nums if x != 0]
-            x_axis.add_numbers(*self.x_labeled_nums)
+            x_axis.add_numbers(self.x_labeled_nums)
         if self.x_axis_label:
             x_label = TexText(self.x_axis_label)
             x_label.next_to(
@@ -116,7 +115,7 @@ class GraphScene(Scene):
         if len(self.y_labeled_nums) > 0:
             if self.exclude_zero_label:
                 self.y_labeled_nums = [y for y in self.y_labeled_nums if y != 0]
-            y_axis.add_numbers(*self.y_labeled_nums)
+            y_axis.add_numbers(self.y_labeled_nums)
         if self.y_axis_label:
             y_label = TexText(self.y_axis_label)
             y_label.next_to(

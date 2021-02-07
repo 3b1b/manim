@@ -10,94 +10,64 @@ from manimlib.imports import *
 
 class OpeningManimExample(Scene):
     def construct(self):
-        title = TexText("This is some \\LaTeX")
-        basel = Tex(
-            "\\sum_{n=1}^\\infty "
-            "\\frac{1}{n^2} = \\frac{\\pi^2}{6}"
-        )
-        VGroup(title, basel).arrange(DOWN)
-        self.play(
-            Write(title),
-            FadeIn(basel, UP),
-        )
-        self.wait()
+        intro_words = Text("""
+            The original motivation for manim was to
+            better illustrate mathematical functions
+            as transformations.
+        """)
+        intro_words.to_edge(UP)
 
-        transform_title = Text("That was a transform")
-        transform_title.to_corner(UL)
-        self.play(
-            Transform(title[0], transform_title),
-            LaggedStartMap(FadeOut, basel, shift=DOWN),
-        )
-        self.wait()
+        self.play(Write(intro_words))
+        self.wait(2)
 
-        fade_comment = Text(
-            """
-            You probably don't want to overuse
-            Transforms, though, a simple fade often
-            looks nicer.
-            """,
-            font_size=36,
-            color=GREY_B,
-        )
-        fade_comment.next_to(
-            transform_title, DOWN,
-            buff=LARGE_BUFF,
-            aligned_edge=LEFT
-        )
-        self.play(FadeIn(fade_comment, shift=DOWN))
-        self.wait(3)
-
+        # Linear transform
         grid = NumberPlane((-10, 10), (-5, 5))
-        grid_title = Text(
-            "But manim is for illustrating math, not text",
-        )
-        grid_title.to_edge(UP)
-        grid_title.add_background_rectangle()
-
-        self.add(grid, grid_title)  # Make sure title is on top of grid
-        self.play(
-            FadeOut(title, shift=LEFT),
-            FadeOut(fade_comment, shift=LEFT),
-            FadeIn(grid_title),
-            ShowCreation(grid, run_time=3, lag_ratio=0.1),
-        )
-        self.wait()
-
         matrix = [[1, 1], [0, 1]]
-        linear_transform_title = VGroup(
+        linear_transform_words = VGroup(
             Text("This is what the matrix"),
             IntegerMatrix(matrix, include_background_rectangle=True),
             Text("looks like")
         )
-        linear_transform_title.arrange(RIGHT)
-        linear_transform_title.to_edge(UP)
+        linear_transform_words.arrange(RIGHT)
+        linear_transform_words.to_edge(UP)
+        linear_transform_words.set_stroke(BLACK, 10, background=True)
 
         self.play(
-            FadeOut(grid_title),
-            FadeIn(linear_transform_title),
+            ShowCreation(grid),
+            FadeTransform(intro_words, linear_transform_words)
         )
+        self.wait()
         self.play(grid.apply_matrix, matrix, run_time=3)
         self.wait()
 
-        grid_transform_title = Text(
-            "And this is a nonlinear transformation"
-        )
-        grid_transform_title.set_stroke(BLACK, 5, background=True)
-        grid_transform_title.to_edge(UP)
-        grid.prepare_for_nonlinear_transform(100)
+        # Complex map
+        c_grid = ComplexPlane()
+        moving_c_grid = c_grid.copy()
+        moving_c_grid.prepare_for_nonlinear_transform()
+        c_grid.set_stroke(BLUE_E, 1)
+        c_grid.add_coordinate_labels(font_size=24)
+        complex_map_words = TexText("""
+            Or thinking of the plane as $\\mathds{C}$,\\\\
+            this is the map $z \\rightarrow z^2$
+        """)
+        complex_map_words.to_corner(UR)
+        complex_map_words.set_stroke(BLACK, 5, background=True)
+
         self.play(
-            ApplyPointwiseFunction(
-                lambda p: p + np.array([np.sin(p[1]), np.sin(p[0]), 0]),
-                grid,
-                run_time=5,
-            ),
-            FadeOut(linear_transform_title),
-            FadeIn(grid_transform_title),
+            FadeOut(grid),
+            Write(c_grid, run_time=3),
+            FadeIn(moving_c_grid),
+            FadeTransform(linear_transform_words, complex_map_words),
         )
         self.wait()
+        self.play(
+            moving_c_grid.apply_complex_function, lambda z: z**2,
+            run_time=6,
+        )
+        self.wait(2)
 
 
-class SquareToCircle(Scene):
+class InteractiveDevlopment(Scene):
     def construct(self):
         circle = Circle()
         circle.set_fill(BLUE, opacity=0.5)
@@ -106,18 +76,37 @@ class SquareToCircle(Scene):
 
         self.play(ShowCreation(square))
         self.wait()
-        self.play(ReplacementTransform(square, circle))
-        self.wait()
 
         # This opens an iPython termnial where you can keep writing
         # lines as if they were part of this construct method
         self.embed()
-        # Try typing the following lines
-        # self.play(circle.stretch, 4, {"dim": 0})
-        # self.play(Rotate(circle, TAU / 4))
-        # self.play(circle.shift, 2 * RIGHT, circle.scale, 0.25)
-        # circle.insert_n_curves(10)
-        # self.play(circle.apply_complex_function, lambda z: z**2)
+        # Try copying and pasting some of the lines below into
+        # the interactive shell
+        self.play(ReplacementTransform(square, circle))
+        self.wait()
+        self.play(circle.stretch, 4, 0)
+        self.play(Rotate(circle, 90 * DEGREES))
+        self.play(circle.shift, 2 * RIGHT, circle.scale, 0.25)
+
+        text = Text("""
+            In general, using the interactive shell
+            is very helpful when developing new scenes
+        """)
+        self.play(Write(text))
+
+        # In the interactive shell, you can just type
+        # play, add, remove, clear, wait, save_state and restore,
+        # instead of self.play, self.add, self.remove, etc.
+
+        # To interact with the window, type touch().  You can then
+        # scroll in the window, or zoom by holding down 'z' while scrolling,
+        # and change camera perspective by holding down 'd' while moving
+        # the mouse.  Press 'r' to reset to the standard camera position.
+        # Press 'q' to stop interacting with the window and go back to
+        # typing new commands into the shell.
+
+        # In principle you can customize a scene
+        always(circle.move_to, self.mouse_point)
 
 
 class AnimatingMethods(Scene):

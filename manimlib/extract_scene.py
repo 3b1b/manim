@@ -26,18 +26,20 @@ def is_child_scene(obj, module):
 
 def prompt_user_for_choice(scene_classes):
     name_to_class = {}
-    for scene_class in scene_classes:
+    max_digits = len(str(len(scene_classes)))
+    for idx, scene_class in enumerate(scene_classes, start=1):
         name = scene_class.__name__
-        print(name)
+        print(f"{str(idx).zfill(max_digits)}: {name}")
         name_to_class[name] = scene_class
     try:
         user_input = input(
-            "\nThat module has mulziple scenes, which "
-            "ones would you like to render?\n Scene Name: "
+            "\nThat module has multiple scenes, "
+            "which ones would you like to render?"
+            "\nScene Name or Number: "
         )
         return [
-            name_to_class[user_input]
-            for num_str in user_input.replace(" ", "").split(",")
+            name_to_class[split_str] if not split_str.isnumeric() else scene_classes[int(split_str)-1]
+            for split_str in user_input.replace(" ", "").split(",")
         ]
     except KeyError:
         logging.log(logging.ERROR, "Invalid scene")

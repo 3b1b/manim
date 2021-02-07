@@ -2,7 +2,7 @@ import itertools as it
 import operator as op
 import moderngl
 
-from functools import reduce
+from functools import reduce, wraps
 
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
@@ -403,13 +403,13 @@ class VMobject(Mobject):
         ])
         return self
 
-    def set_points_smoothly(self, points):
+    def set_points_smoothly(self, points, true_smooth=False):
         self.set_points_as_corners(points)
         self.make_smooth()
         return self
 
     def change_anchor_mode(self, mode):
-        assert(mode in ["jagged", "smooth"])
+        assert(mode in ("jagged", "approx_smooth", "true_smooth"))
         nppc = self.n_points_per_curve
         for submob in self.family_members_with_points():
             subpaths = submob.get_subpaths()
@@ -417,12 +417,9 @@ class VMobject(Mobject):
             for subpath in subpaths:
                 anchors = np.vstack([subpath[::nppc], subpath[-1:]])
                 new_subpath = np.array(subpath)
-                if mode == "smooth":
-                    # TOOD, it's not clear which of the two options below should be the default,
-                    # leaving option 1 here commented out as a temporary note.
-                    # Option 1:
-                    # new_subpath[1::nppc] = get_smooth_quadratic_bezier_handle_points(anchors)
-                    # Option 2:
+                if mode == "approx_smooth":
+                    new_subpath[1::nppc] = get_smooth_quadratic_bezier_handle_points(anchors)
+                elif mode == "true_smooth":
                     h1, h2 = get_smooth_cubic_bezier_handle_points(anchors)
                     new_subpath = get_quadratic_approximation_of_cubic(anchors[:-1], h1, h2, anchors[1:])
                 elif mode == "jagged":
@@ -432,15 +429,34 @@ class VMobject(Mobject):
         return self
 
     def make_smooth(self):
-        # TODO, Change this to not rely on a cubic-to-quadratic conversion
-        return self.change_anchor_mode("smooth")
+        """
+        This will double the number of points in the mobject,
+        so should not be called repeatedly.  It also means
+        transforming between states before and after calling
+        this might have strange artifacts
+        """
+        self.change_anchor_mode("true_smooth")
+        return self
+
+    def make_approximately_smooth(self):
+        """
+        Unlike make_smooth, this will not change the number of
+        points, but it also does not result in a perfectly smooth
+        curve.  It's most useful when the points have been
+        sampled at a not-too-low rate from a continuous function,
+        as in the case of ParametricCurve
+        """
+        self.change_anchor_mode("approx_smooth")
+        return self
 
     def make_jagged(self):
-        return self.change_anchor_mode("jagged")
+        self.change_anchor_mode("jagged")
+        return self
 
     def add_subpath(self, points):
         assert(len(points) % self.n_points_per_curve == 0)
         self.append_points(points)
+        return self
 
     def append_vectorized_mobject(self, vectorized_mobject):
         new_points = list(vectorized_mobject.get_points())
@@ -450,6 +466,7 @@ class VMobject(Mobject):
             # a new path
             self.resize_data(len(self.get_points() - 1))
         self.append_points(new_points)
+        return self
 
     #
     def consider_points_equals(self, p0, p1):
@@ -807,6 +824,7 @@ class VMobject(Mobject):
         return tri_indices
 
     def triggers_refreshed_triangulation(func):
+        @wraps(func)
         def wrapper(self, *args, **kwargs):
             old_points = self.get_points()
             func(self, *args, **kwargs)
@@ -827,10 +845,10 @@ class VMobject(Mobject):
 
     # TODO, how to be smart about tangents here?
     @triggers_refreshed_triangulation
-    def apply_function(self, function):
-        super().apply_function(function)
-        if self.make_smooth_after_applying_functions:
-            self.make_smooth()
+    def apply_function(self, function, make_smooth=False, **kwargs):
+        super().apply_function(function, **kwargs)
+        if self.make_smooth_after_applying_functions or make_smooth:
+            self.make_approximately_smooth()
         return self
 
     @triggers_refreshed_triangulation

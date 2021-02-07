@@ -35,7 +35,7 @@ class NumberLine(Line):
         },
         "decimal_number_config": {
             "num_decimal_places": 0,
-            "height": 0.25,
+            "font_size": 36,
         },
         "numbers_to_exclude": None
     }
@@ -57,6 +57,7 @@ class NumberLine(Line):
         super().__init__(self.x_min * RIGHT, self.x_max * RIGHT, **kwargs)
         if self.width:
             self.set_width(self.width)
+            self.unit_size = self.get_unit_size()
         else:
             self.scale(self.unit_size)
         self.center()
@@ -99,7 +100,7 @@ class NumberLine(Line):
         return result
 
     def get_tick_marks(self):
-        return self.tick_marks
+        return self.ticks
 
     def number_to_point(self, number):
         alpha = float(number - self.x_min) / (self.x_max - self.x_min)
@@ -123,14 +124,12 @@ class NumberLine(Line):
         return self.point_to_number(point)
 
     def get_unit_size(self):
-        return (self.x_max - self.x_min) / self.get_length()
+        return self.get_length() / (self.x_max - self.x_min)
 
     def get_number_mobject(self, x,
-                           number_config=None,
                            direction=None,
-                           buff=None):
-        if number_config is None:
-            number_config = {}
+                           buff=None,
+                           **number_config):
         number_config = merge_dicts_recursively(
             self.decimal_number_config, number_config
         )

@@ -134,7 +134,9 @@ def parse_cli():
 
 
 def get_manim_dir():
-    return os.path.dirname(inspect.getabsfile(importlib.import_module("manim")))
+    manimlib_module = importlib.import_module("manimlib")
+    manimlib_dir = os.path.dirname(inspect.getabsfile(manimlib_module))
+    return os.path.abspath(os.path.join(manimlib_dir, ".."))
 
 
 def get_module(file_name):
@@ -150,7 +152,7 @@ def get_module(file_name):
 
 def get_custom_defaults():
     filename = "custom_defaults.yml"
-    manim_defaults_file = os.path.join(get_manim_dir(), filename)
+    manim_defaults_file = os.path.join(get_manim_dir(), "manimlib", "defaults.yml")
     with open(manim_defaults_file, "r") as file:
         custom_defaults = yaml.safe_load(file)
 
