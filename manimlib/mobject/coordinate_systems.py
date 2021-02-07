@@ -173,9 +173,16 @@ class CoordinateSystem():
         label.shift_onto_screen()
         return label
 
-    def get_vertical_line_to_graph(self, x, graph, line_func=Line):
+    def get_v_line_to_graph(self, x, graph, line_func=Line):
         return line_func(
             self.coords_to_point(x, 0),
+            self.input_to_graph_point(x, graph),
+        )
+
+    def get_h_line_to_graph(self, x, graph, line_func=Line):
+        y = self.get_y_axis().p2n(self.itgp(x, graph))
+        return line_func(
+            self.coords_to_point(0, y),
             self.input_to_graph_point(x, graph),
         )
 
