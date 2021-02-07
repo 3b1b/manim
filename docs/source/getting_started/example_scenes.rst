@@ -355,7 +355,7 @@ SurfaceExample
             # be interpreted as the side towards the light, and away from
             # the light.  These can be either urls, or paths to a local file
             # in whatever you've set as the image directory in
-            # the custom_defaults.yml file
+            # the custom_config.yml file
 
             # day_texture = "EarthTextureMap"
             # night_texture = "NightEarthTextureMap"

@@ -48,9 +48,9 @@ def init_customization():
     scope = input(" Please select the scope of the configuration [global/local]: ")
     if scope == "global":
         from manimlib.config import get_manim_dir
-        file_name = os.path.join(get_manim_dir(), "manimlib", "defaults.yml")
+        file_name = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
     else:
-        file_name = os.path.join(os.getcwd(), "custom_defaults.yml")
+        file_name = os.path.join(os.getcwd(), "custom_config.yml")
 
     print("\n directories:")
     configuration["directories"]["output"] = input("  [1/8] Where should manim output video and image files place: ")

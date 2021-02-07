@@ -6,7 +6,7 @@ from contextlib import contextmanager
 
 from manimlib.utils.directories import get_tex_dir
 from manimlib.config import get_manim_dir
-from manimlib.config import get_custom_defaults
+from manimlib.config import get_custom_config
 
 
 SAVED_TEX_CONFIG = {}
@@ -25,8 +25,8 @@ def get_tex_config():
     """
     # Only load once, then save thereafter
     if not SAVED_TEX_CONFIG:
-        custom_defaults = get_custom_defaults()
-        SAVED_TEX_CONFIG.update(custom_defaults["tex"])
+        custom_config = get_custom_config()
+        SAVED_TEX_CONFIG.update(custom_config["tex"])
         # Read in template file
         template_filename = os.path.join(
             get_manim_dir(), "manimlib", "tex_templates",
