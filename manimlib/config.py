@@ -8,6 +8,7 @@ import yaml
 from screeninfo import get_monitors
 
 from manimlib.utils.config_ops import merge_dicts_recursively
+from manimlib.utils.init_config import init_customization
 
 
 def parse_cli():
@@ -99,6 +100,11 @@ def parse_cli():
             help="Name for the movie or image file",
         )
         parser.add_argument(
+            "--config",
+            action="store_true",
+            help="Guide for automatic configuration",
+        )
+        parser.add_argument(
             "-n", "--start_at_animation_number",
             help="Start rendering not from the first animation, but"
                  "from another, specified by its index.  If you pass"
@@ -152,9 +158,18 @@ def get_module(file_name):
 
 def get_custom_defaults():
     filename = "custom_defaults.yml"
-    manim_defaults_file = os.path.join(get_manim_dir(), "manimlib", "defaults.yml")
-    with open(manim_defaults_file, "r") as file:
-        custom_defaults = yaml.safe_load(file)
+    global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "defaults.yml")
+
+    if not (os.path.exists(global_defaults_file) or os.path.exists(filename)):
+        print("There is no configuration file detected. Initial configuration:\n")
+        init_customization()
+
+    if os.path.exists(global_defaults_file):
+        with open(global_defaults_file, "r") as file:
+            custom_defaults = yaml.safe_load(file)
+    else:
+        with open(filename, "r") as file:
+            local_defaults = yaml.safe_load(file)
 
     # See if there's a custom_defaults file in current directory,
     # and if so, it further updates the defaults based on it.
