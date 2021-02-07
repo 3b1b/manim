@@ -699,6 +699,10 @@ class ManimConfig(MutableMapping):
             if hasattr(args, "media_dir") and args.media_dir:
                 self.media_dir = args.media_dir
 
+        # Handle --tex_template
+        if args.tex_template:
+            self.tex_template = TexTemplateFromFile(tex_filename=args.tex_template)
+
         return self
 
     def digest_file(self, filename: str) -> "ManimConfig":

@@ -265,7 +265,7 @@ class TexTemplateFromFile(TexTemplate):
     """
 
     def __init__(self, **kwargs):
-        self.template_file = kwargs.pop("filename", "tex_template.tex")
+        self.template_file = kwargs.pop("tex_filename", "tex_template.tex")
         super().__init__(**kwargs)
 
     def _rebuild(self):
