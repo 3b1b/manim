@@ -148,4 +148,3 @@ dmypy.json
 # For manim
 /videos
 /custom_config.yml
-/manimlib/default_config.yml

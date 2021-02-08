@@ -16,7 +16,7 @@ Note, there are two versions of manim.  This repository began as a personal proj
 Since the fork, this version has evolved to work on top of OpenGL, and allows real-time rendering to an interactive window before scenes are finalized and written to a file.
 
 ## Installation
-Manim runs on Python 3.8.
+Manim runs on Python 3.6 or higher (Python 3.8 is recommended).
 
 System requirements are [FFmpeg](https://ffmpeg.org/), [OpenGL](https://www.opengl.org//), [LaTeX](https://www.latex-project.org) (optional, if you want to use LaTeX)
 and [cairo](https://www.cairographics.org/) (optional, if you want to use Text).
@@ -28,7 +28,7 @@ For more options, take a look at the [Using manim](#using-manim) sections furthe
 If you want to hack on manimlib itself, clone this repository and in that directory execute:
 
 ```sh
-# Install python requirements
+# Install manimgl
 pip install -e .
 
 # Try it out
@@ -61,20 +61,12 @@ manim-render example_scenes.py OpeningManimExample
     manimgl example_scenes.py OpeningManimExample
     ```
 
-
 ## Anaconda Install
 
-* Install latex as above.
-* Create a conda environment using `conda env create -f environment.yml`
-
-
-### Using `virtualenv` and `virtualenvwrapper`
-After installing `virtualenv` and `virtualenvwrapper`
-```sh
-git clone https://github.com/3b1b/manim.git
-mkvirtualenv -a manim -r requirements.txt manim
-python -m manim example_scenes.py OpeningManimExample
-```
+* Install LaTeX as above.
+* Create a conda environment using `conda create -n manim python=3.8`.
+* Activate the environment using `conda activate manim`.
+* Install manimgl using `pip install -e .`.
 
 
 ## Using manim
