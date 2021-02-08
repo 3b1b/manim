@@ -24,7 +24,7 @@ And here is a Chinese version of this documentation: https://manim.ml/shaders
    :caption: Documentation
 
    documentation/constants
-   documentation/custom_default
+   documentation/custom_config
 
 .. toctree::
    :maxdepth: 2

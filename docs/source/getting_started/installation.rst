@@ -55,15 +55,6 @@ For Anaconda
    
    git clone https://github.com/3b1b/manim.git
    cd manim 
-   conda env create -f environment.yml
-
-Using virtualenv and virtualenvwrapper
---------------------------------------
-
-After installing ``virtualenv`` and ``virtualenvwrapper``
-
-.. code-block:: sh
-
-   git clone https://github.com/3b1b/manim.git
-   mkvirtualenv -a manim -r requirements.txt manim
-   python -m manim example_scenes.py OpeningManimExample
+   conda create -n manim python=3.8
+   conda activate manim
+   pip install -e .

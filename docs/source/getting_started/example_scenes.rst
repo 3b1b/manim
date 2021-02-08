@@ -11,7 +11,7 @@ SquareToCircle
 .. manim-example:: SquareToCircle
     :media: ../_static/example_scenes/SquareToCircle.mp4
 
-    from manimlib.imports import *
+    from manimlib import *
 
     class SquareToCircle(Scene):
         def construct(self):

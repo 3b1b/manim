@@ -14,9 +14,9 @@ directory structure:
     ├── manimlib/
     │   ├── animation/
     │   ├── ...
+    │   ├── default_config.yml
     │   └── window.py
-    ├── custom_default.yml
-    ├── manim.py
+    ├── custom_config.yml
     └── start.py
 
 And paste the following code (I will explain the function of each line in detail later):
@@ -24,7 +24,7 @@ And paste the following code (I will explain the function of each line in detail
 .. code-block:: python
     :linenos:
 
-    from manimlib.imports import *
+    from manimlib import *
 
     class SquareToCircle(Scene):
         def construct(self):
@@ -38,7 +38,7 @@ And run this command:
 
 .. code-block:: sh
 
-    python manim.py start.py SquareToCircle
+    manimgl start.py SquareToCircle
 
 A window will pop up on the screen. And then you can :
 
@@ -53,7 +53,7 @@ Run this command again:
 
 .. code-block:: sh
 
-    python manim.py start.py SquareToCircle -os
+    manimgl start.py SquareToCircle -os
 
 At this time, no window will pop up. When the program is finished, this rendered 
 image will be automatically opened (saved in the subdirectory ``images/`` of the same 
@@ -71,7 +71,7 @@ Next, let's take a detailed look at what each row does.
 
 .. code-block:: python
     
-    from manimlib.imports import *
+    from manimlib import *
     
 This will import all the classes that may be used when using manim.
 
@@ -129,7 +129,7 @@ Let's change some codes and add some animations to make videos instead of just p
 .. code-block:: python
     :linenos:
 
-    from manimlib.imports import *
+    from manimlib import *
 
     class SquareToCircle(Scene):
         def construct(self):
@@ -147,14 +147,14 @@ Run this command this time:
 
 .. code-block:: sh
 
-    python manim.py start.py SquareToCircle
+    manimgl start.py SquareToCircle
 
 The pop-up window will play animations of drawing a square and transforming 
 it into a circle. If you want to save this video, run:
 
 .. code-block:: sh
     
-    python manim.py start.py SquareToCircle -ow
+    manimgl start.py SquareToCircle -ow
 
 This time there will be no pop-up window, but the video file (saved in the subdirectory 
 ``videos/`` of the same level directory of ``start.py`` by default) will be automatically 
@@ -209,7 +209,7 @@ at the end of the code to enable interaction:
 
     self.embed()
 
-Then run ``python manim.py start.py SquareToCircle``. 
+Then run ``manimgl start.py SquareToCircle``. 
 
 After the previous animation is executed, the ipython terminal will be opened on 
 the command line. After that, you can continue to write code in it, and the statement 
@@ -245,7 +245,7 @@ empty scene containing only ``self.embed()``, you can directly run the following
 
 .. code-block:: sh
 
-    python manim.py
+    manimgl
 
 You succeeded!
 --------------
