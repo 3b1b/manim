@@ -57,6 +57,13 @@ class GrowArrow(GrowFromPoint):
         point = arrow.get_start()
         super().__init__(arrow, point, **kwargs)
 
+    def create_starting_mobject(self) -> "Mobject":
+        start_arrow = self.mobject.copy()
+        start_arrow.scale(0, scale_tips=True, about_point=self.point)
+        if self.point_color:
+            start_arrow.set_color(self.point_color)
+        return start_arrow
+
 
 class SpinInFromNothing(GrowFromCenter):
     def __init__(self, mobject: "Mobject", path_arc: float = PI, **kwargs) -> None:

@@ -856,6 +856,7 @@ class Arrow(Line):
 
         if scale_tips:
             VMobject.scale(self, factor, **kwargs)
+            self.set_stroke_width_from_length()
             return self
 
         has_tip = self.has_tip()
