@@ -96,13 +96,13 @@ def parse_cli():
             help="Show the output file in finder",
         )
         parser.add_argument(
-            "--file_name",
-            help="Name for the movie or image file",
-        )
-        parser.add_argument(
             "--config",
             action="store_true",
             help="Guide for automatic configuration",
+        )
+        parser.add_argument(
+            "--file_name",
+            help="Name for the movie or image file",
         )
         parser.add_argument(
             "-n", "--start_at_animation_number",
