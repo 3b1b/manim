@@ -116,6 +116,8 @@ class Surface(Mobject):
         return self
 
     def get_partial_points_array(self, points, a, b, resolution, axis):
+        if len(points) == 0:
+            return points
         nu, nv = resolution[:2]
         points = points.reshape(resolution)
         max_index = resolution[axis] - 1
