@@ -101,16 +101,16 @@ class Surface(Mobject):
         return normalize_along_axis(normals, 1)
 
     def pointwise_become_partial(self, smobject, a, b, axis=None):
+        assert(isinstance(smobject, Surface))
         if axis is None:
             axis = self.prefered_creation_axis
-        assert(isinstance(smobject, Surface))
         if a <= 0 and b >= 1:
             self.match_points(smobject)
             return self
 
         nu, nv = smobject.resolution
         self.set_points(np.vstack([
-            self.get_partial_points_array(arr, a, b, (nu, nv, 3), axis=axis)
+            self.get_partial_points_array(arr.copy(), a, b, (nu, nv, 3), axis=axis)
             for arr in smobject.get_surface_points_and_nudged_points()
         ]))
         return self
