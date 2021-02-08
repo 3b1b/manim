@@ -71,20 +71,3 @@ from manimlib.utils.simple_functions import *
 from manimlib.utils.sounds import *
 from manimlib.utils.space_ops import *
 from manimlib.utils.strings import *
-
-# Non manim libraries that are also nice to have without thinking
-
-import inspect
-import itertools as it
-import numpy as np
-import operator as op
-import os
-import random
-import re
-import string
-import sys
-import math
-import sympy
-
-from PIL import Image
-from colour import Color
