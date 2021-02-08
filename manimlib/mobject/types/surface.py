@@ -124,16 +124,28 @@ class Surface(Mobject):
         lower_index, lower_residue = integer_interpolate(0, max_index, a)
         upper_index, upper_residue = integer_interpolate(0, max_index, b)
         if axis == 0:
-            points[:lower_index] = interpolate(points[lower_index], points[lower_index + 1], lower_residue)
-            points[upper_index:] = interpolate(points[upper_index], points[upper_index + 1], upper_residue)
+            points[:lower_index] = interpolate(
+                points[lower_index],
+                points[lower_index + 1],
+                lower_residue
+            )
+            points[upper_index + 1:] = interpolate(
+                points[upper_index],
+                points[upper_index + 1],
+                upper_residue
+            )
         else:
-            tuples = [
-                (points[:, :lower_index], lower_index, lower_residue),
-                (points[:, upper_index:], upper_index, upper_residue),
-            ]
-            for to_change, index, residue in tuples:
-                col = interpolate(points[:, index], points[:, index + 1], residue)
-                to_change[:] = col.reshape((nu, 1, *resolution[2:]))
+            shape = (nu, 1, resolution[2])
+            points[:, :lower_index] = interpolate(
+                points[:, lower_index],
+                points[:, lower_index + 1],
+                lower_residue
+            ).reshape(shape)
+            points[:, upper_index + 1:] = interpolate(
+                points[:, upper_index],
+                points[:, upper_index + 1],
+                upper_residue
+            ).reshape(shape)
         return points.reshape((nu * nv, *resolution[2:]))
 
     def sort_faces_back_to_front(self, vect=OUT):
