@@ -1,4 +1,5 @@
 from manimlib import *
+import numpy as np
 
 # To watch one of these scenes, run the following:
 # python -m manim example_scenes.py SquareToCircle
