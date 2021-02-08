@@ -160,10 +160,6 @@ def get_custom_config():
     filename = "custom_config.yml"
     global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
 
-    if not (os.path.exists(global_defaults_file) or os.path.exists(filename)):
-        print("There is no configuration file detected. Initial configuration:\n")
-        init_customization()
-
     if os.path.exists(global_defaults_file):
         with open(global_defaults_file, "r") as file:
             config = yaml.safe_load(file)
@@ -188,6 +184,17 @@ def get_custom_config():
 
 
 def get_configuration(args):
+    local_config_file = "custom_config.yml"
+    global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
+    if not (os.path.exists(global_defaults_file) or os.path.exists(local_config_file)):
+        print("There is no configuration file detected. Initial configuration:\n")
+        init_customization()
+    elif not os.path.exists(local_config_file):
+        print(f"""Warning: Using the default configuration file, which you can modify in {global_defaults_file}
+        If you want to create a local configuration file, you can create a file named {local_config_file}, or run manimgl --config
+        """)
+        # print(f"Warning: Using the default configuration file, which you can modify in {global_defaults_file}")
+        # print(f"         If you want to create a local configuration file, you can create a file named {filename}")
     custom_config = get_custom_config()
 
     write_file = any([args.write_file, args.open, args.finder])
