@@ -193,8 +193,6 @@ def get_configuration(args):
         print(f"""Warning: Using the default configuration file, which you can modify in {global_defaults_file}
         If you want to create a local configuration file, you can create a file named {local_config_file}, or run manimgl --config
         """)
-        # print(f"Warning: Using the default configuration file, which you can modify in {global_defaults_file}")
-        # print(f"         If you want to create a local configuration file, you can create a file named {filename}")
     custom_config = get_custom_config()
 
     write_file = any([args.write_file, args.open, args.finder])
