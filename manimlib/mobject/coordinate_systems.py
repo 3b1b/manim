@@ -5,6 +5,7 @@ from manimlib.constants import *
 from manimlib.mobject.functions import ParametricCurve
 from manimlib.mobject.geometry import Arrow
 from manimlib.mobject.geometry import Line
+from manimlib.mobject.geometry import DashedLine
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.number_line import NumberLine
 from manimlib.mobject.svg.tex_mobject import Tex
@@ -24,8 +25,8 @@ class CoordinateSystem():
     """
     CONFIG = {
         "dimension": 2,
-        "x_range": [-8, 8, 1],
-        "y_range": [-4, 4, 1],
+        "x_range": np.array([-8, 8, 1]),
+        "y_range": np.array([-4, 4, 1]),
         "width": None,
         "height": None,
         "num_sampled_graph_points_per_tick": 5,
@@ -88,12 +89,26 @@ class CoordinateSystem():
         )
         return self.axis_labels
 
+    def get_line_from_axis_to_point(self, index, point,
+                                    line_func=DashedLine,
+                                    color=GREY_A,
+                                    stroke_width=2):
+        axis = self.get_axis(index)
+        line = line_func(axis.get_projection(point), point)
+        line.set_stroke(color, stroke_width)
+        return line
+
+    def get_v_line(self, point, **kwargs):
+        return self.get_line_from_axis_to_point(0, point, **kwargs)
+
+    def get_h_line(self, point, **kwargs):
+        return self.get_line_from_axis_to_point(1, point, **kwargs)
+
     # Useful for graphing
     def get_graph(self, function, x_range=None, **kwargs):
-        t_range = list(self.x_range)
+        t_range = np.array(self.x_range, dtype=float)
         if x_range is not None:
-            for i in range(len(x_range)):
-                t_range[i] = x_range[i]
+            t_range[:len(x_range)] = x_range
         # For axes, the third coordinate of x_range indicates
         # tick frequency.  But for functions, it indicates a
         # sample frequency
@@ -134,7 +149,7 @@ class CoordinateSystem():
             else:
                 return None
 
-    def itgp(self, x, graph):
+    def i2gp(self, x, graph):
         """
         Alias for input_to_graph_point
         """
@@ -157,7 +172,7 @@ class CoordinateSystem():
             max_y = FRAME_Y_RADIUS - label.get_height()
             max_x = FRAME_X_RADIUS - label.get_width()
             for x0 in np.arange(*self.x_range)[::-1]:
-                pt = self.itgp(x0, graph)
+                pt = self.i2gp(x0, graph)
                 if abs(pt[0]) < max_x and abs(pt[1]) < max_y:
                     x = x0
                     break
@@ -173,18 +188,11 @@ class CoordinateSystem():
         label.shift_onto_screen()
         return label
 
-    def get_v_line_to_graph(self, x, graph, line_func=Line):
-        return line_func(
-            self.coords_to_point(x, 0),
-            self.input_to_graph_point(x, graph),
-        )
+    def get_v_line_to_graph(self, x, graph, **kwargs):
+        return self.get_v_line(self.i2gp(x, graph), **kwargs)
 
-    def get_h_line_to_graph(self, x, graph, line_func=Line):
-        y = self.get_y_axis().p2n(self.itgp(x, graph))
-        return line_func(
-            self.coords_to_point(0, y),
-            self.input_to_graph_point(x, graph),
-        )
+    def get_h_line_to_graph(self, x, graph, **kwargs):
+        return self.get_h_line(self.i2gp(x, graph), **kwargs)
 
     # For calculus
     def angle_of_tangent(self, x, graph, dx=EPSILON):
@@ -231,7 +239,7 @@ class CoordinateSystem():
             else:
                 raise Exception("Invalid input sample type")
             height = get_norm(
-                self.itgp(sample, graph) - self.c2p(sample, 0)
+                self.i2gp(sample, graph) - self.c2p(sample, 0)
             )
             rect = Rectangle(width=x1 - x0, height=height)
             rect.move_to(self.c2p(x0, 0), DL)
@@ -254,21 +262,25 @@ class Axes(VGroup, CoordinateSystem):
     CONFIG = {
         "axis_config": {
             "include_tip": True,
+            "numbers_to_exclude": [0],
         },
         "x_axis_config": {},
         "y_axis_config": {
             "line_to_number_direction": LEFT,
         },
+        "height": FRAME_HEIGHT - 2,
+        "width": FRAME_WIDTH - 2,
     }
 
-    def __init__(self, x_range=None, y_range=None, **kwargs):
-        VGroup.__init__(self, **kwargs)
+    def __init__(self,
+                 x_range=None,
+                 y_range=None,
+                 **kwargs):
+        super().__init__(**kwargs)
         if x_range is not None:
-            for i in range(len(x_range)):
-                self.x_range[i] = x_range[i]
+            self.x_range[:len(x_range)] = x_range
         if y_range is not None:
-            for i in range(len(y_range)):
-                self.y_range[i] = y_range[i]
+            self.y_range[:len(x_range)] = y_range
 
         self.x_axis = self.create_axis(
             self.x_range, self.x_axis_config, self.width,
@@ -310,24 +322,21 @@ class Axes(VGroup, CoordinateSystem):
     def add_coordinate_labels(self,
                               x_values=None,
                               y_values=None,
-                              excluding=[0],
                               **kwargs):
         axes = self.get_axes()
         self.coordinate_labels = VGroup()
         for axis, values in zip(axes, [x_values, y_values]):
-            numbers = axis.add_numbers(
-                values, excluding=excluding, **kwargs
-            )
-            self.coordinate_labels.add(numbers)
+            labels = axis.add_numbers(values, **kwargs)
+            self.coordinate_labels.add(labels)
         return self.coordinate_labels
 
 
 class ThreeDAxes(Axes):
     CONFIG = {
         "dimension": 3,
-        "x_range": (-6, 6, 1),
-        "y_range": (-5, 5, 1),
-        "z_range": (-4, 4, 1),
+        "x_range": np.array([-6, 6, 1]),
+        "y_range": np.array([-5, 5, 1]),
+        "z_range": np.array([-4, 4, 1]),
         "z_axis_config": {},
         "z_normal": DOWN,
         "depth": None,
@@ -375,6 +384,8 @@ class NumberPlane(Axes):
             "stroke_width": 2,
             "stroke_opacity": 1,
         },
+        "height": None,
+        "width": None,
         # Defaults to a faded version of line_config
         "faded_line_style": None,
         "faded_line_ratio": 1,
