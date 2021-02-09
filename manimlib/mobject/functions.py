@@ -9,6 +9,7 @@ class ParametricCurve(VMobject):
         "epsilon": 1e-8,
         # TODO, automatically figure out discontinuities
         "discontinuities": [],
+        "use_smoothing": True,
     }
 
     def __init__(self, t_func, t_range=None, **kwargs):
@@ -39,7 +40,8 @@ class ParametricCurve(VMobject):
             points = np.array([self.t_func(t) for t in t_range])
             self.start_new_path(points[0])
             self.add_points_as_corners(points[1:])
-        self.make_approximately_smooth()
+        if self.use_smoothing:
+            self.make_approximately_smooth()
         return self
 
 

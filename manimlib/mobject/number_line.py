@@ -149,17 +149,22 @@ class NumberLine(Line):
             num_mob.shift(num_mob[0].get_width() * LEFT / 2)
         return num_mob
 
-    def add_numbers(self, x_values=None, excluding=None, **kwargs):
+    def add_numbers(self, x_values=None, excluding=None, font_size=24, **kwargs):
         if x_values is None:
             x_values = self.get_tick_range()
-        if excluding is not None:
-            x_values = list_difference_update(x_values, excluding)
 
-        self.numbers = VGroup()
+        kwargs["font_size"] = font_size
+
+        numbers = VGroup()
         for x in x_values:
-            self.numbers.add(self.get_number_mobject(x, **kwargs))
-        self.add(self.numbers)
-        return self.numbers
+            if x in self.numbers_to_exclude:
+                continue
+            if excluding is not None and x in excluding:
+                continue
+            numbers.add(self.get_number_mobject(x, **kwargs))
+        self.add(numbers)
+        self.numbers = numbers
+        return numbers
 
 
 class UnitInterval(NumberLine):
