@@ -151,13 +151,13 @@ def get_module(file_name):
 
 
 def get_custom_defaults():
-    filename = "custom_defaults.yml"
     manim_defaults_file = os.path.join(get_manim_dir(), "manimlib", "defaults.yml")
     with open(manim_defaults_file, "r") as file:
         custom_defaults = yaml.safe_load(file)
 
     # See if there's a custom_defaults file in current directory,
     # and if so, it further updates the defaults based on it.
+    filename = "custom_defaults.yml"
     if os.path.exists(filename):
         with open(filename, "r") as file:
             local_defaults = yaml.safe_load(file)
@@ -214,9 +214,9 @@ def get_configuration(args):
     # Camera configuration
     config["camera_config"] = get_camera_configuration(args, custom_defaults)
 
-    # Default to putting window in the upper right of screen,
+    # Default to making window half the screen size
     # but make it full screen if -f is passed in
-    monitor = get_monitors()[0]
+    monitor = get_monitors()[custom_defaults["window_monitor"]]
     window_width = monitor.width
     if not args.full_screen:
         window_width //= 2

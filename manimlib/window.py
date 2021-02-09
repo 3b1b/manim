@@ -20,7 +20,13 @@ class Window(PygletWindow):
         self.scene = scene
         self.title = str(scene)
         self.pressed_keys = set()
-        self.position = self.find_initial_position()
+        # No idea why, but when self.position is set once
+        # it sometimes doesn't actually change the position
+        # to the specified tuple on the rhs, but doing it
+        # twice seems to make it work.  ¯\_(ツ)_/¯
+        initial_position = self.find_initial_position()
+        self.position = initial_position
+        self.position = initial_position
 
         mglw.activate_context(window=self)
         self.timer = Timer()
@@ -29,7 +35,7 @@ class Window(PygletWindow):
 
     def find_initial_position(self):
         custom_position = get_customization()["window_position"]
-        monitor = get_monitors()[0]
+        monitor = get_monitors()[get_customization()["window_monitor"]]
         window_width, window_height = self.size
         # Position might be specified with a string of the form
         # x,y for integers x and y
@@ -42,8 +48,8 @@ class Window(PygletWindow):
         width_diff = monitor.width - window_width
         height_diff = monitor.height - window_height
         return (
-            char_to_n[custom_position[1]] * width_diff // 2,
-            char_to_n[custom_position[0]] * height_diff // 2,
+            monitor.x + char_to_n[custom_position[1]] * width_diff // 2,
+            -monitor.y + char_to_n[custom_position[0]] * height_diff // 2,
         )
 
     # Delegate event handling to scene
