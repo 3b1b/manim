@@ -224,7 +224,9 @@ class Mobject(object):
 
     def is_point_touching(self, point, buff=MED_SMALL_BUFF):
         bb = self.get_bounding_box()
-        return np.all(point >= (bb[0] - buff)) and np.all(point <= (bb[2] + buff))
+        mins = (bb[0] - buff)
+        maxs = (bb[2] + buff)
+        return (point >= mins).all() and (point <= maxs).all()
 
     # Family matters
 
