@@ -849,6 +849,8 @@ class Scene(Container):
         for animation in self.animations:
             animation.finish()
             animation.clean_up_from_scene(self)
+        if not self.renderer.skip_animations:
+            self.update_mobjects(0)
         self.renderer.static_image = None
 
     def update_to_time(self, t):
