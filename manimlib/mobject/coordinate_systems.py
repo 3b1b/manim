@@ -25,8 +25,8 @@ class CoordinateSystem():
     """
     CONFIG = {
         "dimension": 2,
-        "x_range": np.array([-8, 8, 1]),
-        "y_range": np.array([-4, 4, 1]),
+        "x_range": np.array([-8, 8, 1.0]),
+        "y_range": np.array([-4, 4, 1.0]),
         "width": None,
         "height": None,
         "num_sampled_graph_points_per_tick": 5,
@@ -280,7 +280,7 @@ class Axes(VGroup, CoordinateSystem):
         if x_range is not None:
             self.x_range[:len(x_range)] = x_range
         if y_range is not None:
-            self.y_range[:len(x_range)] = y_range
+            self.y_range[:len(y_range)] = y_range
 
         self.x_axis = self.create_axis(
             self.x_range, self.x_axis_config, self.width,
