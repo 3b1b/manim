@@ -18,6 +18,7 @@ And here is a Chinese version of this documentation: https://manim.ml/shaders
    getting_started/example_scenes
    getting_started/config
    getting_started/structure
+   getting_started/whatsnew
 
 .. toctree::
    :maxdepth: 2
