@@ -8,6 +8,7 @@ from functools import wraps
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
 import time
+import moderngl
 from IPython.terminal.embed import InteractiveShellEmbed
 
 from manimlib.animation.animation import prepare_animation
@@ -44,7 +45,7 @@ class Scene(object):
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
         if self.preview:
-            self.window = Window(self, **self.window_config)
+            self.window = Window(scene=self, **self.window_config)
             self.camera_config["ctx"] = self.window.ctx
         else:
             self.window = None
