@@ -2,7 +2,7 @@ import os
 import sys
 import traceback
 
-from manim import logger, config
+from manim import logger, console, config, __version__
 from manim.utils.module_ops import (
     get_module,
     get_scene_classes_from_module,
@@ -42,6 +42,7 @@ def open_file_if_needed(file_writer):
 
 
 def main():
+    console.print(f"Manim Community [green]v{__version__}[/green]")
     args = parse_args(sys.argv)
 
     if hasattr(args, "cmd"):
