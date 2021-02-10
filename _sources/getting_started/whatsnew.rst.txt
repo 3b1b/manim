@@ -19,7 +19,7 @@ This document is for reference only, see the source code for details.
   - Deleted ``FadeInFrom, FadeInFromDown, FadeOutAndShift, FadeOutAndShiftDown, FadeInFromLarge``, these can be used ``FadeIn, FadeOut`` to achieve the same effect more easily
   - Added ``FadeTransform`` to cross fade between two objects, and subclass ``FadeTransformPieces``
   - Added ``CountInFrom(decimal_mob, source_number=0)`` to count ``decimal_mob`` from ``source_number`` to the current value
-  - ``Rotating`` can directly pass in ``angle`` and ``axis`` without writing keywords ``angle=, axis= ``
+  - ``Rotating`` can directly pass in ``angle`` and ``axis`` without writing keywords ``angle=, axis=``
   - ``Rotate`` has become a subclass of ``Rotating``, and the distortion effect in ``Transform`` will not appear
   - Removed ``MoveCar`` animation
   - Added ``TransformMatchingShapes(mobject, target_mobject)`` and ``TransformMatchingTex(mobject, target_mobject)``
@@ -141,4 +141,4 @@ This document is for reference only, see the source code for details.
 - ``constants``
   
   - Fixed the aspect ratio of the screen to 16:9
-  - Deleted the old gray series (``LIGHT_GREY``, ``GREY``, ``DARK_GREY``, ``DARKER_GREY``), added a new series of gray ``GREY_A``~``GREY_E``
+  - Deleted the old gray series (``LIGHT_GREY``, ``GREY``, ``DARK_GREY``, ``DARKER_GREY``), added a new series of gray ``GREY_A`` ~ ``GREY_E``
