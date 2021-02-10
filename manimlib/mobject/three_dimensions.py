@@ -156,10 +156,6 @@ class Square3D(Surface):
 
 class Cube(SGroup):
     CONFIG = {
-        # "fill_color": BLUE,
-        # "fill_opacity": 1,
-        # "stroke_width": 1,
-        # "stroke_color": BLACK,
         "color": BLUE,
         "opacity": 1,
         "gloss": 0.5,
@@ -174,7 +170,6 @@ class Cube(SGroup):
             face.apply_matrix(z_to_vector(vect))
             self.add(face)
         self.set_height(self.side_length)
-        # self.set_color(self.color, self.opacity, self.gloss)
 
 
 class Prism(Cube):
