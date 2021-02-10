@@ -35,7 +35,7 @@ InteractiveDevlopment
             self.wait()
             self.play(circle.animate.stretch(4, 0))
             self.play(Rotate(circle, 90 * DEGREES))
-            self.play(circle.animate.shift(2 * RIGHT), circle.animate.scale(0.25))
+            self.play(circle.animate.shift(2 * RIGHT).scale(0.25))
 
             text = Text("""
                 In general, using the interactive shell
