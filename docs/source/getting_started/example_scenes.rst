@@ -1,8 +1,8 @@
 Example Scenes
 ==============
 
-After understanding the previous knowledge, we can understand more scenes. 
-Many example scenes are given in ``example_scenes.py``, let's start with 
+After understanding the previous knowledge, we can understand more scenes.
+Many example scenes are given in ``example_scenes.py``, let's start with
 the simplest and one by one.
 
 SquareToCircle
@@ -19,7 +19,7 @@ SquareToCircle
             circle.set_fill(BLUE, opacity=0.5)
             circle.set_stroke(BLUE_E, width=4)
             square = Square()
-    
+
             self.play(ShowCreation(square))
             self.wait()
             self.play(ReplacementTransform(square, circle))
@@ -39,40 +39,52 @@ AnimatingMethods
             grid = Tex(r"\pi").get_grid(10, 10, height=4)
             self.add(grid)
 
-            # If you pass in a mobject method to the scene's "play" function,
-            # it will apply an animation interpolating between the mobject's
-            # initial state and whatever happens when you apply that method.
-            # For example, calling grid.shift(2 * LEFT) would shift it two units
-            # to the left, but the following line animates that motion.
-            self.play(grid.shift, 2 * LEFT)
+            # You can animate the application of mobject methods with the
+            # ".animate" syntax:
+            self.play(grid.animate.shift(LEFT))
+
+            # Alternatively, you can use the older syntax by passing the
+            # method and then the arguments to the scene's "play" function:
+            self.play(grid.shift, LEFT)
+
+            # Both of those will interpolate between the mobject's initial
+            # state and whatever happens when you apply that method.
+            # For this example, calling grid.shift(LEFT) would shift the
+            # grid one unit to the left, but both of the previous calls to
+            # "self.play" animate that motion.
+
             # The same applies for any method, including those setting colors.
-            self.play(grid.set_submobject_colors_by_gradient, BLUE, GREEN)
-            self.play(grid.set_height, TAU - MED_SMALL_BUFF)
+            self.play(grid.animate.set_color(YELLOW))
+            self.wait()
+            self.play(grid.animate.set_submobject_colors_by_gradient(BLUE, GREEN))
+            self.wait()
+            self.play(grid.animate.set_height(TAU - MED_SMALL_BUFF))
             self.wait()
 
             # The method Mobject.apply_complex_function lets you apply arbitrary
             # complex functions, treating the points defining the mobject as
             # complex numbers.
-            self.play(grid.apply_complex_function, np.exp, run_time=5)
+            self.play(grid.animate.apply_complex_function(np.exp), run_time=5)
             self.wait()
 
             # Even more generally, you could apply Mobject.apply_function,
             # which takes in functions form R^3 to R^3
             self.play(
-                grid.apply_function,
-                lambda p: [
-                    p[0] + 0.5 * math.sin(p[1]),
-                    p[1] + 0.5 * math.sin(p[0]),
-                    p[2]
-                ],
+                grid.animate.apply_function(
+                    lambda p: [
+                        p[0] + 0.5 * math.sin(p[1]),
+                        p[1] + 0.5 * math.sin(p[0]),
+                        p[2]
+                    ]
+                ),
                 run_time=5,
             )
             self.wait()
 
-The new usage in this scene is ``.get_grid()`` and ``self.play(mob.method, args)``.
+The new usage in this scene is ``.get_grid()`` and ``self.play(mob.animate.method(args))``.
 
 - ``.get_grid()`` method will return a new mobject containing multiple copies of this one arranged in a grid.
-- ``self.play(mob.method, args)`` animate the method, and the details are in the comments above.
+- ``self.play(mob.animate.method(args))`` animates the method, and the details are in the comments above.
 
 TextExample
 -----------
@@ -291,18 +303,18 @@ UpdatersExample
 
             # Notice that the brace and label track with the square
             self.play(
-                square.scale, 2,
+                square.animate.scale(2),
                 rate_func=there_and_back,
                 run_time=2,
             )
             self.wait()
             self.play(
-                square.set_width, 5, {"stretch": True},
+                square.set_width(5, stretch=True),
                 run_time=3,
             )
             self.wait()
             self.play(
-                square.set_width, 2,
+                square.animate.set_width(2),
                 run_time=3
             )
             self.wait()
@@ -318,7 +330,7 @@ UpdatersExample
             )
             self.wait(4 * PI)
 
-The new classes and usage in this scene are ``always_redraw()``, ``DecimalNumber``, ``.to_edge()``, 
+The new classes and usage in this scene are ``always_redraw()``, ``DecimalNumber``, ``.to_edge()``,
 ``.center()``, ``always()``, ``f_always()``, ``.set_y()`` and ``.add_updater()``.
 
 - ``always_redraw()`` function create a new mobject every frame.
@@ -400,8 +412,8 @@ SurfaceExample
             self.play(
                 Transform(surface, surfaces[2]),
                 # Move camera frame during the transition
-                frame.increment_phi, -10 * DEGREES,
-                frame.increment_theta, -20 * DEGREES,
+                frame.animate.increment_phi(-10 * DEGREES),
+                frame.animate.increment_theta(-20 * DEGREES),
                 run_time=3
             )
             # Add ambient rotation
@@ -416,8 +428,8 @@ SurfaceExample
             light = self.camera.light_source
             self.add(light)
             light.save_state()
-            self.play(light.move_to, 3 * IN, run_time=5)
-            self.play(light.shift, 10 * OUT, run_time=5)
+            self.play(light.animate.move_to(3 * IN), run_time=5)
+            self.play(light.animate.shift(10 * OUT), run_time=5)
 
             drag_text = Text("Try moving the mouse while pressing d or s")
             drag_text.move_to(light_text)
@@ -426,7 +438,7 @@ SurfaceExample
             self.play(FadeTransform(light_text, drag_text))
             self.wait()
 
-This scene shows an example of using a three-dimensional surface, and 
+This scene shows an example of using a three-dimensional surface, and
 the related usage has been briefly described in the notes.
 
 - ``.fix_in_frame()`` makes the object not change with the view angle of the screen, and is always displayed at a fixed position on the screen.
@@ -467,7 +479,7 @@ OpeningManimExample
                 FadeTransform(intro_words, linear_transform_words)
             )
             self.wait()
-            self.play(grid.apply_matrix, matrix, run_time=3)
+            self.play(grid.animate.apply_matrix(matrix), run_time=3)
             self.wait()
 
             # Complex map
@@ -491,12 +503,12 @@ OpeningManimExample
             )
             self.wait()
             self.play(
-                moving_c_grid.apply_complex_function, lambda z: z**2,
+                moving_c_grid.animate.apply_complex_function(lambda z: z**2),
                 run_time=6,
             )
             self.wait(2)
 
 This scene is a comprehensive application of a two-dimensional scene.
 
-After seeing these scenes, you have already understood part of the 
+After seeing these scenes, you have already understood part of the
 usage of manim. For more examples, see `the video code of 3b1b <https://github.com/3b1b/videos>`_.

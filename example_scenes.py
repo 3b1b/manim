@@ -37,7 +37,7 @@ class OpeningManimExample(Scene):
             FadeTransform(intro_words, linear_transform_words)
         )
         self.wait()
-        self.play(grid.apply_matrix, matrix, run_time=3)
+        self.play(grid.animate.apply_matrix(matrix), run_time=3)
         self.wait()
 
         # Complex map
@@ -61,7 +61,7 @@ class OpeningManimExample(Scene):
         )
         self.wait()
         self.play(
-            moving_c_grid.apply_complex_function, lambda z: z**2,
+            moving_c_grid.animate.apply_complex_function(lambda z: z**2),
             run_time=6,
         )
         self.wait(2)
@@ -72,35 +72,44 @@ class AnimatingMethods(Scene):
         grid = Tex(r"\pi").get_grid(10, 10, height=4)
         self.add(grid)
 
-        # If you pass in a mobject method to the scene's "play" function,
-        # it will apply an animation interpolating between the mobject's
-        # initial state and whatever happens when you apply that method.
-        # For example, calling grid.shift(2 * LEFT) would shift it two units
-        # to the left, but the following line animates that motion.
-        self.play(grid.shift, 2 * LEFT)
+        # You can animate the application of mobject methods with the
+        # ".animate" syntax:
+        self.play(grid.animate.shift(LEFT))
+
+        # Alternatively, you can use the older syntax by passing the
+        # method and then the arguments to the scene's "play" function:
+        self.play(grid.shift, LEFT)
+
+        # Both of those will interpolate between the mobject's initial
+        # state and whatever happens when you apply that method.
+        # For this example, calling grid.shift(LEFT) would shift the
+        # grid one unit to the left, but both of the previous calls to
+        # "self.play" animate that motion.
+
         # The same applies for any method, including those setting colors.
-        self.play(grid.set_color, YELLOW)
+        self.play(grid.animate.set_color(YELLOW))
         self.wait()
-        self.play(grid.set_submobject_colors_by_gradient, BLUE, GREEN)
+        self.play(grid.animate.set_submobject_colors_by_gradient(BLUE, GREEN))
         self.wait()
-        self.play(grid.set_height, TAU - MED_SMALL_BUFF)
+        self.play(grid.animate.set_height(TAU - MED_SMALL_BUFF))
         self.wait()
 
         # The method Mobject.apply_complex_function lets you apply arbitrary
         # complex functions, treating the points defining the mobject as
         # complex numbers.
-        self.play(grid.apply_complex_function, np.exp, run_time=5)
+        self.play(grid.animate.apply_complex_function(np.exp), run_time=5)
         self.wait()
 
         # Even more generally, you could apply Mobject.apply_function,
         # which takes in functions form R^3 to R^3
         self.play(
-            grid.apply_function,
-            lambda p: [
-                p[0] + 0.5 * math.sin(p[1]),
-                p[1] + 0.5 * math.sin(p[0]),
-                p[2]
-            ],
+            grid.animate.apply_function(
+                lambda p: [
+                    p[0] + 0.5 * math.sin(p[1]),
+                    p[1] + 0.5 * math.sin(p[0]),
+                    p[2]
+                ]
+            ),
             run_time=5,
         )
         self.wait()
@@ -294,18 +303,18 @@ class UpdatersExample(Scene):
 
         # Notice that the brace and label track with the square
         self.play(
-            square.scale, 2,
+            square.animate.scale(2),
             rate_func=there_and_back,
             run_time=2,
         )
         self.wait()
         self.play(
-            square.set_width, 5, {"stretch": True},
+            square.set_width(5, stretch=True),
             run_time=3,
         )
         self.wait()
         self.play(
-            square.set_width, 2,
+            square.animate.set_width(2),
             run_time=3
         )
         self.wait()
@@ -398,8 +407,8 @@ class GraphExample(Scene):
             lambda: axes.i2gp(x_tracker.get_value(), parabola)
         )
 
-        self.play(x_tracker.set_value, 4, run_time=3)
-        self.play(x_tracker.set_value, -2, run_time=3)
+        self.play(x_tracker.animate.set_value(4), run_time=3)
+        self.play(x_tracker.animate.set_value(-2), run_time=3)
         self.wait()
 
 
@@ -442,9 +451,9 @@ class CoordinateSystemExample(Scene):
         dot = Dot(color=RED)
         dot.move_to(axes.c2p(0, 0))
         self.play(FadeIn(dot, scale=0.5))
-        self.play(dot.move_to, axes.c2p(3, 2))
+        self.play(dot.animate.move_to(axes.c2p(3, 2)))
         self.wait()
-        self.play(dot.move_to, axes.c2p(5, 0.5))
+        self.play(dot.animate.move_to(axes.c2p(5, 0.5)))
         self.wait()
 
         # Similarly, you can call axes.point_to_coords, or axes.p2c
@@ -461,9 +470,9 @@ class CoordinateSystemExample(Scene):
             ShowCreation(h_line),
             ShowCreation(v_line),
         )
-        self.play(dot.move_to, axes.c2p(3, -2))
+        self.play(dot.animate.move_to(axes.c2p(3, -2)))
         self.wait()
-        self.play(dot.move_to, axes.c2p(1, 1))
+        self.play(dot.animate.move_to(axes.c2p(1, 1)))
         self.wait()
 
         # If we tie the dot to a particular set of coordinates, notice
@@ -471,8 +480,8 @@ class CoordinateSystemExample(Scene):
         # system defined by them.
         f_always(dot.move_to, lambda: axes.c2p(1, 1))
         self.play(
-            axes.scale, 0.75,
-            axes.to_corner, UL,
+            axes.animate.scale(0.75),
+            axes.animate.to_corner(UL),
             run_time=2,
         )
         self.wait()
@@ -546,8 +555,8 @@ class SurfaceExample(Scene):
         self.play(
             Transform(surface, surfaces[2]),
             # Move camera frame during the transition
-            frame.increment_phi, -10 * DEGREES,
-            frame.increment_theta, -20 * DEGREES,
+            frame.animate.increment_phi(-10 * DEGREES),
+            frame.animate.increment_theta(-20 * DEGREES),
             run_time=3
         )
         # Add ambient rotation
@@ -562,8 +571,8 @@ class SurfaceExample(Scene):
         light = self.camera.light_source
         self.add(light)
         light.save_state()
-        self.play(light.move_to, 3 * IN, run_time=5)
-        self.play(light.shift, 10 * OUT, run_time=5)
+        self.play(light.animate.move_to(3 * IN), run_time=5)
+        self.play(light.animate.shift(10 * OUT), run_time=5)
 
         drag_text = Text("Try moving the mouse while pressing d or s")
         drag_text.move_to(light_text)
@@ -593,9 +602,9 @@ class InteractiveDevlopment(Scene):
         # the interactive shell
         self.play(ReplacementTransform(square, circle))
         self.wait()
-        self.play(circle.stretch, 4, 0)
+        self.play(circle.animate.stretch(4, 0))
         self.play(Rotate(circle, 90 * DEGREES))
-        self.play(circle.shift, 2 * RIGHT, circle.scale, 0.25)
+        self.play(circle.animate.shift(2 * RIGHT, circle.scale, 0.25))
 
         text = Text("""
             In general, using the interactive shell
