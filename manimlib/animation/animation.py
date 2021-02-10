@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from manimlib.mobject.mobject import Mobject
+from manimlib.mobject.mobject import Mobject, _AnimationBuilder
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import smooth
 from manimlib.utils.simple_functions import clip
@@ -159,3 +159,13 @@ class Animation(object):
 
     def is_remover(self):
         return self.remover
+
+
+def prepare_animation(anim):
+    if isinstance(anim, _AnimationBuilder):
+        return anim.build()
+
+    if isinstance(anim, Animation):
+        return anim
+
+    raise TypeError(f"Object {anim} cannot be converted to an animation")

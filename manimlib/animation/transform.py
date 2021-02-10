@@ -149,6 +149,12 @@ class MoveToTarget(Transform):
             )
 
 
+class _MethodAnimation(MoveToTarget):
+    def __init__(self, mobject, methods):
+        self.methods = methods
+        super().__init__(mobject)
+
+
 class ApplyMethod(Transform):
     def __init__(self, method, *args, **kwargs):
         """
