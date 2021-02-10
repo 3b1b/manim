@@ -80,11 +80,6 @@ class Mobject(object):
         if self.depth_test:
             self.apply_depth_test()
 
-    @property
-    def animate(self):
-        # Borrowed from https://github.com/ManimCommunity/manim/
-        return _AnimationBuilder(self)
-
     def __str__(self):
         return self.__class__.__name__
 
@@ -118,6 +113,11 @@ class Mobject(object):
         for key in uniforms:
             self.uniforms[key] = uniforms[key]  # Copy?
         return self
+
+    @property
+    def animate(self):
+        # Borrowed from https://github.com/ManimCommunity/manim/
+        return _AnimationBuilder(self)
 
     # Only these methods should directly affect points
 
