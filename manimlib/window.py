@@ -28,6 +28,9 @@ class Window(PygletWindow):
         self.position = initial_position
         self.position = initial_position
 
+        if "size" in kwargs:
+            self.size = kwargs["size"]
+
         mglw.activate_context(window=self)
         self.timer = Timer()
         self.config = mglw.WindowConfig(ctx=self.ctx, wnd=self, timer=self.timer)
