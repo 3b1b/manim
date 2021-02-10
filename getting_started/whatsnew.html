@@ -1,0 +1,344 @@
+<!doctype html>
+<html class="no-js">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="constants" href="../documentation/constants.html" /><link rel="prev" title="Manim’s structure" href="structure.html" />
+
+    <link rel="shortcut icon" href="../_static/icon.png"/><meta name="generator" content="sphinx-3.0.3, furo 2020.10.05.beta9"/>
+        <title>What’s new - manim  documentation</title>
+      <link rel="stylesheet" href="../_static/copybutton.css" />
+    <link rel="stylesheet" href="../_static/custom.css" />
+    <link rel="stylesheet" href="../_static/colors.css" />
+    <link rel="stylesheet" href="../_static/styles/default.css?941f75ba8041041867c7f485">
+    <link rel="stylesheet" href="../_static/pygments.css?941f75ba8041041867c7f485">
+    
+<style>
+  :root {
+    --color-code-background: #f8f8f8;
+    --color-code-foreground: #000000;
+  
+  }
+</style>
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script><script src="../_static/jquery.js"></script>
+      <script src="../_static/underscore.js"></script>
+      
+        <script src="../_static/doctools.js" defer></script>
+      
+        <script src="../_static/language_data.js" defer></script>
+      
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?941f75ba8041041867c7f485"></script></head>
+  <body dir="">
+    
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke-width="1.5" stroke="#101010" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z"/>
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="10" y1="12" x2="20" y2="12" />
+      <line x1="6" y1="18" x2="20" y2="18" />
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      class="feather feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      class="feather feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+
+<div class="page">
+  <header class="mobile-header">
+    <label class="header-left nav-overlay-icon" for="__navigation">
+      <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+    </label>
+    <div class="header-center"><div class="brand">manim  documentation</div></div>
+    <div class="header-right"></div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand centered" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../_static/transparent_graph.png" alt="Logo"/>
+  </div>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html">
+  <input class="sidebar-search" placeholder="Search" name="q">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form><div class="sidebar-tree sidebar-scroll">
+  <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">CLI flags and configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_scenes.html">Example Scenes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">CONFIG dictionary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structure.html">Manim’s structure</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">What’s new</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/constants.html">constants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/custom_default.html">custom_default</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/about.html">About</a></li>
+</ul>
+
+</div>
+      </div>
+      
+    </div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <article role="main">
+        <label class="toc-overlay-icon" for="__toc">
+          <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+        </label>
+        <div class="section" id="what-s-new">
+<h1>What’s new<a class="headerlink" href="#what-s-new" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="usage-changes-of-new-version-manim">
+<h2>Usage changes of new version manim<a class="headerlink" href="#usage-changes-of-new-version-manim" title="Permalink to this headline">¶</a></h2>
+<p>There are many changes in the new version of manim, and here are only the changes that
+may have an impact at the code writing level.</p>
+<p>Some of the changes here may not have any major impact on the use, and some changes
+that affect the use are not mentioned below.</p>
+<p>This document is for reference only, see the source code for details.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Animation</span></code></p>
+<ul>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">Fade</span></code> as the parent class of <code class="docutils literal notranslate"><span class="pre">FadeIn</span></code> and <code class="docutils literal notranslate"><span class="pre">FadeOut</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">FadeIn</span></code> and <code class="docutils literal notranslate"><span class="pre">FadeOut</span></code> can be passed in <code class="docutils literal notranslate"><span class="pre">shift</span></code> and <code class="docutils literal notranslate"><span class="pre">scale</span></code> parameters</p></li>
+<li><p>Deleted <code class="docutils literal notranslate"><span class="pre">FadeInFrom,</span> <span class="pre">FadeInFromDown,</span> <span class="pre">FadeOutAndShift,</span> <span class="pre">FadeOutAndShiftDown,</span> <span class="pre">FadeInFromLarge</span></code>, these can be used <code class="docutils literal notranslate"><span class="pre">FadeIn,</span> <span class="pre">FadeOut</span></code> to achieve the same effect more easily</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">FadeTransform</span></code> to cross fade between two objects, and subclass <code class="docutils literal notranslate"><span class="pre">FadeTransformPieces</span></code></p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">CountInFrom(decimal_mob,</span> <span class="pre">source_number=0)</span></code> to count <code class="docutils literal notranslate"><span class="pre">decimal_mob</span></code> from <code class="docutils literal notranslate"><span class="pre">source_number</span></code> to the current value</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Rotating</span></code> can directly pass in <code class="docutils literal notranslate"><span class="pre">angle</span></code> and <code class="docutils literal notranslate"><span class="pre">axis</span></code> without writing keywords <a href="#id1"><span class="problematic" id="id2">``</span></a>angle=, axis= ``</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Rotate</span></code> has become a subclass of <code class="docutils literal notranslate"><span class="pre">Rotating</span></code>, and the distortion effect in <code class="docutils literal notranslate"><span class="pre">Transform</span></code> will not appear</p></li>
+<li><p>Removed <code class="docutils literal notranslate"><span class="pre">MoveCar</span></code> animation</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">TransformMatchingShapes(mobject,</span> <span class="pre">target_mobject)</span></code> and <code class="docutils literal notranslate"><span class="pre">TransformMatchingTex(mobject,</span> <span class="pre">target_mobject)</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Camera</span></code></p>
+<ul>
+<li><p>Removed all camera classes except <code class="docutils literal notranslate"><span class="pre">Camera</span></code> (<code class="docutils literal notranslate"><span class="pre">MappingCamera</span></code>, <code class="docutils literal notranslate"><span class="pre">MovingCamera</span></code>, <code class="docutils literal notranslate"><span class="pre">MultiCamera</span></code>) and all functions in <code class="docutils literal notranslate"><span class="pre">ThreeDCamera</span></code></p></li>
+<li><p>Implemented <code class="docutils literal notranslate"><span class="pre">CameraFrame</span></code> (as a <code class="docutils literal notranslate"><span class="pre">Mobject</span></code>)</p>
+<ul>
+<li><p>Can be called by <code class="docutils literal notranslate"><span class="pre">self.camera.frame</span></code> in <code class="docutils literal notranslate"><span class="pre">Scene</span></code></p></li>
+<li><p>All methods of <code class="docutils literal notranslate"><span class="pre">Mobject</span></code> can be used, such as <code class="docutils literal notranslate"><span class="pre">.shift()</span></code>, <code class="docutils literal notranslate"><span class="pre">.scale()</span></code>, etc.</p></li>
+<li><p>Call <code class="docutils literal notranslate"><span class="pre">.to_default_state()</span></code> to place in the default position</p></li>
+<li><p>Set the Euler angles of the camera by <code class="docutils literal notranslate"><span class="pre">.set_euler_angles(theta,</span> <span class="pre">phi,</span> <span class="pre">gamma)</span></code></p></li>
+<li><p>Set three single Euler angles by <code class="docutils literal notranslate"><span class="pre">.set_theta(theta)</span></code>, <code class="docutils literal notranslate"><span class="pre">.set_phi(phi)</span></code>, <code class="docutils literal notranslate"><span class="pre">.set_gamma(gamma)</span></code></p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">.increment_theta(dtheta)</span></code>, <code class="docutils literal notranslate"><span class="pre">.increment_phi(dphi)</span></code>, <code class="docutils literal notranslate"><span class="pre">.increment_gamma(gamma)</span></code> to increase the three Euler angles by a certain value. Can be used to realize automatic rotation <code class="docutils literal notranslate"><span class="pre">self.camera.frame.add_updater(lambda</span> <span class="pre">mob,</span> <span class="pre">dt:</span> <span class="pre">mob.increment_theta(0.1</span> <span class="pre">*</span> <span class="pre">dt))</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Camera</span></code> adds a light source, which is a <code class="docutils literal notranslate"><span class="pre">Point</span></code>, which can be called by <code class="docutils literal notranslate"><span class="pre">self.camera.light_source</span></code> in <code class="docutils literal notranslate"><span class="pre">Scene</span></code> to move and so on. The default position is <code class="docutils literal notranslate"><span class="pre">(-</span> <span class="pre">10,</span> <span class="pre">10,</span> <span class="pre">10)</span></code></p></li>
+</ul>
+</li>
+<li><p>Delete <code class="docutils literal notranslate"><span class="pre">Container</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Mobject</span></code></p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">svg</span></code> related</p>
+<ul>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">Checkmark</span></code> and <code class="docutils literal notranslate"><span class="pre">Exmark</span></code></p></li>
+<li><p>Some unnecessary classes have been removed from <code class="docutils literal notranslate"><span class="pre">drawings.py</span></code></p></li>
+<li><p>Removed <code class="docutils literal notranslate"><span class="pre">Code</span></code> and <code class="docutils literal notranslate"><span class="pre">Paragraph</span></code> (by mistake)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TexMobject</span></code> is renamed to <code class="docutils literal notranslate"><span class="pre">Tex</span></code>, <code class="docutils literal notranslate"><span class="pre">TextMobject</span></code> is renamed to <code class="docutils literal notranslate"><span class="pre">TexText</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">font_size</span></code> has been added to <code class="docutils literal notranslate"><span class="pre">Tex</span></code>, <code class="docutils literal notranslate"><span class="pre">TexText</span></code> and <code class="docutils literal notranslate"><span class="pre">Text</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Tex</span></code> and <code class="docutils literal notranslate"><span class="pre">TexText</span></code> added <code class="docutils literal notranslate"><span class="pre">isolate</span></code>, which is a list, which will be automatically split</p></li>
+</ul>
+</li>
+<li><p>Mobject <code class="docutils literal notranslate"><span class="pre">types</span></code></p>
+<ul>
+<li><p>Added a new class <code class="docutils literal notranslate"><span class="pre">Surface</span></code>, which is the parent class of <code class="docutils literal notranslate"><span class="pre">ParametricSurface</span></code> and <code class="docutils literal notranslate"><span class="pre">TexturedSurface</span></code>.</p></li>
+<li><p>Added the group <code class="docutils literal notranslate"><span class="pre">SGroup</span></code> for <code class="docutils literal notranslate"><span class="pre">Surface</span></code></p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">TexturedSurface(uv_surface,</span> <span class="pre">image_file,</span> <span class="pre">dark_image_file=None)</span></code>, where <code class="docutils literal notranslate"><span class="pre">uv_surface</span></code> is a <code class="docutils literal notranslate"><span class="pre">Surface</span></code>, <code class="docutils literal notranslate"><span class="pre">image_file</span></code> is the image to be posted, and <code class="docutils literal notranslate"><span class="pre">dark_image_file</span></code> is the image to be posted in the dark (default and <code class="docutils literal notranslate"><span class="pre">image_file</span></code> is the same)</p></li>
+<li><p>Deleted <code class="docutils literal notranslate"><span class="pre">Mobject1D</span></code>, <code class="docutils literal notranslate"><span class="pre">Mobject2D</span></code>, <code class="docutils literal notranslate"><span class="pre">PointCloudDot</span></code></p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">DotCloud</span></code> (a <code class="docutils literal notranslate"><span class="pre">PMobject</span></code>), which has been greatly optimized</p></li>
+<li><p>Removed <code class="docutils literal notranslate"><span class="pre">AbstractImageMobject</span></code>, <code class="docutils literal notranslate"><span class="pre">ImageMobjectFromCamera</span></code></p></li>
+<li><p>Removed <code class="docutils literal notranslate"><span class="pre">sheen</span></code> from <code class="docutils literal notranslate"><span class="pre">VMobject</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Mobject</span></code></p>
+<ul>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">gloss</span></code> and <code class="docutils literal notranslate"><span class="pre">shadow</span></code>, which are the numbers between <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code> respectively. There are four methods of <code class="docutils literal notranslate"><span class="pre">.get_gloss()</span></code>, <code class="docutils literal notranslate"><span class="pre">.set_gloss(gloss)</span></code>, <code class="docutils literal notranslate"><span class="pre">.get_shadow()</span></code>, <code class="docutils literal notranslate"><span class="pre">.set_shadow(shadow)</span></code></p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">.get_grid(n_rows,</span> <span class="pre">n_cols)</span></code> to copy into grid</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">.set_color_by_code(glsl_code)</span></code> to use GLSL code to change the color</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">.set_color_by_xyz_func(glsl_snippet,</span> <span class="pre">min_value=-5.0,</span> <span class="pre">max_value=5.0,</span> <span class="pre">colormap="viridis")</span></code> to pass in GLSL expression in the form of <code class="docutils literal notranslate"><span class="pre">x,y,z</span></code>, the return value should be a floating point number</p></li>
+</ul>
+</li>
+<li><p>Coordinate system (including <code class="docutils literal notranslate"><span class="pre">Axes</span></code>, <code class="docutils literal notranslate"><span class="pre">ThreeDAxes</span></code>, <code class="docutils literal notranslate"><span class="pre">NumberPlane</span></code>, <code class="docutils literal notranslate"><span class="pre">ComplexPlane</span></code>)</p>
+<ul>
+<li><p>No longer use <code class="docutils literal notranslate"><span class="pre">x_min</span></code>, <code class="docutils literal notranslate"><span class="pre">x_max</span></code>, <code class="docutils literal notranslate"><span class="pre">y_min</span></code>, <code class="docutils literal notranslate"><span class="pre">y_max</span></code>, but use <code class="docutils literal notranslate"><span class="pre">x_range</span></code>, <code class="docutils literal notranslate"><span class="pre">y_range</span></code> as a <code class="docutils literal notranslate"><span class="pre">np.array()</span></code>, containing three numbers <code class="docutils literal notranslate"><span class="pre">np.array([</span> <span class="pre">Minimum,</span> <span class="pre">maximum,</span> <span class="pre">step</span> <span class="pre">size])</span></code></p></li>
+<li><p>Added the abbreviation <code class="docutils literal notranslate"><span class="pre">.i2gp(x,</span> <span class="pre">graph)</span></code> of <code class="docutils literal notranslate"><span class="pre">.input_to_graph_point(x,</span> <span class="pre">graph)</span></code></p></li>
+<li><p>Added some functions of the original <code class="docutils literal notranslate"><span class="pre">GraphScene</span></code></p>
+<ul>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">.get_v_line(point)</span></code>, <code class="docutils literal notranslate"><span class="pre">.get_h_line(point)</span></code> to return the line from <code class="docutils literal notranslate"><span class="pre">point</span></code> to the two coordinate axes, and specify the line type through the keyword argument of <code class="docutils literal notranslate"><span class="pre">line_func</span></code> (default <code class="docutils literal notranslate"><span class="pre">DashedLine</span></code>)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">.get_graph_label(graph,</span> <span class="pre">label,</span> <span class="pre">x,</span> <span class="pre">direction,</span> <span class="pre">buff,</span> <span class="pre">color)</span></code> to return the label added to the image</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">.get_v_line_to_graph(x,</span> <span class="pre">graph)</span></code>, <code class="docutils literal notranslate"><span class="pre">.get_h_line_to_graph(x,</span> <span class="pre">graph)</span></code> to return the line from the point with the abscissa of <code class="docutils literal notranslate"><span class="pre">x</span></code> on the <code class="docutils literal notranslate"><span class="pre">graph</span></code> to the two- axis line</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">.angle_of_tangent(x,</span> <span class="pre">graph,</span> <span class="pre">dx=EPSILON)</span></code>, returns the inclination angle of <code class="docutils literal notranslate"><span class="pre">graph</span></code> at <code class="docutils literal notranslate"><span class="pre">x</span></code></p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">.slope_of_tangent(x,</span> <span class="pre">graph,</span> <span class="pre">dx=EPSILON)</span></code>, returns the slope of tangent line of <code class="docutils literal notranslate"><span class="pre">graph</span></code> at <code class="docutils literal notranslate"><span class="pre">x</span></code></p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">.get_tangent_line(x,</span> <span class="pre">graph,</span> <span class="pre">length=5)</span></code> to return the tangent line of <code class="docutils literal notranslate"><span class="pre">graph</span></code> at <code class="docutils literal notranslate"><span class="pre">x</span></code></p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">.get_riemann_rectangles(graph,</span> <span class="pre">x_range,</span> <span class="pre">dx,</span> <span class="pre">input_sample_type,</span> <span class="pre">...)</span></code> to return Riemann rectangles (a <code class="docutils literal notranslate"><span class="pre">VGroup</span></code>)</p></li>
+</ul>
+</li>
+<li><p>The attribute <code class="docutils literal notranslate"><span class="pre">number_line_config</span></code> of <code class="docutils literal notranslate"><span class="pre">Axes</span></code> is renamed to <code class="docutils literal notranslate"><span class="pre">axis_config</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Axes</span></code> original <code class="docutils literal notranslate"><span class="pre">.get_coordinate_labels(x_values,</span> <span class="pre">y_values)</span></code> method was renamed to <code class="docutils literal notranslate"><span class="pre">.add_coordinate_labels(x_values,</span> <span class="pre">y_values)</span></code> (but it is not added to the screen)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.add_coordinate_labels(numbers)</span></code> of <code class="docutils literal notranslate"><span class="pre">ComplexPlane</span></code> will directly add the coordinates to the screen</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NumberLine</span></code></p>
+<ul>
+<li><p>No longer use <code class="docutils literal notranslate"><span class="pre">x_min</span></code>, <code class="docutils literal notranslate"><span class="pre">x_max</span></code>, <code class="docutils literal notranslate"><span class="pre">tick_frequency</span></code>, but use <code class="docutils literal notranslate"><span class="pre">x_range</span></code>, which is an array containing three numbers <code class="docutils literal notranslate"><span class="pre">[min,</span> <span class="pre">max,</span> <span class="pre">step]</span></code></p></li>
+<li><p>The original <code class="docutils literal notranslate"><span class="pre">label_direction</span></code> attribute changed to the <code class="docutils literal notranslate"><span class="pre">line_to_number_direction</span></code> attribute</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">tip_width</span></code> and <code class="docutils literal notranslate"><span class="pre">tip_height</span></code> with <code class="docutils literal notranslate"><span class="pre">tip_config</span></code> (dictionary) attributes</p></li>
+<li><p>The original <code class="docutils literal notranslate"><span class="pre">exclude_zero_from_default</span></code> attribute is modified to the <code class="docutils literal notranslate"><span class="pre">numbers_to_exclude</span></code> attribute (default is None)</p></li>
+<li><p>The original <code class="docutils literal notranslate"><span class="pre">.add_tick_marks()</span></code> method was changed to the <code class="docutils literal notranslate"><span class="pre">.add_ticks()</span></code> method</p></li>
+<li><p>Delete the <code class="docutils literal notranslate"><span class="pre">.get_number_mobjects(*numbers)</span></code> method, only use the <code class="docutils literal notranslate"><span class="pre">.add_numbers(x_values=None,</span> <span class="pre">excluding=None)</span></code> method</p></li>
+</ul>
+</li>
+<li><p>Three-dimensional objects</p>
+<ul>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">SurfaceMesh(uv_surface)</span></code>, pass in a <code class="docutils literal notranslate"><span class="pre">Surface</span></code> to generate its uv mesh</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ParametricSurface</span></code> no longer uses <code class="docutils literal notranslate"><span class="pre">u_min,</span> <span class="pre">u_max,</span> <span class="pre">v_min,</span> <span class="pre">v_max</span></code>, but instead uses <code class="docutils literal notranslate"><span class="pre">u_range,</span> <span class="pre">v_range</span></code>, which is a tuple (<code class="docutils literal notranslate"><span class="pre">(min,</span> <span class="pre">max)</span></code>), and <code class="docutils literal notranslate"><span class="pre">resolution</span></code> can be set larger, don’t worry Speed ​​issue</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">Torus</span></code>, controlled by <code class="docutils literal notranslate"><span class="pre">r1,</span> <span class="pre">r2</span></code> keyword parameters</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">Cylinder</span></code>, controlled by <code class="docutils literal notranslate"><span class="pre">height,</span> <span class="pre">radius</span></code> keyword parameters</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">Line3D</span></code> (extremely thin cylinder), controlled by the <code class="docutils literal notranslate"><span class="pre">width</span></code> keyword parameter</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">Disk3D</span></code>, controlled by <code class="docutils literal notranslate"><span class="pre">radius</span></code> keyword parameter</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">Square3D</span></code>, controlled by <code class="docutils literal notranslate"><span class="pre">side_length</span></code> keyword parameter</p></li>
+<li><p>Improved <code class="docutils literal notranslate"><span class="pre">Cube</span></code> and <code class="docutils literal notranslate"><span class="pre">Prism</span></code>, the usage remains unchanged</p></li>
+</ul>
+</li>
+<li><p>Other objects</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">ParametricFunction</span></code> is renamed to <code class="docutils literal notranslate"><span class="pre">ParametricCurve</span></code>. Instead of using <code class="docutils literal notranslate"><span class="pre">t_min,</span> <span class="pre">t_max,</span> <span class="pre">step_size</span></code>, use <code class="docutils literal notranslate"><span class="pre">t_range</span></code>, which is an array of three numbers (<code class="docutils literal notranslate"><span class="pre">[t_min,</span> <span class="pre">t_max,</span> <span class="pre">step_size]</span></code>). <code class="docutils literal notranslate"><span class="pre">dt</span></code> was renamed to <code class="docutils literal notranslate"><span class="pre">epsilon</span></code>. Other usage remains unchanged</p></li>
+<li><p>All <code class="docutils literal notranslate"><span class="pre">TipableVMobject</span></code> can pass in <code class="docutils literal notranslate"><span class="pre">tip_length</span></code> to control the style of <code class="docutils literal notranslate"><span class="pre">tip</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Line</span></code> adds <code class="docutils literal notranslate"><span class="pre">.set_points_by_ends(start,</span> <span class="pre">end,</span> <span class="pre">buff=0,</span> <span class="pre">path_arc=0)</span></code> method</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Line</span></code> added <code class="docutils literal notranslate"><span class="pre">.get_projection(point)</span></code> to return the projection position of <code class="docutils literal notranslate"><span class="pre">point</span></code> on a straight line</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Arrow</span></code> adds three attributes of <code class="docutils literal notranslate"><span class="pre">thickness,</span> <span class="pre">tip_width_ratio,</span> <span class="pre">tip_angle</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CubicBezier</span></code> is changed to <code class="docutils literal notranslate"><span class="pre">a0,</span> <span class="pre">h0,</span> <span class="pre">h1,</span> <span class="pre">a1</span></code>, that is, only a third-order Bezier curve is supported</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Square</span></code> can be initialized directly by passing in <code class="docutils literal notranslate"><span class="pre">side_length</span></code> instead of using the keyword <code class="docutils literal notranslate"><span class="pre">side_length=</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">always_redraw(func,</span> <span class="pre">*args,</span> <span class="pre">**kwargs)</span></code> supports incoming parameters <code class="docutils literal notranslate"><span class="pre">*args,</span> <span class="pre">**kwargs</span></code></p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">digit_to_digit_buff</span></code> property of <code class="docutils literal notranslate"><span class="pre">DecimalNumber</span></code> has been renamed to <code class="docutils literal notranslate"><span class="pre">digit_buff_per_font_unit</span></code>, and the <code class="docutils literal notranslate"><span class="pre">.scale()</span></code> method has been improved</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ValueTracker</span></code> adds <code class="docutils literal notranslate"><span class="pre">value_type</span></code> attribute, the default is <code class="docutils literal notranslate"><span class="pre">np.float64</span></code></p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Scene</span></code></p>
+<ul>
+<li><p>Removed all functions of <code class="docutils literal notranslate"><span class="pre">GraphScene</span></code> (moved to <code class="docutils literal notranslate"><span class="pre">once_useful_constructs</span></code>), <code class="docutils literal notranslate"><span class="pre">MovingCameraScene</span></code>, <code class="docutils literal notranslate"><span class="pre">ReconfigurableScene</span></code>, <code class="docutils literal notranslate"><span class="pre">SceneFromVideo</span></code>, <code class="docutils literal notranslate"><span class="pre">ZoomedScene</span></code>, and <code class="docutils literal notranslate"><span class="pre">ThreeDScene</span></code>. Because these can basically be achieved by adjusting <code class="docutils literal notranslate"><span class="pre">CameraFrame</span></code> (<code class="docutils literal notranslate"><span class="pre">self.camera.frame</span></code>)</p></li>
+<li><p>Currently <code class="docutils literal notranslate"><span class="pre">SampleSpaceScene</span></code> and <code class="docutils literal notranslate"><span class="pre">VectorScene</span></code> have not been changed for the new version, so it is not recommended to use (only <code class="docutils literal notranslate"><span class="pre">Scene</span></code> is recommended)</p></li>
+<li><p>Fix the export of gif, just use the <code class="docutils literal notranslate"><span class="pre">-i</span></code> option directly</p></li>
+<li><p>Added the <code class="docutils literal notranslate"><span class="pre">.interact()</span></code> method, during which the mouse and keyboard can be used to continue the interaction, which will be executed by default after the scene ends</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">.embed()</span></code> method, open iPython terminal to enter interactive mode</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">.save_state()</span></code> method to save the current state of the scene</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">.restore()</span></code> method to restore the entire scene to the saved state</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">utils</span></code></p>
+<ul>
+<li><p>A series of functions related to second-order Bezier have been added to <code class="docutils literal notranslate"><span class="pre">utils/bezier.py</span></code></p></li>
+<li><p>Added a function to read color map from <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code> in <code class="docutils literal notranslate"><span class="pre">utils/color.py</span></code></p></li>
+<li><p>Added a series of related functions for processing folders/custom styles/object families</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">resize_array</span></code>, <code class="docutils literal notranslate"><span class="pre">resize_preserving_order</span></code>, <code class="docutils literal notranslate"><span class="pre">resize_with_interpolation</span></code> three functions have been added to <code class="docutils literal notranslate"><span class="pre">utils/iterables.py</span></code></p></li>
+<li><p>The definition of <code class="docutils literal notranslate"><span class="pre">smooth</span></code> is updated in <code class="docutils literal notranslate"><span class="pre">utils/rate_functions.py</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">clip(a,</span> <span class="pre">min_a,</span> <span class="pre">max_a)</span></code> function has been added to <code class="docutils literal notranslate"><span class="pre">utils/simple_functions.py</span></code></p></li>
+<li><p>Some functions have been improved in <code class="docutils literal notranslate"><span class="pre">utils/space_ops.py</span></code>, some functions for space calculation, and functions for processing triangulation have been added</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">constants</span></code></p>
+<ul>
+<li><p>Fixed the aspect ratio of the screen to 16:9</p></li>
+<li><p>Deleted the old gray series (<code class="docutils literal notranslate"><span class="pre">LIGHT_GREY</span></code>, <code class="docutils literal notranslate"><span class="pre">GREY</span></code>, <code class="docutils literal notranslate"><span class="pre">DARK_GREY</span></code>, <code class="docutils literal notranslate"><span class="pre">DARKER_GREY</span></code>), added a new series of gray <code class="docutils literal notranslate"><span class="pre">GREY_A``~``GREY_E</span></code></p></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+      </article>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../documentation/constants.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">constants</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="structure.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Manim’s structure</div>
+                
+              </div>
+            </a>
+        </div>
+
+        <div class="related-information">
+          <span class="copyright">Copyright &copy; - This document has been placed in the public domain.</span> |
+          Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using
+          <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+          <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            Contents
+          </span>
+        </div>
+        <div class="toc-tree">
+          <ul>
+<li><a class="reference internal" href="#">What’s new</a><ul>
+<li><a class="reference internal" href="#usage-changes-of-new-version-manim">Usage changes of new version manim</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+      
+      
+    </aside>
+  </main>
+</div>
+  </body>
+</html>

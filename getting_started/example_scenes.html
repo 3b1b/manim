@@ -8,8 +8,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="../_static/custom.css" />
     <link rel="stylesheet" href="../_static/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?18f7ed19929416e20b78b6d1">
-    <link rel="stylesheet" href="../_static/pygments.css?18f7ed19929416e20b78b6d1">
+    <link rel="stylesheet" href="../_static/styles/default.css?f078220c42d2ee0fcc0210bd">
+    <link rel="stylesheet" href="../_static/pygments.css?f078220c42d2ee0fcc0210bd">
     
 <style>
   :root {
@@ -26,7 +26,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?18f7ed19929416e20b78b6d1"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?f078220c42d2ee0fcc0210bd"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -95,6 +95,7 @@
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Example Scenes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="config.html">CONFIG dictionary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Manim’s structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="whatsnew.html">What’s new</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
@@ -124,11 +125,11 @@
 <p>After understanding the previous knowledge, we can understand more scenes.
 Many example scenes are given in <code class="docutils literal notranslate"><span class="pre">example_scenes.py</span></code>, let’s start with
 the simplest and one by one.</p>
-<div class="section" id="squaretocircle">
-<h2>SquareToCircle<a class="headerlink" href="#squaretocircle" title="Permalink to this headline">¶</a></h2>
-<div class="manim-example"><video autoplay="" class="manim-video" controls="" id="squaretocircle" loop="" src="../_static/example_scenes/SquareToCircle.mp4"></video><h5 class="example-header">SquareToCircle<a class="headerlink" href="#squaretocircle">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">manimlib.imports</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="section" id="interactivedevlopment">
+<h2>InteractiveDevlopment<a class="headerlink" href="#interactivedevlopment" title="Permalink to this headline">¶</a></h2>
+<div class="manim-example"><video autoplay="" class="manim-video" controls="" id="interactivedevlopment" loop="" src="../_static/example_scenes/InteractiveDevlopment.mp4"></video><h5 class="example-header">InteractiveDevlopment<a class="headerlink" href="#interactivedevlopment">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">manimlib.imports</span> <span class="kn">import</span> <span class="o">*</span>
 
-<span class="k">class</span> <span class="nc">SquareToCircle</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">InteractiveDevlopment</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">circle</span> <span class="o">=</span> <span class="n">Circle</span><span class="p">()</span>
         <span class="n">circle</span><span class="o">.</span><span class="n">set_fill</span><span class="p">(</span><span class="n">BLUE</span><span class="p">,</span> <span class="n">opacity</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
@@ -137,12 +138,46 @@ the simplest and one by one.</p>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">ShowCreation</span><span class="p">(</span><span class="n">square</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+        <span class="c1"># This opens an iPython termnial where you can keep writing</span>
+        <span class="c1"># lines as if they were part of this construct method.</span>
+        <span class="c1"># In particular, 'square', 'circle' and 'self' will all be</span>
+        <span class="c1"># part of the local namespace in that terminal.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embed</span><span class="p">()</span>
+
+        <span class="c1"># Try copying and pasting some of the lines below into</span>
+        <span class="c1"># the interactive shell</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">ReplacementTransform</span><span class="p">(</span><span class="n">square</span><span class="p">,</span> <span class="n">circle</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">circle</span><span class="o">.</span><span class="n">stretch</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">Rotate</span><span class="p">(</span><span class="n">circle</span><span class="p">,</span> <span class="mi">90</span> <span class="o">*</span> <span class="n">DEGREES</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">circle</span><span class="o">.</span><span class="n">shift</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">RIGHT</span><span class="p">,</span> <span class="n">circle</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span>
+
+        <span class="n">text</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">"""</span>
+<span class="s2">            In general, using the interactive shell</span>
+<span class="s2">            is very helpful when developing new scenes</span>
+<span class="s2">        """</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">Write</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+
+        <span class="c1"># In the interactive shell, you can just type</span>
+        <span class="c1"># play, add, remove, clear, wait, save_state and restore,</span>
+        <span class="c1"># instead of self.play, self.add, self.remove, etc.</span>
+
+        <span class="c1"># To interact with the window, type touch().  You can then</span>
+        <span class="c1"># scroll in the window, or zoom by holding down 'z' while scrolling,</span>
+        <span class="c1"># and change camera perspective by holding down 'd' while moving</span>
+        <span class="c1"># the mouse.  Press 'r' to reset to the standard camera position.</span>
+        <span class="c1"># Press 'q' to stop interacting with the window and go back to</span>
+        <span class="c1"># typing new commands into the shell.</span>
+
+        <span class="c1"># In principle you can customize a scene to be responsive to</span>
+        <span class="c1"># mouse and keyboard interactions</span>
+        <span class="n">always</span><span class="p">(</span><span class="n">circle</span><span class="o">.</span><span class="n">move_to</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mouse_point</span><span class="p">)</span>
 </pre></div>
 </div>
-</div><p>This scene is what we wrote in <a class="reference internal" href="quickstart.html"><span class="doc">Quick Start</span></a>.
-No more explanation here</p>
+</div><p>This scene is similar to what we wrote in <a class="reference internal" href="quickstart.html"><span class="doc">Quick Start</span></a>.
+And how to interact has been written in the comments.
+No more explanation here.</p>
 </div>
 <div class="section" id="animatingmethods">
 <h2>AnimatingMethods<a class="headerlink" href="#animatingmethods" title="Permalink to this headline">¶</a></h2>
@@ -158,7 +193,10 @@ No more explanation here</p>
         <span class="c1"># to the left, but the following line animates that motion.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">shift</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">LEFT</span><span class="p">)</span>
         <span class="c1"># The same applies for any method, including those setting colors.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">set_color</span><span class="p">,</span> <span class="n">YELLOW</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">set_submobject_colors_by_gradient</span><span class="p">,</span> <span class="n">BLUE</span><span class="p">,</span> <span class="n">GREEN</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">set_height</span><span class="p">,</span> <span class="n">TAU</span> <span class="o">-</span> <span class="n">MED_SMALL_BUFF</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
 
@@ -438,6 +476,172 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
 <li><p><code class="docutils literal notranslate"><span class="pre">.add_updater()</span></code> sets an update function for the object. For example: <code class="docutils literal notranslate"><span class="pre">mob1.add_updater(lambda</span> <span class="pre">mob:</span> <span class="pre">mob.next_to(mob2))</span></code> means <code class="docutils literal notranslate"><span class="pre">mob1.next_to(mob2)</span></code> is executed every frame.</p></li>
 </ul>
 </div>
+<div class="section" id="coordinatesystemexample">
+<h2>CoordinateSystemExample<a class="headerlink" href="#coordinatesystemexample" title="Permalink to this headline">¶</a></h2>
+<div class="manim-example"><video autoplay="" class="manim-video" controls="" id="coordinatesystemexample" loop="" src="../_static/example_scenes/CoordinateSystemExample.mp4"></video><h5 class="example-header">CoordinateSystemExample<a class="headerlink" href="#coordinatesystemexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">CoordinateSystemExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">Axes</span><span class="p">(</span>
+            <span class="c1"># x-axis ranges from -1 to 10, with a default step size of 1</span>
+            <span class="n">x_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+            <span class="c1"># y-axis ranges from -2 to 10 with a step size of 0.5</span>
+            <span class="n">y_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+            <span class="c1"># The axes will be stretched so as to match the specified</span>
+            <span class="c1"># height and width</span>
+            <span class="n">height</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+            <span class="c1"># Axes is made of two NumberLine mobjects.  You can specify</span>
+            <span class="c1"># their configuration with axis_config</span>
+            <span class="n">axis_config</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"stroke_color"</span><span class="p">:</span> <span class="n">GREY_A</span><span class="p">,</span>
+                <span class="s2">"stroke_width"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="c1"># Alternatively, you can specify configuration for just one</span>
+            <span class="c1"># of them, like this.</span>
+            <span class="n">y_axis_config</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"include_tip"</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="c1"># Keyword arguments of add_coordinate_labels can be used to</span>
+        <span class="c1"># configure the DecimalNumber mobjects which it creates and</span>
+        <span class="c1"># adds to the axes</span>
+        <span class="n">axes</span><span class="o">.</span><span class="n">add_coordinate_labels</span><span class="p">(</span>
+            <span class="n">font_size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+            <span class="n">num_decimal_places</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span>
+
+        <span class="c1"># Axes descends from the CoordinateSystem class, meaning</span>
+        <span class="c1"># you can call call axes.coords_to_point, abbreviated to</span>
+        <span class="c1"># axes.c2p, to associate a set of coordinates with a point,</span>
+        <span class="c1"># like so:</span>
+        <span class="n">dot</span> <span class="o">=</span> <span class="n">Dot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">RED</span><span class="p">)</span>
+        <span class="n">dot</span><span class="o">.</span><span class="n">move_to</span><span class="p">(</span><span class="n">axes</span><span class="o">.</span><span class="n">c2p</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">FadeIn</span><span class="p">(</span><span class="n">dot</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">dot</span><span class="o">.</span><span class="n">move_to</span><span class="p">,</span> <span class="n">axes</span><span class="o">.</span><span class="n">c2p</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">dot</span><span class="o">.</span><span class="n">move_to</span><span class="p">,</span> <span class="n">axes</span><span class="o">.</span><span class="n">c2p</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+        <span class="c1"># Similarly, you can call axes.point_to_coords, or axes.p2c</span>
+        <span class="c1"># print(axes.p2c(dot.get_center()))</span>
+
+        <span class="c1"># We can draw lines from the axes to better mark the coordinates</span>
+        <span class="c1"># of a given point.</span>
+        <span class="c1"># Here, the always_redraw command means that on each new frame</span>
+        <span class="c1"># the lines will be redrawn</span>
+        <span class="n">h_line</span> <span class="o">=</span> <span class="n">always_redraw</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">axes</span><span class="o">.</span><span class="n">get_h_line</span><span class="p">(</span><span class="n">dot</span><span class="o">.</span><span class="n">get_left</span><span class="p">()))</span>
+        <span class="n">v_line</span> <span class="o">=</span> <span class="n">always_redraw</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">axes</span><span class="o">.</span><span class="n">get_v_line</span><span class="p">(</span><span class="n">dot</span><span class="o">.</span><span class="n">get_bottom</span><span class="p">()))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
+            <span class="n">ShowCreation</span><span class="p">(</span><span class="n">h_line</span><span class="p">),</span>
+            <span class="n">ShowCreation</span><span class="p">(</span><span class="n">v_line</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">dot</span><span class="o">.</span><span class="n">move_to</span><span class="p">,</span> <span class="n">axes</span><span class="o">.</span><span class="n">c2p</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">dot</span><span class="o">.</span><span class="n">move_to</span><span class="p">,</span> <span class="n">axes</span><span class="o">.</span><span class="n">c2p</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+        <span class="c1"># If we tie the dot to a particular set of coordinates, notice</span>
+        <span class="c1"># that as we move the axes around it respects the coordinate</span>
+        <span class="c1"># system defined by them.</span>
+        <span class="n">f_always</span><span class="p">(</span><span class="n">dot</span><span class="o">.</span><span class="n">move_to</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">axes</span><span class="o">.</span><span class="n">c2p</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
+            <span class="n">axes</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span>
+            <span class="n">axes</span><span class="o">.</span><span class="n">to_corner</span><span class="p">,</span> <span class="n">UL</span><span class="p">,</span>
+            <span class="n">run_time</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">FadeOut</span><span class="p">(</span><span class="n">VGroup</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">dot</span><span class="p">,</span> <span class="n">h_line</span><span class="p">,</span> <span class="n">v_line</span><span class="p">)))</span>
+
+        <span class="c1"># Other coordinate systems you can play around with include</span>
+        <span class="c1"># ThreeDAxes, NumberPlane, and ComplexPlane.</span>
+</pre></div>
+</div>
+</div></div>
+<div class="section" id="graphexample">
+<h2>GraphExample<a class="headerlink" href="#graphexample" title="Permalink to this headline">¶</a></h2>
+<div class="manim-example"><video autoplay="" class="manim-video" controls="" id="graphexample" loop="" src="../_static/example_scenes/GraphExample.mp4"></video><h5 class="example-header">GraphExample<a class="headerlink" href="#graphexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">GraphExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">axes</span> <span class="o">=</span> <span class="n">Axes</span><span class="p">((</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+        <span class="n">axes</span><span class="o">.</span><span class="n">add_coordinate_labels</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">Write</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">lag_ratio</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">run_time</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+
+        <span class="c1"># Axes.get_graph will return the graph of a function</span>
+        <span class="n">sin_graph</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">),</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">BLUE</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># By default, it draws it so as to somewhat smoothly interpolate</span>
+        <span class="c1"># between sampled points (x, f(x)).  If the graph is meant to have</span>
+        <span class="c1"># a corner, though, you can set use_smoothing to False</span>
+        <span class="n">relu_graph</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="n">use_smoothing</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">YELLOW</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># For discontinuous functions, you can specify the point of</span>
+        <span class="c1"># discontinuity so that it does not try to draw over the gap.</span>
+        <span class="n">step_graph</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mf">2.0</span> <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">3</span> <span class="k">else</span> <span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">discontinuities</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">GREEN</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Axes.get_graph_label takes in either a string or a mobject.</span>
+        <span class="c1"># If it's a string, it treats it as a LaTeX expression.  By default</span>
+        <span class="c1"># it places the label next to the graph near the right side, and</span>
+        <span class="c1"># has it match the color of the graph</span>
+        <span class="n">sin_label</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">get_graph_label</span><span class="p">(</span><span class="n">sin_graph</span><span class="p">,</span> <span class="s2">"</span><span class="se">\\</span><span class="s2">sin(x)"</span><span class="p">)</span>
+        <span class="n">relu_label</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">get_graph_label</span><span class="p">(</span><span class="n">relu_graph</span><span class="p">,</span> <span class="n">Text</span><span class="p">(</span><span class="s2">"ReLU"</span><span class="p">))</span>
+        <span class="n">step_label</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">get_graph_label</span><span class="p">(</span><span class="n">step_graph</span><span class="p">,</span> <span class="n">Text</span><span class="p">(</span><span class="s2">"Step"</span><span class="p">),</span> <span class="n">x</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
+            <span class="n">ShowCreation</span><span class="p">(</span><span class="n">sin_graph</span><span class="p">),</span>
+            <span class="n">FadeIn</span><span class="p">(</span><span class="n">sin_label</span><span class="p">,</span> <span class="n">RIGHT</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
+            <span class="n">ReplacementTransform</span><span class="p">(</span><span class="n">sin_graph</span><span class="p">,</span> <span class="n">relu_graph</span><span class="p">),</span>
+            <span class="n">FadeTransform</span><span class="p">(</span><span class="n">sin_label</span><span class="p">,</span> <span class="n">relu_label</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
+            <span class="n">ReplacementTransform</span><span class="p">(</span><span class="n">relu_graph</span><span class="p">,</span> <span class="n">step_graph</span><span class="p">),</span>
+            <span class="n">FadeTransform</span><span class="p">(</span><span class="n">relu_label</span><span class="p">,</span> <span class="n">step_label</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+        <span class="n">parabola</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">parabola</span><span class="o">.</span><span class="n">set_stroke</span><span class="p">(</span><span class="n">BLUE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
+            <span class="n">FadeOut</span><span class="p">(</span><span class="n">step_graph</span><span class="p">),</span>
+            <span class="n">FadeOut</span><span class="p">(</span><span class="n">step_label</span><span class="p">),</span>
+            <span class="n">ShowCreation</span><span class="p">(</span><span class="n">parabola</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+        <span class="c1"># You can use axes.input_to_graph_point, abbreviated</span>
+        <span class="c1"># to axes.i2gp, to find a particular point on a graph</span>
+        <span class="n">dot</span> <span class="o">=</span> <span class="n">Dot</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="n">RED</span><span class="p">)</span>
+        <span class="n">dot</span><span class="o">.</span><span class="n">move_to</span><span class="p">(</span><span class="n">axes</span><span class="o">.</span><span class="n">i2gp</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">parabola</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">FadeIn</span><span class="p">(</span><span class="n">dot</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">))</span>
+
+        <span class="c1"># A value tracker lets us animate a parameter, usually</span>
+        <span class="c1"># with the intent of having other mobjects update based</span>
+        <span class="c1"># on the parameter</span>
+        <span class="n">x_tracker</span> <span class="o">=</span> <span class="n">ValueTracker</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">f_always</span><span class="p">(</span>
+            <span class="n">dot</span><span class="o">.</span><span class="n">move_to</span><span class="p">,</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="n">axes</span><span class="o">.</span><span class="n">i2gp</span><span class="p">(</span><span class="n">x_tracker</span><span class="o">.</span><span class="n">get_value</span><span class="p">(),</span> <span class="n">parabola</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">x_tracker</span><span class="o">.</span><span class="n">set_value</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">run_time</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="n">x_tracker</span><span class="o">.</span><span class="n">set_value</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="n">run_time</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+</pre></div>
+</div>
+</div></div>
 <div class="section" id="surfaceexample">
 <h2>SurfaceExample<a class="headerlink" href="#surfaceexample" title="Permalink to this headline">¶</a></h2>
 <div class="manim-example"><video autoplay="" class="manim-video" controls="" id="surfaceexample" loop="" src="../_static/example_scenes/SurfaceExample.mp4"></video><h5 class="example-header">SurfaceExample<a class="headerlink" href="#surfaceexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">SurfaceExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
@@ -651,11 +855,13 @@ usage of manim. For more examples, see <a class="reference external" href="https
         <div class="toc-tree">
           <ul>
 <li><a class="reference internal" href="#">Example Scenes</a><ul>
-<li><a class="reference internal" href="#squaretocircle">SquareToCircle</a></li>
+<li><a class="reference internal" href="#interactivedevlopment">InteractiveDevlopment</a></li>
 <li><a class="reference internal" href="#animatingmethods">AnimatingMethods</a></li>
 <li><a class="reference internal" href="#textexample">TextExample</a></li>
 <li><a class="reference internal" href="#textransformexample">TexTransformExample</a></li>
 <li><a class="reference internal" href="#updatersexample">UpdatersExample</a></li>
+<li><a class="reference internal" href="#coordinatesystemexample">CoordinateSystemExample</a></li>
+<li><a class="reference internal" href="#graphexample">GraphExample</a></li>
 <li><a class="reference internal" href="#surfaceexample">SurfaceExample</a></li>
 <li><a class="reference internal" href="#openingmanimexample">OpeningManimExample</a></li>
 </ul>
