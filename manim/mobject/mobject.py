@@ -10,6 +10,8 @@ import itertools as it
 import operator as op
 import random
 import sys
+import types
+import warnings
 
 from pathlib import Path
 from colour import Color
@@ -33,6 +35,10 @@ from ..utils.space_ops import rotation_matrix
 
 class Mobject(Container):
     """Mathematical Object: base class for objects that can be displayed on screen.
+
+    There is a compatibility layer that allows for
+    getting and setting generic attributes with ``get_*``
+    and ``set_*`` methods. See :meth:`set` for more details.
 
     Attributes
     ----------
@@ -247,6 +253,106 @@ class Mobject(Container):
 
     def __isub__(self, other):
         raise NotImplementedError
+
+    def set(self, **kwargs):
+        """Sets attributes.
+
+        Mainly to be used along with :attr:`animate` to
+        animate setting attributes.
+
+        In addition to this method, there is a compatibility
+        layer that allows ``get_*`` and ``set_*`` methods to
+        get and set generic attributes. For instance::
+
+            >>> mob = Mobject()
+            >>> mob.set_foo(0)
+            Mobject
+            >>> mob.get_foo()
+            0
+            >>> mob.foo
+            0
+
+        This compatibility layer does not interfere with any
+        ``get_*`` or ``set_*`` methods that are explicitly
+        defined.
+
+        .. warning::
+
+            This compatibility layer is for backwards compatibility
+            and is not guaranteed to stay around. Where applicable,
+            please prefer getting/setting attributes normally or with
+            the :meth:`set` method.
+
+        Parameters
+        ----------
+        **kwargs
+            The attributes and corresponding values to set.
+
+        Returns
+        -------
+        :class:`Mobject`
+            ``self``
+
+        Examples
+        --------
+        ::
+
+            >>> mob = Mobject()
+            >>> mob.set(foo=0)
+            Mobject
+            >>> mob.foo
+            0
+        """
+
+        for attr, value in kwargs.items():
+            setattr(self, attr, value)
+
+        return self
+
+    def __getattr__(self, attr):
+        # Add automatic compatibility layer
+        # between properties and get_* and set_*
+        # methods.
+        #
+        # In python 3.9+ we could change this
+        # logic to use str.remove_prefix instead.
+
+        if attr.startswith("get_"):
+            # Remove the "get_" prefix
+            to_get = attr[4:]
+
+            def getter(self):
+                warnings.warn(
+                    "This method is not guaranteed to stay around. Please prefer getting the attribute normally.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+
+                return getattr(self, to_get)
+
+            # Return a bound method
+            return types.MethodType(getter, self)
+
+        if attr.startswith("set_"):
+            # Remove the "set_" prefix
+            to_set = attr[4:]
+
+            def setter(self, value):
+                warnings.warn(
+                    "This method is not guaranteed to stay around. Please prefer setting the attribute normally or with Mobject.set().",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+
+                setattr(self, to_set, value)
+
+                return self
+
+            # Return a bound method
+            return types.MethodType(setter, self)
+
+        # Unhandled attribute, therefore error
+        raise AttributeError
 
     def get_array_attrs(self):
         return ["points"]
