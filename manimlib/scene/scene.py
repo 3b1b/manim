@@ -9,7 +9,6 @@ from tqdm import tqdm as ProgressDisplay
 import numpy as np
 import time
 import moderngl
-from IPython.terminal.embed import InteractiveShellEmbed
 
 from manimlib.animation.animation import prepare_animation
 from manimlib.animation.transform import MoveToTarget
@@ -23,7 +22,6 @@ from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import restructure_list_to_exclude_certain_family_members
 from manimlib.event_handler.event_type import EventType
 from manimlib.event_handler import EVENT_DISPATCHER
-from manimlib.window import Window
 
 
 class Scene(object):
@@ -45,6 +43,7 @@ class Scene(object):
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
         if self.preview:
+            from manimlib.window import Window
             self.window = Window(scene=self, **self.window_config)
             self.camera_config["ctx"] = self.window.ctx
         else:
@@ -119,7 +118,8 @@ class Scene(object):
         self.stop_skipping()
         self.linger_after_completion = False
         self.update_frame()
-
+        
+        from IPython.terminal.embed import InteractiveShellEmbed
         shell = InteractiveShellEmbed()
         # Have the frame update after each command
         shell.events.register('post_run_cell', lambda *a, **kw: self.update_frame())

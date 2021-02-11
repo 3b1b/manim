@@ -16,15 +16,11 @@ from manimlib.animation.update import *
 
 from manimlib.camera.camera import *
 
-# This must be called before manimlib.mobject.interactive
-from manimlib.window import *
-
 from manimlib.mobject.coordinate_systems import *
 from manimlib.mobject.changing import *
 from manimlib.mobject.frame import *
 from manimlib.mobject.functions import *
 from manimlib.mobject.geometry import *
-from manimlib.mobject.interactive import *
 from manimlib.mobject.matrix import *
 from manimlib.mobject.mobject import *
 from manimlib.mobject.number_line import *
@@ -46,18 +42,8 @@ from manimlib.mobject.mobject_update_utils import *
 from manimlib.mobject.value_tracker import *
 from manimlib.mobject.vector_field import *
 
-from manimlib.once_useful_constructs.arithmetic import *
-from manimlib.once_useful_constructs.combinatorics import *
-from manimlib.once_useful_constructs.complex_transformation_scene import *
-from manimlib.once_useful_constructs.counting import *
-from manimlib.once_useful_constructs.fractals import *
-from manimlib.once_useful_constructs.graph_theory import *
-from manimlib.once_useful_constructs.light import *
-
 from manimlib.scene.scene import *
-from manimlib.scene.sample_space_scene import *
 from manimlib.scene.three_d_scene import *
-from manimlib.scene.vector_space_scene import *
 
 from manimlib.utils.bezier import *
 from manimlib.utils.color import *
