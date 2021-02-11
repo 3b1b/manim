@@ -4,6 +4,7 @@ import logging
 
 from manimlib.scene.scene import Scene
 from manimlib.config import get_custom_defaults
+from manimlib.utils.config_ops import merge_dicts_recursively
 
 
 class BlankScene(Scene):
@@ -73,6 +74,11 @@ def get_scenes_to_render(scene_classes, scene_config, config):
         found = False
         for scene_class in scene_classes:
             if scene_class.__name__ == scene_name:
+                if hasattr(scene_class, "CONFIG"):
+                    scene_class_config = scene_class.CONFIG
+                else:
+                    scene_class_config = {}
+                scene_config = merge_dicts_recursively(scene_config, scene_class_config)
                 scene = scene_class(**scene_config)
                 result.append(scene)
                 found = True
