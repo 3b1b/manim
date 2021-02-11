@@ -511,15 +511,16 @@ class Mobject(object):
         for updater_list in [self.time_based_updaters, self.non_time_updaters]:
             while update_function in updater_list:
                 updater_list.remove(update_function)
+        self.refresh_has_updater_status()
         return self
 
     def clear_updaters(self, recurse=True):
         self.time_based_updaters = []
         self.non_time_updaters = []
+        self.refresh_has_updater_status()
         if recurse:
             for submob in self.submobjects:
                 submob.clear_updaters()
-        self.suspend_updating(recurse)
         return self
 
     def match_updaters(self, mobject):
