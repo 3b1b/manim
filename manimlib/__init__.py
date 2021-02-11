@@ -16,11 +16,15 @@ from manimlib.animation.update import *
 
 from manimlib.camera.camera import *
 
+# This must be called before manimlib.mobject.interactive
+from manimlib.window import *
+
 from manimlib.mobject.coordinate_systems import *
 from manimlib.mobject.changing import *
 from manimlib.mobject.frame import *
 from manimlib.mobject.functions import *
 from manimlib.mobject.geometry import *
+from manimlib.mobject.interactive import *
 from manimlib.mobject.matrix import *
 from manimlib.mobject.mobject import *
 from manimlib.mobject.number_line import *
