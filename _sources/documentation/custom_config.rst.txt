@@ -1,4 +1,4 @@
-custom_default
+custom_config
 ==============
 
 ``directories``
@@ -18,12 +18,13 @@ custom_default
     file and saved the last frame, then the final directory structure will be like:
 
     .. code-block:: text
-        :emphasize-lines: 8, 10
+        :emphasize-lines: 9, 11
 
             manim/
             ├── manimlib/
             │   ├── animation/
             │   ├── ...
+            │   ├── default_config.yml
             │   └── window.py
             ├── output/
             │   ├── images
@@ -31,18 +32,18 @@ custom_default
             │   └── videos
             │       └── Scene1.mp4
             ├── code.py
-            ├── custom_default.yml
-            └── manim.py
+            └── custom_config.yml
 
     But if you set ``mirror_module_path`` to ``True``, the directory structure will be:
 
     .. code-block:: text
-        :emphasize-lines: 7
+        :emphasize-lines: 8
 
             manim/
             ├── manimlib/
             │   ├── animation/
             │   ├── ...
+            │   ├── default_config.yml
             │   └── window.py
             ├── output/
             │   └── code/
@@ -51,8 +52,7 @@ custom_default
             │       └── videos
             │           └── Scene1.mp4
             ├── code.py
-            ├── custom_default.yml
-            └── manim.py
+            └── custom_config.yml
 
 - ``raster_images`` 
     The directory for storing raster images to be used in the code (including 

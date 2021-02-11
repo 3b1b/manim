@@ -8,8 +8,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="../_static/custom.css" />
     <link rel="stylesheet" href="../_static/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?3a7000cf3da6346237c09a7d">
-    <link rel="stylesheet" href="../_static/pygments.css?3a7000cf3da6346237c09a7d">
+    <link rel="stylesheet" href="../_static/styles/default.css?ef0fa670e28e2184c24c8e13">
+    <link rel="stylesheet" href="../_static/pygments.css?ef0fa670e28e2184c24c8e13">
     
 <style>
   :root {
@@ -26,7 +26,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?3a7000cf3da6346237c09a7d"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?ef0fa670e28e2184c24c8e13"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -100,7 +100,7 @@
 <p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../documentation/constants.html">constants</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../documentation/custom_default.html">custom_default</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/custom_config.html">custom_config</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Development</span></p>
 <ul>
@@ -135,10 +135,12 @@
 <p>If you want to hack on manimlib itself, clone this repository and in
 that directory execute:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install python requirements</span>
-pip install -r requirements.txt
+pip install -e .
 
 <span class="c1"># Try it out</span>
-python -m manim example_scenes.py OpeningManimExample
+manimgl example_scenes.py OpeningManimExample
+<span class="c1"># or</span>
+manim-render example_scenes.py OpeningManimExample
 </pre></div>
 </div>
 <p>If you run the above command and no error message appears,
@@ -155,8 +157,8 @@ FFmpeg</a>, and make sure that its path is in the PATH environment variable.</p>
 </ol>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/3b1b/manim.git
 <span class="nb">cd</span> manim
-pip install -r requirements.txt
-python manim.py example_scenes.py OpeningManimExample
+pip install -e .
+manimgl example_scenes.py OpeningManimExample
 </pre></div>
 </div>
 </div>
@@ -168,16 +170,9 @@ python manim.py example_scenes.py OpeningManimExample
 </ul>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/3b1b/manim.git
 <span class="nb">cd</span> manim
-conda env create -f environment.yml
-</pre></div>
-</div>
-</div>
-<div class="section" id="using-virtualenv-and-virtualenvwrapper">
-<h2>Using virtualenv and virtualenvwrapper<a class="headerlink" href="#using-virtualenv-and-virtualenvwrapper" title="Permalink to this headline">¶</a></h2>
-<p>After installing <code class="docutils literal notranslate"><span class="pre">virtualenv</span></code> and <code class="docutils literal notranslate"><span class="pre">virtualenvwrapper</span></code></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/3b1b/manim.git
-mkvirtualenv -a manim -r requirements.txt manim
-python -m manim example_scenes.py OpeningManimExample
+conda create -n manim <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.8
+conda activate manim
+pip install -e .
 </pre></div>
 </div>
 </div>
@@ -233,7 +228,6 @@ python -m manim example_scenes.py OpeningManimExample
 <li><a class="reference internal" href="#directly">Directly</a></li>
 <li><a class="reference internal" href="#directly-windows">Directly (Windows)</a></li>
 <li><a class="reference internal" href="#for-anaconda">For Anaconda</a></li>
-<li><a class="reference internal" href="#using-virtualenv-and-virtualenvwrapper">Using virtualenv and virtualenvwrapper</a></li>
 </ul>
 </li>
 </ul>

@@ -8,8 +8,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="../_static/custom.css" />
     <link rel="stylesheet" href="../_static/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?0b645e7d745443e08f3fd074">
-    <link rel="stylesheet" href="../_static/pygments.css?0b645e7d745443e08f3fd074">
+    <link rel="stylesheet" href="../_static/styles/default.css?d33dbdb85ca47da91f6ae029">
+    <link rel="stylesheet" href="../_static/pygments.css?d33dbdb85ca47da91f6ae029">
     
 <style>
   :root {
@@ -26,7 +26,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?0b645e7d745443e08f3fd074"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?d33dbdb85ca47da91f6ae029"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -100,7 +100,7 @@
 <p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../documentation/constants.html">constants</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../documentation/custom_default.html">custom_default</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/custom_config.html">custom_config</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Development</span></p>
 <ul>
@@ -124,13 +124,15 @@
 <h1>CLI flags and configuration<a class="headerlink" href="#cli-flags-and-configuration" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="command-line-interface">
 <h2>Command Line Interface<a class="headerlink" href="#command-line-interface" title="Permalink to this headline">¶</a></h2>
-<p>To run manim, you need to enter the directory at the same level as <code class="docutils literal notranslate"><span class="pre">manim.py</span></code>
+<p>To run manim, you need to enter the directory at the same level as <code class="docutils literal notranslate"><span class="pre">manimlib/</span></code>
 and enter the command in the following format into terminal:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python manim.py &lt;code&gt;.py &lt;Scene&gt; &lt;flags&gt;
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>manimgl &lt;code&gt;.py &lt;Scene&gt; &lt;flags&gt;
+<span class="c1"># or</span>
+manim-render &lt;code&gt;.py &lt;Scene&gt; &lt;flags&gt;
 </pre></div>
 </div>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">&lt;code&gt;.py</span></code> : The python file you wrote. Needs to be at the same level as <code class="docutils literal notranslate"><span class="pre">manim.py</span></code>, otherwise you need to use an absolute path or a relative path.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;code&gt;.py</span></code> : The python file you wrote. Needs to be at the same level as <code class="docutils literal notranslate"><span class="pre">manimlib/</span></code>, otherwise you need to use an absolute path or a relative path.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">&lt;Scene&gt;</span></code> : The scene you want to render here. If it is not written or written incorrectly, it will list all for you to choose. And if there is only one <code class="docutils literal notranslate"><span class="pre">Scene</span></code> in the file, this class will be rendered directly.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">&lt;flags&gt;</span></code> : CLI flags.</p></li>
 </ul>
@@ -223,31 +225,35 @@ and enter the command in the following format into terminal:</p>
 <td></td>
 <td><p>Show the output file in finder</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--file_name</span> <span class="pre">FILE_NAME</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--config</span></code></p></td>
+<td></td>
+<td><p>Guide for automatic configuration</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--file_name</span> <span class="pre">FILE_NAME</span></code></p></td>
 <td></td>
 <td><p>Name for the movie or image file</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--start_at_animation_number</span> <span class="pre">START_AT_ANIMATION_NUMBER</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--start_at_animation_number</span> <span class="pre">START_AT_ANIMATION_NUMBER</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">-n</span></code></p></td>
 <td><p>Start rendering not from the first animation, but from another, specified by its index. If you passin two comma separated values, e.g. “3,6”, it will end the rendering at the second value.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--resolution</span> <span class="pre">RESOLUTION</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--resolution</span> <span class="pre">RESOLUTION</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">-r</span></code></p></td>
 <td><p>Resolution, passed as “WxH”, e.g. “1920x1080”</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--frame_rate</span> <span class="pre">FRAME_RATE</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--frame_rate</span> <span class="pre">FRAME_RATE</span></code></p></td>
 <td></td>
 <td><p>Frame rate, as an integer</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--color</span> <span class="pre">COLOR</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--color</span> <span class="pre">COLOR</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">-c</span></code></p></td>
 <td><p>Background color</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--leave_progress_bars</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--leave_progress_bars</span></code></p></td>
 <td></td>
 <td><p>Leave progress bars displayed in terminal</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--video_dir</span> <span class="pre">VIDEO_DIR</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--video_dir</span> <span class="pre">VIDEO_DIR</span></code></p></td>
 <td></td>
 <td><p>directory to write video</p></td>
 </tr>
@@ -255,28 +261,28 @@ and enter the command in the following format into terminal:</p>
 </table></div>
 </div>
 </div>
-<div class="section" id="custom-default">
-<h2>custom_default<a class="headerlink" href="#custom-default" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="custom-config">
+<h2>custom_config<a class="headerlink" href="#custom-config" title="Permalink to this headline">¶</a></h2>
 <p>In order to perform more configuration (about directories, etc.) and permanently
 change the default value (you don’t have to add flags to the command every time),
-you can modify <code class="docutils literal notranslate"><span class="pre">custom_default.yml</span></code>. The meaning of each option is in
-page <a class="reference internal" href="../documentation/custom_default.html"><span class="doc">custom_default</span></a>.</p>
-<p>You can also use different <code class="docutils literal notranslate"><span class="pre">custom_default.yml</span></code> for different directories, such as
+you can modify <code class="docutils literal notranslate"><span class="pre">custom_config.yml</span></code>. The meaning of each option is in
+page <a class="reference internal" href="../documentation/custom_config.html"><span class="doc">custom_config</span></a>.</p>
+<p>You can also use different <code class="docutils literal notranslate"><span class="pre">custom_config.yml</span></code> for different directories, such as
 following the directory structure:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>manim/
 ├── manimlib/
 │   ├── animation/
 │   ├── ...
+│   ├── default_config.yml
 │   └── window.py
 ├── project/
 │   ├── code.py
-│   └── custom_default.yml
-├── custom_default.yml
-└── manim.py
+│   └── custom_config.yml
+└── custom_config.yml
 </pre></div>
 </div>
-<p>When you enter the <code class="docutils literal notranslate"><span class="pre">project/</span></code> folder and run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">../manim.py</span> <span class="pre">code.py</span> <span class="pre">&lt;Scene&gt;</span></code>,
-it will overwrite <code class="docutils literal notranslate"><span class="pre">manim/custom_default.yml</span></code> with <code class="docutils literal notranslate"><span class="pre">custom_default.yml</span></code>
+<p>When you enter the <code class="docutils literal notranslate"><span class="pre">project/</span></code> folder and run <code class="docutils literal notranslate"><span class="pre">manimgl</span> <span class="pre">code.py</span> <span class="pre">&lt;Scene&gt;</span></code>,
+it will overwrite <code class="docutils literal notranslate"><span class="pre">manim/custom_config.yml</span></code> with <code class="docutils literal notranslate"><span class="pre">custom_config.yml</span></code>
 in the <code class="docutils literal notranslate"><span class="pre">project</span></code> folder.</p>
 </div>
 </div>
@@ -333,7 +339,7 @@ in the <code class="docutils literal notranslate"><span class="pre">project</spa
 <li><a class="reference internal" href="#all-supported-flags">All supported flags</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#custom-default">custom_default</a></li>
+<li><a class="reference internal" href="#custom-config">custom_config</a></li>
 </ul>
 </li>
 </ul>

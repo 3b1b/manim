@@ -4,12 +4,12 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Changelog" href="../development/changelog.html" /><link rel="prev" title="constants" href="constants.html" />
 
     <link rel="shortcut icon" href="../_static/icon.png"/><meta name="generator" content="sphinx-3.0.3, furo 2020.10.05.beta9"/>
-        <title>custom_default - manim  documentation</title>
+        <title>custom_config - manim  documentation</title>
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="../_static/custom.css" />
     <link rel="stylesheet" href="../_static/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?9fb2a5ed21eafadaec1e5006">
-    <link rel="stylesheet" href="../_static/pygments.css?9fb2a5ed21eafadaec1e5006">
+    <link rel="stylesheet" href="../_static/styles/default.css?e77e3db0401f1239118a6a84">
+    <link rel="stylesheet" href="../_static/pygments.css?e77e3db0401f1239118a6a84">
     
 <style>
   :root {
@@ -26,7 +26,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?9fb2a5ed21eafadaec1e5006"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?e77e3db0401f1239118a6a84"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -100,7 +100,7 @@
 <p class="caption"><span class="caption-text">Documentation</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="constants.html">constants</a></li>
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">custom_default</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">custom_config</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Development</span></p>
 <ul>
@@ -120,8 +120,8 @@
         <label class="toc-overlay-icon" for="__toc">
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
-        <div class="section" id="custom-default">
-<h1>custom_default<a class="headerlink" href="#custom-default" title="Permalink to this headline">¶</a></h1>
+        <div class="section" id="custom-config">
+<h1>custom_config<a class="headerlink" href="#custom-config" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="directories">
 <h2><code class="docutils literal notranslate"><span class="pre">directories</span></code><a class="headerlink" href="#directories" title="Permalink to this headline">¶</a></h2>
 <ul>
@@ -142,6 +142,7 @@ file and saved the last frame, then the final directory structure will be like:<
     ├── manimlib/
     │   ├── animation/
     │   ├── ...
+    │   ├── default_config.yml
     │   └── window.py
     ├── output/
     │   ├── images
@@ -149,8 +150,7 @@ file and saved the last frame, then the final directory structure will be like:<
 </span>    │   └── videos
 <span class="hll">    │       └── Scene1.mp4
 </span>    ├── code.py
-    ├── custom_default.yml
-    └── manim.py
+    └── custom_config.yml
 </pre></div>
 </div>
 <p>But if you set <code class="docutils literal notranslate"><span class="pre">mirror_module_path</span></code> to <code class="docutils literal notranslate"><span class="pre">True</span></code>, the directory structure will be:</p>
@@ -158,6 +158,7 @@ file and saved the last frame, then the final directory structure will be like:<
     ├── manimlib/
     │   ├── animation/
     │   ├── ...
+    │   ├── default_config.yml
     │   └── window.py
     ├── output/
 <span class="hll">    │   └── code/
@@ -166,8 +167,7 @@ file and saved the last frame, then the final directory structure will be like:<
     │       └── videos
     │           └── Scene1.mp4
     ├── code.py
-    ├── custom_default.yml
-    └── manim.py
+    └── custom_config.yml
 </pre></div>
 </div>
 </dd>
@@ -338,7 +338,7 @@ effectively has cuts at all the places you might want.</p>
         </div>
         <div class="toc-tree">
           <ul>
-<li><a class="reference internal" href="#">custom_default</a><ul>
+<li><a class="reference internal" href="#">custom_config</a><ul>
 <li><a class="reference internal" href="#directories"><code class="docutils literal notranslate"><span class="pre">directories</span></code></a></li>
 <li><a class="reference internal" href="#tex"><code class="docutils literal notranslate"><span class="pre">tex</span></code></a></li>
 <li><a class="reference internal" href="#universal-import-line"><code class="docutils literal notranslate"><span class="pre">universal_import_line</span></code></a></li>

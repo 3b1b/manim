@@ -8,8 +8,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="../_static/custom.css" />
     <link rel="stylesheet" href="../_static/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?619fcc9ef56c0b82c2cda521">
-    <link rel="stylesheet" href="../_static/pygments.css?619fcc9ef56c0b82c2cda521">
+    <link rel="stylesheet" href="../_static/styles/default.css?2ce16e728d6585000415ac61">
+    <link rel="stylesheet" href="../_static/pygments.css?2ce16e728d6585000415ac61">
     
 <style>
   :root {
@@ -26,7 +26,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?619fcc9ef56c0b82c2cda521"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?2ce16e728d6585000415ac61"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -100,7 +100,7 @@
 <p class="caption"><span class="caption-text">Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../documentation/constants.html">constants</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../documentation/custom_default.html">custom_default</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/custom_config.html">custom_config</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Development</span></p>
 <ul>
@@ -130,9 +130,9 @@ directory structure:</p>
 ├── manimlib/
 │   ├── animation/
 │   ├── ...
+│   ├── default_config.yml
 │   └── window.py
-├── custom_default.yml
-├── manim.py
+├── custom_config.yml
 <span class="hll">└── start.py
 </span></pre></div>
 </div>
@@ -145,7 +145,7 @@ directory structure:</p>
 6
 7
 8
-9</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">manimlib.imports</span> <span class="kn">import</span> <span class="o">*</span>
+9</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">manimlib</span> <span class="kn">import</span> <span class="o">*</span>
 
 <span class="k">class</span> <span class="nc">SquareToCircle</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -157,7 +157,7 @@ directory structure:</p>
 </pre></div>
 </td></tr></table></div></div>
 <p>And run this command:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python manim.py start.py SquareToCircle
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>manimgl start.py SquareToCircle
 </pre></div>
 </div>
 <p>A window will pop up on the screen. And then you can :</p>
@@ -169,7 +169,7 @@ directory structure:</p>
 </ul>
 <p>Finally, you can close the window and exit the program by pressing <kbd class="kbd docutils literal notranslate">q</kbd>.</p>
 <p>Run this command again:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python manim.py start.py SquareToCircle -os
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>manimgl start.py SquareToCircle -os
 </pre></div>
 </div>
 <p>At this time, no window will pop up. When the program is finished, this rendered
@@ -180,10 +180,19 @@ level directory of <code class="docutils literal notranslate"><span class="pre">
 <h2>Make an image<a class="headerlink" href="#make-an-image" title="Permalink to this headline">¶</a></h2>
 <p>Next, let’s take a detailed look at what each row does.</p>
 <p><strong>Line 1</strong>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">manimlib.imports</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
 </pre></div>
 </div>
-<p>This will import all the classes that may be used when using manim.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</p>
+<blockquote>
+<div><p>from manimlib.imports import *</p>
+</div></blockquote>
+<hr class="docutils"/>
+<blockquote>
+<div><p>from manimlib import *</p>
+</div></blockquote>
+<p>&gt;&gt;&gt;&gt;&gt;&gt;&gt; TonyCrane-package-improve
+This will import all the classes that may be used when using manim.</p>
 <p><strong>Line 3</strong>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">SquareToCircle</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
 </pre></div>
@@ -232,7 +241,7 @@ how to create the mobjects in the screen and what operations need to be performe
 10
 11
 12
-13</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">manimlib.imports</span> <span class="kn">import</span> <span class="o">*</span>
+13</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">manimlib</span> <span class="kn">import</span> <span class="o">*</span>
 
 <span class="k">class</span> <span class="nc">SquareToCircle</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -248,12 +257,12 @@ how to create the mobjects in the screen and what operations need to be performe
 </pre></div>
 </td></tr></table></div></div>
 <p>Run this command this time:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python manim.py start.py SquareToCircle
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>manimgl start.py SquareToCircle
 </pre></div>
 </div>
 <p>The pop-up window will play animations of drawing a square and transforming
 it into a circle. If you want to save this video, run:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python manim.py start.py SquareToCircle -ow
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>manimgl start.py SquareToCircle -o
 </pre></div>
 </div>
 <p>This time there will be no pop-up window, but the video file (saved in the subdirectory
@@ -290,7 +299,11 @@ at the end of the code to enable interaction:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">embed</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>Then run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">manim.py</span> <span class="pre">start.py</span> <span class="pre">SquareToCircle</span></code>.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+Then run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">manim.py</span> <span class="pre">start.py</span> <span class="pre">SquareToCircle</span></code>.
+=======
+Then run <code class="docutils literal notranslate"><span class="pre">manimgl</span> <span class="pre">start.py</span> <span class="pre">SquareToCircle</span></code>.
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; TonyCrane-package-improve</p>
 <p>After the previous animation is executed, the ipython terminal will be opened on
 the command line. After that, you can continue to write code in it, and the statement
 you entered will be executed immediately after pressing <kbd class="kbd docutils literal notranslate">Enter</kbd>.</p>
@@ -314,7 +327,7 @@ you entered will be executed immediately after pressing <kbd class="kbd docutils
 <video autoplay="" class="manim-video" controls="" loop="" src="../_static/quickstart/SquareToCircleEmbed.mp4"></video><p>If you want to enter the interactive mode directly, you don’t have to write an
 empty scene containing only <code class="docutils literal notranslate"><span class="pre">self.embed()</span></code>, you can directly run the following command
 (this will enter the ipython terminal while the window pops up):</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python manim.py
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>manimgl
 </pre></div>
 </div>
 </div>
