@@ -1109,7 +1109,7 @@ class Mobject(object):
     def match_z(self, mobject, direction=ORIGIN):
         return self.match_coord(mobject, 2, direction)
 
-    def align_to(self, mobject_or_point, direction=ORIGIN, alignment_vect=UP):
+    def align_to(self, mobject_or_point, direction=ORIGIN):
         """
         Examples:
         mob1.align_to(mob2, UP) moves mob1 vertically so that its
