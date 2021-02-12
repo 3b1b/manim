@@ -8,8 +8,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="../_static/custom.css" />
     <link rel="stylesheet" href="../_static/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?2ce16e728d6585000415ac61">
-    <link rel="stylesheet" href="../_static/pygments.css?2ce16e728d6585000415ac61">
+    <link rel="stylesheet" href="../_static/styles/default.css?4a21260d8449076dff67249f">
+    <link rel="stylesheet" href="../_static/pygments.css?4a21260d8449076dff67249f">
     
 <style>
   :root {
@@ -26,7 +26,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?2ce16e728d6585000415ac61"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?4a21260d8449076dff67249f"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -180,19 +180,10 @@ level directory of <code class="docutils literal notranslate"><span class="pre">
 <h2>Make an image<a class="headerlink" href="#make-an-image" title="Permalink to this headline">¶</a></h2>
 <p>Next, let’s take a detailed look at what each row does.</p>
 <p><strong>Line 1</strong>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">manimlib</span> <span class="kn">import</span> <span class="o">*</span>
 </pre></div>
 </div>
-<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</p>
-<blockquote>
-<div><p>from manimlib.imports import *</p>
-</div></blockquote>
-<hr class="docutils"/>
-<blockquote>
-<div><p>from manimlib import *</p>
-</div></blockquote>
-<p>&gt;&gt;&gt;&gt;&gt;&gt;&gt; TonyCrane-package-improve
-This will import all the classes that may be used when using manim.</p>
+<p>This will import all the classes that may be used when using manim.</p>
 <p><strong>Line 3</strong>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">SquareToCircle</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
 </pre></div>
@@ -299,11 +290,7 @@ at the end of the code to enable interaction:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="bp">self</span><span class="o">.</span><span class="n">embed</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
-Then run <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">manim.py</span> <span class="pre">start.py</span> <span class="pre">SquareToCircle</span></code>.
-=======
-Then run <code class="docutils literal notranslate"><span class="pre">manimgl</span> <span class="pre">start.py</span> <span class="pre">SquareToCircle</span></code>.
-&gt;&gt;&gt;&gt;&gt;&gt;&gt; TonyCrane-package-improve</p>
+<p>Then run <code class="docutils literal notranslate"><span class="pre">manimgl</span> <span class="pre">start.py</span> <span class="pre">SquareToCircle</span></code>.</p>
 <p>After the previous animation is executed, the ipython terminal will be opened on
 the command line. After that, you can continue to write code in it, and the statement
 you entered will be executed immediately after pressing <kbd class="kbd docutils literal notranslate">Enter</kbd>.</p>
