@@ -13,7 +13,8 @@ from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.customization import get_customization
 from manimlib.utils.directories import get_downloads_dir, get_text_dir
-from manimpango import PangoUtils, TextSetting
+from manimpango import PangoUtils
+from manimpango import TextSetting
 
 TEXT_MOB_SCALE_FACTOR = 0.001048
 
@@ -69,16 +70,9 @@ class Text(SVGMobject):
     def apply_space_chars(self):
         submobs = self.submobjects.copy()
         for char_index in range(len(self.text)):
-            if (
-                self.text[char_index] == " "
-                or self.text[char_index] == "\t"
-                or self.text[char_index] == "\n"
-            ):
+            if self.text[char_index] in [" ", "\t", "\n"]:
                 space = Dot(radius=0, fill_opacity=0, stroke_opacity=0)
-                if char_index == 0:
-                    space.move_to(submobs[char_index].get_center())
-                else:
-                    space.move_to(submobs[char_index - 1].get_center())
+                space.move_to(submobs[max(char_index - 1, 0)].get_center())
                 submobs.insert(char_index, space)
         self.set_submobjects(submobs)
 
