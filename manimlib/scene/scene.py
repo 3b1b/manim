@@ -8,7 +8,6 @@ from functools import wraps
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
 import time
-import moderngl
 
 from manimlib.animation.animation import prepare_animation
 from manimlib.animation.transform import MoveToTarget
