@@ -141,6 +141,7 @@ class TextExample(Scene):
             t2f={"font": "Consolas", "words": "Consolas"},
             t2c={"font": BLUE, "words": GREEN}
         )
+        fonts.set_width(FRAME_WIDTH - 1)
         slant = Text(
             "And the same as slant and weight",
             font="Consolas",
