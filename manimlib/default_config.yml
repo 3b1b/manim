@@ -21,11 +21,11 @@ tex:
   template_file: "tex_template.tex" 
   intermediate_filetype: "dvi"
   text_to_replace: "[tex_expression]"
-  # # For ctex, use the following configuration
+  # For ctex, use the following configuration
   # executable: "xelatex -no-pdf"
   # template_file: "ctex_template.tex"
   # intermediate_filetype: "xdv"
-universal_import_line: "from manimlib.imports import *"
+universal_import_line: "from manimlib import *"
 style:
   font: "Consolas"
   background_color: "#333333"

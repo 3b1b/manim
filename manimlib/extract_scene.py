@@ -3,13 +3,13 @@ import sys
 import logging
 
 from manimlib.scene.scene import Scene
-from manimlib.config import get_custom_defaults
+from manimlib.config import get_custom_config
 from manimlib.utils.config_ops import merge_dicts_recursively
 
 
 class BlankScene(Scene):
     def construct(self):
-        exec(get_custom_defaults()["universal_import_line"])
+        exec(get_custom_config()["universal_import_line"])
         self.embed()
 
 

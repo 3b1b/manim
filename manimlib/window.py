@@ -14,19 +14,21 @@ class Window(PygletWindow):
     vsync = True
     cursor = True
 
-    def __init__(self, scene, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, scene, size=(1280, 720), **kwargs):
+        super().__init__()
         digest_config(self, kwargs)
 
-        self.init_mgl_context()
+        self.scene = scene
+        self.pressed_keys = set()
+
+        self.title = str(scene)
+        self.size = size
+
         mglw.activate_context(window=self)
         self.timer = Timer()
         self.config = mglw.WindowConfig(ctx=self.ctx, wnd=self, timer=self.timer)
         self.timer.start()
 
-        self.scene = scene
-        self.title = str(scene)
-        self.pressed_keys = set()
         # No idea why, but when self.position is set once
         # it sometimes doesn't actually change the position
         # to the specified tuple on the rhs, but doing it
@@ -34,9 +36,6 @@ class Window(PygletWindow):
         initial_position = self.find_initial_position()
         self.position = initial_position
         self.position = initial_position
-
-        if "size" in kwargs:
-            self.size = kwargs["size"]
 
     def find_initial_position(self):
         custom_position = get_customization()["window_position"]

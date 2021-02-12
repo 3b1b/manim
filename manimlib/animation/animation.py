@@ -1,6 +1,7 @@
 from copy import deepcopy
 
-from manimlib.mobject.mobject import Mobject, _AnimationBuilder
+from manimlib.mobject.mobject import _AnimationBuilder
+from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import smooth
 from manimlib.utils.simple_functions import clip
