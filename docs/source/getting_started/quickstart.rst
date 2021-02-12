@@ -70,15 +70,9 @@ Next, let's take a detailed look at what each row does.
 **Line 1**:
 
 .. code-block:: python
-<<<<<<< HEAD
-
-    from manimlib.imports import *
-
-=======
     
     from manimlib import *
     
->>>>>>> TonyCrane-package-improve
 This will import all the classes that may be used when using manim.
 
 **Line 3**:
@@ -215,11 +209,7 @@ at the end of the code to enable interaction:
 
     self.embed()
 
-<<<<<<< HEAD
-Then run ``python manim.py start.py SquareToCircle``.
-=======
 Then run ``manimgl start.py SquareToCircle``. 
->>>>>>> TonyCrane-package-improve
 
 After the previous animation is executed, the ipython terminal will be opened on
 the command line. After that, you can continue to write code in it, and the statement
