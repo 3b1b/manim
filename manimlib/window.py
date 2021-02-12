@@ -37,7 +37,6 @@ class Window(PygletWindow):
         self.position = initial_position
         self.position = initial_position
 
-
     def find_initial_position(self):
         custom_position = get_customization()["window_position"]
         monitor = get_monitors()[get_customization()["window_monitor"]]
