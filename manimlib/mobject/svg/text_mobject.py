@@ -52,6 +52,7 @@ class Text(SVGMobject):
         self.text = text_without_tabs
         file_name = self.text2svg()
         PangoUtils.remove_last_M(file_name)
+        self.remove_empty_path(file_name)
         SVGMobject.__init__(self, file_name, **config)
         self.text = text
         if self.disable_ligatures:
@@ -66,6 +67,13 @@ class Text(SVGMobject):
         # anti-aliasing
         if self.height is None:
             self.scale(TEXT_MOB_SCALE_FACTOR * self.font_size)
+
+    def remove_empty_path(self, file_name):
+        with open(file_name, 'r') as fpr:
+            content = fpr.read()
+        content = re.sub(r'<path .*?d=""/>', '', content)
+        with open(file_name, 'w') as fpw:
+            fpw.write(content)
 
     def apply_space_chars(self):
         submobs = self.submobjects.copy()
