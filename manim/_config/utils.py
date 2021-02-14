@@ -616,6 +616,7 @@ class ManimConfig(MutableMapping):
             "show_in_file_browser",
             "sound",
             "leave_progress_bars",
+            "progress_bar",
             "write_to_movie",
             "save_last_frame",
             "save_pngs",
