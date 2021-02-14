@@ -4,6 +4,9 @@ on:
   push:
     paths:
       - 'docs/**'
+  pull_request:
+    paths:
+      - 'docs/**'
 
 jobs:
   docs:
@@ -29,6 +32,7 @@ jobs:
         make html
         
     - name: Deploy to GitHub pages
+      if: ${{ github.event_name == 'push' }}
       uses: JamesIves/github-pages-deploy-action@3.7.1
       with:
         ACCESS_TOKEN: ${{ secrets.DOC_DEPLOY_TOKEN }}
