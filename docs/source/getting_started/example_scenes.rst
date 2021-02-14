@@ -1,32 +1,66 @@
 Example Scenes
 ==============
 
-After understanding the previous knowledge, we can understand more scenes. 
-Many example scenes are given in ``example_scenes.py``, let's start with 
+After understanding the previous knowledge, we can understand more scenes.
+Many example scenes are given in ``example_scenes.py``, let's start with
 the simplest and one by one.
 
-SquareToCircle
---------------
+InteractiveDevlopment
+---------------------
 
-.. manim-example:: SquareToCircle
-    :media: ../_static/example_scenes/SquareToCircle.mp4
+.. manim-example:: InteractiveDevlopment
+    :media: ../_static/example_scenes/InteractiveDevlopment.mp4
 
-    from manimlib.imports import *
+    from manimlib import *
 
-    class SquareToCircle(Scene):
+    class InteractiveDevlopment(Scene):
         def construct(self):
             circle = Circle()
             circle.set_fill(BLUE, opacity=0.5)
             circle.set_stroke(BLUE_E, width=4)
             square = Square()
-    
+
             self.play(ShowCreation(square))
             self.wait()
+
+            # This opens an iPython termnial where you can keep writing
+            # lines as if they were part of this construct method.
+            # In particular, 'square', 'circle' and 'self' will all be
+            # part of the local namespace in that terminal.
+            self.embed()
+
+            # Try copying and pasting some of the lines below into
+            # the interactive shell
             self.play(ReplacementTransform(square, circle))
             self.wait()
+            self.play(circle.animate.stretch(4, 0))
+            self.play(Rotate(circle, 90 * DEGREES))
+            self.play(circle.animate.shift(2 * RIGHT).scale(0.25))
 
-This scene is what we wrote in :doc:`quickstart`.
-No more explanation here
+            text = Text("""
+                In general, using the interactive shell
+                is very helpful when developing new scenes
+            """)
+            self.play(Write(text))
+
+            # In the interactive shell, you can just type
+            # play, add, remove, clear, wait, save_state and restore,
+            # instead of self.play, self.add, self.remove, etc.
+
+            # To interact with the window, type touch().  You can then
+            # scroll in the window, or zoom by holding down 'z' while scrolling,
+            # and change camera perspective by holding down 'd' while moving
+            # the mouse.  Press 'r' to reset to the standard camera position.
+            # Press 'q' to stop interacting with the window and go back to
+            # typing new commands into the shell.
+
+            # In principle you can customize a scene to be responsive to
+            # mouse and keyboard interactions
+            always(circle.move_to, self.mouse_point)
+
+This scene is similar to what we wrote in :doc:`quickstart`.
+And how to interact has been written in the comments.
+No more explanation here.
 
 AnimatingMethods
 ----------------
@@ -39,40 +73,52 @@ AnimatingMethods
             grid = Tex(r"\pi").get_grid(10, 10, height=4)
             self.add(grid)
 
-            # If you pass in a mobject method to the scene's "play" function,
-            # it will apply an animation interpolating between the mobject's
-            # initial state and whatever happens when you apply that method.
-            # For example, calling grid.shift(2 * LEFT) would shift it two units
-            # to the left, but the following line animates that motion.
-            self.play(grid.shift, 2 * LEFT)
+            # You can animate the application of mobject methods with the
+            # ".animate" syntax:
+            self.play(grid.animate.shift(LEFT))
+
+            # Alternatively, you can use the older syntax by passing the
+            # method and then the arguments to the scene's "play" function:
+            self.play(grid.shift, LEFT)
+
+            # Both of those will interpolate between the mobject's initial
+            # state and whatever happens when you apply that method.
+            # For this example, calling grid.shift(LEFT) would shift the
+            # grid one unit to the left, but both of the previous calls to
+            # "self.play" animate that motion.
+
             # The same applies for any method, including those setting colors.
-            self.play(grid.set_submobject_colors_by_gradient, BLUE, GREEN)
-            self.play(grid.set_height, TAU - MED_SMALL_BUFF)
+            self.play(grid.animate.set_color(YELLOW))
+            self.wait()
+            self.play(grid.animate.set_submobject_colors_by_gradient(BLUE, GREEN))
+            self.wait()
+            self.play(grid.animate.set_height(TAU - MED_SMALL_BUFF))
             self.wait()
 
             # The method Mobject.apply_complex_function lets you apply arbitrary
             # complex functions, treating the points defining the mobject as
             # complex numbers.
-            self.play(grid.apply_complex_function, np.exp, run_time=5)
+            self.play(grid.animate.apply_complex_function(np.exp), run_time=5)
             self.wait()
 
             # Even more generally, you could apply Mobject.apply_function,
             # which takes in functions form R^3 to R^3
             self.play(
-                grid.apply_function,
-                lambda p: [
-                    p[0] + 0.5 * math.sin(p[1]),
-                    p[1] + 0.5 * math.sin(p[0]),
-                    p[2]
-                ],
+                grid.animate.apply_function(
+                    lambda p: [
+                        p[0] + 0.5 * math.sin(p[1]),
+                        p[1] + 0.5 * math.sin(p[0]),
+                        p[2]
+                    ]
+                ),
                 run_time=5,
             )
             self.wait()
 
-The new usage in this scene is ``.get_grid()`` and ``self.play(mob.method, args)``.
+The new usage in this scene is ``.get_grid()`` and ``self.play(mob.animate.method(args))``.
 
 - ``.get_grid()`` method will return a new mobject containing multiple copies of this one arranged in a grid.
-- ``self.play(mob.method, args)`` animate the method, and the details are in the comments above.
+- ``self.play(mob.animate.method(args))`` animates the method, and the details are in the comments above.
 
 TextExample
 -----------
@@ -291,18 +337,18 @@ UpdatersExample
 
             # Notice that the brace and label track with the square
             self.play(
-                square.scale, 2,
+                square.animate.scale(2),
                 rate_func=there_and_back,
                 run_time=2,
             )
             self.wait()
             self.play(
-                square.set_width, 5, {"stretch": True},
+                square.set_width(5, stretch=True),
                 run_time=3,
             )
             self.wait()
             self.play(
-                square.set_width, 2,
+                square.animate.set_width(2),
                 run_time=3
             )
             self.wait()
@@ -318,7 +364,7 @@ UpdatersExample
             )
             self.wait(4 * PI)
 
-The new classes and usage in this scene are ``always_redraw()``, ``DecimalNumber``, ``.to_edge()``, 
+The new classes and usage in this scene are ``always_redraw()``, ``DecimalNumber``, ``.to_edge()``,
 ``.center()``, ``always()``, ``f_always()``, ``.set_y()`` and ``.add_updater()``.
 
 - ``always_redraw()`` function create a new mobject every frame.
@@ -329,6 +375,177 @@ The new classes and usage in this scene are ``always_redraw()``, ``DecimalNumber
 - ``f_always(f, g)`` is similar to ``always``, executed ``f(g())`` every frame.
 - ``.set_y()`` means to set the ordinate of the object on the screen.
 - ``.add_updater()`` sets an update function for the object. For example: ``mob1.add_updater(lambda mob: mob.next_to(mob2))`` means ``mob1.next_to(mob2)`` is executed every frame.
+
+CoordinateSystemExample
+-----------------------
+
+.. manim-example:: CoordinateSystemExample
+    :media: ../_static/example_scenes/CoordinateSystemExample.mp4
+
+    class CoordinateSystemExample(Scene):
+        def construct(self):
+            axes = Axes(
+                # x-axis ranges from -1 to 10, with a default step size of 1
+                x_range=(-1, 10),
+                # y-axis ranges from -2 to 10 with a step size of 0.5
+                y_range=(-2, 2, 0.5),
+                # The axes will be stretched so as to match the specified
+                # height and width
+                height=6,
+                width=10,
+                # Axes is made of two NumberLine mobjects.  You can specify
+                # their configuration with axis_config
+                axis_config={
+                    "stroke_color": GREY_A,
+                    "stroke_width": 2,
+                },
+                # Alternatively, you can specify configuration for just one
+                # of them, like this.
+                y_axis_config={
+                    "include_tip": False,
+                }
+            )
+            # Keyword arguments of add_coordinate_labels can be used to
+            # configure the DecimalNumber mobjects which it creates and
+            # adds to the axes
+            axes.add_coordinate_labels(
+                font_size=20,
+                num_decimal_places=1,
+            )
+            self.add(axes)
+
+            # Axes descends from the CoordinateSystem class, meaning
+            # you can call call axes.coords_to_point, abbreviated to
+            # axes.c2p, to associate a set of coordinates with a point,
+            # like so:
+            dot = Dot(color=RED)
+            dot.move_to(axes.c2p(0, 0))
+            self.play(FadeIn(dot, scale=0.5))
+            self.play(dot.animate.move_to(axes.c2p(3, 2)))
+            self.wait()
+            self.play(dot.animate.move_to(axes.c2p(5, 0.5)))
+            self.wait()
+
+            # Similarly, you can call axes.point_to_coords, or axes.p2c
+            # print(axes.p2c(dot.get_center()))
+
+            # We can draw lines from the axes to better mark the coordinates
+            # of a given point.
+            # Here, the always_redraw command means that on each new frame
+            # the lines will be redrawn
+            h_line = always_redraw(lambda: axes.get_h_line(dot.get_left()))
+            v_line = always_redraw(lambda: axes.get_v_line(dot.get_bottom()))
+
+            self.play(
+                ShowCreation(h_line),
+                ShowCreation(v_line),
+            )
+            self.play(dot.animate.move_to(axes.c2p(3, -2)))
+            self.wait()
+            self.play(dot.animate.move_to(axes.c2p(1, 1)))
+            self.wait()
+
+            # If we tie the dot to a particular set of coordinates, notice
+            # that as we move the axes around it respects the coordinate
+            # system defined by them.
+            f_always(dot.move_to, lambda: axes.c2p(1, 1))
+            self.play(
+                axes.animate.scale(0.75),
+                axes.animate.to_corner(UL),
+                run_time=2,
+            )
+            self.wait()
+            self.play(FadeOut(VGroup(axes, dot, h_line, v_line)))
+
+            # Other coordinate systems you can play around with include
+            # ThreeDAxes, NumberPlane, and ComplexPlane.
+
+
+GraphExample
+------------
+
+.. manim-example:: GraphExample
+    :media: ../_static/example_scenes/GraphExample.mp4
+
+    class GraphExample(Scene):
+        def construct(self):
+            axes = Axes((-3, 10), (-1, 8))
+            axes.add_coordinate_labels()
+
+            self.play(Write(axes, lag_ratio=0.01, run_time=1))
+
+            # Axes.get_graph will return the graph of a function
+            sin_graph = axes.get_graph(
+                lambda x: 2 * math.sin(x),
+                color=BLUE,
+            )
+            # By default, it draws it so as to somewhat smoothly interpolate
+            # between sampled points (x, f(x)).  If the graph is meant to have
+            # a corner, though, you can set use_smoothing to False
+            relu_graph = axes.get_graph(
+                lambda x: max(x, 0),
+                use_smoothing=False,
+                color=YELLOW,
+            )
+            # For discontinuous functions, you can specify the point of
+            # discontinuity so that it does not try to draw over the gap.
+            step_graph = axes.get_graph(
+                lambda x: 2.0 if x > 3 else 1.0,
+                discontinuities=[3],
+                color=GREEN,
+            )
+
+            # Axes.get_graph_label takes in either a string or a mobject.
+            # If it's a string, it treats it as a LaTeX expression.  By default
+            # it places the label next to the graph near the right side, and
+            # has it match the color of the graph
+            sin_label = axes.get_graph_label(sin_graph, "\\sin(x)")
+            relu_label = axes.get_graph_label(relu_graph, Text("ReLU"))
+            step_label = axes.get_graph_label(step_graph, Text("Step"), x=4)
+
+            self.play(
+                ShowCreation(sin_graph),
+                FadeIn(sin_label, RIGHT),
+            )
+            self.wait(2)
+            self.play(
+                ReplacementTransform(sin_graph, relu_graph),
+                FadeTransform(sin_label, relu_label),
+            )
+            self.wait()
+            self.play(
+                ReplacementTransform(relu_graph, step_graph),
+                FadeTransform(relu_label, step_label),
+            )
+            self.wait()
+
+            parabola = axes.get_graph(lambda x: 0.25 * x**2)
+            parabola.set_stroke(BLUE)
+            self.play(
+                FadeOut(step_graph),
+                FadeOut(step_label),
+                ShowCreation(parabola)
+            )
+            self.wait()
+
+            # You can use axes.input_to_graph_point, abbreviated
+            # to axes.i2gp, to find a particular point on a graph
+            dot = Dot(color=RED)
+            dot.move_to(axes.i2gp(2, parabola))
+            self.play(FadeIn(dot, scale=0.5))
+
+            # A value tracker lets us animate a parameter, usually
+            # with the intent of having other mobjects update based
+            # on the parameter
+            x_tracker = ValueTracker(2)
+            f_always(
+                dot.move_to,
+                lambda: axes.i2gp(x_tracker.get_value(), parabola)
+            )
+
+            self.play(x_tracker.animate.set_value(4), run_time=3)
+            self.play(x_tracker.animate.set_value(-2), run_time=3)
+            self.wait()
 
 SurfaceExample
 --------------
@@ -355,7 +572,7 @@ SurfaceExample
             # be interpreted as the side towards the light, and away from
             # the light.  These can be either urls, or paths to a local file
             # in whatever you've set as the image directory in
-            # the custom_defaults.yml file
+            # the custom_config.yml file
 
             # day_texture = "EarthTextureMap"
             # night_texture = "NightEarthTextureMap"
@@ -400,8 +617,8 @@ SurfaceExample
             self.play(
                 Transform(surface, surfaces[2]),
                 # Move camera frame during the transition
-                frame.increment_phi, -10 * DEGREES,
-                frame.increment_theta, -20 * DEGREES,
+                frame.animate.increment_phi(-10 * DEGREES),
+                frame.animate.increment_theta(-20 * DEGREES),
                 run_time=3
             )
             # Add ambient rotation
@@ -416,8 +633,8 @@ SurfaceExample
             light = self.camera.light_source
             self.add(light)
             light.save_state()
-            self.play(light.move_to, 3 * IN, run_time=5)
-            self.play(light.shift, 10 * OUT, run_time=5)
+            self.play(light.animate.move_to(3 * IN), run_time=5)
+            self.play(light.animate.shift(10 * OUT), run_time=5)
 
             drag_text = Text("Try moving the mouse while pressing d or s")
             drag_text.move_to(light_text)
@@ -426,7 +643,7 @@ SurfaceExample
             self.play(FadeTransform(light_text, drag_text))
             self.wait()
 
-This scene shows an example of using a three-dimensional surface, and 
+This scene shows an example of using a three-dimensional surface, and
 the related usage has been briefly described in the notes.
 
 - ``.fix_in_frame()`` makes the object not change with the view angle of the screen, and is always displayed at a fixed position on the screen.
@@ -467,7 +684,7 @@ OpeningManimExample
                 FadeTransform(intro_words, linear_transform_words)
             )
             self.wait()
-            self.play(grid.apply_matrix, matrix, run_time=3)
+            self.play(grid.animate.apply_matrix(matrix), run_time=3)
             self.wait()
 
             # Complex map
@@ -491,12 +708,12 @@ OpeningManimExample
             )
             self.wait()
             self.play(
-                moving_c_grid.apply_complex_function, lambda z: z**2,
+                moving_c_grid.animate.apply_complex_function(lambda z: z**2),
                 run_time=6,
             )
             self.wait(2)
 
 This scene is a comprehensive application of a two-dimensional scene.
 
-After seeing these scenes, you have already understood part of the 
+After seeing these scenes, you have already understood part of the
 usage of manim. For more examples, see `the video code of 3b1b <https://github.com/3b1b/videos>`_.

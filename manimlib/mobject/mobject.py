@@ -114,6 +114,11 @@ class Mobject(object):
             self.uniforms[key] = uniforms[key]  # Copy?
         return self
 
+    @property
+    def animate(self):
+        # Borrowed from https://github.com/ManimCommunity/manim/
+        return _AnimationBuilder(self)
+
     # Only these methods should directly affect points
 
     def resize_points(self, new_length, resize_func=resize_array):
@@ -224,7 +229,9 @@ class Mobject(object):
 
     def is_point_touching(self, point, buff=MED_SMALL_BUFF):
         bb = self.get_bounding_box()
-        return np.all(point >= (bb[0] - buff)) and np.all(point <= (bb[2] + buff))
+        mins = (bb[0] - buff)
+        maxs = (bb[2] + buff)
+        return (point >= mins).all() and (point <= maxs).all()
 
     # Family matters
 
@@ -504,15 +511,16 @@ class Mobject(object):
         for updater_list in [self.time_based_updaters, self.non_time_updaters]:
             while update_function in updater_list:
                 updater_list.remove(update_function)
+        self.refresh_has_updater_status()
         return self
 
     def clear_updaters(self, recurse=True):
         self.time_based_updaters = []
         self.non_time_updaters = []
+        self.refresh_has_updater_status()
         if recurse:
             for submob in self.submobjects:
                 submob.clear_updaters()
-        self.suspend_updating(recurse)
         return self
 
     def match_updaters(self, mobject):
@@ -1101,7 +1109,7 @@ class Mobject(object):
     def match_z(self, mobject, direction=ORIGIN):
         return self.match_coord(mobject, 2, direction)
 
-    def align_to(self, mobject_or_point, direction=ORIGIN, alignment_vect=UP):
+    def align_to(self, mobject_or_point, direction=ORIGIN):
         """
         Examples:
         mob1.align_to(mob2, UP) moves mob1 vertically so that its
@@ -1571,3 +1579,51 @@ class Point(Mobject):
 
     def set_location(self, new_loc):
         self.set_points(np.array(new_loc, ndmin=2, dtype=float))
+
+
+class _AnimationBuilder:
+    def __init__(self, mobject):
+        self.mobject = mobject
+        self.overridden_animation = None
+        self.mobject.generate_target()
+        self.is_chaining = False
+        self.methods = []
+
+    def __getattr__(self, method_name):
+        method = getattr(self.mobject.target, method_name)
+        self.methods.append(method)
+        has_overridden_animation = hasattr(method, "_override_animate")
+
+        if (self.is_chaining and has_overridden_animation) or self.overridden_animation:
+            raise NotImplementedError(
+                "Method chaining is currently not supported for "
+                "overridden animations"
+            )
+
+        def update_target(*method_args, **method_kwargs):
+            if has_overridden_animation:
+                self.overridden_animation = method._override_animate(
+                    self.mobject, *method_args, **method_kwargs
+                )
+            else:
+                method(*method_args, **method_kwargs)
+            return self
+
+        self.is_chaining = True
+        return update_target
+
+    def build(self):
+        from manimlib.animation.transform import _MethodAnimation
+
+        if self.overridden_animation:
+            return self.overridden_animation
+
+        return _MethodAnimation(self.mobject, self.methods)
+
+
+def override_animate(method):
+    def decorator(animation_method):
+        method._override_animate = animation_method
+        return animation_method
+
+    return decorator

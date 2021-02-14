@@ -8,9 +8,8 @@ from functools import wraps
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
 import time
-from IPython.terminal.embed import InteractiveShellEmbed
 
-from manimlib.animation.animation import Animation
+from manimlib.animation.animation import prepare_animation
 from manimlib.animation.transform import MoveToTarget
 from manimlib.mobject.mobject import Point
 from manimlib.camera.camera import Camera
@@ -22,7 +21,6 @@ from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import restructure_list_to_exclude_certain_family_members
 from manimlib.event_handler.event_type import EventType
 from manimlib.event_handler import EVENT_DISPATCHER
-from manimlib.window import Window
 
 
 class Scene(object):
@@ -44,7 +42,8 @@ class Scene(object):
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
         if self.preview:
-            self.window = Window(self, **self.window_config)
+            from manimlib.window import Window
+            self.window = Window(scene=self, **self.window_config)
             self.camera_config["ctx"] = self.window.ctx
         else:
             self.window = None
@@ -118,7 +117,8 @@ class Scene(object):
         self.stop_skipping()
         self.linger_after_completion = False
         self.update_frame()
-
+        
+        from IPython.terminal.embed import InteractiveShellEmbed
         shell = InteractiveShellEmbed()
         # Have the frame update after each command
         shell.events.register('post_run_cell', lambda *a, **kw: self.update_frame())
@@ -348,10 +348,7 @@ class Scene(object):
             state["method_args"] = []
 
         for arg in args:
-            if isinstance(arg, Animation):
-                compile_method(state)
-                animations.append(arg)
-            elif inspect.ismethod(arg):
+            if inspect.ismethod(arg):
                 compile_method(state)
                 state["curr_method"] = arg
             elif state["curr_method"] is not None:
@@ -362,7 +359,13 @@ class Scene(object):
                     you meant to pass in as a Scene.play argument
                 """)
             else:
-                raise Exception("Invalid play arguments")
+                try:
+                    anim = prepare_animation(arg)
+                except TypeError:
+                    raise TypeError(f"Unexpected argument {arg} passed to Scene.play()")
+
+                compile_method(state)
+                animations.append(anim)
         compile_method(state)
 
         for animation in animations:

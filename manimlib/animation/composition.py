@@ -1,6 +1,6 @@
 import numpy as np
 
-from manimlib.animation.animation import Animation
+from manimlib.animation.animation import Animation, prepare_animation
 from manimlib.mobject.mobject import Group
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
@@ -29,7 +29,7 @@ class AnimationGroup(Animation):
 
     def __init__(self, *animations, **kwargs):
         digest_config(self, kwargs)
-        self.animations = animations
+        self.animations = [prepare_animation(anim) for anim in animations]
         if self.group is None:
             self.group = Group(*remove_list_redundancies(
                 [anim.mobject for anim in animations]

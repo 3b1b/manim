@@ -2,9 +2,7 @@ import random
 
 from colour import Color
 import numpy as np
-from matplotlib.cm import get_cmap
 
-from manimlib.constants import PALETTE
 from manimlib.constants import WHITE
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.simple_functions import clip_in_place
@@ -102,7 +100,7 @@ def random_bright_color():
 
 
 def random_color():
-    return random.choice(PALETTE)
+    return Color(rgb=(random.random() for i in range(3)))
 
 
 def get_shaded_rgb(rgb, point, unit_normal_vect, light_source):
@@ -116,6 +114,8 @@ def get_shaded_rgb(rgb, point, unit_normal_vect, light_source):
 
 
 def get_colormap_list(map_name="viridis", n_colors=9):
+    from matplotlib.cm import get_cmap
+
     rgbs = get_cmap(map_name).colors  # Make more general?
     return [
         rgbs[int(n)]

@@ -108,6 +108,7 @@ class VMobject(Mobject):
 
     def set_fill(self, color=None, opacity=None, recurse=True):
         self.set_rgba_array(color, opacity, 'fill_rgba', recurse)
+        return self
 
     def set_stroke(self, color=None, width=None, opacity=None, background=None, recurse=True):
         self.set_rgba_array(color, opacity, 'stroke_rgba', recurse)

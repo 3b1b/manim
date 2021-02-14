@@ -110,7 +110,8 @@ class DrawBorderThenFill(Animation):
             # First time crossing over
             submob.set_data(outline.data)
             submob.unlock_data()
-            submob.lock_matching_data(submob, start)
+            if not self.mobject.has_updaters:
+                submob.lock_matching_data(submob, start)
             submob.needs_new_triangulation = False
             self.sm_to_index[hash(submob)] = 1
 

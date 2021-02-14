@@ -1,5 +1,6 @@
 from copy import deepcopy
 
+from manimlib.mobject.mobject import _AnimationBuilder
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import smooth
@@ -25,7 +26,7 @@ class Animation(object):
         # If 0 < lag_ratio < 1, its applied to each
         # with lagged start times
         "lag_ratio": DEFAULT_ANIMATION_LAG_RATIO,
-        "suspend_mobject_updating": True,
+        "suspend_mobject_updating": False,
     }
 
     def __init__(self, mobject, **kwargs):
@@ -159,3 +160,13 @@ class Animation(object):
 
     def is_remover(self):
         return self.remover
+
+
+def prepare_animation(anim):
+    if isinstance(anim, _AnimationBuilder):
+        return anim.build()
+
+    if isinstance(anim, Animation):
+        return anim
+
+    raise TypeError(f"Object {anim} cannot be converted to an animation")

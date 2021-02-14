@@ -17,4 +17,4 @@ pyreadline; sys_platform == 'win32'
 validators
 ipython
 PyOpenGL
-pycairo
+manimpango>=0.2.0,<0.3.0'

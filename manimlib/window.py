@@ -14,23 +14,32 @@ class Window(PygletWindow):
     vsync = True
     cursor = True
 
-    def __init__(self, scene, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, scene, size=(1280, 720), **kwargs):
+        super().__init__()
         digest_config(self, kwargs)
+
         self.scene = scene
-        self.title = str(scene)
         self.pressed_keys = set()
-        self.position = self.find_initial_position()
+        self.title = str(scene)
+        self.size = size
 
         mglw.activate_context(window=self)
         self.timer = Timer()
         self.config = mglw.WindowConfig(ctx=self.ctx, wnd=self, timer=self.timer)
         self.timer.start()
 
-    def find_initial_position(self):
+        # No idea why, but when self.position is set once
+        # it sometimes doesn't actually change the position
+        # to the specified tuple on the rhs, but doing it
+        # twice seems to make it work.  ¯\_(ツ)_/¯
+        initial_position = self.find_initial_position(size)
+        self.position = initial_position
+        self.position = initial_position
+
+    def find_initial_position(self, size):
         custom_position = get_customization()["window_position"]
-        monitor = get_monitors()[0]
-        window_width, window_height = self.size
+        monitor = get_monitors()[get_customization()["window_monitor"]]
+        window_width, window_height = size
         # Position might be specified with a string of the form
         # x,y for integers x and y
         if "," in custom_position:
@@ -42,8 +51,8 @@ class Window(PygletWindow):
         width_diff = monitor.width - window_width
         height_diff = monitor.height - window_height
         return (
-            char_to_n[custom_position[1]] * width_diff // 2,
-            char_to_n[custom_position[0]] * height_diff // 2,
+            monitor.x + char_to_n[custom_position[1]] * width_diff // 2,
+            -monitor.y + char_to_n[custom_position[0]] * height_diff // 2,
         )
 
     # Delegate event handling to scene
