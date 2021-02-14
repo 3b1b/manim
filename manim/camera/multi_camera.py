@@ -54,12 +54,12 @@ class MultiCamera(MovingCamera):
         for imfc in self.image_mobjects_from_cameras:
             pixel_height, pixel_width = self.pixel_array.shape[:2]
             imfc.camera.frame_shape = (
-                imfc.camera.frame.get_height(),
-                imfc.camera.frame.get_width(),
+                imfc.camera.frame.height,
+                imfc.camera.frame.width,
             )
             imfc.camera.reset_pixel_shape(
-                int(pixel_height * imfc.get_height() / self.frame_height),
-                int(pixel_width * imfc.get_width() / self.frame_width),
+                int(pixel_height * imfc.height / self.frame_height),
+                int(pixel_width * imfc.width / self.frame_width),
             )
 
     def reset(self):

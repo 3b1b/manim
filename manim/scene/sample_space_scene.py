@@ -99,14 +99,14 @@ class SampleSpaceScene(Scene):
 
     def get_posterior_rectangles(self, buff=MED_LARGE_BUFF):
         prior_rects = self.get_prior_rectangles()
-        areas = [rect.get_width() * rect.get_height() for rect in prior_rects]
+        areas = [rect.width * rect.height for rect in prior_rects]
         total_area = sum(areas)
-        total_height = prior_rects.get_height()
+        total_height = prior_rects.height
 
         post_rects = prior_rects.copy()
         for rect, area in zip(post_rects, areas):
             rect.stretch_to_fit_height(total_height * area / total_area)
-            rect.stretch_to_fit_width(area / rect.get_height())
+            rect.stretch_to_fit_width(area / rect.height)
         post_rects.arrange(DOWN, buff=0)
         post_rects.next_to(self.sample_space, RIGHT, buff)
         return post_rects
@@ -122,7 +122,7 @@ class SampleSpaceScene(Scene):
         braces = post_rects.braces
         labels = post_rects.labels
         for rect, brace, label in zip(post_rects, braces, labels):
-            brace.stretch_to_fit_height(rect.get_height())
+            brace.stretch_to_fit_height(rect.height)
             brace.next_to(rect, RIGHT, SMALL_BUFF)
             label.next_to(brace, RIGHT, SMALL_BUFF)
 

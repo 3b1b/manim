@@ -69,7 +69,7 @@ class MovingCamera(Camera):
         float
             The height of the frame.
         """
-        return self.frame.get_height()
+        return self.frame.height
 
     @property
     def frame_width(self):
@@ -80,7 +80,7 @@ class MovingCamera(Camera):
         float
             The width of the frame.
         """
-        return self.frame.get_width()
+        return self.frame.width
 
     @property
     def frame_center(self):
@@ -158,9 +158,9 @@ class MovingCamera(Camera):
     # def realign_frame_shape(self):
     #     height, width = self.frame_shape
     #     if self.fixed_dimension == 0:
-    #         self.frame_shape = (height, self.frame.get_width())
+    #         self.frame_shape = (height, self.frame.width
     #     else:
-    #         self.frame_shape = (self.frame.get_height(), width)
+    #         self.frame_shape = (self.frame.height, width)
     #     self.resize_frame_shape(fixed_dimension=self.fixed_dimension)
 
     def get_mobjects_indicating_movement(self):

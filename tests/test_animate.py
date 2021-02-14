@@ -11,7 +11,7 @@ def test_simple_animate():
     s = Square()
     scale_factor = 2
     anim = s.animate.scale(scale_factor).build()
-    assert anim.mobject.target.get_width() == scale_factor * s.get_width()
+    assert anim.mobject.target.width == scale_factor * s.width
 
 
 def test_chained_animate():
@@ -20,7 +20,7 @@ def test_chained_animate():
     direction = np.array((1, 1, 0))
     anim = s.animate.scale(scale_factor).shift(direction).build()
     assert (
-        anim.mobject.target.get_width() == scale_factor * s.get_width()
+        anim.mobject.target.width == scale_factor * s.width
         and (anim.mobject.target.get_center() == direction).all()
     )
 

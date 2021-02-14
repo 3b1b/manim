@@ -204,6 +204,4 @@ class ZoomedScene(MovingCameraScene):
         float
             The zoom factor.
         """
-        return fdiv(
-            self.zoomed_camera.frame.get_height(), self.zoomed_display.get_height()
-        )
+        return fdiv(self.zoomed_camera.frame.height, self.zoomed_display.height)

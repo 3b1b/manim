@@ -84,13 +84,11 @@ class SVGMobject(VMobject):
         self.file_name = file_name or self.file_name
         self.ensure_valid_file()
         self.should_center = should_center
-        self.height = height
-        self.width = width
         self.unpack_groups = unpack_groups
         VMobject.__init__(
             self, fill_opacity=fill_opacity, stroke_width=stroke_width, **kwargs
         )
-        self.move_into_position()
+        self.move_into_position(width, height)
 
     def ensure_valid_file(self):
         """Reads self.file_name and determines whether the given input file_name
@@ -504,17 +502,17 @@ class SVGMobject(VMobject):
         )
         self.ref_to_element.update(new_refs)
 
-    def move_into_position(self):
+    def move_into_position(self, width, height):
         """Uses the SVGMobject's config dictionary to set the Mobject's
         width, height, and/or center it. Use ``width``, ``height``, and
         ``should_center`` respectively to modify this.
         """
         if self.should_center:
             self.center()
-        if self.height is not None:
-            self.set_height(self.height)
-        if self.width is not None:
-            self.set_width(self.width)
+        if height is not None:
+            self.height = height
+        if width is not None:
+            self.width = width
 
 
 class VMobjectFromSVGPathstring(VMobject):

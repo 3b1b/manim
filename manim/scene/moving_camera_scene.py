@@ -15,7 +15,7 @@ Examples
             text = Text("Hello World").set_color(BLUE)
             self.add(text)
             self.camera_frame.save_state()
-            self.play(self.camera_frame.animate.set_width(text.get_width() * 1.2))
+            self.play(self.camera_frame.animate.set(width=text.width * 1.2))
             self.wait(0.3)
             self.play(Restore(self.camera_frame))
 
@@ -40,11 +40,11 @@ Examples
             s = Square(color=BLUE, fill_opacity=0.5).move_to(2 * LEFT)
             t = Triangle(color=YELLOW, fill_opacity=0.5).move_to(2 * RIGHT)
             self.add(s, t)
-            self.play(self.camera_frame.animate.move_to(s).set_width(s.get_width()*2))
+            self.play(self.camera_frame.animate.move_to(s).set(width=s.width*2))
             self.wait(0.3)
-            self.play(self.camera_frame.animate.move_to(t).set_width(t.get_width()*2))
+            self.play(self.camera_frame.animate.move_to(t).set(width=t.width*2))
 
-            self.play(self.camera_frame.animate.move_to(ORIGIN).set_width(14))
+            self.play(self.camera_frame.animate.move_to(ORIGIN).set(width=14))
 
 .. manim:: MovingCameraOnGraph
 

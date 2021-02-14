@@ -84,9 +84,8 @@ class ManimBanner(VGroup):
                 tex.next_to(anim, buff=0.01)
             tex.align_to(self.M, DOWN)
             anim.add(tex)
-        anim.set_color(self.font_color).set_height(
-            m_height_over_anim_height * self.M.get_height()
-        )
+        anim.set_color(self.font_color)
+        anim.height = m_height_over_anim_height * self.M.height
 
         # Note: "anim" is only shown in the expanded state
         # and thus not yet added to the submobjects of self.

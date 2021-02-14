@@ -926,22 +926,22 @@ class GraphScene(Scene):
             group.add(group.df_label)
 
         if len(labels) > 0:
-            max_width = 0.8 * group.dx_line.get_width()
-            max_height = 0.8 * group.df_line.get_height()
-            if labels.get_width() > max_width:
-                labels.set_width(max_width)
-            if labels.get_height() > max_height:
-                labels.set_height(max_height)
+            max_width = 0.8 * group.dx_line.width
+            max_height = 0.8 * group.df_line.height
+            if labels.width > max_width:
+                labels.width = max_width
+            if labels.height > max_height:
+                labels.height = max_height
 
         if dx_label is not None:
             group.dx_label.next_to(
-                group.dx_line, np.sign(dx) * DOWN, buff=group.dx_label.get_height() / 2
+                group.dx_line, np.sign(dx) * DOWN, buff=group.dx_label.height / 2
             )
             group.dx_label.set_color(group.dx_line.get_color())
 
         if df_label is not None:
             group.df_label.next_to(
-                group.df_line, np.sign(dx) * RIGHT, buff=group.df_label.get_height() / 2
+                group.df_line, np.sign(dx) * RIGHT, buff=group.df_label.height / 2
             )
             group.df_label.set_color(group.df_line.get_color())
 
@@ -992,7 +992,7 @@ class GraphScene(Scene):
             Any valid keyword argument of a self.play call.
         """
         triangle = RegularPolygon(n=3, start_angle=np.pi / 2)
-        triangle.set_height(MED_SMALL_BUFF)
+        triangle.height = MED_SMALL_BUFF
         triangle.move_to(self.coords_to_point(x_val, 0), UP)
         triangle.set_fill(color, 1)
         triangle.set_stroke(width=0)

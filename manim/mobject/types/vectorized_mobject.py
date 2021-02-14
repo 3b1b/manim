@@ -1740,10 +1740,12 @@ class VectorizedPoint(VMobject):
         )
         self.set_points(np.array([location]))
 
-    def get_width(self):
+    @VMobject.width.getter
+    def width(self):
         return self.artificial_width
 
-    def get_height(self):
+    @VMobject.height.getter
+    def height(self):
         return self.artificial_height
 
     def get_location(self):

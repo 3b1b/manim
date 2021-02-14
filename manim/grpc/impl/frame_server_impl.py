@@ -404,8 +404,8 @@ def serialize_mobject(mobject):
             logger.info(
                 f"Expected path {mobject.path} to be under the assets dir ({assets_dir_path})"
             )
-        mob_proto.image_mobject_data.height = mobject.get_height()
-        mob_proto.image_mobject_data.width = mobject.get_width()
+        mob_proto.image_mobject_data.height = mobject.height
+        mob_proto.image_mobject_data.width = mobject.width
         mob_center = mobject.get_center()
         mob_proto.image_mobject_data.center.x = mob_center[0]
         mob_proto.image_mobject_data.center.y = mob_center[1]

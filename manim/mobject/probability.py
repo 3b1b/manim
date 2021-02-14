@@ -51,8 +51,8 @@ class SampleSpace(Rectangle):
     def add_title(self, title="Sample space", buff=MED_SMALL_BUFF):
         # TODO, should this really exist in SampleSpaceScene
         title_mob = Tex(title)
-        if title_mob.get_width() > self.get_width():
-            title_mob.set_width(self.get_width())
+        if title_mob.width > self.width:
+            title_mob.width = self.width
         title_mob.next_to(self, UP, buff=buff)
         self.title = title_mob
         self.add(title_mob)
@@ -175,8 +175,6 @@ class BarChart(VGroup):
         **kwargs
     ):
         VGroup.__init__(self, **kwargs)
-        self.height = height
-        self.width = width
         self.n_ticks = n_ticks
         self.tick_width = tick_width
         self.label_y_axis = label_y_axis
@@ -191,19 +189,19 @@ class BarChart(VGroup):
         if self.max_value is None:
             self.max_value = max(values)
 
-        self.add_axes()
-        self.add_bars(values)
+        self.add_axes(width, height)
+        self.add_bars(values, width, height)
         self.center()
 
-    def add_axes(self):
-        x_axis = Line(self.tick_width * LEFT / 2, self.width * RIGHT)
-        y_axis = Line(MED_LARGE_BUFF * DOWN, self.height * UP)
+    def add_axes(self, width, height):
+        x_axis = Line(self.tick_width * LEFT / 2, width * RIGHT)
+        y_axis = Line(MED_LARGE_BUFF * DOWN, height * UP)
         ticks = VGroup()
-        heights = np.linspace(0, self.height, self.n_ticks + 1)
+        heights = np.linspace(0, height, self.n_ticks + 1)
         values = np.linspace(0, self.max_value, self.n_ticks + 1)
         for y, value in zip(heights, values):
             tick = Line(LEFT, RIGHT)
-            tick.set_width(self.tick_width)
+            tick.width = self.tick_width
             tick.move_to(y * UP)
             ticks.add(tick)
         y_axis.add(ticks)
@@ -215,18 +213,18 @@ class BarChart(VGroup):
             labels = VGroup()
             for tick, value in zip(ticks, values):
                 label = MathTex(str(np.round(value, 2)))
-                label.set_height(self.y_axis_label_height)
+                label.height = self.y_axis_label_height
                 label.next_to(tick, LEFT, SMALL_BUFF)
                 labels.add(label)
             self.y_axis_labels = labels
             self.add(labels)
 
-    def add_bars(self, values):
-        buff = float(self.width) / (2 * len(values) + 1)
+    def add_bars(self, values, width, height):
+        buff = float(width) / (2 * len(values) + 1)
         bars = VGroup()
         for i, value in enumerate(values):
             bar = Rectangle(
-                height=(value / self.max_value) * self.height,
+                height=(value / self.max_value) * height,
                 width=buff,
                 stroke_width=self.bar_stroke_width,
                 fill_opacity=self.bar_fill_opacity,

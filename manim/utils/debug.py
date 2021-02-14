@@ -21,7 +21,7 @@ def index_labels(mobject, label_height=0.15):
     labels = VGroup()
     for n, submob in enumerate(mobject):
         label = Integer(n)
-        label.set_height(label_height)
+        label.height = label_height
         label.move_to(submob)
         label.set_stroke(BLACK, 5, background=True)
         labels.add(label)

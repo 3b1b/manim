@@ -101,7 +101,7 @@ class WriteStuff(Scene):
         )
         group = VGroup(example_text, example_tex)
         group.arrange(DOWN)
-        group.set_width(config["frame_width"] - 2 * LARGE_BUFF)
+        group.width = config["frame_width"] - 2 * LARGE_BUFF
 
         self.play(Write(example_text))
         self.play(Write(example_tex))

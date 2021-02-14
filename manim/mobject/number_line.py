@@ -53,7 +53,6 @@ class NumberLine(Line):
         self.unit_size = unit_size
         self.include_ticks = include_ticks
         self.tick_size = tick_size
-        self.width = width
         self.tick_frequency = tick_frequency
         self.leftmost_tick = leftmost_tick
         self.numbers_with_elongated_ticks = numbers_with_elongated_ticks
@@ -83,8 +82,8 @@ class NumberLine(Line):
             color=color,
             **kwargs,
         )
-        if self.width is not None:
-            self.set_width(self.width)
+        if width is not None:
+            self.width = width
             self.unit_size = self.get_unit_size()
         self.shift(-self.number_to_point(self.number_at_center))
 

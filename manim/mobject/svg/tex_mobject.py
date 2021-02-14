@@ -241,7 +241,7 @@ class SingleStringMathTex(SVGMobject):
             background_stroke_color=background_stroke_color,
             **kwargs,
         )
-        if self.height is None:
+        if height is None:
             self.scale(TEX_MOB_SCALE_FACTOR)
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
@@ -560,16 +560,16 @@ class Title(Tex):
         self.match_underline_width_to_text = match_underline_width_to_text
         self.underline_buff = underline_buff
         Tex.__init__(self, *text_parts, **kwargs)
-        self.underline_width = config["frame_width"] - 2
         self.scale(self.scale_factor)
         self.to_edge(UP)
         if self.include_underline:
+            underline_width = config["frame_width"] - 2
             underline = Line(LEFT, RIGHT)
             underline.next_to(self, DOWN, buff=self.underline_buff)
             if self.match_underline_width_to_text:
                 underline.match_width(self)
             else:
-                underline.set_width(self.underline_width)
+                underline.width = underline_width
             self.add(underline)
             self.underline = underline
 

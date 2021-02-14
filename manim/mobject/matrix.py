@@ -132,7 +132,7 @@ class Matrix(VMobject):
     def add_brackets(self, left="\\big[", right="\\big]"):
         bracket_pair = MathTex(left, right)
         bracket_pair.scale(2)
-        bracket_pair.stretch_to_fit_height(self.get_height() + 2 * self.bracket_v_buff)
+        bracket_pair.stretch_to_fit_height(self.height + 2 * self.bracket_v_buff)
         l_bracket, r_bracket = bracket_pair.split()
         l_bracket.next_to(self, LEFT, self.bracket_h_buff)
         r_bracket.next_to(self, RIGHT, self.bracket_h_buff)
@@ -228,7 +228,7 @@ def get_det_text(
 ):
     parens = MathTex("(", ")")
     parens.scale(initial_scale_factor)
-    parens.stretch_to_fit_height(matrix.get_height())
+    parens.stretch_to_fit_height(matrix.height)
     l_paren, r_paren = parens.split()
     l_paren.next_to(matrix, LEFT, buff=0.1)
     r_paren.next_to(matrix, RIGHT, buff=0.1)

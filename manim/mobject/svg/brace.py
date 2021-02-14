@@ -90,7 +90,7 @@ class Brace(MathTex):
         else:
             mob.move_to(self.get_tip())
             buff = kwargs.get("buff", DEFAULT_MOBJECT_TO_MOBJECT_BUFFER)
-            shift_distance = mob.get_width() / 2.0 + buff
+            shift_distance = mob.width / 2.0 + buff
             mob.shift(self.get_direction() * shift_distance)
         return self
 

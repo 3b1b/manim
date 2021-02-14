@@ -238,8 +238,8 @@ class Code(VGroup):
                 foreground = VGroup(self.code, self.line_numbers)
             else:
                 foreground = self.code
-            height = foreground.get_height() + 0.1 * 3 + 2 * self.margin
-            width = foreground.get_width() + 0.1 * 3 + 2 * self.margin
+            height = foreground.height + 0.1 * 3 + 2 * self.margin
+            width = foreground.width + 0.1 * 3 + 2 * self.margin
 
             rect = RoundedRectangle(
                 corner_radius=self.corner_radius,
@@ -262,7 +262,7 @@ class Code(VGroup):
             )
 
             self.background_mobject = VGroup(rect, buttons)
-            x = (height - foreground.get_height()) / 2 - 0.1 * 3
+            x = (height - foreground.height) / 2 - 0.1 * 3
             self.background_mobject.shift(foreground.get_center())
             self.background_mobject.shift(UP * x)
         if self.insert_line_no:

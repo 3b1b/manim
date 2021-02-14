@@ -15,9 +15,13 @@ class SurroundingRectangle(Rectangle):
     def __init__(self, mobject, color=YELLOW, buff=SMALL_BUFF, **kwargs):
         self.color = color
         self.buff = buff
-        kwargs["width"] = mobject.get_width() + 2 * self.buff
-        kwargs["height"] = mobject.get_height() + 2 * self.buff
-        Rectangle.__init__(self, color=color, **kwargs)
+        Rectangle.__init__(
+            self,
+            color=color,
+            width=mobject.width + 2 * self.buff,
+            height=mobject.height + 2 * self.buff,
+            **kwargs
+        )
         self.move_to(mobject)
 
 
