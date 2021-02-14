@@ -311,7 +311,7 @@ class UpdatersExample(Scene):
         )
         self.wait()
         self.play(
-            square.set_width(5, stretch=True),
+            square.animate.set_width(5, stretch=True),
             run_time=3,
         )
         self.wait()
