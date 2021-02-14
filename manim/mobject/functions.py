@@ -119,12 +119,21 @@ class ParametricFunction(VMobject):
 
 
 class FunctionGraph(ParametricFunction):
-    def __init__(self, function, color=YELLOW, **kwargs):
-        self.x_min = -config["frame_x_radius"]
-        self.x_max = config["frame_x_radius"]
+    def __init__(self, function, x_min=None, x_max=None, color=YELLOW, **kwargs):
+        if x_min is None:
+            x_min = -config["frame_x_radius"]
+        if x_max is None:
+            x_max = config["frame_x_radius"]
+        self.x_min = x_min
+        self.x_max = x_max
         self.parametric_function = lambda t: np.array([t, function(t), 0])
         ParametricFunction.__init__(
-            self, self.parametric_function, t_min=self.x_min, t_max=self.x_max, **kwargs
+            self,
+            self.parametric_function,
+            t_min=self.x_min,
+            t_max=self.x_max,
+            color=color,
+            **kwargs
         )
         self.function = function
 
