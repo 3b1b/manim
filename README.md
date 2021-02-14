@@ -18,8 +18,7 @@ Since the fork, this version has evolved to work on top of OpenGL, and allows re
 ## Installation
 Manim runs on Python 3.6 or higher (Python 3.8 is recommended).
 
-System requirements are [FFmpeg](https://ffmpeg.org/), [OpenGL](https://www.opengl.org//), [LaTeX](https://www.latex-project.org) (optional, if you want to use LaTeX)
-and [cairo](https://www.cairographics.org/) (optional, if you want to use Text).
+System requirements are [FFmpeg](https://ffmpeg.org/), [OpenGL](https://www.opengl.org//) and [LaTeX](https://www.latex-project.org) (optional, if you want to use LaTeX).
 
 For more options, take a look at the [Using manim](#using-manim) sections further below.
 
@@ -37,9 +36,9 @@ manimgl example_scenes.py OpeningManimExample
 manim-render example_scenes.py OpeningManimExample
 ```
 ### Mac OSX
-1. Install FFmpeg, LaTeX, Cairo in terminal using homebrew.
+1. Install FFmpeg, LaTeX in terminal using homebrew.
     ```sh
-    brew install ffmpeg mactex cairo
+    brew install ffmpeg mactex
     ```
    
 2. Install latest version of manim using these command.

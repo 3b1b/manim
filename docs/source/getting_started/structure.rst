@@ -59,7 +59,7 @@ Below is the directory structure of manim:
     │   │   ├── brace.py                # Brace
     │   │   ├── drawings.py             # Some special mobject of svg image
     │   │   ├── tex_mobject.py          # Tex and TexText implemented by LaTeX
-    │   │   └── text_mobject.py         # Text implemented by cairo
+    │   │   └── text_mobject.py         # Text implemented by manimpango
     │   ├── changing.py             # Dynamically changing mobject
     │   ├── coordinate_systems.py   # coordinate system
     │   ├── frame.py                # mobject related to frame

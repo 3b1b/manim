@@ -16,7 +16,7 @@ faster rendering speed, and supports real-time rendering and interaction.
 
 - `ManimCommunity/manim <https://github.com/ManimCommunity/manim>`_ : Maintained by Manim Community Dev Team.
 
-Using cairo to use CPU for rendering. There is better documentation and 
+Using multiple backend rendering. There is better documentation and 
 a more open contribution community.
 
 About this documentation

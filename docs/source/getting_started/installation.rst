@@ -8,7 +8,6 @@ System requirements are：
 - `FFmpeg <https://ffmpeg.org/>`__
 - `OpenGL <https://www.opengl.org//>`__ (included in python package ``PyOpenGL``)
 - `LaTeX <https://www.latex-project.org>`__ (optional, if you want to use LaTeX)
-- `cairo <https://www.cairographics.org/>`_ (included in python package ``pycairo``. optional, if you want to use ``Text`` in manim)
 
 Directly
 --------
