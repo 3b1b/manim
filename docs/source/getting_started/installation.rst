@@ -1,7 +1,7 @@
 Installation
 ============
 
-Manim runs on Python 3.8.
+Manim runs on Python 3.6 or higher (Python 3.8 is recommended).
 
 System requirements are：
 
@@ -11,6 +11,14 @@ System requirements are：
 
 Directly
 --------
+
+.. code-block:: sh
+
+   # Install manimgl
+   pip install manimgl
+
+   # Try it out
+   manimgl
 
 If you want to hack on manimlib itself, clone this repository and in
 that directory execute:
