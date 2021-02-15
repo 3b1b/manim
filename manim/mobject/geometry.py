@@ -1253,17 +1253,8 @@ class Rectangle(Polygon):
 
 class Square(Rectangle):
     def __init__(self, side_length=2.0, **kwargs):
+        self.side_length = side_length
         Rectangle.__init__(self, height=side_length, width=side_length, **kwargs)
-
-    @property
-    def side_length(self):
-        """The square's side length."""
-
-        return self.width
-
-    @side_length.setter
-    def side_length(self, value):
-        self.width = value
 
 
 class RoundedRectangle(Rectangle):
