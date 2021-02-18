@@ -240,8 +240,8 @@ def register_font(font_file: typing.Union[str, Path]):
     -----
     This method of adding font files also works with :class:`CairoText`.
     .. important ::
-        This method isn't available for macOS. Using this
-        method on macOS will raise an :class:`AttributeError`.
+        This method is available for macOS for ``ManimPango>=v0.2.3``. Using this
+        method with previous releases will raise an :class:`AttributeError` on macOS.
     """
 
     input_folder = Path(get_downloads_dir()).parent.resolve()
