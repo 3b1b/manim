@@ -117,7 +117,7 @@ class Scene(object):
         self.stop_skipping()
         self.linger_after_completion = False
         self.update_frame()
-        
+
         from IPython.terminal.embed import InteractiveShellEmbed
         shell = InteractiveShellEmbed()
         # Have the frame update after each command
