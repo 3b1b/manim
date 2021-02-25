@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 from manimlib.constants import *
 from manimlib.animation.animation import Animation
@@ -150,6 +151,56 @@ class ShowPassingFlash(ShowPartial):
         super().finish()
         for submob, start in self.get_all_families_zipped():
             submob.pointwise_become_partial(start, 0, 1)
+
+
+class VShowPassingFlash(Animation):
+    CONFIG = {
+        "time_width": 0.3,
+        "taper_width": 0.1,
+        "remover": True,
+    }
+
+    def begin(self):
+        self.mobject.align_stroke_width_data_to_points()
+        super().begin()
+
+    def interpolate_submobject(self, submobject, starting_sumobject, alpha):
+        original_widths = starting_sumobject.get_stroke_widths()
+        # anchor_widths = np.array([*original_widths[0::3, 0], original_widths[-1, 0]])
+        anchor_widths = np.array([0, *original_widths[3::3, 0], 0])
+        n_anchors = len(anchor_widths)
+        time_width = self.time_width
+        # taper_width = self.taper_width
+        # Create a gaussian such that 3 sigmas out on either side
+        # will equals time_width * (number of points)
+        sigma = time_width / 6
+        mu = interpolate(-time_width / 2, 1 + time_width / 2, alpha)
+        offset = math.exp(-4.5)  # 3 sigmas out
+
+        def kernel_func(x):
+            result = math.exp(-0.5 * ((x - mu) / sigma)**2) - offset
+            result = max(result, 0)
+            # if x < taper_width:
+            #     result *= x / taper_width
+            # elif x > 1 - taper_width:
+            #     result *= (1 - x) / taper_width
+            return result
+
+        kernel_array = np.array([
+            kernel_func(n / (n_anchors - 1))
+            for n in range(n_anchors)
+        ])
+        scaled_widths = anchor_widths * kernel_array
+        new_widths = np.zeros(submobject.get_num_points())
+        new_widths[0::3] = scaled_widths[:-1]
+        new_widths[1::3] = (scaled_widths[:-1] + scaled_widths[1:]) / 2
+        new_widths[2::3] = scaled_widths[1:]
+        submobject.set_stroke(width=new_widths)
+
+    def finish(self):
+        super().finish()
+        for submob, start in self.get_all_families_zipped():
+            submob.match_style(start)
 
 
 class ShowCreationThenDestruction(ShowPassingFlash):
