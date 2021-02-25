@@ -504,7 +504,7 @@ class Mobject(object):
 
         self.refresh_has_updater_status()
         if call_updater:
-            self.update()
+            self.update(dt=0)
         return self
 
     def remove_updater(self, update_function):
@@ -841,7 +841,30 @@ class Mobject(object):
 
     # Color functions
 
-    def set_rgba_array(self, color=None, opacity=None, name="rgbas", recurse=True):
+    def set_rgba_array(self, rgba_array, name="rgbas", recurse=False):
+        for mob in self.get_family(recurse):
+            mob.data[name] = np.array(rgba_array)
+        return self
+
+    def set_color_by_rgba_func(self, func, recurse=True):
+        """
+        Func should take in a point in R3 and output an rgba value
+        """
+        for mob in self.get_family(recurse):
+            rgba_array = [func(point) for point in mob.get_points()]
+            mob.set_rgba_array(rgba_array)
+        return self
+
+    def set_color_by_rgb_func(self, func, opacity=1, recurse=True):
+        """
+        Func should take in a point in R3 and output an rgb value
+        """
+        for mob in self.get_family(recurse):
+            rgba_array = [[*func(point), opacity] for point in mob.get_points()]
+            mob.set_rgba_array(rgba_array)
+        return self
+
+    def set_rgba_array_by_color(self, color=None, opacity=None, name="rgbas", recurse=True):
         if color is not None:
             rgbs = np.array([color_to_rgb(c) for c in listify(color)])
         if opacity is not None:
@@ -870,8 +893,8 @@ class Mobject(object):
         return self
 
     def set_color(self, color, opacity=None, recurse=True):
-        self.set_rgba_array(color, opacity, recurse=False)
-        # Recurse to submobjects differently from how set_rgba_array
+        self.set_rgba_array_by_color(color, opacity, recurse=False)
+        # Recurse to submobjects differently from how set_rgba_array_by_color
         # in case they implement set_color differently
         if recurse:
             for submob in self.submobjects:
@@ -879,7 +902,7 @@ class Mobject(object):
         return self
 
     def set_opacity(self, opacity, recurse=True):
-        self.set_rgba_array(color=None, opacity=opacity, recurse=False)
+        self.set_rgba_array_by_color(color=None, opacity=opacity, recurse=False)
         if recurse:
             for submob in self.submobjects:
                 submob.set_opacity(opacity, recurse=True)
