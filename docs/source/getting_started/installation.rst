@@ -10,11 +10,6 @@ System requirements are：
 - `LaTeX <https://www.latex-project.org>`__ (optional, if you want to use LaTeX)
 - `Pango <https://pango.org>`__ (only for Linux)
 
-.. important:: 
-   
-   For Linux Users, installing the wheels provided by 
-   `ManimPango <https://pypi.org/project/manimpango>`__ will cause unwanted side effects.
-   See https://github.com/3b1b/manim/issues/1387 and https://github.com/3b1b/manim/issues/1391
 
 Directly
 --------
