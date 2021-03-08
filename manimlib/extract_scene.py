@@ -37,10 +37,19 @@ def prompt_user_for_choice(scene_classes):
             "which ones would you like to render?"
             "\nScene Name or Number: "
         )
-        return [
-            name_to_class[split_str] if not split_str.isnumeric() else scene_classes[int(split_str)-1]
-            for split_str in user_input.replace(" ", "").split(",")
-        ]
+        # return [
+        #     name_to_class[split_str] if not split_str.isnumeric() else scene_classes[int(split_str)-1]
+        #     for split_str in user_input.replace(" ", "").split(",")
+        # ]
+        class_num = [num_str for num_str in user_input.split(",")]
+        for cn in class_num:
+            if str.__contains__(str(cn), '-'):
+                num1=cn[:cn.rfind('-', 1)]
+                num2=cn[cn.rfind('-', 1)+1:]
+                class_num.remove(cn)
+                for tmp in range(int(num1),int(num2)+1):
+                    class_num.append(tmp)
+        return [scene_classes[int(num_str)-1] for num_str in class_num]
     except KeyError:
         logging.log(logging.ERROR, "Invalid scene")
         sys.exit(2)

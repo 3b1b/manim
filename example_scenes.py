@@ -15,7 +15,9 @@ class OpeningManimExample(Scene):
             The original motivation for manim was to
             better illustrate mathematical functions
             as transformations.
-        """)
+            """,
+            lsh=2,
+            )
         intro_words.to_edge(UP)
 
         self.play(Write(intro_words))
@@ -664,8 +666,8 @@ class ControlsExample(Scene):
         self.add(MotionMobject(text))
 
         self.textbox.set_value("Manim")
-        # self.wait(60)
-        # self.embed()
+        self.wait(5)
+        self.embed()
 
 
 # See https://github.com/3b1b/videos for many, many more

@@ -151,3 +151,5 @@ dmypy.json
 # For manim
 /videos
 /custom_config.yml
+.vscode/settings.json
+.gitignore
