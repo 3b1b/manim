@@ -123,17 +123,15 @@ class ConvolutionPic(Scene):
         sq7_7.formula = formulas
         sq7_7.area = areas
         sq5_5 = SquareLocTxt(4*5/7,5,loctc5)
-
-        sq7_7.sq_Vg.shift(OUT*(-8)).scale(1.2)
-        sq3_3.sq_Vg.move_to(sq7_7.sq_Vg[21]).shift(OUT*11.5).scale(0.58)
-        sq5_5.sq_Vg.move_to(sq7_7.sq_Vg[38]).shift(OUT*12).scale(0.75)
+        sq7_7.sq_Vg.shift(OUT*(-10)).scale(1.2)
+        sq3_3.sq_Vg.move_to(sq7_7.sq_Vg[10]).shift(OUT*9.6).scale(0.8)
+        sq5_5.sq_Vg.move_to(sq7_7.sq_Vg[17]).shift(OUT*14).scale(0.75)
 
         lines7_3s = [[]]*len(white_5loc)
         lines3_5s = [[]]*len(white_5loc)
         ret7_7s = [[]]*len(white_5loc)
         ret5_5s = [[]]*len(white_5loc)
         ret3_3s = [[]]*len(white_5loc)
-
         for numCNA in range(5*5):
             lines7_3 = VGroup()
             lines3_5 = VGroup()
@@ -148,7 +146,7 @@ class ConvolutionPic(Scene):
                     start=sq3_3.sq_Vg.get_corner(point),
                     end=sq5_5.sq_Vg[numCNA].get_corner(point),
                     color=GREEN,
-                    stroke_width=6
+                    stroke_width=2
                     )
                 lines7_3s[numCNA] = lines7_3.add(line1)
                 lines3_5s[numCNA] = lines3_5.add(line2)
@@ -177,24 +175,25 @@ class ConvolutionPic(Scene):
                             stroke_width=2)\
                         .move_to(sq3_3.sq_Vg)
         
-        frame = self.camera.frame
-        frame.set_euler_angles(
-            theta=90 * DEGREES,
-            phi=-30 * DEGREES,
-            gamma=29.9
-            )
-
         texj = Text("卷积核",size=0.42,color = RED).next_to(sq3_3.sq_Vg,UP ,buff = MED_SMALL_BUFF)
-
-        self.play(Write(sq7_7.sq_Vg))
+        self.play(FadeIn(sq7_7.grid,scale=0.5))
         self.wait()
+        self.play(*[Write(text7.txt) for text7 in sq7_7.grid])
+        self.wait()
+        frame = self.camera.frame        
+        self.play(
+            frame.animate.set_euler_angles(
+                theta=65 * DEGREES,
+                phi=-30 * DEGREES,
+                gamma=-65 * DEGREES
+                )
+            )
         self.play(
             ShowCreation(sq3_3.sq_Vg),
             Write(texj)
             )
         self.wait()
         self.play(FadeIn(sq5_5.sq_Vg,scale=0.5))
-
         num = 0
         self.play(Write(ret7_7s[num]))
         self.play(ShowCreation(lines7_3s[num]))
@@ -218,7 +217,7 @@ class ConvolutionPic(Scene):
             )
         self.remove(sq7_7.formula[num])
         self.wait()
-        k = 3
+        k = 25
         for i in range(1,k):
             self.add(
                 VGroup(ret7_7s[i],lines7_3s[i],ret3_3s[i],lines3_5s[i],ret5_5s[i],))
@@ -231,14 +230,15 @@ class ConvolutionPic(Scene):
         self.play(
             LaggedStartMap(
                 FadeOut,
-                VGroup(ret7_7s[k-1],lines7_3s[k-1],ret3_3s[k-1],lines3_5s[k-1],ret5_5s[k-1],sq7_7.sq_Vg,sq3_3.sq_Vg)),
+                VGroup(ret7_7s[k-1],lines7_3s[k-1],ret3_3s[k-1],lines3_5s[k-1],ret5_5s[k-1],sq7_7.sq_Vg,sq3_3.sq_Vg,texj)),
             FadeOut(sq7_7.formula[k-1])
             )
         self.play(
-            sq5_5.sq_Vg.animate.shift(LEFT*2+UP*2).scale(1/0.75),
+            sq5_5.sq_Vg.animate.shift(LEFT*2),
             frame.animate.set_euler_angles(
-                theta=87* DEGREES,
+                theta=0* DEGREES,
                 phi=0 * DEGREES,
+                gamma=0 * DEGREES,
                 )
             )
         self.wait()
@@ -264,7 +264,7 @@ class ConvolutionPic(Scene):
 
         sq5_5.area = areas
         sq3 = SquareLocTxt(4*3/7,3,sq3loc_datas)
-        sq3.sq_Vg.next_to(sq5_5.sq_Vg,buff=LARGE_BUFF*2)
+        sq3.sq_Vg.next_to(sq5_5.sq_Vg,buff=LARGE_BUFF*2).scale(0.8)
         ret5s = [[]]*len(sq3loc)
         ret3s = [[]]*len(sq3loc) 
         areas_color = [RED,GREEN,YELLOW,BLUE,TEAL_A,GOLD,MAROON,PURPLE,ORANGE]
@@ -309,6 +309,7 @@ class ConvolutionPic(Scene):
             self.wait(0.1)
             self.play(TransformFromCopy(ret5s[i],ret3s[i]))
             self.wait(0.5)
+        self.wait()
 
 
 
