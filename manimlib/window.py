@@ -20,7 +20,6 @@ class Window(PygletWindow):
 
         self.scene = scene
         self.pressed_keys = set()
-
         self.title = str(scene)
         self.size = size
 
@@ -33,14 +32,14 @@ class Window(PygletWindow):
         # it sometimes doesn't actually change the position
         # to the specified tuple on the rhs, but doing it
         # twice seems to make it work.  ¯\_(ツ)_/¯
-        initial_position = self.find_initial_position()
+        initial_position = self.find_initial_position(size)
         self.position = initial_position
         self.position = initial_position
 
-    def find_initial_position(self):
+    def find_initial_position(self, size):
         custom_position = get_customization()["window_position"]
         monitor = get_monitors()[get_customization()["window_monitor"]]
-        window_width, window_height = self.size
+        window_width, window_height = size
         # Position might be specified with a string of the form
         # x,y for integers x and y
         if "," in custom_position:

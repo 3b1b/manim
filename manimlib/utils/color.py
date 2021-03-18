@@ -4,7 +4,9 @@ from colour import Color
 import numpy as np
 
 from manimlib.constants import WHITE
+from manimlib.constants import COLORMAP_3B1B
 from manimlib.utils.bezier import interpolate
+from manimlib.utils.iterables import resize_with_interpolation
 from manimlib.utils.simple_functions import clip_in_place
 from manimlib.utils.space_ops import normalize
 
@@ -114,10 +116,22 @@ def get_shaded_rgb(rgb, point, unit_normal_vect, light_source):
 
 
 def get_colormap_list(map_name="viridis", n_colors=9):
+    """
+    Options for map_name:
+    3b1b_colormap
+    magma
+    inferno
+    plasma
+    viridis
+    cividis
+    twilight
+    twilight_shifted
+    turbo
+    """
     from matplotlib.cm import get_cmap
 
-    rgbs = get_cmap(map_name).colors  # Make more general?
-    return [
-        rgbs[int(n)]
-        for n in np.linspace(0, len(rgbs) - 1, n_colors)
-    ]
+    if map_name == "3b1b_colormap":
+        rgbs = [color_to_rgb(color) for color in COLORMAP_3B1B]
+    else:
+        rgbs = get_cmap(map_name).colors  # Make more general?
+    return resize_with_interpolation(np.array(rgbs), n_colors)

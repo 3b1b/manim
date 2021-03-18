@@ -106,23 +106,41 @@ class VMobject(Mobject):
         self.set_flat_stroke(self.flat_stroke)
         return self
 
+    def set_rgba_array(self, rgba_array, name=None, recurse=False):
+        if name is None:
+            names = ["fill_rgba", "stroke_rgba"]
+        else:
+            names = [name]
+
+        for name in names:
+            super().set_rgba_array(rgba_array, name, recurse)
+        return self
+
     def set_fill(self, color=None, opacity=None, recurse=True):
-        self.set_rgba_array(color, opacity, 'fill_rgba', recurse)
+        self.set_rgba_array_by_color(color, opacity, 'fill_rgba', recurse)
         return self
 
     def set_stroke(self, color=None, width=None, opacity=None, background=None, recurse=True):
-        self.set_rgba_array(color, opacity, 'stroke_rgba', recurse)
+        self.set_rgba_array_by_color(color, opacity, 'stroke_rgba', recurse)
 
         if width is not None:
             for mob in self.get_family(recurse):
-                mob.data['stroke_width'] = np.array([
-                    [width] for width in listify(width)
-                ])
+                if isinstance(width, np.ndarray):
+                    arr = width.reshape((len(width), 1))
+                else:
+                    arr = np.array([[w] for w in listify(width)])
+                mob.data['stroke_width'] = arr
 
         if background is not None:
             for mob in self.get_family(recurse):
                 mob.draw_stroke_behind_fill = background
         return self
+
+    def align_stroke_width_data_to_points(self, recurse=True):
+        for mob in self.get_family(recurse):
+            mob.data["stroke_width"] = resize_with_interpolation(
+                mob.data["stroke_width"], len(mob.get_points())
+            )
 
     def set_style(self,
                   fill_color=None,
@@ -259,7 +277,7 @@ class VMobject(Mobject):
         return self.get_fill_color()
 
     def has_stroke(self):
-        return any(self.get_stroke_widths()) and any(self.get_stroke_opacities())
+        return self.get_stroke_widths().any() and self.get_stroke_opacities().any()
 
     def has_fill(self):
         return any(self.get_fill_opacities())

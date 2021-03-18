@@ -141,6 +141,7 @@ class TextExample(Scene):
             t2f={"font": "Consolas", "words": "Consolas"},
             t2c={"font": BLUE, "words": GREEN}
         )
+        fonts.set_width(FRAME_WIDTH - 1)
         slant = Text(
             "And the same as slant and weight",
             font="Consolas",
@@ -310,7 +311,7 @@ class UpdatersExample(Scene):
         )
         self.wait()
         self.play(
-            square.set_width(5, stretch=True),
+            square.animate.set_width(5, stretch=True),
             run_time=3,
         )
         self.wait()
