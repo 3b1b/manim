@@ -107,8 +107,8 @@ class Text(SVGMobject):
             for i, j in self.find_indexes(word)
         ))
 
-    def get_part_by_text(word):
-        parts = self.get_parts_by_text()
+    def get_part_by_text(self, word):
+        parts = self.get_parts_by_text(word)
         if len(parts) > 0:
             return parts[0]
         else:
