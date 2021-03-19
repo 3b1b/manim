@@ -25,6 +25,10 @@ class ShowPartial(Animation):
         if not self.should_match_start:
             self.mobject.lock_matching_data(self.mobject, self.starting_mobject)
 
+    def finish(self):
+        super().finish()
+        self.mobject.unlock_data()
+
     def interpolate_submobject(self, submob, start_submob, alpha):
         submob.pointwise_become_partial(
             start_submob, *self.get_bounds(alpha)
