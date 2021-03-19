@@ -244,7 +244,7 @@ class VMobject(Mobject):
         return self.data['stroke_rgba'][:, 3]
 
     def get_stroke_widths(self):
-        return self.data['stroke_width']
+        return self.data['stroke_width'][:, 0]
 
     # TODO, it's weird for these to return the first of various lists
     # rather than the full information
