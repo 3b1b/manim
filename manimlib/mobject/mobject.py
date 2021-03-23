@@ -561,7 +561,7 @@ class Mobject(object):
         )
         return self
 
-    def scale(self, scale_factor, **kwargs):
+    def scale(self, scale_factor, min_scale_factor=1e-8, **kwargs):
         """
         Default behavior is to scale about the center of the mobject.
         The argument about_edge can be a vector, indicating which side of
@@ -571,6 +571,7 @@ class Mobject(object):
         Otherwise, if about_point is given a value, scaling is done with
         respect to that point.
         """
+        scale_factor = max(scale_factor, min_scale_factor)
         self.apply_points_function(
             lambda points: scale_factor * points,
             works_on_bounding_box=True,
