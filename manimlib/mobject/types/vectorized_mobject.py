@@ -848,8 +848,8 @@ class VMobject(Mobject):
             old_points = self.get_points()
             func(self, *args, **kwargs)
             if not np.all(self.get_points() == old_points):
-                self.refresh_triangulation()
                 self.refresh_unit_normal()
+                self.refresh_triangulation()
         return wrapper
 
     @triggers_refreshed_triangulation
@@ -870,9 +870,10 @@ class VMobject(Mobject):
             self.make_approximately_smooth()
         return self
 
-    @triggers_refreshed_triangulation
     def flip(self, *args, **kwargs):
         super().flip(*args, **kwargs)
+        self.refresh_unit_normal()
+        self.refresh_triangulation()
         return self
 
     # For shaders
