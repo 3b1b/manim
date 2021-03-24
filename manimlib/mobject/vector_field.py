@@ -131,7 +131,7 @@ class VectorField(VGroup):
             origin, _output, buff=0,
             **vector_config
         )
-        vect.shift(_input)
+        vect.shift(_input - origin)
         vect.set_rgba_array([[*self.value_to_rgb(norm), self.opacity]])
         return vect
 
