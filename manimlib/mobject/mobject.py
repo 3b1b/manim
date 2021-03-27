@@ -176,6 +176,7 @@ class Mobject(object):
 
     def match_points(self, mobject):
         self.set_points(mobject.get_points())
+        return self
 
     def get_points(self):
         return self.data["points"]
