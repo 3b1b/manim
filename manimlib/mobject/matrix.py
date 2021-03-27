@@ -57,8 +57,8 @@ class Matrix(VMobject):
     CONFIG = {
         "v_buff": 0.8,
         "h_buff": 1.3,
-        "bracket_h_buff": MED_SMALL_BUFF,
-        "bracket_v_buff": MED_SMALL_BUFF,
+        "bracket_h_buff": 0.2,
+        "bracket_v_buff": 0.25,
         "add_background_rectangles_to_entries": False,
         "include_background_rectangle": False,
         "element_to_mobject": Tex,
@@ -130,6 +130,12 @@ class Matrix(VMobject):
         return VGroup(*[
             VGroup(*[row[i] for row in self.mob_matrix])
             for i in range(len(self.mob_matrix[0]))
+        ])
+
+    def get_rows(self):
+        return VGroup(*[
+            VGroup(*row)
+            for row in self.mob_matrix
         ])
 
     def set_column_colors(self, *colors):
