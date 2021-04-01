@@ -63,8 +63,9 @@ class Brace(SingleStringTex):
         return self
 
     def get_text(self, text, **kwargs):
-        text_mob = Text(text)
-        self.put_at_tip(text_mob, **kwargs)
+        buff = kwargs.pop("buff", SMALL_BUFF)
+        text_mob = Text(text, **kwargs)
+        self.put_at_tip(text_mob, buff=buff)
         return text_mob
 
     def get_tex(self, *tex, **kwargs):
