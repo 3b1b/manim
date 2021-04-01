@@ -5,7 +5,6 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.config_ops import merge_dicts_recursively
-from manimlib.utils.iterables import list_difference_update
 from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.space_ops import normalize
 
