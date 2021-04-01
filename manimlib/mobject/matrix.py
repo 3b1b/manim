@@ -169,6 +169,7 @@ class DecimalMatrix(Matrix):
 class IntegerMatrix(Matrix):
     CONFIG = {
         "element_to_mobject": Integer,
+        "element_alignment_corner": UP,
     }
 
 
