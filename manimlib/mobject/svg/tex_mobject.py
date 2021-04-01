@@ -152,7 +152,7 @@ class SingleStringTex(VMobject):
 
 class Tex(SingleStringTex):
     CONFIG = {
-        "arg_separator": " ",
+        "arg_separator": "",
         # Note, use of isolate is largely rendered
         # moot by the fact that you can surround such strings in
         # {{ and }} as needed.
