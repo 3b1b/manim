@@ -77,14 +77,22 @@ class CameraFrame(Mobject):
         self.set_euler_angles(theta, phi, gamma)
         return self
 
-    def set_euler_angles(self, theta=None, phi=None, gamma=None):
+    def set_euler_angles(self, theta=None, phi=None, gamma=None, units=RADIANS):
         if theta is not None:
-            self.data["euler_angles"][0] = theta
+            self.data["euler_angles"][0] = theta * units
         if phi is not None:
-            self.data["euler_angles"][1] = phi
+            self.data["euler_angles"][1] = phi * units
         if gamma is not None:
-            self.data["euler_angles"][2] = gamma
+            self.data["euler_angles"][2] = gamma * units
         self.refresh_rotation_matrix()
+        return self
+
+    def reorient(self, theta_degrees=None, phi_degrees=None, gamma_degrees=None):
+        """
+        Shortcut for set_euler_angles, defaulting to taking
+        in angles in degrees
+        """
+        self.set_euler_angles(theta_degrees, phi_degrees, gamma_degrees, units=DEGREES)
         return self
 
     def set_theta(self, theta):
