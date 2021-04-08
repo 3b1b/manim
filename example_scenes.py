@@ -583,7 +583,7 @@ class SurfaceExample(Scene):
         self.wait()
 
 
-class InteractiveDevlopment(Scene):
+class InteractiveDevelopment(Scene):
     def construct(self):
         circle = Circle()
         circle.set_fill(BLUE, opacity=0.5)
