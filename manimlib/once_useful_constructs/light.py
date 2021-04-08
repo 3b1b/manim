@@ -74,11 +74,13 @@ class SwitchOff(LaggedStartMap):
 
 class Lighthouse(SVGMobject):
     CONFIG = {
-        "file_name": "lighthouse",
         "height": LIGHTHOUSE_HEIGHT,
         "fill_color": WHITE,
         "fill_opacity": 1.0,
     }
+
+    def __init__(self, **kwargs):
+        super().__init__("lighthouse", **kwargs)
 
     def move_to(self, point):
         self.next_to(point, DOWN, buff=0)
