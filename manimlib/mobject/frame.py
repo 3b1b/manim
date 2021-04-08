@@ -20,6 +20,9 @@ class ScreenRectangle(Rectangle):
 class FullScreenRectangle(ScreenRectangle):
     CONFIG = {
         "height": FRAME_HEIGHT,
+        "fill_color": GREY_E,
+        "fill_opacity": 1,
+        "stroke_width": 0,
     }
 
 

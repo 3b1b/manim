@@ -62,10 +62,13 @@ def move_submobjects_along_vector_field(mobject, func):
     return mobject
 
 
-def move_points_along_vector_field(mobject, func):
+def move_points_along_vector_field(mobject, func, coordinate_system):
+    cs = coordinate_system
+    origin = cs.get_origin()
+
     def apply_nudge(self, dt):
-        self.mobject.apply_function(
-            lambda p: p + func(p) * dt
+        mobject.apply_function(
+            lambda p: p + (cs.c2p(*func(*cs.p2c(p))) - origin) * dt
         )
     mobject.add_updater(apply_nudge)
     return mobject
@@ -128,7 +131,7 @@ class VectorField(VGroup):
             origin, _output, buff=0,
             **vector_config
         )
-        vect.shift(_input)
+        vect.shift(_input - origin)
         vect.set_rgba_array([[*self.value_to_rgb(norm), self.opacity]])
         return vect
 
@@ -162,19 +165,21 @@ class StreamLines(VGroup):
         self.init_style()
 
     def point_func(self, point):
-        return self.coordinate_system.c2p(
-            *self.func(*self.coordinate_system.p2c(point))
-        )
+        in_coords = self.coordinate_system.p2c(point)
+        out_coords = self.func(*in_coords)
+        return self.coordinate_system.c2p(*out_coords)
 
     def draw_lines(self):
         lines = []
+        origin = self.coordinate_system.get_origin()
         for point in self.get_start_points():
             points = [point]
             total_arc_len = 0
-            # for t in np.arange(0, self.virtual_time, self.dt):
+            time = 0
             for x in range(self.max_time_steps):
+                time += self.dt
                 last_point = points[-1]
-                new_point = last_point + self.dt * self.point_func(last_point)
+                new_point = last_point + self.dt * (self.point_func(last_point) - origin)
                 points.append(new_point)
                 total_arc_len += get_norm(new_point - last_point)
                 if get_norm(last_point) > self.cutoff_norm:
@@ -182,8 +187,10 @@ class StreamLines(VGroup):
                 if total_arc_len > self.arc_len:
                     break
             line = VMobject()
+            line.virtual_time = time
             step = max(1, int(len(points) / self.n_samples_per_line))
-            line.set_points_smoothly(points[::step])
+            line.set_points_as_corners(points[::step])
+            line.make_approximately_smooth()
             lines.append(line)
         self.set_submobjects(lines)
 
@@ -220,7 +227,7 @@ class StreamLines(VGroup):
                 rgbas[:, 3] = self.stroke_opacity
                 line.set_rgba_array(rgbas, "stroke_rgba")
         else:
-            self.set_stroke(self.stroke_color)
+            self.set_stroke(self.stroke_color, opacity=self.stroke_opacity)
 
         if self.taper_stroke_width:
             width = [0, self.stroke_width, 0]
@@ -234,7 +241,7 @@ class AnimatedStreamLines(VGroup):
         "lag_range": 4,
         "line_anim_class": VShowPassingFlash,
         "line_anim_config": {
-            "run_time": 4,
+            # "run_time": 4,
             "rate_func": linear,
             "time_width": 0.5,
         },
@@ -244,7 +251,11 @@ class AnimatedStreamLines(VGroup):
         super().__init__(**kwargs)
         self.stream_lines = stream_lines
         for line in stream_lines:
-            line.anim = self.line_anim_class(line, **self.line_anim_config)
+            line.anim = self.line_anim_class(
+                line,
+                run_time=line.virtual_time,
+                **self.line_anim_config,
+            )
             line.anim.begin()
             line.time = -self.lag_range * random.random()
             self.add(line.anim.mobject)

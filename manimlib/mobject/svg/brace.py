@@ -8,6 +8,7 @@ from manimlib.animation.growing import GrowFromCenter
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.tex_mobject import SingleStringTex
 from manimlib.mobject.svg.tex_mobject import TexText
+from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.space_ops import get_norm
@@ -61,9 +62,10 @@ class Brace(SingleStringTex):
             mob.shift(self.get_direction() * shift_distance)
         return self
 
-    def get_text(self, *text, **kwargs):
-        text_mob = TexText(*text)
-        self.put_at_tip(text_mob, **kwargs)
+    def get_text(self, text, **kwargs):
+        buff = kwargs.pop("buff", SMALL_BUFF)
+        text_mob = Text(text, **kwargs)
+        self.put_at_tip(text_mob, buff=buff)
         return text_mob
 
     def get_tex(self, *tex, **kwargs):
