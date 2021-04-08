@@ -8,6 +8,8 @@ System requirements are：
 - `FFmpeg <https://ffmpeg.org/>`__
 - `OpenGL <https://www.opengl.org//>`__ (included in python package ``PyOpenGL``)
 - `LaTeX <https://www.latex-project.org>`__ (optional, if you want to use LaTeX)
+- `Pango <https://pango.org>`__ (only for Linux)
+
 
 Directly
 --------
