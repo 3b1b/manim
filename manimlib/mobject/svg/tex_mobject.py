@@ -172,14 +172,12 @@ class Tex(SingleStringTex):
             self.organize_submobjects_left_to_right()
 
     def break_up_tex_strings(self, tex_strings):
-        # Separate out anything surrounded in double braces
-        patterns = ["{{", "}}"]
         # Separate out any strings specified in the isolate
         # or tex_to_color_map lists.
-        patterns.extend([
+        patterns = (
             "({})".format(re.escape(ss))
             for ss in it.chain(self.isolate, self.tex_to_color_map.keys())
-        ])
+        )
         pattern = "|".join(patterns)
         pieces = []
         for s in tex_strings:
