@@ -401,8 +401,7 @@ class CoordinateSystemExample(Scene):
         # system defined by them.
         f_always(dot.move_to, lambda: axes.c2p(1, 1))
         self.play(
-            axes.animate.scale(0.75),
-            axes.animate.to_corner(UL),
+            axes.animate.scale(0.75).to_corner(UL),
             run_time=2,
         )
         self.wait()
