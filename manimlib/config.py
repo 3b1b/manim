@@ -234,7 +234,9 @@ def get_configuration(args):
 
     # Default to making window half the screen size
     # but make it full screen if -f is passed in
-    monitor = get_monitors()[custom_config["window_monitor"]]
+    monitors = get_monitors()
+    mon_index = custom_config["window_monitor"]
+    monitor = monitors[min(mon_index, len(monitors) - 1)]
     window_width = monitor.width
     if not args.full_screen:
         window_width //= 2

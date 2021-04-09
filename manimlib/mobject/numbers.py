@@ -128,10 +128,11 @@ class DecimalNumber(VMobject):
 
     def set_value(self, number):
         move_to_point = self.get_edge_center(self.edge_to_fix)
-        style = self.get_style()
+        old_submobjects = self.submobjects
         self.set_submobjects_from_number(number)
         self.move_to(move_to_point, self.edge_to_fix)
-        self.set_style(**style)
+        for sm1, sm2 in zip(self.submobjects, old_submobjects):
+            sm1.match_style(sm2)
         return self
 
     def scale(self, scale_factor, **kwargs):

@@ -5,7 +5,6 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.config_ops import merge_dicts_recursively
-from manimlib.utils.iterables import list_difference_update
 from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.space_ops import normalize
 
@@ -144,7 +143,7 @@ class NumberLine(Line):
             direction=direction,
             buff=buff
         )
-        if x < 0 and self.line_to_number_direction[0] == 0:
+        if x < 0 and direction[0] == 0:
             # Align without the minus sign
             num_mob.shift(num_mob[0].get_width() * LEFT / 2)
         return num_mob
@@ -155,10 +154,11 @@ class NumberLine(Line):
 
         kwargs["font_size"] = font_size
 
+        if excluding is None:
+            excluding = self.numbers_to_exclude
+
         numbers = VGroup()
         for x in x_values:
-            if x in self.numbers_to_exclude:
-                continue
             if excluding is not None and x in excluding:
                 continue
             numbers.add(self.get_number_mobject(x, **kwargs))

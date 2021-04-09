@@ -161,20 +161,24 @@ class TexTransformExample(Scene):
     def construct(self):
         to_isolate = ["B", "C", "=", "(", ")"]
         lines = VGroup(
-            # Surrounding substrings with double braces
-            # will ensure that those parts are separated
-            # out in the Tex.  For example, here the
-            # Tex will have 5 submobjects, corresponding
-            # to the strings [A^2, +, B^2, =, C^2]
-            Tex("{{A^2}} + {{B^2}} = {{C^2}}"),
-            Tex("{{A^2}} = {{C^2}} - {{B^2}}"),
+            # Passing in muliple arguments to Tex will result
+            # in the same expression as if those arguments had
+            # been joined together, except that the submobject
+            # heirarchy of the resulting mobject ensure that the
+            # Tex mobject has a subject corresponding to
+            # each of these strings.  For example, the Tex mobject
+            # below will have 5 subjects, corresponding to the
+            # expressions [A^2, +, B^2, =, C^2]
+            Tex("A^2", "+", "B^2", "=", "C^2"),
+            # Likewise here
+            Tex("A^2", "=", "C^2", "-", "B^2"),
             # Alternatively, you can pass in the keyword argument
             # "isolate" with a list of strings that should be out as
-            # their own submobject.  So both lines below are equivalent
-            # to what you'd get by wrapping every instance of "B", "C"
-            # "=", "(" and ")" with double braces
-            Tex("{{A^2}} = (C + B)(C - B)", isolate=to_isolate),
-            Tex("A = \\sqrt{(C + B)(C - B)}", isolate=to_isolate)
+            # their own submobject.  So the line below is equivalent
+            # to the commented out line below it.
+            Tex("A^2 = (C + B)(C - B)", isolate=["A^2", *to_isolate]),
+            # Tex("A^2", "=", "(", "C", "+", "B", ")", "(", "C", "-", "B", ")"),
+            Tex("A = \\sqrt{(C + B)(C - B)}", isolate=["A", *to_isolate])
         )
         lines.arrange(DOWN, buff=LARGE_BUFF)
         for line in lines:
@@ -233,7 +237,7 @@ class TexTransformExample(Scene):
         # new_line2 and the "\sqrt" from the final line.  By passing in,
         # transform_mismatches=True, it will transform this "^2" part into
         # the "\sqrt" part.
-        new_line2 = Tex("{{A}}^2 = (C + B)(C - B)", isolate=to_isolate)
+        new_line2 = Tex("A^2 = (C + B)(C - B)", isolate=["A", *to_isolate])
         new_line2.replace(lines[2])
         new_line2.match_style(lines[2])
 
@@ -401,8 +405,7 @@ class CoordinateSystemExample(Scene):
         # system defined by them.
         f_always(dot.move_to, lambda: axes.c2p(1, 1))
         self.play(
-            axes.animate.scale(0.75),
-            axes.animate.to_corner(UL),
+            axes.animate.scale(0.75).to_corner(UL),
             run_time=2,
         )
         self.wait()
@@ -584,7 +587,7 @@ class SurfaceExample(Scene):
         self.wait()
 
 
-class InteractiveDevlopment(Scene):
+class InteractiveDevelopment(Scene):
     def construct(self):
         circle = Circle()
         circle.set_fill(BLUE, opacity=0.5)
