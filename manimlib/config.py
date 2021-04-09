@@ -130,7 +130,11 @@ def parse_cli():
         )
         parser.add_argument(
             "--video_dir",
-            help="directory to write video",
+            help="Directory to write video",
+        )
+        parser.add_argument(
+            "--config_file",
+            help="Path to the custom configuration file",
         )
         args = parser.parse_args()
         return args
@@ -155,17 +159,19 @@ def get_module(file_name):
         spec.loader.exec_module(module)
         return module
 
+__config_file__ = "custom_config.yml"
 
 def get_custom_config():
-    filename = "custom_config.yml"
+    global __config_file__
+
     global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
 
     if os.path.exists(global_defaults_file):
         with open(global_defaults_file, "r") as file:
             config = yaml.safe_load(file)
 
-        if os.path.exists(filename):
-            with open(filename, "r") as file:
+        if os.path.exists(__config_file__):
+            with open(__config_file__, "r") as file:
                 local_defaults = yaml.safe_load(file)
             if local_defaults:
                 config = merge_dicts_recursively(
@@ -173,22 +179,40 @@ def get_custom_config():
                     local_defaults,
                 )
     else:
-        with open(filename, "r") as file:
+        with open(__config_file__, "r") as file:
             config = yaml.safe_load(file)
-    
+
     return config
 
 
 def get_configuration(args):
-    local_config_file = "custom_config.yml"
+    global __config_file__
+
+    # ensure __config_file__ always exists
+    if args.config_file is not None:
+        if not os.path.exists(args.config_file):
+            print("There is no configuration file detected.")
+            print(f"Copy default configuration file to {args.config_file}.")
+            if sys.platform == 'win32':
+                os.system(f"copy default_config.yml {args.config_file}")
+            elif sys.platform == 'linux2':
+                os.system(f"cp default_config.yml {args.config_file}")
+            else:
+                print("Please create the file manually.")
+            print("Read configuration from default_config.yml.")
+        else:
+            __config_file__ = args.config_file
+
     global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
-    if not (os.path.exists(global_defaults_file) or os.path.exists(local_config_file)):
+
+    if not (os.path.exists(global_defaults_file) or os.path.exists(__config_file__)):
         print("There is no configuration file detected. Initial configuration:\n")
         init_customization()
-    elif not os.path.exists(local_config_file):
-        print(f"""Warning: Using the default configuration file, which you can modify in {global_defaults_file}
-        If you want to create a local configuration file, you can create a file named {local_config_file}, or run manimgl --config
-        """)
+
+    elif not os.path.exists(__config_file__):
+        print(f"Warning: Using the default configuration file, which you can modify in {global_defaults_file}")
+        print(f"If you want to create a local configuration file, you can create a file named {__config_file__}, or run manimgl --config")
+
     custom_config = get_custom_config()
 
     write_file = any([args.write_file, args.open, args.finder])
