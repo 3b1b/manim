@@ -1,5 +1,3 @@
-import operator as op
-
 from manimlib.constants import *
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.numbers import DecimalNumber
@@ -13,72 +11,83 @@ from manimlib.utils.space_ops import normalize
 
 class NumberLine(Line):
     CONFIG = {
-        "color": LIGHT_GREY,
+        "color": GREY_B,
         "stroke_width": 2,
-        "x_min": -FRAME_X_RADIUS,
-        "x_max": FRAME_X_RADIUS,
+        # List of 2 or 3 elements, x_min, x_max, step_size
+        "x_range": [-8, 8, 1],
+        # How big is one one unit of this number line in terms of absolute spacial distance
         "unit_size": 1,
+        "width": None,
         "include_ticks": True,
         "tick_size": 0.1,
-        "tick_frequency": 1,
-        # Defaults to value near x_min s.t. 0 is a tick
-        # TODO, rename this
-        "leftmost_tick": None,
+        "longer_tick_multiple": 1.5,
+        "tick_offset": 0,
         # Change name
-        "numbers_with_elongated_ticks": [0],
+        "numbers_with_elongated_ticks": [],
         "include_numbers": False,
-        "numbers_to_show": None,
-        "longer_tick_multiple": 2,
-        "number_at_center": 0,
-        "number_scale_val": 0.75,
-        "label_direction": DOWN,
+        "line_to_number_direction": DOWN,
         "line_to_number_buff": MED_SMALL_BUFF,
         "include_tip": False,
-        "tip_width": 0.25,
-        "tip_height": 0.25,
+        "tip_config": {
+            "width": 0.25,
+            "length": 0.25,
+        },
         "decimal_number_config": {
             "num_decimal_places": 0,
+            "font_size": 36,
         },
-        "exclude_zero_from_default_numbers": False,
+        "numbers_to_exclude": None
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, x_range=None, **kwargs):
         digest_config(self, kwargs)
-        start = self.unit_size * self.x_min * RIGHT
-        end = self.unit_size * self.x_max * RIGHT
-        Line.__init__(self, start, end, **kwargs)
-        self.shift(-self.number_to_point(self.number_at_center))
+        if x_range is None:
+            x_range = self.x_range
+        if len(x_range) == 2:
+            x_range = [*x_range, 1]
 
-        self.init_leftmost_tick()
+        x_min, x_max, x_step = x_range
+        # A lot of old scenes pass in x_min or x_max explicitly,
+        # so this is just here to keep those workin
+        self.x_min = kwargs.get("x_min", x_min)
+        self.x_max = kwargs.get("x_max", x_max)
+        self.x_step = kwargs.get("x_step", x_step)
+
+        super().__init__(self.x_min * RIGHT, self.x_max * RIGHT, **kwargs)
+        if self.width:
+            self.set_width(self.width)
+            self.unit_size = self.get_unit_size()
+        else:
+            self.scale(self.unit_size)
+        self.center()
+
         if self.include_tip:
             self.add_tip()
-        if self.include_ticks:
-            self.add_tick_marks()
-        if self.include_numbers:
-            self.add_numbers()
-
-    def init_leftmost_tick(self):
-        if self.leftmost_tick is None:
-            self.leftmost_tick = op.mul(
-                self.tick_frequency,
-                np.ceil(self.x_min / self.tick_frequency)
+            self.tip.set_stroke(
+                self.stroke_color,
+                self.stroke_width,
             )
+        if self.include_ticks:
+            self.add_ticks()
+        if self.include_numbers:
+            self.add_numbers(excluding=self.numbers_to_exclude)
 
-    def add_tick_marks(self):
-        tick_size = self.tick_size
-        self.tick_marks = VGroup(*[
-            self.get_tick(x, tick_size)
-            for x in self.get_tick_numbers()
-        ])
-        big_tick_size = tick_size * self.longer_tick_multiple
-        self.big_tick_marks = VGroup(*[
-            self.get_tick(x, big_tick_size)
-            for x in self.numbers_with_elongated_ticks
-        ])
-        self.add(
-            self.tick_marks,
-            self.big_tick_marks,
-        )
+    def get_tick_range(self):
+        if self.include_tip:
+            x_max = self.x_max
+        else:
+            x_max = self.x_max + self.x_step
+        return np.arange(self.x_min, x_max, self.x_step)
+
+    def add_ticks(self):
+        ticks = VGroup()
+        for x in self.get_tick_range():
+            size = self.tick_size
+            if x in self.numbers_with_elongated_ticks:
+                size *= self.longer_tick_multiple
+            ticks.add(self.get_tick(x, size))
+        self.add(ticks)
+        self.ticks = ticks
 
     def get_tick(self, x, size=None):
         if size is None:
@@ -90,36 +99,18 @@ class NumberLine(Line):
         return result
 
     def get_tick_marks(self):
-        return VGroup(
-            *self.tick_marks,
-            *self.big_tick_marks,
-        )
-
-    def get_tick_numbers(self):
-        u = -1 if self.include_tip else 1
-        return np.arange(
-            self.leftmost_tick,
-            self.x_max + u * self.tick_frequency / 2,
-            self.tick_frequency
-        )
+        return self.ticks
 
     def number_to_point(self, number):
         alpha = float(number - self.x_min) / (self.x_max - self.x_min)
-        return interpolate(
-            self.get_start(), self.get_end(), alpha
-        )
+        return interpolate(self.get_start(), self.get_end(), alpha)
 
     def point_to_number(self, point):
-        start_point, end_point = self.get_start_and_end()
-        full_vect = end_point - start_point
-        unit_vect = normalize(full_vect)
-
-        def distance_from_start(p):
-            return np.dot(p - start_point, unit_vect)
-
+        start, end = self.get_start_and_end()
+        unit_vect = normalize(end - start)
         proportion = fdiv(
-            distance_from_start(point),
-            distance_from_start(end_point)
+            np.dot(point - start, unit_vect),
+            np.dot(end - start, unit_vect),
         )
         return interpolate(self.x_min, self.x_max, proportion)
 
@@ -132,70 +123,55 @@ class NumberLine(Line):
         return self.point_to_number(point)
 
     def get_unit_size(self):
-        return (self.x_max - self.x_min) / self.get_length()
+        return self.get_length() / (self.x_max - self.x_min)
 
-    def default_numbers_to_display(self):
-        if self.numbers_to_show is not None:
-            return self.numbers_to_show
-        numbers = np.arange(
-            np.floor(self.leftmost_tick),
-            np.ceil(self.x_max),
-        )
-        if self.exclude_zero_from_default_numbers:
-            numbers = numbers[numbers != 0]
-        return numbers
-
-    def get_number_mobject(self, number,
-                           number_config=None,
-                           scale_val=None,
+    def get_number_mobject(self, x,
                            direction=None,
-                           buff=None):
+                           buff=None,
+                           **number_config):
         number_config = merge_dicts_recursively(
-            self.decimal_number_config,
-            number_config or {},
+            self.decimal_number_config, number_config
         )
-        if scale_val is None:
-            scale_val = self.number_scale_val
         if direction is None:
-            direction = self.label_direction
-        buff = buff or self.line_to_number_buff
+            direction = self.line_to_number_direction
+        if buff is None:
+            buff = self.line_to_number_buff
 
-        num_mob = DecimalNumber(number, **number_config)
-        num_mob.scale(scale_val)
+        num_mob = DecimalNumber(x, **number_config)
         num_mob.next_to(
-            self.number_to_point(number),
+            self.number_to_point(x),
             direction=direction,
             buff=buff
         )
+        if x < 0 and direction[0] == 0:
+            # Align without the minus sign
+            num_mob.shift(num_mob[0].get_width() * LEFT / 2)
         return num_mob
 
-    def get_number_mobjects(self, *numbers, **kwargs):
-        if len(numbers) == 0:
-            numbers = self.default_numbers_to_display()
-        return VGroup(*[
-            self.get_number_mobject(number, **kwargs)
-            for number in numbers
-        ])
+    def add_numbers(self, x_values=None, excluding=None, font_size=24, **kwargs):
+        if x_values is None:
+            x_values = self.get_tick_range()
 
-    def get_labels(self):
-        return self.get_number_mobjects()
+        kwargs["font_size"] = font_size
 
-    def add_numbers(self, *numbers, **kwargs):
-        self.numbers = self.get_number_mobjects(
-            *numbers, **kwargs
-        )
-        self.add(self.numbers)
-        return self
+        if excluding is None:
+            excluding = self.numbers_to_exclude
+
+        numbers = VGroup()
+        for x in x_values:
+            if excluding is not None and x in excluding:
+                continue
+            numbers.add(self.get_number_mobject(x, **kwargs))
+        self.add(numbers)
+        self.numbers = numbers
+        return numbers
 
 
 class UnitInterval(NumberLine):
     CONFIG = {
-        "x_min": 0,
-        "x_max": 1,
-        "unit_size": 6,
-        "tick_frequency": 0.1,
+        "x_range": [0, 1, 0.1],
+        "unit_size": 10,
         "numbers_with_elongated_ticks": [0, 1],
-        "number_at_center": 0.5,
         "decimal_number_config": {
             "num_decimal_places": 1,
         }

@@ -1,115 +1,60 @@
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
-from manimlib.utils.bezier import interpolate
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import color_to_rgba
-from manimlib.utils.color import rgba_to_color
-from manimlib.utils.iterables import stretch_array_to_length
+from manimlib.utils.iterables import resize_with_interpolation
+from manimlib.utils.iterables import resize_array
 
 
 class PMobject(Mobject):
     CONFIG = {
-        "stroke_width": DEFAULT_STROKE_WIDTH,
+        "opacity": 1.0,
     }
 
-    def reset_points(self):
-        self.rgbas = np.zeros((0, 4))
-        self.points = np.zeros((0, 3))
+    def resize_points(self, size, resize_func=resize_array):
+        # TODO
+        for key in self.data:
+            if len(self.data[key]) != size:
+                self.data[key] = resize_array(self.data[key], size)
         return self
 
-    def get_array_attrs(self):
-        return Mobject.get_array_attrs(self) + ["rgbas"]
-
-    def add_points(self, points, rgbas=None, color=None, alpha=1):
+    def add_points(self, points, rgbas=None, color=None, opacity=None):
         """
         points must be a Nx3 numpy array, as must rgbas if it is not None
         """
-        if not isinstance(points, np.ndarray):
-            points = np.array(points)
-        num_new_points = len(points)
-        self.points = np.vstack([self.points, points])
-        if rgbas is None:
-            color = Color(color) if color else self.color
-            rgbas = np.repeat(
-                [color_to_rgba(color, alpha)],
-                num_new_points,
+        self.append_points(points)
+        # rgbas array will have been resized with points
+        if color is not None:
+            if opacity is None:
+                opacity = self.data["rgbas"][-1, 3]
+            new_rgbas = np.repeat(
+                [color_to_rgba(color, opacity)],
+                len(points),
                 axis=0
             )
-        elif len(rgbas) != len(points):
-            raise Exception("points and rgbas must have same shape")
-        self.rgbas = np.vstack([self.rgbas, rgbas])
+        elif rgbas is not None:
+            new_rgbas = rgbas
+        self.data["rgbas"][-len(new_rgbas):] = new_rgbas
         return self
 
-    def set_color(self, color=YELLOW_C, family=True):
-        rgba = color_to_rgba(color)
-        mobs = self.family_members_with_points() if family else [self]
-        for mob in mobs:
-            mob.rgbas[:, :] = rgba
-        self.color = color
-        return self
-
-    def get_stroke_width(self):
-        return self.stroke_width
-
-    def set_stroke_width(self, width, family=True):
-        mobs = self.family_members_with_points() if family else [self]
-        for mob in mobs:
-            mob.stroke_width = width
-        return self
-
-    # def set_color_by_gradient(self, start_color, end_color):
     def set_color_by_gradient(self, *colors):
-        self.rgbas = np.array(list(map(
+        self.data["rgbas"] = np.array(list(map(
             color_to_rgba,
-            color_gradient(colors, len(self.points))
+            color_gradient(colors, self.get_num_points())
         )))
         return self
 
-        start_rgba, end_rgba = list(map(color_to_rgba, [start_color, end_color]))
-        for mob in self.family_members_with_points():
-            num_points = mob.get_num_points()
-            mob.rgbas = np.array([
-                interpolate(start_rgba, end_rgba, alpha)
-                for alpha in np.arange(num_points) / float(num_points)
-            ])
-        return self
-
-    def set_colors_by_radial_gradient(self, center=None, radius=1, inner_color=WHITE, outer_color=BLACK):
-        start_rgba, end_rgba = list(map(color_to_rgba, [start_color, end_color]))
-        if center is None:
-            center = self.get_center()
-        for mob in self.family_members_with_points():
-            num_points = mob.get_num_points()
-            t = min(1, np.abs(mob.get_center() - center) / radius)
-
-            mob.rgbas = np.array(
-                [interpolate(start_rgba, end_rgba, t)] * num_points
-            )
-        return self
-
-    def match_colors(self, mobject):
-        Mobject.align_data(self, mobject)
-        self.rgbas = np.array(mobject.rgbas)
+    def match_colors(self, pmobject):
+        self.data["rgbas"][:] = resize_with_interpolation(
+            pmobject.data["rgbas"], self.get_num_points()
+        )
         return self
 
     def filter_out(self, condition):
         for mob in self.family_members_with_points():
-            to_eliminate = ~np.apply_along_axis(condition, 1, mob.points)
-            mob.points = mob.points[to_eliminate]
-            mob.rgbas = mob.rgbas[to_eliminate]
-        return self
-
-    def thin_out(self, factor=5):
-        """
-        Removes all but every nth point for n = factor
-        """
-        for mob in self.family_members_with_points():
-            num_points = self.get_num_points()
-            mob.apply_over_attr_arrays(
-                lambda arr: arr[
-                    np.arange(0, num_points, factor)
-                ]
-            )
+            to_keep = ~np.apply_along_axis(condition, 1, mob.get_points())
+            for key in mob.data:
+                mob.data[key] = mob.data[key][to_keep]
         return self
 
     def sort_points(self, function=lambda p: p[0]):
@@ -118,72 +63,37 @@ class PMobject(Mobject):
         """
         for mob in self.family_members_with_points():
             indices = np.argsort(
-                np.apply_along_axis(function, 1, mob.points)
+                np.apply_along_axis(function, 1, mob.get_points())
             )
-            mob.apply_over_attr_arrays(lambda arr: arr[indices])
+            for key in mob.data:
+                mob.data[key] = mob.data[key][indices]
         return self
-
-    def fade_to(self, color, alpha):
-        self.rgbas = interpolate(self.rgbas, color_to_rgba(color), alpha)
-        for mob in self.submobjects:
-            mob.fade_to(color, alpha)
-        return self
-
-    def get_all_rgbas(self):
-        return self.get_merged_array("rgbas")
 
     def ingest_submobjects(self):
-        attrs = self.get_array_attrs()
-        arrays = list(map(self.get_merged_array, attrs))
-        for attr, array in zip(attrs, arrays):
-            setattr(self, attr, array)
-        self.set_submobjects([])
+        for key in self.data:
+            self.data[key] = np.vstack([
+                sm.data[key]
+                for sm in self.get_family()
+            ])
         return self
-
-    def get_color(self):
-        return rgba_to_color(self.rgbas[0, :])
 
     def point_from_proportion(self, alpha):
         index = alpha * (self.get_num_points() - 1)
-        return self.points[index]
+        return self.get_points()[int(index)]
 
-    # Alignment
-    def align_points_with_larger(self, larger_mobject):
-        assert(isinstance(larger_mobject, PMobject))
-        self.apply_over_attr_arrays(
-            lambda a: stretch_array_to_length(
-                a, larger_mobject.get_num_points()
-            )
-        )
-
-    def interpolate_color(self, mobject1, mobject2, alpha):
-        self.rgbas = interpolate(
-            mobject1.rgbas, mobject2.rgbas, alpha
-        )
-        self.set_stroke_width(interpolate(
-            mobject1.get_stroke_width(),
-            mobject2.get_stroke_width(),
-            alpha,
-        ))
+    def pointwise_become_partial(self, pmobject, a, b):
+        lower_index = int(a * pmobject.get_num_points())
+        upper_index = int(b * pmobject.get_num_points())
+        for key in self.data:
+            self.data[key] = pmobject.data[key][lower_index:upper_index]
         return self
-
-    def pointwise_become_partial(self, mobject, a, b):
-        lower_index, upper_index = [
-            int(x * mobject.get_num_points())
-            for x in (a, b)
-        ]
-        for attr in self.get_array_attrs():
-            full_array = getattr(mobject, attr)
-            partial_array = full_array[lower_index:upper_index]
-            setattr(self, attr, partial_array)
 
 
 class PGroup(PMobject):
     def __init__(self, *pmobs, **kwargs):
         if not all([isinstance(m, PMobject) for m in pmobs]):
             raise Exception("All submobjects must be of type PMobject")
-        super().__init__(**kwargs)
-        self.add(*pmobs)
+        super().__init__(*pmobs, **kwargs)
 
 
 class Point(PMobject):
@@ -192,5 +102,5 @@ class Point(PMobject):
     }
 
     def __init__(self, location=ORIGIN, **kwargs):
-        PMobject.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.add_points([location])

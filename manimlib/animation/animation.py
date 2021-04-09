@@ -1,5 +1,6 @@
 from copy import deepcopy
 
+from manimlib.mobject.mobject import _AnimationBuilder
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import smooth
@@ -17,13 +18,15 @@ class Animation(object):
         "name": None,
         # Does this animation add or remove a mobject form the screen
         "remover": False,
+        # What to enter into the update function upon completion
+        "final_alpha_value": 1,
         # If 0, the animation is applied to all submobjects
         # at the same time
         # If 1, it is applied to each successively.
         # If 0 < lag_ratio < 1, its applied to each
         # with lagged start times
         "lag_ratio": DEFAULT_ANIMATION_LAG_RATIO,
-        "suspend_mobject_updating": True,
+        "suspend_mobject_updating": False,
     }
 
     def __init__(self, mobject, **kwargs):
@@ -41,7 +44,6 @@ class Animation(object):
         # played.  As much initialization as possible,
         # especially any mobject copying, should live in
         # this method
-        self.mobject.prepare_for_animation()
         self.starting_mobject = self.create_starting_mobject()
         if self.suspend_mobject_updating:
             # All calls to self.mobject's internal updaters
@@ -55,8 +57,7 @@ class Animation(object):
         self.interpolate(0)
 
     def finish(self):
-        self.interpolate(1)
-        self.mobject.cleanup_from_animation()
+        self.interpolate(self.final_alpha_value)
         if self.suspend_mobject_updating:
             self.mobject.resume_updating()
 
@@ -76,7 +77,7 @@ class Animation(object):
 
     def get_all_families_zipped(self):
         return zip(*[
-            mob.family_members_with_points()
+            mob.get_family()
             for mob in self.get_all_mobjects()
         ])
 
@@ -159,3 +160,13 @@ class Animation(object):
 
     def is_remover(self):
         return self.remover
+
+
+def prepare_animation(anim):
+    if isinstance(anim, _AnimationBuilder):
+        return anim.build()
+
+    if isinstance(anim, Animation):
+        return anim
+
+    raise TypeError(f"Object {anim} cannot be converted to an animation")

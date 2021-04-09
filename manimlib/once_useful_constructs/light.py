@@ -74,11 +74,13 @@ class SwitchOff(LaggedStartMap):
 
 class Lighthouse(SVGMobject):
     CONFIG = {
-        "file_name": "lighthouse",
         "height": LIGHTHOUSE_HEIGHT,
         "fill_color": WHITE,
         "fill_opacity": 1.0,
     }
+
+    def __init__(self, **kwargs):
+        super().__init__("lighthouse", **kwargs)
 
     def move_to(self, point):
         self.next_to(point, DOWN, buff=0)
@@ -388,7 +390,7 @@ class LightSource(VMobject):
     def has_screen(self):
         if self.screen is None:
             return False
-        elif np.size(self.screen.points) == 0:
+        elif self.screen.get_num_points() == 0:
             return False
         else:
             return True
@@ -572,7 +574,7 @@ class LightSource(VMobject):
 
         # add two control points for the outer cone
         if np.size(anchors) == 0:
-            self.shadow.points = []
+            self.shadow.resize_points(0)
             return
 
         ray1 = anchors[source_index - 1] - projected_source

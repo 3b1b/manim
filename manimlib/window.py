@@ -1,33 +1,61 @@
 import moderngl_window as mglw
 from moderngl_window.context.pyglet.window import Window as PygletWindow
 from moderngl_window.timers.clock import Timer
+from screeninfo import get_monitors
 
-from manimlib.constants import DEFAULT_PIXEL_WIDTH
-from manimlib.constants import DEFAULT_PIXEL_HEIGHT
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.customization import get_customization
 
 
 class Window(PygletWindow):
-    size = (DEFAULT_PIXEL_WIDTH, DEFAULT_PIXEL_HEIGHT)
     fullscreen = False
     resizable = True
     gl_version = (3, 3)
     vsync = True
-    samples = 1
     cursor = True
 
-    def __init__(self, scene, **kwargs):
+    def __init__(self, scene, size=(1280, 720), **kwargs):
+        super().__init__()
         digest_config(self, kwargs)
-        super().__init__(**kwargs)
+
         self.scene = scene
+        self.pressed_keys = set()
         self.title = str(scene)
-        # Put at the top of the screen
-        self.position = (self.position[0], 0)
+        self.size = size
 
         mglw.activate_context(window=self)
         self.timer = Timer()
         self.config = mglw.WindowConfig(ctx=self.ctx, wnd=self, timer=self.timer)
         self.timer.start()
+
+        # No idea why, but when self.position is set once
+        # it sometimes doesn't actually change the position
+        # to the specified tuple on the rhs, but doing it
+        # twice seems to make it work.  ¯\_(ツ)_/¯
+        initial_position = self.find_initial_position(size)
+        self.position = initial_position
+        self.position = initial_position
+
+    def find_initial_position(self, size):
+        custom_position = get_customization()["window_position"]
+        monitors = get_monitors()
+        mon_index = get_customization()["window_monitor"]
+        monitor = monitors[min(mon_index, len(monitors) - 1)]
+        window_width, window_height = size
+        # Position might be specified with a string of the form
+        # x,y for integers x and y
+        if "," in custom_position:
+            return tuple(map(int, custom_position.split(",")))
+
+        # Alternatively, it might be specified with a string like
+        # UR, OO, DL, etc. specifiying what corner it should go to
+        char_to_n = {"L": 0, "U": 0, "O": 1, "R": 2, "D": 2}
+        width_diff = monitor.width - window_width
+        height_diff = monitor.height - window_height
+        return (
+            monitor.x + char_to_n[custom_position[1]] * width_diff // 2,
+            -monitor.y + char_to_n[custom_position[0]] * height_diff // 2,
+        )
 
     # Delegate event handling to scene
     def pixel_coords_to_space_coords(self, px, py, relative=False):
@@ -61,13 +89,15 @@ class Window(PygletWindow):
         offset = self.pixel_coords_to_space_coords(x_offset, y_offset, relative=True)
         self.scene.on_mouse_scroll(point, offset)
 
-    def on_key_release(self, symbol, modifiers):
-        super().on_key_release(symbol, modifiers)
-        self.scene.on_key_release(symbol, modifiers)
-
     def on_key_press(self, symbol, modifiers):
+        self.pressed_keys.add(symbol)  # Modifiers?
         super().on_key_press(symbol, modifiers)
         self.scene.on_key_press(symbol, modifiers)
+
+    def on_key_release(self, symbol, modifiers):
+        self.pressed_keys.difference_update({symbol})  # Modifiers?
+        super().on_key_release(symbol, modifiers)
+        self.scene.on_key_release(symbol, modifiers)
 
     def on_resize(self, width: int, height: int):
         super().on_resize(width, height)
@@ -84,3 +114,6 @@ class Window(PygletWindow):
     def on_close(self):
         super().on_close()
         self.scene.on_close()
+
+    def is_key_pressed(self, symbol):
+        return (symbol in self.pressed_keys)

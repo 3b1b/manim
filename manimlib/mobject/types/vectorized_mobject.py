@@ -2,23 +2,22 @@ import itertools as it
 import operator as op
 import moderngl
 
-from colour import Color
-from functools import reduce
+from functools import reduce, wraps
 
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.bezier import bezier
-from manimlib.utils.bezier import get_smooth_handle_points
+from manimlib.utils.bezier import get_smooth_quadratic_bezier_handle_points
+from manimlib.utils.bezier import get_smooth_cubic_bezier_handle_points
 from manimlib.utils.bezier import get_quadratic_approximation_of_cubic
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import integer_interpolate
-from manimlib.utils.bezier import partial_bezier_points
-from manimlib.utils.color import color_to_rgba
+from manimlib.utils.bezier import partial_quadratic_bezier_points
 from manimlib.utils.color import rgb_to_hex
 from manimlib.utils.iterables import make_even
-from manimlib.utils.iterables import stretch_array_to_length
-from manimlib.utils.iterables import stretch_array_to_length_with_interpolation
+from manimlib.utils.iterables import resize_array
+from manimlib.utils.iterables import resize_with_interpolation
 from manimlib.utils.iterables import listify
 from manimlib.utils.space_ops import angle_between_vectors
 from manimlib.utils.space_ops import cross2d
@@ -26,7 +25,7 @@ from manimlib.utils.space_ops import earclip_triangulation
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import get_unit_normal
 from manimlib.utils.space_ops import z_to_vector
-from manimlib.utils.shaders import get_shader_info
+from manimlib.shader_wrapper import ShaderWrapper
 
 
 class VMobject(Mobject):
@@ -37,15 +36,11 @@ class VMobject(Mobject):
         "stroke_opacity": 1.0,
         "stroke_width": DEFAULT_STROKE_WIDTH,
         "draw_stroke_behind_fill": False,
-        # TODO, currently sheen does nothing
-        "sheen_factor": 0.0,
-        "sheen_direction": UL,
         # Indicates that it will not be displayed, but
         # that it should count in parent mobject's path
         "pre_function_handle_to_anchor_scale_factor": 0.01,
         "make_smooth_after_applying_functions": False,
         "background_image_file": None,
-        "shade_in_3d": False,
         # This is within a pixel
         # TODO, do we care about accounting for
         # varying zoom levels?
@@ -53,24 +48,18 @@ class VMobject(Mobject):
         "n_points_per_curve": 3,
         "long_lines": False,
         # For shaders
-        "stroke_vert_shader_file": "quadratic_bezier_stroke_vert.glsl",
-        "stroke_geom_shader_file": "quadratic_bezier_stroke_geom.glsl",
-        "stroke_frag_shader_file": "quadratic_bezier_stroke_frag.glsl",
-        "fill_vert_shader_file": "quadratic_bezier_fill_vert.glsl",
-        "fill_geom_shader_file": "quadratic_bezier_fill_geom.glsl",
-        "fill_frag_shader_file": "quadratic_bezier_fill_frag.glsl",
-        # Could also be Bevel, Miter, Round
+        "stroke_shader_folder": "quadratic_bezier_stroke",
+        "fill_shader_folder": "quadratic_bezier_fill",
+        # Could also be "bevel", "miter", "round"
         "joint_type": "auto",
-        # Positive gloss up to 1 makes it reflect the light.
-        "gloss": 0.2,
-        "render_primative": moderngl.TRIANGLES,
+        "flat_stroke": True,
+        "render_primitive": moderngl.TRIANGLES,
         "triangulation_locked": False,
         "fill_dtype": [
             ('point', np.float32, (3,)),
             ('unit_normal', np.float32, (3,)),
             ('color', np.float32, (4,)),
-            ('fill_all', np.float32, (1,)),
-            ('gloss', np.float32, (1,)),
+            ('vert_index', np.float32, (1,)),
         ],
         "stroke_dtype": [
             ("point", np.float32, (3,)),
@@ -79,18 +68,30 @@ class VMobject(Mobject):
             ('unit_normal', np.float32, (3,)),
             ("stroke_width", np.float32, (1,)),
             ("color", np.float32, (4,)),
-            ("joint_type", np.float32, (1,)),
-            ("gloss", np.float32, (1,)),
         ]
     }
+
+    def __init__(self, **kwargs):
+        self.needs_new_triangulation = True
+        self.triangulation = np.zeros(0, dtype='i4')
+        super().__init__(**kwargs)
+        self.refresh_unit_normal()
 
     def get_group_class(self):
         return VGroup
 
+    def init_data(self):
+        super().init_data()
+        self.data.pop("rgbas")
+        self.data.update({
+            "fill_rgba": np.zeros((1, 4)),
+            "stroke_rgba": np.zeros((1, 4)),
+            "stroke_width": np.zeros((1, 1)),
+            "unit_normal": np.zeros((1, 3))
+        })
+
     # Colors
     def init_colors(self):
-        self.fill_rgbas = np.zeros((1, 4))
-        self.stroke_rgbas = np.zeros((1, 4))
         self.set_fill(
             color=self.fill_color or self.color,
             opacity=self.fill_opacity,
@@ -99,109 +100,97 @@ class VMobject(Mobject):
             color=self.stroke_color or self.color,
             width=self.stroke_width,
             opacity=self.stroke_opacity,
+            background=self.draw_stroke_behind_fill,
         )
-        self.set_sheen(
-            factor=self.sheen_factor,
-            direction=self.sheen_direction,
-        )
+        self.set_gloss(self.gloss)
+        self.set_flat_stroke(self.flat_stroke)
         return self
 
-    def generate_rgba_array(self, color, opacity):
-        """
-        First arg can be either a color, or a tuple/list of colors.
-        Likewise, opacity can either be a float, or a tuple of floats.
-        """
-        colors = listify(color)
-        opacities = listify(opacity)
-        return np.array([
-            color_to_rgba(c, o)
-            for c, o in zip(*make_even(colors, opacities))
-        ])
+    def set_rgba_array(self, rgba_array, name=None, recurse=False):
+        if name is None:
+            names = ["fill_rgba", "stroke_rgba"]
+        else:
+            names = [name]
 
-    def update_rgbas_array(self, array_name, color, opacity):
-        rgbas = self.generate_rgba_array(color or BLACK, opacity or 0)
-        # Match up current rgbas array with the newly calculated
-        # one. 99% of the time they'll be the same.
-        curr_rgbas = getattr(self, array_name)
-        if len(curr_rgbas) < len(rgbas):
-            curr_rgbas = stretch_array_to_length(curr_rgbas, len(rgbas))
-            setattr(self, array_name, curr_rgbas)
-        elif len(rgbas) < len(curr_rgbas):
-            rgbas = stretch_array_to_length(rgbas, len(curr_rgbas))
-        # Only update rgb if color was not None, and only
-        # update alpha channel if opacity was passed in
-        if color is not None:
-            curr_rgbas[:, :3] = rgbas[:, :3]
-        if opacity is not None:
-            curr_rgbas[:, 3] = rgbas[:, 3]
+        for name in names:
+            super().set_rgba_array(rgba_array, name, recurse)
         return self
 
-    def set_fill(self, color=None, opacity=None, family=True):
-        if family:
-            for sm in self.submobjects:
-                sm.set_fill(color, opacity, family)
-        self.update_rgbas_array("fill_rgbas", color, opacity)
+    def set_fill(self, color=None, opacity=None, recurse=True):
+        self.set_rgba_array_by_color(color, opacity, 'fill_rgba', recurse)
         return self
 
-    def set_stroke(self, color=None, width=None, opacity=None,
-                   background=None, family=True):
-        if family:
-            for sm in self.submobjects:
-                sm.set_stroke(color, width, opacity, background, family)
-        self.update_rgbas_array("stroke_rgbas", color, opacity)
+    def set_stroke(self, color=None, width=None, opacity=None, background=None, recurse=True):
+        self.set_rgba_array_by_color(color, opacity, 'stroke_rgba', recurse)
+
         if width is not None:
-            self.stroke_width = np.array(listify(width))
+            for mob in self.get_family(recurse):
+                if isinstance(width, np.ndarray):
+                    arr = width.reshape((len(width), 1))
+                else:
+                    arr = np.array([[w] for w in listify(width)])
+                mob.data['stroke_width'] = arr
+
         if background is not None:
-            self.draw_stroke_behind_fill = background
+            for mob in self.get_family(recurse):
+                mob.draw_stroke_behind_fill = background
         return self
+
+    def align_stroke_width_data_to_points(self, recurse=True):
+        for mob in self.get_family(recurse):
+            mob.data["stroke_width"] = resize_with_interpolation(
+                mob.data["stroke_width"], len(mob.get_points())
+            )
 
     def set_style(self,
                   fill_color=None,
                   fill_opacity=None,
+                  fill_rgba=None,
                   stroke_color=None,
-                  stroke_width=None,
                   stroke_opacity=None,
-                  sheen_factor=None,
-                  sheen_direction=None,
-                  background_image_file=None,
-                  family=True):
-        self.set_fill(
-            color=fill_color,
-            opacity=fill_opacity,
-            family=family
-        )
-        self.set_stroke(
-            color=stroke_color,
-            width=stroke_width,
-            opacity=stroke_opacity,
-            family=family,
-        )
-        if sheen_factor:
-            self.set_sheen(
-                factor=sheen_factor,
-                direction=sheen_direction,
-                family=family,
+                  stroke_rgba=None,
+                  stroke_width=None,
+                  gloss=None,
+                  shadow=None,
+                  recurse=True):
+        if fill_rgba is not None:
+            self.data['fill_rgba'] = resize_with_interpolation(fill_rgba, len(fill_rgba))
+        else:
+            self.set_fill(
+                color=fill_color,
+                opacity=fill_opacity,
+                recurse=recurse
             )
-        if background_image_file:
-            self.color_using_background_image(background_image_file)
+
+        if stroke_rgba is not None:
+            self.data['stroke_rgba'] = resize_with_interpolation(stroke_rgba, len(fill_rgba))
+            self.set_stroke(width=stroke_width)
+        else:
+            self.set_stroke(
+                color=stroke_color,
+                width=stroke_width,
+                opacity=stroke_opacity,
+                recurse=recurse,
+            )
+
+        if gloss is not None:
+            self.set_gloss(gloss, recurse=recurse)
+        if shadow is not None:
+            self.set_shadow(shadow, recurse=recurse)
         return self
 
     def get_style(self):
         return {
-            "fill_color": self.get_fill_colors(),
-            "fill_opacity": self.get_fill_opacities(),
-            "stroke_color": self.get_stroke_colors(),
-            "stroke_width": self.get_stroke_width(),
-            "stroke_opacity": self.get_stroke_opacity(),
-            "sheen_factor": self.get_sheen_factor(),
-            "sheen_direction": self.get_sheen_direction(),
-            "background_image_file": self.get_background_image_file(),
+            "fill_rgba": self.data['fill_rgba'],
+            "stroke_rgba": self.data['stroke_rgba'],
+            "stroke_width": self.data['stroke_width'],
+            "gloss": self.get_gloss(),
+            "shadow": self.get_shadow(),
         }
 
-    def match_style(self, vmobject, family=True):
-        self.set_style(**vmobject.get_style(), family=False)
-
-        if family:
+    def match_style(self, vmobject, recurse=True):
+        self.set_style(**vmobject.get_style(), recurse=False)
+        if recurse:
             # Does its best to match up submobject lists, and
             # match styles accordingly
             submobs1, submobs2 = self.submobjects, vmobject.submobjects
@@ -213,43 +202,52 @@ class VMobject(Mobject):
                 sm1.match_style(sm2)
         return self
 
-    def set_color(self, color, family=True):
-        self.set_fill(color, family=family)
-        self.set_stroke(color, family=family)
+    def set_color(self, color, recurse=True):
+        self.set_fill(color, recurse=recurse)
+        self.set_stroke(color, recurse=recurse)
         return self
 
-    def set_opacity(self, opacity, family=True):
-        self.set_fill(opacity=opacity, family=family)
-        self.set_stroke(opacity=opacity, family=family)
+    def set_opacity(self, opacity, recurse=True):
+        self.set_fill(opacity=opacity, recurse=recurse)
+        self.set_stroke(opacity=opacity, recurse=recurse)
         return self
 
-    def fade(self, darkness=0.5, family=True):
+    def fade(self, darkness=0.5, recurse=True):
         factor = 1.0 - darkness
         self.set_fill(
             opacity=factor * self.get_fill_opacity(),
-            family=False,
+            recurse=False,
         )
         self.set_stroke(
             opacity=factor * self.get_stroke_opacity(),
-            family=False,
+            recurse=False,
         )
-        super().fade(darkness, family)
+        super().fade(darkness, recurse)
         return self
 
-    def set_gloss(self, gloss, family=True):
-        if family:
-            for sm in self.get_family():
-                sm.gloss = gloss
-        else:
-            self.gloss = gloss
-        return self
+    def get_fill_colors(self):
+        return [
+            rgb_to_hex(rgba[:3])
+            for rgba in self.data['fill_rgba']
+        ]
 
-    def get_fill_rgbas(self):
-        try:
-            return self.fill_rgbas
-        except AttributeError:
-            return np.zeros((1, 4))
+    def get_fill_opacities(self):
+        return self.data['fill_rgba'][:, 3]
 
+    def get_stroke_colors(self):
+        return [
+            rgb_to_hex(rgba[:3])
+            for rgba in self.data['stroke_rgba']
+        ]
+
+    def get_stroke_opacities(self):
+        return self.data['stroke_rgba'][:, 3]
+
+    def get_stroke_widths(self):
+        return self.data['stroke_width'][:, 0]
+
+    # TODO, it's weird for these to return the first of various lists
+    # rather than the full information
     def get_fill_color(self):
         """
         If there are multiple colors (for gradient)
@@ -264,156 +262,52 @@ class VMobject(Mobject):
         """
         return self.get_fill_opacities()[0]
 
-    def get_fill_colors(self):
-        return [
-            Color(rgb=rgba[:3])
-            for rgba in self.get_fill_rgbas()
-        ]
-
-    def get_fill_opacities(self):
-        return self.get_fill_rgbas()[:, 3]
-
-    def get_stroke_rgbas(self):
-        try:
-            return self.stroke_rgbas
-        except AttributeError:
-            return np.zeros((1, 4))
-
-    # TODO, it's weird for these to return the first of various lists
     def get_stroke_color(self):
         return self.get_stroke_colors()[0]
 
     def get_stroke_width(self):
-        return self.stroke_width[0]
+        return self.get_stroke_widths()[0]
 
     def get_stroke_opacity(self):
         return self.get_stroke_opacities()[0]
 
-    def get_stroke_colors(self):
-        return [
-            rgb_to_hex(rgba[:3])
-            for rgba in self.get_stroke_rgbas()
-        ]
-
-    def get_stroke_opacities(self):
-        return self.get_stroke_rgbas()[:, 3]
-
     def get_color(self):
-        if np.all(self.get_fill_opacities() == 0):
+        if self.has_stroke():
             return self.get_stroke_color()
         return self.get_fill_color()
 
-    # TODO, sheen currently has no effect
-    def set_sheen_direction(self, direction, family=True):
-        direction = np.array(direction)
-        if family:
-            for submob in self.get_family():
-                submob.sheen_direction = direction
-        else:
-            self.sheen_direction = direction
+    def has_stroke(self):
+        return self.get_stroke_widths().any() and self.get_stroke_opacities().any()
+
+    def has_fill(self):
+        return any(self.get_fill_opacities())
+
+    def get_opacity(self):
+        if self.has_fill():
+            return self.get_fill_opacity()
+        return self.get_stroke_opacity()
+
+    def set_flat_stroke(self, flat_stroke=True, recurse=True):
+        for mob in self.get_family(recurse):
+            mob.flat_stroke = flat_stroke
         return self
 
-    def set_sheen(self, factor, direction=None, family=True):
-        if family:
-            for submob in self.submobjects:
-                submob.set_sheen(factor, direction, family)
-        self.sheen_factor = factor
-        if direction is not None:
-            # family set to false because recursion will
-            # already be handled above
-            self.set_sheen_direction(direction, family=False)
-        # Reset color to put sheen_factor into effect
-        if factor != 0:
-            self.set_stroke(self.get_stroke_color(), family=family)
-            self.set_fill(self.get_fill_color(), family=family)
-        return self
-
-    def get_sheen_direction(self):
-        return np.array(self.sheen_direction)
-
-    def get_sheen_factor(self):
-        return self.sheen_factor
-
-    def get_gradient_start_and_end_points(self):
-        if self.shade_in_3d:
-            return get_3d_vmob_gradient_start_and_end_points(self)
-        else:
-            direction = self.get_sheen_direction()
-            c = self.get_center()
-            bases = np.array([
-                self.get_edge_center(vect) - c
-                for vect in [RIGHT, UP, OUT]
-            ]).transpose()
-            offset = np.dot(bases, direction)
-            return (c - offset, c + offset)
-
-    def color_using_background_image(self, background_image_file):
-        self.background_image_file = background_image_file
-        self.set_color(WHITE)
-        for submob in self.submobjects:
-            submob.color_using_background_image(background_image_file)
-        return self
-
-    def get_background_image_file(self):
-        return self.background_image_file
-
-    def match_background_image_file(self, vmobject):
-        self.color_using_background_image(vmobject.get_background_image_file())
-        return self
-
-    def set_shade_in_3d(self, value=True, z_index_as_group=False):
-        for submob in self.get_family():
-            submob.shade_in_3d = value
-            if z_index_as_group:
-                submob.z_index_group = self
-        return self
-
-    def stretched_style_array_matching_points(self, array):
-        new_len = self.get_num_points()
-        long_arr = stretch_array_to_length_with_interpolation(
-            array, 1 + 2 * (new_len // 3)
-        )
-        shape = array.shape
-        if len(shape) > 1:
-            result = np.zeros((new_len, shape[1]))
-        else:
-            result = np.zeros(new_len)
-        result[0::3] = long_arr[0:-1:2]
-        result[1::3] = long_arr[1::2]
-        result[2::3] = long_arr[2::2]
-        return result
+    def get_flat_stroke(self):
+        return self.flat_stroke
 
     # Points
-    def set_points(self, points):
-        super().set_points(points)
-        self.refresh_triangulation()
-        return self
-
-    def get_points(self):
-        # TODO, shouldn't points always be a numpy array anyway?
-        return np.array(self.points)
-
     def set_anchors_and_handles(self, anchors1, handles, anchors2):
         assert(len(anchors1) == len(handles) == len(anchors2))
         nppc = self.n_points_per_curve
-        self.points = np.zeros((nppc * len(anchors1), self.dim))
+        new_points = np.zeros((nppc * len(anchors1), self.dim))
         arrays = [anchors1, handles, anchors2]
         for index, array in enumerate(arrays):
-            self.points[index::nppc] = array
-        return self
-
-    def clear_points(self):
-        self.points = np.zeros((0, self.dim))
-
-    def append_points(self, new_points):
-        # TODO, check that number new points is a multiple of 4?
-        # or else that if len(self.points) % 4 == 1, then
-        # len(new_points) % 4 == 3?
-        self.points = np.vstack([self.points, new_points])
+            new_points[index::nppc] = array
+        self.set_points(new_points)
         return self
 
     def start_new_path(self, point):
-        assert(len(self.points) % self.n_points_per_curve == 0)
+        assert(self.get_num_points() % self.n_points_per_curve == 0)
         self.append_points([point])
         return self
 
@@ -427,7 +321,7 @@ class VMobject(Mobject):
         """
         self.throw_error_if_no_points()
         quadratic_approx = get_quadratic_approximation_of_cubic(
-            self.points[-1], handle1, handle2, anchor
+            self.get_last_point(), handle1, handle2, anchor
         )
         if self.has_new_path_started():
             self.append_points(quadratic_approx[1:])
@@ -439,10 +333,10 @@ class VMobject(Mobject):
         if self.has_new_path_started():
             self.append_points([handle, anchor])
         else:
-            self.append_points([self.points[-1], handle, anchor])
+            self.append_points([self.get_last_point(), handle, anchor])
 
     def add_line_to(self, point):
-        end = self.points[-1]
+        end = self.get_points()[-1]
         alphas = np.linspace(0, 1, self.n_points_per_curve)
         if self.long_lines:
             halfway = interpolate(end, point, 0.5)
@@ -465,7 +359,7 @@ class VMobject(Mobject):
 
     def add_smooth_curve_to(self, point):
         if self.has_new_path_started():
-            self.add_line_to(anchor)
+            self.add_line_to(point)
         else:
             self.throw_error_if_no_points()
             new_handle = self.get_reflection_of_last_handle()
@@ -478,13 +372,14 @@ class VMobject(Mobject):
         self.add_cubic_bezier_curve_to(new_handle, handle, point)
 
     def has_new_path_started(self):
-        return len(self.points) % self.n_points_per_curve == 1
+        return self.get_num_points() % self.n_points_per_curve == 1
 
     def get_last_point(self):
-        return self.points[-1]
+        return self.get_points()[-1]
 
     def get_reflection_of_last_handle(self):
-        return 2 * self.points[-1] - self.points[-2]
+        points = self.get_points()
+        return 2 * points[-1] - points[-2]
 
     def close_path(self):
         if not self.is_closed():
@@ -492,15 +387,11 @@ class VMobject(Mobject):
 
     def is_closed(self):
         return self.consider_points_equals(
-            self.points[0], self.points[-1]
+            self.get_points()[0], self.get_points()[-1]
         )
 
-    def subdivide_sharp_curves(self, angle_threshold=30 * DEGREES, family=True):
-        if family:
-            vmobs = self.family_members_with_points()
-        else:
-            vmobs = [self] if self.has_points() else []
-
+    def subdivide_sharp_curves(self, angle_threshold=30 * DEGREES, recurse=True):
+        vmobs = [vm for vm in self.get_family(recurse) if vm.has_points()]
         for vmob in vmobs:
             new_points = []
             for tup in vmob.get_bezier_tuples():
@@ -509,12 +400,12 @@ class VMobject(Mobject):
                     n = int(np.ceil(angle / angle_threshold))
                     alphas = np.linspace(0, 1, n + 1)
                     new_points.extend([
-                        partial_bezier_points(tup, a1, a2)
+                        partial_quadratic_bezier_points(tup, a1, a2)
                         for a1, a2 in zip(alphas, alphas[1:])
                     ])
                 else:
                     new_points.append(tup)
-            vmob.points = np.vstack(new_points)
+            vmob.set_points(np.vstack(new_points))
         return self
 
     def add_points_as_corners(self, points):
@@ -531,90 +422,98 @@ class VMobject(Mobject):
         ])
         return self
 
-    def set_points_smoothly(self, points):
+    def set_points_smoothly(self, points, true_smooth=False):
         self.set_points_as_corners(points)
         self.make_smooth()
         return self
 
     def change_anchor_mode(self, mode):
-        assert(mode in ["jagged", "smooth"])
+        assert(mode in ("jagged", "approx_smooth", "true_smooth"))
         nppc = self.n_points_per_curve
         for submob in self.family_members_with_points():
             subpaths = submob.get_subpaths()
             submob.clear_points()
             for subpath in subpaths:
                 anchors = np.vstack([subpath[::nppc], subpath[-1:]])
-                if mode == "smooth":
-                    h1, h2 = get_smooth_handle_points(anchors)
-                    new_subpath = get_quadratic_approximation_of_cubic(
-                        anchors[:-1], h1, h2, anchors[1:]
-                    )
+                new_subpath = np.array(subpath)
+                if mode == "approx_smooth":
+                    new_subpath[1::nppc] = get_smooth_quadratic_bezier_handle_points(anchors)
+                elif mode == "true_smooth":
+                    h1, h2 = get_smooth_cubic_bezier_handle_points(anchors)
+                    new_subpath = get_quadratic_approximation_of_cubic(anchors[:-1], h1, h2, anchors[1:])
                 elif mode == "jagged":
-                    new_subpath = np.array(subpath)
-                    new_subpath[1::nppc] = interpolate(
-                        anchors[:-1], anchors[1:], 0.5
-                    )
+                    new_subpath[1::nppc] = 0.5 * (anchors[:-1] + anchors[1:])
                 submob.append_points(new_subpath)
             submob.refresh_triangulation()
         return self
 
     def make_smooth(self):
-        # TODO, Change this to not rely on a cubic-to-quadratic conversion
-        return self.change_anchor_mode("smooth")
+        """
+        This will double the number of points in the mobject,
+        so should not be called repeatedly.  It also means
+        transforming between states before and after calling
+        this might have strange artifacts
+        """
+        self.change_anchor_mode("true_smooth")
+        return self
+
+    def make_approximately_smooth(self):
+        """
+        Unlike make_smooth, this will not change the number of
+        points, but it also does not result in a perfectly smooth
+        curve.  It's most useful when the points have been
+        sampled at a not-too-low rate from a continuous function,
+        as in the case of ParametricCurve
+        """
+        self.change_anchor_mode("approx_smooth")
+        return self
 
     def make_jagged(self):
-        return self.change_anchor_mode("jagged")
+        self.change_anchor_mode("jagged")
+        return self
 
     def add_subpath(self, points):
         assert(len(points) % self.n_points_per_curve == 0)
         self.append_points(points)
+        return self
 
     def append_vectorized_mobject(self, vectorized_mobject):
-        new_points = list(vectorized_mobject.points)
+        new_points = list(vectorized_mobject.get_points())
 
         if self.has_new_path_started():
             # Remove last point, which is starting
             # a new path
-            self.points = self.points[:-1]
+            self.resize_data(len(self.get_points() - 1))
         self.append_points(new_points)
-
-    # TODO, how to be smart about tangents here?
-    def apply_function(self, function):
-        Mobject.apply_function(self, function)
-        if self.make_smooth_after_applying_functions:
-            self.make_smooth()
         return self
-
-    def flip(self, *args, **kwargs):
-        super().flip(*args, **kwargs)
-        self.refresh_triangulation()
 
     #
     def consider_points_equals(self, p0, p1):
-        return np.allclose(
-            p0, p1,
-            atol=self.tolerance_for_point_equality
-        )
+        return get_norm(p1 - p0) < self.tolerance_for_point_equality
 
     # Information about the curve
     def get_bezier_tuples_from_points(self, points):
         nppc = self.n_points_per_curve
         remainder = len(points) % nppc
         points = points[:len(points) - remainder]
-        return np.array([
+        return [
             points[i:i + nppc]
             for i in range(0, len(points), nppc)
-        ])
+        ]
 
     def get_bezier_tuples(self):
         return self.get_bezier_tuples_from_points(self.get_points())
 
     def get_subpaths_from_points(self, points):
         nppc = self.n_points_per_curve
-        split_indices = filter(
-            lambda n: not self.consider_points_equals(points[n - 1], points[n]),
-            range(nppc, len(points), nppc)
-        )
+        diffs = points[nppc - 1:-1:nppc] - points[nppc::nppc]
+        splits = (diffs * diffs).sum(1) > self.tolerance_for_point_equality
+        split_indices = np.arange(nppc, len(points), nppc, dtype=int)[splits]
+
+        # split_indices = filter(
+        #     lambda n: not self.consider_points_equals(points[n - 1], points[n]),
+        #     range(nppc, len(points), nppc)
+        # )
         split_indices = [0, *split_indices, len(points)]
         return [
             points[i1:i2]
@@ -628,13 +527,13 @@ class VMobject(Mobject):
     def get_nth_curve_points(self, n):
         assert(n < self.get_num_curves())
         nppc = self.n_points_per_curve
-        return self.points[nppc * n:nppc * (n + 1)]
+        return self.get_points()[nppc * n:nppc * (n + 1)]
 
     def get_nth_curve_function(self, n):
         return bezier(self.get_nth_curve_points(n))
 
     def get_num_curves(self):
-        return len(self.points) // self.n_points_per_curve
+        return self.get_num_points() // self.n_points_per_curve
 
     def point_from_proportion(self, alpha):
         num_curves = self.get_num_curves()
@@ -650,21 +549,23 @@ class VMobject(Mobject):
         for any i in range(0, len(anchors1))
         """
         nppc = self.n_points_per_curve
+        points = self.get_points()
         return [
-            self.points[i::nppc]
+            points[i::nppc]
             for i in range(nppc)
         ]
 
     def get_start_anchors(self):
-        return self.points[0::self.n_points_per_curve]
+        return self.get_points()[0::self.n_points_per_curve]
 
     def get_end_anchors(self):
         nppc = self.n_points_per_curve
-        return self.points[nppc - 1::nppc]
+        return self.get_points()[nppc - 1::nppc]
 
     def get_anchors(self):
-        if len(self.points) == 1:
-            return self.points
+        points = self.get_points()
+        if len(points) == 1:
+            return points
         return np.array(list(it.chain(*zip(
             self.get_start_anchors(),
             self.get_end_anchors(),
@@ -672,11 +573,12 @@ class VMobject(Mobject):
 
     def get_points_without_null_curves(self, atol=1e-9):
         nppc = self.n_points_per_curve
+        points = self.get_points()
         distinct_curves = reduce(op.or_, [
-            (abs(self.points[i::nppc] - self.points[0::nppc]) > atol).any(1)
+            (abs(points[i::nppc] - points[0::nppc]) > atol).any(1)
             for i in range(1, nppc)
         ])
-        return self.points[distinct_curves.repeat(nppc)]
+        return points[distinct_curves.repeat(nppc)]
 
     def get_arc_length(self, n_sample_points=None):
         if n_sample_points is None:
@@ -694,12 +596,13 @@ class VMobject(Mobject):
         # the polygon formed by the anchor points, pointing
         # in a direction perpendicular to the polygon according
         # to the right hand rule.
-        if self.has_no_points():
+        if not self.has_points():
             return np.zeros(3)
 
         nppc = self.n_points_per_curve
-        p0 = self.points[0::nppc]
-        p1 = self.points[nppc - 1::nppc]
+        points = self.get_points()
+        p0 = points[0::nppc]
+        p1 = points[nppc - 1::nppc]
 
         # Each term goes through all edges [(x1, y1, z1), (x2, y2, z2)]
         return 0.5 * np.array([
@@ -708,34 +611,43 @@ class VMobject(Mobject):
             sum((p0[:, 0] + p1[:, 0]) * (p1[:, 1] - p0[:, 1])),  # Add up (x1 + x2)*(y2 - y1)
         ])
 
-    def get_unit_normal_vector(self):
-        if len(self.points) < 3:
+    def get_unit_normal(self, recompute=False):
+        if not recompute:
+            return self.data["unit_normal"][0]
+
+        if self.get_num_points() < 3:
             return OUT
+
         area_vect = self.get_area_vector()
         area = get_norm(area_vect)
         if area > 0:
             return area_vect / area
         else:
+            points = self.get_points()
             return get_unit_normal(
-                self.points[1] - self.points[0],
-                self.points[2] - self.points[1],
+                points[1] - points[0],
+                points[2] - points[1],
             )
+
+    def refresh_unit_normal(self):
+        for mob in self.get_family():
+            mob.data["unit_normal"][:] = mob.get_unit_normal(recompute=True)
+        return self
 
     # Alignment
     def align_points(self, vmobject):
-        self.align_rgbas(vmobject)
-        if len(self.points) == len(vmobject.points):
+        if self.get_num_points() == len(vmobject.get_points()):
             return
 
         for mob in self, vmobject:
             # If there are no points, add one to
             # where the "center" is
-            if mob.has_no_points():
+            if not mob.has_points():
                 mob.start_new_path(mob.get_center())
             # If there's only one point, turn it into
             # a null curve
             if mob.has_new_path_started():
-                mob.add_line_to(mob.points[0])
+                mob.add_line_to(mob.get_points()[0])
 
         # Figure out what the subpaths are, and align
         subpaths1 = self.get_subpaths()
@@ -766,14 +678,14 @@ class VMobject(Mobject):
         vmobject.set_points(np.vstack(new_subpaths2))
         return self
 
-    def insert_n_curves(self, n):
-        new_points = self.insert_n_curves_to_point_list(n, self.get_points())
-
-        # TODO, this should happen in insert_n_curves_to_point_list
-        if self.has_new_path_started():
-            new_points = np.vstack([new_points, self.get_last_point()])
-
-        self.set_points(new_points)
+    def insert_n_curves(self, n, recurse=True):
+        for mob in self.get_family(recurse):
+            if mob.get_num_curves() > 0:
+                new_points = mob.insert_n_curves_to_point_list(n, mob.get_points())
+                # TODO, this should happen in insert_n_curves_to_point_list
+                if mob.has_new_path_started():
+                    new_points = np.vstack([new_points, mob.get_last_point()])
+                mob.set_points(new_points)
         return self
 
     def insert_n_curves_to_point_list(self, n, points):
@@ -806,45 +718,25 @@ class VMobject(Mobject):
             # smaller quadratic curves
             alphas = np.linspace(0, 1, n_inserts + 2)
             for a1, a2 in zip(alphas, alphas[1:]):
-                new_points += partial_bezier_points(group, a1, a2)
+                new_points += partial_quadratic_bezier_points(group, a1, a2)
         return np.vstack(new_points)
 
-    def align_rgbas(self, vmobject):
-        attrs = ["fill_rgbas", "stroke_rgbas"]
-        for attr in attrs:
-            a1 = getattr(self, attr)
-            a2 = getattr(vmobject, attr)
-            if len(a1) > len(a2):
-                new_a2 = stretch_array_to_length(a2, len(a1))
-                setattr(vmobject, attr, new_a2)
-            elif len(a2) > len(a1):
-                new_a1 = stretch_array_to_length(a1, len(a2))
-                setattr(self, attr, new_a1)
+    def interpolate(self, mobject1, mobject2, alpha, *args, **kwargs):
+        super().interpolate(mobject1, mobject2, alpha, *args, **kwargs)
+        if self.has_fill():
+            tri1 = mobject1.get_triangulation()
+            tri2 = mobject2.get_triangulation()
+            if len(tri1) != len(tri1) or not np.all(tri1 == tri2):
+                self.refresh_triangulation()
         return self
 
-    def interpolate_color(self, mobject1, mobject2, alpha):
-        attrs = [
-            "fill_rgbas",
-            "stroke_rgbas",
-            "stroke_width",
-            # "sheen_direction",
-            # "sheen_factor",
-        ]
-        for attr in attrs:
-            m1a = getattr(mobject1, attr)
-            m2a = getattr(mobject2, attr)
-            setattr(self, attr, interpolate(m1a, m2a, alpha))
-
-    # TODO, somehow do this using stroke_width changes
-    # so as to not have to change the point list
     def pointwise_become_partial(self, vmobject, a, b):
         assert(isinstance(vmobject, VMobject))
-        assert(len(self.points) >= len(vmobject.points))
         if a <= 0 and b >= 1:
-            self.points[:] = vmobject.points
+            self.become(vmobject)
             return self
-        bezier_tuple = vmobject.get_bezier_tuples()
-        num_curves = len(bezier_tuple)
+        num_curves = vmobject.get_num_curves()
+        nppc = self.n_points_per_curve
 
         # Partial curve includes three portions:
         # - A middle section, which matches the curve exactly
@@ -853,27 +745,31 @@ class VMobject(Mobject):
 
         lower_index, lower_residue = integer_interpolate(0, num_curves, a)
         upper_index, upper_residue = integer_interpolate(0, num_curves, b)
+        i1 = nppc * lower_index
+        i2 = nppc * (lower_index + 1)
+        i3 = nppc * upper_index
+        i4 = nppc * (upper_index + 1)
 
-        new_point_list = []
+        vm_points = vmobject.get_points()
+        new_points = vm_points.copy()
         if num_curves == 0:
-            self.points[:] = 0
+            new_points[:] = 0
             return self
         if lower_index == upper_index:
-            new_point_list.append(partial_bezier_points(
-                bezier_tuple[lower_index], lower_residue, upper_residue
-            ))
+            tup = partial_quadratic_bezier_points(vm_points[i1:i2], lower_residue, upper_residue)
+            new_points[:i1] = tup[0]
+            new_points[i1:i4] = tup
+            new_points[i4:] = tup[2]
+            new_points[nppc:] = new_points[nppc - 1]
         else:
-            new_point_list.append(partial_bezier_points(
-                bezier_tuple[lower_index], lower_residue, 1
-            ))
-            for tup in bezier_tuple[lower_index + 1:upper_index]:
-                new_point_list.append(tup)
-            new_point_list.append(partial_bezier_points(
-                bezier_tuple[upper_index], 0, upper_residue
-            ))
-        new_points = np.vstack(new_point_list)
-        self.points[:len(new_points)] = new_points
-        self.points[len(new_points):] = new_points[-1]
+            low_tup = partial_quadratic_bezier_points(vm_points[i1:i2], lower_residue, 1)
+            high_tup = partial_quadratic_bezier_points(vm_points[i3:i4], 0, upper_residue)
+            new_points[0:i1] = low_tup[0]
+            new_points[i1:i2] = low_tup
+            # Keep new_points i2:i3 as they are
+            new_points[i3:i4] = high_tup
+            new_points[i4:] = high_tup[2]
+        self.set_points(new_points)
         return self
 
     def get_subcurve(self, a, b):
@@ -881,126 +777,33 @@ class VMobject(Mobject):
         vmob.pointwise_become_partial(self, a, b)
         return vmob
 
-    # For shaders
-    def init_shader_data(self):
-        self.fill_data = np.zeros(len(self.points), dtype=self.fill_dtype)
-        self.stroke_data = np.zeros(len(self.points), dtype=self.stroke_dtype)
-
-    def get_shader_info_list(self):
-        if self.shader_data_is_locked:
-            return self.saved_shader_info_list
-
-        stroke_info = get_shader_info(
-            vert_file=self.stroke_vert_shader_file,
-            geom_file=self.stroke_geom_shader_file,
-            frag_file=self.stroke_frag_shader_file,
-            texture_path=self.texture_path,
-            render_primative=self.render_primative,
-        )
-        fill_info = get_shader_info(
-            vert_file=self.fill_vert_shader_file,
-            geom_file=self.fill_geom_shader_file,
-            frag_file=self.fill_frag_shader_file,
-            texture_path=self.texture_path,
-            render_primative=self.render_primative,
-        )
-
-        back_stroke_data = []
-        stroke_data = []
-        fill_data = []
-        for submob in self.family_members_with_points():
-            stroke_width = submob.get_stroke_width()
-            stroke_opacity = submob.get_stroke_opacity()
-            fill_opacity = submob.get_fill_opacity()
-
-            if fill_opacity > 0:
-                fill_data.append(submob.get_fill_shader_data())
-
-            if stroke_width > 0 and stroke_opacity > 0:
-                if submob.draw_stroke_behind_fill:
-                    data = back_stroke_data
-                else:
-                    data = stroke_data
-                data.append(submob.get_stroke_shader_data())
-
-        result = []
-        if back_stroke_data:
-            back_stroke_info = dict(stroke_info)  # Copy
-            back_stroke_info["data"] = np.hstack(back_stroke_data)
-            result.append(back_stroke_info)
-        if fill_data:
-            fill_info["data"] = np.hstack(fill_data)
-            result.append(fill_info)
-        if stroke_data:
-            stroke_info["data"] = np.hstack(stroke_data)
-            result.append(stroke_info)
-        return result
-
-    def get_stroke_shader_data(self):
-        joint_type_to_code = {
-            "auto": 0,
-            "round": 1,
-            "bevel": 2,
-            "miter": 3,
-        }
-
-        rgbas = self.get_stroke_rgbas()
-        if len(rgbas) > 1:
-            rgbas = self.stretched_style_array_matching_points(rgbas)
-
-        stroke_width = self.stroke_width
-        if len(stroke_width) > 1:
-            stroke_width = self.stretched_style_array_matching_points(stroke_width)
-
-        points = self.get_points_without_null_curves()
-        nppc = self.n_points_per_curve
-
-        data = self.get_blank_shader_data_array(len(points), "stroke_data")
-        data["point"] = points
-        data["prev_point"][:nppc] = points[-nppc:]
-        data["prev_point"][nppc:] = points[:-nppc]
-        data["next_point"][:-nppc] = points[nppc:]
-        data["next_point"][-nppc:] = points[:nppc]
-        data["unit_normal"] = self.get_unit_normal_vector()
-        data["stroke_width"][:, 0] = stroke_width
-        data["color"] = rgbas
-        data["joint_type"] = joint_type_to_code[self.joint_type]
-        data["gloss"] = self.gloss
-        return data
-
-    def lock_triangulation(self, family=True):
-        mobs = self.get_family() if family else [self]
-        for mob in mobs:
-            mob.triangulation_locked = False
-            mob.saved_triangulation = mob.get_triangulation()
-            mob.triangulation_locked = True
-        return self
-
-    def unlock_triangulation(self):
-        for sm in self.family_members_with_points():
-            sm.triangulation_locked = False
+    # Related to triangulation
 
     def refresh_triangulation(self):
-        for sm in self.get_family():
-            if sm.triangulation_locked:
-                sm.lock_triangulation(family=False)
+        for mob in self.get_family():
+            mob.needs_new_triangulation = True
+        return self
 
     def get_triangulation(self, normal_vector=None):
         # Figure out how to triangulate the interior to know
         # how to send the points as to the vertex shader.
         # First triangles come directly from the points
         if normal_vector is None:
-            normal_vector = self.get_unit_normal_vector()
+            normal_vector = self.get_unit_normal()
 
-        if self.triangulation_locked:
-            return self.saved_triangulation
+        if not self.needs_new_triangulation:
+            return self.triangulation
 
-        if len(self.points) <= 1:
-            return []
+        points = self.get_points()
 
-        # Rotate points such that unit normal vector is OUT
-        # TODO, 99% of the time this does nothing.  Do a check for that?
-        points = np.dot(self.points, z_to_vector(normal_vector))
+        if len(points) <= 1:
+            self.triangulation = np.zeros(0, dtype='i4')
+            self.needs_new_triangulation = False
+            return self.triangulation
+
+        if not np.isclose(normal_vector, OUT).all():
+            # Rotate points such that unit normal vector is OUT
+            points = np.dot(points, z_to_vector(normal_vector))
         indices = np.arange(len(points), dtype=int)
 
         b0s = points[0::3]
@@ -1030,40 +833,166 @@ class VMobject(Mobject):
 
         # Triangulate
         inner_verts = points[inner_vert_indices]
-        inner_tri_indices = inner_vert_indices[earclip_triangulation(inner_verts, rings)]
+        inner_tri_indices = inner_vert_indices[
+            earclip_triangulation(inner_verts, rings)
+        ]
 
         tri_indices = np.hstack([indices, inner_tri_indices])
+        self.triangulation = tri_indices
+        self.needs_new_triangulation = False
         return tri_indices
 
+    def triggers_refreshed_triangulation(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            old_points = self.get_points()
+            func(self, *args, **kwargs)
+            if not np.all(self.get_points() == old_points):
+                self.refresh_unit_normal()
+                self.refresh_triangulation()
+        return wrapper
+
+    @triggers_refreshed_triangulation
+    def set_points(self, points):
+        super().set_points(points)
+        return self
+
+    @triggers_refreshed_triangulation
+    def set_data(self, data):
+        super().set_data(data)
+        return self
+
+    # TODO, how to be smart about tangents here?
+    @triggers_refreshed_triangulation
+    def apply_function(self, function, make_smooth=False, **kwargs):
+        super().apply_function(function, **kwargs)
+        if self.make_smooth_after_applying_functions or make_smooth:
+            self.make_approximately_smooth()
+        return self
+
+    def flip(self, *args, **kwargs):
+        super().flip(*args, **kwargs)
+        self.refresh_unit_normal()
+        self.refresh_triangulation()
+        return self
+
+    # For shaders
+    def init_shader_data(self):
+        self.fill_data = np.zeros(0, dtype=self.fill_dtype)
+        self.stroke_data = np.zeros(0, dtype=self.stroke_dtype)
+        self.fill_shader_wrapper = ShaderWrapper(
+            vert_data=self.fill_data,
+            vert_indices=np.zeros(0, dtype='i4'),
+            shader_folder=self.fill_shader_folder,
+            render_primitive=self.render_primitive,
+        )
+        self.stroke_shader_wrapper = ShaderWrapper(
+            vert_data=self.stroke_data,
+            shader_folder=self.stroke_shader_folder,
+            render_primitive=self.render_primitive,
+        )
+
+    def refresh_shader_wrapper_id(self):
+        for wrapper in [self.fill_shader_wrapper, self.stroke_shader_wrapper]:
+            wrapper.refresh_id()
+        return self
+
+    def get_fill_shader_wrapper(self):
+        self.fill_shader_wrapper.vert_data = self.get_fill_shader_data()
+        self.fill_shader_wrapper.vert_indices = self.get_fill_shader_vert_indices()
+        self.fill_shader_wrapper.uniforms = self.get_shader_uniforms()
+        self.fill_shader_wrapper.depth_test = self.depth_test
+        return self.fill_shader_wrapper
+
+    def get_stroke_shader_wrapper(self):
+        self.stroke_shader_wrapper.vert_data = self.get_stroke_shader_data()
+        self.stroke_shader_wrapper.uniforms = self.get_stroke_uniforms()
+        self.stroke_shader_wrapper.depth_test = self.depth_test
+        return self.stroke_shader_wrapper
+
+    def get_shader_wrapper_list(self):
+        # Build up data lists
+        fill_shader_wrappers = []
+        stroke_shader_wrappers = []
+        back_stroke_shader_wrappers = []
+        for submob in self.family_members_with_points():
+            if submob.has_fill():
+                fill_shader_wrappers.append(submob.get_fill_shader_wrapper())
+            if submob.has_stroke():
+                ssw = submob.get_stroke_shader_wrapper()
+                if submob.draw_stroke_behind_fill:
+                    back_stroke_shader_wrappers.append(ssw)
+                else:
+                    stroke_shader_wrappers.append(ssw)
+
+        # Combine data lists
+        wrapper_lists = [
+            back_stroke_shader_wrappers,
+            fill_shader_wrappers,
+            stroke_shader_wrappers
+        ]
+        result = []
+        for wlist in wrapper_lists:
+            if wlist:
+                wrapper = wlist[0]
+                wrapper.combine_with(*wlist[1:])
+                result.append(wrapper)
+        return result
+
+    def get_stroke_uniforms(self):
+        result = dict(super().get_shader_uniforms())
+        result["joint_type"] = JOINT_TYPE_MAP[self.joint_type]
+        result["flat_stroke"] = float(self.flat_stroke)
+        return result
+
+    def get_stroke_shader_data(self):
+        points = self.get_points()
+        if len(self.stroke_data) != len(points):
+            self.stroke_data = resize_array(self.stroke_data, len(points))
+
+        if "points" not in self.locked_data_keys:
+            nppc = self.n_points_per_curve
+            self.stroke_data["point"] = points
+            self.stroke_data["prev_point"][:nppc] = points[-nppc:]
+            self.stroke_data["prev_point"][nppc:] = points[:-nppc]
+            self.stroke_data["next_point"][:-nppc] = points[nppc:]
+            self.stroke_data["next_point"][-nppc:] = points[:nppc]
+
+        self.read_data_to_shader(self.stroke_data, "color", "stroke_rgba")
+        self.read_data_to_shader(self.stroke_data, "stroke_width", "stroke_width")
+        self.read_data_to_shader(self.stroke_data, "unit_normal", "unit_normal")
+
+        return self.stroke_data
+
     def get_fill_shader_data(self):
-        points = self.points
-        unit_normal = self.get_unit_normal_vector()
-        tri_indices = self.get_triangulation(unit_normal)
+        points = self.get_points()
+        if len(self.fill_data) != len(points):
+            self.fill_data = resize_array(self.fill_data, len(points))
+            self.fill_data["vert_index"][:, 0] = range(len(points))
 
-        # TODO, best way to enable multiple colors?
-        rgbas = self.get_fill_rgbas()[:1]
+        self.read_data_to_shader(self.fill_data, "point", "points")
+        self.read_data_to_shader(self.fill_data, "color", "fill_rgba")
+        self.read_data_to_shader(self.fill_data, "unit_normal", "unit_normal")
 
-        data = self.get_blank_shader_data_array(len(tri_indices), "fill_data")
-        data["point"] = points[tri_indices]
-        data["unit_normal"] = unit_normal
-        data["color"] = rgbas
-        # Assume the triangulation is such that the first n_points points
-        # are on the boundary, and the rest are in the interior
-        data["fill_all"][:len(points)] = 0
-        data["fill_all"][len(points):] = 1
-        data["gloss"] = self.gloss
-        return data
+        return self.fill_data
+
+    def refresh_shader_data(self):
+        self.get_fill_shader_data()
+        self.get_stroke_shader_data()
+
+    def get_fill_shader_vert_indices(self):
+        return self.get_triangulation()
 
 
 class VGroup(VMobject):
     def __init__(self, *vmobjects, **kwargs):
         if not all([isinstance(m, VMobject) for m in vmobjects]):
             raise Exception("All submobjects must be of type VMobject")
-        VMobject.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.add(*vmobjects)
 
 
-class VectorizedPoint(VMobject, Point):
+class VectorizedPoint(Point, VMobject):
     CONFIG = {
         "color": BLACK,
         "fill_opacity": 0,
@@ -1073,15 +1002,14 @@ class VectorizedPoint(VMobject, Point):
     }
 
     def __init__(self, location=ORIGIN, **kwargs):
-        VMobject.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.set_points(np.array([location]))
 
 
 class CurvesAsSubmobjects(VGroup):
     def __init__(self, vmobject, **kwargs):
-        VGroup.__init__(self, **kwargs)
-        tuples = vmobject.get_bezier_tuples()
-        for tup in tuples:
+        super().__init__(**kwargs)
+        for tup in vmobject.get_bezier_tuples():
             part = VMobject()
             part.set_points(tup)
             part.match_style(vmobject)
@@ -1096,7 +1024,7 @@ class DashedVMobject(VMobject):
     }
 
     def __init__(self, vmobject, **kwargs):
-        VMobject.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         num_dashes = self.num_dashes
         ps_ratio = self.positive_space_ratio
         if num_dashes > 0:
@@ -1117,4 +1045,4 @@ class DashedVMobject(VMobject):
             ])
         # Family is already taken care of by get_subcurve
         # implementation
-        self.match_style(vmobject, family=False)
+        self.match_style(vmobject, recurse=False)

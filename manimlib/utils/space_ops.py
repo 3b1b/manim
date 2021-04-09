@@ -1,10 +1,10 @@
 import numpy as np
-import math
 import itertools as it
+import math
 from mapbox_earcut import triangulate_float32 as earcut
 
 from manimlib.constants import RIGHT
-from manimlib.constants import UP
+from manimlib.constants import DOWN
 from manimlib.constants import OUT
 from manimlib.constants import PI
 from manimlib.constants import TAU
@@ -35,11 +35,10 @@ def quaternion_mult(*quats):
     return result
 
 
-def quaternion_from_angle_axis(angle, axis):
-    return [
-        math.cos(angle / 2),
-        *(math.sin(angle / 2) * normalize(axis))
-    ]
+def quaternion_from_angle_axis(angle, axis, axis_normalized=False):
+    if not axis_normalized:
+        axis = normalize(axis)
+    return [math.cos(angle / 2), *(math.sin(angle / 2) * axis)]
 
 
 def angle_axis_from_quaternion(quaternion):
@@ -137,11 +136,14 @@ def z_to_vector(vector):
     Returns some matrix in SO(3) which takes the z-axis to the
     (normalized) vector provided as an argument
     """
-    cp = cross(OUT, vector)
-    if get_norm(cp) == 0:
-        return np.identity(3)
+    axis = cross(OUT, vector)
+    if get_norm(axis) == 0:
+        if vector[2] > 0:
+            return np.identity(3)
+        else:
+            return rotation_matrix(PI, RIGHT)
     angle = np.arccos(np.dot(OUT, normalize(vector)))
-    return rotation_matrix(angle, axis=cp)
+    return rotation_matrix(angle, axis=axis)
 
 
 def angle_of_vector(vector):
@@ -175,6 +177,14 @@ def normalize(vect, fall_back=None):
         return np.zeros(len(vect))
 
 
+def normalize_along_axis(array, axis, fall_back=None):
+    norms = np.sqrt((array * array).sum(axis))
+    norms[norms == 0] = 1
+    buffed_norms = np.repeat(norms, array.shape[axis]).reshape(array.shape)
+    array /= buffed_norms
+    return array
+
+
 def cross(v1, v2):
     return np.array([
         v1[1] * v2[2] - v1[2] * v2[1],
@@ -193,7 +203,7 @@ def get_unit_normal(v1, v2, tol=1e-6):
         new_cp = cross(cross(v1, OUT), v1)
         new_cp_norm = get_norm(new_cp)
         if new_cp_norm < tol:
-            return UP
+            return DOWN
         return new_cp / new_cp_norm
     return cp / cp_norm
 
@@ -280,6 +290,21 @@ def find_intersection(p0, v0, p1, v1, threshold=1e-5):
     return p0 + ratio * v0
 
 
+def get_closest_point_on_line(a, b, p):
+    """
+        It returns point x such that
+        x is on line ab and xp is perpendicular to ab.
+        If x lies beyond ab line, then it returns nearest edge(a or b).
+    """
+    # x = b + t*(a-b) = t*a + (1-t)*b
+    t = np.dot(p - b, a - b) / np.dot(a - b, a - b)
+    if t < 0:
+        t = 0
+    if t > 1:
+        t = 1
+    return ((t * a) + ((1 - t) * b))
+
+
 def get_winding_number(points):
     total_angle = 0
     for p1, p2 in adjacent_pairs(points):
@@ -319,46 +344,82 @@ def is_inside_triangle(p, a, b, c):
 
 
 def norm_squared(v):
-    return sum(v * v)
+    return v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
 
 
 # TODO, fails for polygons drawn over themselves
-def earclip_triangulation(verts, rings):
-    n = len(verts)
-    # Establish where loop indices should be connected
-    loop_connections = dict()
-    for e0, e1 in zip(rings, rings[1:]):
-        temp_i = e0
-        # Find closet point in the first ring (j) to
-        # the first index of this ring (i)
-        norms = np.array([
-            [j, norm_squared(verts[temp_i] - verts[j])]
-            for j in range(0, rings[0])
-            if j not in loop_connections
-        ])
-        j = int(norms[norms[:, 1].argmin()][0])
-        # Find i closest to this j
-        norms = np.array([
-            [i, norm_squared(verts[i] - verts[j])]
-            for i in range(e0, e1)
-            if i not in loop_connections
-        ])
-        i = int(norms[norms[:, 1].argmin()][0])
+def earclip_triangulation(verts, ring_ends):
+    """
+    Returns a list of indices giving a triangulation
+    of a polygon, potentially with holes
 
+    - verts is a numpy array of points
+
+    - ring_ends is a list of indices indicating where
+    the ends of new paths are
+    """
+
+    # First, connect all the rings so that the polygon
+    # with holes is instead treated as a (very convex)
+    # polygon with one edge.  Do this by drawing connections
+    # between rings close to each other
+    rings = [
+        list(range(e0, e1))
+        for e0, e1 in zip([0, *ring_ends], ring_ends)
+    ]
+    attached_rings = rings[:1]
+    detached_rings = rings[1:]
+    loop_connections = dict()
+
+    while detached_rings:
+        i_range, j_range = [
+            list(filter(
+                # Ignore indices that are already being
+                # used to draw some connection
+                lambda i: i not in loop_connections,
+                it.chain(*ring_group)
+            ))
+            for ring_group in (attached_rings, detached_rings)
+        ]
+
+        # Closet point on the atttached rings to an estimated midpoint
+        # of the detached rings
+        tmp_j_vert = midpoint(
+            verts[j_range[0]],
+            verts[j_range[len(j_range) // 2]]
+        )
+        i = min(i_range, key=lambda i: norm_squared(verts[i] - tmp_j_vert))
+        # Closet point of the detached rings to the aforementioned
+        # point of the attached rings
+        j = min(j_range, key=lambda j: norm_squared(verts[i] - verts[j]))
+        # Recalculate i based on new j
+        i = min(i_range, key=lambda i: norm_squared(verts[i] - verts[j]))
+
+        # Remember to connect the polygon at these points
         loop_connections[i] = j
         loop_connections[j] = i
 
+        # Move the ring which j belongs to from the
+        # attached list to the detached list
+        new_ring = next(filter(
+            lambda ring: ring[0] <= j < ring[-1],
+            detached_rings
+        ))
+        detached_rings.remove(new_ring)
+        attached_rings.append(new_ring)
+
     # Setup linked list
     after = []
-    e0 = 0
-    for e1 in rings:
-        after.extend([*range(e0 + 1, e1), e0])
-        e0 = e1
+    end0 = 0
+    for end1 in ring_ends:
+        after.extend(range(end0 + 1, end1))
+        after.append(end0)
+        end0 = end1
 
     # Find an ordering of indices walking around the polygon
     indices = []
     i = 0
-    for x in range(n + len(rings) - 1):
+    for x in range(len(verts) + len(ring_ends) - 1):
         # starting = False
         if i in loop_connections:
             j = loop_connections[i]
@@ -372,87 +433,3 @@ def earclip_triangulation(verts, rings):
 
     meta_indices = earcut(verts[indices, :2], [len(indices)])
     return [indices[mi] for mi in meta_indices]
-
-
-def old_earclip_triangulation(verts, rings, orientation):
-    n = len(verts)
-    assert(n in rings)
-    result = []
-
-    # Establish where loop indices should be connected
-    loop_connections = dict()
-    e0 = 0
-    for e1 in rings:
-        norms = np.array([
-            [i, j, get_norm(verts[i] - verts[j])]
-            for i in range(e0, e1)
-            for j in it.chain(range(0, e0), range(e1, n))
-        ])
-        if len(norms) == 0:
-            continue
-        i, j = norms[np.argmin(norms[:, 2])][:2].astype(int)
-        loop_connections[i] = j
-        loop_connections[j] = i
-        e0 = e1
-
-    # Setup bidirectional linked list
-    before = []
-    after = []
-    e0 = 0
-    for e1 in rings:
-        after += [*range(e0 + 1, e1), e0]
-        before += [e1 - 1, *range(e0, e1 - 1)]
-        e0 = e1
-
-    # Initialize edge triangles
-    edge_tris = []
-    i = 0
-    starting = True
-    while (i != 0 or starting):
-        starting = False
-        if i in loop_connections:
-            j = loop_connections[i]
-            edge_tris.append([before[i], i, j])
-            edge_tris.append([i, j, after[j]])
-            i = after[j]
-        else:
-            edge_tris.append([before[i], i, after[i]])
-            i = after[i]
-
-    # Set up a test for whether or not three indices
-    # form an ear of the polygon, meaning a convex corner
-    # which doesn't contain any other vertices
-    indices = list(range(n))
-
-    def is_ear(*tri_indices):
-        tri = [verts[i] for i in tri_indices]
-        v1 = tri[1] - tri[0]
-        v2 = tri[2] - tri[1]
-        cross = v1[0] * v2[1] - v2[0] * v1[1]
-        if orientation * cross < 0:
-            return False
-        for j in indices:
-            if j in tri_indices:
-                continue
-            elif is_inside_triangle(verts[j], *tri):
-                return False
-        return True
-
-    # Loop through and clip off all the ears
-    n_failures = 0
-    i = 0
-    while n_failures < len(edge_tris):
-        n = len(edge_tris)
-        edge_tri = edge_tris[i % n]
-        if is_ear(*edge_tri):
-            result.extend(edge_tri)
-            edge_tris[(i - 1) % n][2] = edge_tri[2]
-            edge_tris[(i + 1) % n][0] = edge_tri[0]
-            if edge_tri[1] in indices:
-                indices.remove(edge_tri[1])
-            edge_tris.remove(edge_tri)
-            n_failures = 0
-        else:
-            n_failures += 1
-            i += 1
-    return result

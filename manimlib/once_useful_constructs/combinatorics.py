@@ -1,6 +1,6 @@
 from manimlib.constants import *
 from manimlib.mobject.numbers import Integer
-from manimlib.mobject.svg.tex_mobject import TexMobject
+from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.types.vectorized_mobject import VMobject, VGroup
 from manimlib.scene.scene import Scene
 from manimlib.utils.simple_functions import choose
@@ -45,7 +45,7 @@ class CountingScene(Scene):
             self.add(*mobjects)
         for mob, num in zip(mobjects, it.count(1)):
             if display_numbers:
-                num_mob = TexMobject(str(num))
+                num_mob = Tex(str(num))
                 num_mob.center().shift(num_offset)
                 self.add(num_mob)
             if mode == "highlight":
@@ -74,7 +74,7 @@ class CountingScene(Scene):
             raise Warning("Unknown mode")
         frame_time = run_time / (len(regions))
         for region, count in zip(regions, it.count(1)):
-            num_mob = TexMobject(str(count))
+            num_mob = Tex(str(count))
             num_mob.center().shift(num_offset)
             self.add(num_mob)
             self.set_color_region(region)
@@ -113,7 +113,7 @@ class GeneralizedPascalsTriangle(VMobject):
         ]
         for n, k in self.coords:
             center = self.coords_to_center(n, k)
-            num_mob = self.submob_class(n, k)  # TexMobject(str(num))
+            num_mob = self.submob_class(n, k)  # Tex(str(num))
             scale_factor = min(
                 1,
                 self.portion_to_fill * self.cell_height / num_mob.get_height(),
@@ -137,7 +137,7 @@ class GeneralizedPascalsTriangle(VMobject):
     def generate_n_choose_k_mobs(self):
         self.coords_to_n_choose_k = {}
         for n, k in self.coords:
-            nck_mob = TexMobject(r"{%d \choose %d}" % (n, k))
+            nck_mob = Tex(r"{%d \choose %d}" % (n, k))
             scale_factor = min(
                 1,
                 self.portion_to_fill * self.cell_height / nck_mob.get_height(),
@@ -161,7 +161,7 @@ class GeneralizedPascalsTriangle(VMobject):
         return self
 
     def generate_sea_of_zeros(self):
-        zero = TexMobject("0")
+        zero = Tex("0")
         self.sea_of_zeros = []
         for n in range(self.nrows):
             for a in range((self.nrows - n) / 2 + 1):

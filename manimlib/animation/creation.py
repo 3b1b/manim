@@ -16,6 +16,18 @@ class ShowPartial(Animation):
     """
     Abstract class for ShowCreation and ShowPassingFlash
     """
+    CONFIG = {
+        "should_match_start": False,
+    }
+
+    def begin(self):
+        super().begin()
+        if not self.should_match_start:
+            self.mobject.lock_matching_data(self.mobject, self.starting_mobject)
+
+    def finish(self):
+        super().finish()
+        self.mobject.unlock_data()
 
     def interpolate_submobject(self, submob, start_submob, alpha):
         submob.pointwise_become_partial(
@@ -38,7 +50,8 @@ class ShowCreation(ShowPartial):
 class Uncreate(ShowCreation):
     CONFIG = {
         "rate_func": lambda t: smooth(1 - t),
-        "remover": True
+        "remover": True,
+        "should_match_start": True,
     }
 
 
@@ -53,26 +66,34 @@ class DrawBorderThenFill(Animation):
     }
 
     def __init__(self, vmobject, **kwargs):
-        self.check_validity_of_input(vmobject)
+        assert(isinstance(vmobject, VMobject))
+        self.sm_to_index = dict([
+            (hash(sm), 0)
+            for sm in vmobject.get_family()
+        ])
         super().__init__(vmobject, **kwargs)
 
-    def check_validity_of_input(self, vmobject):
-        if not isinstance(vmobject, VMobject):
-            raise Exception(
-                "DrawBorderThenFill only works for VMobjects"
-            )
-
     def begin(self):
+        # Trigger triangulation calculation
+        for submob in self.mobject.get_family():
+            submob.get_triangulation()
+
         self.outline = self.get_outline()
         super().begin()
+        self.mobject.match_style(self.outline)
+        self.mobject.lock_matching_data(self.mobject, self.outline)
+
+    def finish(self):
+        super().finish()
+        self.mobject.unlock_data()
 
     def get_outline(self):
         outline = self.mobject.copy()
         outline.set_fill(opacity=0)
-        for sm in outline.family_members_with_points():
+        for sm in outline.get_family():
             sm.set_stroke(
                 color=self.get_stroke_color(sm),
-                width=self.stroke_width
+                width=float(self.stroke_width)
             )
         return outline
 
@@ -88,11 +109,19 @@ class DrawBorderThenFill(Animation):
 
     def interpolate_submobject(self, submob, start, outline, alpha):
         index, subalpha = integer_interpolate(0, 2, alpha)
+
+        if index == 1 and self.sm_to_index[hash(submob)] == 0:
+            # First time crossing over
+            submob.set_data(outline.data)
+            submob.unlock_data()
+            if not self.mobject.has_updaters:
+                submob.lock_matching_data(submob, start)
+            submob.needs_new_triangulation = False
+            self.sm_to_index[hash(submob)] = 1
+
         if index == 0:
             submob.pointwise_become_partial(outline, 0, subalpha)
-            submob.match_style(outline)
         else:
-            submob.pointwise_become_partial(outline, 0, 1)
             submob.interpolate(outline, start, subalpha)
 
 
@@ -124,7 +153,7 @@ class Write(DrawBorderThenFill):
 class ShowIncreasingSubsets(Animation):
     CONFIG = {
         "suspend_mobject_updating": False,
-        "int_func": np.floor,
+        "int_func": np.round,
     }
 
     def __init__(self, group, **kwargs):

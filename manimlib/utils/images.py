@@ -1,16 +1,24 @@
 import numpy as np
-import os
-
 from PIL import Image
 
-from manimlib.utils.file_ops import seek_full_path_from_defaults
+from manimlib.utils.file_ops import find_file
+from manimlib.utils.directories import get_raster_image_dir
+from manimlib.utils.directories import get_vector_image_dir
 
 
 def get_full_raster_image_path(image_file_name):
-    return seek_full_path_from_defaults(
+    return find_file(
         image_file_name,
-        default_dir=os.path.join("assets", "raster_images"),
-        extensions=[".jpg", ".png", ".gif"]
+        directories=[get_raster_image_dir()],
+        extensions=[".jpg", ".jpeg", ".png", ".gif", ""]
+    )
+
+
+def get_full_vector_image_path(image_file_name):
+    return find_file(
+        image_file_name,
+        directories=[get_vector_image_dir()],
+        extensions=[".svg", ".xdv", ""],
     )
 
 

@@ -1,8 +1,8 @@
 from manimlib.animation.animation import Animation
-from manimlib.animation.transform import Transform
 from manimlib.constants import OUT
 from manimlib.constants import PI
 from manimlib.constants import TAU
+from manimlib.constants import ORIGIN
 from manimlib.utils.rate_functions import linear
 from manimlib.utils.rate_functions import smooth
 
@@ -25,7 +25,7 @@ class Rotating(Animation):
 
     def interpolate_mobject(self, alpha):
         for sm1, sm2 in self.get_all_families_zipped():
-            sm1.points[:] = sm2.points
+            sm1.set_points(sm2.get_points())
         self.mobject.rotate(
             alpha * self.angle,
             axis=self.axis,
@@ -38,6 +38,7 @@ class Rotate(Rotating):
     CONFIG = {
         "run_time": 1,
         "rate_func": smooth,
+        "about_edge": ORIGIN,
     }
 
     def __init__(self, mobject, angle=PI, axis=OUT, **kwargs):

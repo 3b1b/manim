@@ -41,9 +41,9 @@ def f_always(method, *arg_generators, **kwargs):
     return mobject
 
 
-def always_redraw(func):
-    mob = func()
-    mob.add_updater(lambda m: mob.become(func()))
+def always_redraw(func, *args, **kwargs):
+    mob = func(*args, **kwargs)
+    mob.add_updater(lambda m: mob.become(func(*args, **kwargs)))
     return mob
 
 

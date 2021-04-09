@@ -53,22 +53,21 @@ def batch_by_property(items, property_func):
     preserved)
     """
     batch_prop_pairs = []
-
-    def add_batch_prop_pair(batch):
-        if len(batch) > 0:
-            prop = property_func(batch[0])
-            batch_prop_pairs.append((batch, prop))
     curr_batch = []
     curr_prop = None
     for item in items:
         prop = property_func(item)
         if prop != curr_prop:
-            add_batch_prop_pair(curr_batch)
+            # Add current batch
+            if len(curr_batch) > 0:
+                batch_prop_pairs.append((curr_batch, curr_prop))
+            # Redefine curr
             curr_prop = prop
             curr_batch = [item]
         else:
             curr_batch.append(item)
-    add_batch_prop_pair(curr_batch)
+    if len(curr_batch) > 0:
+        batch_prop_pairs.append((curr_batch, curr_prop))
     return batch_prop_pairs
 
 
@@ -81,17 +80,27 @@ def listify(obj):
         return [obj]
 
 
-def stretch_array_to_length(nparray, length):
-    curr_len = len(nparray)
-    if curr_len > length:
-        raise Warning("Trying to stretch array to a length shorter than its own")
-    indices = np.arange(0, curr_len, curr_len / length).astype(int)
+def resize_array(nparray, length):
+    if len(nparray) == length:
+        return nparray
+    return np.resize(nparray, (length, *nparray.shape[1:]))
+
+
+def resize_preserving_order(nparray, length):
+    if len(nparray) == 0:
+        return np.zeros((length, *nparray.shape[1:]))
+    if len(nparray) == length:
+        return nparray
+    indices = np.arange(length) * len(nparray) // length
     return nparray[indices]
 
 
-def stretch_array_to_length_with_interpolation(nparray, length):
-    curr_len = len(nparray)
-    cont_indices = np.linspace(0, curr_len - 1, length)
+def resize_with_interpolation(nparray, length):
+    if len(nparray) == length:
+        return nparray
+    if length == 0:
+        return np.zeros((0, *nparray.shape[1:]))
+    cont_indices = np.linspace(0, len(nparray) - 1, length)
     return np.array([
         (1 - a) * nparray[lh] + a * nparray[rh]
         for ci in cont_indices
@@ -100,12 +109,14 @@ def stretch_array_to_length_with_interpolation(nparray, length):
 
 
 def make_even(iterable_1, iterable_2):
-    list_1 = list(iterable_1)
-    list_2 = list(iterable_2)
-    length = max(len(list_1), len(list_2))
+    len1 = len(iterable_1)
+    len2 = len(iterable_2)
+    if len1 == len2:
+        return iterable_1, iterable_2
+    new_len = max(len1, len2)
     return (
-        [list_1[(n * len(list_1)) // length] for n in range(length)],
-        [list_2[(n * len(list_2)) // length] for n in range(length)]
+        [iterable_1[(n * len1) // new_len] for n in range(new_len)],
+        [iterable_2[(n * len2) // new_len] for n in range(new_len)]
     )
 
 

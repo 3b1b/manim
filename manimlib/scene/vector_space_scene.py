@@ -20,8 +20,8 @@ from manimlib.mobject.matrix import Matrix
 from manimlib.mobject.matrix import VECTOR_LABEL_SCALE_FACTOR
 from manimlib.mobject.matrix import vector_coordinate_label
 from manimlib.mobject.mobject import Mobject
-from manimlib.mobject.svg.tex_mobject import TexMobject
-from manimlib.mobject.svg.tex_mobject import TextMobject
+from manimlib.mobject.svg.tex_mobject import Tex
+from manimlib.mobject.svg.tex_mobject import TexText
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.scene.scene import Scene
@@ -123,10 +123,10 @@ class VectorScene(Scene):
                          rotate=False,
                          color=None,
                          label_scale_factor=VECTOR_LABEL_SCALE_FACTOR):
-        if not isinstance(label, TexMobject):
+        if not isinstance(label, Tex):
             if len(label) == 1:
                 label = "\\vec{\\textbf{%s}}" % label
-            label = TexMobject(label)
+            label = Tex(label)
             if color is None:
                 color = vector.get_color()
             label.set_color(color)
@@ -288,7 +288,7 @@ class LinearTransformationScene(VectorScene):
         "background_plane_kwargs": {
             "color": GREY,
             "axis_config": {
-                "stroke_color": LIGHT_GREY,
+                "stroke_color": GREY_B,
             },
             "axis_config": {
                 "color": GREY,
@@ -408,7 +408,7 @@ class LinearTransformationScene(VectorScene):
         else:
             label_mob.target_text = "%s(%s)" % (
                 transformation_name,
-                label_mob.get_tex_string()
+                label_mob.get_tex()
             )
         label_mob.vector = vector
         label_mob.kwargs = kwargs
@@ -419,7 +419,7 @@ class LinearTransformationScene(VectorScene):
 
     def add_title(self, title, scale_factor=1.5, animate=False):
         if not isinstance(title, Mobject):
-            title = TextMobject(title).scale(scale_factor)
+            title = TexText(title).scale(scale_factor)
         title.to_edge(UP)
         title.add_background_rectangle()
         if animate:
@@ -461,7 +461,7 @@ class LinearTransformationScene(VectorScene):
             v.target = Vector(func(v.get_end()), color=v.get_color())
             norm = get_norm(v.target.get_end())
             if norm < 0.1:
-                v.target.get_tip().scale_in_place(norm)
+                v.target.get_tip().scale(norm)
         return self.get_piece_movement(self.moving_vectors)
 
     def get_transformable_label_movement(self):

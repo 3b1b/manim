@@ -1,9 +1,6 @@
 #version 330
 
-uniform float aspect_ratio;
-uniform float anti_alias_width;
-uniform mat4 to_screen_space;
-uniform float focal_distance;
+#INSERT camera_uniform_declarations.glsl
 
 in vec3 point;
 

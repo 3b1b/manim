@@ -1,70 +1,63 @@
-import re
-import os
 import copy
 import hashlib
-import cairo
-import manimlib.constants as consts
+import os
+import re
+import typing
+from contextlib import contextmanager
+from pathlib import Path
+
+import manimpango
 from manimlib.constants import *
+from manimlib.mobject.geometry import Dot
 from manimlib.mobject.svg.svg_mobject import SVGMobject
+from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.customization import get_customization
+from manimlib.utils.directories import get_downloads_dir, get_text_dir
+from manimpango import PangoUtils
+from manimpango import TextSetting
 
-
-TEXT_MOB_SCALE_FACTOR = 0.05
-
-
-class TextSetting(object):
-    def __init__(self, start, end, font, slant, weight, line_num=-1):
-        self.start = start
-        self.end = end
-        self.font = font
-        self.slant = slant
-        self.weight = weight
-        self.line_num = line_num
+TEXT_MOB_SCALE_FACTOR = 0.001048
 
 
 class Text(SVGMobject):
     CONFIG = {
         # Mobject
-        'color': consts.WHITE,
-        'height': None,
+        "color": WHITE,
+        "height": None,
+        "stroke_width": 0,
         # Text
-        'font': '',
-        'gradient': None,
-        'lsh': -1,
-        'size': 1,
-        'slant': NORMAL,
-        'weight': NORMAL,
-        't2c': {},
-        't2f': {},
-        't2g': {},
-        't2s': {},
-        't2w': {},
+        "font": '',
+        "gradient": None,
+        "lsh": -1,
+        "size": 1,
+        "font_size": 48,
+        "tab_width": 4,
+        "slant": NORMAL,
+        "weight": NORMAL,
+        "t2c": {},
+        "t2f": {},
+        "t2g": {},
+        "t2s": {},
+        "t2w": {},
+        "disable_ligatures": True,
     }
 
     def __init__(self, text, **config):
-        self.text = text
         self.full2short(config)
         digest_config(self, config)
         self.lsh = self.size if self.lsh == -1 else self.lsh
-
+        text_without_tabs = text
+        if text.find('\t') != -1:
+            text_without_tabs = text.replace('\t', ' ' * self.tab_width)
+        self.text = text_without_tabs
         file_name = self.text2svg()
-        self.remove_last_M(file_name)
+        PangoUtils.remove_last_M(file_name)
+        self.remove_empty_path(file_name)
         SVGMobject.__init__(self, file_name, **config)
-
-        nppc = self.n_points_per_curve
-        for each in self:
-            if len(each.points) == 0:
-                continue
-            points = each.points
-            last = points[0]
-            each.clear_points()
-            for index, point in enumerate(points):
-                each.append_points([point])
-                if index != len(points) - 1 and (index + 1) % nppc == 0 and any(point != points[index+1]):
-                    each.add_line_to(last)
-                    last = points[index + 1]
-            each.add_line_to(last)
-
+        self.text = text
+        if self.disable_ligatures:
+            self.apply_space_chars()
         if self.t2c:
             self.set_color_by_t2c()
         if self.gradient:
@@ -74,14 +67,23 @@ class Text(SVGMobject):
 
         # anti-aliasing
         if self.height is None:
-            self.scale(TEXT_MOB_SCALE_FACTOR)
+            self.scale(TEXT_MOB_SCALE_FACTOR * self.font_size)
 
-    def remove_last_M(self, file_name):
+    def remove_empty_path(self, file_name):
         with open(file_name, 'r') as fpr:
             content = fpr.read()
-        content = re.sub(r'Z M [^A-Za-z]*? "\/>', 'Z "/>', content)
+        content = re.sub(r'<path .*?d=""/>', '', content)
         with open(file_name, 'w') as fpw:
             fpw.write(content)
+
+    def apply_space_chars(self):
+        submobs = self.submobjects.copy()
+        for char_index in range(len(self.text)):
+            if self.text[char_index] in [" ", "\t", "\n"]:
+                space = Dot(radius=0, fill_opacity=0, stroke_opacity=0)
+                space.move_to(submobs[max(char_index - 1, 0)].get_center())
+                submobs.insert(char_index, space)
+        self.set_submobjects(submobs)
 
     def find_indexes(self, word):
         m = re.match(r'\[([0-9\-]{0,}):([0-9\-]{0,})\]', word)
@@ -98,6 +100,19 @@ class Text(SVGMobject):
             indexes.append((index, index + len(word)))
             index = self.text.find(word, index + len(word))
         return indexes
+
+    def get_parts_by_text(self, word):
+        return VGroup(*(
+            self[i:j]
+            for i, j in self.find_indexes(word)
+        ))
+
+    def get_part_by_text(self, word):
+        parts = self.get_parts_by_text(word)
+        if len(parts) > 0:
+            return parts[0]
+        else:
+            return None
 
     def full2short(self, config):
         for kwargs in [config, self.CONFIG]:
@@ -126,25 +141,11 @@ class Text(SVGMobject):
             for start, end in self.find_indexes(word):
                 self[start:end].set_color_by_gradient(*gradient)
 
-    def str2slant(self, string):
-        if string == NORMAL:
-            return cairo.FontSlant.NORMAL
-        if string == ITALIC:
-            return cairo.FontSlant.ITALIC
-        if string == OBLIQUE:
-            return cairo.FontSlant.OBLIQUE
-
-    def str2weight(self, string):
-        if string == NORMAL:
-            return cairo.FontWeight.NORMAL
-        if string == BOLD:
-            return cairo.FontWeight.BOLD
-
     def text2hash(self):
         settings = self.font + self.slant + self.weight
         settings += str(self.t2f) + str(self.t2s) + str(self.t2w)
         settings += str(self.lsh) + str(self.size)
-        id_str = self.text+settings
+        id_str = self.text + settings
         hasher = hashlib.sha256()
         hasher.update(id_str.encode())
         return hasher.hexdigest()[:16]
@@ -201,34 +202,79 @@ class Text(SVGMobject):
         lsh = self.lsh * 10
 
         if self.font == '':
-            print(NOT_SETTING_FONT_MSG)
+            self.font = get_customization()['style']['font']
 
-        dir_name = consts.TEXT_DIR
+        dir_name = get_text_dir()
         hash_name = self.text2hash()
-        file_name = os.path.join(dir_name, hash_name)+'.svg'
+        file_name = os.path.join(dir_name, hash_name) + '.svg'
         if os.path.exists(file_name):
             return file_name
-
-        surface = cairo.SVGSurface(file_name, 600, 400)
-        context = cairo.Context(surface)
-        context.set_font_size(size)
-        context.move_to(START_X, START_Y)
-
         settings = self.text2settings()
-        offset_x = 0
-        last_line_num = 0
-        for setting in settings:
-            font = setting.font
-            slant = self.str2slant(setting.slant)
-            weight = self.str2weight(setting.weight)
-            text = self.text[setting.start:setting.end].replace('\n', ' ')
+        width = 600
+        height = 400
+        disable_liga = self.disable_ligatures
+        return manimpango.text2svg(
+            settings,
+            size,
+            lsh,
+            disable_liga,
+            file_name,
+            START_X,
+            START_Y,
+            width,
+            height,
+            self.text,
+        )
 
-            context.select_font_face(font, slant, weight)
-            if setting.line_num != last_line_num:
-                offset_x = 0
-                last_line_num = setting.line_num
-            context.move_to(START_X + offset_x, START_Y + lsh*setting.line_num)
-            context.show_text(text)
-            offset_x += context.text_extents(text)[4]
 
-        return file_name
+@contextmanager
+def register_font(font_file: typing.Union[str, Path]):
+    """Temporarily add a font file to Pango's search path.
+    This searches for the font_file at various places. The order it searches it described below.
+    1. Absolute path.
+    2. Downloads dir.
+
+    Parameters
+    ----------
+    font_file :
+        The font file to add.
+    Examples
+    --------
+    Use ``with register_font(...)`` to add a font file to search
+    path.
+    .. code-block:: python
+        with register_font("path/to/font_file.ttf"):
+           a = Text("Hello", font="Custom Font Name")
+    Raises
+    ------
+    FileNotFoundError:
+        If the font doesn't exists.
+    AttributeError:
+        If this method is used on macOS.
+    Notes
+    -----
+    This method of adding font files also works with :class:`CairoText`.
+    .. important ::
+        This method is available for macOS for ``ManimPango>=v0.2.3``. Using this
+        method with previous releases will raise an :class:`AttributeError` on macOS.
+    """
+
+    input_folder = Path(get_downloads_dir()).parent.resolve()
+    possible_paths = [
+        Path(font_file),
+        input_folder / font_file,
+    ]
+    for path in possible_paths:
+        path = path.resolve()
+        if path.exists():
+            file_path = path
+            break
+    else:
+        error = f"Can't find {font_file}." f"Tried these : {possible_paths}"
+        raise FileNotFoundError(error)
+
+    try:
+        assert manimpango.register_font(str(file_path))
+        yield
+    finally:
+        manimpango.unregister_font(str(file_path))

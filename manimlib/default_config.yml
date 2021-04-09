@@ -1,0 +1,57 @@
+directories:
+  # Set this to true if you want the path to video files
+  # to match the directory structure of the path to the
+  # sourcecode generating that video
+  mirror_module_path: False
+  # Where should manim output video and image files?
+  output: ""
+  # If you want to use images, manim will look to these folders to find them
+  raster_images: ""
+  vector_images: ""
+  # If you want to use sounds, manim will look here to find it.
+  sounds: ""
+  # Manim often generates tex_files or other kinds of serialized data
+  # to keep from having to generate the same thing too many times.  By
+  # default, these will be stored at tempfile.gettempdir(), e.g. this might
+  # return whatever is at to the TMPDIR environment variable.  If you want to
+  # specify them elsewhere,
+  temporary_storage: ""
+tex:
+  executable: "latex"
+  template_file: "tex_template.tex" 
+  intermediate_filetype: "dvi"
+  text_to_replace: "[tex_expression]"
+  # For ctex, use the following configuration
+  # executable: "xelatex -no-pdf"
+  # template_file: "ctex_template.tex"
+  # intermediate_filetype: "xdv"
+universal_import_line: "from manimlib import *"
+style:
+  font: "Consolas"
+  background_color: "#333333"
+# Set the position of preview window, you can use directions, e.g. UL/DR/OL/OO/...
+# also, you can also specify the position(pixel) of the upper left corner of 
+# the window on the monitor, e.g. "960,540"
+window_position: UR
+window_monitor: 0
+# If break_into_partial_movies is set to True, then many small
+# files will be written corresponding to each Scene.play and
+# Scene.wait call, and these files will then be combined
+# to form the full scene.  Sometimes video-editing is made
+# easier when working with the broken up scene, which
+# effectively has cuts at all the places you might want.
+break_into_partial_movies: False
+camera_qualities:
+  low:
+    resolution: "854x480"
+    frame_rate: 15
+  medium:
+    resolution: "1280x720"
+    frame_rate: 30
+  high:
+    resolution: "1920x1080"
+    frame_rate: 30
+  ultra_high:
+    resolution: "3840x2160"
+    frame_rate: 60
+  default_quality: "high"
