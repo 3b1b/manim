@@ -1,15 +1,16 @@
 <!doctype html>
 <html class="no-js">
   <head><meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Example Scenes" href="example_scenes.html" /><link rel="prev" title="Quick Start" href="quickstart.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Example Scenes" href="example_scenes.html" /><link rel="prev" title="Quick Start" href="quickstart.html" />
 
     <link rel="shortcut icon" href="../_static/icon.png"/><meta name="generator" content="sphinx-3.0.3, furo 2020.10.05.beta9"/>
         <title>CLI flags and configuration - manim  documentation</title>
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="../_static/custom.css" />
     <link rel="stylesheet" href="../_static/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?4d9ec36d23faaac6cc9c3f45">
-    <link rel="stylesheet" href="../_static/pygments.css?4d9ec36d23faaac6cc9c3f45">
+    <link rel="stylesheet" href="../_static/styles/default.css?6ef2c2194c863d485a3ad7d5">
+    <link rel="stylesheet" href="../_static/pygments.css?6ef2c2194c863d485a3ad7d5">
     
 <style>
   :root {
@@ -26,7 +27,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?4d9ec36d23faaac6cc9c3f45"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?6ef2c2194c863d485a3ad7d5"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -87,7 +88,7 @@
   <input type="hidden" name="check_keywords" value="yes">
   <input type="hidden" name="area" value="default">
 </form><div class="sidebar-tree sidebar-scroll">
-  <p class="caption"><span class="caption-text">Getting Started</span></p>
+  <p><span class="caption-text">Getting Started</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
@@ -97,12 +98,12 @@
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Manim’s structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="whatsnew.html">What’s new</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Documentation</span></p>
+<p><span class="caption-text">Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../documentation/constants.html">constants</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../documentation/custom_config.html">custom_config</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Development</span></p>
+<p><span class="caption-text">Development</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../development/changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/contributing.html">Contributing</a></li>
@@ -120,9 +121,9 @@
         <label class="toc-overlay-icon" for="__toc">
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
-        <div class="section" id="cli-flags-and-configuration">
+        <section id="cli-flags-and-configuration">
 <h1>CLI flags and configuration<a class="headerlink" href="#cli-flags-and-configuration" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="command-line-interface">
+<section id="command-line-interface">
 <h2>Command Line Interface<a class="headerlink" href="#command-line-interface" title="Permalink to this headline">¶</a></h2>
 <p>To run manim, you need to enter the directory at the same level as <code class="docutils literal notranslate"><span class="pre">manimlib/</span></code>
 and enter the command in the following format into terminal:</p>
@@ -136,7 +137,7 @@ manim-render &lt;code&gt;.py &lt;Scene&gt; &lt;flags&gt;
 <li><p><code class="docutils literal notranslate"><span class="pre">&lt;Scene&gt;</span></code> : The scene you want to render here. If it is not written or written incorrectly, it will list all for you to choose. And if there is only one <code class="docutils literal notranslate"><span class="pre">Scene</span></code> in the file, this class will be rendered directly.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">&lt;flags&gt;</span></code> : CLI flags.</p></li>
 </ul>
-<div class="section" id="some-useful-flags">
+<section id="some-useful-flags">
 <h3>Some useful flags<a class="headerlink" href="#some-useful-flags" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">-w</span></code> to write the scene to a file.</p></li>
@@ -149,8 +150,8 @@ manim-render &lt;code&gt;.py &lt;Scene&gt; &lt;flags&gt;
 <li><p><code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">&lt;number&gt;</span></code> to skip ahead to the <code class="docutils literal notranslate"><span class="pre">n</span></code>’th animation of a scene.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">-f</span></code> to make the playback window fullscreen.</p></li>
 </ul>
-</div>
-<div class="section" id="all-supported-flags">
+</section>
+<section id="all-supported-flags">
 <h3>All supported flags<a class="headerlink" href="#all-supported-flags" title="Permalink to this headline">¶</a></h3>
 <div class="table-wrapper"><table class="docutils align-default">
 <colgroup>
@@ -259,9 +260,9 @@ manim-render &lt;code&gt;.py &lt;Scene&gt; &lt;flags&gt;
 </tr>
 </tbody>
 </table></div>
-</div>
-</div>
-<div class="section" id="custom-config">
+</section>
+</section>
+<section id="custom-config">
 <h2>custom_config<a class="headerlink" href="#custom-config" title="Permalink to this headline">¶</a></h2>
 <p>In order to perform more configuration (about directories, etc.) and permanently
 change the default value (you don’t have to add flags to the command every time),
@@ -284,8 +285,8 @@ following the directory structure:</p>
 <p>When you enter the <code class="docutils literal notranslate"><span class="pre">project/</span></code> folder and run <code class="docutils literal notranslate"><span class="pre">manimgl</span> <span class="pre">code.py</span> <span class="pre">&lt;Scene&gt;</span></code>,
 it will overwrite <code class="docutils literal notranslate"><span class="pre">manim/custom_config.yml</span></code> with <code class="docutils literal notranslate"><span class="pre">custom_config.yml</span></code>
 in the <code class="docutils literal notranslate"><span class="pre">project</span></code> folder.</p>
-</div>
-</div>
+</section>
+</section>
 
       </article>
       <footer>

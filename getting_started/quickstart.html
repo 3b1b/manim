@@ -1,15 +1,16 @@
 <!doctype html>
 <html class="no-js">
   <head><meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="CLI flags and configuration" href="configuration.html" /><link rel="prev" title="Installation" href="installation.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="CLI flags and configuration" href="configuration.html" /><link rel="prev" title="Installation" href="installation.html" />
 
     <link rel="shortcut icon" href="../_static/icon.png"/><meta name="generator" content="sphinx-3.0.3, furo 2020.10.05.beta9"/>
         <title>Quick Start - manim  documentation</title>
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="../_static/custom.css" />
     <link rel="stylesheet" href="../_static/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?40aa7971cb727b2cade18a42">
-    <link rel="stylesheet" href="../_static/pygments.css?40aa7971cb727b2cade18a42">
+    <link rel="stylesheet" href="../_static/styles/default.css?51159c9290109452dd4f2e38">
+    <link rel="stylesheet" href="../_static/pygments.css?51159c9290109452dd4f2e38">
     
 <style>
   :root {
@@ -26,7 +27,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?40aa7971cb727b2cade18a42"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?51159c9290109452dd4f2e38"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -87,7 +88,7 @@
   <input type="hidden" name="check_keywords" value="yes">
   <input type="hidden" name="area" value="default">
 </form><div class="sidebar-tree sidebar-scroll">
-  <p class="caption"><span class="caption-text">Getting Started</span></p>
+  <p><span class="caption-text">Getting Started</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Quick Start</a></li>
@@ -97,12 +98,12 @@
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Manim’s structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="whatsnew.html">What’s new</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Documentation</span></p>
+<p><span class="caption-text">Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../documentation/constants.html">constants</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../documentation/custom_config.html">custom_config</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Development</span></p>
+<p><span class="caption-text">Development</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../development/changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/contributing.html">Contributing</a></li>
@@ -120,7 +121,7 @@
         <label class="toc-overlay-icon" for="__toc">
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
-        <div class="section" id="quick-start">
+        <section id="quick-start">
 <h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h1>
 <p>After installing the manim environment according to the instructions on the
 <a class="reference internal" href="installation.html"><span class="doc">Installation</span></a> page, you can try to make a scene yourself from scratch.</p>
@@ -176,7 +177,7 @@ directory structure:</p>
 image will be automatically opened (saved in the subdirectory <code class="docutils literal notranslate"><span class="pre">images/</span></code> of the same
 level directory of <code class="docutils literal notranslate"><span class="pre">start.py</span></code> by default):</p>
 <img alt="../_images/SquareToCircle.png" class="align-center" src="../_images/SquareToCircle.png"/>
-<div class="section" id="make-an-image">
+<section id="make-an-image">
 <h2>Make an image<a class="headerlink" href="#make-an-image" title="Permalink to this headline">¶</a></h2>
 <p>Next, let’s take a detailed look at what each row does.</p>
 <p><strong>Line 1</strong>:</p>
@@ -216,8 +217,8 @@ how to create the mobjects in the screen and what operations need to be performe
 </pre></div>
 </div>
 <p>Add this circle to the screen through the <code class="docutils literal notranslate"><span class="pre">.add()</span></code> method of <code class="xref py py-class docutils literal notranslate"><span class="pre">Scene</span></code>.</p>
-</div>
-<div class="section" id="add-animations">
+</section>
+<section id="add-animations">
 <h2>Add animations<a class="headerlink" href="#add-animations" title="Permalink to this headline">¶</a></h2>
 <p>Let’s change some codes and add some animations to make videos instead of just pictures.</p>
 <div class="highlight-python notranslate"><div class="table-wrapper"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
@@ -282,8 +283,8 @@ parameters to indicate the pause time (for example, <code class="docutils litera
 <p>Play the animation that transforms <code class="docutils literal notranslate"><span class="pre">square</span></code> into <code class="docutils literal notranslate"><span class="pre">circle</span></code>.
 <code class="docutils literal notranslate"><span class="pre">ReplacementTransform(A,</span> <span class="pre">B)</span></code> means to transform A into B’s pattern and replace A with B.</p>
 <p><strong>Line 13</strong>: Same as line 11, pause for 1s.</p>
-</div>
-<div class="section" id="enable-interaction">
+</section>
+<section id="enable-interaction">
 <h2>Enable interaction<a class="headerlink" href="#enable-interaction" title="Permalink to this headline">¶</a></h2>
 <p>Interaction is a new feature of the new version. You can add the following line
 at the end of the code to enable interaction:</p>
@@ -317,14 +318,14 @@ empty scene containing only <code class="docutils literal notranslate"><span cla
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>manimgl
 </pre></div>
 </div>
-</div>
-<div class="section" id="you-succeeded">
+</section>
+<section id="you-succeeded">
 <h2>You succeeded!<a class="headerlink" href="#you-succeeded" title="Permalink to this headline">¶</a></h2>
 <p>After reading the above content, you already know how to use manim.
 Below you can see some examples, in the <a class="reference internal" href="example_scenes.html"><span class="doc">Example Scenes</span></a> page.
 But before that, you’d better have a look at the <a class="reference internal" href="configuration.html"><span class="doc">CLI flags and configuration</span></a> of manim.</p>
-</div>
-</div>
+</section>
+</section>
 
       </article>
       <footer>

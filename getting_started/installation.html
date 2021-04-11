@@ -1,15 +1,16 @@
 <!doctype html>
 <html class="no-js">
   <head><meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Quick Start" href="quickstart.html" /><link rel="prev" title="Manim’s documentation" href="../index.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Quick Start" href="quickstart.html" /><link rel="prev" title="Manim’s documentation" href="../index.html" />
 
     <link rel="shortcut icon" href="../_static/icon.png"/><meta name="generator" content="sphinx-3.0.3, furo 2020.10.05.beta9"/>
         <title>Installation - manim  documentation</title>
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="../_static/custom.css" />
     <link rel="stylesheet" href="../_static/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?cb354ae629531cb2a800ac90">
-    <link rel="stylesheet" href="../_static/pygments.css?cb354ae629531cb2a800ac90">
+    <link rel="stylesheet" href="../_static/styles/default.css?d66d901c9201bdfa1976e98d">
+    <link rel="stylesheet" href="../_static/pygments.css?d66d901c9201bdfa1976e98d">
     
 <style>
   :root {
@@ -26,7 +27,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?cb354ae629531cb2a800ac90"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?d66d901c9201bdfa1976e98d"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -87,7 +88,7 @@
   <input type="hidden" name="check_keywords" value="yes">
   <input type="hidden" name="area" value="default">
 </form><div class="sidebar-tree sidebar-scroll">
-  <p class="caption"><span class="caption-text">Getting Started</span></p>
+  <p><span class="caption-text">Getting Started</span></p>
 <ul class="current">
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
@@ -97,12 +98,12 @@
 <li class="toctree-l1"><a class="reference internal" href="structure.html">Manim’s structure</a></li>
 <li class="toctree-l1"><a class="reference internal" href="whatsnew.html">What’s new</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Documentation</span></p>
+<p><span class="caption-text">Documentation</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../documentation/constants.html">constants</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../documentation/custom_config.html">custom_config</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Development</span></p>
+<p><span class="caption-text">Development</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../development/changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development/contributing.html">Contributing</a></li>
@@ -120,7 +121,7 @@
         <label class="toc-overlay-icon" for="__toc">
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
-        <div class="section" id="installation">
+        <section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <p>Manim runs on Python 3.6 or higher (Python 3.8 is recommended).</p>
 <p>System requirements are：</p>
@@ -128,8 +129,9 @@
 <li><p><a class="reference external" href="https://ffmpeg.org/">FFmpeg</a></p></li>
 <li><p><a class="reference external" href="https://www.opengl.org//">OpenGL</a> (included in python package <code class="docutils literal notranslate"><span class="pre">PyOpenGL</span></code>)</p></li>
 <li><p><a class="reference external" href="https://www.latex-project.org">LaTeX</a> (optional, if you want to use LaTeX)</p></li>
+<li><p><a class="reference external" href="https://pango.org">Pango</a> (only for Linux)</p></li>
 </ul>
-<div class="section" id="directly">
+<section id="directly">
 <h2>Directly<a class="headerlink" href="#directly" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install manimgl</span>
 pip install manimgl
@@ -151,8 +153,8 @@ manim-render example_scenes.py OpeningManimExample
 </div>
 <p>If you run the above command and no error message appears,
 then you have successfully installed all the environments required by manim.</p>
-</div>
-<div class="section" id="directly-windows">
+</section>
+<section id="directly-windows">
 <h2>Directly (Windows)<a class="headerlink" href="#directly-windows" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
 <li><p><a class="reference external" href="https://www.wikihow.com/Install-FFmpeg-on-Windows">Install
@@ -167,8 +169,8 @@ pip install -e .
 manimgl example_scenes.py OpeningManimExample
 </pre></div>
 </div>
-</div>
-<div class="section" id="for-anaconda">
+</section>
+<section id="for-anaconda">
 <h2>For Anaconda<a class="headerlink" href="#for-anaconda" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Install FFmpeg and LaTeX as above.</p></li>
@@ -181,8 +183,8 @@ conda activate manim
 pip install -e .
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
       </article>
       <footer>
