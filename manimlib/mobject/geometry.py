@@ -49,6 +49,7 @@ class TipableVMobject(VMobject):
         "tip_config": {
             "fill_opacity": 1,
             "stroke_width": 0,
+            "tip_look": 1,  # triangle=0, inner_smooth=1, dot=2
         },
         "normal_vector": OUT,
     }
@@ -786,12 +787,20 @@ class ArrowTip(Triangle):
         "width": DEFAULT_ARROW_TIP_WIDTH,
         "length": DEFAULT_ARROW_TIP_LENGTH,
         "angle": 0,
+        "tip_look": 1,  # triangle=0, inner_smooth=1, dot=2
     }
 
     def __init__(self, **kwargs):
         Triangle.__init__(self, start_angle=0, **kwargs)
         self.set_height(self.width)
         self.set_width(self.length, stretch=True)
+        if self.tip_look == 1:
+            self.set_height(self.length * 0.9, stretch=True)
+            self.data["points"][4] += np.array([0.6 * self.length, 0, 0])
+        elif self.tip_look == 2:
+            h = self.length / 2
+            self.clear_points()
+            self.data["points"] = Dot().set_width(h).get_points()
         self.rotate(self.angle)
 
     def get_base(self):
