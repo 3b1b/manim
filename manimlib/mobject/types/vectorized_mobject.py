@@ -52,7 +52,7 @@ class VMobject(Mobject):
         "fill_shader_folder": "quadratic_bezier_fill",
         # Could also be "bevel", "miter", "round"
         "joint_type": "auto",
-        "flat_stroke": True,
+        "flat_stroke": False,
         "render_primitive": moderngl.TRIANGLES,
         "triangulation_locked": False,
         "fill_dtype": [
