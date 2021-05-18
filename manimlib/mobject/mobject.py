@@ -36,6 +36,8 @@ from manimlib.event_handler.event_type import EventType
 class Mobject(object):
     """
     Mathematical Object
+    
+    Base class of Manim Math Objects
     """
     CONFIG = {
         "color": WHITE,
