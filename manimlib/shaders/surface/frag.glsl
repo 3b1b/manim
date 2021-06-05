@@ -3,6 +3,7 @@
 uniform vec3 light_source_position;
 uniform float gloss;
 uniform float shadow;
+uniform float focal_distance;
 
 in vec3 xyz_coords;
 in vec3 v_normal;

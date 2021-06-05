@@ -17,8 +17,7 @@ vec4 add_light(vec4 color,
                float shadow){
     if(gloss == 0.0 && shadow == 0.0) return color;
 
-    // TODO, read this in as a uniform?
-    float camera_distance = 6;  
+    float camera_distance = focal_distance;
     // Assume everything has already been rotated such that camera is in the z-direction
     vec3 to_camera = vec3(0, 0, camera_distance) - point;
     vec3 to_light = light_coords - point;
