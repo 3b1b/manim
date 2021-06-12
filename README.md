@@ -20,7 +20,8 @@ Since the fork, this version has evolved to work on top of OpenGL, and allows re
 Manim runs on Python 3.6 or higher (Python 3.8 is recommended).
 
 System requirements are [FFmpeg](https://ffmpeg.org/), [OpenGL](https://www.opengl.org/) and [LaTeX](https://www.latex-project.org) (optional, if you want to use LaTeX).
-For Linux, [Pango](https://pango.gnome.org) along with its developerment headers are required. See instruction [here](https://github.com/ManimCommunity/ManimPango#building).
+For Linux, [Pango](https://pango.gnome.org) along with its development headers are required. See instruction [here](https://github.com/ManimCommunity/ManimPango#building).
+
 
 ### Directly
 
