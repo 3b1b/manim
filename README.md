@@ -10,7 +10,7 @@
 [![Manim Discord](https://img.shields.io/discord/581738731934056449.svg?label=discord&logo=discord)](https://discord.gg/mMRrZQW)
 [![docs](https://github.com/3b1b/manim/workflows/docs/badge.svg)](https://3b1b.github.io/manim/)
 
-Manim is an engine for precise programatic animations, designed for creating explanatory math videos.
+Manim is an engine for precise programmatic animations, designed for creating explanatory math videos.
 
 Note, there are two versions of manim.  This repository began as a personal project by the author of [3Blue1Brown](https://www.3blue1brown.com/) for the purpose of animating those videos, with video-specific code available [here](https://github.com/3b1b/videos).  In 2020 a group of developers forked it into what is now the [community edition](https://github.com/ManimCommunity/manim/), with a goal of being more stable, better tested, quicker to respond to community contributions, and all around friendlier to get started with.  You can engage with that community by joining the discord.
 
@@ -21,6 +21,7 @@ Manim runs on Python 3.6 or higher (Python 3.8 is recommended).
 
 System requirements are [FFmpeg](https://ffmpeg.org/), [OpenGL](https://www.opengl.org/) and [LaTeX](https://www.latex-project.org) (optional, if you want to use LaTeX).
 For Linux, [Pango](https://pango.gnome.org) along with its development headers are required. See instruction [here](https://github.com/ManimCommunity/ManimPango#building).
+
 
 ### Directly
 

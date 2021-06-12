@@ -65,6 +65,8 @@ class SingleStringTex(VMobject):
         if self.math_mode:
             new_tex = "\\begin{align*}\n" + new_tex + "\n\\end{align*}"
 
+        new_tex = self.alignment + "\n" + new_tex
+
         tex_config = get_tex_config()
         return tex_config["tex_body"].replace(
             tex_config["text_to_replace"],
@@ -72,10 +74,7 @@ class SingleStringTex(VMobject):
         )
 
     def get_modified_expression(self, tex_string):
-        result = self.alignment + " " + tex_string
-        result = result.strip()
-        result = self.modify_special_strings(result)
-        return result
+        return self.modify_special_strings(tex_string.strip())
 
     def modify_special_strings(self, tex):
         tex = tex.strip()
@@ -153,9 +152,6 @@ class SingleStringTex(VMobject):
 class Tex(SingleStringTex):
     CONFIG = {
         "arg_separator": "",
-        # Note, use of isolate is largely rendered
-        # moot by the fact that you can surround such strings in
-        # {{ and }} as needed.
         "isolate": [],
         "tex_to_color_map": {},
     }
@@ -174,9 +170,12 @@ class Tex(SingleStringTex):
     def break_up_tex_strings(self, tex_strings):
         # Separate out any strings specified in the isolate
         # or tex_to_color_map lists.
+        substrings_to_isolate = [*self.isolate, *self.tex_to_color_map.keys()]
+        if len(substrings_to_isolate) == 0:
+            return tex_strings
         patterns = (
             "({})".format(re.escape(ss))
-            for ss in it.chain(self.isolate, self.tex_to_color_map.keys())
+            for ss in substrings_to_isolate
         )
         pattern = "|".join(patterns)
         pieces = []
