@@ -108,6 +108,11 @@ The relative position of the playback window on the display (two characters,
 the first character means upper(U) / middle(O) / lower(D), the second character 
 means left(L) / middle(O) / right(R)).
 
+``window_monitor``
+------------------
+
+The number of the monitor you want the preview window to pop up on. (default is 0)
+
 ``break_into_partial_movies``
 -----------------------------
 
