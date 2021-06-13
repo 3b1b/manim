@@ -64,6 +64,7 @@ class TipableVMobject(VMobject):
         tip = self.create_tip(at_start, **kwargs)
         self.reset_endpoints_based_on_tip(tip, at_start)
         self.asign_tip_attr(tip, at_start)
+        tip.set_color(self.get_stroke_color())
         self.add(tip)
         return self
 
