@@ -23,6 +23,7 @@ def init_customization():
             "background_color": "",
         },
         "window_position": "UR",
+        "window_position": 0,
         "break_into_partial_movies": False,
         "camera_qualities": {
             "low": {

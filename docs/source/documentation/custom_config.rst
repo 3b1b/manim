@@ -56,7 +56,7 @@ custom_config
 
 - ``raster_images`` 
     The directory for storing raster images to be used in the code (including 
-    ``.jpg``, ``.png`` and ``.gif``), which will be read by ``ImageMobject``.
+    ``.jpg``, ``.jpeg``, ``.png`` and ``.gif``), which will be read by ``ImageMobject``.
 
 - ``vector_images``
     The directory for storing vector images to be used in the code (including 
@@ -107,6 +107,11 @@ Import line that need to execute when entering interactive mode directly.
 The relative position of the playback window on the display (two characters, 
 the first character means upper(U) / middle(O) / lower(D), the second character 
 means left(L) / middle(O) / right(R)).
+
+``window_monitor``
+------------------
+
+The number of the monitor you want the preview window to pop up on. (default is 0)
 
 ``break_into_partial_movies``
 -----------------------------
