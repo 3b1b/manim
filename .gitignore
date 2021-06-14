@@ -17,8 +17,6 @@ develop-eggs/
 dist/
 manimlib.egg-info/
 
-primes.py
-/media_dir.txt
 downloads/
 eggs/
 .eggs/
