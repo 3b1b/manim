@@ -44,7 +44,12 @@ if( document.documentElement.lang !== undefined
   locale = document.documentElement.lang
 }
 
-const path_static = `${DOCUMENTATION_OPTIONS.URL_ROOT}_static/`;
+let doc_url_root = DOCUMENTATION_OPTIONS.URL_ROOT;
+if (doc_url_root == '#') {
+    doc_url_root = '';
+}
+
+const path_static = `${doc_url_root}_static/`;
 
 /**
  * Set up copy/paste for code blocks

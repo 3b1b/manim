@@ -9,8 +9,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="../_static/custom.css" />
     <link rel="stylesheet" href="../_static/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?4783a759ee829cb311e27ec4">
-    <link rel="stylesheet" href="../_static/pygments.css?4783a759ee829cb311e27ec4">
+    <link rel="stylesheet" href="../_static/styles/default.css?fff35623ed19cf73786d42f5">
+    <link rel="stylesheet" href="../_static/pygments.css?fff35623ed19cf73786d42f5">
     
 <style>
   :root {
@@ -27,7 +27,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?4783a759ee829cb311e27ec4"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?fff35623ed19cf73786d42f5"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -118,12 +118,52 @@
   <main class="main">
     <div class="content">
       <article role="main">
-        <label class="toc-overlay-icon no-toc" for="__toc">
+        <label class="toc-overlay-icon" for="__toc">
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
         <section id="changelog">
 <h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
-<p>No changes now.</p>
+<section id="unreleased">
+<h2>Unreleased<a class="headerlink" href="#unreleased" title="Permalink to this headline">¶</a></h2>
+<section id="fixed-bugs">
+<h3>Fixed bugs<a class="headerlink" href="#fixed-bugs" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Fixed the bug of <code class="xref py py-func docutils literal notranslate"><span class="pre">resize_with_interpolation()</span></code> in the case of <code class="docutils literal notranslate"><span class="pre">length=0</span></code></p></li>
+<li><p>Fixed the bug of <code class="docutils literal notranslate"><span class="pre">__init__</span></code> in <code class="xref py py-class docutils literal notranslate"><span class="pre">Elbow</span></code></p></li>
+<li><p>If chosen monitor is not available, choose one that does exist</p></li>
+<li><p>Make sure mobject data gets unlocked after animations</p></li>
+<li><p>Fixed a bug for off-center vector fields</p></li>
+<li><p>Had <code class="docutils literal notranslate"><span class="pre">Mobject.match_points</span></code> return self</p></li>
+<li><p>Fixed chaining animation in example scenes</p></li>
+</ul>
+</section>
+<section id="new-features">
+<h3>New Features<a class="headerlink" href="#new-features" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Added <code class="xref py py-class docutils literal notranslate"><span class="pre">VShowPassingFlash</span></code></p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">COLORMAP_3B1B</span></code></p></li>
+<li><p>Added some methods to coordinate system to access all axes ranges</p>
+<ul>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_origin()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_all_ranges()</span></code></p></li>
+</ul>
+</li>
+<li><p>Added <code class="xref py py-meth docutils literal notranslate"><span class="pre">set_color_by_rgba_func()</span></code></p></li>
+<li><p>Updated <code class="xref py py-class docutils literal notranslate"><span class="pre">VectorField</span></code> and <code class="xref py py-class docutils literal notranslate"><span class="pre">StreamLines</span></code></p></li>
+<li><p>Allow <code class="docutils literal notranslate"><span class="pre">3b1b_colormap</span></code> as an option for <code class="xref py py-func docutils literal notranslate"><span class="pre">get_colormap_list()</span></code></p></li>
+<li><p>Return <code class="docutils literal notranslate"><span class="pre">stroke_width</span></code> as 1d array</p></li>
+<li><p>Added <code class="xref py py-meth docutils literal notranslate"><span class="pre">get_parts_by_text()</span></code></p></li>
+<li><p>Use Text not TexText for Brace</p></li>
+<li><p>Update to Cross to make it default to variable stroke width</p></li>
+<li><p>Added <code class="xref py py-class docutils literal notranslate"><span class="pre">FlashAround</span></code> and <code class="xref py py-class docutils literal notranslate"><span class="pre">FlashUnder</span></code></p></li>
+<li><p>Allowed configuration in <code class="docutils literal notranslate"><span class="pre">Brace.get_text</span></code></p></li>
+<li><p>Added <code class="xref py py-meth docutils literal notranslate"><span class="pre">reorient()</span></code> for quicker changes to frame angle</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">units</span></code> to <code class="xref py py-meth docutils literal notranslate"><span class="pre">set_euler_angles()</span></code></p></li>
+<li><p>Allowed any <code class="docutils literal notranslate"><span class="pre">VMobject</span></code> to be passed into <code class="docutils literal notranslate"><span class="pre">TransformMatchingTex</span></code></p></li>
+<li><p>Removed double brace convention in <code class="docutils literal notranslate"><span class="pre">Tex</span></code> and <code class="docutils literal notranslate"><span class="pre">TexText</span></code></p></li>
+</ul>
+</section>
+</section>
 </section>
 
       </article>
@@ -161,8 +201,29 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            Contents
+          </span>
+        </div>
+        <div class="toc-tree">
+          <ul>
+<li><a class="reference internal" href="#">Changelog</a><ul>
+<li><a class="reference internal" href="#unreleased">Unreleased</a><ul>
+<li><a class="reference internal" href="#fixed-bugs">Fixed bugs</a></li>
+<li><a class="reference internal" href="#new-features">New Features</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
       
       
     </aside>

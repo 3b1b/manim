@@ -8,12 +8,12 @@ the simplest and one by one.
 InteractiveDevlopment
 ---------------------
 
-.. manim-example:: InteractiveDevlopment
-    :media: ../_static/example_scenes/InteractiveDevlopment.mp4
+.. manim-example:: InteractiveDevelopment
+    :media: ../_static/example_scenes/InteractiveDevelopment.mp4
 
     from manimlib import *
 
-    class InteractiveDevlopment(Scene):
+    class InteractiveDevelopment(Scene):
         def construct(self):
             circle = Circle()
             circle.set_fill(BLUE, opacity=0.5)
