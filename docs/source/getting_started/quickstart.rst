@@ -221,7 +221,7 @@ For example: input the following lines (without comment lines) into it respectiv
 .. code-block:: python
 
     # Stretched 4 times in the vertical direction
-    play(circle.animate.stretch(4, dim=0}))
+    play(circle.animate.stretch(4, dim=0))
     # Rotate the ellipse 90°
     play(Rotate(circle, TAU / 4))
     # Move 2 units to the right and shrink to 1/4 of the original

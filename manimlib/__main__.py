@@ -15,3 +15,6 @@ def main():
 
         for scene in scenes:
             scene.run()
+
+if __name__ == '__main__':
+    main()

@@ -180,7 +180,10 @@ class Tex(SingleStringTex):
         pattern = "|".join(patterns)
         pieces = []
         for s in tex_strings:
-            pieces.extend(re.split(pattern, s))
+            if pattern:
+                pieces.extend(re.split(pattern, s))
+            else:
+                pieces.append(s)
         return list(filter(lambda s: s, pieces))
 
     def break_up_by_substrings(self):
