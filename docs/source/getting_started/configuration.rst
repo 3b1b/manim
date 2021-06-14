@@ -58,6 +58,7 @@ flag                                                       abbr   function
 ``--color COLOR``                                          ``-c`` Background color
 ``--leave_progress_bars``                                         Leave progress bars displayed in terminal
 ``--video_dir VIDEO_DIR``                                         directory to write video
+``--config_file CONFIG_FILE``                                     Path to the custom configuration file
 ========================================================== ====== =================================================================================================================================================================================================
 
 custom_config
@@ -87,3 +88,9 @@ following the directory structure:
 When you enter the ``project/`` folder and run ``manimgl code.py <Scene>``, 
 it will overwrite ``manim/default_config.yml`` with ``custom_config.yml`` 
 in the ``project`` folder.
+
+Alternatively, you can use ``--config_file`` flag in CLI to specify configuration file manually.
+
+.. code-block:: sh
+
+    manimgl project/code.py --config_file /path/to/custom_config.yml
