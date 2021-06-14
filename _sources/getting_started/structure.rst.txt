@@ -99,6 +99,7 @@ Below is the directory structure of manim:
         ├── config_ops.py         # Process CONFIG
         ├── customization.py      # Read from custom_config.yml
         ├── debug.py              # Utilities for debugging in program
+        ├── directories.py        # Read directories from config file
         ├── family_ops.py         # Process family members
         ├── file_ops.py           # Process files and directories
         ├── images.py             # Read image

@@ -9,8 +9,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="../_static/custom.css" />
     <link rel="stylesheet" href="../_static/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?e33baf4a8299a223452b56e9">
-    <link rel="stylesheet" href="../_static/pygments.css?e33baf4a8299a223452b56e9">
+    <link rel="stylesheet" href="../_static/styles/default.css?7d9e999516e2fb52753eb3cc">
+    <link rel="stylesheet" href="../_static/pygments.css?7d9e999516e2fb52753eb3cc">
     
 <style>
   :root {
@@ -27,7 +27,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?e33baf4a8299a223452b56e9"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?7d9e999516e2fb52753eb3cc"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -240,6 +240,8 @@ No more explanation here.</p>
 <h2>TextExample<a class="headerlink" href="#textexample" title="Permalink to this headline">¶</a></h2>
 <div class="manim-example"><video autoplay="" class="manim-video" controls="" id="textexample" loop="" src="../_static/example_scenes/TextExample.mp4"></video><h5 class="example-header">TextExample<a class="headerlink" href="#textexample">¶</a></h5><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">TextExample</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># To run this scene properly, you should have "Consolas" font in your computer</span>
+        <span class="c1"># for full usage, you can see https://github.com/3b1b/manim/pull/680</span>
         <span class="n">text</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="s2">"Here is a text"</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="s2">"Consolas"</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">90</span><span class="p">)</span>
         <span class="n">difference</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span>
             <span class="sd">"""</span>
@@ -247,6 +249,7 @@ No more explanation here.</p>
 <span class="sd">            you can change the font more easily, but can't use the LaTeX grammar</span>
 <span class="sd">            """</span><span class="p">,</span>
             <span class="n">font</span><span class="o">=</span><span class="s2">"Arial"</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
+            <span class="c1"># t2c is a dict that you can choose color for different text</span>
             <span class="n">t2c</span><span class="o">=</span><span class="p">{</span><span class="s2">"Text"</span><span class="p">:</span> <span class="n">BLUE</span><span class="p">,</span> <span class="s2">"TexText"</span><span class="p">:</span> <span class="n">BLUE</span><span class="p">,</span> <span class="s2">"LaTeX"</span><span class="p">:</span> <span class="n">ORANGE</span><span class="p">}</span>
         <span class="p">)</span>
         <span class="n">VGroup</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">difference</span><span class="p">)</span><span class="o">.</span><span class="n">arrange</span><span class="p">(</span><span class="n">DOWN</span><span class="p">,</span> <span class="n">buff</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -260,6 +263,7 @@ No more explanation here.</p>
             <span class="n">t2f</span><span class="o">=</span><span class="p">{</span><span class="s2">"font"</span><span class="p">:</span> <span class="s2">"Consolas"</span><span class="p">,</span> <span class="s2">"words"</span><span class="p">:</span> <span class="s2">"Consolas"</span><span class="p">},</span>
             <span class="n">t2c</span><span class="o">=</span><span class="p">{</span><span class="s2">"font"</span><span class="p">:</span> <span class="n">BLUE</span><span class="p">,</span> <span class="s2">"words"</span><span class="p">:</span> <span class="n">GREEN</span><span class="p">}</span>
         <span class="p">)</span>
+        <span class="n">fonts</span><span class="o">.</span><span class="n">set_width</span><span class="p">(</span><span class="n">FRAME_WIDTH</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">slant</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span>
             <span class="s2">"And the same as slant and weight"</span><span class="p">,</span>
             <span class="n">font</span><span class="o">=</span><span class="s2">"Consolas"</span><span class="p">,</span>
@@ -290,20 +294,24 @@ No more explanation here.</p>
     <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">to_isolate</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"B"</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">,</span> <span class="s2">"="</span><span class="p">,</span> <span class="s2">"("</span><span class="p">,</span> <span class="s2">")"</span><span class="p">]</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="n">VGroup</span><span class="p">(</span>
-            <span class="c1"># Surrounding substrings with double braces</span>
-            <span class="c1"># will ensure that those parts are separated</span>
-            <span class="c1"># out in the Tex.  For example, here the</span>
-            <span class="c1"># Tex will have 5 submobjects, corresponding</span>
-            <span class="c1"># to the strings [A^2, +, B^2, =, C^2]</span>
-            <span class="n">Tex</span><span class="p">(</span><span class="s2">"{{A^2}} + {{B^2}} = {{C^2}}"</span><span class="p">),</span>
-            <span class="n">Tex</span><span class="p">(</span><span class="s2">"{{A^2}} = {{C^2}} - {{B^2}}"</span><span class="p">),</span>
+            <span class="c1"># Passing in muliple arguments to Tex will result</span>
+            <span class="c1"># in the same expression as if those arguments had</span>
+            <span class="c1"># been joined together, except that the submobject</span>
+            <span class="c1"># heirarchy of the resulting mobject ensure that the</span>
+            <span class="c1"># Tex mobject has a subject corresponding to</span>
+            <span class="c1"># each of these strings.  For example, the Tex mobject</span>
+            <span class="c1"># below will have 5 subjects, corresponding to the</span>
+            <span class="c1"># expressions [A^2, +, B^2, =, C^2]</span>
+            <span class="n">Tex</span><span class="p">(</span><span class="s2">"A^2"</span><span class="p">,</span> <span class="s2">"+"</span><span class="p">,</span> <span class="s2">"B^2"</span><span class="p">,</span> <span class="s2">"="</span><span class="p">,</span> <span class="s2">"C^2"</span><span class="p">),</span>
+            <span class="c1"># Likewise here</span>
+            <span class="n">Tex</span><span class="p">(</span><span class="s2">"A^2"</span><span class="p">,</span> <span class="s2">"="</span><span class="p">,</span> <span class="s2">"C^2"</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">,</span> <span class="s2">"B^2"</span><span class="p">),</span>
             <span class="c1"># Alternatively, you can pass in the keyword argument</span>
             <span class="c1"># "isolate" with a list of strings that should be out as</span>
-            <span class="c1"># their own submobject.  So both lines below are equivalent</span>
-            <span class="c1"># to what you'd get by wrapping every instance of "B", "C"</span>
-            <span class="c1"># "=", "(" and ")" with double braces</span>
-            <span class="n">Tex</span><span class="p">(</span><span class="s2">"{{A^2}} = (C + B)(C - B)"</span><span class="p">,</span> <span class="n">isolate</span><span class="o">=</span><span class="n">to_isolate</span><span class="p">),</span>
-            <span class="n">Tex</span><span class="p">(</span><span class="s2">"A = </span><span class="se">\\</span><span class="s2">sqrt{(C + B)(C - B)}"</span><span class="p">,</span> <span class="n">isolate</span><span class="o">=</span><span class="n">to_isolate</span><span class="p">)</span>
+            <span class="c1"># their own submobject.  So the line below is equivalent</span>
+            <span class="c1"># to the commented out line below it.</span>
+            <span class="n">Tex</span><span class="p">(</span><span class="s2">"A^2 = (C + B)(C - B)"</span><span class="p">,</span> <span class="n">isolate</span><span class="o">=</span><span class="p">[</span><span class="s2">"A^2"</span><span class="p">,</span> <span class="o">*</span><span class="n">to_isolate</span><span class="p">]),</span>
+            <span class="c1"># Tex("A^2", "=", "(", "C", "+", "B", ")", "(", "C", "-", "B", ")"),</span>
+            <span class="n">Tex</span><span class="p">(</span><span class="s2">"A = </span><span class="se">\\</span><span class="s2">sqrt{(C + B)(C - B)}"</span><span class="p">,</span> <span class="n">isolate</span><span class="o">=</span><span class="p">[</span><span class="s2">"A"</span><span class="p">,</span> <span class="o">*</span><span class="n">to_isolate</span><span class="p">])</span>
         <span class="p">)</span>
         <span class="n">lines</span><span class="o">.</span><span class="n">arrange</span><span class="p">(</span><span class="n">DOWN</span><span class="p">,</span> <span class="n">buff</span><span class="o">=</span><span class="n">LARGE_BUFF</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
@@ -362,7 +370,7 @@ No more explanation here.</p>
         <span class="c1"># new_line2 and the "\sqrt" from the final line.  By passing in,</span>
         <span class="c1"># transform_mismatches=True, it will transform this "^2" part into</span>
         <span class="c1"># the "\sqrt" part.</span>
-        <span class="n">new_line2</span> <span class="o">=</span> <span class="n">Tex</span><span class="p">(</span><span class="s2">"{{A}}^2 = (C + B)(C - B)"</span><span class="p">,</span> <span class="n">isolate</span><span class="o">=</span><span class="n">to_isolate</span><span class="p">)</span>
+        <span class="n">new_line2</span> <span class="o">=</span> <span class="n">Tex</span><span class="p">(</span><span class="s2">"A^2 = (C + B)(C - B)"</span><span class="p">,</span> <span class="n">isolate</span><span class="o">=</span><span class="p">[</span><span class="s2">"A"</span><span class="p">,</span> <span class="o">*</span><span class="n">to_isolate</span><span class="p">])</span>
         <span class="n">new_line2</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
         <span class="n">new_line2</span><span class="o">.</span><span class="n">match_style</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
 
@@ -451,7 +459,7 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
-            <span class="n">square</span><span class="o">.</span><span class="n">set_width</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">stretch</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+            <span class="n">square</span><span class="o">.</span><span class="n">animate</span><span class="o">.</span><span class="n">set_width</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">stretch</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
             <span class="n">run_time</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
@@ -493,7 +501,7 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
         <span class="n">axes</span> <span class="o">=</span> <span class="n">Axes</span><span class="p">(</span>
             <span class="c1"># x-axis ranges from -1 to 10, with a default step size of 1</span>
             <span class="n">x_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
-            <span class="c1"># y-axis ranges from -2 to 10 with a step size of 0.5</span>
+            <span class="c1"># y-axis ranges from -2 to 2 with a step size of 0.5</span>
             <span class="n">y_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
             <span class="c1"># The axes will be stretched so as to match the specified</span>
             <span class="c1"># height and width</span>
