@@ -191,14 +191,15 @@ def get_configuration(args):
     # ensure __config_file__ always exists
     if args.config_file is not None:
         if not os.path.exists(args.config_file):
-            print("There is no configuration file detected.")
-            print(f"Copy default configuration file to {args.config_file}.")
+            print(f"Can't find {args.config_file}.")
             if sys.platform == 'win32':
+                print(f"Copying default configuration file to {args.config_file}...")
                 os.system(f"copy default_config.yml {args.config_file}")
-            elif sys.platform == 'linux2':
+            elif sys.platform in ["linux2", "darwin"]:
+                print(f"Copying default configuration file to {args.config_file}...")
                 os.system(f"cp default_config.yml {args.config_file}")
             else:
-                print("Please create the file manually.")
+                print("Please create the configuration file manually.")
             print("Read configuration from default_config.yml.")
         else:
             __config_file__ = args.config_file
