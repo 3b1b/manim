@@ -14,6 +14,8 @@ Fixed bugs
 - Fixed a bug for off-center vector fields
 - Had ``Mobject.match_points`` return self
 - Fixed chaining animation in example scenes
+- Fixed the default color of tip
+- Fixed a typo in ``ShowPassingFlashWithThinningStrokeWidth``
 
 New Features
 ^^^^^^^^^^^^
@@ -37,3 +39,6 @@ New Features
 - Added ``units`` to :meth:`~manimlib.camera.camera.CameraFrame.set_euler_angles`
 - Allowed any ``VMobject`` to be passed into ``TransformMatchingTex``
 - Removed double brace convention in ``Tex`` and ``TexText``
+- Added support for debugger launch
+- Added CLI flag ``--config_file`` to load configuration file manually
+- Added ``tip_style`` to ``tip_config``
