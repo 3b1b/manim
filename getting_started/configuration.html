@@ -9,8 +9,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="../_static/custom.css" />
     <link rel="stylesheet" href="../_static/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?15e370c141efcd20430af176">
-    <link rel="stylesheet" href="../_static/pygments.css?15e370c141efcd20430af176">
+    <link rel="stylesheet" href="../_static/styles/default.css?3088f2758342f0fde1aeea3b">
+    <link rel="stylesheet" href="../_static/pygments.css?3088f2758342f0fde1aeea3b">
     
 <style>
   :root {
@@ -27,7 +27,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?15e370c141efcd20430af176"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?3088f2758342f0fde1aeea3b"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -258,6 +258,10 @@ manim-render &lt;code&gt;.py &lt;Scene&gt; &lt;flags&gt;
 <td></td>
 <td><p>directory to write video</p></td>
 </tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--config_file</span> <span class="pre">CONFIG_FILE</span></code></p></td>
+<td></td>
+<td><p>Path to the custom configuration file</p></td>
+</tr>
 </tbody>
 </table></div>
 </section>
@@ -285,6 +289,10 @@ following the directory structure:</p>
 <p>When you enter the <code class="docutils literal notranslate"><span class="pre">project/</span></code> folder and run <code class="docutils literal notranslate"><span class="pre">manimgl</span> <span class="pre">code.py</span> <span class="pre">&lt;Scene&gt;</span></code>,
 it will overwrite <code class="docutils literal notranslate"><span class="pre">manim/default_config.yml</span></code> with <code class="docutils literal notranslate"><span class="pre">custom_config.yml</span></code>
 in the <code class="docutils literal notranslate"><span class="pre">project</span></code> folder.</p>
+<p>Alternatively, you can use <code class="docutils literal notranslate"><span class="pre">--config_file</span></code> flag in CLI to specify configuration file manually.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>manimgl project/code.py --config_file /path/to/custom_config.yml
+</pre></div>
+</div>
 </section>
 </section>
 
