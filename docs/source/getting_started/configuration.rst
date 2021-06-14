@@ -85,5 +85,5 @@ following the directory structure:
     └── custom_config.yml
 
 When you enter the ``project/`` folder and run ``manimgl code.py <Scene>``, 
-it will overwrite ``manim/custom_config.yml`` with ``custom_config.yml`` 
+it will overwrite ``manim/default_config.yml`` with ``custom_config.yml`` 
 in the ``project`` folder.

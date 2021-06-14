@@ -56,7 +56,7 @@ custom_config
 
 - ``raster_images`` 
     The directory for storing raster images to be used in the code (including 
-    ``.jpg``, ``.png`` and ``.gif``), which will be read by ``ImageMobject``.
+    ``.jpg``, ``.jpeg``, ``.png`` and ``.gif``), which will be read by ``ImageMobject``.
 
 - ``vector_images``
     The directory for storing vector images to be used in the code (including 

@@ -128,6 +128,8 @@ TextExample
 
     class TextExample(Scene):
         def construct(self):
+            # To run this scene properly, you should have "Consolas" font in your computer
+            # for full usage, you can see https://github.com/3b1b/manim/pull/680
             text = Text("Here is a text", font="Consolas", font_size=90)
             difference = Text(
                 """
@@ -135,6 +137,7 @@ TextExample
                 you can change the font more easily, but can't use the LaTeX grammar
                 """,
                 font="Arial", font_size=24,
+                # t2c is a dict that you can choose color for different text
                 t2c={"Text": BLUE, "TexText": BLUE, "LaTeX": ORANGE}
             )
             VGroup(text, difference).arrange(DOWN, buff=1)
@@ -148,6 +151,7 @@ TextExample
                 t2f={"font": "Consolas", "words": "Consolas"},
                 t2c={"font": BLUE, "words": GREEN}
             )
+            fonts.set_width(FRAME_WIDTH - 1)
             slant = Text(
                 "And the same as slant and weight",
                 font="Consolas",
@@ -180,20 +184,24 @@ TexTransformExample
         def construct(self):
             to_isolate = ["B", "C", "=", "(", ")"]
             lines = VGroup(
-                # Surrounding substrings with double braces
-                # will ensure that those parts are separated
-                # out in the Tex.  For example, here the
-                # Tex will have 5 submobjects, corresponding
-                # to the strings [A^2, +, B^2, =, C^2]
-                Tex("{{A^2}} + {{B^2}} = {{C^2}}"),
-                Tex("{{A^2}} = {{C^2}} - {{B^2}}"),
+                # Passing in muliple arguments to Tex will result
+                # in the same expression as if those arguments had
+                # been joined together, except that the submobject
+                # heirarchy of the resulting mobject ensure that the
+                # Tex mobject has a subject corresponding to
+                # each of these strings.  For example, the Tex mobject
+                # below will have 5 subjects, corresponding to the
+                # expressions [A^2, +, B^2, =, C^2]
+                Tex("A^2", "+", "B^2", "=", "C^2"),
+                # Likewise here
+                Tex("A^2", "=", "C^2", "-", "B^2"),
                 # Alternatively, you can pass in the keyword argument
                 # "isolate" with a list of strings that should be out as
-                # their own submobject.  So both lines below are equivalent
-                # to what you'd get by wrapping every instance of "B", "C"
-                # "=", "(" and ")" with double braces
-                Tex("{{A^2}} = (C + B)(C - B)", isolate=to_isolate),
-                Tex("A = \\sqrt{(C + B)(C - B)}", isolate=to_isolate)
+                # their own submobject.  So the line below is equivalent
+                # to the commented out line below it.
+                Tex("A^2 = (C + B)(C - B)", isolate=["A^2", *to_isolate]),
+                # Tex("A^2", "=", "(", "C", "+", "B", ")", "(", "C", "-", "B", ")"),
+                Tex("A = \\sqrt{(C + B)(C - B)}", isolate=["A", *to_isolate])
             )
             lines.arrange(DOWN, buff=LARGE_BUFF)
             for line in lines:
@@ -252,7 +260,7 @@ TexTransformExample
             # new_line2 and the "\sqrt" from the final line.  By passing in,
             # transform_mismatches=True, it will transform this "^2" part into
             # the "\sqrt" part.
-            new_line2 = Tex("{{A}}^2 = (C + B)(C - B)", isolate=to_isolate)
+            new_line2 = Tex("A^2 = (C + B)(C - B)", isolate=["A", *to_isolate])
             new_line2.replace(lines[2])
             new_line2.match_style(lines[2])
 
@@ -343,7 +351,7 @@ UpdatersExample
             )
             self.wait()
             self.play(
-                square.set_width(5, stretch=True),
+                square.animate.set_width(5, stretch=True),
                 run_time=3,
             )
             self.wait()
@@ -387,7 +395,7 @@ CoordinateSystemExample
             axes = Axes(
                 # x-axis ranges from -1 to 10, with a default step size of 1
                 x_range=(-1, 10),
-                # y-axis ranges from -2 to 10 with a step size of 0.5
+                # y-axis ranges from -2 to 2 with a step size of 0.5
                 y_range=(-2, 2, 0.5),
                 # The axes will be stretched so as to match the specified
                 # height and width
