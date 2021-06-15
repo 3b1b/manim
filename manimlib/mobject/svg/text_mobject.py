@@ -10,6 +10,7 @@ import manimpango
 from manimlib.constants import *
 from manimlib.mobject.geometry import Dot
 from manimlib.mobject.svg.svg_mobject import SVGMobject
+from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.customization import get_customization
 from manimlib.utils.directories import get_downloads_dir, get_text_dir
@@ -99,6 +100,19 @@ class Text(SVGMobject):
             indexes.append((index, index + len(word)))
             index = self.text.find(word, index + len(word))
         return indexes
+
+    def get_parts_by_text(self, word):
+        return VGroup(*(
+            self[i:j]
+            for i, j in self.find_indexes(word)
+        ))
+
+    def get_part_by_text(self, word):
+        parts = self.get_parts_by_text(word)
+        if len(parts) > 0:
+            return parts[0]
+        else:
+            return None
 
     def full2short(self, config):
         for kwargs in [config, self.CONFIG]:
@@ -212,6 +226,7 @@ class Text(SVGMobject):
             self.text,
         )
 
+
 @contextmanager
 def register_font(font_file: typing.Union[str, Path]):
     """Temporarily add a font file to Pango's search path.
@@ -240,8 +255,8 @@ def register_font(font_file: typing.Union[str, Path]):
     -----
     This method of adding font files also works with :class:`CairoText`.
     .. important ::
-        This method isn't available for macOS. Using this
-        method on macOS will raise an :class:`AttributeError`.
+        This method is available for macOS for ``ManimPango>=v0.2.3``. Using this
+        method with previous releases will raise an :class:`AttributeError` on macOS.
     """
 
     input_folder = Path(get_downloads_dir()).parent.resolve()

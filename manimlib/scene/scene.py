@@ -117,7 +117,7 @@ class Scene(object):
         self.stop_skipping()
         self.linger_after_completion = False
         self.update_frame()
-        
+
         from IPython.terminal.embed import InteractiveShellEmbed
         shell = InteractiveShellEmbed()
         # Have the frame update after each command
@@ -272,7 +272,7 @@ class Scene(object):
             times,
             total=n_iterations,
             leave=self.leave_progress_bars,
-            ascii=False if platform.system() != 'Windows' else True
+            ascii=True if platform.system() == 'Windows' else None
         )
         return time_progression
 

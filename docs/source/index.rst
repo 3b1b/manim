@@ -6,7 +6,7 @@ Manim's documentation
 Manim is an animation engine for explanatory math videos. It's used to create precise animations programmatically, as seen in the videos
 at `3Blue1Brown <https://www.3blue1brown.com/>`_.
 
-And here is a Chinese version of this documentation: https://manim.ml/shaders
+And here is a Chinese version of this documentation: https://manim.wiki/shaders
 
 .. toctree::
    :maxdepth: 2

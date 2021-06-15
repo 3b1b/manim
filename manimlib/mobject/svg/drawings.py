@@ -41,13 +41,15 @@ class Exmark(TexText):
 
 class Lightbulb(SVGMobject):
     CONFIG = {
-        "file_name": "lightbulb",
         "height": 1,
         "stroke_color": YELLOW,
         "stroke_width": 3,
         "fill_color": YELLOW,
         "fill_opacity": 0,
     }
+
+    def __init__(self, **kwargs):
+        super().__init__("lightbulb", **kwargs)
 
 
 class Speedometer(VMobject):

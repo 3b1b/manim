@@ -64,16 +64,17 @@ class BackgroundRectangle(SurroundingRectangle):
 class Cross(VGroup):
     CONFIG = {
         "stroke_color": RED,
-        "stroke_width": 6,
+        "stroke_width": [0, 6, 0],
     }
 
     def __init__(self, mobject, **kwargs):
-        VGroup.__init__(self,
-                        Line(UP + LEFT, DOWN + RIGHT),
-                        Line(UP + RIGHT, DOWN + LEFT),
-                        )
+        super().__init__(
+            Line(UL, DR),
+            Line(UR, DL),
+        )
+        self.insert_n_curves(2)
         self.replace(mobject, stretch=True)
-        self.set_stroke(self.stroke_color, self.stroke_width)
+        self.set_stroke(self.stroke_color, width=self.stroke_width)
 
 
 class Underline(Line):

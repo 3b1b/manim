@@ -25,8 +25,8 @@ class CoordinateSystem():
     """
     CONFIG = {
         "dimension": 2,
-        "x_range": np.array([-8, 8, 1.0]),
-        "y_range": np.array([-4, 4, 1.0]),
+        "x_range": np.array([-8.0, 8.0, 1.0]),
+        "y_range": np.array([-4.0, 4.0, 1.0]),
         "width": None,
         "height": None,
         "num_sampled_graph_points_per_tick": 5,
@@ -46,7 +46,13 @@ class CoordinateSystem():
         """Abbreviation for point_to_coords"""
         return self.point_to_coords(point)
 
+    def get_origin(self):
+        return self.c2p(*[0] * self.dimension)
+
     def get_axes(self):
+        raise Exception("Not implemented")
+
+    def get_all_ranges(self):
         raise Exception("Not implemented")
 
     def get_axis(self, index):
@@ -319,6 +325,9 @@ class Axes(VGroup, CoordinateSystem):
     def get_axes(self):
         return self.axes
 
+    def get_all_ranges(self):
+        return [self.x_range, self.y_range]
+
     def add_coordinate_labels(self,
                               x_values=None,
                               y_values=None,
@@ -334,11 +343,13 @@ class Axes(VGroup, CoordinateSystem):
 class ThreeDAxes(Axes):
     CONFIG = {
         "dimension": 3,
-        "x_range": np.array([-6, 6, 1]),
-        "y_range": np.array([-5, 5, 1]),
-        "z_range": np.array([-4, 4, 1]),
+        "x_range": np.array([-6.0, 6.0, 1.0]),
+        "y_range": np.array([-5.0, 5.0, 1.0]),
+        "z_range": np.array([-4.0, 4.0, 1.0]),
         "z_axis_config": {},
         "z_normal": DOWN,
+        "height": None,
+        "width": None,
         "depth": None,
         "num_axis_pieces": 20,
         "gloss": 0.5,
@@ -346,9 +357,11 @@ class ThreeDAxes(Axes):
 
     def __init__(self, x_range=None, y_range=None, z_range=None, **kwargs):
         Axes.__init__(self, x_range, y_range, **kwargs)
+        if z_range is not None:
+            self.z_range[:len(z_range)] = z_range
 
         z_axis = self.create_axis(
-            z_range or self.z_range,
+            self.z_range,
             self.z_axis_config,
             self.depth,
         )
@@ -364,6 +377,9 @@ class ThreeDAxes(Axes):
 
         for axis in self.axes:
             axis.insert_n_curves(self.num_axis_pieces - 1)
+
+    def get_all_ranges(self):
+        return [self.x_range, self.y_range, self.z_range]
 
 
 class NumberPlane(Axes):

@@ -50,6 +50,9 @@ RIGHT_SIDE = FRAME_X_RADIUS * RIGHT
 PI = np.pi
 TAU = 2 * PI
 DEGREES = TAU / 360
+# Nice to have a constant for readability
+# when juxtaposed with expressions like 30 * DEGREES
+RADIANS = 1
 
 FFMPEG_BIN = "ffmpeg"
 
@@ -136,3 +139,5 @@ RED = RED_C
 MAROON = MAROON_C
 PURPLE = PURPLE_C
 GREY = GREY_C
+
+COLORMAP_3B1B = [BLUE_E, GREEN, YELLOW, RED]

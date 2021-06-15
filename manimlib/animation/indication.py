@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 from manimlib.constants import *
 from manimlib.animation.animation import Animation
@@ -13,6 +14,7 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.geometry import Dot
 from manimlib.mobject.shape_matchers import SurroundingRectangle
+from manimlib.mobject.shape_matchers import Underline
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.geometry import Line
 from manimlib.utils.bezier import interpolate
@@ -150,6 +152,87 @@ class ShowPassingFlash(ShowPartial):
         super().finish()
         for submob, start in self.get_all_families_zipped():
             submob.pointwise_become_partial(start, 0, 1)
+
+
+class VShowPassingFlash(Animation):
+    CONFIG = {
+        "time_width": 0.3,
+        "taper_width": 0.02,
+        "remover": True,
+    }
+
+    def begin(self):
+        self.mobject.align_stroke_width_data_to_points()
+        # Compute an array of stroke widths for each submobject
+        # which tapers out at either end
+        self.submob_to_anchor_widths = dict()
+        for sm in self.mobject.get_family():
+            original_widths = sm.get_stroke_widths()
+            anchor_widths = np.array([*original_widths[0::3], original_widths[-1]])
+
+            def taper_kernel(x):
+                if x < self.taper_width:
+                    return x
+                elif x > 1 - self.taper_width:
+                    return 1.0 - x
+                return 1.0
+
+            taper_array = list(map(taper_kernel, np.linspace(0, 1, len(anchor_widths))))
+            self.submob_to_anchor_widths[hash(sm)] = anchor_widths * taper_array
+        super().begin()
+
+    def interpolate_submobject(self, submobject, starting_sumobject, alpha):
+        anchor_widths = self.submob_to_anchor_widths[hash(submobject)]
+        # Create a gaussian such that 3 sigmas out on either side
+        # will equals time_width
+        tw = self.time_width
+        sigma = tw / 6
+        mu = interpolate(-tw / 2, 1 + tw / 2, alpha)
+
+        def gauss_kernel(x):
+            if abs(x - mu) > 3 * sigma:
+                return 0
+            z = (x - mu) / sigma
+            return math.exp(-0.5 * z * z)
+
+        kernel_array = list(map(gauss_kernel, np.linspace(0, 1, len(anchor_widths))))
+        scaled_widths = anchor_widths * kernel_array
+        new_widths = np.zeros(submobject.get_num_points())
+        new_widths[0::3] = scaled_widths[:-1]
+        new_widths[2::3] = scaled_widths[1:]
+        new_widths[1::3] = (new_widths[0::3] + new_widths[2::3]) / 2
+        submobject.set_stroke(width=new_widths)
+
+    def finish(self):
+        super().finish()
+        for submob, start in self.get_all_families_zipped():
+            submob.match_style(start)
+
+
+class FlashAround(VShowPassingFlash):
+    CONFIG = {
+        "stroke_width": 4.0,
+        "color": YELLOW,
+        "buff": SMALL_BUFF,
+        "time_width": 1.0,
+        "n_inserted_curves": 20,
+    }
+
+    def __init__(self, mobject, **kwargs):
+        digest_config(self, kwargs)
+        path = self.get_path(mobject)
+        path.insert_n_curves(self.n_inserted_curves)
+        path.set_points(path.get_points_without_null_curves())
+        path.set_stroke(self.color, self.stroke_width)
+        super().__init__(path, **kwargs)
+
+    def get_path(self, mobject):
+        return SurroundingRectangle(mobject, buff=self.buff)
+
+
+class FlashUnder(FlashAround):
+    def get_path(self, mobject):
+        return Underline(mobject, buff=self.buff)
 
 
 class ShowCreationThenDestruction(ShowPassingFlash):

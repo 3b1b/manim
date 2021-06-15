@@ -4,6 +4,7 @@ uniform vec3 light_source_position;
 uniform float gloss;
 uniform float shadow;
 uniform float anti_alias_width;
+uniform float focal_distance;
 
 in vec4 color;
 in float radius;

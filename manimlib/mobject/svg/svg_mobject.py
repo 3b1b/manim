@@ -169,7 +169,11 @@ class SVGMobject(VMobject):
             else 0.0
             for key in ("cx", "cy", "rx", "ry")
         ]
-        return Circle().scale(rx * RIGHT + ry * UP).shift(x * RIGHT + y * DOWN)
+        result = Circle()
+        result.stretch(rx, 0)
+        result.stretch(ry, 1)
+        result.shift(x * RIGHT + y * DOWN)
+        return result
 
     def rect_to_mobject(self, rect_element):
         fill_color = rect_element.getAttribute("fill")

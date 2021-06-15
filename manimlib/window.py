@@ -15,7 +15,7 @@ class Window(PygletWindow):
     cursor = True
 
     def __init__(self, scene, size=(1280, 720), **kwargs):
-        super().__init__()
+        super().__init__(size=size)
         digest_config(self, kwargs)
 
         self.scene = scene
@@ -38,7 +38,9 @@ class Window(PygletWindow):
 
     def find_initial_position(self, size):
         custom_position = get_customization()["window_position"]
-        monitor = get_monitors()[get_customization()["window_monitor"]]
+        monitors = get_monitors()
+        mon_index = get_customization()["window_monitor"]
+        monitor = monitors[min(mon_index, len(monitors) - 1)]
         window_width, window_height = size
         # Position might be specified with a string of the form
         # x,y for integers x and y

@@ -59,7 +59,7 @@ Below is the directory structure of manim:
     │   │   ├── brace.py                # Brace
     │   │   ├── drawings.py             # Some special mobject of svg image
     │   │   ├── tex_mobject.py          # Tex and TexText implemented by LaTeX
-    │   │   └── text_mobject.py         # Text implemented by cairo
+    │   │   └── text_mobject.py         # Text implemented by manimpango
     │   ├── changing.py             # Dynamically changing mobject
     │   ├── coordinate_systems.py   # coordinate system
     │   ├── frame.py                # mobject related to frame
@@ -99,6 +99,7 @@ Below is the directory structure of manim:
         ├── config_ops.py         # Process CONFIG
         ├── customization.py      # Read from custom_config.yml
         ├── debug.py              # Utilities for debugging in program
+        ├── directories.py        # Read directories from config file
         ├── family_ops.py         # Process family members
         ├── file_ops.py           # Process files and directories
         ├── images.py             # Read image
