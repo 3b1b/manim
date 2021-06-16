@@ -455,7 +455,7 @@ class Camera(object):
         if path not in self.path_to_texture_id:
             # A way to increase tid's sequentially
             tid = len(self.path_to_texture_id)
-            im = Image.open(path)
+            im = Image.open(path).convert("RGBA")
             texture = self.ctx.texture(
                 size=im.size,
                 components=len(im.getbands()),
