@@ -56,9 +56,7 @@ class Mobject(object):
         # Must match in attributes of vert shader
         "shader_dtype": [
             ('point', np.float32, (3,)),
-        ],
-        # Event listener
-        "listen_to_events": False
+        ]
     }
 
     def __init__(self, **kwargs):
