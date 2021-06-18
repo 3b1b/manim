@@ -26,7 +26,7 @@ class Animation(object):
         # If 0 < lag_ratio < 1, its applied to each
         # with lagged start times
         "lag_ratio": DEFAULT_ANIMATION_LAG_RATIO,
-        "suspend_mobject_updating": False,
+        "suspend_mobject_updating": True,
     }
 
     def __init__(self, mobject, **kwargs):

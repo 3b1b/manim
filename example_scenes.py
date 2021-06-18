@@ -15,7 +15,7 @@ class OpeningManimExample(Scene):
             The original motivation for manim was to
             better illustrate mathematical functions
             as transformations.
-        """)
+        """, lsh=1.5)
         intro_words.to_edge(UP)
 
         self.play(Write(intro_words))
@@ -332,7 +332,7 @@ class UpdatersExample(Scene):
         now = self.time
         w0 = square.get_width()
         square.add_updater(
-            lambda m: m.set_width(w0 * math.cos(self.time - now))
+            lambda m: m.set_width(w0 * math.sin(self.time - now) + w0)
         )
         self.wait(4 * PI)
 
