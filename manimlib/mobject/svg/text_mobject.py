@@ -19,7 +19,8 @@ from manimlib.utils.directories import get_downloads_dir, get_text_dir, get_temp
 from manimpango import PangoUtils
 from manimpango import TextSetting
 
-DEFAULT_LINE_SPACING_SCALE = 0.3
+DEFAULT_LINE_SPACING_SCALE = 0.4
+
 
 class Text(SVGMobject):
     CONFIG = {
@@ -48,7 +49,7 @@ class Text(SVGMobject):
     def __init__(self, text, **config):
         self.full2short(config)
         digest_config(self, config)
-        if self.size:
+        if self.size is not None:
             warnings.warn(
                 "self.size has been deprecated and will "
                 "be removed in future.",
@@ -80,8 +81,10 @@ class Text(SVGMobject):
         # anti-aliasing
         if self.height is None and not self.debug:
             self.load_scale_factor()
-            self.scale(self.scale_factor * self.font_size)
-    
+            self.scale(self.scale_factor)
+        elif self.height is not None:
+            self.set_height(self.height)
+
     def load_scale_factor(self):
         factor_file = os.path.join(get_temp_dir(), "text_scale_factor.txt")
         if os.path.exists(factor_file):
