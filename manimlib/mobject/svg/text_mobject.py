@@ -19,7 +19,7 @@ from manimpango import PangoUtils
 from manimpango import TextSetting
 
 TEXT_MOB_SCALE_FACTOR = 1/100
-
+DEFAULT_LINE_SPACING_SCALE = 0.3
 
 class Text(SVGMobject):
     CONFIG = {
@@ -55,7 +55,7 @@ class Text(SVGMobject):
             )
             self.font_size = self.size
         if self.lsh == -1:
-            self.lsh = self.font_size + self.font_size * 0.3
+            self.lsh = self.font_size + self.font_size * DEFAULT_LINE_SPACING_SCALE
         else:
             self.lsh = self.font_size + self.font_size * self.lsh
         text_without_tabs = text
