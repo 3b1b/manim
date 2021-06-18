@@ -367,6 +367,9 @@ def earclip_triangulation(verts, ring_ends):
         list(range(e0, e1))
         for e0, e1 in zip([0, *ring_ends], ring_ends)
     ]
+    for i in rings:
+        verts[i[0]] += (verts[i[1]]-verts[i[0]])*5e-6
+        verts[i[-1]] += (verts[i[-2]]-verts[i[-1]])*5e-6
     attached_rings = rings[:1]
     detached_rings = rings[1:]
     loop_connections = dict()
@@ -402,7 +405,7 @@ def earclip_triangulation(verts, ring_ends):
         # Move the ring which j belongs to from the
         # attached list to the detached list
         new_ring = next(filter(
-            lambda ring: ring[0] <= j < ring[-1],
+            lambda ring: ring[0] <= j <= ring[-1],
             detached_rings
         ))
         detached_rings.remove(new_ring)

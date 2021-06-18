@@ -68,6 +68,9 @@ class Text(SVGMobject):
         # anti-aliasing
         if self.height is None:
             self.scale(TEXT_MOB_SCALE_FACTOR * self.font_size)
+        
+        for i in self.submobjects:
+            i.insert_n_curves(len(i.get_points()))
 
     def remove_empty_path(self, file_name):
         with open(file_name, 'r') as fpr:
