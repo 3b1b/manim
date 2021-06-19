@@ -69,6 +69,8 @@ class Text(SVGMobject):
         if self.height is None:
             self.scale(TEXT_MOB_SCALE_FACTOR * self.font_size)
         
+        # Just a temporary hack to get better triangulation
+        # See pr #1552 for details
         for i in self.submobjects:
             i.insert_n_curves(len(i.get_points()))
 

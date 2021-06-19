@@ -367,6 +367,7 @@ def earclip_triangulation(verts, ring_ends):
         list(range(e0, e1))
         for e0, e1 in zip([0, *ring_ends], ring_ends)
     ]
+    # Points at the same position may cause problems
     for i in rings:
         verts[i[0]] += (verts[i[1]]-verts[i[0]])*5e-6
         verts[i[-1]] += (verts[i[-2]]-verts[i[-1]])*5e-6
