@@ -11,14 +11,14 @@ import manimpango
 from manimlib.constants import *
 from manimlib.mobject.geometry import Dot
 from manimlib.mobject.svg.svg_mobject import SVGMobject
-from manimlib.mobject.svg.tex_mobject import TexText
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.customization import get_customization
-from manimlib.utils.directories import get_downloads_dir, get_text_dir, get_temp_dir
+from manimlib.utils.directories import get_downloads_dir, get_text_dir
 from manimpango import PangoUtils
 from manimpango import TextSetting
 
+TEXT_MOB_SCALE_FACTOR = 0.0076
 DEFAULT_LINE_SPACING_SCALE = 0.3
 
 class Text(SVGMobject):
@@ -42,7 +42,6 @@ class Text(SVGMobject):
         "t2s": {},
         "t2w": {},
         "disable_ligatures": True,
-        "debug": False,
     }
 
     def __init__(self, text, **config):
@@ -78,21 +77,8 @@ class Text(SVGMobject):
             self.set_color_by_t2g()
 
         # anti-aliasing
-        if self.height is None and not self.debug:
-            self.load_scale_factor()
-            self.scale(self.scale_factor * self.font_size)
-    
-    def load_scale_factor(self):
-        factor_file = os.path.join(get_temp_dir(), "text_scale_factor.txt")
-        if os.path.exists(factor_file):
-            with open(factor_file, 'r') as f:
-                self.scale_factor = float(f.read())
-        else:
-            tex_height = TexText("b", font_size=1).get_height()
-            text_height = Text("b", font_size=1, debug=True).get_height()
-            self.scale_factor = tex_height / text_height
-            with open(factor_file, "w") as f:
-                f.write(str(self.scale_factor))
+        if self.height is None:
+            self.scale(TEXT_MOB_SCALE_FACTOR)
 
     def remove_empty_path(self, file_name):
         with open(file_name, 'r') as fpr:
