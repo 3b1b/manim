@@ -16,7 +16,6 @@ Fixed bugs
 - Fixed chaining animation in example scenes
 - Fixed the default color of tip
 - Fixed a typo in ``ShowPassingFlashWithThinningStrokeWidth``
-- Fixed the default size of ``Text``
 
 New Features
 ^^^^^^^^^^^^
