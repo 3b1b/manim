@@ -21,6 +21,7 @@ from manimlib.utils.iterables import resize_with_interpolation
 from manimlib.utils.iterables import make_even
 from manimlib.utils.iterables import listify
 from manimlib.utils.bezier import interpolate
+from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.paths import straight_path
 from manimlib.utils.simple_functions import get_parameters
 from manimlib.utils.space_ops import angle_of_vector
