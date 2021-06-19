@@ -514,7 +514,6 @@ class Mobject(object):
         return self
 
     def clear_updaters(self, recurse=True):
-        self.suspend_updating(recurse)
         self.time_based_updaters = []
         self.non_time_updaters = []
         self.refresh_has_updater_status()
