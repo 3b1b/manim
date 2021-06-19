@@ -18,7 +18,7 @@ from manimlib.utils.directories import get_downloads_dir, get_text_dir
 from manimpango import PangoUtils
 from manimpango import TextSetting
 
-TEXT_MOB_SCALE_FACTOR = 1/100
+TEXT_MOB_SCALE_FACTOR = 0.0076
 DEFAULT_LINE_SPACING_SCALE = 0.3
 
 class Text(SVGMobject):
