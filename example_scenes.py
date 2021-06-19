@@ -660,7 +660,9 @@ class ControlsExample(Scene):
                 )
             else:
                 new_text.set_opacity(0)
+            old_text.suspend_updating(recurse=False)
             old_text.become(new_text)
+            old_text.resume_updating(recurse=False, call_updater=False)
 
         text.add_updater(text_updater)
 
