@@ -15,7 +15,7 @@ class OpeningManimExample(Scene):
             The original motivation for manim was to
             better illustrate mathematical functions
             as transformations.
-        """, lsh=1.5)
+        """)
         intro_words.to_edge(UP)
 
         self.play(Write(intro_words))
