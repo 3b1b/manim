@@ -646,7 +646,7 @@ class ControlsExample(Scene):
         self.add(self.panel)
 
     def construct(self):
-        text = Text("", size=2)
+        text = Text("text", size=2)
 
         def text_updater(old_text):
             assert(isinstance(old_text, Text))
