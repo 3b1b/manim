@@ -639,14 +639,14 @@ class ControlsExample(Scene):
         self.checkbox = Checkbox()
         self.color_picker = ColorSliders()
         self.panel = ControlPanel(
-            Text("Text", size=0.5), self.textbox, Line(),
-            Text("Show/Hide Text", size=0.5), self.checkbox, Line(),
-            Text("Color of Text", size=0.5), self.color_picker
+            Text("Text", font_size=24), self.textbox, Line(),
+            Text("Show/Hide Text", font_size=24), self.checkbox, Line(),
+            Text("Color of Text", font_size=24), self.color_picker
         )
         self.add(self.panel)
 
     def construct(self):
-        text = Text("text", size=2)
+        text = Text("text", font_size=96)
 
         def text_updater(old_text):
             assert(isinstance(old_text, Text))

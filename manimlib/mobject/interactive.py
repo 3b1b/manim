@@ -439,7 +439,7 @@ class ControlPanel(Group):
         },
         "opener_text_kwargs": {
             "text": "Control Panel",
-            "size": 0.4
+            "font_size": 20
         }
     }
 
