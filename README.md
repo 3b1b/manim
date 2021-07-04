@@ -12,9 +12,7 @@
 
 Manim is an engine for precise programmatic animations, designed for creating explanatory math videos.
 
-Note, there are two versions of manim.  This repository began as a personal project by the author of [3Blue1Brown](https://www.3blue1brown.com/) for the purpose of animating those videos, with video-specific code available [here](https://github.com/3b1b/videos).  In 2020 a group of developers forked it into what is now the [community edition](https://github.com/ManimCommunity/manim/), with a goal of being more stable, better tested, quicker to respond to community contributions, and all around friendlier to get started with.  You can engage with that community by joining the discord.
-
-Since the fork, this version has evolved to work on top of OpenGL, and allows real-time rendering to an interactive window before scenes are finalized and written to a file.
+Note, there are two versions of manim.  This repository began as a personal project by the author of [3Blue1Brown](https://www.3blue1brown.com/) for the purpose of animating those videos, with video-specific code available [here](https://github.com/3b1b/videos).  In 2020 a group of developers forked it into what is now the [community edition](https://github.com/ManimCommunity/manim/), with a goal of being more stable, better tested, quicker to respond to community contributions, and all around friendlier to get started with. See [this page](https://docs.manim.community/en/stable/installation/versions.html?highlight=OpenGL#which-version-to-use) for more details.
 
 ## Installation
 Manim runs on Python 3.6 or higher (Python 3.8 is recommended).
