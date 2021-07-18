@@ -1,20 +1,29 @@
 /* Copy buttons */
 button.copybtn {
     position: absolute;
+    display: flex;
     top: .3em;
     right: .5em;
-    width: 1.7rem;
-    height: 1.7rem;
+    width: 1.7em;
+    height: 1.7em;
 	opacity: 0;
-    transition: opacity 0.3s, border .3s;
+    transition: opacity 0.3s, border .3s, background-color .3s;
     user-select: none;
     padding: 0;
     border: none;
     outline: none;
+    border-radius: 0.4em;
+    border: #e1e1e1 1px solid;
+    background-color: rgb(245, 245, 245);
+}
+
+button.copybtn.success {
+    border-color: #22863a;
 }
 
 button.copybtn img {
     width: 100%;
+    padding: .2em;
 }
 
 div.highlight  {
@@ -22,11 +31,15 @@ div.highlight  {
 }
 
 .highlight:hover button.copybtn {
-	opacity: .7;
+	opacity: 1;
 }
 
 .highlight button.copybtn:hover {
-	opacity: 1;
+    background-color: rgb(235, 235, 235);
+}
+
+.highlight button.copybtn:active {
+    background-color: rgb(187, 187, 187);
 }
 
 /**
@@ -46,11 +59,10 @@ div.highlight  {
     visibility: hidden;
     position: absolute;
     content: attr(data-tooltip);
-    padding: 2px;
-    top: 0;
+    padding: .2em;
+    font-size: .8em;
     left: -.2em;
     background: grey;
-    font-size: 1rem;
     color: white;
     white-space: nowrap;
     z-index: 2;
