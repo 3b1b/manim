@@ -10,6 +10,7 @@ from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.scene.scene import Scene
 
+import itertools as it
 
 class CountingScene(Scene):
     CONFIG = {
@@ -219,7 +220,7 @@ class CountInTernary(PowerCounter):
     def construct(self):
         self.count(27)
 
-    # def get_template_configuration(self):
+    # def get_template_configuration(self, place):
     #     return [ORIGIN, UP]
 
 
@@ -233,7 +234,7 @@ class CountInBinaryTo256(PowerCounter):
     def construct(self):
         self.count(128, 0.3)
 
-    def get_template_configuration(self):
+    def get_template_configuration(self, place):
         return [ORIGIN, UP]
 
 
