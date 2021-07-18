@@ -16,6 +16,8 @@ Note, there are two versions of manim.  This repository began as a personal proj
 
 ## Installation
 > **WARNING:** These instructions are for ManimGL _only_. Trying to use these instructions to install [ManimCommunity/manim](https://github.com/ManimCommunity/manim) or instructions there to install this version will cause problems. You should first decide which version you wish to install, then only follow the instructions for your desired version.
+> 
+> **Note**: To install manim directly through pip, please pay attention to the name of the installed package. This repository is ManimGL of 3b1b. The package name is `manimgl` instead of `manim` or `manimlib`. Please use `pip install manimgl` to install the version in this repository.
 
 Manim runs on Python 3.6 or higher (Python 3.8 is recommended).
 
