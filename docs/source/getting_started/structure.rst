@@ -120,9 +120,9 @@ Inheritance structure of manim's classes
 is a pdf showed inheritance structure of manim's classes, large, 
 but basically all classes have included:
 
-.. image:: ../_static/manim_shaders_structure.png
+.. image:: https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/manim_shaders_structure.png
 
 Manim execution process
 -----------------------
 
-.. image:: ../_static/manim_shaders_process_en.png
+.. image:: https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/manim_shaders_process_en.png

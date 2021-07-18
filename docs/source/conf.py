@@ -31,7 +31,10 @@ master_doc = 'index'
 pygments_style = 'default'
 
 html_static_path = ["_static"]
-html_css_files = ["custom.css", "colors.css"]
+html_css_files = [
+    "https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/custom.css", 
+    "https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/colors.css"
+]
 html_theme = 'furo'  # pip install furo==2020.10.5b9
 html_favicon = '_static/icon.png'
 html_logo = '../../logo/transparent_graph.png'
