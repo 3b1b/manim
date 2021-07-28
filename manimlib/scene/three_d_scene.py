@@ -5,6 +5,7 @@ class ThreeDScene(Scene):
     CONFIG = {
         "camera_config": {
             "samples": 4,
+            "anti_alias_width": 0,
         }
     }
 
