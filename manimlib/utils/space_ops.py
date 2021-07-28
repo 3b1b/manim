@@ -369,8 +369,8 @@ def earclip_triangulation(verts, ring_ends):
     ]
     # Points at the same position may cause problems
     for i in rings:
-        verts[i[0]] += (verts[i[1]]-verts[i[0]])*5e-6
-        verts[i[-1]] += (verts[i[-2]]-verts[i[-1]])*5e-6
+        verts[i[0]] += (verts[i[1]] - verts[i[0]]) * 5e-6
+        verts[i[-1]] += (verts[i[-2]] - verts[i[-1]]) * 5e-6
     attached_rings = rings[:1]
     detached_rings = rings[1:]
     loop_connections = dict()
