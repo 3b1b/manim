@@ -17,6 +17,12 @@ Fixed bugs
 - Fixed the default color of tip
 - Fixed a typo in ``ShowPassingFlashWithThinningStrokeWidth``
 - Fixed the default size of ``Text``
+- Fixed a missing import line in ``mobject.py``
+- Fixed the bug in ControlsExample
+- Make sure frame is added to the scene when initialization
+- Fixed zooming directions
+- Rewrote ``earclip_triangulation`` to fix triangulation
+- Allowed sound_file_name to be taken in without extensions
 
 New Features
 ^^^^^^^^^^^^
@@ -43,3 +49,6 @@ New Features
 - Added support for debugger launch
 - Added CLI flag ``--config_file`` to load configuration file manually
 - Added ``tip_style`` to ``tip_config``
+- Added ``MarkupText``
+- Take in ``u_range`` and ``v_range`` as arguments to ``ParametricSurface``
+- Added ``TrueDot``
