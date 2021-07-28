@@ -9,8 +9,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/custom.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?f4e90965290d04b73072c925">
-    <link rel="stylesheet" href="../_static/pygments.css?f4e90965290d04b73072c925">
+    <link rel="stylesheet" href="../_static/styles/default.css?4ab3cb4473feb71fc81c33ed">
+    <link rel="stylesheet" href="../_static/pygments.css?4ab3cb4473feb71fc81c33ed">
     
 <style>
   :root {
@@ -27,7 +27,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?f4e90965290d04b73072c925"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?4ab3cb4473feb71fc81c33ed"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -125,6 +125,10 @@
 <h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
 <section id="unreleased">
 <h2>Unreleased<a class="headerlink" href="#unreleased" title="Permalink to this headline">¶</a></h2>
+<p>No changes</p>
+</section>
+<section id="v1-1-0">
+<h2>v1.1.0<a class="headerlink" href="#v1-1-0" title="Permalink to this headline">¶</a></h2>
 <section id="fixed-bugs">
 <h3>Fixed bugs<a class="headerlink" href="#fixed-bugs" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
@@ -138,6 +142,12 @@
 <li><p>Fixed the default color of tip</p></li>
 <li><p>Fixed a typo in <code class="docutils literal notranslate"><span class="pre">ShowPassingFlashWithThinningStrokeWidth</span></code></p></li>
 <li><p>Fixed the default size of <code class="docutils literal notranslate"><span class="pre">Text</span></code></p></li>
+<li><p>Fixed a missing import line in <code class="docutils literal notranslate"><span class="pre">mobject.py</span></code></p></li>
+<li><p>Fixed the bug in ControlsExample</p></li>
+<li><p>Make sure frame is added to the scene when initialization</p></li>
+<li><p>Fixed zooming directions</p></li>
+<li><p>Rewrote <code class="docutils literal notranslate"><span class="pre">earclip_triangulation</span></code> to fix triangulation</p></li>
+<li><p>Allowed sound_file_name to be taken in without extensions</p></li>
 </ul>
 </section>
 <section id="new-features">
@@ -167,6 +177,9 @@
 <li><p>Added support for debugger launch</p></li>
 <li><p>Added CLI flag <code class="docutils literal notranslate"><span class="pre">--config_file</span></code> to load configuration file manually</p></li>
 <li><p>Added <code class="docutils literal notranslate"><span class="pre">tip_style</span></code> to <code class="docutils literal notranslate"><span class="pre">tip_config</span></code></p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">MarkupText</span></code></p></li>
+<li><p>Take in <code class="docutils literal notranslate"><span class="pre">u_range</span></code> and <code class="docutils literal notranslate"><span class="pre">v_range</span></code> as arguments to <code class="docutils literal notranslate"><span class="pre">ParametricSurface</span></code></p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">TrueDot</span></code></p></li>
 </ul>
 </section>
 </section>
@@ -219,7 +232,8 @@
         <div class="toc-tree">
           <ul>
 <li><a class="reference internal" href="#">Changelog</a><ul>
-<li><a class="reference internal" href="#unreleased">Unreleased</a><ul>
+<li><a class="reference internal" href="#unreleased">Unreleased</a></li>
+<li><a class="reference internal" href="#v1-1-0">v1.1.0</a><ul>
 <li><a class="reference internal" href="#fixed-bugs">Fixed bugs</a></li>
 <li><a class="reference internal" href="#new-features">New Features</a></li>
 </ul>
