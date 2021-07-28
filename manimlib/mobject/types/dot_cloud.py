@@ -2,11 +2,12 @@ import numpy as np
 import moderngl
 
 from manimlib.constants import GREY_C
+from manimlib.constants import ORIGIN
 from manimlib.mobject.types.point_cloud_mobject import PMobject
 from manimlib.utils.iterables import resize_preserving_order
 
 
-DEFAULT_DOT_CLOUD_RADIUS = 0.05
+DEFAULT_DOT_RADIUS = 0.05
 DEFAULT_GRID_HEIGHT = 6
 DEFAULT_BUFF_RATIO = 0.5
 
@@ -15,7 +16,7 @@ class DotCloud(PMobject):
     CONFIG = {
         "color": GREY_C,
         "opacity": 1,
-        "radius": DEFAULT_DOT_CLOUD_RADIUS,
+        "radius": DEFAULT_DOT_RADIUS,
         "shader_folder": "true_dot",
         "render_primitive": moderngl.POINTS,
         "shader_dtype": [
@@ -106,3 +107,8 @@ class DotCloud(PMobject):
         self.read_data_to_shader(shader_data, "radius", "radii")
         self.read_data_to_shader(shader_data, "color", "rgbas")
         return shader_data
+
+
+class TrueDot(DotCloud):
+    def __init__(self, center=ORIGIN, radius=DEFAULT_DOT_RADIUS, **kwargs):
+        super().__init__(points=[center], radius=radius, **kwargs)

@@ -14,7 +14,7 @@ class SurfaceMesh(VGroup):
     CONFIG = {
         "resolution": (21, 21),
         "stroke_width": 1,
-        "normal_nudge": 1e-2,
+        "normal_nudge": 1e-3,
         "depth_test": True,
         "flat_stroke": False,
     }
@@ -35,7 +35,7 @@ class SurfaceMesh(VGroup):
 
         points, du_points, dv_points = uv_surface.get_surface_points_and_nudged_points()
         normals = uv_surface.get_unit_normals()
-        nudge = 1e-2
+        nudge = self.normal_nudge
         nudged_points = points + nudge * normals
 
         for ui in u_indices:

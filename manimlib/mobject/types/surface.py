@@ -181,9 +181,9 @@ class Surface(Mobject):
 
 
 class ParametricSurface(Surface):
-    def __init__(self, uv_func, **kwargs):
+    def __init__(self, uv_func, u_range=(0, 1), v_range=(0, 1), **kwargs):
         self.passed_uv_func = uv_func
-        super().__init__(**kwargs)
+        super().__init__(u_range=u_range, v_range=v_range, **kwargs)
 
     def uv_func(self, u, v):
         return self.passed_uv_func(u, v)
