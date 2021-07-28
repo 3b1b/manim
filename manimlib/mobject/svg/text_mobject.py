@@ -80,11 +80,6 @@ class Text(SVGMobject):
         if self.height is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
 
-        # Just a temporary hack to get better triangulation
-        # See pr #1552 for details
-        for i in self.submobjects:
-            i.insert_n_curves(len(i.get_points()))
-
     def remove_empty_path(self, file_name):
         with open(file_name, 'r') as fpr:
             content = fpr.read()
