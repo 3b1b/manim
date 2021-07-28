@@ -359,81 +359,64 @@ def earclip_triangulation(verts, ring_ends):
     the ends of new paths are
     """
 
-    # First, connect all the rings so that the polygon
-    # with holes is instead treated as a (very convex)
-    # polygon with one edge.  Do this by drawing connections
-    # between rings close to each other
     rings = [
         list(range(e0, e1))
         for e0, e1 in zip([0, *ring_ends], ring_ends)
     ]
+
+    def is_in(point, ring_id):
+        return abs(abs(get_winding_number([i-point for i in verts[rings[ring_id]]]))-1)<1e-5
+
+    def ring_area(ring_id):
+        ring = rings[ring_id]
+        s = 0
+        for i, j in zip(ring[1:], ring):
+            s += cross2d(verts[i], verts[j])
+        return abs(s)/2
+
     # Points at the same position may cause problems
     for i in rings:
-        verts[i[0]] += (verts[i[1]]-verts[i[0]])*5e-6
-        verts[i[-1]] += (verts[i[-2]]-verts[i[-1]])*5e-6
-    attached_rings = rings[:1]
-    detached_rings = rings[1:]
-    loop_connections = dict()
+        verts[i[0]] += (verts[i[1]]-verts[i[0]])*1e-6
+        verts[i[-1]] += (verts[i[-2]]-verts[i[-1]])*1e-6
 
-    while detached_rings:
-        i_range, j_range = [
-            list(filter(
-                # Ignore indices that are already being
-                # used to draw some connection
-                lambda i: i not in loop_connections,
-                it.chain(*ring_group)
-            ))
-            for ring_group in (attached_rings, detached_rings)
-        ]
+    # First, we should know which rings are directly contained in it for each ring
 
-        # Closet point on the atttached rings to an estimated midpoint
-        # of the detached rings
-        tmp_j_vert = midpoint(
-            verts[j_range[0]],
-            verts[j_range[len(j_range) // 2]]
-        )
-        i = min(i_range, key=lambda i: norm_squared(verts[i] - tmp_j_vert))
-        # Closet point of the detached rings to the aforementioned
-        # point of the attached rings
-        j = min(j_range, key=lambda j: norm_squared(verts[i] - verts[j]))
-        # Recalculate i based on new j
-        i = min(i_range, key=lambda i: norm_squared(verts[i] - verts[j]))
+    right = [max(verts[rings[i], 0]) for i in range(len(rings))]
+    left = [min(verts[rings[i], 0]) for i in range(len(rings))]
+    top = [max(verts[rings[i], 1]) for i in range(len(rings))]
+    bottom = [min(verts[rings[i], 1]) for i in range(len(rings))]
+    area = [ring_area(i) for i in range(len(rings))]
 
-        # Remember to connect the polygon at these points
-        loop_connections[i] = j
-        loop_connections[j] = i
+    # The larger ring must be outside
+    rings_sorted = list(range(len(rings)))
+    rings_sorted.sort(key=lambda x: area[x], reverse=True)
 
-        # Move the ring which j belongs to from the
-        # attached list to the detached list
-        new_ring = next(filter(
-            lambda ring: ring[0] <= j <= ring[-1],
-            detached_rings
-        ))
-        detached_rings.remove(new_ring)
-        attached_rings.append(new_ring)
+    def is_in_fast(ring_a, ring_b):
+        # Whether a is in b
+        return (left[ring_b] <= left[ring_a] <= right[ring_a] <= right[ring_b] and
+                bottom[ring_b] <= bottom[ring_a] <= top[ring_a] <= top[ring_b] and
+                is_in(verts[rings[ring_a][0]], ring_b))
 
-    # Setup linked list
-    after = []
-    end0 = 0
-    for end1 in ring_ends:
-        after.extend(range(end0 + 1, end1))
-        after.append(end0)
-        end0 = end1
+    chilren = [[] for i in rings]
+    for idx, i in enumerate(rings_sorted):
+        for j in rings_sorted[:idx][::-1]:
+            if is_in_fast(i, j):
+                chilren[j].append(i)
+                break
 
-    # Find an ordering of indices walking around the polygon
-    indices = []
-    i = 0
-    for x in range(len(verts) + len(ring_ends) - 1):
-        # starting = False
-        if i in loop_connections:
-            j = loop_connections[i]
-            indices.extend([i, j])
-            i = after[j]
-        else:
-            indices.append(i)
-            i = after[i]
-        if i == 0:
-            break
+    res = []
 
-    meta_indices = earcut(verts[indices, :2], [len(indices)])
-    return [indices[mi] for mi in meta_indices]
+    # Then, we can use earcut for each part
+    used = [False]*len(rings)
+    for i in rings_sorted:
+        if used[i]:
+            continue
+        v = rings[i]
+        ring_ends = [len(v)]
+        for j in chilren[i]:
+            used[j] = True
+            v += rings[j]
+            ring_ends.append(len(v))
+        res += [v[i] for i in earcut(verts[v, :2], ring_ends)]
+
+    return res
