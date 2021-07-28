@@ -365,19 +365,19 @@ def earclip_triangulation(verts, ring_ends):
     ]
 
     def is_in(point, ring_id):
-        return abs(abs(get_winding_number([i-point for i in verts[rings[ring_id]]]))-1)<1e-5
+        return abs(abs(get_winding_number([i - point for i in verts[rings[ring_id]]])) - 1) < 1e-5
 
     def ring_area(ring_id):
         ring = rings[ring_id]
         s = 0
         for i, j in zip(ring[1:], ring):
             s += cross2d(verts[i], verts[j])
-        return abs(s)/2
+        return abs(s) / 2
 
     # Points at the same position may cause problems
     for i in rings:
-        verts[i[0]] += (verts[i[1]]-verts[i[0]])*1e-6
-        verts[i[-1]] += (verts[i[-2]]-verts[i[-1]])*1e-6
+        verts[i[0]] += (verts[i[1]]-verts[i[0]]) * 1e-6
+        verts[i[-1]] += (verts[i[-2]]-verts[i[-1]]) * 1e-6
 
     # First, we should know which rings are directly contained in it for each ring
 
@@ -407,7 +407,7 @@ def earclip_triangulation(verts, ring_ends):
     res = []
 
     # Then, we can use earcut for each part
-    used = [False]*len(rings)
+    used = [False] * len(rings)
     for i in rings_sorted:
         if used[i]:
             continue
