@@ -29,7 +29,7 @@ class CoordinateSystem():
         "y_range": np.array([-4.0, 4.0, 1.0]),
         "width": None,
         "height": None,
-        "num_sampled_graph_points_per_tick": 5,
+        "num_sampled_graph_points_per_tick": 20,
     }
 
     def coords_to_point(self, *coords):
@@ -404,7 +404,7 @@ class NumberPlane(Axes):
         "width": None,
         # Defaults to a faded version of line_config
         "faded_line_style": None,
-        "faded_line_ratio": 1,
+        "faded_line_ratio": 4,
         "make_smooth_after_applying_functions": True,
     }
 
