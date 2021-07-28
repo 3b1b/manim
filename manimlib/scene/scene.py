@@ -50,7 +50,7 @@ class Scene(object):
 
         self.camera = self.camera_class(**self.camera_config)
         self.file_writer = SceneFileWriter(self, **self.file_writer_config)
-        self.mobjects = []
+        self.mobjects = [self.camera.frame]
         self.num_plays = 0
         self.time = 0
         self.skip_time = 0
