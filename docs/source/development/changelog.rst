@@ -4,6 +4,11 @@ Changelog
 Unreleased
 ----------
 
+No changes
+
+v1.1.0
+-------
+
 Fixed bugs
 ^^^^^^^^^^
 
