@@ -561,7 +561,7 @@ class Mobject(object):
         )
         return self
 
-    def scale(self, scale_factor, min_scale_factor=1e-8, **kwargs):
+    def scale(self, scale_factor, min_scale_factor=1e-8, about_point=None, about_edge=ORIGIN, recurse=True):
         """
         Default behavior is to scale about the center of the mobject.
         The argument about_edge can be a vector, indicating which side of
@@ -572,11 +572,18 @@ class Mobject(object):
         respect to that point.
         """
         scale_factor = max(scale_factor, min_scale_factor)
-        self.apply_points_function(
-            lambda points: scale_factor * points,
-            works_on_bounding_box=True,
-            **kwargs
-        )
+        if about_point is None and about_edge is not None:
+            about_point = self.get_bounding_box_point(about_edge)
+        if recurse:
+            for submob in self.submobjects:
+                submob.scale(scale_factor, about_point=about_point, recurse=True)
+        if not self.submobjects:
+            self.apply_points_function(
+                lambda points: scale_factor * points,
+                works_on_bounding_box=True,
+                about_point=about_point,
+                about_edge=about_edge
+            )
         return self
 
     def stretch(self, factor, dim, **kwargs):
