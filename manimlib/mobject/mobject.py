@@ -830,7 +830,6 @@ class Mobject(object):
         return self
 
     def put_start_and_end_on(self, start, end):
-        # TODO, this doesn't currently work in 3d
         curr_start, curr_end = self.get_start_and_end()
         curr_vect = curr_end - curr_start
         if np.all(curr_vect == 0):
@@ -842,9 +841,12 @@ class Mobject(object):
         )
         self.rotate(
             angle_of_vector(target_vect) - angle_of_vector(curr_vect),
-            about_point=curr_start
         )
-        self.shift(start - curr_start)
+        self.rotate(
+            math.atan2(target_vect[2], np.sqrt(target_vect[0]**2 + target_vect[1]**2)) - math.atan2(curr_vect[2], np.sqrt(curr_vect[0]**2 + curr_vect[1]**2)), 
+            axis = np.array([-target_vect[1], target_vect[0], 0]),
+        )
+        self.shift(start - self.get_start())
         return self
 
     # Color functions
