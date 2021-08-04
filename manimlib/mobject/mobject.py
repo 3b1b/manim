@@ -843,7 +843,7 @@ class Mobject(object):
             angle_of_vector(target_vect) - angle_of_vector(curr_vect),
         )
         self.rotate(
-            np.arctan2(target_vect[2], get_norm(target_vect[:2])) - np.arctan2(curr_vect[2], get_norm(curr_vect[:2])), 
+            np.arctan2(curr_vect[2], get_norm(curr_vect[:2])) - np.arctan2(target_vect[2], get_norm(target_vect[:2])), 
             axis = np.array([-target_vect[1], target_vect[0], 0]),
         )
         self.shift(start - self.get_start())
