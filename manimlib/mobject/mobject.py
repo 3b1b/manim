@@ -3,7 +3,6 @@ import itertools as it
 import random
 import sys
 import moderngl
-import math
 from functools import wraps
 
 import numpy as np
@@ -844,7 +843,7 @@ class Mobject(object):
             angle_of_vector(target_vect) - angle_of_vector(curr_vect),
         )
         self.rotate(
-            math.atan2(target_vect[2], get_norm(target_vect[:2])) - math.atan2(curr_vect[2], get_norm(curr_vect[:2])), 
+            np.arctan2(target_vect[2], get_norm(target_vect[:2])) - np.arctan2(curr_vect[2], get_norm(curr_vect[:2])), 
             axis = np.array([-target_vect[1], target_vect[0], 0]),
         )
         self.shift(start - self.get_start())
