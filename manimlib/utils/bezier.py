@@ -157,7 +157,7 @@ def get_smooth_cubic_bezier_handle_points(points):
     l, u = 2, 1
     # diag is a representation of the matrix in diagonal form
     # See https://www.particleincell.com/2012/bezier-splines/
-    # for how to arive at these equations
+    # for how to arrive at these equations
     diag = np.zeros((l + u + 1, 2 * num_handles))
     diag[0, 1::2] = -1
     diag[0, 2::2] = 1

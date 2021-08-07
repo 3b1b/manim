@@ -48,7 +48,7 @@ class Window(PygletWindow):
             return tuple(map(int, custom_position.split(",")))
 
         # Alternatively, it might be specified with a string like
-        # UR, OO, DL, etc. specifiying what corner it should go to
+        # UR, OO, DL, etc. specifying what corner it should go to
         char_to_n = {"L": 0, "U": 0, "O": 1, "R": 2, "D": 2}
         width_diff = monitor.width - window_width
         height_diff = monitor.height - window_height
