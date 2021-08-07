@@ -1445,7 +1445,7 @@ class Mobject(object):
         return result
 
     def check_data_alignment(self, array, data_key):
-        # Makes sure that self.data[key] can be brodcast into
+        # Makes sure that self.data[key] can be broadcast into
         # the given array, meaning its length has to be either 1
         # or the length of the array
         d_len = len(self.data[data_key])

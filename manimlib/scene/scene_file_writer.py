@@ -183,7 +183,7 @@ class SceneFileWriter(object):
             '-s', f'{width}x{height}',  # size of one frame
             '-pix_fmt', 'rgba',
             '-r', str(fps),  # frames per second
-            '-i', '-',  # The imput comes from a pipe
+            '-i', '-',  # The input comes from a pipe
             '-vf', 'vflip',
             '-an',  # Tells FFMPEG not to expect any audio
             '-loglevel', 'error',

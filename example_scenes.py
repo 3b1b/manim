@@ -164,7 +164,7 @@ class TexTransformExample(Scene):
             # Passing in muliple arguments to Tex will result
             # in the same expression as if those arguments had
             # been joined together, except that the submobject
-            # heirarchy of the resulting mobject ensure that the
+            # hierarchy of the resulting mobject ensure that the
             # Tex mobject has a subject corresponding to
             # each of these strings.  For example, the Tex mobject
             # below will have 5 subjects, corresponding to the

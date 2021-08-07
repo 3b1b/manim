@@ -23,7 +23,7 @@ def always(method, *args, **kwargs):
 def f_always(method, *arg_generators, **kwargs):
     """
     More functional version of always, where instead
-    of taking in args, it takes in functions which ouput
+    of taking in args, it takes in functions which output
     the relevant arguments.
     """
     assert_is_mobject_method(method)
