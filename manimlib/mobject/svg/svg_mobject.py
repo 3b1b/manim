@@ -11,6 +11,7 @@ from manimlib.constants import DEFAULT_STROKE_WIDTH
 from manimlib.constants import ORIGIN, UP, DOWN, LEFT, RIGHT
 from manimlib.constants import BLACK
 from manimlib.constants import WHITE
+from manimlib.constants import DEGREES, PI
 
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.geometry import Rectangle
@@ -21,6 +22,7 @@ from manimlib.utils.color import *
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.directories import get_mobject_data_dir
 from manimlib.utils.images import get_full_vector_image_path
+from manimlib.utils.simple_functions import clip
 
 
 def string_to_numbers(num_string):
@@ -367,10 +369,18 @@ class VMobjectFromSVGPathstring(VMobject):
     def handle_command(self, command, new_points):
         if command.islower():
             # Treat it as a relative command
-            new_points += self.relative_point
+            if command == "a":
+                # Only the last `self.dim` columns refer to points
+                new_points[:, -self.dim:] += self.relative_point
+            else:
+                new_points += self.relative_point
 
         func, n_points = self.command_to_function(command)
-        func(*new_points[:n_points])
+        command_points = new_points[:n_points]
+        if command.upper() == "A":
+            func(*command_points[0][:-self.dim], np.array(command_points[0][-self.dim:]))
+        else:
+            func(*command_points)
         leftover_points = new_points[n_points:]
 
         # Recursively handle the rest of the points
@@ -379,7 +389,10 @@ class VMobjectFromSVGPathstring(VMobject):
                 # Treat following points as relative line coordinates
                 command = "l"
             if command.islower():
-                leftover_points -= self.relative_point
+                if command == "a":
+                    leftover_points[:, -self.dim:] -= self.relative_point
+                else:
+                    leftover_points -= self.relative_point
                 self.relative_point = self.get_last_point()
             self.handle_command(command, leftover_points)
         else:
@@ -388,19 +401,130 @@ class VMobjectFromSVGPathstring(VMobject):
 
     def string_to_points(self, command, coord_string):
         numbers = string_to_numbers(coord_string)
+        if command.upper() == "A":
+            # Only the last `self.dim` columns refer to points
+            # Each "point" returned here has a size of `(5 + self.dim)`
+            params = np.array(numbers).reshape((-1, 7))
+            result = np.zeros((params.shape[0], 5 + self.dim))
+            result[:, :7] = params
+            return result
         if command.upper() in ["H", "V"]:
             i = {"H": 0, "V": 1}[command.upper()]
             xy = np.zeros((len(numbers), 2))
             xy[:, i] = numbers
             if command.isupper():
                 xy[:, 1 - i] = self.relative_point[1 - i]
-        elif command.upper() == "A":
-            raise Exception("Not implemented")
         else:
-            xy = np.array(numbers).reshape((len(numbers) // 2, 2))
+            xy = np.array(numbers).reshape((-1, 2))
         result = np.zeros((xy.shape[0], self.dim))
         result[:, :2] = xy
         return result
+
+    def add_elliptical_arc_to(self, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, point):
+        """
+        In fact, this method only suits 2d VMobjects.
+        """
+        def close_to_zero(a, threshold=1e-5):
+            return abs(a) < threshold
+
+        def solve_2d_linear_equation(a, b, c):
+            """
+            Using Crammer's rule to solve the linear equation `[a b]x = c`
+            where `a`, `b` and `c` are all 2d vectors.
+            """
+            def det(a, b):
+                return a[0] * b[1] - a[1] * b[0]
+            d = det(a, b)
+            if close_to_zero(d):
+                raise Exception("Cannot handle 0 determinant.")
+            return [det(c, b) / d, det(a, c) / d]
+
+        def get_arc_center_and_angles(x0, y0, rx, ry, phi, large_arc_flag, sweep_flag, x1, y1):
+            """
+            The parameter functions of an ellipse rotated `phi` radians counterclockwise is (on `alpha`):
+                x = cx + rx * cos(alpha) * cos(phi) + ry * sin(alpha) * sin(phi),
+                y = cy + rx * cos(alpha) * sin(phi) - ry * sin(alpha) * cos(phi).
+            Now we have two points sitting on the ellipse: `(x0, y0)`, `(x1, y1)`, corresponding to 4 equations,
+            and we want to hunt for 4 variables: `cx`, `cy`, `alpha0` and `alpha_1`.
+            Let `d_alpha = alpha1 - alpha0`, then:
+            if `sweep_flag = 0` and `large_arc_flag = 1`, then `PI <= d_alpha < 2 * PI`;
+            if `sweep_flag = 0` and `large_arc_flag = 0`, then `0 < d_alpha <= PI`;
+            if `sweep_flag = 1` and `large_arc_flag = 0`, then `-PI <= d_alpha < 0`;
+            if `sweep_flag = 1` and `large_arc_flag = 1`, then `-2 * PI < d_alpha <= -PI`.
+            """
+            xd = x1 - x0
+            yd = y1 - y0
+            if close_to_zero(xd) and close_to_zero(yd):
+                raise Exception("Cannot find arc center since the start point and the end point meet.")
+            # Find `p = cos(alpha1) - cos(alpha0)`, `q = sin(alpha1) - sin(alpha0)`
+            eq0 = [rx * np.cos(phi), ry * np.sin(phi), xd]
+            eq1 = [rx * np.sin(phi), -ry * np.cos(phi), yd]
+            p, q = solve_2d_linear_equation(*zip(eq0, eq1))
+            # Find `s = (alpha1 - alpha0) / 2`, `t = (alpha1 + alpha0) / 2`
+            # If `sin(s) = 0`, this requires `p = q = 0`,
+            # implying `xd = yd = 0`, which is impossible.
+            sin_s = (p ** 2 + q ** 2) ** 0.5 / 2
+            if sweep_flag:
+                sin_s = -sin_s
+            sin_s = clip(sin_s, -1, 1)
+            s = np.arcsin(sin_s)
+            if large_arc_flag:
+                if not sweep_flag:
+                    s = PI - s
+                else:
+                    s = -PI - s
+            sin_t = -p / (2 * sin_s)
+            cos_t = q / (2 * sin_s)
+            cos_t = clip(cos_t, -1, 1)
+            t = np.arccos(cos_t)
+            if sin_t <= 0:
+                t = -t
+            # We can make sure `0 < abs(s) < PI`, `-PI <= t < PI`.
+            alpha0 = t - s
+            alpha_1 = t + s
+            cx = x0 - rx * np.cos(alpha0) * np.cos(phi) - ry * np.sin(alpha0) * np.sin(phi)
+            cy = y0 - rx * np.cos(alpha0) * np.sin(phi) + ry * np.sin(alpha0) * np.cos(phi)
+            return cx, cy, alpha0, alpha_1
+
+        def get_point_on_ellipse(cx, cy, rx, ry, phi, angle):
+            return np.array([
+                cx + rx * np.cos(angle) * np.cos(phi) + ry * np.sin(angle) * np.sin(phi),
+                cy + rx * np.cos(angle) * np.sin(phi) - ry * np.sin(angle) * np.cos(phi),
+                0
+            ])
+
+        def convert_elliptical_arc_to_quadratic_bezier_curve(
+            cx, cy, rx, ry, phi, start_angle, end_angle, n_components=8
+        ):
+            theta = (end_angle - start_angle) / n_components / 2
+            handles = np.array([
+                get_point_on_ellipse(cx, cy, rx / np.cos(theta), ry / np.cos(theta), phi, a)
+                for a in np.linspace(
+                    start_angle + theta,
+                    end_angle - theta,
+                    n_components,
+                )
+            ])
+            anchors = np.array([
+                get_point_on_ellipse(cx, cy, rx, ry, phi, a)
+                for a in np.linspace(
+                    start_angle + theta * 2,
+                    end_angle,
+                    n_components,
+                )
+            ])
+            return handles, anchors
+
+        phi = x_axis_rotation * DEGREES
+        x0, y0 = self.get_last_point()[:2]
+        cx, cy, start_angle, end_angle = get_arc_center_and_angles(
+            x0, y0, rx, ry, phi, large_arc_flag, sweep_flag, point[0], point[1]
+        )
+        handles, anchors = convert_elliptical_arc_to_quadratic_bezier_curve(
+            cx, cy, rx, ry, phi, start_angle, end_angle
+        )
+        for handle, anchor in zip(handles, anchors):
+            self.add_quadratic_bezier_curve_to(handle, anchor)
 
     def command_to_function(self, command):
         return self.get_command_to_function_map()[command.upper()]
@@ -419,7 +543,7 @@ class VMobjectFromSVGPathstring(VMobject):
             "S": (self.add_smooth_cubic_curve_to, 2),
             "Q": (self.add_quadratic_bezier_curve_to, 2),
             "T": (self.add_smooth_curve_to, 1),
-            "A": (self.add_quadratic_bezier_curve_to, 2),  # TODO
+            "A": (self.add_elliptical_arc_to, 1),
             "Z": (self.close_path, 0),
         }
 
