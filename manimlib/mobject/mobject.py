@@ -572,18 +572,12 @@ class Mobject(object):
         respect to that point.
         """
         scale_factor = max(scale_factor, min_scale_factor)
-        if about_point is None and about_edge is not None:
-            about_point = self.get_bounding_box_point(about_edge)
-        if recurse:
-            for submob in self.submobjects:
-                submob.scale(scale_factor, about_point=about_point, recurse=True)
-        if not self.submobjects:
-            self.apply_points_function(
-                lambda points: scale_factor * points,
-                works_on_bounding_box=True,
-                about_point=about_point,
-                about_edge=about_edge
-            )
+        self.apply_points_function(
+            lambda points: scale_factor * points,
+            about_point=about_point,
+            about_edge=about_edge,
+            works_on_bounding_box=True,
+        )
         return self
 
     def stretch(self, factor, dim, **kwargs):
