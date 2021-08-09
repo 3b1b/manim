@@ -5,7 +5,7 @@ from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.iterables import adjacent_pairs
 
-# Warning: This is all now pretty depricated, and should not be expected to work
+# Warning: This is all now pretty deprecated, and should not be expected to work
 
 
 class Region(Mobject):

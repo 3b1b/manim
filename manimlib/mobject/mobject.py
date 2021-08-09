@@ -824,7 +824,6 @@ class Mobject(object):
         return self
 
     def put_start_and_end_on(self, start, end):
-        # TODO, this doesn't currently work in 3d
         curr_start, curr_end = self.get_start_and_end()
         curr_vect = curr_end - curr_start
         if np.all(curr_vect == 0):
@@ -836,9 +835,12 @@ class Mobject(object):
         )
         self.rotate(
             angle_of_vector(target_vect) - angle_of_vector(curr_vect),
-            about_point=curr_start
         )
-        self.shift(start - curr_start)
+        self.rotate(
+            np.arctan2(curr_vect[2], get_norm(curr_vect[:2])) - np.arctan2(target_vect[2], get_norm(target_vect[:2])), 
+            axis = np.array([-target_vect[1], target_vect[0], 0]),
+        )
+        self.shift(start - self.get_start())
         return self
 
     # Color functions
@@ -1437,7 +1439,7 @@ class Mobject(object):
         return result
 
     def check_data_alignment(self, array, data_key):
-        # Makes sure that self.data[key] can be brodcast into
+        # Makes sure that self.data[key] can be broadcast into
         # the given array, meaning its length has to be either 1
         # or the length of the array
         d_len = len(self.data[data_key])

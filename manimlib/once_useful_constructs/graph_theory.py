@@ -333,7 +333,7 @@ class DiscreteGraphScene(Scene):
         x_coord_of = {root: 0}
         y_coord_of = {root: bottom}
         # width to allocate to a given node, computed as
-        # the maxium number of decendents in a single generation,
+        # the maximum number of decendents in a single generation,
         # minus 1, multiplied by x_sep
         width_of = {}
         for index in indices:

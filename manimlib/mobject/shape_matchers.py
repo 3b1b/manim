@@ -47,7 +47,7 @@ class BackgroundRectangle(SurroundingRectangle):
                        fill_opacity=None,
                        family=True
                        ):
-        # Unchangable style, except for fill_opacity
+        # Unchangeable style, except for fill_opacity
         VMobject.set_style_data(
             self,
             stroke_color=BLACK,

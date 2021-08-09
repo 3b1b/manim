@@ -123,7 +123,7 @@ class Scene(object):
         # Have the frame update after each command
         shell.events.register('post_run_cell', lambda *a, **kw: self.update_frame())
         # Use the locals of the caller as the local namespace
-        # once embeded, and add a few custom shortcuts
+        # once embedded, and add a few custom shortcuts
         local_ns = inspect.currentframe().f_back.f_locals
         local_ns["touch"] = self.interact
         for term in ("play", "wait", "add", "remove", "clear", "save_state", "restore"):
