@@ -135,10 +135,8 @@ class DecimalNumber(VMobject):
             sm1.match_style(sm2)
         return self
 
-    def scale(self, scale_factor, **kwargs):
-        super().scale(scale_factor, **kwargs)
+    def _handle_scale_side_effects(self, scale_factor):
         self.data["font_size"] *= scale_factor
-        return self
 
     def get_value(self):
         return self.number

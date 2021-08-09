@@ -561,7 +561,7 @@ class Mobject(object):
         )
         return self
 
-    def scale(self, scale_factor, min_scale_factor=1e-8, about_point=None, about_edge=ORIGIN, recurse=True):
+    def scale(self, scale_factor, min_scale_factor=1e-8, about_point=None, about_edge=ORIGIN):
         """
         Default behavior is to scale about the center of the mobject.
         The argument about_edge can be a vector, indicating which side of
@@ -572,6 +572,8 @@ class Mobject(object):
         respect to that point.
         """
         scale_factor = max(scale_factor, min_scale_factor)
+        for mob in self.get_family():
+            mob._handle_scale_side_effects(scale_factor)
         self.apply_points_function(
             lambda points: scale_factor * points,
             about_point=about_point,
@@ -579,6 +581,11 @@ class Mobject(object):
             works_on_bounding_box=True,
         )
         return self
+
+    def _handle_scale_side_effects(self, scale_factor):
+        # In case subclasses, such as DecimalNumber, need to make
+        # any other changes when the size gets altered
+        pass
 
     def stretch(self, factor, dim, **kwargs):
         def func(points):
