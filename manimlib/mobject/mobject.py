@@ -561,7 +561,7 @@ class Mobject(object):
         )
         return self
 
-    def scale(self, scale_factor, min_scale_factor=1e-8, about_point=None, about_edge=ORIGIN, recurse=True):
+    def scale(self, scale_factor, min_scale_factor=1e-8, about_point=None, about_edge=ORIGIN):
         """
         Default behavior is to scale about the center of the mobject.
         The argument about_edge can be a vector, indicating which side of
@@ -572,12 +572,20 @@ class Mobject(object):
         respect to that point.
         """
         scale_factor = max(scale_factor, min_scale_factor)
+        for mob in self.get_family():
+            mob._handle_scale_side_effects(scale_factor)
         self.apply_points_function(
             lambda points: scale_factor * points,
             about_point=about_point,
             about_edge=about_edge,
             works_on_bounding_box=True,
         )
+        return self
+
+    def _handle_scale_side_effects(self, scale_factor):
+        # In case subclasses, such as DecimalNumber, need to make
+        # any other changes when the size gets altered
+        pass
 
     def stretch(self, factor, dim, **kwargs):
         def func(points):
@@ -823,7 +831,6 @@ class Mobject(object):
         return self
 
     def put_start_and_end_on(self, start, end):
-        # TODO, this doesn't currently work in 3d
         curr_start, curr_end = self.get_start_and_end()
         curr_vect = curr_end - curr_start
         if np.all(curr_vect == 0):
@@ -835,9 +842,12 @@ class Mobject(object):
         )
         self.rotate(
             angle_of_vector(target_vect) - angle_of_vector(curr_vect),
-            about_point=curr_start
         )
-        self.shift(start - curr_start)
+        self.rotate(
+            np.arctan2(curr_vect[2], get_norm(curr_vect[:2])) - np.arctan2(target_vect[2], get_norm(target_vect[:2])), 
+            axis = np.array([-target_vect[1], target_vect[0], 0]),
+        )
+        self.shift(start - self.get_start())
         return self
 
     # Color functions
@@ -1436,7 +1446,7 @@ class Mobject(object):
         return result
 
     def check_data_alignment(self, array, data_key):
-        # Makes sure that self.data[key] can be brodcast into
+        # Makes sure that self.data[key] can be broadcast into
         # the given array, meaning its length has to be either 1
         # or the length of the array
         d_len = len(self.data[data_key])

@@ -44,7 +44,7 @@ class Transform(Animation):
         self.check_target_mobject_validity()
         # Use a copy of target_mobject for the align_data_and_family
         # call so that the actual target_mobject stays
-        # preserved, since calling allign_data will potentailly
+        # preserved, since calling allign_data will potentially
         # change the structure of both arguments
         self.target_copy = self.target_mobject.copy()
         self.mobject.align_data_and_family(self.target_copy)
@@ -161,7 +161,7 @@ class ApplyMethod(Transform):
         method is a method of Mobject, *args are arguments for
         that method.  Key word arguments should be passed in
         as the last arg, as a dict, since **kwargs is for
-        configuration of the transform itslef
+        configuration of the transform itself
 
         Relies on the fact that mobject methods return the mobject
         """
