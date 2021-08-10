@@ -10,7 +10,7 @@ Si deseas instalar otra versión o hacer la instalación de Manim Spanish sin sa
 
 #### Windows
 1. [Descargar e instalar FFmpeg](https://www.gyan.dev/ffmpeg/builds/).
-2. Para el texto matemático debes [descargar e instalar MikTeX](https://miktex.org/download).
+2. Para el texto matemático debes [descargar e instalar MiKTeX](https://miktex.org/download).
 3. Clonar repositorio con [Git](https://git-scm.com/downloads) e instalar los correspondientes paquetes y módulos de Python.
    ```
    # Clonando
