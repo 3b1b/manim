@@ -13,10 +13,8 @@ Si deseas instalar otra versión o hacer la instalación de Manim Spanish sin sa
 2. Para el texto matemático debes [descargar e instalar MiKTeX](https://miktex.org/download).
 3. Clonar repositorio con [Git](https://git-scm.com/downloads) e instalar los correspondientes paquetes y módulos de Python.
    ```
-   # Clonando
    git clone https://github.com/HACHEDOSO/ManimSpanish.git
    cd ManimSpanish
-   # Instalando módulos y paquetes de Python
    pip install -e .
    ```
 
@@ -27,10 +25,8 @@ Si deseas instalar otra versión o hacer la instalación de Manim Spanish sin sa
    ```
 2. Instalar última version de Manim utilizando los siguientes comandos.
    ```
-   # Clonando
    git clone https://github.com/HACHEDOSO/ManimSpanish.git
    cd ManimSpanish
-   # Instalando módulos y paquetes de Python
    pip install -e .
    ```
 
@@ -40,7 +36,6 @@ Ver la [documentación](docs) para instalar en Linux.
 ### ¿Todo resultó bien en la instalación?
 Para verificar que esté todo correcto en la instalación de Manim Spanish, ve a la carpeta donde clonaste con Git a Manim Spanish dentro de la terminal.
 ```
-# Yendo a la carpeta indicada
 cd C:\Carpeta\Donde\Clonaste\ManimSpanish
 ```
 Luego ejecuta el siguiente comando en la terminal.
