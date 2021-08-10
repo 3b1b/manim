@@ -38,7 +38,7 @@ Si deseas instalar otra versión o hacer la instalación de Manim Spanish sin sa
 Ver la [documentación](docs) para instalar en Linux.
 
 ### ¿Todo resultó bien en la instalación?
-Para verificar que esté todo correcto en la instalación, ve a la carpeta donde clonaste con Git a Manim Spanish dentro de la terminal.
+Para verificar que esté todo correcto en la instalación de Manim Spanish, ve a la carpeta donde clonaste con Git a Manim Spanish dentro de la terminal.
 ```
 # Yendo a la carpeta indicada
 cd C:\Carpeta\Donde\Clonaste\ManimSpanish
