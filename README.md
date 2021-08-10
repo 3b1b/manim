@@ -21,7 +21,7 @@ Si deseas instalar otra versión o hacer la instalación de Manim Spanish sin sa
    ```
 
 #### Mac OSX
-1. Instalar FFmpeg y LaTeX en la terminal usando homebrew.
+1. Instalar FFmpeg y LaTeX en la terminal usando [Homebrew](https://brew.sh/index_es).
    ```
    brew install ffmpeg mactex
    ```
