@@ -40,7 +40,6 @@ cd C:\Carpeta\Donde\Clonaste\ManimSpanish
 ```
 Luego ejecuta el siguiente comando en la terminal.
 ```
-# El comando de ManimGL y por ende de Manim Spanish es manimgl
 manimgl example_scenes.py OpeningManimExample
 ```
 Si se abrió una ventana de video mientras se renderizaba y terminó sin errores (el comando no guardará video, sino que simplemente ejecutará una ventana), ¡felicitaciones! Has instalado Manim Spanish en tu equipo, ¡es todo tuyo! :wink:.
