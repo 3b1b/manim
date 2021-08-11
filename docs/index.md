@@ -1,6 +1,7 @@
 ---
 layout: page
 title: ¿Qué es Manim Spanish?
+permalink: /
 nav_order: 1
 ---
 
