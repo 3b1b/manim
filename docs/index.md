@@ -1,37 +1,12 @@
-## Welcome to GitHub Pages
+## ¿Qué es Manim Spanish?
+Manim Spanish es una bifurcación de ManimGL que tiene como objetivo expandir Manim a la gente hispanohablante con una documentación totalmente ordenada, tutoriales bien detallados desde cero (no necesitarás saber nada de programación ni tampoco un gran computador) y nuevas características 👌.
+> Al panel izquierdo tendrás cada sección de la documentación.
 
-You can use the [editor on GitHub](https://github.com/HACHEDOSO/ManimSpanish/edit/master/docs/index.md) to maintain and preview the content for your website in Markdown files.
-
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
-
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/HACHEDOSO/ManimSpanish/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+### ¿Por qué usar Manim?
+- *Porque* genera animaciones que asombran, atraen e impactan.
+- *Porque* es tremendamente didáctico y podrás hacer excelentes explicaciones.
+- *Porque* es completamente gratuito, legal y de código abierto.
+- *Porque* se puede usar desde diversos sistemas operativos.
+- *Porque* se puede usar en computadores antiguos.
+- *Porque* es el momento de que todos innovemos en la educación: el cambio parte desde las acciones.
+- *Porque* la educación digital es la nueva forma de educación.
