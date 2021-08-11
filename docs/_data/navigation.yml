@@ -1,14 +1,14 @@
-- title: ¿Qué es Manim Spanish?
+- text: ¿Qué es Manim Spanish?
   href: /
 
-- title: Instalación
+- text: Instalación
   href: /Instalación/
   links:
-    - title: Windows
+    - text: Windows
       href: /Instalación/#windows
 
-- title: Tutorial
+- text: Tutorial
   href: /Tutorial/
 
-- title: Manual de referencia
+- text: Manual de referencia
   href: /Referencia/
