@@ -1,5 +1,7 @@
 ## Documentación
 
+[Logo de Manim](https://github.com/3b1b/manim/blob/master/logo/cropped.png)
+
 ### ¿Qué es Manim Spanish?
 Manim Spanish es una bifurcación de ManimGL que tiene como objetivo expandir Manim a la gente hispanohablante con una documentación totalmente ordenada, tutoriales bien detallados desde cero (no necesitarás saber nada de programación) y nuevas características 👌. Para usar Manim necesitas un computador, sin importar que éste no sea muy moderno, que tenga instalado Windows, Mac OSX o Linux y para instalar necesitarás conexión a internet. La guía completa de instalación se encuentra [aquí](https://hachedoso.github.io/ManimSpanish/#instalación).
 
