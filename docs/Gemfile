@@ -1,0 +1,1 @@
+gem "jekyll-text-theme"
