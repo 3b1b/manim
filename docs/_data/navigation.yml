@@ -1,0 +1,11 @@
+- title: ¿Qué es Manim Spanish?
+  url: /
+
+- title: Instalación
+  url: /Instalación/
+  sublinks:
+    - title: Windows
+      url: /Instalación/#windows
+
+- title: Tutorial
+  url: /Tutorial/
