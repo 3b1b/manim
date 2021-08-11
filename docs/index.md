@@ -1,3 +1,9 @@
+---
+layout: page
+title: ¿Qué es Manim Spanish?
+nav_order: 1
+---
+
 ## ¿Qué es Manim Spanish?
 
 ![Logo de Manim](logo.png)
