@@ -2,6 +2,7 @@
 layout: page
 title: "Instalación"
 permalink: /Instalación/
+nav_order: 2
 ---
 
 ## Instalación
