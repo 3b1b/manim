@@ -6,7 +6,7 @@ Manim tiene como objetivo animar en todos los sentidos de animar. Si deseas impa
 Antes de instalar, asegúrate de saber bien cuál es la versión que vas a querer de Manim. Existen 3 versiones principales actualmente: [ManimGL](https://github.com/3b1b/manim), [ManimCairo](https://github.com/3b1b/manim/tree/cairo-backend) y [Manim Community](https://github.com/ManimCommunity/manim), siendo [Manim Spanish]() actualmente una bifurcación de ManimGL, por lo que está la documentación completamente dirigida a usuarios de ManimGL hispanohablantes. Todo lo dicho anteriormente quiere decir, en resumen, que puedes instalar ManimGL, ManimCairo, Manim Community o Manim Spanish (bifurcación de ManimGL).
 
 ### Instalación de Manim Spanish
-Si deseas instalar otra versión o hacer la instalación de Manim Spanish sin saber sobre programación, dirígete a la [documentación](docs). Si ya tienes conocimientos previos sobre Python, Git, FFmpeg y LaTeX, puedes seguir los siguientes pasos.
+Si deseas instalar otra versión o hacer la instalación de Manim Spanish sin saber sobre programación, dirígete a la [documentación](https://hachedoso.github.io/ManimSpanish). Si ya tienes conocimientos previos sobre Python, Git, FFmpeg y LaTeX, puedes seguir los siguientes pasos.
 
 #### Windows
 1. [Descargar e instalar FFmpeg](https://www.gyan.dev/ffmpeg/builds/).
@@ -31,7 +31,7 @@ Si deseas instalar otra versión o hacer la instalación de Manim Spanish sin sa
    ```
 
 #### Linux
-Ver la [documentación](docs) para instalar en Linux.
+Ver la [documentación](https://hachedoso.github.io/ManimSpanish) para instalar en Linux.
 
 ### ¿Todo resultó bien en la instalación?
 Para verificar que esté todo correcto en la instalación de Manim Spanish, ve a la carpeta donde clonaste con Git a Manim Spanish dentro de la terminal.
@@ -45,9 +45,9 @@ manimgl example_scenes.py OpeningManimExample
 Si se abrió una ventana de video mientras se renderizaba y terminó sin errores (el comando no guardará video, sino que simplemente ejecutará una ventana), ¡felicitaciones! Has instalado Manim Spanish en tu equipo, ¡es todo tuyo! :wink:.
 
 ## Tutorial
-En la [documentación de Manim Spanish](docs) podrás encontrar todos los tutoriales que necesitas para aprender a usar Manim.
+En la [documentación de Manim Spanish](https://hachedoso.github.io/ManimSpanish) podrás encontrar todos los tutoriales que necesitas para aprender a usar Manim.
 
 ## Documentación
-Nuevamente menciono el enlace de la documentación. [Haz clic aquí para acceder a ella](docs). Si tienes dudas, no dudes en consultar [aquí](https://github.com/HACHEDOSO/ManimSpanish/discussions).
+Nuevamente menciono el enlace de la documentación. [Haz clic aquí para acceder a ella](https://hachedoso.github.io/ManimSpanish). Si tienes dudas, no dudes en consultar [aquí](https://github.com/HACHEDOSO/ManimSpanish/discussions).
 
 ## ¡Podemos cambiar el aula!
