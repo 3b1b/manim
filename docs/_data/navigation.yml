@@ -1,15 +1,20 @@
-primary:
-  - text: ¿Qué es Manim Spanish?
-    href: /
+main:
+  - title: ¿Qué es Manim Spanish?
+    url: /
+    nav_order: 1
 
-  - text: Instalación
-    href: /Instalación/
-    links:
-      - text: Windows
-        href: /Instalación/#windows
+  - title: Instalación
+    url: /Instalación/
+    nav_order: 2
+    sublinks:
+      - title: Windows
+        url: /Instalación/#windows
+        nav_order: 1
 
-  - text: Tutorial
-    href: /Tutorial/
+  - title: Tutorial
+    url: /Tutorial/
+    nav_order: 3
 
-  - text: Manual de referencia
-    href: /Referencia/
+  - title: Manual de referencia
+    url: /Referencia/
+    nav_order: 4
