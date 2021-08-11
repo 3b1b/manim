@@ -1,6 +1,5 @@
 ## ¿Qué es Manim Spanish?
 Manim Spanish es una bifurcación de ManimGL que tiene como objetivo expandir Manim a la gente hispanohablante con una documentación totalmente ordenada, tutoriales bien detallados desde cero (no necesitarás saber nada de programación ni tampoco un gran computador) y nuevas características 👌.
-> Al panel izquierdo tendrás cada sección de la documentación.
 
 ### ¿Por qué usar Manim?
 - *Porque* genera animaciones que asombran, atraen e impactan.
