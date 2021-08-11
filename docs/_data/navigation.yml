@@ -1,11 +1,14 @@
 - title: ¿Qué es Manim Spanish?
-  url: /
+  href: /
 
 - title: Instalación
-  url: /Instalación/
-  sublinks:
+  href: /Instalación/
+  links:
     - title: Windows
-      url: /Instalación/#windows
+      href: /Instalación/#windows
 
 - title: Tutorial
-  url: /Tutorial/
+  href: /Tutorial/
+
+- title: Manual de referencia
+  href: /Referencia/
