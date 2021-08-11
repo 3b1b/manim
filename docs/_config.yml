@@ -1,2 +1,2 @@
-remote_theme: pmarsceill/just-the-docs
+theme: jekyll-theme-rtd
 language: es
