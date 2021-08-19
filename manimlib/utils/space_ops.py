@@ -1,5 +1,7 @@
 import numpy as np
 import itertools as it
+import operator as op
+from functools import reduce
 import math
 from mapbox_earcut import triangulate_float32 as earcut
 
@@ -376,8 +378,8 @@ def earclip_triangulation(verts, ring_ends):
 
     # Points at the same position may cause problems
     for i in rings:
-        verts[i[0]] += (verts[i[1]]-verts[i[0]]) * 1e-6
-        verts[i[-1]] += (verts[i[-2]]-verts[i[-1]]) * 1e-6
+        verts[i[0]] += (verts[i[1]] - verts[i[0]]) * 1e-6
+        verts[i[-1]] += (verts[i[-2]] - verts[i[-1]]) * 1e-6
 
     # First, we should know which rings are directly contained in it for each ring
 
@@ -393,9 +395,11 @@ def earclip_triangulation(verts, ring_ends):
 
     def is_in_fast(ring_a, ring_b):
         # Whether a is in b
-        return (left[ring_b] <= left[ring_a] <= right[ring_a] <= right[ring_b] and
-                bottom[ring_b] <= bottom[ring_a] <= top[ring_a] <= top[ring_b] and
-                is_in(verts[rings[ring_a][0]], ring_b))
+        return reduce(op.and_, (
+            left[ring_b] <= left[ring_a] <= right[ring_a] <= right[ring_b],
+            bottom[ring_b] <= bottom[ring_a] <= top[ring_a] <= top[ring_b],
+            is_in(verts[rings[ring_a][0]], ring_b)
+        ))
 
     chilren = [[] for i in rings]
     for idx, i in enumerate(rings_sorted):
