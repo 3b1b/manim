@@ -773,6 +773,21 @@ class Mobject(object):
     def set_depth(self, depth, stretch=False, **kwargs):
         return self.rescale_to_fit(depth, 2, stretch=stretch, **kwargs)
 
+    def set_max_width(self, max_width, **kwargs):
+        if self.get_width() > max_width:
+            self.set_width(max_width, **kwargs)
+        return self
+
+    def set_max_height(self, max_height, **kwargs):
+        if self.get_height() > max_height:
+            self.set_height(max_height, **kwargs)
+        return self
+
+    def set_max_depth(self, max_depth, **kwargs):
+        if self.get_depth() > max_depth:
+            self.set_depth(max_depth, **kwargs)
+        return self
+
     def set_coord(self, value, dim, direction=ORIGIN):
         curr = self.get_coord(dim, direction)
         shift_vect = np.zeros(self.dim)
