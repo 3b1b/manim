@@ -9,6 +9,7 @@ from manimlib.animation.composition import Succession
 from manimlib.animation.creation import ShowCreation
 from manimlib.animation.creation import ShowPartial
 from manimlib.animation.fading import FadeOut
+from manimlib.animation.fading import FadeIn
 from manimlib.animation.transform import Transform
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.geometry import Circle
@@ -21,6 +22,8 @@ from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import there_and_back
 from manimlib.utils.rate_functions import wiggle
+from manimlib.utils.rate_functions import smooth
+from manimlib.utils.rate_functions import squish_rate_func
 
 
 class FocusOn(Transform):
@@ -361,3 +364,22 @@ class TurnInsideOut(Transform):
 
     def create_target(self):
         return self.mobject.copy().reverse_points()
+
+
+class FlashyFadeIn(AnimationGroup):
+    CONFIG = {
+        "fade_lag": 0,
+    }
+
+    def __init__(self, vmobject, stroke_width=2, **kwargs):
+        digest_config(self, kwargs)
+        outline = vmobject.copy()
+        outline.set_fill(opacity=0)
+        outline.set_stroke(width=stroke_width, opacity=1)
+
+        rate_func = kwargs.get("rate_func", smooth)
+        super().__init__(
+            FadeIn(vmobject, rate_func=squish_rate_func(rate_func, self.fade_lag, 1)),
+            VShowPassingFlash(outline, time_width=1),
+            **kwargs
+        )
