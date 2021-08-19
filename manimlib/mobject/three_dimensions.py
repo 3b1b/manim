@@ -5,9 +5,11 @@ from manimlib.mobject.types.surface import Surface
 from manimlib.mobject.types.surface import SGroup
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.mobject.geometry import Square
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import z_to_vector
+from manimlib.utils.space_ops import compass_directions
 
 
 class SurfaceMesh(VGroup):
@@ -161,15 +163,49 @@ class Cube(SGroup):
         "gloss": 0.5,
         "square_resolution": (2, 2),
         "side_length": 2,
+        "square_class": Square3D,
     }
 
     def init_points(self):
-        for vect in [OUT, RIGHT, UP, LEFT, DOWN, IN]:
-            face = Square3D(resolution=self.square_resolution)
-            face.shift(OUT)
-            face.apply_matrix(z_to_vector(vect))
-            self.add(face)
-        self.set_height(self.side_length)
+        face = Square3D(
+            resolution=self.square_resolution,
+            side_length=self.side_length,
+        )
+        self.add(*self.square_to_cube_faces(face))
+
+    @staticmethod
+    def square_to_cube_faces(square):
+        radius = square.get_height() / 2
+        square.move_to(radius * OUT)
+        result = [square]
+        result.extend([
+            square.copy().rotate(PI / 2, axis=vect, about_point=ORIGIN)
+            for vect in compass_directions(4)
+        ])
+        result.append(square.copy().rotate(PI, RIGHT, about_point=ORIGIN))
+        return result
+
+    def _get_face(self):
+        return Square3D(resolution=self.square_resolution)
+
+
+class VCube(VGroup):
+    CONFIG = {
+        "fill_color": BLUE_D,
+        "fill_opacity": 1,
+        "stroke_width": 0,
+        "gloss": 0.5,
+        "shadow": 0.5,
+    }
+
+    def __init__(self, side_length=2, **kwargs):
+        super().__init__(**kwargs)
+        face = Square(side_length=side_length)
+        face.get_triangulation()
+        self.add(*Cube.square_to_cube_faces(face))
+        self.init_colors()
+        self.apply_depth_test()
+        self.refresh_unit_normal()
 
 
 class Prism(Cube):
