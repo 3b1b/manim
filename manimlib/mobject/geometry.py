@@ -842,16 +842,8 @@ class Rectangle(Polygon):
 
 
 class Square(Rectangle):
-    CONFIG = {
-        "side_length": 2.0,
-    }
-
-    def __init__(self, side_length=None, **kwargs):
-        digest_config(self, kwargs)
-
-        if side_length is None:
-            side_length = self.side_length
-
+    def __init__(self, side_length=2.0, **kwargs):
+        self.side_length = side_length
         super().__init__(side_length, side_length, **kwargs)
 
 
