@@ -1,6 +1,7 @@
 import numpy as np
 
 from manimlib.mobject.mobject import Mobject
+from manimlib.utils.iterables import listify
 
 
 class ValueTracker(Mobject):
@@ -15,18 +16,22 @@ class ValueTracker(Mobject):
     }
 
     def __init__(self, value=0, **kwargs):
+        self.value = value
         super().__init__(**kwargs)
-        self.set_value(value)
 
     def init_data(self):
         super().init_data()
-        self.data["value"] = np.zeros((1, 1), dtype=self.value_type)
+        self.data["value"] = np.array(
+            listify(self.value),
+            ndmin=2,
+            dtype=self.value_type,
+        )
 
     def get_value(self):
-        return self.data["value"][0, 0]
+        return self.data["value"][0, :]
 
     def set_value(self, value):
-        self.data["value"][0, 0] = value
+        self.data["value"][0, :] = value
         return self
 
     def increment_value(self, d_value):
