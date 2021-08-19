@@ -54,7 +54,6 @@ class VMobject(Mobject):
         "joint_type": "auto",
         "flat_stroke": False,
         "render_primitive": moderngl.TRIANGLES,
-        "triangulation_locked": False,
         "fill_dtype": [
             ('point', np.float32, (3,)),
             ('unit_normal', np.float32, (3,)),
