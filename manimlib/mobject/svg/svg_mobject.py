@@ -88,10 +88,10 @@ class SVGMobject(VMobject):
         elif element.tagName == 'style':
             pass  # TODO, handle style
         elif element.tagName in ['g', 'svg', 'symbol']:
-            result += it.chain(*[
+            result += it.chain(*(
                 self.get_mobjects_from(child)
                 for child in element.childNodes
-            ])
+            ))
         elif element.tagName == 'path':
             result.append(self.path_string_to_mobject(
                 element.getAttribute('d')
@@ -341,6 +341,8 @@ class VMobjectFromSVGPathstring(VMobject):
 
         if os.path.exists(points_filepath) and os.path.exists(tris_filepath):
             self.set_points(np.load(points_filepath))
+            self.triangulation = np.load(tris_filepath)
+            self.needs_new_triangulation = False
         else:
             self.relative_point = np.array(ORIGIN)
             for command, coord_string in self.get_commands_and_coord_strings():
@@ -356,6 +358,7 @@ class VMobjectFromSVGPathstring(VMobject):
             self.stretch(-1, 1, about_point=ORIGIN)
             # Save to a file for future use
             np.save(points_filepath, self.get_points())
+            np.save(tris_filepath, self.get_triangulation())
 
     def get_commands_and_coord_strings(self):
         all_commands = list(self.get_command_to_function_map().keys())
