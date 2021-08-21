@@ -572,14 +572,14 @@ class Mobject(object):
         respect to that point.
         """
         scale_factor = max(scale_factor, min_scale_factor)
-        for mob in self.get_family():
-            mob._handle_scale_side_effects(scale_factor)
         self.apply_points_function(
             lambda points: scale_factor * points,
             about_point=about_point,
             about_edge=about_edge,
             works_on_bounding_box=True,
         )
+        for mob in self.get_family():
+            mob._handle_scale_side_effects(scale_factor)
         return self
 
     def _handle_scale_side_effects(self, scale_factor):
@@ -859,8 +859,8 @@ class Mobject(object):
             angle_of_vector(target_vect) - angle_of_vector(curr_vect),
         )
         self.rotate(
-            np.arctan2(curr_vect[2], get_norm(curr_vect[:2])) - np.arctan2(target_vect[2], get_norm(target_vect[:2])), 
-            axis = np.array([-target_vect[1], target_vect[0], 0]),
+            np.arctan2(curr_vect[2], get_norm(curr_vect[:2])) - np.arctan2(target_vect[2], get_norm(target_vect[:2])),
+            axis=np.array([-target_vect[1], target_vect[0], 0]),
         )
         self.shift(start - self.get_start())
         return self
