@@ -423,7 +423,10 @@ class VMobject(Mobject):
 
     def set_points_smoothly(self, points, true_smooth=False):
         self.set_points_as_corners(points)
-        self.make_smooth()
+        if true_smooth:
+            self.make_smooth()
+        else:
+            self.make_approximately_smooth()
         return self
 
     def change_anchor_mode(self, mode):
