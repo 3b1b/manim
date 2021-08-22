@@ -80,38 +80,44 @@ class TracedPath(VMobject):
     CONFIG = {
         "stroke_width": 2,
         "stroke_color": WHITE,
-        "min_distance_to_new_point": 0.1,
         "time_traced": np.inf,
         "fill_opacity": 0,
-        "sparseness": 1,
+        "time_per_anchor": 0.1,
     }
 
     def __init__(self, traced_point_func, **kwargs):
         super().__init__(**kwargs)
         self.traced_point_func = traced_point_func
         self.time = 0
-        self.times = []
         self.traced_points = []
         self.add_updater(lambda m, dt: m.update_path(dt))
 
     def update_path(self, dt):
-        point = np.array(self.traced_point_func())
-        tps = self.traced_points
-        times = self.times
+        if dt == 0:
+            return self
+        point = self.traced_point_func().copy()
+        self.traced_points.append(point)
 
-        if len(tps) == 0:
-            tps.append(point)
-            times.append(self.time)
-        if get_norm(point - tps[-1]) >= self.min_distance_to_new_point:
-            times.append(self.time)
-            tps.append(point)
-        # Cut off tail
-        while times and times[0] < self.time - self.time_traced:
-            times = times[1:]
-            tps = tps[1:]
-        if tps:
-            self.set_points_as_corners(tps[::self.sparseness])
+        if self.time_traced < np.inf:
+            n_relevant_points = int(self.time_traced / dt)
+            n_anchors = int(self.time_traced / self.time_per_anchor)
+            n_tps = len(self.traced_points)
+            points = [
+                self.traced_points[max(n_tps - int(alpha * n_relevant_points) - 1, 0)]
+                for alpha in np.linspace(1, 0, n_anchors)
+            ]
+            # Every now and then refresh the list
+            if n_tps > 10 * n_relevant_points:
+                self.traced_points = self.traced_points[-n_relevant_points:]
+        else:
+            sparseness = max(int(self.time_per_anchor / dt), 1)
+            points = self.traced_points[::sparseness]
+            points[-1] = self.traced_points[-1]
+
+        self.set_points_smoothly(points)
+
         self.time += dt
+        return self
 
 
 class TracingTail(TracedPath):
@@ -120,8 +126,6 @@ class TracingTail(TracedPath):
         "stroke_opacity": (0, 1),
         "stroke_color": WHITE,
         "time_traced": 1.0,
-        "min_distance_to_new_point": 0,
-        "sparseness": 3,
     }
 
     def __init__(self, mobject_or_func, **kwargs):
