@@ -4,6 +4,7 @@ import numpy as np
 from manimlib.utils.simple_functions import choose
 from manimlib.utils.space_ops import find_intersection
 from manimlib.utils.space_ops import cross2d
+from manimlib.utils.space_ops import midpoint
 
 CLOSED_THRESHOLD = 0.001
 
@@ -130,6 +131,8 @@ def get_smooth_quadratic_bezier_handle_points(points):
     another that would produce a parabola passing through P0, call it smooth_to_left,
     and use the midpoint between the two.
     """
+    if len(points) == 2:
+        return midpoint(*points)
     smooth_to_right, smooth_to_left = [
         0.25 * ps[0:-2] + ps[1:-1] - 0.25 * ps[2:]
         for ps in (points, points[::-1])
