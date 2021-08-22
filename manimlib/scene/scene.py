@@ -104,7 +104,7 @@ class Scene(object):
         self.quit_interaction = False
         self.lock_static_mobject_data()
         while not (self.window.is_closing or self.quit_interaction):
-            self.update_frame()
+            self.update_frame(1 / self.camera.frame_rate)
         if self.window.is_closing:
             self.window.destroy()
         if self.quit_interaction:
@@ -247,6 +247,18 @@ class Scene(object):
 
     def get_mobject_copies(self):
         return [m.copy() for m in self.mobjects]
+
+    def point_to_mobject(self, point, search_set=None, buff=0):
+        """
+        E.g. if clicking on the scene, this returns the top layer mobject
+        under a given point
+        """
+        if search_set is None:
+            search_set = self.mobjects
+        for mobject in reversed(search_set):
+            if mobject.is_point_touching(point, buff=buff):
+                return mobject
+        return None
 
     # Related to skipping
     def update_skipping_status(self):
