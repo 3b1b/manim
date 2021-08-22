@@ -1088,14 +1088,16 @@ class Mobject(object):
 
     def get_start(self):
         self.throw_error_if_no_points()
-        return np.array(self.get_points()[0])
+        return self.get_points()[0].copy()
 
     def get_end(self):
         self.throw_error_if_no_points()
-        return np.array(self.get_points()[-1])
+        return self.get_points()[-1].copy()
 
     def get_start_and_end(self):
-        return self.get_start(), self.get_end()
+        self.throw_error_if_no_points()
+        points = self.get_points()
+        return (points[0].copy(), points[-1].copy())
 
     def point_from_proportion(self, alpha):
         points = self.get_points()
