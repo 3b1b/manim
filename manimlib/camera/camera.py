@@ -316,17 +316,6 @@ class Camera(object):
         self.frame.set_height(frame_height)
         self.frame.set_width(frame_width)
 
-    def pixel_coords_to_space_coords(self, px, py, relative=False):
-        pw, ph = self.fbo.size
-        fw, fh = self.get_frame_shape()
-        fc = self.get_frame_center()
-        if relative:
-            return 2 * np.array([px / pw, py / ph, 0])
-        else:
-            # Only scale wrt one axis
-            scale = fh / ph
-            return fc + scale * np.array([(px - pw / 2), (py - ph / 2), 0])
-
     # Rendering
     def capture(self, *mobjects, **kwargs):
         self.refresh_perspective_uniforms()
