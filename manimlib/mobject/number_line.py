@@ -82,7 +82,7 @@ class NumberLine(Line):
         ticks = VGroup()
         for x in self.get_tick_range():
             size = self.tick_size
-            if x in self.numbers_with_elongated_ticks:
+            if np.isclose(self.numbers_with_elongated_ticks, x).any():
                 size *= self.longer_tick_multiple
             ticks.add(self.get_tick(x, size))
         self.add(ticks)
