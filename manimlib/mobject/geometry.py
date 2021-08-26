@@ -29,6 +29,7 @@ DEFAULT_ARROW_TIP_LENGTH = 0.35
 DEFAULT_ARROW_TIP_WIDTH = 0.35
 
 
+# Deprecate?
 class TipableVMobject(VMobject):
     """
     Meant for shared functionality between Arc and Line.
@@ -498,8 +499,8 @@ class Line(TipableVMobject):
         )
         return self
 
-    def set_length(self, length):
-        self.scale(length / self.get_length())
+    def set_length(self, length, **kwargs):
+        self.scale(length / self.get_length(), **kwargs)
 
 
 class DashedLine(Line):
