@@ -37,6 +37,8 @@ out vec4 frag_color;
 
 #INSERT finalize_color.glsl
 
+const int MAX_DEGREE = 5;
+
 vec2 complex_mult(vec2 z, vec2 w){
     return vec2(z.x * w.x - z.y * w.y, z.x * w.y + z.y * w.x);
 }
@@ -54,23 +56,23 @@ vec2 complex_pow(vec2 z, int n){
     return result;
 }
 
-vec2 poly(vec2 z, vec2[6] coefs){
+vec2 poly(vec2 z, vec2[MAX_DEGREE + 1] coefs){
     vec2 result = vec2(0.0);
-    for(int n = 0; n < 6; n++){
+    for(int n = 0; n < MAX_DEGREE + 1; n++){
         result += complex_mult(coefs[n], complex_pow(z, n));
     }
     return result;
 }
 
-vec2 dpoly(vec2 z, vec2[6] coefs){
+vec2 dpoly(vec2 z, vec2[MAX_DEGREE + 1] coefs){
     vec2 result = vec2(0.0);
-    for(int n = 1; n < 6; n++){
+    for(int n = 1; n < MAX_DEGREE + 1; n++){
         result += n * complex_mult(coefs[n], complex_pow(z, n - 1));
     }
     return result;
 }
 
-vec2 seek_root(vec2 z, vec2[6] coefs){
+vec2 seek_root(vec2 z, vec2[MAX_DEGREE + 1] coefs){
     for(int i = 0; i < int(n_steps); i++){
         vec2 step = complex_div(poly(z, coefs), dpoly(z, coefs));
         if(length(step) < 1e-2){
@@ -84,16 +86,16 @@ vec2 seek_root(vec2 z, vec2[6] coefs){
 
 
 void main() {
-    vec2[6] coefs = vec2[6](coef0, coef1, coef2, coef3, coef4, coef5);
-    vec2[5] roots = vec2[5](root0, root1, root2, root3, root4);
-    vec4[5] colors = vec4[5](color0, color1, color2, color3, color4);
+    vec2[MAX_DEGREE + 1] coefs = vec2[MAX_DEGREE + 1](coef0, coef1, coef2, coef3, coef4, coef5);
+    vec2[MAX_DEGREE] roots = vec2[MAX_DEGREE](root0, root1, root2, root3, root4);
+    vec4[MAX_DEGREE] colors = vec4[MAX_DEGREE](color0, color1, color2, color3, color4);
 
     vec2 z = xyz_coords.xy;
     vec2 found_root = seek_root(z, coefs);
 
     vec4 color = vec4(0.0);
     float curr_min = 1e10;
-    for(int i = 0; i < 5; i++){
+    for(int i = 0; i < MAX_DEGREE; i++){
         float dist = distance(roots[i], found_root);
         if(dist < curr_min){
             curr_min = dist;
