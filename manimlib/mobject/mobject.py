@@ -365,14 +365,17 @@ class Mobject(object):
         self.center()
         return self
 
+    def replicate(self, n):
+        return self.get_group_class()(
+            *(self.copy() for x in range(n))
+        )
+
     def get_grid(self, n_rows, n_cols, height=None, **kwargs):
         """
         Returns a new mobject containing multiple copies of this one
         arranged in a grid
         """
-        grid = self.get_group_class()(
-            *(self.copy() for n in range(n_rows * n_cols))
-        )
+        grid = self.replicate(n_rows * n_cols)
         grid.arrange_in_grid(n_rows, n_cols, **kwargs)
         if height is not None:
             grid.set_height(height)
