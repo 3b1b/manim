@@ -2,7 +2,7 @@ from manimlib import *
 import numpy as np
 
 # To watch one of these scenes, run the following:
-# python -m manim example_scenes.py SquareToCircle
+# manimgl example_scenes.py OpeningManimExample
 # Use -s to skip to the end and just save the final frame
 # Use -w to write the animation to a file
 # Use -o to write it to a file and open it once done
