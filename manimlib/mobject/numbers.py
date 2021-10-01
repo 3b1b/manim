@@ -36,7 +36,9 @@ class DecimalNumber(VMobject):
 
         # Add non-numerical bits
         if self.show_ellipsis:
-            self.add(self.string_to_mob("..."))
+            dots = self.string_to_mob("...")
+            dots.arrange(RIGHT, buff=2 * dots[0].get_width())
+            self.add(dots)
         if self.unit is not None:
             self.unit_sign = self.string_to_mob(self.unit, SingleStringTex)
             self.add(self.unit_sign)
