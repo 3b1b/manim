@@ -8,21 +8,16 @@ uniform float focal_distance;
 uniform vec4 color0;
 uniform vec4 color1;
 uniform vec4 color2;
-uniform vec4 color3;
-uniform vec4 color4;
-
-uniform vec2 coef0;
-uniform vec2 coef1;
-uniform vec2 coef2;
-uniform vec2 coef3;
-uniform vec2 coef4;
-uniform vec2 coef5;
 
 uniform vec2 root0;
 uniform vec2 root1;
-uniform vec2 root2;
-uniform vec2 root3;
-uniform vec2 root4;
+
+// uniform vec2 coef0;
+// uniform vec2 coef1;
+// uniform vec2 coef2;
+// uniform vec2 coef3;
+
+uniform vec2 z0;
 
 uniform float n_roots;
 uniform float n_steps;
@@ -37,7 +32,7 @@ out vec4 frag_color;
 
 #INSERT finalize_color.glsl
 
-const int MAX_DEGREE = 5;
+const int MAX_DEGREE = 3;
 
 vec2 complex_mult(vec2 z, vec2 w){
     return vec2(z.x * w.x - z.y * w.y, z.x * w.y + z.y * w.x);
@@ -91,13 +86,20 @@ vec2 seek_root(vec2 z, vec2[MAX_DEGREE + 1] coefs, int max_steps, out float n_it
     return z;
 }
 
-
 void main() {
-    vec2[MAX_DEGREE + 1] coefs = vec2[MAX_DEGREE + 1](coef0, coef1, coef2, coef3, coef4, coef5);
-    vec2[MAX_DEGREE] roots = vec2[MAX_DEGREE](root0, root1, root2, root3, root4);
-    vec4[MAX_DEGREE] colors = vec4[MAX_DEGREE](color0, color1, color2, color3, color4);
+    vec2 root2 = xyz_coords.xy;
 
-    vec2 z = xyz_coords.xy;
+    vec2 coef0 = -complex_mult(complex_mult(root0, root1), root2);
+    vec2 coef1 = complex_mult(root0, root1) + complex_mult(root0, root2) + complex_mult(root1, root2);
+    vec2 coef2 = -(root0 + root1 + root2);
+    vec2 coef3 = vec2(1.0, 0.0);
+
+    vec2[MAX_DEGREE + 1] coefs = vec2[MAX_DEGREE + 1](coef0, coef1, coef2, coef3);
+    vec2[MAX_DEGREE] roots = vec2[MAX_DEGREE](root0, root1, root2);
+    vec4[MAX_DEGREE] colors = vec4[MAX_DEGREE](color0, color1, color2);
+
+    // vec2 z = z0;
+    vec2 z = -coef2 / 3.0;
     float n_iters;
     vec2 found_root = seek_root(z, coefs, int(n_steps), n_iters);
 
@@ -111,38 +113,10 @@ void main() {
             color = colors[i];
         }
     }
-    color *= (1.0 + (color_mult - 1) * (n_iters - 5));
+    // color *= (1.0 + (color_mult - 1) * (n_iters - 5));
 
-    // if(julia_highlight > 0.0){
-    //     float factor = min_dist / distance(z, found_root);
-    //     factor *= pow(2.0, n_iters);
-    //     float t = smoothstep(0, 5, factor);
-    //     t *= 2.0;
-    //     // color = vec4(0.0) * (1 - t) * (1 - t) + 2 * color * (1 - t) * t + vec4(1.0) * t * t;
-    //     color *= t;
-    // }
-
-    if(julia_highlight > 0.0){
-        float radius = julia_highlight;  // TODO
-        vec2[4] samples = vec2[4](
-            z + vec2(radius, 0.0),
-            z + vec2(-radius, 0.0),
-            z + vec2(0.0, radius),
-            z + vec2(0.0, -radius)
-        );
-        for(int i = 0; i < 4; i++){
-            for(int j = 0; j < n_steps; j++){
-                vec2 z = samples[i];
-                z = z - complex_div(poly(z, coefs), dpoly(z, coefs));
-                samples[i] = z;
-            }
-        }
-        float dist_sum = 0.0;
-        for(int i = 0; i < 4; i++){
-            dist_sum += distance(samples[i], samples[(i + 1) % 4]);
-        }
-        float factor = dist_sum / (4 * sqrt(2) * radius);
-        color *= 1.0 * smoothstep(0.0, 50, factor);
+    if (min_dist > 1e-2){
+        color = vec4(0.0, 0.0, 0.0, 1.0);
     }
 
     frag_color = finalize_color(
