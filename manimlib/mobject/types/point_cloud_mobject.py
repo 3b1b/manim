@@ -14,6 +14,8 @@ class PMobject(Mobject):
     def resize_points(self, size, resize_func=resize_array):
         # TODO
         for key in self.data:
+            if key == "bounding_box":
+                continue
             if len(self.data[key]) != size:
                 self.data[key] = resize_array(self.data[key], size)
         return self
