@@ -68,7 +68,9 @@ class DotCloud(PMobject):
         return self
 
     def set_radii(self, radii):
-        self.data["radii"][:] = resize_preserving_order(radii, len(self.data["radii"]))
+        n_points = len(self.get_points())
+        radii = np.array(radii).reshape((len(radii), 1))
+        self.data["radii"] = resize_preserving_order(radii, n_points)
         self.refresh_bounding_box()
         return self
 
