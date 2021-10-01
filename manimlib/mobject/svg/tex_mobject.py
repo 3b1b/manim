@@ -1,7 +1,6 @@
 from functools import reduce
 import operator as op
 import re
-import itertools as it
 
 from manimlib.constants import *
 from manimlib.mobject.geometry import Line
