@@ -20,6 +20,11 @@ class PMobject(Mobject):
                 self.data[key] = resize_array(self.data[key], size)
         return self
 
+    def set_points(self, points):
+        super().set_points(points)
+        self.resize_points(len(points))
+        return self
+
     def add_points(self, points, rgbas=None, color=None, opacity=None):
         """
         points must be a Nx3 numpy array, as must rgbas if it is not None
@@ -87,6 +92,11 @@ class PMobject(Mobject):
         lower_index = int(a * pmobject.get_num_points())
         upper_index = int(b * pmobject.get_num_points())
         for key in self.data:
+            if key == "bounding_box":
+                continue
+            # data_len = len(self.data[key])
+            # lower_index = int(a * data_len)
+            # upper_index = int(np.ceil(b * data_len))
             self.data[key] = pmobject.data[key][lower_index:upper_index]
         return self
 
