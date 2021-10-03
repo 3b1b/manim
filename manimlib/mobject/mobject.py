@@ -411,8 +411,10 @@ class Mobject(object):
         for key in self.data:
             copy_mobject.data[key] = self.data[key].copy()
 
-        # TODO, are uniforms ever numpy arrays?
         copy_mobject.uniforms = dict(self.uniforms)
+        for key in self.uniforms:
+            if isinstance(self.uniforms[key], np.ndarray):
+                copy_mobject.uniforms[key] = self.uniforms[key].copy()
 
         copy_mobject.submobjects = []
         copy_mobject.add(*[sm.copy() for sm in self.submobjects])
