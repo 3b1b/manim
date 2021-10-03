@@ -590,6 +590,7 @@ class Arrow(Line):
         "width_to_tip_len": 0.0075,
         "max_tip_length_to_length_ratio": 0.3,
         "max_width_to_length_ratio": 10,
+        "buff": 0.25,
     }
 
     def set_points_by_ends(self, start, end, buff=0, path_arc=0):
@@ -612,7 +613,7 @@ class Arrow(Line):
         prev_end = self.get_end()
         arc_len = self.get_arc_length()
         tip_len = self.get_stroke_width() * self.width_to_tip_len * self.tip_width_ratio
-        if tip_len > self.max_tip_length_to_length_ratio * arc_len:
+        if tip_len >= self.max_tip_length_to_length_ratio * arc_len:
             alpha = self.max_tip_length_to_length_ratio
         else:
             alpha = tip_len / arc_len
