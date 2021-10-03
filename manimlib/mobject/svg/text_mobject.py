@@ -7,6 +7,9 @@ import typing
 import warnings
 import xml.etree.ElementTree as ET
 import functools
+import pygments
+import pygments.lexers
+import pygments.styles
 
 from contextlib import contextmanager
 from pathlib import Path
@@ -23,6 +26,7 @@ from manimpango import PangoUtils, TextSetting, MarkupUtils
 
 TEXT_MOB_SCALE_FACTOR = 0.0076
 DEFAULT_LINE_SPACING_SCALE = 0.6
+
 
 class Text(SVGMobject):
     CONFIG = {
@@ -47,9 +51,9 @@ class Text(SVGMobject):
         "disable_ligatures": True,
     }
 
-    def __init__(self, text, **config):
-        self.full2short(config)
-        digest_config(self, config)
+    def __init__(self, text, **kwargs):
+        self.full2short(kwargs)
+        digest_config(self, kwargs)
         if self.size:
             warnings.warn(
                 "self.size has been deprecated and will "
@@ -68,7 +72,7 @@ class Text(SVGMobject):
         file_name = self.text2svg()
         PangoUtils.remove_last_M(file_name)
         self.remove_empty_path(file_name)
-        SVGMobject.__init__(self, file_name, **config)
+        SVGMobject.__init__(self, file_name, **kwargs)
         self.text = text
         if self.disable_ligatures:
             self.apply_space_chars()
@@ -145,13 +149,13 @@ class Text(SVGMobject):
 
     def set_color_by_t2c(self, t2c=None):
         t2c = t2c if t2c else self.t2c
-        for word, color in list(t2c.items()):
+        for word, color in t2c.items():
             for start, end in self.find_indexes(word):
                 self[start:end].set_color(color)
 
     def set_color_by_t2g(self, t2g=None):
         t2g = t2g if t2g else self.t2g
-        for word, gradient in list(t2g.items()):
+        for word, gradient in t2g.items():
             for start, end in self.find_indexes(word):
                 self[start:end].set_color_by_gradient(*gradient)
 
@@ -165,49 +169,62 @@ class Text(SVGMobject):
         return hasher.hexdigest()[:16]
 
     def text2settings(self):
+        """
+        Substrings specified in t2f, t2s, t2w can occupy each other.
+        For each category of style, a stack following first-in-last-out is constructed,
+        and the last value in each stack takes effect.
+        """
         settings = []
-        t2x = [self.t2f, self.t2s, self.t2w]
-        for i in range(len(t2x)):
-            fsw = [self.font, self.slant, self.weight]
-            if t2x[i]:
-                for word, x in list(t2x[i].items()):
-                    for start, end in self.find_indexes(word):
-                        fsw[i] = x
-                        settings.append(TextSetting(start, end, *fsw))
+        self.line_num = 0
+        def add_text_settings(start, end, style_stacks):
+            if start == end:
+                return
+            breakdown_indices = [start, *[
+                i + start + 1 for i, char in enumerate(self.text[start:end]) if char == "\n"
+            ], end]
+            style = [stack[-1] for stack in style_stacks]
+            for atom_start, atom_end in zip(breakdown_indices[:-1], breakdown_indices[1:]):
+                if atom_start < atom_end:
+                    settings.append(TextSetting(atom_start, atom_end, *style, self.line_num))
+                self.line_num += 1
+            self.line_num -= 1
 
-        # Set All text settings(default font slant weight)
-        fsw = [self.font, self.slant, self.weight]
-        settings.sort(key=lambda setting: setting.start)
-        temp_settings = settings.copy()
-        start = 0
-        for setting in settings:
-            if setting.start != start:
-                temp_settings.append(TextSetting(start, setting.start, *fsw))
-            start = setting.end
-        if start != len(self.text):
-            temp_settings.append(TextSetting(start, len(self.text), *fsw))
-        settings = sorted(temp_settings, key=lambda setting: setting.start)
+        # Set all the default and specified values.
+        len_text = len(self.text)
+        t2x_items = sorted([
+            *[
+                (0, len_text, t2x_index, value)
+                for t2x_index, value in enumerate([self.font, self.slant, self.weight])
+            ],
+            *[
+                (start, end, t2x_index, value)
+                for t2x_index, t2x in enumerate([self.t2f, self.t2s, self.t2w])
+                for word, value in t2x.items()
+                for start, end in self.find_indexes(word)
+            ]
+        ], key=lambda item: item[0])
 
-        if re.search(r'\n', self.text):
-            line_num = 0
-            for start, end in self.find_indexes('\n'):
-                for setting in settings:
-                    if setting.line_num == -1:
-                        setting.line_num = line_num
-                    if start < setting.end:
-                        line_num += 1
-                        new_setting = copy.copy(setting)
-                        setting.end = end
-                        new_setting.start = end
-                        new_setting.line_num = line_num
-                        settings.append(new_setting)
-                        settings.sort(key=lambda setting: setting.start)
-                        break
+        # Break down ranges and construct settings separately.
+        active_items = []
+        style_stacks = [[] for _ in range(3)]
+        for item, next_start in zip(t2x_items, [*[item[0] for item in t2x_items[1:]], len_text]):
+            active_items.append(item)
+            start, end, t2x_index, value = item
+            style_stacks[t2x_index].append(value)
+            halting_items = sorted(filter(
+                lambda item: item[1] <= next_start,
+                active_items
+            ), key=lambda item: item[1])
+            atom_start = start
+            for halting_item in halting_items:
+                active_items.remove(halting_item)
+                _, atom_end, t2x_index, _ = halting_item
+                add_text_settings(atom_start, atom_end, style_stacks)
+                style_stacks[t2x_index].pop()
+                atom_start = atom_end
+            add_text_settings(atom_start, next_start, style_stacks)
 
-        for setting in settings:
-            if setting.line_num == -1:
-                setting.line_num = 0
-
+        del self.line_num
         return settings
 
     def text2svg(self):
@@ -257,6 +274,7 @@ class MarkupText(SVGMobject):
         "gradient": None,
         "disable_ligatures": True,
     }
+
     def __init__(self, text, **config):
         digest_config(self, config)
         self.text = f'<span>{text}</span>'
@@ -303,6 +321,7 @@ class MarkupText(SVGMobject):
         # anti-aliasing
         if self.height is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
+
     def text2hash(self):
         """Generates ``sha256`` hash for file name."""
         settings = (
@@ -348,7 +367,6 @@ class MarkupText(SVGMobject):
             DEFAULT_PIXEL_HEIGHT,  # height
             **extra_kwargs
         )
-
 
     def _parse_color(self, col):
         """Parse color given in ``<color>`` or ``<gradient>`` tags."""
@@ -471,6 +489,63 @@ class MarkupText(SVGMobject):
 
     def __repr__(self):
         return f"MarkupText({repr(self.original_text)})"
+
+
+class Code(Text):
+    CONFIG = {
+        "font": "Consolas",
+        "font_size": 24,
+        "lsh": 1.0,
+        "language": "python",
+        # Visit https://pygments.org/demo/ to have a preview of more styles.
+        "code_style": "monokai",
+        # If not None, then each character will cover a space of equal width.
+        "char_width": None
+    }
+
+    def __init__(self, code, **kwargs):
+        self.full2short(kwargs)
+        digest_config(self, kwargs)
+        code = code.lstrip("\n")  # avoid mismatches of character indices
+        lexer = pygments.lexers.get_lexer_by_name(self.language)
+        tokens_generator = pygments.lex(code, lexer)
+        styles_dict = dict(pygments.styles.get_style_by_name(self.code_style))
+        default_color_hex = styles_dict[pygments.token.Text]["color"]
+        if not default_color_hex:
+            default_color_hex = self.color[1:]
+        start_index = 0
+        t2c = {}
+        t2s = {}
+        t2w = {}
+        for pair in tokens_generator:
+            ttype, token = pair
+            end_index = start_index + len(token)
+            range_str = f"[{start_index}:{end_index}]"
+            style_dict = styles_dict[ttype]
+            t2c[range_str] = "#" + (style_dict["color"] or default_color_hex)
+            t2s[range_str] = ITALIC if style_dict["italic"] else NORMAL
+            t2w[range_str] = BOLD if style_dict["bold"] else NORMAL
+            start_index = end_index
+        t2c.update(self.t2c)
+        t2s.update(self.t2s)
+        t2w.update(self.t2w)
+        kwargs["t2c"] = t2c
+        kwargs["t2s"] = t2s
+        kwargs["t2w"] = t2w
+        Text.__init__(self, code, **kwargs)
+        if self.char_width is not None:
+            self.set_monospace(self.char_width)
+
+    def set_monospace(self, char_width):
+        current_char_index = 0
+        for i, char in enumerate(self.text):
+            if char == "\n":
+                current_char_index = 0
+                continue
+            self[i].set_x(current_char_index * char_width)
+            current_char_index += 1
+        self.center()
+
 
 @contextmanager
 def register_font(font_file: typing.Union[str, Path]):

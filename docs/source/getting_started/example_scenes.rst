@@ -335,7 +335,7 @@ UpdatersExample
             # If the argument itself might change, you can use f_always,
             # for which the arguments following the initial Mobject method
             # should be functions returning arguments to that method.
-            # The following line ensures thst decimal.set_value(square.get_y())
+            # The following line ensures that decimal.set_value(square.get_y())
             # is called every frame
             f_always(number.set_value, square.get_width)
             # You could also write the following equivalent line
