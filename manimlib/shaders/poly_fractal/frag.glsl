@@ -137,12 +137,11 @@ void main() {
                 samples[i] = z;
             }
         }
-        float dist_sum = 0.0;
+        float max_dist = 0.0;
         for(int i = 0; i < 4; i++){
-            dist_sum += distance(samples[i], samples[(i + 1) % 4]);
+            max_dist = max(max_dist, distance(samples[i], samples[(i + 1) % 4]));
         }
-        float factor = dist_sum / (4 * sqrt(2) * radius);
-        color *= 1.0 * smoothstep(0.0, 50, factor);
+        color *= 1.0 * smoothstep(0, 0.1, max_dist);
     }
 
     frag_color = finalize_color(
