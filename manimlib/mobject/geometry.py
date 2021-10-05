@@ -413,6 +413,10 @@ class Line(TipableVMobject):
             self.set_points_as_corners([start, end])
             return self
         if path_arc:
+            neg = path_arc < 0
+            if neg:
+                path_arc = -path_arc
+                start, end = end, start
             radius = (dist / 2) / math.sin(path_arc / 2)
             alpha = (PI - path_arc) / 2
             center = start + radius * normalize(rotate_vector(end - start, alpha))
@@ -421,6 +425,8 @@ class Line(TipableVMobject):
                 angle=path_arc - 2 * buff / radius,
                 start_angle=angle_of_vector(start - center) + buff / radius,
             )
+            if neg:
+                raw_arc_points = raw_arc_points[::-1]
             self.set_points(center + radius * raw_arc_points)
         else:
             if buff > 0 and dist > 0:
@@ -585,7 +591,7 @@ class Elbow(VMobject):
 class Arrow(Line):
     CONFIG = {
         "stroke_color": GREY_A,
-        "stroke_width": 10,
+        "stroke_width": 5,
         "tip_width_ratio": 4,
         "width_to_tip_len": 0.0075,
         "max_tip_length_to_length_ratio": 0.3,
