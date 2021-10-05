@@ -61,6 +61,8 @@ class PMobject(Mobject):
         for mob in self.family_members_with_points():
             to_keep = ~np.apply_along_axis(condition, 1, mob.get_points())
             for key in mob.data:
+                if key == "bounding_box":
+                    continue
                 mob.data[key] = mob.data[key][to_keep]
         return self
 
