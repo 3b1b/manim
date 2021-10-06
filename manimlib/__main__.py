@@ -7,6 +7,12 @@ import manimlib.utils.init_config
 def main():
     args = manimlib.config.parse_cli()
 
+    if args.version:
+        from manimlib import __version__
+        print(f"ManimGL v{__version__}")
+        if args.file == None:
+            return
+
     if args.config:
         manimlib.utils.init_config.init_customization()
     else:

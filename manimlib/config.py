@@ -136,6 +136,11 @@ def parse_cli():
             "--config_file",
             help="Path to the custom configuration file",
         )
+        parser.add_argument(
+            "-v", "--version",
+            action="store_true",
+            help="Display the version of manimgl"
+        )
         args = parser.parse_args()
         return args
     except argparse.ArgumentError as err:
