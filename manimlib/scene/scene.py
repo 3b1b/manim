@@ -100,6 +100,8 @@ class Scene(object):
         # If there is a window, enter a loop
         # which updates the frame while under
         # the hood calling the pyglet event loop
+        print("Tips: You are now in the interactive mode. Now you can use the keyboard\
+and the mouse to interact with the scene. Just press `q` if you want to quit.")
         self.quit_interaction = False
         self.lock_static_mobject_data()
         while not (self.window.is_closing or self.quit_interaction):
