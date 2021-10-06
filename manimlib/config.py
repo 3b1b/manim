@@ -185,6 +185,13 @@ def get_custom_config():
     return config
 
 
+def check_temporary_storage(config):
+    if config["directories"]["temporary_storage"] == "" and sys.platform == "win32":
+        print("Warning: You may be using Windows platform and have not specified the `temporary\
+_storage` path, which may cause OSError. So it is recommended that you specify the `temporary\
+_storage` in the config file (.yml)")
+
+
 def get_configuration(args):
     global __config_file__
 
@@ -211,10 +218,12 @@ def get_configuration(args):
         init_customization()
 
     elif not os.path.exists(__config_file__):
-        print(f"Warning: Using the default configuration file, which you can modify in {global_defaults_file}")
-        print(f"If you want to create a local configuration file, you can create a file named {__config_file__}, or run manimgl --config")
+        print(f"Warning: Using the default configuration file, which you can modify in `{global_defaults_file}`")
+        print(f"If you want to create a local configuration file, you can create a file named \
+`{__config_file__}`, or run `manimgl --config`")
 
     custom_config = get_custom_config()
+    check_temporary_storage(custom_config)
 
     write_file = any([args.write_file, args.open, args.finder])
     if args.transparent:
