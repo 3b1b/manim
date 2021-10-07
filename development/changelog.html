@@ -9,8 +9,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/custom.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?46b545885735e8b04cf9eaf2">
-    <link rel="stylesheet" href="../_static/pygments.css?46b545885735e8b04cf9eaf2">
+    <link rel="stylesheet" href="../_static/styles/default.css?6c8acc2bf727c7a8c7bd7f34">
+    <link rel="stylesheet" href="../_static/pygments.css?6c8acc2bf727c7a8c7bd7f34">
     
 <style>
   :root {
@@ -27,7 +27,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?46b545885735e8b04cf9eaf2"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?6c8acc2bf727c7a8c7bd7f34"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -125,12 +125,37 @@
 <h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
 <section id="unreleased">
 <h2>Unreleased<a class="headerlink" href="#unreleased" title="Permalink to this headline">¶</a></h2>
-<p>No changes</p>
+<section id="fixed-bugs">
+<h3>Fixed bugs<a class="headerlink" href="#fixed-bugs" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1592">#1592</a>: Fixed <code class="docutils literal notranslate"><span class="pre">put_start_and_end_on</span></code> in 3D</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1601">#1601</a>: Fixed <code class="docutils literal notranslate"><span class="pre">DecimalNumber</span></code>’s scaling issue</p></li>
+</ul>
+</section>
+<section id="new-features">
+<h3>New Features<a class="headerlink" href="#new-features" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1598">#1598</a>: Supported the elliptical arc command <code class="docutils literal notranslate"><span class="pre">A</span></code> for <code class="docutils literal notranslate"><span class="pre">SVGMobject</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1607">#1607</a>: Added <code class="docutils literal notranslate"><span class="pre">FlashyFadeIn</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1607">#1607</a>: Save triangulation</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1625">#1625</a>: Added new <code class="docutils literal notranslate"><span class="pre">Code</span></code> mobject</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/bd356daa99bfe3134fcb192a5f72e0d76d853801">bd356da</a>: Added <code class="docutils literal notranslate"><span class="pre">VCube</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/6d7289338234acc6658b9377c0f0084aa1fa7119">6d72893</a>: Supported <code class="docutils literal notranslate"><span class="pre">ValueTracker</span></code> to track vectors</p></li>
+</ul>
+</section>
+<section id="refactor">
+<h3>Refactor<a class="headerlink" href="#refactor" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1601">#1601</a>: Change back to simpler <code class="docutils literal notranslate"><span class="pre">Mobject.scale</span></code> implementation</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/b667db2d311a11cbbca2a6ff511d2c3cf1675486">b667db2</a>: Simplify <code class="docutils literal notranslate"><span class="pre">Square</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/40290ada8343f10901fa9151cbdf84689667786d">40290ad</a>: Removed unused parameter <code class="docutils literal notranslate"><span class="pre">triangulation_locked</span></code></p></li>
+</ul>
+</section>
 </section>
 <section id="v1-1-0">
 <h2>v1.1.0<a class="headerlink" href="#v1-1-0" title="Permalink to this headline">¶</a></h2>
-<section id="fixed-bugs">
-<h3>Fixed bugs<a class="headerlink" href="#fixed-bugs" title="Permalink to this headline">¶</a></h3>
+<section id="id1">
+<h3>Fixed bugs<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Fixed the bug of <code class="xref py py-func docutils literal notranslate"><span class="pre">resize_with_interpolation()</span></code> in the case of <code class="docutils literal notranslate"><span class="pre">length=0</span></code></p></li>
 <li><p>Fixed the bug of <code class="docutils literal notranslate"><span class="pre">__init__</span></code> in <code class="xref py py-class docutils literal notranslate"><span class="pre">Elbow</span></code></p></li>
@@ -150,8 +175,8 @@
 <li><p>Allowed sound_file_name to be taken in without extensions</p></li>
 </ul>
 </section>
-<section id="new-features">
-<h3>New Features<a class="headerlink" href="#new-features" title="Permalink to this headline">¶</a></h3>
+<section id="id2">
+<h3>New Features<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Added <code class="xref py py-class docutils literal notranslate"><span class="pre">VShowPassingFlash</span></code></p></li>
 <li><p>Added <code class="docutils literal notranslate"><span class="pre">COLORMAP_3B1B</span></code></p></li>
@@ -232,10 +257,15 @@
         <div class="toc-tree">
           <ul>
 <li><a class="reference internal" href="#">Changelog</a><ul>
-<li><a class="reference internal" href="#unreleased">Unreleased</a></li>
-<li><a class="reference internal" href="#v1-1-0">v1.1.0</a><ul>
+<li><a class="reference internal" href="#unreleased">Unreleased</a><ul>
 <li><a class="reference internal" href="#fixed-bugs">Fixed bugs</a></li>
 <li><a class="reference internal" href="#new-features">New Features</a></li>
+<li><a class="reference internal" href="#refactor">Refactor</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#v1-1-0">v1.1.0</a><ul>
+<li><a class="reference internal" href="#id1">Fixed bugs</a></li>
+<li><a class="reference internal" href="#id2">New Features</a></li>
 </ul>
 </li>
 </ul>
