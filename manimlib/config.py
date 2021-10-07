@@ -9,6 +9,7 @@ from screeninfo import get_monitors
 
 from manimlib.utils.config_ops import merge_dicts_recursively
 from manimlib.utils.init_config import init_customization
+from manimlib.logger import log
 
 
 def parse_cli():
@@ -144,7 +145,7 @@ def parse_cli():
         args = parser.parse_args()
         return args
     except argparse.ArgumentError as err:
-        print(str(err))
+        log.error(str(err))
         sys.exit(2)
 
 
@@ -192,7 +193,7 @@ def get_custom_config():
 
 def check_temporary_storage(config):
     if config["directories"]["temporary_storage"] == "" and sys.platform == "win32":
-        print("Warning: You may be using Windows platform and have not specified the `temporary\
+        log.warning("You may be using Windows platform and have not specified the `temporary\
 _storage` path, which may cause OSError. So it is recommended that you specify the `temporary\
 _storage` in the config file (.yml)")
 
@@ -203,28 +204,28 @@ def get_configuration(args):
     # ensure __config_file__ always exists
     if args.config_file is not None:
         if not os.path.exists(args.config_file):
-            print(f"Can't find {args.config_file}.")
+            log.error(f"Can't find {args.config_file}.")
             if sys.platform == 'win32':
-                print(f"Copying default configuration file to {args.config_file}...")
+                log.info(f"Copying default configuration file to {args.config_file}...")
                 os.system(f"copy default_config.yml {args.config_file}")
             elif sys.platform in ["linux2", "darwin"]:
-                print(f"Copying default configuration file to {args.config_file}...")
+                log.info(f"Copying default configuration file to {args.config_file}...")
                 os.system(f"cp default_config.yml {args.config_file}")
             else:
-                print("Please create the configuration file manually.")
-            print("Read configuration from default_config.yml.")
+                log.info("Please create the configuration file manually.")
+            log.info("Read configuration from default_config.yml.")
         else:
             __config_file__ = args.config_file
 
     global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
 
     if not (os.path.exists(global_defaults_file) or os.path.exists(__config_file__)):
-        print("There is no configuration file detected. Initial configuration:\n")
+        log.info("There is no configuration file detected. Initial configuration:\n")
         init_customization()
 
     elif not os.path.exists(__config_file__):
-        print(f"Warning: Using the default configuration file, which you can modify in `{global_defaults_file}`")
-        print(f"If you want to create a local configuration file, you can create a file named \
+        log.info(f"Using the default configuration file, which you can modify in `{global_defaults_file}`")
+        log.info(f"If you want to create a local configuration file, you can create a file named \
 `{__config_file__}`, or run `manimgl --config`")
 
     custom_config = get_custom_config()
@@ -333,9 +334,9 @@ def get_camera_configuration(args, custom_config):
     try:
         bg_color = args.color or custom_config["style"]["background_color"]
         camera_config["background_color"] = colour.Color(bg_color)
-    except AttributeError as err:
-        print("Please use a valid color")
-        print(err)
+    except ValueError as err:
+        log.error("Please use a valid color")
+        log.error(err)
         sys.exit(2)
 
     # If rendering a transparent image/move, make sure the

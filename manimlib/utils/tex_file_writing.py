@@ -1,4 +1,3 @@
-import logging
 import sys
 import os
 import hashlib
@@ -7,6 +6,7 @@ from contextlib import contextmanager
 from manimlib.utils.directories import get_tex_dir
 from manimlib.config import get_manim_dir
 from manimlib.config import get_custom_config
+from manimlib.logger import log
 
 
 SAVED_TEX_CONFIG = {}
@@ -87,15 +87,11 @@ def tex_to_dvi(tex_file):
         exit_code = os.system(" ".join(commands))
         if exit_code != 0:
             log_file = tex_file.replace(".tex", ".log")
-            logging.log(
-                logging.ERROR,
-                "\n\n LaTeX Error!  Not a worry, it happens to the best of us.\n"
-            )
+            log.error("LaTeX Error!  Not a worry, it happens to the best of us.")
             with open(log_file, "r") as file:
                 for line in file.readlines():
                     if line.startswith("!"):
-                        print(line[1:])
-                        logging.log(logging.INFO, line)
+                        log.debug(f"The error could be: `{line[2:-1]}`")
             sys.exit(2)
     return result
 

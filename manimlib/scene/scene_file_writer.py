@@ -12,6 +12,7 @@ from manimlib.utils.file_ops import guarantee_existence
 from manimlib.utils.file_ops import add_extension_if_not_present
 from manimlib.utils.file_ops import get_sorted_integer_files
 from manimlib.utils.sounds import get_full_sound_file_path
+from manimlib.logger import log
 
 
 class SceneFileWriter(object):
@@ -231,7 +232,7 @@ class SceneFileWriter(object):
             **kwargs
         )
         if len(partial_movie_files) == 0:
-            print("No animations in this scene")
+            log.warning("No animations in this scene")
             return
 
         # Write a file partial_file_list.txt containing all
@@ -300,7 +301,7 @@ class SceneFileWriter(object):
         self.print_file_ready_message(file_path)
 
     def print_file_ready_message(self, file_path):
-        print(f"\nFile ready at {file_path}\n")
+        log.info(f"\nFile ready at {file_path}\n")
 
     def should_open_file(self):
         return any([
