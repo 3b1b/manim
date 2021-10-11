@@ -127,7 +127,7 @@ class VMobject(Mobject):
                 if isinstance(width, np.ndarray):
                     arr = width.reshape((len(width), 1))
                 else:
-                    arr = np.array([[w] for w in listify(width)])
+                    arr = np.array([[w] for w in listify(width)], dtype=float)
                 mob.data['stroke_width'] = arr
 
         if background is not None:
