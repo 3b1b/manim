@@ -133,6 +133,7 @@ class CoordinateSystem():
             **kwargs
         )
         graph.underlying_function = function
+        graph.x_range = x_range
         return graph
 
     def get_parametric_curve(self, function, **kwargs):
@@ -449,7 +450,7 @@ class NumberPlane(Axes):
         return lines1, lines2
 
     def get_lines_parallel_to_axis(self, axis1, axis2):
-        freq = axis1.x_step
+        freq = axis2.x_step
         ratio = self.faded_line_ratio
         line = Line(axis1.get_start(), axis1.get_end())
         dense_freq = (1 + ratio)
