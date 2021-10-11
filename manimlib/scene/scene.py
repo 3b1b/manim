@@ -119,6 +119,9 @@ class Scene(object):
         self.linger_after_completion = False
         self.update_frame()
 
+        # Save scene state at the point of embedding
+        self.save_state()
+
         from IPython.terminal.embed import InteractiveShellEmbed
         shell = InteractiveShellEmbed()
         # Have the frame update after each command
