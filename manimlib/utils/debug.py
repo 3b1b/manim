@@ -3,11 +3,12 @@ import time
 from manimlib.constants import BLACK
 from manimlib.mobject.numbers import Integer
 from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.logger import log
 
 
 def print_family(mobject, n_tabs=0):
     """For debugging purposes"""
-    print("\t" * n_tabs, mobject, id(mobject))
+    log.debug("\t" * n_tabs + str(mobject) + " " + str(id(mobject)))
     for submob in mobject.submobjects:
         print_family(submob, n_tabs + 1)
 

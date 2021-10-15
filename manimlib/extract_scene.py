@@ -1,9 +1,9 @@
 import inspect
 import sys
-import logging
 
 from manimlib.scene.scene import Scene
 from manimlib.config import get_custom_config
+from manimlib.logger import log
 
 
 class BlankScene(Scene):
@@ -41,8 +41,11 @@ def prompt_user_for_choice(scene_classes):
             name_to_class[split_str] if not split_str.isnumeric() else scene_classes[int(split_str)-1]
             for split_str in user_input.replace(" ", "").split(",")
         ]
+    except IndexError:
+        log.error("Invalid scene number")
+        sys.exit(2)
     except KeyError:
-        logging.log(logging.ERROR, "Invalid scene")
+        log.error("Invalid scene name")
         sys.exit(2)
     except EOFError:
         sys.exit(1)
@@ -78,10 +81,7 @@ def get_scenes_to_render(scene_classes, scene_config, config):
                 found = True
                 break
         if not found and (scene_name != ""):
-            logging.log(
-                logging.ERROR,
-                f"No scene named {scene_name} found",
-            )
+            log.error(f"No scene named {scene_name} found")
     if result:
         return result
     if len(scene_classes) == 1:

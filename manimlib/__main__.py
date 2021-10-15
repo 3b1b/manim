@@ -2,10 +2,15 @@
 import manimlib.config
 import manimlib.extract_scene
 import manimlib.utils.init_config
+from manimlib import __version__
 
 
 def main():
     args = manimlib.config.parse_cli()
+    
+    print(f"ManimGL \033[32mv{__version__}\033[0m")
+    if args.version and args.file == None:
+        return
 
     if args.config:
         manimlib.utils.init_config.init_customization()

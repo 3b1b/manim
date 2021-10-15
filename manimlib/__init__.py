@@ -1,3 +1,7 @@
+import pkg_resources
+
+__version__ = pkg_resources.get_distribution("manimgl").version
+
 from manimlib.constants import *
 
 from manimlib.animation.animation import *

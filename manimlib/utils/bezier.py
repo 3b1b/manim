@@ -5,6 +5,7 @@ from manimlib.utils.simple_functions import choose
 from manimlib.utils.space_ops import find_intersection
 from manimlib.utils.space_ops import cross2d
 from manimlib.utils.space_ops import midpoint
+from manimlib.logger import log
 
 CLOSED_THRESHOLD = 0.001
 
@@ -68,9 +69,9 @@ def interpolate(start, end, alpha):
     try:
         return (1 - alpha) * start + alpha * end
     except TypeError:
-        print(type(start), start.dtype)
-        print(type(end), start.dtype)
-        print(alpha)
+        log.debug(type(start), start.dtype)
+        log.debug(type(end), start.dtype)
+        log.debug(alpha)
         import sys
         sys.exit(2)
 
