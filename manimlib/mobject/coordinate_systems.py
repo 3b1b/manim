@@ -532,8 +532,14 @@ class ComplexPlane(NumberPlane):
                 value = z.real
             number_mob = axis.get_number_mobject(value, **kwargs)
             # For i and -i, remove the "1"
-            if abs(z.imag) == 1:
+            if z.imag == 1:
                 number_mob.remove(number_mob[0])
+            if z.imag == -1:
+                number_mob.remove(number_mob[1])
+                number_mob[0].next_to(
+                    number_mob[1], LEFT,
+                    buff=number_mob[0].get_width() / 4
+                )
             self.coordinate_labels.add(number_mob)
         self.add(self.coordinate_labels)
         return self
