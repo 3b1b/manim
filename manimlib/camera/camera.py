@@ -440,12 +440,13 @@ class Camera(object):
         }
 
     def init_textures(self):
-        self.path_to_texture_id = {}
+        self.n_textures = 0
+        self.path_to_texture = {}
 
     def get_texture_id(self, path):
-        if path not in self.path_to_texture_id:
-            # A way to increase tid's sequentially
-            tid = len(self.path_to_texture_id)
+        if path not in self.path_to_texture:
+            tid = self.n_textures
+            self.n_textures += 1
             im = Image.open(path).convert("RGBA")
             texture = self.ctx.texture(
                 size=im.size,
@@ -453,8 +454,14 @@ class Camera(object):
                 data=im.tobytes(),
             )
             texture.use(location=tid)
-            self.path_to_texture_id[path] = tid
-        return self.path_to_texture_id[path]
+            self.path_to_texture[path] = (tid, texture)
+        return self.path_to_texture[path][0]
+
+    def release_texture(self, path):
+        tid_and_texture = self.path_to_texture.pop(path, None)
+        if tid_and_texture:
+            tid_and_texture[1].release()
+        return self
 
 
 # Mostly just defined so old scenes don't break
