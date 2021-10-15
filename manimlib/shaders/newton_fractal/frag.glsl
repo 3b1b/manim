@@ -27,8 +27,9 @@ uniform vec2 root4;
 uniform float n_roots;
 uniform float n_steps;
 uniform float julia_highlight;
-uniform float color_mult;
+uniform float saturation_factor;
 uniform float black_for_cycles;
+uniform float is_parameter_space;
 
 uniform vec2 frame_shape;
 
@@ -40,6 +41,7 @@ out vec4 frag_color;
 #INSERT complex_functions.glsl
 
 const int MAX_DEGREE = 5;
+const float CLOSE_ENOUGH = 1e-3;
 
 
 vec2 poly(vec2 z, vec2[MAX_DEGREE + 1] coefs){
@@ -61,7 +63,7 @@ vec2 dpoly(vec2 z, vec2[MAX_DEGREE + 1] coefs){
 vec2 seek_root(vec2 z, vec2[MAX_DEGREE + 1] coefs, int max_steps, out float n_iters){
     float last_len;
     float curr_len;
-    float threshold = 1e-3;
+    float threshold = CLOSE_ENOUGH;
 
     for(int i = 0; i < max_steps; i++){
         last_len = curr_len;
@@ -85,6 +87,24 @@ void main() {
     vec4[MAX_DEGREE] colors = vec4[MAX_DEGREE](color0, color1, color2, color3, color4);
 
     vec2 z = xyz_coords.xy;
+
+    if(is_parameter_space > 0){
+        // In this case, pixel should correspond to one of the roots
+        roots[2] = xyz_coords.xy;
+        vec2 r0 = roots[0];
+        vec2 r1 = roots[1];
+        vec2 r2 = roots[2];
+
+        // It is assumed that the polynomial is cubid...
+        coefs[0] = -complex_mult(complex_mult(r0, r1), r2);
+        coefs[1] = complex_mult(r0, r1) + complex_mult(r0, r2) + complex_mult(r1, r2);
+        coefs[2] = -(r0 + r1 + r2);
+        coefs[3] = vec2(1.0, 0.0);
+
+        // Seed value is always center of the roots
+        z = -coefs[2] / 3.0;
+    }
+
     float n_iters;
     vec2 found_root = seek_root(z, coefs, int(n_steps), n_iters);
 
@@ -98,23 +118,14 @@ void main() {
             color = colors[i];
         }
     }
-    color *= (1.0 + (color_mult - 1) * (n_iters - 5));
+    color *= 1.0 + (0.01 * saturation_factor) * (n_iters - 5 * saturation_factor);
 
-    if(black_for_cycles > 0.0 && min_dist > 1e-2){
+    if(black_for_cycles > 0 && min_dist > CLOSE_ENOUGH){
         color = vec4(0.0, 0.0, 0.0, 1.0);
     }
 
-    // if(julia_highlight > 0.0){
-    //     float factor = min_dist / distance(z, found_root);
-    //     factor *= pow(2.0, n_iters);
-    //     float t = smoothstep(0, 5, factor);
-    //     t *= 2.0;
-    //     // color = vec4(0.0) * (1 - t) * (1 - t) + 2 * color * (1 - t) * t + vec4(1.0) * t * t;
-    //     color *= t;
-    // }
-
     if(julia_highlight > 0.0){
-        float radius = julia_highlight;  // TODO
+        float radius = julia_highlight;
         vec2[4] samples = vec2[4](
             z + vec2(radius, 0.0),
             z + vec2(-radius, 0.0),
