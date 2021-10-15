@@ -1,3 +1,4 @@
+import numpy as np
 import moderngl_window as mglw
 from moderngl_window.context.pyglet.window import Window as PygletWindow
 from moderngl_window.timers.clock import Timer
@@ -59,7 +60,17 @@ class Window(PygletWindow):
 
     # Delegate event handling to scene
     def pixel_coords_to_space_coords(self, px, py, relative=False):
-        return self.scene.camera.pixel_coords_to_space_coords(px, py, relative)
+        pw, ph = self.size
+        fw, fh = self.scene.camera.get_frame_shape()
+        fc = self.scene.camera.get_frame_center()
+        if relative:
+            return np.array([px / pw, py / ph, 0])
+        else:
+            return np.array([
+                fc[0] + px * fw / pw - fw / 2,
+                fc[1] + py * fh / ph - fh / 2,
+                0
+            ])
 
     def on_mouse_motion(self, x, y, dx, dy):
         super().on_mouse_motion(x, y, dx, dy)

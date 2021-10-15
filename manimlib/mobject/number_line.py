@@ -6,7 +6,6 @@ from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.config_ops import merge_dicts_recursively
 from manimlib.utils.simple_functions import fdiv
-from manimlib.utils.space_ops import normalize
 
 
 class NumberLine(Line):
@@ -83,7 +82,7 @@ class NumberLine(Line):
         ticks = VGroup()
         for x in self.get_tick_range():
             size = self.tick_size
-            if x in self.numbers_with_elongated_ticks:
+            if np.isclose(self.numbers_with_elongated_ticks, x).any():
                 size *= self.longer_tick_multiple
             ticks.add(self.get_tick(x, size))
         self.add(ticks)
@@ -106,11 +105,13 @@ class NumberLine(Line):
         return interpolate(self.get_start(), self.get_end(), alpha)
 
     def point_to_number(self, point):
-        start, end = self.get_start_and_end()
-        unit_vect = normalize(end - start)
+        points = self.get_points()
+        start = points[0]
+        end = points[-1]
+        vect = end - start
         proportion = fdiv(
-            np.dot(point - start, unit_vect),
-            np.dot(end - start, unit_vect),
+            np.dot(point - start, vect),
+            np.dot(end - start, vect),
         )
         return interpolate(self.x_min, self.x_max, proportion)
 

@@ -1,4 +1,6 @@
 import numpy as np
+import math
+import numbers
 
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
@@ -27,6 +29,7 @@ DEFAULT_ARROW_TIP_LENGTH = 0.35
 DEFAULT_ARROW_TIP_WIDTH = 0.35
 
 
+# Deprecate?
 class TipableVMobject(VMobject):
     """
     Meant for shared functionality between Arc and Line.
@@ -404,31 +407,37 @@ class Line(TipableVMobject):
         self.set_points_by_ends(self.start, self.end, self.buff, self.path_arc)
 
     def set_points_by_ends(self, start, end, buff=0, path_arc=0):
-        if path_arc:
-            self.set_points(Arc.create_quadratic_bezier_points(path_arc))
-            self.put_start_and_end_on(start, end)
-        else:
+        vect = end - start
+        dist = get_norm(vect)
+        if np.isclose(dist, 0):
             self.set_points_as_corners([start, end])
-        self.account_for_buff(self.buff)
+            return self
+        if path_arc:
+            neg = path_arc < 0
+            if neg:
+                path_arc = -path_arc
+                start, end = end, start
+            radius = (dist / 2) / math.sin(path_arc / 2)
+            alpha = (PI - path_arc) / 2
+            center = start + radius * normalize(rotate_vector(end - start, alpha))
+
+            raw_arc_points = Arc.create_quadratic_bezier_points(
+                angle=path_arc - 2 * buff / radius,
+                start_angle=angle_of_vector(start - center) + buff / radius,
+            )
+            if neg:
+                raw_arc_points = raw_arc_points[::-1]
+            self.set_points(center + radius * raw_arc_points)
+        else:
+            if buff > 0 and dist > 0:
+                start = start + vect * (buff / dist)
+                end = end - vect * (buff / dist)
+            self.set_points_as_corners([start, end])
+        return self
 
     def set_path_arc(self, new_value):
         self.path_arc = new_value
         self.init_points()
-
-    def account_for_buff(self, buff):
-        if buff == 0:
-            return
-        #
-        if self.path_arc == 0:
-            length = self.get_length()
-        else:
-            length = self.get_arc_length()
-        #
-        if length < 2 * buff:
-            return
-        buff_prop = buff / length
-        self.pointwise_become_partial(self, buff_prop, 1 - buff_prop)
-        return self
 
     def set_start_and_end_attrs(self, start, end):
         # If either start or end are Mobjects, this
@@ -439,8 +448,8 @@ class Line(TipableVMobject):
         # Now that we know the direction between them,
         # we can find the appropriate boundary point from
         # start and end, if they're mobjects
-        self.start = self.pointify(start, vect) + self.buff * vect
-        self.end = self.pointify(end, -vect) - self.buff * vect
+        self.start = self.pointify(start, vect)
+        self.end = self.pointify(end, -vect)
 
     def pointify(self, mob_or_point, direction=None):
         """
@@ -461,8 +470,10 @@ class Line(TipableVMobject):
 
     def put_start_and_end_on(self, start, end):
         curr_start, curr_end = self.get_start_and_end()
-        if (curr_start == curr_end).all():
-            self.set_points_by_ends(start, end, self.path_arc)
+        if np.isclose(curr_start, curr_end).all():
+            # Handle null lines more gracefully
+            self.set_points_by_ends(start, end, buff=0, path_arc=self.path_arc)
+            return self
         return super().put_start_and_end_on(start, end)
 
     def get_vector(self):
@@ -494,8 +505,8 @@ class Line(TipableVMobject):
         )
         return self
 
-    def set_length(self, length):
-        self.scale(length / self.get_length())
+    def set_length(self, length, **kwargs):
+        self.scale(length / self.get_length(), **kwargs)
 
 
 class DashedLine(Line):
@@ -578,6 +589,80 @@ class Elbow(VMobject):
 
 
 class Arrow(Line):
+    CONFIG = {
+        "stroke_color": GREY_A,
+        "stroke_width": 5,
+        "tip_width_ratio": 4,
+        "width_to_tip_len": 0.0075,
+        "max_tip_length_to_length_ratio": 0.3,
+        "max_width_to_length_ratio": 10,
+        "buff": 0.25,
+    }
+
+    def set_points_by_ends(self, start, end, buff=0, path_arc=0):
+        super().set_points_by_ends(start, end, buff, path_arc)
+        self.insert_tip_anchor()
+        return self
+
+    def init_colors(self):
+        super().init_colors()
+        self.create_tip_with_stroke_width()
+
+    def get_arc_length(self):
+        # Push up into Line?
+        arc_len = get_norm(self.get_vector())
+        if self.path_arc > 0:
+            arc_len *= self.path_arc / (2 * math.sin(self.path_arc / 2))
+        return arc_len
+
+    def insert_tip_anchor(self):
+        prev_end = self.get_end()
+        arc_len = self.get_arc_length()
+        tip_len = self.get_stroke_width() * self.width_to_tip_len * self.tip_width_ratio
+        if tip_len >= self.max_tip_length_to_length_ratio * arc_len:
+            alpha = self.max_tip_length_to_length_ratio
+        else:
+            alpha = tip_len / arc_len
+        self.pointwise_become_partial(self, 0, 1 - alpha)
+        self.add_line_to(prev_end)
+        return self
+
+    def create_tip_with_stroke_width(self):
+        width = min(
+            self.max_stroke_width,
+            self.max_width_to_length_ratio * self.get_length(),
+        )
+        widths_array = np.full(self.get_num_points(), width)
+        nppc = self.n_points_per_curve
+        if len(widths_array) > nppc:
+            widths_array[-nppc:] = [
+                a * self.tip_width_ratio * width
+                for a in np.linspace(1, 0, nppc)
+            ]
+            self.set_stroke(width=widths_array)
+        return self
+
+    def reset_tip(self):
+        self.set_points_by_ends(
+            self.get_start(),
+            self.get_end(),
+            path_arc=self.path_arc,
+        )
+        self.create_tip_with_stroke_width()
+        return self
+
+    def set_stroke(self, color=None, width=None, *args, **kwargs):
+        super().set_stroke(color=color, width=width, *args, **kwargs)
+        if isinstance(width, numbers.Number):
+            self.max_stroke_width = width
+            self.reset_tip()
+        return self
+
+    def _handle_scale_side_effects(self, scale_factor):
+        return self.reset_tip()
+
+
+class FillArrow(Line):
     CONFIG = {
         "fill_color": GREY_A,
         "fill_opacity": 1,

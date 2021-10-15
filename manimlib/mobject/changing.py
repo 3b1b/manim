@@ -1,8 +1,13 @@
-from manimlib.constants import *
+import numpy as np
+from manimlib.constants import BLUE_D
+from manimlib.constants import BLUE_B
+from manimlib.constants import BLUE_E
+from manimlib.constants import GREY_BROWN
+from manimlib.constants import WHITE
+from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.rate_functions import smooth
-from manimlib.utils.space_ops import get_norm
 
 
 class AnimatedBoundary(VGroup):
@@ -74,25 +79,63 @@ class TracedPath(VMobject):
     CONFIG = {
         "stroke_width": 2,
         "stroke_color": WHITE,
-        "min_distance_to_new_point": 0.1,
+        "time_traced": np.inf,
+        "fill_opacity": 0,
+        "time_per_anchor": 1 / 15,
     }
 
     def __init__(self, traced_point_func, **kwargs):
         super().__init__(**kwargs)
         self.traced_point_func = traced_point_func
-        self.add_updater(lambda m: m.update_path())
+        self.time = 0
+        self.traced_points = []
+        self.add_updater(lambda m, dt: m.update_path(dt))
 
-    def update_path(self):
-        new_point = self.traced_point_func()
-        if not self.has_points():
-            self.start_new_path(new_point)
-            self.add_line_to(new_point)
+    def update_path(self, dt):
+        if dt == 0:
+            return self
+        point = self.traced_point_func().copy()
+        self.traced_points.append(point)
+
+        if self.time_traced < np.inf:
+            n_relevant_points = int(self.time_traced / dt + 0.5)
+            # n_anchors = int(self.time_traced / self.time_per_anchor)
+            n_tps = len(self.traced_points)
+            if n_tps < n_relevant_points:
+                points = self.traced_points + [point] * (n_relevant_points - n_tps)
+            else:
+                points = self.traced_points[n_tps - n_relevant_points:]
+            # points = [
+            #     self.traced_points[max(n_tps - int(alpha * n_relevant_points) - 1, 0)]
+            #     for alpha in np.linspace(1, 0, n_anchors)
+            # ]
+            # Every now and then refresh the list
+            if n_tps > 10 * n_relevant_points:
+                self.traced_points = self.traced_points[-n_relevant_points:]
         else:
-            # Set the end to be the new point
-            self.get_points()[-1] = new_point
+            # sparseness = max(int(self.time_per_anchor / dt), 1)
+            # points = self.traced_points[::sparseness]
+            # points[-1] = self.traced_points[-1]
+            points = self.traced_points
 
-            # Second to last point
-            nppcc = self.n_points_per_curve
-            dist = get_norm(new_point - self.get_points()[-nppcc])
-            if dist >= self.min_distance_to_new_point:
-                self.add_line_to(new_point)
+        if points:
+            self.set_points_smoothly(points)
+
+        self.time += dt
+        return self
+
+
+class TracingTail(TracedPath):
+    CONFIG = {
+        "stroke_width": (0, 3),
+        "stroke_opacity": (0, 1),
+        "stroke_color": WHITE,
+        "time_traced": 1.0,
+    }
+
+    def __init__(self, mobject_or_func, **kwargs):
+        if isinstance(mobject_or_func, Mobject):
+            func = mobject_or_func.get_center
+        else:
+            func = mobject_or_func
+        super().__init__(func, **kwargs)

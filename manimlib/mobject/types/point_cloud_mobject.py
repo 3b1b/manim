@@ -14,8 +14,15 @@ class PMobject(Mobject):
     def resize_points(self, size, resize_func=resize_array):
         # TODO
         for key in self.data:
+            if key == "bounding_box":
+                continue
             if len(self.data[key]) != size:
                 self.data[key] = resize_array(self.data[key], size)
+        return self
+
+    def set_points(self, points):
+        super().set_points(points)
+        self.resize_points(len(points))
         return self
 
     def add_points(self, points, rgbas=None, color=None, opacity=None):
@@ -54,6 +61,8 @@ class PMobject(Mobject):
         for mob in self.family_members_with_points():
             to_keep = ~np.apply_along_axis(condition, 1, mob.get_points())
             for key in mob.data:
+                if key == "bounding_box":
+                    continue
                 mob.data[key] = mob.data[key][to_keep]
         return self
 
@@ -85,7 +94,9 @@ class PMobject(Mobject):
         lower_index = int(a * pmobject.get_num_points())
         upper_index = int(b * pmobject.get_num_points())
         for key in self.data:
-            self.data[key] = pmobject.data[key][lower_index:upper_index]
+            if key == "bounding_box":
+                continue
+            self.data[key] = pmobject.data[key][lower_index:upper_index].copy()
         return self
 
 

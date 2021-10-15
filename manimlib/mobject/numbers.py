@@ -36,7 +36,9 @@ class DecimalNumber(VMobject):
 
         # Add non-numerical bits
         if self.show_ellipsis:
-            self.add(self.string_to_mob("..."))
+            dots = self.string_to_mob("...")
+            dots.arrange(RIGHT, buff=2 * dots[0].get_width())
+            self.add(dots)
         if self.unit is not None:
             self.unit_sign = self.string_to_mob(self.unit, SingleStringTex)
             self.add(self.unit_sign)
@@ -128,7 +130,7 @@ class DecimalNumber(VMobject):
 
     def set_value(self, number):
         move_to_point = self.get_edge_center(self.edge_to_fix)
-        old_submobjects = self.submobjects
+        old_submobjects = list(self.submobjects)
         self.set_submobjects_from_number(number)
         self.move_to(move_to_point, self.edge_to_fix)
         for sm1, sm2 in zip(self.submobjects, old_submobjects):

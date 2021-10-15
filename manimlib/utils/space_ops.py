@@ -1,5 +1,4 @@
 import numpy as np
-import itertools as it
 import operator as op
 from functools import reduce
 import math
@@ -14,7 +13,7 @@ from manimlib.utils.iterables import adjacent_pairs
 
 
 def get_norm(vect):
-    return sum([x**2 for x in vect])**0.5
+    return sum((x**2 for x in vect))**0.5
 
 
 # Quaternions

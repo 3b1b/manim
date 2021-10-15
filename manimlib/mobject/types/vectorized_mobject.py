@@ -127,7 +127,7 @@ class VMobject(Mobject):
                 if isinstance(width, np.ndarray):
                     arr = width.reshape((len(width), 1))
                 else:
-                    arr = np.array([[w] for w in listify(width)])
+                    arr = np.array([[w] for w in listify(width)], dtype=float)
                 mob.data['stroke_width'] = arr
 
         if background is not None:
@@ -149,6 +149,7 @@ class VMobject(Mobject):
                   stroke_opacity=None,
                   stroke_rgba=None,
                   stroke_width=None,
+                  stroke_background=True,
                   gloss=None,
                   shadow=None,
                   recurse=True):
@@ -163,13 +164,17 @@ class VMobject(Mobject):
 
         if stroke_rgba is not None:
             self.data['stroke_rgba'] = resize_with_interpolation(stroke_rgba, len(fill_rgba))
-            self.set_stroke(width=stroke_width)
+            self.set_stroke(
+                width=stroke_width,
+                background=stroke_background,
+            )
         else:
             self.set_stroke(
                 color=stroke_color,
                 width=stroke_width,
                 opacity=stroke_opacity,
                 recurse=recurse,
+                background=stroke_background,
             )
 
         if gloss is not None:
@@ -183,6 +188,7 @@ class VMobject(Mobject):
             "fill_rgba": self.data['fill_rgba'],
             "stroke_rgba": self.data['stroke_rgba'],
             "stroke_width": self.data['stroke_width'],
+            "stroke_background": self.draw_stroke_behind_fill,
             "gloss": self.get_gloss(),
             "shadow": self.get_shadow(),
         }
@@ -423,7 +429,10 @@ class VMobject(Mobject):
 
     def set_points_smoothly(self, points, true_smooth=False):
         self.set_points_as_corners(points)
-        self.make_smooth()
+        if true_smooth:
+            self.make_smooth()
+        else:
+            self.make_approximately_smooth()
         return self
 
     def change_anchor_mode(self, mode):

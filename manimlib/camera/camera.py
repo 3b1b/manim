@@ -316,17 +316,6 @@ class Camera(object):
         self.frame.set_height(frame_height)
         self.frame.set_width(frame_width)
 
-    def pixel_coords_to_space_coords(self, px, py, relative=False):
-        pw, ph = self.fbo.size
-        fw, fh = self.get_frame_shape()
-        fc = self.get_frame_center()
-        if relative:
-            return 2 * np.array([px / pw, py / ph, 0])
-        else:
-            # Only scale wrt one axis
-            scale = fh / ph
-            return fc + scale * np.array([(px - pw / 2), (py - ph / 2), 0])
-
     # Rendering
     def capture(self, *mobjects, **kwargs):
         self.refresh_perspective_uniforms()
@@ -423,6 +412,8 @@ class Camera(object):
             shader[name].value = tid
         for name, value in it.chain(shader_wrapper.uniforms.items(), self.perspective_uniforms.items()):
             try:
+                if isinstance(value, np.ndarray):
+                    value = tuple(value)
                 shader[name].value = value
             except KeyError:
                 pass
@@ -449,12 +440,13 @@ class Camera(object):
         }
 
     def init_textures(self):
-        self.path_to_texture_id = {}
+        self.n_textures = 0
+        self.path_to_texture = {}
 
     def get_texture_id(self, path):
-        if path not in self.path_to_texture_id:
-            # A way to increase tid's sequentially
-            tid = len(self.path_to_texture_id)
+        if path not in self.path_to_texture:
+            tid = self.n_textures
+            self.n_textures += 1
             im = Image.open(path).convert("RGBA")
             texture = self.ctx.texture(
                 size=im.size,
@@ -462,8 +454,14 @@ class Camera(object):
                 data=im.tobytes(),
             )
             texture.use(location=tid)
-            self.path_to_texture_id[path] = tid
-        return self.path_to_texture_id[path]
+            self.path_to_texture[path] = (tid, texture)
+        return self.path_to_texture[path][0]
+
+    def release_texture(self, path):
+        tid_and_texture = self.path_to_texture.pop(path, None)
+        if tid_and_texture:
+            tid_and_texture[1].release()
+        return self
 
 
 # Mostly just defined so old scenes don't break
