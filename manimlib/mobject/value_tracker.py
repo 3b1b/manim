@@ -28,7 +28,10 @@ class ValueTracker(Mobject):
         )
 
     def get_value(self):
-        return self.data["value"][0, :]
+        result = self.data["value"][0, :]
+        if len(result) == 1:
+            return result[0]
+        return result
 
     def set_value(self, value):
         self.data["value"][0, :] = value

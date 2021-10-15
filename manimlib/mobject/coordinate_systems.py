@@ -10,6 +10,7 @@ from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.number_line import NumberLine
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.utils.config_ops import digest_config
 from manimlib.utils.config_ops import merge_dicts_recursively
 from manimlib.utils.simple_functions import binary_search
 from manimlib.utils.space_ops import angle_of_vector
@@ -25,12 +26,17 @@ class CoordinateSystem():
     """
     CONFIG = {
         "dimension": 2,
-        "x_range": np.array([-8.0, 8.0, 1.0]),
-        "y_range": np.array([-4.0, 4.0, 1.0]),
-        "width": None,
-        "height": None,
+        "default_x_range": [-8.0, 8.0, 1.0],
+        "default_y_range": [-4.0, 4.0, 1.0],
+        "width": FRAME_WIDTH,
+        "height": FRAME_HEIGHT,
         "num_sampled_graph_points_per_tick": 20,
     }
+
+    def __init__(self, **kwargs):
+        digest_config(self, kwargs)
+        self.x_range = np.array(self.default_x_range)
+        self.y_range = np.array(self.default_y_range)
 
     def coords_to_point(self, *coords):
         raise Exception("Not implemented")
@@ -127,6 +133,7 @@ class CoordinateSystem():
             **kwargs
         )
         graph.underlying_function = function
+        graph.x_range = x_range
         return graph
 
     def get_parametric_curve(self, function, **kwargs):
@@ -282,7 +289,9 @@ class Axes(VGroup, CoordinateSystem):
                  x_range=None,
                  y_range=None,
                  **kwargs):
-        super().__init__(**kwargs)
+        CoordinateSystem.__init__(self, **kwargs)
+        VGroup.__init__(self, **kwargs)
+
         if x_range is not None:
             self.x_range[:len(x_range)] = x_range
         if y_range is not None:
@@ -441,7 +450,7 @@ class NumberPlane(Axes):
         return lines1, lines2
 
     def get_lines_parallel_to_axis(self, axis1, axis2):
-        freq = axis1.x_step
+        freq = axis2.x_step
         ratio = self.faded_line_ratio
         line = Line(axis1.get_start(), axis1.get_end())
         dense_freq = (1 + ratio)
@@ -501,15 +510,15 @@ class ComplexPlane(NumberPlane):
     def p2n(self, point):
         return self.point_to_number(point)
 
-    def get_default_coordinate_values(self):
+    def get_default_coordinate_values(self, skip_first=True):
         x_numbers = self.get_x_axis().get_tick_range()[1:]
         y_numbers = self.get_y_axis().get_tick_range()[1:]
         y_numbers = [complex(0, y) for y in y_numbers if y != 0]
         return [*x_numbers, *y_numbers]
 
-    def add_coordinate_labels(self, numbers=None, **kwargs):
+    def add_coordinate_labels(self, numbers=None, skip_first=True, **kwargs):
         if numbers is None:
-            numbers = self.get_default_coordinate_values()
+            numbers = self.get_default_coordinate_values(skip_first)
 
         self.coordinate_labels = VGroup()
         for number in numbers:
@@ -522,6 +531,15 @@ class ComplexPlane(NumberPlane):
                 axis = self.get_x_axis()
                 value = z.real
             number_mob = axis.get_number_mobject(value, **kwargs)
+            # For i and -i, remove the "1"
+            if z.imag == 1:
+                number_mob.remove(number_mob[0])
+            if z.imag == -1:
+                number_mob.remove(number_mob[1])
+                number_mob[0].next_to(
+                    number_mob[1], LEFT,
+                    buff=number_mob[0].get_width() / 4
+                )
             self.coordinate_labels.add(number_mob)
         self.add(self.coordinate_labels)
         return self

@@ -365,14 +365,17 @@ class Mobject(object):
         self.center()
         return self
 
+    def replicate(self, n):
+        return self.get_group_class()(
+            *(self.copy() for x in range(n))
+        )
+
     def get_grid(self, n_rows, n_cols, height=None, **kwargs):
         """
         Returns a new mobject containing multiple copies of this one
         arranged in a grid
         """
-        grid = self.get_group_class()(
-            *(self.copy() for n in range(n_rows * n_cols))
-        )
+        grid = self.replicate(n_rows * n_cols)
         grid.arrange_in_grid(n_rows, n_cols, **kwargs)
         if height is not None:
             grid.set_height(height)
@@ -408,8 +411,10 @@ class Mobject(object):
         for key in self.data:
             copy_mobject.data[key] = self.data[key].copy()
 
-        # TODO, are uniforms ever numpy arrays?
         copy_mobject.uniforms = dict(self.uniforms)
+        for key in self.uniforms:
+            if isinstance(self.uniforms[key], np.ndarray):
+                copy_mobject.uniforms[key] = self.uniforms[key].copy()
 
         copy_mobject.submobjects = []
         copy_mobject.add(*[sm.copy() for sm in self.submobjects])
@@ -572,14 +577,14 @@ class Mobject(object):
         respect to that point.
         """
         scale_factor = max(scale_factor, min_scale_factor)
-        for mob in self.get_family():
-            mob._handle_scale_side_effects(scale_factor)
         self.apply_points_function(
             lambda points: scale_factor * points,
             about_point=about_point,
             about_edge=about_edge,
             works_on_bounding_box=True,
         )
+        for mob in self.get_family():
+            mob._handle_scale_side_effects(scale_factor)
         return self
 
     def _handle_scale_side_effects(self, scale_factor):
@@ -773,6 +778,21 @@ class Mobject(object):
     def set_depth(self, depth, stretch=False, **kwargs):
         return self.rescale_to_fit(depth, 2, stretch=stretch, **kwargs)
 
+    def set_max_width(self, max_width, **kwargs):
+        if self.get_width() > max_width:
+            self.set_width(max_width, **kwargs)
+        return self
+
+    def set_max_height(self, max_height, **kwargs):
+        if self.get_height() > max_height:
+            self.set_height(max_height, **kwargs)
+        return self
+
+    def set_max_depth(self, max_depth, **kwargs):
+        if self.get_depth() > max_depth:
+            self.set_depth(max_depth, **kwargs)
+        return self
+
     def set_coord(self, value, dim, direction=ORIGIN):
         curr = self.get_coord(dim, direction)
         shift_vect = np.zeros(self.dim)
@@ -844,8 +864,8 @@ class Mobject(object):
             angle_of_vector(target_vect) - angle_of_vector(curr_vect),
         )
         self.rotate(
-            np.arctan2(curr_vect[2], get_norm(curr_vect[:2])) - np.arctan2(target_vect[2], get_norm(target_vect[:2])), 
-            axis = np.array([-target_vect[1], target_vect[0], 0]),
+            np.arctan2(curr_vect[2], get_norm(curr_vect[:2])) - np.arctan2(target_vect[2], get_norm(target_vect[:2])),
+            axis=np.array([-target_vect[1], target_vect[0], 0]),
         )
         self.shift(start - self.get_start())
         return self
@@ -1073,14 +1093,16 @@ class Mobject(object):
 
     def get_start(self):
         self.throw_error_if_no_points()
-        return np.array(self.get_points()[0])
+        return self.get_points()[0].copy()
 
     def get_end(self):
         self.throw_error_if_no_points()
-        return np.array(self.get_points()[-1])
+        return self.get_points()[-1].copy()
 
     def get_start_and_end(self):
-        return self.get_start(), self.get_end()
+        self.throw_error_if_no_points()
+        points = self.get_points()
+        return (points[0].copy(), points[-1].copy())
 
     def point_from_proportion(self, alpha):
         points = self.get_points()

@@ -22,10 +22,13 @@ class ImageMobject(Mobject):
     }
 
     def __init__(self, filename, **kwargs):
-        path = get_full_raster_image_path(filename)
+        self.set_image_path(get_full_raster_image_path(filename))
+        super().__init__(**kwargs)
+
+    def set_image_path(self, path):
+        self.path = path
         self.image = Image.open(path)
         self.texture_paths = {"Texture": path}
-        super().__init__(**kwargs)
 
     def init_data(self):
         self.data = {
