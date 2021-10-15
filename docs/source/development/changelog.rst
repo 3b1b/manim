@@ -4,7 +4,28 @@ Changelog
 Unreleased
 ----------
 
-No changes
+Fixed bugs
+^^^^^^^^^^
+
+- `#1592 <https://github.com/3b1b/manim/pull/1592>`__: Fixed ``put_start_and_end_on`` in 3D
+- `#1601 <https://github.com/3b1b/manim/pull/1601>`__: Fixed ``DecimalNumber``'s scaling issue
+
+New Features 
+^^^^^^^^^^^^
+
+- `#1598 <https://github.com/3b1b/manim/pull/1598>`__: Supported the elliptical arc command ``A`` for ``SVGMobject``
+- `#1607 <https://github.com/3b1b/manim/pull/1607>`__: Added ``FlashyFadeIn``
+- `#1607 <https://github.com/3b1b/manim/pull/1607>`__: Save triangulation 
+- `#1625 <https://github.com/3b1b/manim/pull/1625>`__: Added new ``Code`` mobject
+- `bd356da <https://github.com/3b1b/manim/commit/bd356daa99bfe3134fcb192a5f72e0d76d853801>`__: Added ``VCube``
+- `6d72893 <https://github.com/3b1b/manim/commit/6d7289338234acc6658b9377c0f0084aa1fa7119>`__: Supported ``ValueTracker`` to track vectors
+
+Refactor
+^^^^^^^^
+
+- `#1601 <https://github.com/3b1b/manim/pull/1601>`__: Change back to simpler ``Mobject.scale`` implementation
+- `b667db2 <https://github.com/3b1b/manim/commit/b667db2d311a11cbbca2a6ff511d2c3cf1675486>`__: Simplify ``Square``
+- `40290ad <https://github.com/3b1b/manim/commit/40290ada8343f10901fa9151cbdf84689667786d>`__: Removed unused parameter ``triangulation_locked``
 
 v1.1.0
 -------
