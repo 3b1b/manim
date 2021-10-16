@@ -767,7 +767,7 @@ class Mobject(object):
         return self.rescale_to_fit(height, 1, stretch=True, **kwargs)
 
     def stretch_to_fit_depth(self, depth, **kwargs):
-        return self.rescale_to_fit(depth, 1, stretch=True, **kwargs)
+        return self.rescale_to_fit(depth, 2, stretch=True, **kwargs)
 
     def set_width(self, width, stretch=False, **kwargs):
         return self.rescale_to_fit(width, 0, stretch=stretch, **kwargs)
