@@ -46,6 +46,7 @@ def init_customization():
         }
     }
 
+    print("Initialize configuration")
     scope = input(" Please select the scope of the configuration [global/local]: ")
     if scope == "global":
         from manimlib.config import get_manim_dir

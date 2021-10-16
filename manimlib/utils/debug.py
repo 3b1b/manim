@@ -8,7 +8,7 @@ from manimlib.logger import log
 
 def print_family(mobject, n_tabs=0):
     """For debugging purposes"""
-    log.debug("\t" * n_tabs + str(mobject) + " " + str(id(mobject)))
+    log.debug(f"{'\t' * n_tabs}{mobject} {id(mobject)}")
     for submob in mobject.submobjects:
         print_family(submob, n_tabs + 1)
 
