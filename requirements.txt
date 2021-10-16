@@ -12,6 +12,7 @@ moderngl_window
 pydub
 pygments
 pyyaml
+rich
 screeninfo
 pyreadline; sys_platform == 'win32'
 validators
