@@ -220,7 +220,7 @@ def get_configuration(args):
     global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
 
     if not (os.path.exists(global_defaults_file) or os.path.exists(__config_file__)):
-        log.info("There is no configuration file detected.")
+        log.info("There is no configuration file detected. Switch to the config file initializer:")
         init_customization()
 
     elif not os.path.exists(__config_file__):
