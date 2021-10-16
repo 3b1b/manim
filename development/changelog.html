@@ -9,8 +9,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/custom.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?45ac2ceea1dea116bfbf0b5a">
-    <link rel="stylesheet" href="../_static/pygments.css?45ac2ceea1dea116bfbf0b5a">
+    <link rel="stylesheet" href="../_static/styles/default.css?9464e582eb66eb6ab2a760a7">
+    <link rel="stylesheet" href="../_static/pygments.css?9464e582eb66eb6ab2a760a7">
     
 <style>
   :root {
@@ -27,7 +27,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?45ac2ceea1dea116bfbf0b5a"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?9464e582eb66eb6ab2a760a7"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -130,6 +130,16 @@
 <ul class="simple">
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1592">#1592</a>: Fixed <code class="docutils literal notranslate"><span class="pre">put_start_and_end_on</span></code> in 3D</p></li>
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1601">#1601</a>: Fixed <code class="docutils literal notranslate"><span class="pre">DecimalNumber</span></code>’s scaling issue</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/56df15453f3e3837ed731581e52a1d76d5692077">56df154</a>: Fixed bug with common range array used for all coordinate systems</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/86458942550c639a241267d04d57d0e909fcf252">8645894</a>: Fixed <code class="docutils literal notranslate"><span class="pre">CoordinateSystem</span></code> init bug</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/0dc096bf576ea900b351e6f4a80c13a77676f89b">0dc096b</a>: Fixed bug for single-valued <code class="docutils literal notranslate"><span class="pre">ValueTracker</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/54ad3550ef0c0e2fda46b26700a43fa8cde0973f">54ad355</a>: Fixed bug with SVG rectangles</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/d45ea28dc1d92ab9c639a047c00c151382eb0131">d45ea28</a>: Fixed <code class="docutils literal notranslate"><span class="pre">DotCloud.set_radii</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/b543cc0e32d45399ee81638b6d4fb631437664cd">b543cc0</a>: Temporarily fixed bug for <code class="docutils literal notranslate"><span class="pre">PMobject</span></code> array resizing</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/5f878a2c1aa531b7682bd048468c72d2835c7fe5">5f878a2</a>: Fixed <code class="docutils literal notranslate"><span class="pre">match_style</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/719c81d72b00dcf49f148d7c146774b22e0fe348">719c81d</a>: Fixed negative <code class="docutils literal notranslate"><span class="pre">path_arc</span></code> case</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/c726eb7a180b669ee81a18555112de26a8aff6d6">c726eb7</a>: Fixed bug with <code class="docutils literal notranslate"><span class="pre">CoordinateSystem.get_lines_parallel_to_axis</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/7732d2f0ee10449c5731499396d4911c03e89648">7732d2f</a>: Fixed <code class="docutils literal notranslate"><span class="pre">ComplexPlane</span></code> -i display bug</p></li>
 </ul>
 </section>
 <section id="new-features">
@@ -139,16 +149,38 @@
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1607">#1607</a>: Added <code class="docutils literal notranslate"><span class="pre">FlashyFadeIn</span></code></p></li>
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1607">#1607</a>: Save triangulation</p></li>
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1625">#1625</a>: Added new <code class="docutils literal notranslate"><span class="pre">Code</span></code> mobject</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1637">#1637</a>: Add warnings and use rich to display log</p></li>
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/bd356daa99bfe3134fcb192a5f72e0d76d853801">bd356da</a>: Added <code class="docutils literal notranslate"><span class="pre">VCube</span></code></p></li>
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/6d7289338234acc6658b9377c0f0084aa1fa7119">6d72893</a>: Supported <code class="docutils literal notranslate"><span class="pre">ValueTracker</span></code> to track vectors</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/3bb8f3f0422a5dfba0da6ef122dc0c01f31aff03">3bb8f3f</a>: Added <code class="docutils literal notranslate"><span class="pre">set_max_width</span></code>, <code class="docutils literal notranslate"><span class="pre">set_max_height</span></code>, <code class="docutils literal notranslate"><span class="pre">set_max_depth</span></code> to <code class="docutils literal notranslate"><span class="pre">Mobject</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/a35dd5a3cbdeffa3891d5aa5f80287c18dba2f7f">a35dd5a</a>: Added <code class="docutils literal notranslate"><span class="pre">TracgTail</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/acba13f4991b78d54c0bf93cce7ca3b351c25476">acba13f</a>: Added <code class="docutils literal notranslate"><span class="pre">Scene.point_to_mobject</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/f84b8a66fe9e8b3872e5c716c5c240c14bb555ee">f84b8a6</a>: Added poly_fractal shader</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/b24ba19dec48ba4e38acbde8eec6d3a308b6ab83">b24ba19</a>: Added kwargs to <code class="docutils literal notranslate"><span class="pre">TipableVMobject.set_length</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/17c2772b84abf6392a4170030e36e981de4737d0">17c2772</a>: Added <code class="docutils literal notranslate"><span class="pre">Mobject.replicate</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/33fa76dfac36e70bb5fad69dc6a336800c6dacce">33fa76d</a>: Added mandelbrot_fractal shader</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/f22a341e8411eae9331d4dd976b5e15bc6db08d9">f22a341</a>: Saved state before each embed</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/e10a752c0001e8981038faa03be4de2603d3565f">e10a752</a>: Allowed releasing of Textures</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/14fbed76da4b493191136caebb8a955e2d41265b">14fbed7</a>: Consolidated and renamed newton_fractal shader</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/6cdbe0d67a11ab14a6d84840a114ae6d3af10168">6cdbe0d</a>: Hade <code class="docutils literal notranslate"><span class="pre">ImageMoject</span></code> remember the filepath to the Image</p></li>
 </ul>
 </section>
 <section id="refactor">
 <h3>Refactor<a class="headerlink" href="#refactor" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1601">#1601</a>: Change back to simpler <code class="docutils literal notranslate"><span class="pre">Mobject.scale</span></code> implementation</p></li>
-<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/b667db2d311a11cbbca2a6ff511d2c3cf1675486">b667db2</a>: Simplify <code class="docutils literal notranslate"><span class="pre">Square</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1601">#1601</a>: Changed back to simpler <code class="docutils literal notranslate"><span class="pre">Mobject.scale</span></code> implementation</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/b667db2d311a11cbbca2a6ff511d2c3cf1675486">b667db2</a>: Simplified <code class="docutils literal notranslate"><span class="pre">Square</span></code></p></li>
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/40290ada8343f10901fa9151cbdf84689667786d">40290ad</a>: Removed unused parameter <code class="docutils literal notranslate"><span class="pre">triangulation_locked</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/8647a6429dd0c52cba14e971b8c09194a93cfd87">8647a64</a>: Reimplemented <code class="docutils literal notranslate"><span class="pre">Arrow</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/d8378d8157040cd797cc47ef9576beffd8607863">d8378d8</a>: Used <code class="docutils literal notranslate"><span class="pre">make_approximately_smooth</span></code> for <code class="docutils literal notranslate"><span class="pre">set_points_smoothly</span></code> by default</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/7b4199c674e291f1b84678828b63b6bd4fcc6b17">7b4199c</a>: Refactored to call <code class="docutils literal notranslate"><span class="pre">_handle_scale_side_effects</span></code> after scaling takes place</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/7356a36fa70a8279b43ae74e247cbd43b2bfd411">7356a36</a>: Refactored to only call <code class="docutils literal notranslate"><span class="pre">throw_error_if_no_points</span></code> once for <code class="docutils literal notranslate"><span class="pre">get_start_and_end</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/0787c4f36270a6560b50ce3e07b30b0ec5f2ba3e">0787c4f</a>: Made sure framerate is 30 for previewed scenes</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/c635f19f2a33e916509e53ded46f55e2afa8f5f2">c635f19</a>: Pushed <code class="docutils literal notranslate"><span class="pre">pixel_coords_to_space_coords</span></code> to <code class="docutils literal notranslate"><span class="pre">Window</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/d5a88d0fa457cfcf4cb9db417a098c37c95c7051">d5a88d0</a>: Refactored to pass tuples and not arrays to uniforms</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/9483f26a3b056de0e34f27acabd1a946f1adbdf9">9483f26</a>: Refactored to copy uniform arrays in <code class="docutils literal notranslate"><span class="pre">Mobject.copy</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/ed1fc4d5f94467d602a568466281ca2d0368b506">ed1fc4d</a>: Added <code class="docutils literal notranslate"><span class="pre">bounding_box</span></code> as exceptional key to point_cloud mobject</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/commit/329d2c6eaec3d88bfb754b555575a3ea7c97a7e0">329d2c6</a>: Made sure stroke width is always a float</p></li>
 </ul>
 </section>
 </section>
