@@ -1,6 +1,15 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+New Features
+^^^^^^^^^^^^
+
+- `10f850d <https://github.com/3b1b/manim/commit/10f850d0d9f971931cc85d44befe67dc842af6d>`__: Added CLI flag ``--log-level`` to specify log level
+
+
 v1.2.0
 ------
 
