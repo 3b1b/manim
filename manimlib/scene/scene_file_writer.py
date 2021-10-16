@@ -301,7 +301,7 @@ class SceneFileWriter(object):
         self.print_file_ready_message(file_path)
 
     def print_file_ready_message(self, file_path):
-        log.info(f"\nFile ready at {file_path}\n")
+        log.info(f"File ready at {file_path}")
 
     def should_open_file(self):
         return any([
