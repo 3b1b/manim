@@ -142,6 +142,10 @@ def parse_cli():
             action="store_true",
             help="Display the version of manimgl"
         )
+        parser.add_argument(
+            "--log-level",
+            help="Level of messages to Display, can be DEBUG / INFO / WARNING / ERROR / CRITICAL"
+        )
         args = parser.parse_args()
         return args
     except argparse.ArgumentError as err:

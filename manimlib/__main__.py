@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import manimlib.config
+import manimlib.logger
 import manimlib.extract_scene
 import manimlib.utils.init_config
 from manimlib import __version__
@@ -11,6 +12,8 @@ def main():
     args = manimlib.config.parse_cli()
     if args.version and args.file == None:
         return
+    if args.log_level:
+        manimlib.logger.log.setLevel(args.log_level)
 
     if args.config:
         manimlib.utils.init_config.init_customization()
