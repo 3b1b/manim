@@ -7,10 +7,10 @@ from manimlib import __version__
 
 def main():
     args = manimlib.config.parse_cli()
-    
-    print(f"ManimGL \033[32mv{__version__}\033[0m")
     if args.version and args.file == None:
         return
+
+    print(f"ManimGL \033[32mv{__version__}\033[0m")
 
     if args.config:
         manimlib.utils.init_config.init_customization()
@@ -21,5 +21,5 @@ def main():
         for scene in scenes:
             scene.run()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
