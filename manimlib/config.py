@@ -142,6 +142,10 @@ def parse_cli():
             action="store_true",
             help="Display the version of manimgl"
         )
+        parser.add_argument(
+            "--log-level",
+            help="Level of messages to Display, can be DEBUG / INFO / WARNING / ERROR / CRITICAL"
+        )
         args = parser.parse_args()
         return args
     except argparse.ArgumentError as err:
@@ -193,9 +197,9 @@ def get_custom_config():
 
 def check_temporary_storage(config):
     if config["directories"]["temporary_storage"] == "" and sys.platform == "win32":
-        log.warning("You may be using Windows platform and have not specified the `temporary\
-_storage` path, which may cause OSError. So it is recommended that you specify the `temporary\
-_storage` in the config file (.yml)")
+        log.warning("You may be using Windows platform and have not specified the path of"
+            " `temporary_storage`, which may cause OSError. So it is recommended"
+            " to specify the `temporary_storage` in the config file (.yml)")
 
 
 def get_configuration(args):
@@ -220,13 +224,13 @@ def get_configuration(args):
     global_defaults_file = os.path.join(get_manim_dir(), "manimlib", "default_config.yml")
 
     if not (os.path.exists(global_defaults_file) or os.path.exists(__config_file__)):
-        log.info("There is no configuration file detected. Initial configuration:\n")
+        log.info("There is no configuration file detected. Switch to the config file initializer:")
         init_customization()
 
     elif not os.path.exists(__config_file__):
         log.info(f"Using the default configuration file, which you can modify in `{global_defaults_file}`")
-        log.info(f"If you want to create a local configuration file, you can create a file named \
-`{__config_file__}`, or run `manimgl --config`")
+        log.info("If you want to create a local configuration file, you can create a file named"
+            f" `{__config_file__}`, or run `manimgl --config`")
 
     custom_config = get_custom_config()
     check_temporary_storage(custom_config)

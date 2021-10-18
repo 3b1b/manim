@@ -69,9 +69,9 @@ def interpolate(start, end, alpha):
     try:
         return (1 - alpha) * start + alpha * end
     except TypeError:
-        log.debug(type(start), start.dtype)
-        log.debug(type(end), start.dtype)
-        log.debug(alpha)
+        log.debug(f"`start` parameter with type `{type(start)}` and dtype `{start.dtype}`")
+        log.debug(f"`end` parameter with type `{type(end)}` and dtype `{end.dtype}`")
+        log.debug(f"`alpha` parameter with value `{alpha}`")
         import sys
         sys.exit(2)
 

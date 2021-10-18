@@ -67,7 +67,7 @@ class CameraFrame(Mobject):
         added_rot_T = rotation_matrix_transpose(angle, axis)
         new_rot_T = np.dot(curr_rot_T, added_rot_T)
         Fz = new_rot_T[2]
-        phi = np.arccos(Fz[2])
+        phi = np.arccos(clip(Fz[2], -1, 1))
         theta = angle_of_vector(Fz[:2]) + PI / 2
         partial_rot_T = np.dot(
             rotation_matrix_transpose(phi, RIGHT),
