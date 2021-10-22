@@ -76,7 +76,7 @@ class VMobject(Mobject):
         super().__init__(**kwargs)
         self.refresh_unit_normal()
         
-    def __add__(self, other : 'VMobject') -> VGroup:
+    def __add__(self, other : 'VMobject') -> 'VGroup':
         assert(isinstance(other, VMobject))
         return VGroup(self, other)
 
