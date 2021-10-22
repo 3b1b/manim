@@ -75,6 +75,10 @@ class VMobject(Mobject):
         self.triangulation = np.zeros(0, dtype='i4')
         super().__init__(**kwargs)
         self.refresh_unit_normal()
+        
+    def __add__(self, other : 'VMobject') -> VGroup:
+        assert(isinstance(other, VMobject))
+        return VGroup(self, other)
 
     def get_group_class(self):
         return VGroup
