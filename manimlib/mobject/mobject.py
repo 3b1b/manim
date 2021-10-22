@@ -87,8 +87,9 @@ class Mobject(object):
         return Group(self, other)
 
     def __mul__(self, other : 'int'):
+        from manimlib.mobject.types.vectorized_mobject import VMobject, VGroup
         if isinstance(self, VMobject):
-            return VGroup(*[mob.copy() for mob in range(other)])
+            return VGroup(*[self.copy() for i in range(other)])
         return Group(*[mob.copy() for mob in range(other)])
 
     def init_data(self):
