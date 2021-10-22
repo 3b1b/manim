@@ -993,6 +993,16 @@ class VGroup(VMobject):
             raise Exception("All submobjects must be of type VMobject")
         super().__init__(**kwargs)
         self.add(*vmobjects)
+    
+    def __add__(self:'VGroup', other : 'VMobject' or 'VGroup'):
+        assert(isinstance(other, VMobject))
+        if isinstance(other, VGroup):
+            return VGroup(*self, *other)
+        if isinstance(other, Mobject):
+            return Group(*self) + other
+        if other in self:
+            return self.add(other.copy())
+        return self.add(other)
 
 
 class VectorizedPoint(Point, VMobject):
