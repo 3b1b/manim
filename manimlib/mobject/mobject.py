@@ -1596,6 +1596,15 @@ class Group(Mobject):
             raise Exception("All submobjects must be of type Mobject")
         Mobject.__init__(self, **kwargs)
         self.add(*mobjects)
+    def __add__(self, other : 'Mobject' or 'Group'):
+        assert(isinstance(other, Mobject))
+        if other in self:
+            return Group(*self, other.copy())
+        if isinstance(other, (Group, VGroup)):
+            if all([isinstance(i, VMobject) for i in Group(*self, *other)]):
+                return VGroup(*self, *other)
+            return Group(*self, *other)
+        return Group(*self, other)
 
 
 class Point(Mobject):
