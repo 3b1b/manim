@@ -82,6 +82,15 @@ class Mobject(object):
     def __str__(self):
         return self.__class__.__name__
 
+    def __add__(self, other : 'Mobject'):
+        assert(isinstance(other, Mobject))
+        return Group(self, other)
+
+    def __mul__(self, other : 'int'):
+        if isinstance(self, VMobject):
+            return VGroup(*[mob.copy() for mob in range(other)])
+        return Group(*[mob.copy() for mob in range(other)])
+
     def init_data(self):
         self.data = {
             "points": np.zeros((0, 3)),
