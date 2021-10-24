@@ -445,6 +445,8 @@ class Camera(object):
 
     def get_texture_id(self, path):
         if path not in self.path_to_texture:
+            if self.n_textures == 15:  # I have no clue why this is needed
+                self.n_textures += 1
             tid = self.n_textures
             self.n_textures += 1
             im = Image.open(path).convert("RGBA")
