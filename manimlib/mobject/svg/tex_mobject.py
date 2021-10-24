@@ -129,15 +129,18 @@ class SingleStringTex(VMobject):
 
     def balance_braces(self, tex):
         """
-        Makes Tex resiliant to unmatched { at start
+        Makes Tex resiliant to unmatched braces
         """
-        num_lefts, num_rights = [tex.count(char) for char in "{}"]
-        while num_rights > num_lefts:
-            tex = "{" + tex
-            num_lefts += 1
-        while num_lefts > num_rights:
-            tex = tex + "}"
-            num_rights += 1
+        num_unclosed_brackets = 0
+        for char in tex:
+            if char == "{":
+                num_unclosed_brackets += 1
+            elif char == "}":
+                if num_unclosed_brackets == 0:
+                    tex = "{" + tex
+                else:
+                    num_unclosed_brackets -= 1
+        tex += num_unclosed_brackets * "}"
         return tex
 
     def get_tex(self):
