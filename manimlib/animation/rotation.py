@@ -1,52 +1,45 @@
 from manimlib.animation.animation import Animation
-from manimlib.animation.transform import Transform
 from manimlib.constants import OUT
 from manimlib.constants import PI
 from manimlib.constants import TAU
+from manimlib.constants import ORIGIN
 from manimlib.utils.rate_functions import linear
+from manimlib.utils.rate_functions import smooth
 
 
 class Rotating(Animation):
     CONFIG = {
-        "axis": OUT,
-        "radians": TAU,
+        # "axis": OUT,
+        # "radians": TAU,
         "run_time": 5,
         "rate_func": linear,
         "about_point": None,
         "about_edge": None,
+        "suspend_mobject_updating": False,
     }
 
-    def interpolate_mobject(self, alpha):
-        self.mobject.become(self.starting_mobject)
-        self.mobject.rotate(
-            alpha * self.radians,
-            axis=self.axis,
-            about_point=self.about_point,
-            about_edge=self.about_edge,
-        )
-
-
-class Rotate(Transform):
-    CONFIG = {
-        "about_point": None,
-        "about_edge": None,
-    }
-
-    def __init__(self, mobject, angle=PI, axis=OUT, **kwargs):
-        if "path_arc" not in kwargs:
-            kwargs["path_arc"] = angle
-        if "path_arc_axis" not in kwargs:
-            kwargs["path_arc_axis"] = axis
+    def __init__(self, mobject, angle=TAU, axis=OUT, **kwargs):
         self.angle = angle
         self.axis = axis
         super().__init__(mobject, **kwargs)
 
-    def create_target(self):
-        target = self.mobject.copy()
-        target.rotate(
-            self.angle,
+    def interpolate_mobject(self, alpha):
+        for sm1, sm2 in self.get_all_families_zipped():
+            sm1.set_points(sm2.get_points())
+        self.mobject.rotate(
+            alpha * self.angle,
             axis=self.axis,
             about_point=self.about_point,
             about_edge=self.about_edge,
         )
-        return target
+
+
+class Rotate(Rotating):
+    CONFIG = {
+        "run_time": 1,
+        "rate_func": smooth,
+        "about_edge": ORIGIN,
+    }
+
+    def __init__(self, mobject, angle=PI, axis=OUT, **kwargs):
+        super().__init__(mobject, angle, axis, **kwargs)

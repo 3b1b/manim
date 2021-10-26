@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import validators
 
 
 def add_extension_if_not_present(file_name, extension):
@@ -16,16 +17,34 @@ def guarantee_existence(path):
     return os.path.abspath(path)
 
 
-def seek_full_path_from_defaults(file_name, default_dir, extensions):
-    possible_paths = [file_name]
-    possible_paths += [
-        os.path.join(default_dir, file_name + extension)
-        for extension in ["", *extensions]
-    ]
+def find_file(file_name, directories=None, extensions=None):
+    # Check if this is a file online first, and if so, download
+    # it to a temporary directory
+    if validators.url(file_name):
+        import urllib.request
+        from manimlib.utils.directories import get_downloads_dir
+        stem, name = os.path.split(file_name)
+        folder = get_downloads_dir()
+        path = os.path.join(folder, name)
+        urllib.request.urlretrieve(file_name, path)
+        return path
+
+    # Check if what was passed in is already a valid path to a file
+    if os.path.exists(file_name):
+        return file_name
+
+    # Otherwise look in local file system
+    directories = directories or [""]
+    extensions = extensions or [""]
+    possible_paths = (
+        os.path.join(directory, file_name + extension)
+        for directory in directories
+        for extension in extensions
+    )
     for path in possible_paths:
         if os.path.exists(path):
             return path
-    raise IOError("File {} not Found".format(file_name))
+    raise IOError(f"{file_name} not Found")
 
 
 def get_sorted_integer_files(directory,

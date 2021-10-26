@@ -3,9 +3,10 @@ import random
 from colour import Color
 import numpy as np
 
-from manimlib.constants import PALETTE
 from manimlib.constants import WHITE
+from manimlib.constants import COLORMAP_3B1B
 from manimlib.utils.bezier import interpolate
+from manimlib.utils.iterables import resize_with_interpolation
 from manimlib.utils.simple_functions import clip_in_place
 from manimlib.utils.space_ops import normalize
 
@@ -26,7 +27,7 @@ def color_to_rgba(color, alpha=1):
 def rgb_to_color(rgb):
     try:
         return Color(rgb=rgb)
-    except:
+    except ValueError:
         return Color(WHITE)
 
 
@@ -35,13 +36,17 @@ def rgba_to_color(rgba):
 
 
 def rgb_to_hex(rgb):
-    return "#" + "".join('%02x' % int(255 * x) for x in rgb)
+    return "#" + "".join(
+        hex(int_x // 16)[2] + hex(int_x % 16)[2]
+        for x in rgb
+        for int_x in [int(255 * x)]
+    )
 
 
 def hex_to_rgb(hex_code):
     hex_part = hex_code[1:]
     if len(hex_part) == 3:
-        "".join([2 * c for c in hex_part])
+        hex_part = "".join([2 * c for c in hex_part])
     return np.array([
         int(hex_part[i:i + 2], 16) / 255
         for i in range(0, 6, 2)
@@ -58,7 +63,7 @@ def color_to_int_rgb(color):
 
 def color_to_int_rgba(color, opacity=1.0):
     alpha = int(255 * opacity)
-    return np.append(color_to_int_rgb(color), alpha)
+    return np.array([*color_to_int_rgb(color), alpha])
 
 
 def color_gradient(reference_colors, length_of_output):
@@ -84,8 +89,7 @@ def interpolate_color(color1, color2, alpha):
 
 def average_color(*colors):
     rgbs = np.array(list(map(color_to_rgb, colors)))
-    mean_rgb = np.apply_along_axis(np.mean, 0, rgbs)
-    return rgb_to_color(mean_rgb)
+    return rgb_to_color(rgbs.mean(0))
 
 
 def random_bright_color():
@@ -98,7 +102,7 @@ def random_bright_color():
 
 
 def random_color():
-    return random.choice(PALETTE)
+    return Color(rgb=(random.random() for i in range(3)))
 
 
 def get_shaded_rgb(rgb, point, unit_normal_vect, light_source):
@@ -109,3 +113,25 @@ def get_shaded_rgb(rgb, point, unit_normal_vect, light_source):
     result = rgb + factor
     clip_in_place(rgb + factor, 0, 1)
     return result
+
+
+def get_colormap_list(map_name="viridis", n_colors=9):
+    """
+    Options for map_name:
+    3b1b_colormap
+    magma
+    inferno
+    plasma
+    viridis
+    cividis
+    twilight
+    twilight_shifted
+    turbo
+    """
+    from matplotlib.cm import get_cmap
+
+    if map_name == "3b1b_colormap":
+        rgbs = [color_to_rgb(color) for color in COLORMAP_3B1B]
+    else:
+        rgbs = get_cmap(map_name).colors  # Make more general?
+    return resize_with_interpolation(np.array(rgbs), n_colors)

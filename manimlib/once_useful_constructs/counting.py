@@ -6,10 +6,11 @@ from manimlib.constants import *
 from manimlib.mobject.geometry import Arrow
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.geometry import Dot
-from manimlib.mobject.svg.tex_mobject import TexMobject
+from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.scene.scene import Scene
 
+import itertools as it
 
 class CountingScene(Scene):
     CONFIG = {
@@ -26,7 +27,7 @@ class CountingScene(Scene):
         self.dots = VGroup()
         self.number = 0
         self.max_place = 0
-        self.number_mob = VGroup(TexMobject(str(self.number)))
+        self.number_mob = VGroup(Tex(str(self.number)))
         self.number_mob.scale(self.num_scale_factor)
         self.number_mob.shift(self.num_start_location)
 
@@ -159,7 +160,7 @@ class CountingScene(Scene):
         place = 0
         max_place = self.max_place
         while place < max_place:
-            digit = TexMobject(str(self.get_place_num(num, place)))
+            digit = Tex(str(self.get_place_num(num, place)))
             if place >= len(self.digit_place_colors):
                 self.digit_place_colors += self.digit_place_colors
             digit.set_color(self.digit_place_colors[place])
@@ -219,7 +220,7 @@ class CountInTernary(PowerCounter):
     def construct(self):
         self.count(27)
 
-    # def get_template_configuration(self):
+    # def get_template_configuration(self, place):
     #     return [ORIGIN, UP]
 
 
@@ -233,7 +234,7 @@ class CountInBinaryTo256(PowerCounter):
     def construct(self):
         self.count(128, 0.3)
 
-    def get_template_configuration(self):
+    def get_template_configuration(self, place):
         return [ORIGIN, UP]
 
 

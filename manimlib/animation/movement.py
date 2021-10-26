@@ -20,7 +20,7 @@ class Homotopy(Animation):
         return lambda p: self.homotopy(*p, t)
 
     def interpolate_submobject(self, submob, start, alpha):
-        submob.points = start.points
+        submob.match_points(start)
         submob.apply_function(
             self.function_at_time_t(alpha),
             **self.apply_function_kwargs
@@ -28,20 +28,22 @@ class Homotopy(Animation):
 
 
 class SmoothedVectorizedHomotopy(Homotopy):
-    def interpolate_submobject(self, submob, start, alpha):
-        Homotopy.interpolate_submobject(self, submob, start, alpha)
-        submob.make_smooth()
+    CONFIG = {
+        "apply_function_kwargs": {"make_smooth": True},
+    }
 
 
 class ComplexHomotopy(Homotopy):
     def __init__(self, complex_homotopy, mobject, **kwargs):
         """
-        Complex Hootopy a function Cx[0, 1] to C
+        Given a function form (z, t) -> w, where z and w
+        are complex numbers and t is time, this animates
+        the state over time
         """
         def homotopy(x, y, z, t):
             c = complex_homotopy(complex(x, y), t)
             return (c.real, c.imag, z)
-        Homotopy.__init__(self, homotopy, mobject, **kwargs)
+        super().__init__(homotopy, mobject, **kwargs)
 
 
 class PhaseFlow(Animation):

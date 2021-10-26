@@ -193,10 +193,10 @@ class DiscreteGraphScene(Scene):
         Scene.__init__(self, *args, **kwargs)
 
     def construct(self):
-        self.points = list(map(np.array, self.graph.vertices))
-        self.vertices = self.dots = [Dot(p) for p in self.points]
+        self._points = list(map(np.array, self.graph.vertices))
+        self.vertices = self.dots = [Dot(p) for p in self._points]
         self.edges = self.lines = [
-            Line(self.points[i], self.points[j])
+            Line(self._points[i], self._points[j])
             for i, j in self.graph.edges
         ]
         self.add(*self.dots + self.edges)
@@ -212,8 +212,8 @@ class DiscreteGraphScene(Scene):
     def region_from_cycle(self, cycle):
         point_pairs = [
             [
-                self.points[cycle[i]],
-                self.points[cycle[(i + 1) % len(cycle)]]
+                self._points[cycle[i]],
+                self._points[cycle[(i + 1) % len(cycle)]]
             ]
             for i in range(len(cycle))
         ]
@@ -236,7 +236,7 @@ class DiscreteGraphScene(Scene):
         start = Mobject(*self.vertices)
         end = Mobject(*[
             Dot(point, radius=3 * Dot.DEFAULT_RADIUS, color="lightgreen")
-            for point in self.points
+            for point in self._points
         ])
         self.play(Transform(
             start, end, rate_func=there_and_back,
@@ -256,7 +256,7 @@ class DiscreteGraphScene(Scene):
             for vertex in self.vertices
         ] + [
             ApplyMethod(
-                edge.scale_in_place,
+                edge.scale,
                 (edge.get_length() - diameter) / edge.get_length()
             )
             for edge in self.edges
@@ -281,7 +281,7 @@ class DiscreteGraphScene(Scene):
         next_in_cycle = it.cycle(cycle)
         next(next_in_cycle)  # jump one ahead
         self.traced_cycle = Mobject(*[
-            Line(self.points[i], self.points[j]).set_color(color)
+            Line(self._points[i], self._points[j]).set_color(color)
             for i, j in zip(cycle, next_in_cycle)
         ])
         self.play(
@@ -306,8 +306,8 @@ class DiscreteGraphScene(Scene):
                     to_check.add(pair[1])
         self.spanning_tree = Mobject(*[
             Line(
-                self.points[pair[0]],
-                self.points[pair[1]]
+                self._points[pair[0]],
+                self._points[pair[1]]
             ).set_color(color)
             for pair in self.spanning_tree_index_pairs
         ])
@@ -320,7 +320,7 @@ class DiscreteGraphScene(Scene):
             self.generate_spanning_tree()
         root = self.spanning_tree_root
         color = self.spanning_tree.get_color()
-        indices = list(range(len(self.points)))
+        indices = list(range(len(self._points)))
         # Build dicts
         parent_of = dict([
             tuple(reversed(pair))
@@ -333,7 +333,7 @@ class DiscreteGraphScene(Scene):
         x_coord_of = {root: 0}
         y_coord_of = {root: bottom}
         # width to allocate to a given node, computed as
-        # the maxium number of decendents in a single generation,
+        # the maximum number of decendents in a single generation,
         # minus 1, multiplied by x_sep
         width_of = {}
         for index in indices:
@@ -376,7 +376,7 @@ class DiscreteGraphScene(Scene):
         cycles = self.graph.region_cycles
         self.dual_points = [
             center_of_mass([
-                self.points[index]
+                self._points[index]
                 for index in cycle
             ])
             for cycle in cycles
@@ -404,8 +404,8 @@ class DiscreteGraphScene(Scene):
                 if all(dual_point_pair[i] == point_at_infinity):
                     new_point = np.array(dual_point_pair[1 - i])
                     vect = center_of_mass([
-                        self.points[pair[0]],
-                        self.points[pair[1]]
+                        self._points[pair[0]],
+                        self._points[pair[1]]
                     ]) - new_point
                     new_point += FRAME_X_RADIUS * vect / get_norm(vect)
                     dual_point_pair[i] = new_point

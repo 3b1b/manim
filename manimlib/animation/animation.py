@@ -1,10 +1,10 @@
 from copy import deepcopy
 
-import numpy as np
-
+from manimlib.mobject.mobject import _AnimationBuilder
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import smooth
+from manimlib.utils.simple_functions import clip
 
 
 DEFAULT_ANIMATION_RUN_TIME = 1.0
@@ -18,6 +18,8 @@ class Animation(object):
         "name": None,
         # Does this animation add or remove a mobject form the screen
         "remover": False,
+        # What to enter into the update function upon completion
+        "final_alpha_value": 1,
         # If 0, the animation is applied to all submobjects
         # at the same time
         # If 1, it is applied to each successively.
@@ -51,10 +53,11 @@ class Animation(object):
             # the internal updaters of self.starting_mobject,
             # or any others among self.get_all_mobjects()
             self.mobject.suspend_updating()
+        self.families = list(self.get_all_families_zipped())
         self.interpolate(0)
 
     def finish(self):
-        self.interpolate(1)
+        self.interpolate(self.final_alpha_value)
         if self.suspend_mobject_updating:
             self.mobject.resume_updating()
 
@@ -74,7 +77,7 @@ class Animation(object):
 
     def get_all_families_zipped(self):
         return zip(*[
-            mob.family_members_with_points()
+            mob.get_family()
             for mob in self.get_all_mobjects()
         ])
 
@@ -107,7 +110,7 @@ class Animation(object):
 
     # Methods for interpolation, the mean of an Animation
     def interpolate(self, alpha):
-        alpha = np.clip(alpha, 0, 1)
+        alpha = clip(alpha, 0, 1)
         self.interpolate_mobject(self.rate_func(alpha))
 
     def update(self, alpha):
@@ -118,9 +121,8 @@ class Animation(object):
         self.interpolate(alpha)
 
     def interpolate_mobject(self, alpha):
-        families = list(self.get_all_families_zipped())
-        for i, mobs in enumerate(families):
-            sub_alpha = self.get_sub_alpha(alpha, i, len(families))
+        for i, mobs in enumerate(self.families):
+            sub_alpha = self.get_sub_alpha(alpha, i, len(self.families))
             self.interpolate_submobject(*mobs, sub_alpha)
 
     def interpolate_submobject(self, submobject, starting_sumobject, alpha):
@@ -135,7 +137,7 @@ class Animation(object):
         full_length = (num_submobjects - 1) * lag_ratio + 1
         value = alpha * full_length
         lower = index * lag_ratio
-        return np.clip((value - lower), 0, 1)
+        return clip((value - lower), 0, 1)
 
     # Getters and setters
     def set_run_time(self, run_time):
@@ -158,3 +160,13 @@ class Animation(object):
 
     def is_remover(self):
         return self.remover
+
+
+def prepare_animation(anim):
+    if isinstance(anim, _AnimationBuilder):
+        return anim.build()
+
+    if isinstance(anim, Animation):
+        return anim
+
+    raise TypeError(f"Object {anim} cannot be converted to an animation")

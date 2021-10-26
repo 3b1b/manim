@@ -1,30 +1,36 @@
-.. Manim documentation master file, created by
-   sphinx-quickstart on Mon May 27 14:19:19 2019.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Manim's documentation
+=====================
 
-Welcome to Manim's documentation!
-=================================
+.. image:: https://cdn.jsdelivr.net/gh/3b1b/manim@master/logo/white_with_name.png
 
-These docs are generated from the master branch of the
-`Manim repo <https://github.com/3b1b/manim>`_. You can contribute by submitting
-a pull request there.
+Manim is an animation engine for explanatory math videos. It's used to create precise animations programmatically, as seen in the videos
+at `3Blue1Brown <https://www.3blue1brown.com/>`_.
+
+And here is a Chinese version of this documentation: https://docs.manim.org.cn/
 
 .. toctree::
-    :maxdepth: 2
-    :caption: Contents
+   :maxdepth: 2
+   :caption: Getting Started
 
-    about
-    installation/index
-    getting_started/index
-    coordinate
-    animation
-    constants
+   getting_started/installation
+   getting_started/quickstart
+   getting_started/configuration
+   getting_started/example_scenes
+   getting_started/config
+   getting_started/structure
+   getting_started/whatsnew
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Documentation
 
-Indices and tables
-==================
+   documentation/constants
+   documentation/custom_config
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. toctree::
+   :maxdepth: 2
+   :caption: Development
+
+   development/changelog
+   development/contributing
+   development/about

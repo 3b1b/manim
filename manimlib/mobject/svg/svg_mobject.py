@@ -2,10 +2,17 @@ import itertools as it
 import re
 import string
 import warnings
+import os
+import hashlib
 
 from xml.dom import minidom
 
-from manimlib.constants import *
+from manimlib.constants import DEFAULT_STROKE_WIDTH
+from manimlib.constants import ORIGIN, UP, DOWN, LEFT, RIGHT
+from manimlib.constants import BLACK
+from manimlib.constants import WHITE
+from manimlib.constants import DEGREES, PI
+
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import RoundedRectangle
@@ -13,7 +20,9 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.color import *
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.config_ops import digest_locals
+from manimlib.utils.directories import get_mobject_data_dir
+from manimlib.utils.images import get_full_vector_image_path
+from manimlib.utils.simple_functions import clip
 
 
 def string_to_numbers(num_string):
@@ -34,39 +43,37 @@ class SVGMobject(VMobject):
         # Must be filled in in a subclass, or when called
         "file_name": None,
         "unpack_groups": True,  # if False, creates a hierarchy of VGroups
+        # TODO, style components should be read in, not defaulted
         "stroke_width": DEFAULT_STROKE_WIDTH,
         "fill_opacity": 1.0,
         # "fill_color" : LIGHT_GREY,
         "text_scale": 1.0,
+        "path_string_config": {}
     }
 
     def __init__(self, file_name=None, **kwargs):
         digest_config(self, kwargs)
         self.file_name = file_name or self.file_name
-        self.ensure_valid_file()
-        VMobject.__init__(self, **kwargs)
+        if file_name is None:
+            raise Exception("Must specify file for SVGMobject")
+        self.file_path = get_full_vector_image_path(file_name)
+
+        super().__init__(**kwargs)
         self.move_into_position()
         self.update_text_stroke_and_fill(self)
 
-    def ensure_valid_file(self):
-        if self.file_name is None:
-            raise Exception("Must specify file for SVGMobject")
-        possible_paths = [
-            os.path.join(os.path.join("assets", "svg_images"), self.file_name),
-            os.path.join(os.path.join("assets", "svg_images"), self.file_name + ".svg"),
-            os.path.join(os.path.join("assets", "svg_images"), self.file_name + ".xdv"),
-            self.file_name,
-        ]
-        for path in possible_paths:
-            if os.path.exists(path):
-                self.file_path = path
-                return
-        raise IOError("No file matching %s in image directory" %
-                      self.file_name)
+    def move_into_position(self):
+        if self.should_center:
+            self.center()
+        if self.height is not None:
+            self.set_height(self.height)
+        if self.width is not None:
+            self.set_width(self.width)
 
-    def generate_points(self):
+    def init_points(self):
         doc = minidom.parse(self.file_path)
         self.ref_to_element = {}
+
         for svg in doc.getElementsByTagName("svg"):
             mobjects = self.get_mobjects_from(svg)
             if self.unpack_groups:
@@ -84,14 +91,14 @@ class SVGMobject(VMobject):
         elif element.tagName == 'style':
             pass  # TODO, handle style
         elif element.tagName in ['g', 'svg', 'symbol']:
-            result += it.chain(*[
+            result += it.chain(*(
                 self.get_mobjects_from(child)
                 for child in element.childNodes
-            ])
+            ))
         elif element.tagName == 'path':
-            temp = element.getAttribute('d')
-            if temp != '':
-                result.append(self.path_string_to_mobject(temp))
+            result.append(self.path_string_to_mobject(
+                element.getAttribute('d')
+            ))
         elif element.tagName == 'use':
             result += self.use_to_mobjects(element)
         elif element.tagName == 'rect':
@@ -145,13 +152,16 @@ class SVGMobject(VMobject):
         return mob.submobjects
 
     def path_string_to_mobject(self, path_string):
-        return VMobjectFromSVGPathstring(path_string)
+        return VMobjectFromSVGPathstring(
+            path_string,
+            **self.path_string_config,
+        )
 
     def use_to_mobjects(self, use_element):
         # Remove initial "#" character
         ref = use_element.getAttribute("xlink:href")[1:]
         if ref not in self.ref_to_element:
-            warnings.warn("%s not recognized" % ref)
+            warnings.warn(f"{ref} not recognized")
             return VGroup()
         return self.get_mobjects_from(
             self.ref_to_element[ref]
@@ -165,14 +175,11 @@ class SVGMobject(VMobject):
         return float(stripped_attr)
 
     def polygon_to_mobject(self, polygon_element):
-        # TODO, This seems hacky...
         path_string = polygon_element.getAttribute("points")
         for digit in string.digits:
-            path_string = path_string.replace(" " + digit, " L" + digit)
-        path_string = "M" + path_string
+            path_string = path_string.replace(f" {digit}", f"L {digit}")
+        path_string = path_string.replace("L", "M", 1)
         return self.path_string_to_mobject(path_string)
-
-    # <circle class="st1" cx="143.8" cy="268" r="22.6"/>
 
     def circle_to_mobject(self, circle_element):
         x, y, r = [
@@ -194,7 +201,11 @@ class SVGMobject(VMobject):
             else 0.0
             for key in ("cx", "cy", "rx", "ry")
         ]
-        return Circle().scale(rx * RIGHT + ry * UP).shift(x * RIGHT + y * DOWN)
+        result = Circle()
+        result.stretch(rx, 0)
+        result.stretch(ry, 1)
+        result.shift(x * RIGHT + y * DOWN)
+        return result
 
     def rect_to_mobject(self, rect_element):
         fill_color = rect_element.getAttribute("fill")
@@ -203,8 +214,9 @@ class SVGMobject(VMobject):
         corner_radius = rect_element.getAttribute("rx")
 
         # input preprocessing
+        fill_opacity = 1
         if fill_color in ["", "none", "#FFF", "#FFFFFF"] or Color(fill_color) == Color(WHITE):
-            opacity = 0
+            fill_opacity = 0
             fill_color = BLACK  # shdn't be necessary but avoids error msgs
         if fill_color in ["#000", "#000000"]:
             fill_color = WHITE
@@ -232,7 +244,7 @@ class SVGMobject(VMobject):
                 stroke_width=stroke_width,
                 stroke_color=stroke_color,
                 fill_color=fill_color,
-                fill_opacity=opacity
+                fill_opacity=fill_opacity
             )
         else:
             mob = RoundedRectangle(
@@ -253,13 +265,14 @@ class SVGMobject(VMobject):
         return mob
 
     def handle_transforms(self, element, mobject):
+        # TODO, this could use some cleaning...
         x, y = 0, 0
         try:
             x = self.attribute_to_float(element.getAttribute('x'))
             # Flip y
             y = -self.attribute_to_float(element.getAttribute('y'))
-            mobject.shift(x * RIGHT + y * UP)
-        except:
+            mobject.shift([x, y, 0])
+        except Exception:
             pass
 
         transform = element.getAttribute('transform')
@@ -280,7 +293,7 @@ class SVGMobject(VMobject):
             matrix[:, 1] *= -1
 
             for mob in mobject.family_members_with_points():
-                mob.points = np.dot(mob.points, matrix)
+                mob.apply_matrix(matrix.T)
             mobject.shift(x * RIGHT + y * UP)
         except:
             pass
@@ -336,125 +349,210 @@ class SVGMobject(VMobject):
         new_refs = dict([(e.getAttribute('id'), e) for e in self.get_all_childNodes_have_id(defs)])
         self.ref_to_element.update(new_refs)
 
-    def move_into_position(self):
-        if self.should_center:
-            self.center()
-        if self.height is not None:
-            self.set_height(self.height)
-        if self.width is not None:
-            self.set_width(self.width)
-
 
 class VMobjectFromSVGPathstring(VMobject):
+    CONFIG = {
+        "long_lines": False,
+        "should_subdivide_sharp_curves": False,
+        "should_remove_null_curves": False,
+    }
+
     def __init__(self, path_string, **kwargs):
-        digest_locals(self)
-        VMobject.__init__(self, **kwargs)
+        self.path_string = path_string
+        super().__init__(**kwargs)
 
-    def get_path_commands(self):
-        result = [
-            "M",  # moveto
-            "L",  # lineto
-            "H",  # horizontal lineto
-            "V",  # vertical lineto
-            "C",  # curveto
-            "S",  # smooth curveto
-            "Q",  # quadratic Bezier curve
-            "T",  # smooth quadratic Bezier curveto
-            "A",  # elliptical Arc
-            "Z",  # closepath
-        ]
-        result += [s.lower() for s in result]
-        return result
+    def init_points(self):
+        # After a given svg_path has been converted into points, the result
+        # will be saved to a file so that future calls for the same path
+        # don't need to retrace the same computation.
+        hasher = hashlib.sha256(self.path_string.encode())
+        path_hash = hasher.hexdigest()[:16]
+        points_filepath = os.path.join(get_mobject_data_dir(), f"{path_hash}_points.npy")
+        tris_filepath = os.path.join(get_mobject_data_dir(), f"{path_hash}_tris.npy")
 
-    def generate_points(self):
-        pattern = "[%s]" % ("".join(self.get_path_commands()))
-        pairs = list(zip(
+        if os.path.exists(points_filepath) and os.path.exists(tris_filepath):
+            self.set_points(np.load(points_filepath))
+            self.triangulation = np.load(tris_filepath)
+            self.needs_new_triangulation = False
+        else:
+            self.handle_commands()
+            if self.should_subdivide_sharp_curves:
+                # For a healthy triangulation later
+                self.subdivide_sharp_curves()
+            if self.should_remove_null_curves:
+                # Get rid of any null curves
+                self.set_points(self.get_points_without_null_curves())
+            # SVG treats y-coordinate differently
+            self.stretch(-1, 1, about_point=ORIGIN)
+            # Save to a file for future use
+            np.save(points_filepath, self.get_points())
+            np.save(tris_filepath, self.get_triangulation())
+
+    def get_commands_and_coord_strings(self):
+        all_commands = list(self.get_command_to_function_map().keys())
+        all_commands += [c.lower() for c in all_commands]
+        pattern = "[{}]".format("".join(all_commands))
+        return zip(
             re.findall(pattern, self.path_string),
             re.split(pattern, self.path_string)[1:]
-        ))
-        # Which mobject should new points be added to
-        self = self
-        for command, coord_string in pairs:
-            self.handle_command(command, coord_string)
-        # people treat y-coordinate differently
-        self.rotate(np.pi, RIGHT, about_point=ORIGIN)
+        )
 
-    def handle_command(self, command, coord_string):
-        isLower = command.islower()
-        command = command.upper()
-        # new_points are the points that will be added to the curr_points
-        # list. This variable may get modified in the conditionals below.
-        points = self.points
-        new_points = self.string_to_points(coord_string)
+    def handle_commands(self):
+        relative_point = ORIGIN
+        for command, coord_string in self.get_commands_and_coord_strings():
+            func, number_types_str = self.command_to_function(command)
+            upper_command = command.upper()
+            if upper_command == "Z":
+                func()  # `close_path` takes no arguments
+                continue
 
-        if isLower and len(points) > 0:
-            new_points += points[-1]
+            number_types = np.array(list(number_types_str))
+            n_numbers = len(number_types_str)
+            number_groups = np.array(string_to_numbers(coord_string)).reshape((-1, n_numbers))
 
-        if command == "M":  # moveto
-            self.start_new_path(new_points[0])
-            if len(new_points) <= 1:
-                return
+            for numbers in number_groups:
+                if command.islower():
+                    # Treat it as a relative command
+                    numbers[number_types == "x"] += relative_point[0]
+                    numbers[number_types == "y"] += relative_point[1]
 
-            # Draw relative line-to values.
-            points = self.points
-            new_points = new_points[1:]
-            command = "L"
+                if upper_command == "A":
+                    args = [*numbers[:5], np.array([*numbers[5:7], 0.0])]
+                elif upper_command == "H":
+                    args = [np.array([numbers[0], relative_point[1], 0.0])]
+                elif upper_command == "V":
+                    args = [np.array([relative_point[0], numbers[0], 0.0])]
+                else:
+                    args = list(np.hstack((
+                        numbers.reshape((-1, 2)), np.zeros((n_numbers // 2, 1))
+                    )))
+                func(*args)
+                relative_point = self.get_last_point()
 
-            for p in new_points:
-                if isLower:
-                    # Treat everything as relative line-to until empty
-                    p[0] += self.points[-1, 0]
-                    p[1] += self.points[-1, 1]
-                self.add_line_to(p)
-            return
 
-        elif command in ["L", "H", "V"]:  # lineto
-            if command == "H":
-                new_points[0, 1] = points[-1, 1]
-            elif command == "V":
-                if isLower:
-                    new_points[0, 0] -= points[-1, 0]
-                    new_points[0, 0] += points[-1, 1]
-                new_points[0, 1] = new_points[0, 0]
-                new_points[0, 0] = points[-1, 0]
-            self.add_line_to(new_points[0])
-            return
+    def add_elliptical_arc_to(self, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, point):
+        def close_to_zero(a, threshold=1e-5):
+            return abs(a) < threshold
 
-        if command == "C":  # curveto
-            pass  # Yay! No action required
-        elif command in ["S", "T"]:  # smooth curveto
-            self.add_smooth_curve_to(*new_points)
-            # handle1 = points[-1] + (points[-1] - points[-2])
-            # new_points = np.append([handle1], new_points, axis=0)
-            return
-        elif command == "Q":  # quadratic Bezier curve
-            # TODO, this is a suboptimal approximation
-            new_points = np.append([new_points[0]], new_points, axis=0)
-        elif command == "A":  # elliptical Arc
-            raise Exception("Not implemented")
-        elif command == "Z":  # closepath
-            return
+        def solve_2d_linear_equation(a, b, c):
+            """
+            Using Crammer's rule to solve the linear equation `[a b]x = c`
+            where `a`, `b` and `c` are all 2d vectors.
+            """
+            def det(a, b):
+                return a[0] * b[1] - a[1] * b[0]
+            d = det(a, b)
+            if close_to_zero(d):
+                raise Exception("Cannot handle 0 determinant.")
+            return [det(c, b) / d, det(a, c) / d]
 
-        # Add first three points
-        self.add_cubic_bezier_curve_to(*new_points[0:3])
+        def get_arc_center_and_angles(x0, y0, rx, ry, phi, large_arc_flag, sweep_flag, x1, y1):
+            """
+            The parameter functions of an ellipse rotated `phi` radians counterclockwise is (on `alpha`):
+                x = cx + rx * cos(alpha) * cos(phi) + ry * sin(alpha) * sin(phi),
+                y = cy + rx * cos(alpha) * sin(phi) - ry * sin(alpha) * cos(phi).
+            Now we have two points sitting on the ellipse: `(x0, y0)`, `(x1, y1)`, corresponding to 4 equations,
+            and we want to hunt for 4 variables: `cx`, `cy`, `alpha0` and `alpha_1`.
+            Let `d_alpha = alpha1 - alpha0`, then:
+            if `sweep_flag = 0` and `large_arc_flag = 1`, then `PI <= d_alpha < 2 * PI`;
+            if `sweep_flag = 0` and `large_arc_flag = 0`, then `0 < d_alpha <= PI`;
+            if `sweep_flag = 1` and `large_arc_flag = 0`, then `-PI <= d_alpha < 0`;
+            if `sweep_flag = 1` and `large_arc_flag = 1`, then `-2 * PI < d_alpha <= -PI`.
+            """
+            xd = x1 - x0
+            yd = y1 - y0
+            if close_to_zero(xd) and close_to_zero(yd):
+                raise Exception("Cannot find arc center since the start point and the end point meet.")
+            # Find `p = cos(alpha1) - cos(alpha0)`, `q = sin(alpha1) - sin(alpha0)`
+            eq0 = [rx * np.cos(phi), ry * np.sin(phi), xd]
+            eq1 = [rx * np.sin(phi), -ry * np.cos(phi), yd]
+            p, q = solve_2d_linear_equation(*zip(eq0, eq1))
+            # Find `s = (alpha1 - alpha0) / 2`, `t = (alpha1 + alpha0) / 2`
+            # If `sin(s) = 0`, this requires `p = q = 0`,
+            # implying `xd = yd = 0`, which is impossible.
+            sin_s = (p ** 2 + q ** 2) ** 0.5 / 2
+            if sweep_flag:
+                sin_s = -sin_s
+            sin_s = clip(sin_s, -1, 1)
+            s = np.arcsin(sin_s)
+            if large_arc_flag:
+                if not sweep_flag:
+                    s = PI - s
+                else:
+                    s = -PI - s
+            sin_t = -p / (2 * sin_s)
+            cos_t = q / (2 * sin_s)
+            cos_t = clip(cos_t, -1, 1)
+            t = np.arccos(cos_t)
+            if sin_t <= 0:
+                t = -t
+            # We can make sure `0 < abs(s) < PI`, `-PI <= t < PI`.
+            alpha0 = t - s
+            alpha_1 = t + s
+            cx = x0 - rx * np.cos(alpha0) * np.cos(phi) - ry * np.sin(alpha0) * np.sin(phi)
+            cy = y0 - rx * np.cos(alpha0) * np.sin(phi) + ry * np.sin(alpha0) * np.cos(phi)
+            return cx, cy, alpha0, alpha_1
 
-        # Handle situations where there's multiple relative control points
-        if len(new_points) > 3:
-            # Add subsequent offset points relatively.
-            for i in range(3, len(new_points), 3):
-                if isLower:
-                    new_points[i:i + 3] -= points[-1]
-                    new_points[i:i + 3] += new_points[i - 1]
-                self.add_cubic_bezier_curve_to(*new_points[i:i+3])
+        def get_point_on_ellipse(cx, cy, rx, ry, phi, angle):
+            return np.array([
+                cx + rx * np.cos(angle) * np.cos(phi) + ry * np.sin(angle) * np.sin(phi),
+                cy + rx * np.cos(angle) * np.sin(phi) - ry * np.sin(angle) * np.cos(phi),
+                0
+            ])
 
-    def string_to_points(self, coord_string):
-        numbers = string_to_numbers(coord_string)
-        if len(numbers) % 2 == 1:
-            numbers.append(0)
-        num_points = len(numbers) // 2
-        result = np.zeros((num_points, self.dim))
-        result[:, :2] = np.array(numbers).reshape((num_points, 2))
-        return result
+        def convert_elliptical_arc_to_quadratic_bezier_curve(
+            cx, cy, rx, ry, phi, start_angle, end_angle, n_components=8
+        ):
+            theta = (end_angle - start_angle) / n_components / 2
+            handles = np.array([
+                get_point_on_ellipse(cx, cy, rx / np.cos(theta), ry / np.cos(theta), phi, a)
+                for a in np.linspace(
+                    start_angle + theta,
+                    end_angle - theta,
+                    n_components,
+                )
+            ])
+            anchors = np.array([
+                get_point_on_ellipse(cx, cy, rx, ry, phi, a)
+                for a in np.linspace(
+                    start_angle + theta * 2,
+                    end_angle,
+                    n_components,
+                )
+            ])
+            return handles, anchors
+
+        phi = x_axis_rotation * DEGREES
+        x0, y0 = self.get_last_point()[:2]
+        cx, cy, start_angle, end_angle = get_arc_center_and_angles(
+            x0, y0, rx, ry, phi, large_arc_flag, sweep_flag, point[0], point[1]
+        )
+        handles, anchors = convert_elliptical_arc_to_quadratic_bezier_curve(
+            cx, cy, rx, ry, phi, start_angle, end_angle
+        )
+        for handle, anchor in zip(handles, anchors):
+            self.add_quadratic_bezier_curve_to(handle, anchor)
+
+    def command_to_function(self, command):
+        return self.get_command_to_function_map()[command.upper()]
+
+    def get_command_to_function_map(self):
+        """
+        Associates svg command to VMobject function, and
+        the types of arguments it takes in
+        """
+        return {
+            "M": (self.start_new_path, "xy"),
+            "L": (self.add_line_to, "xy"),
+            "H": (self.add_line_to, "x"),
+            "V": (self.add_line_to, "y"),
+            "C": (self.add_cubic_bezier_curve_to, "xyxyxy"),
+            "S": (self.add_smooth_cubic_curve_to, "xyxy"),
+            "Q": (self.add_quadratic_bezier_curve_to, "xyxy"),
+            "T": (self.add_smooth_curve_to, "xy"),
+            "A": (self.add_elliptical_arc_to, "-----xy"),
+            "Z": (self.close_path, ""),
+        }
 
     def get_original_path_string(self):
         return self.path_string

@@ -1,45 +1,51 @@
-from functools import reduce
-
 import numpy as np
+import operator as op
+from functools import reduce
+import math
+from mapbox_earcut import triangulate_float32 as earcut
 
+from manimlib.constants import RIGHT
+from manimlib.constants import DOWN
 from manimlib.constants import OUT
 from manimlib.constants import PI
-from manimlib.constants import RIGHT
 from manimlib.constants import TAU
 from manimlib.utils.iterables import adjacent_pairs
-from manimlib.utils.simple_functions import fdiv
 
 
 def get_norm(vect):
-    return sum([x**2 for x in vect])**0.5
+    return sum((x**2 for x in vect))**0.5
 
 
 # Quaternions
 # TODO, implement quaternion type
 
 
-def quaternion_mult(q1, q2):
-    w1, x1, y1, z1 = q1
-    w2, x2, y2, z2 = q2
-    return np.array([
-        w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
-        w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
-        w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2,
-        w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2,
-    ])
+def quaternion_mult(*quats):
+    if len(quats) == 0:
+        return [1, 0, 0, 0]
+    result = quats[0]
+    for next_quat in quats[1:]:
+        w1, x1, y1, z1 = result
+        w2, x2, y2, z2 = next_quat
+        result = [
+            w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
+            w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
+            w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2,
+            w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2,
+        ]
+    return result
 
 
-def quaternion_from_angle_axis(angle, axis):
-    return np.append(
-        np.cos(angle / 2),
-        np.sin(angle / 2) * normalize(axis)
-    )
+def quaternion_from_angle_axis(angle, axis, axis_normalized=False):
+    if not axis_normalized:
+        axis = normalize(axis)
+    return [math.cos(angle / 2), *(math.sin(angle / 2) * axis)]
 
 
 def angle_axis_from_quaternion(quaternion):
     axis = normalize(
         quaternion[1:],
-        fall_back=np.array([1, 0, 0])
+        fall_back=[1, 0, 0]
     )
     angle = 2 * np.arccos(quaternion[0])
     if angle > TAU / 2:
@@ -48,8 +54,9 @@ def angle_axis_from_quaternion(quaternion):
 
 
 def quaternion_conjugate(quaternion):
-    result = np.array(quaternion)
-    result[1:] *= -1
+    result = list(quaternion)
+    for i in range(1, len(result)):
+        result[i] *= -1
     return result
 
 
@@ -57,18 +64,19 @@ def rotate_vector(vector, angle, axis=OUT):
     if len(vector) == 2:
         # Use complex numbers...because why not
         z = complex(*vector) * np.exp(complex(0, angle))
-        return np.array([z.real, z.imag])
+        result = [z.real, z.imag]
     elif len(vector) == 3:
         # Use quaternions...because why not
         quat = quaternion_from_angle_axis(angle, axis)
         quat_inv = quaternion_conjugate(quat)
-        product = reduce(
-            quaternion_mult,
-            [quat, np.append(0, vector), quat_inv]
-        )
-        return product[1:]
+        product = quaternion_mult(quat, [0, *vector], quat_inv)
+        result = product[1:]
     else:
         raise Exception("vector must be of dimension 2 or 3")
+
+    if isinstance(vector, np.ndarray):
+        return np.array(result)
+    return result
 
 
 def thick_diagonal(dim, thickness=2):
@@ -77,20 +85,49 @@ def thick_diagonal(dim, thickness=2):
     return (np.abs(row_indices - col_indices) < thickness).astype('uint8')
 
 
+def rotation_matrix_transpose_from_quaternion(quat):
+    quat_inv = quaternion_conjugate(quat)
+    return [
+        quaternion_mult(quat, [0, *basis], quat_inv)[1:]
+        for basis in [
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1],
+        ]
+    ]
+
+
+def rotation_matrix_from_quaternion(quat):
+    return np.transpose(rotation_matrix_transpose_from_quaternion(quat))
+
+
+def rotation_matrix_transpose(angle, axis):
+    if axis[0] == 0 and axis[1] == 0:
+        # axis = [0, 0, z] case is common enough it's worth
+        # having a shortcut
+        sgn = 1 if axis[2] > 0 else -1
+        cos_a = math.cos(angle)
+        sin_a = math.sin(angle) * sgn
+        return [
+            [cos_a, sin_a, 0],
+            [-sin_a, cos_a, 0],
+            [0, 0, 1],
+        ]
+    quat = quaternion_from_angle_axis(angle, axis)
+    return rotation_matrix_transpose_from_quaternion(quat)
+
+
 def rotation_matrix(angle, axis):
     """
     Rotation in R^3 about a specified axis of rotation.
     """
-    about_z = rotation_about_z(angle)
-    z_to_axis = z_to_vector(axis)
-    axis_to_z = np.linalg.inv(z_to_axis)
-    return reduce(np.dot, [z_to_axis, about_z, axis_to_z])
+    return np.transpose(rotation_matrix_transpose(angle, axis))
 
 
 def rotation_about_z(angle):
     return [
-        [np.cos(angle), -np.sin(angle), 0],
-        [np.sin(angle), np.cos(angle), 0],
+        [math.cos(angle), -math.sin(angle), 0],
+        [math.sin(angle), math.cos(angle), 0],
         [0, 0, 1]
     ]
 
@@ -100,41 +137,20 @@ def z_to_vector(vector):
     Returns some matrix in SO(3) which takes the z-axis to the
     (normalized) vector provided as an argument
     """
-    norm = get_norm(vector)
-    if norm == 0:
-        return np.identity(3)
-    v = np.array(vector) / norm
-    phi = np.arccos(v[2])
-    if any(v[:2]):
-        # projection of vector to unit circle
-        axis_proj = v[:2] / get_norm(v[:2])
-        theta = np.arccos(axis_proj[0])
-        if axis_proj[1] < 0:
-            theta = -theta
-    else:
-        theta = 0
-    phi_down = np.array([
-        [np.cos(phi), 0, np.sin(phi)],
-        [0, 1, 0],
-        [-np.sin(phi), 0, np.cos(phi)]
-    ])
-    return np.dot(rotation_about_z(theta), phi_down)
-
-
-def angle_between(v1, v2):
-    return np.arccos(np.dot(
-        v1 / get_norm(v1),
-        v2 / get_norm(v2)
-    ))
+    axis = cross(OUT, vector)
+    if get_norm(axis) == 0:
+        if vector[2] > 0:
+            return np.identity(3)
+        else:
+            return rotation_matrix(PI, RIGHT)
+    angle = np.arccos(np.dot(OUT, normalize(vector)))
+    return rotation_matrix(angle, axis=axis)
 
 
 def angle_of_vector(vector):
     """
     Returns polar coordinate theta when vector is project on xy plane
     """
-    z = complex(*vector[:2])
-    if z == 0:
-        return 0
     return np.angle(complex(*vector[:2]))
 
 
@@ -143,10 +159,8 @@ def angle_between_vectors(v1, v2):
     Returns the angle between two 3D vectors.
     This angle will always be btw 0 and pi
     """
-    return np.arccos(fdiv(
-        np.dot(v1, v2),
-        get_norm(v1) * get_norm(v2)
-    ))
+    diff = (angle_of_vector(v2) - angle_of_vector(v1)) % TAU
+    return min(diff, TAU - diff)
 
 
 def project_along_vector(point, vector):
@@ -158,11 +172,18 @@ def normalize(vect, fall_back=None):
     norm = get_norm(vect)
     if norm > 0:
         return np.array(vect) / norm
+    elif fall_back is not None:
+        return fall_back
     else:
-        if fall_back is not None:
-            return fall_back
-        else:
-            return np.zeros(len(vect))
+        return np.zeros(len(vect))
+
+
+def normalize_along_axis(array, axis, fall_back=None):
+    norms = np.sqrt((array * array).sum(axis))
+    norms[norms == 0] = 1
+    buffed_norms = np.repeat(norms, array.shape[axis]).reshape(array.shape)
+    array /= buffed_norms
+    return array
 
 
 def cross(v1, v2):
@@ -173,8 +194,19 @@ def cross(v1, v2):
     ])
 
 
-def get_unit_normal(v1, v2):
-    return normalize(cross(v1, v2))
+def get_unit_normal(v1, v2, tol=1e-6):
+    v1 = normalize(v1)
+    v2 = normalize(v2)
+    cp = cross(v1, v2)
+    cp_norm = get_norm(cp)
+    if cp_norm < tol:
+        # Vectors align, so find a normal to them in the plane shared with the z-axis
+        new_cp = cross(cross(v1, OUT), v1)
+        new_cp_norm = get_norm(new_cp)
+        if new_cp_norm < tol:
+            return DOWN
+        return new_cp / new_cp_norm
+    return cp / cp_norm
 
 
 ###
@@ -230,6 +262,50 @@ def line_intersection(line1, line2):
     return np.array([x, y, 0])
 
 
+def find_intersection(p0, v0, p1, v1, threshold=1e-5):
+    """
+    Return the intersection of a line passing through p0 in direction v0
+    with one passing through p1 in direction v1.  (Or array of intersections
+    from arrays of such points/directions).
+    For 3d values, it returns the point on the ray p0 + v0 * t closest to the
+    ray p1 + v1 * t
+    """
+    p0 = np.array(p0, ndmin=2)
+    v0 = np.array(v0, ndmin=2)
+    p1 = np.array(p1, ndmin=2)
+    v1 = np.array(v1, ndmin=2)
+    m, n = np.shape(p0)
+    assert(n in [2, 3])
+
+    numer = np.cross(v1, p1 - p0)
+    denom = np.cross(v1, v0)
+    if n == 3:
+        d = len(np.shape(numer))
+        new_numer = np.multiply(numer, numer).sum(d - 1)
+        new_denom = np.multiply(denom, numer).sum(d - 1)
+        numer, denom = new_numer, new_denom
+
+    denom[abs(denom) < threshold] = np.inf  # So that ratio goes to 0 there
+    ratio = numer / denom
+    ratio = np.repeat(ratio, n).reshape((m, n))
+    return p0 + ratio * v0
+
+
+def get_closest_point_on_line(a, b, p):
+    """
+        It returns point x such that
+        x is on line ab and xp is perpendicular to ab.
+        If x lies beyond ab line, then it returns nearest edge(a or b).
+    """
+    # x = b + t*(a-b) = t*a + (1-t)*b
+    t = np.dot(p - b, a - b) / np.dot(a - b, a - b)
+    if t < 0:
+        t = 0
+    if t > 1:
+        t = 1
+    return ((t * a) + ((1 - t) * b))
+
+
 def get_winding_number(points):
     total_angle = 0
     for p1, p2 in adjacent_pairs(points):
@@ -237,3 +313,113 @@ def get_winding_number(points):
         d_angle = ((d_angle + PI) % TAU) - PI
         total_angle += d_angle
     return total_angle / TAU
+
+
+##
+
+def cross2d(a, b):
+    if len(a.shape) == 2:
+        return a[:, 0] * b[:, 1] - a[:, 1] * b[:, 0]
+    else:
+        return a[0] * b[1] - b[0] * a[1]
+
+
+def tri_area(a, b, c):
+    return 0.5 * abs(
+        a[0] * (b[1] - c[1]) +
+        b[0] * (c[1] - a[1]) +
+        c[0] * (a[1] - b[1])
+    )
+
+
+def is_inside_triangle(p, a, b, c):
+    """
+    Test if point p is inside triangle abc
+    """
+    crosses = np.array([
+        cross2d(p - a, b - p),
+        cross2d(p - b, c - p),
+        cross2d(p - c, a - p),
+    ])
+    return np.all(crosses > 0) or np.all(crosses < 0)
+
+
+def norm_squared(v):
+    return v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
+
+
+# TODO, fails for polygons drawn over themselves
+def earclip_triangulation(verts, ring_ends):
+    """
+    Returns a list of indices giving a triangulation
+    of a polygon, potentially with holes
+
+    - verts is a numpy array of points
+
+    - ring_ends is a list of indices indicating where
+    the ends of new paths are
+    """
+
+    rings = [
+        list(range(e0, e1))
+        for e0, e1 in zip([0, *ring_ends], ring_ends)
+    ]
+
+    def is_in(point, ring_id):
+        return abs(abs(get_winding_number([i - point for i in verts[rings[ring_id]]])) - 1) < 1e-5
+
+    def ring_area(ring_id):
+        ring = rings[ring_id]
+        s = 0
+        for i, j in zip(ring[1:], ring):
+            s += cross2d(verts[i], verts[j])
+        return abs(s) / 2
+
+    # Points at the same position may cause problems
+    for i in rings:
+        verts[i[0]] += (verts[i[1]] - verts[i[0]]) * 1e-6
+        verts[i[-1]] += (verts[i[-2]] - verts[i[-1]]) * 1e-6
+
+    # First, we should know which rings are directly contained in it for each ring
+
+    right = [max(verts[rings[i], 0]) for i in range(len(rings))]
+    left = [min(verts[rings[i], 0]) for i in range(len(rings))]
+    top = [max(verts[rings[i], 1]) for i in range(len(rings))]
+    bottom = [min(verts[rings[i], 1]) for i in range(len(rings))]
+    area = [ring_area(i) for i in range(len(rings))]
+
+    # The larger ring must be outside
+    rings_sorted = list(range(len(rings)))
+    rings_sorted.sort(key=lambda x: area[x], reverse=True)
+
+    def is_in_fast(ring_a, ring_b):
+        # Whether a is in b
+        return reduce(op.and_, (
+            left[ring_b] <= left[ring_a] <= right[ring_a] <= right[ring_b],
+            bottom[ring_b] <= bottom[ring_a] <= top[ring_a] <= top[ring_b],
+            is_in(verts[rings[ring_a][0]], ring_b)
+        ))
+
+    chilren = [[] for i in rings]
+    for idx, i in enumerate(rings_sorted):
+        for j in rings_sorted[:idx][::-1]:
+            if is_in_fast(i, j):
+                chilren[j].append(i)
+                break
+
+    res = []
+
+    # Then, we can use earcut for each part
+    used = [False] * len(rings)
+    for i in rings_sorted:
+        if used[i]:
+            continue
+        v = rings[i]
+        ring_ends = [len(v)]
+        for j in chilren[i]:
+            used[j] = True
+            v += rings[j]
+            ring_ends.append(len(v))
+        res += [v[i] for i in earcut(verts[v, :2], ring_ends)]
+
+    return res

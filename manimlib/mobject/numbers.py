@@ -1,25 +1,68 @@
 from manimlib.constants import *
-from manimlib.mobject.svg.tex_mobject import SingleStringTexMobject
+from manimlib.mobject.svg.tex_mobject import SingleStringTex
+from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VMobject
+
+
+string_to_mob_map = {}
 
 
 class DecimalNumber(VMobject):
     CONFIG = {
+        "stroke_width": 0,
+        "fill_opacity": 1.0,
         "num_decimal_places": 2,
         "include_sign": False,
         "group_with_commas": True,
-        "digit_to_digit_buff": 0.05,
+        "digit_buff_per_font_unit": 0.001,
         "show_ellipsis": False,
         "unit": None,  # Aligned to bottom unless it starts with "^"
         "include_background_rectangle": False,
         "edge_to_fix": LEFT,
+        "font_size": 48,
     }
 
     def __init__(self, number=0, **kwargs):
         super().__init__(**kwargs)
-        self.number = number
-        self.initial_config = kwargs
+        self.set_submobjects_from_number(number)
+        self.init_colors()
 
+    def set_submobjects_from_number(self, number):
+        self.number = number
+        self.set_submobjects([])
+
+        num_string = self.get_num_string(number)
+        self.add(*map(self.string_to_mob, num_string))
+
+        # Add non-numerical bits
+        if self.show_ellipsis:
+            dots = self.string_to_mob("...")
+            dots.arrange(RIGHT, buff=2 * dots[0].get_width())
+            self.add(dots)
+        if self.unit is not None:
+            self.unit_sign = self.string_to_mob(self.unit, SingleStringTex)
+            self.add(self.unit_sign)
+
+        self.arrange(
+            buff=self.digit_buff_per_font_unit * self.get_font_size(),
+            aligned_edge=DOWN
+        )
+
+        # Handle alignment of parts that should be aligned
+        # to the bottom
+        for i, c in enumerate(num_string):
+            if c == "–" and len(num_string) > i + 1:
+                self[i].align_to(self[i + 1], UP)
+                self[i].shift(self[i + 1].get_height() * DOWN / 2)
+            elif c == ",":
+                self[i].shift(self[i].get_height() * DOWN / 2)
+        if self.unit and self.unit.startswith("^"):
+            self.unit_sign.align_to(self, UP)
+
+        if self.include_background_rectangle:
+            self.add_background_rectangle()
+
+    def get_num_string(self, number):
         if isinstance(number, complex):
             formatter = self.get_complex_formatter()
         else:
@@ -32,45 +75,22 @@ class DecimalNumber(VMobject):
                 num_string = "+" + num_string[1:]
             else:
                 num_string = num_string[1:]
+        num_string = num_string.replace("-", "–")
+        return num_string
 
-        self.add(*[
-            SingleStringTexMobject(char, **kwargs)
-            for char in num_string
-        ])
+    def init_data(self):
+        super().init_data()
+        self.data["font_size"] = np.array([self.font_size], dtype=float)
 
-        # Add non-numerical bits
-        if self.show_ellipsis:
-            self.add(SingleStringTexMobject("\\dots"))
+    def get_font_size(self):
+        return self.data["font_size"][0]
 
-        if num_string.startswith("-"):
-            minus = self.submobjects[0]
-            minus.next_to(
-                self.submobjects[1], LEFT,
-                buff=self.digit_to_digit_buff
-            )
-
-        if self.unit is not None:
-            self.unit_sign = SingleStringTexMobject(self.unit, color=self.color)
-            self.add(self.unit_sign)
-
-        self.arrange(
-            buff=self.digit_to_digit_buff,
-            aligned_edge=DOWN
-        )
-
-        # Handle alignment of parts that should be aligned
-        # to the bottom
-        for i, c in enumerate(num_string):
-            if c == "-" and len(num_string) > i + 1:
-                self[i].align_to(self[i + 1], UP)
-                self[i].shift(self[i+1].get_height() * DOWN / 2)
-            elif c == ",":
-                self[i].shift(self[i].get_height() * DOWN / 2)
-        if self.unit and self.unit.startswith("^"):
-            self.unit_sign.align_to(self, UP)
-        #
-        if self.include_background_rectangle:
-            self.add_background_rectangle()
+    def string_to_mob(self, string, mob_class=Text):
+        if string not in string_to_mob_map:
+            string_to_mob_map[string] = mob_class(string, font_size=1)
+        mob = string_to_mob_map[string].copy()
+        mob.scale(self.get_font_size())
+        return mob
 
     def get_formatter(self, **kwargs):
         """
@@ -108,26 +128,17 @@ class DecimalNumber(VMobject):
             "i"
         ])
 
-    def set_value(self, number, **config):
-        full_config = dict(self.CONFIG)
-        full_config.update(self.initial_config)
-        full_config.update(config)
-        new_decimal = DecimalNumber(number, **full_config)
-        # Make sure last digit has constant height
-        new_decimal.scale(
-            self[-1].get_height() / new_decimal[-1].get_height()
-        )
-        new_decimal.move_to(self, self.edge_to_fix)
-        new_decimal.match_style(self)
-
-        old_family = self.get_family()
-        self.submobjects = new_decimal.submobjects
-        for mob in old_family:
-            # Dumb hack...due to how scene handles families
-            # of animated mobjects
-            mob.points[:] = 0
-        self.number = number
+    def set_value(self, number):
+        move_to_point = self.get_edge_center(self.edge_to_fix)
+        old_submobjects = list(self.submobjects)
+        self.set_submobjects_from_number(number)
+        self.move_to(move_to_point, self.edge_to_fix)
+        for sm1, sm2 in zip(self.submobjects, old_submobjects):
+            sm1.match_style(sm2)
         return self
+
+    def _handle_scale_side_effects(self, scale_factor):
+        self.data["font_size"] *= scale_factor
 
     def get_value(self):
         return self.number

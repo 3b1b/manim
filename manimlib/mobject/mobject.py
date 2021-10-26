@@ -1,86 +1,309 @@
-from functools import reduce
 import copy
 import itertools as it
-import operator as op
-import os
 import random
 import sys
+import moderngl
+from functools import wraps
 
-from colour import Color
 import numpy as np
 
-import manimlib.constants as consts
 from manimlib.constants import *
-from manimlib.container.container import Container
 from manimlib.utils.color import color_gradient
-from manimlib.utils.color import interpolate_color
+from manimlib.utils.color import get_colormap_list
+from manimlib.utils.color import rgb_to_hex
+from manimlib.utils.color import color_to_rgb
+from manimlib.utils.config_ops import digest_config
+from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.iterables import list_update
-from manimlib.utils.iterables import remove_list_redundancies
+from manimlib.utils.iterables import resize_array
+from manimlib.utils.iterables import resize_preserving_order
+from manimlib.utils.iterables import resize_with_interpolation
+from manimlib.utils.iterables import make_even
+from manimlib.utils.iterables import listify
+from manimlib.utils.bezier import interpolate
+from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.paths import straight_path
 from manimlib.utils.simple_functions import get_parameters
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import get_norm
-from manimlib.utils.space_ops import rotation_matrix
+from manimlib.utils.space_ops import rotation_matrix_transpose
+from manimlib.shader_wrapper import ShaderWrapper
+from manimlib.shader_wrapper import get_colormap_code
+from manimlib.event_handler import EVENT_DISPATCHER
+from manimlib.event_handler.event_listner import EventListner
+from manimlib.event_handler.event_type import EventType
 
 
-# TODO: Explain array_attrs
-
-class Mobject(Container):
+class Mobject(object):
     """
     Mathematical Object
     """
     CONFIG = {
         "color": WHITE,
-        "name": None,
-        "dim": 3,
-        "target": None,
+        "opacity": 1,
+        "dim": 3,  # TODO, get rid of this
+        # Lighting parameters
+        # Positive gloss up to 1 makes it reflect the light.
+        "gloss": 0.0,
+        # Positive shadow up to 1 makes a side opposite the light darker
+        "shadow": 0.0,
+        # For shaders
+        "shader_folder": "",
+        "render_primitive": moderngl.TRIANGLE_STRIP,
+        "texture_paths": None,
+        "depth_test": False,
+        # If true, the mobject will not get rotated according to camera position
+        "is_fixed_in_frame": False,
+        # Must match in attributes of vert shader
+        "shader_dtype": [
+            ('point', np.float32, (3,)),
+        ]
     }
 
     def __init__(self, **kwargs):
-        Container.__init__(self, **kwargs)
+        digest_config(self, kwargs)
         self.submobjects = []
-        self.color = Color(self.color)
-        if self.name is None:
-            self.name = self.__class__.__name__
-        self.updaters = []
-        self.updating_suspended = False
-        self.reset_points()
-        self.generate_points()
+        self.parents = []
+        self.family = [self]
+        self.locked_data_keys = set()
+        self.needs_new_bounding_box = True
+
+        self.init_data()
+        self.init_uniforms()
+        self.init_updaters()
+        self.init_event_listners()
+        self.init_points()
         self.init_colors()
+        self.init_shader_data()
+
+        if self.depth_test:
+            self.apply_depth_test()
 
     def __str__(self):
-        return str(self.name)
+        return self.__class__.__name__
 
-    def reset_points(self):
-        self.points = np.zeros((0, self.dim))
+    def init_data(self):
+        self.data = {
+            "points": np.zeros((0, 3)),
+            "bounding_box": np.zeros((3, 3)),
+            "rgbas": np.zeros((1, 4)),
+        }
+
+    def init_uniforms(self):
+        self.uniforms = {
+            "is_fixed_in_frame": float(self.is_fixed_in_frame),
+            "gloss": self.gloss,
+            "shadow": self.shadow,
+        }
 
     def init_colors(self):
-        # For subclasses
+        self.set_color(self.color, self.opacity)
+
+    def init_points(self):
+        # Typically implemented in subclass, unlpess purposefully left blank
         pass
 
-    def generate_points(self):
-        # Typically implemented in subclass, unless purposefully left blank
-        pass
+    def set_data(self, data):
+        for key in data:
+            self.data[key] = data[key].copy()
+        return self
+
+    def set_uniforms(self, uniforms):
+        for key in uniforms:
+            self.uniforms[key] = uniforms[key]  # Copy?
+        return self
+
+    @property
+    def animate(self):
+        # Borrowed from https://github.com/ManimCommunity/manim/
+        return _AnimationBuilder(self)
+
+    # Only these methods should directly affect points
+
+    def resize_points(self, new_length, resize_func=resize_array):
+        if new_length != len(self.data["points"]):
+            self.data["points"] = resize_func(self.data["points"], new_length)
+        self.refresh_bounding_box()
+        return self
+
+    def set_points(self, points):
+        if len(points) == len(self.data["points"]):
+            self.data["points"][:] = points
+        elif isinstance(points, np.ndarray):
+            self.data["points"] = points.copy()
+        else:
+            self.data["points"] = np.array(points)
+        self.refresh_bounding_box()
+        return self
+
+    def append_points(self, new_points):
+        self.data["points"] = np.vstack([self.data["points"], new_points])
+        self.refresh_bounding_box()
+        return self
+
+    def reverse_points(self):
+        for mob in self.get_family():
+            for key in mob.data:
+                mob.data[key] = mob.data[key][::-1]
+        return self
+
+    def apply_points_function(self, func, about_point=None, about_edge=ORIGIN, works_on_bounding_box=False):
+        if about_point is None and about_edge is not None:
+            about_point = self.get_bounding_box_point(about_edge)
+
+        for mob in self.get_family():
+            arrs = []
+            if mob.has_points():
+                arrs.append(mob.get_points())
+            if works_on_bounding_box:
+                arrs.append(mob.get_bounding_box())
+
+            for arr in arrs:
+                if about_point is None:
+                    arr[:] = func(arr)
+                else:
+                    arr[:] = func(arr - about_point) + about_point
+
+        if not works_on_bounding_box:
+            self.refresh_bounding_box(recurse_down=True)
+        else:
+            for parent in self.parents:
+                parent.refresh_bounding_box()
+        return self
+
+    # Others related to points
+
+    def match_points(self, mobject):
+        self.set_points(mobject.get_points())
+        return self
+
+    def get_points(self):
+        return self.data["points"]
+
+    def clear_points(self):
+        self.resize_points(0)
+
+    def get_num_points(self):
+        return len(self.data["points"])
+
+    def get_all_points(self):
+        if self.submobjects:
+            return np.vstack([sm.get_points() for sm in self.get_family()])
+        else:
+            return self.get_points()
+
+    def has_points(self):
+        return self.get_num_points() > 0
+
+    def get_bounding_box(self):
+        if self.needs_new_bounding_box:
+            self.data["bounding_box"] = self.compute_bounding_box()
+            self.needs_new_bounding_box = False
+        return self.data["bounding_box"]
+
+    def compute_bounding_box(self):
+        all_points = np.vstack([
+            self.get_points(),
+            *(
+                mob.get_bounding_box()
+                for mob in self.get_family()[1:]
+                if mob.has_points()
+            )
+        ])
+        if len(all_points) == 0:
+            return np.zeros((3, self.dim))
+        else:
+            # Lower left and upper right corners
+            mins = all_points.min(0)
+            maxs = all_points.max(0)
+            mids = (mins + maxs) / 2
+            return np.array([mins, mids, maxs])
+
+    def refresh_bounding_box(self, recurse_down=False, recurse_up=True):
+        for mob in self.get_family(recurse_down):
+            mob.needs_new_bounding_box = True
+        if recurse_up:
+            for parent in self.parents:
+                parent.refresh_bounding_box()
+        return self
+
+    def is_point_touching(self, point, buff=MED_SMALL_BUFF):
+        bb = self.get_bounding_box()
+        mins = (bb[0] - buff)
+        maxs = (bb[2] + buff)
+        return (point >= mins).all() and (point <= maxs).all()
+
+    # Family matters
+
+    def __getitem__(self, value):
+        if isinstance(value, slice):
+            GroupClass = self.get_group_class()
+            return GroupClass(*self.split().__getitem__(value))
+        return self.split().__getitem__(value)
+
+    def __iter__(self):
+        return iter(self.split())
+
+    def __len__(self):
+        return len(self.split())
+
+    def split(self):
+        return self.submobjects
+
+    def assemble_family(self):
+        sub_families = (sm.get_family() for sm in self.submobjects)
+        self.family = [self, *it.chain(*sub_families)]
+        self.refresh_has_updater_status()
+        self.refresh_bounding_box()
+        for parent in self.parents:
+            parent.assemble_family()
+        return self
+
+    def get_family(self, recurse=True):
+        if recurse:
+            return self.family
+        else:
+            return [self]
+
+    def family_members_with_points(self):
+        return [m for m in self.get_family() if m.has_points()]
 
     def add(self, *mobjects):
         if self in mobjects:
             raise Exception("Mobject cannot contain self")
-        self.submobjects = list_update(self.submobjects, mobjects)
-        return self
-
-    def add_to_back(self, *mobjects):
-        self.remove(*mobjects)
-        self.submobjects = list(mobjects) + self.submobjects
+        for mobject in mobjects:
+            if mobject not in self.submobjects:
+                self.submobjects.append(mobject)
+            if self not in mobject.parents:
+                mobject.parents.append(self)
+        self.assemble_family()
         return self
 
     def remove(self, *mobjects):
         for mobject in mobjects:
             if mobject in self.submobjects:
                 self.submobjects.remove(mobject)
+            if self in mobject.parents:
+                mobject.parents.remove(self)
+        self.assemble_family()
         return self
 
-    def get_array_attrs(self):
-        return ["points"]
+    def add_to_back(self, *mobjects):
+        self.set_submobjects(list_update(mobjects, self.submobjects))
+        return self
+
+    def replace_submobject(self, index, new_submob):
+        old_submob = self.submobjects[index]
+        if self in old_submob.parents:
+            old_submob.parents.remove(self)
+        self.submobjects[index] = new_submob
+        self.assemble_family()
+        return self
+
+    def set_submobjects(self, submobject_list):
+        self.remove(*self.submobjects)
+        self.add(*submobject_list)
+        return self
 
     def digest_mobject_attrs(self):
         """
@@ -88,52 +311,134 @@ class Mobject(Container):
         in the submobjects list.
         """
         mobject_attrs = [x for x in list(self.__dict__.values()) if isinstance(x, Mobject)]
-        self.submobjects = list_update(self.submobjects, mobject_attrs)
+        self.set_submobjects(list_update(self.submobjects, mobject_attrs))
         return self
 
-    def apply_over_attr_arrays(self, func):
-        for attr in self.get_array_attrs():
-            setattr(self, attr, func(getattr(self, attr)))
+    # Submobject organization
+
+    def arrange(self, direction=RIGHT, center=True, **kwargs):
+        for m1, m2 in zip(self.submobjects, self.submobjects[1:]):
+            m2.next_to(m1, direction, **kwargs)
+        if center:
+            self.center()
         return self
 
-    # Displaying
+    def arrange_in_grid(self, n_rows=None, n_cols=None,
+                        buff=None,
+                        h_buff=None,
+                        v_buff=None,
+                        buff_ratio=None,
+                        h_buff_ratio=0.5,
+                        v_buff_ratio=0.5,
+                        aligned_edge=ORIGIN,
+                        fill_rows_first=True):
+        submobs = self.submobjects
+        if n_rows is None and n_cols is None:
+            n_rows = int(np.sqrt(len(submobs)))
+        if n_rows is None:
+            n_rows = len(submobs) // n_cols
+        if n_cols is None:
+            n_cols = len(submobs) // n_rows
 
-    def get_image(self, camera=None):
-        if camera is None:
-            from manimlib.camera.camera import Camera
-            camera = Camera()
-        camera.capture_mobject(self)
-        return camera.get_image()
+        if buff is not None:
+            h_buff = buff
+            v_buff = buff
+        else:
+            if buff_ratio is not None:
+                v_buff_ratio = buff_ratio
+                h_buff_ratio = buff_ratio
+            if h_buff is None:
+                h_buff = h_buff_ratio * self[0].get_width()
+            if v_buff is None:
+                v_buff = v_buff_ratio * self[0].get_height()
 
-    def show(self, camera=None):
-        self.get_image(camera=camera).show()
+        x_unit = h_buff + max([sm.get_width() for sm in submobs])
+        y_unit = v_buff + max([sm.get_height() for sm in submobs])
 
-    def save_image(self, name=None):
-        self.get_image().save(
-            os.path.join(consts.VIDEO_DIR, (name or str(self)) + ".png")
+        for index, sm in enumerate(submobs):
+            if fill_rows_first:
+                x, y = index % n_cols, index // n_cols
+            else:
+                x, y = index // n_rows, index % n_rows
+            sm.move_to(ORIGIN, aligned_edge)
+            sm.shift(x * x_unit * RIGHT + y * y_unit * DOWN)
+        self.center()
+        return self
+
+    def replicate(self, n):
+        return self.get_group_class()(
+            *(self.copy() for x in range(n))
         )
+
+    def get_grid(self, n_rows, n_cols, height=None, **kwargs):
+        """
+        Returns a new mobject containing multiple copies of this one
+        arranged in a grid
+        """
+        grid = self.replicate(n_rows * n_cols)
+        grid.arrange_in_grid(n_rows, n_cols, **kwargs)
+        if height is not None:
+            grid.set_height(height)
+        return grid
+
+    def sort(self, point_to_num_func=lambda p: p[0], submob_func=None):
+        if submob_func is not None:
+            self.submobjects.sort(key=submob_func)
+        else:
+            self.submobjects.sort(key=lambda m: point_to_num_func(m.get_center()))
+        return self
+
+    def shuffle(self, recurse=False):
+        if recurse:
+            for submob in self.submobjects:
+                submob.shuffle(recurse=True)
+        random.shuffle(self.submobjects)
+        return self
+
+    # Copying
 
     def copy(self):
         # TODO, either justify reason for shallow copy, or
         # remove this redundancy everywhere
         # return self.deepcopy()
 
+        parents = self.parents
+        self.parents = []
         copy_mobject = copy.copy(self)
-        copy_mobject.points = np.array(self.points)
-        copy_mobject.submobjects = [
-            submob.copy() for submob in self.submobjects
-        ]
-        copy_mobject.updaters = list(self.updaters)
+        self.parents = parents
+
+        copy_mobject.data = dict(self.data)
+        for key in self.data:
+            copy_mobject.data[key] = self.data[key].copy()
+
+        copy_mobject.uniforms = dict(self.uniforms)
+        for key in self.uniforms:
+            if isinstance(self.uniforms[key], np.ndarray):
+                copy_mobject.uniforms[key] = self.uniforms[key].copy()
+
+        copy_mobject.submobjects = []
+        copy_mobject.add(*[sm.copy() for sm in self.submobjects])
+        copy_mobject.match_updaters(self)
+
+        copy_mobject.needs_new_bounding_box = self.needs_new_bounding_box
+
+        # Make sure any mobject or numpy array attributes are copied
         family = self.get_family()
         for attr, value in list(self.__dict__.items()):
             if isinstance(value, Mobject) and value in family and value is not self:
                 setattr(copy_mobject, attr, value.copy())
             if isinstance(value, np.ndarray):
-                setattr(copy_mobject, attr, np.array(value))
+                setattr(copy_mobject, attr, value.copy())
+            if isinstance(value, ShaderWrapper):
+                setattr(copy_mobject, attr, value.copy())
         return copy_mobject
 
     def deepcopy(self):
-        return copy.deepcopy(self)
+        parents = self.parents
+        self.parents = []
+        result = copy.deepcopy(self)
+        self.parents = parents
+        return result
 
     def generate_target(self, use_deepcopy=False):
         self.target = None  # Prevent exponential explosion
@@ -143,60 +448,82 @@ class Mobject(Container):
             self.target = self.copy()
         return self.target
 
+    def save_state(self, use_deepcopy=False):
+        if hasattr(self, "saved_state"):
+            # Prevent exponential growth of data
+            self.saved_state = None
+        if use_deepcopy:
+            self.saved_state = self.deepcopy()
+        else:
+            self.saved_state = self.copy()
+        return self
+
+    def restore(self):
+        if not hasattr(self, "saved_state") or self.save_state is None:
+            raise Exception("Trying to restore without having saved")
+        self.become(self.saved_state)
+        return self
+
     # Updating
 
-    def update(self, dt=0, recursive=True):
-        if self.updating_suspended:
+    def init_updaters(self):
+        self.time_based_updaters = []
+        self.non_time_updaters = []
+        self.has_updaters = False
+        self.updating_suspended = False
+
+    def update(self, dt=0, recurse=True):
+        if not self.has_updaters or self.updating_suspended:
             return self
-        for updater in self.updaters:
-            parameters = get_parameters(updater)
-            if "dt" in parameters:
-                updater(self, dt)
-            else:
-                updater(self)
-        if recursive:
+        for updater in self.time_based_updaters:
+            updater(self, dt)
+        for updater in self.non_time_updaters:
+            updater(self)
+        if recurse:
             for submob in self.submobjects:
-                submob.update(dt, recursive)
+                submob.update(dt, recurse)
         return self
 
     def get_time_based_updaters(self):
-        return [
-            updater for updater in self.updaters
-            if "dt" in get_parameters(updater)
-        ]
+        return self.time_based_updaters
 
     def has_time_based_updater(self):
-        for updater in self.updaters:
-            if "dt" in get_parameters(updater):
-                return True
-        return False
+        return len(self.time_based_updaters) > 0
 
     def get_updaters(self):
-        return self.updaters
+        return self.time_based_updaters + self.non_time_updaters
 
     def get_family_updaters(self):
-        return list(it.chain(*[
-            sm.get_updaters()
-            for sm in self.get_family()
-        ]))
+        return list(it.chain(*[sm.get_updaters() for sm in self.get_family()]))
 
     def add_updater(self, update_function, index=None, call_updater=True):
-        if index is None:
-            self.updaters.append(update_function)
+        if "dt" in get_parameters(update_function):
+            updater_list = self.time_based_updaters
         else:
-            self.updaters.insert(index, update_function)
+            updater_list = self.non_time_updaters
+
+        if index is None:
+            updater_list.append(update_function)
+        else:
+            updater_list.insert(index, update_function)
+
+        self.refresh_has_updater_status()
         if call_updater:
-            self.update(0)
+            self.update(dt=0)
         return self
 
     def remove_updater(self, update_function):
-        while update_function in self.updaters:
-            self.updaters.remove(update_function)
+        for updater_list in [self.time_based_updaters, self.non_time_updaters]:
+            while update_function in updater_list:
+                updater_list.remove(update_function)
+        self.refresh_has_updater_status()
         return self
 
-    def clear_updaters(self, recursive=True):
-        self.updaters = []
-        if recursive:
+    def clear_updaters(self, recurse=True):
+        self.time_based_updaters = []
+        self.non_time_updaters = []
+        self.refresh_has_updater_status()
+        if recurse:
             for submob in self.submobjects:
                 submob.clear_updaters()
         return self
@@ -207,35 +534,39 @@ class Mobject(Container):
             self.add_updater(updater)
         return self
 
-    def suspend_updating(self, recursive=True):
+    def suspend_updating(self, recurse=True):
         self.updating_suspended = True
-        if recursive:
+        if recurse:
             for submob in self.submobjects:
-                submob.suspend_updating(recursive)
+                submob.suspend_updating(recurse)
         return self
 
-    def resume_updating(self, recursive=True):
+    def resume_updating(self, recurse=True, call_updater=True):
         self.updating_suspended = False
-        if recursive:
+        if recurse:
             for submob in self.submobjects:
-                submob.resume_updating(recursive)
-        self.update(dt=0, recursive=recursive)
+                submob.resume_updating(recurse)
+        for parent in self.parents:
+            parent.resume_updating(recurse=False, call_updater=False)
+        if call_updater:
+            self.update(dt=0, recurse=recurse)
+        return self
+
+    def refresh_has_updater_status(self):
+        self.has_updaters = any(mob.get_updaters() for mob in self.get_family())
         return self
 
     # Transforming operations
 
-    def apply_to_family(self, func):
-        for mob in self.family_members_with_points():
-            func(mob)
-
-    def shift(self, *vectors):
-        total_vector = reduce(op.add, vectors)
-        for mob in self.family_members_with_points():
-            mob.points = mob.points.astype('float')
-            mob.points += total_vector
+    def shift(self, vector):
+        self.apply_points_function(
+            lambda points: points + vector,
+            about_edge=None,
+            works_on_bounding_box=True,
+        )
         return self
 
-    def scale(self, scale_factor, **kwargs):
+    def scale(self, scale_factor, min_scale_factor=1e-8, about_point=None, about_edge=ORIGIN):
         """
         Default behavior is to scale about the center of the mobject.
         The argument about_edge can be a vector, indicating which side of
@@ -245,18 +576,36 @@ class Mobject(Container):
         Otherwise, if about_point is given a value, scaling is done with
         respect to that point.
         """
-        self.apply_points_function_about_point(
-            lambda points: scale_factor * points, **kwargs
+        scale_factor = max(scale_factor, min_scale_factor)
+        self.apply_points_function(
+            lambda points: scale_factor * points,
+            about_point=about_point,
+            about_edge=about_edge,
+            works_on_bounding_box=True,
         )
+        for mob in self.get_family():
+            mob._handle_scale_side_effects(scale_factor)
         return self
 
-    def rotate_about_origin(self, angle, axis=OUT, axes=[]):
+    def _handle_scale_side_effects(self, scale_factor):
+        # In case subclasses, such as DecimalNumber, need to make
+        # any other changes when the size gets altered
+        pass
+
+    def stretch(self, factor, dim, **kwargs):
+        def func(points):
+            points[:, dim] *= factor
+            return points
+        self.apply_points_function(func, works_on_bounding_box=True, **kwargs)
+        return self
+
+    def rotate_about_origin(self, angle, axis=OUT):
         return self.rotate(angle, axis, about_point=ORIGIN)
 
     def rotate(self, angle, axis=OUT, **kwargs):
-        rot_matrix = rotation_matrix(angle, axis)
-        self.apply_points_function_about_point(
-            lambda points: np.dot(points, rot_matrix.T),
+        rot_matrix_T = rotation_matrix_transpose(angle, axis)
+        self.apply_points_function(
+            lambda points: np.dot(points, rot_matrix_T),
             **kwargs
         )
         return self
@@ -264,19 +613,12 @@ class Mobject(Container):
     def flip(self, axis=UP, **kwargs):
         return self.rotate(TAU / 2, axis, **kwargs)
 
-    def stretch(self, factor, dim, **kwargs):
-        def func(points):
-            points[:, dim] *= factor
-            return points
-        self.apply_points_function_about_point(func, **kwargs)
-        return self
-
     def apply_function(self, function, **kwargs):
         # Default to applying matrix about the origin, not mobjects center
         if len(kwargs) == 0:
             kwargs["about_point"] = ORIGIN
-        self.apply_points_function_about_point(
-            lambda points: np.apply_along_axis(function, 1, points),
+        self.apply_points_function(
+            lambda points: np.array([function(p) for p in points]),
             **kwargs
         )
         return self
@@ -297,7 +639,7 @@ class Mobject(Container):
         full_matrix = np.identity(self.dim)
         matrix = np.array(matrix)
         full_matrix[:matrix.shape[0], :matrix.shape[1]] = matrix
-        self.apply_points_function_about_point(
+        self.apply_points_function(
             lambda points: np.dot(points, full_matrix.T),
             **kwargs
         )
@@ -316,65 +658,14 @@ class Mobject(Container):
 
     def wag(self, direction=RIGHT, axis=DOWN, wag_factor=1.0):
         for mob in self.family_members_with_points():
-            alphas = np.dot(mob.points, np.transpose(axis))
+            alphas = np.dot(mob.get_points(), np.transpose(axis))
             alphas -= min(alphas)
             alphas /= max(alphas)
             alphas = alphas**wag_factor
-            mob.points += np.dot(
+            mob.set_points(mob.get_points() + np.dot(
                 alphas.reshape((len(alphas), 1)),
                 np.array(direction).reshape((1, mob.dim))
-            )
-        return self
-
-    def reverse_points(self):
-        for mob in self.family_members_with_points():
-            mob.apply_over_attr_arrays(
-                lambda arr: np.array(list(reversed(arr)))
-            )
-        return self
-
-    def repeat(self, count):
-        """
-        This can make transition animations nicer
-        """
-        def repeat_array(array):
-            return reduce(
-                lambda a1, a2: np.append(a1, a2, axis=0),
-                [array] * count
-            )
-        for mob in self.family_members_with_points():
-            mob.apply_over_attr_arrays(repeat_array)
-        return self
-
-    # In place operations.
-    # Note, much of these are now redundant with default behavior of
-    # above methods
-
-    def apply_points_function_about_point(self, func, about_point=None, about_edge=None):
-        if about_point is None:
-            if about_edge is None:
-                about_edge = ORIGIN
-            about_point = self.get_critical_point(about_edge)
-        for mob in self.family_members_with_points():
-            mob.points -= about_point
-            mob.points = func(mob.points)
-            mob.points += about_point
-        return self
-
-    def rotate_in_place(self, angle, axis=OUT):
-        # redundant with default behavior of rotate now.
-        return self.rotate(angle, axis=axis)
-
-    def scale_in_place(self, scale_factor, **kwargs):
-        # Redundant with default behavior of scale now.
-        return self.scale(scale_factor, **kwargs)
-
-    def scale_about_point(self, scale_factor, point):
-        # Redundant with default behavior of scale now.
-        return self.scale(scale_factor, about_point=point)
-
-    def pose_at_angle(self, **kwargs):
-        self.rotate(TAU / 14, RIGHT + UP, **kwargs)
+            ))
         return self
 
     # Positioning methods
@@ -389,7 +680,7 @@ class Mobject(Container):
         corner in the 2d plane.
         """
         target_point = np.sign(direction) * (FRAME_X_RADIUS, FRAME_Y_RADIUS, 0)
-        point_to_align = self.get_critical_point(direction)
+        point_to_align = self.get_bounding_box_point(direction)
         shift_val = target_point - point_to_align - buff * np.array(direction)
         shift_val = shift_val * abs(np.sign(direction))
         self.shift(shift_val)
@@ -415,7 +706,7 @@ class Mobject(Container):
                 target_aligner = mob[index_of_submobject_to_align]
             else:
                 target_aligner = mob
-            target_point = target_aligner.get_critical_point(
+            target_point = target_aligner.get_bounding_box_point(
                 aligned_edge + direction
             )
         else:
@@ -426,9 +717,8 @@ class Mobject(Container):
             aligner = self[index_of_submobject_to_align]
         else:
             aligner = self
-        point_to_align = aligner.get_critical_point(aligned_edge - direction)
-        self.shift((target_point - point_to_align +
-                    buff * direction) * coor_mask)
+        point_to_align = aligner.get_bounding_box_point(aligned_edge - direction)
+        self.shift((target_point - point_to_align + buff * direction) * coor_mask)
         return self
 
     def shift_onto_screen(self, **kwargs):
@@ -477,7 +767,7 @@ class Mobject(Container):
         return self.rescale_to_fit(height, 1, stretch=True, **kwargs)
 
     def stretch_to_fit_depth(self, depth, **kwargs):
-        return self.rescale_to_fit(depth, 1, stretch=True, **kwargs)
+        return self.rescale_to_fit(depth, 2, stretch=True, **kwargs)
 
     def set_width(self, width, stretch=False, **kwargs):
         return self.rescale_to_fit(width, 0, stretch=stretch, **kwargs)
@@ -487,6 +777,21 @@ class Mobject(Container):
 
     def set_depth(self, depth, stretch=False, **kwargs):
         return self.rescale_to_fit(depth, 2, stretch=stretch, **kwargs)
+
+    def set_max_width(self, max_width, **kwargs):
+        if self.get_width() > max_width:
+            self.set_width(max_width, **kwargs)
+        return self
+
+    def set_max_height(self, max_height, **kwargs):
+        if self.get_height() > max_height:
+            self.set_height(max_height, **kwargs)
+        return self
+
+    def set_max_depth(self, max_depth, **kwargs):
+        if self.get_depth() > max_depth:
+            self.set_depth(max_depth, **kwargs)
+        return self
 
     def set_coord(self, value, dim, direction=ORIGIN):
         curr = self.get_coord(dim, direction)
@@ -513,20 +818,20 @@ class Mobject(Container):
     def move_to(self, point_or_mobject, aligned_edge=ORIGIN,
                 coor_mask=np.array([1, 1, 1])):
         if isinstance(point_or_mobject, Mobject):
-            target = point_or_mobject.get_critical_point(aligned_edge)
+            target = point_or_mobject.get_bounding_box_point(aligned_edge)
         else:
             target = point_or_mobject
-        point_to_align = self.get_critical_point(aligned_edge)
+        point_to_align = self.get_bounding_box_point(aligned_edge)
         self.shift((target - point_to_align) * coor_mask)
         return self
 
     def replace(self, mobject, dim_to_match=0, stretch=False):
         if not mobject.get_num_points() and not mobject.submobjects:
-            raise Warning("Attempting to replace mobject with no points")
+            self.scale(0)
             return self
         if stretch:
-            self.stretch_to_fit_width(mobject.get_width())
-            self.stretch_to_fit_height(mobject.get_height())
+            for i in range(self.dim):
+                self.rescale_to_fit(mobject.length_over_dim(i), i, stretch=True)
         else:
             self.rescale_to_fit(
                 mobject.length_over_dim(dim_to_match),
@@ -542,7 +847,7 @@ class Mobject(Container):
                  buff=MED_SMALL_BUFF):
         self.replace(mobject, dim_to_match, stretch)
         length = mobject.length_over_dim(dim_to_match)
-        self.scale_in_place((length + buff) / length)
+        self.scale((length + buff) / length)
         return self
 
     def put_start_and_end_on(self, start, end):
@@ -556,15 +861,130 @@ class Mobject(Container):
             about_point=curr_start,
         )
         self.rotate(
-            angle_of_vector(target_vect) -
-            angle_of_vector(curr_vect),
-            about_point=curr_start
+            angle_of_vector(target_vect) - angle_of_vector(curr_vect),
         )
-        self.shift(start - curr_start)
+        self.rotate(
+            np.arctan2(curr_vect[2], get_norm(curr_vect[:2])) - np.arctan2(target_vect[2], get_norm(target_vect[:2])),
+            axis=np.array([-target_vect[1], target_vect[0], 0]),
+        )
+        self.shift(start - self.get_start())
+        return self
+
+    # Color functions
+
+    def set_rgba_array(self, rgba_array, name="rgbas", recurse=False):
+        for mob in self.get_family(recurse):
+            mob.data[name] = np.array(rgba_array)
+        return self
+
+    def set_color_by_rgba_func(self, func, recurse=True):
+        """
+        Func should take in a point in R3 and output an rgba value
+        """
+        for mob in self.get_family(recurse):
+            rgba_array = [func(point) for point in mob.get_points()]
+            mob.set_rgba_array(rgba_array)
+        return self
+
+    def set_color_by_rgb_func(self, func, opacity=1, recurse=True):
+        """
+        Func should take in a point in R3 and output an rgb value
+        """
+        for mob in self.get_family(recurse):
+            rgba_array = [[*func(point), opacity] for point in mob.get_points()]
+            mob.set_rgba_array(rgba_array)
+        return self
+
+    def set_rgba_array_by_color(self, color=None, opacity=None, name="rgbas", recurse=True):
+        if color is not None:
+            rgbs = np.array([color_to_rgb(c) for c in listify(color)])
+        if opacity is not None:
+            opacities = listify(opacity)
+
+        # Color only
+        if color is not None and opacity is None:
+            for mob in self.get_family(recurse):
+                mob.data[name] = resize_array(mob.data[name], len(rgbs))
+                mob.data[name][:, :3] = rgbs
+
+        # Opacity only
+        if color is None and opacity is not None:
+            for mob in self.get_family(recurse):
+                mob.data[name] = resize_array(mob.data[name], len(opacities))
+                mob.data[name][:, 3] = opacities
+
+        # Color and opacity
+        if color is not None and opacity is not None:
+            rgbas = np.array([
+                [*rgb, o]
+                for rgb, o in zip(*make_even(rgbs, opacities))
+            ])
+            for mob in self.get_family(recurse):
+                mob.data[name] = rgbas.copy()
+        return self
+
+    def set_color(self, color, opacity=None, recurse=True):
+        self.set_rgba_array_by_color(color, opacity, recurse=False)
+        # Recurse to submobjects differently from how set_rgba_array_by_color
+        # in case they implement set_color differently
+        if recurse:
+            for submob in self.submobjects:
+                submob.set_color(color, recurse=True)
+        return self
+
+    def set_opacity(self, opacity, recurse=True):
+        self.set_rgba_array_by_color(color=None, opacity=opacity, recurse=False)
+        if recurse:
+            for submob in self.submobjects:
+                submob.set_opacity(opacity, recurse=True)
+        return self
+
+    def get_color(self):
+        return rgb_to_hex(self.data["rgbas"][0, :3])
+
+    def get_opacity(self):
+        return self.data["rgbas"][0, 3]
+
+    def set_color_by_gradient(self, *colors):
+        self.set_submobject_colors_by_gradient(*colors)
+        return self
+
+    def set_submobject_colors_by_gradient(self, *colors):
+        if len(colors) == 0:
+            raise Exception("Need at least one color")
+        elif len(colors) == 1:
+            return self.set_color(*colors)
+
+        # mobs = self.family_members_with_points()
+        mobs = self.submobjects
+        new_colors = color_gradient(colors, len(mobs))
+
+        for mob, color in zip(mobs, new_colors):
+            mob.set_color(color)
+        return self
+
+    def fade(self, darkness=0.5, recurse=True):
+        self.set_opacity(1.0 - darkness, recurse=recurse)
+
+    def get_gloss(self):
+        return self.uniforms["gloss"]
+
+    def set_gloss(self, gloss, recurse=True):
+        for mob in self.get_family(recurse):
+            mob.uniforms["gloss"] = gloss
+        return self
+
+    def get_shadow(self):
+        return self.uniforms["shadow"]
+
+    def set_shadow(self, shadow, recurse=True):
+        for mob in self.get_family(recurse):
+            mob.uniforms["shadow"] = shadow
         return self
 
     # Background rectangle
-    def add_background_rectangle(self, color=BLACK, opacity=0.75, **kwargs):
+
+    def add_background_rectangle(self, color=None, opacity=0.75, **kwargs):
         # TODO, this does not behave well when the mobject has points,
         # since it gets displayed on top
         from manimlib.mobject.shape_matchers import BackgroundRectangle
@@ -586,180 +1006,44 @@ class Mobject(Container):
             mob.add_background_rectangle(**kwargs)
         return self
 
-    # Color functions
-
-    def set_color(self, color=YELLOW_C, family=True):
-        """
-        Condition is function which takes in one arguments, (x, y, z).
-        Here it just recurses to submobjects, but in subclasses this
-        should be further implemented based on the the inner workings
-        of color
-        """
-        if family:
-            for submob in self.submobjects:
-                submob.set_color(color, family=family)
-        self.color = color
-        return self
-
-    def set_color_by_gradient(self, *colors):
-        self.set_submobject_colors_by_gradient(*colors)
-        return self
-
-    def set_colors_by_radial_gradient(self, center=None, radius=1, inner_color=WHITE, outer_color=BLACK):
-        self.set_submobject_colors_by_radial_gradient(
-            center, radius, inner_color, outer_color)
-        return self
-
-    def set_submobject_colors_by_gradient(self, *colors):
-        if len(colors) == 0:
-            raise Exception("Need at least one color")
-        elif len(colors) == 1:
-            return self.set_color(*colors)
-
-        mobs = self.family_members_with_points()
-        new_colors = color_gradient(colors, len(mobs))
-
-        for mob, color in zip(mobs, new_colors):
-            mob.set_color(color, family=False)
-        return self
-
-    def set_submobject_colors_by_radial_gradient(self, center=None, radius=1, inner_color=WHITE, outer_color=BLACK):
-        if center is None:
-            center = self.get_center()
-
-        for mob in self.family_members_with_points():
-            t = get_norm(mob.get_center() - center) / radius
-            t = min(t, 1)
-            mob_color = interpolate_color(inner_color, outer_color, t)
-            mob.set_color(mob_color, family=False)
-
-        return self
-
-    def to_original_color(self):
-        self.set_color(self.color)
-        return self
-
-    def fade_to(self, color, alpha, family=True):
-        if self.get_num_points() > 0:
-            new_color = interpolate_color(
-                self.get_color(), color, alpha
-            )
-            self.set_color(new_color, family=False)
-        if family:
-            for submob in self.submobjects:
-                submob.fade_to(color, alpha)
-        return self
-
-    def fade(self, darkness=0.5, family=True):
-        if family:
-            for submob in self.submobjects:
-                submob.fade(darkness, family)
-        return self
-
-    def get_color(self):
-        return self.color
-
-    ##
-
-    def save_state(self, use_deepcopy=False):
-        if hasattr(self, "saved_state"):
-            # Prevent exponential growth of data
-            self.saved_state = None
-        if use_deepcopy:
-            self.saved_state = self.deepcopy()
-        else:
-            self.saved_state = self.copy()
-        return self
-
-    def restore(self):
-        if not hasattr(self, "saved_state") or self.save_state is None:
-            raise Exception("Trying to restore without having saved")
-        self.become(self.saved_state)
-        return self
-
-    ##
-
-    def reduce_across_dimension(self, points_func, reduce_func, dim):
-        points = self.get_all_points()
-        if points is None or len(points) == 0:
-            # Note, this default means things like empty VGroups
-            # will appear to have a center at [0, 0, 0]
-            return 0
-        values = points_func(points[:, dim])
-        return reduce_func(values)
-
-    def nonempty_submobjects(self):
-        return [
-            submob for submob in self.submobjects
-            if len(submob.submobjects) != 0 or len(submob.points) != 0
-        ]
-
-    def get_merged_array(self, array_attr):
-        result = getattr(self, array_attr)
-        for submob in self.submobjects:
-            result = np.append(
-                result, submob.get_merged_array(array_attr),
-                axis=0
-            )
-            submob.get_merged_array(array_attr)
-        return result
-
-    def get_all_points(self):
-        return self.get_merged_array("points")
-
     # Getters
 
-    def get_points_defining_boundary(self):
-        return self.get_all_points()
-
-    def get_num_points(self):
-        return len(self.points)
-
-    def get_extremum_along_dim(self, points=None, dim=0, key=0):
-        if points is None:
-            points = self.get_points_defining_boundary()
-        values = points[:, dim]
-        if key < 0:
-            return np.min(values)
-        elif key == 0:
-            return (np.min(values) + np.max(values)) / 2
-        else:
-            return np.max(values)
-
-    def get_critical_point(self, direction):
-        """
-        Picture a box bounding the mobject.  Such a box has
-        9 'critical points': 4 corners, 4 edge center, the
-        center.  This returns one of them.
-        """
-        result = np.zeros(self.dim)
-        all_points = self.get_points_defining_boundary()
-        if len(all_points) == 0:
-            return result
-        for dim in range(self.dim):
-            result[dim] = self.get_extremum_along_dim(
-                all_points, dim=dim, key=direction[dim]
-            )
-        return result
-
-    # Pseudonyms for more general get_critical_point method
+    def get_bounding_box_point(self, direction):
+        bb = self.get_bounding_box()
+        indices = (np.sign(direction) + 1).astype(int)
+        return np.array([
+            bb[indices[i]][i]
+            for i in range(3)
+        ])
 
     def get_edge_center(self, direction):
-        return self.get_critical_point(direction)
+        return self.get_bounding_box_point(direction)
 
     def get_corner(self, direction):
-        return self.get_critical_point(direction)
+        return self.get_bounding_box_point(direction)
 
     def get_center(self):
-        return self.get_critical_point(np.zeros(self.dim))
+        return self.get_bounding_box()[1]
 
     def get_center_of_mass(self):
-        return np.apply_along_axis(np.mean, 0, self.get_all_points())
+        return self.get_all_points().mean(0)
 
     def get_boundary_point(self, direction):
-        all_points = self.get_points_defining_boundary()
-        index = np.argmax(np.dot(all_points, np.array(direction).T))
+        all_points = self.get_all_points()
+        boundary_directions = all_points - self.get_center()
+        norms = np.linalg.norm(boundary_directions, axis=1)
+        boundary_directions /= np.repeat(norms, 3).reshape((len(norms), 3))
+        index = np.argmax(np.dot(boundary_directions, np.array(direction).T))
         return all_points[index]
+
+    def get_continuous_bounding_box_point(self, direction):
+        dl, center, ur = self.get_bounding_box()
+        corner_vect = (ur - center)
+        return center + direction / np.max(np.abs(np.true_divide(
+            direction, corner_vect,
+            out=np.zeros(len(direction)),
+            where=((corner_vect) != 0)
+        )))
 
     def get_top(self):
         return self.get_edge_center(UP)
@@ -780,10 +1064,8 @@ class Mobject(Container):
         return self.get_edge_center(IN)
 
     def length_over_dim(self, dim):
-        return (
-            self.reduce_across_dimension(np.max, np.max, dim) -
-            self.reduce_across_dimension(np.min, np.min, dim)
-        )
+        bb = self.get_bounding_box()
+        return abs((bb[2] - bb[0])[dim])
 
     def get_width(self):
         return self.length_over_dim(0)
@@ -798,9 +1080,7 @@ class Mobject(Container):
         """
         Meant to generalize get_x, get_y, get_z
         """
-        return self.get_extremum_along_dim(
-            dim=dim, key=direction[dim]
-        )
+        return self.get_bounding_box_point(direction)[dim]
 
     def get_x(self, direction=ORIGIN):
         return self.get_coord(0, direction)
@@ -813,21 +1093,29 @@ class Mobject(Container):
 
     def get_start(self):
         self.throw_error_if_no_points()
-        return np.array(self.points[0])
+        return self.get_points()[0].copy()
 
     def get_end(self):
         self.throw_error_if_no_points()
-        return np.array(self.points[-1])
+        return self.get_points()[-1].copy()
 
     def get_start_and_end(self):
-        return self.get_start(), self.get_end()
+        self.throw_error_if_no_points()
+        points = self.get_points()
+        return (points[0].copy(), points[-1].copy())
 
     def point_from_proportion(self, alpha):
-        raise Exception("Not implemented")
+        points = self.get_points()
+        i, subalpha = integer_interpolate(0, len(points) - 1, alpha)
+        return interpolate(points[i], points[i + 1], subalpha)
+
+    def pfp(self, alpha):
+        """Abbreviation fo point_from_proportion"""
+        return self.point_from_proportion(alpha)
 
     def get_pieces(self, n_pieces):
         template = self.copy()
-        template.submobjects = []
+        template.set_submobjects([])
         alphas = np.linspace(0, 1, n_pieces + 1)
         return Group(*[
             template.copy().pointwise_become_partial(
@@ -840,12 +1128,6 @@ class Mobject(Container):
         # TODO, better place to define default z_index_group?
         z_index_group = getattr(self, "z_index_group", self)
         return z_index_group.get_center()
-
-    def has_points(self):
-        return len(self.points) > 0
-
-    def has_no_points(self):
-        return not self.has_points()
 
     # Match other mobject properties
 
@@ -883,7 +1165,7 @@ class Mobject(Container):
     def match_z(self, mobject, direction=ORIGIN):
         return self.match_coord(mobject, 2, direction)
 
-    def align_to(self, mobject_or_point, direction=ORIGIN, alignment_vect=UP):
+    def align_to(self, mobject_or_point, direction=ORIGIN):
         """
         Examples:
         mob1.align_to(mob2, UP) moves mob1 vertically so that its
@@ -894,7 +1176,7 @@ class Mobject(Container):
         the center of mob2
         """
         if isinstance(mobject_or_point, Mobject):
-            point = mobject_or_point.get_critical_point(direction)
+            point = mobject_or_point.get_bounding_box_point(direction)
         else:
             point = mobject_or_point
 
@@ -903,218 +1185,418 @@ class Mobject(Container):
                 self.set_coord(point[dim], dim, direction)
         return self
 
-    # Family matters
-
-    def __getitem__(self, value):
-        self_list = self.split()
-        if isinstance(value, slice):
-            GroupClass = self.get_group_class()
-            return GroupClass(*self_list.__getitem__(value))
-        return self_list.__getitem__(value)
-
-    def __iter__(self):
-        return iter(self.split())
-
-    def __len__(self):
-        return len(self.split())
-
     def get_group_class(self):
         return Group
 
-    def split(self):
-        result = [self] if len(self.points) > 0 else []
-        return result + self.submobjects
-
-    def get_family(self):
-        sub_families = list(map(Mobject.get_family, self.submobjects))
-        all_mobjects = [self] + list(it.chain(*sub_families))
-        return remove_list_redundancies(all_mobjects)
-
-    def family_members_with_points(self):
-        return [m for m in self.get_family() if m.get_num_points() > 0]
-
-    def arrange(self, direction=RIGHT, center=True, **kwargs):
-        for m1, m2 in zip(self.submobjects, self.submobjects[1:]):
-            m2.next_to(m1, direction, **kwargs)
-        if center:
-            self.center()
-        return self
-
-    def arrange_in_grid(self, n_rows=None, n_cols=None, **kwargs):
-        submobs = self.submobjects
-        if n_rows is None and n_cols is None:
-            n_cols = int(np.sqrt(len(submobs)))
-
-        if n_rows is not None:
-            v1 = RIGHT
-            v2 = DOWN
-            n = len(submobs) // n_rows
-        elif n_cols is not None:
-            v1 = DOWN
-            v2 = RIGHT
-            n = len(submobs) // n_cols
-        Group(*[
-            Group(*submobs[i:i + n]).arrange(v1, **kwargs)
-            for i in range(0, len(submobs), n)
-        ]).arrange(v2, **kwargs)
-        return self
-
-    def sort(self, point_to_num_func=lambda p: p[0], submob_func=None):
-        if submob_func is None:
-            submob_func = lambda m: point_to_num_func(m.get_center())
-        self.submobjects.sort(key=submob_func)
-        return self
-
-    def shuffle(self, recursive=False):
-        if recursive:
-            for submob in self.submobjects:
-                submob.shuffle(recursive=True)
-        random.shuffle(self.submobjects)
-
-    # Just here to keep from breaking old scenes.
-    def arrange_submobjects(self, *args, **kwargs):
-        return self.arrange(*args, **kwargs)
-
-    def sort_submobjects(self, *args, **kwargs):
-        return self.sort(*args, **kwargs)
-
-    def shuffle_submobjects(self, *args, **kwargs):
-        return self.shuffle(*args, **kwargs)
-
     # Alignment
-    def align_data(self, mobject):
-        self.null_point_align(mobject)
-        self.align_submobjects(mobject)
-        self.align_points(mobject)
-        # Recurse
-        for m1, m2 in zip(self.submobjects, mobject.submobjects):
-            m1.align_data(m2)
 
-    def get_point_mobject(self, center=None):
-        """
-        The simplest mobject to be transformed to or from self.
-        Should by a point of the appropriate type
-        """
-        message = "get_point_mobject not implemented for {}"
-        raise Exception(message.format(self.__class__.__name__))
+    def align_data_and_family(self, mobject):
+        self.align_family(mobject)
+        self.align_data(mobject)
+
+    def align_data(self, mobject):
+        # In case any data arrays get resized when aligned to shader data
+        self.refresh_shader_data()
+        for mob1, mob2 in zip(self.get_family(), mobject.get_family()):
+            # Separate out how points are treated so that subclasses
+            # can handle that case differently if they choose
+            mob1.align_points(mob2)
+            for key in mob1.data.keys() & mob2.data.keys():
+                if key == "points":
+                    continue
+                arr1 = mob1.data[key]
+                arr2 = mob2.data[key]
+                if len(arr2) > len(arr1):
+                    mob1.data[key] = resize_preserving_order(arr1, len(arr2))
+                elif len(arr1) > len(arr2):
+                    mob2.data[key] = resize_preserving_order(arr2, len(arr1))
 
     def align_points(self, mobject):
-        count1 = self.get_num_points()
-        count2 = mobject.get_num_points()
-        if count1 < count2:
-            self.align_points_with_larger(mobject)
-        elif count2 < count1:
-            mobject.align_points_with_larger(self)
+        max_len = max(self.get_num_points(), mobject.get_num_points())
+        for mob in (self, mobject):
+            mob.resize_points(max_len, resize_func=resize_preserving_order)
         return self
 
-    def align_points_with_larger(self, larger_mobject):
-        raise Exception("Not implemented")
-
-    def align_submobjects(self, mobject):
+    def align_family(self, mobject):
         mob1 = self
         mob2 = mobject
-        n1 = len(mob1.submobjects)
-        n2 = len(mob2.submobjects)
-        mob1.add_n_more_submobjects(max(0, n2 - n1))
-        mob2.add_n_more_submobjects(max(0, n1 - n2))
-        return self
-
-    def null_point_align(self, mobject):
-        """
-        If a mobject with points is being aligned to
-        one without, treat both as groups, and push
-        the one with points into its own submobjects
-        list.
-        """
-        for m1, m2 in (self, mobject), (mobject, self):
-            if m1.has_no_points() and m2.has_points():
-                m2.push_self_into_submobjects()
+        n1 = len(mob1)
+        n2 = len(mob2)
+        if n1 != n2:
+            mob1.add_n_more_submobjects(max(0, n2 - n1))
+            mob2.add_n_more_submobjects(max(0, n1 - n2))
+        # Recurse
+        for sm1, sm2 in zip(mob1.submobjects, mob2.submobjects):
+            sm1.align_family(sm2)
         return self
 
     def push_self_into_submobjects(self):
-        copy = self.copy()
-        copy.submobjects = []
-        self.reset_points()
+        copy = self.deepcopy()
+        copy.set_submobjects([])
+        self.resize_points(0)
         self.add(copy)
         return self
 
     def add_n_more_submobjects(self, n):
         if n == 0:
-            return
+            return self
 
         curr = len(self.submobjects)
         if curr == 0:
             # If empty, simply add n point mobjects
-            self.submobjects = [
-                self.get_point_mobject()
+            null_mob = self.copy()
+            null_mob.set_points([self.get_center()])
+            self.set_submobjects([
+                null_mob.copy()
                 for k in range(n)
-            ]
-            return
-
+            ])
+            return self
         target = curr + n
-        # TODO, factor this out to utils so as to reuse
-        # with VMobject.insert_n_curves
         repeat_indices = (np.arange(target) * curr) // target
         split_factors = [
-            sum(repeat_indices == i)
+            (repeat_indices == i).sum()
             for i in range(curr)
         ]
         new_submobs = []
         for submob, sf in zip(self.submobjects, split_factors):
             new_submobs.append(submob)
             for k in range(1, sf):
-                new_submobs.append(
-                    submob.copy().fade(1)
-                )
-        self.submobjects = new_submobs
+                new_submob = submob.copy()
+                # If the submobject is at all transparent, then
+                # make the copy completely transparent
+                if submob.get_opacity() < 1:
+                    new_submob.set_opacity(0)
+                new_submobs.append(new_submob)
+        self.set_submobjects(new_submobs)
         return self
 
-    def repeat_submobject(self, submob):
-        return submob.copy()
+    # Interpolate
 
-    def interpolate(self, mobject1, mobject2,
-                    alpha, path_func=straight_path):
-        """
-        Turns self into an interpolation between mobject1
-        and mobject2.
-        """
-        self.points = path_func(
-            mobject1.points, mobject2.points, alpha
-        )
-        self.interpolate_color(mobject1, mobject2, alpha)
+    def interpolate(self, mobject1, mobject2, alpha, path_func=straight_path):
+        for key in self.data:
+            if key in self.locked_data_keys:
+                continue
+            if len(self.data[key]) == 0:
+                continue
+            if key not in mobject1.data or key not in mobject2.data:
+                continue
+
+            if key in ("points", "bounding_box"):
+                func = path_func
+            else:
+                func = interpolate
+
+            self.data[key][:] = func(
+                mobject1.data[key],
+                mobject2.data[key],
+                alpha
+            )
+        for key in self.uniforms:
+            self.uniforms[key] = interpolate(
+                mobject1.uniforms[key],
+                mobject2.uniforms[key],
+                alpha
+            )
         return self
 
-    def interpolate_color(self, mobject1, mobject2, alpha):
-        pass  # To implement in subclass
-
-    def become_partial(self, mobject, a, b):
+    def pointwise_become_partial(self, mobject, a, b):
         """
         Set points in such a way as to become only
         part of mobject.
         Inputs 0 <= a < b <= 1 determine what portion
         of mobject to become.
         """
-        pass  # To implement in subclasses
-
-        # TODO, color?
-
-    def pointwise_become_partial(self, mobject, a, b):
         pass  # To implement in subclass
 
-    def become(self, mobject, copy_submobjects=True):
+    def become(self, mobject):
         """
-        Edit points, colors and submobjects to be idential
+        Edit all data and submobjects to be idential
         to another mobject
         """
-        self.align_data(mobject)
+        self.align_family(mobject)
         for sm1, sm2 in zip(self.get_family(), mobject.get_family()):
-            sm1.points = np.array(sm2.points)
-            sm1.interpolate_color(sm1, sm2, 1)
+            sm1.set_data(sm2.data)
+            sm1.set_uniforms(sm2.uniforms)
+        self.refresh_bounding_box(recurse_down=True)
         return self
 
+    # Locking data
+
+    def lock_data(self, keys):
+        """
+        To speed up some animations, particularly transformations,
+        it can be handy to acknowledge which pieces of data
+        won't change during the animation so that calls to
+        interpolate can skip this, and so that it's not
+        read into the shader_wrapper objects needlessly
+        """
+        if self.has_updaters:
+            return
+        # Be sure shader data has most up to date information
+        self.refresh_shader_data()
+        self.locked_data_keys = set(keys)
+
+    def lock_matching_data(self, mobject1, mobject2):
+        for sm, sm1, sm2 in zip(self.get_family(), mobject1.get_family(), mobject2.get_family()):
+            keys = sm.data.keys() & sm1.data.keys() & sm2.data.keys()
+            sm.lock_data(list(filter(
+                lambda key: np.all(sm1.data[key] == sm2.data[key]),
+                keys,
+            )))
+        return self
+
+    def unlock_data(self):
+        for mob in self.get_family():
+            mob.locked_data_keys = set()
+
+    # Operations touching shader uniforms
+
+    def affects_shader_info_id(func):
+        @wraps(func)
+        def wrapper(self):
+            for mob in self.get_family():
+                func(mob)
+                mob.refresh_shader_wrapper_id()
+            return self
+        return wrapper
+
+    @affects_shader_info_id
+    def fix_in_frame(self):
+        self.uniforms["is_fixed_in_frame"] = 1.0
+        return self
+
+    @affects_shader_info_id
+    def unfix_from_frame(self):
+        self.uniforms["is_fixed_in_frame"] = 0.0
+        return self
+
+    @affects_shader_info_id
+    def apply_depth_test(self):
+        self.depth_test = True
+        return self
+
+    @affects_shader_info_id
+    def deactivate_depth_test(self):
+        self.depth_test = False
+        return self
+
+    # Shader code manipulation
+
+    def replace_shader_code(self, old, new):
+        # TODO, will this work with VMobject structure, given
+        # that it does not simpler return shader_wrappers of
+        # family?
+        for wrapper in self.get_shader_wrapper_list():
+            wrapper.replace_code(old, new)
+        return self
+
+    def set_color_by_code(self, glsl_code):
+        """
+        Takes a snippet of code and inserts it into a
+        context which has the following variables:
+        vec4 color, vec3 point, vec3 unit_normal.
+        The code should change the color variable
+        """
+        self.replace_shader_code(
+            "///// INSERT COLOR FUNCTION HERE /////",
+            glsl_code
+        )
+        return self
+
+    def set_color_by_xyz_func(self, glsl_snippet,
+                              min_value=-5.0, max_value=5.0,
+                              colormap="viridis"):
+        """
+        Pass in a glsl expression in terms of x, y and z which returns
+        a float.
+        """
+        # TODO, add a version of this which changes the point data instead
+        # of the shader code
+        for char in "xyz":
+            glsl_snippet = glsl_snippet.replace(char, "point." + char)
+        rgb_list = get_colormap_list(colormap)
+        self.set_color_by_code(
+            "color.rgb = float_to_color({}, {}, {}, {});".format(
+                glsl_snippet,
+                float(min_value),
+                float(max_value),
+                get_colormap_code(rgb_list)
+            )
+        )
+        return self
+
+    # For shader data
+
+    def init_shader_data(self):
+        # TODO, only call this when needed?
+        self.shader_data = np.zeros(len(self.get_points()), dtype=self.shader_dtype)
+        self.shader_indices = None
+        self.shader_wrapper = ShaderWrapper(
+            vert_data=self.shader_data,
+            shader_folder=self.shader_folder,
+            texture_paths=self.texture_paths,
+            depth_test=self.depth_test,
+            render_primitive=self.render_primitive,
+        )
+
+    def refresh_shader_wrapper_id(self):
+        self.shader_wrapper.refresh_id()
+        return self
+
+    def get_shader_wrapper(self):
+        self.shader_wrapper.vert_data = self.get_shader_data()
+        self.shader_wrapper.vert_indices = self.get_shader_vert_indices()
+        self.shader_wrapper.uniforms = self.get_shader_uniforms()
+        self.shader_wrapper.depth_test = self.depth_test
+        return self.shader_wrapper
+
+    def get_shader_wrapper_list(self):
+        shader_wrappers = it.chain(
+            [self.get_shader_wrapper()],
+            *[sm.get_shader_wrapper_list() for sm in self.submobjects]
+        )
+        batches = batch_by_property(shader_wrappers, lambda sw: sw.get_id())
+
+        result = []
+        for wrapper_group, sid in batches:
+            shader_wrapper = wrapper_group[0]
+            if not shader_wrapper.is_valid():
+                continue
+            shader_wrapper.combine_with(*wrapper_group[1:])
+            if len(shader_wrapper.vert_data) > 0:
+                result.append(shader_wrapper)
+        return result
+
+    def check_data_alignment(self, array, data_key):
+        # Makes sure that self.data[key] can be broadcast into
+        # the given array, meaning its length has to be either 1
+        # or the length of the array
+        d_len = len(self.data[data_key])
+        if d_len != 1 and d_len != len(array):
+            self.data[data_key] = resize_with_interpolation(
+                self.data[data_key], len(array)
+            )
+        return self
+
+    def get_resized_shader_data_array(self, length):
+        # If possible, try to populate an existing array, rather
+        # than recreating it each frame
+        if len(self.shader_data) != length:
+            self.shader_data = resize_array(self.shader_data, length)
+        return self.shader_data
+
+    def read_data_to_shader(self, shader_data, shader_data_key, data_key):
+        if data_key in self.locked_data_keys:
+            return
+        self.check_data_alignment(shader_data, data_key)
+        shader_data[shader_data_key] = self.data[data_key]
+
+    def get_shader_data(self):
+        shader_data = self.get_resized_shader_data_array(self.get_num_points())
+        self.read_data_to_shader(shader_data, "point", "points")
+        return shader_data
+
+    def refresh_shader_data(self):
+        self.get_shader_data()
+
+    def get_shader_uniforms(self):
+        return self.uniforms
+
+    def get_shader_vert_indices(self):
+        return self.shader_indices
+
+    # Event Handlers
+    """
+        Event handling follows the Event Bubbling model of DOM in javascript.
+        Return false to stop the event bubbling.
+        To learn more visit https://www.quirksmode.org/js/events_order.html
+
+        Event Callback Argument is a callable function taking two arguments:
+            1. Mobject
+            2. EventData
+    """
+
+    def init_event_listners(self):
+        self.event_listners = []
+
+    def add_event_listner(self, event_type, event_callback):
+        event_listner = EventListner(self, event_type, event_callback)
+        self.event_listners.append(event_listner)
+        EVENT_DISPATCHER.add_listner(event_listner)
+        return self
+
+    def remove_event_listner(self, event_type, event_callback):
+        event_listner = EventListner(self, event_type, event_callback)
+        while event_listner in self.event_listners:
+            self.event_listners.remove(event_listner)
+        EVENT_DISPATCHER.remove_listner(event_listner)
+        return self
+
+    def clear_event_listners(self, recurse=True):
+        self.event_listners = []
+        if recurse:
+            for submob in self.submobjects:
+                submob.clear_event_listners(recurse=recurse)
+        return self
+
+    def get_event_listners(self):
+        return self.event_listners
+
+    def get_family_event_listners(self):
+        return list(it.chain(*[sm.get_event_listners() for sm in self.get_family()]))
+
+    def get_has_event_listner(self):
+        return any(
+            mob.get_event_listners()
+            for mob in self.get_family()
+        )
+
+    def add_mouse_motion_listner(self, callback):
+        self.add_event_listner(EventType.MouseMotionEvent, callback)
+
+    def remove_mouse_motion_listner(self, callback):
+        self.remove_event_listner(EventType.MouseMotionEvent, callback)
+
+    def add_mouse_press_listner(self, callback):
+        self.add_event_listner(EventType.MousePressEvent, callback)
+
+    def remove_mouse_press_listner(self, callback):
+        self.remove_event_listner(EventType.MousePressEvent, callback)
+
+    def add_mouse_release_listner(self, callback):
+        self.add_event_listner(EventType.MouseReleaseEvent, callback)
+
+    def remove_mouse_release_listner(self, callback):
+        self.remove_event_listner(EventType.MouseReleaseEvent, callback)
+
+    def add_mouse_drag_listner(self, callback):
+        self.add_event_listner(EventType.MouseDragEvent, callback)
+
+    def remove_mouse_drag_listner(self, callback):
+        self.remove_event_listner(EventType.MouseDragEvent, callback)
+
+    def add_mouse_scroll_listner(self, callback):
+        self.add_event_listner(EventType.MouseScrollEvent, callback)
+
+    def remove_mouse_scroll_listner(self, callback):
+        self.remove_event_listner(EventType.MouseScrollEvent, callback)
+
+    def add_key_press_listner(self, callback):
+        self.add_event_listner(EventType.KeyPressEvent, callback)
+
+    def remove_key_press_listner(self, callback):
+        self.remove_event_listner(EventType.KeyPressEvent, callback)
+
+    def add_key_release_listner(self, callback):
+        self.add_event_listner(EventType.KeyReleaseEvent, callback)
+
+    def remove_key_release_listner(self, callback):
+        self.remove_event_listner(EventType.KeyReleaseEvent, callback)
+
     # Errors
+
     def throw_error_if_no_points(self):
-        if self.has_no_points():
+        if not self.has_points():
             message = "Cannot call Mobject.{} " +\
                       "for a Mobject with no points"
             caller_name = sys._getframe(1).f_code.co_name
@@ -1127,3 +1609,77 @@ class Group(Mobject):
             raise Exception("All submobjects must be of type Mobject")
         Mobject.__init__(self, **kwargs)
         self.add(*mobjects)
+
+
+class Point(Mobject):
+    CONFIG = {
+        "artificial_width": 1e-6,
+        "artificial_height": 1e-6,
+    }
+
+    def __init__(self, location=ORIGIN, **kwargs):
+        Mobject.__init__(self, **kwargs)
+        self.set_location(location)
+
+    def get_width(self):
+        return self.artificial_width
+
+    def get_height(self):
+        return self.artificial_height
+
+    def get_location(self):
+        return self.get_points()[0].copy()
+
+    def get_bounding_box_point(self, *args, **kwargs):
+        return self.get_location()
+
+    def set_location(self, new_loc):
+        self.set_points(np.array(new_loc, ndmin=2, dtype=float))
+
+
+class _AnimationBuilder:
+    def __init__(self, mobject):
+        self.mobject = mobject
+        self.overridden_animation = None
+        self.mobject.generate_target()
+        self.is_chaining = False
+        self.methods = []
+
+    def __getattr__(self, method_name):
+        method = getattr(self.mobject.target, method_name)
+        self.methods.append(method)
+        has_overridden_animation = hasattr(method, "_override_animate")
+
+        if (self.is_chaining and has_overridden_animation) or self.overridden_animation:
+            raise NotImplementedError(
+                "Method chaining is currently not supported for "
+                "overridden animations"
+            )
+
+        def update_target(*method_args, **method_kwargs):
+            if has_overridden_animation:
+                self.overridden_animation = method._override_animate(
+                    self.mobject, *method_args, **method_kwargs
+                )
+            else:
+                method(*method_args, **method_kwargs)
+            return self
+
+        self.is_chaining = True
+        return update_target
+
+    def build(self):
+        from manimlib.animation.transform import _MethodAnimation
+
+        if self.overridden_animation:
+            return self.overridden_animation
+
+        return _MethodAnimation(self.mobject, self.methods)
+
+
+def override_animate(method):
+    def decorator(animation_method):
+        method._override_animate = animation_method
+        return animation_method
+
+    return decorator
