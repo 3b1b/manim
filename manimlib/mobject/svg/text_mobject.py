@@ -90,7 +90,7 @@ class Text(SVGMobject):
     def get_space_width(self):
         size = self.size * 10
 
-        dir_name = consts.TEXT_DIR
+        dir_name = get_text_dir()
         file_name = os.path.join(dir_name, "space") + '.svg'
 
         surface = cairo.SVGSurface(file_name, 600, 400)
@@ -111,7 +111,7 @@ class Text(SVGMobject):
 
     def get_extra_bottom_space_perc(self):
         size = self.size * 10
-        dir_name = consts.TEXT_DIR
+        dir_name = get_text_dir()
         file_name = os.path.join(dir_name, "space") + '.svg'
         surface = cairo.SVGSurface(file_name, 600, 400)
         context = cairo.Context(surface)
