@@ -1595,7 +1595,9 @@ class Group(Mobject):
             raise Exception("All submobjects must be of type Mobject")
         Mobject.__init__(self, **kwargs)
         self.add(*mobjects)
+        
     def __add__(self, other : 'Mobject' or 'Group'):
+        assert(isinstance(other(Mobject))
         return self.add(other)
 
 
