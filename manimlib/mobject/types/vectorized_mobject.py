@@ -991,6 +991,7 @@ class VGroup(VMobject):
         self.add(*vmobjects)
     
     def __add__(self:'VGroup', other : 'VMobject' or 'VGroup'):
+        assert(isinstance(other, VMobject))
         return self.add(other)
 
 
