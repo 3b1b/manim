@@ -82,10 +82,12 @@ class Mobject(object):
     def __str__(self):
         return self.__class__.__name__
 
-    def __add__(self, other : 'Mobject'):
+    def __add__(self, other : 'Mobject') -> 'Mobject':
+        assert(isinstance(other, Mobject))
         return self.get_group_class(self, other)
 
-    def __mul__(self, other : 'int'):
+    def __mul__(self, other : 'int') -> 'Mobject':
+        assert(isinstance(other, int))
         return self.replicate(other)
 
     def init_data(self):
