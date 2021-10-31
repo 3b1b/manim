@@ -83,14 +83,10 @@ class Mobject(object):
         return self.__class__.__name__
 
     def __add__(self, other : 'Mobject'):
-        assert(isinstance(other, Mobject))
         return Group(self, other)
 
     def __mul__(self, other : 'int'):
-        from manimlib.mobject.types.vectorized_mobject import VMobject, VGroup
-        if isinstance(self, VMobject):
-            return VGroup(*[self.copy() for i in range(other)])
-        return Group(*[mob.copy() for mob in range(other)])
+        return self.replicate(other)
 
     def init_data(self):
         self.data = {
