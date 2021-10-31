@@ -995,13 +995,6 @@ class VGroup(VMobject):
         self.add(*vmobjects)
     
     def __add__(self:'VGroup', other : 'VMobject' or 'VGroup'):
-        assert(isinstance(other, VMobject))
-        if isinstance(other, VGroup):
-            return VGroup(*self, *other)
-        if isinstance(other, Mobject):
-            return Group(*self) + other
-        if other in self:
-            return self.add(other.copy())
         return self.add(other)
 
 
