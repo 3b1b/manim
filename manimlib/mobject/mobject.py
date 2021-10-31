@@ -83,7 +83,7 @@ class Mobject(object):
         return self.__class__.__name__
 
     def __add__(self, other : 'Mobject'):
-        return Group(self, other)
+        return self.get_group_class(self, other)
 
     def __mul__(self, other : 'int'):
         return self.replicate(other)
