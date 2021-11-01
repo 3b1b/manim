@@ -84,7 +84,7 @@ class Mobject(object):
 
     def __add__(self, other : 'Mobject') -> 'Mobject':
         assert(isinstance(other, Mobject))
-        return self.get_group_class(self, other)
+        return self.get_group_class()(self, other)
 
     def __mul__(self, other : 'int') -> 'Mobject':
         assert(isinstance(other, int))
