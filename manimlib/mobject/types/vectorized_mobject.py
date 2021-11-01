@@ -74,7 +74,6 @@ class VMobject(Mobject):
         self.needs_new_triangulation = True
         self.triangulation = np.zeros(0, dtype='i4')
         super().__init__(**kwargs)
-        self.refresh_unit_normal()
 
     def get_group_class(self):
         return VGroup
@@ -629,17 +628,19 @@ class VMobject(Mobject):
         area_vect = self.get_area_vector()
         area = get_norm(area_vect)
         if area > 0:
-            return area_vect / area
+            normal = area_vect / area
         else:
             points = self.get_points()
-            return get_unit_normal(
+            normal = get_unit_normal(
                 points[1] - points[0],
                 points[2] - points[1],
             )
+        self.data["unit_normal"][:] = normal
+        return normal
 
     def refresh_unit_normal(self):
         for mob in self.get_family():
-            mob.data["unit_normal"][:] = mob.get_unit_normal(recompute=True)
+            mob.get_unit_normal(recompute=True)
         return self
 
     # Alignment
@@ -797,7 +798,7 @@ class VMobject(Mobject):
         # how to send the points as to the vertex shader.
         # First triangles come directly from the points
         if normal_vector is None:
-            normal_vector = self.get_unit_normal()
+            normal_vector = self.get_unit_normal(recompute=True)
 
         if not self.needs_new_triangulation:
             return self.triangulation
