@@ -1597,7 +1597,7 @@ class Group(Mobject):
         self.add(*mobjects)
         
     def __add__(self, other : 'Mobject' or 'Group'):
-        assert(isinstance(other(Mobject))
+        assert(isinstance(other, Mobject))
         return self.add(other)
 
 
