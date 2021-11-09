@@ -157,6 +157,7 @@ class Mobject(object):
         for mob in self.get_family():
             for key in mob.data:
                 mob.data[key] = mob.data[key][::-1]
+        self.refresh_unit_normal()
         return self
 
     def apply_points_function(self, func, about_point=None, about_edge=ORIGIN, works_on_bounding_box=False):
