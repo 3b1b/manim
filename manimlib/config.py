@@ -282,7 +282,7 @@ def get_configuration(args):
     mon_index = custom_config["window_monitor"]
     monitor = monitors[min(mon_index, len(monitors) - 1)]
     window_width = monitor.width
-    if not args.full_screen:
+    if not (args.full_screen or custom_config["full_screen"]):
         window_width //= 2
     window_height = window_width * 9 // 16
     config["window_config"] = {
