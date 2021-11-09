@@ -94,12 +94,23 @@ class Intersection(VMobject):
 
 
 class Exclusion(VMobject):
-    def __init__(self, subject, clip, **kwargs):
+    def __init__(self, *vmobjects, **kwargs):
+        if len(vmobjects) < 2:
+            raise ValueError("At least 2 mobjects needed for Exclusion.")
         super().__init__(**kwargs)
         outpen = pathops.Path()
         pathops.xor(
-            [_convert_vmobject_to_skia_path(subject)],
-            [_convert_vmobject_to_skia_path(clip)],
+            [_convert_vmobject_to_skia_path(vmobjects[0])],
+            [_convert_vmobject_to_skia_path(vmobjects[1])],
             outpen.getPen(),
         )
+        new_outpen = outpen
+        for _i in range(2, len(vmobjects)):
+            new_outpen = pathops.Path()
+            pathops.xor(
+                [outpen],
+                [_convert_vmobject_to_skia_path(vmobjects[_i])],
+                new_outpen.getPen(),
+            )
+            outpen = new_outpen
         _convert_skia_path_to_vmobject(outpen, self)
