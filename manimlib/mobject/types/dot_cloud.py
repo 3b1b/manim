@@ -17,6 +17,7 @@ class DotCloud(PMobject):
         "color": GREY_C,
         "opacity": 1,
         "radius": DEFAULT_DOT_RADIUS,
+        "glow_factor": 0,
         "shader_folder": "true_dot",
         "render_primitive": moderngl.POINTS,
         "shader_dtype": [
@@ -35,6 +36,10 @@ class DotCloud(PMobject):
         super().init_data()
         self.data["radii"] = np.zeros((1, 1))
         self.set_radius(self.radius)
+
+    def init_uniforms(self):
+        super().init_uniforms()
+        self.uniforms["glow_factor"] = self.glow_factor
 
     def to_grid(self, n_rows, n_cols, n_layers=1,
                 buff_ratio=None,
@@ -84,6 +89,12 @@ class DotCloud(PMobject):
 
     def get_radius(self):
         return self.get_radii().max()
+
+    def set_glow_factor(self, glow_factor):
+        self.uniforms["glow_factor"] = glow_factor
+
+    def get_glow_factor(self):
+        return self.uniforms["glow_factor"]
 
     def compute_bounding_box(self):
         bb = super().compute_bounding_box()
