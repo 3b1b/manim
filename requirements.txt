@@ -9,6 +9,7 @@ mapbox-earcut
 matplotlib
 moderngl
 moderngl_window
+skia-pathops
 pydub
 pygments
 pyyaml
