@@ -149,6 +149,7 @@ class VMobject(Mobject):
                   stroke_rgba=None,
                   stroke_width=None,
                   stroke_background=True,
+                  reflectiveness=None,
                   gloss=None,
                   shadow=None,
                   recurse=True):
@@ -176,6 +177,8 @@ class VMobject(Mobject):
                 background=stroke_background,
             )
 
+        if reflectiveness is not None:
+            self.set_reflectiveness(reflectiveness, recurse=recurse)
         if gloss is not None:
             self.set_gloss(gloss, recurse=recurse)
         if shadow is not None:
@@ -188,6 +191,7 @@ class VMobject(Mobject):
             "stroke_rgba": self.data['stroke_rgba'],
             "stroke_width": self.data['stroke_width'],
             "stroke_background": self.draw_stroke_behind_fill,
+            "reflectiveness": self.get_reflectiveness(),
             "gloss": self.get_gloss(),
             "shadow": self.get_shadow(),
         }
@@ -276,9 +280,9 @@ class VMobject(Mobject):
         return self.get_stroke_opacities()[0]
 
     def get_color(self):
-        if self.has_stroke():
-            return self.get_stroke_color()
-        return self.get_fill_color()
+        if self.has_fill():
+            return self.get_fill_color()
+        return self.get_stroke_color()
 
     def has_stroke(self):
         return self.get_stroke_widths().any() and self.get_stroke_opacities().any()
