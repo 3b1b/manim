@@ -4,6 +4,8 @@ uniform sampler2D LightTexture;
 uniform sampler2D DarkTexture;
 uniform float num_textures;
 uniform vec3 light_source_position;
+uniform vec3 camera_position;
+uniform float reflectiveness;
 uniform float gloss;
 uniform float shadow;
 uniform float focal_distance;
@@ -36,6 +38,8 @@ void main() {
         xyz_coords,
         normalize(v_normal),
         light_source_position,
+        camera_position,
+        reflectiveness,
         gloss,
         shadow
     );

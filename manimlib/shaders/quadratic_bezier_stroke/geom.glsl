@@ -13,7 +13,9 @@ uniform float flat_stroke;
 
 //Needed for lighting
 uniform vec3 light_source_position;
+uniform vec3 camera_position;
 uniform float joint_type;
+uniform float reflectiveness;
 uniform float gloss;
 uniform float shadow;
 
@@ -259,6 +261,8 @@ void main() {
             xyz_coords,
             v_global_unit_normal[index_map[i]],
             light_source_position,
+            camera_position,
+            reflectiveness,
             gloss,
             shadow
         );
