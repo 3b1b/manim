@@ -6,7 +6,6 @@ from manimlib.constants import *
 from manimlib.animation.fading import FadeIn
 from manimlib.animation.growing import GrowFromCenter
 from manimlib.mobject.svg.tex_mobject import Tex
-from manimlib.mobject.svg.tex_mobject import SingleStringTex
 from manimlib.mobject.svg.tex_mobject import TexText
 from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VMobject
@@ -14,7 +13,7 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.space_ops import get_norm
 
 
-class Brace(SingleStringTex):
+class Brace(Tex):
     CONFIG = {
         "buff": 0.2,
         "tex_string": r"\underbrace{\qquad}"
