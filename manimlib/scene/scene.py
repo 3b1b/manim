@@ -135,7 +135,7 @@ class Scene(object):
         for term in ("play", "wait", "add", "remove", "clear", "save_state", "restore"):
             local_ns[term] = getattr(self, term)
         log.info("Tips: Now the embed iPython terminal is open. But you can't interact with"
-            " the window directly. To do so, you need to type `touch()` or `self.interact()`")
+                 " the window directly. To do so, you need to type `touch()` or `self.interact()`")
         shell(local_ns=local_ns, stack_depth=2)
         # End scene when exiting an embed.
         raise EndSceneEarlyException()
