@@ -188,9 +188,9 @@ class VMobject(Mobject):
 
     def get_style(self):
         return {
-            "fill_rgba": self.data['fill_rgba'],
-            "stroke_rgba": self.data['stroke_rgba'],
-            "stroke_width": self.data['stroke_width'],
+            "fill_rgba": self.data['fill_rgba'].copy(),
+            "stroke_rgba": self.data['stroke_rgba'].copy(),
+            "stroke_width": self.data['stroke_width'].copy(),
             "stroke_background": self.draw_stroke_behind_fill,
             "reflectiveness": self.get_reflectiveness(),
             "gloss": self.get_gloss(),
@@ -222,16 +222,17 @@ class VMobject(Mobject):
         return self
 
     def fade(self, darkness=0.5, recurse=True):
-        factor = 1.0 - darkness
-        self.set_fill(
-            opacity=factor * self.get_fill_opacity(),
-            recurse=False,
-        )
-        self.set_stroke(
-            opacity=factor * self.get_stroke_opacity(),
-            recurse=False,
-        )
-        super().fade(darkness, recurse)
+        mobs = self.get_family() if recurse else [self]
+        for mob in mobs:
+            factor = 1.0 - darkness
+            mob.set_fill(
+                opacity=factor * mob.get_fill_opacity(),
+                recurse=False,
+            )
+            mob.set_stroke(
+                opacity=factor * mob.get_stroke_opacity(),
+                recurse=False,
+            )
         return self
 
     def get_fill_colors(self):
@@ -508,10 +509,10 @@ class VMobject(Mobject):
         nppc = self.n_points_per_curve
         remainder = len(points) % nppc
         points = points[:len(points) - remainder]
-        return [
+        return (
             points[i:i + nppc]
             for i in range(0, len(points), nppc)
-        ]
+        )
 
     def get_bezier_tuples(self):
         return self.get_bezier_tuples_from_points(self.get_points())
