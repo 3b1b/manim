@@ -437,7 +437,7 @@ class Camera(object):
         for name, path in shader_wrapper.texture_paths.items():
             tid = self.get_texture_id(path)
             shader[name].value = tid
-        for name, value in it.chain(shader_wrapper.uniforms.items(), self.perspective_uniforms.items()):
+        for name, value in it.chain(self.perspective_uniforms.items(), shader_wrapper.uniforms.items()):
             try:
                 if isinstance(value, np.ndarray):
                     value = tuple(value)
