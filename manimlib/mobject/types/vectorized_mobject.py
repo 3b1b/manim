@@ -135,6 +135,10 @@ class VMobject(Mobject):
                 mob.draw_stroke_behind_fill = background
         return self
 
+    def set_backstroke(self, color=BLACK, width=3, background=True):
+        self.set_stroke(color, width, background=background)
+        return self
+
     def align_stroke_width_data_to_points(self, recurse=True):
         for mob in self.get_family(recurse):
             mob.data["stroke_width"] = resize_with_interpolation(
