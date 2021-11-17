@@ -122,6 +122,15 @@ class CameraFrame(Mobject):
         self.refresh_rotation_matrix()
         return self
 
+    def get_theta(self):
+        return self.data["euler_angles"][0]
+
+    def get_phi(self):
+        return self.data["euler_angles"][1]
+
+    def get_gamma(self):
+        return self.data["euler_angles"][2]
+
     def get_shape(self):
         return (self.get_width(), self.get_height())
 
