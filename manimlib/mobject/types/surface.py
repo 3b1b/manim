@@ -162,6 +162,11 @@ class Surface(Mobject):
             tri_is[k::3] = tri_is[k::3][indices]
         return self
 
+    def always_sort_to_camera(self, camera):
+        self.add_updater(lambda m: m.sort_faces_back_to_front(
+            camera.get_location() - self.get_center()
+        ))
+
     # For shaders
     def get_shader_data(self):
         s_points, du_points, dv_points = self.get_surface_points_and_nudged_points()
