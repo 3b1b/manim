@@ -20,7 +20,8 @@ class Surface(Mobject):
         "resolution": (101, 101),
         "color": GREY,
         "opacity": 1.0,
-        "gloss": 0.3,
+        "reflectiveness": 0.3,
+        "gloss": 0.1,
         "shadow": 0.4,
         "prefered_creation_axis": 1,
         # For du and dv steps.  Much smaller and numerical error
