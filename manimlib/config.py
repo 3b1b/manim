@@ -187,8 +187,7 @@ def insert_embed_line(file_name, lineno):
     n_spaces = len(line) - len(line.lstrip())
     lines.insert(lineno - 1, " " * n_spaces + "self.embed()\n")
 
-    # Where should this really live?
-    alt_file = file_name.replace(".py", "_alt.py")
+    alt_file = file_name.replace(".py", "_inserted_embed.py")
     with open(alt_file, 'w') as fp:
         fp.writelines(lines)
 
