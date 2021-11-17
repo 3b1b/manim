@@ -10,6 +10,7 @@ from manimlib.constants import OUT
 from manimlib.constants import PI
 from manimlib.constants import TAU
 from manimlib.utils.iterables import adjacent_pairs
+from manimlib.utils.simple_functions import clip
 
 
 def cross(v1, v2):
@@ -174,7 +175,7 @@ def angle_between_vectors(v1, v2):
     Returns the angle between two 3D vectors.
     This angle will always be btw 0 and pi
     """
-    return math.acos(np.dot(normalize(v1), normalize(v2)))
+    return math.acos(clip(np.dot(normalize(v1), normalize(v2)), -1, 1))
 
 
 def project_along_vector(point, vector):
