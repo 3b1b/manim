@@ -12,6 +12,7 @@ from manimlib.utils.bezier import get_smooth_quadratic_bezier_handle_points
 from manimlib.utils.bezier import get_smooth_cubic_bezier_handle_points
 from manimlib.utils.bezier import get_quadratic_approximation_of_cubic
 from manimlib.utils.bezier import interpolate
+from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import partial_quadratic_bezier_points
 from manimlib.utils.color import rgb_to_hex
@@ -546,11 +547,34 @@ class VMobject(Mobject):
     def get_num_curves(self):
         return self.get_num_points() // self.n_points_per_curve
 
-    def point_from_proportion(self, alpha):
+    def quick_point_from_proportion(self, alpha):
+        # Assumes all curves have the same length, so is inaccurate
         num_curves = self.get_num_curves()
         n, residue = integer_interpolate(0, num_curves, alpha)
         curve_func = self.get_nth_curve_function(n)
         return curve_func(residue)
+
+    def point_from_proportion(self, alpha):
+        if alpha <= 0:
+            return self.get_start()
+        elif alpha >= 1:
+            return self.get_end()
+
+        partials = [0]
+        for tup in self.get_bezier_tuples():
+            # Approximate length with straight line from start to end
+            arclen = get_norm(tup[0] - tup[-1])
+            partials.append(partials[-1] + arclen)
+        full = partials[-1]
+        if full == 0:
+            return self.get_start()
+        # First index where the partial lenth is more alpha times the full length
+        i = next(
+            (i for i, x in enumerate(partials) if x >= full * alpha),
+            len(partials)  # Default
+        )
+        residue = inverse_interpolate(partials[i - 1] / full, partials[i] / full, alpha)
+        return self.get_nth_curve_function(i - 1)(residue)
 
     def get_anchors_and_handles(self):
         """
@@ -706,7 +730,7 @@ class VMobject(Mobject):
         if len(points) == 1:
             return np.repeat(points, nppc * n, 0)
 
-        bezier_groups = self.get_bezier_tuples_from_points(points)
+        bezier_groups = list(self.get_bezier_tuples_from_points(points))
         norms = np.array([
             get_norm(bg[nppc - 1] - bg[0])
             for bg in bezier_groups
