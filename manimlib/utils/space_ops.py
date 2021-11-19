@@ -157,6 +157,8 @@ def z_to_vector(vector):
 
 
 def rotation_between_vectors(v1, v2):
+    if np.all(np.isclose(v1, v2)):
+        return np.identity(3)
     return rotation_matrix(
         angle=angle_between_vectors(v1, v2),
         axis=normalize(np.cross(v1, v2))
