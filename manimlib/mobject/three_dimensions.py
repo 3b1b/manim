@@ -36,8 +36,8 @@ class SurfaceMesh(VGroup):
         # 'indices' are treated as floats. Later, there will be
         # an interpolation between the floor and ceiling of these
         # indices
-        u_indices = np.linspace(0, full_nu, part_nu)
-        v_indices = np.linspace(0, full_nv, part_nv)
+        u_indices = np.linspace(0, full_nu - 1, part_nu)
+        v_indices = np.linspace(0, full_nv - 1, part_nv)
 
         points, du_points, dv_points = uv_surface.get_surface_points_and_nudged_points()
         normals = uv_surface.get_unit_normals()
