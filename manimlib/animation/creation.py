@@ -174,16 +174,12 @@ class ShowSubmobjectsOneByOne(ShowIncreasingSubsets):
         "int_func": np.ceil,
     }
 
-    def __init__(self, group, **kwargs):
-        new_group = Group(*group)
-        super().__init__(new_group, **kwargs)
-
     def update_submobject_list(self, index):
         # N = len(self.all_submobs)
         if index == 0:
             self.mobject.set_submobjects([])
         else:
-            self.mobject.set_submobjects(self.all_submobs[index - 1])
+            self.mobject.set_submobjects([self.all_submobs[index - 1]])
 
 
 # TODO, this is broken...
