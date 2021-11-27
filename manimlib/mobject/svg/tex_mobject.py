@@ -1,8 +1,6 @@
 from functools import reduce
-import hashlib
 import operator as op
 import re
-from types import MethodType
 
 from manimlib.constants import *
 from manimlib.mobject.geometry import Line
@@ -18,119 +16,10 @@ from manimlib.utils.tex_file_writing import display_during_execution
 SCALE_FACTOR_PER_FONT_POINT = 0.001
 
 
-tex_hash_to_mob_map = {}
+tex_string_to_mob_map = {}
 
 
-class SVGTex(SVGMobject):
-    CONFIG = {
-        "height": None,
-        # The hierachy structure is needed for the `break_up_by_substrings` method
-        "unpack_groups": False,
-        "path_string_config": {
-            "should_subdivide_sharp_curves": True,
-            "should_remove_null_curves": True,
-        }
-    }
-
-    def __init__(self, tex_obj, **kwargs):
-        self.tex_obj = tex_obj
-        full_tex = self.get_tex_file_body()
-        filename = tex_to_svg_file(full_tex)
-        super().__init__(filename, **kwargs)
-        self.break_up_by_substrings()
-        self.init_colors()
-
-    def get_mobjects_from(self, element):
-        result = super().get_mobjects_from(element)
-        if len(result) == 0:
-            return result
-        result[0].fill_color = None
-        try:
-            fill_color = element.getAttribute("fill")
-            if fill_color:
-                result[0].fill_color = fill_color
-        except:
-            pass
-        return result
-
-    def get_tex_file_body(self):
-        new_tex = self.get_modified_expression()
-        if self.tex_obj.math_mode:
-            new_tex = "\\begin{align*}\n" + new_tex + "\n\\end{align*}"
-
-        new_tex = self.tex_obj.alignment + "\n" + new_tex
-
-        tex_config = get_tex_config()
-        return tex_config["tex_body"].replace(
-            tex_config["text_to_replace"],
-            new_tex
-        )
-
-    def get_modified_expression(self):
-        tex_components = []
-        to_isolate = self.tex_obj.substrings_to_isolate
-        for tex_substring in self.tex_obj.tex_substrings:
-            if tex_substring not in to_isolate:
-                tex_components.append(tex_substring)
-            else:
-                color_index = to_isolate.index(tex_substring)
-                tex_components.append("".join([
-                    "{\\color[RGB]{",
-                    str(self.get_nth_color_tuple(color_index))[1:-1],
-                    "}",
-                    tex_substring,
-                    "}"
-                ]))
-        return self.tex_obj.arg_separator.join(tex_components)
-
-    def break_up_by_substrings(self):
-        """
-        Reorganize existing submojects one layer
-        deeper based on the structure of tex_substrings (as a list
-        of tex_substrings)
-        """
-        if len(self.tex_obj.tex_substrings) == 1:
-            submob = self.copy()
-            self.set_submobjects([submob])
-            return self
-        new_submobjects = []
-        new_submobject_components = []
-        for part in self.submobjects:
-            if part.fill_color is not None:
-                if new_submobject_components:
-                    new_submobjects.append(VGroup(*new_submobject_components))
-                    new_submobject_components = []
-                new_submobjects.append(part)
-            else:
-                new_submobject_components.append(part)
-        if new_submobject_components:
-            new_submobjects.append(VGroup(*new_submobject_components))
-
-        for submob, tex_substring in zip(new_submobjects, self.tex_obj.tex_substrings):
-            fill_color = submob.fill_color
-            if fill_color is not None:
-                submob_tex_string = self.tex_obj.substrings_to_isolate[int(fill_color[1:], 16) - 1]
-            else:
-                submob_tex_string = tex_substring
-            submob.tex_string = submob_tex_string
-            # Prevent methods and classes using `get_tex()` from breaking.
-            submob.get_tex = MethodType(lambda sm: sm.tex_string, submob)
-        self.set_submobjects(new_submobjects)
-
-        return self
-
-    @staticmethod
-    def get_nth_color_tuple(n):  ## TODO: Refactor
-        # Get a unique color different from black,
-        # or the svg file will not include the color information.
-        return (
-            (n + 1) // 256 // 256,
-            (n + 1) // 256 % 256,
-            (n + 1) % 256
-        )
-
-
-class Tex(VMobject):
+class SingleStringTex(VMobject):
     CONFIG = {
         "fill_opacity": 1.0,
         "stroke_width": 0,
@@ -140,49 +29,155 @@ class Tex(VMobject):
         "organize_left_to_right": False,
         "alignment": "\\centering",
         "math_mode": True,
-        "arg_separator": "",
-        "isolate": [],
-        "tex_to_color_map": {},
     }
 
-    def __init__(self, *tex_strings, **kwargs):
+    def __init__(self, tex_string, **kwargs):
         super().__init__(**kwargs)
-        self.substrings_to_isolate = [*self.isolate, *self.tex_to_color_map.keys()]
-        self.tex_substrings = self.break_up_tex_strings(tex_strings)
-        tex_string = self.arg_separator.join(tex_strings)
+        assert(isinstance(tex_string, str))
         self.tex_string = tex_string
-
-        hash_val = self.tex2hash()
-        if hash_val not in tex_hash_to_mob_map:  ## TODO
+        if tex_string not in tex_string_to_mob_map:
             with display_during_execution(f" Writing \"{tex_string}\""):
-                svg_mob = SVGTex(self)
-                tex_hash_to_mob_map[hash_val] = svg_mob
+                full_tex = self.get_tex_file_body(tex_string)
+                filename = tex_to_svg_file(full_tex)
+                svg_mob = SVGMobject(
+                    filename,
+                    height=None,
+                    path_string_config={
+                        "should_subdivide_sharp_curves": True,
+                        "should_remove_null_curves": True,
+                    }
+                )
+                tex_string_to_mob_map[tex_string] = svg_mob
         self.add(*(
             sm.copy()
-            for sm in tex_hash_to_mob_map[hash_val]
+            for sm in tex_string_to_mob_map[tex_string]
         ))
         self.init_colors()
-        self.set_color_by_tex_to_color_map(self.tex_to_color_map, substring=False)
 
         if self.height is None:
             self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
 
-    def tex2hash(self):
-        id_str = self.tex_string + str(self.substrings_to_isolate)
-        hasher = hashlib.sha256()
-        hasher.update(id_str.encode())
-        return hasher.hexdigest()[:16]
+    def get_tex_file_body(self, tex_string):
+        new_tex = self.get_modified_expression(tex_string)
+        if self.math_mode:
+            new_tex = "\\begin{align*}\n" + new_tex + "\n\\end{align*}"
+
+        new_tex = self.alignment + "\n" + new_tex
+
+        tex_config = get_tex_config()
+        return tex_config["tex_body"].replace(
+            tex_config["text_to_replace"],
+            new_tex
+        )
+
+    def get_modified_expression(self, tex_string):
+        return self.modify_special_strings(tex_string.strip())
+
+    def modify_special_strings(self, tex):
+        tex = tex.strip()
+        should_add_filler = reduce(op.or_, [
+            # Fraction line needs something to be over
+            tex == "\\over",
+            tex == "\\overline",
+            # Makesure sqrt has overbar
+            tex == "\\sqrt",
+            tex == "\\sqrt{",
+            # Need to add blank subscript or superscript
+            tex.endswith("_"),
+            tex.endswith("^"),
+            tex.endswith("dot"),
+        ])
+        if should_add_filler:
+            filler = "{\\quad}"
+            tex += filler
+
+        if tex == "\\substack":
+            tex = "\\quad"
+
+        if tex == "":
+            tex = "\\quad"
+
+        # To keep files from starting with a line break
+        if tex.startswith("\\\\"):
+            tex = tex.replace("\\\\", "\\quad\\\\")
+
+        tex = self.balance_braces(tex)
+
+        # Handle imbalanced \left and \right
+        num_lefts, num_rights = [
+            len([
+                s for s in tex.split(substr)[1:]
+                if s and s[0] in "(){}[]|.\\"
+            ])
+            for substr in ("\\left", "\\right")
+        ]
+        if num_lefts != num_rights:
+            tex = tex.replace("\\left", "\\big")
+            tex = tex.replace("\\right", "\\big")
+
+        for context in ["array"]:
+            begin_in = ("\\begin{%s}" % context) in tex
+            end_in = ("\\end{%s}" % context) in tex
+            if begin_in ^ end_in:
+                # Just turn this into a blank string,
+                # which means caller should leave a
+                # stray \\begin{...} with other symbols
+                tex = ""
+        return tex
+
+    def balance_braces(self, tex):
+        """
+        Makes Tex resiliant to unmatched braces
+        """
+        num_unclosed_brackets = 0
+        for char in tex:
+            if char == "{":
+                num_unclosed_brackets += 1
+            elif char == "}":
+                if num_unclosed_brackets == 0:
+                    tex = "{" + tex
+                else:
+                    num_unclosed_brackets -= 1
+        tex += num_unclosed_brackets * "}"
+        return tex
+
+    def get_tex(self):
+        return self.tex_string
+
+    def organize_submobjects_left_to_right(self):
+        self.sort(lambda p: p[0])
+        return self
+
+
+class Tex(SingleStringTex):
+    CONFIG = {
+        "arg_separator": "",
+        "isolate": [],
+        "tex_to_color_map": {},
+    }
+
+    def __init__(self, *tex_strings, **kwargs):
+        digest_config(self, kwargs)
+        self.tex_strings = self.break_up_tex_strings(tex_strings)
+        full_string = self.arg_separator.join(self.tex_strings)
+        super().__init__(full_string, **kwargs)
+        self.break_up_by_substrings()
+        self.set_color_by_tex_to_color_map(self.tex_to_color_map)
+
+        if self.organize_left_to_right:
+            self.organize_submobjects_left_to_right()
 
     def break_up_tex_strings(self, tex_strings):
         # Separate out any strings specified in the isolate
         # or tex_to_color_map lists.
-        if len(self.substrings_to_isolate) == 0:
+        substrings_to_isolate = [*self.isolate, *self.tex_to_color_map.keys()]
+        if len(substrings_to_isolate) == 0:
             return tex_strings
         patterns = (
             "({})".format(re.escape(ss))
-            for ss in self.substrings_to_isolate
+            for ss in substrings_to_isolate
         )
         pattern = "|".join(patterns)
         pieces = []
@@ -193,9 +188,33 @@ class Tex(VMobject):
                 pieces.append(s)
         return list(filter(lambda s: s, pieces))
 
-
-    def organize_submobjects_left_to_right(self):
-        self.sort(lambda p: p[0])
+    def break_up_by_substrings(self):
+        """
+        Reorganize existing submojects one layer
+        deeper based on the structure of tex_strings (as a list
+        of tex_strings)
+        """
+        if len(self.tex_strings) == 1:
+            submob = self.copy()
+            self.set_submobjects([submob])
+            return self
+        new_submobjects = []
+        curr_index = 0
+        config = dict(self.CONFIG)
+        config["alignment"] = ""
+        for tex_string in self.tex_strings:
+            tex_string = tex_string.strip()
+            if len(tex_string) == 0:
+                continue
+            sub_tex_mob = SingleStringTex(tex_string, **config)
+            num_submobs = len(sub_tex_mob)
+            if num_submobs == 0:
+                continue
+            new_index = curr_index + num_submobs
+            sub_tex_mob.set_submobjects(self[curr_index:new_index])
+            new_submobjects.append(sub_tex_mob)
+            curr_index = new_index
+        self.set_submobjects(new_submobjects)
         return self
 
     def get_parts_by_tex(self, tex, substring=True, case_sensitive=True):
@@ -208,9 +227,10 @@ class Tex(VMobject):
             else:
                 return tex1 == tex2
 
-        return VGroup(*[
-            mob for mob in self.submobjects if test(tex, mob.get_tex())
-        ])
+        return VGroup(*filter(
+            lambda m: isinstance(m, SingleStringTex) and test(tex, m.get_tex()),
+            self.submobjects
+        ))
 
     def get_part_by_tex(self, tex, **kwargs):
         all_parts = self.get_parts_by_tex(tex, **kwargs)
