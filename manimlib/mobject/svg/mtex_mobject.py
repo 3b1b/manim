@@ -303,9 +303,9 @@ class MTex(VMobject):
             result.add(mob)
         return result
 
-    def get_part_by_tex(self, tex):
+    def get_part_by_tex(self, tex, index=0):
         all_parts = self.get_parts_by_tex(tex)
-        return all_parts[0] if all_parts else None
+        return all_parts[index]
 
     def set_color_by_tex(self, tex, color):
         self.get_parts_by_tex(tex).set_color(color)
@@ -315,6 +315,29 @@ class MTex(VMobject):
         for tex, color in list(tex_to_color_map.items()):
             self.set_color_by_tex(tex, color)
         return self
+
+    def slice_of_part(self, part):
+        # Only finds where the head and the tail of `part` is in.
+        submobs = self.submobjects
+        begin_mob = part[0]
+        begin_index = 0
+        while begin_mob not in submobs[begin_index]:
+            begin_index += 1
+        end_mob = part[-1]
+        end_index = len(submobs) - 1
+        while end_mob not in submobs[end_index]:
+            end_index -= 1
+        return slice(begin_index, end_index + 1)
+
+    def slice_of_part_by_tex(self, tex, index=0):
+        part = self.get_part_by_tex(tex, index=index)
+        return self.slice_of_part(part)
+
+    def index_of_part(self, part):
+        return self.slice_of_part(part).start
+
+    def index_of_part_by_tex(self, tex, index=0):
+        return self.slice_of_part_by_tex(tex, index=index).start
 
 
 class MTexText(MTex):
