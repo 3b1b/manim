@@ -1,7 +1,6 @@
 import itertools as it
 import re
 
-from manimlib.constants import *
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
@@ -315,29 +314,6 @@ class MTex(VMobject):
     def set_color_by_tex_to_color_map(self, tex_to_color_map):
         for tex, color in list(tex_to_color_map.items()):
             self.set_color_by_tex(tex, color)
-        return self
-
-    def index_of_part(self, submob, start=0):
-        return self.submobjects.index(submob, start)
-
-    def index_of_part_by_tex(self, tex, start=0):
-        part = self.get_part_by_tex(tex)
-        return self.index_of_part(part, start)
-
-    def slice_by_tex(self, start_tex=None, stop_tex=None):
-        if start_tex is None:
-            start_index = 0
-        else:
-            start_index = self.index_of_part_by_tex(start_tex)
-
-        if stop_tex is None:
-            return self[start_index:]
-        else:
-            stop_index = self.index_of_part_by_tex(stop_tex, start=start_index)
-            return self[start_index:stop_index]
-
-    def set_bstroke(self, color=BLACK, width=4):
-        self.set_stroke(color, width, background=True)
         return self
 
 
