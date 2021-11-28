@@ -288,6 +288,13 @@ class MTex(VMobject):
         self.set_submobjects(new_submobjects)
         return self
 
+    def get_all_isolated_substrings(self):
+        tex_string = self.tex_string
+        return remove_list_redundancies([
+            tex_string[span_tuple[0] : span_tuple[1]]
+            for span_tuple in self.tex_spans_dict.keys()
+        ])
+
     def get_parts_by_tex(self, tex):
         all_span_tuples = sorted(
             list(self.tex_spans_dict.keys()),
