@@ -46,7 +46,8 @@ class _LabelledTex(SVGMobject):
 
 class _TexSpan(object):
     def __init__(self, script_type, label):
-        # 0 for normal, 1 for subscript, 2 for superscript.
+        # script_type: 0 for normal, 1 for subscript, 2 for superscript.
+        # Only those spans with `label != -1` will be colored.
         self.script_type = script_type
         self.label = label
         self.containing_labels = []
@@ -107,8 +108,6 @@ class MTex(VMobject):
         else:
             label = -1
 
-        # 0 for normal, 1 for subscript, 2 for superscript.
-        # Only those spans with `label != -1` will be colored.
         tex_span = _TexSpan(script_type, label)
         self.tex_spans_dict[span_tuple] = tex_span
 
@@ -301,11 +300,11 @@ class MTex(VMobject):
                 continue
             if script_type_0 == 2 and script_type_1 == 1:
                 continue
-            submobs_slice_0 = self.get_slice_by_labels(
-                self.tex_spans_dict[span_tuple_0].containing_labels
+            submobs_slice_0 = self.slice_of_part(
+                self.get_part_by_span_tuples([span_tuple_0])
             )
-            submobs_slice_1 = self.get_slice_by_labels(
-                self.tex_spans_dict[span_tuple_1].containing_labels
+            submobs_slice_1 = self.slice_of_part(
+                self.get_part_by_span_tuples([span_tuple_1])
             )
             submobs = self.submobjects
             self.set_submobjects([
@@ -316,18 +315,18 @@ class MTex(VMobject):
                 *submobs[submobs_slice_0.stop :]
             ])
 
-    def get_part_by_labels(self, labels):
+    def get_part_by_span_tuples(self, span_tuples):
+        labels = remove_list_redundancies(list(it.chain(*[
+            self.tex_spans_dict[span_tuple].containing_labels
+            for span_tuple in span_tuples
+        ])))
         return VGroup(*filter(
             lambda submob: submob.label_str \
                 and MTex.color_str_to_label(submob.label_str) in labels,
             it.chain(*self.submobjects)
         ))
 
-    def get_slice_by_labels(self, labels):
-        part = self.get_part_by_labels(labels)
-        return self.slice_of_part(part)
-
-    def get_parts_by_tex(self, tex):
+    def get_part_by_custom_span_tuple(self, custom_span_tuple):
         all_span_tuples = sorted(
             list(self.tex_spans_dict.keys()),
             key=lambda t: (t[0], -t[1])
@@ -338,7 +337,9 @@ class MTex(VMobject):
                 return partial_components
             if span_begin > span_end:
                 return None
-            next_tuple_choices = filter(lambda t: t[0] == span_begin, all_span_tuples)
+            next_tuple_choices = sorted(list(filter(
+                lambda t: t[0] == span_begin, all_span_tuples
+            )), key=lambda t: -t[1])
             for possible_tuple in next_tuple_choices:
                 result = find_components_of_span(
                     (possible_tuple[1], span_end), [*partial_components, possible_tuple]
@@ -347,16 +348,16 @@ class MTex(VMobject):
                     return result
             return None
 
+        span_tuples = find_components_of_span(custom_span_tuple)
+        if span_tuples is None:
+            tex = self.tex_string[slice(*custom_span_tuple)]
+            raise ValueError(f"Failed to get span of tex: \"{tex}\"")
+        return self.get_part_by_span_tuples(span_tuples)
+
+    def get_parts_by_tex(self, tex):
         result = VGroup()
         for match_obj in re.finditer(re.escape(tex), self.tex_string):
-            span_tuples = find_components_of_span(match_obj.span())
-            if span_tuples is None:
-                raise ValueError(f"Failed to get span of tex: \"{tex}\"")
-            labels = remove_list_redundancies(list(it.chain(*[
-                self.tex_spans_dict[span_tuple].containing_labels
-                for span_tuple in span_tuples
-            ])))
-            part = self.get_part_by_labels(labels)
+            part = self.get_part_by_custom_span_tuple(match_obj.span())
             result.add(part)
         return result
 
@@ -374,7 +375,7 @@ class MTex(VMobject):
         return self
 
     def slice_of_part(self, part):
-        # Only finds where the head and the tail of `part` is in.
+        # Only finds where the head and the tail of `part` are.
         submobs = self.submobjects
         submobs_len = len(submobs)
         begin_mob = part[0]
