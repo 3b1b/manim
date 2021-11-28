@@ -167,6 +167,8 @@ class MTex(VMobject):
         additional_strings_to_break_up = remove_list_redundancies([
             *self.isolate, *self.tex_to_color_map.keys()
         ])
+        if "" in additional_strings_to_break_up:
+            additional_strings_to_break_up.remove("")
         if not additional_strings_to_break_up:
             return
 
@@ -291,7 +293,7 @@ class MTex(VMobject):
     def get_all_isolated_substrings(self):
         tex_string = self.tex_string
         return remove_list_redundancies([
-            tex_string[span_tuple[0] : span_tuple[1]]
+            tex_string[slice(*span_tuple)]
             for span_tuple in self.tex_spans_dict.keys()
         ])
 
@@ -348,14 +350,17 @@ class MTex(VMobject):
     def slice_of_part(self, part):
         # Only finds where the head and the tail of `part` is in.
         submobs = self.submobjects
+        submobs_len = len(submobs)
         begin_mob = part[0]
         begin_index = 0
-        while begin_mob not in submobs[begin_index]:
+        while begin_mob < submobs_len and begin_mob not in submobs[begin_index]:
             begin_index += 1
         end_mob = part[-1]
-        end_index = len(submobs) - 1
-        while end_mob not in submobs[end_index]:
+        end_index = submobs_len - 1
+        while end_index >= 0 and end_mob not in submobs[end_index]:
             end_index -= 1
+        if begin_index > end_index:
+            raise ValueError("Unable to find part")
         return slice(begin_index, end_index + 1)
 
     def slice_of_part_by_tex(self, tex, index=0):
