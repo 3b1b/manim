@@ -88,7 +88,8 @@ class MTex(VMobject):
             submob.copy()
             for submob in tex_hash_to_mob_map[hash_val]
         ])
-        self.build_structure()
+        self.build_submobjects()
+        self.sort_scripts_in_tex_order()
 
         self.init_colors()
         self.set_color_by_tex_to_color_map(self.tex_to_color_map)
@@ -193,13 +194,12 @@ class MTex(VMobject):
                 self.add_tex_span(span_tuple)
 
     def analyse_containing_labels(self):
-        all_span_tuples = list(self.tex_spans_dict.keys())
-        for span_0 in all_span_tuples:
-            for span_1 in all_span_tuples:
-                tex_span_0 = self.tex_spans_dict[span_0]
-                tex_span_1 = self.tex_spans_dict[span_1]
-                if span_0[0] <= span_1[0] and span_0[1] >= span_1[1] and tex_span_1.label != -1:
-                    tex_span_0.containing_labels.append(tex_span_1.label)
+        for span_0, tex_span_0 in self.tex_spans_dict.items():
+            if tex_span_0.label == -1:
+                continue
+            for span_1, tex_span_1 in self.tex_spans_dict.items():
+                if span_1[0] <= span_0[0] and span_0[1] <= span_1[1]:
+                    tex_span_1.containing_labels.append(tex_span_0.label)
 
     def raise_tex_parsing_error(self):
         raise ValueError(f"Failed to parse tex: \"{self.tex_string}\"")
@@ -227,25 +227,29 @@ class MTex(VMobject):
             for span_tuple, tex_span in self.tex_spans_dict.items()
             for i in range(2)
             if tex_span.label != -1
-        ], key=lambda t: (t[0], 1 - t[1], -t[2]))
+        ], key=lambda t: (t[0], -t[1], -t[2]))
         # Add one more item to ensure all the substrings are joined.
         indices_with_labels.append((
             len(tex_string), 0, 0, -1
         ))
 
         result = tex_string[: indices_with_labels[0][0]]
-        for index_0_with_label, index_1_with_label in list(adjacent_pairs(indices_with_labels))[:-1]:
-            index, flag, _, label = index_0_with_label
+        index_with_label_pairs = list(adjacent_pairs(indices_with_labels))[:-1]
+        for index_with_label, next_index_with_label in index_with_label_pairs:
+            index, flag, _, label = index_with_label
+            # Adding one more pair of braces will help maintain the glyghs of tex file...
             if flag == 0:
                 color_tuple = MTex.label_to_color_tuple(label)
                 result += "".join([
                     "{{",
                     "\\color[RGB]",
-                    "{" + ",".join(map(str, color_tuple)) + "}"
+                    "{",
+                    ",".join(map(str, color_tuple)),
+                    "}"
                 ])
             else:
                 result += "}}"
-            result += tex_string[index : index_1_with_label[0]]
+            result += tex_string[index : next_index_with_label[0]]
         return result
 
     @staticmethod
@@ -261,7 +265,7 @@ class MTex(VMobject):
     def color_str_to_label(color):
         return int(color[1:], 16) - 1
 
-    def build_structure(self):
+    def build_submobjects(self):
         # Simply pack together adjacent mobjects with the same label.
         new_submobjects = []
         new_submobject_components = []
@@ -280,12 +284,48 @@ class MTex(VMobject):
         self.set_submobjects(new_submobjects)
         return self
 
-    def get_all_isolated_substrings(self):
-        tex_string = self.tex_string
-        return remove_list_redundancies([
-            tex_string[slice(*span_tuple)]
-            for span_tuple in self.tex_spans_dict.keys()
+    def sort_scripts_in_tex_order(self):
+        # LaTeX always puts superscripts before subscripts.
+        # This function sorts the submobjects of scripts in the order of tex given.
+        script_spans_with_types = sorted([
+            (index, span_tuple, tex_span.script_type)
+            for span_tuple, tex_span in self.tex_spans_dict.items()
+            if tex_span.script_type != 0
+            for index in span_tuple
         ])
+        script_span_with_type_pair = list(adjacent_pairs(script_spans_with_types))[:-1]
+        for span_with_type, next_span_with_type in script_span_with_type_pair:
+            index_0, span_tuple_0, script_type_0 = span_with_type
+            index_1, span_tuple_1, script_type_1 = next_span_with_type
+            if index_0 != index_1:
+                continue
+            if script_type_0 == 2 and script_type_1 == 1:
+                continue
+            submobs_slice_0 = self.get_slice_by_labels(
+                self.tex_spans_dict[span_tuple_0].containing_labels
+            )
+            submobs_slice_1 = self.get_slice_by_labels(
+                self.tex_spans_dict[span_tuple_1].containing_labels
+            )
+            submobs = self.submobjects
+            self.set_submobjects([
+                *submobs[: submobs_slice_1.start],
+                *submobs[submobs_slice_0],
+                *submobs[submobs_slice_1.stop : submobs_slice_0.start],
+                *submobs[submobs_slice_1],
+                *submobs[submobs_slice_0.stop :]
+            ])
+
+    def get_part_by_labels(self, labels):
+        return VGroup(*filter(
+            lambda submob: submob.label_str \
+                and MTex.color_str_to_label(submob.label_str) in labels,
+            it.chain(*self.submobjects)
+        ))
+
+    def get_slice_by_labels(self, labels):
+        part = self.get_part_by_labels(labels)
+        return self.slice_of_part(part)
 
     def get_parts_by_tex(self, tex):
         all_span_tuples = sorted(
@@ -316,12 +356,8 @@ class MTex(VMobject):
                 self.tex_spans_dict[span_tuple].containing_labels
                 for span_tuple in span_tuples
             ])))
-            mob = VGroup(*filter(
-                lambda submob: submob.label_str \
-                    and MTex.color_str_to_label(submob.label_str) in labels,
-                it.chain(*self.submobjects)
-            ))
-            result.add(mob)
+            part = self.get_part_by_labels(labels)
+            result.add(part)
         return result
 
     def get_part_by_tex(self, tex, index=0):
@@ -343,7 +379,7 @@ class MTex(VMobject):
         submobs_len = len(submobs)
         begin_mob = part[0]
         begin_index = 0
-        while begin_mob < submobs_len and begin_mob not in submobs[begin_index]:
+        while begin_index < submobs_len and begin_mob not in submobs[begin_index]:
             begin_index += 1
         end_mob = part[-1]
         end_index = submobs_len - 1
@@ -362,6 +398,13 @@ class MTex(VMobject):
 
     def index_of_part_by_tex(self, tex, index=0):
         return self.slice_of_part_by_tex(tex, index=index).start
+
+    def get_all_isolated_substrings(self):
+        tex_string = self.tex_string
+        return remove_list_redundancies([
+            tex_string[slice(*span_tuple)]
+            for span_tuple in self.tex_spans_dict.keys()
+        ])
 
 
 class MTexText(MTex):
