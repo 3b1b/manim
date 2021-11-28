@@ -45,11 +45,17 @@ class _LabelledTex(SVGMobject):
 
 
 class _TexSpan(object):
-    def __init__(self, script_type, label, referring_labels):
+    def __init__(self, script_type, label, containing_labels):
         # 0 for normal, 1 for subscript, 2 for superscript.
         self.script_type = script_type
         self.label = label
-        self.referring_labels = referring_labels
+        self.containing_labels = containing_labels
+
+    def __repr__(self):
+        return "_TexSpan(" + ", ".join([
+            attrib_name + "=" + str(getattr(self, attrib_name))
+            for attrib_name in ["script_type", "label", "containing_labels"]
+        ]) + ")"
 
 
 class MTex(VMobject):
@@ -92,18 +98,18 @@ class MTex(VMobject):
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
 
-    def add_tex_span(self, span_tuple, script_type=0, referring_labels=None):
-        if referring_labels is None:
+    def add_tex_span(self, span_tuple, script_type=0, containing_labels=None):
+        if containing_labels is None:
             # Should be additionally labelled.
             label = self.current_label
             self.current_label += 1
-            referring_labels = [label]
+            containing_labels = [label]
         else:
             label = -1
 
         # 0 for normal, 1 for subscript, 2 for superscript.
         # Only those spans with `label != -1` will be colored.
-        tex_span = _TexSpan(script_type, label, referring_labels)
+        tex_span = _TexSpan(script_type, label, containing_labels)
         self.tex_spans_dict[span_tuple] = tex_span
 
     def parse_tex(self):
@@ -112,7 +118,7 @@ class MTex(VMobject):
         self.break_up_by_braces()
         self.break_up_by_scripts()
         self.break_up_by_additional_strings()
-        self.analyse_referring_colors()
+        self.analyse_containing_labels()
 
     def break_up_by_braces(self):
         span_tuples = []
@@ -154,7 +160,7 @@ class MTex(VMobject):
             self.add_tex_span(
                 (token_begin, content_span[1]),
                 script_type=script_type,
-                referring_labels=[label]
+                containing_labels=[label]
             )
 
     def break_up_by_additional_strings(self):
@@ -186,7 +192,7 @@ class MTex(VMobject):
             if span_tuple not in self.tex_spans_dict:
                 self.add_tex_span(span_tuple)
 
-    def analyse_referring_colors(self):
+    def analyse_containing_labels(self):
         all_span_tuples = list(self.tex_spans_dict.keys())
         if not all_span_tuples:
             return
@@ -200,7 +206,7 @@ class MTex(VMobject):
                 if tex_span_0.label == -1:
                     continue
                 if span_0[0] <= span_1[0] and span_0[1] >= span_1[1]:
-                    tex_span_0.referring_labels.append(tex_span_1.label)
+                    tex_span_0.containing_labels.append(tex_span_1.label)
 
     def raise_tex_parsing_error(self):
         raise ValueError(f"Failed to parse tex: \"{self.tex_string}\"")
@@ -224,19 +230,19 @@ class MTex(VMobject):
             return tex_string
 
         indices_with_labels = sorted([
-            (index, i, tex_span.label)
+            (span_tuple[i], i, span_tuple[1 - i], tex_span.label)
             for span_tuple, tex_span in self.tex_spans_dict.items()
-            for i, index in enumerate(span_tuple)
+            for i in range(2)
             if tex_span.label != -1
-        ], key=lambda t: (t[0], 1 - t[1]))
+        ], key=lambda t: (t[0], 1 - t[1], -t[2]))
         # Add one more item to ensure all the substrings are joined.
         indices_with_labels.append((
-            len(tex_string), 0, -1
+            len(tex_string), 0, 0, -1
         ))
 
         result = tex_string[: indices_with_labels[0][0]]
         for index_0_with_label, index_1_with_label in list(adjacent_pairs(indices_with_labels))[:-1]:
-            index, flag, label = index_0_with_label
+            index, flag, _, label = index_0_with_label
             if flag == 0:
                 color_tuple = MTex.label_to_color_tuple(label)
                 result += "".join([
@@ -283,21 +289,37 @@ class MTex(VMobject):
         return self
 
     def get_parts_by_tex(self, tex):
-        result = VGroup()
-        d = dict(self.tex_spans_dict.keys())
-        for match_obj in re.finditer(re.escape(tex), self.tex_string):
-            labels = []
-            span_begin, span_end = match_obj.span()
-            while span_begin < span_end and span_begin in d:
-                next_span_begin = d[span_begin]
-                referring_labels = self.tex_spans_dict[(span_begin, next_span_begin)].referring_labels
-                labels.extend(referring_labels)
-                span_begin = next_span_begin
-            if span_begin != span_end:
-                raise ValueError(f"Failed to get span of tex: \"{tex}\"")
+        all_span_tuples = sorted(
+            list(self.tex_spans_dict.keys()),
+            key=lambda t: (t[0], -t[1])
+        )
+        def find_components_of_span(span_tuple, partial_components=[]):
+            span_begin, span_end = span_tuple
+            if span_begin == span_end:
+                return partial_components
+            if span_begin > span_end:
+                return None
+            next_tuple_choices = filter(lambda t: t[0] == span_begin, all_span_tuples)
+            for possible_tuple in next_tuple_choices:
+                result = find_components_of_span(
+                    (possible_tuple[1], span_end), [*partial_components, possible_tuple]
+                )
+                if result is not None:
+                    return result
+            return None
 
+        result = VGroup()
+        for match_obj in re.finditer(re.escape(tex), self.tex_string):
+            span_tuples = find_components_of_span(match_obj.span())
+            if span_tuples is None:
+                raise ValueError(f"Failed to get span of tex: \"{tex}\"")
+            labels = remove_list_redundancies(list(it.chain(*[
+                self.tex_spans_dict[span_tuple].containing_labels
+                for span_tuple in span_tuples
+            ])))
             mob = VGroup(*filter(
-                lambda submob: submob.label_str and MTex.color_str_to_label(submob.label_str) in labels,
+                lambda submob: submob.label_str \
+                    and MTex.color_str_to_label(submob.label_str) in labels,
                 it.chain(*self.submobjects)
             ))
             result.add(mob)
