@@ -45,11 +45,11 @@ class _LabelledTex(SVGMobject):
 
 
 class _TexSpan(object):
-    def __init__(self, script_type, label, containing_labels):
+    def __init__(self, script_type, label):
         # 0 for normal, 1 for subscript, 2 for superscript.
         self.script_type = script_type
         self.label = label
-        self.containing_labels = containing_labels
+        self.containing_labels = []
 
     def __repr__(self):
         return "_TexSpan(" + ", ".join([
@@ -98,18 +98,17 @@ class MTex(VMobject):
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
 
-    def add_tex_span(self, span_tuple, script_type=0, containing_labels=None):
-        if containing_labels is None:
+    def add_tex_span(self, span_tuple, script_type=0):
+        if script_type == 0:
             # Should be additionally labelled.
             label = self.current_label
             self.current_label += 1
-            containing_labels = [label]
         else:
             label = -1
 
         # 0 for normal, 1 for subscript, 2 for superscript.
         # Only those spans with `label != -1` will be colored.
-        tex_span = _TexSpan(script_type, label, containing_labels)
+        tex_span = _TexSpan(script_type, label)
         self.tex_spans_dict[span_tuple] = tex_span
 
     def parse_tex(self):
@@ -159,8 +158,7 @@ class MTex(VMobject):
             label = self.tex_spans_dict[content_span].label
             self.add_tex_span(
                 (token_begin, content_span[1]),
-                script_type=script_type,
-                containing_labels=[label]
+                script_type=script_type
             )
 
     def break_up_by_additional_strings(self):
@@ -196,18 +194,11 @@ class MTex(VMobject):
 
     def analyse_containing_labels(self):
         all_span_tuples = list(self.tex_spans_dict.keys())
-        if not all_span_tuples:
-            return
-
-        for i, span_0 in enumerate(all_span_tuples):
-            for j, span_1 in enumerate(all_span_tuples):
-                if i == j:
-                    continue
+        for span_0 in all_span_tuples:
+            for span_1 in all_span_tuples:
                 tex_span_0 = self.tex_spans_dict[span_0]
                 tex_span_1 = self.tex_spans_dict[span_1]
-                if tex_span_0.label == -1:
-                    continue
-                if span_0[0] <= span_1[0] and span_0[1] >= span_1[1]:
+                if span_0[0] <= span_1[0] and span_0[1] >= span_1[1] and tex_span_1.label != -1:
                     tex_span_0.containing_labels.append(tex_span_1.label)
 
     def raise_tex_parsing_error(self):
@@ -261,11 +252,10 @@ class MTex(VMobject):
     def label_to_color_tuple(n):
         # Get a unique color different from black,
         # or the svg file will not include the color information.
-        return (
-            (n + 1) // 256 // 256,
-            (n + 1) // 256 % 256,
-            (n + 1) % 256
-        )
+        rgb = n + 1
+        rg, b = divmod(rgb, 256)
+        r, g = divmod(rg, 256)
+        return r, g, b
 
     @staticmethod
     def color_str_to_label(color):
