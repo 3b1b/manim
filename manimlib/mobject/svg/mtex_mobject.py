@@ -224,13 +224,11 @@ class MTex(VMobject):
         indices_with_labels = sorted([
             (span_tuple[i], i, span_tuple[1 - i], tex_span.label)
             for span_tuple, tex_span in self.tex_spans_dict.items()
-            for i in range(2)
             if tex_span.label != -1
+            for i in range(2)
         ], key=lambda t: (t[0], -t[1], -t[2]))
         # Add one more item to ensure all the substrings are joined.
-        indices_with_labels.append((
-            len(tex_string), 0, 0, -1
-        ))
+        indices_with_labels.append((len(tex_string), 0, 0, -1))
 
         result = tex_string[: indices_with_labels[0][0]]
         index_with_label_pairs = list(adjacent_pairs(indices_with_labels))[:-1]
@@ -267,19 +265,18 @@ class MTex(VMobject):
     def build_submobjects(self):
         # Simply pack together adjacent mobjects with the same label.
         new_submobjects = []
-        new_submobject_components = []
+        new_glyphs = []
         current_label_str = ""
         for submob in self.submobjects:
             if submob.label_str == current_label_str:
-                new_submobject_components.append(submob)
+                new_glyphs.append(submob)
             else:
-                if new_submobject_components:
-                    new_submobjects.append(VGroup(*new_submobject_components))
-                new_submobject_components = [submob]
+                if new_glyphs:
+                    new_submobjects.append(VGroup(*new_glyphs))
+                new_glyphs = [submob]
                 current_label_str = submob.label_str
-        if new_submobject_components:
-            new_submobjects.append(VGroup(*new_submobject_components))
-
+        if new_glyphs:
+            new_submobjects.append(VGroup(*new_glyphs))
         self.set_submobjects(new_submobjects)
         return self
 
@@ -293,26 +290,26 @@ class MTex(VMobject):
             for index in span_tuple
         ])
         script_span_with_type_pair = list(adjacent_pairs(script_spans_with_types))[:-1]
-        for span_with_type, next_span_with_type in script_span_with_type_pair:
-            index_0, span_tuple_0, script_type_0 = span_with_type
-            index_1, span_tuple_1, script_type_1 = next_span_with_type
+        for span_with_type_0, span_with_type_1 in script_span_with_type_pair:
+            index_0, span_tuple_0, script_type_0 = span_with_type_0
+            index_1, span_tuple_1, script_type_1 = span_with_type_1
             if index_0 != index_1:
                 continue
             if script_type_0 == 2 and script_type_1 == 1:
                 continue
-            submobs_slice_0 = self.slice_of_part(
+            submob_slice_0 = self.slice_of_part(
                 self.get_part_by_span_tuples([span_tuple_0])
             )
-            submobs_slice_1 = self.slice_of_part(
+            submob_slice_1 = self.slice_of_part(
                 self.get_part_by_span_tuples([span_tuple_1])
             )
             submobs = self.submobjects
             self.set_submobjects([
-                *submobs[: submobs_slice_1.start],
-                *submobs[submobs_slice_0],
-                *submobs[submobs_slice_1.stop : submobs_slice_0.start],
-                *submobs[submobs_slice_1],
-                *submobs[submobs_slice_0.stop :]
+                *submobs[: submob_slice_1.start],
+                *submobs[submob_slice_0],
+                *submobs[submob_slice_1.stop : submob_slice_0.start],
+                *submobs[submob_slice_1],
+                *submobs[submob_slice_0.stop :]
             ])
 
     def get_part_by_span_tuples(self, span_tuples):
@@ -326,40 +323,37 @@ class MTex(VMobject):
             it.chain(*self.submobjects)
         ))
 
-    def get_part_by_custom_span_tuple(self, custom_span_tuple):
-        all_span_tuples = sorted(
-            list(self.tex_spans_dict.keys()),
-            key=lambda t: (t[0], -t[1])
-        )
-        def find_components_of_span(span_tuple, partial_components=[]):
-            span_begin, span_end = span_tuple
-            if span_begin == span_end:
-                return partial_components
-            if span_begin > span_end:
-                return None
-            next_tuple_choices = sorted(list(filter(
-                lambda t: t[0] == span_begin, all_span_tuples
-            )), key=lambda t: -t[1])
-            for possible_tuple in next_tuple_choices:
-                result = find_components_of_span(
-                    (possible_tuple[1], span_end), [*partial_components, possible_tuple]
-                )
-                if result is not None:
-                    return result
+    def find_components_of_custom_span(self, custom_span_tuple, partial_components=[]):
+        span_begin, span_end = custom_span_tuple
+        if span_begin == span_end:
+            return partial_components
+        next_begin_choices = sorted([
+            span_tuple[1]
+            for span_tuple in self.tex_spans_dict.keys()
+            if span_tuple[0] == span_begin and span_tuple[1] <= span_end
+        ], reverse=True)
+        if not next_begin_choices:
             return None
+        for next_begin in next_begin_choices:
+            result = self.find_components_of_custom_span(
+                (next_begin, span_end), [*partial_components, (span_begin, next_begin)]
+            )
+            if result is not None:
+                return result
+        return None
 
-        span_tuples = find_components_of_span(custom_span_tuple)
+    def get_part_by_custom_span_tuple(self, custom_span_tuple):
+        span_tuples = self.find_components_of_custom_span(custom_span_tuple)
         if span_tuples is None:
             tex = self.tex_string[slice(*custom_span_tuple)]
             raise ValueError(f"Failed to get span of tex: \"{tex}\"")
         return self.get_part_by_span_tuples(span_tuples)
 
     def get_parts_by_tex(self, tex):
-        result = VGroup()
-        for match_obj in re.finditer(re.escape(tex), self.tex_string):
-            part = self.get_part_by_custom_span_tuple(match_obj.span())
-            result.add(part)
-        return result
+        return VGroup(*[
+            self.get_part_by_custom_span_tuple(match_obj.span())
+            for match_obj in re.finditer(re.escape(tex), self.tex_string)
+        ])
 
     def get_part_by_tex(self, tex, index=0):
         all_parts = self.get_parts_by_tex(tex)
@@ -374,18 +368,20 @@ class MTex(VMobject):
             self.set_color_by_tex(tex, color)
         return self
 
-    def slice_of_part(self, part):
-        # Only finds where the head and the tail of `part` are.
+    def index_of_glyph(self, glyph):
         submobs = self.submobjects
         submobs_len = len(submobs)
-        begin_mob = part[0]
-        begin_index = 0
-        while begin_index < submobs_len and begin_mob not in submobs[begin_index]:
-            begin_index += 1
-        end_mob = part[-1]
-        end_index = submobs_len - 1
-        while end_index >= 0 and end_mob not in submobs[end_index]:
-            end_index -= 1
+        result = 0
+        while result < submobs_len and glyph not in submobs[result]:
+            result += 1
+        if result == submobs_len:
+            raise ValueError("Unable to find mob in tex")
+        return result
+
+    def slice_of_part(self, part):
+        # Only finds where the head and the tail of `part` are.
+        begin_index = self.index_of_glyph(part[0])
+        end_index = self.index_of_glyph(part[-1])
         if begin_index > end_index:
             raise ValueError("Unable to find part")
         return slice(begin_index, end_index + 1)
