@@ -311,6 +311,7 @@ class MTex(VMobject):
                 *submobs[submob_slice_1],
                 *submobs[submob_slice_0.stop :]
             ])
+        return self
 
     def get_part_by_span_tuples(self, span_tuples):
         labels = remove_list_redundancies(list(it.chain(*[
@@ -323,27 +324,25 @@ class MTex(VMobject):
             it.chain(*self.submobjects)
         ))
 
-    def find_components_of_custom_span(self, custom_span_tuple, partial_components=[]):
+    def find_span_components_of_custom_span(self, custom_span_tuple, partial_result=[]):
         span_begin, span_end = custom_span_tuple
         if span_begin == span_end:
-            return partial_components
+            return partial_result
         next_begin_choices = sorted([
             span_tuple[1]
             for span_tuple in self.tex_spans_dict.keys()
             if span_tuple[0] == span_begin and span_tuple[1] <= span_end
         ], reverse=True)
-        if not next_begin_choices:
-            return None
         for next_begin in next_begin_choices:
-            result = self.find_components_of_custom_span(
-                (next_begin, span_end), [*partial_components, (span_begin, next_begin)]
+            result = self.find_span_components_of_custom_span(
+                (next_begin, span_end), [*partial_result, (span_begin, next_begin)]
             )
             if result is not None:
                 return result
         return None
 
     def get_part_by_custom_span_tuple(self, custom_span_tuple):
-        span_tuples = self.find_components_of_custom_span(custom_span_tuple)
+        span_tuples = self.find_span_components_of_custom_span(custom_span_tuple)
         if span_tuples is None:
             tex = self.tex_string[slice(*custom_span_tuple)]
             raise ValueError(f"Failed to get span of tex: \"{tex}\"")
@@ -375,7 +374,7 @@ class MTex(VMobject):
         while result < submobs_len and glyph not in submobs[result]:
             result += 1
         if result == submobs_len:
-            raise ValueError("Unable to find mob in tex")
+            raise ValueError("Unable to find glyph in tex")
         return result
 
     def slice_of_part(self, part):
@@ -383,7 +382,7 @@ class MTex(VMobject):
         begin_index = self.index_of_glyph(part[0])
         end_index = self.index_of_glyph(part[-1])
         if begin_index > end_index:
-            raise ValueError("Unable to find part")
+            raise ValueError("Unable to find part in tex")
         return slice(begin_index, end_index + 1)
 
     def slice_of_part_by_tex(self, tex, index=0):
