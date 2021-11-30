@@ -282,48 +282,42 @@ class Scene(object):
             self.skip_time += self.time
 
     # Methods associated with running animations
-    def get_time_progression(self, run_time, n_iterations=None, override_skip_animations=False):
+    def get_time_progression(self, run_time, n_iterations=None, desc="", override_skip_animations=False):
         if self.skip_animations and not override_skip_animations:
-            times = [run_time]
+            return [run_time]
         else:
             step = 1 / self.camera.frame_rate
             times = np.arange(0, run_time, step)
-        time_progression = ProgressDisplay(
+
+        if self.file_writer.has_progress_display:
+            self.file_writer.set_progress_display_subdescription(desc)
+            return times
+
+        return ProgressDisplay(
             times,
             total=n_iterations,
             leave=self.leave_progress_bars,
-            ascii=True if platform.system() == 'Windows' else None
+            ascii=True if platform.system() == 'Windows' else None,
+            desc=desc,
         )
-        return time_progression
 
     def get_run_time(self, animations):
         return np.max([animation.run_time for animation in animations])
 
     def get_animation_time_progression(self, animations):
         run_time = self.get_run_time(animations)
-        time_progression = self.get_time_progression(run_time)
-        time_progression.set_description("".join([
-            f"Animation {self.num_plays}: {animations[0]}",
-            ", etc." if len(animations) > 1 else "",
-        ]))
+        description = f"{self.num_plays} {animations[0]}"
+        if len(animations) > 1:
+            description += ", etc."
+        time_progression = self.get_time_progression(run_time, desc=description)
         return time_progression
 
-    def get_wait_time_progression(self, duration, stop_condition):
+    def get_wait_time_progression(self, duration, stop_condition=None):
+        kw = {"desc": f"{self.num_plays} Waiting"}
         if stop_condition is not None:
-            time_progression = self.get_time_progression(
-                duration,
-                n_iterations=-1,  # So it doesn't show % progress
-                override_skip_animations=True
-            )
-            time_progression.set_description(
-                "Waiting for {}".format(stop_condition.__name__)
-            )
-        else:
-            time_progression = self.get_time_progression(duration)
-            time_progression.set_description(
-                "Waiting {}".format(self.num_plays)
-            )
-        return time_progression
+            kw["n_iterations"] = -1  # So it doesn't show % progress
+            kw["override_skip_animations"] = True
+        return self.get_time_progression(duration, **kw)
 
     def anims_from_play_args(self, *args, **kwargs):
         """
@@ -488,13 +482,9 @@ class Scene(object):
                     time_progression.close()
                     break
             self.unlock_mobject_data()
-        elif self.skip_animations:
-            # Do nothing
-            return self
         else:
             self.update_frame(duration)
-            n_frames = int(duration * self.camera.frame_rate)
-            for n in range(n_frames):
+            for n in self.get_wait_time_progression(duration):
                 self.emit_frame()
         return self
 
