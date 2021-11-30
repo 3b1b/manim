@@ -1386,11 +1386,13 @@ class Mobject(object):
     @affects_shader_info_id
     def fix_in_frame(self):
         self.uniforms["is_fixed_in_frame"] = 1.0
+        self.is_fixed_in_frame = True
         return self
 
     @affects_shader_info_id
     def unfix_from_frame(self):
         self.uniforms["is_fixed_in_frame"] = 0.0
+        self.is_fixed_in_frame = False
         return self
 
     @affects_shader_info_id
