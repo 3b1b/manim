@@ -200,12 +200,11 @@ class Laptop(VGroup):
 
 class VideoIcon(SVGMobject):
     CONFIG = {
-        "file_name": "video_icon",
         "width": FRAME_WIDTH / 12.,
     }
 
     def __init__(self, **kwargs):
-        SVGMobject.__init__(self, **kwargs)
+        super().__init__(file_name="video_icon", **kwargs)
         self.center()
         self.set_width(self.width)
         self.set_stroke(color=WHITE, width=0)

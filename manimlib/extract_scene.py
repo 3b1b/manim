@@ -1,5 +1,6 @@
 import inspect
 import sys
+import copy
 
 from manimlib.scene.scene import Scene
 from manimlib.config import get_custom_config
@@ -38,7 +39,7 @@ def prompt_user_for_choice(scene_classes):
             "\nScene Name or Number: "
         )
         return [
-            name_to_class[split_str] if not split_str.isnumeric() else scene_classes[int(split_str)-1]
+            name_to_class[split_str] if not split_str.isnumeric() else scene_classes[int(split_str) - 1]
             for split_str in user_input.replace(" ", "").split(",")
         ]
     except IndexError:
@@ -67,6 +68,24 @@ def get_scene_config(config):
     ])
 
 
+def compute_total_frames(scene_class, scene_config):
+    """
+    When a scene is being written to file, a copy of the scene is run with
+    skip_animations set to true so as to count how many frames it will require.
+    This allows for a total progress bar on rendering, and also allows runtime
+    errors to be exposed preemptively for long running scenes. The final frame
+    is saved by default, so that one can more quickly check that the last frame
+    looks as expected.
+    """
+    pre_config = copy.deepcopy(scene_config)
+    pre_config["file_writer_config"]["write_to_movie"] = False
+    pre_config["file_writer_config"]["save_last_frame"] = True
+    pre_config["skip_animations"] = True
+    pre_scene = scene_class(**pre_config)
+    pre_scene.run()
+    return int(pre_scene.time * scene_config["camera_config"]["frame_rate"])
+
+
 def get_scenes_to_render(scene_classes, scene_config, config):
     if config["write_all"]:
         return [sc(**scene_config) for sc in scene_classes]
@@ -76,6 +95,9 @@ def get_scenes_to_render(scene_classes, scene_config, config):
         found = False
         for scene_class in scene_classes:
             if scene_class.__name__ == scene_name:
+                fw_config = scene_config["file_writer_config"]
+                if fw_config["write_to_movie"]:
+                    fw_config["total_frames"] = compute_total_frames(scene_class, scene_config)
                 scene = scene_class(**scene_config)
                 result.append(scene)
                 found = True

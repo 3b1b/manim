@@ -224,6 +224,8 @@ class FlashAround(VShowPassingFlash):
     def __init__(self, mobject, **kwargs):
         digest_config(self, kwargs)
         path = self.get_path(mobject)
+        if mobject.is_fixed_in_frame:
+            path.fix_in_frame()
         path.insert_n_curves(self.n_inserted_curves)
         path.set_points(path.get_points_without_null_curves())
         path.set_stroke(self.color, self.stroke_width)
