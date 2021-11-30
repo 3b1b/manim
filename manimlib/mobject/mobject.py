@@ -313,6 +313,11 @@ class Mobject(object):
         self.assemble_family()
         return self
 
+    def insert_submobject(self, index, new_submob):
+        self.submobjects.insert(index, new_submob)
+        self.assemble_family()
+        return self
+
     def set_submobjects(self, submobject_list):
         self.remove(*self.submobjects)
         self.add(*submobject_list)
