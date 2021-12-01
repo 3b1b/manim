@@ -507,6 +507,7 @@ class Line(TipableVMobject):
 
     def set_length(self, length, **kwargs):
         self.scale(length / self.get_length(), **kwargs)
+        return self
 
 
 class DashedLine(Line):

@@ -11,6 +11,8 @@ uniform float focal_distance;
 uniform float is_fixed_in_frame;
 // Needed for finalize_color
 uniform vec3 light_source_position;
+uniform vec3 camera_position;
+uniform float reflectiveness;
 uniform float gloss;
 uniform float shadow;
 
@@ -44,6 +46,8 @@ void emit_vertex_wrapper(vec3 point, int index){
         point,
         v_global_unit_normal[index],
         light_source_position,
+        camera_position,
+        reflectiveness,
         gloss,
         shadow
     );

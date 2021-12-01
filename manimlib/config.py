@@ -5,11 +5,15 @@ import importlib
 import os
 import sys
 import yaml
+from contextlib import contextmanager
 from screeninfo import get_monitors
 
 from manimlib.utils.config_ops import merge_dicts_recursively
 from manimlib.utils.init_config import init_customization
 from manimlib.logger import log
+
+
+__config_file__ = "custom_config.yml"
 
 
 def parse_cli():
@@ -113,6 +117,12 @@ def parse_cli():
                  "the rendering at the second value",
         )
         parser.add_argument(
+            "-e", "--embed",
+            help="Takes a line number as an argument, and results"
+                 "in the scene being called as if the line `self.embed()`"
+                 "was inserted into the scene code at that line number."
+        )
+        parser.add_argument(
             "-r", "--resolution",
             help="Resolution, passed as \"WxH\", e.g. \"1920x1080\"",
         )
@@ -162,14 +172,30 @@ def get_manim_dir():
 def get_module(file_name):
     if file_name is None:
         return None
-    else:
-        module_name = file_name.replace(os.sep, ".").replace(".py", "")
-        spec = importlib.util.spec_from_file_location(module_name, file_name)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        return module
+    module_name = file_name.replace(os.sep, ".").replace(".py", "")
+    spec = importlib.util.spec_from_file_location(module_name, file_name)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
-__config_file__ = "custom_config.yml"
+
+@contextmanager
+def insert_embed_line(file_name, lineno):
+    with open(file_name, 'r') as fp:
+        lines = fp.readlines()
+    line = lines[lineno - 1]
+    n_spaces = len(line) - len(line.lstrip())
+    lines.insert(lineno - 1, " " * n_spaces + "self.embed()\n")
+
+    alt_file = file_name.replace(".py", "_inserted_embed.py")
+    with open(alt_file, 'w') as fp:
+        fp.writelines(lines)
+
+    try:
+        yield alt_file
+    finally:
+        os.remove(alt_file)
+
 
 def get_custom_config():
     global __config_file__
@@ -197,9 +223,11 @@ def get_custom_config():
 
 def check_temporary_storage(config):
     if config["directories"]["temporary_storage"] == "" and sys.platform == "win32":
-        log.warning("You may be using Windows platform and have not specified the path of"
+        log.warning(
+            "You may be using Windows platform and have not specified the path of"
             " `temporary_storage`, which may cause OSError. So it is recommended"
-            " to specify the `temporary_storage` in the config file (.yml)")
+            " to specify the `temporary_storage` in the config file (.yml)"
+        )
 
 
 def get_configuration(args):
@@ -229,8 +257,10 @@ def get_configuration(args):
 
     elif not os.path.exists(__config_file__):
         log.info(f"Using the default configuration file, which you can modify in `{global_defaults_file}`")
-        log.info("If you want to create a local configuration file, you can create a file named"
-            f" `{__config_file__}`, or run `manimgl --config`")
+        log.info(
+            "If you want to create a local configuration file, you can create a file named"
+            f" `{__config_file__}`, or run `manimgl --config`"
+        )
 
     custom_config = get_custom_config()
     check_temporary_storage(custom_config)
@@ -260,7 +290,12 @@ def get_configuration(args):
         "quiet": args.quiet,
     }
 
-    module = get_module(args.file)
+    if args.embed is None:
+        module = get_module(args.file)
+    else:
+        with insert_embed_line(args.file, int(args.embed)) as alt_file:
+            module = get_module(alt_file)
+
     config = {
         "module": module,
         "scene_names": args.scene_names,
@@ -282,7 +317,7 @@ def get_configuration(args):
     mon_index = custom_config["window_monitor"]
     monitor = monitors[min(mon_index, len(monitors) - 1)]
     window_width = monitor.width
-    if not args.full_screen:
+    if not (args.full_screen or custom_config["full_screen"]):
         window_width //= 2
     window_height = window_width * 9 // 16
     config["window_config"] = {
