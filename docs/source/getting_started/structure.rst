@@ -113,6 +113,10 @@ Below is the directory structure of manim:
         ├── strings.py            # Process strings
         └── tex_file_writing.py   # Use LaTeX to write strings as svg
 
+.. raw:: html
+    
+        <img src="../_static/manimlib_graph.svg" alt="Manim Directory Structure" />
+
 Inheritance structure of manim's classes
 ----------------------------------------
 
