@@ -4,18 +4,18 @@ directories:
   # sourcecode generating that video
   mirror_module_path: False
   # Where should manim output video and image files?
-  output: ""
+  output: "C:/Users/nvesh/Videos/Manim"
   # If you want to use images, manim will look to these folders to find them
-  raster_images: ""
-  vector_images: ""
+  raster_images: "C:/Users/nvesh/OneDrive/Pictures/Manim"
+  vector_images: "C:/Users/nvesh/OneDrive/Pictures/Manim"
   # If you want to use sounds, manim will look here to find it.
-  sounds: ""
+  sounds: "C:/Users/nvesh/Music/Manim"
   # Manim often generates tex_files or other kinds of serialized data
   # to keep from having to generate the same thing too many times.  By
   # default, these will be stored at tempfile.gettempdir(), e.g. this might
   # return whatever is at to the TMPDIR environment variable.  If you want to
   # specify them elsewhere,
-  temporary_storage: ""
+  temporary_storage: "C:/Users/nvesh/Videos/Manim_Cache"
 tex:
   executable: "latex"
   template_file: "tex_template.tex" 
