@@ -6,6 +6,7 @@ from manimlib.mobject.types.surface import SGroup
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.geometry import Square
+from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import z_to_vector
@@ -14,9 +15,9 @@ from manimlib.utils.space_ops import compass_directions
 
 class SurfaceMesh(VGroup):
     CONFIG = {
-        "resolution": (21, 21),
+        "resolution": (21, 11),
         "stroke_width": 1,
-        "normal_nudge": 1e-3,
+        "normal_nudge": 1e-2,
         "depth_test": True,
         "flat_stroke": False,
     }
@@ -32,8 +33,11 @@ class SurfaceMesh(VGroup):
 
         full_nu, full_nv = uv_surface.resolution
         part_nu, part_nv = self.resolution
-        u_indices = np.linspace(0, full_nu, part_nu).astype(int)
-        v_indices = np.linspace(0, full_nv, part_nv).astype(int)
+        # 'indices' are treated as floats. Later, there will be
+        # an interpolation between the floor and ceiling of these
+        # indices
+        u_indices = np.linspace(0, full_nu - 1, part_nu)
+        v_indices = np.linspace(0, full_nv - 1, part_nv)
 
         points, du_points, dv_points = uv_surface.get_surface_points_and_nudged_points()
         normals = uv_surface.get_unit_normals()
@@ -42,12 +46,28 @@ class SurfaceMesh(VGroup):
 
         for ui in u_indices:
             path = VMobject()
-            full_ui = full_nv * ui
-            path.set_points_smoothly(nudged_points[full_ui:full_ui + full_nv])
+            # full_ui = full_nv * ui
+            # path.set_points_smoothly(
+            #     nudged_points[full_ui:full_ui + full_nv]
+            # )
+            low_ui = full_nv * int(math.floor(ui))
+            high_ui = full_nv * int(math.ceil(ui))
+            path.set_points_smoothly(interpolate(
+                nudged_points[low_ui:low_ui + full_nv],
+                nudged_points[high_ui:high_ui + full_nv],
+                ui % 1
+            ))
             self.add(path)
         for vi in v_indices:
             path = VMobject()
-            path.set_points_smoothly(nudged_points[vi::full_nv])
+            # path.set_points_smoothly(
+            #     nudged_points[vi::full_nv]
+            # )
+            path.set_points_smoothly(interpolate(
+                nudged_points[int(math.floor(vi))::full_nv],
+                nudged_points[int(math.ceil(vi))::full_nv],
+                vi % 1
+            ))
             self.add(path)
 
 

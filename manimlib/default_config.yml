@@ -34,6 +34,7 @@ style:
 # the window on the monitor, e.g. "960,540"
 window_position: UR
 window_monitor: 0
+full_screen: False
 # If break_into_partial_movies is set to True, then many small
 # files will be written corresponding to each Scene.play and
 # Scene.wait call, and these files will then be combined

@@ -8,12 +8,31 @@ Fixed bugs
 ^^^^^^^^^^
 
 - `#1653 <https://github.com/3b1b/manim/pull/1653>`__: Fixed ``Mobject.stretch_to_fit_depth``
+- `#1655 <https://github.com/3b1b/manim/pull/1655>`__: Fixed the bug of rotating camera
 
 New Features
 ^^^^^^^^^^^^
 
 - `e10f850 <https://github.com/3b1b/manim/commit/e10f850d0d9f971931cc85d44befe67dc842af6d>`__: Added CLI flag ``--log-level`` to specify log level
+- `#1667 <https://github.com/3b1b/manim/pull/1667>`__: Added operations (``+`` and ``*``) for ``Mobject``
+- `#1675 <https://github.com/3b1b/manim/pull/1675>`__: Added 4 boolean operations for ``VMobject`` in ``manimlib/mobject/boolean_ops.py``
 
+  - ``Union(*vmobjects, **kwargs)``  
+  - ``Difference(subject, clip, **kwargs)`` 
+  - ``Intersection(*vmobjects, **kwargs)`` 
+  - ``Exclusion(*vmobjects, **kwargs)`` 
+
+Refactor
+^^^^^^^^
+
+- `#1662 <https://github.com/3b1b/manim/pull/1662>`__: Refactored support for command ``A`` in path of SVG 
+- `#1662 <https://github.com/3b1b/manim/pull/1662>`__: Refactored ``SingleStringTex.balance_braces``
+
+
+Dependencies
+^^^^^^^^^^^^
+
+- `#1675 <https://github.com/3b1b/manim/pull/1675>`__: Added dependency on python packages `skia-pathops <https://github.com/fonttools/skia-pathops>`__
 
 v1.2.0
 ------
