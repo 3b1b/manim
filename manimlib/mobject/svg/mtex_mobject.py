@@ -26,19 +26,24 @@ class _LabelledTex(SVGMobject):
         },
     }
 
+    @staticmethod
+    def color_str_to_label(color):
+        return int(color[1:], 16) - 1
+
     def get_mobjects_from(self, element):
         result = super().get_mobjects_from(element)
         for mob in result:
-            if not hasattr(mob, "label_str"):
-                mob.label_str = ""
+            if not hasattr(mob, "glyph_label"):
+                mob.glyph_label = -1
         try:
-            label_str = element.getAttribute("fill")
-            if label_str:
-                if len(label_str) == 4:
+            color_str = element.getAttribute("fill")
+            if color_str:
+                if len(color_str) == 4:
                     # "#RGB" => "#RRGGBB"
-                    label_str = "#" + "".join([c * 2 for c in label_str[1:]])
+                    color_str = "#" + "".join([c * 2 for c in color_str[1:]])
+                glyph_label = _LabelledTex.color_str_to_label(color_str)
                 for mob in result:
-                    mob.label_str = label_str
+                    mob.glyph_label = glyph_label
         except:
             pass
         return result
@@ -99,6 +104,19 @@ class MTex(VMobject):
             self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
+
+    @staticmethod
+    def label_to_color_tuple(n):
+        # Get a unique color different from black,
+        # or the svg file will not include the color information.
+        rgb = n + 1
+        rg, b = divmod(rgb, 256)
+        r, g = divmod(rg, 256)
+        return r, g, b
+
+    @staticmethod
+    def get_neighbouring_pairs(iterable):
+        return list(adjacent_pairs(iterable))[:-1]
 
     def add_tex_span(self, span_tuple, script_type=0):
         if script_type == 0:
@@ -231,7 +249,7 @@ class MTex(VMobject):
         indices_with_labels.append((len(tex_string), 0, 0, -1))
 
         result = tex_string[: indices_with_labels[0][0]]
-        index_with_label_pairs = list(adjacent_pairs(indices_with_labels))[:-1]
+        index_with_label_pairs = MTex.get_neighbouring_pairs(indices_with_labels)
         for index_with_label, next_index_with_label in index_with_label_pairs:
             index, flag, _, label = index_with_label
             # Adding one more pair of braces will help maintain the glyghs of tex file...
@@ -249,34 +267,25 @@ class MTex(VMobject):
             result += tex_string[index : next_index_with_label[0]]
         return result
 
-    @staticmethod
-    def label_to_color_tuple(n):
-        # Get a unique color different from black,
-        # or the svg file will not include the color information.
-        rgb = n + 1
-        rg, b = divmod(rgb, 256)
-        r, g = divmod(rg, 256)
-        return r, g, b
-
-    @staticmethod
-    def color_str_to_label(color):
-        return int(color[1:], 16) - 1
-
     def build_submobjects(self):
         # Simply pack together adjacent mobjects with the same label.
         new_submobjects = []
         new_glyphs = []
-        current_label_str = ""
+        current_glyph_label = -1
         for submob in self.submobjects:
-            if submob.label_str == current_label_str:
+            if submob.glyph_label == current_glyph_label:
                 new_glyphs.append(submob)
             else:
                 if new_glyphs:
-                    new_submobjects.append(VGroup(*new_glyphs))
+                    new_submobject = VGroup(*new_glyphs)
+                    new_submobject.submob_label = current_glyph_label
+                    new_submobjects.append(new_submobject)
                 new_glyphs = [submob]
-                current_label_str = submob.label_str
+                current_glyph_label = submob.glyph_label
         if new_glyphs:
-            new_submobjects.append(VGroup(*new_glyphs))
+            new_submobject = VGroup(*new_glyphs)
+            new_submobject.submob_label = current_glyph_label
+            new_submobjects.append(new_submobject)
         self.set_submobjects(new_submobjects)
         return self
 
@@ -289,7 +298,7 @@ class MTex(VMobject):
             if tex_span.script_type != 0
             for index in span_tuple
         ])
-        script_span_with_type_pair = list(adjacent_pairs(script_spans_with_types))[:-1]
+        script_span_with_type_pair = MTex.get_neighbouring_pairs(script_spans_with_types)
         for span_with_type_0, span_with_type_1 in script_span_with_type_pair:
             index_0, span_tuple_0, script_type_0 = span_with_type_0
             index_1, span_tuple_1, script_type_1 = span_with_type_1
@@ -319,9 +328,8 @@ class MTex(VMobject):
             for span_tuple in span_tuples
         ])))
         return VGroup(*filter(
-            lambda submob: submob.label_str \
-                and MTex.color_str_to_label(submob.label_str) in labels,
-            it.chain(*self.submobjects)
+            lambda submob: submob.submob_label in labels,
+            self.submobjects
         ))
 
     def find_span_components_of_custom_span(self, custom_span_tuple, partial_result=[]):
@@ -367,33 +375,30 @@ class MTex(VMobject):
             self.set_color_by_tex(tex, color)
         return self
 
-    def index_of_glyph(self, glyph):
-        submobs = self.submobjects
-        submobs_len = len(submobs)
-        result = 0
-        while result < submobs_len and glyph not in submobs[result]:
-            result += 1
-        if result == submobs_len:
-            raise ValueError("Unable to find glyph in tex")
-        return result
+    def indices_of_part(self, part):
+        return [
+            i for i, submob in enumerate(self.submobjects)
+            if submob in part
+        ]
+
+    def indices_of_part_by_tex(self, tex, index=0):
+        part = self.get_part_by_tex(tex, index=index)
+        return self.indices_of_part(part)
 
     def slice_of_part(self, part):
-        # Only finds where the head and the tail of `part` are.
-        begin_index = self.index_of_glyph(part[0])
-        end_index = self.index_of_glyph(part[-1])
-        if begin_index > end_index:
-            raise ValueError("Unable to find part in tex")
-        return slice(begin_index, end_index + 1)
+        indices = self.indices_of_part(part)
+        return slice(indices[0], indices[-1] + 1)
 
     def slice_of_part_by_tex(self, tex, index=0):
         part = self.get_part_by_tex(tex, index=index)
         return self.slice_of_part(part)
 
     def index_of_part(self, part):
-        return self.slice_of_part(part).start
+        return self.indices_of_part(part)[0]
 
     def index_of_part_by_tex(self, tex, index=0):
-        return self.slice_of_part_by_tex(tex, index=index).start
+        part = self.get_part_by_tex(tex, index=index)
+        return self.index_of_part(part)
 
     def get_all_isolated_substrings(self):
         tex_string = self.tex_string
