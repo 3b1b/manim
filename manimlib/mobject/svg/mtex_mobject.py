@@ -27,23 +27,40 @@ class _LabelledTex(SVGMobject):
     }
 
     @staticmethod
-    def color_str_to_label(color):
-        return int(color[1:], 16) - 1
+    def color_str_to_label(color_str):
+        if len(color_str) == 4:
+            # "#RGB" => "#RRGGBB"
+            color_str = "#" + "".join([c * 2 for c in color_str[1:]])
+        return int(color_str[1:], 16) - 1
+
+    @staticmethod
+    def href_str_to_id(href_str):
+        match_obj = re.match(r"^#g(\d+)-(\d+)$", href_str)
+        if not match_obj:
+            return -1
+        return match_obj.group(2)
 
     def get_mobjects_from(self, element):
         result = super().get_mobjects_from(element)
         for mob in result:
             if not hasattr(mob, "glyph_label"):
                 mob.glyph_label = -1
+            if not hasattr(mob, "glyph_id"):
+                mob.glyph_id = -1
         try:
             color_str = element.getAttribute("fill")
             if color_str:
-                if len(color_str) == 4:
-                    # "#RGB" => "#RRGGBB"
-                    color_str = "#" + "".join([c * 2 for c in color_str[1:]])
                 glyph_label = _LabelledTex.color_str_to_label(color_str)
                 for mob in result:
                     mob.glyph_label = glyph_label
+        except:
+            pass
+        try:
+            href_str = element.getAttribute("xlink:href")
+            if href_str:
+                glyph_id = _LabelledTex.href_str_to_id(href_str)
+                for mob in result:
+                    mob.glyph_id = glyph_id
         except:
             pass
         return result
@@ -270,22 +287,23 @@ class MTex(VMobject):
     def build_submobjects(self):
         # Simply pack together adjacent mobjects with the same label.
         new_submobjects = []
+        def append_new_submobject(glyphs):
+            if glyphs:
+                submobject = VGroup(*glyphs)
+                submobject.submob_label = glyphs[0].glyph_label
+                submobject.submob_id_tuple = tuple([glyph.glyph_id for glyph in glyphs])
+                new_submobjects.append(submobject)
+
         new_glyphs = []
         current_glyph_label = -1
         for submob in self.submobjects:
             if submob.glyph_label == current_glyph_label:
                 new_glyphs.append(submob)
             else:
-                if new_glyphs:
-                    new_submobject = VGroup(*new_glyphs)
-                    new_submobject.submob_label = current_glyph_label
-                    new_submobjects.append(new_submobject)
+                append_new_submobject(new_glyphs)
                 new_glyphs = [submob]
                 current_glyph_label = submob.glyph_label
-        if new_glyphs:
-            new_submobject = VGroup(*new_glyphs)
-            new_submobject.submob_label = current_glyph_label
-            new_submobjects.append(new_submobject)
+        append_new_submobject(new_glyphs)
         self.set_submobjects(new_submobjects)
         return self
 
