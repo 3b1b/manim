@@ -394,10 +394,13 @@ class MTex(VMobject):
         return self
 
     def indices_of_part(self, part):
-        return [
+        indices = [
             i for i, submob in enumerate(self.submobjects)
             if submob in part
         ]
+        if not indices:
+            raise ValueError("Failed to find part in tex")
+        return indices
 
     def indices_of_part_by_tex(self, tex, index=0):
         part = self.get_part_by_tex(tex, index=index)
