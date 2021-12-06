@@ -97,7 +97,7 @@ class MTex(VMobject):
 
     def __init__(self, tex_string, **kwargs):
         super().__init__(**kwargs)
-        self.tex_string = tex_string
+        self.tex_string = tex_string.strip("\n")
         self.parse_tex()
 
         full_tex = self.get_tex_file_body()
@@ -168,8 +168,17 @@ class MTex(VMobject):
         if left_brace_indices:
             self.raise_tex_parsing_error()
 
+        # Braces leading by `\begin` and `\end` shouldn't be marked.
+        eliminated_left_brace_indices = []
+        for match_obj in re.finditer(r"(\\begin|\\end)((\{\w+\})+)", self.tex_string):
+            for left_brace_match_obj in re.finditer(r"\{", match_obj.group(2)):
+                eliminated_left_brace_indices.append(
+                    match_obj.span(2)[0] + left_brace_match_obj.span()[0]
+                )
+
         for span_tuple in span_tuples:
-            self.add_tex_span(span_tuple)
+            if span_tuple[0] not in eliminated_left_brace_indices:
+                self.add_tex_span(span_tuple)
 
     def break_up_by_scripts(self):
         tex_string = self.tex_string
@@ -240,10 +249,10 @@ class MTex(VMobject):
 
     def get_tex_file_body(self):
         new_tex = self.get_modified_expression()
-        if self.math_mode:
-            new_tex = "\\begin{align*}\n" + new_tex + "\n\\end{align*}"
 
-        new_tex = self.alignment + "\n" + new_tex
+        if self.math_mode:
+            new_tex = "\n".join(["\\begin{align*}", new_tex, "\\end{align*}"])
+        new_tex = "\n".join([self.alignment, new_tex])
 
         tex_config = get_tex_config()
         return tex_config["tex_body"].replace(
