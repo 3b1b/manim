@@ -171,9 +171,10 @@ class MTex(VMobject):
         # Braces leading by `\begin` and `\end` shouldn't be marked.
         eliminated_left_brace_indices = []
         for match_obj in re.finditer(r"(\\begin|\\end)((\{\w+\})+)", self.tex_string):
+            match_obj_index = match_obj.span(2)[0]
             for left_brace_match_obj in re.finditer(r"\{", match_obj.group(2)):
                 eliminated_left_brace_indices.append(
-                    match_obj.span(2)[0] + left_brace_match_obj.span()[0]
+                    match_obj_index + left_brace_match_obj.span()[0]
                 )
 
         for span_tuple in span_tuples:
@@ -331,7 +332,7 @@ class MTex(VMobject):
             index_1, span_tuple_1, script_type_1 = span_with_type_1
             if index_0 != index_1:
                 continue
-            if script_type_0 == 2 and script_type_1 == 1:
+            if not (script_type_0 == 1 and script_type_1 == 2):
                 continue
             submob_slice_0 = self.slice_of_part(
                 self.get_part_by_span_tuples([span_tuple_0])
@@ -429,6 +430,9 @@ class MTex(VMobject):
     def index_of_part_by_tex(self, tex, index=0):
         part = self.get_part_by_tex(tex, index=index)
         return self.index_of_part(part)
+
+    def get_tex(self):
+        return self.tex_string
 
     def get_all_isolated_substrings(self):
         tex_string = self.tex_string
