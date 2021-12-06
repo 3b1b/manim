@@ -139,18 +139,3 @@ class TransformMatchingTex(TransformMatchingParts):
     @staticmethod
     def get_mobject_key(mobject):
         return mobject.get_tex()
-
-
-class TransformMatchingMTex(TransformMatchingParts):
-    CONFIG = {
-        "mobject_type": VMobject,
-        "group_type": VGroup,
-    }
-
-    @staticmethod
-    def get_mobject_parts(mobject):
-        return mobject.submobjects
-
-    @staticmethod
-    def get_mobject_key(mobject):
-        return mobject.submob_id_tuple
