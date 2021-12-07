@@ -56,6 +56,8 @@ class Scene(object):
         self.time = 0
         self.skip_time = 0
         self.original_skipping_status = self.skip_animations
+        if self.start_at_animation_number is not None:
+            self.skip_animations = True
 
         # Items associated with interaction
         self.mouse_point = Point()
@@ -277,9 +279,8 @@ class Scene(object):
                 raise EndSceneEarlyException()
 
     def stop_skipping(self):
-        if self.skip_animations:
-            self.skip_animations = False
-            self.skip_time += self.time
+        self.virtual_animation_start_time = self.time
+        self.skip_animations = False
 
     # Methods associated with running animations
     def get_time_progression(self, run_time, n_iterations=None, desc="", override_skip_animations=False):
