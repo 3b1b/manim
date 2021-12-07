@@ -335,6 +335,7 @@ class MTex(VMobject):
         return self
 
     def assign_submob_tex_strings(self):
+        # Not sure whether this is the best practice...
         tex_string = self.tex_string
         label_dict = {
             tex_span.label: (span_tuple, tex_span.containing_labels)
@@ -460,6 +461,13 @@ class MTex(VMobject):
             tex_string[slice(*span_tuple)]
             for span_tuple in self.tex_spans_dict.keys()
         ])
+
+    def print_tex_strings_of_submobjects(self):
+        # For debugging
+        # Working with `index_labels()`
+        print(f"Submobjects of \"{self.get_tex()}\":")
+        for i, submob in enumerate(self.submobjects):
+            print(f"{i}: \"{submob.get_tex()}\"")
 
 
 class MTexText(MTex):
