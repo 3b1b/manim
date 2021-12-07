@@ -273,7 +273,9 @@ class Scene(object):
     def update_skipping_status(self):
         if self.start_at_animation_number is not None:
             if self.num_plays == self.start_at_animation_number:
-                self.stop_skipping()
+                self.skip_time = self.time
+                if not self.original_skipping_status:
+                    self.stop_skipping()
         if self.end_at_animation_number is not None:
             if self.num_plays >= self.end_at_animation_number:
                 raise EndSceneEarlyException()
