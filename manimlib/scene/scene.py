@@ -186,6 +186,13 @@ class Scene(object):
             for mob in self.mobjects
         ])
 
+    def has_time_based_updaters(self):
+        return any([
+            sm.has_time_based_updater()
+            for mob in self.mobjects()
+            for sm in mob.get_family()
+        ])
+
     # Related to time
     def get_time(self):
         return self.time
@@ -472,23 +479,18 @@ class Scene(object):
     @handle_play_like_call
     def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
         self.update_mobjects(dt=0)  # Any problems with this?
-        if self.should_update_mobjects():
-            self.lock_static_mobject_data()
-            time_progression = self.get_wait_time_progression(duration, stop_condition)
-            last_t = 0
-            for t in time_progression:
-                dt = t - last_t
-                last_t = t
-                self.update_frame(dt)
-                self.emit_frame()
-                if stop_condition is not None and stop_condition():
-                    time_progression.close()
-                    break
-            self.unlock_mobject_data()
-        else:
-            self.update_frame(duration)
-            for n in self.get_wait_time_progression(duration):
-                self.emit_frame()
+        self.lock_static_mobject_data()
+        time_progression = self.get_wait_time_progression(duration, stop_condition)
+        last_t = 0
+        for t in time_progression:
+            dt = t - last_t
+            last_t = t
+            self.update_frame(dt)
+            self.emit_frame()
+            if stop_condition is not None and stop_condition():
+                time_progression.close()
+                break
+        self.unlock_mobject_data()
         return self
 
     def wait_until(self, stop_condition, max_time=60):
