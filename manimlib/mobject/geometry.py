@@ -305,6 +305,9 @@ class Circle(Arc):
             (angle - start_angle) / TAU
         )
 
+    def get_radius(self):
+        return get_norm(self.get_start() - self.get_center())
+
 
 class Dot(Circle):
     CONFIG = {
