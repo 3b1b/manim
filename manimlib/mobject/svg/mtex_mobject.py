@@ -81,7 +81,11 @@ class MTex(VMobject):
 
     def __init__(self, tex_string, **kwargs):
         super().__init__(**kwargs)
-        self.tex_string = tex_string.strip("\n")
+        tex_string = tex_string.strip("\n")
+        # Prevent from passing an empty string.
+        if not tex_string:
+            tex_string = "\\quad"
+        self.tex_string = tex_string
         self.parse_tex()
 
         full_tex = self.get_tex_file_body()
@@ -278,6 +282,8 @@ class MTex(VMobject):
         return result
 
     def build_submobjects(self):
+        if not self.submobjects:
+            return
         self.group_submobjects()
         self.sort_scripts_in_tex_order()
         self.assign_submob_tex_strings()
