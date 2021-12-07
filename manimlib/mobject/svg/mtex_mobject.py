@@ -96,8 +96,6 @@ class MTex(VMobject):
             for submob in tex_hash_to_mob_map[hash_val]
         ])
         self.build_submobjects()
-        self.sort_scripts_in_tex_order()
-        self.assign_submob_tex_strings()
 
         self.init_colors()
         self.set_color_by_tex_to_color_map(self.tex_to_color_map)
@@ -280,6 +278,11 @@ class MTex(VMobject):
         return result
 
     def build_submobjects(self):
+        self.group_submobjects()
+        self.sort_scripts_in_tex_order()
+        self.assign_submob_tex_strings()
+
+    def group_submobjects(self):
         # Simply pack together adjacent mobjects with the same label.
         new_submobjects = []
         def append_new_submobject(glyphs):
@@ -299,7 +302,6 @@ class MTex(VMobject):
                 current_glyph_label = submob.glyph_label
         append_new_submobject(new_glyphs)
         self.set_submobjects(new_submobjects)
-        return self
 
     def sort_scripts_in_tex_order(self):
         # LaTeX always puts superscripts before subscripts.
@@ -332,19 +334,18 @@ class MTex(VMobject):
                 *submobs[submob_slice_1],
                 *submobs[submob_slice_0.stop :]
             ])
-        return self
 
     def assign_submob_tex_strings(self):
         # Not sure whether this is the best practice...
         tex_string = self.tex_string
         label_dict = {
-            tex_span.label: (span_tuple, tex_span.containing_labels)
+            tex_span.label: span_tuple
             for span_tuple, tex_span in self.tex_spans_dict.items()
             if tex_span.script_type == 0
         }
         # Use tex strings with "_", "^" included.
         label_dict.update({
-            tex_span.label: (span_tuple, tex_span.containing_labels)
+            tex_span.label: span_tuple
             for span_tuple, tex_span in self.tex_spans_dict.items()
             if tex_span.script_type != 0
         })
@@ -356,20 +357,20 @@ class MTex(VMobject):
         for curr_submob_label, prev_submob_label, next_submob_label in zip(
             curr_labels, prev_labels, next_labels
         ):
-            curr_span_tuple, containing_labels = label_dict[curr_submob_label]
-            prev_span_tuple, _ = label_dict[prev_submob_label]
-            next_span_tuple, _ = label_dict[next_submob_label]
+            curr_span_tuple = label_dict[curr_submob_label]
+            prev_span_tuple = label_dict[prev_submob_label]
+            next_span_tuple = label_dict[next_submob_label]
+            containing_labels = self.tex_spans_dict[curr_span_tuple].containing_labels
             tex_string_spans.append([
                 prev_span_tuple[1] if prev_submob_label in containing_labels else curr_span_tuple[0],
                 next_span_tuple[0] if next_submob_label in containing_labels else curr_span_tuple[1]
             ])
-        tex_string_spans[0][0] = label_dict[curr_labels[0]][0][0]
-        tex_string_spans[-1][1] = label_dict[curr_labels[-1]][0][1]
+        tex_string_spans[0][0] = label_dict[curr_labels[0]][0]
+        tex_string_spans[-1][1] = label_dict[curr_labels[-1]][1]
         for submob, tex_string_span in zip(self.submobjects, tex_string_spans):
             submob.tex_string = tex_string[slice(*tex_string_span)]
             # Support `get_tex()` method here.
             submob.get_tex = MethodType(lambda inst: inst.tex_string, submob)
-        return self
 
     def get_part_by_span_tuples(self, span_tuples):
         labels = remove_list_redundancies(list(it.chain(*[
@@ -464,7 +465,7 @@ class MTex(VMobject):
 
     def print_tex_strings_of_submobjects(self):
         # For debugging
-        # Working with `index_labels()`
+        # Work with `index_labels()`
         print(f"Submobjects of \"{self.get_tex()}\":")
         for i, submob in enumerate(self.submobjects):
             print(f"{i}: \"{submob.get_tex()}\"")
