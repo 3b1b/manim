@@ -46,10 +46,6 @@ class SurfaceMesh(VGroup):
 
         for ui in u_indices:
             path = VMobject()
-            # full_ui = full_nv * ui
-            # path.set_points_smoothly(
-            #     nudged_points[full_ui:full_ui + full_nv]
-            # )
             low_ui = full_nv * int(math.floor(ui))
             high_ui = full_nv * int(math.ceil(ui))
             path.set_points_smoothly(interpolate(
@@ -60,9 +56,6 @@ class SurfaceMesh(VGroup):
             self.add(path)
         for vi in v_indices:
             path = VMobject()
-            # path.set_points_smoothly(
-            #     nudged_points[vi::full_nv]
-            # )
             path.set_points_smoothly(interpolate(
                 nudged_points[int(math.floor(vi))::full_nv],
                 nudged_points[int(math.ceil(vi))::full_nv],
