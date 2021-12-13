@@ -76,6 +76,7 @@ class MTex(VMobject):
         "alignment": "\\centering",
         "math_mode": True,
         "isolate": [],
+        "unbreakable_commands": ["\\begin", "\\end"],
         "tex_to_color_map": {},
     }
 
@@ -122,6 +123,10 @@ class MTex(VMobject):
     def get_neighbouring_pairs(iterable):
         return list(adjacent_pairs(iterable))[:-1]
 
+    @staticmethod
+    def contains(span_0, span_1):
+        return span_0[0] <= span_1[0] and span_1[1] <= span_0[1]
+
     def add_tex_span(self, span_tuple, script_type=0, label=-1):
         if script_type == 0:
             # Should be additionally labelled.
@@ -137,12 +142,14 @@ class MTex(VMobject):
         self.break_up_by_braces()
         self.break_up_by_scripts()
         self.break_up_by_additional_strings()
+        self.merge_unbreakable_strings()
         self.analyse_containing_labels()
 
     def break_up_by_braces(self):
+        tex_string = self.tex_string
         span_tuples = []
         left_brace_indices = []
-        for match_obj in re.finditer(r"(?<!\\)(\{|\})", self.tex_string):
+        for match_obj in re.finditer(r"(?<!\\)(\{|\})", tex_string):
             if match_obj.group() == "{":
                 left_brace_index = match_obj.span()[0]
                 left_brace_indices.append(left_brace_index)
@@ -153,30 +160,19 @@ class MTex(VMobject):
         if left_brace_indices:
             self.raise_tex_parsing_error()
 
-        # Braces leading by `\begin` and `\end` shouldn't be marked.
-        eliminated_left_brace_indices = []
-        for match_obj in re.finditer(r"(\\begin|\\end)((\{\w+\})+)", self.tex_string):
-            match_obj_index = match_obj.span(2)[0]
-            for left_brace_match_obj in re.finditer(r"\{", match_obj.group(2)):
-                eliminated_left_brace_indices.append(
-                    match_obj_index + left_brace_match_obj.span()[0]
-                )
-
+        self.paired_braces_tuples = span_tuples
         for span_tuple in span_tuples:
-            if span_tuple[0] not in eliminated_left_brace_indices:
-                self.add_tex_span(span_tuple)
+            self.add_tex_span(span_tuple)
 
     def break_up_by_scripts(self):
         tex_string = self.tex_string
-        brace_indices_dict = dict([
-            (span_tuple[0], span_tuple)
-            for span_tuple in self.tex_spans_dict.keys()
-        ])
+        brace_indices_dict = dict(self.tex_spans_dict.keys())
+        script_spans = []
         for match_obj in re.finditer(r"((?<!\\)(_|\^)\s*)|(\s+(_|\^)\s*)", tex_string):
             script_type = 1 if "_" in match_obj.group() else 2
             token_begin, token_end = match_obj.span()
             if token_end in brace_indices_dict:
-                content_span = brace_indices_dict[token_end]
+                content_span = (token_end, brace_indices_dict[token_end])
             else:
                 content_match_obj = re.match(r"\w|\\[a-zA-Z]+", tex_string[token_end:])
                 if not content_match_obj:
@@ -185,12 +181,15 @@ class MTex(VMobject):
                     index + token_end for index in content_match_obj.span()
                 ])
                 self.add_tex_span(content_span)
+            subscript_span = (token_begin, content_span[1])
+            script_spans.append(subscript_span)
             label = self.tex_spans_dict[content_span].label
             self.add_tex_span(
-                (token_begin, content_span[1]),
+                subscript_span,
                 script_type=script_type,
                 label=label
             )
+        self.script_spans = script_spans
 
     def break_up_by_additional_strings(self):
         additional_strings_to_break_up = remove_list_redundancies([
@@ -202,7 +201,7 @@ class MTex(VMobject):
             return
 
         tex_string = self.tex_string
-        all_span_tuples = list(self.tex_spans_dict.keys())
+        all_span_tuples = []
         for string in additional_strings_to_break_up:
             # Only matches non-crossing strings.
             for match_obj in re.finditer(re.escape(string), tex_string):
@@ -210,11 +209,10 @@ class MTex(VMobject):
 
         script_spans_dict = dict([
             span_tuple[::-1]
-            for span_tuple, tex_span in self.tex_spans_dict.items()
-            if tex_span.script_type != 0
+            for span_tuple in self.script_spans
         ])
         for span_begin, span_end in all_span_tuples:
-            if span_begin in script_spans_dict.values():
+            if span_end in script_spans_dict.values():
                 # Deconstruct spans with subscripts & superscripts.
                 while span_end in script_spans_dict:
                     span_end = script_spans_dict[span_end]
@@ -224,12 +222,38 @@ class MTex(VMobject):
             if span_tuple not in self.tex_spans_dict:
                 self.add_tex_span(span_tuple)
 
+    def merge_unbreakable_strings(self):
+        tex_string = self.tex_string
+        command_merge_spans = []
+        brace_indices_dict = dict(self.paired_braces_tuples)
+        # Braces leading by `unbreakable_commands` shouldn't be marked.
+        for command in self.unbreakable_commands:
+            for match_obj in re.finditer(re.escape(command), tex_string):
+                merge_begin_index = match_obj.span()[1]
+                merge_end_index = merge_begin_index
+                if merge_end_index not in brace_indices_dict:
+                    continue
+                while merge_end_index in brace_indices_dict:
+                    merge_end_index = brace_indices_dict[merge_end_index]
+                command_merge_spans.append((merge_begin_index, merge_end_index))
+
+        if not command_merge_spans:
+            return
+        self.tex_spans_dict = {
+            span_tuple: tex_span
+            for span_tuple, tex_span in self.tex_spans_dict.items()
+            if all([
+                not MTex.contains(merge_span, span_tuple)
+                for merge_span in command_merge_spans
+            ])
+        }
+
     def analyse_containing_labels(self):
         for span_0, tex_span_0 in self.tex_spans_dict.items():
             if tex_span_0.script_type != 0:
                 continue
             for span_1, tex_span_1 in self.tex_spans_dict.items():
-                if span_1[0] <= span_0[0] and span_0[1] <= span_1[1]:
+                if MTex.contains(span_1, span_0):
                     tex_span_1.containing_labels.append(tex_span_0.label)
 
     def raise_tex_parsing_error(self):
@@ -266,6 +290,7 @@ class MTex(VMobject):
         index_with_label_pairs = MTex.get_neighbouring_pairs(indices_with_labels)
         for index_with_label, next_index_with_label in index_with_label_pairs:
             index, flag, _, label = index_with_label
+            next_index, *_ = next_index_with_label
             # Adding one more pair of braces will help maintain the glyghs of tex file...
             if flag == 0:
                 color_tuple = MTex.label_to_color_tuple(label)
@@ -278,7 +303,7 @@ class MTex(VMobject):
                 ])
             else:
                 result += "}}"
-            result += tex_string[index : next_index_with_label[0]]
+            result += tex_string[index : next_index]
         return result
 
     def build_submobjects(self):
@@ -312,19 +337,21 @@ class MTex(VMobject):
     def sort_scripts_in_tex_order(self):
         # LaTeX always puts superscripts before subscripts.
         # This function sorts the submobjects of scripts in the order of tex given.
-        script_spans_with_types = sorted([
-            (index, span_tuple, tex_span.script_type)
-            for span_tuple, tex_span in self.tex_spans_dict.items()
-            if tex_span.script_type != 0
+        index_and_span_list = sorted([
+            (index, span_tuple)
+            for span_tuple in self.script_spans
             for index in span_tuple
         ])
-        script_span_with_type_pair = MTex.get_neighbouring_pairs(script_spans_with_types)
-        for span_with_type_0, span_with_type_1 in script_span_with_type_pair:
-            index_0, span_tuple_0, script_type_0 = span_with_type_0
-            index_1, span_tuple_1, script_type_1 = span_with_type_1
+        index_and_span_pair = MTex.get_neighbouring_pairs(index_and_span_list)
+        for index_and_span_0, index_and_span_1 in index_and_span_pair:
+            index_0, span_tuple_0 = index_and_span_0
+            index_1, span_tuple_1 = index_and_span_1
             if index_0 != index_1:
                 continue
-            if not (script_type_0 == 1 and script_type_1 == 2):
+            if not all([
+                self.tex_spans_dict[span_tuple_0].script_type == 1,
+                self.tex_spans_dict[span_tuple_1].script_type == 2
+            ]):
                 continue
             submob_slice_0 = self.slice_of_part(
                 self.get_part_by_span_tuples([span_tuple_0])
@@ -343,33 +370,31 @@ class MTex(VMobject):
 
     def assign_submob_tex_strings(self):
         # Not sure whether this is the best practice...
+        # Just a temporary hack for supporting `TransformMatchingTex`.
         tex_string = self.tex_string
-        label_dict = {
-            tex_span.label: span_tuple
-            for span_tuple, tex_span in self.tex_spans_dict.items()
-            if tex_span.script_type == 0
-        }
-        # Use tex strings with "_", "^" included.
-        label_dict.update({
-            tex_span.label: span_tuple
-            for span_tuple, tex_span in self.tex_spans_dict.items()
-            if tex_span.script_type != 0
-        })
+        # Use tex strings including "_", "^".
+        label_dict = {}
+        for span_tuple, tex_span in self.tex_spans_dict.items():
+            if tex_span.script_type != 0:
+                label_dict[tex_span.label] = span_tuple
+            else:
+                if tex_span.label not in label_dict:
+                    label_dict[tex_span.label] = span_tuple
 
         curr_labels = [submob.submob_label for submob in self.submobjects]
         prev_labels = [curr_labels[-1], *curr_labels[:-1]]
         next_labels = [*curr_labels[1:], curr_labels[0]]
         tex_string_spans = []
-        for curr_submob_label, prev_submob_label, next_submob_label in zip(
+        for curr_label, prev_label, next_label in zip(
             curr_labels, prev_labels, next_labels
         ):
-            curr_span_tuple = label_dict[curr_submob_label]
-            prev_span_tuple = label_dict[prev_submob_label]
-            next_span_tuple = label_dict[next_submob_label]
+            curr_span_tuple = label_dict[curr_label]
+            prev_span_tuple = label_dict[prev_label]
+            next_span_tuple = label_dict[next_label]
             containing_labels = self.tex_spans_dict[curr_span_tuple].containing_labels
             tex_string_spans.append([
-                prev_span_tuple[1] if prev_submob_label in containing_labels else curr_span_tuple[0],
-                next_span_tuple[0] if next_submob_label in containing_labels else curr_span_tuple[1]
+                prev_span_tuple[1] if prev_label in containing_labels else curr_span_tuple[0],
+                next_span_tuple[0] if next_label in containing_labels else curr_span_tuple[1]
             ])
         tex_string_spans[0][0] = label_dict[curr_labels[0]][0]
         tex_string_spans[-1][1] = label_dict[curr_labels[-1]][1]
