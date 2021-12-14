@@ -68,10 +68,10 @@ class TransformMatchingParts(AnimationGroup):
             anims.append(FadeTransformPieces(fade_source, fade_target, **kwargs))
         else:
             anims.append(FadeOutToPoint(
-                fade_source, fade_target.get_center(), **kwargs
+                fade_source, target_mobject.get_center(), **kwargs
             ))
             anims.append(FadeInFromPoint(
-                fade_target.copy(), fade_source.get_center(), **kwargs
+                fade_target.copy(), mobject.get_center(), **kwargs
             ))
 
         super().__init__(*anims)
