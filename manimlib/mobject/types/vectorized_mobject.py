@@ -1032,8 +1032,8 @@ class VGroup(VMobject):
             raise Exception("All submobjects must be of type VMobject")
         super().__init__(**kwargs)
         self.add(*vmobjects)
-    
-    def __add__(self:'VGroup', other : 'VMobject' or 'VGroup'):
+
+    def __add__(self: 'VGroup', other: 'VMobject' or 'VGroup'):
         assert(isinstance(other, VMobject))
         return self.add(other)
 
