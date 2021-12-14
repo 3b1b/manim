@@ -6,6 +6,8 @@ from manimlib.mobject.types.surface import SGroup
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.geometry import Square
+from manimlib.mobject.geometry import Polygon
+from manimlib.mobject.geometry import Line
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.space_ops import get_norm
@@ -46,10 +48,6 @@ class SurfaceMesh(VGroup):
 
         for ui in u_indices:
             path = VMobject()
-            # full_ui = full_nv * ui
-            # path.set_points_smoothly(
-            #     nudged_points[full_ui:full_ui + full_nv]
-            # )
             low_ui = full_nv * int(math.floor(ui))
             high_ui = full_nv * int(math.ceil(ui))
             path.set_points_smoothly(interpolate(
@@ -60,9 +58,6 @@ class SurfaceMesh(VGroup):
             self.add(path)
         for vi in v_indices:
             path = VMobject()
-            # path.set_points_smoothly(
-            #     nudged_points[vi::full_nv]
-            # )
             path.set_points_smoothly(interpolate(
                 nudged_points[int(math.floor(vi))::full_nv],
                 nudged_points[int(math.ceil(vi))::full_nv],
@@ -226,6 +221,53 @@ class VCube(VGroup):
         self.init_colors()
         self.apply_depth_test()
         self.refresh_unit_normal()
+
+
+class Dodecahedron(VGroup):
+    CONFIG = {
+        "fill_color": BLUE_E,
+        "fill_opacity": 1,
+        "stroke_width": 1,
+        "reflectiveness": 0.2,
+        "gloss": 0.3,
+        "shadow": 0.2,
+        "depth_test": True,
+    }
+
+    def init_points(self):
+        # Star by creating two of the pentagons, meeting
+        # back to back on the positive x-axis
+        phi = (1 + math.sqrt(5)) / 2
+        x, y, z = np.identity(3)
+        pentagon1 = Polygon(
+            [phi, 1 / phi, 0],
+            [1, 1, 1],
+            [1 / phi, 0, phi],
+            [1, -1, 1],
+            [phi, -1 / phi, 0],
+        )
+        pentagon2 = pentagon1.copy().stretch(-1, 2, about_point=ORIGIN)
+        pentagon2.reverse_points()
+        x_pair = VGroup(pentagon1, pentagon2)
+        z_pair = x_pair.copy().apply_matrix(np.array([z, -x, -y]).T)
+        y_pair = x_pair.copy().apply_matrix(np.array([y, z, x]).T)
+
+        self.add(*x_pair, *y_pair, *z_pair)
+        for pentagon in list(self):
+            pc = pentagon.copy()
+            pc.apply_function(lambda p: -p)
+            pc.reverse_points()
+            self.add(pc)
+
+        # # Rotate those two pentagons by all the axis permuations to fill
+        # # out the dodecahedron
+        # Id = np.identity(3)
+        # for i in range(3):
+        #     perm = [j % 3 for j in range(i, i + 3)]
+        #     for b in [1, -1]:
+        #         matrix = b * np.array([Id[0][perm], Id[1][perm], Id[2][perm]])
+        #         self.add(pentagon1.copy().apply_matrix(matrix, about_point=ORIGIN))
+        #         self.add(pentagon2.copy().apply_matrix(matrix, about_point=ORIGIN))
 
 
 class Prism(Cube):

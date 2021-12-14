@@ -185,7 +185,7 @@ def insert_embed_line(file_name, lineno):
         lines = fp.readlines()
     line = lines[lineno - 1]
     n_spaces = len(line) - len(line.lstrip())
-    lines.insert(lineno - 1, " " * n_spaces + "self.embed()\n")
+    lines.insert(lineno, " " * n_spaces + "self.embed()\n")
 
     alt_file = file_name.replace(".py", "_inserted_embed.py")
     with open(alt_file, 'w') as fp:
@@ -302,9 +302,10 @@ def get_configuration(args):
         "file_writer_config": file_writer_config,
         "quiet": args.quiet or args.write_all,
         "write_all": args.write_all,
+        "skip_animations": args.skip_animations,
         "start_at_animation_number": args.start_at_animation_number,
-        "preview": not write_file,
         "end_at_animation_number": None,
+        "preview": not write_file,
         "leave_progress_bars": args.leave_progress_bars,
     }
 
@@ -334,10 +335,6 @@ def get_configuration(args):
         else:
             config["start_at_animation_number"] = int(stan)
 
-    config["skip_animations"] = any([
-        args.skip_animations,
-        args.start_at_animation_number,
-    ])
     return config
 
 

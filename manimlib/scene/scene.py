@@ -56,6 +56,8 @@ class Scene(object):
         self.time = 0
         self.skip_time = 0
         self.original_skipping_status = self.skip_animations
+        if self.start_at_animation_number is not None:
+            self.skip_animations = True
 
         # Items associated with interaction
         self.mouse_point = Point()
@@ -184,6 +186,13 @@ class Scene(object):
             for mob in self.mobjects
         ])
 
+    def has_time_based_updaters(self):
+        return any([
+            sm.has_time_based_updater()
+            for mob in self.mobjects()
+            for sm in mob.get_family()
+        ])
+
     # Related to time
     def get_time(self):
         return self.time
@@ -271,15 +280,16 @@ class Scene(object):
     def update_skipping_status(self):
         if self.start_at_animation_number is not None:
             if self.num_plays == self.start_at_animation_number:
-                self.stop_skipping()
+                self.skip_time = self.time
+                if not self.original_skipping_status:
+                    self.stop_skipping()
         if self.end_at_animation_number is not None:
             if self.num_plays >= self.end_at_animation_number:
                 raise EndSceneEarlyException()
 
     def stop_skipping(self):
-        if self.skip_animations:
-            self.skip_animations = False
-            self.skip_time += self.time
+        self.virtual_animation_start_time = self.time
+        self.skip_animations = False
 
     # Methods associated with running animations
     def get_time_progression(self, run_time, n_iterations=None, desc="", override_skip_animations=False):
@@ -469,23 +479,18 @@ class Scene(object):
     @handle_play_like_call
     def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
         self.update_mobjects(dt=0)  # Any problems with this?
-        if self.should_update_mobjects():
-            self.lock_static_mobject_data()
-            time_progression = self.get_wait_time_progression(duration, stop_condition)
-            last_t = 0
-            for t in time_progression:
-                dt = t - last_t
-                last_t = t
-                self.update_frame(dt)
-                self.emit_frame()
-                if stop_condition is not None and stop_condition():
-                    time_progression.close()
-                    break
-            self.unlock_mobject_data()
-        else:
-            self.update_frame(duration)
-            for n in self.get_wait_time_progression(duration):
-                self.emit_frame()
+        self.lock_static_mobject_data()
+        time_progression = self.get_wait_time_progression(duration, stop_condition)
+        last_t = 0
+        for t in time_progression:
+            dt = t - last_t
+            last_t = t
+            self.update_frame(dt)
+            self.emit_frame()
+            if stop_condition is not None and stop_condition():
+                time_progression.close()
+                break
+        self.unlock_mobject_data()
         return self
 
     def wait_until(self, stop_condition, max_time=60):

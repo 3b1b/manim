@@ -887,7 +887,7 @@ class VMobject(Mobject):
     def triggers_refreshed_triangulation(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
-            old_points = self.get_points()
+            old_points = self.get_points().copy()
             func(self, *args, **kwargs)
             if not np.all(self.get_points() == old_points):
                 self.refresh_unit_normal()
@@ -1032,8 +1032,8 @@ class VGroup(VMobject):
             raise Exception("All submobjects must be of type VMobject")
         super().__init__(**kwargs)
         self.add(*vmobjects)
-    
-    def __add__(self:'VGroup', other : 'VMobject' or 'VGroup'):
+
+    def __add__(self: 'VGroup', other: 'VMobject' or 'VGroup'):
         assert(isinstance(other, VMobject))
         return self.add(other)
 
@@ -1048,7 +1048,8 @@ class VectorizedPoint(Point, VMobject):
     }
 
     def __init__(self, location=ORIGIN, **kwargs):
-        super().__init__(**kwargs)
+        Point.__init__(self, **kwargs)
+        VMobject.__init__(self, **kwargs)
         self.set_points(np.array([location]))
 
 

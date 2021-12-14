@@ -37,7 +37,7 @@ class SceneFileWriter(object):
         "show_file_location_upon_completion": False,
         "quiet": False,
         "total_frames": 0,
-        "progress_description_len": 35,
+        "progress_description_len": 60,
     }
 
     def __init__(self, scene, **kwargs):
@@ -76,10 +76,14 @@ class SceneFileWriter(object):
         return path
 
     def get_default_scene_name(self):
-        if self.file_name is None:
-            return self.scene.__class__.__name__
-        else:
-            return self.file_name
+        name = str(self.scene)
+        saan = self.scene.start_at_animation_number
+        eaan = self.scene.end_at_animation_number
+        if saan is not None:
+            name += f"_{saan}"
+        if eaan is not None:
+            name += f"_{eaan}"
+        return name
 
     def get_resolution_directory(self):
         pixel_height = self.scene.camera.pixel_height
@@ -212,15 +216,17 @@ class SceneFileWriter(object):
         if self.total_frames > 0:
             self.progress_display = ProgressDisplay(
                 range(self.total_frames),
+                # bar_format="{l_bar}{bar}|{n_fmt}/{total_fmt}",
                 leave=False,
                 ascii=True if platform.system() == 'Windows' else None,
-                desc="Full render: "
+                dynamic_ncols=True,
             )
             self.has_progress_display = True
 
-    def set_progress_display_subdescription(self, desc):
+    def set_progress_display_subdescription(self, sub_desc):
         desc_len = self.progress_description_len
-        full_desc = f"Full render ({desc})"
+        file = os.path.split(self.get_movie_file_path())[1]
+        full_desc = f"Rendering {file} ({sub_desc})"
         if len(full_desc) > desc_len:
             full_desc = full_desc[:desc_len - 4] + "...)"
         else:
@@ -327,7 +333,8 @@ class SceneFileWriter(object):
         self.print_file_ready_message(file_path)
 
     def print_file_ready_message(self, file_path):
-        log.info(f"File ready at {file_path}")
+        if not self.quiet:
+            log.info(f"File ready at {file_path}")
 
     def should_open_file(self):
         return any([

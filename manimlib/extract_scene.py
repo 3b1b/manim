@@ -80,10 +80,12 @@ def compute_total_frames(scene_class, scene_config):
     pre_config = copy.deepcopy(scene_config)
     pre_config["file_writer_config"]["write_to_movie"] = False
     pre_config["file_writer_config"]["save_last_frame"] = True
+    pre_config["file_writer_config"]["quiet"] = True
     pre_config["skip_animations"] = True
     pre_scene = scene_class(**pre_config)
     pre_scene.run()
-    return int(pre_scene.time * scene_config["camera_config"]["frame_rate"])
+    total_time = pre_scene.time - pre_scene.skip_time
+    return int(total_time * scene_config["camera_config"]["frame_rate"])
 
 
 def get_scenes_to_render(scene_classes, scene_config, config):
