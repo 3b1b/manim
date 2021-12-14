@@ -9,8 +9,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/custom.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?a2b6469950968dc0c980db61">
-    <link rel="stylesheet" href="../_static/pygments.css?a2b6469950968dc0c980db61">
+    <link rel="stylesheet" href="../_static/styles/default.css?d457be9e26e03b4d1c75a1d9">
+    <link rel="stylesheet" href="../_static/pygments.css?d457be9e26e03b4d1c75a1d9">
     
 <style>
   :root {
@@ -27,7 +27,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?a2b6469950968dc0c980db61"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?d457be9e26e03b4d1c75a1d9"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -130,6 +130,12 @@
 <ul class="simple">
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1653">#1653</a>: Fixed <code class="docutils literal notranslate"><span class="pre">Mobject.stretch_to_fit_depth</span></code></p></li>
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1655">#1655</a>: Fixed the bug of rotating camera</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/c73d507c76af5c8602d4118bc7538ba04c03ebae">c73d507</a>: Fixed <code class="docutils literal notranslate"><span class="pre">SurfaceMesh</span></code> to be evenly spaced</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/82bd02d21fbd89b71baa21e077e143f440df9014">82bd02d</a>: Fixed <code class="docutils literal notranslate"><span class="pre">angle_between_vectors</span></code> add <code class="docutils literal notranslate"><span class="pre">rotation_between_vectors</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/a7173142bf93fd309def0cc10f3c56f5e6972332">a717314</a>: Fixed <code class="docutils literal notranslate"><span class="pre">VMobject.fade</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/fbc329d7ce3b11821d47adf6052d932f7eff724a">fbc329d</a>: Fixed <code class="docutils literal notranslate"><span class="pre">angle_between_vectors</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/bcd09906bea5eaaa5352e7bee8f3153f434cf606">bcd0990</a>: Fixed bug in <code class="docutils literal notranslate"><span class="pre">ShowSubmobjectsOneByOne</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1691/commits/7023548ec62c4adb2f371aab6a8c7f62deb7c33c">7023548</a>: Fixed bug in <code class="docutils literal notranslate"><span class="pre">TransformMatchingParts</span></code></p></li>
 </ul>
 </section>
 <section id="new-features">
@@ -145,6 +151,20 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">Exclusion(*vmobjects,</span> <span class="pre">**kwargs)</span></code></p></li>
 </ul>
 </li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/81c3ae30372e288dc772633dbd17def6e603753e">81c3ae3</a>: Added reflectiveness</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/2c7689ed9e81229ce87c648f97f26267956c0bc9">2c7689e</a>: Enabled <code class="docutils literal notranslate"><span class="pre">glow_factor</span></code> on <code class="docutils literal notranslate"><span class="pre">DotCloud</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/d065e1973d1d6ebd2bece81ce4bdf0c2fff7c772">d065e19</a>: Added option <code class="docutils literal notranslate"><span class="pre">-e</span></code> to insert embed line from the command line</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/0e78027186a976f7e5fa8d586f586bf6e6baab8d">0e78027</a>: Improved <code class="docutils literal notranslate"><span class="pre">point_from_proportion</span></code> to account for arc length</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/781a9934fda6ba11f22ba32e8ccddcb3ba78592e">781a993</a>: Added shortcut <code class="docutils literal notranslate"><span class="pre">set_backstroke</span></code> for setting black background stroke</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/0b898a5594203668ed9cad38b490ab49ba233bd4">0b898a5</a>: Added <code class="docutils literal notranslate"><span class="pre">Suface.always_sort_to_camera</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/e899604a2d05f78202fcb3b9824ec34647237eae">e899604</a>: Added getter methods for specific euler angles</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/407c53f97c061bfd8a53beacd88af4c786f9e9ee">407c53f</a>: Hade <code class="docutils literal notranslate"><span class="pre">rotation_between_vectors</span></code> handle identical/similar vectors</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/49743daf3244bfa11a427040bdde8e2bb79589e8">49743da</a>: Added <code class="docutils literal notranslate"><span class="pre">Mobject.insert_submobject</span></code> method</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/9dd1f47dabca1580d6102e34e44574b0cba556e7">9dd1f47</a>: Created single progress display for full scene render</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1691/commits/264f7b11726e9e736f0fe472f66e38539f74e848">264f7b1</a>: Added <code class="docutils literal notranslate"><span class="pre">Circle.get_radius</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1691/commits/83841ae41568a9c9dff44cd163106c19a74ac281">83841ae</a>: Added <code class="docutils literal notranslate"><span class="pre">Dodecahedron</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1691/commits/a1d51474ea1ce3b7aa3efbe4c5e221be70ee2f5b">a1d5147</a>: Added <code class="docutils literal notranslate"><span class="pre">GlowDot</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1678">#1678</a>: Added <code class="docutils literal notranslate"><span class="pre">MTex</span></code> , see <a class="reference external" href="https://github.com/3b1b/manim/pull/1678">#1678</a> for details</p></li>
 </ul>
 </section>
 <section id="refactor">
@@ -152,6 +172,17 @@
 <ul class="simple">
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1662">#1662</a>: Refactored support for command <code class="docutils literal notranslate"><span class="pre">A</span></code> in path of SVG</p></li>
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1662">#1662</a>: Refactored <code class="docutils literal notranslate"><span class="pre">SingleStringTex.balance_braces</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/8b454fbe9335a7011e947093230b07a74ba9c653">8b454fb</a>: Slight tweaks to how saturation_factor works on newton-fractal</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/317a5d6226475b6b54a78db7116c373ef84ea923">317a5d6</a>: Made it possible to set full screen preview as a default</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/e764da3c3adc5ae2a4ce877b340d2b6abcddc2fc">e764da3</a>: Used <code class="docutils literal notranslate"><span class="pre">quick_point_from_proportion</span></code> for graph points</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/d2182b9112300558b6c074cefd685f97c10b3898">d2182b9</a>: Made sure <code class="docutils literal notranslate"><span class="pre">Line.set_length</span></code> returns self</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/eea3c6b29438f9e9325329c4355e76b9f635e97a">eea3c6b</a>: Better align <code class="docutils literal notranslate"><span class="pre">SurfaceMesh</span></code> to the corresponding surface polygons</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/ee1594a3cb7a79b8fc361e4c4397a88c7d20c7e3">ee1594a</a>: Match <code class="docutils literal notranslate"><span class="pre">fix_in_frame</span></code> status for <code class="docutils literal notranslate"><span class="pre">FlashAround</span></code> mobject</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1688/commits/ba23fbe71e4a038201cd7df1d200514ed1c13bc2">ba23fbe</a>: Made sure <code class="docutils literal notranslate"><span class="pre">Mobject.is_fixed_in_frame</span></code> stays updated with uniforms</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1691/commits/98b0d266d2475926a606331923cca3dc1dea97ad">98b0d26</a>: Made sure <code class="docutils literal notranslate"><span class="pre">skip_animations</span></code> and <code class="docutils literal notranslate"><span class="pre">start_at_animation_number</span></code> play well together</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1691/commits/f8e6e7df3ceb6f3d845ced4b690a85b35e0b8d00">f8e6e7d</a>: Updated progress display for full scene render</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1691/commits/8f1dfabff04a8456f5c4df75b0f97d50b2755003">8f1dfab</a>: <code class="docutils literal notranslate"><span class="pre">VectorizedPoint</span></code> should call <code class="docutils literal notranslate"><span class="pre">__init__</span></code> for both super classes</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1691/commits/758f329a06a0c198b27a48c577575d94554305bf">758f329</a>: Used array copy when checking need for refreshing triangulation</p></li>
 </ul>
 </section>
 <section id="dependencies">
