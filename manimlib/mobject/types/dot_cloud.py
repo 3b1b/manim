@@ -2,12 +2,14 @@ import numpy as np
 import moderngl
 
 from manimlib.constants import GREY_C
+from manimlib.constants import YELLOW
 from manimlib.constants import ORIGIN
 from manimlib.mobject.types.point_cloud_mobject import PMobject
 from manimlib.utils.iterables import resize_preserving_order
 
 
 DEFAULT_DOT_RADIUS = 0.05
+DEFAULT_GLOW_DOT_RADIUS = 0.2
 DEFAULT_GRID_HEIGHT = 6
 DEFAULT_BUFF_RATIO = 0.5
 
@@ -123,5 +125,13 @@ class DotCloud(PMobject):
 
 
 class TrueDot(DotCloud):
-    def __init__(self, center=ORIGIN, radius=DEFAULT_DOT_RADIUS, **kwargs):
-        super().__init__(points=[center], radius=radius, **kwargs)
+    def __init__(self, center=ORIGIN, **kwargs):
+        super().__init__(points=[center], **kwargs)
+
+
+class GlowDot(TrueDot):
+    CONFIG = {
+        "glow_factor": 2,
+        "radius": DEFAULT_GLOW_DOT_RADIUS,
+        "color": YELLOW,
+    }
