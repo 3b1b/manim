@@ -9,6 +9,11 @@ Fixed bugs
 
 - `#1653 <https://github.com/3b1b/manim/pull/1653>`__: Fixed ``Mobject.stretch_to_fit_depth``
 - `#1655 <https://github.com/3b1b/manim/pull/1655>`__: Fixed the bug of rotating camera
+- `c73d507 <https://github.com/3b1b/manim/pull/1688/commits/c73d507c76af5c8602d4118bc7538ba04c03ebae>`__: Fixed ``SurfaceMesh`` to be evenly spaced
+- `82bd02d <https://github.com/3b1b/manim/pull/1688/commits/82bd02d21fbd89b71baa21e077e143f440df9014>`__: Fixed ``angle_between_vectors`` add ``rotation_between_vectors``
+- `a717314 <https://github.com/3b1b/manim/pull/1688/commits/a7173142bf93fd309def0cc10f3c56f5e6972332>`__: Fixed ``VMobject.fade``
+- `fbc329d <https://github.com/3b1b/manim/pull/1688/commits/fbc329d7ce3b11821d47adf6052d932f7eff724a>`__: Fixed ``angle_between_vectors``
+- `bcd0990 <https://github.com/3b1b/manim/pull/1688/commits/bcd09906bea5eaaa5352e7bee8f3153f434cf606>`__: Fixed bug in ``ShowSubmobjectsOneByOne``
 
 New Features
 ^^^^^^^^^^^^
@@ -21,12 +26,29 @@ New Features
   - ``Difference(subject, clip, **kwargs)`` 
   - ``Intersection(*vmobjects, **kwargs)`` 
   - ``Exclusion(*vmobjects, **kwargs)`` 
+- `81c3ae3 <https://github.com/3b1b/manim/pull/1688/commits/81c3ae30372e288dc772633dbd17def6e603753e>`__: Added reflectiveness
+- `2c7689e <https://github.com/3b1b/manim/pull/1688/commits/2c7689ed9e81229ce87c648f97f26267956c0bc9>`__: Enabled ``glow_factor`` on ``DotCloud``
+- `d065e19 <https://github.com/3b1b/manim/pull/1688/commits/d065e1973d1d6ebd2bece81ce4bdf0c2fff7c772>`__: Added option ``-e`` to insert embed line from the command line
+- `0e78027 <https://github.com/3b1b/manim/pull/1688/commits/0e78027186a976f7e5fa8d586f586bf6e6baab8d>`__: Improved ``point_from_proportion`` to account for arc length
+- `781a993 <https://github.com/3b1b/manim/pull/1688/commits/781a9934fda6ba11f22ba32e8ccddcb3ba78592e>`__: Added shortcut ``set_backstroke`` for setting black background stroke
+- `0b898a5 <https://github.com/3b1b/manim/pull/1688/commits/0b898a5594203668ed9cad38b490ab49ba233bd4>`__: Added ``Suface.always_sort_to_camera``
+- `e899604 <https://github.com/3b1b/manim/pull/1688/commits/e899604a2d05f78202fcb3b9824ec34647237eae>`__: Added getter methods for specific euler angles
+- `407c53f <https://github.com/3b1b/manim/pull/1688/commits/407c53f97c061bfd8a53beacd88af4c786f9e9ee>`__: Hade ``rotation_between_vectors`` handle identical/similar vectors
+- `49743da <https://github.com/3b1b/manim/pull/1688/commits/49743daf3244bfa11a427040bdde8e2bb79589e8>`__: Added ``Mobject.insert_submobject`` method
+- `9dd1f47 <https://github.com/3b1b/manim/pull/1688/commits/9dd1f47dabca1580d6102e34e44574b0cba556e7>`__: Created single progress display for full scene render
 
 Refactor
 ^^^^^^^^
 
 - `#1662 <https://github.com/3b1b/manim/pull/1662>`__: Refactored support for command ``A`` in path of SVG 
 - `#1662 <https://github.com/3b1b/manim/pull/1662>`__: Refactored ``SingleStringTex.balance_braces``
+- `8b454fb <https://github.com/3b1b/manim/pull/1688/commits/8b454fbe9335a7011e947093230b07a74ba9c653>`__: Slight tweaks to how saturation_factor works on newton-fractal
+- `317a5d6 <https://github.com/3b1b/manim/pull/1688/commits/317a5d6226475b6b54a78db7116c373ef84ea923>`__: Made it possible to set full screen preview as a default
+- `e764da3 <https://github.com/3b1b/manim/pull/1688/commits/e764da3c3adc5ae2a4ce877b340d2b6abcddc2fc>`__: Used ``quick_point_from_proportion`` for graph points
+- `d2182b9 <https://github.com/3b1b/manim/pull/1688/commits/d2182b9112300558b6c074cefd685f97c10b3898>`__: Made sure ``Line.set_length`` returns self
+- `eea3c6b <https://github.com/3b1b/manim/pull/1688/commits/eea3c6b29438f9e9325329c4355e76b9f635e97a>`__: Better align ``SurfaceMesh`` to the corresponding surface polygons
+- `ee1594a <https://github.com/3b1b/manim/pull/1688/commits/ee1594a3cb7a79b8fc361e4c4397a88c7d20c7e3>`__: Match ``fix_in_frame`` status for ``FlashAround`` mobject
+- `ba23fbe <https://github.com/3b1b/manim/pull/1688/commits/ba23fbe71e4a038201cd7df1d200514ed1c13bc2>`__: Made sure ``Mobject.is_fixed_in_frame`` stays updated with uniforms
 
 
 Dependencies
