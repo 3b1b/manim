@@ -14,6 +14,7 @@ Fixed bugs
 - `a717314 <https://github.com/3b1b/manim/pull/1688/commits/a7173142bf93fd309def0cc10f3c56f5e6972332>`__: Fixed ``VMobject.fade``
 - `fbc329d <https://github.com/3b1b/manim/pull/1688/commits/fbc329d7ce3b11821d47adf6052d932f7eff724a>`__: Fixed ``angle_between_vectors``
 - `bcd0990 <https://github.com/3b1b/manim/pull/1688/commits/bcd09906bea5eaaa5352e7bee8f3153f434cf606>`__: Fixed bug in ``ShowSubmobjectsOneByOne``
+- `7023548 <https://github.com/3b1b/manim/pull/1691/commits/7023548ec62c4adb2f371aab6a8c7f62deb7c33c>`__: Fixed bug in ``TransformMatchingParts``
 
 New Features
 ^^^^^^^^^^^^
@@ -36,6 +37,10 @@ New Features
 - `407c53f <https://github.com/3b1b/manim/pull/1688/commits/407c53f97c061bfd8a53beacd88af4c786f9e9ee>`__: Hade ``rotation_between_vectors`` handle identical/similar vectors
 - `49743da <https://github.com/3b1b/manim/pull/1688/commits/49743daf3244bfa11a427040bdde8e2bb79589e8>`__: Added ``Mobject.insert_submobject`` method
 - `9dd1f47 <https://github.com/3b1b/manim/pull/1688/commits/9dd1f47dabca1580d6102e34e44574b0cba556e7>`__: Created single progress display for full scene render
+- `264f7b1 <https://github.com/3b1b/manim/pull/1691/commits/264f7b11726e9e736f0fe472f66e38539f74e848>`__: Added ``Circle.get_radius``
+- `83841ae <https://github.com/3b1b/manim/pull/1691/commits/83841ae41568a9c9dff44cd163106c19a74ac281>`__: Added ``Dodecahedron``
+- `a1d5147 <https://github.com/3b1b/manim/pull/1691/commits/a1d51474ea1ce3b7aa3efbe4c5e221be70ee2f5b>`__: Added ``GlowDot``
+- `#1678 <https://github.com/3b1b/manim/pull/1678>`__: Added ``MTex`` , see `#1678 <https://github.com/3b1b/manim/pull/1678>`__ for details
 
 Refactor
 ^^^^^^^^
@@ -49,6 +54,10 @@ Refactor
 - `eea3c6b <https://github.com/3b1b/manim/pull/1688/commits/eea3c6b29438f9e9325329c4355e76b9f635e97a>`__: Better align ``SurfaceMesh`` to the corresponding surface polygons
 - `ee1594a <https://github.com/3b1b/manim/pull/1688/commits/ee1594a3cb7a79b8fc361e4c4397a88c7d20c7e3>`__: Match ``fix_in_frame`` status for ``FlashAround`` mobject
 - `ba23fbe <https://github.com/3b1b/manim/pull/1688/commits/ba23fbe71e4a038201cd7df1d200514ed1c13bc2>`__: Made sure ``Mobject.is_fixed_in_frame`` stays updated with uniforms
+- `98b0d26 <https://github.com/3b1b/manim/pull/1691/commits/98b0d266d2475926a606331923cca3dc1dea97ad>`__: Made sure ``skip_animations`` and ``start_at_animation_number`` play well together
+- `f8e6e7d <https://github.com/3b1b/manim/pull/1691/commits/f8e6e7df3ceb6f3d845ced4b690a85b35e0b8d00>`__: Updated progress display for full scene render
+- `8f1dfab <https://github.com/3b1b/manim/pull/1691/commits/8f1dfabff04a8456f5c4df75b0f97d50b2755003>`__: ``VectorizedPoint`` should call ``__init__`` for both super classes
+- `758f329 <https://github.com/3b1b/manim/pull/1691/commits/758f329a06a0c198b27a48c577575d94554305bf>`__: Used array copy when checking need for refreshing triangulation
 
 
 Dependencies
