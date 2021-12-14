@@ -83,22 +83,3 @@ Its value is a dictionary, passed in as ``kwargs`` when initializing the ``Camer
 to modify the value of the properties of the ``Camera`` class.
 
 So the nesting of the ``CONFIG`` dictionary **essentially** passes in the value as ``kwargs``.
-
-Common usage
-------------
-
-When writing a class by yourself, you can add attributes or modify the attributes 
-of the parent class through ``CONFIG``.
-
-The most commonly used is to modify the properties of the camera when writing a ``Scene``:
-
-.. code-block:: python
-
-    class YourScene(Scene):
-        CONFIG = {
-            "camera_config": {
-                "background_color": WHITE,
-            },
-        }
-
-For example, the above dictionary will change the background color to white, etc.

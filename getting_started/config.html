@@ -9,8 +9,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/custom.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?eab5ab44104975b97bdcff1f">
-    <link rel="stylesheet" href="../_static/pygments.css?eab5ab44104975b97bdcff1f">
+    <link rel="stylesheet" href="../_static/styles/default.css?614036c110710340dd07b525">
+    <link rel="stylesheet" href="../_static/pygments.css?614036c110710340dd07b525">
     
 <style>
   :root {
@@ -27,7 +27,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?eab5ab44104975b97bdcff1f"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?614036c110710340dd07b525"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -194,21 +194,6 @@ Its value is a dictionary, passed in as <code class="docutils literal notranslat
 to modify the value of the properties of the <code class="docutils literal notranslate"><span class="pre">Camera</span></code> class.</p>
 <p>So the nesting of the <code class="docutils literal notranslate"><span class="pre">CONFIG</span></code> dictionary <strong>essentially</strong> passes in the value as <code class="docutils literal notranslate"><span class="pre">kwargs</span></code>.</p>
 </section>
-<section id="common-usage">
-<h2>Common usage<a class="headerlink" href="#common-usage" title="Permalink to this headline">¶</a></h2>
-<p>When writing a class by yourself, you can add attributes or modify the attributes
-of the parent class through <code class="docutils literal notranslate"><span class="pre">CONFIG</span></code>.</p>
-<p>The most commonly used is to modify the properties of the camera when writing a <code class="docutils literal notranslate"><span class="pre">Scene</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">YourScene</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
-    <span class="n">CONFIG</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">"camera_config"</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">"background_color"</span><span class="p">:</span> <span class="n">WHITE</span><span class="p">,</span>
-        <span class="p">},</span>
-    <span class="p">}</span>
-</pre></div>
-</div>
-<p>For example, the above dictionary will change the background color to white, etc.</p>
-</section>
 </section>
 
       </article>
@@ -260,7 +245,6 @@ of the parent class through <code class="docutils literal notranslate"><span cla
 <li><a class="reference internal" href="#">CONFIG dictionary</a><ul>
 <li><a class="reference internal" href="#what-s-config">What’s CONFIG</a></li>
 <li><a class="reference internal" href="#config-nesting">CONFIG nesting</a></li>
-<li><a class="reference internal" href="#common-usage">Common usage</a></li>
 </ul>
 </li>
 </ul>
