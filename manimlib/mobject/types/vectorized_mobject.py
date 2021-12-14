@@ -1048,7 +1048,8 @@ class VectorizedPoint(Point, VMobject):
     }
 
     def __init__(self, location=ORIGIN, **kwargs):
-        super().__init__(**kwargs)
+        Point.__init__(self, **kwargs)
+        VMobject.__init__(self, **kwargs)
         self.set_points(np.array([location]))
 
 
