@@ -1,0 +1,6 @@
+       text26=MathTex("(x+0.3)^2+(y-2.8)^2=0.07").move_to(3*RIGHT+2*UP)
+       self.play(Write(text26))
+       hs26a=ax.get_graph(lambda x:sqrt(0.07-(y-2.8)*(y-2.8))-0.3)
+       hs26b=ax.get_graph(lambda x:-sqrt(0.07-(y-2.8)*(y-2.8))-0.3)
+       self.play(Create(hs26a), Create(hs26b))
+       self.play(FadeOut(text26a))
