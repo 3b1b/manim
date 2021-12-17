@@ -175,35 +175,36 @@ class BarChart(VGroup):
     def add_axes(self):
         x_axis = Line(self.tick_width * LEFT / 2, self.width * RIGHT)
         y_axis = Line(MED_LARGE_BUFF * DOWN, self.height * UP)
-        ticks = VGroup()
+        y_ticks = VGroup()
         heights = np.linspace(0, self.height, self.n_ticks + 1)
         values = np.linspace(0, self.max_value, self.n_ticks + 1)
         for y, value in zip(heights, values):
-            tick = Line(LEFT, RIGHT)
-            tick.set_width(self.tick_width)
-            tick.move_to(y * UP)
-            ticks.add(tick)
-        y_axis.add(ticks)
+            y_tick = Line(LEFT, RIGHT)
+            y_tick.set_width(self.tick_width)
+            y_tick.move_to(y * UP)
+            y_ticks.add(y_tick)
+        y_axis.add(y_ticks)
 
         if self.include_x_ticks == True:
+            x_ticks = VGroup()
             widths = np.linspace(0, self.width, self.n_ticks_x + 1)
             label_values = np.linspace(0, len(self.bar_names), self.n_ticks_x + 1)
             for x, value in zip(widths, label_values):
-                tick1 = Line(UP, DOWN)
-                tick1.set_height(self.tick_height)
-                tick1.move_to(x * RIGHT)
-                ticks.add(tick)
-            x_axis.add(ticks)
+                x_tick = Line(UP, DOWN)
+                x_tick.set_height(self.tick_height)
+                x_tick.move_to(x * RIGHT)
+                x_ticks.add(x_tick)
+            x_axis.add(x_ticks)
 
         self.add(x_axis, y_axis)
         self.x_axis, self.y_axis = x_axis, y_axis
 
         if self.label_y_axis:
             labels = VGroup()
-            for tick, value in zip(ticks, values):
+            for y_tick, value in zip(y_ticks, values):
                 label = Tex(str(np.round(value, 2)))
                 label.set_height(self.y_axis_label_height)
-                label.next_to(tick, LEFT, SMALL_BUFF)
+                label.next_to(y_tick, LEFT, SMALL_BUFF)
                 labels.add(label)
             self.y_axis_labels = labels
             self.add(labels)
