@@ -7,7 +7,6 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.geometry import Square
 from manimlib.mobject.geometry import Polygon
-from manimlib.mobject.geometry import Line
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.space_ops import get_norm

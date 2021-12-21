@@ -50,6 +50,7 @@ class Lightbulb(SVGMobject):
 
     def __init__(self, **kwargs):
         super().__init__("lightbulb", **kwargs)
+        self.insert_n_curves(25)
 
 
 class Speedometer(VMobject):
