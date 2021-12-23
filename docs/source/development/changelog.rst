@@ -1,6 +1,22 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+Fixed bugs
+^^^^^^^^^^
+- `f1996f8 <https://github.com/3b1b/manim/pull/1697/commits/f1996f8479f9e33d626b3b66e9eb6995ce231d86>`__: Temporarily fixed ``Lightbulb``
+
+New Features
+^^^^^^^^^^^^
+- `#1694 <https://github.com/3b1b/manim/pull/1694>`__: Added option to add ticks on x-axis in ``BarChart``
+
+Refactor 
+^^^^^^^^
+- `5aa8d15 <https://github.com/3b1b/manim/pull/1697/commits/5aa8d15d85797f68a8f169ca69fd90d441a3abbe>`__: Used ``FFMPEG_BIN`` instead of ``"ffmpeg"`` for sound incorporation
+
+
 v1.3.0
 ------
 
