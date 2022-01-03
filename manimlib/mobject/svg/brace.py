@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import copy
 
 from manimlib.animation.composition import AnimationGroup
 from manimlib.constants import *
