@@ -56,7 +56,7 @@ class _LabelledTex(SVGMobject):
 
 class _TexSpan(object):
     def __init__(self, script_type, label):
-        # script_type: 0 for normal, 1 for subscript, 2 for superscript.
+        # `script_type`: 0 for normal, 1 for subscript, 2 for superscript.
         # Only those spans with `script_type == 0` will be colored.
         self.script_type = script_type
         self.label = label
@@ -252,10 +252,7 @@ class MTex(VMobject):
     CONFIG = {
         "fill_opacity": 1.0,
         "stroke_width": 0,
-        "should_center": True,
         "font_size": 48,
-        "height": None,
-        "organize_left_to_right": False,
         "alignment": "\\centering",
         "tex_environment": "align*",
         "isolate": [],
@@ -286,11 +283,7 @@ class MTex(VMobject):
 
         self.init_colors()
         self.set_color_by_tex_to_color_map(self.tex_to_color_map)
-
-        if self.height is None:
-            self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)
-        if self.organize_left_to_right:
-            self.organize_submobjects_left_to_right()
+        self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)
 
     @staticmethod
     def modify_tex_string(tex_string):
@@ -364,24 +357,24 @@ class MTex(VMobject):
                 self.tex_spans_dict[span_tuple_1].script_type == 2
             ]):
                 continue
-            submob_slice_0 = self.slice_of_part(
+            submob_range_0 = self.range_of_part(
                 self.get_part_by_span_tuples([span_tuple_0])
             )
-            submob_slice_1 = self.slice_of_part(
+            submob_range_1 = self.range_of_part(
                 self.get_part_by_span_tuples([span_tuple_1])
             )
             submobs = self.submobjects
             self.set_submobjects([
-                *submobs[: submob_slice_1.start],
-                *submobs[submob_slice_0],
-                *submobs[submob_slice_1.stop : submob_slice_0.start],
-                *submobs[submob_slice_1],
-                *submobs[submob_slice_0.stop :]
+                *submobs[: submob_range_1.start],
+                *submobs[submob_range_0.start : submob_range_0.stop],
+                *submobs[submob_range_1.stop : submob_range_0.start],
+                *submobs[submob_range_1.start : submob_range_1.stop],
+                *submobs[submob_range_0.stop :]
             ])
 
     def assign_submob_tex_strings(self):
         # Not sure whether this is the best practice...
-        # Just a temporary hack for supporting `TransformMatchingTex`.
+        # This also supports `TransformMatchingMTex`.
         tex_string = self.tex_string
         # Use tex strings including "_", "^".
         label_dict = {}
@@ -480,13 +473,13 @@ class MTex(VMobject):
         part = self.get_part_by_tex(tex, index=index)
         return self.indices_of_part(part)
 
-    def slice_of_part(self, part):
+    def range_of_part(self, part):
         indices = self.indices_of_part(part)
-        return slice(indices[0], indices[-1] + 1)
+        return range(indices[0], indices[-1] + 1)
 
-    def slice_of_part_by_tex(self, tex, index=0):
+    def range_of_part_by_tex(self, tex, index=0):
         part = self.get_part_by_tex(tex, index=index)
-        return self.slice_of_part(part)
+        return self.range_of_part(part)
 
     def index_of_part(self, part):
         return self.indices_of_part(part)[0]
