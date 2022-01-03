@@ -88,6 +88,7 @@ class BraceLabel(VMobject):
     CONFIG = {
         "label_constructor": Tex,
         "label_scale": 1,
+        "lable_buff": DEFAULT_MOBJECT_TO_MOBJECT_BUFFER  
     }
 
     def __init__(self, obj, text, brace_direction=DOWN, **kwargs):
@@ -104,7 +105,7 @@ class BraceLabel(VMobject):
         if self.label_scale != 1:
             self.label.scale(self.label_scale)
 
-        self.brace.put_at_tip(self.label)
+        self.brace.put_at_tip(self.label, buff=self.lable_buff)
         self.set_submobjects([self.brace, self.label])
 
     def creation_anim(self, label_anim=FadeIn, brace_anim=GrowFromCenter):
