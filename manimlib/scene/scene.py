@@ -432,6 +432,11 @@ class Scene(object):
     def unlock_mobject_data(self):
         self.camera.release_static_mobjects()
 
+    def refresh_locked_data(self):
+        self.unlock_mobject_data()
+        self.lock_static_mobject_data()
+        return self
+
     def begin_animations(self, animations):
         for animation in animations:
             animation.begin()
