@@ -813,6 +813,21 @@ class Mobject(object):
             self.set_depth(max_depth, **kwargs)
         return self
 
+    def set_min_width(self, min_width, **kwargs):
+        if self.get_width() < min_width:
+            self.set_width(min_width, **kwargs)
+        return self
+
+    def set_min_height(self, min_height, **kwargs):
+        if self.get_height() < min_height:
+            self.set_height(min_height, **kwargs)
+        return self
+
+    def set_min_depth(self, min_depth, **kwargs):
+        if self.get_depth() < min_depth:
+            self.set_depth(min_depth, **kwargs)
+        return self
+
     def set_coord(self, value, dim, direction=ORIGIN):
         curr = self.get_coord(dim, direction)
         shift_vect = np.zeros(self.dim)
