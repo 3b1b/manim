@@ -36,6 +36,7 @@ class Scene(object):
         "end_at_animation_number": None,
         "leave_progress_bars": False,
         "preview": True,
+        "presenter_mode": False,
         "linger_after_completion": True,
     }
 
@@ -62,6 +63,7 @@ class Scene(object):
         # Items associated with interaction
         self.mouse_point = Point()
         self.mouse_drag_point = Point()
+        self.hold_on_wait = not self.presenter_mode
 
         # Much nicer to work with deterministic scenes
         if self.random_seed is not None:
@@ -485,16 +487,21 @@ class Scene(object):
     def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
         self.update_mobjects(dt=0)  # Any problems with this?
         self.lock_static_mobject_data()
-        time_progression = self.get_wait_time_progression(duration, stop_condition)
-        last_t = 0
-        for t in time_progression:
-            dt = t - last_t
-            last_t = t
-            self.update_frame(dt)
-            self.emit_frame()
-            if stop_condition is not None and stop_condition():
-                time_progression.close()
-                break
+        if self.presenter_mode and not self.skip_animations:
+            while self.hold_on_wait:
+                self.update_frame(dt=1 / self.camera.frame_rate)
+            self.hold_on_wait = True
+        else:
+            time_progression = self.get_wait_time_progression(duration, stop_condition)
+            last_t = 0
+            for t in time_progression:
+                dt = t - last_t
+                last_t = t
+                self.update_frame(dt)
+                self.emit_frame()
+                if stop_condition is not None and stop_condition():
+                    time_progression.close()
+                    break
         self.unlock_mobject_data()
         return self
 
@@ -615,6 +622,8 @@ class Scene(object):
             self.camera.frame.to_default_state()
         elif char == "q":
             self.quit_interaction = True
+        elif char == " ":
+            self.hold_on_wait = False
 
     def on_resize(self, width: int, height: int):
         self.camera.reset_pixel_shape(width, height)
