@@ -116,7 +116,7 @@ class Scene(object):
         if self.quit_interaction:
             self.unlock_mobject_data()
 
-    def embed(self):
+    def embed(self, close_scene_on_exit=True):
         if not self.preview:
             # If the scene is just being
             # written, ignore embed calls
@@ -141,8 +141,9 @@ class Scene(object):
         log.info("Tips: Now the embed iPython terminal is open. But you can't interact with"
                  " the window directly. To do so, you need to type `touch()` or `self.interact()`")
         shell(local_ns=local_ns, stack_depth=2)
-        # End scene when exiting an embed.
-        raise EndSceneEarlyException()
+        # End scene when exiting an embed
+        if close_scene_on_exit:
+            raise EndSceneEarlyException()
 
     def __str__(self):
         return self.__class__.__name__
@@ -624,6 +625,8 @@ class Scene(object):
             self.quit_interaction = True
         elif char == " ":
             self.hold_on_wait = False
+        elif char == "e":
+            self.embed(close_scene_on_exit=False)
 
     def on_resize(self, width: int, height: int):
         self.camera.reset_pixel_shape(width, height)
