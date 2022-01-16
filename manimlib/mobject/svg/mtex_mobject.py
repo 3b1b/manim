@@ -18,6 +18,10 @@ SCALE_FACTOR_PER_FONT_POINT = 0.001
 tex_hash_to_mob_map = {}
 
 
+def _contains(span_0, span_1):
+    return span_0[0] <= span_1[0] and span_1[1] <= span_0[1]
+
+
 def _get_neighbouring_pairs(iterable):
     return list(adjacent_pairs(iterable))[:-1]
 
@@ -72,19 +76,12 @@ class _TexSpan(object):
 class _TexParser(object):
     def __init__(self, mtex):
         self.tex_string = mtex.tex_string
-        strings_to_break_up = remove_list_redundancies([
-            *mtex.isolate, *mtex.tex_to_color_map.keys(), mtex.tex_string
-        ])
-        if "" in strings_to_break_up:
-            strings_to_break_up.remove("")
-        unbreakable_commands = mtex.unbreakable_commands
-
         self.tex_spans_dict = {}
         self.current_label = 0
         self.break_up_by_braces()
         self.break_up_by_scripts()
-        self.break_up_by_additional_strings(strings_to_break_up)
-        self.merge_unbreakable_commands(unbreakable_commands)
+        self.break_up_by_additional_strings(mtex.strings_to_break_up)
+        self.merge_unbreakable_commands(mtex.unbreakable_commands)
         self.analyse_containing_labels()
 
     @staticmethod
@@ -95,10 +92,6 @@ class _TexParser(object):
         rg, b = divmod(rgb, 256)
         r, g = divmod(rg, 256)
         return r, g, b
-
-    @staticmethod
-    def contains(span_0, span_1):
-        return span_0[0] <= span_1[0] and span_1[1] <= span_0[1]
 
     def add_tex_span(self, span_tuple, script_type=0, label=-1):
         if script_type == 0:
@@ -157,7 +150,7 @@ class _TexParser(object):
     def break_up_by_additional_strings(self, strings_to_break_up):
         tex_string = self.tex_string
         all_span_tuples = []
-        for string in strings_to_break_up:
+        for string in [*strings_to_break_up, tex_string]:
             # Only matches non-crossing strings.
             for match_obj in re.finditer(re.escape(string), tex_string):
                 all_span_tuples.append(match_obj.span())
@@ -197,7 +190,7 @@ class _TexParser(object):
             span_tuple: tex_span
             for span_tuple, tex_span in self.tex_spans_dict.items()
             if all([
-                not _TexParser.contains(merge_span, span_tuple)
+                not _contains(merge_span, span_tuple)
                 for merge_span in command_merge_spans
             ])
         }
@@ -207,7 +200,7 @@ class _TexParser(object):
             if tex_span_0.script_type != 0:
                 continue
             for span_1, tex_span_1 in self.tex_spans_dict.items():
-                if _TexParser.contains(span_1, span_0):
+                if _contains(span_1, span_0):
                     tex_span_1.containing_labels.append(tex_span_0.label)
 
     def get_labelled_expression(self):
@@ -263,6 +256,7 @@ class MTex(VMobject):
     def __init__(self, tex_string, **kwargs):
         super().__init__(**kwargs)
         self.tex_string = MTex.modify_tex_string(tex_string)
+        self.set_strings_to_break_up()
 
         tex_parser = _TexParser(self)
         self.tex_spans_dict = tex_parser.tex_spans_dict
@@ -292,6 +286,14 @@ class MTex(VMobject):
         if not result:
             result = "\\quad"
         return result
+
+    def set_strings_to_break_up(self):
+        strings_to_break_up = remove_list_redundancies([
+            *self.isolate, *self.tex_to_color_map.keys()
+        ])
+        if "" in strings_to_break_up:
+            strings_to_break_up.remove("")
+        self.strings_to_break_up = strings_to_break_up
 
     def get_tex_file_body(self, new_tex):
         if self.tex_environment:
@@ -346,8 +348,10 @@ class MTex(VMobject):
             if tex_span.script_type != 0
             for index in span_tuple
         ])
-        index_and_span_pair = _get_neighbouring_pairs(index_and_span_list)
-        for index_and_span_0, index_and_span_1 in index_and_span_pair:
+        index_and_span_pairs = _get_neighbouring_pairs(index_and_span_list)
+
+        switch_range_pairs = []
+        for index_and_span_0, index_and_span_1 in index_and_span_pairs:
             index_0, span_tuple_0 = index_and_span_0
             index_1, span_tuple_1 = index_and_span_1
             if index_0 != index_1:
@@ -363,14 +367,21 @@ class MTex(VMobject):
             submob_range_1 = self.range_of_part(
                 self.get_part_by_span_tuples([span_tuple_1])
             )
-            submobs = self.submobjects
-            self.set_submobjects([
-                *submobs[: submob_range_1.start],
-                *submobs[submob_range_0.start : submob_range_0.stop],
-                *submobs[submob_range_1.stop : submob_range_0.start],
-                *submobs[submob_range_1.start : submob_range_1.stop],
-                *submobs[submob_range_0.stop :]
-            ])
+            switch_range_pairs.append((submob_range_0, submob_range_1))
+
+        switch_range_pairs.sort(key=lambda pair: (pair[0].stop, -pair[0].start))
+        indices = list(range(len(self.submobjects)))
+        for submob_range_0, submob_range_1 in switch_range_pairs:
+            indices = [
+                *indices[: submob_range_1.start],
+                *indices[submob_range_0.start : submob_range_0.stop],
+                *indices[submob_range_1.stop : submob_range_0.start],
+                *indices[submob_range_1.start : submob_range_1.stop],
+                *indices[submob_range_0.stop :]
+            ]
+
+        submobs = self.submobjects
+        self.set_submobjects([submobs[i] for i in indices])
 
     def assign_submob_tex_strings(self):
         # Not sure whether this is the best practice...
@@ -457,7 +468,10 @@ class MTex(VMobject):
 
     def set_color_by_tex_to_color_map(self, tex_to_color_map):
         for tex, color in list(tex_to_color_map.items()):
-            self.set_color_by_tex(tex, color)
+            try:
+                self.set_color_by_tex(tex, color)
+            except:
+                pass
         return self
 
     def indices_of_part(self, part):
