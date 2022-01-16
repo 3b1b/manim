@@ -56,6 +56,7 @@ class TransformMatchingParts(AnimationGroup):
             anims.append(FadeTransformPieces(
                 key_mapped_source,
                 key_mapped_target,
+                **kwargs
             ))
 
         fade_source = self.group_type()
@@ -166,25 +167,38 @@ class TransformMatchingMTex(AnimationGroup):
                 elif isinstance(key, range):
                     submobs_list.extend([mob[index] for index in key])
                 elif isinstance(key, str):
-                    submobs_list.extend(it.chain(*mob.get_parts_by_tex(key)))
+                    submobs_list.extend(it.chain(*mob.get_parts_by_tex(key))) # TODO
                 else:
                     raise ValueError(f"Unexpected key: \"{key}\"")
             return VGroup(*remove_list_redundancies(submobs_list))
 
+        keys_pairs = [
+            (src_keys, tar_keys)
+            for src_keys, tar_keys in self.key_map.items()
+        ]
+        keys_pairs.extend([
+            (keys, keys)
+            for keys in set(mobject.strings_to_break_up).intersection(
+                set(target_mobject.strings_to_break_up)
+            )
+        ])
+
         rest_src_submobs = mobject.submobjects
         rest_tar_submobs = target_mobject.submobjects
-        for src_keys, tar_keys in self.key_map.items():
+        for src_keys, tar_keys in keys_pairs:
             src_submobs = VGroup(*filter(
                 lambda m: m in rest_src_submobs,
                 get_submobjects_from_keys(mobject, src_keys)
             ))
-            rest_src_submobs = list(filter(
-                lambda m: m not in src_submobs,
-                rest_src_submobs
-            ))
             tar_submobs = VGroup(*filter(
                 lambda m: m in rest_tar_submobs,
                 get_submobjects_from_keys(target_mobject, tar_keys)
+            ))
+            if not (src_submobs and tar_submobs):
+                continue
+            rest_src_submobs = list(filter(
+                lambda m: m not in src_submobs,
+                rest_src_submobs
             ))
             rest_tar_submobs = list(filter(
                 lambda m: m not in tar_submobs,
