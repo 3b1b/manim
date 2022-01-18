@@ -485,7 +485,9 @@ class Scene(object):
         self.unlock_mobject_data()
 
     @handle_play_like_call
-    def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None):
+    def wait(self, duration=DEFAULT_WAIT_TIME, stop_condition=None, note=None):
+        if note:
+            log.info(note)
         self.update_mobjects(dt=0)  # Any problems with this?
         self.lock_static_mobject_data()
         if self.presenter_mode and not self.skip_animations:
