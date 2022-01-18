@@ -132,7 +132,11 @@ class SingleStringTex(VMobject):
         Makes Tex resiliant to unmatched braces
         """
         num_unclosed_brackets = 0
-        for char in tex:
+        for i in range(len(tex)):
+            if i > 0 and tex[i - 1] == "\\":
+                # So as to not count '\{' type expressions
+                continue
+            char = tex[i]
             if char == "{":
                 num_unclosed_brackets += 1
             elif char == "}":
