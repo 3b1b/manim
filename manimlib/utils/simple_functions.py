@@ -22,13 +22,16 @@ def choose_using_cache(n, r):
 def choose(n, r, use_cache=True):
     if use_cache:
         return choose_using_cache(n, r)
-    if n < r:
-        return 0
-    if r == 0:
-        return 1
+    r = min(r, n - r)
     denom = reduce(op.mul, range(1, r + 1), 1)
     numer = reduce(op.mul, range(n, n - r, -1), 1)
     return numer // denom
+
+
+def gen_choose(n, r):
+    numer = np.prod(np.arange(n, n - r, -1))
+    denom = np.prod(np.arange(1, r + 1))
+    return numer / denom
 
 
 def get_num_args(function):
