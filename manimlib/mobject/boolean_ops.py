@@ -55,8 +55,7 @@ class Union(VMobject):
             for vmobject in vmobjects
         ]
         pathops.union(paths, outpen.getPen())
-        _convert_skia_path_to_vmobject(outpen, self)
-        self.reverse_points()
+        _convert_skia_path_to_vmobject(outpen, self).reverse_points()
 
 
 class Difference(VMobject):
@@ -68,8 +67,7 @@ class Difference(VMobject):
             [_convert_vmobject_to_skia_path(clip)],
             outpen.getPen(),
         )
-        _convert_skia_path_to_vmobject(outpen, self)
-        self.reverse_points()
+        _convert_skia_path_to_vmobject(outpen, self).reverse_points()
 
 
 class Intersection(VMobject):
@@ -92,8 +90,7 @@ class Intersection(VMobject):
                 new_outpen.getPen(),
             )
             outpen = new_outpen
-        _convert_skia_path_to_vmobject(outpen, self)
-        self.reverse_points()
+        _convert_skia_path_to_vmobject(outpen, self).reverse_points()
 
 
 class Exclusion(VMobject):
@@ -116,5 +113,4 @@ class Exclusion(VMobject):
                 new_outpen.getPen(),
             )
             outpen = new_outpen
-        _convert_skia_path_to_vmobject(outpen, self)
-        self.reverse_points()
+        _convert_skia_path_to_vmobject(outpen, self).reverse_points()
