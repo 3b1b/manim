@@ -21,7 +21,7 @@ def _convert_vmobject_to_skia_path(vmobject):
     return path
 
 
-def _convert_skia_path_to_vmobject(path, vmobject):
+def _convert_skia_path_to_vmobject(path, vmobject: VMobject):
     PathVerb = pathops.PathVerb
     current_path_start = np.array([0.0, 0.0, 0.0])
     for path_verb, points in path:
