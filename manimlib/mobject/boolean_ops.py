@@ -41,7 +41,7 @@ def _convert_skia_path_to_vmobject(path, vmobject):
                 vmobject.add_quadratic_bezier_curve_to(*points)
             else:
                 raise Exception(f"Unsupported: {path_verb}")
-    return vmobject
+    return vmobject.reverse_points()
 
 
 class Union(VMobject):
@@ -55,7 +55,7 @@ class Union(VMobject):
             for vmobject in vmobjects
         ]
         pathops.union(paths, outpen.getPen())
-        _convert_skia_path_to_vmobject(outpen, self).reverse_points()
+        _convert_skia_path_to_vmobject(outpen, self)
 
 
 class Difference(VMobject):
@@ -67,7 +67,7 @@ class Difference(VMobject):
             [_convert_vmobject_to_skia_path(clip)],
             outpen.getPen(),
         )
-        _convert_skia_path_to_vmobject(outpen, self).reverse_points()
+        _convert_skia_path_to_vmobject(outpen, self)
 
 
 class Intersection(VMobject):
@@ -90,7 +90,7 @@ class Intersection(VMobject):
                 new_outpen.getPen(),
             )
             outpen = new_outpen
-        _convert_skia_path_to_vmobject(outpen, self).reverse_points()
+        _convert_skia_path_to_vmobject(outpen, self)
 
 
 class Exclusion(VMobject):
@@ -113,4 +113,4 @@ class Exclusion(VMobject):
                 new_outpen.getPen(),
             )
             outpen = new_outpen
-        _convert_skia_path_to_vmobject(outpen, self).reverse_points()
+        _convert_skia_path_to_vmobject(outpen, self)
