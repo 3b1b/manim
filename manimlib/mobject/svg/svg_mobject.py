@@ -409,7 +409,8 @@ class VMobjectFromSVGPathstring(VMobject):
 
             number_types = np.array(list(number_types_str))
             n_numbers = len(number_types_str)
-            number_groups = np.array(string_to_numbers(coord_string)).reshape((-1, n_numbers))
+            number_list = _PathStringParser(coord_string, number_types_str).args
+            number_groups = np.array(number_list).reshape((-1, n_numbers))
 
             for numbers in number_groups:
                 if command.islower():
@@ -551,9 +552,63 @@ class VMobjectFromSVGPathstring(VMobject):
             "S": (self.add_smooth_cubic_curve_to, "xyxy"),
             "Q": (self.add_quadratic_bezier_curve_to, "xyxy"),
             "T": (self.add_smooth_curve_to, "xy"),
-            "A": (self.add_elliptical_arc_to, "-----xy"),
+            "A": (self.add_elliptical_arc_to, "uuaffxy"),
             "Z": (self.close_path, ""),
         }
 
     def get_original_path_string(self):
         return self.path_string
+
+
+class InvalidPathError(ValueError):
+    pass
+
+
+class _PathStringParser:
+    def __init__(self, arguments, rules):
+        self.args = []
+        arguments = bytearray(arguments, "ascii")
+        while arguments:
+            for rule in rules:
+                self._rule_to_function_map[rule](arguments)
+    
+    @property
+    def _rule_to_function_map(self):
+        return {
+            "x": self._get_number,
+            "y": self._get_number,
+            "a": self._get_number,
+            "u": self._get_unsigned_number,
+            "f": self._get_flag,
+        }
+
+    def _strip_array(self, arg_array):
+        while arg_array and arg_array[0] in [0x9, 0x20, 0xA, 0xC, 0xD, 0x2C]:
+            arg_array[0:1] = b""
+
+    def _get_number(self, arg_array):
+        pattern = re.compile(rb"^[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?")
+        res = pattern.search(arg_array)
+        if not res:
+            raise InvalidPathError(f"Expected a number, got '{arg_array}'")
+        number = float(res.group())
+        self.args.append(number)
+        arg_array[res.start():res.end()] = b""
+        self._strip_array(arg_array)
+        return number
+
+    def _get_unsigned_number(self, arg_array):
+        number = self._get_number(arg_array)
+        if number < 0:
+            raise InvalidPathError(f"Expected an unsigned number, got '{number}'")
+        return number
+    
+    def _get_flag(self, arg_array):
+        flag = arg_array[0]
+        if flag != 48 and flag != 49:
+            raise InvalidPathError(f"Expected a flag (0/1), got '{chr(flag)}'")
+        flag -= 48
+        self.args.append(flag)
+        arg_array[0:1] = b""
+        self._strip_array(arg_array)
+        return flag
