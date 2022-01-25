@@ -1,6 +1,7 @@
 import sys
 import os
 import hashlib
+import re
 from contextlib import contextmanager
 
 from manimlib.utils.directories import get_tex_dir
@@ -43,13 +44,16 @@ def tex_hash(tex_file_content):
     return hasher.hexdigest()[:16]
 
 
-def tex_to_svg_file(tex_file_content):
+def tex_to_svg_file(tex_file_content, use_mathjax=False):
     svg_file = os.path.join(
         get_tex_dir(), tex_hash(tex_file_content) + ".svg"
     )
     if not os.path.exists(svg_file):
         # If svg doesn't exist, create it
-        tex_to_svg(tex_file_content, svg_file)
+        if use_mathjax:
+            tex_to_svg_using_mathjax(tex_file_content, svg_file)
+        else:
+            tex_to_svg(tex_file_content, svg_file)
     return svg_file
 
 
@@ -66,6 +70,31 @@ def tex_to_svg(tex_file_content, svg_file):
         if not file.endswith(end):
             os.remove(os.path.join(tex_dir, file))
 
+    return svg_file
+
+
+def tex_to_svg_using_mathjax(tex_file_content, svg_file):
+    commands = [
+        "node",
+        os.path.join(
+            get_manim_dir(),
+            "manimlib", "mathjax", "index.js"
+        ),
+        "-v",
+        svg_file,
+        f"\"{tex_file_content}\"",
+        ">",
+        os.devnull
+    ]
+    exit_code = os.system(" ".join(commands))
+    with open(svg_file, "r") as file:
+        error_match_obj = re.search(r"(?<=data\-mjx\-error\=\")(.*?)(?=\")", file.read())
+    if exit_code != 0 or error_match_obj is not None:
+        log.error("LaTeX Error!  Not a worry, it happens to the best of us.")
+        if error_match_obj is not None:
+            log.debug(f"The error could be: `{error_match_obj.group()}`")
+        os.remove(svg_file)
+        sys.exit(2)
     return svg_file
 
 
