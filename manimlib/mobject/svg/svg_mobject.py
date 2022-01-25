@@ -228,7 +228,7 @@ class SVGMobject(VMobject):
                 stroke_width=stroke_width,
                 stroke_color=stroke_color,
                 fill_color=fill_color,
-                fill_opacity=opacity,
+                fill_opacity=fill_opacity,
                 corner_radius=corner_radius
             )
 
