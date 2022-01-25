@@ -15,14 +15,18 @@ from manimlib.utils.tex_file_writing import display_during_execution
 SCALE_FACTOR_PER_FONT_POINT = 0.001
 
 
-tex_hash_to_mob_map = {}
+TEX_HASH_TO_MOB_MAP = {}
+
+
+def _contains(span_0, span_1):
+    return span_0[0] <= span_1[0] and span_1[1] <= span_0[1]
 
 
 def _get_neighbouring_pairs(iterable):
     return list(adjacent_pairs(iterable))[:-1]
 
 
-class _LabelledTex(SVGMobject):
+class _PlainTex(SVGMobject):
     CONFIG = {
         "height": None,
         "path_string_config": {
@@ -31,18 +35,20 @@ class _LabelledTex(SVGMobject):
         },
     }
 
+
+class _LabelledTex(_PlainTex):
     @staticmethod
     def color_str_to_label(color_str):
         if len(color_str) == 4:
             # "#RGB" => "#RRGGBB"
             color_str = "#" + "".join([c * 2 for c in color_str[1:]])
-        return int(color_str[1:], 16) - 1
+        return int(color_str[1:], 16)
 
     def get_mobjects_from(self, element):
         result = super().get_mobjects_from(element)
         for mob in result:
             if not hasattr(mob, "glyph_label"):
-                mob.glyph_label = -1
+                mob.glyph_label = 0
         try:
             color_str = element.getAttribute("fill")
             if color_str:
@@ -56,7 +62,7 @@ class _LabelledTex(SVGMobject):
 
 class _TexSpan(object):
     def __init__(self, script_type, label):
-        # script_type: 0 for normal, 1 for subscript, 2 for superscript.
+        # `script_type`: 0 for normal, 1 for subscript, 2 for superscript.
         # Only those spans with `script_type == 0` will be colored.
         self.script_type = script_type
         self.label = label
@@ -72,33 +78,22 @@ class _TexSpan(object):
 class _TexParser(object):
     def __init__(self, mtex):
         self.tex_string = mtex.tex_string
-        strings_to_break_up = remove_list_redundancies([
-            *mtex.isolate, *mtex.tex_to_color_map.keys(), mtex.tex_string
-        ])
-        if "" in strings_to_break_up:
-            strings_to_break_up.remove("")
-        unbreakable_commands = mtex.unbreakable_commands
-
         self.tex_spans_dict = {}
         self.current_label = 0
+        self.add_tex_span((0, len(self.tex_string)))
         self.break_up_by_braces()
         self.break_up_by_scripts()
-        self.break_up_by_additional_strings(strings_to_break_up)
-        self.merge_unbreakable_commands(unbreakable_commands)
+        self.break_up_by_additional_strings(mtex.strings_to_break_up)
+        self.merge_unbreakable_commands(mtex.unbreakable_commands)
         self.analyse_containing_labels()
 
     @staticmethod
-    def label_to_color_tuple(n):
+    def label_to_color_tuple(rgb):
         # Get a unique color different from black,
         # or the svg file will not include the color information.
-        rgb = n + 1
         rg, b = divmod(rgb, 256)
         r, g = divmod(rg, 256)
         return r, g, b
-
-    @staticmethod
-    def contains(span_0, span_1):
-        return span_0[0] <= span_1[0] and span_1[1] <= span_0[1]
 
     def add_tex_span(self, span_tuple, script_type=0, label=-1):
         if script_type == 0:
@@ -197,7 +192,7 @@ class _TexParser(object):
             span_tuple: tex_span
             for span_tuple, tex_span in self.tex_spans_dict.items()
             if all([
-                not _TexParser.contains(merge_span, span_tuple)
+                not _contains(merge_span, span_tuple)
                 for merge_span in command_merge_spans
             ])
         }
@@ -207,7 +202,7 @@ class _TexParser(object):
             if tex_span_0.script_type != 0:
                 continue
             for span_1, tex_span_1 in self.tex_spans_dict.items():
-                if _TexParser.contains(span_1, span_0):
+                if _contains(span_1, span_0):
                     tex_span_1.containing_labels.append(tex_span_0.label)
 
     def get_labelled_expression(self):
@@ -215,14 +210,13 @@ class _TexParser(object):
         if not self.tex_spans_dict:
             return tex_string
 
+        # Remove the span of extire tex string.
         indices_with_labels = sorted([
             (span_tuple[i], i, span_tuple[1 - i], tex_span.label)
             for span_tuple, tex_span in self.tex_spans_dict.items()
             if tex_span.script_type == 0
             for i in range(2)
-        ], key=lambda t: (t[0], -t[1], -t[2]))
-        # Add one more item to ensure all the substrings are joined.
-        indices_with_labels.append((len(tex_string), 0, 0, 0))
+        ], key=lambda t: (t[0], -t[1], -t[2]))[1:]
 
         result = tex_string[: indices_with_labels[0][0]]
         index_with_label_pairs = _get_neighbouring_pairs(indices_with_labels)
@@ -252,61 +246,98 @@ class MTex(VMobject):
     CONFIG = {
         "fill_opacity": 1.0,
         "stroke_width": 0,
-        "should_center": True,
         "font_size": 48,
-        "height": None,
-        "organize_left_to_right": False,
         "alignment": "\\centering",
         "tex_environment": "align*",
         "isolate": [],
-        "unbreakable_commands": ["\\begin", "\\end"],
         "tex_to_color_map": {},
+        "unbreakable_commands": ["\\begin", "\\end"],
+        "generate_plain_tex_file": False,
+        "use_mathjax": False,
     }
 
     def __init__(self, tex_string, **kwargs):
         super().__init__(**kwargs)
-        self.tex_string = MTex.modify_tex_string(tex_string)
+        tex_string = tex_string.strip()
+        # Prevent from passing an empty string.
+        if not tex_string:
+            tex_string = " "
+        self.tex_string = tex_string
+        self.set_strings_to_break_up()
 
-        tex_parser = _TexParser(self)
-        self.tex_spans_dict = tex_parser.tex_spans_dict
-
-        new_tex = tex_parser.get_labelled_expression()
-        full_tex = self.get_tex_file_body(new_tex)
-        hash_val = hash(full_tex)
-        if hash_val not in tex_hash_to_mob_map:
-            with display_during_execution(f"Writing \"{tex_string}\""):
-                filename = tex_to_svg_file(full_tex)
-                svg_mob = _LabelledTex(filename)
-                tex_hash_to_mob_map[hash_val] = svg_mob
-        self.add(*[
-            submob.copy()
-            for submob in tex_hash_to_mob_map[hash_val]
-        ])
-        self.build_submobjects()
+        self.generate_mobject()
 
         self.init_colors()
         self.set_color_by_tex_to_color_map(self.tex_to_color_map)
+        scale_factor = SCALE_FACTOR_PER_FONT_POINT * self.font_size
+        if self.use_mathjax:
+            scale_factor *= 0.01 # -ish
+        self.scale(scale_factor)
 
-        if self.height is None:
-            self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)
-        if self.organize_left_to_right:
-            self.organize_submobjects_left_to_right()
+    def set_strings_to_break_up(self):
+        strings_to_break_up = remove_list_redundancies([
+            *self.isolate, *self.tex_to_color_map.keys()
+        ])
+        if "" in strings_to_break_up:
+            strings_to_break_up.remove("")
+        self.strings_to_break_up = strings_to_break_up
 
-    @staticmethod
-    def modify_tex_string(tex_string):
-        result = tex_string.strip("\n")
-        # Prevent from passing an empty string.
-        if not result:
-            result = "\\quad"
-        return result
+    def generate_mobject(self):
+        use_mathjax = self.use_mathjax
+        tex_parser = _TexParser(self)
+        self.tex_spans_dict = tex_parser.tex_spans_dict
+
+        plain_full_tex = self.get_tex_file_body(self.tex_string)
+        plain_hash_val = hash((plain_full_tex, use_mathjax))
+        if plain_hash_val in TEX_HASH_TO_MOB_MAP:
+            self.add(*TEX_HASH_TO_MOB_MAP[plain_hash_val].copy())
+            return self
+
+        labelled_expression = tex_parser.get_labelled_expression()
+        full_tex = self.get_tex_file_body(labelled_expression)
+        hash_val = hash((full_tex, use_mathjax))
+        if hash_val in TEX_HASH_TO_MOB_MAP and not self.generate_plain_tex_file:
+            self.add(*TEX_HASH_TO_MOB_MAP[hash_val].copy())
+            return self
+
+        modes = ["labelled"]
+        if use_mathjax:
+            modes.append("mathjax")
+        with display_during_execution(f"Writing \"{self.tex_string}\" ({', '.join(modes)})"):
+            filename = tex_to_svg_file(full_tex, use_mathjax=use_mathjax)
+            svg_mob = _LabelledTex(filename)
+            self.add(*svg_mob.copy())
+            self.build_submobjects()
+        TEX_HASH_TO_MOB_MAP[hash_val] = self
+        if not self.generate_plain_tex_file:
+            return self
+
+        modes[0] = "plain"
+        with display_during_execution(f"Writing \"{self.tex_string}\" ({', '.join(modes)})"):
+            filename = tex_to_svg_file(plain_full_tex, use_mathjax=use_mathjax)
+            plain_svg_mob = _PlainTex(filename)
+            svg_mob = TEX_HASH_TO_MOB_MAP[hash_val]
+            for plain_submob, submob in zip(plain_svg_mob, svg_mob):
+                plain_submob.glyph_label = submob.glyph_label
+            self.add(*plain_svg_mob.copy())
+            self.build_submobjects()
+        TEX_HASH_TO_MOB_MAP[plain_hash_val] = self
+        return self
 
     def get_tex_file_body(self, new_tex):
-        if self.tex_environment:
+        if self.tex_environment is None:
+            if self.use_mathjax:
+                new_tex = f"\\text{{{new_tex}}}"
+        else:
             new_tex = "\n".join([
                 f"\\begin{{{self.tex_environment}}}",
                 new_tex,
                 f"\\end{{{self.tex_environment}}}"
             ])
+
+        if self.use_mathjax:
+            return new_tex.replace("\n", "")
+
         if self.alignment:
             new_tex = "\n".join([self.alignment, new_tex])
 
@@ -317,11 +348,11 @@ class MTex(VMobject):
         )
 
     def build_submobjects(self):
-        if not self.submobjects:
-            return
-        self.group_submobjects()
-        self.sort_scripts_in_tex_order()
-        self.assign_submob_tex_strings()
+        if self.submobjects:
+            self.group_submobjects()
+            self.sort_scripts_in_tex_order()
+            self.assign_submob_tex_strings()
+        return self.submobjects
 
     def group_submobjects(self):
         # Simply pack together adjacent mobjects with the same label.
@@ -333,7 +364,7 @@ class MTex(VMobject):
                 new_submobjects.append(submobject)
 
         new_glyphs = []
-        current_glyph_label = -1
+        current_glyph_label = 0
         for submob in self.submobjects:
             if submob.glyph_label == current_glyph_label:
                 new_glyphs.append(submob)
@@ -353,8 +384,10 @@ class MTex(VMobject):
             if tex_span.script_type != 0
             for index in span_tuple
         ])
-        index_and_span_pair = _get_neighbouring_pairs(index_and_span_list)
-        for index_and_span_0, index_and_span_1 in index_and_span_pair:
+        index_and_span_pairs = _get_neighbouring_pairs(index_and_span_list)
+
+        switch_range_pairs = []
+        for index_and_span_0, index_and_span_1 in index_and_span_pairs:
             index_0, span_tuple_0 = index_and_span_0
             index_1, span_tuple_1 = index_and_span_1
             if index_0 != index_1:
@@ -364,24 +397,31 @@ class MTex(VMobject):
                 self.tex_spans_dict[span_tuple_1].script_type == 2
             ]):
                 continue
-            submob_slice_0 = self.slice_of_part(
+            submob_range_0 = self.range_of_part(
                 self.get_part_by_span_tuples([span_tuple_0])
             )
-            submob_slice_1 = self.slice_of_part(
+            submob_range_1 = self.range_of_part(
                 self.get_part_by_span_tuples([span_tuple_1])
             )
-            submobs = self.submobjects
-            self.set_submobjects([
-                *submobs[: submob_slice_1.start],
-                *submobs[submob_slice_0],
-                *submobs[submob_slice_1.stop : submob_slice_0.start],
-                *submobs[submob_slice_1],
-                *submobs[submob_slice_0.stop :]
-            ])
+            switch_range_pairs.append((submob_range_0, submob_range_1))
+
+        switch_range_pairs.sort(key=lambda pair: (pair[0].stop, -pair[0].start))
+        indices = list(range(len(self.submobjects)))
+        for submob_range_0, submob_range_1 in switch_range_pairs:
+            indices = [
+                *indices[: submob_range_1.start],
+                *indices[submob_range_0.start : submob_range_0.stop],
+                *indices[submob_range_1.stop : submob_range_0.start],
+                *indices[submob_range_1.start : submob_range_1.stop],
+                *indices[submob_range_0.stop :]
+            ]
+
+        submobs = self.submobjects
+        self.set_submobjects([submobs[i] for i in indices])
 
     def assign_submob_tex_strings(self):
         # Not sure whether this is the best practice...
-        # Just a temporary hack for supporting `TransformMatchingTex`.
+        # This temporarily supports `TransformMatchingTex`.
         tex_string = self.tex_string
         # Use tex strings including "_", "^".
         label_dict = {}
@@ -464,7 +504,10 @@ class MTex(VMobject):
 
     def set_color_by_tex_to_color_map(self, tex_to_color_map):
         for tex, color in list(tex_to_color_map.items()):
-            self.set_color_by_tex(tex, color)
+            try:
+                self.set_color_by_tex(tex, color)
+            except:
+                pass
         return self
 
     def indices_of_part(self, part):
@@ -480,13 +523,13 @@ class MTex(VMobject):
         part = self.get_part_by_tex(tex, index=index)
         return self.indices_of_part(part)
 
-    def slice_of_part(self, part):
+    def range_of_part(self, part):
         indices = self.indices_of_part(part)
-        return slice(indices[0], indices[-1] + 1)
+        return range(indices[0], indices[-1] + 1)
 
-    def slice_of_part_by_tex(self, tex, index=0):
+    def range_of_part_by_tex(self, tex, index=0):
         part = self.get_part_by_tex(tex, index=index)
-        return self.slice_of_part(part)
+        return self.range_of_part(part)
 
     def index_of_part(self, part):
         return self.indices_of_part(part)[0]
