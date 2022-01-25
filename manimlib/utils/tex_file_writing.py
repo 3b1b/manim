@@ -74,6 +74,7 @@ def tex_to_svg(tex_file_content, svg_file):
 
 
 def tex_to_svg_using_mathjax(tex_file_content, svg_file):
+    log_file = svg_file.replace(".svg", ".log")
     commands = [
         "node",
         os.path.join(
@@ -84,10 +85,10 @@ def tex_to_svg_using_mathjax(tex_file_content, svg_file):
         svg_file,
         f"\"{tex_file_content}\"",
         ">",
-        os.devnull
+        log_file
     ]
     exit_code = os.system(" ".join(commands))
-    with open(svg_file, "r") as file:
+    with open(svg_file, "r", encoding="utf-8") as file:
         error_match_obj = re.search(r"(?<=data\-mjx\-error\=\")(.*?)(?=\")", file.read())
     if exit_code != 0 or error_match_obj is not None:
         log.error("LaTeX Error!  Not a worry, it happens to the best of us.")
