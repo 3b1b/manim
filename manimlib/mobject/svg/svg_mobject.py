@@ -71,8 +71,9 @@ class SVGMobject(VMobject):
         doc = minidom.parse(self.file_path)
         self.ref_to_element = {}
 
-        for svg in doc.getElementsByTagName("svg"):
-            mobjects = self.get_mobjects_from(svg)
+        for child in doc.childNodes:
+            if child.tagName != 'svg': continue 
+            mobjects = self.get_mobjects_from(child)
             if self.unpack_groups:
                 self.add(*mobjects)
             else:
