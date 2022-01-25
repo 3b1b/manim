@@ -74,18 +74,16 @@ def tex_to_svg(tex_file_content, svg_file):
 
 
 def tex_to_svg_using_mathjax(tex_file_content, svg_file):
-    log_file = svg_file.replace(".svg", ".log")
     commands = [
         "node",
         os.path.join(
             get_manim_dir(),
             "manimlib", "mathjax", "index.js"
         ),
-        "-v",
         svg_file,
         f"\"{tex_file_content}\"",
         ">",
-        log_file
+        os.devnull
     ]
     exit_code = os.system(" ".join(commands))
     with open(svg_file, "r", encoding="utf-8") as file:
