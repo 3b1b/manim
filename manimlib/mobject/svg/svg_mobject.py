@@ -1,7 +1,6 @@
 import itertools as it
 import re
 import string
-import warnings
 import os
 import hashlib
 
@@ -23,6 +22,7 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.directories import get_mobject_data_dir
 from manimlib.utils.images import get_full_vector_image_path
 from manimlib.utils.simple_functions import clip
+from manimlib.logger import log
 
 
 def string_to_numbers(num_string):
@@ -132,7 +132,7 @@ class SVGMobject(VMobject):
         # Remove initial "#" character
         ref = use_element.getAttribute("xlink:href")[1:]
         if ref not in self.ref_to_element:
-            warnings.warn(f"{ref} not recognized")
+            log.warning(f"{ref} not recognized")
             return VGroup()
         return self.get_mobjects_from(
             self.ref_to_element[ref]
