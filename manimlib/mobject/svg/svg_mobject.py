@@ -237,14 +237,13 @@ class SVGMobject(VMobject):
         return mob
 
     def handle_transforms(self, element, mobject):
-        x, y = 0, 0
-        try:
-            x = self.attribute_to_float(element.getAttribute('x'))
-            # Flip y
-            y = -self.attribute_to_float(element.getAttribute('y'))
-            mobject.shift([x, y, 0])
-        except Exception:
-            pass
+        x, y = (
+            self.attribute_to_float(element.getAttribute(key))
+            if element.hasAttribute(key)
+            else 0.0
+            for key in ("x", "y")
+        )
+        mobject.shift(x * RIGHT + y * DOWN)
 
         transform_names = [
             "matrix", 
