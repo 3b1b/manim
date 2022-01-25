@@ -336,7 +336,9 @@ class MTex(VMobject):
             ])
 
         if self.use_mathjax:
-            return new_tex.replace("\n", "")
+            new_tex = new_tex.replace("\"", "\\\"")
+            new_tex = new_tex.replace("\n", "")
+            return new_tex
 
         if self.alignment:
             new_tex = "\n".join([self.alignment, new_tex])
