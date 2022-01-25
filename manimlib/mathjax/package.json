@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "mathjax-full": "^3.2.0"
+  },
+  "name": "manim-mathjax",
+  "version": "1.0.0",
+  "description": "generate formula svg compatible with manim",
+  "main": "index.js",
+  "author": "zmx0142857",
+  "license": "ISC"
+}
