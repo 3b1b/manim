@@ -250,7 +250,7 @@ class SVGMobject(VMobject):
             "translate", "translateX", "translateY", 
             "scale", "scaleX", "scaleY", 
             "rotate", 
-            "skew", "skewX", "skewY"
+            "skewX", "skewY"
         ]
         transform_pattern = re.compile("|".join([x + r"[^)]*\)" for x in transform_names]))
         number_pattern = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?")
@@ -269,6 +269,8 @@ class SVGMobject(VMobject):
                 self._handle_scale_transform(mobject, op_name, op_args)
             elif op_name == "rotate":
                 self._handle_rotate_transform(mobject, op_name, op_args)
+            elif op_name.startswith("skew"):
+                self._handle_skew_transform(mobject, op_name, op_args)
     
     def _handle_matrix_transform(self, mobject, op_name, op_args):
         transform = np.array(op_args).reshape([3, 2])
@@ -314,6 +316,15 @@ class SVGMobject(VMobject):
         else:
             deg, x, y = op_args 
             mobject.rotate(deg * DEGREES, axis=IN, about_point=np.array([x, y, 0]))
+    
+    def _handle_skew_transform(self, mobject, op_name, op_args):
+        rad = op_args[0] * DEGREES
+        if op_name == "skewX":
+            tana = np.tan(rad)
+            self._handle_matrix_transform(mobject, None, [1., 0., tana, 1., 0., 0.])
+        elif op_name == "skewY":
+            tana = np.tan(rad)
+            self._handle_matrix_transform(mobject, None, [1., tana, 0., 1., 0., 0.])
 
     def flatten(self, input_list):
         output_list = []
