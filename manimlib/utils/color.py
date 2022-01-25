@@ -7,7 +7,6 @@ from manimlib.constants import WHITE
 from manimlib.constants import COLORMAP_3B1B
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.iterables import resize_with_interpolation
-from manimlib.utils.space_ops import normalize
 
 
 def color_to_rgb(color):
