@@ -1,3 +1,4 @@
+from abc import abstractmethod
 import numpy as np
 import numbers
 
@@ -55,9 +56,11 @@ class CoordinateSystem():
     def get_origin(self):
         return self.c2p(*[0] * self.dimension)
 
+    @abstractmethod
     def get_axes(self):
         raise Exception("Not implemented")
 
+    @abstractmethod
     def get_all_ranges(self):
         raise Exception("Not implemented")
 
