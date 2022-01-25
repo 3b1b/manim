@@ -108,8 +108,8 @@ class SVGMobject(VMobject):
         elif element.tagName in ['polygon', 'polyline']:
             result.append(self.polygon_to_mobject(element))
         else:
+            log.warning(f"Unsupported element type: {element.tagName}")
             pass  # TODO
-            # warnings.warn("Unknown element type: " + element.tagName)
         result = [m for m in result if m is not None]
         self.handle_transforms(element, VGroup(*result))
         if len(result) > 1 and not self.unpack_groups:
