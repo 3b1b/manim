@@ -274,7 +274,7 @@ class CoordinateSystem():
 class Axes(VGroup, CoordinateSystem):
     CONFIG = {
         "axis_config": {
-            "include_tip": True,
+            "include_tip": False,
             "numbers_to_exclude": [0],
         },
         "x_axis_config": {},
