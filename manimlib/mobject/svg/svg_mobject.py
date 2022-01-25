@@ -72,6 +72,7 @@ class SVGMobject(VMobject):
         self.ref_to_element = {}
 
         for child in doc.childNodes:
+            if not isinstance(child, minidom.Element): continue
             if child.tagName != 'svg': continue 
             mobjects = self.get_mobjects_from(child)
             if self.unpack_groups:
