@@ -569,6 +569,7 @@ class _PathStringParser:
     def __init__(self, arguments, rules):
         self.args = []
         arguments = bytearray(arguments, "ascii")
+        self._strip_array(arguments)
         while arguments:
             for rule in rules:
                 self._rule_to_function_map[rule](arguments)
