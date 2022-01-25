@@ -7,7 +7,7 @@ import hashlib
 from xml.dom import minidom
 
 from manimlib.constants import DEFAULT_STROKE_WIDTH
-from manimlib.constants import ORIGIN, UP, DOWN, LEFT, RIGHT
+from manimlib.constants import ORIGIN, UP, DOWN, LEFT, RIGHT, IN
 from manimlib.constants import BLACK
 from manimlib.constants import WHITE
 from manimlib.constants import DEGREES, PI
@@ -267,6 +267,8 @@ class SVGMobject(VMobject):
                 self._handle_translate_transform(mobject, op_name, op_args)
             elif op_name.startswith("scale"):
                 self._handle_scale_transform(mobject, op_name, op_args)
+            elif op_name == "rotate":
+                self._handle_rotate_transform(mobject, op_name, op_args)
     
     def _handle_matrix_transform(self, mobject, op_name, op_args):
         transform = np.array(op_args).reshape([3, 2])
@@ -305,6 +307,13 @@ class SVGMobject(VMobject):
             mobject.flip(RIGHT)
             sy = -sy
         mobject.scale(np.array([sx, sy, 1]), about_point=ORIGIN)
+    
+    def _handle_rotate_transform(self, mobject, op_name, op_args):
+        if len(op_args) == 1:
+            mobject.rotate(op_args[0] * DEGREES, axis=IN, about_point=ORIGIN)
+        else:
+            deg, x, y = op_args 
+            mobject.rotate(deg * DEGREES, axis=IN, about_point=np.array([x, y, 0]))
 
     def flatten(self, input_list):
         output_list = []
