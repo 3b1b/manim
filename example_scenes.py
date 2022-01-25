@@ -274,7 +274,7 @@ class UpdatersExample(Scene):
         square = Square()
         square.set_fill(BLUE_E, 1)
 
-        # On all all frames, the constructor Brace(square, UP) will
+        # On all frames, the constructor Brace(square, UP) will
         # be called, and the mobject brace will set its data to match
         # that of the newly constructed object
         brace = always_redraw(Brace, square, UP)

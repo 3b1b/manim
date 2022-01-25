@@ -53,6 +53,7 @@ flag                                                       abbr   function
 ``--config``                                                      Guide for automatic configuration
 ``--file_name FILE_NAME``                                         Name for the movie or image file
 ``--start_at_animation_number START_AT_ANIMATION_NUMBER``  ``-n`` Start rendering not from the first animation, but from another, specified by its index. If you passing two comma separated values, e.g. "3,6", it will end the rendering at the second value.
+``--embed LINENO``                                         ``-e`` Takes a line number as an argument, and results in the scene being called as if the line ``self.embed()`` was inserted into the scene code at that line number
 ``--resolution RESOLUTION``                                ``-r`` Resolution, passed as "WxH", e.g. "1920x1080"
 ``--frame_rate FRAME_RATE``                                       Frame rate, as an integer
 ``--color COLOR``                                          ``-c`` Background color

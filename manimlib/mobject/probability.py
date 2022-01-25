@@ -149,7 +149,9 @@ class BarChart(VGroup):
         "height": 4,
         "width": 6,
         "n_ticks": 4,
+        "include_x_ticks": False,
         "tick_width": 0.2,
+        "tick_height": 0.15,
         "label_y_axis": True,
         "y_axis_label_height": 0.25,
         "max_value": 1,
@@ -165,6 +167,7 @@ class BarChart(VGroup):
         if self.max_value is None:
             self.max_value = max(values)
 
+        self.n_ticks_x = len(values)
         self.add_axes()
         self.add_bars(values)
         self.center()
@@ -172,31 +175,42 @@ class BarChart(VGroup):
     def add_axes(self):
         x_axis = Line(self.tick_width * LEFT / 2, self.width * RIGHT)
         y_axis = Line(MED_LARGE_BUFF * DOWN, self.height * UP)
-        ticks = VGroup()
+        y_ticks = VGroup()
         heights = np.linspace(0, self.height, self.n_ticks + 1)
         values = np.linspace(0, self.max_value, self.n_ticks + 1)
         for y, value in zip(heights, values):
-            tick = Line(LEFT, RIGHT)
-            tick.set_width(self.tick_width)
-            tick.move_to(y * UP)
-            ticks.add(tick)
-        y_axis.add(ticks)
+            y_tick = Line(LEFT, RIGHT)
+            y_tick.set_width(self.tick_width)
+            y_tick.move_to(y * UP)
+            y_ticks.add(y_tick)
+        y_axis.add(y_ticks)
+
+        if self.include_x_ticks == True:
+            x_ticks = VGroup()
+            widths = np.linspace(0, self.width, self.n_ticks_x + 1)
+            label_values = np.linspace(0, len(self.bar_names), self.n_ticks_x + 1)
+            for x, value in zip(widths, label_values):
+                x_tick = Line(UP, DOWN)
+                x_tick.set_height(self.tick_height)
+                x_tick.move_to(x * RIGHT)
+                x_ticks.add(x_tick)
+            x_axis.add(x_ticks)
 
         self.add(x_axis, y_axis)
         self.x_axis, self.y_axis = x_axis, y_axis
 
         if self.label_y_axis:
             labels = VGroup()
-            for tick, value in zip(ticks, values):
+            for y_tick, value in zip(y_ticks, values):
                 label = Tex(str(np.round(value, 2)))
                 label.set_height(self.y_axis_label_height)
-                label.next_to(tick, LEFT, SMALL_BUFF)
+                label.next_to(y_tick, LEFT, SMALL_BUFF)
                 labels.add(label)
             self.y_axis_labels = labels
             self.add(labels)
 
     def add_bars(self, values):
-        buff = float(self.width) / (2 * len(values) + 1)
+        buff = float(self.width) / (2 * len(values))
         bars = VGroup()
         for i, value in enumerate(values):
             bar = Rectangle(
@@ -205,7 +219,7 @@ class BarChart(VGroup):
                 stroke_width=self.bar_stroke_width,
                 fill_opacity=self.bar_fill_opacity,
             )
-            bar.move_to((2 * i + 1) * buff * RIGHT, DOWN + LEFT)
+            bar.move_to((2 * i + 0.5) * buff * RIGHT, DOWN + LEFT * 5)
             bars.add(bar)
         bars.set_color_by_gradient(*self.bar_colors)
 

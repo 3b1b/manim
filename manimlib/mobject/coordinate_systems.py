@@ -1,3 +1,4 @@
+from abc import abstractmethod
 import numpy as np
 import numbers
 
@@ -51,13 +52,15 @@ class CoordinateSystem():
     def p2c(self, point):
         """Abbreviation for point_to_coords"""
         return self.point_to_coords(point)
-
+    
     def get_origin(self):
         return self.c2p(*[0] * self.dimension)
-
+    
+    @abstractmethod
     def get_axes(self):
         raise Exception("Not implemented")
 
+    @abstractmethod
     def get_all_ranges(self):
         raise Exception("Not implemented")
 
@@ -333,6 +336,18 @@ class Axes(VGroup, CoordinateSystem):
 
     def get_axes(self):
         return self.axes
+    
+    def get_axis(self, index):
+        return self.get_axes()[index]
+
+    def get_x_axis(self):
+        return self.get_axis(0)
+
+    def get_y_axis(self):
+        return self.get_axis(1)
+
+    def get_z_axis(self):
+        return self.get_axis(2)
 
     def get_all_ranges(self):
         return [self.x_range, self.y_range]

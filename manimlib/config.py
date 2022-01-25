@@ -123,7 +123,7 @@ def parse_cli():
                  "the rendering at the second value",
         )
         parser.add_argument(
-            "-e", "--embed",
+            "-e", "--embed", metavar="LINENO",
             help="Takes a line number as an argument, and results"
                  "in the scene being called as if the line `self.embed()`"
                  "was inserted into the scene code at that line number."
