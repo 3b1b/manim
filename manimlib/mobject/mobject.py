@@ -1192,21 +1192,21 @@ class Mobject(object):
     def match_depth(self, mobject, **kwargs):
         return self.match_dim_size(mobject, 2, **kwargs)
 
-    def match_coord(self, mobject, dim, direction=ORIGIN):
-        return self.set_coord(
-            mobject.get_coord(dim, direction),
-            dim=dim,
-            direction=direction,
-        )
+    def match_coord(self, mobject_or_point, dim, direction=ORIGIN):
+        if isinstance(mobject_or_point, Mobject):
+            coord = mobject_or_point.get_coord(dim, direction)
+        else:
+            coord = mobject_or_point[dim]
+        return self.set_coord(coord, dim=dim, direction=direction)
 
-    def match_x(self, mobject, direction=ORIGIN):
-        return self.match_coord(mobject, 0, direction)
+    def match_x(self, mobject_or_point, direction=ORIGIN):
+        return self.match_coord(mobject_or_point, 0, direction)
 
-    def match_y(self, mobject, direction=ORIGIN):
-        return self.match_coord(mobject, 1, direction)
+    def match_y(self, mobject_or_point, direction=ORIGIN):
+        return self.match_coord(mobject_or_point, 1, direction)
 
-    def match_z(self, mobject, direction=ORIGIN):
-        return self.match_coord(mobject, 2, direction)
+    def match_z(self, mobject_or_point, direction=ORIGIN):
+        return self.match_coord(mobject_or_point, 2, direction)
 
     def align_to(self, mobject_or_point, direction=ORIGIN):
         """
