@@ -1,37 +1,18 @@
-from functools import reduce
 import inspect
 import numpy as np
-import operator as op
+import math
 
 
 def sigmoid(x):
     return 1.0 / (1 + np.exp(-x))
 
 
-CHOOSE_CACHE = {}
-
-
-def choose_using_cache(n, r):
-    if n not in CHOOSE_CACHE:
-        CHOOSE_CACHE[n] = {}
-    if r not in CHOOSE_CACHE[n]:
-        CHOOSE_CACHE[n][r] = choose(n, r, use_cache=False)
-    return CHOOSE_CACHE[n][r]
-
-
-def choose(n, r, use_cache=True):
-    if use_cache:
-        return choose_using_cache(n, r)
-    r = min(r, n - r)
-    denom = reduce(op.mul, range(1, r + 1), 1)
-    numer = reduce(op.mul, range(n, n - r, -1), 1)
-    return numer // denom
+def choose(n, r):
+    return math.comb(n, r)
 
 
 def gen_choose(n, r):
-    numer = np.prod(np.arange(n, n - r, -1))
-    denom = np.prod(np.arange(1, r + 1))
-    return numer / denom
+    return np.prod(np.arange(n, n - r, -1)) / math.factorial(r)
 
 
 def get_num_args(function):
