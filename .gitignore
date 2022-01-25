@@ -150,3 +150,7 @@ dmypy.json
 # For manim
 /videos
 /custom_config.yml
+
+# Javascript stuff:
+node_modules/
+package-lock.json
