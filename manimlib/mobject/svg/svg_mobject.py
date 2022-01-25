@@ -565,6 +565,7 @@ class InvalidPathError(ValueError):
 
 
 class _PathStringParser:
+    # modified from https://github.com/regebro/svg.path/
     def __init__(self, arguments, rules):
         self.args = []
         arguments = bytearray(arguments, "ascii")
@@ -583,6 +584,8 @@ class _PathStringParser:
         }
 
     def _strip_array(self, arg_array):
+        # wsp: (0x9, 0x20, 0xA, 0xC, 0xD) with comma 0x2C
+        # https://www.w3.org/TR/SVG/paths.html#PathDataBNF
         while arg_array and arg_array[0] in [0x9, 0x20, 0xA, 0xC, 0xD, 0x2C]:
             arg_array[0:1] = b""
 
