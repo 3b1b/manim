@@ -371,7 +371,7 @@ class VMobjectFromSVGPathstring(VMobject):
         points_filepath = os.path.join(get_mobject_data_dir(), f"{path_hash}_points.npy")
         tris_filepath = os.path.join(get_mobject_data_dir(), f"{path_hash}_tris.npy")
 
-        if os.path.exists(points_filepath) and os.path.exists(tris_filepath) and False:
+        if os.path.exists(points_filepath) and os.path.exists(tris_filepath):
             self.set_points(np.load(points_filepath))
             self.triangulation = np.load(tris_filepath)
             self.needs_new_triangulation = False
