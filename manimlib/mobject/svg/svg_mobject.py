@@ -480,7 +480,7 @@ class VMobjectFromSVGPathstring(VMobject):
             number_list = _PathStringParser(coord_string, number_types_str).args
             number_groups = np.array(number_list).reshape((-1, n_numbers))
 
-            for numbers in number_groups:
+            for ind, numbers in enumerate(number_groups):
                 if command.islower():
                     # Treat it as a relative command
                     numbers[number_types == "x"] += relative_point[0]
@@ -496,6 +496,9 @@ class VMobjectFromSVGPathstring(VMobject):
                     args = list(np.hstack((
                         numbers.reshape((-1, 2)), np.zeros((n_numbers // 2, 1))
                     )))
+                if upper_command == "M" and ind != 0:
+                    # M x1 y1 x2 y2  is equal to  M x1 y1 L x2 y2
+                    func, _ = self.command_to_function("L")
                 func(*args)
                 relative_point = self.get_last_point()
 
