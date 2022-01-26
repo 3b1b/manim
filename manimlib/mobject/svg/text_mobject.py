@@ -85,6 +85,9 @@ class Text(SVGMobject):
         if self.height is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
 
+    def init_colors(self, override=True):
+        super().init_colors(override=override)
+
     def remove_empty_path(self, file_name):
         with open(file_name, 'r') as fpr:
             content = fpr.read()
