@@ -42,6 +42,7 @@ class SingleStringTex(VMobject):
                 svg_mob = SVGMobject(
                     filename,
                     height=None,
+                    color=self.color,
                     stroke_width=self.stroke_width,
                     path_string_config={
                         "should_subdivide_sharp_curves": True,
