@@ -73,15 +73,17 @@ def parse_color(color):
         return web2hex(color)
 
 
-def fill_default_values(style):
-    for attr in DEFAULT_STYLE:
+def fill_default_values(style, default_style):
+    default = DEFAULT_STYLE.copy()
+    default.update(default_style)
+    for attr in default:
         if attr not in style:
-            style[attr] = DEFAULT_STYLE[attr]
+            style[attr] = default[attr]
 
 
-def parse_style(style):
+def parse_style(style, default_style):
     manim_style = {}
-    fill_default_values(style)
+    fill_default_values(style, default_style)
 
     manim_style["fill_opacity"] = float(style["fill-opacity"])
     manim_style["stroke_opacity"] = float(style["stroke-opacity"])
@@ -144,7 +146,7 @@ class SVGMobject(VMobject):
         for child in doc.childNodes:
             if not isinstance(child, minidom.Element): continue
             if child.tagName != 'svg': continue 
-            mobjects = self.get_mobjects_from(child, self.generate_style())
+            mobjects = self.get_mobjects_from(child, dict())
             if self.unpack_groups:
                 self.add(*mobjects)
             else:
@@ -190,7 +192,7 @@ class SVGMobject(VMobject):
 
         return result
     
-    def generate_style(self):
+    def generate_default_style(self):
         style = {
             "fill-opacity": self.fill_opacity,
             "stroke-width": self.stroke_width,
@@ -208,7 +210,7 @@ class SVGMobject(VMobject):
         return VMobjectFromSVGPathstring(
             path_string,
             **self.path_string_config,
-            **parse_style(style),
+            **parse_style(style, self.generate_default_style()),
         )
 
     def use_to_mobjects(self, use_element, local_style):
@@ -247,7 +249,10 @@ class SVGMobject(VMobject):
             else 0.0
             for key in ("cx", "cy", "r")
         )
-        return Circle(radius=r, **parse_style(style)).shift(x * RIGHT + y * DOWN)
+        return Circle(
+            radius=r, 
+            **parse_style(style, self.generate_default_style())
+        ).shift(x * RIGHT + y * DOWN)
 
     def ellipse_to_mobject(self, circle_element, style):
         x, y, rx, ry = (
@@ -258,7 +263,7 @@ class SVGMobject(VMobject):
             else 0.0
             for key in ("cx", "cy", "rx", "ry")
         )
-        result = Circle(**parse_style(style))
+        result = Circle(**parse_style(style, self.generate_default_style()))
         result.stretch(rx, 0)
         result.stretch(ry, 1)
         result.shift(x * RIGHT + y * DOWN)
@@ -276,7 +281,7 @@ class SVGMobject(VMobject):
 
         corner_radius = float(corner_radius)
 
-        parsed_style = parse_style(style)
+        parsed_style = parse_style(style, self.generate_default_style())
         parsed_style["stroke_width"] = stroke_width
 
         if corner_radius == 0:

@@ -42,6 +42,7 @@ class SingleStringTex(VMobject):
                 svg_mob = SVGMobject(
                     filename,
                     height=None,
+                    stroke_width=self.stroke_width,
                     path_string_config={
                         "should_subdivide_sharp_curves": True,
                         "should_remove_null_curves": True,
@@ -52,7 +53,7 @@ class SingleStringTex(VMobject):
             sm.copy()
             for sm in tex_string_to_mob_map[tex_string]
         ))
-        self.init_colors()
+        self.init_colors(override=False)
 
         if self.height is None:
             self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)
