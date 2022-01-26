@@ -16,7 +16,7 @@ from manimlib.utils.tex_file_writing import display_during_execution
 SCALE_FACTOR_PER_FONT_POINT = 0.001
 
 
-tex_string_to_mob_map = {}
+tex_string_with_color_to_mob_map = {}
 
 
 class SingleStringTex(VMobject):
@@ -35,7 +35,7 @@ class SingleStringTex(VMobject):
         super().__init__(**kwargs)
         assert(isinstance(tex_string, str))
         self.tex_string = tex_string
-        if tex_string not in tex_string_to_mob_map:
+        if tex_string not in tex_string_with_color_to_mob_map:
             with display_during_execution(f" Writing \"{tex_string}\""):
                 full_tex = self.get_tex_file_body(tex_string)
                 filename = tex_to_svg_file(full_tex)
@@ -49,10 +49,10 @@ class SingleStringTex(VMobject):
                         "should_remove_null_curves": True,
                     }
                 )
-                tex_string_to_mob_map[tex_string] = svg_mob
+                tex_string_with_color_to_mob_map[(self.color, tex_string)] = svg_mob
         self.add(*(
             sm.copy()
-            for sm in tex_string_to_mob_map[tex_string]
+            for sm in tex_string_with_color_to_mob_map[(self.color, tex_string)]
         ))
         self.init_colors(override=False)
 
