@@ -472,6 +472,7 @@ class VMobjectFromSVGPathstring(VMobject):
             upper_command = command.upper()
             if upper_command == "Z":
                 func()  # `close_path` takes no arguments
+                relative_point = self.get_last_point()
                 continue
 
             number_types = np.array(list(number_types_str))
