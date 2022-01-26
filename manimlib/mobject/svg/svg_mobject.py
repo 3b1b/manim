@@ -35,7 +35,7 @@ DEFAULT_STYLE = {
 
 def cascade_element_style(element, inherited):
     style = inherited.copy()
-    
+
     for attr in DEFAULT_STYLE:
         if element.hasAttribute(attr):
             style[attr] = element.getAttribute(attr)
@@ -47,13 +47,13 @@ def cascade_element_style(element, inherited):
                 key, value = style_spec.split(":")
             except ValueError as e:
                 if not style_spec.strip():
-                    pass 
+                    pass
                 else:
-                    raise e 
+                    raise e
             else:
                 style[key.strip()] = value.strip()
-    
-    return style 
+
+    return style
 
 
 def parse_color(color):
@@ -66,7 +66,7 @@ def parse_color(color):
         else:
             parsed_rgbs = [int(i) / 255.0 for i in splits]
         return rgb_to_hex(parsed_rgbs)
-    
+
     else:
         return web2hex(color)
 
@@ -91,14 +91,14 @@ def parse_style(style, default_style):
         manim_style["fill_opacity"] = 0
     else:
         manim_style["fill_color"] = parse_color(style["fill"])
-    
+
     if style["stroke"] == "none":
         manim_style["stroke_width"] = 0
         if "fill_color" in manim_style:
             manim_style["stroke_color"] = manim_style["fill_color"]
     else:
         manim_style["stroke_color"] = parse_color(style["stroke"])
-    
+
     return manim_style
 
 
@@ -132,17 +132,19 @@ class SVGMobject(VMobject):
             self.set_height(self.height)
         if self.width is not None:
             self.set_width(self.width)
-    
+
     def init_colors(self, override=False):
-        super().init_colors(override=False)
+        super().init_colors(override=override)
 
     def init_points(self):
         doc = minidom.parse(self.file_path)
         self.ref_to_element = {}
 
         for child in doc.childNodes:
-            if not isinstance(child, minidom.Element): continue
-            if child.tagName != 'svg': continue 
+            if not isinstance(child, minidom.Element):
+                continue
+            if child.tagName != 'svg':
+                continue
             mobjects = self.get_mobjects_from(child, dict())
             if self.unpack_groups:
                 self.add(*mobjects)
@@ -188,7 +190,7 @@ class SVGMobject(VMobject):
             result = [VGroup(*result)]
 
         return result
-    
+
     def generate_default_style(self):
         style = {
             "fill-opacity": self.fill_opacity,
@@ -247,7 +249,7 @@ class SVGMobject(VMobject):
             for key in ("cx", "cy", "r")
         )
         return Circle(
-            radius=r, 
+            radius=r,
             **parse_style(style, self.generate_default_style())
         ).shift(x * RIGHT + y * DOWN)
 
@@ -316,10 +318,10 @@ class SVGMobject(VMobject):
         mobject.shift(x * RIGHT + y * DOWN)
 
         transform_names = [
-            "matrix", 
-            "translate", "translateX", "translateY", 
-            "scale", "scaleX", "scaleY", 
-            "rotate", 
+            "matrix",
+            "translate", "translateX", "translateY",
+            "scale", "scaleX", "scaleY",
+            "rotate",
             "skewX", "skewY"
         ]
         transform_pattern = re.compile("|".join([x + r"[^)]*\)" for x in transform_names]))
@@ -330,7 +332,7 @@ class SVGMobject(VMobject):
             op_name, op_args = transform.split("(")
             op_name = op_name.strip()
             op_args = [float(x) for x in number_pattern.findall(op_args)]
-            
+
             if op_name == "matrix":
                 self._handle_matrix_transform(mobject, op_name, op_args)
             elif op_name.startswith("translate"):
@@ -341,7 +343,7 @@ class SVGMobject(VMobject):
                 self._handle_rotate_transform(mobject, op_name, op_args)
             elif op_name.startswith("skew"):
                 self._handle_skew_transform(mobject, op_name, op_args)
-    
+
     def _handle_matrix_transform(self, mobject, op_name, op_args):
         transform = np.array(op_args).reshape([3, 2])
         x = transform[2][0]
@@ -362,31 +364,31 @@ class SVGMobject(VMobject):
         else:
             x, y = op_args
         mobject.shift(x * RIGHT + y * DOWN)
-    
+
     def _handle_scale_transform(self, mobject, op_name, op_args):
         if op_name.endswith("X"):
             sx, sy = op_args[0], 1
         elif op_name.endswith("Y"):
             sx, sy = 1, op_args[0]
         elif len(op_args) == 2:
-            sx, sy = op_args 
+            sx, sy = op_args
         else:
             sx = sy = op_args[0]
         if sx < 0:
             mobject.flip(UP)
-            sx = -sx 
+            sx = -sx
         if sy < 0:
             mobject.flip(RIGHT)
             sy = -sy
         mobject.scale(np.array([sx, sy, 1]), about_point=ORIGIN)
-    
+
     def _handle_rotate_transform(self, mobject, op_name, op_args):
         if len(op_args) == 1:
             mobject.rotate(op_args[0] * DEGREES, axis=IN, about_point=ORIGIN)
         else:
-            deg, x, y = op_args 
+            deg, x, y = op_args
             mobject.rotate(deg * DEGREES, axis=IN, about_point=np.array([x, y, 0]))
-    
+
     def _handle_skew_transform(self, mobject, op_name, op_args):
         rad = op_args[0] * DEGREES
         if op_name == "skewX":
@@ -645,7 +647,7 @@ class _PathStringParser:
         while arguments:
             for rule in rules:
                 self._rule_to_function_map[rule](arguments)
-    
+
     @property
     def _rule_to_function_map(self):
         return {
@@ -678,7 +680,7 @@ class _PathStringParser:
         if number < 0:
             raise InvalidPathError(f"Expected an unsigned number, got '{number}'")
         return number
-    
+
     def _get_flag(self, arg_array):
         flag = arg_array[0]
         if flag != 48 and flag != 49:
