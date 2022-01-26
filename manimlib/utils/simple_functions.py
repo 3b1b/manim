@@ -1,14 +1,16 @@
 import inspect
 import numpy as np
 import math
+from functools import lru_cache
 
 
 def sigmoid(x):
     return 1.0 / (1 + np.exp(-x))
 
 
-def choose(n, r):
-    return math.comb(n, r)
+@lru_cache(maxsize=10)
+def choose(n, k):
+    return math.comb(n, k)
 
 
 def gen_choose(n, r):
@@ -35,14 +37,6 @@ def clip(a, min_a, max_a):
     elif a > max_a:
         return max_a
     return a
-
-
-def clip_in_place(array, min_val=None, max_val=None):
-    if max_val is not None:
-        array[array > max_val] = max_val
-    if min_val is not None:
-        array[array < min_val] = min_val
-    return array
 
 
 def fdiv(a, b, zero_over_zero_value=None):
