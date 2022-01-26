@@ -25,16 +25,6 @@ from manimlib.utils.simple_functions import clip
 from manimlib.logger import log
 
 
-def string_to_numbers(num_string):
-    num_string = num_string.replace("-", ",-")
-    num_string = num_string.replace("e,-", "e-")
-    return [
-        float(s)
-        for s in re.split("[ ,]", num_string)
-        if s != ""
-    ]
-
-
 class SVGMobject(VMobject):
     CONFIG = {
         "should_center": True,
@@ -117,11 +107,6 @@ class SVGMobject(VMobject):
             result = [VGroup(*result)]
 
         return result
-
-    def g_to_mobjects(self, g_element):
-        mob = VGroup(*self.get_mobjects_from(g_element))
-        self.handle_transforms(g_element, mob)
-        return mob.submobjects
 
     def path_string_to_mobject(self, path_string):
         return VMobjectFromSVGPathstring(
@@ -429,7 +414,6 @@ class VMobjectFromSVGPathstring(VMobject):
                     )))
                 func(*args)
                 relative_point = self.get_last_point()
-
 
     def add_elliptical_arc_to(self, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, point):
         def close_to_zero(a, threshold=1e-5):
