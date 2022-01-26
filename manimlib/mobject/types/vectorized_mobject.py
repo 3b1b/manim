@@ -389,7 +389,6 @@ class VMobject(Mobject):
             new_handle = self.get_points()[-1]
         else:
             new_handle = self.get_reflection_of_last_handle()
-        print(new_handle, handle, point)
         self.add_cubic_bezier_curve_to(new_handle, handle, point)
 
     def has_new_path_started(self):

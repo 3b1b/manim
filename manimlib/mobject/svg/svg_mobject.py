@@ -9,8 +9,6 @@ from xml.dom import minidom
 
 from manimlib.constants import DEFAULT_STROKE_WIDTH
 from manimlib.constants import ORIGIN, UP, DOWN, LEFT, RIGHT, IN
-from manimlib.constants import BLACK
-from manimlib.constants import WHITE
 from manimlib.constants import DEGREES, PI
 
 from manimlib.mobject.geometry import Circle
@@ -112,7 +110,6 @@ class SVGMobject(VMobject):
         # Must be filled in in a subclass, or when called
         "file_name": None,
         "unpack_groups": True,  # if False, creates a hierarchy of VGroups
-        # TODO, style components should be read in, not defaulted
         "stroke_width": DEFAULT_STROKE_WIDTH,
         "fill_opacity": 1.0,
         "path_string_config": {}
