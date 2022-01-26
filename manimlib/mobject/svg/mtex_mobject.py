@@ -49,7 +49,23 @@ class _LabelledTex(_PlainTex):
         if len(color_str) == 4:
             # "#RGB" => "#RRGGBB"
             color_str = "#" + "".join([c * 2 for c in color_str[1:]])
-        return int(color_str[1:], 16)
+
+        return int(color_str[1:], 16) - 1
+
+    def get_mobjects_from(self, element, style):
+        result = super().get_mobjects_from(element, style)
+        for mob in result:
+            if not hasattr(mob, "glyph_label"):
+                mob.glyph_label = -1
+        try:
+            color_str = element.getAttribute("fill")
+            if color_str:
+                glyph_label = _LabelledTex.color_str_to_label(color_str)
+                for mob in result:
+                    mob.glyph_label = glyph_label
+        except:
+            pass
+        return result
 
 
 class _TexSpan(object):

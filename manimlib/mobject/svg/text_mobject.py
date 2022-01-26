@@ -3,7 +3,6 @@ import os
 import re
 import io
 import typing
-import warnings
 import xml.etree.ElementTree as ET
 import functools
 import pygments
@@ -14,6 +13,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import manimpango
+from manimlib.logger import log
 from manimlib.constants import *
 from manimlib.mobject.geometry import Dot
 from manimlib.mobject.svg.svg_mobject import SVGMobject
@@ -54,10 +54,9 @@ class Text(SVGMobject):
         self.full2short(kwargs)
         digest_config(self, kwargs)
         if self.size:
-            warnings.warn(
-                "self.size has been deprecated and will "
+            log.warning(
+                "`self.size` has been deprecated and will "
                 "be removed in future.",
-                DeprecationWarning
             )
             self.font_size = self.size
         if self.lsh == -1:
@@ -85,6 +84,9 @@ class Text(SVGMobject):
         # anti-aliasing
         if self.height is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
+
+    def init_colors(self, override=True):
+        super().init_colors(override=override)
 
     def remove_empty_path(self, file_name):
         with open(file_name, 'r') as fpr:
