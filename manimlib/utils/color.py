@@ -7,8 +7,6 @@ from manimlib.constants import WHITE
 from manimlib.constants import COLORMAP_3B1B
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.iterables import resize_with_interpolation
-from manimlib.utils.simple_functions import clip_in_place
-from manimlib.utils.space_ops import normalize
 
 
 def color_to_rgb(color):
@@ -103,16 +101,6 @@ def random_bright_color():
 
 def random_color():
     return Color(rgb=(random.random() for i in range(3)))
-
-
-def get_shaded_rgb(rgb, point, unit_normal_vect, light_source):
-    to_sun = normalize(light_source - point)
-    factor = 0.5 * np.dot(unit_normal_vect, to_sun)**3
-    if factor < 0:
-        factor *= 0.5
-    result = rgb + factor
-    clip_in_place(rgb + factor, 0, 1)
-    return result
 
 
 def get_colormap_list(map_name="viridis", n_colors=9):

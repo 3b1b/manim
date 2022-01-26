@@ -1,34 +1,16 @@
-from functools import reduce
 import inspect
 import numpy as np
-import operator as op
+from scipy import special
+from functools import lru_cache
 
 
 def sigmoid(x):
     return 1.0 / (1 + np.exp(-x))
 
 
-CHOOSE_CACHE = {}
-
-
-def choose_using_cache(n, r):
-    if n not in CHOOSE_CACHE:
-        CHOOSE_CACHE[n] = {}
-    if r not in CHOOSE_CACHE[n]:
-        CHOOSE_CACHE[n][r] = choose(n, r, use_cache=False)
-    return CHOOSE_CACHE[n][r]
-
-
-def choose(n, r, use_cache=True):
-    if use_cache:
-        return choose_using_cache(n, r)
-    if n < r:
-        return 0
-    if r == 0:
-        return 1
-    denom = reduce(op.mul, range(1, r + 1), 1)
-    numer = reduce(op.mul, range(n, n - r, -1), 1)
-    return numer // denom
+@lru_cache(maxsize=10)
+def choose(n, k):
+    return special.comb(n, k, exact=True)
 
 
 def get_num_args(function):
@@ -51,14 +33,6 @@ def clip(a, min_a, max_a):
     elif a > max_a:
         return max_a
     return a
-
-
-def clip_in_place(array, min_val=None, max_val=None):
-    if max_val is not None:
-        array[array > max_val] = max_val
-    if min_val is not None:
-        array[array < min_val] = min_val
-    return array
 
 
 def fdiv(a, b, zero_over_zero_value=None):
