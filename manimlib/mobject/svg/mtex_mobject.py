@@ -38,8 +38,8 @@ class _LabelledTex(SVGMobject):
             color_str = "#" + "".join([c * 2 for c in color_str[1:]])
         return int(color_str[1:], 16) - 1
 
-    def get_mobjects_from(self, element):
-        result = super().get_mobjects_from(element)
+    def get_mobjects_from(self, element, style):
+        result = super().get_mobjects_from(element, style)
         for mob in result:
             if not hasattr(mob, "glyph_label"):
                 mob.glyph_label = -1
