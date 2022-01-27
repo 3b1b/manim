@@ -11,10 +11,12 @@ Fixed bugs
 New Features
 ^^^^^^^^^^^^
 - `#1694 <https://github.com/3b1b/manim/pull/1694>`__: Added option to add ticks on x-axis in ``BarChart``
+- `#1704 <https://github.com/3b1b/manim/pull/1704>`__: Added ``lable_buff`` config parameter for ``Brace``
 
 Refactor 
 ^^^^^^^^
 - `5aa8d15 <https://github.com/3b1b/manim/pull/1697/commits/5aa8d15d85797f68a8f169ca69fd90d441a3abbe>`__: Used ``FFMPEG_BIN`` instead of ``"ffmpeg"`` for sound incorporation
+- `#1709 <https://github.com/3b1b/manim/pull/1709>`__: Decorated ``CoordinateSystem.get_axes`` and ``.get_all_ranges`` as abstract method 
 
 
 v1.3.0
