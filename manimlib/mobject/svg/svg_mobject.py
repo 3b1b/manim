@@ -13,6 +13,7 @@ from tinycss2 import parse_stylesheet, parse_declaration_list
 from manimlib.constants import ORIGIN, UP, DOWN, LEFT, RIGHT, IN
 from manimlib.constants import DEGREES, PI
 
+from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import RoundedRectangle
@@ -174,6 +175,8 @@ class SVGMobject(VMobject):
             ))
         elif tag == 'use':
             result += self.use_to_mobjects(element, style)
+        elif tag == 'line':
+            result.append(self.line_to_mobject(element, style))
         elif tag == 'rect':
             result.append(self.rect_to_mobject(element, style))
         elif tag == 'circle':
@@ -186,8 +189,8 @@ class SVGMobject(VMobject):
             pass
         else:
             log.warning(f"Unsupported element type: {tag}")
-            pass  # TODO, support <line> and <text> tag
-        result = [m.insert_n_curves(0) for m in result if m is not None]
+            pass  # TODO, support <text> tag
+        result = [m for m in result if m is not None]
         self.handle_transforms(element, VGroup(*result))
         if len(result) > 1 and not self.unpack_groups:
             result = [VGroup(*result)]
@@ -314,6 +317,16 @@ class SVGMobject(VMobject):
 
         mob.shift(mob.get_center() - mob.get_corner(UP + LEFT))
         return mob
+    
+    def line_to_mobject(self, line_element, style):
+        x1, y1, x2, y2 = (
+            self.attribute_to_float(line_element.get(key, "0.0"))
+            for key in ("x1", "y1", "x2", "y2")
+        )
+        return Line(
+            [x1, -y1, 0], [x2, -y2, 0], 
+            **parse_style(style, self.generate_default_style())
+        )
 
     def handle_transforms(self, element, mobject):
         x, y = (
