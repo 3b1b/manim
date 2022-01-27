@@ -7,14 +7,23 @@ Unreleased
 Fixed bugs
 ^^^^^^^^^^
 - `f1996f8 <https://github.com/3b1b/manim/pull/1697/commits/f1996f8479f9e33d626b3b66e9eb6995ce231d86>`__: Temporarily fixed ``Lightbulb``
+- `#1712 <https://github.com/3b1b/manim/pull/1712>`__: Fixed some bugs of ``SVGMobject``
+- `#1717 <https://github.com/3b1b/manim/pull/1717>`__: Fixed some bugs of SVG path string parser
 
 New Features
 ^^^^^^^^^^^^
 - `#1694 <https://github.com/3b1b/manim/pull/1694>`__: Added option to add ticks on x-axis in ``BarChart``
+- `#1704 <https://github.com/3b1b/manim/pull/1704>`__: Added ``lable_buff`` config parameter for ``Brace``
+- `#1712 <https://github.com/3b1b/manim/pull/1712>`__: Added support for ``rotate skewX skewY`` transform in SVG 
+- `#1717 <https://github.com/3b1b/manim/pull/1717>`__: Added style support to ``SVGMobject``
 
 Refactor 
 ^^^^^^^^
 - `5aa8d15 <https://github.com/3b1b/manim/pull/1697/commits/5aa8d15d85797f68a8f169ca69fd90d441a3abbe>`__: Used ``FFMPEG_BIN`` instead of ``"ffmpeg"`` for sound incorporation
+- `#1709 <https://github.com/3b1b/manim/pull/1709>`__: Decorated ``CoordinateSystem.get_axes`` and ``.get_all_ranges`` as abstract method 
+- `#1712 <https://github.com/3b1b/manim/pull/1712>`__: Refactored SVG path string parser
+- `#1712 <https://github.com/3b1b/manim/pull/1712>`__: Allowed ``Mobject.scale`` to receive iterable ``scale_factor``
+- `#1716 <https://github.com/3b1b/manim/pull/1716>`__: Refactored ``MTex``
 
 
 v1.3.0
