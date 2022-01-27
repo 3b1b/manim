@@ -162,7 +162,7 @@ class SVGMobject(VMobject):
 
         tag = element.tag.split("}")[-1]
         if tag == 'defs':
-            self.update_ref_to_element(element, style)
+            self.update_ref_to_element(wrapper, style)
         elif tag in ['g', 'svg', 'symbol']:
             result += it.chain(*(
                 self.get_mobjects_from(child, style)
@@ -231,7 +231,7 @@ class SVGMobject(VMobject):
 
     def use_to_mobjects(self, use_element, local_style):
         # Remove initial "#" character
-        ref = use_element.get("xlink:href")[1:]
+        ref = use_element.get(r"{http://www.w3.org/1999/xlink}href")[1:]
         if ref not in self.ref_to_element:
             log.warning(f"{ref} not recognized")
             return VGroup()
@@ -412,18 +412,22 @@ class SVGMobject(VMobject):
                 output_list.append(i)
         return output_list
 
-    def get_all_childNodes_have_id(self, element):
-        all_childNodes_have_id = []
+    def get_all_childWrappers_have_id(self, wrapper):
+        all_childWrappers_have_id = []
+        element = wrapper.etree_element
         if not isinstance(element, ElementTree.Element):
             return
         if element.get('id'):
-            return [element]
-        for e in element.childNodes:
-            all_childNodes_have_id.append(self.get_all_childNodes_have_id(e))
-        return self.flatten([e for e in all_childNodes_have_id if e])
+            return [wrapper]
+        for e in wrapper.iter_children():
+            all_childWrappers_have_id.append(self.get_all_childWrappers_have_id(e))
+        return self.flatten([e for e in all_childWrappers_have_id if e])
 
-    def update_ref_to_element(self, defs, style):
-        new_refs = dict([(e.get('id', ''), (e, style)) for e in self.get_all_childNodes_have_id(defs)])
+    def update_ref_to_element(self, wrapper, style):
+        new_refs = {
+            e.etree_element.get('id', ''): (e, style)
+            for e in self.get_all_childWrappers_have_id(wrapper)
+        }
         self.ref_to_element.update(new_refs)
 
 
