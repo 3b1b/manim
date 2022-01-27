@@ -43,17 +43,9 @@ def cascade_element_style(element, inherited):
             style[attr] = element.get(attr)
 
     if element.get("style"):
-        for style_spec in element.get("style").split(";"):
-            style_spec = style_spec.strip()
-            try:
-                key, value = style_spec.split(":")
-            except ValueError as e:
-                if not style_spec.strip():
-                    pass
-                else:
-                    raise e
-            else:
-                style[key.strip()] = value.strip()
+        declarations = parse_declaration_list(element.get("style"))
+        for declaration in declarations:
+            style[declaration.name] = css_serialize(declaration.value)
 
     return style
 
