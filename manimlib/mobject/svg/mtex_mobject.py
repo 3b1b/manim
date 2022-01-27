@@ -349,8 +349,6 @@ class MTex(VMobject):
         self.tex_spans_dict = tex_parser.tex_spans_dict
 
         fill_color = self.get_fill_color()
-        stroke_width = self.get_stroke_width()
-
         # Cannot simultaneously be false, so at least one file is generated.
         require_labelled_tex_file = tex_parser.current_label != 0
         require_plain_tex_file = any([
@@ -362,7 +360,7 @@ class MTex(VMobject):
 
         if require_labelled_tex_file:
             labelled_full_tex = self.get_tex_file_body(tex_parser.get_labelled_expression())
-            labelled_hash_val = hash((labelled_full_tex, stroke_width))
+            labelled_hash_val = hash(labelled_full_tex)
             if labelled_hash_val in TEX_HASH_TO_MOB_MAP:
                 if not require_plain_tex_file:
                     self.add(*TEX_HASH_TO_MOB_MAP[labelled_hash_val].copy())
@@ -370,10 +368,7 @@ class MTex(VMobject):
             else:
                 with display_during_execution(f"Writing \"{tex_string}\""):
                     filename = tex_to_svg_file(labelled_full_tex)
-                    labelled_svg_glyphs = _LabelledTex(
-                        filename,
-                        stroke_width=stroke_width
-                    )
+                    labelled_svg_glyphs = _LabelledTex(filename)
                     self.add(*labelled_svg_glyphs)
                     self.build_submobjects()
                 TEX_HASH_TO_MOB_MAP[labelled_hash_val] = self.copy()
@@ -383,17 +378,13 @@ class MTex(VMobject):
         # require_plain_tex_file == True
         self.set_submobjects([])
         full_tex = self.get_tex_file_body(tex_string)
-        hash_val = hash((full_tex, fill_color, stroke_width))
+        hash_val = hash((full_tex, fill_color))
         if hash_val in TEX_HASH_TO_MOB_MAP:
             self.add(*TEX_HASH_TO_MOB_MAP[hash_val].copy())
             return self
         with display_during_execution(f"Writing \"{tex_string}\""):
             filename = tex_to_svg_file(full_tex)
-            svg_glyphs = _PlainTex(
-                filename,
-                fill_color=fill_color,
-                stroke_width=stroke_width
-            )
+            svg_glyphs = _PlainTex(filename, fill_color=fill_color)
             if require_labelled_tex_file:
                 labelled_svg_mob = TEX_HASH_TO_MOB_MAP[labelled_hash_val]
                 for glyph, labelled_glyph in zip(svg_glyphs, it.chain(*labelled_svg_mob)):
