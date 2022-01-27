@@ -156,8 +156,8 @@ class SVGMobject(VMobject):
             self.add(*mobjects[0].submobjects)
 
     def get_mobjects_from(self, wrapper, style):
-        element = wrapper.etree_element
         result = []
+        element = wrapper.etree_element
         if not isinstance(element, ElementTree.Element):
             return result
 
@@ -171,8 +171,6 @@ class SVGMobject(VMobject):
         tag = element.tag.split("}")[-1]
         if tag == 'defs':
             self.update_ref_to_element(element, style)
-        elif tag == 'style':
-            pass
         elif tag in ['g', 'svg', 'symbol']:
             result += it.chain(*(
                 self.get_mobjects_from(child, style)
@@ -192,9 +190,11 @@ class SVGMobject(VMobject):
             result.append(self.ellipse_to_mobject(element, style))
         elif tag in ['polygon', 'polyline']:
             result.append(self.polygon_to_mobject(element, style))
+        elif tag == 'style':
+            pass
         else:
             log.warning(f"Unsupported element type: {tag}")
-            pass  # TODO
+            pass  # TODO, support <line> and <text> tag
         result = [m.insert_n_curves(0) for m in result if m is not None]
         self.handle_transforms(element, VGroup(*result))
         if len(result) > 1 and not self.unpack_groups:
@@ -246,9 +246,7 @@ class SVGMobject(VMobject):
         def_element, def_style = self.ref_to_element[ref]
         style = local_style.copy()
         style.update(def_style)
-        return self.get_mobjects_from(
-            def_element, style
-        )
+        return self.get_mobjects_from(def_element, style)
 
     def attribute_to_float(self, attr):
         stripped_attr = "".join([
@@ -341,7 +339,7 @@ class SVGMobject(VMobject):
         ]
         transform_pattern = re.compile("|".join([x + r"[^)]*\)" for x in transform_names]))
         number_pattern = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?")
-        transforms = transform_pattern.findall(element.get('transform', ''))[::-1]
+        transforms = transform_pattern.findall(element.get("transform", ""))[::-1]
 
         for transform in transforms:
             op_name, op_args = transform.split("(")
