@@ -3,6 +3,7 @@ import re
 import sys
 from types import MethodType
 
+from manimlib.constants import BLACK
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
@@ -31,6 +32,7 @@ def _get_neighbouring_pairs(iterable):
 
 class _TexSVG(SVGMobject):
     CONFIG = {
+        "color": BLACK,
         "height": None,
         "path_string_config": {
             "should_subdivide_sharp_curves": True,
@@ -39,17 +41,14 @@ class _TexSVG(SVGMobject):
     }
 
     @staticmethod
-    def color_str_to_label(color_str):
-        if len(color_str) == 4:
-            # "#RGB" => "#RRGGBB"
-            color_str = "#" + "".join([c * 2 for c in color_str[1:]])
-        if color_str == "#ffffff":
-            return 0
-        return int(color_str[1:], 16)
+    def color_to_label(fill_color):
+        r, g, b = color_to_int_rgb(fill_color)
+        rg = r * 256 + g
+        return rg * 256 + b
 
     def parse_labels(self):
         for glyph in self:
-            glyph.glyph_label = _TexSVG.color_str_to_label(glyph.fill_color)
+            glyph.glyph_label = _TexSVG.color_to_label(glyph.fill_color)
         return self
 
 
@@ -90,8 +89,7 @@ class _TexParser(object):
 
     @staticmethod
     def label_to_color_tuple(rgb):
-        # Get a unique color different from black,
-        # or the svg file will not include the color information.
+        # Get a unique color different from black.
         rg, b = divmod(rgb, 256)
         r, g = divmod(rg, 256)
         return r, g, b
@@ -306,6 +304,7 @@ class _TexParser(object):
 
     @staticmethod
     def get_color_related_commands_dict():
+        # Only list a few commands that are commonly used.
         return {
             "\\color": 1,
             "\\textcolor": 1,
