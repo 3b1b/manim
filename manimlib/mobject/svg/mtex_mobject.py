@@ -237,7 +237,7 @@ class _TexParser(object):
                     f"\"{tex_string[slice(*span_tuple)]}\""
                     for span_tuple in span_tuple_pair
                 ))
-            sys.exit(2)
+            raise ValueError
 
     def analyse_containing_labels(self):
         for span_0, tex_span_0 in self.tex_spans_dict.items():
@@ -299,8 +299,7 @@ class _TexParser(object):
         return result.replace(color_command_placeholder, "\\color[RGB]")
 
     def raise_tex_parsing_error(self, message):
-        log.error(f"Failed to parse tex ({message}): \"{self.tex_string}\"")
-        sys.exit(2)
+        raise ValueError(f"Failed to parse tex ({message}): \"{self.tex_string}\"")
 
     @staticmethod
     def get_color_related_commands_dict():
@@ -581,8 +580,7 @@ class MTex(VMobject):
         span_tuples = self.find_span_components_of_custom_span(custom_span_tuple)
         if span_tuples is None:
             tex = self.tex_string[slice(*custom_span_tuple)]
-            log.error(f"Failed to get span of tex: \"{tex}\"")
-            sys.exit(2)
+            raise ValueError(f"Failed to get span of tex: \"{tex}\"")
         return self.get_part_by_span_tuples(span_tuples)
 
     def get_parts_by_tex(self, tex):
@@ -613,19 +611,12 @@ class MTex(VMobject):
             if submob in part
         ]
         if not indices:
-            log.error("Failed to find part in tex")
-            sys.exit(2)
+            raise ValueError("Failed to find part in tex")
         return indices
 
     def indices_of_part_by_tex(self, tex, index=0):
         part = self.get_part_by_tex(tex, index=index)
         return self.indices_of_part(part)
-
-    def indices_of_all_parts_by_tex(self, tex, index=0):
-        all_parts = self.get_parts_by_tex(tex)
-        return list(it.chain(*[
-            self.indices_of_part(part) for part in all_parts
-        ]))
 
     def range_of_part(self, part):
         indices = self.indices_of_part(part)
