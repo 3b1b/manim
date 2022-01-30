@@ -371,8 +371,8 @@ class MTex(VMobject):
                 self.add(*TEX_HASH_TO_MOB_MAP[labelled_hash_val].copy())
             else:
                 with display_during_execution(f"Writing \"{tex_string}\""):
-                    filename = tex_to_svg_file(labelled_full_tex)
-                    labelled_svg_glyphs = _TexSVG(filename).parse_labels()
+                    labelled_svg_glyphs = MTex.get_svg_glyphs(labelled_full_tex)
+                    labelled_svg_glyphs.parse_labels()
                     self.add(*labelled_svg_glyphs)
                     self.build_submobjects()
                     TEX_HASH_TO_MOB_MAP[labelled_hash_val] = self.copy()
@@ -388,8 +388,7 @@ class MTex(VMobject):
             self.add(*TEX_HASH_TO_MOB_MAP[hash_val].copy())
         else:
             with display_during_execution(f"Writing \"{tex_string}\""):
-                filename = tex_to_svg_file(full_tex)
-                svg_glyphs = _TexSVG(filename)
+                svg_glyphs = MTex.get_svg_glyphs(full_tex)
                 if require_labelled_tex_file:
                     labelled_svg_mob = TEX_HASH_TO_MOB_MAP[labelled_hash_val]
                     for glyph, labelled_glyph in zip(svg_glyphs, it.chain(*labelled_svg_mob)):
@@ -428,6 +427,11 @@ class MTex(VMobject):
             tex_config["text_to_replace"],
             new_tex
         )
+
+    @staticmethod
+    def get_svg_glyphs(full_tex):
+        filename = tex_to_svg_file(full_tex)
+        return _TexSVG(filename)
 
     def build_submobjects(self):
         if not self.submobjects:
