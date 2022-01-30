@@ -9,6 +9,7 @@ Fixed bugs
 - `f1996f8 <https://github.com/3b1b/manim/pull/1697/commits/f1996f8479f9e33d626b3b66e9eb6995ce231d86>`__: Temporarily fixed ``Lightbulb``
 - `#1712 <https://github.com/3b1b/manim/pull/1712>`__: Fixed some bugs of ``SVGMobject``
 - `#1717 <https://github.com/3b1b/manim/pull/1717>`__: Fixed some bugs of SVG path string parser
+- `#1720 <https://github.com/3b1b/manim/pull/1720>`__: Fixed some bugs of ``MTex``
 
 New Features
 ^^^^^^^^^^^^
@@ -16,6 +17,8 @@ New Features
 - `#1704 <https://github.com/3b1b/manim/pull/1704>`__: Added ``lable_buff`` config parameter for ``Brace``
 - `#1712 <https://github.com/3b1b/manim/pull/1712>`__: Added support for ``rotate skewX skewY`` transform in SVG 
 - `#1717 <https://github.com/3b1b/manim/pull/1717>`__: Added style support to ``SVGMobject``
+- `#1719 <https://github.com/3b1b/manim/pull/1719>`__: Added parser to <style> element of SVG 
+- `#1719 <https://github.com/3b1b/manim/pull/1719>`__: Added support for <line> element in ``SVGMobject``
 
 Refactor 
 ^^^^^^^^
@@ -24,6 +27,12 @@ Refactor
 - `#1712 <https://github.com/3b1b/manim/pull/1712>`__: Refactored SVG path string parser
 - `#1712 <https://github.com/3b1b/manim/pull/1712>`__: Allowed ``Mobject.scale`` to receive iterable ``scale_factor``
 - `#1716 <https://github.com/3b1b/manim/pull/1716>`__: Refactored ``MTex``
+- `#1721 <https://github.com/3b1b/manim/pull/1721>`__: Improved config helper (``manimgl --config``)
+- `#1723 <https://github.com/3b1b/manim/pull/1723>`__: Refactored ``MTex``
+
+Dependencies
+^^^^^^^^^^^^
+- `#1719 <https://github.com/3b1b/manim/pull/1719>`__: Added dependency on python package `cssselect2 <https://github.com/Kozea/cssselect2>`__
 
 
 v1.3.0
@@ -88,7 +97,7 @@ Refactor
 Dependencies
 ^^^^^^^^^^^^
 
-- `#1675 <https://github.com/3b1b/manim/pull/1675>`__: Added dependency on python packages `skia-pathops <https://github.com/fonttools/skia-pathops>`__
+- `#1675 <https://github.com/3b1b/manim/pull/1675>`__: Added dependency on python package `skia-pathops <https://github.com/fonttools/skia-pathops>`__
 
 v1.2.0
 ------

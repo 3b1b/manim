@@ -9,8 +9,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/custom.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?deef033713e72ed9da207f11">
-    <link rel="stylesheet" href="../_static/pygments.css?deef033713e72ed9da207f11">
+    <link rel="stylesheet" href="../_static/styles/default.css?80f9ee54394e784c6c0294ec">
+    <link rel="stylesheet" href="../_static/pygments.css?80f9ee54394e784c6c0294ec">
     
 <style>
   :root {
@@ -27,7 +27,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?deef033713e72ed9da207f11"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?80f9ee54394e784c6c0294ec"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -131,6 +131,7 @@
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1697/commits/f1996f8479f9e33d626b3b66e9eb6995ce231d86">f1996f8</a>: Temporarily fixed <code class="docutils literal notranslate"><span class="pre">Lightbulb</span></code></p></li>
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1712">#1712</a>: Fixed some bugs of <code class="docutils literal notranslate"><span class="pre">SVGMobject</span></code></p></li>
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1717">#1717</a>: Fixed some bugs of SVG path string parser</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1720">#1720</a>: Fixed some bugs of <code class="docutils literal notranslate"><span class="pre">MTex</span></code></p></li>
 </ul>
 </section>
 <section id="new-features">
@@ -140,6 +141,8 @@
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1704">#1704</a>: Added <code class="docutils literal notranslate"><span class="pre">lable_buff</span></code> config parameter for <code class="docutils literal notranslate"><span class="pre">Brace</span></code></p></li>
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1712">#1712</a>: Added support for <code class="docutils literal notranslate"><span class="pre">rotate</span> <span class="pre">skewX</span> <span class="pre">skewY</span></code> transform in SVG</p></li>
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1717">#1717</a>: Added style support to <code class="docutils literal notranslate"><span class="pre">SVGMobject</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1719">#1719</a>: Added parser to &lt;style&gt; element of SVG</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1719">#1719</a>: Added support for &lt;line&gt; element in <code class="docutils literal notranslate"><span class="pre">SVGMobject</span></code></p></li>
 </ul>
 </section>
 <section id="refactor">
@@ -150,6 +153,14 @@
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1712">#1712</a>: Refactored SVG path string parser</p></li>
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1712">#1712</a>: Allowed <code class="docutils literal notranslate"><span class="pre">Mobject.scale</span></code> to receive iterable <code class="docutils literal notranslate"><span class="pre">scale_factor</span></code></p></li>
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1716">#1716</a>: Refactored <code class="docutils literal notranslate"><span class="pre">MTex</span></code></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1721">#1721</a>: Improved config helper (<code class="docutils literal notranslate"><span class="pre">manimgl</span> <span class="pre">--config</span></code>)</p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1723">#1723</a>: Refactored <code class="docutils literal notranslate"><span class="pre">MTex</span></code></p></li>
+</ul>
+</section>
+<section id="dependencies">
+<h3>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1719">#1719</a>: Added dependency on python package <a class="reference external" href="https://github.com/Kozea/cssselect2">cssselect2</a></p></li>
 </ul>
 </section>
 </section>
@@ -215,10 +226,10 @@
 <li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1691/commits/758f329a06a0c198b27a48c577575d94554305bf">758f329</a>: Used array copy when checking need for refreshing triangulation</p></li>
 </ul>
 </section>
-<section id="dependencies">
-<h3>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h3>
+<section id="dependencies-1">
+<h3>Dependencies<a class="headerlink" href="#dependencies-1" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1675">#1675</a>: Added dependency on python packages <a class="reference external" href="https://github.com/fonttools/skia-pathops">skia-pathops</a></p></li>
+<li><p><a class="reference external" href="https://github.com/3b1b/manim/pull/1675">#1675</a>: Added dependency on python package <a class="reference external" href="https://github.com/fonttools/skia-pathops">skia-pathops</a></p></li>
 </ul>
 </section>
 </section>
@@ -392,13 +403,14 @@
 <li><a class="reference internal" href="#fixed-bugs">Fixed bugs</a></li>
 <li><a class="reference internal" href="#new-features">New Features</a></li>
 <li><a class="reference internal" href="#refactor">Refactor</a></li>
+<li><a class="reference internal" href="#dependencies">Dependencies</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#v1-3-0">v1.3.0</a><ul>
 <li><a class="reference internal" href="#fixed-bugs-1">Fixed bugs</a></li>
 <li><a class="reference internal" href="#new-features-1">New Features</a></li>
 <li><a class="reference internal" href="#refactor-1">Refactor</a></li>
-<li><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li><a class="reference internal" href="#dependencies-1">Dependencies</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#v1-2-0">v1.2.0</a><ul>
