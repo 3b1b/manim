@@ -41,7 +41,7 @@ def _convert_skia_path_to_vmobject(path, vmobject):
                 vmobject.add_quadratic_bezier_curve_to(*points)
             else:
                 raise Exception(f"Unsupported: {path_verb}")
-    return vmobject
+    return vmobject.reverse_points()
 
 
 class Union(VMobject):
