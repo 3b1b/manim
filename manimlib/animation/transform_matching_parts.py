@@ -1,16 +1,20 @@
 import numpy as np
+import itertools as it
 
 from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.fading import FadeTransformPieces
 from manimlib.animation.fading import FadeInFromPoint
 from manimlib.animation.fading import FadeOutToPoint
+from manimlib.animation.transform import ReplacementTransform
 from manimlib.animation.transform import Transform
 
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Group
+from manimlib.mobject.svg.mtex_mobject import MTex
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.iterables import remove_list_redundancies
 
 
 class TransformMatchingParts(AnimationGroup):
@@ -139,3 +143,108 @@ class TransformMatchingTex(TransformMatchingParts):
     @staticmethod
     def get_mobject_key(mobject):
         return mobject.get_tex()
+
+
+class TransformMatchingMTex(AnimationGroup):
+    CONFIG = {
+        "key_map": dict(),
+    }
+
+    def __init__(self, source_mobject, target_mobject, **kwargs):
+        digest_config(self, kwargs)
+        assert isinstance(source_mobject, MTex)
+        assert isinstance(target_mobject, MTex)
+        anims = []
+        rest_source_submobs = source_mobject.submobjects.copy()
+        rest_target_submobs = target_mobject.submobjects.copy()
+
+        def add_anim_from(anim_class, func, source_attr, target_attr=None):
+            if target_attr is None:
+                target_attr = source_attr
+            source_parts = func(source_mobject, source_attr)
+            target_parts = func(target_mobject, target_attr)
+            filtered_source_parts = [
+                submob_part for submob_part in source_parts
+                if all([
+                    submob in rest_source_submobs
+                    for submob in submob_part
+                ])
+            ]
+            filtered_target_parts = [
+                submob_part for submob_part in target_parts
+                if all([
+                    submob in rest_target_submobs
+                    for submob in submob_part
+                ])
+            ]
+            if not (filtered_source_parts and filtered_target_parts):
+                return
+            anims.append(anim_class(
+                VGroup(*filtered_source_parts),
+                VGroup(*filtered_target_parts),
+                **kwargs
+            ))
+            for submob in it.chain(*filtered_source_parts):
+                rest_source_submobs.remove(submob)
+            for submob in it.chain(*filtered_target_parts):
+                rest_target_submobs.remove(submob)
+
+        def get_submobs_from_keys(mobject, keys):
+            if not isinstance(keys, tuple):
+                keys = (keys,)
+            indices = []
+            for key in keys:
+                if isinstance(key, int):
+                    indices.append(key)
+                elif isinstance(key, range):
+                    indices.extend(key)
+                elif isinstance(key, str):
+                    all_parts = mobject.get_parts_by_tex(key)
+                    indices.extend(it.chain(*[
+                        mobject.indices_of_part(part) for part in all_parts
+                    ]))
+                else:
+                    raise TypeError(key)
+            return VGroup(VGroup(*[
+                mobject[i] for i in remove_list_redundancies(indices)
+            ]))
+
+        for source_key, target_key in self.key_map.items():
+            add_anim_from(
+                ReplacementTransform, get_submobs_from_keys,
+                source_key, target_key
+            )
+
+        common_specified_substrings = sorted(list(
+            set(source_mobject.get_specified_substrings()).intersection(
+                target_mobject.get_specified_substrings()
+            )
+        ), key=len, reverse=True)
+        for part_tex_string in common_specified_substrings:
+            add_anim_from(
+                FadeTransformPieces, MTex.get_parts_by_tex, part_tex_string
+            )
+
+        common_submob_tex_strings = {
+            source_submob.get_tex() for source_submob in source_mobject
+        }.intersection({
+            target_submob.get_tex() for target_submob in target_mobject
+        })
+        for tex_string in common_submob_tex_strings:
+            add_anim_from(
+                FadeTransformPieces,
+                lambda mobject, attr: VGroup(*[
+                    VGroup(mob) for mob in mobject
+                    if mob.get_tex() == attr
+                ]),
+                tex_string
+            )
+
+        anims.append(FadeOutToPoint(
+            VGroup(*rest_source_submobs), target_mobject.get_center(), **kwargs
+        ))
+        anims.append(FadeInFromPoint(
+            VGroup(*rest_target_submobs), source_mobject.get_center(), **kwargs
+        ))
+
+        super().__init__(*anims)
