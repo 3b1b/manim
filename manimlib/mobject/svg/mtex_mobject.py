@@ -21,10 +21,6 @@ SCALE_FACTOR_PER_FONT_POINT = 0.001
 TEX_HASH_TO_MOB_MAP = {}
 
 
-def _contains(span_0, span_1):
-    return span_0[0] <= span_1[0] and span_1[1] <= span_0[1]
-
-
 def _get_neighbouring_pairs(iterable):
     return list(adjacent_pairs(iterable))[:-1]
 
@@ -41,12 +37,22 @@ class _TexSVG(SVGMobject):
 
 
 class _TexSpan(object):
-    def __init__(self, label, script_type, command_span):
+    def __init__(self, label):
         self.label = label
-        # `script_type`: 0 for normal, 1 for subscript, 2 for superscript.
-        self.script_type = script_type
-        self.command_span = command_span
         self.containing_labels = []
+
+    def __repr__(self):
+        return self.__class__.__name__ + "(" + ", ".join([
+            key + "=" + repr(value)
+            for key, value in self.__dict__.items()
+            if not key.startswith("__")
+        ]) + ")"
+
+
+class _ScriptSpan(object):
+    def __init__(self, span_tuple, script_char):
+        self.span_tuple = span_tuple
+        self.script_char = script_char
 
     def __repr__(self):
         return self.__class__.__name__ + "(" + ", ".join([
@@ -65,6 +71,8 @@ class _TexParser(object):
         self.brace_indices_dict = self.get_brace_indices_dict()
         self.tex_spans_dict = {}
         self.labels_count = 0
+        self.script_spans_dict = {}
+        self.neighbouring_script_span_pairs = []
         self.specified_substrings = []
         self.add_tex_span((0, len(tex_string)))
         self.break_up_by_scripts()
@@ -73,16 +81,13 @@ class _TexParser(object):
         self.specified_substrings = remove_list_redundancies(
             self.specified_substrings
         )
-        self.check_if_partially_overlap()
         self.analyse_containing_labels()
 
-    def add_tex_span(self, span_tuple, script_type=0, command_span=None):
+    def add_tex_span(self, span_tuple):
         if span_tuple in self.tex_spans_dict:
             return
 
-        if command_span is None:
-            command_span = span_tuple
-        tex_span = _TexSpan(self.labels_count, script_type, command_span)
+        tex_span = _TexSpan(self.labels_count)
         self.tex_spans_dict[span_tuple] = tex_span
         self.labels_count += 1
 
@@ -134,25 +139,47 @@ class _TexParser(object):
         whitespace_indices = self.whitespace_indices
         brace_indices_dict = self.brace_indices_dict
         for script_index in self.script_indices:
-            script_type = 1 if tex_string[script_index] == "_" else 2
-            content_begin = script_index + 1
-            while content_begin in whitespace_indices:
-                content_begin += 1
-            if content_begin in brace_indices_dict.keys():
-                content_end = brace_indices_dict[content_begin] + 1
+            extended_begin = script_index
+            while extended_begin - 1 in whitespace_indices:
+                extended_begin -= 1
+            script_begin = script_index + 1
+            while script_begin in whitespace_indices:
+                script_begin += 1
+            if script_begin in brace_indices_dict.keys():
+                script_end = brace_indices_dict[script_begin] + 1
             else:
                 pattern = re.compile(r"\w|\\[a-zA-Z]+")
-                match_obj = pattern.match(tex_string, pos=content_begin)
+                match_obj = pattern.match(tex_string, pos=script_begin)
                 if not match_obj:
-                    script_name = ("subscript", "superscript")[script_type - 1]
-                    log.warning(f"Unclear {script_name} while parsing")
+                    if tex_string[script_index] == "_":
+                        script_name = "subscript"
+                    else:
+                        script_name = "superscript"
+                    log.warning(
+                        f"Unclear {script_name} detected while parsing. "
+                        "Please use braces to clarify"
+                    )
                     continue
-                content_end = match_obj.end()
-            self.add_tex_span(
-                (script_index, content_end),
-                script_type=script_type,
-                command_span=(content_begin, content_end)
+                script_end = match_obj.end()
+            span_tuple = (script_begin, script_end)
+            script_span = (extended_begin, script_end)
+            self.add_tex_span(span_tuple)
+            self.script_spans_dict[script_span] = _ScriptSpan(
+                span_tuple, tex_string[script_index]
             )
+
+        if not self.script_spans_dict:
+            return
+
+        indices_with_script_spans = sorted([
+            (index, script_span)
+            for script_span in self.script_spans_dict.keys()
+            for index in script_span
+        ])
+        _, sorted_script_spans = zip(*indices_with_script_spans)
+        for span_0, span_1 in _get_neighbouring_pairs(sorted_script_spans):
+            if span_0[1] == span_1[0]:
+                self.neighbouring_script_span_pairs.append((span_0, span_1))
 
     def break_up_by_double_braces(self):
         # Match paired double braces (`{{...}}`).
@@ -196,41 +223,37 @@ class _TexParser(object):
             for match_obj in match_objs:
                 all_span_tuples.append(match_obj.span())
 
-        whitespace_indices = self.whitespace_indices
-        script_spans_dict = dict([
-            span_tuple[::-1]
-            for span_tuple, tex_span in self.tex_spans_dict.items()
-            if tex_span.script_type != 0
+        former_script_spans_dict = dict([
+            span_tuple[0][::-1]
+            for span_tuple in self.neighbouring_script_span_pairs
         ])
         for span_begin, span_end in all_span_tuples:
             # Deconstruct spans containing one out of two scripts.
-            if span_end in script_spans_dict.keys():
-                whitespace_span_end = span_end
-                while whitespace_span_end in whitespace_indices:
-                    whitespace_span_end += 1
-                if whitespace_span_end in script_spans_dict.values():
-                    span_end = script_spans_dict[span_end]
-                    while span_end in whitespace_indices:
-                        span_end -= 1
-                    if span_begin >= span_end:
-                        continue
+            if span_end in former_script_spans_dict.keys():
+                span_end = former_script_spans_dict[span_end]
+                if span_begin >= span_end:
+                    continue
             self.add_tex_span((span_begin, span_end))
 
-    def check_if_partially_overlap(self):
+    def analyse_containing_labels(self):
+        tex_spans_dict = self.tex_spans_dict
         span_tuples = sorted(
-            self.tex_spans_dict.keys(),
+            tex_spans_dict.keys(),
             key=lambda t: (t[0], -t[1])
         )
         overlapping_span_pairs = []
         for index, span_0 in enumerate(span_tuples):
-            for span_1 in span_tuples[index + 1:]:
+            for span_1 in span_tuples[index:]:
                 if span_0[1] <= span_1[0]:
                     continue
                 if span_0[1] < span_1[1]:
                     overlapping_span_pairs.append((span_0, span_1))
+                tex_spans_dict[span_0].containing_labels.append(
+                    tex_spans_dict[span_1].label
+                )
         if overlapping_span_pairs:
             tex_string = self.tex_string
-            log.error("Partially overlapping substring pairs occur in MTex:")
+            log.error("Partially overlapping substrings detected:")
             for span_tuple_pair in overlapping_span_pairs:
                 log.error(", ".join(
                     f"\"{tex_string[slice(*span_tuple)]}\""
@@ -238,27 +261,20 @@ class _TexParser(object):
                 ))
             raise ValueError
 
-    def analyse_containing_labels(self):
-        for span_0, tex_span_0 in self.tex_spans_dict.items():
-            for span_1, tex_span_1 in self.tex_spans_dict.items():
-                if _contains(span_1, span_0):
-                    tex_span_1.containing_labels.append(tex_span_0.label)
-
     def get_labelled_tex_string(self):
         tex_string = self.tex_string
         indices_with_labels = sorted([
             (
-                tex_span.command_span[i],
-                i,
-                tex_span.command_span[1 - i],
+                *span_tuple[::(1, -1)[flag]],
+                flag,
                 tex_span.label
             )
-            for tex_span in self.tex_spans_dict.values()
-            for i in range(2)
-        ], key=lambda t: (t[0], -t[1], -t[2]))
-        indices, flags, _, labels = zip(*indices_with_labels)
+            for span_tuple, tex_span in self.tex_spans_dict.items()
+            for flag in range(2)
+        ], key=lambda t: (t[0], -t[2], -t[1]))
+        indices, _, flags, labels = zip(*indices_with_labels)
         command_pieces = [
-            ("{{\\color[HTML]{" + "{:06x}".format(label) + "}", "}}")[flag]
+            ("{{{{\\color[HTML]{{{:06x}}}".format(label), "}}")[flag]
             for flag, label in zip(flags, labels)
         ][1:-1]
         command_pieces.insert(0, "")
@@ -268,57 +284,39 @@ class _TexParser(object):
         ]
         return "".join(it.chain(*zip(command_pieces, string_pieces)))
 
-    def require_labelled_tex_file(self):
-        return self.labels_count > 1
-
     def get_sorted_submob_indices(self, submob_labels):
-        whitespace_indices = self.whitespace_indices
         tex_spans_dict = self.tex_spans_dict
-        indices_with_spans = sorted([
-            (*span_tuple[::(-1, 1)[tex_span.script_type - 1]], tex_span)
-            for span_tuple, tex_span in tex_spans_dict.items()
-            if tex_span.script_type != 0
-        ])
-
+        script_spans_dict = self.script_spans_dict
         switch_range_pairs = []
-        for index_with_span_0, index_with_span_1 in _get_neighbouring_pairs(
-            indices_with_spans
-        ):
-            index_0, _, tex_span_0 = index_with_span_0
-            index_1, _, tex_span_1 = index_with_span_1
-            if tex_span_0.script_type != 1 or tex_span_1.script_type != 2:
-                continue
+        for span_pair in self.neighbouring_script_span_pairs:
             if not all([
-                index in whitespace_indices
-                for index in range(index_0, index_1)
+                script_spans_dict[script_span].script_char != "_^"[i]
+                for i, script_span in enumerate(span_pair)
             ]):
                 continue
-            indices_0 = [
-                i for i, label in enumerate(submob_labels)
-                if label in tex_span_0.containing_labels
-            ]
-            range_0 = range(indices_0[0], indices_0[-1] + 1)
-            indices_1 = [
-                i for i, label in enumerate(submob_labels)
-                if label in tex_span_1.containing_labels
-            ]
-            range_1 = range(indices_1[0], indices_1[-1] + 1)
-            switch_range_pairs.append((range_0, range_1))
+            range_pair = []
+            for script_span in span_pair:
+                span_tuple = script_spans_dict[script_span].span_tuple
+                indices = [
+                    i for i, label in enumerate(submob_labels)
+                    if label in tex_spans_dict[span_tuple].containing_labels
+                ]
+                range_pair.append(range(indices[0], indices[-1] + 1))
+            switch_range_pairs.append(tuple(range_pair))
 
         switch_range_pairs.sort(key=lambda t: (t[0].stop, -t[0].start))
-        indices = list(range(len(submob_labels)))
+        result = list(range(len(submob_labels)))
         for range_0, range_1 in switch_range_pairs:
-            indices = [
-                *indices[:range_1.start],
-                *indices[range_0.start:range_0.stop],
-                *indices[range_1.stop:range_0.start],
-                *indices[range_1.start:range_1.stop],
-                *indices[range_0.stop:]
+            result = [
+                *result[:range_1.start],
+                *result[range_0.start:range_0.stop],
+                *result[range_1.stop:range_0.start],
+                *result[range_1.start:range_1.stop],
+                *result[range_0.stop:]
             ]
-        return indices
+        return result
 
     def get_submob_tex_strings(self, submob_labels):
-        # Not sure whether this is the best practice...
         tex_spans_dict = self.tex_spans_dict
         labels = submob_labels + [submob_labels[0]]
         label_dict = {
@@ -378,9 +376,15 @@ class _TexParser(object):
         return result
 
     def find_span_components_of_custom_span(self, custom_span_tuple):
-        whitespace_indices = self.whitespace_indices
+        skipped_indices = sorted(it.chain(
+            self.whitespace_indices,
+            self.script_indices
+        ))
         span_choices = sorted(filter(
-            lambda t: _contains(custom_span_tuple, t),
+            lambda span_tuple: all([
+                span_tuple[0] >= custom_span_tuple[0],
+                span_tuple[1] <= custom_span_tuple[1]
+            ]),
             self.tex_spans_dict.keys()
         ))
         # Filter out spans that reach the farthest.
@@ -390,8 +394,7 @@ class _TexParser(object):
         result = []
         while span_begin != span_end:
             if span_begin not in span_choices_dict:
-                if span_begin in whitespace_indices:
-                    # Whitespaces may occur between spans.
+                if span_begin in skipped_indices:
                     span_begin += 1
                     continue
                 return None
@@ -409,7 +412,7 @@ class _TexParser(object):
     def get_specified_substrings(self):
         return self.specified_substrings
 
-    def get_all_isolated_substrings(self):
+    def get_isolated_substrings(self):
         return remove_list_redundancies([
             self.tex_string[slice(*span_tuple)]
             for span_tuple in self.tex_spans_dict.keys()
@@ -425,6 +428,7 @@ class MTex(VMobject):
         "tex_environment": "align*",
         "isolate": [],
         "tex_to_color_map": {},
+        "use_plain_tex": False,
     }
 
     def __init__(self, tex_string, **kwargs):
@@ -451,52 +455,73 @@ class MTex(VMobject):
         return rg * 256 + b
 
     def generate_mobject(self):
-        parser = self.__parser
-        labelled_tex = self.get_tex_file_body(parser.get_labelled_tex_string())
-        hash_val = hash(labelled_tex)
+        labelled_tex_string = self.__parser.get_labelled_tex_string()
+        labelled_tex_content = self.get_tex_file_content(labelled_tex_string)
+        hash_val = hash(labelled_tex_content)
         if hash_val not in TEX_HASH_TO_MOB_MAP:
-            with display_during_execution(f"Writing \"{self.tex_string}\""):
-                full_tex = self.get_tex_file_body(self.tex_string)
-                if parser.require_labelled_tex_file():
-                    labelled_svg_glyphs = MTex.tex_to_glyphs(labelled_tex)
-                    svg_glyphs = MTex.tex_to_glyphs(full_tex)
-                    for glyph, labelled_glyph in zip(
-                        svg_glyphs, labelled_svg_glyphs
-                    ):
-                        glyph.glyph_label = MTex.color_to_label(
-                            labelled_glyph.fill_color
-                        )
-                else:
-                    svg_glyphs = MTex.tex_to_glyphs(full_tex)
-                    for glyph in svg_glyphs:
-                        glyph.glyph_label = 0
-            TEX_HASH_TO_MOB_MAP[hash_val] = self.build_submobjects(svg_glyphs)
-        self.add(*TEX_HASH_TO_MOB_MAP[hash_val].copy())
+            TEX_HASH_TO_MOB_MAP[hash_val] = [None, None]
+        mob_list = TEX_HASH_TO_MOB_MAP[hash_val]
 
-    def get_tex_file_body(self, new_tex):
+        if not self.use_plain_tex:
+            if mob_list[0] is not None:
+                self.add(*mob_list[0].copy())
+                return
+
+            with display_during_execution(f"Writing \"{self.tex_string}\""):
+                labelled_svg_glyphs = MTex.tex_content_to_glyphs(
+                    labelled_tex_content
+                )
+                for labelled_glyph in labelled_svg_glyphs:
+                    labelled_glyph.glyph_label = MTex.color_to_label(
+                        labelled_glyph.fill_color
+                    )
+                mob = self.build_mobject(labelled_svg_glyphs)
+            mob_list[0] = mob
+            self.add(*mob.copy())
+            return
+
+        if mob_list[1] is not None:
+            self.add(*mob_list[1].copy())
+            return
+
+        with display_during_execution(f"Writing \"{self.tex_string}\""):
+            tex_content = self.get_tex_file_content(self.tex_string)
+            labelled_svg_glyphs = MTex.tex_content_to_glyphs(
+                labelled_tex_content
+            )
+            svg_glyphs = MTex.tex_content_to_glyphs(tex_content)
+            for glyph, labelled_glyph in zip(svg_glyphs, labelled_svg_glyphs):
+                glyph.glyph_label = MTex.color_to_label(
+                    labelled_glyph.fill_color
+                )
+            mob = self.build_mobject(svg_glyphs)
+        mob_list[1] = mob
+        self.add(*mob.copy())
+
+    def get_tex_file_content(self, tex_string):
         if self.tex_environment:
-            new_tex = "\n".join([
+            tex_string = "\n".join([
                 f"\\begin{{{self.tex_environment}}}",
-                new_tex,
+                tex_string,
                 f"\\end{{{self.tex_environment}}}"
             ])
         if self.alignment:
-            new_tex = "\n".join([self.alignment, new_tex])
-
-        tex_config = get_tex_config()
-        return tex_config["tex_body"].replace(
-            tex_config["text_to_replace"],
-            new_tex
-        )
+            tex_string = "\n".join([self.alignment, tex_string])
+        return tex_string
 
     @staticmethod
-    def tex_to_glyphs(full_tex):
+    def tex_content_to_glyphs(tex_content):
+        tex_config = get_tex_config()
+        full_tex = tex_config["tex_body"].replace(
+            tex_config["text_to_replace"],
+            tex_content
+        )
         filename = tex_to_svg_file(full_tex)
         return _TexSVG(filename)
 
-    def build_submobjects(self, svg_glyphs):
+    def build_mobject(self, svg_glyphs):
         if not svg_glyphs:
-            return []
+            return VGroup()
 
         # Simply pack together adjacent mobjects with the same label.
         submobjects = []
@@ -518,16 +543,17 @@ class MTex(VMobject):
         for submob, label in zip(submobjects, submob_labels):
             submob.submob_label = label
 
-        parser = self.__parser
-        indices = parser.get_sorted_submob_indices(submob_labels)
+        indices = self.__parser.get_sorted_submob_indices(submob_labels)
         submobjects = [submobjects[index] for index in indices]
 
-        submob_tex_strings = parser.get_submob_tex_strings(submob_labels)
+        submob_tex_strings = self.__parser.get_submob_tex_strings(
+            submob_labels
+        )
         for submob, submob_tex in zip(submobjects, submob_tex_strings):
             submob.tex_string = submob_tex
             # Support `get_tex()` method here.
             submob.get_tex = MethodType(lambda inst: inst.tex_string, submob)
-        return submobjects
+        return VGroup(*submobjects)
 
     def get_part_by_span_tuples(self, span_tuples):
         labels = self.__parser.get_containing_labels_by_span_tuples(
@@ -585,8 +611,8 @@ class MTex(VMobject):
     def get_specified_substrings(self):
         return self.__parser.get_specified_substrings()
 
-    def get_all_isolated_substrings(self):
-        return self.__parser.get_all_isolated_substrings()
+    def get_isolated_substrings(self):
+        return self.__parser.get_isolated_substrings()
 
 
 class MTexText(MTex):
