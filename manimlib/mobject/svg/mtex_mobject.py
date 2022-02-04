@@ -256,15 +256,15 @@ class _TexParser(object):
         def script_span_to_submob_range(script_span):
             tex_span = self.script_span_to_tex_span_dict[script_span]
             submob_indices = [
-                i for i, label in enumerate(submob_labels)
+                index for index, label in enumerate(submob_labels)
                 if label in self.containing_labels_dict[tex_span]
             ]
             return range(submob_indices[0], submob_indices[-1] + 1)
 
         filtered_script_span_pairs = filter(
             lambda script_span_pair: all([
-                self.script_span_to_char_dict[script_span] == "_^"[i]
-                for i, script_span in enumerate(script_span_pair)
+                self.script_span_to_char_dict[script_span] == character
+                for script_span, character in zip(script_span_pair, "_^")
             ]),
             self.neighbouring_script_span_pairs
         )
@@ -567,7 +567,7 @@ class MTex(VMobject):
 
     def indices_of_part(self, part):
         indices = [
-            i for i, submob in enumerate(self.submobjects)
+            index for index, submob in enumerate(self.submobjects)
             if submob in part
         ]
         if not indices:
