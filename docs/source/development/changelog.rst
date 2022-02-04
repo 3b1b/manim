@@ -1,6 +1,14 @@
 Changelog
 =========
 
+v1.4.1
+------
+
+Fixed bugs 
+^^^^^^^^^^
+- `#1724 <https://github.com/3b1b/manim/pull/1724>`__: Temporarily fixed boolean operations' bug 
+- `d2e0811 <https://github.com/3b1b/manim/commit/d2e0811285f7908e71a65e664fec88b1af1c6144>`__: Import ``Iterable`` from ``collections.abc`` instead of ``collections`` which is deprecated since python 3.9
+
 v1.4.0
 ------
 
