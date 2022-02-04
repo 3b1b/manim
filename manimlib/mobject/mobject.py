@@ -4,7 +4,7 @@ import random
 import sys
 import moderngl
 from functools import wraps
-from collections import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 
