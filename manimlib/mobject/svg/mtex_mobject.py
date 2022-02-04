@@ -549,7 +549,9 @@ class MTex(VMobject):
     def get_parts_by_tex(self, tex):
         return VGroup(*[
             self.get_part_by_custom_span(match_obj.span())
-            for match_obj in re.finditer(re.escape(tex), self.tex_string)
+            for match_obj in re.finditer(
+                re.escape(tex.strip()), self.tex_string
+            )
         ])
 
     def get_part_by_tex(self, tex, index=0):
