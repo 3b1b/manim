@@ -1,3 +1,5 @@
+from isosurfaces import plot_isoline
+
 from manimlib.constants import *
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
@@ -68,3 +70,40 @@ class FunctionGraph(ParametricCurve):
 
     def get_point_from_function(self, x):
         return self.t_func(x)
+
+
+class ImplicitFunction(VMobject):
+    CONFIG = {
+        "x_range": [-FRAME_X_RADIUS, FRAME_X_RADIUS],
+        "y_range": [-FRAME_Y_RADIUS, FRAME_Y_RADIUS],
+        "min_depth": 5,
+        "max_quads": 1500,
+        "use_smoothing": True
+    }
+
+    def __init__(self, func, x_range=None, y_range=None, **kwargs):
+        digest_config(self, kwargs)
+        self.function = func
+        super().__init__(**kwargs)
+
+    def init_points(self):
+        p_min, p_max = (
+            np.array([self.x_range[0], self.y_range[0]]),
+            np.array([self.x_range[1], self.y_range[1]]),
+        )
+        curves = plot_isoline(
+            fn=lambda u: self.function(u[0], u[1]),
+            pmin=p_min,
+            pmax=p_max,
+            min_depth=self.min_depth,
+            max_quads=self.max_quads,
+        )  # returns a list of lists of 2D points
+        curves = [
+            np.pad(curve, [(0, 0), (0, 1)]) for curve in curves if curve != []
+        ]  # add z coord as 0
+        for curve in curves:
+            self.start_new_path(curve[0])
+            self.add_points_as_corners(curve[1:])
+        if self.use_smoothing:
+            self.make_smooth()
+        return self
