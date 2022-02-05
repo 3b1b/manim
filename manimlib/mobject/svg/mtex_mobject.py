@@ -242,7 +242,7 @@ class _TexParser(object):
             for flag in range(2)
         ], key=lambda t: (t[0], -t[2], -t[1])))
         command_pieces = [
-            ("{{{{\\color[HTML]{{{:06x}}}".format(label), "}}")[flag]
+            ("{{" + self.get_color_command(label), "}}")[flag]
             for flag, label in zip(flags, labels)
         ][1:-1]
         command_pieces.insert(0, "")
@@ -251,6 +251,17 @@ class _TexParser(object):
             for tex_span in _get_neighbouring_pairs(indices)
         ]
         return "".join(it.chain(*zip(command_pieces, string_pieces)))
+
+    @staticmethod
+    def get_color_command(label):
+        rg, b = divmod(label, 256)
+        r, g = divmod(rg, 256)
+        return "".join([
+            "\\color[RGB]",
+            "{",
+            ",".join(map(str, (r, g, b))),
+            "}"
+        ])
 
     def get_sorted_submob_indices(self, submob_labels):
         def script_span_to_submob_range(script_span):
@@ -447,7 +458,7 @@ class MTex(VMobject):
                     labelled_tex_content
                 )
                 glyph_labels = [
-                    MTex.color_to_label(labelled_glyph.fill_color)
+                    self.color_to_label(labelled_glyph.fill_color)
                     for labelled_glyph in labelled_svg_glyphs
                 ]
                 mob = self.build_mobject(labelled_svg_glyphs, glyph_labels)
@@ -464,7 +475,7 @@ class MTex(VMobject):
             tex_content = self.get_tex_file_content(self.tex_string)
             svg_glyphs = self.tex_content_to_glyphs(tex_content)
             glyph_labels = [
-                MTex.color_to_label(labelled_glyph.fill_color)
+                self.color_to_label(labelled_glyph.fill_color)
                 for labelled_glyph in labelled_svg_glyphs
             ]
             mob = self.build_mobject(svg_glyphs, glyph_labels)
