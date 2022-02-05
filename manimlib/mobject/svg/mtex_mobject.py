@@ -583,6 +583,12 @@ class MTex(VMobject):
     def get_tex(self):
         return self.tex_string
 
+    def get_submob_tex(self):
+        return [
+            submob.get_tex()
+            for submob in self.submobjects
+        ]
+
     def get_specified_substrings(self):
         return self.__parser.get_specified_substrings()
 
