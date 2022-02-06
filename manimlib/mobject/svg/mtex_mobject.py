@@ -52,6 +52,7 @@ class _TexParser(object):
         self.break_up_by_scripts()
         self.break_up_by_double_braces()
         self.break_up_by_additional_substrings(additional_substrings)
+        self.tex_span_list.sort(key=lambda t: (t[0], -t[1]))
         self.specified_substrings = remove_list_redundancies(
             self.specified_substrings
         )
@@ -120,7 +121,7 @@ class _TexParser(object):
             if script_begin in brace_indices_dict.keys():
                 script_end = brace_indices_dict[script_begin] + 1
             else:
-                pattern = re.compile(r"\w|\\[a-zA-Z]+")
+                pattern = re.compile(r"[a-zA-Z0-9]|\\[a-zA-Z]+")
                 match_obj = pattern.match(tex_string, pos=script_begin)
                 if not match_obj:
                     script_name = {
@@ -208,22 +209,18 @@ class _TexParser(object):
 
     def get_containing_labels_dict(self):
         tex_span_list = self.tex_span_list
-        sorted_tex_spans = sorted(
-            tex_span_list,
-            key=lambda t: (t[0], -t[1])
-        )
         result = {
             tex_span: []
             for tex_span in tex_span_list
         }
         overlapping_tex_span_pairs = []
-        for index, span_0 in enumerate(sorted_tex_spans):
-            for span_1 in sorted_tex_spans[index:]:
+        for index_0, span_0 in enumerate(tex_span_list):
+            for index_1, span_1 in enumerate(tex_span_list[index_0:]):
                 if span_0[1] <= span_1[0]:
                     continue
                 if span_0[1] < span_1[1]:
                     overlapping_tex_span_pairs.append((span_0, span_1))
-                result[span_0].append(tex_span_list.index(span_1))
+                result[span_0].append(index_0 + index_1)
         if overlapping_tex_span_pairs:
             tex_string = self.tex_string
             log.error("Partially overlapping substrings detected:")
@@ -441,18 +438,12 @@ class MTex(VMobject):
     def generate_mobject(self):
         labelled_tex_string = self.__parser.get_labelled_tex_string()
         labelled_tex_content = self.get_tex_file_content(labelled_tex_string)
-        hash_val = hash(labelled_tex_content)
-        if hash_val not in TEX_HASH_TO_MOB_MAP:
-            TEX_HASH_TO_MOB_MAP[hash_val] = {
-                "plain": None,
-                "labelled": None
-            }
-        mob_dict = TEX_HASH_TO_MOB_MAP[hash_val]
+        hash_val = hash((labelled_tex_content, self.use_plain_tex))
+
+        if hash_val in TEX_HASH_TO_MOB_MAP:
+            return TEX_HASH_TO_MOB_MAP[hash_val]
 
         if not self.use_plain_tex:
-            if mob_dict["labelled"] is not None:
-                return mob_dict["labelled"]
-
             with display_during_execution(f"Writing \"{self.tex_string}\""):
                 labelled_svg_glyphs = self.tex_content_to_glyphs(
                     labelled_tex_content
@@ -462,11 +453,8 @@ class MTex(VMobject):
                     for labelled_glyph in labelled_svg_glyphs
                 ]
                 mob = self.build_mobject(labelled_svg_glyphs, glyph_labels)
-            mob_dict["labelled"] = mob
+            TEX_HASH_TO_MOB_MAP[hash_val] = mob
             return mob
-
-        if mob_dict["plain"] is not None:
-            return mob_dict["plain"]
 
         with display_during_execution(f"Writing \"{self.tex_string}\""):
             labelled_svg_glyphs = self.tex_content_to_glyphs(
@@ -479,7 +467,7 @@ class MTex(VMobject):
                 for labelled_glyph in labelled_svg_glyphs
             ]
             mob = self.build_mobject(svg_glyphs, glyph_labels)
-        mob_dict["plain"] = mob
+        TEX_HASH_TO_MOB_MAP[hash_val] = mob
         return mob
 
     def get_tex_file_content(self, tex_string):
