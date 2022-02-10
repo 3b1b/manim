@@ -849,6 +849,11 @@ class Polygon(VMobject):
         return self
 
 
+class Polyline(Polygon):
+    def init_points(self):
+        self.set_points_as_corners(self.vertices)
+
+
 class RegularPolygon(Polygon):
     CONFIG = {
         "start_angle": None,
