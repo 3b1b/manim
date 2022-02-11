@@ -167,19 +167,18 @@ class SVGMobject(VMobject):
 
     def get_mobject_from(self, shape):
         shape_class_to_func_map = {
-            se.Path: "path_to_mobject",
-            se.SimpleLine: "line_to_mobject",
-            se.Rect: "rect_to_mobject",
-            se.Circle: "circle_to_mobject",
-            se.Ellipse: "ellipse_to_mobject",
-            se.Polygon: "polygon_to_mobject",
-            se.Polyline: "polyline_to_mobject",
-            # se.Text: "text_to_mobject"  # TODO
+            se.Path: self.path_to_mobject,
+            se.SimpleLine: self.line_to_mobject,
+            se.Rect: self.rect_to_mobject,
+            se.Circle: self.circle_to_mobject,
+            se.Ellipse: self.ellipse_to_mobject,
+            se.Polygon: self.polygon_to_mobject,
+            se.Polyline: self.polyline_to_mobject,
+            # se.Text: self.text_to_mobject,  # TODO
         }
-        for shape_class, func_name in shape_class_to_func_map.items():
+        for shape_class, func in shape_class_to_func_map.items():
             if isinstance(shape, shape_class):
-                func_name = shape_class_to_func_map[shape_class]
-                mob = self.__getattribute__(func_name)(shape)
+                mob = func(shape)
                 self.apply_style_to_mobject(mob, shape)
                 return mob
 
@@ -302,17 +301,17 @@ class VMobjectFromSVGPath(VMobject):
 
     def handle_commands(self):
         segment_class_to_func_map = {
-            se.Move: ("start_new_path", ("end",)),
-            se.Close: ("close_path", ()),
-            se.Line: ("add_line_to", ("end",)),
-            se.QuadraticBezier: ("add_quadratic_bezier_curve_to", ("control", "end")),
-            se.CubicBezier: ("add_cubic_bezier_curve_to", ("control1", "control2", "end"))
+            se.Move: (self.start_new_path, ("end",)),
+            se.Close: (self.close_path, ()),
+            se.Line: (self.add_line_to, ("end",)),
+            se.QuadraticBezier: (self.add_quadratic_bezier_curve_to, ("control", "end")),
+            se.CubicBezier: (self.add_cubic_bezier_curve_to, ("control1", "control2", "end"))
         }
         for segment in self.path_obj:
             segment_class = segment.__class__
-            func_name, attr_names = segment_class_to_func_map[segment_class]
+            func, attr_names = segment_class_to_func_map[segment_class]
             points = [
                 _convert_point_to_3d(*segment.__getattribute__(attr_name))
                 for attr_name in attr_names
             ]
-            self.__getattribute__(func_name)(*points)
+            func(*points)
