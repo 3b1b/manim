@@ -28,6 +28,7 @@ def _get_neighbouring_pairs(iterable):
 class _TexSVG(SVGMobject):
     CONFIG = {
         "color": BLACK,
+        "stroke_width": 0,
         "height": None,
         "path_string_config": {
             "should_subdivide_sharp_curves": True,
@@ -449,7 +450,7 @@ class MTex(VMobject):
                     labelled_tex_content
                 )
                 glyph_labels = [
-                    self.color_to_label(labelled_glyph.fill_color)
+                    self.color_to_label(labelled_glyph.get_fill_color())
                     for labelled_glyph in labelled_svg_glyphs
                 ]
                 mob = self.build_mobject(labelled_svg_glyphs, glyph_labels)
@@ -463,7 +464,7 @@ class MTex(VMobject):
             tex_content = self.get_tex_file_content(self.tex_string)
             svg_glyphs = self.tex_content_to_glyphs(tex_content)
             glyph_labels = [
-                self.color_to_label(labelled_glyph.fill_color)
+                self.color_to_label(labelled_glyph.get_fill_color())
                 for labelled_glyph in labelled_svg_glyphs
             ]
             mob = self.build_mobject(svg_glyphs, glyph_labels)

@@ -18,5 +18,5 @@ validators
 ipython
 PyOpenGL
 manimpango>=0.2.0,<0.4.0
-cssselect2
 isosurfaces
+svgelements
