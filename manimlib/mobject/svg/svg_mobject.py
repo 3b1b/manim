@@ -1,12 +1,12 @@
+import os
+import re
+import hashlib
+import itertools as it
+
 import svgelements as se
 import numpy as np
-import itertools as it
-import os
-import hashlib
-import re
 
 from manimlib.constants import RIGHT
-
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.geometry import Polygon
