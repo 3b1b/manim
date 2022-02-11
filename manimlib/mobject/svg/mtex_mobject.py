@@ -2,7 +2,7 @@ import itertools as it
 import re
 from types import MethodType
 
-from manimlib.constants import BLACK
+from manimlib.constants import BLACK, WHITE
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
@@ -28,6 +28,7 @@ def _get_neighbouring_pairs(iterable):
 class _TexSVG(SVGMobject):
     CONFIG = {
         "color": BLACK,
+        "stroke_width": 0,
         "height": None,
         "path_string_config": {
             "should_subdivide_sharp_curves": True,

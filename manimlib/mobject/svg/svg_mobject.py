@@ -30,10 +30,15 @@ class SVGMobject(VMobject):
         "should_center": True,
         "height": 2,
         "width": None,
-        # Must be filled in in a subclass, or when called
+        # Must be filled in a subclass, or when called
         "file_name": None,
-        "stroke_width": 0.0,
-        "fill_opacity": 1.0,
+        "color": None,
+        "opacity": None,
+        "fill_color": None,
+        "fill_opacity": None,
+        "stroke_width": None,
+        "stroke_color": None,
+        "stroke_opacity": None,
         "path_string_config": {}
     }
 
@@ -59,9 +64,7 @@ class SVGMobject(VMobject):
         # Remove fill_color, fill_opacity,
         # stroke_width, stroke_color, stroke_opacity
         # as each submobject may have those values specified in svg file
-        self.set_stroke(
-            background=self.draw_stroke_behind_fill,
-        )
+        self.set_stroke(background=self.draw_stroke_behind_fill)
         self.set_gloss(self.gloss)
         self.set_flat_stroke(self.flat_stroke)
         return self
@@ -126,17 +129,21 @@ class SVGMobject(VMobject):
         return result
 
     def generate_context_values_from_config(self):
-        result = {
-            "fill-opacity": self.fill_opacity,
-            "stroke-width": self.stroke_width,
-            "stroke-opacity": self.stroke_opacity,
-        }
-        if self.color:
+        result = {}
+        if self.stroke_width is not None:
+            result["stroke-width"] = self.stroke_width
+        if self.color is not None:
             result["fill"] = result["stroke"] = self.color
-        if self.fill_color:
+        if self.fill_color is not None:
             result["fill"] = self.fill_color
-        if self.stroke_color:
+        if self.stroke_color is not None:
             result["stroke"] = self.stroke_color
+        if self.opacity is not None:
+            result["fill-opacity"] = result["stroke-opacity"] = self.opacity
+        if self.fill_opacity is not None:
+            result["fill-opacity"] = self.fill_opacity
+        if self.stroke_opacity is not None:
+            result["stroke-opacity"] = self.stroke_opacity
         return result
 
     def get_mobjects_from(self, shape):

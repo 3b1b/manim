@@ -54,11 +54,18 @@ class SingleStringTex(VMobject):
             sm.copy()
             for sm in tex_string_with_color_to_mob_map[(self.color, tex_string)]
         ))
+        self.init_colors()
 
         if self.height is None:
             self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
+
+    def init_colors(self):
+        self.set_stroke(background=self.draw_stroke_behind_fill)
+        self.set_gloss(self.gloss)
+        self.set_flat_stroke(self.flat_stroke)
+        return self
 
     def get_tex_file_body(self, tex_string):
         new_tex = self.get_modified_expression(tex_string)
