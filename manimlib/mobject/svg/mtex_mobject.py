@@ -2,7 +2,7 @@ import itertools as it
 import re
 from types import MethodType
 
-from manimlib.constants import BLACK, WHITE
+from manimlib.constants import BLACK
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
