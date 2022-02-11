@@ -260,7 +260,7 @@ class TexturedSurface(Surface):
         super().init_uniforms()
         self.uniforms["num_textures"] = self.num_textures
 
-    def init_colors(self, override=True):
+    def init_colors(self):
         self.data["opacity"] = np.array([self.uv_surface.data["rgbas"][:, 3]])
 
     def set_opacity(self, opacity, recurse=True):

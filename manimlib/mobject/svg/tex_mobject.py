@@ -54,7 +54,6 @@ class SingleStringTex(VMobject):
             sm.copy()
             for sm in tex_string_with_color_to_mob_map[(self.color, tex_string)]
         ))
-        self.init_colors(override=False)
 
         if self.height is None:
             self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)

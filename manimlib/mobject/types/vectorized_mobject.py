@@ -90,7 +90,7 @@ class VMobject(Mobject):
         })
 
     # Colors
-    def init_colors(self, override=True):
+    def init_colors(self):
         self.set_fill(
             color=self.fill_color or self.color,
             opacity=self.fill_opacity,
@@ -103,9 +103,6 @@ class VMobject(Mobject):
         )
         self.set_gloss(self.gloss)
         self.set_flat_stroke(self.flat_stroke)
-        if not override:
-            for submobjects in self.submobjects:
-                submobjects.init_colors(override=False)
         return self
 
     def set_rgba_array(self, rgba_array, name=None, recurse=False):

@@ -608,8 +608,8 @@ class Arrow(Line):
         self.insert_tip_anchor()
         return self
 
-    def init_colors(self, override=True):
-        super().init_colors(override)
+    def init_colors(self):
+        super().init_colors()
         self.create_tip_with_stroke_width()
 
     def get_arc_length(self):
