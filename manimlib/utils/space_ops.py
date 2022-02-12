@@ -1,7 +1,11 @@
-import numpy as np
+from __future__ import annotations
+
+import math
 import operator as op
 from functools import reduce
-import math
+from typing import Callable, Iterable, Sequence
+
+import numpy as np
 from mapbox_earcut import triangulate_float32 as earcut
 
 from manimlib.constants import RIGHT
@@ -13,7 +17,7 @@ from manimlib.utils.iterables import adjacent_pairs
 from manimlib.utils.simple_functions import clip
 
 
-def cross(v1, v2):
+def cross(v1: np.ndarray, v2: np.ndarray) -> list[np.ndarray]:
     return [
         v1[1] * v2[2] - v1[2] * v2[1],
         v1[2] * v2[0] - v1[0] * v2[2],
@@ -21,7 +25,7 @@ def cross(v1, v2):
     ]
 
 
-def get_norm(vect):
+def get_norm(vect: np.ndarray) -> np.flaoting:
     return sum((x**2 for x in vect))**0.5
 
 
@@ -29,7 +33,7 @@ def get_norm(vect):
 # TODO, implement quaternion type
 
 
-def quaternion_mult(*quats):
+def quaternion_mult(*quats: Sequence[float]) -> list[float]:
     if len(quats) == 0:
         return [1, 0, 0, 0]
     result = quats[0]
@@ -45,13 +49,19 @@ def quaternion_mult(*quats):
     return result
 
 
-def quaternion_from_angle_axis(angle, axis, axis_normalized=False):
+def quaternion_from_angle_axis(
+    angle: float,
+    axis: np.ndarray,
+    axis_normalized: bool = False
+) -> list[float]:
     if not axis_normalized:
         axis = normalize(axis)
     return [math.cos(angle / 2), *(math.sin(angle / 2) * axis)]
 
 
-def angle_axis_from_quaternion(quaternion):
+def angle_axis_from_quaternion(
+    quaternion: Sequence[float]
+) -> tuple[float, np.ndarray]:
     axis = normalize(
         quaternion[1:],
         fall_back=[1, 0, 0]
@@ -62,14 +72,18 @@ def angle_axis_from_quaternion(quaternion):
     return angle, axis
 
 
-def quaternion_conjugate(quaternion):
+def quaternion_conjugate(quaternion: Iterable) -> list:
     result = list(quaternion)
     for i in range(1, len(result)):
         result[i] *= -1
     return result
 
 
-def rotate_vector(vector, angle, axis=OUT):
+def rotate_vector(
+    vector: Iterable, 
+    angle: float, 
+    axis: np.ndarray = OUT
+) -> np.ndarray | list[float]:
     if len(vector) == 2:
         # Use complex numbers...because why not
         z = complex(*vector) * np.exp(complex(0, angle))
@@ -88,13 +102,13 @@ def rotate_vector(vector, angle, axis=OUT):
     return result
 
 
-def thick_diagonal(dim, thickness=2):
+def thick_diagonal(dim: int, thickness: int = 2) -> np.ndarray:
     row_indices = np.arange(dim).repeat(dim).reshape((dim, dim))
     col_indices = np.transpose(row_indices)
     return (np.abs(row_indices - col_indices) < thickness).astype('uint8')
 
 
-def rotation_matrix_transpose_from_quaternion(quat):
+def rotation_matrix_transpose_from_quaternion(quat: Iterable) -> list[list[float]]:
     quat_inv = quaternion_conjugate(quat)
     return [
         quaternion_mult(quat, [0, *basis], quat_inv)[1:]
@@ -106,11 +120,11 @@ def rotation_matrix_transpose_from_quaternion(quat):
     ]
 
 
-def rotation_matrix_from_quaternion(quat):
+def rotation_matrix_from_quaternion(quat: Iterable) -> np.ndarray:
     return np.transpose(rotation_matrix_transpose_from_quaternion(quat))
 
 
-def rotation_matrix_transpose(angle, axis):
+def rotation_matrix_transpose(angle: float, axis: np.ndarray) -> list[list[flaot]]:
     if axis[0] == 0 and axis[1] == 0:
         # axis = [0, 0, z] case is common enough it's worth
         # having a shortcut
@@ -126,14 +140,14 @@ def rotation_matrix_transpose(angle, axis):
     return rotation_matrix_transpose_from_quaternion(quat)
 
 
-def rotation_matrix(angle, axis):
+def rotation_matrix(angle: float, axis: np.ndarray) -> np.ndarray:
     """
     Rotation in R^3 about a specified axis of rotation.
     """
     return np.transpose(rotation_matrix_transpose(angle, axis))
 
 
-def rotation_about_z(angle):
+def rotation_about_z(angle: float) -> list[list[float]]:
     return [
         [math.cos(angle), -math.sin(angle), 0],
         [math.sin(angle), math.cos(angle), 0],
@@ -141,7 +155,7 @@ def rotation_about_z(angle):
     ]
 
 
-def z_to_vector(vector):
+def z_to_vector(vector: np.ndarray) -> np.ndarray:
     """
     Returns some matrix in SO(3) which takes the z-axis to the
     (normalized) vector provided as an argument
@@ -156,7 +170,7 @@ def z_to_vector(vector):
     return rotation_matrix(angle, axis=axis)
 
 
-def rotation_between_vectors(v1, v2):
+def rotation_between_vectors(v1, v2) -> np.ndarray:
     if np.all(np.isclose(v1, v2)):
         return np.identity(3)
     return rotation_matrix(
@@ -165,14 +179,14 @@ def rotation_between_vectors(v1, v2):
     )
 
 
-def angle_of_vector(vector):
+def angle_of_vector(vector: Sequence[float]) -> float:
     """
     Returns polar coordinate theta when vector is project on xy plane
     """
     return np.angle(complex(*vector[:2]))
 
 
-def angle_between_vectors(v1, v2):
+def angle_between_vectors(v1: np.ndarray, v2: np.ndarray) -> float:
     """
     Returns the angle between two 3D vectors.
     This angle will always be btw 0 and pi
@@ -180,12 +194,15 @@ def angle_between_vectors(v1, v2):
     return math.acos(clip(np.dot(normalize(v1), normalize(v2)), -1, 1))
 
 
-def project_along_vector(point, vector):
+def project_along_vector(point: np.ndarray, vector: np.ndarray) -> np.ndarray:
     matrix = np.identity(3) - np.outer(vector, vector)
     return np.dot(point, matrix.T)
 
 
-def normalize(vect, fall_back=None):
+def normalize(
+    vect: np.ndarray,
+    fall_back: np.ndarray | None = None
+) -> np.ndarray:
     norm = get_norm(vect)
     if norm > 0:
         return np.array(vect) / norm
@@ -195,7 +212,10 @@ def normalize(vect, fall_back=None):
         return np.zeros(len(vect))
 
 
-def normalize_along_axis(array, axis, fall_back=None):
+def normalize_along_axis(
+    array: np.ndarray,
+    axis: np.ndarray,
+) -> np.ndarray:
     norms = np.sqrt((array * array).sum(axis))
     norms[norms == 0] = 1
     buffed_norms = np.repeat(norms, array.shape[axis]).reshape(array.shape)
@@ -203,7 +223,11 @@ def normalize_along_axis(array, axis, fall_back=None):
     return array
 
 
-def get_unit_normal(v1, v2, tol=1e-6):
+def get_unit_normal(
+    v1: np.ndarray,
+    v2: np.ndarray,
+    tol: float=1e-6
+) -> np.ndarray:
     v1 = normalize(v1)
     v2 = normalize(v2)
     cp = cross(v1, v2)
@@ -221,7 +245,7 @@ def get_unit_normal(v1, v2, tol=1e-6):
 ###
 
 
-def compass_directions(n=4, start_vect=RIGHT):
+def compass_directions(n: int = 4, start_vect: np.ndarray = RIGHT) -> np.ndarray:
     angle = TAU / n
     return np.array([
         rotate_vector(start_vect, k * angle)
@@ -229,28 +253,36 @@ def compass_directions(n=4, start_vect=RIGHT):
     ])
 
 
-def complex_to_R3(complex_num):
+def complex_to_R3(complex_num: complex) -> np.ndarray:
     return np.array((complex_num.real, complex_num.imag, 0))
 
 
-def R3_to_complex(point):
+def R3_to_complex(point: Sequence[float]) -> complex:
     return complex(*point[:2])
 
 
-def complex_func_to_R3_func(complex_func):
+def complex_func_to_R3_func(
+    complex_func: Callable[[complex], complex]
+) -> Callable[[np.ndarray], np.ndarray]:
     return lambda p: complex_to_R3(complex_func(R3_to_complex(p)))
 
 
-def center_of_mass(points):
+def center_of_mass(points: Iterable[Sequence[float]]) -> np.ndarray:
     points = [np.array(point).astype("float") for point in points]
     return sum(points) / len(points)
 
 
-def midpoint(point1, point2):
+def midpoint(
+    point1: Sequence[float],
+    point2: Sequence[float]
+) -> np.ndarray:
     return center_of_mass([point1, point2])
 
 
-def line_intersection(line1, line2):
+def line_intersection(
+    line1: Sequence[Sequence[float]],
+    line2: Sequence[Sequence[float]]
+) -> np.ndarray:
     """
     return intersection point of two lines,
     each defined with a pair of vectors determining
@@ -271,7 +303,13 @@ def line_intersection(line1, line2):
     return np.array([x, y, 0])
 
 
-def find_intersection(p0, v0, p1, v1, threshold=1e-5):
+def find_intersection(
+    p0: Iterable[float],
+    v0: Iterable[float],
+    p1: Iterable[float],
+    v1: Iterable[float],
+    threshold: float = 1e-5
+) -> np.ndarray:
     """
     Return the intersection of a line passing through p0 in direction v0
     with one passing through p1 in direction v1.  (Or array of intersections
@@ -300,7 +338,11 @@ def find_intersection(p0, v0, p1, v1, threshold=1e-5):
     return p0 + ratio * v0
 
 
-def get_closest_point_on_line(a, b, p):
+def get_closest_point_on_line(
+    a: np.ndarray,
+    b: np.ndarray,
+    p: np.ndarray
+) -> np.ndarray:
     """
         It returns point x such that
         x is on line ab and xp is perpendicular to ab.
@@ -315,7 +357,7 @@ def get_closest_point_on_line(a, b, p):
     return ((t * a) + ((1 - t) * b))
 
 
-def get_winding_number(points):
+def get_winding_number(points: Iterable[float]) -> float:
     total_angle = 0
     for p1, p2 in adjacent_pairs(points):
         d_angle = angle_of_vector(p2) - angle_of_vector(p1)
@@ -326,14 +368,18 @@ def get_winding_number(points):
 
 ##
 
-def cross2d(a, b):
+def cross2d(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     if len(a.shape) == 2:
         return a[:, 0] * b[:, 1] - a[:, 1] * b[:, 0]
     else:
         return a[0] * b[1] - b[0] * a[1]
 
 
-def tri_area(a, b, c):
+def tri_area(
+    a: Sequence[float],
+    b: Sequence[float],
+    c: Sequence[float]
+) -> float:
     return 0.5 * abs(
         a[0] * (b[1] - c[1]) +
         b[0] * (c[1] - a[1]) +
@@ -341,7 +387,12 @@ def tri_area(a, b, c):
     )
 
 
-def is_inside_triangle(p, a, b, c):
+def is_inside_triangle(
+    p: np.ndarray,
+    a: np.ndarray,
+    b: np.ndarray,
+    c: np.ndarray
+) -> bool:
     """
     Test if point p is inside triangle abc
     """
@@ -353,12 +404,12 @@ def is_inside_triangle(p, a, b, c):
     return np.all(crosses > 0) or np.all(crosses < 0)
 
 
-def norm_squared(v):
+def norm_squared(v: Sequence[float]) -> float:
     return v[0] * v[0] + v[1] * v[1] + v[2] * v[2]
 
 
 # TODO, fails for polygons drawn over themselves
-def earclip_triangulation(verts, ring_ends):
+def earclip_triangulation(verts: np.ndarray, ring_ends: list[int]) -> list:
     """
     Returns a list of indices giving a triangulation
     of a polygon, potentially with holes
