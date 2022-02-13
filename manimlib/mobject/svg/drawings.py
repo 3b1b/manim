@@ -318,6 +318,9 @@ class Bubble(SVGMobject):
         self.content = Mobject()
         self.refresh_triangulation()
 
+    def init_colors(override=True):
+        super().init_colors(override=override)
+
     def get_tip(self):
         # TODO, find a better way
         return self.get_corner(DOWN + self.direction) - 0.6 * self.direction
