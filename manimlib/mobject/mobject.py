@@ -43,7 +43,7 @@ Self = TypeVar("Self", bound="Mobject")
 TimeBasedUpdater = Callable[["Mobject", float], None]
 NonTimeUpdater = Callable[["Mobject"], None]
 Updater = Union[TimeBasedUpdater, NonTimeUpdater]
-Color = Union[str, colour.Color, Sequence[float]]
+ManimColor = Union[str, colour.Color, Sequence[float]]
 
 
 class Mobject(object):
@@ -1024,7 +1024,7 @@ class Mobject(object):
 
     def set_rgba_array_by_color(
         self,
-        color: Color | None = None,
+        color: ManimColor | None = None,
         opacity: float | None = None,
         name: str = "rgbas",
         recurse: bool = True
@@ -1056,7 +1056,7 @@ class Mobject(object):
                 mob.data[name] = rgbas.copy()
         return self
 
-    def set_color(self, color: Color, opacity: float | None = None, recurse: bool = True):
+    def set_color(self, color: ManimColor, opacity: float | None = None, recurse: bool = True):
         self.set_rgba_array_by_color(color, opacity, recurse=False)
         # Recurse to submobjects differently from how set_rgba_array_by_color
         # in case they implement set_color differently
@@ -1078,11 +1078,11 @@ class Mobject(object):
     def get_opacity(self) -> float:
         return self.data["rgbas"][0, 3]
 
-    def set_color_by_gradient(self, *colors: Color):
+    def set_color_by_gradient(self, *colors: ManimColor):
         self.set_submobject_colors_by_gradient(*colors)
         return self
 
-    def set_submobject_colors_by_gradient(self, *colors: Color):
+    def set_submobject_colors_by_gradient(self, *colors: ManimColor):
         if len(colors) == 0:
             raise Exception("Need at least one color")
         elif len(colors) == 1:
@@ -1127,7 +1127,7 @@ class Mobject(object):
 
     def add_background_rectangle(
         self,
-        color: Color | None = None,
+        color: ManimColor | None = None,
         opacity: float = 0.75,
         **kwargs
     ):

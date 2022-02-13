@@ -13,7 +13,7 @@ from manimlib.utils.iterables import resize_with_interpolation
 from manimlib.utils.iterables import resize_array
 
 
-Color = Union[str, colour.Color, Sequence[float]]
+ManimColor = Union[str, colour.Color, Sequence[float]]
 
 
 class PMobject(Mobject):
@@ -43,7 +43,7 @@ class PMobject(Mobject):
         self,
         points: npt.ArrayLike,
         rgbas: np.ndarray | None = None,
-        color: Color | None = None,
+        color: ManimColor | None = None,
         opacity: float | None = None
     ):
         """
@@ -64,7 +64,7 @@ class PMobject(Mobject):
         self.data["rgbas"][-len(new_rgbas):] = new_rgbas
         return self
 
-    def set_color_by_gradient(self, *colors: Color):
+    def set_color_by_gradient(self, *colors: ManimColor):
         self.data["rgbas"] = np.array(list(map(
             color_to_rgba,
             color_gradient(colors, self.get_num_points())

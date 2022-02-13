@@ -34,7 +34,7 @@ from manimlib.utils.space_ops import z_to_vector
 from manimlib.shader_wrapper import ShaderWrapper
 
 
-Color = Union[str, colour.Color, Sequence[float]]
+ManimColor = Union[str, colour.Color, Sequence[float]]
 
 
 class VMobject(Mobject):
@@ -130,7 +130,7 @@ class VMobject(Mobject):
 
     def set_fill(
         self,
-        color: Color | None = None,
+        color: ManimColor | None = None,
         opacity: float | None = None,
         recurse: bool = True
     ):
@@ -139,7 +139,7 @@ class VMobject(Mobject):
 
     def set_stroke(
         self,
-        color: Color | None = None,
+        color: ManimColor | None = None,
         width: float | npt.ArrayLike | None = None,
         opacity: float | None = None,
         background: bool | None = None,
@@ -162,7 +162,7 @@ class VMobject(Mobject):
 
     def set_backstroke(
         self,
-        color: Color = BLACK,
+        color: ManimColor = BLACK,
         width: float | npt.ArrayLike = 3,
         background: bool = True
     ):
@@ -177,10 +177,10 @@ class VMobject(Mobject):
 
     def set_style(
         self,
-        fill_color: Color | None = None,
+        fill_color: ManimColor | None = None,
         fill_opacity: float | None = None,
         fill_rgba: npt.ArrayLike | None = None,
-        stroke_color: Color | None = None,
+        stroke_color: ManimColor | None = None,
         stroke_opacity: float | None = None,
         stroke_rgba: npt.ArrayLike | None = None,
         stroke_width: float | npt.ArrayLike | None = None,
@@ -247,7 +247,7 @@ class VMobject(Mobject):
                 sm1.match_style(sm2)
         return self
 
-    def set_color(self, color: Color, recurse: bool = True):
+    def set_color(self, color: ManimColor, recurse: bool = True):
         self.set_fill(color, recurse=recurse)
         self.set_stroke(color, recurse=recurse)
         return self
