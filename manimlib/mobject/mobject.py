@@ -1686,13 +1686,21 @@ class Mobject(object):
     def init_event_listners(self):
         self.event_listners: list[EventListner] = []
 
-    def add_event_listner(self, event_type: EventType, event_callback: Callable):
+    def add_event_listner(
+        self,
+        event_type: EventType,
+        event_callback: Callable[[Mobject, dict[str]]]
+    ):
         event_listner = EventListner(self, event_type, event_callback)
         self.event_listners.append(event_listner)
         EVENT_DISPATCHER.add_listner(event_listner)
         return self
 
-    def remove_event_listner(self, event_type: EventType, event_callback: Callable):
+    def remove_event_listner(
+        self,
+        event_type: EventType,
+        event_callback: Callable[[Mobject, dict[str]]]
+    ):
         event_listner = EventListner(self, event_type, event_callback)
         while event_listner in self.event_listners:
             self.event_listners.remove(event_listner)
