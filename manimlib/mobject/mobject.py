@@ -4,7 +4,7 @@ import random
 import sys
 import moderngl
 from functools import wraps
-from collections import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 
@@ -109,8 +109,8 @@ class Mobject(object):
             "reflectiveness": self.reflectiveness,
         }
 
-    def init_colors(self, override=True):
-        self.set_color(self.color, self.opacity, override)
+    def init_colors(self):
+        self.set_color(self.color, self.opacity)
 
     def init_points(self):
         # Typically implemented in subclass, unlpess purposefully left blank

@@ -71,6 +71,8 @@ class Text(SVGMobject):
         PangoUtils.remove_last_M(file_name)
         self.remove_empty_path(file_name)
         SVGMobject.__init__(self, file_name, **kwargs)
+        if self.color:
+            self.set_fill(self.color)
         self.text = text
         if self.disable_ligatures:
             self.apply_space_chars()
@@ -84,9 +86,6 @@ class Text(SVGMobject):
         # anti-aliasing
         if self.height is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
-
-    def init_colors(self, override=True):
-        super().init_colors(override=override)
 
     def remove_empty_path(self, file_name):
         with open(file_name, 'r') as fpr:
