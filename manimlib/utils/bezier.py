@@ -14,7 +14,9 @@ from manimlib.logger import log
 CLOSED_THRESHOLD = 0.001
 T = TypeVar("T")
 
-def bezier(points: Iterable) -> Callable[[float], float | Iterable]:
+def bezier(
+    points: Iterable[float | np.ndarray]
+) -> Callable[[float], float | np.ndarray]:
     n = len(points) - 1
 
     def result(t):
