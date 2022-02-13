@@ -78,9 +78,11 @@ def parse_style(style, default_style):
     manim_style = {}
     fill_default_values(style, default_style)
 
-    manim_style["fill_opacity"] = float(style["fill-opacity"])
-    manim_style["stroke_opacity"] = float(style["stroke-opacity"])
-    manim_style["stroke_width"] = float(style["stroke-width"])
+    for key in ("fill-opacity", "stroke-opacity", "stroke-width"):
+        value = style[key]
+        if isinstance(value, str) and value.endswith("px"):
+            value = float(value[:-2]) * 0  # HACKY, need to fix
+        manim_style[key.replace("-", "_")] = float(value)
 
     if style["fill"] == "none":
         manim_style["fill_opacity"] = 0
