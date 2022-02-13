@@ -6,6 +6,7 @@ from functools import reduce
 from typing import Callable, Iterable, Sequence
 
 import numpy as np
+import numpy.typing as npt
 from mapbox_earcut import triangulate_float32 as earcut
 
 from manimlib.constants import RIGHT
@@ -124,7 +125,7 @@ def rotation_matrix_from_quaternion(quat: Iterable) -> np.ndarray:
     return np.transpose(rotation_matrix_transpose_from_quaternion(quat))
 
 
-def rotation_matrix_transpose(angle: float, axis: np.ndarray) -> list[list[flaot]]:
+def rotation_matrix_transpose(angle: float, axis: np.ndarray) -> list[list[float]]:
     if axis[0] == 0 and axis[1] == 0:
         # axis = [0, 0, z] case is common enough it's worth
         # having a shortcut
@@ -267,7 +268,7 @@ def complex_func_to_R3_func(
     return lambda p: complex_to_R3(complex_func(R3_to_complex(p)))
 
 
-def center_of_mass(points: Iterable[Sequence[float]]) -> np.ndarray:
+def center_of_mass(points: Iterable[npt.ArrayLike]) -> np.ndarray:
     points = [np.array(point).astype("float") for point in points]
     return sum(points) / len(points)
 
@@ -304,10 +305,10 @@ def line_intersection(
 
 
 def find_intersection(
-    p0: Iterable[float],
-    v0: Iterable[float],
-    p1: Iterable[float],
-    v1: Iterable[float],
+    p0: npt.ArrayLike,
+    v0: npt.ArrayLike,
+    p1: npt.ArrayLike,
+    v1: npt.ArrayLike,
     threshold: float = 1e-5
 ) -> np.ndarray:
     """

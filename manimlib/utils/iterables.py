@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import itertools as it
-from typing import Callable, Iterable, TypeVar
+from typing import Callable, Iterable, Sequence, TypeVar
 
 import numpy as np
 
@@ -119,8 +119,8 @@ def resize_with_interpolation(nparray: np.ndarray, length: int) -> np.ndarray:
 
 
 def make_even(
-    iterable_1: Iterable[T], 
-    iterable_2: Iterable[S]
+    iterable_1: Sequence[T], 
+    iterable_2: Sequence[S]
 ) -> tuple[list[T], list[S]]:
     len1 = len(iterable_1)
     len2 = len(iterable_2)

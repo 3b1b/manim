@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import Iterable, Callable, TypeVar
+from typing import Iterable, Callable, TypeVar, Sequence
 
 from scipy import linalg
 import numpy as np
+import numpy.typing as npt
 
 from manimlib.utils.simple_functions import choose
 from manimlib.utils.space_ops import find_intersection
@@ -29,7 +30,7 @@ def bezier(
 
 
 def partial_bezier_points(
-    points: Iterable[np.ndarray],
+    points: Sequence[np.ndarray],
     a: float,
     b: float
 ) -> list[float]:
@@ -59,7 +60,7 @@ def partial_bezier_points(
 # Shortened version of partial_bezier_points just for quadratics,
 # since this is called a fair amount
 def partial_quadratic_bezier_points(
-    points: Iterable[np.ndarray],
+    points: Sequence[np.ndarray],
     a: float,
     b: float
 ) -> list[float]:
@@ -148,7 +149,7 @@ def match_interpolate(
 
 
 def get_smooth_quadratic_bezier_handle_points(
-    points: Iterable[np.ndarray]
+    points: Sequence[np.ndarray]
 ) -> np.ndarray | list[np.ndarray]:
     """
     Figuring out which bezier curves most smoothly connect a sequence of points.
@@ -182,7 +183,7 @@ def get_smooth_quadratic_bezier_handle_points(
 
 
 def get_smooth_cubic_bezier_handle_points(
-    points: Iterable[np.ndarray]
+    points: npt.ArrayLike
 ) -> tuple[np.ndarray, np.ndarray]:
     points = np.array(points)
     num_handles = len(points) - 1
@@ -261,17 +262,17 @@ def diag_to_matrix(
     return matrix
 
 
-def is_closed(points: Iterable[np.ndarray]) -> bool:
+def is_closed(points: Sequence[np.ndarray]) -> bool:
     return np.allclose(points[0], points[-1])
 
 
 # Given 4 control points for a cubic bezier curve (or arrays of such)
 # return control points for 2 quadratics (or 2n quadratics) approximating them.
 def get_quadratic_approximation_of_cubic(
-    a0: np.ndarray | Iterable[np.ndarray],
-    h0: np.ndarray | Iterable[np.ndarray],
-    h1: np.ndarray | Iterable[np.ndarray],
-    a1: np.ndarray | Iterable[np.ndarray]
+    a0: npt.ArrayLike,
+    h0: npt.ArrayLike,
+    h1: npt.ArrayLike,
+    a1: npt.ArrayLike
 ) -> np.ndarray:
     a0 = np.array(a0, ndmin=2)
     h0 = np.array(h0, ndmin=2)
