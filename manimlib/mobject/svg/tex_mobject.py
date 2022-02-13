@@ -36,20 +36,19 @@ class SingleStringTex(VMobject):
         assert(isinstance(tex_string, str))
         self.tex_string = tex_string
         if tex_string not in tex_string_with_color_to_mob_map:
-            with display_during_execution(f" Writing \"{tex_string}\""):
-                full_tex = self.get_tex_file_body(tex_string)
-                filename = tex_to_svg_file(full_tex)
-                svg_mob = SVGMobject(
-                    filename,
-                    height=None,
-                    color=self.color,
-                    stroke_width=self.stroke_width,
-                    path_string_config={
-                        "should_subdivide_sharp_curves": True,
-                        "should_remove_null_curves": True,
-                    }
-                )
-                tex_string_with_color_to_mob_map[(self.color, tex_string)] = svg_mob
+            full_tex = self.get_tex_file_body(tex_string)
+            filename = tex_to_svg_file(full_tex)
+            svg_mob = SVGMobject(
+                filename,
+                height=None,
+                color=self.color,
+                stroke_width=self.stroke_width,
+                path_string_config={
+                    "should_subdivide_sharp_curves": True,
+                    "should_remove_null_curves": True,
+                }
+            )
+            tex_string_with_color_to_mob_map[(self.color, tex_string)] = svg_mob
         self.add(*(
             sm.copy()
             for sm in tex_string_with_color_to_mob_map[(self.color, tex_string)]
