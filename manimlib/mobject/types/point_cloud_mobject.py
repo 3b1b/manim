@@ -21,6 +21,8 @@ class PMobject(Mobject):
         return self
 
     def set_points(self, points):
+        if len(points) == 0:
+            points = np.zeros((0, 3))
         super().set_points(points)
         self.resize_points(len(points))
         return self
@@ -34,14 +36,18 @@ class PMobject(Mobject):
         if color is not None:
             if opacity is None:
                 opacity = self.data["rgbas"][-1, 3]
-            new_rgbas = np.repeat(
+            rgbas = np.repeat(
                 [color_to_rgba(color, opacity)],
                 len(points),
                 axis=0
             )
-        elif rgbas is not None:
-            new_rgbas = rgbas
-        self.data["rgbas"][-len(new_rgbas):] = new_rgbas
+        if rgbas is not None:
+            self.data["rgbas"][-len(rgbas):] = rgbas
+        return self
+
+    def add_point(self, point, rgba=None, color=None, opacity=None):
+        rgbas = None if rgba is None else [rgba]
+        self.add_points([point], rgbas, color, opacity)
         return self
 
     def set_color_by_gradient(self, *colors):
