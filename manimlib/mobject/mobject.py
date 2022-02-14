@@ -39,7 +39,6 @@ from manimlib.event_handler.event_listner import EventListner
 from manimlib.event_handler.event_type import EventType
 
 
-Self = TypeVar("Self", bound="Mobject")
 TimeBasedUpdater = Callable[["Mobject", float], None]
 NonTimeUpdater = Callable[["Mobject"], None]
 Updater = Union[TimeBasedUpdater, NonTimeUpdater]
@@ -77,9 +76,9 @@ class Mobject(object):
 
     def __init__(self, **kwargs):
         digest_config(self, kwargs)
-        self.submobjects: list["Mobject"] = []
-        self.parents: list["Mobject"] = []
-        self.family: list["Mobject"] = [self]
+        self.submobjects: list[Mobject] = []
+        self.parents: list[Mobject] = []
+        self.family: list[Mobject] = [self]
         self.locked_data_keys: set[str] = set()
         self.needs_new_bounding_box: bool = True
 
@@ -97,11 +96,11 @@ class Mobject(object):
     def __str__(self):
         return self.__class__.__name__
 
-    def __add__(self, other: "Mobject") -> "Mobject":
+    def __add__(self, other: Mobject) -> Mobject:
         assert(isinstance(other, Mobject))
         return self.get_group_class()(self, other)
 
-    def __mul__(self, other: int) -> "Mobject":
+    def __mul__(self, other: int) -> Mobject:
         assert(isinstance(other, int))
         return self.replicate(other)
 
@@ -208,7 +207,7 @@ class Mobject(object):
 
     # Others related to points
 
-    def match_points(self, mobject: "Mobject"):
+    def match_points(self, mobject: Mobject):
         self.set_points(mobject.get_points())
         return self
 
@@ -311,7 +310,7 @@ class Mobject(object):
     def family_members_with_points(self):
         return [m for m in self.get_family() if m.has_points()]
 
-    def add(self, *mobjects: "Mobject"):
+    def add(self, *mobjects: Mobject):
         if self in mobjects:
             raise Exception("Mobject cannot contain self")
         for mobject in mobjects:
@@ -322,7 +321,7 @@ class Mobject(object):
         self.assemble_family()
         return self
 
-    def remove(self, *mobjects: "Mobject"):
+    def remove(self, *mobjects: Mobject):
         for mobject in mobjects:
             if mobject in self.submobjects:
                 self.submobjects.remove(mobject)
@@ -331,11 +330,11 @@ class Mobject(object):
         self.assemble_family()
         return self
 
-    def add_to_back(self, *mobjects: "Mobject"):
+    def add_to_back(self, *mobjects: Mobject):
         self.set_submobjects(list_update(mobjects, self.submobjects))
         return self
 
-    def replace_submobject(self, index: int, new_submob: "Mobject"):
+    def replace_submobject(self, index: int, new_submob: Mobject):
         old_submob = self.submobjects[index]
         if self in old_submob.parents:
             old_submob.parents.remove(self)
@@ -343,12 +342,12 @@ class Mobject(object):
         self.assemble_family()
         return self
 
-    def insert_submobject(self, index: int, new_submob: "Mobject"):
+    def insert_submobject(self, index: int, new_submob: Mobject):
         self.submobjects.insert(index, new_submob)
         self.assemble_family()
         return self
 
-    def set_submobjects(self, submobject_list: list["Mobject"]):
+    def set_submobjects(self, submobject_list: list[Mobject]):
         self.remove(*self.submobjects)
         self.add(*submobject_list)
         return self
@@ -441,7 +440,7 @@ class Mobject(object):
     def sort(
         self,
         point_to_num_func: Callable[[np.ndarray], float] = lambda p: p[0],
-        submob_func: Callable[["Mobject"]] | None = None
+        submob_func: Callable[[Mobject]] | None = None
     ):
         if submob_func is not None:
             self.submobjects.sort(key=submob_func)
@@ -596,7 +595,7 @@ class Mobject(object):
                 submob.clear_updaters()
         return self
 
-    def match_updaters(self, mobject: "Mobject"):
+    def match_updaters(self, mobject: Mobject):
         self.clear_updaters()
         for updater in mobject.get_updaters():
             self.add_updater(updater)
@@ -798,11 +797,11 @@ class Mobject(object):
 
     def next_to(
         self,
-        mobject_or_point: "Mobject" | np.ndarray,
+        mobject_or_point: Mobject | np.ndarray,
         direction: np.ndarray = RIGHT,
         buff: float = DEFAULT_MOBJECT_TO_MOBJECT_BUFFER,
         aligned_edge: np.ndarray = ORIGIN,
-        submobject_to_align: "Mobject" | None = None,
+        submobject_to_align: Mobject | None = None,
         index_of_submobject_to_align: int | slice | None = None,
         coor_mask: np.ndarray = np.array([1, 1, 1]),
     ):
@@ -938,7 +937,7 @@ class Mobject(object):
 
     def move_to(
         self,
-        point_or_mobject: "Mobject" | np.ndarray,
+        point_or_mobject: Mobject | np.ndarray,
         aligned_edge: np.ndarray = ORIGIN,
         coor_mask: np.ndarray = np.array([1, 1, 1])
     ):
@@ -950,7 +949,7 @@ class Mobject(object):
         self.shift((target - point_to_align) * coor_mask)
         return self
 
-    def replace(self, mobject: "Mobject", dim_to_match: int = 0, stretch: bool = False):
+    def replace(self, mobject: Mobject, dim_to_match: int = 0, stretch: bool = False):
         if not mobject.get_num_points() and not mobject.submobjects:
             self.scale(0)
             return self
@@ -968,7 +967,7 @@ class Mobject(object):
 
     def surround(
         self,
-        mobject: "Mobject",
+        mobject: Mobject,
         dim_to_match: int = 0,
         stretch: bool = False,
         buff: float = MED_SMALL_BUFF
@@ -1292,27 +1291,27 @@ class Mobject(object):
 
     # Match other mobject properties
 
-    def match_color(self, mobject: "Mobject"):
+    def match_color(self, mobject: Mobject):
         return self.set_color(mobject.get_color())
 
-    def match_dim_size(self, mobject: "Mobject", dim: int, **kwargs):
+    def match_dim_size(self, mobject: Mobject, dim: int, **kwargs):
         return self.rescale_to_fit(
             mobject.length_over_dim(dim), dim,
             **kwargs
         )
 
-    def match_width(self, mobject: "Mobject", **kwargs):
+    def match_width(self, mobject: Mobject, **kwargs):
         return self.match_dim_size(mobject, 0, **kwargs)
 
-    def match_height(self, mobject: "Mobject", **kwargs):
+    def match_height(self, mobject: Mobject, **kwargs):
         return self.match_dim_size(mobject, 1, **kwargs)
 
-    def match_depth(self, mobject: "Mobject", **kwargs):
+    def match_depth(self, mobject: Mobject, **kwargs):
         return self.match_dim_size(mobject, 2, **kwargs)
 
     def match_coord(
         self,
-        mobject_or_point: "Mobject" | np.ndarray,
+        mobject_or_point: Mobject | np.ndarray,
         dim: int,
         direction: np.ndarray = ORIGIN
     ):
@@ -1324,28 +1323,28 @@ class Mobject(object):
 
     def match_x(
         self,
-        mobject_or_point: "Mobject" | np.ndarray,
+        mobject_or_point: Mobject | np.ndarray,
         direction: np.ndarray = ORIGIN
     ):
         return self.match_coord(mobject_or_point, 0, direction)
 
     def match_y(
         self,
-        mobject_or_point: "Mobject" | np.ndarray,
+        mobject_or_point: Mobject | np.ndarray,
         direction: np.ndarray = ORIGIN
     ):
         return self.match_coord(mobject_or_point, 1, direction)
 
     def match_z(
         self,
-        mobject_or_point: "Mobject" | np.ndarray,
+        mobject_or_point: Mobject | np.ndarray,
         direction: np.ndarray = ORIGIN
     ):
         return self.match_coord(mobject_or_point, 2, direction)
 
     def align_to(
         self,
-        mobject_or_point: "Mobject" | np.ndarray,
+        mobject_or_point: Mobject | np.ndarray,
         direction: np.ndarray = ORIGIN
     ):
         """
@@ -1372,11 +1371,11 @@ class Mobject(object):
 
     # Alignment
 
-    def align_data_and_family(self, mobject: "Mobject") -> None:
+    def align_data_and_family(self, mobject: Mobject) -> None:
         self.align_family(mobject)
         self.align_data(mobject)
 
-    def align_data(self, mobject: "Mobject") -> None:
+    def align_data(self, mobject: Mobject) -> None:
         # In case any data arrays get resized when aligned to shader data
         self.refresh_shader_data()
         for mob1, mob2 in zip(self.get_family(), mobject.get_family()):
@@ -1393,13 +1392,13 @@ class Mobject(object):
                 elif len(arr1) > len(arr2):
                     mob2.data[key] = resize_preserving_order(arr2, len(arr1))
 
-    def align_points(self, mobject: "Mobject"):
+    def align_points(self, mobject: Mobject):
         max_len = max(self.get_num_points(), mobject.get_num_points())
         for mob in (self, mobject):
             mob.resize_points(max_len, resize_func=resize_preserving_order)
         return self
 
-    def align_family(self, mobject: "Mobject"):
+    def align_family(self, mobject: Mobject):
         mob1 = self
         mob2 = mobject
         n1 = len(mob1)
@@ -1456,8 +1455,8 @@ class Mobject(object):
 
     def interpolate(
         self,
-        mobject1: "Mobject",
-        mobject2: "Mobject",
+        mobject1: Mobject,
+        mobject2: Mobject,
         alpha: float,
         path_func: Callable[[np.ndarray, np.ndarray, float], np.ndarray] = straight_path
     ):
@@ -1496,7 +1495,7 @@ class Mobject(object):
         """
         pass  # To implement in subclass
 
-    def become(self, mobject: "Mobject"):
+    def become(self, mobject: Mobject):
         """
         Edit all data and submobjects to be idential
         to another mobject
@@ -1524,7 +1523,7 @@ class Mobject(object):
         self.refresh_shader_data()
         self.locked_data_keys = set(keys)
 
-    def lock_matching_data(self, mobject1: "Mobject", mobject2: "Mobject"):
+    def lock_matching_data(self, mobject1: Mobject, mobject2: Mobject):
         for sm, sm1, sm2 in zip(self.get_family(), mobject1.get_family(), mobject2.get_family()):
             keys = sm.data.keys() & sm1.data.keys() & sm2.data.keys()
             sm.lock_data(list(filter(
@@ -1811,13 +1810,13 @@ class Mobject(object):
 
 
 class Group(Mobject):
-    def __init__(self, *mobjects: "Mobject", **kwargs):
+    def __init__(self, *mobjects: Mobject, **kwargs):
         if not all([isinstance(m, Mobject) for m in mobjects]):
             raise Exception("All submobjects must be of type Mobject")
         Mobject.__init__(self, **kwargs)
         self.add(*mobjects)
 
-    def __add__(self, other: "Mobject" | "Group"):
+    def __add__(self, other: Mobject | Group):
         assert(isinstance(other, Mobject))
         return self.add(other)
 

@@ -77,7 +77,7 @@ class PMobject(Mobject):
         )))
         return self
 
-    def match_colors(self, pmobject: "PMobject"):
+    def match_colors(self, pmobject: PMobject):
         self.data["rgbas"][:] = resize_with_interpolation(
             pmobject.data["rgbas"], self.get_num_points()
         )
@@ -116,7 +116,7 @@ class PMobject(Mobject):
         index = alpha * (self.get_num_points() - 1)
         return self.get_points()[int(index)]
 
-    def pointwise_become_partial(self, pmobject: "PMobject", a: float, b: float):
+    def pointwise_become_partial(self, pmobject: PMobject, a: float, b: float):
         lower_index = int(a * pmobject.get_num_points())
         upper_index = int(b * pmobject.get_num_points())
         for key in self.data:

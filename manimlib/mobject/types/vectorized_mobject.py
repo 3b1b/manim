@@ -233,7 +233,7 @@ class VMobject(Mobject):
             "shadow": self.get_shadow(),
         }
 
-    def match_style(self, vmobject: "VMobject", recurse: bool = True):
+    def match_style(self, vmobject: VMobject, recurse: bool = True):
         self.set_style(**vmobject.get_style(), recurse=False)
         if recurse:
             # Does its best to match up submobject lists, and
@@ -553,7 +553,7 @@ class VMobject(Mobject):
         self.append_points(points)
         return self
 
-    def append_vectorized_mobject(self, vectorized_mobject: "VMobject"):
+    def append_vectorized_mobject(self, vectorized_mobject: VMobject):
         new_points = list(vectorized_mobject.get_points())
 
         if self.has_new_path_started():
@@ -739,7 +739,7 @@ class VMobject(Mobject):
         return self
 
     # Alignment
-    def align_points(self, vmobject: "VMobject"):
+    def align_points(self, vmobject: VMobject):
         if self.get_num_points() == len(vmobject.get_points()):
             return
 
@@ -827,8 +827,8 @@ class VMobject(Mobject):
 
     def interpolate(
         self,
-        mobject1: "VMobject",
-        mobject2: "VMobject",
+        mobject1: VMobject,
+        mobject2: VMobject,
         alpha: float,
         *args, **kwargs
     ):
@@ -840,7 +840,7 @@ class VMobject(Mobject):
                 self.refresh_triangulation()
         return self
 
-    def pointwise_become_partial(self, vmobject: "VMobject", a: float, b: float):
+    def pointwise_become_partial(self, vmobject: VMobject, a: float, b: float):
         assert(isinstance(vmobject, VMobject))
         if a <= 0 and b >= 1:
             self.become(vmobject)
@@ -882,7 +882,7 @@ class VMobject(Mobject):
         self.set_points(new_points)
         return self
 
-    def get_subcurve(self, a: float, b: float) -> "VMobject":
+    def get_subcurve(self, a: float, b: float) -> VMobject:
         vmob = self.copy()
         vmob.pointwise_become_partial(self, a, b)
         return vmob
@@ -1106,7 +1106,7 @@ class VGroup(VMobject):
         super().__init__(**kwargs)
         self.add(*vmobjects)
 
-    def __add__(self, other: VMobject | "VGroup"):
+    def __add__(self, other: VMobject | VGroup):
         assert(isinstance(other, VMobject))
         return self.add(other)
 
