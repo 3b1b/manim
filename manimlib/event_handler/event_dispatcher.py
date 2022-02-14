@@ -16,7 +16,7 @@ class EventDispatcher(object):
         }
         self.mouse_point = np.array((0., 0., 0.))
         self.mouse_drag_point = np.array((0., 0., 0.))
-        self.pressed_keys: set[str] = set()
+        self.pressed_keys: set[int] = set()
         self.draggable_object_listners: list[EventListner] = []
 
     def add_listner(self, event_listner: EventListner):
@@ -86,7 +86,7 @@ class EventDispatcher(object):
     def get_mouse_drag_point(self) -> np.ndarray:
         return self.mouse_drag_point
 
-    def is_key_pressed(self, symbol) -> bool:
+    def is_key_pressed(self, symbol: int) -> bool:
         return (symbol in self.pressed_keys)
 
     __iadd__ = add_listner

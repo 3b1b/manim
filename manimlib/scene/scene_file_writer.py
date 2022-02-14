@@ -1,10 +1,13 @@
-import numpy as np
-from pydub import AudioSegment
-import shutil
-import subprocess as sp
+from __future__ import annotations
+
 import os
 import sys
+import shutil
 import platform
+import subprocess as sp
+
+import numpy as np
+from pydub import AudioSegment
 from tqdm import tqdm as ProgressDisplay
 
 from manimlib.constants import FFMPEG_BIN
@@ -14,6 +17,12 @@ from manimlib.utils.file_ops import add_extension_if_not_present
 from manimlib.utils.file_ops import get_sorted_integer_files
 from manimlib.utils.sounds import get_full_sound_file_path
 from manimlib.logger import log
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from manimlib.scene.scene import Scene
+    from manimlib.camera.camera import Camera
+    from PIL.Image import Image
 
 
 class SceneFileWriter(object):
@@ -42,14 +51,14 @@ class SceneFileWriter(object):
 
     def __init__(self, scene, **kwargs):
         digest_config(self, kwargs)
-        self.scene = scene
-        self.writing_process = None
-        self.has_progress_display = False
+        self.scene: Scene = scene
+        self.writing_process: sp.Popen | None = None
+        self.has_progress_display: bool = False
         self.init_output_directories()
         self.init_audio()
 
     # Output directories and files
-    def init_output_directories(self):
+    def init_output_directories(self) -> None:
         out_dir = self.output_directory
         if self.mirror_module_path:
             module_dir = self.get_default_module_directory()
@@ -69,13 +78,13 @@ class SceneFileWriter(object):
                     movie_dir, "partial_movie_files", scene_name,
                 ))
 
-    def get_default_module_directory(self):
+    def get_default_module_directory(self) -> str:
         path, _ = os.path.splitext(self.input_file_path)
         if path.startswith("_"):
             path = path[1:]
         return path
 
-    def get_default_scene_name(self):
+    def get_default_scene_name(self) -> str:
         name = str(self.scene)
         saan = self.scene.start_at_animation_number
         eaan = self.scene.end_at_animation_number
@@ -85,7 +94,7 @@ class SceneFileWriter(object):
             name += f"_{eaan}"
         return name
 
-    def get_resolution_directory(self):
+    def get_resolution_directory(self) -> str:
         pixel_height = self.scene.camera.pixel_height
         frame_rate = self.scene.camera.frame_rate
         return "{}p{}".format(
@@ -93,10 +102,10 @@ class SceneFileWriter(object):
         )
 
     # Directory getters
-    def get_image_file_path(self):
+    def get_image_file_path(self) -> str:
         return self.image_file_path
 
-    def get_next_partial_movie_path(self):
+    def get_next_partial_movie_path(self) -> str:
         result = os.path.join(
             self.partial_movie_directory,
             "{:05}{}".format(
@@ -106,19 +115,22 @@ class SceneFileWriter(object):
         )
         return result
 
-    def get_movie_file_path(self):
+    def get_movie_file_path(self) -> str:
         return self.movie_file_path
 
     # Sound
-    def init_audio(self):
-        self.includes_sound = False
+    def init_audio(self) -> None:
+        self.includes_sound: bool = False
 
-    def create_audio_segment(self):
+    def create_audio_segment(self) -> None:
         self.audio_segment = AudioSegment.silent()
 
-    def add_audio_segment(self, new_segment,
-                          time=None,
-                          gain_to_background=None):
+    def add_audio_segment(
+        self,
+        new_segment: AudioSegment,
+        time: float | None = None,
+        gain_to_background: float | None = None
+    ) -> None:
         if not self.includes_sound:
             self.includes_sound = True
             self.create_audio_segment()
@@ -142,27 +154,33 @@ class SceneFileWriter(object):
             gain_during_overlay=gain_to_background,
         )
 
-    def add_sound(self, sound_file, time=None, gain=None, **kwargs):
+    def add_sound(
+        self,
+        sound_file: str,
+        time: float | None = None,
+        gain: float | None = None,
+        gain_to_background: float | None = None
+    ) -> None:
         file_path = get_full_sound_file_path(sound_file)
         new_segment = AudioSegment.from_file(file_path)
         if gain:
             new_segment = new_segment.apply_gain(gain)
-        self.add_audio_segment(new_segment, time, **kwargs)
+        self.add_audio_segment(new_segment, time, gain_to_background)
 
     # Writers
-    def begin(self):
+    def begin(self) -> None:
         if not self.break_into_partial_movies and self.write_to_movie:
             self.open_movie_pipe(self.get_movie_file_path())
 
-    def begin_animation(self):
+    def begin_animation(self) -> None:
         if self.break_into_partial_movies and self.write_to_movie:
             self.open_movie_pipe(self.get_next_partial_movie_path())
 
-    def end_animation(self):
+    def end_animation(self) -> None:
         if self.break_into_partial_movies and self.write_to_movie:
             self.close_movie_pipe()
 
-    def finish(self):
+    def finish(self) -> None:
         if self.write_to_movie:
             if self.break_into_partial_movies:
                 self.combine_movie_files()
@@ -177,7 +195,7 @@ class SceneFileWriter(object):
         if self.should_open_file():
             self.open_file()
 
-    def open_movie_pipe(self, file_path):
+    def open_movie_pipe(self, file_path: str) -> None:
         stem, ext = os.path.splitext(file_path)
         self.final_file_path = file_path
         self.temp_file_path = stem + "_temp" + ext
@@ -223,7 +241,7 @@ class SceneFileWriter(object):
             )
             self.has_progress_display = True
 
-    def set_progress_display_subdescription(self, sub_desc):
+    def set_progress_display_subdescription(self, sub_desc: str) -> None:
         desc_len = self.progress_description_len
         file = os.path.split(self.get_movie_file_path())[1]
         full_desc = f"Rendering {file} ({sub_desc})"
@@ -233,14 +251,14 @@ class SceneFileWriter(object):
             full_desc += " " * (desc_len - len(full_desc))
         self.progress_display.set_description(full_desc)
 
-    def write_frame(self, camera):
+    def write_frame(self, camera: Camera) -> None:
         if self.write_to_movie:
             raw_bytes = camera.get_raw_fbo_data()
             self.writing_process.stdin.write(raw_bytes)
             if self.has_progress_display:
                 self.progress_display.update()
 
-    def close_movie_pipe(self):
+    def close_movie_pipe(self) -> None:
         self.writing_process.stdin.close()
         self.writing_process.wait()
         self.writing_process.terminate()
@@ -248,7 +266,7 @@ class SceneFileWriter(object):
             self.progress_display.close()
         shutil.move(self.temp_file_path, self.final_file_path)
 
-    def combine_movie_files(self):
+    def combine_movie_files(self) -> None:
         kwargs = {
             "remove_non_integer_files": True,
             "extension": self.movie_file_extension,
@@ -296,7 +314,7 @@ class SceneFileWriter(object):
         combine_process = sp.Popen(commands)
         combine_process.wait()
 
-    def add_sound_to_video(self):
+    def add_sound_to_video(self) -> None:
         movie_file_path = self.get_movie_file_path()
         stem, ext = os.path.splitext(movie_file_path)
         sound_file_path = stem + ".wav"
@@ -327,22 +345,22 @@ class SceneFileWriter(object):
         shutil.move(temp_file_path, movie_file_path)
         os.remove(sound_file_path)
 
-    def save_final_image(self, image):
+    def save_final_image(self, image: Image) -> None:
         file_path = self.get_image_file_path()
         image.save(file_path)
         self.print_file_ready_message(file_path)
 
-    def print_file_ready_message(self, file_path):
+    def print_file_ready_message(self, file_path: str) -> None:
         if not self.quiet:
             log.info(f"File ready at {file_path}")
 
-    def should_open_file(self):
+    def should_open_file(self) -> bool:
         return any([
             self.show_file_location_upon_completion,
             self.open_file_upon_completion,
         ])
 
-    def open_file(self):
+    def open_file(self) -> None:
         if self.quiet:
             curr_stdout = sys.stdout
             sys.stdout = open(os.devnull, "w")

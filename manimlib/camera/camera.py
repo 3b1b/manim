@@ -297,7 +297,7 @@ class Camera(object):
             dtype=dtype,
         )
 
-    def get_image(self) -> Image:
+    def get_image(self) -> Image.Image:
         return Image.frombytes(
             'RGBA',
             self.get_pixel_shape(),
