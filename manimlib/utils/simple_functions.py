@@ -1,6 +1,6 @@
 import inspect
 import numpy as np
-from scipy import special
+import math
 from functools import lru_cache
 
 
@@ -10,7 +10,11 @@ def sigmoid(x):
 
 @lru_cache(maxsize=10)
 def choose(n, k):
-    return special.comb(n, k, exact=True)
+    return math.comb(n, k)
+
+
+def gen_choose(n, r):
+    return np.prod(np.arange(n, n - r, -1)) / math.factorial(r)
 
 
 def get_num_args(function):
