@@ -650,7 +650,7 @@ class Mobject(object):
         Otherwise, if about_point is given a value, scaling is done with
         respect to that point.
         """
-        if isinstance(scale_factor, npt.ArrayLike):
+        if isinstance(scale_factor, Iterable):
             scale_factor = np.array(scale_factor).clip(min=min_scale_factor)
         else:
             scale_factor = max(scale_factor, min_scale_factor)
