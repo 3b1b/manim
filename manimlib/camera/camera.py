@@ -12,7 +12,6 @@ from colour import Color
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
-from manimlib.shader_wrapper import ShaderWrapper
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.simple_functions import clip
@@ -21,6 +20,10 @@ from manimlib.utils.space_ops import rotation_matrix_transpose_from_quaternion
 from manimlib.utils.space_ops import rotation_matrix_transpose
 from manimlib.utils.space_ops import quaternion_from_angle_axis
 from manimlib.utils.space_ops import quaternion_mult
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from manimlib.shader_wrapper import ShaderWrapper
 
 
 class CameraFrame(Mobject):

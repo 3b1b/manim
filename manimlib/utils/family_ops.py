@@ -3,7 +3,9 @@ from __future__ import annotations
 import itertools as it
 from typing import Iterable
 
-from manimlib.mobject.mobject import Mobject
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from manimlib.mobject.mobject import Mobject
 
 
 def extract_mobject_family_members(

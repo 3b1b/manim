@@ -5,10 +5,13 @@ import numpy as np
 from typing import Callable
 
 from manimlib.constants import BLACK
-from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.numbers import Integer
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.logger import log
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from manimlib.mobject.mobject import Mobject
 
 
 def print_family(mobject: Mobject, n_tabs: int = 0) -> None:

@@ -7,13 +7,16 @@ import numpy as np
 import numpy.typing as npt
 
 from manimlib.constants import *
-from manimlib.camera.camera import Camera
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.images import get_full_raster_image_path
 from manimlib.utils.iterables import listify
 from manimlib.utils.space_ops import normalize_along_axis
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from manimlib.camera.camera import Camera
 
 
 class Surface(Mobject):
