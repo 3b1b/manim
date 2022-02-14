@@ -277,7 +277,6 @@ class DiscreteGraphScene(Scene):
     def trace_cycle(self, cycle=None, color="yellow", run_time=2.0):
         if cycle is None:
             cycle = self.graph.region_cycles[0]
-        time_per_edge = run_time / len(cycle)
         next_in_cycle = it.cycle(cycle)
         next(next_in_cycle)  # jump one ahead
         self.traced_cycle = Mobject(*[

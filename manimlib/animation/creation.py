@@ -1,7 +1,6 @@
 from manimlib.animation.animation import Animation
 from manimlib.animation.composition import Succession
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.mobject.mobject import Group
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import linear
@@ -147,7 +146,7 @@ class Write(DrawBorderThenFill):
             else:
                 self.run_time = 2
         if self.lag_ratio is None:
-            self.lag_ratio = min(4.0 / length, 0.2)
+            self.lag_ratio = min(4.0 / (length + 1.0), 0.2)
 
 
 class ShowIncreasingSubsets(Animation):

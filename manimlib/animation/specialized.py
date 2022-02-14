@@ -17,7 +17,6 @@ class Broadcast(LaggedStart):
         "remover": True,
         "lag_ratio": 0.2,
         "run_time": 3,
-        "remover": True,
     }
 
     def __init__(self, focal_point, **kwargs):

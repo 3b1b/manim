@@ -112,7 +112,7 @@ class Matrix(VMobject):
             "\\left[",
             "\\begin{array}{c}",
             *height * ["\\quad \\\\"],
-            "\\end{array}"
+            "\\end{array}",
             "\\right]",
         ]))[0]
         bracket_pair.set_height(
