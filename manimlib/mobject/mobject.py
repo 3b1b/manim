@@ -5,7 +5,7 @@ import copy
 import random
 import itertools as it
 from functools import wraps
-from typing import Iterable, TypeVar, Callable, Union, Sequence
+from typing import Iterable, Callable, Union, Sequence
 
 import colour
 import moderngl
