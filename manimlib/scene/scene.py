@@ -63,7 +63,7 @@ class Scene(object):
         # Items associated with interaction
         self.mouse_point = Point()
         self.mouse_drag_point = Point()
-        self.hold_on_wait = not self.presenter_mode
+        self.hold_on_wait = self.presenter_mode
 
         # Much nicer to work with deterministic scenes
         if self.random_seed is not None:
