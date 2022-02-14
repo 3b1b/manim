@@ -1,16 +1,18 @@
-import hashlib
+from __future__ import annotations
+
 import os
 import re
 import io
-import typing
-import xml.etree.ElementTree as ET
+import hashlib
 import functools
+from pathlib import Path
+import xml.etree.ElementTree as ET
+from contextlib import contextmanager
+from typing import Iterable, Sequence, Union
+
 import pygments
 import pygments.lexers
 import pygments.styles
-
-from contextlib import contextmanager
-from pathlib import Path
 
 import manimpango
 from manimlib.logger import log
@@ -22,6 +24,12 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.customization import get_customization
 from manimlib.utils.directories import get_downloads_dir, get_text_dir
 from manimpango import PangoUtils, TextSetting, MarkupUtils
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import colour
+    from manimlib.mobject.types.vectorized_mobject import VMobject
+    ManimColor = Union[str, colour.Color, Sequence[float]]
 
 TEXT_MOB_SCALE_FACTOR = 0.0076
 DEFAULT_LINE_SPACING_SCALE = 0.6
@@ -50,7 +58,7 @@ class Text(SVGMobject):
         "disable_ligatures": True,
     }
 
-    def __init__(self, text, **kwargs):
+    def __init__(self, text: str, **kwargs):
         self.full2short(kwargs)
         digest_config(self, kwargs)
         if self.size:
@@ -60,9 +68,9 @@ class Text(SVGMobject):
             )
             self.font_size = self.size
         if self.lsh == -1:
-            self.lsh = self.font_size + self.font_size * DEFAULT_LINE_SPACING_SCALE
+            self.lsh: float = self.font_size + self.font_size * DEFAULT_LINE_SPACING_SCALE
         else:
-            self.lsh = self.font_size + self.font_size * self.lsh
+            self.lsh: float = self.font_size + self.font_size * self.lsh
         text_without_tabs = text
         if text.find('\t') != -1:
             text_without_tabs = text.replace('\t', ' ' * self.tab_width)
@@ -87,14 +95,14 @@ class Text(SVGMobject):
         if self.height is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
 
-    def remove_empty_path(self, file_name):
+    def remove_empty_path(self, file_name: str) -> None:
         with open(file_name, 'r') as fpr:
             content = fpr.read()
         content = re.sub(r'<path .*?d=""/>', '', content)
         with open(file_name, 'w') as fpw:
             fpw.write(content)
 
-    def apply_space_chars(self):
+    def apply_space_chars(self) -> None:
         submobs = self.submobjects.copy()
         for char_index in range(len(self.text)):
             if self.text[char_index] in [" ", "\t", "\n"]:
@@ -103,7 +111,7 @@ class Text(SVGMobject):
                 submobs.insert(char_index, space)
         self.set_submobjects(submobs)
 
-    def find_indexes(self, word):
+    def find_indexes(self, word: str) -> list[tuple[int, int]]:
         m = re.match(r'\[([0-9\-]{0,}):([0-9\-]{0,})\]', word)
         if m:
             start = int(m.group(1)) if m.group(1) != '' else 0
@@ -119,20 +127,20 @@ class Text(SVGMobject):
             index = self.text.find(word, index + len(word))
         return indexes
 
-    def get_parts_by_text(self, word):
+    def get_parts_by_text(self, word: str) -> VGroup:
         return VGroup(*(
             self[i:j]
             for i, j in self.find_indexes(word)
         ))
 
-    def get_part_by_text(self, word):
+    def get_part_by_text(self, word: str) -> VMobject | None:
         parts = self.get_parts_by_text(word)
         if len(parts) > 0:
             return parts[0]
         else:
             return None
 
-    def full2short(self, config):
+    def full2short(self, config: dict[str]) -> None:
         for kwargs in [config, self.CONFIG]:
             if kwargs.__contains__('line_spacing_height'):
                 kwargs['lsh'] = kwargs.pop('line_spacing_height')
@@ -147,19 +155,25 @@ class Text(SVGMobject):
             if kwargs.__contains__('text2weight'):
                 kwargs['t2w'] = kwargs.pop('text2weight')
 
-    def set_color_by_t2c(self, t2c=None):
+    def set_color_by_t2c(
+        self,
+        t2c: dict[str, ManimColor] | None = None
+    ) -> None:
         t2c = t2c if t2c else self.t2c
         for word, color in t2c.items():
             for start, end in self.find_indexes(word):
                 self[start:end].set_color(color)
 
-    def set_color_by_t2g(self, t2g=None):
+    def set_color_by_t2g(
+        self,
+        t2g: dict[str, Iterable[ManimColor]] | None = None
+    ) -> None:
         t2g = t2g if t2g else self.t2g
         for word, gradient in t2g.items():
             for start, end in self.find_indexes(word):
                 self[start:end].set_color_by_gradient(*gradient)
 
-    def text2hash(self):
+    def text2hash(self) -> str:
         settings = self.font + self.slant + self.weight
         settings += str(self.t2f) + str(self.t2s) + str(self.t2w)
         settings += str(self.lsh) + str(self.font_size)
@@ -168,7 +182,7 @@ class Text(SVGMobject):
         hasher.update(id_str.encode())
         return hasher.hexdigest()[:16]
 
-    def text2settings(self):
+    def text2settings(self) -> list[TextSetting]:
         """
         Substrings specified in t2f, t2s, t2w can occupy each other.
         For each category of style, a stack following first-in-last-out is constructed,
@@ -227,7 +241,7 @@ class Text(SVGMobject):
         del self.line_num
         return settings
 
-    def text2svg(self):
+    def text2svg(self) -> str:
         # anti-aliasing
         size = self.font_size
         lsh = self.lsh
@@ -503,7 +517,7 @@ class Code(Text):
         "char_width": None
     }
 
-    def __init__(self, code, **kwargs):
+    def __init__(self, code: str, **kwargs):
         self.full2short(kwargs)
         digest_config(self, kwargs)
         code = code.lstrip("\n")  # avoid mismatches of character indices
@@ -536,7 +550,7 @@ class Code(Text):
         if self.char_width is not None:
             self.set_monospace(self.char_width)
 
-    def set_monospace(self, char_width):
+    def set_monospace(self, char_width: float) -> None:
         current_char_index = 0
         for i, char in enumerate(self.text):
             if char == "\n":
@@ -548,7 +562,7 @@ class Code(Text):
 
 
 @contextmanager
-def register_font(font_file: typing.Union[str, Path]):
+def register_font(font_file: str | Path):
     """Temporarily add a font file to Pango's search path.
     This searches for the font_file at various places. The order it searches it described below.
     1. Absolute path.

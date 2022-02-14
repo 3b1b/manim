@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import os
 import re
 import hashlib
 import itertools as it
+from typing import Callable
 
 import svgelements as se
 import numpy as np
@@ -20,7 +23,7 @@ from manimlib.utils.images import get_full_vector_image_path
 from manimlib.logger import log
 
 
-def _convert_point_to_3d(x, y):
+def _convert_point_to_3d(x: float, y: float) -> np.ndarray:
     return np.array([x, y, 0.0])
 
 
@@ -41,7 +44,7 @@ class SVGMobject(VMobject):
         "path_string_config": {}
     }
 
-    def __init__(self, file_name=None, **kwargs):
+    def __init__(self, file_name: str | None = None, **kwargs):
         digest_config(self, kwargs)
         self.file_name = file_name or self.file_name
         if file_name is None:
@@ -51,7 +54,7 @@ class SVGMobject(VMobject):
         super().__init__(**kwargs)
         self.move_into_position()
 
-    def move_into_position(self):
+    def move_into_position(self) -> None:
         if self.should_center:
             self.center()
         if self.height is not None:
@@ -59,7 +62,7 @@ class SVGMobject(VMobject):
         if self.width is not None:
             self.set_width(self.width)
 
-    def init_colors(self):
+    def init_colors(self) -> None:
         # Remove fill_color, fill_opacity,
         # stroke_width, stroke_color, stroke_opacity
         # as each submobject may have those values specified in svg file
@@ -68,7 +71,7 @@ class SVGMobject(VMobject):
         self.set_flat_stroke(self.flat_stroke)
         return self
 
-    def init_points(self):
+    def init_points(self) -> None:
         with open(self.file_path, "r") as svg_file:
             svg_string = svg_file.read()
 
@@ -96,7 +99,7 @@ class SVGMobject(VMobject):
         self.flip(RIGHT)  # Flip y
         self.scale(0.75)
 
-    def modify_svg_file(self, svg_string):
+    def modify_svg_file(self, svg_string: str) -> str:
         # svgelements cannot handle em, ex units
         # Convert them using 1em = 16px, 1ex = 0.5em = 8px
         def convert_unit(match_obj):
@@ -127,7 +130,7 @@ class SVGMobject(VMobject):
 
         return result
 
-    def generate_context_values_from_config(self):
+    def generate_context_values_from_config(self) -> dict[str]:
         result = {}
         if self.stroke_width is not None:
             result["stroke-width"] = self.stroke_width
@@ -145,7 +148,7 @@ class SVGMobject(VMobject):
             result["stroke-opacity"] = self.stroke_opacity
         return result
 
-    def get_mobjects_from(self, shape):
+    def get_mobjects_from(self, shape) -> list[VMobject]:
         if isinstance(shape, se.Group):
             return list(it.chain(*(
                 self.get_mobjects_from(child)
@@ -161,7 +164,7 @@ class SVGMobject(VMobject):
         return [mob]
 
     @staticmethod
-    def handle_transform(mob, matrix):
+    def handle_transform(mob: VMobject, matrix: se.Matrix) -> VMobject:
         mat = np.array([
             [matrix.a, matrix.c],
             [matrix.b, matrix.d]
@@ -171,8 +174,10 @@ class SVGMobject(VMobject):
         mob.shift(vec)
         return mob
 
-    def get_mobject_from(self, shape):
-        shape_class_to_func_map = {
+    def get_mobject_from(self, shape: se.Shape | se.Text) -> VMobject | None:
+        shape_class_to_func_map: dict[
+            type, Callable[[se.Shape | se.Text], VMobject]
+        ] = {
             se.Path: self.path_to_mobject,
             se.SimpleLine: self.line_to_mobject,
             se.Rect: self.rect_to_mobject,
@@ -194,7 +199,10 @@ class SVGMobject(VMobject):
         return None
 
     @staticmethod
-    def apply_style_to_mobject(mob, shape):
+    def apply_style_to_mobject(
+        mob: VMobject,
+        shape: se.Shape | se.Text
+    ) -> VMobject:
         mob.set_style(
             stroke_width=shape.stroke_width,
             stroke_color=shape.stroke.hex,
@@ -204,16 +212,16 @@ class SVGMobject(VMobject):
         )
         return mob
 
-    def path_to_mobject(self, path):
+    def path_to_mobject(self, path: se.Path) -> VMobjectFromSVGPath:
         return VMobjectFromSVGPath(path, **self.path_string_config)
 
-    def line_to_mobject(self, line):
+    def line_to_mobject(self, line: se.Line) -> Line:
         return Line(
             start=_convert_point_to_3d(line.x1, line.y1),
             end=_convert_point_to_3d(line.x2, line.y2)
         )
 
-    def rect_to_mobject(self, rect):
+    def rect_to_mobject(self, rect: se.Rect) -> Rectangle | RoundedRectangle:
         if rect.rx == 0 or rect.ry == 0:
             mob = Rectangle(
                 width=rect.width,
@@ -232,7 +240,7 @@ class SVGMobject(VMobject):
         ))
         return mob
 
-    def circle_to_mobject(self, circle):
+    def circle_to_mobject(self, circle: se.Circle) -> Circle:
         # svgelements supports `rx` & `ry` but `r`
         mob = Circle(radius=circle.rx)
         mob.shift(_convert_point_to_3d(
@@ -240,7 +248,7 @@ class SVGMobject(VMobject):
         ))
         return mob
 
-    def ellipse_to_mobject(self, ellipse):
+    def ellipse_to_mobject(self, ellipse: se.Ellipse) -> Circle:
         mob = Circle(radius=ellipse.rx)
         mob.stretch_to_fit_height(2 * ellipse.ry)
         mob.shift(_convert_point_to_3d(
@@ -248,21 +256,21 @@ class SVGMobject(VMobject):
         ))
         return mob
 
-    def polygon_to_mobject(self, polygon):
+    def polygon_to_mobject(self, polygon: se.Polygon) -> Polygon:
         points = [
             _convert_point_to_3d(*point)
             for point in polygon
         ]
         return Polygon(*points)
 
-    def polyline_to_mobject(self, polyline):
+    def polyline_to_mobject(self, polyline: se.Polyline) -> Polyline:
         points = [
             _convert_point_to_3d(*point)
             for point in polyline
         ]
         return Polyline(*points)
 
-    def text_to_mobject(self, text):
+    def text_to_mobject(self, text: se.Text):
         pass
 
 
@@ -273,13 +281,13 @@ class VMobjectFromSVGPath(VMobject):
         "should_remove_null_curves": False,
     }
 
-    def __init__(self, path_obj, **kwargs):
+    def __init__(self, path_obj: se.Path, **kwargs):
         # Get rid of arcs
         path_obj.approximate_arcs_with_quads()
         self.path_obj = path_obj
         super().__init__(**kwargs)
 
-    def init_points(self):
+    def init_points(self) -> None:
         # After a given svg_path has been converted into points, the result
         # will be saved to a file so that future calls for the same path
         # don't need to retrace the same computation.
@@ -305,7 +313,7 @@ class VMobjectFromSVGPath(VMobject):
             np.save(points_filepath, self.get_points())
             np.save(tris_filepath, self.get_triangulation())
 
-    def handle_commands(self):
+    def handle_commands(self) -> None:
         segment_class_to_func_map = {
             se.Move: (self.start_new_path, ("end",)),
             se.Close: (self.close_path, ()),

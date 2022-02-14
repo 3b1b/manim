@@ -1,11 +1,15 @@
-import numpy as np
+from __future__ import annotations
+
 import math
 import copy
+from typing import Iterable
 
-from manimlib.animation.composition import AnimationGroup
+import numpy as np
+
 from manimlib.constants import *
 from manimlib.animation.fading import FadeIn
 from manimlib.animation.growing import GrowFromCenter
+from manimlib.animation.composition import AnimationGroup
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.tex_mobject import SingleStringTex
 from manimlib.mobject.svg.tex_mobject import TexText
@@ -14,6 +18,10 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.space_ops import get_norm
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from manimlib.mobject.mobject import Mobject
+    from manimlib.animation.animation import Animation
 
 class Brace(SingleStringTex):
     CONFIG = {
@@ -21,7 +29,12 @@ class Brace(SingleStringTex):
         "tex_string": r"\underbrace{\qquad}"
     }
 
-    def __init__(self, mobject, direction=DOWN, **kwargs):
+    def __init__(
+        self,
+        mobject: Mobject,
+        direction: np.ndarray = DOWN,
+        **kwargs
+    ):
         digest_config(self, kwargs, locals())
         angle = -math.atan2(*direction[:2]) + PI
         mobject.rotate(-angle, about_point=ORIGIN)
@@ -36,7 +49,7 @@ class Brace(SingleStringTex):
         for mob in mobject, self:
             mob.rotate(angle, about_point=ORIGIN)
 
-    def set_initial_width(self, width):
+    def set_initial_width(self, width: float):
         width_diff = width - self.get_width()
         if width_diff > 0:
             for tip, rect, vect in [(self[0], self[1], RIGHT), (self[5], self[4], LEFT)]:
@@ -49,7 +62,12 @@ class Brace(SingleStringTex):
             self.set_width(width, stretch=True)
         return self
 
-    def put_at_tip(self, mob, use_next_to=True, **kwargs):
+    def put_at_tip(
+        self,
+        mob: Mobject,
+        use_next_to: bool = True,
+        **kwargs
+    ):
         if use_next_to:
             mob.next_to(
                 self.get_tip(),
@@ -63,24 +81,24 @@ class Brace(SingleStringTex):
             mob.shift(self.get_direction() * shift_distance)
         return self
 
-    def get_text(self, text, **kwargs):
+    def get_text(self, text: str, **kwargs) -> Text:
         buff = kwargs.pop("buff", SMALL_BUFF)
         text_mob = Text(text, **kwargs)
         self.put_at_tip(text_mob, buff=buff)
         return text_mob
 
-    def get_tex(self, *tex, **kwargs):
+    def get_tex(self, *tex: str, **kwargs) -> Tex:
         tex_mob = Tex(*tex)
         self.put_at_tip(tex_mob, **kwargs)
         return tex_mob
 
-    def get_tip(self):
+    def get_tip(self) -> np.ndarray:
         # Very specific to the LaTeX representation
         # of a brace, but it's the only way I can think
         # of to get the tip regardless of orientation.
         return self.get_all_points()[self.tip_point_index]
 
-    def get_direction(self):
+    def get_direction(self) -> np.ndarray:
         vect = self.get_tip() - self.get_center()
         return vect / get_norm(vect)
 
@@ -92,14 +110,20 @@ class BraceLabel(VMobject):
         "label_buff": DEFAULT_MOBJECT_TO_MOBJECT_BUFFER  
     }
 
-    def __init__(self, obj, text, brace_direction=DOWN, **kwargs):
+    def __init__(
+        self,
+        obj: list[VMobject] | Mobject,
+        text: Iterable[str] | str,
+        brace_direction: np.ndarray = DOWN,
+        **kwargs
+    ) -> None:
         VMobject.__init__(self, **kwargs)
         self.brace_direction = brace_direction
         if isinstance(obj, list):
             obj = VMobject(*obj)
         self.brace = Brace(obj, brace_direction, **kwargs)
 
-        if isinstance(text, tuple) or isinstance(text, list):
+        if isinstance(text, Iterable):
             self.label = self.label_constructor(*text, **kwargs)
         else:
             self.label = self.label_constructor(str(text))
@@ -109,10 +133,14 @@ class BraceLabel(VMobject):
         self.brace.put_at_tip(self.label, buff=self.label_buff)
         self.set_submobjects([self.brace, self.label])
 
-    def creation_anim(self, label_anim=FadeIn, brace_anim=GrowFromCenter):
+    def creation_anim(
+        self,
+        label_anim: Animation = FadeIn,
+        brace_anim: Animation=GrowFromCenter
+    ) -> AnimationGroup:
         return AnimationGroup(brace_anim(self.brace), label_anim(self.label))
 
-    def shift_brace(self, obj, **kwargs):
+    def shift_brace(self, obj: list[VMobject] | Mobject, **kwargs):
         if isinstance(obj, list):
             obj = VMobject(*obj)
         self.brace = Brace(obj, self.brace_direction, **kwargs)
@@ -120,7 +148,7 @@ class BraceLabel(VMobject):
         self.submobjects[0] = self.brace
         return self
 
-    def change_label(self, *text, **kwargs):
+    def change_label(self, *text: str, **kwargs):
         self.label = self.label_constructor(*text, **kwargs)
         if self.label_scale != 1:
             self.label.scale(self.label_scale)
@@ -129,7 +157,7 @@ class BraceLabel(VMobject):
         self.submobjects[1] = self.label
         return self
 
-    def change_brace_label(self, obj, *text):
+    def change_brace_label(self, obj: list[VMobject] | Mobject, *text: str):
         self.shift_brace(obj)
         self.change_label(*text)
         return self
