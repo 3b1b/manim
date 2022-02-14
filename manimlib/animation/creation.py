@@ -146,7 +146,7 @@ class Write(DrawBorderThenFill):
             else:
                 self.run_time = 2
         if self.lag_ratio is None:
-            self.lag_ratio = min(4.0 / length, 0.2)
+            self.lag_ratio = min(4.0 / (length + 1.0), 0.2)
 
 
 class ShowIncreasingSubsets(Animation):
