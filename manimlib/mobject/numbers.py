@@ -20,6 +20,7 @@ class DecimalNumber(VMobject):
         "include_background_rectangle": False,
         "edge_to_fix": LEFT,
         "font_size": 48,
+        "text_config": {} # Do not pass in font_size here
     }
 
     def __init__(self, number=0, **kwargs):
@@ -30,13 +31,13 @@ class DecimalNumber(VMobject):
     def set_submobjects_from_number(self, number):
         self.number = number
         self.set_submobjects([])
-
+        string_to_mob_ = lambda s: self.string_to_mob(s, **self.text_config)
         num_string = self.get_num_string(number)
-        self.add(*map(self.string_to_mob, num_string))
+        self.add(*map(string_to_mob_, num_string))
 
         # Add non-numerical bits
         if self.show_ellipsis:
-            dots = self.string_to_mob("...")
+            dots = string_to_mob_("...")
             dots.arrange(RIGHT, buff=2 * dots[0].get_width())
             self.add(dots)
         if self.unit is not None:
@@ -85,10 +86,15 @@ class DecimalNumber(VMobject):
     def get_font_size(self):
         return self.data["font_size"][0]
 
-    def string_to_mob(self, string, mob_class=Text):
-        if string not in string_to_mob_map:
-            string_to_mob_map[string] = mob_class(string, font_size=1)
-        mob = string_to_mob_map[string].copy()
+    def string_to_mob(self, string, mob_class=Text, **kwargs):
+        if not kwargs:
+            if string not in string_to_mob_map:
+              string_to_mob_map[string] = mob_class(string, font_size=1, **kwargs)
+            mob = string_to_mob_map[string].copy()
+        else:
+            if (string, str(kwargs)) not in string_to_mob_map:
+              string_to_mob_map[(string, str(kwargs))] = mob_class(string, font_size=1, **kwargs)
+            mob = string_to_mob_map[(string, str(kwargs))].copy()
         mob.scale(self.get_font_size())
         return mob
 
