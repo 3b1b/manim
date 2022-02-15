@@ -126,8 +126,9 @@ def dvi_to_svg(dvi_file, regen_if_exists=False):
 def display_during_execution(message):
     # Only show top line
     to_print = message.split("\n")[0]
-    if len(to_print) > 80:
-        to_print = to_print[:77] + "..."
+    max_characters = os.get_terminal_size().columns - 1
+    if len(to_print) > max_characters:
+        to_print = to_print[:max_characters - 3] + "..."
     try:
         print(to_print, end="\r")
         yield
