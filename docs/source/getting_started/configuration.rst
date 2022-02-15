@@ -43,6 +43,7 @@ flag                                                       abbr   function
 ``--hd``                                                          Render at a 1080p quality
 ``--uhd``                                                         Render at a 4k quality
 ``--full_screen``                                          ``-f`` Show window in full screen
+``--presenter_mode``                                       ``-p`` Scene will stay paused during wait calls until space bar or right arrow is hit, like a slide show
 ``--save_pngs``                                            ``-g`` Save each frame as a png
 ``--save_as_gif``                                          ``-i`` Save the video as gif
 ``--transparent``                                          ``-t`` Render to a movie file with an alpha channel
@@ -58,7 +59,7 @@ flag                                                       abbr   function
 ``--frame_rate FRAME_RATE``                                       Frame rate, as an integer
 ``--color COLOR``                                          ``-c`` Background color
 ``--leave_progress_bars``                                         Leave progress bars displayed in terminal
-``--video_dir VIDEO_DIR``                                         directory to write video
+``--video_dir VIDEO_DIR``                                         Directory to write video
 ``--config_file CONFIG_FILE``                                     Path to the custom configuration file
 ========================================================== ====== =================================================================================================================================================================================================
 

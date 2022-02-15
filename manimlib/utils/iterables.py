@@ -139,3 +139,14 @@ def remove_nones(sequence):
 
 def concatenate_lists(*list_of_lists):
     return [item for l in list_of_lists for item in l]
+
+
+def hash_obj(obj):
+    if isinstance(obj, dict):
+        new_obj = {k: hash_obj(v) for k, v in obj.items()}
+        return hash(tuple(frozenset(sorted(new_obj.items()))))
+
+    if isinstance(obj, (set, tuple, list)):
+        return hash(tuple(hash_obj(e) for e in obj))
+
+    return hash(obj)

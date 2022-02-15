@@ -23,7 +23,7 @@ def parse_cli():
         module_location.add_argument(
             "file",
             nargs="?",
-            help="path to file holding the python code for the scene",
+            help="Path to file holding the python code for the scene",
         )
         parser.add_argument(
             "scene_names",
@@ -68,7 +68,7 @@ def parse_cli():
         parser.add_argument(
             "-p", "--presenter_mode",
             action="store_true",
-            help="scene will stay paused during wait calls until "
+            help="Scene will stay paused during wait calls until "
                  "space bar or right arrow is hit, like a slide show"
         )
         parser.add_argument(
