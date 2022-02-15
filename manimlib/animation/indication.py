@@ -14,7 +14,7 @@ from manimlib.animation.creation import ShowCreation
 from manimlib.animation.creation import ShowPartial
 from manimlib.animation.fading import FadeOut
 from manimlib.animation.fading import FadeIn
-from manimlib.animation.transform import ManimColor, Transform
+from manimlib.animation.transform import Transform
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.geometry import Dot
