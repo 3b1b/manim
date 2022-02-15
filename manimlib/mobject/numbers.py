@@ -26,7 +26,6 @@ class DecimalNumber(VMobject):
     def __init__(self, number=0, **kwargs):
         super().__init__(**kwargs)
         self.set_submobjects_from_number(number)
-        self.init_colors()
 
     def set_submobjects_from_number(self, number):
         self.number = number
