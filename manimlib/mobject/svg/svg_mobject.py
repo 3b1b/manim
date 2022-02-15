@@ -1,7 +1,7 @@
 import os
-import re
 import hashlib
 import itertools as it
+from xml.etree import ElementTree as ET
 
 import svgelements as se
 import numpy as np
@@ -20,6 +20,9 @@ from manimlib.utils.images import get_full_vector_image_path
 from manimlib.logger import log
 
 
+SVG_HASH_TO_MOB_MAP = {}
+
+
 def _convert_point_to_3d(x, y):
     return np.array([x, y, 0.0])
 
@@ -29,8 +32,8 @@ class SVGMobject(VMobject):
         "should_center": True,
         "height": 2,
         "width": None,
-        # Must be filled in a subclass, or when called
         "file_name": None,
+        # Style that overrides the original svg
         "color": None,
         "opacity": None,
         "fill_color": None,
@@ -38,127 +41,120 @@ class SVGMobject(VMobject):
         "stroke_width": None,
         "stroke_color": None,
         "stroke_opacity": None,
-        "path_string_config": {}
+        # Style that fills only when not specified
+        # If None, regarded as default values from svg standard
+        "svg_default": {
+            "color": None,
+            "opacity": None,
+            "fill_color": None,
+            "fill_opacity": None,
+            "stroke_width": None,
+            "stroke_color": None,
+            "stroke_opacity": None,
+        },
+        "path_string_config": {},
     }
 
     def __init__(self, file_name=None, **kwargs):
-        digest_config(self, kwargs)
-        self.file_name = file_name or self.file_name
-        if file_name is None:
-            raise Exception("Must specify file for SVGMobject")
-        self.file_path = get_full_vector_image_path(file_name)
-
         super().__init__(**kwargs)
+        self.file_name = file_name or self.file_name
+        self.init_svg_mobject()
+        self.init_colors()
         self.move_into_position()
 
-    def move_into_position(self):
-        if self.should_center:
-            self.center()
-        if self.height is not None:
-            self.set_height(self.height)
-        if self.width is not None:
-            self.set_width(self.width)
+    def init_svg_mobject(self):
+        hasher = hashlib.sha256(str(self.hash_seed).encode())
+        hash_val = hasher.hexdigest()
+        if hash_val in SVG_HASH_TO_MOB_MAP:
+            mob = SVG_HASH_TO_MOB_MAP[hash_val].copy()
+            self.add(*mob)
+            return
 
-    def init_colors(self):
-        # Remove fill_color, fill_opacity,
-        # stroke_width, stroke_color, stroke_opacity
-        # as each submobject may have those values specified in svg file
-        self.set_stroke(background=self.draw_stroke_behind_fill)
-        self.set_gloss(self.gloss)
-        self.set_flat_stroke(self.flat_stroke)
-        return self
+        self.generate_mobject()
+        SVG_HASH_TO_MOB_MAP[hash_val] = self.copy()
 
-    def init_points(self):
-        with open(self.file_path, "r") as svg_file:
-            svg_string = svg_file.read()
-
-        # Create a temporary svg file to dump modified svg to be parsed
-        modified_svg_string = self.modify_svg_file(svg_string)
-        modified_file_path = self.file_path.replace(".svg", "_.svg")
-        with open(modified_file_path, "w") as modified_svg_file:
-            modified_svg_file.write(modified_svg_string)
-
-        # `color` attribute handles `currentColor` keyword
-        if self.fill_color:
-            color = self.fill_color
-        elif self.color:
-            color = self.color
-        else:
-            color = "black"
-        shapes = se.SVG.parse(
-            modified_file_path,
-            color=color
+    @property
+    def hash_seed(self):
+        # Returns data which can uniquely represent the result of `init_points`.
+        # The hashed value of it is stored as a key in `SVG_HASH_TO_MOB_MAP`.
+        return (
+            self.__class__.__name__,
+            self.svg_default,
+            self.path_string_config,
+            self.file_name
         )
+
+    def generate_mobject(self):
+        file_path = self.get_file_path()
+        element_tree = ET.parse(file_path)
+        new_tree = self.modify_xml_tree(element_tree)
+        # Create a temporary svg file to dump modified svg to be parsed
+        modified_file_path = file_path.replace(".svg", "_.svg")
+        new_tree.write(modified_file_path)
+
+        svg = se.SVG.parse(modified_file_path)
         os.remove(modified_file_path)
 
-        mobjects = self.get_mobjects_from(shapes)
+        mobjects = self.get_mobjects_from(svg)
         self.add(*mobjects)
         self.flip(RIGHT)  # Flip y
-        self.scale(0.75)
 
-    def modify_svg_file(self, svg_string):
-        # svgelements cannot handle em, ex units
-        # Convert them using 1em = 16px, 1ex = 0.5em = 8px
-        def convert_unit(match_obj):
-            number = float(match_obj.group(1))
-            unit = match_obj.group(2)
-            factor = 16 if unit == "em" else 8
-            return str(number * factor) + "px"
+    def get_file_path(self):
+        if self.file_name is None:
+            raise Exception("Must specify file for SVGMobject")
+        return get_full_vector_image_path(self.file_name)
 
-        number_pattern = r"([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)(ex|em)(?![a-zA-Z])"
-        result = re.sub(number_pattern, convert_unit, svg_string)
+    def modify_xml_tree(self, element_tree):
+        config_style_dict = self.generate_config_style_dict()
+        style_keys = (
+            "fill",
+            "fill-opacity",
+            "stroke",
+            "stroke-opacity",
+            "stroke-width",
+            "style"
+        )
+        root = element_tree.getroot()
+        root_style_dict = {
+            k: v for k, v in root.attrib.items()
+            if k in style_keys
+        }
 
-        # Add a group tag to set style from configuration
-        style_dict = self.generate_context_values_from_config()
-        group_tag_begin = "<g " + " ".join([
-            f"{k}=\"{v}\""
-            for k, v in style_dict.items()
-        ]) + ">"
-        group_tag_end = "</g>"
-        begin_insert_index = re.search(r"<svg[\s\S]*?>", result).end()
-        end_insert_index = re.search(r"[\s\S]*(</svg\s*>)", result).start(1)
-        result = "".join([
-            result[:begin_insert_index],
-            group_tag_begin,
-            result[begin_insert_index:end_insert_index],
-            group_tag_end,
-            result[end_insert_index:]
-        ])
+        new_root = ET.Element("svg", {})
+        config_style_node = ET.SubElement(new_root, "g", config_style_dict)
+        root_style_node = ET.SubElement(config_style_node, "g", root_style_dict)
+        root_style_node.extend(root)
+        return ET.ElementTree(new_root)
 
-        return result
-
-    def generate_context_values_from_config(self):
+    def generate_config_style_dict(self):
+        keys_converting_dict = {
+            "fill": ("color", "fill_color"),
+            "fill-opacity": ("opacity", "fill_opacity"),
+            "stroke": ("color", "stroke_color"),
+            "stroke-opacity": ("opacity", "stroke_opacity"),
+            "stroke-width": ("stroke_width",)
+        }
+        svg_default_dict = self.svg_default
         result = {}
-        if self.stroke_width is not None:
-            result["stroke-width"] = self.stroke_width
-        if self.color is not None:
-            result["fill"] = result["stroke"] = self.color
-        if self.fill_color is not None:
-            result["fill"] = self.fill_color
-        if self.stroke_color is not None:
-            result["stroke"] = self.stroke_color
-        if self.opacity is not None:
-            result["fill-opacity"] = result["stroke-opacity"] = self.opacity
-        if self.fill_opacity is not None:
-            result["fill-opacity"] = self.fill_opacity
-        if self.stroke_opacity is not None:
-            result["stroke-opacity"] = self.stroke_opacity
+        for svg_key, style_keys in keys_converting_dict.items():
+            for style_key in style_keys:
+                if svg_default_dict[style_key] is None:
+                    continue
+                result[svg_key] = str(svg_default_dict[style_key])
         return result
 
-    def get_mobjects_from(self, shape):
-        if isinstance(shape, se.Group):
-            return list(it.chain(*(
-                self.get_mobjects_from(child)
-                for child in shape
-            )))
-
-        mob = self.get_mobject_from(shape)
-        if mob is None:
-            return []
-
-        if isinstance(shape, se.Transformable) and shape.apply:
-            self.handle_transform(mob, shape.transform)
-        return [mob]
+    def get_mobjects_from(self, svg):
+        result = []
+        for shape in svg.elements():
+            if isinstance(shape, se.Group):
+                continue
+            mob = self.get_mobject_from(shape)
+            if mob is None:
+                continue
+            if isinstance(shape, se.Transformable) and shape.apply:
+                self.handle_transform(mob, shape.transform)
+            result.append(mob)
+        return result
 
     @staticmethod
     def handle_transform(mob, matrix):
@@ -264,6 +260,14 @@ class SVGMobject(VMobject):
 
     def text_to_mobject(self, text):
         pass
+
+    def move_into_position(self):
+        if self.should_center:
+            self.center()
+        if self.height is not None:
+            self.set_height(self.height)
+        if self.width is not None:
+            self.set_width(self.width)
 
 
 class VMobjectFromSVGPath(VMobject):
