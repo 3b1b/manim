@@ -17,6 +17,7 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.directories import get_mobject_data_dir
 from manimlib.utils.images import get_full_vector_image_path
+from manimlib.utils.iterables import hash_obj
 from manimlib.logger import log
 
 
@@ -63,8 +64,7 @@ class SVGMobject(VMobject):
         self.move_into_position()
 
     def init_svg_mobject(self):
-        hasher = hashlib.sha256(str(self.hash_seed).encode())
-        hash_val = hasher.hexdigest()
+        hash_val = hash_obj(self.hash_seed)
         if hash_val in SVG_HASH_TO_MOB_MAP:
             mob = SVG_HASH_TO_MOB_MAP[hash_val].copy()
             self.add(*mob)
