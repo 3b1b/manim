@@ -1,3 +1,10 @@
+from __future__ import annotations
+
+import itertools as it
+from abc import abstractmethod
+
+import numpy as np
+
 from manimlib.animation.animation import Animation
 from manimlib.animation.composition import Succession
 from manimlib.mobject.types.vectorized_mobject import VMobject
@@ -7,8 +14,9 @@ from manimlib.utils.rate_functions import linear
 from manimlib.utils.rate_functions import double_smooth
 from manimlib.utils.rate_functions import smooth
 
-import numpy as np
-import itertools as it
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from manimlib.mobject.mobject import Group
 
 
 class ShowPartial(Animation):
@@ -19,21 +27,27 @@ class ShowPartial(Animation):
         "should_match_start": False,
     }
 
-    def begin(self):
+    def begin(self) -> None:
         super().begin()
         if not self.should_match_start:
             self.mobject.lock_matching_data(self.mobject, self.starting_mobject)
 
-    def finish(self):
+    def finish(self) -> None:
         super().finish()
         self.mobject.unlock_data()
 
-    def interpolate_submobject(self, submob, start_submob, alpha):
+    def interpolate_submobject(
+        self,
+        submob: VMobject,
+        start_submob: VMobject,
+        alpha: float
+    ) -> None:
         submob.pointwise_become_partial(
             start_submob, *self.get_bounds(alpha)
         )
 
-    def get_bounds(self, alpha):
+    @abstractmethod
+    def get_bounds(self, alpha: float) -> tuple[float, float]:
         raise Exception("Not Implemented")
 
 
@@ -42,7 +56,7 @@ class ShowCreation(ShowPartial):
         "lag_ratio": 1,
     }
 
-    def get_bounds(self, alpha):
+    def get_bounds(self, alpha: float) -> tuple[float, float]:
         return (0, alpha)
 
 
@@ -64,7 +78,7 @@ class DrawBorderThenFill(Animation):
         "fill_animation_config": {},
     }
 
-    def __init__(self, vmobject, **kwargs):
+    def __init__(self, vmobject: VMobject, **kwargs):
         assert(isinstance(vmobject, VMobject))
         self.sm_to_index = dict([
             (hash(sm), 0)
@@ -72,7 +86,7 @@ class DrawBorderThenFill(Animation):
         ])
         super().__init__(vmobject, **kwargs)
 
-    def begin(self):
+    def begin(self) -> None:
         # Trigger triangulation calculation
         for submob in self.mobject.get_family():
             submob.get_triangulation()
@@ -82,11 +96,11 @@ class DrawBorderThenFill(Animation):
         self.mobject.match_style(self.outline)
         self.mobject.lock_matching_data(self.mobject, self.outline)
 
-    def finish(self):
+    def finish(self) -> None:
         super().finish()
         self.mobject.unlock_data()
 
-    def get_outline(self):
+    def get_outline(self) -> VMobject:
         outline = self.mobject.copy()
         outline.set_fill(opacity=0)
         for sm in outline.get_family():
@@ -96,17 +110,23 @@ class DrawBorderThenFill(Animation):
             )
         return outline
 
-    def get_stroke_color(self, vmobject):
+    def get_stroke_color(self, vmobject: VMobject) -> str:
         if self.stroke_color:
             return self.stroke_color
         elif vmobject.get_stroke_width() > 0:
             return vmobject.get_stroke_color()
         return vmobject.get_color()
 
-    def get_all_mobjects(self):
+    def get_all_mobjects(self) -> list[VMobject]:
         return [*super().get_all_mobjects(), self.outline]
 
-    def interpolate_submobject(self, submob, start, outline, alpha):
+    def interpolate_submobject(
+        self,
+        submob: VMobject,
+        start: VMobject,
+        outline: VMobject,
+        alpha: float
+    ) -> None:
         index, subalpha = integer_interpolate(0, 2, alpha)
 
         if index == 1 and self.sm_to_index[hash(submob)] == 0:
@@ -133,13 +153,13 @@ class Write(DrawBorderThenFill):
         "rate_func": linear,
     }
 
-    def __init__(self, mobject, **kwargs):
+    def __init__(self, vmobject: VMobject, **kwargs):
         digest_config(self, kwargs)
-        self.set_default_config_from_length(mobject)
-        super().__init__(mobject, **kwargs)
+        self.set_default_config_from_length(vmobject)
+        super().__init__(vmobject, **kwargs)
 
-    def set_default_config_from_length(self, mobject):
-        length = len(mobject.family_members_with_points())
+    def set_default_config_from_length(self, vmobject: VMobject) -> None:
+        length = len(vmobject.family_members_with_points())
         if self.run_time is None:
             if length < 15:
                 self.run_time = 1
@@ -155,16 +175,16 @@ class ShowIncreasingSubsets(Animation):
         "int_func": np.round,
     }
 
-    def __init__(self, group, **kwargs):
+    def __init__(self, group: Group, **kwargs):
         self.all_submobs = list(group.submobjects)
         super().__init__(group, **kwargs)
 
-    def interpolate_mobject(self, alpha):
+    def interpolate_mobject(self, alpha: float) -> None:
         n_submobs = len(self.all_submobs)
         index = int(self.int_func(alpha * n_submobs))
         self.update_submobject_list(index)
 
-    def update_submobject_list(self, index):
+    def update_submobject_list(self, index: int) -> None:
         self.mobject.set_submobjects(self.all_submobs[:index])
 
 
@@ -173,7 +193,7 @@ class ShowSubmobjectsOneByOne(ShowIncreasingSubsets):
         "int_func": np.ceil,
     }
 
-    def update_submobject_list(self, index):
+    def update_submobject_list(self, index: int) -> None:
         # N = len(self.all_submobs)
         if index == 0:
             self.mobject.set_submobjects([])

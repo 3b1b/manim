@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import numpy as np
+
 from manimlib.animation.composition import LaggedStart
 from manimlib.animation.transform import Restore
 from manimlib.constants import WHITE
@@ -19,7 +23,7 @@ class Broadcast(LaggedStart):
         "run_time": 3,
     }
 
-    def __init__(self, focal_point, **kwargs):
+    def __init__(self, focal_point: np.ndarray, **kwargs):
         digest_config(self, kwargs)
         circles = VGroup()
         for x in range(self.n_circles):
