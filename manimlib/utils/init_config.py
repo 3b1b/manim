@@ -17,7 +17,7 @@ def get_manim_dir() -> str:
     return os.path.abspath(os.path.join(manimlib_dir, ".."))
 
 
-def remove_empty_value(dictionary: dict[str, Any]) -> dict[str, Any]:
+def remove_empty_value(dictionary: dict[str, Any]) -> None:
     for key in list(dictionary.keys()):
         if dictionary[key] == "":
             dictionary.pop(key)
