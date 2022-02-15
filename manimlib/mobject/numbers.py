@@ -86,14 +86,20 @@ class DecimalNumber(VMobject):
         return self.data["font_size"][0]
 
     def string_to_mob(self, string, mob_class=Text, **kwargs):
-        if not kwargs:
-            if string not in string_to_mob_map:
-              string_to_mob_map[string] = mob_class(string, font_size=1, **kwargs)
-            mob = string_to_mob_map[string].copy()
-        else:
-            if (string, str(kwargs)) not in string_to_mob_map:
-              string_to_mob_map[(string, str(kwargs))] = mob_class(string, font_size=1, **kwargs)
-            mob = string_to_mob_map[(string, str(kwargs))].copy()
+        def make_hash(o):
+            if isinstance(o, (set, tuple, list)):
+                return tuple([make_hash(e) for e in o])    
+            elif not isinstance(o, dict):
+                return hash(o)
+            from copy import deepcopy as _deepcopy
+            new_o = _deepcopy(o)
+            for k, v in new_o.items():
+                new_o[k] = make_hash(v)
+            return hash(tuple(frozenset(sorted(new_o.items()))))
+
+        if (string, make_hash(kwargs)) not in string_to_mob_map:
+            string_to_mob_map[(string, make_hash(kwargs))] = mob_class(string, font_size=1, **kwargs)
+        mob = string_to_mob_map[(string, make_hash(kwargs))].copy()
         mob.scale(self.get_font_size())
         return mob
 
