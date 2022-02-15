@@ -92,12 +92,12 @@ def interpolate(start: T, end: T, alpha: float) -> T:
 
 
 def set_array_by_interpolation(
-    arr: list[T],
-    arr1: list[T],
-    arr2: list[T],
+    arr: np.ndarray,
+    arr1: np.ndarray,
+    arr2: np.ndarray,
     alpha: float,
-    interp_func: Callable[[T, T, float], T] = interpolate
-) -> list[T]:
+    interp_func: Callable[[np.ndarray, np.ndarray, float], np.ndarray] = interpolate
+) -> np.ndarray:
     arr[:] = interp_func(arr1, arr2, alpha)
     return arr
 
