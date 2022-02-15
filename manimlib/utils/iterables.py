@@ -147,6 +147,6 @@ def hash_obj(obj):
         return hash(tuple(frozenset(sorted(new_obj.items()))))
 
     if isinstance(obj, (set, tuple, list)):
-        return hash(tuple([hash_obj(e) for e in obj]))
+        return hash(tuple(hash_obj(e) for e in obj))
 
     return hash(obj)
