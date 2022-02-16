@@ -6,11 +6,11 @@ import itertools as it
 from types import MethodType
 from typing import Iterable, Union, Sequence
 
-from manimlib.constants import BLACK
+from manimlib.constants import WHITE
 from manimlib.mobject.svg.svg_mobject import SVGMobject
-from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.color import color_to_int_rgb
+from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import adjacent_pairs
 from manimlib.utils.iterables import remove_list_redundancies
 from manimlib.utils.tex_file_writing import tex_to_svg_file
@@ -24,23 +24,8 @@ ManimColor = Union[str, colour.Color, Sequence[float]]
 SCALE_FACTOR_PER_FONT_POINT = 0.001
 
 
-TEX_HASH_TO_MOB_MAP: dict[int, VGroup] = {}
-
-
 def _get_neighbouring_pairs(iterable: Iterable) -> list:
     return list(adjacent_pairs(iterable))[:-1]
-
-
-class _TexSVG(SVGMobject):
-    CONFIG = {
-        "color": BLACK,
-        "stroke_width": 0,
-        "height": None,
-        "path_string_config": {
-            "should_subdivide_sharp_curves": True,
-            "should_remove_null_curves": True,
-        },
-    }
 
 
 class _TexParser(object):
@@ -417,10 +402,21 @@ class _TexParser(object):
         ])
 
 
-class MTex(VMobject):
+class _TexSVG(SVGMobject):
     CONFIG = {
+        "height": None,
         "fill_opacity": 1.0,
         "stroke_width": 0,
+        "path_string_config": {
+            "should_subdivide_sharp_curves": True,
+            "should_remove_null_curves": True,
+        },
+    }
+
+
+class MTex(_TexSVG):
+    CONFIG = {
+        "color": WHITE,
         "font_size": 48,
         "alignment": "\\centering",
         "tex_environment": "align*",
@@ -430,65 +426,51 @@ class MTex(VMobject):
     }
 
     def __init__(self, tex_string: str, **kwargs):
-        super().__init__(**kwargs)
+        digest_config(self, kwargs)
         tex_string = tex_string.strip()
         # Prevent from passing an empty string.
         if not tex_string:
             tex_string = "\\quad"
         self.tex_string = tex_string
-
-        self.__parser = _TexParser(
+        self.parser = _TexParser(
             self.tex_string,
             [*self.tex_to_color_map.keys(), *self.isolate]
         )
-        mob = self.generate_mobject()
-        self.add(*mob.copy())
-        self.init_colors()
+        super().__init__(**kwargs)
+
         self.set_color_by_tex_to_color_map(self.tex_to_color_map)
         self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)
 
-    @staticmethod
-    def color_to_label(color: ManimColor) -> list:
-        r, g, b = color_to_int_rgb(color)
-        rg = r * 256 + g
-        return rg * 256 + b
+    @property
+    def hash_seed(
+        self
+    ) -> tuple[str, dict[str], dict[str, bool], str, list[str], str, str, bool]:
+        return (
+            self.__class__.__name__,
+            self.svg_default,
+            self.path_string_config,
+            self.tex_string,
+            self.parser.specified_substrings,
+            self.alignment,
+            self.tex_environment,
+            self.use_plain_tex
+        )
 
-    def generate_mobject(self) -> VGroup:
-        labelled_tex_string = self.__parser.get_labelled_tex_string()
-        labelled_tex_content = self.get_tex_file_content(labelled_tex_string)
-        hash_val = hash((labelled_tex_content, self.use_plain_tex))
+    def get_file_path(self) -> str:
+        return self._get_file_path(self.use_plain_tex)
 
-        if hash_val in TEX_HASH_TO_MOB_MAP:
-            return TEX_HASH_TO_MOB_MAP[hash_val]
+    def _get_file_path(self, use_plain_tex: bool) -> str:
+        if use_plain_tex:
+            tex_string = self.tex_string
+        else:
+            tex_string = self.parser.get_labelled_tex_string()
 
-        if not self.use_plain_tex:
-            with display_during_execution(f"Writing \"{self.tex_string}\""):
-                labelled_svg_glyphs = self.tex_content_to_glyphs(
-                    labelled_tex_content
-                )
-                glyph_labels = [
-                    self.color_to_label(labelled_glyph.get_fill_color())
-                    for labelled_glyph in labelled_svg_glyphs
-                ]
-                mob = self.build_mobject(labelled_svg_glyphs, glyph_labels)
-            TEX_HASH_TO_MOB_MAP[hash_val] = mob
-            return mob
-
+        full_tex = self.get_tex_file_body(tex_string)
         with display_during_execution(f"Writing \"{self.tex_string}\""):
-            labelled_svg_glyphs = self.tex_content_to_glyphs(
-                labelled_tex_content
-            )
-            tex_content = self.get_tex_file_content(self.tex_string)
-            svg_glyphs = self.tex_content_to_glyphs(tex_content)
-            glyph_labels = [
-                self.color_to_label(labelled_glyph.get_fill_color())
-                for labelled_glyph in labelled_svg_glyphs
-            ]
-            mob = self.build_mobject(svg_glyphs, glyph_labels)
-        TEX_HASH_TO_MOB_MAP[hash_val] = mob
-        return mob
+            file_path = self.tex_to_svg_file_path(full_tex)
+        return file_path
 
-    def get_tex_file_content(self, tex_string: str) -> str:
+    def get_tex_file_body(self, tex_string: str) -> str:
         if self.tex_environment:
             tex_string = "\n".join([
                 f"\\begin{{{self.tex_environment}}}",
@@ -497,17 +479,38 @@ class MTex(VMobject):
             ])
         if self.alignment:
             tex_string = "\n".join([self.alignment, tex_string])
-        return tex_string
+        
+        tex_config = get_tex_config()
+        return tex_config["tex_body"].replace(
+            tex_config["text_to_replace"],
+            tex_string
+        )
 
     @staticmethod
-    def tex_content_to_glyphs(tex_content: str) -> _TexSVG:
-        tex_config = get_tex_config()
-        full_tex = tex_config["tex_body"].replace(
-            tex_config["text_to_replace"],
-            tex_content
-        )
-        filename = tex_to_svg_file(full_tex)
-        return _TexSVG(filename)
+    def tex_to_svg_file_path(tex_file_content: str) -> str:
+        return tex_to_svg_file(tex_file_content)
+
+    def generate_mobject(self) -> None:
+        super().generate_mobject()
+
+        if not self.use_plain_tex:
+            labelled_svg_glyphs = self
+        else:
+            file_path = self._get_file_path(use_plain_tex=False)
+            labelled_svg_glyphs = _TexSVG(file_path)
+
+        glyph_labels = [
+            self.color_to_label(labelled_glyph.get_fill_color())
+            for labelled_glyph in labelled_svg_glyphs
+        ]
+        mob = self.build_mobject(self, glyph_labels)
+        self.set_submobjects(mob.submobjects)
+
+    @staticmethod
+    def color_to_label(color: ManimColor) -> int:
+        r, g, b = color_to_int_rgb(color)
+        rg = r * 256 + g
+        return rg * 256 + b
 
     def build_mobject(
         self,
@@ -535,11 +538,11 @@ class MTex(VMobject):
         submob_labels.append(current_glyph_label)
         submobjects.append(submobject)
 
-        indices = self.__parser.get_sorted_submob_indices(submob_labels)
+        indices = self.parser.get_sorted_submob_indices(submob_labels)
         rearranged_submobjects = [submobjects[index] for index in indices]
         rearranged_labels = [submob_labels[index] for index in indices]
 
-        submob_tex_strings = self.__parser.get_submob_tex_strings(
+        submob_tex_strings = self.parser.get_submob_tex_strings(
             rearranged_labels
         )
         for submob, label, submob_tex in zip(
@@ -555,14 +558,14 @@ class MTex(VMobject):
         self,
         tex_spans: Iterable[tuple[int, int]]
     ) -> VGroup:
-        labels = self.__parser.get_containing_labels_by_tex_spans(tex_spans)
+        labels = self.parser.get_containing_labels_by_tex_spans(tex_spans)
         return VGroup(*filter(
             lambda submob: submob.submob_label in labels,
             self.submobjects
         ))
 
     def get_part_by_custom_span(self, custom_span: tuple[int, int]) -> VGroup:
-        tex_spans = self.__parser.find_span_components_of_custom_span(
+        tex_spans = self.parser.find_span_components_of_custom_span(
             custom_span
         )
         if tex_spans is None:
@@ -617,10 +620,10 @@ class MTex(VMobject):
         ]
 
     def get_specified_substrings(self) -> list[str]:
-        return self.__parser.get_specified_substrings()
+        return self.parser.get_specified_substrings()
 
     def get_isolated_substrings(self) -> list[str]:
-        return self.__parser.get_isolated_substrings()
+        return self.parser.get_isolated_substrings()
 
 
 class MTexText(MTex):

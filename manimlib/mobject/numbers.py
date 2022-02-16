@@ -6,6 +6,7 @@ from manimlib.constants import *
 from manimlib.mobject.svg.tex_mobject import SingleStringTex
 from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.utils.iterables import hash_obj
 
 T = TypeVar("T", bound=VMobject)
 
@@ -25,23 +26,23 @@ class DecimalNumber(VMobject):
         "include_background_rectangle": False,
         "edge_to_fix": LEFT,
         "font_size": 48,
+        "text_config": {} # Do not pass in font_size here
     }
 
     def __init__(self, number: float | complex = 0, **kwargs):
         super().__init__(**kwargs)
         self.set_submobjects_from_number(number)
-        self.init_colors()
 
     def set_submobjects_from_number(self, number: float | complex) -> None:
         self.number = number
         self.set_submobjects([])
-
+        string_to_mob_ = lambda s: self.string_to_mob(s, **self.text_config)
         num_string = self.get_num_string(number)
-        self.add(*map(self.string_to_mob, num_string))
+        self.add(*map(string_to_mob_, num_string))
 
         # Add non-numerical bits
         if self.show_ellipsis:
-            dots = self.string_to_mob("...")
+            dots = string_to_mob_("...")
             dots.arrange(RIGHT, buff=2 * dots[0].get_width())
             self.add(dots)
         if self.unit is not None:
@@ -90,10 +91,10 @@ class DecimalNumber(VMobject):
     def get_font_size(self) -> float:
         return self.data["font_size"][0]
 
-    def string_to_mob(self, string: str, mob_class: Type[T] = Text) -> T:
-        if string not in string_to_mob_map:
-            string_to_mob_map[string] = mob_class(string, font_size=1)
-        mob = string_to_mob_map[string].copy()
+    def string_to_mob(self, string: str, mob_class: Type[T] = Text, **kwargs) -> T:
+        if (string, hash_obj(kwargs)) not in string_to_mob_map:
+            string_to_mob_map[(string, hash_obj(kwargs))] = mob_class(string, font_size=1, **kwargs)
+        mob = string_to_mob_map[(string, hash_obj(kwargs))].copy()
         mob.scale(self.get_font_size())
         return mob
 
