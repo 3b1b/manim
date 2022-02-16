@@ -5,7 +5,6 @@ import re
 from manimlib.constants import *
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.svg.svg_mobject import SVGMobject
-from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.tex_file_writing import tex_to_svg_file
@@ -16,55 +15,50 @@ from manimlib.utils.tex_file_writing import display_during_execution
 SCALE_FACTOR_PER_FONT_POINT = 0.001
 
 
-tex_string_with_color_to_mob_map = {}
-
-
-class SingleStringTex(VMobject):
+class SingleStringTex(SVGMobject):
     CONFIG = {
+        "height": None,
         "fill_opacity": 1.0,
         "stroke_width": 0,
-        "should_center": True,
+        "svg_default": {
+            "color": WHITE,
+        },
+        "path_string_config": {
+            "should_subdivide_sharp_curves": True,
+            "should_remove_null_curves": True,
+        },
         "font_size": 48,
-        "height": None,
-        "organize_left_to_right": False,
         "alignment": "\\centering",
         "math_mode": True,
+        "organize_left_to_right": False,
     }
 
     def __init__(self, tex_string, **kwargs):
-        super().__init__(**kwargs)
-        assert(isinstance(tex_string, str))
+        assert isinstance(tex_string, str)
         self.tex_string = tex_string
-        if tex_string not in tex_string_with_color_to_mob_map:
-            full_tex = self.get_tex_file_body(tex_string)
-            filename = tex_to_svg_file(full_tex)
-            svg_mob = SVGMobject(
-                filename,
-                height=None,
-                color=self.color,
-                stroke_width=self.stroke_width,
-                path_string_config={
-                    "should_subdivide_sharp_curves": True,
-                    "should_remove_null_curves": True,
-                }
-            )
-            tex_string_with_color_to_mob_map[(self.color, tex_string)] = svg_mob
-        self.add(*(
-            sm.copy()
-            for sm in tex_string_with_color_to_mob_map[(self.color, tex_string)]
-        ))
-        self.init_colors()
+        super().__init__(**kwargs)
 
         if self.height is None:
             self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
 
-    def init_colors(self):
-        self.set_stroke(background=self.draw_stroke_behind_fill)
-        self.set_gloss(self.gloss)
-        self.set_flat_stroke(self.flat_stroke)
-        return self
+    @property
+    def hash_seed(self):
+        return (
+            self.__class__.__name__,
+            self.svg_default,
+            self.path_string_config,
+            self.tex_string,
+            self.alignment,
+            self.math_mode
+        )
+
+    def get_file_path(self):
+        full_tex = self.get_tex_file_body(self.tex_string)
+        with display_during_execution(f"Writing \"{self.tex_string}\""):
+            file_path = tex_to_svg_file(full_tex)
+        return file_path
 
     def get_tex_file_body(self, tex_string):
         new_tex = self.get_modified_expression(tex_string)

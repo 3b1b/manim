@@ -71,8 +71,6 @@ class Text(SVGMobject):
         PangoUtils.remove_last_M(file_name)
         self.remove_empty_path(file_name)
         SVGMobject.__init__(self, file_name, **kwargs)
-        if self.color:
-            self.set_fill(self.color)
         self.text = text
         if self.disable_ligatures:
             self.apply_space_chars()
