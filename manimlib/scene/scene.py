@@ -72,7 +72,7 @@ class Scene(object):
         # Items associated with interaction
         self.mouse_point = Point()
         self.mouse_drag_point = Point()
-        self.hold_on_wait = not self.presenter_mode
+        self.hold_on_wait = self.presenter_mode
 
         # Much nicer to work with deterministic scenes
         if self.random_seed is not None:
@@ -700,9 +700,9 @@ class Scene(object):
             self.camera.frame.to_default_state()
         elif char == "q":
             self.quit_interaction = True
-        elif char == " ":
+        elif char == " " or symbol == 65363:  # Space or right arrow
             self.hold_on_wait = False
-        elif char == "e":
+        elif char == "e" and modifiers == 3:  # ctrl + shift + e
             self.embed(close_scene_on_exit=False)
 
     def on_resize(self, width: int, height: int) -> None:
