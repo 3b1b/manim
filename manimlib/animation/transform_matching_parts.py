@@ -19,6 +19,7 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import remove_list_redundancies
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from manimlib.scene.scene import Scene
     from manimlib.mobject.svg.tex_mobject import Tex, SingleStringTex

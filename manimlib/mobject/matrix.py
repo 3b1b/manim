@@ -16,6 +16,7 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     import colour
     from manimlib.mobject.mobject import Mobject

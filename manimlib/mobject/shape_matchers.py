@@ -10,6 +10,7 @@ from manimlib.utils.customization import get_customization
 from manimlib.utils.config_ops import digest_config
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from typing import Union, Sequence
     from manimlib.mobject.mobject import Mobject

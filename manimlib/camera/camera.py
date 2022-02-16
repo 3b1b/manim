@@ -22,6 +22,7 @@ from manimlib.utils.space_ops import quaternion_from_angle_axis
 from manimlib.utils.space_ops import quaternion_mult
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from manimlib.shader_wrapper import ShaderWrapper
 

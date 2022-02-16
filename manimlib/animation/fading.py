@@ -10,6 +10,7 @@ from manimlib.utils.bezier import interpolate
 from manimlib.utils.rate_functions import there_and_back
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from manimlib.scene.scene import Scene
     from manimlib.mobject.mobject import Mobject

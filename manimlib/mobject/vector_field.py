@@ -23,6 +23,7 @@ from manimlib.utils.simple_functions import sigmoid
 from manimlib.utils.space_ops import get_norm
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from manimlib.mobject.mobject import Mobject
     from manimlib.mobject.coordinate_systems import CoordinateSystem

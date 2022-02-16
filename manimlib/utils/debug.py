@@ -10,6 +10,7 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.logger import log
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from manimlib.mobject.mobject import Mobject
 

@@ -15,6 +15,7 @@ from manimlib.utils.iterables import listify
 from manimlib.utils.space_ops import normalize_along_axis
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from manimlib.camera.camera import Camera
 

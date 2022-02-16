@@ -23,6 +23,7 @@ from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotate_vector
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     import colour
     from manimlib.mobject.mobject import Mobject

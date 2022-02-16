@@ -26,6 +26,7 @@ from manimlib.utils.directories import get_downloads_dir, get_text_dir
 from manimpango import PangoUtils, TextSetting, MarkupUtils
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     import colour
     from manimlib.mobject.types.vectorized_mobject import VMobject

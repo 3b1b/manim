@@ -9,6 +9,7 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.utils.simple_functions import clip
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     import numpy as np
     from manimlib.animation.animation import Animation

@@ -9,6 +9,7 @@ from manimlib.utils.rate_functions import linear
 from manimlib.utils.rate_functions import smooth
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     import numpy as np
     from manimlib.mobject.mobject import Mobject

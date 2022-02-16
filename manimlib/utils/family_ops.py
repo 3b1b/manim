@@ -4,6 +4,7 @@ import itertools as it
 from typing import Iterable
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from manimlib.mobject.mobject import Mobject
 

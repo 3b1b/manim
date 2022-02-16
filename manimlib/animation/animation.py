@@ -10,6 +10,7 @@ from manimlib.utils.rate_functions import smooth
 from manimlib.utils.simple_functions import clip
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from manimlib.scene.scene import Scene
 

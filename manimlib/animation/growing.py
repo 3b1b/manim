@@ -4,6 +4,7 @@ from manimlib.constants import PI
 from manimlib.animation.transform import Transform
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     import numpy as np
     from manimlib.mobject.mobject import Mobject

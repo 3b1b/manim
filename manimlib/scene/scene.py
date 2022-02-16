@@ -27,6 +27,7 @@ from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.logger import log
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from PIL.Image import Image
     from manimlib.animation.animation import Animation

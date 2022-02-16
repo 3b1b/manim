@@ -19,6 +19,7 @@ from manimlib.utils.sounds import get_full_sound_file_path
 from manimlib.logger import log
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from manimlib.scene.scene import Scene
     from manimlib.camera.camera import Camera

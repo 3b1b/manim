@@ -19,6 +19,7 @@ from manimlib.utils.rate_functions import smooth
 from manimlib.utils.rate_functions import squish_rate_func
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     import colour
     from manimlib.scene.scene import Scene

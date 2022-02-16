@@ -6,6 +6,7 @@ from typing import Callable
 from manimlib.animation.animation import Animation
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from manimlib.mobject.mobject import Mobject
 
