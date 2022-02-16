@@ -6,38 +6,40 @@ Unreleased
 
 Fixed bugs
 ^^^^^^^^^^
-- `#1740 <https://github.com/3b1b/manim/pull/1740>`__: Bug fix for the case of calling ``Write`` on a null object
+- Bug fix for the case of calling ``Write`` on a null object (`#1740 <https://github.com/3b1b/manim/pull/1740>`__)
 
 
 New Features
 ^^^^^^^^^^^^
-- `#1725 <https://github.com/3b1b/manim/pull/1725>`__: Added ``TransformMatchingMTex``
-- `#1727 <https://github.com/3b1b/manim/pull/1727>`__: Added ``ImplicitFunction``
-- `#1731 <https://github.com/3b1b/manim/pull/1731>`__: Added ``Polyline``
-- `#1739 <https://github.com/3b1b/manim/pull/1739/commits/a64259158538eae6043566aaf3d3329ff4ac394b>`__: Allowed ``Mobject.set_points`` to take in an empty list, and added ``Mobject.add_point``
-- `#1739 <https://github.com/3b1b/manim/pull/1739/commits/33d2894c167c577a15fdadbaf26488ff1f5bff87>`__: Added ``Scene.refresh_locked_data``
-- `#1739 <https://github.com/3b1b/manim/pull/1739/commits/9a9cc8bdacb7541b7cd4a52ad705abc21f3e27fe>`__: Added presenter mode to scenes with ``-p`` option
-- `#1739 <https://github.com/3b1b/manim/pull/1739/commits/9df12fcb7d8360e51cd7021d6877ca1a5c31835e>`__: Allowed for an embed by hitting ``e`` during interaction
-- `#1739 <https://github.com/3b1b/manim/pull/1739/commits/2798d15591a0375ae6bb9135473e6f5328267323>`__: Added ``Mobject.set_min_width/height/depth``
-- `#1739 <https://github.com/3b1b/manim/pull/1739/commits/29a4d3e82ba94c007c996b2d1d0f923941452698>`__: Allowed ``Mobject.match_coord/x/y/z`` to take in a point
+- Added ``TransformMatchingMTex`` (`#1725 <https://github.com/3b1b/manim/pull/1725>`__)
+- Added ``ImplicitFunction`` (`#1727 <https://github.com/3b1b/manim/pull/1727>`__)
+- Added ``Polyline`` (`#1731 <https://github.com/3b1b/manim/pull/1731>`__)
+- Allowed ``Mobject.set_points`` to take in an empty list, and added ``Mobject.add_point`` (`#1739 <https://github.com/3b1b/manim/pull/1739/commits/a64259158538eae6043566aaf3d3329ff4ac394b>`__)
+- Added ``Scene.refresh_locked_data`` (`#1739 <https://github.com/3b1b/manim/pull/1739/commits/33d2894c167c577a15fdadbaf26488ff1f5bff87>`__)
+- Added presenter mode to scenes with ``-p`` option (`#1739 <https://github.com/3b1b/manim/pull/1739/commits/9a9cc8bdacb7541b7cd4a52ad705abc21f3e27fe>`__ and `#1742 <https://github.com/3b1b/manim/pull/1742>`__)
+- Allowed for an embed by hitting ``ctrl+shift+e`` during interaction (`#1739 <https://github.com/3b1b/manim/pull/1739/commits/9df12fcb7d8360e51cd7021d6877ca1a5c31835e>`__ and `#1746 <https://github.com/3b1b/manim/pull/1746>`__)
+- Added ``Mobject.set_min_width/height/depth`` (`#1739 <https://github.com/3b1b/manim/pull/1739/commits/2798d15591a0375ae6bb9135473e6f5328267323>`__)
+- Allowed ``Mobject.match_coord/x/y/z`` to take in a point (`#1739 <https://github.com/3b1b/manim/pull/1739/commits/29a4d3e82ba94c007c996b2d1d0f923941452698>`__)
+- Added ``text_config`` to ``DecimalNumber`` (`#1744 <https://github.com/3b1b/manim/pull/1744>`__)
 
 
 Refactor
 ^^^^^^^^
-- `#1725 <https://github.com/3b1b/manim/pull/1725>`__: Refactored ``MTex``
-- `#1731 <https://github.com/3b1b/manim/pull/1731>`__: Refactored ``SVGMobject`` with svgelements
-- `#1739 <https://github.com/3b1b/manim/pull/1739/commits/2488b9e866fb1ecb842a27dd9f4956ec167e3dee>`__: Made sure ``ParametricCurve`` has at least one point
-- `#1739 <https://github.com/3b1b/manim/pull/1739/commits/6c6d387a210756c38feca7d34838aa9ac99bb58a>`__: Set default to no tips on ``Axes``
-- `#1739 <https://github.com/3b1b/manim/pull/1739/commits/58e06e8f6b7c5059ff315d51fd0018fec5cfbb05>`__: Stopped displaying when writing tex string is happening
+- Refactored ``MTex`` (`#1725 <https://github.com/3b1b/manim/pull/1725>`__)
+- Refactored ``SVGMobject`` with svgelements (`#1731 <https://github.com/3b1b/manim/pull/1731>`__)
+- Made sure ``ParametricCurve`` has at least one point (`#1739 <https://github.com/3b1b/manim/pull/1739/commits/2488b9e866fb1ecb842a27dd9f4956ec167e3dee>`__)
+- Set default to no tips on ``Axes`` (`#1739 <https://github.com/3b1b/manim/pull/1739/commits/6c6d387a210756c38feca7d34838aa9ac99bb58a>`__)
+- Stopped displaying when writing tex string is happening (`#1739 <https://github.com/3b1b/manim/pull/1739/commits/58e06e8f6b7c5059ff315d51fd0018fec5cfbb05>`__)
+- Reorganize inheriting order and refactor SVGMobject (`#1745 <https://github.com/3b1b/manim/pull/1745>`__)
 
 
 Dependencies
 ^^^^^^^^^^^^
-- `#1727 <https://github.com/3b1b/manim/pull/1727>`__: Added dependency on ``isosurfaces``
-- `#1728 <https://github.com/3b1b/manim/pull/1728>`__: Removed dependency on ``argparse`` since it's a built-in module
-- `#1728 <https://github.com/3b1b/manim/pull/1728>`__: Removed dependency on ``pyreadline``
-- `#1731 <https://github.com/3b1b/manim/pull/1731>`__: Removed dependency on ``cssselect2``
-- `#1731 <https://github.com/3b1b/manim/pull/1731>`__: Added dependency on ``svgelements``
+- Added dependency on ``isosurfaces`` (`#1727 <https://github.com/3b1b/manim/pull/1727>`__)
+- Removed dependency on ``argparse`` since it's a built-in module (`#1728 <https://github.com/3b1b/manim/pull/1728>`__)
+- Removed dependency on ``pyreadline`` (`#1728 <https://github.com/3b1b/manim/pull/1728>`__)
+- Removed dependency on ``cssselect2`` (`#1731 <https://github.com/3b1b/manim/pull/1731>`__)
+- Added dependency on ``svgelements`` (`#1731 <https://github.com/3b1b/manim/pull/1731>`__)
 
 
 v1.4.1
