@@ -169,9 +169,9 @@ class SVGMobject(VMobject):
         mob.shift(vec)
         return mob
 
-    def get_mobject_from(self, shape: se.Shape | se.Text) -> VMobject | None:
+    def get_mobject_from(self, shape: se.GraphicObject) -> VMobject | None:
         shape_class_to_func_map: dict[
-            type, Callable[[se.Shape | se.Text], VMobject]
+            type, Callable[[se.GraphicObject], VMobject]
         ] = {
             se.Path: self.path_to_mobject,
             se.SimpleLine: self.line_to_mobject,
@@ -196,7 +196,7 @@ class SVGMobject(VMobject):
     @staticmethod
     def apply_style_to_mobject(
         mob: VMobject,
-        shape: se.Shape | se.Text
+        shape: se.GraphicObject
     ) -> VMobject:
         mob.set_style(
             stroke_width=shape.stroke_width,
@@ -216,7 +216,7 @@ class SVGMobject(VMobject):
             end=_convert_point_to_3d(line.x2, line.y2)
         )
 
-    def rect_to_mobject(self, rect: se.Rect) -> Rectangle | RoundedRectangle:
+    def rect_to_mobject(self, rect: se.Rect) -> Rectangle:
         if rect.rx == 0 or rect.ry == 0:
             mob = Rectangle(
                 width=rect.width,
