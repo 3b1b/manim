@@ -631,7 +631,7 @@ class Scene(object):
             self.quit_interaction = True
         elif char == " " or symbol == 65363:  # Space or right arrow
             self.hold_on_wait = False
-        elif char == "e":
+        elif char == "e" and modifiers == 3:  # ctrl + shift + e
             self.embed(close_scene_on_exit=False)
 
     def on_resize(self, width: int, height: int):

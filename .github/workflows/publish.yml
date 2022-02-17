@@ -8,6 +8,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["py36", "py37", "py38", "py39", "py310"]
+
     steps:
     - uses: actions/checkout@v2
 
@@ -20,11 +25,13 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install setuptools wheel twine build
-    
-    - name: Build and publish
+
+    - name: Build wheels
+      run: python setup.py bdist_wheel --python-tag ${{ matrix.python }}
+
+    - name: Upload wheels
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
-        python -m build
         twine upload dist/*
