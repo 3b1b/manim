@@ -176,7 +176,7 @@ class SVGMobject(VMobject):
             se.Ellipse: self.ellipse_to_mobject,
             se.Polygon: self.polygon_to_mobject,
             se.Polyline: self.polyline_to_mobject,
-            # se.Text: self.text_to_mobject,  # TODO
+            se.Text: self.text_to_mobject,  # TODO
         }
         for shape_class, func in shape_class_to_func_map.items():
             if isinstance(shape, shape_class):
@@ -259,7 +259,11 @@ class SVGMobject(VMobject):
         return Polyline(*points)
 
     def text_to_mobject(self, text):
-        pass
+        from manimlib.mobject.svg.text_mobject import Text
+        mob = Text(text.text, font=text.font_family, font_size=text.font_size)
+        mob.scale(1 / 0.0076)   # TODO
+        mob.flip(RIGHT)
+        return mob
 
     def move_into_position(self):
         if self.should_center:
@@ -278,10 +282,21 @@ class VMobjectFromSVGPath(VMobject):
     }
 
     def __init__(self, path_obj, **kwargs):
+        self.path_obj = self.modify_path(path_obj)
+        super().__init__(**kwargs)
+
+    @staticmethod
+    def modify_path(path_obj):
         # Get rid of arcs
         path_obj.approximate_arcs_with_quads()
-        self.path_obj = path_obj
-        super().__init__(**kwargs)
+        # Remove trailing "Z M" command
+        if len(path_obj) >= 2:
+            if all([
+                isinstance(path_obj[-2], se.Close),
+                isinstance(path_obj[-1], se.Move),
+            ]):
+                del path_obj[len(path_obj._segments) - 1]
+        return path_obj
 
     def init_points(self):
         # After a given svg_path has been converted into points, the result
@@ -297,17 +312,18 @@ class VMobjectFromSVGPath(VMobject):
             self.set_points(np.load(points_filepath))
             self.triangulation = np.load(tris_filepath)
             self.needs_new_triangulation = False
-        else:
-            self.handle_commands()
-            if self.should_subdivide_sharp_curves:
-                # For a healthy triangulation later
-                self.subdivide_sharp_curves()
-            if self.should_remove_null_curves:
-                # Get rid of any null curves
-                self.set_points(self.get_points_without_null_curves())
-            # Save to a file for future use
-            np.save(points_filepath, self.get_points())
-            np.save(tris_filepath, self.get_triangulation())
+            return
+
+        self.handle_commands()
+        if self.should_subdivide_sharp_curves:
+            # For a healthy triangulation later
+            self.subdivide_sharp_curves()
+        if self.should_remove_null_curves:
+            # Get rid of any null curves
+            self.set_points(self.get_points_without_null_curves())
+        # Save to a file for future use
+        np.save(points_filepath, self.get_points())
+        np.save(tris_filepath, self.get_triangulation())
 
     def handle_commands(self):
         segment_class_to_func_map = {
@@ -325,3 +341,6 @@ class VMobjectFromSVGPath(VMobject):
                 for attr_name in attr_names
             ]
             func(*points)
+        #print(self.get_num_points())
+        #self.close_path()
+        #print(self.get_num_points())

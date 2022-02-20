@@ -17,6 +17,7 @@ from manimlib.logger import log
 from manimlib.constants import *
 from manimlib.mobject.geometry import Dot
 from manimlib.mobject.svg.svg_mobject import SVGMobject
+from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.customization import get_customization
@@ -34,12 +35,11 @@ class Text(SVGMobject):
         "height": None,
         "stroke_width": 0,
         # Text
-        "font": '',
-        "gradient": None,
-        "lsh": -1,
+        "lsh": None,
         "size": None,
         "font_size": 48,
-        "tab_width": 4,
+        "font": None,
+        "gradient": None,
         "slant": NORMAL,
         "weight": NORMAL,
         "t2c": {},
@@ -53,56 +53,81 @@ class Text(SVGMobject):
     def __init__(self, text, **kwargs):
         self.full2short(kwargs)
         digest_config(self, kwargs)
+        self.text = text
         if self.size:
             log.warning(
                 "`self.size` has been deprecated and will "
                 "be removed in future.",
             )
             self.font_size = self.size
-        if self.lsh == -1:
-            self.lsh = self.font_size + self.font_size * DEFAULT_LINE_SPACING_SCALE
-        else:
-            self.lsh = self.font_size + self.font_size * self.lsh
-        text_without_tabs = text
-        if text.find('\t') != -1:
-            text_without_tabs = text.replace('\t', ' ' * self.tab_width)
-        self.text = text_without_tabs
+        self.lsh = self.font_size * (1 + (
+            self.lsh or DEFAULT_LINE_SPACING_SCALE
+        ))
+        if self.font is None:
+            self.font = get_customization()["style"]["font"]
         file_name = self.text2svg()
-        PangoUtils.remove_last_M(file_name)
-        self.remove_empty_path(file_name)
-        SVGMobject.__init__(self, file_name, **kwargs)
-        self.text = text
-        if self.disable_ligatures:
-            self.apply_space_chars()
-        if self.t2c:
-            self.set_color_by_t2c()
+        #self.remove_last_M(file_name)
+        #self.remove_empty_path(file_name)
+        super().__init__(file_name, **kwargs)
+        self.remove_empty_submobs()   # TODO: move into generate_mobject
+        self.apply_space_chars()   # TODO: move into generate_mobject
+
+        self.set_color_by_t2c(self.t2c)
         if self.gradient:
             self.set_color_by_gradient(*self.gradient)
-        if self.t2g:
-            self.set_color_by_t2g()
+        self.set_color_by_t2g(self.t2g)
 
         # anti-aliasing
         if self.height is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
 
-    def remove_empty_path(self, file_name):
-        with open(file_name, 'r') as fpr:
-            content = fpr.read()
-        content = re.sub(r'<path .*?d=""/>', '', content)
-        with open(file_name, 'w') as fpw:
-            fpw.write(content)
+    #def remove_empty_path(self, file_name):
+    #    with open(file_name, 'r') as fpr:
+    #        content = fpr.read()
+    #    content = re.sub(r'<path .*?d=""/>', '', content)
+    #    with open(file_name, 'w') as fpw:
+    #        fpw.write(content)
+
+    #def remove_last_M(self, file_name):
+    #    """Remove element from the SVG file in order to allow comparison."""
+    #    with open(file_name, "r") as fpr:
+    #        content = fpr.read()
+    #    content = re.sub(r'Z M [^A-Za-z]*? "\/>', 'Z "/>', content)
+    #    with open(file_name, "w") as fpw:
+    #        fpw.write(content)
+
+    def remove_empty_submobs(self):  # TODO
+        self.set_submobjects(list(filter(
+            lambda submob: submob.has_points(),
+            self.submobjects
+        )))
 
     def apply_space_chars(self):
+        # Align every character with a submobject
         submobs = self.submobjects.copy()
-        for char_index in range(len(self.text)):
-            if self.text[char_index] in [" ", "\t", "\n"]:
-                space = Dot(radius=0, fill_opacity=0, stroke_opacity=0)
-                space.move_to(submobs[max(char_index - 1, 0)].get_center())
-                submobs.insert(char_index, space)
+        for wsp_match_obj in re.finditer(r"\s", self.text):
+            char_index = wsp_match_obj.start()
+            space = Dot(radius=0, fill_opacity=0, stroke_opacity=0)
+            space.move_to(submobs[max(char_index - 1, 0)].get_center())
+            submobs.insert(char_index, space)
         self.set_submobjects(submobs)
 
-    def find_indexes(self, word):
-        m = re.match(r'\[([0-9\-]{0,}):([0-9\-]{0,})\]', word)
+    def set_color_by_t2c(self, t2c):
+        for word, color in t2c.items():
+            for start, end in self.find_indexes(word):
+                self[start:end].set_color(color)
+
+    def set_color_by_t2g(self, t2g):
+        for word, gradient in t2g.items():
+            for start, end in self.find_indexes(word):
+                self[start:end].set_color_by_gradient(*gradient)
+
+    def find_indexes(self, tuple_or_word):
+        if isinstance(tuple_or_word, tuple):
+            return [tuple_or_word]
+
+        # TODO: needed?
+        m = re.match(r'\[([0-9\-]{0,}):([0-9\-]{0,})\]', tuple_or_word)
         if m:
             start = int(m.group(1)) if m.group(1) != '' else 0
             end = int(m.group(2)) if m.group(2) != '' else len(self.text)
@@ -110,12 +135,10 @@ class Text(SVGMobject):
             end = len(self.text) + end if end < 0 else end
             return [(start, end)]
 
-        indexes = []
-        index = self.text.find(word)
-        while index != -1:
-            indexes.append((index, index + len(word)))
-            index = self.text.find(word, index + len(word))
-        return indexes
+        return [
+            match_obj.span()
+            for match_obj in re.finditer(re.escape(tuple_or_word), self.text)
+        ]
 
     def get_parts_by_text(self, word):
         return VGroup(*(
@@ -145,19 +168,7 @@ class Text(SVGMobject):
             if kwargs.__contains__('text2weight'):
                 kwargs['t2w'] = kwargs.pop('text2weight')
 
-    def set_color_by_t2c(self, t2c=None):
-        t2c = t2c if t2c else self.t2c
-        for word, color in t2c.items():
-            for start, end in self.find_indexes(word):
-                self[start:end].set_color(color)
-
-    def set_color_by_t2g(self, t2g=None):
-        t2g = t2g if t2g else self.t2g
-        for word, gradient in t2g.items():
-            for start, end in self.find_indexes(word):
-                self[start:end].set_color_by_gradient(*gradient)
-
-    def text2hash(self):
+    def text2hash(self):  # TODO
         settings = self.font + self.slant + self.weight
         settings += str(self.t2f) + str(self.t2s) + str(self.t2w)
         settings += str(self.lsh) + str(self.font_size)
@@ -166,63 +177,65 @@ class Text(SVGMobject):
         hasher.update(id_str.encode())
         return hasher.hexdigest()[:16]
 
+    def get_t2x_components(self, t2x_dict):
+        """
+        Convert to non-overlapping items
+        """
+        result = []
+        for key, value in t2x_dict.items():
+            for text_span in self.find_indexes(key):
+                if text_span[0] >= text_span[1]:
+                    continue
+                new_result = [(text_span, value)]
+                for s, v in result:
+                    if text_span[1] <= s[0] or s[1] <= text_span[0]:
+                        new_result.append((s, v))
+                        continue
+                    if s[0] < text_span[0]:
+                        new_result.append(((s[0], text_span[0]), v))
+                    if text_span[1] < s[1]:
+                        new_result.append(((text_span[1], s[1]), v))
+                result = new_result
+        return sorted(result)
+
+    def merge_t2x_items(self, *t2x_dicts):
+        result = []
+        def append_item(t2x_items, current_index):
+            next_index = min(item[0][1] for item in t2x_items)
+            result.append(((current_index, next_index), tuple(item[1] for item in t2x_items)))
+            return next_index
+
+        t2x_item_generators = [
+            iter(self.get_t2x_components(t2x_dict))
+            for t2x_dict in t2x_dicts
+        ]
+        t2x_items = [next(gen) for gen in t2x_item_generators]
+        current_index = append_item(t2x_items, 0)
+        text_len = len(self.text)
+        while current_index != text_len:
+            for i, gen in enumerate(t2x_item_generators):
+                if t2x_items[i][0][1] == current_index:
+                    t2x_items[i] = next(gen)
+            current_index = append_item(t2x_items, current_index)
+        return result
+
     def text2settings(self):
-        """
-        Substrings specified in t2f, t2s, t2w can occupy each other.
-        For each category of style, a stack following first-in-last-out is constructed,
-        and the last value in each stack takes effect.
-        """
-        settings = []
-        self.line_num = 0
-        def add_text_settings(start, end, style_stacks):
-            if start == end:
-                return
-            breakdown_indices = [start, *[
-                i + start + 1 for i, char in enumerate(self.text[start:end]) if char == "\n"
-            ], end]
-            style = [stack[-1] for stack in style_stacks]
-            for atom_start, atom_end in zip(breakdown_indices[:-1], breakdown_indices[1:]):
-                if atom_start < atom_end:
-                    settings.append(TextSetting(atom_start, atom_end, *style, self.line_num))
-                self.line_num += 1
-            self.line_num -= 1
-
-        # Set all the default and specified values.
-        len_text = len(self.text)
-        t2x_items = sorted([
-            *[
-                (0, len_text, t2x_index, value)
-                for t2x_index, value in enumerate([self.font, self.slant, self.weight])
-            ],
-            *[
-                (start, end, t2x_index, value)
-                for t2x_index, t2x in enumerate([self.t2f, self.t2s, self.t2w])
-                for word, value in t2x.items()
-                for start, end in self.find_indexes(word)
-            ]
-        ], key=lambda item: item[0])
-
-        # Break down ranges and construct settings separately.
-        active_items = []
-        style_stacks = [[] for _ in range(3)]
-        for item, next_start in zip(t2x_items, [*[item[0] for item in t2x_items[1:]], len_text]):
-            active_items.append(item)
-            start, end, t2x_index, value = item
-            style_stacks[t2x_index].append(value)
-            halting_items = sorted(filter(
-                lambda item: item[1] <= next_start,
-                active_items
-            ), key=lambda item: item[1])
-            atom_start = start
-            for halting_item in halting_items:
-                active_items.remove(halting_item)
-                _, atom_end, t2x_index, _ = halting_item
-                add_text_settings(atom_start, atom_end, style_stacks)
-                style_stacks[t2x_index].pop()
-                atom_start = atom_end
-            add_text_settings(atom_start, next_start, style_stacks)
-
-        del self.line_num
+        # Substrings specified in t2f, t2s, t2w may occupy each other
+        full_span = (0, len(self.text))
+        t2f = {full_span: self.font, **self.t2f}
+        t2s = {full_span: self.slant, **self.t2s}
+        t2w = {full_span: self.weight, **self.t2w}
+        t2l = {full_span: self.text.count("\n"), **{
+            match_obj.span(): line_num
+            for line_num, match_obj in enumerate(re.finditer(r".*\n", self.text))
+        }}
+        setting_items = self.merge_t2x_items(
+            t2f, t2s, t2w, t2l
+        )
+        settings = [
+            TextSetting(*text_span, *values)
+            for text_span, values in setting_items
+        ]
         return settings
 
     def text2svg(self):
@@ -230,14 +243,11 @@ class Text(SVGMobject):
         size = self.font_size
         lsh = self.lsh
 
-        if self.font == '':
-            self.font = get_customization()['style']['font']
-
         dir_name = get_text_dir()
         hash_name = self.text2hash()
         file_name = os.path.join(dir_name, hash_name) + '.svg'
-        if os.path.exists(file_name):
-            return file_name
+        #if os.path.exists(file_name):  # TODO: recover
+        #    return file_name
         settings = self.text2settings()
         width = DEFAULT_PIXEL_WIDTH
         height = DEFAULT_PIXEL_HEIGHT
@@ -504,25 +514,26 @@ class Code(Text):
     def __init__(self, code, **kwargs):
         self.full2short(kwargs)
         digest_config(self, kwargs)
-        code = code.lstrip("\n")  # avoid mismatches of character indices
         lexer = pygments.lexers.get_lexer_by_name(self.language)
         tokens_generator = pygments.lex(code, lexer)
         styles_dict = dict(pygments.styles.get_style_by_name(self.code_style))
         default_color_hex = styles_dict[pygments.token.Text]["color"]
         if not default_color_hex:
             default_color_hex = self.color[1:]
+        code = ""
         start_index = 0
         t2c = {}
         t2s = {}
         t2w = {}
         for pair in tokens_generator:
             ttype, token = pair
+            code += token
             end_index = start_index + len(token)
-            range_str = f"[{start_index}:{end_index}]"
+            span_tuple = (start_index, end_index)
             style_dict = styles_dict[ttype]
-            t2c[range_str] = "#" + (style_dict["color"] or default_color_hex)
-            t2s[range_str] = ITALIC if style_dict["italic"] else NORMAL
-            t2w[range_str] = BOLD if style_dict["bold"] else NORMAL
+            t2c[span_tuple] = "#" + (style_dict["color"] or default_color_hex)
+            t2s[span_tuple] = ITALIC if style_dict["italic"] else NORMAL
+            t2w[span_tuple] = BOLD if style_dict["bold"] else NORMAL
             start_index = end_index
         t2c.update(self.t2c)
         t2s.update(self.t2s)
@@ -530,7 +541,7 @@ class Code(Text):
         kwargs["t2c"] = t2c
         kwargs["t2s"] = t2s
         kwargs["t2w"] = t2w
-        Text.__init__(self, code, **kwargs)
+        super().__init__(code, **kwargs)
         if self.char_width is not None:
             self.set_monospace(self.char_width)
 
