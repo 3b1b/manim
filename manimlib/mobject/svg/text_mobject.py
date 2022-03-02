@@ -327,8 +327,9 @@ class Text(SVGMobject):
             for word_or_text_span, value in t2x_dict.items():
                 for text_span in self.find_indexes(word_or_text_span):
                     self.parser.update_local_attr(text_span, key, value)
-        for text_span, local_config in self.local_configs.items():
-            self.parser.update_local_attrs(text_span, local_config)
+        for word_or_text_span, local_config in self.local_configs.items():
+            for text_span in self.find_indexes(word_or_text_span):
+                self.parser.update_local_attrs(text_span, local_config)
 
         return self.parser.get_markup_str_with_attrs()
 
