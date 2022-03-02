@@ -126,18 +126,18 @@ class _TextParser(object):
         return _TextParser.SPAN_ATTR_KEY_CONVERSION[key]
 
     @staticmethod
-    def update_attr_dict(attr_dict: dict[str, str], key: str, value: str) -> None:
+    def update_attr_dict(attr_dict: dict[str, str], key: str, value: typing.Any) -> None:
         converted_key = _TextParser.convert_key_alias(key)
-        attr_dict[converted_key] = value
+        attr_dict[converted_key] = str(value)
 
-    def update_global_attr(self, key: str, value: str) -> None:
+    def update_global_attr(self, key: str, value: typing.Any) -> None:
         _TextParser.update_attr_dict(self.global_attrs, key, value)
 
-    def update_global_attrs(self, attr_dict: dict[str, str]) -> None:
+    def update_global_attrs(self, attr_dict: dict[str, typing.Any]) -> None:
         for key, value in attr_dict.items():
             self.update_global_attr(key, value)
 
-    def update_local_attr(self, span: tuple[int, int], key: str, value: str) -> None:
+    def update_local_attr(self, span: tuple[int, int], key: str, value: typing.Any) -> None:
         if span[0] >= span[1]:
             log.warning(f"Span {span} doesn't match any part of the string")
             return
@@ -164,7 +164,7 @@ class _TextParser(object):
             self.local_attrs[span_to_become] = attr_dict
             _TextParser.update_attr_dict(self.local_attrs[span_to_become], key, value)
 
-    def update_local_attrs(self, text_span: tuple[int, int], attr_dict: dict[str, str]) -> None:
+    def update_local_attrs(self, text_span: tuple[int, int], attr_dict: dict[str, typing.Any]) -> None:
         for key, value in attr_dict.items():
             self.update_local_attr(text_span, key, value)
 
@@ -224,6 +224,8 @@ class Text(SVGMobject):
         "alignment": "LEFT",
         "line_width_factor": None,  # No auto wrapping if set to None
         "font": "",
+        "disable_ligatures": True,
+        "apply_space_chars": True,
         "slant": NORMAL,
         "weight": NORMAL,
         "gradient": None,
@@ -232,8 +234,8 @@ class Text(SVGMobject):
         "t2g": {},
         "t2s": {},
         "t2w": {},
-        "disable_ligatures": True,
-        "apply_space_chars": True,
+        "global_config": {},
+        "local_configs": {},
     }
 
     def __init__(self, text, **kwargs):
@@ -266,14 +268,16 @@ class Text(SVGMobject):
             self.alignment,
             self.line_width_factor,
             self.font,
+            self.disable_ligatures,
+            self.apply_space_chars,
             self.slant,
             self.weight,
             self.t2c,
             self.t2f,
             self.t2s,
             self.t2w,
-            self.disable_ligatures,
-            self.apply_space_chars
+            self.global_config,
+            self.local_configs
         )
 
     def get_file_path(self):
@@ -294,9 +298,9 @@ class Text(SVGMobject):
 
         config_style_dict = self.generate_config_style_dict()
         global_attr_dict = {
-            "line_height": str(((self.lsh or DEFAULT_LINE_SPACING_SCALE) + 1) * 0.6),
+            "line_height": ((self.lsh or DEFAULT_LINE_SPACING_SCALE) + 1) * 0.6,
             "font_family": self.font or get_customization()["style"]["font"],
-            "font_size": str(self.font_size * 1024),
+            "font_size": self.font_size * 1024,
             "font_style": self.slant,
             "font_weight": self.weight,
             # TODO, it seems this doesn't work
@@ -310,6 +314,7 @@ class Text(SVGMobject):
             if v is not None
         }
         self.parser.update_global_attrs(global_attr_dict)
+        self.parser.update_global_attrs(self.global_config)
 
         for t2x_dict, key in (
             (self.t2c, "foreground"),
@@ -319,7 +324,9 @@ class Text(SVGMobject):
         ):
             for word_or_text_span, value in t2x_dict.items():
                 for text_span in self.find_indexes(word_or_text_span):
-                    self.parser.update_local_attr(text_span, key, str(value))
+                    self.parser.update_local_attr(text_span, key, value)
+        for text_span, local_config in self.local_configs.items():
+            self.parser.update_local_attrs(text_span, local_config)
 
         return self.parser.get_markup_str_with_attrs()
 
@@ -396,7 +403,6 @@ class Text(SVGMobject):
 class MarkupText(Text):
     CONFIG = {
         "is_markup": True,
-        "apply_space_chars": False,
     }
 
 
@@ -407,8 +413,7 @@ class Code(MarkupText):
         "lsh": 1.0,
         "language": "python",
         # Visit https://pygments.org/demo/ to have a preview of more styles.
-        "code_style": "monokai",
-        "apply_space_chars": True
+        "code_style": "monokai"
     }
 
     def __init__(self, code, **kwargs):
