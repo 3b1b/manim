@@ -8,9 +8,9 @@ from pathlib import Path
 import pygments
 import pygments.formatters
 import pygments.lexers
-
 import manimpango
 from manimpango import MarkupUtils
+
 from manimlib.logger import log
 from manimlib.constants import *
 from manimlib.mobject.geometry import Dot
