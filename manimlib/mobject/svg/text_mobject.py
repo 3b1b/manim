@@ -404,9 +404,14 @@ class Text(SVGMobject):
                     kwargs[short_name] = kwargs.pop(long_name)
 
     def get_parts_by_text(self, word):
-        if not self.apply_space_chars:
+        if self.is_markup:
             log.warning(
-                "Slicing Text without applying spaces, "
+                "Slicing MarkupText via `get_parts_by_text`, "
+                "the result could be unexpected."
+            )
+        elif not self.apply_space_chars:
+            log.warning(
+                "Slicing Text without applying spaces via `get_parts_by_text`, "
                 "the result could be unexpected."
             )
         return VGroup(*(
