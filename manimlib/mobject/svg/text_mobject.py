@@ -69,7 +69,6 @@ class _TextParser(object):
         for key_alias_list in SPAN_ATTR_KEY_ALIAS_LIST
         for key in key_alias_list
     }
-    SPAN_ATTR_KEY_ALIASES = tuple(SPAN_ATTR_KEY_CONVERSION.keys())
 
     TAG_TO_ATTR_DICT = {
         "b": {"font_weight": "bold"},
@@ -227,7 +226,7 @@ class Text(SVGMobject):
         "line_width_factor": None,
         "font": "",
         "disable_ligatures": True,
-        "apply_space_chars": False,
+        "apply_space_chars": True,
         "slant": NORMAL,
         "weight": NORMAL,
         "gradient": None,
@@ -315,19 +314,21 @@ class Text(SVGMobject):
             for k, v in global_attr_dict.items()
             if v is not None
         }
+        global_attr_dict.update(self.global_config)
         self.parser.update_global_attrs(global_attr_dict)
-        self.parser.update_global_attrs(self.global_config)
 
-        for t2x_dict, key in (
-            (self.t2c, "foreground"),
-            (self.t2f, "font_family"),
-            (self.t2s, "font_style"),
-            (self.t2w, "font_weight")
-        ):
-            for word_or_text_span, value in t2x_dict.items():
-                for text_span in self.find_indexes(word_or_text_span):
-                    self.parser.update_local_attr(text_span, key, value)
-        for word_or_text_span, local_config in self.local_configs.items():
+        local_attr_items = [
+            (word_or_text_span, {key: value})
+            for t2x_dict, key in (
+                (self.t2c, "foreground"),
+                (self.t2f, "font_family"),
+                (self.t2s, "font_style"),
+                (self.t2w, "font_weight")
+            )
+            for word_or_text_span, value in t2x_dict.items()
+        ]
+        local_attr_items.extend(self.local_configs.items())
+        for word_or_text_span, local_config in local_attr_items:
             for text_span in self.find_indexes(word_or_text_span):
                 self.parser.update_local_attrs(text_span, local_config)
 
@@ -377,7 +378,7 @@ class Text(SVGMobject):
         # Remove empty paths
         submobjects = list(filter(lambda submob: submob.has_points(), self))
 
-        # Apply space characters (may be deprecated?)
+        # Apply space characters
         if self.apply_space_chars:
             content_str = self.parser.get_string_content(self.text)
             for char_index, char in enumerate(content_str):
@@ -402,10 +403,27 @@ class Text(SVGMobject):
                 if long_name in kwargs:
                     kwargs[short_name] = kwargs.pop(long_name)
 
+    def get_parts_by_text(self, word):
+        if not self.apply_space_chars:
+            log.warning(
+                "Slicing Text without applying spaces, "
+                "the result could be unexpected."
+            )
+        return VGroup(*(
+            self[i:j]
+            for i, j in self.find_indexes(word)
+        ))
+
+    def get_part_by_text(self, word):
+        parts = self.get_parts_by_text(word)
+        if len(parts) > 0:
+            return parts[0]
+
 
 class MarkupText(Text):
     CONFIG = {
         "is_markup": True,
+        "apply_space_chars": False,
     }
 
 
