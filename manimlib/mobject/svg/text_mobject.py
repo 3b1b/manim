@@ -169,19 +169,19 @@ class _TextParser(object):
         for key, value in attr_dict.items():
             self.update_local_attr(text_span, key, value)
 
-    def get_string_content(self, string: str) -> str:
+    def remove_tags(self, string: str) -> str:
         for tag_string in self.tag_strings:
             string = string.replace(tag_string, "")
-        if not self.is_markup:
-            string = saxutils.escape(string)
         return string
 
     def get_text_pieces(self) -> list[tuple[str, dict[str, str]]]:
         result = []
         for span in sorted(self.local_attrs.keys()):
-            text_piece = self.get_string_content(self.text[slice(*span)])
+            text_piece = self.remove_tags(self.text[slice(*span)])
             if not text_piece:
                 continue
+            if not self.is_markup:
+                text_piece = saxutils.escape(text_piece)
             attr_dict = self.global_attrs.copy()
             attr_dict.update(self.local_attrs[span])
             result.append((text_piece, attr_dict))
@@ -380,7 +380,9 @@ class Text(SVGMobject):
 
         # Apply space characters
         if self.apply_space_chars:
-            content_str = self.parser.get_string_content(self.text)
+            content_str = self.parser.remove_tags(self.text)
+            if self.is_markup:
+                content_str = saxutils.unescape(content_str)
             for char_index, char in enumerate(content_str):
                 if not re.match(r"\s", char):
                     continue
@@ -439,7 +441,7 @@ class Code(MarkupText):
         "lsh": 1.0,
         "language": "python",
         # Visit https://pygments.org/demo/ to have a preview of more styles.
-        "code_style": "monokai"
+        "code_style": "monokai",
     }
 
     def __init__(self, code, **kwargs):
