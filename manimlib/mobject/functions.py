@@ -73,6 +73,16 @@ class FunctionGraph(ParametricCurve):
     def get_point_from_function(self, x):
         return self.t_func(x)
 
+    def get_t_func(self):
+        return self.t_func
+
+    def get_function(self):
+        if hasattr(self, "underlying_function"):
+            return self.underlying_function
+
+    def get_x_range(self):
+        if hasattr(self, "x_range"):
+            return self.x_range
 
 class ImplicitFunction(VMobject):
     CONFIG = {
