@@ -670,5 +670,48 @@ class ControlsExample(Scene):
         # self.wait(60)
         # self.embed()
 
+class WritePersianExample(Scene):
+    """
+        This is the simplest and basic form of implementing Persian/Farsi Language for  manim library.
+
+    User needs to make some changes in
+
+    default_config.yml file like this:
+            tex:
+            executable: "xelatex -no-pdf"
+            template_file: "ftex_template.tex"
+            intermediate_filetype: "xdv"
+            text_to_replace: "[tex_expression]"
+
+        and
+        User need to have "HM XNiloofar" font in his computer or any desired persian font in HM family.
+    """
+
+    def construct(self):
+        rtarrow0 = Tex(r"X^{20} + 123456", font_size=96).to_edge(UP)
+        rtarrow1 = TexText(
+            r"""
+            \lr{Hello World}
+            
+            سلام دنیا
+            
+            $x^2 + y^2 = z^2$
+            
+            """,
+            font_size=96,
+        )
+        self.add(rtarrow0)
+        self.add(rtarrow1)
+
+        source = TexText("سلام علیکم", height=1).to_edge(DOWN)
+        target = TexText("علی سالم است", height=1).to_edge(DOWN)
+
+        self.play(Write(source))
+        self.wait()
+        kw = {"run_time": 3, "path_arc": PI / 2}
+        self.play(TransformMatchingShapes(source, target, **kw))
+        self.wait()
+        self.play(TransformMatchingShapes(target, source, **kw))
+        self.wait()
 
 # See https://github.com/3b1b/videos for many, many more

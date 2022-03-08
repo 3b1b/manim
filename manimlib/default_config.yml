@@ -17,9 +17,9 @@ directories:
   # specify them elsewhere,
   temporary_storage: ""
 tex:
-  executable: "latex"
-  template_file: "tex_template.tex" 
-  intermediate_filetype: "dvi"
+  executable: "xelatex -no-pdf"
+  template_file: "ftex_template.tex" 
+  intermediate_filetype: "xdv"
   text_to_replace: "[tex_expression]"
   # For ctex, use the following configuration
   # executable: "xelatex -no-pdf"
