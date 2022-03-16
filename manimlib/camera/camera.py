@@ -439,7 +439,7 @@ class Camera(object):
             shader[name].value = tid
         for name, value in it.chain(self.perspective_uniforms.items(), shader_wrapper.uniforms.items()):
             try:
-                if isinstance(value, np.ndarray):
+                if isinstance(value, np.ndarray) and value.ndim > 0:
                     value = tuple(value)
                 shader[name].value = value
             except KeyError:
