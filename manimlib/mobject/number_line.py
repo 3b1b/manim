@@ -101,7 +101,7 @@ class NumberLine(Line):
         return self.ticks
 
     def number_to_point(self, number):
-        alpha = float(number - self.x_min) / (self.x_max - self.x_min)
+        alpha = (number - self.x_min) / (self.x_max - self.x_min)
         return interpolate(self.get_start(), self.get_end(), alpha)
 
     def point_to_number(self, point):
