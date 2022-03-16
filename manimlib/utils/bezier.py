@@ -67,7 +67,13 @@ def partial_quadratic_bezier_points(points, a, b):
 
 def interpolate(start, end, alpha):
     try:
-        return (1 - alpha) * start + alpha * end
+        if isinstance(alpha, float):
+            return (1 - alpha) * start + alpha * end
+        # Otherwise, assume alpha is a list or array, and return
+        # an appropriated shaped array of all corresponding
+        # interpolations
+        result = np.outer(1 - alpha, start) + np.outer(alpha, end)
+        return result.reshape((*np.shape(alpha), *np.shape(start)))
     except TypeError:
         log.debug(f"`start` parameter with type `{type(start)}` and dtype `{start.dtype}`")
         log.debug(f"`end` parameter with type `{type(end)}` and dtype `{end.dtype}`")
