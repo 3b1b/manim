@@ -423,8 +423,7 @@ class Text(SVGMobject):
 
     def get_part_by_text(self, word):
         parts = self.get_parts_by_text(word)
-        if len(parts) > 0:
-            return parts[0]
+        return parts[0] if parts else None
 
 
 class MarkupText(Text):
