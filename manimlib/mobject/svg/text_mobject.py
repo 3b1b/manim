@@ -413,7 +413,7 @@ class Text(SVGMobject):
             )
         elif not self.apply_space_chars:
             log.warning(
-                "Slicing Text without applying spaces via `get_parts_by_text`, "
+                "Slicing Text via `get_parts_by_text` without applying spaces, "
                 "the result could be unexpected."
             )
         return VGroup(*(
