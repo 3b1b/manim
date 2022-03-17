@@ -1,6 +1,7 @@
 from manimlib.animation.animation import Animation
 from manimlib.animation.rotation import Rotating
 from manimlib.constants import *
+from manimlib.mobject.boolean_ops import Difference
 from manimlib.mobject.geometry import Arc
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.geometry import Line
@@ -12,6 +13,7 @@ from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.tex_mobject import TexText
 from manimlib.mobject.three_dimensions import Cube
+from manimlib.mobject.three_dimensions import Prismify
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
@@ -19,6 +21,7 @@ from manimlib.utils.rate_functions import linear
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import complex_to_R3
 from manimlib.utils.space_ops import rotate_vector
+from manimlib.utils.space_ops import midpoint
 
 
 class Checkmark(TexText):
@@ -433,3 +436,84 @@ class VectorizedEarth(SVGMobject):
         )
         circle.replace(self)
         self.add_to_back(circle)
+
+
+class Piano(VGroup):
+    n_white_keys = 52
+    black_pattern = [0, 2, 3, 5, 6]
+    white_keys_per_octave = 7
+    white_key_dims = (0.15, 1.0)
+    black_key_dims = (0.1, 0.66)
+    key_buff = 0.02
+    white_key_color = WHITE
+    black_key_color = GREY_E
+    total_width = 13
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.add_white_keys()
+        self.add_black_keys()
+        self.sort_keys()
+        self[:-1].reverse_points()
+        self.set_width(self.total_width)
+
+    def add_white_keys(self):
+        key = Rectangle(*self.white_key_dims)
+        key.set_fill(self.white_key_color, 1)
+        key.set_stroke(width=0)
+        self.white_keys = key.get_grid(1, self.n_white_keys, buff=self.key_buff)
+        self.add(*self.white_keys)
+
+    def add_black_keys(self):
+        key = Rectangle(*self.black_key_dims)
+        key.set_fill(self.black_key_color, 1)
+        key.set_stroke(width=0)
+
+        self.black_keys = VGroup()
+        for i in range(len(self.white_keys) - 1):
+            if i % self.white_keys_per_octave not in self.black_pattern:
+                continue
+            wk1 = self.white_keys[i]
+            wk2 = self.white_keys[i + 1]
+            bk = key.copy()
+            bk.move_to(midpoint(wk1.get_top(), wk2.get_top()), UP)
+            big_bk = bk.copy()
+            big_bk.stretch((bk.get_width() + self.key_buff) / bk.get_width(), 0)
+            big_bk.stretch((bk.get_height() + self.key_buff) / bk.get_height(), 1)
+            big_bk.move_to(bk, UP)
+            for wk in wk1, wk2:
+                wk.become(Difference(wk, big_bk).match_style(wk))
+            self.black_keys.add(bk)
+        self.add(*self.black_keys)
+
+    def sort_keys(self):
+        self.sort(lambda p: p[0])
+
+
+class Piano3D(VGroup):
+    CONFIG = {
+        "depth_test": True,
+        "reflectiveness": 1.0,
+        "stroke_width": 0.25,
+        "stroke_color": BLACK,
+        "key_depth": 0.1,
+        "black_key_shift": 0.05,
+    }
+    piano_2d_config = {
+        "white_key_color": GREY_A,
+        "key_buff": 0.001
+    }
+
+    def __init__(self, **kwargs):
+        digest_config(self, kwargs)
+        piano_2d = Piano(**self.piano_2d_config)
+        super().__init__(*(
+            Prismify(key, self.key_depth)
+            for key in piano_2d
+        ))
+        self.set_stroke(self.stroke_color, self.stroke_width)
+        self.apply_depth_test()
+        # Elevate black keys
+        for i, key in enumerate(self):
+            if piano_2d[i] in piano_2d.black_keys:
+                key.shift(self.black_key_shift * OUT)
