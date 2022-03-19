@@ -3,6 +3,7 @@ import operator as op
 from functools import reduce
 import math
 from mapbox_earcut import triangulate_float32 as earcut
+from scipy.spatial.transform import Rotation
 
 from manimlib.constants import RIGHT
 from manimlib.constants import DOWN
@@ -25,67 +26,62 @@ def get_norm(vect):
     return sum((x**2 for x in vect))**0.5
 
 
-# Quaternions
-# TODO, implement quaternion type
+def normalize(vect, fall_back=None):
+    norm = get_norm(vect)
+    if norm > 0:
+        return np.array(vect) / norm
+    elif fall_back is not None:
+        return fall_back
+    else:
+        return np.zeros(len(vect))
+
+
+# Operations related to rotation
 
 
 def quaternion_mult(*quats):
+    # Real part is last entry, which is bizzare, but fits scipy Rotation convention
     if len(quats) == 0:
-        return [1, 0, 0, 0]
+        return [0, 0, 0, 1]
     result = quats[0]
     for next_quat in quats[1:]:
-        w1, x1, y1, z1 = result
-        w2, x2, y2, z2 = next_quat
+        x1, y1, z1, w1 = result
+        x2, y2, z2, w2 = next_quat
         result = [
-            w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
             w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
             w1 * y2 + y1 * w2 + z1 * x2 - x1 * z2,
             w1 * z2 + z1 * w2 + x1 * y2 - y1 * x2,
+            w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
         ]
     return result
 
 
 def quaternion_from_angle_axis(angle, axis, axis_normalized=False):
-    if not axis_normalized:
-        axis = normalize(axis)
-    return [math.cos(angle / 2), *(math.sin(angle / 2) * axis)]
+    return Rotation.from_rotvec(angle * normalize(axis)).as_quat()
 
 
-def angle_axis_from_quaternion(quaternion):
-    axis = normalize(
-        quaternion[1:],
-        fall_back=[1, 0, 0]
-    )
-    angle = 2 * np.arccos(quaternion[0])
-    if angle > TAU / 2:
-        angle = TAU - angle
-    return angle, axis
+def angle_axis_from_quaternion(quat):
+    rot_vec = Rotation.from_quat(quat).as_rotvec()
+    norm = get_norm(rot_vec)
+    return norm, rot_vec / norm
 
 
 def quaternion_conjugate(quaternion):
     result = list(quaternion)
-    for i in range(1, len(result)):
+    for i in range(3):
         result[i] *= -1
     return result
 
 
 def rotate_vector(vector, angle, axis=OUT):
-    if len(vector) == 2:
-        # Use complex numbers...because why not
-        z = complex(*vector) * np.exp(complex(0, angle))
-        result = [z.real, z.imag]
-    elif len(vector) == 3:
-        # Use quaternions...because why not
-        quat = quaternion_from_angle_axis(angle, axis)
-        quat_inv = quaternion_conjugate(quat)
-        product = quaternion_mult(quat, [0, *vector], quat_inv)
-        result = product[1:]
-    else:
-        raise Exception("vector must be of dimension 2 or 3")
+    rot = Rotation.from_rotvec(angle * normalize(axis))
+    return np.dot(vector, rot.as_matrix().T)
 
-    if isinstance(vector, np.ndarray):
-        return np.array(result)
-    return result
+
+def rotate_vector_2d(vector, angle):
+    # Use complex numbers...because why not
+    z = complex(*vector) * np.exp(complex(0, angle))
+    return np.array([z.real, z.imag])
 
 
 def thick_diagonal(dim, thickness=2):
@@ -94,43 +90,19 @@ def thick_diagonal(dim, thickness=2):
     return (np.abs(row_indices - col_indices) < thickness).astype('uint8')
 
 
-def rotation_matrix_transpose_from_quaternion(quat):
-    quat_inv = quaternion_conjugate(quat)
-    return [
-        quaternion_mult(quat, [0, *basis], quat_inv)[1:]
-        for basis in [
-            [1, 0, 0],
-            [0, 1, 0],
-            [0, 0, 1],
-        ]
-    ]
-
-
 def rotation_matrix_from_quaternion(quat):
-    return np.transpose(rotation_matrix_transpose_from_quaternion(quat))
-
-
-def rotation_matrix_transpose(angle, axis):
-    if axis[0] == 0 and axis[1] == 0:
-        # axis = [0, 0, z] case is common enough it's worth
-        # having a shortcut
-        sgn = 1 if axis[2] > 0 else -1
-        cos_a = math.cos(angle)
-        sin_a = math.sin(angle) * sgn
-        return [
-            [cos_a, sin_a, 0],
-            [-sin_a, cos_a, 0],
-            [0, 0, 1],
-        ]
-    quat = quaternion_from_angle_axis(angle, axis)
-    return rotation_matrix_transpose_from_quaternion(quat)
+    return Rotation.from_quat(quat).as_matrix()
 
 
 def rotation_matrix(angle, axis):
     """
     Rotation in R^3 about a specified axis of rotation.
     """
-    return np.transpose(rotation_matrix_transpose(angle, axis))
+    return Rotation.from_rotvec(angle * normalize(axis)).as_matrix()
+
+
+def rotation_matrix_transpose(angle, axis):
+    return rotation_matrix(angle, axis).T
 
 
 def rotation_about_z(angle):
@@ -141,28 +113,17 @@ def rotation_about_z(angle):
     ]
 
 
-def z_to_vector(vector):
-    """
-    Returns some matrix in SO(3) which takes the z-axis to the
-    (normalized) vector provided as an argument
-    """
-    axis = cross(OUT, vector)
-    if get_norm(axis) == 0:
-        if vector[2] > 0:
-            return np.identity(3)
-        else:
-            return rotation_matrix(PI, RIGHT)
-    angle = np.arccos(np.dot(OUT, normalize(vector)))
-    return rotation_matrix(angle, axis=axis)
-
-
 def rotation_between_vectors(v1, v2):
     if np.all(np.isclose(v1, v2)):
         return np.identity(3)
     return rotation_matrix(
         angle=angle_between_vectors(v1, v2),
-        axis=normalize(np.cross(v1, v2))
+        axis=np.cross(v1, v2)
     )
+
+
+def z_to_vector(vector):
+    return rotation_between_vectors(OUT, vector)
 
 
 def angle_of_vector(vector):
@@ -177,22 +138,15 @@ def angle_between_vectors(v1, v2):
     Returns the angle between two 3D vectors.
     This angle will always be btw 0 and pi
     """
-    return math.acos(clip(np.dot(normalize(v1), normalize(v2)), -1, 1))
+    n1 = get_norm(v1)
+    n2 = get_norm(v2)
+    cos_angle = np.dot(v1, v2) / (n1 * n2)
+    return math.acos(clip(cos_angle, -1, 1))
 
 
 def project_along_vector(point, vector):
     matrix = np.identity(3) - np.outer(vector, vector)
     return np.dot(point, matrix.T)
-
-
-def normalize(vect, fall_back=None):
-    norm = get_norm(vect)
-    if norm > 0:
-        return np.array(vect) / norm
-    elif fall_back is not None:
-        return fall_back
-    else:
-        return np.zeros(len(vect))
 
 
 def normalize_along_axis(array, axis, fall_back=None):
