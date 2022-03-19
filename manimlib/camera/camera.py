@@ -12,6 +12,7 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.simple_functions import fdiv
+from manimlib.utils.space_ops import normalize
 
 
 class CameraFrame(Mobject):
@@ -53,7 +54,7 @@ class CameraFrame(Mobject):
         return self.get_orientation().as_matrix().T
 
     def rotate(self, angle, axis=OUT, **kwargs):
-        rot = Rotation.from_rotvec(angle * axis)
+        rot = Rotation.from_rotvec(angle * normalize(axis))
         self.set_orientation(rot * self.get_orientation())
         return self
 
