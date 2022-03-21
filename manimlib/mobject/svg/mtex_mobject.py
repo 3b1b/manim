@@ -557,7 +557,10 @@ class MTex(_TexSVG):
 
     def get_part_by_tex(self, tex, index=0):
         all_parts = self.get_parts_by_tex(tex)
-        return all_parts[index]
+        try:
+            return all_parts[index]
+        except IndexError:
+            return None
 
     def set_color_by_tex(self, tex, color):
         self.get_parts_by_tex(tex).set_color(color)
