@@ -449,7 +449,7 @@ class Code(MarkupText):
         lexer = pygments.lexers.get_lexer_by_name(self.language)
         formatter = pygments.formatters.PangoMarkupFormatter(style=self.code_style)
         markup = pygments.highlight(code, lexer, formatter)
-        markup = markup.replace("<tt>", "<span>").replace("</tt>", "</span>")
+        markup = re.sub(r"</?tt>", "", markup)
         super().__init__(markup, **kwargs)
 
 
