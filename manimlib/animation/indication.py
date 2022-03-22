@@ -1,5 +1,9 @@
-import numpy as np
+from __future__ import annotations
+
 import math
+from typing import Union, Sequence
+
+import numpy as np
 
 from manimlib.constants import *
 from manimlib.animation.animation import Animation
@@ -25,6 +29,13 @@ from manimlib.utils.rate_functions import wiggle
 from manimlib.utils.rate_functions import smooth
 from manimlib.utils.rate_functions import squish_rate_func
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import colour
+    from manimlib.mobject.mobject import Mobject
+    ManimColor = Union[str, colour.Color, Sequence[float]]
+
 
 class FocusOn(Transform):
     CONFIG = {
@@ -34,13 +45,13 @@ class FocusOn(Transform):
         "remover": True,
     }
 
-    def __init__(self, focus_point, **kwargs):
+    def __init__(self, focus_point: np.ndarray, **kwargs):
         self.focus_point = focus_point
         # Initialize with blank mobject, while create_target
         # and create_starting_mobject handle the meat
         super().__init__(VMobject(), **kwargs)
 
-    def create_target(self):
+    def create_target(self) -> Dot:
         little_dot = Dot(radius=0)
         little_dot.set_fill(self.color, opacity=self.opacity)
         little_dot.add_updater(
@@ -48,7 +59,7 @@ class FocusOn(Transform):
         )
         return little_dot
 
-    def create_starting_mobject(self):
+    def create_starting_mobject(self) -> Dot:
         return Dot(
             radius=FRAME_X_RADIUS + FRAME_Y_RADIUS,
             stroke_width=0,
@@ -64,7 +75,7 @@ class Indicate(Transform):
         "color": YELLOW,
     }
 
-    def create_target(self):
+    def create_target(self) -> Mobject:
         target = self.mobject.copy()
         target.scale(self.scale_factor)
         target.set_color(self.color)
@@ -80,7 +91,12 @@ class Flash(AnimationGroup):
         "run_time": 1,
     }
 
-    def __init__(self, point, color=YELLOW, **kwargs):
+    def __init__(
+        self,
+        point: np.ndarray,
+        color: ManimColor = YELLOW,
+        **kwargs
+    ):
         self.point = point
         self.color = color
         digest_config(self, kwargs)
@@ -92,7 +108,7 @@ class Flash(AnimationGroup):
             **kwargs,
         )
 
-    def create_lines(self):
+    def create_lines(self) -> VGroup:
         lines = VGroup()
         for angle in np.arange(0, TAU, TAU / self.num_lines):
             line = Line(ORIGIN, self.line_length * RIGHT)
@@ -106,7 +122,7 @@ class Flash(AnimationGroup):
         lines.add_updater(lambda l: l.move_to(self.point))
         return lines
 
-    def create_line_anims(self):
+    def create_line_anims(self) -> list[Animation]:
         return [
             ShowCreationThenDestruction(line)
             for line in self.lines
@@ -122,17 +138,17 @@ class CircleIndicate(Indicate):
         },
     }
 
-    def __init__(self, mobject, **kwargs):
+    def __init__(self, mobject: Mobject, **kwargs):
         digest_config(self, kwargs)
         circle = self.get_circle(mobject)
         super().__init__(circle, **kwargs)
 
-    def get_circle(self, mobject):
+    def get_circle(self, mobject: Mobject) -> Circle:
         circle = Circle(**self.circle_config)
         circle.add_updater(lambda c: c.surround(mobject))
         return circle
 
-    def interpolate_mobject(self, alpha):
+    def interpolate_mobject(self, alpha: float) -> None:
         super().interpolate_mobject(alpha)
         self.mobject.set_stroke(opacity=alpha)
 
@@ -143,7 +159,7 @@ class ShowPassingFlash(ShowPartial):
         "remover": True,
     }
 
-    def get_bounds(self, alpha):
+    def get_bounds(self, alpha: float) -> tuple[float, float]:
         tw = self.time_width
         upper = interpolate(0, 1 + tw, alpha)
         lower = upper - tw
@@ -151,7 +167,7 @@ class ShowPassingFlash(ShowPartial):
         lower = max(lower, 0)
         return (lower, upper)
 
-    def finish(self):
+    def finish(self) -> None:
         super().finish()
         for submob, start in self.get_all_families_zipped():
             submob.pointwise_become_partial(start, 0, 1)
@@ -164,7 +180,7 @@ class VShowPassingFlash(Animation):
         "remover": True,
     }
 
-    def begin(self):
+    def begin(self) -> None:
         self.mobject.align_stroke_width_data_to_points()
         # Compute an array of stroke widths for each submobject
         # which tapers out at either end
@@ -184,7 +200,12 @@ class VShowPassingFlash(Animation):
             self.submob_to_anchor_widths[hash(sm)] = anchor_widths * taper_array
         super().begin()
 
-    def interpolate_submobject(self, submobject, starting_sumobject, alpha):
+    def interpolate_submobject(
+        self,
+        submobject: VMobject,
+        starting_sumobject: None,
+        alpha: float
+    ) -> None:
         anchor_widths = self.submob_to_anchor_widths[hash(submobject)]
         # Create a gaussian such that 3 sigmas out on either side
         # will equals time_width
@@ -206,7 +227,7 @@ class VShowPassingFlash(Animation):
         new_widths[1::3] = (new_widths[0::3] + new_widths[2::3]) / 2
         submobject.set_stroke(width=new_widths)
 
-    def finish(self):
+    def finish(self) -> None:
         super().finish()
         for submob, start in self.get_all_families_zipped():
             submob.match_style(start)
@@ -221,7 +242,7 @@ class FlashAround(VShowPassingFlash):
         "n_inserted_curves": 20,
     }
 
-    def __init__(self, mobject, **kwargs):
+    def __init__(self, mobject: Mobject, **kwargs):
         digest_config(self, kwargs)
         path = self.get_path(mobject)
         if mobject.is_fixed_in_frame:
@@ -231,12 +252,12 @@ class FlashAround(VShowPassingFlash):
         path.set_stroke(self.color, self.stroke_width)
         super().__init__(path, **kwargs)
 
-    def get_path(self, mobject):
+    def get_path(self, mobject: Mobject) -> SurroundingRectangle:
         return SurroundingRectangle(mobject, buff=self.buff)
 
 
 class FlashUnder(FlashAround):
-    def get_path(self, mobject):
+    def get_path(self, mobject: Mobject) -> Underline:
         return Underline(mobject, buff=self.buff)
 
 
@@ -252,7 +273,7 @@ class ShowCreationThenFadeOut(Succession):
         "remover": True,
     }
 
-    def __init__(self, mobject, **kwargs):
+    def __init__(self, mobject: Mobject, **kwargs):
         super().__init__(
             ShowCreation(mobject),
             FadeOut(mobject),
@@ -269,7 +290,7 @@ class AnimationOnSurroundingRectangle(AnimationGroup):
         "rect_animation": Animation
     }
 
-    def __init__(self, mobject, **kwargs):
+    def __init__(self, mobject: Mobject, **kwargs):
         digest_config(self, kwargs)
         if "surrounding_rectangle_config" in kwargs:
             kwargs.pop("surrounding_rectangle_config")
@@ -282,7 +303,7 @@ class AnimationOnSurroundingRectangle(AnimationGroup):
             self.rect_animation(rect, **kwargs),
         )
 
-    def get_rect(self):
+    def get_rect(self) -> SurroundingRectangle:
         return SurroundingRectangle(
             self.mobject_to_surround,
             **self.surrounding_rectangle_config
@@ -314,7 +335,7 @@ class ApplyWave(Homotopy):
         "run_time": 1,
     }
 
-    def __init__(self, mobject, **kwargs):
+    def __init__(self, mobject: Mobject, **kwargs):
         digest_config(self, kwargs, locals())
         left_x = mobject.get_left()[0]
         right_x = mobject.get_right()[0]
@@ -339,15 +360,20 @@ class WiggleOutThenIn(Animation):
         "rotate_about_point": None,
     }
 
-    def get_scale_about_point(self):
+    def get_scale_about_point(self) -> np.ndarray:
         if self.scale_about_point is None:
             return self.mobject.get_center()
 
-    def get_rotate_about_point(self):
+    def get_rotate_about_point(self) -> np.ndarray:
         if self.rotate_about_point is None:
             return self.mobject.get_center()
 
-    def interpolate_submobject(self, submobject, starting_sumobject, alpha):
+    def interpolate_submobject(
+        self,
+        submobject: Mobject,
+        starting_sumobject: Mobject,
+        alpha: float
+    ) -> None:
         submobject.match_points(starting_sumobject)
         submobject.scale(
             interpolate(1, self.scale_value, there_and_back(alpha)),
@@ -364,7 +390,7 @@ class TurnInsideOut(Transform):
         "path_arc": TAU / 4,
     }
 
-    def create_target(self):
+    def create_target(self) -> Mobject:
         return self.mobject.copy().reverse_points()
 
 
@@ -373,7 +399,7 @@ class FlashyFadeIn(AnimationGroup):
         "fade_lag": 0,
     }
 
-    def __init__(self, vmobject, stroke_width=2, **kwargs):
+    def __init__(self, vmobject: VMobject, stroke_width: float = 2, **kwargs):
         digest_config(self, kwargs)
         outline = vmobject.copy()
         outline.set_fill(opacity=0)

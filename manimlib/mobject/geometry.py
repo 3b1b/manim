@@ -1,6 +1,11 @@
-import numpy as np
+from __future__ import annotations
+
 import math
 import numbers
+from typing import Sequence, Union
+
+import colour
+import numpy as np
 
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
@@ -20,6 +25,8 @@ from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import normalize
 from manimlib.utils.space_ops import rotate_vector
 from manimlib.utils.space_ops import rotation_matrix_transpose
+
+ManimColor = Union[str, colour.Color, Sequence[float]]
 
 
 DEFAULT_DOT_RADIUS = 0.08
@@ -58,7 +65,7 @@ class TipableVMobject(VMobject):
     }
 
     # Adding, Creating, Modifying tips
-    def add_tip(self, at_start=False, **kwargs):
+    def add_tip(self, at_start: bool = False, **kwargs):
         """
         Adds a tip to the TipableVMobject instance, recognising
         that the endpoints might need to be switched if it's
@@ -71,7 +78,7 @@ class TipableVMobject(VMobject):
         self.add(tip)
         return self
 
-    def create_tip(self, at_start=False, **kwargs):
+    def create_tip(self, at_start: bool = False, **kwargs) -> ArrowTip:
         """
         Stylises the tip, positions it spacially, and returns
         the newly instantiated tip to the caller.
@@ -80,7 +87,7 @@ class TipableVMobject(VMobject):
         self.position_tip(tip, at_start)
         return tip
 
-    def get_unpositioned_tip(self, **kwargs):
+    def get_unpositioned_tip(self, **kwargs) -> ArrowTip:
         """
         Returns a tip that has been stylistically configured,
         but has not yet been given a position in space.
@@ -90,7 +97,7 @@ class TipableVMobject(VMobject):
         config.update(kwargs)
         return ArrowTip(**config)
 
-    def position_tip(self, tip, at_start=False):
+    def position_tip(self, tip: ArrowTip, at_start: bool = False) -> ArrowTip:
         # Last two control points, defining both
         # the end, and the tangency direction
         if at_start:
@@ -103,7 +110,7 @@ class TipableVMobject(VMobject):
         tip.shift(anchor - tip.get_tip_point())
         return tip
 
-    def reset_endpoints_based_on_tip(self, tip, at_start):
+    def reset_endpoints_based_on_tip(self, tip: ArrowTip, at_start: bool):
         if self.get_length() == 0:
             # Zero length, put_start_and_end_on wouldn't
             # work
@@ -118,7 +125,7 @@ class TipableVMobject(VMobject):
         self.put_start_and_end_on(start, end)
         return self
 
-    def asign_tip_attr(self, tip, at_start):
+    def asign_tip_attr(self, tip: ArrowTip, at_start: bool):
         if at_start:
             self.start_tip = tip
         else:
@@ -126,14 +133,14 @@ class TipableVMobject(VMobject):
         return self
 
     # Checking for tips
-    def has_tip(self):
+    def has_tip(self) -> bool:
         return hasattr(self, "tip") and self.tip in self
 
-    def has_start_tip(self):
+    def has_start_tip(self) -> bool:
         return hasattr(self, "start_tip") and self.start_tip in self
 
     # Getters
-    def pop_tips(self):
+    def pop_tips(self) -> VGroup:
         start, end = self.get_start_and_end()
         result = VGroup()
         if self.has_tip():
@@ -145,7 +152,7 @@ class TipableVMobject(VMobject):
         self.put_start_and_end_on(start, end)
         return result
 
-    def get_tips(self):
+    def get_tips(self) -> VGroup:
         """
         Returns a VGroup (collection of VMobjects) containing
         the TipableVMObject instance's tips.
@@ -157,7 +164,7 @@ class TipableVMobject(VMobject):
             result.add(self.start_tip)
         return result
 
-    def get_tip(self):
+    def get_tip(self) -> ArrowTip:
         """Returns the TipableVMobject instance's (first) tip,
         otherwise throws an exception."""
         tips = self.get_tips()
@@ -166,28 +173,28 @@ class TipableVMobject(VMobject):
         else:
             return tips[0]
 
-    def get_default_tip_length(self):
+    def get_default_tip_length(self) -> float:
         return self.tip_length
 
-    def get_first_handle(self):
+    def get_first_handle(self) -> np.ndarray:
         return self.get_points()[1]
 
-    def get_last_handle(self):
+    def get_last_handle(self) -> np.ndarray:
         return self.get_points()[-2]
 
-    def get_end(self):
+    def get_end(self) -> np.ndarray:
         if self.has_tip():
             return self.tip.get_start()
         else:
             return VMobject.get_end(self)
 
-    def get_start(self):
+    def get_start(self) -> np.ndarray:
         if self.has_start_tip():
             return self.start_tip.get_start()
         else:
             return VMobject.get_start(self)
 
-    def get_length(self):
+    def get_length(self) -> float:
         start, end = self.get_start_and_end()
         return get_norm(start - end)
 
@@ -200,12 +207,17 @@ class Arc(TipableVMobject):
         "arc_center": ORIGIN,
     }
 
-    def __init__(self, start_angle=0, angle=TAU / 4, **kwargs):
+    def __init__(
+        self,
+        start_angle: float = 0,
+        angle: float = TAU / 4,
+        **kwargs
+    ):
         self.start_angle = start_angle
         self.angle = angle
         VMobject.__init__(self, **kwargs)
 
-    def init_points(self):
+    def init_points(self) -> None:
         self.set_points(Arc.create_quadratic_bezier_points(
             angle=self.angle,
             start_angle=self.start_angle,
@@ -215,7 +227,11 @@ class Arc(TipableVMobject):
         self.shift(self.arc_center)
 
     @staticmethod
-    def create_quadratic_bezier_points(angle, start_angle=0, n_components=8):
+    def create_quadratic_bezier_points(
+        angle: float,
+        start_angle: float = 0,
+        n_components: int = 8
+    ) -> np.ndarray:
         samples = np.array([
             [np.cos(a), np.sin(a), 0]
             for a in np.linspace(
@@ -233,7 +249,7 @@ class Arc(TipableVMobject):
         points[2::3] = samples[2::2]
         return points
 
-    def get_arc_center(self):
+    def get_arc_center(self) -> np.ndarray:
         """
         Looks at the normals to the first two
         anchors, and finds their intersection points
@@ -248,21 +264,27 @@ class Arc(TipableVMobject):
         n2 = rotate_vector(t2, TAU / 4)
         return find_intersection(a1, n1, a2, n2)
 
-    def get_start_angle(self):
+    def get_start_angle(self) -> float:
         angle = angle_of_vector(self.get_start() - self.get_arc_center())
         return angle % TAU
 
-    def get_stop_angle(self):
+    def get_stop_angle(self) -> float:
         angle = angle_of_vector(self.get_end() - self.get_arc_center())
         return angle % TAU
 
-    def move_arc_center_to(self, point):
+    def move_arc_center_to(self, point: np.ndarray):
         self.shift(point - self.get_arc_center())
         return self
 
 
 class ArcBetweenPoints(Arc):
-    def __init__(self, start, end, angle=TAU / 4, **kwargs):
+    def __init__(
+        self,
+        start: np.ndarray,
+        end: np.ndarray,
+        angle: float = TAU / 4,
+        **kwargs
+    ):
         super().__init__(angle=angle, **kwargs)
         if angle == 0:
             self.set_points_as_corners([LEFT, RIGHT])
@@ -270,13 +292,23 @@ class ArcBetweenPoints(Arc):
 
 
 class CurvedArrow(ArcBetweenPoints):
-    def __init__(self, start_point, end_point, **kwargs):
+    def __init__(
+        self,
+        start_point: np.ndarray,
+        end_point: np.ndarray,
+        **kwargs
+    ):
         ArcBetweenPoints.__init__(self, start_point, end_point, **kwargs)
         self.add_tip()
 
 
 class CurvedDoubleArrow(CurvedArrow):
-    def __init__(self, start_point, end_point, **kwargs):
+    def __init__(
+        self,
+        start_point: np.ndarray,
+        end_point: np.ndarray,
+        **kwargs
+    ):
         CurvedArrow.__init__(self, start_point, end_point, **kwargs)
         self.add_tip(at_start=True)
 
@@ -291,7 +323,13 @@ class Circle(Arc):
     def __init__(self, **kwargs):
         Arc.__init__(self, 0, TAU, **kwargs)
 
-    def surround(self, mobject, dim_to_match=0, stretch=False, buff=MED_SMALL_BUFF):
+    def surround(
+        self,
+        mobject: Mobject,
+        dim_to_match: int = 0,
+        stretch: bool = False,
+        buff: float = MED_SMALL_BUFF
+    ):
         # Ignores dim_to_match and stretch; result will always be a circle
         # TODO: Perhaps create an ellipse class to handle singele-dimension stretching
 
@@ -299,13 +337,13 @@ class Circle(Arc):
         self.stretch((self.get_width() + 2 * buff) / self.get_width(), 0)
         self.stretch((self.get_height() + 2 * buff) / self.get_height(), 1)
 
-    def point_at_angle(self, angle):
+    def point_at_angle(self, angle: float) -> np.ndarray:
         start_angle = self.get_start_angle()
         return self.point_from_proportion(
             (angle - start_angle) / TAU
         )
 
-    def get_radius(self):
+    def get_radius(self) -> float:
         return get_norm(self.get_start() - self.get_center())
 
 
@@ -317,7 +355,7 @@ class Dot(Circle):
         "color": WHITE
     }
 
-    def __init__(self, point=ORIGIN, **kwargs):
+    def __init__(self, point: np.ndarray = ORIGIN, **kwargs):
         super().__init__(arc_center=point, **kwargs)
 
 
@@ -401,15 +439,26 @@ class Line(TipableVMobject):
         "path_arc": 0,
     }
 
-    def __init__(self, start=LEFT, end=RIGHT, **kwargs):
+    def __init__(
+        self,
+        start: np.ndarray = LEFT,
+        end: np.ndarray = RIGHT,
+        **kwargs
+    ):
         digest_config(self, kwargs)
         self.set_start_and_end_attrs(start, end)
         super().__init__(**kwargs)
 
-    def init_points(self):
+    def init_points(self) -> None:
         self.set_points_by_ends(self.start, self.end, self.buff, self.path_arc)
 
-    def set_points_by_ends(self, start, end, buff=0, path_arc=0):
+    def set_points_by_ends(
+        self,
+        start: np.ndarray,
+        end: np.ndarray,
+        buff: float = 0,
+        path_arc: float = 0
+    ):
         vect = end - start
         dist = get_norm(vect)
         if np.isclose(dist, 0):
@@ -438,11 +487,11 @@ class Line(TipableVMobject):
             self.set_points_as_corners([start, end])
         return self
 
-    def set_path_arc(self, new_value):
+    def set_path_arc(self, new_value: float) -> None:
         self.path_arc = new_value
         self.init_points()
 
-    def set_start_and_end_attrs(self, start, end):
+    def set_start_and_end_attrs(self, start: np.ndarray, end: np.ndarray):
         # If either start or end are Mobjects, this
         # gives their centers
         rough_start = self.pointify(start)
@@ -454,7 +503,11 @@ class Line(TipableVMobject):
         self.start = self.pointify(start, vect)
         self.end = self.pointify(end, -vect)
 
-    def pointify(self, mob_or_point, direction=None):
+    def pointify(
+        self,
+        mob_or_point: Mobject | np.ndarray,
+        direction: np.ndarray | None = None
+    ) -> np.ndarray:
         """
         Take an argument passed into Line (or subclass) and turn
         it into a 3d point.
@@ -471,7 +524,7 @@ class Line(TipableVMobject):
             result[:len(point)] = point
             return result
 
-    def put_start_and_end_on(self, start, end):
+    def put_start_and_end_on(self, start: np.ndarray, end: np.ndarray):
         curr_start, curr_end = self.get_start_and_end()
         if np.isclose(curr_start, curr_end).all():
             # Handle null lines more gracefully
@@ -479,16 +532,16 @@ class Line(TipableVMobject):
             return self
         return super().put_start_and_end_on(start, end)
 
-    def get_vector(self):
+    def get_vector(self) -> np.ndarray:
         return self.get_end() - self.get_start()
 
-    def get_unit_vector(self):
+    def get_unit_vector(self) -> np.ndarray:
         return normalize(self.get_vector())
 
-    def get_angle(self):
+    def get_angle(self) -> float:
         return angle_of_vector(self.get_vector())
 
-    def get_projection(self, point):
+    def get_projection(self, point: np.ndarray) -> np.ndarray:
         """
         Return projection of a point onto the line
         """
@@ -496,10 +549,10 @@ class Line(TipableVMobject):
         start = self.get_start()
         return start + np.dot(point - start, unit_vect) * unit_vect
 
-    def get_slope(self):
+    def get_slope(self) -> float:
         return np.tan(self.get_angle())
 
-    def set_angle(self, angle, about_point=None):
+    def set_angle(self, angle: float, about_point: np.ndarray | None = None):
         if about_point is None:
             about_point = self.get_start()
         self.rotate(
@@ -508,7 +561,7 @@ class Line(TipableVMobject):
         )
         return self
 
-    def set_length(self, length, **kwargs):
+    def set_length(self, length: float, **kwargs):
         self.scale(length / self.get_length(), **kwargs)
         return self
 
@@ -532,35 +585,35 @@ class DashedLine(Line):
         self.clear_points()
         self.add(*dashes)
 
-    def calculate_num_dashes(self, positive_space_ratio):
+    def calculate_num_dashes(self, positive_space_ratio: float) -> int:
         try:
             full_length = self.dash_length / positive_space_ratio
             return int(np.ceil(self.get_length() / full_length))
         except ZeroDivisionError:
             return 1
 
-    def calculate_positive_space_ratio(self):
+    def calculate_positive_space_ratio(self) -> float:
         return fdiv(
             self.dash_length,
             self.dash_length + self.dash_spacing,
         )
 
-    def get_start(self):
+    def get_start(self) -> np.ndarray:
         if len(self.submobjects) > 0:
             return self.submobjects[0].get_start()
         else:
             return Line.get_start(self)
 
-    def get_end(self):
+    def get_end(self) -> np.ndarray:
         if len(self.submobjects) > 0:
             return self.submobjects[-1].get_end()
         else:
             return Line.get_end(self)
 
-    def get_first_handle(self):
+    def get_first_handle(self) -> np.ndarray:
         return self.submobjects[0].get_points()[1]
 
-    def get_last_handle(self):
+    def get_last_handle(self) -> np.ndarray:
         return self.submobjects[-1].get_points()[-2]
 
 
@@ -570,7 +623,7 @@ class TangentLine(Line):
         "d_alpha": 1e-6
     }
 
-    def __init__(self, vmob, alpha, **kwargs):
+    def __init__(self, vmob: VMobject, alpha: float, **kwargs):
         digest_config(self, kwargs)
         da = self.d_alpha
         a1 = clip(alpha - da, 0, 1)
@@ -603,16 +656,22 @@ class Arrow(Line):
         "buff": 0.25,
     }
 
-    def set_points_by_ends(self, start, end, buff=0, path_arc=0):
+    def set_points_by_ends(
+        self,
+        start: np.ndarray,
+        end: np.ndarray,
+        buff: float = 0,
+        path_arc: float = 0
+    ):
         super().set_points_by_ends(start, end, buff, path_arc)
         self.insert_tip_anchor()
         return self
 
-    def init_colors(self):
+    def init_colors(self) -> None:
         super().init_colors()
         self.create_tip_with_stroke_width()
 
-    def get_arc_length(self):
+    def get_arc_length(self) -> float:
         # Push up into Line?
         arc_len = get_norm(self.get_vector())
         if self.path_arc > 0:
@@ -655,14 +714,19 @@ class Arrow(Line):
         self.create_tip_with_stroke_width()
         return self
 
-    def set_stroke(self, color=None, width=None, *args, **kwargs):
+    def set_stroke(
+        self,
+        color: ManimColor | None = None,
+        width: float | None = None,
+        *args, **kwargs
+    ):
         super().set_stroke(color=color, width=width, *args, **kwargs)
         if isinstance(width, numbers.Number):
             self.max_stroke_width = width
             self.reset_tip()
         return self
 
-    def _handle_scale_side_effects(self, scale_factor):
+    def _handle_scale_side_effects(self, scale_factor: float):
         return self.reset_tip()
 
 
@@ -679,7 +743,13 @@ class FillArrow(Line):
         "max_width_to_length_ratio": 0.1,
     }
 
-    def set_points_by_ends(self, start, end, buff=0, path_arc=0):
+    def set_points_by_ends(
+        self,
+        start: np.ndarray,
+        end: np.ndarray,
+        buff: float = 0,
+        path_arc: float = 0
+    ) -> None:
         # Find the right tip length and thickness
         vect = end - start
         length = max(get_norm(vect), 1e-8)
@@ -748,15 +818,15 @@ class FillArrow(Line):
         )
         return self
 
-    def get_start(self):
+    def get_start(self) -> np.ndarray:
         nppc = self.n_points_per_curve
         points = self.get_points()
         return (points[0] + points[-nppc]) / 2
 
-    def get_end(self):
+    def get_end(self) -> np.ndarray:
         return self.get_points()[self.tip_index]
 
-    def put_start_and_end_on(self, start, end):
+    def put_start_and_end_on(self, start: np.ndarray, end: np.ndarray):
         self.set_points_by_ends(start, end, buff=0, path_arc=self.path_arc)
         return self
 
@@ -765,12 +835,12 @@ class FillArrow(Line):
         self.reset_points_around_ends()
         return self
 
-    def set_thickness(self, thickness):
+    def set_thickness(self, thickness: float):
         self.thickness = thickness
         self.reset_points_around_ends()
         return self
 
-    def set_path_arc(self, path_arc):
+    def set_path_arc(self, path_arc: float):
         self.path_arc = path_arc
         self.reset_points_around_ends()
         return self
@@ -781,7 +851,7 @@ class Vector(Arrow):
         "buff": 0,
     }
 
-    def __init__(self, direction=RIGHT, **kwargs):
+    def __init__(self, direction: np.ndarray = RIGHT, **kwargs):
         if len(direction) == 2:
             direction = np.hstack([direction, 0])
         super().__init__(ORIGIN, direction, **kwargs)
@@ -794,24 +864,31 @@ class DoubleArrow(Arrow):
 
 
 class CubicBezier(VMobject):
-    def __init__(self, a0, h0, h1, a1, **kwargs):
+    def __init__(
+        self,
+        a0: np.ndarray,
+        h0: np.ndarray,
+        h1: np.ndarray,
+        a1: np.ndarray,
+        **kwargs
+    ):
         VMobject.__init__(self, **kwargs)
         self.add_cubic_bezier_curve(a0, h0, h1, a1)
 
 
 class Polygon(VMobject):
-    def __init__(self, *vertices, **kwargs):
+    def __init__(self, *vertices: np.ndarray, **kwargs):
         self.vertices = vertices
         super().__init__(**kwargs)
 
-    def init_points(self):
+    def init_points(self) -> None:
         verts = self.vertices
         self.set_points_as_corners([*verts, verts[0]])
 
-    def get_vertices(self):
+    def get_vertices(self) -> list[np.ndarray]:
         return self.get_start_anchors()
 
-    def round_corners(self, radius=0.5):
+    def round_corners(self, radius: float = 0.5):
         vertices = self.get_vertices()
         arcs = []
         for v1, v2, v3 in adjacent_n_tuples(vertices, 3):
@@ -850,7 +927,7 @@ class Polygon(VMobject):
 
 
 class Polyline(Polygon):
-    def init_points(self):
+    def init_points(self) -> None:
         self.set_points_as_corners(self.vertices)
 
 
@@ -859,7 +936,7 @@ class RegularPolygon(Polygon):
         "start_angle": None,
     }
 
-    def __init__(self, n=6, **kwargs):
+    def __init__(self, n: int = 6, **kwargs):
         digest_config(self, kwargs, locals())
         if self.start_angle is None:
             # 0 for odd, 90 for even
@@ -898,19 +975,19 @@ class ArrowTip(Triangle):
             self.data["points"] = Dot().set_width(h).get_points()
         self.rotate(self.angle)
 
-    def get_base(self):
+    def get_base(self) -> np.ndarray:
         return self.point_from_proportion(0.5)
 
-    def get_tip_point(self):
+    def get_tip_point(self) -> np.ndarray:
         return self.get_points()[0]
 
-    def get_vector(self):
+    def get_vector(self) -> np.ndarray:
         return self.get_tip_point() - self.get_base()
 
-    def get_angle(self):
+    def get_angle(self) -> float:
         return angle_of_vector(self.get_vector())
 
-    def get_length(self):
+    def get_length(self) -> float:
         return get_norm(self.get_vector())
 
 
@@ -923,7 +1000,12 @@ class Rectangle(Polygon):
         "close_new_points": True,
     }
 
-    def __init__(self, width=None, height=None, **kwargs):
+    def __init__(
+        self,
+        width: float | None = None,
+        height: float | None = None,
+        **kwargs
+    ):
         Polygon.__init__(self, UR, UL, DL, DR, **kwargs)
 
         if width is None:
@@ -936,7 +1018,7 @@ class Rectangle(Polygon):
 
 
 class Square(Rectangle):
-    def __init__(self, side_length=2.0, **kwargs):
+    def __init__(self, side_length: float = 2.0, **kwargs):
         self.side_length = side_length
         super().__init__(side_length, side_length, **kwargs)
 

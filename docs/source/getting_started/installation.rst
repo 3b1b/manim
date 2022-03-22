@@ -1,7 +1,7 @@
 Installation
 ============
 
-Manim runs on Python 3.6 or higher (Python 3.8 is recommended).
+Manim runs on Python 3.7 or higher.
 
 System requirements are：
 

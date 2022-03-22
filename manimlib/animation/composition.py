@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import numpy as np
+from typing import Callable
 
 from manimlib.animation.animation import Animation, prepare_animation
 from manimlib.mobject.mobject import Group
@@ -8,6 +11,12 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import remove_list_redundancies
 from manimlib.utils.rate_functions import linear
 from manimlib.utils.simple_functions import clip
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from manimlib.scene.scene import Scene
+    from manimlib.mobject.mobject import Mobject
 
 
 DEFAULT_LAGGED_START_LAG_RATIO = 0.05
@@ -27,7 +36,7 @@ class AnimationGroup(Animation):
         "group": None,
     }
 
-    def __init__(self, *animations, **kwargs):
+    def __init__(self, *animations: Animation, **kwargs):
         digest_config(self, kwargs)
         self.animations = [prepare_animation(anim) for anim in animations]
         if self.group is None:
@@ -37,27 +46,27 @@ class AnimationGroup(Animation):
         self.init_run_time()
         Animation.__init__(self, self.group, **kwargs)
 
-    def get_all_mobjects(self):
+    def get_all_mobjects(self) -> Group:
         return self.group
 
-    def begin(self):
+    def begin(self) -> None:
         for anim in self.animations:
             anim.begin()
         # self.init_run_time()
 
-    def finish(self):
+    def finish(self) -> None:
         for anim in self.animations:
             anim.finish()
 
-    def clean_up_from_scene(self, scene):
+    def clean_up_from_scene(self, scene: Scene) -> None:
         for anim in self.animations:
             anim.clean_up_from_scene(scene)
 
-    def update_mobjects(self, dt):
+    def update_mobjects(self, dt: float) -> None:
         for anim in self.animations:
             anim.update_mobjects(dt)
 
-    def init_run_time(self):
+    def init_run_time(self) -> None:
         self.build_animations_with_timings()
         if self.anims_with_timings:
             self.max_end_time = np.max([
@@ -68,7 +77,7 @@ class AnimationGroup(Animation):
         if self.run_time is None:
             self.run_time = self.max_end_time
 
-    def build_animations_with_timings(self):
+    def build_animations_with_timings(self) -> None:
         """
         Creates a list of triplets of the form
         (anim, start_time, end_time)
@@ -87,7 +96,7 @@ class AnimationGroup(Animation):
                 start_time, end_time, self.lag_ratio
             )
 
-    def interpolate(self, alpha):
+    def interpolate(self, alpha: float) -> None:
         # Note, if the run_time of AnimationGroup has been
         # set to something other than its default, these
         # times might not correspond to actual times,
@@ -111,19 +120,19 @@ class Succession(AnimationGroup):
         "lag_ratio": 1,
     }
 
-    def begin(self):
+    def begin(self) -> None:
         assert(len(self.animations) > 0)
         self.init_run_time()
         self.active_animation = self.animations[0]
         self.active_animation.begin()
 
-    def finish(self):
+    def finish(self) -> None:
         self.active_animation.finish()
 
-    def update_mobjects(self, dt):
+    def update_mobjects(self, dt: float) -> None:
         self.active_animation.update_mobjects(dt)
 
-    def interpolate(self, alpha):
+    def interpolate(self, alpha: float) -> None:
         index, subalpha = integer_interpolate(
             0, len(self.animations), alpha
         )
@@ -146,7 +155,13 @@ class LaggedStartMap(LaggedStart):
         "run_time": 2,
     }
 
-    def __init__(self, AnimationClass, mobject, arg_creator=None, **kwargs):
+    def __init__(
+        self,
+        AnimationClass: type,
+        mobject: Mobject,
+        arg_creator: Callable[[Mobject], tuple] | None = None,
+        **kwargs
+    ):
         args_list = []
         for submob in mobject:
             if arg_creator:

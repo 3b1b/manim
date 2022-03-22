@@ -1,5 +1,10 @@
-import numpy as np
+from __future__ import annotations
+
+from typing import Iterable, Callable
+
 import moderngl
+import numpy as np
+import numpy.typing as npt
 
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
@@ -8,6 +13,11 @@ from manimlib.utils.bezier import interpolate
 from manimlib.utils.images import get_full_raster_image_path
 from manimlib.utils.iterables import listify
 from manimlib.utils.space_ops import normalize_along_axis
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from manimlib.camera.camera import Camera
 
 
 class Surface(Mobject):
@@ -42,7 +52,7 @@ class Surface(Mobject):
         super().__init__(**kwargs)
         self.compute_triangle_indices()
 
-    def uv_func(self, u, v):
+    def uv_func(self, u: float, v: float) -> tuple[float, float, float]:
         # To be implemented in subclasses
         return (u, v, 0.0)
 
@@ -85,15 +95,17 @@ class Surface(Mobject):
         indices[5::6] = index_grid[+1:, +1:].flatten()  # Bottom right
         self.triangle_indices = indices
 
-    def get_triangle_indices(self):
+    def get_triangle_indices(self) -> np.ndarray:
         return self.triangle_indices
 
-    def get_surface_points_and_nudged_points(self):
+    def get_surface_points_and_nudged_points(
+        self
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         points = self.get_points()
         k = len(points) // 3
         return points[:k], points[k:2 * k], points[2 * k:]
 
-    def get_unit_normals(self):
+    def get_unit_normals(self) -> np.ndarray:
         s_points, du_points, dv_points = self.get_surface_points_and_nudged_points()
         normals = np.cross(
             (du_points - s_points) / self.epsilon,
@@ -101,7 +113,13 @@ class Surface(Mobject):
         )
         return normalize_along_axis(normals, 1)
 
-    def pointwise_become_partial(self, smobject, a, b, axis=None):
+    def pointwise_become_partial(
+        self,
+        smobject: "Surface",
+        a: float,
+        b: float,
+        axis: np.ndarray | None = None
+    ):
         assert(isinstance(smobject, Surface))
         if axis is None:
             axis = self.prefered_creation_axis
@@ -116,7 +134,14 @@ class Surface(Mobject):
         ]))
         return self
 
-    def get_partial_points_array(self, points, a, b, resolution, axis):
+    def get_partial_points_array(
+        self,
+        points: np.ndarray,
+        a: float,
+        b: float,
+        resolution: npt.ArrayLike,
+        axis: int
+    ) -> np.ndarray:
         if len(points) == 0:
             return points
         nu, nv = resolution[:2]
@@ -149,7 +174,7 @@ class Surface(Mobject):
             ).reshape(shape)
         return points.reshape((nu * nv, *resolution[2:]))
 
-    def sort_faces_back_to_front(self, vect=OUT):
+    def sort_faces_back_to_front(self, vect: np.ndarray = OUT):
         tri_is = self.triangle_indices
         indices = list(range(len(tri_is) // 3))
         points = self.get_points()
@@ -162,13 +187,13 @@ class Surface(Mobject):
             tri_is[k::3] = tri_is[k::3][indices]
         return self
 
-    def always_sort_to_camera(self, camera):
+    def always_sort_to_camera(self, camera: Camera):
         self.add_updater(lambda m: m.sort_faces_back_to_front(
             camera.get_location() - self.get_center()
         ))
 
     # For shaders
-    def get_shader_data(self):
+    def get_shader_data(self) -> np.ndarray:
         s_points, du_points, dv_points = self.get_surface_points_and_nudged_points()
         shader_data = self.get_resized_shader_data_array(len(s_points))
         if "points" not in self.locked_data_keys:
@@ -178,16 +203,22 @@ class Surface(Mobject):
         self.fill_in_shader_color_info(shader_data)
         return shader_data
 
-    def fill_in_shader_color_info(self, shader_data):
+    def fill_in_shader_color_info(self, shader_data: np.ndarray) -> np.ndarray:
         self.read_data_to_shader(shader_data, "color", "rgbas")
         return shader_data
 
-    def get_shader_vert_indices(self):
+    def get_shader_vert_indices(self) -> np.ndarray:
         return self.get_triangle_indices()
 
 
 class ParametricSurface(Surface):
-    def __init__(self, uv_func, u_range=(0, 1), v_range=(0, 1), **kwargs):
+    def __init__(
+        self,
+        uv_func: Callable[[float, float], Iterable[float]],
+        u_range: tuple[float, float] = (0, 1),
+        v_range: tuple[float, float] = (0, 1),
+        **kwargs
+    ):
         self.passed_uv_func = uv_func
         super().__init__(u_range=u_range, v_range=v_range, **kwargs)
 
@@ -200,7 +231,7 @@ class SGroup(Surface):
         "resolution": (0, 0),
     }
 
-    def __init__(self, *parametric_surfaces, **kwargs):
+    def __init__(self, *parametric_surfaces: Surface, **kwargs):
         super().__init__(uv_func=None, **kwargs)
         self.add(*parametric_surfaces)
 
@@ -220,7 +251,13 @@ class TexturedSurface(Surface):
         ]
     }
 
-    def __init__(self, uv_surface, image_file, dark_image_file=None, **kwargs):
+    def __init__(
+        self,
+        uv_surface: Surface,
+        image_file: str,
+        dark_image_file: str | None = None,
+        **kwargs
+    ):
         if not isinstance(uv_surface, Surface):
             raise Exception("uv_surface must be of type Surface")
         # Set texture information
@@ -236,10 +273,10 @@ class TexturedSurface(Surface):
 
         self.uv_surface = uv_surface
         self.uv_func = uv_surface.uv_func
-        self.u_range = uv_surface.u_range
-        self.v_range = uv_surface.v_range
-        self.resolution = uv_surface.resolution
-        self.gloss = self.uv_surface.gloss
+        self.u_range: tuple[float, float] = uv_surface.u_range
+        self.v_range: tuple[float, float] = uv_surface.v_range
+        self.resolution: tuple[float, float] = uv_surface.resolution
+        self.gloss: float = self.uv_surface.gloss
         super().__init__(**kwargs)
 
     def init_data(self):
@@ -263,12 +300,18 @@ class TexturedSurface(Surface):
     def init_colors(self):
         self.data["opacity"] = np.array([self.uv_surface.data["rgbas"][:, 3]])
 
-    def set_opacity(self, opacity, recurse=True):
+    def set_opacity(self, opacity: float, recurse: bool = True):
         for mob in self.get_family(recurse):
             mob.data["opacity"] = np.array([[o] for o in listify(opacity)])
         return self
 
-    def pointwise_become_partial(self, tsmobject, a, b, axis=1):
+    def pointwise_become_partial(
+        self,
+        tsmobject: "TexturedSurface",
+        a: float,
+        b: float,
+        axis: int = 1
+    ):
         super().pointwise_become_partial(tsmobject, a, b, axis)
         im_coords = self.data["im_coords"]
         im_coords[:] = tsmobject.data["im_coords"]
@@ -280,7 +323,7 @@ class TexturedSurface(Surface):
         )
         return self
 
-    def fill_in_shader_color_info(self, shader_data):
+    def fill_in_shader_color_info(self, shader_data: np.ndarray) -> np.ndarray:
         self.read_data_to_shader(shader_data, "opacity", "opacity")
         self.read_data_to_shader(shader_data, "im_coords", "im_coords")
         return shader_data

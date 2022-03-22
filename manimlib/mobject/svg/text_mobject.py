@@ -1,123 +1,433 @@
-import hashlib
+from __future__ import annotations
+
 import os
 import re
-import io
 import typing
-import xml.etree.ElementTree as ET
-import functools
+from pathlib import Path
+
+import xml.sax.saxutils as saxutils
+from contextlib import contextmanager
+from typing import Iterable, Sequence, Union
+
 import pygments
+import pygments.formatters
 import pygments.lexers
 import pygments.styles
 
-from contextlib import contextmanager
-from pathlib import Path
+from manimpango import MarkupUtils
 
-import manimpango
 from manimlib.logger import log
 from manimlib.constants import *
 from manimlib.mobject.geometry import Dot
 from manimlib.mobject.svg.svg_mobject import SVGMobject
-from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.customization import get_customization
-from manimlib.utils.directories import get_downloads_dir, get_text_dir
-from manimpango import PangoUtils, TextSetting, MarkupUtils
+from manimlib.utils.tex_file_writing import tex_hash
+from manimlib.utils.config_ops import digest_config
+from manimlib.utils.directories import get_downloads_dir
+from manimlib.utils.directories import get_text_dir
+
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import colour
+    from manimlib.mobject.types.vectorized_mobject import VMobject
+    ManimColor = Union[str, colour.Color, Sequence[float]]
 
 TEXT_MOB_SCALE_FACTOR = 0.0076
 DEFAULT_LINE_SPACING_SCALE = 0.6
 
 
+class _TextParser(object):
+    # See https://docs.gtk.org/Pango/pango_markup.html
+    # A tag containing two aliases will cause warning,
+    # so only use the first key of each group of aliases.
+    SPAN_ATTR_KEY_ALIAS_LIST = (
+        ("font", "font_desc"),
+        ("font_family", "face"),
+        ("font_size", "size"),
+        ("font_style", "style"),
+        ("font_weight", "weight"),
+        ("font_variant", "variant"),
+        ("font_stretch", "stretch"),
+        ("font_features",),
+        ("foreground", "fgcolor", "color"),
+        ("background", "bgcolor"),
+        ("alpha", "fgalpha"),
+        ("background_alpha", "bgalpha"),
+        ("underline",),
+        ("underline_color",),
+        ("overline",),
+        ("overline_color",),
+        ("rise",),
+        ("baseline_shift",),
+        ("font_scale",),
+        ("strikethrough",),
+        ("strikethrough_color",),
+        ("fallback",),
+        ("lang",),
+        ("letter_spacing",),
+        ("gravity",),
+        ("gravity_hint",),
+        ("show",),
+        ("insert_hyphens",),
+        ("allow_breaks",),
+        ("line_height",),
+        ("text_transform",),
+        ("segment",),
+    )
+    SPAN_ATTR_KEY_CONVERSION = {
+        key: key_alias_list[0]
+        for key_alias_list in SPAN_ATTR_KEY_ALIAS_LIST
+        for key in key_alias_list
+    }
+
+    TAG_TO_ATTR_DICT = {
+        "b": {"font_weight": "bold"},
+        "big": {"font_size": "larger"},
+        "i": {"font_style": "italic"},
+        "s": {"strikethrough": "true"},
+        "sub": {"baseline_shift": "subscript", "font_scale": "subscript"},
+        "sup": {"baseline_shift": "superscript", "font_scale": "superscript"},
+        "small": {"font_size": "smaller"},
+        "tt": {"font_family": "monospace"},
+        "u": {"underline": "single"},
+    }
+
+    def __init__(self, text: str = "", is_markup: bool = True):
+        self.text = text
+        self.is_markup = is_markup
+        self.global_attrs = {}
+        self.local_attrs = {(0, len(self.text)): {}}
+        self.tag_strings = set()
+        if is_markup:
+            self.parse_markup()
+
+    def parse_markup(self) -> None:
+        tag_pattern = r"""<(/?)(\w+)\s*((\w+\s*\=\s*('[^']*'|"[^"]*")\s*)*)>"""
+        attr_pattern = r"""(\w+)\s*\=\s*(?:(?:'([^']*)')|(?:"([^"]*)"))"""
+        start_match_obj_stack = []
+        match_obj_pairs = []
+        for match_obj in re.finditer(tag_pattern, self.text):
+            if not match_obj.group(1):
+                start_match_obj_stack.append(match_obj)
+            else:
+                match_obj_pairs.append((start_match_obj_stack.pop(), match_obj))
+            self.tag_strings.add(match_obj.group())
+        assert not start_match_obj_stack, "Unclosed tag(s) detected"
+
+        for start_match_obj, end_match_obj in match_obj_pairs:
+            tag_name = start_match_obj.group(2)
+            assert tag_name == end_match_obj.group(2), "Unmatched tag names"
+            assert not end_match_obj.group(3), "Attributes shan't exist in ending tags"
+            if tag_name == "span":
+                attr_dict = {
+                    match.group(1): match.group(2) or match.group(3)
+                    for match in re.finditer(attr_pattern, start_match_obj.group(3))
+                }
+            elif tag_name in _TextParser.TAG_TO_ATTR_DICT.keys():
+                assert not start_match_obj.group(3), f"Attributes shan't exist in tag '{tag_name}'"
+                attr_dict = _TextParser.TAG_TO_ATTR_DICT[tag_name]
+            else:
+                raise AssertionError(f"Unknown tag: '{tag_name}'")
+
+            text_span = (start_match_obj.end(), end_match_obj.start())
+            self.update_local_attrs(text_span, attr_dict)
+
+    @staticmethod
+    def convert_key_alias(key: str) -> str:
+        return _TextParser.SPAN_ATTR_KEY_CONVERSION[key]
+
+    @staticmethod
+    def update_attr_dict(attr_dict: dict[str, str], key: str, value: typing.Any) -> None:
+        converted_key = _TextParser.convert_key_alias(key)
+        attr_dict[converted_key] = str(value)
+
+    def update_global_attr(self, key: str, value: typing.Any) -> None:
+        _TextParser.update_attr_dict(self.global_attrs, key, value)
+
+    def update_global_attrs(self, attr_dict: dict[str, typing.Any]) -> None:
+        for key, value in attr_dict.items():
+            self.update_global_attr(key, value)
+
+    def update_local_attr(self, span: tuple[int, int], key: str, value: typing.Any) -> None:
+        if span[0] >= span[1]:
+            log.warning(f"Span {span} doesn't match any part of the string")
+            return
+
+        if span in self.local_attrs.keys():
+            _TextParser.update_attr_dict(self.local_attrs[span], key, value)
+            return
+
+        span_triplets = []
+        for sp, attr_dict in self.local_attrs.items():
+            if sp[1] <= span[0] or span[1] <= sp[0]:
+                continue
+            span_to_become = (max(sp[0], span[0]), min(sp[1], span[1]))
+            spans_to_add = []
+            if sp[0] < span[0]:
+                spans_to_add.append((sp[0], span[0]))
+            if span[1] < sp[1]:
+                spans_to_add.append((span[1], sp[1]))
+            span_triplets.append((sp, span_to_become, spans_to_add))
+        for span_to_remove, span_to_become, spans_to_add in span_triplets:
+            attr_dict = self.local_attrs.pop(span_to_remove)
+            for span_to_add in spans_to_add:
+                self.local_attrs[span_to_add] = attr_dict.copy()
+            self.local_attrs[span_to_become] = attr_dict
+            _TextParser.update_attr_dict(self.local_attrs[span_to_become], key, value)
+
+    def update_local_attrs(self, text_span: tuple[int, int], attr_dict: dict[str, typing.Any]) -> None:
+        for key, value in attr_dict.items():
+            self.update_local_attr(text_span, key, value)
+
+    def remove_tags(self, string: str) -> str:
+        for tag_string in self.tag_strings:
+            string = string.replace(tag_string, "")
+        return string
+
+    def get_text_pieces(self) -> list[tuple[str, dict[str, str]]]:
+        result = []
+        for span in sorted(self.local_attrs.keys()):
+            text_piece = self.remove_tags(self.text[slice(*span)])
+            if not text_piece:
+                continue
+            if not self.is_markup:
+                text_piece = saxutils.escape(text_piece)
+            attr_dict = self.global_attrs.copy()
+            attr_dict.update(self.local_attrs[span])
+            result.append((text_piece, attr_dict))
+        return result
+
+    def get_markup_str_with_attrs(self):
+        return "".join([
+            f"<span {_TextParser.get_attr_dict_str(attr_dict)}>{text_piece}</span>"
+            for text_piece, attr_dict in self.get_text_pieces()
+        ])
+
+    @staticmethod
+    def get_attr_dict_str(attr_dict: dict[str, str]):
+        return " ".join([
+            f"{key}='{value}'"
+            for key, value in attr_dict.items()
+        ])
+
+
+# Temporary handler
+class _Alignment:
+    VAL_LIST = ["LEFT", "CENTER", "RIGHT"]
+    def __init__(self, s):
+        self.value = _Alignment.VAL_LIST.index(s.upper())
+
+
 class Text(SVGMobject):
     CONFIG = {
         # Mobject
-        "color": WHITE,
-        "height": None,
         "stroke_width": 0,
+        "svg_default": {
+            "color": WHITE,
+        },
+        "height": None,
         # Text
-        "font": '',
-        "gradient": None,
-        "lsh": -1,
-        "size": None,
+        "is_markup": False,
         "font_size": 48,
-        "tab_width": 4,
+        "lsh": None,
+        "justify": False,
+        "indent": 0,
+        "alignment": "LEFT",
+        "line_width_factor": None,
+        "font": "",
+        "disable_ligatures": True,
+        "apply_space_chars": True,
         "slant": NORMAL,
         "weight": NORMAL,
+        "gradient": None,
         "t2c": {},
         "t2f": {},
         "t2g": {},
         "t2s": {},
         "t2w": {},
-        "disable_ligatures": True,
+        "global_config": {},
+        "local_configs": {},
     }
 
     def __init__(self, text, **kwargs):
         self.full2short(kwargs)
         digest_config(self, kwargs)
-        if self.size:
-            log.warning(
-                "`self.size` has been deprecated and will "
-                "be removed in future.",
-            )
-            self.font_size = self.size
-        if self.lsh == -1:
-            self.lsh = self.font_size + self.font_size * DEFAULT_LINE_SPACING_SCALE
-        else:
-            self.lsh = self.font_size + self.font_size * self.lsh
-        text_without_tabs = text
-        if text.find('\t') != -1:
-            text_without_tabs = text.replace('\t', ' ' * self.tab_width)
-        self.text = text_without_tabs
-        file_name = self.text2svg()
-        PangoUtils.remove_last_M(file_name)
-        self.remove_empty_path(file_name)
-        SVGMobject.__init__(self, file_name, **kwargs)
+        validate_error = MarkupUtils.validate(text)
+        if validate_error:
+            raise ValueError(validate_error)
         self.text = text
-        if self.disable_ligatures:
-            self.apply_space_chars()
-        if self.t2c:
-            self.set_color_by_t2c()
+        self.parser = _TextParser(text, is_markup=self.is_markup)
+        super().__init__(**kwargs)
+
         if self.gradient:
             self.set_color_by_gradient(*self.gradient)
-        if self.t2g:
-            self.set_color_by_t2g()
-
-        # anti-aliasing
         if self.height is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
 
-    def remove_empty_path(self, file_name):
-        with open(file_name, 'r') as fpr:
-            content = fpr.read()
-        content = re.sub(r'<path .*?d=""/>', '', content)
-        with open(file_name, 'w') as fpw:
-            fpw.write(content)
+    @property
+    def hash_seed(self):
+        return (
+            self.__class__.__name__,
+            self.svg_default,
+            self.path_string_config,
+            self.text,
+            self.is_markup,
+            self.font_size,
+            self.lsh,
+            self.justify,
+            self.indent,
+            self.alignment,
+            self.line_width_factor,
+            self.font,
+            self.disable_ligatures,
+            self.apply_space_chars,
+            self.slant,
+            self.weight,
+            self.t2c,
+            self.t2f,
+            self.t2s,
+            self.t2w,
+            self.global_config,
+            self.local_configs
+        )
 
-    def apply_space_chars(self):
-        submobs = self.submobjects.copy()
-        for char_index in range(len(self.text)):
-            if self.text[char_index] in [" ", "\t", "\n"]:
+    def get_file_path(self):
+        full_markup = self.get_full_markup_str()
+        svg_file = os.path.join(
+            get_text_dir(), tex_hash(full_markup) + ".svg"
+        )
+        if not os.path.exists(svg_file):
+            self.markup_to_svg(full_markup, svg_file)
+        return svg_file
+
+    def get_full_markup_str(self):
+        if self.t2g:
+            log.warning(
+                "Manim currently cannot parse gradient from svg. "
+                "Please set gradient via `set_color_by_gradient`.",
+            )
+
+        config_style_dict = self.generate_config_style_dict()
+        global_attr_dict = {
+            "line_height": ((self.lsh or DEFAULT_LINE_SPACING_SCALE) + 1) * 0.6,
+            "font_family": self.font or get_customization()["style"]["font"],
+            "font_size": self.font_size * 1024,
+            "font_style": self.slant,
+            "font_weight": self.weight,
+            # TODO, it seems this doesn't work
+            "font_features": "liga=0,dlig=0,clig=0,hlig=0" if self.disable_ligatures else None,
+            "foreground": config_style_dict.get("fill", None),
+            "alpha": config_style_dict.get("fill-opacity", None)
+        }
+        global_attr_dict = {
+            k: v
+            for k, v in global_attr_dict.items()
+            if v is not None
+        }
+        global_attr_dict.update(self.global_config)
+        self.parser.update_global_attrs(global_attr_dict)
+
+        local_attr_items = [
+            (word_or_text_span, {key: value})
+            for t2x_dict, key in (
+                (self.t2c, "foreground"),
+                (self.t2f, "font_family"),
+                (self.t2s, "font_style"),
+                (self.t2w, "font_weight")
+            )
+            for word_or_text_span, value in t2x_dict.items()
+        ]
+        local_attr_items.extend(self.local_configs.items())
+        for word_or_text_span, local_config in local_attr_items:
+            for text_span in self.find_indexes(word_or_text_span):
+                self.parser.update_local_attrs(text_span, local_config)
+
+        return self.parser.get_markup_str_with_attrs()
+
+    def find_indexes(self, word_or_text_span):
+        if isinstance(word_or_text_span, tuple):
+            return [word_or_text_span]
+
+        return [
+            match_obj.span()
+            for match_obj in re.finditer(re.escape(word_or_text_span), self.text)
+        ]
+
+    def markup_to_svg(self, markup_str, file_name):
+        # `manimpango` is under construction,
+        # so the following code is intended to suit its interface
+        alignment = _Alignment(self.alignment)
+        if self.line_width_factor is None:
+            pango_width = -1
+        else:
+            pango_width = self.line_width_factor * DEFAULT_PIXEL_WIDTH
+
+        return MarkupUtils.text2svg(
+            text=markup_str,
+            font="",                     # Already handled
+            slant="NORMAL",              # Already handled
+            weight="NORMAL",             # Already handled
+            size=1,                      # Already handled
+            _=0,                         # Empty parameter
+            disable_liga=False,          # Already handled
+            file_name=file_name,
+            START_X=0,
+            START_Y=0,
+            width=DEFAULT_PIXEL_WIDTH,
+            height=DEFAULT_PIXEL_HEIGHT,
+            justify=self.justify,
+            indent=self.indent,
+            line_spacing=None,           # Already handled
+            alignment=alignment,
+            pango_width=pango_width
+        )
+
+    def generate_mobject(self):
+        super().generate_mobject()
+
+        # Remove empty paths
+        submobjects = list(filter(lambda submob: submob.has_points(), self))
+
+        # Apply space characters
+        if self.apply_space_chars:
+            content_str = self.parser.remove_tags(self.text)
+            if self.is_markup:
+                content_str = saxutils.unescape(content_str)
+            for char_index, char in enumerate(content_str):
+                if not re.match(r"\s", char):
+                    continue
                 space = Dot(radius=0, fill_opacity=0, stroke_opacity=0)
-                space.move_to(submobs[max(char_index - 1, 0)].get_center())
-                submobs.insert(char_index, space)
-        self.set_submobjects(submobs)
+                space.move_to(submobjects[max(char_index - 1, 0)].get_center())
+                submobjects.insert(char_index, space)
+        self.set_submobjects(submobjects)
 
-    def find_indexes(self, word):
-        m = re.match(r'\[([0-9\-]{0,}):([0-9\-]{0,})\]', word)
-        if m:
-            start = int(m.group(1)) if m.group(1) != '' else 0
-            end = int(m.group(2)) if m.group(2) != '' else len(self.text)
-            start = len(self.text) + start if start < 0 else start
-            end = len(self.text) + end if end < 0 else end
-            return [(start, end)]
-
-        indexes = []
-        index = self.text.find(word)
-        while index != -1:
-            indexes.append((index, index + len(word)))
-            index = self.text.find(word, index + len(word))
-        return indexes
+    def full2short(self, config):
+        conversion_dict = {
+            "line_spacing_height": "lsh",
+            "text2color": "t2c",
+            "text2font": "t2f",
+            "text2gradient": "t2g",
+            "text2slant": "t2s",
+            "text2weight": "t2w"
+        }
+        for kwargs in [config, self.CONFIG]:
+            for long_name, short_name in conversion_dict.items():
+                if long_name in kwargs:
+                    kwargs[short_name] = kwargs.pop(long_name)
 
     def get_parts_by_text(self, word):
+        if self.is_markup:
+            log.warning(
+                "Slicing MarkupText via `get_parts_by_text`, "
+                "the result could be unexpected."
+            )
+        elif not self.apply_space_chars:
+            log.warning(
+                "Slicing Text via `get_parts_by_text` without applying spaces, "
+                "the result could be unexpected."
+            )
         return VGroup(*(
             self[i:j]
             for i, j in self.find_indexes(word)
@@ -125,371 +435,18 @@ class Text(SVGMobject):
 
     def get_part_by_text(self, word):
         parts = self.get_parts_by_text(word)
-        if len(parts) > 0:
-            return parts[0]
-        else:
-            return None
-
-    def full2short(self, config):
-        for kwargs in [config, self.CONFIG]:
-            if kwargs.__contains__('line_spacing_height'):
-                kwargs['lsh'] = kwargs.pop('line_spacing_height')
-            if kwargs.__contains__('text2color'):
-                kwargs['t2c'] = kwargs.pop('text2color')
-            if kwargs.__contains__('text2font'):
-                kwargs['t2f'] = kwargs.pop('text2font')
-            if kwargs.__contains__('text2gradient'):
-                kwargs['t2g'] = kwargs.pop('text2gradient')
-            if kwargs.__contains__('text2slant'):
-                kwargs['t2s'] = kwargs.pop('text2slant')
-            if kwargs.__contains__('text2weight'):
-                kwargs['t2w'] = kwargs.pop('text2weight')
-
-    def set_color_by_t2c(self, t2c=None):
-        t2c = t2c if t2c else self.t2c
-        for word, color in t2c.items():
-            for start, end in self.find_indexes(word):
-                self[start:end].set_color(color)
-
-    def set_color_by_t2g(self, t2g=None):
-        t2g = t2g if t2g else self.t2g
-        for word, gradient in t2g.items():
-            for start, end in self.find_indexes(word):
-                self[start:end].set_color_by_gradient(*gradient)
-
-    def text2hash(self):
-        settings = self.font + self.slant + self.weight
-        settings += str(self.t2f) + str(self.t2s) + str(self.t2w)
-        settings += str(self.lsh) + str(self.font_size)
-        id_str = self.text + settings
-        hasher = hashlib.sha256()
-        hasher.update(id_str.encode())
-        return hasher.hexdigest()[:16]
-
-    def text2settings(self):
-        """
-        Substrings specified in t2f, t2s, t2w can occupy each other.
-        For each category of style, a stack following first-in-last-out is constructed,
-        and the last value in each stack takes effect.
-        """
-        settings = []
-        self.line_num = 0
-        def add_text_settings(start, end, style_stacks):
-            if start == end:
-                return
-            breakdown_indices = [start, *[
-                i + start + 1 for i, char in enumerate(self.text[start:end]) if char == "\n"
-            ], end]
-            style = [stack[-1] for stack in style_stacks]
-            for atom_start, atom_end in zip(breakdown_indices[:-1], breakdown_indices[1:]):
-                if atom_start < atom_end:
-                    settings.append(TextSetting(atom_start, atom_end, *style, self.line_num))
-                self.line_num += 1
-            self.line_num -= 1
-
-        # Set all the default and specified values.
-        len_text = len(self.text)
-        t2x_items = sorted([
-            *[
-                (0, len_text, t2x_index, value)
-                for t2x_index, value in enumerate([self.font, self.slant, self.weight])
-            ],
-            *[
-                (start, end, t2x_index, value)
-                for t2x_index, t2x in enumerate([self.t2f, self.t2s, self.t2w])
-                for word, value in t2x.items()
-                for start, end in self.find_indexes(word)
-            ]
-        ], key=lambda item: item[0])
-
-        # Break down ranges and construct settings separately.
-        active_items = []
-        style_stacks = [[] for _ in range(3)]
-        for item, next_start in zip(t2x_items, [*[item[0] for item in t2x_items[1:]], len_text]):
-            active_items.append(item)
-            start, end, t2x_index, value = item
-            style_stacks[t2x_index].append(value)
-            halting_items = sorted(filter(
-                lambda item: item[1] <= next_start,
-                active_items
-            ), key=lambda item: item[1])
-            atom_start = start
-            for halting_item in halting_items:
-                active_items.remove(halting_item)
-                _, atom_end, t2x_index, _ = halting_item
-                add_text_settings(atom_start, atom_end, style_stacks)
-                style_stacks[t2x_index].pop()
-                atom_start = atom_end
-            add_text_settings(atom_start, next_start, style_stacks)
-
-        del self.line_num
-        return settings
-
-    def text2svg(self):
-        # anti-aliasing
-        size = self.font_size
-        lsh = self.lsh
-
-        if self.font == '':
-            self.font = get_customization()['style']['font']
-
-        dir_name = get_text_dir()
-        hash_name = self.text2hash()
-        file_name = os.path.join(dir_name, hash_name) + '.svg'
-        if os.path.exists(file_name):
-            return file_name
-        settings = self.text2settings()
-        width = DEFAULT_PIXEL_WIDTH
-        height = DEFAULT_PIXEL_HEIGHT
-        disable_liga = self.disable_ligatures
-        return manimpango.text2svg(
-            settings,
-            size,
-            lsh,
-            disable_liga,
-            file_name,
-            START_X,
-            START_Y,
-            width,
-            height,
-            self.text,
-        )
+        return parts[0] if parts else None
 
 
-class MarkupText(SVGMobject):
+class MarkupText(Text):
     CONFIG = {
-        # Mobject
-        "color": WHITE,
-        "height": None,
-        # Text
-        "font": '',
-        "font_size": 48,
-        "lsh": None,
-        "justify": False,
-        "slant": NORMAL,
-        "weight": NORMAL,
-        "tab_width": 4,
-        "gradient": None,
-        "disable_ligatures": True,
+        "is_markup": True,
+        "apply_space_chars": False,
     }
 
-    def __init__(self, text, **config):
-        digest_config(self, config)
-        self.text = f'<span>{text}</span>'
-        self.original_text = self.text
-        self.text_for_parsing = self.text
-        text_without_tabs = text
-        if "\t" in text:
-            text_without_tabs = text.replace("\t", " " * self.tab_width)
-        try:
-            colormap = self.extract_color_tags()
-            gradientmap = self.extract_gradient_tags()
-        except ET.ParseError:
-            # let pango handle that error
-            pass
-        validate_error = MarkupUtils.validate(self.text)
-        if validate_error:
-            raise ValueError(validate_error)
-        file_name = self.text2svg()
-        PangoUtils.remove_last_M(file_name)
-        super().__init__(
-            file_name,
-            **config,
-        )
-        self.chars = self.get_group_class()(*self.submobjects)
-        self.text = text_without_tabs.replace(" ", "").replace("\n", "")
-        if self.gradient:
-            self.set_color_by_gradient(*self.gradient)
-        for col in colormap:
-            self.chars[
-                col["start"]
-                - col["start_offset"] : col["end"]
-                - col["start_offset"]
-                - col["end_offset"]
-            ].set_color(self._parse_color(col["color"]))
-        for grad in gradientmap:
-            self.chars[
-                grad["start"]
-                - grad["start_offset"] : grad["end"]
-                - grad["start_offset"]
-                - grad["end_offset"]
-            ].set_color_by_gradient(
-                *(self._parse_color(grad["from"]), self._parse_color(grad["to"]))
-            )
-        # anti-aliasing
-        if self.height is None:
-            self.scale(TEXT_MOB_SCALE_FACTOR)
-
-    def text2hash(self):
-        """Generates ``sha256`` hash for file name."""
-        settings = (
-            "MARKUPPANGO" + self.font + self.slant + self.weight + self.color
-        )  # to differentiate from classical Pango Text
-        settings += str(self.lsh) + str(self.font_size)
-        settings += str(self.disable_ligatures)
-        settings += str(self.justify)
-        id_str = self.text + settings
-        hasher = hashlib.sha256()
-        hasher.update(id_str.encode())
-        return hasher.hexdigest()[:16]
-    
-    def text2svg(self):
-        """Convert the text to SVG using Pango."""
-        size = self.font_size
-        dir_name = get_text_dir()
-        disable_liga = self.disable_ligatures
-        if not os.path.exists(dir_name):
-            os.makedirs(dir_name)
-        hash_name = self.text2hash()
-        file_name = os.path.join(dir_name, hash_name) + ".svg"
-        if os.path.exists(file_name):
-            return file_name
-
-        extra_kwargs = {}
-        extra_kwargs['justify'] = self.justify
-        extra_kwargs['pango_width'] = DEFAULT_PIXEL_WIDTH - 100
-        if self.lsh:
-            extra_kwargs['line_spacing']=self.lsh
-        return MarkupUtils.text2svg(
-            f'<span foreground="{self.color}">{self.text}</span>',
-            self.font,
-            self.slant,
-            self.weight,
-            size,
-            0, # empty parameter
-            disable_liga,
-            file_name,
-            START_X,
-            START_Y,
-            DEFAULT_PIXEL_WIDTH,  # width
-            DEFAULT_PIXEL_HEIGHT,  # height
-            **extra_kwargs
-        )
-
-    def _parse_color(self, col):
-        """Parse color given in ``<color>`` or ``<gradient>`` tags."""
-        if re.match("#[0-9a-f]{6}", col):
-            return col
-        else:
-            return globals()[col.upper()] # this is hacky
-
-    @functools.lru_cache(10)
-    def get_text_from_markup(self, element=None):
-        if not element:
-            element = ET.fromstring(self.text_for_parsing)
-        final_text = ''
-        for i in element.itertext():
-            final_text += i
-        return final_text
-
-    def extract_color_tags(self, text=None, colormap = None):
-        """Used to determine which parts (if any) of the string should be formatted
-        with a custom color.
-        Removes the ``<color>`` tag, as it is not part of Pango's markup and would cause an error.
-        Note: Using the ``<color>`` tags is deprecated. As soon as the legacy syntax is gone, this function
-        will be removed.
-        """
-        if not text:
-            text = self.text_for_parsing
-        if not colormap:
-            colormap = list()
-        elements = ET.fromstring(text)
-        text_from_markup = self.get_text_from_markup()
-        final_xml = ET.fromstring(f'<span>{elements.text if elements.text else ""}</span>')
-        def get_color_map(elements):
-            for element in elements:
-                if element.tag == 'color':
-                    element_text = self.get_text_from_markup(element)
-                    start = text_from_markup.find(element_text)
-                    end = start + len(element_text)
-                    offsets = element.get('offset').split(",") if element.get('offset') else [0]
-                    start_offset = int(offsets[0]) if offsets[0] else 0
-                    end_offset = int(offsets[1]) if len(offsets) == 2 and offsets[1] else 0
-                    colormap.append(
-                        {
-                            "start": start,
-                            "end": end,
-                            "color": element.get('col'),
-                            "start_offset": start_offset,
-                            "end_offset": end_offset,
-                        }
-                    )
-                    
-                    _elements_list = list(element.iter())
-                    if len(_elements_list) <= 1:
-                        final_xml.append(ET.fromstring(f'<span>{element.text if element.text else ""}</span>'))
-                    else:
-                        final_xml.append(_elements_list[-1])
-                else:
-                    if len(list(element.iter())) == 1:
-                        final_xml.append(element)
-                    else:
-                        get_color_map(element)
-        get_color_map(elements)
-        with io.BytesIO() as f:
-            tree = ET.ElementTree()  
-            tree._setroot(final_xml)
-            tree.write(f)
-            self.text = f.getvalue().decode()
-        self.text_for_parsing = self.text # gradients will use it
-        return colormap
-
-    def extract_gradient_tags(self, text=None,gradientmap=None):
-        """Used to determine which parts (if any) of the string should be formatted
-        with a gradient.
-        Removes the ``<gradient>`` tag, as it is not part of Pango's markup and would cause an error.
-        """
-        if not text:
-            text = self.text_for_parsing
-        if not gradientmap:
-            gradientmap = list()
-
-        elements = ET.fromstring(text)
-        text_from_markup = self.get_text_from_markup()
-        final_xml = ET.fromstring(f'<span>{elements.text if elements.text else ""}</span>')
-        def get_gradient_map(elements):
-            for element in elements:
-                if element.tag == 'gradient':
-                    element_text = self.get_text_from_markup(element)
-                    start = text_from_markup.find(element_text)
-                    end = start + len(element_text)
-                    offsets = element.get('offset').split(",") if element.get('offset') else [0]
-                    start_offset = int(offsets[0]) if offsets[0] else 0
-                    end_offset = int(offsets[1]) if len(offsets) == 2 and offsets[1] else 0
-                    gradientmap.append(
-                        {
-                            "start": start,
-                            "end": end,
-                            "from": element.get('from'),
-                            "to": element.get('to'),
-                            "start_offset": start_offset,
-                            "end_offset": end_offset,
-                        }
-                    )
-                    _elements_list = list(element.iter())
-                    if len(_elements_list) == 1:
-                        final_xml.append(ET.fromstring(f'<span>{element.text if element.text else ""}</span>'))
-                    else:
-                        final_xml.append(_elements_list[-1])
-                else:
-                    if len(list(element.iter())) == 1:
-                        final_xml.append(element)
-                    else:
-                        get_gradient_map(element)
-        get_gradient_map(elements)
-        with io.BytesIO() as f:
-            tree = ET.ElementTree()  
-            tree._setroot(final_xml)
-            tree.write(f)
-            self.text = f.getvalue().decode()
-
-        return gradientmap
-
-    def __repr__(self):
-        return f"MarkupText({repr(self.original_text)})"
 
 
-class Code(Text):
+class Code(MarkupText):
     CONFIG = {
         "font": "Consolas",
         "font_size": 24,
@@ -497,56 +454,20 @@ class Code(Text):
         "language": "python",
         # Visit https://pygments.org/demo/ to have a preview of more styles.
         "code_style": "monokai",
-        # If not None, then each character will cover a space of equal width.
-        "char_width": None
     }
 
     def __init__(self, code, **kwargs):
-        self.full2short(kwargs)
         digest_config(self, kwargs)
-        code = code.lstrip("\n")  # avoid mismatches of character indices
+        self.code = code
         lexer = pygments.lexers.get_lexer_by_name(self.language)
-        tokens_generator = pygments.lex(code, lexer)
-        styles_dict = dict(pygments.styles.get_style_by_name(self.code_style))
-        default_color_hex = styles_dict[pygments.token.Text]["color"]
-        if not default_color_hex:
-            default_color_hex = self.color[1:]
-        start_index = 0
-        t2c = {}
-        t2s = {}
-        t2w = {}
-        for pair in tokens_generator:
-            ttype, token = pair
-            end_index = start_index + len(token)
-            range_str = f"[{start_index}:{end_index}]"
-            style_dict = styles_dict[ttype]
-            t2c[range_str] = "#" + (style_dict["color"] or default_color_hex)
-            t2s[range_str] = ITALIC if style_dict["italic"] else NORMAL
-            t2w[range_str] = BOLD if style_dict["bold"] else NORMAL
-            start_index = end_index
-        t2c.update(self.t2c)
-        t2s.update(self.t2s)
-        t2w.update(self.t2w)
-        kwargs["t2c"] = t2c
-        kwargs["t2s"] = t2s
-        kwargs["t2w"] = t2w
-        Text.__init__(self, code, **kwargs)
-        if self.char_width is not None:
-            self.set_monospace(self.char_width)
-
-    def set_monospace(self, char_width):
-        current_char_index = 0
-        for i, char in enumerate(self.text):
-            if char == "\n":
-                current_char_index = 0
-                continue
-            self[i].set_x(current_char_index * char_width)
-            current_char_index += 1
-        self.center()
+        formatter = pygments.formatters.PangoMarkupFormatter(style=self.code_style)
+        markup = pygments.highlight(code, lexer, formatter)
+        markup = re.sub(r"</?tt>", "", markup)
+        super().__init__(markup, **kwargs)
 
 
 @contextmanager
-def register_font(font_file: typing.Union[str, Path]):
+def register_font(font_file: str | Path):
     """Temporarily add a font file to Pango's search path.
     This searches for the font_file at various places. The order it searches it described below.
     1. Absolute path.

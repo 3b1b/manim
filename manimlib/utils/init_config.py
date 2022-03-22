@@ -1,7 +1,8 @@
 import os
 import yaml
 import inspect
-import importlib 
+import importlib
+from typing import Any
 
 from rich import box
 from rich.rule import Rule 
@@ -10,13 +11,13 @@ from rich.console import Console
 from rich.prompt import Prompt, Confirm
 
 
-def get_manim_dir():
+def get_manim_dir() -> str:
     manimlib_module = importlib.import_module("manimlib")
     manimlib_dir = os.path.dirname(inspect.getabsfile(manimlib_module))
     return os.path.abspath(os.path.join(manimlib_dir, ".."))
 
 
-def remove_empty_value(dictionary):
+def remove_empty_value(dictionary: dict[str, Any]) -> None:
     for key in list(dictionary.keys()):
         if dictionary[key] == "":
             dictionary.pop(key)
@@ -24,7 +25,7 @@ def remove_empty_value(dictionary):
             remove_empty_value(dictionary[key])
 
 
-def init_customization():
+def init_customization() -> None:
     configuration = {
         "directories": {
             "mirror_module_path": False,

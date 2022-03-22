@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 
 from manimlib.event_handler.event_type import EventType
@@ -6,21 +8,23 @@ from manimlib.event_handler.event_listner import EventListner
 
 class EventDispatcher(object):
     def __init__(self):
-        self.event_listners = {
+        self.event_listners: dict[
+            EventType, list[EventListner]
+        ] = {
             event_type: []
             for event_type in EventType
         }
         self.mouse_point = np.array((0., 0., 0.))
         self.mouse_drag_point = np.array((0., 0., 0.))
-        self.pressed_keys = set()
-        self.draggable_object_listners = []
+        self.pressed_keys: set[int] = set()
+        self.draggable_object_listners: list[EventListner] = []
 
-    def add_listner(self, event_listner):
+    def add_listner(self, event_listner: EventListner):
         assert(isinstance(event_listner, EventListner))
         self.event_listners[event_listner.event_type].append(event_listner)
         return self
 
-    def remove_listner(self, event_listner):
+    def remove_listner(self, event_listner: EventListner):
         assert(isinstance(event_listner, EventListner))
         try:
             while event_listner in self.event_listners[event_listner.event_type]:
@@ -30,8 +34,7 @@ class EventDispatcher(object):
             pass
         return self
 
-    def dispatch(self, event_type, **event_data):
-
+    def dispatch(self, event_type: EventType, **event_data):
         if event_type == EventType.MouseMotionEvent:
             self.mouse_point = event_data["point"]
         elif event_type == EventType.MouseDragEvent:
@@ -74,16 +77,16 @@ class EventDispatcher(object):
 
         return propagate_event
 
-    def get_listners_count(self):
+    def get_listners_count(self) -> int:
         return sum([len(value) for key, value in self.event_listners.items()])
 
-    def get_mouse_point(self):
+    def get_mouse_point(self) -> np.ndarray:
         return self.mouse_point
 
-    def get_mouse_drag_point(self):
+    def get_mouse_drag_point(self) -> np.ndarray:
         return self.mouse_drag_point
 
-    def is_key_pressed(self, symbol):
+    def is_key_pressed(self, symbol: int) -> bool:
         return (symbol in self.pressed_keys)
 
     __iadd__ = add_listner
