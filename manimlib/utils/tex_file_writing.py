@@ -32,7 +32,7 @@ def get_tex_config():
             get_manim_dir(), "manimlib", "tex_templates",
             SAVED_TEX_CONFIG["template_file"],
         )
-        with open(template_filename, "r") as file:
+        with open(template_filename, "r", encoding="utf-8") as file:
             SAVED_TEX_CONFIG["tex_body"] = file.read()
     return SAVED_TEX_CONFIG
 
@@ -88,7 +88,7 @@ def tex_to_dvi(tex_file):
         if exit_code != 0:
             log_file = tex_file.replace(".tex", ".log")
             log.error("LaTeX Error!  Not a worry, it happens to the best of us.")
-            with open(log_file, "r") as file:
+            with open(log_file, "r", encoding="utf-8") as file:
                 for line in file.readlines():
                     if line.startswith("!"):
                         log.debug(f"The error could be: `{line[2:-1]}`")

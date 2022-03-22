@@ -309,6 +309,7 @@ class CoordinateSystem():
         stroke_color: ManimColor = BLACK,
         fill_opacity: float = 1,
         colors: Iterable[ManimColor] = (BLUE, GREEN),
+        stroke_background: bool = True,
         show_signed_area: bool = True
     ) -> VGroup:
         if x_range is None:
@@ -332,7 +333,8 @@ class CoordinateSystem():
             height = get_norm(
                 self.i2gp(sample, graph) - self.c2p(sample, 0)
             )
-            rect = Rectangle(width=x1 - x0, height=height)
+            rect = Rectangle(width=self.x_axis.n2p(x1)[0] - self.x_axis.n2p(x0)[0], 
+                             height=height)
             rect.move_to(self.c2p(x0, 0), DL)
             rects.append(rect)
         result = VGroup(*rects)
@@ -341,6 +343,7 @@ class CoordinateSystem():
             stroke_width=stroke_width,
             stroke_color=stroke_color,
             fill_opacity=fill_opacity,
+            stroke_background=stroke_background
         )
         return result
 

@@ -91,7 +91,8 @@ class SVGMobject(VMobject):
         element_tree = ET.parse(file_path)
         new_tree = self.modify_xml_tree(element_tree)
         # Create a temporary svg file to dump modified svg to be parsed
-        modified_file_path = file_path.replace(".svg", "_.svg")
+        root, ext = os.path.splitext(file_path)
+        modified_file_path = root + "_" + ext
         new_tree.write(modified_file_path)
 
         svg = se.SVG.parse(modified_file_path)
@@ -150,9 +151,28 @@ class SVGMobject(VMobject):
         for shape in svg.elements():
             if isinstance(shape, se.Group):
                 continue
-            mob = self.get_mobject_from(shape)
-            if mob is None:
+            elif isinstance(shape, se.Path):
+                mob = self.path_to_mobject(shape)
+            elif isinstance(shape, se.SimpleLine):
+                mob = self.line_to_mobject(shape)
+            elif isinstance(shape, se.Rect):
+                mob = self.rect_to_mobject(shape)
+            elif isinstance(shape, se.Circle):
+                mob = self.circle_to_mobject(shape)
+            elif isinstance(shape, se.Ellipse):
+                mob = self.ellipse_to_mobject(shape)
+            elif isinstance(shape, se.Polygon):
+                mob = self.polygon_to_mobject(shape)
+            elif isinstance(shape, se.Polyline):
+                mob = self.polyline_to_mobject(shape)
+            # elif isinstance(shape, se.Text):
+            #     mob = self.text_to_mobject(shape)
+            elif type(shape) == se.SVGElement:
                 continue
+            else:
+                log.warning(f"Unsupported element type: {type(shape)}")
+                continue
+            self.apply_style_to_mobject(mob, shape)
             if isinstance(shape, se.Transformable) and shape.apply:
                 self.handle_transform(mob, shape.transform)
             result.append(mob)
@@ -205,6 +225,17 @@ class SVGMobject(VMobject):
             fill_color=shape.fill.hex,
             fill_opacity=shape.fill.opacity
         )
+        return mob
+
+    @staticmethod
+    def handle_transform(mob, matrix):
+        mat = np.array([
+            [matrix.a, matrix.c],
+            [matrix.b, matrix.d]
+        ])
+        vec = np.array([matrix.e, matrix.f, 0.0])
+        mob.apply_matrix(mat)
+        mob.shift(vec)
         return mob
 
     def path_to_mobject(self, path: se.Path) -> VMobjectFromSVGPath:
@@ -332,3 +363,7 @@ class VMobjectFromSVGPath(VMobject):
                 for attr_name in attr_names
             ]
             func(*points)
+
+        # Get rid of the side effect of trailing "Z M" commands.
+        if self.has_new_path_started():
+            self.resize_points(self.get_num_points() - 1)
