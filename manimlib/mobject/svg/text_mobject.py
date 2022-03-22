@@ -3,11 +3,9 @@ from __future__ import annotations
 import os
 import re
 import typing
-import io
-import hashlib
-import functools
 from pathlib import Path
-import xml.etree.ElementTree as ET
+
+import xml.sax.saxutils as saxutils
 from contextlib import contextmanager
 from typing import Iterable, Sequence, Union
 
