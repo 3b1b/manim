@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import moderngl
 from colour import Color
 import OpenGL.GL as gl
-from __future__ import annotations
 
 import itertools as it
 
