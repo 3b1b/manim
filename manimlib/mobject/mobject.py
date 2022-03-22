@@ -935,32 +935,24 @@ class Mobject(object):
         return self
 
     def set_rgba_array_by_color(self, color=None, opacity=None, name="rgbas", recurse=True):
+        max_len = 0
         if color is not None:
             rgbs = np.array([color_to_rgb(c) for c in listify(color)])
+            max_len = len(rgbs)
         if opacity is not None:
-            opacities = listify(opacity)
+            opacities = np.array(listify(opacity))
+            max_len = max(max_len, len(opacities))
 
-        # Color only
-        if color is not None and opacity is None:
-            for mob in self.get_family(recurse):
-                mob.data[name] = resize_array(mob.data[name], len(rgbs))
-                mob.data[name][:, :3] = rgbs
-
-        # Opacity only
-        if color is None and opacity is not None:
-            for mob in self.get_family(recurse):
-                mob.data[name] = resize_array(mob.data[name], len(opacities))
-                mob.data[name][:, 3] = opacities
-
-        # Color and opacity
-        if color is not None and opacity is not None:
-            rgbas = np.array([
-                [*rgb, o]
-                for rgb, o in zip(*make_even(rgbs, opacities))
-            ])
-            for mob in self.get_family(recurse):
-                mob.data[name] = rgbas.copy()
+        for mob in self.get_family(recurse):
+            if max_len > len(mob.data[name]):
+                mob.data[name] = resize_array(mob.data[name], max_len)
+            size = len(mob.data[name])
+            if color is not None:
+                mob.data[name][:, :3] = resize_array(rgbs, size)
+            if opacity is not None:
+                mob.data[name][:, 3] = resize_array(opacities, size)
         return self
+        
 
     def set_color(self, color, opacity=None, recurse=True):
         self.set_rgba_array_by_color(color, opacity, recurse=False)
