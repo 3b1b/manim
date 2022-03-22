@@ -38,6 +38,7 @@ class Scene(object):
         "preview": True,
         "presenter_mode": False,
         "linger_after_completion": True,
+        "pan_sensitivity": 3,
     }
 
     def __init__(self, **kwargs):
@@ -562,8 +563,8 @@ class Scene(object):
 
         frame = self.camera.frame
         if self.window.is_key_pressed(ord("d")):
-            frame.increment_theta(-d_point[0])
-            frame.increment_phi(d_point[1])
+            frame.increment_theta(-self.pan_sensitivity * d_point[0])
+            frame.increment_phi(self.pan_sensitivity * d_point[1])
         elif self.window.is_key_pressed(ord("s")):
             shift = -d_point
             shift[0] *= frame.get_width() / 2
