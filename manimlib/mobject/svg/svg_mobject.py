@@ -89,7 +89,8 @@ class SVGMobject(VMobject):
         element_tree = ET.parse(file_path)
         new_tree = self.modify_xml_tree(element_tree)
         # Create a temporary svg file to dump modified svg to be parsed
-        modified_file_path = file_path.replace(".svg", "_.svg")
+        root, ext = os.path.splitext(file_path)
+        modified_file_path = root + "_" + ext
         new_tree.write(modified_file_path)
 
         svg = se.SVG.parse(modified_file_path)
@@ -148,46 +149,32 @@ class SVGMobject(VMobject):
         for shape in svg.elements():
             if isinstance(shape, se.Group):
                 continue
-            mob = self.get_mobject_from(shape)
-            if mob is None:
+            elif isinstance(shape, se.Path):
+                mob = self.path_to_mobject(shape)
+            elif isinstance(shape, se.SimpleLine):
+                mob = self.line_to_mobject(shape)
+            elif isinstance(shape, se.Rect):
+                mob = self.rect_to_mobject(shape)
+            elif isinstance(shape, se.Circle):
+                mob = self.circle_to_mobject(shape)
+            elif isinstance(shape, se.Ellipse):
+                mob = self.ellipse_to_mobject(shape)
+            elif isinstance(shape, se.Polygon):
+                mob = self.polygon_to_mobject(shape)
+            elif isinstance(shape, se.Polyline):
+                mob = self.polyline_to_mobject(shape)
+            # elif isinstance(shape, se.Text):
+            #     mob = self.text_to_mobject(shape)
+            elif type(shape) == se.SVGElement:
                 continue
+            else:
+                log.warning(f"Unsupported element type: {type(shape)}")
+                continue
+            self.apply_style_to_mobject(mob, shape)
             if isinstance(shape, se.Transformable) and shape.apply:
                 self.handle_transform(mob, shape.transform)
             result.append(mob)
         return result
-
-    @staticmethod
-    def handle_transform(mob, matrix):
-        mat = np.array([
-            [matrix.a, matrix.c],
-            [matrix.b, matrix.d]
-        ])
-        vec = np.array([matrix.e, matrix.f, 0.0])
-        mob.apply_matrix(mat)
-        mob.shift(vec)
-        return mob
-
-    def get_mobject_from(self, shape):
-        shape_class_to_func_map = {
-            se.Path: self.path_to_mobject,
-            se.SimpleLine: self.line_to_mobject,
-            se.Rect: self.rect_to_mobject,
-            se.Circle: self.circle_to_mobject,
-            se.Ellipse: self.ellipse_to_mobject,
-            se.Polygon: self.polygon_to_mobject,
-            se.Polyline: self.polyline_to_mobject,
-            # se.Text: self.text_to_mobject,  # TODO
-        }
-        for shape_class, func in shape_class_to_func_map.items():
-            if isinstance(shape, shape_class):
-                mob = func(shape)
-                self.apply_style_to_mobject(mob, shape)
-                return mob
-
-        shape_class_name = shape.__class__.__name__
-        if shape_class_name != "SVGElement":
-            log.warning(f"Unsupported element type: {shape_class_name}")
-        return None
 
     @staticmethod
     def apply_style_to_mobject(mob, shape):
@@ -198,6 +185,17 @@ class SVGMobject(VMobject):
             fill_color=shape.fill.hex,
             fill_opacity=shape.fill.opacity
         )
+        return mob
+
+    @staticmethod
+    def handle_transform(mob, matrix):
+        mat = np.array([
+            [matrix.a, matrix.c],
+            [matrix.b, matrix.d]
+        ])
+        vec = np.array([matrix.e, matrix.f, 0.0])
+        mob.apply_matrix(mat)
+        mob.shift(vec)
         return mob
 
     def path_to_mobject(self, path):
