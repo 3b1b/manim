@@ -1,5 +1,9 @@
+from __future__ import annotations
+
+from typing import Iterable, Sequence, Union
 from functools import reduce
 import operator as op
+import colour
 import re
 
 from manimlib.constants import *
@@ -10,6 +14,8 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.tex_file_writing import tex_to_svg_file
 from manimlib.utils.tex_file_writing import get_tex_config
 from manimlib.utils.tex_file_writing import display_during_execution
+
+ManimColor = Union[str, colour.Color, Sequence[float]]
 
 
 SCALE_FACTOR_PER_FONT_POINT = 0.001
@@ -33,7 +39,7 @@ class SingleStringTex(SVGMobject):
         "organize_left_to_right": False,
     }
 
-    def __init__(self, tex_string, **kwargs):
+    def __init__(self, tex_string: str, **kwargs):
         assert isinstance(tex_string, str)
         self.tex_string = tex_string
         super().__init__(**kwargs)
@@ -44,7 +50,7 @@ class SingleStringTex(SVGMobject):
             self.organize_submobjects_left_to_right()
 
     @property
-    def hash_seed(self):
+    def hash_seed(self) -> tuple[str, dict[str], dict[str, bool], str, str, bool]:
         return (
             self.__class__.__name__,
             self.svg_default,
@@ -54,13 +60,13 @@ class SingleStringTex(SVGMobject):
             self.math_mode
         )
 
-    def get_file_path(self):
+    def get_file_path(self) -> str:
         full_tex = self.get_tex_file_body(self.tex_string)
         with display_during_execution(f"Writing \"{self.tex_string}\""):
             file_path = tex_to_svg_file(full_tex)
         return file_path
 
-    def get_tex_file_body(self, tex_string):
+    def get_tex_file_body(self, tex_string: str) -> str:
         new_tex = self.get_modified_expression(tex_string)
         if self.math_mode:
             new_tex = "\\begin{align*}\n" + new_tex + "\n\\end{align*}"
@@ -73,10 +79,10 @@ class SingleStringTex(SVGMobject):
             new_tex
         )
 
-    def get_modified_expression(self, tex_string):
+    def get_modified_expression(self, tex_string: str) -> str:
         return self.modify_special_strings(tex_string.strip())
 
-    def modify_special_strings(self, tex):
+    def modify_special_strings(self, tex: str) -> str:
         tex = tex.strip()
         should_add_filler = reduce(op.or_, [
             # Fraction line needs something to be over
@@ -128,7 +134,7 @@ class SingleStringTex(SVGMobject):
                 tex = ""
         return tex
 
-    def balance_braces(self, tex):
+    def balance_braces(self, tex: str) -> str:
         """
         Makes Tex resiliant to unmatched braces
         """
@@ -148,7 +154,7 @@ class SingleStringTex(SVGMobject):
         tex += num_unclosed_brackets * "}"
         return tex
 
-    def get_tex(self):
+    def get_tex(self) -> str:
         return self.tex_string
 
     def organize_submobjects_left_to_right(self):
@@ -163,7 +169,7 @@ class Tex(SingleStringTex):
         "tex_to_color_map": {},
     }
 
-    def __init__(self, *tex_strings, **kwargs):
+    def __init__(self, *tex_strings: str, **kwargs):
         digest_config(self, kwargs)
         self.tex_strings = self.break_up_tex_strings(tex_strings)
         full_string = self.arg_separator.join(self.tex_strings)
@@ -174,7 +180,7 @@ class Tex(SingleStringTex):
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
 
-    def break_up_tex_strings(self, tex_strings):
+    def break_up_tex_strings(self, tex_strings: Iterable[str]) -> Iterable[str]:
         # Separate out any strings specified in the isolate
         # or tex_to_color_map lists.
         substrings_to_isolate = [*self.isolate, *self.tex_to_color_map.keys()]
@@ -222,7 +228,12 @@ class Tex(SingleStringTex):
         self.set_submobjects(new_submobjects)
         return self
 
-    def get_parts_by_tex(self, tex, substring=True, case_sensitive=True):
+    def get_parts_by_tex(
+        self,
+        tex: str,
+        substring: bool = True,
+        case_sensitive: bool = True
+    ) -> VGroup:
         def test(tex1, tex2):
             if not case_sensitive:
                 tex1 = tex1.lower()
@@ -237,27 +248,36 @@ class Tex(SingleStringTex):
             self.submobjects
         ))
 
-    def get_part_by_tex(self, tex, **kwargs):
+    def get_part_by_tex(self, tex: str, **kwargs) -> SingleStringTex | None:
         all_parts = self.get_parts_by_tex(tex, **kwargs)
         return all_parts[0] if all_parts else None
 
-    def set_color_by_tex(self, tex, color, **kwargs):
+    def set_color_by_tex(self, tex: str, color: ManimColor, **kwargs):
         self.get_parts_by_tex(tex, **kwargs).set_color(color)
         return self
 
-    def set_color_by_tex_to_color_map(self, tex_to_color_map, **kwargs):
+    def set_color_by_tex_to_color_map(
+        self,
+        tex_to_color_map: dict[str, ManimColor],
+        **kwargs
+    ):
         for tex, color in list(tex_to_color_map.items()):
             self.set_color_by_tex(tex, color, **kwargs)
         return self
 
-    def index_of_part(self, part, start=0):
+    def index_of_part(self, part: SingleStringTex, start: int = 0) -> int:
         return self.submobjects.index(part, start)
 
-    def index_of_part_by_tex(self, tex, start=0, **kwargs):
+    def index_of_part_by_tex(self, tex: str, start: int = 0, **kwargs) -> int:
         part = self.get_part_by_tex(tex, **kwargs)
         return self.index_of_part(part, start)
 
-    def slice_by_tex(self, start_tex=None, stop_tex=None, **kwargs):
+    def slice_by_tex(
+        self,
+        start_tex: str | None = None,
+        stop_tex: str | None = None,
+        **kwargs
+    ) -> VGroup:
         if start_tex is None:
             start_index = 0
         else:
@@ -269,10 +289,10 @@ class Tex(SingleStringTex):
             stop_index = self.index_of_part_by_tex(stop_tex, start=start_index, **kwargs)
             return self[start_index:stop_index]
 
-    def sort_alphabetically(self):
+    def sort_alphabetically(self) -> None:
         self.submobjects.sort(key=lambda m: m.get_tex())
 
-    def set_bstroke(self, color=BLACK, width=4):
+    def set_bstroke(self, color: ManimColor = BLACK, width: float = 4):
         self.set_stroke(color, width, background=True)
         return self
 
@@ -291,7 +311,7 @@ class BulletedList(TexText):
         "alignment": "",
     }
 
-    def __init__(self, *items, **kwargs):
+    def __init__(self, *items: str, **kwargs):
         line_separated_items = [s + "\\\\" for s in items]
         TexText.__init__(self, *line_separated_items, **kwargs)
         for part in self:
@@ -304,7 +324,7 @@ class BulletedList(TexText):
             buff=self.buff
         )
 
-    def fade_all_but(self, index_or_string, opacity=0.5):
+    def fade_all_but(self, index_or_string: int | str, opacity: float = 0.5) -> None:
         arg = index_or_string
         if isinstance(arg, str):
             part = self.get_part_by_tex(arg)
@@ -342,7 +362,7 @@ class Title(TexText):
         "underline_buff": MED_SMALL_BUFF,
     }
 
-    def __init__(self, *text_parts, **kwargs):
+    def __init__(self, *text_parts: str, **kwargs):
         TexText.__init__(self, *text_parts, **kwargs)
         self.scale(self.scale_factor)
         self.to_edge(UP)

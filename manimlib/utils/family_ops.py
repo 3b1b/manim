@@ -1,7 +1,18 @@
+from __future__ import annotations
+
 import itertools as it
+from typing import Iterable
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from manimlib.mobject.mobject import Mobject
 
 
-def extract_mobject_family_members(mobject_list, only_those_with_points=False):
+def extract_mobject_family_members(
+    mobject_list: Iterable[Mobject],
+    only_those_with_points: bool = False
+) -> list[Mobject]:
     result = list(it.chain(*[
         mob.get_family()
         for mob in mobject_list
@@ -11,7 +22,10 @@ def extract_mobject_family_members(mobject_list, only_those_with_points=False):
     return result
 
 
-def restructure_list_to_exclude_certain_family_members(mobject_list, to_remove):
+def restructure_list_to_exclude_certain_family_members(
+    mobject_list: list[Mobject],
+    to_remove: list[Mobject]
+) -> list[Mobject]:
     """
     Removes anything in to_remove from mobject_list, but in the event that one of
     the items to be removed is a member of the family of an item in mobject_list,

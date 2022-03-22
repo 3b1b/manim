@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import numpy as np
+import numpy.typing as npt
 import moderngl
 
 from manimlib.constants import GREY_C
@@ -29,27 +32,31 @@ class DotCloud(PMobject):
         ],
     }
 
-    def __init__(self, points=None, **kwargs):
+    def __init__(self, points: npt.ArrayLike = None, **kwargs):
         super().__init__(**kwargs)
         if points is not None:
             self.set_points(points)
 
-    def init_data(self):
+    def init_data(self) -> None:
         super().init_data()
         self.data["radii"] = np.zeros((1, 1))
         self.set_radius(self.radius)
 
-    def init_uniforms(self):
+    def init_uniforms(self) -> None:
         super().init_uniforms()
         self.uniforms["glow_factor"] = self.glow_factor
 
-    def to_grid(self, n_rows, n_cols, n_layers=1,
-                buff_ratio=None,
-                h_buff_ratio=1.0,
-                v_buff_ratio=1.0,
-                d_buff_ratio=1.0,
-                height=DEFAULT_GRID_HEIGHT,
-                ):
+    def to_grid(
+        self,
+        n_rows: int,
+        n_cols: int,
+        n_layers: int = 1,
+        buff_ratio: float | None = None,
+        h_buff_ratio: float = 1.0,
+        v_buff_ratio: float = 1.0,
+        d_buff_ratio: float = 1.0,
+        height: float = DEFAULT_GRID_HEIGHT,
+    ):
         n_points = n_rows * n_cols * n_layers
         points = np.repeat(range(n_points), 3, axis=0).reshape((n_points, 3))
         points[:, 0] = points[:, 0] % n_cols
@@ -74,50 +81,55 @@ class DotCloud(PMobject):
         self.center()
         return self
 
-    def set_radii(self, radii):
+    def set_radii(self, radii: npt.ArrayLike):
         n_points = len(self.get_points())
         radii = np.array(radii).reshape((len(radii), 1))
         self.data["radii"] = resize_preserving_order(radii, n_points)
         self.refresh_bounding_box()
         return self
 
-    def get_radii(self):
+    def get_radii(self) -> np.ndarray:
         return self.data["radii"]
 
-    def set_radius(self, radius):
+    def set_radius(self, radius: float):
         self.data["radii"][:] = radius
         self.refresh_bounding_box()
         return self
 
-    def get_radius(self):
+    def get_radius(self) -> float:
         return self.get_radii().max()
 
-    def set_glow_factor(self, glow_factor):
+    def set_glow_factor(self, glow_factor: float) -> None:
         self.uniforms["glow_factor"] = glow_factor
 
-    def get_glow_factor(self):
+    def get_glow_factor(self) -> float:
         return self.uniforms["glow_factor"]
 
-    def compute_bounding_box(self):
+    def compute_bounding_box(self) -> np.ndarray:
         bb = super().compute_bounding_box()
         radius = self.get_radius()
         bb[0] += np.full((3,), -radius)
         bb[2] += np.full((3,), radius)
         return bb
 
-    def scale(self, scale_factor, scale_radii=True, **kwargs):
+    def scale(
+        self,
+        scale_factor: float | npt.ArrayLike,
+        scale_radii: bool = True,
+        **kwargs
+    ):
         super().scale(scale_factor, **kwargs)
         if scale_radii:
             self.set_radii(scale_factor * self.get_radii())
         return self
 
-    def make_3d(self, reflectiveness=0.5, shadow=0.2):
+    def make_3d(self, reflectiveness: float = 0.5, shadow: float = 0.2):
         self.set_reflectiveness(reflectiveness)
         self.set_shadow(shadow)
         self.apply_depth_test()
         return self
 
-    def get_shader_data(self):
+    def get_shader_data(self) -> np.ndarray:
         shader_data = super().get_shader_data()
         self.read_data_to_shader(shader_data, "radius", "radii")
         self.read_data_to_shader(shader_data, "color", "rgbas")
@@ -125,7 +137,7 @@ class DotCloud(PMobject):
 
 
 class TrueDot(DotCloud):
-    def __init__(self, center=ORIGIN, **kwargs):
+    def __init__(self, center: np.ndarray = ORIGIN, **kwargs):
         super().__init__(points=[center], **kwargs)
 
 

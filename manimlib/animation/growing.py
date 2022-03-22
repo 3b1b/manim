@@ -1,6 +1,14 @@
-from manimlib.animation.transform import Transform
-# from manimlib.utils.paths import counterclockwise_path
+from __future__ import annotations
+
 from manimlib.constants import PI
+from manimlib.animation.transform import Transform
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import numpy as np
+    from manimlib.mobject.mobject import Mobject
+    from manimlib.mobject.geometry import Arrow
 
 
 class GrowFromPoint(Transform):
@@ -8,14 +16,14 @@ class GrowFromPoint(Transform):
         "point_color": None,
     }
 
-    def __init__(self, mobject, point, **kwargs):
+    def __init__(self, mobject: Mobject, point: np.ndarray, **kwargs):
         self.point = point
         super().__init__(mobject, **kwargs)
 
-    def create_target(self):
+    def create_target(self) -> Mobject:
         return self.mobject
 
-    def create_starting_mobject(self):
+    def create_starting_mobject(self) -> Mobject:
         start = super().create_starting_mobject()
         start.scale(0)
         start.move_to(self.point)
@@ -25,19 +33,19 @@ class GrowFromPoint(Transform):
 
 
 class GrowFromCenter(GrowFromPoint):
-    def __init__(self, mobject, **kwargs):
+    def __init__(self, mobject: Mobject, **kwargs):
         point = mobject.get_center()
         super().__init__(mobject, point, **kwargs)
 
 
 class GrowFromEdge(GrowFromPoint):
-    def __init__(self, mobject, edge, **kwargs):
+    def __init__(self, mobject: Mobject, edge: np.ndarray, **kwargs):
         point = mobject.get_bounding_box_point(edge)
         super().__init__(mobject, point, **kwargs)
 
 
 class GrowArrow(GrowFromPoint):
-    def __init__(self, arrow, **kwargs):
+    def __init__(self, arrow: Arrow, **kwargs):
         point = arrow.get_start()
         super().__init__(arrow, point, **kwargs)
 

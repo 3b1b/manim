@@ -1,11 +1,16 @@
+from __future__ import annotations
+
+from typing import TypeVar, Type
+
 from manimlib.constants import *
 from manimlib.mobject.svg.tex_mobject import SingleStringTex
 from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.iterables import hash_obj
 
+T = TypeVar("T", bound=VMobject)
 
-string_to_mob_map = {}
+string_to_mob_map: dict[str, VMobject] = {}
 
 
 class DecimalNumber(VMobject):
@@ -24,11 +29,11 @@ class DecimalNumber(VMobject):
         "text_config": {} # Do not pass in font_size here
     }
 
-    def __init__(self, number=0, **kwargs):
+    def __init__(self, number: float | complex = 0, **kwargs):
         super().__init__(**kwargs)
         self.set_submobjects_from_number(number)
 
-    def set_submobjects_from_number(self, number):
+    def set_submobjects_from_number(self, number: float | complex) -> None:
         self.number = number
         self.set_submobjects([])
         string_to_mob_ = lambda s: self.string_to_mob(s, **self.text_config)
@@ -63,7 +68,7 @@ class DecimalNumber(VMobject):
         if self.include_background_rectangle:
             self.add_background_rectangle()
 
-    def get_num_string(self, number):
+    def get_num_string(self, number: float | complex) -> str:
         if isinstance(number, complex):
             formatter = self.get_complex_formatter()
         else:
@@ -79,21 +84,21 @@ class DecimalNumber(VMobject):
         num_string = num_string.replace("-", "–")
         return num_string
 
-    def init_data(self):
+    def init_data(self) -> None:
         super().init_data()
         self.data["font_size"] = np.array([self.font_size], dtype=float)
 
-    def get_font_size(self):
+    def get_font_size(self) -> float:
         return self.data["font_size"][0]
 
-    def string_to_mob(self, string, mob_class=Text, **kwargs):
+    def string_to_mob(self, string: str, mob_class: Type[T] = Text, **kwargs) -> T:
         if (string, hash_obj(kwargs)) not in string_to_mob_map:
             string_to_mob_map[(string, hash_obj(kwargs))] = mob_class(string, font_size=1, **kwargs)
         mob = string_to_mob_map[(string, hash_obj(kwargs))].copy()
         mob.scale(self.get_font_size())
         return mob
 
-    def get_formatter(self, **kwargs):
+    def get_formatter(self, **kwargs) -> str:
         """
         Configuration is based first off instance attributes,
         but overwritten by any kew word argument.  Relevant
@@ -122,14 +127,14 @@ class DecimalNumber(VMobject):
             "}",
         ])
 
-    def get_complex_formatter(self, **kwargs):
+    def get_complex_formatter(self, **kwargs) -> str:
         return "".join([
             self.get_formatter(field_name="0.real"),
             self.get_formatter(field_name="0.imag", include_sign=True),
             "i"
         ])
 
-    def set_value(self, number):
+    def set_value(self, number: float | complex):
         move_to_point = self.get_edge_center(self.edge_to_fix)
         old_submobjects = list(self.submobjects)
         self.set_submobjects_from_number(number)
@@ -138,13 +143,13 @@ class DecimalNumber(VMobject):
             sm1.match_style(sm2)
         return self
 
-    def _handle_scale_side_effects(self, scale_factor):
+    def _handle_scale_side_effects(self, scale_factor: float) -> None:
         self.data["font_size"] *= scale_factor
 
-    def get_value(self):
+    def get_value(self) -> float | complex:
         return self.number
 
-    def increment_value(self, delta_t=1):
+    def increment_value(self, delta_t: float | complex = 1) -> None:
         self.set_value(self.get_value() + delta_t)
 
 
@@ -153,5 +158,5 @@ class Integer(DecimalNumber):
         "num_decimal_places": 0,
     }
 
-    def get_value(self):
+    def get_value(self) -> int:
         return int(np.round(super().get_value()))

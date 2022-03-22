@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ["py36", "py37", "py38", "py39", "py310"]
+        python: ["py37", "py38", "py39", "py310"]
 
     steps:
     - uses: actions/checkout@v2

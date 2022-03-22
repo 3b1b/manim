@@ -1,5 +1,7 @@
-import numpy as np
 import math
+from typing import Callable
+
+import numpy as np
 
 from manimlib.constants import OUT
 from manimlib.utils.bezier import interpolate
@@ -9,7 +11,11 @@ from manimlib.utils.space_ops import rotation_matrix_transpose
 STRAIGHT_PATH_THRESHOLD = 0.01
 
 
-def straight_path(start_points, end_points, alpha):
+def straight_path(
+    start_points: np.ndarray,
+    end_points: np.ndarray,
+    alpha: float
+) -> np.ndarray:
     """
     Same function as interpolate, but renamed to reflect
     intent of being used to determine how a set of points move
@@ -19,7 +25,10 @@ def straight_path(start_points, end_points, alpha):
     return interpolate(start_points, end_points, alpha)
 
 
-def path_along_arc(arc_angle, axis=OUT):
+def path_along_arc(
+    arc_angle: float, 
+    axis: np.ndarray = OUT
+) -> Callable[[np.ndarray, np.ndarray, float], np.ndarray]:
     """
     If vect is vector from start to end, [vect[:,1], -vect[:,0]] is
     perpendicular to vect in the left direction.
@@ -41,9 +50,9 @@ def path_along_arc(arc_angle, axis=OUT):
     return path
 
 
-def clockwise_path():
+def clockwise_path() -> Callable[[np.ndarray, np.ndarray, float], np.ndarray]:
     return path_along_arc(-np.pi)
 
 
-def counterclockwise_path():
+def counterclockwise_path() -> Callable[[np.ndarray, np.ndarray, float], np.ndarray]:
     return path_along_arc(np.pi)

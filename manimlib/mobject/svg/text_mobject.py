@@ -1,14 +1,21 @@
+from __future__ import annotations
+
 import os
 import re
 import typing
-import xml.sax.saxutils as saxutils
-from contextlib import contextmanager
+import io
+import hashlib
+import functools
 from pathlib import Path
+import xml.etree.ElementTree as ET
+from contextlib import contextmanager
+from typing import Iterable, Sequence, Union
 
 import pygments
 import pygments.formatters
 import pygments.lexers
-import manimpango
+import pygments.styles
+
 from manimpango import MarkupUtils
 
 from manimlib.logger import log
@@ -21,6 +28,13 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.directories import get_downloads_dir
 from manimlib.utils.directories import get_text_dir
 
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import colour
+    from manimlib.mobject.types.vectorized_mobject import VMobject
+    ManimColor = Union[str, colour.Color, Sequence[float]]
 
 TEXT_MOB_SCALE_FACTOR = 0.0076
 DEFAULT_LINE_SPACING_SCALE = 0.6
@@ -433,6 +447,7 @@ class MarkupText(Text):
     }
 
 
+
 class Code(MarkupText):
     CONFIG = {
         "font": "Consolas",
@@ -454,7 +469,7 @@ class Code(MarkupText):
 
 
 @contextmanager
-def register_font(font_file: typing.Union[str, Path]):
+def register_font(font_file: str | Path):
     """Temporarily add a font file to Pango's search path.
     This searches for the font_file at various places. The order it searches it described below.
     1. Absolute path.

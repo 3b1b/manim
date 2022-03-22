@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import os
 import hashlib
 import itertools as it
+from typing import Callable
 from xml.etree import ElementTree as ET
 
 import svgelements as se
@@ -21,10 +24,10 @@ from manimlib.utils.iterables import hash_obj
 from manimlib.logger import log
 
 
-SVG_HASH_TO_MOB_MAP = {}
+SVG_HASH_TO_MOB_MAP: dict[int, VMobject] = {}
 
 
-def _convert_point_to_3d(x, y):
+def _convert_point_to_3d(x: float, y: float) -> np.ndarray:
     return np.array([x, y, 0.0])
 
 
@@ -55,15 +58,14 @@ class SVGMobject(VMobject):
         },
         "path_string_config": {},
     }
-
-    def __init__(self, file_name=None, **kwargs):
+    def __init__(self, file_name: str | None = None, **kwargs):
         super().__init__(**kwargs)
         self.file_name = file_name or self.file_name
         self.init_svg_mobject()
         self.init_colors()
         self.move_into_position()
 
-    def init_svg_mobject(self):
+    def init_svg_mobject(self) -> None:
         hash_val = hash_obj(self.hash_seed)
         if hash_val in SVG_HASH_TO_MOB_MAP:
             mob = SVG_HASH_TO_MOB_MAP[hash_val].copy()
@@ -74,7 +76,7 @@ class SVGMobject(VMobject):
         SVG_HASH_TO_MOB_MAP[hash_val] = self.copy()
 
     @property
-    def hash_seed(self):
+    def hash_seed(self) -> tuple[str, dict[str], dict[str, bool], str]:
         # Returns data which can uniquely represent the result of `init_points`.
         # The hashed value of it is stored as a key in `SVG_HASH_TO_MOB_MAP`.
         return (
@@ -84,7 +86,7 @@ class SVGMobject(VMobject):
             self.file_name
         )
 
-    def generate_mobject(self):
+    def generate_mobject(self) -> None:
         file_path = self.get_file_path()
         element_tree = ET.parse(file_path)
         new_tree = self.modify_xml_tree(element_tree)
@@ -100,12 +102,12 @@ class SVGMobject(VMobject):
         self.add(*mobjects)
         self.flip(RIGHT)  # Flip y
 
-    def get_file_path(self):
+    def get_file_path(self) -> str:
         if self.file_name is None:
             raise Exception("Must specify file for SVGMobject")
         return get_full_vector_image_path(self.file_name)
 
-    def modify_xml_tree(self, element_tree):
+    def modify_xml_tree(self, element_tree: ET.ElementTree) -> ET.ElementTree:
         config_style_dict = self.generate_config_style_dict()
         style_keys = (
             "fill",
@@ -127,7 +129,7 @@ class SVGMobject(VMobject):
         root_style_node.extend(root)
         return ET.ElementTree(new_root)
 
-    def generate_config_style_dict(self):
+    def generate_config_style_dict(self) -> dict[str, str]:
         keys_converting_dict = {
             "fill": ("color", "fill_color"),
             "fill-opacity": ("opacity", "fill_opacity"),
@@ -144,7 +146,7 @@ class SVGMobject(VMobject):
                 result[svg_key] = str(svg_default_dict[style_key])
         return result
 
-    def get_mobjects_from(self, svg):
+    def get_mobjects_from(self, svg: se.SVG) -> list[VMobject]:
         result = []
         for shape in svg.elements():
             if isinstance(shape, se.Group):
@@ -177,7 +179,45 @@ class SVGMobject(VMobject):
         return result
 
     @staticmethod
-    def apply_style_to_mobject(mob, shape):
+    def handle_transform(mob: VMobject, matrix: se.Matrix) -> VMobject:
+        mat = np.array([
+            [matrix.a, matrix.c],
+            [matrix.b, matrix.d]
+        ])
+        vec = np.array([matrix.e, matrix.f, 0.0])
+        mob.apply_matrix(mat)
+        mob.shift(vec)
+        return mob
+
+    def get_mobject_from(self, shape: se.GraphicObject) -> VMobject | None:
+        shape_class_to_func_map: dict[
+            type, Callable[[se.GraphicObject], VMobject]
+        ] = {
+            se.Path: self.path_to_mobject,
+            se.SimpleLine: self.line_to_mobject,
+            se.Rect: self.rect_to_mobject,
+            se.Circle: self.circle_to_mobject,
+            se.Ellipse: self.ellipse_to_mobject,
+            se.Polygon: self.polygon_to_mobject,
+            se.Polyline: self.polyline_to_mobject,
+            # se.Text: self.text_to_mobject,  # TODO
+        }
+        for shape_class, func in shape_class_to_func_map.items():
+            if isinstance(shape, shape_class):
+                mob = func(shape)
+                self.apply_style_to_mobject(mob, shape)
+                return mob
+
+        shape_class_name = shape.__class__.__name__
+        if shape_class_name != "SVGElement":
+            log.warning(f"Unsupported element type: {shape_class_name}")
+        return None
+
+    @staticmethod
+    def apply_style_to_mobject(
+        mob: VMobject,
+        shape: se.GraphicObject
+    ) -> VMobject:
         mob.set_style(
             stroke_width=shape.stroke_width,
             stroke_color=shape.stroke.hex,
@@ -198,16 +238,16 @@ class SVGMobject(VMobject):
         mob.shift(vec)
         return mob
 
-    def path_to_mobject(self, path):
+    def path_to_mobject(self, path: se.Path) -> VMobjectFromSVGPath:
         return VMobjectFromSVGPath(path, **self.path_string_config)
 
-    def line_to_mobject(self, line):
+    def line_to_mobject(self, line: se.Line) -> Line:
         return Line(
             start=_convert_point_to_3d(line.x1, line.y1),
             end=_convert_point_to_3d(line.x2, line.y2)
         )
 
-    def rect_to_mobject(self, rect):
+    def rect_to_mobject(self, rect: se.Rect) -> Rectangle:
         if rect.rx == 0 or rect.ry == 0:
             mob = Rectangle(
                 width=rect.width,
@@ -226,7 +266,7 @@ class SVGMobject(VMobject):
         ))
         return mob
 
-    def circle_to_mobject(self, circle):
+    def circle_to_mobject(self, circle: se.Circle) -> Circle:
         # svgelements supports `rx` & `ry` but `r`
         mob = Circle(radius=circle.rx)
         mob.shift(_convert_point_to_3d(
@@ -234,7 +274,7 @@ class SVGMobject(VMobject):
         ))
         return mob
 
-    def ellipse_to_mobject(self, ellipse):
+    def ellipse_to_mobject(self, ellipse: se.Ellipse) -> Circle:
         mob = Circle(radius=ellipse.rx)
         mob.stretch_to_fit_height(2 * ellipse.ry)
         mob.shift(_convert_point_to_3d(
@@ -242,24 +282,24 @@ class SVGMobject(VMobject):
         ))
         return mob
 
-    def polygon_to_mobject(self, polygon):
+    def polygon_to_mobject(self, polygon: se.Polygon) -> Polygon:
         points = [
             _convert_point_to_3d(*point)
             for point in polygon
         ]
         return Polygon(*points)
 
-    def polyline_to_mobject(self, polyline):
+    def polyline_to_mobject(self, polyline: se.Polyline) -> Polyline:
         points = [
             _convert_point_to_3d(*point)
             for point in polyline
         ]
         return Polyline(*points)
 
-    def text_to_mobject(self, text):
+    def text_to_mobject(self, text: se.Text):
         pass
 
-    def move_into_position(self):
+    def move_into_position(self) -> None:
         if self.should_center:
             self.center()
         if self.height is not None:
@@ -275,13 +315,13 @@ class VMobjectFromSVGPath(VMobject):
         "should_remove_null_curves": False,
     }
 
-    def __init__(self, path_obj, **kwargs):
+    def __init__(self, path_obj: se.Path, **kwargs):
         # Get rid of arcs
         path_obj.approximate_arcs_with_quads()
         self.path_obj = path_obj
         super().__init__(**kwargs)
 
-    def init_points(self):
+    def init_points(self) -> None:
         # After a given svg_path has been converted into points, the result
         # will be saved to a file so that future calls for the same path
         # don't need to retrace the same computation.
@@ -307,7 +347,7 @@ class VMobjectFromSVGPath(VMobject):
             np.save(points_filepath, self.get_points())
             np.save(tris_filepath, self.get_triangulation())
 
-    def handle_commands(self):
+    def handle_commands(self) -> None:
         segment_class_to_func_map = {
             se.Move: (self.start_new_path, ("end",)),
             se.Close: (self.close_path, ()),

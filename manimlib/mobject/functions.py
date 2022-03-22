@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Callable, Sequence
+
 from isosurfaces import plot_isoline
 
 from manimlib.constants import *
@@ -14,7 +18,12 @@ class ParametricCurve(VMobject):
         "use_smoothing": True,
     }
 
-    def __init__(self, t_func, t_range=None, **kwargs):
+    def __init__(
+        self,
+        t_func: Callable[[float], np.ndarray],
+        t_range: Sequence[float] | None = None,
+        **kwargs
+    ):
         digest_config(self, kwargs)
         if t_range is not None:
             self.t_range[:len(t_range)] = t_range
@@ -27,7 +36,7 @@ class ParametricCurve(VMobject):
         self.t_func = t_func
         VMobject.__init__(self, **kwargs)
 
-    def get_point_from_function(self, t):
+    def get_point_from_function(self, t: float) -> np.ndarray:
         return self.t_func(t)
 
     def init_points(self):
@@ -67,7 +76,12 @@ class FunctionGraph(ParametricCurve):
         "x_range": [-8, 8, 0.25],
     }
 
-    def __init__(self, function, x_range=None, **kwargs):
+    def __init__(
+        self,
+        function: Callable[[float], float],
+        x_range: Sequence[float] | None = None,
+        **kwargs
+    ):
         digest_config(self, kwargs)
         self.function = function
 
@@ -89,7 +103,11 @@ class ImplicitFunction(VMobject):
         "use_smoothing": True
     }
 
-    def __init__(self, func, x_range=None, y_range=None, **kwargs):
+    def __init__(
+        self,
+        func: Callable[[float, float], float],
+        **kwargs
+    ):
         digest_config(self, kwargs)
         self.function = func
         super().__init__(**kwargs)

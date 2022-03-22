@@ -1,5 +1,8 @@
-import numpy as np
+from __future__ import annotations
+
 import itertools as it
+
+import numpy as np
 
 from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.fading import FadeTransformPieces
@@ -7,7 +10,6 @@ from manimlib.animation.fading import FadeInFromPoint
 from manimlib.animation.fading import FadeOutToPoint
 from manimlib.animation.transform import ReplacementTransform
 from manimlib.animation.transform import Transform
-
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.svg.mtex_mobject import MTex
@@ -15,6 +17,12 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import remove_list_redundancies
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from manimlib.scene.scene import Scene
+    from manimlib.mobject.svg.tex_mobject import Tex, SingleStringTex
 
 
 class TransformMatchingParts(AnimationGroup):
@@ -26,7 +34,7 @@ class TransformMatchingParts(AnimationGroup):
         "key_map": dict(),
     }
 
-    def __init__(self, mobject, target_mobject, **kwargs):
+    def __init__(self, mobject: Mobject, target_mobject: Mobject, **kwargs):
         digest_config(self, kwargs)
         assert(isinstance(mobject, self.mobject_type))
         assert(isinstance(target_mobject, self.mobject_type))
@@ -83,8 +91,8 @@ class TransformMatchingParts(AnimationGroup):
         self.to_remove = mobject
         self.to_add = target_mobject
 
-    def get_shape_map(self, mobject):
-        shape_map = {}
+    def get_shape_map(self, mobject: Mobject) -> dict[int, VGroup]:
+        shape_map: dict[int, VGroup] = {}
         for sm in self.get_mobject_parts(mobject):
             key = self.get_mobject_key(sm)
             if key not in shape_map:
@@ -92,7 +100,7 @@ class TransformMatchingParts(AnimationGroup):
             shape_map[key].add(sm)
         return shape_map
 
-    def clean_up_from_scene(self, scene):
+    def clean_up_from_scene(self, scene: Scene) -> None:
         for anim in self.animations:
             anim.update(0)
         scene.remove(self.mobject)
@@ -100,12 +108,12 @@ class TransformMatchingParts(AnimationGroup):
         scene.add(self.to_add)
 
     @staticmethod
-    def get_mobject_parts(mobject):
+    def get_mobject_parts(mobject: Mobject) -> Mobject:
         # To be implemented in subclass
         return mobject
 
     @staticmethod
-    def get_mobject_key(mobject):
+    def get_mobject_key(mobject: Mobject) -> int:
         # To be implemented in subclass
         return hash(mobject)
 
@@ -117,11 +125,11 @@ class TransformMatchingShapes(TransformMatchingParts):
     }
 
     @staticmethod
-    def get_mobject_parts(mobject):
+    def get_mobject_parts(mobject: VMobject) -> list[VMobject]:
         return mobject.family_members_with_points()
 
     @staticmethod
-    def get_mobject_key(mobject):
+    def get_mobject_key(mobject: VMobject) -> int:
         mobject.save_state()
         mobject.center()
         mobject.set_height(1)
@@ -137,11 +145,11 @@ class TransformMatchingTex(TransformMatchingParts):
     }
 
     @staticmethod
-    def get_mobject_parts(mobject):
+    def get_mobject_parts(mobject: Tex) -> list[SingleStringTex]:
         return mobject.submobjects
 
     @staticmethod
-    def get_mobject_key(mobject):
+    def get_mobject_key(mobject: Tex) -> str:
         return mobject.get_tex()
 
 
@@ -150,7 +158,7 @@ class TransformMatchingMTex(AnimationGroup):
         "key_map": dict(),
     }
 
-    def __init__(self, source_mobject, target_mobject, **kwargs):
+    def __init__(self, source_mobject: MTex, target_mobject: MTex, **kwargs):
         digest_config(self, kwargs)
         assert isinstance(source_mobject, MTex)
         assert isinstance(target_mobject, MTex)
