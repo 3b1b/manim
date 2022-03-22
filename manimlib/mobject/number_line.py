@@ -104,8 +104,8 @@ class NumberLine(Line):
     def get_tick_marks(self) -> VGroup:
         return self.ticks
 
-    def number_to_point(self, number: float) -> np.ndarray:
-        alpha = float(number - self.x_min) / (self.x_max - self.x_min)
+    def number_to_point(self, number: float | np.ndarray) -> np.ndarray:
+        alpha = (number - self.x_min) / (self.x_max - self.x_min)
         return interpolate(self.get_start(), self.get_end(), alpha)
 
     def point_to_number(self, point: np.ndarray) -> float:
@@ -159,7 +159,7 @@ class NumberLine(Line):
     def add_numbers(
         self,
         x_values: Iterable[float] | None = None,
-        excluding: Iterable[float] | None =None,
+        excluding: Iterable[float] | None = None,
         font_size: int = 24,
         **kwargs
     ) -> VGroup:

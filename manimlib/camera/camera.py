@@ -1,25 +1,21 @@
 from __future__ import annotations
 
-import math
+import moderngl
+from colour import Color
+import OpenGL.GL as gl
+
 import itertools as it
 
-import moderngl
 import numpy as np
+from scipy.spatial.transform import Rotation
 from PIL import Image
-import OpenGL.GL as gl
-from colour import Color
 
 from manimlib.constants import *
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.simple_functions import fdiv
-from manimlib.utils.simple_functions import clip
-from manimlib.utils.space_ops import angle_of_vector
-from manimlib.utils.space_ops import rotation_matrix_transpose_from_quaternion
-from manimlib.utils.space_ops import rotation_matrix_transpose
-from manimlib.utils.space_ops import quaternion_from_angle_axis
-from manimlib.utils.space_ops import quaternion_mult
+from manimlib.utils.space_ops import normalize
 
 from typing import TYPE_CHECKING
 
@@ -31,15 +27,13 @@ class CameraFrame(Mobject):
     CONFIG = {
         "frame_shape": (FRAME_WIDTH, FRAME_HEIGHT),
         "center_point": ORIGIN,
-        # Theta, phi, gamma
-        "euler_angles": [0, 0, 0],
         "focal_distance": 2,
     }
 
-    def init_data(self) -> None:
-        super().init_data()
-        self.data["euler_angles"] = np.array(self.euler_angles, dtype=float)
-        self.refresh_rotation_matrix()
+    def init_uniforms(self) -> None:
+        super().init_uniforms()
+        # As a quaternion
+        self.uniforms["orientation"] = Rotation.identity().as_quat()
 
     def init_points(self) -> None:
         self.set_points([ORIGIN, LEFT, RIGHT, DOWN, UP])
@@ -47,42 +41,29 @@ class CameraFrame(Mobject):
         self.set_height(self.frame_shape[1], stretch=True)
         self.move_to(self.center_point)
 
+    def set_orientation(self, rotation: Rotation):
+        self.uniforms["orientation"][:] = rotation.as_quat()
+        return self
+
+    def get_orientation(self):
+        return Rotation.from_quat(self.uniforms["orientation"])
+
     def to_default_state(self):
         self.center()
         self.set_height(FRAME_HEIGHT)
         self.set_width(FRAME_WIDTH)
-        self.set_euler_angles(0, 0, 0)
+        self.set_orientation(Rotation.identity())
         return self
 
-    def get_euler_angles(self) -> np.ndarray:
-        return self.data["euler_angles"]
+    def get_euler_angles(self):
+        return self.get_orientation().as_euler("xzy")
 
-    def get_inverse_camera_rotation_matrix(self) -> list[list[float]]:
-        return self.inverse_camera_rotation_matrix
-
-    def refresh_rotation_matrix(self) -> None:
-        # Rotate based on camera orientation
-        theta, phi, gamma = self.get_euler_angles()
-        quat = quaternion_mult(
-            quaternion_from_angle_axis(theta, OUT, axis_normalized=True),
-            quaternion_from_angle_axis(phi, RIGHT, axis_normalized=True),
-            quaternion_from_angle_axis(gamma, OUT, axis_normalized=True),
-        )
-        self.inverse_camera_rotation_matrix = rotation_matrix_transpose_from_quaternion(quat)
+    def get_inverse_camera_rotation_matrix(self):
+        return self.get_orientation().as_matrix().T
 
     def rotate(self, angle: float, axis: np.ndarray = OUT, **kwargs):
-        curr_rot_T = self.get_inverse_camera_rotation_matrix()
-        added_rot_T = rotation_matrix_transpose(angle, axis)
-        new_rot_T = np.dot(curr_rot_T, added_rot_T)
-        Fz = new_rot_T[2]
-        phi = np.arccos(clip(Fz[2], -1, 1))
-        theta = angle_of_vector(Fz[:2]) + PI / 2
-        partial_rot_T = np.dot(
-            rotation_matrix_transpose(phi, RIGHT),
-            rotation_matrix_transpose(theta, OUT),
-        )
-        gamma = angle_of_vector(np.dot(partial_rot_T, new_rot_T.T)[:, 0])
-        self.set_euler_angles(theta, phi, gamma)
+        rot = Rotation.from_rotvec(angle * normalize(axis))
+        self.set_orientation(rot * self.get_orientation())
         return self
 
     def set_euler_angles(
@@ -92,13 +73,11 @@ class CameraFrame(Mobject):
         gamma: float | None = None,
         units: float = RADIANS
     ):
-        if theta is not None:
-            self.data["euler_angles"][0] = theta * units
-        if phi is not None:
-            self.data["euler_angles"][1] = phi * units
-        if gamma is not None:
-            self.data["euler_angles"][2] = gamma * units
-        self.refresh_rotation_matrix()
+        eulers = self.get_euler_angles()  # phi, theta, gamma
+        for i, var in enumerate([phi, theta, gamma]):
+            if var is not None:
+                eulers[i] = var * units
+        self.set_orientation(Rotation.from_euler('xzy', eulers))
         return self
 
     def reorient(
@@ -124,32 +103,18 @@ class CameraFrame(Mobject):
         return self.set_euler_angles(gamma=gamma)
 
     def increment_theta(self, dtheta: float):
-        self.data["euler_angles"][0] += dtheta
-        self.refresh_rotation_matrix()
+        self.rotate(dtheta, OUT)
         return self
 
     def increment_phi(self, dphi: float):
-        phi = self.data["euler_angles"][1]
-        new_phi = clip(phi + dphi, 0, PI)
-        self.data["euler_angles"][1] = new_phi
-        self.refresh_rotation_matrix()
+        self.rotate(dphi, self.get_inverse_camera_rotation_matrix()[0])
         return self
 
     def increment_gamma(self, dgamma: float):
-        self.data["euler_angles"][2] += dgamma
-        self.refresh_rotation_matrix()
+        self.rotate(dgamma, self.get_inverse_camera_rotation_matrix()[2])
         return self
 
-    def get_theta(self) -> float:
-        return self.data["euler_angles"][0]
-
-    def get_phi(self) -> float:
-        return self.data["euler_angles"][1]
-
-    def get_gamma(self) -> float:
-        return self.data["euler_angles"][2]
-
-    def get_shape(self) -> tuple[float, float]:
+    def get_shape(self):
         return (self.get_width(), self.get_height())
 
     def get_center(self) -> np.ndarray:
@@ -167,19 +132,10 @@ class CameraFrame(Mobject):
     def get_focal_distance(self) -> float:
         return self.focal_distance * self.get_height()
 
-    def get_implied_camera_location(self) -> tuple[float, float, float]:
-        theta, phi, gamma = self.get_euler_angles()
+    def get_implied_camera_location(self) -> np.ndarray:
+        to_camera = self.get_inverse_camera_rotation_matrix()[2]
         dist = self.get_focal_distance()
-        x, y, z = self.get_center()
-        return (
-            x + dist * math.sin(theta) * math.sin(phi),
-            y - dist * math.cos(theta) * math.sin(phi),
-            z + dist * math.cos(phi)
-        )
-
-    def interpolate(self, *args, **kwargs):
-        super().interpolate(*args, **kwargs)
-        self.refresh_rotation_matrix()
+        return self.get_center() + dist * to_camera
 
 
 class Camera(object):
@@ -474,7 +430,7 @@ class Camera(object):
             shader[name].value = tid
         for name, value in it.chain(self.perspective_uniforms.items(), shader_wrapper.uniforms.items()):
             try:
-                if isinstance(value, np.ndarray):
+                if isinstance(value, np.ndarray) and value.ndim > 0:
                     value = tuple(value)
                 shader[name].value = value
             except KeyError:

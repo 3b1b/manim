@@ -408,10 +408,10 @@ class Axes(VGroup, CoordinateSystem):
 
     def coords_to_point(self, *coords: float) -> np.ndarray:
         origin = self.x_axis.number_to_point(0)
-        result = origin.copy()
-        for axis, coord in zip(self.get_axes(), coords):
-            result += (axis.number_to_point(coord) - origin)
-        return result
+        return origin + sum(
+            axis.number_to_point(coord) - origin
+            for axis, coord in zip(self.get_axes(), coords)
+        )
 
     def point_to_coords(self, point: np.ndarray) -> tuple[float, ...]:
         return tuple([

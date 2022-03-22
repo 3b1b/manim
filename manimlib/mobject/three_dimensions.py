@@ -11,6 +11,7 @@ from manimlib.mobject.geometry import Square
 from manimlib.mobject.geometry import Polygon
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.iterables import adjacent_pairs
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import z_to_vector
 from manimlib.utils.space_ops import compass_directions
@@ -280,3 +281,22 @@ class Prism(Cube):
         Cube.init_points(self)
         for dim, value in enumerate(self.dimensions):
             self.rescale_to_fit(value, dim, stretch=True)
+
+
+class Prismify(VGroup):
+    CONFIG = {
+        "apply_depth_test": True
+    }
+
+    def __init__(self, vmobject, depth=1.0, direction=IN, **kwargs):
+        # At the moment, this assume stright edges
+        super().__init__(**kwargs)
+        vect = depth * direction
+        self.add(vmobject.copy())
+        points = vmobject.get_points()[::vmobject.n_points_per_curve]
+        for p1, p2 in adjacent_pairs(points):
+            wall = VMobject()
+            wall.match_style(vmobject)
+            wall.set_points_as_corners([p1, p2, p2 + vect, p1 + vect])
+            self.add(wall)
+        self.add(vmobject.copy().shift(vect).reverse_points())

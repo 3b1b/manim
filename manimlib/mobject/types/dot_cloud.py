@@ -141,9 +141,13 @@ class TrueDot(DotCloud):
         super().__init__(points=[center], **kwargs)
 
 
-class GlowDot(TrueDot):
+class GlowDots(DotCloud):
     CONFIG = {
         "glow_factor": 2,
         "radius": DEFAULT_GLOW_DOT_RADIUS,
         "color": YELLOW,
     }
+
+
+class GlowDot(GlowDots, TrueDot):
+    pass

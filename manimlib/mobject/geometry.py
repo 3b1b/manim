@@ -647,7 +647,7 @@ class Elbow(VMobject):
 
 class Arrow(Line):
     CONFIG = {
-        "stroke_color": GREY_A,
+        "color": GREY_A,
         "stroke_width": 5,
         "tip_width_ratio": 4,
         "width_to_tip_len": 0.0075,
