@@ -12,7 +12,6 @@ from typing import Iterable, Sequence, Union
 import pygments
 import pygments.formatters
 import pygments.lexers
-import pygments.styles
 
 from manimpango import MarkupUtils
 
@@ -20,6 +19,7 @@ from manimlib.logger import log
 from manimlib.constants import *
 from manimlib.mobject.geometry import Dot
 from manimlib.mobject.svg.svg_mobject import SVGMobject
+from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.customization import get_customization
 from manimlib.utils.tex_file_writing import tex_hash
 from manimlib.utils.config_ops import digest_config
@@ -30,9 +30,7 @@ from manimlib.utils.directories import get_text_dir
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    import colour
     from manimlib.mobject.types.vectorized_mobject import VMobject
-    ManimColor = Union[str, colour.Color, Sequence[float]]
 
 TEXT_MOB_SCALE_FACTOR = 0.0076
 DEFAULT_LINE_SPACING_SCALE = 0.6
@@ -199,14 +197,14 @@ class _TextParser(object):
             result.append((text_piece, attr_dict))
         return result
 
-    def get_markup_str_with_attrs(self):
+    def get_markup_str_with_attrs(self) -> str:
         return "".join([
             f"<span {_TextParser.get_attr_dict_str(attr_dict)}>{text_piece}</span>"
             for text_piece, attr_dict in self.get_text_pieces()
         ])
 
     @staticmethod
-    def get_attr_dict_str(attr_dict: dict[str, str]):
+    def get_attr_dict_str(attr_dict: dict[str, str]) -> str:
         return " ".join([
             f"{key}='{value}'"
             for key, value in attr_dict.items()
@@ -215,9 +213,14 @@ class _TextParser(object):
 
 # Temporary handler
 class _Alignment:
-    VAL_LIST = ["LEFT", "CENTER", "RIGHT"]
-    def __init__(self, s):
-        self.value = _Alignment.VAL_LIST.index(s.upper())
+    VAL_DICT = {
+        "LEFT": 0,
+        "CENTER": 1,
+        "RIGHT": 2
+    }
+
+    def __init__(self, s: str):
+        self.value = _Alignment.VAL_DICT[s.upper()]
 
 
 class Text(SVGMobject):
@@ -251,7 +254,7 @@ class Text(SVGMobject):
         "local_configs": {},
     }
 
-    def __init__(self, text, **kwargs):
+    def __init__(self, text: str, **kwargs):
         self.full2short(kwargs)
         digest_config(self, kwargs)
         validate_error = MarkupUtils.validate(text)
@@ -267,7 +270,7 @@ class Text(SVGMobject):
             self.scale(TEXT_MOB_SCALE_FACTOR)
 
     @property
-    def hash_seed(self):
+    def hash_seed(self) -> tuple:
         return (
             self.__class__.__name__,
             self.svg_default,
@@ -293,7 +296,7 @@ class Text(SVGMobject):
             self.local_configs
         )
 
-    def get_file_path(self):
+    def get_file_path(self) -> str:
         full_markup = self.get_full_markup_str()
         svg_file = os.path.join(
             get_text_dir(), tex_hash(full_markup) + ".svg"
@@ -302,7 +305,7 @@ class Text(SVGMobject):
             self.markup_to_svg(full_markup, svg_file)
         return svg_file
 
-    def get_full_markup_str(self):
+    def get_full_markup_str(self) -> str:
         if self.t2g:
             log.warning(
                 "Manim currently cannot parse gradient from svg. "
@@ -346,7 +349,7 @@ class Text(SVGMobject):
 
         return self.parser.get_markup_str_with_attrs()
 
-    def find_indexes(self, word_or_text_span):
+    def find_indexes(self, word_or_text_span: str | tuple[int, int]) -> list[tuple[int, int]]:
         if isinstance(word_or_text_span, tuple):
             return [word_or_text_span]
 
@@ -355,7 +358,7 @@ class Text(SVGMobject):
             for match_obj in re.finditer(re.escape(word_or_text_span), self.text)
         ]
 
-    def markup_to_svg(self, markup_str, file_name):
+    def markup_to_svg(self, markup_str: str, file_name: str) -> str:
         # `manimpango` is under construction,
         # so the following code is intended to suit its interface
         alignment = _Alignment(self.alignment)
@@ -384,7 +387,7 @@ class Text(SVGMobject):
             pango_width=pango_width
         )
 
-    def generate_mobject(self):
+    def generate_mobject(self) -> None:
         super().generate_mobject()
 
         # Remove empty paths
@@ -395,15 +398,14 @@ class Text(SVGMobject):
             content_str = self.parser.remove_tags(self.text)
             if self.is_markup:
                 content_str = saxutils.unescape(content_str)
-            for char_index, char in enumerate(content_str):
-                if not re.match(r"\s", char):
-                    continue
+            for match_obj in re.finditer(r"\s", content_str):
+                char_index = match_obj.start()
                 space = Dot(radius=0, fill_opacity=0, stroke_opacity=0)
                 space.move_to(submobjects[max(char_index - 1, 0)].get_center())
                 submobjects.insert(char_index, space)
         self.set_submobjects(submobjects)
 
-    def full2short(self, config):
+    def full2short(self, config: dict) -> None:
         conversion_dict = {
             "line_spacing_height": "lsh",
             "text2color": "t2c",
@@ -417,7 +419,7 @@ class Text(SVGMobject):
                 if long_name in kwargs:
                     kwargs[short_name] = kwargs.pop(long_name)
 
-    def get_parts_by_text(self, word):
+    def get_parts_by_text(self, word: str) -> VGroup:
         if self.is_markup:
             log.warning(
                 "Slicing MarkupText via `get_parts_by_text`, "
@@ -433,7 +435,7 @@ class Text(SVGMobject):
             for i, j in self.find_indexes(word)
         ))
 
-    def get_part_by_text(self, word):
+    def get_part_by_text(self, word: str) -> VMobject | None:
         parts = self.get_parts_by_text(word)
         return parts[0] if parts else None
 
@@ -443,7 +445,6 @@ class MarkupText(Text):
         "is_markup": True,
         "apply_space_chars": False,
     }
-
 
 
 class Code(MarkupText):
@@ -456,7 +457,7 @@ class Code(MarkupText):
         "code_style": "monokai",
     }
 
-    def __init__(self, code, **kwargs):
+    def __init__(self, code: str, **kwargs):
         digest_config(self, kwargs)
         self.code = code
         lexer = pygments.lexers.get_lexer_by_name(self.language)
