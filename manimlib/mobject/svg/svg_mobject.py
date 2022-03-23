@@ -76,7 +76,7 @@ class SVGMobject(VMobject):
         SVG_HASH_TO_MOB_MAP[hash_val] = self.copy()
 
     @property
-    def hash_seed(self) -> tuple[str, dict[str], dict[str, bool], str]:
+    def hash_seed(self) -> tuple:
         # Returns data which can uniquely represent the result of `init_points`.
         # The hashed value of it is stored as a key in `SVG_HASH_TO_MOB_MAP`.
         return (

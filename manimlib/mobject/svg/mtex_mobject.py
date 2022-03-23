@@ -447,9 +447,7 @@ class MTex(_TexSVG):
         self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)
 
     @property
-    def hash_seed(
-        self
-    ) -> tuple[str, dict[str], dict[str, bool], str, list[str], str, str, bool]:
+    def hash_seed(self) -> tuple:
         return (
             self.__class__.__name__,
             self.svg_default,
@@ -462,9 +460,9 @@ class MTex(_TexSVG):
         )
 
     def get_file_path(self) -> str:
-        return self._get_file_path(self.use_plain_tex)
+        return self.get_file_path_(use_plain_tex=self.use_plain_tex)
 
-    def _get_file_path(self, use_plain_tex: bool) -> str:
+    def get_file_path_(self, use_plain_tex: bool) -> str:
         if use_plain_tex:
             tex_string = self.tex_string
         else:
@@ -501,7 +499,7 @@ class MTex(_TexSVG):
         if not self.use_plain_tex:
             labelled_svg_glyphs = self
         else:
-            file_path = self._get_file_path(use_plain_tex=False)
+            file_path = self.get_file_path_(use_plain_tex=False)
             labelled_svg_glyphs = _TexSVG(file_path)
 
         glyph_labels = [
