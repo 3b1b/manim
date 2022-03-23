@@ -84,8 +84,6 @@ Text
 
 .. code-block:: python
 
-    START_X = 30
-    START_Y = 20
     NORMAL = "NORMAL"
     ITALIC = "ITALIC"
     OBLIQUE = "OBLIQUE"

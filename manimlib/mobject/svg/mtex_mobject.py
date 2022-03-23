@@ -18,7 +18,12 @@ from manimlib.utils.tex_file_writing import get_tex_config
 from manimlib.utils.tex_file_writing import display_during_execution
 from manimlib.logger import log
 
-ManimColor = Union[str, colour.Color, Sequence[float]]
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from manimlib.mobject.types.vectorized_mobject import VMobject
+    ManimColor = Union[str, colour.Color, Sequence[float]]
 
 
 SCALE_FACTOR_PER_FONT_POINT = 0.001
@@ -29,7 +34,7 @@ def _get_neighbouring_pairs(iterable: Iterable) -> list:
 
 
 class _TexParser(object):
-    def __init__(self, tex_string: str, additional_substrings: str):
+    def __init__(self, tex_string: str, additional_substrings: list[str]):
         self.tex_string = tex_string
         self.whitespace_indices = self.get_whitespace_indices()
         self.backslash_indices = self.get_backslash_indices()
@@ -173,7 +178,7 @@ class _TexParser(object):
 
     def break_up_by_additional_substrings(
         self,
-        additional_substrings: Iterable[str]
+        additional_substrings: list[str]
     ) -> None:
         stripped_substrings = sorted(remove_list_redundancies([
             string.strip()
@@ -257,7 +262,7 @@ class _TexParser(object):
             "}"
         ])
 
-    def get_sorted_submob_indices(self, submob_labels: Iterable[int]) -> list[int]:
+    def get_sorted_submob_indices(self, submob_labels: list[int]) -> list[int]:
         def script_span_to_submob_range(script_span):
             tex_span = self.script_span_to_tex_span_dict[script_span]
             submob_indices = [
@@ -291,7 +296,7 @@ class _TexParser(object):
             ]
         return result
 
-    def get_submob_tex_strings(self, submob_labels: Iterable[int]) -> list[str]:
+    def get_submob_tex_strings(self, submob_labels: list[int]) -> list[str]:
         ordered_tex_spans = [
             self.tex_span_list[label] for label in submob_labels
         ]
@@ -385,7 +390,7 @@ class _TexParser(object):
 
     def get_containing_labels_by_tex_spans(
         self,
-        tex_spans: Iterable[tuple[int, int]]
+        tex_spans: list[tuple[int, int]]
     ) -> list[int]:
         return remove_list_redundancies(list(it.chain(*[
             self.containing_labels_dict[tex_span]
@@ -442,9 +447,7 @@ class MTex(_TexSVG):
         self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)
 
     @property
-    def hash_seed(
-        self
-    ) -> tuple[str, dict[str], dict[str, bool], str, list[str], str, str, bool]:
+    def hash_seed(self) -> tuple:
         return (
             self.__class__.__name__,
             self.svg_default,
@@ -457,9 +460,9 @@ class MTex(_TexSVG):
         )
 
     def get_file_path(self) -> str:
-        return self._get_file_path(self.use_plain_tex)
+        return self.get_file_path_(use_plain_tex=self.use_plain_tex)
 
-    def _get_file_path(self, use_plain_tex: bool) -> str:
+    def get_file_path_(self, use_plain_tex: bool) -> str:
         if use_plain_tex:
             tex_string = self.tex_string
         else:
@@ -496,15 +499,17 @@ class MTex(_TexSVG):
         if not self.use_plain_tex:
             labelled_svg_glyphs = self
         else:
-            file_path = self._get_file_path(use_plain_tex=False)
+            file_path = self.get_file_path_(use_plain_tex=False)
             labelled_svg_glyphs = _TexSVG(file_path)
 
         glyph_labels = [
             self.color_to_label(labelled_glyph.get_fill_color())
             for labelled_glyph in labelled_svg_glyphs
         ]
-        mob = self.build_mobject(self, glyph_labels)
-        self.set_submobjects(mob.submobjects)
+        rearranged_submobs = self.rearrange_submobjects(
+            self.submobjects, glyph_labels
+        )
+        self.set_submobjects(rearranged_submobs)
 
     @staticmethod
     def color_to_label(color: ManimColor) -> int:
@@ -512,13 +517,13 @@ class MTex(_TexSVG):
         rg = r * 256 + g
         return rg * 256 + b
 
-    def build_mobject(
+    def rearrange_submobjects(
         self,
-        svg_glyphs: _TexSVG | None,
-        glyph_labels: Iterable[int]
-    ) -> VGroup:
+        svg_glyphs: list[VMobject],
+        glyph_labels: list[int]
+    ) -> list[VMobject]:
         if not svg_glyphs:
-            return VGroup()
+            return []
 
         # Simply pack together adjacent mobjects with the same label.
         submobjects = []
@@ -552,11 +557,11 @@ class MTex(_TexSVG):
             submob.tex_string = submob_tex
             # Support `get_tex()` method here.
             submob.get_tex = MethodType(lambda inst: inst.tex_string, submob)
-        return VGroup(*rearranged_submobjects)
+        return rearranged_submobjects
 
     def get_part_by_tex_spans(
         self,
-        tex_spans: Iterable[tuple[int, int]]
+        tex_spans: list[tuple[int, int]]
     ) -> VGroup:
         labels = self.parser.get_containing_labels_by_tex_spans(tex_spans)
         return VGroup(*filter(
@@ -581,7 +586,7 @@ class MTex(_TexSVG):
             )
         ])
 
-    def get_part_by_tex(self, tex: str, index: int = 0) -> VGroup:
+    def get_part_by_tex(self, tex: str, index: int = 0) -> VMobject:
         all_parts = self.get_parts_by_tex(tex)
         return all_parts[index]
 
@@ -597,7 +602,7 @@ class MTex(_TexSVG):
             self.set_color_by_tex(tex, color)
         return self
 
-    def indices_of_part(self, part: Iterable[VGroup]) -> list[int]:
+    def indices_of_part(self, part: Iterable[VMobject]) -> list[int]:
         indices = [
             index for index, submob in enumerate(self.submobjects)
             if submob in part

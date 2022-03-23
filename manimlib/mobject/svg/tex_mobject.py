@@ -50,7 +50,7 @@ class SingleStringTex(SVGMobject):
             self.organize_submobjects_left_to_right()
 
     @property
-    def hash_seed(self) -> tuple[str, dict[str], dict[str, bool], str, str, bool]:
+    def hash_seed(self) -> tuple:
         return (
             self.__class__.__name__,
             self.svg_default,

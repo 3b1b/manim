@@ -64,8 +64,6 @@ JOINT_TYPE_MAP = {
 }
 
 # Related to Text
-START_X = 30
-START_Y = 20
 NORMAL = "NORMAL"
 ITALIC = "ITALIC"
 OBLIQUE = "OBLIQUE"

@@ -76,7 +76,7 @@ class SVGMobject(VMobject):
         SVG_HASH_TO_MOB_MAP[hash_val] = self.copy()
 
     @property
-    def hash_seed(self) -> tuple[str, dict[str], dict[str, bool], str]:
+    def hash_seed(self) -> tuple:
         # Returns data which can uniquely represent the result of `init_points`.
         # The hashed value of it is stored as a key in `SVG_HASH_TO_MOB_MAP`.
         return (
@@ -188,30 +188,6 @@ class SVGMobject(VMobject):
         mob.apply_matrix(mat)
         mob.shift(vec)
         return mob
-
-    def get_mobject_from(self, shape: se.GraphicObject) -> VMobject | None:
-        shape_class_to_func_map: dict[
-            type, Callable[[se.GraphicObject], VMobject]
-        ] = {
-            se.Path: self.path_to_mobject,
-            se.SimpleLine: self.line_to_mobject,
-            se.Rect: self.rect_to_mobject,
-            se.Circle: self.circle_to_mobject,
-            se.Ellipse: self.ellipse_to_mobject,
-            se.Polygon: self.polygon_to_mobject,
-            se.Polyline: self.polyline_to_mobject,
-            # se.Text: self.text_to_mobject,  # TODO
-        }
-        for shape_class, func in shape_class_to_func_map.items():
-            if isinstance(shape, shape_class):
-                mob = func(shape)
-                self.apply_style_to_mobject(mob, shape)
-                return mob
-
-        shape_class_name = shape.__class__.__name__
-        if shape_class_name != "SVGElement":
-            log.warning(f"Unsupported element type: {shape_class_name}")
-        return None
 
     @staticmethod
     def apply_style_to_mobject(
