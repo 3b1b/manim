@@ -17,6 +17,7 @@ from manimlib.constants import PI
 from manimlib.constants import TAU
 from manimlib.utils.iterables import adjacent_pairs
 from manimlib.utils.simple_functions import clip
+from manimlib.logger import log
 
 
 def cross(v1: np.ndarray, v2: np.ndarray) -> list[np.ndarray]:
@@ -415,6 +416,8 @@ def earclip_triangulation(verts: np.ndarray, ring_ends: list[int]) -> list:
 
     chilren = [[] for i in rings]
     for idx, i in enumerate(rings_sorted):
+        if len(rings_sorted) > 100 and (not idx%100 or idx+1==len(rings_sorted)):
+            log.info(f"SVG triangulation: {idx}/{len(rings_sorted)}")
         for j in rings_sorted[:idx][::-1]:
             if is_in_fast(i, j):
                 chilren[j].append(i)
