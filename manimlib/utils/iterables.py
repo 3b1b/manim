@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools as it
 from typing import Callable, Iterable, Sequence, TypeVar
 
 import numpy as np
@@ -34,10 +33,6 @@ def list_update(l1: Iterable[T], l2: Iterable[T]) -> list[T]:
 
 def list_difference_update(l1: Iterable[T], l2: Iterable[T]) -> list[T]:
     return [e for e in l1 if e not in l2]
-
-
-def all_elements_are_instances(iterable: Iterable, Class: type) -> bool:
-    return all([isinstance(e, Class) for e in iterable])
 
 
 def adjacent_n_tuples(objects: Iterable[T], n: int) -> zip[tuple[T, T]]:
@@ -131,30 +126,6 @@ def make_even(
         [iterable_1[(n * len1) // new_len] for n in range(new_len)],
         [iterable_2[(n * len2) // new_len] for n in range(new_len)]
     )
-
-
-def make_even_by_cycling(
-    iterable_1: Iterable[T],
-    iterable_2: Iterable[S]
-) -> tuple[list[T], list[S]]:
-    length = max(len(iterable_1), len(iterable_2))
-    cycle1 = it.cycle(iterable_1)
-    cycle2 = it.cycle(iterable_2)
-    return (
-        [next(cycle1) for x in range(length)],
-        [next(cycle2) for x in range(length)]
-    )
-
-
-def remove_nones(sequence: Iterable) -> list:
-    return [x for x in sequence if x]
-
-
-# Note this is redundant with it.chain
-
-
-def concatenate_lists(*list_of_lists):
-    return [item for l in list_of_lists for item in l]
 
 
 def hash_obj(obj: object) -> int:
