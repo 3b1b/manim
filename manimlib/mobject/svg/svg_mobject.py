@@ -57,6 +57,8 @@ class SVGMobject(VMobject):
             "stroke_opacity": None,
         },
         "path_string_config": {},
+        #experimental support for gradient fills - off by default
+        "gradient_fills": None,
     }
     def __init__(self, file_name: str | None = None, **kwargs):
         super().__init__(**kwargs)
@@ -148,7 +150,17 @@ class SVGMobject(VMobject):
 
     def get_mobjects_from(self, svg: se.SVG) -> list[VMobject]:
         result = []
-        for shape in svg.elements():
+        for shape in (ele_gener:=svg.elements()):
+            if self.gradient_fills and shape.values.get("tag").endswith("Gradient"):
+                #create a dict for the gradient data and its stops
+                grad = { "id": shape.id, "tag": shape.values.get("tag"),
+                         "colors": [], "opacities": [], "offsets": [] }
+                #loop through all of the color stops, advancing the outer loop as we do
+                while (shape:=ele_gener.__next__()) and (shape.values.get("tag")=="stop"):
+                    grad["colors"].append(shape.values.get("stop-color", "#ffffff"))
+                    grad["opacities"].append(float(shape.values.get("stop-opacity", 1.0)))
+                    grad["offsets"].append(float(shape.values.get("offset", 1.0)))
+                #shape is now set to the next element past the gradient/stops - process as normal
             if isinstance(shape, se.Group):
                 continue
             elif isinstance(shape, se.Path):
@@ -175,6 +187,10 @@ class SVGMobject(VMobject):
             self.apply_style_to_mobject(mob, shape)
             if isinstance(shape, se.Transformable) and shape.apply:
                 self.handle_transform(mob, shape.transform)
+            #check this shape for url() fill and if configured, apply the gradient
+            if self.gradient_fills and shape.values["fill"].startswith("url("):
+                mob.set_fill(grad["colors"],grad["opacities"])
+                #TODO radials, offsets, position data, direction data
             result.append(mob)
         return result
 
