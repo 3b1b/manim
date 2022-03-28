@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 import re
 import itertools as it
-import xml.sax.saxutils as saxutils
 from pathlib import Path
 from contextlib import contextmanager
 import typing
@@ -512,11 +511,6 @@ class MarkupText(LabelledString):
             ),
             self.get_end_tag_str()
         ])
-
-    def handle_submob_string(self, substr: str, string_span: Span) -> str:
-        if self.is_markup:
-            substr = saxutils.unescape(substr)
-        return substr
 
     # Method alias
 
