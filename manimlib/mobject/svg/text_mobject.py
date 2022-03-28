@@ -219,7 +219,7 @@ class MarkupText(LabelledString):
             weight="NORMAL",             # Already handled
             size=1,                      # Already handled
             _=0,                         # Empty parameter
-            disable_liga=False,          # Need not to handle
+            disable_liga=False,
             file_name=file_name,
             START_X=0,
             START_Y=0,
