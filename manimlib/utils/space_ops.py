@@ -4,11 +4,13 @@ import math
 import operator as op
 from functools import reduce
 from typing import Callable, Iterable, Sequence
+import platform
 
 import numpy as np
 import numpy.typing as npt
 from mapbox_earcut import triangulate_float32 as earcut
 from scipy.spatial.transform import Rotation
+from tqdm import tqdm as ProgressDisplay
 
 from manimlib.constants import RIGHT
 from manimlib.constants import DOWN
@@ -414,7 +416,16 @@ def earclip_triangulation(verts: np.ndarray, ring_ends: list[int]) -> list:
         ))
 
     chilren = [[] for i in rings]
-    for idx, i in enumerate(rings_sorted):
+    ringenum = ProgressDisplay(
+        enumerate(rings_sorted),
+        total=len(rings),
+        leave=False,
+        ascii=True if platform.system() == 'Windows' else None,
+        dynamic_ncols=True,
+        desc="SVG Triangulation",
+        delay=3,
+    )
+    for idx, i in ringenum:
         for j in rings_sorted[:idx][::-1]:
             if is_in_fast(i, j):
                 chilren[j].append(i)
