@@ -12,7 +12,7 @@ from manimlib.animation.transform import ReplacementTransform
 from manimlib.animation.transform import Transform
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Group
-from manimlib.mobject.svg.mtex_mobject import MTex
+from manimlib.mobject.svg.mtex_mobject import LabelledString
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
@@ -153,15 +153,16 @@ class TransformMatchingTex(TransformMatchingParts):
         return mobject.get_tex()
 
 
-class TransformMatchingMTex(AnimationGroup):
+class TransformMatchingString(AnimationGroup):
     CONFIG = {
         "key_map": dict(),
+        "transform_mismatches_class": None,
     }
 
-    def __init__(self, source_mobject: MTex, target_mobject: MTex, **kwargs):
+    def __init__(self, source_mobject: LabelledString, target_mobject: LabelledString, **kwargs):
         digest_config(self, kwargs)
-        assert isinstance(source_mobject, MTex)
-        assert isinstance(target_mobject, MTex)
+        assert isinstance(source_mobject, LabelledString)
+        assert isinstance(target_mobject, LabelledString)
         anims = []
         rest_source_submobs = source_mobject.submobjects.copy()
         rest_target_submobs = target_mobject.submobjects.copy()
@@ -207,7 +208,7 @@ class TransformMatchingMTex(AnimationGroup):
                 elif isinstance(key, range):
                     indices.extend(key)
                 elif isinstance(key, str):
-                    all_parts = mobject.get_parts_by_tex(key)
+                    all_parts = mobject.get_parts_by_string(key)
                     indices.extend(it.chain(*[
                         mobject.indices_of_part(part) for part in all_parts
                     ]))
@@ -228,31 +229,34 @@ class TransformMatchingMTex(AnimationGroup):
                 target_mobject.get_specified_substrings()
             )
         ), key=len, reverse=True)
-        for part_tex_string in common_specified_substrings:
+        for part_string in common_specified_substrings:
             add_anim_from(
-                FadeTransformPieces, MTex.get_parts_by_tex, part_tex_string
+                FadeTransformPieces, LabelledString.get_parts_by_string, part_string
             )
 
-        common_submob_tex_strings = {
-            source_submob.get_tex() for source_submob in source_mobject
+        common_submob_strings = {
+            source_submob.get_string() for source_submob in source_mobject
         }.intersection({
-            target_submob.get_tex() for target_submob in target_mobject
+            target_submob.get_string() for target_submob in target_mobject
         })
-        for tex_string in common_submob_tex_strings:
+        for substr in common_submob_strings:
             add_anim_from(
                 FadeTransformPieces,
                 lambda mobject, attr: VGroup(*[
                     VGroup(mob) for mob in mobject
-                    if mob.get_tex() == attr
+                    if mob.get_string() == attr
                 ]),
-                tex_string
+                substr
             )
 
-        anims.append(FadeOutToPoint(
-            VGroup(*rest_source_submobs), target_mobject.get_center(), **kwargs
-        ))
-        anims.append(FadeInFromPoint(
-            VGroup(*rest_target_submobs), source_mobject.get_center(), **kwargs
-        ))
+        if self.transform_mismatches_class is not None:
+            anims.append(self.transform_mismatches_class(fade_source, fade_target, **kwargs))
+        else:
+            anims.append(FadeOutToPoint(
+                VGroup(*rest_source_submobs), target_mobject.get_center(), **kwargs
+            ))
+            anims.append(FadeInFromPoint(
+                VGroup(*rest_target_submobs), source_mobject.get_center(), **kwargs
+            ))
 
         super().__init__(*anims)
