@@ -498,7 +498,6 @@ class MTex(LabelledString):
         "tex_environment": "align*",
         "isolate": [],
         "tex_to_color_map": {},
-        "use_plain_file": False,
     }
 
     def __init__(self, tex_string: str, **kwargs):
@@ -518,13 +517,13 @@ class MTex(LabelledString):
             self.__class__.__name__,
             self.svg_default,
             self.path_string_config,
-            self.tex_string,
             self.base_color,
+            self.use_plain_file,
+            self.tex_string,
             self.alignment,
             self.tex_environment,
             self.isolate,
-            self.tex_to_color_map,
-            self.use_plain_file
+            self.tex_to_color_map
         )
 
     def get_file_path_by_content(self, content: str) -> str:

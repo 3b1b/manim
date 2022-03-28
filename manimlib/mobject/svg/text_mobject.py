@@ -161,6 +161,8 @@ class MarkupText(LabelledString):
             self.__class__.__name__,
             self.svg_default,
             self.path_string_config,
+            self.base_color,
+            self.use_plain_file,
             self.text,
             self.is_markup,
             self.font_size,
