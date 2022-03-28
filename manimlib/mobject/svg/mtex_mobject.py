@@ -398,7 +398,7 @@ class LabelledString(_StringSVG):
 
     def find_span_components_of_custom_span(
         self, custom_span: Span
-    ) -> list[Span] | None:
+    ) -> list[Span]:
         span_choices = sorted(filter(
             lambda span: self.span_contains(custom_span, span),
             self.label_span_list
@@ -413,7 +413,7 @@ class LabelledString(_StringSVG):
         while span_begin != span_end:
             span_begin = self.lstrip(span_begin)
             if span_begin not in span_choices_dict.keys():
-                return None
+                return []
             next_begin = span_choices_dict[span_begin]
             result.append((span_begin, next_begin))
             span_begin = next_begin
@@ -421,10 +421,6 @@ class LabelledString(_StringSVG):
 
     def get_part_by_custom_span(self, custom_span: Span) -> VGroup:
         spans = self.find_span_components_of_custom_span(custom_span)
-        if spans is None:
-            substr = self.string[slice(*custom_span)]
-            raise ValueError(f"Failed to match mobjects from \"{substr}\"")
-
         labels = set(it.chain(*[
             self.containing_labels_dict[span]
             for span in spans
