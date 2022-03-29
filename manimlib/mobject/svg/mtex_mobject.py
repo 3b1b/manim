@@ -50,6 +50,7 @@ class LabelledString(_StringSVG):
     CONFIG = {
         "base_color": WHITE,
         "use_plain_file": False,
+        "isolate": [],
     }
 
     def __init__(self, string: str, **kwargs):
@@ -57,10 +58,11 @@ class LabelledString(_StringSVG):
         super().__init__(**kwargs)
 
     def get_file_path(self, use_plain_file: bool = False) -> str:
-        if use_plain_file:
-            content = self.plain_string
-        else:
-            content = self.labelled_string
+        #if use_plain_file:
+        #    content = self.plain_string
+        #else:
+        #    content = self.labelled_string
+        content = self.get_decorated_string(use_plain_file=use_plain_file)
         return self.get_file_path_by_content(content)
 
     @abstractmethod
@@ -87,6 +89,7 @@ class LabelledString(_StringSVG):
             glyphs = self.submobjects
             self.set_fill(self.base_color)
 
+        # TODO
         # Simply pack together adjacent mobjects with the same label.
         submob_labels, glyphs_lists = self.group_neighbours(
             glyph_labels, glyphs
@@ -105,14 +108,12 @@ class LabelledString(_StringSVG):
 
     # Toolkits
 
-    @staticmethod
-    def color_to_label(color: ManimColor) -> int:
-        r, g, b = color_to_int_rgb(color)
-        rg = r * 256 + g
-        rgb = rg * 256 + b
-        if rgb == 16777215:  # white
-            return -1
-        return rgb
+    def find_spans(self, *patterns: str) -> list[Span]:
+        return [
+            match_obj.span()
+            for pattern in patterns
+            for match_obj in re.finditer(pattern, self.string)
+        ]
 
     @staticmethod
     def get_neighbouring_pairs(iterable: Iterable) -> list:
@@ -211,58 +212,78 @@ class LabelledString(_StringSVG):
         result.update(other_repl_items)
         return result
 
-    @property
-    def skipped_spans(self) -> list[Span]:
-        return []
+    #@property
+    #def skipped_spans(self) -> list[Span]:
+    #    return [
+    #        match_obj.span()
+    #        for match_obj in re.finditer(r"\s+", self.string)
+    #    ]
 
-    def lstrip(self, index: int) -> int:
-        index_seq = list(it.chain(*self.skipped_spans))
-        region_index = self.find_region_index(index, index_seq)
-        if region_index % 2 == 0:
-            return index_seq[region_index + 1]
-        return index
+    #def lstrip(self, index: int) -> int:
+    #    index_seq = list(it.chain(*self.skipped_spans))
+    #    region_index = self.find_region_index(index, index_seq)
+    #    if region_index % 2 == 0:
+    #        return index_seq[region_index + 1]
+    #    return index
 
-    def rstrip(self, index: int) -> int:
-        index_seq = list(it.chain(*self.skipped_spans))
-        region_index = self.find_region_index(index - 1, index_seq)
-        if region_index % 2 == 0:
-            return index_seq[region_index]
-        return index
+    #def rstrip(self, index: int) -> int:
+    #    index_seq = list(it.chain(*self.skipped_spans))
+    #    region_index = self.find_region_index(index - 1, index_seq)
+    #    if region_index % 2 == 0:
+    #        return index_seq[region_index]
+    #    return index
 
-    def strip(self, span: Span) -> Span | None:
-        result = (
-            self.lstrip(span[0]),
-            self.rstrip(span[1])
-        )
-        if result[0] >= result[1]:
-            return None
-        return result
-
-    @staticmethod
-    def lslide(index: int, slid_spans: list[Span]) -> int:
-        slide_dict = dict(sorted(slid_spans))
-        while index in slide_dict.keys():
-            index = slide_dict[index]
-        return index
+    #def strip(self, span: Span) -> Span | None:
+    #    result = (
+    #        self.lstrip(span[0]),
+    #        self.rstrip(span[1])
+    #    )
+    #    if result[0] >= result[1]:
+    #        return None
+    #    return result
 
     @staticmethod
-    def rslide(index: int, slid_spans: list[Span]) -> int:
-        slide_dict = dict(sorted([
-            slide_span[::-1] for slide_span in slid_spans
+    def lstrip(index: int, skipped: list[Span]) -> int:
+        transfer_dict = dict(sorted(skipped))
+        while index in transfer_dict.keys():
+            index = transfer_dict[index]
+        return index
+
+    @staticmethod
+    def rstrip(index: int, skipped: list[Span]) -> int:
+        transfer_dict = dict(sorted([
+            skipped_span[::-1] for skipped_span in skipped
         ], reverse=True))
-        while index in slide_dict.keys():
-            index = slide_dict[index]
+        while index in transfer_dict.keys():
+            index = transfer_dict[index]
         return index
 
     @staticmethod
-    def slide(span: Span, slid_spans: list[Span]) -> Span | None:
+    def strip(span: Span, skipped: list[Span]) -> Span | None:
         result = (
-            LabelledString.lslide(span[0], slid_spans),
-            LabelledString.rslide(span[1], slid_spans)
+            LabelledString.lstrip(span[0], skipped),
+            LabelledString.rstrip(span[1], skipped)
         )
         if result[0] >= result[1]:
             return None
         return result
+
+    @abstractmethod
+    def get_begin_color_command_str(r: int, g: int, b: int) -> str:
+        return ""
+
+    @abstractmethod
+    def get_end_color_command_str() -> str:
+        return ""
+
+    @staticmethod
+    def color_to_label(color: ManimColor) -> int:
+        r, g, b = color_to_int_rgb(color)
+        rg = r * 256 + g
+        rgb = rg * 256 + b
+        if rgb == 16777215:  # white
+            return -1
+        return rgb
 
     # Parser
 
@@ -270,50 +291,154 @@ class LabelledString(_StringSVG):
     def full_span(self) -> Span:
         return (0, len(self.string))
 
-    def get_substrs_to_isolate(self, substrs: list[str]) -> list[str]:
-        result = list(filter(
-            lambda s: s in self.string,
-            remove_list_redundancies(substrs)
-        ))
-        if "" in result:
-            result.remove("")
-        return result
+    @property
+    def space_spans(self) -> list[Span]:
+        return self.find_spans(r"\s+")
+
+    @abstractmethod
+    def internal_specified_spans(self) -> list[Span]:
+        return []
 
     @property
+    def external_specified_spans(self) -> list[Span]:
+        substrs = remove_list_redundancies(self.isolate)
+        if "" in substrs:
+            substrs.remove("")
+        return self.find_spans(*[
+            re.escape(substr.strip()) for substr in substrs
+        ])
+
+    @property
+    def specified_spans(self) -> list[Span]:
+        return remove_list_redundancies([
+            self.full_span,
+            *self.internal_specified_spans,
+            *self.external_specified_spans
+        ])
+
+    def get_specified_substrings(self) -> list[str]:
+        return remove_list_redundancies([
+            self.string[slice(*span)]
+            for span in self.specified_spans
+        ])
+
+    @abstractmethod
     def label_span_list(self) -> list[Span]:
         return []
 
-    @property
-    def inserted_string_pairs(self) -> list[tuple[Span, tuple[str, str]]]:
+    @abstractmethod
+    def get_inserted_string_pairs(
+        self, use_plain_file: bool
+    ) -> list[tuple[Span, tuple[str, str]]]:
+        return []
+
+    @abstractmethod
+    def command_repl_items(self) -> list[tuple[Span, str]]:
         return []
 
     @property
-    def command_repl_items(self) -> list[tuple[Span, str]]:
-        return []
+    def command_spans(self) -> list[Span]:
+        return [cmd_span for cmd_span, _ in self.command_repl_items]
+
+    @abstractmethod
+    def remove_commands_in_plain_file(self) -> bool:
+        return True
+
+    #@abstractmethod
+    #def get_command_repl_items(
+    #    self, use_plain_file: bool
+    #) -> list[tuple[Span, str]]:
+    #    return []
+
+    def get_decorated_string(self, use_plain_file: bool) -> str:
+        if use_plain_file and self.remove_commands_in_plain_file:
+            other_repl_items = []
+        else:
+            other_repl_items = self.command_repl_items
+        span_repl_dict = self.get_span_replacement_dict(
+            self.get_inserted_string_pairs(use_plain_file),
+            other_repl_items
+        )
+        result = self.replace_str_by_spans(self.string, span_repl_dict)
+
+        if not use_plain_file:
+            return result
+        return "".join([
+            self.get_begin_color_command_str(
+                *color_to_int_rgb(self.base_color)
+            ),
+            result,
+            self.get_end_color_command_str()
+        ])
 
     @abstractmethod
     def has_predefined_colors(self) -> bool:
         return False
 
-    @property
-    def plain_string(self) -> str:
-        return self.string
+    #@property
+    #def plain_string(self) -> str:
+    #    return self.string
+
+    #@property
+    #def labelled_string(self) -> str:
+    #    return self.replace_str_by_spans(
+    #        self.string, self.get_span_replacement_dict(
+    #            self.inserted_string_pairs,
+    #            self.command_repl_items
+    #        )
+    #    )
 
     @property
-    def labelled_string(self) -> str:
-        return self.replace_str_by_spans(
-            self.string, self.get_span_replacement_dict(
-                self.inserted_string_pairs,
-                self.command_repl_items
-            )
-        )
-
-    @property
-    def ignored_indices_for_submob_strings(self) -> list[int]:
+    def additionally_ignored_indices(self) -> list[int]:
         return []
 
-    def handle_submob_string(self, substr: str, string_span: Span) -> str:
-        return substr
+    @property
+    def skipped_spans(self) -> list[Span]:
+        return list(it.chain(
+            self.space_spans,
+            self.command_spans,
+            [
+                (index, index + 1)
+                for index in self.additionally_ignored_indices
+            ]
+        ))
+
+    @property
+    def containing_labels_dict(self) -> dict[Span, list[int]]:
+        label_span_list = self.label_span_list
+        result = {
+            span: []
+            for span in label_span_list
+        }
+        for span_0 in label_span_list:
+            for span_index, span_1 in enumerate(label_span_list):
+                if self.span_contains(span_0, span_1):
+                    result[span_0].append(span_index)
+                elif span_0[0] < span_1[0] < span_0[1] < span_1[1]:
+                    string_0, string_1 = [
+                        self.string[slice(*span)]
+                        for span in [span_0, span_1]
+                    ]
+                    raise ValueError(
+                        "Partially overlapping substrings detected: "
+                        f"'{string_0}' and '{string_1}'"
+                    )
+        result[self.full_span] = list(range(-1, len(label_span_list)))
+        return result
+
+    def get_cleaned_substr(self, string_span: Span) -> str:
+        span = self.strip(string_span, self.skipped_spans)
+        if span is None:
+            return ""
+
+        span_repl_dict = {
+            tuple([index - span[0] for index in cmd_span]): ""
+            for cmd_span in self.command_spans
+            if self.span_contains(span, cmd_span)
+        }
+        return self.replace_str_by_spans(
+            self.string[slice(*span)], span_repl_dict
+        )
 
     def get_submob_strings(self, submob_labels: list[int]) -> list[str]:
         ordered_spans = [
@@ -343,62 +468,17 @@ class LabelledString(_StringSVG):
             (ordered_span_begins[0], *string_span_begins),
             (*string_span_ends, ordered_span_ends[-1])
         ))
-
-        command_spans = [span for span, _ in self.command_repl_items]
-        slid_spans = list(it.chain(
-            self.skipped_spans,
-            command_spans,
-            [
-                (index, index + 1)
-                for index in self.ignored_indices_for_submob_strings
-            ]
-        ))
-        result = []
-        for string_span in string_spans:
-            string_span = self.slide(string_span, slid_spans)
-            if string_span is None:
-                result.append("")
-                continue
-
-            span_repl_dict = {
-                tuple([index - string_span[0] for index in cmd_span]): ""
-                for cmd_span in command_spans
-                if self.span_contains(string_span, cmd_span)
-            }
-            substr = self.string[slice(*string_span)]
-            substr = self.replace_str_by_spans(substr, span_repl_dict)
-            substr = self.handle_submob_string(substr, string_span)
-            result.append(substr)
-        return result
+        return [
+            self.get_cleaned_substr(string_span)
+            for string_span in string_spans
+        ]
 
     # Selector
-
-    @property
-    def containing_labels_dict(self) -> dict[Span, list[int]]:
-        label_span_list = self.label_span_list
-        result = {
-            span: []
-            for span in label_span_list
-        }
-        for span_0 in label_span_list:
-            for span_index, span_1 in enumerate(label_span_list):
-                if self.span_contains(span_0, span_1):
-                    result[span_0].append(span_index)
-                elif span_0[0] < span_1[0] < span_0[1] < span_1[1]:
-                    string_0, string_1 = [
-                        self.string[slice(*span)]
-                        for span in [span_0, span_1]
-                    ]
-                    raise ValueError(
-                        "Partially overlapping substrings detected: "
-                        f"'{string_0}' and '{string_1}'"
-                    )
-        result[self.full_span] = list(range(-1, len(label_span_list)))
-        return result
 
     def find_span_components_of_custom_span(
         self, custom_span: Span
     ) -> list[Span]:
+        skipped_spans = self.skipped_spans
         span_choices = sorted(filter(
             lambda span: self.span_contains(custom_span, span),
             self.label_span_list
@@ -408,10 +488,10 @@ class LabelledString(_StringSVG):
 
         result = []
         span_begin, span_end = custom_span
-        span_begin = self.rstrip(span_begin)
-        span_end = self.rstrip(span_end)
+        span_begin = self.rstrip(span_begin, skipped_spans)
+        span_end = self.rstrip(span_end, skipped_spans)
         while span_begin != span_end:
-            span_begin = self.lstrip(span_begin)
+            span_begin = self.lstrip(span_begin, skipped_spans)
             if span_begin not in span_choices_dict.keys():
                 return []
             next_begin = span_choices_dict[span_begin]
@@ -432,8 +512,8 @@ class LabelledString(_StringSVG):
 
     def get_parts_by_string(self, substr: str) -> VGroup:
         return VGroup(*[
-            self.get_part_by_custom_span(match_obj.span())
-            for match_obj in re.finditer(re.escape(substr), self.string)
+            self.get_part_by_custom_span(span)
+            for span in self.find_spans(re.escape(substr.strip()))
         ])
 
     def get_part_by_string(self, substr: str, index: int = 0) -> VMobject:
@@ -466,23 +546,6 @@ class LabelledString(_StringSVG):
         part = self.get_part_by_string(substr, index=index)
         return self.indices_of_part(part)
 
-    @property
-    def specified_substrings(self) -> list[str]:
-        return []
-
-    def get_specified_substrings(self) -> list[str]:
-        return self.specified_substrings
-
-    @property
-    def isolated_substrings(self) -> list[str]:
-        return remove_list_redundancies([
-            self.string[slice(*span)]
-            for span in self.label_span_list
-        ])
-
-    def get_isolated_substrings(self) -> list[str]:
-        return self.isolated_substrings
-
     def get_string(self) -> str:
         return self.string
 
@@ -492,16 +555,17 @@ class MTex(LabelledString):
         "font_size": 48,
         "alignment": "\\centering",
         "tex_environment": "align*",
-        "isolate": [],
         "tex_to_color_map": {},
     }
 
     def __init__(self, tex_string: str, **kwargs):
+        digest_config(self, kwargs)
         tex_string = tex_string.strip()
         # Prevent from passing an empty string.
         if not tex_string:
             tex_string = "\\quad"
         self.tex_string = tex_string
+        self.isolate.extend(self.tex_to_color_map.keys())
         super().__init__(tex_string, **kwargs)
 
         self.set_color_by_tex_to_color_map(self.tex_to_color_map)
@@ -515,10 +579,10 @@ class MTex(LabelledString):
             self.path_string_config,
             self.base_color,
             self.use_plain_file,
+            self.isolate,
             self.tex_string,
             self.alignment,
             self.tex_environment,
-            self.isolate,
             self.tex_to_color_map
         )
 
@@ -548,6 +612,28 @@ class MTex(LabelledString):
     def tex_to_svg_file_path(tex_file_content: str) -> str:
         return tex_to_svg_file(tex_file_content)
 
+    # Toolkits
+
+    #@property
+    #def skipped_spans(self) -> list[Span]:
+    #    return super().skipped_spans + self.indices_to_spans(
+    #        self.script_char_indices
+    #    )
+
+    @staticmethod
+    def get_begin_color_command_str(r: int, g: int, b: int) -> str:
+        return "".join([
+            "{{",
+            "\\color[RGB]",
+            "{",
+            ",".join(map(str, (r, g, b))),
+            "}"
+        ])
+
+    @staticmethod
+    def get_end_color_command_str() -> str:
+        return "}}"
+
     # Parser
 
     @property
@@ -559,15 +645,20 @@ class MTex(LabelledString):
             if len(match_obj.group()) % 2 == 1
         ]
 
-    def get_brace_indices_lists(self) -> tuple[list[Span], list[Span]]:
-        string = self.string
-        indices = list(filter(
+    @staticmethod
+    def get_unescaped_char_indices(*chars: str):
+        return list(filter(
             lambda index: index - 1 not in self.backslash_indices,
             [
                 match_obj.start()
-                for match_obj in re.finditer(r"[{}]", string)
+                for char in chars
+                for match_obj in re.finditer(re.escape(char), string)
             ]
         ))
+
+    def get_brace_indices_lists(self) -> tuple[list[Span], list[Span]]:
+        string = self.string
+        indices = self.get_unescaped_char_indices("{", "}")
         left_brace_indices = []
         right_brace_indices = []
         left_brace_indices_stack = []
@@ -594,20 +685,8 @@ class MTex(LabelledString):
         return self.get_brace_indices_lists()[1]
 
     @property
-    def skipped_spans(self) -> list[Span]:
-        return [
-            match_obj.span()
-            for match_obj in re.finditer(r"\s*([_^])\s*|(\s+)", self.string)
-            if match_obj.group(2) is not None
-            or match_obj.start(1) - 1 not in self.backslash_indices
-        ]
-
-    @property
-    def script_char_spans(self) -> list[Span]:
-        return list(filter(
-            lambda span: self.string[slice(*span)].strip(),
-            self.skipped_spans
-        ))
+    def script_char_indices(self) -> list[Span]:
+        return self.get_unescaped_char_indices("_", "^")
 
     @property
     def script_content_spans(self) -> list[Span]:
@@ -615,7 +694,8 @@ class MTex(LabelledString):
         brace_indices_dict = dict(zip(
             self.left_brace_indices, self.right_brace_indices
         ))
-        for _, span_begin in self.script_char_spans:
+        for index in self.script_char_indices:
+            span_begin = self.lstrip(index, self.space_spans)
             if span_begin in brace_indices_dict.keys():
                 span_end = brace_indices_dict[span_begin] + 1
             else:
@@ -635,7 +715,7 @@ class MTex(LabelledString):
         return result
 
     @property
-    def double_braces_spans(self) -> list[Span]:
+    def internal_specified_spans(self) -> list[Span]:
         # Match paired double braces (`{{...}}`).
         result = []
         reversed_brace_indices_dict = dict(zip(
@@ -659,28 +739,16 @@ class MTex(LabelledString):
         return result
 
     @property
-    def additional_substrings(self) -> list[str]:
-        return self.get_substrs_to_isolate(list(it.chain(
-            self.tex_to_color_map.keys(),
-            self.isolate
-        )))
-
-    def get_label_span_list(self, extended: bool) -> list[Span]:
+    def label_span_list(self) -> list[Span]:
         script_content_spans = self.script_content_spans
         script_spans = [
-            (script_char_span[0], script_content_span[1])
-            for script_char_span, script_content_span in zip(
-                self.script_char_spans, script_content_spans
+            (self.rstrip(index, self.space_spans), script_content_span[1])
+            for index, script_content_span in zip(
+                self.script_char_indices, script_content_spans
             )
         ]
         spans = remove_list_redundancies([
-            self.full_span,
-            *self.double_braces_spans,
-            *filter(lambda stripped_span: stripped_span is not None, [
-                self.strip(match_obj.span())
-                for substr in self.additional_substrings
-                for match_obj in re.finditer(re.escape(substr), self.string)
-            ]),
+            *self.specified_spans,
             *script_content_spans
         ])
         result = []
@@ -688,36 +756,52 @@ class MTex(LabelledString):
             if span in script_content_spans:
                 continue
             span_begin, span_end = span
-            shrinked_end = self.rslide(span_end, script_spans)
+            shrinked_end = self.rstrip(span_end, script_spans)
             if span_begin >= shrinked_end:
                 continue
-            shrinked_span = (span_begin, shrinked_end)
-            if shrinked_span in result:
-                continue
-            result.append(shrinked_span)
+            result.append((span_begin, self.lstrip(span_end, script_spans)))
 
-        if extended:
-            result = [
-                (span_begin, self.lslide(span_end, script_spans))
-                for span_begin, span_end in result
-            ]
-        return script_content_spans + result
+        #if extended:
+        #    result = [
+        #        (span_begin, self.lstrip(span_end, script_spans))
+        #        for span_begin, span_end in result
+        #    ]
+        return script_content_spans + remove_list_redundancies(result)
 
-    @property
-    def label_span_list(self) -> list[Span]:
-        return self.get_label_span_list(extended=False)
+    #@property
+    #def label_span_list(self) -> list[Span]:
+    #    return self.get_label_span_list(extended=False)
 
-    @property
-    def inserted_string_pairs(self) -> list[tuple[Span, tuple[str, str]]]:
+    def get_inserted_string_pairs(
+        self, use_plain_file: bool
+    ) -> list[tuple[Span, tuple[str, str]]]:
+        if use_plain_file:
+            return []
         return [
             (span, (
-                "{{" + self.get_color_command_by_label(label),
-                "}}"
+                self.get_begin_color_command_str(
+                    label // 256 // 256,
+                    label // 256 % 256,
+                    label % 256
+                ),
+                self.get_end_color_command_str()
             ))
             for label, span in enumerate(
-                self.get_label_span_list(extended=True)
+                self.label_span_list
             )
         ]
+
+    #@property
+    #def inserted_string_pairs(self) -> list[tuple[Span, tuple[str, str]]]:
+    #    return [
+    #        (span, (
+    #            "{{" + self.get_color_command_by_label(label),
+    #            "}}"
+    #        ))
+    #        for label, span in enumerate(
+    #            self.get_label_span_list(extended=True)
+    #        )
+    #    ]
 
     @property
     def command_repl_items(self) -> list[tuple[Span, str]]:
@@ -755,38 +839,43 @@ class MTex(LabelledString):
         return result
 
     @property
+    def remove_commands_in_plain_file(self) -> bool:
+        return True
+
+    @property
     def has_predefined_colors(self) -> bool:
         return bool(self.command_repl_items)
 
-    @staticmethod
-    def get_color_command_by_label(label: int) -> str:
-        if label == -1:
-            label = 16777215  # white
-        rg, b = divmod(label, 256)
-        r, g = divmod(rg, 256)
-        return "".join([
-            "\\color[RGB]",
-            "{",
-            ",".join(map(str, (r, g, b))),
-            "}"
-        ])
+    #@staticmethod
+    #def get_color_command_by_label(label: int) -> str:
+    #    if label == -1:
+    #        label = 16777215  # white
+    #    rg, b = divmod(label, 256)
+    #    r, g = divmod(rg, 256)
+    #    return "".join([
+    #        "\\color[RGB]",
+    #        "{",
+    #        ",".join(map(str, (r, g, b))),
+    #        "}"
+    #    ])
+
+    #@property
+    #def plain_string(self) -> str:
+    #    return "".join([
+    #        "{{",
+    #        self.get_color_command_by_label(
+    #            self.color_to_label(self.base_color)
+    #        ),
+    #        self.string,
+    #        "}}"
+    #    ])
 
     @property
-    def plain_string(self) -> str:
-        return "".join([
-            "{{",
-            self.get_color_command_by_label(
-                self.color_to_label(self.base_color)
-            ),
-            self.string,
-            "}}"
-        ])
-
-    @property
-    def ignored_indices_for_submob_strings(self) -> list[int]:
+    def additionally_ignored_indices(self) -> list[int]:
         return self.left_brace_indices + self.right_brace_indices
 
-    def handle_submob_string(self, substr: str, string_span: Span) -> str:
+    def get_cleaned_substr(self, string_span: Span) -> str:
+        substr = super().get_cleaned_substr(string_span)
         unclosed_left_braces = 0
         unclosed_right_braces = 0
         for index in range(*string_span):
@@ -802,13 +891,6 @@ class MTex(LabelledString):
             substr,
             unclosed_left_braces * "}"
         ])
-
-    @property
-    def specified_substrings(self) -> list[str]:
-        return remove_list_redundancies([
-            self.string[slice(*double_braces_span)]
-            for double_braces_span in self.double_braces_spans
-        ] + self.additional_substrings)
 
     # Method alias
 

@@ -153,7 +153,7 @@ class TransformMatchingTex(TransformMatchingParts):
         return mobject.get_tex()
 
 
-class TransformMatchingString(AnimationGroup):
+class TransformMatchingStrings(AnimationGroup):
     CONFIG = {
         "key_map": dict(),
         "transform_mismatches_class": None,

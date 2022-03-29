@@ -131,15 +131,16 @@ class MarkupText(LabelledString):
         "t2w": {},
         "global_config": {},
         "local_configs": {},
-        "isolate": [],
     }
 
     def __init__(self, text: str, **kwargs):
         self.full2short(kwargs)
         digest_config(self, kwargs)
-        validate_error = MarkupUtils.validate(text)
-        if validate_error:
-            raise ValueError(validate_error)
+
+        if self.is_markup:
+            validate_error = MarkupUtils.validate(text)
+            if validate_error:
+                raise ValueError(validate_error)
 
         self.text = text
         super().__init__(text, **kwargs)
@@ -162,6 +163,7 @@ class MarkupText(LabelledString):
             self.path_string_config,
             self.base_color,
             self.use_plain_file,
+            self.isolate,
             self.text,
             self.is_markup,
             self.font_size,
@@ -178,8 +180,7 @@ class MarkupText(LabelledString):
             self.t2s,
             self.t2w,
             self.global_config,
-            self.local_configs,
-            self.isolate
+            self.local_configs
         )
 
     def full2short(self, config: dict) -> None:
@@ -288,6 +289,15 @@ class MarkupText(LabelledString):
             MarkupText.get_neighbouring_pairs(index_seq), attr_dict_list[:-1]
         ))
 
+    @staticmethod
+    def get_begin_color_command_str(r: int, g: int, b: int) -> str:
+        color_hex = "#{:02x}{:02x}{:02x}".format(r, g, b).upper()
+        return MarkupText.get_begin_tag_str({"foreground": color_hex})
+
+    @staticmethod
+    def get_end_color_command_str() -> str:
+        return MarkupText.get_end_tag_str()
+
     # Parser
 
     @property
@@ -319,17 +329,12 @@ class MarkupText(LabelledString):
             if end_match_obj.group(3):
                 raise ValueError("Attributes shan't exist in ending tags")
             if tag_name == "span":
-                attr_dict = dict([
-                    (
-                        MarkupText.convert_attr_key(match.group(1)),
-                        MarkupText.convert_attr_val(
-                            match.group(2) or match.group(3)
-                        )
-                    )
+                attr_dict = {
+                    match.group(1): match.group(2) or match.group(3)
                     for match in re.finditer(
                         attr_pattern, begin_match_obj.group(3)
                     )
-                ])
+                }
             elif tag_name in TAG_TO_ATTR_DICT.keys():
                 if begin_match_obj.group(3):
                     raise ValueError(
@@ -373,6 +378,19 @@ class MarkupText(LabelledString):
         ]
 
     @property
+    def local_attr_items_from_markup(self) -> list[tuple[Span, str, str]]:
+        return sorted([
+            (
+                (begin_tag_span[0], end_tag_span[1]),
+                self.convert_attr_key(key),
+                self.convert_attr_val(val)
+            )
+            for begin_tag_span, end_tag_span, attr_dict
+            in self.tag_items_from_markup
+            for key, val in attr_dict.items()
+        ])
+
+    @property
     def local_attr_items_from_config(self) -> list[tuple[Span, str, str]]:
         result = [
             (text_span, key, val)
@@ -383,11 +401,11 @@ class MarkupText(LabelledString):
                 (self.t2w, "font_weight")
             )
             for word_or_span, val in t2x_dict.items()
-            for text_span in self.find_spans(word_or_span)
+            for text_span in self.find_spans_by_word_or_span(word_or_span)
         ] + [
             (text_span, key, val)
             for word_or_span, local_config in self.local_configs.items()
-            for text_span in self.find_spans(word_or_span)
+            for text_span in self.find_spans_by_word_or_span(word_or_span)
             for key, val in local_config.items()
         ]
         return [
@@ -399,45 +417,45 @@ class MarkupText(LabelledString):
             for text_span, key, val in result
         ]
 
-    def find_spans(self, word_or_span: str | Span) -> list[Span]:
+    def find_spans_by_word_or_span(
+        self, word_or_span: str | Span
+    ) -> list[Span]:
         if isinstance(word_or_span, tuple):
             return [word_or_span]
 
-        return [
-            match_obj.span()
-            for match_obj in re.finditer(re.escape(word_or_span), self.string)
-        ]
+        return self.find_spans(re.escape(word_or_span))
+
+    #@property
+    #def skipped_spans(self) -> list[Span]:
+    #    return [
+    #        match_obj.span()
+    #        for match_obj in re.finditer(r"\s+", self.string)
+    #    ]
+
+    #@property
+    #def additional_substrings(self) -> list[str]:
+    #    return self.get_substrs_to_isolate(self.isolate)
 
     @property
-    def skipped_spans(self) -> list[Span]:
+    def internal_specified_spans(self) -> list[Span]:
         return [
-            match_obj.span()
-            for match_obj in re.finditer(r"\s+", self.string)
+            markup_span
+            for markup_span, _, _ in self.local_attr_items_from_markup
         ]
 
     @property
     def label_span_list(self) -> list[Span]:
-        breakup_indices = [
-            index
-            for pattern in [
-                r"\s+",
-                r"\b",
-                *[
-                    re.escape(substr)
-                    for substr in self.get_substrs_to_isolate(self.isolate)
-                ]
-            ]
-            for match_obj in re.finditer(pattern, self.string)
-            for index in match_obj.span()
-        ]
+        entity_spans = [span for span, _ in self.command_repl_items]
+        if self.is_markup:
+            entity_spans += self.find_spans(r"&.*?;")
         breakup_indices = sorted(filter(
             lambda index: not any([
                 span[0] < index < span[1]
-                for span, _ in self.command_repl_items
+                for span in entity_spans
             ]),
-            remove_list_redundancies([
-                *self.full_span, *breakup_indices
-            ])
+            remove_list_redundancies(list(it.chain(*(
+                self.specified_spans + self.find_spans(r"\s+", r"\b")
+            ))))
         ))
         return list(filter(
             lambda span: self.string[slice(*span)].strip(),
@@ -451,20 +469,15 @@ class MarkupText(LabelledString):
                 (self.full_span, key, val)
                 for key, val in self.global_attr_items_from_config
             ],
-            sorted([
-                ((begin_tag_span[0], end_tag_span[1]), key, val)
-                for begin_tag_span, end_tag_span, attr_dict
-                in self.tag_items_from_markup
-                for key, val in attr_dict.items()
-            ]),
+            self.local_attr_items_from_markup,
             self.local_attr_items_from_config
         ))
 
     def get_inserted_string_pairs(
-        self, use_label: bool
+        self, use_plain_file: bool
     ) -> list[tuple[Span, tuple[str, str]]]:
         attr_items = self.predefined_items
-        if use_label:
+        if not use_plain_file:
             attr_items = [
                 (span, key, WHITE if key in COLOR_RELATED_KEYS else val)
                 for span, key, val in attr_items
@@ -480,17 +493,37 @@ class MarkupText(LabelledString):
             for span, attr_dict in self.merge_attr_items(attr_items)
         ]
 
-    @property
-    def inserted_string_pairs(self) -> list[tuple[Span, tuple[str, str]]]:
-        return self.get_inserted_string_pairs(use_label=True)
+    #@property
+    #def inserted_string_pairs(self) -> list[tuple[Span, tuple[str, str]]]:
+    #    return self.get_inserted_string_pairs(use_label=True)
 
     @property
     def command_repl_items(self) -> list[tuple[Span, str]]:
-        return [
+        result = [
             (tag_span, "")
             for begin_tag, end_tag, _ in self.tag_items_from_markup
             for tag_span in (begin_tag, end_tag)
         ]
+        if not self.is_markup:
+            result += [
+                (span, escaped)
+                for char, escaped in (
+                    ("&", "&amp;"),
+                    (">", "&gt;"),
+                    ("<", "&lt;")
+                )
+                for span in self.find_spans(re.escape(char))
+            ]
+        return result
+
+    def remove_commands_in_plain_file(self) -> bool:
+        return False
+
+    #@abstractmethod
+    #def get_command_repl_items(
+    #    self, use_plain_file: bool
+    #) -> list[tuple[Span, str]]:
+    #    return []
 
     @property
     def has_predefined_colors(self) -> bool:
@@ -499,18 +532,25 @@ class MarkupText(LabelledString):
             for _, key, _ in self.predefined_items
         ])
 
-    @property
-    def plain_string(self) -> str:
-        return "".join([
-            self.get_begin_tag_str({"foreground": self.base_color}),
-            self.replace_str_by_spans(
-                self.string, self.get_span_replacement_dict(
-                    self.get_inserted_string_pairs(use_label=False),
-                    self.command_repl_items
-                )
-            ),
-            self.get_end_tag_str()
-        ])
+    #@property
+    #def plain_string(self) -> str:
+    #    return "".join([
+    #        self.get_begin_tag_str({"foreground": self.base_color}),
+    #        self.replace_str_by_spans(
+    #            self.string, self.get_span_replacement_dict(
+    #                self.get_inserted_string_pairs(use_label=False),
+    #                self.command_repl_items
+    #            )
+    #        ),
+    #        self.get_end_tag_str()
+    #    ])
+
+    #@property
+    #def specified_substrings(self) -> list[str]:  # TODO: clean up and merge
+    #    return remove_list_redundancies([
+    #        self.get_cleaned_substr(markup_span)
+    #        for markup_span, _, _ in self.local_attr_items_from_markup
+    #    ] + self.additional_substrings)
 
     # Method alias
 
