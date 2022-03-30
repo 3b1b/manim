@@ -16,7 +16,7 @@ from manimpango import MarkupUtils
 
 from manimlib.logger import log
 from manimlib.constants import *
-from manimlib.mobject.svg.mtex_mobject import LabelledString
+from manimlib.mobject.svg.labelled_string import LabelledString
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.customization import get_customization
 from manimlib.utils.tex_file_writing import tex_hash
