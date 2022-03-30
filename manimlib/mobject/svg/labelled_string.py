@@ -3,7 +3,6 @@ from __future__ import annotations
 import re
 import colour
 import itertools as it
-#from types import MethodType
 from typing import Iterable, Union, Sequence
 from abc import abstractmethod
 
