@@ -399,6 +399,9 @@ class LabelledString(_StringSVG):
         ])
 
     def get_group_substr_items(self) -> tuple[list[Span], list[str]]:
+        if not self.submob_labels:
+            return [], []
+
         group_labels, submob_spans = zip(
             *self.compress_neighbours(self.submob_labels)
         )
