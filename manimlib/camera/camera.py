@@ -60,6 +60,15 @@ class CameraFrame(Mobject):
     def get_euler_angles(self):
         return self.get_orientation().as_euler("zxz")[::-1]
 
+    def get_theta(self):
+        return self.get_euler_angles()[0]
+
+    def get_phi(self):
+        return self.get_euler_angles()[1]
+
+    def get_gamma(self):
+        return self.get_euler_angles()[2]
+
     def get_inverse_camera_rotation_matrix(self):
         return self.get_orientation().as_matrix().T
 
