@@ -3,6 +3,7 @@ from __future__ import annotations
 import moderngl
 from colour import Color
 import OpenGL.GL as gl
+import math
 
 import itertools as it
 
@@ -27,13 +28,14 @@ class CameraFrame(Mobject):
     CONFIG = {
         "frame_shape": (FRAME_WIDTH, FRAME_HEIGHT),
         "center_point": ORIGIN,
-        "focal_distance": 2,
+        "focal_dist_to_height": 2,
     }
 
     def init_uniforms(self) -> None:
         super().init_uniforms()
         # As a quaternion
         self.uniforms["orientation"] = Rotation.identity().as_quat()
+        self.uniforms["focal_dist_to_height"] = self.focal_dist_to_height
 
     def init_points(self) -> None:
         self.set_points([ORIGIN, LEFT, RIGHT, DOWN, UP])
@@ -56,7 +58,7 @@ class CameraFrame(Mobject):
         return self
 
     def get_euler_angles(self):
-        return self.get_orientation().as_euler("xzy")
+        return self.get_orientation().as_euler("zxz")[::-1]
 
     def get_inverse_camera_rotation_matrix(self):
         return self.get_orientation().as_matrix().T
@@ -73,11 +75,11 @@ class CameraFrame(Mobject):
         gamma: float | None = None,
         units: float = RADIANS
     ):
-        eulers = self.get_euler_angles()  # phi, theta, gamma
-        for i, var in enumerate([phi, theta, gamma]):
+        eulers = self.get_euler_angles()  # theta, phi, gamma
+        for i, var in enumerate([theta, phi, gamma]):
             if var is not None:
                 eulers[i] = var * units
-        self.set_orientation(Rotation.from_euler('xzy', eulers))
+        self.set_orientation(Rotation.from_euler("zxz", eulers[::-1]))
         return self
 
     def reorient(
@@ -114,6 +116,14 @@ class CameraFrame(Mobject):
         self.rotate(dgamma, self.get_inverse_camera_rotation_matrix()[2])
         return self
 
+    def set_focal_distance(self, focal_distance: float):
+        self.uniforms["focal_dist_to_height"] = focal_distance / self.get_height()
+        return self
+
+    def set_field_of_view(self, field_of_view: float):
+        self.uniforms["focal_dist_to_height"] = 2 * math.tan(field_of_view / 2)
+        return self
+
     def get_shape(self):
         return (self.get_width(), self.get_height())
 
@@ -130,7 +140,10 @@ class CameraFrame(Mobject):
         return points[4, 1] - points[3, 1]
 
     def get_focal_distance(self) -> float:
-        return self.focal_distance * self.get_height()
+        return self.uniforms["focal_dist_to_height"] * self.get_height()
+
+    def get_field_of_view(self) -> float:
+        return 2 * math.atan(self.uniforms["focal_dist_to_height"] / 2)
 
     def get_implied_camera_location(self) -> np.ndarray:
         to_camera = self.get_inverse_camera_rotation_matrix()[2]
