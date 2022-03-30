@@ -341,6 +341,14 @@ class VMobject(Mobject):
     def get_flat_stroke(self) -> bool:
         return self.flat_stroke
 
+    def set_joint_type(self, joint_type: str, recurse: bool = True):
+        for mob in self.get_family(recurse):
+            mob.joint_type = joint_type
+        return self
+
+    def get_joint_type(self) -> str:
+        return self.joint_type
+
     # Points
     def set_anchors_and_handles(
         self,
