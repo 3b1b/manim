@@ -56,7 +56,7 @@ class CameraFrame(Mobject):
         return self
 
     def get_euler_angles(self):
-        return self.get_orientation().as_euler("xzy")
+        return self.get_orientation().as_euler("zxz")[::-1]
 
     def get_inverse_camera_rotation_matrix(self):
         return self.get_orientation().as_matrix().T
@@ -73,11 +73,11 @@ class CameraFrame(Mobject):
         gamma: float | None = None,
         units: float = RADIANS
     ):
-        eulers = self.get_euler_angles()  # phi, theta, gamma
-        for i, var in enumerate([phi, theta, gamma]):
+        eulers = self.get_euler_angles()  # theta, phi, gamma
+        for i, var in enumerate([theta, phi, gamma]):
             if var is not None:
                 eulers[i] = var * units
-        self.set_orientation(Rotation.from_euler('xzy', eulers))
+        self.set_orientation(Rotation.from_euler("zxz", eulers[::-1]))
         return self
 
     def reorient(
