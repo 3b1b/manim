@@ -538,7 +538,6 @@ class Scene(object):
                 self.update_frame(dt)
                 self.emit_frame()
                 if stop_condition is not None and stop_condition():
-                    time_progression.close()
                     break
         self.unlock_mobject_data()
         return self
