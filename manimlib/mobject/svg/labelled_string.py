@@ -92,7 +92,7 @@ class LabelledString(_StringSVG):
     def parse(self) -> None:
         self.command_repl_items = self.get_command_repl_items()
         self.command_spans = self.get_command_spans()
-        self.ignored_indices = self.get_ignored_indices()
+        self.ignored_spans = self.get_ignored_spans()
         self.skipped_spans = self.get_skipped_spans()
         self.internal_specified_spans = self.get_internal_specified_spans()
         self.external_specified_spans = self.get_external_specified_spans()
@@ -283,17 +283,14 @@ class LabelledString(_StringSVG):
     def get_command_spans(self) -> list[Span]:
         return [cmd_span for cmd_span, _ in self.command_repl_items]
 
-    def get_ignored_indices(self) -> list[int]:
+    def get_ignored_spans(self) -> list[int]:
         return []
 
     def get_skipped_spans(self) -> list[Span]:
         return list(it.chain(
             self.space_spans,
             self.command_spans,
-            [
-                (index, index + 1)
-                for index in self.ignored_indices
-            ]
+            self.ignored_spans
         ))
 
     @abstractmethod
@@ -746,8 +743,11 @@ class MTex(LabelledString):
             result.append(((span_begin, span_end), repl_str))
         return result
 
-    def get_ignored_indices(self) -> list[int]:
-        return self.script_char_indices
+    def get_ignored_spans(self) -> list[int]:
+        return [
+            (index, index + 1)
+            for index in self.script_char_indices
+        ]
 
     def get_internal_specified_spans(self) -> list[Span]:
         # Match paired double braces (`{{...}}`).
