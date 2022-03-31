@@ -433,16 +433,10 @@ class MarkupText(LabelledString):
         return result
 
     def get_internal_specified_spans(self) -> list[Span]:
-        return [
-            markup_span
-            for markup_span, _ in self.local_dicts_from_markup
-        ]
+        return [span for span, _ in self.local_dicts_from_markup]
 
     def get_external_specified_spans(self) -> list[Span]:
-        return [
-            markup_span
-            for markup_span, _, _ in self.local_dicts_from_config
-        ]
+        return [span for span, _ in self.local_dicts_from_config]
 
     def get_label_span_list(self) -> list[Span]:
         breakup_indices = remove_list_redundancies(list(it.chain(*it.chain(
