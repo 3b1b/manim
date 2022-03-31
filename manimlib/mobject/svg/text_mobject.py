@@ -137,6 +137,8 @@ class MarkupText(LabelledString):
         self.full2short(kwargs)
         digest_config(self, kwargs)
 
+        if not self.font:
+            self.font = get_customization()["style"]["font"]
         if self.is_markup:
             validate_error = MarkupUtils.validate(text)
             if validate_error:
@@ -236,19 +238,19 @@ class MarkupText(LabelledString):
 
     def pre_parse(self) -> None:
         super().pre_parse()
-        self.global_items_from_config = self.get_global_items_from_config()
         self.tag_items_from_markup = self.get_tag_items_from_markup()
-        self.local_items_from_markup = self.get_local_items_from_markup()
-        self.local_items_from_config = self.get_local_items_from_config()
-        self.predefined_items = self.get_predefined_items()
+        self.global_dict_from_config = self.get_global_dict_from_config()
+        self.local_dicts_from_markup = self.get_local_dicts_from_markup()
+        self.local_dicts_from_config = self.get_local_dicts_from_config()
+        self.predefined_attr_dicts = self.get_predefined_attr_dicts()
 
     # Toolkits
 
     @staticmethod
     def get_attr_dict_str(attr_dict: dict[str, str]) -> str:
         return " ".join([
-            f"{key}='{value}'"
-            for key, value in attr_dict.items()
+            f"{key}='{val}'"
+            for key, val in attr_dict.items()
         ])
 
     @staticmethod
@@ -273,20 +275,12 @@ class MarkupText(LabelledString):
         return MarkupText.get_end_tag_str()
 
     @staticmethod
-    def convert_attr_key(key: str) -> str:
-        return SPAN_ATTR_KEY_CONVERSION[key.lower()]
-
-    @staticmethod
-    def convert_attr_val(val: typing.Any) -> str:
-        return str(val).lower()
-
-    @staticmethod
-    def merge_attr_items(
-        attr_items: list[Span, str, str]
+    def merge_attr_dicts(
+        attr_dict_items: list[Span, str, typing.Any]
     ) -> list[tuple[Span, dict[str, str]]]:
         index_seq = [0]
         attr_dict_list = [{}]
-        for span, key, value in attr_items:
+        for span, attr_dict in attr_dict_items:
             if span[0] >= span[1]:
                 continue
             region_indices = [
@@ -304,42 +298,16 @@ class MarkupText(LabelledString):
                 region_indices[flag] += 1
                 if flag == 0:
                     region_indices[1] += 1
-            if not key:
-                continue
-            for attr_dict in attr_dict_list[slice(*region_indices)]:
-                attr_dict[key] = value
+            for key, val in attr_dict.items():
+                if not key:
+                    continue
+                for mid_dict in attr_dict_list[slice(*region_indices)]:
+                    mid_dict[key] = val
         return list(zip(
             MarkupText.get_neighbouring_pairs(index_seq), attr_dict_list[:-1]
         ))
 
     # Pre-parsing
-
-    def get_global_items_from_config(self) -> list[str, str]:
-        global_attr_dict = {
-            "line_height": (
-                (self.lsh or DEFAULT_LINE_SPACING_SCALE) + 1
-            ) * 0.6,
-            "font_family": self.font or get_customization()["style"]["font"],
-            "font_size": self.font_size * 1024,
-            "font_style": self.slant,
-            "font_weight": self.weight
-        }
-        global_attr_dict = {
-            k: v
-            for k, v in global_attr_dict.items()
-            if v is not None
-        }
-        result = list(it.chain(
-            global_attr_dict.items(),
-            self.global_config.items()
-        ))
-        return [
-            (
-                self.convert_attr_key(key),
-                self.convert_attr_val(val)
-            )
-            for key, val in result
-        ]
 
     def get_tag_items_from_markup(
         self
@@ -347,8 +315,8 @@ class MarkupText(LabelledString):
         if not self.is_markup:
             return []
 
-        tag_pattern = r"""<(/?)(\w+)\s*((\w+\s*\=\s*('.*?'|".*?")\s*)*)>"""
-        attr_pattern = r"""(\w+)\s*\=\s*(?:(?:'(.*?)')|(?:"(.*?)"))"""
+        tag_pattern = r"""<(/?)(\w+)\s*((?:\w+\s*\=\s*(['"]).*?\4\s*)*)>"""
+        attr_pattern = r"""(\w+)\s*\=\s*(['"])(.*?)\2"""
         begin_match_obj_stack = []
         match_obj_pairs = []
         for match_obj in re.finditer(tag_pattern, self.string):
@@ -370,7 +338,7 @@ class MarkupText(LabelledString):
                 raise ValueError("Attributes shan't exist in ending tags")
             if tag_name == "span":
                 attr_dict = {
-                    match.group(1): match.group(2) or match.group(3)
+                    match.group(1): match.group(3)
                     for match in re.finditer(
                         attr_pattern, begin_match_obj.group(3)
                     )
@@ -389,21 +357,33 @@ class MarkupText(LabelledString):
             )
         return result
 
-    def get_local_items_from_markup(self) -> list[tuple[Span, str, str]]:
+    def get_global_dict_from_config(self) -> dict[str, typing.Any]:
+        result = {
+            "line_height": (
+                (self.lsh or DEFAULT_LINE_SPACING_SCALE) + 1
+            ) * 0.6,
+            "font_family": self.font,
+            "font_size": self.font_size * 1024,
+            "font_style": self.slant,
+            "font_weight": self.weight
+        }
+        result.update(self.global_config)
+        return result
+
+    def get_local_dicts_from_markup(
+        self
+    ) -> list[Span, dict[str, str]]:
         return sorted([
-            (
-                (begin_tag_span[0], end_tag_span[1]),
-                self.convert_attr_key(key),
-                self.convert_attr_val(val)
-            )
+            ((begin_tag_span[0], end_tag_span[1]), attr_dict)
             for begin_tag_span, end_tag_span, attr_dict
             in self.tag_items_from_markup
-            for key, val in attr_dict.items()
         ])
 
-    def get_local_items_from_config(self) -> list[tuple[Span, str, str]]:
-        result = [
-            (span, key, val)
+    def get_local_dicts_from_config(
+        self
+    ) -> list[Span, dict[str, typing.Any]]:
+        return [
+            (span, {key: val})
             for t2x_dict, key in (
                 (self.t2c, "foreground"),
                 (self.t2f, "font_family"),
@@ -413,29 +393,24 @@ class MarkupText(LabelledString):
             for substr, val in t2x_dict.items()
             for span in self.find_substr(substr)
         ] + [
-            (span, key, val)
+            (span, local_config)
             for substr, local_config in self.local_configs.items()
             for span in self.find_substr(substr)
-            for key, val in local_config.items()
-        ]
-        return [
-            (
-                span,
-                self.convert_attr_key(key),
-                self.convert_attr_val(val)
-            )
-            for span, key, val in result
         ]
 
-    def get_predefined_items(self) -> list[Span, str, str]:
-        return list(it.chain(
-            [
-                (self.full_span, key, val)
-                for key, val in self.global_items_from_config
-            ],
-            self.local_items_from_markup,
-            self.local_items_from_config
-        ))
+    def get_predefined_attr_dicts(self) -> list[Span, dict[str, str]]:
+        attr_dict_items = [
+            (self.full_span, self.global_dict_from_config),
+            *self.local_dicts_from_markup,
+            *self.local_dicts_from_config
+        ]
+        return [
+            (span, {
+                SPAN_ATTR_KEY_CONVERSION[key.lower()]: str(val)
+                for key, val in attr_dict.items()
+            })
+            for span, attr_dict in attr_dict_items
+        ]
 
     # Parsing
 
@@ -460,13 +435,13 @@ class MarkupText(LabelledString):
     def get_internal_specified_spans(self) -> list[Span]:
         return [
             markup_span
-            for markup_span, _, _ in self.local_items_from_markup
+            for markup_span, _ in self.local_dicts_from_markup
         ]
 
     def get_external_specified_spans(self) -> list[Span]:
         return [
             markup_span
-            for markup_span, _, _ in self.local_items_from_config
+            for markup_span, _, _ in self.local_dicts_from_config
         ]
 
     def get_label_span_list(self) -> list[Span]:
@@ -493,18 +468,20 @@ class MarkupText(LabelledString):
     def get_inserted_string_pairs(
         self, use_plain_file: bool
     ) -> list[tuple[Span, tuple[str, str]]]:
-        attr_items = self.predefined_items.copy()
         if not use_plain_file:
-            attr_items = [
-                (span, key, WHITE if key in COLOR_RELATED_KEYS else val)
-                for span, key, val in attr_items
+            attr_dict_items = [
+                (span, {
+                    key: WHITE if key in COLOR_RELATED_KEYS else val
+                    for key, val in attr_dict.items()
+                })
+                for span, attr_dict in self.predefined_attr_dicts
             ] + [
-                (span, "foreground", self.rgb_int_to_hex(label))
+                (span, {"foreground": self.rgb_int_to_hex(label)})
                 for label, span in enumerate(self.label_span_list)
             ]
         else:
-            attr_items += [
-                (span, "", "")
+            attr_dict_items = self.predefined_attr_dicts + [
+                (span, {})
                 for span in self.label_span_list
             ]
         return [
@@ -512,7 +489,7 @@ class MarkupText(LabelledString):
                 self.get_begin_tag_str(attr_dict),
                 self.get_end_tag_str()
             ))
-            for span, attr_dict in self.merge_attr_items(attr_items)
+            for span, attr_dict in self.merge_attr_dicts(attr_dict_items)
         ]
 
     def get_other_repl_items(
@@ -523,7 +500,8 @@ class MarkupText(LabelledString):
     def get_has_predefined_colors(self) -> bool:
         return any([
             key in COLOR_RELATED_KEYS
-            for _, key, _ in self.predefined_items
+            for _, attr_dict in self.predefined_attr_dicts
+            for key in attr_dict.keys()
         ])
 
     # Method alias
