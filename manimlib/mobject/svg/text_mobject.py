@@ -304,18 +304,13 @@ class MarkupText(LabelledString):
                 region_indices[flag] += 1
                 if flag == 0:
                     region_indices[1] += 1
+            if not key:
+                continue
             for attr_dict in attr_dict_list[slice(*region_indices)]:
                 attr_dict[key] = value
         return list(zip(
             MarkupText.get_neighbouring_pairs(index_seq), attr_dict_list[:-1]
         ))
-
-    def find_spans_by_word_or_span(
-        self, word_or_span: str | Span
-    ) -> list[Span]:
-        if isinstance(word_or_span, tuple):
-            return [word_or_span]
-        return self.find_spans(re.escape(word_or_span))
 
     # Pre-parsing
 
@@ -408,28 +403,28 @@ class MarkupText(LabelledString):
 
     def get_local_items_from_config(self) -> list[tuple[Span, str, str]]:
         result = [
-            (text_span, key, val)
+            (span, key, val)
             for t2x_dict, key in (
                 (self.t2c, "foreground"),
                 (self.t2f, "font_family"),
                 (self.t2s, "font_style"),
                 (self.t2w, "font_weight")
             )
-            for word_or_span, val in t2x_dict.items()
-            for text_span in self.find_spans_by_word_or_span(word_or_span)
+            for substr, val in t2x_dict.items()
+            for span in self.find_substr(substr)
         ] + [
-            (text_span, key, val)
-            for word_or_span, local_config in self.local_configs.items()
-            for text_span in self.find_spans_by_word_or_span(word_or_span)
+            (span, key, val)
+            for substr, local_config in self.local_configs.items()
+            for span in self.find_substr(substr)
             for key, val in local_config.items()
         ]
         return [
             (
-                text_span,
+                span,
                 self.convert_attr_key(key),
                 self.convert_attr_val(val)
             )
-            for text_span, key, val in result
+            for span, key, val in result
         ]
 
     def get_predefined_items(self) -> list[Span, str, str]:
@@ -458,7 +453,7 @@ class MarkupText(LabelledString):
                     (">", "&gt;"),
                     ("<", "&lt;")
                 )
-                for span in self.find_spans(re.escape(char))
+                for span in self.find_substr(char)
             ]
         return result
 
@@ -466,6 +461,12 @@ class MarkupText(LabelledString):
         return [
             markup_span
             for markup_span, _, _ in self.local_items_from_markup
+        ]
+
+    def get_external_specified_spans(self) -> list[Span]:
+        return [
+            markup_span
+            for markup_span, _, _ in self.local_items_from_config
         ]
 
     def get_label_span_list(self) -> list[Span]:
@@ -492,7 +493,7 @@ class MarkupText(LabelledString):
     def get_inserted_string_pairs(
         self, use_plain_file: bool
     ) -> list[tuple[Span, tuple[str, str]]]:
-        attr_items = self.predefined_items
+        attr_items = self.predefined_items.copy()
         if not use_plain_file:
             attr_items = [
                 (span, key, WHITE if key in COLOR_RELATED_KEYS else val)
@@ -500,6 +501,11 @@ class MarkupText(LabelledString):
             ] + [
                 (span, "foreground", self.rgb_int_to_hex(label))
                 for label, span in enumerate(self.label_span_list)
+            ]
+        else:
+            attr_items += [
+                (span, "", "")
+                for span in self.label_span_list
             ]
         return [
             (span, (

@@ -199,7 +199,7 @@ class TransformMatchingStrings(AnimationGroup):
                     filtered_source_indices_lists,
                     filtered_target_indices_lists
                 ]):
-                    return
+                    continue
                 anims.append(anim_class(source_parts, target_parts, **kwargs))
                 for index in it.chain(*filtered_source_indices_lists):
                     rest_source_indices.remove(index)
@@ -207,12 +207,10 @@ class TransformMatchingStrings(AnimationGroup):
                     rest_target_indices.remove(index)
 
         def get_common_substrs(func):
-            result = sorted(list(
-                set(func(source_mobject)).intersection(func(target_mobject))
-            ), key=len, reverse=True)
-            if "" in result:
-                result.remove("")
-            return result
+            return sorted([
+                substr for substr in func(source_mobject)
+                if substr and substr in func(target_mobject)
+            ], key=len, reverse=True)
 
         def get_parts_from_keys(mobject, keys):
             if not isinstance(keys, tuple):
@@ -241,16 +239,12 @@ class TransformMatchingStrings(AnimationGroup):
         add_anims_from(
             FadeTransformPieces,
             LabelledString.get_parts_by_string,
-            get_common_substrs(
-                lambda mobject: mobject.specified_substrings
-            )
+            get_common_substrs(LabelledString.get_specified_substrs)
         )
         add_anims_from(
             FadeTransformPieces,
             LabelledString.get_parts_by_group_substr,
-            get_common_substrs(
-                lambda mobject: mobject.group_substrs
-            )
+            get_common_substrs(LabelledString.get_group_substrs)
         )
 
         fade_source = VGroup(*[
