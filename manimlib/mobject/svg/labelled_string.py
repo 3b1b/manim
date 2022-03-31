@@ -232,13 +232,6 @@ class LabelledString(_StringSVG):
         )
 
     @staticmethod
-    def extend_span(span: Span, skipped: list[Span]) -> Span:
-        return (
-            LabelledString.lslide(span[0], skipped),
-            LabelledString.rslide(span[1], skipped)
-        )
-
-    @staticmethod
     def rgb_to_int(rgb_tuple: tuple[int, int, int]) -> int:
         r, g, b = rgb_tuple
         rg = r * 256 + g
@@ -604,7 +597,6 @@ class MTex(LabelledString):
         super().pre_parse()
         self.backslash_indices = self.get_backslash_indices()
         self.brace_index_pairs = self.get_brace_index_pairs()
-        self.script_char_indices = self.get_script_char_indices()
         self.script_char_spans = self.get_script_char_spans()
         self.script_content_spans = self.get_script_content_spans()
         self.script_spans = self.get_script_spans()
@@ -665,19 +657,17 @@ class MTex(LabelledString):
             raise ValueError("Missing '}' inserted")
         return list(zip(left_brace_indices, right_brace_indices))
 
-    def get_script_char_indices(self) -> list[int]:
-        return self.get_unescaped_char_indices("_", "^")
-
-    def get_script_char_spans(self) -> list[Span]:
+    def get_script_char_spans(self) -> list[int]:
         return [
-            self.extend_span((index, index + 1), self.space_spans)
-            for index in self.script_char_indices
+            (index, index + 1)
+            for index in self.get_unescaped_char_indices("_", "^")
         ]
 
     def get_script_content_spans(self) -> list[Span]:
         result = []
         brace_indices_dict = dict(self.brace_index_pairs)
-        for _, span_begin in self.script_char_spans:
+        for script_char_span in self.script_char_spans:
+            span_begin = self.rslide(script_char_span[1], self.space_spans)
             if span_begin in brace_indices_dict.keys():
                 span_end = brace_indices_dict[span_begin] + 1
             else:
@@ -698,7 +688,10 @@ class MTex(LabelledString):
 
     def get_script_spans(self) -> list[Span]:
         return [
-            (script_char_span[0], script_content_span[1])
+            (
+                self.lslide(script_char_span[0], self.space_spans),
+                script_content_span[1]
+            )
             for script_char_span, script_content_span in zip(
                 self.script_char_spans, self.script_content_spans
             )
@@ -744,10 +737,7 @@ class MTex(LabelledString):
         return result
 
     def get_ignored_spans(self) -> list[int]:
-        return [
-            (index, index + 1)
-            for index in self.script_char_indices
-        ]
+        return self.script_char_spans.copy()
 
     def get_internal_specified_spans(self) -> list[Span]:
         # Match paired double braces (`{{...}}`).
