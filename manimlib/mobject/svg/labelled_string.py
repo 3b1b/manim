@@ -187,8 +187,9 @@ class LabelledString(_StringSVG):
         inserted_string_pairs: list[tuple[Span, tuple[str, str]]],
         other_repl_items: list[tuple[Span, str]]
     ) -> dict[Span, str]:
+        result = dict(other_repl_items)
         if not inserted_string_pairs:
-            return other_repl_items.copy()
+            return result
 
         indices, _, _, inserted_strings = zip(*sorted([
             (
@@ -200,12 +201,11 @@ class LabelledString(_StringSVG):
             for span, str_pair in inserted_string_pairs
             for flag in range(2)
         ]))
-        result = {
+        result.update({
             (index, index): "".join(inserted_strings[slice(*item_span)])
             for index, item_span
             in LabelledString.compress_neighbours(indices)
-        }
-        result.update(other_repl_items)
+        })
         return result
 
     @staticmethod
@@ -272,7 +272,7 @@ class LabelledString(_StringSVG):
         return (0, len(self.string))
 
     def get_space_spans(self) -> list[Span]:
-        return self.find_spans(r"\s+")
+        return self.find_spans(r"\s")
 
     # Parsing
 

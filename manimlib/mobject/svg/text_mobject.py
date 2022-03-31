@@ -470,7 +470,7 @@ class MarkupText(LabelledString):
 
     def get_label_span_list(self) -> list[Span]:
         breakup_indices = remove_list_redundancies(list(it.chain(*it.chain(
-            self.space_spans,
+            self.find_spans(r"\s+"),
             self.find_spans(r"\b"),
             self.specified_spans
         ))))
