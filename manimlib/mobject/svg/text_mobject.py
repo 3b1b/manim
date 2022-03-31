@@ -234,13 +234,13 @@ class MarkupText(LabelledString):
             pango_width=pango_width
         )
 
-    def parse(self) -> None:
+    def pre_parse(self) -> None:
+        super().pre_parse()
         self.global_items_from_config = self.get_global_items_from_config()
         self.tag_items_from_markup = self.get_tag_items_from_markup()
         self.local_items_from_markup = self.get_local_items_from_markup()
         self.local_items_from_config = self.get_local_items_from_config()
         self.predefined_items = self.get_predefined_items()
-        super().parse()
 
     # Toolkits
 

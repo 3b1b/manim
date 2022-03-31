@@ -103,7 +103,6 @@ class LabelledString(_StringSVG):
     def post_parse(self) -> None:
         self.containing_labels_dict = self.get_containing_labels_dict()
         self.specified_substrings = self.get_specified_substrings()
-        self.group_substr_items = self.get_group_substr_items()
         self.group_substrs = self.get_group_substrs()
 
     # Toolkits
@@ -275,6 +274,8 @@ class LabelledString(_StringSVG):
     def get_space_spans(self) -> list[Span]:
         return self.find_spans(r"\s+")
 
+    # Parsing
+
     @abstractmethod
     def get_command_repl_items(self) -> list[tuple[Span, str]]:
         return []
@@ -300,8 +301,13 @@ class LabelledString(_StringSVG):
         return []
 
     def get_external_specified_spans(self) -> list[Span]:
+        if "" in self.isolate:
+            return self.get_neighbouring_pairs(
+                list(range(len(self.string) + 1))
+            )
+
         return remove_list_redundancies(list(it.chain(*[
-            self.find_spans(re.escape(substr.strip()))
+            self.find_spans(re.escape(substr))
             for substr in self.isolate
         ])))
 
@@ -398,13 +404,15 @@ class LabelledString(_StringSVG):
             for span in self.specified_spans
         ])
 
-    def get_group_substr_items(self) -> tuple[list[Span], list[str]]:
+    def get_group_span_items(self) -> tuple[list[int], list[Span]]:
         if not self.submob_labels:
             return [], []
-
-        group_labels, submob_spans = zip(
+        return tuple(zip(
             *self.compress_neighbours(self.submob_labels)
-        )
+        ))
+
+    def get_group_substrs(self) -> list[str]:
+        group_labels, _ = self.get_group_span_items()
         ordered_spans = [
             self.label_span_list[label] if label != -1 else self.full_span
             for label in group_labels
@@ -440,16 +448,23 @@ class LabelledString(_StringSVG):
             self.get_cleaned_substr(span) if span[0] < span[1] else ""
             for span in shrinked_spans
         ]
-        return submob_spans, group_substrs
+        return group_substrs
 
-    def get_group_substrs(self) -> list[str]:
-        return self.group_substr_items[1]
+    def get_submob_groups(self) -> VGroup:
+        _, submob_spans = self.get_group_span_items()
+        return VGroup(*[
+            VGroup(*self.submobjects[slice(*submob_span)])
+            for submob_span in submob_spans
+        ])
 
     # Selector
 
     def find_span_components_of_custom_span(
         self, custom_span: Span
     ) -> list[Span]:
+        if custom_span[0] >= custom_span[1]:
+            return []
+
         indices = remove_list_redundancies(list(it.chain(
             self.full_span,
             *self.label_span_list
@@ -485,15 +500,19 @@ class LabelledString(_StringSVG):
         ))
 
     def get_parts_by_string(self, substr: str) -> VGroup:
+        if not substr:
+            return VGroup()
         return VGroup(*[
             self.get_parts_by_custom_span(span)
-            for span in self.find_spans(re.escape(substr.strip()))
+            for span in self.find_spans(re.escape(substr))
         ])
 
     def get_parts_by_group_substr(self, substr: str) -> VGroup:
         return VGroup(*[
-            VGroup(*self.submobjects[slice(*submob_span)])
-            for submob_span, group_substr in zip(*self.group_substr_items)
+            group
+            for group, group_substr in zip(
+                self.get_submob_groups(), self.group_substrs
+            )
             if group_substr == substr
         ])
 
@@ -533,7 +552,6 @@ class MTex(LabelledString):
 
     def __init__(self, tex_string: str, **kwargs):
         digest_config(self, kwargs)
-        tex_string = tex_string.strip()
         # Prevent from passing an empty string.
         if not tex_string:
             tex_string = "\\quad"
@@ -795,6 +813,8 @@ class MTex(LabelledString):
 
     def get_has_predefined_colors(self) -> bool:
         return bool(self.command_repl_items)
+
+    # Post-parsing
 
     def get_cleaned_substr(self, span: Span) -> str:
         substr = super().get_cleaned_substr(span)
