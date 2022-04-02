@@ -307,6 +307,19 @@ class MarkupText(LabelledString):
             MarkupText.get_neighbouring_pairs(index_seq), attr_dict_list[:-1]
         ))
 
+    def find_substr_or_span(
+        self, substr_or_span: str | tuple[int | None, int | None]
+    ) -> list[Span]:
+        if isinstance(substr_or_span, str):
+            return self.find_substr(substr)
+
+        span_begin, span_end = substr_or_span
+        if span_begin is None:
+            span_begin = 0
+        if span_end is None:
+            span_end = len(self.string)
+        return [(span_begin, span_end)]
+
     # Pre-parsing
 
     def get_tag_items_from_markup(
@@ -390,12 +403,12 @@ class MarkupText(LabelledString):
                 (self.t2s, "font_style"),
                 (self.t2w, "font_weight")
             )
-            for substr, val in t2x_dict.items()
-            for span in self.find_substr(substr)
+            for substr_or_span, val in t2x_dict.items()
+            for span in self.find_substr_or_span(substr_or_span)
         ] + [
             (span, local_config)
-            for substr, local_config in self.local_configs.items()
-            for span in self.find_substr(substr)
+            for substr_or_span, local_config in self.local_configs.items()
+            for span in self.find_substr_or_span(substr_or_span)
         ]
 
     def get_predefined_attr_dicts(self) -> list[Span, dict[str, str]]:
