@@ -313,11 +313,18 @@ class MarkupText(LabelledString):
         if isinstance(substr_or_span, str):
             return self.find_substr(substr)
 
+        string_len = len(self.string)
         span_begin, span_end = substr_or_span
         if span_begin is None:
             span_begin = 0
+        elif span_begin < 0:
+            span_begin += string_len
         if span_end is None:
-            span_end = len(self.string)
+            span_end = string_len
+        elif span_end < 0:
+            span_end += string_len
+        if span_begin >= span_end:
+            return []
         return [(span_begin, span_end)]
 
     # Pre-parsing
