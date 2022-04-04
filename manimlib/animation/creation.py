@@ -7,6 +7,7 @@ import numpy as np
 
 from manimlib.animation.animation import Animation
 from manimlib.animation.composition import Succession
+from manimlib.mobject.svg.labelled_string import LabelledString
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.config_ops import digest_config
@@ -202,23 +203,19 @@ class ShowSubmobjectsOneByOne(ShowIncreasingSubsets):
             self.mobject.set_submobjects([self.all_submobs[index - 1]])
 
 
-# TODO, this is broken...
-class AddTextWordByWord(Succession):
+class AddTextWordByWord(ShowIncreasingSubsets):
     CONFIG = {
         # If given a value for run_time, it will
-        # override the time_per_char
+        # override the time_per_word
         "run_time": None,
-        "time_per_char": 0.06,
+        "time_per_word": 0.2,
+        "rate_func": linear,
     }
 
-    def __init__(self, text_mobject, **kwargs):
+    def __init__(self, string_mobject, **kwargs):
+        assert isinstance(string_mobject, LabelledString)
+        grouped_mobject = string_mobject.get_submob_groups()
         digest_config(self, kwargs)
-        tpc = self.time_per_char
-        anims = it.chain(*[
-            [
-                ShowIncreasingSubsets(word, run_time=tpc * len(word)),
-                Animation(word, run_time=0.005 * len(word)**1.5),
-            ]
-            for word in text_mobject
-        ])
-        super().__init__(*anims, **kwargs)
+        if self.run_time is None:
+            self.run_time = self.time_per_word * len(grouped_mobject)
+        super().__init__(grouped_mobject, **kwargs)
