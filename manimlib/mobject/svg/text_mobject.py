@@ -311,7 +311,7 @@ class MarkupText(LabelledString):
         self, substr_or_span: str | tuple[int | None, int | None]
     ) -> list[Span]:
         if isinstance(substr_or_span, str):
-            return self.find_substr(substr)
+            return self.find_substr(substr_or_span)
 
         string_len = len(self.string)
         span_begin, span_end = substr_or_span
