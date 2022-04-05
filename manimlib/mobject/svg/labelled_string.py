@@ -146,8 +146,6 @@ class LabelledString(_StringSVG):
     def take_nearest_value(seq: list[int], val: int, index_shift: int) -> int:
         sorted_seq = sorted(seq)
         index = LabelledString.find_region_index(sorted_seq, val)
-        if index == -1:
-            raise IndexError
         return sorted_seq[index + index_shift]
 
     @staticmethod
