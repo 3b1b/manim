@@ -58,6 +58,7 @@ class SVGMobject(VMobject):
         },
         "path_string_config": {},
     }
+
     def __init__(self, file_name: str | None = None, **kwargs):
         super().__init__(**kwargs)
         self.file_name = file_name or self.file_name
