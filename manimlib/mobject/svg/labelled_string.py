@@ -113,24 +113,14 @@ class LabelledString(_StringSVG):
     def get_substr(self, span: Span) -> str:
         return self.string[slice(*span)]
 
-    def handle_regex_method(func):
-        def wrapper(self, pattern, pos=0, endpos=9223372036854775807):
-            return func()(
-                re.compile(pattern), self.string, pos=pos, endpos=endpos
-            )
-        return wrapper
+    def finditer(self, pattern, **kwargs):
+        return re.compile(pattern).finditer(self.string, **kwargs)
 
-    @handle_regex_method
-    def finditer():
-        return re.Pattern.finditer
+    def search(self, pattern, **kwargs):
+        return re.compile(pattern).search(self.string, **kwargs)
 
-    @handle_regex_method
-    def search():
-        return re.Pattern.search
-
-    @handle_regex_method
-    def match():
-        return re.Pattern.match
+    def match(self, pattern, **kwargs):
+        return re.compile(pattern).match(self.string, **kwargs)
 
     def find_spans(self, pattern: str) -> list[Span]:
         return [match_obj.span() for match_obj in self.finditer(pattern)]
