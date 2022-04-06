@@ -575,6 +575,8 @@ class Mobject(object):
             updater_list.insert(index, update_function)
 
         self.refresh_has_updater_status()
+        for parent in self.parents:
+            parent.has_updaters = True
         if call_updater:
             self.update(dt=0)
         return self
