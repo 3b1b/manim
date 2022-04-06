@@ -6,11 +6,8 @@ from manimlib.constants import *
 from manimlib.mobject.svg.tex_mobject import SingleStringTex
 from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.iterables import hash_obj
 
 T = TypeVar("T", bound=VMobject)
-
-string_to_mob_map: dict[str, VMobject] = {}
 
 
 class DecimalNumber(VMobject):
@@ -92,9 +89,7 @@ class DecimalNumber(VMobject):
         return self.data["font_size"][0]
 
     def string_to_mob(self, string: str, mob_class: Type[T] = Text, **kwargs) -> T:
-        if (string, hash_obj(kwargs)) not in string_to_mob_map:
-            string_to_mob_map[(string, hash_obj(kwargs))] = mob_class(string, font_size=1, **kwargs)
-        mob = string_to_mob_map[(string, hash_obj(kwargs))].copy()
+        mob = mob_class(string, font_size=1, **kwargs)
         mob.scale(self.get_font_size())
         return mob
 

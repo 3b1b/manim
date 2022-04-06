@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 import colour
 from typing import Union, Sequence
 
@@ -57,7 +56,7 @@ class MTex(LabelledString):
 
     def get_file_path_by_content(self, content: str) -> str:
         full_tex = self.get_tex_file_body(content)
-        with display_during_execution(f"Writing \"{self.string}\""):
+        with display_during_execution(f"Writing \"{self.tex_string}\""):
             file_path = self.tex_to_svg_file_path(full_tex)
         return file_path
 
@@ -116,19 +115,19 @@ class MTex(LabelledString):
             if (span[1] - span[0]) % 2 == 1
         ]
 
-    def get_unescaped_char_spans(self, *chars: str):
+    def get_unescaped_char_spans(self, chars: str):
         return sorted(filter(
             lambda span: span[0] - 1 not in self.backslash_indices,
-            self.find_substr(*chars)
+            self.find_substrs(list(chars))
         ))
 
     def get_brace_index_pairs(self) -> list[Span]:
-        string = self.string
         left_brace_indices = []
         right_brace_indices = []
         left_brace_indices_stack = []
-        for index, _ in self.get_unescaped_char_spans("{", "}"):
-            if string[index] == "{":
+        for span in self.get_unescaped_char_spans("{}"):
+            index = span[0]
+            if self.get_substr(span) == "{":
                 left_brace_indices_stack.append(index)
             else:
                 if not left_brace_indices_stack:
@@ -141,18 +140,18 @@ class MTex(LabelledString):
         return list(zip(left_brace_indices, right_brace_indices))
 
     def get_script_char_spans(self) -> list[int]:
-        return self.get_unescaped_char_spans("_", "^")
+        return self.get_unescaped_char_spans("_^")
 
     def get_script_content_spans(self) -> list[Span]:
         result = []
         brace_indices_dict = dict(self.brace_index_pairs)
+        script_pattern = r"[a-zA-Z0-9]|\\[a-zA-Z]+"
         for script_char_span in self.script_char_spans:
-            span_begin = self.rslide(script_char_span[1], self.space_spans)
+            span_begin = self.match(r"\s*", pos=script_char_span[1]).end()
             if span_begin in brace_indices_dict.keys():
                 span_end = brace_indices_dict[span_begin] + 1
             else:
-                pattern = re.compile(r"[a-zA-Z0-9]|\\[a-zA-Z]+")
-                match_obj = pattern.match(self.string, pos=span_begin)
+                match_obj = self.match(script_pattern, pos=span_begin)
                 if not match_obj:
                     script_name = {
                         "_": "subscript",
@@ -169,7 +168,7 @@ class MTex(LabelledString):
     def get_script_spans(self) -> list[Span]:
         return [
             (
-                self.lslide(script_char_span[0], self.space_spans),
+                self.search(r"\s*$", endpos=script_char_span[0]).start(),
                 script_content_span[1]
             )
             for script_char_span, script_content_span in zip(
@@ -200,7 +199,7 @@ class MTex(LabelledString):
             ")",
             r"(?![a-zA-Z])"
         ])
-        for match_obj in re.finditer(pattern, self.string):
+        for match_obj in self.finditer(pattern):
             span_begin, cmd_end = match_obj.span()
             if span_begin not in backslash_indices:
                 continue
@@ -243,7 +242,7 @@ class MTex(LabelledString):
         return result
 
     def get_external_specified_spans(self) -> list[Span]:
-        return self.find_substr(*self.tex_to_color_map.keys())
+        return self.find_substrs(list(self.tex_to_color_map.keys()))
 
     def get_label_span_list(self) -> list[Span]:
         result = self.script_content_spans.copy()
@@ -284,7 +283,8 @@ class MTex(LabelledString):
             return []
         return self.command_repl_items.copy()
 
-    def get_has_predefined_colors(self) -> bool:
+    @property
+    def has_predefined_colors(self) -> bool:
         return bool(self.command_repl_items)
 
     # Post-parsing

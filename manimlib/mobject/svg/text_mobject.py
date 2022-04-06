@@ -17,7 +17,6 @@ from manimpango import MarkupUtils
 from manimlib.logger import log
 from manimlib.constants import *
 from manimlib.mobject.svg.labelled_string import LabelledString
-from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.customization import get_customization
 from manimlib.utils.tex_file_writing import tex_hash
 from manimlib.utils.config_ops import digest_config
@@ -30,8 +29,10 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from manimlib.mobject.types.vectorized_mobject import VMobject
+    from manimlib.mobject.types.vectorized_mobject import VGroup
     ManimColor = Union[str, colour.Color, Sequence[float]]
     Span = tuple[int, int]
+
 
 TEXT_MOB_SCALE_FACTOR = 0.0076
 DEFAULT_LINE_SPACING_SCALE = 0.6
@@ -313,19 +314,14 @@ class MarkupText(LabelledString):
         if isinstance(substr_or_span, str):
             return self.find_substr(substr_or_span)
 
-        string_len = len(self.string)
-        span_begin, span_end = substr_or_span
-        if span_begin is None:
-            span_begin = 0
-        elif span_begin < 0:
-            span_begin += string_len
-        if span_end is None:
-            span_end = string_len
-        elif span_end < 0:
-            span_end += string_len
-        if span_begin >= span_end:
+        span = tuple([
+            (index if index >= 0 else index + self.string_len)
+            if index is not None else substitute
+            for index, substitute in zip(substr_or_span, self.full_span)
+        ])
+        if span[0] >= span[1]:
             return []
-        return [(span_begin, span_end)]
+        return [span]
 
     # Pre-parsing
 
@@ -339,7 +335,7 @@ class MarkupText(LabelledString):
         attr_pattern = r"""(\w+)\s*\=\s*(['"])(.*?)\2"""
         begin_match_obj_stack = []
         match_obj_pairs = []
-        for match_obj in re.finditer(tag_pattern, self.string):
+        for match_obj in self.finditer(tag_pattern):
             if not match_obj.group(1):
                 begin_match_obj_stack.append(match_obj)
             else:
@@ -475,7 +471,7 @@ class MarkupText(LabelledString):
             breakup_indices
         ))
         return list(filter(
-            lambda span: self.string[slice(*span)].strip(),
+            lambda span: self.get_substr(span).strip(),
             self.get_neighbouring_pairs(breakup_indices)
         ))
 
@@ -511,7 +507,8 @@ class MarkupText(LabelledString):
     ) -> list[tuple[Span, str]]:
         return self.command_repl_items.copy()
 
-    def get_has_predefined_colors(self) -> bool:
+    @property
+    def has_predefined_colors(self) -> bool:
         return any([
             key in COLOR_RELATED_KEYS
             for _, attr_dict in self.predefined_attr_dicts
