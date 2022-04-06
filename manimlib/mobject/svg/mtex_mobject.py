@@ -314,19 +314,21 @@ class MTex(LabelledString):
 
     # Method alias
 
-    def get_parts_by_tex(self, tex: str) -> VGroup:
-        return self.get_parts_by_string(tex)
+    def get_parts_by_tex(self, tex: str, **kwargs) -> VGroup:
+        return self.get_parts_by_string(tex, **kwargs)
 
-    def get_part_by_tex(self, tex: str) -> VMobject:
-        return self.get_part_by_string(tex)
+    def get_part_by_tex(self, tex: str, **kwargs) -> VMobject:
+        return self.get_part_by_string(tex, **kwargs)
 
-    def set_color_by_tex(self, tex: str, color: ManimColor):
-        return self.set_color_by_string(tex, color)
+    def set_color_by_tex(self, tex: str, color: ManimColor, **kwargs):
+        return self.set_color_by_string(tex, color, **kwargs)
 
     def set_color_by_tex_to_color_map(
-        self, tex_to_color_map: dict[str, ManimColor]
+        self, tex_to_color_map: dict[str, ManimColor], **kwargs
     ):
-        return self.set_color_by_string_to_color_map(tex_to_color_map)
+        return self.set_color_by_string_to_color_map(
+            tex_to_color_map, **kwargs
+        )
 
     def get_tex(self) -> str:
         return self.get_string()

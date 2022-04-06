@@ -517,19 +517,21 @@ class MarkupText(LabelledString):
 
     # Method alias
 
-    def get_parts_by_text(self, text: str) -> VGroup:
-        return self.get_parts_by_string(text)
+    def get_parts_by_text(self, text: str, **kwargs) -> VGroup:
+        return self.get_parts_by_string(text, **kwargs)
 
-    def get_part_by_text(self, text: str) -> VMobject:
-        return self.get_part_by_string(text)
+    def get_part_by_text(self, text: str, **kwargs) -> VMobject:
+        return self.get_part_by_string(text, **kwargs)
 
-    def set_color_by_text(self, text: str, color: ManimColor):
-        return self.set_color_by_string(text, color)
+    def set_color_by_text(self, text: str, color: ManimColor, **kwargs):
+        return self.set_color_by_string(text, color, **kwargs)
 
     def set_color_by_text_to_color_map(
-        self, text_to_color_map: dict[str, ManimColor]
+        self, text_to_color_map: dict[str, ManimColor], **kwargs
     ):
-        return self.set_color_by_string_to_color_map(text_to_color_map)
+        return self.set_color_by_string_to_color_map(
+            text_to_color_map, **kwargs
+        )
 
     def get_text(self) -> str:
         return self.get_string()
