@@ -9,8 +9,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/custom.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?07012313fac244023c5ed284">
-    <link rel="stylesheet" href="../_static/pygments.css?07012313fac244023c5ed284">
+    <link rel="stylesheet" href="../_static/styles/default.css?d581e1fd04a09a70a84ea84e">
+    <link rel="stylesheet" href="../_static/pygments.css?d581e1fd04a09a70a84ea84e">
     
 <style>
   :root {
@@ -27,7 +27,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?07012313fac244023c5ed284"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?d581e1fd04a09a70a84ea84e"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -148,6 +148,7 @@
 <li><p>Added a basic <code class="docutils literal notranslate"><span class="pre">Prismify</span></code> to turn a flat <code class="docutils literal notranslate"><span class="pre">VMobject</span></code> into something with depth (<a class="reference external" href="https://github.com/3b1b/manim/pull/1764/commits/f249da95fb65ed5495cd1db1f12ece7e90061af6">#1764</a>)</p></li>
 <li><p>Added <code class="docutils literal notranslate"><span class="pre">GlowDots</span></code>, analogous to <code class="docutils literal notranslate"><span class="pre">GlowDot</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1764/commits/e19f35585d817e74b40bc30b1ab7cee84b24da05">#1764</a>)</p></li>
 <li><p>Added <code class="docutils literal notranslate"><span class="pre">TransformMatchingStrings</span></code> which is compatible with <code class="docutils literal notranslate"><span class="pre">Text</span></code> and <code class="docutils literal notranslate"><span class="pre">MTex</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1772">#1772</a>)</p></li>
+<li><p>Added support for <code class="docutils literal notranslate"><span class="pre">substring</span></code> and <code class="docutils literal notranslate"><span class="pre">case_sensitive</span></code> parameters for <code class="docutils literal notranslate"><span class="pre">LabelledString.get_parts_by_string</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1780">#1780</a>)</p></li>
 </ul>
 </section>
 <section id="refactor">
@@ -157,7 +158,7 @@
 <li><p>Specifid UTF-8 encoding for tex files (<a class="reference external" href="https://github.com/3b1b/manim/pull/1748">#1748</a>)</p></li>
 <li><p>Refactored <code class="docutils literal notranslate"><span class="pre">Text</span></code> with the latest manimpango (<a class="reference external" href="https://github.com/3b1b/manim/pull/1751">#1751</a>)</p></li>
 <li><p>Reorganized getters for <code class="docutils literal notranslate"><span class="pre">ParametricCurve</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1757">#1757</a>)</p></li>
-<li><p>Refactored <code class="docutils literal notranslate"><span class="pre">CameraFrame</span></code> to use <a href="#system-message-1"><span class="problematic" id="problematic-1">``</span></a>scipy.spatial.transform.Rotation `` (<a class="reference external" href="https://github.com/3b1b/manim/pull/1764/commits/625460467fdc01fc1b6621cbb3d2612195daedb9">#1764</a>)</p></li>
+<li><p>Refactored <code class="docutils literal notranslate"><span class="pre">CameraFrame</span></code> to use <code class="docutils literal notranslate"><span class="pre">scipy.spatial.transform.Rotation</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1764/commits/625460467fdc01fc1b6621cbb3d2612195daedb9">#1764</a>)</p></li>
 <li><p>Refactored rotation methods to use <code class="docutils literal notranslate"><span class="pre">scipy.spatial.transform.Rotation</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1764/commits/7bf3615bb15cc6d15506d48ac800a23313054c8e">#1764</a>)</p></li>
 <li><p>Used <code class="docutils literal notranslate"><span class="pre">stroke_color</span></code> to init <code class="docutils literal notranslate"><span class="pre">Arrow</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1764/commits/c0b7b55e49f06b75ae133b5a810bebc28c212cd6">#1764</a>)</p></li>
 <li><p>Refactored <code class="docutils literal notranslate"><span class="pre">Mobject.set_rgba_array_by_color</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1764/commits/8b1f0a8749d91eeda4b674ed156cbc7f8e1e48a8">#1764</a>)</p></li>
@@ -169,6 +170,7 @@
 <li><p>Refactored <code class="docutils literal notranslate"><span class="pre">VCube</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1770/commits/0f8d7ed59751d42d5011813ba5694ecb506082f7">#1770</a>)</p></li>
 <li><p>Refactored <code class="docutils literal notranslate"><span class="pre">Prism</span></code> to receive <code class="docutils literal notranslate"><span class="pre">width</span> <span class="pre">height</span> <span class="pre">depth</span></code> instead of <code class="docutils literal notranslate"><span class="pre">dimensions</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1770/commits/0f8d7ed59751d42d5011813ba5694ecb506082f7">#1770</a>)</p></li>
 <li><p>Refactored <code class="docutils literal notranslate"><span class="pre">Text</span></code>, <code class="docutils literal notranslate"><span class="pre">MarkupText</span></code> and <code class="docutils literal notranslate"><span class="pre">MTex</span></code> based on <code class="docutils literal notranslate"><span class="pre">LabelledString</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1772">#1772</a>)</p></li>
+<li><p>Refactored <code class="docutils literal notranslate"><span class="pre">LabelledString</span></code> and relevant classes (<a class="reference external" href="https://github.com/3b1b/manim/pull/1779">#1779</a>)</p></li>
 </ul>
 </section>
 </section>
