@@ -315,9 +315,13 @@ class MarkupText(LabelledString):
             return self.find_substr(substr_or_span)
 
         span = tuple([
-            (index if index >= 0 else index + self.string_len)
-            if index is not None else substitute
-            for index, substitute in zip(substr_or_span, self.full_span)
+            (
+                min(index, self.string_len)
+                if index >= 0
+                else max(index + self.string_len, 0)
+            )
+            if index is not None else default_index
+            for index, default_index in zip(substr_or_span, self.full_span)
         ])
         if span[0] >= span[1]:
             return []
