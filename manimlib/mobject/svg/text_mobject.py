@@ -315,9 +315,13 @@ class MarkupText(LabelledString):
             return self.find_substr(substr_or_span)
 
         span = tuple([
-            (index if index >= 0 else index + self.string_len)
-            if index is not None else substitute
-            for index, substitute in zip(substr_or_span, self.full_span)
+            (
+                min(index, self.string_len)
+                if index >= 0
+                else max(index + self.string_len, 0)
+            )
+            if index is not None else default_index
+            for index, default_index in zip(substr_or_span, self.full_span)
         ])
         if span[0] >= span[1]:
             return []
@@ -517,19 +521,21 @@ class MarkupText(LabelledString):
 
     # Method alias
 
-    def get_parts_by_text(self, text: str) -> VGroup:
-        return self.get_parts_by_string(text)
+    def get_parts_by_text(self, text: str, **kwargs) -> VGroup:
+        return self.get_parts_by_string(text, **kwargs)
 
-    def get_part_by_text(self, text: str) -> VMobject:
-        return self.get_part_by_string(text)
+    def get_part_by_text(self, text: str, **kwargs) -> VMobject:
+        return self.get_part_by_string(text, **kwargs)
 
-    def set_color_by_text(self, text: str, color: ManimColor):
-        return self.set_color_by_string(text, color)
+    def set_color_by_text(self, text: str, color: ManimColor, **kwargs):
+        return self.set_color_by_string(text, color, **kwargs)
 
     def set_color_by_text_to_color_map(
-        self, text_to_color_map: dict[str, ManimColor]
+        self, text_to_color_map: dict[str, ManimColor], **kwargs
     ):
-        return self.set_color_by_string_to_color_map(text_to_color_map)
+        return self.set_color_by_string_to_color_map(
+            text_to_color_map, **kwargs
+        )
 
     def get_text(self) -> str:
         return self.get_string()
