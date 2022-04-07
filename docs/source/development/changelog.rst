@@ -23,6 +23,7 @@ New features
 - Added a basic ``Prismify`` to turn a flat ``VMobject`` into something with depth (`#1764 <https://github.com/3b1b/manim/pull/1764/commits/f249da95fb65ed5495cd1db1f12ece7e90061af6>`__)
 - Added ``GlowDots``, analogous to ``GlowDot`` (`#1764 <https://github.com/3b1b/manim/pull/1764/commits/e19f35585d817e74b40bc30b1ab7cee84b24da05>`__)
 - Added ``TransformMatchingStrings`` which is compatible with ``Text`` and ``MTex`` (`#1772 <https://github.com/3b1b/manim/pull/1772>`__)
+- Added support for ``substring`` and ``case_sensitive`` parameters for ``LabelledString.get_parts_by_string`` (`#1780 <https://github.com/3b1b/manim/pull/1780>`__) 
 
 
 Refactor
@@ -31,7 +32,7 @@ Refactor
 - Specifid UTF-8 encoding for tex files (`#1748 <https://github.com/3b1b/manim/pull/1748>`__)
 - Refactored ``Text`` with the latest manimpango (`#1751 <https://github.com/3b1b/manim/pull/1751>`__)
 - Reorganized getters for ``ParametricCurve`` (`#1757 <https://github.com/3b1b/manim/pull/1757>`__)
-- Refactored ``CameraFrame`` to use ``scipy.spatial.transform.Rotation `` (`#1764 <https://github.com/3b1b/manim/pull/1764/commits/625460467fdc01fc1b6621cbb3d2612195daedb9>`__)
+- Refactored ``CameraFrame`` to use ``scipy.spatial.transform.Rotation`` (`#1764 <https://github.com/3b1b/manim/pull/1764/commits/625460467fdc01fc1b6621cbb3d2612195daedb9>`__)
 - Refactored rotation methods to use ``scipy.spatial.transform.Rotation`` (`#1764 <https://github.com/3b1b/manim/pull/1764/commits/7bf3615bb15cc6d15506d48ac800a23313054c8e>`__)
 - Used ``stroke_color`` to init ``Arrow`` (`#1764 <https://github.com/3b1b/manim/pull/1764/commits/c0b7b55e49f06b75ae133b5a810bebc28c212cd6>`__)
 - Refactored ``Mobject.set_rgba_array_by_color`` (`#1764 <https://github.com/3b1b/manim/pull/1764/commits/8b1f0a8749d91eeda4b674ed156cbc7f8e1e48a8>`__)
@@ -43,6 +44,7 @@ Refactor
 - Refactored ``VCube`` (`#1770 <https://github.com/3b1b/manim/pull/1770/commits/0f8d7ed59751d42d5011813ba5694ecb506082f7>`__)
 - Refactored ``Prism`` to receive ``width height depth`` instead of ``dimensions`` (`#1770 <https://github.com/3b1b/manim/pull/1770/commits/0f8d7ed59751d42d5011813ba5694ecb506082f7>`__)
 - Refactored ``Text``, ``MarkupText`` and ``MTex`` based on ``LabelledString`` (`#1772 <https://github.com/3b1b/manim/pull/1772>`__)
+- Refactored ``LabelledString`` and relevant classes (`#1779 <https://github.com/3b1b/manim/pull/1779>`__)
 
 
 v1.5.0
