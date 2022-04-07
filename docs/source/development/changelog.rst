@@ -13,6 +13,7 @@ Fixed bugs
 - Fixed the width of riemann rectangles (`#1762 <https://github.com/3b1b/manim/pull/1762>`__)
 - Bug fixed in cases where empty array is passed to shader (`#1764 <https://github.com/3b1b/manim/pull/1764/commits/fa38b56fd87f713657c7f778f39dca7faf15baa8>`__)
 - Fixed ``AddTextWordByWord`` (`#1772 <https://github.com/3b1b/manim/pull/1772>`__)
+- Fixed ``ControlsExample`` (`#1781 <https://github.com/3b1b/manim/pull/1781>`__)
 
 
 New features
