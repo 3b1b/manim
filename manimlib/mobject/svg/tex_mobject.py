@@ -100,6 +100,18 @@ class SingleStringTex(SVGMobject):
             filler = "{\\quad}"
             tex += filler
 
+        should_add_double_filler = reduce(op.or_, [
+            tex == "\\overset",
+            # TODO: these can't be used since they change
+            # the latex draw order.
+            # tex == "\\frac", # you can use \\over as a alternative 
+            # tex == "\\dfrac",
+            # tex == "\\binom",
+        ])
+        if should_add_double_filler:
+            filler = "{\\quad}{\\quad}"
+            tex += filler
+
         if tex == "\\substack":
             tex = "\\quad"
 
