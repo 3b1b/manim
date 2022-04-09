@@ -678,15 +678,18 @@ class Arrow(Line):
             arc_len *= self.path_arc / (2 * math.sin(self.path_arc / 2))
         return arc_len
 
-    def insert_tip_anchor(self):
-        prev_end = self.get_end()
+    def get_alpha(self):
         arc_len = self.get_arc_length()
         tip_len = self.get_stroke_width() * self.width_to_tip_len * self.tip_width_ratio
         if tip_len >= self.max_tip_length_to_length_ratio * arc_len:
-            alpha = self.max_tip_length_to_length_ratio
+            return self.max_tip_length_to_length_ratio 
         else:
-            alpha = tip_len / arc_len
-        self.pointwise_become_partial(self, 0, 1 - alpha)
+            return tip_len / arc_len
+    
+    def insert_tip_anchor(self):
+        prev_end = self.get_start()
+        alpha=self.get_alpha()
+        self.pointwise_become_partial(self, 1-alpha, 1)
         self.add_line_to(prev_end)
         return self
 
@@ -705,10 +708,10 @@ class Arrow(Line):
             self.set_stroke(width=widths_array)
         return self
 
-    def reset_tip(self):
+   def reset_tip(self):
         self.set_points_by_ends(
-            self.get_start(),
             self.get_end(),
+            (self.get_start()-self.get_end())*(1+self.get_alpha())+self.get_end(),#fix the start point
             path_arc=self.path_arc,
         )
         self.create_tip_with_stroke_width()
