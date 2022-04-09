@@ -708,7 +708,7 @@ class Arrow(Line):
             self.set_stroke(width=widths_array)
         return self
 
-   def reset_tip(self):
+    def reset_tip(self):
         self.set_points_by_ends(
             self.get_end(),
             (self.get_start()-self.get_end())*(1+self.get_alpha())+self.get_end(),#fix the start point
