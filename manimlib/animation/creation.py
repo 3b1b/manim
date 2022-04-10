@@ -6,7 +6,6 @@ from abc import abstractmethod
 import numpy as np
 
 from manimlib.animation.animation import Animation
-from manimlib.animation.composition import Succession
 from manimlib.mobject.svg.labelled_string import LabelledString
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.bezier import integer_interpolate
