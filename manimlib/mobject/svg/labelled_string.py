@@ -520,14 +520,17 @@ class LabelledString(_StringSVG):
         ])
 
     def get_parts_by_string(
-        self, substr: str, case_sensitive: bool = True, **kwargs
+        self, substr: str,
+        case_sensitive: bool = True, regex: bool = False, **kwargs
     ) -> VGroup:
         flags = 0
         if not case_sensitive:
             flags |= re.I
+        pattern = substr if regex else re.escape(substr)
         return VGroup(*[
             self.get_part_by_custom_span(span, **kwargs)
-            for span in self.find_substr(substr, flags=flags)
+            for span in self.find_spans(pattern, flags=flags)
+            if span[0] < span[1]
         ])
 
     def get_part_by_string(
