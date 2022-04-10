@@ -485,12 +485,12 @@ class MarkupText(LabelledString):
         if not use_plain_file:
             attr_dict_items = [
                 (span, {
-                    key: WHITE if key in COLOR_RELATED_KEYS else val
+                    key: BLACK if key in COLOR_RELATED_KEYS else val
                     for key, val in attr_dict.items()
                 })
                 for span, attr_dict in self.predefined_attr_dicts
             ] + [
-                (span, {"foreground": self.rgb_int_to_hex(label)})
+                (span, {"foreground": self.rgb_int_to_hex(label + 1)})
                 for label, span in enumerate(self.label_span_list)
             ]
         else:

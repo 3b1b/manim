@@ -209,7 +209,7 @@ class MTex(LabelledString):
                 right_brace_indices, cmd_end, n_braces
             ) + 1
             if substitute_cmd:
-                repl_str = "\\" + cmd_name + n_braces * "{white}"
+                repl_str = "\\" + cmd_name + n_braces * "{black}"
             else:
                 repl_str = ""
             result.append(((span_begin, span_end), repl_str))
@@ -270,7 +270,7 @@ class MTex(LabelledString):
         ]
         return [
             (span, (
-                self.get_begin_color_command_str(label),
+                self.get_begin_color_command_str(label + 1),
                 self.get_end_color_command_str()
             ))
             for label, span in enumerate(extended_label_span_list)
