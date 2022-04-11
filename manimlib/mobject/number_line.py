@@ -7,6 +7,7 @@ from manimlib.mobject.geometry import Line
 from manimlib.mobject.numbers import DecimalNumber
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.bezier import interpolate
+from manimlib.utils.bezier import outer_interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.config_ops import merge_dicts_recursively
 from manimlib.utils.simple_functions import fdiv
@@ -106,7 +107,7 @@ class NumberLine(Line):
 
     def number_to_point(self, number: float | np.ndarray) -> np.ndarray:
         alpha = (number - self.x_min) / (self.x_max - self.x_min)
-        return interpolate(self.get_start(), self.get_end(), alpha)
+        return outer_interpolate(self.get_start(), self.get_end(), alpha)
 
     def point_to_number(self, point: np.ndarray) -> float:
         points = self.get_points()

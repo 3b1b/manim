@@ -80,21 +80,25 @@ def partial_quadratic_bezier_points(
 
 # Linear interpolation variants
 
-def interpolate(start: T, end: T, alpha: float) -> T:
+
+def interpolate(start: T, end: T, alpha: np.ndarray | float) -> T:
     try:
-        if isinstance(alpha, float):
-            return (1 - alpha) * start + alpha * end
-        # Otherwise, assume alpha is a list or array, and return
-        # an appropriated shaped array of all corresponding
-        # interpolations
-        result = np.outer(1 - alpha, start) + np.outer(alpha, end)
-        return result.reshape((*np.shape(alpha), *np.shape(start)))
+        return (1 - alpha) * start + alpha * end
     except TypeError:
         log.debug(f"`start` parameter with type `{type(start)}` and dtype `{start.dtype}`")
         log.debug(f"`end` parameter with type `{type(end)}` and dtype `{end.dtype}`")
         log.debug(f"`alpha` parameter with value `{alpha}`")
         import sys
         sys.exit(2)
+
+
+def outer_interpolate(
+    start: np.ndarray | float,
+    end: np.ndarray | float,
+    alpha: np.ndarray | float,
+) -> T:
+    result = np.outer(1 - alpha, start) + np.outer(alpha, end)
+    return result.reshape((*np.shape(alpha), *np.shape(start)))
 
 
 def set_array_by_interpolation(
