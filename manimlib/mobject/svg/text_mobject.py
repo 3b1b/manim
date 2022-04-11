@@ -255,27 +255,6 @@ class MarkupText(LabelledString):
         ])
 
     @staticmethod
-    def get_begin_tag_str(attr_dict: dict[str, str]) -> str:
-        return f"<span {MarkupText.get_attr_dict_str(attr_dict)}>"
-
-    @staticmethod
-    def get_end_tag_str() -> str:
-        return "</span>"
-
-    @staticmethod
-    def rgb_int_to_hex(rgb_int: int) -> str:
-        return "#{:06x}".format(rgb_int).upper()
-
-    @staticmethod
-    def get_begin_color_command_str(rgb_int: int):
-        color_hex = MarkupText.rgb_int_to_hex(rgb_int)
-        return MarkupText.get_begin_tag_str({"foreground": color_hex})
-
-    @staticmethod
-    def get_end_color_command_str() -> str:
-        return MarkupText.get_end_tag_str()
-
-    @staticmethod
     def merge_attr_dicts(
         attr_dict_items: list[Span, str, typing.Any]
     ) -> list[tuple[Span, dict[str, str]]]:
@@ -452,6 +431,14 @@ class MarkupText(LabelledString):
             ]
         return result
 
+    def get_extra_entity_spans(self) -> list[Span]:
+        if not self.is_markup:
+            return []
+        return self.find_spans(r"&.*?;")
+
+    def get_extra_ignored_spans(self) -> list[int]:
+        return []
+
     def get_internal_specified_spans(self) -> list[Span]:
         return [span for span, _ in self.local_dicts_from_markup]
 
@@ -464,13 +451,10 @@ class MarkupText(LabelledString):
             self.find_spans(r"\b"),
             self.specified_spans
         ))))
-        entity_spans = self.command_spans.copy()
-        if self.is_markup:
-            entity_spans += self.find_spans(r"&.*?;")
         breakup_indices = sorted(filter(
             lambda index: not any([
                 span[0] < index < span[1]
-                for span in entity_spans
+                for span in self.entity_spans
             ]),
             breakup_indices
         ))
@@ -479,40 +463,45 @@ class MarkupText(LabelledString):
             self.get_neighbouring_pairs(breakup_indices)
         ))
 
-    def get_inserted_string_pairs(
-        self, use_plain_file: bool
-    ) -> list[tuple[Span, tuple[str, str]]]:
-        if not use_plain_file:
+    def get_content(self, use_plain_file: bool) -> str:
+        if use_plain_file:
             attr_dict_items = [
-                (span, {
-                    key: BLACK if key in COLOR_RELATED_KEYS else val
-                    for key, val in attr_dict.items()
-                })
-                for span, attr_dict in self.predefined_attr_dicts
-            ] + [
-                (span, {"foreground": self.rgb_int_to_hex(label + 1)})
-                for label, span in enumerate(self.label_span_list)
+                (self.full_span, {"foreground": self.base_color}),
+                *self.predefined_attr_dicts,
+                *[
+                    (span, {})
+                    for span in self.label_span_list
+                ]
             ]
         else:
-            attr_dict_items = self.predefined_attr_dicts + [
-                (span, {})
-                for span in self.label_span_list
+            attr_dict_items = [
+                (self.full_span, {"foreground": BLACK}),
+                *[
+                    (span, {
+                        key: BLACK if key in COLOR_RELATED_KEYS else val
+                        for key, val in attr_dict.items()
+                    })
+                    for span, attr_dict in self.predefined_attr_dicts
+                ],
+                *[
+                    (span, {"foreground": self.int_to_hex(label + 1)})
+                    for label, span in enumerate(self.label_span_list)
+                ]
             ]
-        return [
+        inserted_string_pairs = [
             (span, (
-                self.get_begin_tag_str(attr_dict),
-                self.get_end_tag_str()
+                f"<span {self.get_attr_dict_str(attr_dict)}>",
+                "</span>"
             ))
             for span, attr_dict in self.merge_attr_dicts(attr_dict_items)
         ]
-
-    def get_other_repl_items(
-        self, use_plain_file: bool
-    ) -> list[tuple[Span, str]]:
-        return self.command_repl_items.copy()
+        span_repl_dict = self.generate_span_repl_dict(
+            inserted_string_pairs, self.command_repl_items
+        )
+        return self.get_replaced_substr(self.full_span, span_repl_dict)
 
     @property
-    def has_predefined_colors(self) -> bool:
+    def has_predefined_local_colors(self) -> bool:
         return any([
             key in COLOR_RELATED_KEYS
             for _, attr_dict in self.predefined_attr_dicts

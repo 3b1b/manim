@@ -4,12 +4,14 @@ import re
 import colour
 import itertools as it
 from typing import Iterable, Union, Sequence
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
-from manimlib.constants import WHITE
+from manimlib.constants import BLACK, WHITE
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.color import color_to_int_rgb
+from manimlib.utils.color import color_to_rgb
+from manimlib.utils.color import rgb_to_hex
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import remove_list_redundancies
 
@@ -34,36 +36,39 @@ class _StringSVG(SVGMobject):
     }
 
 
-class LabelledString(_StringSVG):
+class LabelledString(_StringSVG, ABC):
     """
     An abstract base class for `MTex` and `MarkupText`
     """
     CONFIG = {
-        "base_color": None,
+        "base_color": WHITE,
         "use_plain_file": False,
         "isolate": [],
     }
 
     def __init__(self, string: str, **kwargs):
         self.string = string
-        reserved_svg_default = kwargs.pop("svg_default", {})
         digest_config(self, kwargs)
-        self.reserved_svg_default = reserved_svg_default
-        self.base_color = self.base_color \
-            or reserved_svg_default.get("color", None) \
-            or reserved_svg_default.get("fill_color", None) \
+
+        # Convert `base_color` to hex code.
+        self.base_color = rgb_to_hex(color_to_rgb(
+            self.base_color \
+            or self.svg_default.get("color", None) \
+            or self.svg_default.get("fill_color", None) \
             or WHITE
+        ))
+        self.svg_default["fill_color"] = BLACK
 
         self.pre_parse()
         self.parse()
-        super().__init__(**kwargs)
+        super().__init__()
         self.post_parse()
 
     def get_file_path(self) -> str:
         return self.get_file_path_(use_plain_file=False)
 
     def get_file_path_(self, use_plain_file: bool) -> str:
-        content = self.get_decorated_string(use_plain_file=use_plain_file)
+        content = self.get_content(use_plain_file)
         return self.get_file_path_by_content(content)
 
     @abstractmethod
@@ -77,15 +82,11 @@ class LabelledString(_StringSVG):
             self.color_to_label(submob.get_fill_color())
             for submob in self.submobjects
         ]
-        if any([
-            self.use_plain_file,
-            self.reserved_svg_default,
-            self.has_predefined_colors
-        ]):
+        if self.use_plain_file or self.has_predefined_local_colors:
             file_path = self.get_file_path_(use_plain_file=True)
             plain_svg = _StringSVG(
                 file_path,
-                svg_default=self.reserved_svg_default,
+                svg_default=self.svg_default,
                 path_string_config=self.path_string_config
             )
             self.set_submobjects(plain_svg.submobjects)
@@ -101,7 +102,9 @@ class LabelledString(_StringSVG):
     def parse(self) -> None:
         self.command_repl_items = self.get_command_repl_items()
         self.command_spans = self.get_command_spans()
-        self.ignored_spans = self.get_ignored_spans()
+        self.extra_entity_spans = self.get_extra_entity_spans()
+        self.entity_spans = self.get_entity_spans()
+        self.extra_ignored_spans = self.get_extra_ignored_spans()
         self.skipped_spans = self.get_skipped_spans()
         self.internal_specified_spans = self.get_internal_specified_spans()
         self.external_specified_spans = self.get_external_specified_spans()
@@ -216,7 +219,7 @@ class LabelledString(_StringSVG):
         return sorted_seq[index + index_shift]
 
     @staticmethod
-    def get_span_replacement_dict(
+    def generate_span_repl_dict(
         inserted_string_pairs: list[tuple[Span, tuple[str, str]]],
         other_repl_items: list[tuple[Span, str]]
     ) -> dict[Span, str]:
@@ -291,18 +294,18 @@ class LabelledString(_StringSVG):
         return r, g, b
 
     @staticmethod
+    def int_to_hex(rgb_int: int) -> str:
+        return "#{:06x}".format(rgb_int).upper()
+
+    @staticmethod
+    def hex_to_int(rgb_hex: str) -> int:
+        return int(rgb_hex[1:], 16)
+
+    @staticmethod
     def color_to_label(color: ManimColor) -> int:
         rgb_tuple = color_to_int_rgb(color)
         rgb = LabelledString.rgb_to_int(rgb_tuple)
         return rgb - 1
-
-    @abstractmethod
-    def get_begin_color_command_str(int_rgb: int) -> str:
-        return ""
-
-    @abstractmethod
-    def get_end_color_command_str() -> str:
-        return ""
 
     # Parsing
 
@@ -313,14 +316,25 @@ class LabelledString(_StringSVG):
     def get_command_spans(self) -> list[Span]:
         return [cmd_span for cmd_span, _ in self.command_repl_items]
 
-    def get_ignored_spans(self) -> list[int]:
+    @abstractmethod
+    def get_extra_entity_spans(self) -> list[Span]:
+        return []
+
+    def get_entity_spans(self) -> list[Span]:
+        return list(it.chain(
+            self.command_spans,
+            self.extra_entity_spans
+        ))
+
+    @abstractmethod
+    def get_extra_ignored_spans(self) -> list[int]:
         return []
 
     def get_skipped_spans(self) -> list[Span]:
         return list(it.chain(
             self.find_spans(r"\s"),
             self.command_spans,
-            self.ignored_spans
+            self.extra_ignored_spans
         ))
 
     def shrink_span(self, span: Span) -> Span:
@@ -344,7 +358,11 @@ class LabelledString(_StringSVG):
             self.find_substrs(self.isolate)
         ))
         shrinked_spans = list(filter(
-            lambda span: span[0] < span[1],
+            lambda span: span[0] < span[1] and not any([
+                entity_span[0] < index < entity_span[1]
+                for index in span
+                for entity_span in self.entity_spans
+            ]),
             [self.shrink_span(span) for span in spans]
         ))
         return remove_list_redundancies(shrinked_spans)
@@ -363,36 +381,11 @@ class LabelledString(_StringSVG):
             )
 
     @abstractmethod
-    def get_inserted_string_pairs(
-        self, use_plain_file: bool
-    ) -> list[tuple[Span, tuple[str, str]]]:
-        return []
+    def get_content(self, use_plain_file: bool) -> str:
+        return ""
 
     @abstractmethod
-    def get_other_repl_items(
-        self, use_plain_file: bool
-    ) -> list[tuple[Span, str]]:
-        return []
-
-    def get_decorated_string(self, use_plain_file: bool) -> str:
-        span_repl_dict = self.get_span_replacement_dict(
-            self.get_inserted_string_pairs(use_plain_file),
-            self.get_other_repl_items(use_plain_file)
-        )
-        result = self.get_replaced_substr(self.full_span, span_repl_dict)
-
-        if not use_plain_file:
-            return result
-        return "".join([
-            self.get_begin_color_command_str(
-                self.rgb_to_int(color_to_int_rgb(self.base_color))
-            ),
-            result,
-            self.get_end_color_command_str()
-        ])
-
-    @abstractmethod
-    def has_predefined_colors(self) -> bool:
+    def has_predefined_local_colors(self) -> bool:
         return False
 
     # Post-parsing
