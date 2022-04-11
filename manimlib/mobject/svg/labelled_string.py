@@ -4,12 +4,14 @@ import re
 import colour
 import itertools as it
 from typing import Iterable, Union, Sequence
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
-from manimlib.constants import WHITE
+from manimlib.constants import BLACK, WHITE
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.color import color_to_int_rgb
+from manimlib.utils.color import color_to_rgb
+from manimlib.utils.color import rgb_to_hex
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import remove_list_redundancies
 
@@ -34,35 +36,39 @@ class _StringSVG(SVGMobject):
     }
 
 
-class LabelledString(_StringSVG):
+class LabelledString(_StringSVG, ABC):
     """
     An abstract base class for `MTex` and `MarkupText`
     """
     CONFIG = {
-        "base_color": None,
+        "base_color": WHITE,
         "use_plain_file": False,
         "isolate": [],
     }
 
     def __init__(self, string: str, **kwargs):
         self.string = string
-        reserved_svg_default = kwargs.pop("svg_default", {})
         digest_config(self, kwargs)
-        self.reserved_svg_default = reserved_svg_default
-        self.base_color = self.base_color \
-            or reserved_svg_default.get("color", None) \
-            or reserved_svg_default.get("fill_color", None) \
+
+        # Convert `base_color` to hex code.
+        self.base_color = rgb_to_hex(color_to_rgb(
+            self.base_color \
+            or self.svg_default.get("color", None) \
+            or self.svg_default.get("fill_color", None) \
             or WHITE
+        ))
+        self.svg_default["fill_color"] = BLACK
 
         self.pre_parse()
         self.parse()
-        super().__init__(**kwargs)
+        super().__init__()
+        self.post_parse()
 
     def get_file_path(self) -> str:
         return self.get_file_path_(use_plain_file=False)
 
     def get_file_path_(self, use_plain_file: bool) -> str:
-        content = self.get_decorated_string(use_plain_file=use_plain_file)
+        content = self.get_content(use_plain_file)
         return self.get_file_path_by_content(content)
 
     @abstractmethod
@@ -76,15 +82,11 @@ class LabelledString(_StringSVG):
             self.color_to_label(submob.get_fill_color())
             for submob in self.submobjects
         ]
-        if any([
-            self.use_plain_file,
-            self.reserved_svg_default,
-            self.has_predefined_colors
-        ]):
+        if self.use_plain_file or self.has_predefined_local_colors:
             file_path = self.get_file_path_(use_plain_file=True)
             plain_svg = _StringSVG(
                 file_path,
-                svg_default=self.reserved_svg_default,
+                svg_default=self.svg_default,
                 path_string_config=self.path_string_config
             )
             self.set_submobjects(plain_svg.submobjects)
@@ -100,13 +102,29 @@ class LabelledString(_StringSVG):
     def parse(self) -> None:
         self.command_repl_items = self.get_command_repl_items()
         self.command_spans = self.get_command_spans()
-        self.ignored_spans = self.get_ignored_spans()
+        self.extra_entity_spans = self.get_extra_entity_spans()
+        self.entity_spans = self.get_entity_spans()
+        self.extra_ignored_spans = self.get_extra_ignored_spans()
         self.skipped_spans = self.get_skipped_spans()
         self.internal_specified_spans = self.get_internal_specified_spans()
         self.external_specified_spans = self.get_external_specified_spans()
         self.specified_spans = self.get_specified_spans()
         self.label_span_list = self.get_label_span_list()
         self.check_overlapping()
+
+    def post_parse(self) -> None:
+        self.labelled_submobject_items = [
+            (submob.label, submob)
+            for submob in self.submobjects
+        ]
+        self.labelled_submobjects = self.get_labelled_submobjects()
+        self.specified_substrs = self.get_specified_substrs()
+        self.group_items = self.get_group_items()
+        self.group_substrs = self.get_group_substrs()
+        self.submob_groups = self.get_submob_groups()
+
+    def copy(self):
+        return self.deepcopy()
 
     # Toolkits
 
@@ -118,10 +136,14 @@ class LabelledString(_StringSVG):
     ) -> Iterable[re.Match]:
         return re.compile(pattern, flags).finditer(self.string, **kwargs)
 
-    def search(self, pattern: str, flags: int = 0, **kwargs) -> re.Match:
+    def search(
+        self, pattern: str, flags: int = 0, **kwargs
+    ) -> re.Match | None:
         return re.compile(pattern, flags).search(self.string, **kwargs)
 
-    def match(self, pattern: str, flags: int = 0, **kwargs) -> re.Match:
+    def match(
+        self, pattern: str, flags: int = 0, **kwargs
+    ) -> re.Match | None:
         return re.compile(pattern, flags).match(self.string, **kwargs)
 
     def find_spans(self, pattern: str, **kwargs) -> list[Span]:
@@ -197,7 +219,7 @@ class LabelledString(_StringSVG):
         return sorted_seq[index + index_shift]
 
     @staticmethod
-    def get_span_replacement_dict(
+    def generate_span_repl_dict(
         inserted_string_pairs: list[tuple[Span, tuple[str, str]]],
         other_repl_items: list[tuple[Span, str]]
     ) -> dict[Span, str]:
@@ -272,20 +294,18 @@ class LabelledString(_StringSVG):
         return r, g, b
 
     @staticmethod
+    def int_to_hex(rgb_int: int) -> str:
+        return "#{:06x}".format(rgb_int).upper()
+
+    @staticmethod
+    def hex_to_int(rgb_hex: str) -> int:
+        return int(rgb_hex[1:], 16)
+
+    @staticmethod
     def color_to_label(color: ManimColor) -> int:
         rgb_tuple = color_to_int_rgb(color)
         rgb = LabelledString.rgb_to_int(rgb_tuple)
-        if rgb == 16777215:  # white
-            return -1
-        return rgb
-
-    @abstractmethod
-    def get_begin_color_command_str(int_rgb: int) -> str:
-        return ""
-
-    @abstractmethod
-    def get_end_color_command_str() -> str:
-        return ""
+        return rgb - 1
 
     # Parsing
 
@@ -296,14 +316,25 @@ class LabelledString(_StringSVG):
     def get_command_spans(self) -> list[Span]:
         return [cmd_span for cmd_span, _ in self.command_repl_items]
 
-    def get_ignored_spans(self) -> list[int]:
+    @abstractmethod
+    def get_extra_entity_spans(self) -> list[Span]:
+        return []
+
+    def get_entity_spans(self) -> list[Span]:
+        return list(it.chain(
+            self.command_spans,
+            self.extra_entity_spans
+        ))
+
+    @abstractmethod
+    def get_extra_ignored_spans(self) -> list[int]:
         return []
 
     def get_skipped_spans(self) -> list[Span]:
         return list(it.chain(
             self.find_spans(r"\s"),
             self.command_spans,
-            self.ignored_spans
+            self.extra_ignored_spans
         ))
 
     def shrink_span(self, span: Span) -> Span:
@@ -321,14 +352,17 @@ class LabelledString(_StringSVG):
         return []
 
     def get_specified_spans(self) -> list[Span]:
-        spans = [
-            self.full_span,
-            *self.internal_specified_spans,
-            *self.external_specified_spans,
-            *self.find_substrs(self.isolate)
-        ]
+        spans = list(it.chain(
+            self.internal_specified_spans,
+            self.external_specified_spans,
+            self.find_substrs(self.isolate)
+        ))
         shrinked_spans = list(filter(
-            lambda span: span[0] < span[1],
+            lambda span: span[0] < span[1] and not any([
+                entity_span[0] < index < entity_span[1]
+                for index in span
+                for entity_span in self.entity_spans
+            ]),
             [self.shrink_span(span) for span in spans]
         ))
         return remove_list_redundancies(shrinked_spans)
@@ -347,39 +381,17 @@ class LabelledString(_StringSVG):
             )
 
     @abstractmethod
-    def get_inserted_string_pairs(
-        self, use_plain_file: bool
-    ) -> list[tuple[Span, tuple[str, str]]]:
-        return []
+    def get_content(self, use_plain_file: bool) -> str:
+        return ""
 
     @abstractmethod
-    def get_other_repl_items(
-        self, use_plain_file: bool
-    ) -> list[tuple[Span, str]]:
-        return []
-
-    def get_decorated_string(self, use_plain_file: bool) -> str:
-        span_repl_dict = self.get_span_replacement_dict(
-            self.get_inserted_string_pairs(use_plain_file),
-            self.get_other_repl_items(use_plain_file)
-        )
-        result = self.get_replaced_substr(self.full_span, span_repl_dict)
-
-        if not use_plain_file:
-            return result
-        return "".join([
-            self.get_begin_color_command_str(
-                self.rgb_to_int(color_to_int_rgb(self.base_color))
-            ),
-            result,
-            self.get_end_color_command_str()
-        ])
-
-    @abstractmethod
-    def has_predefined_colors(self) -> bool:
+    def has_predefined_local_colors(self) -> bool:
         return False
 
     # Post-parsing
+
+    def get_labelled_submobjects(self) -> list[VMobject]:
+        return [submob for _, submob in self.labelled_submobject_items]
 
     def get_cleaned_substr(self, span: Span) -> str:
         span_repl_dict = dict.fromkeys(self.command_spans, "")
@@ -391,17 +403,14 @@ class LabelledString(_StringSVG):
             for span in self.specified_spans
         ])
 
-    def get_group_span_items(self) -> tuple[list[int], list[Span]]:
-        submob_labels = [submob.label for submob in self.submobjects]
-        if not submob_labels:
-            return [], []
-        return tuple(zip(*self.compress_neighbours(submob_labels)))
-
-    def get_group_substrs(self) -> list[str]:
-        group_labels, _ = self.get_group_span_items()
-        if not group_labels:
+    def get_group_items(self) -> list[tuple[str, VGroup]]:
+        if not self.labelled_submobject_items:
             return []
 
+        labels, labelled_submobjects = zip(*self.labelled_submobject_items)
+        group_labels, labelled_submob_spans = zip(
+            *self.compress_neighbours(labels)
+        )
         ordered_spans = [
             self.label_span_list[label] if label != -1 else self.full_span
             for label in group_labels
@@ -425,16 +434,27 @@ class LabelledString(_StringSVG):
                 interval_spans, (ordered_spans[0][0], ordered_spans[-1][1])
             )
         ]
-        return [
+        group_substrs = [
             self.get_cleaned_substr(span) if span[0] < span[1] else ""
             for span in shrinked_spans
         ]
+        submob_groups = VGroup(*[
+            VGroup(*labelled_submobjects[slice(*submob_span)])
+            for submob_span in labelled_submob_spans
+        ])
+        return list(zip(group_substrs, submob_groups))
 
-    def get_submob_groups(self) -> VGroup:
-        _, submob_spans = self.get_group_span_items()
+    def get_group_substrs(self) -> list[str]:
+        return [group_substr for group_substr, _ in self.group_items]
+
+    def get_submob_groups(self) -> list[VGroup]:
+        return [submob_group for _, submob_group in self.group_items]
+
+    def get_parts_by_group_substr(self, substr: str) -> VGroup:
         return VGroup(*[
-            VGroup(*self.submobjects[slice(*submob_span)])
-            for submob_span in submob_spans
+            group
+            for group_substr, group in self.group_items
+            if group_substr == substr
         ])
 
     # Selector
@@ -477,7 +497,7 @@ class LabelledString(_StringSVG):
             span_begin = next_begin
         return result
 
-    def get_parts_by_custom_span(self, custom_span: Span, **kwargs) -> VGroup:
+    def get_part_by_custom_span(self, custom_span: Span, **kwargs) -> VGroup:
         labels = [
             label for label, span in enumerate(self.label_span_list)
             if any([
@@ -487,29 +507,23 @@ class LabelledString(_StringSVG):
                 )
             ])
         ]
-        return VGroup(*filter(
-            lambda submob: submob.label in labels,
-            self.submobjects
-        ))
+        return VGroup(*[
+            submob for label, submob in self.labelled_submobject_items
+            if label in labels
+        ])
 
     def get_parts_by_string(
-        self, substr: str, case_sensitive: bool = True, **kwargs
+        self, substr: str,
+        case_sensitive: bool = True, regex: bool = False, **kwargs
     ) -> VGroup:
         flags = 0
         if not case_sensitive:
             flags |= re.I
+        pattern = substr if regex else re.escape(substr)
         return VGroup(*[
-            self.get_parts_by_custom_span(span, **kwargs)
-            for span in self.find_substr(substr, flags=flags)
-        ])
-
-    def get_parts_by_group_substr(self, substr: str) -> VGroup:
-        return VGroup(*[
-            group
-            for group, group_substr in zip(
-                self.get_submob_groups(), self.get_group_substrs()
-            )
-            if group_substr == substr
+            self.get_part_by_custom_span(span, **kwargs)
+            for span in self.find_spans(pattern, flags=flags)
+            if span[0] < span[1]
         ])
 
     def get_part_by_string(
@@ -527,14 +541,6 @@ class LabelledString(_StringSVG):
         for substr, color in string_to_color_map.items():
             self.set_color_by_string(substr, color, **kwargs)
         return self
-
-    def indices_of_part(self, part: Iterable[VMobject]) -> list[int]:
-        return [self.submobjects.index(submob) for submob in part]
-
-    def indices_lists_of_parts(
-        self, parts: Iterable[Iterable[VMobject]]
-    ) -> list[list[int]]:
-        return [self.indices_of_part(part) for part in parts]
 
     def get_string(self) -> str:
         return self.string

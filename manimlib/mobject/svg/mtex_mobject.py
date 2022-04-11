@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools as it
 import colour
 from typing import Union, Sequence
 
@@ -32,7 +33,7 @@ class MTex(LabelledString):
     def __init__(self, tex_string: str, **kwargs):
         # Prevent from passing an empty string.
         if not tex_string:
-            tex_string = "\\quad"
+            tex_string = "\\\\"
         self.tex_string = tex_string
         super().__init__(tex_string, **kwargs)
 
@@ -55,30 +56,14 @@ class MTex(LabelledString):
         )
 
     def get_file_path_by_content(self, content: str) -> str:
-        full_tex = self.get_tex_file_body(content)
-        with display_during_execution(f"Writing \"{self.tex_string}\""):
-            file_path = self.tex_to_svg_file_path(full_tex)
-        return file_path
-
-    def get_tex_file_body(self, content: str) -> str:
-        if self.tex_environment:
-            content = "\n".join([
-                f"\\begin{{{self.tex_environment}}}",
-                content,
-                f"\\end{{{self.tex_environment}}}"
-            ])
-        if self.alignment:
-            content = "\n".join([self.alignment, content])
-
         tex_config = get_tex_config()
-        return tex_config["tex_body"].replace(
+        full_tex = tex_config["tex_body"].replace(
             tex_config["text_to_replace"],
             content
         )
-
-    @staticmethod
-    def tex_to_svg_file_path(tex_file_content: str) -> str:
-        return tex_to_svg_file(tex_file_content)
+        with display_during_execution(f"Writing \"{self.tex_string}\""):
+            file_path = tex_to_svg_file(full_tex)
+        return file_path
 
     def pre_parse(self) -> None:
         super().pre_parse()
@@ -91,29 +76,23 @@ class MTex(LabelledString):
     # Toolkits
 
     @staticmethod
-    def get_begin_color_command_str(rgb_int: int) -> str:
+    def get_color_command_str(rgb_int: int) -> str:
         rgb_tuple = MTex.int_to_rgb(rgb_int)
         return "".join([
-            "{{",
             "\\color[RGB]",
             "{",
             ",".join(map(str, rgb_tuple)),
             "}"
         ])
 
-    @staticmethod
-    def get_end_color_command_str() -> str:
-        return "}}"
-
     # Pre-parsing
 
     def get_backslash_indices(self) -> list[int]:
-        # Newlines (`\\`) don't count.
-        return [
-            span[1] - 1
+        # The latter of `\\` doesn't count.
+        return list(it.chain(*[
+            range(span[0], span[1], 2)
             for span in self.find_spans(r"\\+")
-            if (span[1] - span[0]) % 2 == 1
-        ]
+        ]))
 
     def get_unescaped_char_spans(self, chars: str):
         return sorted(filter(
@@ -209,13 +188,19 @@ class MTex(LabelledString):
                 right_brace_indices, cmd_end, n_braces
             ) + 1
             if substitute_cmd:
-                repl_str = "\\" + cmd_name + n_braces * "{white}"
+                repl_str = "\\" + cmd_name + n_braces * "{black}"
             else:
                 repl_str = ""
             result.append(((span_begin, span_end), repl_str))
         return result
 
-    def get_ignored_spans(self) -> list[int]:
+    def get_extra_entity_spans(self) -> list[Span]:
+        return [
+            self.match(r"\\([a-zA-Z]+|.)", pos=index).span()
+            for index in self.backslash_indices
+        ]
+
+    def get_extra_ignored_spans(self) -> list[int]:
         return self.script_char_spans.copy()
 
     def get_internal_specified_spans(self) -> list[Span]:
@@ -256,35 +241,46 @@ class MTex(LabelledString):
             result.append(shrinked_span)
         return result
 
-    def get_inserted_string_pairs(
-        self, use_plain_file: bool
-    ) -> list[tuple[Span, tuple[str, str]]]:
+    def get_content(self, use_plain_file: bool) -> str:
         if use_plain_file:
-            return []
+            span_repl_dict = {}
+        else:
+            extended_label_span_list = [
+                span
+                if span in self.script_content_spans
+                else (span[0], self.rslide(span[1], self.script_spans))
+                for span in self.label_span_list
+            ]
+            inserted_string_pairs = [
+                (span, (
+                    "{{" + self.get_color_command_str(label + 1),
+                    "}}"
+                ))
+                for label, span in enumerate(extended_label_span_list)
+            ]
+            span_repl_dict = self.generate_span_repl_dict(
+                inserted_string_pairs,
+                self.command_repl_items
+            )
+        result = self.get_replaced_substr(self.full_span, span_repl_dict)
 
-        extended_label_span_list = [
-            span
-            if span in self.script_content_spans
-            else (span[0], self.rslide(span[1], self.script_spans))
-            for span in self.label_span_list
-        ]
-        return [
-            (span, (
-                self.get_begin_color_command_str(label),
-                self.get_end_color_command_str()
-            ))
-            for label, span in enumerate(extended_label_span_list)
-        ]
-
-    def get_other_repl_items(
-        self, use_plain_file: bool
-    ) -> list[tuple[Span, str]]:
+        if self.tex_environment:
+            result = "\n".join([
+                f"\\begin{{{self.tex_environment}}}",
+                result,
+                f"\\end{{{self.tex_environment}}}"
+            ])
+        if self.alignment:
+            result = "\n".join([self.alignment, result])
         if use_plain_file:
-            return []
-        return self.command_repl_items.copy()
+            result = "\n".join([
+                self.get_color_command_str(self.hex_to_int(self.base_color)),
+                result
+            ])
+        return result
 
     @property
-    def has_predefined_colors(self) -> bool:
+    def has_predefined_local_colors(self) -> bool:
         return bool(self.command_repl_items)
 
     # Post-parsing
