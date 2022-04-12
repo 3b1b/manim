@@ -5,7 +5,7 @@ import numbers
 
 import numpy as np
 
-from manimlib.constants import DOWN, LEFT, ORIGIN, OUT, RIGHT, UP
+from manimlib.constants import DL, DOWN, DR, LEFT, ORIGIN, OUT, RIGHT, UL, UP, UR
 from manimlib.constants import GREY_A, RED, WHITE
 from manimlib.constants import MED_SMALL_BUFF
 from manimlib.constants import PI, TAU
