@@ -5,44 +5,54 @@ import copy
 import random
 import itertools as it
 from functools import wraps
-from typing import Iterable, Callable, Union, Sequence
 
-import colour
 import moderngl
 import numpy as np
-import numpy.typing as npt
 
-from manimlib.constants import *
+from manimlib.constants import DEFAULT_MOBJECT_TO_EDGE_BUFFER
+from manimlib.constants import DEFAULT_MOBJECT_TO_MOBJECT_BUFFER
+from manimlib.constants import DOWN, IN, LEFT, ORIGIN, OUT, RIGHT, UP
+from manimlib.constants import FRAME_X_RADIUS, FRAME_Y_RADIUS
+from manimlib.constants import MED_SMALL_BUFF
+from manimlib.constants import TAU
+from manimlib.constants import WHITE
+from manimlib.event_handler import EVENT_DISPATCHER
+from manimlib.event_handler.event_listner import EventListner
+from manimlib.event_handler.event_type import EventType
+from manimlib.shader_wrapper import get_colormap_code
+from manimlib.shader_wrapper import ShaderWrapper
 from manimlib.utils.color import color_gradient
+from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import get_colormap_list
 from manimlib.utils.color import rgb_to_hex
-from manimlib.utils.color import color_to_rgb
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.iterables import list_update
+from manimlib.utils.iterables import listify
+from manimlib.utils.iterables import make_even
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_preserving_order
 from manimlib.utils.iterables import resize_with_interpolation
-from manimlib.utils.iterables import make_even
-from manimlib.utils.iterables import listify
-from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import integer_interpolate
+from manimlib.utils.bezier import interpolate
 from manimlib.utils.paths import straight_path
 from manimlib.utils.simple_functions import get_parameters
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotation_matrix_transpose
-from manimlib.shader_wrapper import ShaderWrapper
-from manimlib.shader_wrapper import get_colormap_code
-from manimlib.event_handler import EVENT_DISPATCHER
-from manimlib.event_handler.event_listner import EventListner
-from manimlib.event_handler.event_type import EventType
 
+from typing import TYPE_CHECKING
 
-TimeBasedUpdater = Callable[["Mobject", float], None]
-NonTimeUpdater = Callable[["Mobject"], None]
-Updater = Union[TimeBasedUpdater, NonTimeUpdater]
-ManimColor = Union[str, colour.Color, Sequence[float]]
+if TYPE_CHECKING:
+    from colour import Color
+    from typing import Callable, Iterable, Sequence, Union
+
+    import numpy.typing as npt
+
+    TimeBasedUpdater = Callable[["Mobject", float], None]
+    NonTimeUpdater = Callable[["Mobject"], None]
+    Updater = Union[TimeBasedUpdater, NonTimeUpdater]
+    ManimColor = Union[str, Color]
 
 
 class Mobject(object):
@@ -635,7 +645,7 @@ class Mobject(object):
 
     def scale(
         self,
-        scale_factor: float | npt.ArrayLike,
+        scale_factor: float | Iterable[float],
         min_scale_factor: float = 1e-8,
         about_point: np.ndarray | None = None,
         about_edge: np.ndarray = ORIGIN
@@ -649,10 +659,7 @@ class Mobject(object):
         Otherwise, if about_point is given a value, scaling is done with
         respect to that point.
         """
-        if isinstance(scale_factor, Iterable):
-            scale_factor = np.array(scale_factor).clip(min=min_scale_factor)
-        else:
-            scale_factor = max(scale_factor, min_scale_factor)
+        scale_factor = np.resize(scale_factor, self.dim).clip(min=min_scale_factor)
         self.apply_points_function(
             lambda points: scale_factor * points,
             about_point=about_point,
@@ -1038,8 +1045,8 @@ class Mobject(object):
 
     def set_rgba_array_by_color(
         self,
-        color: ManimColor | None = None,
-        opacity: float | None = None,
+        color: ManimColor | Iterable[ManimColor] | None = None,
+        opacity: float | Iterable[float] | None = None,
         name: str = "rgbas",
         recurse: bool = True
     ):
@@ -1061,7 +1068,12 @@ class Mobject(object):
                 mob.data[name][:, 3] = resize_array(opacities, size)
         return self
 
-    def set_color(self, color: ManimColor, opacity: float | None = None, recurse: bool = True):
+    def set_color(
+        self,
+        color: ManimColor | Iterable[ManimColor] | None,
+        opacity: float | Iterable[float] | None = None,
+        recurse: bool = True
+    ):
         self.set_rgba_array_by_color(color, opacity, recurse=False)
         # Recurse to submobjects differently from how set_rgba_array_by_color
         # in case they implement set_color differently
@@ -1070,7 +1082,11 @@ class Mobject(object):
                 submob.set_color(color, recurse=True)
         return self
 
-    def set_opacity(self, opacity: float, recurse: bool = True):
+    def set_opacity(
+        self,
+        opacity: float | Iterable[float] | None,
+        recurse: bool = True
+    ):
         self.set_rgba_array_by_color(color=None, opacity=opacity, recurse=False)
         if recurse:
             for submob in self.submobjects:

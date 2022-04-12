@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 import inspect
-from typing import Callable, Union, Sequence
 
 import numpy as np
-import numpy.typing as npt
 
 from manimlib.animation.animation import Animation
 from manimlib.constants import DEFAULT_POINTWISE_FUNCTION_RUN_TIME
-from manimlib.constants import OUT
 from manimlib.constants import DEGREES
+from manimlib.constants import OUT
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
@@ -21,9 +19,14 @@ from manimlib.utils.rate_functions import squish_rate_func
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    import colour
+    from colour import Color
+    from typing import Callable, Union
+
+    import numpy.typing as npt
+
     from manimlib.scene.scene import Scene
-    ManimColor = Union[str, colour.Color, Sequence[float]]
+
+    ManimColor = Union[str, Color]
 
 
 class Transform(Animation):

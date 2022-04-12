@@ -2,19 +2,21 @@ from __future__ import annotations
 
 import math
 
-from manimlib.constants import *
-from manimlib.mobject.types.surface import Surface
+from manimlib.constants import BLUE, BLUE_D, BLUE_E
+from manimlib.constants import IN, ORIGIN, OUT, RIGHT
+from manimlib.constants import PI, TAU
 from manimlib.mobject.types.surface import SGroup
+from manimlib.mobject.types.surface import Surface
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.mobject.geometry import Square
 from manimlib.mobject.geometry import Polygon
+from manimlib.mobject.geometry import Square
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import adjacent_pairs
+from manimlib.utils.space_ops import compass_directions
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import z_to_vector
-from manimlib.utils.space_ops import compass_directions
 
 
 class SurfaceMesh(VGroup):

@@ -1,21 +1,22 @@
 from __future__ import annotations
 
 import itertools as it
-import colour
-from typing import Union, Sequence
 
 from manimlib.mobject.svg.labelled_string import LabelledString
-from manimlib.utils.tex_file_writing import tex_to_svg_file
-from manimlib.utils.tex_file_writing import get_tex_config
 from manimlib.utils.tex_file_writing import display_during_execution
-
+from manimlib.utils.tex_file_writing import get_tex_config
+from manimlib.utils.tex_file_writing import tex_to_svg_file
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from manimlib.mobject.types.vectorized_mobject import VMobject
+    from colour import Color
+    from typing import Union
+
     from manimlib.mobject.types.vectorized_mobject import VGroup
-    ManimColor = Union[str, colour.Color, Sequence[float]]
+    from manimlib.mobject.types.vectorized_mobject import VMobject
+
+    ManimColor = Union[str, Color]
     Span = tuple[int, int]
 
 

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import inspect
-from typing import Callable
 
 from manimlib.constants import DEGREES
 from manimlib.constants import RIGHT
@@ -11,7 +10,10 @@ from manimlib.utils.simple_functions import clip
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from typing import Callable
+
     import numpy as np
+
     from manimlib.animation.animation import Animation
 
 

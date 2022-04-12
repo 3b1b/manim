@@ -2,27 +2,32 @@ from __future__ import annotations
 
 import math
 import copy
-from typing import Iterable
 
 import numpy as np
 
-from manimlib.constants import *
+from manimlib.constants import DEFAULT_MOBJECT_TO_MOBJECT_BUFFER, SMALL_BUFF
+from manimlib.constants import DOWN, LEFT, ORIGIN, RIGHT, UP
+from manimlib.constants import PI
+from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.fading import FadeIn
 from manimlib.animation.growing import GrowFromCenter
-from manimlib.animation.composition import AnimationGroup
-from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.tex_mobject import SingleStringTex
+from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.tex_mobject import TexText
 from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.iterables import listify
 from manimlib.utils.space_ops import get_norm
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from manimlib.mobject.mobject import Mobject
+    from typing import Iterable
+
     from manimlib.animation.animation import Animation
+    from manimlib.mobject.mobject import Mobject
+
 
 class Brace(SingleStringTex):
     CONFIG = {
@@ -113,8 +118,8 @@ class BraceLabel(VMobject):
 
     def __init__(
         self,
-        obj: list[VMobject] | Mobject,
-        text: Iterable[str] | str,
+        obj: VMobject | list[VMobject],
+        text: str | Iterable[str],
         brace_direction: np.ndarray = DOWN,
         **kwargs
     ) -> None:
@@ -124,12 +129,8 @@ class BraceLabel(VMobject):
             obj = VMobject(*obj)
         self.brace = Brace(obj, brace_direction, **kwargs)
 
-        if isinstance(text, Iterable):
-            self.label = self.label_constructor(*text, **kwargs)
-        else:
-            self.label = self.label_constructor(str(text))
-        if self.label_scale != 1:
-            self.label.scale(self.label_scale)
+        self.label = self.label_constructor(*listify(text), **kwargs)
+        self.label.scale(self.label_scale)
 
         self.brace.put_at_tip(self.label, buff=self.label_buff)
         self.set_submobjects([self.brace, self.label])
@@ -137,11 +138,11 @@ class BraceLabel(VMobject):
     def creation_anim(
         self,
         label_anim: Animation = FadeIn,
-        brace_anim: Animation=GrowFromCenter
+        brace_anim: Animation = GrowFromCenter
     ) -> AnimationGroup:
         return AnimationGroup(brace_anim(self.brace), label_anim(self.label))
 
-    def shift_brace(self, obj: list[VMobject] | Mobject, **kwargs):
+    def shift_brace(self, obj: VMobject | list[VMobject], **kwargs):
         if isinstance(obj, list):
             obj = VMobject(*obj)
         self.brace = Brace(obj, self.brace_direction, **kwargs)
@@ -158,7 +159,7 @@ class BraceLabel(VMobject):
         self.submobjects[1] = self.label
         return self
 
-    def change_brace_label(self, obj: list[VMobject] | Mobject, *text: str):
+    def change_brace_label(self, obj: VMobject | list[VMobject], *text: str):
         self.shift_brace(obj)
         self.change_label(*text)
         return self

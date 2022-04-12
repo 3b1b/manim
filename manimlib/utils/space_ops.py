@@ -1,24 +1,26 @@
 from __future__ import annotations
 
+from functools import reduce
 import math
 import operator as op
-from functools import reduce
-from typing import Callable, Iterable, Sequence
 import platform
 
-import numpy as np
-import numpy.typing as npt
 from mapbox_earcut import triangulate_float32 as earcut
+import numpy as np
 from scipy.spatial.transform import Rotation
 from tqdm import tqdm as ProgressDisplay
 
-from manimlib.constants import RIGHT
-from manimlib.constants import DOWN
-from manimlib.constants import OUT
-from manimlib.constants import PI
-from manimlib.constants import TAU
+from manimlib.constants import DOWN, OUT, RIGHT
+from manimlib.constants import PI, TAU
 from manimlib.utils.iterables import adjacent_pairs
 from manimlib.utils.simple_functions import clip
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Callable, Iterable, Sequence
+
+    import numpy.typing as npt
 
 
 def cross(v1: np.ndarray, v2: np.ndarray) -> list[np.ndarray]:

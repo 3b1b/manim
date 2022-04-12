@@ -1,36 +1,38 @@
 from __future__ import annotations
 
-import os
-import re
-import itertools as it
-from pathlib import Path
 from contextlib import contextmanager
-import typing
-from typing import Iterable, Sequence, Union
+import itertools as it
+import os
+from pathlib import Path
+import re
 
+from manimpango import MarkupUtils
 import pygments
 import pygments.formatters
 import pygments.lexers
 
-from manimpango import MarkupUtils
-
+from manimlib.constants import BLACK
+from manimlib.constants import DEFAULT_PIXEL_HEIGHT, DEFAULT_PIXEL_WIDTH
+from manimlib.constants import NORMAL
 from manimlib.logger import log
-from manimlib.constants import *
 from manimlib.mobject.svg.labelled_string import LabelledString
-from manimlib.utils.customization import get_customization
-from manimlib.utils.tex_file_writing import tex_hash
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.customization import get_customization
 from manimlib.utils.directories import get_downloads_dir
 from manimlib.utils.directories import get_text_dir
 from manimlib.utils.iterables import remove_list_redundancies
-
+from manimlib.utils.tex_file_writing import tex_hash
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from colour import Color
+    from typing import Any, Union
+
     from manimlib.mobject.types.vectorized_mobject import VMobject
     from manimlib.mobject.types.vectorized_mobject import VGroup
-    ManimColor = Union[str, colour.Color, Sequence[float]]
+
+    ManimColor = Union[str, Color]
     Span = tuple[int, int]
 
 
@@ -256,7 +258,7 @@ class MarkupText(LabelledString):
 
     @staticmethod
     def merge_attr_dicts(
-        attr_dict_items: list[Span, str, typing.Any]
+        attr_dict_items: list[Span, str, Any]
     ) -> list[tuple[Span, dict[str, str]]]:
         index_seq = [0]
         attr_dict_list = [{}]
@@ -356,7 +358,7 @@ class MarkupText(LabelledString):
             )
         return result
 
-    def get_global_dict_from_config(self) -> dict[str, typing.Any]:
+    def get_global_dict_from_config(self) -> dict[str, Any]:
         result = {
             "line_height": (
                 (self.lsh or DEFAULT_LINE_SPACING_SCALE) + 1
@@ -380,7 +382,7 @@ class MarkupText(LabelledString):
 
     def get_local_dicts_from_config(
         self
-    ) -> list[Span, dict[str, typing.Any]]:
+    ) -> list[Span, dict[str, Any]]:
         return [
             (span, {key: val})
             for t2x_dict, key in (

@@ -1,35 +1,36 @@
 from __future__ import annotations
 
-import time
-import random
-import inspect
-import platform
-import itertools as it
 from functools import wraps
-from typing import Iterable, Callable
+import inspect
+import itertools as it
+import platform
+import random
+import time
 
-from tqdm import tqdm as ProgressDisplay
 import numpy as np
-import numpy.typing as npt
+from tqdm import tqdm as ProgressDisplay
 
 from manimlib.animation.animation import prepare_animation
 from manimlib.animation.transform import MoveToTarget
 from manimlib.camera.camera import Camera
 from manimlib.constants import DEFAULT_WAIT_TIME
+from manimlib.event_handler import EVENT_DISPATCHER
+from manimlib.event_handler.event_type import EventType
+from manimlib.logger import log
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import restructure_list_to_exclude_certain_family_members
-from manimlib.event_handler.event_type import EventType
-from manimlib.event_handler import EVENT_DISPATCHER
-from manimlib.logger import log
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from typing import Callable, Iterable
+
     from PIL.Image import Image
+
     from manimlib.animation.animation import Animation
 
 

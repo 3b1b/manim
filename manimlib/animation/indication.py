@@ -1,40 +1,43 @@
 from __future__ import annotations
 
-import math
-from typing import Union, Sequence
-
 import numpy as np
 
-from manimlib.constants import *
 from manimlib.animation.animation import Animation
-from manimlib.animation.movement import Homotopy
 from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.composition import Succession
 from manimlib.animation.creation import ShowCreation
 from manimlib.animation.creation import ShowPartial
 from manimlib.animation.fading import FadeOut
 from manimlib.animation.fading import FadeIn
+from manimlib.animation.movement import Homotopy
 from manimlib.animation.transform import Transform
-from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.constants import ORIGIN, RIGHT, UP
+from manimlib.constants import SMALL_BUFF
+from manimlib.constants import TAU
+from manimlib.constants import GREY, YELLOW
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.geometry import Dot
+from manimlib.mobject.geometry import Line
 from manimlib.mobject.shape_matchers import SurroundingRectangle
 from manimlib.mobject.shape_matchers import Underline
+from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.mobject.geometry import Line
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.rate_functions import there_and_back
-from manimlib.utils.rate_functions import wiggle
 from manimlib.utils.rate_functions import smooth
 from manimlib.utils.rate_functions import squish_rate_func
+from manimlib.utils.rate_functions import there_and_back
+from manimlib.utils.rate_functions import wiggle
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    import colour
+    from colour import Color
+    from typing import Union
+
     from manimlib.mobject.mobject import Mobject
-    ManimColor = Union[str, colour.Color, Sequence[float]]
+
+    ManimColor = Union[str, Color]
 
 
 class FocusOn(Transform):
@@ -217,7 +220,7 @@ class VShowPassingFlash(Animation):
             if abs(x - mu) > 3 * sigma:
                 return 0
             z = (x - mu) / sigma
-            return math.exp(-0.5 * z * z)
+            return np.exp(-0.5 * z * z)
 
         kernel_array = list(map(gauss_kernel, np.linspace(0, 1, len(anchor_widths))))
         scaled_widths = anchor_widths * kernel_array

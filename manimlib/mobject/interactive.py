@@ -1,22 +1,32 @@
 from __future__ import annotations
 
-from typing import Callable
-
 import numpy as np
 from pyglet.window import key as PygletWindowKeys
 
 from manimlib.constants import FRAME_HEIGHT, FRAME_WIDTH
-from manimlib.constants import LEFT, RIGHT, UP, DOWN, ORIGIN
-from manimlib.constants import SMALL_BUFF, MED_SMALL_BUFF, MED_LARGE_BUFF
-from manimlib.constants import BLACK, GREY_A, GREY_C, RED, GREEN, BLUE, WHITE
-from manimlib.mobject.mobject import Mobject, Group
-from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.mobject.geometry import Dot, Line, Square, Rectangle, RoundedRectangle, Circle
+from manimlib.constants import DOWN, LEFT, ORIGIN, RIGHT, UP
+from manimlib.constants import MED_LARGE_BUFF, MED_SMALL_BUFF, SMALL_BUFF
+from manimlib.constants import BLACK, BLUE, GREEN, GREY_A, GREY_C, RED, WHITE
+from manimlib.mobject.mobject import Group
+from manimlib.mobject.mobject import Mobject
+from manimlib.mobject.geometry import Circle
+from manimlib.mobject.geometry import Dot
+from manimlib.mobject.geometry import Line
+from manimlib.mobject.geometry import Rectangle
+from manimlib.mobject.geometry import RoundedRectangle
+from manimlib.mobject.geometry import Square
 from manimlib.mobject.svg.text_mobject import Text
+from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.value_tracker import ValueTracker
+from manimlib.utils.color import rgb_to_hex
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.space_ops import get_norm, get_closest_point_on_line
-from manimlib.utils.color import rgb_to_color, color_to_rgba, rgb_to_hex
+from manimlib.utils.space_ops import get_closest_point_on_line
+from manimlib.utils.space_ops import get_norm
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Callable
 
 
 # Interactive Mobjects
@@ -336,7 +346,7 @@ class ColorSliders(Group):
         g = self.g_slider.get_value() / 255
         b = self.b_slider.get_value() / 255
         alpha = self.a_slider.get_value()
-        return color_to_rgba(rgb_to_color((r, g, b)), alpha=alpha)
+        return np.array((r, g, b, alpha))
 
     def get_picked_color(self) -> str:
         rgba = self.get_value()

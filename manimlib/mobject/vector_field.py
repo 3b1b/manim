@@ -1,23 +1,21 @@
 from __future__ import annotations
 
 import itertools as it
-import random
-from typing import Sequence, TypeVar, Callable, Iterable
 
 import numpy as np
-import numpy.typing as npt
 
-from manimlib.constants import *
+from manimlib.constants import FRAME_HEIGHT, FRAME_WIDTH
+from manimlib.constants import WHITE
 from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.indication import VShowPassingFlash
 from manimlib.mobject.geometry import Arrow
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.bezier import interpolate
+from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.color import get_colormap_list
-from manimlib.utils.config_ops import merge_dicts_recursively
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.config_ops import merge_dicts_recursively
 from manimlib.utils.rate_functions import linear
 from manimlib.utils.simple_functions import sigmoid
 from manimlib.utils.space_ops import get_norm
@@ -25,8 +23,13 @@ from manimlib.utils.space_ops import get_norm
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from manimlib.mobject.mobject import Mobject
+    from typing import Callable, Iterable, Sequence, TypeVar
+
+    import numpy.typing as npt
+
     from manimlib.mobject.coordinate_systems import CoordinateSystem
+    from manimlib.mobject.mobject import Mobject
+
     T = TypeVar("T")
 
 
@@ -299,7 +302,7 @@ class AnimatedStreamLines(VGroup):
                 **self.line_anim_config,
             )
             line.anim.begin()
-            line.time = -self.lag_range * random.random()
+            line.time = -self.lag_range * np.random.random()
             self.add(line.anim.mobject)
 
         self.add_updater(lambda m, dt: m.update(dt))

@@ -1,11 +1,14 @@
 from __future__ import annotations
 
-from typing import Callable, Iterable, Sequence, TypeVar
-
 import numpy as np
 
-T = TypeVar("T")
-S = TypeVar("S")
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Callable, Iterable, Sequence, TypeVar
+
+    T = TypeVar("T")
+    S = TypeVar("S")
 
 
 def remove_list_redundancies(l: Iterable[T]) -> list[T]:

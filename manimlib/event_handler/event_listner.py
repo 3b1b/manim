@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from typing import Callable, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from manimlib.mobject.mobject import Mobject
+    from typing import Callable
+
     from manimlib.event_handler.event_type import EventType
+    from manimlib.mobject.mobject import Mobject
+
 
 class EventListner(object):
     def __init__(

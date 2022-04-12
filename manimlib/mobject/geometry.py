@@ -2,23 +2,24 @@ from __future__ import annotations
 
 import math
 import numbers
-from typing import Sequence, Union
 
-import colour
 import numpy as np
 
-from manimlib.constants import *
+from manimlib.constants import DOWN, LEFT, ORIGIN, OUT, RIGHT, UP
+from manimlib.constants import GREY_A, RED, WHITE
+from manimlib.constants import MED_SMALL_BUFF
+from manimlib.constants import PI, TAU
 from manimlib.mobject.mobject import Mobject
+from manimlib.mobject.types.vectorized_mobject import DashedVMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.mobject.types.vectorized_mobject import DashedVMobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import adjacent_n_tuples
 from manimlib.utils.iterables import adjacent_pairs
-from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.simple_functions import clip
-from manimlib.utils.space_ops import angle_of_vector
+from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.space_ops import angle_between_vectors
+from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import compass_directions
 from manimlib.utils.space_ops import find_intersection
 from manimlib.utils.space_ops import get_norm
@@ -26,7 +27,13 @@ from manimlib.utils.space_ops import normalize
 from manimlib.utils.space_ops import rotate_vector
 from manimlib.utils.space_ops import rotation_matrix_transpose
 
-ManimColor = Union[str, colour.Color, Sequence[float]]
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from colour import Color
+    from typing import Union
+
+    ManimColor = Union[str, Color]
 
 
 DEFAULT_DOT_RADIUS = 0.08
@@ -716,8 +723,8 @@ class Arrow(Line):
 
     def set_stroke(
         self,
-        color: ManimColor | None = None,
-        width: float | None = None,
+        color: ManimColor | Iterable[ManimColor] | None = None,
+        width: float | Iterable[float] | None = None,
         *args, **kwargs
     ):
         super().set_stroke(color=color, width=width, *args, **kwargs)

@@ -8,6 +8,7 @@ from manimlib.utils.bezier import interpolate
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotation_matrix_transpose
 
+
 STRAIGHT_PATH_THRESHOLD = 0.01
 
 

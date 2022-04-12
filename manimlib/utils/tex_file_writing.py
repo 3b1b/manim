@@ -1,12 +1,12 @@
-import sys
-import os
-import hashlib
 from contextlib import contextmanager
+import hashlib
+import os
+import sys
 
-from manimlib.utils.directories import get_tex_dir
-from manimlib.config import get_manim_dir
 from manimlib.config import get_custom_config
+from manimlib.config import get_manim_dir
 from manimlib.logger import log
+from manimlib.utils.directories import get_tex_dir
 
 
 SAVED_TEX_CONFIG = {}

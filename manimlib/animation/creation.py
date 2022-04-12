@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import itertools as it
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 import numpy as np
 
 from manimlib.animation.animation import Animation
-from manimlib.animation.composition import Succession
 from manimlib.mobject.svg.labelled_string import LabelledString
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.bezier import integer_interpolate
@@ -18,10 +16,10 @@ from manimlib.utils.rate_functions import smooth
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from manimlib.mobject.mobject import Group
+    from manimlib.mobject.mobject import Mobject
 
 
-class ShowPartial(Animation):
+class ShowPartial(Animation, ABC):
     """
     Abstract class for ShowCreation and ShowPassingFlash
     """
@@ -177,7 +175,7 @@ class ShowIncreasingSubsets(Animation):
         "int_func": np.round,
     }
 
-    def __init__(self, group: Group, **kwargs):
+    def __init__(self, group: Mobject, **kwargs):
         self.all_submobs = list(group.submobjects)
         super().__init__(group, **kwargs)
 

@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import re
-import colour
-import itertools as it
-from typing import Iterable, Union, Sequence
 from abc import ABC, abstractmethod
+import itertools as it
+import re
 
 from manimlib.constants import BLACK, WHITE
 from manimlib.mobject.svg.svg_mobject import SVGMobject
@@ -15,12 +13,15 @@ from manimlib.utils.color import rgb_to_hex
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import remove_list_redundancies
 
-
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from colour import Color
+    from typing import Iterable, Union
+
     from manimlib.mobject.types.vectorized_mobject import VMobject
-    ManimColor = Union[str, colour.Color, Sequence[float]]
+
+    ManimColor = Union[str, Color]
     Span = tuple[int, int]
 
 

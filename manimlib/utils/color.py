@@ -1,18 +1,21 @@
 from __future__ import annotations
 
-from typing import Iterable, Union
-
 from colour import Color
 from colour import hex2rgb
 from colour import rgb2hex
 import numpy as np
 
-from manimlib.constants import WHITE
 from manimlib.constants import COLORMAP_3B1B
+from manimlib.constants import WHITE
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.iterables import resize_with_interpolation
 
-ManimColor = Union[str, Color]
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Iterable, Union
+
+    ManimColor = Union[str, Color]
 
 
 def color_to_rgb(color: ManimColor) -> np.ndarray:

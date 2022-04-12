@@ -20,8 +20,8 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import linear
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import complex_to_R3
-from manimlib.utils.space_ops import rotate_vector
 from manimlib.utils.space_ops import midpoint
+from manimlib.utils.space_ops import rotate_vector
 
 
 class Checkmark(TexText):

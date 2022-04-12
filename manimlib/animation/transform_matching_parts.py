@@ -5,9 +5,9 @@ import itertools as it
 import numpy as np
 
 from manimlib.animation.composition import AnimationGroup
-from manimlib.animation.fading import FadeTransformPieces
 from manimlib.animation.fading import FadeInFromPoint
 from manimlib.animation.fading import FadeOutToPoint
+from manimlib.animation.fading import FadeTransformPieces
 from manimlib.animation.transform import ReplacementTransform
 from manimlib.animation.transform import Transform
 from manimlib.mobject.mobject import Mobject
@@ -16,13 +16,13 @@ from manimlib.mobject.svg.labelled_string import LabelledString
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.iterables import remove_list_redundancies
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from manimlib.mobject.svg.tex_mobject import SingleStringTex
+    from manimlib.mobject.svg.tex_mobject import Tex
     from manimlib.scene.scene import Scene
-    from manimlib.mobject.svg.tex_mobject import Tex, SingleStringTex
 
 
 class TransformMatchingParts(AnimationGroup):
