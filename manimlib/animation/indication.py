@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import numpy as np
 
 from manimlib.animation.animation import Animation
@@ -220,7 +221,7 @@ class VShowPassingFlash(Animation):
             if abs(x - mu) > 3 * sigma:
                 return 0
             z = (x - mu) / sigma
-            return np.exp(-0.5 * z * z)
+            return math.exp(-0.5 * z * z)
 
         kernel_array = list(map(gauss_kernel, np.linspace(0, 1, len(anchor_widths))))
         scaled_widths = anchor_widths * kernel_array
