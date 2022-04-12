@@ -645,7 +645,7 @@ class Mobject(object):
 
     def scale(
         self,
-        scale_factor: float | Iterable[float],
+        scale_factor: float | Sequence[float],
         min_scale_factor: float = 1e-8,
         about_point: np.ndarray | None = None,
         about_edge: np.ndarray = ORIGIN
