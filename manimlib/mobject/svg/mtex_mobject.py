@@ -33,7 +33,7 @@ class MTex(LabelledString):
 
     def __init__(self, tex_string: str, **kwargs):
         # Prevent from passing an empty string.
-        if not tex_string:
+        if not tex_string.strip():
             tex_string = "\\\\"
         self.tex_string = tex_string
         super().__init__(tex_string, **kwargs)
