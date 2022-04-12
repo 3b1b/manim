@@ -43,8 +43,8 @@ def rgb_to_hex(rgb: Iterable[float]) -> str:
     return rgb2hex(rgb, force_long=True).upper()
 
 
-def hex_to_rgb(hex_code: str) -> tuple[float]:
-    return hex2rgb(hex_code)
+def hex_to_rgb(hex_code: str) -> np.ndarray:
+    return np.array(hex2rgb(hex_code))
 
 
 def invert_color(color: ManimColor) -> Color:
