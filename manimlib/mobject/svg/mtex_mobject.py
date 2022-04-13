@@ -266,11 +266,12 @@ class MTex(LabelledString):
         result = self.get_replaced_substr(self.full_span, span_repl_dict)
 
         if self.tex_environment:
-            result = "\n".join([
-                f"\\begin{{{self.tex_environment}}}",
-                result,
-                f"\\end{{{self.tex_environment}}}"
-            ])
+            if isinstance(self.tex_environment, str):
+                prefix = f"\\begin{{{self.tex_environment}}}"
+                suffix = f"\\end{{{self.tex_environment}}}"
+            else:
+                prefix, suffix = self.tex_environment
+            result = "\n".join([prefix, result, suffix])
         if self.alignment:
             result = "\n".join([self.alignment, result])
         if use_plain_file:

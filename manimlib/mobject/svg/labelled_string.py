@@ -373,6 +373,8 @@ class LabelledString(_StringSVG, ABC):
         return []
 
     def check_overlapping(self) -> None:
+        if len(self.label_span_list) >= 16777216:
+            raise ValueError("Cannot label that many substrings")
         for span_0, span_1 in it.product(self.label_span_list, repeat=2):
             if not span_0[0] < span_1[0] < span_0[1] < span_1[1]:
                 continue
