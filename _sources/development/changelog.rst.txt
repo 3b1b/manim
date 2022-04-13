@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Unreleased
-----------
+v1.6.1
+------
 
 Fixed bugs
 ^^^^^^^^^^
