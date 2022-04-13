@@ -9,8 +9,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/custom.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?d80d567896ad6fbf694f11ec">
-    <link rel="stylesheet" href="../_static/pygments.css?d80d567896ad6fbf694f11ec">
+    <link rel="stylesheet" href="../_static/styles/default.css?da3831d7d20871320f87f789">
+    <link rel="stylesheet" href="../_static/pygments.css?da3831d7d20871320f87f789">
     
 <style>
   :root {
@@ -27,7 +27,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?d80d567896ad6fbf694f11ec"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?da3831d7d20871320f87f789"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -123,16 +123,86 @@
         </label>
         <section id="changelog">
 <h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
-<section id="v1-5-0">
-<h2>v1.5.0<a class="headerlink" href="#v1-5-0" title="Permalink to this headline">¶</a></h2>
+<section id="unreleased">
+<h2>Unreleased<a class="headerlink" href="#unreleased" title="Permalink to this headline">¶</a></h2>
 <section id="fixed-bugs">
 <h3>Fixed bugs<a class="headerlink" href="#fixed-bugs" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Fixed the bug of <code class="docutils literal notranslate"><span class="pre">MTex</span></code> with multi-line tex string (<a class="reference external" href="https://github.com/3b1b/manim/pull/1785">#1785</a>)</p></li>
+<li><p>Fixed <code class="docutils literal notranslate"><span class="pre">interpolate</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1788">#1788</a>)</p></li>
+<li><p>Fixed <code class="docutils literal notranslate"><span class="pre">ImageMobject</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1791">#1791</a>)</p></li>
+</ul>
+</section>
+<section id="refactor">
+<h3>Refactor<a class="headerlink" href="#refactor" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">\overset</span></code> as a special string in <code class="docutils literal notranslate"><span class="pre">Tex</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1783">#1783</a>)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">outer_interpolate</span></code> to perform interpolation using <code class="docutils literal notranslate"><span class="pre">np.outer</span></code> on arrays (<a class="reference external" href="https://github.com/3b1b/manim/pull/1788">#1788</a>)</p></li>
+</ul>
+</section>
+</section>
+<section id="v1-6-0">
+<h2>v1.6.0<a class="headerlink" href="#v1-6-0" title="Permalink to this headline">¶</a></h2>
+<section id="breaking-changes">
+<h3>Breaking changes<a class="headerlink" href="#breaking-changes" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><strong>Python 3.6 is no longer supported</strong> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1736">#1736</a>)</p></li>
+</ul>
+</section>
+<section id="fixed-bugs-1">
+<h3>Fixed bugs<a class="headerlink" href="#fixed-bugs-1" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Fixed the width of riemann rectangles (<a class="reference external" href="https://github.com/3b1b/manim/pull/1762">#1762</a>)</p></li>
+<li><p>Bug fixed in cases where empty array is passed to shader (<a class="reference external" href="https://github.com/3b1b/manim/pull/1764/commits/fa38b56fd87f713657c7f778f39dca7faf15baa8">#1764</a>)</p></li>
+<li><p>Fixed <code class="docutils literal notranslate"><span class="pre">AddTextWordByWord</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1772">#1772</a>)</p></li>
+<li><p>Fixed <code class="docutils literal notranslate"><span class="pre">ControlsExample</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1781">#1781</a>)</p></li>
+</ul>
+</section>
+<section id="new-features">
+<h3>New features<a class="headerlink" href="#new-features" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Added more functions to <code class="docutils literal notranslate"><span class="pre">Text</span></code> (details: <a class="reference external" href="https://github.com/3b1b/manim/pull/1751">#1751</a>)</p></li>
+<li><p>Allowed <code class="docutils literal notranslate"><span class="pre">interpolate</span></code> to work on an array of alpha values (<a class="reference external" href="https://github.com/3b1b/manim/pull/1764/commits/bf2d9edfe67c7e63ac0107d1d713df7ae7c3fb8f">#1764</a>)</p></li>
+<li><p>Allowed <code class="docutils literal notranslate"><span class="pre">Numberline.number_to_point</span></code> and <code class="docutils literal notranslate"><span class="pre">CoordinateSystem.coords_to_point</span></code> to work on an array of inputs (<a class="reference external" href="https://github.com/3b1b/manim/pull/1764/commits/c3e13fff0587d3bb007e71923af7eaf9e4926560">#1764</a>)</p></li>
+<li><p>Added a basic <code class="docutils literal notranslate"><span class="pre">Prismify</span></code> to turn a flat <code class="docutils literal notranslate"><span class="pre">VMobject</span></code> into something with depth (<a class="reference external" href="https://github.com/3b1b/manim/pull/1764/commits/f249da95fb65ed5495cd1db1f12ece7e90061af6">#1764</a>)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">GlowDots</span></code>, analogous to <code class="docutils literal notranslate"><span class="pre">GlowDot</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1764/commits/e19f35585d817e74b40bc30b1ab7cee84b24da05">#1764</a>)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">TransformMatchingStrings</span></code> which is compatible with <code class="docutils literal notranslate"><span class="pre">Text</span></code> and <code class="docutils literal notranslate"><span class="pre">MTex</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1772">#1772</a>)</p></li>
+<li><p>Added support for <code class="docutils literal notranslate"><span class="pre">substring</span></code> and <code class="docutils literal notranslate"><span class="pre">case_sensitive</span></code> parameters for <code class="docutils literal notranslate"><span class="pre">LabelledString.get_parts_by_string</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1780">#1780</a>)</p></li>
+</ul>
+</section>
+<section id="refactor-1">
+<h3>Refactor<a class="headerlink" href="#refactor-1" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Added type hints (<a class="reference external" href="https://github.com/3b1b/manim/pull/1736">#1736</a>)</p></li>
+<li><p>Specifid UTF-8 encoding for tex files (<a class="reference external" href="https://github.com/3b1b/manim/pull/1748">#1748</a>)</p></li>
+<li><p>Refactored <code class="docutils literal notranslate"><span class="pre">Text</span></code> with the latest manimpango (<a class="reference external" href="https://github.com/3b1b/manim/pull/1751">#1751</a>)</p></li>
+<li><p>Reorganized getters for <code class="docutils literal notranslate"><span class="pre">ParametricCurve</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1757">#1757</a>)</p></li>
+<li><p>Refactored <code class="docutils literal notranslate"><span class="pre">CameraFrame</span></code> to use <code class="docutils literal notranslate"><span class="pre">scipy.spatial.transform.Rotation</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1764/commits/625460467fdc01fc1b6621cbb3d2612195daedb9">#1764</a>)</p></li>
+<li><p>Refactored rotation methods to use <code class="docutils literal notranslate"><span class="pre">scipy.spatial.transform.Rotation</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1764/commits/7bf3615bb15cc6d15506d48ac800a23313054c8e">#1764</a>)</p></li>
+<li><p>Used <code class="docutils literal notranslate"><span class="pre">stroke_color</span></code> to init <code class="docutils literal notranslate"><span class="pre">Arrow</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1764/commits/c0b7b55e49f06b75ae133b5a810bebc28c212cd6">#1764</a>)</p></li>
+<li><p>Refactored <code class="docutils literal notranslate"><span class="pre">Mobject.set_rgba_array_by_color</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1764/commits/8b1f0a8749d91eeda4b674ed156cbc7f8e1e48a8">#1764</a>)</p></li>
+<li><p>Made panning more sensitive to mouse movements (<a class="reference external" href="https://github.com/3b1b/manim/pull/1764/commits/9d0cc810c5fcb4252990e706c6bf880d571cb1a2">#1764</a>)</p></li>
+<li><p>Added loading progress for large SVGs (<a class="reference external" href="https://github.com/3b1b/manim/pull/1766">#1766</a>)</p></li>
+<li><p>Added getter/setter of <code class="docutils literal notranslate"><span class="pre">field_of_view</span></code> for <code class="docutils literal notranslate"><span class="pre">CameraFrame</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1770/commits/0610f331a4f7a126a3aae34f8a2a86eabcb692f4">#1770</a>)</p></li>
+<li><p>Renamed <code class="docutils literal notranslate"><span class="pre">focal_distance</span></code> to <code class="docutils literal notranslate"><span class="pre">focal_dist_to_height</span></code> and added getter/setter (<a class="reference external" href="https://github.com/3b1b/manim/pull/1770/commits/0610f331a4f7a126a3aae34f8a2a86eabcb692f4">#1770</a>)</p></li>
+<li><p>Added getter and setter for <code class="docutils literal notranslate"><span class="pre">VMobject.joint_type</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1770/commits/2a7a7ac5189a14170f883533137e8a2ae09aac41">#1770</a>)</p></li>
+<li><p>Refactored <code class="docutils literal notranslate"><span class="pre">VCube</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1770/commits/0f8d7ed59751d42d5011813ba5694ecb506082f7">#1770</a>)</p></li>
+<li><p>Refactored <code class="docutils literal notranslate"><span class="pre">Prism</span></code> to receive <code class="docutils literal notranslate"><span class="pre">width</span> <span class="pre">height</span> <span class="pre">depth</span></code> instead of <code class="docutils literal notranslate"><span class="pre">dimensions</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1770/commits/0f8d7ed59751d42d5011813ba5694ecb506082f7">#1770</a>)</p></li>
+<li><p>Refactored <code class="docutils literal notranslate"><span class="pre">Text</span></code>, <code class="docutils literal notranslate"><span class="pre">MarkupText</span></code> and <code class="docutils literal notranslate"><span class="pre">MTex</span></code> based on <code class="docutils literal notranslate"><span class="pre">LabelledString</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1772">#1772</a>)</p></li>
+<li><p>Refactored <code class="docutils literal notranslate"><span class="pre">LabelledString</span></code> and relevant classes (<a class="reference external" href="https://github.com/3b1b/manim/pull/1779">#1779</a>)</p></li>
+</ul>
+</section>
+</section>
+<section id="v1-5-0">
+<h2>v1.5.0<a class="headerlink" href="#v1-5-0" title="Permalink to this headline">¶</a></h2>
+<section id="fixed-bugs-2">
+<h3>Fixed bugs<a class="headerlink" href="#fixed-bugs-2" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Bug fix for the case of calling <code class="docutils literal notranslate"><span class="pre">Write</span></code> on a null object (<a class="reference external" href="https://github.com/3b1b/manim/pull/1740">#1740</a>)</p></li>
 </ul>
 </section>
-<section id="new-features">
-<h3>New Features<a class="headerlink" href="#new-features" title="Permalink to this headline">¶</a></h3>
+<section id="new-features-1">
+<h3>New features<a class="headerlink" href="#new-features-1" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Added <code class="docutils literal notranslate"><span class="pre">TransformMatchingMTex</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1725">#1725</a>)</p></li>
 <li><p>Added <code class="docutils literal notranslate"><span class="pre">ImplicitFunction</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1727">#1727</a>)</p></li>
@@ -146,8 +216,8 @@
 <li><p>Added <code class="docutils literal notranslate"><span class="pre">text_config</span></code> to <code class="docutils literal notranslate"><span class="pre">DecimalNumber</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1744">#1744</a>)</p></li>
 </ul>
 </section>
-<section id="refactor">
-<h3>Refactor<a class="headerlink" href="#refactor" title="Permalink to this headline">¶</a></h3>
+<section id="refactor-2">
+<h3>Refactor<a class="headerlink" href="#refactor-2" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Refactored <code class="docutils literal notranslate"><span class="pre">MTex</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1725">#1725</a>)</p></li>
 <li><p>Refactored <code class="docutils literal notranslate"><span class="pre">SVGMobject</span></code> with svgelements (<a class="reference external" href="https://github.com/3b1b/manim/pull/1731">#1731</a>)</p></li>
@@ -170,8 +240,8 @@
 </section>
 <section id="v1-4-1">
 <h2>v1.4.1<a class="headerlink" href="#v1-4-1" title="Permalink to this headline">¶</a></h2>
-<section id="fixed-bugs-1">
-<h3>Fixed bugs<a class="headerlink" href="#fixed-bugs-1" title="Permalink to this headline">¶</a></h3>
+<section id="fixed-bugs-3">
+<h3>Fixed bugs<a class="headerlink" href="#fixed-bugs-3" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Temporarily fixed boolean operations’ bug  (<a class="reference external" href="https://github.com/3b1b/manim/pull/1724">#1724</a>)</p></li>
 <li><p>Import <code class="docutils literal notranslate"><span class="pre">Iterable</span></code> from <code class="docutils literal notranslate"><span class="pre">collections.abc</span></code> instead of <code class="docutils literal notranslate"><span class="pre">collections</span></code> which is deprecated since python 3.9 (<a class="reference external" href="https://github.com/3b1b/manim/commit/d2e0811285f7908e71a65e664fec88b1af1c6144">d2e0811</a>)</p></li>
@@ -180,8 +250,8 @@
 </section>
 <section id="v1-4-0">
 <h2>v1.4.0<a class="headerlink" href="#v1-4-0" title="Permalink to this headline">¶</a></h2>
-<section id="fixed-bugs-2">
-<h3>Fixed bugs<a class="headerlink" href="#fixed-bugs-2" title="Permalink to this headline">¶</a></h3>
+<section id="fixed-bugs-4">
+<h3>Fixed bugs<a class="headerlink" href="#fixed-bugs-4" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Temporarily fixed <code class="docutils literal notranslate"><span class="pre">Lightbulb</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1697/commits/f1996f8479f9e33d626b3b66e9eb6995ce231d86">f1996f8</a>)</p></li>
 <li><p>Fixed some bugs of <code class="docutils literal notranslate"><span class="pre">SVGMobject</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1712">#1712</a>)</p></li>
@@ -189,8 +259,8 @@
 <li><p>Fixed some bugs of <code class="docutils literal notranslate"><span class="pre">MTex</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1720">#1720</a>)</p></li>
 </ul>
 </section>
-<section id="new-features-1">
-<h3>New Features<a class="headerlink" href="#new-features-1" title="Permalink to this headline">¶</a></h3>
+<section id="new-features-2">
+<h3>New features<a class="headerlink" href="#new-features-2" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Added option to add ticks on x-axis in <code class="docutils literal notranslate"><span class="pre">BarChart</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1694">#1694</a>)</p></li>
 <li><p>Added <code class="docutils literal notranslate"><span class="pre">lable_buff</span></code> config parameter for <code class="docutils literal notranslate"><span class="pre">Brace</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1704">#1704</a>)</p></li>
@@ -200,8 +270,8 @@
 <li><p>Added support for &lt;line&gt; element in <code class="docutils literal notranslate"><span class="pre">SVGMobject</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1719">#1719</a>)</p></li>
 </ul>
 </section>
-<section id="refactor-1">
-<h3>Refactor<a class="headerlink" href="#refactor-1" title="Permalink to this headline">¶</a></h3>
+<section id="refactor-3">
+<h3>Refactor<a class="headerlink" href="#refactor-3" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Used <code class="docutils literal notranslate"><span class="pre">FFMPEG_BIN</span></code> instead of <code class="docutils literal notranslate"><span class="pre">"ffmpeg"</span></code> for sound incorporation (<a class="reference external" href="https://github.com/3b1b/manim/pull/1697/commits/5aa8d15d85797f68a8f169ca69fd90d441a3abbe">5aa8d15</a>)</p></li>
 <li><p>Decorated <code class="docutils literal notranslate"><span class="pre">CoordinateSystem.get_axes</span></code> and <code class="docutils literal notranslate"><span class="pre">.get_all_ranges</span></code> as abstract method  (<a class="reference external" href="https://github.com/3b1b/manim/pull/1709">#1709</a>)</p></li>
@@ -221,8 +291,8 @@
 </section>
 <section id="v1-3-0">
 <h2>v1.3.0<a class="headerlink" href="#v1-3-0" title="Permalink to this headline">¶</a></h2>
-<section id="fixed-bugs-3">
-<h3>Fixed bugs<a class="headerlink" href="#fixed-bugs-3" title="Permalink to this headline">¶</a></h3>
+<section id="fixed-bugs-5">
+<h3>Fixed bugs<a class="headerlink" href="#fixed-bugs-5" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Fixed <code class="docutils literal notranslate"><span class="pre">Mobject.stretch_to_fit_depth</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1653">#1653</a>)</p></li>
 <li><p>Fixed the bug of rotating camera (<a class="reference external" href="https://github.com/3b1b/manim/pull/1655">#1655</a>)</p></li>
@@ -234,8 +304,8 @@
 <li><p>Fixed bug in <code class="docutils literal notranslate"><span class="pre">TransformMatchingParts</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1691/commits/7023548ec62c4adb2f371aab6a8c7f62deb7c33c">7023548</a>)</p></li>
 </ul>
 </section>
-<section id="new-features-2">
-<h3>New Features<a class="headerlink" href="#new-features-2" title="Permalink to this headline">¶</a></h3>
+<section id="new-features-3">
+<h3>New features<a class="headerlink" href="#new-features-3" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Added CLI flag <code class="docutils literal notranslate"><span class="pre">--log-level</span></code> to specify log level (<a class="reference external" href="https://github.com/3b1b/manim/commit/e10f850d0d9f971931cc85d44befe67dc842af6d">e10f850</a>)</p></li>
 <li><p>Added operations (<code class="docutils literal notranslate"><span class="pre">+</span></code> and <code class="docutils literal notranslate"><span class="pre">*</span></code>) for <code class="docutils literal notranslate"><span class="pre">Mobject</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1667">#1667</a>)</p></li>
@@ -263,8 +333,8 @@
 <li><p>Added <code class="docutils literal notranslate"><span class="pre">MTex</span></code> , see <a class="reference external" href="https://github.com/3b1b/manim/pull/1678">#1678</a> for details (<a class="reference external" href="https://github.com/3b1b/manim/pull/1678">#1678</a>)</p></li>
 </ul>
 </section>
-<section id="refactor-2">
-<h3>Refactor<a class="headerlink" href="#refactor-2" title="Permalink to this headline">¶</a></h3>
+<section id="refactor-4">
+<h3>Refactor<a class="headerlink" href="#refactor-4" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Refactored support for command <code class="docutils literal notranslate"><span class="pre">A</span></code> in path of SVG  (<a class="reference external" href="https://github.com/3b1b/manim/pull/1662">#1662</a>)</p></li>
 <li><p>Refactored <code class="docutils literal notranslate"><span class="pre">SingleStringTex.balance_braces</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1662">#1662</a>)</p></li>
@@ -290,8 +360,8 @@
 </section>
 <section id="v1-2-0">
 <h2>v1.2.0<a class="headerlink" href="#v1-2-0" title="Permalink to this headline">¶</a></h2>
-<section id="fixed-bugs-4">
-<h3>Fixed bugs<a class="headerlink" href="#fixed-bugs-4" title="Permalink to this headline">¶</a></h3>
+<section id="fixed-bugs-6">
+<h3>Fixed bugs<a class="headerlink" href="#fixed-bugs-6" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Fixed <code class="docutils literal notranslate"><span class="pre">put_start_and_end_on</span></code> in 3D (<a class="reference external" href="https://github.com/3b1b/manim/pull/1592">#1592</a>)</p></li>
 <li><p>Fixed <code class="docutils literal notranslate"><span class="pre">DecimalNumber</span></code>’s scaling issue (<a class="reference external" href="https://github.com/3b1b/manim/pull/1601">#1601</a>)</p></li>
@@ -307,8 +377,8 @@
 <li><p>Fixed <code class="docutils literal notranslate"><span class="pre">ComplexPlane</span></code> -i display bug (<a class="reference external" href="https://github.com/3b1b/manim/commit/7732d2f0ee10449c5731499396d4911c03e89648">7732d2f</a>)</p></li>
 </ul>
 </section>
-<section id="new-features-3">
-<h3>New Features<a class="headerlink" href="#new-features-3" title="Permalink to this headline">¶</a></h3>
+<section id="new-features-4">
+<h3>New features<a class="headerlink" href="#new-features-4" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Supported the elliptical arc command <code class="docutils literal notranslate"><span class="pre">A</span></code> for <code class="docutils literal notranslate"><span class="pre">SVGMobject</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1598">#1598</a>)</p></li>
 <li><p>Added <code class="docutils literal notranslate"><span class="pre">FlashyFadeIn</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/pull/1607">#1607</a>)</p></li>
@@ -330,8 +400,8 @@
 <li><p>Hade <code class="docutils literal notranslate"><span class="pre">ImageMoject</span></code> remember the filepath to the Image (<a class="reference external" href="https://github.com/3b1b/manim/commit/6cdbe0d67a11ab14a6d84840a114ae6d3af10168">6cdbe0d</a>)</p></li>
 </ul>
 </section>
-<section id="refactor-3">
-<h3>Refactor<a class="headerlink" href="#refactor-3" title="Permalink to this headline">¶</a></h3>
+<section id="refactor-5">
+<h3>Refactor<a class="headerlink" href="#refactor-5" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Changed back to simpler <code class="docutils literal notranslate"><span class="pre">Mobject.scale</span></code> implementation (<a class="reference external" href="https://github.com/3b1b/manim/pull/1601">#1601</a>)</p></li>
 <li><p>Simplified <code class="docutils literal notranslate"><span class="pre">Square</span></code> (<a class="reference external" href="https://github.com/3b1b/manim/commit/b667db2d311a11cbbca2a6ff511d2c3cf1675486">b667db2</a>)</p></li>
@@ -351,8 +421,8 @@
 </section>
 <section id="v1-1-0">
 <h2>v1.1.0<a class="headerlink" href="#v1-1-0" title="Permalink to this headline">¶</a></h2>
-<section id="fixed-bugs-5">
-<h3>Fixed bugs<a class="headerlink" href="#fixed-bugs-5" title="Permalink to this headline">¶</a></h3>
+<section id="fixed-bugs-7">
+<h3>Fixed bugs<a class="headerlink" href="#fixed-bugs-7" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Fixed the bug of <code class="xref py py-func docutils literal notranslate"><span class="pre">resize_with_interpolation()</span></code> in the case of <code class="docutils literal notranslate"><span class="pre">length=0</span></code></p></li>
 <li><p>Fixed the bug of <code class="docutils literal notranslate"><span class="pre">__init__</span></code> in <code class="xref py py-class docutils literal notranslate"><span class="pre">Elbow</span></code></p></li>
@@ -372,8 +442,8 @@
 <li><p>Allowed sound_file_name to be taken in without extensions</p></li>
 </ul>
 </section>
-<section id="new-features-4">
-<h3>New Features<a class="headerlink" href="#new-features-4" title="Permalink to this headline">¶</a></h3>
+<section id="new-features-5">
+<h3>New features<a class="headerlink" href="#new-features-5" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Added <code class="xref py py-class docutils literal notranslate"><span class="pre">VShowPassingFlash</span></code></p></li>
 <li><p>Added <code class="docutils literal notranslate"><span class="pre">COLORMAP_3B1B</span></code></p></li>
@@ -454,40 +524,52 @@
         <div class="toc-tree">
           <ul>
 <li><a class="reference internal" href="#">Changelog</a><ul>
-<li><a class="reference internal" href="#v1-5-0">v1.5.0</a><ul>
+<li><a class="reference internal" href="#unreleased">Unreleased</a><ul>
 <li><a class="reference internal" href="#fixed-bugs">Fixed bugs</a></li>
-<li><a class="reference internal" href="#new-features">New Features</a></li>
 <li><a class="reference internal" href="#refactor">Refactor</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#v1-6-0">v1.6.0</a><ul>
+<li><a class="reference internal" href="#breaking-changes">Breaking changes</a></li>
+<li><a class="reference internal" href="#fixed-bugs-1">Fixed bugs</a></li>
+<li><a class="reference internal" href="#new-features">New features</a></li>
+<li><a class="reference internal" href="#refactor-1">Refactor</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#v1-5-0">v1.5.0</a><ul>
+<li><a class="reference internal" href="#fixed-bugs-2">Fixed bugs</a></li>
+<li><a class="reference internal" href="#new-features-1">New features</a></li>
+<li><a class="reference internal" href="#refactor-2">Refactor</a></li>
 <li><a class="reference internal" href="#dependencies">Dependencies</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#v1-4-1">v1.4.1</a><ul>
-<li><a class="reference internal" href="#fixed-bugs-1">Fixed bugs</a></li>
+<li><a class="reference internal" href="#fixed-bugs-3">Fixed bugs</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#v1-4-0">v1.4.0</a><ul>
-<li><a class="reference internal" href="#fixed-bugs-2">Fixed bugs</a></li>
-<li><a class="reference internal" href="#new-features-1">New Features</a></li>
-<li><a class="reference internal" href="#refactor-1">Refactor</a></li>
+<li><a class="reference internal" href="#fixed-bugs-4">Fixed bugs</a></li>
+<li><a class="reference internal" href="#new-features-2">New features</a></li>
+<li><a class="reference internal" href="#refactor-3">Refactor</a></li>
 <li><a class="reference internal" href="#dependencies-1">Dependencies</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#v1-3-0">v1.3.0</a><ul>
-<li><a class="reference internal" href="#fixed-bugs-3">Fixed bugs</a></li>
-<li><a class="reference internal" href="#new-features-2">New Features</a></li>
-<li><a class="reference internal" href="#refactor-2">Refactor</a></li>
+<li><a class="reference internal" href="#fixed-bugs-5">Fixed bugs</a></li>
+<li><a class="reference internal" href="#new-features-3">New features</a></li>
+<li><a class="reference internal" href="#refactor-4">Refactor</a></li>
 <li><a class="reference internal" href="#dependencies-2">Dependencies</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#v1-2-0">v1.2.0</a><ul>
-<li><a class="reference internal" href="#fixed-bugs-4">Fixed bugs</a></li>
-<li><a class="reference internal" href="#new-features-3">New Features</a></li>
-<li><a class="reference internal" href="#refactor-3">Refactor</a></li>
+<li><a class="reference internal" href="#fixed-bugs-6">Fixed bugs</a></li>
+<li><a class="reference internal" href="#new-features-4">New features</a></li>
+<li><a class="reference internal" href="#refactor-5">Refactor</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#v1-1-0">v1.1.0</a><ul>
-<li><a class="reference internal" href="#fixed-bugs-5">Fixed bugs</a></li>
-<li><a class="reference internal" href="#new-features-4">New Features</a></li>
+<li><a class="reference internal" href="#fixed-bugs-7">Fixed bugs</a></li>
+<li><a class="reference internal" href="#new-features-5">New features</a></li>
 </ul>
 </li>
 </ul>
