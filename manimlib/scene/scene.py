@@ -10,7 +10,6 @@ from typing import Iterable, Callable
 
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
-import numpy.typing as npt
 
 from manimlib.animation.animation import prepare_animation
 from manimlib.animation.transform import MoveToTarget
@@ -605,9 +604,11 @@ class Scene(object):
             return
 
         frame = self.camera.frame
+        # Handle perspective changes
         if self.window.is_key_pressed(ord("d")):
             frame.increment_theta(-self.pan_sensitivity * d_point[0])
             frame.increment_phi(self.pan_sensitivity * d_point[1])
+        # Handle frame movements
         elif self.window.is_key_pressed(ord("s")):
             shift = -d_point
             shift[0] *= frame.get_width() / 2
