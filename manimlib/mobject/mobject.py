@@ -421,21 +421,6 @@ class Mobject(object):
         self.center()
         return self
 
-    def replicate(self, n: int) -> Group:
-        return self.get_group_class()(
-            *(self.copy() for x in range(n))
-        )
-
-    def get_grid(self, n_rows: int, n_cols: int, height: float | None = None, **kwargs):
-        """
-        Returns a new mobject containing multiple copies of this one
-        arranged in a grid
-        """
-        grid = self.replicate(n_rows * n_cols)
-        grid.arrange_in_grid(n_rows, n_cols, **kwargs)
-        if height is not None:
-            grid.set_height(height)
-        return grid
 
     def sort(
         self,
@@ -456,6 +441,33 @@ class Mobject(object):
         random.shuffle(self.submobjects)
         self.assemble_family()
         return self
+
+    # Creating new Mobjects from this one
+
+    def replicate(self, n: int) -> Group:
+        return self.get_group_class()(
+            *(self.copy() for x in range(n))
+        )
+
+    def get_grid(self, n_rows: int, n_cols: int, height: float | None = None, **kwargs):
+        """
+        Returns a new mobject containing multiple copies of this one
+        arranged in a grid
+        """
+        grid = self.replicate(n_rows * n_cols)
+        grid.arrange_in_grid(n_rows, n_cols, **kwargs)
+        if height is not None:
+            grid.set_height(height)
+        return grid
+
+    def get_highlight(self):
+        from manimlib.mobject.types.dot_cloud import GlowDot
+        highlight = Group(*(
+            GlowDot(self.get_corner(v), color=WHITE)
+            for v in [UR, UL, DL, DR]
+        ))
+        highlight.add_updater(lambda m: m.move_to(self))
+        return highlight
 
     # Copying
 
