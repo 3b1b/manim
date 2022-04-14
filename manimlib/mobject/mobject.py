@@ -591,10 +591,10 @@ class Mobject(object):
     def clear_updaters(self, recurse: bool = True):
         self.time_based_updaters = []
         self.non_time_updaters = []
-        self.refresh_has_updater_status()
         if recurse:
             for submob in self.submobjects:
                 submob.clear_updaters()
+        self.refresh_has_updater_status()
         return self
 
     def match_updaters(self, mobject: Mobject):
