@@ -1,6 +1,67 @@
 Changelog
 =========
 
+v1.6.1
+------
+
+Fixed bugs
+^^^^^^^^^^
+- Fixed the bug of ``MTex`` with multi-line tex string (`#1785 <https://github.com/3b1b/manim/pull/1785>`__)
+- Fixed ``interpolate`` (`#1788 <https://github.com/3b1b/manim/pull/1788>`__)
+- Fixed ``ImageMobject`` (`#1791 <https://github.com/3b1b/manim/pull/1791>`__)
+
+Refactor
+^^^^^^^^
+- Added ``\overset`` as a special string in ``Tex`` (`#1783 <https://github.com/3b1b/manim/pull/1783>`__)
+- Added ``outer_interpolate`` to perform interpolation using ``np.outer`` on arrays (`#1788 <https://github.com/3b1b/manim/pull/1788>`__)
+
+v1.6.0
+------
+
+Breaking changes
+^^^^^^^^^^^^^^^^
+- **Python 3.6 is no longer supported** (`#1736 <https://github.com/3b1b/manim/pull/1736>`__)
+
+Fixed bugs
+^^^^^^^^^^
+- Fixed the width of riemann rectangles (`#1762 <https://github.com/3b1b/manim/pull/1762>`__)
+- Bug fixed in cases where empty array is passed to shader (`#1764 <https://github.com/3b1b/manim/pull/1764/commits/fa38b56fd87f713657c7f778f39dca7faf15baa8>`__)
+- Fixed ``AddTextWordByWord`` (`#1772 <https://github.com/3b1b/manim/pull/1772>`__)
+- Fixed ``ControlsExample`` (`#1781 <https://github.com/3b1b/manim/pull/1781>`__)
+
+
+New features
+^^^^^^^^^^^^
+- Added more functions to ``Text`` (details: `#1751 <https://github.com/3b1b/manim/pull/1751>`__)
+- Allowed ``interpolate`` to work on an array of alpha values (`#1764 <https://github.com/3b1b/manim/pull/1764/commits/bf2d9edfe67c7e63ac0107d1d713df7ae7c3fb8f>`__)
+- Allowed ``Numberline.number_to_point`` and ``CoordinateSystem.coords_to_point`` to work on an array of inputs (`#1764 <https://github.com/3b1b/manim/pull/1764/commits/c3e13fff0587d3bb007e71923af7eaf9e4926560>`__)
+- Added a basic ``Prismify`` to turn a flat ``VMobject`` into something with depth (`#1764 <https://github.com/3b1b/manim/pull/1764/commits/f249da95fb65ed5495cd1db1f12ece7e90061af6>`__)
+- Added ``GlowDots``, analogous to ``GlowDot`` (`#1764 <https://github.com/3b1b/manim/pull/1764/commits/e19f35585d817e74b40bc30b1ab7cee84b24da05>`__)
+- Added ``TransformMatchingStrings`` which is compatible with ``Text`` and ``MTex`` (`#1772 <https://github.com/3b1b/manim/pull/1772>`__)
+- Added support for ``substring`` and ``case_sensitive`` parameters for ``LabelledString.get_parts_by_string`` (`#1780 <https://github.com/3b1b/manim/pull/1780>`__) 
+
+
+Refactor
+^^^^^^^^
+- Added type hints (`#1736 <https://github.com/3b1b/manim/pull/1736>`__)
+- Specifid UTF-8 encoding for tex files (`#1748 <https://github.com/3b1b/manim/pull/1748>`__)
+- Refactored ``Text`` with the latest manimpango (`#1751 <https://github.com/3b1b/manim/pull/1751>`__)
+- Reorganized getters for ``ParametricCurve`` (`#1757 <https://github.com/3b1b/manim/pull/1757>`__)
+- Refactored ``CameraFrame`` to use ``scipy.spatial.transform.Rotation`` (`#1764 <https://github.com/3b1b/manim/pull/1764/commits/625460467fdc01fc1b6621cbb3d2612195daedb9>`__)
+- Refactored rotation methods to use ``scipy.spatial.transform.Rotation`` (`#1764 <https://github.com/3b1b/manim/pull/1764/commits/7bf3615bb15cc6d15506d48ac800a23313054c8e>`__)
+- Used ``stroke_color`` to init ``Arrow`` (`#1764 <https://github.com/3b1b/manim/pull/1764/commits/c0b7b55e49f06b75ae133b5a810bebc28c212cd6>`__)
+- Refactored ``Mobject.set_rgba_array_by_color`` (`#1764 <https://github.com/3b1b/manim/pull/1764/commits/8b1f0a8749d91eeda4b674ed156cbc7f8e1e48a8>`__)
+- Made panning more sensitive to mouse movements (`#1764 <https://github.com/3b1b/manim/pull/1764/commits/9d0cc810c5fcb4252990e706c6bf880d571cb1a2>`__)
+- Added loading progress for large SVGs (`#1766 <https://github.com/3b1b/manim/pull/1766>`__)
+- Added getter/setter of ``field_of_view`` for ``CameraFrame`` (`#1770 <https://github.com/3b1b/manim/pull/1770/commits/0610f331a4f7a126a3aae34f8a2a86eabcb692f4>`__)
+- Renamed ``focal_distance`` to ``focal_dist_to_height`` and added getter/setter (`#1770 <https://github.com/3b1b/manim/pull/1770/commits/0610f331a4f7a126a3aae34f8a2a86eabcb692f4>`__)
+- Added getter and setter for ``VMobject.joint_type`` (`#1770 <https://github.com/3b1b/manim/pull/1770/commits/2a7a7ac5189a14170f883533137e8a2ae09aac41>`__)
+- Refactored ``VCube`` (`#1770 <https://github.com/3b1b/manim/pull/1770/commits/0f8d7ed59751d42d5011813ba5694ecb506082f7>`__)
+- Refactored ``Prism`` to receive ``width height depth`` instead of ``dimensions`` (`#1770 <https://github.com/3b1b/manim/pull/1770/commits/0f8d7ed59751d42d5011813ba5694ecb506082f7>`__)
+- Refactored ``Text``, ``MarkupText`` and ``MTex`` based on ``LabelledString`` (`#1772 <https://github.com/3b1b/manim/pull/1772>`__)
+- Refactored ``LabelledString`` and relevant classes (`#1779 <https://github.com/3b1b/manim/pull/1779>`__)
+
+
 v1.5.0
 ------
 
@@ -9,7 +70,7 @@ Fixed bugs
 - Bug fix for the case of calling ``Write`` on a null object (`#1740 <https://github.com/3b1b/manim/pull/1740>`__)
 
 
-New Features
+New features
 ^^^^^^^^^^^^
 - Added ``TransformMatchingMTex`` (`#1725 <https://github.com/3b1b/manim/pull/1725>`__)
 - Added ``ImplicitFunction`` (`#1727 <https://github.com/3b1b/manim/pull/1727>`__)
@@ -60,7 +121,7 @@ Fixed bugs
 - Fixed some bugs of SVG path string parser (`#1717 <https://github.com/3b1b/manim/pull/1717>`__)
 - Fixed some bugs of ``MTex`` (`#1720 <https://github.com/3b1b/manim/pull/1720>`__)
 
-New Features
+New features
 ^^^^^^^^^^^^
 - Added option to add ticks on x-axis in ``BarChart`` (`#1694 <https://github.com/3b1b/manim/pull/1694>`__)
 - Added ``lable_buff`` config parameter for ``Brace`` (`#1704 <https://github.com/3b1b/manim/pull/1704>`__)
@@ -99,7 +160,7 @@ Fixed bugs
 - Fixed bug in ``ShowSubmobjectsOneByOne`` (`bcd0990 <https://github.com/3b1b/manim/pull/1688/commits/bcd09906bea5eaaa5352e7bee8f3153f434cf606>`__)
 - Fixed bug in ``TransformMatchingParts`` (`7023548 <https://github.com/3b1b/manim/pull/1691/commits/7023548ec62c4adb2f371aab6a8c7f62deb7c33c>`__)
 
-New Features
+New features
 ^^^^^^^^^^^^
 
 - Added CLI flag ``--log-level`` to specify log level (`e10f850 <https://github.com/3b1b/manim/commit/e10f850d0d9f971931cc85d44befe67dc842af6d>`__)
@@ -167,7 +228,7 @@ Fixed bugs
 - Fixed bug with ``CoordinateSystem.get_lines_parallel_to_axis`` (`c726eb7 <https://github.com/3b1b/manim/commit/c726eb7a180b669ee81a18555112de26a8aff6d6>`__)
 - Fixed ``ComplexPlane`` -i display bug (`7732d2f <https://github.com/3b1b/manim/commit/7732d2f0ee10449c5731499396d4911c03e89648>`__)
 
-New Features 
+New features 
 ^^^^^^^^^^^^
 
 - Supported the elliptical arc command ``A`` for ``SVGMobject`` (`#1598 <https://github.com/3b1b/manim/pull/1598>`__)
@@ -230,7 +291,7 @@ Fixed bugs
 - Rewrote ``earclip_triangulation`` to fix triangulation
 - Allowed sound_file_name to be taken in without extensions
 
-New Features
+New features
 ^^^^^^^^^^^^
 
 - Added :class:`~manimlib.animation.indication.VShowPassingFlash`

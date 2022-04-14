@@ -48,6 +48,9 @@ class ImageMobject(Mobject):
             mob.data["opacity"] = np.array([[o] for o in listify(opacity)])
         return self
 
+    def set_color(self, color, opacity=None, recurse=None):
+        return self
+
     def point_to_rgb(self, point: np.ndarray) -> np.ndarray:
         x0, y0 = self.get_corner(UL)[:2]
         x1, y1 = self.get_corner(DR)[:2]

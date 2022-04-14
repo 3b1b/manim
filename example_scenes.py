@@ -650,7 +650,7 @@ class ControlsExample(Scene):
 
         def text_updater(old_text):
             assert(isinstance(old_text, Text))
-            new_text = Text(self.textbox.get_value(), size=old_text.size)
+            new_text = Text(self.textbox.get_value(), font_size=old_text.font_size)
             # new_text.align_data_and_family(old_text)
             new_text.move_to(old_text)
             if self.checkbox.get_value():

@@ -173,6 +173,8 @@ class SVGMobject(VMobject):
             else:
                 log.warning(f"Unsupported element type: {type(shape)}")
                 continue
+            if not mob.has_points():
+                continue
             self.apply_style_to_mobject(mob, shape)
             if isinstance(shape, se.Transformable) and shape.apply:
                 self.handle_transform(mob, shape.transform)

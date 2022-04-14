@@ -12,7 +12,7 @@ from manimlib.animation.transform import ReplacementTransform
 from manimlib.animation.transform import Transform
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Group
-from manimlib.mobject.svg.mtex_mobject import MTex
+from manimlib.mobject.svg.labelled_string import LabelledString
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
@@ -153,106 +153,108 @@ class TransformMatchingTex(TransformMatchingParts):
         return mobject.get_tex()
 
 
-class TransformMatchingMTex(AnimationGroup):
+class TransformMatchingStrings(AnimationGroup):
     CONFIG = {
         "key_map": dict(),
+        "transform_mismatches": False,
     }
 
-    def __init__(self, source_mobject: MTex, target_mobject: MTex, **kwargs):
+    def __init__(self,
+        source: LabelledString,
+        target: LabelledString,
+        **kwargs
+    ):
         digest_config(self, kwargs)
-        assert isinstance(source_mobject, MTex)
-        assert isinstance(target_mobject, MTex)
+        assert isinstance(source, LabelledString)
+        assert isinstance(target, LabelledString)
         anims = []
-        rest_source_submobs = source_mobject.submobjects.copy()
-        rest_target_submobs = target_mobject.submobjects.copy()
+        source_indices = list(range(len(source.labelled_submobjects)))
+        target_indices = list(range(len(target.labelled_submobjects)))
 
-        def add_anim_from(anim_class, func, source_attr, target_attr=None):
-            if target_attr is None:
-                target_attr = source_attr
-            source_parts = func(source_mobject, source_attr)
-            target_parts = func(target_mobject, target_attr)
-            filtered_source_parts = [
-                submob_part for submob_part in source_parts
-                if all([
-                    submob in rest_source_submobs
-                    for submob in submob_part
-                ])
+        def get_indices_lists(mobject, parts):
+            return [
+                [
+                    mobject.labelled_submobjects.index(submob)
+                    for submob in part
+                ]
+                for part in parts
             ]
-            filtered_target_parts = [
-                submob_part for submob_part in target_parts
-                if all([
-                    submob in rest_target_submobs
-                    for submob in submob_part
-                ])
-            ]
-            if not (filtered_source_parts and filtered_target_parts):
-                return
-            anims.append(anim_class(
-                VGroup(*filtered_source_parts),
-                VGroup(*filtered_target_parts),
-                **kwargs
-            ))
-            for submob in it.chain(*filtered_source_parts):
-                rest_source_submobs.remove(submob)
-            for submob in it.chain(*filtered_target_parts):
-                rest_target_submobs.remove(submob)
 
-        def get_submobs_from_keys(mobject, keys):
-            if not isinstance(keys, tuple):
-                keys = (keys,)
-            indices = []
+        def add_anims_from(anim_class, func, source_args, target_args=None):
+            if target_args is None:
+                target_args = source_args.copy()
+            for source_arg, target_arg in zip(source_args, target_args):
+                source_parts = func(source, source_arg)
+                target_parts = func(target, target_arg)
+                source_indices_lists = list(filter(
+                    lambda indices_list: all([
+                        index in source_indices
+                        for index in indices_list
+                    ]), get_indices_lists(source, source_parts)
+                ))
+                target_indices_lists = list(filter(
+                    lambda indices_list: all([
+                        index in target_indices
+                        for index in indices_list
+                    ]), get_indices_lists(target, target_parts)
+                ))
+                if not source_indices_lists or not target_indices_lists:
+                    continue
+                anims.append(anim_class(source_parts, target_parts, **kwargs))
+                for index in it.chain(*source_indices_lists):
+                    source_indices.remove(index)
+                for index in it.chain(*target_indices_lists):
+                    target_indices.remove(index)
+
+        def get_common_substrs(substrs_from_source, substrs_from_target):
+            return sorted([
+                substr for substr in substrs_from_source
+                if substr and substr in substrs_from_target
+            ], key=len, reverse=True)
+
+        def get_parts_from_keys(mobject, keys):
+            if isinstance(keys, str):
+                keys = [keys]
+            result = VGroup()
             for key in keys:
-                if isinstance(key, int):
-                    indices.append(key)
-                elif isinstance(key, range):
-                    indices.extend(key)
-                elif isinstance(key, str):
-                    all_parts = mobject.get_parts_by_tex(key)
-                    indices.extend(it.chain(*[
-                        mobject.indices_of_part(part) for part in all_parts
-                    ]))
-                else:
+                if not isinstance(key, str):
                     raise TypeError(key)
-            return VGroup(VGroup(*[
-                mobject[i] for i in remove_list_redundancies(indices)
-            ]))
+                result.add(*mobject.get_parts_by_string(key))
+            return result
 
-        for source_key, target_key in self.key_map.items():
-            add_anim_from(
-                ReplacementTransform, get_submobs_from_keys,
-                source_key, target_key
+        add_anims_from(
+            ReplacementTransform, get_parts_from_keys,
+            self.key_map.keys(), self.key_map.values()
+        )
+        add_anims_from(
+            FadeTransformPieces,
+            LabelledString.get_parts_by_string,
+            get_common_substrs(
+                source.specified_substrs,
+                target.specified_substrs
             )
+        )
+        add_anims_from(
+            FadeTransformPieces,
+            LabelledString.get_parts_by_group_substr,
+            get_common_substrs(
+                source.group_substrs,
+                target.group_substrs
+            )
+        )
 
-        common_specified_substrings = sorted(list(
-            set(source_mobject.get_specified_substrings()).intersection(
-                target_mobject.get_specified_substrings()
+        rest_source = VGroup(*[source[index] for index in source_indices])
+        rest_target = VGroup(*[target[index] for index in target_indices])
+        if self.transform_mismatches:
+            anims.append(
+                ReplacementTransform(rest_source, rest_target, **kwargs)
             )
-        ), key=len, reverse=True)
-        for part_tex_string in common_specified_substrings:
-            add_anim_from(
-                FadeTransformPieces, MTex.get_parts_by_tex, part_tex_string
+        else:
+            anims.append(
+                FadeOutToPoint(rest_source, target.get_center(), **kwargs)
             )
-
-        common_submob_tex_strings = {
-            source_submob.get_tex() for source_submob in source_mobject
-        }.intersection({
-            target_submob.get_tex() for target_submob in target_mobject
-        })
-        for tex_string in common_submob_tex_strings:
-            add_anim_from(
-                FadeTransformPieces,
-                lambda mobject, attr: VGroup(*[
-                    VGroup(mob) for mob in mobject
-                    if mob.get_tex() == attr
-                ]),
-                tex_string
+            anims.append(
+                FadeInFromPoint(rest_target, source.get_center(), **kwargs)
             )
-
-        anims.append(FadeOutToPoint(
-            VGroup(*rest_source_submobs), target_mobject.get_center(), **kwargs
-        ))
-        anims.append(FadeInFromPoint(
-            VGroup(*rest_target_submobs), source_mobject.get_center(), **kwargs
-        ))
 
         super().__init__(*anims)

@@ -154,7 +154,7 @@ def angle_between_vectors(v1: np.ndarray, v2: np.ndarray) -> float:
     n2 = get_norm(v2)
     if n1 == 0 or n2 == 0:
         return 0
-    cos_angle = np.dot(v1, v2) / (n1 * n2)
+    cos_angle = np.dot(v1, v2) / np.float64(n1 * n2)
     return math.acos(clip(cos_angle, -1, 1))
 
 
