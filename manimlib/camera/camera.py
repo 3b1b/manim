@@ -199,7 +199,10 @@ class Camera(object):
         self.init_textures()
         self.init_light_source()
         self.refresh_perspective_uniforms()
-        self.static_mobject_to_render_group_list = {}
+        # A cached map from mobjects to their associated list of render groups
+        # so that these render groups are not regenerated unnecessarily for static
+        # mobjects
+        self.mob_to_render_groups = {}
 
     def init_frame(self) -> None:
         self.frame = CameraFrame(**self.frame_config)
@@ -365,11 +368,21 @@ class Camera(object):
         if render_group["single_use"]:
             self.release_render_group(render_group)
 
-    def get_render_group_list(self, mobject: Mobject) -> list[dict[str]] | map[dict[str]]:
-        try:
-            return self.static_mobject_to_render_group_list[id(mobject)]
-        except KeyError:
-            return map(self.get_render_group, mobject.get_shader_wrapper_list())
+    def get_render_group_list(self, mobject: Mobject) -> Iterable[dict[str]]:
+        if mobject.is_changing():
+            return self.generate_render_group_list(mobject)
+
+        # Otherwise, cache result for later use
+        key = id(mobject)
+        if key not in self.mob_to_render_groups:
+            self.mob_to_render_groups[key] = list(self.generate_render_group_list(mobject))
+        return self.mob_to_render_groups[key]
+
+    def generate_render_group_list(self, mobject: Mobject) -> Iterable[dict[str]]:
+        return (
+            self.get_render_group(sw, single_use=mobject.is_changing())
+            for sw in mobject.get_shader_wrapper_list()
+        )
 
     def get_render_group(
         self,
@@ -408,19 +421,10 @@ class Camera(object):
             if render_group[key] is not None:
                 render_group[key].release()
 
-    def set_mobjects_as_static(self, *mobjects: Mobject) -> None:
-        # Creates buffer and array objects holding each mobjects shader data
-        for mob in mobjects:
-            self.static_mobject_to_render_group_list[id(mob)] = [
-                self.get_render_group(sw, single_use=False)
-                for sw in mob.get_shader_wrapper_list()
-            ]
-
-    def release_static_mobjects(self) -> None:
-        for rg_list in self.static_mobject_to_render_group_list.values():
-            for render_group in rg_list:
-                self.release_render_group(render_group)
-        self.static_mobject_to_render_group_list = {}
+    def refresh_static_mobjects(self) -> None:
+        for render_group in it.chain(*self.mob_to_render_groups.values()):
+            self.release_render_group(render_group)
+        self.mob_to_render_groups = {}
 
     # Shaders
     def init_shaders(self) -> None:

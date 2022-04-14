@@ -71,7 +71,7 @@ class Mobject(object):
         # Must match in attributes of vert shader
         "shader_dtype": [
             ('point', np.float32, (3,)),
-        ]
+        ],
     }
 
     def __init__(self, **kwargs):
@@ -81,6 +81,8 @@ class Mobject(object):
         self.family: list[Mobject] = [self]
         self.locked_data_keys: set[str] = set()
         self.needs_new_bounding_box: bool = True
+        self._is_animating: bool = False
+        self._is_movable: bool = False
 
         self.init_data()
         self.init_uniforms()
@@ -421,7 +423,6 @@ class Mobject(object):
         self.center()
         return self
 
-
     def sort(
         self,
         point_to_num_func: Callable[[np.ndarray], float] = lambda p: p[0],
@@ -636,6 +637,23 @@ class Mobject(object):
     def refresh_has_updater_status(self):
         self.has_updaters = any(mob.get_updaters() for mob in self.get_family())
         return self
+
+    # Check if mark as static or not for camera
+
+    def is_changing(self) -> bool:
+        return self._is_animating or self.has_updaters or self._is_movable
+
+    def set_animating_status(self, is_animating: bool) -> None:
+        self._is_animating = is_animating
+
+    def set_movable_status(self, is_movable: bool) -> None:
+        self._is_movable = is_movable
+
+    def is_movable(self) -> bool:
+        return self._is_movable
+
+    def make_movable(self) -> None:
+        self._is_movable = True
 
     # Transforming operations
 
