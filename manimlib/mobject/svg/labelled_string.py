@@ -4,10 +4,9 @@ from abc import ABC, abstractmethod
 import itertools as it
 import re
 
-from manimlib.constants import BLACK, WHITE
+from manimlib.constants import WHITE
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.utils.color import color_to_int_rgb
 from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import rgb_to_hex
 from manimlib.utils.config_ops import digest_config
@@ -25,7 +24,10 @@ if TYPE_CHECKING:
     Span = tuple[int, int]
 
 
-class _StringSVG(SVGMobject):
+class LabelledString(SVGMobject, ABC):
+    """
+    An abstract base class for `MTex` and `MarkupText`
+    """
     CONFIG = {
         "height": None,
         "stroke_width": 0,
@@ -34,16 +36,6 @@ class _StringSVG(SVGMobject):
             "should_subdivide_sharp_curves": True,
             "should_remove_null_curves": True,
         },
-    }
-
-
-class LabelledString(_StringSVG, ABC):
-    """
-    An abstract base class for `MTex` and `MarkupText`
-    """
-    CONFIG = {
-        "base_color": WHITE,
-        "use_plain_file": False,
         "isolate": [],
     }
 
@@ -51,14 +43,11 @@ class LabelledString(_StringSVG, ABC):
         self.string = string
         digest_config(self, kwargs)
 
-        # Convert `base_color` to hex code.
-        self.base_color = rgb_to_hex(color_to_rgb(
-            self.base_color \
-            or self.svg_default.get("color", None) \
-            or self.svg_default.get("fill_color", None) \
+        self.base_color_int = self.color_to_int(
+            self.svg_default.get("fill_color") \
+            or self.svg_default.get("color") \
             or WHITE
-        ))
-        self.svg_default["fill_color"] = BLACK
+        )
 
         self.pre_parse()
         self.parse()
@@ -66,7 +55,7 @@ class LabelledString(_StringSVG, ABC):
         self.post_parse()
 
     def get_file_path(self) -> str:
-        return self.get_file_path_(use_plain_file=False)
+        return self.get_file_path_(use_plain_file=True)
 
     def get_file_path_(self, use_plain_file: bool) -> str:
         content = self.get_content(use_plain_file)
@@ -79,22 +68,34 @@ class LabelledString(_StringSVG, ABC):
     def generate_mobject(self) -> None:
         super().generate_mobject()
 
-        submob_labels = [
-            self.color_to_label(submob.get_fill_color())
-            for submob in self.submobjects
-        ]
-        if self.use_plain_file or self.has_predefined_local_colors:
-            file_path = self.get_file_path_(use_plain_file=True)
-            plain_svg = _StringSVG(
-                file_path,
-                svg_default=self.svg_default,
-                path_string_config=self.path_string_config
-            )
-            self.set_submobjects(plain_svg.submobjects)
+        if self.label_span_list:
+            file_path = self.get_file_path_(use_plain_file=False)
+            labelled_svg = SVGMobject(file_path)
+            submob_color_ints = [
+                self.color_to_int(submob.get_fill_color())
+                for submob in labelled_svg.submobjects
+            ]
         else:
-            self.set_fill(self.base_color)
-        for submob, label in zip(self.submobjects, submob_labels):
-            submob.label = label
+            submob_color_ints = [0] * len(self.submobjects)
+
+        if len(self.submobjects) != len(submob_color_ints):
+            raise ValueError(
+                "Cannot align submobjects of the labelled svg "
+                "to the original svg"
+            )
+
+        unrecognized_color_ints = remove_list_redundancies(sorted(filter(
+            lambda color_int: color_int > len(self.label_span_list),
+            submob_color_ints
+        )))
+        if unrecognized_color_ints:
+            raise ValueError(
+                "Unrecognized color label(s) detected: "
+                f"{','.join(map(self.int_to_hex, unrecognized_color_ints))}"
+            )
+
+        for submob, color_int in zip(self.submobjects, submob_color_ints):
+            submob.label = color_int - 1
 
     def pre_parse(self) -> None:
         self.string_len = len(self.string)
@@ -283,30 +284,13 @@ class LabelledString(_StringSVG, ABC):
         return index
 
     @staticmethod
-    def rgb_to_int(rgb_tuple: tuple[int, int, int]) -> int:
-        r, g, b = rgb_tuple
-        rg = r * 256 + g
-        return rg * 256 + b
-
-    @staticmethod
-    def int_to_rgb(rgb_int: int) -> tuple[int, int, int]:
-        rg, b = divmod(rgb_int, 256)
-        r, g = divmod(rg, 256)
-        return r, g, b
+    def color_to_int(color: ManimColor) -> int:
+        hex_code = rgb_to_hex(color_to_rgb(color))
+        return int(hex_code[1:], 16)
 
     @staticmethod
     def int_to_hex(rgb_int: int) -> str:
         return "#{:06x}".format(rgb_int).upper()
-
-    @staticmethod
-    def hex_to_int(rgb_hex: str) -> int:
-        return int(rgb_hex[1:], 16)
-
-    @staticmethod
-    def color_to_label(color: ManimColor) -> int:
-        rgb_tuple = color_to_int_rgb(color)
-        rgb = LabelledString.rgb_to_int(rgb_tuple)
-        return rgb - 1
 
     # Parsing
 
@@ -386,10 +370,6 @@ class LabelledString(_StringSVG, ABC):
     @abstractmethod
     def get_content(self, use_plain_file: bool) -> str:
         return ""
-
-    @abstractmethod
-    def has_predefined_local_colors(self) -> bool:
-        return False
 
     # Post-parsing
 

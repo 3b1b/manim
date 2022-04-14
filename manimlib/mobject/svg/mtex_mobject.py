@@ -47,8 +47,6 @@ class MTex(LabelledString):
             self.__class__.__name__,
             self.svg_default,
             self.path_string_config,
-            self.base_color,
-            self.use_plain_file,
             self.isolate,
             self.tex_string,
             self.alignment,
@@ -78,13 +76,9 @@ class MTex(LabelledString):
 
     @staticmethod
     def get_color_command_str(rgb_int: int) -> str:
-        rgb_tuple = MTex.int_to_rgb(rgb_int)
-        return "".join([
-            "\\color[RGB]",
-            "{",
-            ",".join(map(str, rgb_tuple)),
-            "}"
-        ])
+        rg, b = divmod(rgb_int, 256)
+        r, g = divmod(rg, 256)
+        return f"\\color[RGB]{{{r}, {g}, {b}}}"
 
     # Pre-parsing
 
@@ -276,14 +270,10 @@ class MTex(LabelledString):
             result = "\n".join([self.alignment, result])
         if use_plain_file:
             result = "\n".join([
-                self.get_color_command_str(self.hex_to_int(self.base_color)),
+                self.get_color_command_str(self.base_color_int),
                 result
             ])
         return result
-
-    @property
-    def has_predefined_local_colors(self) -> bool:
-        return bool(self.command_repl_items)
 
     # Post-parsing
 

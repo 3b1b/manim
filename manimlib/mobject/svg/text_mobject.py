@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from colour import Color
-    from typing import Any, Union
+    from typing import Union
 
     from manimlib.mobject.types.vectorized_mobject import VMobject
     from manimlib.mobject.types.vectorized_mobject import VGroup
@@ -43,7 +43,7 @@ DEFAULT_LINE_SPACING_SCALE = 0.6
 # See https://docs.gtk.org/Pango/pango_markup.html
 # A tag containing two aliases will cause warning,
 # so only use the first key of each group of aliases.
-SPAN_ATTR_KEY_ALIAS_LIST = (
+MARKUP_KEY_ALIAS_LIST = (
     ("font", "font_desc"),
     ("font_family", "face"),
     ("font_size", "size"),
@@ -77,19 +77,14 @@ SPAN_ATTR_KEY_ALIAS_LIST = (
     ("text_transform",),
     ("segment",),
 )
-COLOR_RELATED_KEYS = (
+MARKUP_COLOR_KEYS = (
     "foreground",
-     "background",
-     "underline_color",
-     "overline_color",
-     "strikethrough_color"
+    "background",
+    "underline_color",
+    "overline_color",
+    "strikethrough_color"
 )
-SPAN_ATTR_KEY_CONVERSION = {
-    key: key_alias_list[0]
-    for key_alias_list in SPAN_ATTR_KEY_ALIAS_LIST
-    for key in key_alias_list
-}
-TAG_TO_ATTR_DICT = {
+MARKUP_TAG_CONVERSION_DICT = {
     "b": {"font_weight": "bold"},
     "big": {"font_size": "larger"},
     "i": {"font_style": "italic"},
@@ -166,8 +161,6 @@ class MarkupText(LabelledString):
             self.__class__.__name__,
             self.svg_default,
             self.path_string_config,
-            self.base_color,
-            self.use_plain_file,
             self.isolate,
             self.text,
             self.is_markup,
@@ -258,7 +251,7 @@ class MarkupText(LabelledString):
 
     @staticmethod
     def merge_attr_dicts(
-        attr_dict_items: list[Span, str, Any]
+        attr_dict_items: list[tuple[Span, dict[str, str]]]
     ) -> list[tuple[Span, dict[str, str]]]:
         index_seq = [0]
         attr_dict_list = [{}]
@@ -344,12 +337,12 @@ class MarkupText(LabelledString):
                         attr_pattern, begin_match_obj.group(3)
                     )
                 }
-            elif tag_name in TAG_TO_ATTR_DICT.keys():
+            elif tag_name in MARKUP_TAG_CONVERSION_DICT.keys():
                 if begin_match_obj.group(3):
                     raise ValueError(
                         f"Attributes shan't exist in tag '{tag_name}'"
                     )
-                attr_dict = TAG_TO_ATTR_DICT[tag_name].copy()
+                attr_dict = MARKUP_TAG_CONVERSION_DICT[tag_name].copy()
             else:
                 raise ValueError(f"Unknown tag: '{tag_name}'")
 
@@ -358,13 +351,13 @@ class MarkupText(LabelledString):
             )
         return result
 
-    def get_global_dict_from_config(self) -> dict[str, Any]:
+    def get_global_dict_from_config(self) -> dict[str, str]:
         result = {
-            "line_height": (
+            "line_height": str((
                 (self.lsh or DEFAULT_LINE_SPACING_SCALE) + 1
-            ) * 0.6,
+            ) * 0.6),
             "font_family": self.font,
-            "font_size": self.font_size * 1024,
+            "font_size": str(self.font_size * 1024),
             "font_style": self.slant,
             "font_weight": self.weight
         }
@@ -382,7 +375,7 @@ class MarkupText(LabelledString):
 
     def get_local_dicts_from_config(
         self
-    ) -> list[Span, dict[str, Any]]:
+    ) -> list[Span, dict[str, str]]:
         return [
             (span, {key: val})
             for t2x_dict, key in (
@@ -405,9 +398,14 @@ class MarkupText(LabelledString):
             *self.local_dicts_from_markup,
             *self.local_dicts_from_config
         ]
+        key_conversion_dict = {
+            key: key_alias_list[0]
+            for key_alias_list in MARKUP_KEY_ALIAS_LIST
+            for key in key_alias_list
+        }
         return [
             (span, {
-                SPAN_ATTR_KEY_CONVERSION[key.lower()]: str(val)
+                key_conversion_dict[key.lower()]: val
                 for key, val in attr_dict.items()
             })
             for span, attr_dict in attr_dict_items
@@ -442,7 +440,7 @@ class MarkupText(LabelledString):
         return []
 
     def get_internal_specified_spans(self) -> list[Span]:
-        return [span for span, _ in self.local_dicts_from_markup]
+        return []
 
     def get_external_specified_spans(self) -> list[Span]:
         return [span for span, _ in self.local_dicts_from_config]
@@ -468,7 +466,9 @@ class MarkupText(LabelledString):
     def get_content(self, use_plain_file: bool) -> str:
         if use_plain_file:
             attr_dict_items = [
-                (self.full_span, {"foreground": self.base_color}),
+                (self.full_span, {
+                    "foreground": self.int_to_hex(self.base_color_int)
+                }),
                 *self.predefined_attr_dicts,
                 *[
                     (span, {})
@@ -480,7 +480,7 @@ class MarkupText(LabelledString):
                 (self.full_span, {"foreground": BLACK}),
                 *[
                     (span, {
-                        key: BLACK if key in COLOR_RELATED_KEYS else val
+                        key: BLACK if key in MARKUP_COLOR_KEYS else val
                         for key, val in attr_dict.items()
                     })
                     for span, attr_dict in self.predefined_attr_dicts
@@ -501,14 +501,6 @@ class MarkupText(LabelledString):
             inserted_string_pairs, self.command_repl_items
         )
         return self.get_replaced_substr(self.full_span, span_repl_dict)
-
-    @property
-    def has_predefined_local_colors(self) -> bool:
-        return any([
-            key in COLOR_RELATED_KEYS
-            for _, attr_dict in self.predefined_attr_dicts
-            for key in attr_dict.keys()
-        ])
 
     # Method alias
 
