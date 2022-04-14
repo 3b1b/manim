@@ -452,11 +452,7 @@ class MarkupText(LabelledString):
             self.specified_spans
         ))))
         breakup_indices = sorted(filter(
-            lambda index: not any([
-                span[0] < index < span[1]
-                for span in self.entity_spans
-            ]),
-            breakup_indices
+            self.index_not_in_entity_spans, breakup_indices
         ))
         return list(filter(
             lambda span: self.get_substr(span).strip(),
@@ -464,12 +460,19 @@ class MarkupText(LabelledString):
         ))
 
     def get_content(self, use_plain_file: bool) -> str:
+        filtered_attr_dicts = list(filter(
+            lambda item: all([
+                self.index_not_in_entity_spans(index)
+                for index in item[0]
+            ]),
+            self.predefined_attr_dicts
+        ))
         if use_plain_file:
             attr_dict_items = [
                 (self.full_span, {
                     "foreground": self.int_to_hex(self.base_color_int)
                 }),
-                *self.predefined_attr_dicts,
+                *filtered_attr_dicts,
                 *[
                     (span, {})
                     for span in self.label_span_list
@@ -483,7 +486,7 @@ class MarkupText(LabelledString):
                         key: BLACK if key in MARKUP_COLOR_KEYS else val
                         for key, val in attr_dict.items()
                     })
-                    for span, attr_dict in self.predefined_attr_dicts
+                    for span, attr_dict in filtered_attr_dicts
                 ],
                 *[
                     (span, {"foreground": self.int_to_hex(label + 1)})

@@ -311,6 +311,12 @@ class LabelledString(SVGMobject, ABC):
             self.extra_entity_spans
         ))
 
+    def index_not_in_entity_spans(self, index: int) -> bool:
+        return not any([
+            entity_span[0] < index < entity_span[1]
+            for entity_span in self.entity_spans
+        ])
+
     @abstractmethod
     def get_extra_ignored_spans(self) -> list[int]:
         return []
@@ -343,10 +349,9 @@ class LabelledString(SVGMobject, ABC):
             self.find_substrs(self.isolate)
         ))
         shrinked_spans = list(filter(
-            lambda span: span[0] < span[1] and not any([
-                entity_span[0] < index < entity_span[1]
+            lambda span: span[0] < span[1] and all([
+                self.index_not_in_entity_spans(index)
                 for index in span
-                for entity_span in self.entity_spans
             ]),
             [self.shrink_span(span) for span in spans]
         ))

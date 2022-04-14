@@ -7,6 +7,7 @@ import itertools as it
 from functools import wraps
 
 import moderngl
+import numbers
 import numpy as np
 
 from manimlib.constants import DEFAULT_MOBJECT_TO_EDGE_BUFFER
@@ -659,7 +660,10 @@ class Mobject(object):
         Otherwise, if about_point is given a value, scaling is done with
         respect to that point.
         """
-        scale_factor = np.resize(scale_factor, self.dim).clip(min=min_scale_factor)
+        if isinstance(scale_factor, numbers.Number):
+            scale_factor = max(scale_factor, min_scale_factor)
+        else:
+            scale_factor = np.array(scale_factor).clip(min=min_scale_factor)
         self.apply_points_function(
             lambda points: scale_factor * points,
             about_point=about_point,

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import numpy as np
+
 from manimlib.constants import DOWN, LEFT, RIGHT, UP
 from manimlib.mobject.svg.tex_mobject import SingleStringTex
 from manimlib.mobject.svg.text_mobject import Text
