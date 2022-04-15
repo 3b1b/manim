@@ -135,8 +135,8 @@ class MTex(LabelledString):
             if span_begin in brace_indices_dict.keys():
                 span_end = brace_indices_dict[span_begin] + 1
             else:
-                match_obj = self.match(script_pattern, pos=span_begin)
-                if not match_obj:
+                span = self.find_spans(script_pattern, pos=span_begin)[0]
+                if span[0] != span_begin:
                     script_name = {
                         "_": "subscript",
                         "^": "superscript"
@@ -145,7 +145,7 @@ class MTex(LabelledString):
                         f"Unclear {script_name} detected while parsing. "
                         "Please use braces to clarify"
                     )
-                span_end = match_obj.end()
+                span_end = span[1]
             result.append((span_begin, span_end))
         return result
 
