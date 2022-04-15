@@ -34,6 +34,11 @@ if TYPE_CHECKING:
 
     ManimColor = Union[str, Color]
     Span = tuple[int, int]
+    Selector = Union[
+        str,
+        re.Pattern,
+        tuple[Union[int, None], Union[int, None]]
+    ]
 
 
 TEXT_MOB_SCALE_FACTOR = 0.0076
@@ -283,25 +288,6 @@ class MarkupText(LabelledString):
             MarkupText.get_neighbouring_pairs(index_seq), attr_dict_list[:-1]
         ))
 
-    def find_substr_or_span(
-        self, substr_or_span: str | tuple[int | None, int | None]
-    ) -> list[Span]:
-        if isinstance(substr_or_span, str):
-            return self.find_substr(substr_or_span)
-
-        span = tuple([
-            (
-                min(index, self.string_len)
-                if index >= 0
-                else max(index + self.string_len, 0)
-            )
-            if index is not None else default_index
-            for index, default_index in zip(substr_or_span, self.full_span)
-        ])
-        if span[0] >= span[1]:
-            return []
-        return [span]
-
     # Pre-parsing
 
     def get_tag_items_from_markup(
@@ -314,7 +300,7 @@ class MarkupText(LabelledString):
         attr_pattern = r"""(\w+)\s*\=\s*(['"])(.*?)\2"""
         begin_match_obj_stack = []
         match_obj_pairs = []
-        for match_obj in self.finditer(tag_pattern):
+        for match_obj in re.finditer(tag_pattern, self.string):
             if not match_obj.group(1):
                 begin_match_obj_stack.append(match_obj)
             else:
@@ -385,12 +371,12 @@ class MarkupText(LabelledString):
                 (self.t2s, "font_style"),
                 (self.t2w, "font_weight")
             )
-            for substr_or_span, val in t2x_dict.items()
-            for span in self.find_substr_or_span(substr_or_span)
+            for selector, val in t2x_dict.items()
+            for span in self.find_spans_by_selector(selector)
         ] + [
             (span, local_config)
-            for substr_or_span, local_config in self.local_configs.items()
-            for span in self.find_substr_or_span(substr_or_span)
+            for selector, local_config in self.local_configs.items()
+            for span in self.find_spans_by_selector(selector)
         ]
 
     def get_predefined_attr_dicts(self) -> list[Span, dict[str, str]]:
@@ -428,7 +414,7 @@ class MarkupText(LabelledString):
                     (">", "&gt;"),
                     ("<", "&lt;")
                 )
-                for span in self.find_substr(char)
+                for span in self.find_spans(re.escape(char))
             ]
         return result
 
@@ -460,7 +446,7 @@ class MarkupText(LabelledString):
             self.get_neighbouring_pairs(breakup_indices)
         ))
 
-    def get_content(self, use_plain_file: bool) -> str:
+    def get_content(self, is_labelled: bool) -> str:
         filtered_attr_dicts = list(filter(
             lambda item: all([
                 self.is_splittable_index(index)
@@ -468,18 +454,7 @@ class MarkupText(LabelledString):
             ]),
             self.predefined_attr_dicts
         ))
-        if use_plain_file:
-            attr_dict_items = [
-                (self.full_span, {
-                    "foreground": self.int_to_hex(self.base_color_int)
-                }),
-                *filtered_attr_dicts,
-                *[
-                    (span, {})
-                    for span in self.label_span_list
-                ]
-            ]
-        else:
+        if is_labelled:
             attr_dict_items = [
                 (self.full_span, {"foreground": BLACK}),
                 *[
@@ -492,6 +467,17 @@ class MarkupText(LabelledString):
                 *[
                     (span, {"foreground": self.int_to_hex(label + 1)})
                     for label, span in enumerate(self.label_span_list)
+                ]
+            ]
+        else:
+            attr_dict_items = [
+                (self.full_span, {
+                    "foreground": self.int_to_hex(self.base_color_int)
+                }),
+                *filtered_attr_dicts,
+                *[
+                    (span, {})
+                    for span in self.label_span_list
                 ]
             ]
         inserted_string_pairs = [
@@ -508,21 +494,21 @@ class MarkupText(LabelledString):
 
     # Method alias
 
-    def get_parts_by_text(self, text: str, **kwargs) -> VGroup:
-        return self.get_parts_by_string(text, **kwargs)
+    def get_parts_by_text(self, selector: Selector, **kwargs) -> VGroup:
+        return self.select_parts(selector, **kwargs)
 
-    def get_part_by_text(self, text: str, **kwargs) -> VMobject:
-        return self.get_part_by_string(text, **kwargs)
+    def get_part_by_text(self, selector: Selector, **kwargs) -> VMobject:
+        return self.select_part(selector, **kwargs)
 
-    def set_color_by_text(self, text: str, color: ManimColor, **kwargs):
-        return self.set_color_by_string(text, color, **kwargs)
+    def set_color_by_text(
+        self, selector: Selector, color: ManimColor, **kwargs
+    ):
+        return self.set_parts_color(selector, color, **kwargs)
 
     def set_color_by_text_to_color_map(
-        self, text_to_color_map: dict[str, ManimColor], **kwargs
+        self, color_map: dict[Selector, ManimColor], **kwargs
     ):
-        return self.set_color_by_string_to_color_map(
-            text_to_color_map, **kwargs
-        )
+        return self.set_parts_color_by_dict(color_map, **kwargs)
 
     def get_text(self) -> str:
         return self.get_string()

@@ -213,14 +213,12 @@ class TransformMatchingStrings(AnimationGroup):
             ], key=len, reverse=True)
 
         def get_parts_from_keys(mobject, keys):
-            if isinstance(keys, str):
+            if not isinstance(keys, list):
                 keys = [keys]
-            result = VGroup()
-            for key in keys:
-                if not isinstance(key, str):
-                    raise TypeError(key)
-                result.add(*mobject.get_parts_by_string(key))
-            return result
+            return VGroup(*it.chain(*[
+                mobject.select_parts(key)
+                for key in keys
+            ]))
 
         add_anims_from(
             ReplacementTransform, get_parts_from_keys,
@@ -228,7 +226,7 @@ class TransformMatchingStrings(AnimationGroup):
         )
         add_anims_from(
             FadeTransformPieces,
-            LabelledString.get_parts_by_string,
+            LabelledString.select_parts,
             get_common_substrs(
                 source.specified_substrs,
                 target.specified_substrs
@@ -236,7 +234,7 @@ class TransformMatchingStrings(AnimationGroup):
         )
         add_anims_from(
             FadeTransformPieces,
-            LabelledString.get_parts_by_group_substr,
+            LabelledString.select_parts_by_group_substr,
             get_common_substrs(
                 source.group_substrs,
                 target.group_substrs

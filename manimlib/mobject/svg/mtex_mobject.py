@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import itertools as it
+import re
 
 from manimlib.mobject.svg.labelled_string import LabelledString
 from manimlib.utils.tex_file_writing import display_during_execution
@@ -18,6 +19,11 @@ if TYPE_CHECKING:
 
     ManimColor = Union[str, Color]
     Span = tuple[int, int]
+    Selector = Union[
+        str,
+        re.Pattern,
+        tuple[Union[int, None], Union[int, None]]
+    ]
 
 
 SCALE_FACTOR_PER_FONT_POINT = 0.001
@@ -61,7 +67,7 @@ class MTex(LabelledString):
             tex_config["text_to_replace"],
             content
         )
-        with display_during_execution(f"Writing \"{self.tex_string}\""):
+        with display_during_execution(f"Writing \"{self.string}\""):
             file_path = tex_to_svg_file(full_tex)
         return file_path
 
@@ -93,7 +99,10 @@ class MTex(LabelledString):
     def get_unescaped_char_spans(self, chars: str):
         return sorted(filter(
             lambda span: span[0] - 1 not in self.backslash_indices,
-            self.find_substrs(list(chars))
+            list(it.chain(*[
+                self.find_spans(re.escape(char))
+                for char in chars
+            ]))
         ))
 
     def get_brace_index_pairs(self) -> list[Span]:
@@ -121,8 +130,8 @@ class MTex(LabelledString):
         result = []
         brace_indices_dict = dict(self.brace_index_pairs)
         script_pattern = r"[a-zA-Z0-9]|\\[a-zA-Z]+"
-        for script_char_span in self.script_char_spans:
-            span_begin = self.match(r"\s*", pos=script_char_span[1]).end()
+        for char_span in self.script_char_spans:
+            span_begin = self.find_spans(r"\s*", pos=char_span[1])[0][1]
             if span_begin in brace_indices_dict.keys():
                 span_end = brace_indices_dict[span_begin] + 1
             else:
@@ -143,10 +152,10 @@ class MTex(LabelledString):
     def get_script_spans(self) -> list[Span]:
         return [
             (
-                self.search(r"\s*$", endpos=script_char_span[0]).start(),
+                self.find_spans(r"\s*", endpos=char_span[0])[-1][0],
                 script_content_span[1]
             )
-            for script_char_span, script_content_span in zip(
+            for char_span, script_content_span in zip(
                 self.script_char_spans, self.script_content_spans
             )
         ]
@@ -174,7 +183,7 @@ class MTex(LabelledString):
             ")",
             r"(?![a-zA-Z])"
         ])
-        for match_obj in self.finditer(pattern):
+        for match_obj in re.finditer(pattern, self.string):
             span_begin, cmd_end = match_obj.span()
             if span_begin not in backslash_indices:
                 continue
@@ -192,7 +201,7 @@ class MTex(LabelledString):
 
     def get_extra_entity_spans(self) -> list[Span]:
         return [
-            self.match(r"\\([a-zA-Z]+|.)", pos=index).span()
+            self.find_spans(r"\\([a-zA-Z]+|.?)", pos=index)[0]
             for index in self.backslash_indices
         ]
 
@@ -223,7 +232,10 @@ class MTex(LabelledString):
         return result
 
     def get_external_specified_spans(self) -> list[Span]:
-        return self.find_substrs(list(self.tex_to_color_map.keys()))
+        return list(it.chain(*[
+            self.find_spans_by_selector(selector)
+            for selector in self.tex_to_color_map.keys()
+        ]))
 
     def get_label_span_list(self) -> list[Span]:
         result = self.script_content_spans.copy()
@@ -237,10 +249,8 @@ class MTex(LabelledString):
             result.append(shrinked_span)
         return result
 
-    def get_content(self, use_plain_file: bool) -> str:
-        if use_plain_file:
-            span_repl_dict = {}
-        else:
+    def get_content(self, is_labelled: bool) -> str:
+        if is_labelled:
             extended_label_span_list = [
                 span
                 if span in self.script_content_spans
@@ -258,6 +268,8 @@ class MTex(LabelledString):
                 inserted_string_pairs,
                 self.command_repl_items
             )
+        else:
+            span_repl_dict = {}
         result = self.get_replaced_substr(self.full_span, span_repl_dict)
 
         if self.tex_environment:
@@ -269,7 +281,7 @@ class MTex(LabelledString):
             result = "\n".join([prefix, result, suffix])
         if self.alignment:
             result = "\n".join([self.alignment, result])
-        if use_plain_file:
+        if not is_labelled:
             result = "\n".join([
                 self.get_color_command_str(self.base_color_int),
                 result
@@ -303,21 +315,21 @@ class MTex(LabelledString):
 
     # Method alias
 
-    def get_parts_by_tex(self, tex: str, **kwargs) -> VGroup:
-        return self.get_parts_by_string(tex, **kwargs)
+    def get_parts_by_tex(self, selector: Selector, **kwargs) -> VGroup:
+        return self.select_parts(selector, **kwargs)
 
-    def get_part_by_tex(self, tex: str, **kwargs) -> VMobject:
-        return self.get_part_by_string(tex, **kwargs)
+    def get_part_by_tex(self, selector: Selector, **kwargs) -> VMobject:
+        return self.select_part(selector, **kwargs)
 
-    def set_color_by_tex(self, tex: str, color: ManimColor, **kwargs):
-        return self.set_color_by_string(tex, color, **kwargs)
+    def set_color_by_tex(
+        self, selector: Selector, color: ManimColor, **kwargs
+    ):
+        return self.set_parts_color(selector, color, **kwargs)
 
     def set_color_by_tex_to_color_map(
-        self, tex_to_color_map: dict[str, ManimColor], **kwargs
+        self, color_map: dict[Selector, ManimColor], **kwargs
     ):
-        return self.set_color_by_string_to_color_map(
-            tex_to_color_map, **kwargs
-        )
+        return self.set_parts_color_by_dict(color_map, **kwargs)
 
     def get_tex(self) -> str:
         return self.get_string()
