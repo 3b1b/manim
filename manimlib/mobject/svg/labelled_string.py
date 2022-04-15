@@ -103,6 +103,7 @@ class LabelledString(SVGMobject, ABC):
     def pre_parse(self) -> None:
         self.string_len = len(self.string)
         self.full_span = (0, self.string_len)
+        self.space_spans = self.find_spans(r"\s+")
         self.base_color_int = self.color_to_int(self.base_color)
 
     def parse(self) -> None:
@@ -137,13 +138,16 @@ class LabelledString(SVGMobject, ABC):
     def get_substr(self, span: Span) -> str:
         return self.string[slice(*span)]
 
-    def find_spans(self, pattern: str | re.Pattern, **kwargs) -> list[Span]:
+    def find_spans(self, pattern: str | re.Pattern) -> list[Span]:
         if isinstance(pattern, str):
             pattern = re.compile(pattern)
         return [
             match_obj.span()
-            for match_obj in pattern.finditer(self.string, **kwargs)
+            for match_obj in pattern.finditer(self.string)
         ]
+
+    def match_at(self, pattern: str, pos: int) -> re.Pattern | None:
+        return re.compile(pattern).match(self.string, pos=pos)
 
     def find_spans_by_selector(self, selector: Selector) -> list[Span]:
         if isinstance(selector, str):

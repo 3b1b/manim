@@ -131,12 +131,12 @@ class MTex(LabelledString):
         brace_indices_dict = dict(self.brace_index_pairs)
         script_pattern = r"[a-zA-Z0-9]|\\[a-zA-Z]+"
         for char_span in self.script_char_spans:
-            span_begin = self.find_spans(r"\s*", pos=char_span[1])[0][1]
+            span_begin = self.rslide(char_span[1], self.space_spans)
             if span_begin in brace_indices_dict.keys():
                 span_end = brace_indices_dict[span_begin] + 1
             else:
-                spans = self.find_spans(script_pattern, pos=span_begin)
-                if not spans or spans[0][0] != span_begin:
+                match_obj = self.match_at(script_pattern, span_begin)
+                if match_obj is None:
                     script_name = {
                         "_": "subscript",
                         "^": "superscript"
@@ -146,14 +146,14 @@ class MTex(LabelledString):
                         f"(position {char_span[0]}). "
                         "Please use braces to clarify"
                     )
-                span_end = spans[0][1]
+                span_end = match_obj.end()
             result.append((span_begin, span_end))
         return result
 
     def get_script_spans(self) -> list[Span]:
         return [
             (
-                self.find_spans(r"\s*", endpos=char_span[0])[-1][0],
+                self.lslide(char_span[0], self.space_spans),
                 script_content_span[1]
             )
             for char_span, script_content_span in zip(
@@ -202,7 +202,7 @@ class MTex(LabelledString):
 
     def get_extra_entity_spans(self) -> list[Span]:
         return [
-            self.find_spans(r"\\([a-zA-Z]+|.?)", pos=index)[0]
+            self.match_at(r"\\([a-zA-Z]+|.?)", index).span()
             for index in self.backslash_indices
         ]
 
