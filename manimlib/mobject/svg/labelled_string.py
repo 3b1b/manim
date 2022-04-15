@@ -36,18 +36,15 @@ class LabelledString(SVGMobject, ABC):
             "should_subdivide_sharp_curves": True,
             "should_remove_null_curves": True,
         },
+        "base_color": WHITE,
         "isolate": [],
     }
 
     def __init__(self, string: str, **kwargs):
         self.string = string
         digest_config(self, kwargs)
-
-        self.base_color_int = self.color_to_int(
-            self.svg_default.get("fill_color") \
-            or self.svg_default.get("color") \
-            or WHITE
-        )
+        if self.base_color is None:
+            self.base_color = WHITE
 
         self.pre_parse()
         self.parse()
@@ -68,7 +65,8 @@ class LabelledString(SVGMobject, ABC):
     def generate_mobject(self) -> None:
         super().generate_mobject()
 
-        if self.label_span_list:
+        num_labels = len(self.label_span_list)
+        if num_labels:
             file_path = self.get_file_path_(use_plain_file=False)
             labelled_svg = SVGMobject(file_path)
             submob_color_ints = [
@@ -85,7 +83,7 @@ class LabelledString(SVGMobject, ABC):
             )
 
         unrecognized_color_ints = remove_list_redundancies(sorted(filter(
-            lambda color_int: color_int > len(self.label_span_list),
+            lambda color_int: color_int > num_labels,
             submob_color_ints
         )))
         if unrecognized_color_ints:
@@ -100,6 +98,7 @@ class LabelledString(SVGMobject, ABC):
     def pre_parse(self) -> None:
         self.string_len = len(self.string)
         self.full_span = (0, self.string_len)
+        self.base_color_int = self.color_to_int(self.base_color)
 
     def parse(self) -> None:
         self.command_repl_items = self.get_command_repl_items()
@@ -311,7 +310,7 @@ class LabelledString(SVGMobject, ABC):
             self.extra_entity_spans
         ))
 
-    def index_not_in_entity_spans(self, index: int) -> bool:
+    def is_splittable_index(self, index: int) -> bool:
         return not any([
             entity_span[0] < index < entity_span[1]
             for entity_span in self.entity_spans
@@ -348,12 +347,16 @@ class LabelledString(SVGMobject, ABC):
             self.external_specified_spans,
             self.find_substrs(self.isolate)
         ))
-        shrinked_spans = list(filter(
-            lambda span: span[0] < span[1] and all([
-                self.index_not_in_entity_spans(index)
+        filtered_spans = list(filter(
+            lambda span: all([
+                self.is_splittable_index(index)
                 for index in span
             ]),
-            [self.shrink_span(span) for span in spans]
+            spans
+        ))
+        shrinked_spans = list(filter(
+            lambda span: span[0] < span[1],
+            [self.shrink_span(span) for span in filtered_spans]
         ))
         return remove_list_redundancies(shrinked_spans)
 

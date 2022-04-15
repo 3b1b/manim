@@ -47,6 +47,7 @@ class MTex(LabelledString):
             self.__class__.__name__,
             self.svg_default,
             self.path_string_config,
+            self.base_color,
             self.isolate,
             self.tex_string,
             self.alignment,

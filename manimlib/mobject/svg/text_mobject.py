@@ -161,6 +161,7 @@ class MarkupText(LabelledString):
             self.__class__.__name__,
             self.svg_default,
             self.path_string_config,
+            self.base_color,
             self.isolate,
             self.text,
             self.is_markup,
@@ -452,7 +453,7 @@ class MarkupText(LabelledString):
             self.specified_spans
         ))))
         breakup_indices = sorted(filter(
-            self.index_not_in_entity_spans, breakup_indices
+            self.is_splittable_index, breakup_indices
         ))
         return list(filter(
             lambda span: self.get_substr(span).strip(),
@@ -462,7 +463,7 @@ class MarkupText(LabelledString):
     def get_content(self, use_plain_file: bool) -> str:
         filtered_attr_dicts = list(filter(
             lambda item: all([
-                self.index_not_in_entity_spans(index)
+                self.is_splittable_index(index)
                 for index in item[0]
             ]),
             self.predefined_attr_dicts
