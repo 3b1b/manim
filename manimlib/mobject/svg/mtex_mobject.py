@@ -142,7 +142,8 @@ class MTex(LabelledString):
                         "^": "superscript"
                     }[self.get_string(char_span)]
                     raise ValueError(
-                        f"Unclear {script_name} detected while parsing. "
+                        f"Unclear {script_name} detected while parsing "
+                        f"(position {char_span[0]}). "
                         "Please use braces to clarify"
                     )
                 span_end = spans[0][1]
