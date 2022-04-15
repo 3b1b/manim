@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from colour import Color
+
 import numpy as np
 
 from typing import TYPE_CHECKING
@@ -79,7 +81,7 @@ def batch_by_property(
     return batch_prop_pairs
 
 
-def listify(obj) -> list:
+def listify(obj: object) -> list:
     if isinstance(obj, str):
         return [obj]
     try:
@@ -138,5 +140,8 @@ def hash_obj(obj: object) -> int:
 
     if isinstance(obj, (set, tuple, list)):
         return hash(tuple(hash_obj(e) for e in obj))
+
+    if isinstance(obj, Color):
+        return hash(obj.get_rgb())
 
     return hash(obj)
