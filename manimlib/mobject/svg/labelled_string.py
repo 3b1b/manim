@@ -187,7 +187,13 @@ class LabelledString(SVGMobject, ABC):
                 ])
                 spans = [span]
             result.extend(spans)
-        return list(filter(lambda span: span[0] < span[1], result))
+        return sorted(
+            filter(
+                lambda span: span[0] < span[1],
+                remove_list_redundancies(result)
+            ),
+            key=lambda span: (span[0], -span[1])
+        )
 
     @staticmethod
     def get_neighbouring_pairs(iterable: list) -> list[tuple]:
@@ -529,10 +535,13 @@ class LabelledString(SVGMobject, ABC):
         ])
 
     def select_parts(self, selector: Selector, **kwargs) -> VGroup:
-        return VGroup(*[
-            self.select_part_by_span(span, **kwargs)
-            for span in self.find_spans_by_selector(selector)
-        ])
+        return VGroup(*filter(
+            lambda part: part.submobjects,
+            [
+                self.select_part_by_span(span, **kwargs)
+                for span in self.find_spans_by_selector(selector)
+            ]
+        ))
 
     def select_part(
         self, selector: Selector, index: int = 0, **kwargs
