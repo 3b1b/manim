@@ -212,29 +212,19 @@ class TransformMatchingStrings(AnimationGroup):
                 if substr and substr in substrs_from_target
             ], key=len, reverse=True)
 
-        def get_parts_from_keys(mobject, keys):
-            if not isinstance(keys, list):
-                keys = [keys]
-            return VGroup(*it.chain(*[
-                mobject.select_parts(key)
-                for key in keys
-            ]))
-
         add_anims_from(
-            ReplacementTransform, get_parts_from_keys,
+            ReplacementTransform, LabelledString.select_parts,
             self.key_map.keys(), self.key_map.values()
         )
         add_anims_from(
-            FadeTransformPieces,
-            LabelledString.select_parts,
+            FadeTransformPieces, LabelledString.select_parts,
             get_common_substrs(
                 source.specified_substrs,
                 target.specified_substrs
             )
         )
         add_anims_from(
-            FadeTransformPieces,
-            LabelledString.select_parts_by_group_substr,
+            FadeTransformPieces, LabelledString.select_parts_by_group_substr,
             get_common_substrs(
                 source.group_substrs,
                 target.group_substrs

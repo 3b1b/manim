@@ -22,11 +22,12 @@ if TYPE_CHECKING:
 
     ManimColor = Union[str, Color]
     Span = tuple[int, int]
-    Selector = Union[
+    SingleSelector = Union[
         str,
         re.Pattern,
         tuple[Union[int, None], Union[int, None]]
     ]
+    Selector = Union[SingleSelector, Iterable[SingleSelector]]
 
 
 class LabelledString(SVGMobject, ABC):
@@ -149,22 +150,43 @@ class LabelledString(SVGMobject, ABC):
     def match_at(self, pattern: str, pos: int) -> re.Pattern | None:
         return re.compile(pattern).match(self.string, pos=pos)
 
-    def find_spans_by_selector(self, selector: Selector) -> list[Span]:
+    @staticmethod
+    def is_single_selector(selector: Selector) -> bool:
         if isinstance(selector, str):
-            result = self.find_spans(re.escape(selector))
-        elif isinstance(selector, re.Pattern):
-            result = self.find_spans(selector)
-        else:
-            span = tuple([
-                (
-                    min(index, self.string_len)
-                    if index >= 0
-                    else max(index + self.string_len, 0)
-                )
-                if index is not None else default_index
-                for index, default_index in zip(selector, self.full_span)
-            ])
-            result = [span]
+            return True
+        if isinstance(selector, re.Pattern):
+            return True
+        if isinstance(selector, tuple):
+            if len(selector) == 2 and all([
+                isinstance(index, int) or index is None
+                for index in selector
+            ]):
+                return True
+        return False
+
+    def find_spans_by_selector(self, selector: Selector) -> list[Span]:
+        if self.is_single_selector(selector):
+            selector = (selector,)
+        result = []
+        for sel in selector:
+            if not self.is_single_selector(sel):
+                raise TypeError(f"Invalid selector: '{sel}'")
+            if isinstance(sel, str):
+                spans = self.find_spans(re.escape(sel))
+            elif isinstance(sel, re.Pattern):
+                spans = self.find_spans(sel)
+            else:
+                span = tuple([
+                    (
+                        min(index, self.string_len)
+                        if index >= 0
+                        else max(index + self.string_len, 0)
+                    )
+                    if index is not None else default_index
+                    for index, default_index in zip(sel, self.full_span)
+                ])
+                spans = [span]
+            result.extend(spans)
         return list(filter(lambda span: span[0] < span[1], result))
 
     @staticmethod
@@ -348,10 +370,7 @@ class LabelledString(SVGMobject, ABC):
         spans = list(it.chain(
             self.internal_specified_spans,
             self.external_specified_spans,
-            *[
-                self.find_spans_by_selector(selector)
-                for selector in self.isolate
-            ]
+            self.find_spans_by_selector(self.isolate)
         ))
         filtered_spans = list(filter(
             lambda span: all([

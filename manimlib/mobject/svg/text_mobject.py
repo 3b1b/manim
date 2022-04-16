@@ -34,11 +34,12 @@ if TYPE_CHECKING:
 
     ManimColor = Union[str, Color]
     Span = tuple[int, int]
-    Selector = Union[
+    SingleSelector = Union[
         str,
         re.Pattern,
         tuple[Union[int, None], Union[int, None]]
     ]
+    Selector = Union[SingleSelector, Iterable[SingleSelector]]
 
 
 TEXT_MOB_SCALE_FACTOR = 0.0076
