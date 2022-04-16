@@ -15,7 +15,6 @@ if TYPE_CHECKING:
     from typing import Union
 
     from manimlib.mobject.types.vectorized_mobject import VGroup
-    from manimlib.mobject.types.vectorized_mobject import VMobject
 
     ManimColor = Union[str, Color]
     Span = tuple[int, int]
@@ -320,7 +319,7 @@ class MTex(LabelledString):
     def get_parts_by_tex(self, selector: Selector, **kwargs) -> VGroup:
         return self.select_parts(selector, **kwargs)
 
-    def get_part_by_tex(self, selector: Selector, **kwargs) -> VMobject:
+    def get_part_by_tex(self, selector: Selector, **kwargs) -> VGroup:
         return self.select_part(selector, **kwargs)
 
     def set_color_by_tex(

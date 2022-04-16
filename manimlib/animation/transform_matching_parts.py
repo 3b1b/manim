@@ -168,13 +168,17 @@ class TransformMatchingStrings(AnimationGroup):
         assert isinstance(source, LabelledString)
         assert isinstance(target, LabelledString)
         anims = []
-        source_indices = list(range(len(source.labelled_submobjects)))
-        target_indices = list(range(len(target.labelled_submobjects)))
+        source_indices = list(range(len(source.labelled_submobject_items)))
+        target_indices = list(range(len(target.labelled_submobject_items)))
 
         def get_indices_lists(mobject, parts):
+            labelled_submobjects = [
+                submob
+                for _, submob in mobject.labelled_submobject_items
+            ]
             return [
                 [
-                    mobject.labelled_submobjects.index(submob)
+                    labelled_submobjects.index(submob)
                     for submob in part
                 ]
                 for part in parts

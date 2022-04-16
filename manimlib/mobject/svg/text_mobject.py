@@ -29,7 +29,6 @@ if TYPE_CHECKING:
     from colour import Color
     from typing import Union
 
-    from manimlib.mobject.types.vectorized_mobject import VMobject
     from manimlib.mobject.types.vectorized_mobject import VGroup
 
     ManimColor = Union[str, Color]
@@ -498,7 +497,7 @@ class MarkupText(LabelledString):
     def get_parts_by_text(self, selector: Selector, **kwargs) -> VGroup:
         return self.select_parts(selector, **kwargs)
 
-    def get_part_by_text(self, selector: Selector, **kwargs) -> VMobject:
+    def get_part_by_text(self, selector: Selector, **kwargs) -> VGroup:
         return self.select_part(selector, **kwargs)
 
     def set_color_by_text(

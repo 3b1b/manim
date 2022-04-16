@@ -18,8 +18,6 @@ if TYPE_CHECKING:
     from colour import Color
     from typing import Iterable, Union
 
-    from manimlib.mobject.types.vectorized_mobject import VMobject
-
     ManimColor = Union[str, Color]
     Span = tuple[int, int]
     SingleSelector = Union[
@@ -125,7 +123,6 @@ class LabelledString(SVGMobject, ABC):
             (submob.label, submob)
             for submob in self.submobjects
         ]
-        self.labelled_submobjects = self.get_labelled_submobjects()
         self.specified_substrs = self.get_specified_substrs()
         self.group_items = self.get_group_items()
         self.group_substrs = self.get_group_substrs()
@@ -412,9 +409,6 @@ class LabelledString(SVGMobject, ABC):
 
     # Post-parsing
 
-    def get_labelled_submobjects(self) -> list[VMobject]:
-        return [submob for _, submob in self.labelled_submobject_items]
-
     def get_cleaned_substr(self, span: Span) -> str:
         span_repl_dict = dict.fromkeys(self.command_spans, "")
         return self.get_replaced_substr(span, span_repl_dict)
@@ -545,7 +539,7 @@ class LabelledString(SVGMobject, ABC):
 
     def select_part(
         self, selector: Selector, index: int = 0, **kwargs
-    ) -> VMobject:
+    ) -> VGroup:
         return self.select_parts(selector, **kwargs)[index]
 
     def set_parts_color(
