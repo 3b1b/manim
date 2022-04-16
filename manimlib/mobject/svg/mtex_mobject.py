@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from colour import Color
-    from typing import Union
+    from typing import Iterable, Union
 
     from manimlib.mobject.types.vectorized_mobject import VGroup
 
