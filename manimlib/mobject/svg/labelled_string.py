@@ -20,12 +20,16 @@ if TYPE_CHECKING:
 
     ManimColor = Union[str, Color]
     Span = tuple[int, int]
-    SingleSelector = Union[
+    Selector = Union[
         str,
         re.Pattern,
-        tuple[Union[int, None], Union[int, None]]
+        tuple[Union[int, None], Union[int, None]],
+        Iterable[
+            str,
+            re.Pattern,
+            tuple[Union[int, None], Union[int, None]]
+        ]
     ]
-    Selector = Union[SingleSelector, Iterable[SingleSelector]]
 
 
 class LabelledString(SVGMobject, ABC):
