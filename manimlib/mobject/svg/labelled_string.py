@@ -188,13 +188,10 @@ class LabelledString(SVGMobject, ABC):
                 ])
                 spans = [span]
             result.extend(spans)
-        return sorted(
-            filter(
-                lambda span: span[0] < span[1],
-                remove_list_redundancies(result)
-            ),
-            key=lambda span: (span[0], -span[1])
-        )
+        return sorted(filter(
+            lambda span: span[0] < span[1],
+            remove_list_redundancies(result)
+        ))
 
     @staticmethod
     def get_neighbouring_pairs(iterable: list) -> list[tuple]:
