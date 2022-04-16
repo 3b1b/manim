@@ -37,11 +37,11 @@ if TYPE_CHECKING:
         str,
         re.Pattern,
         tuple[Union[int, None], Union[int, None]],
-        Iterable[
+        Iterable[Union[
             str,
             re.Pattern,
             tuple[Union[int, None], Union[int, None]]
-        ]
+        ]]
     ]
 
 
