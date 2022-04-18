@@ -214,23 +214,19 @@ class MTex(LabelledString):
         result = []
 
         # Match paired double braces (`{{...}}`).
-        reversed_brace_spans_dict = dict(sorted([
-            pair[::-1] for pair in self.brace_spans
-        ]))
+        sorted_brace_spans = sorted(
+            self.brace_spans, key=lambda span: span[1]
+        )
         skip = False
-        for prev_brace_end, brace_end in self.get_neighbouring_pairs(
-            list(reversed_brace_spans_dict.keys())
+        for prev_span, span in self.get_neighbouring_pairs(
+            sorted_brace_spans
         ):
             if skip:
                 skip = False
                 continue
-            if brace_end != prev_brace_end + 1:
+            if span[0] != prev_span[0] - 1 or span[1] != prev_span[1] + 1:
                 continue
-            brace_begin = reversed_brace_spans_dict[brace_end]
-            prev_brace_begin = reversed_brace_spans_dict[prev_brace_end]
-            if brace_begin != prev_brace_begin - 1:
-                continue
-            result.append((brace_begin, brace_end))
+            result.append(span)
             skip = True
 
         result.extend(it.chain(*[
