@@ -53,11 +53,16 @@ class LabelledString(SVGMobject, ABC):
         digest_config(self, kwargs)
         if self.base_color is None:
             self.base_color = WHITE
+        self.base_color_int = self.color_to_int(self.base_color)
 
-        self.pre_parse()
+        self.string_len = len(self.string)
+        self.full_span = (0, self.string_len)
         self.parse()
         super().__init__()
-        self.post_parse()
+        self.labelled_submobject_items = [
+            (submob.label, submob)
+            for submob in self.submobjects
+        ]
 
     def get_file_path(self) -> str:
         return self.get_file_path_(is_labelled=False)
@@ -85,7 +90,6 @@ class LabelledString(SVGMobject, ABC):
             submob_color_ints = [0] * len(self.submobjects)
 
         if len(self.submobjects) != len(submob_color_ints):
-            print(len(self.submobjects), len(submob_color_ints))
             raise ValueError(
                 "Cannot align submobjects of the labelled svg "
                 "to the original svg"
@@ -104,11 +108,6 @@ class LabelledString(SVGMobject, ABC):
         for submob, color_int in zip(self.submobjects, submob_color_ints):
             submob.label = color_int - 1
 
-    def pre_parse(self) -> None:
-        self.string_len = len(self.string)
-        self.full_span = (0, self.string_len)
-        self.base_color_int = self.color_to_int(self.base_color)
-
     def parse(self) -> None:
         self.skippable_indices = self.get_skippable_indices()
         self.entity_spans = self.get_entity_spans()
@@ -120,12 +119,6 @@ class LabelledString(SVGMobject, ABC):
         self.label_span_list = self.get_label_span_list()
         if len(self.label_span_list) >= 16777216:
             raise ValueError("Cannot handle that many substrings")
-
-    def post_parse(self) -> None:
-        self.labelled_submobject_items = [
-            (submob.label, submob)
-            for submob in self.submobjects
-        ]
 
     def copy(self):
         return self.deepcopy()
@@ -362,7 +355,7 @@ class LabelledString(SVGMobject, ABC):
     def get_content(self, is_labelled: bool) -> str:
         return ""
 
-    # Post-parsing
+    # Selector
 
     @abstractmethod
     def get_cleaned_substr(self, span: Span) -> str:
@@ -413,8 +406,6 @@ class LabelledString(SVGMobject, ABC):
             )
             for span in self.specified_spans
         ]
-
-    # Selector
 
     def find_span_components(
         self, custom_span: Span, substring: bool = True

@@ -198,9 +198,9 @@ class SVGMobject(VMobject):
     ) -> VMobject:
         mob.set_style(
             stroke_width=shape.stroke_width,
-            stroke_color=shape.stroke.hex,
+            stroke_color=shape.stroke.hexrgb,
             stroke_opacity=shape.stroke.opacity,
-            fill_color=shape.fill.hex,
+            fill_color=shape.fill.hexrgb,
             fill_opacity=shape.fill.opacity
         )
         return mob

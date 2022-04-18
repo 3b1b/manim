@@ -6,13 +6,12 @@ import os
 from pathlib import Path
 import re
 
-from manimpango import MarkupUtils
+import manimpango
 import pygments
 import pygments.formatters
 import pygments.lexers
 
-from manimlib.constants import BLACK
-from manimlib.constants import DEFAULT_PIXEL_HEIGHT, DEFAULT_PIXEL_WIDTH
+from manimlib.constants import DEFAULT_PIXEL_WIDTH, FRAME_WIDTH
 from manimlib.constants import NORMAL
 from manimlib.logger import log
 from manimlib.mobject.svg.labelled_string import LabelledString
@@ -46,48 +45,15 @@ if TYPE_CHECKING:
 
 TEXT_MOB_SCALE_FACTOR = 0.0076
 DEFAULT_LINE_SPACING_SCALE = 0.6
+# Ensure the canvas is large enough to hold all glyphs.
+DEFAULT_CANVAS_WIDTH = 16384
+DEFAULT_CANVAS_HEIGHT = 16384
 
 
 # See https://docs.gtk.org/Pango/pango_markup.html
-# A tag containing two aliases will cause warning,
-# so only use the first key of each group of aliases.
-MARKUP_KEY_ALIAS_LIST = (
-    ("font", "font_desc"),
-    ("font_family", "face"),
-    ("font_size", "size"),
-    ("font_style", "style"),
-    ("font_weight", "weight"),
-    ("font_variant", "variant"),
-    ("font_stretch", "stretch"),
-    ("font_features",),
-    ("foreground", "fgcolor", "color"),
-    ("background", "bgcolor"),
-    ("alpha", "fgalpha"),
-    ("background_alpha", "bgalpha"),
-    ("underline",),
-    ("underline_color",),
-    ("overline",),
-    ("overline_color",),
-    ("rise",),
-    ("baseline_shift",),
-    ("font_scale",),
-    ("strikethrough",),
-    ("strikethrough_color",),
-    ("fallback",),
-    ("lang",),
-    ("letter_spacing",),
-    ("gravity",),
-    ("gravity_hint",),
-    ("show",),
-    ("insert_hyphens",),
-    ("allow_breaks",),
-    ("line_height",),
-    ("text_transform",),
-    ("segment",),
-)
 MARKUP_COLOR_KEYS = (
-    "foreground",
-    "background",
+    "foreground", "fgcolor", "color",
+    "background", "bgcolor",
     "underline_color",
     "overline_color",
     "strikethrough_color"
@@ -125,7 +91,7 @@ class MarkupText(LabelledString):
         "justify": False,
         "indent": 0,
         "alignment": "LEFT",
-        "line_width_factor": None,
+        "line_width": None,
         "font": "",
         "slant": NORMAL,
         "weight": NORMAL,
@@ -146,9 +112,7 @@ class MarkupText(LabelledString):
         if not self.font:
             self.font = get_customization()["style"]["font"]
         if self.is_markup:
-            validate_error = MarkupUtils.validate(text)
-            if validate_error:
-                raise ValueError(validate_error)
+            self.validate_markup_string(text)
 
         self.text = text
         super().__init__(text, **kwargs)
@@ -178,7 +142,7 @@ class MarkupText(LabelledString):
             self.justify,
             self.indent,
             self.alignment,
-            self.line_width_factor,
+            self.line_width,
             self.font,
             self.slant,
             self.weight,
@@ -205,23 +169,32 @@ class MarkupText(LabelledString):
                     kwargs[short_name] = kwargs.pop(long_name)
 
     def get_file_path_by_content(self, content: str) -> str:
+        hash_content = str((
+            content,
+            self.justify,
+            self.indent,
+            self.alignment,
+            self.line_width
+        ))
         svg_file = os.path.join(
-            get_text_dir(), tex_hash(content) + ".svg"
+            get_text_dir(), tex_hash(hash_content) + ".svg"
         )
         if not os.path.exists(svg_file):
             self.markup_to_svg(content, svg_file)
         return svg_file
 
     def markup_to_svg(self, markup_str: str, file_name: str) -> str:
+        self.validate_markup_string(markup_str)
+
         # `manimpango` is under construction,
         # so the following code is intended to suit its interface
         alignment = _Alignment(self.alignment)
-        if self.line_width_factor is None:
+        if self.line_width is None:
             pango_width = -1
         else:
-            pango_width = self.line_width_factor * DEFAULT_PIXEL_WIDTH
+            pango_width = self.line_width / FRAME_WIDTH * DEFAULT_PIXEL_WIDTH
 
-        return MarkupUtils.text2svg(
+        return manimpango.MarkupUtils.text2svg(
             text=markup_str,
             font="",                     # Already handled
             slant="NORMAL",              # Already handled
@@ -232,8 +205,8 @@ class MarkupText(LabelledString):
             file_name=file_name,
             START_X=0,
             START_Y=0,
-            width=DEFAULT_PIXEL_WIDTH,
-            height=DEFAULT_PIXEL_HEIGHT,
+            width=DEFAULT_CANVAS_WIDTH,
+            height=DEFAULT_CANVAS_HEIGHT,
             justify=self.justify,
             indent=self.indent,
             line_spacing=None,           # Already handled
@@ -241,11 +214,22 @@ class MarkupText(LabelledString):
             pango_width=pango_width
         )
 
-    def pre_parse(self) -> None:
-        super().pre_parse()
+    @staticmethod
+    def validate_markup_string(markup_str: str) -> None:
+        validate_error = manimpango.MarkupUtils.validate(markup_str)
+        if not validate_error:
+            return
+        raise ValueError(
+            f"Invalid markup string \"{markup_str}\"\n"
+            f"{validate_error}"
+        )
+
+    def parse(self) -> None:
+        self.global_attr_dict = self.get_global_attr_dict()
         self.tag_pairs_from_markup = self.get_tag_pairs_from_markup()
         self.tag_spans = self.get_tag_spans()
         self.items_from_markup = self.get_items_from_markup()
+        super().parse()
 
     # Toolkits
 
@@ -256,7 +240,24 @@ class MarkupText(LabelledString):
             for key, val in attr_dict.items()
         ])
 
-    # Pre-parsing
+    # Parsing
+
+    def get_global_attr_dict(self) -> dict[str, str]:
+        result = {
+            "font_size": str(self.font_size * 1024),
+            "foreground": self.int_to_hex(self.base_color_int),
+            "font_family": self.font,
+            "font_style": self.slant,
+            "font_weight": self.weight,
+        }
+        # `line_height` attribute is supported since Pango 1.50.
+        if tuple(map(int, manimpango.pango_version().split("."))) >= (1, 50):
+            result.update({
+                "line_height": str((
+                    (self.lsh or DEFAULT_LINE_SPACING_SCALE) + 1
+                ) * 0.6),
+            })
+        return result
 
     def get_tag_pairs_from_markup(
         self
@@ -264,8 +265,8 @@ class MarkupText(LabelledString):
         if not self.is_markup:
             return []
 
-        tag_pattern = r"""<(/?)(\w+)\s*((?:\w+\s*\=\s*(['"]).*?\4\s*)*)>"""
-        attr_pattern = r"""(\w+)\s*\=\s*(['"])(.*?)\2"""
+        tag_pattern = r"""<(/?)(\w+)\s*((\w+\s*\=\s*(['"])[\s\S]*?\5\s*)*)>"""
+        attr_pattern = r"""(\w+)\s*\=\s*(['"])([\s\S]*?)\2"""
         begin_match_obj_stack = []
         match_obj_pairs = []
         for match_obj in re.finditer(tag_pattern, self.string):
@@ -275,16 +276,10 @@ class MarkupText(LabelledString):
                 match_obj_pairs.append(
                     (begin_match_obj_stack.pop(), match_obj)
                 )
-        if begin_match_obj_stack:
-            raise ValueError("Unclosed tag(s) detected")
 
         result = []
         for begin_match_obj, end_match_obj in match_obj_pairs:
             tag_name = begin_match_obj.group(2)
-            if tag_name != end_match_obj.group(2):
-                raise ValueError("Unmatched tag names")
-            if end_match_obj.group(3):
-                raise ValueError("Attributes shan't exist in ending tags")
             if tag_name == "span":
                 attr_dict = {
                     match.group(1): match.group(3)
@@ -292,14 +287,8 @@ class MarkupText(LabelledString):
                         attr_pattern, begin_match_obj.group(3)
                     )
                 }
-            elif tag_name in MARKUP_TAG_CONVERSION_DICT.keys():
-                if begin_match_obj.group(3):
-                    raise ValueError(
-                        f"Attributes shan't exist in tag '{tag_name}'"
-                    )
-                attr_dict = MARKUP_TAG_CONVERSION_DICT[tag_name].copy()
             else:
-                raise ValueError(f"Unknown tag: '{tag_name}'")
+                attr_dict = MARKUP_TAG_CONVERSION_DICT.get(tag_name, {})
 
             result.append(
                 (begin_match_obj.span(), end_match_obj.span(), attr_dict)
@@ -320,8 +309,6 @@ class MarkupText(LabelledString):
             in self.tag_pairs_from_markup
         ]
 
-    # Parsing
-
     def get_skippable_indices(self) -> list[int]:
         return self.find_indices(r"\s")
 
@@ -335,20 +322,9 @@ class MarkupText(LabelledString):
         return [span for span, _ in self.items_from_markup]
 
     def get_extra_isolated_items(self) -> list[tuple[Span, dict[str, str]]]:
-        result = [
-            (self.full_span, {
-                "line_height": str((
-                    (self.lsh or DEFAULT_LINE_SPACING_SCALE) + 1
-                ) * 0.6),
-                "font_family": self.font,
-                "font_size": str(self.font_size * 1024),
-                "font_style": self.slant,
-                "font_weight": self.weight,
-                "foreground": self.int_to_hex(self.base_color_int)
-            }),
-            (self.full_span, self.global_config),
-            *self.items_from_markup,
-            *[
+        return list(it.chain(
+            self.items_from_markup,
+            [
                 (span, {key: val})
                 for t2x_dict, key in (
                     (self.t2c, "foreground"),
@@ -359,24 +335,12 @@ class MarkupText(LabelledString):
                 for selector, val in t2x_dict.items()
                 for span in self.find_spans_by_selector(selector)
             ],
-            *[
+            [
                 (span, local_config)
                 for selector, local_config in self.local_configs.items()
                 for span in self.find_spans_by_selector(selector)
             ]
-        ]
-        key_conversion_dict = {
-            key: key_alias_list[0]
-            for key_alias_list in MARKUP_KEY_ALIAS_LIST
-            for key in key_alias_list
-        }
-        return [
-            (span, {
-                key_conversion_dict[key.lower()]: val
-                for key, val in attr_dict.items()
-            })
-            for span, attr_dict in result
-        ]
+        ))
 
     def get_label_span_list(self) -> list[Span]:
         interval_spans = sorted(it.chain(
@@ -398,14 +362,20 @@ class MarkupText(LabelledString):
         ]))
 
     def get_content(self, is_labelled: bool) -> str:
+        predefined_items = [
+            (self.full_span, self.global_attr_dict),
+            (self.full_span, self.global_config),
+            *self.specified_items
+        ]
         if is_labelled:
             attr_dict_items = list(it.chain(
                 [
                     (span, {
-                        key: BLACK if key in MARKUP_COLOR_KEYS else val
+                        key:
+                        "black" if key.lower() in MARKUP_COLOR_KEYS else val
                         for key, val in attr_dict.items()
                     })
-                    for span, attr_dict in self.specified_items
+                    for span, attr_dict in predefined_items
                 ],
                 [
                     (span, {"foreground": self.int_to_hex(label + 1)})
@@ -414,7 +384,7 @@ class MarkupText(LabelledString):
             ))
         else:
             attr_dict_items = list(it.chain(
-                self.specified_items,
+                predefined_items,
                 [
                     (span, {})
                     for span in self.label_span_list
@@ -425,7 +395,7 @@ class MarkupText(LabelledString):
                 f"<span {self.get_attr_dict_str(attr_dict)}>",
                 "</span>"
             ))
-            for span, attr_dict in attr_dict_items
+            for span, attr_dict in attr_dict_items if attr_dict
         ]
         repl_items = [
             (tag_span, "") for tag_span in self.tag_spans
@@ -445,7 +415,7 @@ class MarkupText(LabelledString):
         )
         return self.get_replaced_substr(self.full_span, span_repl_dict)
 
-    # Post-parsing
+    # Selector
 
     def get_cleaned_substr(self, span: Span) -> str:
         repl_dict = dict.fromkeys(self.tag_spans, "")

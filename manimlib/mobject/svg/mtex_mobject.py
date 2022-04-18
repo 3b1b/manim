@@ -84,8 +84,7 @@ class MTex(LabelledString):
             file_path = tex_to_svg_file(full_tex)
         return file_path
 
-    def pre_parse(self) -> None:
-        super().pre_parse()
+    def parse(self) -> None:
         self.backslash_indices = self.get_backslash_indices()
         self.command_spans = self.get_command_spans()
         self.brace_spans = self.get_brace_spans()
@@ -93,6 +92,7 @@ class MTex(LabelledString):
         self.script_content_spans = self.get_script_content_spans()
         self.script_spans = self.get_script_spans()
         self.command_repl_items = self.get_command_repl_items()
+        super().parse()
 
     # Toolkits
 
@@ -102,7 +102,7 @@ class MTex(LabelledString):
         r, g = divmod(rg, 256)
         return f"\\color[RGB]{{{r}, {g}, {b}}}"
 
-    # Pre-parsing
+    # Parsing
 
     def get_backslash_indices(self) -> list[int]:
         # The latter of `\\` doesn't count.
@@ -186,19 +186,17 @@ class MTex(LabelledString):
                 continue
             n_braces, substitute_cmd = TEX_COLOR_COMMANDS_DICT[cmd_name]
             span_begin, span_end = cmd_span
-            for _ in n_braces:
+            for _ in range(n_braces):
                 span_end = brace_spans_dict[min(filter(
                     lambda index: index >= span_end,
                     brace_begins
                 ))]
             if substitute_cmd:
-                repl_str = "\\" + cmd_name + n_braces * "{black}"
+                repl_str = cmd_name + n_braces * "{black}"
             else:
                 repl_str = ""
             result.append(((span_begin, span_end), repl_str))
         return result
-
-    # Parsing
 
     def get_skippable_indices(self) -> list[int]:
         return list(it.chain(
@@ -298,7 +296,7 @@ class MTex(LabelledString):
             ])
         return result
 
-    # Post-parsing
+    # Selector
 
     def get_cleaned_substr(self, span: Span) -> str:
         if not self.brace_spans:
