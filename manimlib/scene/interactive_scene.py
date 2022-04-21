@@ -2,12 +2,13 @@ import numpy as np
 import itertools as it
 import pyperclip
 import os
+import platform
 
 from manimlib.animation.fading import FadeIn
 from manimlib.constants import MANIM_COLORS, WHITE, YELLOW
-from manimlib.constants import ORIGIN, UP, DOWN, LEFT, RIGHT
+from manimlib.constants import ORIGIN, UP, DOWN, LEFT, RIGHT, DL, UL, UR, DR
 from manimlib.constants import FRAME_WIDTH, SMALL_BUFF
-from manimlib.constants import CTRL_SYMBOL, SHIFT_SYMBOL, DELETE_SYMBOL, ARROW_SYMBOLS
+from manimlib.constants import SHIFT_SYMBOL, DELETE_SYMBOL, ARROW_SYMBOLS
 from manimlib.constants import SHIFT_MODIFIER, COMMAND_MODIFIER
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.geometry import Rectangle
@@ -37,8 +38,6 @@ COLOR_KEY = 'c'
 
 class InteractiveScene(Scene):
     """
-    TODO, Document
-
     To select mobjects on screen, hold ctrl and move the mouse to highlight a region,
     or just tap ctrl to select the mobject under the cursor.
 
@@ -60,7 +59,7 @@ class InteractiveScene(Scene):
     """
     corner_dot_config = dict(
         color=WHITE,
-        radius=0.1,
+        radius=0.05,
         glow_factor=1.0,
     )
     selection_rectangle_stroke_color = WHITE
@@ -149,11 +148,15 @@ class InteractiveScene(Scene):
 
     def get_corner_dots(self, mobject):
         dots = DotCloud(**self.corner_dot_config)
-        dots.add_updater(lambda d: d.set_points(mobject.get_all_corners()))
-        dots.scale((dots.get_width() + dots.get_radius()) / dots.get_width())
-        # Since for flat object, all 8 corners really appear as four, dim the dots
+        radius = self.corner_dot_config["radius"]
         if mobject.get_depth() < 1e-2:
-            dots.set_opacity(0.5)
+            vects = [DL, UL, UR, DR]
+        else:
+            vects = list(it.product(*3 * [[-1, 1]]))
+        dots.add_updater(lambda d: d.set_points([
+            mobject.get_corner(v) + v * radius
+            for v in vects
+        ]))
         return dots
 
     def get_highlight(self, mobject):
@@ -179,16 +182,10 @@ class InteractiveScene(Scene):
         return rect
 
     def add_to_selection(self, *mobjects):
-        for mob in mobjects:
-            if mob in self.unselectables:
-                continue
-            if mob not in self.selection:
-                self.selection.add(mob)
-                self.selection_highlight.add(self.get_highlight(mob))
-        self.saved_selection_state = [
-            (mob, mob.copy())
-            for mob in self.selection
-        ]
+        mobs = list(filter(lambda m: m not in self.unselectables, mobjects))
+        self.selection.add(*mobjects)
+        self.selection_highlight.add(*map(self.get_highlight, mobs))
+        self.saved_selection_state = [(mob, mob.copy()) for mob in self.selection]
 
     def toggle_from_selection(self, *mobjects):
         for mob in mobjects:
@@ -230,7 +227,7 @@ class InteractiveScene(Scene):
         except ValueError:
             pass
         # Otherwise, treat as tex or text
-        if "\\" in clipboard_str:  # Proxy to text for LaTeX
+        if set("\\^=+").intersection(clipboard_str):  # Proxy to text for LaTeX
             try:
                 new_mob = Tex(clipboard_str)
             except LatexError:
@@ -240,7 +237,6 @@ class InteractiveScene(Scene):
         self.clear_selection()
         self.add(new_mob)
         self.add_to_selection(new_mob)
-        new_mob.move_to(self.mouse_point)
 
     def delete_selection(self):
         self.remove(*self.selection)
@@ -255,9 +251,17 @@ class InteractiveScene(Scene):
             while file_name in files:
                 file_name = file_name.replace(str(index), str(index + 1))
                 index += 1
-            user_name = input(
-                f"Enter mobject file name (default is {file_name}): "
-            )
+            if platform.system() == 'Darwin':
+                user_name = os.popen(f"""
+                    osascript -e '
+                    set chosenfile to (choose file name default name "{file_name}" default location "{directory}")
+                    POSIX path of chosenfile'
+                """).read()
+                user_name = user_name.replace("\n", "")
+            else:
+                user_name = input(
+                    f"Enter mobject file name (default is {file_name}): "
+                )
             if user_name:
                 file_name = user_name
             files.append(file_name)
