@@ -6,7 +6,7 @@ from manimlib.animation.fading import FadeIn
 from manimlib.constants import MANIM_COLORS, WHITE
 from manimlib.constants import ORIGIN, UP, DOWN, LEFT, RIGHT, DL, UL, UR, DR
 from manimlib.constants import FRAME_WIDTH, SMALL_BUFF
-from manimlib.constants import SHIFT_SYMBOL, DELETE_SYMBOL, ARROW_SYMBOLS
+from manimlib.constants import SHIFT_SYMBOL, CTRL_SYMBOL, DELETE_SYMBOL, ARROW_SYMBOLS
 from manimlib.constants import SHIFT_MODIFIER, COMMAND_MODIFIER
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.geometry import Rectangle
@@ -258,6 +258,7 @@ class InteractiveScene(Scene):
             self.scale_about_point = center
         self.scale_ref_vect = mp - self.scale_about_point
         self.scale_ref_width = self.selection.get_width()
+        self.scale_ref_height = self.selection.get_height()
 
     # Event handlers
 
@@ -367,13 +368,22 @@ class InteractiveScene(Scene):
             self.selection.set_y((point - self.mouse_to_selection)[1])
         # Scale selection
         elif self.window.is_key_pressed(ord(RESIZE_KEY)):
-            # TODO, allow for scaling about the opposite corner
             vect = point - self.scale_about_point
-            scalar = get_norm(vect) / get_norm(self.scale_ref_vect)
-            self.selection.set_width(
-                scalar * self.scale_ref_width,
-                about_point=self.scale_about_point
-            )
+            if self.window.is_key_pressed(CTRL_SYMBOL):
+                for i in (0, 1):
+                    scalar = vect[i] / self.scale_ref_vect[i]
+                    self.selection.rescale_to_fit(
+                        scalar * [self.scale_ref_width, self.scale_ref_height][i],
+                        dim=i,
+                        about_point=self.scale_about_point,
+                        stretch=True,
+                    )
+            else:
+                scalar = get_norm(vect) / get_norm(self.scale_ref_vect)
+                self.selection.set_width(
+                    scalar * self.scale_ref_width,
+                    about_point=self.scale_about_point
+                )
         # Add to selection
         elif self.window.is_key_pressed(ord(SELECT_KEY)) and self.window.is_key_pressed(SHIFT_SYMBOL):
             mob = self.point_to_mobject(
