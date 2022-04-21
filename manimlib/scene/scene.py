@@ -295,6 +295,25 @@ class Scene(object):
                 return mobject
         return None
 
+    def get_group(self, *mobjects):
+        if all(isinstance(m, VMobject) for m in mobjects):
+            return VGroup(*mobjects)
+        else:
+            return Group(*mobjects)
+
+    def id_to_mobject(self, id_value):
+        for mob in self.mobjects:
+            for sm in mob.get_family():
+                if id(sm) == id_value:
+                    return sm
+        return None
+
+    def ids_to_group(self, *id_values):
+        return self.get_group(*filter(
+            lambda x: x is not None,
+            map(self.id_to_mobject, id_values)
+        ))
+
     # Related to skipping
     def update_skipping_status(self) -> None:
         if self.start_at_animation_number is not None:
