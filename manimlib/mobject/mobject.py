@@ -1235,6 +1235,13 @@ class Mobject(object):
     def get_corner(self, direction: np.ndarray) -> np.ndarray:
         return self.get_bounding_box_point(direction)
 
+    def get_all_corners(self):
+        bb = self.get_bounding_box()
+        return np.array([
+            [bb[indices[-i + 1]][i] for i in range(3)]
+            for indices in it.product(*3 * [[0, 2]])
+        ])
+
     def get_center(self) -> np.ndarray:
         return self.get_bounding_box()[1]
 
