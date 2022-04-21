@@ -349,22 +349,6 @@ class VMobject(Mobject):
     def get_joint_type(self) -> str:
         return self.joint_type
 
-    def get_highlight(
-        self,
-        stroke_color: Color = WHITE,
-        added_stroke: float = 3.0,
-        opacity: float = 0.75,
-    ) -> VMobject:
-        highlight = self.copy()
-        highlight.set_fill(opacity=0)
-        highlight.set_stroke(
-            color=stroke_color,
-            width=self.get_stroke_width() + added_stroke,
-            opacity=opacity
-        )
-        highlight.add_updater(lambda m: m.move_to(self))
-        return highlight
-
     # Points
     def set_anchors_and_handles(
         self,
