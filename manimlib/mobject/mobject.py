@@ -502,13 +502,7 @@ class Mobject(object):
         self.become(self.saved_state)
         return self
 
-    def save_to_file(self, file_path: str):
-        if not file_path.endswith(".mob"):
-            file_path += ".mob"
-        if os.path.exists(file_path):
-            cont = input(f"{file_path} already exists. Overwrite (y/n)? ")
-            if cont != "y":
-                return
+    def save_to_file(self, file_path: str, supress_overwrite_warning: bool = False):
         with open(file_path, "wb") as fp:
             fp.write(self.serialize())
         log.info(f"Saved mobject to {file_path}")

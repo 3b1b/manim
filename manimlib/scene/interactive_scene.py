@@ -138,14 +138,6 @@ class InteractiveScene(Scene):
         palette.fix_in_frame()
         return palette
 
-    def get_stroke_highlight(self, vmobject):
-        outline = vmobject.copy()
-        for sm, osm in zip(vmobject.get_family(), outline.get_family()):
-            osm.set_fill(opacity=0)
-            osm.set_stroke(YELLOW, width=sm.get_stroke_width() + 1.5)
-        outline.add_updater(lambda o: o.replace(vmobject))
-        return outline
-
     def get_corner_dots(self, mobject):
         dots = DotCloud(**self.corner_dot_config)
         radius = self.corner_dot_config["radius"]
@@ -160,8 +152,10 @@ class InteractiveScene(Scene):
         return dots
 
     def get_highlight(self, mobject):
-        if isinstance(mobject, VMobject) and mobject.has_points():
-            return self.get_stroke_highlight(mobject)
+        if isinstance(mobject, VMobject) and mobject.has_points() and not self.select_top_level_mobs:
+            result = VHighlight(mobject)
+            result.add_updater(lambda m: m.replace(mobject))
+            return result
         else:
             return self.get_corner_dots(mobject)
 
@@ -182,10 +176,14 @@ class InteractiveScene(Scene):
         return rect
 
     def add_to_selection(self, *mobjects):
-        mobs = list(filter(lambda m: m not in self.unselectables, mobjects))
-        self.selection.add(*mobjects)
-        self.selection_highlight.add(*map(self.get_highlight, mobs))
-        self.saved_selection_state = [(mob, mob.copy()) for mob in self.selection]
+        mobs = list(filter(
+            lambda m: m not in self.unselectables and m not in self.selection,
+            mobjects
+        ))
+        if mobs:
+            self.selection.add(*mobs)
+            self.selection_highlight.add(*map(self.get_highlight, mobs))
+            self.saved_selection_state = [(mob, mob.copy()) for mob in self.selection]
 
     def toggle_from_selection(self, *mobjects):
         for mob in mobjects:
@@ -382,16 +380,16 @@ class InteractiveScene(Scene):
     def on_mouse_motion(self, point: np.ndarray, d_point: np.ndarray) -> None:
         super().on_mouse_motion(point, d_point)
         # Move selection
-        if self.window.is_key_pressed(ord("g")):
+        if self.window.is_key_pressed(ord(GRAB_KEY)):
             self.selection.move_to(point - self.mouse_to_selection)
         # Move selection restricted to horizontal
-        elif self.window.is_key_pressed(ord("h")):
+        elif self.window.is_key_pressed(ord(HORIZONTAL_GRAB_KEY)):
             self.selection.set_x((point - self.mouse_to_selection)[0])
         # Move selection restricted to vertical
-        elif self.window.is_key_pressed(ord("v")):
+        elif self.window.is_key_pressed(ord(VERTICAL_GRAB_KEY)):
             self.selection.set_y((point - self.mouse_to_selection)[1])
         # Scale selection
-        elif self.window.is_key_pressed(ord("t")):
+        elif self.window.is_key_pressed(ord(RESIZE_KEY)):
             # TODO, allow for scaling about the opposite corner
             vect = point - self.scale_about_point
             scalar = get_norm(vect) / get_norm(self.scale_ref_vect)
@@ -411,10 +409,14 @@ class InteractiveScene(Scene):
             )))
             mob = self.point_to_mobject(point, to_search)
             if mob is not None:
-                self.selection.set_color(mob.get_fill_color())
+                self.selection.set_color(mob.get_color())
             self.remove(self.color_palette)
         elif self.window.is_key_pressed(SHIFT_SYMBOL):
-            mob = self.point_to_mobject(point)
+            mob = self.point_to_mobject(
+                point,
+                search_set=self.get_selection_search_set(),
+                buff=SMALL_BUFF
+            )
             if mob is not None:
                 self.toggle_from_selection(mob)
         else:
