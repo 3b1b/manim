@@ -673,19 +673,18 @@ class Mobject(object):
     def is_changing(self) -> bool:
         return self._is_animating or self.has_updaters or self._is_movable
 
-    def set_animating_status(self, is_animating: bool) -> None:
-        self._is_animating = is_animating
-
-    def set_movable_status(self, is_movable: bool) -> None:
-        self._is_movable = is_movable
-
-    def is_movable(self) -> bool:
-        return self._is_movable
+    def set_animating_status(self, is_animating: bool, recurse: bool = True) -> None:
+        for mob in self.get_family(recurse):
+            mob._is_animating = is_animating
+        return self
 
     def make_movable(self, value: bool = True, recurse: bool = True) -> None:
         for mob in self.get_family(recurse):
             mob._is_movable = value
         return self
+
+    def is_movable(self) -> bool:
+        return self._is_movable
 
     # Transforming operations
 
