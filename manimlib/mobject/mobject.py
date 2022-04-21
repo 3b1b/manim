@@ -267,15 +267,22 @@ class Mobject(object):
                 parent.refresh_bounding_box()
         return self
 
-    def is_point_touching(
+    def are_points_touching(
         self,
-        point: np.ndarray,
+        points: np.ndarray,
         buff: float = MED_SMALL_BUFF
     ) -> bool:
         bb = self.get_bounding_box()
         mins = (bb[0] - buff)
         maxs = (bb[2] + buff)
-        return (point >= mins).all() and (point <= maxs).all()
+        return ((points >= mins) * (points <= maxs)).all(1)
+
+    def is_point_touching(
+        self,
+        point: np.ndarray,
+        buff: float = MED_SMALL_BUFF
+    ) -> bool:
+        return self.are_points_touching(np.array(point, ndmin=2), buff)[0]
 
     # Family matters
 
