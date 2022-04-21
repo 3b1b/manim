@@ -682,8 +682,10 @@ class Mobject(object):
     def is_movable(self) -> bool:
         return self._is_movable
 
-    def make_movable(self) -> None:
-        self._is_movable = True
+    def make_movable(self, value: bool = True, recurse: bool = True) -> None:
+        for mob in self.get_family(recurse):
+            mob._is_movable = value
+        return self
 
     # Transforming operations
 
