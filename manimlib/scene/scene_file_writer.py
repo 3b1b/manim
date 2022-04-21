@@ -78,6 +78,8 @@ class SceneFileWriter(object):
                 self.partial_movie_directory = guarantee_existence(os.path.join(
                     movie_dir, "partial_movie_files", scene_name,
                 ))
+        # A place to save mobjects
+        self.saved_mobject_directory = os.path.join(out_dir, "mobjects")
 
     def get_default_module_directory(self) -> str:
         path, _ = os.path.splitext(self.input_file_path)
@@ -118,6 +120,12 @@ class SceneFileWriter(object):
 
     def get_movie_file_path(self) -> str:
         return self.movie_file_path
+
+    def get_saved_mobject_directory(self) -> str:
+        return guarantee_existence(os.path.join(
+            self.saved_mobject_directory,
+            str(self.scene),
+        ))
 
     # Sound
     def init_audio(self) -> None:
