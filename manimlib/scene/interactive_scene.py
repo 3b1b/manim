@@ -1,11 +1,9 @@
 import numpy as np
 import itertools as it
 import pyperclip
-import os
-import platform
 
 from manimlib.animation.fading import FadeIn
-from manimlib.constants import MANIM_COLORS, WHITE, YELLOW
+from manimlib.constants import MANIM_COLORS, WHITE
 from manimlib.constants import ORIGIN, UP, DOWN, LEFT, RIGHT, DL, UL, UR, DR
 from manimlib.constants import FRAME_WIDTH, SMALL_BUFF
 from manimlib.constants import SHIFT_SYMBOL, DELETE_SYMBOL, ARROW_SYMBOLS
@@ -18,6 +16,7 @@ from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.mobject.types.vectorized_mobject import VHighlight
 from manimlib.mobject.types.dot_cloud import DotCloud
 from manimlib.scene.scene import Scene
 from manimlib.utils.tex_file_writing import LatexError
@@ -375,6 +374,14 @@ class InteractiveScene(Scene):
                 scalar * self.scale_ref_width,
                 about_point=self.scale_about_point
             )
+        # Add to selection
+        elif self.window.is_key_pressed(ord(SELECT_KEY)) and self.window.is_key_pressed(SHIFT_SYMBOL):
+            mob = self.point_to_mobject(
+                point, search_set=self.get_selection_search_set(),
+                buff=SMALL_BUFF
+            )
+            if mob is not None:
+                self.add_to_selection(mob)
 
     def on_mouse_release(self, point: np.ndarray, button: int, mods: int) -> None:
         super().on_mouse_release(point, button, mods)
