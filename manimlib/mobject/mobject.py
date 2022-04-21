@@ -136,8 +136,10 @@ class Mobject(object):
         return self
 
     def set_uniforms(self, uniforms: dict):
-        for key in uniforms:
-            self.uniforms[key] = uniforms[key]  # Copy?
+        for key, value in uniforms.items():
+            if isinstance(value, np.ndarray):
+                value = value.copy()
+            self.uniforms[key] = value
         return self
 
     @property
