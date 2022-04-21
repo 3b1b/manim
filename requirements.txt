@@ -9,7 +9,6 @@ matplotlib
 moderngl
 moderngl_window
 skia-pathops
-pickle
 pydub
 pygments
 pyperclip
