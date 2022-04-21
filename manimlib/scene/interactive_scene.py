@@ -240,31 +240,6 @@ class InteractiveScene(Scene):
         self.remove(*self.selection)
         self.clear_selection()
 
-    def saved_selection_to_file(self):
-        directory = self.file_writer.get_saved_mobject_directory()
-        files = os.listdir(directory)
-        for mob in self.selection:
-            file_name = str(mob) + "_0.mob"
-            index = 0
-            while file_name in files:
-                file_name = file_name.replace(str(index), str(index + 1))
-                index += 1
-            if platform.system() == 'Darwin':
-                user_name = os.popen(f"""
-                    osascript -e '
-                    set chosenfile to (choose file name default name "{file_name}" default location "{directory}")
-                    POSIX path of chosenfile'
-                """).read()
-                user_name = user_name.replace("\n", "")
-            else:
-                user_name = input(
-                    f"Enter mobject file name (default is {file_name}): "
-                )
-            if user_name:
-                file_name = user_name
-            files.append(file_name)
-            self.save_mobect(mob, file_name)
-
     def undo(self):
         mobs = []
         for mob, state in self.saved_selection_state:
@@ -355,7 +330,10 @@ class InteractiveScene(Scene):
             self.undo()
         # Command + s -> Save selections to file
         elif char == "s" and modifiers == COMMAND_MODIFIER:
-            self.saved_selection_to_file()
+            to_save = self.selection
+            if len(to_save) == 1:
+                to_save = to_save[0]
+            self.save_mobect(to_save)
         # Keyboard movements
         elif symbol in ARROW_SYMBOLS:
             nudge = self.selection_nudge_size
