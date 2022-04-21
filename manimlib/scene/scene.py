@@ -4,9 +4,9 @@ import time
 import random
 import inspect
 import platform
-import itertools as it
 from functools import wraps
 from typing import Iterable, Callable
+import os
 
 from tqdm import tqdm as ProgressDisplay
 import numpy as np
@@ -14,9 +14,15 @@ import numpy as np
 from manimlib.animation.animation import prepare_animation
 from manimlib.animation.transform import MoveToTarget
 from manimlib.camera.camera import Camera
+from manimlib.config import get_custom_config
 from manimlib.constants import DEFAULT_WAIT_TIME
+from manimlib.constants import ARROW_SYMBOLS
+from manimlib.constants import SHIFT_MODIFIER, CTRL_MODIFIER, COMMAND_MODIFIER
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
+from manimlib.mobject.mobject import Group
+from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.family_ops import extract_mobject_family_members
@@ -30,6 +36,14 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from PIL.Image import Image
     from manimlib.animation.animation import Animation
+
+
+PAN_3D_KEY = 'd'
+FRAME_SHIFT_KEY = 'f'
+ZOOM_KEY = 'z'
+RESET_FRAME_KEY = 'r'
+QUIT_KEY = 'q'
+EMBED_KEY = 'e'
 
 
 class Scene(object):
@@ -117,7 +131,8 @@ class Scene(object):
         # the hood calling the pyglet event loop
         log.info(
             "Tips: You are now in the interactive mode. Now you can use the keyboard"
-            " and the mouse to interact with the scene. Just press `q` if you want to quit."
+            " and the mouse to interact with the scene. Just press `command + q` or `esc`"
+            " if you want to quit."
         )
         self.quit_interaction = False
         self.refresh_static_mobjects()
@@ -147,10 +162,12 @@ class Scene(object):
         # once embedded, and add a few custom shortcuts
         local_ns = inspect.currentframe().f_back.f_locals
         local_ns["touch"] = self.interact
+        local_ns["i2g"] = self.ids_to_group
         for term in ("play", "wait", "add", "remove", "clear", "save_state", "restore"):
             local_ns[term] = getattr(self, term)
         log.info("Tips: Now the embed iPython terminal is open. But you can't interact with"
                  " the window directly. To do so, you need to type `touch()` or `self.interact()`")
+        exec(get_custom_config()["universal_import_line"])
         shell(local_ns=local_ns, stack_depth=2)
         # End scene when exiting an embed
         if close_scene_on_exit:
@@ -617,11 +634,11 @@ class Scene(object):
 
         frame = self.camera.frame
         # Handle perspective changes
-        if self.window.is_key_pressed(ord("d")):
+        if self.window.is_key_pressed(ord(PAN_3D_KEY)):
             frame.increment_theta(-self.pan_sensitivity * d_point[0])
             frame.increment_phi(self.pan_sensitivity * d_point[1])
         # Handle frame movements
-        elif self.window.is_key_pressed(ord("s")):
+        elif self.window.is_key_pressed(ord(FRAME_SHIFT_KEY)):
             shift = -d_point
             shift[0] *= frame.get_width() / 2
             shift[1] *= frame.get_height() / 2
@@ -649,6 +666,7 @@ class Scene(object):
         button: int,
         mods: int
     ) -> None:
+        self.mouse_drag_point.move_to(point)
         event_data = {"point": point, "button": button, "mods": mods}
         propagate_event = EVENT_DISPATCHER.dispatch(EventType.MousePressEvent, **event_data)
         if propagate_event is not None and propagate_event is False:
@@ -676,9 +694,9 @@ class Scene(object):
             return
 
         frame = self.camera.frame
-        if self.window.is_key_pressed(ord("z")):
+        if self.window.is_key_pressed(ord(ZOOM_KEY)):
             factor = 1 + np.arctan(10 * offset[1])
-            frame.scale(1/factor, about_point=point)
+            frame.scale(1 / factor, about_point=point)
         else:
             transform = frame.get_inverse_camera_rotation_matrix()
             shift = np.dot(np.transpose(transform), offset)
@@ -710,13 +728,16 @@ class Scene(object):
         if propagate_event is not None and propagate_event is False:
             return
 
-        if char == "r":
+        if char == RESET_FRAME_KEY:
             self.camera.frame.to_default_state()
-        elif char == "q":
+        # command + q
+        elif char == QUIT_KEY and modifiers == COMMAND_MODIFIER:
             self.quit_interaction = True
-        elif char == " " or symbol == 65363:  # Space or right arrow
+        # Space or right arrow
+        elif char == " " or symbol == ARROW_SYMBOLS[2]:
             self.hold_on_wait = False
-        elif char == "e" and modifiers == 3:  # ctrl + shift + e
+        # ctrl + shift + e
+        elif char == EMBED_KEY and modifiers == CTRL_MODIFIER | SHIFT_MODIFIER:
             self.embed(close_scene_on_exit=False)
 
     def on_resize(self, width: int, height: int) -> None:
