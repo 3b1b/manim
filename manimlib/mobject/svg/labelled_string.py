@@ -123,9 +123,6 @@ class LabelledString(_StringSVG, ABC):
         self.group_substrs = self.get_group_substrs()
         self.submob_groups = self.get_submob_groups()
 
-    def copy(self):
-        return self.deepcopy()
-
     # Toolkits
 
     def get_substr(self, span: Span) -> str:

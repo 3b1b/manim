@@ -50,11 +50,13 @@ class AnimationGroup(Animation):
         return self.group
 
     def begin(self) -> None:
+        self.group.set_animating_status(True)
         for anim in self.animations:
             anim.begin()
         # self.init_run_time()
 
     def finish(self) -> None:
+        self.group.set_animating_status(False)
         for anim in self.animations:
             anim.finish()
 

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import sys
-import copy
 import random
 import itertools as it
 from functools import wraps
 from typing import Iterable, Callable, Union, Sequence
+import pickle
+import os
 
 import colour
 import moderngl
@@ -23,7 +24,6 @@ from manimlib.utils.iterables import list_update
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_preserving_order
 from manimlib.utils.iterables import resize_with_interpolation
-from manimlib.utils.iterables import make_even
 from manimlib.utils.iterables import listify
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import integer_interpolate
@@ -37,6 +37,7 @@ from manimlib.shader_wrapper import get_colormap_code
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_listner import EventListner
 from manimlib.event_handler.event_type import EventType
+from manimlib.logger import log
 
 
 TimeBasedUpdater = Callable[["Mobject", float], None]
@@ -71,7 +72,7 @@ class Mobject(object):
         # Must match in attributes of vert shader
         "shader_dtype": [
             ('point', np.float32, (3,)),
-        ]
+        ],
     }
 
     def __init__(self, **kwargs):
@@ -81,6 +82,8 @@ class Mobject(object):
         self.family: list[Mobject] = [self]
         self.locked_data_keys: set[str] = set()
         self.needs_new_bounding_box: bool = True
+        self._is_animating: bool = False
+        self._is_movable: bool = False
 
         self.init_data()
         self.init_uniforms()
@@ -265,15 +268,30 @@ class Mobject(object):
                 parent.refresh_bounding_box()
         return self
 
-    def is_point_touching(
+    def are_points_touching(
         self,
-        point: np.ndarray,
+        points: np.ndarray,
         buff: float = MED_SMALL_BUFF
     ) -> bool:
         bb = self.get_bounding_box()
         mins = (bb[0] - buff)
         maxs = (bb[2] + buff)
-        return (point >= mins).all() and (point <= maxs).all()
+        return ((points >= mins) * (points <= maxs)).all(1)
+
+    def is_point_touching(
+        self,
+        point: np.ndarray,
+        buff: float = MED_SMALL_BUFF
+    ) -> bool:
+        return self.are_points_touching(np.array(point, ndmin=2), buff)[0]
+
+    def is_touching(self, mobject: Mobject, buff: float = 1e-2) -> bool:
+        bb1 = self.get_bounding_box()
+        bb2 = mobject.get_bounding_box()
+        return not any((
+            (bb2[2] < bb1[0] - buff).any(),  # E.g. Right of mobject is left of self's left
+            (bb2[0] > bb1[2] + buff).any(),  # E.g. Left of mobject is right of self's right
+        ))
 
     # Family matters
 
@@ -421,22 +439,6 @@ class Mobject(object):
         self.center()
         return self
 
-    def replicate(self, n: int) -> Group:
-        return self.get_group_class()(
-            *(self.copy() for x in range(n))
-        )
-
-    def get_grid(self, n_rows: int, n_cols: int, height: float | None = None, **kwargs):
-        """
-        Returns a new mobject containing multiple copies of this one
-        arranged in a grid
-        """
-        grid = self.replicate(n_rows * n_cols)
-        grid.arrange_in_grid(n_rows, n_cols, **kwargs)
-        if height is not None:
-            grid.set_height(height)
-        return grid
-
     def sort(
         self,
         point_to_num_func: Callable[[np.ndarray], float] = lambda p: p[0],
@@ -457,67 +459,46 @@ class Mobject(object):
         self.assemble_family()
         return self
 
+    # Creating new Mobjects from this one
+
+    def replicate(self, n: int) -> Group:
+        return self.get_group_class()(
+            *(self.copy() for x in range(n))
+        )
+
+    def get_grid(self, n_rows: int, n_cols: int, height: float | None = None, **kwargs):
+        """
+        Returns a new mobject containing multiple copies of this one
+        arranged in a grid
+        """
+        grid = self.replicate(n_rows * n_cols)
+        grid.arrange_in_grid(n_rows, n_cols, **kwargs)
+        if height is not None:
+            grid.set_height(height)
+        return grid
+
     # Copying
 
     def copy(self):
-        # TODO, either justify reason for shallow copy, or
-        # remove this redundancy everywhere
-        # return self.deepcopy()
-
-        parents = self.parents
         self.parents = []
-        copy_mobject = copy.copy(self)
-        self.parents = parents
-
-        copy_mobject.data = dict(self.data)
-        for key in self.data:
-            copy_mobject.data[key] = self.data[key].copy()
-
-        copy_mobject.uniforms = dict(self.uniforms)
-        for key in self.uniforms:
-            if isinstance(self.uniforms[key], np.ndarray):
-                copy_mobject.uniforms[key] = self.uniforms[key].copy()
-
-        copy_mobject.submobjects = []
-        copy_mobject.add(*[sm.copy() for sm in self.submobjects])
-        copy_mobject.match_updaters(self)
-
-        copy_mobject.needs_new_bounding_box = self.needs_new_bounding_box
-
-        # Make sure any mobject or numpy array attributes are copied
-        family = self.get_family()
-        for attr, value in list(self.__dict__.items()):
-            if isinstance(value, Mobject) and value in family and value is not self:
-                setattr(copy_mobject, attr, value.copy())
-            if isinstance(value, np.ndarray):
-                setattr(copy_mobject, attr, value.copy())
-            if isinstance(value, ShaderWrapper):
-                setattr(copy_mobject, attr, value.copy())
-        return copy_mobject
+        return pickle.loads(pickle.dumps(self))
 
     def deepcopy(self):
-        parents = self.parents
-        self.parents = []
-        result = copy.deepcopy(self)
-        self.parents = parents
-        return result
+        # This used to be different from copy, so is now just here for backward compatibility
+        return self.copy()
 
     def generate_target(self, use_deepcopy: bool = False):
+        # TODO, remove now pointless use_deepcopy arg
         self.target = None  # Prevent exponential explosion
-        if use_deepcopy:
-            self.target = self.deepcopy()
-        else:
-            self.target = self.copy()
+        self.target = self.copy()
         return self.target
 
     def save_state(self, use_deepcopy: bool = False):
+        # TODO, remove now pointless use_deepcopy arg
         if hasattr(self, "saved_state"):
             # Prevent exponential growth of data
             self.saved_state = None
-        if use_deepcopy:
-            self.saved_state = self.deepcopy()
-        else:
-            self.saved_state = self.copy()
+        self.saved_state = self.copy()
         return self
 
     def restore(self):
@@ -525,6 +506,27 @@ class Mobject(object):
             raise Exception("Trying to restore without having saved")
         self.become(self.saved_state)
         return self
+
+    def save_to_file(self, file_path):
+        if not file_path.endswith(".mob"):
+            file_path += ".mob"
+        if os.path.exists(file_path):
+            cont = input(f"{file_path} already exists. Overwrite (y/n)? ")
+            if cont != "y":
+                return
+        with open(file_path, "wb") as fp:
+            pickle.dump(self, fp)
+        log.info(f"Saved mobject to {file_path}")
+        return self
+
+    @staticmethod
+    def load(file_path):
+        if not os.path.exists(file_path):
+            log.error(f"No file found at {file_path}")
+            sys.exit(2)
+        with open(file_path, "rb") as fp:
+            mobject = pickle.load(fp)
+        return mobject
 
     # Updating
 
@@ -575,6 +577,8 @@ class Mobject(object):
             updater_list.insert(index, update_function)
 
         self.refresh_has_updater_status()
+        for parent in self.parents:
+            parent.has_updaters = True
         if call_updater:
             self.update(dt=0)
         return self
@@ -589,10 +593,10 @@ class Mobject(object):
     def clear_updaters(self, recurse: bool = True):
         self.time_based_updaters = []
         self.non_time_updaters = []
-        self.refresh_has_updater_status()
         if recurse:
             for submob in self.submobjects:
                 submob.clear_updaters()
+        self.refresh_has_updater_status()
         return self
 
     def match_updaters(self, mobject: Mobject):
@@ -622,6 +626,24 @@ class Mobject(object):
     def refresh_has_updater_status(self):
         self.has_updaters = any(mob.get_updaters() for mob in self.get_family())
         return self
+
+    # Check if mark as static or not for camera
+
+    def is_changing(self) -> bool:
+        return self._is_animating or self.has_updaters or self._is_movable
+
+    def set_animating_status(self, is_animating: bool, recurse: bool = True) -> None:
+        for mob in self.get_family(recurse):
+            mob._is_animating = is_animating
+        return self
+
+    def make_movable(self, value: bool = True, recurse: bool = True) -> None:
+        for mob in self.get_family(recurse):
+            mob._is_movable = value
+        return self
+
+    def is_movable(self) -> bool:
+        return self._is_movable
 
     # Transforming operations
 
@@ -1173,6 +1195,13 @@ class Mobject(object):
     def get_corner(self, direction: np.ndarray) -> np.ndarray:
         return self.get_bounding_box_point(direction)
 
+    def get_all_corners(self):
+        bb = self.get_bounding_box()
+        return np.array([
+            [bb[indices[-i + 1]][i] for i in range(3)]
+            for indices in it.product(*3 * [[0, 2]])
+        ])
+
     def get_center(self) -> np.ndarray:
         return self.get_bounding_box()[1]
 
@@ -1403,7 +1432,7 @@ class Mobject(object):
         return self
 
     def push_self_into_submobjects(self):
-        copy = self.deepcopy()
+        copy = self.copy()
         copy.set_submobjects([])
         self.resize_points(0)
         self.add(copy)
