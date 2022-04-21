@@ -588,6 +588,19 @@ class Scene(object):
             mob.become(mob_state)
             self.mobjects.append(mob)
 
+    def save_mobect(self, mobject: Mobject, file_name: str):
+        directory = self.file_writer.get_saved_mobject_directory()
+        path = os.path.join(directory, file_name)
+        mobject.save_to_file(path)
+
+    def load_mobject(self, file_name):
+        if os.path.exists(file_name):
+            path = file_name
+        else:
+            directory = self.file_writer.get_saved_mobject_directory()
+            path = os.path.join(directory, file_name)
+        return Mobject.load(path)
+
     # Event handling
 
     def on_mouse_motion(
