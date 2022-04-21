@@ -575,22 +575,18 @@ class Scene(object):
 
     # Helpers for interactive development
     def save_state(self) -> None:
-        self.saved_state = {
-            "mobjects": self.mobjects,
-            "mobject_states": [
-                mob.copy()
-                for mob in self.mobjects
-            ],
-        }
+        self.saved_state = [
+            (mob, mob.copy())
+            for mob in self.mobjects
+        ]
 
     def restore(self) -> None:
         if not hasattr(self, "saved_state"):
             raise Exception("Trying to restore scene without having saved")
-        mobjects = self.saved_state["mobjects"]
-        states = self.saved_state["mobject_states"]
-        for mob, state in zip(mobjects, states):
-            mob.become(state)
-        self.mobjects = mobjects
+        self.mobjects = []
+        for mob, mob_state in self.saved_state:
+            mob.become(mob_state)
+            self.mobjects.append(mob)
 
     # Event handling
 
