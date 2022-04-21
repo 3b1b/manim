@@ -6,6 +6,8 @@ import random
 import itertools as it
 from functools import wraps
 from typing import Iterable, Callable, Union, Sequence
+import pickle
+import os
 
 import colour
 import moderngl
@@ -37,6 +39,7 @@ from manimlib.shader_wrapper import get_colormap_code
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_listner import EventListner
 from manimlib.event_handler.event_type import EventType
+from manimlib.logger import log
 
 
 TimeBasedUpdater = Callable[["Mobject", float], None]
@@ -544,6 +547,27 @@ class Mobject(object):
             raise Exception("Trying to restore without having saved")
         self.become(self.saved_state)
         return self
+
+    def save_to_file(self, file_path):
+        if not file_path.endswith(".mob"):
+            file_path += ".mob"
+        if os.path.exists(file_path):
+            cont = input(f"{file_path} already exists. Overwrite (y/n)? ")
+            if cont != "y":
+                return
+        with open(file_path, "wb") as fp:
+            pickle.dump(self, fp)
+        log.info(f"Saved mobject to {file_path}")
+        return self
+
+    @staticmethod
+    def load(file_path):
+        if not os.path.exists(file_path):
+            log.error(f"No file found at {file_path}")
+            sys.exit(2)
+        with open(file_path, "rb") as fp:
+            mobject = pickle.load(fp)
+        return mobject
 
     # Updating
 
