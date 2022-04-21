@@ -476,15 +476,6 @@ class Mobject(object):
             grid.set_height(height)
         return grid
 
-    def get_highlight(self):
-        from manimlib.mobject.types.dot_cloud import GlowDot
-        highlight = Group(*(
-            GlowDot(self.get_corner(v), color=WHITE)
-            for v in [UR, UL, DL, DR]
-        ))
-        highlight.add_updater(lambda m: m.move_to(self))
-        return highlight
-
     # Copying
 
     def copy(self):
