@@ -605,10 +605,12 @@ class Scene(object):
             mob.become(mob_state)
             self.mobjects.append(mob)
 
-    def save_mobect(self, mobject: Mobject, file_name: str):
-        directory = self.file_writer.get_saved_mobject_directory()
-        path = os.path.join(directory, file_name)
-        mobject.save_to_file(path)
+    def save_mobect(self, mobject: Mobject, file_path: str | None = None) -> None:
+        if file_path is None:
+            file_path = self.file_writer.get_saved_mobject_path(mobject)
+            if file_path is None:
+                return
+        mobject.save_to_file(file_path)
 
     def load_mobject(self, file_name):
         if os.path.exists(file_name):
