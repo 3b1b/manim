@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import sys
-import copy
 import random
 import itertools as it
 from functools import wraps
@@ -25,7 +24,6 @@ from manimlib.utils.iterables import list_update
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_preserving_order
 from manimlib.utils.iterables import resize_with_interpolation
-from manimlib.utils.iterables import make_even
 from manimlib.utils.iterables import listify
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import integer_interpolate
@@ -482,64 +480,25 @@ class Mobject(object):
     # Copying
 
     def copy(self):
-        # TODO, either justify reason for shallow copy, or
-        # remove this redundancy everywhere
-        # return self.deepcopy()
-
-        parents = self.parents
         self.parents = []
-        copy_mobject = copy.copy(self)
-        self.parents = parents
-
-        copy_mobject.data = dict(self.data)
-        for key in self.data:
-            copy_mobject.data[key] = self.data[key].copy()
-
-        copy_mobject.uniforms = dict(self.uniforms)
-        for key in self.uniforms:
-            if isinstance(self.uniforms[key], np.ndarray):
-                copy_mobject.uniforms[key] = self.uniforms[key].copy()
-
-        copy_mobject.submobjects = []
-        copy_mobject.add(*[sm.copy() for sm in self.submobjects])
-        copy_mobject.match_updaters(self)
-
-        copy_mobject.needs_new_bounding_box = self.needs_new_bounding_box
-
-        # Make sure any mobject or numpy array attributes are copied
-        family = self.get_family()
-        for attr, value in list(self.__dict__.items()):
-            if isinstance(value, Mobject) and value in family and value is not self:
-                setattr(copy_mobject, attr, value.copy())
-            if isinstance(value, np.ndarray):
-                setattr(copy_mobject, attr, value.copy())
-            if isinstance(value, ShaderWrapper):
-                setattr(copy_mobject, attr, value.copy())
-        return copy_mobject
+        return pickle.loads(pickle.dumps(self))
 
     def deepcopy(self):
-        parents = self.parents
-        self.parents = []
-        result = copy.deepcopy(self)
-        self.parents = parents
-        return result
+        # This used to be different from copy, so is now just here for backward compatibility
+        return self.copy()
 
     def generate_target(self, use_deepcopy: bool = False):
+        # TODO, remove now pointless use_deepcopy arg
         self.target = None  # Prevent exponential explosion
-        if use_deepcopy:
-            self.target = self.deepcopy()
-        else:
-            self.target = self.copy()
+        self.target = self.copy()
         return self.target
 
     def save_state(self, use_deepcopy: bool = False):
+        # TODO, remove now pointless use_deepcopy arg
         if hasattr(self, "saved_state"):
             # Prevent exponential growth of data
             self.saved_state = None
-        if use_deepcopy:
-            self.saved_state = self.deepcopy()
-        else:
-            self.saved_state = self.copy()
+        self.saved_state = self.copy()
         return self
 
     def restore(self):
@@ -1473,7 +1432,7 @@ class Mobject(object):
         return self
 
     def push_self_into_submobjects(self):
-        copy = self.deepcopy()
+        copy = self.copy()
         copy.set_submobjects([])
         self.resize_points(0)
         self.add(copy)
