@@ -120,9 +120,6 @@ class LabelledString(SVGMobject, ABC):
         if len(self.label_span_list) >= 16777216:
             raise ValueError("Cannot handle that many substrings")
 
-    def copy(self):
-        return self.deepcopy()
-
     # Toolkits
 
     def get_substr(self, span: Span) -> str:

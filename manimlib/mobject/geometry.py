@@ -327,8 +327,8 @@ class Circle(Arc):
         "anchors_span_full_range": False
     }
 
-    def __init__(self, **kwargs):
-        Arc.__init__(self, 0, TAU, **kwargs)
+    def __init__(self, start_angle: float = 0, **kwargs):
+        Arc.__init__(self, start_angle, TAU, **kwargs)
 
     def surround(
         self,

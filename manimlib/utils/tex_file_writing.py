@@ -94,7 +94,7 @@ def tex_to_dvi(tex_file: str) -> str:
                 for line in file.readlines():
                     if line.startswith("!"):
                         log.debug(f"The error could be: `{line[2:-1]}`")
-            sys.exit(2)
+            raise LatexError()
     return result
 
 
@@ -136,3 +136,8 @@ def display_during_execution(message: str) -> None:
         yield
     finally:
         print(" " * len(to_print), end="\r")
+
+
+
+class LatexError(Exception):
+    pass
