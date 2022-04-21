@@ -284,6 +284,14 @@ class Mobject(object):
     ) -> bool:
         return self.are_points_touching(np.array(point, ndmin=2), buff)[0]
 
+    def is_touching(self, mobject: Mobject, buff: float = 1e-2) -> bool:
+        bb1 = self.get_bounding_box()
+        bb2 = mobject.get_bounding_box()
+        return not any((
+            (bb2[2] < bb1[0] - buff).any(),  # E.g. Right of mobject is left of self's left
+            (bb2[0] > bb1[2] + buff).any(),  # E.g. Left of mobject is right of self's right
+        ))
+
     # Family matters
 
     def __getitem__(self, value):
