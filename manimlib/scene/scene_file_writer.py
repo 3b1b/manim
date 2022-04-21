@@ -228,7 +228,7 @@ class SceneFileWriter(object):
             # This is if the background of the exported
             # video should be transparent.
             command += [
-                '-vcodec', 'qtrle',
+                '-vcodec', 'prores_ks',
             ]
         elif self.movie_file_extension == ".gif":
             command += []
