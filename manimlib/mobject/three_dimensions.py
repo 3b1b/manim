@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import math
 
+import numpy as np
+
 from manimlib.constants import BLUE, BLUE_D, BLUE_E
 from manimlib.constants import IN, ORIGIN, OUT, RIGHT
 from manimlib.constants import PI, TAU

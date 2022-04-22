@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import copy
-import sys
-import random
-import itertools as it
 from functools import wraps
-import pickle
+import itertools as it
 import os
+import pickle
+import random
+import sys
 
 import moderngl
 import numbers
@@ -1224,7 +1224,7 @@ class Mobject(object):
         bb = self.get_bounding_box()
         return np.array([
             [bb[indices[-i + 1]][i] for i in range(3)]
-            for indices in it.product(*3 * [[0, 2]])
+            for indices in it.product([0, 2], repeat=3)
         ])
 
     def get_center(self) -> np.ndarray:

@@ -3,12 +3,10 @@ from __future__ import annotations
 from functools import wraps
 import inspect
 import itertools as it
+import os
 import platform
 import random
 import time
-import platform
-from functools import wraps
-import os
 
 import numpy as np
 from tqdm import tqdm as ProgressDisplay
@@ -18,16 +16,16 @@ from manimlib.animation.transform import MoveToTarget
 from manimlib.camera.camera import Camera
 from manimlib.config import get_custom_config
 from manimlib.constants import ARROW_SYMBOLS
-from manimlib.constants import SHIFT_MODIFIER, CTRL_MODIFIER, COMMAND_MODIFIER
 from manimlib.constants import DEFAULT_WAIT_TIME
+from manimlib.constants import COMMAND_MODIFIER, CTRL_MODIFIER, SHIFT_MODIFIER
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
+from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
-from manimlib.mobject.mobject import Group
-from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.family_ops import extract_mobject_family_members

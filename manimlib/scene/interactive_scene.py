@@ -1,29 +1,29 @@
-import numpy as np
 import itertools as it
-import pyperclip
+import numpy as np
 import os
 import platform
+import pyperclip
 
 from manimlib.animation.fading import FadeIn
-from manimlib.constants import MANIM_COLORS, WHITE, YELLOW
-from manimlib.constants import ORIGIN, UP, DOWN, LEFT, RIGHT, DL, UL, UR, DR
+from manimlib.constants import ARROW_SYMBOLS, DELETE_SYMBOL, SHIFT_SYMBOL
+from manimlib.constants import COMMAND_MODIFIER, SHIFT_MODIFIER
+from manimlib.constants import DL, DOWN, DR, LEFT, ORIGIN, RIGHT, UL, UP, UR
 from manimlib.constants import FRAME_WIDTH, SMALL_BUFF
-from manimlib.constants import SHIFT_SYMBOL, DELETE_SYMBOL, ARROW_SYMBOLS
-from manimlib.constants import SHIFT_MODIFIER, COMMAND_MODIFIER
-from manimlib.mobject.mobject import Mobject
+from manimlib.constants import MANIM_COLORS, WHITE, YELLOW
+from manimlib.logger import log
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import Square
 from manimlib.mobject.mobject import Group
+from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.text_mobject import Text
-from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.dot_cloud import DotCloud
+from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.scene.scene import Scene
-from manimlib.utils.tex_file_writing import LatexError
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.space_ops import get_norm
-from manimlib.logger import log
+from manimlib.utils.tex_file_writing import LatexError
 
 
 SELECT_KEY = 's'
