@@ -16,7 +16,7 @@ from manimlib.animation.transform import MoveToTarget
 from manimlib.camera.camera import Camera
 from manimlib.constants import DEFAULT_WAIT_TIME
 from manimlib.constants import ARROW_SYMBOLS
-from manimlib.constants import SHIFT_MODIFIER, CTRL_MODIFIER, COMMAND_MODIFIER
+from manimlib.constants import COMMAND_MODIFIER
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.mobject.mobject import Group
@@ -42,7 +42,6 @@ FRAME_SHIFT_KEY = 'f'
 ZOOM_KEY = 'z'
 RESET_FRAME_KEY = 'r'
 QUIT_KEY = 'q'
-EMBED_KEY = 'e'
 
 
 class Scene(object):
@@ -787,9 +786,6 @@ class Scene(object):
         # Space or right arrow
         elif char == " " or symbol == ARROW_SYMBOLS[2]:
             self.hold_on_wait = False
-        # ctrl + shift + e
-        elif char == EMBED_KEY and modifiers == CTRL_MODIFIER | SHIFT_MODIFIER:
-            self.embed(close_scene_on_exit=False)
 
     def on_resize(self, width: int, height: int) -> None:
         self.camera.reset_pixel_shape(width, height)
