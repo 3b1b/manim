@@ -76,6 +76,7 @@ class Scene(object):
         self.camera: Camera = self.camera_class(**self.camera_config)
         self.file_writer = SceneFileWriter(self, **self.file_writer_config)
         self.mobjects: list[Mobject] = [self.camera.frame]
+        self.id_to_mobject_map: dict[int, Mobject] = dict()
         self.num_plays: int = 0
         self.time: float = 0
         self.skip_time: float = 0
@@ -263,6 +264,11 @@ class Scene(object):
         """
         self.remove(*new_mobjects)
         self.mobjects += new_mobjects
+        self.id_to_mobject_map.update({
+            id(sm): sm
+            for m in new_mobjects
+            for sm in m.get_family()
+        })
         return self
 
     def add_mobjects_among(self, values: Iterable):
@@ -326,11 +332,7 @@ class Scene(object):
             return Group(*mobjects)
 
     def id_to_mobject(self, id_value):
-        for mob in self.mobjects:
-            for sm in mob.get_family():
-                if id(sm) == id_value:
-                    return sm
-        return None
+        return self.id_to_mobject_map[id_value]
 
     def ids_to_group(self, *id_values):
         return self.get_group(*filter(
