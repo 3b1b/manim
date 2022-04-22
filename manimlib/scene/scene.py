@@ -163,7 +163,11 @@ class Scene(object):
         # Enables gui interactions during the embed
         def inputhook(context):
             while not context.input_is_ready():
-                self.update_frame()
+                if self.window.is_closing:
+                    pass
+                    # self.window.destroy()
+                else:
+                    self.update_frame(dt=0)
 
         pt_inputhooks.register("manim", inputhook)
         shell.enable_gui("manim")
