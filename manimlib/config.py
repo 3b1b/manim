@@ -117,16 +117,18 @@ def parse_cli():
         )
         parser.add_argument(
             "-n", "--start_at_animation_number",
-            help="Start rendering not from the first animation, but"
-                 "from another, specified by its index.  If you pass"
-                 "in two comma separated values, e.g. \"3,6\", it will end"
+            help="Start rendering not from the first animation, but "
+                 "from another, specified by its index.  If you pass "
+                 "in two comma separated values, e.g. \"3,6\", it will end "
                  "the rendering at the second value",
         )
         parser.add_argument(
-            "-e", "--embed", metavar="LINENO",
-            help="Takes a line number as an argument, and results"
-                 "in the scene being called as if the line `self.embed()`"
-                 "was inserted into the scene code at that line number."
+            "-e", "--embed",
+            nargs="*",
+            help="Creates a new file where the line `self.embed` is inserted "
+                 "into the Scenes construct method. "
+                 "If a string is passed in, the line will be inserted below the "
+                 "last line of code including that string."
         )
         parser.add_argument(
             "-r", "--resolution",
@@ -186,12 +188,43 @@ def get_module(file_name):
 
 
 @contextmanager
-def insert_embed_line(file_name, lineno):
+def insert_embed_line(file_name: str, scene_names: list[str], strings_to_match: str):
+    """
+    This is hacky, but convenient. When user includes the argument "-e", it will try
+    to recreate a file that inserts the line `self.embed()` into the end of the scene's
+    construct method. If there is an argument passed in, it will insert the line after
+    the last line in the sourcefile which includes that string.
+    """
     with open(file_name, 'r') as fp:
         lines = fp.readlines()
-    line = lines[lineno - 1]
-    n_spaces = len(line) - len(line.lstrip())
-    lines.insert(lineno, " " * n_spaces + "self.embed()\n")
+
+    line = None
+    if strings_to_match:
+        matching_lines = [
+            line for line in lines
+            if any(s in line for s in strings_to_match)
+        ]
+        if matching_lines:
+            line = matching_lines[-1]
+            n_spaces = len(line) - len(line.lstrip())
+            lines.insert(lines.index(line), " " * n_spaces + "self.embed()\n")
+    if line is None:
+        lineno = 0
+        in_scene = False
+        in_construct = False
+        n_spaces = 8
+        # Search for scene definition
+        for lineno, line in enumerate(lines):
+            indent = len(line) - len(line.lstrip())
+            if line.startswith(f"class {scene_names[0]}"):
+                in_scene = True
+            elif in_scene and "def construct" in line:
+                in_construct = True
+                n_spaces = indent + 4
+            elif in_construct:
+                if len(line.strip()) > 0 and indent < n_spaces:
+                    break
+        lines.insert(lineno, " " * n_spaces + "self.embed()\n")
 
     alt_file = file_name.replace(".py", "_inserted_embed.py")
     with open(alt_file, 'w') as fp:
@@ -296,10 +329,10 @@ def get_configuration(args):
         "quiet": args.quiet,
     }
 
-    if args.embed is None:
-        module = get_module(args.file)
-    else:
-        with insert_embed_line(args.file, int(args.embed)) as alt_file:
+    module = get_module(args.file)
+
+    if args.embed is not None:
+        with insert_embed_line(args.file, args.scene_names, args.embed) as alt_file:
             module = get_module(alt_file)
 
     config = {
