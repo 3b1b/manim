@@ -470,6 +470,10 @@ class Mobject(object):
         self.parents = pre
         return result
 
+    def deserialize(self, data: bytes):
+        self.become(pickle.loads(data))
+        return self
+
     def copy(self):
         try:
             serial = self.serialize()
