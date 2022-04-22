@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import sys
 import random
 import itertools as it
@@ -493,7 +494,10 @@ class Mobject(object):
 
     def copy(self):
         self.parents = []
-        return pickle.loads(pickle.dumps(self))
+        try:
+            return pickle.loads(pickle.dumps(self))
+        except AttributeError:
+            return copy.deepcopy(self)
 
     def deepcopy(self):
         # This used to be different from copy, so is now just here for backward compatibility
