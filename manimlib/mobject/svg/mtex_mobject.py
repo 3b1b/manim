@@ -1,45 +1,25 @@
 from __future__ import annotations
 
 import itertools as it
-import re
+import colour
+from typing import Union, Sequence
 
 from manimlib.mobject.svg.labelled_string import LabelledString
-from manimlib.utils.tex_file_writing import display_during_execution
-from manimlib.utils.tex_file_writing import get_tex_config
 from manimlib.utils.tex_file_writing import tex_to_svg_file
+from manimlib.utils.tex_file_writing import get_tex_config
+from manimlib.utils.tex_file_writing import display_during_execution
+
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from colour import Color
-    from typing import Iterable, Union
-
+    from manimlib.mobject.types.vectorized_mobject import VMobject
     from manimlib.mobject.types.vectorized_mobject import VGroup
-
-    ManimColor = Union[str, Color]
+    ManimColor = Union[str, colour.Color, Sequence[float]]
     Span = tuple[int, int]
-    Selector = Union[
-        str,
-        re.Pattern,
-        tuple[Union[int, None], Union[int, None]],
-        Iterable[Union[
-            str,
-            re.Pattern,
-            tuple[Union[int, None], Union[int, None]]
-        ]]
-    ]
 
 
 SCALE_FACTOR_PER_FONT_POINT = 0.001
-
-
-TEX_COLOR_COMMANDS_DICT = {
-    "\\color": (1, False),
-    "\\textcolor": (1, False),
-    "\\pagecolor": (1, True),
-    "\\colorbox": (1, True),
-    "\\fcolorbox": (2, True),
-}
 
 
 class MTex(LabelledString):
@@ -52,7 +32,7 @@ class MTex(LabelledString):
 
     def __init__(self, tex_string: str, **kwargs):
         # Prevent from passing an empty string.
-        if not tex_string.strip():
+        if not tex_string:
             tex_string = "\\\\"
         self.tex_string = tex_string
         super().__init__(tex_string, **kwargs)
@@ -67,6 +47,7 @@ class MTex(LabelledString):
             self.svg_default,
             self.path_string_config,
             self.base_color,
+            self.use_plain_file,
             self.isolate,
             self.tex_string,
             self.alignment,
@@ -80,87 +61,85 @@ class MTex(LabelledString):
             tex_config["text_to_replace"],
             content
         )
-        with display_during_execution(f"Writing \"{self.string}\""):
+        with display_during_execution(f"Writing \"{self.tex_string}\""):
             file_path = tex_to_svg_file(full_tex)
         return file_path
 
-    def parse(self) -> None:
+    def pre_parse(self) -> None:
+        super().pre_parse()
         self.backslash_indices = self.get_backslash_indices()
-        self.command_spans = self.get_command_spans()
-        self.brace_spans = self.get_brace_spans()
-        self.script_char_indices = self.get_script_char_indices()
+        self.brace_index_pairs = self.get_brace_index_pairs()
+        self.script_char_spans = self.get_script_char_spans()
         self.script_content_spans = self.get_script_content_spans()
         self.script_spans = self.get_script_spans()
-        self.command_repl_items = self.get_command_repl_items()
-        super().parse()
 
     # Toolkits
 
     @staticmethod
     def get_color_command_str(rgb_int: int) -> str:
-        rg, b = divmod(rgb_int, 256)
-        r, g = divmod(rg, 256)
-        return f"\\color[RGB]{{{r}, {g}, {b}}}"
+        rgb_tuple = MTex.int_to_rgb(rgb_int)
+        return "".join([
+            "\\color[RGB]",
+            "{",
+            ",".join(map(str, rgb_tuple)),
+            "}"
+        ])
 
-    # Parsing
+    # Pre-parsing
 
     def get_backslash_indices(self) -> list[int]:
         # The latter of `\\` doesn't count.
-        return self.find_indices(r"\\.")
+        return list(it.chain(*[
+            range(span[0], span[1], 2)
+            for span in self.find_spans(r"\\+")
+        ]))
 
-    def get_command_spans(self) -> list[Span]:
-        return [
-            self.match(r"\\(?:[a-zA-Z]+|.)", pos=index).span()
-            for index in self.backslash_indices
-        ]
-
-    def get_unescaped_char_indices(self, char: str) -> list[int]:
-        return list(filter(
-            lambda index: index - 1 not in self.backslash_indices,
-            self.find_indices(re.escape(char))
+    def get_unescaped_char_spans(self, chars: str):
+        return sorted(filter(
+            lambda span: span[0] - 1 not in self.backslash_indices,
+            self.find_substrs(list(chars))
         ))
 
-    def get_brace_spans(self) -> list[Span]:
-        span_begins = []
-        span_ends = []
-        span_begins_stack = []
-        char_items = sorted([
-            (index, char)
-            for char in "{}"
-            for index in self.get_unescaped_char_indices(char)
-        ])
-        for index, char in char_items:
-            if char == "{":
-                span_begins_stack.append(index)
+    def get_brace_index_pairs(self) -> list[Span]:
+        left_brace_indices = []
+        right_brace_indices = []
+        left_brace_indices_stack = []
+        for span in self.get_unescaped_char_spans("{}"):
+            index = span[0]
+            if self.get_substr(span) == "{":
+                left_brace_indices_stack.append(index)
             else:
-                if not span_begins_stack:
+                if not left_brace_indices_stack:
                     raise ValueError("Missing '{' inserted")
-                span_begins.append(span_begins_stack.pop())
-                span_ends.append(index + 1)
-        if span_begins_stack:
+                left_brace_index = left_brace_indices_stack.pop()
+                left_brace_indices.append(left_brace_index)
+                right_brace_indices.append(index)
+        if left_brace_indices_stack:
             raise ValueError("Missing '}' inserted")
-        return list(zip(span_begins, span_ends))
+        return list(zip(left_brace_indices, right_brace_indices))
 
-    def get_script_char_indices(self) -> list[int]:
-        return list(it.chain(*[
-            self.get_unescaped_char_indices(char)
-            for char in "_^"
-        ]))
+    def get_script_char_spans(self) -> list[int]:
+        return self.get_unescaped_char_spans("_^")
 
     def get_script_content_spans(self) -> list[Span]:
         result = []
-        script_entity_dict = dict(it.chain(
-            self.brace_spans,
-            self.command_spans
-        ))
-        for index in self.script_char_indices:
-            span_begin = self.match(r"\s*", pos=index + 1).end()
-            if span_begin in script_entity_dict.keys():
-                span_end = script_entity_dict[span_begin]
+        brace_indices_dict = dict(self.brace_index_pairs)
+        script_pattern = r"[a-zA-Z0-9]|\\[a-zA-Z]+"
+        for script_char_span in self.script_char_spans:
+            span_begin = self.match(r"\s*", pos=script_char_span[1]).end()
+            if span_begin in brace_indices_dict.keys():
+                span_end = brace_indices_dict[span_begin] + 1
             else:
-                match_obj = self.match(r".", pos=span_begin)
-                if match_obj is None:
-                    continue
+                match_obj = self.match(script_pattern, pos=span_begin)
+                if not match_obj:
+                    script_name = {
+                        "_": "subscript",
+                        "^": "superscript"
+                    }[script_char]
+                    raise ValueError(
+                        f"Unclear {script_name} detected while parsing. "
+                        "Please use braces to clarify"
+                    )
                 span_end = match_obj.end()
             result.append((span_begin, span_end))
         return result
@@ -168,100 +147,110 @@ class MTex(LabelledString):
     def get_script_spans(self) -> list[Span]:
         return [
             (
-                self.match(r"[\s\S]*?(\s*)$", endpos=index).start(1),
+                self.search(r"\s*$", endpos=script_char_span[0]).start(),
                 script_content_span[1]
             )
-            for index, script_content_span in zip(
-                self.script_char_indices, self.script_content_spans
+            for script_char_span, script_content_span in zip(
+                self.script_char_spans, self.script_content_spans
             )
         ]
 
+    # Parsing
+
     def get_command_repl_items(self) -> list[tuple[Span, str]]:
+        color_related_command_dict = {
+            "color": (1, False),
+            "textcolor": (1, False),
+            "pagecolor": (1, True),
+            "colorbox": (1, True),
+            "fcolorbox": (2, True),
+        }
         result = []
-        brace_spans_dict = dict(self.brace_spans)
-        brace_begins = list(brace_spans_dict.keys())
-        for cmd_span in self.command_spans:
-            cmd_name = self.get_substr(cmd_span)
-            if cmd_name not in TEX_COLOR_COMMANDS_DICT.keys():
+        backslash_indices = self.backslash_indices
+        right_brace_indices = [
+            right_index
+            for left_index, right_index in self.brace_index_pairs
+        ]
+        pattern = "".join([
+            r"\\",
+            "(",
+            "|".join(color_related_command_dict.keys()),
+            ")",
+            r"(?![a-zA-Z])"
+        ])
+        for match_obj in self.finditer(pattern):
+            span_begin, cmd_end = match_obj.span()
+            if span_begin not in backslash_indices:
                 continue
-            n_braces, substitute_cmd = TEX_COLOR_COMMANDS_DICT[cmd_name]
-            span_begin, span_end = cmd_span
-            for _ in range(n_braces):
-                span_end = brace_spans_dict[min(filter(
-                    lambda index: index >= span_end,
-                    brace_begins
-                ))]
+            cmd_name = match_obj.group(1)
+            n_braces, substitute_cmd = color_related_command_dict[cmd_name]
+            span_end = self.take_nearest_value(
+                right_brace_indices, cmd_end, n_braces
+            ) + 1
             if substitute_cmd:
-                repl_str = cmd_name + n_braces * "{black}"
+                repl_str = "\\" + cmd_name + n_braces * "{black}"
             else:
                 repl_str = ""
             result.append(((span_begin, span_end), repl_str))
         return result
 
-    def get_skippable_indices(self) -> list[int]:
-        return list(it.chain(
-            self.find_indices(r"\s"),
-            self.script_char_indices
-        ))
+    def get_extra_entity_spans(self) -> list[Span]:
+        return [
+            self.match(r"\\([a-zA-Z]+|.)", pos=index).span()
+            for index in self.backslash_indices
+        ]
 
-    def get_entity_spans(self) -> list[Span]:
-        return self.command_spans.copy()
+    def get_extra_ignored_spans(self) -> list[int]:
+        return self.script_char_spans.copy()
 
-    def get_bracket_spans(self) -> list[Span]:
-        return self.brace_spans.copy()
-
-    def get_extra_isolated_items(self) -> list[tuple[Span, dict[str, str]]]:
-        result = []
-
+    def get_internal_specified_spans(self) -> list[Span]:
         # Match paired double braces (`{{...}}`).
-        sorted_brace_spans = sorted(
-            self.brace_spans, key=lambda span: span[1]
-        )
+        result = []
+        reversed_brace_indices_dict = dict([
+            pair[::-1] for pair in self.brace_index_pairs
+        ])
         skip = False
-        for prev_span, span in self.get_neighbouring_pairs(
-            sorted_brace_spans
+        for prev_right_index, right_index in self.get_neighbouring_pairs(
+            list(reversed_brace_indices_dict.keys())
         ):
             if skip:
                 skip = False
                 continue
-            if span[0] != prev_span[0] - 1 or span[1] != prev_span[1] + 1:
+            if right_index != prev_right_index + 1:
                 continue
-            result.append(span)
+            left_index = reversed_brace_indices_dict[right_index]
+            prev_left_index = reversed_brace_indices_dict[prev_right_index]
+            if left_index != prev_left_index - 1:
+                continue
+            result.append((left_index, right_index + 1))
             skip = True
+        return result
 
-        result.extend(it.chain(*[
-            self.find_spans_by_selector(selector)
-            for selector in self.tex_to_color_map.keys()
-        ]))
-        return [(span, {}) for span in result]
+    def get_external_specified_spans(self) -> list[Span]:
+        return self.find_substrs(list(self.tex_to_color_map.keys()))
 
     def get_label_span_list(self) -> list[Span]:
         result = self.script_content_spans.copy()
-        reversed_script_spans_dict = dict([
-            script_span[::-1] for script_span in self.script_spans
-        ])
         for span_begin, span_end in self.specified_spans:
-            while span_end in reversed_script_spans_dict.keys():
-                span_end = reversed_script_spans_dict[span_end]
-            if span_begin >= span_end:
+            shrinked_end = self.lslide(span_end, self.script_spans)
+            if span_begin >= shrinked_end:
                 continue
-            shrinked_span = (span_begin, span_end)
+            shrinked_span = (span_begin, shrinked_end)
             if shrinked_span in result:
                 continue
             result.append(shrinked_span)
         return result
 
-    def get_content(self, is_labelled: bool) -> str:
-        if is_labelled:
-            extended_label_span_list = []
-            script_spans_dict = dict(self.script_spans)
-            for span in self.label_span_list:
-                if span not in self.script_content_spans:
-                    span_begin, span_end = span
-                    while span_end in script_spans_dict.keys():
-                        span_end = script_spans_dict[span_end]
-                    span = (span_begin, span_end)
-                extended_label_span_list.append(span)
+    def get_content(self, use_plain_file: bool) -> str:
+        if use_plain_file:
+            span_repl_dict = {}
+        else:
+            extended_label_span_list = [
+                span
+                if span in self.script_content_spans
+                else (span[0], self.rslide(span[1], self.script_spans))
+                for span in self.label_span_list
+            ]
             inserted_string_pairs = [
                 (span, (
                     "{{" + self.get_color_command_str(label + 1),
@@ -270,51 +259,42 @@ class MTex(LabelledString):
                 for label, span in enumerate(extended_label_span_list)
             ]
             span_repl_dict = self.generate_span_repl_dict(
-                inserted_string_pairs, self.command_repl_items
+                inserted_string_pairs,
+                self.command_repl_items
             )
-        else:
-            span_repl_dict = {}
         result = self.get_replaced_substr(self.full_span, span_repl_dict)
 
         if self.tex_environment:
-            if isinstance(self.tex_environment, str):
-                prefix = f"\\begin{{{self.tex_environment}}}"
-                suffix = f"\\end{{{self.tex_environment}}}"
-            else:
-                prefix, suffix = self.tex_environment
-            result = "\n".join([prefix, result, suffix])
+            result = "\n".join([
+                f"\\begin{{{self.tex_environment}}}",
+                result,
+                f"\\end{{{self.tex_environment}}}"
+            ])
         if self.alignment:
             result = "\n".join([self.alignment, result])
-        if not is_labelled:
+        if use_plain_file:
             result = "\n".join([
-                self.get_color_command_str(self.base_color_int),
+                self.get_color_command_str(self.hex_to_int(self.base_color)),
                 result
             ])
         return result
 
-    # Selector
+    @property
+    def has_predefined_local_colors(self) -> bool:
+        return bool(self.command_repl_items)
+
+    # Post-parsing
 
     def get_cleaned_substr(self, span: Span) -> str:
-        if not self.brace_spans:
-            brace_begins, brace_ends = [], []
-        else:
-            brace_begins, brace_ends = zip(*self.brace_spans)
-        left_brace_indices = list(brace_begins)
-        right_brace_indices = [index - 1 for index in brace_ends]
-        skippable_indices = list(it.chain(
-            self.skippable_indices,
-            left_brace_indices,
-            right_brace_indices
-        ))
-        shrinked_span = self.shrink_span(span, skippable_indices)
-
-        if shrinked_span[0] >= shrinked_span[1]:
-            return ""
+        substr = super().get_cleaned_substr(span)
+        if not self.brace_index_pairs:
+            return substr
 
         # Balance braces.
+        left_brace_indices, right_brace_indices = zip(*self.brace_index_pairs)
         unclosed_left_braces = 0
         unclosed_right_braces = 0
-        for index in range(*shrinked_span):
+        for index in range(*span):
             if index in left_brace_indices:
                 unclosed_left_braces += 1
             elif index in right_brace_indices:
@@ -324,27 +304,27 @@ class MTex(LabelledString):
                     unclosed_left_braces -= 1
         return "".join([
             unclosed_right_braces * "{",
-            self.get_substr(shrinked_span),
+            substr,
             unclosed_left_braces * "}"
         ])
 
     # Method alias
 
-    def get_parts_by_tex(self, selector: Selector, **kwargs) -> VGroup:
-        return self.select_parts(selector, **kwargs)
+    def get_parts_by_tex(self, tex: str, **kwargs) -> VGroup:
+        return self.get_parts_by_string(tex, **kwargs)
 
-    def get_part_by_tex(self, selector: Selector, **kwargs) -> VGroup:
-        return self.select_part(selector, **kwargs)
+    def get_part_by_tex(self, tex: str, **kwargs) -> VMobject:
+        return self.get_part_by_string(tex, **kwargs)
 
-    def set_color_by_tex(
-        self, selector: Selector, color: ManimColor, **kwargs
-    ):
-        return self.set_parts_color(selector, color, **kwargs)
+    def set_color_by_tex(self, tex: str, color: ManimColor, **kwargs):
+        return self.set_color_by_string(tex, color, **kwargs)
 
     def set_color_by_tex_to_color_map(
-        self, color_map: dict[Selector, ManimColor], **kwargs
+        self, tex_to_color_map: dict[str, ManimColor], **kwargs
     ):
-        return self.set_parts_color_by_dict(color_map, **kwargs)
+        return self.set_color_by_string_to_color_map(
+            tex_to_color_map, **kwargs
+        )
 
     def get_tex(self) -> str:
         return self.get_string()
