@@ -14,7 +14,6 @@ import numpy as np
 from manimlib.animation.animation import prepare_animation
 from manimlib.animation.transform import MoveToTarget
 from manimlib.camera.camera import Camera
-from manimlib.config import get_custom_config
 from manimlib.constants import DEFAULT_WAIT_TIME
 from manimlib.constants import ARROW_SYMBOLS
 from manimlib.constants import SHIFT_MODIFIER, CTRL_MODIFIER, COMMAND_MODIFIER
@@ -143,32 +142,40 @@ class Scene(object):
 
     def embed(self, close_scene_on_exit: bool = True) -> None:
         if not self.preview:
-            # If the scene is just being
-            # written, ignore embed calls
+            # If the scene is just being written, ignore embed calls
             return
         self.stop_skipping()
         self.linger_after_completion = False
         self.update_frame()
-
-        # Save scene state at the point of embedding
         self.save_state()
 
-        from IPython.terminal.embed import InteractiveShellEmbed
-        shell = InteractiveShellEmbed()
-        # Have the frame update after each command
-        shell.events.register('post_run_cell', lambda *a, **kw: self.refresh_static_mobjects())
-        shell.events.register('post_run_cell', lambda *a, **kw: self.update_frame())
-        # Use the locals of the caller as the local namespace
-        # once embedded, and add a few custom shortcuts
+        # Configure and launch embedded terminal
+        from IPython.terminal import embed, pt_inputhooks
+        shell = embed.InteractiveShellEmbed.instance()
+
+        # Use the locals namespace of the caller
         local_ns = inspect.currentframe().f_back.f_locals
-        local_ns["touch"] = self.interact
-        local_ns["i2g"] = self.ids_to_group
-        for term in ("play", "wait", "add", "remove", "clear", "save_state", "restore"):
+        # Add a few custom shortcuts
+        for term in ("play", "wait", "add", "remove", "clear", "save_state", "restore", "i2g", "i2m"):
             local_ns[term] = getattr(self, term)
-        log.info("Tips: Now the embed iPython terminal is open. But you can't interact with"
-                 " the window directly. To do so, you need to type `touch()` or `self.interact()`")
-        exec(get_custom_config()["universal_import_line"])
+
+        # Enables gui interactions during the embed
+        def inputhook(context):
+            while not context.input_is_ready():
+                self.update_frame()
+
+        pt_inputhooks.register("manim", inputhook)
+        shell.enable_gui("manim")
+
+        # Have the frame update after each command
+        def post_cell_func(*args, **kwargs):
+            self.refresh_static_mobjects()
+
+        shell.events.register("post_run_cell", post_cell_func)
+
+        # Launch shell, with stack_depth=2 indicating we should use caller globals/locals
         shell(local_ns=local_ns, stack_depth=2)
+
         # End scene when exiting an embed
         if close_scene_on_exit:
             raise EndSceneEarlyException()
@@ -330,6 +337,12 @@ class Scene(object):
             lambda x: x is not None,
             map(self.id_to_mobject, id_values)
         ))
+
+    def i2g(self, *id_values):
+        return self.ids_to_group(*id_values)
+
+    def i2m(self, id_value):
+        return self.id_to_mobject(id_value)
 
     # Related to skipping
     def update_skipping_status(self) -> None:
