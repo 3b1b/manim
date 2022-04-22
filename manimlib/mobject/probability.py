@@ -280,6 +280,3 @@ class BarChart(VGroup):
                 (value / self.max_value) * self.height
             )
             bar.move_to(bar_bottom, DOWN)
-
-    def copy(self):
-        return self.deepcopy()

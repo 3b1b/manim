@@ -700,7 +700,7 @@ class VMobject(Mobject):
             self.get_end_anchors(),
         ))))
 
-    def get_points_without_null_curves(self, atol: float=1e-9) -> np.ndarray:
+    def get_points_without_null_curves(self, atol: float = 1e-9) -> np.ndarray:
         nppc = self.n_points_per_curve
         points = self.get_points()
         distinct_curves = reduce(op.or_, [

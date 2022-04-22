@@ -51,6 +51,7 @@ from manimlib.mobject.value_tracker import *
 from manimlib.mobject.vector_field import *
 
 from manimlib.scene.scene import *
+from manimlib.scene.interactive_scene import *
 from manimlib.scene.three_d_scene import *
 
 from manimlib.utils.bezier import *

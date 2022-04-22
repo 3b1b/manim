@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import itertools as it
-
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -12,15 +10,14 @@ if TYPE_CHECKING:
 
 def extract_mobject_family_members(
     mobject_list: Iterable[Mobject],
-    only_those_with_points: bool = False
+    exclude_pointless: bool = False
 ) -> list[Mobject]:
-    result = list(it.chain(*[
-        mob.get_family()
+    return [
+        sm
         for mob in mobject_list
-    ]))
-    if only_those_with_points:
-        result = [mob for mob in result if mob.has_points()]
-    return result
+        for sm in mob.get_family()
+        if (not exclude_pointless) or sm.has_points()
+    ]
 
 
 def restructure_list_to_exclude_certain_family_members(

@@ -579,7 +579,7 @@ class SurfaceExample(Scene):
         self.play(light.animate.move_to(3 * IN), run_time=5)
         self.play(light.animate.shift(10 * OUT), run_time=5)
 
-        drag_text = Text("Try moving the mouse while pressing d or s")
+        drag_text = Text("Try moving the mouse while pressing d or f")
         drag_text.move_to(light_text)
         drag_text.fix_in_frame()
 

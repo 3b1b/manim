@@ -1,6 +1,20 @@
 Changelog
 =========
 
+v1.6.1
+------
+
+Fixed bugs
+^^^^^^^^^^
+- Fixed the bug of ``MTex`` with multi-line tex string (`#1785 <https://github.com/3b1b/manim/pull/1785>`__)
+- Fixed ``interpolate`` (`#1788 <https://github.com/3b1b/manim/pull/1788>`__)
+- Fixed ``ImageMobject`` (`#1791 <https://github.com/3b1b/manim/pull/1791>`__)
+
+Refactor
+^^^^^^^^
+- Added ``\overset`` as a special string in ``Tex`` (`#1783 <https://github.com/3b1b/manim/pull/1783>`__)
+- Added ``outer_interpolate`` to perform interpolation using ``np.outer`` on arrays (`#1788 <https://github.com/3b1b/manim/pull/1788>`__)
+
 v1.6.0
 ------
 

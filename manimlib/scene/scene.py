@@ -6,6 +6,9 @@ import itertools as it
 import platform
 import random
 import time
+import platform
+from functools import wraps
+import os
 
 import numpy as np
 from tqdm import tqdm as ProgressDisplay
@@ -13,12 +16,18 @@ from tqdm import tqdm as ProgressDisplay
 from manimlib.animation.animation import prepare_animation
 from manimlib.animation.transform import MoveToTarget
 from manimlib.camera.camera import Camera
+from manimlib.config import get_custom_config
+from manimlib.constants import ARROW_SYMBOLS
+from manimlib.constants import SHIFT_MODIFIER, CTRL_MODIFIER, COMMAND_MODIFIER
 from manimlib.constants import DEFAULT_WAIT_TIME
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
+from manimlib.mobject.mobject import Group
+from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.family_ops import extract_mobject_family_members
@@ -32,6 +41,14 @@ if TYPE_CHECKING:
     from PIL.Image import Image
 
     from manimlib.animation.animation import Animation
+
+
+PAN_3D_KEY = 'd'
+FRAME_SHIFT_KEY = 'f'
+ZOOM_KEY = 'z'
+RESET_FRAME_KEY = 'r'
+QUIT_KEY = 'q'
+EMBED_KEY = 'e'
 
 
 class Scene(object):
@@ -117,16 +134,17 @@ class Scene(object):
         # If there is a window, enter a loop
         # which updates the frame while under
         # the hood calling the pyglet event loop
-        log.info("Tips: You are now in the interactive mode. Now you can use the keyboard"
-            " and the mouse to interact with the scene. Just press `q` if you want to quit.")
+        log.info(
+            "Tips: You are now in the interactive mode. Now you can use the keyboard"
+            " and the mouse to interact with the scene. Just press `command + q` or `esc`"
+            " if you want to quit."
+        )
         self.quit_interaction = False
-        self.lock_static_mobject_data()
+        self.refresh_static_mobjects()
         while not (self.window.is_closing or self.quit_interaction):
             self.update_frame(1 / self.camera.frame_rate)
         if self.window.is_closing:
             self.window.destroy()
-        if self.quit_interaction:
-            self.unlock_mobject_data()
 
     def embed(self, close_scene_on_exit: bool = True) -> None:
         if not self.preview:
@@ -143,15 +161,18 @@ class Scene(object):
         from IPython.terminal.embed import InteractiveShellEmbed
         shell = InteractiveShellEmbed()
         # Have the frame update after each command
+        shell.events.register('post_run_cell', lambda *a, **kw: self.refresh_static_mobjects())
         shell.events.register('post_run_cell', lambda *a, **kw: self.update_frame())
         # Use the locals of the caller as the local namespace
         # once embedded, and add a few custom shortcuts
         local_ns = inspect.currentframe().f_back.f_locals
         local_ns["touch"] = self.interact
+        local_ns["i2g"] = self.ids_to_group
         for term in ("play", "wait", "add", "remove", "clear", "save_state", "restore"):
             local_ns[term] = getattr(self, term)
         log.info("Tips: Now the embed iPython terminal is open. But you can't interact with"
                  " the window directly. To do so, you need to type `touch()` or `self.interact()`")
+        exec(get_custom_config()["universal_import_line"])
         shell(local_ns=local_ns, stack_depth=2)
         # End scene when exiting an embed
         if close_scene_on_exit:
@@ -295,6 +316,25 @@ class Scene(object):
             if mobject.is_point_touching(point, buff=buff):
                 return mobject
         return None
+
+    def get_group(self, *mobjects):
+        if all(isinstance(m, VMobject) for m in mobjects):
+            return VGroup(*mobjects)
+        else:
+            return Group(*mobjects)
+
+    def id_to_mobject(self, id_value):
+        for mob in self.mobjects:
+            for sm in mob.get_family():
+                if id(sm) == id_value:
+                    return sm
+        return None
+
+    def ids_to_group(self, *id_values):
+        return self.get_group(*filter(
+            lambda x: x is not None,
+            map(self.id_to_mobject, id_values)
+        ))
 
     # Related to skipping
     def update_skipping_status(self) -> None:
@@ -444,6 +484,7 @@ class Scene(object):
                 self.real_animation_start_time = time.time()
                 self.virtual_animation_start_time = self.time
 
+            self.refresh_static_mobjects()
             func(self, *args, **kwargs)
 
             if should_write:
@@ -452,23 +493,8 @@ class Scene(object):
             self.num_plays += 1
         return wrapper
 
-    def lock_static_mobject_data(self, *animations: Animation) -> None:
-        movers = list(it.chain(*[
-            anim.mobject.get_family()
-            for anim in animations
-        ]))
-        for mobject in self.mobjects:
-            if mobject in movers or mobject.get_family_updaters():
-                continue
-            self.camera.set_mobjects_as_static(mobject)
-
-    def unlock_mobject_data(self) -> None:
-        self.camera.release_static_mobjects()
-
-    def refresh_locked_data(self):
-        self.unlock_mobject_data()
-        self.lock_static_mobject_data()
-        return self
+    def refresh_static_mobjects(self) -> None:
+        self.camera.refresh_static_mobjects()
 
     def begin_animations(self, animations: Iterable[Animation]) -> None:
         for animation in animations:
@@ -508,11 +534,9 @@ class Scene(object):
             log.warning("Called Scene.play with no animations")
             return
         animations = self.anims_from_play_args(*args, **kwargs)
-        self.lock_static_mobject_data(*animations)
         self.begin_animations(animations)
         self.progress_through_animations(animations)
         self.finish_animations(animations)
-        self.unlock_mobject_data()
 
     @handle_play_like_call
     def wait(
@@ -525,7 +549,6 @@ class Scene(object):
         if note:
             log.info(note)
         self.update_mobjects(dt=0)  # Any problems with this?
-        self.lock_static_mobject_data()
         if self.presenter_mode and not self.skip_animations and not ignore_presenter_mode:
             while self.hold_on_wait:
                 self.update_frame(dt=1 / self.camera.frame_rate)
@@ -539,9 +562,8 @@ class Scene(object):
                 self.update_frame(dt)
                 self.emit_frame()
                 if stop_condition is not None and stop_condition():
-                    time_progression.close()
                     break
-        self.unlock_mobject_data()
+        self.refresh_static_mobjects()
         return self
 
     def wait_until(
@@ -575,22 +597,31 @@ class Scene(object):
 
     # Helpers for interactive development
     def save_state(self) -> None:
-        self.saved_state = {
-            "mobjects": self.mobjects,
-            "mobject_states": [
-                mob.copy()
-                for mob in self.mobjects
-            ],
-        }
+        self.saved_state = [
+            (mob, mob.copy())
+            for mob in self.mobjects
+        ]
 
     def restore(self) -> None:
         if not hasattr(self, "saved_state"):
             raise Exception("Trying to restore scene without having saved")
-        mobjects = self.saved_state["mobjects"]
-        states = self.saved_state["mobject_states"]
-        for mob, state in zip(mobjects, states):
-            mob.become(state)
-        self.mobjects = mobjects
+        self.mobjects = []
+        for mob, mob_state in self.saved_state:
+            mob.become(mob_state)
+            self.mobjects.append(mob)
+
+    def save_mobect(self, mobject: Mobject, file_name: str):
+        directory = self.file_writer.get_saved_mobject_directory()
+        path = os.path.join(directory, file_name)
+        mobject.save_to_file(path)
+
+    def load_mobject(self, file_name):
+        if os.path.exists(file_name):
+            path = file_name
+        else:
+            directory = self.file_writer.get_saved_mobject_directory()
+            path = os.path.join(directory, file_name)
+        return Mobject.load(path)
 
     # Event handling
 
@@ -607,10 +638,12 @@ class Scene(object):
             return
 
         frame = self.camera.frame
-        if self.window.is_key_pressed(ord("d")):
+        # Handle perspective changes
+        if self.window.is_key_pressed(ord(PAN_3D_KEY)):
             frame.increment_theta(-self.pan_sensitivity * d_point[0])
             frame.increment_phi(self.pan_sensitivity * d_point[1])
-        elif self.window.is_key_pressed(ord("s")):
+        # Handle frame movements
+        elif self.window.is_key_pressed(ord(FRAME_SHIFT_KEY)):
             shift = -d_point
             shift[0] *= frame.get_width() / 2
             shift[1] *= frame.get_height() / 2
@@ -638,6 +671,7 @@ class Scene(object):
         button: int,
         mods: int
     ) -> None:
+        self.mouse_drag_point.move_to(point)
         event_data = {"point": point, "button": button, "mods": mods}
         propagate_event = EVENT_DISPATCHER.dispatch(EventType.MousePressEvent, **event_data)
         if propagate_event is not None and propagate_event is False:
@@ -665,9 +699,9 @@ class Scene(object):
             return
 
         frame = self.camera.frame
-        if self.window.is_key_pressed(ord("z")):
+        if self.window.is_key_pressed(ord(ZOOM_KEY)):
             factor = 1 + np.arctan(10 * offset[1])
-            frame.scale(1/factor, about_point=point)
+            frame.scale(1 / factor, about_point=point)
         else:
             transform = frame.get_inverse_camera_rotation_matrix()
             shift = np.dot(np.transpose(transform), offset)
@@ -699,13 +733,16 @@ class Scene(object):
         if propagate_event is not None and propagate_event is False:
             return
 
-        if char == "r":
+        if char == RESET_FRAME_KEY:
             self.camera.frame.to_default_state()
-        elif char == "q":
+        # command + q
+        elif char == QUIT_KEY and modifiers == COMMAND_MODIFIER:
             self.quit_interaction = True
-        elif char == " " or symbol == 65363:  # Space or right arrow
+        # Space or right arrow
+        elif char == " " or symbol == ARROW_SYMBOLS[2]:
             self.hold_on_wait = False
-        elif char == "e" and modifiers == 3:  # ctrl + shift + e
+        # ctrl + shift + e
+        elif char == EMBED_KEY and modifiers == CTRL_MODIFIER | SHIFT_MODIFIER:
             self.embed(close_scene_on_exit=False)
 
     def on_resize(self, width: int, height: int) -> None:
