@@ -86,7 +86,6 @@ class InteractiveScene(Scene):
             self.cursor_location_label,
             self.camera.frame
         ]
-        self.saved_selection_state = []
         self.select_top_level_mobs = True
 
         self.is_selecting = False
@@ -210,7 +209,6 @@ class InteractiveScene(Scene):
         if mobs:
             self.selection.add(*mobs)
             self.selection_highlight.add(*map(self.get_highlight, mobs))
-            self.saved_selection_state = [(mob, mob.copy()) for mob in self.selection]
 
     def toggle_from_selection(self, *mobjects):
         for mob in mobjects:
@@ -267,14 +265,8 @@ class InteractiveScene(Scene):
         self.remove(*self.selection)
         self.clear_selection()
 
-    def undo(self):
-        mobs = []
-        for mob, state in self.saved_selection_state:
-            mob.become(state)
-            mobs.append(mob)
-            if mob not in self.mobjects:
-                self.add(mob)
-        self.selection.set_submobjects(mobs)
+    def restore_state(self, mobject_states: list[tuple[Mobject, Mobject]]):
+        super().restore_state(mobject_states)
         self.refresh_selection_highlight()
 
     def prepare_resizing(self, about_corner=False):
@@ -313,9 +305,11 @@ class InteractiveScene(Scene):
             if len(self.selection) == 0:
                 return
             if self.color_palette not in self.mobjects:
+                self.save_state()
                 self.add(self.color_palette)
             else:
                 self.remove(self.color_palette)
+        # Show coordiantes of cursor location
         elif char == CURSOR_LOCATION_KEY and modifiers == 0:
             self.add(self.cursor_location_label)
         # Command + c -> Copy mobject ids to clipboard
@@ -355,15 +349,18 @@ class InteractiveScene(Scene):
         # Command + t -> Toggle selection mode
         elif char == "t" and modifiers == COMMAND_MODIFIER:
             self.toggle_selection_mode()
-        # Command + z -> Restore selection to original state
+        # Command + z -> Undo
         elif char == "z" and modifiers == COMMAND_MODIFIER:
             self.undo()
+        # Command + shift + z -> Redo
+        elif char == "z" and modifiers == COMMAND_MODIFIER | SHIFT_MODIFIER:
+            self.redo()
         # Command + s -> Save selections to file
         elif char == "s" and modifiers == COMMAND_MODIFIER:
             to_save = self.selection
             if len(to_save) == 1:
                 to_save = to_save[0]
-            self.save_mobect(to_save)
+            self.save_mobject_to_file(to_save)
         # Keyboard movements
         elif symbol in ARROW_SYMBOLS:
             nudge = self.selection_nudge_size
@@ -371,6 +368,10 @@ class InteractiveScene(Scene):
                 nudge *= 10
             vect = [LEFT, UP, RIGHT, DOWN][ARROW_SYMBOLS.index(symbol)]
             self.selection.shift(nudge * vect)
+
+        # Conditions for saving state
+        if char in [GRAB_KEY, HORIZONTAL_GRAB_KEY, VERTICAL_GRAB_KEY, RESIZE_KEY]:
+            self.save_state()
 
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         super().on_key_release(symbol, modifiers)

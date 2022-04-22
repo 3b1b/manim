@@ -61,6 +61,7 @@ class Scene(object):
         "presenter_mode": False,
         "linger_after_completion": True,
         "pan_sensitivity": 3,
+        "max_num_saved_states": 20,
     }
 
     def __init__(self, **kwargs):
@@ -70,6 +71,8 @@ class Scene(object):
             self.window = Window(scene=self, **self.window_config)
             self.camera_config["ctx"] = self.window.ctx
             self.camera_config["frame_rate"] = 30  # Where's that 30 from?
+            self.undo_stack = []
+            self.redo_stack = []
         else:
             self.window = None
 
@@ -88,11 +91,15 @@ class Scene(object):
         self.mouse_point = Point()
         self.mouse_drag_point = Point()
         self.hold_on_wait = self.presenter_mode
+        self.inside_embed = False
 
         # Much nicer to work with deterministic scenes
         if self.random_seed is not None:
             random.seed(self.random_seed)
             np.random.seed(self.random_seed)
+
+    def __str__(self) -> str:
+        return self.__class__.__name__
 
     def run(self) -> None:
         self.virtual_animation_start_time: float = 0
@@ -143,22 +150,28 @@ class Scene(object):
 
     def embed(self, close_scene_on_exit: bool = True) -> None:
         if not self.preview:
-            # If the scene is just being written, ignore embed calls
+            # Ignore embed calls when there is no preview
             return
+        self.inside_embed = True
         self.stop_skipping()
         self.linger_after_completion = False
         self.update_frame()
         self.save_state()
 
-        # Configure and launch embedded terminal
+        # Configure and launch embedded IPython terminal
         from IPython.terminal import embed, pt_inputhooks
         shell = embed.InteractiveShellEmbed.instance()
 
         # Use the locals namespace of the caller
         local_ns = inspect.currentframe().f_back.f_locals
         # Add a few custom shortcuts
-        for term in ("play", "wait", "add", "remove", "clear", "save_state", "restore", "i2g", "i2m"):
-            local_ns[term] = getattr(self, term)
+        local_ns.update({
+            name: getattr(self, name)
+            for name in [
+                "play", "wait", "add", "remove", "clear",
+                "save_state", "undo", "redo", "i2g", "i2m"
+            ]
+        })
 
         # Enables gui interactions during the embed
         def inputhook(context):
@@ -172,7 +185,7 @@ class Scene(object):
         pt_inputhooks.register("manim", inputhook)
         shell.enable_gui("manim")
 
-        # Have the frame update after each command
+        # Operation to run after each ipython command
         def post_cell_func(*args, **kwargs):
             self.refresh_static_mobjects()
 
@@ -181,14 +194,13 @@ class Scene(object):
         # Launch shell, with stack_depth=2 indicating we should use caller globals/locals
         shell(local_ns=local_ns, stack_depth=2)
 
+        self.inside_embed = False
         # End scene when exiting an embed
         if close_scene_on_exit:
             raise EndSceneEarlyException()
 
-    def __str__(self) -> str:
-        return self.__class__.__name__
-
     # Only these methods should touch the camera
+
     def get_image(self) -> Image:
         return self.camera.get_image()
 
@@ -219,6 +231,7 @@ class Scene(object):
             self.file_writer.write_frame(self.camera)
 
     # Related to updating
+
     def update_mobjects(self, dt: float) -> None:
         for mobject in self.mobjects:
             mobject.update(dt)
@@ -237,6 +250,7 @@ class Scene(object):
         ])
 
     # Related to time
+
     def get_time(self) -> float:
         return self.time
 
@@ -244,6 +258,7 @@ class Scene(object):
         self.time += dt
 
     # Related to internal mobject organization
+
     def get_top_level_mobjects(self) -> list[Mobject]:
         # Return only those which are not in the family
         # of another mobject from the scene
@@ -351,6 +366,7 @@ class Scene(object):
         return self.id_to_mobject(id_value)
 
     # Related to skipping
+
     def update_skipping_status(self) -> None:
         if self.start_at_animation_number is not None:
             if self.num_plays == self.start_at_animation_number:
@@ -366,6 +382,7 @@ class Scene(object):
         self.skip_animations = False
 
     # Methods associated with running animations
+
     def get_time_progression(
         self,
         run_time: float,
@@ -489,6 +506,8 @@ class Scene(object):
     def handle_play_like_call(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
+            if self.inside_embed:
+                self.save_state()
             self.update_skipping_status()
             should_write = not self.skip_animations
             if should_write:
@@ -610,21 +629,32 @@ class Scene(object):
         self.file_writer.add_sound(sound_file, time, gain, gain_to_background)
 
     # Helpers for interactive development
+
+    def get_state(self) -> list[tuple[Mobject, Mobject]]:
+        return [(mob, mob.copy()) for mob in self.mobjects]
+
+    def restore_state(self, mobject_states: list[tuple[Mobject, Mobject]]):
+        self.mobjects = [mob.become(mob_copy) for mob, mob_copy in mobject_states]
+
     def save_state(self) -> None:
-        self.saved_state = [
-            (mob, mob.copy())
-            for mob in self.mobjects
-        ]
+        if not self.preview:
+            return
+        self.redo_stack = []
+        self.undo_stack.append(self.get_state())
+        if len(self.undo_stack) > self.max_num_saved_states:
+            self.undo_stack.pop(0)
 
-    def restore(self) -> None:
-        if not hasattr(self, "saved_state"):
-            raise Exception("Trying to restore scene without having saved")
-        self.mobjects = []
-        for mob, mob_state in self.saved_state:
-            mob.become(mob_state)
-            self.mobjects.append(mob)
+    def undo(self):
+        if self.undo_stack:
+            self.redo_stack.append(self.get_state())
+            self.restore_state(self.undo_stack.pop())
 
-    def save_mobect(self, mobject: Mobject, file_path: str | None = None) -> None:
+    def redo(self):
+        if self.redo_stack:
+            self.undo_stack.append(self.get_state())
+            self.restore_state(self.redo_stack.pop())
+
+    def save_mobject_to_file(self, mobject: Mobject, file_path: str | None = None) -> None:
         if file_path is None:
             file_path = self.file_writer.get_saved_mobject_path(mobject)
             if file_path is None:
