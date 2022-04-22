@@ -61,7 +61,7 @@ class SceneFileWriter(object):
 
     # Output directories and files
     def init_output_directories(self) -> None:
-        out_dir = self.output_directory
+        out_dir = self.output_directory or ""
         if self.mirror_module_path:
             module_dir = self.get_default_module_directory()
             out_dir = os.path.join(out_dir, module_dir)
