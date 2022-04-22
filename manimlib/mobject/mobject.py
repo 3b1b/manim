@@ -530,7 +530,6 @@ class Mobject(object):
             sm1.texture_paths = sm2.texture_paths
             sm1.depth_test = sm2.depth_test
             sm1.render_primitive = sm2.render_primitive
-        self.refresh_shader_wrapper_id()
         self.refresh_bounding_box(recurse_down=True)
         return self
 
