@@ -3,15 +3,16 @@ import itertools as it
 import pyperclip
 
 from manimlib.animation.fading import FadeIn
-from manimlib.constants import MANIM_COLORS, WHITE
+from manimlib.constants import MANIM_COLORS, WHITE, GREY_C
 from manimlib.constants import ORIGIN, UP, DOWN, LEFT, RIGHT, DL, UL, UR, DR
 from manimlib.constants import FRAME_WIDTH, SMALL_BUFF
 from manimlib.constants import SHIFT_SYMBOL, CTRL_SYMBOL, DELETE_SYMBOL, ARROW_SYMBOLS
 from manimlib.constants import SHIFT_MODIFIER, COMMAND_MODIFIER
-from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import Square
 from manimlib.mobject.mobject import Group
+from manimlib.mobject.mobject import Mobject
+from manimlib.mobject.numbers import DecimalNumber
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VMobject
@@ -31,6 +32,7 @@ HORIZONTAL_GRAB_KEY = 'h'
 VERTICAL_GRAB_KEY = 'v'
 RESIZE_KEY = 't'
 COLOR_KEY = 'c'
+CURSOR_LOCATION_KEY = 'l'
 
 
 # Note, a lot of the functionality here is still buggy and very much a work in progress.
@@ -65,16 +67,23 @@ class InteractiveScene(Scene):
     selection_rectangle_stroke_width = 1.0
     colors = MANIM_COLORS
     selection_nudge_size = 0.05
+    cursor_location_config = dict(
+        font_size=14,
+        fill_color=GREY_C,
+        num_decimal_places=3,
+    )
 
     def setup(self):
         self.selection = Group()
         self.selection_highlight = Group()
         self.selection_rectangle = self.get_selection_rectangle()
         self.color_palette = self.get_color_palette()
+        self.cursor_location_label = self.get_cursor_location_label()
         self.unselectables = [
             self.selection,
             self.selection_highlight,
             self.selection_rectangle,
+            self.cursor_location_label,
             self.camera.frame
         ]
         self.saved_selection_state = []
@@ -82,6 +91,57 @@ class InteractiveScene(Scene):
 
         self.is_selecting = False
         self.add(self.selection_highlight)
+
+    def get_selection_rectangle(self):
+        rect = Rectangle(
+            stroke_color=self.selection_rectangle_stroke_color,
+            stroke_width=self.selection_rectangle_stroke_width,
+        )
+        rect.fix_in_frame()
+        rect.fixed_corner = ORIGIN
+        rect.add_updater(self.update_selection_rectangle)
+        return rect
+
+    def update_selection_rectangle(self, rect):
+        p1 = rect.fixed_corner
+        p2 = self.mouse_point.get_center()
+        rect.set_points_as_corners([
+            p1, [p2[0], p1[1], 0],
+            p2, [p1[0], p2[1], 0],
+            p1,
+        ])
+        return rect
+
+    def get_color_palette(self):
+        palette = VGroup(*(
+            Square(fill_color=color, fill_opacity=1, side_length=1)
+            for color in self.colors
+        ))
+        palette.set_stroke(width=0)
+        palette.arrange(RIGHT, buff=0.5)
+        palette.set_width(FRAME_WIDTH - 0.5)
+        palette.to_edge(DOWN, buff=SMALL_BUFF)
+        palette.fix_in_frame()
+        return palette
+
+    def get_cursor_location_label(self):
+        decimals = VGroup(*(
+            DecimalNumber(**self.cursor_location_config)
+            for n in range(3)
+        ))
+
+        def update_coords(decimals):
+            for mob, coord in zip(decimals, self.mouse_point.get_location()):
+                mob.set_value(coord)
+            decimals.arrange(RIGHT, buff=decimals.get_height())
+            decimals.to_corner(DR, buff=SMALL_BUFF)
+            decimals.fix_in_frame()
+            return decimals
+
+        decimals.add_updater(update_coords)
+        return decimals
+
+    # Related to selection
 
     def toggle_selection_mode(self):
         self.select_top_level_mobs = not self.select_top_level_mobs
@@ -115,28 +175,6 @@ class InteractiveScene(Scene):
             )
         self.refresh_selection_highlight()
 
-    def get_selection_rectangle(self):
-        rect = Rectangle(
-            stroke_color=self.selection_rectangle_stroke_color,
-            stroke_width=self.selection_rectangle_stroke_width,
-        )
-        rect.fix_in_frame()
-        rect.fixed_corner = ORIGIN
-        rect.add_updater(self.update_selection_rectangle)
-        return rect
-
-    def get_color_palette(self):
-        palette = VGroup(*(
-            Square(fill_color=color, fill_opacity=1, side_length=1)
-            for color in self.colors
-        ))
-        palette.set_stroke(width=0)
-        palette.arrange(RIGHT, buff=0.5)
-        palette.set_width(FRAME_WIDTH - 0.5)
-        palette.to_edge(DOWN, buff=SMALL_BUFF)
-        palette.fix_in_frame()
-        return palette
-
     def get_corner_dots(self, mobject):
         dots = DotCloud(**self.corner_dot_config)
         radius = self.corner_dot_config["radius"]
@@ -163,16 +201,6 @@ class InteractiveScene(Scene):
             self.get_highlight(mob)
             for mob in self.selection
         ])
-
-    def update_selection_rectangle(self, rect):
-        p1 = rect.fixed_corner
-        p2 = self.mouse_point.get_center()
-        rect.set_points_as_corners([
-            p1, [p2[0], p1[1], 0],
-            p2, [p1[0], p2[1], 0],
-            p1,
-        ])
-        return rect
 
     def add_to_selection(self, *mobjects):
         mobs = list(filter(
@@ -201,7 +229,7 @@ class InteractiveScene(Scene):
             mob.make_movable()
         super().add(*new_mobjects)
 
-    # Selection operations
+    # Functions for keyboard actions
 
     def copy_selection(self):
         ids = map(id, self.selection)
@@ -288,6 +316,8 @@ class InteractiveScene(Scene):
                 self.add(self.color_palette)
             else:
                 self.remove(self.color_palette)
+        elif char == CURSOR_LOCATION_KEY and modifiers == 0:
+            self.add(self.cursor_location_label)
         # Command + c -> Copy mobject ids to clipboard
         elif char == "c" and modifiers == COMMAND_MODIFIER:
             self.copy_selection()
@@ -350,7 +380,8 @@ class InteractiveScene(Scene):
             for mob in reversed(self.get_selection_search_set()):
                 if mob.is_movable() and self.selection_rectangle.is_touching(mob):
                     self.add_to_selection(mob)
-
+        elif chr(symbol) == CURSOR_LOCATION_KEY:
+            self.remove(self.cursor_location_label)
         elif symbol == SHIFT_SYMBOL:
             if self.window.is_key_pressed(ord(RESIZE_KEY)):
                 self.prepare_resizing(about_corner=False)
