@@ -3,11 +3,12 @@ import sys
 import copy
 
 from manimlib.scene.scene import Scene
+from manimlib.scene.interactive_scene import InteractiveScene
 from manimlib.config import get_custom_config
 from manimlib.logger import log
 
 
-class BlankScene(Scene):
+class BlankScene(InteractiveScene):
     def construct(self):
         exec(get_custom_config()["universal_import_line"])
         self.embed()
