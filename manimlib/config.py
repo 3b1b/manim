@@ -124,7 +124,8 @@ def parse_cli():
         )
         parser.add_argument(
             "-e", "--embed",
-            nargs="*",
+            nargs="?",
+            const="",
             help="Creates a new file where the line `self.embed` is inserted "
                  "into the Scenes construct method. "
                  "If a string is passed in, the line will be inserted below the "
@@ -187,8 +188,12 @@ def get_module(file_name):
     return module
 
 
+def get_indent(line: str):
+    return len(line) - len(line.lstrip())
+
+
 @contextmanager
-def insert_embed_line(file_name: str, scene_names: list[str], strings_to_match: str):
+def insert_embed_line(file_name: str, scene_name: str, line_marker: str):
     """
     This is hacky, but convenient. When user includes the argument "-e", it will try
     to recreate a file that inserts the line `self.embed()` into the end of the scene's
@@ -198,34 +203,47 @@ def insert_embed_line(file_name: str, scene_names: list[str], strings_to_match: 
     with open(file_name, 'r') as fp:
         lines = fp.readlines()
 
-    line = None
-    if strings_to_match:
-        matching_lines = [
-            line for line in lines
-            if any(s in line for s in strings_to_match)
-        ]
-        if matching_lines:
-            line = matching_lines[-1]
-            n_spaces = len(line) - len(line.lstrip())
-            lines.insert(lines.index(line), " " * n_spaces + "self.embed()\n")
-    if line is None:
-        lineno = 0
-        in_scene = False
-        in_construct = False
-        n_spaces = 8
-        # Search for scene definition
-        for lineno, line in enumerate(lines):
-            indent = len(line) - len(line.lstrip())
-            if line.startswith(f"class {scene_names[0]}"):
-                in_scene = True
-            elif in_scene and "def construct" in line:
-                in_construct = True
-                n_spaces = indent + 4
-            elif in_construct:
-                if len(line.strip()) > 0 and indent < n_spaces:
-                    break
-        lines.insert(lineno, " " * n_spaces + "self.embed()\n")
+    try:
+        scene_line_number = next(
+            i for i, line in enumerate(lines)
+            if line.startswith(f"class {scene_name}")
+        )
+    except StopIteration:
+        log.error(f"No scene {scene_name}")
 
+    prev_line_num = None
+    n_spaces = None
+    if len(line_marker) == 0:
+        # Find the end of the construct method
+        in_construct = False
+        for index in range(scene_line_number, len(lines) - 1):
+            line = lines[index]
+            if line.lstrip().startswith("def construct"):
+                in_construct = True
+                n_spaces = get_indent(line) + 4
+            elif in_construct:
+                if len(line.strip()) > 0 and get_indent(line) < n_spaces:
+                    prev_line_num = index - 2
+                    break
+    elif line_marker.isdigit():
+        # Treat the argument as a line number
+        prev_line_num = int(line_marker) - 1
+    elif len(line_marker) > 0:
+        # Treat the argument as a string
+        try:
+            prev_line_num = next(
+                i
+                for i in range(len(lines) - 1, scene_line_number, -1)
+                if line_marker in lines[i]
+            )
+        except StopIteration:
+            log.error(f"No lines matching {line_marker}")
+            sys.exit(2)
+
+    # Insert and write new file
+    if n_spaces is None:
+        n_spaces = get_indent(lines[prev_line_num])
+    lines.insert(prev_line_num + 1, " " * n_spaces + "self.embed()\n")
     alt_file = file_name.replace(".py", "_inserted_embed.py")
     with open(alt_file, 'w') as fp:
         fp.writelines(lines)
@@ -332,7 +350,7 @@ def get_configuration(args):
     module = get_module(args.file)
 
     if args.embed is not None:
-        with insert_embed_line(args.file, args.scene_names, args.embed) as alt_file:
+        with insert_embed_line(args.file, args.scene_names[0], args.embed) as alt_file:
             module = get_module(alt_file)
 
     config = {
