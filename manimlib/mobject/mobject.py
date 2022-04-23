@@ -500,28 +500,31 @@ class Mobject(object):
         self.become(pickle.loads(data))
         return self
 
+    def deepcopy(self):
+        try:
+            # Often faster than deepcopy
+            return pickle.loads(pickle.dumps(self))
+        except AttributeError:
+            return copy.deepcopy(self)
+
     @stash_mobject_pointers
     def copy(self, deep: bool = False):
         if deep:
-            try:
-                # Often faster than deepcopy
-                return pickle.loads(pickle.dumps(self))
-            except AttributeError:
-                return copy.deepcopy(self)
+            return self.deepcopy()
 
         result = copy.copy(self)
 
         # The line above is only a shallow copy, so the internal
         # data which are numpyu arrays or other mobjects still
         # need to be further copied.
-        result.data = dict(self.data)
-        for key in result.data:
-            result.data[key] = result.data[key].copy()
-
-        result.uniforms = dict(self.uniforms)
-        for key in result.uniforms:
-            if isinstance(result.uniforms[key], np.ndarray):
-                result.uniforms[key] = result.uniforms[key].copy()
+        result.data = {
+            key: np.array(value)
+            for key, value in self.data.items()
+        }
+        result.uniforms = {
+            key: np.array(value)
+            for key, value in self.uniforms.items()
+        }
 
         result.submobjects = []
         result.add(*(sm.copy() for sm in self.submobjects))
@@ -529,16 +532,16 @@ class Mobject(object):
 
         family = self.get_family()
         for attr, value in list(self.__dict__.items()):
-            if isinstance(value, Mobject) and value in family and value is not self:
-                setattr(result, attr, result.family[self.family.index(value)])
+            if isinstance(value, Mobject) and value is not self:
+                if value in family:
+                    setattr(result, attr, result.family[self.family.index(value)])
+                else:
+                    setattr(result, attr, value.copy())
             if isinstance(value, np.ndarray):
                 setattr(result, attr, value.copy())
             if isinstance(value, ShaderWrapper):
                 setattr(result, attr, value.copy())
         return result
-
-    def deepcopy(self):
-        return self.copy(deep=True)
 
     def generate_target(self, use_deepcopy: bool = False):
         self.target = self.copy(deep=use_deepcopy)
