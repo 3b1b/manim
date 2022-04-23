@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import hashlib
-import itertools as it
 import os
 from xml.etree import ElementTree as ET
 
@@ -17,7 +16,6 @@ from manimlib.mobject.geometry import Polyline
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import RoundedRectangle
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.directories import get_mobject_data_dir
 from manimlib.utils.images import get_full_vector_image_path
 from manimlib.utils.iterables import hash_obj
