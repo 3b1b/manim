@@ -27,14 +27,16 @@ from manimlib.utils.space_ops import get_norm
 
 SELECT_KEY = 's'
 GRAB_KEY = 'g'
-HORIZONTAL_GRAB_KEY = 'h'
-VERTICAL_GRAB_KEY = 'v'
+X_GRAB_KEY = 'h'
+Y_GRAB_KEY = 'v'
+GRAB_KEYS = [GRAB_KEY, X_GRAB_KEY, Y_GRAB_KEY]
 RESIZE_KEY = 't'
 COLOR_KEY = 'c'
 CURSOR_LOCATION_KEY = 'l'
 
 
 # Note, a lot of the functionality here is still buggy and very much a work in progress.
+
 
 class InteractiveScene(Scene):
     """
@@ -86,8 +88,10 @@ class InteractiveScene(Scene):
             self.camera.frame
         ]
         self.select_top_level_mobs = True
+        self.regenerate_selection_search_set()
 
         self.is_selecting = False
+        self.is_grabbing = False
         self.add(self.selection_highlight)
 
     def get_selection_rectangle(self):
@@ -144,18 +148,22 @@ class InteractiveScene(Scene):
     def toggle_selection_mode(self):
         self.select_top_level_mobs = not self.select_top_level_mobs
         self.refresh_selection_scope()
+        self.regenerate_selection_search_set()
 
     def get_selection_search_set(self) -> list[Mobject]:
-        mobs = [
-            m for m in self.mobjects
-            if m not in self.unselectables and m.is_interaction_allowed()
-        ]
+        return self.selection_search_set
+
+    def regenerate_selection_search_set(self):
+        selectable = list(filter(
+            lambda m: m not in self.unselectables,
+            self.mobjects
+        ))
         if self.select_top_level_mobs:
-            return mobs
+            self.selection_search_set = selectable
         else:
-            return [
+            self.selection_search_set = [
                 submob
-                for mob in mobs
+                for mob in selectable
                 for submob in mob.family_members_with_points()
             ]
 
@@ -208,30 +216,47 @@ class InteractiveScene(Scene):
             lambda m: m not in self.unselectables and m not in self.selection,
             mobjects
         ))
-        if mobs:
-            self.selection.add(*mobs)
-            self.selection_highlight.add(*map(self.get_highlight, mobs))
+        if len(mobs) == 0:
+            return
+        self.selection.add(*mobs)
+        self.selection_highlight.add(*map(self.get_highlight, mobs))
+        for mob in mobs:
+            mob.set_animating_status(True)
+        self.refresh_static_mobjects()
 
     def toggle_from_selection(self, *mobjects):
         for mob in mobjects:
             if mob in self.selection:
                 self.selection.remove(mob)
+                mob.set_animating_status(False)
             else:
                 self.add_to_selection(mob)
         self.refresh_selection_highlight()
 
     def clear_selection(self):
+        for mob in self.selection:
+            mob.set_animating_status(False)
         self.selection.set_submobjects([])
         self.selection_highlight.set_submobjects([])
+        self.refresh_static_mobjects()
 
     def add(self, *new_mobjects: Mobject):
-        for mob in new_mobjects:
-            mob.allow_interaction()
         super().add(*new_mobjects)
+        self.regenerate_selection_search_set()
+
+    def remove(self, *mobjects: Mobject):
+        super().remove(*mobjects)
+        self.regenerate_selection_search_set()
 
     def disable_interaction(self, *mobjects: Mobject):
         for mob in mobjects:
-            mob.allow_interaction(False)
+            self.unselectables.append(mob)
+        self.regenerate_selection_search_set()
+
+    def enable_interaction(self, *mobjects: Mobject):
+        for mob in mobjects:
+            if mob in self.unselectables:
+                self.unselectables.remove(mob)
 
     # Functions for keyboard actions
 
@@ -247,11 +272,11 @@ class InteractiveScene(Scene):
             mobs = map(self.id_to_mobject, ids)
             mob_copies = [m.copy() for m in mobs if m is not None]
             self.clear_selection()
-            self.add_to_selection(*mob_copies)
             self.play(*(
                 FadeIn(mc, run_time=0.5, scale=1.5)
                 for mc in mob_copies
             ))
+            self.add_to_selection(*mob_copies)
             return
         except ValueError:
             pass
@@ -275,6 +300,23 @@ class InteractiveScene(Scene):
         super().restore_state(mobject_states)
         self.refresh_selection_highlight()
 
+    def enable_selection(self):
+        self.is_selecting = True
+        self.add(self.selection_rectangle)
+        self.selection_rectangle.fixed_corner = self.mouse_point.get_center().copy()
+
+    def gather_new_selection(self):
+        self.is_selecting = False
+        self.remove(self.selection_rectangle)
+        for mob in reversed(self.get_selection_search_set()):
+            if self.selection_rectangle.is_touching(mob):
+                self.add_to_selection(mob)
+
+    def prepare_grab(self):
+        mp = self.mouse_point.get_center()
+        self.mouse_to_selection = mp - self.selection.get_center()
+        self.is_grabbing = True
+
     def prepare_resizing(self, about_corner=False):
         center = self.selection.get_center()
         mp = self.mouse_point.get_center()
@@ -286,169 +328,175 @@ class InteractiveScene(Scene):
         self.scale_ref_width = self.selection.get_width()
         self.scale_ref_height = self.selection.get_height()
 
-    # Event handlers
+    def toggle_color_palette(self):
+        if len(self.selection) == 0:
+            return
+        if self.color_palette not in self.mobjects:
+            self.save_state()
+            self.add(self.color_palette)
+        else:
+            self.remove(self.color_palette)
+
+    def group_selection(self):
+        group = self.get_group(*self.selection)
+        self.add(group)
+        self.clear_selection()
+        self.add_to_selection(group)
+
+    def ungroup_selection(self):
+        pieces = []
+        for mob in list(self.selection):
+            self.remove(mob)
+            pieces.extend(list(mob))
+        self.clear_selection()
+        self.add(*pieces)
+        self.add_to_selection(*pieces)
+
+    def nudge_selection(self, vect: np.ndarray, large: bool = False):
+        nudge = self.selection_nudge_size
+        if large:
+            nudge *= 10
+        self.selection.shift(nudge * vect)
+
+    def save_selection_to_file(self):
+        if len(self.selection) == 1:
+            self.save_mobject_to_file(self.selection[0])
+        else:
+            self.save_mobject_to_file(self.selection)
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         super().on_key_press(symbol, modifiers)
         char = chr(symbol)
-        # Enable selection
         if char == SELECT_KEY and modifiers == 0:
-            self.is_selecting = True
-            self.add(self.selection_rectangle)
-            self.selection_rectangle.fixed_corner = self.mouse_point.get_center().copy()
-        # Prepare for move
-        elif char in [GRAB_KEY, HORIZONTAL_GRAB_KEY, VERTICAL_GRAB_KEY] and modifiers == 0:
-            mp = self.mouse_point.get_center()
-            self.mouse_to_selection = mp - self.selection.get_center()
-        # Prepare for resizing
+            self.enable_selection()
+        elif char in GRAB_KEYS and modifiers == 0:
+            self.prepare_grab()
         elif char == RESIZE_KEY and modifiers in [0, SHIFT_MODIFIER]:
             self.prepare_resizing(about_corner=(modifiers == SHIFT_MODIFIER))
         elif symbol == SHIFT_SYMBOL:
             if self.window.is_key_pressed(ord("t")):
                 self.prepare_resizing(about_corner=True)
-        # Show color palette
         elif char == COLOR_KEY and modifiers == 0:
-            if len(self.selection) == 0:
-                return
-            if self.color_palette not in self.mobjects:
-                self.save_state()
-                self.add(self.color_palette)
-            else:
-                self.remove(self.color_palette)
-        # Show coordiantes of cursor location
+            self.toggle_color_palette()
         elif char == CURSOR_LOCATION_KEY and modifiers == 0:
             self.add(self.cursor_location_label)
-        # Command + c -> Copy mobject ids to clipboard
         elif char == "c" and modifiers == COMMAND_MODIFIER:
             self.copy_selection()
-        # Command + v -> Paste
         elif char == "v" and modifiers == COMMAND_MODIFIER:
             self.paste_selection()
-        # Command + x -> Cut
         elif char == "x" and modifiers == COMMAND_MODIFIER:
             self.copy_selection()
             self.delete_selection()
-        # Delete
         elif symbol == DELETE_SYMBOL:
             self.delete_selection()
-        # Command + a -> Select all
         elif char == "a" and modifiers == COMMAND_MODIFIER:
             self.clear_selection()
             self.add_to_selection(*self.mobjects)
-        # Command + g -> Group selection
         elif char == "g" and modifiers == COMMAND_MODIFIER:
-            group = self.get_group(*self.selection)
-            self.add(group)
-            self.clear_selection()
-            self.add_to_selection(group)
-        # Command + shift + g -> Ungroup the selection
+            self.group_selection()
         elif char == "g" and modifiers == COMMAND_MODIFIER | SHIFT_MODIFIER:
-            pieces = []
-            for mob in list(self.selection):
-                self.remove(mob)
-                pieces.extend(list(mob))
-            self.clear_selection()
-            self.add(*pieces)
-            self.add_to_selection(*pieces)
-        # Command + t -> Toggle selection mode
+            self.ungroup_selection()
         elif char == "t" and modifiers == COMMAND_MODIFIER:
             self.toggle_selection_mode()
-        # Command + z -> Undo
         elif char == "z" and modifiers == COMMAND_MODIFIER:
             self.undo()
-        # Command + shift + z -> Redo
         elif char == "z" and modifiers == COMMAND_MODIFIER | SHIFT_MODIFIER:
             self.redo()
-        # Command + s -> Save selections to file
         elif char == "s" and modifiers == COMMAND_MODIFIER:
-            to_save = self.selection
-            if len(to_save) == 1:
-                to_save = to_save[0]
-            self.save_mobject_to_file(to_save)
-        # Keyboard movements
+            self.save_selection_to_file()
         elif symbol in ARROW_SYMBOLS:
-            nudge = self.selection_nudge_size
-            if (modifiers & SHIFT_MODIFIER):
-                nudge *= 10
-            vect = [LEFT, UP, RIGHT, DOWN][ARROW_SYMBOLS.index(symbol)]
-            self.selection.shift(nudge * vect)
+            self.nudge_selection(
+                vect=[LEFT, UP, RIGHT, DOWN][ARROW_SYMBOLS.index(symbol)],
+                large=(modifiers & SHIFT_MODIFIER),
+            )
 
         # Conditions for saving state
-        if char in [GRAB_KEY, HORIZONTAL_GRAB_KEY, VERTICAL_GRAB_KEY, RESIZE_KEY]:
+        if char in [GRAB_KEY, X_GRAB_KEY, Y_GRAB_KEY, RESIZE_KEY]:
             self.save_state()
 
     def on_key_release(self, symbol: int, modifiers: int) -> None:
         super().on_key_release(symbol, modifiers)
         if chr(symbol) == SELECT_KEY:
-            self.is_selecting = False
-            self.remove(self.selection_rectangle)
-            for mob in reversed(self.get_selection_search_set()):
-                if self.selection_rectangle.is_touching(mob):
-                    self.add_to_selection(mob)
+            self.gather_new_selection()
+        if chr(symbol) in GRAB_KEYS:
+            self.is_grabbing = False
         elif chr(symbol) == CURSOR_LOCATION_KEY:
             self.remove(self.cursor_location_label)
-        elif symbol == SHIFT_SYMBOL:
-            if self.window.is_key_pressed(ord(RESIZE_KEY)):
-                self.prepare_resizing(about_corner=False)
+        elif symbol == SHIFT_SYMBOL and self.window.is_key_pressed(ord(RESIZE_KEY)):
+            self.prepare_resizing(about_corner=False)
+
+    # Mouse actions
+    def handle_grabbing(self, point: np.ndarray):
+        diff = point - self.mouse_to_selection
+        if self.window.is_key_pressed(ord(GRAB_KEY)):
+            self.selection.move_to(diff)
+        elif self.window.is_key_pressed(ord(X_GRAB_KEY)):
+            self.selection.set_x(diff[0])
+        elif self.window.is_key_pressed(ord(Y_GRAB_KEY)):
+            self.selection.set_y(diff[1])
+
+    def handle_resizing(self, point: np.ndarray):
+        vect = point - self.scale_about_point
+        if self.window.is_key_pressed(CTRL_SYMBOL):
+            for i in (0, 1):
+                scalar = vect[i] / self.scale_ref_vect[i]
+                self.selection.rescale_to_fit(
+                    scalar * [self.scale_ref_width, self.scale_ref_height][i],
+                    dim=i,
+                    about_point=self.scale_about_point,
+                    stretch=True,
+                )
+        else:
+            scalar = get_norm(vect) / get_norm(self.scale_ref_vect)
+            self.selection.set_width(
+                scalar * self.scale_ref_width,
+                about_point=self.scale_about_point
+            )
+
+    def handle_sweeping_selection(self, point: np.ndarray):
+        mob = self.point_to_mobject(
+            point, search_set=self.get_selection_search_set(),
+            buff=SMALL_BUFF
+        )
+        if mob is not None:
+            self.add_to_selection(mob)
+
+    def choose_color(self, point: np.ndarray):
+        # Search through all mobject on the screen, not just the palette
+        to_search = [
+            sm
+            for mobject in self.mobjects
+            for sm in mobject.family_members_with_points()
+            if mobject not in self.unselectables
+        ]
+        mob = self.point_to_mobject(point, to_search)
+        if mob is not None:
+            self.selection.set_color(mob.get_color())
+        self.remove(self.color_palette)
+
+    def toggle_clicked_mobject_from_selection(self, point: np.ndarray):
+        mob = self.point_to_mobject(
+            point,
+            search_set=self.get_selection_search_set(),
+            buff=SMALL_BUFF
+        )
+        if mob is not None:
+            self.toggle_from_selection(mob)
 
     def on_mouse_motion(self, point: np.ndarray, d_point: np.ndarray) -> None:
         super().on_mouse_motion(point, d_point)
-        # Move selection
-        if self.window.is_key_pressed(ord(GRAB_KEY)):
-            self.selection.move_to(point - self.mouse_to_selection)
-        # Move selection restricted to horizontal
-        elif self.window.is_key_pressed(ord(HORIZONTAL_GRAB_KEY)):
-            self.selection.set_x((point - self.mouse_to_selection)[0])
-        # Move selection restricted to vertical
-        elif self.window.is_key_pressed(ord(VERTICAL_GRAB_KEY)):
-            self.selection.set_y((point - self.mouse_to_selection)[1])
-        # Scale selection
+        if self.is_grabbing:
+            self.handle_grabbing(point)
         elif self.window.is_key_pressed(ord(RESIZE_KEY)):
-            vect = point - self.scale_about_point
-            if self.window.is_key_pressed(CTRL_SYMBOL):
-                for i in (0, 1):
-                    scalar = vect[i] / self.scale_ref_vect[i]
-                    self.selection.rescale_to_fit(
-                        scalar * [self.scale_ref_width, self.scale_ref_height][i],
-                        dim=i,
-                        about_point=self.scale_about_point,
-                        stretch=True,
-                    )
-            else:
-                scalar = get_norm(vect) / get_norm(self.scale_ref_vect)
-                self.selection.set_width(
-                    scalar * self.scale_ref_width,
-                    about_point=self.scale_about_point
-                )
-        # Add to selection
+            self.handle_resizing(point)
         elif self.window.is_key_pressed(ord(SELECT_KEY)) and self.window.is_key_pressed(SHIFT_SYMBOL):
-            mob = self.point_to_mobject(
-                point, search_set=self.get_selection_search_set(),
-                buff=SMALL_BUFF
-            )
-            if mob is not None:
-                self.add_to_selection(mob)
+            self.handle_sweeping_selection(point)
 
     def on_mouse_release(self, point: np.ndarray, button: int, mods: int) -> None:
         super().on_mouse_release(point, button, mods)
         if self.color_palette in self.mobjects:
-            # Search through all mobject on the screne, not just the palette
-            to_search = list(it.chain(*(
-                mobject.family_members_with_points()
-                for mobject in self.mobjects
-                if mobject not in self.unselectables
-            )))
-            mob = self.point_to_mobject(point, to_search)
-            if mob is not None:
-                self.selection.set_color(mob.get_color())
-            self.remove(self.color_palette)
+            self.choose_color(point)
         elif self.window.is_key_pressed(SHIFT_SYMBOL):
-            mob = self.point_to_mobject(
-                point,
-                search_set=self.get_selection_search_set(),
-                buff=SMALL_BUFF
-            )
-            if mob is not None:
-                self.toggle_from_selection(mob)
+            self.toggle_clicked_mobject_from_selection(point)
         else:
             self.clear_selection()
