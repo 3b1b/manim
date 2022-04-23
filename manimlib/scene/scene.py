@@ -647,11 +647,13 @@ class Scene(object):
         if self.undo_stack:
             self.redo_stack.append(self.get_state())
             self.restore_state(self.undo_stack.pop())
+        self.refresh_static_mobjects()
 
     def redo(self):
         if self.redo_stack:
             self.undo_stack.append(self.get_state())
             self.restore_state(self.redo_stack.pop())
+        self.refresh_static_mobjects()
 
     def save_mobject_to_file(self, mobject: Mobject, file_path: str | None = None) -> None:
         if file_path is None:
