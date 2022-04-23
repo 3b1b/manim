@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import numpy as np
-from typing import Callable
 
-from manimlib.animation.animation import Animation, prepare_animation
+from manimlib.animation.animation import Animation
+from manimlib.animation.animation import prepare_animation
 from manimlib.mobject.mobject import Group
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
@@ -15,8 +15,10 @@ from manimlib.utils.simple_functions import clip
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from manimlib.scene.scene import Scene
+    from typing import Callable
+
     from manimlib.mobject.mobject import Mobject
+    from manimlib.scene.scene import Scene
 
 
 DEFAULT_LAGGED_START_LAG_RATIO = 0.05

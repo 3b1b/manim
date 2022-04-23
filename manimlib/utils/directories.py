@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import os
 
-from manimlib.utils.file_ops import guarantee_existence
 from manimlib.utils.customization import get_customization
+from manimlib.utils.file_ops import guarantee_existence
 
 
 def get_directories() -> dict[str, str]:

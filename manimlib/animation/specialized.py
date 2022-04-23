@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-import numpy as np
-
 from manimlib.animation.composition import LaggedStart
 from manimlib.animation.transform import Restore
-from manimlib.constants import WHITE
-from manimlib.constants import BLACK
+from manimlib.constants import BLACK, WHITE
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import digest_config
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import numpy as np
 
 
 class Broadcast(LaggedStart):

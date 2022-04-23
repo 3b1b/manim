@@ -1,21 +1,28 @@
 from __future__ import annotations
 
-from typing import Iterable, Sequence, Union
 from functools import reduce
 import operator as op
-import colour
 import re
 
-from manimlib.constants import *
+from manimlib.constants import BLACK, WHITE
+from manimlib.constants import DOWN, LEFT, RIGHT, UP
+from manimlib.constants import FRAME_WIDTH
+from manimlib.constants import MED_LARGE_BUFF, MED_SMALL_BUFF, SMALL_BUFF
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.tex_file_writing import tex_to_svg_file
-from manimlib.utils.tex_file_writing import get_tex_config
 from manimlib.utils.tex_file_writing import display_during_execution
+from manimlib.utils.tex_file_writing import get_tex_config
+from manimlib.utils.tex_file_writing import tex_to_svg_file
 
-ManimColor = Union[str, colour.Color, Sequence[float]]
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from colour import Color
+    from typing import Iterable, Union
+
+    ManimColor = Union[str, Color]
 
 
 SCALE_FACTOR_PER_FONT_POINT = 0.001

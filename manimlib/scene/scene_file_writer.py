@@ -1,29 +1,30 @@
 from __future__ import annotations
 
 import os
-import sys
-import shutil
 import platform
+import shutil
 import subprocess as sp
+import sys
 
 import numpy as np
 from pydub import AudioSegment
 from tqdm import tqdm as ProgressDisplay
 
 from manimlib.constants import FFMPEG_BIN
+from manimlib.logger import log
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.file_ops import guarantee_existence
 from manimlib.utils.file_ops import add_extension_if_not_present
 from manimlib.utils.file_ops import get_sorted_integer_files
+from manimlib.utils.file_ops import guarantee_existence
 from manimlib.utils.sounds import get_full_sound_file_path
-from manimlib.logger import log
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from manimlib.scene.scene import Scene
-    from manimlib.camera.camera import Camera
     from PIL.Image import Image
+
+    from manimlib.camera.camera import Camera
+    from manimlib.scene.scene import Scene
 
 
 class SceneFileWriter(object):

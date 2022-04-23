@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-from typing import Callable, Sequence
-
 from manimlib.animation.animation import Animation
 from manimlib.utils.rate_functions import linear
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from typing import Callable, Sequence
+
     import numpy as np
+
     from manimlib.mobject.mobject import Mobject
 
 

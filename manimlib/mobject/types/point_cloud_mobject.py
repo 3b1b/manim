@@ -1,19 +1,22 @@
 from __future__ import annotations
 
-from typing import Callable, Sequence, Union
-
-import colour
-import numpy.typing as npt
-
-from manimlib.constants import *
+from manimlib.constants import BLACK
+from manimlib.constants import ORIGIN
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import color_to_rgba
-from manimlib.utils.iterables import resize_with_interpolation
 from manimlib.utils.iterables import resize_array
+from manimlib.utils.iterables import resize_with_interpolation
 
+from typing import TYPE_CHECKING
 
-ManimColor = Union[str, colour.Color, Sequence[float]]
+if TYPE_CHECKING:
+    from colour import Color
+    from typing import Callable, Union
+
+    import numpy.typing as npt
+
+    ManimColor = Union[str, Color]
 
 
 class PMobject(Mobject):

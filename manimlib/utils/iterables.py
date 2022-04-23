@@ -1,11 +1,16 @@
 from __future__ import annotations
 
-from typing import Callable, Iterable, Sequence, TypeVar
+from colour import Color
 
 import numpy as np
 
-T = TypeVar("T")
-S = TypeVar("S")
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Callable, Iterable, Sequence, TypeVar
+
+    T = TypeVar("T")
+    S = TypeVar("S")
 
 
 def remove_list_redundancies(l: Iterable[T]) -> list[T]:
@@ -76,7 +81,7 @@ def batch_by_property(
     return batch_prop_pairs
 
 
-def listify(obj) -> list:
+def listify(obj: object) -> list:
     if isinstance(obj, str):
         return [obj]
     try:
@@ -130,10 +135,17 @@ def make_even(
 
 def hash_obj(obj: object) -> int:
     if isinstance(obj, dict):
-        new_obj = {k: hash_obj(v) for k, v in obj.items()}
-        return hash(tuple(frozenset(sorted(new_obj.items()))))
+        return hash(tuple(sorted([
+            (hash_obj(k), hash_obj(v)) for k, v in obj.items()
+        ])))
 
-    if isinstance(obj, (set, tuple, list)):
+    if isinstance(obj, set):
+        return hash(tuple(sorted(hash_obj(e) for e in obj)))
+
+    if isinstance(obj, (tuple, list)):
         return hash(tuple(hash_obj(e) for e in obj))
+
+    if isinstance(obj, Color):
+        return hash(obj.get_rgb())
 
     return hash(obj)

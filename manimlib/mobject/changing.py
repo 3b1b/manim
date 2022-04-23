@@ -1,18 +1,17 @@
 from __future__ import annotations
 
-from typing import Callable
-
 import numpy as np
 
-from manimlib.constants import BLUE_D
-from manimlib.constants import BLUE_B
-from manimlib.constants import BLUE_E
-from manimlib.constants import GREY_BROWN
-from manimlib.constants import WHITE
+from manimlib.constants import BLUE_B, BLUE_D, BLUE_E, GREY_BROWN, WHITE
 from manimlib.mobject.mobject import Mobject
-from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.rate_functions import smooth
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Callable
 
 
 class AnimatedBoundary(VGroup):

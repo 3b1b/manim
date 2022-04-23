@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import itertools as it
-from typing import Union, Sequence
 
 import numpy as np
-import numpy.typing as npt
 
-from manimlib.constants import *
+from manimlib.constants import DEFAULT_MOBJECT_TO_MOBJECT_BUFFER
+from manimlib.constants import DOWN, LEFT, RIGHT, UP
+from manimlib.constants import WHITE
 from manimlib.mobject.numbers import DecimalNumber
 from manimlib.mobject.numbers import Integer
 from manimlib.mobject.shape_matchers import BackgroundRectangle
@@ -18,9 +18,14 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    import colour
+    from colour import Color
+    from typing import Union
+
+    import numpy.typing as npt
+
     from manimlib.mobject.mobject import Mobject
-    ManimColor = Union[str, colour.Color, Sequence[float]]
+
+    ManimColor = Union[str, Color]
 
 
 VECTOR_LABEL_SCALE_FACTOR = 0.8

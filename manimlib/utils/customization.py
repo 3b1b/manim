@@ -4,6 +4,7 @@ import tempfile
 from manimlib.config import get_custom_config
 from manimlib.config import get_manim_dir
 
+
 CUSTOMIZATION = {}
 
 

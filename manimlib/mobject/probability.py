@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import Iterable, Union, Sequence
-import colour
-
-from manimlib.constants import *
+from manimlib.constants import BLUE, BLUE_E, GREEN_E, GREY_B, GREY_D, MAROON_B, YELLOW
+from manimlib.constants import DOWN, LEFT, RIGHT, UP
+from manimlib.constants import MED_LARGE_BUFF, MED_SMALL_BUFF, SMALL_BUFF
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.mobject import Mobject
@@ -14,7 +13,14 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.color import color_gradient
 from manimlib.utils.iterables import listify
 
-ManimColor = Union[str, colour.Color, Sequence[float]]
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from colour import Color
+    from typing import Iterable, Union
+
+    ManimColor = Union[str, Color]
+
 
 EPSILON = 0.0001
 

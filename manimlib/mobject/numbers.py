@@ -1,13 +1,18 @@
 from __future__ import annotations
 
-from typing import TypeVar, Type
+import numpy as np
 
-from manimlib.constants import *
+from manimlib.constants import DOWN, LEFT, RIGHT, UP
 from manimlib.mobject.svg.tex_mobject import SingleStringTex
 from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VMobject
 
-T = TypeVar("T", bound=VMobject)
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Type, TypeVar
+
+    T = TypeVar("T", bound=VMobject)
 
 
 class DecimalNumber(VMobject):

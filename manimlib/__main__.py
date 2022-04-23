@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-import manimlib.config
-import manimlib.logger
-import manimlib.extract_scene
-import manimlib.utils.init_config
 from manimlib import __version__
+import manimlib.config
+import manimlib.extract_scene
+import manimlib.logger
+import manimlib.utils.init_config
 
 
 def main():
