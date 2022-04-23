@@ -33,7 +33,6 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.iterables import list_update
 from manimlib.utils.iterables import listify
-from manimlib.utils.iterables import make_even
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_preserving_order
 from manimlib.utils.iterables import resize_with_interpolation
@@ -96,7 +95,8 @@ class Mobject(object):
         self.locked_data_keys: set[str] = set()
         self.needs_new_bounding_box: bool = True
         self._is_animating: bool = False
-        self._is_movable: bool = False
+        self.saved_state = None
+        self.target = None
 
         self.init_data()
         self.init_uniforms()
@@ -148,8 +148,10 @@ class Mobject(object):
         return self
 
     def set_uniforms(self, uniforms: dict):
-        for key in uniforms:
-            self.uniforms[key] = uniforms[key]  # Copy?
+        for key, value in uniforms.items():
+            if isinstance(value, np.ndarray):
+                value = value.copy()
+            self.uniforms[key] = value
         return self
 
     @property
@@ -472,66 +474,91 @@ class Mobject(object):
         self.assemble_family()
         return self
 
-    # Creating new Mobjects from this one
+    # Copying and serialization
 
-    def replicate(self, n: int) -> Group:
-        return self.get_group_class()(
-            *(self.copy() for x in range(n))
-        )
+    def stash_mobject_pointers(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            uncopied_attrs = ["parents", "target", "saved_state"]
+            stash = dict()
+            for attr in uncopied_attrs:
+                if hasattr(self, attr):
+                    value = getattr(self, attr)
+                    stash[attr] = value
+                    null_value = [] if isinstance(value, list) else None
+                    setattr(self, attr, null_value)
+            result = func(self, *args, **kwargs)
+            self.__dict__.update(stash)
+            return result
+        return wrapper
 
-    def get_grid(self, n_rows: int, n_cols: int, height: float | None = None, **kwargs):
-        """
-        Returns a new mobject containing multiple copies of this one
-        arranged in a grid
-        """
-        grid = self.replicate(n_rows * n_cols)
-        grid.arrange_in_grid(n_rows, n_cols, **kwargs)
-        if height is not None:
-            grid.set_height(height)
-        return grid
+    @stash_mobject_pointers
+    def serialize(self):
+        return pickle.dumps(self)
 
-    # Copying
+    def deserialize(self, data: bytes):
+        self.become(pickle.loads(data))
+        return self
 
-    def copy(self):
-        self.parents = []
-        try:
-            return pickle.loads(pickle.dumps(self))
-        except AttributeError:
-            return copy.deepcopy(self)
+    @stash_mobject_pointers
+    def copy(self, deep: bool = False):
+        if deep:
+            try:
+                # Often faster than deepcopy
+                return pickle.loads(pickle.dumps(self))
+            except AttributeError:
+                return copy.deepcopy(self)
+
+        result = copy.copy(self)
+
+        # The line above is only a shallow copy, so the internal
+        # data which are numpyu arrays or other mobjects still
+        # need to be further copied.
+        result.data = dict(self.data)
+        for key in result.data:
+            result.data[key] = result.data[key].copy()
+
+        result.uniforms = dict(self.uniforms)
+        for key in result.uniforms:
+            if isinstance(result.uniforms[key], np.ndarray):
+                result.uniforms[key] = result.uniforms[key].copy()
+
+        result.submobjects = []
+        result.add(*(sm.copy() for sm in self.submobjects))
+        result.match_updaters(self)
+
+        family = self.get_family()
+        for attr, value in list(self.__dict__.items()):
+            if isinstance(value, Mobject) and value in family and value is not self:
+                setattr(result, attr, result.family[self.family.index(value)])
+            if isinstance(value, np.ndarray):
+                setattr(result, attr, value.copy())
+            if isinstance(value, ShaderWrapper):
+                setattr(result, attr, value.copy())
+        return result
 
     def deepcopy(self):
-        # This used to be different from copy, so is now just here for backward compatibility
-        return self.copy()
+        return self.copy(deep=True)
 
     def generate_target(self, use_deepcopy: bool = False):
-        # TODO, remove now pointless use_deepcopy arg
-        self.target = None  # Prevent exponential explosion
-        self.target = self.copy()
+        self.target = self.copy(deep=use_deepcopy)
+        self.target.saved_state = self.saved_state
         return self.target
 
     def save_state(self, use_deepcopy: bool = False):
-        # TODO, remove now pointless use_deepcopy arg
-        if hasattr(self, "saved_state"):
-            # Prevent exponential growth of data
-            self.saved_state = None
-        self.saved_state = self.copy()
+        self.saved_state = self.copy(deep=use_deepcopy)
+        self.saved_state.target = self.target
         return self
 
     def restore(self):
-        if not hasattr(self, "saved_state") or self.save_state is None:
+        if not hasattr(self, "saved_state") or self.saved_state is None:
             raise Exception("Trying to restore without having saved")
         self.become(self.saved_state)
         return self
 
-    def save_to_file(self, file_path):
-        if not file_path.endswith(".mob"):
-            file_path += ".mob"
-        if os.path.exists(file_path):
-            cont = input(f"{file_path} already exists. Overwrite (y/n)? ")
-            if cont != "y":
-                return
+    def save_to_file(self, file_path: str, supress_overwrite_warning: bool = False):
         with open(file_path, "wb") as fp:
-            pickle.dump(self, fp)
+            fp.write(self.serialize())
         log.info(f"Saved mobject to {file_path}")
         return self
 
@@ -543,6 +570,39 @@ class Mobject(object):
         with open(file_path, "rb") as fp:
             mobject = pickle.load(fp)
         return mobject
+
+    def become(self, mobject: Mobject):
+        """
+        Edit all data and submobjects to be idential
+        to another mobject
+        """
+        self.align_family(mobject)
+        for sm1, sm2 in zip(self.get_family(), mobject.get_family()):
+            sm1.set_data(sm2.data)
+            sm1.set_uniforms(sm2.uniforms)
+            sm1.shader_folder = sm2.shader_folder
+            sm1.texture_paths = sm2.texture_paths
+            sm1.depth_test = sm2.depth_test
+            sm1.render_primitive = sm2.render_primitive
+        self.refresh_bounding_box(recurse_down=True)
+        return self
+
+    # Creating new Mobjects from this one
+
+    def replicate(self, n: int) -> Group:
+        group_class = self.get_group_class()
+        return group_class(*(self.copy() for _ in range(n)))
+
+    def get_grid(self, n_rows: int, n_cols: int, height: float | None = None, **kwargs) -> Group:
+        """
+        Returns a new mobject containing multiple copies of this one
+        arranged in a grid
+        """
+        grid = self.replicate(n_rows * n_cols)
+        grid.arrange_in_grid(n_rows, n_cols, **kwargs)
+        if height is not None:
+            grid.set_height(height)
+        return grid
 
     # Updating
 
@@ -646,20 +706,12 @@ class Mobject(object):
     # Check if mark as static or not for camera
 
     def is_changing(self) -> bool:
-        return self._is_animating or self.has_updaters or self._is_movable
+        return self._is_animating or self.has_updaters
 
     def set_animating_status(self, is_animating: bool, recurse: bool = True) -> None:
         for mob in self.get_family(recurse):
             mob._is_animating = is_animating
         return self
-
-    def make_movable(self, value: bool = True, recurse: bool = True) -> None:
-        for mob in self.get_family(recurse):
-            mob._is_movable = value
-        return self
-
-    def is_movable(self) -> bool:
-        return self._is_movable
 
     # Transforming operations
 
@@ -1539,18 +1591,6 @@ class Mobject(object):
         of mobject to become.
         """
         pass  # To implement in subclass
-
-    def become(self, mobject: Mobject):
-        """
-        Edit all data and submobjects to be idential
-        to another mobject
-        """
-        self.align_family(mobject)
-        for sm1, sm2 in zip(self.get_family(), mobject.get_family()):
-            sm1.set_data(sm2.data)
-            sm1.set_uniforms(sm2.uniforms)
-        self.refresh_bounding_box(recurse_down=True)
-        return self
 
     # Locking data
 

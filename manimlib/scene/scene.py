@@ -14,10 +14,9 @@ from tqdm import tqdm as ProgressDisplay
 from manimlib.animation.animation import prepare_animation
 from manimlib.animation.transform import MoveToTarget
 from manimlib.camera.camera import Camera
-from manimlib.config import get_custom_config
 from manimlib.constants import ARROW_SYMBOLS
 from manimlib.constants import DEFAULT_WAIT_TIME
-from manimlib.constants import COMMAND_MODIFIER, CTRL_MODIFIER, SHIFT_MODIFIER
+from manimlib.constants import COMMAND_MODIFIER
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
@@ -46,7 +45,6 @@ FRAME_SHIFT_KEY = 'f'
 ZOOM_KEY = 'z'
 RESET_FRAME_KEY = 'r'
 QUIT_KEY = 'q'
-EMBED_KEY = 'e'
 
 
 class Scene(object):
@@ -65,6 +63,7 @@ class Scene(object):
         "presenter_mode": False,
         "linger_after_completion": True,
         "pan_sensitivity": 3,
+        "max_num_saved_states": 20,
     }
 
     def __init__(self, **kwargs):
@@ -74,12 +73,15 @@ class Scene(object):
             self.window = Window(scene=self, **self.window_config)
             self.camera_config["ctx"] = self.window.ctx
             self.camera_config["frame_rate"] = 30  # Where's that 30 from?
+            self.undo_stack = []
+            self.redo_stack = []
         else:
             self.window = None
 
         self.camera: Camera = self.camera_class(**self.camera_config)
         self.file_writer = SceneFileWriter(self, **self.file_writer_config)
         self.mobjects: list[Mobject] = [self.camera.frame]
+        self.id_to_mobject_map: dict[int, Mobject] = dict()
         self.num_plays: int = 0
         self.time: float = 0
         self.skip_time: float = 0
@@ -91,11 +93,15 @@ class Scene(object):
         self.mouse_point = Point()
         self.mouse_drag_point = Point()
         self.hold_on_wait = self.presenter_mode
+        self.inside_embed = False
 
         # Much nicer to work with deterministic scenes
         if self.random_seed is not None:
             random.seed(self.random_seed)
             np.random.seed(self.random_seed)
+
+    def __str__(self) -> str:
+        return self.__class__.__name__
 
     def run(self) -> None:
         self.virtual_animation_start_time: float = 0
@@ -146,40 +152,57 @@ class Scene(object):
 
     def embed(self, close_scene_on_exit: bool = True) -> None:
         if not self.preview:
-            # If the scene is just being
-            # written, ignore embed calls
+            # Ignore embed calls when there is no preview
             return
+        self.inside_embed = True
         self.stop_skipping()
         self.linger_after_completion = False
         self.update_frame()
-
-        # Save scene state at the point of embedding
         self.save_state()
 
-        from IPython.terminal.embed import InteractiveShellEmbed
-        shell = InteractiveShellEmbed()
-        # Have the frame update after each command
-        shell.events.register('post_run_cell', lambda *a, **kw: self.refresh_static_mobjects())
-        shell.events.register('post_run_cell', lambda *a, **kw: self.update_frame())
-        # Use the locals of the caller as the local namespace
-        # once embedded, and add a few custom shortcuts
+        # Configure and launch embedded IPython terminal
+        from IPython.terminal import embed, pt_inputhooks
+        shell = embed.InteractiveShellEmbed.instance()
+
+        # Use the locals namespace of the caller
         local_ns = inspect.currentframe().f_back.f_locals
-        local_ns["touch"] = self.interact
-        local_ns["i2g"] = self.ids_to_group
-        for term in ("play", "wait", "add", "remove", "clear", "save_state", "restore"):
-            local_ns[term] = getattr(self, term)
-        log.info("Tips: Now the embed iPython terminal is open. But you can't interact with"
-                 " the window directly. To do so, you need to type `touch()` or `self.interact()`")
-        exec(get_custom_config()["universal_import_line"])
+        # Add a few custom shortcuts
+        local_ns.update({
+            name: getattr(self, name)
+            for name in [
+                "play", "wait", "add", "remove", "clear",
+                "save_state", "undo", "redo", "i2g", "i2m"
+            ]
+        })
+
+        # Enables gui interactions during the embed
+        def inputhook(context):
+            while not context.input_is_ready():
+                if self.window.is_closing:
+                    pass
+                    # self.window.destroy()
+                else:
+                    self.update_frame(dt=0)
+
+        pt_inputhooks.register("manim", inputhook)
+        shell.enable_gui("manim")
+
+        # Operation to run after each ipython command
+        def post_cell_func(*args, **kwargs):
+            self.refresh_static_mobjects()
+
+        shell.events.register("post_run_cell", post_cell_func)
+
+        # Launch shell, with stack_depth=2 indicating we should use caller globals/locals
         shell(local_ns=local_ns, stack_depth=2)
+
+        self.inside_embed = False
         # End scene when exiting an embed
         if close_scene_on_exit:
             raise EndSceneEarlyException()
 
-    def __str__(self) -> str:
-        return self.__class__.__name__
-
     # Only these methods should touch the camera
+
     def get_image(self) -> Image:
         return self.camera.get_image()
 
@@ -210,6 +233,7 @@ class Scene(object):
             self.file_writer.write_frame(self.camera)
 
     # Related to updating
+
     def update_mobjects(self, dt: float) -> None:
         for mobject in self.mobjects:
             mobject.update(dt)
@@ -228,6 +252,7 @@ class Scene(object):
         ])
 
     # Related to time
+
     def get_time(self) -> float:
         return self.time
 
@@ -235,6 +260,7 @@ class Scene(object):
         self.time += dt
 
     # Related to internal mobject organization
+
     def get_top_level_mobjects(self) -> list[Mobject]:
         # Return only those which are not in the family
         # of another mobject from the scene
@@ -259,6 +285,11 @@ class Scene(object):
         """
         self.remove(*new_mobjects)
         self.mobjects += new_mobjects
+        self.id_to_mobject_map.update({
+            id(sm): sm
+            for m in new_mobjects
+            for sm in m.get_family()
+        })
         return self
 
     def add_mobjects_among(self, values: Iterable):
@@ -322,11 +353,7 @@ class Scene(object):
             return Group(*mobjects)
 
     def id_to_mobject(self, id_value):
-        for mob in self.mobjects:
-            for sm in mob.get_family():
-                if id(sm) == id_value:
-                    return sm
-        return None
+        return self.id_to_mobject_map[id_value]
 
     def ids_to_group(self, *id_values):
         return self.get_group(*filter(
@@ -334,7 +361,14 @@ class Scene(object):
             map(self.id_to_mobject, id_values)
         ))
 
+    def i2g(self, *id_values):
+        return self.ids_to_group(*id_values)
+
+    def i2m(self, id_value):
+        return self.id_to_mobject(id_value)
+
     # Related to skipping
+
     def update_skipping_status(self) -> None:
         if self.start_at_animation_number is not None:
             if self.num_plays == self.start_at_animation_number:
@@ -350,6 +384,7 @@ class Scene(object):
         self.skip_animations = False
 
     # Methods associated with running animations
+
     def get_time_progression(
         self,
         run_time: float,
@@ -473,6 +508,8 @@ class Scene(object):
     def handle_play_like_call(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
+            if self.inside_embed:
+                self.save_state()
             self.update_skipping_status()
             should_write = not self.skip_animations
             if should_write:
@@ -594,24 +631,39 @@ class Scene(object):
         self.file_writer.add_sound(sound_file, time, gain, gain_to_background)
 
     # Helpers for interactive development
+
+    def get_state(self) -> list[tuple[Mobject, Mobject]]:
+        return [(mob, mob.copy()) for mob in self.mobjects]
+
+    def restore_state(self, mobject_states: list[tuple[Mobject, Mobject]]):
+        self.mobjects = [mob.become(mob_copy) for mob, mob_copy in mobject_states]
+
     def save_state(self) -> None:
-        self.saved_state = [
-            (mob, mob.copy())
-            for mob in self.mobjects
-        ]
+        if not self.preview:
+            return
+        self.redo_stack = []
+        self.undo_stack.append(self.get_state())
+        if len(self.undo_stack) > self.max_num_saved_states:
+            self.undo_stack.pop(0)
 
-    def restore(self) -> None:
-        if not hasattr(self, "saved_state"):
-            raise Exception("Trying to restore scene without having saved")
-        self.mobjects = []
-        for mob, mob_state in self.saved_state:
-            mob.become(mob_state)
-            self.mobjects.append(mob)
+    def undo(self):
+        if self.undo_stack:
+            self.redo_stack.append(self.get_state())
+            self.restore_state(self.undo_stack.pop())
+        self.refresh_static_mobjects()
 
-    def save_mobect(self, mobject: Mobject, file_name: str):
-        directory = self.file_writer.get_saved_mobject_directory()
-        path = os.path.join(directory, file_name)
-        mobject.save_to_file(path)
+    def redo(self):
+        if self.redo_stack:
+            self.undo_stack.append(self.get_state())
+            self.restore_state(self.redo_stack.pop())
+        self.refresh_static_mobjects()
+
+    def save_mobject_to_file(self, mobject: Mobject, file_path: str | None = None) -> None:
+        if file_path is None:
+            file_path = self.file_writer.get_saved_mobject_path(mobject)
+            if file_path is None:
+                return
+        mobject.save_to_file(file_path)
 
     def load_mobject(self, file_name):
         if os.path.exists(file_name):
@@ -739,9 +791,6 @@ class Scene(object):
         # Space or right arrow
         elif char == " " or symbol == ARROW_SYMBOLS[2]:
             self.hold_on_wait = False
-        # ctrl + shift + e
-        elif char == EMBED_KEY and modifiers == CTRL_MODIFIER | SHIFT_MODIFIER:
-            self.embed(close_scene_on_exit=False)
 
     def on_resize(self, width: int, height: int) -> None:
         self.camera.reset_pixel_shape(width, height)

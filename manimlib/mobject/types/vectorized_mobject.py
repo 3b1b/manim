@@ -8,6 +8,8 @@ import operator as op
 import moderngl
 import numpy as np
 
+from manimlib.constants import GREY_C
+from manimlib.constants import GREY_E
 from manimlib.constants import BLACK, WHITE
 from manimlib.constants import DEFAULT_STROKE_WIDTH
 from manimlib.constants import DEGREES
@@ -23,6 +25,7 @@ from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.bezier import partial_quadratic_bezier_points
+from manimlib.utils.color import color_gradient
 from manimlib.utils.color import rgb_to_hex
 from manimlib.utils.iterables import listify
 from manimlib.utils.iterables import make_even
@@ -1193,3 +1196,24 @@ class DashedVMobject(VMobject):
         # Family is already taken care of by get_subcurve
         # implementation
         self.match_style(vmobject, recurse=False)
+
+
+class VHighlight(VGroup):
+    def __init__(
+        self,
+        vmobject: VMobject,
+        n_layers: int = 3,
+        color_bounds: tuple[ManimColor] = (GREY_C, GREY_E),
+        max_stroke_width: float = 10.0,
+    ):
+        outline = vmobject.replicate(n_layers)
+        outline.set_fill(opacity=0)
+        added_widths = np.linspace(0, max_stroke_width, n_layers + 1)[1:]
+        colors = color_gradient(color_bounds, n_layers)
+        for part, added_width, color in zip(reversed(outline), added_widths, colors):
+            for sm in part.family_members_with_points():
+                part.set_stroke(
+                    width=sm.get_stroke_width() + added_width,
+                    color=color,
+                )
+        super().__init__(*outline)
