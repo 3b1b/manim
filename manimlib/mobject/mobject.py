@@ -84,7 +84,6 @@ class Mobject(object):
         self.locked_data_keys: set[str] = set()
         self.needs_new_bounding_box: bool = True
         self._is_animating: bool = False
-        self.interaction_allowed: bool = False
         self.saved_state = None
         self.target = None
 
@@ -495,7 +494,7 @@ class Mobject(object):
         if deep:
             try:
                 # Often faster than deepcopy
-                return pickle.loads(self.serialize())
+                return pickle.loads(pickle.dumps(self))
             except AttributeError:
                 return copy.deepcopy(self)
 
@@ -696,20 +695,12 @@ class Mobject(object):
     # Check if mark as static or not for camera
 
     def is_changing(self) -> bool:
-        return self._is_animating or self.has_updaters or self.interaction_allowed
+        return self._is_animating or self.has_updaters
 
     def set_animating_status(self, is_animating: bool, recurse: bool = True) -> None:
         for mob in self.get_family(recurse):
             mob._is_animating = is_animating
         return self
-
-    def allow_interaction(self, value: bool = True, recurse: bool = True) -> None:
-        for mob in self.get_family(recurse):
-            mob.interaction_allowed = value
-        return self
-
-    def is_interaction_allowed(self) -> bool:
-        return self.interaction_allowed
 
     # Transforming operations
 
