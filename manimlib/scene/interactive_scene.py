@@ -398,10 +398,6 @@ class InteractiveScene(Scene):
             self.ungroup_selection()
         elif char == "t" and modifiers == COMMAND_MODIFIER:
             self.toggle_selection_mode()
-        elif char == "z" and modifiers == COMMAND_MODIFIER:
-            self.undo()
-        elif char == "z" and modifiers == COMMAND_MODIFIER | SHIFT_MODIFIER:
-            self.redo()
         elif char == "s" and modifiers == COMMAND_MODIFIER:
             self.save_selection_to_file()
         elif symbol in ARROW_SYMBOLS:
