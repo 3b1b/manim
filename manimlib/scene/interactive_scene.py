@@ -145,8 +145,11 @@ class InteractiveScene(Scene):
         self.select_top_level_mobs = not self.select_top_level_mobs
         self.refresh_selection_scope()
 
-    def get_selection_search_set(self):
-        mobs = [m for m in self.mobjects if m not in self.unselectables]
+    def get_selection_search_set(self) -> list[Mobject]:
+        mobs = [
+            m for m in self.mobjects
+            if m not in self.unselectables and m.is_interaction_allowed()
+        ]
         if self.select_top_level_mobs:
             return mobs
         else:
@@ -173,7 +176,7 @@ class InteractiveScene(Scene):
             )
         self.refresh_selection_highlight()
 
-    def get_corner_dots(self, mobject):
+    def get_corner_dots(self, mobject: Mobject) -> Mobject:
         dots = DotCloud(**self.corner_dot_config)
         radius = self.corner_dot_config["radius"]
         if mobject.get_depth() < 1e-2:
@@ -186,7 +189,7 @@ class InteractiveScene(Scene):
         ]))
         return dots
 
-    def get_highlight(self, mobject):
+    def get_highlight(self, mobject: Mobject) -> Mobject:
         if isinstance(mobject, VMobject) and mobject.has_points() and not self.select_top_level_mobs:
             result = VHighlight(mobject)
             result.add_updater(lambda m: m.replace(mobject))
@@ -223,8 +226,12 @@ class InteractiveScene(Scene):
 
     def add(self, *new_mobjects: Mobject):
         for mob in new_mobjects:
-            mob.make_movable()
+            mob.allow_interaction()
         super().add(*new_mobjects)
+
+    def disable_interaction(self, *mobjects: Mobject):
+        for mob in mobjects:
+            mob.allow_interaction(False)
 
     # Functions for keyboard actions
 
@@ -376,7 +383,7 @@ class InteractiveScene(Scene):
             self.is_selecting = False
             self.remove(self.selection_rectangle)
             for mob in reversed(self.get_selection_search_set()):
-                if mob.is_movable() and self.selection_rectangle.is_touching(mob):
+                if self.selection_rectangle.is_touching(mob):
                     self.add_to_selection(mob)
         elif chr(symbol) == CURSOR_LOCATION_KEY:
             self.remove(self.cursor_location_label)
