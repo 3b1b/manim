@@ -243,15 +243,15 @@ def insert_embed_line(file_name: str, scene_name: str, line_marker: str):
     # Insert and write new file
     if n_spaces is None:
         n_spaces = get_indent(lines[prev_line_num])
-    lines.insert(prev_line_num + 1, " " * n_spaces + "self.embed()\n")
-    alt_file = file_name.replace(".py", "_inserted_embed.py")
-    with open(alt_file, 'w') as fp:
-        fp.writelines(lines)
-
+    new_lines = list(lines)
+    new_lines.insert(prev_line_num + 1, " " * n_spaces + "self.embed()\n")
+    with open(file_name, 'w') as fp:
+        fp.writelines(new_lines)
     try:
-        yield alt_file
+        yield file_name
     finally:
-        os.remove(alt_file)
+        with open(file_name, 'w') as fp:
+            fp.writelines(lines)
 
 
 def get_custom_config():
