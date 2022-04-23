@@ -23,7 +23,6 @@ from manimlib.scene.scene import Scene
 from manimlib.utils.tex_file_writing import LatexError
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.space_ops import get_norm
-from manimlib.logger import log
 
 
 SELECT_KEY = 's'
@@ -320,8 +319,6 @@ class InteractiveScene(Scene):
             self.paste_selection()
         # Command + x -> Cut
         elif char == "x" and modifiers == COMMAND_MODIFIER:
-            # TODO, this copy won't work, because once the objects are removed,
-            # they're not searched for in the pasting.
             self.copy_selection()
             self.delete_selection()
         # Delete
