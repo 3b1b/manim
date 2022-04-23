@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from functools import wraps
 import inspect
-import itertools as it
 import os
 import platform
 import random
@@ -17,6 +16,7 @@ from manimlib.camera.camera import Camera
 from manimlib.constants import ARROW_SYMBOLS
 from manimlib.constants import DEFAULT_WAIT_TIME
 from manimlib.constants import COMMAND_MODIFIER
+from manimlib.constants import SHIFT_MODIFIER
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
@@ -785,6 +785,10 @@ class Scene(object):
 
         if char == RESET_FRAME_KEY:
             self.camera.frame.to_default_state()
+        elif char == "z" and modifiers == COMMAND_MODIFIER:
+            self.undo()
+        elif char == "z" and modifiers == COMMAND_MODIFIER | SHIFT_MODIFIER:
+            self.redo()
         # command + q
         elif char == QUIT_KEY and modifiers == COMMAND_MODIFIER:
             self.quit_interaction = True
