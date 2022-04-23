@@ -1,14 +1,19 @@
 from __future__ import annotations
 
-from typing import Callable, Iterable, Sequence, TypeVar
+from colour import Color
 
 import numpy as np
 
-T = TypeVar("T")
-S = TypeVar("S")
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Callable, Iterable, Sequence, TypeVar
+
+    T = TypeVar("T")
+    S = TypeVar("S")
 
 
-def remove_list_redundancies(l: Iterable[T]) -> list[T]:
+def remove_list_redundancies(l: Sequence[T]) -> list[T]:
     """
     Used instead of list(set(l)) to maintain order
     Keeps the last occurrence of each element
@@ -35,14 +40,14 @@ def list_difference_update(l1: Iterable[T], l2: Iterable[T]) -> list[T]:
     return [e for e in l1 if e not in l2]
 
 
-def adjacent_n_tuples(objects: Iterable[T], n: int) -> zip[tuple[T, T]]:
+def adjacent_n_tuples(objects: Sequence[T], n: int) -> zip[tuple[T, T]]:
     return zip(*[
         [*objects[k:], *objects[:k]]
         for k in range(n)
     ])
 
 
-def adjacent_pairs(objects: Iterable[T]) -> zip[tuple[T, T]]:
+def adjacent_pairs(objects: Sequence[T]) -> zip[tuple[T, T]]:
     return adjacent_n_tuples(objects, 2)
 
 
@@ -76,7 +81,7 @@ def batch_by_property(
     return batch_prop_pairs
 
 
-def listify(obj) -> list:
+def listify(obj: object) -> list:
     if isinstance(obj, str):
         return [obj]
     try:
@@ -130,10 +135,17 @@ def make_even(
 
 def hash_obj(obj: object) -> int:
     if isinstance(obj, dict):
-        new_obj = {k: hash_obj(v) for k, v in obj.items()}
-        return hash(tuple(frozenset(sorted(new_obj.items()))))
+        return hash(tuple(sorted([
+            (hash_obj(k), hash_obj(v)) for k, v in obj.items()
+        ])))
 
-    if isinstance(obj, (set, tuple, list)):
+    if isinstance(obj, set):
+        return hash(tuple(sorted(hash_obj(e) for e in obj)))
+
+    if isinstance(obj, (tuple, list)):
         return hash(tuple(hash_obj(e) for e in obj))
+
+    if isinstance(obj, Color):
+        return hash(obj.get_rgb())
 
     return hash(obj)
