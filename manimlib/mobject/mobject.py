@@ -85,6 +85,8 @@ class Mobject(object):
         self.needs_new_bounding_box: bool = True
         self._is_animating: bool = False
         self.interaction_allowed: bool = False
+        self.saved_state = None
+        self.target = None
 
         self.init_data()
         self.init_uniforms()
@@ -473,7 +475,7 @@ class Mobject(object):
                 if hasattr(self, attr):
                     value = getattr(self, attr)
                     stash[attr] = value
-                    null_value = [] if isinstance(value, Iterable) else None
+                    null_value = [] if isinstance(value, list) else None
                     setattr(self, attr, null_value)
             result = func(self, *args, **kwargs)
             self.__dict__.update(stash)
@@ -530,14 +532,16 @@ class Mobject(object):
 
     def generate_target(self, use_deepcopy: bool = False):
         self.target = self.copy(deep=use_deepcopy)
+        self.target.saved_state = self.saved_state
         return self.target
 
     def save_state(self, use_deepcopy: bool = False):
         self.saved_state = self.copy(deep=use_deepcopy)
+        self.saved_state.target = self.target
         return self
 
     def restore(self):
-        if not hasattr(self, "saved_state") or self.save_state is None:
+        if not hasattr(self, "saved_state") or self.saved_state is None:
             raise Exception("Trying to restore without having saved")
         self.become(self.saved_state)
         return self
