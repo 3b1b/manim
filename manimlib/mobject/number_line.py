@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from typing import Iterable, Sequence
+import numpy as np
 
-from manimlib.constants import *
+from manimlib.constants import DOWN, LEFT, RIGHT, UP
+from manimlib.constants import GREY_B
+from manimlib.constants import MED_SMALL_BUFF
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.numbers import DecimalNumber
 from manimlib.mobject.types.vectorized_mobject import VGroup
@@ -11,6 +13,11 @@ from manimlib.utils.bezier import outer_interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.config_ops import merge_dicts_recursively
 from manimlib.utils.simple_functions import fdiv
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Iterable, Sequence
 
 
 class NumberLine(Line):

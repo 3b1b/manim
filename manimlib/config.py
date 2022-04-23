@@ -1,16 +1,16 @@
 import argparse
 import colour
-import inspect
+from contextlib import contextmanager
 import importlib
+import inspect
 import os
+from screeninfo import get_monitors
 import sys
 import yaml
-from contextlib import contextmanager
-from screeninfo import get_monitors
 
+from manimlib.logger import log
 from manimlib.utils.config_ops import merge_dicts_recursively
 from manimlib.utils.init_config import init_customization
-from manimlib.logger import log
 
 
 __config_file__ = "custom_config.yml"

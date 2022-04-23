@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 import math
-from typing import Callable
 
 import numpy as np
 
@@ -7,6 +8,12 @@ from manimlib.constants import OUT
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotation_matrix_transpose
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Callable
+
 
 STRAIGHT_PATH_THRESHOLD = 0.01
 

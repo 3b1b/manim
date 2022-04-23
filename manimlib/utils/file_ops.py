@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import os
-from typing import Iterable
 
 import numpy as np
 import validators
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Iterable
 
 
 def add_extension_if_not_present(file_name: str, extension: str) -> str:

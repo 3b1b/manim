@@ -1,11 +1,11 @@
+import copy
 import inspect
 import sys
-import copy
 
-from manimlib.scene.scene import Scene
-from manimlib.scene.interactive_scene import InteractiveScene
 from manimlib.config import get_custom_config
 from manimlib.logger import log
+from manimlib.scene.interactive_scene import InteractiveScene
+from manimlib.scene.scene import Scene
 
 
 class BlankScene(InteractiveScene):

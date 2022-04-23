@@ -1,16 +1,20 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 import numbers
-from abc import abstractmethod
-from typing import Type, TypeVar, Union, Callable, Iterable, Sequence
 
 import numpy as np
 
-from manimlib.constants import *
+from manimlib.constants import BLACK, BLUE, BLUE_D, GREEN, GREY_A, WHITE
+from manimlib.constants import DEGREES, PI
+from manimlib.constants import DL, DOWN, DR, LEFT, ORIGIN, OUT, RIGHT, UP
+from manimlib.constants import FRAME_HEIGHT, FRAME_WIDTH
+from manimlib.constants import FRAME_X_RADIUS, FRAME_Y_RADIUS
+from manimlib.constants import MED_SMALL_BUFF, SMALL_BUFF
 from manimlib.mobject.functions import ParametricCurve
 from manimlib.mobject.geometry import Arrow
-from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import DashedLine
+from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.number_line import NumberLine
 from manimlib.mobject.svg.tex_mobject import Tex
@@ -25,16 +29,19 @@ from manimlib.utils.space_ops import rotate_vector
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    import colour
+    from colour import Color
+    from typing import Callable, Iterable, Sequence, Type, TypeVar, Union
+
     from manimlib.mobject.mobject import Mobject
+
     T = TypeVar("T", bound=Mobject)
-    ManimColor = Union[str, colour.Color, Sequence[float]]
+    ManimColor = Union[str, Color]
 
 
 EPSILON = 1e-8
 
 
-class CoordinateSystem():
+class CoordinateSystem(ABC):
     """
     Abstract class for Axes and NumberPlane
     """

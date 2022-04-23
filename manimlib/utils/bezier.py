@@ -1,19 +1,26 @@
 from __future__ import annotations
 
-from typing import Iterable, Callable, TypeVar, Sequence
-
-from scipy import linalg
 import numpy as np
-import numpy.typing as npt
+from scipy import linalg
 
-from manimlib.utils.simple_functions import choose
-from manimlib.utils.space_ops import find_intersection
-from manimlib.utils.space_ops import cross2d
-from manimlib.utils.space_ops import midpoint
 from manimlib.logger import log
+from manimlib.utils.simple_functions import choose
+from manimlib.utils.space_ops import cross2d
+from manimlib.utils.space_ops import find_intersection
+from manimlib.utils.space_ops import midpoint
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Callable, Iterable, Sequence, TypeVar
+
+    import numpy.typing as npt
+
+    T = TypeVar("T")
+
 
 CLOSED_THRESHOLD = 0.001
-T = TypeVar("T")
+
 
 def bezier(
     points: Iterable[float | np.ndarray]

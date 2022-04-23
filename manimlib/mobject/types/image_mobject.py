@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 from PIL import Image
 
-from manimlib.constants import *
+from manimlib.constants import DL, DR, UL, UR
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.images import get_full_raster_image_path

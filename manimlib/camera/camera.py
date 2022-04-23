@@ -1,19 +1,23 @@
 from __future__ import annotations
 
-import moderngl
-from colour import Color
-import OpenGL.GL as gl
+import itertools as it
 import math
 
-import itertools as it
-
+import moderngl
 import numpy as np
-from scipy.spatial.transform import Rotation
+import OpenGL.GL as gl
 from PIL import Image
+from scipy.spatial.transform import Rotation
 
-from manimlib.constants import *
+from manimlib.constants import BLACK
+from manimlib.constants import DEGREES, RADIANS
+from manimlib.constants import DEFAULT_FRAME_RATE
+from manimlib.constants import DEFAULT_PIXEL_HEIGHT, DEFAULT_PIXEL_WIDTH
+from manimlib.constants import FRAME_HEIGHT, FRAME_WIDTH
+from manimlib.constants import DOWN, LEFT, ORIGIN, OUT, RIGHT, UP
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
+from manimlib.utils.color import color_to_rgba
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.space_ops import normalize
@@ -189,10 +193,9 @@ class Camera(object):
     def __init__(self, ctx: moderngl.Context | None = None, **kwargs):
         digest_config(self, kwargs, locals())
         self.rgb_max_val: float = np.iinfo(self.pixel_array_dtype).max
-        self.background_rgba: list[float] = [
-            *Color(self.background_color).get_rgb(),
-            self.background_opacity
-        ]
+        self.background_rgba: list[float] = list(color_to_rgba(
+            self.background_color, self.background_opacity
+        ))
         self.init_frame()
         self.init_context(ctx)
         self.init_shaders()
