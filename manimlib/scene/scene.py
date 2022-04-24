@@ -63,7 +63,7 @@ class Scene(object):
         "presenter_mode": False,
         "linger_after_completion": True,
         "pan_sensitivity": 3,
-        "max_num_saved_states": 20,
+        "max_num_saved_states": 50,
     }
 
     def __init__(self, **kwargs):
@@ -178,10 +178,7 @@ class Scene(object):
         # Enables gui interactions during the embed
         def inputhook(context):
             while not context.input_is_ready():
-                if self.window.is_closing:
-                    pass
-                    # self.window.destroy()
-                else:
+                if not self.window.is_closing:
                     self.update_frame(dt=0)
 
         pt_inputhooks.register("manim", inputhook)
@@ -190,6 +187,7 @@ class Scene(object):
         # Operation to run after each ipython command
         def post_cell_func(*args, **kwargs):
             self.refresh_static_mobjects()
+            self.save_state()
 
         shell.events.register("post_run_cell", post_cell_func)
 
@@ -510,6 +508,7 @@ class Scene(object):
         def wrapper(self, *args, **kwargs):
             if self.inside_embed:
                 self.save_state()
+
             self.update_skipping_status()
             should_write = not self.skip_animations
             if should_write:
@@ -524,6 +523,9 @@ class Scene(object):
 
             if should_write:
                 self.file_writer.end_animation()
+
+            if self.inside_embed:
+                self.save_state()
 
             self.num_plays += 1
         return wrapper
@@ -632,8 +634,22 @@ class Scene(object):
 
     # Helpers for interactive development
 
-    def get_state(self) -> list[tuple[Mobject, Mobject]]:
-        return [(mob, mob.copy()) for mob in self.mobjects]
+    def get_state(self) -> tuple[list[tuple[Mobject, Mobject]], int]:
+        if self.undo_stack:
+            last_state = dict(self.undo_stack[-1])
+        else:
+            last_state = {}
+        result = []
+        n_changes = 0
+        for mob in self.mobjects:
+            # If it hasn't changed since the last state, just point to the
+            # same copy as before
+            if mob in last_state and last_state[mob].looks_identical(mob):
+                result.append((mob, last_state[mob]))
+            else:
+                result.append((mob, mob.copy()))
+                n_changes += 1
+        return result, n_changes
 
     def restore_state(self, mobject_states: list[tuple[Mobject, Mobject]]):
         self.mobjects = [mob.become(mob_copy) for mob, mob_copy in mobject_states]
@@ -642,19 +658,21 @@ class Scene(object):
         if not self.preview:
             return
         self.redo_stack = []
-        self.undo_stack.append(self.get_state())
-        if len(self.undo_stack) > self.max_num_saved_states:
-            self.undo_stack.pop(0)
+        state, n_changes = self.get_state()
+        if n_changes > 0:
+            self.undo_stack.append(state)
+            if len(self.undo_stack) > self.max_num_saved_states:
+                self.undo_stack.pop(0)
 
     def undo(self):
         if self.undo_stack:
-            self.redo_stack.append(self.get_state())
+            self.redo_stack.append(self.get_state()[0])
             self.restore_state(self.undo_stack.pop())
         self.refresh_static_mobjects()
 
     def redo(self):
         if self.redo_stack:
-            self.undo_stack.append(self.get_state())
+            self.undo_stack.append(self.get_state()[0])
             self.restore_state(self.redo_stack.pop())
         self.refresh_static_mobjects()
 
