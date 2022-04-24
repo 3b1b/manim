@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 from manimlib.animation.animation import Animation
-from manimlib.constants import OUT
-from manimlib.constants import PI
-from manimlib.constants import TAU
-from manimlib.constants import ORIGIN
+from manimlib.constants import ORIGIN, OUT
+from manimlib.constants import PI, TAU
 from manimlib.utils.rate_functions import linear
 from manimlib.utils.rate_functions import smooth
 
@@ -12,6 +10,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import numpy as np
+
     from manimlib.mobject.mobject import Mobject
 
 

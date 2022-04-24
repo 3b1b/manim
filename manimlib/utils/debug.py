@@ -1,17 +1,18 @@
 from __future__ import annotations
 
-import time
 import numpy as np
-from typing import Callable
+import time
 
 from manimlib.constants import BLACK
+from manimlib.logger import log
 from manimlib.mobject.numbers import Integer
 from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.logger import log
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from typing import Callable
+
     from manimlib.mobject.mobject import Mobject
 
 

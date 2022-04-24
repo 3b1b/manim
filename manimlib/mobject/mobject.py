@@ -1,50 +1,61 @@
 from __future__ import annotations
 
 import copy
-import sys
-import random
-import itertools as it
 from functools import wraps
-from typing import Iterable, Callable, Union, Sequence
-import pickle
+import itertools as it
 import os
+import pickle
+import random
+import sys
 
-import colour
 import moderngl
+import numbers
 import numpy as np
-import numpy.typing as npt
 
-from manimlib.constants import *
+from manimlib.constants import DEFAULT_MOBJECT_TO_EDGE_BUFFER
+from manimlib.constants import DEFAULT_MOBJECT_TO_MOBJECT_BUFFER
+from manimlib.constants import DOWN, IN, LEFT, ORIGIN, OUT, RIGHT, UP
+from manimlib.constants import FRAME_X_RADIUS, FRAME_Y_RADIUS
+from manimlib.constants import MED_SMALL_BUFF
+from manimlib.constants import TAU
+from manimlib.constants import WHITE
+from manimlib.event_handler import EVENT_DISPATCHER
+from manimlib.event_handler.event_listner import EventListner
+from manimlib.event_handler.event_type import EventType
+from manimlib.logger import log
+from manimlib.shader_wrapper import get_colormap_code
+from manimlib.shader_wrapper import ShaderWrapper
 from manimlib.utils.color import color_gradient
+from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import get_colormap_list
 from manimlib.utils.color import rgb_to_hex
-from manimlib.utils.color import color_to_rgb
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.iterables import list_update
+from manimlib.utils.iterables import listify
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_preserving_order
 from manimlib.utils.iterables import resize_with_interpolation
-from manimlib.utils.iterables import listify
-from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import integer_interpolate
+from manimlib.utils.bezier import interpolate
 from manimlib.utils.paths import straight_path
 from manimlib.utils.simple_functions import get_parameters
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotation_matrix_transpose
-from manimlib.shader_wrapper import ShaderWrapper
-from manimlib.shader_wrapper import get_colormap_code
-from manimlib.event_handler import EVENT_DISPATCHER
-from manimlib.event_handler.event_listner import EventListner
-from manimlib.event_handler.event_type import EventType
-from manimlib.logger import log
 
+from typing import TYPE_CHECKING
 
-TimeBasedUpdater = Callable[["Mobject", float], None]
-NonTimeUpdater = Callable[["Mobject"], None]
-Updater = Union[TimeBasedUpdater, NonTimeUpdater]
-ManimColor = Union[str, colour.Color, Sequence[float]]
+if TYPE_CHECKING:
+    from colour import Color
+    from typing import Callable, Iterable, Sequence, Union
+
+    import numpy.typing as npt
+
+    TimeBasedUpdater = Callable[["Mobject", float], None]
+    NonTimeUpdater = Callable[["Mobject"], None]
+    Updater = Union[TimeBasedUpdater, NonTimeUpdater]
+    ManimColor = Union[str, Color]
 
 
 class Mobject(object):
@@ -84,7 +95,8 @@ class Mobject(object):
         self.locked_data_keys: set[str] = set()
         self.needs_new_bounding_box: bool = True
         self._is_animating: bool = False
-        self._is_movable: bool = False
+        self.saved_state = None
+        self.target = None
 
         self.init_data()
         self.init_uniforms()
@@ -136,8 +148,10 @@ class Mobject(object):
         return self
 
     def set_uniforms(self, uniforms: dict):
-        for key in uniforms:
-            self.uniforms[key] = uniforms[key]  # Copy?
+        for key, value in uniforms.items():
+            if isinstance(value, np.ndarray):
+                value = value.copy()
+            self.uniforms[key] = value
         return self
 
     @property
@@ -460,66 +474,94 @@ class Mobject(object):
         self.assemble_family()
         return self
 
-    # Creating new Mobjects from this one
+    # Copying and serialization
 
-    def replicate(self, n: int) -> Group:
-        return self.get_group_class()(
-            *(self.copy() for x in range(n))
-        )
+    def stash_mobject_pointers(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            uncopied_attrs = ["parents", "target", "saved_state"]
+            stash = dict()
+            for attr in uncopied_attrs:
+                if hasattr(self, attr):
+                    value = getattr(self, attr)
+                    stash[attr] = value
+                    null_value = [] if isinstance(value, list) else None
+                    setattr(self, attr, null_value)
+            result = func(self, *args, **kwargs)
+            self.__dict__.update(stash)
+            return result
+        return wrapper
 
-    def get_grid(self, n_rows: int, n_cols: int, height: float | None = None, **kwargs):
-        """
-        Returns a new mobject containing multiple copies of this one
-        arranged in a grid
-        """
-        grid = self.replicate(n_rows * n_cols)
-        grid.arrange_in_grid(n_rows, n_cols, **kwargs)
-        if height is not None:
-            grid.set_height(height)
-        return grid
+    @stash_mobject_pointers
+    def serialize(self):
+        return pickle.dumps(self)
 
-    # Copying
+    def deserialize(self, data: bytes):
+        self.become(pickle.loads(data))
+        return self
 
-    def copy(self):
-        self.parents = []
+    def deepcopy(self):
         try:
+            # Often faster than deepcopy
             return pickle.loads(pickle.dumps(self))
         except AttributeError:
             return copy.deepcopy(self)
 
-    def deepcopy(self):
-        # This used to be different from copy, so is now just here for backward compatibility
-        return self.copy()
+    @stash_mobject_pointers
+    def copy(self, deep: bool = False):
+        if deep:
+            return self.deepcopy()
+
+        result = copy.copy(self)
+
+        # The line above is only a shallow copy, so the internal
+        # data which are numpyu arrays or other mobjects still
+        # need to be further copied.
+        result.data = {
+            key: np.array(value)
+            for key, value in self.data.items()
+        }
+        result.uniforms = {
+            key: np.array(value)
+            for key, value in self.uniforms.items()
+        }
+
+        result.submobjects = []
+        result.add(*(sm.copy() for sm in self.submobjects))
+        result.match_updaters(self)
+
+        family = self.get_family()
+        for attr, value in list(self.__dict__.items()):
+            if isinstance(value, Mobject) and value is not self:
+                if value in family:
+                    setattr(result, attr, result.family[self.family.index(value)])
+                else:
+                    setattr(result, attr, value.copy())
+            if isinstance(value, np.ndarray):
+                setattr(result, attr, value.copy())
+            if isinstance(value, ShaderWrapper):
+                setattr(result, attr, value.copy())
+        return result
 
     def generate_target(self, use_deepcopy: bool = False):
-        # TODO, remove now pointless use_deepcopy arg
-        self.target = None  # Prevent exponential explosion
-        self.target = self.copy()
+        self.target = self.copy(deep=use_deepcopy)
+        self.target.saved_state = self.saved_state
         return self.target
 
     def save_state(self, use_deepcopy: bool = False):
-        # TODO, remove now pointless use_deepcopy arg
-        if hasattr(self, "saved_state"):
-            # Prevent exponential growth of data
-            self.saved_state = None
-        self.saved_state = self.copy()
+        self.saved_state = self.copy(deep=use_deepcopy)
+        self.saved_state.target = self.target
         return self
 
     def restore(self):
-        if not hasattr(self, "saved_state") or self.save_state is None:
+        if not hasattr(self, "saved_state") or self.saved_state is None:
             raise Exception("Trying to restore without having saved")
         self.become(self.saved_state)
         return self
 
-    def save_to_file(self, file_path):
-        if not file_path.endswith(".mob"):
-            file_path += ".mob"
-        if os.path.exists(file_path):
-            cont = input(f"{file_path} already exists. Overwrite (y/n)? ")
-            if cont != "y":
-                return
+    def save_to_file(self, file_path: str, supress_overwrite_warning: bool = False):
         with open(file_path, "wb") as fp:
-            pickle.dump(self, fp)
+            fp.write(self.serialize())
         log.info(f"Saved mobject to {file_path}")
         return self
 
@@ -531,6 +573,39 @@ class Mobject(object):
         with open(file_path, "rb") as fp:
             mobject = pickle.load(fp)
         return mobject
+
+    def become(self, mobject: Mobject):
+        """
+        Edit all data and submobjects to be idential
+        to another mobject
+        """
+        self.align_family(mobject)
+        for sm1, sm2 in zip(self.get_family(), mobject.get_family()):
+            sm1.set_data(sm2.data)
+            sm1.set_uniforms(sm2.uniforms)
+            sm1.shader_folder = sm2.shader_folder
+            sm1.texture_paths = sm2.texture_paths
+            sm1.depth_test = sm2.depth_test
+            sm1.render_primitive = sm2.render_primitive
+        self.refresh_bounding_box(recurse_down=True)
+        return self
+
+    # Creating new Mobjects from this one
+
+    def replicate(self, n: int) -> Group:
+        group_class = self.get_group_class()
+        return group_class(*(self.copy() for _ in range(n)))
+
+    def get_grid(self, n_rows: int, n_cols: int, height: float | None = None, **kwargs) -> Group:
+        """
+        Returns a new mobject containing multiple copies of this one
+        arranged in a grid
+        """
+        grid = self.replicate(n_rows * n_cols)
+        grid.arrange_in_grid(n_rows, n_cols, **kwargs)
+        if height is not None:
+            grid.set_height(height)
+        return grid
 
     # Updating
 
@@ -634,20 +709,12 @@ class Mobject(object):
     # Check if mark as static or not for camera
 
     def is_changing(self) -> bool:
-        return self._is_animating or self.has_updaters or self._is_movable
+        return self._is_animating or self.has_updaters
 
     def set_animating_status(self, is_animating: bool, recurse: bool = True) -> None:
         for mob in self.get_family(recurse):
             mob._is_animating = is_animating
         return self
-
-    def make_movable(self, value: bool = True, recurse: bool = True) -> None:
-        for mob in self.get_family(recurse):
-            mob._is_movable = value
-        return self
-
-    def is_movable(self) -> bool:
-        return self._is_movable
 
     # Transforming operations
 
@@ -675,10 +742,10 @@ class Mobject(object):
         Otherwise, if about_point is given a value, scaling is done with
         respect to that point.
         """
-        if isinstance(scale_factor, Iterable):
-            scale_factor = np.array(scale_factor).clip(min=min_scale_factor)
-        else:
+        if isinstance(scale_factor, numbers.Number):
             scale_factor = max(scale_factor, min_scale_factor)
+        else:
+            scale_factor = np.array(scale_factor).clip(min=min_scale_factor)
         self.apply_points_function(
             lambda points: scale_factor * points,
             about_point=about_point,
@@ -1064,8 +1131,8 @@ class Mobject(object):
 
     def set_rgba_array_by_color(
         self,
-        color: ManimColor | None = None,
-        opacity: float | None = None,
+        color: ManimColor | Iterable[ManimColor] | None = None,
+        opacity: float | Iterable[float] | None = None,
         name: str = "rgbas",
         recurse: bool = True
     ):
@@ -1087,7 +1154,12 @@ class Mobject(object):
                 mob.data[name][:, 3] = resize_array(opacities, size)
         return self
 
-    def set_color(self, color: ManimColor, opacity: float | None = None, recurse: bool = True):
+    def set_color(
+        self,
+        color: ManimColor | Iterable[ManimColor] | None,
+        opacity: float | Iterable[float] | None = None,
+        recurse: bool = True
+    ):
         self.set_rgba_array_by_color(color, opacity, recurse=False)
         # Recurse to submobjects differently from how set_rgba_array_by_color
         # in case they implement set_color differently
@@ -1096,7 +1168,11 @@ class Mobject(object):
                 submob.set_color(color, recurse=True)
         return self
 
-    def set_opacity(self, opacity: float, recurse: bool = True):
+    def set_opacity(
+        self,
+        opacity: float | Iterable[float] | None,
+        recurse: bool = True
+    ):
         self.set_rgba_array_by_color(color=None, opacity=opacity, recurse=False)
         if recurse:
             for submob in self.submobjects:
@@ -1203,7 +1279,7 @@ class Mobject(object):
         bb = self.get_bounding_box()
         return np.array([
             [bb[indices[-i + 1]][i] for i in range(3)]
-            for indices in it.product(*3 * [[0, 2]])
+            for indices in it.product([0, 2], repeat=3)
         ])
 
     def get_center(self) -> np.ndarray:
@@ -1518,18 +1594,6 @@ class Mobject(object):
         of mobject to become.
         """
         pass  # To implement in subclass
-
-    def become(self, mobject: Mobject):
-        """
-        Edit all data and submobjects to be idential
-        to another mobject
-        """
-        self.align_family(mobject)
-        for sm1, sm2 in zip(self.get_family(), mobject.get_family()):
-            sm1.set_data(sm2.data)
-            sm1.set_uniforms(sm2.uniforms)
-        self.refresh_bounding_box(recurse_down=True)
-        return self
 
     # Locking data
 

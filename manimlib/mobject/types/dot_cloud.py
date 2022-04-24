@@ -1,14 +1,17 @@
 from __future__ import annotations
 
-import numpy as np
-import numpy.typing as npt
 import moderngl
+import numpy as np
 
-from manimlib.constants import GREY_C
-from manimlib.constants import YELLOW
+from manimlib.constants import GREY_C, YELLOW
 from manimlib.constants import ORIGIN
 from manimlib.mobject.types.point_cloud_mobject import PMobject
 from manimlib.utils.iterables import resize_preserving_order
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import numpy.typing as npt
 
 
 DEFAULT_DOT_RADIUS = 0.05

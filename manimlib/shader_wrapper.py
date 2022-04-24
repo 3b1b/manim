@@ -1,15 +1,20 @@
 from __future__ import annotations
 
+import copy
 import os
 import re
-import copy
-from typing import Iterable
 
 import moderngl
 import numpy as np
 
 from manimlib.utils.directories import get_shader_dir
 from manimlib.utils.file_ops import find_file
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Iterable
+
 
 # Mobjects that should be rendered with
 # the same shader will be organized and

@@ -1,30 +1,36 @@
 from __future__ import annotations
 
-import operator as op
+from functools import reduce
+from functools import wraps
 import itertools as it
-from functools import reduce, wraps
-from typing import Iterable, Sequence, Callable, Union
+import operator as op
 
-import colour
 import moderngl
-import numpy.typing as npt
+import numpy as np
 
-from manimlib.constants import *
+from manimlib.constants import GREY_C
+from manimlib.constants import GREY_E
+from manimlib.constants import BLACK, WHITE
+from manimlib.constants import DEFAULT_STROKE_WIDTH
+from manimlib.constants import DEGREES
+from manimlib.constants import JOINT_TYPE_MAP
+from manimlib.constants import ORIGIN, OUT, UP
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.bezier import bezier
-from manimlib.utils.bezier import get_smooth_quadratic_bezier_handle_points
-from manimlib.utils.bezier import get_smooth_cubic_bezier_handle_points
 from manimlib.utils.bezier import get_quadratic_approximation_of_cubic
+from manimlib.utils.bezier import get_smooth_cubic_bezier_handle_points
+from manimlib.utils.bezier import get_smooth_quadratic_bezier_handle_points
+from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import inverse_interpolate
-from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import partial_quadratic_bezier_points
+from manimlib.utils.color import color_gradient
 from manimlib.utils.color import rgb_to_hex
+from manimlib.utils.iterables import listify
 from manimlib.utils.iterables import make_even
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_with_interpolation
-from manimlib.utils.iterables import listify
 from manimlib.utils.space_ops import angle_between_vectors
 from manimlib.utils.space_ops import cross2d
 from manimlib.utils.space_ops import earclip_triangulation
@@ -33,8 +39,15 @@ from manimlib.utils.space_ops import get_unit_normal
 from manimlib.utils.space_ops import z_to_vector
 from manimlib.shader_wrapper import ShaderWrapper
 
+from typing import TYPE_CHECKING
 
-ManimColor = Union[str, colour.Color, Sequence[float]]
+if TYPE_CHECKING:
+    from colour import Color
+    from typing import Callable, Iterable, Sequence, Union
+
+    import numpy.typing as npt
+
+    ManimColor = Union[str, Color]
 
 
 class VMobject(Mobject):
@@ -130,8 +143,8 @@ class VMobject(Mobject):
 
     def set_fill(
         self,
-        color: ManimColor | None = None,
-        opacity: float | None = None,
+        color: ManimColor | Iterable[ManimColor] | None = None,
+        opacity: float | Iterable[float] | None = None,
         recurse: bool = True
     ):
         self.set_rgba_array_by_color(color, opacity, 'fill_rgba', recurse)
@@ -139,9 +152,9 @@ class VMobject(Mobject):
 
     def set_stroke(
         self,
-        color: ManimColor | None = None,
-        width: float | npt.ArrayLike | None = None,
-        opacity: float | None = None,
+        color: ManimColor | Iterable[ManimColor] | None = None,
+        width: float | Iterable[float] | None = None,
+        opacity: float | Iterable[float] | None = None,
         background: bool | None = None,
         recurse: bool = True
     ):
@@ -162,8 +175,8 @@ class VMobject(Mobject):
 
     def set_backstroke(
         self,
-        color: ManimColor = BLACK,
-        width: float | npt.ArrayLike = 3,
+        color: ManimColor | Iterable[ManimColor] = BLACK,
+        width: float | Iterable[float] = 3,
         background: bool = True
     ):
         self.set_stroke(color, width, background=background)
@@ -177,13 +190,13 @@ class VMobject(Mobject):
 
     def set_style(
         self,
-        fill_color: ManimColor | None = None,
-        fill_opacity: float | None = None,
+        fill_color: ManimColor | Iterable[ManimColor] | None = None,
+        fill_opacity: float | Iterable[float] | None = None,
         fill_rgba: npt.ArrayLike | None = None,
-        stroke_color: ManimColor | None = None,
-        stroke_opacity: float | None = None,
+        stroke_color: ManimColor | Iterable[ManimColor] | None = None,
+        stroke_opacity: float | Iterable[float] | None = None,
         stroke_rgba: npt.ArrayLike | None = None,
-        stroke_width: float | npt.ArrayLike | None = None,
+        stroke_width: float | Iterable[float] | None = None,
         stroke_background: bool = True,
         reflectiveness: float | None = None,
         gloss: float | None = None,
@@ -247,12 +260,21 @@ class VMobject(Mobject):
                 sm1.match_style(sm2)
         return self
 
-    def set_color(self, color: ManimColor, recurse: bool = True):
-        self.set_fill(color, recurse=recurse)
-        self.set_stroke(color, recurse=recurse)
+    def set_color(
+        self,
+        color: ManimColor | Iterable[ManimColor] | None,
+        opacity: float | Iterable[float] | None = None,
+        recurse: bool = True
+    ):
+        self.set_fill(color, opacity=opacity, recurse=recurse)
+        self.set_stroke(color, opacity=opacity, recurse=recurse)
         return self
 
-    def set_opacity(self, opacity: float, recurse: bool = True):
+    def set_opacity(
+        self,
+        opacity: float | Iterable[float] | None,
+        recurse: bool = True
+    ):
         self.set_fill(opacity=opacity, recurse=recurse)
         self.set_stroke(opacity=opacity, recurse=recurse)
         return self
@@ -1174,3 +1196,24 @@ class DashedVMobject(VMobject):
         # Family is already taken care of by get_subcurve
         # implementation
         self.match_style(vmobject, recurse=False)
+
+
+class VHighlight(VGroup):
+    def __init__(
+        self,
+        vmobject: VMobject,
+        n_layers: int = 3,
+        color_bounds: tuple[ManimColor] = (GREY_C, GREY_E),
+        max_stroke_width: float = 10.0,
+    ):
+        outline = vmobject.replicate(n_layers)
+        outline.set_fill(opacity=0)
+        added_widths = np.linspace(0, max_stroke_width, n_layers + 1)[1:]
+        colors = color_gradient(color_bounds, n_layers)
+        for part, added_width, color in zip(reversed(outline), added_widths, colors):
+            for sm in part.family_members_with_points():
+                part.set_stroke(
+                    width=sm.get_stroke_width() + added_width,
+                    color=color,
+                )
+        super().__init__(*outline)

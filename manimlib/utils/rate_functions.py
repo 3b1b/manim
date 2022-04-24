@@ -1,8 +1,13 @@
-from typing import Callable
+from __future__ import annotations
 
 import numpy as np
 
 from manimlib.utils.bezier import bezier
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Callable
 
 
 def linear(t: float) -> float:

@@ -1,16 +1,21 @@
 from __future__ import annotations
 
+import importlib
+import inspect
 import os
 import yaml
-import inspect
-import importlib
-from typing import Any
 
 from rich import box
+from rich.console import Console
+from rich.prompt import Confirm
+from rich.prompt import Prompt
 from rich.rule import Rule 
 from rich.table import Table
-from rich.console import Console
-from rich.prompt import Prompt, Confirm
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Any
 
 
 def get_manim_dir() -> str:

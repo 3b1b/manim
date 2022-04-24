@@ -4,17 +4,17 @@ import numpy as np
 
 from manimlib.animation.animation import Animation
 from manimlib.animation.transform import Transform
-from manimlib.mobject.mobject import Group
 from manimlib.constants import ORIGIN
+from manimlib.mobject.mobject import Group
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.rate_functions import there_and_back
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from manimlib.scene.scene import Scene
     from manimlib.mobject.mobject import Mobject
     from manimlib.mobject.types.vectorized_mobject import VMobject
+    from manimlib.scene.scene import Scene
 
 
 DEFAULT_FADE_LAG_RATIO = 0

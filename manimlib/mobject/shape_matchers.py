@@ -1,20 +1,25 @@
 from __future__ import annotations
 
-from manimlib.constants import *
+from colour import Color
+
+from manimlib.constants import BLACK, RED, YELLOW
+from manimlib.constants import DL, DOWN, DR, LEFT, RIGHT, UL, UR
+from manimlib.constants import SMALL_BUFF
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.color import Color
-from manimlib.utils.customization import get_customization
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.customization import get_customization
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Union, Sequence
+    from typing import Union
+
     from manimlib.mobject.mobject import Mobject
-    ManimColor = Union[str, Color, Sequence[float]]
+
+    ManimColor = Union[str, Color]
 
 
 class SurroundingRectangle(Rectangle):

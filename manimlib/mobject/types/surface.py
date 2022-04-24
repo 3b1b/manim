@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from typing import Iterable, Callable
-
 import moderngl
 import numpy as np
-import numpy.typing as npt
 
-from manimlib.constants import *
+from manimlib.constants import GREY
+from manimlib.constants import OUT
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
@@ -17,6 +15,10 @@ from manimlib.utils.space_ops import normalize_along_axis
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from typing import Callable, Iterable
+
+    import numpy.typing as npt
+
     from manimlib.camera.camera import Camera
 
 

@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import operator as op
-from typing import Callable
-
 from manimlib.animation.animation import Animation
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from typing import Callable
+
     from manimlib.mobject.mobject import Mobject
 
 
@@ -47,10 +46,7 @@ class MaintainPositionRelativeTo(Animation):
         **kwargs
     ):
         self.tracked_mobject = tracked_mobject
-        self.diff = op.sub(
-            mobject.get_center(),
-            tracked_mobject.get_center(),
-        )
+        self.diff = mobject.get_center() - tracked_mobject.get_center()
         super().__init__(mobject, **kwargs)
 
     def interpolate_mobject(self, alpha: float) -> None:

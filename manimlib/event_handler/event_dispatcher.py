@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from manimlib.event_handler.event_type import EventType
 from manimlib.event_handler.event_listner import EventListner
+from manimlib.event_handler.event_type import EventType
 
 
 class EventDispatcher(object):

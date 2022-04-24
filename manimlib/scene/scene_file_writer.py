@@ -1,29 +1,31 @@
 from __future__ import annotations
 
 import os
-import sys
-import shutil
 import platform
+import shutil
 import subprocess as sp
+import sys
 
 import numpy as np
 from pydub import AudioSegment
 from tqdm import tqdm as ProgressDisplay
 
 from manimlib.constants import FFMPEG_BIN
+from manimlib.logger import log
+from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.file_ops import guarantee_existence
 from manimlib.utils.file_ops import add_extension_if_not_present
 from manimlib.utils.file_ops import get_sorted_integer_files
+from manimlib.utils.file_ops import guarantee_existence
 from manimlib.utils.sounds import get_full_sound_file_path
-from manimlib.logger import log
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from manimlib.scene.scene import Scene
-    from manimlib.camera.camera import Camera
     from PIL.Image import Image
+
+    from manimlib.camera.camera import Camera
+    from manimlib.scene.scene import Scene
 
 
 class SceneFileWriter(object):
@@ -60,7 +62,7 @@ class SceneFileWriter(object):
 
     # Output directories and files
     def init_output_directories(self) -> None:
-        out_dir = self.output_directory
+        out_dir = self.output_directory or ""
         if self.mirror_module_path:
             module_dir = self.get_default_module_directory()
             out_dir = os.path.join(out_dir, module_dir)
@@ -126,6 +128,36 @@ class SceneFileWriter(object):
             self.saved_mobject_directory,
             str(self.scene),
         ))
+
+    def get_saved_mobject_path(self, mobject: Mobject) -> str | None:
+        directory = self.get_saved_mobject_directory()
+        files = os.listdir(directory)
+        default_name = str(mobject) + "_0.mob"
+        index = 0
+        while default_name in files:
+            default_name = default_name.replace(str(index), str(index + 1))
+            index += 1
+        if platform.system() == 'Darwin':
+            cmds = [
+                "osascript", "-e",
+                f"""
+                set chosenfile to (choose file name default name "{default_name}" default location "{directory}")
+                POSIX path of chosenfile
+                """,
+            ]
+            process = sp.Popen(cmds, stdout=sp.PIPE)
+            file_path = process.stdout.read().decode("utf-8").split("\n")[0]
+            if not file_path:
+                return
+        else:
+            user_name = input(f"Enter mobject file name (default is {default_name}): ")
+            file_path = os.path.join(directory, user_name or default_name)
+            if os.path.exists(file_path) or os.path.exists(file_path + ".mob"):
+                if input(f"{file_path} already exists. Overwrite (y/n)? ") != "y":
+                    return
+        if not file_path.endswith(".mob"):
+            file_path = file_path + ".mob"
+        return file_path
 
     # Sound
     def init_audio(self) -> None:

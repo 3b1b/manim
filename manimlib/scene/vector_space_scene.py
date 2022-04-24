@@ -8,7 +8,10 @@ from manimlib.animation.growing import GrowArrow
 from manimlib.animation.transform import ApplyFunction
 from manimlib.animation.transform import ApplyPointwiseFunction
 from manimlib.animation.transform import Transform
-from manimlib.constants import *
+from manimlib.constants import BLACK, BLUE_D, GREEN_C, RED_C, GREY, WHITE, YELLOW
+from manimlib.constants import DL, DOWN, ORIGIN, RIGHT, UP
+from manimlib.constants import FRAME_WIDTH, FRAME_X_RADIUS, FRAME_Y_RADIUS
+from manimlib.constants import SMALL_BUFF
 from manimlib.mobject.coordinate_systems import Axes
 from manimlib.mobject.coordinate_systems import NumberPlane
 from manimlib.mobject.geometry import Arrow
@@ -29,6 +32,7 @@ from manimlib.utils.rate_functions import rush_from
 from manimlib.utils.rate_functions import rush_into
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import get_norm
+
 
 X_COLOR = GREEN_C
 Y_COLOR = RED_C

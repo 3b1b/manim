@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-from manimlib.constants import PI
 from manimlib.animation.transform import Transform
+from manimlib.constants import PI
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import numpy as np
-    from manimlib.mobject.mobject import Mobject
+
     from manimlib.mobject.geometry import Arrow
+    from manimlib.mobject.mobject import Mobject
 
 
 class GrowFromPoint(Transform):

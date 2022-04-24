@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Callable
 
 from manimlib.mobject.mobject import _AnimationBuilder
 from manimlib.mobject.mobject import Mobject
@@ -12,6 +11,8 @@ from manimlib.utils.simple_functions import clip
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from typing import Callable
+
     from manimlib.scene.scene import Scene
 
 

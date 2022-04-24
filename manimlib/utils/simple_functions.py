@@ -1,7 +1,8 @@
-import inspect
-import numpy as np
-import math
 from functools import lru_cache
+import inspect
+import math
+
+import numpy as np
 
 
 def sigmoid(x):
