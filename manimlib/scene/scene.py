@@ -28,7 +28,6 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.family_ops import extract_mobject_family_members
-from manimlib.utils.family_ops import restructure_list_to_exclude_certain_family_members
 
 from typing import TYPE_CHECKING
 
@@ -302,10 +301,32 @@ class Scene(object):
         ))
         return self
 
-    def remove(self, *mobjects_to_remove: Mobject):
-        self.mobjects = restructure_list_to_exclude_certain_family_members(
-            self.mobjects, mobjects_to_remove
-        )
+    def replace(self, mobject: Mobject, *replacements: Mobject):
+        if mobject in self.mobjects:
+            index = self.mobjects.index(mobject)
+            self.mobjects = [
+                *self.mobjects[:index],
+                *replacements,
+                *self.mobjects[index + 1:]
+            ]
+        return self
+
+    def remove(self, *mobjects: Mobject):
+        """
+        Removes anything in mobjects from scenes mobject list, but in the event that one
+        of the items to be removed is a member of the family of an item in mobject_list,
+        the other family members are added back into the list.
+
+        For example, if the scene includes Group(m1, m2, m3), and we call scene.remove(m1),
+        the desired behavior is for the scene to then include m2 and m3 (ungrouped).
+        """
+        for mob in mobjects:
+            # First restructure list so that parents/grandparents/etc. are replaced
+            # with their children
+            for ancestor in reversed(mob.get_ancestors()):
+                self.replace(ancestor, *ancestor.submobjects)
+            if mob in self.mobjects:
+                self.mobjects.remove(mob)
         return self
 
     def bring_to_front(self, *mobjects: Mobject):
