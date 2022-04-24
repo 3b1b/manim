@@ -362,13 +362,14 @@ class Mobject(object):
         self.assemble_family()
         return self
 
-    def remove(self, *mobjects: Mobject):
+    def remove(self, *mobjects: Mobject, reassemble: bool = True):
         for mobject in mobjects:
             if mobject in self.submobjects:
                 self.submobjects.remove(mobject)
             if self in mobject.parents:
                 mobject.parents.remove(self)
-        self.assemble_family()
+        if reassemble:
+            self.assemble_family()
         return self
 
     def add_to_back(self, *mobjects: Mobject):
@@ -389,7 +390,7 @@ class Mobject(object):
         return self
 
     def set_submobjects(self, submobject_list: list[Mobject]):
-        self.remove(*self.submobjects)
+        self.remove(*self.submobjects, reassemble=False)
         self.add(*submobject_list)
         return self
 
@@ -534,9 +535,18 @@ class Mobject(object):
             for key, value in self.uniforms.items()
         }
 
-        result.submobjects = []
-        result.add(*(sm.copy() for sm in self.submobjects))
-        result.match_updaters(self)
+        # Instead of adding using result.add, which does some checks for updating
+        # updater statues and bounding box, just directly modify the family-related
+        # lists
+        result.submobjects = [sm.copy() for sm in self.submobjects]
+        for sm in result.submobjects:
+            sm.parents = [result]
+        result.family = [result, *it.chain(*(sm.get_family() for sm in result.submobjects))]
+
+        # Similarly, instead of calling match_updaters, since we know the status
+        # won't have changed, just directly match.
+        result.non_time_updaters = list(self.non_time_updaters)
+        result.time_based_updaters = list(self.time_based_updaters)
 
         family = self.get_family()
         for attr, value in list(self.__dict__.items()):
