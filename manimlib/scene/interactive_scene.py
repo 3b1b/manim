@@ -317,12 +317,13 @@ class InteractiveScene(Scene):
 
     def gather_new_selection(self):
         self.is_selecting = False
-        self.remove(self.selection_rectangle)
-        additions = []
-        for mob in reversed(self.get_selection_search_set()):
-            if self.selection_rectangle.is_touching(mob):
-                additions.append(mob)
-        self.add_to_selection(*additions)
+        if self.selection_rectangle in self.mobjects:
+            self.remove(self.selection_rectangle)
+            additions = []
+            for mob in reversed(self.get_selection_search_set()):
+                if self.selection_rectangle.is_touching(mob):
+                    additions.append(mob)
+            self.add_to_selection(*additions)
 
     def prepare_grab(self):
         mp = self.mouse_point.get_center()
