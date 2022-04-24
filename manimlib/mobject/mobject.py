@@ -590,6 +590,23 @@ class Mobject(object):
         self.refresh_bounding_box(recurse_down=True)
         return self
 
+    def looks_identical(self, mobject: Mobject):
+        fam1 = self.get_family()
+        fam2 = mobject.get_family()
+        if len(fam1) != len(fam2):
+            return False
+        for m1, m2 in zip(fam1, fam2):
+            for d1, d2 in [(m1.data, m2.data), (m1.uniforms, m2.uniforms)]:
+                if set(d1).difference(d2):
+                    return False
+                for key in d1:
+                    if isinstance(d1[key], np.ndarray):
+                        if not np.all(d1[key] == d2[key]):
+                            return False
+                    elif d1[key] != d2[key]:
+                        return False
+        return True
+
     # Creating new Mobjects from this one
 
     def replicate(self, n: int) -> Group:
