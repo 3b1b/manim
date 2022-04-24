@@ -68,7 +68,7 @@ class ShaderWrapper(object):
         if result.vert_indices is not None:
             result.vert_indices = np.array(self.vert_indices)
         if self.uniforms:
-            result.uniforms = dict(self.uniforms)
+            result.uniforms = {key: np.array(value) for key, value in self.uniforms.items()}
         if self.texture_paths:
             result.texture_paths = dict(self.texture_paths)
         return result
