@@ -28,6 +28,7 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.family_ops import extract_mobject_family_members
+from manimlib.utils.iterables import list_difference_update
 
 from typing import TYPE_CHECKING
 
@@ -325,8 +326,7 @@ class Scene(object):
             # with their children
             for ancestor in reversed(mob.get_ancestors()):
                 self.replace(ancestor, *ancestor.submobjects)
-            if mob in self.mobjects:
-                self.mobjects.remove(mob)
+            self.mobjects = list_difference_update(self.mobjects, mob.get_family())
         return self
 
     def bring_to_front(self, *mobjects: Mobject):
