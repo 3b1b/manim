@@ -343,6 +343,14 @@ class Mobject(object):
     def family_members_with_points(self):
         return [m for m in self.get_family() if m.has_points()]
 
+    def get_ancestors(self) -> list[Mobject]:
+        ancestors = list(self.parents)
+        n = 0
+        while n < len(ancestors):
+            ancestors.extend(ancestors[n].parents)
+            n += 1
+        return ancestors
+
     def add(self, *mobjects: Mobject):
         if self in mobjects:
             raise Exception("Mobject cannot contain self")
