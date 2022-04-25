@@ -13,19 +13,12 @@ if TYPE_CHECKING:
     S = TypeVar("S")
 
 
-def remove_list_redundancies(l: Iterable[T]) -> list[T]:
+def remove_list_redundancies(lst: Iterable[T]) -> list[T]:
     """
     Used instead of list(set(l)) to maintain order
     Keeps the last occurrence of each element
     """
-    reversed_result = []
-    used = set()
-    for x in reversed(l):
-        if x not in used:
-            reversed_result.append(x)
-            used.add(x)
-    reversed_result.reverse()
-    return reversed_result
+    return list(reversed(dict.fromkeys(reversed(lst))))
 
 
 def list_update(l1: Iterable[T], l2: Iterable[T]) -> list[T]:
@@ -33,7 +26,7 @@ def list_update(l1: Iterable[T], l2: Iterable[T]) -> list[T]:
     Used instead of list(set(l1).update(l2)) to maintain order,
     making sure duplicates are removed from l1, not l2.
     """
-    return [e for e in l1 if e not in l2] + list(l2)
+    return remove_list_redundancies([*l1, *l2])
 
 
 def list_difference_update(l1: Iterable[T], l2: Iterable[T]) -> list[T]:
