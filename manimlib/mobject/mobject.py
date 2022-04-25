@@ -565,8 +565,6 @@ class Mobject(object):
             if isinstance(value, Mobject) and value is not self:
                 if value in family:
                     setattr(result, attr, result.family[self.family.index(value)])
-                else:
-                    setattr(result, attr, value.copy())
             if isinstance(value, np.ndarray):
                 setattr(result, attr, value.copy())
             if isinstance(value, ShaderWrapper):
