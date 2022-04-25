@@ -322,9 +322,9 @@ class Scene(object):
         the desired behavior is for the scene to then include m2 and m3 (ungrouped).
         """
         for mob in mobjects:
-            # First restructure list so that parents/grandparents/etc. are replaced
-            # with their children
-            for ancestor in reversed(mob.get_ancestors()):
+            # First restructure self.mobjects so that parents/grandparents/etc. are replaced
+            # with their children, likewise for all ancestors in the extended family.
+            for ancestor in mob.get_ancestors(extended=True):
                 self.replace(ancestor, *ancestor.submobjects)
             self.mobjects = list_difference_update(self.mobjects, mob.get_family())
         return self
