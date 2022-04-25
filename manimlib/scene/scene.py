@@ -604,10 +604,10 @@ class Scene(object):
         note: str = None,
         ignore_presenter_mode: bool = False
     ):
-        if note:
-            log.info(note)
         self.update_mobjects(dt=0)  # Any problems with this?
         if self.presenter_mode and not self.skip_animations and not ignore_presenter_mode:
+            if note:
+                log.info(note)
             while self.hold_on_wait:
                 self.update_frame(dt=1 / self.camera.frame_rate)
             self.hold_on_wait = True
