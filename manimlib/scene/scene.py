@@ -687,13 +687,15 @@ class Scene(object):
 
     def undo(self):
         if self.undo_stack:
-            self.redo_stack.append(self.get_state()[0])
+            state, n_changes = self.get_state()
+            self.redo_stack.append(state)
             self.restore_state(self.undo_stack.pop())
         self.refresh_static_mobjects()
 
     def redo(self):
         if self.redo_stack:
-            self.undo_stack.append(self.get_state()[0])
+            state, n_changes = self.get_state()
+            self.undo_stack.append(state)
             self.restore_state(self.redo_stack.pop())
         self.refresh_static_mobjects()
 
