@@ -343,13 +343,25 @@ class Mobject(object):
     def family_members_with_points(self):
         return [m for m in self.get_family() if m.has_points()]
 
-    def get_ancestors(self) -> list[Mobject]:
-        ancestors = list(self.parents)
-        n = 0
-        while n < len(ancestors):
-            ancestors.extend(ancestors[n].parents)
-            n += 1
-        return ancestors
+    def get_ancestors(self, extended: bool = False) -> list[Mobject]:
+        """
+        Returns parents, grandparents, etc.
+        Order of result should be from higher members of the hierarchy down.
+
+        If extended is set to true, it includes the ancestors of all family members,
+        e.g. any other parents of a submobject
+        """
+        ancestors = []
+        to_process = list(self.get_family(recurse=extended))
+        excluded = set(to_process)
+        while to_process:
+            for p in to_process.pop().parents:
+                if p not in excluded:
+                    ancestors.append(p)
+                    to_process.append(p)
+        # Remove redundancies while preserving order
+        ancestors.reverse()
+        return list(dict.fromkeys(ancestors))
 
     def add(self, *mobjects: Mobject):
         if self in mobjects:
