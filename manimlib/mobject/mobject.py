@@ -343,6 +343,26 @@ class Mobject(object):
     def family_members_with_points(self):
         return [m for m in self.get_family() if m.has_points()]
 
+    def get_ancestors(self, extended: bool = False) -> list[Mobject]:
+        """
+        Returns parents, grandparents, etc.
+        Order of result should be from higher members of the hierarchy down.
+
+        If extended is set to true, it includes the ancestors of all family members,
+        e.g. any other parents of a submobject
+        """
+        ancestors = []
+        to_process = list(self.get_family(recurse=extended))
+        excluded = set(to_process)
+        while to_process:
+            for p in to_process.pop().parents:
+                if p not in excluded:
+                    ancestors.append(p)
+                    to_process.append(p)
+        # Remove redundancies while preserving order
+        ancestors.reverse()
+        return list(dict.fromkeys(ancestors))
+
     def add(self, *mobjects: Mobject):
         if self in mobjects:
             raise Exception("Mobject cannot contain self")
@@ -354,13 +374,14 @@ class Mobject(object):
         self.assemble_family()
         return self
 
-    def remove(self, *mobjects: Mobject):
+    def remove(self, *mobjects: Mobject, reassemble: bool = True):
         for mobject in mobjects:
             if mobject in self.submobjects:
                 self.submobjects.remove(mobject)
             if self in mobject.parents:
                 mobject.parents.remove(self)
-        self.assemble_family()
+        if reassemble:
+            self.assemble_family()
         return self
 
     def add_to_back(self, *mobjects: Mobject):
@@ -381,7 +402,7 @@ class Mobject(object):
         return self
 
     def set_submobjects(self, submobject_list: list[Mobject]):
-        self.remove(*self.submobjects)
+        self.remove(*self.submobjects, reassemble=False)
         self.add(*submobject_list)
         return self
 
@@ -526,17 +547,24 @@ class Mobject(object):
             for key, value in self.uniforms.items()
         }
 
-        result.submobjects = []
-        result.add(*(sm.copy() for sm in self.submobjects))
-        result.match_updaters(self)
+        # Instead of adding using result.add, which does some checks for updating
+        # updater statues and bounding box, just directly modify the family-related
+        # lists
+        result.submobjects = [sm.copy() for sm in self.submobjects]
+        for sm in result.submobjects:
+            sm.parents = [result]
+        result.family = [result, *it.chain(*(sm.get_family() for sm in result.submobjects))]
+
+        # Similarly, instead of calling match_updaters, since we know the status
+        # won't have changed, just directly match.
+        result.non_time_updaters = list(self.non_time_updaters)
+        result.time_based_updaters = list(self.time_based_updaters)
 
         family = self.get_family()
         for attr, value in list(self.__dict__.items()):
             if isinstance(value, Mobject) and value is not self:
                 if value in family:
                     setattr(result, attr, result.family[self.family.index(value)])
-                else:
-                    setattr(result, attr, value.copy())
             if isinstance(value, np.ndarray):
                 setattr(result, attr, value.copy())
             if isinstance(value, ShaderWrapper):
@@ -589,6 +617,23 @@ class Mobject(object):
             sm1.render_primitive = sm2.render_primitive
         self.refresh_bounding_box(recurse_down=True)
         return self
+
+    def looks_identical(self, mobject: Mobject):
+        fam1 = self.get_family()
+        fam2 = mobject.get_family()
+        if len(fam1) != len(fam2):
+            return False
+        for m1, m2 in zip(fam1, fam2):
+            for d1, d2 in [(m1.data, m2.data), (m1.uniforms, m2.uniforms)]:
+                if set(d1).difference(d2):
+                    return False
+                for key in d1:
+                    if isinstance(d1[key], np.ndarray):
+                        if not np.all(d1[key] == d2[key]):
+                            return False
+                    elif d1[key] != d2[key]:
+                        return False
+        return True
 
     # Creating new Mobjects from this one
 

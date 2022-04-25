@@ -45,13 +45,30 @@ class ShaderWrapper(object):
         self.init_program_code()
         self.refresh_id()
 
+    def __eq__(self, shader_wrapper: ShaderWrapper):
+        return all((
+            np.all(self.vert_data == shader_wrapper.vert_data),
+            np.all(self.vert_indices == shader_wrapper.vert_indices),
+            self.shader_folder == shader_wrapper.shader_folder,
+            all(
+                np.all(self.uniforms[key] == shader_wrapper.uniforms[key])
+                for key in self.uniforms
+            ),
+            all(
+                self.texture_paths[key] == shader_wrapper.texture_paths[key]
+                for key in self.texture_paths
+            ),
+            self.depth_test == shader_wrapper.depth_test,
+            self.render_primitive == shader_wrapper.render_primitive,
+        ))
+
     def copy(self):
         result = copy.copy(self)
         result.vert_data = np.array(self.vert_data)
         if result.vert_indices is not None:
             result.vert_indices = np.array(self.vert_indices)
         if self.uniforms:
-            result.uniforms = dict(self.uniforms)
+            result.uniforms = {key: np.array(value) for key, value in self.uniforms.items()}
         if self.texture_paths:
             result.texture_paths = dict(self.texture_paths)
         return result
