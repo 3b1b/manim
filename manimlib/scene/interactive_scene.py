@@ -206,10 +206,18 @@ class InteractiveScene(Scene):
             return self.get_corner_dots(mobject)
 
     def refresh_selection_highlight(self):
-        self.selection_highlight.set_submobjects([
-            self.get_highlight(mob)
-            for mob in self.selection
-        ])
+        if len(self.selection) > 0:
+            self.remove(self.selection_highlight)
+            self.selection_highlight.set_submobjects([
+                self.get_highlight(mob)
+                for mob in self.selection
+            ])
+            index = min((
+                i for i, mob in enumerate(self.mobjects)
+                for sm in self.selection
+                if sm in mob.get_family()
+            ))
+            self.mobjects.insert(index, self.selection_highlight)
 
     def add_to_selection(self, *mobjects):
         mobs = list(filter(
@@ -219,9 +227,11 @@ class InteractiveScene(Scene):
         if len(mobs) == 0:
             return
         self.selection.add(*mobs)
-        self.selection_highlight.add(*map(self.get_highlight, mobs))
-        for mob in mobs:
-            mob.set_animating_status(True)
+        self.refresh_selection_highlight()
+        for sm in mobs:
+            for mob in self.mobjects:
+                if sm in mob.get_family():
+                    mob.set_animating_status(True)
         self.refresh_static_mobjects()
 
     def toggle_from_selection(self, *mobjects):
@@ -307,10 +317,13 @@ class InteractiveScene(Scene):
 
     def gather_new_selection(self):
         self.is_selecting = False
-        self.remove(self.selection_rectangle)
-        for mob in reversed(self.get_selection_search_set()):
-            if self.selection_rectangle.is_touching(mob):
-                self.add_to_selection(mob)
+        if self.selection_rectangle in self.mobjects:
+            self.remove(self.selection_rectangle)
+            additions = []
+            for mob in reversed(self.get_selection_search_set()):
+                if self.selection_rectangle.is_touching(mob):
+                    additions.append(mob)
+            self.add_to_selection(*additions)
 
     def prepare_grab(self):
         mp = self.mouse_point.get_center()
