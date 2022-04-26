@@ -895,7 +895,15 @@ class Polygon(VMobject):
     def get_vertices(self) -> list[np.ndarray]:
         return self.get_start_anchors()
 
-    def round_corners(self, radius: float = 0.5):
+    def round_corners(self, radius: float | None = None):
+        if radius is None:
+            verts = self.get_vertices()
+            min_edge_length = min(
+                get_norm(v1 - v2)
+                for v1, v2 in zip(verts, verts[1:])
+                if not np.isclose(v1, v2).all()
+            )
+            radius = 0.25 * min_edge_length
         vertices = self.get_vertices()
         arcs = []
         for v1, v2, v3 in adjacent_n_tuples(vertices, 3):
