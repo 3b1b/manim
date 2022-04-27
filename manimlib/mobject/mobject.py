@@ -359,8 +359,9 @@ class Mobject(object):
                 if p not in excluded:
                     ancestors.append(p)
                     to_process.append(p)
-        # Remove redundancies while preserving order
+        # Ensure mobjects highest in the hierarchy show up first
         ancestors.reverse()
+        # Remove list redundancies while preserving order
         return list(dict.fromkeys(ancestors))
 
     def add(self, *mobjects: Mobject):
