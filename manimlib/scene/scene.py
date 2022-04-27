@@ -86,6 +86,7 @@ class Scene(object):
         self.time: float = 0
         self.skip_time: float = 0
         self.original_skipping_status: bool = self.skip_animations
+        self.checkpoint_states: dict[str, list[tuple[Mobject, Mobject]]] = dict()
         if self.start_at_animation_number is not None:
             self.skip_animations = True
 
@@ -174,6 +175,28 @@ class Scene(object):
                 "save_state", "undo", "redo", "i2g", "i2m"
             ]
         })
+
+        # This is useful if one wants to re-run a block of scene
+        # code, while developing, tweaking it each time.
+        # As long as the copied selection starts with a comment,
+        # this will revert to the state of the scene at the first
+        # point of running.
+        def checkpoint_paste(skip=False):
+            pasted = pyperclip.paste()
+            line0 = pasted.lstrip().split("\n")[0]
+            if line0.startswith("#"):
+                if line0 not in self.checkpoint_states:
+                    self.checkpoint(line0)
+                else:
+                    self.revert_to_checkpoint(line0)
+            if skip:
+                originally_skip = self.skip_animations
+                self.skip_animations = True
+            shell.run_line_magic("paste", "")
+            if skip:
+                self.skip_animations = originally_skip
+
+        local_ns['checkpoint_paste'] = checkpoint_paste
 
         # Enables gui interactions during the embed
         def inputhook(context):
@@ -698,6 +721,18 @@ class Scene(object):
             self.undo_stack.append(state)
             self.restore_state(self.redo_stack.pop())
         self.refresh_static_mobjects()
+
+    def checkpoint(self, key: str):
+        self.checkpoint_states[key] = self.get_state()[0]
+
+    def revert_to_checkpoint(self, key: str):
+        if key not in self.checkpoint_states:
+            log.error(f"No checkpoint at {key}")
+            return
+        self.restore_state(self.checkpoint_states[key])
+
+    def clear_checkpoints(self):
+        self.checkpoint_states = dict()
 
     def save_mobject_to_file(self, mobject: Mobject, file_path: str | None = None) -> None:
         if file_path is None:
