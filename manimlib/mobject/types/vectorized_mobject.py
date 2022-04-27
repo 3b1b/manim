@@ -1204,15 +1204,15 @@ class VHighlight(VGroup):
         vmobject: VMobject,
         n_layers: int = 3,
         color_bounds: tuple[ManimColor] = (GREY_C, GREY_E),
-        max_stroke_width: float = 10.0,
+        max_stroke_addition: float = 5.0,
     ):
         outline = vmobject.replicate(n_layers)
         outline.set_fill(opacity=0)
-        added_widths = np.linspace(0, max_stroke_width, n_layers + 1)[1:]
+        added_widths = np.linspace(0, max_stroke_addition, n_layers + 1)[1:]
         colors = color_gradient(color_bounds, n_layers)
         for part, added_width, color in zip(reversed(outline), added_widths, colors):
             for sm in part.family_members_with_points():
-                part.set_stroke(
+                sm.set_stroke(
                     width=sm.get_stroke_width() + added_width,
                     color=color,
                 )
