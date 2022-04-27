@@ -616,6 +616,7 @@ class Mobject(object):
             sm1.depth_test = sm2.depth_test
             sm1.render_primitive = sm2.render_primitive
         self.refresh_bounding_box(recurse_down=True)
+        self.match_updaters(mobject)
         return self
 
     def looks_identical(self, mobject: Mobject):
