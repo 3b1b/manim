@@ -4,6 +4,7 @@ from functools import wraps
 import inspect
 import os
 import platform
+import pyperclip
 import random
 import time
 
@@ -207,9 +208,18 @@ class Scene(object):
         pt_inputhooks.register("manim", inputhook)
         shell.enable_gui("manim")
 
+        # This is hacky, but there's an issue with ipython which is that
+        # when you define lambda's or list comprehensions during a shell session,
+        # they are not aware of local variables in the surrounding scope. Because
+        # That comes up a fair bit during scene construction, to get around this,
+        # we (admittedly sketchily) update the global namespace to match the local
+        # namespace, since this is just a shell session anyway.
+        shell.events.register("pre_run_cell", lambda: shell.user_global_ns.update(shell.user_ns))
+
         # Operation to run after each ipython command
-        def post_cell_func(*args, **kwargs):
+        def post_cell_func():
             self.refresh_static_mobjects()
+            self.update_frame(dt=0, ignore_skipping=True)
             self.save_state()
 
         shell.events.register("post_run_cell", post_cell_func)
