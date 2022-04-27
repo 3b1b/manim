@@ -62,6 +62,7 @@ class Scene(object):
         "leave_progress_bars": False,
         "preview": True,
         "presenter_mode": False,
+        "show_animation_progress": False,
         "linger_after_completion": True,
         "pan_sensitivity": 3,
         "max_num_saved_states": 50,
@@ -88,8 +89,11 @@ class Scene(object):
         self.skip_time: float = 0
         self.original_skipping_status: bool = self.skip_animations
         self.checkpoint_states: dict[str, list[tuple[Mobject, Mobject]]] = dict()
+
         if self.start_at_animation_number is not None:
             self.skip_animations = True
+        if self.file_writer.has_progress_display:
+            self.show_animation_progress = False
 
         # Items associated with interaction
         self.mouse_point = Point()
@@ -446,21 +450,22 @@ class Scene(object):
     ) -> list[float] | np.ndarray | ProgressDisplay:
         if self.skip_animations and not override_skip_animations:
             return [run_time]
-        else:
-            step = 1 / self.camera.frame_rate
-            times = np.arange(0, run_time, step)
+
+        times = np.arange(0, run_time, 1 / self.camera.frame_rate)
 
         if self.file_writer.has_progress_display:
             self.file_writer.set_progress_display_subdescription(desc)
-            return times
 
-        return ProgressDisplay(
-            times,
-            total=n_iterations,
-            leave=self.leave_progress_bars,
-            ascii=True if platform.system() == 'Windows' else None,
-            desc=desc,
-        )
+        if self.show_animation_progress:
+            return ProgressDisplay(
+                times,
+                total=n_iterations,
+                leave=self.leave_progress_bars,
+                ascii=True if platform.system() == 'Windows' else None,
+                desc=desc,
+            )
+        else:
+            return times
 
     def get_run_time(self, animations: Iterable[Animation]) -> float:
         return np.max([animation.run_time for animation in animations])

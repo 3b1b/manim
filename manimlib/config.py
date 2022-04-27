@@ -149,6 +149,11 @@ def parse_cli():
             help="Leave progress bars displayed in terminal",
         )
         parser.add_argument(
+            "--show_animation_progress",
+            action="store_true",
+            help="Show progress bar for each animation",
+        )
+        parser.add_argument(
             "--video_dir",
             help="Directory to write video",
         )
@@ -365,6 +370,7 @@ def get_configuration(args):
         "preview": not write_file,
         "presenter_mode": args.presenter_mode,
         "leave_progress_bars": args.leave_progress_bars,
+        "show_animation_progress": args.show_animation_progress,
     }
 
     # Camera configuration
