@@ -209,17 +209,19 @@ class MTex(LabelledString):
         # Match paired double braces (`{{...}}`).
         sorted_brace_spans = sorted(self.brace_spans, key=lambda t: t[1])
         inner_brace_spans = [
-            sorted_brace_spans[span_span[0]]
-            for _, span_span in self.compress_neighbours([
-                (brace_span[0] + index, brace_span[1] - index)
-                for index, brace_span in enumerate(sorted_brace_spans)
+            sorted_brace_spans[range_begin]
+            for _, (range_begin, range_end) in self.compress_neighbours([
+                (span_begin + index, span_end - index)
+                for index, (span_begin, span_end) in enumerate(
+                    sorted_brace_spans
+                )
             ])
-            if span_span[1] - span_span[0] >= 2
+            if range_end - range_begin >= 2
         ]
         inner_brace_content_spans = [
-            (span[0] + 1, span[1] - 1)
-            for span in inner_brace_spans
-            if span[1] - span[0] > 2
+            (span_begin + 1, span_end - 1)
+            for span_begin, span_end in inner_brace_spans
+            if span_end - span_begin > 2
         ]
 
         result = self.remove_redundancies(self.chain(
@@ -303,12 +305,14 @@ class MTex(LabelledString):
     # Selector
 
     def get_cleaned_substr(self, span: Span) -> str:
-        if not self.brace_spans:
-            brace_begins, brace_ends = [], []
-        else:
-            brace_begins, brace_ends = zip(*self.brace_spans)
-        left_brace_indices = list(brace_begins)
-        right_brace_indices = [index - 1 for index in brace_ends]
+        left_brace_indices = [
+            span_begin
+            for span_begin, _ in self.brace_spans
+        ]
+        right_brace_indices = [
+            span_end - 1
+            for _, span_end in self.brace_spans
+        ]
         skippable_indices = self.chain(
             self.find_indices(r"\s"),
             self.script_char_indices,

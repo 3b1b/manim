@@ -300,18 +300,17 @@ class MarkupText(LabelledString):
         return result
 
     def get_tag_spans(self) -> list[Span]:
-        return [
-            tag_span
-            for begin_tag, end_tag, _ in self.tag_pairs_from_markup
-            for tag_span in (begin_tag, end_tag)
-        ]
+        return self.chain(
+            (begin_tag_span, end_tag_span)
+            for begin_tag_span, end_tag_span, _ in self.tag_pairs_from_markup
+        )
 
-    def get_items_from_markup(self) -> list[Span]:
+    def get_items_from_markup(self) -> list[tuple[Span, dict[str, str]]]:
         return [
-            ((begin_tag_span[1], end_tag_span[0]), attr_dict)
-            for begin_tag_span, end_tag_span, attr_dict
+            ((span_begin, span_end), attr_dict)
+            for (_, span_begin), (span_end, _), attr_dict
             in self.tag_pairs_from_markup
-            if begin_tag_span[1] < end_tag_span[0]
+            if span_begin < span_end
         ]
 
     def get_specified_items(self) -> list[tuple[Span, dict[str, str]]]:
