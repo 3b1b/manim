@@ -87,7 +87,7 @@ class InteractiveScene(Scene):
             self.cursor_location_label,
             self.camera.frame
         ]
-        self.select_top_level_mobs = True
+        self.select_top_level_mobs = False
         self.regenerate_selection_search_set()
 
         self.is_selecting = False
@@ -190,7 +190,7 @@ class InteractiveScene(Scene):
         if mobject.get_depth() < 1e-2:
             vects = [DL, UL, UR, DR]
         else:
-            vects = list(it.product(*3 * [[-1, 1]]))
+            vects = np.array(list(it.product(*3 * [[-1, 1]])))
         dots.add_updater(lambda d: d.set_points([
             mobject.get_corner(v) + v * radius
             for v in vects
@@ -200,7 +200,7 @@ class InteractiveScene(Scene):
     def get_highlight(self, mobject: Mobject) -> Mobject:
         if isinstance(mobject, VMobject) and mobject.has_points() and not self.select_top_level_mobs:
             result = VHighlight(mobject)
-            result.add_updater(lambda m: m.replace(mobject))
+            result.add_updater(lambda m: m.replace(mobject, stretch=True))
             return result
         else:
             return self.get_corner_dots(mobject)
@@ -212,12 +212,15 @@ class InteractiveScene(Scene):
                 self.get_highlight(mob)
                 for mob in self.selection
             ])
-            index = min((
-                i for i, mob in enumerate(self.mobjects)
-                for sm in self.selection
-                if sm in mob.get_family()
-            ))
-            self.mobjects.insert(index, self.selection_highlight)
+            try:
+                index = min((
+                    i for i, mob in enumerate(self.mobjects)
+                    for sm in self.selection
+                    if sm in mob.get_family()
+                ))
+                self.mobjects.insert(index, self.selection_highlight)
+            except ValueError:
+                pass
 
     def add_to_selection(self, *mobjects):
         mobs = list(filter(
@@ -260,13 +263,15 @@ class InteractiveScene(Scene):
 
     def disable_interaction(self, *mobjects: Mobject):
         for mob in mobjects:
-            self.unselectables.append(mob)
+            for sm in mob.get_family():
+                self.unselectables.append(sm)
         self.regenerate_selection_search_set()
 
     def enable_interaction(self, *mobjects: Mobject):
         for mob in mobjects:
-            if mob in self.unselectables:
-                self.unselectables.remove(mob)
+            for sm in mob.get_family():
+                if sm in self.unselectables:
+                    self.unselectables.remove(sm)
 
     # Functions for keyboard actions
 
@@ -323,6 +328,9 @@ class InteractiveScene(Scene):
             for mob in reversed(self.get_selection_search_set()):
                 if self.selection_rectangle.is_touching(mob):
                     additions.append(mob)
+                    # If it was just a click, not a drag, add only one item
+                    if self.selection_rectangle.get_width() < 1e-3:
+                        break
             self.add_to_selection(*additions)
 
     def prepare_grab(self):
@@ -445,6 +453,8 @@ class InteractiveScene(Scene):
             self.selection.set_y(diff[1])
 
     def handle_resizing(self, point: np.ndarray):
+        if not hasattr(self, "scale_about_point"):
+            return
         vect = point - self.scale_about_point
         if self.window.is_key_pressed(CTRL_SYMBOL):
             for i in (0, 1):
