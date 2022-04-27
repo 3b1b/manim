@@ -90,11 +90,13 @@ def tex_to_dvi(tex_file: str) -> str:
         if exit_code != 0:
             log_file = tex_file.replace(".tex", ".log")
             log.error("LaTeX Error!  Not a worry, it happens to the best of us.")
+            error_str = ""
             with open(log_file, "r", encoding="utf-8") as file:
                 for line in file.readlines():
                     if line.startswith("!"):
-                        log.debug(f"The error could be: `{line[2:-1]}`")
-            raise LatexError()
+                        error_str = line[2:-1]
+                        log.debug(f"The error could be: `{error_str}`")
+            raise LatexError(error_str)
     return result
 
 
