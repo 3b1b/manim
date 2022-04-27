@@ -100,6 +100,7 @@ class Scene(object):
         self.mouse_drag_point = Point()
         self.hold_on_wait = self.presenter_mode
         self.inside_embed = False
+        self.quit_interaction = False
 
         # Much nicer to work with deterministic scenes
         if self.random_seed is not None:
@@ -117,8 +118,8 @@ class Scene(object):
         self.setup()
         try:
             self.construct()
-        except EndSceneEarlyException:
-            pass
+        except (EndSceneEarlyException, KeyboardInterrupt):
+            self.linger_after_completion = False
         self.tear_down()
 
     def setup(self) -> None:
@@ -137,8 +138,12 @@ class Scene(object):
     def tear_down(self) -> None:
         self.stop_skipping()
         self.file_writer.finish()
-        if self.window and self.linger_after_completion:
-            self.interact()
+        if self.window:
+            if self.linger_after_completion:
+                self.interact()
+            else:
+                self.window.destroy()
+                self.window = None
 
     def interact(self) -> None:
         # If there is a window, enter a loop
@@ -149,12 +154,12 @@ class Scene(object):
             " and the mouse to interact with the scene. Just press `command + q` or `esc`"
             " if you want to quit."
         )
-        self.quit_interaction = False
         self.refresh_static_mobjects()
-        while not (self.window.is_closing or self.quit_interaction):
-            self.update_frame(1 / self.camera.frame_rate)
-        if self.window.is_closing:
-            self.window.destroy()
+        try:
+            while True:
+                self.update_frame(1 / self.camera.frame_rate)
+        except (EndSceneEarlyException, KeyboardInterrupt):
+            return
 
     def embed(self, close_scene_on_exit: bool = True) -> None:
         if not self.preview:
@@ -250,6 +255,9 @@ class Scene(object):
         self.update_mobjects(dt)
         if self.skip_animations and not ignore_skipping:
             return
+
+        if self.window.is_closing or self.quit_interaction:
+            raise EndSceneEarlyException()
 
         if self.window:
             self.window.clear()
