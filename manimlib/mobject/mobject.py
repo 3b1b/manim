@@ -619,8 +619,8 @@ class Mobject(object):
         return self
 
     def looks_identical(self, mobject: Mobject):
-        fam1 = self.get_family()
-        fam2 = mobject.get_family()
+        fam1 = self.family_members_with_points()
+        fam2 = mobject.family_members_with_points()
         if len(fam1) != len(fam2):
             return False
         for m1, m2 in zip(fam1, fam2):
@@ -628,11 +628,13 @@ class Mobject(object):
                 if set(d1).difference(d2):
                     return False
                 for key in d1:
-                    if isinstance(d1[key], np.ndarray):
-                        if not np.all(d1[key] == d2[key]):
+                    eq = (d1[key] == d2[key])
+                    if isinstance(eq, bool):
+                        if not eq:
                             return False
-                    elif d1[key] != d2[key]:
-                        return False
+                    else:
+                        if not eq.all():
+                            return False
         return True
 
     # Creating new Mobjects from this one
