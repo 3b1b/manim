@@ -116,6 +116,8 @@ class Scene(object):
         self.file_writer.begin()
 
         self.setup()
+        if self.presenter_mode:
+            self.wait()
         try:
             self.construct()
         except (EndSceneEarlyException, KeyboardInterrupt):
