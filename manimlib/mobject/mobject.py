@@ -286,7 +286,7 @@ class Mobject(object):
     def are_points_touching(
         self,
         points: np.ndarray,
-        buff: float = MED_SMALL_BUFF
+        buff: float = 0
     ) -> bool:
         bb = self.get_bounding_box()
         mins = (bb[0] - buff)
@@ -296,7 +296,7 @@ class Mobject(object):
     def is_point_touching(
         self,
         point: np.ndarray,
-        buff: float = MED_SMALL_BUFF
+        buff: float = 0
     ) -> bool:
         return self.are_points_touching(np.array(point, ndmin=2), buff)[0]
 
