@@ -66,7 +66,7 @@ class InteractiveScene(Scene):
     )
     selection_rectangle_stroke_color = WHITE
     selection_rectangle_stroke_width = 1.0
-    colors = MANIM_COLORS
+    palette_colors = MANIM_COLORS
     selection_nudge_size = 0.05
     cursor_location_config = dict(
         font_size=14,
@@ -144,7 +144,7 @@ class InteractiveScene(Scene):
     def get_color_palette(self):
         palette = VGroup(*(
             Square(fill_color=color, fill_opacity=1, side_length=1)
-            for color in self.colors
+            for color in self.palette_colors
         ))
         palette.set_stroke(width=0)
         palette.arrange(RIGHT, buff=0.5)
