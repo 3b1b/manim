@@ -1202,7 +1202,7 @@ class VHighlight(VGroup):
     def __init__(
         self,
         vmobject: VMobject,
-        n_layers: int = 3,
+        n_layers: int = 5,
         color_bounds: tuple[ManimColor] = (GREY_C, GREY_E),
         max_stroke_addition: float = 5.0,
     ):
