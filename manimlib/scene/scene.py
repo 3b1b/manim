@@ -258,7 +258,7 @@ class Scene(object):
         if self.skip_animations and not ignore_skipping:
             return
 
-        if self.window.is_closing or self.quit_interaction:
+        if self.window is not None and (self.window.is_closing or self.quit_interaction):
             raise EndSceneEarlyException()
 
         if self.window:
