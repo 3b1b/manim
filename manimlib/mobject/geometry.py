@@ -821,7 +821,7 @@ class FillArrow(Line):
 
     def reset_points_around_ends(self):
         self.set_points_by_ends(
-            self.get_start(), self.get_end(), path_arc=self.path_arc
+            self.get_start().copy(), self.get_end().copy(), path_arc=self.path_arc
         )
         return self
 
