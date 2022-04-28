@@ -28,7 +28,7 @@ class DecimalNumber(VMobject):
         "include_background_rectangle": False,
         "edge_to_fix": LEFT,
         "font_size": 48,
-        "text_config": {} # Do not pass in font_size here
+        "text_config": {}  # Do not pass in font_size here
     }
 
     def __init__(self, number: float | complex = 0, **kwargs):
@@ -38,17 +38,20 @@ class DecimalNumber(VMobject):
     def set_submobjects_from_number(self, number: float | complex) -> None:
         self.number = number
         self.set_submobjects([])
-        string_to_mob_ = lambda s: self.string_to_mob(s, **self.text_config)
+        self.text_config["font_size"] = self.get_font_size()
         num_string = self.get_num_string(number)
-        self.add(*map(string_to_mob_, num_string))
+        self.add(*(
+            Text(ns, **self.text_config)
+            for ns in num_string
+        ))
 
         # Add non-numerical bits
         if self.show_ellipsis:
-            dots = string_to_mob_("...")
+            dots = Text("...", **self.text_config)
             dots.arrange(RIGHT, buff=2 * dots[0].get_width())
             self.add(dots)
         if self.unit is not None:
-            self.unit_sign = self.string_to_mob(self.unit, SingleStringTex)
+            self.unit_sign = SingleStringTex(self.unit, font_size=self.get_font_size())
             self.add(self.unit_sign)
 
         self.arrange(
@@ -91,12 +94,7 @@ class DecimalNumber(VMobject):
         self.data["font_size"] = np.array([self.font_size], dtype=float)
 
     def get_font_size(self) -> float:
-        return self.data["font_size"][0]
-
-    def string_to_mob(self, string: str, mob_class: Type[T] = Text, **kwargs) -> T:
-        mob = mob_class(string, font_size=1, **kwargs)
-        mob.scale(self.get_font_size())
-        return mob
+        return int(self.data["font_size"][0])
 
     def get_formatter(self, **kwargs) -> str:
         """
