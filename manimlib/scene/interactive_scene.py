@@ -2,12 +2,14 @@ import itertools as it
 import numpy as np
 import pyperclip
 
-from manimlib.animation.fading import FadeIn
+from manimlib.animation.fading import FadeIn, FadeOut
 from manimlib.constants import ARROW_SYMBOLS, CTRL_SYMBOL, DELETE_SYMBOL, SHIFT_SYMBOL
 from manimlib.constants import COMMAND_MODIFIER, SHIFT_MODIFIER
 from manimlib.constants import DL, DOWN, DR, LEFT, ORIGIN, RIGHT, UL, UP, UR
 from manimlib.constants import FRAME_WIDTH, SMALL_BUFF
-from manimlib.constants import MANIM_COLORS, WHITE, GREY_C
+from manimlib.constants import PI
+from manimlib.constants import MANIM_COLORS, WHITE, GREY_A, GREY_C
+from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import Square
 from manimlib.mobject.mobject import Group
@@ -33,6 +35,7 @@ GRAB_KEYS = [GRAB_KEY, X_GRAB_KEY, Y_GRAB_KEY]
 RESIZE_KEY = 't'
 COLOR_KEY = 'c'
 CURSOR_LOCATION_KEY = 'l'
+CURSOR_KEY = 'k'
 
 
 # Note, a lot of the functionality here is still buggy and very much a work in progress.
@@ -73,17 +76,21 @@ class InteractiveScene(Scene):
         fill_color=GREY_C,
         num_decimal_places=3,
     )
+    crosshair_width = 0.2
+    crosshair_color = GREY_A
 
     def setup(self):
         self.selection = Group()
         self.selection_highlight = self.get_selection_highlight()
         self.selection_rectangle = self.get_selection_rectangle()
-        self.color_palette = self.get_color_palette()
+        self.crosshair = self.get_crosshair()
         self.cursor_location_label = self.get_cursor_location_label()
+        self.color_palette = self.get_color_palette()
         self.unselectables = [
             self.selection,
             self.selection_highlight,
             self.selection_rectangle,
+            self.crosshair,
             self.cursor_location_label,
             self.camera.frame
         ]
@@ -92,6 +99,7 @@ class InteractiveScene(Scene):
 
         self.is_selecting = False
         self.is_grabbing = False
+
         self.add(self.selection_highlight)
 
     def get_selection_rectangle(self):
@@ -140,6 +148,18 @@ class InteractiveScene(Scene):
             self.mobjects.insert(index - 1, highlight)
         except ValueError:
             pass
+
+    def get_crosshair(self):
+        line = Line(LEFT, RIGHT)
+        line.insert_n_curves(1)
+        lines = line.replicate(2)
+        lines[1].rotate(PI / 2)
+        crosshair = VMobject()
+        crosshair.set_points([*lines[0].get_points(), *lines[1].get_points()])
+        crosshair.set_width(self.crosshair_width)
+        crosshair.set_stroke(self.crosshair_color, width=[2, 0, 2, 2, 0, 2])
+        crosshair.time_since_movement = 10
+        return crosshair
 
     def get_color_palette(self):
         palette = VGroup(*(
@@ -426,6 +446,9 @@ class InteractiveScene(Scene):
                 vect=[LEFT, UP, RIGHT, DOWN][ARROW_SYMBOLS.index(symbol)],
                 large=(modifiers & SHIFT_MODIFIER),
             )
+        # Adding crosshair
+        if char in [SELECT_KEY, CURSOR_KEY]:
+            self.add(self.crosshair)
 
         # Conditions for saving state
         if char in [GRAB_KEY, X_GRAB_KEY, Y_GRAB_KEY, RESIZE_KEY]:
@@ -441,6 +464,9 @@ class InteractiveScene(Scene):
             self.remove(self.cursor_location_label)
         elif symbol == SHIFT_SYMBOL and self.window.is_key_pressed(ord(RESIZE_KEY)):
             self.prepare_resizing(about_corner=False)
+        # Removing crosshair
+        if chr(symbol) in [SELECT_KEY, CURSOR_KEY]:
+            self.play(FadeOut(self.crosshair, run_time=0.25))
 
     # Mouse actions
     def handle_grabbing(self, point: np.ndarray):
@@ -495,6 +521,7 @@ class InteractiveScene(Scene):
 
     def on_mouse_motion(self, point: np.ndarray, d_point: np.ndarray) -> None:
         super().on_mouse_motion(point, d_point)
+        self.crosshair.move_to(point)
         if self.is_grabbing:
             self.handle_grabbing(point)
         elif self.window.is_key_pressed(ord(RESIZE_KEY)):
