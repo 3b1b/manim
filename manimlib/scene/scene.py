@@ -754,6 +754,11 @@ class Scene(object):
         if key not in self.checkpoint_states:
             log.error(f"No checkpoint at {key}")
             return
+        all_keys = list(self.checkpoint_states.keys())
+        index = all_keys.index(key)
+        for later_key in all_keys[index + 1:]:
+            self.checkpoint_states.pop(later_key)
+
         self.restore_state(self.checkpoint_states[key])
 
     def clear_checkpoints(self):
