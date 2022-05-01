@@ -230,6 +230,8 @@ def insert_embed_line(file_name: str, scene_name: str, line_marker: str):
                 if len(line.strip()) > 0 and get_indent(line) < n_spaces:
                     prev_line_num = index - 2
                     break
+        if prev_line_num is None:
+            prev_line_num = len(lines) - 2
     elif line_marker.isdigit():
         # Treat the argument as a line number
         prev_line_num = int(line_marker) - 1
@@ -238,7 +240,7 @@ def insert_embed_line(file_name: str, scene_name: str, line_marker: str):
         try:
             prev_line_num = next(
                 i
-                for i in range(len(lines) - 1, scene_line_number, -1)
+                for i in range(scene_line_number, len(lines) - 1)
                 if line_marker in lines[i]
             )
         except StopIteration:
