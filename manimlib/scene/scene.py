@@ -21,6 +21,7 @@ from manimlib.constants import SHIFT_MODIFIER
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
+from manimlib.mobject.mobject import _AnimationBuilder
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
@@ -502,74 +503,16 @@ class Scene(object):
             kw["override_skip_animations"] = True
         return self.get_time_progression(duration, **kw)
 
-    def anims_from_play_args(self, *args, **kwargs) -> list[Animation]:
-        """
-        Each arg can either be an animation, or a mobject method
-        followed by that methods arguments (and potentially follow
-        by a dict of kwargs for that method).
-        This animation list is built by going through the args list,
-        and each animation is simply added, but when a mobject method
-        s hit, a MoveToTarget animation is built using the args that
-        follow up until either another animation is hit, another method
-        is hit, or the args list runs out.
-        """
-        animations = []
-        state = {
-            "curr_method": None,
-            "last_method": None,
-            "method_args": [],
-        }
-
-        def compile_method(state):
-            if state["curr_method"] is None:
-                return
-            mobject = state["curr_method"].__self__
-            if state["last_method"] and state["last_method"].__self__ is mobject:
-                animations.pop()
-                # method should already have target then.
-            else:
-                mobject.generate_target()
-            #
-            if len(state["method_args"]) > 0 and isinstance(state["method_args"][-1], dict):
-                method_kwargs = state["method_args"].pop()
-            else:
-                method_kwargs = {}
-            state["curr_method"].__func__(
-                mobject.target,
-                *state["method_args"],
-                **method_kwargs
-            )
-            animations.append(MoveToTarget(mobject))
-            state["last_method"] = state["curr_method"]
-            state["curr_method"] = None
-            state["method_args"] = []
-
-        for arg in args:
-            if inspect.ismethod(arg):
-                compile_method(state)
-                state["curr_method"] = arg
-            elif state["curr_method"] is not None:
-                state["method_args"].append(arg)
-            elif isinstance(arg, Mobject):
-                raise Exception("""
-                    I think you may have invoked a method
-                    you meant to pass in as a Scene.play argument
-                """)
-            else:
-                try:
-                    anim = prepare_animation(arg)
-                except TypeError:
-                    raise TypeError(f"Unexpected argument {arg} passed to Scene.play()")
-
-                compile_method(state)
-                animations.append(anim)
-        compile_method(state)
-
-        for animation in animations:
+    def prepare_animations(
+        self,
+        proto_animations: list[Animation | _AnimationBuilder],
+        animation_config: dict,
+    ):
+        animations = list(map(prepare_animation, proto_animations))
+        for anim in animations:
             # This is where kwargs to play like run_time and rate_func
             # get applied to all animations
-            animation.update_config(**kwargs)
-
+            anim.update_config(**animation_config)
         return animations
 
     def handle_play_like_call(func):
@@ -635,11 +578,11 @@ class Scene(object):
             self.update_mobjects(0)
 
     @handle_play_like_call
-    def play(self, *args, **kwargs) -> None:
-        if len(args) == 0:
+    def play(self, *proto_animations, **animation_config) -> None:
+        if len(proto_animations) == 0:
             log.warning("Called Scene.play with no animations")
             return
-        animations = self.anims_from_play_args(*args, **kwargs)
+        animations = self.prepare_animations(proto_animations, animation_config)
         self.begin_animations(animations)
         self.progress_through_animations(animations)
         self.finish_animations(animations)
