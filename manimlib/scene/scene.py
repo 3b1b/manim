@@ -13,7 +13,6 @@ import numpy as np
 from tqdm import tqdm as ProgressDisplay
 
 from manimlib.animation.animation import prepare_animation
-from manimlib.animation.transform import MoveToTarget
 from manimlib.camera.camera import Camera
 from manimlib.constants import ARROW_SYMBOLS
 from manimlib.constants import DEFAULT_WAIT_TIME
