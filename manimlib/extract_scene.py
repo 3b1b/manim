@@ -64,6 +64,7 @@ def get_scene_config(config):
             "start_at_animation_number",
             "end_at_animation_number",
             "leave_progress_bars",
+            "show_animation_progress",
             "preview",
             "presenter_mode",
         ]
