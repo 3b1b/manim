@@ -479,7 +479,7 @@ class Scene(object):
             return times
 
     def get_run_time(self, animations: Iterable[Animation]) -> float:
-        return np.max([animation.run_time for animation in animations])
+        return np.max([animation.get_run_time() for animation in animations])
 
     def get_animation_time_progression(
         self,
