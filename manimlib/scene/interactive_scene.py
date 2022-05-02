@@ -22,6 +22,7 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VHighlight
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.scene.scene import Scene
+from manimlib.scene.scene import SceneState
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.tex_file_writing import LatexError
@@ -190,6 +191,26 @@ class InteractiveScene(Scene):
         decimals.add_updater(update_coords)
         return decimals
 
+    # Overrides
+    def get_state(self):
+        return SceneState(self, ignore=[
+            self.selection_highlight,
+            self.selection_rectangle,
+            self.crosshair,
+        ])
+
+    def restore_state(self, scene_state: SceneState):
+        super().restore_state(scene_state)
+        self.mobjects.insert(0, self.selection_highlight)
+
+    def add(self, *mobjects: Mobject):
+        super().add(*mobjects)
+        self.regenerate_selection_search_set()
+
+    def remove(self, *mobjects: Mobject):
+        super().remove(*mobjects)
+        self.regenerate_selection_search_set()
+
     # Related to selection
 
     def toggle_selection_mode(self):
@@ -280,12 +301,6 @@ class InteractiveScene(Scene):
         self.selection.set_submobjects([])
         self.refresh_static_mobjects()
 
-    def add(self, *mobjects: Mobject):
-        super().add(*mobjects)
-        self.regenerate_selection_search_set()
-
-    def remove(self, *mobjects: Mobject):
-        super().remove(*mobjects)
         self.regenerate_selection_search_set()
 
     def disable_interaction(self, *mobjects: Mobject):
