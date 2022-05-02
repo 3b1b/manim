@@ -225,8 +225,8 @@ class TransformMatchingStrings(AnimationGroup):
                         VGroup(*target_substr_to_parts_map[substr])
                     )
                     for substr in sorted([
-                        s for s in source_substr_to_parts_map.keys()
-                        if s and s in target_substr_to_parts_map.keys()
+                        s for s in source_substr_to_parts_map
+                        if s and s in target_substr_to_parts_map
                     ], key=len, reverse=True)
                 ]
             )
