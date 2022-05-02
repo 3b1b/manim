@@ -159,7 +159,7 @@ class InteractiveScene(Scene):
         crosshair.set_points([*lines[0].get_points(), *lines[1].get_points()])
         crosshair.set_width(self.crosshair_width)
         crosshair.set_stroke(self.crosshair_color, width=[2, 0, 2, 2, 0, 2])
-        crosshair.time_since_movement = 10
+        crosshair.set_animating_status(True)
         return crosshair
 
     def get_color_palette(self):
@@ -300,8 +300,6 @@ class InteractiveScene(Scene):
             mob.set_animating_status(False)
         self.selection.set_submobjects([])
         self.refresh_static_mobjects()
-
-        self.regenerate_selection_search_set()
 
     def disable_interaction(self, *mobjects: Mobject):
         for mob in mobjects:
@@ -481,7 +479,7 @@ class InteractiveScene(Scene):
             self.prepare_resizing(about_corner=False)
         # Removing crosshair
         if chr(symbol) in [SELECT_KEY, CURSOR_KEY]:
-            self.play(FadeOut(self.crosshair, run_time=0.25))
+            self.remove(self.crosshair)
 
     # Mouse actions
     def handle_grabbing(self, point: np.ndarray):
