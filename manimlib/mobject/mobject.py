@@ -476,6 +476,31 @@ class Mobject(object):
         self.center()
         return self
 
+    def arrange_to_fit_dim(self, length: float, dim: int, about_edge=ORIGIN):
+        ref_point = self.get_bounding_box_point(about_edge)
+        n_submobs = len(self.submobjects)
+        if n_submobs <= 1:
+            return
+        total_length = sum(sm.length_over_dim(dim) for sm in self.submobjects)
+        buff = (length - total_length) / (n_submobs - 1)
+        vect = np.zeros(self.dim)
+        vect[dim] = 1
+        x = 0
+        for submob in self.submobjects:
+            submob.set_coord(x, dim, -vect)
+            x += submob.length_over_dim(dim) + buff
+        self.move_to(ref_point, about_edge)
+        return self
+
+    def arrange_to_fit_width(self, width: float):
+        return self.arrange_to_fit_dim(width, 0)
+
+    def arrange_to_fit_height(self, height: float):
+        return self.arrange_to_fit_dim(height, 1)
+
+    def arrange_to_fit_depth(self, depth: float):
+        return self.arrange_to_fit_dim(depth, 2)
+
     def sort(
         self,
         point_to_num_func: Callable[[np.ndarray], float] = lambda p: p[0],
