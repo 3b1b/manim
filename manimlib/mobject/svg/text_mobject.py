@@ -114,6 +114,7 @@ class MarkupText(LabelledString):
         "t2w": {},
         "global_config": {},
         "local_configs": {},
+        "split_words": True,
     }
 
     def __init__(self, text: str, **kwargs):
@@ -162,7 +163,8 @@ class MarkupText(LabelledString):
             self.t2s,
             self.t2w,
             self.global_config,
-            self.local_configs
+            self.local_configs,
+            self.split_words
         )
 
     def full2short(self, config: dict) -> None:
@@ -250,28 +252,26 @@ class MarkupText(LabelledString):
     # Toolkits
 
     @staticmethod
-    def get_tag_str(
-        attr_dict: dict[str, str], escape_color_keys: bool, is_begin_tag: bool
-    ) -> str:
-        if not is_begin_tag:
-            return "</span>"
-        if escape_color_keys:
-            converted_attr_dict = {}
+    def get_tag_string_pair(
+        attr_dict: dict[str, str], label_hex: str | None
+    ) -> tuple[str, str]:
+        if label_hex is not None:
+            converted_attr_dict = {"foreground": label_hex}
             for key, val in attr_dict.items():
                 substitute_key = MARKUP_COLOR_KEYS_DICT.get(key.lower(), None)
                 if substitute_key is None:
                     converted_attr_dict[key] = val
                 elif substitute_key:
                     converted_attr_dict[key] = "black"
-                else:
-                    converted_attr_dict[key] = "black"
+                #else:
+                #    converted_attr_dict[key] = "black"
         else:
             converted_attr_dict = attr_dict.copy()
-        result = " ".join([
+        attrs_str = " ".join([
             f"{key}='{val}'"
             for key, val in converted_attr_dict.items()
         ])
-        return f"<span {result}>"
+        return (f"<span {attrs_str}>", "</span>")
 
     def get_global_attr_dict(self) -> dict[str, str]:
         result = {
@@ -286,8 +286,9 @@ class MarkupText(LabelledString):
         if tuple(map(int, pango_version.split("."))) < (1, 50):
             if self.lsh is not None:
                 log.warning(
-                    f"Pango version {pango_version} found (< 1.50), "
-                    "unable to set `line_height` attribute"
+                    "Pango version %s found (< 1.50), "
+                    "unable to set `line_height` attribute",
+                    pango_version
                 )
         else:
             line_spacing_scale = self.lsh or DEFAULT_LINE_SPACING_SCALE
@@ -477,8 +478,8 @@ class MarkupText(LabelledString):
         if not self.is_markup:
             return [], []
 
-        tag_pattern = r"""<(/?)(\w+)\s*((\w+\s*\=\s*(['"])[\s\S]*?\5\s*)*)>"""
-        attr_pattern = r"""(\w+)\s*\=\s*(['"])([\s\S]*?)\2"""
+        tag_pattern = r"<(/?)(\w+)\s*((\w+\s*\=\s*(['\x22])[\s\S]*?\5\s*)*)>"
+        attr_pattern = r"(\w+)\s*\=\s*(['\x22])([\s\S]*?)\2"
         begin_match_obj_stack = []
         markup_tag_items = []
         for match_obj in re.finditer(tag_pattern, self.string):
@@ -511,7 +512,7 @@ class MarkupText(LabelledString):
         return tag_span_pairs, internal_items
 
     def get_external_items(self) -> list[tuple[Span, dict[str, str]]]:
-        return [
+        result = [
             (self.full_span, self.get_global_attr_dict()),
             (self.full_span, self.global_config),
             *[
@@ -531,6 +532,17 @@ class MarkupText(LabelledString):
                 for span in self.find_spans_by_selector(selector)
             ]
         ]
+        if self.split_words:
+            # For backward compatibility
+            result.extend([
+                (span, {})
+                for span in self.find_spans(r"[a-zA-Z]+")
+                for pattern in (r"[a-zA-Z]+", r"\S+")
+            ])
+        return result
+
+
+    #def get_label_span_list(self, split_spans: list[Span]) -> list[Span]:
 
     #def get_spans_from_items(
     #    self, specified_items: list[tuple[Span, dict[str, str]]]
@@ -546,31 +558,31 @@ class MarkupText(LabelledString):
     #        for span in self.split_span(specified_span)
     #    ]
 
-    def get_label_span_list(self, split_spans: list[Span]) -> list[Span]:
-        interval_spans = sorted(self.chain(
-            self.tag_spans,
-            [
-                (index, index)
-                for span in split_spans
-                for index in span
-            ]
-        ))
-        text_spans = self.get_complement_spans(self.full_span, interval_spans)
-        if self.is_markup:
-            pattern = r"[0-9a-zA-Z]+|(?:&[\s\S]*?;|[^0-9a-zA-Z\s])+"
-        else:
-            pattern = r"[0-9a-zA-Z]+|[^0-9a-zA-Z\s]+"
-        return self.chain(*[
-            self.find_spans(pattern, pos=span_begin, endpos=span_end)
-            for span_begin, span_end in text_spans
-        ])
+    #def get_label_span_list(self, split_spans: list[Span]) -> list[Span]:
+    #    interval_spans = sorted(self.chain(
+    #        self.tag_spans,
+    #        [
+    #            (index, index)
+    #            for span in split_spans
+    #            for index in span
+    #        ]
+    #    ))
+    #    text_spans = self.get_complement_spans(self.full_span, interval_spans)
+    #    if self.is_markup:
+    #        pattern = r"[0-9a-zA-Z]+|(?:&[\s\S]*?;|[^0-9a-zA-Z\s])+"
+    #    else:
+    #        pattern = r"[0-9a-zA-Z]+|[^0-9a-zA-Z\s]+"
+    #    return self.chain(*[
+    #        self.find_spans(pattern, pos=span_begin, endpos=span_end)
+    #        for span_begin, span_end in text_spans
+    #    ])
 
-    def get_additional_inserted_str_pairs(
-        self
-    ) -> list[tuple[Span, tuple[str, str]]]:
-        return []
+    #def get_additional_inserted_str_pairs(
+    #    self
+    #) -> list[tuple[Span, tuple[str, str]]]:
+    #    return []
 
-    def get_command_repl_items(self, is_labelled: bool) -> list[Span, str]:
+    def get_command_repl_items(self) -> list[Span, str]:
         result = [
             (tag_span, "") for tag_span in self.tag_spans
         ]
@@ -755,8 +767,8 @@ class MarkupText(LabelledString):
     #        for span, attr_dict in attr_dict_items
     #    ]
 
-    def get_content(self, is_labelled: bool) -> str:
-        return self.decorated_strings[is_labelled]
+    def get_full_content_string(self, content_string: str, is_labelled: bool) -> str:
+        return content_string
 
     # Selector
 

@@ -213,8 +213,9 @@ class AddTextWordByWord(ShowIncreasingSubsets):
 
     def __init__(self, string_mobject, **kwargs):
         assert isinstance(string_mobject, LabelledString)
-        grouped_mobject = VGroup(*[
-            part for _, part in string_mobject.get_group_part_items()
+        grouped_mobject = string_mobject.build_parts_from_indices_lists([
+            indices_list
+            for _, indices_list in string_mobject.get_group_part_items()
         ])
         digest_config(self, kwargs)
         if self.run_time is None:

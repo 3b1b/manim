@@ -168,73 +168,67 @@ class TransformMatchingStrings(AnimationGroup):
         assert isinstance(source, LabelledString)
         assert isinstance(target, LabelledString)
         anims = []
+        source_indices = list(range(len(source.labels)))
+        target_indices = list(range(len(target.labels)))
 
-        source_submobs = [
-            submob for _, submob in source.labelled_submobject_items
-        ]
-        target_submobs = [
-            submob for _, submob in target.labelled_submobject_items
-        ]
-        source_indices = list(range(len(source_submobs)))
-        target_indices = list(range(len(target_submobs)))
-
-        def get_filtered_indices_lists(parts, submobs, rest_indices):
+        def get_filtered_indices_lists(indices_lists, rest_indices):
             return list(filter(
-                lambda indices_list: all([
+                lambda indices_list: all(
                     index in rest_indices
                     for index in indices_list
-                ]),
-                [
-                    [submobs.index(submob) for submob in part]
-                    for part in parts
-                ]
+                ),
+                indices_lists
             ))
 
-        def add_anims(anim_class, parts_pairs):
-            for source_parts, target_parts in parts_pairs:
+        def add_anims(anim_class, indices_lists_pairs):
+            for source_indices_lists, target_indices_lists in indices_lists_pairs:
                 source_indices_lists = get_filtered_indices_lists(
-                    source_parts, source_submobs, source_indices
+                    source_indices_lists, source_indices
                 )
                 target_indices_lists = get_filtered_indices_lists(
-                    target_parts, target_submobs, target_indices
+                    target_indices_lists, target_indices
                 )
                 if not source_indices_lists or not target_indices_lists:
                     continue
-                anims.append(anim_class(source_parts, target_parts, **kwargs))
+                anims.append(anim_class(
+                    source.build_parts_from_indices_lists(source_indices_lists),
+                    target.build_parts_from_indices_lists(target_indices_lists),
+                    **kwargs
+                ))
                 for index in it.chain(*source_indices_lists):
                     source_indices.remove(index)
                 for index in it.chain(*target_indices_lists):
                     target_indices.remove(index)
 
-        def get_substr_to_parts_map(part_items):
+        def get_substr_to_indices_lists_map(part_items):
             result = {}
-            for substr, part in part_items:
+            for substr, indices_list in part_items:
                 if substr not in result:
                     result[substr] = []
-                result[substr].append(part)
+                result[substr].append(indices_list)
             return result
 
         def add_anims_from(anim_class, func):
-            source_substr_to_parts_map = get_substr_to_parts_map(func(source))
-            target_substr_to_parts_map = get_substr_to_parts_map(func(target))
+            source_substr_map = get_substr_to_indices_lists_map(func(source))
+            target_substr_map = get_substr_to_indices_lists_map(func(target))
+            common_substrings = sorted([
+                s for s in source_substr_map if s and s in target_substr_map
+            ], key=len, reverse=True)
             add_anims(
                 anim_class,
                 [
-                    (
-                        VGroup(*source_substr_to_parts_map[substr]),
-                        VGroup(*target_substr_to_parts_map[substr])
-                    )
-                    for substr in sorted([
-                        s for s in source_substr_to_parts_map
-                        if s and s in target_substr_to_parts_map
-                    ], key=len, reverse=True)
+                    (source_substr_map[substr], target_substr_map[substr])
+                    for substr in common_substrings
                 ]
             )
 
         add_anims(
             ReplacementTransform,
             [
-                (source.select_parts(k), target.select_parts(v))
+                (
+                    source.get_submob_indices_lists_by_selector(k),
+                    target.get_submob_indices_lists_by_selector(v)
+                )
                 for k, v in self.key_map.items()
             ]
         )

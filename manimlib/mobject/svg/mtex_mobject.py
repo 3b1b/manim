@@ -31,14 +31,14 @@ if TYPE_CHECKING:
 SCALE_FACTOR_PER_FONT_POINT = 0.001
 
 
-TEX_COLOR_COMMANDS_DICT = {
-    "\\color": (1, False),
-    "\\textcolor": (1, False),
-    "\\pagecolor": (1, True),
-    "\\colorbox": (1, True),
-    "\\fcolorbox": (2, True),
-}
-TEX_COLOR_COMMAND_SUFFIX = "replaced"
+#TEX_COLOR_COMMANDS_DICT = {
+#    "\\color": (1, False),
+#    "\\textcolor": (1, False),
+#    "\\pagecolor": (1, True),
+#    "\\colorbox": (1, True),
+#    "\\fcolorbox": (2, True),
+#}
+#TEX_COLOR_COMMAND_SUFFIX = "replaced"
 
 
 class MTex(LabelledString):
@@ -56,7 +56,7 @@ class MTex(LabelledString):
         self.tex_string = tex_string
         super().__init__(tex_string, **kwargs)
 
-        #self.set_color_by_tex_to_color_map(self.tex_to_color_map)
+        self.set_color_by_tex_to_color_map(self.tex_to_color_map)
         self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)
 
     @property
@@ -97,16 +97,12 @@ class MTex(LabelledString):
         return f"\\color[RGB]{{{r}, {g}, {b}}}"
 
     @staticmethod
-    def get_tag_str(
-        attr_dict: dict[str, str], escape_color_keys: bool, is_begin_tag: bool
-    ) -> str:
-        if escape_color_keys:
-            return ""
-        if not is_begin_tag:
-            return "}}"
-        if "foreground" not in attr_dict:
-            return "{{"
-        return "{{" + MTex.get_color_command_str(attr_dict["foreground"])
+    def get_tag_string_pair(
+        attr_dict: dict[str, str], label_hex: str | None
+    ) -> tuple[str, str]:
+        if label_hex is None:
+            return ("", "")
+        return ("{{" + MTex.get_color_command_str(label_hex), "}}")
 
     #@staticmethod
     #def shrink_span(span: Span, skippable_indices: list[int]) -> Span:
@@ -223,20 +219,20 @@ class MTex(LabelledString):
             raise ValueError("Missing '}' inserted")
 
         #tag_span_pairs = brace_span_pairs.copy()
-        script_entity_dict = dict(self.chain(
-            [
-                (span_begin, span_end)
-                for (span_begin, _), (_, span_end) in brace_span_pairs
-            ],
-            command_spans
-        ))
-        script_additional_brace_spans = [
-            (char_index + 1, script_entity_dict.get(
-                script_begin, script_begin + 1
-            ))
-            for char_index, script_begin in self.find_spans(r"[_^]\s*(?=.)")
-            if (char_index - 1, char_index + 1) not in command_spans
-        ]
+        #script_entity_dict = dict(self.chain(
+        #    [
+        #        (span_begin, span_end)
+        #        for (span_begin, _), (_, span_end) in brace_span_pairs
+        #    ],
+        #    command_spans
+        #))
+        #script_additional_brace_spans = [
+        #    (char_index + 1, script_entity_dict.get(
+        #        script_begin, script_begin + 1
+        #    ))
+        #    for char_index, script_begin in self.find_spans(r"[_^]\s*(?=.)")
+        #    if (char_index - 1, char_index + 1) not in command_spans
+        #]
         #for char_index, script_begin in self.find_spans(r"[_^]\s*(?=.)"):
         #    if (char_index - 1, char_index + 1) in command_spans:
         #        continue
@@ -246,13 +242,13 @@ class MTex(LabelledString):
         #    )
         #    script_additional_brace_spans.append((char_index + 1, script_end))
 
-        tag_span_pairs = self.chain(
-            brace_span_pairs,
-            [
-                ((script_begin - 1, script_begin), (script_end, script_end))
-                for script_begin, script_end in script_additional_brace_spans
-            ]
-        )
+        #tag_span_pairs = self.chain(
+        #    brace_span_pairs,
+        #    [
+        #        ((script_begin - 1, script_begin), (script_end, script_end))
+        #        for script_begin, script_end in script_additional_brace_spans
+        #    ]
+        #)
 
         brace_content_spans = [
             (span_begin, span_end)
@@ -268,15 +264,18 @@ class MTex(LabelledString):
             ])
             if range_end - range_begin >= 2
         ]
-        self.script_additional_brace_spans = script_additional_brace_spans
-        return tag_span_pairs, internal_items
+        #self.script_additional_brace_spans = script_additional_brace_spans
+        return brace_span_pairs, internal_items
 
     def get_external_items(self) -> list[tuple[Span, dict[str, str]]]:
         return [
-            (span, {"foreground": self.color_to_hex(color)})
-            for selector, color in self.tex_to_color_map.items()
+            (span, {})
+            for selector in self.tex_to_color_map
             for span in self.find_spans_by_selector(selector)
         ]
+
+    #def get_label_span_list(self, split_spans: list[Span]) -> list[Span]:
+    #    return split_spans.copy()
 
     #def get_spans_from_items(self, specified_items: list[Span]) -> list[Span]:
     #    return specified_items
@@ -287,29 +286,30 @@ class MTex(LabelledString):
     #        for span in specified_items
     #    ]))
 
-    def get_label_span_list(self, split_spans: list[Span]) -> list[Span]:
-        return split_spans
+    #def get_label_span_list(self, split_spans: list[Span]) -> list[Span]:
+    #    return split_spans
 
-    def get_additional_inserted_str_pairs(
-        self
-    ) -> list[tuple[Span, tuple[str, str]]]:
-        return [
-            (span, ("{", "}"))
-            for span in self.script_additional_brace_spans
-        ]
+    #def get_additional_inserted_str_pairs(
+    #    self
+    #) -> list[tuple[Span, tuple[str, str]]]:
+    #    return [
+    #        (span, ("{", "}"))
+    #        for span in self.script_additional_brace_spans
+    #    ]
 
-    def get_command_repl_items(self, is_labelled: bool) -> list[Span, str]:
-        if not is_labelled:
-            return []
-        result = []
-        command_spans = self.entity_spans  # TODO
-        for cmd_span in command_spans:
-            cmd_str = self.get_substr(cmd_span)
-            if cmd_str not in TEX_COLOR_COMMANDS_DICT:
-                continue
-            repl_str = f"{cmd_str}{TEX_COLOR_COMMAND_SUFFIX}"
-            result.append((cmd_span, repl_str))
-        return result
+    def get_command_repl_items(self) -> list[Span, str]:
+        return []
+        #if not is_labelled:
+        #    return []
+        #result = []
+        #command_spans = self.entity_spans  # TODO
+        #for cmd_span in command_spans:
+        #    cmd_str = self.get_substr(cmd_span)
+        #    if cmd_str not in TEX_COLOR_COMMANDS_DICT:
+        #        continue
+        #    repl_str = f"{cmd_str}{TEX_COLOR_COMMAND_SUFFIX}"
+        #    result.append((cmd_span, repl_str))
+        #return result
 
     #def get_predefined_inserted_str_items(
     #    self, split_items: list[Span]
@@ -558,15 +558,8 @@ class MTex(LabelledString):
     #        for label, span in enumerate(self.label_span_list)
     #    ]
 
-    def get_full_content_string(
-        self,
-        label_span_list: list[Span],
-        split_items: list[tuple[Span, dict[str, str]]],
-        is_labelled: bool
-    ) -> str:
-        result = super().get_full_content_string(
-            label_span_list, split_items, is_labelled
-        )
+    def get_full_content_string(self, content_string: str, is_labelled: bool) -> str:
+        result = content_string
 
         if self.tex_environment:
             if isinstance(self.tex_environment, str):
@@ -578,25 +571,25 @@ class MTex(LabelledString):
         if self.alignment:
             result = "\n".join([self.alignment, result])
 
-        if is_labelled:
-            occurred_commands = [
-                # TODO
-                self.get_substr(span) for span in self.entity_spans
-            ]
-            newcommand_lines = [
-                "".join([
-                    f"\\newcommand{cmd_name}{TEX_COLOR_COMMAND_SUFFIX}",
-                    f"[{n_braces + 1}][]",
-                    "{",
-                    cmd_name + "{black}" * n_braces if substitute_cmd else "",
-                    "}"
-                ])
-                for cmd_name, (n_braces, substitute_cmd)
-                in TEX_COLOR_COMMANDS_DICT.items()
-                if cmd_name in occurred_commands
-            ]
-            result = "\n".join([*newcommand_lines, result])
-        else:
+        #if is_labelled:
+        #    occurred_commands = [
+        #        # TODO
+        #        self.get_substr(span) for span in self.entity_spans
+        #    ]
+        #    newcommand_lines = [
+        #        "".join([
+        #            f"\\newcommand{cmd_name}{TEX_COLOR_COMMAND_SUFFIX}",
+        #            f"[{n_braces + 1}][]",
+        #            "{",
+        #            cmd_name + "{black}" * n_braces if substitute_cmd else "",
+        #            "}"
+        #        ])
+        #        for cmd_name, (n_braces, substitute_cmd)
+        #        in TEX_COLOR_COMMANDS_DICT.items()
+        #        if cmd_name in occurred_commands
+        #    ]
+        #    result = "\n".join([*newcommand_lines, result])
+        if not is_labelled:
             result = "\n".join([
                 self.get_color_command_str(self.base_color_hex),
                 result

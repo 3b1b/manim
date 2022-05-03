@@ -5,6 +5,7 @@ import itertools as it
 import re
 
 from manimlib.constants import WHITE
+from manimlib.logger import log
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.color import color_to_rgb
@@ -63,6 +64,7 @@ class LabelledString(SVGMobject, ABC):
             (submob.label, submob)
             for submob in self.submobjects
         ]
+        self.labels = [label for label, _ in self.labelled_submobject_items]
 
     def get_file_path(self) -> str:
         return self.get_file_path_by_content(self.original_content)
@@ -78,26 +80,30 @@ class LabelledString(SVGMobject, ABC):
         labelled_svg = SVGMobject(file_path)
         num_submobjects = len(self.submobjects)
         if num_submobjects != len(labelled_svg.submobjects):
-            raise ValueError(
+            log.warning(
                 "Cannot align submobjects of the labelled svg "
-                "to the original svg"
+                "to the original svg. Skip the labelling process."
             )
-
-        submob_color_ints = [
-            self.hex_to_int(self.color_to_hex(submob.get_fill_color()))
-            for submob in labelled_svg.submobjects
-        ]
-        unrecognized_color_ints = self.remove_redundancies(sorted(filter(
-            lambda color_int: color_int > len(self.label_span_list),
-            submob_color_ints
-        )))
-        if unrecognized_color_ints:
-            raise ValueError(
-                "Unrecognized color label(s) detected: "
-                f"{', '.join(map(self.int_to_hex, unrecognized_color_ints))}"
-            )
+            submob_color_ints = [0] * num_submobjects
+        else:
+            submob_color_ints = [
+                self.hex_to_int(self.color_to_hex(submob.get_fill_color()))
+                for submob in labelled_svg.submobjects
+            ]
+            unrecognized_colors = list(filter(
+                lambda color_int: color_int > len(self.labelled_spans),
+                submob_color_ints
+            ))
+            if unrecognized_colors:
+                log.warning(
+                    "Unrecognized color label(s) detected (%s, etc). "
+                    "Skip the labelling process.",
+                    self.int_to_hex(unrecognized_colors[0])
+                )
+                submob_color_ints = [0] * num_submobjects
 
         #if self.sort_labelled_submobs:
+        # TODO: remove this
         submob_indices = sorted(
             range(num_submobjects),
             key=lambda index: tuple(
@@ -135,12 +141,10 @@ class LabelledString(SVGMobject, ABC):
     #        pattern = re.compile(pattern)
     #    return re.compile(pattern).match(self.string, **kwargs)
 
-    def find_spans(self, pattern: str | re.Pattern, **kwargs) -> list[Span]:
-        if isinstance(pattern, str):
-            pattern = re.compile(pattern)
+    def find_spans(self, pattern: str) -> list[Span]:
         return [
             match_obj.span()
-            for match_obj in pattern.finditer(self.string, **kwargs)
+            for match_obj in re.finditer(pattern, self.string)
         ]
 
     #def find_indices(self, pattern: str | re.Pattern, **kwargs) -> list[int]:
@@ -151,7 +155,18 @@ class LabelledString(SVGMobject, ABC):
             if isinstance(sel, str):
                 return self.find_spans(re.escape(sel))
             if isinstance(sel, re.Pattern):
-                return self.find_spans(sel)
+                result_iterator = sel.finditer(self.string)
+                if not sel.groups:
+                    return [
+                        match_obj.span()
+                        for match_obj in result_iterator
+                    ]
+                return [
+                    span
+                    for match_obj in result_iterator
+                    for span in match_obj.regs[1:]
+                    if span != (-1, -1)
+                ]
             if isinstance(sel, tuple) and len(sel) == 2 and all(
                 isinstance(index, int) or index is None
                 for index in sel
@@ -225,7 +240,7 @@ class LabelledString(SVGMobject, ABC):
     def span_contains(span_0: Span, span_1: Span) -> bool:
         return span_0[0] <= span_1[0] and span_0[1] >= span_1[1]
 
-    def get_piece_items(
+    def get_level_items(
         self,
         tag_span_pairs: list[tuple[Span, Span]],
         entity_spans: list[Span]
@@ -241,7 +256,7 @@ class LabelledString(SVGMobject, ABC):
         piece_levels = [0, *it.accumulate([tag for _, tag in tagged_items])]
         return piece_spans, piece_levels
 
-    def split_span(self, arbitrary_span: Span) -> list[Span]:
+    def split_span_by_levels(self, arbitrary_span: Span) -> list[Span]:
         # ignorable_indices --
         # left_bracket_spans
         # right_bracket_spans
@@ -413,10 +428,10 @@ class LabelledString(SVGMobject, ABC):
 
     @staticmethod
     @abstractmethod
-    def get_tag_str(
-        attr_dict: dict[str, str], escape_color_keys: bool, is_begin_tag: bool
-    ) -> str:
-        return ""
+    def get_tag_string_pair(
+        attr_dict: dict[str, str], label_hex: str | None
+    ) -> tuple[str, str]:
+        return ("", "")
 
     #def get_color_tag_str(self, rgb_int: int, is_begin_tag: bool) -> str:
     #    return self.get_tag_str({
@@ -481,7 +496,7 @@ class LabelledString(SVGMobject, ABC):
     def parse(self) -> None:
         self.entity_spans = self.get_entity_spans()
         tag_span_pairs, internal_items = self.get_internal_items()
-        self.piece_spans, self.piece_levels = self.get_piece_items(
+        self.piece_spans, self.piece_levels = self.get_level_items(
             tag_span_pairs, self.entity_spans
         )
         #self.tag_content_spans = [
@@ -497,26 +512,19 @@ class LabelledString(SVGMobject, ABC):
                 for span in self.find_spans_by_selector(self.isolate)
             ]
         )
-        print(f"\n{specified_items=}\n")
-        specified_spans = [span for span, _ in specified_items]
-        for span_0, span_1 in it.product(specified_spans, repeat=2):
-            if not span_0[0] < span_1[0] < span_0[1] < span_1[1]:
-                continue
-            raise ValueError(
-                "Partially overlapping substrings detected: "
-                f"'{self.get_substr(span_0)}' and '{self.get_substr(span_1)}'"
-            )
+        #print(f"\n{specified_items=}\n")
+        #specified_spans =
 
         split_items = [
             (span, attr_dict)
             for specified_span, attr_dict in specified_items
-            for span in self.split_span(specified_span)
+            for span in self.split_span_by_levels(specified_span)
         ]
-        print(f"\n{split_items=}\n")
-        split_spans = [span for span, _ in split_items]
-        label_span_list = self.get_label_span_list(split_spans)
-        if len(label_span_list) >= 16777216:
-            raise ValueError("Cannot handle that many substrings")
+        #print(f"\n{split_items=}\n")
+        #labelled_spans = [span for span, _ in split_items]
+        #labelled_spans = self.get_labelled_spans(split_spans)
+        #if len(labelled_spans) >= 16777216:
+        #    raise ValueError("Cannot handle that many substrings")
 
         #content_strings = []
         #for is_labelled in (False, True):
@@ -549,17 +557,66 @@ class LabelledString(SVGMobject, ABC):
         #    for flag in range(2)
         #]
 
-        self.specified_spans = specified_spans
-        self.label_span_list = label_span_list
-        self.original_content = self.get_full_content_string(
-            label_span_list, split_items, is_labelled=False
+        command_repl_items = self.get_command_repl_items()
+
+        #full_content_strings = {}
+        #for is_labelled in (False, True):
+        #    inserted_str_pairs = [
+        #        (span, self.get_tag_string_pair(
+        #            attr_dict,
+        #            rgb_hex=self.int_to_hex(label + 1) if is_labelled else None
+        #        ))
+        #        for label, (span, attr_dict) in enumerate(split_items)
+        #    ]
+        #    repl_items = self.chain(
+        #        command_repl_items,
+        #        [
+        #            ((index, index), inserted_str)
+        #            for index, inserted_str
+        #            in self.sort_obj_pairs_by_spans(inserted_str_pairs)
+        #        ]
+        #    )
+        #    content_string = self.get_replaced_substr(
+        #        self.full_span, repl_items
+        #    )
+        #    full_content_string = self.get_full_content_string(content_string)
+        #    #full_content_strings[is_labelled] = full_content_string
+
+        self.specified_spans = [span for span, _ in specified_items]
+        self.labelled_spans = [span for span, _ in split_items]
+        for span_0, span_1 in it.product(self.labelled_spans, repeat=2):
+            if not span_0[0] < span_1[0] < span_0[1] < span_1[1]:
+                continue
+            raise ValueError(
+                "Partially overlapping substrings detected: "
+                f"'{self.get_substr(span_0)}' and '{self.get_substr(span_1)}'"
+            )
+
+        self.original_content, self.labelled_content = (
+            self.get_full_content_string(self.get_replaced_substr(
+                self.full_span, self.chain(
+                    command_repl_items,
+                    [
+                        ((index, index), inserted_str)
+                        for index, inserted_str in self.sort_obj_pairs_by_spans([
+                            (span, self.get_tag_string_pair(
+                                attr_dict,
+                                label_hex=self.int_to_hex(label + 1) if is_labelled else None
+                            ))
+                            for label, (span, attr_dict) in enumerate(split_items)
+                        ])
+                    ]
+                )
+            ), is_labelled=is_labelled)
+            for is_labelled in (False, True)
         )
-        self.labelled_content = self.get_full_content_string(
-            label_span_list, split_items, is_labelled=True
-        )
-        print(self.original_content)
-        print()
-        print(self.labelled_content)
+
+
+        #self.original_content = full_content_strings[False]
+        #self.labelled_content = full_content_strings[True]
+        #print(self.original_content)
+        #print()
+        #print(self.labelled_content)
 
 
         #self.command_repl_dict = self.get_command_repl_dict()
@@ -569,8 +626,8 @@ class LabelledString(SVGMobject, ABC):
         ##self.specified_items = self.get_specified_items()
         #self.specified_spans = []
         #self.check_overlapping()  #######
-        #self.label_span_list = []
-        #if len(self.label_span_list) >= 16777216:
+        #self.labelled_spans = []
+        #if len(self.labelled_spans) >= 16777216:
         #    raise ValueError("Cannot handle that many substrings")
 
     @abstractmethod
@@ -636,9 +693,9 @@ class LabelledString(SVGMobject, ABC):
     #def get_split_items(self, specified_items: list[T]) -> list[T]:
     #    return []
 
-    @abstractmethod
-    def get_label_span_list(self, split_spans: list[Span]) -> list[Span]:
-        return []
+    #@abstractmethod
+    #def get_labelled_spans(self, split_spans: list[Span]) -> list[Span]:
+    #    return []
 
     #@abstractmethod
     #def get_predefined_inserted_str_items(
@@ -666,7 +723,7 @@ class LabelledString(SVGMobject, ABC):
     #    return []
 
     #@abstractmethod
-    #def get_label_span_list(self) -> list[Span]:
+    #def get_labelled_spans(self) -> list[Span]:
     #    return []
 
     #def get_decorated_string(
@@ -694,56 +751,19 @@ class LabelledString(SVGMobject, ABC):
     #        repl_items.extend(self.command_repl_items)
     #    return self.get_replaced_substr(self.full_span, repl_items)
 
+    #@abstractmethod
+    #def get_additional_inserted_str_pairs(
+    #    self
+    #) -> list[tuple[Span, tuple[str, str]]]:
+    #    return []
+
     @abstractmethod
-    def get_additional_inserted_str_pairs(
-        self
-    ) -> list[tuple[Span, tuple[str, str]]]:
+    def get_command_repl_items(self) -> list[Span, str]:
         return []
 
     @abstractmethod
-    def get_command_repl_items(self, is_labelled: bool) -> list[Span, str]:
-        return []
-
-    def get_full_content_string(
-        self,
-        label_span_list: list[Span],
-        split_items: list[tuple[Span, dict[str, str]]],
-        is_labelled: bool
-    ) -> str:
-        label_items = [
-            (span, {
-                "foreground": self.int_to_hex(label + 1)
-            } if is_labelled else {})
-            for label, span in enumerate(label_span_list)
-        ]
-        inserted_str_pairs = self.chain(
-            self.get_additional_inserted_str_pairs(),
-            [
-                (span, tuple(
-                    self.get_tag_str(
-                        attr_dict,
-                        escape_color_keys=is_labelled and not is_label_item,
-                        is_begin_tag=is_begin_tag
-                    )
-                    for is_begin_tag in (True, False)
-                ))
-                for is_label_item, items in enumerate((
-                    split_items, label_items
-                ))
-                for span, attr_dict in items
-            ]
-        )
-        repl_items = self.chain(
-            self.get_command_repl_items(is_labelled),
-            [
-                ((index, index), inserted_str)
-                for index, inserted_str
-                in self.sort_obj_pairs_by_spans(inserted_str_pairs)
-            ]
-        )
-        return self.get_replaced_substr(
-            self.full_span, repl_items
-        )
+    def get_full_content_string(self, content_string: str, is_labelled: bool) -> str:
+        return ""
 
     #def get_content(self, is_labelled: bool) -> str:
     #    return self.content_strings[int(is_labelled)]
@@ -754,16 +774,15 @@ class LabelledString(SVGMobject, ABC):
     def get_cleaned_substr(self, span: Span) -> str:
         return ""
 
-    def get_group_part_items(self) -> list[tuple[str, VGroup]]:
-        if not self.labelled_submobject_items:
+    def get_group_part_items(self) -> list[tuple[str, list[int]]]:
+        if not self.labels:
             return []
 
-        labels, labelled_submobjects = zip(*self.labelled_submobject_items)
         group_labels, labelled_submob_ranges = zip(
-            *self.compress_neighbours(labels)
+            *self.compress_neighbours(self.labels)
         )
         ordered_spans = [
-            self.label_span_list[label] if label != -1 else self.full_span
+            self.labelled_spans[label] if label != -1 else self.full_span
             for label in group_labels
         ]
         interval_spans = [
@@ -785,36 +804,66 @@ class LabelledString(SVGMobject, ABC):
                 (ordered_spans[0][0], ordered_spans[-1][1]), interval_spans
             )
         ]
-        submob_groups = VGroup(*[
-            VGroup(*labelled_submobjects[slice(*submob_range)])
+        submob_indices_lists = [
+            list(range(*submob_range))
             for submob_range in labelled_submob_ranges
-        ])
-        return list(zip(group_substrs, submob_groups))
+        ]
+        return list(zip(group_substrs, submob_indices_lists))
 
-    def get_specified_part_items(self) -> list[tuple[str, VGroup]]:
+    def get_submob_indices_list_by_span(
+        self, arbitrary_span: Span
+    ) -> list[int]:
+        return [
+            submob_index
+            for submob_index, label in enumerate(self.labels)
+            if label != -1 and self.span_contains(
+                arbitrary_span, self.labelled_spans[label]
+            )
+        ]
+
+    def get_specified_part_items(self) -> list[tuple[str, list[int]]]:
         return [
             (
                 self.get_substr(span),
-                self.select_part_by_span(span)
+                self.get_submob_indices_list_by_span(span)
             )
             for span in self.specified_spans
         ]
 
-    def select_part_by_span(self, arbitrary_span: Span) -> VGroup:
-        return VGroup(*[
-            submob for label, submob in self.labelled_submobject_items
-            if label != -1
-            and self.span_contains(arbitrary_span, self.label_span_list[label])
-        ])
-
-    def select_parts(self, selector: Selector) -> VGroup:
-        return VGroup(*filter(
-            lambda part: part.submobjects,
+    def get_submob_indices_lists_by_selector(
+        self, selector: Selector
+    ) -> list[list[int]]:
+        return list(filter(
+            lambda indices_list: indices_list,
             [
-                self.select_part_by_span(span)
+                self.get_submob_indices_list_by_span(span)
                 for span in self.find_spans_by_selector(selector)
             ]
         ))
+
+    def build_parts_from_indices_lists(
+        self, submob_indices_lists: list[list[int]]
+    ) -> VGroup:
+        return VGroup(*[
+            VGroup(*[
+                self.labelled_submobject_items[submob_index][1]
+                for submob_index in indices_list
+            ])
+            for indices_list in submob_indices_lists
+        ])
+
+    #def select_part_by_span(self, arbitrary_span: Span) -> VGroup:
+    #    return VGroup(*[
+    #        self.labelled_submobject_items[submob_index]
+    #        for submob_index in self.get_submob_indices_list_by_span(
+    #            arbitrary_span
+    #        )
+    #    ])
+
+    def select_parts(self, selector: Selector) -> VGroup:
+        return self.build_parts_from_indices_lists(
+            self.get_submob_indices_lists_by_selector(selector)
+        )
 
     def select_part(self, selector: Selector, index: int = 0) -> VGroup:
         return self.select_parts(selector)[index]
