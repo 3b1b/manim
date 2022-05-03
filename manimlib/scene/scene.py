@@ -145,9 +145,6 @@ class Scene(object):
         if self.window:
             self.window.destroy()
             self.window = None
-        if self.inside_embed:
-            self.embed_shell.enable_gui(None)
-            self.embed_shell.exiter()
 
     def interact(self) -> None:
         # If there is a window, enter a loop
@@ -522,6 +519,8 @@ class Scene(object):
         def wrapper(self, *args, **kwargs):
             if self.inside_embed:
                 self.save_state()
+            if self.presenter_mode and self.num_plays == 0:
+                self.hold_loop()
 
             self.update_skipping_status()
             should_write = not self.skip_animations
@@ -601,9 +600,7 @@ class Scene(object):
         if self.presenter_mode and not self.skip_animations and not ignore_presenter_mode:
             if note:
                 log.info(note)
-            while self.hold_on_wait:
-                self.update_frame(dt=1 / self.camera.frame_rate)
-            self.hold_on_wait = True
+            self.hold_loop()
         else:
             time_progression = self.get_wait_time_progression(duration, stop_condition)
             last_t = 0
@@ -616,6 +613,11 @@ class Scene(object):
                     break
         self.refresh_static_mobjects()
         return self
+
+    def hold_loop(self):
+        while self.hold_on_wait:
+            self.update_frame(dt=1 / self.camera.frame_rate)
+        self.hold_on_wait = True
 
     def wait_until(
         self,
