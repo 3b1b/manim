@@ -64,7 +64,6 @@ class Scene(object):
         "preview": True,
         "presenter_mode": False,
         "show_animation_progress": False,
-        "linger_after_completion": True,
         "pan_sensitivity": 3,
         "max_num_saved_states": 50,
     }
@@ -117,12 +116,14 @@ class Scene(object):
         self.file_writer.begin()
 
         self.setup()
-        if self.presenter_mode:
-            self.wait()
         try:
             self.construct()
-        except (EndSceneEarlyException, KeyboardInterrupt):
-            self.linger_after_completion = False
+            self.interact()
+        except EndScene:
+            pass
+        except KeyboardInterrupt:
+            # Get rid keyboard interupt symbols
+            print("", end="\r")
         self.tear_down()
 
     def setup(self) -> None:
@@ -142,35 +143,33 @@ class Scene(object):
         self.stop_skipping()
         self.file_writer.finish()
         if self.window:
-            if self.linger_after_completion:
-                self.interact()
-            else:
-                self.window.destroy()
-                self.window = None
+            self.window.destroy()
+            self.window = None
+        if self.inside_embed:
+            self.embed_shell.enable_gui(None)
+            self.embed_shell.exiter()
 
     def interact(self) -> None:
         # If there is a window, enter a loop
         # which updates the frame while under
         # the hood calling the pyglet event loop
+        if self.window is None:
+            return
         log.info(
             "Tips: You are now in the interactive mode. Now you can use the keyboard"
             " and the mouse to interact with the scene. Just press `command + q` or `esc`"
             " if you want to quit."
         )
+        self.skip_animations = False
         self.refresh_static_mobjects()
-        try:
-            while True:
-                self.update_frame(1 / self.camera.frame_rate)
-        except (EndSceneEarlyException, KeyboardInterrupt):
-            return
+        while not self.is_window_closing():
+            self.update_frame(1 / self.camera.frame_rate)
 
     def embed(self, close_scene_on_exit: bool = True) -> None:
         if not self.preview:
-            # Ignore embed calls when there is no preview
-            return
+            return  # Embed is only relevant with a preview
         self.inside_embed = True
         self.stop_skipping()
-        self.linger_after_completion = False
         self.update_frame()
         self.save_state()
 
@@ -214,8 +213,10 @@ class Scene(object):
         # Enables gui interactions during the embed
         def inputhook(context):
             while not context.input_is_ready():
-                if not self.window.is_closing:
+                if not self.is_window_closing():
                     self.update_frame(dt=0)
+            if self.is_window_closing():
+                shell.ask_exit()
 
         pt_inputhooks.register("manim", inputhook)
         shell.enable_gui("manim")
@@ -226,7 +227,10 @@ class Scene(object):
         # That comes up a fair bit during scene construction, to get around this,
         # we (admittedly sketchily) update the global namespace to match the local
         # namespace, since this is just a shell session anyway.
-        shell.events.register("pre_run_cell", lambda: shell.user_global_ns.update(shell.user_ns))
+        shell.events.register(
+            "pre_run_cell",
+            lambda: shell.user_global_ns.update(shell.user_ns)
+        )
 
         # Operation to run after each ipython command
         def post_cell_func():
@@ -236,13 +240,11 @@ class Scene(object):
 
         shell.events.register("post_run_cell", post_cell_func)
 
-        # Launch shell, with stack_depth=2 indicating we should use caller globals/locals
         shell(local_ns=local_ns, stack_depth=2)
 
-        self.inside_embed = False
         # End scene when exiting an embed
         if close_scene_on_exit:
-            raise EndSceneEarlyException()
+            raise EndScene()
 
     # Only these methods should touch the camera
 
@@ -259,8 +261,8 @@ class Scene(object):
         if self.skip_animations and not ignore_skipping:
             return
 
-        if self.window is not None and (self.window.is_closing or self.quit_interaction):
-            raise EndSceneEarlyException()
+        if self.is_window_closing():
+            raise EndScene()
 
         if self.window:
             self.window.clear()
@@ -444,7 +446,7 @@ class Scene(object):
                     self.stop_skipping()
         if self.end_at_animation_number is not None:
             if self.num_plays >= self.end_at_animation_number:
-                raise EndSceneEarlyException()
+                raise EndScene()
 
     def stop_skipping(self) -> None:
         self.virtual_animation_start_time = self.time
@@ -707,6 +709,9 @@ class Scene(object):
             path = os.path.join(directory, file_name)
         return Mobject.load(path)
 
+    def is_window_closing(self):
+        return self.window and (self.window.is_closing or self.quit_interaction)
+
     # Event handling
 
     def on_mouse_motion(
@@ -887,5 +892,5 @@ class SceneState():
         ]
 
 
-class EndSceneEarlyException(Exception):
+class EndScene(Exception):
     pass
