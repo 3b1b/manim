@@ -47,7 +47,7 @@ class LabelledString(SVGMobject, ABC):
             "should_remove_null_curves": True,
         },
         "base_color": WHITE,
-        "isolate": [],
+        "isolate": (),
     }
 
     def __init__(self, string: str, **kwargs):
@@ -60,11 +60,11 @@ class LabelledString(SVGMobject, ABC):
         self.full_span = (0, len(self.string))
         self.parse()
         super().__init__(**kwargs)
-        self.labelled_submobject_items = [
-            (submob.label, submob)
-            for submob in self.submobjects
-        ]
-        self.labels = [label for label, _ in self.labelled_submobject_items]
+        #self.labelled_submobject_items = [
+        #    (submob.label, submob)
+        #    for submob in self.submobjects
+        #]
+        self.labels = [submob.label for submob in self.submobjects]
 
     def get_file_path(self) -> str:
         return self.get_file_path_by_content(self.original_content)
@@ -188,10 +188,11 @@ class LabelledString(SVGMobject, ABC):
                 if spans is None:
                     raise TypeError(f"Invalid selector: '{sel}'")
                 result.extend(spans)
-        return sorted(filter(
-            lambda span: span[0] < span[1],
-            self.remove_redundancies(result)
-        ))
+        #return sorted(filter(
+        #    lambda span: span[0] < span[1],
+        #    self.remove_redundancies(result)
+        #))
+        return result
 
     @staticmethod
     def chain(*iterables: Iterable[T]) -> list[T]:
@@ -240,31 +241,33 @@ class LabelledString(SVGMobject, ABC):
     def span_contains(span_0: Span, span_1: Span) -> bool:
         return span_0[0] <= span_1[0] and span_0[1] >= span_1[1]
 
-    def get_level_items(
-        self,
-        tag_span_pairs: list[tuple[Span, Span]],
-        entity_spans: list[Span]
-    ) -> tuple[list[Span], list[int]]:
-        tagged_items = sorted(self.chain(
-            [(begin_cmd_span, 1) for begin_cmd_span, _ in tag_span_pairs],
-            [(end_cmd_span, -1) for _, end_cmd_span in tag_span_pairs],
-            [(entity_span, 0) for entity_span in entity_spans],
-        ), key=lambda t: t[0])
-        piece_spans = self.get_complement_spans(self.full_span, [
-            interval_span for interval_span, _ in tagged_items
-        ])
-        piece_levels = [0, *it.accumulate([tag for _, tag in tagged_items])]
-        return piece_spans, piece_levels
+    #def get_level_interval_spans(
+    #    self,
+    #    tag_span_pairs: list[tuple[Span, Span]],
+    #    entity_spans: list[Span]
+    #) -> list[tuple[Span, int]]:
+    #    return sorted(self.chain(
+    #        [(begin_cmd_span, 1) for begin_cmd_span, _ in tag_span_pairs],
+    #        [(end_cmd_span, -1) for _, end_cmd_span in tag_span_pairs],
+    #        [(entity_span, 0) for entity_span in entity_spans],
+    #    ), key=lambda t: t[0])
+    #    #piece_spans = self.get_complement_spans(self.full_span, [
+    #    #    interval_span for interval_span, _ in level_interval_spans
+    #    #])
+    #    #piece_levels = [0, *it.accumulate([tag for _, tag in level_interval_spans])]
+    #    #return piece_spans, piece_levels
 
-    def split_span_by_levels(self, arbitrary_span: Span) -> list[Span]:
+    def split_span_by_levels(
+        self, arbitrary_span: Span
+    ) -> tuple[list[Span], int, int]:
         # ignorable_indices --
         # left_bracket_spans
         # right_bracket_spans
         # entity_spans
         #piece_spans, piece_levels = zip(*self.piece_items)
         #ignorable_indices = self.ignorable_indices
-        piece_spans = self.piece_spans
-        piece_levels = self.piece_levels
+        #piece_spans = self.piece_spans
+        #piece_levels = self.piece_levels
         #piece_begins, piece_ends = zip(*piece_spans)
         #span_begin, span_end = arbitrary_span
         #while span_begin in ignorable_indices:
@@ -274,50 +277,141 @@ class LabelledString(SVGMobject, ABC):
         #entity_spans = self.chain(
         #    left_bracket_spans, right_bracket_spans, entity_spans
         #)
-        index_begin = sum([
-            arbitrary_span[0] > piece_end
-            for _, piece_end in piece_spans
-        ])
-        index_end = sum([
-            arbitrary_span[1] >= piece_begin
-            for piece_begin, _ in piece_spans
-        ])
-        if index_begin >= index_end:
-            return []
+        #if arbitrary_span[0] > arbitrary_span[1]:
+        #    return []
 
-        lowest_level = min(
-            piece_levels[index_begin:index_end]
+        #level_interval_span_items = self.level_interval_span_items
+        #if not level_interval_span_items:
+        #    #if 
+        #    return [arbitrary_span]
+
+        #span_begin, span_end = arbitrary_span
+        #print(level_interval_span_items)
+        #level_interval_spans, level_shifts = zip(*level_interval_span_items)  # TODO: avoid empty list
+        interval_span_items = self.cmd_span_items
+        interval_spans = [span for span, _ in interval_span_items]
+        #level_interval_spans = self.level_interval_spans
+        #level_shifts = self.level_shifts
+        #print(level_interval_span_items, arbitrary_span)
+        #index_begin = sum([
+        #    arbitrary_span[0] > piece_end
+        #    for _, piece_end in piece_spans
+        #])
+        #interval_index_begin = sum([
+        #    span_begin >= interval_begin
+        #    for interval_begin, _ in level_interval_spans
+        #])
+        #index_end = sum([
+        #    arbitrary_span[1] >= piece_begin
+        #    for piece_begin, _ in piece_spans
+        #])
+        #interval_index_end = sum([
+        #    span_end >= interval_end
+        #    for _, interval_end in level_interval_spans
+        #])
+        #interval_range = (
+        #    sum([
+        #        arbitrary_span[0] >= interval_begin
+        #        for interval_begin, _ in interval_spans
+        #    ]),
+        #    sum([
+        #        arbitrary_span[1] >= interval_end
+        #        for _, interval_end in interval_spans
+        #    ])
+        #)
+        #interval_range = (interval_range[0], interval_range[1] - len(level_interval_spans))
+        #print(interval_index_begin, interval_index_end)
+        #complement_spans = self.get_complement_spans(self.full_span, interval_spans)
+        #adjusted_span = (
+        #    #max(arbitrary_span[0], level_interval_spans[interval_range[0] - 1][1]),
+        #    #if interval_range[0] > 0 else arbitrary_span[0],
+        #    #min(arbitrary_span[1], level_interval_spans[interval_range[1]][0])
+        #    #if interval_range[1] < len(level_interval_spans) else arbitrary_span[1]
+        #)
+        #adjusted_span = (
+        #    max(arbitrary_span[0], complement_spans[interval_range[0]][0]),
+        #    min(arbitrary_span[1], complement_spans[interval_range[1]][1])
+        #)
+        #print(arbitrary_span, adjusted_span)
+
+        interval_range = (
+            sum([
+                arbitrary_span[0] > interval_begin
+                for interval_begin, _ in interval_spans
+            ]),
+            sum([
+                arbitrary_span[1] >= interval_end
+                for _, interval_end in interval_spans
+            ])
         )
-        split_piece_indices = []
-        target_level = piece_levels[index_begin]
-        for piece_index in range(index_begin, index_end):
-            if piece_levels[piece_index] != target_level:
-                continue
-            split_piece_indices.append(piece_index)
-            target_level -= 1
-            if target_level < lowest_level:
-                break
-        len_indices = len(split_piece_indices)
-        target_level = piece_levels[index_end - 1]
-        for piece_index in range(index_begin, index_end)[::-1]:
-            if piece_levels[piece_index] != target_level:
-                continue
-            split_piece_indices.insert(len_indices, piece_index + 1)
-            target_level -= 1
-            if target_level < lowest_level:
-                break
+        complement_spans = self.get_complement_spans(self.full_span, interval_spans)
+        adjusted_span = (
+            max(arbitrary_span[0], complement_spans[interval_range[0]][0]),
+            min(arbitrary_span[1], complement_spans[interval_range[1]][1])
+        )
+        if adjusted_span[0] > adjusted_span[1]:
+            #print([])
+            return [], 0, 0
 
-        span_begins = [
-            piece_spans[piece_index][0]
-            for piece_index in split_piece_indices[:-1]
+        #lowest_level = min(
+        #    piece_levels[index_begin:index_end]
+        #)
+        #split_piece_indices = []
+        #target_level = piece_levels[index_begin]
+        #for piece_index in range(index_begin, index_end):
+        #    if piece_levels[piece_index] != target_level:
+        #        continue
+        #    split_piece_indices.append(piece_index)
+        #    target_level -= 1
+        #    if target_level < lowest_level:
+        #        break
+        #len_indices = len(split_piece_indices)
+        #target_level = piece_levels[index_end - 1]
+        #for piece_index in range(index_begin, index_end)[::-1]:
+        #    if piece_levels[piece_index] != target_level:
+        #        continue
+        #    split_piece_indices.insert(len_indices, piece_index + 1)
+        #    target_level -= 1
+        #    if target_level < lowest_level:
+        #        break
+        upwards_stack = []
+        downwards_stack = []
+        for interval_index in range(*interval_range):
+            _, level_shift = interval_span_items[interval_index]
+            if level_shift == 1:
+                upwards_stack.append(interval_index)
+            elif level_shift == -1:
+                if upwards_stack:
+                    upwards_stack.pop()
+                else:
+                    downwards_stack.append(interval_index)
+        #split_piece_indices = downwards_stack + upwards_stack
+        #print(split_piece_indices)
+
+        covered_interval_spans = [
+            interval_spans[piece_index]
+            for piece_index in self.chain(downwards_stack, upwards_stack)
         ]
-        span_begins[0] = max(arbitrary_span[0], span_begins[0])
-        span_ends = [
-            piece_spans[piece_index - 1][1]
-            for piece_index in split_piece_indices[1:]
-        ]
-        span_ends[-1] = min(arbitrary_span[1], span_ends[-1])
-        return list(zip(span_begins, span_ends))
+        result = self.get_complement_spans(adjusted_span, covered_interval_spans)
+        return result, len(downwards_stack), len(upwards_stack)
+        #if interval_index_begin > 0:
+        #    span_begin = max(span_begin, level_interval_spans[interval_index_begin - 1][1])
+        #if interval_index_end < len(level_interval_spans):
+        #    span_end = min(span_end, level_interval_spans[interval_index_end][0])
+        #universal_span = (span_begin, span_end)
+        #print(universal_span, self.get_complement_spans(universal_span, interval_spans))
+        #print(self.get_complement_spans(adjusted_span, interval_spans))
+        #span_begins = [
+        #    level_interval_spans[piece_index][0][1]
+        #    for piece_index in split_piece_indices
+        #]
+        #span_begins[0] = max(arbitrary_span[0], span_begins[0])
+        #span_ends = [
+        #    level_interval_spans[piece_index - 1][0][1]
+        #    for piece_index in split_piece_indices[1:]
+        #]
+        #span_ends[-1] = min(arbitrary_span[1], span_ends[-1])
+        #return list(zip(span_begins, span_ends))
         #lowest_level_indices = [
         #    piece_index
         #    for piece_index, piece_level in enumerate(piece_levels)
@@ -383,7 +477,7 @@ class LabelledString(SVGMobject, ABC):
             (*span_ends, universal_span[1])
         ))
 
-    def get_replaced_substr(self, span: Span, repl_items: list[Span, str]):  # TODO: need `span` attr?
+    def replace_string(self, span: Span, repl_items: list[Span, str]):  # TODO: need `span` attr?
         if not repl_items:
             return self.get_substr(span)
 
@@ -412,7 +506,7 @@ class LabelledString(SVGMobject, ABC):
     #            )
     #        ]
     #    )
-    #    return self.get_replaced_substr(self.full_span, all_repl_items)
+    #    return self.replace_string(self.full_span, all_repl_items)
 
     @staticmethod
     def color_to_hex(color: ManimColor) -> str:
@@ -494,32 +588,69 @@ class LabelledString(SVGMobject, ABC):
     #    return [span for span, _ in self.specified_items]
 
     def parse(self) -> None:
-        self.entity_spans = self.get_entity_spans()
-        tag_span_pairs, internal_items = self.get_internal_items()
-        self.piece_spans, self.piece_levels = self.get_level_items(
-            tag_span_pairs, self.entity_spans
-        )
+        begin_cmd_spans, end_cmd_spans, cmd_spans = self.get_command_spans()
+
+        cmd_span_items = sorted(self.chain(
+            [(begin_cmd_span, 1) for begin_cmd_span in begin_cmd_spans],
+            [(end_cmd_span, -1) for end_cmd_span in end_cmd_spans],
+            [(cmd_span, 0) for cmd_span in cmd_spans],
+        ), key=lambda t: t[0])
+        self.cmd_span_items = cmd_span_items
+
+        cmd_span_pairs = []
+        begin_cmd_spans_stack = []
+        for cmd_span, flag in cmd_span_items:
+            if flag == 1:
+                begin_cmd_spans_stack.append(cmd_span)
+            elif flag == -1:
+                if not begin_cmd_spans_stack:
+                    raise ValueError("Missing '{' inserted")
+                begin_cmd_span = begin_cmd_spans_stack.pop()
+                cmd_span_pairs.append((begin_cmd_span, cmd_span))
+        if begin_cmd_spans_stack:
+            raise ValueError("Missing '}' inserted")
+
+        specified_items = self.get_specified_items(cmd_span_pairs)
+
+        #entity_spans = self.get_entity_spans()
+        #self.entity_spans = entity_spans
+        #tag_span_pairs, internal_items = self.get_internal_items()
+        #self.level_interval_spans = self.get_level_interval_spans(
+        #    tag_span_pairs, self.entity_spans
+        #)
+        #self.level_interval_spans = [
+        #    level_interval_span
+        #    for level_interval_span, _ in level_interval_span_items
+        #]
+        #self.level_shifts = [
+        #    level_shift
+        #    for _, level_shift in level_interval_span_items
+        #]  # TODO
         #self.tag_content_spans = [
         #    (content_begin, content_end)
         #    for (_, content_begin), (content_end, _) in tag_span_pairs
         #]
-        self.tag_spans = self.chain(*tag_span_pairs)
-        specified_items = self.chain(
-            internal_items,
-            self.get_external_items(),
-            [
-                (span, {})
-                for span in self.find_spans_by_selector(self.isolate)
-            ]
-        )
+        #self.tag_spans = self.chain(*tag_span_pairs)
+        #specified_items = self.chain(
+        #    self.get_specified_items(cmd_span_pairs)
+        #    internal_items,
+        #    self.get_external_items(),
+        #    [
+        #        (span, {})
+        #        for span in self.find_spans_by_selector(self.isolate)
+        #    ]
+        #)
         #print(f"\n{specified_items=}\n")
         #specified_spans =
+
 
         split_items = [
             (span, attr_dict)
             for specified_span, attr_dict in specified_items
-            for span in self.split_span_by_levels(specified_span)
+            for span in self.split_span_by_levels(specified_span)[0]
         ]
+        #print([self.get_substr(span) for span, _ in specified_items])
+        #print([self.get_substr(span) for span, _ in split_items])
         #print(f"\n{split_items=}\n")
         #labelled_spans = [span for span, _ in split_items]
         #labelled_spans = self.get_labelled_spans(split_spans)
@@ -550,14 +681,12 @@ class LabelledString(SVGMobject, ABC):
 
 
         #decorated_strings = [
-        #    self.get_replaced_substr(self.full_span, [
+        #    self.replace_string(self.full_span, [
         #        (span, str_pair[flag])
         #        for span, str_pair in command_repl_items
         #    ])
         #    for flag in range(2)
         #]
-
-        command_repl_items = self.get_command_repl_items()
 
         #full_content_strings = {}
         #for is_labelled in (False, True):
@@ -576,11 +705,17 @@ class LabelledString(SVGMobject, ABC):
         #            in self.sort_obj_pairs_by_spans(inserted_str_pairs)
         #        ]
         #    )
-        #    content_string = self.get_replaced_substr(
+        #    content_string = self.replace_string(
         #        self.full_span, repl_items
         #    )
         #    full_content_string = self.get_full_content_string(content_string)
         #    #full_content_strings[is_labelled] = full_content_string
+
+        command_repl_items = [
+            (span, self.get_replaced_substr(self.get_substr(span), flag))
+            for span, flag in cmd_span_items
+        ]
+        self.command_repl_items = command_repl_items
 
         self.specified_spans = [span for span, _ in specified_items]
         self.labelled_spans = [span for span, _ in split_items]
@@ -593,7 +728,7 @@ class LabelledString(SVGMobject, ABC):
             )
 
         self.original_content, self.labelled_content = (
-            self.get_full_content_string(self.get_replaced_substr(
+            self.get_full_content_string(self.replace_string(
                 self.full_span, self.chain(
                     command_repl_items,
                     [
@@ -610,6 +745,9 @@ class LabelledString(SVGMobject, ABC):
             ), is_labelled=is_labelled)
             for is_labelled in (False, True)
         )
+        print(self.original_content)
+        print()
+        print(self.labelled_content)
 
 
         #self.original_content = full_content_strings[False]
@@ -631,17 +769,23 @@ class LabelledString(SVGMobject, ABC):
         #    raise ValueError("Cannot handle that many substrings")
 
     @abstractmethod
-    def get_entity_spans(self) -> list[Span]:
-        return []
+    def get_command_spans(self) -> tuple[list[Span], list[Span], list[Span]]:
+        return [], [], []
+
+    #@abstractmethod
+    #def get_entity_spans(self) -> list[Span]:
+    #    return []
+
+    #@abstractmethod
+    #def get_internal_items(
+    #    self
+    #) -> tuple[list[tuple[Span, Span]], list[tuple[Span, dict[str, str]]]]:
+    #    return [], []
 
     @abstractmethod
-    def get_internal_items(
-        self
-    ) -> tuple[list[tuple[Span, Span]], list[tuple[Span, dict[str, str]]]]:
-        return [], []
-
-    @abstractmethod
-    def get_external_items(self) -> list[tuple[Span, dict[str, str]]]:
+    def get_specified_items(
+        self, cmd_span_pairs: list[tuple[Span, Span]]
+    ) -> list[tuple[Span, dict[str, str]]]:
         return []
 
     #@abstractmethod
@@ -687,7 +831,7 @@ class LabelledString(SVGMobject, ABC):
     #        ]))
     #        for span in self.get_complement_spans(adjusted_span, result)
     #    ]))
-        return list(filter(lambda span: span[0] < span[1], result))
+    #    return list(filter(lambda span: span[0] < span[1], result))
 
     #@abstractmethod
     #def get_split_items(self, specified_items: list[T]) -> list[T]:
@@ -758,8 +902,8 @@ class LabelledString(SVGMobject, ABC):
     #    return []
 
     @abstractmethod
-    def get_command_repl_items(self) -> list[Span, str]:
-        return []
+    def get_replaced_substr(self, substr: str, flag: int) -> str:
+        return ""
 
     @abstractmethod
     def get_full_content_string(self, content_string: str, is_labelled: bool) -> str:
@@ -842,14 +986,14 @@ class LabelledString(SVGMobject, ABC):
         ))
 
     def build_parts_from_indices_lists(
-        self, submob_indices_lists: list[list[int]]
+        self, indices_lists: list[list[int]]
     ) -> VGroup:
         return VGroup(*[
             VGroup(*[
-                self.labelled_submobject_items[submob_index][1]
+                self.submobjects[submob_index]
                 for submob_index in indices_list
             ])
-            for indices_list in submob_indices_lists
+            for indices_list in indices_lists
         ])
 
     #def select_part_by_span(self, arbitrary_span: Span) -> VGroup:

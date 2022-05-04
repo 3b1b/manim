@@ -114,7 +114,11 @@ class MarkupText(LabelledString):
         "t2w": {},
         "global_config": {},
         "local_configs": {},
-        "split_words": True,
+        # When attempting to slice submobs via `get_part_by_text` thereafter,
+        # it's recommended to explicitly specify them in `isolate` attribute
+        # when initializing.
+        # For backward compatibility
+        "isolate": (re.compile(r"[a-zA-Z]+"), re.compile(r"\S+")),
     }
 
     def __init__(self, text: str, **kwargs):
@@ -163,8 +167,7 @@ class MarkupText(LabelledString):
             self.t2s,
             self.t2w,
             self.global_config,
-            self.local_configs,
-            self.split_words
+            self.local_configs
         )
 
     def full2short(self, config: dict) -> None:
@@ -467,54 +470,114 @@ class MarkupText(LabelledString):
         #]
         #return bracket_content_spans, label_span_list, command_repl_items
 
-    def get_entity_spans(self) -> list[Span]:
+    def get_command_spans(self) -> tuple[list[Span], list[Span], list[Span]]:
+        begin_cmd_spans = self.find_spans(
+            r"<\w+\s*(?:\w+\s*\=\s*(['\x22])[\s\S]*?\1\s*)*>"
+        )
+        end_cmd_spans = self.find_spans(r"</\w+\s*>")
         if not self.is_markup:
-            return []
-        return self.find_spans(r"&[\s\S]*?;")
+            cmd_spans = []
+        else:
+            cmd_spans = self.find_spans(r"&[\s\S]*?;")  # TODO
+        return begin_cmd_spans, end_cmd_spans, cmd_spans
 
-    def get_internal_items(
-        self
-    ) -> tuple[list[tuple[Span, Span]], list[tuple[Span, dict[str, str]]]]:
-        if not self.is_markup:
-            return [], []
+    #def get_entity_spans(self) -> list[Span]:
+    #    if not self.is_markup:
+    #        return []
+    #    return self.find_spans(r"&[\s\S]*?;")
 
-        tag_pattern = r"<(/?)(\w+)\s*((\w+\s*\=\s*(['\x22])[\s\S]*?\5\s*)*)>"
+    #def get_internal_items(
+    #    self
+    #) -> tuple[list[tuple[Span, Span]], list[tuple[Span, dict[str, str]]]]:
+    #    if not self.is_markup:
+    #        return [], []
+
+    #    tag_pattern = r"<(/?)(\w+)\s*((\w+\s*\=\s*(['\x22])[\s\S]*?\5\s*)*)>"
+    #    attr_pattern = r"(\w+)\s*\=\s*(['\x22])([\s\S]*?)\2"
+    #    begin_match_obj_stack = []
+    #    markup_tag_items = []
+    #    for match_obj in re.finditer(tag_pattern, self.string):
+    #        if not match_obj.group(1):
+    #            begin_match_obj_stack.append(match_obj)
+    #            continue
+    #        begin_match_obj = begin_match_obj_stack.pop()
+    #        tag_name = begin_match_obj.group(2)
+    #        if tag_name == "span":
+    #            attr_dict = {
+    #                attr_match_obj.group(1): attr_match_obj.group(3)
+    #                for attr_match_obj in re.finditer(
+    #                    attr_pattern, begin_match_obj.group(3)
+    #                )
+    #            }
+    #        else:
+    #            attr_dict = MARKUP_TAG_CONVERSION_DICT.get(tag_name, {})
+    #        markup_tag_items.append(
+    #            (begin_match_obj.span(), match_obj.span(), attr_dict)
+    #        )
+
+    #    tag_span_pairs = [
+    #        (tag_begin_span, tag_end_span)
+    #        for tag_begin_span, tag_end_span, _ in markup_tag_items
+    #    ]
+    #    internal_items = [
+    #        ((span_begin, span_end), attr_dict)
+    #        for (_, span_begin), (span_end, _), attr_dict in markup_tag_items
+    #    ]
+    #    return tag_span_pairs, internal_items
+
+    #def get_external_items(self) -> list[tuple[Span, dict[str, str]]]:
+    #    return [
+    #        (self.full_span, self.get_global_attr_dict()),
+    #        (self.full_span, self.global_config),
+    #        *[
+    #            (span, {key: val})
+    #            for t2x_dict, key in (
+    #                (self.t2c, "foreground"),
+    #                (self.t2f, "font_family"),
+    #                (self.t2s, "font_style"),
+    #                (self.t2w, "font_weight")
+    #            )
+    #            for selector, val in t2x_dict.items()
+    #            for span in self.find_spans_by_selector(selector)
+    #        ],
+    #        *[
+    #            (span, local_config)
+    #            for selector, local_config in self.local_configs.items()
+    #            for span in self.find_spans_by_selector(selector)
+    #        ]
+    #    ]
+        #if self.split_words:
+        #    # For backward compatibility
+        #    result.extend([
+        #        (span, {})
+        #        for pattern in (r"[a-zA-Z]+", r"\S+")
+        #        for span in self.find_spans(pattern)
+        #    ])
+        #return result
+
+    def get_specified_items(
+        self, cmd_span_pairs: list[tuple[Span, Span]]
+    ) -> list[tuple[Span, dict[str, str]]]:
         attr_pattern = r"(\w+)\s*\=\s*(['\x22])([\s\S]*?)\2"
-        begin_match_obj_stack = []
-        markup_tag_items = []
-        for match_obj in re.finditer(tag_pattern, self.string):
-            if not match_obj.group(1):
-                begin_match_obj_stack.append(match_obj)
-                continue
-            begin_match_obj = begin_match_obj_stack.pop()
-            tag_name = begin_match_obj.group(2)
+        internal_items = []
+        for begin_cmd_span, end_cmd_span in cmd_span_pairs:
+            begin_tag = self.get_substr(begin_cmd_span)
+            tag_name = re.match(r"<(\w+)", begin_tag).group(1)
             if tag_name == "span":
                 attr_dict = {
                     attr_match_obj.group(1): attr_match_obj.group(3)
-                    for attr_match_obj in re.finditer(
-                        attr_pattern, begin_match_obj.group(3)
-                    )
+                    for attr_match_obj in re.finditer(attr_pattern, begin_tag)
                 }
             else:
                 attr_dict = MARKUP_TAG_CONVERSION_DICT.get(tag_name, {})
-            markup_tag_items.append(
-                (begin_match_obj.span(), match_obj.span(), attr_dict)
+            internal_items.append(
+                ((begin_cmd_span[1], end_cmd_span[0]), attr_dict)
             )
 
-        tag_span_pairs = [
-            (tag_begin_span, tag_end_span)
-            for tag_begin_span, tag_end_span, _ in markup_tag_items
-        ]
-        internal_items = [
-            ((span_begin, span_end), attr_dict)
-            for (_, span_begin), (span_end, _), attr_dict in markup_tag_items
-        ]
-        return tag_span_pairs, internal_items
-
-    def get_external_items(self) -> list[tuple[Span, dict[str, str]]]:
-        result = [
+        return [
             (self.full_span, self.get_global_attr_dict()),
             (self.full_span, self.global_config),
+            *internal_items,
             *[
                 (span, {key: val})
                 for t2x_dict, key in (
@@ -532,14 +595,7 @@ class MarkupText(LabelledString):
                 for span in self.find_spans_by_selector(selector)
             ]
         ]
-        if self.split_words:
-            # For backward compatibility
-            result.extend([
-                (span, {})
-                for span in self.find_spans(r"[a-zA-Z]+")
-                for pattern in (r"[a-zA-Z]+", r"\S+")
-            ])
-        return result
+
 
 
     #def get_label_span_list(self, split_spans: list[Span]) -> list[Span]:
@@ -582,17 +638,17 @@ class MarkupText(LabelledString):
     #) -> list[tuple[Span, tuple[str, str]]]:
     #    return []
 
-    def get_command_repl_items(self) -> list[Span, str]:
-        result = [
-            (tag_span, "") for tag_span in self.tag_spans
-        ]
-        if not self.is_markup:
-            result.extend([
-                (span, escaped)
-                for char, escaped in XML_ENTITIES
-                for span in self.find_spans(re.escape(char))
-            ])
-        return result
+    #def get_command_repl_items(self) -> list[Span, str]:
+    #    result = [
+    #        (tag_span, "") for tag_span in self.tag_spans  # TODO
+    #    ]
+    #    if not self.is_markup:
+    #        result.extend([
+    #            (span, escaped)
+    #            for char, escaped in XML_ENTITIES
+    #            for span in self.find_spans(re.escape(char))
+    #        ])
+    #    return result
 
     #def get_predefined_inserted_str_items(
     #    self, split_items: list[tuple[Span, dict[str, str]]]
@@ -767,13 +823,31 @@ class MarkupText(LabelledString):
     #        for span, attr_dict in attr_dict_items
     #    ]
 
+    def get_replaced_substr(self, substr: str, flag: int) -> str:
+        if flag:
+            return ""
+        return dict(XML_ENTITIES).get(substr, substr)
+
     def get_full_content_string(self, content_string: str, is_labelled: bool) -> str:
         return content_string
 
     # Selector
 
     def get_cleaned_substr(self, span: Span) -> str:
-        return self.get_substr(span)   # TODO: test
+        filtered_repl_items = []
+        entity_to_char_dict = {
+            entity: char
+            for char, entity in XML_ENTITIES
+        }
+        for cmd_span, replaced_substr in self.command_repl_items:
+            if not self.span_contains(span, cmd_span):
+                continue
+            if re.fullmatch(r"&[\s\S]*;", replaced_substr):
+                if replaced_substr in entity_to_char_dict:
+                    replaced_substr = entity_to_char_dict[replaced_substr]
+            filtered_repl_items.append((cmd_span, replaced_substr))
+
+        return self.replace_string(span, filtered_repl_items).strip()   # TODO: test
         #repl_items = [
         #    (cmd_span, repl_str)
         #    for cmd_span, (repl_str, _) in self.command_repl_items

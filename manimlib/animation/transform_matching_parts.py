@@ -155,7 +155,7 @@ class TransformMatchingTex(TransformMatchingParts):
 
 class TransformMatchingStrings(AnimationGroup):
     CONFIG = {
-        "key_map": dict(),
+        "key_map": {},
         "transform_mismatches": False,
     }
 
@@ -172,13 +172,16 @@ class TransformMatchingStrings(AnimationGroup):
         target_indices = list(range(len(target.labels)))
 
         def get_filtered_indices_lists(indices_lists, rest_indices):
-            return list(filter(
-                lambda indices_list: all(
-                    index in rest_indices
-                    for index in indices_list
-                ),
-                indices_lists
-            ))
+            result = []
+            for indices_list in indices_lists:
+                if not indices_list:
+                    continue
+                if not all(index in rest_indices for index in indices_list):
+                    continue
+                result.append(indices_list)
+                for index in indices_list:
+                    rest_indices.remove(index)
+            return result
 
         def add_anims(anim_class, indices_lists_pairs):
             for source_indices_lists, target_indices_lists in indices_lists_pairs:
@@ -195,10 +198,6 @@ class TransformMatchingStrings(AnimationGroup):
                     target.build_parts_from_indices_lists(target_indices_lists),
                     **kwargs
                 ))
-                for index in it.chain(*source_indices_lists):
-                    source_indices.remove(index)
-                for index in it.chain(*target_indices_lists):
-                    target_indices.remove(index)
 
         def get_substr_to_indices_lists_map(part_items):
             result = {}

@@ -195,28 +195,42 @@ class MTex(LabelledString):
         ##super().parse()
         #self.label_span_list = self.get_label_span_list()
 
-    def get_entity_spans(self) -> list[Span]:
-        return self.find_spans(r"\\(?:[a-zA-Z]+|.)")
+    def get_command_spans(self) -> tuple[list[Span], list[Span], list[Span]]:
+        cmd_spans = self.find_spans(r"\\(?:[a-zA-Z]+|\s|\S)")
+        begin_cmd_spans = [
+            span
+            for span in self.find_spans("{")
+            if (span[0] - 1, span[1]) not in cmd_spans
+        ]
+        end_cmd_spans = [
+            span
+            for span in self.find_spans("}")
+            if (span[0] - 1, span[1]) not in cmd_spans
+        ]
+        return begin_cmd_spans, end_cmd_spans, cmd_spans
 
-    def get_internal_items(
-        self
-    ) -> tuple[list[tuple[Span, Span]], list[tuple[Span, dict[str, str]]]]:
-        command_spans = self.entity_spans
-        brace_span_pairs = []
-        brace_begin_spans_stack = []
-        for span in self.find_spans(r"[{}]"):
-            char_index = span[0]
-            if (char_index - 1, char_index + 1) in command_spans:
-                continue
-            if self.get_substr(span) == "{":
-                brace_begin_spans_stack.append(span)
-            else:
-                if not brace_begin_spans_stack:
-                    raise ValueError("Missing '{' inserted")
-                brace_span = brace_begin_spans_stack.pop()
-                brace_span_pairs.append((brace_span, span))
-        if brace_begin_spans_stack:
-            raise ValueError("Missing '}' inserted")
+    #def get_entity_spans(self) -> list[Span]:
+    #    return self.find_spans(r"\\(?:[a-zA-Z]+|.)")
+
+    #def get_internal_items(
+    #    self
+    #) -> tuple[list[tuple[Span, Span]], list[tuple[Span, dict[str, str]]]]:
+    #    command_spans = self.entity_spans
+    #    brace_span_pairs = []
+    #    brace_begin_spans_stack = []
+    #    for span in self.find_spans(r"[{}]"):
+    #        char_index = span[0]
+    #        if (char_index - 1, char_index + 1) in command_spans:
+    #            continue
+    #        if self.get_substr(span) == "{":
+    #            brace_begin_spans_stack.append(span)
+    #        else:
+    #            if not brace_begin_spans_stack:
+    #                raise ValueError("Missing '{' inserted")
+    #            brace_span = brace_begin_spans_stack.pop()
+    #            brace_span_pairs.append((brace_span, span))
+    #    if brace_begin_spans_stack:
+    #        raise ValueError("Missing '}' inserted")
 
         #tag_span_pairs = brace_span_pairs.copy()
         #script_entity_dict = dict(self.chain(
@@ -250,29 +264,56 @@ class MTex(LabelledString):
         #    ]
         #)
 
-        brace_content_spans = [
-            (span_begin, span_end)
-            for (_, span_begin), (span_end, _) in brace_span_pairs
-        ]
-        internal_items = [
-            (brace_content_spans[range_begin], {})
-            for _, (range_begin, range_end) in self.compress_neighbours([
-                (span_begin + index, span_end - index)
-                for index, (span_begin, span_end) in enumerate(
-                    brace_content_spans
-                )
-            ])
-            if range_end - range_begin >= 2
-        ]
-        #self.script_additional_brace_spans = script_additional_brace_spans
-        return brace_span_pairs, internal_items
+        #brace_content_spans = [
+        #    (span_begin, span_end)
+        #    for (_, span_begin), (span_end, _) in brace_span_pairs
+        #]
+        #internal_items = [
+        #    (brace_content_spans[range_begin], {})
+        #    for _, (range_begin, range_end) in self.compress_neighbours([
+        #        (span_begin + index, span_end - index)
+        #        for index, (span_begin, span_end) in enumerate(
+        #            brace_content_spans
+        #        )
+        #    ])
+        #    if range_end - range_begin >= 2
+        #]
+        ##self.script_additional_brace_spans = script_additional_brace_spans
+        #return brace_span_pairs, internal_items
 
-    def get_external_items(self) -> list[tuple[Span, dict[str, str]]]:
-        return [
-            (span, {})
-            for selector in self.tex_to_color_map
-            for span in self.find_spans_by_selector(selector)
+    #def get_external_items(self) -> list[tuple[Span, dict[str, str]]]:
+    #    return [
+    #        (span, {})
+    #        for selector in self.tex_to_color_map
+    #        for span in self.find_spans_by_selector(selector)
+    #    ]
+
+    def get_specified_items(
+        self, cmd_span_pairs: list[tuple[Span, Span]]
+    ) -> list[tuple[Span, dict[str, str]]]:
+        cmd_content_spans = [
+            (span_begin, span_end)
+            for (_, span_begin), (span_end, _) in cmd_span_pairs
         ]
+        specified_spans = self.chain(
+            [
+                cmd_content_spans[range_begin]
+                for _, (range_begin, range_end) in self.compress_neighbours([
+                    (span_begin + index, span_end - index)
+                    for index, (span_begin, span_end) in enumerate(
+                        cmd_content_spans
+                    )
+                ])
+                if range_end - range_begin >= 2
+            ],
+            [
+                span
+                for selector in self.tex_to_color_map
+                for span in self.find_spans_by_selector(selector)
+            ],
+            self.find_spans_by_selector(self.isolate)
+        )
+        return [(span, {}) for span in specified_spans]
 
     #def get_label_span_list(self, split_spans: list[Span]) -> list[Span]:
     #    return split_spans.copy()
@@ -297,8 +338,8 @@ class MTex(LabelledString):
     #        for span in self.script_additional_brace_spans
     #    ]
 
-    def get_command_repl_items(self) -> list[Span, str]:
-        return []
+    #def get_command_repl_items(self) -> list[Span, str]:
+    #    return []
         #if not is_labelled:
         #    return []
         #result = []
@@ -558,6 +599,9 @@ class MTex(LabelledString):
     #        for label, span in enumerate(self.label_span_list)
     #    ]
 
+    def get_replaced_substr(self, substr: str, flag: int) -> str:
+        return substr  # TODO: replace color commands
+
     def get_full_content_string(self, content_string: str, is_labelled: bool) -> str:
         result = content_string
 
@@ -599,7 +643,98 @@ class MTex(LabelledString):
     # Selector
 
     def get_cleaned_substr(self, span: Span) -> str:
-        return self.get_substr(span)   # TODO: test
+        backslash_indices = [
+            index for index, _ in self.find_spans(r"\\[\s\S]")
+        ]
+        #ignored_spans = [
+        #    ignored_span
+        #    for ignored_span in self.find_spans(r"[\s_^{}]+")
+        #    if ignored_span[0] - 1 not in backslash_indices
+        #]
+        #shrinked_span, _ = self.adjust_span(span, ignored_spans)
+        ignored_indices = [
+            index
+            for index, _ in self.find_spans(r"[\s_^{}]")
+            if index - 1 not in backslash_indices
+        ]
+        span_begin, span_end = span
+        while span_begin in ignored_indices:
+            span_begin += 1
+        while span_end - 1 in ignored_indices:
+            span_end -= 1
+        shrinked_span = (span_begin, span_end)
+        #if span_begin >= span_end:
+        #    return ""
+
+        #shrinked_span = (span_begin, span_end)
+        _, unclosed_right_braces, unclosed_left_braces = self.split_span_by_levels(shrinked_span)
+
+        whitespace_repl_items = []
+        for whitespace_span in self.find_spans(r"\s+"):
+            if not self.span_contains(shrinked_span, whitespace_span):
+                continue
+            if whitespace_span[0] - 1 in backslash_indices:
+                whitespace_span = (whitespace_span[0] + 1, whitespace_span[1])
+            if all(
+                self.get_substr((index, index + 1)).isalpha()
+                for index in (whitespace_span[0] - 1, whitespace_span[1])
+            ):
+                replaced_substr = " "
+            else:
+                replaced_substr = ""
+            whitespace_repl_items.append((whitespace_span, replaced_substr))
+
+        return "".join([
+            unclosed_right_braces * "{",
+            self.replace_string(shrinked_span, whitespace_repl_items),
+            unclosed_left_braces * "}"
+        ])
+
+
+        #interval_spans = [
+        #    span
+        #    if span[0] - 1 not in backslash_indices
+        #    else (span[0] + 1, span[1])
+        #    for span in self.find_spans(r"[\s_^{}]+")
+        #]
+        #adjusted_span, _ = self.adjust_span(span, interval_spans)
+        #if adjusted_span[0] >= adjusted_span[1]:
+        #    return ""
+
+        #left_brace_indices = list(filter(
+        #    lambda index: self.get_substr((index, index + 1)) == "{",
+        #    ignored_indices
+        #))
+        #right_brace_indices = list(filter(
+        #    lambda index: self.get_substr((index, index + 1)) == "}",
+        #    ignored_indices
+        #))
+        #unclosed_left_braces = 0
+        #unclosed_right_braces = 0
+        #for index in range(*adjusted_span):
+        #    if index in left_brace_indices:
+        #        unclosed_left_braces += 1
+        #    elif index in right_brace_indices:
+        #        if unclosed_left_braces == 0:
+        #            unclosed_right_braces += 1
+        #        else:
+        #            unclosed_left_braces -= 1
+        #adjusted_span, unclosed_left_braces, unclosed_right_braces \
+        #    = self.adjust_span(span, align_level=False)
+        #print(self.get_substr(span), "".join([
+        #    unclosed_right_braces * "{",
+        #    self.get_substr(shrinked_span),
+        #    unclosed_left_braces * "}"
+        #]))
+        #result = "".join([
+        #    unclosed_right_braces * "{",
+        #    self.get_substr(shrinked_span),
+        #    unclosed_left_braces * "}"
+        #])
+        #return re.sub(r"\s+", " ", result)
+
+        #return (span_begin, span_end)
+        #return self.get_substr(span)   # TODO: test
         #left_brace_indices = [
         #    span_begin - 1
         #    for span_begin, _ in self.brace_content_spans
