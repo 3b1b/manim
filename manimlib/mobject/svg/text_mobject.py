@@ -71,15 +71,8 @@ MARKUP_TAG_CONVERSION_DICT = {
     "tt": {"font_family": "monospace"},
     "u": {"underline": "single"},
 }
-# See https://gitlab.gnome.org/GNOME/glib/-/blob/main/glib/gmarkup.c
-# Line 629, 2204
-XML_ENTITIES = (
-    ("<", "&lt;"),
-    (">", "&gt;"),
-    ("&", "&amp;"),
-    ("\"", "&quot;"),
-    ("'", "&apos;")
-)
+XML_ENTITIES = ("&lt;", "&gt;", "&amp;", "&quot;", "&apos;")
+XML_ENTITY_CHARS = "<>&\"'"
 
 
 # Temporary handler
@@ -240,68 +233,50 @@ class MarkupText(LabelledString):
             f"{validate_error}"
         )
 
-    #@property
-    #def sort_labelled_submobs(self) -> bool:
-    #    return True
-
-    # Toolkits
-
-    @staticmethod
-    def get_tag_string_pair(
-        attr_dict: dict[str, str], label_hex: str | None
-    ) -> tuple[str, str]:
-        if label_hex is not None:
-            converted_attr_dict = {"foreground": label_hex}
-            for key, val in attr_dict.items():
-                substitute_key = MARKUP_COLOR_KEYS_DICT.get(key.lower(), None)
-                if substitute_key is None:
-                    converted_attr_dict[key] = val
-                elif substitute_key:
-                    converted_attr_dict[key] = "black"
-                #else:
-                #    converted_attr_dict[key] = "black"
-        else:
-            converted_attr_dict = attr_dict.copy()
-        attrs_str = " ".join([
-            f"{key}='{val}'"
-            for key, val in converted_attr_dict.items()
-        ])
-        return (f"<span {attrs_str}>", "</span>")
-
-    def get_global_attr_dict(self) -> dict[str, str]:
-        result = {
-            "foreground": self.base_color_hex,
-            "font_family": self.font,
-            "font_style": self.slant,
-            "font_weight": self.weight,
-            "font_size": str(self.font_size * 1024),
-        }
-        # `line_height` attribute is supported since Pango 1.50.
-        pango_version = manimpango.pango_version()
-        if tuple(map(int, pango_version.split("."))) < (1, 50):
-            if self.lsh is not None:
-                log.warning(
-                    "Pango version %s found (< 1.50), "
-                    "unable to set `line_height` attribute",
-                    pango_version
-                )
-        else:
-            line_spacing_scale = self.lsh or DEFAULT_LINE_SPACING_SCALE
-            result["line_height"] = str(((line_spacing_scale) + 1) * 0.6)
-        return result
-
     # Parsing
 
-    def get_command_spans(self) -> tuple[list[Span], list[Span], list[Span]]:
-        begin_cmd_spans = self.find_spans(
-            r"<\w+\s*(?:\w+\s*\=\s*(['\x22])[\s\S]*?\1\s*)*>"
-        )
-        end_cmd_spans = self.find_spans(r"</\w+\s*>")
+    def get_cmd_spans(self) -> tuple[list[Span], list[Span], list[Span]]:
         if not self.is_markup:
-            cmd_spans = []
-        else:
-            cmd_spans = self.find_spans(r"&[\s\S]*?;")  # TODO
-        return begin_cmd_spans, end_cmd_spans, cmd_spans
+            return [], [], self.find_spans(r"[<>&\x22']")
+
+        # See https://gitlab.gnome.org/GNOME/glib/-/blob/main/glib/gmarkup.c
+        string = self.string
+        cmd_spans = []
+        cmd_pattern = re.compile(r"""
+            &[\s\S]*?;                  # entity & character reference
+            |</?\w+(?:\s*\w+\s*\=\s*(['"])[\s\S]*?\1)*/?>  # tag
+            |<\?[\s\S]*?\?>|<\?>        # instruction
+            |<!--[\s\S]*?-->|<!---?>    # comment
+            |<!\[CDATA\[[\s\S]*?\]\]>   # cdata
+            |<!DOCTYPE                  # doctype (require balancing groups)
+            |[>"']                      # characters to escape
+        """, re.X)
+        match_obj = cmd_pattern.search(string)
+        while match_obj:
+            span_begin, span_end = match_obj.span()
+            if match_obj.group() == "<!DOCTYPE":
+                balance = 1
+                while balance != 0:
+                    angle_match_obj = re.compile(r"[<>]").search(
+                        string, pos=span_end
+                    )
+                    balance += {"<": 1, ">": -1}[angle_match_obj.group()]
+                    span_end = angle_match_obj.end()
+            cmd_spans.append((span_begin, span_end))
+            match_obj = cmd_pattern.search(string, pos=span_end)
+
+        begin_cmd_spans = []
+        end_cmd_spans = []
+        other_cmd_spans = []
+        for cmd_span in cmd_spans:
+            substr = self.get_substr(cmd_span)
+            if re.fullmatch(r"<\w[\s\S]*[^/]>", substr):
+                begin_cmd_spans.append(cmd_span)
+            elif substr.startswith("</"):
+                end_cmd_spans.append(cmd_span)
+            else:
+                other_cmd_spans.append(cmd_span)
+        return begin_cmd_spans, end_cmd_spans, other_cmd_spans
 
     def get_specified_items(
         self, cmd_span_pairs: list[tuple[Span, Span]]
@@ -323,8 +298,6 @@ class MarkupText(LabelledString):
             )
 
         return [
-            (self.full_span, self.get_global_attr_dict()),
-            (self.full_span, self.global_config),
             *internal_items,
             *[
                 (span, {key: val})
@@ -341,34 +314,83 @@ class MarkupText(LabelledString):
                 (span, local_config)
                 for selector, local_config in self.local_configs.items()
                 for span in self.find_spans_by_selector(selector)
+            ],
+            *[
+                (span, {})
+                for span in self.find_spans_by_selector(self.isolate)
             ]
         ]
 
-    def get_replaced_substr(self, substr: str, flag: int) -> str:
-        if flag:
+    def get_repl_substr_for_content(self, substr: str) -> str:
+        if substr.startswith("<") and substr.endswith(">"):
             return ""
-        return dict(XML_ENTITIES).get(substr, substr)
+        if substr in XML_ENTITY_CHARS:
+            return XML_ENTITIES[XML_ENTITY_CHARS.index(substr)]
+        return substr
 
-    def get_full_content_string(self, content_string: str, is_labelled: bool) -> str:
-        return content_string
+    def get_repl_substr_for_matching(self, substr: str) -> str:
+        if substr.startswith("<") and substr.endswith(">"):
+            return ""
+        if substr in XML_ENTITIES:
+            return XML_ENTITY_CHARS[XML_ENTITIES.index(substr)]
+        if substr.startswith("&#") and substr.endswith(";"):
+            if substr.startswith("&#x"):
+                char_reference = int(substr[3:-1], 16)
+            else:
+                char_reference = int(substr[2:-1], 10)
+            return chr(char_reference)
+        return substr
 
-    # Selector
+    @staticmethod
+    def get_cmd_str_pair(
+        attr_dict: dict[str, str], label_hex: str | None
+    ) -> tuple[str, str]:
+        if label_hex is not None:
+            converted_attr_dict = {"foreground": label_hex}
+            for key, val in attr_dict.items():
+                substitute_key = MARKUP_COLOR_KEYS_DICT.get(key.lower(), None)
+                if substitute_key is None:
+                    converted_attr_dict[key] = val
+                elif substitute_key:
+                    converted_attr_dict[key] = "black"
+        else:
+            converted_attr_dict = attr_dict.copy()
+        attrs_str = " ".join([
+            f"{key}='{val}'"
+            for key, val in converted_attr_dict.items()
+        ])
+        return f"<span {attrs_str}>", "</span>"
 
-    def get_cleaned_substr(self, span: Span) -> str:
-        filtered_repl_items = []
-        entity_to_char_dict = {
-            entity: char
-            for char, entity in XML_ENTITIES
+    def get_content_prefix_and_suffix(
+        self, is_labelled: bool
+    ) -> tuple[str, str]:
+        global_attr_dict = {
+            "foreground": self.base_color_hex,
+            "font_family": self.font,
+            "font_style": self.slant,
+            "font_weight": self.weight,
+            "font_size": str(self.font_size * 1024),
         }
-        for cmd_span, replaced_substr in self.command_repl_items:
-            if not self.span_contains(span, cmd_span):
-                continue
-            if re.fullmatch(r"&[\s\S]*;", replaced_substr):
-                if replaced_substr in entity_to_char_dict:
-                    replaced_substr = entity_to_char_dict[replaced_substr]
-            filtered_repl_items.append((cmd_span, replaced_substr))
+        global_attr_dict.update(self.global_config)
+        # `line_height` attribute is supported since Pango 1.50.
+        pango_version = manimpango.pango_version()
+        if tuple(map(int, pango_version.split("."))) < (1, 50):
+            if self.lsh is not None:
+                log.warning(
+                    "Pango version %s found (< 1.50), "
+                    "unable to set `line_height` attribute",
+                    pango_version
+                )
+        else:
+            line_spacing_scale = self.lsh or DEFAULT_LINE_SPACING_SCALE
+            global_attr_dict["line_height"] = str(
+                ((line_spacing_scale) + 1) * 0.6
+            )
 
-        return self.replace_string(span, filtered_repl_items).strip()  # TODO
+        return self.get_cmd_str_pair(
+            global_attr_dict,
+            label_hex=self.int_to_hex(0) if is_labelled else None
+        )
 
     # Method alias
 

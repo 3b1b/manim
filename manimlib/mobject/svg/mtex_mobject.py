@@ -73,42 +73,21 @@ class MTex(LabelledString):
             file_path = tex_to_svg_file(full_tex)
         return file_path
 
-    #@property
-    #def sort_labelled_submobs(self) -> bool:
-    #    return False
-
-    # Toolkits
-
-    @staticmethod
-    def get_color_command_str(rgb_hex: str) -> str:
-        rgb = MTex.hex_to_int(rgb_hex)
-        rg, b = divmod(rgb, 256)
-        r, g = divmod(rg, 256)
-        return f"\\color[RGB]{{{r}, {g}, {b}}}"
-
-    @staticmethod
-    def get_tag_string_pair(
-        attr_dict: dict[str, str], label_hex: str | None
-    ) -> tuple[str, str]:
-        if label_hex is None:
-            return ("", "")
-        return ("{{" + MTex.get_color_command_str(label_hex), "}}")
-
     # Parsing
 
-    def get_command_spans(self) -> tuple[list[Span], list[Span], list[Span]]:
-        cmd_spans = self.find_spans(r"\\(?:[a-zA-Z]+|\s|\S)")
-        begin_cmd_spans = [
-            span
-            for span in self.find_spans("{")
-            if (span[0] - 1, span[1]) not in cmd_spans
-        ]
-        end_cmd_spans = [
-            span
-            for span in self.find_spans("}")
-            if (span[0] - 1, span[1]) not in cmd_spans
-        ]
-        return begin_cmd_spans, end_cmd_spans, cmd_spans
+    def get_cmd_spans(self) -> tuple[list[Span], list[Span], list[Span]]:
+        backslash_spans = self.find_spans(r"\\(?:[a-zA-Z]+|\s|\S)")
+        def find_unescaped_spans(pattern):
+            return list(filter(
+                lambda span: (span[0] - 1, span[1]) not in backslash_spans,
+                self.find_spans(pattern)
+            ))
+
+        return (
+            find_unescaped_spans(r"{"),
+            find_unescaped_spans(r"}"),
+            backslash_spans + find_unescaped_spans(r"[_^]")
+        )
 
     def get_specified_items(
         self, cmd_span_pairs: list[tuple[Span, Span]]
@@ -117,8 +96,8 @@ class MTex(LabelledString):
             (span_begin, span_end)
             for (_, span_begin), (span_end, _) in cmd_span_pairs
         ]
-        specified_spans = self.chain(
-            [
+        specified_spans = [
+            *[
                 cmd_content_spans[range_begin]
                 for _, (range_begin, range_end) in self.compress_neighbours([
                     (span_begin + index, span_end - index)
@@ -128,77 +107,57 @@ class MTex(LabelledString):
                 ])
                 if range_end - range_begin >= 2
             ],
-            [
+            *[
                 span
                 for selector in self.tex_to_color_map
                 for span in self.find_spans_by_selector(selector)
             ],
-            self.find_spans_by_selector(self.isolate)
-        )
+            *self.find_spans_by_selector(self.isolate)
+        ]
         return [(span, {}) for span in specified_spans]
 
-    def get_replaced_substr(self, substr: str, flag: int) -> str:
+    def get_repl_substr_for_content(self, substr: str) -> str:
         return substr
 
-    def get_full_content_string(self, content_string: str, is_labelled: bool) -> str:
-        result = content_string
+    def get_repl_substr_for_matching(self, substr: str) -> str:
+        return substr if substr.startswith("\\") else ""
 
+    @staticmethod
+    def get_color_cmd_str(rgb_hex: str) -> str:
+        rgb = MTex.hex_to_int(rgb_hex)
+        rg, b = divmod(rgb, 256)
+        r, g = divmod(rg, 256)
+        return f"\\color[RGB]{{{r}, {g}, {b}}}"
+
+    @staticmethod
+    def get_cmd_str_pair(
+        attr_dict: dict[str, str], label_hex: str | None
+    ) -> tuple[str, str]:
+        if label_hex is None:
+            return "", ""
+        return "{{" + MTex.get_color_cmd_str(label_hex), "}}"
+
+    def get_content_prefix_and_suffix(
+        self, is_labelled: bool
+    ) -> tuple[str, str]:
+        prefix_lines = []
+        suffix_lines = []
+        if not is_labelled:
+            prefix_lines.append(self.get_color_cmd_str(self.base_color_hex))
+        if self.alignment:
+            prefix_lines.append(self.alignment)
         if self.tex_environment:
             if isinstance(self.tex_environment, str):
-                prefix = f"\\begin{{{self.tex_environment}}}"
-                suffix = f"\\end{{{self.tex_environment}}}"
+                env_prefix = f"\\begin{{{self.tex_environment}}}"
+                env_suffix = f"\\end{{{self.tex_environment}}}"
             else:
-                prefix, suffix = self.tex_environment
-            result = "\n".join([prefix, result, suffix])
-        if self.alignment:
-            result = "\n".join([self.alignment, result])
-
-        if not is_labelled:
-            result = "\n".join([
-                self.get_color_command_str(self.base_color_hex),
-                result
-            ])
-        return result
-
-    # Selector
-
-    def get_cleaned_substr(self, span: Span) -> str:
-        backslash_indices = [
-            index for index, _ in self.find_spans(r"\\[\s\S]")
-        ]
-        ignored_indices = [
-            index
-            for index, _ in self.find_spans(r"[\s_^{}]")
-            if index - 1 not in backslash_indices
-        ]
-        span_begin, span_end = span
-        while span_begin in ignored_indices:
-            span_begin += 1
-        while span_end - 1 in ignored_indices:
-            span_end -= 1
-        shrinked_span = (span_begin, span_end)
-
-        whitespace_repl_items = []
-        for whitespace_span in self.find_spans(r"\s+"):
-            if not self.span_contains(shrinked_span, whitespace_span):
-                continue
-            if whitespace_span[0] - 1 in backslash_indices:
-                whitespace_span = (whitespace_span[0] + 1, whitespace_span[1])
-            if all(
-                self.get_substr((index, index + 1)).isalpha()
-                for index in (whitespace_span[0] - 1, whitespace_span[1])
-            ):
-                replaced_substr = " "
-            else:
-                replaced_substr = ""
-            whitespace_repl_items.append((whitespace_span, replaced_substr))
-
-        _, unclosed_right_braces, unclosed_left_braces = self.split_span_by_levels(shrinked_span)
-        return "".join([
-            unclosed_right_braces * "{",
-            self.replace_string(shrinked_span, whitespace_repl_items),
-            unclosed_left_braces * "}"
-        ])
+                env_prefix, env_suffix = self.tex_environment
+            prefix_lines.append(env_prefix)
+            suffix_lines.append(env_suffix)
+        return (
+            "".join([line + "\n" for line in prefix_lines]),
+            "".join(["\n" + line for line in suffix_lines])
+        )
 
     # Method alias
 
