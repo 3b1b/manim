@@ -73,7 +73,7 @@ class InteractiveScene(Scene):
     palette_colors = MANIM_COLORS
     selection_nudge_size = 0.05
     cursor_location_config = dict(
-        font_size=14,
+        font_size=24,
         fill_color=GREY_C,
         num_decimal_places=3,
     )
