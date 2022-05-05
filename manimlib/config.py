@@ -337,6 +337,16 @@ def get_configuration(args):
     else:
         file_ext = ".mp4"
 
+    dir_config = custom_config["directories"]
+    output_directory = args.video_dir or dir_config["output"]
+    if dir_config["mirror_module_path"]:
+        to_cut = dir_config["removed_mirror_prefix"]
+        input_file = os.path.abspath(args.file)
+        output_directory = os.path.join(
+            output_directory,
+            input_file.replace(to_cut, "").replace(".py", "")
+        )
+
     file_writer_config = {
         "write_to_movie": not args.skip_animations and write_file,
         "break_into_partial_movies": custom_config["break_into_partial_movies"],
@@ -345,8 +355,7 @@ def get_configuration(args):
         # If -t is passed in (for transparent), this will be RGBA
         "png_mode": "RGBA" if args.transparent else "RGB",
         "movie_file_extension": file_ext,
-        "mirror_module_path": custom_config["directories"]["mirror_module_path"],
-        "output_directory": args.video_dir or custom_config["directories"]["output"],
+        "output_directory": output_directory,
         "file_name": args.file_name,
         "input_file_path": args.file or "",
         "open_file_upon_completion": args.open,

@@ -37,9 +37,6 @@ class SceneFileWriter(object):
         "png_mode": "RGBA",
         "save_last_frame": False,
         "movie_file_extension": ".mp4",
-        # Should the path of output files mirror the directory
-        # structure of the module holding the scene?
-        "mirror_module_path": False,
         # What python file is generating this scene
         "input_file_path": "",
         # Where should this be written
@@ -63,10 +60,6 @@ class SceneFileWriter(object):
     # Output directories and files
     def init_output_directories(self) -> None:
         out_dir = self.output_directory or ""
-        if self.mirror_module_path:
-            module_dir = self.get_default_module_directory()
-            out_dir = os.path.join(out_dir, module_dir)
-
         scene_name = self.file_name or self.get_default_scene_name()
         if self.save_last_frame:
             image_dir = guarantee_existence(os.path.join(out_dir, "images"))
@@ -81,7 +74,9 @@ class SceneFileWriter(object):
                     movie_dir, "partial_movie_files", scene_name,
                 ))
         # A place to save mobjects
-        self.saved_mobject_directory = os.path.join(out_dir, "mobjects")
+        self.saved_mobject_directory = os.path.join(
+            out_dir, "mobjects", str(self.scene)
+        )
 
     def get_default_module_directory(self) -> str:
         path, _ = os.path.splitext(self.input_file_path)
@@ -124,10 +119,7 @@ class SceneFileWriter(object):
         return self.movie_file_path
 
     def get_saved_mobject_directory(self) -> str:
-        return guarantee_existence(os.path.join(
-            self.saved_mobject_directory,
-            str(self.scene),
-        ))
+        return guarantee_existence(self.saved_mobject_directory)
 
     def get_saved_mobject_path(self, mobject: Mobject) -> str | None:
         directory = self.get_saved_mobject_directory()
