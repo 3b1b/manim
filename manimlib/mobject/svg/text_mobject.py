@@ -49,32 +49,6 @@ DEFAULT_CANVAS_WIDTH = 16384
 DEFAULT_CANVAS_HEIGHT = 16384
 
 
-# See https://docs.gtk.org/Pango/pango_markup.html
-MARKUP_COLOR_KEYS_DICT = {
-    "foreground": False,
-    "fgcolor": False,
-    "color": False,
-    "background": True,
-    "bgcolor": True,
-    "underline_color": True,
-    "overline_color": True,
-    "strikethrough_color": True,
-}
-MARKUP_TAG_CONVERSION_DICT = {
-    "b": {"font_weight": "bold"},
-    "big": {"font_size": "larger"},
-    "i": {"font_style": "italic"},
-    "s": {"strikethrough": "true"},
-    "sub": {"baseline_shift": "subscript", "font_scale": "subscript"},
-    "sup": {"baseline_shift": "superscript", "font_scale": "superscript"},
-    "small": {"font_size": "smaller"},
-    "tt": {"font_family": "monospace"},
-    "u": {"underline": "single"},
-}
-XML_ENTITIES = ("&lt;", "&gt;", "&amp;", "&quot;", "&apos;")
-XML_ENTITY_CHARS = "<>&\"'"
-
-
 # Temporary handler
 class _Alignment:
     VAL_DICT = {
@@ -107,11 +81,31 @@ class MarkupText(LabelledString):
         "t2w": {},
         "global_config": {},
         "local_configs": {},
-        # When attempting to slice submobs via `get_part_by_text` thereafter,
-        # it's recommended to explicitly specify them in `isolate` attribute
-        # when initializing.
         # For backward compatibility
         "isolate": (re.compile(r"[a-zA-Z]+"), re.compile(r"\S+")),
+    }
+
+    # See https://docs.gtk.org/Pango/pango_markup.html
+    MARKUP_COLOR_KEYS = {
+        "foreground": False,
+        "fgcolor": False,
+        "color": False,
+        "background": True,
+        "bgcolor": True,
+        "underline_color": True,
+        "overline_color": True,
+        "strikethrough_color": True,
+    }
+    MARKUP_TAGS = {
+        "b": {"font_weight": "bold"},
+        "big": {"font_size": "larger"},
+        "i": {"font_style": "italic"},
+        "s": {"strikethrough": "true"},
+        "sub": {"baseline_shift": "subscript", "font_scale": "subscript"},
+        "sup": {"baseline_shift": "superscript", "font_scale": "superscript"},
+        "small": {"font_size": "smaller"},
+        "tt": {"font_family": "monospace"},
+        "u": {"underline": "single"},
     }
 
     def __init__(self, text: str, **kwargs):
@@ -235,53 +229,28 @@ class MarkupText(LabelledString):
 
     # Parsing
 
-    def get_cmd_spans(self) -> tuple[list[Span], list[Span], list[Span]]:
+    def get_cmd_spans(self) -> list[Span]:
         if not self.is_markup:
-            return [], [], self.find_spans(r"[<>&\x22']")
+            return self.find_spans(r"""[<>&"']""")
 
+        # Unsupported passthroughs:
+        # "<?...?>", "<!--...-->", "<![CDATA[...]]>", "<!DOCTYPE...>"
         # See https://gitlab.gnome.org/GNOME/glib/-/blob/main/glib/gmarkup.c
-        string = self.string
-        cmd_spans = []
-        cmd_pattern = re.compile(r"""
-            &[\s\S]*?;                  # entity & character reference
-            |</?\w+(?:\s*\w+\s*\=\s*(['"])[\s\S]*?\1)*/?>  # tag
-            |<\?[\s\S]*?\?>|<\?>        # instruction
-            |<!--[\s\S]*?-->|<!---?>    # comment
-            |<!\[CDATA\[[\s\S]*?\]\]>   # cdata
-            |<!DOCTYPE                  # doctype (require balancing groups)
-            |[>"']                      # characters to escape
-        """, re.X)
-        match_obj = cmd_pattern.search(string)
-        while match_obj:
-            span_begin, span_end = match_obj.span()
-            if match_obj.group() == "<!DOCTYPE":
-                balance = 1
-                while balance != 0:
-                    angle_match_obj = re.compile(r"[<>]").search(
-                        string, pos=span_end
-                    )
-                    balance += {"<": 1, ">": -1}[angle_match_obj.group()]
-                    span_end = angle_match_obj.end()
-            cmd_spans.append((span_begin, span_end))
-            match_obj = cmd_pattern.search(string, pos=span_end)
+        return self.find_spans(
+            r"""&[\s\S]*?;|[>"']|</?\w+(?:\s*\w+\s*\=\s*(["'])[\s\S]*?\1)*/?>"""
+        )
 
-        begin_cmd_spans = []
-        end_cmd_spans = []
-        other_cmd_spans = []
-        for cmd_span in cmd_spans:
-            substr = self.get_substr(cmd_span)
-            if re.fullmatch(r"<\w[\s\S]*[^/]>", substr):
-                begin_cmd_spans.append(cmd_span)
-            elif substr.startswith("</"):
-                end_cmd_spans.append(cmd_span)
-            else:
-                other_cmd_spans.append(cmd_span)
-        return begin_cmd_spans, end_cmd_spans, other_cmd_spans
+    def get_substr_flag(self, substr: str) -> int:
+        if re.fullmatch(r"<\w[\s\S]*[^/]>", substr):
+            return 1
+        if substr.startswith("</"):
+            return -1
+        return 0
 
     def get_specified_items(
         self, cmd_span_pairs: list[tuple[Span, Span]]
     ) -> list[tuple[Span, dict[str, str]]]:
-        attr_pattern = r"(\w+)\s*\=\s*(['\x22])([\s\S]*?)\2"
+        attr_pattern = r"""(\w+)\s*\=\s*(["'])([\s\S]*?)\2"""
         internal_items = []
         for begin_cmd_span, end_cmd_span in cmd_span_pairs:
             begin_tag = self.get_substr(begin_cmd_span)
@@ -292,7 +261,7 @@ class MarkupText(LabelledString):
                     for attr_match_obj in re.finditer(attr_pattern, begin_tag)
                 }
             else:
-                attr_dict = MARKUP_TAG_CONVERSION_DICT.get(tag_name, {})
+                attr_dict = MarkupText.MARKUP_TAGS.get(tag_name, {})
             internal_items.append(
                 ((begin_cmd_span[1], end_cmd_span[0]), attr_dict)
             )
@@ -324,22 +293,30 @@ class MarkupText(LabelledString):
     def get_repl_substr_for_content(self, substr: str) -> str:
         if substr.startswith("<") and substr.endswith(">"):
             return ""
-        if substr in XML_ENTITY_CHARS:
-            return XML_ENTITIES[XML_ENTITY_CHARS.index(substr)]
-        return substr
+        return {
+            "<": "&lt;",
+            ">": "&gt;",
+            "&": "&amp;",
+            "\"": "&quot;",
+            "'": "&apos;"
+        }.get(substr, substr)
 
     def get_repl_substr_for_matching(self, substr: str) -> str:
         if substr.startswith("<") and substr.endswith(">"):
             return ""
-        if substr in XML_ENTITIES:
-            return XML_ENTITY_CHARS[XML_ENTITIES.index(substr)]
         if substr.startswith("&#") and substr.endswith(";"):
             if substr.startswith("&#x"):
                 char_reference = int(substr[3:-1], 16)
             else:
                 char_reference = int(substr[2:-1], 10)
             return chr(char_reference)
-        return substr
+        return {
+            "&lt;": "<",
+            "&gt;": ">",
+            "&amp;": "&",
+            "&quot;": "\"",
+            "&apos;": "'"
+        }.get(substr, substr)
 
     @staticmethod
     def get_cmd_str_pair(
@@ -348,7 +325,7 @@ class MarkupText(LabelledString):
         if label_hex is not None:
             converted_attr_dict = {"foreground": label_hex}
             for key, val in attr_dict.items():
-                substitute_key = MARKUP_COLOR_KEYS_DICT.get(key.lower(), None)
+                substitute_key = MarkupText.MARKUP_COLOR_KEYS.get(key, None)
                 if substitute_key is None:
                     converted_attr_dict[key] = val
                 elif substitute_key:

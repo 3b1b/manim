@@ -75,19 +75,11 @@ class MTex(LabelledString):
 
     # Parsing
 
-    def get_cmd_spans(self) -> tuple[list[Span], list[Span], list[Span]]:
-        backslash_spans = self.find_spans(r"\\(?:[a-zA-Z]+|\s|\S)")
-        def find_unescaped_spans(pattern):
-            return list(filter(
-                lambda span: (span[0] - 1, span[1]) not in backslash_spans,
-                self.find_spans(pattern)
-            ))
+    def get_cmd_spans(self) -> list[Span]:
+        return self.find_spans(r"\\(?:[a-zA-Z]+|\s|\S)|[_^{}]")
 
-        return (
-            find_unescaped_spans(r"{"),
-            find_unescaped_spans(r"}"),
-            backslash_spans + find_unescaped_spans(r"[_^]")
-        )
+    def get_substr_flag(self, substr: str) -> int:
+        return {"{": 1, "}": -1}.get(substr, 0)
 
     def get_specified_items(
         self, cmd_span_pairs: list[tuple[Span, Span]]
