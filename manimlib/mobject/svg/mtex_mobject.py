@@ -81,6 +81,12 @@ class MTex(LabelledString):
     def get_substr_flag(self, substr: str) -> int:
         return {"{": 1, "}": -1}.get(substr, 0)
 
+    def get_repl_substr_for_content(self, substr: str) -> str:
+        return substr
+
+    def get_repl_substr_for_matching(self, substr: str) -> str:
+        return substr if substr.startswith("\\") else ""
+
     def get_specified_items(
         self, cmd_span_pairs: list[tuple[Span, Span]]
     ) -> list[tuple[Span, dict[str, str]]]:
@@ -107,12 +113,6 @@ class MTex(LabelledString):
             *self.find_spans_by_selector(self.isolate)
         ]
         return [(span, {}) for span in specified_spans]
-
-    def get_repl_substr_for_content(self, substr: str) -> str:
-        return substr
-
-    def get_repl_substr_for_matching(self, substr: str) -> str:
-        return substr if substr.startswith("\\") else ""
 
     @staticmethod
     def get_color_cmd_str(rgb_hex: str) -> str:

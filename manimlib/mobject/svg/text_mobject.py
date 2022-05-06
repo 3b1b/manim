@@ -247,6 +247,34 @@ class MarkupText(LabelledString):
             return -1
         return 0
 
+    def get_repl_substr_for_content(self, substr: str) -> str:
+        if substr.startswith("<") and substr.endswith(">"):
+            return ""
+        return {
+            "<": "&lt;",
+            ">": "&gt;",
+            "&": "&amp;",
+            "\"": "&quot;",
+            "'": "&apos;"
+        }.get(substr, substr)
+
+    def get_repl_substr_for_matching(self, substr: str) -> str:
+        if substr.startswith("<") and substr.endswith(">"):
+            return ""
+        if substr.startswith("&#") and substr.endswith(";"):
+            if substr.startswith("&#x"):
+                char_reference = int(substr[3:-1], 16)
+            else:
+                char_reference = int(substr[2:-1], 10)
+            return chr(char_reference)
+        return {
+            "&lt;": "<",
+            "&gt;": ">",
+            "&amp;": "&",
+            "&quot;": "\"",
+            "&apos;": "'"
+        }.get(substr, substr)
+
     def get_specified_items(
         self, cmd_span_pairs: list[tuple[Span, Span]]
     ) -> list[tuple[Span, dict[str, str]]]:
@@ -289,34 +317,6 @@ class MarkupText(LabelledString):
                 for span in self.find_spans_by_selector(self.isolate)
             ]
         ]
-
-    def get_repl_substr_for_content(self, substr: str) -> str:
-        if substr.startswith("<") and substr.endswith(">"):
-            return ""
-        return {
-            "<": "&lt;",
-            ">": "&gt;",
-            "&": "&amp;",
-            "\"": "&quot;",
-            "'": "&apos;"
-        }.get(substr, substr)
-
-    def get_repl_substr_for_matching(self, substr: str) -> str:
-        if substr.startswith("<") and substr.endswith(">"):
-            return ""
-        if substr.startswith("&#") and substr.endswith(";"):
-            if substr.startswith("&#x"):
-                char_reference = int(substr[3:-1], 16)
-            else:
-                char_reference = int(substr[2:-1], 10)
-            return chr(char_reference)
-        return {
-            "&lt;": "<",
-            "&gt;": ">",
-            "&amp;": "&",
-            "&quot;": "\"",
-            "&apos;": "'"
-        }.get(substr, substr)
 
     @staticmethod
     def get_cmd_str_pair(

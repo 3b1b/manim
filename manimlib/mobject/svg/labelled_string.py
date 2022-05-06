@@ -212,24 +212,6 @@ class LabelledString(SVGMobject, ABC):
         return list(zip(unique_vals, val_ranges))
 
     @staticmethod
-    def sort_obj_pairs_by_spans(
-        obj_pairs: list[tuple[Span, tuple[T, T]]]
-    ) -> list[tuple[int, T]]:
-        return sorted([
-            (index, obj)
-            for (index, _), obj in [
-                *sorted([
-                    (span[::-1], end_obj)
-                    for span, (_, end_obj) in reversed(obj_pairs)
-                ], key=lambda t: (t[0][0], -t[0][1])),
-                *sorted([
-                    (span, begin_obj)
-                    for span, (begin_obj, _) in obj_pairs
-                ], key=lambda t: (t[0][0], -t[0][1]))
-            ]
-        ], key=lambda t: t[0])
-
-    @staticmethod
     def span_contains(span_0: Span, span_1: Span) -> bool:
         return span_0[0] <= span_1[0] and span_0[1] >= span_1[1]
 
@@ -246,13 +228,11 @@ class LabelledString(SVGMobject, ABC):
             (*span_ends, universal_span[1])
         ))
 
-    def replace_string(self, span: Span, repl_items: list[Span, str]):
+    def replace_substr(self, span: Span, repl_items: list[Span, str]):
         if not repl_items:
             return self.get_substr(span)
 
-        repl_spans, repl_strs = zip(*sorted(
-            repl_items, key=lambda t: t[0]
-        ))
+        repl_spans, repl_strs = zip(*sorted(repl_items, key=lambda t: t[0]))
         pieces = [
             self.get_substr(piece_span)
             for piece_span in self.get_complement_spans(span, repl_spans)
@@ -278,7 +258,6 @@ class LabelledString(SVGMobject, ABC):
         cmd_spans = self.get_cmd_spans()
         cmd_substrs = [self.get_substr(span) for span in cmd_spans]
         flags = [self.get_substr_flag(substr) for substr in cmd_substrs]
-
         specified_items = self.get_specified_items(
             self.get_cmd_span_pairs(cmd_spans, flags)
         )
@@ -303,13 +282,6 @@ class LabelledString(SVGMobject, ABC):
         ]
         self.check_overlapping()
 
-        #self.original_content = self.get_content(
-        #    cmd_repl_items_for_content, split_items, is_labelled=False
-        #)
-        #self.labelled_content = self.get_content(
-        #    cmd_repl_items_for_content, split_items, is_labelled=True
-        #)
-
     @abstractmethod
     def get_cmd_spans(self) -> list[Span]:
         return []
@@ -317,6 +289,14 @@ class LabelledString(SVGMobject, ABC):
     @abstractmethod
     def get_substr_flag(self, substr: str) -> int:
         return 0
+
+    @abstractmethod
+    def get_repl_substr_for_content(self, substr: str) -> str:
+        return ""
+
+    @abstractmethod
+    def get_repl_substr_for_matching(self, substr: str) -> str:
+        return ""
 
     @staticmethod
     def get_cmd_span_pairs(
@@ -329,11 +309,11 @@ class LabelledString(SVGMobject, ABC):
                 begin_cmd_spans_stack.append(cmd_span)
             elif flag == -1:
                 if not begin_cmd_spans_stack:
-                    raise ValueError("Missing '{' inserted")
+                    raise ValueError("Missing open command")
                 begin_cmd_span = begin_cmd_spans_stack.pop()
                 result.append((begin_cmd_span, cmd_span))
         if begin_cmd_spans_stack:
-            raise ValueError("Missing '}' inserted")
+            raise ValueError("Missing close command")
         return result
 
     @abstractmethod
@@ -394,14 +374,6 @@ class LabelledString(SVGMobject, ABC):
                 f"'{self.get_substr(span_0)}' and '{self.get_substr(span_1)}'"
             )
 
-    @abstractmethod
-    def get_repl_substr_for_content(self, substr: str) -> str:
-        return ""
-
-    @abstractmethod
-    def get_repl_substr_for_matching(self, substr: str) -> str:
-        return ""
-
     @staticmethod
     @abstractmethod
     def get_cmd_str_pair(
@@ -423,16 +395,27 @@ class LabelledString(SVGMobject, ABC):
             ))
             for label, (span, attr_dict) in enumerate(self.split_items)
         ]
+        inserted_str_items = sorted([
+            (index, s)
+            for (index, _), s in [
+                *sorted([
+                    (span[::-1], end_str)
+                    for span, (_, end_str) in reversed(inserted_str_pairs)
+                ], key=lambda t: (t[0][0], -t[0][1])),
+                *sorted([
+                    (span, begin_str)
+                    for span, (begin_str, _) in inserted_str_pairs
+                ], key=lambda t: (t[0][0], -t[0][1]))
+            ]
+        ], key=lambda t: t[0])
         repl_items = self.cmd_repl_items_for_content + [
             ((index, index), inserted_str)
-            for index, inserted_str in self.sort_obj_pairs_by_spans(
-                inserted_str_pairs
-            )
+            for index, inserted_str in inserted_str_items
         ]
         prefix, suffix = self.get_content_prefix_and_suffix(is_labelled)
         return "".join([
             prefix,
-            self.replace_string(self.full_span, repl_items),
+            self.replace_substr(self.full_span, repl_items),
             suffix
         ])
 
@@ -483,7 +466,7 @@ class LabelledString(SVGMobject, ABC):
             )
         ]
         group_substrs = [
-            re.sub(r"\s+", "", self.replace_string(
+            re.sub(r"\s+", "", self.replace_substr(
                 span, [
                     (cmd_span, repl_str)
                     for cmd_span, repl_str in self.cmd_repl_items_for_matching
