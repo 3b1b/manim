@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from manimlib.animation.animation import Animation
-from manimlib.mobject.svg.labelled_string import LabelledString
+from manimlib.mobject.svg.string_mobject import StringMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.bezier import integer_interpolate
@@ -212,7 +212,7 @@ class AddTextWordByWord(ShowIncreasingSubsets):
     }
 
     def __init__(self, string_mobject, **kwargs):
-        assert isinstance(string_mobject, LabelledString)
+        assert isinstance(string_mobject, StringMobject)
         grouped_mobject = string_mobject.build_groups()
         digest_config(self, kwargs)
         if self.run_time is None:

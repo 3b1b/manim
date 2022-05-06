@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from manimlib.mobject.svg.labelled_string import LabelledString
+from manimlib.mobject.svg.string_mobject import StringMobject
 from manimlib.utils.tex_file_writing import display_during_execution
 from manimlib.utils.tex_file_writing import get_tex_config
 from manimlib.utils.tex_file_writing import tex_to_svg_file
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 SCALE_FACTOR_PER_FONT_POINT = 0.001
 
 
-class MTex(LabelledString):
+class MTex(StringMobject):
     CONFIG = {
         "font_size": 48,
         "alignment": "\\centering",

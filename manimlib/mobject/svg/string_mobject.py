@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     T = TypeVar("T")
 
 
-class LabelledString(SVGMobject, ABC):
+class StringMobject(SVGMobject, ABC):
     """
     An abstract base class for `MTex` and `MarkupText`
 
@@ -49,9 +49,9 @@ class LabelledString(SVGMobject, ABC):
     or a 2-tuple containing integers or None, or a collection of the above.
     Note, substrings specified cannot *partially* overlap with each other.
 
-    Each instance of `LabelledString` generates 2 svg files.
+    Each instance of `StringMobject` generates 2 svg files.
     The additional one is generated with some color commands inserted,
-    so that each submobject of the original `SVGMobject` will be "labelled"
+    so that each submobject of the original `SVGMobject` will be labelled
     by the color of its paired submobject from the additional `SVGMobject`.
     """
     CONFIG = {
@@ -208,7 +208,7 @@ class LabelledString(SVGMobject, ABC):
             unique_vals.append(val)
             indices.append(index)
         indices.append(len(vals))
-        val_ranges = LabelledString.get_neighbouring_pairs(indices)
+        val_ranges = StringMobject.get_neighbouring_pairs(indices)
         return list(zip(unique_vals, val_ranges))
 
     @staticmethod

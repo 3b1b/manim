@@ -38,8 +38,8 @@ from manimlib.mobject.probability import *
 from manimlib.mobject.shape_matchers import *
 from manimlib.mobject.svg.brace import *
 from manimlib.mobject.svg.drawings import *
-from manimlib.mobject.svg.labelled_string import *
 from manimlib.mobject.svg.mtex_mobject import *
+from manimlib.mobject.svg.string_mobject import *
 from manimlib.mobject.svg.svg_mobject import *
 from manimlib.mobject.svg.tex_mobject import *
 from manimlib.mobject.svg.text_mobject import *

@@ -12,7 +12,7 @@ from manimlib.animation.transform import ReplacementTransform
 from manimlib.animation.transform import Transform
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Group
-from manimlib.mobject.svg.labelled_string import LabelledString
+from manimlib.mobject.svg.string_mobject import StringMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
@@ -160,13 +160,13 @@ class TransformMatchingStrings(AnimationGroup):
     }
 
     def __init__(self,
-        source: LabelledString,
-        target: LabelledString,
+        source: StringMobject,
+        target: StringMobject,
         **kwargs
     ):
         digest_config(self, kwargs)
-        assert isinstance(source, LabelledString)
-        assert isinstance(target, LabelledString)
+        assert isinstance(source, StringMobject)
+        assert isinstance(target, StringMobject)
         anims = []
         source_indices = list(range(len(source.labels)))
         target_indices = list(range(len(target.labels)))
@@ -233,11 +233,11 @@ class TransformMatchingStrings(AnimationGroup):
         )
         add_anims_from(
             FadeTransformPieces,
-            LabelledString.get_specified_part_items
+            StringMobject.get_specified_part_items
         )
         add_anims_from(
             FadeTransformPieces,
-            LabelledString.get_group_part_items
+            StringMobject.get_group_part_items
         )
 
         rest_source = VGroup(*[source[index] for index in source_indices])

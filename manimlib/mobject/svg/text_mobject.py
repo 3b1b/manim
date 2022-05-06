@@ -13,7 +13,7 @@ import pygments.lexers
 from manimlib.constants import DEFAULT_PIXEL_WIDTH, FRAME_WIDTH
 from manimlib.constants import NORMAL
 from manimlib.logger import log
-from manimlib.mobject.svg.labelled_string import LabelledString
+from manimlib.mobject.svg.string_mobject import StringMobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.customization import get_customization
 from manimlib.utils.directories import get_downloads_dir
@@ -61,7 +61,7 @@ class _Alignment:
         self.value = _Alignment.VAL_DICT[s.upper()]
 
 
-class MarkupText(LabelledString):
+class MarkupText(StringMobject):
     CONFIG = {
         "is_markup": True,
         "font_size": 48,
