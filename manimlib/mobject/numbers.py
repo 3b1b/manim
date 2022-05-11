@@ -34,12 +34,13 @@ class DecimalNumber(VMobject):
     def __init__(self, number: float | complex = 0, **kwargs):
         super().__init__(**kwargs)
         self.set_submobjects_from_number(number)
+        self.init_colors()
 
     def set_submobjects_from_number(self, number: float | complex) -> None:
         self.number = number
         self.set_submobjects([])
         self.text_config["font_size"] = self.get_font_size()
-        num_string = self.get_num_string(number)
+        num_string = self.num_string = self.get_num_string(number)
         self.add(*(
             Text(ns, **self.text_config)
             for ns in num_string
@@ -137,11 +138,10 @@ class DecimalNumber(VMobject):
 
     def set_value(self, number: float | complex):
         move_to_point = self.get_edge_center(self.edge_to_fix)
-        old_submobjects = list(self.submobjects)
+        style = self.family_members_with_points()[0].get_style()
         self.set_submobjects_from_number(number)
         self.move_to(move_to_point, self.edge_to_fix)
-        for sm1, sm2 in zip(self.submobjects, old_submobjects):
-            sm1.match_style(sm2)
+        self.set_style(**style)
         return self
 
     def _handle_scale_side_effects(self, scale_factor: float) -> None:
