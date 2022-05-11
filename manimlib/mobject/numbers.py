@@ -132,6 +132,9 @@ class DecimalNumber(VMobject):
             "i"
         ])
 
+    def get_tex(self):
+        return self.num_string
+
     def set_value(self, number: float | complex):
         move_to_point = self.get_edge_center(self.edge_to_fix)
         old_submobjects = list(self.submobjects)
