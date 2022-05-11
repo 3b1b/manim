@@ -492,14 +492,14 @@ class Mobject(object):
         self.move_to(ref_point, about_edge)
         return self
 
-    def arrange_to_fit_width(self, width: float):
-        return self.arrange_to_fit_dim(width, 0)
+    def arrange_to_fit_width(self, width: float, about_edge=ORIGIN):
+        return self.arrange_to_fit_dim(width, 0, about_edge)
 
-    def arrange_to_fit_height(self, height: float):
-        return self.arrange_to_fit_dim(height, 1)
+    def arrange_to_fit_height(self, height: float, about_edge=ORIGIN):
+        return self.arrange_to_fit_dim(height, 1, about_edge)
 
-    def arrange_to_fit_depth(self, depth: float):
-        return self.arrange_to_fit_dim(depth, 2)
+    def arrange_to_fit_depth(self, depth: float, about_edge=ORIGIN):
+        return self.arrange_to_fit_dim(depth, 2, about_edge)
 
     def sort(
         self,
