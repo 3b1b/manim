@@ -191,6 +191,7 @@ class Scene(object):
         # this will revert to the state of the scene at the first
         # point of running.
         def checkpoint_paste(skip=False, show_progress=False):
+        def checkpoint_paste(skip=False, show_progress=True):
             pasted = pyperclip.paste()
             line0 = pasted.lstrip().split("\n")[0]
             if line0.startswith("#"):
