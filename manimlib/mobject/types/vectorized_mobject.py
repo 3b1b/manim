@@ -203,36 +203,38 @@ class VMobject(Mobject):
         shadow: float | None = None,
         recurse: bool = True
     ):
-        if fill_rgba is not None:
-            self.data['fill_rgba'] = resize_with_interpolation(fill_rgba, len(fill_rgba))
-        else:
-            self.set_fill(
-                color=fill_color,
-                opacity=fill_opacity,
-                recurse=recurse
-            )
+        for mob in self.get_family(recurse):
+            if fill_rgba is not None:
+                mob.data['fill_rgba'] = resize_with_interpolation(fill_rgba, len(fill_rgba))
+            else:
+                mob.set_fill(
+                    color=fill_color,
+                    opacity=fill_opacity,
+                    recurse=False
+                )
 
-        if stroke_rgba is not None:
-            self.data['stroke_rgba'] = resize_with_interpolation(stroke_rgba, len(fill_rgba))
-            self.set_stroke(
-                width=stroke_width,
-                background=stroke_background,
-            )
-        else:
-            self.set_stroke(
-                color=stroke_color,
-                width=stroke_width,
-                opacity=stroke_opacity,
-                recurse=recurse,
-                background=stroke_background,
-            )
+            if stroke_rgba is not None:
+                mob.data['stroke_rgba'] = resize_with_interpolation(stroke_rgba, len(fill_rgba))
+                mob.set_stroke(
+                    width=stroke_width,
+                    background=stroke_background,
+                    recurse=False,
+                )
+            else:
+                mob.set_stroke(
+                    color=stroke_color,
+                    width=stroke_width,
+                    opacity=stroke_opacity,
+                    recurse=False,
+                    background=stroke_background,
+                )
 
-        if reflectiveness is not None:
-            self.set_reflectiveness(reflectiveness, recurse=recurse)
-        if gloss is not None:
-            self.set_gloss(gloss, recurse=recurse)
-        if shadow is not None:
-            self.set_shadow(shadow, recurse=recurse)
+            if reflectiveness is not None:
+                mob.set_reflectiveness(reflectiveness, recurse=False)
+            if gloss is not None:
+                mob.set_gloss(gloss, recurse=False)
+            if shadow is not None:
+                mob.set_shadow(shadow, recurse=False)
         return self
 
     def get_style(self):
