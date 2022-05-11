@@ -54,6 +54,7 @@ class SceneFileWriter(object):
         self.scene: Scene = scene
         self.writing_process: sp.Popen | None = None
         self.has_progress_display: bool = False
+        self.ended_with_interrupt: bool = False
         self.init_output_directories()
         self.init_audio()
 
@@ -297,7 +298,11 @@ class SceneFileWriter(object):
         self.writing_process.terminate()
         if self.has_progress_display:
             self.progress_display.close()
-        shutil.move(self.temp_file_path, self.final_file_path)
+
+        if not self.ended_with_interrupt:
+            shutil.move(self.temp_file_path, self.final_file_path)
+        else:
+            self.movie_file_path = self.temp_file_path
 
     def combine_movie_files(self) -> None:
         kwargs = {

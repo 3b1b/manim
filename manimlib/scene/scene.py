@@ -124,6 +124,7 @@ class Scene(object):
         except KeyboardInterrupt:
             # Get rid keyboard interupt symbols
             print("", end="\r")
+            self.file_writer.ended_with_interrupt = True
         self.tear_down()
 
     def setup(self) -> None:
@@ -190,7 +191,6 @@ class Scene(object):
         # As long as the copied selection starts with a comment,
         # this will revert to the state of the scene at the first
         # point of running.
-        def checkpoint_paste(skip=False, show_progress=False):
         def checkpoint_paste(skip=False, show_progress=True):
             pasted = pyperclip.paste()
             line0 = pasted.lstrip().split("\n")[0]
