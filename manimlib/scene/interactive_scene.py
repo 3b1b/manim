@@ -2,7 +2,7 @@ import itertools as it
 import numpy as np
 import pyperclip
 
-from manimlib.animation.fading import FadeIn, FadeOut
+from manimlib.animation.fading import FadeIn
 from manimlib.constants import ARROW_SYMBOLS, CTRL_SYMBOL, DELETE_SYMBOL, SHIFT_SYMBOL
 from manimlib.constants import COMMAND_MODIFIER, SHIFT_MODIFIER
 from manimlib.constants import DL, DOWN, DR, LEFT, ORIGIN, RIGHT, UL, UP, UR
@@ -35,7 +35,7 @@ Y_GRAB_KEY = 'v'
 GRAB_KEYS = [GRAB_KEY, X_GRAB_KEY, Y_GRAB_KEY]
 RESIZE_KEY = 't'
 COLOR_KEY = 'c'
-CURSOR_LOCATION_KEY = 'l'
+INFORMATION_KEY = 'i'
 CURSOR_KEY = 'k'
 
 
@@ -77,6 +77,11 @@ class InteractiveScene(Scene):
         fill_color=GREY_C,
         num_decimal_places=3,
     )
+    time_label_config = dict(
+        font_size=24,
+        fill_color=GREY_C,
+        num_decimal_places=1,
+    )
     crosshair_width = 0.2
     crosshair_color = GREY_A
 
@@ -85,14 +90,14 @@ class InteractiveScene(Scene):
         self.selection_highlight = self.get_selection_highlight()
         self.selection_rectangle = self.get_selection_rectangle()
         self.crosshair = self.get_crosshair()
-        self.cursor_location_label = self.get_cursor_location_label()
+        self.information_label = self.get_information_label()
         self.color_palette = self.get_color_palette()
         self.unselectables = [
             self.selection,
             self.selection_highlight,
             self.selection_rectangle,
             self.crosshair,
-            self.cursor_location_label,
+            self.information_label,
             self.camera.frame
         ]
         self.select_top_level_mobs = True
@@ -160,6 +165,7 @@ class InteractiveScene(Scene):
         crosshair.set_width(self.crosshair_width)
         crosshair.set_stroke(self.crosshair_color, width=[2, 0, 2, 2, 0, 2])
         crosshair.set_animating_status(True)
+        crosshair.fix_in_frame()
         return crosshair
 
     def get_color_palette(self):
@@ -174,22 +180,28 @@ class InteractiveScene(Scene):
         palette.fix_in_frame()
         return palette
 
-    def get_cursor_location_label(self):
-        decimals = VGroup(*(
+    def get_information_label(self):
+        loc_label = VGroup(*(
             DecimalNumber(**self.cursor_location_config)
             for n in range(3)
         ))
 
-        def update_coords(decimals):
-            for mob, coord in zip(decimals, self.mouse_point.get_location()):
+        def update_coords(loc_label):
+            for mob, coord in zip(loc_label, self.mouse_point.get_location()):
                 mob.set_value(coord)
-            decimals.arrange(RIGHT, buff=decimals.get_height())
-            decimals.to_corner(DR, buff=SMALL_BUFF)
-            decimals.fix_in_frame()
-            return decimals
+            loc_label.arrange(RIGHT, buff=loc_label.get_height())
+            loc_label.to_corner(DR, buff=SMALL_BUFF)
+            loc_label.fix_in_frame()
+            return loc_label
 
-        decimals.add_updater(update_coords)
-        return decimals
+        loc_label.add_updater(update_coords)
+
+        time_label = DecimalNumber(0, **self.time_label_config)
+        time_label.to_corner(DL, buff=SMALL_BUFF)
+        time_label.fix_in_frame()
+        time_label.add_updater(lambda m, dt: m.increment_value(dt))
+
+        return VGroup(loc_label, time_label)
 
     # Overrides
     def get_state(self):
@@ -210,6 +222,9 @@ class InteractiveScene(Scene):
     def remove(self, *mobjects: Mobject):
         super().remove(*mobjects)
         self.regenerate_selection_search_set()
+
+    # def increment_time(self, dt: float) -> None:
+    #     super().increment_time(dt)
 
     # Related to selection
 
@@ -391,6 +406,12 @@ class InteractiveScene(Scene):
         else:
             self.remove(self.color_palette)
 
+    def display_information(self, show=True):
+        if show:
+            self.add(self.information_label)
+        else:
+            self.remove(self.information_label)
+
     def group_selection(self):
         group = self.get_group(*self.selection)
         self.add(group)
@@ -432,8 +453,8 @@ class InteractiveScene(Scene):
                 self.prepare_resizing(about_corner=True)
         elif char == COLOR_KEY and modifiers == 0:
             self.toggle_color_palette()
-        elif char == CURSOR_LOCATION_KEY and modifiers == 0:
-            self.add(self.cursor_location_label)
+        elif char == INFORMATION_KEY and modifiers == 0:
+            self.display_information()
         elif char == "c" and modifiers == COMMAND_MODIFIER:
             self.copy_selection()
         elif char == "v" and modifiers == COMMAND_MODIFIER:
@@ -473,8 +494,8 @@ class InteractiveScene(Scene):
             self.gather_new_selection()
         if chr(symbol) in GRAB_KEYS:
             self.is_grabbing = False
-        elif chr(symbol) == CURSOR_LOCATION_KEY:
-            self.remove(self.cursor_location_label)
+        elif chr(symbol) == INFORMATION_KEY:
+            self.display_information(False)
         elif symbol == SHIFT_SYMBOL and self.window.is_key_pressed(ord(RESIZE_KEY)):
             self.prepare_resizing(about_corner=False)
         # Removing crosshair
