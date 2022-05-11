@@ -199,6 +199,7 @@ class Scene(object):
                     self.checkpoint(line0)
                 else:
                     self.revert_to_checkpoint(line0)
+                    self.update_frame(dt=0)
             if skip:
                 originally_skip = self.skip_animations
                 self.skip_animations = True
