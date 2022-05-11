@@ -339,13 +339,13 @@ def get_configuration(args):
 
     dir_config = custom_config["directories"]
     output_directory = args.video_dir or dir_config["output"]
-    if dir_config["mirror_module_path"]:
+    if dir_config["mirror_module_path"] and args.file:
         to_cut = dir_config["removed_mirror_prefix"]
-        input_file = os.path.abspath(args.file)
-        output_directory = os.path.join(
-            output_directory,
-            input_file.replace(to_cut, "").replace(".py", "")
-        )
+        ext = os.path.abspath(args.file)
+        ext = ext.replace(to_cut, "").replace(".py", "")
+        if ext.startswith("_"):
+            ext = ext[1:]
+        output_directory = os.path.join(output_directory, ext)
 
     file_writer_config = {
         "write_to_movie": not args.skip_animations and write_file,
