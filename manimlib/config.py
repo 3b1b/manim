@@ -415,31 +415,31 @@ def get_configuration(args):
 
 def get_camera_configuration(args, custom_config):
     camera_config = {}
-    camera_qualities = get_custom_config()["camera_qualities"]
+    camera_resolutions = get_custom_config()["camera_resolutions"]
     if args.low_quality:
-        quality = camera_qualities["low"]
+        resolution = camera_resolutions["low"]
     elif args.medium_quality:
-        quality = camera_qualities["medium"]
+        resolution = camera_resolutions["med"]
     elif args.hd:
-        quality = camera_qualities["high"]
+        resolution = camera_resolutions["high"]
     elif args.uhd:
-        quality = camera_qualities["ultra_high"]
+        resolution = camera_resolutions["4k"]
     else:
-        quality = camera_qualities[camera_qualities["default_quality"]]
+        resolution = camera_resolutions[camera_resolutions["default_resolution"]]
 
-    if args.resolution:
-        quality["resolution"] = args.resolution
     if args.frame_rate:
-        quality["frame_rate"] = int(args.frame_rate)
+        frame_rate = int(args.frame_rate)
+    else:
+        frame_rate = get_custom_config()["frame_rate"]
 
-    width_str, height_str = quality["resolution"].split("x")
+    width_str, height_str = resolution.split("x")
     width = int(width_str)
     height = int(height_str)
 
     camera_config.update({
         "pixel_width": width,
         "pixel_height": height,
-        "frame_rate": quality["frame_rate"],
+        "frame_rate": frame_rate,
     })
 
     try:
