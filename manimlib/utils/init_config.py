@@ -9,7 +9,7 @@ from rich import box
 from rich.console import Console
 from rich.prompt import Confirm
 from rich.prompt import Prompt
-from rich.rule import Rule 
+from rich.rule import Rule
 from rich.table import Table
 
 from typing import TYPE_CHECKING
@@ -64,7 +64,7 @@ def init_customization() -> None:
             "4k": "3840x2160",
             "default_resolution": "high",
         },
-        "frame_rate": 30,
+        "fps": 30,
     }
 
     console = Console()

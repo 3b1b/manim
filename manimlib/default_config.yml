@@ -48,4 +48,4 @@ camera_resolutions:
   high: "1920x1080"
   4k: "3840x2160"
   default_resolution: "high"
-frame_rate: 30
+fps: 30

@@ -136,7 +136,7 @@ def parse_cli():
             help="Resolution, passed as \"WxH\", e.g. \"1920x1080\"",
         )
         parser.add_argument(
-            "--frame_rate",
+            "--fps",
             help="Frame rate, as an integer",
         )
         parser.add_argument(
@@ -427,10 +427,10 @@ def get_camera_configuration(args, custom_config):
     else:
         resolution = camera_resolutions[camera_resolutions["default_resolution"]]
 
-    if args.frame_rate:
-        frame_rate = int(args.frame_rate)
+    if args.fps:
+        fps = int(args.fps)
     else:
-        frame_rate = get_custom_config()["frame_rate"]
+        fps = get_custom_config()["fps"]
 
     width_str, height_str = resolution.split("x")
     width = int(width_str)
@@ -439,7 +439,7 @@ def get_camera_configuration(args, custom_config):
     camera_config.update({
         "pixel_width": width,
         "pixel_height": height,
-        "frame_rate": frame_rate,
+        "fps": fps,
     })
 
     try:

@@ -97,9 +97,9 @@ class SceneFileWriter(object):
 
     def get_resolution_directory(self) -> str:
         pixel_height = self.scene.camera.pixel_height
-        frame_rate = self.scene.camera.frame_rate
+        fps = self.scene.camera.fps
         return "{}p{}".format(
-            pixel_height, frame_rate
+            pixel_height, fps
         )
 
     # Directory getters
@@ -234,7 +234,7 @@ class SceneFileWriter(object):
         self.final_file_path = file_path
         self.temp_file_path = stem + "_temp" + ext
 
-        fps = self.scene.camera.frame_rate
+        fps = self.scene.camera.fps
         width, height = self.scene.camera.get_pixel_shape()
 
         command = [

@@ -74,7 +74,7 @@ class Scene(object):
             from manimlib.window import Window
             self.window = Window(scene=self, **self.window_config)
             self.camera_config["ctx"] = self.window.ctx
-            self.camera_config["frame_rate"] = 30  # Where's that 30 from?
+            self.camera_config["fps"] = 30  # Where's that 30 from?
             self.undo_stack = []
             self.redo_stack = []
         else:
@@ -161,7 +161,7 @@ class Scene(object):
         self.skip_animations = False
         self.refresh_static_mobjects()
         while not self.is_window_closing():
-            self.update_frame(1 / self.camera.frame_rate)
+            self.update_frame(1 / self.camera.fps)
 
     def embed(self, close_scene_on_exit: bool = True) -> None:
         if not self.preview:
@@ -469,7 +469,7 @@ class Scene(object):
         if self.skip_animations and not override_skip_animations:
             return [run_time]
 
-        times = np.arange(0, run_time, 1 / self.camera.frame_rate)
+        times = np.arange(0, run_time, 1 / self.camera.fps)
 
         if self.file_writer.has_progress_display:
             self.file_writer.set_progress_display_subdescription(desc)
@@ -628,7 +628,7 @@ class Scene(object):
 
     def hold_loop(self):
         while self.hold_on_wait:
-            self.update_frame(dt=1 / self.camera.frame_rate)
+            self.update_frame(dt=1 / self.camera.fps)
         self.hold_on_wait = True
 
     def wait_until(
