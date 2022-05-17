@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import itertools as it
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 import numpy as np
 
 from manimlib.animation.animation import Animation
-from manimlib.mobject.svg.labelled_string import LabelledString
+from manimlib.mobject.svg.string_mobject import StringMobject
+from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.config_ops import digest_config
@@ -17,10 +17,10 @@ from manimlib.utils.rate_functions import smooth
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from manimlib.mobject.mobject import Group
+    from manimlib.mobject.mobject import Mobject
 
 
-class ShowPartial(Animation):
+class ShowPartial(Animation, ABC):
     """
     Abstract class for ShowCreation and ShowPassingFlash
     """
@@ -176,7 +176,7 @@ class ShowIncreasingSubsets(Animation):
         "int_func": np.round,
     }
 
-    def __init__(self, group: Group, **kwargs):
+    def __init__(self, group: Mobject, **kwargs):
         self.all_submobs = list(group.submobjects)
         super().__init__(group, **kwargs)
 
@@ -212,8 +212,8 @@ class AddTextWordByWord(ShowIncreasingSubsets):
     }
 
     def __init__(self, string_mobject, **kwargs):
-        assert isinstance(string_mobject, LabelledString)
-        grouped_mobject = string_mobject.submob_groups
+        assert isinstance(string_mobject, StringMobject)
+        grouped_mobject = string_mobject.build_groups()
         digest_config(self, kwargs)
         if self.run_time is None:
             self.run_time = self.time_per_word * len(grouped_mobject)
