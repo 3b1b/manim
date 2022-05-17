@@ -5,24 +5,24 @@ import itertools as it
 import numpy as np
 
 from manimlib.animation.composition import AnimationGroup
-from manimlib.animation.fading import FadeTransformPieces
 from manimlib.animation.fading import FadeInFromPoint
 from manimlib.animation.fading import FadeOutToPoint
+from manimlib.animation.fading import FadeTransformPieces
 from manimlib.animation.transform import ReplacementTransform
 from manimlib.animation.transform import Transform
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Group
-from manimlib.mobject.svg.labelled_string import LabelledString
+from manimlib.mobject.svg.string_mobject import StringMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.config_ops import digest_config
-from manimlib.utils.iterables import remove_list_redundancies
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from manimlib.mobject.svg.tex_mobject import SingleStringTex
+    from manimlib.mobject.svg.tex_mobject import Tex
     from manimlib.scene.scene import Scene
-    from manimlib.mobject.svg.tex_mobject import Tex, SingleStringTex
 
 
 class TransformMatchingParts(AnimationGroup):
@@ -155,92 +155,89 @@ class TransformMatchingTex(TransformMatchingParts):
 
 class TransformMatchingStrings(AnimationGroup):
     CONFIG = {
-        "key_map": dict(),
+        "key_map": {},
         "transform_mismatches": False,
     }
 
     def __init__(self,
-        source: LabelledString,
-        target: LabelledString,
+        source: StringMobject,
+        target: StringMobject,
         **kwargs
     ):
         digest_config(self, kwargs)
-        assert isinstance(source, LabelledString)
-        assert isinstance(target, LabelledString)
+        assert isinstance(source, StringMobject)
+        assert isinstance(target, StringMobject)
         anims = []
-        source_indices = list(range(len(source.labelled_submobjects)))
-        target_indices = list(range(len(target.labelled_submobjects)))
+        source_indices = list(range(len(source.labels)))
+        target_indices = list(range(len(target.labels)))
 
-        def get_indices_lists(mobject, parts):
-            return [
-                [
-                    mobject.labelled_submobjects.index(submob)
-                    for submob in part
-                ]
-                for part in parts
-            ]
-
-        def add_anims_from(anim_class, func, source_args, target_args=None):
-            if target_args is None:
-                target_args = source_args.copy()
-            for source_arg, target_arg in zip(source_args, target_args):
-                source_parts = func(source, source_arg)
-                target_parts = func(target, target_arg)
-                source_indices_lists = list(filter(
-                    lambda indices_list: all([
-                        index in source_indices
-                        for index in indices_list
-                    ]), get_indices_lists(source, source_parts)
-                ))
-                target_indices_lists = list(filter(
-                    lambda indices_list: all([
-                        index in target_indices
-                        for index in indices_list
-                    ]), get_indices_lists(target, target_parts)
-                ))
-                if not source_indices_lists or not target_indices_lists:
+        def get_filtered_indices_lists(indices_lists, rest_indices):
+            result = []
+            for indices_list in indices_lists:
+                if not indices_list:
                     continue
-                anims.append(anim_class(source_parts, target_parts, **kwargs))
-                for index in it.chain(*source_indices_lists):
-                    source_indices.remove(index)
-                for index in it.chain(*target_indices_lists):
-                    target_indices.remove(index)
-
-        def get_common_substrs(substrs_from_source, substrs_from_target):
-            return sorted([
-                substr for substr in substrs_from_source
-                if substr and substr in substrs_from_target
-            ], key=len, reverse=True)
-
-        def get_parts_from_keys(mobject, keys):
-            if isinstance(keys, str):
-                keys = [keys]
-            result = VGroup()
-            for key in keys:
-                if not isinstance(key, str):
-                    raise TypeError(key)
-                result.add(*mobject.get_parts_by_string(key))
+                if not all(index in rest_indices for index in indices_list):
+                    continue
+                result.append(indices_list)
+                for index in indices_list:
+                    rest_indices.remove(index)
             return result
 
-        add_anims_from(
-            ReplacementTransform, get_parts_from_keys,
-            self.key_map.keys(), self.key_map.values()
+        def add_anims(anim_class, indices_lists_pairs):
+            for source_indices_lists, target_indices_lists in indices_lists_pairs:
+                source_indices_lists = get_filtered_indices_lists(
+                    source_indices_lists, source_indices
+                )
+                target_indices_lists = get_filtered_indices_lists(
+                    target_indices_lists, target_indices
+                )
+                if not source_indices_lists or not target_indices_lists:
+                    continue
+                anims.append(anim_class(
+                    source.build_parts_from_indices_lists(source_indices_lists),
+                    target.build_parts_from_indices_lists(target_indices_lists),
+                    **kwargs
+                ))
+
+        def get_substr_to_indices_lists_map(part_items):
+            result = {}
+            for substr, indices_list in part_items:
+                if substr not in result:
+                    result[substr] = []
+                result[substr].append(indices_list)
+            return result
+
+        def add_anims_from(anim_class, func):
+            source_substr_map = get_substr_to_indices_lists_map(func(source))
+            target_substr_map = get_substr_to_indices_lists_map(func(target))
+            common_substrings = sorted([
+                s for s in source_substr_map if s and s in target_substr_map
+            ], key=len, reverse=True)
+            add_anims(
+                anim_class,
+                [
+                    (source_substr_map[substr], target_substr_map[substr])
+                    for substr in common_substrings
+                ]
+            )
+
+        add_anims(
+            ReplacementTransform,
+            [
+                (
+                    source.get_submob_indices_lists_by_selector(k),
+                    target.get_submob_indices_lists_by_selector(v)
+                )
+                for k, v in self.key_map.items()
+            ]
         )
         add_anims_from(
             FadeTransformPieces,
-            LabelledString.get_parts_by_string,
-            get_common_substrs(
-                source.specified_substrs,
-                target.specified_substrs
-            )
+            StringMobject.get_specified_part_items
         )
         add_anims_from(
             FadeTransformPieces,
-            LabelledString.get_parts_by_group_substr,
-            get_common_substrs(
-                source.group_substrs,
-                target.group_substrs
-            )
+            StringMobject.get_group_part_items
         )
 
         rest_source = VGroup(*[source[index] for index in source_indices])
