@@ -174,8 +174,8 @@ class StringMobject(SVGMobject, ABC):
             ):
                 l = self.full_span[1]
                 span = tuple(
+                    default_index if index is None else
                     min(index, l) if index >= 0 else max(index + l, 0)
-                    if index is not None else default_index
                     for index, default_index in zip(sel, self.full_span)
                 )
                 return [span]
