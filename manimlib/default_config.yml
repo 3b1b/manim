@@ -18,13 +18,12 @@ directories:
   temporary_storage: ""
 tex:
   executable: "latex"
-  template_file: "tex_template.tex" 
-  intermediate_filetype: "dvi"
-  text_to_replace: "[tex_expression]"
+  intermediate_filetype: ".dvi"
+  preamble: "default"
   # For ctex, use the following configuration
   # executable: "xelatex -no-pdf"
-  # template_file: "ctex_template.tex"
-  # intermediate_filetype: "xdv"
+  # intermediate_filetype: ".xdv"
+  # preamble: "ctex"
 universal_import_line: "from manimlib import *"
 style:
   font: "Consolas"

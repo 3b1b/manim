@@ -18,7 +18,7 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.customization import get_customization
 from manimlib.utils.directories import get_downloads_dir
 from manimlib.utils.directories import get_text_dir
-from manimlib.utils.tex_file_writing import tex_hash
+from manimlib.utils.simple_functions import hash_string
 
 from typing import TYPE_CHECKING
 
@@ -180,7 +180,7 @@ class MarkupText(StringMobject):
             self.line_width
         ))
         svg_file = os.path.join(
-            get_text_dir(), tex_hash(hash_content) + ".svg"
+            get_text_dir(), hash_string(hash_content) + ".svg"
         )
         if not os.path.exists(svg_file):
             self.markup_to_svg(content, svg_file)

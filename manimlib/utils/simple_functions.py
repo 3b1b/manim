@@ -1,4 +1,5 @@
 from functools import lru_cache
+import hashlib
 import inspect
 import math
 
@@ -76,3 +77,9 @@ def binary_search(function,
         else:
             return None
     return mh
+
+
+def hash_string(string):
+    # Truncating at 16 bytes for cleanliness
+    hasher = hashlib.sha256(string.encode())
+    return hasher.hexdigest()[:16]

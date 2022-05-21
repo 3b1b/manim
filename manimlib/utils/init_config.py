@@ -9,7 +9,7 @@ from rich import box
 from rich.console import Console
 from rich.prompt import Confirm
 from rich.prompt import Prompt
-from rich.rule import Rule 
+from rich.rule import Rule
 from rich.table import Table
 
 from typing import TYPE_CHECKING
@@ -44,9 +44,8 @@ def init_customization() -> None:
         },
         "tex": {
             "executable": "",
-            "template_file": "",
             "intermediate_filetype": "",
-            "text_to_replace": "[tex_expression]",
+            "preamble": "",
         },
         "universal_import_line": "from manimlib import *",
         "style": {
@@ -83,7 +82,7 @@ def init_customization() -> None:
     # print("Initialize configuration")
     try:
         scope = Prompt.ask(
-            "  Select the scope of the configuration", 
+            "  Select the scope of the configuration",
             choices=["global", "local"],
             default="local"
         )
@@ -129,13 +128,13 @@ def init_customization() -> None:
         )
         if tex == "latex":
             tex_config["executable"] = "latex"
-            tex_config["template_file"] = "tex_template.tex"
-            tex_config["intermediate_filetype"] = "dvi"
+            tex_config["intermediate_filetype"] = ".dvi"
+            tex_config["preamble"] = "default"
         else:
             tex_config["executable"] = "xelatex -no-pdf"
-            tex_config["template_file"] = "ctex_template.tex"
-            tex_config["intermediate_filetype"] = "xdv"
-        
+            tex_config["intermediate_filetype"] = ".xdv"
+            tex_config["preamble"] = "ctex"
+
         console.print("[bold]Styles:[/bold]")
         configuration["style"]["background_color"] = Prompt.ask(
             "  Which [bold]background color[/bold] do you want [italic](hex code)",
@@ -172,7 +171,7 @@ def init_customization() -> None:
             file_name = os.path.join(os.getcwd(), "custom_config.yml")
         with open(file_name, "w", encoding="utf-8") as f:
             yaml.dump(configuration, f)
-        
+
         console.print(f"\n:rocket: You have successfully set up a {scope} configuration file!")
         console.print(f"You can manually modify it in: [cyan]`{file_name}`[/cyan]")
 
