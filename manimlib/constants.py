@@ -64,56 +64,6 @@ JOINT_TYPE_MAP = {
     "miter": 3,
 }
 
-# Related to Tex
-PRESET_PREAMBLE = {
-    "default": (
-        "\\usepackage[english]{babel}",
-        "\\usepackage[utf8]{inputenc}",
-        "\\usepackage[T1]{fontenc}",
-        "\\usepackage{amsmath}",
-        "\\usepackage{amssymb}",
-        "\\usepackage{dsfont}",
-        "\\usepackage{setspace}",
-        "\\usepackage{tipa}",
-        "\\usepackage{relsize}",
-        "\\usepackage{textcomp}",
-        "\\usepackage{mathrsfs}",
-        "\\usepackage{calligra}",
-        "\\usepackage{wasysym}",
-        "\\usepackage{ragged2e}",
-        "\\usepackage{physics}",
-        "\\usepackage{xcolor}",
-        "\\usepackage{microtype}",
-        "\\usepackage{pifont}",
-        "\\DisableLigatures{encoding = *, family = * }",
-        "\\linespread{1}",
-    ),
-    "ctex": (
-        "\\usepackage[UTF8]{ctex}",
-        "\\usepackage[english]{babel}",
-        "\\usepackage{amsmath}",
-        "\\usepackage{amssymb}",
-        "\\usepackage{dsfont}",
-        "\\usepackage{setspace}",
-        "\\usepackage{tipa}",
-        "\\usepackage{relsize}",
-        "\\usepackage{textcomp}",
-        "\\usepackage{mathrsfs}",
-        "\\usepackage{calligra}",
-        "\\usepackage{wasysym}",
-        "\\usepackage{ragged2e}",
-        "\\usepackage{physics}",
-        "\\usepackage{xcolor}",
-        "\\usepackage{microtype}",
-        "\\linespread{1}",
-    ),
-    "minimized": (
-        "\\usepackage{amsmath}",
-        "\\usepackage{amssymb}",
-        "\\usepackage{xcolor}",
-    ),
-}
-
 # Related to Text
 NORMAL = "NORMAL"
 ITALIC = "ITALIC"

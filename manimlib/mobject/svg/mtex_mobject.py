@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from manimlib.mobject.svg.string_mobject import StringMobject
-from manimlib.utils.tex_file_writing import TexTemplate
+from manimlib.utils.tex_file_writing import display_during_execution
+from manimlib.utils.tex_file_writing import tex_content_to_svg_file
 
 from typing import TYPE_CHECKING
 
@@ -35,7 +36,8 @@ class MTex(StringMobject):
         "alignment": "\\centering",
         "tex_environment": "align*",
         "tex_to_color_map": {},
-        "tex_template": None,
+        "font": "",
+        "additional_preamble": "",
     }
 
     def __init__(self, tex_string: str, **kwargs):
@@ -60,12 +62,15 @@ class MTex(StringMobject):
             self.alignment,
             self.tex_environment,
             self.tex_to_color_map,
-            self.tex_template
+            self.font,
+            self.additional_preamble
         )
 
     def get_file_path_by_content(self, content: str) -> str:
-        tex_template = self.tex_template or TexTemplate()
-        file_path = tex_template.get_svg_file_path(content)
+        with display_during_execution(f"Writing \"{self.tex_string}\""):
+            file_path = tex_content_to_svg_file(
+                content, self.font, self.additional_preamble
+            )
         return file_path
 
     # Parsing

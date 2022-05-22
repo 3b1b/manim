@@ -42,14 +42,10 @@ def init_customization() -> None:
             "sounds": "",
             "temporary_storage": "",
         },
-        "tex": {
-            "executable": "",
-            "intermediate_filetype": "",
-            "preamble": "",
-        },
         "universal_import_line": "from manimlib import *",
         "style": {
-            "font": "Consolas",
+            "tex_font": "",
+            "font": "",
             "background_color": "",
         },
         "window_position": "UR",
@@ -119,24 +115,17 @@ def init_customization() -> None:
             show_default=False
         )
 
-        console.print("[bold]LaTeX:[/bold]")
-        tex_config = configuration["tex"]
-        tex = Prompt.ask(
-            "  Select an executable program to use to compile a LaTeX source file",
-            choices=["latex", "xelatex"],
-            default="latex"
-        )
-        if tex == "latex":
-            tex_config["executable"] = "latex"
-            tex_config["intermediate_filetype"] = ".dvi"
-            tex_config["preamble"] = "default"
-        else:
-            tex_config["executable"] = "xelatex -no-pdf"
-            tex_config["intermediate_filetype"] = ".xdv"
-            tex_config["preamble"] = "ctex"
-
         console.print("[bold]Styles:[/bold]")
-        configuration["style"]["background_color"] = Prompt.ask(
+        style_config = configuration["style"]
+        style_config["tex_font"] = Prompt.ask(
+            "  Which [bold]font[/bold] for LaTeX do you want",
+            default="default"
+        )
+        style_config["font"] = Prompt.ask(
+            "  Which [bold]font[/bold] for non-LaTeX text do you want",
+            default="Consolas"
+        )
+        style_config["background_color"] = Prompt.ask(
             "  Which [bold]background color[/bold] do you want [italic](hex code)",
             default="#333333"
         )

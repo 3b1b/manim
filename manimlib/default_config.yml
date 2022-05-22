@@ -16,16 +16,9 @@ directories:
   # return whatever is at to the TMPDIR environment variable.  If you want to
   # specify them elsewhere,
   temporary_storage: ""
-tex:
-  executable: "latex"
-  intermediate_filetype: ".dvi"
-  preamble: "default"
-  # For ctex, use the following configuration
-  # executable: "xelatex -no-pdf"
-  # intermediate_filetype: ".xdv"
-  # preamble: "ctex"
 universal_import_line: "from manimlib import *"
 style:
+  tex_font: "default"
   font: "Consolas"
   background_color: "#333333"
 # Set the position of preview window, you can use directions, e.g. UL/DR/OL/OO/...
