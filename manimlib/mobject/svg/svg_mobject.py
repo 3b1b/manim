@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import os
 from xml.etree import ElementTree as ET
 
@@ -19,6 +18,7 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.directories import get_mobject_data_dir
 from manimlib.utils.images import get_full_vector_image_path
 from manimlib.utils.iterables import hash_obj
+from manimlib.utils.simple_functions import hash_string
 
 
 SVG_HASH_TO_MOB_MAP: dict[int, VMobject] = {}
@@ -106,7 +106,7 @@ class SVGMobject(VMobject):
         return get_full_vector_image_path(self.file_name)
 
     def modify_xml_tree(self, element_tree: ET.ElementTree) -> ET.ElementTree:
-        config_style_dict = self.generate_config_style_dict()
+        config_style_attrs = self.generate_config_style_dict()
         style_keys = (
             "fill",
             "fill-opacity",
@@ -116,14 +116,17 @@ class SVGMobject(VMobject):
             "style"
         )
         root = element_tree.getroot()
-        root_style_dict = {
-            k: v for k, v in root.attrib.items()
-            if k in style_keys
-        }
+        style_attrs = {}
+        rest_attrs = {}
+        for k, v in root.attrib.items():
+            if k in style_keys:
+                style_attrs[k] = v
+            else:
+                rest_attrs[k] = v
 
-        new_root = ET.Element("svg", {})
-        config_style_node = ET.SubElement(new_root, "g", config_style_dict)
-        root_style_node = ET.SubElement(config_style_node, "g", root_style_dict)
+        new_root = ET.Element("svg", rest_attrs)
+        config_style_node = ET.SubElement(new_root, "g", config_style_attrs)
+        root_style_node = ET.SubElement(config_style_node, "g", style_attrs)
         root_style_node.extend(root)
         return ET.ElementTree(new_root)
 
@@ -302,8 +305,7 @@ class VMobjectFromSVGPath(VMobject):
         # will be saved to a file so that future calls for the same path
         # don't need to retrace the same computation.
         path_string = self.path_obj.d()
-        hasher = hashlib.sha256(path_string.encode())
-        path_hash = hasher.hexdigest()[:16]
+        path_hash = hash_string(path_string)
         points_filepath = os.path.join(get_mobject_data_dir(), f"{path_hash}_points.npy")
         tris_filepath = os.path.join(get_mobject_data_dir(), f"{path_hash}_tris.npy")
 
