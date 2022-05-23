@@ -290,6 +290,8 @@ class InteractiveScene(Scene):
             )
             result.add_updater(lambda m: m.replace(mobject, stretch=True))
             return result
+        elif isinstance(mobject, DotCloud):
+            return Mobject()
         else:
             return self.get_corner_dots(mobject)
 
@@ -483,7 +485,12 @@ class InteractiveScene(Scene):
                 large=(modifiers & SHIFT_MODIFIER),
             )
         # Adding crosshair
-        if char in [SELECT_KEY, CURSOR_KEY]:
+        if char == CURSOR_KEY:
+            if self.crosshair in self.mobjects:
+                self.remove(self.crosshair)
+            else:
+                self.add(self.crosshair)
+        if char == SELECT_KEY:
             self.add(self.crosshair)
 
         # Conditions for saving state
@@ -494,15 +501,13 @@ class InteractiveScene(Scene):
         super().on_key_release(symbol, modifiers)
         if chr(symbol) == SELECT_KEY:
             self.gather_new_selection()
+            # self.remove(self.crosshair)
         if chr(symbol) in GRAB_KEYS:
             self.is_grabbing = False
         elif chr(symbol) == INFORMATION_KEY:
             self.display_information(False)
         elif symbol == SHIFT_SYMBOL and self.window.is_key_pressed(ord(RESIZE_KEY)):
             self.prepare_resizing(about_corner=False)
-        # Removing crosshair
-        if chr(symbol) in [SELECT_KEY, CURSOR_KEY]:
-            self.remove(self.crosshair)
 
     # Mouse actions
     def handle_grabbing(self, point: np.ndarray):
