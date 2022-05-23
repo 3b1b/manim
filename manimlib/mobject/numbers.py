@@ -116,13 +116,14 @@ class DecimalNumber(VMobject):
             ]
         ])
         config.update(kwargs)
+        ndp = config["num_decimal_places"]
         return "".join([
             "{",
             config.get("field_name", ""),
             ":",
             "+" if config["include_sign"] else "",
             "," if config["group_with_commas"] else "",
-            ".", str(config["num_decimal_places"]), "f",
+            f".{ndp}f",
             "}",
         ])
 
