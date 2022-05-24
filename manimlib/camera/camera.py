@@ -11,7 +11,7 @@ from scipy.spatial.transform import Rotation
 
 from manimlib.constants import BLACK
 from manimlib.constants import DEGREES, RADIANS
-from manimlib.constants import DEFAULT_FRAME_RATE
+from manimlib.constants import DEFAULT_FPS
 from manimlib.constants import DEFAULT_PIXEL_HEIGHT, DEFAULT_PIXEL_WIDTH
 from manimlib.constants import FRAME_HEIGHT, FRAME_WIDTH
 from manimlib.constants import DOWN, LEFT, ORIGIN, OUT, RIGHT, UP
@@ -170,7 +170,7 @@ class Camera(object):
         "frame_config": {},
         "pixel_width": DEFAULT_PIXEL_WIDTH,
         "pixel_height": DEFAULT_PIXEL_HEIGHT,
-        "frame_rate": DEFAULT_FRAME_RATE,
+        "fps": DEFAULT_FPS,
         # Note: frame height and width will be resized to match
         # the pixel aspect ratio
         "background_color": BLACK,

@@ -68,7 +68,7 @@ class MarkupText(StringMobject):
         "lsh": None,
         "justify": False,
         "indent": 0,
-        "alignment": "LEFT",
+        "alignment": "",
         "line_width": None,
         "font": "",
         "slant": NORMAL,
@@ -114,6 +114,8 @@ class MarkupText(StringMobject):
 
         if not self.font:
             self.font = get_customization()["style"]["font"]
+        if not self.alignment:
+            self.alignment = get_customization()["style"]["text_alignment"]
         if self.is_markup:
             self.validate_markup_string(text)
 

@@ -286,7 +286,7 @@ class Mobject(object):
     def are_points_touching(
         self,
         points: np.ndarray,
-        buff: float = MED_SMALL_BUFF
+        buff: float = 0
     ) -> bool:
         bb = self.get_bounding_box()
         mins = (bb[0] - buff)
@@ -296,7 +296,7 @@ class Mobject(object):
     def is_point_touching(
         self,
         point: np.ndarray,
-        buff: float = MED_SMALL_BUFF
+        buff: float = 0
     ) -> bool:
         return self.are_points_touching(np.array(point, ndmin=2), buff)[0]
 
@@ -359,8 +359,9 @@ class Mobject(object):
                 if p not in excluded:
                     ancestors.append(p)
                     to_process.append(p)
-        # Remove redundancies while preserving order
+        # Ensure mobjects highest in the hierarchy show up first
         ancestors.reverse()
+        # Remove list redundancies while preserving order
         return list(dict.fromkeys(ancestors))
 
     def add(self, *mobjects: Mobject):
@@ -474,6 +475,31 @@ class Mobject(object):
             sm.shift(x * x_unit * RIGHT + y * y_unit * DOWN)
         self.center()
         return self
+
+    def arrange_to_fit_dim(self, length: float, dim: int, about_edge=ORIGIN):
+        ref_point = self.get_bounding_box_point(about_edge)
+        n_submobs = len(self.submobjects)
+        if n_submobs <= 1:
+            return
+        total_length = sum(sm.length_over_dim(dim) for sm in self.submobjects)
+        buff = (length - total_length) / (n_submobs - 1)
+        vect = np.zeros(self.dim)
+        vect[dim] = 1
+        x = 0
+        for submob in self.submobjects:
+            submob.set_coord(x, dim, -vect)
+            x += submob.length_over_dim(dim) + buff
+        self.move_to(ref_point, about_edge)
+        return self
+
+    def arrange_to_fit_width(self, width: float, about_edge=ORIGIN):
+        return self.arrange_to_fit_dim(width, 0, about_edge)
+
+    def arrange_to_fit_height(self, height: float, about_edge=ORIGIN):
+        return self.arrange_to_fit_dim(height, 1, about_edge)
+
+    def arrange_to_fit_depth(self, depth: float, about_edge=ORIGIN):
+        return self.arrange_to_fit_dim(depth, 2, about_edge)
 
     def sort(
         self,
@@ -616,11 +642,12 @@ class Mobject(object):
             sm1.depth_test = sm2.depth_test
             sm1.render_primitive = sm2.render_primitive
         self.refresh_bounding_box(recurse_down=True)
+        self.match_updaters(mobject)
         return self
 
     def looks_identical(self, mobject: Mobject):
-        fam1 = self.get_family()
-        fam2 = mobject.get_family()
+        fam1 = self.family_members_with_points()
+        fam2 = mobject.family_members_with_points()
         if len(fam1) != len(fam2):
             return False
         for m1, m2 in zip(fam1, fam2):
@@ -628,11 +655,13 @@ class Mobject(object):
                 if set(d1).difference(d2):
                     return False
                 for key in d1:
-                    if isinstance(d1[key], np.ndarray):
-                        if not np.all(d1[key] == d2[key]):
+                    eq = (d1[key] == d2[key])
+                    if isinstance(eq, bool):
+                        if not eq:
                             return False
-                    elif d1[key] != d2[key]:
-                        return False
+                    else:
+                        if not eq.all():
+                            return False
         return True
 
     # Creating new Mobjects from this one

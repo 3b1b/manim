@@ -87,7 +87,7 @@ class Cross(VGroup):
             Line(UL, DR),
             Line(UR, DL),
         )
-        self.insert_n_curves(2)
+        self.insert_n_curves(20)
         self.replace(mobject, stretch=True)
         self.set_stroke(self.stroke_color, width=self.stroke_width)
 

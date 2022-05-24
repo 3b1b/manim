@@ -9,7 +9,7 @@ from rich import box
 from rich.console import Console
 from rich.prompt import Confirm
 from rich.prompt import Prompt
-from rich.rule import Rule 
+from rich.rule import Rule
 from rich.table import Table
 
 from typing import TYPE_CHECKING
@@ -57,25 +57,14 @@ def init_customization() -> None:
         "window_monitor": 0,
         "full_screen": False,
         "break_into_partial_movies": False,
-        "camera_qualities": {
-            "low": {
-                "resolution": "854x480",
-                "frame_rate": 15,
-            },
-            "medium": {
-                "resolution": "1280x720",
-                "frame_rate": 30,
-            },
-            "high": {
-                "resolution": "1920x1080",
-                "frame_rate": 60,
-            },
-            "ultra_high": {
-                "resolution": "3840x2160",
-                "frame_rate": 60,
-            },
-            "default_quality": "",
-        }
+        "camera_resolutions": {
+            "low": "854x480",
+            "medium": "1280x720",
+            "high": "1920x1080",
+            "4k": "3840x2160",
+            "default_resolution": "high",
+        },
+        "fps": 30,
     }
 
     console = Console()
@@ -83,7 +72,7 @@ def init_customization() -> None:
     # print("Initialize configuration")
     try:
         scope = Prompt.ask(
-            "  Select the scope of the configuration", 
+            "  Select the scope of the configuration",
             choices=["global", "local"],
             default="local"
         )
