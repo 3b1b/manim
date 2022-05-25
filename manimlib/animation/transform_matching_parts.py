@@ -192,6 +192,8 @@ class TransformMatchingStrings(AnimationGroup):
                     target_indices_lists, target_indices
                 )
                 if not source_indices_lists or not target_indices_lists:
+                    source_indices.extend(it.chain(*source_indices_lists))
+                    target_indices.extend(it.chain(*target_indices_lists))
                     continue
                 anims.append(anim_class(
                     source.build_parts_from_indices_lists(source_indices_lists),
