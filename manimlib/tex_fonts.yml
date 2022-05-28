@@ -45,6 +45,12 @@ basic: |-
   \usepackage{amssymb}
   \usepackage{xcolor}
 
+ctex_basic: |-
+  \usepackage[UTF8]{ctex}
+  \usepackage{amsmath}
+  \usepackage{amssymb}
+  \usepackage{xcolor}
+
 # A collection of TeX templates for the fonts described at
 # http://jf.burnol.free.fr/showcase.html
 
