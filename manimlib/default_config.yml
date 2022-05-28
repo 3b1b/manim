@@ -18,6 +18,8 @@ directories:
   temporary_storage: ""
 universal_import_line: "from manimlib import *"
 style:
+  # "latex" | "xelatex"
+  tex_compiler: "latex"
   tex_font: "default"
   font: "Consolas"
   text_alignment: "LEFT"

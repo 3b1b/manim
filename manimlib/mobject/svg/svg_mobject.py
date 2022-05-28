@@ -122,7 +122,8 @@ class SVGMobject(VMobject):
             if k in style_keys
         }
 
-        new_root = ET.Element("svg", {})  # TODO: width, height
+        # Ignore other attributes in case that svgelements cannot parse them
+        new_root = ET.Element("svg", {})
         config_style_node = ET.SubElement(new_root, "g", config_style_attrs)
         root_style_node = ET.SubElement(config_style_node, "g", style_attrs)
         root_style_node.extend(root)

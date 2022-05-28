@@ -44,8 +44,9 @@ def init_customization() -> None:
         },
         "universal_import_line": "from manimlib import *",
         "style": {
+            "tex_compiler": "",
             "tex_font": "",
-            "font": "",
+            "font": "Consolas",
             "background_color": "",
         },
         "window_position": "UR",
@@ -57,7 +58,7 @@ def init_customization() -> None:
             "medium": "1280x720",
             "high": "1920x1080",
             "4k": "3840x2160",
-            "default_resolution": "high",
+            "default_resolution": "",
         },
         "fps": 30,
     }
@@ -106,14 +107,16 @@ def init_customization() -> None:
 
         console.print("[bold]Styles:[/bold]")
         style_config = configuration["style"]
-        style_config["tex_font"] = Prompt.ask(
-            "  Which [bold]font[/bold] for LaTeX do you want",
-            default="default"
+        compiler = Prompt.ask(
+            "  Select an executable program to use to compile a LaTeX source file",
+            choices=["latex", "xelatex"],
+            default="latex"
         )
-        style_config["font"] = Prompt.ask(
-            "  Which [bold]font[/bold] for non-LaTeX text do you want",
-            default="Consolas"
-        )
+        style_config["tex_compiler"] = compiler
+        if compiler == "latex":
+            style_config["tex_font"] = "default"
+        else:
+            style_config["tex_font"] = "ctex"
         style_config["background_color"] = Prompt.ask(
             "  Which [bold]background color[/bold] do you want [italic](hex code)",
             default="#333333"
@@ -127,7 +130,7 @@ def init_customization() -> None:
         )
         table.add_row("480p15", "720p30", "1080p60", "2160p60")
         console.print(table)
-        configuration["camera_qualities"]["default_quality"] = Prompt.ask(
+        configuration["camera_resolutions"]["default_resolution"] = Prompt.ask(
             "  Which one to choose as the default rendering quality",
             choices=["low", "medium", "high", "ultra_high"],
             default="high"

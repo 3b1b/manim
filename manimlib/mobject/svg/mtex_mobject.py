@@ -40,6 +40,16 @@ class MTex(StringMobject):
         "additional_preamble": "",
     }
 
+    CMD_PATTERN = r"\\(?:[a-zA-Z]+|.)|[_^{}]"
+    FLAG_DICT = {
+        r"{": 1,
+        r"}": -1
+    }
+    CONTENT_REPL = {}
+    MATCH_REPL = {
+        r"[_^{}]": ""
+    }
+
     def __init__(self, tex_string: str, **kwargs):
         # Prevent from passing an empty string.
         if not tex_string.strip():
@@ -75,44 +85,32 @@ class MTex(StringMobject):
 
     # Parsing
 
-    def get_cmd_spans(self) -> list[Span]:
-        return self.find_spans(r"\\(?:[a-zA-Z]+|\s|\S)|[_^{}]")
-
-    def get_substr_flag(self, substr: str) -> int:
-        return {"{": 1, "}": -1}.get(substr, 0)
-
-    def get_repl_substr_for_content(self, substr: str) -> str:
-        return substr
-
-    def get_repl_substr_for_matching(self, substr: str) -> str:
-        return substr if substr.startswith("\\") else ""
-
-    def get_specified_items(
+    def get_internal_specified_items(
         self, cmd_span_pairs: list[tuple[Span, Span]]
     ) -> list[tuple[Span, dict[str, str]]]:
         cmd_content_spans = [
             (span_begin, span_end)
             for (_, span_begin), (span_end, _) in cmd_span_pairs
         ]
-        specified_spans = [
-            *[
-                cmd_content_spans[range_begin]
-                for _, (range_begin, range_end) in self.compress_neighbours([
-                    (span_begin + index, span_end - index)
-                    for index, (span_begin, span_end) in enumerate(
-                        cmd_content_spans
-                    )
-                ])
-                if range_end - range_begin >= 2
-            ],
-            *[
-                span
-                for selector in self.tex_to_color_map
-                for span in self.find_spans_by_selector(selector)
-            ],
-            *self.find_spans_by_selector(self.isolate)
+        return [
+            (cmd_content_spans[range_begin], {})
+            for _, (range_begin, range_end) in self.group_neighbours([
+                (span_begin + index, span_end - index)
+                for index, (span_begin, span_end) in enumerate(
+                    cmd_content_spans
+                )
+            ])
+            if range_end - range_begin >= 2
         ]
-        return [(span, {}) for span in specified_spans]
+
+    def get_external_specified_items(
+        self
+    ) -> list[tuple[Span, dict[str, str]]]:
+        return [
+            (span, {})
+            for selector in self.tex_to_color_map
+            for span in self.find_spans_by_selector(selector)
+        ]
 
     @staticmethod
     def get_color_cmd_str(rgb_hex: str) -> str:
@@ -156,8 +154,8 @@ class MTex(StringMobject):
     def get_parts_by_tex(self, selector: Selector) -> VGroup:
         return self.select_parts(selector)
 
-    def get_part_by_tex(self, selector: Selector) -> VGroup:
-        return self.select_part(selector)
+    def get_part_by_tex(self, selector: Selector, **kwargs) -> VGroup:
+        return self.select_part(selector, **kwargs)
 
     def set_color_by_tex(self, selector: Selector, color: ManimColor):
         return self.set_parts_color(selector, color)

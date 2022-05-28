@@ -15,14 +15,7 @@ from manimlib.utils.simple_functions import hash_string
 SAVED_TEX_CONFIG = {}
 
 
-def get_tex_font_config(tex_font: str) -> str:
-    """
-    Returns a dict which should look something like this:
-    {
-        "compiler": "latex",
-        "preamble": "..."
-    }
-    """
+def get_tex_font_preamble(tex_font: str) -> str:
     name = re.sub(r"[^a-zA-Z]", "_", tex_font).lower()
     with open(os.path.join(
         get_manim_dir(), "manimlib", "tex_fonts.yml"
@@ -35,30 +28,40 @@ def get_tex_font_config(tex_font: str) -> str:
         )
         name = "default"
     result = templates_dict[name]
-    if name not in ("default", "ctex", "blank", "basic"):
-        result["preamble"] = "\n".join((
-            templates_dict["basic"]["preamble"], result["preamble"]
-        ))
+    if name not in ("default", "ctex", "basic"):
+        result = templates_dict["basic"] + "\n" + result
     return result
 
 
 def get_tex_config() -> dict[str, str]:
+    """
+    Returns a dict which should look something like this:
+    {
+        "compiler": "latex",
+        "font": "default",
+        "preamble": "..."
+    }
+    """
     # Only load once, then save thereafter
     if not SAVED_TEX_CONFIG:
-        tex_font = get_custom_config()["style"]["tex_font"]
-        SAVED_TEX_CONFIG.update(get_tex_font_config(tex_font))
+        style_config = get_custom_config()["style"]
+        SAVED_TEX_CONFIG.update({
+            "compiler": style_config["tex_compiler"],
+            "font": style_config["tex_font"],
+            "preamble": get_tex_font_preamble(style_config["tex_font"])
+        })
     return SAVED_TEX_CONFIG
 
 
 def tex_content_to_svg_file(
     content: str, tex_font: str, additional_preamble: str
 ) -> str:
-    if not tex_font:
-        tex_config = get_tex_config()
+    tex_config = get_tex_config()
+    if not tex_font or tex_font == tex_config["font"]:
+        preamble = tex_config["preamble"]
     else:
-        tex_config = get_tex_font_config(tex_font)
+        preamble = get_tex_font_preamble(tex_font)
 
-    preamble = tex_config["preamble"]
     if additional_preamble:
         preamble += "\n" + additional_preamble
     full_tex = "\n\n".join((
