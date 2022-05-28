@@ -116,15 +116,13 @@ class SVGMobject(VMobject):
             "style"
         )
         root = element_tree.getroot()
-        style_attrs = {}
-        rest_attrs = {}
-        for k, v in root.attrib.items():
-            if k in style_keys:
-                style_attrs[k] = v
-            else:
-                rest_attrs[k] = v
+        style_attrs = {
+            k: v
+            for k, v in root.attrib.items()
+            if k in style_keys
+        }
 
-        new_root = ET.Element("svg", rest_attrs)
+        new_root = ET.Element("svg", {})  # TODO: width, height
         config_style_node = ET.SubElement(new_root, "g", config_style_attrs)
         root_style_node = ET.SubElement(config_style_node, "g", style_attrs)
         root_style_node.extend(root)
