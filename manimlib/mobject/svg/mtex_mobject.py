@@ -36,7 +36,7 @@ class MTex(StringMobject):
         "alignment": "\\centering",
         "tex_environment": "align*",
         "tex_to_color_map": {},
-        "font": "",
+        "template": "",
         "additional_preamble": "",
     }
 
@@ -72,14 +72,14 @@ class MTex(StringMobject):
             self.alignment,
             self.tex_environment,
             self.tex_to_color_map,
-            self.font,
+            self.template,
             self.additional_preamble
         )
 
     def get_file_path_by_content(self, content: str) -> str:
         with display_during_execution(f"Writing \"{self.tex_string}\""):
             file_path = tex_content_to_svg_file(
-                content, self.font, self.additional_preamble
+                content, self.template, self.additional_preamble
             )
         return file_path
 

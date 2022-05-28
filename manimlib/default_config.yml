@@ -20,7 +20,7 @@ universal_import_line: "from manimlib import *"
 style:
   # "latex" | "xelatex"
   tex_compiler: "latex"
-  tex_font: "default"
+  tex_template: "default"
   font: "Consolas"
   text_alignment: "LEFT"
   background_color: "#333333"

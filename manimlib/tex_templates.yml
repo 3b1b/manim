@@ -51,7 +51,7 @@ ctex_basic: |-
   \usepackage{amssymb}
   \usepackage{xcolor}
 
-blank: ""
+none: ""
 
 # A collection of TeX templates for the fonts described at
 # http://jf.burnol.free.fr/showcase.html

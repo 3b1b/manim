@@ -15,15 +15,15 @@ from manimlib.utils.simple_functions import hash_string
 SAVED_TEX_CONFIG = {}
 
 
-def get_tex_font_preamble(tex_font: str) -> str:
-    name = re.sub(r"[^a-zA-Z]", "_", tex_font).lower()
+def get_tex_preamble(template_name: str) -> str:
+    name = re.sub(r"[^a-zA-Z]", "_", template_name).lower()
     with open(os.path.join(
-        get_manim_dir(), "manimlib", "tex_fonts.yml"
+        get_manim_dir(), "manimlib", "tex_templates.yml"
     ), encoding="utf-8") as tex_templates_file:
         templates_dict = yaml.safe_load(tex_templates_file)
     if name not in templates_dict:
         log.warning(
-            "Cannot recognize font '%s', falling back to 'default'.",
+            "Cannot recognize template '%s', falling back to 'default'.",
             name
         )
         name = "default"
@@ -38,7 +38,7 @@ def get_tex_config() -> dict[str, str]:
     Returns a dict which should look something like this:
     {
         "compiler": "latex",
-        "font": "default",
+        "template": "default",
         "preamble": "..."
     }
     """
@@ -47,20 +47,20 @@ def get_tex_config() -> dict[str, str]:
         style_config = get_custom_config()["style"]
         SAVED_TEX_CONFIG.update({
             "compiler": style_config["tex_compiler"],
-            "font": style_config["tex_font"],
-            "preamble": get_tex_font_preamble(style_config["tex_font"])
+            "template": style_config["tex_template"],
+            "preamble": get_tex_preamble(style_config["tex_template"])
         })
     return SAVED_TEX_CONFIG
 
 
 def tex_content_to_svg_file(
-    content: str, tex_font: str, additional_preamble: str
+    content: str, template: str, additional_preamble: str
 ) -> str:
     tex_config = get_tex_config()
-    if not tex_font or tex_font == tex_config["font"]:
+    if not template or template == tex_config["template"]:
         preamble = tex_config["preamble"]
     else:
-        preamble = get_tex_font_preamble(tex_font)
+        preamble = get_tex_preamble(template)
 
     if additional_preamble:
         preamble += "\n" + additional_preamble

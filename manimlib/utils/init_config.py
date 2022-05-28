@@ -45,7 +45,7 @@ def init_customization() -> None:
         "universal_import_line": "from manimlib import *",
         "style": {
             "tex_compiler": "",
-            "tex_font": "",
+            "tex_template": "",
             "font": "Consolas",
             "background_color": "",
         },
@@ -114,9 +114,9 @@ def init_customization() -> None:
         )
         style_config["tex_compiler"] = compiler
         if compiler == "latex":
-            style_config["tex_font"] = "default"
+            style_config["tex_template"] = "default"
         else:
-            style_config["tex_font"] = "ctex"
+            style_config["tex_template"] = "ctex"
         style_config["background_color"] = Prompt.ask(
             "  Which [bold]background color[/bold] do you want [italic](hex code)",
             default="#333333"

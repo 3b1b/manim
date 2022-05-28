@@ -43,7 +43,7 @@ class SingleStringTex(SVGMobject):
         "alignment": "\\centering",
         "math_mode": True,
         "organize_left_to_right": False,
-        "font": "",
+        "template": "",
         "additional_preamble": "",
     }
 
@@ -66,7 +66,7 @@ class SingleStringTex(SVGMobject):
             self.tex_string,
             self.alignment,
             self.math_mode,
-            self.font,
+            self.template,
             self.additional_preamble
         )
 
@@ -74,7 +74,7 @@ class SingleStringTex(SVGMobject):
         content = self.get_tex_file_body(self.tex_string)
         with display_during_execution(f"Writing \"{self.tex_string}\""):
             file_path = tex_content_to_svg_file(
-                content, self.font, self.additional_preamble
+                content, self.template, self.additional_preamble
             )
         return file_path
 
