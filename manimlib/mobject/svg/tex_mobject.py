@@ -33,7 +33,7 @@ class SingleStringTex(SVGMobject):
         "fill_opacity": 1.0,
         "stroke_width": 0,
         "svg_default": {
-            "color": WHITE,
+            "fill_color": WHITE,
         },
         "path_string_config": {
             "should_subdivide_sharp_curves": True,

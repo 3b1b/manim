@@ -6,6 +6,7 @@ from manimlib.mobject.mobject import _AnimationBuilder
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import smooth
+from manimlib.utils.rate_functions import squish_rate_func
 from manimlib.utils.simple_functions import clip
 
 from typing import TYPE_CHECKING
@@ -23,6 +24,7 @@ DEFAULT_ANIMATION_LAG_RATIO = 0
 class Animation(object):
     CONFIG = {
         "run_time": DEFAULT_ANIMATION_RUN_TIME,
+        "time_span": None,  # Tuple of times, between which the animation will run
         "rate_func": smooth,
         "name": None,
         # Does this animation add or remove a mobject form the screen
@@ -53,6 +55,12 @@ class Animation(object):
         # played.  As much initialization as possible,
         # especially any mobject copying, should live in
         # this method
+        if self.time_span is not None:
+            start, end = self.time_span
+            self.run_time = max(end, self.run_time)
+            self.rate_func = squish_rate_func(
+                self.rate_func, start / self.run_time, end / self.run_time,
+            )
         self.mobject.set_animating_status(True)
         self.starting_mobject = self.create_starting_mobject()
         if self.suspend_mobject_updating:
@@ -166,6 +174,8 @@ class Animation(object):
         return self
 
     def get_run_time(self) -> float:
+        if self.time_span:
+            return max(self.run_time, self.time_span[1])
         return self.run_time
 
     def set_rate_func(self, rate_func: Callable[[float], float]):

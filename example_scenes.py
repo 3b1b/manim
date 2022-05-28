@@ -77,10 +77,6 @@ class AnimatingMethods(Scene):
         # ".animate" syntax:
         self.play(grid.animate.shift(LEFT))
 
-        # Alternatively, you can use the older syntax by passing the
-        # method and then the arguments to the scene's "play" function:
-        self.play(grid.shift, LEFT)
-
         # Both of those will interpolate between the mobject's initial
         # state and whatever happens when you apply that method.
         # For this example, calling grid.shift(LEFT) would shift the

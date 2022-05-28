@@ -75,6 +75,7 @@ class ParametricCurve(VMobject):
         if hasattr(self, "x_range"):
             return self.x_range
 
+
 class FunctionGraph(ParametricCurve):
     CONFIG = {
         "color": YELLOW,

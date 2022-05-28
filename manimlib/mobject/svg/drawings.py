@@ -308,7 +308,7 @@ class Bubble(SVGMobject):
     }
 
     def __init__(self, **kwargs):
-        digest_config(self, kwargs, locals())
+        digest_config(self, kwargs)
         if self.file_name is None:
             raise Exception("Must invoke Bubble subclass")
         SVGMobject.__init__(self, self.file_name, **kwargs)
@@ -317,7 +317,11 @@ class Bubble(SVGMobject):
         self.stretch_to_fit_width(self.width)
         if self.direction[0] > 0:
             self.flip()
-        self.direction_was_specified = ("direction" in kwargs)
+        if "direction" in kwargs:
+            self.direction = kwargs["direction"]
+            self.direction_was_specified = True
+        else:
+            self.direction_was_specified = False
         self.content = Mobject()
         self.refresh_triangulation()
 

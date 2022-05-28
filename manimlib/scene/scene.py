@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from collections import OrderedDict
 from functools import wraps
 import inspect
 import os
 import platform
+import pyperclip
 import random
 import time
 
@@ -11,7 +13,6 @@ import numpy as np
 from tqdm import tqdm as ProgressDisplay
 
 from manimlib.animation.animation import prepare_animation
-from manimlib.animation.transform import MoveToTarget
 from manimlib.camera.camera import Camera
 from manimlib.constants import ARROW_SYMBOLS
 from manimlib.constants import DEFAULT_WAIT_TIME
@@ -20,6 +21,7 @@ from manimlib.constants import SHIFT_MODIFIER
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
+from manimlib.mobject.mobject import _AnimationBuilder
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
@@ -61,7 +63,7 @@ class Scene(object):
         "leave_progress_bars": False,
         "preview": True,
         "presenter_mode": False,
-        "linger_after_completion": True,
+        "show_animation_progress": False,
         "pan_sensitivity": 3,
         "max_num_saved_states": 50,
     }
@@ -72,7 +74,7 @@ class Scene(object):
             from manimlib.window import Window
             self.window = Window(scene=self, **self.window_config)
             self.camera_config["ctx"] = self.window.ctx
-            self.camera_config["frame_rate"] = 30  # Where's that 30 from?
+            self.camera_config["fps"] = 30  # Where's that 30 from?
             self.undo_stack = []
             self.redo_stack = []
         else:
@@ -86,14 +88,19 @@ class Scene(object):
         self.time: float = 0
         self.skip_time: float = 0
         self.original_skipping_status: bool = self.skip_animations
+        self.checkpoint_states: dict[str, list[tuple[Mobject, Mobject]]] = dict()
+
         if self.start_at_animation_number is not None:
             self.skip_animations = True
+        if self.file_writer.has_progress_display:
+            self.show_animation_progress = False
 
         # Items associated with interaction
         self.mouse_point = Point()
         self.mouse_drag_point = Point()
         self.hold_on_wait = self.presenter_mode
         self.inside_embed = False
+        self.quit_interaction = False
 
         # Much nicer to work with deterministic scenes
         if self.random_seed is not None:
@@ -111,8 +118,13 @@ class Scene(object):
         self.setup()
         try:
             self.construct()
-        except EndSceneEarlyException:
+            self.interact()
+        except EndScene:
             pass
+        except KeyboardInterrupt:
+            # Get rid keyboard interupt symbols
+            print("", end="\r")
+            self.file_writer.ended_with_interrupt = True
         self.tear_down()
 
     def setup(self) -> None:
@@ -131,32 +143,31 @@ class Scene(object):
     def tear_down(self) -> None:
         self.stop_skipping()
         self.file_writer.finish()
-        if self.window and self.linger_after_completion:
-            self.interact()
+        if self.window:
+            self.window.destroy()
+            self.window = None
 
     def interact(self) -> None:
         # If there is a window, enter a loop
         # which updates the frame while under
         # the hood calling the pyglet event loop
+        if self.window is None:
+            return
         log.info(
             "Tips: You are now in the interactive mode. Now you can use the keyboard"
             " and the mouse to interact with the scene. Just press `command + q` or `esc`"
             " if you want to quit."
         )
-        self.quit_interaction = False
+        self.skip_animations = False
         self.refresh_static_mobjects()
-        while not (self.window.is_closing or self.quit_interaction):
-            self.update_frame(1 / self.camera.frame_rate)
-        if self.window.is_closing:
-            self.window.destroy()
+        while not self.is_window_closing():
+            self.update_frame(1 / self.camera.fps)
 
     def embed(self, close_scene_on_exit: bool = True) -> None:
         if not self.preview:
-            # Ignore embed calls when there is no preview
-            return
+            return  # Embed is only relevant with a preview
         self.inside_embed = True
         self.stop_skipping()
-        self.linger_after_completion = False
         self.update_frame()
         self.save_state()
 
@@ -175,29 +186,70 @@ class Scene(object):
             ]
         })
 
+        # This is useful if one wants to re-run a block of scene
+        # code, while developing, tweaking it each time.
+        # As long as the copied selection starts with a comment,
+        # this will revert to the state of the scene at the first
+        # point of running.
+        def checkpoint_paste(skip=False, show_progress=True):
+            pasted = pyperclip.paste()
+            line0 = pasted.lstrip().split("\n")[0]
+            if line0.startswith("#"):
+                if line0 not in self.checkpoint_states:
+                    self.checkpoint(line0)
+                else:
+                    self.revert_to_checkpoint(line0)
+                    self.update_frame(dt=0)
+            if skip:
+                originally_skip = self.skip_animations
+                self.skip_animations = True
+            if show_progress:
+                originally_show_animation_progress = self.show_animation_progress
+                self.show_animation_progress = True
+            shell.run_line_magic("paste", "")
+            if skip:
+                self.skip_animations = originally_skip
+            if show_progress:
+                self.show_animation_progress = originally_show_animation_progress
+
+        local_ns['checkpoint_paste'] = checkpoint_paste
+
         # Enables gui interactions during the embed
         def inputhook(context):
             while not context.input_is_ready():
-                if not self.window.is_closing:
+                if not self.is_window_closing():
                     self.update_frame(dt=0)
+            if self.is_window_closing():
+                shell.ask_exit()
 
         pt_inputhooks.register("manim", inputhook)
         shell.enable_gui("manim")
 
+        # This is hacky, but there's an issue with ipython which is that
+        # when you define lambda's or list comprehensions during a shell session,
+        # they are not aware of local variables in the surrounding scope. Because
+        # That comes up a fair bit during scene construction, to get around this,
+        # we (admittedly sketchily) update the global namespace to match the local
+        # namespace, since this is just a shell session anyway.
+        shell.events.register(
+            "pre_run_cell",
+            lambda: shell.user_global_ns.update(shell.user_ns)
+        )
+
         # Operation to run after each ipython command
-        def post_cell_func(*args, **kwargs):
+        def post_cell_func():
             self.refresh_static_mobjects()
+            if not self.is_window_closing():
+                self.update_frame(dt=0, ignore_skipping=True)
             self.save_state()
 
         shell.events.register("post_run_cell", post_cell_func)
 
-        # Launch shell, with stack_depth=2 indicating we should use caller globals/locals
         shell(local_ns=local_ns, stack_depth=2)
 
-        self.inside_embed = False
         # End scene when exiting an embed
         if close_scene_on_exit:
-            raise EndSceneEarlyException()
+            raise EndScene()
 
     # Only these methods should touch the camera
 
@@ -213,6 +265,9 @@ class Scene(object):
         self.update_mobjects(dt)
         if self.skip_animations and not ignore_skipping:
             return
+
+        if self.is_window_closing():
+            raise EndScene()
 
         if self.window:
             self.window.clear()
@@ -396,7 +451,7 @@ class Scene(object):
                     self.stop_skipping()
         if self.end_at_animation_number is not None:
             if self.num_plays >= self.end_at_animation_number:
-                raise EndSceneEarlyException()
+                raise EndScene()
 
     def stop_skipping(self) -> None:
         self.virtual_animation_start_time = self.time
@@ -413,24 +468,25 @@ class Scene(object):
     ) -> list[float] | np.ndarray | ProgressDisplay:
         if self.skip_animations and not override_skip_animations:
             return [run_time]
-        else:
-            step = 1 / self.camera.frame_rate
-            times = np.arange(0, run_time, step)
+
+        times = np.arange(0, run_time, 1 / self.camera.fps)
 
         if self.file_writer.has_progress_display:
             self.file_writer.set_progress_display_subdescription(desc)
+
+        if self.show_animation_progress:
+            return ProgressDisplay(
+                times,
+                total=n_iterations,
+                leave=self.leave_progress_bars,
+                ascii=True if platform.system() == 'Windows' else None,
+                desc=desc,
+            )
+        else:
             return times
 
-        return ProgressDisplay(
-            times,
-            total=n_iterations,
-            leave=self.leave_progress_bars,
-            ascii=True if platform.system() == 'Windows' else None,
-            desc=desc,
-        )
-
     def get_run_time(self, animations: Iterable[Animation]) -> float:
-        return np.max([animation.run_time for animation in animations])
+        return np.max([animation.get_run_time() for animation in animations])
 
     def get_animation_time_progression(
         self,
@@ -454,74 +510,16 @@ class Scene(object):
             kw["override_skip_animations"] = True
         return self.get_time_progression(duration, **kw)
 
-    def anims_from_play_args(self, *args, **kwargs) -> list[Animation]:
-        """
-        Each arg can either be an animation, or a mobject method
-        followed by that methods arguments (and potentially follow
-        by a dict of kwargs for that method).
-        This animation list is built by going through the args list,
-        and each animation is simply added, but when a mobject method
-        s hit, a MoveToTarget animation is built using the args that
-        follow up until either another animation is hit, another method
-        is hit, or the args list runs out.
-        """
-        animations = []
-        state = {
-            "curr_method": None,
-            "last_method": None,
-            "method_args": [],
-        }
-
-        def compile_method(state):
-            if state["curr_method"] is None:
-                return
-            mobject = state["curr_method"].__self__
-            if state["last_method"] and state["last_method"].__self__ is mobject:
-                animations.pop()
-                # method should already have target then.
-            else:
-                mobject.generate_target()
-            #
-            if len(state["method_args"]) > 0 and isinstance(state["method_args"][-1], dict):
-                method_kwargs = state["method_args"].pop()
-            else:
-                method_kwargs = {}
-            state["curr_method"].__func__(
-                mobject.target,
-                *state["method_args"],
-                **method_kwargs
-            )
-            animations.append(MoveToTarget(mobject))
-            state["last_method"] = state["curr_method"]
-            state["curr_method"] = None
-            state["method_args"] = []
-
-        for arg in args:
-            if inspect.ismethod(arg):
-                compile_method(state)
-                state["curr_method"] = arg
-            elif state["curr_method"] is not None:
-                state["method_args"].append(arg)
-            elif isinstance(arg, Mobject):
-                raise Exception("""
-                    I think you may have invoked a method
-                    you meant to pass in as a Scene.play argument
-                """)
-            else:
-                try:
-                    anim = prepare_animation(arg)
-                except TypeError:
-                    raise TypeError(f"Unexpected argument {arg} passed to Scene.play()")
-
-                compile_method(state)
-                animations.append(anim)
-        compile_method(state)
-
-        for animation in animations:
+    def prepare_animations(
+        self,
+        proto_animations: list[Animation | _AnimationBuilder],
+        animation_config: dict,
+    ):
+        animations = list(map(prepare_animation, proto_animations))
+        for anim in animations:
             # This is where kwargs to play like run_time and rate_func
             # get applied to all animations
-            animation.update_config(**kwargs)
-
+            anim.update_config(**animation_config)
         return animations
 
     def handle_play_like_call(func):
@@ -529,6 +527,8 @@ class Scene(object):
         def wrapper(self, *args, **kwargs):
             if self.inside_embed:
                 self.save_state()
+            if self.presenter_mode and self.num_plays == 0:
+                self.hold_loop()
 
             self.update_skipping_status()
             should_write = not self.skip_animations
@@ -547,6 +547,10 @@ class Scene(object):
 
             if self.inside_embed:
                 self.save_state()
+
+            if self.skip_animations and self.window is not None:
+                # Show some quick frames along the way
+                self.update_frame(dt=0, ignore_skipping=True)
 
             self.num_plays += 1
         return wrapper
@@ -587,11 +591,11 @@ class Scene(object):
             self.update_mobjects(0)
 
     @handle_play_like_call
-    def play(self, *args, **kwargs) -> None:
-        if len(args) == 0:
+    def play(self, *proto_animations, **animation_config) -> None:
+        if len(proto_animations) == 0:
             log.warning("Called Scene.play with no animations")
             return
-        animations = self.anims_from_play_args(*args, **kwargs)
+        animations = self.prepare_animations(proto_animations, animation_config)
         self.begin_animations(animations)
         self.progress_through_animations(animations)
         self.finish_animations(animations)
@@ -608,9 +612,7 @@ class Scene(object):
         if self.presenter_mode and not self.skip_animations and not ignore_presenter_mode:
             if note:
                 log.info(note)
-            while self.hold_on_wait:
-                self.update_frame(dt=1 / self.camera.frame_rate)
-            self.hold_on_wait = True
+            self.hold_loop()
         else:
             time_progression = self.get_wait_time_progression(duration, stop_condition)
             last_t = 0
@@ -623,6 +625,11 @@ class Scene(object):
                     break
         self.refresh_static_mobjects()
         return self
+
+    def hold_loop(self):
+        while self.hold_on_wait:
+            self.update_frame(dt=1 / self.camera.fps)
+        self.hold_on_wait = True
 
     def wait_until(
         self,
@@ -655,49 +662,51 @@ class Scene(object):
 
     # Helpers for interactive development
 
-    def get_state(self) -> tuple[list[tuple[Mobject, Mobject]], int]:
-        if self.undo_stack:
-            last_state = dict(self.undo_stack[-1])
-        else:
-            last_state = {}
-        result = []
-        n_changes = 0
-        for mob in self.mobjects:
-            # If it hasn't changed since the last state, just point to the
-            # same copy as before
-            if mob in last_state and last_state[mob].looks_identical(mob):
-                result.append((mob, last_state[mob]))
-            else:
-                result.append((mob, mob.copy()))
-                n_changes += 1
-        return result, n_changes
+    def get_state(self) -> SceneState:
+        return SceneState(self)
 
-    def restore_state(self, mobject_states: list[tuple[Mobject, Mobject]]):
-        self.mobjects = [mob.become(mob_copy) for mob, mob_copy in mobject_states]
+    def restore_state(self, scene_state: SceneState):
+        scene_state.restore_scene(self)
 
     def save_state(self) -> None:
         if not self.preview:
             return
+        state = self.get_state()
+        if self.undo_stack and state.mobjects_match(self.undo_stack[-1]):
+            return
         self.redo_stack = []
-        state, n_changes = self.get_state()
-        if n_changes > 0:
-            self.undo_stack.append(state)
-            if len(self.undo_stack) > self.max_num_saved_states:
-                self.undo_stack.pop(0)
+        self.undo_stack.append(state)
+        if len(self.undo_stack) > self.max_num_saved_states:
+            self.undo_stack.pop(0)
 
     def undo(self):
         if self.undo_stack:
-            state, n_changes = self.get_state()
-            self.redo_stack.append(state)
+            self.redo_stack.append(self.get_state())
             self.restore_state(self.undo_stack.pop())
         self.refresh_static_mobjects()
 
     def redo(self):
         if self.redo_stack:
-            state, n_changes = self.get_state()
-            self.undo_stack.append(state)
+            self.undo_stack.append(self.get_state())
             self.restore_state(self.redo_stack.pop())
         self.refresh_static_mobjects()
+
+    def checkpoint(self, key: str):
+        self.checkpoint_states[key] = self.get_state()
+
+    def revert_to_checkpoint(self, key: str):
+        if key not in self.checkpoint_states:
+            log.error(f"No checkpoint at {key}")
+            return
+        all_keys = list(self.checkpoint_states.keys())
+        index = all_keys.index(key)
+        for later_key in all_keys[index + 1:]:
+            self.checkpoint_states.pop(later_key)
+
+        self.restore_state(self.checkpoint_states[key])
+
+    def clear_checkpoints(self):
+        self.checkpoint_states = dict()
 
     def save_mobject_to_file(self, mobject: Mobject, file_path: str | None = None) -> None:
         if file_path is None:
@@ -713,6 +722,9 @@ class Scene(object):
             directory = self.file_writer.get_saved_mobject_directory()
             path = os.path.join(directory, file_name)
         return Mobject.load(path)
+
+    def is_window_closing(self):
+        return self.window and (self.window.is_closing or self.quit_interaction)
 
     # Event handling
 
@@ -850,5 +862,49 @@ class Scene(object):
         pass
 
 
-class EndSceneEarlyException(Exception):
+class SceneState():
+    def __init__(self, scene: Scene, ignore: list[Mobject] | None = None):
+        self.time = scene.time
+        self.num_plays = scene.num_plays
+        self.mobjects_to_copies = OrderedDict.fromkeys(scene.mobjects)
+        if ignore:
+            for mob in ignore:
+                self.mobjects_to_copies.pop(mob, None)
+
+        last_m2c = scene.undo_stack[-1].mobjects_to_copies if scene.undo_stack else dict()
+        for mob in self.mobjects_to_copies:
+            # If it hasn't changed since the last state, just point to the
+            # same copy as before
+            if mob in last_m2c and last_m2c[mob].looks_identical(mob):
+                self.mobjects_to_copies[mob] = last_m2c[mob]
+            else:
+                self.mobjects_to_copies[mob] = mob.copy()
+
+    def __eq__(self, state: SceneState):
+        return all((
+            self.time == state.time,
+            self.num_plays == state.num_plays,
+            self.mobjects_to_copies == state.mobjects_to_copies
+        ))
+
+    def mobjects_match(self, state: SceneState):
+        return self.mobjects_to_copies == state.mobjects_to_copies
+
+    def n_changes(self, state: SceneState):
+        m2c = state.mobjects_to_copies
+        return sum(
+            1 - int(mob in m2c and mob.looks_identical(m2c[mob]))
+            for mob in self.mobjects_to_copies
+        )
+
+    def restore_scene(self, scene: Scene):
+        scene.time = self.time
+        scene.num_plays = self.num_plays
+        scene.mobjects = [
+            mob.become(mob_copy)
+            for mob, mob_copy in self.mobjects_to_copies.items()
+        ]
+
+
+class EndScene(Exception):
     pass

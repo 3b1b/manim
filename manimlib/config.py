@@ -136,7 +136,7 @@ def parse_cli():
             help="Resolution, passed as \"WxH\", e.g. \"1920x1080\"",
         )
         parser.add_argument(
-            "--frame_rate",
+            "--fps",
             help="Frame rate, as an integer",
         )
         parser.add_argument(
@@ -147,6 +147,11 @@ def parse_cli():
             "--leave_progress_bars",
             action="store_true",
             help="Leave progress bars displayed in terminal",
+        )
+        parser.add_argument(
+            "--show_animation_progress",
+            action="store_true",
+            help="Show progress bar for each animation",
         )
         parser.add_argument(
             "--video_dir",
@@ -225,6 +230,8 @@ def insert_embed_line(file_name: str, scene_name: str, line_marker: str):
                 if len(line.strip()) > 0 and get_indent(line) < n_spaces:
                     prev_line_num = index - 2
                     break
+        if prev_line_num is None:
+            prev_line_num = len(lines) - 2
     elif line_marker.isdigit():
         # Treat the argument as a line number
         prev_line_num = int(line_marker) - 1
@@ -233,7 +240,7 @@ def insert_embed_line(file_name: str, scene_name: str, line_marker: str):
         try:
             prev_line_num = next(
                 i
-                for i in range(len(lines) - 1, scene_line_number, -1)
+                for i in range(scene_line_number, len(lines) - 1)
                 if line_marker in lines[i]
             )
         except StopIteration:
@@ -330,6 +337,16 @@ def get_configuration(args):
     else:
         file_ext = ".mp4"
 
+    dir_config = custom_config["directories"]
+    output_directory = args.video_dir or dir_config["output"]
+    if dir_config["mirror_module_path"] and args.file:
+        to_cut = dir_config["removed_mirror_prefix"]
+        ext = os.path.abspath(args.file)
+        ext = ext.replace(to_cut, "").replace(".py", "")
+        if ext.startswith("_"):
+            ext = ext[1:]
+        output_directory = os.path.join(output_directory, ext)
+
     file_writer_config = {
         "write_to_movie": not args.skip_animations and write_file,
         "break_into_partial_movies": custom_config["break_into_partial_movies"],
@@ -338,8 +355,7 @@ def get_configuration(args):
         # If -t is passed in (for transparent), this will be RGBA
         "png_mode": "RGBA" if args.transparent else "RGB",
         "movie_file_extension": file_ext,
-        "mirror_module_path": custom_config["directories"]["mirror_module_path"],
-        "output_directory": args.video_dir or custom_config["directories"]["output"],
+        "output_directory": output_directory,
         "file_name": args.file_name,
         "input_file_path": args.file or "",
         "open_file_upon_completion": args.open,
@@ -365,6 +381,7 @@ def get_configuration(args):
         "preview": not write_file,
         "presenter_mode": args.presenter_mode,
         "leave_progress_bars": args.leave_progress_bars,
+        "show_animation_progress": args.show_animation_progress,
     }
 
     # Camera configuration
@@ -398,31 +415,31 @@ def get_configuration(args):
 
 def get_camera_configuration(args, custom_config):
     camera_config = {}
-    camera_qualities = get_custom_config()["camera_qualities"]
+    camera_resolutions = get_custom_config()["camera_resolutions"]
     if args.low_quality:
-        quality = camera_qualities["low"]
+        resolution = camera_resolutions["low"]
     elif args.medium_quality:
-        quality = camera_qualities["medium"]
+        resolution = camera_resolutions["med"]
     elif args.hd:
-        quality = camera_qualities["high"]
+        resolution = camera_resolutions["high"]
     elif args.uhd:
-        quality = camera_qualities["ultra_high"]
+        resolution = camera_resolutions["4k"]
     else:
-        quality = camera_qualities[camera_qualities["default_quality"]]
+        resolution = camera_resolutions[camera_resolutions["default_resolution"]]
 
-    if args.resolution:
-        quality["resolution"] = args.resolution
-    if args.frame_rate:
-        quality["frame_rate"] = int(args.frame_rate)
+    if args.fps:
+        fps = int(args.fps)
+    else:
+        fps = get_custom_config()["fps"]
 
-    width_str, height_str = quality["resolution"].split("x")
+    width_str, height_str = resolution.split("x")
     width = int(width_str)
     height = int(height_str)
 
     camera_config.update({
         "pixel_width": width,
         "pixel_height": height,
-        "frame_rate": quality["frame_rate"],
+        "fps": fps,
     })
 
     try:
