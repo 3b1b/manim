@@ -28,7 +28,7 @@ def get_tex_font_preamble(tex_font: str) -> str:
         )
         name = "default"
     result = templates_dict[name]
-    if name not in ("default", "ctex", "basic", "ctex_basic"):
+    if name not in ("default", "ctex", "basic", "ctex_basic", "blank"):
         result = templates_dict["basic"] + "\n" + result
     return result
 
