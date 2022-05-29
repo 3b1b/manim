@@ -22,6 +22,8 @@ from manimlib.utils.simple_functions import hash_string
 
 
 SVG_HASH_TO_MOB_MAP: dict[int, VMobject] = {}
+SVG_XMLNS = "{http://www.w3.org/2000/svg}"
+SVG_XLINK = "{http://www.w3.org/1999/xlink}"
 
 
 def _convert_point_to_3d(x: float, y: float) -> np.ndarray:
@@ -106,6 +108,8 @@ class SVGMobject(VMobject):
         return get_full_vector_image_path(self.file_name)
 
     def modify_xml_tree(self, element_tree: ET.ElementTree) -> ET.ElementTree:
+        element_tree = self.expand_use_elements(element_tree)
+
         config_style_attrs = self.generate_config_style_dict()
         style_keys = (
             "fill",
@@ -123,11 +127,41 @@ class SVGMobject(VMobject):
         }
 
         # Ignore other attributes in case that svgelements cannot parse them
-        new_root = ET.Element("svg", {})
-        config_style_node = ET.SubElement(new_root, "g", config_style_attrs)
-        root_style_node = ET.SubElement(config_style_node, "g", style_attrs)
+        new_root = ET.Element("svg")
+        config_style_node = ET.SubElement(new_root, f"{SVG_XMLNS}g", config_style_attrs)
+        root_style_node = ET.SubElement(config_style_node, f"{SVG_XMLNS}g", style_attrs)
         root_style_node.extend(root)
         return ET.ElementTree(new_root)
+
+    @staticmethod
+    def expand_use_elements(element_tree: ET.ElementTree) -> ET.ElementTree:
+        # Replace `use` elements with copies of elements they refer to
+        xpath = f".//{SVG_XMLNS}use[@{SVG_XLINK}href]"
+        element = element_tree.find(xpath)
+        while element is not None:
+            element.tag = f"{SVG_XMLNS}g"
+            attrs = element.attrib
+            href_str = attrs.pop(f"{SVG_XLINK}href")[1:]
+            href_element = element_tree.find(f".//{SVG_XMLNS}*[@id='{href_str}']")
+            if href_element is None:
+                continue
+            attrs.pop("width", None)
+            attrs.pop("height", None)
+            x = attrs.pop("x", "0")
+            y = attrs.pop("y", "0")
+            if not x == y == "0":
+                translate_str = f"translate({x}, {y})"
+                if "transform" in attrs:
+                    attrs["transform"] = translate_str + " " + attrs["transform"]
+                else:
+                    attrs["transform"] = translate_str
+            shadow_node = ET.SubElement(element, href_element.tag, href_element.attrib)
+            shadow_node.extend(href_element)
+            element = element_tree.find(xpath)
+
+        for defs_element in element_tree.iterfind(f".//{SVG_XMLNS}defs"):
+            defs_element.clear()
+        return element_tree
 
     def generate_config_style_dict(self) -> dict[str, str]:
         keys_converting_dict = {
