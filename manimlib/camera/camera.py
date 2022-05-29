@@ -230,10 +230,6 @@ class Camera(object):
             self.ctx.enable(moderngl.BLEND)
         else:
             self.ctx.disable(moderngl.BLEND)
-        self.ctx.blend_func = (
-            moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA,
-            # moderngl.ONE, moderngl.ONE
-        )
 
     def set_ctx_depth_test(self, enable: bool = True) -> None:
         if enable:
