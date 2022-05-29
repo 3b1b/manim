@@ -136,13 +136,15 @@ class SVGMobject(VMobject):
     @staticmethod
     def expand_use_elements(element_tree: ET.ElementTree) -> ET.ElementTree:
         # Replace `use` elements with copies of elements they refer to
-        xpath = f".//{SVG_XMLNS}use[@{SVG_XLINK}href]"
-        element = element_tree.find(xpath)
-        while element is not None:
+        while True:
+            element = element_tree.find(f".//{SVG_XMLNS}use[@{SVG_XLINK}href]")
+            if element is None:
+                break
+
             element.tag = f"{SVG_XMLNS}g"
             attrs = element.attrib
-            href_str = attrs.pop(f"{SVG_XLINK}href")[1:]
-            href_element = element_tree.find(f".//{SVG_XMLNS}*[@id='{href_str}']")
+            href_id = attrs.pop(f"{SVG_XLINK}href")[1:]
+            href_element = element_tree.find(f".//{SVG_XMLNS}*[@id='{href_id}']")
             if href_element is None:
                 continue
             attrs.pop("width", None)
@@ -157,7 +159,6 @@ class SVGMobject(VMobject):
                     attrs["transform"] = translate_str
             shadow_node = ET.SubElement(element, href_element.tag, href_element.attrib)
             shadow_node.extend(href_element)
-            element = element_tree.find(xpath)
 
         for defs_element in element_tree.iterfind(f".//{SVG_XMLNS}defs"):
             defs_element.clear()
