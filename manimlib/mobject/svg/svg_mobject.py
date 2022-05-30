@@ -205,7 +205,7 @@ class SVGMobject(VMobject):
             elif type(shape) == se.SVGElement:
                 continue
             else:
-                log.warning(f"Unsupported element type: {type(shape)}")
+                log.warning("Unsupported element type: %s", type(shape))
                 continue
             if not mob.has_points():
                 continue
@@ -238,17 +238,6 @@ class SVGMobject(VMobject):
             fill_color=shape.fill.hexrgb,
             fill_opacity=shape.fill.opacity
         )
-        return mob
-
-    @staticmethod
-    def handle_transform(mob, matrix):
-        mat = np.array([
-            [matrix.a, matrix.c],
-            [matrix.b, matrix.d]
-        ])
-        vec = np.array([matrix.e, matrix.f, 0.0])
-        mob.apply_matrix(mat)
-        mob.shift(vec)
         return mob
 
     def path_to_mobject(self, path: se.Path) -> VMobjectFromSVGPath:
