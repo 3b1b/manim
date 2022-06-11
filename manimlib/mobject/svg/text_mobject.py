@@ -61,7 +61,7 @@ class _Alignment:
         self.value = _Alignment.VAL_DICT[s.upper()]
 
 
-class Text(StringMobject):
+class MarkupText(StringMobject):
     CONFIG = {
         "font_size": 48,
         "lsh": None,
@@ -84,21 +84,50 @@ class Text(StringMobject):
         "isolate": (re.compile(r"[a-zA-Z]+"), re.compile(r"\S+")),
     }
 
-    CMD_PATTERN = r"""[<>&"']"""
-    FLAG_DICT = {}
-    CONTENT_REPL = {
-        r"<": "&lt;",
-        r">": "&gt;",
-        r"&": "&amp;",
-        r"\"": "&quot;",
-        r"'": "&apos;"
+    # See https://docs.gtk.org/Pango/pango_markup.html
+    MARKUP_TAGS = {
+        "b": {"font_weight": "bold"},
+        "big": {"font_size": "larger"},
+        "i": {"font_style": "italic"},
+        "s": {"strikethrough": "true"},
+        "sub": {"baseline_shift": "subscript", "font_scale": "subscript"},
+        "sup": {"baseline_shift": "superscript", "font_scale": "superscript"},
+        "small": {"font_size": "smaller"},
+        "tt": {"font_family": "monospace"},
+        "u": {"underline": "single"},
     }
-    MATCH_REPL = {}
+    MARKUP_ENTITY_DICT = {
+        "<": "&lt;",
+        ">": "&gt;",
+        "&": "&amp;",
+        "\"": "&quot;",
+        "'": "&apos;"
+    }
+    #ENTITIES, ENTITY_CHARS = zip(
+    #    ("&lt;", "<"),
+    #    ("&gt;", ">"),
+    #    ("&amp;", "&"),
+    #    ("&quot;", "\""),
+    #    ("&apos;", "'")
+    #)
+
+    #CMD_PATTERN = r"""[<>&"']"""
+    #FLAG_DICT = {}
+    #CONTENT_REPL = {
+    #    r"<": "&lt;",
+    #    r">": "&gt;",
+    #    r"&": "&amp;",
+    #    r"\"": "&quot;",
+    #    r"'": "&apos;"
+    #}
+    #MATCH_REPL = {}
 
     def __init__(self, text: str, **kwargs):
         self.full2short(kwargs)
         digest_config(self, kwargs)
 
+        if not isinstance(self, Text):
+            self.validate_markup_string(text)
         if not self.font:
             self.font = get_customization()["style"]["font"]
         if not self.alignment:
@@ -213,12 +242,80 @@ class Text(StringMobject):
             f"{validate_error}"
         )
 
+    # Toolkits
+
+    @staticmethod
+    def escape_markup_char(substr: str) -> str:
+        return MarkupText.MARKUP_ENTITY_DICT.get(substr, substr)
+
+    @staticmethod
+    def unescape_markup_char(substr: str) -> str:
+        return {
+            v: k
+            for k, v in MarkupText.MARKUP_ENTITY_DICT.items()
+        }.get(substr, substr)
+
     # Parsing
 
+    @staticmethod
+    def get_cmd_pattern() -> str | None:
+        # Unsupported passthroughs:
+        # "<?...?>", "<!--...-->", "<![CDATA[...]]>", "<!DOCTYPE...>"
+        # See https://gitlab.gnome.org/GNOME/glib/-/blob/main/glib/gmarkup.c
+        return r"""(<(/)?\w+(?:\s*\w+\s*\=\s*(["']).*?\3)*(/)?>)|(&(#(x)?)?(.*?);)|([>"'])"""
+
+    @staticmethod
+    def get_matched_flag(match_obj: re.Match) -> int:
+        if match_obj.group(1):
+            if match_obj.group(2):
+                return -1
+            if not match_obj.group(4):
+                return 1
+        return 0
+
+    @staticmethod
+    def replace_for_content(match_obj: re.Match) -> str:
+        substr = match_obj.group()
+        if match_obj.group(9):
+            return MarkupText.escape_markup_char(substr)
+        return substr
+
+    @staticmethod
+    def replace_for_matching(match_obj: re.Match) -> str:
+        substr = match_obj.group()
+        if match_obj.group(1):
+            return ""
+        if match_obj.group(5):
+            if match_obj.group(6):
+                base = 10
+                if match_obj.group(7):
+                    base = 16
+                return chr(int(match_obj.group(8), base))
+            return MarkupText.unescape_markup_char(substr)
+        return substr
+
+    @staticmethod
     def get_internal_specified_items(
-        self, cmd_span_pairs: list[tuple[Span, Span]]
+        cmd_match_pairs: list[tuple[re.Match, re.Match]]
     ) -> list[tuple[Span, dict[str, str]]]:
-        return []
+        attr_pattern = r"""(\w+)\s*\=\s*(["'])(.*?)\2"""
+        result = []
+        for begin_match, end_match in cmd_match_pairs:
+            begin_tag = begin_match.group()
+            tag_name = re.search(r"\w+", begin_tag).group()
+            if tag_name == "span":
+                attr_dict = {
+                    attr_match_obj.group(1): attr_match_obj.group(3)
+                    for attr_match_obj in re.finditer(
+                        attr_pattern, begin_tag, re.S
+                    )
+                }
+            else:
+                attr_dict = MarkupText.MARKUP_TAGS.get(tag_name, {})
+            result.append(
+                ((begin_match.end(), end_match.start()), attr_dict)
+            )
+        return result
 
     def get_external_specified_items(
         self
@@ -315,70 +412,22 @@ class Text(StringMobject):
         return self.get_string()
 
 
-class MarkupText(Text):
-    # Unsupported passthroughs:
-    # "<?...?>", "<!--...-->", "<![CDATA[...]]>", "<!DOCTYPE...>"
-    # See https://gitlab.gnome.org/GNOME/glib/-/blob/main/glib/gmarkup.c
-    CMD_PATTERN = r"""</?\w+(?:\s*\w+\s*\=\s*(["']).*?\1)*/?>|&.*?;|[>"']"""
-    FLAG_DICT = {
-        r"</.*>": -1,
-        r"<.*/>": 0,
-        r"<.*>": 1
-    }
-    CONTENT_REPL = {
-        r">": "&gt;",
-        r"\"": "&quot;",
-        r"'": "&apos;"
-    }
-    MATCH_REPL = {
-        r"<.*>": "",
-        r"&#x(.*);": lambda m: chr(int(m.group(1), 16)),
-        r"&#(.*);": lambda m: chr(int(m.group(1), 10)),
-        r"&lt;": "<",
-        r"&gt;": ">",
-        r"&amp;": "&",
-        r"&quot;": "\"",
-        r"&apos;": "'"
-    }
+class Text(MarkupText):
+    @staticmethod
+    def get_cmd_pattern() -> str | None:
+        return r"""[<>&"']"""
 
-    # See https://docs.gtk.org/Pango/pango_markup.html
-    MARKUP_TAGS = {
-        "b": {"font_weight": "bold"},
-        "big": {"font_size": "larger"},
-        "i": {"font_style": "italic"},
-        "s": {"strikethrough": "true"},
-        "sub": {"baseline_shift": "subscript", "font_scale": "subscript"},
-        "sup": {"baseline_shift": "superscript", "font_scale": "superscript"},
-        "small": {"font_size": "smaller"},
-        "tt": {"font_family": "monospace"},
-        "u": {"underline": "single"},
-    }
+    @staticmethod
+    def get_matched_flag(match_obj: re.Match) -> int:
+        return 0
 
-    def __init__(self, text: str, **kwargs):
-        self.validate_markup_string(text)
-        super().__init__(text, **kwargs)
+    @staticmethod
+    def replace_for_content(match_obj: re.Match) -> str:
+        return Text.escape_markup_char(match_obj.group())
 
-    def get_internal_specified_items(
-        self, cmd_span_pairs: list[tuple[Span, Span]]
-    ) -> list[tuple[Span, dict[str, str]]]:
-        attr_pattern = r"""(\w+)\s*\=\s*(["'])(.*?)\2"""
-        result = []
-        for begin_cmd_span, end_cmd_span in cmd_span_pairs:
-            begin_tag = self.get_substr(begin_cmd_span)
-            tag_name = re.search(r"\w+", begin_tag).group()
-            if tag_name == "span":
-                attr_dict = {
-                    attr_match_obj.group(1): attr_match_obj.group(3)
-                    for attr_match_obj in re.finditer(
-                        attr_pattern, begin_tag, re.S
-                    )
-                }
-            else:
-                attr_dict = self.MARKUP_TAGS.get(tag_name, {})
-            result.append(
-                ((begin_cmd_span[1], end_cmd_span[0]), attr_dict)
-            )
-        return result
+    @staticmethod
+    def replace_for_matching(match_obj: re.Match) -> str:
+        return match_obj.group()
 
 
 class Code(MarkupText):

@@ -66,11 +66,6 @@ class StringMobject(SVGMobject, ABC):
         "isolate": (),
     }
 
-    CMD_PATTERN: str | None = None
-    FLAG_DICT: dict[str, int] = {}
-    CONTENT_REPL: dict[str, str | Callable[[re.Match], str]] = {}
-    MATCH_REPL: dict[str, str | Callable[[re.Match], str]] = {}
-
     def __init__(self, string: str, **kwargs):
         self.string = string
         digest_config(self, kwargs)
@@ -78,7 +73,7 @@ class StringMobject(SVGMobject, ABC):
             self.base_color = WHITE
         self.base_color_hex = self.color_to_hex(self.base_color)
 
-        self.full_span = (0, len(self.string))
+        self.full_len = len(self.string)
         self.parse()
         super().__init__(**kwargs)
         self.labels = [submob.label for submob in self.submobjects]
@@ -174,11 +169,11 @@ class StringMobject(SVGMobject, ABC):
                 isinstance(index, int) or index is None
                 for index in sel
             ):
-                l = self.full_span[1]
+                l = self.full_len
                 span = tuple(
                     default_index if index is None else
                     min(index, l) if index >= 0 else max(index + l, 0)
-                    for index, default_index in zip(sel, self.full_span)
+                    for index, default_index in zip(sel, (0, l))
                 )
                 return [span]
             return None
@@ -197,56 +192,9 @@ class StringMobject(SVGMobject, ABC):
         return self.string[slice(*span)]
 
     @staticmethod
-    def get_substr_matched_obj(
-        substr: str, match_dict: dict[str, T]
-    ) -> tuple[re.Match, T] | None:
-        for pattern, val in match_dict.items():
-            match_obj = re.fullmatch(pattern, substr, re.S)
-            if match_obj is None:
-                continue
-            return match_obj, val
-        return None
-
-    @staticmethod
-    def get_substr_matched_val(
-        substr: str, match_dict: dict[str, T], default: T
-    ) -> T:
-        obj = StringMobject.get_substr_matched_obj(substr, match_dict)
-        if obj is None:
-            return default
-        _, val = obj
-        return val
-
-    @staticmethod
-    def get_substr_matched_str(
-        substr: str, match_dict: dict[str, str | Callable[[re.Match], str]]
-    ) -> str:
-        obj = StringMobject.get_substr_matched_obj(substr, match_dict)
-        if obj is None:
-            return substr
-        match_obj, val = obj
-        if isinstance(val, str):
-            return val
-        return val(match_obj)
-
-    @staticmethod
     def get_neighbouring_pairs(vals: Iterable[T]) -> list[tuple[T, T]]:
         val_list = list(vals)
         return list(zip(val_list[:-1], val_list[1:]))
-
-    @staticmethod
-    def group_neighbours(vals: Iterable[T]) -> list[tuple[T, Span]]:
-        if not vals:
-            return []
-
-        unique_vals, range_lens = zip(*(
-            (val, len(list(grouper)))
-            for val, grouper in it.groupby(vals)
-        ))
-        val_ranges = StringMobject.get_neighbouring_pairs(
-            [0, *it.accumulate(range_lens)]
-        )
-        return list(zip(unique_vals, val_ranges))
 
     @staticmethod
     def span_contains(span_0: Span, span_1: Span) -> bool:
@@ -280,19 +228,17 @@ class StringMobject(SVGMobject, ABC):
     # Parsing
 
     def parse(self) -> None:
-        pattern = self.CMD_PATTERN
-        cmd_spans = [] if pattern is None else [
-            match_obj.span()
-            for match_obj in re.finditer(pattern, self.string, re.S)
-        ]
-        cmd_substrs = [self.get_substr(span) for span in cmd_spans]
+        cmd_matches = list(re.finditer(
+            self.get_cmd_pattern(), self.string, flags=re.S
+        ))
+        cmd_spans = [match_obj.span() for match_obj in cmd_matches]
         flags = [
-            self.get_substr_matched_val(substr, self.FLAG_DICT, 0)
-            for substr in cmd_substrs
+            self.get_matched_flag(match_obj)
+            for match_obj in cmd_matches
         ]
         specified_items = [
             *self.get_internal_specified_items(
-                self.get_cmd_span_pairs(cmd_spans, flags)
+                self.get_cmd_match_pairs(cmd_matches, flags)
             ),
             *self.get_external_specified_items(),
             *[
@@ -311,37 +257,50 @@ class StringMobject(SVGMobject, ABC):
         self.specified_spans = [span for span, _ in specified_items]
         self.split_items = split_items
         self.labelled_spans = [span for span, _ in split_items]
-        self.cmd_repl_items_for_content = [
-            (span, self.get_substr_matched_str(substr, self.CONTENT_REPL))
-            for span, substr in zip(cmd_spans, cmd_substrs)
-        ]
-        self.cmd_repl_items_for_matching = [
-            (span, self.get_substr_matched_str(substr, self.MATCH_REPL))
-            for span, substr in zip(cmd_spans, cmd_substrs)
-        ]
         self.check_overlapping()
 
     @staticmethod
-    def get_cmd_span_pairs(
-        cmd_spans: list[Span], flags: list[int]
-    ) -> list[tuple[Span, Span]]:
+    @abstractmethod
+    def get_cmd_pattern() -> str:
+        return ""
+
+    @staticmethod
+    @abstractmethod
+    def get_matched_flag(match_obj: re.Match) -> int:
+        return 0
+
+    @staticmethod
+    @abstractmethod
+    def replace_for_content(match_obj: re.Match) -> str:
+        return ""
+
+    @staticmethod
+    @abstractmethod
+    def replace_for_matching(match_obj: re.Match) -> str:
+        return ""
+
+    @staticmethod
+    def get_cmd_match_pairs(
+        cmd_matches: list[re.Match], flags: list[int]
+    ) -> list[tuple[re.Match, re.Match]]:
         result = []
-        begin_cmd_spans_stack = []
-        for cmd_span, flag in zip(cmd_spans, flags):
+        begin_cmd_matches_stack = []
+        for cmd_match, flag in zip(cmd_matches, flags):
             if flag == 1:
-                begin_cmd_spans_stack.append(cmd_span)
+                begin_cmd_matches_stack.append(cmd_match)
             elif flag == -1:
-                if not begin_cmd_spans_stack:
+                if not begin_cmd_matches_stack:
                     raise ValueError("Missing open command")
-                begin_cmd_span = begin_cmd_spans_stack.pop()
-                result.append((begin_cmd_span, cmd_span))
-        if begin_cmd_spans_stack:
+                begin_cmd_match = begin_cmd_matches_stack.pop()
+                result.append((begin_cmd_match, cmd_match))
+        if begin_cmd_matches_stack:
             raise ValueError("Missing close command")
         return result
 
+    @staticmethod
     @abstractmethod
     def get_internal_specified_items(
-        self, cmd_span_pairs: list[tuple[Span, Span]]
+        cmd_match_pairs: list[tuple[re.Match, re.Match]]
     ) -> list[tuple[Span, dict[str, str]]]:
         return []
 
@@ -365,7 +324,7 @@ class StringMobject(SVGMobject, ABC):
             ])
         )
         complement_spans = self.get_complement_spans(
-            self.full_span, cmd_spans
+            (0, self.full_len), cmd_spans
         )
         adjusted_span = (
             max(arbitrary_span[0], complement_spans[cmd_range[0]][0]),
@@ -416,17 +375,13 @@ class StringMobject(SVGMobject, ABC):
     ) -> tuple[str, str]:
         return "", ""
 
-    def replace_substr(self, span: Span, repl_items: list[Span, str]):
-        if not repl_items:
-            return self.get_substr(span)
-
-        repl_spans, repl_strs = zip(*sorted(repl_items, key=lambda t: t[0]))
-        pieces = [
-            self.get_substr(piece_span)
-            for piece_span in self.get_complement_spans(span, repl_spans)
-        ]
-        repl_strs = [*repl_strs, ""]
-        return "".join(it.chain(*zip(pieces, repl_strs)))
+    def replace_substr(
+        self, span: Span, replace_func: Callable[[re.Match], str]
+    ) -> str:
+        return re.sub(
+            self.get_cmd_pattern(), replace_func, self.get_substr(span),
+            flags=re.S
+        )
 
     def get_content(self, is_labelled: bool) -> str:
         inserted_str_pairs = [
@@ -436,27 +391,35 @@ class StringMobject(SVGMobject, ABC):
             ))
             for label, (span, attr_dict) in enumerate(self.split_items)
         ]
-        inserted_str_items = sorted([
-            (index, s)
-            for (index, _), s in [
-                *sorted([
-                    (span[::-1], end_str)
-                    for span, (_, end_str) in reversed(inserted_str_pairs)
-                ], key=lambda t: (t[0][0], -t[0][1])),
-                *sorted([
-                    (span, begin_str)
-                    for span, (begin_str, _) in inserted_str_pairs
-                ], key=lambda t: (t[0][0], -t[0][1]))
-            ]
-        ], key=lambda t: t[0])
-        repl_items = self.cmd_repl_items_for_content + [
-            ((index, index), inserted_str)
-            for index, inserted_str in inserted_str_items
+        if inserted_str_pairs:
+            indices, inserted_strs = zip(*sorted([
+                (index, s)
+                for (index, _), s in [
+                    *sorted([
+                        (span[::-1], end_str)
+                        for span, (_, end_str) in reversed(inserted_str_pairs)
+                    ], key=lambda t: (t[0][0], -t[0][1])),
+                    *sorted([
+                        (span, begin_str)
+                        for span, (begin_str, _) in inserted_str_pairs
+                    ], key=lambda t: (t[0][0], -t[0][1]))
+                ]
+            ], key=lambda t: t[0]))
+        else:
+            indices = ()
+            inserted_strs = ()
+        replaced_pieces = [
+            self.replace_substr(span, self.replace_for_content)
+            for span in zip((0, *indices), (*indices, self.full_len))
         ]
+        #repl_items = self.cmd_repl_items_for_content + [
+        #    ((index, index), inserted_str)
+        #    for index, inserted_str in inserted_str_items
+        #]
         prefix, suffix = self.get_content_prefix_and_suffix(is_labelled)
         return "".join([
             prefix,
-            self.replace_substr(self.full_span, repl_items),
+            *it.chain(*zip(replaced_pieces, (*inserted_strs, ""))),
             suffix
         ])
 
@@ -486,11 +449,15 @@ class StringMobject(SVGMobject, ABC):
         if not self.labels:
             return []
 
-        group_labels, labelled_submob_ranges = zip(
-            *self.group_neighbours(self.labels)
+        group_labels, range_lens = zip(*(
+            (val, len(list(grouper)))
+            for val, grouper in it.groupby(self.labels)
+        ))
+        labelled_submob_ranges = self.get_neighbouring_pairs(
+            [0, *it.accumulate(range_lens)]
         )
         ordered_spans = [
-            self.labelled_spans[label] if label != -1 else self.full_span
+            self.labelled_spans[label] if label != -1 else (0, self.full_len)
             for label in group_labels
         ]
         interval_spans = [
@@ -508,11 +475,7 @@ class StringMobject(SVGMobject, ABC):
         ]
         group_substrs = [
             re.sub(r"\s+", "", self.replace_substr(
-                span, [
-                    (cmd_span, repl_str)
-                    for cmd_span, repl_str in self.cmd_repl_items_for_matching
-                    if self.span_contains(span, cmd_span)
-                ]
+                span, self.replace_for_matching
             ))
             for span in self.get_complement_spans(
                 (ordered_spans[0][0], ordered_spans[-1][1]), interval_spans

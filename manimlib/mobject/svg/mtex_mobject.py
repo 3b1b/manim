@@ -40,15 +40,15 @@ class MTex(StringMobject):
         "additional_preamble": "",
     }
 
-    CMD_PATTERN = r"\\(?:[a-zA-Z]+|.)|[_^{}]"
-    FLAG_DICT = {
-        r"{": 1,
-        r"}": -1
-    }
-    CONTENT_REPL = {}
-    MATCH_REPL = {
-        r"[_^{}]": ""
-    }
+    #CMD_PATTERN = r"\\(?:[a-zA-Z]+|.)|[_^{}]"
+    #FLAG_DICT = {
+    #    r"{": 1,
+    #    r"}": -1
+    #}
+    #CONTENT_REPL = {}
+    #MATCH_REPL = {
+    #    r"[_^{}]": ""
+    #}
 
     def __init__(self, tex_string: str, **kwargs):
         # Prevent from passing an empty string.
@@ -85,23 +85,55 @@ class MTex(StringMobject):
 
     # Parsing
 
+    @staticmethod
+    def get_cmd_pattern() -> str | None:
+        return r"(\\(?:[a-zA-Z]+|.))|([_^])|([{}])"
+
+    @staticmethod
+    def get_matched_flag(match_obj: re.Match) -> int:
+        substr = match_obj.group()
+        if match_obj.group(3):
+            if substr == "{":
+                return 1
+            if substr == "}":
+                return -1
+        return 0
+
+    @staticmethod
+    def replace_for_content(match_obj: re.Match) -> str:
+        return match_obj.group()
+
+    @staticmethod
+    def replace_for_matching(match_obj: re.Match) -> str:
+        if not match_obj.group(1):
+            return ""
+        return match_obj.group()
+
+    @staticmethod
     def get_internal_specified_items(
-        self, cmd_span_pairs: list[tuple[Span, Span]]
+        cmd_match_pairs: list[tuple[re.Match, re.Match]]
     ) -> list[tuple[Span, dict[str, str]]]:
         cmd_content_spans = [
-            (span_begin, span_end)
-            for (_, span_begin), (span_end, _) in cmd_span_pairs
+            (begin_match.end(), end_match.start())
+            for begin_match, end_match in cmd_match_pairs
         ]
+        #print(MTex.get_neighbouring_pairs(cmd_content_spans))
         return [
-            (cmd_content_spans[range_begin], {})
-            for _, (range_begin, range_end) in self.group_neighbours([
-                (span_begin + index, span_end - index)
-                for index, (span_begin, span_end) in enumerate(
-                    cmd_content_spans
-                )
-            ])
-            if range_end - range_begin >= 2
+            (span, {})
+            for span, next_span
+            in MTex.get_neighbouring_pairs(cmd_content_spans)
+            if span[0] == next_span[0] + 1 and span[1] == next_span[1] - 1
         ]
+        #return [
+        #    (cmd_content_spans[range_begin], {})
+        #    for _, (range_begin, range_end) in self.group_neighbours([
+        #        (span_begin + index, span_end - index)
+        #        for index, (span_begin, span_end) in enumerate(
+        #            cmd_content_spans
+        #        )
+        #    ])
+        #    if range_end - range_begin >= 2
+        #]
 
     def get_external_specified_items(
         self
