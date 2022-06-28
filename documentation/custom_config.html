@@ -9,8 +9,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/custom.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?a2d099815c4fb79f0fec3a67">
-    <link rel="stylesheet" href="../_static/pygments.css?a2d099815c4fb79f0fec3a67">
+    <link rel="stylesheet" href="../_static/styles/default.css?d13009349e2d7c41722436c6">
+    <link rel="stylesheet" href="../_static/pygments.css?d13009349e2d7c41722436c6">
     
 <style>
   :root {
@@ -27,7 +27,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?a2d099815c4fb79f0fec3a67"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?d13009349e2d7c41722436c6"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -240,6 +240,11 @@ is recommended)</p>
 </dl>
 </li>
 <li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">text_alignment</span></code></dt><dd><p>Default text alignment for LaTeX</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">background_color</span></code></dt><dd><p>Default background color</p>
 </dd>
 </dl>
@@ -256,6 +261,10 @@ means left(L) / middle(O) / right(R)).</p>
 <h2><code class="docutils literal notranslate"><span class="pre">window_monitor</span></code><a class="headerlink" href="#window-monitor" title="Permalink to this headline">¶</a></h2>
 <p>The number of the monitor you want the preview window to pop up on. (default is 0)</p>
 </section>
+<section id="full-screen">
+<h2><code class="docutils literal notranslate"><span class="pre">full_screen</span></code><a class="headerlink" href="#full-screen" title="Permalink to this headline">¶</a></h2>
+<p>Whether open the window in full screen. (default is false)</p>
+</section>
 <section id="break-into-partial-movies">
 <h2><code class="docutils literal notranslate"><span class="pre">break_into_partial_movies</span></code><a class="headerlink" href="#break-into-partial-movies" title="Permalink to this headline">¶</a></h2>
 <p>If this is set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, then many small files will be written corresponding
@@ -264,36 +273,40 @@ to form the full scene.</p>
 <p>Sometimes video-editing is made easier when working with the broken up scene, which
 effectively has cuts at all the places you might want.</p>
 </section>
-<section id="camera-qualities">
-<h2><code class="docutils literal notranslate"><span class="pre">camera_qualities</span></code><a class="headerlink" href="#camera-qualities" title="Permalink to this headline">¶</a></h2>
-<p>Export quality</p>
+<section id="camera-resolutions">
+<h2><code class="docutils literal notranslate"><span class="pre">camera_resolutions</span></code><a class="headerlink" href="#camera-resolutions" title="Permalink to this headline">¶</a></h2>
+<p>Export resolutions</p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">low</span></code></dt><dd><p>Low quality (default is 480p15)</p>
+<dt><code class="docutils literal notranslate"><span class="pre">low</span></code></dt><dd><p>Low resolutions (default is 480p)</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">medium</span></code></dt><dd><p>Medium quality (default is 720p30)</p>
+<dt><code class="docutils literal notranslate"><span class="pre">medium</span></code></dt><dd><p>Medium resolutions (default is 720p)</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">high</span></code></dt><dd><p>High quality (default is 1080p30)</p>
+<dt><code class="docutils literal notranslate"><span class="pre">high</span></code></dt><dd><p>High resolutions (default is 1080p)</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">ultra_high</span></code></dt><dd><p>Ultra high quality (default is 4K60)</p>
+<dt><code class="docutils literal notranslate"><span class="pre">ultra_high</span></code></dt><dd><p>Ultra high resolutions (default is 4K)</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">default_quality</span></code></dt><dd><p>Default quality (one of the above four)</p>
+<dt><code class="docutils literal notranslate"><span class="pre">default_resolutions</span></code></dt><dd><p>Default resolutions (one of the above four, default is high)</p>
 </dd>
 </dl>
 </li>
 </ul>
+</section>
+<section id="fps">
+<h2><code class="docutils literal notranslate"><span class="pre">fps</span></code><a class="headerlink" href="#fps" title="Permalink to this headline">¶</a></h2>
+<p>Export frame rate. (default is 30)</p>
 </section>
 </section>
 
@@ -350,8 +363,10 @@ effectively has cuts at all the places you might want.</p>
 <li><a class="reference internal" href="#style"><code class="docutils literal notranslate"><span class="pre">style</span></code></a></li>
 <li><a class="reference internal" href="#window-position"><code class="docutils literal notranslate"><span class="pre">window_position</span></code></a></li>
 <li><a class="reference internal" href="#window-monitor"><code class="docutils literal notranslate"><span class="pre">window_monitor</span></code></a></li>
+<li><a class="reference internal" href="#full-screen"><code class="docutils literal notranslate"><span class="pre">full_screen</span></code></a></li>
 <li><a class="reference internal" href="#break-into-partial-movies"><code class="docutils literal notranslate"><span class="pre">break_into_partial_movies</span></code></a></li>
-<li><a class="reference internal" href="#camera-qualities"><code class="docutils literal notranslate"><span class="pre">camera_qualities</span></code></a></li>
+<li><a class="reference internal" href="#camera-resolutions"><code class="docutils literal notranslate"><span class="pre">camera_resolutions</span></code></a></li>
+<li><a class="reference internal" href="#fps"><code class="docutils literal notranslate"><span class="pre">fps</span></code></a></li>
 </ul>
 </li>
 </ul>
