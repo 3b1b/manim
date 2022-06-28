@@ -132,7 +132,7 @@ Sometimes video-editing is made easier when working with the broken up scene, wh
 effectively has cuts at all the places you might want.
 
 ``camera_resolutions``
---------------------
+----------------------
 
 Export resolutions
 
