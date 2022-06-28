@@ -1,6 +1,97 @@
 Changelog
 =========
 
+Unreleased
+----------
+
+Breaking Changes
+^^^^^^^^^^^^^^^^
+- Added ``InteractiveScene`` (`#1794 <https://github.com/3b1b/manim/pull/1794>`__)
+
+Fixed bugs
+^^^^^^^^^^
+- Fixed ``ImageMobject`` by overriding ``set_color`` method (`#1791 <https://github.com/3b1b/manim/pull/1791>`__)
+- Fixed bug with trying to close window during embed (`#1796 <https://github.com/3b1b/manim/commit/e0f5686d667152582f052021cd62bd2ef8c6b470>`__)
+- Fixed animating ``Mobject.restore`` bug (`#1796 <https://github.com/3b1b/manim/commit/62289045cc8e102121cfe4d7739f3c89102046fb>`__)
+- Fixed ``InteractiveScene.refresh_selection_highlight`` (`#1802 <https://github.com/3b1b/manim/commit/205116b8cec964b5619416f6e8acf0d8ac7df828>`__)
+- Fixed ``VMobject.match_style`` (`#1821 <https://github.com/3b1b/manim/commit/0060a4860c9d6b073a60cd839269c213446bba7b>`__)
+
+New Features
+^^^^^^^^^^^^
+- Added specific euler angle getters (`#1794 <https://github.com/3b1b/manim/commit/df2d465140e25fee265f602608aebbbaa2898c7e>`__)
+- Added start angle option to ``Circle`` (`#1794 <https://github.com/3b1b/manim/commit/217c1d7bb02f23a61722bf7275c40802be808563>`__)
+- Added ``Mobject.is_touching`` (`#1794 <https://github.com/3b1b/manim/commit/c1716895c0d9f36e23487322a18963991100bb95>`__)
+- Added ``Mobject.get_highlight`` (`#1794 <https://github.com/3b1b/manim/commit/29816fa74c7aa6ca060b63ab4165c89987e58d8b>`__)
+- Allowed for saving and loading mobjects from file (`#1794 <https://github.com/3b1b/manim/commit/50f5d20cc379947d7253d841c060dd7c55fa7787>`__)
+- Added ``Mobject.get_all_corners`` (`#1794 <https://github.com/3b1b/manim/commit/f636199d9a5d1e87ab861bcb6aebae6c9d96a133>`__)
+- Added ``Scene.id_to_mobject`` and ``Scene.ids_to_group`` (`#1794 <https://github.com/3b1b/manim/commit/cb768c26a0bc63e02c3035b4af31ba5cbc2e9dda>`__)
+- Added ``Scene.save_mobject`` and ``Scene.load_mobject`` to allow for saving and loading mobjects from file at the Scene level (`#1794 <https://github.com/3b1b/manim/commit/777b6d37783f8592df8a8abc3d62af972bc5a0c6>`__)
+- Added ``InteractiveScene`` (`#1794 <https://github.com/3b1b/manim/commit/c3afc84bfeb3a76ea8ede4ec4d9f36df0d4d9a28>`__)
+- Added ``VHighlight`` (`#1794 <https://github.com/3b1b/manim/commit/9d5e2b32fa9215219d11a601829126cea40410d1>`__)
+- Allowed for sweeping selection (`#1796 <https://github.com/3b1b/manim/commit/4caa03332367631d2fff15afd7e56b15fe8701ee>`__)
+- Allowed stretched-resizing (`#1796 <https://github.com/3b1b/manim/commit/b4b72d1b68d0993b96a6af76c4bb6816f77f0f12>`__)
+- Added cursor location label (`#1796 <https://github.com/3b1b/manim/commit/b9751e9d06068f27a327b419c52fd3c9d68db2e6>`__)
+- Added ``Mobject.deserialize`` (`#1796 <https://github.com/3b1b/manim/commit/4d8698a0e88333f6481c08d1b84b6e44f9dc4543>`__)
+- Added undo and redo stacks for scene (`#1796 <https://github.com/3b1b/manim/commit/cf466006faa00fc12dc22f5732dc21ccedaa5a63>`__)
+- Added ``Mobject.looks_identical`` (`#1802 <https://github.com/3b1b/manim/commit/c3c5717dde543b172b928b516d80a29bbd12651f>`__)
+- Added equality for ``ShaderWrapper`` (`#1802 <https://github.com/3b1b/manim/commit/3ae0a4e81b7790194bcf27142a1deb29fa548b9d>`__)
+- Added ``Mobject.get_ancestors`` (`#1802 <https://github.com/3b1b/manim/commit/db884b0a67fcee1ad7009f1869c475015fa886c7>`__)
+- Added smarter default radius to ``Polygon.round_corners`` (`#1802 <https://github.com/3b1b/manim/commit/4c1210b3ab1bf66b161f3d00cb859d36068c2fbb>`__)
+- Added checkpoints to ``Scene`` (`#1821 <https://github.com/3b1b/manim/commit/1b589e336f8151f2914ff00e8956baea8a95abc5>`__)
+- Added ``crosshair`` to ``InteractiveScene`` (`#1821 <https://github.com/3b1b/manim/commit/33ffd4863aaa7ecf950b7044181a8e8e3c643698>`__)
+- Added ``SceneState`` (`#1821 <https://github.com/3b1b/manim/commit/75e1cff5792065aa1c7fb3eb02e6ee0fa0e8e18d>`__)
+- Added ``time_span`` option to ``Animation`` (`#1821 <https://github.com/3b1b/manim/commit/a6fcfa3b4053b7f68f7b029eae87dbd207d97ad2>`__)
+- Added ``Mobject.arrange_to_fit_dim`` (`#1821 <https://github.com/3b1b/manim/commit/a87d3b5f59a64ce5a89ce6e17310bdbf62166157>`__)
+- Added ``DecimalNumber.get_tex`` (`#1821 <https://github.com/3b1b/manim/commit/48689c8c7bc0029bf5c1b540c11f647e857d419b>`__)
+
+Refactor
+^^^^^^^^
+- Updated parent updater status when adding updaters (`#1794 <https://github.com/3b1b/manim/commit/3b847da9eaad7391e779c5dbce63ad9257d8c773>`__)
+- Added case for zero vectors on ``angle_between_vectors`` (`#1794 <https://github.com/3b1b/manim/commit/e8ac25903e19cbb2b2c2037c988baafce4ddcbbc>`__)
+- Refactored ``Mobject.clear_updaters`` (`#1794 <https://github.com/3b1b/manim/commit/95f56f5e80106443d705c68fa220850ec38daee0>`__)
+- Changed the way changing-vs-static mobjects are tracked (more details see `#1794 <https://github.com/3b1b/manim/commit/50565fcd7a43ed13dc532f17515208edf97f64d0>`__)
+- Refactored ``Mobject.is_point_touching`` (`#1794 <https://github.com/3b1b/manim/commit/135f68de35712be266a1a85261d6d44234fc0056>`__)
+- Refactored ``Mobject.make_movable`` and ``Mobject.set_animating_status`` to recurse over family (`#1794 <https://github.com/3b1b/manim/commit/48390375037f745c9cb82b03d1cb3a1de6c530f3>`__)
+- Refactored ``AnimationGroup`` (`#1794 <https://github.com/3b1b/manim/commit/fdeab8ca953b46a902b531febcf132739ca194d4>`__)
+- Refactored ``Scene.save_state`` and ``Scene.restore`` (`#1794 <https://github.com/3b1b/manim/commit/97400a5cf26f33ed507ddeeb9b9a7f1a558d4f17>`__)
+- Added ``MANIM_COLORS`` (`#1794 <https://github.com/3b1b/manim/commit/5a34ca1fba8b4724eda0caa11b271d74e49f468c>`__)
+- Changed default transparent background codec to be prores (`#1794 <https://github.com/3b1b/manim/commit/eae7dbbe6eaf4344374713052aae694e69b62c28>`__)
+- Simplified ``Mobject.copy`` (`#1794 <https://github.com/3b1b/manim/commit/1b009a4b035244bd6a0b48bc4dc945fd3b4236ef>`__)
+- Refactored ``StringMobject`` and relevant classes (`#1795 <https://github.com/3b1b/manim/pull/1795>`__)
+- Updates to copying based on pickle serializing (`#1796 <https://github.com/3b1b/manim/commit/fe3e10acd29a3dd6f8b485c0e36ead819f2d937b>`)
+- Removed ``refresh_shader_wrapper_id`` from ``Mobject.become`` (`#1796 <https://github.com/3b1b/manim/commit/1b2460f02a694314897437b9b8755443ed290cc1>`__)
+- Refactored ``Scene.embed`` to play nicely with gui interactions (`#1796 <https://github.com/3b1b/manim/commit/c96bdc243e57c17bb75bf12d73ab5bf119cf1464>`__)
+- Made ``BlankScene`` inherit from ``InteractiveScene`` (`#1796 <https://github.com/3b1b/manim/commit/2737d9a736885a594dd101ffe07bb82e00069333>`__)
+- Updated behavior of -e flag to take in (optional) strings as inputs (`#1796 <https://github.com/3b1b/manim/commit/bb7fa2c8aa68d7c7992517cfde3c7d0e804e13e8>`__)
+- Refactor -e flag (`#1796 <https://github.com/3b1b/manim/commit/71c14969dffc8762a43f9646a0c3dc024a51b8df>`__)
+- Reverted to original copying scheme (`#1796 <https://github.com/3b1b/manim/commit/59506b89cc73fff3b3736245dd72e61dcebf9a2c>`__)
+- Renamed ``Mobject.is_movable`` to ``Mobject.interaction_allowed`` (`#1796 <https://github.com/3b1b/manim/commit/3961005fd708333a3e77856d10e78451faa04075>`__)
+- Refreshed static mobjects on undo's and redo's (`#1796 <https://github.com/3b1b/manim/commit/04bca6cafbb1482b8f25cfb34ce83316d8a095c9>`__)
+- Factored out event handling (`#1796 <https://github.com/3b1b/manim/commit/754316bf586be5a59839f8bac6fb9fcc47da0efb>`__)
+- Removed ``Mobject.interaction_allowed``, in favor of using ``_is_animating`` for multiple purposes (`#1796 <https://github.com/3b1b/manim/commit/f70e91348c8241bcb96470e7881dd92d9d3386d3>`__)
+- Moved Command + z and Command + shift + z behavior to Scene (`#1797 <https://github.com/3b1b/manim/commit/0fd8491c515ad23ca308099abe0f39fc38e2dd0e>`__)
+- Slight copy refactor (`#1797 <https://github.com/3b1b/manim/commit/902c2c002d6ca03c8080b2bd02ca36f2b8a748b6>`__)
+- When scene saves state, have it only copy mobjects which have changed (`#1802 <https://github.com/3b1b/manim/commit/bd2dce08300e5b110c6668bd6763f3918fcdc65e>`__)
+- Cleaned up ``Scene.remove`` function (`#1802 <https://github.com/3b1b/manim/commit/6310e2fb6414b01b3fe4be1d4d98525e34356b5e>`__)
+- Speed-ups to ``Mobject.copy`` (`#1802 <https://github.com/3b1b/manim/commit/e49e4b8373c13c7a888193aaf61955470acbe5d6>`__)
+- Slight speed-up to ``InteractiveScene.gather_selection`` (`#1802 <https://github.com/3b1b/manim/commit/f2b4245c134da577a2854732ec0331768d93ffbe>`__)
+- Only leave wait notes in presenter mode (`#1802 <https://github.com/3b1b/manim/commit/42d1f48c60d11caa043d5458e64bfceb31ea203f>`__)
+- Refactored ``remove_list_redundancies`` and ``list_update`` (`#1821 <https://github.com/3b1b/manim/commit/b920e7be7b85bc0bb0577e2f71c4320bb97b42d4>`__)
+- Match updaters in ``Mobject.become`` (`#1821 <https://github.com/3b1b/manim/commit/0e45b41fea5f22d136f62f4af2e0d892e61a12ce>`__)
+- Don't show animation progress bar by default (`#1821 <https://github.com/3b1b/manim/commit/52259af5df619d3f44fbaff4c43402b93d01be2f>`__)
+- Handle quitting during scene more gracefully (`#1821 <https://github.com/3b1b/manim/commit/e83ad785caaa1a1456e07b23f207469d335bbc0d>`__)
+- Made ``selection_highlight`` refresh with an updater (`#1821 <https://github.com/3b1b/manim/commit/ac08963feff24a1dd2e57f604b44ea0a18ab01f3>`__)
+- Refactored ``anims_from_play_args`` to ``prepare_animations`` which deprecating old style ``self.play(mob.method, ...)`` (`#1821 <https://github.com/3b1b/manim/commit/feab79c260498fd7757a304e24c617a4e51ba1df>`__)
+- Made presenter mode hold before first play call (`#1821 <https://github.com/3b1b/manim/commit/a9a151d4eff80cc37b9db0fe7117727aac45ba09>`__)
+- Update frame on all play calls when skipping animations, so as to provide a rapid preview during scene loading (`#1821 <https://github.com/3b1b/manim/commit/41b811a5e7c03f528d41555217106e62b287ca3b>`__)
+- Renamed frame_rate to fps (`#1821 <https://github.com/3b1b/manim/commit/6decb0c32aec21c09007f9a2b91aaa8e642ca848>`__)
+- Let default text alignment be decided in default_config (`#1821 <https://github.com/3b1b/manim/commit/83b4aa6b88b6c3defb19f204189681f5afbb219e>`__)
+
+Dependencies
+^^^^^^^^^^^^
+- Added dependency on ``pyperclip`` (`#1794 <https://github.com/3b1b/manim/commit/e579f4c955844fba415b976c313f64d1bb0376d0>`__)
+
+
 v1.6.1
 ------
 
