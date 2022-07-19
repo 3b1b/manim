@@ -393,10 +393,11 @@ def get_configuration(args):
     monitors = get_monitors()
     mon_index = custom_config["window_monitor"]
     monitor = monitors[min(mon_index, len(monitors) - 1)]
-    window_width = monitor.width
+    aspect_ratio = config["camera_config"]["pixel_width"] / config["camera_config"]["pixel_height"]
+    window_height = monitor.height
     if not (args.full_screen or custom_config["full_screen"]):
-        window_width //= 2
-    window_height = window_width * 9 // 16
+        window_height //= 2
+    window_width = int(window_height * aspect_ratio)
     config["window_config"] = {
         "size": (window_width, window_height),
     }
