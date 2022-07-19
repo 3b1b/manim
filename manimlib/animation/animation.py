@@ -1,10 +1,20 @@
+from __future__ import annotations
+
 from copy import deepcopy
 
 from manimlib.mobject.mobject import _AnimationBuilder
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import smooth
+from manimlib.utils.rate_functions import squish_rate_func
 from manimlib.utils.simple_functions import clip
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Callable
+
+    from manimlib.scene.scene import Scene
 
 
 DEFAULT_ANIMATION_RUN_TIME = 1.0
@@ -14,6 +24,7 @@ DEFAULT_ANIMATION_LAG_RATIO = 0
 class Animation(object):
     CONFIG = {
         "run_time": DEFAULT_ANIMATION_RUN_TIME,
+        "time_span": None,  # Tuple of times, between which the animation will run
         "rate_func": smooth,
         "name": None,
         # Does this animation add or remove a mobject form the screen
@@ -29,21 +40,28 @@ class Animation(object):
         "suspend_mobject_updating": True,
     }
 
-    def __init__(self, mobject, **kwargs):
+    def __init__(self, mobject: Mobject, **kwargs):
         assert(isinstance(mobject, Mobject))
         digest_config(self, kwargs)
         self.mobject = mobject
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.name:
             return self.name
         return self.__class__.__name__ + str(self.mobject)
 
-    def begin(self):
+    def begin(self) -> None:
         # This is called right as an animation is being
         # played.  As much initialization as possible,
         # especially any mobject copying, should live in
         # this method
+        if self.time_span is not None:
+            start, end = self.time_span
+            self.run_time = max(end, self.run_time)
+            self.rate_func = squish_rate_func(
+                self.rate_func, start / self.run_time, end / self.run_time,
+            )
+        self.mobject.set_animating_status(True)
         self.starting_mobject = self.create_starting_mobject()
         if self.suspend_mobject_updating:
             # All calls to self.mobject's internal updaters
@@ -56,32 +74,33 @@ class Animation(object):
         self.families = list(self.get_all_families_zipped())
         self.interpolate(0)
 
-    def finish(self):
+    def finish(self) -> None:
         self.interpolate(self.final_alpha_value)
+        self.mobject.set_animating_status(False)
         if self.suspend_mobject_updating:
             self.mobject.resume_updating()
 
-    def clean_up_from_scene(self, scene):
+    def clean_up_from_scene(self, scene: Scene) -> None:
         if self.is_remover():
             scene.remove(self.mobject)
 
-    def create_starting_mobject(self):
+    def create_starting_mobject(self) -> Mobject:
         # Keep track of where the mobject starts
         return self.mobject.copy()
 
-    def get_all_mobjects(self):
+    def get_all_mobjects(self) -> tuple[Mobject, Mobject]:
         """
         Ordering must match the ording of arguments to interpolate_submobject
         """
         return self.mobject, self.starting_mobject
 
-    def get_all_families_zipped(self):
+    def get_all_families_zipped(self) -> zip[tuple[Mobject]]:
         return zip(*[
             mob.get_family()
             for mob in self.get_all_mobjects()
         ])
 
-    def update_mobjects(self, dt):
+    def update_mobjects(self, dt: float) -> None:
         """
         Updates things like starting_mobject, and (for
         Transforms) target_mobject.  Note, since typically
@@ -92,7 +111,7 @@ class Animation(object):
         for mob in self.get_all_mobjects_to_update():
             mob.update(dt)
 
-    def get_all_mobjects_to_update(self):
+    def get_all_mobjects_to_update(self) -> list[Mobject]:
         # The surrounding scene typically handles
         # updating of self.mobject.  Besides, in
         # most cases its updating is suspended anyway
@@ -109,27 +128,37 @@ class Animation(object):
         return self
 
     # Methods for interpolation, the mean of an Animation
-    def interpolate(self, alpha):
+    def interpolate(self, alpha: float) -> None:
         alpha = clip(alpha, 0, 1)
         self.interpolate_mobject(self.rate_func(alpha))
 
-    def update(self, alpha):
+    def update(self, alpha: float) -> None:
         """
         This method shouldn't exist, but it's here to
         keep many old scenes from breaking
         """
         self.interpolate(alpha)
 
-    def interpolate_mobject(self, alpha):
+    def interpolate_mobject(self, alpha: float) -> None:
         for i, mobs in enumerate(self.families):
             sub_alpha = self.get_sub_alpha(alpha, i, len(self.families))
             self.interpolate_submobject(*mobs, sub_alpha)
 
-    def interpolate_submobject(self, submobject, starting_sumobject, alpha):
+    def interpolate_submobject(
+        self,
+        submobject: Mobject,
+        starting_submobject: Mobject,
+        alpha: float
+    ):
         # Typically ipmlemented by subclass
         pass
 
-    def get_sub_alpha(self, alpha, index, num_submobjects):
+    def get_sub_alpha(
+        self,
+        alpha: float,
+        index: int,
+        num_submobjects: int
+    ) -> float:
         # TODO, make this more understanable, and/or combine
         # its functionality with AnimationGroup's method
         # build_animations_with_timings
@@ -140,29 +169,31 @@ class Animation(object):
         return clip((value - lower), 0, 1)
 
     # Getters and setters
-    def set_run_time(self, run_time):
+    def set_run_time(self, run_time: float):
         self.run_time = run_time
         return self
 
-    def get_run_time(self):
+    def get_run_time(self) -> float:
+        if self.time_span:
+            return max(self.run_time, self.time_span[1])
         return self.run_time
 
-    def set_rate_func(self, rate_func):
+    def set_rate_func(self, rate_func: Callable[[float], float]):
         self.rate_func = rate_func
         return self
 
-    def get_rate_func(self):
+    def get_rate_func(self) -> Callable[[float], float]:
         return self.rate_func
 
-    def set_name(self, name):
+    def set_name(self, name: str):
         self.name = name
         return self
 
-    def is_remover(self):
+    def is_remover(self) -> bool:
         return self.remover
 
 
-def prepare_animation(anim):
+def prepare_animation(anim: Animation | _AnimationBuilder):
     if isinstance(anim, _AnimationBuilder):
         return anim.build()
 

@@ -1,28 +1,46 @@
-from scipy import linalg
-import numpy as np
+from __future__ import annotations
 
-from manimlib.utils.simple_functions import choose
-from manimlib.utils.space_ops import find_intersection
-from manimlib.utils.space_ops import cross2d
-from manimlib.utils.space_ops import midpoint
+import numpy as np
+from scipy import linalg
+
 from manimlib.logger import log
+from manimlib.utils.simple_functions import choose
+from manimlib.utils.space_ops import cross2d
+from manimlib.utils.space_ops import find_intersection
+from manimlib.utils.space_ops import midpoint
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Callable, Iterable, Sequence, TypeVar
+
+    import numpy.typing as npt
+
+    T = TypeVar("T")
+
 
 CLOSED_THRESHOLD = 0.001
 
 
-def bezier(points):
+def bezier(
+    points: Iterable[float | np.ndarray]
+) -> Callable[[float], float | np.ndarray]:
     n = len(points) - 1
 
     def result(t):
-        return sum([
+        return sum(
             ((1 - t)**(n - k)) * (t**k) * choose(n, k) * point
             for k, point in enumerate(points)
-        ])
+        )
 
     return result
 
 
-def partial_bezier_points(points, a, b):
+def partial_bezier_points(
+    points: Sequence[np.ndarray],
+    a: float,
+    b: float
+) -> list[float]:
     """
     Given an list of points which define
     a bezier curve, and two numbers 0<=a<b<=1,
@@ -48,7 +66,11 @@ def partial_bezier_points(points, a, b):
 
 # Shortened version of partial_bezier_points just for quadratics,
 # since this is called a fair amount
-def partial_quadratic_bezier_points(points, a, b):
+def partial_quadratic_bezier_points(
+    points: Sequence[np.ndarray],
+    a: float,
+    b: float
+) -> list[float]:
     if a == 1:
         return 3 * [points[-1]]
 
@@ -65,7 +87,8 @@ def partial_quadratic_bezier_points(points, a, b):
 
 # Linear interpolation variants
 
-def interpolate(start, end, alpha):
+
+def interpolate(start: T, end: T, alpha: np.ndarray | float) -> T:
     try:
         return (1 - alpha) * start + alpha * end
     except TypeError:
@@ -76,12 +99,31 @@ def interpolate(start, end, alpha):
         sys.exit(2)
 
 
-def set_array_by_interpolation(arr, arr1, arr2, alpha, interp_func=interpolate):
+def outer_interpolate(
+    start: np.ndarray | float,
+    end: np.ndarray | float,
+    alpha: np.ndarray | float,
+) -> T:
+    result = np.outer(1 - alpha, start) + np.outer(alpha, end)
+    return result.reshape((*np.shape(alpha), *np.shape(start)))
+
+
+def set_array_by_interpolation(
+    arr: np.ndarray,
+    arr1: np.ndarray,
+    arr2: np.ndarray,
+    alpha: float,
+    interp_func: Callable[[np.ndarray, np.ndarray, float], np.ndarray] = interpolate
+) -> np.ndarray:
     arr[:] = interp_func(arr1, arr2, alpha)
     return arr
 
 
-def integer_interpolate(start, end, alpha):
+def integer_interpolate(
+    start: T,
+    end: T,
+    alpha: float
+) -> tuple[int, float]:
     """
     alpha is a float between 0 and 1.  This returns
     an integer between start and end (inclusive) representing
@@ -102,22 +144,30 @@ def integer_interpolate(start, end, alpha):
     return (value, residue)
 
 
-def mid(start, end):
+def mid(start: T, end: T) -> T:
     return (start + end) / 2.0
 
 
-def inverse_interpolate(start, end, value):
+def inverse_interpolate(start: T, end: T, value: T) -> float:
     return np.true_divide(value - start, end - start)
 
 
-def match_interpolate(new_start, new_end, old_start, old_end, old_value):
+def match_interpolate(
+    new_start: T, 
+    new_end: T, 
+    old_start: T, 
+    old_end: T, 
+    old_value: T
+) -> T:
     return interpolate(
         new_start, new_end,
         inverse_interpolate(old_start, old_end, old_value)
     )
 
 
-def get_smooth_quadratic_bezier_handle_points(points):
+def get_smooth_quadratic_bezier_handle_points(
+    points: Sequence[np.ndarray]
+) -> np.ndarray | list[np.ndarray]:
     """
     Figuring out which bezier curves most smoothly connect a sequence of points.
 
@@ -149,7 +199,9 @@ def get_smooth_quadratic_bezier_handle_points(points):
     return handles
 
 
-def get_smooth_cubic_bezier_handle_points(points):
+def get_smooth_cubic_bezier_handle_points(
+    points: npt.ArrayLike
+) -> tuple[np.ndarray, np.ndarray]:
     points = np.array(points)
     num_handles = len(points) - 1
     dim = points.shape[1]
@@ -207,7 +259,10 @@ def get_smooth_cubic_bezier_handle_points(points):
     return handle_pairs[0::2], handle_pairs[1::2]
 
 
-def diag_to_matrix(l_and_u, diag):
+def diag_to_matrix(
+    l_and_u: tuple[int, int], 
+    diag: np.ndarray
+) -> np.ndarray:
     """
     Converts array whose rows represent diagonal
     entries of a matrix into the matrix itself.
@@ -224,13 +279,18 @@ def diag_to_matrix(l_and_u, diag):
     return matrix
 
 
-def is_closed(points):
+def is_closed(points: Sequence[np.ndarray]) -> bool:
     return np.allclose(points[0], points[-1])
 
 
 # Given 4 control points for a cubic bezier curve (or arrays of such)
 # return control points for 2 quadratics (or 2n quadratics) approximating them.
-def get_quadratic_approximation_of_cubic(a0, h0, h1, a1):
+def get_quadratic_approximation_of_cubic(
+    a0: npt.ArrayLike,
+    h0: npt.ArrayLike,
+    h1: npt.ArrayLike,
+    a1: npt.ArrayLike
+) -> np.ndarray:
     a0 = np.array(a0, ndmin=2)
     h0 = np.array(h0, ndmin=2)
     h1 = np.array(h1, ndmin=2)
@@ -298,7 +358,9 @@ def get_quadratic_approximation_of_cubic(a0, h0, h1, a1):
     return result
 
 
-def get_smooth_quadratic_bezier_path_through(points):
+def get_smooth_quadratic_bezier_path_through(
+    points: list[np.ndarray]
+) -> np.ndarray:
     # TODO
     h0, h1 = get_smooth_cubic_bezier_handle_points(points)
     a0 = points[:-1]

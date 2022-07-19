@@ -1,11 +1,23 @@
-from manimlib.constants import *
+from __future__ import annotations
+
+import numpy as np
+
+from manimlib.constants import DOWN, LEFT, RIGHT, UP
+from manimlib.constants import GREY_B
+from manimlib.constants import MED_SMALL_BUFF
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.numbers import DecimalNumber
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.bezier import interpolate
+from manimlib.utils.bezier import outer_interpolate
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.config_ops import merge_dicts_recursively
 from manimlib.utils.simple_functions import fdiv
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Iterable, Sequence
 
 
 class NumberLine(Line):
@@ -38,7 +50,7 @@ class NumberLine(Line):
         "numbers_to_exclude": None
     }
 
-    def __init__(self, x_range=None, **kwargs):
+    def __init__(self, x_range: Sequence[float] | None = None, **kwargs):
         digest_config(self, kwargs)
         if x_range is None:
             x_range = self.x_range
@@ -48,9 +60,9 @@ class NumberLine(Line):
         x_min, x_max, x_step = x_range
         # A lot of old scenes pass in x_min or x_max explicitly,
         # so this is just here to keep those workin
-        self.x_min = kwargs.get("x_min", x_min)
-        self.x_max = kwargs.get("x_max", x_max)
-        self.x_step = kwargs.get("x_step", x_step)
+        self.x_min: float = kwargs.get("x_min", x_min)
+        self.x_max: float = kwargs.get("x_max", x_max)
+        self.x_step: float = kwargs.get("x_step", x_step)
 
         super().__init__(self.x_min * RIGHT, self.x_max * RIGHT, **kwargs)
         if self.width:
@@ -71,14 +83,14 @@ class NumberLine(Line):
         if self.include_numbers:
             self.add_numbers(excluding=self.numbers_to_exclude)
 
-    def get_tick_range(self):
+    def get_tick_range(self) -> np.ndarray:
         if self.include_tip:
             x_max = self.x_max
         else:
             x_max = self.x_max + self.x_step
         return np.arange(self.x_min, x_max, self.x_step)
 
-    def add_ticks(self):
+    def add_ticks(self) -> None:
         ticks = VGroup()
         for x in self.get_tick_range():
             size = self.tick_size
@@ -88,7 +100,7 @@ class NumberLine(Line):
         self.add(ticks)
         self.ticks = ticks
 
-    def get_tick(self, x, size=None):
+    def get_tick(self, x: float, size: float | None = None) -> Line:
         if size is None:
             size = self.tick_size
         result = Line(size * DOWN, size * UP)
@@ -97,14 +109,14 @@ class NumberLine(Line):
         result.match_style(self)
         return result
 
-    def get_tick_marks(self):
+    def get_tick_marks(self) -> VGroup:
         return self.ticks
 
-    def number_to_point(self, number):
-        alpha = float(number - self.x_min) / (self.x_max - self.x_min)
-        return interpolate(self.get_start(), self.get_end(), alpha)
+    def number_to_point(self, number: float | np.ndarray) -> np.ndarray:
+        alpha = (number - self.x_min) / (self.x_max - self.x_min)
+        return outer_interpolate(self.get_start(), self.get_end(), alpha)
 
-    def point_to_number(self, point):
+    def point_to_number(self, point: np.ndarray) -> float:
         points = self.get_points()
         start = points[0]
         end = points[-1]
@@ -115,21 +127,24 @@ class NumberLine(Line):
         )
         return interpolate(self.x_min, self.x_max, proportion)
 
-    def n2p(self, number):
+    def n2p(self, number: float) -> np.ndarray:
         """Abbreviation for number_to_point"""
         return self.number_to_point(number)
 
-    def p2n(self, point):
+    def p2n(self, point: np.ndarray) -> float:
         """Abbreviation for point_to_number"""
         return self.point_to_number(point)
 
-    def get_unit_size(self):
+    def get_unit_size(self) -> float:
         return self.get_length() / (self.x_max - self.x_min)
 
-    def get_number_mobject(self, x,
-                           direction=None,
-                           buff=None,
-                           **number_config):
+    def get_number_mobject(
+        self,
+        x: float,
+        direction: np.ndarray | None = None,
+        buff: float | None = None,
+        **number_config
+    ) -> DecimalNumber:
         number_config = merge_dicts_recursively(
             self.decimal_number_config, number_config
         )
@@ -149,7 +164,13 @@ class NumberLine(Line):
             num_mob.shift(num_mob[0].get_width() * LEFT / 2)
         return num_mob
 
-    def add_numbers(self, x_values=None, excluding=None, font_size=24, **kwargs):
+    def add_numbers(
+        self,
+        x_values: Iterable[float] | None = None,
+        excluding: Iterable[float] | None = None,
+        font_size: int = 24,
+        **kwargs
+    ) -> VGroup:
         if x_values is None:
             x_values = self.get_tick_range()
 

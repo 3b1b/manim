@@ -77,10 +77,6 @@ class AnimatingMethods(Scene):
         # ".animate" syntax:
         self.play(grid.animate.shift(LEFT))
 
-        # Alternatively, you can use the older syntax by passing the
-        # method and then the arguments to the scene's "play" function:
-        self.play(grid.shift, LEFT)
-
         # Both of those will interpolate between the mobject's initial
         # state and whatever happens when you apply that method.
         # For this example, calling grid.shift(LEFT) would shift the
@@ -274,7 +270,7 @@ class UpdatersExample(Scene):
         square = Square()
         square.set_fill(BLUE_E, 1)
 
-        # On all all frames, the constructor Brace(square, UP) will
+        # On all frames, the constructor Brace(square, UP) will
         # be called, and the mobject brace will set its data to match
         # that of the newly constructed object
         brace = always_redraw(Brace, square, UP)
@@ -579,7 +575,7 @@ class SurfaceExample(Scene):
         self.play(light.animate.move_to(3 * IN), run_time=5)
         self.play(light.animate.shift(10 * OUT), run_time=5)
 
-        drag_text = Text("Try moving the mouse while pressing d or s")
+        drag_text = Text("Try moving the mouse while pressing d or f")
         drag_text.move_to(light_text)
         drag_text.fix_in_frame()
 
@@ -650,7 +646,7 @@ class ControlsExample(Scene):
 
         def text_updater(old_text):
             assert(isinstance(old_text, Text))
-            new_text = Text(self.textbox.get_value(), size=old_text.size)
+            new_text = Text(self.textbox.get_value(), font_size=old_text.font_size)
             # new_text.align_data_and_family(old_text)
             new_text.move_to(old_text)
             if self.checkbox.get_value():

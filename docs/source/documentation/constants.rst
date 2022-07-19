@@ -18,7 +18,7 @@ Frame and pixel shape
 
     DEFAULT_PIXEL_HEIGHT = 1080
     DEFAULT_PIXEL_WIDTH = 1920
-    DEFAULT_FRAME_RATE = 30
+    DEFAULT_FPS = 30
 
 Buffs
 -----
@@ -84,8 +84,6 @@ Text
 
 .. code-block:: python
 
-    START_X = 30
-    START_Y = 20
     NORMAL = "NORMAL"
     ITALIC = "ITALIC"
     OBLIQUE = "OBLIQUE"

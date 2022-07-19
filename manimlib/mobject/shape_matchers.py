@@ -1,11 +1,25 @@
-from manimlib.constants import *
+from __future__ import annotations
+
+from colour import Color
+
+from manimlib.constants import BLACK, RED, YELLOW
+from manimlib.constants import DL, DOWN, DR, LEFT, RIGHT, UL, UR
+from manimlib.constants import SMALL_BUFF
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.color import Color
-from manimlib.utils.customization import get_customization
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.customization import get_customization
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Union
+
+    from manimlib.mobject.mobject import Mobject
+
+    ManimColor = Union[str, Color]
 
 
 class SurroundingRectangle(Rectangle):
@@ -14,7 +28,7 @@ class SurroundingRectangle(Rectangle):
         "buff": SMALL_BUFF,
     }
 
-    def __init__(self, mobject, **kwargs):
+    def __init__(self, mobject: Mobject, **kwargs):
         digest_config(self, kwargs)
         kwargs["width"] = mobject.get_width() + 2 * self.buff
         kwargs["height"] = mobject.get_height() + 2 * self.buff
@@ -30,23 +44,24 @@ class BackgroundRectangle(SurroundingRectangle):
         "buff": 0
     }
 
-    def __init__(self, mobject, color=None, **kwargs):
+    def __init__(self, mobject: Mobject, color: ManimColor = None, **kwargs):
         if color is None:
             color = get_customization()['style']['background_color']
         SurroundingRectangle.__init__(self, mobject, color=color, **kwargs)
         self.original_fill_opacity = self.fill_opacity
 
-    def pointwise_become_partial(self, mobject, a, b):
+    def pointwise_become_partial(self, mobject: Mobject, a: float, b: float):
         self.set_fill(opacity=b * self.original_fill_opacity)
         return self
 
-    def set_style_data(self,
-                       stroke_color=None,
-                       stroke_width=None,
-                       fill_color=None,
-                       fill_opacity=None,
-                       family=True
-                       ):
+    def set_style_data(
+        self,
+        stroke_color: ManimColor | None = None,
+        stroke_width: float | None = None,
+        fill_color: ManimColor | None = None,
+        fill_opacity: float | None = None,
+        family: bool = True
+    ):
         # Unchangeable style, except for fill_opacity
         VMobject.set_style_data(
             self,
@@ -57,7 +72,7 @@ class BackgroundRectangle(SurroundingRectangle):
         )
         return self
 
-    def get_fill_color(self):
+    def get_fill_color(self) -> Color:
         return Color(self.color)
 
 
@@ -67,12 +82,12 @@ class Cross(VGroup):
         "stroke_width": [0, 6, 0],
     }
 
-    def __init__(self, mobject, **kwargs):
+    def __init__(self, mobject: Mobject, **kwargs):
         super().__init__(
             Line(UL, DR),
             Line(UR, DL),
         )
-        self.insert_n_curves(2)
+        self.insert_n_curves(20)
         self.replace(mobject, stretch=True)
         self.set_stroke(self.stroke_color, width=self.stroke_width)
 
@@ -82,7 +97,7 @@ class Underline(Line):
         "buff": SMALL_BUFF,
     }
 
-    def __init__(self, mobject, **kwargs):
+    def __init__(self, mobject: Mobject, **kwargs):
         super().__init__(LEFT, RIGHT, **kwargs)
         self.match_width(mobject)
         self.next_to(mobject, DOWN, buff=self.buff)

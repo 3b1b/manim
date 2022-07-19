@@ -1,25 +1,43 @@
-import numpy as np
+from __future__ import annotations
+
 import itertools as it
-import random
 
-from manimlib.constants import *
+import numpy as np
 
+from manimlib.constants import FRAME_HEIGHT, FRAME_WIDTH
+from manimlib.constants import WHITE
 from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.indication import VShowPassingFlash
 from manimlib.mobject.geometry import Arrow
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.bezier import interpolate
+from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.color import get_colormap_list
-from manimlib.utils.config_ops import merge_dicts_recursively
 from manimlib.utils.config_ops import digest_config
+from manimlib.utils.config_ops import merge_dicts_recursively
 from manimlib.utils.rate_functions import linear
 from manimlib.utils.simple_functions import sigmoid
 from manimlib.utils.space_ops import get_norm
 
+from typing import TYPE_CHECKING
 
-def get_vectorized_rgb_gradient_function(min_value, max_value, color_map):
+if TYPE_CHECKING:
+    from typing import Callable, Iterable, Sequence, TypeVar
+
+    import numpy.typing as npt
+
+    from manimlib.mobject.coordinate_systems import CoordinateSystem
+    from manimlib.mobject.mobject import Mobject
+
+    T = TypeVar("T")
+
+
+def get_vectorized_rgb_gradient_function(
+    min_value: T,
+    max_value: T,
+    color_map: str
+) -> Callable[[npt.ArrayLike], np.ndarray]:
     rgbs = np.array(get_colormap_list(color_map))
 
     def func(values):
@@ -37,12 +55,19 @@ def get_vectorized_rgb_gradient_function(min_value, max_value, color_map):
     return func
 
 
-def get_rgb_gradient_function(min_value, max_value, color_map):
+def get_rgb_gradient_function(
+    min_value: T,
+    max_value: T,
+    color_map: str
+) -> Callable[[T], np.ndarray]:
     vectorized_func = get_vectorized_rgb_gradient_function(min_value, max_value, color_map)
     return lambda value: vectorized_func([value])[0]
 
 
-def move_along_vector_field(mobject, func):
+def move_along_vector_field(
+    mobject: Mobject,
+    func: Callable[[np.ndarray], np.ndarray]
+) -> Mobject:
     mobject.add_updater(
         lambda m, dt: m.shift(
             func(m.get_center()) * dt
@@ -51,7 +76,10 @@ def move_along_vector_field(mobject, func):
     return mobject
 
 
-def move_submobjects_along_vector_field(mobject, func):
+def move_submobjects_along_vector_field(
+    mobject: Mobject,
+    func: Callable[[np.ndarray], np.ndarray]
+) -> Mobject:
     def apply_nudge(mob, dt):
         for submob in mob:
             x, y = submob.get_center()[:2]
@@ -62,7 +90,11 @@ def move_submobjects_along_vector_field(mobject, func):
     return mobject
 
 
-def move_points_along_vector_field(mobject, func, coordinate_system):
+def move_points_along_vector_field(
+    mobject: Mobject,
+    func: Callable[[float, float], Iterable[float]],
+    coordinate_system: CoordinateSystem
+) -> Mobject:
     cs = coordinate_system
     origin = cs.get_origin()
 
@@ -74,7 +106,10 @@ def move_points_along_vector_field(mobject, func, coordinate_system):
     return mobject
 
 
-def get_sample_points_from_coordinate_system(coordinate_system, step_multiple):
+def get_sample_points_from_coordinate_system(
+    coordinate_system: CoordinateSystem,
+    step_multiple: float
+) -> it.product[tuple[np.ndarray, ...]]:
     ranges = []
     for range_args in coordinate_system.get_all_ranges():
         _min, _max, step = range_args
@@ -96,7 +131,12 @@ class VectorField(VGroup):
         "vector_config": {},
     }
 
-    def __init__(self, func, coordinate_system, **kwargs):
+    def __init__(
+        self,
+        func: Callable[[float, float], Sequence[float]],
+        coordinate_system: CoordinateSystem,
+        **kwargs
+    ):
         super().__init__(**kwargs)
         self.func = func
         self.coordinate_system = coordinate_system
@@ -112,7 +152,7 @@ class VectorField(VGroup):
             for coords in samples
         ))
 
-    def get_vector(self, coords, **kwargs):
+    def get_vector(self, coords: Iterable[float], **kwargs) -> Arrow:
         vector_config = merge_dicts_recursively(
             self.vector_config,
             kwargs
@@ -157,19 +197,24 @@ class StreamLines(VGroup):
         "color_map": "3b1b_colormap",
     }
 
-    def __init__(self, func, coordinate_system, **kwargs):
+    def __init__(
+        self,
+        func: Callable[[float, float], Sequence[float]],
+        coordinate_system: CoordinateSystem,
+        **kwargs
+    ):
         super().__init__(**kwargs)
         self.func = func
         self.coordinate_system = coordinate_system
         self.draw_lines()
         self.init_style()
 
-    def point_func(self, point):
+    def point_func(self, point: np.ndarray) -> np.ndarray:
         in_coords = self.coordinate_system.p2c(point)
         out_coords = self.func(*in_coords)
         return self.coordinate_system.c2p(*out_coords)
 
-    def draw_lines(self):
+    def draw_lines(self) -> None:
         lines = []
         origin = self.coordinate_system.get_origin()
         for point in self.get_start_points():
@@ -194,7 +239,7 @@ class StreamLines(VGroup):
             lines.append(line)
         self.set_submobjects(lines)
 
-    def get_start_points(self):
+    def get_start_points(self) -> np.ndarray:
         cs = self.coordinate_system
         sample_coords = get_sample_points_from_coordinate_system(
             cs, self.step_multiple,
@@ -210,7 +255,7 @@ class StreamLines(VGroup):
             for coords in sample_coords
         ])
 
-    def init_style(self):
+    def init_style(self) -> None:
         if self.color_by_magnitude:
             values_to_rgbs = get_vectorized_rgb_gradient_function(
                 *self.magnitude_range, self.color_map,
@@ -247,7 +292,7 @@ class AnimatedStreamLines(VGroup):
         },
     }
 
-    def __init__(self, stream_lines, **kwargs):
+    def __init__(self, stream_lines: StreamLines, **kwargs):
         super().__init__(**kwargs)
         self.stream_lines = stream_lines
         for line in stream_lines:
@@ -257,12 +302,12 @@ class AnimatedStreamLines(VGroup):
                 **self.line_anim_config,
             )
             line.anim.begin()
-            line.time = -self.lag_range * random.random()
+            line.time = -self.lag_range * np.random.random()
             self.add(line.anim.mobject)
 
         self.add_updater(lambda m, dt: m.update(dt))
 
-    def update(self, dt):
+    def update(self, dt: float) -> None:
         stream_lines = self.stream_lines
         for line in stream_lines:
             line.time += dt
@@ -278,13 +323,13 @@ class ShowPassingFlashWithThinningStrokeWidth(AnimationGroup):
         "remover": True
     }
 
-    def __init__(self, vmobject, **kwargs):
+    def __init__(self, vmobject: VMobject, **kwargs):
         digest_config(self, kwargs)
         max_stroke_width = vmobject.get_stroke_width()
         max_time_width = kwargs.pop("time_width", self.time_width)
         AnimationGroup.__init__(self, *[
             VShowPassingFlash(
-                vmobject.deepcopy().set_stroke(width=stroke_width),
+                vmobject.copy().set_stroke(width=stroke_width),
                 time_width=time_width,
                 **kwargs
             )

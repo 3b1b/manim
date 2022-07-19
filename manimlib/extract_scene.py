@@ -1,13 +1,14 @@
+import copy
 import inspect
 import sys
-import copy
 
-from manimlib.scene.scene import Scene
 from manimlib.config import get_custom_config
 from manimlib.logger import log
+from manimlib.scene.interactive_scene import InteractiveScene
+from manimlib.scene.scene import Scene
 
 
-class BlankScene(Scene):
+class BlankScene(InteractiveScene):
     def construct(self):
         exec(get_custom_config()["universal_import_line"])
         self.embed()
@@ -63,7 +64,9 @@ def get_scene_config(config):
             "start_at_animation_number",
             "end_at_animation_number",
             "leave_progress_bars",
+            "show_animation_progress",
             "preview",
+            "presenter_mode",
         ]
     ])
 
@@ -85,7 +88,7 @@ def compute_total_frames(scene_class, scene_config):
     pre_scene = scene_class(**pre_config)
     pre_scene.run()
     total_time = pre_scene.time - pre_scene.skip_time
-    return int(total_time * scene_config["camera_config"]["frame_rate"])
+    return int(total_time * scene_config["camera_config"]["fps"])
 
 
 def get_scenes_to_render(scene_classes, scene_config, config):

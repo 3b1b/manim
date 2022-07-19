@@ -1,94 +1,106 @@
-import moderngl
-import math
-from colour import Color
-import OpenGL.GL as gl
+from __future__ import annotations
 
-from PIL import Image
-import numpy as np
 import itertools as it
+import math
 
-from manimlib.constants import *
+import moderngl
+import numpy as np
+import OpenGL.GL as gl
+from PIL import Image
+from scipy.spatial.transform import Rotation
+
+from manimlib.constants import BLACK
+from manimlib.constants import DEGREES, RADIANS
+from manimlib.constants import DEFAULT_FPS
+from manimlib.constants import DEFAULT_PIXEL_HEIGHT, DEFAULT_PIXEL_WIDTH
+from manimlib.constants import FRAME_HEIGHT, FRAME_WIDTH
+from manimlib.constants import DOWN, LEFT, ORIGIN, OUT, RIGHT, UP
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
+from manimlib.utils.color import color_to_rgba
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.simple_functions import fdiv
-from manimlib.utils.simple_functions import clip
-from manimlib.utils.space_ops import angle_of_vector
-from manimlib.utils.space_ops import rotation_matrix_transpose_from_quaternion
-from manimlib.utils.space_ops import rotation_matrix_transpose
-from manimlib.utils.space_ops import quaternion_from_angle_axis
-from manimlib.utils.space_ops import quaternion_mult
+from manimlib.utils.space_ops import normalize
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from manimlib.shader_wrapper import ShaderWrapper
 
 
 class CameraFrame(Mobject):
     CONFIG = {
         "frame_shape": (FRAME_WIDTH, FRAME_HEIGHT),
         "center_point": ORIGIN,
-        # Theta, phi, gamma
-        "euler_angles": [0, 0, 0],
-        "focal_distance": 2,
+        "focal_dist_to_height": 2,
     }
 
-    def init_data(self):
-        super().init_data()
-        self.data["euler_angles"] = np.array(self.euler_angles, dtype=float)
-        self.refresh_rotation_matrix()
+    def init_uniforms(self) -> None:
+        super().init_uniforms()
+        # As a quaternion
+        self.uniforms["orientation"] = Rotation.identity().as_quat()
+        self.uniforms["focal_dist_to_height"] = self.focal_dist_to_height
 
-    def init_points(self):
+    def init_points(self) -> None:
         self.set_points([ORIGIN, LEFT, RIGHT, DOWN, UP])
         self.set_width(self.frame_shape[0], stretch=True)
         self.set_height(self.frame_shape[1], stretch=True)
         self.move_to(self.center_point)
 
+    def set_orientation(self, rotation: Rotation):
+        self.uniforms["orientation"][:] = rotation.as_quat()
+        return self
+
+    def get_orientation(self):
+        return Rotation.from_quat(self.uniforms["orientation"])
+
     def to_default_state(self):
         self.center()
         self.set_height(FRAME_HEIGHT)
         self.set_width(FRAME_WIDTH)
-        self.set_euler_angles(0, 0, 0)
+        self.set_orientation(Rotation.identity())
         return self
 
     def get_euler_angles(self):
-        return self.data["euler_angles"]
+        return self.get_orientation().as_euler("zxz")[::-1]
+
+    def get_theta(self):
+        return self.get_euler_angles()[0]
+
+    def get_phi(self):
+        return self.get_euler_angles()[1]
+
+    def get_gamma(self):
+        return self.get_euler_angles()[2]
 
     def get_inverse_camera_rotation_matrix(self):
-        return self.inverse_camera_rotation_matrix
+        return self.get_orientation().as_matrix().T
 
-    def refresh_rotation_matrix(self):
-        # Rotate based on camera orientation
-        theta, phi, gamma = self.get_euler_angles()
-        quat = quaternion_mult(
-            quaternion_from_angle_axis(theta, OUT, axis_normalized=True),
-            quaternion_from_angle_axis(phi, RIGHT, axis_normalized=True),
-            quaternion_from_angle_axis(gamma, OUT, axis_normalized=True),
-        )
-        self.inverse_camera_rotation_matrix = rotation_matrix_transpose_from_quaternion(quat)
-
-    def rotate(self, angle, axis=OUT, **kwargs):
-        curr_rot_T = self.get_inverse_camera_rotation_matrix()
-        added_rot_T = rotation_matrix_transpose(angle, axis)
-        new_rot_T = np.dot(curr_rot_T, added_rot_T)
-        Fz = new_rot_T[2]
-        phi = np.arccos(clip(Fz[2], -1, 1))
-        theta = angle_of_vector(Fz[:2]) + PI / 2
-        partial_rot_T = np.dot(
-            rotation_matrix_transpose(phi, RIGHT),
-            rotation_matrix_transpose(theta, OUT),
-        )
-        gamma = angle_of_vector(np.dot(partial_rot_T, new_rot_T.T)[:, 0])
-        self.set_euler_angles(theta, phi, gamma)
+    def rotate(self, angle: float, axis: np.ndarray = OUT, **kwargs):
+        rot = Rotation.from_rotvec(angle * normalize(axis))
+        self.set_orientation(rot * self.get_orientation())
         return self
 
-    def set_euler_angles(self, theta=None, phi=None, gamma=None, units=RADIANS):
-        if theta is not None:
-            self.data["euler_angles"][0] = theta * units
-        if phi is not None:
-            self.data["euler_angles"][1] = phi * units
-        if gamma is not None:
-            self.data["euler_angles"][2] = gamma * units
-        self.refresh_rotation_matrix()
+    def set_euler_angles(
+        self,
+        theta: float | None = None,
+        phi: float | None = None,
+        gamma: float | None = None,
+        units: float = RADIANS
+    ):
+        eulers = self.get_euler_angles()  # theta, phi, gamma
+        for i, var in enumerate([theta, phi, gamma]):
+            if var is not None:
+                eulers[i] = var * units
+        self.set_orientation(Rotation.from_euler("zxz", eulers[::-1]))
         return self
 
-    def reorient(self, theta_degrees=None, phi_degrees=None, gamma_degrees=None):
+    def reorient(
+        self,
+        theta_degrees: float | None = None,
+        phi_degrees: float | None = None,
+        gamma_degrees: float | None = None,
+    ):
         """
         Shortcut for set_euler_angles, defaulting to taking
         in angles in degrees
@@ -96,72 +108,60 @@ class CameraFrame(Mobject):
         self.set_euler_angles(theta_degrees, phi_degrees, gamma_degrees, units=DEGREES)
         return self
 
-    def set_theta(self, theta):
+    def set_theta(self, theta: float):
         return self.set_euler_angles(theta=theta)
 
-    def set_phi(self, phi):
+    def set_phi(self, phi: float):
         return self.set_euler_angles(phi=phi)
 
-    def set_gamma(self, gamma):
+    def set_gamma(self, gamma: float):
         return self.set_euler_angles(gamma=gamma)
 
-    def increment_theta(self, dtheta):
-        self.data["euler_angles"][0] += dtheta
-        self.refresh_rotation_matrix()
+    def increment_theta(self, dtheta: float):
+        self.rotate(dtheta, OUT)
         return self
 
-    def increment_phi(self, dphi):
-        phi = self.data["euler_angles"][1]
-        new_phi = clip(phi + dphi, 0, PI)
-        self.data["euler_angles"][1] = new_phi
-        self.refresh_rotation_matrix()
+    def increment_phi(self, dphi: float):
+        self.rotate(dphi, self.get_inverse_camera_rotation_matrix()[0])
         return self
 
-    def increment_gamma(self, dgamma):
-        self.data["euler_angles"][2] += dgamma
-        self.refresh_rotation_matrix()
+    def increment_gamma(self, dgamma: float):
+        self.rotate(dgamma, self.get_inverse_camera_rotation_matrix()[2])
         return self
 
-    def get_theta(self):
-        return self.data["euler_angles"][0]
+    def set_focal_distance(self, focal_distance: float):
+        self.uniforms["focal_dist_to_height"] = focal_distance / self.get_height()
+        return self
 
-    def get_phi(self):
-        return self.data["euler_angles"][1]
-
-    def get_gamma(self):
-        return self.data["euler_angles"][2]
+    def set_field_of_view(self, field_of_view: float):
+        self.uniforms["focal_dist_to_height"] = 2 * math.tan(field_of_view / 2)
+        return self
 
     def get_shape(self):
         return (self.get_width(), self.get_height())
 
-    def get_center(self):
+    def get_center(self) -> np.ndarray:
         # Assumes first point is at the center
         return self.get_points()[0]
 
-    def get_width(self):
+    def get_width(self) -> float:
         points = self.get_points()
         return points[2, 0] - points[1, 0]
 
-    def get_height(self):
+    def get_height(self) -> float:
         points = self.get_points()
         return points[4, 1] - points[3, 1]
 
-    def get_focal_distance(self):
-        return self.focal_distance * self.get_height()
+    def get_focal_distance(self) -> float:
+        return self.uniforms["focal_dist_to_height"] * self.get_height()
 
-    def get_implied_camera_location(self):
-        theta, phi, gamma = self.get_euler_angles()
+    def get_field_of_view(self) -> float:
+        return 2 * math.atan(self.uniforms["focal_dist_to_height"] / 2)
+
+    def get_implied_camera_location(self) -> np.ndarray:
+        to_camera = self.get_inverse_camera_rotation_matrix()[2]
         dist = self.get_focal_distance()
-        x, y, z = self.get_center()
-        return (
-            x + dist * math.sin(theta) * math.sin(phi),
-            y - dist * math.cos(theta) * math.sin(phi),
-            z + dist * math.cos(phi)
-        )
-
-    def interpolate(self, *args, **kwargs):
-        super().interpolate(*args, **kwargs)
-        self.refresh_rotation_matrix()
+        return self.get_center() + dist * to_camera
 
 
 class Camera(object):
@@ -170,7 +170,7 @@ class Camera(object):
         "frame_config": {},
         "pixel_width": DEFAULT_PIXEL_WIDTH,
         "pixel_height": DEFAULT_PIXEL_HEIGHT,
-        "frame_rate": DEFAULT_FRAME_RATE,
+        "fps": DEFAULT_FPS,
         # Note: frame height and width will be resized to match
         # the pixel aspect ratio
         "background_color": BLACK,
@@ -190,25 +190,27 @@ class Camera(object):
         "samples": 0,
     }
 
-    def __init__(self, ctx=None, **kwargs):
+    def __init__(self, ctx: moderngl.Context | None = None, **kwargs):
         digest_config(self, kwargs, locals())
-        self.rgb_max_val = np.iinfo(self.pixel_array_dtype).max
-        self.background_rgba = [
-            *Color(self.background_color).get_rgb(),
-            self.background_opacity
-        ]
+        self.rgb_max_val: float = np.iinfo(self.pixel_array_dtype).max
+        self.background_rgba: list[float] = list(color_to_rgba(
+            self.background_color, self.background_opacity
+        ))
         self.init_frame()
         self.init_context(ctx)
         self.init_shaders()
         self.init_textures()
         self.init_light_source()
         self.refresh_perspective_uniforms()
-        self.static_mobject_to_render_group_list = {}
+        # A cached map from mobjects to their associated list of render groups
+        # so that these render groups are not regenerated unnecessarily for static
+        # mobjects
+        self.mob_to_render_groups = {}
 
-    def init_frame(self):
+    def init_frame(self) -> None:
         self.frame = CameraFrame(**self.frame_config)
 
-    def init_context(self, ctx=None):
+    def init_context(self, ctx: moderngl.Context | None = None) -> None:
         if ctx is None:
             ctx = moderngl.create_standalone_context()
             fbo = self.get_fbo(ctx, 0)
@@ -223,7 +225,7 @@ class Camera(object):
         fbo_msaa.use()
         self.fbo_msaa = fbo_msaa
 
-    def set_ctx_blending(self, enable=True):
+    def set_ctx_blending(self, enable: bool = True) -> None:
         if enable:
             self.ctx.enable(moderngl.BLEND)
         else:
@@ -233,17 +235,21 @@ class Camera(object):
             # moderngl.ONE, moderngl.ONE
         )
 
-    def set_ctx_depth_test(self, enable=True):
+    def set_ctx_depth_test(self, enable: bool = True) -> None:
         if enable:
             self.ctx.enable(moderngl.DEPTH_TEST)
         else:
             self.ctx.disable(moderngl.DEPTH_TEST)
 
-    def init_light_source(self):
+    def init_light_source(self) -> None:
         self.light_source = Point(self.light_source_position)
 
     # Methods associated with the frame buffer
-    def get_fbo(self, ctx, samples=0):
+    def get_fbo(
+        self,
+        ctx: moderngl.Context,
+        samples: int = 0
+    ) -> moderngl.Framebuffer:
         pw = self.pixel_width
         ph = self.pixel_height
         return ctx.framebuffer(
@@ -258,16 +264,16 @@ class Camera(object):
             )
         )
 
-    def clear(self):
+    def clear(self) -> None:
         self.fbo.clear(*self.background_rgba)
         self.fbo_msaa.clear(*self.background_rgba)
 
-    def reset_pixel_shape(self, new_width, new_height):
+    def reset_pixel_shape(self, new_width: int, new_height: int) -> None:
         self.pixel_width = new_width
         self.pixel_height = new_height
         self.refresh_perspective_uniforms()
 
-    def get_raw_fbo_data(self, dtype='f1'):
+    def get_raw_fbo_data(self, dtype: str = 'f1') -> bytes:
         # Copy blocks from the fbo_msaa to the drawn fbo using Blit
         pw, ph = (self.pixel_width, self.pixel_height)
         gl.glBindFramebuffer(gl.GL_READ_FRAMEBUFFER, self.fbo_msaa.glo)
@@ -279,7 +285,7 @@ class Camera(object):
             dtype=dtype,
         )
 
-    def get_image(self, pixel_array=None):
+    def get_image(self) -> Image.Image:
         return Image.frombytes(
             'RGBA',
             self.get_pixel_shape(),
@@ -287,7 +293,7 @@ class Camera(object):
             'raw', 'RGBA', 0, -1
         )
 
-    def get_pixel_array(self):
+    def get_pixel_array(self) -> np.ndarray:
         raw = self.get_raw_fbo_data(dtype='f4')
         flat_arr = np.frombuffer(raw, dtype='f4')
         arr = flat_arr.reshape([*self.fbo.size, self.n_channels])
@@ -295,7 +301,7 @@ class Camera(object):
         return (self.rgb_max_val * arr).astype(self.pixel_array_dtype)
 
     # Needed?
-    def get_texture(self):
+    def get_texture(self) -> moderngl.Texture:
         texture = self.ctx.texture(
             size=self.fbo.size,
             components=4,
@@ -305,32 +311,32 @@ class Camera(object):
         return texture
 
     # Getting camera attributes
-    def get_pixel_shape(self):
+    def get_pixel_shape(self) -> tuple[int, int]:
         return self.fbo.viewport[2:4]
         # return (self.pixel_width, self.pixel_height)
 
-    def get_pixel_width(self):
+    def get_pixel_width(self) -> int:
         return self.get_pixel_shape()[0]
 
-    def get_pixel_height(self):
+    def get_pixel_height(self) -> int:
         return self.get_pixel_shape()[1]
 
-    def get_frame_height(self):
+    def get_frame_height(self) -> float:
         return self.frame.get_height()
 
-    def get_frame_width(self):
+    def get_frame_width(self) -> float:
         return self.frame.get_width()
 
-    def get_frame_shape(self):
+    def get_frame_shape(self) -> tuple[float, float]:
         return (self.get_frame_width(), self.get_frame_height())
 
-    def get_frame_center(self):
+    def get_frame_center(self) -> np.ndarray:
         return self.frame.get_center()
 
-    def get_location(self):
+    def get_location(self) -> tuple[float, float, float]:
         return self.frame.get_implied_camera_location()
 
-    def resize_frame_shape(self, fixed_dimension=0):
+    def resize_frame_shape(self, fixed_dimension: bool = False) -> None:
         """
         Changes frame_shape to match the aspect ratio
         of the pixels, where fixed_dimension determines
@@ -342,7 +348,7 @@ class Camera(object):
         frame_height = self.get_frame_height()
         frame_width = self.get_frame_width()
         aspect_ratio = fdiv(pixel_width, pixel_height)
-        if fixed_dimension == 0:
+        if not fixed_dimension:
             frame_height = frame_width / aspect_ratio
         else:
             frame_width = aspect_ratio * frame_height
@@ -350,13 +356,13 @@ class Camera(object):
         self.frame.set_width(frame_width)
 
     # Rendering
-    def capture(self, *mobjects, **kwargs):
+    def capture(self, *mobjects: Mobject, **kwargs) -> None:
         self.refresh_perspective_uniforms()
         for mobject in mobjects:
             for render_group in self.get_render_group_list(mobject):
                 self.render(render_group)
 
-    def render(self, render_group):
+    def render(self, render_group: dict[str]) -> None:
         shader_wrapper = render_group["shader_wrapper"]
         shader_program = render_group["prog"]
         self.set_shader_uniforms(shader_program, shader_wrapper)
@@ -365,13 +371,27 @@ class Camera(object):
         if render_group["single_use"]:
             self.release_render_group(render_group)
 
-    def get_render_group_list(self, mobject):
-        try:
-            return self.static_mobject_to_render_group_list[id(mobject)]
-        except KeyError:
-            return map(self.get_render_group, mobject.get_shader_wrapper_list())
+    def get_render_group_list(self, mobject: Mobject) -> Iterable[dict[str]]:
+        if mobject.is_changing():
+            return self.generate_render_group_list(mobject)
 
-    def get_render_group(self, shader_wrapper, single_use=True):
+        # Otherwise, cache result for later use
+        key = id(mobject)
+        if key not in self.mob_to_render_groups:
+            self.mob_to_render_groups[key] = list(self.generate_render_group_list(mobject))
+        return self.mob_to_render_groups[key]
+
+    def generate_render_group_list(self, mobject: Mobject) -> Iterable[dict[str]]:
+        return (
+            self.get_render_group(sw, single_use=mobject.is_changing())
+            for sw in mobject.get_shader_wrapper_list()
+        )
+
+    def get_render_group(
+        self,
+        shader_wrapper: ShaderWrapper,
+        single_use: bool = True
+    ) -> dict[str]:
         # Data buffers
         vbo = self.ctx.buffer(shader_wrapper.vert_data.tobytes())
         if shader_wrapper.vert_indices is None:
@@ -399,31 +419,27 @@ class Camera(object):
             "single_use": single_use,
         }
 
-    def release_render_group(self, render_group):
+    def release_render_group(self, render_group: dict[str]) -> None:
         for key in ["vbo", "ibo", "vao"]:
             if render_group[key] is not None:
                 render_group[key].release()
 
-    def set_mobjects_as_static(self, *mobjects):
-        # Creates buffer and array objects holding each mobjects shader data
-        for mob in mobjects:
-            self.static_mobject_to_render_group_list[id(mob)] = [
-                self.get_render_group(sw, single_use=False)
-                for sw in mob.get_shader_wrapper_list()
-            ]
-
-    def release_static_mobjects(self):
-        for rg_list in self.static_mobject_to_render_group_list.values():
-            for render_group in rg_list:
-                self.release_render_group(render_group)
-        self.static_mobject_to_render_group_list = {}
+    def refresh_static_mobjects(self) -> None:
+        for render_group in it.chain(*self.mob_to_render_groups.values()):
+            self.release_render_group(render_group)
+        self.mob_to_render_groups = {}
 
     # Shaders
-    def init_shaders(self):
+    def init_shaders(self) -> None:
         # Initialize with the null id going to None
-        self.id_to_shader_program = {"": None}
+        self.id_to_shader_program: dict[
+            int | str, tuple[moderngl.Program, str] | None
+        ] = {"": None}
 
-    def get_shader_program(self, shader_wrapper):
+    def get_shader_program(
+        self,
+        shader_wrapper: ShaderWrapper
+    ) -> tuple[moderngl.Program, str]:
         sid = shader_wrapper.get_program_id()
         if sid not in self.id_to_shader_program:
             # Create shader program for the first time, then cache
@@ -433,19 +449,23 @@ class Camera(object):
             self.id_to_shader_program[sid] = (program, vert_format)
         return self.id_to_shader_program[sid]
 
-    def set_shader_uniforms(self, shader, shader_wrapper):
+    def set_shader_uniforms(
+        self,
+        shader: moderngl.Program,
+        shader_wrapper: ShaderWrapper
+    ) -> None:
         for name, path in shader_wrapper.texture_paths.items():
             tid = self.get_texture_id(path)
             shader[name].value = tid
         for name, value in it.chain(self.perspective_uniforms.items(), shader_wrapper.uniforms.items()):
             try:
-                if isinstance(value, np.ndarray):
+                if isinstance(value, np.ndarray) and value.ndim > 0:
                     value = tuple(value)
                 shader[name].value = value
             except KeyError:
                 pass
 
-    def refresh_perspective_uniforms(self):
+    def refresh_perspective_uniforms(self) -> None:
         frame = self.frame
         pw, ph = self.get_pixel_shape()
         fw, fh = frame.get_shape()
@@ -470,11 +490,13 @@ class Camera(object):
             "focal_distance": frame.get_focal_distance(),
         }
 
-    def init_textures(self):
-        self.n_textures = 0
-        self.path_to_texture = {}
+    def init_textures(self) -> None:
+        self.n_textures: int = 0
+        self.path_to_texture: dict[
+            str, tuple[int, moderngl.Texture]
+        ] = {}
 
-    def get_texture_id(self, path):
+    def get_texture_id(self, path: str) -> int:
         if path not in self.path_to_texture:
             if self.n_textures == 15:  # I have no clue why this is needed
                 self.n_textures += 1
@@ -490,7 +512,7 @@ class Camera(object):
             self.path_to_texture[path] = (tid, texture)
         return self.path_to_texture[path][0]
 
-    def release_texture(self, path):
+    def release_texture(self, path: str):
         tid_and_texture = self.path_to_texture.pop(path, None)
         if tid_and_texture:
             tid_and_texture[1].release()

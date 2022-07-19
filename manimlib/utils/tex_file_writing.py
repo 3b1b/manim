@@ -1,18 +1,20 @@
-import sys
-import os
-import hashlib
-from contextlib import contextmanager
+from __future__ import annotations
 
-from manimlib.utils.directories import get_tex_dir
-from manimlib.config import get_manim_dir
+from contextlib import contextmanager
+import hashlib
+import os
+import sys
+
 from manimlib.config import get_custom_config
+from manimlib.config import get_manim_dir
 from manimlib.logger import log
+from manimlib.utils.directories import get_tex_dir
 
 
 SAVED_TEX_CONFIG = {}
 
 
-def get_tex_config():
+def get_tex_config() -> dict[str, str]:
     """
     Returns a dict which should look something like this:
     {
@@ -32,18 +34,18 @@ def get_tex_config():
             get_manim_dir(), "manimlib", "tex_templates",
             SAVED_TEX_CONFIG["template_file"],
         )
-        with open(template_filename, "r") as file:
+        with open(template_filename, "r", encoding="utf-8") as file:
             SAVED_TEX_CONFIG["tex_body"] = file.read()
     return SAVED_TEX_CONFIG
 
 
-def tex_hash(tex_file_content):
+def tex_hash(tex_file_content: str) -> int:
     # Truncating at 16 bytes for cleanliness
     hasher = hashlib.sha256(tex_file_content.encode())
     return hasher.hexdigest()[:16]
 
 
-def tex_to_svg_file(tex_file_content):
+def tex_to_svg_file(tex_file_content: str) -> str:
     svg_file = os.path.join(
         get_tex_dir(), tex_hash(tex_file_content) + ".svg"
     )
@@ -53,7 +55,7 @@ def tex_to_svg_file(tex_file_content):
     return svg_file
 
 
-def tex_to_svg(tex_file_content, svg_file):
+def tex_to_svg(tex_file_content: str, svg_file: str) -> str:
     tex_file = svg_file.replace(".svg", ".tex")
     with open(tex_file, "w", encoding="utf-8") as outfile:
         outfile.write(tex_file_content)
@@ -69,7 +71,7 @@ def tex_to_svg(tex_file_content, svg_file):
     return svg_file
 
 
-def tex_to_dvi(tex_file):
+def tex_to_dvi(tex_file: str) -> str:
     tex_config = get_tex_config()
     program = tex_config["executable"]
     file_type = tex_config["intermediate_filetype"]
@@ -88,15 +90,17 @@ def tex_to_dvi(tex_file):
         if exit_code != 0:
             log_file = tex_file.replace(".tex", ".log")
             log.error("LaTeX Error!  Not a worry, it happens to the best of us.")
-            with open(log_file, "r") as file:
+            error_str = ""
+            with open(log_file, "r", encoding="utf-8") as file:
                 for line in file.readlines():
                     if line.startswith("!"):
-                        log.debug(f"The error could be: `{line[2:-1]}`")
-            sys.exit(2)
+                        error_str = line[2:-1]
+                        log.debug(f"The error could be: `{error_str}`")
+            raise LatexError(error_str)
     return result
 
 
-def dvi_to_svg(dvi_file, regen_if_exists=False):
+def dvi_to_svg(dvi_file: str) -> str:
     """
     Converts a dvi, which potentially has multiple slides, into a
     directory full of enumerated pngs corresponding with these slides.
@@ -123,11 +127,19 @@ def dvi_to_svg(dvi_file, regen_if_exists=False):
 
 # TODO, perhaps this should live elsewhere
 @contextmanager
-def display_during_execution(message):
+def display_during_execution(message: str) -> None:
     # Only show top line
     to_print = message.split("\n")[0]
+    max_characters = os.get_terminal_size().columns - 1
+    if len(to_print) > max_characters:
+        to_print = to_print[:max_characters - 3] + "..."
     try:
         print(to_print, end="\r")
         yield
     finally:
         print(" " * len(to_print), end="\r")
+
+
+
+class LatexError(Exception):
+    pass
