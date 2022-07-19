@@ -8,7 +8,7 @@ import numpy as np
 from manimlib.constants import DL, DOWN, DR, LEFT, ORIGIN, OUT, RIGHT, UL, UP, UR
 from manimlib.constants import GREY_A, RED, WHITE
 from manimlib.constants import MED_SMALL_BUFF
-from manimlib.constants import PI, TAU
+from manimlib.constants import PI, TAU, DEGREES
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.vectorized_mobject import DashedVMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
