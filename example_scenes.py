@@ -668,3 +668,18 @@ class ControlsExample(Scene):
 
 
 # See https://github.com/3b1b/videos for many, many more
+
+
+####################################################################
+# BEGIN: jCode example scenes                                      #
+####################################################################
+
+
+class NewtonGravitation2DExample(Scene):
+    def construct(self) -> None:
+        pass
+
+
+####################################################################
+# eNd: jCode example scenes                                        #
+####################################################################
