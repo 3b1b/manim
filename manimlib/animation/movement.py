@@ -160,8 +160,11 @@ class NewtonGravitation(Animation):
         self.y: np.ndarray = odeint(self.dydt, y0, t, args=extra_args)
 
     def interpolate_mobject(self, alpha: float) -> None:
-        index = np.floor(alpha*self.y.shape[0])
-        state = self.y[index]
+        row_index: int = min(
+            int(np.floor(alpha*self.y.shape[0])),
+            self.y.shape[0]-1
+        )
+        state: np.ndarray = self.y[row_index,:]
         for i, submobj in enumerate(self.mobject.submobjects):
             point: np.ndarray = state[i*DIMENSIONS:(i+1)*DIMENSIONS]
             submobj.move_to(point)
@@ -187,19 +190,20 @@ class NewtonGravitation(Animation):
         masses: an iterable containing the mass values for each mass
         """
         # Split info from state vector
-        velocities: np.ndarray = y[d*n]
+        velocities: np.ndarray = y[:DIMENSIONS*n]
         # Reshape positions so that every row contains the location of that mass
         positions: np.ndarray = np.reshape(y[:DIMENSIONS*n], (n, DIMENSIONS))
         # Create the accelerations structure
-        accelerations: np.ndarray = np.zeros((n, d))
+        accelerations: np.ndarray = np.zeros((n, DIMENSIONS))
 
         # Fill accelerations
         for i, acc in enumerate(accelerations):
             for j, pos in enumerate(positions):
                 if i != j:
-                    diff_vector = positions[i] - pos
+                    diff_vector: np.ndarray = positions[i] - pos
                     acc -= masses[j] * (diff_vector / (np.linalg.norm(diff_vector)**3))
 
+        # Ensemble derivative and return
         return np.concatenate((velocities, G*accelerations.flatten()))
 
 ####################################################################
