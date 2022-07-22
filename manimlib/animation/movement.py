@@ -190,7 +190,7 @@ class NewtonGravitation(Animation):
         masses: an iterable containing the mass values for each mass
         """
         # Split info from state vector
-        velocities: np.ndarray = y[:DIMENSIONS*n]
+        velocities: np.ndarray = y[DIMENSIONS*n:]
         # Reshape positions so that every row contains the location of that mass
         positions: np.ndarray = np.reshape(y[:DIMENSIONS*n], (n, DIMENSIONS))
         # Create the accelerations structure

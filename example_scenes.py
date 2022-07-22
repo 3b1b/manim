@@ -681,20 +681,22 @@ class NewtonGravitation2DExample(Scene):
         n_masses = 3
         y0: np.ndarray = np.array(
             [
-                [2, 1, 0],  # position of mass1
-                [-3, 1.5, 0],  # position of mass2
-                [5.5, -2.5, 0],  # position of mass3
-                [0, 0, 0],  # velocity of mass1
-                [0, 0, 0],  # velocity of mass2
-                [0, 0, 0],  # velocity of mass3
+                [3.5, 0, 0],  # position of mass1
+                [2.5, 0, 0],  # position of mass2
+                [0, 0, 0],  # position of mass3
+                [0.3, -2.5, 0],  # velocity of mass1
+                [0, 3, 0],  # velocity of mass2
+                [0, -0.4, 0],  # velocity of mass3
             ]
         )
         masses: np.ndarray = np.array(
-            [1, 1, 1]
+            [1.3, 2.5, 20]
         )
-        mass_multiplier = 0.35  # multiplier for the radius given a mass
+        radii: np.ndarray = np.array(
+            [0.12, 0.25, 0.5]
+        )
         # the fps value can be independent of the real FPS of the animation
-        t0, T, fps = 0, 5, 200  # may need to rise fps to get better results
+        t0, T, fps = 0, 10, 600  # may need to rise fps to get better results
         t: np.ndarray = np.linspace(t0, T, (T-t0)*fps)
         colors: tuple = (RED_E, BLUE, GREEN)
         # Create circle mobjects and move them to their initial positions
@@ -703,7 +705,7 @@ class NewtonGravitation2DExample(Scene):
                 fill_color=colors[i],
                 fill_opacity=1,
                 stroke_width=0,
-                radius=masses[i]*mass_multiplier
+                radius=radii[i]
             ) for i in range(n_masses)
         ]
         # there is no need to slice but for consistency
@@ -717,9 +719,10 @@ class NewtonGravitation2DExample(Scene):
         self.wait(2)
 
         # Animate the gravitation behavior
+        slow_factor: float = 2.0
         self.play(
             NewtonGravitation(t, masses, y0.flatten(), VGroup(*mass_circles)),
-            run_time=T-t0
+            run_time=(T-t0)*slow_factor
         )
 
 
