@@ -677,9 +677,43 @@ class ControlsExample(Scene):
 
 class NewtonGravitation2DExample(Scene):
     def construct(self) -> None:
-        pass
+        # Define properties
+        n_masses = 3
+        y0: np.ndarray = np.array(
+            [
+                [2, 1, 0],  # position of mass1
+                [-3, 1.5, 0],  # position of mass2
+                [5.5, -2.5, 0],  # position of mass3
+                [2, 0, 0],  # velocity of mass1
+                [0, -2, 0],  # velocity of mass2
+                [-1, 0, 0],  # velocity of mass3
+            ]
+        )
+        masses: np.ndarray = np.array(
+            [1, 1, 1]
+        )
+        mass_multiplier = 0.35  # multiplier for the radius given a mass
+        # the fps value can be independent of the real FPS of the animation
+        t0, T, fps = 0, 5, 30  # may need to rise fps to get better results
+        t: np.ndarray = np.linspace(t0, T, (T-t0)*fps)
+        colors: tuple = (RED_E, BLUE, GREEN)
+        # Create circle mobjects and move them to their initial positions
+        mass_circles: list[Mobject] = [
+            Circle(
+                fill_color=colors[i],
+                fill_opacity=1,
+                stroke_width=0,
+                radius=masses[i]*mass_multiplier
+            ) for i in range(n_masses)
+        ]
+        # there is no need to slice but for consistency
+        for circle, pos in zip(mass_circles, y0[:n_masses,:]):
+            circle.move_to(pos)
+        
+        # Add circle mobjects to the scene
+        self.add(*mass_circles)
 
 
 ####################################################################
-# eNd: jCode example scenes                                        #
+# END: jCode example scenes                                        #
 ####################################################################
