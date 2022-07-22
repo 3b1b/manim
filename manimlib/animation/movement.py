@@ -128,7 +128,7 @@ class NewtonGravitation(Animation):
     Evolves a group of mobjects (with self.submobjects) using
     Newton's gravitation and LSODA algorithm
 
-    Simplified from https://github.com/jCodingStuff/NBodyProblem
+    Extracted from https://github.com/jCodingStuff/NBodyProblem
     """
 
     CONFIG = {
@@ -153,25 +153,23 @@ class NewtonGravitation(Animation):
         super().__init__(mobject, **kwargs)
         # Integrate over time
         extra_args = (
-            DIMENSIONS,
             self.grav_constant,
             masses.shape[0],
             masses,
         )
-        self.y = odeint(self.dydt, y0, t, args=extra_args)
+        self.y: np.ndarray = odeint(self.dydt, y0, t, args=extra_args)
 
     def interpolate_mobject(self, alpha: float) -> None:
         index = np.floor(alpha*self.y.shape[0])
         state = self.y[index]
         for i, submobj in enumerate(self.mobject.submobjects):
-            point: np.ndarray = state[i*self.ndimensions:i*self.ndimensions+2]
-            submobj.move_to((point[0], point[1], 0.0))
+            point: np.ndarray = state[i*DIMENSIONS:(i+1)*DIMENSIONS]
+            submobj.move_to(point)
 
     @staticmethod
     def dydt(
         y: np.ndarray,
         t: float,
-        d: int,
         G: float,
         n: int,
         masses: Iterable[float]
@@ -184,7 +182,6 @@ class NewtonGravitation(Animation):
         y: state vector (x,y positions of masses followed by their velocity,
            that is, it includes 4*n elements)
         t: current time of the system
-        d: number of dimensions
         G: gravitational constant
         n: number of masses in the system
         masses: an iterable containing the mass values for each mass
@@ -192,7 +189,7 @@ class NewtonGravitation(Animation):
         # Split info from state vector
         velocities: np.ndarray = y[d*n]
         # Reshape positions so that every row contains the location of that mass
-        positions: np.ndarray = np.reshape(y[:d*n], (n, d))
+        positions: np.ndarray = np.reshape(y[:DIMENSIONS*n], (n, DIMENSIONS))
         # Create the accelerations structure
         accelerations: np.ndarray = np.zeros((n, d))
 
