@@ -36,6 +36,7 @@ OUT = np.array((0., 0., 1.))
 X_AXIS = np.array((1., 0., 0.))
 Y_AXIS = np.array((0., 1., 0.))
 Z_AXIS = np.array((0., 0., 1.))
+DIMENSIONS: int = 3
 
 # Useful abbreviations for diagonals
 UL = UP + LEFT

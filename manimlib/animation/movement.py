@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from manimlib.animation.animation import Animation
+from manimlib.constants import DIMENSIONS
 from manimlib.utils.rate_functions import linear
 
 import numpy as np
@@ -121,17 +122,16 @@ class MoveAlongPath(Animation):
 # BEGIN: jCode custom animations                                   #
 ####################################################################
 
-#### NEWTON GRAVITATION 2D ####
-class NewtonGravitation2D(Animation):
+#### NEWTON GRAVITATION ####
+class NewtonGravitation(Animation):
     """
     Evolves a group of mobjects (with self.submobjects) using
-    Newton's gravitation and Runge Kutta 4th order time integrator
+    Newton's gravitation and LSODA algorithm
 
     Simplified from https://github.com/jCodingStuff/NBodyProblem
     """
 
     CONFIG = {
-        "ndimensions": 2,  # number of spatial dimentions
         "grav_constant": 1.0,  # value of the gravitational constant G
     }
 
@@ -144,7 +144,7 @@ class NewtonGravitation2D(Animation):
         **kwargs
     ):
         """
-        Initialize a new NewtonGravitation2D object
+        Initialize a new NewtonGravitation object
 
         t: times for the system (to be passed to the integrator)
         masses: masses of the system
@@ -153,7 +153,7 @@ class NewtonGravitation2D(Animation):
         super().__init__(mobject, **kwargs)
         # Integrate over time
         extra_args = (
-            self.ndimensions,
+            DIMENSIONS,
             self.grav_constant,
             masses.shape[0],
             masses,
