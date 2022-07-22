@@ -696,11 +696,11 @@ class NewtonGravitation2DExample(Scene):
             [0.12, 0.25, 0.5]
         )
         # the fps value can be independent of the real FPS of the animation
-        t0, T, fps = 0, 10, 600  # may need to rise fps to get better results
+        t0, T, fps = 0, 14, 600  # may need to rise fps to get better results
         t: np.ndarray = np.linspace(t0, T, (T-t0)*fps)
         colors: tuple = (RED_E, BLUE, GREEN)
         # Create circle mobjects and move them to their initial positions
-        mass_circles: list[Mobject] = [
+        mass_circles: list[Circle] = [
             Circle(
                 fill_color=colors[i],
                 fill_opacity=1,
@@ -711,8 +711,18 @@ class NewtonGravitation2DExample(Scene):
         # there is no need to slice but for consistency
         for circle, pos in zip(mass_circles, y0[:n_masses,:]):
             circle.move_to(pos)
+        # Create the tracing lines
+        tracing_lines: list[Polyline] = [
+            Polyline(
+                pos,
+                stroke_color=color,
+                stroke_width=1.5,
+                stroke_opacity=0.5
+            ) for pos, color in zip(y0[:n_masses,:], colors)
+        ]
         
         # Add circle mobjects to the scene
+        self.add(*tracing_lines)
         self.add(*mass_circles)
 
         # Wait a couple seconds
@@ -721,7 +731,13 @@ class NewtonGravitation2DExample(Scene):
         # Animate the gravitation behavior
         slow_factor: float = 2.0
         self.play(
-            NewtonGravitation(t, masses, y0.flatten(), VGroup(*mass_circles)),
+            NewtonGravitation(
+                t,
+                masses,
+                y0.flatten(),
+                VGroup(*(mass_circles+tracing_lines)),
+                scene=self
+            ),
             run_time=(T-t0)*slow_factor
         )
 

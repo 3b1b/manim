@@ -944,6 +944,17 @@ class Polygon(VMobject):
 class Polyline(Polygon):
     def init_points(self) -> None:
         self.set_points_as_corners(self.vertices)
+    
+    def add_vertices(self, *vertices: np.ndarray) -> None:
+        """
+        Add vertices to the polyline
+
+        Keyword arguments
+        -----------------
+        vertices: at least one vertex (3D numpy ndarray)
+        """
+        self.vertices += vertices
+        self.init_points()
 
 
 class RegularPolygon(Polygon):

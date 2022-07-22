@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from manimlib.animation.animation import Animation
 from manimlib.constants import DIMENSIONS
+from manimlib.scene.scene import Scene
 from manimlib.utils.rate_functions import linear
 
 import numpy as np
@@ -141,20 +142,29 @@ class NewtonGravitation(Animation):
         masses: np.ndarray,
         y0: np.ndarray,
         mobject: Mobject,
+        scene: Scene=None,
         **kwargs
     ):
         """
         Initialize a new NewtonGravitation object
 
+        scene: current scene to make sure that the circles are always
+               on top of the lines
         t: times for the system (to be passed to the integrator)
         masses: masses of the system
         y0: initial state vector (first positions then velocities)
+        mobject: collection of circle mobjects (and polylines if
+                 we want tracing lines)
+        scene: in case we have tracing lines, we need the scene to
+               put the circles back on top
         """
         super().__init__(mobject, **kwargs)
+        self.scene = scene
+        self.n_masses: int = masses.shape[0]
         # Integrate over time
         extra_args = (
             self.grav_constant,
-            masses.shape[0],
+            self.n_masses,
             masses,
         )
         self.y: np.ndarray = odeint(self.dydt, y0, t, args=extra_args)
@@ -165,9 +175,15 @@ class NewtonGravitation(Animation):
             self.y.shape[0]-1
         )
         state: np.ndarray = self.y[row_index,:]
-        for i, submobj in enumerate(self.mobject.submobjects):
+        submobjects = self.mobject.submobjects
+        for i, submobj in enumerate(submobjects[:self.n_masses]):
             point: np.ndarray = state[i*DIMENSIONS:(i+1)*DIMENSIONS]
             submobj.move_to(point)
+            # Check if polylines aree provided
+            if len(submobjects) == 2*self.n_masses:
+                submobjects[i+self.n_masses].add_vertices(point)
+                if self.scene:
+                    self.scene.bring_to_front(submobj)  # be on top of lines!
 
     @staticmethod
     def dydt(
