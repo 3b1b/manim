@@ -12,12 +12,22 @@ class Body:
 
     def __init__(
         self,
-        mass: float,
-        pos: np.ndarray,
-        mobj: Mobject
+        mass: float=1.0,
+        position: np.ndarray=np.array([0,0,0]),
+        velocity: np.ndarray=np.array([0,0,0]),
+        mobj: Mobject=None
     ) -> None:
         """
         Initialize a new Body object
+
+        Keyword arguments
+        -----------------
+        mass: the mass of the body
+        position: 3D vector representing the (x,y,z) components
+                  of the position
+        velocity: 3D vector representing the (x,y,z) components
+                  of the velocity
+        mobj: the Mobject this body is linked to (if any)
         """
 
         self.mass: float = mass
@@ -26,9 +36,13 @@ class Body:
                 f"Current value for mass ({self.mass}) is negative!"
             )
         
-        self.pos: np.ndarray = pos
-        if len(self.pos.shape) != 1 or self.pos.shape[0] == 3:
+        self.position: np.ndarray = position
+        if len(self.position.shape) != 1 or self.position.shape[0] == 3:
             raise Exception("Position is invalid!")
+
+        self.velocity: np.ndarray = velocity
+        if len(self.velocity.shape) != 1 or self.velocity.shape[0] == 3:
+            raise Exception("Velocity is invalid!")
         
         self.mobj: Mobject = mobj
         self.mobj.move_to(self.pos)
