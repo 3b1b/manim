@@ -677,6 +677,14 @@ class ControlsExample(Scene):
 
 class NewtonGravitation2DExample(Scene):
     def construct(self) -> None:
+        # Draw background grid
+        grid: NumberPlane = NumberPlane(
+            axis_config={"stroke_color": "#cccccc"},
+            background_line_style={"stroke_color": GREY_C},
+            opacity=0.4
+        )
+        self.add(grid)
+
         # Define properties
         n_masses = 3
         y0: np.ndarray = np.array(
@@ -717,7 +725,7 @@ class NewtonGravitation2DExample(Scene):
                 pos,
                 stroke_color=color,
                 stroke_width=1.5,
-                stroke_opacity=0.5
+                stroke_opacity=0.9
             ) for pos, color in zip(y0[:n_masses,:], colors)
         ]
         
