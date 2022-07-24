@@ -733,18 +733,35 @@ class NewtonGravitation2DExample(Scene):
         self.add(*tracing_lines)
         self.add(*mass_circles)
 
+        # Create the physical system (bodies and forces)
+        bodies: list[Body] = [
+            Body(
+                mass=masses[i],
+                position=y0[i],
+                velocity=y0[i+n_masses],
+                mobj=mass_circles[i],
+                tracer=tracing_lines[i]
+            ) for i in range(n_masses)
+        ]
+        forces: list[Force] = []
+        for i, body1 in enumerate(bodies):
+            for j, body2 in enumerate(bodies[i+1:],start=i+1):
+                forces.append(
+                    NewtonGravitationalForce((body1, body2))
+                )
+        system: PhysicalSystem = PhysicalSystem(bodies, forces)
+
         # Wait a couple seconds
         self.wait(2)
 
-        # Animate the gravitation behavior
+        # Animate the physical system
         slow_factor: float = 2.0
         self.play(
-            NewtonGravitation(
-                t,
-                masses,
-                y0.flatten(),
-                VGroup(*(mass_circles+tracing_lines)),
-                scene=self
+            EvolvePhysicalSystem(
+                system,
+                t=t,
+                scene=self,
+                background_mobjects=[grid]
             ),
             run_time=(T-t0)*slow_factor
         )

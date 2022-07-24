@@ -19,6 +19,7 @@ from manimlib.animation.specialized import *
 from manimlib.animation.transform import *
 from manimlib.animation.transform_matching_parts import *
 from manimlib.animation.update import *
+from manimlib.animation.physics import *
 
 from manimlib.camera.camera import *
 
@@ -51,6 +52,10 @@ from manimlib.mobject.types.surface import *
 from manimlib.mobject.types.vectorized_mobject import *
 from manimlib.mobject.value_tracker import *
 from manimlib.mobject.vector_field import *
+
+from manimlib.physics.physical_system import *
+from manimlib.physics.force import *
+from manimlib.physics.body import *
 
 from manimlib.scene.interactive_scene import *
 from manimlib.scene.scene import *

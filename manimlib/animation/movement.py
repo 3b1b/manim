@@ -2,20 +2,18 @@ from __future__ import annotations
 
 from manimlib.animation.animation import Animation
 from manimlib.constants import DIMENSIONS
-from manimlib.scene.scene import Scene
 from manimlib.utils.rate_functions import linear
 
 import numpy as np
 from scipy.integrate import odeint
 
-from typing import TYPE_CHECKING, Iterable, NewType
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Sequence
-
+    from typing import Callable, Iterable, Sequence
     # import numpy as np
-
     from manimlib.mobject.mobject import Mobject
+    from manimlib.scene.scene import Scene
 
 
 class Homotopy(Animation):
@@ -119,10 +117,7 @@ class MoveAlongPath(Animation):
         self.mobject.move_to(point)
 
 
-####################################################################
-# BEGIN: jCode custom animations                                   #
-####################################################################
-
+# TODO: DEPRECATED! check manimlib.animation.physics and manimlib.physics
 #### NEWTON GRAVITATION ####
 class NewtonGravitation(Animation):
     """
@@ -221,7 +216,3 @@ class NewtonGravitation(Animation):
 
         # Ensemble derivative and return
         return np.concatenate((velocities, G*accelerations.flatten()))
-
-####################################################################
-# END: jCode custom animations                                     #
-####################################################################
