@@ -29,13 +29,16 @@ class PhysicalSystem(Group):
         forces (list[Force]): forces to be added to the system (default: empty list)
         """
         # Aggregate all submobjects and pass them to the superclass constructor
-        mobjects: list[Mobject] = [
-            body.mobj for body in bodies if body.mobj is not None
-        ] + [
-            body.tracer for body in bodies if body.tracer is not None
-        ] + [
-            force.line for force in forces if force.line is not None
-        ]
+        mobjects: list[Mobject] = []
+        for body in bodies:
+            if body.mobj is not None:
+                mobjects.append(body.mobj)
+            if body.tracer is not None:
+                mobjects.append(body.tracer)
+        for force in forces:
+            for mobj in force.mobjects:
+                if mobj is not None:
+                    mobjects.append(mobj)
         super().__init__(*mobjects, **kwargs)
         self.bodies: list[Body] = bodies
         for i, body in enumerate(self.bodies):  # set indices for the bodies
@@ -136,6 +139,8 @@ class GravitationalSystem(PhysicalSystem):
         """
         Add a NewtonGravitationalForce to every pair of bodies
         TODO: add an option in 'kwargs' to automatically add line mobjects for the force
+              (they will have to be added with the self.add() method as well, since this is
+              a mobject itself too)
 
         Keyword arguments
         -----------------

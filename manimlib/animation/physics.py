@@ -107,10 +107,13 @@ class EvolvePhysicalSystem(Animation):
             body.set_position(pos, update_mobject_position=True)
             body.update_tracer()
             if body.tracer is not None:
-                self.scene.bring_to_front(body.tracer)
+                self.scene.bring_to_back(body.tracer)
             if body.mobj is not None:
                 self.scene.bring_to_front(body.mobj)
-        # # Handle background and foreground mobjects
+        # Update mobjects in forces
+        for force in self.mobject.forces:
+            force.update_mobjects()
+        # Handle background and foreground mobjects
         if self.background_mobjects:
             self.scene.bring_to_back(*self.background_mobjects)
         if self.foreground_mobjects:
