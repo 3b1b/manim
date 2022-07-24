@@ -743,29 +743,29 @@ class NewtonGravitation2DExample(Scene):
                 tracer=tracing_lines[i]
             ) for i in range(n_masses)
         ]
-        force_colors: list[str] = [YELLOW, PURPLE, LIGHT_BROWN]
-        k: int = 0
+        # force_colors: list[str] = [YELLOW, PURPLE, LIGHT_BROWN]
+        # k: int = 0
         forces: list[Force] = []
         for i, body1 in enumerate(bodies):
             for _, body2 in enumerate(bodies[i+1:],start=i+1):
-                line = Line(
-                            body1.position,
-                            body2.position,
-                            stroke_color=force_colors[k],
-                            stroke_width=5
-                       )
-                self.add(line)
+                # line = Line(
+                #             body1.position,
+                #             body2.position,
+                #             stroke_color=force_colors[k],
+                #             stroke_width=5
+                #        )
+                # self.add(line)
                 forces.append(
                     NewtonGravitationalForce(
                         (body1, body2),
-                        mobjects=(line,)
+                        # mobjects=(line,)
                     )
                 )
-                k += 1
+                # k += 1
         system: PhysicalSystem = PhysicalSystem(bodies, forces)
         # system: GravitationalSystem = GravitationalSystem(bodies)
         # system.fill_forces()
-        self.bring_to_front(*mass_circles)  # put them on top of the force mobjects
+        # self.bring_to_front(*mass_circles)  # put them on top of the force mobjects
 
         # Wait a couple seconds
         self.wait(2)

@@ -3,7 +3,7 @@ from __future__ import annotations
 from manimlib.constants import DIMENSIONS
 from manimlib.mobject.mobject import Group
 from manimlib.physics.body import Body
-from manimlib.physics.force import Force, NewtonGravitationalForce, get_force_by_name
+from manimlib.physics.force import Force, NewtonGravitationalForce
 import numpy as np
 
 from typing import Callable, List, TYPE_CHECKING
