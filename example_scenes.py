@@ -743,13 +743,15 @@ class NewtonGravitation2DExample(Scene):
                 tracer=tracing_lines[i]
             ) for i in range(n_masses)
         ]
-        forces: list[Force] = []
-        for i, body1 in enumerate(bodies):
-            for j, body2 in enumerate(bodies[i+1:],start=i+1):
-                forces.append(
-                    NewtonGravitationalForce((body1, body2))
-                )
-        system: PhysicalSystem = PhysicalSystem(bodies, forces)
+        # forces: list[Force] = []
+        # for i, body1 in enumerate(bodies):
+        #     for _, body2 in enumerate(bodies[i+1:],start=i+1):
+        #         forces.append(
+        #             NewtonGravitationalForce((body1, body2))
+        #         )
+        # system: PhysicalSystem = PhysicalSystem(bodies, forces)
+        system: GravitationalSystem = GravitationalSystem(bodies)
+        system.fill_forces()
 
         # Wait a couple seconds
         self.wait(2)

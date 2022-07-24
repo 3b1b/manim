@@ -3,10 +3,10 @@ from __future__ import annotations
 from manimlib.constants import DIMENSIONS
 from manimlib.mobject.mobject import Group
 from manimlib.physics.body import Body
-from manimlib.physics.force import Force
+from manimlib.physics.force import Force, NewtonGravitationalForce, get_force_by_name
 import numpy as np
 
-from typing import List, TYPE_CHECKING
+from typing import Callable, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from manimlib.mobject.mobject import Mobject
@@ -125,3 +125,42 @@ class PhysicalSystem(Group):
                subclass
         """
         pass
+
+
+class GravitationalSystem(PhysicalSystem):
+    """
+    Special case of a physical system for gravitational simulation
+    """
+
+    def fill_forces(self, **kwargs) -> None:
+        """
+        Add a NewtonGravitationalForce to every pair of bodies
+        TODO: add an option in 'kwargs' to automatically add line mobjects for the force
+
+        Keyword arguments
+        -----------------
+        kwargs (dict[str, Any]): understood keys are 'model' (default: 'newton',
+                and others in the future) and 'G' (default: 1.0, gravitational
+                constant)
+        """
+        # Check if there are at least 2 bodies
+        if self.get_n_bodies() <= 1:
+            return
+        # Set default value for 'model'
+        if "model" not in kwargs:
+            kwargs["model"] = 'newton'
+        # Add the forces
+        if kwargs["model"] == "newton":
+            # Get the G value
+            if 'G' not in kwargs:
+                kwargs['G'] = 1.0
+            for i, body1 in enumerate(self.bodies):
+                for _, body2 in enumerate(self.bodies[i+1:],start=i+1):
+                    self.forces.append(
+                        NewtonGravitationalForce(
+                            (body1, body2),
+                            G = kwargs["G"]
+                        )
+                    )
+        else:
+            raise Exception(f"Force model with name {kwargs['model']} could not be found...")

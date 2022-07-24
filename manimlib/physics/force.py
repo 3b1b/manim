@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
-from typing import Union
+from typing import Union, Callable
 
 from manimlib.physics.body import Body
 from manimlib.mobject.geometry import Line
@@ -95,3 +95,16 @@ class NewtonGravitationalForce(Force):
             force: np.ndarray = self.G * body1.mass * body2.mass * delta_pos / distance**3
             forces[body1.index] += force
             forces[body2.index] -= force
+
+
+def get_force_by_name(name: str) -> Callable:
+    """
+    Get a Force constructor by name
+
+    Keyword arguments
+    -----------------
+    name (str): name of the force
+    """
+    if name == "newton":
+        return NewtonGravitationalForce
+    return None
