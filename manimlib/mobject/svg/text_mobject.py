@@ -243,7 +243,7 @@ class MarkupText(StringMobject):
         )
 
     def get_substr_flag(self, substr: str) -> int:
-        if re.fullmatch(r"<\w[\s\S]*[^/]>", substr):
+        if re.fullmatch(r"<\w[\s\S]*[^/]*>", substr):
             return 1
         if substr.startswith("</"):
             return -1
