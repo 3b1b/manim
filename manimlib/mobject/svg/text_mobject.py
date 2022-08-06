@@ -80,8 +80,7 @@ class MarkupText(StringMobject):
         "t2w": {},
         "global_config": {},
         "local_configs": {},
-        # For backward compatibility
-        "isolate": (re.compile(r"[a-zA-Z]+"), re.compile(r"\S+")),
+        "isolate": re.compile(r"\w+", re.U),
     }
 
     # See https://docs.gtk.org/Pango/pango_markup.html
@@ -103,24 +102,6 @@ class MarkupText(StringMobject):
         "\"": "&quot;",
         "'": "&apos;"
     }
-    #ENTITIES, ENTITY_CHARS = zip(
-    #    ("&lt;", "<"),
-    #    ("&gt;", ">"),
-    #    ("&amp;", "&"),
-    #    ("&quot;", "\""),
-    #    ("&apos;", "'")
-    #)
-
-    #CMD_PATTERN = r"""[<>&"']"""
-    #FLAG_DICT = {}
-    #CONTENT_REPL = {
-    #    r"<": "&lt;",
-    #    r">": "&gt;",
-    #    r"&": "&amp;",
-    #    r"\"": "&quot;",
-    #    r"'": "&apos;"
-    #}
-    #MATCH_REPL = {}
 
     def __init__(self, text: str, **kwargs):
         self.full2short(kwargs)
@@ -258,62 +239,76 @@ class MarkupText(StringMobject):
     # Parsing
 
     @staticmethod
-    def get_cmd_pattern() -> str | None:
-        # Unsupported passthroughs:
-        # "<?...?>", "<!--...-->", "<![CDATA[...]]>", "<!DOCTYPE...>"
-        # See https://gitlab.gnome.org/GNOME/glib/-/blob/main/glib/gmarkup.c
-        return r"""(<(/)?\w+(?:\s*\w+\s*\=\s*(["']).*?\3)*(/)?>)|(&(#(x)?)?(.*?);)|([>"'])"""
+    def get_command_pattern() -> str:
+        return r"""
+            (?P<tag>
+                <
+                (?P<close_slash>/)?
+                (?P<tag_name>\w+)\s*
+                (?P<attr_list>(?:\w+\s*\=\s*(?P<quot>["']).*?(?P=quot)\s*)*)  # TODO: test wsp
+                (?P<elision_slash>/)?
+                >
+            )
+            |(?P<passthrough>
+                <\?.*?\?>|<!--.*?-->|<!\[CDATA\[.*?\]\]>|<!DOCTYPE.*?>
+            )
+            |(?P<entity>&(?P<unicode>\#(?P<hex>x)?)?(?P<content>.*?);)
+            |(?P<char>[>"'])
+        """
 
     @staticmethod
-    def get_matched_flag(match_obj: re.Match) -> int:
-        if match_obj.group(1):
-            if match_obj.group(2):
+    def get_command_flag(match_obj: re.Match) -> int:
+        if match_obj.group("tag"):
+            if match_obj.group("close_slash"):
                 return -1
-            if not match_obj.group(4):
+            if not match_obj.group("elision_slash"):
                 return 1
         return 0
 
     @staticmethod
     def replace_for_content(match_obj: re.Match) -> str:
-        substr = match_obj.group()
-        if match_obj.group(9):
-            return MarkupText.escape_markup_char(substr)
-        return substr
+        if match_obj.group("tag"):
+            return ""
+        if match_obj.group("char"):
+            return MarkupText.escape_markup_char(match_obj.group("char"))
+        return match_obj.group()
 
     @staticmethod
     def replace_for_matching(match_obj: re.Match) -> str:
-        substr = match_obj.group()
-        if match_obj.group(1):
+        if match_obj.group("tag"):
             return ""
-        if match_obj.group(5):
-            if match_obj.group(6):
+        if match_obj.group("entity"):
+            if match_obj.group("unicode"):
                 base = 10
-                if match_obj.group(7):
+                if match_obj.group("hex"):
                     base = 16
-                return chr(int(match_obj.group(8), base))
-            return MarkupText.unescape_markup_char(substr)
-        return substr
+                return chr(int(match_obj.group("content"), base))
+            return MarkupText.unescape_markup_char(match_obj.group("entity"))
+        return match_obj.group()
 
     @staticmethod
     def get_internal_specified_items(
-        cmd_match_pairs: list[tuple[re.Match, re.Match]]
+        command_match_pairs: list[tuple[re.Match, re.Match]]
     ) -> list[tuple[Span, dict[str, str]]]:
-        attr_pattern = r"""(\w+)\s*\=\s*(["'])(.*?)\2"""
+        pattern = r"""
+            (?P<attr_name>\w+)
+            \s*\=\s*
+            (?P<quot>["'])(?P<attr_val>.*?)(?P=quot)
+        """
         result = []
-        for begin_match, end_match in cmd_match_pairs:
-            begin_tag = begin_match.group()
-            tag_name = re.search(r"\w+", begin_tag).group()
+        for start_match, end_match in command_match_pairs:
+            tag_name = start_match.group("tag_name")
             if tag_name == "span":
                 attr_dict = {
-                    attr_match_obj.group(1): attr_match_obj.group(3)
-                    for attr_match_obj in re.finditer(
-                        attr_pattern, begin_tag, re.S
+                    match_obj.group("attr_name"): match_obj.group("attr_val")
+                    for match_obj in re.finditer(
+                        pattern, start_match.group("attr_list"), re.S | re.X
                     )
                 }
             else:
                 attr_dict = MarkupText.MARKUP_TAGS.get(tag_name, {})
             result.append(
-                ((begin_match.end(), end_match.start()), attr_dict)
+                ((start_match.end(), end_match.start()), attr_dict)
             )
         return result
 
@@ -340,9 +335,12 @@ class MarkupText(StringMobject):
         ]
 
     @staticmethod
-    def get_cmd_str_pair(
-        attr_dict: dict[str, str], label_hex: str | None
-    ) -> tuple[str, str]:
+    def get_command_string(
+        attr_dict: dict[str, str], is_end: bool, label_hex: str | None
+    ) -> str:
+        if is_end:
+            return "</span>"
+
         if label_hex is not None:
             converted_attr_dict = {"foreground": label_hex}
             for key, val in attr_dict.items():
@@ -359,7 +357,7 @@ class MarkupText(StringMobject):
             f"{key}='{val}'"
             for key, val in converted_attr_dict.items()
         ])
-        return f"<span {attrs_str}>", "</span>"
+        return f"<span {attrs_str}>"
 
     def get_content_prefix_and_suffix(
         self, is_labelled: bool
@@ -387,9 +385,13 @@ class MarkupText(StringMobject):
                 ((line_spacing_scale) + 1) * 0.6
             )
 
-        return self.get_cmd_str_pair(
-            global_attr_dict,
-            label_hex=self.int_to_hex(0) if is_labelled else None
+        return tuple(
+            self.get_command_string(
+                global_attr_dict,
+                is_end=is_end,
+                label_hex=self.int_to_hex(0) if is_labelled else None
+            )
+            for is_end in (False, True)
         )
 
     # Method alias
@@ -413,12 +415,17 @@ class MarkupText(StringMobject):
 
 
 class Text(MarkupText):
+    CONFIG = {
+        # For backward compatibility
+        "isolate": (re.compile(r"\w+", re.U), re.compile(r"\S+", re.U)),
+    }
+
     @staticmethod
-    def get_cmd_pattern() -> str | None:
+    def get_command_pattern() -> str | None:
         return r"""[<>&"']"""
 
     @staticmethod
-    def get_matched_flag(match_obj: re.Match) -> int:
+    def get_command_flag(match_obj: re.Match) -> int:
         return 0
 
     @staticmethod

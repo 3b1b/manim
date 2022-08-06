@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import itertools as it
+
 from manimlib.mobject.svg.string_mobject import StringMobject
 from manimlib.utils.tex_file_writing import display_during_execution
 from manimlib.utils.tex_file_writing import tex_content_to_svg_file
@@ -40,16 +42,6 @@ class MTex(StringMobject):
         "additional_preamble": "",
     }
 
-    #CMD_PATTERN = r"\\(?:[a-zA-Z]+|.)|[_^{}]"
-    #FLAG_DICT = {
-    #    r"{": 1,
-    #    r"}": -1
-    #}
-    #CONTENT_REPL = {}
-    #MATCH_REPL = {
-    #    r"[_^{}]": ""
-    #}
-
     def __init__(self, tex_string: str, **kwargs):
         # Prevent from passing an empty string.
         if not tex_string.strip():
@@ -86,17 +78,20 @@ class MTex(StringMobject):
     # Parsing
 
     @staticmethod
-    def get_cmd_pattern() -> str | None:
-        return r"(\\(?:[a-zA-Z]+|.))|([_^])|([{}])"
+    def get_command_pattern() -> str:
+        return r"""
+            (?P<command>\\(?:[a-zA-Z]+|.))
+            |(?P<script>[_^])
+            |(?P<open>{)
+            |(?P<close>})
+        """
 
     @staticmethod
-    def get_matched_flag(match_obj: re.Match) -> int:
-        substr = match_obj.group()
-        if match_obj.group(3):
-            if substr == "{":
-                return 1
-            if substr == "}":
-                return -1
+    def get_command_flag(match_obj: re.Match) -> int:
+        if match_obj.group("open"):
+            return 1
+        if match_obj.group("close"):
+            return -1
         return 0
 
     @staticmethod
@@ -105,7 +100,7 @@ class MTex(StringMobject):
 
     @staticmethod
     def replace_for_matching(match_obj: re.Match) -> str:
-        if not match_obj.group(1):
+        if not match_obj.group("command"):
             return ""
         return match_obj.group()
 
@@ -114,26 +109,15 @@ class MTex(StringMobject):
         cmd_match_pairs: list[tuple[re.Match, re.Match]]
     ) -> list[tuple[Span, dict[str, str]]]:
         cmd_content_spans = [
-            (begin_match.end(), end_match.start())
-            for begin_match, end_match in cmd_match_pairs
+            (start_match.end(), end_match.start())
+            for start_match, end_match in cmd_match_pairs
         ]
-        #print(MTex.get_neighbouring_pairs(cmd_content_spans))
         return [
             (span, {})
             for span, next_span
             in MTex.get_neighbouring_pairs(cmd_content_spans)
             if span[0] == next_span[0] + 1 and span[1] == next_span[1] - 1
         ]
-        #return [
-        #    (cmd_content_spans[range_begin], {})
-        #    for _, (range_begin, range_end) in self.group_neighbours([
-        #        (span_begin + index, span_end - index)
-        #        for index, (span_begin, span_end) in enumerate(
-        #            cmd_content_spans
-        #        )
-        #    ])
-        #    if range_end - range_begin >= 2
-        #]
 
     def get_external_specified_items(
         self
@@ -152,12 +136,14 @@ class MTex(StringMobject):
         return f"\\color[RGB]{{{r}, {g}, {b}}}"
 
     @staticmethod
-    def get_cmd_str_pair(
-        attr_dict: dict[str, str], label_hex: str | None
-    ) -> tuple[str, str]:
+    def get_command_string(
+        attr_dict: dict[str, str], is_end: bool, label_hex: str | None
+    ) -> str:
         if label_hex is None:
-            return "", ""
-        return "{{" + MTex.get_color_cmd_str(label_hex), "}}"
+            return ""
+        if is_end:
+            return "}}"
+        return "{{" + MTex.get_color_cmd_str(label_hex)
 
     def get_content_prefix_and_suffix(
         self, is_labelled: bool
