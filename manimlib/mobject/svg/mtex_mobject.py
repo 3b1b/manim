@@ -106,16 +106,16 @@ class MTex(StringMobject):
 
     @staticmethod
     def get_internal_specified_items(
-        cmd_match_pairs: list[tuple[re.Match, re.Match]]
+        command_match_pairs: list[tuple[re.Match, re.Match]]
     ) -> list[tuple[Span, dict[str, str]]]:
-        cmd_content_spans = [
+        command_content_spans = [
             (start_match.end(), end_match.start())
-            for start_match, end_match in cmd_match_pairs
+            for start_match, end_match in command_match_pairs
         ]
         return [
             (span, {})
             for span, next_span
-            in MTex.get_neighbouring_pairs(cmd_content_spans)
+            in MTex.get_neighbouring_pairs(command_content_spans)
             if span[0] == next_span[0] + 1 and span[1] == next_span[1] - 1
         ]
 
@@ -129,7 +129,7 @@ class MTex(StringMobject):
         ]
 
     @staticmethod
-    def get_color_cmd_str(rgb_hex: str) -> str:
+    def get_color_command(rgb_hex: str) -> str:
         rgb = MTex.hex_to_int(rgb_hex)
         rg, b = divmod(rgb, 256)
         r, g = divmod(rg, 256)
@@ -143,7 +143,7 @@ class MTex(StringMobject):
             return ""
         if is_end:
             return "}}"
-        return "{{" + MTex.get_color_cmd_str(label_hex)
+        return "{{" + MTex.get_color_command(label_hex)
 
     def get_content_prefix_and_suffix(
         self, is_labelled: bool
@@ -151,7 +151,9 @@ class MTex(StringMobject):
         prefix_lines = []
         suffix_lines = []
         if not is_labelled:
-            prefix_lines.append(self.get_color_cmd_str(self.base_color_hex))
+            prefix_lines.append(self.get_color_command(
+                self.color_to_hex(self.base_color)
+            ))
         if self.alignment:
             prefix_lines.append(self.alignment)
         if self.tex_environment:

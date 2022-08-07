@@ -363,7 +363,7 @@ class MarkupText(StringMobject):
         self, is_labelled: bool
     ) -> tuple[str, str]:
         global_attr_dict = {
-            "foreground": self.base_color_hex,
+            "foreground": self.color_to_hex(self.base_color),
             "font_family": self.font,
             "font_style": self.slant,
             "font_weight": self.weight,
