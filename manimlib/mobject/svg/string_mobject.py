@@ -64,6 +64,7 @@ class StringMobject(SVGMobject, ABC):
         },
         "base_color": WHITE,
         "isolate": (),
+        "protect": (),
     }
 
     def __init__(self, string: str, **kwargs):
@@ -188,11 +189,6 @@ class StringMobject(SVGMobject, ABC):
         return list(filter(lambda span: span[0] < span[1], result))
 
     @staticmethod
-    def get_neighbouring_pairs(vals: Iterable[T]) -> list[tuple[T, T]]:
-        val_list = list(vals)
-        return list(zip(val_list[:-1], val_list[1:]))
-
-    @staticmethod
     def span_contains(span_0: Span, span_1: Span) -> bool:
         return span_0[0] <= span_1[0] and span_0[1] >= span_1[1]
 
@@ -214,6 +210,126 @@ class StringMobject(SVGMobject, ABC):
         def get_substr(span: Span) -> str:
             return self.string[slice(*span)]
 
+        def get_neighbouring_pairs(vals: Iterable[T]) -> list[tuple[T, T]]:
+            val_list = list(vals)
+            return list(zip(val_list[:-1], val_list[1:]))
+
+        command_matches = self.get_command_matches(self.string)
+        command_spans = [match_obj.span() for match_obj in command_matches]
+        configured_items = self.get_configured_items()
+        #configured_spans = [span for span, _ in configured_items]
+        #configured_attr_dicts = [d for _, d in configured_items]
+        categorized_spans = [
+            [span for span, _ in configured_items],
+            self.find_spans_by_selector(self.isolate),
+            self.find_spans_by_selector(self.protect),
+            command_spans  # TODO
+        ]
+        sorted_items = sorted([
+            (category, category_index, flag, *span[::flag])
+            for category, spans in enumerate(categorized_spans)
+            for category_index, span in enumerate(spans)
+            for flag in (1, -1)
+        ], key=lambda t: (t[3], t[2], -t[4], t[2] * (t[0] + 1), t[2] * t[1]))  # TODO
+
+        labelled_spans = []
+        attr_dicts = []
+        inserted_items = []
+
+        label = 0
+        region_index = 0
+        protect_level = 0
+        bracket_levels = [0]
+        open_command_stack = []
+        open_stack = []
+
+        #protect_level_stack = []
+        #bracket_level_stack = []
+        #inserted_position_stack = []
+        #index_items_len = 0  # label * 2
+        for category, i, flag, _, _ in sorted_items:
+            if category in (2, 3):
+                if flag == 1:
+                    protect_level += 1
+                    continue
+                protect_level -= 1
+                if category == 2:
+                    continue
+                region_index += 1
+                command_match = command_matches[i]
+                command_flag = self.get_command_flag(command_match)
+                if command_flag == 1:
+                    bracket_levels.append(bracket_levels[-1] + 1)
+                    open_command_stack.append(
+                        (command_match, region_index, label)
+                    )
+                    continue
+                elif command_flag == 0:
+                    continue
+                bracket_levels.append(bracket_levels[-1] - 1)
+                command_match_, region_index_, label_ = open_command_stack.pop()
+                attr_dict = self.get_attr_dict_from_command_pair(
+                    command_match_, command_match
+                )
+                if attr_dict is None:
+                    continue
+                span = (command_match_.end(), command_match.start())
+            else:
+                if flag == 1:
+                    open_stack.append(
+                        (category, i, protect_level, region_index, label)
+                    )
+                    continue
+                category_, i_, protect_level_, region_index_, label_ \
+                    = open_stack.pop()
+                span = categorized_spans[category][i]
+                if (category_, i_) != (category, i):
+                    log.warning(
+                        "Partly overlapping substrings detected: '%s' and '%s'",
+                        get_substr(categorized_spans[category_][i_]),
+                        get_substr(span)
+                    )
+                    continue
+                if protect_level_ or protect_level:
+                    continue
+                levels = bracket_levels[region_index_:region_index]
+                if levels and (
+                    any(levels[0] > l for l in levels) or levels[0] < levels[-1]
+                ):
+                    log.warning(
+                        "Cannot handle substring '%s'", get_substr(span)
+                    )
+                    continue
+                attr_dict = {} if category == 1 else configured_items[i][1]
+            pos = label_ * 2
+            labelled_spans.append(span)
+            attr_dicts.append(attr_dict)
+            inserted_items.insert(pos, (label, 1, span[0], region_index_))
+            inserted_items.append((label, -1, span[1], region_index))
+            label += 1
+
+        extended_inserted_items = [
+            (-1, 1, 0, 0),
+            *inserted_items,
+            (-1, -1, len(self.string), len(command_matches))
+        ]
+
+        inserted_label_items = [
+            (label, flag)
+            for label, flag, _, _ in extended_inserted_items
+        ]
+        inserted_indices = [
+            index
+            for _, _, index, _ in extended_inserted_items
+        ]
+        inserted_region_indices = [
+            region_index
+            for _, _, _, region_index in extended_inserted_items
+        ]
+
+        inserted_interval_spans = get_neighbouring_pairs(inserted_indices)
+        inserted_interval_region_spans = get_neighbouring_pairs(inserted_region_indices)
+
         def get_complement_spans(
             universal_span: Span, interval_spans: list[Span]
         ) -> list[Span]:
@@ -226,108 +342,26 @@ class StringMobject(SVGMobject, ABC):
                 (*span_ends, universal_span[1])
             ))
 
-        full_len = len(self.string)
-
-        command_matches = list(re.finditer(
-            self.get_command_pattern(), self.string, re.X | re.S
-        ))
-        command_flags = [
-            self.get_command_flag(command_match)
-            for command_match in command_matches
-        ]
-        command_match_pairs = self.get_command_match_pairs(
-            command_matches, command_flags
-        )
-        all_specified_items = [
-            *self.get_internal_specified_items(command_match_pairs),
-            *self.get_external_specified_items(),
-            *[
-                (span, {})
-                for span in self.find_spans_by_selector(self.isolate)
-            ]
-        ]
-        command_spans = [match_obj.span() for match_obj in command_matches]
-        region_spans = get_complement_spans(
-            (0, full_len), command_spans
-        )
-
-        def get_region_index(index: int) -> int:
-            for region_index, (start, end) in enumerate(region_spans):
-                if start <= index <= end:
-                    return region_index
-            return -1
-
-        labelled_spans = []
-        attr_dicts = []
-        for span, attr_dict in all_specified_items:
-            region_range = tuple(get_region_index(index) for index in span)
-            if -1 in region_range:
-                continue
-            levels = list(it.accumulate(command_flags[slice(*region_range)]))
-            if levels and any([
-                *(level < 0 for level in levels), levels[-1] > 0
-            ]):
-                log.warning(
-                    "Cannot handle substring '%s', ignored",
-                    get_substr(span)
-                )
-                continue
-            overlapped_spans = [
-                s for s in labelled_spans if any([
-                    s[0] < span[0] < s[1] < span[1],
-                    span[0] < s[0] < span[1] < s[1]
-                ])
-            ]
-            if overlapped_spans:
-                log.warning(
-                    "Substring '%s' partly overlaps with '%s', ignored",
-                    get_substr(span),
-                    get_substr(overlapped_spans[0])
-                )
-                continue
-            labelled_spans.append(span)
-            attr_dicts.append(attr_dict)
-
-        inserted_items = [
-            label_flag_pair
-            for _, label_flag_pair in sorted(it.chain(*(
-                sorted([
-                    (span[::flag], (label, flag))
-                    for label, span in list(enumerate(labelled_spans))[::flag]
-                ], key=lambda t: (t[0][0], -t[0][1]))
-                for flag in (-1, 1)
-            )), key=lambda t: t[0][0])
-        ]
-        #inserted_indices = [0, *(
-        #    labelled_spans[label][flag < 0]
-        #    for label, flag in inserted_items
-        #), full_len]
-        inserted_interval_items = [
-            tuple(zip(*pair))
-            for pair in self.get_neighbouring_pairs([
-                (index, get_region_index(index))
-                for index in [0, *(
-                    labelled_spans[label][flag < 0]
-                    for label, flag in inserted_items
-                ), full_len]
-            ])
-        ]
-
         def join_strs(strs: list[str], inserted_strs: list[str]) -> str:
             return "".join(it.chain(*zip(strs, (*inserted_strs, ""))))
 
+        subpieces_groups = [
+            [
+                get_substr(s)
+                for s in get_complement_spans(
+                    span, command_spans[slice(*region_range)]
+                )
+            ]
+            for span, region_range in zip(inserted_interval_spans, inserted_interval_region_spans)
+        ]
+
         def get_replaced_pieces(replace_func: Callable[[re.Match], str]) -> list[str]:
             return [
-                join_strs([
-                    get_substr(s)
-                    for s in get_complement_spans(
-                        span, command_spans[slice(*region_range)]
-                    )
-                ], [
+                join_strs(subpieces, [
                     replace_func(command_match)
                     for command_match in command_matches[slice(*region_range)]
                 ])
-                for span, region_range in inserted_interval_items
+                for subpieces, region_range in zip(subpieces_groups, inserted_interval_region_spans)
             ]
 
         content_pieces = get_replaced_pieces(self.replace_for_content)
@@ -340,7 +374,7 @@ class StringMobject(SVGMobject, ABC):
                     is_end=flag < 0,
                     label_hex=self.int_to_hex(label + 1) if is_labelled else None
                 )
-                for label, flag in inserted_items
+                for label, flag in inserted_label_items[1:-1]
             ]
             prefix, suffix = self.get_content_prefix_and_suffix(
                 is_labelled=is_labelled
@@ -351,18 +385,27 @@ class StringMobject(SVGMobject, ABC):
                 suffix
             ])
 
-        def get_group_substrs(group_labels: list[int]) -> list[str]:
-            if not group_labels:
+        def get_group_part_items_by_labels(labels: list[int]) -> list[tuple[str, list[int]]]:
+            if not labels:
                 return []
 
+            range_lens, group_labels = zip(*(
+                (len(list(grouper)), val)
+                for val, grouper in it.groupby(labels)
+            ))
+            submob_indices_lists = [
+                list(range(*submob_range))
+                for submob_range in get_neighbouring_pairs(
+                    [0, *it.accumulate(range_lens)]
+                )
+            ]
+
             def get_index(label, flag):
-                if label == -1:
-                    return 0 if flag == 1 else len(inserted_items) + 1
-                return inserted_items.index((label, flag)) + 1
+                return inserted_label_items.index((label, flag))
 
             def get_labelled_span(label):
                 if label == -1:
-                    return (0, full_len)
+                    return (0, len(self.string))
                 return labelled_spans[label]
 
             def label_contains(label_0, label_1):
@@ -376,7 +419,7 @@ class StringMobject(SVGMobject, ABC):
             #        get_index(curr_label, 1)
             #        if label_contains(prev_label, curr_label)
             #        else get_index(prev_label, -1)
-            #        for prev_label, curr_label in self.get_neighbouring_pairs(
+            #        for prev_label, curr_label in get_neighbouring_pairs(
             #            group_labels
             #        )
             #    )
@@ -386,7 +429,7 @@ class StringMobject(SVGMobject, ABC):
             #        get_index(curr_label, -1)
             #        if label_contains(next_label, curr_label)
             #        else get_index(next_label, 1)
-            #        for curr_label, next_label in self.get_neighbouring_pairs(
+            #        for curr_label, next_label in get_neighbouring_pairs(
             #            group_labels
             #        )
             #    ),
@@ -404,26 +447,27 @@ class StringMobject(SVGMobject, ABC):
                         if label_contains(next_label, prev_label)
                         else get_index(next_label, 1)
                     )
-                    for prev_label, next_label in self.get_neighbouring_pairs(
+                    for prev_label, next_label in get_neighbouring_pairs(
                         group_labels
                     )
                 ]
             )
-            return [
+            group_substrs = [
                 re.sub(r"\s+", "", "".join(
                     matching_pieces[slice(*piece_ranges)]
                 ))
                 for piece_ranges in piece_ranges
             ]
+            return list(zip(group_substrs, submob_indices_lists))
 
         self.labelled_spans = labelled_spans
         self.get_content = get_content
-        self.get_group_substrs = get_group_substrs
+        self.get_group_part_items_by_labels = get_group_part_items_by_labels
 
     @staticmethod
     @abstractmethod
-    def get_command_pattern() -> str:
-        return r"(?!)"
+    def get_command_matches(string: str) -> list[re.Match]:
+        return []
 
     @staticmethod
     @abstractmethod
@@ -442,15 +486,13 @@ class StringMobject(SVGMobject, ABC):
 
     @staticmethod
     @abstractmethod
-    def get_internal_specified_items(
-        command_match_pairs: list[tuple[re.Match, re.Match]]
-    ) -> list[tuple[Span, dict[str, str]]]:
-        return []
+    def get_attr_dict_from_command_pair(
+        open_command: re.Match, close_command: re.Match,
+    ) -> dict[str, str] | None:
+        return None
 
     @abstractmethod
-    def get_external_specified_items(
-        self
-    ) -> list[tuple[Span, dict[str, str]]]:
+    def get_configured_items(self) -> list[tuple[Span, dict[str, str]]]:
         return []
 
     @staticmethod
@@ -465,26 +507,6 @@ class StringMobject(SVGMobject, ABC):
         self, is_labelled: bool
     ) -> tuple[str, str]:
         return "", ""
-
-    @staticmethod
-    def get_command_match_pairs(
-        command_matches: list[re.Match], command_flags: list[int]
-    ) -> list[tuple[re.Match, re.Match]]:
-        result = []
-        open_stack = []
-        for command_match, flag in zip(command_matches, command_flags):
-            if flag == 1:
-                open_stack.append(command_match)
-            elif flag == -1:
-                if not open_stack:
-                    raise ValueError("Missing open command")
-                open_command_match = open_stack.pop()
-                result.append(
-                    (open_command_match, command_match)
-                )
-        if open_stack:
-            raise ValueError("Missing close command")
-        return result
 
     # Selector
 
@@ -509,21 +531,7 @@ class StringMobject(SVGMobject, ABC):
         ]
 
     def get_group_part_items(self) -> list[tuple[str, list[int]]]:
-        if not self.labels:
-            return []
-
-        range_lens, group_labels = zip(*(
-            (len(list(grouper)), val)
-            for val, grouper in it.groupby(self.labels)
-        ))
-        submob_indices_lists = [
-            list(range(*submob_range))
-            for submob_range in self.get_neighbouring_pairs(
-                [0, *it.accumulate(range_lens)]
-            )
-        ]
-        group_substrs = self.get_group_substrs(list(group_labels))
-        return list(zip(group_substrs, submob_indices_lists))
+        return self.get_group_part_items_by_labels(self.labels)
 
     def get_submob_indices_lists_by_selector(
         self, selector: Selector

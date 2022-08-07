@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import itertools as it
+import re
 
 from manimlib.mobject.svg.string_mobject import StringMobject
 from manimlib.utils.tex_file_writing import display_during_execution
@@ -78,13 +78,44 @@ class MTex(StringMobject):
     # Parsing
 
     @staticmethod
-    def get_command_pattern() -> str:
-        return r"""
+    def get_command_matches(string: str) -> list[re.Match]:
+        # Group together adjacent braces
+        pattern = re.compile(r"""
             (?P<command>\\(?:[a-zA-Z]+|.))
             |(?P<script>[_^])
-            |(?P<open>{)
-            |(?P<close>})
-        """
+            |(?P<open>{+)
+            |(?P<close>}+)
+        """, flags=re.X | re.S)
+        result = []
+        open_stack = []
+        for match_obj in pattern.finditer(string):
+            if match_obj.group("open"):
+                open_stack.append((match_obj.span(), len(result)))
+            elif match_obj.group("close"):
+                close_start, close_end = match_obj.span()
+                while True:
+                    if not open_stack:
+                        raise ValueError("Missing '{' inserted")
+                    (open_start, open_end), index = open_stack.pop()
+                    n = min(open_end - open_start, close_end - close_start)
+                    result.insert(index, pattern.fullmatch(
+                        string, pos=open_end - n, endpos=open_end
+                    ))
+                    result.append(pattern.fullmatch(
+                        string, pos=close_start, endpos=close_start + n
+                    ))
+                    close_start += n
+                    if close_start < close_end:
+                        continue
+                    open_end -= n
+                    if open_start < open_end:
+                        open_stack.append(((open_start, open_end), index))
+                    break
+            else:
+                result.append(match_obj)
+        if open_stack:
+            raise ValueError("Missing '}' inserted")
+        return result
 
     @staticmethod
     def get_command_flag(match_obj: re.Match) -> int:
@@ -100,28 +131,19 @@ class MTex(StringMobject):
 
     @staticmethod
     def replace_for_matching(match_obj: re.Match) -> str:
-        if not match_obj.group("command"):
-            return ""
-        return match_obj.group()
+        if match_obj.group("command"):
+            return match_obj.group()
+        return ""
 
     @staticmethod
-    def get_internal_specified_items(
-        command_match_pairs: list[tuple[re.Match, re.Match]]
-    ) -> list[tuple[Span, dict[str, str]]]:
-        command_content_spans = [
-            (start_match.end(), end_match.start())
-            for start_match, end_match in command_match_pairs
-        ]
-        return [
-            (span, {})
-            for span, next_span
-            in MTex.get_neighbouring_pairs(command_content_spans)
-            if span[0] == next_span[0] + 1 and span[1] == next_span[1] - 1
-        ]
+    def get_attr_dict_from_command_pair(
+        open_command: re.Match, close_command: re.Match
+    ) -> dict[str, str] | None:
+        if len(open_command.group()) >= 2:
+            return {}
+        return None
 
-    def get_external_specified_items(
-        self
-    ) -> list[tuple[Span, dict[str, str]]]:
+    def get_configured_items(self) -> list[tuple[Span, dict[str, str]]]:
         return [
             (span, {})
             for selector in self.tex_to_color_map

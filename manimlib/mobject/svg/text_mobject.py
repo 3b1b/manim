@@ -239,8 +239,8 @@ class MarkupText(StringMobject):
     # Parsing
 
     @staticmethod
-    def get_command_pattern() -> str:
-        return r"""
+    def get_command_matches(string: str) -> list[re.Match]:
+        pattern = re.compile(r"""
             (?P<tag>
                 <
                 (?P<close_slash>/)?
@@ -254,7 +254,8 @@ class MarkupText(StringMobject):
             )
             |(?P<entity>&(?P<unicode>\#(?P<hex>x)?)?(?P<content>.*?);)
             |(?P<char>[>"'])
-        """
+        """, flags=re.X | re.S)
+        return list(pattern.finditer(string))
 
     @staticmethod
     def get_command_flag(match_obj: re.Match) -> int:
@@ -287,34 +288,25 @@ class MarkupText(StringMobject):
         return match_obj.group()
 
     @staticmethod
-    def get_internal_specified_items(
-        command_match_pairs: list[tuple[re.Match, re.Match]]
-    ) -> list[tuple[Span, dict[str, str]]]:
+    def get_attr_dict_from_command_pair(
+        open_command: re.Match, close_command: re.Match
+    ) -> dict[str, str] | None:
         pattern = r"""
             (?P<attr_name>\w+)
             \s*\=\s*
             (?P<quot>["'])(?P<attr_val>.*?)(?P=quot)
         """
-        result = []
-        for start_match, end_match in command_match_pairs:
-            tag_name = start_match.group("tag_name")
-            if tag_name == "span":
-                attr_dict = {
-                    match_obj.group("attr_name"): match_obj.group("attr_val")
-                    for match_obj in re.finditer(
-                        pattern, start_match.group("attr_list"), re.S | re.X
-                    )
-                }
-            else:
-                attr_dict = MarkupText.MARKUP_TAGS.get(tag_name, {})
-            result.append(
-                ((start_match.end(), end_match.start()), attr_dict)
-            )
-        return result
+        tag_name = open_command.group("tag_name")
+        if tag_name == "span":
+            return {
+                match_obj.group("attr_name"): match_obj.group("attr_val")
+                for match_obj in re.finditer(
+                    pattern, open_command.group("attr_list"), re.S | re.X
+                )
+            }
+        return MarkupText.MARKUP_TAGS.get(tag_name, {})
 
-    def get_external_specified_items(
-        self
-    ) -> list[tuple[Span, dict[str, str]]]:
+    def get_configured_items(self) -> list[tuple[Span, dict[str, str]]]:
         return [
             *[
                 (span, {key: val})
