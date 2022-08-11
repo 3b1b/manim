@@ -315,7 +315,10 @@ class Mobject(object):
             GroupClass = self.get_group_class()
             return GroupClass(*self.split().__getitem__(value))
         return self.split().__getitem__(value)
-
+    
+    def __setitem__(self, index, value):
+        return self.split().__setitem__(index, value)
+    
     def __iter__(self):
         return iter(self.split())
 
