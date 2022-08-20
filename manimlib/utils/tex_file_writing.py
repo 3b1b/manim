@@ -16,7 +16,7 @@ SAVED_TEX_CONFIG = {}
 
 
 def get_tex_preamble(template_name: str) -> str:
-    name = re.sub(r"[^a-zA-Z]", "_", template_name).lower()
+    name = template_name.replace(" ", "_").lower()
     with open(os.path.join(
         get_manim_dir(), "manimlib", "tex_templates.yml"
     ), encoding="utf-8") as tex_templates_file:
@@ -143,7 +143,7 @@ def create_tex_svg(full_tex: str, svg_file: str, compiler: str) -> None:
 
 # TODO, perhaps this should live elsewhere
 @contextmanager
-def display_during_execution(message: str) -> None:
+def display_during_execution(message: str):
     # Merge into a single line
     to_print = message.replace("\n", " ")
     max_characters = os.get_terminal_size().columns - 1

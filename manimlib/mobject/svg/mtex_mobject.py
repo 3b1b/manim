@@ -131,9 +131,9 @@ class MTex(StringMobject):
 
     @staticmethod
     def replace_for_matching(match_obj: re.Match) -> str:
-        if match_obj.group("command"):
-            return match_obj.group()
-        return ""
+        if match_obj.group("script"):
+            return ""
+        return match_obj.group()
 
     @staticmethod
     def get_attr_dict_from_command_pair(

@@ -253,7 +253,7 @@ gfs_didot: |-
   \let\varphi\phi
 
 # GFS NeoHellenic
-gfs_neoHellenic: |-
+gfs_neohellenic: |-
   \usepackage[T1]{fontenc}
   \renewcommand{\rmdefault}{neohellenic}
   \usepackage[LGRgreek]{mathastext}

@@ -80,6 +80,7 @@ class MarkupText(StringMobject):
         "t2w": {},
         "global_config": {},
         "local_configs": {},
+        "disable_ligatures": True,
         "isolate": re.compile(r"\w+", re.U),
     }
 
@@ -150,7 +151,8 @@ class MarkupText(StringMobject):
             self.t2s,
             self.t2w,
             self.global_config,
-            self.local_configs
+            self.local_configs,
+            self.disable_ligatures
         )
 
     def full2short(self, config: dict) -> None:
@@ -359,9 +361,8 @@ class MarkupText(StringMobject):
             "font_family": self.font,
             "font_style": self.slant,
             "font_weight": self.weight,
-            "font_size": str(self.font_size * 1024),
+            "font_size": str(round(self.font_size * 1024)),
         }
-        global_attr_dict.update(self.global_config)
         # `line_height` attribute is supported since Pango 1.50.
         pango_version = manimpango.pango_version()
         if tuple(map(int, pango_version.split("."))) < (1, 50):
@@ -376,7 +377,10 @@ class MarkupText(StringMobject):
             global_attr_dict["line_height"] = str(
                 ((line_spacing_scale) + 1) * 0.6
             )
+        if self.disable_ligatures:
+            global_attr_dict["font_features"] = "liga=0,dlig=0,clig=0,hlig=0"
 
+        global_attr_dict.update(self.global_config)
         return tuple(
             self.get_command_string(
                 global_attr_dict,
@@ -413,8 +417,9 @@ class Text(MarkupText):
     }
 
     @staticmethod
-    def get_command_pattern() -> str | None:
-        return r"""[<>&"']"""
+    def get_command_matches(string: str) -> list[re.Match]:
+        pattern = re.compile(r"""[<>&"']""")
+        return list(pattern.finditer(string))
 
     @staticmethod
     def get_command_flag(match_obj: re.Match) -> int:
