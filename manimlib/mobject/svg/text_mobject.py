@@ -247,7 +247,7 @@ class MarkupText(StringMobject):
                 <
                 (?P<close_slash>/)?
                 (?P<tag_name>\w+)\s*
-                (?P<attr_list>(?:\w+\s*\=\s*(?P<quot>["']).*?(?P=quot)\s*)*)  # TODO: test wsp
+                (?P<attr_list>(?:\w+\s*\=\s*(?P<quot>["']).*?(?P=quot)\s*)*)
                 (?P<elision_slash>/)?
                 >
             )

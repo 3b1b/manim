@@ -79,10 +79,9 @@ class MTex(StringMobject):
 
     @staticmethod
     def get_command_matches(string: str) -> list[re.Match]:
-        # Group together adjacent braces
+        # Lump together adjacent brace pairs
         pattern = re.compile(r"""
             (?P<command>\\(?:[a-zA-Z]+|.))
-            |(?P<script>[_^])
             |(?P<open>{+)
             |(?P<close>}+)
         """, flags=re.X | re.S)
@@ -131,9 +130,9 @@ class MTex(StringMobject):
 
     @staticmethod
     def replace_for_matching(match_obj: re.Match) -> str:
-        if match_obj.group("script"):
-            return ""
-        return match_obj.group()
+        if match_obj.group("command"):
+            return match_obj.group()
+        return ""
 
     @staticmethod
     def get_attr_dict_from_command_pair(
