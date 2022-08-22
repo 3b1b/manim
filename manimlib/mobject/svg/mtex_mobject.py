@@ -60,6 +60,7 @@ class MTex(StringMobject):
             self.path_string_config,
             self.base_color,
             self.isolate,
+            self.protect,
             self.tex_string,
             self.alignment,
             self.tex_environment,

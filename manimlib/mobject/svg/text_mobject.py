@@ -136,6 +136,7 @@ class MarkupText(StringMobject):
             self.path_string_config,
             self.base_color,
             self.isolate,
+            self.protect,
             self.text,
             self.font_size,
             self.lsh,
