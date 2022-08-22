@@ -179,13 +179,8 @@ class MTex(StringMobject):
         if self.alignment:
             prefix_lines.append(self.alignment)
         if self.tex_environment:
-            if isinstance(self.tex_environment, str):
-                env_prefix = f"\\begin{{{self.tex_environment}}}"
-                env_suffix = f"\\end{{{self.tex_environment}}}"
-            else:
-                env_prefix, env_suffix = self.tex_environment
-            prefix_lines.append(env_prefix)
-            suffix_lines.append(env_suffix)
+            prefix_lines.append(f"\\begin{{{self.tex_environment}}}")
+            suffix_lines.append(f"\\end{{{self.tex_environment}}}")
         return (
             "".join([line + "\n" for line in prefix_lines]),
             "".join(["\n" + line for line in suffix_lines])

@@ -279,7 +279,7 @@ class MarkupText(StringMobject):
 
     @staticmethod
     def replace_for_matching(match_obj: re.Match) -> str:
-        if match_obj.group("tag"):
+        if match_obj.group("tag") or match_obj.group("passthrough"):
             return ""
         if match_obj.group("entity"):
             if match_obj.group("unicode"):
@@ -311,7 +311,7 @@ class MarkupText(StringMobject):
 
     def get_configured_items(self) -> list[tuple[Span, dict[str, str]]]:
         return [
-            *[
+            *(
                 (span, {key: val})
                 for t2x_dict, key in (
                     (self.t2c, "foreground"),
@@ -321,12 +321,12 @@ class MarkupText(StringMobject):
                 )
                 for selector, val in t2x_dict.items()
                 for span in self.find_spans_by_selector(selector)
-            ],
-            *[
+            ),
+            *(
                 (span, local_config)
                 for selector, local_config in self.local_configs.items()
                 for span in self.find_spans_by_selector(selector)
-            ]
+            )
         ]
 
     @staticmethod

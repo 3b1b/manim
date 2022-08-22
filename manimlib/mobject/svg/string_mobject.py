@@ -506,13 +506,13 @@ class StringMobject(SVGMobject, ABC):
     def build_parts_from_indices_lists(
         self, indices_lists: list[list[int]]
     ) -> VGroup:
-        return VGroup(*[
-            VGroup(*[
+        return VGroup(*(
+            VGroup(*(
                 self.submobjects[submob_index]
                 for submob_index in indices_list
-            ])
+            ))
             for indices_list in indices_lists
-        ])
+        ))
 
     def build_groups(self) -> VGroup:
         return self.build_parts_from_indices_lists([

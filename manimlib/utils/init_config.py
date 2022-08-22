@@ -44,7 +44,6 @@ def init_customization() -> None:
         },
         "universal_import_line": "from manimlib import *",
         "style": {
-            "tex_compiler": "",
             "tex_template": "",
             "font": "Consolas",
             "background_color": "",
@@ -107,16 +106,11 @@ def init_customization() -> None:
 
         console.print("[bold]Styles:[/bold]")
         style_config = configuration["style"]
-        compiler = Prompt.ask(
-            "  Select an executable program to use to compile a LaTeX source file",
-            choices=["latex", "xelatex"],
-            default="latex"
+        tex_template = Prompt.ask(
+            "  Select a TeX template to compile a LaTeX source file",
+            default="default"
         )
-        style_config["tex_compiler"] = compiler
-        if compiler == "latex":
-            style_config["tex_template"] = "default"
-        else:
-            style_config["tex_template"] = "ctex"
+        style_config["tex_template"] = tex_template
         style_config["background_color"] = Prompt.ask(
             "  Which [bold]background color[/bold] do you want [italic](hex code)",
             default="#333333"

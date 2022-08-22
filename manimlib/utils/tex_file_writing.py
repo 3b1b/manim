@@ -15,7 +15,7 @@ from manimlib.utils.simple_functions import hash_string
 SAVED_TEX_CONFIG = {}
 
 
-def get_tex_preamble(template_name: str) -> str:
+def get_tex_template_config(template_name: str) -> dict[str, str]:
     name = template_name.replace(" ", "_").lower()
     with open(os.path.join(
         get_manim_dir(), "manimlib", "tex_templates.yml"
@@ -27,28 +27,26 @@ def get_tex_preamble(template_name: str) -> str:
             name
         )
         name = "default"
-    result = templates_dict[name]
-    if name not in ("default", "ctex", "basic", "ctex_basic", "blank"):
-        result = templates_dict["basic"] + "\n" + result
-    return result
+    return templates_dict[name]
 
 
 def get_tex_config() -> dict[str, str]:
     """
     Returns a dict which should look something like this:
     {
-        "compiler": "latex",
         "template": "default",
+        "compiler": "latex",
         "preamble": "..."
     }
     """
     # Only load once, then save thereafter
     if not SAVED_TEX_CONFIG:
-        style_config = get_custom_config()["style"]
+        template_name = get_custom_config()["style"]["tex_template"]
+        template_config = get_tex_template_config(template_name)
         SAVED_TEX_CONFIG.update({
-            "compiler": style_config["tex_compiler"],
-            "template": style_config["tex_template"],
-            "preamble": get_tex_preamble(style_config["tex_template"])
+            "template": template_name,
+            "compiler": template_config["compiler"],
+            "preamble": template_config["preamble"]
         })
     return SAVED_TEX_CONFIG
 
@@ -58,9 +56,12 @@ def tex_content_to_svg_file(
 ) -> str:
     tex_config = get_tex_config()
     if not template or template == tex_config["template"]:
+        compiler = tex_config["compiler"]
         preamble = tex_config["preamble"]
     else:
-        preamble = get_tex_preamble(template)
+        config = get_tex_template_config(template)
+        compiler = config["compiler"]
+        preamble = config["preamble"]
 
     if additional_preamble:
         preamble += "\n" + additional_preamble
@@ -77,7 +78,7 @@ def tex_content_to_svg_file(
     )
     if not os.path.exists(svg_file):
         # If svg doesn't exist, create it
-        create_tex_svg(full_tex, svg_file, tex_config["compiler"])
+        create_tex_svg(full_tex, svg_file, compiler)
     return svg_file
 
 
