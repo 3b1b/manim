@@ -243,7 +243,7 @@ class SVGMobject(VMobject):
     def path_to_mobject(self, path: se.Path) -> VMobjectFromSVGPath:
         return VMobjectFromSVGPath(path, **self.path_string_config)
 
-    def line_to_mobject(self, line: se.Line) -> Line:
+    def line_to_mobject(self, line: se.SimpleLine) -> Line:
         return Line(
             start=_convert_point_to_3d(line.x1, line.y1),
             end=_convert_point_to_3d(line.x2, line.y2)
