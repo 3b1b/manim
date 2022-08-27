@@ -111,11 +111,20 @@ def get_scenes_to_render(scene_classes, scene_config, config):
             log.error(f"No scene named {scene_name} found")
     if result:
         return result
+    
+    # another case
+    result=[]
     if len(scene_classes) == 1:
-        result = [scene_classes[0]]
+        scene_classes = [scene_classes[0]]
     else:
-        result = prompt_user_for_choice(scene_classes)
-    return [scene_class(**scene_config) for scene_class in result]
+        scene_classes = prompt_user_for_choice(scene_classes)
+    for scene_class in scene_classes:
+        fw_config = scene_config["file_writer_config"]
+        if fw_config["write_to_movie"]:
+            fw_config["total_frames"] = compute_total_frames(scene_class, scene_config)
+            scene = scene_class(**scene_config)
+            result.append(scene)
+    return result
 
 
 def get_scene_classes_from_module(module):
