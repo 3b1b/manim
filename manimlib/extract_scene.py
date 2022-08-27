@@ -122,8 +122,8 @@ def get_scenes_to_render(scene_classes, scene_config, config):
         fw_config = scene_config["file_writer_config"]
         if fw_config["write_to_movie"]:
             fw_config["total_frames"] = compute_total_frames(scene_class, scene_config)
-            scene = scene_class(**scene_config)
-            result.append(scene)
+        scene = scene_class(**scene_config)
+        result.append(scene)
     return result
 
 
