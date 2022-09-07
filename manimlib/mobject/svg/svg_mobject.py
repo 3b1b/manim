@@ -108,8 +108,6 @@ class SVGMobject(VMobject):
         return get_full_vector_image_path(self.file_name)
 
     def modify_xml_tree(self, element_tree: ET.ElementTree) -> ET.ElementTree:
-        element_tree = self.expand_use_elements(element_tree)
-
         config_style_attrs = self.generate_config_style_dict()
         style_keys = (
             "fill",
@@ -133,37 +131,6 @@ class SVGMobject(VMobject):
         root_style_node.extend(root)
         return ET.ElementTree(new_root)
 
-    @staticmethod
-    def expand_use_elements(element_tree: ET.ElementTree) -> ET.ElementTree:
-        # Replace `use` elements with copies of elements they refer to
-        while True:
-            element = element_tree.find(f".//{SVG_XMLNS}use[@{SVG_XLINK}href]")
-            if element is None:
-                break
-
-            element.tag = f"{SVG_XMLNS}g"
-            attrs = element.attrib
-            href_id = attrs.pop(f"{SVG_XLINK}href")[1:]
-            href_element = element_tree.find(f".//{SVG_XMLNS}*[@id='{href_id}']")
-            if href_element is None:
-                continue
-            attrs.pop("width", None)
-            attrs.pop("height", None)
-            x = attrs.pop("x", "0")
-            y = attrs.pop("y", "0")
-            if not x == y == "0":
-                translate_str = f"translate({x}, {y})"
-                if "transform" in attrs:
-                    attrs["transform"] = translate_str + " " + attrs["transform"]
-                else:
-                    attrs["transform"] = translate_str
-            shadow_node = ET.SubElement(element, href_element.tag, href_element.attrib)
-            shadow_node.extend(href_element)
-
-        for defs_element in element_tree.iterfind(f".//{SVG_XMLNS}defs"):
-            defs_element.clear()
-        return element_tree
-
     def generate_config_style_dict(self) -> dict[str, str]:
         keys_converting_dict = {
             "fill": ("color", "fill_color"),
@@ -184,7 +151,7 @@ class SVGMobject(VMobject):
     def get_mobjects_from(self, svg: se.SVG) -> list[VMobject]:
         result = []
         for shape in svg.elements():
-            if isinstance(shape, se.Group):
+            if isinstance(shape, (se.Group, se.Use)):
                 continue
             elif isinstance(shape, se.Path):
                 mob = self.path_to_mobject(shape)
@@ -192,9 +159,7 @@ class SVGMobject(VMobject):
                 mob = self.line_to_mobject(shape)
             elif isinstance(shape, se.Rect):
                 mob = self.rect_to_mobject(shape)
-            elif isinstance(shape, se.Circle):
-                mob = self.circle_to_mobject(shape)
-            elif isinstance(shape, se.Ellipse):
+            elif isinstance(shape, (se.Circle, se.Ellipse)):
                 mob = self.ellipse_to_mobject(shape)
             elif isinstance(shape, se.Polygon):
                 mob = self.polygon_to_mobject(shape)
@@ -209,7 +174,8 @@ class SVGMobject(VMobject):
                 continue
             if not mob.has_points():
                 continue
-            self.apply_style_to_mobject(mob, shape)
+            if isinstance(shape, se.GraphicObject):
+                self.apply_style_to_mobject(mob, shape)
             if isinstance(shape, se.Transformable) and shape.apply:
                 self.handle_transform(mob, shape.transform)
             result.append(mob)
@@ -268,15 +234,7 @@ class SVGMobject(VMobject):
         ))
         return mob
 
-    def circle_to_mobject(self, circle: se.Circle) -> Circle:
-        # svgelements supports `rx` & `ry` but `r`
-        mob = Circle(radius=circle.rx)
-        mob.shift(_convert_point_to_3d(
-            circle.cx, circle.cy
-        ))
-        return mob
-
-    def ellipse_to_mobject(self, ellipse: se.Ellipse) -> Circle:
+    def ellipse_to_mobject(self, ellipse: se.Circle | se.Ellipse) -> Circle:
         mob = Circle(radius=ellipse.rx)
         mob.stretch_to_fit_height(2 * ellipse.ry)
         mob.shift(_convert_point_to_3d(
