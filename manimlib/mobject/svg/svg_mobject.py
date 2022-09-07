@@ -22,8 +22,6 @@ from manimlib.utils.simple_functions import hash_string
 
 
 SVG_HASH_TO_MOB_MAP: dict[int, VMobject] = {}
-SVG_XMLNS = "{http://www.w3.org/2000/svg}"
-SVG_XLINK = "{http://www.w3.org/1999/xlink}"
 
 
 def _convert_point_to_3d(x: float, y: float) -> np.ndarray:
@@ -125,6 +123,7 @@ class SVGMobject(VMobject):
         }
 
         # Ignore other attributes in case that svgelements cannot parse them
+        SVG_XMLNS = "{http://www.w3.org/2000/svg}"
         new_root = ET.Element("svg")
         config_style_node = ET.SubElement(new_root, f"{SVG_XMLNS}g", config_style_attrs)
         root_style_node = ET.SubElement(config_style_node, f"{SVG_XMLNS}g", style_attrs)
