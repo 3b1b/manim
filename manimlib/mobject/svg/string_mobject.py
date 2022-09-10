@@ -121,10 +121,10 @@ class StringMobject(SVGMobject, ABC):
             log.warning(
                 "Unrecognizable color labels detected (%s). "
                 "The result could be unexpected.",
-                ", ".join([
+                ", ".join(
                     self.int_to_hex(color)
                     for color in unrecognizable_colors
-                ])
+                )
             )
 
     def rearrange_submobjects_by_positions(
@@ -249,6 +249,8 @@ class StringMobject(SVGMobject, ABC):
 
         inserted_items = []
         labelled_items = []
+        overlapping_spans = []
+        level_mismatched_spans = []
 
         label = 1
         protect_level = 0
@@ -296,20 +298,12 @@ class StringMobject(SVGMobject, ABC):
             pos, category_, i_, protect_level_, bracket_stack_ \
                 = open_stack.pop()
             if category_ != category or i_ != i:
-                span_ = configured_items[i_][0] \
-                    if category_ == 0 else isolated_spans[i_]
-                log.warning(
-                    "Partly overlapping substrings detected: '%s' and '%s'",
-                    get_substr(span_),
-                    get_substr(span)
-                )
+                overlapping_spans.append(span)
                 continue
             if protect_level_ or protect_level:
                 continue
             if bracket_stack_ != bracket_stack:
-                log.warning(
-                    "Cannot handle substring '%s'", get_substr(span)
-                )
+                level_mismatched_spans.append(span)
                 continue
             labelled_items.append((span, attr_dict))
             inserted_items.insert(pos, (label, 1))
@@ -318,6 +312,23 @@ class StringMobject(SVGMobject, ABC):
         labelled_items.insert(0, ((0, len(self.string)), {}))
         inserted_items.insert(0, (0, 1))
         inserted_items.append((0, -1))
+
+        if overlapping_spans:
+            log.warning(
+                "Partly overlapping substrings detected: %s",
+                ", ".join(
+                    f"'{get_substr(span)}'"
+                    for span in overlapping_spans
+                )
+            )
+        if level_mismatched_spans:
+            log.warning(
+                "Cannot handle substrings: %s",
+                ", ".join(
+                    f"'{get_substr(span)}'"
+                    for span in level_mismatched_spans
+                )
+            )
 
         def reconstruct_string(
             start_item: tuple[int, int],
@@ -372,7 +383,7 @@ class StringMobject(SVGMobject, ABC):
         prefix, suffix = self.get_content_prefix_and_suffix(
             is_labelled=is_labelled
         )
-        return "".join([prefix, content, suffix])
+        return "".join((prefix, content, suffix))
 
     @staticmethod
     @abstractmethod
