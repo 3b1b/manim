@@ -2015,7 +2015,8 @@ class _AnimationBuilder:
         self.overridden_animation = None
         self.mobject.generate_target()
         self.is_chaining = False
-        self.methods = []
+        self.methods: list[Callable] = []
+        self.anim_args = {}
 
     def __getattr__(self, method_name: str):
         method = getattr(self.mobject.target, method_name)
@@ -2040,13 +2041,17 @@ class _AnimationBuilder:
         self.is_chaining = True
         return update_target
 
+    def set_anim_args(self, **kwargs):
+        self.anim_args = kwargs
+        return self
+
     def build(self):
         from manimlib.animation.transform import _MethodAnimation
 
         if self.overridden_animation:
             return self.overridden_animation
 
-        return _MethodAnimation(self.mobject, self.methods)
+        return _MethodAnimation(self.mobject, self.methods, **self.anim_args)
 
 
 def override_animate(method):
