@@ -2042,6 +2042,18 @@ class _AnimationBuilder:
         return update_target
 
     def set_anim_args(self, **kwargs):
+        '''
+        You can change the args of :class:`~manimlib.animation.transform.Transform`, such as
+
+        - ``run_time``
+        - ``time_span``
+        - ``rate_func``
+        - ``lag_ratio``
+        - ``path_arc``
+        - ``path_func``
+
+        and so on.
+        '''
         self.anim_args = kwargs
         return self
 
