@@ -296,9 +296,11 @@ class Bubble(SVGMobject):
     CONFIG = {
         "direction": LEFT,
         "center_point": ORIGIN,
-        "content_scale_factor": 0.75,
+        "content_scale_factor": 0.7,
         "height": 5,
         "width": 8,
+        "max_height": None,
+        "max_width": None,
         "bubble_center_adjustment_factor": 1. / 8,
         "file_name": None,
         "fill_color": BLACK,
@@ -313,8 +315,12 @@ class Bubble(SVGMobject):
             raise Exception("Must invoke Bubble subclass")
         SVGMobject.__init__(self, self.file_name, **kwargs)
         self.center()
-        self.stretch_to_fit_height(self.height)
-        self.stretch_to_fit_width(self.width)
+        self.set_height(self.height, stretch=True)
+        self.set_width(self.width, stretch=True)
+        if self.max_height:
+            self.set_max_height(self.max_height)
+        if self.max_width:
+            self.set_max_width(self.max_width)
         if self.direction[0] > 0:
             self.flip()
         if "direction" in kwargs:
@@ -360,12 +366,9 @@ class Bubble(SVGMobject):
         return self
 
     def position_mobject_inside(self, mobject):
-        scaled_width = self.content_scale_factor * self.get_width()
-        if mobject.get_width() > scaled_width:
-            mobject.set_width(scaled_width)
-        mobject.shift(
-            self.get_bubble_center() - mobject.get_center()
-        )
+        mobject.set_max_width(self.content_scale_factor * self.get_width())
+        mobject.set_max_height(self.content_scale_factor * self.get_height() / 1.5)
+        mobject.shift(self.get_bubble_center() - mobject.get_center())
         return mobject
 
     def add_content(self, mobject):
@@ -377,15 +380,14 @@ class Bubble(SVGMobject):
         self.add_content(TexText(*text))
         return self
 
-    def resize_to_content(self):
-        target_width = self.content.get_width()
-        target_width += max(MED_LARGE_BUFF, 2)
-        target_height = self.content.get_height()
-        target_height += 2.5 * LARGE_BUFF
+    def resize_to_content(self, buff=0.75):
+        width = self.content.get_width()
+        height = self.content.get_height()
+        target_width = width + min(buff, height)
+        target_height = 1.35 * (self.content.get_height() + buff)
         tip_point = self.get_tip()
-        self.stretch_to_fit_width(target_width)
-        self.stretch_to_fit_height(target_height)
-        self.move_tip_to(tip_point)
+        self.stretch_to_fit_width(target_width, about_point=tip_point)
+        self.stretch_to_fit_height(target_height, about_point=tip_point)
         self.position_mobject_inside(self.content)
 
     def clear(self):

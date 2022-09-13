@@ -11,6 +11,7 @@ import yaml
 from manimlib.logger import log
 from manimlib.utils.config_ops import merge_dicts_recursively
 from manimlib.utils.init_config import init_customization
+from manimlib.constants import FRAME_HEIGHT
 
 
 __config_file__ = "custom_config.yml"
@@ -228,10 +229,10 @@ def insert_embed_line(file_name: str, scene_name: str, line_marker: str):
                 n_spaces = get_indent(line) + 4
             elif in_construct:
                 if len(line.strip()) > 0 and get_indent(line) < n_spaces:
-                    prev_line_num = index - 2
+                    prev_line_num = index - 1
                     break
         if prev_line_num is None:
-            prev_line_num = len(lines) - 2
+            prev_line_num = len(lines) - 1
     elif line_marker.isdigit():
         # Treat the argument as a line number
         prev_line_num = int(line_marker) - 1
@@ -392,10 +393,11 @@ def get_configuration(args):
     monitors = get_monitors()
     mon_index = custom_config["window_monitor"]
     monitor = monitors[min(mon_index, len(monitors) - 1)]
+    aspect_ratio = config["camera_config"]["pixel_width"] / config["camera_config"]["pixel_height"]
     window_width = monitor.width
     if not (args.full_screen or custom_config["full_screen"]):
         window_width //= 2
-    window_height = window_width * 9 // 16
+    window_height = int(window_width / aspect_ratio)
     config["window_config"] = {
         "size": (window_width, window_height),
     }
@@ -416,7 +418,9 @@ def get_configuration(args):
 def get_camera_configuration(args, custom_config):
     camera_config = {}
     camera_resolutions = get_custom_config()["camera_resolutions"]
-    if args.low_quality:
+    if args.resolution:
+        resolution = args.resolution
+    elif args.low_quality:
         resolution = camera_resolutions["low"]
     elif args.medium_quality:
         resolution = camera_resolutions["med"]
@@ -439,6 +443,9 @@ def get_camera_configuration(args, custom_config):
     camera_config.update({
         "pixel_width": width,
         "pixel_height": height,
+        "frame_config": {
+            "frame_shape": ((width / height) * FRAME_HEIGHT, FRAME_HEIGHT),
+        },
         "fps": fps,
     })
 

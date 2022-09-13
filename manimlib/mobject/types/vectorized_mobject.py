@@ -770,6 +770,11 @@ class VMobject(Mobject):
             mob.get_unit_normal(recompute=True)
         return self
 
+    def reverse_points(self):
+        super().reverse_points()
+        self.refresh_unit_normal()
+        return self
+
     # Alignment
     def align_points(self, vmobject: VMobject):
         if self.get_num_points() == len(vmobject.get_points()):

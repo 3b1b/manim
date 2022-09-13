@@ -837,7 +837,7 @@ class Scene(object):
             return
 
         if char == RESET_FRAME_KEY:
-            self.camera.frame.to_default_state()
+            self.play(self.camera.frame.animate.to_default_state())
         elif char == "z" and modifiers == COMMAND_MODIFIER:
             self.undo()
         elif char == "z" and modifiers == COMMAND_MODIFIER | SHIFT_MODIFIER:

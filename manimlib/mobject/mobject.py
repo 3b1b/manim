@@ -190,7 +190,6 @@ class Mobject(object):
         for mob in self.get_family():
             for key in mob.data:
                 mob.data[key] = mob.data[key][::-1]
-        self.refresh_unit_normal()
         return self
 
     def apply_points_function(
@@ -634,13 +633,19 @@ class Mobject(object):
         to another mobject
         """
         self.align_family(mobject)
-        for sm1, sm2 in zip(self.get_family(), mobject.get_family()):
+        family1 = self.get_family()
+        family2 = mobject.get_family()
+        for sm1, sm2 in zip(family1, family2):
             sm1.set_data(sm2.data)
             sm1.set_uniforms(sm2.uniforms)
             sm1.shader_folder = sm2.shader_folder
             sm1.texture_paths = sm2.texture_paths
             sm1.depth_test = sm2.depth_test
             sm1.render_primitive = sm2.render_primitive
+        # Make sure named family members carry over
+        for attr, value in list(mobject.__dict__.items()):
+            if isinstance(value, Mobject) and value in family2:
+                setattr(self, attr, family1[family2.index(value)])
         self.refresh_bounding_box(recurse_down=True)
         self.match_updaters(mobject)
         return self
