@@ -1,0 +1,732 @@
+# Classical TeX templates
+
+default:
+  description: ""
+  compiler: latex
+  preamble: |-
+    \usepackage[english]{babel}
+    \usepackage[utf8]{inputenc}
+    \usepackage[T1]{fontenc}
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{dsfont}
+    \usepackage{setspace}
+    \usepackage{tipa}
+    \usepackage{relsize}
+    \usepackage{textcomp}
+    \usepackage{mathrsfs}
+    \usepackage{calligra}
+    \usepackage{wasysym}
+    \usepackage{ragged2e}
+    \usepackage{physics}
+    \usepackage{xcolor}
+    \usepackage{microtype}
+    \usepackage{pifont}
+    \DisableLigatures{encoding = *, family = * }
+    \linespread{1}
+
+ctex:
+  description: ""
+  compiler: xelatex
+  preamble: |-
+    \usepackage[UTF8]{ctex}
+    \usepackage[english]{babel}
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{dsfont}
+    \usepackage{setspace}
+    \usepackage{tipa}
+    \usepackage{relsize}
+    \usepackage{textcomp}
+    \usepackage{mathrsfs}
+    \usepackage{calligra}
+    \usepackage{wasysym}
+    \usepackage{ragged2e}
+    \usepackage{physics}
+    \usepackage{xcolor}
+    \usepackage{microtype}
+    \linespread{1}
+
+# Simplified TeX templates
+
+basic:
+  description: ""
+  compiler: latex
+  preamble: |-
+    \usepackage[english]{babel}
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+
+basic_ctex:
+  description: ""
+  compiler: xelatex
+  preamble: |-
+    \usepackage[UTF8]{ctex}
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+
+empty:
+  description: ""
+  compiler: latex
+  preamble: ""
+
+empty_ctex:
+  description: ""
+  compiler: xelatex
+  preamble: ""
+
+# A collection of TeX templates for the fonts described at
+# http://jf.burnol.free.fr/showcase.html
+
+american_typewriter:
+  description: American Typewriter
+  compiler: xelatex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[no-math]{fontspec}
+    \setmainfont[Mapping=tex-text]{American Typewriter}
+    \usepackage[defaultmathsizes]{mathastext}
+
+antykwa:
+  description: Antykwa Poltawskiego (TX Fonts for Greek and math symbols)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[OT4,OT1]{fontenc}
+    \usepackage{txfonts}
+    \usepackage[upright]{txgreeks}
+    \usepackage{antpolt}
+    \usepackage[defaultmathsizes,nolessnomore]{mathastext}
+
+apple_chancery:
+  description: Apple Chancery
+  compiler: xelatex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[no-math]{fontspec}
+    \setmainfont[Mapping=tex-text]{Apple Chancery}
+    \usepackage[defaultmathsizes]{mathastext}
+
+auriocus_kalligraphicus:
+  description: Auriocus Kalligraphicus (Symbol Greek)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage{aurical}
+    \renewcommand{\rmdefault}{AuriocusKalligraphicus}
+    \usepackage[symbolgreek]{mathastext}
+
+baskervald_adf_fourier:
+  description: Baskervald ADF with Fourier
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[upright]{fourier}
+    \usepackage{baskervald}
+    \usepackage[defaultmathsizes,noasterisk]{mathastext}
+
+baskerville_it:
+  description: Baskerville (Italic)
+  compiler: xelatex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[no-math]{fontspec}
+    \setmainfont[Mapping=tex-text]{Baskerville}
+    \usepackage[defaultmathsizes,italic]{mathastext}
+
+biolinum:
+  description: Biolinum
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage{txfonts}
+    \usepackage[upright]{txgreeks}
+    \usepackage[no-math]{fontspec}
+    \setmainfont[Mapping=tex-text]{Minion Pro}
+    \setsansfont[Mapping=tex-text,Scale=MatchUppercase]{Myriad Pro}
+    \renewcommand\familydefault\sfdefault
+    \usepackage[defaultmathsizes]{mathastext}
+    \renewcommand\familydefault\rmdefault
+
+brushscriptx:
+  description: BrushScriptX-Italic (PX math and Greek)
+  compiler: xelatex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage{pxfonts}
+    \renewcommand{\rmdefault}{pbsi}
+    \renewcommand{\mddefault}{xl}
+    \renewcommand{\bfdefault}{xl}
+    \usepackage[defaultmathsizes,noasterisk]{mathastext}
+    \boldmath
+
+chalkboard_se:
+  description: Chalkboard SE
+  compiler: xelatex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[no-math]{fontspec}
+    \setmainfont[Mapping=tex-text]{Chalkboard SE}
+    \usepackage[defaultmathsizes]{mathastext}
+
+chalkduster:
+  description: Chalkduster
+  compiler: lualatex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[no-math]{fontspec}
+    \setmainfont[Mapping=tex-text]{Chalkduster}
+    \usepackage[defaultmathsizes]{mathastext}
+
+comfortaa:
+  description: Comfortaa
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[default]{comfortaa}
+    \usepackage[LGRgreek,defaultmathsizes,noasterisk]{mathastext}
+    \let\varphi\phi
+    \linespread{1.06}
+
+comic_sans:
+  description: Comic Sans MS
+  compiler: xelatex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[no-math]{fontspec}
+    \setmainfont[Mapping=tex-text]{Comic Sans MS}
+    \usepackage[defaultmathsizes]{mathastext}
+
+droid_sans:
+  description: Droid Sans
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage[default]{droidsans}
+    \usepackage[LGRgreek]{mathastext}
+    \let\varepsilon\epsilon
+
+droid_sans_it:
+  description: Droid Sans (Italic)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage[default]{droidsans}
+    \usepackage[LGRgreek,defaultmathsizes,italic]{mathastext}
+    \let\varphi\phi
+
+droid_serif:
+  description: Droid Serif
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage[default]{droidserif}
+    \usepackage[LGRgreek]{mathastext}
+    \let\varepsilon\epsilon
+
+droid_serif_px_it:
+  description: Droid Serif (PX math symbols) (Italic)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage{pxfonts}
+    \usepackage[default]{droidserif}
+    \usepackage[LGRgreek,defaultmathsizes,italic,basic]{mathastext}
+    \let\varphi\phi
+
+ecf_augie:
+  description: ECF Augie (Euler Greek)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \renewcommand\familydefault{fau}
+    \usepackage[defaultmathsizes,eulergreek]{mathastext}
+
+ecf_jd:
+  description: ECF JD (with TX fonts)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage{txfonts}
+    \usepackage[upright]{txgreeks}
+    \renewcommand\familydefault{fjd}
+    \usepackage{mathastext}
+    \mathversion{bold}
+
+ecf_skeetch:
+  description: ECF Skeetch (CM Greek)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \DeclareFontFamily{T1}{fsk}{}
+    \DeclareFontShape{T1}{fsk}{m}{n}{<->s*[1.315] fskmw8t}{}
+    \renewcommand\rmdefault{fsk}
+    \usepackage[noendash,defaultmathsizes,nohbar,defaultimath]{mathastext}
+
+ecf_tall_paul:
+  description: ECF Tall Paul (with Symbol font)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \DeclareFontFamily{T1}{ftp}{}
+    \DeclareFontShape{T1}{ftp}{m}{n}{<->s*[1.4] ftpmw8t}{}
+    \renewcommand\familydefault{ftp}
+    \usepackage[symbol]{mathastext}
+    \let\infty\inftypsy
+
+ecf_webster:
+  description: ECF Webster (with TX fonts)
+  compiler: xelatex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage{txfonts}
+    \usepackage[upright]{txgreeks}
+    \renewcommand\familydefault{fwb}
+    \usepackage{mathastext}
+    \renewcommand{\int}{\intop\limits}
+    \linespread{1.5}
+    \mathversion{bold}
+
+electrum_adf:
+  description: Electrum ADF (CM Greek)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage[LGRgreek,basic,defaultmathsizes]{mathastext}
+    \usepackage[lf]{electrum}
+    \Mathastext
+    \let\varphi\phi
+
+epigrafica:
+  description: Epigrafica
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[LGR,OT1]{fontenc}
+    \usepackage{epigrafica}
+    \usepackage[basic,LGRgreek,defaultmathsizes]{mathastext}
+    \let\varphi\phi
+    \linespread{1.2}
+
+fourier_utopia:
+  description: Fourier Utopia (Fourier upright Greek)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage[upright]{fourier}
+    \usepackage{mathastext}
+
+french_cursive:
+  description: French Cursive (Euler Greek)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage[default]{frcursive}
+    \usepackage[eulergreek,noplusnominus,noequal,nohbar,nolessnomore,noasterisk]{mathastext}
+
+gfs_bodoni:
+  description: GFS Bodoni
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \renewcommand{\rmdefault}{bodoni}
+    \usepackage[LGRgreek]{mathastext}
+    \let\varphi\phi
+    \linespread{1.06}
+
+gfs_didot:
+  description: GFS Didot (Italic)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \renewcommand\rmdefault{udidot}
+    \usepackage[LGRgreek,defaultmathsizes,italic]{mathastext}
+    \let\varphi\phi
+
+gfs_neohellenic:
+  description: GFS NeoHellenic
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \renewcommand{\rmdefault}{neohellenic}
+    \usepackage[LGRgreek]{mathastext}
+    \let\varphi\phi
+    \linespread{1.06}
+
+gnu_freesans_tx:
+  description: GNU FreeSerif (and TX fonts symbols)
+  compiler: xelatex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[no-math]{fontspec}
+    \usepackage{txfonts}
+    \setmainfont[ExternalLocation,Mapping=tex-text,BoldFont=FreeSerifBold,ItalicFont=FreeSerifItalic,BoldItalicFont=FreeSerifBoldItalic]{FreeSerif}
+    \usepackage[defaultmathsizes]{mathastext}
+
+gnu_freeserif_freesans:
+  description: GNU FreeSerif and FreeSans
+  compiler: xelatex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[no-math]{fontspec}
+    \setmainfont[ExternalLocation,Mapping=tex-text,BoldFont=FreeSerifBold,ItalicFont=FreeSerifItalic,BoldItalicFont=FreeSerifBoldItalic]{FreeSerif}
+    \setsansfont[ExternalLocation,Mapping=tex-text,BoldFont=FreeSansBold,ItalicFont=FreeSansOblique,BoldItalicFont=FreeSansBoldOblique,Scale=MatchLowercase]{FreeSans}
+    \renewcommand{\familydefault}{lmss}
+    \usepackage[LGRgreek,defaultmathsizes,noasterisk]{mathastext}
+    \renewcommand{\familydefault}{\sfdefault}
+    \Mathastext
+    \let\varphi\phi
+    \renewcommand{\familydefault}{\rmdefault}
+
+helvetica_fourier_it:
+  description: Helvetica with Fourier (Italic)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage[scaled]{helvet}
+    \usepackage{fourier}
+    \renewcommand{\rmdefault}{phv}
+    \usepackage[italic,defaultmathsizes,noasterisk]{mathastext}
+
+latin_modern_tw:
+  description: Latin Modern Typewriter Proportional
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage[variablett]{lmodern}
+    \renewcommand{\rmdefault}{\ttdefault}
+    \usepackage[LGRgreek]{mathastext}
+    \MTgreekfont{lmtt}
+    \Mathastext
+    \let\varepsilon\epsilon
+
+latin_modern_tw_it:
+  description: Latin Modern Typewriter Proportional (CM Greek) (Italic)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage[variablett,nomath]{lmodern}
+    \renewcommand{\familydefault}{\ttdefault}
+    \usepackage[frenchmath]{mathastext}
+    \linespread{1.08}
+
+libertine:
+  description: Libertine
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage{libertine}
+    \usepackage[greek=n]{libgreek}
+    \usepackage[noasterisk,defaultmathsizes]{mathastext}
+
+libris_adf_fourier:
+  description: Libris ADF with Fourier
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage[upright]{fourier}
+    \usepackage{libris}
+    \renewcommand{\familydefault}{\sfdefault}
+    \usepackage[noasterisk]{mathastext}
+
+minion_pro_myriad_pro:
+  description: Minion Pro and Myriad Pro (and TX fonts symbols)
+  compiler: xelatex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage[default]{droidserif}
+    \usepackage[LGRgreek]{mathastext}
+    \let\varepsilon\epsilon
+
+minion_pro_tx:
+  description: Minion Pro (and TX fonts symbols)
+  compiler: xelatex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage{txfonts}
+    \usepackage[no-math]{fontspec}
+    \setmainfont[Mapping=tex-text]{Minion Pro}
+    \usepackage[defaultmathsizes]{mathastext}
+
+new_century_schoolbook:
+  description: New Century Schoolbook (Symbol Greek)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage{newcent}
+    \usepackage[symbolgreek]{mathastext}
+    \linespread{1.1}
+
+new_century_schoolbook_px:
+  description: New Century Schoolbook (Symbol Greek, PX math symbols)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage{pxfonts}
+    \usepackage{newcent}
+    \usepackage[symbolgreek,defaultmathsizes]{mathastext}
+    \linespread{1.06}
+
+noteworthy_light:
+  description: Noteworthy Light
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[no-math]{fontspec}
+    \setmainfont[Mapping=tex-text]{Noteworthy Light}
+    \usepackage[defaultmathsizes]{mathastext}
+
+palatino:
+  description: Palatino (Symbol Greek)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage{palatino}
+    \usepackage[symbolmax,defaultmathsizes]{mathastext}
+
+papyrus:
+  description: Papyrus
+  compiler: xelatex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[no-math]{fontspec}
+    \setmainfont[Mapping=tex-text]{Papyrus}
+    \usepackage[defaultmathsizes]{mathastext}
+
+romande_adf_fourier_it:
+  description: Romande ADF with Fourier (Italic)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage{fourier}
+    \usepackage{romande}
+    \usepackage[italic,defaultmathsizes,noasterisk]{mathastext}
+    \renewcommand{\itshape}{\swashstyle}
+
+slitex:
+  description: SliTeX (Euler Greek)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage{tpslifonts}
+    \usepackage[eulergreek,defaultmathsizes]{mathastext}
+    \MTEulerScale{1.06}
+    \linespread{1.2}
+
+times_fourier_it:
+  description: Times with Fourier (Italic)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage{fourier}
+    \renewcommand{\rmdefault}{ptm}
+    \usepackage[italic,defaultmathsizes,noasterisk]{mathastext}
+
+urw_avant_garde:
+  description: URW Avant Garde (Symbol Greek)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage{avant}
+    \renewcommand{\familydefault}{\sfdefault}
+    \usepackage[symbolgreek,defaultmathsizes]{mathastext}
+
+urw_zapf_chancery:
+  description: URW Zapf Chancery (CM Greek)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \DeclareFontFamily{T1}{pzc}{}
+    \DeclareFontShape{T1}{pzc}{mb}{it}{<->s*[1.2] pzcmi8t}{}
+    \DeclareFontShape{T1}{pzc}{m}{it}{<->ssub * pzc/mb/it}{}
+    \DeclareFontShape{T1}{pzc}{mb}{sl}{<->ssub * pzc/mb/it}{}
+    \DeclareFontShape{T1}{pzc}{m}{sl}{<->ssub * pzc/mb/sl}{}
+    \DeclareFontShape{T1}{pzc}{m}{n}{<->ssub * pzc/mb/it}{}
+    \usepackage{chancery}
+    \usepackage{mathastext}
+    \linespread{1.05}
+    \boldmath
+
+venturis_adf_fourier_it:
+  description: Venturis ADF with Fourier (Italic)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage{fourier}
+    \usepackage[lf]{venturis}
+    \usepackage[italic,defaultmathsizes,noasterisk]{mathastext}
+
+verdana_it:
+  description: Verdana (Italic)
+  compiler: xelatex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[no-math]{fontspec}
+    \setmainfont[Mapping=tex-text]{Verdana}
+    \usepackage[defaultmathsizes,italic]{mathastext}
+
+vollkorn:
+  description: Vollkorn (TX fonts for Greek and math symbols)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage[T1]{fontenc}
+    \usepackage{txfonts}
+    \usepackage[upright]{txgreeks}
+    \usepackage{vollkorn}
+    \usepackage[defaultmathsizes]{mathastext}
+
+vollkorn_fourier_it:
+  description: Vollkorn with Fourier (Italic)
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \usepackage{fourier}
+    \usepackage{vollkorn}
+    \usepackage[italic,nohbar]{mathastext}
+
+zapf_chancery:
+  description: Zapf Chancery
+  compiler: latex
+  preamble: |-
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{xcolor}
+    \DeclareFontFamily{T1}{pzc}{}
+    \DeclareFontShape{T1}{pzc}{mb}{it}{<->s*[1.2] pzcmi8t}{}
+    \DeclareFontShape{T1}{pzc}{m}{it}{<->ssub * pzc/mb/it}{}
+    \usepackage{chancery}
+    \renewcommand\shapedefault\itdefault
+    \renewcommand\bfdefault\mddefault
+    \usepackage[defaultmathsizes]{mathastext}
+    \linespread{1.05}

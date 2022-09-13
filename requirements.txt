@@ -17,7 +17,7 @@ rich
 scipy
 screeninfo
 skia-pathops
-svgelements
+svgelements>=1.8.1
 sympy
 tqdm
 validators
