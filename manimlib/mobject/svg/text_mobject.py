@@ -18,7 +18,7 @@ from manimlib.utils.config_ops import digest_config
 from manimlib.utils.customization import get_customization
 from manimlib.utils.directories import get_downloads_dir
 from manimlib.utils.directories import get_text_dir
-from manimlib.utils.tex_file_writing import tex_hash
+from manimlib.utils.simple_functions import hash_string
 
 from typing import TYPE_CHECKING
 
@@ -63,7 +63,6 @@ class _Alignment:
 
 class MarkupText(StringMobject):
     CONFIG = {
-        "is_markup": True,
         "font_size": 48,
         "lsh": None,
         "justify": False,
@@ -81,21 +80,11 @@ class MarkupText(StringMobject):
         "t2w": {},
         "global_config": {},
         "local_configs": {},
-        # For backward compatibility
-        "isolate": (re.compile(r"[a-zA-Z]+"), re.compile(r"\S+")),
+        "disable_ligatures": True,
+        "isolate": re.compile(r"\w+", re.U),
     }
 
     # See https://docs.gtk.org/Pango/pango_markup.html
-    MARKUP_COLOR_KEYS = {
-        "foreground": False,
-        "fgcolor": False,
-        "color": False,
-        "background": True,
-        "bgcolor": True,
-        "underline_color": True,
-        "overline_color": True,
-        "strikethrough_color": True,
-    }
     MARKUP_TAGS = {
         "b": {"font_weight": "bold"},
         "big": {"font_size": "larger"},
@@ -107,17 +96,24 @@ class MarkupText(StringMobject):
         "tt": {"font_family": "monospace"},
         "u": {"underline": "single"},
     }
+    MARKUP_ENTITY_DICT = {
+        "<": "&lt;",
+        ">": "&gt;",
+        "&": "&amp;",
+        "\"": "&quot;",
+        "'": "&apos;"
+    }
 
     def __init__(self, text: str, **kwargs):
         self.full2short(kwargs)
         digest_config(self, kwargs)
 
+        if not isinstance(self, Text):
+            self.validate_markup_string(text)
         if not self.font:
             self.font = get_customization()["style"]["font"]
         if not self.alignment:
             self.alignment = get_customization()["style"]["text_alignment"]
-        if self.is_markup:
-            self.validate_markup_string(text)
 
         self.text = text
         super().__init__(text, **kwargs)
@@ -140,8 +136,8 @@ class MarkupText(StringMobject):
             self.path_string_config,
             self.base_color,
             self.isolate,
+            self.protect,
             self.text,
-            self.is_markup,
             self.font_size,
             self.lsh,
             self.justify,
@@ -156,7 +152,8 @@ class MarkupText(StringMobject):
             self.t2s,
             self.t2w,
             self.global_config,
-            self.local_configs
+            self.local_configs,
+            self.disable_ligatures
         )
 
     def full2short(self, config: dict) -> None:
@@ -182,7 +179,7 @@ class MarkupText(StringMobject):
             self.line_width
         ))
         svg_file = os.path.join(
-            get_text_dir(), tex_hash(hash_content) + ".svg"
+            get_text_dir(), hash_string(hash_content) + ".svg"
         )
         if not os.path.exists(svg_file):
             self.markup_to_svg(content, svg_file)
@@ -229,76 +226,92 @@ class MarkupText(StringMobject):
             f"{validate_error}"
         )
 
+    # Toolkits
+
+    @staticmethod
+    def escape_markup_char(substr: str) -> str:
+        return MarkupText.MARKUP_ENTITY_DICT.get(substr, substr)
+
+    @staticmethod
+    def unescape_markup_char(substr: str) -> str:
+        return {
+            v: k
+            for k, v in MarkupText.MARKUP_ENTITY_DICT.items()
+        }.get(substr, substr)
+
     # Parsing
 
-    def get_cmd_spans(self) -> list[Span]:
-        if not self.is_markup:
-            return self.find_spans(r"""[<>&"']""")
+    @staticmethod
+    def get_command_matches(string: str) -> list[re.Match]:
+        pattern = re.compile(r"""
+            (?P<tag>
+                <
+                (?P<close_slash>/)?
+                (?P<tag_name>\w+)\s*
+                (?P<attr_list>(?:\w+\s*\=\s*(?P<quot>["']).*?(?P=quot)\s*)*)
+                (?P<elision_slash>/)?
+                >
+            )
+            |(?P<passthrough>
+                <\?.*?\?>|<!--.*?-->|<!\[CDATA\[.*?\]\]>|<!DOCTYPE.*?>
+            )
+            |(?P<entity>&(?P<unicode>\#(?P<hex>x)?)?(?P<content>.*?);)
+            |(?P<char>[>"'])
+        """, flags=re.X | re.S)
+        return list(pattern.finditer(string))
 
-        # Unsupported passthroughs:
-        # "<?...?>", "<!--...-->", "<![CDATA[...]]>", "<!DOCTYPE...>"
-        # See https://gitlab.gnome.org/GNOME/glib/-/blob/main/glib/gmarkup.c
-        return self.find_spans(
-            r"""&[\s\S]*?;|[>"']|</?\w+(?:\s*\w+\s*\=\s*(["'])[\s\S]*?\1)*/?>"""
-        )
-
-    def get_substr_flag(self, substr: str) -> int:
-        if re.fullmatch(r"<\w[\s\S]*[^/]>", substr):
-            return 1
-        if substr.startswith("</"):
-            return -1
+    @staticmethod
+    def get_command_flag(match_obj: re.Match) -> int:
+        if match_obj.group("tag"):
+            if match_obj.group("close_slash"):
+                return -1
+            if not match_obj.group("elision_slash"):
+                return 1
         return 0
 
-    def get_repl_substr_for_content(self, substr: str) -> str:
-        if substr.startswith("<") and substr.endswith(">"):
+    @staticmethod
+    def replace_for_content(match_obj: re.Match) -> str:
+        if match_obj.group("tag"):
             return ""
-        return {
-            "<": "&lt;",
-            ">": "&gt;",
-            "&": "&amp;",
-            "\"": "&quot;",
-            "'": "&apos;"
-        }.get(substr, substr)
+        if match_obj.group("char"):
+            return MarkupText.escape_markup_char(match_obj.group("char"))
+        return match_obj.group()
 
-    def get_repl_substr_for_matching(self, substr: str) -> str:
-        if substr.startswith("<") and substr.endswith(">"):
+    @staticmethod
+    def replace_for_matching(match_obj: re.Match) -> str:
+        if match_obj.group("tag") or match_obj.group("passthrough"):
             return ""
-        if substr.startswith("&#") and substr.endswith(";"):
-            if substr.startswith("&#x"):
-                char_reference = int(substr[3:-1], 16)
-            else:
-                char_reference = int(substr[2:-1], 10)
-            return chr(char_reference)
-        return {
-            "&lt;": "<",
-            "&gt;": ">",
-            "&amp;": "&",
-            "&quot;": "\"",
-            "&apos;": "'"
-        }.get(substr, substr)
+        if match_obj.group("entity"):
+            if match_obj.group("unicode"):
+                base = 10
+                if match_obj.group("hex"):
+                    base = 16
+                return chr(int(match_obj.group("content"), base))
+            return MarkupText.unescape_markup_char(match_obj.group("entity"))
+        return match_obj.group()
 
-    def get_specified_items(
-        self, cmd_span_pairs: list[tuple[Span, Span]]
-    ) -> list[tuple[Span, dict[str, str]]]:
-        attr_pattern = r"""(\w+)\s*\=\s*(["'])([\s\S]*?)\2"""
-        internal_items = []
-        for begin_cmd_span, end_cmd_span in cmd_span_pairs:
-            begin_tag = self.get_substr(begin_cmd_span)
-            tag_name = re.match(r"<(\w+)", begin_tag).group(1)
-            if tag_name == "span":
-                attr_dict = {
-                    attr_match_obj.group(1): attr_match_obj.group(3)
-                    for attr_match_obj in re.finditer(attr_pattern, begin_tag)
-                }
-            else:
-                attr_dict = MarkupText.MARKUP_TAGS.get(tag_name, {})
-            internal_items.append(
-                ((begin_cmd_span[1], end_cmd_span[0]), attr_dict)
-            )
+    @staticmethod
+    def get_attr_dict_from_command_pair(
+        open_command: re.Match, close_command: re.Match
+    ) -> dict[str, str] | None:
+        pattern = r"""
+            (?P<attr_name>\w+)
+            \s*\=\s*
+            (?P<quot>["'])(?P<attr_val>.*?)(?P=quot)
+        """
+        tag_name = open_command.group("tag_name")
+        if tag_name == "span":
+            return {
+                match_obj.group("attr_name"): match_obj.group("attr_val")
+                for match_obj in re.finditer(
+                    pattern, open_command.group("attr_list"), re.S | re.X
+                )
+            }
+        return MarkupText.MARKUP_TAGS.get(tag_name, {})
 
+    def get_configured_items(self) -> list[tuple[Span, dict[str, str]]]:
         return [
-            *internal_items,
-            *[
+            *(
                 (span, {key: val})
                 for t2x_dict, key in (
                     (self.t2c, "foreground"),
@@ -308,49 +321,49 @@ class MarkupText(StringMobject):
                 )
                 for selector, val in t2x_dict.items()
                 for span in self.find_spans_by_selector(selector)
-            ],
-            *[
+            ),
+            *(
                 (span, local_config)
                 for selector, local_config in self.local_configs.items()
                 for span in self.find_spans_by_selector(selector)
-            ],
-            *[
-                (span, {})
-                for span in self.find_spans_by_selector(self.isolate)
-            ]
+            )
         ]
 
     @staticmethod
-    def get_cmd_str_pair(
-        attr_dict: dict[str, str], label_hex: str | None
-    ) -> tuple[str, str]:
+    def get_command_string(
+        attr_dict: dict[str, str], is_end: bool, label_hex: str | None
+    ) -> str:
+        if is_end:
+            return "</span>"
+
         if label_hex is not None:
             converted_attr_dict = {"foreground": label_hex}
             for key, val in attr_dict.items():
-                substitute_key = MarkupText.MARKUP_COLOR_KEYS.get(key, None)
-                if substitute_key is None:
-                    converted_attr_dict[key] = val
-                elif substitute_key:
+                if key in (
+                    "background", "bgcolor",
+                    "underline_color", "overline_color", "strikethrough_color"
+                ):
                     converted_attr_dict[key] = "black"
+                elif key not in ("foreground", "fgcolor", "color"):
+                    converted_attr_dict[key] = val
         else:
             converted_attr_dict = attr_dict.copy()
         attrs_str = " ".join([
             f"{key}='{val}'"
             for key, val in converted_attr_dict.items()
         ])
-        return f"<span {attrs_str}>", "</span>"
+        return f"<span {attrs_str}>"
 
     def get_content_prefix_and_suffix(
         self, is_labelled: bool
     ) -> tuple[str, str]:
         global_attr_dict = {
-            "foreground": self.base_color_hex,
+            "foreground": self.color_to_hex(self.base_color),
             "font_family": self.font,
             "font_style": self.slant,
             "font_weight": self.weight,
-            "font_size": str(self.font_size * 1024),
+            "font_size": str(round(self.font_size * 1024)),
         }
-        global_attr_dict.update(self.global_config)
         # `line_height` attribute is supported since Pango 1.50.
         pango_version = manimpango.pango_version()
         if tuple(map(int, pango_version.split("."))) < (1, 50):
@@ -365,10 +378,17 @@ class MarkupText(StringMobject):
             global_attr_dict["line_height"] = str(
                 ((line_spacing_scale) + 1) * 0.6
             )
+        if self.disable_ligatures:
+            global_attr_dict["font_features"] = "liga=0,dlig=0,clig=0,hlig=0"
 
-        return self.get_cmd_str_pair(
-            global_attr_dict,
-            label_hex=self.int_to_hex(0) if is_labelled else None
+        global_attr_dict.update(self.global_config)
+        return tuple(
+            self.get_command_string(
+                global_attr_dict,
+                is_end=is_end,
+                label_hex=self.int_to_hex(0) if is_labelled else None
+            )
+            for is_end in (False, True)
         )
 
     # Method alias
@@ -376,8 +396,8 @@ class MarkupText(StringMobject):
     def get_parts_by_text(self, selector: Selector) -> VGroup:
         return self.select_parts(selector)
 
-    def get_part_by_text(self, selector: Selector) -> VGroup:
-        return self.select_part(selector)
+    def get_part_by_text(self, selector: Selector, **kwargs) -> VGroup:
+        return self.select_part(selector, **kwargs)
 
     def set_color_by_text(self, selector: Selector, color: ManimColor):
         return self.set_parts_color(selector, color)
@@ -393,8 +413,26 @@ class MarkupText(StringMobject):
 
 class Text(MarkupText):
     CONFIG = {
-        "is_markup": False,
+        # For backward compatibility
+        "isolate": (re.compile(r"\w+", re.U), re.compile(r"\S+", re.U)),
     }
+
+    @staticmethod
+    def get_command_matches(string: str) -> list[re.Match]:
+        pattern = re.compile(r"""[<>&"']""")
+        return list(pattern.finditer(string))
+
+    @staticmethod
+    def get_command_flag(match_obj: re.Match) -> int:
+        return 0
+
+    @staticmethod
+    def replace_for_content(match_obj: re.Match) -> str:
+        return Text.escape_markup_char(match_obj.group())
+
+    @staticmethod
+    def replace_for_matching(match_obj: re.Match) -> str:
+        return match_obj.group()
 
 
 class Code(MarkupText):

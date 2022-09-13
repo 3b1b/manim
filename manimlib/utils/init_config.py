@@ -42,14 +42,9 @@ def init_customization() -> None:
             "sounds": "",
             "temporary_storage": "",
         },
-        "tex": {
-            "executable": "",
-            "template_file": "",
-            "intermediate_filetype": "",
-            "text_to_replace": "[tex_expression]",
-        },
         "universal_import_line": "from manimlib import *",
         "style": {
+            "tex_template": "",
             "font": "Consolas",
             "background_color": "",
         },
@@ -62,7 +57,7 @@ def init_customization() -> None:
             "medium": "1280x720",
             "high": "1920x1080",
             "4k": "3840x2160",
-            "default_resolution": "high",
+            "default_resolution": "",
         },
         "fps": 30,
     }
@@ -109,24 +104,14 @@ def init_customization() -> None:
             show_default=False
         )
 
-        console.print("[bold]LaTeX:[/bold]")
-        tex_config = configuration["tex"]
-        tex = Prompt.ask(
-            "  Select an executable program to use to compile a LaTeX source file",
-            choices=["latex", "xelatex"],
-            default="latex"
-        )
-        if tex == "latex":
-            tex_config["executable"] = "latex"
-            tex_config["template_file"] = "tex_template.tex"
-            tex_config["intermediate_filetype"] = "dvi"
-        else:
-            tex_config["executable"] = "xelatex -no-pdf"
-            tex_config["template_file"] = "ctex_template.tex"
-            tex_config["intermediate_filetype"] = "xdv"
-        
         console.print("[bold]Styles:[/bold]")
-        configuration["style"]["background_color"] = Prompt.ask(
+        style_config = configuration["style"]
+        tex_template = Prompt.ask(
+            "  Select a TeX template to compile a LaTeX source file",
+            default="default"
+        )
+        style_config["tex_template"] = tex_template
+        style_config["background_color"] = Prompt.ask(
             "  Which [bold]background color[/bold] do you want [italic](hex code)",
             default="#333333"
         )
@@ -139,7 +124,7 @@ def init_customization() -> None:
         )
         table.add_row("480p15", "720p30", "1080p60", "2160p60")
         console.print(table)
-        configuration["camera_qualities"]["default_quality"] = Prompt.ask(
+        configuration["camera_resolutions"]["default_resolution"] = Prompt.ask(
             "  Which one to choose as the default rendering quality",
             choices=["low", "medium", "high", "ultra_high"],
             default="high"
@@ -161,7 +146,7 @@ def init_customization() -> None:
             file_name = os.path.join(os.getcwd(), "custom_config.yml")
         with open(file_name, "w", encoding="utf-8") as f:
             yaml.dump(configuration, f)
-        
+
         console.print(f"\n:rocket: You have successfully set up a {scope} configuration file!")
         console.print(f"You can manually modify it in: [cyan]`{file_name}`[/cyan]")
 

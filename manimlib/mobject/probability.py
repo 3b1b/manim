@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import numpy as np
+
 from manimlib.constants import BLUE, BLUE_E, GREEN_E, GREY_B, GREY_D, MAROON_B, YELLOW
 from manimlib.constants import DOWN, LEFT, RIGHT, UP
 from manimlib.constants import MED_LARGE_BUFF, MED_SMALL_BUFF, SMALL_BUFF

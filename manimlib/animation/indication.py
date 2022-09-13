@@ -12,6 +12,7 @@ from manimlib.animation.fading import FadeOut
 from manimlib.animation.fading import FadeIn
 from manimlib.animation.movement import Homotopy
 from manimlib.animation.transform import Transform
+from manimlib.constants import FRAME_X_RADIUS, FRAME_Y_RADIUS
 from manimlib.constants import ORIGIN, RIGHT, UP
 from manimlib.constants import SMALL_BUFF
 from manimlib.constants import TAU

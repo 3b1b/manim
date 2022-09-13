@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import os
 from xml.etree import ElementTree as ET
 
@@ -19,6 +18,7 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.directories import get_mobject_data_dir
 from manimlib.utils.images import get_full_vector_image_path
 from manimlib.utils.iterables import hash_obj
+from manimlib.utils.simple_functions import hash_string
 
 
 SVG_HASH_TO_MOB_MAP: dict[int, VMobject] = {}
@@ -106,7 +106,7 @@ class SVGMobject(VMobject):
         return get_full_vector_image_path(self.file_name)
 
     def modify_xml_tree(self, element_tree: ET.ElementTree) -> ET.ElementTree:
-        config_style_dict = self.generate_config_style_dict()
+        config_style_attrs = self.generate_config_style_dict()
         style_keys = (
             "fill",
             "fill-opacity",
@@ -116,14 +116,17 @@ class SVGMobject(VMobject):
             "style"
         )
         root = element_tree.getroot()
-        root_style_dict = {
-            k: v for k, v in root.attrib.items()
+        style_attrs = {
+            k: v
+            for k, v in root.attrib.items()
             if k in style_keys
         }
 
-        new_root = ET.Element("svg", {})
-        config_style_node = ET.SubElement(new_root, "g", config_style_dict)
-        root_style_node = ET.SubElement(config_style_node, "g", root_style_dict)
+        # Ignore other attributes in case that svgelements cannot parse them
+        SVG_XMLNS = "{http://www.w3.org/2000/svg}"
+        new_root = ET.Element("svg")
+        config_style_node = ET.SubElement(new_root, f"{SVG_XMLNS}g", config_style_attrs)
+        root_style_node = ET.SubElement(config_style_node, f"{SVG_XMLNS}g", style_attrs)
         root_style_node.extend(root)
         return ET.ElementTree(new_root)
 
@@ -147,7 +150,7 @@ class SVGMobject(VMobject):
     def get_mobjects_from(self, svg: se.SVG) -> list[VMobject]:
         result = []
         for shape in svg.elements():
-            if isinstance(shape, se.Group):
+            if isinstance(shape, (se.Group, se.Use)):
                 continue
             elif isinstance(shape, se.Path):
                 mob = self.path_to_mobject(shape)
@@ -155,9 +158,7 @@ class SVGMobject(VMobject):
                 mob = self.line_to_mobject(shape)
             elif isinstance(shape, se.Rect):
                 mob = self.rect_to_mobject(shape)
-            elif isinstance(shape, se.Circle):
-                mob = self.circle_to_mobject(shape)
-            elif isinstance(shape, se.Ellipse):
+            elif isinstance(shape, (se.Circle, se.Ellipse)):
                 mob = self.ellipse_to_mobject(shape)
             elif isinstance(shape, se.Polygon):
                 mob = self.polygon_to_mobject(shape)
@@ -168,11 +169,12 @@ class SVGMobject(VMobject):
             elif type(shape) == se.SVGElement:
                 continue
             else:
-                log.warning(f"Unsupported element type: {type(shape)}")
+                log.warning("Unsupported element type: %s", type(shape))
                 continue
             if not mob.has_points():
                 continue
-            self.apply_style_to_mobject(mob, shape)
+            if isinstance(shape, se.GraphicObject):
+                self.apply_style_to_mobject(mob, shape)
             if isinstance(shape, se.Transformable) and shape.apply:
                 self.handle_transform(mob, shape.transform)
             result.append(mob)
@@ -203,21 +205,10 @@ class SVGMobject(VMobject):
         )
         return mob
 
-    @staticmethod
-    def handle_transform(mob, matrix):
-        mat = np.array([
-            [matrix.a, matrix.c],
-            [matrix.b, matrix.d]
-        ])
-        vec = np.array([matrix.e, matrix.f, 0.0])
-        mob.apply_matrix(mat)
-        mob.shift(vec)
-        return mob
-
     def path_to_mobject(self, path: se.Path) -> VMobjectFromSVGPath:
         return VMobjectFromSVGPath(path, **self.path_string_config)
 
-    def line_to_mobject(self, line: se.Line) -> Line:
+    def line_to_mobject(self, line: se.SimpleLine) -> Line:
         return Line(
             start=_convert_point_to_3d(line.x1, line.y1),
             end=_convert_point_to_3d(line.x2, line.y2)
@@ -242,15 +233,7 @@ class SVGMobject(VMobject):
         ))
         return mob
 
-    def circle_to_mobject(self, circle: se.Circle) -> Circle:
-        # svgelements supports `rx` & `ry` but `r`
-        mob = Circle(radius=circle.rx)
-        mob.shift(_convert_point_to_3d(
-            circle.cx, circle.cy
-        ))
-        return mob
-
-    def ellipse_to_mobject(self, ellipse: se.Ellipse) -> Circle:
+    def ellipse_to_mobject(self, ellipse: se.Circle | se.Ellipse) -> Circle:
         mob = Circle(radius=ellipse.rx)
         mob.stretch_to_fit_height(2 * ellipse.ry)
         mob.shift(_convert_point_to_3d(
@@ -302,8 +285,7 @@ class VMobjectFromSVGPath(VMobject):
         # will be saved to a file so that future calls for the same path
         # don't need to retrace the same computation.
         path_string = self.path_obj.d()
-        hasher = hashlib.sha256(path_string.encode())
-        path_hash = hasher.hexdigest()[:16]
+        path_hash = hash_string(path_string)
         points_filepath = os.path.join(get_mobject_data_dir(), f"{path_hash}_points.npy")
         tris_filepath = os.path.join(get_mobject_data_dir(), f"{path_hash}_tris.npy")
 

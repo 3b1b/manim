@@ -16,17 +16,9 @@ directories:
   # return whatever is at to the TMPDIR environment variable.  If you want to
   # specify them elsewhere,
   temporary_storage: ""
-tex:
-  executable: "latex"
-  template_file: "tex_template.tex" 
-  intermediate_filetype: "dvi"
-  text_to_replace: "[tex_expression]"
-  # For ctex, use the following configuration
-  # executable: "xelatex -no-pdf"
-  # template_file: "ctex_template.tex"
-  # intermediate_filetype: "xdv"
 universal_import_line: "from manimlib import *"
 style:
+  tex_template: "default"
   font: "Consolas"
   text_alignment: "LEFT"
   background_color: "#333333"

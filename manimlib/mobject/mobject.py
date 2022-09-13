@@ -2020,7 +2020,9 @@ class _AnimationBuilder:
         self.overridden_animation = None
         self.mobject.generate_target()
         self.is_chaining = False
-        self.methods = []
+        self.methods: list[Callable] = []
+        self.anim_args = {}
+        self.can_pass_args = True
 
     def __getattr__(self, method_name: str):
         method = getattr(self.mobject.target, method_name)
@@ -2045,13 +2047,40 @@ class _AnimationBuilder:
         self.is_chaining = True
         return update_target
 
+    def __call__(self, **kwargs):
+        return self.set_anim_args(**kwargs)
+
+    def set_anim_args(self, **kwargs):
+        '''
+        You can change the args of :class:`~manimlib.animation.transform.Transform`, such as
+
+        - ``run_time``
+        - ``time_span``
+        - ``rate_func``
+        - ``lag_ratio``
+        - ``path_arc``
+        - ``path_func``
+
+        and so on.
+        '''
+
+        if not self.can_pass_args:
+            raise ValueError(
+                "Animation arguments can only be passed by calling ``animate`` "
+                "or ``set_anim_args`` and can only be passed once",
+            )
+
+        self.anim_args = kwargs
+        self.can_pass_args = False
+        return self
+
     def build(self):
         from manimlib.animation.transform import _MethodAnimation
 
         if self.overridden_animation:
             return self.overridden_animation
 
-        return _MethodAnimation(self.mobject, self.methods)
+        return _MethodAnimation(self.mobject, self.methods, **self.anim_args)
 
 
 def override_animate(method):
