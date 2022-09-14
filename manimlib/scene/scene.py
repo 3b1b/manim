@@ -304,6 +304,88 @@ class Scene(object):
             for sm in mob.get_family()
         ])
 
+    def auto_zoom(self,
+            mobjects: list[Mobject],
+            margin: float = 0,
+            only_mobjects_in_frame: bool = False,
+            animate: bool = True,
+    ):
+        """Zooms on to a given array of mobjects (or a singular mobject)
+        and automatically resizes to frame all the mobjects.
+
+        .. NOTE::
+
+            This method only works when 2D-objects in the XY-plane are considered, it
+            will not work correctly when the camera has been rotated.
+
+        Parameters
+        ----------
+        mobjects
+            The mobject or array of mobjects that the camera will focus on.
+
+        margin
+            The width of the margin that is added to the frame (optional, 0 by default).
+
+        only_mobjects_in_frame
+            If set to ``True``, only allows focusing on mobjects that are already in frame.
+
+        animate
+            If set to ``False``, applies the changes instead of returning the corresponding animation
+
+        Returns
+        -------
+        Union[_AnimationBuilder, ScreenRectangle]
+            _AnimationBuilder that zooms the camera view to a given list of mobjects
+            or ScreenRectangle with position and size updated to zoomed position.
+
+        """
+        scene_critical_x_left = None
+        scene_critical_x_right = None
+        scene_critical_y_up = None
+        scene_critical_y_down = None
+
+        for m in mobjects:
+            if (m == self.camera.frame) or (
+                    only_mobjects_in_frame and not self.camera.is_in_frame(m)
+            ):
+                # detected camera frame, should not be used to calculate final position of camera
+                continue
+
+            # initialize scene critical points with first mobjects critical points
+            if scene_critical_x_left is None:
+                scene_critical_x_left = m.get_left()[0]
+                scene_critical_x_right = m.get_right()[0]
+                scene_critical_y_up = m.get_top()[1]
+                scene_critical_y_down = m.get_bottom()[1]
+
+            else:
+                if m.get_left()[0] < scene_critical_x_left:
+                    scene_critical_x_left = m.get_left()[0]
+
+                if m.get_right()[0] > scene_critical_x_right:
+                    scene_critical_x_right = m.get_right()[0]
+
+                if m.get_top()[1] > scene_critical_y_up:
+                    scene_critical_y_up = m.get_top()[1]
+
+                if m.get_bottom()[1] < scene_critical_y_down:
+                    scene_critical_y_down = m.get_bottom()[1]
+
+        # calculate center x and y
+        x = (scene_critical_x_left + scene_critical_x_right) / 2
+        y = (scene_critical_y_up + scene_critical_y_down) / 2
+
+        # calculate proposed width and height of zoomed scene
+        new_width = abs(scene_critical_x_left - scene_critical_x_right)
+        new_height = abs(scene_critical_y_up - scene_critical_y_down)
+
+        m_target = self.camera.frame.animate if animate else self.camera.frame
+        # zoom to fit all mobjects along the side that has the largest size
+        if new_width / self.camera.frame.get_width() > new_height / self.camera.frame.get_height():
+            return m_target.set_x(x).set_y(y).set_width(new_width + margin)
+        else:
+            return m_target.set_x(x).set_y(y).set_height(new_height + margin)
+
     # Related to time
 
     def get_time(self) -> float:
