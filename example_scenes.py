@@ -593,7 +593,7 @@ class InteractiveDevelopment(Scene):
         self.play(ShowCreation(square))
         self.wait()
 
-        # This opens an iPython termnial where you can keep writing
+        # This opens an iPython terminal where you can keep writing
         # lines as if they were part of this construct method.
         # In particular, 'square', 'circle' and 'self' will all be
         # part of the local namespace in that terminal.
