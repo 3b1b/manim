@@ -94,15 +94,12 @@ class Matrix(VMobject):
         or mobjects
         """
         VMobject.__init__(self, **kwargs)
-        matrix = self.matrix = np.array(matrix, ndmin=2)
-        mob_matrix = self.matrix_to_mob_matrix(matrix)
+        mob_matrix = self.mob_matrix = self.matrix_to_mob_matrix(matrix)
         self.organize_mob_matrix(mob_matrix)
-        # self.elements = VGroup(*mob_matrix.flatten())
         self.elements = VGroup(*it.chain(*mob_matrix))
         self.add(self.elements)
         self.add_brackets()
         self.center()
-        self.mob_matrix = mob_matrix
         if self.add_background_rectangles_to_entries:
             for mob in self.elements:
                 mob.add_background_rectangle()
@@ -129,7 +126,7 @@ class Matrix(VMobject):
         return self
 
     def add_brackets(self):
-        height = self.matrix.shape[0]
+        height = len(self.mob_matrix)
         bracket_pair = Tex("".join([
             "\\left[",
             "\\begin{array}{c}",
