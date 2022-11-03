@@ -294,7 +294,10 @@ def find_intersection(
     denom[abs(denom) < threshold] = np.inf  # So that ratio goes to 0 there
     ratio = numer / denom
     ratio = np.repeat(ratio, n).reshape((m, n))
-    return p0 + ratio * v0
+    result = p0 + ratio * v0
+    if m == 1:
+        return result[0]
+    return result
 
 
 def get_closest_point_on_line(
