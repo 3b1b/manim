@@ -1449,7 +1449,7 @@ class Mobject(object):
         return interpolate(points[i], points[i + 1], subalpha)
 
     def pfp(self, alpha):
-        """Abbreviation fo point_from_proportion"""
+        """Abbreviation for point_from_proportion"""
         return self.point_from_proportion(alpha)
 
     def get_pieces(self, n_pieces: int) -> Group:
