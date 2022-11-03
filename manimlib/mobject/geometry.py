@@ -347,7 +347,7 @@ class Circle(Arc):
     def point_at_angle(self, angle: float) -> np.ndarray:
         start_angle = self.get_start_angle()
         return self.point_from_proportion(
-            (angle - start_angle) / TAU
+            ((angle - start_angle) % TAU) / TAU
         )
 
     def get_radius(self) -> float:
