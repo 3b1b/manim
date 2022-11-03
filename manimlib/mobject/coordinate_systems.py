@@ -5,9 +5,9 @@ import numbers
 
 import numpy as np
 
-from manimlib.constants import BLACK, BLUE, BLUE_D, GREEN, GREY_A, WHITE
+from manimlib.constants import BLACK, BLUE, BLUE_D, GREEN, GREY_A, WHITE, RED
 from manimlib.constants import DEGREES, PI
-from manimlib.constants import DL, DOWN, DR, LEFT, ORIGIN, OUT, RIGHT, UP
+from manimlib.constants import DL, UL, DOWN, DR, LEFT, ORIGIN, OUT, RIGHT, UP
 from manimlib.constants import FRAME_HEIGHT, FRAME_WIDTH
 from manimlib.constants import FRAME_X_RADIUS, FRAME_Y_RADIUS
 from manimlib.constants import MED_SMALL_BUFF, SMALL_BUFF
@@ -19,6 +19,7 @@ from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.number_line import NumberLine
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.mobject.types.dot_cloud import DotCloud
 from manimlib.utils.config_ops import digest_config
 from manimlib.utils.config_ops import merge_dicts_recursively
 from manimlib.utils.simple_functions import binary_search
@@ -233,6 +234,19 @@ class CoordinateSystem(ABC):
         """
         return self.input_to_graph_point(x, graph)
 
+    def bind_graph_to_func(self, graph, func, jagged=False):
+        """
+        Use for graphing functions which might change over time, or change with
+        conditions
+        """
+        graph.x_values = [self.x_axis.p2n(p) for p in graph.get_points()]
+        graph.add_updater(lambda g: g.set_points([self.c2p(x, func(x)) for x in g.x_values]))
+        if jagged:
+            graph.add_updater(lambda g: g.make_jagged())
+        else:
+            graph.add_updater(lambda g: g.make_approximately_smooth())
+        return graph
+
     def get_graph_label(
         self,
         graph: ParametricCurve,
@@ -273,6 +287,12 @@ class CoordinateSystem(ABC):
 
     def get_h_line_to_graph(self, x: float, graph: ParametricCurve, **kwargs):
         return self.get_h_line(self.i2gp(x, graph), **kwargs)
+
+    def get_scatterplot(self,
+                        x_values: np.ndarray,
+                        y_values: np.ndarray,
+                        **dot_config):
+        return DotCloud(self.c2p(x_values, y_values), **dot_config)
 
     # For calculus
     def angle_of_tangent(
@@ -316,6 +336,7 @@ class CoordinateSystem(ABC):
         stroke_color: ManimColor = BLACK,
         fill_opacity: float = 1,
         colors: Iterable[ManimColor] = (BLUE, GREEN),
+        negative_color: ManimColor = RED,
         stroke_background: bool = True,
         show_signed_area: bool = True
     ) -> VGroup:
@@ -338,12 +359,13 @@ class CoordinateSystem(ABC):
                 sample = 0.5 * x0 + 0.5 * x1
             else:
                 raise Exception("Invalid input sample type")
-            height = get_norm(
-                self.i2gp(sample, graph) - self.c2p(sample, 0)
+            height_vect = self.i2gp(sample, graph) - self.c2p(sample, 0)
+            rect = Rectangle(
+                width=self.x_axis.n2p(x1)[0] - self.x_axis.n2p(x0)[0],
+                height=get_norm(height_vect),
             )
-            rect = Rectangle(width=self.x_axis.n2p(x1)[0] - self.x_axis.n2p(x0)[0], 
-                             height=height)
-            rect.move_to(self.c2p(x0, 0), DL)
+            rect.positive = height_vect[1] > 0
+            rect.move_to(self.c2p(x0, 0), DL if rect.positive else UL)
             rects.append(rect)
         result = VGroup(*rects)
         result.set_submobject_colors_by_gradient(*colors)
@@ -353,6 +375,9 @@ class CoordinateSystem(ABC):
             fill_opacity=fill_opacity,
             stroke_background=stroke_background
         )
+        for rect in result:
+            if not rect.positive:
+                rect.set_fill(negative_color)
         return result
 
     def get_area_under_graph(self, graph, x_range, fill_color=BLUE, fill_opacity=1):
@@ -647,7 +672,7 @@ class ComplexPlane(NumberPlane):
             if abs(z.imag) > abs(z.real):
                 axis = self.get_y_axis()
                 value = z.imag
-                kwargs["unit"] = "i"
+                kwargs["unit_tex"] = "i"
             else:
                 axis = self.get_x_axis()
                 value = z.real
