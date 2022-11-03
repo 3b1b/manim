@@ -627,7 +627,7 @@ class Mobject(object):
             mobject = pickle.load(fp)
         return mobject
 
-    def become(self, mobject: Mobject):
+    def become(self, mobject: Mobject, match_updaters=False):
         """
         Edit all data and submobjects to be idential
         to another mobject
@@ -647,7 +647,8 @@ class Mobject(object):
             if isinstance(value, Mobject) and value in family2:
                 setattr(self, attr, family1[family2.index(value)])
         self.refresh_bounding_box(recurse_down=True)
-        self.match_updaters(mobject)
+        if match_updaters:
+            self.match_updaters(mobject)
         return self
 
     def looks_identical(self, mobject: Mobject):
