@@ -1265,7 +1265,10 @@ class Mobject(object):
         return self.data["rgbas"][0, 3]
 
     def set_color_by_gradient(self, *colors: ManimColor):
-        self.set_submobject_colors_by_gradient(*colors)
+        if self.has_points():
+            self.set_color(colors)
+        else:
+            self.set_submobject_colors_by_gradient(*colors)
         return self
 
     def set_submobject_colors_by_gradient(self, *colors: ManimColor):
