@@ -274,9 +274,11 @@ class ShrinkToCenter(ScaleInPlace):
         super().__init__(mobject, 0, **kwargs)
 
 
-class Restore(ApplyMethod):
+class Restore(Transform):
     def __init__(self, mobject: Mobject, **kwargs):
-        super().__init__(mobject.restore, **kwargs)
+        if not hasattr(mobject, "saved_state") or mobject.saved_state is None:
+            raise Exception("Trying to restore without having saved")
+        super().__init__(mobject, mobject.saved_state, **kwargs)
 
 
 class ApplyFunction(Transform):
