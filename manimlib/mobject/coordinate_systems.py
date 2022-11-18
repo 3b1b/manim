@@ -716,9 +716,7 @@ class ComplexPlane(NumberPlane):
                 axis = self.get_x_axis()
                 value = z.real
             number_mob = axis.get_number_mobject(value, **kwargs)
-            # For i and -i, remove the "1"
-            if z.imag == 1:
-                number_mob.remove(number_mob[0])
+            # For -i, remove the "1"
             if z.imag == -1:
                 number_mob.remove(number_mob[1])
                 number_mob[0].next_to(
