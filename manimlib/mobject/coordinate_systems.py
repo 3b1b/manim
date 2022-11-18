@@ -533,6 +533,17 @@ class ThreeDAxes(Axes):
     def get_all_ranges(self) -> list[Sequence[float]]:
         return [self.x_range, self.y_range, self.z_range]
 
+    def add_axis_labels(self, x_tex="x", y_tex="y", z_tex="z", font_size=24, buff=0.2):
+        x_label, y_label, z_label = labels = VGroup(*(
+            Tex(tex, font_size=font_size)
+            for tex in [x_tex, y_tex, z_tex]
+        ))
+        z_label.rotate(PI / 2, RIGHT)
+        for label, axis in zip(labels, self):
+            label.next_to(axis, normalize(np.round(axis.get_vector()), 2), buff=buff)
+            axis.add(label)
+        self.axis_labels = labels
+
     def get_graph(self, func, color=BLUE_E, opacity=0.9, **kwargs):
         xu = self.x_axis.unit_size
         yu = self.y_axis.unit_size
