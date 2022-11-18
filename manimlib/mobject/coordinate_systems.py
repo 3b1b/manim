@@ -533,6 +533,20 @@ class ThreeDAxes(Axes):
     def get_all_ranges(self) -> list[Sequence[float]]:
         return [self.x_range, self.y_range, self.z_range]
 
+    def get_graph(self, func, color=BLUE_E, opacity=0.9, **kwargs):
+        xu = self.x_axis.unit_size
+        yu = self.y_axis.unit_size
+        zu = self.z_axis.unit_size
+        x0, y0, z0 = self.get_origin()
+        return ParametricSurface(
+            lambda u, v: [xu * u + x0, yu * v + y0, zu * func(u, v) + z0],
+            u_range=self.x_range[:2],
+            v_range=self.y_range[:2],
+            color=color,
+            opacity=opacity,
+            **kwargs
+        )
+
 
 class NumberPlane(Axes):
     CONFIG = {
