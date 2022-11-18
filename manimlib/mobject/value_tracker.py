@@ -17,7 +17,7 @@ class ValueTracker(Mobject):
         "value_type": np.float64,
     }
 
-    def __init__(self, value: float | complex = 0, **kwargs):
+    def __init__(self, value: float | complex | np.ndarray = 0, **kwargs):
         self.value = value
         super().__init__(**kwargs)
 

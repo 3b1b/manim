@@ -129,8 +129,7 @@ class Animation(object):
 
     # Methods for interpolation, the mean of an Animation
     def interpolate(self, alpha: float) -> None:
-        alpha = clip(alpha, 0, 1)
-        self.interpolate_mobject(self.rate_func(alpha))
+        self.interpolate_mobject(alpha)
 
     def update(self, alpha: float) -> None:
         """
@@ -166,7 +165,8 @@ class Animation(object):
         full_length = (num_submobjects - 1) * lag_ratio + 1
         value = alpha * full_length
         lower = index * lag_ratio
-        return clip((value - lower), 0, 1)
+        raw_sub_alpha = clip((value - lower), 0, 1)
+        return self.rate_func(raw_sub_alpha)
 
     # Getters and setters
     def set_run_time(self, run_time: float):

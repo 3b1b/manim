@@ -59,6 +59,10 @@ def running_start(t: float, pull_factor: float = -0.5) -> float:
     return bezier([0, 0, pull_factor, pull_factor, 1, 1, 1])(t)
 
 
+def overshoot(t: float, pull_factor: float = 1.5) -> float:
+    return bezier([0, 0, pull_factor, pull_factor, 1, 1])(t)
+
+
 def not_quite_there(
     func: Callable[[float], float] = smooth,
     proportion: float = 0.7

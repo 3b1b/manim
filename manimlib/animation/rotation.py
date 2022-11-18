@@ -40,7 +40,7 @@ class Rotating(Animation):
         for sm1, sm2 in self.get_all_families_zipped():
             sm1.set_points(sm2.get_points())
         self.mobject.rotate(
-            alpha * self.angle,
+            self.rate_func(alpha) * self.angle,
             axis=self.axis,
             about_point=self.about_point,
             about_edge=self.about_edge,

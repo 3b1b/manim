@@ -31,6 +31,7 @@ from manimlib.utils.tex_file_writing import LatexError
 
 
 SELECT_KEY = 's'
+UNSELECT_KEY = 'u'
 GRAB_KEY = 'g'
 X_GRAB_KEY = 'h'
 Y_GRAB_KEY = 'v'
@@ -302,8 +303,8 @@ class InteractiveScene(Scene):
         ))
         if len(mobs) == 0:
             return
-        self.selection.add(*mobs)
         self.selection.set_animating_status(True)
+        self.selection.add(*mobs)
 
     def toggle_from_selection(self, *mobjects: Mobject):
         for mob in mobjects:
@@ -448,6 +449,8 @@ class InteractiveScene(Scene):
         char = chr(symbol)
         if char == SELECT_KEY and modifiers == 0:
             self.enable_selection()
+        if char == UNSELECT_KEY:
+            self.clear_selection()
         elif char in GRAB_KEYS and modifiers == 0:
             self.prepare_grab()
         elif char == RESIZE_KEY and modifiers in [0, SHIFT_MODIFIER]:
