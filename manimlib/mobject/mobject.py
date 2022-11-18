@@ -520,6 +520,11 @@ class Mobject(object):
         self.assemble_family()
         return self
 
+    def reverse_submobjects(self):
+        self.submobjects.reverse()
+        self.assemble_family()
+        return self
+
     # Copying and serialization
 
     def stash_mobject_pointers(func):
