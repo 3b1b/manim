@@ -816,7 +816,7 @@ class Mobject(object):
         return self._is_animating or self.has_updaters
 
     def set_animating_status(self, is_animating: bool, recurse: bool = True) -> None:
-        for mob in self.get_family(recurse):
+        for mob in (*self.get_family(recurse), *self.get_ancestors(extended=True)):
             mob._is_animating = is_animating
         return self
 
