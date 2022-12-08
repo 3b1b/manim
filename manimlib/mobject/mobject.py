@@ -1035,13 +1035,13 @@ class Mobject(object):
         return self
 
     def is_off_screen(self):
-        if self.get_left()[0] > FRAME_X_RADIUS:
+        if self.get_left()[0] < -FRAME_X_RADIUS:
             return True
-        if self.get_right()[0] < -FRAME_X_RADIUS:
+        if self.get_right()[0] > FRAME_X_RADIUS:
             return True
-        if self.get_bottom()[1] > FRAME_Y_RADIUS:
+        if self.get_bottom()[1] < -FRAME_Y_RADIUS:
             return True
-        if self.get_top()[1] < -FRAME_Y_RADIUS:
+        if self.get_top()[1] > FRAME_Y_RADIUS:
             return True
         return False
 
