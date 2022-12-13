@@ -667,7 +667,7 @@ class VMobject(Mobject):
         full = partials[-1]
         if full == 0:
             return self.get_start()
-        # First index where the partial lenth is more alpha times the full length
+        # First index where the partial length is more alpha times the full length
         i = next(
             (i for i, x in enumerate(partials) if x >= full * alpha),
             len(partials)  # Default
