@@ -22,33 +22,41 @@ DEFAULT_ANIMATION_LAG_RATIO = 0
 
 
 class Animation(object):
-    CONFIG = {
-        "run_time": DEFAULT_ANIMATION_RUN_TIME,
-        "time_span": None,  # Tuple of times, between which the animation will run
-        "rate_func": smooth,
-        "name": None,
-        # Does this animation add or remove a mobject form the screen
-        "remover": False,
-        # What to enter into the update function upon completion
-        "final_alpha_value": 1,
-        # If 0, the animation is applied to all submobjects
-        # at the same time
+    def __init__(
+        self,
+        mobject: Mobject,
+        run_time: float = DEFAULT_ANIMATION_RUN_TIME,
+        # Tuple of times, between which the animation will run
+        time_span: tuple[float, float] | None = None,
+        # If 0, the animation is applied to all submobjects at the same time
         # If 1, it is applied to each successively.
-        # If 0 < lag_ratio < 1, its applied to each
-        # with lagged start times
-        "lag_ratio": DEFAULT_ANIMATION_LAG_RATIO,
-        "suspend_mobject_updating": True,
-    }
-
-    def __init__(self, mobject: Mobject, **kwargs):
-        assert(isinstance(mobject, Mobject))
-        digest_config(self, kwargs)
+        # If 0 < lag_ratio < 1, its applied to each with lagged start times
+        lag_ratio: float = DEFAULT_ANIMATION_LAG_RATIO,
+        rate_func: Callable[[float], float] = smooth,
+        name: str = "",
+        # Does this animation add or remove a mobject form the screen
+        remover: bool = False,
+        # What to enter into the update function upon completion
+        final_alpha_value: float = 1.0,
+        suspend_mobject_updating: bool = True,
+        **kwargs
+    ):
         self.mobject = mobject
+        self.run_time = run_time
+        self.time_span = time_span
+        self.rate_func = rate_func
+        self.name = name or self.__class__.__name__ + str(self.mobject)
+        self.remover = remover
+        self.final_alpha_value = final_alpha_value
+        self.lag_ratio = lag_ratio
+        self.suspend_mobject_updating = suspend_mobject_updating
+
+        assert(isinstance(mobject, Mobject))
+
+        digest_config(self, kwargs)  # Need to delete
 
     def __str__(self) -> str:
-        if self.name:
-            return self.name
-        return self.__class__.__name__ + str(self.mobject)
+        return self.name
 
     def begin(self) -> None:
         # This is called right as an animation is being
