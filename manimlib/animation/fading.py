@@ -6,6 +6,8 @@ from manimlib.mobject.mobject import Group
 from manimlib.constants import ORIGIN
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.rate_functions import there_and_back
+from manimlib.utils.rate_functions import rush_from
+from manimlib.utils.rate_functions import rush_into
 
 
 DEFAULT_FADE_LAG_RATIO = 0
@@ -51,6 +53,32 @@ class FadeOut(Fade):
         result.shift(self.shift_vect)
         result.scale(self.scale_factor)
         return result
+
+
+class FadeInFrom(FadeIn):
+    CONFIG = {
+        "rate_func": rush_from
+    }
+
+    def __init__(self, mobject, direction, **kwargs):
+        super().__init__(
+            mobject,
+            shift = - direction,
+            **kwargs,
+        )
+
+
+class FadeOutTo(FadeOut):
+    CONFIG = {
+        "rate_func": rush_into
+    }
+
+    def __init__(self, mobject, direction, **kwargs):
+        super().__init__(
+            mobject,
+            shift = direction,
+            **kwargs
+        )
 
 
 class FadeInFromPoint(FadeIn):
