@@ -1,5 +1,5 @@
 // Assumes the following uniforms exist in the surrounding context:
-// uniform vec3 camera_center;
+// uniform vec3 camera_offset;
 // uniform mat3 camera_rotation;
 
 vec3 get_rotated_surface_unit_normal_vector(vec3 point, vec3 du_point, vec3 dv_point){

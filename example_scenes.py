@@ -2,7 +2,7 @@ from manimlib import *
 import numpy as np
 
 # To watch one of these scenes, run the following:
-# python -m manim example_scenes.py SquareToCircle
+# manimgl example_scenes.py OpeningManimExample
 # Use -s to skip to the end and just save the final frame
 # Use -w to write the animation to a file
 # Use -o to write it to a file and open it once done
@@ -76,10 +76,6 @@ class AnimatingMethods(Scene):
         # You can animate the application of mobject methods with the
         # ".animate" syntax:
         self.play(grid.animate.shift(LEFT))
-
-        # Alternatively, you can use the older syntax by passing the
-        # method and then the arguments to the scene's "play" function:
-        self.play(grid.shift, LEFT)
 
         # Both of those will interpolate between the mobject's initial
         # state and whatever happens when you apply that method.
@@ -164,7 +160,7 @@ class TexTransformExample(Scene):
             # Passing in muliple arguments to Tex will result
             # in the same expression as if those arguments had
             # been joined together, except that the submobject
-            # heirarchy of the resulting mobject ensure that the
+            # hierarchy of the resulting mobject ensure that the
             # Tex mobject has a subject corresponding to
             # each of these strings.  For example, the Tex mobject
             # below will have 5 subjects, corresponding to the
@@ -274,7 +270,7 @@ class UpdatersExample(Scene):
         square = Square()
         square.set_fill(BLUE_E, 1)
 
-        # On all all frames, the constructor Brace(square, UP) will
+        # On all frames, the constructor Brace(square, UP) will
         # be called, and the mobject brace will set its data to match
         # that of the newly constructed object
         brace = always_redraw(Brace, square, UP)
@@ -579,7 +575,7 @@ class SurfaceExample(Scene):
         self.play(light.animate.move_to(3 * IN), run_time=5)
         self.play(light.animate.shift(10 * OUT), run_time=5)
 
-        drag_text = Text("Try moving the mouse while pressing d or s")
+        drag_text = Text("Try moving the mouse while pressing d or f")
         drag_text.move_to(light_text)
         drag_text.fix_in_frame()
 
@@ -597,7 +593,7 @@ class InteractiveDevelopment(Scene):
         self.play(ShowCreation(square))
         self.wait()
 
-        # This opens an iPython termnial where you can keep writing
+        # This opens an iPython terminal where you can keep writing
         # lines as if they were part of this construct method.
         # In particular, 'square', 'circle' and 'self' will all be
         # part of the local namespace in that terminal.
@@ -650,7 +646,7 @@ class ControlsExample(Scene):
 
         def text_updater(old_text):
             assert(isinstance(old_text, Text))
-            new_text = Text(self.textbox.get_value(), size=old_text.size)
+            new_text = Text(self.textbox.get_value(), font_size=old_text.font_size)
             # new_text.align_data_and_family(old_text)
             new_text.move_to(old_text)
             if self.checkbox.get_value():

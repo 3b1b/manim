@@ -277,7 +277,6 @@ class DiscreteGraphScene(Scene):
     def trace_cycle(self, cycle=None, color="yellow", run_time=2.0):
         if cycle is None:
             cycle = self.graph.region_cycles[0]
-        time_per_edge = run_time / len(cycle)
         next_in_cycle = it.cycle(cycle)
         next(next_in_cycle)  # jump one ahead
         self.traced_cycle = Mobject(*[
@@ -333,7 +332,7 @@ class DiscreteGraphScene(Scene):
         x_coord_of = {root: 0}
         y_coord_of = {root: bottom}
         # width to allocate to a given node, computed as
-        # the maxium number of decendents in a single generation,
+        # the maximum number of decendents in a single generation,
         # minus 1, multiplied by x_sep
         width_of = {}
         for index in indices:

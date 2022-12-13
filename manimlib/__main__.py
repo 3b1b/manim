@@ -1,11 +1,19 @@
 #!/usr/bin/env python
+from manimlib import __version__
 import manimlib.config
 import manimlib.extract_scene
+import manimlib.logger
 import manimlib.utils.init_config
 
 
 def main():
+    print(f"ManimGL \033[32mv{__version__}\033[0m")
+
     args = manimlib.config.parse_cli()
+    if args.version and args.file is None:
+        return
+    if args.log_level:
+        manimlib.logger.log.setLevel(args.log_level)
 
     if args.config:
         manimlib.utils.init_config.init_customization()
@@ -16,5 +24,6 @@ def main():
         for scene in scenes:
             scene.run()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

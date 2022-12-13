@@ -29,6 +29,6 @@ void main(){
     next_bp = position_point_into_frame(next_point);
     v_global_unit_normal = rotate_point_into_frame(unit_normal);
 
-    v_stroke_width = STROKE_WIDTH_CONVERSION * stroke_width;
+    v_stroke_width = STROKE_WIDTH_CONVERSION * stroke_width * frame_shape[1] / 8.0;
     v_color = color;
 }

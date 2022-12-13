@@ -1,12 +1,14 @@
+import copy
 import inspect
 import sys
-import logging
 
-from manimlib.scene.scene import Scene
 from manimlib.config import get_custom_config
+from manimlib.logger import log
+from manimlib.scene.interactive_scene import InteractiveScene
+from manimlib.scene.scene import Scene
 
 
-class BlankScene(Scene):
+class BlankScene(InteractiveScene):
     def construct(self):
         exec(get_custom_config()["universal_import_line"])
         self.embed()
@@ -38,11 +40,14 @@ def prompt_user_for_choice(scene_classes):
             "\nScene Name or Number: "
         )
         return [
-            name_to_class[split_str] if not split_str.isnumeric() else scene_classes[int(split_str)-1]
+            name_to_class[split_str] if not split_str.isnumeric() else scene_classes[int(split_str) - 1]
             for split_str in user_input.replace(" ", "").split(",")
         ]
+    except IndexError:
+        log.error("Invalid scene number")
+        sys.exit(2)
     except KeyError:
-        logging.log(logging.ERROR, "Invalid scene")
+        log.error("Invalid scene name")
         sys.exit(2)
     except EOFError:
         sys.exit(1)
@@ -59,9 +64,31 @@ def get_scene_config(config):
             "start_at_animation_number",
             "end_at_animation_number",
             "leave_progress_bars",
+            "show_animation_progress",
             "preview",
+            "presenter_mode",
         ]
     ])
+
+
+def compute_total_frames(scene_class, scene_config):
+    """
+    When a scene is being written to file, a copy of the scene is run with
+    skip_animations set to true so as to count how many frames it will require.
+    This allows for a total progress bar on rendering, and also allows runtime
+    errors to be exposed preemptively for long running scenes. The final frame
+    is saved by default, so that one can more quickly check that the last frame
+    looks as expected.
+    """
+    pre_config = copy.deepcopy(scene_config)
+    pre_config["file_writer_config"]["write_to_movie"] = False
+    pre_config["file_writer_config"]["save_last_frame"] = True
+    pre_config["file_writer_config"]["quiet"] = True
+    pre_config["skip_animations"] = True
+    pre_scene = scene_class(**pre_config)
+    pre_scene.run()
+    total_time = pre_scene.time - pre_scene.skip_time
+    return int(total_time * scene_config["camera_config"]["fps"])
 
 
 def get_scenes_to_render(scene_classes, scene_config, config):
@@ -73,22 +100,31 @@ def get_scenes_to_render(scene_classes, scene_config, config):
         found = False
         for scene_class in scene_classes:
             if scene_class.__name__ == scene_name:
+                fw_config = scene_config["file_writer_config"]
+                if fw_config["write_to_movie"]:
+                    fw_config["total_frames"] = compute_total_frames(scene_class, scene_config)
                 scene = scene_class(**scene_config)
                 result.append(scene)
                 found = True
                 break
         if not found and (scene_name != ""):
-            logging.log(
-                logging.ERROR,
-                f"No scene named {scene_name} found",
-            )
+            log.error(f"No scene named {scene_name} found")
     if result:
         return result
+    
+    # another case
+    result=[]
     if len(scene_classes) == 1:
-        result = [scene_classes[0]]
+        scene_classes = [scene_classes[0]]
     else:
-        result = prompt_user_for_choice(scene_classes)
-    return [scene_class(**scene_config) for scene_class in result]
+        scene_classes = prompt_user_for_choice(scene_classes)
+    for scene_class in scene_classes:
+        fw_config = scene_config["file_writer_config"]
+        if fw_config["write_to_movie"]:
+            fw_config["total_frames"] = compute_total_frames(scene_class, scene_config)
+        scene = scene_class(**scene_config)
+        result.append(scene)
+    return result
 
 
 def get_scene_classes_from_module(module):

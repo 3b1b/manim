@@ -1,8 +1,17 @@
-from manimlib.constants import *
-from manimlib.mobject.types.vectorized_mobject import VMobject
+from __future__ import annotations
+
+import numpy as np
+
+from manimlib.constants import BLUE_B, BLUE_D, BLUE_E, GREY_BROWN, WHITE
+from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.rate_functions import smooth
-from manimlib.utils.space_ops import get_norm
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Callable
 
 
 class AnimatedBoundary(VGroup):
@@ -15,10 +24,10 @@ class AnimatedBoundary(VGroup):
         "fade_rate_func": smooth,
     }
 
-    def __init__(self, vmobject, **kwargs):
+    def __init__(self, vmobject: VMobject, **kwargs):
         super().__init__(**kwargs)
-        self.vmobject = vmobject
-        self.boundary_copies = [
+        self.vmobject: VMobject = vmobject
+        self.boundary_copies: list[VMobject] = [
             vmobject.copy().set_style(
                 stroke_width=0,
                 fill_opacity=0
@@ -26,12 +35,12 @@ class AnimatedBoundary(VGroup):
             for x in range(2)
         ]
         self.add(*self.boundary_copies)
-        self.total_time = 0
+        self.total_time: float = 0
         self.add_updater(
             lambda m, dt: self.update_boundary_copies(dt)
         )
 
-    def update_boundary_copies(self, dt):
+    def update_boundary_copies(self, dt: float) -> None:
         # Not actual time, but something which passes at
         # an altered rate to make the implementation below
         # cleaner
@@ -62,7 +71,13 @@ class AnimatedBoundary(VGroup):
 
         self.total_time += dt
 
-    def full_family_become_partial(self, mob1, mob2, a, b):
+    def full_family_become_partial(
+        self,
+        mob1: VMobject,
+        mob2: VMobject,
+        a: float,
+        b: float
+    ):
         family1 = mob1.family_members_with_points()
         family2 = mob2.family_members_with_points()
         for sm1, sm2 in zip(family1, family2):
@@ -74,25 +89,67 @@ class TracedPath(VMobject):
     CONFIG = {
         "stroke_width": 2,
         "stroke_color": WHITE,
-        "min_distance_to_new_point": 0.1,
+        "time_traced": np.inf,
+        "fill_opacity": 0,
+        "time_per_anchor": 1 / 15,
     }
 
-    def __init__(self, traced_point_func, **kwargs):
+    def __init__(self, traced_point_func: Callable[[], np.ndarray], **kwargs):
         super().__init__(**kwargs)
         self.traced_point_func = traced_point_func
-        self.add_updater(lambda m: m.update_path())
+        self.time: float = 0
+        self.traced_points: list[np.ndarray] = []
+        self.add_updater(lambda m, dt: m.update_path(dt))
 
-    def update_path(self):
-        new_point = self.traced_point_func()
-        if not self.has_points():
-            self.start_new_path(new_point)
-            self.add_line_to(new_point)
+    def update_path(self, dt: float):
+        if dt == 0:
+            return self
+        point = self.traced_point_func().copy()
+        self.traced_points.append(point)
+
+        if self.time_traced < np.inf:
+            n_relevant_points = int(self.time_traced / dt + 0.5)
+            # n_anchors = int(self.time_traced / self.time_per_anchor)
+            n_tps = len(self.traced_points)
+            if n_tps < n_relevant_points:
+                points = self.traced_points + [point] * (n_relevant_points - n_tps)
+            else:
+                points = self.traced_points[n_tps - n_relevant_points:]
+            # points = [
+            #     self.traced_points[max(n_tps - int(alpha * n_relevant_points) - 1, 0)]
+            #     for alpha in np.linspace(1, 0, n_anchors)
+            # ]
+            # Every now and then refresh the list
+            if n_tps > 10 * n_relevant_points:
+                self.traced_points = self.traced_points[-n_relevant_points:]
         else:
-            # Set the end to be the new point
-            self.get_points()[-1] = new_point
+            # sparseness = max(int(self.time_per_anchor / dt), 1)
+            # points = self.traced_points[::sparseness]
+            # points[-1] = self.traced_points[-1]
+            points = self.traced_points
 
-            # Second to last point
-            nppcc = self.n_points_per_curve
-            dist = get_norm(new_point - self.get_points()[-nppcc])
-            if dist >= self.min_distance_to_new_point:
-                self.add_line_to(new_point)
+        if points:
+            self.set_points_smoothly(points)
+
+        self.time += dt
+        return self
+
+
+class TracingTail(TracedPath):
+    CONFIG = {
+        "stroke_width": (0, 3),
+        "stroke_opacity": (0, 1),
+        "stroke_color": WHITE,
+        "time_traced": 1.0,
+    }
+
+    def __init__(
+        self,
+        mobject_or_func: Mobject | Callable[[], np.ndarray],
+        **kwargs
+    ):
+        if isinstance(mobject_or_func, Mobject):
+            func = mobject_or_func.get_center
+        else:
+            func = mobject_or_func
+        super().__init__(func, **kwargs)
