@@ -7,7 +7,7 @@ import manimlib.utils.init_config
 
 
 def main():
-    print(f"ManimGL \033[32mv{__version__}\033[0m")
+    print(f"\nManimGL \033[32mv{__version__}\033[0m")
 
     args = manimlib.config.parse_cli()
     if args.version and args.file is None:
