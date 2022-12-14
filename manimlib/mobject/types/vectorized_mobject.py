@@ -108,6 +108,12 @@ class VMobject(Mobject):
             "unit_normal": np.zeros((1, 3))
         })
 
+    def get_family(self, recurse: bool = True) -> list[VMobject]:
+        return super().get_family(recurse)
+
+    def replicate(self, n: int) -> VGroup:
+        return super().replicate(n)
+
     # Colors
     def init_colors(self):
         self.set_fill(
