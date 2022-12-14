@@ -1,4 +1,5 @@
 from __future__ import annotations
+from re import sub
 
 import numpy as np
 
@@ -7,9 +8,7 @@ from manimlib.animation.animation import prepare_animation
 from manimlib.mobject.mobject import Group
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import remove_list_redundancies
-from manimlib.utils.rate_functions import linear
 from manimlib.utils.simple_functions import clip
 
 from typing import TYPE_CHECKING
@@ -25,28 +24,30 @@ DEFAULT_LAGGED_START_LAG_RATIO = 0.05
 
 
 class AnimationGroup(Animation):
-    CONFIG = {
-        # If None, this defaults to the sum of all
-        # internal animations
-        "run_time": None,
-        "rate_func": linear,
-        # If 0, all animations are played at once.
-        # If 1, all are played successively.
-        # If >0 and <1, they start at lagged times
-        # from one and other.
-        "lag_ratio": 0,
-        "group": None,
-    }
-
-    def __init__(self, *animations: Animation, **kwargs):
-        digest_config(self, kwargs)
+    def __init__(self,
+        *animations: Animation,
+        run_time: float = -1,  # If negative, default to sum of inputed animation runtimes
+        lag_ratio: float = 0.0,
+        group: Mobject | None = None,
+        **kwargs
+    ):
         self.animations = [prepare_animation(anim) for anim in animations]
+        self.build_animations_with_timings(lag_ratio)
+        self.max_end_time = max((awt[2] for awt in self.anims_with_timings), default=0)
+        self.run_time = self.max_end_time if run_time < 0 else run_time
+        self.lag_ratio = lag_ratio
+        self.group = group
         if self.group is None:
             self.group = Group(*remove_list_redundancies(
-                [anim.mobject for anim in animations]
+                [anim.mobject for anim in self.animations]
             ))
-        self.init_run_time()
-        Animation.__init__(self, self.group, **kwargs)
+
+        super().__init__(
+            self.group,
+            run_time=self.run_time,
+            lag_ratio=lag_ratio,
+            **kwargs
+        )
 
     def get_all_mobjects(self) -> Group:
         return self.group
@@ -70,18 +71,15 @@ class AnimationGroup(Animation):
         for anim in self.animations:
             anim.update_mobjects(dt)
 
-    def init_run_time(self) -> None:
-        self.build_animations_with_timings()
-        if self.anims_with_timings:
-            self.max_end_time = np.max([
-                awt[2] for awt in self.anims_with_timings
-            ])
-        else:
-            self.max_end_time = 0
-        if self.run_time is None:
+    def calculate_max_end_time(self) -> None:
+        self.max_end_time = max(
+            (awt[2] for awt in self.anims_with_timings),
+            default=0,
+        )
+        if self.run_time < 0:
             self.run_time = self.max_end_time
 
-    def build_animations_with_timings(self) -> None:
+    def build_animations_with_timings(self, lag_ratio: float) -> None:
         """
         Creates a list of triplets of the form
         (anim, start_time, end_time)
@@ -94,10 +92,9 @@ class AnimationGroup(Animation):
             self.anims_with_timings.append(
                 (anim, start_time, end_time)
             )
-            # Start time of next animation is based on
-            # the lag_ratio
+            # Start time of next animation is based on the lag_ratio
             curr_time = interpolate(
-                start_time, end_time, self.lag_ratio
+                start_time, end_time, lag_ratio
             )
 
     def interpolate(self, alpha: float) -> None:
@@ -112,21 +109,21 @@ class AnimationGroup(Animation):
             if anim_time == 0:
                 sub_alpha = 0
             else:
-                sub_alpha = clip(
-                    (time - start_time) / anim_time,
-                    0, 1
-                )
+                sub_alpha = clip((time - start_time) / anim_time, 0, 1)
             anim.interpolate(sub_alpha)
 
 
 class Succession(AnimationGroup):
-    CONFIG = {
-        "lag_ratio": 1,
-    }
+    def __init__(
+        self,
+        *animations: Animation,
+        lag_ratio: float = 1.0,
+        **kwargs
+    ):
+        super().__init__(*animations, lag_ratio=lag_ratio, **kwargs)
 
     def begin(self) -> None:
         assert(len(self.animations) > 0)
-        self.init_run_time()
         self.active_animation = self.animations[0]
         self.active_animation.begin()
 
@@ -149,34 +146,29 @@ class Succession(AnimationGroup):
 
 
 class LaggedStart(AnimationGroup):
-    CONFIG = {
-        "lag_ratio": DEFAULT_LAGGED_START_LAG_RATIO,
-    }
+    def __init__(
+        self,
+        *animations,
+        lag_ratio: float = DEFAULT_LAGGED_START_LAG_RATIO,
+        **kwargs
+    ):
+        super().__init__(*animations, lag_ratio=lag_ratio, **kwargs)
 
 
 class LaggedStartMap(LaggedStart):
-    CONFIG = {
-        "run_time": 2,
-    }
-
     def __init__(
         self,
         AnimationClass: type,
-        mobject: Mobject,
+        group: Mobject,
         arg_creator: Callable[[Mobject], tuple] | None = None,
+        run_time: float = 2.0,
         **kwargs
     ):
-        args_list = []
-        for submob in mobject:
-            if arg_creator:
-                args_list.append(arg_creator(submob))
-            else:
-                args_list.append((submob,))
         anim_kwargs = dict(kwargs)
-        if "lag_ratio" in anim_kwargs:
-            anim_kwargs.pop("lag_ratio")
-        animations = [
-            AnimationClass(*args, **anim_kwargs)
-            for args in args_list
-        ]
-        super().__init__(*animations, group=mobject, **kwargs)
+        anim_kwargs.pop("lag_ratio", None)
+        super().__init__(
+            *(AnimationClass(submob, **anim_kwargs) for submob in group),
+            group=group,
+            run_time=run_time,
+            **kwargs
+        )
