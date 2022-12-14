@@ -777,6 +777,7 @@ class VMobject(Mobject):
     def reverse_points(self):
         super().reverse_points()
         self.refresh_unit_normal()
+        self.refresh_triangulation()
         return self
 
     # Alignment
