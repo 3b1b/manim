@@ -16,6 +16,7 @@ from manimlib.utils.rate_functions import smooth
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from typing import Callable
     from manimlib.mobject.mobject import Mobject
     from manimlib.scene.scene import Scene
     from manimlib.constants import ManimColor
