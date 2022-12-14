@@ -341,6 +341,7 @@ class Circle(Arc):
         self.replace(mobject, dim_to_match, stretch)
         self.stretch((self.get_width() + 2 * buff) / self.get_width(), 0)
         self.stretch((self.get_height() + 2 * buff) / self.get_height(), 1)
+        return self
 
     def point_at_angle(self, angle: float) -> np.ndarray:
         start_angle = self.get_start_angle()
