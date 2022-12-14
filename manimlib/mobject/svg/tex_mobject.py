@@ -18,10 +18,8 @@ from manimlib.utils.tex_file_writing import tex_content_to_svg_file
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from colour import Color
-    from typing import Iterable, Union
-
-    ManimColor = Union[str, Color]
+    from typing import Iterable
+    from manimlib.constants import ManimColor
 
 
 SCALE_FACTOR_PER_FONT_POINT = 0.001

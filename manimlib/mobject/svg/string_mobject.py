@@ -17,10 +17,9 @@ from manimlib.utils.config_ops import digest_config
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from colour import Color
     from typing import Callable, Iterable, Union
+    from manimlib.constants import ManimColor
 
-    ManimColor = Union[str, Color]
     Span = tuple[int, int]
     Selector = Union[
         str,

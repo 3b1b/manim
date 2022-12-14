@@ -18,14 +18,9 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from colour import Color
-    from typing import Union
-
     import numpy.typing as npt
-
     from manimlib.mobject.mobject import Mobject
-
-    ManimColor = Union[str, Color]
+    from manimlib.constants import ManimColor
 
 
 VECTOR_LABEL_SCALE_FACTOR = 0.8

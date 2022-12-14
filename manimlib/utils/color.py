@@ -13,9 +13,8 @@ from manimlib.utils.iterables import resize_with_interpolation
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterable, Union
-
-    ManimColor = Union[str, Color]
+    from typing import Iterable
+    from manimlib.constants import ManimColor
 
 
 def color_to_rgb(color: ManimColor) -> np.ndarray:

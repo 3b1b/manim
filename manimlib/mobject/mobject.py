@@ -47,7 +47,6 @@ from manimlib.utils.space_ops import rotation_matrix_transpose
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from colour import Color
     from typing import Callable, Iterable, Sequence, Union
 
     import numpy.typing as npt
@@ -55,7 +54,7 @@ if TYPE_CHECKING:
     TimeBasedUpdater = Callable[["Mobject", float], None]
     NonTimeUpdater = Callable[["Mobject"], None]
     Updater = Union[TimeBasedUpdater, NonTimeUpdater]
-    ManimColor = Union[str, Color]
+    from manimlib.constants import ManimColor
 
 
 class Mobject(object):
@@ -333,7 +332,7 @@ class Mobject(object):
             parent.assemble_family()
         return self
 
-    def get_family(self, recurse: bool = True):
+    def get_family(self, recurse: bool = True) -> list[Mobject]:
         if recurse:
             return self.family
         else:

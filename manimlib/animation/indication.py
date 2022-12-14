@@ -34,12 +34,8 @@ from manimlib.utils.rate_functions import wiggle
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from colour import Color
-    from typing import Union
-
+    from manimlib.constants import ManimColor
     from manimlib.mobject.mobject import Mobject
-
-    ManimColor = Union[str, Color]
 
 
 class FocusOn(Transform):

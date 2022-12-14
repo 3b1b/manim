@@ -13,12 +13,9 @@ from manimlib.utils.iterables import resize_with_interpolation
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from colour import Color
-    from typing import Callable, Union
-
+    from typing import Callable
     import numpy.typing as npt
-
-    ManimColor = Union[str, Color]
+    from manimlib.constants import ManimColor
 
 
 class PMobject(Mobject):

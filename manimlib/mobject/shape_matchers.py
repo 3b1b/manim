@@ -15,11 +15,8 @@ from manimlib.utils.customization import get_customization
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Union
-
     from manimlib.mobject.mobject import Mobject
-
-    ManimColor = Union[str, Color]
+    from manimlib.constants import ManimColor
 
 
 class SurroundingRectangle(Rectangle):

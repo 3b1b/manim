@@ -84,6 +84,13 @@ CTRL_MODIFIER = 2
 COMMAND_MODIFIER = 64
 
 # Colors
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from typing import Union
+    from colour import Color
+    ManimColor = Union[str, Color, None]
+
+
 BLUE_E = "#1C758A"
 BLUE_D = "#29ABCA"
 BLUE_C = "#58C4DD"

@@ -18,10 +18,8 @@ from manimlib.utils.iterables import listify
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from colour import Color
-    from typing import Iterable, Union
-
-    ManimColor = Union[str, Color]
+    from typing import Iterable
+    from manimlib.constants import ManimColor
 
 
 EPSILON = 0.0001

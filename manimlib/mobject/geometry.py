@@ -30,10 +30,8 @@ from manimlib.utils.space_ops import rotation_matrix_transpose
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from colour import Color
-    from typing import Iterable, Union
-
-    ManimColor = Union[str, Color]
+    from typing import Iterable
+    from manimlib.constants import ManimColor
 
 
 DEFAULT_DOT_RADIUS = 0.08

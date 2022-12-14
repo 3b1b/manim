@@ -33,13 +33,11 @@ from manimlib.utils.space_ops import normalize
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from colour import Color
-    from typing import Callable, Iterable, Sequence, Type, TypeVar, Union
-
+    from typing import Callable, Iterable, Sequence, Type, TypeVar
     from manimlib.mobject.mobject import Mobject
+    from manimlib.constants import ManimColor
 
     T = TypeVar("T", bound=Mobject)
-    ManimColor = Union[str, Color]
 
 
 EPSILON = 1e-8

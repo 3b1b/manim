@@ -9,13 +9,12 @@ from manimlib.utils.tex_file_writing import tex_content_to_svg_file
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from colour import Color
     import re
     from typing import Iterable, Union
 
     from manimlib.mobject.types.vectorized_mobject import VGroup
+    from manimlib.constants import ManimColor
 
-    ManimColor = Union[str, Color]
     Span = tuple[int, int]
     Selector = Union[
         str,

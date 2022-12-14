@@ -42,12 +42,10 @@ from manimlib.shader_wrapper import ShaderWrapper
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from colour import Color
-    from typing import Callable, Iterable, Sequence, Union
+    from typing import Callable, Iterable, Sequence
 
     import numpy.typing as npt
-
-    ManimColor = Union[str, Color]
+    from manimlib.constants import ManimColor
 
 
 class VMobject(Mobject):
