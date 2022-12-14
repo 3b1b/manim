@@ -11,38 +11,46 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import numpy as np
+    from manimlib.constants import ManimColor
 
 
 class Broadcast(LaggedStart):
-    CONFIG = {
-        "small_radius": 0.0,
-        "big_radius": 5,
-        "n_circles": 5,
-        "start_stroke_width": 8,
-        "color": WHITE,
-        "remover": True,
-        "lag_ratio": 0.2,
-        "run_time": 3,
-    }
+    def __init__(
+        self,
+        focal_point: np.ndarray,
+        small_radius: float = 0.0,
+        big_radius: float = 5.0,
+        n_circles: int = 5,
+        start_stroke_width: float = 8.0,
+        color: ManimColor = WHITE,
+        run_time: float = 3.0,
+        lag_ratio: float = 0.2,
+        remover: bool = True,
+        **kwargs
+    ):
+        self.focal_point = focal_point
+        self.small_radius = small_radius
+        self.big_radius = big_radius
+        self.n_circles = n_circles
+        self.start_stroke_width = start_stroke_width
+        self.color = color
 
-    def __init__(self, focal_point: np.ndarray, **kwargs):
-        digest_config(self, kwargs)
         circles = VGroup()
-        for x in range(self.n_circles):
+        for x in range(n_circles):
             circle = Circle(
-                radius=self.big_radius,
+                radius=big_radius,
                 stroke_color=BLACK,
                 stroke_width=0,
             )
-            circle.add_updater(
-                lambda c: c.move_to(focal_point)
-            )
+            circle.add_updater(lambda c: c.move_to(focal_point))
             circle.save_state()
-            circle.set_width(self.small_radius * 2)
-            circle.set_stroke(self.color, self.start_stroke_width)
+            circle.set_width(small_radius * 2)
+            circle.set_stroke(color, start_stroke_width)
             circles.add(circle)
-        animations = [
-            Restore(circle)
-            for circle in circles
-        ]
-        super().__init__(*animations, **kwargs)
+        super().__init__(
+            *map(Restore, circles),
+            run_time=run_time,
+            lag_ratio=lag_ratio,
+            remover=remover,
+            **kwargs
+        )
