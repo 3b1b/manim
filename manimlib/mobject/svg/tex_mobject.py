@@ -4,7 +4,7 @@ from functools import reduce
 import operator as op
 import re
 
-from manimlib.constants import BLACK, WHITE
+from manimlib.constants import BLACK, WHITE, GREY_C
 from manimlib.constants import DOWN, LEFT, RIGHT, UP
 from manimlib.constants import FRAME_WIDTH
 from manimlib.constants import MED_LARGE_BUFF, MED_SMALL_BUFF, SMALL_BUFF
@@ -18,7 +18,7 @@ from manimlib.utils.tex_file_writing import tex_content_to_svg_file
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterable
+    from typing import Iterable, List, Dict, Sequence
     from manimlib.constants import ManimColor
 
 
@@ -26,29 +26,43 @@ SCALE_FACTOR_PER_FONT_POINT = 0.001
 
 
 class SingleStringTex(SVGMobject):
-    CONFIG = {
-        "height": None,
-        "fill_opacity": 1.0,
-        "stroke_width": 0,
-        "svg_default": {
-            "fill_color": WHITE,
-        },
-        "path_string_config": {
-            "should_subdivide_sharp_curves": True,
-            "should_remove_null_curves": True,
-        },
-        "font_size": 48,
-        "alignment": "\\centering",
-        "math_mode": True,
-        "organize_left_to_right": False,
-        "template": "",
-        "additional_preamble": "",
-    }
-
-    def __init__(self, tex_string: str, **kwargs):
-        assert isinstance(tex_string, str)
+    def __init__(
+        self,
+        tex_string: str,
+        height: float | None = None,
+        fill_color: ManimColor = WHITE,
+        fill_opacity: float = 1.0,
+        stroke_width: float = 0,
+        svg_default: dict = dict(fill_color=WHITE),
+        path_string_config: dict = dict(
+            should_subdivide_sharp_curves=True,
+            should_remove_null_curves=True,
+        ),
+        font_size: int = 48,
+        alignment: str = R"\centering",
+        math_mode: bool = True,
+        organize_left_to_right: bool = False,
+        template: str = "",
+        additional_preamble: str = "",
+        **kwargs
+    ):
         self.tex_string = tex_string
-        super().__init__(**kwargs)
+        self.height = height
+        self.svg_default = svg_default
+        self.path_string_config = path_string_config
+        self.font_size = font_size
+        self.alignment = alignment
+        self.math_mode = math_mode
+        self.organize_left_to_right = organize_left_to_right
+        self.template = template
+        self.additional_preamble = additional_preamble
+
+        super().__init__(
+            fill_color=fill_color,
+            fill_opacity=fill_opacity,
+            stroke_width=stroke_width,
+            **kwargs
+        )
 
         if self.height is None:
             self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)
@@ -178,27 +192,30 @@ class SingleStringTex(SVGMobject):
 
 
 class Tex(SingleStringTex):
-    CONFIG = {
-        "arg_separator": "",
-        "isolate": [],
-        "tex_to_color_map": {},
-    }
+    def __init__(
+        self,
+        *tex_strings: str,
+        arg_separator: str = "",
+        isolate: List[str] = [],
+        tex_to_color_map: Dict[str, ManimColor] = {},
+        **kwargs
+    ):
+        self.tex_strings = self.break_up_tex_strings(
+            tex_strings,
+            substrings_to_isolate=[*isolate, *tex_to_color_map.keys()]
+        )
+        full_string = arg_separator.join(self.tex_strings)
 
-    def __init__(self, *tex_strings: str, **kwargs):
-        digest_config(self, kwargs)
-        self.tex_strings = self.break_up_tex_strings(tex_strings)
-        full_string = self.arg_separator.join(self.tex_strings)
         super().__init__(full_string, **kwargs)
-        self.break_up_by_substrings()
-        self.set_color_by_tex_to_color_map(self.tex_to_color_map)
+        self.break_up_by_substrings(self.tex_strings)
+        self.set_color_by_tex_to_color_map(tex_to_color_map)
 
         if self.organize_left_to_right:
             self.organize_submobjects_left_to_right()
 
-    def break_up_tex_strings(self, tex_strings: Iterable[str]) -> Iterable[str]:
+    def break_up_tex_strings(self, tex_strings: Iterable[str], substrings_to_isolate: List[str] = []) -> Iterable[str]:
         # Separate out any strings specified in the isolate
         # or tex_to_color_map lists.
-        substrings_to_isolate = [*self.isolate, *self.tex_to_color_map.keys()]
         if len(substrings_to_isolate) == 0:
             return tex_strings
         patterns = (
@@ -214,30 +231,28 @@ class Tex(SingleStringTex):
                 pieces.append(s)
         return list(filter(lambda s: s, pieces))
 
-    def break_up_by_substrings(self):
+    def break_up_by_substrings(self, tex_strings: Iterable[str]):
         """
         Reorganize existing submojects one layer
         deeper based on the structure of tex_strings (as a list
         of tex_strings)
         """
-        if len(self.tex_strings) == 1:
+        if len(list(tex_strings)) == 1:
             submob = self.copy()
             self.set_submobjects([submob])
             return self
         new_submobjects = []
         curr_index = 0
-        config = dict(self.CONFIG)
-        config["alignment"] = ""
-        for tex_string in self.tex_strings:
+        for tex_string in tex_strings:
             tex_string = tex_string.strip()
             if len(tex_string) == 0:
                 continue
-            sub_tex_mob = SingleStringTex(tex_string, **config)
+            sub_tex_mob = SingleStringTex(tex_string)
             num_submobs = len(sub_tex_mob)
             if num_submobs == 0:
                 continue
             new_index = curr_index + num_submobs
-            sub_tex_mob.set_submobjects(self[curr_index:new_index])
+            sub_tex_mob.set_submobjects(self.submobjects[curr_index:new_index])
             new_submobjects.append(sub_tex_mob)
             curr_index = new_index
         self.set_submobjects(new_submobjects)
@@ -313,30 +328,43 @@ class Tex(SingleStringTex):
 
 
 class TexText(Tex):
-    CONFIG = {
-        "math_mode": False,
-        "arg_separator": "",
-    }
+    def __init__(
+        self,
+        *tex_strings: str,
+        math_mode: bool = False,
+        arg_separator: str = "",
+        **kwargs
+    ):
+        super().__init__(
+            *tex_strings,
+            math_mode=math_mode,
+            arg_separator=arg_separator,
+            **kwargs
+        )
 
 
 class BulletedList(TexText):
-    CONFIG = {
-        "buff": MED_LARGE_BUFF,
-        "dot_scale_factor": 2,
-        "alignment": "",
-    }
-
-    def __init__(self, *items: str, **kwargs):
-        line_separated_items = [s + "\\\\" for s in items]
-        TexText.__init__(self, *line_separated_items, **kwargs)
+    def __init__(
+        self,
+        *items: str,
+        buff: float = MED_LARGE_BUFF,
+        dot_scale_factor: float = 2.0,
+        alignment: str = "",
+        **kwargs
+    ):
+        super().__init__(
+            *(s + R"\\" for s in items),
+            alignment=alignment,
+            **kwargs
+        )
         for part in self:
-            dot = Tex("\\cdot").scale(self.dot_scale_factor)
+            dot = Tex(R"\cdot").scale(dot_scale_factor)
             dot.next_to(part[0], LEFT, SMALL_BUFF)
             part.add_to_back(dot)
         self.arrange(
             DOWN,
             aligned_edge=LEFT,
-            buff=self.buff
+            buff=buff
         )
 
     def fade_all_but(self, index_or_string: int | str, opacity: float = 0.5) -> None:
@@ -354,39 +382,40 @@ class BulletedList(TexText):
                 other_part.set_fill(opacity=opacity)
 
 
-class TexFromPresetString(Tex):
-    CONFIG = {
-        # To be filled by subclasses
-        "tex": None,
-        "color": None,
-    }
+class TexTextFromPresetString(TexText):
+    tex: str = ""
+    default_color: ManimColor = WHITE
 
     def __init__(self, **kwargs):
-        digest_config(self, kwargs)
-        Tex.__init__(self, self.tex, **kwargs)
-        self.set_color(self.color)
+        super().__init__(
+            self.tex,
+            color=kwargs.pop("color", self.default_color),
+            **kwargs
+        )
 
 
 class Title(TexText):
-    CONFIG = {
-        "scale_factor": 1,
-        "include_underline": True,
-        "underline_width": FRAME_WIDTH - 2,
+    def __init__(
+        self,
+        *text_parts: str,
+        scale_factor: float = 1.0,
+        include_underline: bool = True,
+        underline_width: float = FRAME_WIDTH - 2,
         # This will override underline_width
-        "match_underline_width_to_text": False,
-        "underline_buff": MED_SMALL_BUFF,
-    }
-
-    def __init__(self, *text_parts: str, **kwargs):
-        TexText.__init__(self, *text_parts, **kwargs)
-        self.scale(self.scale_factor)
+        match_underline_width_to_text: bool = False,
+        underline_buff: float = SMALL_BUFF,
+        underline_style: dict = dict(stroke_width=2, stroke_color=GREY_C),
+        **kwargs
+    ):
+        super().__init__(*text_parts, **kwargs)
+        self.scale(scale_factor)
         self.to_edge(UP)
-        if self.include_underline:
-            underline = Line(LEFT, RIGHT)
-            underline.next_to(self, DOWN, buff=self.underline_buff)
-            if self.match_underline_width_to_text:
+        if include_underline:
+            underline = Line(LEFT, RIGHT, **underline_style)
+            underline.next_to(self, DOWN, buff=underline_buff)
+            if match_underline_width_to_text:
                 underline.match_width(self)
             else:
-                underline.set_width(self.underline_width)
+                underline.set_width(underline_width)
             self.add(underline)
             self.underline = underline
