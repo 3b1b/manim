@@ -65,12 +65,12 @@ if TYPE_CHECKING:
 
 class Checkmark(TexTextFromPresetString):
     tex: str = R"\ding{51}"
-    default_color: str = GREEN
+    default_color: ManimColor = GREEN
 
 
 class Exmark(TexTextFromPresetString):
     tex: str = R"\ding{55}"
-    default_color: str = RED
+    default_color: ManimColor = RED
 
 
 class Lightbulb(SVGMobject):
