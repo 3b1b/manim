@@ -83,7 +83,7 @@ class Mobject(object):
         # Makes parts bright where light gets reflected toward the camera
         gloss: float = 0.0,
         # For shaders
-        texture_paths: str | Sequence[str] | None = None,
+        texture_paths: dict[str, str] | None = None,
         # If true, the mobject will not get rotated according to camera position
         is_fixed_in_frame: bool = False,
         **kwargs
