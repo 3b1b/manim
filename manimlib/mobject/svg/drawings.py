@@ -1,9 +1,39 @@
-from operator import le
-from os import DirEntry
-from manimlib.animation.animation import Animation
+from __future__ import annotations
+
+import numpy as np
+
 from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.rotation import Rotating
-from manimlib.constants import *
+from manimlib.constants import BLACK
+from manimlib.constants import BLUE_A
+from manimlib.constants import BLUE_B
+from manimlib.constants import BLUE_C
+from manimlib.constants import BLUE_D
+from manimlib.constants import DOWN
+from manimlib.constants import DOWN
+from manimlib.constants import FRAME_WIDTH
+from manimlib.constants import GREEN
+from manimlib.constants import GREEN_SCREEN
+from manimlib.constants import GREY
+from manimlib.constants import GREY_A
+from manimlib.constants import GREY_B
+from manimlib.constants import GREY_E
+from manimlib.constants import LEFT
+from manimlib.constants import LEFT
+from manimlib.constants import MED_LARGE_BUFF
+from manimlib.constants import MED_SMALL_BUFF
+from manimlib.constants import ORIGIN
+from manimlib.constants import OUT
+from manimlib.constants import PI
+from manimlib.constants import RED
+from manimlib.constants import RIGHT
+from manimlib.constants import RIGHT
+from manimlib.constants import SMALL_BUFF
+from manimlib.constants import SMALL_BUFF
+from manimlib.constants import UP
+from manimlib.constants import UP
+from manimlib.constants import WHITE
+from manimlib.constants import YELLOW
 from manimlib.mobject.boolean_ops import Difference
 from manimlib.mobject.geometry import Arc
 from manimlib.mobject.geometry import Circle
@@ -16,22 +46,22 @@ from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.tex_mobject import TexText
 from manimlib.mobject.svg.tex_mobject import TexTextFromPresetString
-from manimlib.mobject.three_dimensions import VCube
 from manimlib.mobject.three_dimensions import Prismify
+from manimlib.mobject.three_dimensions import VCube
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import linear
 from manimlib.utils.space_ops import angle_of_vector
-from manimlib.utils.space_ops import complex_to_R3
+from manimlib.utils.space_ops import compass_directions
 from manimlib.utils.space_ops import midpoint
 from manimlib.utils.space_ops import rotate_vector
-from manimlib.utils.space_ops import compass_directions
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from typing import Tuple, Sequence, Callable
     from manimlib.constants import ManimColor, np_vector
+
 
 class Checkmark(TexTextFromPresetString):
     tex: str = R"\ding{51}"
@@ -67,7 +97,7 @@ class Lightbulb(SVGMobject):
 class Speedometer(VMobject):
     def __init__(
         self,
-        arc_angle: float = 4 * np.pi / 3,
+        arc_angle: float = 4 * PI / 3,
         num_ticks: int = 8,
         tick_length: float = 0.2,
         needle_width: float = 0.1,
@@ -84,8 +114,8 @@ class Speedometer(VMobject):
         self.needle_height = needle_height
         self.needle_color = needle_color
 
-        start_angle = np.pi / 2 + arc_angle / 2
-        end_angle = np.pi / 2 - arc_angle / 2
+        start_angle = PI / 2 + arc_angle / 2
+        end_angle = PI / 2 - arc_angle / 2
         self.arc = Arc(
             start_angle=start_angle,
             angle=-self.arc_angle
@@ -328,6 +358,7 @@ class Bubble(SVGMobject):
     ):
         self.direction = direction
         self.bubble_center_adjustment_factor = bubble_center_adjustment_factor
+        self.content_scale_factor = content_scale_factor
 
         super().__init__(
             fill_color=fill_color,
