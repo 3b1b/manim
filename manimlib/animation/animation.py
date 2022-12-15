@@ -39,7 +39,6 @@ class Animation(object):
         # What to enter into the update function upon completion
         final_alpha_value: float = 1.0,
         suspend_mobject_updating: bool = True,
-        **kwargs
     ):
         self.mobject = mobject
         self.run_time = run_time
