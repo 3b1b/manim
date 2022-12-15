@@ -1,5 +1,14 @@
 import numpy as np
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Union
+    from colour import Color
+
+    # Abbreviations for a common types
+    ManimColor = Union[str, Color, None]
+    np_vector = np.ndarray[int, np.dtype[np.float64]]
 
 # Sizes relevant to default camera frame
 ASPECT_RATIO = 16.0 / 9.0
@@ -83,12 +92,6 @@ CTRL_MODIFIER = 2
 COMMAND_MODIFIER = 64
 
 # Colors
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from typing import Union
-    from colour import Color
-    ManimColor = Union[str, Color, None]
-
 
 BLUE_E = "#1C758A"
 BLUE_D = "#29ABCA"
