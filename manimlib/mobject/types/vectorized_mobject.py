@@ -77,10 +77,10 @@ class VMobject(Mobject):
         self,
         color: ManimColor = None,  # If set, this will override stroke_color and fill_color
         fill_color: ManimColor = WHITE,
-        fill_opacity: float = 0.0,
+        fill_opacity: float | None = 0.0,
         stroke_color: ManimColor = GREY_C,
-        stroke_opacity: float = 1.0,
-        stroke_width: float = DEFAULT_STROKE_WIDTH,
+        stroke_opacity: float | None = 1.0,
+        stroke_width: float | None = DEFAULT_STROKE_WIDTH,
         draw_stroke_behind_fill: bool = False,
         background_image_file: str | None = None,
         long_lines: bool = False,
