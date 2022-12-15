@@ -33,11 +33,15 @@ from manimlib.utils.rate_functions import rush_into
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import get_norm
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from manimlib.constants import ManimColor
+    from typing import List
 
 X_COLOR = GREEN_C
 Y_COLOR = RED_C
 Z_COLOR = BLUE_D
-
 
 # TODO: Much of this scene type seems dependent on the coordinate system chosen.
 # That is, being centered at the origin with grid units corresponding to the
@@ -46,9 +50,7 @@ Z_COLOR = BLUE_D
 # Also, methods I would have thought of as getters, like coords_to_vector, are
 # actually doing a lot of animating.
 class VectorScene(Scene):
-    CONFIG = {
-        "basis_vector_stroke_width": 6
-    }
+    basis_vector_stroke_width: int = 6
 
     def add_plane(self, animate=False, **kwargs):
         plane = NumberPlane(**kwargs)
@@ -279,34 +281,30 @@ class VectorScene(Scene):
 
 
 class LinearTransformationScene(VectorScene):
-    CONFIG = {
-        "include_background_plane": True,
-        "include_foreground_plane": True,
-        "foreground_plane_kwargs": {
-            "x_max": FRAME_WIDTH / 2,
-            "x_min": -FRAME_WIDTH / 2,
-            "y_max": FRAME_WIDTH / 2,
-            "y_min": -FRAME_WIDTH / 2,
-            "faded_line_ratio": 0
-        },
-        "background_plane_kwargs": {
-            "color": GREY,
-            "axis_config": {
-                "color": GREY,
-            },
-            "background_line_style": {
-                "stroke_color": GREY,
-                "stroke_width": 1,
-            },
-        },
-        "show_coordinates": False,
-        "show_basis_vectors": True,
-        "basis_vector_stroke_width": 6,
-        "i_hat_color": X_COLOR,
-        "j_hat_color": Y_COLOR,
-        "leave_ghost_vectors": False,
-        "t_matrix": [[3, 0], [1, 2]],
-    }
+    include_background_plane: bool = True
+    include_foreground_plane: bool = True
+    foreground_plane_kwargs: dict = dict(
+        x_max=FRAME_WIDTH / 2,
+        x_min=-FRAME_WIDTH / 2,
+        y_max=FRAME_WIDTH / 2,
+        y_min=-FRAME_WIDTH / 2,
+        faded_line_ratio=0
+    )
+    background_plane_kwargs: dict = dict(
+        color=GREY,
+        axis_config=dict(color=GREY),
+        background_line_style=dict(
+            stroke_color=GREY,
+            stroke_width=1,
+        ),
+    )
+    show_coordinates: bool = True
+    show_basis_vectors: bool = True
+    basis_vector_stroke_width: float = 6.0
+    i_hat_color: ManimColor = X_COLOR
+    j_hat_color: ManimColor = Y_COLOR
+    leave_ghost_vectors: bool = False
+    t_matrix: List[List[float]] = [[3, 0], [1, 2]]
 
     def setup(self):
         # The has_already_setup attr is to not break all the old Scenes
