@@ -170,5 +170,4 @@ class LaggedStartMap(LaggedStart):
             *(AnimationClass(submob, **anim_kwargs) for submob in group),
             group=group,
             run_time=run_time,
-            **kwargs
         )
