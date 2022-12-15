@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import numpy.typing as npt
+    from typing import Sequence, Tuple
+    from manimlib.constants import ManimColor, np_vector
 
 
 DEFAULT_DOT_RADIUS = 0.05
@@ -19,24 +21,35 @@ DEFAULT_GLOW_DOT_RADIUS = 0.2
 DEFAULT_GRID_HEIGHT = 6
 DEFAULT_BUFF_RATIO = 0.5
 
-
 class DotCloud(PMobject):
-    CONFIG = {
-        "color": GREY_C,
-        "opacity": 1,
-        "radius": DEFAULT_DOT_RADIUS,
-        "glow_factor": 0,
-        "shader_folder": "true_dot",
-        "render_primitive": moderngl.POINTS,
-        "shader_dtype": [
-            ('point', np.float32, (3,)),
-            ('radius', np.float32, (1,)),
-            ('color', np.float32, (4,)),
-        ],
-    }
+    shader_folder: str = "true_dot"
+    render_primitive: int = moderngl.POINTS
+    shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
+        ('point', np.float32, (3,)),
+        ('radius', np.float32, (1,)),
+        ('color', np.float32, (4,)),
+    ]
 
-    def __init__(self, points: npt.ArrayLike = None, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        points: Sequence[np_vector] | None = None,
+        color: ManimColor = GREY_C,
+        opacity: float = 1.0,
+        radius: float = DEFAULT_DOT_RADIUS,
+        glow_factor: float = 0.0,
+        **kwargs
+    ):
+        self.radius = radius
+        self.glow_factor = glow_factor
+
+        print(kwargs)
+
+        super().__init__(
+            color=color,
+            opacity=opacity,
+            **kwargs
+        )
+
         if points is not None:
             self.set_points(points)
 
@@ -145,11 +158,21 @@ class TrueDot(DotCloud):
 
 
 class GlowDots(DotCloud):
-    CONFIG = {
-        "glow_factor": 2,
-        "radius": DEFAULT_GLOW_DOT_RADIUS,
-        "color": YELLOW,
-    }
+    def __init__(
+        self,
+        points: Sequence[np_vector] | None = None,
+        color: ManimColor = YELLOW,
+        radius: float = DEFAULT_GLOW_DOT_RADIUS,
+        glow_factor: float = 2.0,
+        **kwargs,
+    ):
+        super().__init__(
+            points,
+            color=color,
+            radius=radius,
+            glow_factor=glow_factor,
+            **kwargs,
+        )
 
 
 class GlowDot(GlowDots, TrueDot):
