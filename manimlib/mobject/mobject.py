@@ -47,48 +47,58 @@ from manimlib.utils.space_ops import rotation_matrix_transpose
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Sequence, Union
+    from typing import Callable, Iterable, Sequence, Union, Tuple
 
     import numpy.typing as npt
 
     TimeBasedUpdater = Callable[["Mobject", float], None]
     NonTimeUpdater = Callable[["Mobject"], None]
     Updater = Union[TimeBasedUpdater, NonTimeUpdater]
-    from manimlib.constants import ManimColor
 
-    np_vector = np.ndarray[int, np.dtype[np.float64]]
+    from manimlib.constants import ManimColor, np_vector
 
 class Mobject(object):
     """
     Mathematical Object
     """
-    CONFIG = {
-        "color": WHITE,
-        "opacity": 1,
-        "dim": 3,  # TODO, get rid of this
-        # Lighting parameters
-        # ...
-        # Larger reflectiveness makes things brighter when facing the light
-        "reflectiveness": 0.0,
-        # Larger shadow makes faces opposite the light darker
-        "shadow": 0.0,
-        # Makes parts bright where light gets reflected toward the camera
-        "gloss": 0.0,
-        # For shaders
-        "shader_folder": "",
-        "render_primitive": moderngl.TRIANGLE_STRIP,
-        "texture_paths": None,
-        "depth_test": False,
-        # If true, the mobject will not get rotated according to camera position
-        "is_fixed_in_frame": False,
-        # Must match in attributes of vert shader
-        "shader_dtype": [
-            ('point', np.float32, (3,)),
-        ],
-    }
+    dim: int = 3
+    shader_folder: str = ""
+    render_primitive: int = moderngl.TRIANGLE_STRIP
+    # Must match in attributes of vert shader
+    shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
+        ('point', np.float32, (3,)),
+    ]
+    depth_test: bool = False
 
-    def __init__(self, **kwargs):
-        digest_config(self, kwargs)
+    CONFIG = {}  # Need to delete
+
+    def __init__(
+        self,
+        color: ManimColor = WHITE,
+        opacity: float = 1.0,
+        # Larger reflectiveness makes things brighter when facing the light
+        reflectiveness: float = 0.0,
+        # Larger shadow makes faces opposite the light darker
+        shadow: float = 0.0,
+        # Makes parts bright where light gets reflected toward the camera
+        gloss: float = 0.0,
+        # For shaders
+        texture_paths: str | Sequence[str] | None = None,
+        # If true, the mobject will not get rotated according to camera position
+        is_fixed_in_frame: bool = False,
+        **kwargs
+    ):
+        self.color = color
+        self.opacity = opacity
+        self.reflectiveness = reflectiveness
+        self.shadow = shadow
+        self.gloss = gloss
+        self.texture_paths = texture_paths
+        self.is_fixed_in_frame = is_fixed_in_frame
+
+        digest_config(self, kwargs) # Need to delete
+
+        # Internal state
         self.submobjects: list[Mobject] = []
         self.parents: list[Mobject] = []
         self.family: list[Mobject] = [self]
@@ -2017,13 +2027,16 @@ class Group(Mobject):
 
 
 class Point(Mobject):
-    CONFIG = {
-        "artificial_width": 1e-6,
-        "artificial_height": 1e-6,
-    }
-
-    def __init__(self, location: npt.ArrayLike = ORIGIN, **kwargs):
-        Mobject.__init__(self, **kwargs)
+    def __init__(
+        self,
+        location: np_vector = ORIGIN,
+        artificial_width: float = 1e-6,
+        artificial_height: float = 1e-6,
+        **kwargs
+    ):
+        self.artificial_width = artificial_width
+        self.artificial_height = artificial_height
+        super().__init__(**kwargs)
         self.set_location(location)
 
     def get_width(self) -> float:
