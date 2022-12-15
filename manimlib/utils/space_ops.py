@@ -167,7 +167,7 @@ def project_along_vector(point: np.ndarray, vector: np.ndarray) -> np.ndarray:
 
 def normalize_along_axis(
     array: np.ndarray,
-    axis: np.ndarray,
+    axis: int,
 ) -> np.ndarray:
     norms = np.sqrt((array * array).sum(axis))
     norms[norms == 0] = 1
