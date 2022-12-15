@@ -14,7 +14,6 @@ from manimlib.constants import DEFAULT_PIXEL_WIDTH, FRAME_WIDTH
 from manimlib.constants import NORMAL
 from manimlib.logger import log
 from manimlib.mobject.svg.string_mobject import StringMobject
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.customization import get_customization
 from manimlib.utils.directories import get_downloads_dir
 from manimlib.utils.directories import get_text_dir
@@ -23,7 +22,7 @@ from manimlib.utils.simple_functions import hash_string
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterable, Union
+    from typing import Iterable, Union, Pattern
 
     from manimlib.mobject.types.vectorized_mobject import VGroup
     from manimlib.constants import ManimColor
@@ -60,28 +59,6 @@ class _Alignment:
 
 
 class MarkupText(StringMobject):
-    CONFIG = {
-        "font_size": 48,
-        "lsh": None,
-        "justify": False,
-        "indent": 0,
-        "alignment": "",
-        "line_width": None,
-        "font": "",
-        "slant": NORMAL,
-        "weight": NORMAL,
-        "gradient": None,
-        "t2c": {},
-        "t2f": {},
-        "t2g": {},
-        "t2s": {},
-        "t2w": {},
-        "global_config": {},
-        "local_configs": {},
-        "disable_ligatures": True,
-        "isolate": re.compile(r"\w+", re.U),
-    }
-
     # See https://docs.gtk.org/Pango/pango_markup.html
     MARKUP_TAGS = {
         "b": {"font_weight": "bold"},
@@ -102,25 +79,72 @@ class MarkupText(StringMobject):
         "'": "&apos;"
     }
 
-    def __init__(self, text: str, **kwargs):
-        self.full2short(kwargs)
-        digest_config(self, kwargs)
+    def __init__(
+        self,
+        text: str,
+        font_size: int = 48,
+        height: float | None = None,
+        justify: bool = False,
+        indent: float = 0,
+        alignment: str = "",
+        line_width: float | None = None,
+        font: str = "",
+        slant: str = NORMAL,
+        weight: str = NORMAL,
+        gradient: Iterable[ManimColor] | None = None,
+        line_spacing_height: float | None = None,
+        text2color: dict = {},
+        text2font: dict = {},
+        text2gradient: dict = {},
+        text2slant: dict = {},
+        text2weight: dict = {},
+        # For convenience, one can use shortened names
+        lsh: float | None = None,  # Overrides line_spacing_height
+        t2c: dict | None = None,  # Overrides text2color
+        t2f: dict | None = None,  # Overrides text2font
+        t2g: dict | None = None,  # Overrides text2gradient
+        t2s: dict | None = None,  # Overrides text2slant
+        t2w: dict | None = None,  # Overrides text2weight
+        global_config: dict = {},
+        local_configs: dict = {},
+        disable_ligatures: bool = True,
+        isolate: Selector = re.compile(r"\w+", re.U),
+        **kwargs
+    ):
+        self.text = text
+        self.font_size = font_size
+        self.justify = justify
+        self.indent = indent
+        self.alignment = alignment or get_customization()["style"]["text_alignment"]
+        self.line_width = line_width
+        self.font = font or get_customization()["style"]["font"]
+        self.slant = slant
+        self.weight = weight
+        self.gradient = gradient
+
+        self.lsh = lsh or line_spacing_height
+        self.t2c = t2c or text2color
+        self.t2f = t2f or text2font
+        self.t2g = t2g or text2gradient
+        self.t2s = t2s or text2slant
+        self.t2w = t2w or text2weight
+
+        self.global_config = global_config
+        self.local_configs = local_configs
+        self.disable_ligatures = disable_ligatures
+        self.isolate = isolate
 
         if not isinstance(self, Text):
             self.validate_markup_string(text)
-        if not self.font:
-            self.font = get_customization()["style"]["font"]
-        if not self.alignment:
-            self.alignment = get_customization()["style"]["text_alignment"]
 
-        self.text = text
-        super().__init__(text, **kwargs)
+        super().__init__(text, height=height, **kwargs)
+
 
         if self.t2g:
-            log.warning(
-                "Manim currently cannot parse gradient from svg. "
-                "Please set gradient via `set_color_by_gradient`.",
-            )
+            log.warning("""
+                Manim currently cannot parse gradient from svg.
+                Please set gradient via `set_color_by_gradient`.
+            """)
         if self.gradient:
             self.set_color_by_gradient(*self.gradient)
         if self.height is None:
@@ -153,20 +177,6 @@ class MarkupText(StringMobject):
             self.local_configs,
             self.disable_ligatures
         )
-
-    def full2short(self, config: dict) -> None:
-        conversion_dict = {
-            "line_spacing_height": "lsh",
-            "text2color": "t2c",
-            "text2font": "t2f",
-            "text2gradient": "t2g",
-            "text2slant": "t2s",
-            "text2weight": "t2w"
-        }
-        for kwargs in [config, self.CONFIG]:
-            for long_name, short_name in conversion_dict.items():
-                if long_name in kwargs:
-                    kwargs[short_name] = kwargs.pop(long_name)
 
     def get_file_path_by_content(self, content: str) -> str:
         hash_content = str((
@@ -410,10 +420,14 @@ class MarkupText(StringMobject):
 
 
 class Text(MarkupText):
-    CONFIG = {
+    def __init__(
+        self,
+        text: str,
         # For backward compatibility
-        "isolate": (re.compile(r"\w+", re.U), re.compile(r"\S+", re.U)),
-    }
+        isolate: Selector = (re.compile(r"\w+", re.U), re.compile(r"\S+", re.U)),
+        **kwargs
+    ):
+        super().__init__(text, isolate=isolate, **kwargs)
 
     @staticmethod
     def get_command_matches(string: str) -> list[re.Match]:
@@ -434,25 +448,34 @@ class Text(MarkupText):
 
 
 class Code(MarkupText):
-    CONFIG = {
-        "font": "Consolas",
-        "font_size": 24,
-        "lsh": 1.0,
-        "language": "python",
+    def __init__(
+        self,
+        code: str,
+        font: str = "Consolas",
+        font_size: int = 24,
+        lsh: float = 1.0,
+        fill_color: ManimColor = None,
+        stroke_color: ManimColor = None,
+        language: str = "python",
         # Visit https://pygments.org/demo/ to have a preview of more styles.
-        "code_style": "monokai",
-    }
-
-    def __init__(self, code: str, **kwargs):
-        digest_config(self, kwargs)
-        self.code = code
-        lexer = pygments.lexers.get_lexer_by_name(self.language)
+        code_style: str = "monokai",
+        **kwargs
+    ):
+        lexer = pygments.lexers.get_lexer_by_name(language)
         formatter = pygments.formatters.PangoMarkupFormatter(
-            style=self.code_style
+            style=code_style
         )
         markup = pygments.highlight(code, lexer, formatter)
         markup = re.sub(r"</?tt>", "", markup)
-        super().__init__(markup, **kwargs)
+        super().__init__(
+            markup,
+            font=font,
+            font_size=font_size,
+            lsh=lsh,
+            stroke_color=stroke_color,
+            fill_color=fill_color,
+            **kwargs
+        )
 
 
 @contextmanager

@@ -12,7 +12,6 @@ from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import rgb_to_hex
-from manimlib.utils.config_ops import digest_config
 
 from typing import TYPE_CHECKING
 
@@ -52,27 +51,36 @@ class StringMobject(SVGMobject, ABC):
     so that each submobject of the original `SVGMobject` will be labelled
     by the color of its paired submobject from the additional `SVGMobject`.
     """
-    CONFIG = {
-        "height": None,
-        "stroke_width": 0,
-        "stroke_color": WHITE,
-        "path_string_config": {
-            "should_subdivide_sharp_curves": True,
-            "should_remove_null_curves": True,
-        },
-        "base_color": WHITE,
-        "isolate": (),
-        "protect": (),
-    }
-
-    def __init__(self, string: str, **kwargs):
+    def __init__(
+        self,
+        string: str,
+        height: float | None = None,
+        fill_color: ManimColor = WHITE,
+        stroke_color: ManimColor = WHITE,
+        stroke_width: float = 0,
+        path_string_config: dict = dict(
+            should_subdivide_sharp_curves=True,
+            should_remove_null_curves=True,
+        ),
+        base_color: ManimColor = WHITE,
+        isolate: Selector = (),
+        protect: Selector = (),
+        **kwargs
+    ):
         self.string = string
-        digest_config(self, kwargs)
-        if self.base_color is None:
-            self.base_color = WHITE
+        self.path_string_config = path_string_config
+        self.base_color = base_color or WHITE
+        self.isolate = isolate
+        self.protect = protect
 
         self.parse()
-        super().__init__(**kwargs)
+        super().__init__(
+            height=height,
+            stroke_color=stroke_color,
+            fill_color=fill_color,
+            stroke_width=stroke_width,
+            **kwargs
+        )
         self.labels = [submob.label for submob in self.submobjects]
 
     def get_file_path(self) -> str:
