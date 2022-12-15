@@ -48,12 +48,13 @@ class FadeOut(Fade):
     def __init__(
         self,
         mobject: Mobject,
+        shift: np.ndarray = ORIGIN,
         remover: bool = True,
         final_alpha_value: float = 0.0,  # Put it back in original state when done,
         **kwargs
     ):
         super().__init__(
-            mobject,
+            mobject, shift,
             remover=remover,
             final_alpha_value=final_alpha_value,
             **kwargs
