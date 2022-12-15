@@ -53,8 +53,6 @@ class Animation(object):
 
         assert(isinstance(mobject, Mobject))
 
-        digest_config(self, kwargs)  # Need to delete
-
     def __str__(self) -> str:
         return self.name
 
