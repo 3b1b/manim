@@ -47,7 +47,6 @@ class SingleStringTex(SVGMobject):
         **kwargs
     ):
         self.tex_string = tex_string
-        self.height = height
         self.svg_default = svg_default
         self.path_string_config = path_string_config
         self.font_size = font_size
@@ -58,6 +57,7 @@ class SingleStringTex(SVGMobject):
         self.additional_preamble = additional_preamble
 
         super().__init__(
+            height=height,
             fill_color=fill_color,
             fill_opacity=fill_opacity,
             stroke_width=stroke_width,
