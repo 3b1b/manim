@@ -17,8 +17,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence, Tuple
 
-    import numpy.typing as npt
-
     from manimlib.camera.camera import Camera
     from manimlib.constants import ManimColor, np_vector
 
