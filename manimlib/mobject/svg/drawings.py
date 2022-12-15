@@ -12,6 +12,7 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.tex_mobject import TexText
+from manimlib.mobject.svg.tex_mobject import TexTextFromPresetString
 from manimlib.mobject.three_dimensions import Cube
 from manimlib.mobject.three_dimensions import Prismify
 from manimlib.mobject.types.vectorized_mobject import VGroup
@@ -23,23 +24,15 @@ from manimlib.utils.space_ops import complex_to_R3
 from manimlib.utils.space_ops import midpoint
 from manimlib.utils.space_ops import rotate_vector
 
-
-class Checkmark(TexText):
-    CONFIG = {
-        "color": GREEN
-    }
-
-    def __init__(self, **kwargs):
-        super().__init__("\\ding{51}")
+class Checkmark(TexTextFromPresetString):
+    tex: str = R"\ding{51}"
+    default_color: str = GREEN
 
 
-class Exmark(TexText):
-    CONFIG = {
-        "color": RED
-    }
+class Exmark(TexTextFromPresetString):
+    tex: str = R"\ding{55}"
+    default_color: str = RED
 
-    def __init__(self, **kwargs):
-        super().__init__("\\ding{55}")
 
 
 class Lightbulb(SVGMobject):
