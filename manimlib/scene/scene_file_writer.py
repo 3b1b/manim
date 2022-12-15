@@ -29,29 +29,43 @@ if TYPE_CHECKING:
 
 
 class SceneFileWriter(object):
-    CONFIG = {
-        "write_to_movie": False,
-        "break_into_partial_movies": False,
-        # TODO, save_pngs is doing nothing
-        "save_pngs": False,
-        "png_mode": "RGBA",
-        "save_last_frame": False,
-        "movie_file_extension": ".mp4",
+    def __init__(
+        self,
+        scene: Scene,
+        write_to_movie: bool = False,
+        break_into_partial_movies: bool = False,
+        save_pngs: bool = False,  # TODO, this currently does nothing
+        png_mode: str = "RGBA",
+        save_last_frame: bool = False,
+        movie_file_extension: str = ".mp4",
         # What python file is generating this scene
-        "input_file_path": "",
+        input_file_path: str = "",
         # Where should this be written
-        "output_directory": None,
-        "file_name": None,
-        "open_file_upon_completion": False,
-        "show_file_location_upon_completion": False,
-        "quiet": False,
-        "total_frames": 0,
-        "progress_description_len": 40,
-    }
-
-    def __init__(self, scene, **kwargs):
-        digest_config(self, kwargs)
+        output_directory: str | None = None,
+        file_name: str | None = None,
+        open_file_upon_completion: bool = False,
+        show_file_location_upon_completion: bool = False,
+        quiet: bool = False,
+        total_frames: int = 0,
+        progress_description_len: int = 40,
+    ):
         self.scene: Scene = scene
+        self.write_to_movie = write_to_movie
+        self.break_into_partial_movies = break_into_partial_movies
+        self.save_pngs = save_pngs
+        self.png_mode = png_mode
+        self.save_last_frame = save_last_frame
+        self.movie_file_extension = movie_file_extension
+        self.input_file_path = input_file_path
+        self.output_directory = output_directory
+        self.file_name = file_name
+        self.open_file_upon_completion = open_file_upon_completion
+        self.show_file_location_upon_completion = show_file_location_upon_completion
+        self.quiet = quiet
+        self.total_frames = total_frames
+        self.progress_description_len = progress_description_len
+
+        # State during file writing
         self.writing_process: sp.Popen | None = None
         self.progress_display: ProgressDisplay | None = None
         self.ended_with_interrupt: bool = False
