@@ -369,7 +369,7 @@ class VMobject(Mobject):
         return self.get_stroke_color()
 
     def has_stroke(self) -> bool:
-        return self.get_stroke_widths().any() and self.get_stroke_opacities().any()
+        return bool(self.get_stroke_widths().any() and self.get_stroke_opacities().any())
 
     def has_fill(self) -> bool:
         return any(self.get_fill_opacities())
@@ -602,7 +602,7 @@ class VMobject(Mobject):
         self.change_anchor_mode("jagged")
         return self
 
-    def add_subpath(self, points: Iterable[np_vector]):
+    def add_subpath(self, points: Sequence[np_vector]):
         assert(len(points) % self.n_points_per_curve == 0)
         self.append_points(points)
         return self
@@ -613,7 +613,7 @@ class VMobject(Mobject):
         if self.has_new_path_started():
             # Remove last point, which is starting
             # a new path
-            self.resize_data(len(self.get_points() - 1))
+            self.resize_points(len(self.get_points() - 1))
         self.append_points(new_points)
         return self
 
