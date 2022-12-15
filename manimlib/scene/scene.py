@@ -50,38 +50,52 @@ QUIT_KEY = 'q'
 
 
 class Scene(object):
-    CONFIG = {
-        "window_config": {},
-        "camera_class": Camera,
-        "camera_config": {},
-        "file_writer_config": {},
-        "skip_animations": False,
-        "always_update_mobjects": False,
-        "random_seed": 0,
-        "start_at_animation_number": None,
-        "end_at_animation_number": None,
-        "leave_progress_bars": False,
-        "preview": True,
-        "presenter_mode": False,
-        "show_animation_progress": False,
-        "pan_sensitivity": 3,
-        "max_num_saved_states": 50,
-    }
+    random_seed: int = 0
+    pan_sensitivity: float = 3.0
+    max_num_saved_states: int = 50
 
-    def __init__(self, **kwargs):
-        digest_config(self, kwargs)
+    def __init__(
+        self,
+        window_config: dict = dict(),
+        camera_class: type = Camera,
+        camera_config: dict = dict(),
+        file_writer_config: dict = dict(),
+        skip_animations: bool = False,
+        always_update_mobjects: bool = False,
+        start_at_animation_number: int | None = None,
+        end_at_animation_number: int | None = None,
+        leave_progress_bars: bool = False,
+        preview: bool = True,
+        presenter_mode: bool = False,
+        show_animation_progress: bool = False,
+    ):
+        self.skip_animations = skip_animations
+        self.always_update_mobjects = always_update_mobjects
+        self.start_at_animation_number = start_at_animation_number
+        self.end_at_animation_number = end_at_animation_number
+        self.leave_progress_bars = leave_progress_bars
+        self.preview = preview
+        self.presenter_mode = presenter_mode
+        self.show_animation_progress = show_animation_progress
+
+        # # Overwrite class variables with configuration
+        # for key, value in config.items():
+        #     setattr(self, key, value)
+
+        # Initialize window, if applicable
         if self.preview:
             from manimlib.window import Window
-            self.window = Window(scene=self, **self.window_config)
-            self.camera_config["ctx"] = self.window.ctx
-            self.camera_config["fps"] = 30  # Where's that 30 from?
+            self.window = Window(scene=self, **window_config)
+            camera_config["ctx"] = self.window.ctx
+            camera_config["fps"] = 30  # Where's that 30 from?
             self.undo_stack = []
             self.redo_stack = []
         else:
             self.window = None
 
-        self.camera: Camera = self.camera_class(**self.camera_config)
-        self.file_writer = SceneFileWriter(self, **self.file_writer_config)
+        # Core state of the scene
+        self.camera: Camera = camera_class(**camera_config)
+        self.file_writer = SceneFileWriter(self, **file_writer_config)
         self.mobjects: list[Mobject] = [self.camera.frame]
         self.id_to_mobject_map: dict[int, Mobject] = dict()
         self.num_plays: int = 0
