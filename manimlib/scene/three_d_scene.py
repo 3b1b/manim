@@ -2,11 +2,7 @@ from manimlib.scene.scene import Scene
 
 
 class ThreeDScene(Scene):
-    CONFIG = {
-        "camera_config": {
-            "samples": 4,
-        }
-    }
+    camera_config = dict(samples=4)
 
     def begin_ambient_camera_rotation(self, rate=0.02):
         pass  # TODO

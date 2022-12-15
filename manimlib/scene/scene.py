@@ -53,6 +53,7 @@ class Scene(object):
     random_seed: int = 0
     pan_sensitivity: float = 3.0
     max_num_saved_states: int = 50
+    camera_config: dict = dict()
 
     def __init__(
         self,
@@ -78,23 +79,20 @@ class Scene(object):
         self.presenter_mode = presenter_mode
         self.show_animation_progress = show_animation_progress
 
-        # # Overwrite class variables with configuration
-        # for key, value in config.items():
-        #     setattr(self, key, value)
-
         # Initialize window, if applicable
         if self.preview:
             from manimlib.window import Window
             self.window = Window(scene=self, **window_config)
-            camera_config["ctx"] = self.window.ctx
-            camera_config["fps"] = 30  # Where's that 30 from?
+            self.camera_config.update(camera_config)
+            self.camera_config["ctx"] = self.window.ctx
+            self.camera_config["fps"] = 30  # Where's that 30 from?
             self.undo_stack = []
             self.redo_stack = []
         else:
             self.window = None
 
         # Core state of the scene
-        self.camera: Camera = camera_class(**camera_config)
+        self.camera: Camera = camera_class(**self.camera_config)
         self.file_writer = SceneFileWriter(self, **file_writer_config)
         self.mobjects: list[Mobject] = [self.camera.frame]
         self.id_to_mobject_map: dict[int, Mobject] = dict()

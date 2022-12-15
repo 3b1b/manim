@@ -493,9 +493,7 @@ class GraphExample(Scene):
 
 
 class SurfaceExample(Scene):
-    CONFIG = {
-        "camera_class": ThreeDCamera,
-    }
+    camera_config = dict(samples=4)
 
     def construct(self):
         surface_text = Text("For 3d scenes, try using surfaces")
