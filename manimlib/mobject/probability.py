@@ -26,16 +26,25 @@ EPSILON = 0.0001
 
 
 class SampleSpace(Rectangle):
-    CONFIG = {
-        "height": 3,
-        "width": 3,
-        "fill_color": GREY_D,
-        "fill_opacity": 1,
-        "stroke_width": 0.5,
-        "stroke_color": GREY_B,
-        ##
-        "default_label_scale_val": 1,
-    }
+    def __init__(
+        self,
+        width: float = 3,
+        height: float = 3,
+        fill_color: ManimColor = GREY_D,
+        fill_opacity: float = 1,
+        stroke_width: float = 0.5,
+        stroke_color: ManimColor = GREY_B,
+        default_label_scale_val: float = 1,
+        **kwargs,
+    ):
+        super().__init__(
+            width, height,
+            fill_color=fill_color,
+            fill_opacity=fill_opacity,
+            stroke_width=stroke_width,
+            stroke_color=stroke_color,
+        )
+        self.default_label_scale_val = default_label_scale_val
 
     def add_title(
         self,
@@ -184,25 +193,41 @@ class SampleSpace(Rectangle):
 
 
 class BarChart(VGroup):
-    CONFIG = {
-        "height": 4,
-        "width": 6,
-        "n_ticks": 4,
-        "include_x_ticks": False,
-        "tick_width": 0.2,
-        "tick_height": 0.15,
-        "label_y_axis": True,
-        "y_axis_label_height": 0.25,
-        "max_value": 1,
-        "bar_colors": [BLUE, YELLOW],
-        "bar_fill_opacity": 0.8,
-        "bar_stroke_width": 3,
-        "bar_names": [],
-        "bar_label_scale_val": 0.75,
-    }
+    def __init__(
+        self,
+        values: Iterable[float],
+        height: float = 4,
+        width: float = 6,
+        n_ticks: int = 4,
+        include_x_ticks: bool = False,
+        tick_width: float = 0.2,
+        tick_height: float = 0.15,
+        label_y_axis: bool = True,
+        y_axis_label_height: float = 0.25,
+        max_value: float = 1,
+        bar_colors: list[ManimColor] = [BLUE, YELLOW],
+        bar_fill_opacity: float = 0.8,
+        bar_stroke_width: float = 3,
+        bar_names: list[str] = [],
+        bar_label_scale_val: float = 0.75,
+        **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.height = height
+        self.width = width
+        self.n_ticks = n_ticks
+        self.include_x_ticks = include_x_ticks
+        self.tick_width = tick_width
+        self.tick_height = tick_height
+        self.label_y_axis = label_y_axis
+        self.y_axis_label_height = y_axis_label_height
+        self.max_value = max_value
+        self.bar_colors = bar_colors
+        self.bar_fill_opacity = bar_fill_opacity
+        self.bar_stroke_width = bar_stroke_width
+        self.bar_names = bar_names
+        self.bar_label_scale_val = bar_label_scale_val
 
-    def __init__(self, values: Iterable[float], **kwargs):
-        VGroup.__init__(self, **kwargs)
         if self.max_value is None:
             self.max_value = max(values)
 
