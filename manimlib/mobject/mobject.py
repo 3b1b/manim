@@ -67,7 +67,6 @@ class Mobject(object):
     shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ('point', np.float32, (3,)),
     ]
-    depth_test: bool = False
 
     CONFIG = {}  # Need to delete
 
@@ -85,6 +84,7 @@ class Mobject(object):
         texture_paths: dict[str, str] | None = None,
         # If true, the mobject will not get rotated according to camera position
         is_fixed_in_frame: bool = False,
+        depth_test: bool = False,
         **kwargs
     ):
         self.color = color
@@ -94,6 +94,7 @@ class Mobject(object):
         self.gloss = gloss
         self.texture_paths = texture_paths
         self.is_fixed_in_frame = is_fixed_in_frame
+        self.depth_test = depth_test
 
         digest_config(self, kwargs) # Need to delete
 
