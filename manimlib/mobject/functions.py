@@ -6,7 +6,6 @@ import numpy as np
 from manimlib.constants import FRAME_X_RADIUS, FRAME_Y_RADIUS
 from manimlib.constants import YELLOW
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.config_ops import digest_config
 
 from typing import TYPE_CHECKING
 
