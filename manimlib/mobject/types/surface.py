@@ -279,7 +279,8 @@ class TexturedSurface(Surface):
             self.num_textures = 1
         else:
             self.num_textures = 2
-        self.texture_paths = {
+
+        texture_paths = {
             "LightTexture": get_full_raster_image_path(image_file),
             "DarkTexture": get_full_raster_image_path(dark_image_file),
         }
@@ -289,8 +290,11 @@ class TexturedSurface(Surface):
         self.u_range: Tuple[float, float] = uv_surface.u_range
         self.v_range: Tuple[float, float] = uv_surface.v_range
         self.resolution: Tuple[int, int] = uv_surface.resolution
-        self.gloss: float = self.uv_surface.gloss
-        super().__init__(**kwargs)
+        super().__init__(
+            texture_paths=texture_paths,
+            gloss=uv_surface.gloss,
+            **kwargs
+        )
 
     def init_data(self):
         super().init_data()
