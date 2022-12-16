@@ -6,7 +6,7 @@ import numbers
 import numpy as np
 
 from manimlib.constants import DL, DOWN, DR, LEFT, ORIGIN, OUT, RIGHT, UL, UP, UR
-from manimlib.constants import GREY_A, RED, WHITE
+from manimlib.constants import GREY_A, RED, WHITE, BLACK
 from manimlib.constants import MED_SMALL_BUFF
 from manimlib.constants import DEGREES, PI, TAU
 from manimlib.mobject.mobject import Mobject
@@ -350,17 +350,19 @@ class Dot(Circle):
         self,
         point: np_vector = ORIGIN,
         radius: float = DEFAULT_DOT_RADIUS,
+        stroke_color: ManimColor = BLACK,
         stroke_width: float = 0.0,
         fill_opacity: float = 1.0,
-        color: ManimColor = WHITE,
+        fill_color: ManimColor = WHITE,
         **kwargs
     ):
         super().__init__(
             arc_center=point,
             radius=radius,
+            stroke_color=stroke_color,
             stroke_width=stroke_width,
             fill_opacity=fill_opacity,
-            color=color,
+            fill_color=fill_color,
             **kwargs
         )
 
@@ -395,13 +397,13 @@ class AnnularSector(VMobject):
         inner_radius: float = 1.0,
         outer_radius: float = 2.0,
         arc_center: np_vector = ORIGIN,
-        color: ManimColor = GREY_A,
+        fill_color: ManimColor = GREY_A,
         fill_opacity: float = 1.0,
         stroke_width: float = 0.0,
         **kwargs,
     ):
         super().__init__(
-            color=color,
+            fill_color=fill_color,
             fill_opacity=fill_opacity,
             stroke_width=stroke_width,
         )
@@ -445,12 +447,12 @@ class Annulus(VMobject):
         outer_radius: float = 2.0,
         fill_opacity: float = 1.0,
         stroke_width: float = 0.0,
-        color: ManimColor = GREY_A,
+        fill_color: ManimColor = GREY_A,
         center: np_vector = ORIGIN,
         **kwargs,
     ):
         super().__init__(
-            color=color,
+            fill_color=fill_color,
             fill_opacity=fill_opacity,
             stroke_width=stroke_width,
         )
@@ -676,7 +678,7 @@ class Arrow(Line):
         self,
         start: np_vector | Mobject,
         end: np_vector | Mobject,
-        color: ManimColor = GREY_A,
+        stroke_color: ManimColor = GREY_A,
         stroke_width: float = 5,
         buff: float = 0.25,
         tip_width_ratio: float = 5,
@@ -692,7 +694,7 @@ class Arrow(Line):
         self.max_stroke_width = stroke_width
         super().__init__(
             start, end,
-            color=color,
+            stroke_color=stroke_color,
             stroke_width=stroke_width,
             buff=buff,
             **kwargs
@@ -1051,10 +1053,9 @@ class Rectangle(Polygon):
         self,
         width: float = 4.0,
         height: float = 2.0,
-        color: ManimColor = WHITE,
         **kwargs
     ):
-        super().__init__(UR, UL, DL, DR, color=color, **kwargs)
+        super().__init__(UR, UL, DL, DR, **kwargs)
         self.set_width(width, stretch=True)
         self.set_height(height, stretch=True)
 
