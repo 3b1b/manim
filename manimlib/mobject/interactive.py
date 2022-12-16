@@ -317,7 +317,7 @@ class ColorSliders(Group):
         self.r_slider.slider.set_color(RED)
         self.g_slider.slider.set_color(GREEN)
         self.b_slider.slider.set_color(BLUE)
-        self.a_slider.slider.set_color_by_gradient([BLACK, WHITE])
+        self.a_slider.slider.set_color_by_gradient(BLACK, WHITE)
 
         self.selected_color_box = Rectangle(**self.rect_kwargs)
         self.selected_color_box.add_updater(
