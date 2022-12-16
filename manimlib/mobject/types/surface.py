@@ -23,7 +23,6 @@ if TYPE_CHECKING:
 
 class Surface(Mobject):
     render_primitive: int = moderngl.TRIANGLES
-    depth_test: bool = True
     shader_folder: str = "surface"
     shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ('point', np.float32, (3,)),
@@ -38,6 +37,7 @@ class Surface(Mobject):
         reflectiveness: float = 0.3,
         gloss: float = 0.1,
         shadow: float = 0.4,
+        depth_test: bool = True,
         u_range: Tuple[float, float] = (0.0, 1.0),
         v_range: Tuple[float, float] = (0.0, 1.0),
         # Resolution counts number of points sampled, which for
@@ -62,6 +62,7 @@ class Surface(Mobject):
             reflectiveness=reflectiveness,
             gloss=gloss,
             shadow=shadow,
+            depth_test=depth_test,
         )
         self.compute_triangle_indices()
 
