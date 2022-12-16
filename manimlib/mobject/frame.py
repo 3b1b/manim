@@ -3,7 +3,6 @@ from __future__ import annotations
 from manimlib.constants import BLACK, GREY_E
 from manimlib.constants import FRAME_HEIGHT
 from manimlib.mobject.geometry import Rectangle
-from manimlib.utils.config_ops import digest_config
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

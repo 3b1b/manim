@@ -5,7 +5,6 @@ from manimlib.animation.transform import Restore
 from manimlib.constants import BLACK, WHITE
 from manimlib.mobject.geometry import Circle
 from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.utils.config_ops import digest_config
 
 from typing import TYPE_CHECKING
 

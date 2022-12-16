@@ -27,7 +27,6 @@ from manimlib.mobject.shape_matchers import Underline
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.bezier import interpolate
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import smooth
 from manimlib.utils.rate_functions import squish_rate_func
 from manimlib.utils.rate_functions import there_and_back

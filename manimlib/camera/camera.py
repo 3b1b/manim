@@ -19,7 +19,6 @@ from manimlib.constants import DOWN, LEFT, ORIGIN, OUT, RIGHT, UP
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Point
 from manimlib.utils.color import color_to_rgba
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.space_ops import normalize
 

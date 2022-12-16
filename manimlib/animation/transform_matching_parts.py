@@ -161,7 +161,6 @@ class TransformMatchingStrings(AnimationGroup):
         transform_mismatches: bool = False,
         **kwargs
     ):
-        digest_config(self, kwargs)
         assert isinstance(source, StringMobject)
         assert isinstance(target, StringMobject)
 

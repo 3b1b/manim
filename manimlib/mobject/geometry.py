@@ -13,7 +13,6 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.types.vectorized_mobject import DashedVMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import adjacent_n_tuples
 from manimlib.utils.iterables import adjacent_pairs
 from manimlib.utils.simple_functions import clip

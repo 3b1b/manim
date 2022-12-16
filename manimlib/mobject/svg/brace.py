@@ -17,7 +17,6 @@ from manimlib.mobject.svg.tex_mobject import TexText
 from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import listify
 from manimlib.utils.space_ops import get_norm
 

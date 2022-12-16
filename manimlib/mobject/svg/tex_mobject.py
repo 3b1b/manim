@@ -11,7 +11,6 @@ from manimlib.constants import MED_LARGE_BUFF, MED_SMALL_BUFF, SMALL_BUFF
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.tex_file_writing import display_during_execution
 from manimlib.utils.tex_file_writing import tex_content_to_svg_file
 

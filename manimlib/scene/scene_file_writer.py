@@ -13,7 +13,6 @@ from tqdm import tqdm as ProgressDisplay
 from manimlib.constants import FFMPEG_BIN
 from manimlib.logger import log
 from manimlib.mobject.mobject import Mobject
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.file_ops import add_extension_if_not_present
 from manimlib.utils.file_ops import get_sorted_integer_files
 from manimlib.utils.file_ops import guarantee_existence
