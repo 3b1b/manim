@@ -44,6 +44,8 @@ if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence, Tuple
     from manimlib.constants import ManimColor, np_vector
 
+DEFAULT_STROKE_COLOR = GREY_A
+DEFAULT_FILL_COLOR = GREY_C
 
 class VMobject(Mobject):
     n_points_per_curve: int = 3
@@ -73,9 +75,9 @@ class VMobject(Mobject):
     def __init__(
         self,
         color: ManimColor = None,  # If set, this will override stroke_color and fill_color
-        fill_color: ManimColor = GREY_C,
+        fill_color: ManimColor = None,
         fill_opacity: float | Iterable[float] | None = 0.0,
-        stroke_color: ManimColor = GREY_A,
+        stroke_color: ManimColor = None,
         stroke_opacity: float | Iterable[float] | None = 1.0,
         stroke_width: float | Iterable[float] | None = DEFAULT_STROKE_WIDTH,
         draw_stroke_behind_fill: bool = False,
@@ -86,9 +88,9 @@ class VMobject(Mobject):
         flat_stroke: bool = False,
         **kwargs
     ):
-        self.fill_color = color or fill_color
+        self.fill_color = fill_color or color or DEFAULT_FILL_COLOR
         self.fill_opacity = fill_opacity
-        self.stroke_color = color or stroke_color
+        self.stroke_color = stroke_color or color or DEFAULT_STROKE_COLOR
         self.stroke_opacity = stroke_opacity
         self.stroke_width = stroke_width
         self.draw_stroke_behind_fill = draw_stroke_behind_fill
