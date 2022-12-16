@@ -32,7 +32,7 @@ from manimlib.utils.space_ops import normalize
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Sequence, Type, TypeVar, Tuple
+    from typing import Callable, Iterable, Sequence, Type, TypeVar
     from manimlib.mobject.mobject import Mobject
     from manimlib.constants import ManimColor, np_vector, RangeSpecifier
 
@@ -397,16 +397,15 @@ class CoordinateSystem(ABC):
 
 
 class Axes(VGroup, CoordinateSystem):
+    default_y_axis_config: dict = dict(line_to_number_direction=LEFT)
+
     def __init__(
         self,
         x_range: RangeSpecifier = DEFAULT_X_RANGE,
         y_range: RangeSpecifier = DEFAULT_Y_RANGE,
-        axis_config: dict = dict(
-            include_tip=False,
-            numbers_to_exclude=[0],
-        ),
+        axis_config: dict = dict(),
         x_axis_config: dict = dict(),
-        y_axis_config: dict = dict(line_to_number_direction=LEFT),
+        y_axis_config: dict = dict(),
         height: float = FRAME_HEIGHT - 2,
         width: float = FRAME_WIDTH - 2,
         **kwargs
@@ -416,12 +415,18 @@ class Axes(VGroup, CoordinateSystem):
 
         self.x_axis = self.create_axis(
             self.x_range,
-            axis_config=merge_dicts_recursively(axis_config, x_axis_config),
+            axis_config=merge_dicts_recursively(
+                axis_config, x_axis_config
+            ),
             length=width,
         )
         self.y_axis = self.create_axis(
             self.y_range,
-            axis_config=merge_dicts_recursively(axis_config, y_axis_config),
+            axis_config=merge_dicts_recursively(
+                self.default_y_axis_config,
+                axis_config,
+                y_axis_config
+            ),
             length=height
         )
         self.y_axis.rotate(90 * DEGREES, about_point=ORIGIN)
@@ -435,7 +440,7 @@ class Axes(VGroup, CoordinateSystem):
     def create_axis(
         self,
         range_terms: RangeSpecifier,
-        axis_config: dict[str],
+        axis_config: dict,
         length: float
     ) -> NumberLine:
         axis = NumberLine(range_terms, width=length, **axis_config)
@@ -465,12 +470,13 @@ class Axes(VGroup, CoordinateSystem):
         self,
         x_values: Iterable[float] | None = None,
         y_values: Iterable[float] | None = None,
+        excluding: Iterable[float] = [0],
         **kwargs
     ) -> VGroup:
         axes = self.get_axes()
         self.coordinate_labels = VGroup()
         for axis, values in zip(axes, [x_values, y_values]):
-            labels = axis.add_numbers(values, **kwargs)
+            labels = axis.add_numbers(values, excluding=excluding, **kwargs)
             self.coordinate_labels.add(labels)
         return self.coordinate_labels
 

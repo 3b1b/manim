@@ -346,15 +346,16 @@ class CoordinateSystemExample(Scene):
             width=10,
             # Axes is made of two NumberLine mobjects.  You can specify
             # their configuration with axis_config
-            axis_config={
-                "stroke_color": GREY_A,
-                "stroke_width": 2,
-            },
+            axis_config=dict(
+                stroke_color=GREY_A,
+                stroke_width=2,
+                numbers_to_exclude=[0],
+            ),
             # Alternatively, you can specify configuration for just one
             # of them, like this.
-            y_axis_config={
-                "include_tip": False,
-            }
+            y_axis_config=dict(
+                numbers_with_elongated_ticks=[-2, 2],
+            )
         )
         # Keyword arguments of add_coordinate_labels can be used to
         # configure the DecimalNumber mobjects which it creates and
