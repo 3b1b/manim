@@ -6,7 +6,6 @@ import numpy as np
 
 from manimlib.constants import FRAME_HEIGHT, FRAME_WIDTH
 from manimlib.constants import WHITE
-from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.indication import VShowPassingFlash
 from manimlib.mobject.geometry import Arrow
 from manimlib.mobject.types.vectorized_mobject import VGroup
@@ -14,7 +13,6 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import inverse_interpolate
 from manimlib.utils.color import get_colormap_list
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.config_ops import merge_dicts_recursively
 from manimlib.utils.rate_functions import linear
 from manimlib.utils.simple_functions import sigmoid
@@ -330,28 +328,3 @@ class AnimatedStreamLines(VGroup):
             line.time += dt
             adjusted_time = max(line.time, 0) % line.anim.run_time
             line.anim.update(adjusted_time / line.anim.run_time)
-
-
-# TODO: This class should be deleted
-class ShowPassingFlashWithThinningStrokeWidth(AnimationGroup):
-    CONFIG = {
-        "n_segments": 10,
-        "time_width": 0.1,
-        "remover": True
-    }
-
-    def __init__(self, vmobject: VMobject, **kwargs):
-        digest_config(self, kwargs)
-        max_stroke_width = vmobject.get_stroke_width()
-        max_time_width = kwargs.pop("time_width", self.time_width)
-        AnimationGroup.__init__(self, *[
-            VShowPassingFlash(
-                vmobject.copy().set_stroke(width=stroke_width),
-                time_width=time_width,
-                **kwargs
-            )
-            for stroke_width, time_width in zip(
-                np.linspace(0, max_stroke_width, self.n_segments),
-                np.linspace(max_time_width, 0, self.n_segments)
-            )
-        ])
