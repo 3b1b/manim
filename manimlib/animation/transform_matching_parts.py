@@ -14,10 +14,8 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.svg.string_mobject import StringMobject
 from manimlib.mobject.svg.tex_mobject import Tex
-from manimlib.mobject.svg.text_mobject import TEXT_MOB_SCALE_FACTOR
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
-from manimlib.utils.config_ops import digest_config
 
 from typing import TYPE_CHECKING
 
