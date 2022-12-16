@@ -100,11 +100,11 @@ class MarkupText(StringMobject):
         text2weight: dict = {},
         # For convenience, one can use shortened names
         lsh: float | None = None,  # Overrides line_spacing_height
-        t2c: dict | None = None,  # Overrides text2color
-        t2f: dict | None = None,  # Overrides text2font
-        t2g: dict | None = None,  # Overrides text2gradient
-        t2s: dict | None = None,  # Overrides text2slant
-        t2w: dict | None = None,  # Overrides text2weight
+        t2c: dict = {},  # Overrides text2color if nonempty
+        t2f: dict = {},  # Overrides text2font if nonempty
+        t2g: dict = {},  # Overrides text2gradient if nonempty
+        t2s: dict = {},  # Overrides text2slant if nonempty
+        t2w: dict = {},  # Overrides text2weight if nonempty
         global_config: dict = {},
         local_configs: dict = {},
         disable_ligatures: bool = True,
@@ -120,14 +120,13 @@ class MarkupText(StringMobject):
         self.font = font or get_customization()["style"]["font"]
         self.slant = slant
         self.weight = weight
-        self.gradient = gradient
 
-        self.lsh = lsh or line_spacing_height
-        self.t2c = t2c or text2color
-        self.t2f = t2f or text2font
-        self.t2g = t2g or text2gradient
-        self.t2s = t2s or text2slant
-        self.t2w = t2w or text2weight
+        self.lsh = line_spacing_height or lsh
+        self.t2c = text2color or t2c
+        self.t2f = text2font or t2f
+        self.t2g = text2gradient or t2g
+        self.t2s = text2slant or t2s
+        self.t2w = text2weight or t2w
 
         self.global_config = global_config
         self.local_configs = local_configs
@@ -139,14 +138,15 @@ class MarkupText(StringMobject):
 
         super().__init__(text, height=height, **kwargs)
 
-
         if self.t2g:
             log.warning("""
                 Manim currently cannot parse gradient from svg.
                 Please set gradient via `set_color_by_gradient`.
             """)
-        if self.gradient:
-            self.set_color_by_gradient(*self.gradient)
+        if gradient:
+            self.set_color_by_gradient(*gradient)
+        if self.t2c:
+            self.set_color_by_text_to_color_map(self.t2c)
         if self.height is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
 
@@ -230,7 +230,7 @@ class MarkupText(StringMobject):
         if not validate_error:
             return
         raise ValueError(
-            f"Invalid markup string \"{markup_str}\"\n"
+            f"Invalid markup string \"{markup_str}\"\n" + \
             f"{validate_error}"
         )
 
