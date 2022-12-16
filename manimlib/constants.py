@@ -5,13 +5,14 @@ import numpy as np
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Union
+    from typing import Union, Tuple
     from colour import Color
 
     from typing import List
 
     # Abbreviations for a common types
     ManimColor = Union[str, Color, None]
+    RangeSpecifier = Tuple[float, float, float] | Tuple[float, float]
     np_vector = np.ndarray[int, np.dtype[np.float64]]
 
 # Sizes relevant to default camera frame

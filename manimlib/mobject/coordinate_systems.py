@@ -35,9 +35,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence, Type, TypeVar, Tuple
     from manimlib.mobject.mobject import Mobject
-    from manimlib.constants import ManimColor, np_vector
-
-    RangeSpecifier = Tuple[float, float, float] | Tuple[float, float]
+    from manimlib.constants import ManimColor, np_vector, RangeSpecifier
 
     T = TypeVar("T", bound=Mobject)
 
