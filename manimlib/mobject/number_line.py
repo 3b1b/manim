@@ -18,69 +18,76 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Iterable, Sequence
+    from manimlib.constants import ManimColor, np_vector, RangeSpecifier
 
 
 class NumberLine(Line):
-    CONFIG = {
-        "color": GREY_B,
-        "stroke_width": 2,
-        # List of 2 or 3 elements, x_min, x_max, step_size
-        "x_range": [-8, 8, 1],
+    def __init__(
+        self,
+        x_range: RangeSpecifier = (-8, 8, 1),
+        color: ManimColor = GREY_B,
+        stroke_width: float = 2.0,
         # How big is one one unit of this number line in terms of absolute spacial distance
-        "unit_size": 1,
-        "width": None,
-        "include_ticks": True,
-        "tick_size": 0.1,
-        "longer_tick_multiple": 1.5,
-        "tick_offset": 0,
+        unit_size: float = 1.0,
+        width: float | None = None,
+        include_ticks: bool = True,
+        tick_size: float = 0.1,
+        longer_tick_multiple: float = 1.5,
+        tick_offset: float = 0.0,
         # Change name
-        "numbers_with_elongated_ticks": [],
-        "include_numbers": False,
-        "line_to_number_direction": DOWN,
-        "line_to_number_buff": MED_SMALL_BUFF,
-        "include_tip": False,
-        "tip_config": {
-            "width": 0.25,
-            "length": 0.25,
-        },
-        "decimal_number_config": {
-            "num_decimal_places": 0,
-            "font_size": 36,
-        },
-        "numbers_to_exclude": None
-    }
+        numbers_with_elongated_ticks: list[float] = [],
+        include_numbers: bool = False,
+        line_to_number_direction: np_vector = DOWN,
+        line_to_number_buff: float = MED_SMALL_BUFF,
+        include_tip: bool = False,
+        tip_config: dict = dict(
+            width=0.25,
+            length=0.25,
+        ),
+        decimal_number_config: dict = dict(
+            num_decimal_places=0,
+            font_size=36,
+        ),
+        numbers_to_exclude: list | None = None,
+        **kwargs,
+    ):
+        self.x_range = x_range
+        self.tick_size = tick_size
+        self.longer_tick_multiple = longer_tick_multiple
+        self.tick_offset = tick_offset
+        self.numbers_with_elongated_ticks = numbers_with_elongated_ticks
+        self.line_to_number_direction = line_to_number_direction
+        self.line_to_number_buff = line_to_number_buff
+        self.include_tip = include_tip
+        self.tip_config = tip_config
+        self.decimal_number_config = decimal_number_config
+        self.numbers_to_exclude = numbers_to_exclude
 
-    def __init__(self, x_range: Sequence[float] | None = None, **kwargs):
-        digest_config(self, kwargs)
-        if x_range is None:
-            x_range = self.x_range
-        if len(x_range) == 2:
-            x_range = [*x_range, 1]
+        self.x_min, self.x_max = x_range[:2]
+        self.x_step = 1 if len(x_range) == 2 else x_range[2]
 
-        x_min, x_max, x_step = x_range
-        # A lot of old scenes pass in x_min or x_max explicitly,
-        # so this is just here to keep those workin
-        self.x_min: float = kwargs.get("x_min", x_min)
-        self.x_max: float = kwargs.get("x_max", x_max)
-        self.x_step: float = kwargs.get("x_step", x_step)
+        super().__init__(
+            self.x_min * RIGHT, self.x_max * RIGHT,
+            color=color,
+            stroke_width=stroke_width,
+            **kwargs
+        )
 
-        super().__init__(self.x_min * RIGHT, self.x_max * RIGHT, **kwargs)
-        if self.width:
-            self.set_width(self.width)
-            self.unit_size = self.get_unit_size()
+        if width:
+            self.set_width(width)
         else:
-            self.scale(self.unit_size)
+            self.scale(unit_size)
         self.center()
 
-        if self.include_tip:
+        if include_tip:
             self.add_tip()
             self.tip.set_stroke(
                 self.stroke_color,
                 self.stroke_width,
             )
-        if self.include_ticks:
+        if include_ticks:
             self.add_ticks()
-        if self.include_numbers:
+        if include_numbers:
             self.add_numbers(excluding=self.numbers_to_exclude)
 
     def get_tick_range(self) -> np.ndarray:
@@ -112,11 +119,11 @@ class NumberLine(Line):
     def get_tick_marks(self) -> VGroup:
         return self.ticks
 
-    def number_to_point(self, number: float | np.ndarray) -> np.ndarray:
+    def number_to_point(self, number: float | np.ndarray) -> np_vector:
         alpha = (number - self.x_min) / (self.x_max - self.x_min)
         return outer_interpolate(self.get_start(), self.get_end(), alpha)
 
-    def point_to_number(self, point: np.ndarray) -> float:
+    def point_to_number(self, point: np_vector) -> float:
         points = self.get_points()
         start = points[0]
         end = points[-1]
@@ -127,11 +134,11 @@ class NumberLine(Line):
         )
         return interpolate(self.x_min, self.x_max, proportion)
 
-    def n2p(self, number: float) -> np.ndarray:
+    def n2p(self, number: float) -> np_vector:
         """Abbreviation for number_to_point"""
         return self.number_to_point(number)
 
-    def p2n(self, point: np.ndarray) -> float:
+    def p2n(self, point: np_vector) -> float:
         """Abbreviation for point_to_number"""
         return self.point_to_number(point)
 
@@ -141,7 +148,7 @@ class NumberLine(Line):
     def get_number_mobject(
         self,
         x: float,
-        direction: np.ndarray | None = None,
+        direction: np_vector | None = None,
         buff: float | None = None,
         unit: float = 1.0,
         unit_tex: str = "",
@@ -198,11 +205,18 @@ class NumberLine(Line):
 
 
 class UnitInterval(NumberLine):
-    CONFIG = {
-        "x_range": [0, 1, 0.1],
-        "unit_size": 10,
-        "numbers_with_elongated_ticks": [0, 1],
-        "decimal_number_config": {
-            "num_decimal_places": 1,
-        }
-    }
+    def __init__(
+        self,
+        x_range: RangeSpecifier = (0, 1, 0.1),
+        unit_size: float = 10,
+        numbers_with_elongated_ticks: list[float] = [0, 1],
+        decimal_number_config: dict = dict(
+            num_decimal_places=1,
+        )
+    ):
+        super().__init__(
+            x_range=x_range,
+            unit_size=unit_size,
+            numbers_with_elongated_ticks=numbers_with_elongated_ticks,
+            decimal_number_config   =decimal_number_config,
+        )
