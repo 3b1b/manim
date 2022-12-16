@@ -176,18 +176,20 @@ class CoordinateSystem(ABC):
         x_range: Sequence[float] | None = None,
         **kwargs
     ) -> ParametricCurve:
-        t_range = np.array(self.x_range, dtype=float)
-        if x_range is not None:
-            t_range[:len(x_range)] = x_range
+        x_range = x_range or self.x_range
+        t_range = np.ones(3)
+        t_range[:len(x_range)] = x_range
         # For axes, the third coordinate of x_range indicates
         # tick frequency.  But for functions, it indicates a
         # sample frequency
-        if x_range is None or len(x_range) < 3:
-            t_range[2] /= self.num_sampled_graph_points_per_tick
+        t_range[2] /= self.num_sampled_graph_points_per_tick
+
+        def parametric_function(t: float) -> np_vector:
+            return self.c2p(t, function(t))
 
         graph = ParametricCurve(
-            lambda t: self.c2p(t, function(t)),
-            t_range=t_range,
+            parametric_function,
+            t_range=tuple(t_range),
             **kwargs
         )
         graph.underlying_function = function
