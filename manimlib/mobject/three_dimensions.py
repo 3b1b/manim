@@ -15,7 +15,6 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.mobject.geometry import Polygon
 from manimlib.mobject.geometry import Square
 from manimlib.utils.bezier import interpolate
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.iterables import adjacent_pairs
 from manimlib.utils.space_ops import compass_directions
 from manimlib.utils.space_ops import get_norm

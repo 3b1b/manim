@@ -18,9 +18,6 @@ if TYPE_CHECKING:
 
 
 class DecimalNumber(VMobject):
-    CONFIG = {
-    }
-
     def __init__(
         self,
         number: float | complex = 0,
