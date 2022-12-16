@@ -75,7 +75,7 @@ class VMobject(Mobject):
     def __init__(
         self,
         color: ManimColor = None,  # If set, this will override stroke_color and fill_color
-        fill_color: ManimColor = WHITE,
+        fill_color: ManimColor = GREY_C,
         fill_opacity: float | Iterable[float] | None = 0.0,
         stroke_color: ManimColor = GREY_A,
         stroke_opacity: float | Iterable[float] | None = 1.0,
