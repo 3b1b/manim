@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class ParametricCurve(VMobject):
     def __init__(
         self,
-        t_func: Callable[[float], Sequence[float]],
+        t_func: Callable[[float], Sequence[float] | np_vector],
         t_range: Tuple[float, float, float] = (0, 1, 0.1),
         epsilon: float = 1e-8,
         # TODO, automatically figure out discontinuities
