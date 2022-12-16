@@ -68,8 +68,6 @@ class Mobject(object):
         ('point', np.float32, (3,)),
     ]
 
-    CONFIG = {}  # Need to delete
-
     def __init__(
         self,
         color: ManimColor = WHITE,
@@ -95,8 +93,6 @@ class Mobject(object):
         self.texture_paths = texture_paths
         self.is_fixed_in_frame = is_fixed_in_frame
         self.depth_test = depth_test
-
-        digest_config(self, kwargs) # Need to delete
 
         # Internal state
         self.submobjects: list[Mobject] = []
