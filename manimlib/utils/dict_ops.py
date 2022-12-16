@@ -22,6 +22,8 @@ def filtered_locals(caller_locals):
 
 def digest_config(obj, kwargs, caller_locals={}):
     """
+    (Deprecated)
+
     Sets init args and CONFIG values as local variables
 
     The purpose of this function is to ensure that all
