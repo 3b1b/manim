@@ -8,8 +8,7 @@ import operator as op
 import moderngl
 import numpy as np
 
-from manimlib.constants import GREY_C
-from manimlib.constants import GREY_E
+from manimlib.constants import GREY_A, GREY_C, GREY_E
 from manimlib.constants import BLACK, WHITE
 from manimlib.constants import DEFAULT_STROKE_WIDTH
 from manimlib.constants import DEGREES
@@ -78,7 +77,7 @@ class VMobject(Mobject):
         color: ManimColor = None,  # If set, this will override stroke_color and fill_color
         fill_color: ManimColor = WHITE,
         fill_opacity: float | Iterable[float] | None = 0.0,
-        stroke_color: ManimColor = GREY_C,
+        stroke_color: ManimColor = GREY_A,
         stroke_opacity: float | Iterable[float] | None = 1.0,
         stroke_width: float | Iterable[float] | None = DEFAULT_STROKE_WIDTH,
         draw_stroke_behind_fill: bool = False,
