@@ -19,7 +19,6 @@ from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.value_tracker import ValueTracker
 from manimlib.utils.color import rgb_to_hex
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.space_ops import get_closest_point_on_line
 from manimlib.utils.space_ops import get_norm
 
@@ -27,6 +26,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Callable
+    from manimlib.constants import ManimColor
 
 
 # Interactive Mobjects
@@ -95,19 +95,25 @@ class ControlMobject(ValueTracker):
 
 
 class EnableDisableButton(ControlMobject):
-    CONFIG = {
-        "value_type": np.dtype(bool),
-        "rect_kwargs": {
+    def __init__(
+        self,
+        value: bool = True,
+        value_type: np.dtype = np.dtype(bool),
+        rect_kwargs: dict = {
             "width": 0.5,
             "height": 0.5,
             "fill_opacity": 1.0
         },
-        "enable_color": GREEN,
-        "disable_color": RED
-    }
+        enable_color: ManimColor = GREEN,
+        disable_color: ManimColor = RED,
+        **kwargs
+    ):
+        self.value = value
+        self.value_type = value_type
+        self.rect_kwargs = rect_kwargs
+        self.enable_color = enable_color
+        self.disable_color = disable_color
 
-    def __init__(self, value: bool = True, **kwargs):
-        digest_config(self, kwargs)
         self.box = Rectangle(**self.rect_kwargs)
         super().__init__(value, self.box, **kwargs)
         self.add_mouse_press_listner(self.on_mouse_press)
@@ -130,27 +136,32 @@ class EnableDisableButton(ControlMobject):
 
 
 class Checkbox(ControlMobject):
-    CONFIG = {
-        "value_type": np.dtype(bool),
-        "rect_kwargs": {
+    def __init__(
+        self,
+        value: bool = True,
+        value_type: np.dtype = np.dtype(bool),
+        rect_kwargs: dict = {
             "width": 0.5,
             "height": 0.5,
             "fill_opacity": 0.0
         },
-
-        "checkmark_kwargs": {
+        checkmark_kwargs: dict = {
             "stroke_color": GREEN,
             "stroke_width": 6,
         },
-        "cross_kwargs": {
+        cross_kwargs: dict = {
             "stroke_color": RED,
             "stroke_width": 6,
         },
-        "box_content_buff": SMALL_BUFF
-    }
+        box_content_buff: float = SMALL_BUFF,
+        **kwargs
+    ):
+        self.value_type = value_type
+        self.rect_kwargs = rect_kwargs
+        self.checkmark_kwargs = checkmark_kwargs
+        self.cross_kwargs = cross_kwargs
+        self.box_content_buff = box_content_buff
 
-    def __init__(self, value: bool = True, **kwargs):
-        digest_config(self, kwargs)
         self.box = Rectangle(**self.rect_kwargs)
         self.box_content = self.get_checkmark() if value else self.get_cross()
         super().__init__(value, self.box, self.box_content, **kwargs)
@@ -200,27 +211,33 @@ class Checkbox(ControlMobject):
 
 
 class LinearNumberSlider(ControlMobject):
-    CONFIG = {
-        "value_type": np.float64,
-        "min_value": -10.0,
-        "max_value": 10.0,
-        "step": 1.0,
-
-        "rounded_rect_kwargs": {
+    def __init__(
+        self,
+        value: float = 0,
+        value_type: type = np.float64,
+        min_value: float = -10.0,
+        max_value: float = 10.0,
+        step: float = 1.0,
+        rounded_rect_kwargs: dict = {
             "height": 0.075,
             "width": 2,
             "corner_radius": 0.0375
         },
-        "circle_kwargs": {
+        circle_kwargs: dict = {
             "radius": 0.1,
             "stroke_color": GREY_A,
             "fill_color": GREY_A,
             "fill_opacity": 1.0
-        }
-    }
+        },
+        **kwargs
+    ):
+        self.value_type = value_type
+        self.min_value = min_value
+        self.max_value = max_value
+        self.step = step
+        self.rounded_rect_kwargs = rounded_rect_kwargs
+        self.circle_kwargs = circle_kwargs
 
-    def __init__(self, value: float = 0, **kwargs):
-        digest_config(self, kwargs)
         self.bar = RoundedRectangle(**self.rounded_rect_kwargs)
         self.slider = Circle(**self.circle_kwargs)
         self.slider_axis = Line(
@@ -258,24 +275,29 @@ class LinearNumberSlider(ControlMobject):
 
 
 class ColorSliders(Group):
-    CONFIG = {
-        "sliders_kwargs": {},
-        "rect_kwargs": {
+    def __init__(
+        self,
+        sliders_kwargs: dict = {},
+        rect_kwargs: dict = {
             "width": 2.0,
             "height": 0.5,
             "stroke_opacity": 1.0
         },
-        "background_grid_kwargs": {
+        background_grid_kwargs: dict = {
             "colors": [GREY_A, GREY_C],
             "single_square_len": 0.1
         },
-        "sliders_buff": MED_LARGE_BUFF,
-        "default_rgb_value": 255,
-        "default_a_value": 1,
-    }
-
-    def __init__(self, **kwargs):
-        digest_config(self, kwargs)
+        sliders_buff: float = MED_LARGE_BUFF,
+        default_rgb_value: int = 255,
+        default_a_value: int = 1,
+        **kwargs
+    ):
+        self.sliders_kwargs = sliders_kwargs
+        self.rect_kwargs = rect_kwargs
+        self.background_grid_kwargs = background_grid_kwargs
+        self.sliders_buff = sliders_buff
+        self.default_rgb_value = default_rgb_value
+        self.default_a_value = default_a_value
 
         rgb_kwargs = {"value": self.default_rgb_value, "min_value": 0, "max_value": 255, "step": 1}
         a_kwargs = {"value": self.default_a_value, "min_value": 0, "max_value": 1, "step": 0.04}
@@ -358,26 +380,33 @@ class ColorSliders(Group):
 
 
 class Textbox(ControlMobject):
-    CONFIG = {
-        "value_type": np.dtype(object),
-
-        "box_kwargs": {
+    def __init__(
+        self,
+        value: str = "",
+        value_type: np.dtype = np.dtype(object),
+        box_kwargs: dict = {
             "width": 2.0,
             "height": 1.0,
             "fill_color": WHITE,
             "fill_opacity": 1.0,
         },
-        "text_kwargs": {
+        text_kwargs: dict = {
             "color": BLUE
         },
-        "text_buff": MED_SMALL_BUFF,
-        "isInitiallyActive": False,
-        "active_color": BLUE,
-        "deactive_color": RED,
-    }
+        text_buff: float = MED_SMALL_BUFF,
+        isInitiallyActive: bool = False,
+        active_color: ManimColor = BLUE,
+        deactive_color: ManimColor = RED,
+        **kwargs
+    ):
+        self.value_type = value_type
+        self.box_kwargs = box_kwargs
+        self.text_kwargs = text_kwargs
+        self.text_buff = text_buff
+        self.isInitiallyActive = isInitiallyActive
+        self.active_color = active_color
+        self.deactive_color = deactive_color
 
-    def __init__(self, value: str = "", **kwargs):
-        digest_config(self, kwargs)
         self.isActive = self.isInitiallyActive
         self.box = Rectangle(**self.box_kwargs)
         self.box.add_mouse_press_listner(self.box_on_mouse_press)
@@ -436,28 +465,31 @@ class Textbox(ControlMobject):
 
 
 class ControlPanel(Group):
-    CONFIG = {
-        "panel_kwargs": {
+    def __init__(
+        self,
+        *controls: ControlMobject,
+        panel_kwargs: dict = {
             "width": FRAME_WIDTH / 4,
             "height": MED_SMALL_BUFF + FRAME_HEIGHT,
             "fill_color": GREY_C,
             "fill_opacity": 1.0,
             "stroke_width": 0.0
         },
-        "opener_kwargs": {
+        opener_kwargs: dict = {
             "width": FRAME_WIDTH / 8,
             "height": 0.5,
             "fill_color": GREY_C,
             "fill_opacity": 1.0
         },
-        "opener_text_kwargs": {
+        opener_text_kwargs: dict = {
             "text": "Control Panel",
             "font_size": 20
-        }
-    }
-
-    def __init__(self, *controls: ControlMobject, **kwargs):
-        digest_config(self, kwargs)
+        },
+        **kwargs
+    ):
+        self.panel_kwargs = panel_kwargs
+        self.opener_kwargs = opener_kwargs
+        self.opener_text_kwargs = opener_text_kwargs
 
         self.panel = Rectangle(**self.panel_kwargs)
         self.panel.to_corner(UP + LEFT, buff=0)
