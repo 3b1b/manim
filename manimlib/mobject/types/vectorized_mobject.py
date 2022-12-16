@@ -710,7 +710,7 @@ class VMobject(Mobject):
             for i in range(nppc)
         ]
 
-    def get_start_anchors(self) -> np_vector:
+    def get_start_anchors(self) -> list[np_vector]:
         return self.get_points()[0::self.n_points_per_curve]
 
     def get_end_anchors(self) -> np_vector:
