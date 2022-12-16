@@ -4,7 +4,6 @@ from copy import deepcopy
 
 from manimlib.mobject.mobject import _AnimationBuilder
 from manimlib.mobject.mobject import Mobject
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.rate_functions import smooth
 from manimlib.utils.rate_functions import squish_rate_func
 from manimlib.utils.simple_functions import clip
@@ -128,8 +127,15 @@ class Animation(object):
     def copy(self):
         return deepcopy(self)
 
-    def update_config(self, **kwargs):
-        digest_config(self, kwargs)
+    def update_rate_info(
+        self,
+        run_time: float | None = None,
+        rate_func: Callable[[float], float] | None = None,
+        lag_ratio: float | None = None,
+    ):
+        self.run_time = run_time or self.run_time
+        self.rate_func = rate_func or self.rate_func
+        self.lag_ratio = lag_ratio or self.lag_ratio
         return self
 
     # Methods for interpolation, the mean of an Animation

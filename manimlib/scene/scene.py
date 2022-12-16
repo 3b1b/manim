@@ -502,6 +502,7 @@ class Scene(object):
         self,
         animations: Iterable[Animation]
     ) -> list[float] | np.ndarray | ProgressDisplay:
+        animations = list(animations)
         run_time = self.get_run_time(animations)
         description = f"{self.num_plays} {animations[0]}"
         if len(animations) > 1:
@@ -519,18 +520,6 @@ class Scene(object):
             kw["n_iterations"] = -1  # So it doesn't show % progress
             kw["override_skip_animations"] = True
         return self.get_time_progression(duration, **kw)
-
-    def prepare_animations(
-        self,
-        proto_animations: list[Animation | _AnimationBuilder],
-        animation_config: dict,
-    ):
-        animations = list(map(prepare_animation, proto_animations))
-        for anim in animations:
-            # This is where kwargs to play like run_time and rate_func
-            # get applied to all animations
-            anim.update_config(**animation_config)
-        return animations
 
     def handle_play_like_call(func):
         @wraps(func)
@@ -601,11 +590,19 @@ class Scene(object):
             self.update_mobjects(0)
 
     @handle_play_like_call
-    def play(self, *proto_animations, **animation_config) -> None:
+    def play(
+        self,
+        *proto_animations: Animation | _AnimationBuilder,
+        run_time: float | None = None,
+        rate_func: Callable[[float], float] | None = None,
+        lag_ratio: float | None = None,
+    ) -> None:
         if len(proto_animations) == 0:
             log.warning("Called Scene.play with no animations")
             return
-        animations = self.prepare_animations(proto_animations, animation_config)
+        animations = list(map(prepare_animation, proto_animations))
+        for anim in animations:
+            anim.update_rate_info(run_time, rate_func, lag_ratio)
         self.begin_animations(animations)
         self.progress_through_animations(animations)
         self.finish_animations(animations)
