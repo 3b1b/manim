@@ -22,10 +22,10 @@ from manimlib.utils.simple_functions import hash_string
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterable, Union, Pattern
+    from typing import Iterable, Union
 
     from manimlib.mobject.types.vectorized_mobject import VGroup
-    from manimlib.constants import ManimColor
+    from manimlib.typing import ManimColor
     Span = tuple[int, int]
     Selector = Union[
         str,

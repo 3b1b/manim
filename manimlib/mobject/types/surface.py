@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence, Tuple
 
     from manimlib.camera.camera import Camera
-    from manimlib.constants import ManimColor, np_vector
+    from manimlib.typing import ManimColor, np_vector
 
 
 class Surface(Mobject):

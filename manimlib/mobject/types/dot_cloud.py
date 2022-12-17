@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import numpy.typing as npt
     from typing import Sequence, Tuple
-    from manimlib.constants import ManimColor, np_vector
+    from manimlib.typing import ManimColor, np_vector
 
 
 DEFAULT_DOT_RADIUS = 0.05

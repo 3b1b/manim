@@ -23,7 +23,7 @@ from manimlib.utils.space_ops import z_to_vector
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Tuple, TypeVar
-    from manimlib.constants import ManimColor, np_vector
+    from manimlib.typing import ManimColor, np_vector
 
     T = TypeVar("T", bound=Mobject)
 

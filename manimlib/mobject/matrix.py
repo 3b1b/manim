@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from typing import Sequence
     import numpy.typing as npt
     from manimlib.mobject.mobject import Mobject
-    from manimlib.constants import ManimColor, np_vector
+    from manimlib.typing import ManimColor, np_vector
 
 
 VECTOR_LABEL_SCALE_FACTOR = 0.8

@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from manimlib.shader_wrapper import ShaderWrapper
-    from manimlib.constants import ManimColor
+    from manimlib.typing import ManimColor
     from typing import Sequence
 
     np_vector = np.ndarray[int, np.dtype[np.float64]]

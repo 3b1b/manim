@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Iterable
-    from manimlib.constants import ManimColor
+    from manimlib.typing import ManimColor
 
 
 def color_to_rgb(color: ManimColor) -> np.ndarray:

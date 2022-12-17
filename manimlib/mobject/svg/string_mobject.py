@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Union
-    from manimlib.constants import ManimColor
+    from manimlib.typing import ManimColor
 
     Span = tuple[int, int]
     Selector = Union[

@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence, TypeVar, Tuple
     import numpy.typing as npt
-    from manimlib.constants import ManimColor, np_vector
+    from manimlib.typing import ManimColor, np_vector
 
     from manimlib.mobject.coordinate_systems import CoordinateSystem
     from manimlib.mobject.mobject import Mobject

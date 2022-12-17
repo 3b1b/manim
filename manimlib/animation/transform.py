@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from typing import Callable
     import numpy.typing as npt
     from manimlib.scene.scene import Scene
-    from manimlib.constants import ManimColor
+    from manimlib.typing import ManimColor
 
 
 class Transform(Animation):

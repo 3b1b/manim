@@ -1,19 +1,11 @@
 from __future__ import annotations
-
 import numpy as np
 
 from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
-    from typing import Union, Tuple
-    from colour import Color
-
     from typing import List
+    from manimlib.typing import ManimColor, np_vector
 
-    # Abbreviations for a common types
-    ManimColor = Union[str, Color, None]
-    RangeSpecifier = Tuple[float, float, float] | Tuple[float, float]
-    np_vector = np.ndarray[int, np.dtype[np.float64]]
 
 # Sizes relevant to default camera frame
 ASPECT_RATIO: float = 16.0 / 9.0

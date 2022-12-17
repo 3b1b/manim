@@ -27,8 +27,7 @@ if TYPE_CHECKING:
 
     from manimlib.animation.animation import Animation
     from manimlib.mobject.mobject import Mobject
-
-    from manimlib.constants import ManimColor, np_vector
+    from manimlib.typing import np_vector
 
 
 class Brace(SingleStringTex):

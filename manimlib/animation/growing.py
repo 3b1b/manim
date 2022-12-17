@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
     from manimlib.mobject.geometry import Arrow
     from manimlib.mobject.mobject import Mobject
-    from manimlib.constants import ManimColor
+    from manimlib.typing import ManimColor
 
 
 class GrowFromPoint(Transform):

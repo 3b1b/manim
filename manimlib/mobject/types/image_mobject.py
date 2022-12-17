@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Sequence, Tuple
-    from manimlib.constants import np_vector
+    from manimlib.typing import np_vector
 
 
 class ImageMobject(Mobject):

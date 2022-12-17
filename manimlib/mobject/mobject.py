@@ -48,7 +48,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence, Union, Tuple
     import numpy.typing as npt
-    from manimlib.constants import ManimColor, np_vector
+    from manimlib.typing import ManimColor, np_vector
 
     TimeBasedUpdater = Callable[["Mobject", float], None]
     NonTimeUpdater = Callable[["Mobject"], None]

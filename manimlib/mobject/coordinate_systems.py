@@ -34,7 +34,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence, Type, TypeVar
     from manimlib.mobject.mobject import Mobject
-    from manimlib.constants import ManimColor, np_vector, RangeSpecifier
+    from manimlib.typing import ManimColor, np_vector, RangeSpecifier
 
     T = TypeVar("T", bound=Mobject)
 

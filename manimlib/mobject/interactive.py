@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Callable
-    from manimlib.constants import ManimColor
+    from manimlib.typing import ManimColor
 
 
 # Interactive Mobjects

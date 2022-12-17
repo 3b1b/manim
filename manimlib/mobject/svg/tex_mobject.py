@@ -17,8 +17,8 @@ from manimlib.utils.tex_file_writing import tex_content_to_svg_file
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterable, List, Dict, Sequence
-    from manimlib.constants import ManimColor
+    from typing import Iterable, List, Dict
+    from manimlib.typing import ManimColor
 
 
 SCALE_FACTOR_PER_FONT_POINT = 0.001

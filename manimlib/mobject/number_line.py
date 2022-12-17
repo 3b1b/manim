@@ -16,8 +16,8 @@ from manimlib.utils.simple_functions import fdiv
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterable, Sequence
-    from manimlib.constants import ManimColor, np_vector, RangeSpecifier
+    from typing import Iterable
+    from manimlib.typing import ManimColor, np_vector, RangeSpecifier
 
 
 class NumberLine(Line):

@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from typing import Callable
     from manimlib.mobject.mobject import Mobject
     from manimlib.scene.scene import Scene
-    from manimlib.constants import ManimColor
+    from manimlib.typing import ManimColor
 
 
 class ShowPartial(Animation, ABC):
