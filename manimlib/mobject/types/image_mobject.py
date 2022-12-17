@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Sequence, Tuple
-    from manimlib.typing import np_vector
+    from manimlib.typing import Vect3
 
 
 class ImageMobject(Mobject):
@@ -55,7 +55,7 @@ class ImageMobject(Mobject):
     def set_color(self, color, opacity=None, recurse=None):
         return self
 
-    def point_to_rgb(self, point: np_vector) -> np_vector:
+    def point_to_rgb(self, point: Vect3) -> Vect3:
         x0, y0 = self.get_corner(UL)[:2]
         x1, y1 = self.get_corner(DR)[:2]
         x_alpha = inverse_interpolate(x0, x1, point[0])

@@ -34,7 +34,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence, Type, TypeVar
     from manimlib.mobject.mobject import Mobject
-    from manimlib.typing import ManimColor, np_vector, RangeSpecifier
+    from manimlib.typing import ManimColor, Vect3, RangeSpecifier
 
     T = TypeVar("T", bound=Mobject)
 
@@ -61,22 +61,22 @@ class CoordinateSystem(ABC):
         self.num_sampled_graph_points_per_tick = num_sampled_graph_points_per_tick
 
     @abstractmethod
-    def coords_to_point(self, *coords: float) -> np_vector:
+    def coords_to_point(self, *coords: float) -> Vect3:
         raise Exception("Not implemented")
 
     @abstractmethod
-    def point_to_coords(self, point: np_vector) -> tuple[float, ...]:
+    def point_to_coords(self, point: Vect3) -> tuple[float, ...]:
         raise Exception("Not implemented")
 
     def c2p(self, *coords: float):
         """Abbreviation for coords_to_point"""
         return self.coords_to_point(*coords)
 
-    def p2c(self, point: np_vector):
+    def p2c(self, point: Vect3):
         """Abbreviation for point_to_coords"""
         return self.point_to_coords(point)
 
-    def get_origin(self) -> np_vector:
+    def get_origin(self) -> Vect3:
         return self.c2p(*[0] * self.dimension)
 
     @abstractmethod
@@ -102,8 +102,8 @@ class CoordinateSystem(ABC):
     def get_x_axis_label(
         self,
         label_tex: str,
-        edge: np_vector = RIGHT,
-        direction: np_vector = DL,
+        edge: Vect3 = RIGHT,
+        direction: Vect3 = DL,
         **kwargs
     ) -> Tex:
         return self.get_axis_label(
@@ -114,8 +114,8 @@ class CoordinateSystem(ABC):
     def get_y_axis_label(
         self,
         label_tex: str,
-        edge: np_vector = UP,
-        direction: np_vector = DR,
+        edge: Vect3 = UP,
+        direction: Vect3 = DR,
         **kwargs
     ) -> Tex:
         return self.get_axis_label(
@@ -126,9 +126,9 @@ class CoordinateSystem(ABC):
     def get_axis_label(
         self,
         label_tex: str,
-        axis: np_vector,
-        edge: np_vector,
-        direction: np_vector,
+        axis: Vect3,
+        edge: Vect3,
+        direction: Vect3,
         buff: float = MED_SMALL_BUFF
     ) -> Tex:
         label = Tex(label_tex)
@@ -153,7 +153,7 @@ class CoordinateSystem(ABC):
     def get_line_from_axis_to_point(
         self, 
         index: int,
-        point: np_vector,
+        point: Vect3,
         line_func: Type[T] = DashedLine,
         color: ManimColor = GREY_A,
         stroke_width: float = 2
@@ -163,10 +163,10 @@ class CoordinateSystem(ABC):
         line.set_stroke(color, stroke_width)
         return line
 
-    def get_v_line(self, point: np_vector, **kwargs):
+    def get_v_line(self, point: Vect3, **kwargs):
         return self.get_line_from_axis_to_point(0, point, **kwargs)
 
-    def get_h_line(self, point: np_vector, **kwargs):
+    def get_h_line(self, point: Vect3, **kwargs):
         return self.get_line_from_axis_to_point(1, point, **kwargs)
 
     # Useful for graphing
@@ -184,7 +184,7 @@ class CoordinateSystem(ABC):
         # sample frequency
         t_range[2] /= self.num_sampled_graph_points_per_tick
 
-        def parametric_function(t: float) -> np_vector:
+        def parametric_function(t: float) -> Vect3:
             return self.c2p(t, function(t))
 
         graph = ParametricCurve(
@@ -198,7 +198,7 @@ class CoordinateSystem(ABC):
 
     def get_parametric_curve(
         self,
-        function: Callable[[float], np_vector],
+        function: Callable[[float], Vect3],
         **kwargs
     ) -> ParametricCurve:
         dim = self.dimension
@@ -213,7 +213,7 @@ class CoordinateSystem(ABC):
         self,
         x: float,
         graph: ParametricCurve
-    ) -> np_vector | None:
+    ) -> Vect3 | None:
         if hasattr(graph, "underlying_function"):
             return self.coords_to_point(x, graph.underlying_function(x))
         else:
@@ -230,7 +230,7 @@ class CoordinateSystem(ABC):
             else:
                 return None
 
-    def i2gp(self, x: float, graph: ParametricCurve) -> np_vector | None:
+    def i2gp(self, x: float, graph: ParametricCurve) -> Vect3 | None:
         """
         Alias for input_to_graph_point
         """
@@ -265,7 +265,7 @@ class CoordinateSystem(ABC):
         graph: ParametricCurve,
         label: str | Mobject = "f(x)",
         x: float | None = None,
-        direction: np_vector = RIGHT,
+        direction: Vect3 = RIGHT,
         buff: float = MED_SMALL_BUFF,
         color: ManimColor | None = None
     ) -> Tex | Mobject:
@@ -302,8 +302,8 @@ class CoordinateSystem(ABC):
         return self.get_h_line(self.i2gp(x, graph), **kwargs)
 
     def get_scatterplot(self,
-                        x_values: np_vector,
-                        y_values: np_vector,
+                        x_values: Vect3,
+                        y_values: Vect3,
                         **dot_config):
         return DotCloud(self.c2p(x_values, y_values), **dot_config)
 
@@ -449,14 +449,14 @@ class Axes(VGroup, CoordinateSystem):
         axis.shift(-axis.n2p(0))
         return axis
 
-    def coords_to_point(self, *coords: float) -> np_vector:
+    def coords_to_point(self, *coords: float) -> Vect3:
         origin = self.x_axis.number_to_point(0)
         return origin + sum(
             axis.number_to_point(coord) - origin
             for axis, coord in zip(self.get_axes(), coords)
         )
 
-    def point_to_coords(self, point: np_vector) -> tuple[float, ...]:
+    def point_to_coords(self, point: Vect3) -> tuple[float, ...]:
         return tuple([
             axis.point_to_number(point)
             for axis in self.get_axes()
@@ -492,7 +492,7 @@ class ThreeDAxes(Axes):
         y_range: RangeSpecifier = (-5.0, 5.0, 1.0),
         z_range: RangeSpecifier = (-4.0, 4.0, 1.0),
         z_axis_config: dict = dict(),
-        z_normal: np_vector = DOWN,
+        z_normal: Vect3 = DOWN,
         depth: float = 6.0,
         num_axis_pieces: int = 20,
         gloss: float = 0.5,
@@ -664,18 +664,18 @@ class NumberPlane(Axes):
 
 
 class ComplexPlane(NumberPlane):
-    def number_to_point(self, number: complex | float) -> np_vector:
+    def number_to_point(self, number: complex | float) -> Vect3:
         number = complex(number)
         return self.coords_to_point(number.real, number.imag)
 
-    def n2p(self, number: complex | float) -> np_vector:
+    def n2p(self, number: complex | float) -> Vect3:
         return self.number_to_point(number)
 
-    def point_to_number(self, point: np_vector) -> complex:
+    def point_to_number(self, point: Vect3) -> complex:
         x, y = self.point_to_coords(point)
         return complex(x, y)
 
-    def p2n(self, point: np_vector) -> complex:
+    def p2n(self, point: Vect3) -> complex:
         return self.point_to_number(point)
 
     def get_default_coordinate_values(

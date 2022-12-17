@@ -60,7 +60,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Tuple, Sequence, Callable
-    from manimlib.typing import ManimColor, np_vector
+    from manimlib.typing import ManimColor, Vect3
 
 
 class Checkmark(TexTextFromPresetString):
@@ -342,8 +342,8 @@ class Bubble(SVGMobject):
 
     def __init__(
         self,
-        direction: np_vector = LEFT,
-        center_point: np_vector = ORIGIN,
+        direction: Vect3 = LEFT,
+        center_point: Vect3 = ORIGIN,
         content_scale_factor: float = 0.7,
         height: float = 4.0,
         width: float = 8.0,

@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from typing import Sequence
     import numpy.typing as npt
     from manimlib.mobject.mobject import Mobject
-    from manimlib.typing import ManimColor, np_vector
+    from manimlib.typing import ManimColor, Vect3
 
 
 VECTOR_LABEL_SCALE_FACTOR = 0.8
@@ -82,7 +82,7 @@ class Matrix(VMobject):
         add_background_rectangles_to_entries: bool = False,
         include_background_rectangle: bool = False,
         element_config: dict = dict(),
-        element_alignment_corner: np_vector = DOWN,
+        element_alignment_corner: Vect3 = DOWN,
         **kwargs
     ):
         """
@@ -123,7 +123,7 @@ class Matrix(VMobject):
         matrix: list[list[Mobject]],
         v_buff: float,
         h_buff: float,
-        aligned_corner: np_vector,
+        aligned_corner: Vect3,
     ):
         for i, row in enumerate(matrix):
             for j, elem in enumerate(row):
@@ -193,7 +193,7 @@ class IntegerMatrix(Matrix):
     def __init__(
         self,
         matrix: npt.ArrayLike,
-        element_alignment_corner: np_vector = UP,
+        element_alignment_corner: Vect3 = UP,
         **kwargs
     ):
         super().__init__(matrix, element_alignment_corner=element_alignment_corner, **kwargs)

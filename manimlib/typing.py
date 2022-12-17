@@ -11,7 +11,6 @@ if TYPE_CHECKING:
 
     # TODO, Nothing about these actually specifies length,
     # they are so far just about code readability
-    np_vector = np.ndarray[int, np.dtype[np.float64]]
     Vect2 = np.ndarray[int, np.dtype[np.float64]]  # TODO, specify length of 2
     Vect3 = np.ndarray[int, np.dtype[np.float64]]  # TODO, specify length of 3
     Vect4 = np.ndarray[int, np.dtype[np.float64]]  # TODO, specify length of 4

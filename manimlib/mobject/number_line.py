@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Iterable
-    from manimlib.typing import ManimColor, np_vector, RangeSpecifier
+    from manimlib.typing import ManimColor, Vect3, RangeSpecifier
 
 
 class NumberLine(Line):
@@ -36,7 +36,7 @@ class NumberLine(Line):
         # Change name
         numbers_with_elongated_ticks: list[float] = [],
         include_numbers: bool = False,
-        line_to_number_direction: np_vector = DOWN,
+        line_to_number_direction: Vect3 = DOWN,
         line_to_number_buff: float = MED_SMALL_BUFF,
         include_tip: bool = False,
         tip_config: dict = dict(
@@ -118,11 +118,11 @@ class NumberLine(Line):
     def get_tick_marks(self) -> VGroup:
         return self.ticks
 
-    def number_to_point(self, number: float | np.ndarray) -> np_vector:
+    def number_to_point(self, number: float | np.ndarray) -> Vect3:
         alpha = (number - self.x_min) / (self.x_max - self.x_min)
         return outer_interpolate(self.get_start(), self.get_end(), alpha)
 
-    def point_to_number(self, point: np_vector) -> float:
+    def point_to_number(self, point: Vect3) -> float:
         points = self.get_points()
         start = points[0]
         end = points[-1]
@@ -133,11 +133,11 @@ class NumberLine(Line):
         )
         return interpolate(self.x_min, self.x_max, proportion)
 
-    def n2p(self, number: float) -> np_vector:
+    def n2p(self, number: float) -> Vect3:
         """Abbreviation for number_to_point"""
         return self.number_to_point(number)
 
-    def p2n(self, point: np_vector) -> float:
+    def p2n(self, point: Vect3) -> float:
         """Abbreviation for point_to_number"""
         return self.point_to_number(point)
 
@@ -147,7 +147,7 @@ class NumberLine(Line):
     def get_number_mobject(
         self,
         x: float,
-        direction: np_vector | None = None,
+        direction: Vect3 | None = None,
         buff: float | None = None,
         unit: float = 1.0,
         unit_tex: str = "",

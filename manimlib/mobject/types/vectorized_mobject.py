@@ -42,7 +42,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence, Tuple
-    from manimlib.typing import ManimColor, np_vector
+    from manimlib.typing import ManimColor, Vect3, Vect4
 
 DEFAULT_STROKE_COLOR = GREY_A
 DEFAULT_FILL_COLOR = GREY_C
@@ -149,7 +149,7 @@ class VMobject(Mobject):
 
     def set_rgba_array(
         self,
-        rgba_array: np_vector,
+        rgba_array: Vect3,
         name: str | None = None,
         recurse: bool = False
     ):
@@ -213,10 +213,10 @@ class VMobject(Mobject):
         self,
         fill_color: ManimColor | Iterable[ManimColor] | None = None,
         fill_opacity: float | Iterable[float] | None = None,
-        fill_rgba: np_vector | None = None,
+        fill_rgba: Vect4 | None = None,
         stroke_color: ManimColor | Iterable[ManimColor] | None = None,
         stroke_opacity: float | Iterable[float] | None = None,
-        stroke_rgba: np_vector | None = None,
+        stroke_rgba: Vect4 | None = None,
         stroke_width: float | Iterable[float] | None = None,
         stroke_background: bool = True,
         reflectiveness: float | None = None,
@@ -322,7 +322,7 @@ class VMobject(Mobject):
             for rgba in self.data['fill_rgba']
         ]
 
-    def get_fill_opacities(self) -> np_vector:
+    def get_fill_opacities(self) -> np.ndarray:
         return self.data['fill_rgba'][:, 3]
 
     def get_stroke_colors(self) -> list[str]:
@@ -331,10 +331,10 @@ class VMobject(Mobject):
             for rgba in self.data['stroke_rgba']
         ]
 
-    def get_stroke_opacities(self) -> np_vector:
+    def get_stroke_opacities(self) -> np.ndarray:
         return self.data['stroke_rgba'][:, 3]
 
-    def get_stroke_widths(self) -> np_vector:
+    def get_stroke_widths(self) -> np.ndarray:
         return self.data['stroke_width'][:, 0]
 
     # TODO, it's weird for these to return the first of various lists
@@ -356,7 +356,7 @@ class VMobject(Mobject):
     def get_stroke_color(self) -> str:
         return self.get_stroke_colors()[0]
 
-    def get_stroke_width(self) -> float | np_vector:
+    def get_stroke_width(self) -> float | np.ndarray:
         return self.get_stroke_widths()[0]
 
     def get_stroke_opacity(self) -> float:
@@ -397,9 +397,9 @@ class VMobject(Mobject):
     # Points
     def set_anchors_and_handles(
         self,
-        anchors1: np_vector,
-        handles: np_vector,
-        anchors2: np_vector
+        anchors1: Vect3,
+        handles: Vect3,
+        anchors2: Vect3
     ):
         assert(len(anchors1) == len(handles) == len(anchors2))
         nppc = self.n_points_per_curve
@@ -410,26 +410,26 @@ class VMobject(Mobject):
         self.set_points(new_points)
         return self
 
-    def start_new_path(self, point: np_vector):
+    def start_new_path(self, point: Vect3):
         assert(self.get_num_points() % self.n_points_per_curve == 0)
         self.append_points([point])
         return self
 
     def add_cubic_bezier_curve(
         self,
-        anchor1: np_vector,
-        handle1: np_vector,
-        handle2: np_vector,
-        anchor2: np_vector
+        anchor1: Vect3,
+        handle1: Vect3,
+        handle2: Vect3,
+        anchor2: Vect3
     ):
         new_points = get_quadratic_approximation_of_cubic(anchor1, handle1, handle2, anchor2)
         self.append_points(new_points)
 
     def add_cubic_bezier_curve_to(
         self,
-        handle1: np_vector,
-        handle2: np_vector,
-        anchor: np_vector
+        handle1: Vect3,
+        handle2: Vect3,
+        anchor: Vect3
     ):
         """
         Add cubic bezier curve to the path.
@@ -443,14 +443,14 @@ class VMobject(Mobject):
         else:
             self.append_points(quadratic_approx)
 
-    def add_quadratic_bezier_curve_to(self, handle: np_vector, anchor: np_vector):
+    def add_quadratic_bezier_curve_to(self, handle: Vect3, anchor: Vect3):
         self.throw_error_if_no_points()
         if self.has_new_path_started():
             self.append_points([handle, anchor])
         else:
             self.append_points([self.get_last_point(), handle, anchor])
 
-    def add_line_to(self, point: np_vector):
+    def add_line_to(self, point: Vect3):
         end = self.get_points()[-1]
         alphas = np.linspace(0, 1, self.n_points_per_curve)
         if self.long_lines:
@@ -472,7 +472,7 @@ class VMobject(Mobject):
         self.append_points(points)
         return self
 
-    def add_smooth_curve_to(self, point: np_vector):
+    def add_smooth_curve_to(self, point: Vect3):
         if self.has_new_path_started():
             self.add_line_to(point)
         else:
@@ -481,7 +481,7 @@ class VMobject(Mobject):
             self.add_quadratic_bezier_curve_to(new_handle, point)
         return self
 
-    def add_smooth_cubic_curve_to(self, handle: np_vector, point: np_vector):
+    def add_smooth_cubic_curve_to(self, handle: Vect3, point: Vect3):
         self.throw_error_if_no_points()
         if self.get_num_points() == 1:
             new_handle = self.get_points()[-1]
@@ -492,10 +492,10 @@ class VMobject(Mobject):
     def has_new_path_started(self) -> bool:
         return self.get_num_points() % self.n_points_per_curve == 1
 
-    def get_last_point(self) -> np_vector:
+    def get_last_point(self) -> Vect3:
         return self.get_points()[-1]
 
-    def get_reflection_of_last_handle(self) -> np_vector:
+    def get_reflection_of_last_handle(self) -> Vect3:
         points = self.get_points()
         return 2 * points[-1] - points[-2]
 
@@ -530,12 +530,12 @@ class VMobject(Mobject):
             vmob.set_points(np.vstack(new_points))
         return self
 
-    def add_points_as_corners(self, points: Iterable[np_vector]):
+    def add_points_as_corners(self, points: Iterable[Vect3]):
         for point in points:
             self.add_line_to(point)
         return points
 
-    def set_points_as_corners(self, points: Iterable[np_vector]):
+    def set_points_as_corners(self, points: Iterable[Vect3]):
         nppc = self.n_points_per_curve
         points = np.array(points)
         self.set_anchors_and_handles(*[
@@ -546,7 +546,7 @@ class VMobject(Mobject):
 
     def set_points_smoothly(
         self,
-        points: Iterable[np_vector],
+        points: Iterable[Vect3],
         true_smooth: bool = False
     ):
         self.set_points_as_corners(points)
@@ -601,7 +601,7 @@ class VMobject(Mobject):
         self.change_anchor_mode("jagged")
         return self
 
-    def add_subpath(self, points: Sequence[np_vector]):
+    def add_subpath(self, points: Sequence[Vect3]):
         assert(len(points) % self.n_points_per_curve == 0)
         self.append_points(points)
         return self
@@ -617,11 +617,11 @@ class VMobject(Mobject):
         return self
 
     #
-    def consider_points_equals(self, p0: np_vector, p1: np_vector) -> bool:
+    def consider_points_equals(self, p0: Vect3, p1: Vect3) -> bool:
         return get_norm(p1 - p0) < self.tolerance_for_point_equality
 
     # Information about the curve
-    def get_bezier_tuples_from_points(self, points: Sequence[np_vector]):
+    def get_bezier_tuples_from_points(self, points: Sequence[Vect3]):
         nppc = self.n_points_per_curve
         remainder = len(points) % nppc
         points = points[:len(points) - remainder]
@@ -635,8 +635,8 @@ class VMobject(Mobject):
 
     def get_subpaths_from_points(
         self,
-        points: Sequence[np_vector]
-    ) -> list[Sequence[np_vector]]:
+        points: Sequence[Vect3]
+    ) -> list[Sequence[Vect3]]:
         nppc = self.n_points_per_curve
         diffs = points[nppc - 1:-1:nppc] - points[nppc::nppc]
         splits = (diffs * diffs).sum(1) > self.tolerance_for_point_equality
@@ -653,28 +653,28 @@ class VMobject(Mobject):
             if (i2 - i1) >= nppc
         ]
 
-    def get_subpaths(self) -> list[Sequence[np_vector]]:
+    def get_subpaths(self) -> list[Sequence[Vect3]]:
         return self.get_subpaths_from_points(self.get_points())
 
-    def get_nth_curve_points(self, n: int) -> np_vector:
+    def get_nth_curve_points(self, n: int) -> Vect3:
         assert(n < self.get_num_curves())
         nppc = self.n_points_per_curve
         return self.get_points()[nppc * n:nppc * (n + 1)]
 
-    def get_nth_curve_function(self, n: int) -> Callable[[float], np_vector]:
+    def get_nth_curve_function(self, n: int) -> Callable[[float], Vect3]:
         return bezier(self.get_nth_curve_points(n))
 
     def get_num_curves(self) -> int:
         return self.get_num_points() // self.n_points_per_curve
 
-    def quick_point_from_proportion(self, alpha: float) -> np_vector:
+    def quick_point_from_proportion(self, alpha: float) -> Vect3:
         # Assumes all curves have the same length, so is inaccurate
         num_curves = self.get_num_curves()
         n, residue = integer_interpolate(0, num_curves, alpha)
         curve_func = self.get_nth_curve_function(n)
         return curve_func(residue)
 
-    def point_from_proportion(self, alpha: float) -> np_vector:
+    def point_from_proportion(self, alpha: float) -> Vect3:
         if alpha <= 0:
             return self.get_start()
         elif alpha >= 1:
@@ -696,7 +696,7 @@ class VMobject(Mobject):
         residue = inverse_interpolate(partials[i - 1] / full, partials[i] / full, alpha)
         return self.get_nth_curve_function(i - 1)(residue)
 
-    def get_anchors_and_handles(self) -> list[np_vector]:
+    def get_anchors_and_handles(self) -> list[Vect3]:
         """
         returns anchors1, handles, anchors2,
         where (anchors1[i], handles[i], anchors2[i])
@@ -710,14 +710,14 @@ class VMobject(Mobject):
             for i in range(nppc)
         ]
 
-    def get_start_anchors(self) -> list[np_vector]:
+    def get_start_anchors(self) -> list[Vect3]:
         return self.get_points()[0::self.n_points_per_curve]
 
-    def get_end_anchors(self) -> np_vector:
+    def get_end_anchors(self) -> Vect3:
         nppc = self.n_points_per_curve
         return self.get_points()[nppc - 1::nppc]
 
-    def get_anchors(self) -> np_vector:
+    def get_anchors(self) -> Vect3:
         points = self.get_points()
         if len(points) == 1:
             return points
@@ -726,7 +726,7 @@ class VMobject(Mobject):
             self.get_end_anchors(),
         ))))
 
-    def get_points_without_null_curves(self, atol: float = 1e-9) -> np_vector:
+    def get_points_without_null_curves(self, atol: float = 1e-9) -> Vect3:
         nppc = self.n_points_per_curve
         points = self.get_points()
         distinct_curves = reduce(op.or_, [
@@ -746,7 +746,7 @@ class VMobject(Mobject):
         norms = np.array([get_norm(d) for d in diffs])
         return norms.sum()
 
-    def get_area_vector(self) -> np_vector:
+    def get_area_vector(self) -> Vect3:
         # Returns a vector whose length is the area bound by
         # the polygon formed by the anchor points, pointing
         # in a direction perpendicular to the polygon according
@@ -766,7 +766,7 @@ class VMobject(Mobject):
             sum((p0[:, 0] + p1[:, 0]) * (p1[:, 1] - p0[:, 1])),  # Add up (x1 + x2)*(y2 - y1)
         ])
 
-    def get_unit_normal(self, recompute: bool = False) -> np_vector:
+    def get_unit_normal(self, recompute: bool = False) -> Vect3:
         if not recompute:
             return self.data["unit_normal"][0]
 
@@ -851,7 +851,7 @@ class VMobject(Mobject):
                 mob.set_points(new_points)
         return self
 
-    def insert_n_curves_to_point_list(self, n: int, points: np_vector):
+    def insert_n_curves_to_point_list(self, n: int, points: Vect3):
         nppc = self.n_points_per_curve
         if len(points) == 1:
             return np.repeat(points, nppc * n, 0)
@@ -953,7 +953,7 @@ class VMobject(Mobject):
             mob.needs_new_triangulation = True
         return self
 
-    def get_triangulation(self, normal_vector: np_vector | None = None):
+    def get_triangulation(self, normal_vector: Vect3 | None = None):
         # Figure out how to triangulate the interior to know
         # how to send the points as to the vertex shader.
         # First triangles come directly from the points
@@ -1022,7 +1022,7 @@ class VMobject(Mobject):
         return wrapper
 
     @triggers_refreshed_triangulation
-    def set_points(self, points: np_vector):
+    def set_points(self, points: Vect3):
         super().set_points(points)
         return self
 
@@ -1035,7 +1035,7 @@ class VMobject(Mobject):
     @triggers_refreshed_triangulation
     def apply_function(
         self,
-        function: Callable[[np_vector], np_vector],
+        function: Callable[[Vect3], Vect3],
         make_smooth: bool = False,
         **kwargs
     ):
@@ -1044,7 +1044,7 @@ class VMobject(Mobject):
             self.make_approximately_smooth()
         return self
 
-    def flip(self, axis: np_vector = UP, **kwargs):
+    def flip(self, axis: Vect3 = UP, **kwargs):
         super().flip(axis, **kwargs)
         self.refresh_unit_normal()
         self.refresh_triangulation()

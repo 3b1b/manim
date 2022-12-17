@@ -48,7 +48,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence, Union, Tuple
     import numpy.typing as npt
-    from manimlib.typing import ManimColor, np_vector
+    from manimlib.typing import ManimColor, Vect3, Vect4
 
     TimeBasedUpdater = Callable[["Mobject", float], None]
     NonTimeUpdater = Callable[["Mobject"], None]
@@ -200,8 +200,8 @@ class Mobject(object):
     def apply_points_function(
         self,
         func: Callable[[np.ndarray], np.ndarray],
-        about_point: np_vector = None,
-        about_edge: np_vector = ORIGIN,
+        about_point: Vect3 = None,
+        about_edge: Vect3 = ORIGIN,
         works_on_bounding_box: bool = False
     ):
         if about_point is None and about_edge is not None:
@@ -233,7 +233,7 @@ class Mobject(object):
         self.set_points(mobject.get_points())
         return self
 
-    def get_points(self) -> np_vector:
+    def get_points(self) -> Vect3:
         return self.data["points"]
 
     def clear_points(self) -> None:
@@ -242,7 +242,7 @@ class Mobject(object):
     def get_num_points(self) -> int:
         return len(self.data["points"])
 
-    def get_all_points(self) -> np_vector:
+    def get_all_points(self) -> Vect3:
         if self.submobjects:
             return np.vstack([sm.get_points() for sm in self.get_family()])
         else:
@@ -251,13 +251,13 @@ class Mobject(object):
     def has_points(self) -> bool:
         return self.get_num_points() > 0
 
-    def get_bounding_box(self) -> np_vector:
+    def get_bounding_box(self) -> Vect3:
         if self.needs_new_bounding_box:
             self.data["bounding_box"] = self.compute_bounding_box()
             self.needs_new_bounding_box = False
         return self.data["bounding_box"]
 
-    def compute_bounding_box(self) -> np_vector:
+    def compute_bounding_box(self) -> Vect3:
         all_points = np.vstack([
             self.get_points(),
             *(
@@ -289,7 +289,7 @@ class Mobject(object):
 
     def are_points_touching(
         self,
-        points: np_vector,
+        points: Vect3,
         buff: float = 0
     ) -> bool:
         bb = self.get_bounding_box()
@@ -299,7 +299,7 @@ class Mobject(object):
 
     def is_point_touching(
         self,
-        point: np_vector,
+        point: Vect3,
         buff: float = 0
     ) -> bool:
         return self.are_points_touching(np.array(point, ndmin=2), buff)[0]
@@ -424,7 +424,7 @@ class Mobject(object):
 
     def arrange(
         self,
-        direction: np_vector = RIGHT,
+        direction: Vect3 = RIGHT,
         center: bool = True,
         **kwargs
     ):
@@ -444,7 +444,7 @@ class Mobject(object):
         buff_ratio: float | None = None,
         h_buff_ratio: float = 0.5,
         v_buff_ratio: float = 0.5,
-        aligned_edge: np_vector = ORIGIN,
+        aligned_edge: Vect3 = ORIGIN,
         fill_rows_first: bool = True
     ):
         submobs = self.submobjects
@@ -827,7 +827,7 @@ class Mobject(object):
 
     # Transforming operations
 
-    def shift(self, vector: np_vector):
+    def shift(self, vector: Vect3):
         self.apply_points_function(
             lambda points: points + vector,
             about_edge=None,
@@ -839,8 +839,8 @@ class Mobject(object):
         self,
         scale_factor: float | npt.ArrayLike,
         min_scale_factor: float = 1e-8,
-        about_point: np_vector | None = None,
-        about_edge: np_vector = ORIGIN
+        about_point: Vect3 | None = None,
+        about_edge: Vect3 = ORIGIN
     ):
         """
         Default behavior is to scale about the center of the mobject.
@@ -877,14 +877,14 @@ class Mobject(object):
         self.apply_points_function(func, works_on_bounding_box=True, **kwargs)
         return self
 
-    def rotate_about_origin(self, angle: float, axis: np_vector = OUT):
+    def rotate_about_origin(self, angle: float, axis: Vect3 = OUT):
         return self.rotate(angle, axis, about_point=ORIGIN)
 
     def rotate(
         self,
         angle: float,
-        axis: np_vector = OUT,
-        about_point: np_vector | None = None,
+        axis: Vect3 = OUT,
+        about_point: Vect3 | None = None,
         **kwargs
     ):
         rot_matrix_T = rotation_matrix_transpose(angle, axis)
@@ -895,7 +895,7 @@ class Mobject(object):
         )
         return self
 
-    def flip(self, axis: np_vector = UP, **kwargs):
+    def flip(self, axis: Vect3 = UP, **kwargs):
         return self.rotate(TAU / 2, axis, **kwargs)
 
     def apply_function(self, function: Callable[[np.ndarray], np.ndarray], **kwargs):
@@ -946,8 +946,8 @@ class Mobject(object):
 
     def wag(
         self,
-        direction: np_vector = RIGHT,
-        axis: np_vector = DOWN,
+        direction: Vect3 = RIGHT,
+        axis: Vect3 = DOWN,
         wag_factor: float = 1.0
     ):
         for mob in self.family_members_with_points():
@@ -969,7 +969,7 @@ class Mobject(object):
 
     def align_on_border(
         self,
-        direction: np_vector,
+        direction: Vect3,
         buff: float = DEFAULT_MOBJECT_TO_EDGE_BUFFER
     ):
         """
@@ -985,27 +985,27 @@ class Mobject(object):
 
     def to_corner(
         self,
-        corner: np_vector = LEFT + DOWN,
+        corner: Vect3 = LEFT + DOWN,
         buff: float = DEFAULT_MOBJECT_TO_EDGE_BUFFER
     ):
         return self.align_on_border(corner, buff)
 
     def to_edge(
         self,
-        edge: np_vector = LEFT,
+        edge: Vect3 = LEFT,
         buff: float = DEFAULT_MOBJECT_TO_EDGE_BUFFER
     ):
         return self.align_on_border(edge, buff)
 
     def next_to(
         self,
-        mobject_or_point: Mobject | np_vector,
-        direction: np_vector = RIGHT,
+        mobject_or_point: Mobject | Vect3,
+        direction: Vect3 = RIGHT,
         buff: float = DEFAULT_MOBJECT_TO_MOBJECT_BUFFER,
-        aligned_edge: np_vector = ORIGIN,
+        aligned_edge: Vect3 = ORIGIN,
         submobject_to_align: Mobject | None = None,
         index_of_submobject_to_align: int | slice | None = None,
-        coor_mask: np_vector = np.array([1, 1, 1]),
+        coor_mask: Vect3 = np.array([1, 1, 1]),
     ):
         if isinstance(mobject_or_point, Mobject):
             mob = mobject_or_point
@@ -1050,7 +1050,7 @@ class Mobject(object):
             return True
         return False
 
-    def stretch_about_point(self, factor: float, dim: int, point: np_vector):
+    def stretch_about_point(self, factor: float, dim: int, point: Vect3):
         return self.stretch(factor, dim, about_point=point)
 
     def stretch_in_place(self, factor: float, dim: int):
@@ -1115,20 +1115,20 @@ class Mobject(object):
             self.set_depth(min_depth, **kwargs)
         return self
 
-    def set_coord(self, value: float, dim: int, direction: np_vector = ORIGIN):
+    def set_coord(self, value: float, dim: int, direction: Vect3 = ORIGIN):
         curr = self.get_coord(dim, direction)
         shift_vect = np.zeros(self.dim)
         shift_vect[dim] = value - curr
         self.shift(shift_vect)
         return self
 
-    def set_x(self, x: float, direction: np_vector = ORIGIN):
+    def set_x(self, x: float, direction: Vect3 = ORIGIN):
         return self.set_coord(x, 0, direction)
 
-    def set_y(self, y: float, direction: np_vector = ORIGIN):
+    def set_y(self, y: float, direction: Vect3 = ORIGIN):
         return self.set_coord(y, 1, direction)
 
-    def set_z(self, z: float, direction: np_vector = ORIGIN):
+    def set_z(self, z: float, direction: Vect3 = ORIGIN):
         return self.set_coord(z, 2, direction)
 
     def space_out_submobjects(self, factor: float = 1.5, **kwargs):
@@ -1139,9 +1139,9 @@ class Mobject(object):
 
     def move_to(
         self,
-        point_or_mobject: Mobject | np_vector,
-        aligned_edge: np_vector = ORIGIN,
-        coor_mask: np_vector = np.array([1, 1, 1])
+        point_or_mobject: Mobject | Vect3,
+        aligned_edge: Vect3 = ORIGIN,
+        coor_mask: Vect3 = np.array([1, 1, 1])
     ):
         if isinstance(point_or_mobject, Mobject):
             target = point_or_mobject.get_bounding_box_point(aligned_edge)
@@ -1179,7 +1179,7 @@ class Mobject(object):
         self.scale((length + buff) / length)
         return self
 
-    def put_start_and_end_on(self, start: np_vector, end: np_vector):
+    def put_start_and_end_on(self, start: Vect3, end: Vect3):
         curr_start, curr_end = self.get_start_and_end()
         curr_vect = curr_end - curr_start
         if np.all(curr_vect == 0):
@@ -1213,7 +1213,7 @@ class Mobject(object):
 
     def set_color_by_rgba_func(
         self,
-        func: Callable[[np.ndarray], Sequence[float]],
+        func: Callable[[Vect3], Vect4],
         recurse: bool = True
     ):
         """
@@ -1226,7 +1226,7 @@ class Mobject(object):
 
     def set_color_by_rgb_func(
         self,
-        func: Callable[[np.ndarray], Sequence[float]],
+        func: Callable[[Vect3], Vect3],
         opacity: float = 1,
         recurse: bool = True
     ):
@@ -1373,7 +1373,7 @@ class Mobject(object):
 
     # Getters
 
-    def get_bounding_box_point(self, direction: np_vector) -> np_vector:
+    def get_bounding_box_point(self, direction: Vect3) -> Vect3:
         bb = self.get_bounding_box()
         indices = (np.sign(direction) + 1).astype(int)
         return np.array([
@@ -1381,10 +1381,10 @@ class Mobject(object):
             for i in range(3)
         ])
 
-    def get_edge_center(self, direction: np_vector) -> np_vector:
+    def get_edge_center(self, direction: Vect3) -> Vect3:
         return self.get_bounding_box_point(direction)
 
-    def get_corner(self, direction: np_vector) -> np_vector:
+    def get_corner(self, direction: Vect3) -> Vect3:
         return self.get_bounding_box_point(direction)
 
     def get_all_corners(self):
@@ -1394,13 +1394,13 @@ class Mobject(object):
             for indices in it.product([0, 2], repeat=3)
         ])
 
-    def get_center(self) -> np_vector:
+    def get_center(self) -> Vect3:
         return self.get_bounding_box()[1]
 
-    def get_center_of_mass(self) -> np_vector:
+    def get_center_of_mass(self) -> Vect3:
         return self.get_all_points().mean(0)
 
-    def get_boundary_point(self, direction: np_vector) -> np_vector:
+    def get_boundary_point(self, direction: Vect3) -> Vect3:
         all_points = self.get_all_points()
         boundary_directions = all_points - self.get_center()
         norms = np.linalg.norm(boundary_directions, axis=1)
@@ -1408,7 +1408,7 @@ class Mobject(object):
         index = np.argmax(np.dot(boundary_directions, np.array(direction).T))
         return all_points[index]
 
-    def get_continuous_bounding_box_point(self, direction: np_vector) -> np_vector:
+    def get_continuous_bounding_box_point(self, direction: Vect3) -> Vect3:
         dl, center, ur = self.get_bounding_box()
         corner_vect = (ur - center)
         return center + direction / np.max(np.abs(np.true_divide(
@@ -1417,22 +1417,22 @@ class Mobject(object):
             where=((corner_vect) != 0)
         )))
 
-    def get_top(self) -> np_vector:
+    def get_top(self) -> Vect3:
         return self.get_edge_center(UP)
 
-    def get_bottom(self) -> np_vector:
+    def get_bottom(self) -> Vect3:
         return self.get_edge_center(DOWN)
 
-    def get_right(self) -> np_vector:
+    def get_right(self) -> Vect3:
         return self.get_edge_center(RIGHT)
 
-    def get_left(self) -> np_vector:
+    def get_left(self) -> Vect3:
         return self.get_edge_center(LEFT)
 
-    def get_zenith(self) -> np_vector:
+    def get_zenith(self) -> Vect3:
         return self.get_edge_center(OUT)
 
-    def get_nadir(self) -> np_vector:
+    def get_nadir(self) -> Vect3:
         return self.get_edge_center(IN)
 
     def length_over_dim(self, dim: int) -> float:
@@ -1448,7 +1448,7 @@ class Mobject(object):
     def get_depth(self) -> float:
         return self.length_over_dim(2)
 
-    def get_coord(self, dim: int, direction: np_vector = ORIGIN) -> float:
+    def get_coord(self, dim: int, direction: Vect3 = ORIGIN) -> float:
         """
         Meant to generalize get_x, get_y, get_z
         """
@@ -1463,20 +1463,20 @@ class Mobject(object):
     def get_z(self, direction=ORIGIN) -> float:
         return self.get_coord(2, direction)
 
-    def get_start(self) -> np_vector:
+    def get_start(self) -> Vect3:
         self.throw_error_if_no_points()
         return self.get_points()[0].copy()
 
-    def get_end(self) -> np_vector:
+    def get_end(self) -> Vect3:
         self.throw_error_if_no_points()
         return self.get_points()[-1].copy()
 
-    def get_start_and_end(self) -> tuple[np_vector, np_vector]:
+    def get_start_and_end(self) -> tuple[Vect3, Vect3]:
         self.throw_error_if_no_points()
         points = self.get_points()
         return (points[0].copy(), points[-1].copy())
 
-    def point_from_proportion(self, alpha: float) -> np_vector:
+    def point_from_proportion(self, alpha: float) -> Vect3:
         points = self.get_points()
         i, subalpha = integer_interpolate(0, len(points) - 1, alpha)
         return interpolate(points[i], points[i + 1], subalpha)
@@ -1523,9 +1523,9 @@ class Mobject(object):
 
     def match_coord(
         self,
-        mobject_or_point: Mobject | np_vector,
+        mobject_or_point: Mobject | Vect3,
         dim: int,
-        direction: np_vector = ORIGIN
+        direction: Vect3 = ORIGIN
     ):
         if isinstance(mobject_or_point, Mobject):
             coord = mobject_or_point.get_coord(dim, direction)
@@ -1535,29 +1535,29 @@ class Mobject(object):
 
     def match_x(
         self,
-        mobject_or_point: Mobject | np_vector,
-        direction: np_vector = ORIGIN
+        mobject_or_point: Mobject | Vect3,
+        direction: Vect3 = ORIGIN
     ):
         return self.match_coord(mobject_or_point, 0, direction)
 
     def match_y(
         self,
-        mobject_or_point: Mobject | np_vector,
-        direction: np_vector = ORIGIN
+        mobject_or_point: Mobject | Vect3,
+        direction: Vect3 = ORIGIN
     ):
         return self.match_coord(mobject_or_point, 1, direction)
 
     def match_z(
         self,
-        mobject_or_point: Mobject | np_vector,
-        direction: np_vector = ORIGIN
+        mobject_or_point: Mobject | Vect3,
+        direction: Vect3 = ORIGIN
     ):
         return self.match_coord(mobject_or_point, 2, direction)
 
     def align_to(
         self,
-        mobject_or_point: Mobject | np_vector,
-        direction: np_vector = ORIGIN
+        mobject_or_point: Mobject | Vect3,
+        direction: Vect3 = ORIGIN
     ):
         """
         Examples:
@@ -1871,7 +1871,7 @@ class Mobject(object):
             )
         return self
 
-    def get_resized_shader_data_array(self, length: int) -> np_vector:
+    def get_resized_shader_data_array(self, length: int) -> Vect3:
         # If possible, try to populate an existing array, rather
         # than recreating it each frame
         if len(self.shader_data) != length:
@@ -1880,7 +1880,7 @@ class Mobject(object):
 
     def read_data_to_shader(
         self,
-        shader_data: np_vector,
+        shader_data: Vect3,
         shader_data_key: str,
         data_key: str
     ):
@@ -2024,7 +2024,7 @@ class Group(Mobject):
 class Point(Mobject):
     def __init__(
         self,
-        location: np_vector = ORIGIN,
+        location: Vect3 = ORIGIN,
         artificial_width: float = 1e-6,
         artificial_height: float = 1e-6,
         **kwargs
@@ -2040,10 +2040,10 @@ class Point(Mobject):
     def get_height(self) -> float:
         return self.artificial_height
 
-    def get_location(self) -> np_vector:
+    def get_location(self) -> Vect3:
         return self.get_points()[0].copy()
 
-    def get_bounding_box_point(self, *args, **kwargs) -> np_vector:
+    def get_bounding_box_point(self, *args, **kwargs) -> Vect3:
         return self.get_location()
 
     def set_location(self, new_loc: npt.ArrayLike):

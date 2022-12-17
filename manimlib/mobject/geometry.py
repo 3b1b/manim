@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Iterable
-    from manimlib.typing import ManimColor, np_vector
+    from manimlib.typing import ManimColor, Vect3
 
 
 DEFAULT_DOT_RADIUS = 0.08
@@ -177,19 +177,19 @@ class TipableVMobject(VMobject):
     def get_default_tip_length(self) -> float:
         return self.tip_length
 
-    def get_first_handle(self) -> np_vector:
+    def get_first_handle(self) -> Vect3:
         return self.get_points()[1]
 
-    def get_last_handle(self) -> np_vector:
+    def get_last_handle(self) -> Vect3:
         return self.get_points()[-2]
 
-    def get_end(self) -> np_vector:
+    def get_end(self) -> Vect3:
         if self.has_tip():
             return self.tip.get_start()
         else:
             return VMobject.get_end(self)
 
-    def get_start(self) -> np_vector:
+    def get_start(self) -> Vect3:
         if self.has_start_tip():
             return self.start_tip.get_start()
         else:
@@ -207,7 +207,7 @@ class Arc(TipableVMobject):
         angle: float = TAU / 4,
         radius: float = 1.0,
         n_components: int = 8,
-        arc_center: np_vector = ORIGIN,
+        arc_center: Vect3 = ORIGIN,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -225,7 +225,7 @@ class Arc(TipableVMobject):
         angle: float,
         start_angle: float = 0,
         n_components: int = 8
-    ) -> np_vector:
+    ) -> Vect3:
         samples = np.array([
             [np.cos(a), np.sin(a), 0]
             for a in np.linspace(
@@ -243,7 +243,7 @@ class Arc(TipableVMobject):
         points[2::3] = samples[2::2]
         return points
 
-    def get_arc_center(self) -> np_vector:
+    def get_arc_center(self) -> Vect3:
         """
         Looks at the normals to the first two
         anchors, and finds their intersection points
@@ -266,7 +266,7 @@ class Arc(TipableVMobject):
         angle = angle_of_vector(self.get_end() - self.get_arc_center())
         return angle % TAU
 
-    def move_arc_center_to(self, point: np_vector):
+    def move_arc_center_to(self, point: Vect3):
         self.shift(point - self.get_arc_center())
         return self
 
@@ -274,8 +274,8 @@ class Arc(TipableVMobject):
 class ArcBetweenPoints(Arc):
     def __init__(
         self,
-        start: np_vector,
-        end: np_vector,
+        start: Vect3,
+        end: Vect3,
         angle: float = TAU / 4,
         **kwargs
     ):
@@ -288,8 +288,8 @@ class ArcBetweenPoints(Arc):
 class CurvedArrow(ArcBetweenPoints):
     def __init__(
         self,
-        start_point: np_vector,
-        end_point: np_vector,
+        start_point: Vect3,
+        end_point: Vect3,
         **kwargs
     ):
         super().__init__(start_point, end_point, **kwargs)
@@ -299,8 +299,8 @@ class CurvedArrow(ArcBetweenPoints):
 class CurvedDoubleArrow(CurvedArrow):
     def __init__(
         self,
-        start_point: np_vector,
-        end_point: np_vector,
+        start_point: Vect3,
+        end_point: Vect3,
         **kwargs
     ):
         super().__init__(start_point, end_point, **kwargs)
@@ -334,7 +334,7 @@ class Circle(Arc):
         self.stretch((self.get_height() + 2 * buff) / self.get_height(), 1)
         return self
 
-    def point_at_angle(self, angle: float) -> np_vector:
+    def point_at_angle(self, angle: float) -> Vect3:
         start_angle = self.get_start_angle()
         return self.point_from_proportion(
             ((angle - start_angle) % TAU) / TAU
@@ -347,7 +347,7 @@ class Circle(Arc):
 class Dot(Circle):
     def __init__(
         self,
-        point: np_vector = ORIGIN,
+        point: Vect3 = ORIGIN,
         radius: float = DEFAULT_DOT_RADIUS,
         stroke_color: ManimColor = BLACK,
         stroke_width: float = 0.0,
@@ -369,7 +369,7 @@ class Dot(Circle):
 class SmallDot(Dot):
     def __init__(
         self,
-        point: np_vector = ORIGIN,
+        point: Vect3 = ORIGIN,
         radius: float = DEFAULT_SMALL_DOT_RADIUS,
         **kwargs
     ):
@@ -395,7 +395,7 @@ class AnnularSector(VMobject):
         start_angle: float = 0.0,
         inner_radius: float = 1.0,
         outer_radius: float = 2.0,
-        arc_center: np_vector = ORIGIN,
+        arc_center: Vect3 = ORIGIN,
         fill_color: ManimColor = GREY_A,
         fill_opacity: float = 1.0,
         stroke_width: float = 0.0,
@@ -447,7 +447,7 @@ class Annulus(VMobject):
         fill_opacity: float = 1.0,
         stroke_width: float = 0.0,
         fill_color: ManimColor = GREY_A,
-        center: np_vector = ORIGIN,
+        center: Vect3 = ORIGIN,
         **kwargs,
     ):
         super().__init__(
@@ -468,8 +468,8 @@ class Annulus(VMobject):
 class Line(TipableVMobject):
     def __init__(
         self,
-        start: np_vector | Mobject = LEFT,
-        end: np_vector | Mobject = RIGHT,
+        start: Vect3 | Mobject = LEFT,
+        end: Vect3 | Mobject = RIGHT,
         buff: float = 0.0,
         path_arc: float = 0.0,
         **kwargs
@@ -481,8 +481,8 @@ class Line(TipableVMobject):
 
     def set_points_by_ends(
         self,
-        start: np_vector,
-        end: np_vector,
+        start: Vect3,
+        end: Vect3,
         buff: float = 0,
         path_arc: float = 0
     ):
@@ -518,7 +518,7 @@ class Line(TipableVMobject):
         self.path_arc = new_value
         self.init_points()
 
-    def set_start_and_end_attrs(self, start: np_vector | Mobject, end: np_vector | Mobject):
+    def set_start_and_end_attrs(self, start: Vect3 | Mobject, end: Vect3 | Mobject):
         # If either start or end are Mobjects, this
         # gives their centers
         rough_start = self.pointify(start)
@@ -532,9 +532,9 @@ class Line(TipableVMobject):
 
     def pointify(
         self,
-        mob_or_point: Mobject | np_vector,
-        direction: np_vector | None = None
-    ) -> np_vector:
+        mob_or_point: Mobject | Vect3,
+        direction: Vect3 | None = None
+    ) -> Vect3:
         """
         Take an argument passed into Line (or subclass) and turn
         it into a 3d point.
@@ -551,7 +551,7 @@ class Line(TipableVMobject):
             result[:len(point)] = point
             return result
 
-    def put_start_and_end_on(self, start: np_vector, end: np_vector):
+    def put_start_and_end_on(self, start: Vect3, end: Vect3):
         curr_start, curr_end = self.get_start_and_end()
         if np.isclose(curr_start, curr_end).all():
             # Handle null lines more gracefully
@@ -559,16 +559,16 @@ class Line(TipableVMobject):
             return self
         return super().put_start_and_end_on(start, end)
 
-    def get_vector(self) -> np_vector:
+    def get_vector(self) -> Vect3:
         return self.get_end() - self.get_start()
 
-    def get_unit_vector(self) -> np_vector:
+    def get_unit_vector(self) -> Vect3:
         return normalize(self.get_vector())
 
     def get_angle(self) -> float:
         return angle_of_vector(self.get_vector())
 
-    def get_projection(self, point: np_vector) -> np_vector:
+    def get_projection(self, point: Vect3) -> Vect3:
         """
         Return projection of a point onto the line
         """
@@ -579,7 +579,7 @@ class Line(TipableVMobject):
     def get_slope(self) -> float:
         return np.tan(self.get_angle())
 
-    def set_angle(self, angle: float, about_point: np_vector | None = None):
+    def set_angle(self, angle: float, about_point: Vect3 | None = None):
         if about_point is None:
             about_point = self.get_start()
         self.rotate(
@@ -601,8 +601,8 @@ class Line(TipableVMobject):
 class DashedLine(Line):
     def __init__(
         self,
-        start: np_vector = LEFT,
-        end: np_vector = RIGHT,
+        start: Vect3 = LEFT,
+        end: Vect3 = RIGHT,
         dash_length: float = DEFAULT_DASH_LENGTH,
         positive_space_ratio: float = 0.5,
         **kwargs
@@ -625,22 +625,22 @@ class DashedLine(Line):
         except ZeroDivisionError:
             return 1
 
-    def get_start(self) -> np_vector:
+    def get_start(self) -> Vect3:
         if len(self.submobjects) > 0:
             return self.submobjects[0].get_start()
         else:
             return Line.get_start(self)
 
-    def get_end(self) -> np_vector:
+    def get_end(self) -> Vect3:
         if len(self.submobjects) > 0:
             return self.submobjects[-1].get_end()
         else:
             return Line.get_end(self)
 
-    def get_first_handle(self) -> np_vector:
+    def get_first_handle(self) -> Vect3:
         return self.submobjects[0].get_points()[1]
 
-    def get_last_handle(self) -> np_vector:
+    def get_last_handle(self) -> Vect3:
         return self.submobjects[-1].get_points()[-2]
 
 
@@ -675,8 +675,8 @@ class Elbow(VMobject):
 class Arrow(Line):
     def __init__(
         self,
-        start: np_vector | Mobject,
-        end: np_vector | Mobject,
+        start: Vect3 | Mobject,
+        end: Vect3 | Mobject,
         stroke_color: ManimColor = GREY_A,
         stroke_width: float = 5,
         buff: float = 0.25,
@@ -701,8 +701,8 @@ class Arrow(Line):
 
     def set_points_by_ends(
         self,
-        start: np_vector,
-        end: np_vector,
+        start: Vect3,
+        end: Vect3,
         buff: float = 0,
         path_arc: float = 0
     ):
@@ -766,8 +766,8 @@ class Arrow(Line):
 class FillArrow(Line):
     def __init__(
         self,
-        start: np_vector | Mobject = LEFT,
-        end: np_vector | Mobject = LEFT,
+        start: Vect3 | Mobject = LEFT,
+        end: Vect3 | Mobject = LEFT,
         fill_color: ManimColor = GREY_A,
         fill_opacity: float = 1.0,
         stroke_width: float = 0.0,
@@ -795,8 +795,8 @@ class FillArrow(Line):
 
     def set_points_by_ends(
         self,
-        start: np_vector,
-        end: np_vector,
+        start: Vect3,
+        end: Vect3,
         buff: float = 0,
         path_arc: float = 0
     ) -> None:
@@ -868,15 +868,15 @@ class FillArrow(Line):
         )
         return self
 
-    def get_start(self) -> np_vector:
+    def get_start(self) -> Vect3:
         nppc = self.n_points_per_curve
         points = self.get_points()
         return (points[0] + points[-nppc]) / 2
 
-    def get_end(self) -> np_vector:
+    def get_end(self) -> Vect3:
         return self.get_points()[self.tip_index]
 
-    def put_start_and_end_on(self, start: np_vector, end: np_vector):
+    def put_start_and_end_on(self, start: Vect3, end: Vect3):
         self.set_points_by_ends(start, end, buff=0, path_arc=self.path_arc)
         return self
 
@@ -899,7 +899,7 @@ class FillArrow(Line):
 class Vector(Arrow):
     def __init__(
         self,
-        direction: np_vector = RIGHT,
+        direction: Vect3 = RIGHT,
         buff: float = 0.0,
         **kwargs
     ):
@@ -911,10 +911,10 @@ class Vector(Arrow):
 class CubicBezier(VMobject):
     def __init__(
         self,
-        a0: np_vector,
-        h0: np_vector,
-        h1: np_vector,
-        a1: np_vector,
+        a0: Vect3,
+        h0: Vect3,
+        h1: Vect3,
+        a1: Vect3,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -922,11 +922,11 @@ class CubicBezier(VMobject):
 
 
 class Polygon(VMobject):
-    def __init__(self, *vertices: np_vector, **kwargs):
+    def __init__(self, *vertices: Vect3, **kwargs):
         super().__init__(**kwargs)
         self.set_points_as_corners([*vertices, vertices[0]])
 
-    def get_vertices(self) -> list[np_vector]:
+    def get_vertices(self) -> list[Vect3]:
         return self.get_start_anchors()
 
     def round_corners(self, radius: float | None = None):
@@ -976,7 +976,7 @@ class Polygon(VMobject):
 
 
 class Polyline(VMobject):
-    def __init__(self, *vertices: np_vector, **kwargs):
+    def __init__(self, *vertices: Vect3, **kwargs):
         super().__init__(**kwargs)
         self.set_points_as_corners(vertices)
 
@@ -1031,13 +1031,13 @@ class ArrowTip(Triangle):
             self.data["points"] = Dot().set_width(h).get_points()
         self.rotate(angle)
 
-    def get_base(self) -> np_vector:
+    def get_base(self) -> Vect3:
         return self.point_from_proportion(0.5)
 
-    def get_tip_point(self) -> np_vector:
+    def get_tip_point(self) -> Vect3:
         return self.get_points()[0]
 
-    def get_vector(self) -> np_vector:
+    def get_vector(self) -> Vect3:
         return self.get_tip_point() - self.get_base()
 
     def get_angle(self) -> float:

@@ -4,7 +4,7 @@ import numpy as np
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import List
-    from manimlib.typing import ManimColor, np_vector
+    from manimlib.typing import ManimColor, Vect3
 
 
 # Sizes relevant to default camera frame
@@ -31,27 +31,27 @@ DEFAULT_MOBJECT_TO_MOBJECT_BUFFER: float = MED_SMALL_BUFF
 DEFAULT_WAIT_TIME: float = 1.0
 
 
-ORIGIN: np_vector = np.array([0., 0., 0.])
-UP: np_vector = np.array([0., 1., 0.])
-DOWN: np_vector = np.array([0., -1., 0.])
-RIGHT: np_vector = np.array([1., 0., 0.])
-LEFT: np_vector = np.array([-1., 0., 0.])
-IN: np_vector = np.array([0., 0., -1.])
-OUT: np_vector = np.array([0., 0., 1.])
-X_AXIS: np_vector = np.array([1., 0., 0.])
-Y_AXIS: np_vector = np.array([0., 1., 0.])
-Z_AXIS: np_vector = np.array([0., 0., 1.])
+ORIGIN: Vect3 = np.array([0., 0., 0.])
+UP: Vect3 = np.array([0., 1., 0.])
+DOWN: Vect3 = np.array([0., -1., 0.])
+RIGHT: Vect3 = np.array([1., 0., 0.])
+LEFT: Vect3 = np.array([-1., 0., 0.])
+IN: Vect3 = np.array([0., 0., -1.])
+OUT: Vect3 = np.array([0., 0., 1.])
+X_AXIS: Vect3 = np.array([1., 0., 0.])
+Y_AXIS: Vect3 = np.array([0., 1., 0.])
+Z_AXIS: Vect3 = np.array([0., 0., 1.])
 
 # Useful abbreviations for diagonals
-UL: np_vector = UP + LEFT
-UR: np_vector = UP + RIGHT
-DL: np_vector = DOWN + LEFT
-DR: np_vector = DOWN + RIGHT
+UL: Vect3 = UP + LEFT
+UR: Vect3 = UP + RIGHT
+DL: Vect3 = DOWN + LEFT
+DR: Vect3 = DOWN + RIGHT
 
-TOP: np_vector = FRAME_Y_RADIUS * UP
-BOTTOM: np_vector = FRAME_Y_RADIUS * DOWN
-LEFT_SIDE: np_vector = FRAME_X_RADIUS * LEFT
-RIGHT_SIDE: np_vector = FRAME_X_RADIUS * RIGHT
+TOP: Vect3 = FRAME_Y_RADIUS * UP
+BOTTOM: Vect3 = FRAME_Y_RADIUS * DOWN
+LEFT_SIDE: Vect3 = FRAME_X_RADIUS * LEFT
+RIGHT_SIDE: Vect3 = FRAME_X_RADIUS * RIGHT
 
 PI: float = np.pi
 TAU: float = 2 * PI

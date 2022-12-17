@@ -29,14 +29,14 @@ if TYPE_CHECKING:
     from manimlib.typing import ManimColor
     from typing import Sequence
 
-    np_vector = np.ndarray[int, np.dtype[np.float64]]
+    Vect3 = np.ndarray[int, np.dtype[np.float64]]
 
 
 class CameraFrame(Mobject):
     def __init__(
         self,
         frame_shape: tuple[float, float] = (FRAME_WIDTH, FRAME_HEIGHT),
-        center_point: np_vector = ORIGIN,
+        center_point: Vect3 = ORIGIN,
         focal_dist_to_height: float = 2.0,
         **kwargs,
     ):

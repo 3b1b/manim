@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import TypeVar
-    from manimlib.typing import ManimColor, np_vector
+    from manimlib.typing import ManimColor, Vect3
 
     T = TypeVar("T", bound=VMobject)
 
@@ -31,7 +31,7 @@ class DecimalNumber(VMobject):
         show_ellipsis: bool = False,
         unit: str | None = None,  # Aligned to bottom unless it starts with "^"
         include_background_rectangle: bool = False,
-        edge_to_fix: np_vector = LEFT,
+        edge_to_fix: Vect3 = LEFT,
         font_size: int = 48,
         text_config: dict = dict(),  # Do not pass in font_size here
         **kwargs

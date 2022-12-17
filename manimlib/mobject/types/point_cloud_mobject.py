@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Callable, Sequence
     import numpy.typing as npt
-    from manimlib.typing import ManimColor, np_vector
+    from manimlib.typing import ManimColor, Vect3
 
 
 class PMobject(Mobject):
@@ -32,7 +32,7 @@ class PMobject(Mobject):
                 self.data[key] = resize_func(self.data[key], size)
         return self
 
-    def set_points(self, points: np_vector):
+    def set_points(self, points: Vect3):
         if len(points) == 0:
             points = np.zeros((0, 3))
         super().set_points(points)
@@ -41,8 +41,8 @@ class PMobject(Mobject):
 
     def add_points(
         self,
-        points: Sequence[np_vector],
-        rgbas: np_vector | None = None,
+        points: Sequence[Vect3],
+        rgbas: Vect3 | None = None,
         color: ManimColor | None = None,
         opacity: float | None = None
     ):
@@ -63,7 +63,7 @@ class PMobject(Mobject):
             self.data["rgbas"][-len(rgbas):] = rgbas
         return self
 
-    def add_point(self, point: np_vector, rgba=None, color=None, opacity=None):
+    def add_point(self, point: Vect3, rgba=None, color=None, opacity=None):
         rgbas = None if rgba is None else [rgba]
         self.add_points([point], rgbas, color, opacity)
         return self
@@ -90,7 +90,7 @@ class PMobject(Mobject):
                 mob.data[key] = mob.data[key][to_keep]
         return self
 
-    def sort_points(self, function: Callable[[np_vector], None] = lambda p: p[0]):
+    def sort_points(self, function: Callable[[Vect3], None] = lambda p: p[0]):
         """
         function is any map from R^3 to R
         """

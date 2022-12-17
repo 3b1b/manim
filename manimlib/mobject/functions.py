@@ -11,13 +11,13 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Callable, Sequence, Tuple
-    from manimlib.typing import ManimColor, np_vector
+    from manimlib.typing import ManimColor, Vect3
 
 
 class ParametricCurve(VMobject):
     def __init__(
         self,
-        t_func: Callable[[float], Sequence[float] | np_vector],
+        t_func: Callable[[float], Sequence[float] | Vect3],
         t_range: Tuple[float, float, float] = (0, 1, 0.1),
         epsilon: float = 1e-8,
         # TODO, automatically figure out discontinuities
@@ -32,7 +32,7 @@ class ParametricCurve(VMobject):
         self.use_smoothing = use_smoothing
         super().__init__(**kwargs)
 
-    def get_point_from_function(self, t: float) -> np_vector:
+    def get_point_from_function(self, t: float) -> Vect3:
         return np.array(self.t_func(t))
 
     def init_points(self):

@@ -27,14 +27,14 @@ if TYPE_CHECKING:
 
     from manimlib.animation.animation import Animation
     from manimlib.mobject.mobject import Mobject
-    from manimlib.typing import np_vector
+    from manimlib.typing import Vect3
 
 
 class Brace(SingleStringTex):
     def __init__(
         self,
         mobject: Mobject,
-        direction: np_vector = DOWN,
+        direction: Vect3 = DOWN,
         buff: float = 0.2,
         tex_string: str = R"\underbrace{\qquad}",
         **kwargs

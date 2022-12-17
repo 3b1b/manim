@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Callable, List, Iterable
-    from manimlib.typing import ManimColor, np_vector
+    from manimlib.typing import ManimColor, Vect3
 
 
 class AnimatedBoundary(VGroup):
@@ -97,7 +97,7 @@ class AnimatedBoundary(VGroup):
 class TracedPath(VMobject):
     def __init__(
         self,
-        traced_point_func: Callable[[], np_vector],
+        traced_point_func: Callable[[], Vect3],
         time_traced: float = np.inf,
         time_per_anchor: float = 1.0 / 15,
         stroke_width: float | Iterable[float] = 2.0,

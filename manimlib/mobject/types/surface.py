@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence, Tuple
 
     from manimlib.camera.camera import Camera
-    from manimlib.typing import ManimColor, np_vector
+    from manimlib.typing import ManimColor, Vect3
 
 
 class Surface(Mobject):
@@ -114,12 +114,12 @@ class Surface(Mobject):
 
     def get_surface_points_and_nudged_points(
         self
-    ) -> tuple[np_vector, np_vector, np_vector]:
+    ) -> tuple[Vect3, Vect3, Vect3]:
         points = self.get_points()
         k = len(points) // 3
         return points[:k], points[k:2 * k], points[2 * k:]
 
-    def get_unit_normals(self) -> np_vector:
+    def get_unit_normals(self) -> Vect3:
         s_points, du_points, dv_points = self.get_surface_points_and_nudged_points()
         normals = np.cross(
             (du_points - s_points) / self.epsilon,
@@ -150,12 +150,12 @@ class Surface(Mobject):
 
     def get_partial_points_array(
         self,
-        points: np_vector,
+        points: Vect3,
         a: float,
         b: float,
         resolution: Sequence[int],
         axis: int
-    ) -> np_vector:
+    ) -> Vect3:
         if len(points) == 0:
             return points
         nu, nv = resolution[:2]
@@ -188,7 +188,7 @@ class Surface(Mobject):
             ).reshape(shape)
         return points.reshape((nu * nv, *resolution[2:]))
 
-    def sort_faces_back_to_front(self, vect: np_vector = OUT):
+    def sort_faces_back_to_front(self, vect: Vect3 = OUT):
         tri_is = self.triangle_indices
         indices = list(range(len(tri_is) // 3))
         points = self.get_points()

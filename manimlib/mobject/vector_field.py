@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence, TypeVar, Tuple
     import numpy.typing as npt
-    from manimlib.typing import ManimColor, np_vector
+    from manimlib.typing import ManimColor, Vect3
 
     from manimlib.mobject.coordinate_systems import CoordinateSystem
     from manimlib.mobject.mobject import Mobject
@@ -35,7 +35,7 @@ def get_vectorized_rgb_gradient_function(
     min_value: T,
     max_value: T,
     color_map: str
-) -> Callable[[npt.ArrayLike], np_vector]:
+) -> Callable[[npt.ArrayLike], Vect3]:
     rgbs = np.array(get_colormap_list(color_map))
 
     def func(values):
@@ -57,14 +57,14 @@ def get_rgb_gradient_function(
     min_value: T,
     max_value: T,
     color_map: str
-) -> Callable[[T], np_vector]:
+) -> Callable[[T], Vect3]:
     vectorized_func = get_vectorized_rgb_gradient_function(min_value, max_value, color_map)
     return lambda value: vectorized_func([value])[0]
 
 
 def move_along_vector_field(
     mobject: Mobject,
-    func: Callable[[np_vector], np_vector]
+    func: Callable[[Vect3], Vect3]
 ) -> Mobject:
     mobject.add_updater(
         lambda m, dt: m.shift(
@@ -76,7 +76,7 @@ def move_along_vector_field(
 
 def move_submobjects_along_vector_field(
     mobject: Mobject,
-    func: Callable[[np_vector], np_vector]
+    func: Callable[[Vect3], Vect3]
 ) -> Mobject:
     def apply_nudge(mob, dt):
         for submob in mob:
@@ -107,7 +107,7 @@ def move_points_along_vector_field(
 def get_sample_points_from_coordinate_system(
     coordinate_system: CoordinateSystem,
     step_multiple: float
-) -> it.product[tuple[np_vector, ...]]:
+) -> it.product[tuple[Vect3, ...]]:
     ranges = []
     for range_args in coordinate_system.get_all_ranges():
         _min, _max, step = range_args
@@ -224,7 +224,7 @@ class StreamLines(VGroup):
         self.draw_lines()
         self.init_style()
 
-    def point_func(self, point: np_vector) -> np_vector:
+    def point_func(self, point: Vect3) -> Vect3:
         in_coords = self.coordinate_system.p2c(point)
         out_coords = self.func(*in_coords)
         return self.coordinate_system.c2p(*out_coords)
@@ -254,7 +254,7 @@ class StreamLines(VGroup):
             lines.append(line)
         self.set_submobjects(lines)
 
-    def get_start_points(self) -> np_vector:
+    def get_start_points(self) -> Vect3:
         cs = self.coordinate_system
         sample_coords = get_sample_points_from_coordinate_system(
             cs, self.step_multiple,

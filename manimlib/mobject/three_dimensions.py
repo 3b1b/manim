@@ -23,7 +23,7 @@ from manimlib.utils.space_ops import z_to_vector
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Tuple, TypeVar
-    from manimlib.typing import ManimColor, np_vector
+    from manimlib.typing import ManimColor, Vect3
 
     T = TypeVar("T", bound=Mobject)
 
@@ -145,7 +145,7 @@ class Cylinder(Surface):
         resolution: Tuple[int, int] = (101, 11),
         height: float = 2,
         radius: float = 1,
-        axis: np_vector = OUT,
+        axis: Vect3 = OUT,
         **kwargs,
     ):
         self.height = height
@@ -173,8 +173,8 @@ class Cylinder(Surface):
 class Line3D(Cylinder):
     def __init__(
         self,
-        start: np_vector,
-        end: np_vector,
+        start: Vect3,
+        end: Vect3,
         width: float = 0.05,
         resolution: Tuple[int, int] = (21, 25),
         **kwargs
