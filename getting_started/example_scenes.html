@@ -9,8 +9,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/custom.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?cddb0bbb609f3423660eef8c">
-    <link rel="stylesheet" href="../_static/pygments.css?cddb0bbb609f3423660eef8c">
+    <link rel="stylesheet" href="../_static/styles/default.css?dc36a5632b77c61f379c4b6d">
+    <link rel="stylesheet" href="../_static/pygments.css?dc36a5632b77c61f379c4b6d">
     
 <style>
   :root {
@@ -27,7 +27,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?cddb0bbb609f3423660eef8c"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?dc36a5632b77c61f379c4b6d"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -377,7 +377,7 @@ No more explanation here.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
             <span class="n">TransformMatchingTex</span><span class="p">(</span>
                 <span class="n">new_line2</span><span class="p">,</span> <span class="n">lines</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
-                <span class="n">transform_mismatches</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                <span class="n">transform_mismatches</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">),</span>
             <span class="o">**</span><span class="n">play_kw</span>
         <span class="p">)</span>
@@ -427,9 +427,9 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
             <span class="n">Text</span><span class="p">(</span><span class="s2">"Width = "</span><span class="p">),</span>
             <span class="n">DecimalNumber</span><span class="p">(</span>
                 <span class="mi">0</span><span class="p">,</span>
-                <span class="n">show_ellipsis</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                <span class="n">show_ellipsis</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">num_decimal_places</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-                <span class="n">include_sign</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                <span class="n">include_sign</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
         <span class="n">label</span><span class="o">.</span><span class="n">arrange</span><span class="p">(</span><span class="n">RIGHT</span><span class="p">)</span>
@@ -459,7 +459,7 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
-            <span class="n">square</span><span class="o">.</span><span class="n">animate</span><span class="o">.</span><span class="n">set_width</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">stretch</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+            <span class="n">square</span><span class="o">.</span><span class="n">animate</span><span class="o">.</span><span class="n">set_width</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">stretch</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
             <span class="n">run_time</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
@@ -516,7 +516,7 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
             <span class="c1"># Alternatively, you can specify configuration for just one</span>
             <span class="c1"># of them, like this.</span>
             <span class="n">y_axis_config</span><span class="o">=</span><span class="p">{</span>
-                <span class="s2">"include_tip"</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+                <span class="s2">"include_tip"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
             <span class="p">}</span>
         <span class="p">)</span>
         <span class="c1"># Keyword arguments of add_coordinate_labels can be used to</span>
@@ -594,7 +594,7 @@ and <code class="docutils literal notranslate"><span class="pre">TransformMatchi
         <span class="c1"># a corner, though, you can set use_smoothing to False</span>
         <span class="n">relu_graph</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">get_graph</span><span class="p">(</span>
             <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
-            <span class="n">use_smoothing</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+            <span class="n">use_smoothing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">color</span><span class="o">=</span><span class="n">YELLOW</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="c1"># For discontinuous functions, you can specify the point of</span>
@@ -777,12 +777,12 @@ the related usage has been briefly described in the notes.</p>
         <span class="n">matrix</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
         <span class="n">linear_transform_words</span> <span class="o">=</span> <span class="n">VGroup</span><span class="p">(</span>
             <span class="n">Text</span><span class="p">(</span><span class="s2">"This is what the matrix"</span><span class="p">),</span>
-            <span class="n">IntegerMatrix</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">include_background_rectangle</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span>
+            <span class="n">IntegerMatrix</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">include_background_rectangle</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
             <span class="n">Text</span><span class="p">(</span><span class="s2">"looks like"</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="n">linear_transform_words</span><span class="o">.</span><span class="n">arrange</span><span class="p">(</span><span class="n">RIGHT</span><span class="p">)</span>
         <span class="n">linear_transform_words</span><span class="o">.</span><span class="n">to_edge</span><span class="p">(</span><span class="n">UP</span><span class="p">)</span>
-        <span class="n">linear_transform_words</span><span class="o">.</span><span class="n">set_stroke</span><span class="p">(</span><span class="n">BLACK</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">linear_transform_words</span><span class="o">.</span><span class="n">set_stroke</span><span class="p">(</span><span class="n">BLACK</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
             <span class="n">ShowCreation</span><span class="p">(</span><span class="n">grid</span><span class="p">),</span>
@@ -799,11 +799,11 @@ the related usage has been briefly described in the notes.</p>
         <span class="n">c_grid</span><span class="o">.</span><span class="n">set_stroke</span><span class="p">(</span><span class="n">BLUE_E</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="n">c_grid</span><span class="o">.</span><span class="n">add_coordinate_labels</span><span class="p">(</span><span class="n">font_size</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
         <span class="n">complex_map_words</span> <span class="o">=</span> <span class="n">TexText</span><span class="p">(</span><span class="s2">"""</span>
-<span class="s2">            Or thinking of the plane as $</span><span class="se">\\</span><span class="s2">mathds{C}$,</span><span class="se">\\\\</span><span class="s2"></span>
+<span class="s2">            Or thinking of the plane as $</span><span class="se">\\</span><span class="s2">mathds</span><span class="si">{C}</span><span class="s2">$,</span><span class="se">\\\\</span><span class="s2"></span>
 <span class="s2">            this is the map $z </span><span class="se">\\</span><span class="s2">rightarrow z^2$</span>
 <span class="s2">        """</span><span class="p">)</span>
         <span class="n">complex_map_words</span><span class="o">.</span><span class="n">to_corner</span><span class="p">(</span><span class="n">UR</span><span class="p">)</span>
-        <span class="n">complex_map_words</span><span class="o">.</span><span class="n">set_stroke</span><span class="p">(</span><span class="n">BLACK</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">complex_map_words</span><span class="o">.</span><span class="n">set_stroke</span><span class="p">(</span><span class="n">BLACK</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">play</span><span class="p">(</span>
             <span class="n">FadeOut</span><span class="p">(</span><span class="n">grid</span><span class="p">),</span>

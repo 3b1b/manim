@@ -2,10 +2,25 @@ function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
 
+/**
+ * Removes excluded text from a Node.
+ *
+ * @param {Node} target Node to filter.
+ * @param {string} exclude CSS selector of nodes to exclude.
+ * @returns {DOMString} Text from `target` with text removed.
+ */
+export function filterText(target, exclude) {
+    const clone = target.cloneNode(true);  // clone as to not modify the live DOM
+    if (exclude) {
+        // remove excluded nodes
+        clone.querySelectorAll(exclude).forEach(node => node.remove());
+    }
+    return clone.innerText;
+}
+
 // Callback when a copy button is clicked. Will be passed the node that was clicked
 // should then grab the text and replace pieces of text that shouldn't be used in output
 export function formatCopyText(textContent, copybuttonPromptText, isRegexp = false, onlyCopyPromptLines = true, removePrompts = true, copyEmptyLines = true, lineContinuationChar = "", hereDocDelim = "") {
-
     var regexp;
     var match;
 

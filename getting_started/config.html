@@ -9,8 +9,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/custom.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?471a338d03e5f87e5a469843">
-    <link rel="stylesheet" href="../_static/pygments.css?471a338d03e5f87e5a469843">
+    <link rel="stylesheet" href="../_static/styles/default.css?d7274348f303e1edb9522cdb">
+    <link rel="stylesheet" href="../_static/pygments.css?d7274348f303e1edb9522cdb">
     
 <style>
   :root {
@@ -27,7 +27,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?471a338d03e5f87e5a469843"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?d7274348f303e1edb9522cdb"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -128,7 +128,7 @@
 <p><code class="docutils literal notranslate"><span class="pre">CONFIG</span></code> dictionary is a feature of manim, which facilitates the inheritance
 and modification of parameters between parent and child classes.</p>
 <div class="line-block">
-<div class="line"><code class="docutils literal notranslate"><span class="pre">CONFIG</span></code> dictionary ‘s processing is in <code class="docutils literal notranslate"><span class="pre">manimlib/utils/config_ops.py</span></code></div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">CONFIG</span></code> dictionary ‘s processing is in <code class="docutils literal notranslate"><span class="pre">manimlib/utils/dict_ops.py</span></code></div>
 <div class="line">It can convert the key-value pairs in the <code class="docutils literal notranslate"><span class="pre">CONFIG</span></code> dictionary into class attributes and values</div>
 </div>
 <p>Generally, the first line of the <code class="docutils literal notranslate"><span class="pre">.__init__()</span></code> method in some basic class (<code class="docutils literal notranslate"><span class="pre">Mobject</span></code>, <code class="docutils literal notranslate"><span class="pre">Animation</span></code>,
@@ -141,8 +141,8 @@ directly through <code class="docutils literal notranslate"><span class="pre">se
 <span class="k">class</span> <span class="nc">Circle</span><span class="p">(</span><span class="n">Arc</span><span class="p">):</span>
     <span class="n">CONFIG</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">"color"</span><span class="p">:</span> <span class="n">RED</span><span class="p">,</span>
-        <span class="s2">"close_new_points"</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
-        <span class="s2">"anchors_span_full_range"</span><span class="p">:</span> <span class="bp">False</span>
+        <span class="s2">"close_new_points"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"anchors_span_full_range"</span><span class="p">:</span> <span class="kc">False</span>
     <span class="p">}</span>
 </pre></div>
 </div>

@@ -7,7 +7,7 @@ What's CONFIG
 ``CONFIG`` dictionary is a feature of manim, which facilitates the inheritance 
 and modification of parameters between parent and child classes.
 
-| ``CONFIG`` dictionary 's processing is in ``manimlib/utils/config_ops.py``
+| ``CONFIG`` dictionary 's processing is in ``manimlib/utils/dict_ops.py``
 | It can convert the key-value pairs in the ``CONFIG`` dictionary into class attributes and values
 
 Generally, the first line of the ``.__init__()`` method in some basic class (``Mobject``, ``Animation``, 

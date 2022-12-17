@@ -9,8 +9,8 @@
       <link rel="stylesheet" href="../_static/copybutton.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/custom.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/manim-kindergarten/CDN@master/manimgl_assets/colors.css" />
-    <link rel="stylesheet" href="../_static/styles/default.css?d8d4d519bbee752eb0c857af">
-    <link rel="stylesheet" href="../_static/pygments.css?d8d4d519bbee752eb0c857af">
+    <link rel="stylesheet" href="../_static/styles/default.css?c561518a46841575fb52c175">
+    <link rel="stylesheet" href="../_static/pygments.css?c561518a46841575fb52c175">
     
 <style>
   :root {
@@ -27,7 +27,7 @@
         <script src="../_static/language_data.js" defer></script>
       
         <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?d8d4d519bbee752eb0c857af"></script></head>
+        <script src="../_static/copybutton.js"></script><script src="../_static/scripts/main.js?c561518a46841575fb52c175"></script></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -138,15 +138,15 @@ directory structure:</p>
 </span></pre></div>
 </div>
 <p>And paste the following code (I will explain the function of each line in detail later):</p>
-<div class="highlight-python notranslate"><div class="table-wrapper"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
-2
-3
-4
-5
-6
-7
-8
-9</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">manimlib</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="highlight-python notranslate"><div class="table-wrapper"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">manimlib</span> <span class="kn">import</span> <span class="o">*</span>
 
 <span class="k">class</span> <span class="nc">SquareToCircle</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -221,19 +221,19 @@ how to create the mobjects in the screen and what operations need to be performe
 <section id="add-animations">
 <h2>Add animations<a class="headerlink" href="#add-animations" title="Permalink to this headline">¶</a></h2>
 <p>Let’s change some codes and add some animations to make videos instead of just pictures.</p>
-<div class="highlight-python notranslate"><div class="table-wrapper"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">manimlib</span> <span class="kn">import</span> <span class="o">*</span>
+<div class="highlight-python notranslate"><div class="table-wrapper"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">manimlib</span> <span class="kn">import</span> <span class="o">*</span>
 
 <span class="k">class</span> <span class="nc">SquareToCircle</span><span class="p">(</span><span class="n">Scene</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">construct</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -308,7 +308,7 @@ you entered will be executed immediately after pressing <kbd class="kbd docutils
 <span class="c1"># Apply a complex transformation of f(z)=z^2 to all points on the circle</span>
 <span class="n">play</span><span class="p">(</span><span class="n">circle</span><span class="o">.</span><span class="n">animate</span><span class="o">.</span><span class="n">apply_complex_function</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">z</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
 <span class="c1"># Close the window and exit the program</span>
-<span class="nb">exit</span><span class="p">()</span>
+<span class="n">exit</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>You will get an animation similar to the following:</p>
