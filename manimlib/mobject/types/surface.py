@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence, Tuple
 
     from manimlib.camera.camera import Camera
-    from manimlib.typing import ManimColor, Vect3
+    from manimlib.typing import ManimColor, Vect3, Vect3Array
 
 
 class Surface(Mobject):
@@ -114,12 +114,12 @@ class Surface(Mobject):
 
     def get_surface_points_and_nudged_points(
         self
-    ) -> tuple[Vect3, Vect3, Vect3]:
+    ) -> tuple[Vect3Array, Vect3Array, Vect3Array]:
         points = self.get_points()
         k = len(points) // 3
         return points[:k], points[k:2 * k], points[2 * k:]
 
-    def get_unit_normals(self) -> Vect3:
+    def get_unit_normals(self) -> Vect3Array:
         s_points, du_points, dv_points = self.get_surface_points_and_nudged_points()
         normals = np.cross(
             (du_points - s_points) / self.epsilon,
@@ -150,12 +150,12 @@ class Surface(Mobject):
 
     def get_partial_points_array(
         self,
-        points: Vect3,
+        points: Vect3Array,
         a: float,
         b: float,
         resolution: Sequence[int],
         axis: int
-    ) -> Vect3:
+    ) -> Vect3Array:
         if len(points) == 0:
             return points
         nu, nv = resolution[:2]

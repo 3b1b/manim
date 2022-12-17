@@ -33,7 +33,7 @@ def list_difference_update(l1: Iterable[T], l2: Iterable[T]) -> list[T]:
     return [e for e in l1 if e not in l2]
 
 
-def adjacent_n_tuples(objects: Sequence[T], n: int) -> zip[tuple[T, T]]:
+def adjacent_n_tuples(objects: Sequence[T], n: int) -> zip[tuple[T, ...]]:
     return zip(*[
         [*objects[k:], *objects[:k]]
         for k in range(n)

@@ -42,7 +42,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence, Tuple
-    from manimlib.typing import ManimColor, Vect3, Vect4
+    from manimlib.typing import ManimColor, Vect3, Vect4, Vect3Array, Vect4Array
 
 DEFAULT_STROKE_COLOR = GREY_A
 DEFAULT_FILL_COLOR = GREY_C
@@ -149,7 +149,7 @@ class VMobject(Mobject):
 
     def set_rgba_array(
         self,
-        rgba_array: Vect3,
+        rgba_array: Vect4Array,
         name: str | None = None,
         recurse: bool = False
     ):
@@ -397,9 +397,9 @@ class VMobject(Mobject):
     # Points
     def set_anchors_and_handles(
         self,
-        anchors1: Vect3,
-        handles: Vect3,
-        anchors2: Vect3
+        anchors1: Vect3Array,
+        handles: Vect3Array,
+        anchors2: Vect3Array
     ):
         assert(len(anchors1) == len(handles) == len(anchors2))
         nppc = self.n_points_per_curve
@@ -601,7 +601,7 @@ class VMobject(Mobject):
         self.change_anchor_mode("jagged")
         return self
 
-    def add_subpath(self, points: Sequence[Vect3]):
+    def add_subpath(self, points: Vect3Array):
         assert(len(points) % self.n_points_per_curve == 0)
         self.append_points(points)
         return self
@@ -635,8 +635,8 @@ class VMobject(Mobject):
 
     def get_subpaths_from_points(
         self,
-        points: Sequence[Vect3]
-    ) -> list[Sequence[Vect3]]:
+        points: Vect3Array
+    ) -> Vect3Array:
         nppc = self.n_points_per_curve
         diffs = points[nppc - 1:-1:nppc] - points[nppc::nppc]
         splits = (diffs * diffs).sum(1) > self.tolerance_for_point_equality
@@ -647,13 +647,13 @@ class VMobject(Mobject):
         #     range(nppc, len(points), nppc)
         # )
         split_indices = [0, *split_indices, len(points)]
-        return [
+        return np.array([
             points[i1:i2]
             for i1, i2 in zip(split_indices, split_indices[1:])
             if (i2 - i1) >= nppc
-        ]
+        ])
 
-    def get_subpaths(self) -> list[Sequence[Vect3]]:
+    def get_subpaths(self) -> Vect3Array:
         return self.get_subpaths_from_points(self.get_points())
 
     def get_nth_curve_points(self, n: int) -> Vect3:
@@ -710,14 +710,14 @@ class VMobject(Mobject):
             for i in range(nppc)
         ]
 
-    def get_start_anchors(self) -> list[Vect3]:
+    def get_start_anchors(self) -> Vect3Array:
         return self.get_points()[0::self.n_points_per_curve]
 
     def get_end_anchors(self) -> Vect3:
         nppc = self.n_points_per_curve
         return self.get_points()[nppc - 1::nppc]
 
-    def get_anchors(self) -> Vect3:
+    def get_anchors(self) -> Vect3Array:
         points = self.get_points()
         if len(points) == 1:
             return points
@@ -726,7 +726,7 @@ class VMobject(Mobject):
             self.get_end_anchors(),
         ))))
 
-    def get_points_without_null_curves(self, atol: float = 1e-9) -> Vect3:
+    def get_points_without_null_curves(self, atol: float = 1e-9) -> Vect3Array:
         nppc = self.n_points_per_curve
         points = self.get_points()
         distinct_curves = reduce(op.or_, [
@@ -851,7 +851,7 @@ class VMobject(Mobject):
                 mob.set_points(new_points)
         return self
 
-    def insert_n_curves_to_point_list(self, n: int, points: Vect3):
+    def insert_n_curves_to_point_list(self, n: int, points: Vect3Array):
         nppc = self.n_points_per_curve
         if len(points) == 1:
             return np.repeat(points, nppc * n, 0)
@@ -1022,7 +1022,7 @@ class VMobject(Mobject):
         return wrapper
 
     @triggers_refreshed_triangulation
-    def set_points(self, points: Vect3):
+    def set_points(self, points: Vect3Array):
         super().set_points(points)
         return self
 

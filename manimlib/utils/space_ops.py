@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Callable, Sequence, List, Tuple
-    from manimlib.typing import ManimColor, Vect2, Vect3, Vect4, VectN, Matrix3x3
+    from manimlib.typing import ManimColor, Vect2, Vect3, Vect4, VectN, Matrix3x3, Vect3Array, Vect2Array
 
 
 def cross(v1: Vect3 | List[float], v2: Vect3 | List[float]) -> Vect3:
@@ -369,7 +369,7 @@ def norm_squared(v: VectN | List[float]) -> float:
 
 
 # TODO, fails for polygons drawn over themselves
-def earclip_triangulation(verts: Vect2 | Vect3, ring_ends: list[int]) -> list[int]:
+def earclip_triangulation(verts: Vect3Array | Vect2Array, ring_ends: list[int]) -> list[int]:
     """
     Returns a list of indices giving a triangulation
     of a polygon, potentially with holes

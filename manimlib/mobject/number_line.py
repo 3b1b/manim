@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Iterable
-    from manimlib.typing import ManimColor, Vect3, RangeSpecifier
+    from manimlib.typing import ManimColor, Vect3, Vect3Array, VectN, RangeSpecifier
 
 
 class NumberLine(Line):
@@ -118,11 +118,11 @@ class NumberLine(Line):
     def get_tick_marks(self) -> VGroup:
         return self.ticks
 
-    def number_to_point(self, number: float | np.ndarray) -> Vect3:
+    def number_to_point(self, number: float | VectN) -> Vect3 | Vect3Array:
         alpha = (number - self.x_min) / (self.x_max - self.x_min)
         return outer_interpolate(self.get_start(), self.get_end(), alpha)
 
-    def point_to_number(self, point: Vect3) -> float:
+    def point_to_number(self, point: Vect3 | Vect3Array) -> float | VectN:
         points = self.get_points()
         start = points[0]
         end = points[-1]
@@ -133,11 +133,11 @@ class NumberLine(Line):
         )
         return interpolate(self.x_min, self.x_max, proportion)
 
-    def n2p(self, number: float) -> Vect3:
+    def n2p(self, number: float | VectN) -> Vect3 | Vect3Array:
         """Abbreviation for number_to_point"""
         return self.number_to_point(number)
 
-    def p2n(self, point: Vect3) -> float:
+    def p2n(self, point: Vect3 | Vect3Array) -> float | VectN:
         """Abbreviation for point_to_number"""
         return self.point_to_number(point)
 

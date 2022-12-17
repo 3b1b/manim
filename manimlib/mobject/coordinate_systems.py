@@ -34,7 +34,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Callable, Iterable, Sequence, Type, TypeVar
     from manimlib.mobject.mobject import Mobject
-    from manimlib.typing import ManimColor, Vect3, RangeSpecifier
+    from manimlib.typing import ManimColor, Vect3, Vect3Array, VectN, RangeSpecifier
 
     T = TypeVar("T", bound=Mobject)
 
@@ -61,18 +61,18 @@ class CoordinateSystem(ABC):
         self.num_sampled_graph_points_per_tick = num_sampled_graph_points_per_tick
 
     @abstractmethod
-    def coords_to_point(self, *coords: float) -> Vect3:
+    def coords_to_point(self, *coords: float | VectN) -> Vect3 | Vect3Array:
         raise Exception("Not implemented")
 
     @abstractmethod
-    def point_to_coords(self, point: Vect3) -> tuple[float, ...]:
+    def point_to_coords(self, point: Vect3 | Vect3Array) -> tuple[float | VectN, ...]:
         raise Exception("Not implemented")
 
-    def c2p(self, *coords: float):
+    def c2p(self, *coords: float) -> Vect3 | Vect3Array:
         """Abbreviation for coords_to_point"""
         return self.coords_to_point(*coords)
 
-    def p2c(self, point: Vect3):
+    def p2c(self, point: Vect3) -> tuple[float | VectN, ...]:
         """Abbreviation for point_to_coords"""
         return self.point_to_coords(point)
 
@@ -302,8 +302,8 @@ class CoordinateSystem(ABC):
         return self.get_h_line(self.i2gp(x, graph), **kwargs)
 
     def get_scatterplot(self,
-                        x_values: Vect3,
-                        y_values: Vect3,
+                        x_values: Vect3Array,
+                        y_values: Vect3Array,
                         **dot_config):
         return DotCloud(self.c2p(x_values, y_values), **dot_config)
 
@@ -449,14 +449,14 @@ class Axes(VGroup, CoordinateSystem):
         axis.shift(-axis.n2p(0))
         return axis
 
-    def coords_to_point(self, *coords: float) -> Vect3:
+    def coords_to_point(self, *coords: float | VectN) -> Vect3 | Vect3Array:
         origin = self.x_axis.number_to_point(0)
         return origin + sum(
             axis.number_to_point(coord) - origin
             for axis, coord in zip(self.get_axes(), coords)
         )
 
-    def point_to_coords(self, point: Vect3) -> tuple[float, ...]:
+    def point_to_coords(self, point: Vect3 | Vect3Array) -> tuple[float | VectN, ...]:
         return tuple([
             axis.point_to_number(point)
             for axis in self.get_axes()

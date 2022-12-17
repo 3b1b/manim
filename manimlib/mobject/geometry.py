@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Iterable
-    from manimlib.typing import ManimColor, Vect3
+    from manimlib.typing import ManimColor, Vect3, Vect3Array
 
 
 DEFAULT_DOT_RADIUS = 0.08
@@ -926,7 +926,7 @@ class Polygon(VMobject):
         super().__init__(**kwargs)
         self.set_points_as_corners([*vertices, vertices[0]])
 
-    def get_vertices(self) -> list[Vect3]:
+    def get_vertices(self) -> Vect3Array:
         return self.get_start_anchors()
 
     def round_corners(self, radius: float | None = None):

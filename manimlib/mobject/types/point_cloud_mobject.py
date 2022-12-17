@@ -13,9 +13,8 @@ from manimlib.utils.iterables import resize_with_interpolation
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Sequence
-    import numpy.typing as npt
-    from manimlib.typing import ManimColor, Vect3
+    from typing import Callable
+    from manimlib.typing import ManimColor, Vect3, Vect3Array, Vect4Array
 
 
 class PMobject(Mobject):
@@ -32,7 +31,7 @@ class PMobject(Mobject):
                 self.data[key] = resize_func(self.data[key], size)
         return self
 
-    def set_points(self, points: Vect3):
+    def set_points(self, points: Vect3Array):
         if len(points) == 0:
             points = np.zeros((0, 3))
         super().set_points(points)
@@ -41,8 +40,8 @@ class PMobject(Mobject):
 
     def add_points(
         self,
-        points: Sequence[Vect3],
-        rgbas: Vect3 | None = None,
+        points: Vect3Array,
+        rgbas: Vect4Array | None = None,
         color: ManimColor | None = None,
         opacity: float | None = None
     ):

@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import numpy.typing as npt
     from typing import Sequence, Tuple
-    from manimlib.typing import ManimColor, Vect3
+    from manimlib.typing import ManimColor, Vect3, Vect3Array
 
 
 DEFAULT_DOT_RADIUS = 0.05
@@ -32,7 +32,7 @@ class DotCloud(PMobject):
 
     def __init__(
         self,
-        points: Sequence[Vect3] | None = None,
+        points: Vect3Array | None = None,
         color: ManimColor = GREY_C,
         opacity: float = 1.0,
         radius: float = DEFAULT_DOT_RADIUS,
@@ -160,7 +160,7 @@ class TrueDot(DotCloud):
 class GlowDots(DotCloud):
     def __init__(
         self,
-        points: Sequence[Vect3] | None = None,
+        points: Vect3Array | None = None,
         color: ManimColor = YELLOW,
         radius: float = DEFAULT_GLOW_DOT_RADIUS,
         glow_factor: float = 2.0,

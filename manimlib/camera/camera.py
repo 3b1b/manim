@@ -26,11 +26,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from manimlib.shader_wrapper import ShaderWrapper
-    from manimlib.typing import ManimColor
+    from manimlib.typing import ManimColor, Vect3
     from typing import Sequence
-
-    Vect3 = np.ndarray[int, np.dtype[np.float64]]
-
 
 class CameraFrame(Mobject):
     def __init__(
