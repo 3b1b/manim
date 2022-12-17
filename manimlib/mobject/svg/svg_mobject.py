@@ -64,24 +64,29 @@ class SVGMobject(VMobject):
         **kwargs
     ):
         self.file_name = file_name or self.file_name
-        self.should_center = should_center
-        self.height = height
-        self.width = width
         self.svg_default = svg_default
         self.path_string_config = path_string_config
 
-        super().__init__(
-            color=color,
-            fill_color=fill_color,
-            fill_opacity=fill_opacity,
-            stroke_width=stroke_width,
-            stroke_color=stroke_color,
-            stroke_opacity=stroke_opacity,
-            **kwargs
-        )
+        super().__init__(**kwargs )
         self.init_svg_mobject()
-        self.init_colors()
-        self.move_into_position()
+
+        # Rather than passing style into super().__init__
+        # do it after svg has been taken in
+        self.set_style(
+            fill_color=color or fill_color,
+            fill_opacity=fill_opacity,
+            stroke_color=color or stroke_color,
+            stroke_width=stroke_width,
+            stroke_opacity=stroke_opacity,
+        )
+
+        # Initialize position
+        if should_center:
+            self.center()
+        if height is not None:
+            self.set_height(height)
+        if width is not None:
+            self.set_width(width)
 
     def init_svg_mobject(self) -> None:
         hash_val = hash_obj(self.hash_seed)
@@ -277,14 +282,6 @@ class SVGMobject(VMobject):
 
     def text_to_mobject(self, text: se.Text):
         pass
-
-    def move_into_position(self) -> None:
-        if self.should_center:
-            self.center()
-        if self.height is not None:
-            self.set_height(self.height)
-        if self.width is not None:
-            self.set_width(self.width)
 
 
 class VMobjectFromSVGPath(VMobject):
