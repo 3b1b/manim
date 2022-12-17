@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import numpy as np
 
-from manimlib.constants import BLACK
-from manimlib.constants import ORIGIN
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import color_to_rgba
