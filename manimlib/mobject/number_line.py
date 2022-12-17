@@ -10,7 +10,7 @@ from manimlib.mobject.numbers import DecimalNumber
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import outer_interpolate
-from manimlib.utils.config_ops import merge_dicts_recursively
+from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.simple_functions import fdiv
 
 from typing import TYPE_CHECKING

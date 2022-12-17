@@ -9,7 +9,7 @@ import sys
 import yaml
 
 from manimlib.logger import log
-from manimlib.utils.config_ops import merge_dicts_recursively
+from manimlib.utils.dict_ops import merge_dicts_recursively
 from manimlib.utils.init_config import init_customization
 from manimlib.constants import FRAME_HEIGHT
 
