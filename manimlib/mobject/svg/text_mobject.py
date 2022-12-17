@@ -147,7 +147,7 @@ class MarkupText(StringMobject):
             self.set_color_by_gradient(*gradient)
         if self.t2c:
             self.set_color_by_text_to_color_map(self.t2c)
-        if self.height is None:
+        if height is None:
             self.scale(TEXT_MOB_SCALE_FACTOR)
 
     @property
