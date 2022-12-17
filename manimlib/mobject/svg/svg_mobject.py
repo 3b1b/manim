@@ -66,6 +66,7 @@ class SVGMobject(VMobject):
         self.file_name = file_name or self.file_name
         self.svg_default = svg_default
         self.path_string_config = path_string_config
+        self.height = height
 
         super().__init__(**kwargs )
         self.init_svg_mobject()
