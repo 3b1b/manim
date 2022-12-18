@@ -511,39 +511,35 @@ class Scene(object):
             kw["override_skip_animations"] = True
         return self.get_time_progression(duration, **kw)
 
-    @staticmethod
-    def handle_play_like_call(func: Callable):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            if self.inside_embed:
-                self.save_state()
-            if self.presenter_mode and self.num_plays == 0:
-                self.hold_loop()
+    def pre_play(self):
+        if self.inside_embed:
+            self.save_state()
+        if self.presenter_mode and self.num_plays == 0:
+            self.hold_loop()
 
-            self.update_skipping_status()
-            should_write = not self.skip_animations
-            if should_write:
-                self.file_writer.begin_animation()
+        self.update_skipping_status()
 
-            if self.window:
-                self.real_animation_start_time = time.time()
-                self.virtual_animation_start_time = self.time
+        if not self.skip_animations:
+            self.file_writer.begin_animation()
 
-            self.refresh_static_mobjects()
-            func(self, *args, **kwargs)
+        if self.window:
+            self.real_animation_start_time = time.time()
+            self.virtual_animation_start_time = self.time
 
-            if should_write:
-                self.file_writer.end_animation()
+        self.refresh_static_mobjects()
 
-            if self.inside_embed:
-                self.save_state()
+    def post_play(self):
+        if not self.skip_animations:
+            self.file_writer.end_animation()
 
-            if self.skip_animations and self.window is not None:
-                # Show some quick frames along the way
-                self.update_frame(dt=0, ignore_skipping=True)
+        if self.inside_embed:
+            self.save_state()
 
-            self.num_plays += 1
-        return wrapper
+        if self.skip_animations and self.window is not None:
+            # Show some quick frames along the way
+            self.update_frame(dt=0, ignore_skipping=True)
+
+        self.num_plays += 1
 
     def refresh_static_mobjects(self) -> None:
         self.camera.refresh_static_mobjects()
@@ -580,7 +576,6 @@ class Scene(object):
         else:
             self.update_mobjects(0)
 
-    @handle_play_like_call
     def play(
         self,
         *proto_animations: Animation | _AnimationBuilder,
@@ -594,11 +589,12 @@ class Scene(object):
         animations = list(map(prepare_animation, proto_animations))
         for anim in animations:
             anim.update_rate_info(run_time, rate_func, lag_ratio)
+        self.pre_play()
         self.begin_animations(animations)
         self.progress_through_animations(animations)
         self.finish_animations(animations)
+        self.post_play()
 
-    @handle_play_like_call
     def wait(
         self,
         duration: float = DEFAULT_WAIT_TIME,
@@ -606,6 +602,7 @@ class Scene(object):
         note: str = None,
         ignore_presenter_mode: bool = False
     ):
+        self.pre_play()
         self.update_mobjects(dt=0)  # Any problems with this?
         if self.presenter_mode and not self.skip_animations and not ignore_presenter_mode:
             if note:
@@ -622,6 +619,7 @@ class Scene(object):
                 if stop_condition is not None and stop_condition():
                     break
         self.refresh_static_mobjects()
+        self.post_play()
         return self
 
     def hold_loop(self):
