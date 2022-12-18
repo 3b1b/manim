@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from functools import wraps
 import inspect
 import os
 import platform
@@ -14,6 +13,7 @@ from tqdm import tqdm as ProgressDisplay
 
 from manimlib.animation.animation import prepare_animation
 from manimlib.camera.camera import Camera
+from manimlib.config import get_module
 from manimlib.constants import ARROW_SYMBOLS
 from manimlib.constants import DEFAULT_WAIT_TIME
 from manimlib.constants import COMMAND_MODIFIER
@@ -164,11 +164,11 @@ class Scene(object):
         # the hood calling the pyglet event loop
         if self.window is None:
             return
-        log.info(
-            "Tips: You are now in the interactive mode. Now you can use the keyboard"
-            " and the mouse to interact with the scene. Just press `command + q` or `esc`"
-            " if you want to quit."
-        )
+        log.info("""
+            Tips: You are now in the interactive mode. Now you can use the keyboard
+             and the mouse to interact with the scene. Just press `command + q` or `esc`
+             if you want to quit.
+        """)
         self.skip_animations = False
         self.refresh_static_mobjects()
         while not self.is_window_closing():
@@ -187,7 +187,9 @@ class Scene(object):
         shell = embed.InteractiveShellEmbed.instance()
 
         # Use the locals namespace of the caller
-        local_ns = inspect.currentframe().f_back.f_locals
+        caller_frame = inspect.currentframe().f_back
+        local_ns = dict(caller_frame.f_locals)
+
         # Add a few custom shortcuts
         local_ns.update({
             name: getattr(self, name)
@@ -196,6 +198,8 @@ class Scene(object):
                 "save_state", "undo", "redo", "i2g", "i2m"
             ]
         })
+
+        module = get_module(caller_frame.f_globals["__file__"])
 
         # This is useful if one wants to re-run a block of scene
         # code, while developing, tweaking it each time.
@@ -246,7 +250,7 @@ class Scene(object):
 
         shell.events.register("post_run_cell", post_cell_func)
 
-        shell(local_ns=local_ns, stack_depth=2)
+        shell(local_ns=local_ns, stack_depth=2, module=module)
 
         # End scene when exiting an embed
         if close_scene_on_exit:
