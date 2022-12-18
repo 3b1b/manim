@@ -399,6 +399,7 @@ class CoordinateSystem(ABC):
 
 
 class Axes(VGroup, CoordinateSystem):
+    default_axis_config: dict = dict()
     default_x_axis_config: dict = dict()
     default_y_axis_config: dict = dict(line_to_number_direction=LEFT)
 
@@ -419,6 +420,7 @@ class Axes(VGroup, CoordinateSystem):
         self.x_axis = self.create_axis(
             self.x_range,
             axis_config=merge_dicts_recursively(
+                self.default_axis_config,
                 self.default_x_axis_config,
                 axis_config,
                 x_axis_config
@@ -428,6 +430,7 @@ class Axes(VGroup, CoordinateSystem):
         self.y_axis = self.create_axis(
             self.y_range,
             axis_config=merge_dicts_recursively(
+                self.default_axis_config,
                 self.default_y_axis_config,
                 axis_config,
                 y_axis_config
@@ -488,6 +491,7 @@ class Axes(VGroup, CoordinateSystem):
 
 class ThreeDAxes(Axes):
     dimension: int = 3
+    default_z_axis_config: dict = dict()
 
     def __init__(
         self,
@@ -507,6 +511,8 @@ class ThreeDAxes(Axes):
         self.z_axis = self.create_axis(
             self.z_range,
             axis_config=merge_dicts_recursively(
+                self.default_axis_config,
+                self.default_z_axis_config,
                 kwargs.get("axes_config", {}),
                 z_axis_config
             ),
@@ -554,21 +560,22 @@ class ThreeDAxes(Axes):
 
 
 class NumberPlane(Axes):
+    default_axis_config: dict = dict(
+        stroke_color=WHITE,
+        stroke_width=2,
+        include_ticks=False,
+        include_tip=False,
+        line_to_number_buff=SMALL_BUFF,
+        line_to_number_direction=DL,
+    )
+    default_y_axis_config: dict = dict(
+        line_to_number_direction=DL,
+    )
+
     def __init__(
         self,
         x_range: RangeSpecifier = (-8.0, 8.0, 1.0),
         y_range: RangeSpecifier = (-4.0, 4.0, 1.0),
-        axis_config: dict = dict(
-            stroke_color=WHITE,
-            stroke_width=2,
-            include_ticks=False,
-            include_tip=False,
-            line_to_number_buff=SMALL_BUFF,
-            line_to_number_direction=DL,
-        ),
-        y_axis_config: dict = dict(
-            line_to_number_direction=DL,
-        ),
         height: float = 8.0,
         width: float = 16.0,
         background_line_style: dict = dict(
@@ -586,8 +593,6 @@ class NumberPlane(Axes):
             x_range, y_range,
             height=height,
             width=width,
-            axis_config=axis_config,
-            y_axis_config=y_axis_config,
             **kwargs
         )
         self.background_line_style = dict(background_line_style)
