@@ -4,7 +4,7 @@ import moderngl
 import numpy as np
 
 from manimlib.constants import GREY_C, YELLOW
-from manimlib.constants import ORIGIN
+from manimlib.constants import ORIGIN, NULL_POINTS
 from manimlib.mobject.types.point_cloud_mobject import PMobject
 from manimlib.utils.iterables import resize_preserving_order
 
@@ -32,7 +32,7 @@ class DotCloud(PMobject):
 
     def __init__(
         self,
-        points: Vect3Array | None = None,
+        points: Vect3Array = NULL_POINTS,
         color: ManimColor = GREY_C,
         opacity: float = 1.0,
         radius: float = DEFAULT_DOT_RADIUS,
@@ -41,8 +41,6 @@ class DotCloud(PMobject):
     ):
         self.radius = radius
         self.glow_factor = glow_factor
-
-        print(kwargs)
 
         super().__init__(
             color=color,
@@ -153,14 +151,14 @@ class DotCloud(PMobject):
 
 
 class TrueDot(DotCloud):
-    def __init__(self, center: np.ndarray = ORIGIN, **kwargs):
-        super().__init__(points=[center], **kwargs)
+    def __init__(self, center: Vect3 = ORIGIN, **kwargs):
+        super().__init__(points=np.array([center]), **kwargs)
 
 
 class GlowDots(DotCloud):
     def __init__(
         self,
-        points: Vect3Array | None = None,
+        points: Vect3Array = NULL_POINTS,
         color: ManimColor = YELLOW,
         radius: float = DEFAULT_GLOW_DOT_RADIUS,
         glow_factor: float = 2.0,
@@ -175,5 +173,6 @@ class GlowDots(DotCloud):
         )
 
 
-class GlowDot(GlowDots, TrueDot):
-    pass
+class GlowDot(GlowDots):
+    def __init__(self, center: Vect3 = ORIGIN, **kwargs):
+        super().__init__(points=np.array([center]), **kwargs)
