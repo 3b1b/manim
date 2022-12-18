@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Callable
+    from manimlib.typing import Vect3, Vect3Array
 
 
 STRAIGHT_PATH_THRESHOLD = 0.01
@@ -34,8 +35,8 @@ def straight_path(
 
 def path_along_arc(
     arc_angle: float, 
-    axis: np.ndarray = OUT
-) -> Callable[[np.ndarray, np.ndarray, float], np.ndarray]:
+    axis: Vect3 = OUT
+) -> Callable[[Vect3Array, Vect3Array, float], Vect3Array]:
     """
     If vect is vector from start to end, [vect[:,1], -vect[:,0]] is
     perpendicular to vect in the left direction.
@@ -57,9 +58,9 @@ def path_along_arc(
     return path
 
 
-def clockwise_path() -> Callable[[np.ndarray, np.ndarray, float], np.ndarray]:
+def clockwise_path() -> Callable[[Vect3Array, Vect3Array, float], Vect3Array]:
     return path_along_arc(-np.pi)
 
 
-def counterclockwise_path() -> Callable[[np.ndarray, np.ndarray, float], np.ndarray]:
+def counterclockwise_path() -> Callable[[Vect3Array, Vect3Array, float], Vect3Array]:
     return path_along_arc(np.pi)
