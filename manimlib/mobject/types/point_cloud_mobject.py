@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import numpy as np
 
-from manimlib.constants import BLACK
-from manimlib.constants import ORIGIN
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import color_to_rgba
@@ -13,19 +11,11 @@ from manimlib.utils.iterables import resize_with_interpolation
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from colour import Color
-    from typing import Callable, Union
-
-    import numpy.typing as npt
-
-    ManimColor = Union[str, Color]
+    from typing import Callable
+    from manimlib.typing import ManimColor, Vect3, Vect3Array, Vect4Array
 
 
 class PMobject(Mobject):
-    CONFIG = {
-        "opacity": 1.0,
-    }
-
     def resize_points(
         self,
         size: int,
@@ -39,7 +29,7 @@ class PMobject(Mobject):
                 self.data[key] = resize_func(self.data[key], size)
         return self
 
-    def set_points(self, points: npt.ArrayLike):
+    def set_points(self, points: Vect3Array):
         if len(points) == 0:
             points = np.zeros((0, 3))
         super().set_points(points)
@@ -48,8 +38,8 @@ class PMobject(Mobject):
 
     def add_points(
         self,
-        points: npt.ArrayLike,
-        rgbas: np.ndarray | None = None,
+        points: Vect3Array,
+        rgbas: Vect4Array | None = None,
         color: ManimColor | None = None,
         opacity: float | None = None
     ):
@@ -70,7 +60,7 @@ class PMobject(Mobject):
             self.data["rgbas"][-len(rgbas):] = rgbas
         return self
 
-    def add_point(self, point, rgba=None, color=None, opacity=None):
+    def add_point(self, point: Vect3, rgba=None, color=None, opacity=None):
         rgbas = None if rgba is None else [rgba]
         self.add_points([point], rgbas, color, opacity)
         return self
@@ -97,7 +87,7 @@ class PMobject(Mobject):
                 mob.data[key] = mob.data[key][to_keep]
         return self
 
-    def sort_points(self, function: Callable[[np.ndarray]] = lambda p: p[0]):
+    def sort_points(self, function: Callable[[Vect3], None] = lambda p: p[0]):
         """
         function is any map from R^3 to R
         """
@@ -135,14 +125,5 @@ class PGroup(PMobject):
     def __init__(self, *pmobs: PMobject, **kwargs):
         if not all([isinstance(m, PMobject) for m in pmobs]):
             raise Exception("All submobjects must be of type PMobject")
-        super().__init__(*pmobs, **kwargs)
-
-
-class Point(PMobject):
-    CONFIG = {
-        "color": BLACK,
-    }
-
-    def __init__(self, location: np.ndarray = ORIGIN, **kwargs):
         super().__init__(**kwargs)
-        self.add_points([location])
+        self.add(*pmobs)

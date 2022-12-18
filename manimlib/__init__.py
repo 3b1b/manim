@@ -2,6 +2,11 @@ import pkg_resources
 
 __version__ = pkg_resources.get_distribution("manimgl").version
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from manimlib.typing import *
+
 from manimlib.constants import *
 
 from manimlib.window import *
@@ -54,11 +59,10 @@ from manimlib.mobject.vector_field import *
 
 from manimlib.scene.interactive_scene import *
 from manimlib.scene.scene import *
-from manimlib.scene.three_d_scene import *
 
 from manimlib.utils.bezier import *
 from manimlib.utils.color import *
-from manimlib.utils.config_ops import *
+from manimlib.utils.dict_ops import *
 from manimlib.utils.customization import *
 from manimlib.utils.debug import *
 from manimlib.utils.directories import *

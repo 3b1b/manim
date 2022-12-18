@@ -7,7 +7,6 @@ from moderngl_window.context.pyglet.window import Window as PygletWindow
 from moderngl_window.timers.clock import Timer
 from screeninfo import get_monitors
 
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.customization import get_customization
 
 from typing import TYPE_CHECKING
@@ -30,7 +29,6 @@ class Window(PygletWindow):
         **kwargs
     ):
         super().__init__(size=size)
-        digest_config(self, kwargs)
 
         self.scene = scene
         self.pressed_keys = set()

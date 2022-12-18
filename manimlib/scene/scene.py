@@ -28,7 +28,6 @@ from manimlib.mobject.mobject import Point
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.scene.scene_file_writer import SceneFileWriter
-from manimlib.utils.config_ops import digest_config
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.iterables import list_difference_update
 
@@ -50,29 +49,40 @@ QUIT_KEY = 'q'
 
 
 class Scene(object):
-    CONFIG = {
-        "window_config": {},
-        "camera_class": Camera,
-        "camera_config": {},
-        "file_writer_config": {},
-        "skip_animations": False,
-        "always_update_mobjects": False,
-        "random_seed": 0,
-        "start_at_animation_number": None,
-        "end_at_animation_number": None,
-        "leave_progress_bars": False,
-        "preview": True,
-        "presenter_mode": False,
-        "show_animation_progress": False,
-        "pan_sensitivity": 3,
-        "max_num_saved_states": 50,
-    }
+    random_seed: int = 0
+    pan_sensitivity: float = 3.0
+    max_num_saved_states: int = 50
+    camera_config: dict = dict()
 
-    def __init__(self, **kwargs):
-        digest_config(self, kwargs)
+    def __init__(
+        self,
+        window_config: dict = dict(),
+        camera_class: type = Camera,
+        camera_config: dict = dict(),
+        file_writer_config: dict = dict(),
+        skip_animations: bool = False,
+        always_update_mobjects: bool = False,
+        start_at_animation_number: int | None = None,
+        end_at_animation_number: int | None = None,
+        leave_progress_bars: bool = False,
+        preview: bool = True,
+        presenter_mode: bool = False,
+        show_animation_progress: bool = False,
+    ):
+        self.skip_animations = skip_animations
+        self.always_update_mobjects = always_update_mobjects
+        self.start_at_animation_number = start_at_animation_number
+        self.end_at_animation_number = end_at_animation_number
+        self.leave_progress_bars = leave_progress_bars
+        self.preview = preview
+        self.presenter_mode = presenter_mode
+        self.show_animation_progress = show_animation_progress
+
+        # Initialize window, if applicable
         if self.preview:
             from manimlib.window import Window
-            self.window = Window(scene=self, **self.window_config)
+            self.window = Window(scene=self, **window_config)
+            self.camera_config= {**self.camera_config, **camera_config}
             self.camera_config["ctx"] = self.window.ctx
             self.camera_config["fps"] = 30  # Where's that 30 from?
             self.undo_stack = []
@@ -80,8 +90,9 @@ class Scene(object):
         else:
             self.window = None
 
-        self.camera: Camera = self.camera_class(**self.camera_config)
-        self.file_writer = SceneFileWriter(self, **self.file_writer_config)
+        # Core state of the scene
+        self.camera: Camera = camera_class(**self.camera_config)
+        self.file_writer = SceneFileWriter(self, **file_writer_config)
         self.mobjects: list[Mobject] = [self.camera.frame]
         self.id_to_mobject_map: dict[int, Mobject] = dict()
         self.num_plays: int = 0
@@ -191,7 +202,7 @@ class Scene(object):
         # As long as the copied selection starts with a comment,
         # this will revert to the state of the scene at the first
         # point of running.
-        def checkpoint_paste(skip=False, show_progress=True):
+        def checkpoint_paste(quiet=True):
             pasted = pyperclip.paste()
             line0 = pasted.lstrip().split("\n")[0]
             if line0.startswith("#"):
@@ -200,17 +211,7 @@ class Scene(object):
                 else:
                     self.revert_to_checkpoint(line0)
                     self.update_frame(dt=0)
-            if skip:
-                originally_skip = self.skip_animations
-                self.skip_animations = True
-            if show_progress:
-                originally_show_animation_progress = self.show_animation_progress
-                self.show_animation_progress = True
-            shell.run_line_magic("paste", "")
-            if skip:
-                self.skip_animations = originally_skip
-            if show_progress:
-                self.show_animation_progress = originally_show_animation_progress
+            shell.run_line_magic("paste", "-q" if quiet else "")
 
         local_ns['checkpoint_paste'] = checkpoint_paste
 
@@ -491,6 +492,7 @@ class Scene(object):
         self,
         animations: Iterable[Animation]
     ) -> list[float] | np.ndarray | ProgressDisplay:
+        animations = list(animations)
         run_time = self.get_run_time(animations)
         description = f"{self.num_plays} {animations[0]}"
         if len(animations) > 1:
@@ -509,50 +511,35 @@ class Scene(object):
             kw["override_skip_animations"] = True
         return self.get_time_progression(duration, **kw)
 
-    def prepare_animations(
-        self,
-        proto_animations: list[Animation | _AnimationBuilder],
-        animation_config: dict,
-    ):
-        animations = list(map(prepare_animation, proto_animations))
-        for anim in animations:
-            # This is where kwargs to play like run_time and rate_func
-            # get applied to all animations
-            anim.update_config(**animation_config)
-        return animations
+    def pre_play(self):
+        if self.inside_embed:
+            self.save_state()
+        if self.presenter_mode and self.num_plays == 0:
+            self.hold_loop()
 
-    def handle_play_like_call(func):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            if self.inside_embed:
-                self.save_state()
-            if self.presenter_mode and self.num_plays == 0:
-                self.hold_loop()
+        self.update_skipping_status()
 
-            self.update_skipping_status()
-            should_write = not self.skip_animations
-            if should_write:
-                self.file_writer.begin_animation()
+        if not self.skip_animations:
+            self.file_writer.begin_animation()
 
-            if self.window:
-                self.real_animation_start_time = time.time()
-                self.virtual_animation_start_time = self.time
+        if self.window:
+            self.real_animation_start_time = time.time()
+            self.virtual_animation_start_time = self.time
 
-            self.refresh_static_mobjects()
-            func(self, *args, **kwargs)
+        self.refresh_static_mobjects()
 
-            if should_write:
-                self.file_writer.end_animation()
+    def post_play(self):
+        if not self.skip_animations:
+            self.file_writer.end_animation()
 
-            if self.inside_embed:
-                self.save_state()
+        if self.inside_embed:
+            self.save_state()
 
-            if self.skip_animations and self.window is not None:
-                # Show some quick frames along the way
-                self.update_frame(dt=0, ignore_skipping=True)
+        if self.skip_animations and self.window is not None:
+            # Show some quick frames along the way
+            self.update_frame(dt=0, ignore_skipping=True)
 
-            self.num_plays += 1
-        return wrapper
+        self.num_plays += 1
 
     def refresh_static_mobjects(self) -> None:
         self.camera.refresh_static_mobjects()
@@ -589,17 +576,25 @@ class Scene(object):
         else:
             self.update_mobjects(0)
 
-    @handle_play_like_call
-    def play(self, *proto_animations, **animation_config) -> None:
+    def play(
+        self,
+        *proto_animations: Animation | _AnimationBuilder,
+        run_time: float | None = None,
+        rate_func: Callable[[float], float] | None = None,
+        lag_ratio: float | None = None,
+    ) -> None:
         if len(proto_animations) == 0:
             log.warning("Called Scene.play with no animations")
             return
-        animations = self.prepare_animations(proto_animations, animation_config)
+        animations = list(map(prepare_animation, proto_animations))
+        for anim in animations:
+            anim.update_rate_info(run_time, rate_func, lag_ratio)
+        self.pre_play()
         self.begin_animations(animations)
         self.progress_through_animations(animations)
         self.finish_animations(animations)
+        self.post_play()
 
-    @handle_play_like_call
     def wait(
         self,
         duration: float = DEFAULT_WAIT_TIME,
@@ -607,6 +602,7 @@ class Scene(object):
         note: str = None,
         ignore_presenter_mode: bool = False
     ):
+        self.pre_play()
         self.update_mobjects(dt=0)  # Any problems with this?
         if self.presenter_mode and not self.skip_animations and not ignore_presenter_mode:
             if note:
@@ -623,6 +619,7 @@ class Scene(object):
                 if stop_condition is not None and stop_condition():
                     break
         self.refresh_static_mobjects()
+        self.post_play()
         return self
 
     def hold_loop(self):

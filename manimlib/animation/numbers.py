@@ -11,19 +11,21 @@ if TYPE_CHECKING:
 
 
 class ChangingDecimal(Animation):
-    CONFIG = {
-        "suspend_mobject_updating": False,
-    }
-
     def __init__(
         self,
         decimal_mob: DecimalNumber,
         number_update_func: Callable[[float], float],
+        suspend_mobject_updating: bool = False,
         **kwargs
     ):
         assert(isinstance(decimal_mob, DecimalNumber))
         self.number_update_func = number_update_func
-        super().__init__(decimal_mob, **kwargs)
+        super().__init__(
+            decimal_mob,
+            suspend_mobject_updating=suspend_mobject_updating,
+            **kwargs
+        )
+        self.mobject = decimal_mob
 
     def interpolate_mobject(self, alpha: float) -> None:
         self.mobject.set_value(

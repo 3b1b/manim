@@ -10,31 +10,34 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import numpy as np
-
+    from typing import Callable
     from manimlib.mobject.mobject import Mobject
 
 
 class Rotating(Animation):
-    CONFIG = {
-        # "axis": OUT,
-        # "radians": TAU,
-        "run_time": 5,
-        "rate_func": linear,
-        "about_point": None,
-        "about_edge": None,
-        "suspend_mobject_updating": False,
-    }
-
     def __init__(
         self,
         mobject: Mobject,
         angle: float = TAU,
         axis: np.ndarray = OUT,
+        about_point: np.ndarray | None = None,
+        about_edge: np.ndarray | None = None,
+        run_time: float = 5.0,
+        rate_func: Callable[[float], float] = linear,
+        suspend_mobject_updating: bool = False,
         **kwargs
     ):
         self.angle = angle
         self.axis = axis
-        super().__init__(mobject, **kwargs)
+        self.about_point = about_point
+        self.about_edge = about_edge
+        super().__init__(
+            mobject,
+            run_time=run_time,
+            rate_func=rate_func,
+            suspend_mobject_updating=suspend_mobject_updating,
+            **kwargs
+        )
 
     def interpolate_mobject(self, alpha: float) -> None:
         for sm1, sm2 in self.get_all_families_zipped():
@@ -48,17 +51,20 @@ class Rotating(Animation):
 
 
 class Rotate(Rotating):
-    CONFIG = {
-        "run_time": 1,
-        "rate_func": smooth,
-        "about_edge": ORIGIN,
-    }
-
     def __init__(
         self,
         mobject: Mobject,
         angle: float = PI,
         axis: np.ndarray = OUT,
+        run_time: float = 1,
+        rate_func: Callable[[float], float] = smooth,
+        about_edge: np.ndarray = ORIGIN,
         **kwargs
     ):
-        super().__init__(mobject, angle, axis, **kwargs)
+        super().__init__(
+            mobject, angle, axis,
+            run_time=run_time,
+            rate_func=rate_func,
+            about_edge=about_edge,
+            **kwargs
+        )

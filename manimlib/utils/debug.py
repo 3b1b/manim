@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import numpy as np
-import time
-
 from manimlib.constants import BLACK
 from manimlib.logger import log
 from manimlib.mobject.numbers import Integer
@@ -11,8 +8,6 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable
-
     from manimlib.mobject.mobject import Mobject
 
 
@@ -24,7 +19,7 @@ def print_family(mobject: Mobject, n_tabs: int = 0) -> None:
 
 
 def index_labels(
-    mobject: Mobject | np.ndarray, 
+    mobject: Mobject, 
     label_height: float = 0.15
 ) -> VGroup:
     labels = VGroup()
@@ -35,9 +30,3 @@ def index_labels(
         label.set_stroke(BLACK, 5, background=True)
         labels.add(label)
     return labels
-
-
-def get_runtime(func: Callable) -> float:
-    now = time.time()
-    func()
-    return time.time() - now

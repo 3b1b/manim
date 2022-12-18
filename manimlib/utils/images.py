@@ -29,16 +29,7 @@ def get_full_vector_image_path(image_file_name: str) -> str:
     )
 
 
-def drag_pixels(frames: Iterable) -> list:
-    curr = frames[0]
-    new_frames = []
-    for frame in frames:
-        curr += (curr == 0) * np.array(frame)
-        new_frames.append(np.array(curr))
-    return new_frames
-
-
-def invert_image(image: Iterable) -> Image:
+def invert_image(image: Iterable) -> Image.Image:
     arr = np.array(image)
     arr = (255 * np.ones(arr.shape)).astype(arr.dtype) - arr
     return Image.fromarray(arr)

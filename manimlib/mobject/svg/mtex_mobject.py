@@ -9,13 +9,12 @@ from manimlib.utils.tex_file_writing import tex_content_to_svg_file
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from colour import Color
     import re
     from typing import Iterable, Union
 
     from manimlib.mobject.types.vectorized_mobject import VGroup
+    from manimlib.typing import ManimColor
 
-    ManimColor = Union[str, Color]
     Span = tuple[int, int]
     Selector = Union[
         str,
@@ -33,24 +32,34 @@ SCALE_FACTOR_PER_FONT_POINT = 0.001
 
 
 class MTex(StringMobject):
-    CONFIG = {
-        "font_size": 48,
-        "alignment": "\\centering",
-        "tex_environment": "align*",
-        "tex_to_color_map": {},
-        "template": "",
-        "additional_preamble": "",
-    }
+    tex_environment: str = "align*"
 
-    def __init__(self, tex_string: str, **kwargs):
+    def __init__(
+        self,
+        tex_string: str,
+        font_size: int = 48,
+        alignment: str = R"\centering",
+        template: str = "",
+        additional_preamble: str = "",
+        tex_to_color_map: dict = dict(),
+        **kwargs
+    ):
         # Prevent from passing an empty string.
         if not tex_string.strip():
-            tex_string = "\\\\"
+            tex_string = R"\\"
         self.tex_string = tex_string
-        super().__init__(tex_string, **kwargs)
+        self.alignment = alignment
+        self.template = template
+        self.additional_preamble = additional_preamble
+        self.tex_to_color_map = dict(tex_to_color_map)
 
-        self.set_color_by_tex_to_color_map(self.tex_to_color_map)
-        self.scale(SCALE_FACTOR_PER_FONT_POINT * self.font_size)
+        super().__init__(
+            tex_string,
+            **kwargs
+        )
+
+        self.set_color_by_tex_to_color_map(tex_to_color_map)
+        self.scale(SCALE_FACTOR_PER_FONT_POINT * font_size)
 
     @property
     def hash_seed(self) -> tuple:
@@ -207,6 +216,4 @@ class MTex(StringMobject):
 
 
 class MTexText(MTex):
-    CONFIG = {
-        "tex_environment": None,
-    }
+    tex_environment: str = ""

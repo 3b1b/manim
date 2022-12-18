@@ -20,6 +20,11 @@ from manimlib.utils.images import get_full_vector_image_path
 from manimlib.utils.iterables import hash_obj
 from manimlib.utils.simple_functions import hash_string
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from manimlib.typing import ManimColor
+
+
 
 SVG_HASH_TO_MOB_MAP: dict[int, VMobject] = {}
 
@@ -29,39 +34,60 @@ def _convert_point_to_3d(x: float, y: float) -> np.ndarray:
 
 
 class SVGMobject(VMobject):
-    CONFIG = {
-        "should_center": True,
-        "height": 2,
-        "width": None,
-        "file_name": None,
+    file_name: str = ""
+
+    def __init__(
+        self,
+        file_name: str = "",
+        should_center: bool = True,
+        height: float | None = 2.0,
+        width: float | None = None,
         # Style that overrides the original svg
-        "color": None,
-        "opacity": None,
-        "fill_color": None,
-        "fill_opacity": None,
-        "stroke_width": None,
-        "stroke_color": None,
-        "stroke_opacity": None,
+        color: ManimColor = None,
+        fill_color: ManimColor = None,
+        fill_opacity: float | None = None,
+        stroke_width: float | None = 0.0,
+        stroke_color: ManimColor = None,
+        stroke_opacity: float | None = None,
         # Style that fills only when not specified
         # If None, regarded as default values from svg standard
-        "svg_default": {
-            "color": None,
-            "opacity": None,
-            "fill_color": None,
-            "fill_opacity": None,
-            "stroke_width": None,
-            "stroke_color": None,
-            "stroke_opacity": None,
-        },
-        "path_string_config": {},
-    }
-
-    def __init__(self, file_name: str | None = None, **kwargs):
-        super().__init__(**kwargs)
+        svg_default: dict = dict(
+            color=None,
+            opacity=None,
+            fill_color=None,
+            fill_opacity=None,
+            stroke_width=None,
+            stroke_color=None,
+            stroke_opacity=None,
+        ),
+        path_string_config: dict = dict(),
+        **kwargs
+    ):
         self.file_name = file_name or self.file_name
+        self.svg_default = dict(svg_default)
+        self.path_string_config = dict(path_string_config)
+        self.height = height
+
+        super().__init__(**kwargs )
         self.init_svg_mobject()
-        self.init_colors()
-        self.move_into_position()
+
+        # Rather than passing style into super().__init__
+        # do it after svg has been taken in
+        self.set_style(
+            fill_color=color or fill_color,
+            fill_opacity=fill_opacity,
+            stroke_color=color or stroke_color,
+            stroke_width=stroke_width,
+            stroke_opacity=stroke_opacity,
+        )
+
+        # Initialize position
+        if should_center:
+            self.center()
+        if height is not None:
+            self.set_height(height)
+        if width is not None:
+            self.set_width(width)
 
     def init_svg_mobject(self) -> None:
         hash_val = hash_obj(self.hash_seed)
@@ -258,26 +284,22 @@ class SVGMobject(VMobject):
     def text_to_mobject(self, text: se.Text):
         pass
 
-    def move_into_position(self) -> None:
-        if self.should_center:
-            self.center()
-        if self.height is not None:
-            self.set_height(self.height)
-        if self.width is not None:
-            self.set_width(self.width)
-
 
 class VMobjectFromSVGPath(VMobject):
-    CONFIG = {
-        "long_lines": False,
-        "should_subdivide_sharp_curves": False,
-        "should_remove_null_curves": False,
-    }
-
-    def __init__(self, path_obj: se.Path, **kwargs):
+    def __init__(
+        self,
+        path_obj: se.Path,
+        long_lines: bool = False,
+        should_subdivide_sharp_curves: bool = False,
+        should_remove_null_curves: bool = False,
+        **kwargs
+    ):
         # Get rid of arcs
         path_obj.approximate_arcs_with_quads()
         self.path_obj = path_obj
+        self.long_lines = long_lines
+        self.should_subdivide_sharp_curves = should_subdivide_sharp_curves
+        self.should_remove_null_curves = should_remove_null_curves
         super().__init__(**kwargs)
 
     def init_points(self) -> None:

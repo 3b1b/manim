@@ -12,19 +12,14 @@ from manimlib.utils.rate_functions import there_and_back
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from typing import Callable
     from manimlib.mobject.mobject import Mobject
     from manimlib.mobject.types.vectorized_mobject import VMobject
     from manimlib.scene.scene import Scene
 
 
-DEFAULT_FADE_LAG_RATIO = 0
-
 
 class Fade(Transform):
-    CONFIG = {
-        "lag_ratio": DEFAULT_FADE_LAG_RATIO,
-    }
-
     def __init__(
         self,
         mobject: Mobject,
@@ -38,10 +33,6 @@ class Fade(Transform):
 
 
 class FadeIn(Fade):
-    CONFIG = {
-        "lag_ratio": DEFAULT_FADE_LAG_RATIO,
-    }
-
     def create_target(self) -> Mobject:
         return self.mobject
 
@@ -54,11 +45,20 @@ class FadeIn(Fade):
 
 
 class FadeOut(Fade):
-    CONFIG = {
-        "remover": True,
-        # Put it back in original state when done
-        "final_alpha_value": 0,
-    }
+    def __init__(
+        self,
+        mobject: Mobject,
+        shift: np.ndarray = ORIGIN,
+        remover: bool = True,
+        final_alpha_value: float = 0.0,  # Put it back in original state when done,
+        **kwargs
+    ):
+        super().__init__(
+            mobject, shift,
+            remover=remover,
+            final_alpha_value=final_alpha_value,
+            **kwargs
+        )
 
     def create_target(self) -> Mobject:
         result = self.mobject.copy()
@@ -69,7 +69,7 @@ class FadeOut(Fade):
 
 
 class FadeInFromPoint(FadeIn):
-    def __init__(self, mobject: Mobject, point: np.ndarray, **kwargs):
+    def __init__(self, mobject: Mobject, point: np.ndarray[int, np.dtype[np.float64]], **kwargs):
         super().__init__(
             mobject,
             shift=mobject.get_center() - point,
@@ -79,7 +79,7 @@ class FadeInFromPoint(FadeIn):
 
 
 class FadeOutToPoint(FadeOut):
-    def __init__(self, mobject: Mobject, point: np.ndarray, **kwargs):
+    def __init__(self, mobject: Mobject, point: np.ndarray[int, np.dtype[np.float64]], **kwargs):
         super().__init__(
             mobject,
             shift=point - mobject.get_center(),
@@ -89,18 +89,20 @@ class FadeOutToPoint(FadeOut):
 
 
 class FadeTransform(Transform):
-    CONFIG = {
-        "stretch": True,
-        "dim_to_match": 1,
-    }
-
-    def __init__(self, mobject: Mobject, target_mobject: Mobject, **kwargs):
+    def __init__(
+        self,
+        mobject: Mobject,
+        target_mobject: Mobject,
+        stretch: bool = True,
+        dim_to_match: int = 1,
+        **kwargs
+    ):
         self.to_add_on_completion = target_mobject
+        self.stretch = stretch
+        self.dim_to_match = dim_to_match
+
         mobject.save_state()
-        super().__init__(
-            Group(mobject, target_mobject.copy()),
-            **kwargs
-        )
+        super().__init__(Group(mobject, target_mobject.copy()), **kwargs)
 
     def begin(self) -> None:
         self.ending_mobject = self.mobject.copy()
@@ -147,9 +149,12 @@ class VFadeIn(Animation):
     """
     VFadeIn and VFadeOut only work for VMobjects,
     """
-    CONFIG = {
-        "suspend_mobject_updating": False,
-    }
+    def __init__(self, vmobject: VMobject, suspend_mobject_updating: bool = False, **kwargs):
+        super().__init__(
+            vmobject,
+            suspend_mobject_updating=suspend_mobject_updating,
+            **kwargs
+        )
 
     def interpolate_submobject(
         self,
@@ -166,11 +171,19 @@ class VFadeIn(Animation):
 
 
 class VFadeOut(VFadeIn):
-    CONFIG = {
-        "remover": True,
-        # Put it back in original state when done
-        "final_alpha_value": 0,
-    }
+    def __init__(
+        self,
+        vmobject: VMobject,
+        remover: bool = True,
+        final_alpha_value: float = 0.0,
+        **kwargs
+    ):
+        super().__init__(
+            vmobject,
+            remover=remover,
+            final_alpha_value=final_alpha_value,
+            **kwargs
+        )
 
     def interpolate_submobject(
         self,
@@ -182,9 +195,18 @@ class VFadeOut(VFadeIn):
 
 
 class VFadeInThenOut(VFadeIn):
-    CONFIG = {
-        "rate_func": there_and_back,
-        "remover": True,
-        # Put it back in original state when done
-        "final_alpha_value": 0.5,
-    }
+    def __init__(
+        self,
+        vmobject: VMobject,
+        rate_func: Callable[[float], float] = there_and_back,
+        remover: bool = True,
+        final_alpha_value: float = 0.5,
+        **kwargs
+    ):
+        super().__init__(
+            vmobject,
+            rate_func=rate_func,
+            remover=remover,
+            final_alpha_value=final_alpha_value,
+            **kwargs
+        )

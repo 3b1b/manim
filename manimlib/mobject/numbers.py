@@ -3,6 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 from manimlib.constants import DOWN, LEFT, RIGHT, UP
+from manimlib.constants import WHITE
 from manimlib.mobject.svg.tex_mobject import SingleStringTex
 from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VMobject
@@ -10,29 +11,49 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Type, TypeVar
+    from typing import TypeVar
+    from manimlib.typing import ManimColor, Vect3
 
     T = TypeVar("T", bound=VMobject)
 
 
 class DecimalNumber(VMobject):
-    CONFIG = {
-        "stroke_width": 0,
-        "fill_opacity": 1.0,
-        "num_decimal_places": 2,
-        "include_sign": False,
-        "group_with_commas": True,
-        "digit_buff_per_font_unit": 0.001,
-        "show_ellipsis": False,
-        "unit": None,  # Aligned to bottom unless it starts with "^"
-        "include_background_rectangle": False,
-        "edge_to_fix": LEFT,
-        "font_size": 48,
-        "text_config": {}  # Do not pass in font_size here
-    }
+    def __init__(
+        self,
+        number: float | complex = 0,
+        color: ManimColor = WHITE,
+        stroke_width: float = 0,
+        fill_opacity: float = 1.0,
+        num_decimal_places: int = 2,
+        include_sign: bool = False,
+        group_with_commas: bool = True,
+        digit_buff_per_font_unit: float = 0.001,
+        show_ellipsis: bool = False,
+        unit: str | None = None,  # Aligned to bottom unless it starts with "^"
+        include_background_rectangle: bool = False,
+        edge_to_fix: Vect3 = LEFT,
+        font_size: int = 48,
+        text_config: dict = dict(),  # Do not pass in font_size here
+        **kwargs
+    ):
+        self.num_decimal_places = num_decimal_places
+        self.include_sign = include_sign
+        self.group_with_commas = group_with_commas
+        self.digit_buff_per_font_unit = digit_buff_per_font_unit
+        self.show_ellipsis = show_ellipsis
+        self.unit = unit
+        self.include_background_rectangle = include_background_rectangle
+        self.edge_to_fix = edge_to_fix
+        self.font_size = font_size
+        self.text_config = dict(text_config)
 
-    def __init__(self, number: float | complex = 0, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(
+            color=color,
+            stroke_width=stroke_width,
+            fill_opacity=fill_opacity,
+            **kwargs
+        )
+
         self.set_submobjects_from_number(number)
         self.init_colors()
 
@@ -94,7 +115,7 @@ class DecimalNumber(VMobject):
         super().init_data()
         self.data["font_size"] = np.array([self.font_size], dtype=float)
 
-    def get_font_size(self) -> float:
+    def get_font_size(self) -> int:
         return int(self.data["font_size"][0])
 
     def get_formatter(self, **kwargs) -> str:
@@ -156,9 +177,13 @@ class DecimalNumber(VMobject):
 
 
 class Integer(DecimalNumber):
-    CONFIG = {
-        "num_decimal_places": 0,
-    }
+    def __init__(
+        self,
+        number: int = 0,
+        num_decimal_places: int = 0,
+        **kwargs,
+    ):
+        super().__init__(number, num_decimal_places=num_decimal_places, **kwargs)
 
     def get_value(self) -> int:
         return int(np.round(super().get_value()))

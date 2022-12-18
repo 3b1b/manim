@@ -15,43 +15,55 @@ from manimlib.utils.space_ops import normalize_along_axis
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable
-
-    import numpy.typing as npt
+    from typing import Callable, Iterable, Sequence, Tuple
 
     from manimlib.camera.camera import Camera
+    from manimlib.typing import ManimColor, Vect3, Vect3Array
 
 
 class Surface(Mobject):
-    CONFIG = {
-        "u_range": (0, 1),
-        "v_range": (0, 1),
+    render_primitive: int = moderngl.TRIANGLES
+    shader_folder: str = "surface"
+    shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
+        ('point', np.float32, (3,)),
+        ('du_point', np.float32, (3,)),
+        ('dv_point', np.float32, (3,)),
+        ('color', np.float32, (4,)),
+    ]
+
+    def __init__(
+        self,
+        color: ManimColor = GREY,
+        reflectiveness: float = 0.3,
+        gloss: float = 0.1,
+        shadow: float = 0.4,
+        depth_test: bool = True,
+        u_range: Tuple[float, float] = (0.0, 1.0),
+        v_range: Tuple[float, float] = (0.0, 1.0),
         # Resolution counts number of points sampled, which for
         # each coordinate is one more than the the number of
         # rows/columns of approximating squares
-        "resolution": (101, 101),
-        "color": GREY,
-        "opacity": 1.0,
-        "reflectiveness": 0.3,
-        "gloss": 0.1,
-        "shadow": 0.4,
-        "prefered_creation_axis": 1,
+        resolution: Tuple[int, int] = (101, 101),
+        prefered_creation_axis: int = 1,
         # For du and dv steps.  Much smaller and numerical error
         # can crop up in the shaders.
-        "epsilon": 1e-5,
-        "render_primitive": moderngl.TRIANGLES,
-        "depth_test": True,
-        "shader_folder": "surface",
-        "shader_dtype": [
-            ('point', np.float32, (3,)),
-            ('du_point', np.float32, (3,)),
-            ('dv_point', np.float32, (3,)),
-            ('color', np.float32, (4,)),
-        ]
-    }
+        epsilon: float = 1e-5,
+        **kwargs
+    ):
+        self.u_range = u_range
+        self.v_range = v_range
+        self.resolution = resolution
+        self.prefered_creation_axis = prefered_creation_axis
+        self.epsilon = epsilon
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(
+            **kwargs,
+            color=color,
+            reflectiveness=reflectiveness,
+            gloss=gloss,
+            shadow=shadow,
+            depth_test=depth_test,
+        )
         self.compute_triangle_indices()
 
     def uv_func(self, u: float, v: float) -> tuple[float, float, float]:
@@ -102,12 +114,12 @@ class Surface(Mobject):
 
     def get_surface_points_and_nudged_points(
         self
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    ) -> tuple[Vect3Array, Vect3Array, Vect3Array]:
         points = self.get_points()
         k = len(points) // 3
         return points[:k], points[k:2 * k], points[2 * k:]
 
-    def get_unit_normals(self) -> np.ndarray:
+    def get_unit_normals(self) -> Vect3Array:
         s_points, du_points, dv_points = self.get_surface_points_and_nudged_points()
         normals = np.cross(
             (du_points - s_points) / self.epsilon,
@@ -120,7 +132,7 @@ class Surface(Mobject):
         smobject: "Surface",
         a: float,
         b: float,
-        axis: np.ndarray | None = None
+        axis: int | None = None
     ):
         assert(isinstance(smobject, Surface))
         if axis is None:
@@ -138,12 +150,12 @@ class Surface(Mobject):
 
     def get_partial_points_array(
         self,
-        points: np.ndarray,
+        points: Vect3Array,
         a: float,
         b: float,
-        resolution: npt.ArrayLike,
+        resolution: Sequence[int],
         axis: int
-    ) -> np.ndarray:
+    ) -> Vect3Array:
         if len(points) == 0:
             return points
         nu, nv = resolution[:2]
@@ -176,7 +188,7 @@ class Surface(Mobject):
             ).reshape(shape)
         return points.reshape((nu * nv, *resolution[2:]))
 
-    def sort_faces_back_to_front(self, vect: np.ndarray = OUT):
+    def sort_faces_back_to_front(self, vect: Vect3 = OUT):
         tri_is = self.triangle_indices
         indices = list(range(len(tri_is) // 3))
         points = self.get_points()
@@ -190,9 +202,10 @@ class Surface(Mobject):
         return self
 
     def always_sort_to_camera(self, camera: Camera):
-        self.add_updater(lambda m: m.sort_faces_back_to_front(
-            camera.get_location() - self.get_center()
-        ))
+        def updater(surface: Surface):
+            vect = camera.get_location() - surface.get_center()
+            surface.sort_faces_back_to_front(vect)
+        self.add_updater(updater)
 
     # For shaders
     def get_shader_data(self) -> np.ndarray:
@@ -229,12 +242,12 @@ class ParametricSurface(Surface):
 
 
 class SGroup(Surface):
-    CONFIG = {
-        "resolution": (0, 0),
-    }
-
-    def __init__(self, *parametric_surfaces: Surface, **kwargs):
-        super().__init__(uv_func=None, **kwargs)
+    def __init__(
+        self,
+        *parametric_surfaces: Surface,
+        **kwargs
+    ):
+        super().__init__(uv_func=None, resolution=(0, 0), **kwargs)
         self.add(*parametric_surfaces)
 
     def init_points(self):
@@ -242,16 +255,14 @@ class SGroup(Surface):
 
 
 class TexturedSurface(Surface):
-    CONFIG = {
-        "shader_folder": "textured_surface",
-        "shader_dtype": [
-            ('point', np.float32, (3,)),
-            ('du_point', np.float32, (3,)),
-            ('dv_point', np.float32, (3,)),
-            ('im_coords', np.float32, (2,)),
-            ('opacity', np.float32, (1,)),
-        ]
-    }
+    shader_folder: str = "textured_surface"
+    shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
+        ('point', np.float32, (3,)),
+        ('du_point', np.float32, (3,)),
+        ('dv_point', np.float32, (3,)),
+        ('im_coords', np.float32, (2,)),
+        ('opacity', np.float32, (1,)),
+    ]
 
     def __init__(
         self,
@@ -268,18 +279,22 @@ class TexturedSurface(Surface):
             self.num_textures = 1
         else:
             self.num_textures = 2
-        self.texture_paths = {
+
+        texture_paths = {
             "LightTexture": get_full_raster_image_path(image_file),
             "DarkTexture": get_full_raster_image_path(dark_image_file),
         }
 
         self.uv_surface = uv_surface
         self.uv_func = uv_surface.uv_func
-        self.u_range: tuple[float, float] = uv_surface.u_range
-        self.v_range: tuple[float, float] = uv_surface.v_range
-        self.resolution: tuple[float, float] = uv_surface.resolution
-        self.gloss: float = self.uv_surface.gloss
-        super().__init__(**kwargs)
+        self.u_range: Tuple[float, float] = uv_surface.u_range
+        self.v_range: Tuple[float, float] = uv_surface.v_range
+        self.resolution: Tuple[int, int] = uv_surface.resolution
+        super().__init__(
+            texture_paths=texture_paths,
+            gloss=uv_surface.gloss,
+            **kwargs
+        )
 
     def init_data(self):
         super().init_data()
