@@ -130,6 +130,14 @@ class VMobject(Mobject):
     def get_grid(self, *args, **kwargs) -> VGroup:
         return super().get_grid(*args, **kwargs)
 
+    def __getitem__(self, value: int | slice) -> VMobject:
+        return super().__getitem__(value)
+
+    def add(self, *vmobjects: VMobject):
+        if not all((isinstance(m, VMobject) for m in vmobjects)):
+            raise Exception("All submobjects must be of type VMobject")
+        super().add(*vmobjects)
+
     # Colors
     def init_colors(self):
         self.set_fill(
@@ -1160,8 +1168,6 @@ class VMobject(Mobject):
 
 class VGroup(VMobject):
     def __init__(self, *vmobjects: VMobject, **kwargs):
-        if not all([isinstance(m, VMobject) for m in vmobjects]):
-            raise Exception("All submobjects must be of type VMobject")
         super().__init__(**kwargs)
         self.add(*vmobjects)
 

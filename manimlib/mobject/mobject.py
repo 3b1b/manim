@@ -314,7 +314,7 @@ class Mobject(object):
 
     # Family matters
 
-    def __getitem__(self, value):
+    def __getitem__(self, value: int | slice) -> Mobject:
         if isinstance(value, slice):
             GroupClass = self.get_group_class()
             return GroupClass(*self.split().__getitem__(value))
@@ -326,7 +326,7 @@ class Mobject(object):
     def __len__(self):
         return len(self.split())
 
-    def split(self):
+    def split(self) -> list[Mobject]:
         return self.submobjects
 
     def assemble_family(self):
