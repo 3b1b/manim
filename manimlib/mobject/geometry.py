@@ -1027,8 +1027,7 @@ class ArrowTip(Triangle):
             self.data["points"][4] += np.array([0.6 * length, 0, 0])
         elif tip_style == 2:
             h = length / 2
-            self.clear_points()
-            self.data["points"] = Dot().set_width(h).get_points()
+            self.set_points(Dot().set_width(h).get_points())
         self.rotate(angle)
 
     def get_base(self) -> Vect3:
