@@ -216,8 +216,9 @@ def insert_embed_line(file_name: str, scene_name: str, line_marker: str):
         )
     except StopIteration:
         log.error(f"No scene {scene_name}")
+        return
 
-    prev_line_num = None
+    prev_line_num = -1
     n_spaces = None
     if len(line_marker) == 0:
         # Find the end of the construct method
@@ -228,10 +229,10 @@ def insert_embed_line(file_name: str, scene_name: str, line_marker: str):
                 in_construct = True
                 n_spaces = get_indent(line) + 4
             elif in_construct:
-                if len(line.strip()) > 0 and get_indent(line) < n_spaces:
+                if len(line.strip()) > 0 and get_indent(line) < (n_spaces or 0):
                     prev_line_num = index - 1
                     break
-        if prev_line_num is None:
+        if prev_line_num < 0:
             prev_line_num = len(lines) - 1
     elif line_marker.isdigit():
         # Treat the argument as a line number
@@ -248,18 +249,20 @@ def insert_embed_line(file_name: str, scene_name: str, line_marker: str):
             log.error(f"No lines matching {line_marker}")
             sys.exit(2)
 
-    # Insert and write new file
+    # Insert the embed line, rewrite file, then write it back when done
     if n_spaces is None:
         n_spaces = get_indent(lines[prev_line_num])
+    inserted_line = " " * n_spaces + "self.embed()\n"
     new_lines = list(lines)
-    new_lines.insert(prev_line_num + 1, " " * n_spaces + "self.embed()\n")
-    alt_file = file_name.replace(".py", "_insert_embed.py")
-    with open(alt_file, 'w') as fp:
+    new_lines.insert(prev_line_num + 1, inserted_line)
+
+    with open(file_name, 'w') as fp:
         fp.writelines(new_lines)
     try:
-        yield alt_file
+        yield file_name
     finally:
-        os.remove(alt_file)
+        with open(file_name, 'w') as fp:
+            fp.writelines(lines)
 
 
 def get_custom_config():
