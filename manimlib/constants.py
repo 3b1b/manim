@@ -42,6 +42,8 @@ X_AXIS: Vect3 = np.array([1., 0., 0.])
 Y_AXIS: Vect3 = np.array([0., 1., 0.])
 Z_AXIS: Vect3 = np.array([0., 0., 1.])
 
+NULL_POINTS = np.array([[0., 0., 0.]])
+
 # Useful abbreviations for diagonals
 UL: Vect3 = UP + LEFT
 UR: Vect3 = UP + RIGHT
