@@ -80,25 +80,25 @@ def init_customization() -> None:
             show_default=False
         )
         dir_config["raster_images"] = Prompt.ask(
-            "  Which folder should manim find [bold]raster images[/bold] (.jpg .png .gif) in "
+            "  Which folder should manim find [bold]raster images[/bold] (.jpg .png .gif) in " + \
             "[prompt.default](optional, default is none)",
             default="",
             show_default=False
         )
         dir_config["vector_images"] = Prompt.ask(
-            "  Which folder should manim find [bold]vector images[/bold] (.svg .xdv) in "
+            "  Which folder should manim find [bold]vector images[/bold] (.svg .xdv) in " + \
             "[prompt.default](optional, default is none)",
             default="",
             show_default=False
         )
         dir_config["sounds"] = Prompt.ask(
-            "  Which folder should manim find [bold]sound files[/bold] (.mp3 .wav) in "
+            "  Which folder should manim find [bold]sound files[/bold] (.mp3 .wav) in " + \
             "[prompt.default](optional, default is none)",
             default="",
             show_default=False
         )
         dir_config["temporary_storage"] = Prompt.ask(
-            "  Which folder should manim storage [bold]temporary files[/bold] "
+            "  Which folder should manim storage [bold]temporary files[/bold] " + \
             "[prompt.default](recommended, use system temporary folder by default)",
             default="",
             show_default=False
