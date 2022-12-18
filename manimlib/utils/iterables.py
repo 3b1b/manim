@@ -114,7 +114,7 @@ def resize_with_interpolation(nparray: np.ndarray, length: int) -> np.ndarray:
 def make_even(
     iterable_1: Sequence[T],
     iterable_2: Sequence[S]
-) -> tuple[list[T], list[S]]:
+) -> tuple[Sequence[T], Sequence[S]]:
     len1 = len(iterable_1)
     len2 = len(iterable_2)
     if len1 == len2:
