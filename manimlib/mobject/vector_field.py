@@ -140,7 +140,7 @@ class VectorField(VGroup):
         self.color_map = color_map
         self.length_func = length_func
         self.opacity = opacity
-        self.vector_config = vector_config
+        self.vector_config = dict(vector_config)
 
         self.value_to_rgb = get_rgb_gradient_function(
             *self.magnitude_range, self.color_map,

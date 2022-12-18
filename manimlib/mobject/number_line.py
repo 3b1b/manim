@@ -54,12 +54,12 @@ class NumberLine(Line):
         self.tick_size = tick_size
         self.longer_tick_multiple = longer_tick_multiple
         self.tick_offset = tick_offset
-        self.numbers_with_elongated_ticks = numbers_with_elongated_ticks
+        self.numbers_with_elongated_ticks = list(numbers_with_elongated_ticks)
         self.line_to_number_direction = line_to_number_direction
         self.line_to_number_buff = line_to_number_buff
         self.include_tip = include_tip
-        self.tip_config = tip_config
-        self.decimal_number_config = decimal_number_config
+        self.tip_config = dict(tip_config)
+        self.decimal_number_config = dict(decimal_number_config)
         self.numbers_to_exclude = numbers_to_exclude
 
         self.x_min, self.x_max = x_range[:2]
@@ -217,5 +217,5 @@ class UnitInterval(NumberLine):
             x_range=x_range,
             unit_size=unit_size,
             numbers_with_elongated_ticks=numbers_with_elongated_ticks,
-            decimal_number_config   =decimal_number_config,
+            decimal_number_config=decimal_number_config,
         )

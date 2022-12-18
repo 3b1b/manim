@@ -399,6 +399,7 @@ class CoordinateSystem(ABC):
 
 
 class Axes(VGroup, CoordinateSystem):
+    default_x_axis_config: dict = dict()
     default_y_axis_config: dict = dict(line_to_number_direction=LEFT)
 
     def __init__(
@@ -418,7 +419,9 @@ class Axes(VGroup, CoordinateSystem):
         self.x_axis = self.create_axis(
             self.x_range,
             axis_config=merge_dicts_recursively(
-                axis_config, x_axis_config
+                self.default_x_axis_config,
+                axis_config,
+                x_axis_config
             ),
             length=width,
         )
@@ -503,7 +506,10 @@ class ThreeDAxes(Axes):
         self.z_range = z_range
         self.z_axis = self.create_axis(
             self.z_range,
-            axis_config=merge_dicts_recursively(kwargs.get("axes_config", {}), z_axis_config),
+            axis_config=merge_dicts_recursively(
+                kwargs.get("axes_config", {}),
+                z_axis_config
+            ),
             length=depth,
         )
         self.z_axis.rotate(-PI / 2, UP, about_point=ORIGIN)
@@ -584,8 +590,8 @@ class NumberPlane(Axes):
             y_axis_config=y_axis_config,
             **kwargs
         )
-        self.background_line_style = background_line_style
-        self.faded_line_style = faded_line_style
+        self.background_line_style = dict(background_line_style)
+        self.faded_line_style = dict(faded_line_style)
         self.faded_line_ratio = faded_line_ratio
         self.make_smooth_after_applying_functions = make_smooth_after_applying_functions
         self.init_background_lines()

@@ -7,7 +7,7 @@ import re
 from manimlib.constants import BLACK, WHITE, GREY_C
 from manimlib.constants import DOWN, LEFT, RIGHT, UP
 from manimlib.constants import FRAME_WIDTH
-from manimlib.constants import MED_LARGE_BUFF, MED_SMALL_BUFF, SMALL_BUFF
+from manimlib.constants import MED_LARGE_BUFF, SMALL_BUFF
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
@@ -46,8 +46,8 @@ class SingleStringTex(SVGMobject):
         **kwargs
     ):
         self.tex_string = tex_string
-        self.svg_default = svg_default
-        self.path_string_config = path_string_config
+        self.svg_default = dict(svg_default)
+        self.path_string_config = dict(path_string_config)
         self.font_size = font_size
         self.alignment = alignment
         self.math_mode = math_mode

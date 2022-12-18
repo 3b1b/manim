@@ -35,13 +35,14 @@ class TransformMatchingParts(AnimationGroup):
         target_mobject: Mobject,
         transform_mismatches: bool = False,
         fade_transform_mismatches: bool = False,
-        key_map: dict = dict(),
+        key_map: dict | None = None,
         **kwargs
     ):
         assert(isinstance(mobject, self.mobject_type))
         assert(isinstance(target_mobject, self.mobject_type))
         source_map = self.get_shape_map(mobject)
         target_map = self.get_shape_map(target_mobject)
+        key_map = key_map or dict()
 
         # Create two mobjects whose submobjects all match each other
         # according to whatever keys are used for source_map and

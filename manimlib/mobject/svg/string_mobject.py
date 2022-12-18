@@ -68,7 +68,7 @@ class StringMobject(SVGMobject, ABC):
         **kwargs
     ):
         self.string = string
-        self.path_string_config = path_string_config
+        self.path_string_config = dict(path_string_config)
         self.base_color = base_color or WHITE
         self.isolate = isolate
         self.protect = protect

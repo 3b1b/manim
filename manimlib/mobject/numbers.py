@@ -45,7 +45,7 @@ class DecimalNumber(VMobject):
         self.include_background_rectangle = include_background_rectangle
         self.edge_to_fix = edge_to_fix
         self.font_size = font_size
-        self.text_config = text_config
+        self.text_config = dict(text_config)
 
         super().__init__(
             color=color,

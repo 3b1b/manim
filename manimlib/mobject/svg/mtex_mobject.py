@@ -51,7 +51,7 @@ class MTex(StringMobject):
         self.alignment = alignment
         self.template = template
         self.additional_preamble = additional_preamble
-        self.tex_to_color_map = tex_to_color_map
+        self.tex_to_color_map = dict(tex_to_color_map)
 
         super().__init__(
             tex_string,

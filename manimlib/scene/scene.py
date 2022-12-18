@@ -82,7 +82,7 @@ class Scene(object):
         if self.preview:
             from manimlib.window import Window
             self.window = Window(scene=self, **window_config)
-            self.camera_config.update(camera_config)
+            self.camera_config= {**self.camera_config, **camera_config}
             self.camera_config["ctx"] = self.window.ctx
             self.camera_config["fps"] = 30  # Where's that 30 from?
             self.undo_stack = []
