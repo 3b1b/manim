@@ -206,7 +206,7 @@ class Scene(object):
         # As long as the copied selection starts with a comment,
         # this will revert to the state of the scene at the first
         # point of running.
-        def checkpoint_paste(quiet=True):
+        def checkpoint_paste(quiet=True, show_progress=True, skip=False):
             pasted = pyperclip.paste()
             line0 = pasted.lstrip().split("\n")[0]
             if line0.startswith("#"):
@@ -215,7 +215,16 @@ class Scene(object):
                 else:
                     self.revert_to_checkpoint(line0)
                     self.update_frame(dt=0)
+
+            prev_show_progress = self.show_animation_progress
+            prev_skipping = self.skip_animations
+            self.show_animation_progress = show_progress
+            self.skip_animations = skip
+
             shell.run_line_magic("paste", "-q" if quiet else "")
+
+            self.show_animation_progress = prev_show_progress
+            self.skip_animations = prev_skipping
 
         local_ns['checkpoint_paste'] = checkpoint_paste
 
