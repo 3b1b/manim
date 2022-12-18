@@ -644,24 +644,20 @@ class VMobject(Mobject):
     def get_subpaths_from_points(
         self,
         points: Vect3Array
-    ) -> Vect3Array:
+    ) -> list[Vect3Array]:
         nppc = self.n_points_per_curve
         diffs = points[nppc - 1:-1:nppc] - points[nppc::nppc]
         splits = (diffs * diffs).sum(1) > self.tolerance_for_point_equality
         split_indices = np.arange(nppc, len(points), nppc, dtype=int)[splits]
 
-        # split_indices = filter(
-        #     lambda n: not self.consider_points_equals(points[n - 1], points[n]),
-        #     range(nppc, len(points), nppc)
-        # )
         split_indices = [0, *split_indices, len(points)]
-        return np.array([
+        return [
             points[i1:i2]
             for i1, i2 in zip(split_indices, split_indices[1:])
             if (i2 - i1) >= nppc
-        ])
+        ]
 
-    def get_subpaths(self) -> Vect3Array:
+    def get_subpaths(self) -> list[Vect3Array]:
         return self.get_subpaths_from_points(self.get_points())
 
     def get_nth_curve_points(self, n: int) -> Vect3:
