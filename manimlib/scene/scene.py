@@ -159,16 +159,18 @@ class Scene(object):
             self.window = None
 
     def interact(self) -> None:
-        # If there is a window, enter a loop
-        # which updates the frame while under
-        # the hood calling the pyglet event loop
+        """
+        If there is a window, enter a loop
+        which updates the frame while under
+        the hood calling the pyglet event loop
+        """
         if self.window is None:
             return
-        log.info("""
-            Tips: You are now in the interactive mode. Now you can use the keyboard
-             and the mouse to interact with the scene. Just press `command + q` or `esc`
-             if you want to quit.
-        """)
+        log.info(
+            "\nTips: Using the keys `d`, `f`, or `z` " +
+            "you can interact with the scene. " +
+            "Press `command + q` or `esc` to quit"
+        )
         self.skip_animations = False
         self.refresh_static_mobjects()
         while not self.is_window_closing():
