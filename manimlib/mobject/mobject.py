@@ -176,7 +176,7 @@ class Mobject(object):
         self.refresh_bounding_box()
         return self
 
-    def set_points(self, points: npt.ArrayLike):
+    def set_points(self, points: Vect3Array):
         if len(points) == len(self.data["points"]):
             self.data["points"][:] = points
         elif isinstance(points, np.ndarray):
@@ -186,7 +186,7 @@ class Mobject(object):
         self.refresh_bounding_box()
         return self
 
-    def append_points(self, new_points: npt.ArrayLike):
+    def append_points(self, new_points: Vect3Array):
         self.data["points"] = np.vstack([self.data["points"], new_points])
         self.refresh_bounding_box()
         return self
