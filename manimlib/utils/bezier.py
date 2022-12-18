@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
     T = TypeVar("T")
 
-    Scalable = float | VectN
+    Scalable = TypeVar("Scalable", float, VectN)
 
 
 CLOSED_THRESHOLD = 0.001
@@ -89,7 +89,7 @@ def partial_quadratic_bezier_points(
 # Linear interpolation variants
 
 
-def interpolate(start: Scalable, end: Scalable, alpha: Scalable) -> Scalable:
+def interpolate(start: Scalable, end: Scalable, alpha: float | VectN) -> Scalable:
     try:
         return (1 - alpha) * start + alpha * end
     except TypeError:
@@ -149,7 +149,7 @@ def mid(start: Scalable, end: Scalable) -> Scalable:
     return (start + end) / 2.0
 
 
-def inverse_interpolate(start: Scalable, end: Scalable, value: Scalable) -> Scalable:
+def inverse_interpolate(start: Scalable, end: Scalable, value: Scalable) -> np.ndarray:
     return np.true_divide(value - start, end - start)
 
 
