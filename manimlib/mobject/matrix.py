@@ -106,10 +106,16 @@ class Matrix(VMobject):
             self.add_background_rectangle()
 
 
-    def element_to_mobject(self, element: str | float, **config) -> Tex:
+    def element_to_mobject(self, element: str | float | VMobject, **config) -> VMobject:
+        if isinstance(element, VMobject):
+            return element
         return Tex(str(element), **config)
 
-    def matrix_to_mob_matrix(self, matrix: npt.ArrayLike, **config) -> list[list[VMobject]]:
+    def matrix_to_mob_matrix(
+        self,
+        matrix: Sequence[Sequence[str | float | VMobject]],
+        **config
+    ) -> list[list[VMobject]]:
         return [
             [
                 self.element_to_mobject(item, **config)
@@ -120,7 +126,7 @@ class Matrix(VMobject):
 
     def organize_mob_matrix(
         self,
-        matrix: list[list[Mobject]],
+        matrix: list[list[VMobject]],
         v_buff: float,
         h_buff: float,
         aligned_corner: Vect3,
