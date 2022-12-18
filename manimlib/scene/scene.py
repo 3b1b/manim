@@ -545,9 +545,6 @@ class Scene(object):
         if not self.skip_animations:
             self.file_writer.end_animation()
 
-        if self.inside_embed:
-            self.save_state()
-
         if self.skip_animations and self.window is not None:
             # Show some quick frames along the way
             self.update_frame(dt=0, ignore_skipping=True)
