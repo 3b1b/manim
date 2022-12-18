@@ -181,8 +181,10 @@ class Mobject(object):
             self.data["points"][:] = points
         elif isinstance(points, np.ndarray):
             self.data["points"] = points.copy()
-        else:
+        elif isinstance(points, list):
             self.data["points"] = np.array(points)
+        else:
+            raise Exception(f"Invalid type {type(points)} for points")
         self.refresh_bounding_box()
         return self
 
