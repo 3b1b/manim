@@ -511,7 +511,8 @@ class Scene(object):
             kw["override_skip_animations"] = True
         return self.get_time_progression(duration, **kw)
 
-    def handle_play_like_call(func):
+    @staticmethod
+    def handle_play_like_call(func: Callable):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             if self.inside_embed:
