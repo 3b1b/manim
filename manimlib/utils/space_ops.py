@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Callable, Sequence, List, Tuple
-    from manimlib.typing import ManimColor, Vect2, Vect3, Vect4, VectN, Matrix3x3, Vect3Array, Vect2Array
+    from manimlib.typing import Vect2, Vect3, Vect4, VectN, Matrix3x3, Vect3Array, Vect2Array
 
 
 def cross(v1: Vect3 | List[float], v2: Vect3 | List[float]) -> Vect3:
