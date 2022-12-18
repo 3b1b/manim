@@ -15,9 +15,7 @@ if TYPE_CHECKING:
     from typing import Callable, Sequence, TypeVar
     from manimlib.typing import VectN, FloatArray
 
-    T = TypeVar("T")
-
-    Scalable = TypeVar("Scalable", float, VectN)
+    Scalable = TypeVar("Scalable", float, FloatArray)
 
 
 CLOSED_THRESHOLD = 0.001
