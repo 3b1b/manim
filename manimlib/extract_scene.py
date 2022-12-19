@@ -35,8 +35,8 @@ def prompt_user_for_choice(scene_classes):
         name_to_class[name] = scene_class
     try:
         user_input = input(
-            "\nThat module has multiple scenes, "
-            "which ones would you like to render?"
+            "\nThat module has multiple scenes, " + \
+            "which ones would you like to render?" + \
             "\nScene Name or Number: "
         )
         return [

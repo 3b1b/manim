@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from functools import wraps
 import inspect
 import os
 import platform
@@ -9,11 +8,16 @@ import pyperclip
 import random
 import time
 
+from IPython.terminal import pt_inputhooks
+from IPython.terminal.embed import InteractiveShellEmbed
+from IPython.core.getipython import get_ipython
+
 import numpy as np
 from tqdm import tqdm as ProgressDisplay
 
 from manimlib.animation.animation import prepare_animation
 from manimlib.camera.camera import Camera
+from manimlib.config import get_module
 from manimlib.constants import ARROW_SYMBOLS
 from manimlib.constants import DEFAULT_WAIT_TIME
 from manimlib.constants import COMMAND_MODIFIER
@@ -52,12 +56,13 @@ class Scene(object):
     random_seed: int = 0
     pan_sensitivity: float = 3.0
     max_num_saved_states: int = 50
-    camera_config: dict = dict()
+    default_camera_config: dict = dict()
+    default_window_config: dict = dict()
+    default_file_writer_config: dict = dict()
 
     def __init__(
         self,
         window_config: dict = dict(),
-        camera_class: type = Camera,
         camera_config: dict = dict(),
         file_writer_config: dict = dict(),
         skip_animations: bool = False,
@@ -78,21 +83,22 @@ class Scene(object):
         self.presenter_mode = presenter_mode
         self.show_animation_progress = show_animation_progress
 
+        self.camera_config = {**self.default_camera_config, **camera_config}
+        self.window_config = {**self.default_window_config, **window_config}
+        self.file_writer_config = {**self.default_file_writer_config, **file_writer_config}
+
         # Initialize window, if applicable
         if self.preview:
             from manimlib.window import Window
-            self.window = Window(scene=self, **window_config)
-            self.camera_config= {**self.camera_config, **camera_config}
+            self.window = Window(scene=self, **self.window_config)
             self.camera_config["ctx"] = self.window.ctx
             self.camera_config["fps"] = 30  # Where's that 30 from?
-            self.undo_stack = []
-            self.redo_stack = []
         else:
             self.window = None
 
         # Core state of the scene
-        self.camera: Camera = camera_class(**self.camera_config)
-        self.file_writer = SceneFileWriter(self, **file_writer_config)
+        self.camera: Camera = Camera(**self.camera_config)
+        self.file_writer = SceneFileWriter(self, **self.file_writer_config)
         self.mobjects: list[Mobject] = [self.camera.frame]
         self.id_to_mobject_map: dict[int, Mobject] = dict()
         self.num_plays: int = 0
@@ -100,6 +106,8 @@ class Scene(object):
         self.skip_time: float = 0
         self.original_skipping_status: bool = self.skip_animations
         self.checkpoint_states: dict[str, list[tuple[Mobject, Mobject]]] = dict()
+        self.undo_stack = []
+        self.redo_stack = []
 
         if self.start_at_animation_number is not None:
             self.skip_animations = True
@@ -110,7 +118,6 @@ class Scene(object):
         self.mouse_point = Point()
         self.mouse_drag_point = Point()
         self.hold_on_wait = self.presenter_mode
-        self.inside_embed = False
         self.quit_interaction = False
 
         # Much nicer to work with deterministic scenes
@@ -159,61 +166,56 @@ class Scene(object):
             self.window = None
 
     def interact(self) -> None:
-        # If there is a window, enter a loop
-        # which updates the frame while under
-        # the hood calling the pyglet event loop
+        """
+        If there is a window, enter a loop
+        which updates the frame while under
+        the hood calling the pyglet event loop
+        """
         if self.window is None:
             return
         log.info(
-            "Tips: You are now in the interactive mode. Now you can use the keyboard"
-            " and the mouse to interact with the scene. Just press `command + q` or `esc`"
-            " if you want to quit."
+            "\nTips: Using the keys `d`, `f`, or `z` " +
+            "you can interact with the scene. " +
+            "Press `command + q` or `esc` to quit"
         )
         self.skip_animations = False
         self.refresh_static_mobjects()
         while not self.is_window_closing():
             self.update_frame(1 / self.camera.fps)
 
-    def embed(self, close_scene_on_exit: bool = True) -> None:
+    def embed(
+        self,
+        close_scene_on_exit: bool = True,
+        show_animation_progress: bool = True,
+    ) -> None:
         if not self.preview:
             return  # Embed is only relevant with a preview
-        self.inside_embed = True
         self.stop_skipping()
         self.update_frame()
         self.save_state()
+        self.show_animation_progress = show_animation_progress
 
-        # Configure and launch embedded IPython terminal
-        from IPython.terminal import embed, pt_inputhooks
-        shell = embed.InteractiveShellEmbed.instance()
+        # Create embedded IPython terminal to be configured
+        shell = InteractiveShellEmbed.instance()
 
         # Use the locals namespace of the caller
-        local_ns = inspect.currentframe().f_back.f_locals
+        caller_frame = inspect.currentframe().f_back
+        local_ns = dict(caller_frame.f_locals)
+
         # Add a few custom shortcuts
-        local_ns.update({
-            name: getattr(self, name)
-            for name in [
-                "play", "wait", "add", "remove", "clear",
-                "save_state", "undo", "redo", "i2g", "i2m"
-            ]
-        })
-
-        # This is useful if one wants to re-run a block of scene
-        # code, while developing, tweaking it each time.
-        # As long as the copied selection starts with a comment,
-        # this will revert to the state of the scene at the first
-        # point of running.
-        def checkpoint_paste(quiet=True):
-            pasted = pyperclip.paste()
-            line0 = pasted.lstrip().split("\n")[0]
-            if line0.startswith("#"):
-                if line0 not in self.checkpoint_states:
-                    self.checkpoint(line0)
-                else:
-                    self.revert_to_checkpoint(line0)
-                    self.update_frame(dt=0)
-            shell.run_line_magic("paste", "-q" if quiet else "")
-
-        local_ns['checkpoint_paste'] = checkpoint_paste
+        local_ns.update(
+            play=self.play,
+            wait=self.wait,
+            add=self.add,
+            remove=self.remove,
+            clear=self.clear,
+            save_state=self.save_state,
+            undo=self.undo,
+            redo=self.redo,
+            i2g=self.i2g,
+            i2m=self.i2m,
+            checkpoint_paste=self.checkpoint_paste,
+        )
 
         # Enables gui interactions during the embed
         def inputhook(context):
@@ -246,7 +248,14 @@ class Scene(object):
 
         shell.events.register("post_run_cell", post_cell_func)
 
-        shell(local_ns=local_ns, stack_depth=2)
+        # Launch shell
+        shell(
+            local_ns=local_ns,
+            # Pretend like we're embeding in the caller function, not here
+            stack_depth=2,
+            # Specify that the present module is the caller's, not here
+            module=get_module(caller_frame.f_globals["__file__"])
+        )
 
         # End scene when exiting an embed
         if close_scene_on_exit:
@@ -512,8 +521,6 @@ class Scene(object):
         return self.get_time_progression(duration, **kw)
 
     def pre_play(self):
-        if self.inside_embed:
-            self.save_state()
         if self.presenter_mode and self.num_plays == 0:
             self.hold_loop()
 
@@ -531,9 +538,6 @@ class Scene(object):
     def post_play(self):
         if not self.skip_animations:
             self.file_writer.end_animation()
-
-        if self.inside_embed:
-            self.save_state()
 
         if self.skip_animations and self.window is not None:
             # Show some quick frames along the way
@@ -686,6 +690,37 @@ class Scene(object):
             self.undo_stack.append(self.get_state())
             self.restore_state(self.redo_stack.pop())
         self.refresh_static_mobjects()
+
+    def checkpoint_paste(self, skip: bool = False):
+        """
+        Used during interactive development to run (or re-run)
+        a block of scene code.
+
+        If the copied selection starts with a comment, this will
+        revert to the state of the scene the first time this function
+        was called on a block of code starting with that comment.
+        """
+        shell = get_ipython()
+        if shell is None:
+            raise Exception(
+                "Scene.checkpoint_paste cannot be called outside of " +
+                "an ipython shell"
+            )
+
+        pasted = pyperclip.paste()
+        line0 = pasted.lstrip().split("\n")[0]
+        if line0.startswith("#"):
+            if line0 not in self.checkpoint_states:
+                self.checkpoint(line0)
+            else:
+                self.revert_to_checkpoint(line0)
+
+        prev_skipping = self.skip_animations
+        self.skip_animations = skip
+
+        shell.run_cell(pasted)
+
+        self.skip_animations = prev_skipping
 
     def checkpoint(self, key: str):
         self.checkpoint_states[key] = self.get_state()
