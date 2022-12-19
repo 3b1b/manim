@@ -700,6 +700,13 @@ class Scene(object):
         revert to the state of the scene the first time this function
         was called on a block of code starting with that comment.
         """
+        shell = get_ipython()
+        if shell is None:
+            raise Exception(
+                "Scene.checkpoint_paste cannot be called outside of " +
+                "an ipython shell"
+            )
+
         pasted = pyperclip.paste()
         line0 = pasted.lstrip().split("\n")[0]
         if line0.startswith("#"):
@@ -707,13 +714,6 @@ class Scene(object):
                 self.checkpoint(line0)
             else:
                 self.revert_to_checkpoint(line0)
-
-        shell = get_ipython()
-        if shell is None:
-            raise Exception(
-                "Scene.checkpoint_paste cannot be called outside of " +
-                "an ipython shell"
-            )
 
         prev_skipping = self.skip_animations
         self.skip_animations = skip
