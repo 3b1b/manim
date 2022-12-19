@@ -56,12 +56,13 @@ class Scene(object):
     random_seed: int = 0
     pan_sensitivity: float = 3.0
     max_num_saved_states: int = 50
-    camera_config: dict = dict()
+    default_camera_config: dict = dict()
+    default_window_config: dict = dict()
+    default_file_writer_config: dict = dict()
 
     def __init__(
         self,
         window_config: dict = dict(),
-        camera_class: type = Camera,
         camera_config: dict = dict(),
         file_writer_config: dict = dict(),
         skip_animations: bool = False,
@@ -82,21 +83,22 @@ class Scene(object):
         self.presenter_mode = presenter_mode
         self.show_animation_progress = show_animation_progress
 
+        self.camera_config = {**self.default_camera_config, **camera_config}
+        self.window_config = {**self.default_window_config, **window_config}
+        self.file_writer_config = {**self.default_file_writer_config, **file_writer_config}
+
         # Initialize window, if applicable
         if self.preview:
             from manimlib.window import Window
-            self.window = Window(scene=self, **window_config)
-            self.camera_config= {**self.camera_config, **camera_config}
+            self.window = Window(scene=self, **self.window_config)
             self.camera_config["ctx"] = self.window.ctx
             self.camera_config["fps"] = 30  # Where's that 30 from?
-            self.undo_stack = []
-            self.redo_stack = []
         else:
             self.window = None
 
         # Core state of the scene
-        self.camera: Camera = camera_class(**self.camera_config)
-        self.file_writer = SceneFileWriter(self, **file_writer_config)
+        self.camera: Camera = Camera(**self.camera_config)
+        self.file_writer = SceneFileWriter(self, **self.file_writer_config)
         self.mobjects: list[Mobject] = [self.camera.frame]
         self.id_to_mobject_map: dict[int, Mobject] = dict()
         self.num_plays: int = 0
@@ -104,6 +106,8 @@ class Scene(object):
         self.skip_time: float = 0
         self.original_skipping_status: bool = self.skip_animations
         self.checkpoint_states: dict[str, list[tuple[Mobject, Mobject]]] = dict()
+        self.undo_stack = []
+        self.redo_stack = []
 
         if self.start_at_animation_number is not None:
             self.skip_animations = True
