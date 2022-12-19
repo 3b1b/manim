@@ -35,12 +35,14 @@ def _convert_point_to_3d(x: float, y: float) -> np.ndarray:
 
 class SVGMobject(VMobject):
     file_name: str = ""
+    height: float | None = 2.0
+    width: float | None = None
 
     def __init__(
         self,
         file_name: str = "",
         should_center: bool = True,
-        height: float | None = 2.0,
+        height: float | None = None,
         width: float | None = None,
         # Style that overrides the original svg
         color: ManimColor = None,
@@ -66,7 +68,6 @@ class SVGMobject(VMobject):
         self.file_name = file_name or self.file_name
         self.svg_default = dict(svg_default)
         self.path_string_config = dict(path_string_config)
-        self.height = height
 
         super().__init__(**kwargs )
         self.init_svg_mobject()
@@ -82,6 +83,9 @@ class SVGMobject(VMobject):
         )
 
         # Initialize position
+        height = height or self.height
+        width = width or self.width
+
         if should_center:
             self.center()
         if height is not None:
