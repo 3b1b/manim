@@ -8,6 +8,10 @@ import pyperclip
 import random
 import time
 
+from IPython.terminal import pt_inputhooks
+from IPython.terminal.embed import InteractiveShellEmbed
+from IPython.core.getipython import get_ipython
+
 import numpy as np
 from tqdm import tqdm as ProgressDisplay
 
@@ -110,7 +114,6 @@ class Scene(object):
         self.mouse_point = Point()
         self.mouse_drag_point = Point()
         self.hold_on_wait = self.presenter_mode
-        self.inside_embed = False
         self.quit_interaction = False
 
         # Much nicer to work with deterministic scenes
@@ -176,59 +179,39 @@ class Scene(object):
         while not self.is_window_closing():
             self.update_frame(1 / self.camera.fps)
 
-    def embed(self, close_scene_on_exit: bool = True) -> None:
+    def embed(
+        self,
+        close_scene_on_exit: bool = True,
+        show_animation_progress: bool = True,
+    ) -> None:
         if not self.preview:
             return  # Embed is only relevant with a preview
-        self.inside_embed = True
         self.stop_skipping()
         self.update_frame()
         self.save_state()
+        self.show_animation_progress = show_animation_progress
 
-        # Configure and launch embedded IPython terminal
-        from IPython.terminal import embed, pt_inputhooks
-        shell = embed.InteractiveShellEmbed.instance()
+        # Create embedded IPython terminal to be configured
+        shell = InteractiveShellEmbed.instance()
 
         # Use the locals namespace of the caller
         caller_frame = inspect.currentframe().f_back
         local_ns = dict(caller_frame.f_locals)
 
         # Add a few custom shortcuts
-        local_ns.update({
-            name: getattr(self, name)
-            for name in [
-                "play", "wait", "add", "remove", "clear",
-                "save_state", "undo", "redo", "i2g", "i2m"
-            ]
-        })
-
-        module = get_module(caller_frame.f_globals["__file__"])
-
-        # This is useful if one wants to re-run a block of scene
-        # code, while developing, tweaking it each time.
-        # As long as the copied selection starts with a comment,
-        # this will revert to the state of the scene at the first
-        # point of running.
-        def checkpoint_paste(show_progress=True, skip=False):
-            pasted = pyperclip.paste()
-            line0 = pasted.lstrip().split("\n")[0]
-            if line0.startswith("#"):
-                if line0 not in self.checkpoint_states:
-                    self.checkpoint(line0)
-                else:
-                    self.revert_to_checkpoint(line0)
-                    self.update_frame(dt=0)
-
-            prev_show_progress = self.show_animation_progress
-            prev_skipping = self.skip_animations
-            self.show_animation_progress = show_progress
-            self.skip_animations = skip
-
-            shell.run_cell(pyperclip.paste())
-
-            self.show_animation_progress = prev_show_progress
-            self.skip_animations = prev_skipping
-
-        local_ns['checkpoint_paste'] = checkpoint_paste
+        local_ns.update(
+            play=self.play,
+            wait=self.wait,
+            add=self.add,
+            remove=self.remove,
+            clear=self.clear,
+            save_state=self.save_state,
+            undo=self.undo,
+            redo=self.redo,
+            i2g=self.i2g,
+            i2m=self.i2m,
+            checkpoint_paste=self.checkpoint_paste,
+        )
 
         # Enables gui interactions during the embed
         def inputhook(context):
@@ -261,7 +244,14 @@ class Scene(object):
 
         shell.events.register("post_run_cell", post_cell_func)
 
-        shell(local_ns=local_ns, stack_depth=2, module=module)
+        # Launch shell
+        shell(
+            local_ns=local_ns,
+            # Pretend like we're embeding in the caller function, not here
+            stack_depth=2,
+            # Specify that the present module is the caller's, not here
+            module=get_module(caller_frame.f_globals["__file__"])
+        )
 
         # End scene when exiting an embed
         if close_scene_on_exit:
@@ -527,8 +517,6 @@ class Scene(object):
         return self.get_time_progression(duration, **kw)
 
     def pre_play(self):
-        if self.inside_embed:
-            self.save_state()
         if self.presenter_mode and self.num_plays == 0:
             self.hold_loop()
 
@@ -698,6 +686,37 @@ class Scene(object):
             self.undo_stack.append(self.get_state())
             self.restore_state(self.redo_stack.pop())
         self.refresh_static_mobjects()
+
+    def checkpoint_paste(self, skip: bool = False):
+        """
+        Used during interactive development to run (or re-run)
+        a block of scene code.
+
+        If the copied selection starts with a comment, this will
+        revert to the state of the scene the first time this function
+        was called on a block of code starting with that comment.
+        """
+        pasted = pyperclip.paste()
+        line0 = pasted.lstrip().split("\n")[0]
+        if line0.startswith("#"):
+            if line0 not in self.checkpoint_states:
+                self.checkpoint(line0)
+            else:
+                self.revert_to_checkpoint(line0)
+
+        shell = get_ipython()
+        if shell is None:
+            raise Exception(
+                "Scene.checkpoint_paste cannot be called outside of " +
+                "an ipython shell"
+            )
+
+        prev_skipping = self.skip_animations
+        self.skip_animations = skip
+
+        shell.run_cell(pasted)
+
+        self.skip_animations = prev_skipping
 
     def checkpoint(self, key: str):
         self.checkpoint_states[key] = self.get_state()
