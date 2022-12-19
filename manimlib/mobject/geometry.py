@@ -598,6 +598,7 @@ class Line(TipableVMobject):
             arc_len *= self.path_arc / (2 * math.sin(self.path_arc / 2))
         return arc_len
 
+
 class DashedLine(Line):
     def __init__(
         self,
