@@ -25,6 +25,8 @@ SCALE_FACTOR_PER_FONT_POINT = 0.001
 
 
 class SingleStringTex(SVGMobject):
+    height: float | None = None
+
     def __init__(
         self,
         tex_string: str,
@@ -60,6 +62,7 @@ class SingleStringTex(SVGMobject):
             fill_color=fill_color,
             fill_opacity=fill_opacity,
             stroke_width=stroke_width,
+            path_string_config=path_string_config,
             **kwargs
         )
 

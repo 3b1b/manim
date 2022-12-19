@@ -51,10 +51,11 @@ class StringMobject(SVGMobject, ABC):
     so that each submobject of the original `SVGMobject` will be labelled
     by the color of its paired submobject from the additional `SVGMobject`.
     """
+    height = None
+
     def __init__(
         self,
         string: str,
-        height: float | None = None,
         fill_color: ManimColor = WHITE,
         stroke_color: ManimColor = WHITE,
         stroke_width: float = 0,
@@ -75,7 +76,6 @@ class StringMobject(SVGMobject, ABC):
 
         self.parse()
         super().__init__(
-            height=height,
             stroke_color=stroke_color,
             fill_color=fill_color,
             stroke_width=stroke_width,
