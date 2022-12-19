@@ -545,9 +545,9 @@ class ThreeDAxes(Axes):
         self.axis_labels = labels
 
     def get_graph(self, func, color=BLUE_E, opacity=0.9, **kwargs):
-        xu = self.x_axis.unit_size
-        yu = self.y_axis.unit_size
-        zu = self.z_axis.unit_size
+        xu = self.x_axis.get_unit_size()
+        yu = self.y_axis.get_unit_size()
+        zu = self.z_axis.get_unit_size()
         x0, y0, z0 = self.get_origin()
         return ParametricSurface(
             lambda u, v: [xu * u + x0, yu * v + y0, zu * func(u, v) + z0],
