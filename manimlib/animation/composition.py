@@ -1,10 +1,10 @@
 from __future__ import annotations
-from re import sub
 
 import numpy as np
 
 from manimlib.animation.animation import Animation
 from manimlib.animation.animation import prepare_animation
+from manimlib.mobject.mobject import _AnimationBuilder
 from manimlib.mobject.mobject import Group
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
@@ -25,7 +25,7 @@ DEFAULT_LAGGED_START_LAG_RATIO = 0.05
 
 class AnimationGroup(Animation):
     def __init__(self,
-        *animations: Animation,
+        *animations: Animation | _AnimationBuilder,
         run_time: float = -1,  # If negative, default to sum of inputed animation runtimes
         lag_ratio: float = 0.0,
         group: Mobject | None = None,
