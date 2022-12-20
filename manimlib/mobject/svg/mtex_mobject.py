@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 
 from manimlib.mobject.svg.string_mobject import StringMobject
+from manimlib.utils.tex_file_writing import display_during_execution
 from manimlib.utils.tex_file_writing import tex_content_to_svg_file
 
 from typing import TYPE_CHECKING
@@ -78,9 +79,10 @@ class MTex(StringMobject):
         )
 
     def get_file_path_by_content(self, content: str) -> str:
-        file_path = tex_content_to_svg_file(
-            content, self.template, self.additional_preamble
-        )
+        with display_during_execution(f"Writing \"{self.tex_string}\""):
+            file_path = tex_content_to_svg_file(
+                content, self.template, self.additional_preamble
+            )
         return file_path
 
     # Parsing

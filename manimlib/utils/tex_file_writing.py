@@ -78,8 +78,7 @@ def tex_content_to_svg_file(
     )
     if not os.path.exists(svg_file):
         # If svg doesn't exist, create it
-        with display_during_execution(f"Writing \"{content}\""):
-            create_tex_svg(full_tex, svg_file, compiler)
+        create_tex_svg(full_tex, svg_file, compiler)
     return svg_file
 
 

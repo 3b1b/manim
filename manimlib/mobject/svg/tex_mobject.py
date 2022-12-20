@@ -11,6 +11,7 @@ from manimlib.constants import MED_LARGE_BUFF, SMALL_BUFF
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.utils.tex_file_writing import display_during_execution
 from manimlib.utils.tex_file_writing import tex_content_to_svg_file
 
 from typing import TYPE_CHECKING
@@ -85,9 +86,10 @@ class SingleStringTex(SVGMobject):
 
     def get_file_path(self) -> str:
         content = self.get_tex_file_body(self.tex_string)
-        file_path = tex_content_to_svg_file(
-            content, self.template, self.additional_preamble
-        )
+        with display_during_execution(f"Writing \"{self.tex_string}\""):
+            file_path = tex_content_to_svg_file(
+                content, self.template, self.additional_preamble
+            )
         return file_path
 
     def get_tex_file_body(self, tex_string: str) -> str:
