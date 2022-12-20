@@ -100,7 +100,6 @@ class VMobject(Mobject):
         self.flat_stroke = flat_stroke
 
         self.needs_new_triangulation = True
-        self.needs_new_unit_normal = True
         self.triangulation = np.zeros(0, dtype='i4')
 
         super().__init__(**kwargs)
@@ -759,10 +758,9 @@ class VMobject(Mobject):
         if not self.has_points():
             return np.zeros(3)
 
-        nppc = self.n_points_per_curve
         points = self.get_points()
-        p0 = points[0::nppc]
-        p1 = points[nppc - 1::nppc]
+        p0 = points[:-1]
+        p1 = points[1:]
 
         # Each term goes through all edges [(x1, y1, z1), (x2, y2, z2)]
         return 0.5 * np.array([
@@ -772,7 +770,7 @@ class VMobject(Mobject):
         ])
 
     def get_unit_normal(self, recompute: bool = False) -> Vect3:
-        if not self.needs_new_unit_normal and not recompute:
+        if not recompute:
             return self.data["unit_normal"][0]
 
         if self.get_num_points() < 3:
@@ -789,12 +787,11 @@ class VMobject(Mobject):
                 points[2] - points[1],
             )
         self.data["unit_normal"][:] = normal
-        self.needs_new_unit_normal = False
         return normal
 
     def refresh_unit_normal(self):
         for mob in self.get_family():
-            mob.needs_new_unit_normal = True
+            mob.get_unit_normal(recompute=True)
         return self
 
     # Alignment
@@ -1026,9 +1023,10 @@ class VMobject(Mobject):
         super().set_points(points)
         return self
 
-    @triggers_refreshed_triangulation
     def append_points(self, points: Vect3Array):
         super().append_points(points)
+        self.refresh_unit_normal()
+        self.refresh_triangulation()
         return self
 
     @triggers_refreshed_triangulation
