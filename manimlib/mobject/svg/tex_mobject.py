@@ -247,7 +247,7 @@ class Tex(SingleStringTex):
             tex_string = tex_string.strip()
             if len(tex_string) == 0:
                 continue
-            sub_tex_mob = SingleStringTex(tex_string)
+            sub_tex_mob = SingleStringTex(tex_string, math_mode=self.math_mode)
             num_submobs = len(sub_tex_mob)
             if num_submobs == 0:
                 continue
