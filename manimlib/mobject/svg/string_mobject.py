@@ -85,7 +85,8 @@ class StringMobject(SVGMobject, ABC):
         self.labels = [submob.label for submob in self.submobjects]
 
     def get_file_path(self) -> str:
-        original_content = self.get_content(is_labelled=False)
+        # original_content = self.get_content(is_labelled=False)
+        original_content = self.get_content(is_labelled=True)
         return self.get_file_path_by_content(original_content)
 
     @abstractmethod
@@ -101,9 +102,10 @@ class StringMobject(SVGMobject, ABC):
                 submob.label = 0
             return
 
-        labelled_content = self.get_content(is_labelled=True)
-        file_path = self.get_file_path_by_content(labelled_content)
-        labelled_svg = SVGMobject(file_path)
+        # labelled_content = self.get_content(is_labelled=True)
+        # file_path = self.get_file_path_by_content(labelled_content)
+        # labelled_svg = SVGMobject(file_path)
+        labelled_svg = self.copy()
         if len(self.submobjects) != len(labelled_svg.submobjects):
             log.warning(
                 "Cannot align submobjects of the labelled svg " + \
