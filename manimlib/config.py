@@ -419,7 +419,7 @@ def get_window_config(args: Namespace, custom_config: dict, camera_config: dict)
     }
 
 
-def get_camera_configuration(args: Namespace, custom_config: dict) -> dict:
+def get_camera_config(args: Namespace, custom_config: dict) -> dict:
     camera_config = {}
     camera_resolutions = custom_config["camera_resolutions"]
     if args.resolution:
@@ -472,7 +472,7 @@ def get_camera_configuration(args: Namespace, custom_config: dict) -> dict:
 def get_configuration(args: Namespace) -> dict:
     init_global_config(args.config_file)
     custom_config = get_custom_config()
-    camera_config = get_camera_configuration(args, custom_config)
+    camera_config = get_camera_config(args, custom_config)
     window_config = get_window_config(args, custom_config, camera_config)
     start, end = get_animations_numbers(args)
 
