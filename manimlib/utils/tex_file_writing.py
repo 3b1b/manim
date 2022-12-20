@@ -113,14 +113,15 @@ def create_tex_svg(full_tex: str, svg_file: str, compiler: str) -> None:
         log.error(
             "LaTeX Error!  Not a worry, it happens to the best of us."
         )
+        error_str = ""
         with open(root + ".log", "r", encoding="utf-8") as log_file:
-            error_match_obj = re.search(r"(?<=\n! ).*", log_file.read())
+            error_match_obj = re.search(r"(?<=\n! ).*\n.*\n", log_file.read())
             if error_match_obj:
+                error_str = error_match_obj.group()
                 log.debug(
-                    "The error could be: `%s`",
-                    error_match_obj.group()
+                    f"The error could be:\n`{error_str}`",
                 )
-        raise LatexError()
+        raise LatexError(error_str)
 
     # dvi to svg
     os.system(" ".join((
