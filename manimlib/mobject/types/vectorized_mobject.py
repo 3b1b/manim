@@ -100,6 +100,7 @@ class VMobject(Mobject):
         self.flat_stroke = flat_stroke
 
         self.needs_new_triangulation = True
+        self.needs_new_unit_normal = True
         self.triangulation = np.zeros(0, dtype='i4')
 
         super().__init__(**kwargs)
@@ -114,7 +115,7 @@ class VMobject(Mobject):
             "fill_rgba": np.zeros((1, 4)),
             "stroke_rgba": np.zeros((1, 4)),
             "stroke_width": np.zeros((1, 1)),
-            "unit_normal": np.zeros((1, 3))
+            "unit_normal": np.array(OUT, ndmin=2),
         })
 
     # These are here just to make type checkers happy
@@ -771,7 +772,7 @@ class VMobject(Mobject):
         ])
 
     def get_unit_normal(self, recompute: bool = False) -> Vect3:
-        if not recompute:
+        if not self.needs_new_unit_normal and not recompute:
             return self.data["unit_normal"][0]
 
         if self.get_num_points() < 3:
@@ -788,17 +789,12 @@ class VMobject(Mobject):
                 points[2] - points[1],
             )
         self.data["unit_normal"][:] = normal
+        self.needs_new_unit_normal = False
         return normal
 
     def refresh_unit_normal(self):
         for mob in self.get_family():
-            mob.get_unit_normal(recompute=True)
-        return self
-
-    def reverse_points(self):
-        super().reverse_points()
-        self.refresh_unit_normal()
-        self.refresh_triangulation()
+            mob.needs_new_unit_normal = True
         return self
 
     # Alignment
@@ -1028,6 +1024,16 @@ class VMobject(Mobject):
     @triggers_refreshed_triangulation
     def set_points(self, points: Vect3Array):
         super().set_points(points)
+        return self
+
+    @triggers_refreshed_triangulation
+    def append_points(self, points: Vect3Array):
+        super().append_points(points)
+        return self
+
+    @triggers_refreshed_triangulation
+    def reverse_points(self):
+        super().reverse_points()
         return self
 
     @triggers_refreshed_triangulation

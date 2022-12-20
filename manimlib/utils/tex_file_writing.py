@@ -52,7 +52,8 @@ def get_tex_config() -> dict[str, str]:
 
 
 def tex_content_to_svg_file(
-    content: str, template: str, additional_preamble: str
+    content: str, template: str, additional_preamble: str,
+    short_tex: str
 ) -> str:
     tex_config = get_tex_config()
     if not template or template == tex_config["template"]:
@@ -78,7 +79,8 @@ def tex_content_to_svg_file(
     )
     if not os.path.exists(svg_file):
         # If svg doesn't exist, create it
-        create_tex_svg(full_tex, svg_file, compiler)
+        with display_during_execution("Writing " + short_tex):
+            create_tex_svg(full_tex, svg_file, compiler)
     return svg_file
 
 
@@ -112,14 +114,15 @@ def create_tex_svg(full_tex: str, svg_file: str, compiler: str) -> None:
         log.error(
             "LaTeX Error!  Not a worry, it happens to the best of us."
         )
+        error_str = ""
         with open(root + ".log", "r", encoding="utf-8") as log_file:
-            error_match_obj = re.search(r"(?<=\n! ).*", log_file.read())
+            error_match_obj = re.search(r"(?<=\n! ).*\n.*\n", log_file.read())
             if error_match_obj:
+                error_str = error_match_obj.group()
                 log.debug(
-                    "The error could be: `%s`",
-                    error_match_obj.group()
+                    f"The error could be:\n`{error_str}`",
                 )
-        raise LatexError()
+        raise LatexError(error_str)
 
     # dvi to svg
     os.system(" ".join((

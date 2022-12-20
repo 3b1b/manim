@@ -5,6 +5,7 @@ from xml.etree import ElementTree as ET
 
 import numpy as np
 import svgelements as se
+import io
 
 from manimlib.constants import RIGHT
 from manimlib.logger import log
@@ -35,12 +36,14 @@ def _convert_point_to_3d(x: float, y: float) -> np.ndarray:
 
 class SVGMobject(VMobject):
     file_name: str = ""
+    height: float | None = 2.0
+    width: float | None = None
 
     def __init__(
         self,
         file_name: str = "",
         should_center: bool = True,
-        height: float | None = 2.0,
+        height: float | None = None,
         width: float | None = None,
         # Style that overrides the original svg
         color: ManimColor = None,
@@ -66,7 +69,6 @@ class SVGMobject(VMobject):
         self.file_name = file_name or self.file_name
         self.svg_default = dict(svg_default)
         self.path_string_config = dict(path_string_config)
-        self.height = height
 
         super().__init__(**kwargs )
         self.init_svg_mobject()
@@ -82,6 +84,9 @@ class SVGMobject(VMobject):
         )
 
         # Initialize position
+        height = height or self.height
+        width = width or self.width
+
         if should_center:
             self.center()
         if height is not None:
@@ -114,13 +119,13 @@ class SVGMobject(VMobject):
         file_path = self.get_file_path()
         element_tree = ET.parse(file_path)
         new_tree = self.modify_xml_tree(element_tree)
-        # Create a temporary svg file to dump modified svg to be parsed
-        root, ext = os.path.splitext(file_path)
-        modified_file_path = root + "_" + ext
-        new_tree.write(modified_file_path)
 
-        svg = se.SVG.parse(modified_file_path)
-        os.remove(modified_file_path)
+        # New svg based on tree contents
+        data_stream = io.BytesIO()
+        new_tree.write(data_stream)
+        data_stream.seek(0)
+        svg = se.SVG.parse(data_stream)
+        data_stream.close()
 
         mobjects = self.get_mobjects_from(svg)
         self.add(*mobjects)
