@@ -24,21 +24,10 @@ from manimlib.utils.simple_functions import hash_string
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterable, Union
+    from typing import Iterable
 
     from manimlib.mobject.types.vectorized_mobject import VGroup
-    from manimlib.typing import ManimColor
-    Span = tuple[int, int]
-    Selector = Union[
-        str,
-        re.Pattern,
-        tuple[Union[int, None], Union[int, None]],
-        Iterable[Union[
-            str,
-            re.Pattern,
-            tuple[Union[int, None], Union[int, None]]
-        ]]
-    ]
+    from manimlib.typing import ManimColor, Span, Selector
 
 
 TEXT_MOB_SCALE_FACTOR = 0.0076

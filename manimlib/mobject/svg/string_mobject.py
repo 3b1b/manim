@@ -17,20 +17,8 @@ from manimlib.utils.color import int_to_hex
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Callable, Iterable, Union
-    from manimlib.typing import ManimColor
-
-    Span = tuple[int, int]
-    Selector = Union[
-        str,
-        re.Pattern,
-        tuple[Union[int, None], Union[int, None]],
-        Iterable[Union[
-            str,
-            re.Pattern,
-            tuple[Union[int, None], Union[int, None]]
-        ]]
-    ]
+    from typing import Callable
+    from manimlib.typing import ManimColor, Span, Selector
 
 
 class StringMobject(SVGMobject, ABC):
