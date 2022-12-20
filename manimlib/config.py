@@ -198,8 +198,9 @@ def get_indent(line: str):
     return len(line) - len(line.lstrip())
 
 
-@contextmanager
-def insert_embed_line(file_name: str, scene_name: str, line_marker: str):
+def get_module_with_inserted_embed_line(
+    file_name: str, scene_name: str, line_marker: str
+):
     """
     This is hacky, but convenient. When user includes the argument "-e", it will try
     to recreate a file that inserts the line `self.embed()` into the end of the scene's
@@ -259,10 +260,15 @@ def insert_embed_line(file_name: str, scene_name: str, line_marker: str):
 
     with open(new_file, 'w') as fp:
         fp.writelines(new_lines)
-    try:
-        yield new_file
-    finally:
-        os.remove(new_file)
+
+    module = get_module(new_file)
+    # This is to pretend the module imported from the edited lines
+    # of code actually comes from the original file.
+    module.__file__ = file_name
+
+    os.remove(new_file)
+
+    return module
 
 
 def get_custom_config():
@@ -368,12 +374,9 @@ def get_configuration(args):
     }
 
     if args.embed is not None:
-        with insert_embed_line(args.file, args.scene_names[0], args.embed) as alt_file:
-            module = get_module(alt_file)
-            # Slightly hacky, this is to pretend the module imported
-            # from the edited lines of code actually comes from the
-            # original file.
-            module.__file__ = args.file
+        module = get_module_with_inserted_embed_line(
+            args.file, args.scene_names[0], args.embed
+        )
     else:
         module = get_module(args.file)
 
