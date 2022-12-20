@@ -42,9 +42,10 @@ from manimlib.mobject.geometry import Polygon
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.geometry import Square
 from manimlib.mobject.mobject import Mobject
+from manimlib.mobject.numbers import Integer
 from manimlib.mobject.svg.svg_mobject import SVGMobject
-from manimlib.mobject.svg.tex_mobject import Tex
-from manimlib.mobject.svg.tex_mobject import TexText
+from manimlib.mobject.svg.mtex_mobject import MTex
+from manimlib.mobject.svg.mtex_mobject import MTexText
 from manimlib.mobject.svg.special_tex import TexTextFromPresetString
 from manimlib.mobject.three_dimensions import Prismify
 from manimlib.mobject.three_dimensions import VCube
@@ -125,7 +126,7 @@ class Speedometer(VMobject):
         for index, angle in enumerate(tick_angle_range):
             vect = rotate_vector(RIGHT, angle)
             tick = Line((1 - tick_length) * vect, vect)
-            label = Tex(str(10 * index))
+            label = Integer(10 * index)
             label.set_height(tick_length)
             label.shift((1 + tick_length) * vect)
             self.add(tick, label)
@@ -426,7 +427,7 @@ class Bubble(SVGMobject):
         return self.content
 
     def write(self, *text):
-        self.add_content(TexText(*text))
+        self.add_content(MTexText(*text))
         return self
 
     def resize_to_content(self, buff=0.75):
