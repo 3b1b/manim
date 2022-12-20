@@ -63,7 +63,7 @@ def color_to_int_rgba(color: ManimColor, opacity: float = 1.0) -> np.ndarray[int
 
 
 def color_to_hex(color: ManimColor) -> str:
-    return Color(color).hex.upper()
+    return Color(color).get_hex_l().upper()
 
 
 def hex_to_int(rgb_hex: str) -> int:
