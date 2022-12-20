@@ -410,13 +410,15 @@ class Axes(VGroup, CoordinateSystem):
         axis_config: dict = dict(),
         x_axis_config: dict = dict(),
         y_axis_config: dict = dict(),
-        height: float = FRAME_HEIGHT - 2,
-        width: float = FRAME_WIDTH - 2,
+        height: float | None = None,
+        width: float | None = None,
+        unit_size: float = 1.0,
         **kwargs
     ):
         CoordinateSystem.__init__(self, x_range, y_range, **kwargs)
         VGroup.__init__(self, **kwargs)
 
+        axis_config = dict(**axis_config, unit_size=unit_size)
         self.x_axis = self.create_axis(
             self.x_range,
             axis_config=merge_dicts_recursively(
@@ -435,7 +437,7 @@ class Axes(VGroup, CoordinateSystem):
                 axis_config,
                 y_axis_config
             ),
-            length=height
+            length=height,
         )
         self.y_axis.rotate(90 * DEGREES, about_point=ORIGIN)
         # Add as a separate group in case various other
@@ -449,7 +451,7 @@ class Axes(VGroup, CoordinateSystem):
         self,
         range_terms: RangeSpecifier,
         axis_config: dict,
-        length: float
+        length: float | None
     ) -> NumberLine:
         axis = NumberLine(range_terms, width=length, **axis_config)
         axis.shift(-axis.n2p(0))
@@ -576,8 +578,6 @@ class NumberPlane(Axes):
         self,
         x_range: RangeSpecifier = (-8.0, 8.0, 1.0),
         y_range: RangeSpecifier = (-4.0, 4.0, 1.0),
-        height: float = 8.0,
-        width: float = 16.0,
         background_line_style: dict = dict(
             stroke_color=BLUE_D,
             stroke_width=2,
@@ -589,12 +589,7 @@ class NumberPlane(Axes):
         make_smooth_after_applying_functions: bool = True,
         **kwargs
     ):
-        super().__init__(
-            x_range, y_range,
-            height=height,
-            width=width,
-            **kwargs
-        )
+        super().__init__(x_range, y_range, **kwargs)
         self.background_line_style = dict(background_line_style)
         self.faded_line_style = dict(faded_line_style)
         self.faded_line_ratio = faded_line_ratio
