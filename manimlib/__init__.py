@@ -46,6 +46,7 @@ from manimlib.mobject.svg.drawings import *
 from manimlib.mobject.svg.mtex_mobject import *
 from manimlib.mobject.svg.string_mobject import *
 from manimlib.mobject.svg.svg_mobject import *
+from manimlib.mobject.svg.special_tex import *
 from manimlib.mobject.svg.tex_mobject import *
 from manimlib.mobject.svg.text_mobject import *
 from manimlib.mobject.three_dimensions import *

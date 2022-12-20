@@ -45,7 +45,7 @@ from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.tex_mobject import TexText
-from manimlib.mobject.svg.tex_mobject import TexTextFromPresetString
+from manimlib.mobject.svg.special_tex import TexTextFromPresetString
 from manimlib.mobject.three_dimensions import Prismify
 from manimlib.mobject.three_dimensions import VCube
 from manimlib.mobject.types.vectorized_mobject import VGroup
