@@ -10,23 +10,8 @@ from manimlib.utils.tex_file_writing import tex_content_to_svg_file
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    import re
-    from typing import Iterable, Union
-
     from manimlib.mobject.types.vectorized_mobject import VGroup
-    from manimlib.typing import ManimColor
-
-    Span = tuple[int, int]
-    Selector = Union[
-        str,
-        re.Pattern,
-        tuple[Union[int, None], Union[int, None]],
-        Iterable[Union[
-            str,
-            re.Pattern,
-            tuple[Union[int, None], Union[int, None]]
-        ]]
-    ]
+    from manimlib.typing import ManimColor, Span, Selector
 
 
 SCALE_FACTOR_PER_FONT_POINT = 0.001
