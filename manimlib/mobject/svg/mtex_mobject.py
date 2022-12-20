@@ -22,26 +22,41 @@ class MTex(StringMobject):
 
     def __init__(
         self,
-        tex_string: str,
+        *tex_strings: str,
         font_size: int = 48,
         alignment: str = R"\centering",
         template: str = "",
         additional_preamble: str = "",
         tex_to_color_map: dict = dict(),
         t2c: dict = dict(),
+        isolate: Selector = [],
         use_labelled_svg: bool = True,
         **kwargs
     ):
+        # Combine multi-string arg, but mark them to isolate
+        if len(tex_strings) > 1:
+            if isinstance(isolate, (str, re.Pattern, tuple)):
+                isolate = [isolate]
+            isolate = [*isolate, *tex_strings]
+
+        tex_string = " ".join(tex_strings)
+
         # Prevent from passing an empty string.
         if not tex_string.strip():
             tex_string = R"\\"
+
         self.tex_string = tex_string
         self.alignment = alignment
         self.template = template
         self.additional_preamble = additional_preamble
         self.tex_to_color_map = dict(**t2c, **tex_to_color_map)
 
-        super().__init__(tex_string, use_labelled_svg=use_labelled_svg, **kwargs)
+        super().__init__(
+            tex_string,
+            use_labelled_svg=use_labelled_svg,
+            isolate=isolate,
+            **kwargs
+        )
 
         self.set_color_by_tex_to_color_map(self.tex_to_color_map)
         self.scale(SCALE_FACTOR_PER_FONT_POINT * font_size)
