@@ -10,7 +10,7 @@ from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.svg.brace import Brace
 from manimlib.mobject.svg.mtex_mobject import MTex
-from manimlib.mobject.svg.tex_mobject import TexText
+from manimlib.mobject.svg.mtex_mobject import MTexText
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.color import color_gradient
 from manimlib.utils.iterables import listify
@@ -52,7 +52,7 @@ class SampleSpace(Rectangle):
         buff: float = MED_SMALL_BUFF
     ) -> None:
         # TODO, should this really exist in SampleSpaceScene
-        title_mob = TexText(title)
+        title_mob = MTexText(title)
         if title_mob.get_width() > self.get_width():
             title_mob.set_width(self.get_width())
         title_mob.next_to(self, UP, buff=buff)
