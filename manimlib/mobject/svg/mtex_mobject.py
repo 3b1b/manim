@@ -28,6 +28,7 @@ class MTex(StringMobject):
         template: str = "",
         additional_preamble: str = "",
         tex_to_color_map: dict = dict(),
+        t2c: dict = dict(),
         **kwargs
     ):
         # Prevent from passing an empty string.
@@ -37,14 +38,11 @@ class MTex(StringMobject):
         self.alignment = alignment
         self.template = template
         self.additional_preamble = additional_preamble
-        self.tex_to_color_map = dict(tex_to_color_map)
+        self.tex_to_color_map = dict(**t2c, **tex_to_color_map)
 
-        super().__init__(
-            tex_string,
-            **kwargs
-        )
+        super().__init__(tex_string, **kwargs)
 
-        self.set_color_by_tex_to_color_map(tex_to_color_map)
+        self.set_color_by_tex_to_color_map(self.tex_to_color_map)
         self.scale(SCALE_FACTOR_PER_FONT_POINT * font_size)
 
     @property
@@ -65,10 +63,9 @@ class MTex(StringMobject):
         )
 
     def get_file_path_by_content(self, content: str) -> str:
-        file_path = tex_content_to_svg_file(
+        return tex_content_to_svg_file(
             content, self.template, self.additional_preamble, self.tex_string
         )
-        return file_path
 
     # Parsing
 
