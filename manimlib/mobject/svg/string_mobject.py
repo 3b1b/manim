@@ -69,7 +69,6 @@ class StringMobject(SVGMobject, ABC):
         **kwargs
     ):
         self.string = string
-        self.path_string_config = dict(path_string_config)
         self.base_color = base_color or WHITE
         self.isolate = isolate
         self.protect = protect
@@ -79,6 +78,7 @@ class StringMobject(SVGMobject, ABC):
             stroke_color=stroke_color,
             fill_color=fill_color,
             stroke_width=stroke_width,
+            path_string_config=path_string_config,
             **kwargs
         )
         self.labels = [submob.label for submob in self.submobjects]
@@ -105,7 +105,7 @@ class StringMobject(SVGMobject, ABC):
         labelled_svg = SVGMobject(file_path)
         if len(self.submobjects) != len(labelled_svg.submobjects):
             log.warning(
-                "Cannot align submobjects of the labelled svg "
+                "Cannot align submobjects of the labelled svg " + \
                 "to the original svg. Skip the labelling process."
             )
             for submob in self.submobjects:
@@ -126,7 +126,7 @@ class StringMobject(SVGMobject, ABC):
             submob.label = label
         if unrecognizable_colors:
             log.warning(
-                "Unrecognizable color labels detected (%s). "
+                "Unrecognizable color labels detected (%s). " + \
                 "The result could be unexpected.",
                 ", ".join(
                     self.int_to_hex(color)
@@ -144,11 +144,7 @@ class StringMobject(SVGMobject, ABC):
         if not labelled_svg.submobjects:
             return
 
-        bb_0 = self.get_bounding_box()
-        bb_1 = labelled_svg.get_bounding_box()
-        scale_factor = abs((bb_0[2] - bb_0[0]) / (bb_1[2] - bb_1[0]))
-        labelled_svg.move_to(self).scale(scale_factor)
-
+        labelled_svg.replace(self)
         distance_matrix = cdist(
             [submob.get_center() for submob in self.submobjects],
             [submob.get_center() for submob in labelled_svg.submobjects]
