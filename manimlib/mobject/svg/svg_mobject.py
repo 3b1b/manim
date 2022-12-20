@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
 
 
-SVG_HASH_TO_MOB_MAP: dict[int, VMobject] = {}
+SVG_HASH_TO_MOB_MAP: dict[int, list[VMobject]] = {}
 
 
 def _convert_point_to_3d(x: float, y: float) -> np.ndarray:
@@ -97,12 +97,13 @@ class SVGMobject(VMobject):
     def init_svg_mobject(self) -> None:
         hash_val = hash_obj(self.hash_seed)
         if hash_val in SVG_HASH_TO_MOB_MAP:
-            mob = SVG_HASH_TO_MOB_MAP[hash_val].copy()
-            self.add(*mob)
-            return
+            submobs = [sm.copy() for sm in SVG_HASH_TO_MOB_MAP[hash_val]]
+        else:
+            submobs = self.mobjects_from_file(self.get_file_path())
+            SVG_HASH_TO_MOB_MAP[hash_val] = [sm.copy() for sm in submobs]
 
-        self.generate_mobject()
-        SVG_HASH_TO_MOB_MAP[hash_val] = self.copy()
+        self.add(*submobs)
+        self.flip(RIGHT)  # Flip y
 
     @property
     def hash_seed(self) -> tuple:
@@ -115,8 +116,7 @@ class SVGMobject(VMobject):
             self.file_name
         )
 
-    def generate_mobject(self) -> None:
-        file_path = self.get_file_path()
+    def mobjects_from_file(self, file_path: str) -> list[VMobject]:
         element_tree = ET.parse(file_path)
         new_tree = self.modify_xml_tree(element_tree)
 
@@ -127,9 +127,7 @@ class SVGMobject(VMobject):
         svg = se.SVG.parse(data_stream)
         data_stream.close()
 
-        mobjects = self.get_mobjects_from(svg)
-        self.add(*mobjects)
-        self.flip(RIGHT)  # Flip y
+        return self.mobjects_from_svg(svg)
 
     def get_file_path(self) -> str:
         if self.file_name is None:
@@ -178,7 +176,7 @@ class SVGMobject(VMobject):
                 result[svg_key] = str(svg_default_dict[style_key])
         return result
 
-    def get_mobjects_from(self, svg: se.SVG) -> list[VMobject]:
+    def mobjects_from_svg(self, svg: se.SVG) -> list[VMobject]:
         result = []
         for shape in svg.elements():
             if isinstance(shape, (se.Group, se.Use)):

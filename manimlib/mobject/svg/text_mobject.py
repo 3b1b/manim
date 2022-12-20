@@ -416,9 +416,10 @@ class Text(MarkupText):
         text: str,
         # For backward compatibility
         isolate: Selector = (re.compile(r"\w+", re.U), re.compile(r"\S+", re.U)),
+        use_labelled_svg: bool = True,
         **kwargs
     ):
-        super().__init__(text, isolate=isolate, **kwargs)
+        super().__init__(text, isolate=isolate, use_labelled_svg=use_labelled_svg, **kwargs)
 
     @staticmethod
     def get_command_matches(string: str) -> list[re.Match]:

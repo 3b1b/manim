@@ -29,6 +29,7 @@ class MTex(StringMobject):
         additional_preamble: str = "",
         tex_to_color_map: dict = dict(),
         t2c: dict = dict(),
+        use_labelled_svg: bool = True,
         **kwargs
     ):
         # Prevent from passing an empty string.
@@ -40,7 +41,7 @@ class MTex(StringMobject):
         self.additional_preamble = additional_preamble
         self.tex_to_color_map = dict(**t2c, **tex_to_color_map)
 
-        super().__init__(tex_string, **kwargs)
+        super().__init__(tex_string, use_labelled_svg=use_labelled_svg, **kwargs)
 
         self.set_color_by_tex_to_color_map(self.tex_to_color_map)
         self.scale(SCALE_FACTOR_PER_FONT_POINT * font_size)
