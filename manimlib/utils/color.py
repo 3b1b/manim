@@ -62,6 +62,18 @@ def color_to_int_rgba(color: ManimColor, opacity: float = 1.0) -> np.ndarray[int
     return np.array([*color_to_int_rgb(color), alpha], dtype=np.uint8)
 
 
+def color_to_hex(color: ManimColor) -> str:
+    return Color(color).hex.upper()
+
+
+def hex_to_int(rgb_hex: str) -> int:
+    return int(rgb_hex[1:], 16)
+
+
+def int_to_hex(rgb_int: int) -> str:
+    return f"#{rgb_int:06x}".upper()
+
+
 def color_gradient(
     reference_colors: Iterable[ManimColor],
     length_of_output: int

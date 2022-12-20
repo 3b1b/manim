@@ -624,7 +624,6 @@ class Scene(object):
                     break
         self.refresh_static_mobjects()
         self.post_play()
-        return self
 
     def hold_loop(self):
         while self.hold_on_wait:

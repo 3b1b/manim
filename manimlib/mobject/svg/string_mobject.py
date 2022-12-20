@@ -10,8 +10,9 @@ from manimlib.constants import WHITE
 from manimlib.logger import log
 from manimlib.mobject.svg.svg_mobject import SVGMobject
 from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.utils.color import color_to_rgb
-from manimlib.utils.color import rgb_to_hex
+from manimlib.utils.color import color_to_hex
+from manimlib.utils.color import hex_to_int
+from manimlib.utils.color import int_to_hex
 
 from typing import TYPE_CHECKING
 
@@ -117,7 +118,7 @@ class StringMobject(SVGMobject, ABC):
         for submob, labelled_svg_submob in zip(
             self.submobjects, labelled_svg.submobjects
         ):
-            label = self.hex_to_int(self.color_to_hex(
+            label = hex_to_int(color_to_hex(
                 labelled_svg_submob.get_fill_color()
             ))
             if label >= labels_count:
@@ -129,7 +130,7 @@ class StringMobject(SVGMobject, ABC):
                 "Unrecognizable color labels detected (%s). " + \
                 "The result could be unexpected.",
                 ", ".join(
-                    self.int_to_hex(color)
+                    int_to_hex(color)
                     for color in unrecognizable_colors
                 )
             )
@@ -195,18 +196,6 @@ class StringMobject(SVGMobject, ABC):
     @staticmethod
     def span_contains(span_0: Span, span_1: Span) -> bool:
         return span_0[0] <= span_1[0] and span_0[1] >= span_1[1]
-
-    @staticmethod
-    def color_to_hex(color: ManimColor) -> str:
-        return rgb_to_hex(color_to_rgb(color))
-
-    @staticmethod
-    def hex_to_int(rgb_hex: str) -> int:
-        return int(rgb_hex[1:], 16)
-
-    @staticmethod
-    def int_to_hex(rgb_int: int) -> str:
-        return f"#{rgb_int:06x}".upper()
 
     # Parsing
 
@@ -380,7 +369,7 @@ class StringMobject(SVGMobject, ABC):
             lambda label, flag, attr_dict: self.get_command_string(
                 attr_dict,
                 is_end=flag < 0,
-                label_hex=self.int_to_hex(label) if is_labelled else None
+                label_hex=int_to_hex(label) if is_labelled else None
             )
         )
         prefix, suffix = self.get_content_prefix_and_suffix(
