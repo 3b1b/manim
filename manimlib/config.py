@@ -184,7 +184,7 @@ def get_manim_dir():
     return os.path.abspath(os.path.join(manimlib_dir, ".."))
 
 
-def get_module(file_name):
+def get_module(file_name: str | None):
     if file_name is None:
         return None
     module_name = file_name.replace(os.sep, ".").replace(".py", "")
@@ -255,14 +255,14 @@ def insert_embed_line(file_name: str, scene_name: str, line_marker: str):
     inserted_line = " " * n_spaces + "self.embed()\n"
     new_lines = list(lines)
     new_lines.insert(prev_line_num + 1, inserted_line)
+    new_file = file_name.replace(".py", "_insert_embed.py")
 
-    with open(file_name, 'w') as fp:
+    with open(new_file, 'w') as fp:
         fp.writelines(new_lines)
     try:
-        yield file_name
+        yield new_file
     finally:
-        with open(file_name, 'w') as fp:
-            fp.writelines(lines)
+        os.remove(new_file)
 
 
 def get_custom_config():
@@ -326,7 +326,7 @@ def get_configuration(args):
     elif not os.path.exists(__config_file__):
         log.info(f"Using the default configuration file, which you can modify in `{global_defaults_file}`")
         log.info(
-            "If you want to create a local configuration file, you can create a file named"
+            "If you want to create a local configuration file, you can create a file named" + \
             f" `{__config_file__}`, or run `manimgl --config`"
         )
 
@@ -367,11 +367,15 @@ def get_configuration(args):
         "quiet": args.quiet,
     }
 
-    module = get_module(args.file)
-
     if args.embed is not None:
         with insert_embed_line(args.file, args.scene_names[0], args.embed) as alt_file:
             module = get_module(alt_file)
+            # Slightly hacky, this is to pretend the module imported
+            # from the edited lines of code actually comes from the
+            # original file.
+            module.__file__ = args.file
+    else:
+        module = get_module(args.file)
 
     config = {
         "module": module,
