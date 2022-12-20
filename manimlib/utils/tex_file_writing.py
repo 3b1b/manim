@@ -52,7 +52,8 @@ def get_tex_config() -> dict[str, str]:
 
 
 def tex_content_to_svg_file(
-    content: str, template: str, additional_preamble: str
+    content: str, template: str, additional_preamble: str,
+    short_tex: str
 ) -> str:
     tex_config = get_tex_config()
     if not template or template == tex_config["template"]:
@@ -78,7 +79,8 @@ def tex_content_to_svg_file(
     )
     if not os.path.exists(svg_file):
         # If svg doesn't exist, create it
-        create_tex_svg(full_tex, svg_file, compiler)
+        with display_during_execution("Writing " + short_tex):
+            create_tex_svg(full_tex, svg_file, compiler)
     return svg_file
 
 
