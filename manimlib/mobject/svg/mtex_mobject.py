@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 
 from manimlib.mobject.svg.string_mobject import StringMobject
+from manimlib.utils.color import color_to_hex
+from manimlib.utils.color import hex_to_int
 from manimlib.utils.tex_file_writing import tex_content_to_svg_file
 
 from typing import TYPE_CHECKING
@@ -159,7 +161,7 @@ class MTex(StringMobject):
 
     @staticmethod
     def get_color_command(rgb_hex: str) -> str:
-        rgb = MTex.hex_to_int(rgb_hex)
+        rgb = hex_to_int(rgb_hex)
         rg, b = divmod(rgb, 256)
         r, g = divmod(rg, 256)
         return f"\\color[RGB]{{{r}, {g}, {b}}}"
@@ -181,7 +183,7 @@ class MTex(StringMobject):
         suffix_lines = []
         if not is_labelled:
             prefix_lines.append(self.get_color_command(
-                self.color_to_hex(self.base_color)
+                color_to_hex(self.base_color)
             ))
         if self.alignment:
             prefix_lines.append(self.alignment)

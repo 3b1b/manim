@@ -15,6 +15,8 @@ from manimlib.constants import NORMAL
 from manimlib.logger import log
 from manimlib.mobject.svg.string_mobject import StringMobject
 from manimlib.utils.customization import get_customization
+from manimlib.utils.color import color_to_hex
+from manimlib.utils.color import int_to_hex
 from manimlib.utils.directories import get_downloads_dir
 from manimlib.utils.directories import get_text_dir
 from manimlib.utils.simple_functions import hash_string
@@ -366,7 +368,7 @@ class MarkupText(StringMobject):
         self, is_labelled: bool
     ) -> tuple[str, str]:
         global_attr_dict = {
-            "foreground": self.color_to_hex(self.base_color),
+            "foreground": color_to_hex(self.base_color),
             "font_family": self.font,
             "font_style": self.slant,
             "font_weight": self.weight,
@@ -394,7 +396,7 @@ class MarkupText(StringMobject):
             self.get_command_string(
                 global_attr_dict,
                 is_end=is_end,
-                label_hex=self.int_to_hex(0) if is_labelled else None
+                label_hex=int_to_hex(0) if is_labelled else None
             )
             for is_end in (False, True)
         )
