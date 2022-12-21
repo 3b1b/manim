@@ -201,7 +201,7 @@ class MTex(StringMobject):
     def get_parts_by_tex(self, selector: Selector) -> VGroup:
         return self.select_parts(selector)
 
-    def get_part_by_tex(self, selector: Selector, index: int = 0) -> VGroup:
+    def get_part_by_tex(self, selector: Selector, index: int = 0) -> VMobject:
         return self.select_part(selector, index)
 
     def set_color_by_tex(self, selector: Selector, color: ManimColor):
@@ -212,41 +212,13 @@ class MTex(StringMobject):
     ):
         return self.set_parts_color_by_dict(color_map)
 
-    def select_parts(self, selector: Selector) -> VGroup:
-        result = super().select_parts(selector)
-        if len(result) == 0 and isinstance(selector, str):
-            log.warning(f"Accessing unisolated substring: {selector}")
-            return self.dirty_select(selector)
-        return result
-
-    def dirty_select(self, substr: str) -> VGroup:
-        """
-        Tries to pull out substrings based on guessing how
-        many symbols are associated with a given tex string.
-
-        This can fail in cases where the order of symbols does
-        not match the order in which they're drawn by latex.
-        For example, `\\underbrace{text}' orders the brace
-        after the text.
-        """
+    def substr_to_path_count(self, substr: str) -> int:
         tex = self.get_tex()
-        result = []
         if len(self) != num_tex_symbols(tex):
             log.warning(
                 f"Estimated size of {tex} does not match true size",
             )
-        for match in re.finditer(substr.replace("\\", R"\\"), tex):
-            index = match.start()
-            start = num_tex_symbols(tex[:index])
-            end = start + num_tex_symbols(substr)
-            result.append(self[start:end])
-        return VGroup(*result)
-
-    def __getitem__(self, value: int | slice | str | re.Pattern) -> VMobject:
-        # TODO, maybe move this functionality up to StringMobject
-        if isinstance(value, (str, re.Pattern)):
-            return self.select_parts(value)
-        return super().__getitem__(value)
+        return num_tex_symbols(substr)
 
     def get_tex(self) -> str:
         return self.get_string()

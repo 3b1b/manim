@@ -538,12 +538,35 @@ class StringMobject(SVGMobject, ABC):
         ])
 
     def select_parts(self, selector: Selector) -> VGroup:
-        return self.build_parts_from_indices_lists(
-            self.get_submob_indices_lists_by_selector(selector)
-        )
+        indices_list = self.get_submob_indices_lists_by_selector(selector)
+        if indices_list:
+            return self.build_parts_from_indices_lists(indices_list)
+        elif isinstance(selector, str):
+            # Otherwise, try finding substrings which weren't specifically isolated
+            log.warning("Accessing unisolated substring, results may not be as expected")
+            return self.select_unisolated_substring(selector)
+        else:
+            return VGroup()
 
-    def select_part(self, selector: Selector, index: int = 0) -> VGroup:
+    def __getitem__(self, value: int | slice | Selector) -> VMobject:
+        if isinstance(value, (int, slice)):
+            return super().__getitem__(value)
+        return self.select_parts(value)
+
+    def select_part(self, selector: Selector, index: int = 0) -> VMobject:
         return self.select_parts(selector)[index]
+
+    def substr_to_path_count(self, substr: str) -> int:
+        return len(re.sub(R"\s", "", substr))
+
+    def select_unisolated_substring(self, substr: str) -> VGroup:
+        result = []
+        for match in re.finditer(substr.replace("\\", r"\\"), self.string):
+            index = match.start()
+            start = self.substr_to_path_count(self.string[:index])
+            end = start + self.substr_to_path_count(substr)
+            result.append(self[start:end])
+        return VGroup(*result)
 
     def set_parts_color(self, selector: Selector, color: ManimColor):
         self.select_parts(selector).set_color(color)
