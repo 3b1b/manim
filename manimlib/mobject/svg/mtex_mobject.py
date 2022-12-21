@@ -201,8 +201,8 @@ class MTex(StringMobject):
     def get_parts_by_tex(self, selector: Selector) -> VGroup:
         return self.select_parts(selector)
 
-    def get_part_by_tex(self, selector: Selector, **kwargs) -> VGroup:
-        return self.select_part(selector, **kwargs)
+    def get_part_by_tex(self, selector: Selector, index: int = 0) -> VGroup:
+        return self.select_part(selector, index)
 
     def set_color_by_tex(self, selector: Selector, color: ManimColor):
         return self.set_parts_color(selector, color)
@@ -212,6 +212,12 @@ class MTex(StringMobject):
     ):
         return self.set_parts_color_by_dict(color_map)
 
+    def select_parts(self, selector: Selector) -> VGroup:
+        result = super().select_parts(selector)
+        if len(result) == 0 and isinstance(selector, str):
+            log.warning(f"Accessing unisolated substring: {selector}")
+            return self.dirty_select(selector)
+        return result
 
     def dirty_select(self, substr: str) -> VGroup:
         """
