@@ -242,6 +242,12 @@ class MTex(StringMobject):
             result.append(self[start:end])
         return VGroup(*result)
 
+    def __getitem__(self, value: int | slice | str | re.Pattern) -> VMobject:
+        # TODO, maybe move this functionality up to StringMobject
+        if isinstance(value, (str, re.Pattern)):
+            return self.select_parts(value)
+        return super().__getitem__(value)
+
     def get_tex(self) -> str:
         return self.get_string()
 
