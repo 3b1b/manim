@@ -3,14 +3,17 @@ from __future__ import annotations
 import re
 
 from manimlib.mobject.svg.string_mobject import StringMobject
+from manimlib.mobject.types.vectorized_mobject import VGroup
+from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.utils.color import color_to_hex
 from manimlib.utils.color import hex_to_int
 from manimlib.utils.tex_file_writing import tex_content_to_svg_file
+from manimlib.utils.tex import num_tex_symbols
+from manimlib.logger import log
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from manimlib.mobject.types.vectorized_mobject import VGroup
     from manimlib.typing import ManimColor, Span, Selector
 
 
@@ -209,36 +212,27 @@ class MTex(StringMobject):
     ):
         return self.set_parts_color_by_dict(color_map)
 
-    @staticmethod
-    def n_symbols(tex) -> int:
-        """
-        This function attempts to estimate the number of symbols that
-        a given string of tex would produce.
-        
-        No guarantees this is accurate.
-        """
-        count_to_subtrs = [
-            (0, ["emph", "textbf", "big", "Big", "small", "Small"]),
-            (2, ["sqrt", "ne"]),
-            (6, ["underbrace"]),
-            # Replace all other \expressions (like "\pi") with a single character
-            # Deliberately put this last.
-            (1, ["[a-zA-Z]+"])
-        ]
-        for count, substrs in count_to_subtrs:
-            # Replace occurances of the given substrings with `count` characters
-            pattern = "|".join((R"\\" + s for s in substrs ))
-            tex = re.sub(pattern, "X" * count, tex)
-        # Ignore various control characters
-        return len(list(filter(lambda c: c not in "^{} \n\t_", tex)))
 
     def dirty_select(self, substr: str) -> VGroup:
+        """
+        Tries to pull out substrings based on guessing how
+        many symbols are associated with a given tex string.
+
+        This can fail in cases where the order of symbols does
+        not match the order in which they're drawn by latex.
+        For example, `\\underbrace{text}' orders the brace
+        after the text.
+        """
         tex = self.get_tex()
         result = []
+        if len(self) != num_tex_symbols(tex):
+            log.warning(
+                f"Estimated size of {tex} does not match true size",
+            )
         for match in re.finditer(substr.replace("\\", R"\\"), tex):
             index = match.start()
-            start = self.n_symbols(tex[:index])
-            end = start + self.n_symbols(substr)
+            start = num_tex_symbols(tex[:index])
+            end = start + num_tex_symbols(substr)
             result.append(self[start:end])
         return VGroup(*result)
 
