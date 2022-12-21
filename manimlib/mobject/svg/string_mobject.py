@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 class StringMobject(SVGMobject, ABC):
     """
-    An abstract base class for `MTex` and `MarkupText`
+    An abstract base class for `Tex` and `MarkupText`
 
     This class aims to optimize the logic of "slicing submobjects
     via substrings". This could be much clearer and more user-friendly

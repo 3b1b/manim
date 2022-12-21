@@ -47,7 +47,7 @@ class OpeningManimExample(Scene):
         moving_c_grid.prepare_for_nonlinear_transform()
         c_grid.set_stroke(BLUE_E, 1)
         c_grid.add_coordinate_labels(font_size=24)
-        complex_map_words = MTexText("""
+        complex_map_words = TexText("""
             Or thinking of the plane as $\\mathds{C}$,\\\\
             this is the map $z \\rightarrow z^2$
         """)
@@ -70,7 +70,7 @@ class OpeningManimExample(Scene):
 
 class AnimatingMethods(Scene):
     def construct(self):
-        grid = Tex(r"\pi").get_grid(10, 10, height=4)
+        grid = Tex(R"\pi").get_grid(10, 10, height=4)
         self.add(grid)
 
         # You can animate the application of mobject methods with the
@@ -165,16 +165,16 @@ class TexTransformExample(Scene):
             # each of these strings.  For example, the Tex mobject
             # below will have 5 subjects, corresponding to the
             # expressions [A^2, +, B^2, =, C^2]
-            Tex("A^2", "+", "B^2", "=", "C^2"),
+            OldTex("A^2", "+", "B^2", "=", "C^2"),
             # Likewise here
-            Tex("A^2", "=", "C^2", "-", "B^2"),
+            OldTex("A^2", "=", "C^2", "-", "B^2"),
             # Alternatively, you can pass in the keyword argument
             # "isolate" with a list of strings that should be out as
             # their own submobject.  So the line below is equivalent
             # to the commented out line below it.
-            Tex("A^2 = (C + B)(C - B)", isolate=["A^2", *to_isolate]),
-            # Tex("A^2", "=", "(", "C", "+", "B", ")", "(", "C", "-", "B", ")"),
-            Tex("A = \\sqrt{(C + B)(C - B)}", isolate=["A", *to_isolate])
+            OldTex("A^2 = (C + B)(C - B)", isolate=["A^2", *to_isolate]),
+            # OldTex("A^2", "=", "(", "C", "+", "B", ")", "(", "C", "-", "B", ")"),
+            OldTex("A = \\sqrt{(C + B)(C - B)}", isolate=["A", *to_isolate])
         )
         lines.arrange(DOWN, buff=LARGE_BUFF)
         for line in lines:
@@ -233,7 +233,7 @@ class TexTransformExample(Scene):
         # new_line2 and the "\sqrt" from the final line.  By passing in,
         # transform_mismatches=True, it will transform this "^2" part into
         # the "\sqrt" part.
-        new_line2 = Tex("A^2 = (C + B)(C - B)", isolate=["A", *to_isolate])
+        new_line2 = OldTex("A^2 = (C + B)(C - B)", isolate=["A", *to_isolate])
         new_line2.replace(lines[2])
         new_line2.match_style(lines[2])
 

@@ -18,7 +18,7 @@ from manimlib.mobject.geometry import DashedLine
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.geometry import Rectangle
 from manimlib.mobject.number_line import NumberLine
-from manimlib.mobject.svg.mtex_mobject import MTex
+from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.types.dot_cloud import DotCloud
 from manimlib.mobject.types.surface import ParametricSurface
 from manimlib.mobject.types.vectorized_mobject import VGroup
@@ -105,7 +105,7 @@ class CoordinateSystem(ABC):
         edge: Vect3 = RIGHT,
         direction: Vect3 = DL,
         **kwargs
-    ) -> MTex:
+    ) -> Tex:
         return self.get_axis_label(
             label_tex, self.get_x_axis(),
             edge, direction, **kwargs
@@ -117,7 +117,7 @@ class CoordinateSystem(ABC):
         edge: Vect3 = UP,
         direction: Vect3 = DR,
         **kwargs
-    ) -> MTex:
+    ) -> Tex:
         return self.get_axis_label(
             label_tex, self.get_y_axis(),
             edge, direction, **kwargs
@@ -130,8 +130,8 @@ class CoordinateSystem(ABC):
         edge: Vect3,
         direction: Vect3,
         buff: float = MED_SMALL_BUFF
-    ) -> MTex:
-        label = MTex(label_tex)
+    ) -> Tex:
+        label = Tex(label_tex)
         label.next_to(
             axis.get_edge_center(edge), direction,
             buff=buff
@@ -268,9 +268,9 @@ class CoordinateSystem(ABC):
         direction: Vect3 = RIGHT,
         buff: float = MED_SMALL_BUFF,
         color: ManimColor | None = None
-    ) -> MTex | Mobject:
+    ) -> Tex | Mobject:
         if isinstance(label, str):
-            label = MTex(label)
+            label = Tex(label)
         if color is None:
             label.match_color(graph)
         if x is None:
@@ -537,7 +537,7 @@ class ThreeDAxes(Axes):
 
     def add_axis_labels(self, x_tex="x", y_tex="y", z_tex="z", font_size=24, buff=0.2):
         x_label, y_label, z_label = labels = VGroup(*(
-            MTex(tex, font_size=font_size)
+            Tex(tex, font_size=font_size)
             for tex in [x_tex, y_tex, z_tex]
         ))
         z_label.rotate(PI / 2, RIGHT)

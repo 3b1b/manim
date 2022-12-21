@@ -6,7 +6,7 @@ from manimlib.constants import FRAME_WIDTH
 from manimlib.constants import MED_LARGE_BUFF, SMALL_BUFF
 from manimlib.mobject.geometry import Line
 from manimlib.mobject.types.vectorized_mobject import VGroup
-from manimlib.mobject.svg.mtex_mobject import MTexText
+from manimlib.mobject.svg.tex_mobject import TexText
 
 
 from typing import TYPE_CHECKING
@@ -30,7 +30,7 @@ class BulletedList(VGroup):
             *labelled_content,
             R"\end{itemize}"
         ])
-        tex_text = MTexText(tex_string, isolate=labelled_content, **kwargs)
+        tex_text = TexText(tex_string, isolate=labelled_content, **kwargs)
         lines = (tex_text.select_part(part) for part in labelled_content)
 
         super().__init__(*lines)
@@ -42,7 +42,7 @@ class BulletedList(VGroup):
             part.set_fill(opacity=(1.0 if i == index else opacity))
 
 
-class TexTextFromPresetString(MTexText):
+class TexTextFromPresetString(TexText):
     tex: str = ""
     default_color: ManimColor = WHITE
 
@@ -54,7 +54,7 @@ class TexTextFromPresetString(MTexText):
         )
 
 
-class Title(MTexText):
+class Title(TexText):
     def __init__(
         self,
         *text_parts: str,

@@ -11,8 +11,7 @@ from manimlib.constants import PI
 from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.fading import FadeIn
 from manimlib.animation.growing import GrowFromCenter
-from manimlib.mobject.svg.tex_mobject import SingleStringTex
-from manimlib.mobject.svg.mtex_mobject import MTex
+from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.tex_mobject import TexText
 from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.vectorized_mobject import VGroup
@@ -30,7 +29,7 @@ if TYPE_CHECKING:
     from manimlib.typing import Vect3
 
 
-class Brace(SingleStringTex):
+class Brace(Tex):
     def __init__(
         self,
         mobject: Mobject,
@@ -92,8 +91,8 @@ class Brace(SingleStringTex):
         self.put_at_tip(text_mob, buff=buff)
         return text_mob
 
-    def get_tex(self, *tex: str, **kwargs) -> MTex:
-        tex_mob = MTex(*tex)
+    def get_tex(self, *tex: str, **kwargs) -> Tex:
+        tex_mob = Tex(*tex)
         self.put_at_tip(tex_mob, **kwargs)
         return tex_mob
 
@@ -109,7 +108,7 @@ class Brace(SingleStringTex):
 
 
 class BraceLabel(VMobject):
-    label_constructor: type = MTex
+    label_constructor: type = Tex
 
     def __init__(
         self,

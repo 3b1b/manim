@@ -17,7 +17,7 @@ from manimlib.mobject.geometry import Square
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.numbers import DecimalNumber
-from manimlib.mobject.svg.mtex_mobject import MTex
+from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.text_mobject import Text
 from manimlib.mobject.types.dot_cloud import DotCloud
 from manimlib.mobject.types.vectorized_mobject import VGroup
@@ -61,7 +61,7 @@ class InteractiveScene(Scene):
     Command + 'c' copies the ids of selections to clipboard
     Command + 'v' will paste either:
         - The copied mobject
-        - A MTex mobject based on copied LaTeX
+        - A Tex mobject based on copied LaTeX
         - A Text mobject based on copied Text
     Command + 'z' restores selection back to its original state
     Command + 's' saves the selected mobjects to file
@@ -358,7 +358,7 @@ class InteractiveScene(Scene):
         # Otherwise, treat as tex or text
         if set("\\^=+").intersection(clipboard_str):  # Proxy to text for LaTeX
             try:
-                new_mob = MTex(clipboard_str)
+                new_mob = Tex(clipboard_str)
             except LatexError:
                 return
         else:

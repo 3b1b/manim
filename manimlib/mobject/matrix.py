@@ -10,8 +10,8 @@ from manimlib.constants import WHITE
 from manimlib.mobject.numbers import DecimalNumber
 from manimlib.mobject.numbers import Integer
 from manimlib.mobject.shape_matchers import BackgroundRectangle
-from manimlib.mobject.svg.mtex_mobject import MTex
-from manimlib.mobject.svg.mtex_mobject import MTexText
+from manimlib.mobject.svg.tex_mobject import Tex
+from manimlib.mobject.svg.tex_mobject import TexText
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 
@@ -41,8 +41,8 @@ def matrix_to_tex_string(matrix: npt.ArrayLike) -> str:
     return prefix + R" \\ ".join(rows) + suffix
 
 
-def matrix_to_mobject(matrix: npt.ArrayLike) -> MTex:
-    return MTex(matrix_to_tex_string(matrix))
+def matrix_to_mobject(matrix: npt.ArrayLike) -> Tex:
+    return Tex(matrix_to_tex_string(matrix))
 
 
 def vector_coordinate_label(
@@ -109,7 +109,7 @@ class Matrix(VMobject):
     def element_to_mobject(self, element: str | float | VMobject, **config) -> VMobject:
         if isinstance(element, VMobject):
             return element
-        return MTex(str(element), **config)
+        return Tex(str(element), **config)
 
     def matrix_to_mob_matrix(
         self,
@@ -142,7 +142,7 @@ class Matrix(VMobject):
 
     def add_brackets(self, v_buff: float, h_buff: float):
         height = len(self.mob_matrix)
-        brackets = MTex("".join((
+        brackets = Tex("".join((
             R"\left[\begin{array}{c}",
             *height * [R"\quad \\"],
             R"\end{array}\right]",
@@ -219,22 +219,22 @@ def get_det_text(
     background_rect: bool = False,
     initial_scale_factor: int = 2
 ) -> VGroup:
-    parens = MTex("()")
+    parens = Tex("()")
     parens.scale(initial_scale_factor)
     parens.stretch_to_fit_height(matrix.get_height())
     l_paren, r_paren = parens.split()
     l_paren.next_to(matrix, LEFT, buff=0.1)
     r_paren.next_to(matrix, RIGHT, buff=0.1)
-    det = MTexText("det")
+    det = TexText("det")
     det.scale(initial_scale_factor)
     det.next_to(l_paren, LEFT, buff=0.1)
     if background_rect:
         det.add_background_rectangle()
     det_text = VGroup(det, l_paren, r_paren)
     if determinant is not None:
-        eq = MTex("=")
+        eq = Tex("=")
         eq.next_to(r_paren, RIGHT, buff=0.1)
-        result = MTex(str(determinant))
+        result = Tex(str(determinant))
         result.next_to(eq, RIGHT, buff=0.2)
         det_text.add(eq, result)
     return det_text

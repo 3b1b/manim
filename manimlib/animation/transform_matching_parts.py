@@ -13,15 +13,14 @@ from manimlib.animation.transform import Transform
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.svg.string_mobject import StringMobject
-from manimlib.mobject.svg.tex_mobject import Tex
+from manimlib.mobject.svg.old_tex_mobject import OldTex
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from manimlib.mobject.svg.tex_mobject import SingleStringTex
-    from manimlib.mobject.svg.tex_mobject import Tex
+    from manimlib.mobject.svg.old_tex_mobject import SingleStringTex
     from manimlib.scene.scene import Scene
 
 
@@ -140,15 +139,15 @@ class TransformMatchingShapes(TransformMatchingParts):
 
 
 class TransformMatchingTex(TransformMatchingParts):
-    mobject_type: type = Tex
+    mobject_type: type = OldTex
     group_type: type = VGroup
 
     @staticmethod
-    def get_mobject_parts(mobject: Tex) -> list[SingleStringTex]:
+    def get_mobject_parts(mobject: OldTex) -> list[SingleStringTex]:
         return mobject.submobjects
 
     @staticmethod
-    def get_mobject_key(mobject: Tex) -> str:
+    def get_mobject_key(mobject: OldTex) -> str:
         return mobject.get_tex()
 
 
