@@ -764,6 +764,11 @@ class VMobject(Mobject):
         p0 = points[0::nppc]
         p1 = points[nppc - 1::nppc]
 
+        if len(p0) != len(p1):
+            m = min(len(p0), len(p1))
+            p0 = p0[:m]
+            p1 = p1[:m]
+
         # Each term goes through all edges [(x1, y1, z1), (x2, y2, z2)]
         return 0.5 * np.array([
             sum((p0[:, 1] + p1[:, 1]) * (p1[:, 2] - p0[:, 2])),  # Add up (y1 + y2)*(z2 - z1)
