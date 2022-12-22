@@ -178,8 +178,7 @@ def normalize_along_axis(
     norms = np.sqrt((array * array).sum(axis))
     norms[norms == 0] = 1
     buffed_norms = np.repeat(norms, array.shape[axis]).reshape(array.shape)
-    array /= buffed_norms
-    return array
+    return array / buffed_norms
 
 
 def get_unit_normal(
