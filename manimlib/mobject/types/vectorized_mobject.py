@@ -1055,7 +1055,6 @@ class VMobject(Mobject):
     def flip(self, axis: Vect3 = UP, **kwargs):
         super().flip(axis, **kwargs)
         self.refresh_unit_normal()
-        self.refresh_triangulation()
         return self
 
     # For shaders
