@@ -758,9 +758,10 @@ class VMobject(Mobject):
         if not self.has_points():
             return np.zeros(3)
 
+        nppc = self.n_points_per_curve
         points = self.get_points()
-        p0 = points[:-1]
-        p1 = points[1:]
+        p0 = points[0::nppc]
+        p1 = points[nppc - 1::nppc]
 
         # Each term goes through all edges [(x1, y1, z1), (x2, y2, z2)]
         return 0.5 * np.array([
@@ -1023,10 +1024,9 @@ class VMobject(Mobject):
         super().set_points(points)
         return self
 
+    @triggers_refreshed_triangulation
     def append_points(self, points: Vect3Array):
         super().append_points(points)
-        self.refresh_unit_normal()
-        self.refresh_triangulation()
         return self
 
     @triggers_refreshed_triangulation
