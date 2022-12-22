@@ -383,9 +383,10 @@ def earclip_triangulation(verts: Vect3Array | Vect2Array, ring_ends: list[int]) 
         list(range(e0, e1))
         for e0, e1 in zip([0, *ring_ends], ring_ends)
     ]
+    epsilon = 1e-6
 
     def is_in(point, ring_id):
-        return abs(abs(get_winding_number([i - point for i in verts[rings[ring_id]]])) - 1) < 1e-5
+        return abs(abs(get_winding_number([i - point for i in verts[rings[ring_id]]])) - 1) < epsilon
 
     def ring_area(ring_id):
         ring = rings[ring_id]
@@ -396,8 +397,8 @@ def earclip_triangulation(verts: Vect3Array | Vect2Array, ring_ends: list[int]) 
 
     # Points at the same position may cause problems
     for i in rings:
-        verts[i[0]] += (verts[i[1]] - verts[i[0]]) * 1e-6
-        verts[i[-1]] += (verts[i[-2]] - verts[i[-1]]) * 1e-6
+        verts[i[0]] += (verts[i[1]] - verts[i[0]]) * epsilon
+        verts[i[-1]] += (verts[i[-2]] - verts[i[-1]]) * epsilon
 
     # First, we should know which rings are directly contained in it for each ring
 
