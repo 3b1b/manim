@@ -100,6 +100,7 @@ class VMobject(Mobject):
         self.flat_stroke = flat_stroke
 
         self.needs_new_triangulation = True
+        self.needs_new_unit_normal = True
         self.triangulation = np.zeros(0, dtype='i4')
 
         super().__init__(**kwargs)
@@ -771,7 +772,7 @@ class VMobject(Mobject):
         ])
 
     def get_unit_normal(self, recompute: bool = False) -> Vect3:
-        if not recompute:
+        if not self.needs_new_unit_normal and not recompute:
             return self.data["unit_normal"][0]
 
         if self.get_num_points() < 3:
@@ -788,11 +789,12 @@ class VMobject(Mobject):
                 points[2] - points[1],
             )
         self.data["unit_normal"][:] = normal
+        self.needs_new_unit_normal = False
         return normal
 
     def refresh_unit_normal(self):
         for mob in self.get_family():
-            mob.get_unit_normal(recompute=True)
+            mob.needs_new_unit_normal = True
         return self
 
     # Alignment
