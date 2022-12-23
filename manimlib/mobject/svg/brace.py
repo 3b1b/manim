@@ -51,7 +51,6 @@ class Brace(Tex):
         self.shift(left - self.get_corner(UL) + buff * DOWN)
         for mob in mobject, self:
             mob.rotate(angle, about_point=ORIGIN)
-        self.refresh_unit_normal()
 
     def set_initial_width(self, width: float):
         width_diff = width - self.get_width()

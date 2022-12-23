@@ -407,7 +407,6 @@ class TurnInsideOut(Transform):
     def create_target(self) -> Mobject:
         result = self.mobject.copy().reverse_points()
         if isinstance(result, VMobject):
-            result.refresh_unit_normal()
             result.refresh_triangulation()
         return result
 

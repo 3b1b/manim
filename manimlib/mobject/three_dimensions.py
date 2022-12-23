@@ -320,7 +320,6 @@ class VCube(VGroup3D):
         )
         face = Square(side_length=side_length, **style)
         super().__init__(*square_to_cube_faces(face), **style)
-        self.refresh_unit_normal()
 
 
 class VPrism(VCube):

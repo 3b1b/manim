@@ -790,9 +790,6 @@ class VMobject(Mobject):
             )
         return normal
 
-    def refresh_unit_normal(self):  # TODO, Delete
-        return self
-
     # Alignment
     def align_points(self, vmobject: VMobject):
         if self.get_num_points() == len(vmobject.get_points()):
@@ -1013,7 +1010,6 @@ class VMobject(Mobject):
             old_points = self.get_points().copy()
             func(self, *args, **kwargs)
             if not np.all(self.get_points() == old_points):
-                self.refresh_unit_normal()
                 self.refresh_triangulation()
         return wrapper
 
@@ -1048,18 +1044,6 @@ class VMobject(Mobject):
         super().apply_function(function, **kwargs)
         if self.make_smooth_after_applying_functions or make_smooth:
             self.make_approximately_smooth()
-        return self
-
-    def refresh_bounding_box(
-        self,
-        recurse_down: bool = False,
-        recurse_up: bool = True
-    ):
-        super().refresh_bounding_box(recurse_down, recurse_up)
-        # Anything which calls for refreshing the bounding box
-        # shoudl also trigger a recomputation of the unit normal
-        for mob in self.get_family(recurse_down):
-            mob.refresh_unit_normal()
         return self
 
     # For shaders
