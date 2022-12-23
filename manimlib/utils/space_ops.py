@@ -145,7 +145,7 @@ def rotation_between_vectors(v1: Vect3, v2: Vect3) -> Matrix3x3:
         axis = np.cross(v1, UP)
     return rotation_matrix(
         angle=angle_between_vectors(v1, v2),
-        axis=np.cross(v1, v2)
+        axis=axis,
     )
 
 
