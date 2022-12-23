@@ -10,7 +10,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 from tqdm import tqdm as ProgressDisplay
 
-from manimlib.constants import DOWN, OUT, RIGHT
+from manimlib.constants import DOWN, OUT, RIGHT, UP
 from manimlib.constants import PI, TAU
 from manimlib.utils.iterables import adjacent_pairs
 from manimlib.utils.simple_functions import clip
@@ -134,8 +134,15 @@ def rotation_about_z(angle: float) -> Matrix3x3:
 
 
 def rotation_between_vectors(v1: Vect3, v2: Vect3) -> Matrix3x3:
-    if np.all(np.isclose(v1, v2)):
+    if np.isclose(v1, v2).all():
         return np.identity(3)
+    axis = np.cross(v1, v2)
+    if np.isclose(axis, [0, 0, 0]).all():
+        # v1 and v2 align
+        axis = np.cross(v1, RIGHT)
+    if np.isclose(axis, [0, 0, 0]).all():
+        # v1 and v2 _and_ RIGHT all align
+        axis = np.cross(v1, UP)
     return rotation_matrix(
         angle=angle_between_vectors(v1, v2),
         axis=np.cross(v1, v2)
