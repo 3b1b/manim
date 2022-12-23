@@ -1055,9 +1055,16 @@ class VMobject(Mobject):
             self.make_approximately_smooth()
         return self
 
-    def flip(self, axis: Vect3 = UP, **kwargs):
-        super().flip(axis, **kwargs)
-        self.refresh_unit_normal()
+    def refresh_bounding_box(
+        self,
+        recurse_down: bool = False,
+        recurse_up: bool = True
+    ):
+        super().refresh_bounding_box(recurse_down, recurse_up)
+        # Anything which calls for refreshing the bounding box
+        # shoudl also trigger a recomputation of the unit normal
+        for mob in self.get_family(recurse_down):
+            mob.refresh_unit_normal()
         return self
 
     # For shaders
