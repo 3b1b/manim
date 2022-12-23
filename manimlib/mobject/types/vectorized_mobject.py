@@ -100,6 +100,7 @@ class VMobject(Mobject):
         self.flat_stroke = flat_stroke
 
         self.needs_new_triangulation = True
+        self.needs_new_unit_normal = True
         self.triangulation = np.zeros(0, dtype='i4')
 
         super().__init__(**kwargs)
@@ -775,7 +776,10 @@ class VMobject(Mobject):
             sum((p0[:, 0] + p1[:, 0]) * (p1[:, 1] - p0[:, 1])),  # Add up (x1 + x2)*(y2 - y1)
         ])
 
-    def get_unit_normal(self) -> Vect3:
+    def get_unit_normal(self, recompute: bool = False) -> Vect3:
+        if not self.needs_new_unit_normal and not recompute:
+            return self.data["unit_normal"][0]
+
         if self.get_num_points() < 3:
             return OUT
 
@@ -790,11 +794,12 @@ class VMobject(Mobject):
                 points[2] - points[1],
             )
         self.data["unit_normal"][:] = normal
+        self.needs_new_unit_normal = False
         return normal
 
     def refresh_unit_normal(self):
         for mob in self.get_family():
-            mob.get_unit_normal()
+            mob.needs_new_unit_normal = True
         return self
 
     # Alignment
@@ -958,7 +963,7 @@ class VMobject(Mobject):
         # how to send the points as to the vertex shader.
         # First triangles come directly from the points
         if normal_vector is None:
-            normal_vector = self.get_unit_normal()
+            normal_vector = self.get_unit_normal(recompute=True)
 
         if not self.needs_new_triangulation:
             return self.triangulation
@@ -972,7 +977,6 @@ class VMobject(Mobject):
 
         if not np.isclose(normal_vector, OUT).all():
             # Rotate points such that unit normal vector is OUT
-            # Note, transpose of z_to_vector is its inverse
             points = np.dot(points, z_to_vector(normal_vector))
         indices = np.arange(len(points), dtype=int)
 
