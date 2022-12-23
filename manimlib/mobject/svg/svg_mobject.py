@@ -312,12 +312,9 @@ class VMobjectFromSVGPath(VMobject):
         path_string = self.path_obj.d()
         path_hash = hash_string(path_string)
         points_filepath = os.path.join(get_mobject_data_dir(), f"{path_hash}_points.npy")
-        tris_filepath = os.path.join(get_mobject_data_dir(), f"{path_hash}_tris.npy")
 
-        if os.path.exists(points_filepath) and os.path.exists(tris_filepath):
+        if os.path.exists(points_filepath):
             self.set_points(np.load(points_filepath))
-            self.triangulation = np.load(tris_filepath)
-            self.needs_new_triangulation = False
         else:
             self.handle_commands()
             if self.should_subdivide_sharp_curves:
@@ -328,7 +325,7 @@ class VMobjectFromSVGPath(VMobject):
                 self.set_points(self.get_points_without_null_curves())
             # Save to a file for future use
             np.save(points_filepath, self.get_points())
-            np.save(tris_filepath, self.get_triangulation())
+        self.get_triangulation()
 
     def handle_commands(self) -> None:
         segment_class_to_func_map = {
