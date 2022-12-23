@@ -53,7 +53,7 @@ class VMobject(Mobject):
     fill_shader_folder: str = "quadratic_bezier_fill"
     fill_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ('point', np.float32, (3,)),
-        ('unit_normal', np.float32, (3,)),
+        ('orientation', np.float32, (1,)),
         ('color', np.float32, (4,)),
         ('vert_index', np.float32, (1,)),
     ]
@@ -61,7 +61,6 @@ class VMobject(Mobject):
         ("point", np.float32, (3,)),
         ("prev_point", np.float32, (3,)),
         ("next_point", np.float32, (3,)),
-        ('unit_normal', np.float32, (3,)),
         ("stroke_width", np.float32, (1,)),
         ("color", np.float32, (4,)),
     ]
@@ -100,7 +99,6 @@ class VMobject(Mobject):
         self.flat_stroke = flat_stroke
 
         self.needs_new_triangulation = True
-        self.needs_new_unit_normal = True
         self.triangulation = np.zeros(0, dtype='i4')
 
         super().__init__(**kwargs)
@@ -115,7 +113,7 @@ class VMobject(Mobject):
             "fill_rgba": np.zeros((1, 4)),
             "stroke_rgba": np.zeros((1, 4)),
             "stroke_width": np.zeros((1, 1)),
-            "unit_normal": np.array(OUT, ndmin=2),
+            "orientation": np.zeros((1, 1)),
         })
 
     # These are here just to make type checkers happy
@@ -776,10 +774,7 @@ class VMobject(Mobject):
             sum((p0[:, 0] + p1[:, 0]) * (p1[:, 1] - p0[:, 1])),  # Add up (x1 + x2)*(y2 - y1)
         ])
 
-    def get_unit_normal(self, recompute: bool = False) -> Vect3:
-        if not self.needs_new_unit_normal and not recompute:
-            return self.data["unit_normal"][0]
-
+    def get_unit_normal(self) -> Vect3:
         if self.get_num_points() < 3:
             return OUT
 
@@ -793,13 +788,9 @@ class VMobject(Mobject):
                 points[1] - points[0],
                 points[2] - points[1],
             )
-        self.data["unit_normal"][:] = normal
-        self.needs_new_unit_normal = False
         return normal
 
-    def refresh_unit_normal(self):
-        for mob in self.get_family():
-            mob.needs_new_unit_normal = True
+    def refresh_unit_normal(self):  # TODO, Delete
         return self
 
     # Alignment
@@ -958,13 +949,10 @@ class VMobject(Mobject):
             mob.needs_new_triangulation = True
         return self
 
-    def get_triangulation(self, normal_vector: Vect3 | None = None):
+    def get_triangulation(self):
         # Figure out how to triangulate the interior to know
         # how to send the points as to the vertex shader.
         # First triangles come directly from the points
-        if normal_vector is None:
-            normal_vector = self.get_unit_normal(recompute=True)
-
         if not self.needs_new_triangulation:
             return self.triangulation
 
@@ -975,6 +963,7 @@ class VMobject(Mobject):
             self.needs_new_triangulation = False
             return self.triangulation
 
+        normal_vector = self.get_unit_normal()
         if not np.isclose(normal_vector, OUT).all():
             # Rotate points such that unit normal vector is OUT
             points = np.dot(points, z_to_vector(normal_vector))
@@ -988,6 +977,8 @@ class VMobject(Mobject):
 
         crosses = cross2d(v01s, v12s)
         convexities = np.sign(crosses)
+        orientations = np.sign(convexities.repeat(3))
+        self.data["orientation"] = orientations.reshape((len(orientations), 1))
 
         atol = self.tolerance_for_point_equality
         end_of_loop = np.zeros(len(b0s), dtype=bool)
@@ -1155,7 +1146,6 @@ class VMobject(Mobject):
 
         self.read_data_to_shader(self.stroke_data, "color", "stroke_rgba")
         self.read_data_to_shader(self.stroke_data, "stroke_width", "stroke_width")
-        self.read_data_to_shader(self.stroke_data, "unit_normal", "unit_normal")
 
         return self.stroke_data
 
@@ -1167,7 +1157,7 @@ class VMobject(Mobject):
 
         self.read_data_to_shader(self.fill_data, "point", "points")
         self.read_data_to_shader(self.fill_data, "color", "fill_rgba")
-        self.read_data_to_shader(self.fill_data, "unit_normal", "unit_normal")
+        self.read_data_to_shader(self.fill_data, "orientation", "orientation")
 
         return self.fill_data
 

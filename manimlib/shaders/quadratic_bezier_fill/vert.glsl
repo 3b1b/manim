@@ -3,12 +3,12 @@
 #INSERT camera_uniform_declarations.glsl
 
 in vec3 point;
-in vec3 unit_normal;
+in float orientation;
 in vec4 color;
 in float vert_index;
 
 out vec3 bp;  // Bezier control point
-out vec3 v_global_unit_normal;
+out float v_orientation;
 out vec4 v_color;
 out float v_vert_index;
 
@@ -17,7 +17,7 @@ out float v_vert_index;
 
 void main(){
     bp = position_point_into_frame(point);
-    v_global_unit_normal = rotate_point_into_frame(unit_normal);
+    v_orientation = orientation;
     v_color = color;
     v_vert_index = vert_index;
 }
