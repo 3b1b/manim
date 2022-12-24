@@ -43,9 +43,10 @@ from manimlib.mobject.probability import *
 from manimlib.mobject.shape_matchers import *
 from manimlib.mobject.svg.brace import *
 from manimlib.mobject.svg.drawings import *
-from manimlib.mobject.svg.mtex_mobject import *
+from manimlib.mobject.svg.tex_mobject import *
 from manimlib.mobject.svg.string_mobject import *
 from manimlib.mobject.svg.svg_mobject import *
+from manimlib.mobject.svg.special_tex import *
 from manimlib.mobject.svg.tex_mobject import *
 from manimlib.mobject.svg.text_mobject import *
 from manimlib.mobject.three_dimensions import *
@@ -74,3 +75,4 @@ from manimlib.utils.rate_functions import *
 from manimlib.utils.simple_functions import *
 from manimlib.utils.sounds import *
 from manimlib.utils.space_ops import *
+from manimlib.utils.tex import *

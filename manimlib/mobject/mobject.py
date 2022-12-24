@@ -534,7 +534,8 @@ class Mobject(object):
 
     # Copying and serialization
 
-    def stash_mobject_pointers(func):
+    @staticmethod
+    def stash_mobject_pointers(func: Callable):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             uncopied_attrs = ["parents", "target", "saved_state"]
@@ -1740,7 +1741,8 @@ class Mobject(object):
 
     # Operations touching shader uniforms
 
-    def affects_shader_info_id(func):
+    @staticmethod
+    def affects_shader_info_id(func: Callable):
         @wraps(func)
         def wrapper(self):
             for mob in self.get_family():

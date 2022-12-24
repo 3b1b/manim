@@ -10,7 +10,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 from tqdm import tqdm as ProgressDisplay
 
-from manimlib.constants import DOWN, OUT, RIGHT
+from manimlib.constants import DOWN, OUT, RIGHT, UP
 from manimlib.constants import PI, TAU
 from manimlib.utils.iterables import adjacent_pairs
 from manimlib.utils.simple_functions import clip
@@ -134,11 +134,18 @@ def rotation_about_z(angle: float) -> Matrix3x3:
 
 
 def rotation_between_vectors(v1: Vect3, v2: Vect3) -> Matrix3x3:
-    if np.all(np.isclose(v1, v2)):
+    if np.isclose(v1, v2).all():
         return np.identity(3)
+    axis = np.cross(v1, v2)
+    if np.isclose(axis, [0, 0, 0]).all():
+        # v1 and v2 align
+        axis = np.cross(v1, RIGHT)
+    if np.isclose(axis, [0, 0, 0]).all():
+        # v1 and v2 _and_ RIGHT all align
+        axis = np.cross(v1, UP)
     return rotation_matrix(
         angle=angle_between_vectors(v1, v2),
-        axis=np.cross(v1, v2)
+        axis=axis,
     )
 
 
@@ -178,8 +185,7 @@ def normalize_along_axis(
     norms = np.sqrt((array * array).sum(axis))
     norms[norms == 0] = 1
     buffed_norms = np.repeat(norms, array.shape[axis]).reshape(array.shape)
-    array /= buffed_norms
-    return array
+    return array / buffed_norms
 
 
 def get_unit_normal(
@@ -384,9 +390,10 @@ def earclip_triangulation(verts: Vect3Array | Vect2Array, ring_ends: list[int]) 
         list(range(e0, e1))
         for e0, e1 in zip([0, *ring_ends], ring_ends)
     ]
+    epsilon = 1e-6
 
     def is_in(point, ring_id):
-        return abs(abs(get_winding_number([i - point for i in verts[rings[ring_id]]])) - 1) < 1e-5
+        return abs(abs(get_winding_number([i - point for i in verts[rings[ring_id]]])) - 1) < epsilon
 
     def ring_area(ring_id):
         ring = rings[ring_id]
@@ -397,8 +404,8 @@ def earclip_triangulation(verts: Vect3Array | Vect2Array, ring_ends: list[int]) 
 
     # Points at the same position may cause problems
     for i in rings:
-        verts[i[0]] += (verts[i[1]] - verts[i[0]]) * 1e-6
-        verts[i[-1]] += (verts[i[-2]] - verts[i[-1]]) * 1e-6
+        verts[i[0]] += (verts[i[1]] - verts[i[0]]) * epsilon
+        verts[i[-1]] += (verts[i[-2]] - verts[i[-1]]) * epsilon
 
     # First, we should know which rings are directly contained in it for each ring
 

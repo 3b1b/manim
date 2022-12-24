@@ -697,6 +697,7 @@ class ComplexPlane(NumberPlane):
         self,
         numbers: list[complex] | None = None,
         skip_first: bool = True,
+        font_size: int = 36,
         **kwargs
     ):
         if numbers is None:
@@ -712,7 +713,7 @@ class ComplexPlane(NumberPlane):
             else:
                 axis = self.get_x_axis()
                 value = z.real
-            number_mob = axis.get_number_mobject(value, **kwargs)
+            number_mob = axis.get_number_mobject(value, font_size=font_size, **kwargs)
             # For -i, remove the "1"
             if z.imag == -1:
                 number_mob.remove(number_mob[1])

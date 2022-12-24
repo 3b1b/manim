@@ -146,7 +146,7 @@ class Matrix(VMobject):
             R"\left[\begin{array}{c}",
             *height * [R"\quad \\"],
             R"\end{array}\right]",
-        )))[0]
+        )))
         brackets.set_height(self.get_height() + v_buff)
         l_bracket = brackets[:len(brackets) // 2]
         r_bracket = brackets[len(brackets) // 2:]
@@ -219,7 +219,7 @@ def get_det_text(
     background_rect: bool = False,
     initial_scale_factor: int = 2
 ) -> VGroup:
-    parens = Tex("(", ")")
+    parens = Tex("()")
     parens.scale(initial_scale_factor)
     parens.stretch_to_fit_height(matrix.get_height())
     l_paren, r_paren = parens.split()

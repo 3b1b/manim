@@ -53,7 +53,7 @@ class VMobject(Mobject):
     fill_shader_folder: str = "quadratic_bezier_fill"
     fill_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ('point', np.float32, (3,)),
-        ('unit_normal', np.float32, (3,)),
+        ('orientation', np.float32, (1,)),
         ('color', np.float32, (4,)),
         ('vert_index', np.float32, (1,)),
     ]
@@ -61,7 +61,6 @@ class VMobject(Mobject):
         ("point", np.float32, (3,)),
         ("prev_point", np.float32, (3,)),
         ("next_point", np.float32, (3,)),
-        ('unit_normal', np.float32, (3,)),
         ("stroke_width", np.float32, (1,)),
         ("color", np.float32, (4,)),
     ]
@@ -114,7 +113,7 @@ class VMobject(Mobject):
             "fill_rgba": np.zeros((1, 4)),
             "stroke_rgba": np.zeros((1, 4)),
             "stroke_width": np.zeros((1, 1)),
-            "unit_normal": np.array(OUT, ndmin=2),
+            "orientation": np.zeros((1, 1)),
         })
 
     # These are here just to make type checkers happy
@@ -758,9 +757,15 @@ class VMobject(Mobject):
         if not self.has_points():
             return np.zeros(3)
 
+        nppc = self.n_points_per_curve
         points = self.get_points()
-        p0 = points[:-1]
-        p1 = points[1:]
+        p0 = points[0::nppc]
+        p1 = points[nppc - 1::nppc]
+
+        if len(p0) != len(p1):
+            m = min(len(p0), len(p1))
+            p0 = p0[:m]
+            p1 = p1[:m]
 
         # Each term goes through all edges [(x1, y1, z1), (x2, y2, z2)]
         return 0.5 * np.array([
@@ -769,10 +774,7 @@ class VMobject(Mobject):
             sum((p0[:, 0] + p1[:, 0]) * (p1[:, 1] - p0[:, 1])),  # Add up (x1 + x2)*(y2 - y1)
         ])
 
-    def get_unit_normal(self, recompute: bool = False) -> Vect3:
-        if not recompute:
-            return self.data["unit_normal"][0]
-
+    def get_unit_normal(self) -> Vect3:
         if self.get_num_points() < 3:
             return OUT
 
@@ -786,13 +788,7 @@ class VMobject(Mobject):
                 points[1] - points[0],
                 points[2] - points[1],
             )
-        self.data["unit_normal"][:] = normal
         return normal
-
-    def refresh_unit_normal(self):
-        for mob in self.get_family():
-            mob.get_unit_normal(recompute=True)
-        return self
 
     # Alignment
     def align_points(self, vmobject: VMobject):
@@ -948,15 +944,16 @@ class VMobject(Mobject):
     def refresh_triangulation(self):
         for mob in self.get_family():
             mob.needs_new_triangulation = True
+            mob.data["orientation"] = resize_array(
+                mob.data["orientation"],
+                mob.get_num_points()
+            )
         return self
 
-    def get_triangulation(self, normal_vector: Vect3 | None = None):
+    def get_triangulation(self):
         # Figure out how to triangulate the interior to know
         # how to send the points as to the vertex shader.
         # First triangles come directly from the points
-        if normal_vector is None:
-            normal_vector = self.get_unit_normal(recompute=True)
-
         if not self.needs_new_triangulation:
             return self.triangulation
 
@@ -967,6 +964,7 @@ class VMobject(Mobject):
             self.needs_new_triangulation = False
             return self.triangulation
 
+        normal_vector = self.get_unit_normal()
         if not np.isclose(normal_vector, OUT).all():
             # Rotate points such that unit normal vector is OUT
             points = np.dot(points, z_to_vector(normal_vector))
@@ -980,6 +978,8 @@ class VMobject(Mobject):
 
         crosses = cross2d(v01s, v12s)
         convexities = np.sign(crosses)
+        orientations = np.sign(convexities.repeat(3))
+        self.data["orientation"] = orientations.reshape((len(orientations), 1))
 
         atol = self.tolerance_for_point_equality
         end_of_loop = np.zeros(len(b0s), dtype=bool)
@@ -1008,13 +1008,13 @@ class VMobject(Mobject):
         self.needs_new_triangulation = False
         return tri_indices
 
-    def triggers_refreshed_triangulation(func):
+    @staticmethod
+    def triggers_refreshed_triangulation(func: Callable):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             old_points = self.get_points().copy()
             func(self, *args, **kwargs)
             if not np.all(self.get_points() == old_points):
-                self.refresh_unit_normal()
                 self.refresh_triangulation()
         return wrapper
 
@@ -1023,10 +1023,9 @@ class VMobject(Mobject):
         super().set_points(points)
         return self
 
+    @triggers_refreshed_triangulation
     def append_points(self, points: Vect3Array):
         super().append_points(points)
-        self.refresh_unit_normal()
-        self.refresh_triangulation()
         return self
 
     @triggers_refreshed_triangulation
@@ -1050,12 +1049,6 @@ class VMobject(Mobject):
         super().apply_function(function, **kwargs)
         if self.make_smooth_after_applying_functions or make_smooth:
             self.make_approximately_smooth()
-        return self
-
-    def flip(self, axis: Vect3 = UP, **kwargs):
-        super().flip(axis, **kwargs)
-        self.refresh_unit_normal()
-        self.refresh_triangulation()
         return self
 
     # For shaders
@@ -1142,7 +1135,6 @@ class VMobject(Mobject):
 
         self.read_data_to_shader(self.stroke_data, "color", "stroke_rgba")
         self.read_data_to_shader(self.stroke_data, "stroke_width", "stroke_width")
-        self.read_data_to_shader(self.stroke_data, "unit_normal", "unit_normal")
 
         return self.stroke_data
 
@@ -1154,7 +1146,7 @@ class VMobject(Mobject):
 
         self.read_data_to_shader(self.fill_data, "point", "points")
         self.read_data_to_shader(self.fill_data, "color", "fill_rgba")
-        self.read_data_to_shader(self.fill_data, "unit_normal", "unit_normal")
+        self.read_data_to_shader(self.fill_data, "orientation", "orientation")
 
         return self.fill_data
 

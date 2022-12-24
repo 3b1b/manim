@@ -17,7 +17,7 @@ uniform float gloss;
 uniform float shadow;
 
 in vec3 bp[3];
-in vec3 v_global_unit_normal[3];
+in float v_orientation[3];
 in vec4 v_color[3];
 in float v_vert_index[3];
 
@@ -32,6 +32,8 @@ out vec2 uv_coords;
 out vec2 uv_b2;
 out float bezier_degree;
 
+vec3 local_unit_normal;
+
 
 // Analog of import for manim only
 #INSERT quadratic_bezier_geometry_functions.glsl
@@ -44,7 +46,7 @@ void emit_vertex_wrapper(vec3 point, int index){
     color = finalize_color(
         v_color[index],
         point,
-        v_global_unit_normal[index],
+        local_unit_normal,
         light_source_position,
         camera_position,
         reflectiveness,
@@ -128,7 +130,7 @@ void main(){
     vec3 new_bp[3];
     bezier_degree = get_reduced_control_points(vec3[3](bp[0], bp[1], bp[2]), new_bp);
     vec3 local_unit_normal = get_unit_normal(new_bp);
-    orientation = sign(dot(v_global_unit_normal[0], local_unit_normal));
+    orientation = v_orientation[0];
 
     if(bezier_degree >= 1){
         emit_pentagon(new_bp, local_unit_normal);

@@ -24,21 +24,10 @@ from manimlib.utils.simple_functions import hash_string
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterable, Union
+    from typing import Iterable
 
     from manimlib.mobject.types.vectorized_mobject import VGroup
-    from manimlib.typing import ManimColor
-    Span = tuple[int, int]
-    Selector = Union[
-        str,
-        re.Pattern,
-        tuple[Union[int, None], Union[int, None]],
-        Iterable[Union[
-            str,
-            re.Pattern,
-            tuple[Union[int, None], Union[int, None]]
-        ]]
-    ]
+    from manimlib.typing import ManimColor, Span, Selector
 
 
 TEXT_MOB_SCALE_FACTOR = 0.0076
@@ -427,9 +416,10 @@ class Text(MarkupText):
         text: str,
         # For backward compatibility
         isolate: Selector = (re.compile(r"\w+", re.U), re.compile(r"\S+", re.U)),
+        use_labelled_svg: bool = True,
         **kwargs
     ):
-        super().__init__(text, isolate=isolate, **kwargs)
+        super().__init__(text, isolate=isolate, use_labelled_svg=use_labelled_svg, **kwargs)
 
     @staticmethod
     def get_command_matches(string: str) -> list[re.Match]:

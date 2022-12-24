@@ -22,7 +22,6 @@ uniform float shadow;
 in vec3 bp[3];
 in vec3 prev_bp[3];
 in vec3 next_bp[3];
-in vec3 v_global_unit_normal[3];
 
 in vec4 v_color[3];
 in float v_stroke_width[3];
@@ -42,6 +41,8 @@ out float bezier_degree;
 
 out vec2 uv_coords;
 out vec2 uv_b2;
+
+vec3 unit_normal;
 
 // Codes for joint types
 const float AUTO_JOINT = 0;
@@ -206,6 +207,7 @@ void main() {
     vec3 controls[3];
     vec3 prev[3];
     vec3 next[3];
+    unit_normal = get_unit_normal(controls);
     bezier_degree = get_reduced_control_points(vec3[3](bp[0], bp[1], bp[2]), controls);
     if(bezier_degree == 0.0) return;  // Null curve
     int degree = int(bezier_degree);
@@ -219,7 +221,7 @@ void main() {
         float sf = perspective_scale_factor(controls[i].z, focal_distance);
         if(bool(flat_stroke)){
             vec3 to_cam = normalize(vec3(0.0, 0.0, focal_distance) - controls[i]);
-            sf *= abs(dot(v_global_unit_normal[i], to_cam));
+            sf *= abs(dot(unit_normal, to_cam));
         }
         scaled_strokes[i] = v_stroke_width[i] * sf;
     }
@@ -259,7 +261,7 @@ void main() {
         color = finalize_color(
             v_color[index_map[i]],
             xyz_coords,
-            v_global_unit_normal[index_map[i]],
+            unit_normal,
             light_source_position,
             camera_position,
             reflectiveness,

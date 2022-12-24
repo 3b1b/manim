@@ -11,7 +11,6 @@ from manimlib.constants import PI
 from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.fading import FadeIn
 from manimlib.animation.growing import GrowFromCenter
-from manimlib.mobject.svg.tex_mobject import SingleStringTex
 from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.svg.tex_mobject import TexText
 from manimlib.mobject.svg.text_mobject import Text
@@ -30,7 +29,7 @@ if TYPE_CHECKING:
     from manimlib.typing import Vect3
 
 
-class Brace(SingleStringTex):
+class Brace(Tex):
     def __init__(
         self,
         mobject: Mobject,
@@ -52,7 +51,6 @@ class Brace(SingleStringTex):
         self.shift(left - self.get_corner(UL) + buff * DOWN)
         for mob in mobject, self:
             mob.rotate(angle, about_point=ORIGIN)
-        self.refresh_unit_normal()
 
     def set_initial_width(self, width: float):
         width_diff = width - self.get_width()

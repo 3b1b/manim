@@ -1,13 +1,23 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Union, Tuple, Annotated, Literal
+    from typing import Union, Tuple, Annotated, Literal, Iterable
     from colour import Color
     import numpy as np
+    import re
 
     # Abbreviations for a common types
     ManimColor = Union[str, Color, None]
     RangeSpecifier = Tuple[float, float, float] | Tuple[float, float]
+
+
+    Span = tuple[int, int]
+    SingleSelector = Union[
+        str,
+        re.Pattern,
+        tuple[Union[int, None], Union[int, None]],
+    ]
+    Selector = Union[SingleSelector, Iterable[SingleSelector]]
 
     # These are various alternate names for np.ndarray meant to specify
     # certain shapes.
