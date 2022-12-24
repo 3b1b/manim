@@ -1741,7 +1741,8 @@ class Mobject(object):
 
     # Operations touching shader uniforms
 
-    def affects_shader_info_id(func):
+    @staticmethod
+    def affects_shader_info_id(func: Callable):
         @wraps(func)
         def wrapper(self):
             for mob in self.get_family():
