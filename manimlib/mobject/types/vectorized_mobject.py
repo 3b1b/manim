@@ -944,6 +944,10 @@ class VMobject(Mobject):
     def refresh_triangulation(self):
         for mob in self.get_family():
             mob.needs_new_triangulation = True
+            mob.data["orientation"] = resize_array(
+                mob.data["orientation"],
+                mob.get_num_points()
+            )
         return self
 
     def get_triangulation(self):
