@@ -534,7 +534,8 @@ class Mobject(object):
 
     # Copying and serialization
 
-    def stash_mobject_pointers(func):
+    @staticmethod
+    def stash_mobject_pointers(func: Callable):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             uncopied_attrs = ["parents", "target", "saved_state"]

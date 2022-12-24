@@ -1004,7 +1004,8 @@ class VMobject(Mobject):
         self.needs_new_triangulation = False
         return tri_indices
 
-    def triggers_refreshed_triangulation(func):
+    @staticmethod
+    def triggers_refreshed_triangulation(func: Callable):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             old_points = self.get_points().copy()
