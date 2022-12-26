@@ -16,17 +16,16 @@ if TYPE_CHECKING:
 
 
 class Window(PygletWindow):
-    fullscreen = False
-    resizable = True
-    gl_version = (3, 3)
-    vsync = True
-    cursor = True
+    fullscreen: bool = False
+    resizable: bool = True
+    gl_version: tuple[int, int] = (3, 3)
+    vsync: bool = True
+    cursor: bool = True
 
     def __init__(
         self,
         scene: Scene,
         size: tuple[int, int] = (1280, 720),
-        **kwargs
     ):
         super().__init__(size=size)
 
