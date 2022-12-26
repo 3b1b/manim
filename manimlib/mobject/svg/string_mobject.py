@@ -561,7 +561,7 @@ class StringMobject(SVGMobject, ABC):
 
     def select_unisolated_substring(self, substr: str) -> VGroup:
         result = []
-        for match in re.finditer(substr.replace("\\", r"\\"), self.string):
+        for match in re.finditer(re.escape(substr), self.string):
             index = match.start()
             start = self.substr_to_path_count(self.string[:index])
             end = start + self.substr_to_path_count(substr)
