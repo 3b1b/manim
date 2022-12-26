@@ -312,13 +312,11 @@ class Circle(Arc):
         self,
         start_angle: float = 0,
         stroke_color: ManimColor = RED,
-        close_new_points: bool = True,
         **kwargs
     ):
         super().__init__(
             start_angle, TAU,
             stroke_color=stroke_color,
-            close_new_points=close_new_points,
             **kwargs
         )
 
