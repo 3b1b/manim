@@ -82,7 +82,6 @@ class Mobject(object):
         # If true, the mobject will not get rotated according to camera position
         is_fixed_in_frame: bool = False,
         depth_test: bool = False,
-        **kwargs
     ):
         self.color = color
         self.opacity = opacity
