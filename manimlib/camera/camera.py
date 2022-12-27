@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import itertools as it
 import math
-from random import sample
 
 import moderngl
 import numpy as np
