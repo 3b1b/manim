@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from manimlib.shader_wrapper import ShaderWrapper
     from manimlib.typing import ManimColor, Vect3
-    from typing import Sequence
+    from typing import Any, Iterable
 
 class CameraFrame(Mobject):
     def __init__(
@@ -175,7 +175,7 @@ class Camera(object):
         self,
         ctx: moderngl.Context | None = None,
         background_image: str | None = None,
-        frame_config: dict = dict,
+        frame_config: dict = dict(),
         pixel_width: int = DEFAULT_PIXEL_WIDTH,
         pixel_height: int = DEFAULT_PIXEL_HEIGHT,
         fps: int = DEFAULT_FPS,
@@ -188,14 +188,13 @@ class Camera(object):
         image_mode: str = "RGBA",
         n_channels: int = 4,
         pixel_array_dtype: type = np.uint8,
-        light_source_position: Sequence[float] = [-10, 10, 10],
+        light_source_position: Vect3 = np.array([-10, 10, 10]),
         # Measured in pixel widths, used for vector graphics
         anti_alias_width: float = 1.5,
         # Although vector graphics handle antialiasing fine
         # without multisampling, for 3d scenes one might want
         # to set samples to be greater than 0.
         samples: int = 0,
-        **kwargs
     ):
         self.background_image = background_image
         self.pixel_width = pixel_width
@@ -369,13 +368,13 @@ class Camera(object):
         self.frame.set_width(frame_width)
 
     # Rendering
-    def capture(self, *mobjects: Mobject, **kwargs) -> None:
+    def capture(self, *mobjects: Mobject) -> None:
         self.refresh_perspective_uniforms()
         for mobject in mobjects:
             for render_group in self.get_render_group_list(mobject):
                 self.render(render_group)
 
-    def render(self, render_group: dict[str]) -> None:
+    def render(self, render_group: dict[str, Any]) -> None:
         shader_wrapper = render_group["shader_wrapper"]
         shader_program = render_group["prog"]
         self.set_shader_uniforms(shader_program, shader_wrapper)
@@ -384,7 +383,7 @@ class Camera(object):
         if render_group["single_use"]:
             self.release_render_group(render_group)
 
-    def get_render_group_list(self, mobject: Mobject) -> Iterable[dict[str]]:
+    def get_render_group_list(self, mobject: Mobject) -> Iterable[dict[str, Any]]:
         if mobject.is_changing():
             return self.generate_render_group_list(mobject)
 
@@ -394,7 +393,7 @@ class Camera(object):
             self.mob_to_render_groups[key] = list(self.generate_render_group_list(mobject))
         return self.mob_to_render_groups[key]
 
-    def generate_render_group_list(self, mobject: Mobject) -> Iterable[dict[str]]:
+    def generate_render_group_list(self, mobject: Mobject) -> Iterable[dict[str, Any]]:
         return (
             self.get_render_group(sw, single_use=mobject.is_changing())
             for sw in mobject.get_shader_wrapper_list()
@@ -404,7 +403,7 @@ class Camera(object):
         self,
         shader_wrapper: ShaderWrapper,
         single_use: bool = True
-    ) -> dict[str]:
+    ) -> dict[str, Any]:
         # Data buffers
         vbo = self.ctx.buffer(shader_wrapper.vert_data.tobytes())
         if shader_wrapper.vert_indices is None:
@@ -432,7 +431,7 @@ class Camera(object):
             "single_use": single_use,
         }
 
-    def release_render_group(self, render_group: dict[str]) -> None:
+    def release_render_group(self, render_group: dict[str, Any]) -> None:
         for key in ["vbo", "ibo", "vao"]:
             if render_group[key] is not None:
                 render_group[key].release()
@@ -445,14 +444,12 @@ class Camera(object):
     # Shaders
     def init_shaders(self) -> None:
         # Initialize with the null id going to None
-        self.id_to_shader_program: dict[
-            int | str, tuple[moderngl.Program, str] | None
-        ] = {"": None}
+        self.id_to_shader_program: dict[int, tuple[moderngl.Program, str] | None] = {hash(""): None}
 
     def get_shader_program(
         self,
         shader_wrapper: ShaderWrapper
-    ) -> tuple[moderngl.Program, str]:
+    ) -> tuple[moderngl.Program, str] | None:
         sid = shader_wrapper.get_program_id()
         if sid not in self.id_to_shader_program:
             # Create shader program for the first time, then cache
@@ -471,12 +468,10 @@ class Camera(object):
             tid = self.get_texture_id(path)
             shader[name].value = tid
         for name, value in it.chain(self.perspective_uniforms.items(), shader_wrapper.uniforms.items()):
-            try:
+            if name in shader:
                 if isinstance(value, np.ndarray) and value.ndim > 0:
                     value = tuple(value)
                 shader[name].value = value
-            except KeyError:
-                pass
 
     def refresh_perspective_uniforms(self) -> None:
         frame = self.frame

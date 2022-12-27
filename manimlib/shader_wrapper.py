@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 class ShaderWrapper(object):
     def __init__(
         self,
-        vert_data: np.ndarray | None = None,
+        vert_data: np.ndarray,
         vert_indices: np.ndarray | None = None,
         shader_folder: str | None = None,
         uniforms: dict[str, float] | None = None,  # A dictionary mapping names of uniform variables
