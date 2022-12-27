@@ -965,28 +965,23 @@ class VMobject(Mobject):
             return self.triangulation
 
         normal_vector = self.get_unit_normal()
-        if not np.isclose(normal_vector, OUT).all():
-            # Rotate points such that unit normal vector is OUT
-            points = np.dot(points, z_to_vector(normal_vector))
         indices = np.arange(len(points), dtype=int)
 
-        b0s = points[0::3]
-        b1s = points[1::3]
-        b2s = points[2::3]
-        v01s = b1s - b0s
-        v12s = b2s - b1s
-
-        crosses = cross2d(v01s, v12s)
-        convexities = np.sign(crosses)
-        orientations = np.sign(convexities.repeat(3))
-        self.data["orientation"] = orientations.reshape((len(orientations), 1))
+        # Rotate points such that unit normal vector is OUT
+        if not np.isclose(normal_vector, OUT).all():
+            points = np.dot(points, z_to_vector(normal_vector))
 
         atol = self.tolerance_for_point_equality
-        end_of_loop = np.zeros(len(b0s), dtype=bool)
-        end_of_loop[:-1] = (np.abs(b2s[:-1] - b0s[1:]) > atol).any(1)
+        end_of_loop = np.zeros(len(points) // 3, dtype=bool)
+        end_of_loop[:-1] = (np.abs(points[2:-3:3] - points[3::3]) > atol).any(1)
         end_of_loop[-1] = True
 
-        concave_parts = convexities < 0
+        v01s = points[1::3] - points[0::3]
+        v12s = points[2::3] - points[1::3]
+        curve_orientations = np.sign(cross2d(v01s, v12s))
+        self.data["orientation"] = np.transpose([curve_orientations.repeat(3)])
+
+        concave_parts = curve_orientations < 0
 
         # These are the vertices to which we'll apply a polygon triangulation
         inner_vert_indices = np.hstack([
@@ -1073,8 +1068,8 @@ class VMobject(Mobject):
         return self
 
     def get_fill_shader_wrapper(self) -> ShaderWrapper:
-        self.fill_shader_wrapper.vert_data = self.get_fill_shader_data()
         self.fill_shader_wrapper.vert_indices = self.get_fill_shader_vert_indices()
+        self.fill_shader_wrapper.vert_data = self.get_fill_shader_data()
         self.fill_shader_wrapper.uniforms = self.get_shader_uniforms()
         self.fill_shader_wrapper.depth_test = self.depth_test
         return self.fill_shader_wrapper
