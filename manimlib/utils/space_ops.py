@@ -334,7 +334,7 @@ def get_winding_number(points: Sequence[Vect2 | Vect3]) -> float:
 
 ##
 
-def cross2d(a: Vect2, b: Vect2) -> Vect2:
+def cross2d(a: Vect2 | Vect2Array, b: Vect2 | Vect2Array) -> Vect2 | Vect2Array:
     if len(a.shape) == 2:
         return a[:, 0] * b[:, 1] - a[:, 1] * b[:, 0]
     else:

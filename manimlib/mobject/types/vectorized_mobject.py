@@ -113,7 +113,7 @@ class VMobject(Mobject):
             "fill_rgba": np.zeros((1, 4)),
             "stroke_rgba": np.zeros((1, 4)),
             "stroke_width": np.zeros((1, 1)),
-            "orientation": np.zeros((1, 1)),
+            "orientation": np.ones((1, 1)),
         })
 
     # These are here just to make type checkers happy
