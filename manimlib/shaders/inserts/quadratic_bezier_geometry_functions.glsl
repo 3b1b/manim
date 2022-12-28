@@ -56,7 +56,7 @@ mat4 get_xyz_to_uv(vec3 b0, vec3 b1, vec3 unit_normal){
 // float get_reduced_control_points(vec3 b0, vec3 b1, vec3 b2, out vec3 new_points[3]){
 float get_reduced_control_points(in vec3 points[3], out vec3 new_points[3]){
     float length_threshold = 1e-6;
-    float angle_threshold = 5e-2;
+    float angle_threshold = 1e-3;
 
     vec3 p0 = points[0];
     vec3 p1 = points[1];
