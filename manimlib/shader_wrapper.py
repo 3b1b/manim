@@ -9,6 +9,7 @@ import numpy as np
 
 from manimlib.utils.directories import get_shader_dir
 from manimlib.utils.file_ops import find_file
+from manimlib.utils.iterables import resize_array
 
 from typing import TYPE_CHECKING
 
@@ -129,22 +130,28 @@ class ShaderWrapper(object):
             code_map[name] = re.sub(old, new, code_map[name])
         self.refresh_id()
 
-    def combine_with(self, *shader_wrappers: ShaderWrapper):
-        # Assume they are of the same type
-        if len(shader_wrappers) == 0:
-            return
+    def combine_with(self, *shader_wrappers: ShaderWrapper) -> ShaderWrapper:
+        self.read_in(self, *shader_wrappers)
+        return self
+
+    def read_in(self, *shader_wrappers: ShaderWrapper) -> ShaderWrapper:
+        # Assume all are of the same type
+        total_len = sum(len(sw.vert_data) for sw in shader_wrappers)
+        self.vert_data = resize_array(self.vert_data, total_len)
         if self.vert_indices is not None:
-            num_verts = len(self.vert_data)
-            indices_list = [self.vert_indices]
-            data_list = [self.vert_data]
-            for sw in shader_wrappers:
-                indices_list.append(sw.vert_indices + num_verts)
-                data_list.append(sw.vert_data)
-                num_verts += len(sw.vert_data)
-            self.vert_indices = np.hstack(indices_list)
-            self.vert_data = np.hstack(data_list)
-        else:
-            self.vert_data = np.hstack([self.vert_data, *[sw.vert_data for sw in shader_wrappers]])
+            total_verts = sum(len(sw.vert_indices) for sw in shader_wrappers)
+            self.vert_indices = resize_array(self.vert_indices, total_verts)
+
+        n_points = 0
+        n_verts = 0
+        for sw in shader_wrappers:
+            new_n_points = n_points + len(sw.vert_data)
+            self.vert_data[n_points:new_n_points] = sw.vert_data
+            if self.vert_indices is not None and sw.vert_indices is not None:
+                new_n_verts = n_verts + len(sw.vert_indices)
+                self.vert_indices[n_verts:new_n_verts] = sw.vert_indices + n_points
+                n_verts = new_n_verts
+            n_points = new_n_points
         return self
 
 
