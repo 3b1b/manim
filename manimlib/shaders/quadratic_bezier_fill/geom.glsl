@@ -78,7 +78,7 @@ void emit_pentagon(vec3[3] points, vec3 normal){
     vec3 p0_perp = cross(t01, normal);
     vec3 p2_perp = cross(t12, normal);
 
-    bool fill_inside = orientation > 0;
+    bool fill_inside = orientation >= 0.0;
     float aaw = anti_alias_width;
     vec3 corners[5];
     if(fill_inside){
