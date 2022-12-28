@@ -18,7 +18,7 @@ mat3 get_xy_to_uv(vec2 b0, vec2 b1){
         I.y, J.y, 0.0,
         0.0, 0.0, 1.0
     );
-    return (1 / sf) * rotate * shift;
+    return (1.0 / sf) * rotate * shift;
 }
 
 
@@ -44,7 +44,7 @@ mat4 get_xyz_to_uv(vec3 b0, vec3 b1, vec3 unit_normal){
         I.z, J.z, K.z, 0.0,
         0.0, 0.0, 0.0, 1.0
     );
-    return (1 / scale_factor) * rotate * shift;
+    return (1.0 / scale_factor) * rotate * shift;
 }
 
 
@@ -55,7 +55,7 @@ mat4 get_xyz_to_uv(vec3 b0, vec3 b1, vec3 unit_normal){
 // while also passing tangency information in the linear case.
 // float get_reduced_control_points(vec3 b0, vec3 b1, vec3 b2, out vec3 new_points[3]){
 float get_reduced_control_points(in vec3 points[3], out vec3 new_points[3]){
-    float length_threshold = 1e-6;
+    float length_threshold = 1e-8;
     float angle_threshold = 1e-3;
 
     vec3 p0 = points[0];
@@ -80,7 +80,7 @@ float get_reduced_control_points(in vec3 points[3], out vec3 new_points[3]){
         return 2.0;
     }else if(linear){
         new_points[0] = p0;
-        new_points[1] = (p0 + p2) / 2.0;
+        new_points[1] = 0.5 * (p0 + p2);
         new_points[2] = p2;
         return 1.0;
     }else{
