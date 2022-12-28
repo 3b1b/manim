@@ -250,7 +250,7 @@ class Mobject(object):
             return self.get_points()
 
     def has_points(self) -> bool:
-        return self.get_num_points() > 0
+        return self.data["points"].size > 0
 
     def get_bounding_box(self) -> Vect3Array:
         if self.needs_new_bounding_box:
