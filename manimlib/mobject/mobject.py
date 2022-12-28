@@ -176,15 +176,8 @@ class Mobject(object):
         return self
 
     def set_points(self, points: Vect3Array):
-        if len(points) == len(self.data["points"]):
-            self.data["points"][:] = points
-        elif isinstance(points, np.ndarray):
-            self.data["points"] = points.copy()
-        elif isinstance(points, list):
-            self.data["points"] = np.array(points)
-        else:
-            raise Exception(f"Invalid type {type(points)} for points")
-        self.refresh_bounding_box()
+        self.resize_points(len(points))
+        self.data["points"][:] = points
         return self
 
     def append_points(self, new_points: Vect3Array):
