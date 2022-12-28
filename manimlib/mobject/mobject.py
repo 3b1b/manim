@@ -551,7 +551,6 @@ class Mobject(object):
             return result
         return wrapper
 
-    @stash_mobject_pointers
     def serialize(self):
         return pickle.dumps(self)
 
@@ -566,7 +565,6 @@ class Mobject(object):
         except AttributeError:
             return copy.deepcopy(self)
 
-    @stash_mobject_pointers
     def copy(self, deep: bool = False):
         if deep:
             return self.deepcopy()
@@ -1751,24 +1749,19 @@ class Mobject(object):
             return self
         return wrapper
 
-    @affects_shader_info_id
     def fix_in_frame(self):
         self.uniforms["is_fixed_in_frame"] = 1.0
         self.is_fixed_in_frame = True
         return self
-
-    @affects_shader_info_id
     def unfix_from_frame(self):
         self.uniforms["is_fixed_in_frame"] = 0.0
         self.is_fixed_in_frame = False
         return self
 
-    @affects_shader_info_id
     def apply_depth_test(self):
         self.depth_test = True
         return self
 
-    @affects_shader_info_id
     def deactivate_depth_test(self):
         self.depth_test = False
         return self
