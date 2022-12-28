@@ -1832,7 +1832,7 @@ class Mobject(object):
         self.shader_wrapper.refresh_id()
         return self
 
-    def get_shader_wrapper(self):
+    def get_shader_wrapper(self) -> ShaderWrapper:
         self.shader_wrapper.vert_data = self.get_shader_data()
         self.shader_wrapper.vert_indices = self.get_shader_vert_indices()
         self.shader_wrapper.uniforms = self.get_shader_uniforms()
