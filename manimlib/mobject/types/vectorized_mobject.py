@@ -1008,7 +1008,6 @@ class VMobject(Mobject):
         self.needs_new_triangulation = False
         return tri_indices
 
-    @staticmethod
     def triggers_refreshed_triangulation(func: Callable):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
@@ -1018,28 +1017,23 @@ class VMobject(Mobject):
                 self.refresh_triangulation()
         return wrapper
 
-    @triggers_refreshed_triangulation
     def set_points(self, points: Vect3Array):
         super().set_points(points)
         return self
 
-    @triggers_refreshed_triangulation
     def append_points(self, points: Vect3Array):
         super().append_points(points)
         return self
 
-    @triggers_refreshed_triangulation
     def reverse_points(self):
         super().reverse_points()
         return self
 
-    @triggers_refreshed_triangulation
     def set_data(self, data: dict):
         super().set_data(data)
         return self
 
     # TODO, how to be smart about tangents here?
-    @triggers_refreshed_triangulation
     def apply_function(
         self,
         function: Callable[[Vect3], Vect3],
