@@ -181,7 +181,9 @@ class Mobject(object):
         return self
 
     def append_points(self, new_points: Vect3Array):
-        self.data["points"] = np.vstack([self.data["points"], new_points])
+        n = self.get_num_points()
+        self.resize_points(n + len(new_points))
+        self.data["points"][n:] = new_points
         self.refresh_bounding_box()
         return self
 
