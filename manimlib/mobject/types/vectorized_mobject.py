@@ -1064,6 +1064,10 @@ class VMobject(Mobject):
             render_primitive=self.render_primitive,
         )
 
+        self.meta_fill_shader_wrapper = self.fill_shader_wrapper.copy()
+        self.meta_stroke_shader_wrapper = self.stroke_shader_wrapper.copy()
+        self.meta_back_stroke_shader_wrapper = self.stroke_shader_wrapper.copy()
+
     def refresh_shader_wrapper_id(self):
         for wrapper in [self.fill_shader_wrapper, self.stroke_shader_wrapper]:
             wrapper.refresh_id()
@@ -1098,18 +1102,11 @@ class VMobject(Mobject):
                     stroke_shader_wrappers.append(ssw)
 
         # Combine data lists
-        wrapper_lists = [
-            back_stroke_shader_wrappers,
-            fill_shader_wrappers,
-            stroke_shader_wrappers
-        ]
-        result = []
-        for wlist in wrapper_lists:
-            if wlist:
-                wrapper = wlist[0]
-                wrapper.combine_with(*wlist[1:])
-                result.append(wrapper)
-        return result
+        return list(filter(lambda sw: len(sw.vert_data) > 0, [
+            self.meta_back_stroke_shader_wrapper.read_in(*back_stroke_shader_wrappers),
+            self.meta_fill_shader_wrapper.read_in(*fill_shader_wrappers),
+            self.meta_stroke_shader_wrapper.read_in(*stroke_shader_wrappers),
+        ]))
 
     def get_stroke_uniforms(self) -> dict[str, float]:
         result = dict(super().get_shader_uniforms())
