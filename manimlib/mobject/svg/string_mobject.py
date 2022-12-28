@@ -455,6 +455,14 @@ class StringMobject(SVGMobject, ABC):
             for span in self.labelled_spans[1:]
         ]
 
+    def get_specified_substrings(self) -> list[str]:
+        substrs = [
+            self.string[slice(*span)]
+            for span in self.labelled_spans[1:]
+        ]
+        # Use dict.fromkeys to remove duplicates while retaining order
+        return list(dict.fromkeys(substrs).keys())
+
     def get_group_part_items(self) -> list[tuple[str, list[int]]]:
         if not self.labels:
             return []
