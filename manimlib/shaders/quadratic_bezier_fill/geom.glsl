@@ -32,7 +32,7 @@ out vec2 uv_coords;
 out vec2 uv_b2;
 out float bezier_degree;
 
-vec3 local_unit_normal;
+vec3 unit_normal;
 
 
 // Analog of import for manim only
@@ -46,7 +46,7 @@ void emit_vertex_wrapper(vec3 point, int index){
     color = finalize_color(
         v_color[index],
         point,
-        local_unit_normal,
+        unit_normal,
         light_source_position,
         camera_position,
         reflectiveness,
@@ -129,11 +129,11 @@ void main(){
 
     vec3 new_bp[3];
     bezier_degree = get_reduced_control_points(vec3[3](bp[0], bp[1], bp[2]), new_bp);
-    vec3 local_unit_normal = get_unit_normal(new_bp);
+    unit_normal = get_unit_normal(new_bp);
     orientation = v_orientation[0];
 
     if(bezier_degree >= 1){
-        emit_pentagon(new_bp, local_unit_normal);
+        emit_pentagon(new_bp, unit_normal);
     }
     // Don't emit any vertices for bezier_degree 0
 }
