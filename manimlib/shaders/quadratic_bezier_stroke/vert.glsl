@@ -5,7 +5,6 @@
 in vec3 point;
 in vec3 prev_point;
 in vec3 next_point;
-in vec3 unit_normal;
 
 in float stroke_width;
 in vec4 color;
