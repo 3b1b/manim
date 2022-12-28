@@ -124,6 +124,8 @@ class VMobject(Mobject):
         return super().family_members_with_points()
 
     def replicate(self, n: int) -> VGroup:
+        if self.has_fill():
+            self.get_triangulation()
         return super().replicate(n)
 
     def get_grid(self, *args, **kwargs) -> VGroup:
