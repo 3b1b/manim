@@ -377,10 +377,10 @@ class VMobject(Mobject):
         return self.get_stroke_color()
 
     def has_stroke(self) -> bool:
-        return any(self.get_stroke_widths()) and any(self.get_stroke_opacities())
+        return any(self.data['stroke_width']) and any(self.data['stroke_rgba'][:, 3])
 
     def has_fill(self) -> bool:
-        return any(self.get_fill_opacities())
+        return any(self.data['fill_rgba'][:, 3])
 
     def get_opacity(self) -> float:
         if self.has_fill():
