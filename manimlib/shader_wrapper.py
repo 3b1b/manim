@@ -131,7 +131,7 @@ class ShaderWrapper(object):
         self.refresh_id()
 
     def combine_with(self, *shader_wrappers: ShaderWrapper) -> ShaderWrapper:
-        self.read_in(self, *shader_wrappers)
+        self.read_in(self.copy(), *shader_wrappers)
         return self
 
     def read_in(self, *shader_wrappers: ShaderWrapper) -> ShaderWrapper:
