@@ -904,7 +904,7 @@ class VMobject(Mobject):
         if self.has_fill():
             tri1 = mobject1.get_triangulation()
             tri2 = mobject2.get_triangulation()
-            if len(tri1) != len(tri1) or not (tri1 == tri2).all():
+            if len(tri1) != len(tri2) or not (tri1 == tri2).all():
                 self.refresh_triangulation()
         return self
 
@@ -1019,7 +1019,6 @@ class VMobject(Mobject):
         self.needs_new_triangulation = False
         return tri_indices
 
-    @staticmethod
     def triggers_refreshed_triangulation(func: Callable):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
