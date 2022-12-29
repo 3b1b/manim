@@ -528,7 +528,6 @@ class Mobject(object):
 
     # Copying and serialization
 
-    @staticmethod
     def stash_mobject_pointers(func: Callable):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
@@ -1735,7 +1734,6 @@ class Mobject(object):
 
     # Operations touching shader uniforms
 
-    @staticmethod
     def affects_shader_info_id(func: Callable):
         @wraps(func)
         def wrapper(self):

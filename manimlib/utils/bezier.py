@@ -24,9 +24,12 @@ CLOSED_THRESHOLD = 0.001
 def bezier(
     points: Sequence[Scalable]
 ) -> Callable[[float], Scalable]:
+    if len(points) == 0:
+        raise Exception("bezier cannot be calld on an empty list")
+
     n = len(points) - 1
 
-    def result(t: Scalable) -> Scalable:
+    def result(t: float) -> Scalable:
         return sum(
             ((1 - t)**(n - k)) * (t**k) * choose(n, k) * point
             for k, point in enumerate(points)

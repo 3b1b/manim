@@ -904,7 +904,7 @@ class VMobject(Mobject):
         if self.has_fill():
             tri1 = mobject1.get_triangulation()
             tri2 = mobject2.get_triangulation()
-            if len(tri1) != len(tri1) or not np.all(tri1 == tri2):
+            if len(tri1) != len(tri2) or not (tri1 == tri2).all():
                 self.refresh_triangulation()
         return self
 
@@ -1019,7 +1019,6 @@ class VMobject(Mobject):
         self.needs_new_triangulation = False
         return tri_indices
 
-    @staticmethod
     def triggers_refreshed_triangulation(func: Callable):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
@@ -1126,9 +1125,11 @@ class VMobject(Mobject):
             stroke_shader_wrappers,
         ]
         for sw, sw_list in zip(self.shader_wrapper_list, sw_lists):
+            if not sw_list:
+                continue
             sw.read_in(*sw_list)
-            sw.depth_test = self.depth_test
-            sw.uniforms = self.uniforms
+            sw.depth_test = any(sw.depth_test for sw in sw_list)
+            sw.uniforms.update(sw_list[0].uniforms)
         return list(filter(lambda sw: len(sw.vert_data) > 0, self.shader_wrapper_list))
 
     def get_stroke_shader_data(self) -> np.ndarray:

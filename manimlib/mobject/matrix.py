@@ -81,7 +81,6 @@ class Matrix(VMobject):
         bracket_v_buff: float = 0.25,
         add_background_rectangles_to_entries: bool = False,
         include_background_rectangle: bool = False,
-        element_config: dict = dict(),
         element_alignment_corner: Vect3 = DOWN,
         **kwargs
     ):
@@ -89,9 +88,9 @@ class Matrix(VMobject):
         Matrix can either include numbers, tex_strings,
         or mobjects
         """
-        super().__init__(**kwargs)
+        super().__init__()
 
-        mob_matrix = self.matrix_to_mob_matrix(matrix, **element_config)
+        mob_matrix = self.matrix_to_mob_matrix(matrix, **kwargs)
         self.mob_matrix = mob_matrix
 
         self.organize_mob_matrix(mob_matrix, v_buff, h_buff, element_alignment_corner)
