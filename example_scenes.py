@@ -374,7 +374,7 @@ class CoordinateSystemExample(Scene):
 
 class GraphExample(Scene):
     def construct(self):
-        axes = Axes((-3, 10), (-1, 8))
+        axes = Axes((-3, 10), (-1, 8), height=6)
         axes.add_coordinate_labels()
 
         self.play(Write(axes, lag_ratio=0.01, run_time=1))
