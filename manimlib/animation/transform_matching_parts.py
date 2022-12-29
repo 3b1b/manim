@@ -151,13 +151,14 @@ class TransformMatchingStrings(AnimationGroup):
         match_animation: type = Transform,
         mismatch_animation: type = Transform,
         run_time=2,
+        lag_ratio=0,
         **kwargs,
     ):
         self.source = source
         self.target = target
         matched_keys = matched_keys or list()
         key_map = key_map or dict()
-        self.anim_config = dict(run_time=run_time, **kwargs)
+        self.anim_config = dict(**kwargs)
 
         # We will progressively build up a list of transforms
         # from characters in source to those in target. These
@@ -208,7 +209,11 @@ class TransformMatchingStrings(AnimationGroup):
                 target_char, source.get_center(),
                 **self.anim_config
             ))
-        super().__init__(*self.anims)
+        super().__init__(
+            *self.anims,
+            run_time=run_time,
+            lag_ratio=lag_ratio,
+        )
 
     def add_transform(
         self,
