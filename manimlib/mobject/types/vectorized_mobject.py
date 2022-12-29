@@ -1126,9 +1126,11 @@ class VMobject(Mobject):
             stroke_shader_wrappers,
         ]
         for sw, sw_list in zip(self.shader_wrapper_list, sw_lists):
+            if not sw_list:
+                continue
             sw.read_in(*sw_list)
-            sw.depth_test = self.depth_test
-            sw.uniforms = self.uniforms
+            sw.depth_test = any(sw.depth_test for sw in sw_list)
+            sw.uniforms.update(sw_list[0].uniforms)
         return list(filter(lambda sw: len(sw.vert_data) > 0, self.shader_wrapper_list))
 
     def get_stroke_shader_data(self) -> np.ndarray:
