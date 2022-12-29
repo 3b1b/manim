@@ -74,6 +74,7 @@ class Scene(object):
         preview: bool = True,
         presenter_mode: bool = False,
         show_animation_progress: bool = False,
+        embed_exception_mode = "",
     ):
         self.skip_animations = skip_animations
         self.always_update_mobjects = always_update_mobjects
@@ -83,6 +84,7 @@ class Scene(object):
         self.preview = preview
         self.presenter_mode = presenter_mode
         self.show_animation_progress = show_animation_progress
+        self.embed_exception_mode = embed_exception_mode
 
         self.camera_config = {**self.default_camera_config, **camera_config}
         self.window_config = {**self.default_window_config, **window_config}
@@ -248,6 +250,8 @@ class Scene(object):
             self.save_state()
 
         shell.events.register("post_run_cell", post_cell_func)
+
+        shell.magic(f"xmode {self.embed_exception_mode}")
 
         # Launch shell
         shell(
