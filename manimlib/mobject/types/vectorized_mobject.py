@@ -148,6 +148,11 @@ class VMobject(Mobject):
             raise Exception("All submobjects must be of type VMobject")
         super().add(*vmobjects)
 
+    def copy(self) -> VMobject:
+        result = super().copy()
+        result.shader_wrapper_list = [sw.copy() for sw in self.shader_wrapper_list]
+        return result
+
     # Colors
     def init_colors(self):
         self.set_fill(
@@ -1073,9 +1078,13 @@ class VMobject(Mobject):
             render_primitive=self.render_primitive,
         )
 
-        self.meta_fill_shader_wrapper = self.fill_shader_wrapper.copy()
-        self.meta_stroke_shader_wrapper = self.stroke_shader_wrapper.copy()
-        self.meta_back_stroke_shader_wrapper = self.stroke_shader_wrapper.copy()
+        self.shader_wrapper_list = [
+            self.stroke_shader_wrapper.copy(),  # Use for back stroke
+            self.fill_shader_wrapper.copy(),
+            self.stroke_shader_wrapper.copy(),
+        ]
+        for sw in self.shader_wrapper_list:
+            sw.uniforms = self.uniforms
 
     def refresh_shader_wrapper_id(self):
         for wrapper in [self.fill_shader_wrapper, self.stroke_shader_wrapper]:
@@ -1111,18 +1120,14 @@ class VMobject(Mobject):
                     stroke_shader_wrappers.append(ssw)
 
         # Combine data lists
-        result = [
-            self.meta_back_stroke_shader_wrapper.read_in(*back_stroke_shader_wrappers),
-            self.meta_fill_shader_wrapper.read_in(*fill_shader_wrappers),
-            self.meta_stroke_shader_wrapper.read_in(*stroke_shader_wrappers),
+        sw_lists = [
+            back_stroke_shader_wrappers,
+            fill_shader_wrappers,
+            stroke_shader_wrappers,
         ]
-        for i, sw in enumerate(result):
+        for sw, sw_list in zip(self.shader_wrapper_list, sw_lists):
+            sw.read_in(*sw_list)
             sw.depth_test = self.depth_test
-    def get_stroke_uniforms(self) -> dict[str, float]:
-        result = dict(super().get_shader_uniforms())
-        result["joint_type"] = JOINT_TYPE_MAP[self.joint_type]
-        result["flat_stroke"] = float(self.flat_stroke)
-        return result
             sw.uniforms = self.uniforms
         return list(filter(lambda sw: len(sw.vert_data) > 0, self.shader_wrapper_list))
 
