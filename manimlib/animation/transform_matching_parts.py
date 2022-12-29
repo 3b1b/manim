@@ -4,26 +4,20 @@ import itertools as it
 
 import numpy as np
 
-from manimlib.animation.animation import Animation
 from manimlib.animation.composition import AnimationGroup
 from manimlib.animation.fading import FadeInFromPoint
 from manimlib.animation.fading import FadeOutToPoint
 from manimlib.animation.fading import FadeTransformPieces
-from manimlib.animation.fading import FadeTransform
-from manimlib.animation.transform import ReplacementTransform
 from manimlib.animation.transform import Transform
 from manimlib.mobject.mobject import Mobject
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.svg.string_mobject import StringMobject
-from manimlib.mobject.svg.old_tex_mobject import OldTex
-from manimlib.mobject.svg.tex_mobject import Tex
 from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from manimlib.mobject.svg.old_tex_mobject import SingleStringTex
     from manimlib.scene.scene import Scene
 
 
@@ -213,6 +207,7 @@ class TransformMatchingStrings(AnimationGroup):
             *self.anims,
             run_time=run_time,
             lag_ratio=lag_ratio,
+            group_type=VGroup,
         )
 
     def add_transform(
@@ -235,18 +230,10 @@ class TransformMatchingStrings(AnimationGroup):
                 self.target_chars.remove(char)
 
     def find_pairs_with_matching_shapes(self, chars1, chars2) -> list[tuple[VMobject, VMobject]]:
-        for char in (*chars1, *chars2):
-            char.save_state()
-            char.set_height(1)
-            char.center()
         result = []
         for char1, char2 in it.product(chars1, chars2):
-            p1 = char1.get_points()
-            p2 = char2.get_points()
-            if len(p1) == len(p2) and np.isclose(p1, p2 , atol=1e-1).all():
+            if char1.has_same_shape_as(char2):
                 result.append((char1, char2))
-        for char in (*chars1, *chars2):
-            char.restore()
         return result
 
     def clean_up_from_scene(self, scene: Scene) -> None:
