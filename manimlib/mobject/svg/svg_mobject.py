@@ -292,15 +292,12 @@ class VMobjectFromSVGPath(VMobject):
     def __init__(
         self,
         path_obj: se.Path,
-        long_lines: bool = False,
         should_subdivide_sharp_curves: bool = False,
-        should_remove_null_curves: bool = False,
         **kwargs
     ):
         # Get rid of arcs
         path_obj.approximate_arcs_with_quads()
         self.path_obj = path_obj
-        self.long_lines = long_lines
         self.should_subdivide_sharp_curves = should_subdivide_sharp_curves
         self.should_remove_null_curves = should_remove_null_curves
         super().__init__(**kwargs)
