@@ -54,22 +54,11 @@ def prompt_user_for_choice(scene_classes):
 
 
 def get_scene_config(config):
-    return dict([
-        (key, config[key])
-        for key in [
-            "window_config",
-            "camera_config",
-            "file_writer_config",
-            "skip_animations",
-            "start_at_animation_number",
-            "end_at_animation_number",
-            "leave_progress_bars",
-            "show_animation_progress",
-            "preview",
-            "presenter_mode",
-        ]
-    ])
-
+    scene_parameters = inspect.signature(Scene).parameters.keys()
+    return {
+        key: config[key]
+        for key in set(scene_parameters).intersection(config.keys())
+    }
 
 def compute_total_frames(scene_class, scene_config):
     """
