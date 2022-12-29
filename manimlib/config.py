@@ -491,4 +491,6 @@ def get_configuration(args: Namespace) -> dict:
         "presenter_mode": args.presenter_mode,
         "leave_progress_bars": args.leave_progress_bars,
         "show_animation_progress": args.show_animation_progress,
+        "embed_exception_mode": custom_config["embed_exception_mode"],
+        "embed_error_sound": custom_config["embed_error_sound"],
     }

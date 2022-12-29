@@ -657,7 +657,7 @@ class Mobject(object):
             self.match_updaters(mobject)
         return self
 
-    def looks_identical(self, mobject: Mobject):
+    def looks_identical(self, mobject: Mobject) -> bool:
         fam1 = self.family_members_with_points()
         fam2 = mobject.family_members_with_points()
         if len(fam1) != len(fam2):
@@ -667,14 +667,19 @@ class Mobject(object):
                 if set(d1).difference(d2):
                     return False
                 for key in d1:
-                    eq = (d1[key] == d2[key])
-                    if isinstance(eq, bool):
-                        if not eq:
-                            return False
-                    else:
-                        if not eq.all():
-                            return False
+                    if not np.isclose(d1[key], d2[key]).all():
+                        return False
         return True
+
+    def has_same_shape_as(self, mobject: Mobject) -> bool:
+        # Normalize both point sets by centering and making height 1
+        points1, points2 = (
+            (m.get_all_points() - m.get_center()) / m.get_height()
+            for m in (self, mobject)
+        )
+        if len(points1) != len(points2):
+            return False
+        return bool(np.isclose(points1, points2).all())
 
     # Creating new Mobjects from this one
 
@@ -1723,7 +1728,7 @@ class Mobject(object):
         for sm, sm1, sm2 in zip(self.get_family(), mobject1.get_family(), mobject2.get_family()):
             keys = sm.data.keys() & sm1.data.keys() & sm2.data.keys()
             sm.lock_data(list(filter(
-                lambda key: np.all(sm1.data[key] == sm2.data[key]),
+                lambda key: (sm1.data[key] == sm2.data[key]).all(),
                 keys,
             )))
         return self

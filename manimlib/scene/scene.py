@@ -16,15 +16,18 @@ import numpy as np
 from tqdm import tqdm as ProgressDisplay
 
 from manimlib.animation.animation import prepare_animation
+from manimlib.animation.fading import VFadeInThenOut
 from manimlib.camera.camera import Camera
 from manimlib.config import get_module
 from manimlib.constants import ARROW_SYMBOLS
 from manimlib.constants import DEFAULT_WAIT_TIME
 from manimlib.constants import COMMAND_MODIFIER
 from manimlib.constants import SHIFT_MODIFIER
+from manimlib.constants import RED
 from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
+from manimlib.mobject.frame import FullScreenRectangle
 from manimlib.mobject.mobject import _AnimationBuilder
 from manimlib.mobject.mobject import Group
 from manimlib.mobject.mobject import Mobject
@@ -34,7 +37,6 @@ from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.family_ops import extract_mobject_family_members
 from manimlib.utils.family_ops import recursive_mobject_remove
-from manimlib.utils.iterables import list_difference_update
 
 from typing import TYPE_CHECKING
 
@@ -74,6 +76,8 @@ class Scene(object):
         preview: bool = True,
         presenter_mode: bool = False,
         show_animation_progress: bool = False,
+        embed_exception_mode: str = "",
+        embed_error_sound: bool = False,
     ):
         self.skip_animations = skip_animations
         self.always_update_mobjects = always_update_mobjects
@@ -83,6 +87,8 @@ class Scene(object):
         self.preview = preview
         self.presenter_mode = presenter_mode
         self.show_animation_progress = show_animation_progress
+        self.embed_exception_mode = embed_exception_mode
+        self.embed_error_sound = embed_error_sound
 
         self.camera_config = {**self.default_camera_config, **camera_config}
         self.window_config = {**self.default_window_config, **window_config}
@@ -248,6 +254,22 @@ class Scene(object):
             self.save_state()
 
         shell.events.register("post_run_cell", post_cell_func)
+
+        # Flash border, and potentially play sound, on exceptions
+        def custom_exc(shell, etype, evalue, tb, tb_offset=None):
+            # still show the error don't just swallow it
+            shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
+            if self.embed_error_sound:
+                os.system("printf '\a'")
+            self.play(VFadeInThenOut(
+                FullScreenRectangle().set_stroke(RED, 30).set_fill(opacity=0),
+                run_time=0.5,
+            ))
+
+        shell.set_custom_exc((Exception,), custom_exc)
+
+        # Set desired exception mode
+        shell.magic(f"xmode {self.embed_exception_mode}")
 
         # Launch shell
         shell(

@@ -42,3 +42,5 @@ camera_resolutions:
   4k: "3840x2160"
   default_resolution: "high"
 fps: 30
+embed_exception_mode: "Verbose"
+embed_error_sound: False

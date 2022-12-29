@@ -29,6 +29,7 @@ class AnimationGroup(Animation):
         run_time: float = -1,  # If negative, default to sum of inputed animation runtimes
         lag_ratio: float = 0.0,
         group: Mobject | None = None,
+        group_type: type = Group,
         **kwargs
     ):
         self.animations = [prepare_animation(anim) for anim in animations]
@@ -38,7 +39,7 @@ class AnimationGroup(Animation):
         self.lag_ratio = lag_ratio
         self.group = group
         if self.group is None:
-            self.group = Group(*remove_list_redundancies(
+            self.group = group_type(*remove_list_redundancies(
                 [anim.mobject for anim in self.animations]
             ))
 
@@ -49,7 +50,7 @@ class AnimationGroup(Animation):
             **kwargs
         )
 
-    def get_all_mobjects(self) -> Group:
+    def get_all_mobjects(self) -> Mobject:
         return self.group
 
     def begin(self) -> None:

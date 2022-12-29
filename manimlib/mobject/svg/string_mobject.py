@@ -547,7 +547,7 @@ class StringMobject(SVGMobject, ABC):
 
     def select_parts(self, selector: Selector) -> VGroup:
         specified_substrings = self.get_specified_substrings()
-        if isinstance(selector, str) and selector not in specified_substrings:
+        if isinstance(selector, (str, re.Pattern)) and selector not in specified_substrings:
             return self.select_unisolated_substring(selector)
         indices_list = self.get_submob_indices_lists_by_selector(selector)
         return self.build_parts_from_indices_lists(indices_list)
@@ -563,11 +563,14 @@ class StringMobject(SVGMobject, ABC):
     def substr_to_path_count(self, substr: str) -> int:
         return len(re.sub(R"\s", "", substr))
 
-    def select_unisolated_substring(self, substr: str) -> VGroup:
+    def select_unisolated_substring(self, pattern: str | re.Pattern) -> VGroup:
+        if isinstance(pattern, str):
+            pattern = re.compile(re.escape(pattern))
         result = []
-        for match in re.finditer(re.escape(substr), self.string):
+        for match in re.finditer(pattern, self.string):
             index = match.start()
             start = self.substr_to_path_count(self.string[:index])
+            substr = match.group()
             end = start + self.substr_to_path_count(substr)
             result.append(self[start:end])
         return VGroup(*result)
