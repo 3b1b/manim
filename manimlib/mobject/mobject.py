@@ -82,7 +82,6 @@ class Mobject(object):
         # If true, the mobject will not get rotated according to camera position
         is_fixed_in_frame: bool = False,
         depth_test: bool = False,
-        **kwargs
     ):
         self.color = color
         self.opacity = opacity
@@ -177,19 +176,14 @@ class Mobject(object):
         return self
 
     def set_points(self, points: Vect3Array):
-        if len(points) == len(self.data["points"]):
-            self.data["points"][:] = points
-        elif isinstance(points, np.ndarray):
-            self.data["points"] = points.copy()
-        elif isinstance(points, list):
-            self.data["points"] = np.array(points)
-        else:
-            raise Exception(f"Invalid type {type(points)} for points")
-        self.refresh_bounding_box()
+        self.resize_points(len(points))
+        self.data["points"][:] = points
         return self
 
     def append_points(self, new_points: Vect3Array):
-        self.data["points"] = np.vstack([self.data["points"], new_points])
+        n = self.get_num_points()
+        self.resize_points(n + len(new_points))
+        self.data["points"][n:] = new_points
         self.refresh_bounding_box()
         return self
 
@@ -251,7 +245,7 @@ class Mobject(object):
             return self.get_points()
 
     def has_points(self) -> bool:
-        return self.get_num_points() > 0
+        return self.data["points"].size > 0
 
     def get_bounding_box(self) -> Vect3Array:
         if self.needs_new_bounding_box:
@@ -1840,7 +1834,7 @@ class Mobject(object):
         self.shader_wrapper.refresh_id()
         return self
 
-    def get_shader_wrapper(self):
+    def get_shader_wrapper(self) -> ShaderWrapper:
         self.shader_wrapper.vert_data = self.get_shader_data()
         self.shader_wrapper.vert_indices = self.get_shader_vert_indices()
         self.shader_wrapper.uniforms = self.get_shader_uniforms()

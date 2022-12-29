@@ -36,7 +36,7 @@ class StringMobject(SVGMobject, ABC):
     or a 2-tuple containing integers or None, or a collection of the above.
     Note, substrings specified cannot *partly* overlap with each other.
 
-    Each instance of `StringMobject` generates 2 svg files.
+    Each instance of `StringMobject` may generate 2 svg files.
     The additional one is generated with some color commands inserted,
     so that each submobject of the original `SVGMobject` will be labelled
     by the color of its paired submobject from the additional `SVGMobject`.
@@ -455,6 +455,14 @@ class StringMobject(SVGMobject, ABC):
             for span in self.labelled_spans[1:]
         ]
 
+    def get_specified_substrings(self) -> list[str]:
+        substrs = [
+            self.string[slice(*span)]
+            for span in self.labelled_spans[1:]
+        ]
+        # Use dict.fromkeys to remove duplicates while retaining order
+        return list(dict.fromkeys(substrs).keys())
+
     def get_group_part_items(self) -> list[tuple[str, list[int]]]:
         if not self.labels:
             return []
@@ -538,15 +546,11 @@ class StringMobject(SVGMobject, ABC):
         ])
 
     def select_parts(self, selector: Selector) -> VGroup:
-        indices_list = self.get_submob_indices_lists_by_selector(selector)
-        if indices_list:
-            return self.build_parts_from_indices_lists(indices_list)
-        elif isinstance(selector, str):
-            # Otherwise, try finding substrings which weren't specifically isolated
-            log.warning("Accessing unisolated substring, results may not be as expected")
+        specified_substrings = self.get_specified_substrings()
+        if isinstance(selector, str) and selector not in specified_substrings:
             return self.select_unisolated_substring(selector)
-        else:
-            return VGroup()
+        indices_list = self.get_submob_indices_lists_by_selector(selector)
+        return self.build_parts_from_indices_lists(indices_list)
 
     def __getitem__(self, value: int | slice | Selector) -> VMobject:
         if isinstance(value, (int, slice)):
@@ -561,7 +565,7 @@ class StringMobject(SVGMobject, ABC):
 
     def select_unisolated_substring(self, substr: str) -> VGroup:
         result = []
-        for match in re.finditer(substr.replace("\\", r"\\"), self.string):
+        for match in re.finditer(re.escape(substr), self.string):
             index = match.start()
             start = self.substr_to_path_count(self.string[:index])
             end = start + self.substr_to_path_count(substr)

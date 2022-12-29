@@ -32,13 +32,6 @@ float sdf(){
     if(abs(v2 / u2) < 0.1 * uv_anti_alias_width){
         return abs(uv_coords[1]);
     }
-    // For flat-ish curves, take the curve
-    else if(abs(v2 / u2) < 0.5 * uv_anti_alias_width){
-        return min_dist_to_curve(uv_coords, uv_b2, bezier_degree);
-    }
-    // I know, I don't love this amount of arbitrary-seeming branching either,
-    // but a number of strange dimples and bugs pop up otherwise.
-
     // This converts uv_coords to yet another space where the bezier points sit on
     // (0, 0), (1/2, 0) and (1, 1), so that the curve can be expressed implicityly
     // as y = x^2.
@@ -50,7 +43,7 @@ float sdf(){
     // Sign takes care of whether we should be filling the inside or outside of curve.
     float sgn = orientation * sign(v2);
     float Fp = (p.x * p.x - p.y);
-    if(sgn * Fp < 0){
+    if(sgn * Fp <= 0){
         return 0.0;
     }else{
         return min_dist_to_curve(uv_coords, uv_b2, bezier_degree);

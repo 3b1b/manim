@@ -7,6 +7,7 @@ uniform float anti_alias_width;
 
 // Needed for get_gl_Position
 uniform vec2 frame_shape;
+uniform vec2 pixel_shape;
 uniform float focal_distance;
 uniform float is_fixed_in_frame;
 // Needed for finalize_color
@@ -32,7 +33,7 @@ out vec2 uv_coords;
 out vec2 uv_b2;
 out float bezier_degree;
 
-vec3 local_unit_normal;
+vec3 unit_normal;
 
 
 // Analog of import for manim only
@@ -46,7 +47,7 @@ void emit_vertex_wrapper(vec3 point, int index){
     color = finalize_color(
         v_color[index],
         point,
-        local_unit_normal,
+        unit_normal,
         light_source_position,
         camera_position,
         reflectiveness,
@@ -78,12 +79,20 @@ void emit_pentagon(vec3[3] points, vec3 normal){
     vec3 p0_perp = cross(t01, normal);
     vec3 p2_perp = cross(t12, normal);
 
-    bool fill_inside = orientation > 0;
-    float aaw = anti_alias_width;
+    bool fill_inside = orientation > 0.0;
+    float aaw = anti_alias_width * frame_shape.y / pixel_shape.y;
     vec3 corners[5];
-    if(fill_inside){
-        // Note, straight lines will also fall into this case, and since p0_perp and p2_perp
-        // will point to the right of the curve, it's just what we want
+    if(bezier_degree == 1.0){
+        // For straight lines, buff out in both directions
+        corners = vec3[5](
+            p0 + aaw * p0_perp,
+            p0 - aaw * p0_perp,
+            p1 + 0.5 * aaw * (p0_perp + p2_perp),
+            p2 - aaw * p2_perp,
+            p2 + aaw * p2_perp
+        );
+    } else if(fill_inside){
+        // If curved, and filling insight, just buff out away interior
         corners = vec3[5](
             p0 + aaw * p0_perp,
             p0,
@@ -103,7 +112,7 @@ void emit_pentagon(vec3[3] points, vec3 normal){
 
     mat4 xyz_to_uv = get_xyz_to_uv(p0, p1, normal);
     uv_b2 = (xyz_to_uv * vec4(p2, 1)).xy;
-    uv_anti_alias_width = anti_alias_width / length(p1 - p0);
+    uv_anti_alias_width = aaw / length(p1 - p0);
 
     for(int i = 0; i < 5; i++){
         vec3 corner = corners[i];
@@ -129,11 +138,11 @@ void main(){
 
     vec3 new_bp[3];
     bezier_degree = get_reduced_control_points(vec3[3](bp[0], bp[1], bp[2]), new_bp);
-    vec3 local_unit_normal = get_unit_normal(new_bp);
+    unit_normal = get_unit_normal(new_bp);
     orientation = v_orientation[0];
 
     if(bezier_degree >= 1){
-        emit_pentagon(new_bp, local_unit_normal);
+        emit_pentagon(new_bp, unit_normal);
     }
     // Don't emit any vertices for bezier_degree 0
 }

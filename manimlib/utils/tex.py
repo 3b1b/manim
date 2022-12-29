@@ -32,7 +32,7 @@ def get_pattern_symbol_count_pairs() -> List[Tuple[str, int]]:
     )
 
     for count, tex_list in count_to_tex_list.items():
-        pattern = "|".join(r"\\" + s + r"(\s|\\)" + s for s in tex_list)
+        pattern = "|".join(r"\\" + s for s in tex_list)
         pattern_symbol_count_pairs.append((pattern, count))
 
     # Assume all other expressions of the form \thing are drawn with one path

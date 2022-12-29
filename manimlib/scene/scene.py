@@ -33,6 +33,7 @@ from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.mobject.types.vectorized_mobject import VMobject
 from manimlib.scene.scene_file_writer import SceneFileWriter
 from manimlib.utils.family_ops import extract_mobject_family_members
+from manimlib.utils.family_ops import recursive_mobject_remove
 from manimlib.utils.iterables import list_difference_update
 
 from typing import TYPE_CHECKING
@@ -377,7 +378,7 @@ class Scene(object):
             ]
         return self
 
-    def remove(self, *mobjects: Mobject):
+    def remove(self, *mobjects_to_remove: Mobject):
         """
         Removes anything in mobjects from scenes mobject list, but in the event that one
         of the items to be removed is a member of the family of an item in mobject_list,
@@ -386,13 +387,9 @@ class Scene(object):
         For example, if the scene includes Group(m1, m2, m3), and we call scene.remove(m1),
         the desired behavior is for the scene to then include m2 and m3 (ungrouped).
         """
-        for mob in mobjects:
-            # First restructure self.mobjects so that parents/grandparents/etc. are replaced
-            # with their children, likewise for all ancestors in the extended family.
-            for ancestor in mob.get_ancestors(extended=True):
-                self.replace(ancestor, *ancestor.submobjects)
-            self.mobjects = list_difference_update(self.mobjects, mob.get_family())
-        return self
+        to_remove = set(extract_mobject_family_members(mobjects_to_remove))
+        new_mobjects, _ = recursive_mobject_remove(self.mobjects, to_remove)
+        self.mobjects = new_mobjects
 
     def bring_to_front(self, *mobjects: Mobject):
         self.add(*mobjects)

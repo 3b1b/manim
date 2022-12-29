@@ -37,10 +37,12 @@ class DotCloud(PMobject):
         opacity: float = 1.0,
         radius: float = DEFAULT_DOT_RADIUS,
         glow_factor: float = 0.0,
+        anti_alias_width: float = 1.0,
         **kwargs
     ):
         self.radius = radius
         self.glow_factor = glow_factor
+        self.anti_alias_width = anti_alias_width
 
         super().__init__(
             color=color,
@@ -59,6 +61,7 @@ class DotCloud(PMobject):
     def init_uniforms(self) -> None:
         super().init_uniforms()
         self.uniforms["glow_factor"] = self.glow_factor
+        self.uniforms["anti_alias_width"] = self.anti_alias_width
 
     def to_grid(
         self,

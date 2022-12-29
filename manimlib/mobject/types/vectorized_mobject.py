@@ -85,6 +85,8 @@ class VMobject(Mobject):
         # Could also be "bevel", "miter", "round"
         joint_type: str = "auto",
         flat_stroke: bool = False,
+        # Measured in pixel widths
+        anti_alias_width: float = 1.0,
         **kwargs
     ):
         self.fill_color = fill_color or color or DEFAULT_FILL_COLOR
@@ -97,6 +99,7 @@ class VMobject(Mobject):
         self.long_lines = long_lines
         self.joint_type = joint_type
         self.flat_stroke = flat_stroke
+        self.anti_alias_width = anti_alias_width
 
         self.needs_new_triangulation = True
         self.triangulation = np.zeros(0, dtype='i4')
@@ -113,8 +116,14 @@ class VMobject(Mobject):
             "fill_rgba": np.zeros((1, 4)),
             "stroke_rgba": np.zeros((1, 4)),
             "stroke_width": np.zeros((1, 1)),
-            "orientation": np.zeros((1, 1)),
+            "orientation": np.ones((1, 1)),
         })
+
+    def init_uniforms(self):
+        super().init_uniforms()
+        self.uniforms["anti_alias_width"] = self.anti_alias_width
+        self.uniforms["joint_type"] = JOINT_TYPE_MAP[self.joint_type]
+        self.uniforms["flat_stroke"] = float(self.flat_stroke)
 
     # These are here just to make type checkers happy
     def get_family(self, recurse: bool = True) -> list[VMobject]:
@@ -124,6 +133,8 @@ class VMobject(Mobject):
         return super().family_members_with_points()
 
     def replicate(self, n: int) -> VGroup:
+        if self.has_fill():
+            self.get_triangulation()
         return super().replicate(n)
 
     def get_grid(self, *args, **kwargs) -> VGroup:
@@ -136,6 +147,11 @@ class VMobject(Mobject):
         if not all((isinstance(m, VMobject) for m in vmobjects)):
             raise Exception("All submobjects must be of type VMobject")
         super().add(*vmobjects)
+
+    def copy(self, deep: bool = False) -> VMobject:
+        result = super().copy(deep)
+        result.shader_wrapper_list = [sw.copy() for sw in self.shader_wrapper_list]
+        return result
 
     # Colors
     def init_colors(self):
@@ -375,10 +391,10 @@ class VMobject(Mobject):
         return self.get_stroke_color()
 
     def has_stroke(self) -> bool:
-        return bool(self.get_stroke_widths().any() and self.get_stroke_opacities().any())
+        return any(self.data['stroke_width']) and any(self.data['stroke_rgba'][:, 3])
 
     def has_fill(self) -> bool:
-        return any(self.get_fill_opacities())
+        return any(self.data['fill_rgba'][:, 3])
 
     def get_opacity(self) -> float:
         if self.has_fill():
@@ -387,19 +403,19 @@ class VMobject(Mobject):
 
     def set_flat_stroke(self, flat_stroke: bool = True, recurse: bool = True):
         for mob in self.get_family(recurse):
-            mob.flat_stroke = flat_stroke
+            mob.uniforms["flat_stroke"] = float(flat_stroke)
         return self
 
     def get_flat_stroke(self) -> bool:
-        return self.flat_stroke
+        return self.uniforms["flat_stroke"] == 1.0
 
     def set_joint_type(self, joint_type: str, recurse: bool = True):
         for mob in self.get_family(recurse):
-            mob.joint_type = joint_type
+            mob.uniforms["joint_type"] = JOINT_TYPE_MAP[joint_type]
         return self
 
-    def get_joint_type(self) -> str:
-        return self.joint_type
+    def get_joint_type(self) -> float:
+        return self.uniforms["joint_type"]
 
     # Points
     def set_anchors_and_handles(
@@ -965,28 +981,23 @@ class VMobject(Mobject):
             return self.triangulation
 
         normal_vector = self.get_unit_normal()
-        if not np.isclose(normal_vector, OUT).all():
-            # Rotate points such that unit normal vector is OUT
-            points = np.dot(points, z_to_vector(normal_vector))
         indices = np.arange(len(points), dtype=int)
 
-        b0s = points[0::3]
-        b1s = points[1::3]
-        b2s = points[2::3]
-        v01s = b1s - b0s
-        v12s = b2s - b1s
-
-        crosses = cross2d(v01s, v12s)
-        convexities = np.sign(crosses)
-        orientations = np.sign(convexities.repeat(3))
-        self.data["orientation"] = orientations.reshape((len(orientations), 1))
+        # Rotate points such that unit normal vector is OUT
+        if not np.isclose(normal_vector, OUT).all():
+            points = np.dot(points, z_to_vector(normal_vector))
 
         atol = self.tolerance_for_point_equality
-        end_of_loop = np.zeros(len(b0s), dtype=bool)
-        end_of_loop[:-1] = (np.abs(b2s[:-1] - b0s[1:]) > atol).any(1)
+        end_of_loop = np.zeros(len(points) // 3, dtype=bool)
+        end_of_loop[:-1] = (np.abs(points[2:-3:3] - points[3::3]) > atol).any(1)
         end_of_loop[-1] = True
 
-        concave_parts = convexities < 0
+        v01s = points[1::3] - points[0::3]
+        v12s = points[2::3] - points[1::3]
+        curve_orientations = np.sign(cross2d(v01s, v12s))
+        self.data["orientation"] = np.transpose([curve_orientations.repeat(3)])
+
+        concave_parts = curve_orientations < 0
 
         # These are the vertices to which we'll apply a polygon triangulation
         inner_vert_indices = np.hstack([
@@ -1012,10 +1023,8 @@ class VMobject(Mobject):
     def triggers_refreshed_triangulation(func: Callable):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
-            old_points = self.get_points().copy()
             func(self, *args, **kwargs)
-            if not np.all(self.get_points() == old_points):
-                self.refresh_triangulation()
+            self.refresh_triangulation()
         return wrapper
 
     @triggers_refreshed_triangulation
@@ -1058,14 +1067,24 @@ class VMobject(Mobject):
         self.fill_shader_wrapper = ShaderWrapper(
             vert_data=self.fill_data,
             vert_indices=np.zeros(0, dtype='i4'),
+            uniforms=self.uniforms,
             shader_folder=self.fill_shader_folder,
             render_primitive=self.render_primitive,
         )
         self.stroke_shader_wrapper = ShaderWrapper(
             vert_data=self.stroke_data,
+            uniforms=self.uniforms,
             shader_folder=self.stroke_shader_folder,
             render_primitive=self.render_primitive,
         )
+
+        self.shader_wrapper_list = [
+            self.stroke_shader_wrapper.copy(),  # Use for back stroke
+            self.fill_shader_wrapper.copy(),
+            self.stroke_shader_wrapper.copy(),
+        ]
+        for sw in self.shader_wrapper_list:
+            sw.uniforms = self.uniforms
 
     def refresh_shader_wrapper_id(self):
         for wrapper in [self.fill_shader_wrapper, self.stroke_shader_wrapper]:
@@ -1073,15 +1092,15 @@ class VMobject(Mobject):
         return self
 
     def get_fill_shader_wrapper(self) -> ShaderWrapper:
-        self.fill_shader_wrapper.vert_data = self.get_fill_shader_data()
         self.fill_shader_wrapper.vert_indices = self.get_fill_shader_vert_indices()
+        self.fill_shader_wrapper.vert_data = self.get_fill_shader_data()
         self.fill_shader_wrapper.uniforms = self.get_shader_uniforms()
         self.fill_shader_wrapper.depth_test = self.depth_test
         return self.fill_shader_wrapper
 
     def get_stroke_shader_wrapper(self) -> ShaderWrapper:
         self.stroke_shader_wrapper.vert_data = self.get_stroke_shader_data()
-        self.stroke_shader_wrapper.uniforms = self.get_stroke_uniforms()
+        self.stroke_shader_wrapper.uniforms = self.get_shader_uniforms()
         self.stroke_shader_wrapper.depth_test = self.depth_test
         return self.stroke_shader_wrapper
 
@@ -1101,24 +1120,16 @@ class VMobject(Mobject):
                     stroke_shader_wrappers.append(ssw)
 
         # Combine data lists
-        wrapper_lists = [
+        sw_lists = [
             back_stroke_shader_wrappers,
             fill_shader_wrappers,
-            stroke_shader_wrappers
+            stroke_shader_wrappers,
         ]
-        result = []
-        for wlist in wrapper_lists:
-            if wlist:
-                wrapper = wlist[0]
-                wrapper.combine_with(*wlist[1:])
-                result.append(wrapper)
-        return result
-
-    def get_stroke_uniforms(self) -> dict[str, float]:
-        result = dict(super().get_shader_uniforms())
-        result["joint_type"] = JOINT_TYPE_MAP[self.joint_type]
-        result["flat_stroke"] = float(self.flat_stroke)
-        return result
+        for sw, sw_list in zip(self.shader_wrapper_list, sw_lists):
+            sw.read_in(*sw_list)
+            sw.depth_test = self.depth_test
+            sw.uniforms = self.uniforms
+        return list(filter(lambda sw: len(sw.vert_data) > 0, self.shader_wrapper_list))
 
     def get_stroke_shader_data(self) -> np.ndarray:
         points = self.get_points()
