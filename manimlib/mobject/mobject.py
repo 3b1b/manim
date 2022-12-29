@@ -657,7 +657,7 @@ class Mobject(object):
             self.match_updaters(mobject)
         return self
 
-    def looks_identical(self, mobject: Mobject):
+    def looks_identical(self, mobject: Mobject) -> bool:
         fam1 = self.family_members_with_points()
         fam2 = mobject.family_members_with_points()
         if len(fam1) != len(fam2):
@@ -667,13 +667,8 @@ class Mobject(object):
                 if set(d1).difference(d2):
                     return False
                 for key in d1:
-                    eq = (d1[key] == d2[key])
-                    if isinstance(eq, bool):
-                        if not eq:
-                            return False
-                    else:
-                        if not eq.all():
-                            return False
+                    if not np.isclose(d1[key], d2[key]).all():
+                        return False
         return True
 
     # Creating new Mobjects from this one
