@@ -74,7 +74,8 @@ class Scene(object):
         preview: bool = True,
         presenter_mode: bool = False,
         show_animation_progress: bool = False,
-        embed_exception_mode = "",
+        embed_exception_mode: str = "",
+        embed_error_sound: bool = False,
     ):
         self.skip_animations = skip_animations
         self.always_update_mobjects = always_update_mobjects
@@ -85,6 +86,7 @@ class Scene(object):
         self.presenter_mode = presenter_mode
         self.show_animation_progress = show_animation_progress
         self.embed_exception_mode = embed_exception_mode
+        self.embed_error_sound = embed_error_sound
 
         self.camera_config = {**self.default_camera_config, **camera_config}
         self.window_config = {**self.default_window_config, **window_config}
@@ -251,6 +253,16 @@ class Scene(object):
 
         shell.events.register("post_run_cell", post_cell_func)
 
+        if self.embed_error_sound:
+            # Play sound after any Exceptions
+            def custom_exc(shell, etype, evalue, tb, tb_offset=None):
+                # still show the error don't just swallow it
+                shell.showtraceback((etype, evalue, tb), tb_offset=tb_offset)
+                os.system("printf '\a'")
+
+            shell.set_custom_exc((Exception,), custom_exc)
+
+        # Set desired exception mode
         shell.magic(f"xmode {self.embed_exception_mode}")
 
         # Launch shell

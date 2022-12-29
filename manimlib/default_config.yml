@@ -43,3 +43,4 @@ camera_resolutions:
   default_resolution: "high"
 fps: 30
 embed_exception_mode: "Verbose"
+embed_error_sound: False
