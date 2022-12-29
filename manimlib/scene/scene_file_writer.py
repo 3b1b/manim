@@ -47,7 +47,6 @@ class SceneFileWriter(object):
         quiet: bool = False,
         total_frames: int = 0,
         progress_description_len: int = 40,
-        threads: int = 0,  # Tells system to use max available
     ):
         self.scene: Scene = scene
         self.write_to_movie = write_to_movie
@@ -64,7 +63,6 @@ class SceneFileWriter(object):
         self.quiet = quiet
         self.total_frames = total_frames
         self.progress_description_len = progress_description_len
-        self.threads = threads
 
         # State during file writing
         self.writing_process: sp.Popen | None = None
@@ -263,7 +261,6 @@ class SceneFileWriter(object):
             '-vf', 'vflip',
             '-an',  # Tells FFMPEG not to expect any audio
             '-loglevel', 'error',
-            '-threads', str(self.threads),
         ]
         if self.movie_file_extension == ".mov":
             # This is if the background of the exported
