@@ -78,12 +78,20 @@ void emit_pentagon(vec3[3] points, vec3 normal){
     vec3 p0_perp = cross(t01, normal);
     vec3 p2_perp = cross(t12, normal);
 
-    bool fill_inside = orientation >= 0.0;
+    bool fill_inside = orientation > 0.0;
     float aaw = anti_alias_width;
     vec3 corners[5];
-    if(fill_inside){
-        // Note, straight lines will also fall into this case, and since p0_perp and p2_perp
-        // will point to the right of the curve, it's just what we want
+    if(bezier_degree == 1.0){
+        // For straight lines, buff out in both directions
+        corners = vec3[5](
+            p0 + aaw * p0_perp,
+            p0 - aaw * p0_perp,
+            p1 + 0.5 * aaw * (p0_perp + p2_perp),
+            p2 - aaw * p2_perp,
+            p2 + aaw * p2_perp
+        );
+    } else if(fill_inside){
+        // If curved, and filling insight, just buff out away interior
         corners = vec3[5](
             p0 + aaw * p0_perp,
             p0,
