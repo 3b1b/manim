@@ -671,6 +671,16 @@ class Mobject(object):
                         return False
         return True
 
+    def has_same_shape_as(self, mobject: Mobject) -> bool:
+        # Normalize both point sets by centering and making height 1
+        points1, points2 = (
+            (m.get_all_points() - m.get_center()) / m.get_height()
+            for m in (self, mobject)
+        )
+        if len(points1) != len(points2):
+            return False
+        return bool(np.isclose(points1, points2).all())
+
     # Creating new Mobjects from this one
 
     def replicate(self, n: int) -> Group:
