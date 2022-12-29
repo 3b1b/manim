@@ -148,8 +148,8 @@ class VMobject(Mobject):
             raise Exception("All submobjects must be of type VMobject")
         super().add(*vmobjects)
 
-    def copy(self) -> VMobject:
-        result = super().copy()
+    def copy(self, deep: bool = False) -> VMobject:
+        result = super().copy(deep)
         result.shader_wrapper_list = [sw.copy() for sw in self.shader_wrapper_list]
         return result
 
