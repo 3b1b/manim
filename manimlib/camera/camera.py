@@ -189,8 +189,6 @@ class Camera(object):
         n_channels: int = 4,
         pixel_array_dtype: type = np.uint8,
         light_source_position: Vect3 = np.array([-10, 10, 10]),
-        # Measured in pixel widths, used for vector graphics
-        anti_alias_width: float = 1.5,
         # Although vector graphics handle antialiasing fine
         # without multisampling, for 3d scenes one might want
         # to set samples to be greater than 0.
@@ -205,7 +203,6 @@ class Camera(object):
         self.n_channels = n_channels
         self.pixel_array_dtype = pixel_array_dtype
         self.light_source_position = light_source_position
-        self.anti_alias_width = anti_alias_width
         self.samples = samples
 
         self.rgb_max_val: float = np.iinfo(self.pixel_array_dtype).max
@@ -475,11 +472,6 @@ class Camera(object):
 
     def refresh_perspective_uniforms(self) -> None:
         frame = self.frame
-        pw, ph = self.get_pixel_shape()
-        fw, fh = frame.get_shape()
-        # TODO, this should probably be a mobject uniform, with
-        # the camera taking care of the conversion factor
-        anti_alias_width = self.anti_alias_width / (ph / fh)
         # Orient light
         rotation = frame.get_inverse_camera_rotation_matrix()
         offset = frame.get_center()
@@ -490,7 +482,7 @@ class Camera(object):
 
         self.perspective_uniforms = {
             "frame_shape": frame.get_shape(),
-            "anti_alias_width": anti_alias_width,
+            "pixel_shape": self.get_pixel_shape(),
             "camera_offset": tuple(offset),
             "camera_rotation": tuple(np.array(rotation).T.flatten()),
             "camera_position": tuple(cam_pos),
@@ -529,5 +521,5 @@ class Camera(object):
 
 # Mostly just defined so old scenes don't break
 class ThreeDCamera(Camera):
-    def __init__(self, samples: int = 4, anti_alias_width: float = 0, **kwargs):
-        super().__init__(samples=samples, anti_alias_width=anti_alias_width, **kwargs)
+    def __init__(self, samples: int = 4, **kwargs):
+        super().__init__(samples=samples, **kwargs)

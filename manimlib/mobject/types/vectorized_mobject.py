@@ -85,6 +85,8 @@ class VMobject(Mobject):
         # Could also be "bevel", "miter", "round"
         joint_type: str = "auto",
         flat_stroke: bool = False,
+        # Measured in pixel widths
+        anti_alias_width: float = 1.0,
         **kwargs
     ):
         self.fill_color = fill_color or color or DEFAULT_FILL_COLOR
@@ -97,6 +99,7 @@ class VMobject(Mobject):
         self.long_lines = long_lines
         self.joint_type = joint_type
         self.flat_stroke = flat_stroke
+        self.anti_alias_width = anti_alias_width
 
         self.needs_new_triangulation = True
         self.triangulation = np.zeros(0, dtype='i4')
@@ -115,6 +118,10 @@ class VMobject(Mobject):
             "stroke_width": np.zeros((1, 1)),
             "orientation": np.ones((1, 1)),
         })
+
+    def init_uniforms(self):
+        super().init_uniforms()
+        self.uniforms["anti_alias_width"] = self.anti_alias_width
 
     # These are here just to make type checkers happy
     def get_family(self, recurse: bool = True) -> list[VMobject]:
@@ -1053,11 +1060,13 @@ class VMobject(Mobject):
         self.fill_shader_wrapper = ShaderWrapper(
             vert_data=self.fill_data,
             vert_indices=np.zeros(0, dtype='i4'),
+            uniforms=self.uniforms,
             shader_folder=self.fill_shader_folder,
             render_primitive=self.render_primitive,
         )
         self.stroke_shader_wrapper = ShaderWrapper(
             vert_data=self.stroke_data,
+            uniforms=self.get_stroke_uniforms(),
             shader_folder=self.stroke_shader_folder,
             render_primitive=self.render_primitive,
         )
@@ -1100,11 +1109,14 @@ class VMobject(Mobject):
                     stroke_shader_wrappers.append(ssw)
 
         # Combine data lists
-        return list(filter(lambda sw: len(sw.vert_data) > 0, [
+        result = [
             self.meta_back_stroke_shader_wrapper.read_in(*back_stroke_shader_wrappers),
             self.meta_fill_shader_wrapper.read_in(*fill_shader_wrappers),
             self.meta_stroke_shader_wrapper.read_in(*stroke_shader_wrappers),
-        ]))
+        ]
+        for i, sw in enumerate(result):
+            sw.depth_test = self.depth_test
+        return list(filter(lambda sw: len(sw.vert_data) > 0, result))
 
     def get_stroke_uniforms(self) -> dict[str, float]:
         result = dict(super().get_shader_uniforms())
