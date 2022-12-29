@@ -293,6 +293,7 @@ class VMobjectFromSVGPath(VMobject):
         self,
         path_obj: se.Path,
         should_subdivide_sharp_curves: bool = False,
+        should_remove_null_curves: bool = True,
         **kwargs
     ):
         # Get rid of arcs
