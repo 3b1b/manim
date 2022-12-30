@@ -6,6 +6,8 @@ from manimlib.animation.animation import Animation
 from manimlib.animation.transform import Transform
 from manimlib.constants import ORIGIN
 from manimlib.mobject.mobject import Group
+from manimlib.mobject.types.vectorized_mobject import VMobject
+from manimlib.mobject.types.vectorized_mobject import VGroup
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.rate_functions import there_and_back
 
@@ -14,7 +16,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import Callable
     from manimlib.mobject.mobject import Mobject
-    from manimlib.mobject.types.vectorized_mobject import VMobject
     from manimlib.scene.scene import Scene
     from manimlib.typing import Vect3
 
@@ -102,8 +103,12 @@ class FadeTransform(Transform):
         self.stretch = stretch
         self.dim_to_match = dim_to_match
 
+        group_type = Group
+        if isinstance(mobject, VMobject) and isinstance(target_mobject, VMobject):
+            group_type = VGroup
+
         mobject.save_state()
-        super().__init__(Group(mobject, target_mobject.copy()), **kwargs)
+        super().__init__(group_type(mobject, target_mobject.copy()), **kwargs)
 
     def begin(self) -> None:
         self.ending_mobject = self.mobject.copy()
