@@ -184,7 +184,7 @@ class TexTransformExample(Scene):
                 # line up. If it's not specified, the animation
                 # will try its best, but may not quite give the
                 # intended effect
-                matched_keys=["A^2", "B^2", "C^2", "="],
+                matched_keys=["A^2", "B^2", "C^2"],
                 # When you want a substring from the source
                 # to go to a non-equal substring from the target,
                 # use the key map.
@@ -193,12 +193,14 @@ class TexTransformExample(Scene):
             ),
         )
         self.wait()
-        self.play(TransformMatchingStrings(lines[1].copy(), lines[2]))
+        self.play(TransformMatchingStrings(
+            lines[1].copy(), lines[2],
+            matched_keys=["A^2"]
+        ))
         self.wait()
         self.play(
             TransformMatchingStrings(
                 lines[2].copy(), lines[3],
-                matched_keys=["="],
                 key_map={"2": R"\sqrt"},
                 path_arc=-30 * DEGREES,
             ),
@@ -216,6 +218,30 @@ class TexTransformExample(Scene):
         self.play(Indicate(low_equation[R"\sqrt"]))
         self.wait()
         self.play(LaggedStartMap(FadeOut, lines, shift=2 * RIGHT))
+
+        # Indexing by substrings like this may not work in cases where
+        # the order in which Latex draws symbols does not match
+        # the order in which they show up in the string.
+        # For example, here the infinity is drawn before the sigma
+        # so we dont' get the desired behavior.
+        equation = Tex(R"\sum_{n = 1}^\infty \frac{1}{n^2} = \frac{\pi^2}{6}")
+        self.play(FadeIn(equation))
+        self.play(equation[R"\infty"].animate.set_color(RED))  # Doesn't hit the infinity
+        self.wait()
+        self.play(FadeOut(equation))
+
+        # However you can always fix this by explicitly passing in
+        # a string you might want to isolate later. Also, using
+        # \over instead of \frac helps to avoid the issue.
+        equation = Tex(
+            R"\sum_{n = 1}^\infty {1 \over n^2} = {\pi^2 \over 6}",
+            # Explicitly mark "\infty" as a substring you might want to access
+            isolate=[R"\infty"]  
+        )
+        self.play(FadeIn(equation))
+        self.play(equation[R"\infty"].animate.set_color(RED))  # Got it!
+        self.wait()
+        self.play(FadeOut(equation))
 
         # TransformMatchingShapes will try to line up all pieces of a
         # source mobject with those of a target, regardless of the
