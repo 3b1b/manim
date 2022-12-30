@@ -193,11 +193,7 @@ class TexTransformExample(Scene):
             ),
         )
         self.wait()
-        self.play(
-            TransformMatchingStrings(
-                lines[1].copy(), lines[2],
-            ),
-        )
+        self.play(TransformMatchingStrings(lines[1].copy(), lines[2]))
         self.wait()
         self.play(
             TransformMatchingStrings(
@@ -208,6 +204,17 @@ class TexTransformExample(Scene):
             ),
         )
         self.wait(2)
+
+        # You can also index into Tex mobject (or other StringMobjects)
+        # by substrings and regular expressions
+        top_equation = lines[0]
+        low_equation = lines[3]
+
+        self.play(LaggedStartMap(FlashAround, low_equation["C"], lag_ratio=0.5))
+        self.play(LaggedStartMap(FlashAround, low_equation["B"], lag_ratio=0.5))
+        self.play(LaggedStartMap(FlashAround, top_equation[re.compile(r"\w\^2")]))
+        self.play(Indicate(low_equation[R"\sqrt"]))
+        self.wait()
         self.play(LaggedStartMap(FadeOut, lines, shift=2 * RIGHT))
 
         # TransformMatchingShapes will try to line up all pieces of a
