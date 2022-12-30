@@ -394,6 +394,7 @@ class Mobject(object):
         if self in old_submob.parents:
             old_submob.parents.remove(self)
         self.submobjects[index] = new_submob
+        new_submob.parents.append(self)
         self.assemble_family()
         return self
 
