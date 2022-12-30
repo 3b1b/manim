@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from manimlib.mobject.mobject import Mobject
     from manimlib.mobject.types.vectorized_mobject import VMobject
     from manimlib.scene.scene import Scene
+    from manimlib.typing import Vect3
 
 
 
@@ -48,7 +49,7 @@ class FadeOut(Fade):
     def __init__(
         self,
         mobject: Mobject,
-        shift: np.ndarray = ORIGIN,
+        shift: Vect3 = ORIGIN,
         remover: bool = True,
         final_alpha_value: float = 0.0,  # Put it back in original state when done,
         **kwargs
@@ -69,7 +70,7 @@ class FadeOut(Fade):
 
 
 class FadeInFromPoint(FadeIn):
-    def __init__(self, mobject: Mobject, point: np.ndarray[int, np.dtype[np.float64]], **kwargs):
+    def __init__(self, mobject: Mobject, point: Vect3, **kwargs):
         super().__init__(
             mobject,
             shift=mobject.get_center() - point,
@@ -79,7 +80,7 @@ class FadeInFromPoint(FadeIn):
 
 
 class FadeOutToPoint(FadeOut):
-    def __init__(self, mobject: Mobject, point: np.ndarray[int, np.dtype[np.float64]], **kwargs):
+    def __init__(self, mobject: Mobject, point: Vect3, **kwargs):
         super().__init__(
             mobject,
             shift=point - mobject.get_center(),
