@@ -163,12 +163,13 @@ class LaggedStartMap(LaggedStart):
         group: Mobject,
         arg_creator: Callable[[Mobject], tuple] | None = None,
         run_time: float = 2.0,
+        lag_ratio: float = DEFAULT_LAGGED_START_LAG_RATIO,
         **kwargs
     ):
         anim_kwargs = dict(kwargs)
         anim_kwargs.pop("lag_ratio", None)
         super().__init__(
             *(AnimationClass(submob, **anim_kwargs) for submob in group),
-            group=group,
             run_time=run_time,
+            lag_ratio=lag_ratio,
         )
