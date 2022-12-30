@@ -668,17 +668,11 @@ class Mobject(object):
                 if set(d1).difference(d2):
                     return False
                 for key in d1:
-                    try:
-                        if isinstance(d1[key], np.ndarray) and isinstance(d2[key], np.ndarray):
-                            if not d1[key].size == d2[key].size:
-                                return False
-                        if not np.isclose(d1[key], d2[key]).all():
+                    if isinstance(d1[key], np.ndarray) and isinstance(d2[key], np.ndarray):
+                        if not d1[key].size == d2[key].size:
                             return False
-                    except Exception as e:
-                        print(self)
-                        print(d1[key])
-                        print(d2[key])
-                        raise e
+                    if not np.isclose(d1[key], d2[key]).all():
+                        return False
         return True
 
     def has_same_shape_as(self, mobject: Mobject) -> bool:
