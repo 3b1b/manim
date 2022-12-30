@@ -88,7 +88,7 @@ def color_gradient(
     alphas_mod1[-1] = 1
     floors[-1] = len(rgbs) - 2
     return [
-        rgb_to_color(interpolate(rgbs[i], rgbs[i + 1], alpha))
+        rgb_to_color(np.sqrt(interpolate(rgbs[i]**2, rgbs[i + 1]**2, alpha)))
         for i, alpha in zip(floors, alphas_mod1)
     ]
 
@@ -98,13 +98,13 @@ def interpolate_color(
     color2: ManimColor,
     alpha: float
 ) -> Color:
-    rgb = interpolate(color_to_rgb(color1), color_to_rgb(color2), alpha)
+    rgb = np.sqrt(interpolate(color_to_rgb(color1)**2, color_to_rgb(color2)**2, alpha))
     return rgb_to_color(rgb)
 
 
 def average_color(*colors: ManimColor) -> Color:
     rgbs = np.array(list(map(color_to_rgb, colors)))
-    return rgb_to_color(rgbs.mean(0))
+    return rgb_to_color(np.sqrt((rgbs**2).mean(0)))
 
 
 def random_color() -> Color:
