@@ -323,7 +323,6 @@ class VMobjectFromSVGPath(VMobject):
                 self.set_points(self.get_points_without_null_curves())
             # Save to a file for future use
             np.save(points_filepath, self.get_points())
-        self.get_triangulation()
 
     def handle_commands(self) -> None:
         segment_class_to_func_map = {

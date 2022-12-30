@@ -305,7 +305,8 @@ class Camera(object):
     def get_pixel_array(self) -> np.ndarray:
         raw = self.get_raw_fbo_data(dtype='f4')
         flat_arr = np.frombuffer(raw, dtype='f4')
-        arr = flat_arr.reshape([*self.fbo.size, self.n_channels])
+        arr = flat_arr.reshape([*reversed(self.fbo.size), self.n_channels])
+        arr = arr[::-1]
         # Convert from float
         return (self.rgb_max_val * arr).astype(self.pixel_array_dtype)
 

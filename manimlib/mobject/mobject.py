@@ -394,6 +394,7 @@ class Mobject(object):
         if self in old_submob.parents:
             old_submob.parents.remove(self)
         self.submobjects[index] = new_submob
+        new_submob.parents.append(self)
         self.assemble_family()
         return self
 
@@ -667,6 +668,9 @@ class Mobject(object):
                 if set(d1).difference(d2):
                     return False
                 for key in d1:
+                    if isinstance(d1[key], np.ndarray) and isinstance(d2[key], np.ndarray):
+                        if not d1[key].size == d2[key].size:
+                            return False
                     if not np.isclose(d1[key], d2[key]).all():
                         return False
         return True
@@ -821,7 +825,7 @@ class Mobject(object):
     def is_changing(self) -> bool:
         return self._is_animating or self.has_updaters
 
-    def set_animating_status(self, is_animating: bool, recurse: bool = True) -> None:
+    def set_animating_status(self, is_animating: bool, recurse: bool = True):
         for mob in (*self.get_family(recurse), *self.get_ancestors(extended=True)):
             mob._is_animating = is_animating
         return self

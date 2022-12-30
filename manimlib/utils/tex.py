@@ -15,7 +15,7 @@ def num_tex_symbols(tex: str) -> int:
     # First, remove patterns like \begin{align}, \phantom{thing},
     # \begin{array}{cc}, etc.
     pattern = "|".join(
-        r"(\\" + s + ")" + r"(\{\w+\})?(\{\w+\})?(\[\w+\])?"
+        rf"(\\{s})" + r"(\{\w+\})?(\{\w+\})?(\[\w+\])?"
         for s in ["begin", "end", "phantom"]
     )
     for tup in re.findall(pattern, tex):

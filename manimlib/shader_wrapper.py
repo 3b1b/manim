@@ -7,6 +7,8 @@ import re
 import moderngl
 import numpy as np
 
+from functools import lru_cache
+
 from manimlib.utils.directories import get_shader_dir
 from manimlib.utils.file_ops import find_file
 from manimlib.utils.iterables import resize_array
@@ -159,7 +161,7 @@ class ShaderWrapper(object):
 # For caching
 filename_to_code_map: dict[str, str] = {}
 
-
+@lru_cache(maxsize=12)
 def get_shader_code_from_file(filename: str) -> str | None:
     if not filename:
         return None
