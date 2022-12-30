@@ -212,16 +212,61 @@ class Tex(StringMobject):
     ):
         return self.set_parts_color_by_dict(color_map)
 
+    def get_tex(self) -> str:
+        return self.get_string()
+
+    # Specific to Tex
     def substr_to_path_count(self, substr: str) -> int:
         tex = self.get_tex()
         if len(self) != num_tex_symbols(tex):
-            log.warning(
-                f"Estimated size of {tex} does not match true size",
-            )
+            log.warning(f"Estimated size of {tex} does not match true size")
         return num_tex_symbols(substr)
 
-    def get_tex(self) -> str:
-        return self.get_string()
+    def make_number_changable(
+        self,
+        value: float | int | str,
+        index: int = 0,
+        replace_all: bool = False,
+        **config,
+    ) -> VMobject:
+        substr = str(value)
+        parts = self.select_parts(substr)
+        if len(parts) == 0:
+            log.warning(f"{value} not found in Tex.make_number_changable call")
+            return VMobject()
+        if index > len(parts) - 1:
+            log.warning(f"Requested {index}th occurance of {value}, but only {len(parts)} exist")
+            return VMobject()
+        if not replace_all:
+            parts = [parts[index]]
+
+        from manimlib.mobject.numbers import DecimalNumber
+
+        decimal_mobs = []
+        for part in parts:
+            if "." in substr:
+                num_decimal_places = len(substr.split(".")[1])
+            else:
+                num_decimal_places = 0
+            decimal_mob = DecimalNumber(
+                float(value),
+                num_decimal_places=num_decimal_places,
+                **config,
+            )
+            decimal_mob.replace(part)
+            decimal_mob.match_style(part)
+            if len(part) > 1:
+                self.remove(*part[1:])
+            self.replace_submobject(self.submobjects.index(part[0]), decimal_mob)
+            decimal_mobs.append(decimal_mob)
+
+            # Replace substr with something that looks like a tex command. This
+            # is to ensure Tex.substr_to_path_count counts it correctly.
+            self.string = self.string.replace(substr, R"\decimalmob", 1)
+
+        if replace_all:
+            return VGroup(*decimal_mobs)
+        return decimal_mobs[index]
 
 
 class TexText(Tex):
