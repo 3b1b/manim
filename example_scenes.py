@@ -219,11 +219,11 @@ class TexTransformExample(Scene):
         self.wait()
         self.play(LaggedStartMap(FadeOut, lines, shift=2 * RIGHT))
 
-        # Indexing by substrings like this may not work in cases where
+        # Indexing by substrings like this may not work when
         # the order in which Latex draws symbols does not match
         # the order in which they show up in the string.
         # For example, here the infinity is drawn before the sigma
-        # so we dont' get the desired behavior.
+        # so we don't get the desired behavior.
         equation = Tex(R"\sum_{n = 1}^\infty \frac{1}{n^2} = \frac{\pi^2}{6}")
         self.play(FadeIn(equation))
         self.play(equation[R"\infty"].animate.set_color(RED))  # Doesn't hit the infinity
@@ -232,11 +232,11 @@ class TexTransformExample(Scene):
 
         # However you can always fix this by explicitly passing in
         # a string you might want to isolate later. Also, using
-        # \over instead of \frac helps to avoid the issue.
+        # \over instead of \frac helps to avoid the issue for fractions
         equation = Tex(
             R"\sum_{n = 1}^\infty {1 \over n^2} = {\pi^2 \over 6}",
             # Explicitly mark "\infty" as a substring you might want to access
-            isolate=[R"\infty"]  
+            isolate=[R"\infty"]
         )
         self.play(FadeIn(equation))
         self.play(equation[R"\infty"].animate.set_color(RED))  # Got it!
