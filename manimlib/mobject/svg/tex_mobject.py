@@ -42,7 +42,7 @@ class Tex(StringMobject):
                 isolate = [isolate]
             isolate = [*isolate, *tex_strings]
 
-        tex_string = " ".join(tex_strings)
+        tex_string = (" ".join(tex_strings)).strip()
 
         # Prevent from passing an empty string.
         if not tex_string.strip():
@@ -221,6 +221,15 @@ class Tex(StringMobject):
         if len(self) != num_tex_symbols(tex):
             log.warning(f"Estimated size of {tex} does not match true size")
         return num_tex_symbols(substr)
+
+    def get_symbol_substrings(self):
+        pattern = "|".join((
+            # Tex commands
+            r"\\[a-zA-Z]+",
+            # And most single characters, with these exceptions
+            r"[^\^\{\}\s\_\$\\\&]",
+        ))
+        return re.findall(pattern, self.string)
 
     def make_number_changable(
         self,

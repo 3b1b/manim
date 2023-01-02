@@ -561,7 +561,10 @@ class StringMobject(SVGMobject, ABC):
         return self.select_parts(selector)[index]
 
     def substr_to_path_count(self, substr: str) -> int:
-        return len(re.sub(R"\s", "", substr))
+        return len(re.sub(r"\s", "", substr))
+
+    def get_symbol_substrings(self):
+        return list(re.sub(r"\s", "", self.string))
 
     def select_unisolated_substring(self, pattern: str | re.Pattern) -> VGroup:
         if isinstance(pattern, str):
