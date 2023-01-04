@@ -55,7 +55,6 @@ class VMobject(Mobject):
         ('point', np.float32, (3,)),
         ('orientation', np.float32, (1,)),
         ('color', np.float32, (4,)),
-        ('vert_index', np.float32, (1,)),
     ]
     stroke_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ("point", np.float32, (3,)),
@@ -1142,11 +1141,7 @@ class VMobject(Mobject):
         return self.stroke_data
 
     def get_fill_shader_data(self) -> np.ndarray:
-        points = self.get_points()
-        if len(self.fill_data) != len(points):
-            self.fill_data = resize_array(self.fill_data, len(points))
-            self.fill_data["vert_index"][:, 0] = range(len(points))
-
+        self.fill_data = resize_array(self.fill_data, len(self.get_points()))
         self.read_data_to_shader(self.fill_data, "point", "points")
         self.read_data_to_shader(self.fill_data, "color", "fill_rgba")
         self.read_data_to_shader(self.fill_data, "orientation", "orientation")
