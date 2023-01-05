@@ -995,9 +995,8 @@ class VMobject(Mobject):
         v12s = points[2::3] - points[1::3]
         curve_orientations = np.sign(cross2d(v01s, v12s))
         self.data["orientation"] = np.transpose([curve_orientations.repeat(3)])
-        # Read into fill_data so there are no locked data issues later
-        self.fill_data = resize_array(self.fill_data, len(points))
-        self.fill_data["orientation"][:] = self.data["orientation"]
+        if "orientation" in self.locked_data_keys:
+            self.locked_data_keys.remove("orientation")
 
         concave_parts = curve_orientations < 0
 
