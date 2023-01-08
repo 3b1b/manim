@@ -60,6 +60,7 @@ def get_scene_config(config):
         for key in set(scene_parameters).intersection(config.keys())
     }
 
+
 def compute_total_frames(scene_class, scene_config):
     """
     When a scene is being written to file, a copy of the scene is run with
