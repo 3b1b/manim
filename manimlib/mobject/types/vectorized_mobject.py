@@ -961,7 +961,7 @@ class VMobject(Mobject):
         vmob.pointwise_become_partial(self, a, b)
         return vmob
 
-    # Related to triangulation
+    # Data for shaders that may need refreshing
 
     def refresh_triangulation(self):
         for mob in self.get_family():
