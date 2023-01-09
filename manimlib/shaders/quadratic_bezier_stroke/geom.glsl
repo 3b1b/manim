@@ -143,6 +143,8 @@ int get_corners(
 
 
 void main() {
+    if (distance(verts[0], verts[1]) == 0 && distance(verts[1], verts[2]) == 0) return;
+
     bezier_degree = (abs(v_joint_angle[1]) < 1e-3) ? 1.0 : 2.0;
     vec3 unit_normal = get_unit_normal(vec3[3](verts[0], verts[1], verts[2]));
 
