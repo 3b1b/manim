@@ -11,6 +11,7 @@ uniform float is_fixed_in_frame;
 
 uniform float anti_alias_width;
 uniform float flat_stroke;
+uniform mat3 camera_rotation;
 
 //Needed for lighting
 uniform vec3 light_source_position;
@@ -134,7 +135,7 @@ void main() {
     if (distance(verts[0], verts[1]) == 0 && distance(verts[1], verts[2]) == 0) return;
 
     bezier_degree = (abs(v_joint_angle[1]) < ANGLE_THRESHOLD) ? 1.0 : 2.0;
-    vec3 unit_normal = get_unit_normal(vec3[3](verts[0], verts[1], verts[2]));
+    vec3 unit_normal = camera_rotation * vec3(0.0, 0.0, 1.0); // TODO, track true unit normal globally
 
     // Adjust stroke width based on distance from the camera
     float scaled_strokes[3];
