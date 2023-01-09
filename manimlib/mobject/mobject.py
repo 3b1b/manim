@@ -132,7 +132,7 @@ class Mobject(object):
         }
 
     def init_uniforms(self):
-        self.uniforms: dict[str, float] = {
+        self.uniforms: dict[str, float | np.ndarray] = {
             "is_fixed_in_frame": float(self.is_fixed_in_frame),
             "gloss": self.gloss,
             "shadow": self.shadow,
