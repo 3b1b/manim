@@ -32,8 +32,7 @@ out float uv_anti_alias_width;
 
 out float has_prev;
 out float has_next;
-out float bevel_start;
-out float bevel_end;
+out float bevel;
 out float angle_from_prev;
 out float angle_to_next;
 
@@ -159,8 +158,7 @@ void find_joint_info(){
         (joint_type == AUTO_JOINT && bezier_degree == 1.0) ||
         joint_type == BEVEL_JOINT
     );
-    bevel_start = float(should_bevel);
-    bevel_end = float(should_bevel);
+    bevel = float(should_bevel);
 }
 
 

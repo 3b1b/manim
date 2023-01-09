@@ -11,8 +11,7 @@ in float uv_anti_alias_width;
 
 in float has_prev;
 in float has_next;
-in float bevel_start;
-in float bevel_end;
+in float bevel;
 in float angle_from_prev;
 in float angle_to_next;
 
@@ -33,7 +32,7 @@ float modify_distance_for_endpoints(vec2 p, float dist, float t){
         // Clip the start
         if(has_prev == 0) return max(dist, -p.x + buff);
         // Bevel start
-        if(bevel_start == 1){
+        if(bevel == 1){
             float a = angle_from_prev;
             mat2 rot = mat2(
                 cos(a), sin(a),
@@ -60,7 +59,7 @@ float modify_distance_for_endpoints(vec2 p, float dist, float t){
         float perp_dist = dot(p - uv_b2, v21) / len_v21;
         if(has_next == 0) return max(dist, -perp_dist + buff);
         // Bevel end
-        if(bevel_end == 1){
+        if(bevel == 1){
             float a = -angle_to_next;
             mat2 rot = mat2(
                 cos(a), sin(a),
