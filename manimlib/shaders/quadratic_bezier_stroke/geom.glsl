@@ -42,8 +42,10 @@ const float AUTO_JOINT = 0;
 const float ROUND_JOINT = 1;
 const float BEVEL_JOINT = 2;
 const float MITER_JOINT = 3;
+
 const float PI = 3.141592653;
 const float DISJOINT_CONST = 404.0;
+const float ANGLE_THRESHOLD = 1e-3;
 
 
 #INSERT quadratic_bezier_geometry_functions.glsl
@@ -56,7 +58,7 @@ void create_joint(float angle, vec2 unit_tan, float buff,
                   vec2 static_c0, out vec2 changing_c0,
                   vec2 static_c1, out vec2 changing_c1){
     float shift;
-    if(abs(angle) < 1e-3){
+    if(abs(angle) < ANGLE_THRESHOLD){
         // No joint
         shift = 0;
     }else if(joint_type == MITER_JOINT){
@@ -131,7 +133,7 @@ int get_corners(
 void main() {
     if (distance(verts[0], verts[1]) == 0 && distance(verts[1], verts[2]) == 0) return;
 
-    bezier_degree = (abs(v_joint_angle[1]) < 1e-3) ? 1.0 : 2.0;
+    bezier_degree = (abs(v_joint_angle[1]) < ANGLE_THRESHOLD) ? 1.0 : 2.0;
     vec3 unit_normal = get_unit_normal(vec3[3](verts[0], verts[1], verts[2]));
 
     // Adjust stroke width based on distance from the camera
