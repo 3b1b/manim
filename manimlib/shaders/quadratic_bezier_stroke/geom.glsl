@@ -52,20 +52,6 @@ const float DISJOINT_CONST = 404.0;
 #INSERT finalize_color.glsl
 
 
-
-bool find_intersection(vec2 p0, vec2 v0, vec2 p1, vec2 v1, out vec2 intersection){
-    // Find the intersection of a line passing through
-    // p0 in the direction v0 and one passing through p1 in
-    // the direction p1.
-    // That is, find a solutoin to p0 + v0 * t = p1 + v1 * s
-    float det = -v0.x * v1.y + v1.x * v0.y;
-    if(det == 0) return false;
-    float t = cross2d(p0 - p1, v1) / det;
-    intersection = p0 + v0 * t;
-    return true;
-}
-
-
 void create_joint(float angle, vec2 unit_tan, float buff,
                   vec2 static_c0, out vec2 changing_c0,
                   vec2 static_c1, out vec2 changing_c1){
@@ -137,7 +123,7 @@ int get_corners(
     if(orientation > 0) corners = vec2[5](c0, c1, p1, c2, c3);
     else                corners = vec2[5](c1, c0, p1, c3, c2);
     // Replace corner[2] with convex hull point accounting for stroke width
-    find_intersection(corners[0], v01, corners[4], v21, corners[2]);
+    corners[2] = corners[2] - orientation * (buff0 * p0_perp + buff2 * p2_perp);
     return 5;
 }
 
