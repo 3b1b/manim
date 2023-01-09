@@ -37,6 +37,7 @@ from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import get_unit_normal
 from manimlib.utils.space_ops import normalize_along_axis
 from manimlib.utils.space_ops import z_to_vector
+from manimlib.utils.simple_functions import arr_clip
 from manimlib.shader_wrapper import ShaderWrapper
 
 from typing import TYPE_CHECKING
@@ -1028,45 +1029,59 @@ class VMobject(Mobject):
             mob.needs_new_joint_angles = True
         return self
 
-    def get_joint_angles(self, result):
+    def get_joint_angles(self, result=None):
         """
-        Fills the array `result` with angle information for
-        each point
+        One can optionally pass in `result` as an array
+        which the answer will be read into.
         """
         points = self.get_points()
-        assert(len(result) == len(points))
+        if result is not None:
+            assert(len(result) == len(points))
+        else:
+            result = np.zeros(len(points))
+
+        if(len(points) == 0):
+            return result
 
         # Unit tangent vectors
         a0, h, a1 = points[0::3], points[1::3], points[2::3]
         a0_to_h = normalize_along_axis(h - a0, 1)
         h_to_a1 = normalize_along_axis(a1 - h, 1)
 
-        def angles(vects1, vects2):
-            angle = np.arccos(np.clip((vects1 * vects2).sum(1), -1, 1))
-            sgn = np.sign(cross2d(vects1, vects2))
-            return sgn * angle
+        vect_to_vert = np.zeros(points.shape)
+        vect_from_vert = np.zeros(points.shape)
 
-        # Angles at all handle points
-        result[1::3] = angles(a0_to_h, h_to_a1)
+        vect_to_vert[1::3] = a0_to_h
+        vect_from_vert[1::3] = h_to_a1
 
-        # Angles at first anchors
-        to_a1 = np.vstack([h_to_a1[-1:], h_to_a1[:-1]])
-        result[0::3] = angles(to_a1, a0_to_h)
+        vect_to_vert[0] = h_to_a1[-1]
+        vect_to_vert[3::3] = h_to_a1[:-1]
+        vect_from_vert[0::3] = a0_to_h
 
-        # Angles at second anchors
-        from_a2 = np.vstack([a0_to_h[1:], a0_to_h[:1]])
-        result[2::3] = angles(h_to_a1, from_a2)
+        vect_to_vert[2::3] = h_to_a1
+        vect_from_vert[2:-1:3] = a0_to_h[1:]
+        vect_from_vert[-1] = a0_to_h[0]
+
+        # Compute angles
+        dots = (vect_to_vert * vect_from_vert).sum(1)
+        angle = np.arccos(arr_clip(dots, -1, 1))
+        sgn = np.sign(cross2d(vect_to_vert, vect_from_vert))
+        result[:] = sgn * angle
 
         # To communicate to the shader that a given anchor point
         # sits at the end of a curve, we set its angle equal
         # to something outside the range [-pi, pi].
         # An arbitrary constant is used
-        a0_matched = np.isclose(a0, np.vstack([a1[-1:], a1[:-1]])).all(1)
-        a1_matched = np.isclose(a1, np.vstack([a0[1:], a0[:1]])).all(1)
-        result[0::3][~a0_matched] = DISJOINT_CONST
-        result[2::3][~a1_matched] = DISJOINT_CONST
+        mis_matches = (a0[1:] != a1[:-1]).any(1)
+        ends_mismatch = (a1[-1] != a0[0]).any()
+        if ends_mismatch:
+            result[0] = DISJOINT_CONST
+            result[-1] = DISJOINT_CONST
+        result[3::3][mis_matches] = DISJOINT_CONST
+        result[2:-1:3][mis_matches] = DISJOINT_CONST
 
         self.needs_new_joint_angles = False
+        return result
 
     def triggers_refreshed_triangulation(func: Callable):
         @wraps(func)
