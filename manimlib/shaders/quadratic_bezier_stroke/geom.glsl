@@ -32,16 +32,10 @@ out float uv_anti_alias_width;
 
 out float has_prev;
 out float has_next;
-out float bevel;
-out float angle_from_prev;
-out float angle_to_next;
-
 out float bezier_degree;
 
 out vec2 uv_coords;
 out vec2 uv_b2;
-
-vec3 unit_normal;
 
 // Codes for joint types
 const float AUTO_JOINT = 0;
@@ -93,7 +87,14 @@ void create_joint(float angle, vec2 unit_tan, float buff,
 // This function is responsible for finding the corners of
 // a bounding region around the bezier curve, which can be
 // emitted as a triangle fan
-int get_corners(vec2 controls[3], int degree, float stroke_widths[3], out vec2 corners[5]){
+int get_corners(
+    vec2 controls[3],
+    int degree,
+    float stroke_widths[3],
+    float angle_from_prev,
+    float angle_to_next,
+    out vec2 corners[5]
+){
     vec2 p0 = controls[0];
     vec2 p1 = controls[1];
     vec2 p2 = controls[2];
@@ -141,30 +142,9 @@ int get_corners(vec2 controls[3], int degree, float stroke_widths[3], out vec2 c
 }
 
 
-void find_joint_info(){
-    angle_from_prev = v_joint_angle[0];
-    angle_to_next = v_joint_angle[2];
-    has_prev = 1.0;
-    has_next = 1.0;
-    if(angle_from_prev == DISJOINT_CONST){
-        angle_from_prev = 0.0;
-        has_prev = 0.0;
-    }
-    if(angle_to_next == DISJOINT_CONST){
-        angle_to_next = 0.0;
-        has_next = 0.0;
-    }
-    bool should_bevel = (
-        (joint_type == AUTO_JOINT && bezier_degree == 1.0) ||
-        joint_type == BEVEL_JOINT
-    );
-    bevel = float(should_bevel);
-}
-
-
 void main() {
     bezier_degree = (abs(v_joint_angle[1]) < 1e-3) ? 1.0 : 2.0;
-    unit_normal = get_unit_normal(vec3[3](verts[0], verts[1], verts[2]));
+    vec3 unit_normal = get_unit_normal(vec3[3](verts[0], verts[1], verts[2]));
 
     // Adjust stroke width based on distance from the camera
     float scaled_strokes[3];
@@ -185,17 +165,33 @@ void main() {
         float sf = perspective_scale_factor(verts[i].z, focal_distance);
         flat_controls[i] = sf * verts[i].xy;
     }
+
     // If the curve is flat, put the middle control in the midpoint
     if (bezier_degree == 1.0){
         flat_controls[1] = 0.5 * (flat_controls[0] + flat_controls[2]);
     }
 
-    // Set joint angles, etc.
-    find_joint_info();
+    // Set joint information
+    float angle_from_prev = v_joint_angle[0];
+    float angle_to_next = v_joint_angle[2];
+    has_prev = 1.0;
+    has_next = 1.0;
+    if(angle_from_prev == DISJOINT_CONST){
+        angle_from_prev = 0.0;
+        has_prev = 0.0;
+    }
+    if(angle_to_next == DISJOINT_CONST){
+        angle_to_next = 0.0;
+        has_next = 0.0;
+    }
 
     // Corners of a bounding region around curve
     vec2 corners[5];
-    int n_corners = get_corners(flat_controls, int(bezier_degree), scaled_strokes, corners);
+    int n_corners = get_corners(
+        flat_controls, int(bezier_degree), scaled_strokes,
+        angle_from_prev, angle_to_next,
+        corners
+    );
 
     int index_map[5] = int[5](0, 0, 1, 2, 2);
     if(n_corners == 4) index_map[2] = 2;

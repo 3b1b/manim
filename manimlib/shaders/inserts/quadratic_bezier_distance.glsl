@@ -1,14 +1,11 @@
-// Must be inserted in a context with a definition for modify_distance_for_endpoints
-
 // All of this is with respect to a curve that's been rotated/scaled
 // so that b0 = (0, 0) and b1 = (1, 0).  That is, b2 entirely
 // determines the shape of the curve
 
+uniform float joint_type;
+
+
 vec2 bezier(float t, vec2 b2){
-    // Quick returns for the 0 and 1 cases
-    if (t == 0) return vec2(0, 0);
-    else if (t == 1) return b2;
-    // Everything else
     return vec2(
         2 * t * (1 - t) + b2.x * t*t,
         b2.y * t * t
@@ -64,22 +61,19 @@ int cubic_solve(float a, float b, float c, float d, out float roots[3]){
     return n_valid_roots;
 }
 
-float dist_to_line(vec2 p, vec2 b2){
-    float t = clamp(p.x / b2.x, 0, 1);
-    float dist;
-    if(t == 0)      dist = length(p);
-    else if(t == 1) dist = distance(p, b2);
-    else            dist = abs(p.y);
 
-    return modify_distance_for_endpoints(p, dist, t);
+float dist_to_line(vec2 p, vec2 b2){
+    if(joint_type == 1){
+        float t = p.x / b2.x;
+        if (t < 0) return length(p);
+        if (t > 1) return distance(p, b2);
+    }
+    return abs(p.y);
 }
 
 
 float dist_to_point_on_curve(vec2 p, float t, vec2 b2){
-    t = clamp(t, 0, 1);
-    return modify_distance_for_endpoints(
-        p, length(p - bezier(t, b2)), t
-    );
+    return length(p - bezier(t, b2));
 }
 
 

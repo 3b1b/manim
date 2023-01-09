@@ -11,81 +11,59 @@ in float uv_anti_alias_width;
 
 in float has_prev;
 in float has_next;
-in float bevel;
-in float angle_from_prev;
-in float angle_to_next;
-
 in float bezier_degree;
 
 out vec4 frag_color;
+
+
+#INSERT quadratic_bezier_distance.glsl
 
 
 float cross2d(vec2 v, vec2 w){
     return v.x * w.y - w.x * v.y;
 }
 
-
 float modify_distance_for_endpoints(vec2 p, float dist, float t){
+    if (0 <= t && t <= 1) return dist;
+
     float buff = 0.5 * uv_stroke_width - uv_anti_alias_width;
     // Check the beginning of the curve
-    if(t == 0){
-        // Clip the start
-        if(has_prev == 0) return max(dist, -p.x + buff);
-        // Bevel start
-        if(bevel == 1){
-            float a = angle_from_prev;
-            mat2 rot = mat2(
-                cos(a), sin(a),
-                -sin(a), cos(a)
-            );
-            // Dist for intersection of two lines
-            float bevel_d = max(abs(p.y), abs((rot * p).y));
-            // Dist for union of this intersection with the real curve
-            // intersected with radius 2 away from curve to smooth out
-            // really sharp corners
-            return max(min(dist, bevel_d), dist / 2);
-        }
-        // Otherwise, start will be rounded off
-    }else if(t == 1){
+    if(t < 0 && has_prev == 0) return max(dist, -p.x + buff);
+
+    if(t > 1){
         // Check the end of the curve
-        // TODO, too much code repetition
-        vec2 v21 = (bezier_degree == 2) ? vec2(1, 0) - uv_b2 : vec2(-1, 0);
+        vec2 v21 = vec2(1, 0) - uv_b2;
         float len_v21 = length(v21);
-        if(len_v21 == 0){
-            v21 = -uv_b2;
-            len_v21 = length(v21);
-        }
+        if(len_v21 == 0) len_v21 = length(-uv_b2);
 
         float perp_dist = dot(p - uv_b2, v21) / len_v21;
         if(has_next == 0) return max(dist, -perp_dist + buff);
-        // Bevel end
-        if(bevel == 1){
-            float a = -angle_to_next;
-            mat2 rot = mat2(
-                cos(a), sin(a),
-                -sin(a), cos(a)
-            );
-            vec2 v21_unit = v21 / length(v21);
-            float bevel_d = max(
-                abs(cross2d(p - uv_b2, v21_unit)),
-                abs(cross2d((rot * (p - uv_b2)), v21_unit))
-            );
-            return max(min(dist, bevel_d), dist / 2);
-        }
-        // Otherwise, end will be rounded off
     }
     return dist;
 }
 
 
-#INSERT quadratic_bezier_distance.glsl
+float dist_to_curve(){
+    float dist = min_dist_to_curve(uv_coords, uv_b2, bezier_degree);
+    if(has_prev == 0 && uv_coords.x < 0){
+        float buff = 0.5 * uv_stroke_width - uv_anti_alias_width;
+        return max(-uv_coords.x + buff, dist);
+    }
+    if(has_next == 0 && uv_coords.x > uv_b2.x){
+        float buff = 0.5 * uv_stroke_width - uv_anti_alias_width;
+        vec2 v12 = normalize(uv_b2 - vec2(1, 0));
+        float perp_dist = dot(uv_coords - uv_b2, v12);
+        if (perp_dist > 0) return max(perp_dist + buff, dist);
+    }
+    return dist;
+}
 
 
 void main() {
     if (uv_stroke_width == 0) discard;
-    float dist_to_curve = min_dist_to_curve(uv_coords, uv_b2, bezier_degree);
+
     // An sdf for the region around the curve we wish to color.
-    float signed_dist = abs(dist_to_curve) - 0.5 * uv_stroke_width;
+    float signed_dist = abs(dist_to_curve()) - 0.5 * uv_stroke_width;
 
     frag_color = color;
     frag_color.a *= smoothstep(0.5, -0.5, signed_dist / uv_anti_alias_width);
