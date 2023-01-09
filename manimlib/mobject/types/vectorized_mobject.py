@@ -35,6 +35,7 @@ from manimlib.utils.space_ops import cross2d
 from manimlib.utils.space_ops import earclip_triangulation
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import get_unit_normal
+from manimlib.utils.space_ops import normalize_along_axis
 from manimlib.utils.space_ops import z_to_vector
 from manimlib.shader_wrapper import ShaderWrapper
 
@@ -47,6 +48,8 @@ if TYPE_CHECKING:
 DEFAULT_STROKE_COLOR = GREY_A
 DEFAULT_FILL_COLOR = GREY_C
 
+DISJOINT_CONST = 404
+
 class VMobject(Mobject):
     n_points_per_curve: int = 3
     stroke_shader_folder: str = "quadratic_bezier_stroke"
@@ -58,8 +61,7 @@ class VMobject(Mobject):
     ]
     stroke_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ("point", np.float32, (3,)),
-        ("prev_point", np.float32, (3,)),
-        ("next_point", np.float32, (3,)),
+        ("joint_angle", np.float32, (1,)),
         ("stroke_width", np.float32, (1,)),
         ("color", np.float32, (4,)),
     ]
@@ -102,6 +104,7 @@ class VMobject(Mobject):
 
         self.needs_new_triangulation = True
         self.triangulation = np.zeros(0, dtype='i4')
+        self.needs_new_joint_angles = True
 
         super().__init__(**kwargs)
 
@@ -1020,11 +1023,57 @@ class VMobject(Mobject):
         self.needs_new_triangulation = False
         return tri_indices
 
+    def refresh_joint_angles(self):
+        for mob in self.get_family():
+            mob.needs_new_joint_angles = True
+        return self
+
+    def get_joint_angles(self, result):
+        """
+        Fills the array `result` with angle information for
+        each point
+        """
+        points = self.get_points()
+        assert(len(result) == len(points))
+
+        # Unit tangent vectors
+        a0, h, a1 = points[0::3], points[1::3], points[2::3]
+        a0_to_h = normalize_along_axis(h - a0, 1)
+        h_to_a1 = normalize_along_axis(a1 - h, 1)
+
+        def angles(vects1, vects2):
+            angle = np.arccos(np.clip((vects1 * vects2).sum(1), -1, 1))
+            sgn = np.sign(cross2d(vects1, vects2))
+            return sgn * angle
+
+        # Angles at all handle points
+        result[1::3] = angles(a0_to_h, h_to_a1)
+
+        # Angles at first anchors
+        to_a1 = np.vstack([h_to_a1[-1:], h_to_a1[:-1]])
+        result[0::3] = angles(to_a1, a0_to_h)
+
+        # Angles at second anchors
+        from_a2 = np.vstack([a0_to_h[1:], a0_to_h[:1]])
+        result[2::3] = angles(h_to_a1, from_a2)
+
+        # To communicate to the shader that a given anchor point
+        # sits at the end of a curve, we set its angle equal
+        # to something outside the range [-pi, pi].
+        # An arbitrary constant is used
+        a0_matched = np.isclose(a0, np.vstack([a1[-1:], a1[:-1]])).all(1)
+        a1_matched = np.isclose(a1, np.vstack([a0[1:], a0[:1]])).all(1)
+        result[0::3][~a0_matched] = DISJOINT_CONST
+        result[2::3][~a1_matched] = DISJOINT_CONST
+
+        self.needs_new_joint_angles = False
+
     def triggers_refreshed_triangulation(func: Callable):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             func(self, *args, **kwargs)
             self.refresh_triangulation()
+            self.refresh_joint_angles()
         return wrapper
 
     @triggers_refreshed_triangulation
@@ -1129,16 +1178,12 @@ class VMobject(Mobject):
         if len(self.stroke_data) != len(points):
             self.stroke_data = resize_array(self.stroke_data, len(points))
 
-        if "points" not in self.locked_data_keys:
-            nppc = self.n_points_per_curve
-            self.stroke_data["point"] = points
-            self.stroke_data["prev_point"][:nppc] = points[-nppc:]
-            self.stroke_data["prev_point"][nppc:] = points[:-nppc]
-            self.stroke_data["next_point"][:-nppc] = points[nppc:]
-            self.stroke_data["next_point"][-nppc:] = points[:nppc]
-
+        self.read_data_to_shader(self.stroke_data, "point", "points")
         self.read_data_to_shader(self.stroke_data, "color", "stroke_rgba")
         self.read_data_to_shader(self.stroke_data, "stroke_width", "stroke_width")
+
+        if self.needs_new_joint_angles:
+            self.get_joint_angles(self.stroke_data["joint_angle"][:, 0])
 
         return self.stroke_data
 

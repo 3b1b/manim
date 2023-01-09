@@ -21,11 +21,10 @@ uniform float gloss;
 uniform float shadow;
 
 in vec3 bp[3];
-in vec3 prev_bp[3];
-in vec3 next_bp[3];
 
-in vec4 v_color[3];
+in float v_joint_angle[3];
 in float v_stroke_width[3];
+in vec4 v_color[3];
 
 out vec4 color;
 out float uv_stroke_width;
@@ -51,6 +50,7 @@ const float ROUND_JOINT = 1;
 const float BEVEL_JOINT = 2;
 const float MITER_JOINT = 3;
 const float PI = 3.141592653;
+const float DISJOINT_CONST = 404.0;
 
 
 #INSERT quadratic_bezier_geometry_functions.glsl
@@ -178,42 +178,35 @@ void set_adjascent_info(vec2 c0, vec2 tangent,
 }
 
 
-void find_joint_info(vec2 controls[3], vec2 prev[3], vec2 next[3], int degree){
-    float tol = 1e-6;
-
-    // Made as floats not bools so they can be passed to the frag shader
-    has_prev = float(distance(prev[2], controls[0]) < tol);
-    has_next = float(distance(next[0], controls[2]) < tol);
-
-    if(bool(has_prev)){
-        vec2 tangent = controls[1] - controls[0];
-        set_adjascent_info(
-            controls[0], tangent, degree, prev,
-            bevel_start, angle_from_prev
-        );
+void find_joint_info(){
+    angle_from_prev = v_joint_angle[0];
+    angle_to_next = v_joint_angle[2];
+    has_prev = 1.0;
+    has_next = 1.0;
+    if(angle_from_prev == DISJOINT_CONST){
+        angle_from_prev = 0.0;
+        has_prev = 0.0;
     }
-    if(bool(has_next)){
-        vec2 tangent = controls[1] - controls[2];
-        set_adjascent_info(
-            controls[2], tangent, degree, next,
-            bevel_end, angle_to_next
-        );
-        angle_to_next *= -1;
+    if(angle_to_next == DISJOINT_CONST){
+        angle_to_next = 0.0;
+        has_next = 0.0;
     }
+    bool should_bevel = (
+        (joint_type == AUTO_JOINT && bezier_degree == 1.0) ||
+        joint_type == BEVEL_JOINT
+    );
+    bevel_start = float(should_bevel);
+    bevel_end = float(should_bevel);
 }
 
 
 void main() {
     // Convert control points to a standard form if they are linear or null
     vec3 controls[3];
-    vec3 prev[3];
-    vec3 next[3];
-    unit_normal = get_unit_normal(controls);
     bezier_degree = get_reduced_control_points(vec3[3](bp[0], bp[1], bp[2]), controls);
     if(bezier_degree == 0.0) return;  // Null curve
     int degree = int(bezier_degree);
-    get_reduced_control_points(vec3[3](prev_bp[0], prev_bp[1], prev_bp[2]), prev);
-    get_reduced_control_points(vec3[3](next_bp[0], next_bp[1], next_bp[2]), next);
+    unit_normal = get_unit_normal(controls);
 
 
     // Adjust stroke width based on distance from the camera
@@ -231,13 +224,10 @@ void main() {
     // gets tranlated to a uv plane.  The z-coordinate information will be remembered
     // by what's sent out to gl_Position, and by how it affects the lighting and stroke width
     vec2 flat_controls[3];
-    vec2 flat_prev[3];
-    vec2 flat_next[3];
     flatten_points(controls, flat_controls);
-    flatten_points(prev, flat_prev);
-    flatten_points(next, flat_next);
 
-    find_joint_info(flat_controls, flat_prev, flat_next, degree);
+    // Set joint angles, etc.
+    find_joint_info();
 
     // Corners of a bounding region around curve
     vec2 corners[5];
