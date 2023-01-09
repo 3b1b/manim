@@ -31,6 +31,7 @@ out float orientation;
 // uv space is where b0 = (0, 0), b1 = (1, 0), and transform is orthogonal
 out vec2 uv_coords;
 out vec2 uv_b2;
+// These are coordinates in a space where the curve is even simpler, y = x^2
 out vec2 simp_coords;
 out float bezier_degree;
 
