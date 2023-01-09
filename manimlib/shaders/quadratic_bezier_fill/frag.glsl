@@ -10,14 +10,11 @@ in vec3 xyz_coords;
 in float orientation;
 in vec2 uv_coords;
 in vec2 uv_b2;
+in vec2 simp_coords;
 in float bezier_degree;
 
 out vec4 frag_color;
 
-// Needed for quadratic_bezier_distance insertion below
-float modify_distance_for_endpoints(vec2 p, float dist, float t){
-    return dist;
-}
 
 #INSERT quadratic_bezier_distance.glsl
 
@@ -32,17 +29,10 @@ float sdf(){
     if(abs(v2 / u2) < 0.1 * uv_anti_alias_width){
         return abs(uv_coords[1]);
     }
-    // This converts uv_coords to yet another space where the bezier points sit on
-    // (0, 0), (1/2, 0) and (1, 1), so that the curve can be expressed implicityly
-    // as y = x^2.
-    mat2 to_simple_space = mat2(
-        v2, 0,
-        2 - u2, 4 * v2
-    );
-    vec2 p = to_simple_space * uv_coords;
+    vec2 p = simp_coords;
+    float Fp = (p.x * p.x - p.y);
     // Sign takes care of whether we should be filling the inside or outside of curve.
     float sgn = orientation * sign(v2);
-    float Fp = (p.x * p.x - p.y);
     if(sgn * Fp <= 0){
         return 0.0;
     }else{

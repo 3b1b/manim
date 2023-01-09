@@ -31,6 +31,7 @@ out float orientation;
 // uv space is where b0 = (0, 0), b1 = (1, 0), and transform is orthogonal
 out vec2 uv_coords;
 out vec2 uv_b2;
+out vec2 simp_coords;
 out float bezier_degree;
 
 vec3 unit_normal;
@@ -114,9 +115,18 @@ void emit_pentagon(vec3[3] points, vec3 normal){
     uv_b2 = (xyz_to_uv * vec4(p2, 1)).xy;
     uv_anti_alias_width = aaw / length(p1 - p0);
 
+    // Matrix from the uv space to an even simpler
+    // one where the curve is equal to y = x^2
+    mat2 to_simple_space = mat2(
+        uv_b2.y, 0,
+        2 - uv_b2.x, 4 * uv_b2.y
+    );
+    //
+
     for(int i = 0; i < 5; i++){
         vec3 corner = corners[i];
         uv_coords = (xyz_to_uv * vec4(corner, 1)).xy;
+        simp_coords = to_simple_space * uv_coords;
         int j = int(sign(i - 1) + 1);  // Maps i = [0, 1, 2, 3, 4] onto j = [0, 0, 1, 2, 2]
         emit_vertex_wrapper(corner, j);
     }
