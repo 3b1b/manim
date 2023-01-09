@@ -146,14 +146,14 @@ void main(){
         return;
     }
 
-    vec3 new_bp[3];
-    bezier_degree = get_reduced_control_points(vec3[3](bp[0], bp[1], bp[2]), new_bp);
+    vec3 v01 = normalize(bp[1] - bp[0]);
+    vec3 v12 = normalize(bp[2] - bp[1]);
+    float angle = acos(clamp(dot(v01, v12), -1, 1));
+    bezier_degree = (angle < 1e-3) ? 1.0 : 2.0;
+    vec3[3] new_bp = vec3[3](bp[0], bp[1], bp[2]);
     unit_normal = get_unit_normal(new_bp);
     orientation = v_orientation[0];
 
-    if(bezier_degree >= 1){
-        emit_pentagon(new_bp, unit_normal);
-    }
-    // Don't emit any vertices for bezier_degree 0
+    emit_pentagon(new_bp, unit_normal);
 }
 
