@@ -20,7 +20,7 @@ uniform float reflectiveness;
 uniform float gloss;
 uniform float shadow;
 
-in vec3 bp[3];
+in vec3 verts[3];
 
 in float v_joint_angle[3];
 in float v_stroke_width[3];
@@ -58,24 +58,6 @@ const float DISJOINT_CONST = 404.0;
 #INSERT get_unit_normal.glsl
 #INSERT finalize_color.glsl
 
-
-void flatten_points(in vec3[3] points, out vec2[3] flat_points){
-    for(int i = 0; i < 3; i++){
-        float sf = perspective_scale_factor(points[i].z, focal_distance);
-        flat_points[i] = sf * points[i].xy;
-    }
-}
-
-
-float angle_between_vectors(vec2 v1, vec2 v2){
-    float v1_norm = length(v1);
-    float v2_norm = length(v2);
-    if(v1_norm == 0 || v2_norm == 0) return 0.0;
-    float dp = dot(v1, v2) / (v1_norm * v2_norm);
-    float angle = acos(clamp(dp, -1.0, 1.0));
-    float sn = sign(cross2d(v1, v2));
-    return sn * angle;
-}
 
 
 bool find_intersection(vec2 p0, vec2 v0, vec2 p1, vec2 v1, out vec2 intersection){
@@ -160,24 +142,6 @@ int get_corners(vec2 controls[3], int degree, float stroke_widths[3], out vec2 c
 }
 
 
-void set_adjascent_info(vec2 c0, vec2 tangent,
-                        int degree,
-                        vec2 adj[3],
-                        out float bevel,
-                        out float angle
-                        ){
-    bool linear_adj = (angle_between_vectors(adj[1] - adj[0], adj[2] - adj[1]) < 1e-3);
-    angle = angle_between_vectors(c0 - adj[1], tangent);
-    // Decide on joint type
-    bool one_linear = (degree == 1 || linear_adj);
-    bool should_bevel = (
-        (joint_type == AUTO_JOINT && one_linear) ||
-        joint_type == BEVEL_JOINT
-    );
-    bevel = should_bevel ? 1.0 : 0.0;
-}
-
-
 void find_joint_info(){
     angle_from_prev = v_joint_angle[0];
     angle_to_next = v_joint_angle[2];
@@ -201,20 +165,15 @@ void find_joint_info(){
 
 
 void main() {
-    // Convert control points to a standard form if they are linear or null
-    vec3 controls[3];
-    bezier_degree = get_reduced_control_points(vec3[3](bp[0], bp[1], bp[2]), controls);
-    if(bezier_degree == 0.0) return;  // Null curve
-    int degree = int(bezier_degree);
-    unit_normal = get_unit_normal(controls);
-
+    bezier_degree = (abs(v_joint_angle[1]) < 1e-3) ? 1.0 : 2.0;
+    unit_normal = get_unit_normal(vec3[3](verts[0], verts[1], verts[2]));
 
     // Adjust stroke width based on distance from the camera
     float scaled_strokes[3];
     for(int i = 0; i < 3; i++){
-        float sf = perspective_scale_factor(controls[i].z, focal_distance);
+        float sf = perspective_scale_factor(verts[i].z, focal_distance);
         if(bool(flat_stroke)){
-            vec3 to_cam = normalize(vec3(0.0, 0.0, focal_distance) - controls[i]);
+            vec3 to_cam = normalize(vec3(0.0, 0.0, focal_distance) - verts[i]);
             sf *= abs(dot(unit_normal, to_cam));
         }
         scaled_strokes[i] = v_stroke_width[i] * sf;
@@ -224,14 +183,21 @@ void main() {
     // gets tranlated to a uv plane.  The z-coordinate information will be remembered
     // by what's sent out to gl_Position, and by how it affects the lighting and stroke width
     vec2 flat_controls[3];
-    flatten_points(controls, flat_controls);
+    for(int i = 0; i < 3; i++){
+        float sf = perspective_scale_factor(verts[i].z, focal_distance);
+        flat_controls[i] = sf * verts[i].xy;
+    }
+    // If the curve is flat, put the middle control in the midpoint
+    if (bezier_degree == 1.0){
+        flat_controls[1] = 0.5 * (flat_controls[0] + flat_controls[2]);
+    }
 
     // Set joint angles, etc.
     find_joint_info();
 
     // Corners of a bounding region around curve
     vec2 corners[5];
-    int n_corners = get_corners(flat_controls, degree, scaled_strokes, corners);
+    int n_corners = get_corners(flat_controls, int(bezier_degree), scaled_strokes, corners);
 
     int index_map[5] = int[5](0, 0, 1, 2, 2);
     if(n_corners == 4) index_map[2] = 2;
@@ -247,8 +213,7 @@ void main() {
         uv_coords = (xy_to_uv * vec3(corners[i], 1.0)).xy;
         uv_stroke_width = scaled_strokes[index_map[i]] / scale_factor;
         // Apply some lighting to the color before sending out.
-        // vec3 xyz_coords = vec3(corners[i], controls[index_map[i]].z);
-        vec3 xyz_coords = vec3(corners[i], controls[index_map[i]].z);
+        vec3 xyz_coords = vec3(corners[i], verts[index_map[i]].z);
         color = finalize_color(
             v_color[index_map[i]],
             xyz_coords,
@@ -261,7 +226,7 @@ void main() {
         );
         gl_Position = vec4(
             get_gl_Position(vec3(corners[i], 0.0)).xy,
-            get_gl_Position(controls[index_map[i]]).zw
+            get_gl_Position(verts[index_map[i]]).zw
         );
         EmitVertex();
     }
