@@ -51,6 +51,12 @@ def clip(a: float, min_a: float, max_a: float) -> float:
     return a
 
 
+def arr_clip(arr: np.ndarray, min_a: float, max_a: float) -> np.ndarray:
+    arr[arr < min_a] = min_a
+    arr[arr > max_a] = max_a
+    return arr
+
+
 def fdiv(a: Scalable, b: Scalable, zero_over_zero_value: Scalable | None = None) -> Scalable:
     if zero_over_zero_value is not None:
         out = np.full_like(a, zero_over_zero_value)
