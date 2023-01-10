@@ -31,8 +31,6 @@ out vec4 color;
 out float uv_stroke_width;
 out float uv_anti_alias_width;
 
-// out float has_prev;
-// out float has_next;
 out float bezier_degree;
 
 out vec2 uv_coords;

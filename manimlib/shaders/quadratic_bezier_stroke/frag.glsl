@@ -14,12 +14,6 @@ out vec4 frag_color;
 
 const float QUICK_DIST_WIDTH = 0.2;
 
-
-float cube_root(float x){
-    return sign(x) * pow(abs(x), 1.0 / 3.0);
-}
-
-
 // Distance from (x0, y0) to the curve y = x^2
 float dist_to_curve(float x0, float y0){
     if(bezier_degree == 1.0){
@@ -59,9 +53,9 @@ float dist_to_curve(float x0, float y0){
 void main() {
     if (uv_stroke_width == 0) discard;
 
+    // Compute sdf for the region around the curve we wish to color.
     float x0 = uv_coords.x;
     float y0 = uv_coords.y;
-    // An sdf for the region around the curve we wish to color.
     float signed_dist = abs(dist_to_curve(x0, y0)) - 0.5 * uv_stroke_width;
 
     frag_color = color;
