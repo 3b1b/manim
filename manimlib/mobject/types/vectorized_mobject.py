@@ -120,7 +120,7 @@ class VMobject(Mobject):
             "stroke_rgba": np.zeros((1, 4)),
             "stroke_width": np.zeros((1, 1)),
             "orientation": np.ones((1, 1)),
-            "joint_angle": np.zeros((1, 1)),
+            "joint_angle": np.zeros((0, 1)),
         })
 
     def init_uniforms(self):
@@ -813,6 +813,8 @@ class VMobject(Mobject):
             # needlessly throughout an animation
             if self.has_fill() and vmobject.has_fill() and self.has_same_shape_as(vmobject):
                 vmobject.triangulation = self.triangulation
+            self.get_joint_angles()
+            vmobject.get_joint_angles()
             return
 
         for mob in self, vmobject:
