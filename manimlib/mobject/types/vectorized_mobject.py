@@ -1036,6 +1036,8 @@ class VMobject(Mobject):
         if not self.needs_new_joint_angles:
             return self.data["joint_angle"]
 
+        self.needs_new_joint_angles = False
+
         points = self.get_points()
         self.data["joint_angle"] = resize_array(self.data["joint_angle"], len(points))
 
@@ -1080,7 +1082,6 @@ class VMobject(Mobject):
         self.data["joint_angle"][3::3][mis_matches] = DISJOINT_CONST
         self.data["joint_angle"][2:-1:3][mis_matches] = DISJOINT_CONST
 
-        self.needs_new_joint_angles = False
         return self.data["joint_angle"]
 
     def triggers_refreshed_triangulation(func: Callable):
