@@ -50,16 +50,25 @@ const float ANGLE_THRESHOLD = 1e-3;
 #INSERT get_gl_Position.glsl
 #INSERT get_unit_normal.glsl
 #INSERT finalize_color.glsl
+#INSERT rotate.glsl
+
+
+float angle_between(vec2 v1, vec2 v2){
+    float abs_angle = acos(clamp(dot(normalize(v1), normalize(v2)), -1.0, 1.0));
+    float sgn = sign(cross2d(v1, v2));
+    return sgn * abs_angle;
+}
 
 
 void create_joint(float angle, vec2 unit_tan, float buff,
                   vec2 static_c0, out vec2 changing_c0,
                   vec2 static_c1, out vec2 changing_c1){
     float shift;
-    if(abs(angle) < ANGLE_THRESHOLD || int(joint_type) == NO_JOINT){
+    if(abs(angle) < ANGLE_THRESHOLD || abs(angle) > 0.99 * PI || int(joint_type) == NO_JOINT){
         // No joint
         shift = 0;
-    }else if(int(joint_type) == MITER_JOINT || (int(joint_type) == AUTO_JOINT && angle > 0.9 * PI)){
+    // }else if(int(joint_type) == MITER_JOINT || (int(joint_type) == AUTO_JOINT && abs(angle) > 0.95 * PI)){
+    }else if(int(joint_type) == MITER_JOINT){
         shift = buff * (-1.0 - cos(angle)) / sin(angle);
     }else{
         // For a Bevel joint
@@ -94,9 +103,16 @@ int get_corners(
     vec2 p0_perp = sgn * vec2(-v01.y, v01.x);  // Pointing to the inside of the curve from p0
     vec2 p2_perp = sgn * vec2(-v12.y, v12.x);  // Pointing to the inside of the curve from p2
 
-    // aaw is the added width given around the polygon for antialiasing.
-    // In case the normal is faced away from (0, 0, 1), the vector to the
-    // camera, this is scaled up.
+    // This is to prevent weird bevel artifacts for sharp angles
+    if(abs(angle_from_prev) > 0.5 * PI){
+        stroke_widths[0] *= sin(angle_from_prev);
+        stroke_widths[1] = 0.5 * (stroke_widths[0] + stroke_widths[2]);
+    }
+    if(abs(angle_to_next) > 0.5 * PI){
+        stroke_widths[2] *= sin(angle_to_next);
+        stroke_widths[1] = 0.5 * (stroke_widths[0] + stroke_widths[2]);
+    }
+
     float buff0 = 0.5 * stroke_widths[0] + aaw;
     float buff2 = 0.5 * stroke_widths[2] + aaw;
 
@@ -127,22 +143,14 @@ void main() {
 
     vec3 unit_normal = camera_rotation * vec3(0.0, 0.0, 1.0); // TODO, track true unit normal globally
 
-    // Control points are projected to the xy plane before drawing, which in turn
-    // gets tranlated to a uv plane.  The z-coordinate information will be remembered
-    // by what's sent out to gl_Position, and by how it affects the lighting and stroke width
-    vec2 flat_controls[3];
     float scaled_strokes[3];
     for(int i = 0; i < 3; i++){
-        float sf = perspective_scale_factor(verts[i].z, focal_distance);
-        flat_controls[i] = sf * verts[i].xy;
-
+        scaled_strokes[i] = v_stroke_width[i];
         if(bool(flat_stroke)){
             vec3 to_cam = normalize(vec3(0.0, 0.0, focal_distance) - verts[i]);
-            sf *= abs(dot(unit_normal, to_cam));
+            scaled_strokes[i] *= abs(dot(unit_normal, to_cam));
         }
-        scaled_strokes[i] = v_stroke_width[i] * sf;
     }
-
 
     // Set joint information
     float angle_from_prev = v_joint_angle[0];
@@ -155,28 +163,44 @@ void main() {
         // TODO, add anti-aliasing patch to curve end
         angle_to_next = 0.0;
     }
+    // Recompute angles based on perspective
+    if(angle_from_prev > 0.0 && unit_normal != vec3(0.0, 0.0, 1.0)){
+        vec3 v01 = verts[1] - verts[0];
+        vec3 from_prev = rotate(v01, angle_from_prev, unit_normal);
+        angle_from_prev = angle_between(from_prev.xy, v01.xy);
+    }
+    if(angle_to_next > 0.0 && unit_normal != vec3(0.0, 0.0, 1.0)){
+        vec3 v12 = verts[2] - verts[1];
+        vec3 to_next = rotate(v12, -angle_to_next, unit_normal);
+        angle_to_next = angle_between(v12.xy, to_next.xy);
+    }
+
+    // Control points are projected to the xy plane before drawing, which in turn
+    // gets tranlated to a uv plane.  The z-coordinate information will be remembered
+    // by what's sent out to gl_Position, and by how it affects the lighting and stroke width
+    vec2 flat_verts[3] = vec2[3](verts[0].xy, verts[1].xy, verts[2].xy);
+
+    // If the curve is flat, put the middle control in the midpoint
+    is_linear = float(abs(v_joint_angle[1]) < ANGLE_THRESHOLD);
+    if (bool(is_linear)){
+        flat_verts[1] = 0.5 * (flat_verts[0] + flat_verts[2]);
+    }
 
     // We want to change the coordinates to a space where the curve
     // coincides with y = x^2, between some values x0 and x2. Or, in
     // the case of a linear curve (bezier degree 1), just put it on
     // the segment from (0, 0) to (1, 0)
-    is_linear = float(abs(v_joint_angle[1]) < ANGLE_THRESHOLD);
-    mat3 xy_to_uv = get_xy_to_uv(flat_controls, is_linear, is_linear);
+    mat3 xy_to_uv = get_xy_to_uv(flat_verts, is_linear, is_linear);
 
     float uv_scale_factor = length(xy_to_uv[0].xy);
-    float scaled_anti_alias_width = anti_alias_width * (frame_shape.y / pixel_shape.y);
-    uv_anti_alias_width = uv_scale_factor * scaled_anti_alias_width;
-
-    // If the curve is flat, put the middle control in the midpoint
-    if (bool(is_linear)){
-        flat_controls[1] = 0.5 * (flat_controls[0] + flat_controls[2]);
-    }
+    float scaled_aaw = anti_alias_width * (frame_shape.y / pixel_shape.y);
+    uv_anti_alias_width = uv_scale_factor * scaled_aaw;
 
     // Corners of a bounding region around curve
     vec2 corners[5];
     int n_corners = get_corners(
-        flat_controls, scaled_strokes,
-        scaled_anti_alias_width, angle_from_prev, angle_to_next,
+        flat_verts, scaled_strokes, scaled_aaw,
+        angle_from_prev, angle_to_next,
         corners
     );
 
@@ -199,10 +223,7 @@ void main() {
             gloss,
             shadow
         );
-        gl_Position = vec4(
-            get_gl_Position(vec3(corners[i], 0.0)).xy,
-            get_gl_Position(verts[index_map[i]]).zw
-        );
+        gl_Position = get_gl_Position(vec3(corners[i], verts[index_map[i]].z));
         EmitVertex();
     }
     EndPrimitive();
