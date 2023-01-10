@@ -86,10 +86,8 @@ int get_corners(
     vec2 p2 = controls[2];
 
     // Unit vectors for directions between control points
-    vec2 v10 = normalize(p0 - p1);
+    vec2 v01 = normalize(p1 - p0);
     vec2 v12 = normalize(p2 - p1);
-    vec2 v01 = -v10;
-    vec2 v21 = -v12;
 
     float cross_prod = cross2d(v01, v12);
     float sgn = (cross_prod >= 0.0 || bool(is_linear)) ? 1.0 : -1.0;
@@ -109,7 +107,7 @@ int get_corners(
 
     // Account for previous and next control points
     create_joint(angle_from_prev, v01, buff0, c0, c0, c1, c1);
-    create_joint(angle_to_next, v21, buff2, c3, c3, c2, c2);
+    create_joint(angle_to_next, -v12, buff2, c3, c3, c2, c2);
 
     // Linear case is the simplest
     if(bool(is_linear)){
