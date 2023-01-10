@@ -813,8 +813,6 @@ class VMobject(Mobject):
             # needlessly throughout an animation
             if self.has_fill() and vmobject.has_fill() and self.has_same_shape_as(vmobject):
                 vmobject.triangulation = self.triangulation
-            self.get_joint_angles()
-            vmobject.get_joint_angles()
             return
 
         for mob in self, vmobject:
@@ -912,6 +910,9 @@ class VMobject(Mobject):
             tri2 = mobject2.get_triangulation()
             if len(tri1) != len(tri2) or not (tri1 == tri2).all():
                 self.refresh_triangulation()
+        if self.has_stroke():
+            for mob in (self, mobject1, mobject2):
+                mob.get_joint_angles()
         return self
 
     def pointwise_become_partial(self, vmobject: VMobject, a: float, b: float):
