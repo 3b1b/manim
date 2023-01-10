@@ -31,12 +31,11 @@ out vec4 color;
 out float uv_stroke_width;
 out float uv_anti_alias_width;
 
-out float has_prev;
-out float has_next;
+// out float has_prev;
+// out float has_next;
 out float bezier_degree;
 
 out vec2 uv_coords;
-out vec2 uv_b2;
 
 // Codes for joint types
 const float AUTO_JOINT = 0;
@@ -103,17 +102,15 @@ int get_corners(
     float aaw = anti_alias_width * frame_shape.y / pixel_shape.y;
     float buff0 = 0.5 * stroke_widths[0] + aaw;
     float buff2 = 0.5 * stroke_widths[2] + aaw;
-    float aaw0 = (1 - has_prev) * aaw;
-    float aaw2 = (1 - has_next) * aaw;
 
-    vec2 c0 = p0 - buff0 * p0_perp + aaw0 * v10;
-    vec2 c1 = p0 + buff0 * p0_perp + aaw0 * v10;
-    vec2 c2 = p2 + buff2 * p2_perp + aaw2 * v12;
-    vec2 c3 = p2 - buff2 * p2_perp + aaw2 * v12;
+    vec2 c0 = p0 - buff0 * p0_perp;
+    vec2 c1 = p0 + buff0 * p0_perp;
+    vec2 c2 = p2 + buff2 * p2_perp;
+    vec2 c3 = p2 - buff2 * p2_perp;
 
     // Account for previous and next control points
-    if(has_prev > 0) create_joint(angle_from_prev, v01, buff0, c0, c0, c1, c1);
-    if(has_next > 0) create_joint(angle_to_next, v21, buff2, c3, c3, c2, c2);
+    create_joint(angle_from_prev, v01, buff0, c0, c0, c1, c1);
+    create_joint(angle_to_next, v21, buff2, c3, c3, c2, c2);
 
     // Linear case is the simplest
     if(degree == 1){
@@ -137,24 +134,20 @@ void main() {
     bezier_degree = (abs(v_joint_angle[1]) < ANGLE_THRESHOLD) ? 1.0 : 2.0;
     vec3 unit_normal = camera_rotation * vec3(0.0, 0.0, 1.0); // TODO, track true unit normal globally
 
-    // Adjust stroke width based on distance from the camera
+    // Control points are projected to the xy plane before drawing, which in turn
+    // gets tranlated to a uv plane.  The z-coordinate information will be remembered
+    // by what's sent out to gl_Position, and by how it affects the lighting and stroke width
+    vec2 flat_controls[3];
     float scaled_strokes[3];
     for(int i = 0; i < 3; i++){
         float sf = perspective_scale_factor(verts[i].z, focal_distance);
+        flat_controls[i] = sf * verts[i].xy;
+
         if(bool(flat_stroke)){
             vec3 to_cam = normalize(vec3(0.0, 0.0, focal_distance) - verts[i]);
             sf *= abs(dot(unit_normal, to_cam));
         }
         scaled_strokes[i] = v_stroke_width[i] * sf;
-    }
-
-    // Control points are projected to the xy plane before drawing, which in turn
-    // gets tranlated to a uv plane.  The z-coordinate information will be remembered
-    // by what's sent out to gl_Position, and by how it affects the lighting and stroke width
-    vec2 flat_controls[3];
-    for(int i = 0; i < 3; i++){
-        float sf = perspective_scale_factor(verts[i].z, focal_distance);
-        flat_controls[i] = sf * verts[i].xy;
     }
 
     // If the curve is flat, put the middle control in the midpoint
@@ -165,15 +158,13 @@ void main() {
     // Set joint information
     float angle_from_prev = v_joint_angle[0];
     float angle_to_next = v_joint_angle[2];
-    has_prev = 1.0;
-    has_next = 1.0;
     if(angle_from_prev == DISJOINT_CONST){
+        // TODO, mark the fact that there is no previous
         angle_from_prev = 0.0;
-        has_prev = 0.0;
     }
     if(angle_to_next == DISJOINT_CONST){
+        // TODO, mark the fact that there is no next
         angle_to_next = 0.0;
-        has_next = 0.0;
     }
 
     // Corners of a bounding region around curve
@@ -187,16 +178,15 @@ void main() {
     int index_map[5] = int[5](0, 0, 1, 2, 2);
     if(n_corners == 4) index_map[2] = 2;
 
-    // Find uv conversion matrix
-    mat3 xy_to_uv = get_xy_to_uv(flat_controls[0], flat_controls[1]);
-    float scale_factor = length(flat_controls[1] - flat_controls[0]);
-    uv_anti_alias_width = anti_alias_width * frame_shape.y / pixel_shape.y / scale_factor;
-    uv_b2 = (xy_to_uv * vec3(flat_controls[2], 1.0)).xy;
+    // Find uv conversion
+    mat3 xy_to_uv = get_xy_to_uv(flat_controls, bezier_degree);
+    float scale_factor = length(xy_to_uv[0].xy);
+    uv_anti_alias_width = scale_factor * anti_alias_width * (frame_shape.y / pixel_shape.y);
 
     // Emit each corner
     for(int i = 0; i < n_corners; i++){
         uv_coords = (xy_to_uv * vec3(corners[i], 1.0)).xy;
-        uv_stroke_width = scaled_strokes[index_map[i]] / scale_factor;
+        uv_stroke_width = scale_factor * scaled_strokes[index_map[i]];
         // Apply some lighting to the color before sending out.
         vec3 xyz_coords = vec3(corners[i], verts[index_map[i]].z);
         color = finalize_color(
