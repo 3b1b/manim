@@ -1126,6 +1126,10 @@ class VMobject(Mobject):
             self.make_approximately_smooth()
         return self
 
+    def apply_points_function(self, *args, **kwargs,):
+        super().apply_points_function(*args, **kwargs)
+        self.refresh_joint_angles()
+
     # For shaders
     def init_shader_data(self):
         self.fill_data = np.zeros(0, dtype=self.fill_dtype)
