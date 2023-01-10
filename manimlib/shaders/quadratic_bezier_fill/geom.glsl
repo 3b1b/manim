@@ -37,7 +37,7 @@ const float ANGLE_THRESHOLD = 1e-3;
 
 
 // Analog of import for manim only
-#INSERT quadratic_bezier_geometry_functions.glsl
+#INSERT get_xy_to_uv.glsl
 #INSERT get_gl_Position.glsl
 #INSERT get_unit_normal.glsl
 #INSERT finalize_color.glsl

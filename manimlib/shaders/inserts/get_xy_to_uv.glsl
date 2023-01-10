@@ -60,6 +60,11 @@ mat3 map_point_pairs(vec2 src0, vec2 src1, vec2 dest0, vec2 dest1){
 
 
 mat3 get_xy_to_uv(vec2 controls[3], float temp_is_linear, out float is_linear){
+    /*
+    Returns a matrix for an affine transformation which maps a set of quadratic
+    bezier controls points into a new coordinate system such that the bezier curve
+    coincides with y = x^2
+    */
     vec2[2] dest;
     is_linear = temp_is_linear;
     if (!bool(is_linear)){
