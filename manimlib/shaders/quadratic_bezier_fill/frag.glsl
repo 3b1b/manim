@@ -25,7 +25,7 @@ float sdf(float x0, float y0){
 void main() {
     if (color.a == 0) discard;
     frag_color = color;
-    if (fill_all == 1.0) return;
+    if (bool(fill_all)) return;
     float dist = sdf(uv_coords.x, uv_coords.y);
     frag_color.a *= smoothstep(1, 0, dist / uv_anti_alias_width);
 }

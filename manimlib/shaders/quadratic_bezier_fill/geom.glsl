@@ -33,6 +33,8 @@ out float is_linear;
 
 vec3 unit_normal;
 
+const float ANGLE_THRESHOLD = 1e-3;
+
 
 // Analog of import for manim only
 #INSERT quadratic_bezier_geometry_functions.glsl
@@ -65,60 +67,49 @@ void emit_simple_triangle(){
 }
 
 
-void emit_pentagon(vec3[3] points, vec3 normal){
-    vec3 p0 = points[0];
-    vec3 p1 = points[1];
-    vec3 p2 = points[2];
+void emit_pentagon(vec3[3] points){
+    vec2 p0 = points[0].xy;
+    vec2 p1 = points[1].xy;
+    vec2 p2 = points[2].xy;
 
     // Tangent vectors
-    vec3 t01 = normalize(p1 - p0);
-    vec3 t12 = normalize(p2 - p1);
-    // Vectors perpendicular to the curve in the plane of the curve pointing outside the curve
-    vec3 p0_perp = cross(t01, normal);
-    vec3 p2_perp = cross(t12, normal);
+    vec2 t01 = normalize(p1 - p0);
+    vec2 t12 = normalize(p2 - p1);
+
+    // Vectors perpendicular to the curve in the plane
+    // of the curve pointing outside the curve
+    float cross_prod = cross2d(t01, t12);
+    float sgn = cross_prod >= 0.0 ? 1.0 : -1.0;
+    vec2 p0_perp = sgn * vec2(t01.y, -t01.x);
+    vec2 p2_perp = sgn * vec2(t12.y, -t12.x);
+
+    float angle = asin(clamp(cross_prod, -1, 1));
+    is_linear = float(abs(angle) < ANGLE_THRESHOLD);
 
     bool fill_inside = orientation > 0.0;
     float aaw = anti_alias_width * frame_shape.y / pixel_shape.y;
-    vec3 corners[5];
-    if(bool(is_linear)){
-        // For straight lines, buff out in both directions
-        corners = vec3[5](
-            p0 + aaw * p0_perp,
-            p0 - aaw * p0_perp,
-            p1 + 0.5 * aaw * (p0_perp + p2_perp),
-            p2 - aaw * p2_perp,
-            p2 + aaw * p2_perp
-        );
-    } else if(fill_inside){
-        // If curved, and filling insight, just buff out away interior
-        corners = vec3[5](
-            p0 + aaw * p0_perp,
-            p0,
-            p1 + 0.5 * aaw * (p0_perp + p2_perp),
-            p2,
-            p2 + aaw * p2_perp
-        );
-    }else{
-        corners = vec3[5](
-            p0,
-            p0 - aaw * p0_perp,
-            p1,
-            p2 - aaw * p2_perp,
-            p2
-        );
+    vec2 corners[5] = vec2[5](p0, p0, p1, p2, p2);
+
+    if(fill_inside || bool(is_linear)){
+        // Add buffer outside the curve
+        corners[0] += aaw * p0_perp;
+        corners[2] += 0.5 * aaw * (p0_perp + p2_perp);
+        corners[4] += aaw * p2_perp;
+    }
+    if(!fill_inside || bool(is_linear)){
+        // Add buffer inside the curve
+        corners[1] -= aaw * p0_perp;
+        corners[3] -= aaw * p2_perp;
     }
 
     // Compute xy_to_uv matrix, and potentially re-evaluate bezier degree
-    mat3 xy_to_uv = get_xy_to_uv(
-        vec2[3](p0.xy, p1.xy, p2.xy),
-        is_linear, is_linear
-    );
+    mat3 xy_to_uv = get_xy_to_uv(vec2[3](p0, p1, p2), is_linear, is_linear);
     uv_anti_alias_width = aaw * length(xy_to_uv[0].xy);
 
     for(int i = 0; i < 5; i++){
-        vec3 corner = corners[i];
-        uv_coords = (xy_to_uv * vec3(corner.xy, 1.0)).xy;
         int j = int(sign(i - 1) + 1);  // Maps i = [0, 1, 2, 3, 4] onto j = [0, 0, 1, 2, 2]
+        vec3 corner = vec3(corners[i], points[j].z);
+        uv_coords = (xy_to_uv * vec3(corners[i], 1.0)).xy;
         emit_vertex_wrapper(corner, j);
     }
     EndPrimitive();
@@ -132,19 +123,15 @@ void main(){
         (v_vert_index[2] - v_vert_index[1]) != 1.0
     );
 
-    if(fill_all == 1.0){
+    if(bool(fill_all)){
         emit_simple_triangle();
         return;
     }
 
-    vec3 v01 = normalize(bp[1] - bp[0]);
-    vec3 v12 = normalize(bp[2] - bp[1]);
-    float angle = acos(clamp(dot(v01, v12), -1, 1));
-    is_linear = float(angle < 1e-3);
-    vec3[3] new_bp = vec3[3](bp[0], bp[1], bp[2]);
-    unit_normal = get_unit_normal(new_bp);
+    vec3[3] verts = vec3[3](bp[0], bp[1], bp[2]);
+    unit_normal = get_unit_normal(verts);
     orientation = v_orientation[0];
 
-    emit_pentagon(new_bp, unit_normal);
+    emit_pentagon(verts);
 }
 
