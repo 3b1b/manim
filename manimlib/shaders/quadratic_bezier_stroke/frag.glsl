@@ -8,7 +8,7 @@ in float uv_stroke_width;
 in float uv_anti_alias_width;
 in vec4 color;
 
-in float bezier_degree;
+in float is_linear;
 
 out vec4 frag_color;
 
@@ -16,11 +16,10 @@ const float QUICK_DIST_WIDTH = 0.2;
 
 // Distance from (x0, y0) to the curve y = x^2
 float dist_to_curve(float x0, float y0){
-    if(bezier_degree == 1.0){
-        // In this case, the curve will actually have
-        // been set to equal the x axis
-        return y0;
-    }
+    // In the linear case, the curve will have
+    // been set to equal the x axis
+    if(bool(is_linear)) return y0;
+
     if(uv_stroke_width < QUICK_DIST_WIDTH){
         // This is a quick approximation for computing
         // the distance to the curve.

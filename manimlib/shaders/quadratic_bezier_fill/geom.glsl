@@ -29,7 +29,7 @@ out float uv_anti_alias_width;
 out float orientation;
 // uv space is where the curve coincides with y = x^2
 out vec2 uv_coords;
-out float bezier_degree;
+out float is_linear;
 
 vec3 unit_normal;
 
@@ -80,7 +80,7 @@ void emit_pentagon(vec3[3] points, vec3 normal){
     bool fill_inside = orientation > 0.0;
     float aaw = anti_alias_width * frame_shape.y / pixel_shape.y;
     vec3 corners[5];
-    if(bezier_degree == 1.0){
+    if(bool(is_linear)){
         // For straight lines, buff out in both directions
         corners = vec3[5](
             p0 + aaw * p0_perp,
@@ -109,13 +109,10 @@ void emit_pentagon(vec3[3] points, vec3 normal){
     }
 
     // Compute xy_to_uv matrix, and potentially re-evaluate bezier degree
-    float new_bezier_degree;
     mat3 xy_to_uv = get_xy_to_uv(
         vec2[3](p0.xy, p1.xy, p2.xy),
-        bezier_degree,
-        new_bezier_degree
+        is_linear, is_linear
     );
-    bezier_degree = new_bezier_degree;
     uv_anti_alias_width = aaw * length(xy_to_uv[0].xy);
 
     for(int i = 0; i < 5; i++){
@@ -143,7 +140,7 @@ void main(){
     vec3 v01 = normalize(bp[1] - bp[0]);
     vec3 v12 = normalize(bp[2] - bp[1]);
     float angle = acos(clamp(dot(v01, v12), -1, 1));
-    bezier_degree = (angle < 1e-3) ? 1.0 : 2.0;
+    is_linear = float(angle < 1e-3);
     vec3[3] new_bp = vec3[3](bp[0], bp[1], bp[2]);
     unit_normal = get_unit_normal(new_bp);
     orientation = v_orientation[0];

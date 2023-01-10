@@ -31,7 +31,7 @@ out vec4 color;
 out float uv_stroke_width;
 out float uv_anti_alias_width;
 
-out float bezier_degree;
+out float is_linear;
 
 out vec2 uv_coords;
 
@@ -75,7 +75,6 @@ void create_joint(float angle, vec2 unit_tan, float buff,
 // emitted as a triangle fan
 int get_corners(
     vec2 controls[3],
-    int degree,
     float stroke_widths[3],
     float angle_from_prev,
     float angle_to_next,
@@ -111,7 +110,7 @@ int get_corners(
     create_joint(angle_to_next, v21, buff2, c3, c3, c2, c2);
 
     // Linear case is the simplest
-    if(degree == 1){
+    if(bool(is_linear)){
         // The order of corners should be for a triangle_strip.  Last entry is a dummy
         corners = vec2[5](c0, c1, c3, c2, vec2(0.0));
         return 4;
@@ -164,24 +163,22 @@ void main() {
     // coincides with y = x^2, between some values x0 and x2. Or, in
     // the case of a linear curve (bezier degree 1), just put it on
     // the segment from (0, 0) to (1, 0)
-    bezier_degree = (abs(v_joint_angle[1]) < ANGLE_THRESHOLD) ? 1.0 : 2.0;
+    is_linear = float(abs(v_joint_angle[1]) < ANGLE_THRESHOLD);
 
-    float new_bezier_degree;
-    mat3 xy_to_uv = get_xy_to_uv(flat_controls, bezier_degree, new_bezier_degree);
-    bezier_degree = new_bezier_degree;
+    mat3 xy_to_uv = get_xy_to_uv(flat_controls, is_linear, is_linear);
 
     float scale_factor = length(xy_to_uv[0].xy);
     uv_anti_alias_width = scale_factor * anti_alias_width * (frame_shape.y / pixel_shape.y);
 
     // If the curve is flat, put the middle control in the midpoint
-    if (bezier_degree == 1.0){
+    if (bool(is_linear)){
         flat_controls[1] = 0.5 * (flat_controls[0] + flat_controls[2]);
     }
 
     // Corners of a bounding region around curve
     vec2 corners[5];
     int n_corners = get_corners(
-        flat_controls, int(bezier_degree), scaled_strokes,
+        flat_controls, scaled_strokes,
         angle_from_prev, angle_to_next,
         corners
     );
