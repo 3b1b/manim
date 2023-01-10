@@ -29,6 +29,7 @@ from manimlib.utils.color import color_gradient
 from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import get_colormap_list
 from manimlib.utils.color import rgb_to_hex
+from manimlib.utils.iterables import arrays_match
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.iterables import list_update
 from manimlib.utils.iterables import listify
@@ -1734,7 +1735,7 @@ class Mobject(object):
         for sm, sm1, sm2 in zip(self.get_family(), mobject1.get_family(), mobject2.get_family()):
             keys = sm.data.keys() & sm1.data.keys() & sm2.data.keys()
             sm.lock_data(list(filter(
-                lambda key: (sm1.data[key] == sm2.data[key]).all(),
+                lambda key: arrays_match(sm1.data[key], sm2.data[key]),
                 keys,
             )))
         return self
