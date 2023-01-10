@@ -26,13 +26,9 @@ out vec4 color;
 out float fill_all;
 out float uv_anti_alias_width;
 
-out vec3 xyz_coords;
 out float orientation;
-// uv space is where b0 = (0, 0), b1 = (1, 0), and transform is orthogonal
+// uv space is where the curve coincides with y = x^2
 out vec2 uv_coords;
-out vec2 uv_b2;
-// These are coordinates in a space where the curve is even simpler, y = x^2
-out vec2 simp_coords;
 out float bezier_degree;
 
 vec3 unit_normal;
@@ -56,8 +52,7 @@ void emit_vertex_wrapper(vec3 point, int index){
         gloss,
         shadow
     );
-    xyz_coords = point;
-    gl_Position = get_gl_Position(xyz_coords);
+    gl_Position = get_gl_Position(point);
     EmitVertex();
 }
 
@@ -74,6 +69,7 @@ void emit_pentagon(vec3[3] points, vec3 normal){
     vec3 p0 = points[0];
     vec3 p1 = points[1];
     vec3 p2 = points[2];
+
     // Tangent vectors
     vec3 t01 = normalize(p1 - p0);
     vec3 t12 = normalize(p2 - p1);
@@ -112,22 +108,19 @@ void emit_pentagon(vec3[3] points, vec3 normal){
         );
     }
 
-    mat4 xyz_to_uv = get_xyz_to_uv(p0, p1, normal);
-    uv_b2 = (xyz_to_uv * vec4(p2, 1)).xy;
-    uv_anti_alias_width = aaw / length(p1 - p0);
-
-    // Matrix from the uv space to an even simpler
-    // one where the curve is equal to y = x^2
-    mat2 to_simple_space = mat2(
-        uv_b2.y, 0,
-        2 - uv_b2.x, 4 * uv_b2.y
+    // Compute xy_to_uv matrix, and potentially re-evaluate bezier degree
+    float new_bezier_degree;
+    mat3 xy_to_uv = get_xy_to_uv(
+        vec2[3](p0.xy, p1.xy, p2.xy),
+        bezier_degree,
+        new_bezier_degree
     );
-    //
+    bezier_degree = new_bezier_degree;
+    uv_anti_alias_width = aaw * length(xy_to_uv[0].xy);
 
     for(int i = 0; i < 5; i++){
         vec3 corner = corners[i];
-        uv_coords = (xyz_to_uv * vec4(corner, 1)).xy;
-        simp_coords = to_simple_space * uv_coords;
+        uv_coords = (xy_to_uv * vec3(corner.xy, 1.0)).xy;
         int j = int(sign(i - 1) + 1);  // Maps i = [0, 1, 2, 3, 4] onto j = [0, 0, 1, 2, 2]
         emit_vertex_wrapper(corner, j);
     }
