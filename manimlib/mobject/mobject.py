@@ -1593,14 +1593,16 @@ class Mobject(object):
         self.align_data(mobject)
 
     def align_data(self, mobject: Mobject) -> None:
-        # In case any data arrays get resized when aligned to shader data
-        self.refresh_shader_data()
         for mob1, mob2 in zip(self.get_family(), mobject.get_family()):
-            # Separate out how points are treated so that subclasses
-            # can handle that case differently if they choose
+            # In case any data arrays get resized when aligned to shader data
+            mob1.refresh_shader_data()
+            mob2.refresh_shader_data()
+
             mob1.align_points(mob2)
             for key in mob1.data.keys() & mob2.data.keys():
                 if key == "points":
+                    # Separate out how points are treated so that subclasses
+                    # can handle that case differently if they choose
                     continue
                 arr1 = mob1.data[key]
                 arr2 = mob2.data[key]
