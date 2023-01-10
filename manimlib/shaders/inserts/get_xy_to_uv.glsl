@@ -63,15 +63,17 @@ mat3 get_xy_to_uv(vec2 controls[3], float temp_is_linear, out float is_linear){
     /*
     Returns a matrix for an affine transformation which maps a set of quadratic
     bezier controls points into a new coordinate system such that the bezier curve
-    coincides with y = x^2
+    coincides with y = x^2, or in the case of a linear curve, it's mapped to the x-axis.
     */
     vec2[2] dest;
     is_linear = temp_is_linear;
+    // Portions of the parabola y = x^2 where x exceeds this value are just
+    // treated as straight lines.
+    float thresh = 2.0;  
     if (!bool(is_linear)){
         vec2 xs = xs_on_clean_parabola(controls);
         float x0 = xs.x;
         float x2 = xs.y;
-        float thresh = 2.0;
         if((x0 > thresh && x2 > thresh) || (x0 < -thresh && x2 < -thresh)){
             is_linear = 1.0;
         }else{
