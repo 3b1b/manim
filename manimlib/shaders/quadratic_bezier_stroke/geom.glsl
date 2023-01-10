@@ -76,6 +76,7 @@ void create_joint(float angle, vec2 unit_tan, float buff,
 int get_corners(
     vec2 controls[3],
     float stroke_widths[3],
+    float aaw,  // Anti-alias width
     float angle_from_prev,
     float angle_to_next,
     out vec2 corners[5]
@@ -90,13 +91,14 @@ int get_corners(
     vec2 v01 = -v10;
     vec2 v21 = -v12;
 
-    vec2 p0_perp = vec2(-v01.y, v01.x);  // Pointing to the left of the curve from p0
-    vec2 p2_perp = vec2(-v12.y, v12.x);  // Pointing to the left of the curve from p2
+    float cross_prod = cross2d(v01, v12);
+    float sgn = (cross_prod >= 0.0 || bool(is_linear)) ? 1.0 : -1.0;
+    vec2 p0_perp = sgn * vec2(-v01.y, v01.x);  // Pointing to the inside of the curve from p0
+    vec2 p2_perp = sgn * vec2(-v12.y, v12.x);  // Pointing to the inside of the curve from p2
 
     // aaw is the added width given around the polygon for antialiasing.
     // In case the normal is faced away from (0, 0, 1), the vector to the
     // camera, this is scaled up.
-    float aaw = anti_alias_width * frame_shape.y / pixel_shape.y;
     float buff0 = 0.5 * stroke_widths[0] + aaw;
     float buff2 = 0.5 * stroke_widths[2] + aaw;
 
@@ -116,11 +118,8 @@ int get_corners(
         return 4;
     }
     // Otherwise, form a pentagon around the curve
-    float orientation = sign(cross2d(v01, v12));  // Positive for ccw curves
-    if(orientation > 0) corners = vec2[5](c0, c1, p1, c2, c3);
-    else                corners = vec2[5](c1, c0, p1, c3, c2);
-    // Replace corner[2] with convex hull point accounting for stroke width
-    corners[2] = corners[2] - orientation * (buff0 * p0_perp + buff2 * p2_perp);
+    corners = vec2[5](c0, c1, p1, c2, c3);
+    corners[2] -= buff0 * p0_perp + buff2 * p2_perp;
     return 5;
 }
 
@@ -151,11 +150,11 @@ void main() {
     float angle_from_prev = v_joint_angle[0];
     float angle_to_next = v_joint_angle[2];
     if(angle_from_prev == DISJOINT_CONST){
-        // TODO, mark the fact that there is no previous
+        // TODO, add anti-aliasing patch to curve start
         angle_from_prev = 0.0;
     }
     if(angle_to_next == DISJOINT_CONST){
-        // TODO, mark the fact that there is no next
+        // TODO, add anti-aliasing patch to curve end
         angle_to_next = 0.0;
     }
 
@@ -164,11 +163,11 @@ void main() {
     // the case of a linear curve (bezier degree 1), just put it on
     // the segment from (0, 0) to (1, 0)
     is_linear = float(abs(v_joint_angle[1]) < ANGLE_THRESHOLD);
-
     mat3 xy_to_uv = get_xy_to_uv(flat_controls, is_linear, is_linear);
 
-    float scale_factor = length(xy_to_uv[0].xy);
-    uv_anti_alias_width = scale_factor * anti_alias_width * (frame_shape.y / pixel_shape.y);
+    float uv_scale_factor = length(xy_to_uv[0].xy);
+    float scaled_anti_alias_width = anti_alias_width * (frame_shape.y / pixel_shape.y);
+    uv_anti_alias_width = uv_scale_factor * scaled_anti_alias_width;
 
     // If the curve is flat, put the middle control in the midpoint
     if (bool(is_linear)){
@@ -179,7 +178,7 @@ void main() {
     vec2 corners[5];
     int n_corners = get_corners(
         flat_controls, scaled_strokes,
-        angle_from_prev, angle_to_next,
+        scaled_anti_alias_width, angle_from_prev, angle_to_next,
         corners
     );
 
@@ -189,7 +188,7 @@ void main() {
     // Emit each corner
     for(int i = 0; i < n_corners; i++){
         uv_coords = (xy_to_uv * vec3(corners[i], 1.0)).xy;
-        uv_stroke_width = scale_factor * scaled_strokes[index_map[i]];
+        uv_stroke_width = uv_scale_factor * scaled_strokes[index_map[i]];
         // Apply some lighting to the color before sending out.
         vec3 xyz_coords = vec3(corners[i], verts[index_map[i]].z);
         color = finalize_color(
