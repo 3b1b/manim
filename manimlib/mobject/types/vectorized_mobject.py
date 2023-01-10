@@ -1071,18 +1071,16 @@ class VMobject(Mobject):
         sgn = np.sign(cross2d(vect_to_vert, vect_from_vert))
         self.data["joint_angle"][:, 0] = sgn * angle
 
-        # To communicate to the shader that a given anchor point
-        # sits at the end of a curve, we set its angle equal
-        # to something outside the range [-pi, pi].
-        # An arbitrary constant is used
+        # If a given anchor point sits at the end of a curve,
+        # we set its angle equal to 0
         ends_mismatch = (a1[-1] != a0[0]).any()
         if ends_mismatch:
-            self.data["joint_angle"][0] = DISJOINT_CONST
-            self.data["joint_angle"][-1] = DISJOINT_CONST
+            self.data["joint_angle"][0] = 0
+            self.data["joint_angle"][-1] = 0
 
         mis_matches = (a0[1:] != a1[:-1]).any(1)
-        self.data["joint_angle"][3::3][mis_matches] = DISJOINT_CONST
-        self.data["joint_angle"][2:-1:3][mis_matches] = DISJOINT_CONST
+        self.data["joint_angle"][3::3][mis_matches] = 0
+        self.data["joint_angle"][2:-1:3][mis_matches] = 0
 
         return self.data["joint_angle"]
 

@@ -42,7 +42,6 @@ const int BEVEL_JOINT = 2;
 const int MITER_JOINT = 3;
 
 const float PI = 3.141592653;
-const float DISJOINT_CONST = 404.0;
 const float ANGLE_THRESHOLD = 1e-3;
 
 
@@ -152,18 +151,10 @@ void main() {
         }
     }
 
-    // Set joint information
+    // Set joint information, potentially recomputing based on perspective
     float angle_from_prev = v_joint_angle[0];
     float angle_to_next = v_joint_angle[2];
-    if(angle_from_prev == DISJOINT_CONST){
-        // TODO, add anti-aliasing patch to curve start
-        angle_from_prev = 0.0;
-    }
-    if(angle_to_next == DISJOINT_CONST){
-        // TODO, add anti-aliasing patch to curve end
-        angle_to_next = 0.0;
-    }
-    // Recompute angles based on perspective
+
     if(angle_from_prev > 0.0 && unit_normal != vec3(0.0, 0.0, 1.0)){
         vec3 v01 = verts[1] - verts[0];
         vec3 from_prev = rotate(v01, angle_from_prev, unit_normal);
