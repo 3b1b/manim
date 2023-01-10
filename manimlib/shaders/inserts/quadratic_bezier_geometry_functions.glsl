@@ -59,8 +59,9 @@ mat3 map_point_pairs(vec2 src0, vec2 src1, vec2 dest0, vec2 dest1){
 }
 
 
-mat3 get_xy_to_uv(vec2 controls[3], float bezier_degree){
+mat3 get_xy_to_uv(vec2 controls[3], float bezier_degree, out float new_bezier_degree){
     vec2[2] dest;
+    new_bezier_degree = bezier_degree;
     if (bezier_degree == 1.0){
         dest[0] = vec2(0, 0);
         dest[1] = vec2(1, 0);
@@ -68,8 +69,15 @@ mat3 get_xy_to_uv(vec2 controls[3], float bezier_degree){
         vec2 xs = xs_on_clean_parabola(controls);
         float x0 = xs.x;
         float x2 = xs.y;
-        dest[0] = vec2(x0, x0 * x0);
-        dest[1] = vec2(x2, x2 * x2);
+        float thresh = 2.0;
+        if((x0 > thresh && x2 > thresh) || (x0 < -thresh && x2 < -thresh)){
+            dest[0] = vec2(0, 0);
+            dest[1] = vec2(1, 0);
+            new_bezier_degree = 1.0;
+        }else{
+            dest[0] = vec2(x0, x0 * x0);
+            dest[1] = vec2(x2, x2 * x2);
+        }
     }
     return map_point_pairs(
         controls[0], controls[2], dest[0], dest[1]

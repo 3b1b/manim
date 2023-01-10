@@ -131,7 +131,6 @@ int get_corners(
 void main() {
     if (distance(verts[0], verts[1]) == 0 && distance(verts[1], verts[2]) == 0) return;
 
-    bezier_degree = (abs(v_joint_angle[1]) < ANGLE_THRESHOLD) ? 1.0 : 2.0;
     vec3 unit_normal = camera_rotation * vec3(0.0, 0.0, 1.0); // TODO, track true unit normal globally
 
     // Control points are projected to the xy plane before drawing, which in turn
@@ -150,10 +149,6 @@ void main() {
         scaled_strokes[i] = v_stroke_width[i] * sf;
     }
 
-    // If the curve is flat, put the middle control in the midpoint
-    if (bezier_degree == 1.0){
-        flat_controls[1] = 0.5 * (flat_controls[0] + flat_controls[2]);
-    }
 
     // Set joint information
     float angle_from_prev = v_joint_angle[0];
@@ -167,6 +162,24 @@ void main() {
         angle_to_next = 0.0;
     }
 
+    // We want to change the coordinates to a space where the curve
+    // coincides with y = x^2, between some values x0 and x2. Or, in
+    // the case of a linear curve (bezier degree 1), just put it on
+    // the segment from (0, 0) to (1, 0)
+    bezier_degree = (abs(v_joint_angle[1]) < ANGLE_THRESHOLD) ? 1.0 : 2.0;
+
+    float new_bezier_degree;
+    mat3 xy_to_uv = get_xy_to_uv(flat_controls, bezier_degree, new_bezier_degree);
+    bezier_degree = new_bezier_degree;
+
+    float scale_factor = length(xy_to_uv[0].xy);
+    uv_anti_alias_width = scale_factor * anti_alias_width * (frame_shape.y / pixel_shape.y);
+
+    // If the curve is flat, put the middle control in the midpoint
+    if (bezier_degree == 1.0){
+        flat_controls[1] = 0.5 * (flat_controls[0] + flat_controls[2]);
+    }
+
     // Corners of a bounding region around curve
     vec2 corners[5];
     int n_corners = get_corners(
@@ -177,11 +190,6 @@ void main() {
 
     int index_map[5] = int[5](0, 0, 1, 2, 2);
     if(n_corners == 4) index_map[2] = 2;
-
-    // Find uv conversion
-    mat3 xy_to_uv = get_xy_to_uv(flat_controls, bezier_degree);
-    float scale_factor = length(xy_to_uv[0].xy);
-    uv_anti_alias_width = scale_factor * anti_alias_width * (frame_shape.y / pixel_shape.y);
 
     // Emit each corner
     for(int i = 0; i < n_corners; i++){
