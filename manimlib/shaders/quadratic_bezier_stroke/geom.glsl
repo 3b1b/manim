@@ -59,7 +59,7 @@ void create_joint(float angle, vec2 unit_tan, float buff,
     if(abs(angle) < ANGLE_THRESHOLD){
         // No joint
         shift = 0;
-    }else if(joint_type == MITER_JOINT){
+    }else if(joint_type == MITER_JOINT || (joint_type == AUTO_JOINT && angle > 0.9 * PI)){
         shift = buff * (-1.0 - cos(angle)) / sin(angle);
     }else{
         // For a Bevel joint
