@@ -84,7 +84,7 @@ class VMobject(Mobject):
         draw_stroke_behind_fill: bool = False,
         background_image_file: str | None = None,
         long_lines: bool = False,
-        # Could also be "bevel", "miter", "round"
+        # Could also be "no_joint", "bevel", "miter"
         joint_type: str = "auto",
         flat_stroke: bool = False,
         # Measured in pixel widths

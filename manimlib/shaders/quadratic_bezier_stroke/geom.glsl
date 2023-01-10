@@ -36,10 +36,10 @@ out float is_linear;
 out vec2 uv_coords;
 
 // Codes for joint types
-const float AUTO_JOINT = 0;
-const float ROUND_JOINT = 1;
-const float BEVEL_JOINT = 2;
-const float MITER_JOINT = 3;
+const int NO_JOINT = 0;
+const int AUTO_JOINT = 1;
+const int BEVEL_JOINT = 2;
+const int MITER_JOINT = 3;
 
 const float PI = 3.141592653;
 const float DISJOINT_CONST = 404.0;
@@ -56,10 +56,10 @@ void create_joint(float angle, vec2 unit_tan, float buff,
                   vec2 static_c0, out vec2 changing_c0,
                   vec2 static_c1, out vec2 changing_c1){
     float shift;
-    if(abs(angle) < ANGLE_THRESHOLD){
+    if(abs(angle) < ANGLE_THRESHOLD || int(joint_type) == NO_JOINT){
         // No joint
         shift = 0;
-    }else if(joint_type == MITER_JOINT || (joint_type == AUTO_JOINT && angle > 0.9 * PI)){
+    }else if(int(joint_type) == MITER_JOINT || (int(joint_type) == AUTO_JOINT && angle > 0.9 * PI)){
         shift = buff * (-1.0 - cos(angle)) / sin(angle);
     }else{
         // For a Bevel joint
