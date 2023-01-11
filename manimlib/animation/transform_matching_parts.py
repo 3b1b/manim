@@ -42,8 +42,8 @@ class TransformMatchingParts(AnimationGroup):
         self.anim_config = dict(**kwargs)
 
         # We will progressively build up a list of transforms
-        # from characters in source to those in target. These
-        # two lists keep track of which characters are accounted
+        # from pieces in source to those in target. These
+        # two lists keep track of which pieces are accounted
         # for so far
         self.source_pieces = source.family_members_with_points()
         self.target_pieces = target.family_members_with_points()
@@ -57,14 +57,18 @@ class TransformMatchingParts(AnimationGroup):
             self.add_transform(*pair)
 
         # Finally, account for mismatches
-        for source_char in self.source_pieces:
+        for source_piece in self.source_pieces:
+            if any([source_piece in anim.mobject.get_family() for anim in self.anims]):
+                continue
             self.anims.append(FadeOutToPoint(
-                source_char, target.get_center(),
+                source_piece, target.get_center(),
                 **self.anim_config
             ))
-        for target_char in self.target_pieces:
+        for target_piece in self.target_pieces:
+            if any([target_piece in anim.mobject.get_family() for anim in self.anims]):
+                continue
             self.anims.append(FadeInFromPoint(
-                target_char, source.get_center(),
+                target_piece, source.get_center(),
                 **self.anim_config
             ))
 
