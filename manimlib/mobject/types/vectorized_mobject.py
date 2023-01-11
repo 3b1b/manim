@@ -852,6 +852,8 @@ class VMobject(Mobject):
             new_subpaths2.append(sp2)
         self.set_points(np.vstack(new_subpaths1))
         vmobject.set_points(np.vstack(new_subpaths2))
+        for mob in (self, vmobject):
+            mob.get_joint_angles()
         return self
 
     def insert_n_curves(self, n: int, recurse: bool = True):
