@@ -225,22 +225,13 @@ class Arc(TipableVMobject):
         angle: float,
         start_angle: float = 0,
         n_components: int = 8
-    ) -> Vect3:
-        samples = np.array([
-            [np.cos(a), np.sin(a), 0]
-            for a in np.linspace(
-                start_angle,
-                start_angle + angle,
-                2 * n_components + 1,
-            )
-        ])
+    ) -> Vect3Array:
+        n_points = 2 * n_components + 1
+        angles = np.linspace(start_angle, start_angle + angle, n_points)
+        points = np.array([np.cos(angles), np.sin(angles), np.zeros(n_points)]).T
+        # Adjust handles
         theta = angle / n_components
-        samples[1::2] /= np.cos(theta / 2)
-
-        points = np.zeros((3 * n_components, 3))
-        points[0::3] = samples[0:-1:2]
-        points[1::3] = samples[1::2]
-        points[2::3] = samples[2::2]
+        points[1::2] /= np.cos(theta / 2)
         return points
 
     def get_arc_center(self) -> Vect3:
