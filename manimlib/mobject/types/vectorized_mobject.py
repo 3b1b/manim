@@ -1046,15 +1046,16 @@ class VMobject(Mobject):
         self.needs_new_joint_angles = False
 
         points = self.get_points()
+        append_one = False
+        if(len(points) % 3 == 1):
+            points = points[:-1]
+            append_one = True
+
         self.data["joint_angle"] = resize_array(self.data["joint_angle"], len(points))
 
         if(len(points) < 3):
             return self.data["joint_angle"]
 
-        append_one = False
-        if(len(points) % 3 == 1):
-            points = points[:-1]
-            append_one = True
 
         # Unit tangent vectors
         a0, h, a1 = points[0::3], points[1::3], points[2::3]
@@ -1078,7 +1079,7 @@ class VMobject(Mobject):
         dots = (vect_to_vert * vect_from_vert).sum(1)
         angle = np.arccos(arr_clip(dots, -1, 1))
         sgn = np.sign(cross2d(vect_to_vert, vect_from_vert))
-        self.data["joint_angle"][:len(angle), 0] = sgn * angle
+        self.data["joint_angle"][:, 0] = sgn * angle
 
         # If a given anchor point sits at the end of a curve,
         # we set its angle equal to 0
@@ -1092,7 +1093,7 @@ class VMobject(Mobject):
         self.data["joint_angle"][2:-1:3][mis_matches] = 0
 
         if append_one:
-            self.data["joint_angle"] = np.hstack([self.data["joint_angle"], 0])
+            self.data["joint_angle"] = np.vstack([self.data["joint_angle"], np.zeros((1, 1))])
 
         return self.data["joint_angle"]
 
@@ -1103,6 +1104,7 @@ class VMobject(Mobject):
             if refresh:
                 self.refresh_triangulation()
                 self.refresh_joint_angles()
+                self.get_joint_angles()
         return wrapper
 
     @triggers_refreshed_triangulation
