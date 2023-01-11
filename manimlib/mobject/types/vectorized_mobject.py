@@ -813,6 +813,8 @@ class VMobject(Mobject):
             # needlessly throughout an animation
             if self.has_fill() and vmobject.has_fill() and self.has_same_shape_as(vmobject):
                 vmobject.triangulation = self.triangulation
+            for mob in (self, vmobject):
+                mob.get_joint_angles()
             return
 
         for mob in self, vmobject:
@@ -1037,8 +1039,8 @@ class VMobject(Mobject):
             mob.needs_new_joint_angles = True
         return self
 
-    def get_joint_angles(self):
-        if not self.needs_new_joint_angles:
+    def get_joint_angles(self, refresh: bool = False):
+        if not self.needs_new_joint_angles and not refresh:
             return self.data["joint_angle"]
 
         self.needs_new_joint_angles = False
@@ -1076,7 +1078,7 @@ class VMobject(Mobject):
         dots = (vect_to_vert * vect_from_vert).sum(1)
         angle = np.arccos(arr_clip(dots, -1, 1))
         sgn = np.sign(cross2d(vect_to_vert, vect_from_vert))
-        self.data["joint_angle"][:, 0] = sgn * angle
+        self.data["joint_angle"][:len(angle), 0] = sgn * angle
 
         # If a given anchor point sits at the end of a curve,
         # we set its angle equal to 0
