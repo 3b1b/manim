@@ -138,7 +138,7 @@ int get_corners(
 
 
 void main() {
-    if (distance(verts[0], verts[1]) == 0 && distance(verts[1], verts[2]) == 0) return;
+    if (distance(verts[0], verts[1]) == 0 || distance(verts[1], verts[2]) == 0) return;
 
     vec3 unit_normal = camera_rotation * vec3(0.0, 0.0, 1.0); // TODO, track true unit normal globally
 
