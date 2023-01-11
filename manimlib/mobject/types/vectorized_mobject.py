@@ -1046,8 +1046,13 @@ class VMobject(Mobject):
         points = self.get_points()
         self.data["joint_angle"] = resize_array(self.data["joint_angle"], len(points))
 
-        if(len(points) == 0):
+        if(len(points) < 3):
             return self.data["joint_angle"]
+
+        append_one = False
+        if(len(points) % 3 == 1):
+            points = points[:-1]
+            append_one = True
 
         # Unit tangent vectors
         a0, h, a1 = points[0::3], points[1::3], points[2::3]
@@ -1083,6 +1088,9 @@ class VMobject(Mobject):
         mis_matches = (a0[1:] != a1[:-1]).any(1)
         self.data["joint_angle"][3::3][mis_matches] = 0
         self.data["joint_angle"][2:-1:3][mis_matches] = 0
+
+        if append_one:
+            self.data["joint_angle"] = np.hstack([self.data["joint_angle"], 0])
 
         return self.data["joint_angle"]
 
