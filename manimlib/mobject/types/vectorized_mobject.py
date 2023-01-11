@@ -1050,7 +1050,6 @@ class VMobject(Mobject):
             return self.data["joint_angle"]
 
         # Unit tangent vectors
-        self.get_anchors_and_handles()
         a0, h, a1 = points[0::3], points[1::3], points[2::3]
         a0_to_h = normalize_along_axis(h - a0, 1)
         h_to_a1 = normalize_along_axis(a1 - h, 1)
