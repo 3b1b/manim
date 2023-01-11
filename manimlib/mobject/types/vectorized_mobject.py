@@ -108,6 +108,7 @@ class VMobject(Mobject):
         self.needs_new_triangulation = True
         self.triangulation = np.zeros(0, dtype='i4')
         self.needs_new_joint_angles = True
+        self.outer_vert_indices = np.zeros(0, dtype='i4')
 
         super().__init__(**kwargs)
 
@@ -1144,7 +1145,6 @@ class VMobject(Mobject):
         )
         self.stroke_shader_wrapper = ShaderWrapper(
             vert_data=self.stroke_data,
-            vert_indices=np.zeros(0, dtype='i4'),
             uniforms=self.uniforms,
             shader_folder=self.stroke_shader_folder,
             render_primitive=self.render_primitive,
@@ -1164,8 +1164,11 @@ class VMobject(Mobject):
         return self.fill_shader_wrapper
 
     def get_stroke_shader_wrapper(self) -> ShaderWrapper:
-        self.stroke_shader_wrapper.vert_indices = self.get_stroke_shader_vert_indices()
-        self.stroke_shader_wrapper.vert_data = self.get_stroke_shader_data()
+        # Temporary
+        if len(self.outer_vert_indices) != 3 * self.get_num_curves():
+            self.outer_vert_indices = self.get_outer_vert_indices()
+
+        self.stroke_shader_wrapper.vert_data = self.get_stroke_shader_data()[self.outer_vert_indices]
         self.stroke_shader_wrapper.uniforms = self.get_shader_uniforms()
         self.stroke_shader_wrapper.depth_test = self.depth_test
         return self.stroke_shader_wrapper
