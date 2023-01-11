@@ -350,13 +350,12 @@ def get_quadratic_approximation_of_cubic(
     i1 = find_intersection(a1, T1, mid, Tm)
 
     m, n = np.shape(a0)
-    result = np.zeros((6 * m, n))
-    result[0::6] = a0
-    result[1::6] = i0
-    result[2::6] = mid
-    result[3::6] = mid
-    result[4::6] = i1
-    result[5::6] = a1
+    result = np.zeros((5 * m, n))
+    result[0::5] = a0
+    result[1::5] = i0
+    result[2::5] = mid
+    result[3::5] = i1
+    result[4::5] = a1
     return result
 
 
