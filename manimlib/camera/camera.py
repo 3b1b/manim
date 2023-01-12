@@ -403,20 +403,26 @@ class Camera(object):
         single_use: bool = True
     ) -> dict[str, Any]:
         # Data buffers
-        vert_data = shader_wrapper.vert_data
-        if shader_wrapper.vert_indices is not None:
-            vert_data = vert_data[shader_wrapper.vert_indices]
-
-        vbo = self.ctx.buffer(vert_data.tobytes())
+        vbo = self.ctx.buffer(shader_wrapper.vert_data.tobytes())
+        if shader_wrapper.vert_indices is None:
+            ibo = None
+        else:
+            vert_index_data = shader_wrapper.vert_indices.astype('i4').tobytes()
+            if vert_index_data:
+                ibo = self.ctx.buffer(vert_index_data)
+            else:
+                ibo = None
 
         # Program and vertex array
         shader_program, vert_format = self.get_shader_program(shader_wrapper)
         vao = self.ctx.vertex_array(
             program=shader_program,
             content=[(vbo, vert_format, *shader_wrapper.vert_attributes)],
+            index_buffer=ibo,
         )
         return {
             "vbo": vbo,
+            "ibo": ibo,
             "vao": vao,
             "prog": shader_program,
             "shader_wrapper": shader_wrapper,
@@ -424,7 +430,7 @@ class Camera(object):
         }
 
     def release_render_group(self, render_group: dict[str, Any]) -> None:
-        for key in ["vbo", "vao"]:
+        for key in ["vbo", "ibo", "vao"]:
             if render_group[key] is not None:
                 render_group[key].release()
 
