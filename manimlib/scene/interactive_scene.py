@@ -159,14 +159,14 @@ class InteractiveScene(Scene):
             pass
 
     def get_crosshair(self):
-        line = Line(LEFT, RIGHT)
-        lines = line.replicate(2)
-        lines[1].rotate(PI / 2)
-        crosshair = VMobject()
-        crosshair.add_subpath(lines[0].get_points())
-        crosshair.add_subpath(lines[1].get_points())
+        lines = VMobject().replicate(2)
+        lines[0].set_points([LEFT, ORIGIN, RIGHT])
+        lines[1].set_points([UP, ORIGIN, DOWN])
+        crosshair = VGroup(*lines)
+
         crosshair.set_width(self.crosshair_width)
-        crosshair.set_stroke(self.crosshair_color, width=[2, 0, 2, 0, 2, 0, 2])
+        crosshair.set_stroke(self.crosshair_color, width=[2, 0, 2])
+        crosshair.insert_n_curves(1)
         crosshair.set_animating_status(True)
         crosshair.fix_in_frame()
         return crosshair
