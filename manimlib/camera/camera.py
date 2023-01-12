@@ -402,16 +402,15 @@ class Camera(object):
         shader_wrapper: ShaderWrapper,
         single_use: bool = True
     ) -> dict[str, Any]:
-        # Data buffers
-        vbo = self.ctx.buffer(shader_wrapper.vert_data.tobytes())
-        if shader_wrapper.vert_indices is None:
-            ibo = None
-        else:
-            vert_index_data = shader_wrapper.vert_indices.astype('i4').tobytes()
-            if vert_index_data:
-                ibo = self.ctx.buffer(vert_index_data)
-            else:
-                ibo = None
+        # Data buffer
+        vert_data = shader_wrapper.vert_data
+        indices = shader_wrapper.vert_indices
+        if indices is not None:
+            vert_data = vert_data[indices]
+        vbo = self.ctx.buffer(vert_data.tobytes())
+        # For the moment, the index buffer is actually not used,
+        # since it seems to make the actual render calls meaninfully slower
+        ibo = None
 
         # Program and vertex array
         shader_program, vert_format = self.get_shader_program(shader_wrapper)
