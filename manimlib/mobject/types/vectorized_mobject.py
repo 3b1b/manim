@@ -958,7 +958,9 @@ class VMobject(Mobject):
         Returns the pattern (0, 1, 2, 2, 3, 4, 4, 5, 6, ...)
         """
         n_curves = self.get_num_curves()
-        return (np.arange(1, 3 * n_curves + 1) * 2) // 3
+        if len(self.outer_vert_indices) != 3 * n_curves:
+            self.outer_vert_indices = (np.arange(1, 3 * n_curves + 1) * 2) // 3
+        return self.outer_vert_indices
 
     # Data for shaders that may need refreshing
 
@@ -1166,7 +1168,7 @@ class VMobject(Mobject):
 
     def get_stroke_shader_wrapper(self) -> ShaderWrapper:
         self.stroke_shader_wrapper.vert_data = self.get_stroke_shader_data()
-        self.stroke_shader_wrapper.vert_indices = self.get_stroke_shader_vert_indices()
+        self.stroke_shader_wrapper.vert_indices = self.get_outer_vert_indices()
         self.stroke_shader_wrapper.uniforms = self.get_shader_uniforms()
         self.stroke_shader_wrapper.depth_test = self.depth_test
         return self.stroke_shader_wrapper
@@ -1232,11 +1234,6 @@ class VMobject(Mobject):
 
     def get_fill_shader_vert_indices(self) -> np.ndarray:
         return self.get_triangulation()
-
-    def get_stroke_shader_vert_indices(self) -> np.ndarray:
-        if len(self.outer_vert_indices) != 3 * self.get_num_curves():
-            self.outer_vert_indices = self.get_outer_vert_indices()
-        return self.outer_vert_indices
 
 
 class VGroup(VMobject):
