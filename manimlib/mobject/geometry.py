@@ -858,9 +858,8 @@ class FillArrow(Line):
         return self
 
     def get_start(self) -> Vect3:
-        nppc = self.n_points_per_curve
         points = self.get_points()
-        return (points[0] + points[-nppc]) / 2
+        return 0.5 * (points[0] + points[-3])
 
     def get_end(self) -> Vect3:
         return self.get_points()[self.tip_index]
