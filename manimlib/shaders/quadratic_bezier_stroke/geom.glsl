@@ -26,6 +26,7 @@ in vec3 verts[3];
 in float v_joint_angle[3];
 in float v_stroke_width[3];
 in vec4 v_color[3];
+in float v_vert_index[3];
 
 out vec4 color;
 out float uv_stroke_width;
@@ -140,6 +141,7 @@ void get_corners(
 
 
 void main() {
+    if (int(v_vert_index[0]) % 2 == 1) return;
     if (distance(verts[0], verts[1]) == 0 || distance(verts[1], verts[2]) == 0) return;
 
     vec3 unit_normal = camera_rotation * vec3(0.0, 0.0, 1.0); // TODO, track true unit normal globally
