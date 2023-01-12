@@ -399,11 +399,14 @@ class Prismify(VGroup3D):
         # At the moment, this assume stright edges
         vect = depth * direction
         pieces = [vmobject.copy()]
-        points = vmobject.get_points()[::vmobject.n_points_per_curve]
+        points = vmobject.get_anchors()
         for p1, p2 in adjacent_pairs(points):
             wall = VMobject()
             wall.match_style(vmobject)
             wall.set_points_as_corners([p1, p2, p2 + vect, p1 + vect])
             pieces.append(wall)
-        pieces.append(vmobject.copy().shift(vect).reverse_points())
+        top = vmobject.copy()
+        top.shift(vect)
+        top.reverse_points()
+        pieces.append(top)
         super().__init__(*pieces, **kwargs)
