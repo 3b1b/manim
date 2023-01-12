@@ -19,6 +19,7 @@ from manimlib.utils.simple_functions import clip
 from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.space_ops import angle_between_vectors
 from manimlib.utils.space_ops import angle_of_vector
+from manimlib.utils.space_ops import cross2d
 from manimlib.utils.space_ops import compass_directions
 from manimlib.utils.space_ops import find_intersection
 from manimlib.utils.space_ops import get_norm
@@ -935,20 +936,16 @@ class Polygon(VMobject):
         vertices = self.get_vertices()
         arcs = []
         for v1, v2, v3 in adjacent_n_tuples(vertices, 3):
-            vect1 = v2 - v1
-            vect2 = v3 - v2
-            unit_vect1 = normalize(vect1)
-            unit_vect2 = normalize(vect2)
+            vect1 = normalize(v2 - v1)
+            vect2 = normalize(v3 - v2)
             angle = angle_between_vectors(vect1, vect2)
-            # Negative radius gives concave curves
-            angle *= np.sign(radius)
             # Distance between vertex and start of the arc
             cut_off_length = radius * np.tan(angle / 2)
-            # Determines counterclockwise vs. clockwise
-            sign = np.sign(np.cross(vect1, vect2)[2])
+            # Negative radius gives concave curves
+            sign = float(np.sign(radius * cross2d(vect1, vect2)))
             arc = ArcBetweenPoints(
-                v2 - unit_vect1 * cut_off_length,
-                v2 + unit_vect2 * cut_off_length,
+                v2 - vect1 * cut_off_length,
+                v2 + vect2 * cut_off_length,
                 angle=sign * angle,
                 n_components=2,
             )
@@ -958,14 +955,8 @@ class Polygon(VMobject):
         # To ensure that we loop through starting with last
         arcs = [arcs[-1], *arcs[:-1]]
         for arc1, arc2 in adjacent_pairs(arcs):
-            self.append_points(arc1.get_points())
-            line = Line(arc1.get_end(), arc2.get_start())
-            # Make sure anchors are evenly distributed
-            len_ratio = line.get_length() / arc1.get_arc_length()
-            line.insert_n_curves(
-                int(arc1.get_num_curves() * len_ratio)
-            )
-            self.append_points(line.get_points())
+            self.add_subpath(arc1.get_points())
+            self.add_line_to(arc2.get_start())
         return self
 
 
