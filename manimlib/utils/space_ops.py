@@ -134,15 +134,16 @@ def rotation_about_z(angle: float) -> Matrix3x3:
 
 
 def rotation_between_vectors(v1: Vect3, v2: Vect3) -> Matrix3x3:
-    if np.isclose(v1, v2).all():
+    atol = 1e-8
+    if get_norm(v1 - v2) < atol:
         return np.identity(3)
-    axis = np.cross(v1, v2)
-    if np.isclose(axis, [0, 0, 0]).all():
+    axis = cross(v1, v2)
+    if get_norm(axis) < atol:
         # v1 and v2 align
-        axis = np.cross(v1, RIGHT)
-    if np.isclose(axis, [0, 0, 0]).all():
+        axis = cross(v1, RIGHT)
+    if get_norm(axis) < atol:
         # v1 and v2 _and_ RIGHT all align
-        axis = np.cross(v1, UP)
+        axis = cross(v1, UP)
     return rotation_matrix(
         angle=angle_between_vectors(v1, v2),
         axis=axis,
@@ -157,7 +158,7 @@ def angle_of_vector(vector: Vect2 | Vect3) -> float:
     """
     Returns polar coordinate theta when vector is project on xy plane
     """
-    return np.angle(complex(*vector[:2]))
+    return math.atan2(vector[1], vector[0])
 
 
 def angle_between_vectors(v1: VectN, v2: VectN) -> float:
