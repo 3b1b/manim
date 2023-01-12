@@ -52,9 +52,16 @@ const float ANGLE_THRESHOLD = 1e-3;
 #INSERT rotate.glsl
 
 
+float atan2(float y, float x){
+    // Normally atan is undefined for x = 0
+    if(x == 0) return sign(y) * 0.5 * PI;
+    return atan(y, x);
+}
+
+
 float angle_between(vec2 v1, vec2 v2){
     vec2 quot = complex_div(v2, v1);  // Defined in get_xy_to_uv
-    return sign(quot.x) * atan(quot.y, quot.x);
+    return atan2(quot.y, quot.x);
 }
 
 
