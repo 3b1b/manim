@@ -683,7 +683,7 @@ class VMobject(Mobject):
         return bezier(self.get_nth_curve_points(n))
 
     def get_num_curves(self) -> int:
-        return max((len(self.get_points()) - 1) // 2, 0)
+        return len(self.data["points"]) // 2
 
     def quick_point_from_proportion(self, alpha: float) -> Vect3:
         # Assumes all curves have the same length, so is inaccurate
