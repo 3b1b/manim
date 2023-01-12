@@ -198,32 +198,33 @@ class VShowPassingFlash(Animation):
         self,
         vmobject: VMobject,
         time_width: float = 0.3,
-        taper_width: float = 0.02,
+        taper_width: float = 0.05,
         remover: bool = True,
         **kwargs
     ):
         self.time_width = time_width
         self.taper_width = taper_width
         super().__init__(vmobject, remover=remover, **kwargs)
+        self.mobject = vmobject
+
+    def taper_kernel(self, x):
+        if x < self.taper_width:
+            return x
+        elif x > 1 - self.taper_width:
+            return 1.0 - x
+        return 1.0
 
     def begin(self) -> None:
         self.mobject.align_stroke_width_data_to_points()
         # Compute an array of stroke widths for each submobject
         # which tapers out at either end
-        self.submob_to_anchor_widths = dict()
+        self.submob_to_widths = dict()
         for sm in self.mobject.get_family():
-            original_widths = sm.get_stroke_widths()
-            anchor_widths = np.array([*original_widths[0::3], original_widths[-1]])
-
-            def taper_kernel(x):
-                if x < self.taper_width:
-                    return x
-                elif x > 1 - self.taper_width:
-                    return 1.0 - x
-                return 1.0
-
-            taper_array = list(map(taper_kernel, np.linspace(0, 1, len(anchor_widths))))
-            self.submob_to_anchor_widths[hash(sm)] = anchor_widths * taper_array
+            widths = sm.get_stroke_widths()
+            self.submob_to_widths[hash(sm)] = np.array([
+                width * self.taper_kernel(x)
+                for width, x in zip(widths, np.linspace(0, 1, len(widths)))
+            ])
         super().begin()
 
     def interpolate_submobject(
@@ -232,26 +233,20 @@ class VShowPassingFlash(Animation):
         starting_sumobject: None,
         alpha: float
     ) -> None:
-        anchor_widths = self.submob_to_anchor_widths[hash(submobject)]
+        widths = self.submob_to_widths[hash(submobject)]
+
         # Create a gaussian such that 3 sigmas out on either side
         # will equals time_width
         tw = self.time_width
         sigma = tw / 6
         mu = interpolate(-tw / 2, 1 + tw / 2, alpha)
+        xs = np.linspace(0, 1, len(widths))
+        zs = (xs - mu) / sigma
+        gaussian = np.exp(-0.5 * zs * zs)
+        gaussian[abs(xs - mu) > 3 * sigma] = 0
 
-        def gauss_kernel(x):
-            if abs(x - mu) > 3 * sigma:
-                return 0
-            z = (x - mu) / sigma
-            return math.exp(-0.5 * z * z)
+        submobject.set_stroke(width=widths * gaussian)
 
-        kernel_array = list(map(gauss_kernel, np.linspace(0, 1, len(anchor_widths))))
-        scaled_widths = anchor_widths * kernel_array
-        new_widths = np.zeros(submobject.get_num_points())
-        new_widths[0::3] = scaled_widths[:-1]
-        new_widths[2::3] = scaled_widths[1:]
-        new_widths[1::3] = (new_widths[0::3] + new_widths[2::3]) / 2
-        submobject.set_stroke(width=new_widths)
 
     def finish(self) -> None:
         super().finish()

@@ -36,3 +36,4 @@ if TYPE_CHECKING:
     Vect2Array = Annotated[FloatArray, Literal["N", 2]]
     Vect3Array = Annotated[FloatArray, Literal["N", 3]]
     Vect4Array = Annotated[FloatArray, Literal["N", 4]]
+    VectNArray = Annotated[FloatArray, Literal["N", "M"]]

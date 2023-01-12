@@ -19,6 +19,7 @@ from manimlib.utils.simple_functions import clip
 from manimlib.utils.simple_functions import fdiv
 from manimlib.utils.space_ops import angle_between_vectors
 from manimlib.utils.space_ops import angle_of_vector
+from manimlib.utils.space_ops import cross2d
 from manimlib.utils.space_ops import compass_directions
 from manimlib.utils.space_ops import find_intersection
 from manimlib.utils.space_ops import get_norm
@@ -225,17 +226,13 @@ class Arc(TipableVMobject):
         angle: float,
         start_angle: float = 0,
         n_components: int = 8
-    ) -> Vect3:
-        n_curves = 2 * n_components + 1
-        angles = np.linspace(start_angle, start_angle + angle, n_curves)
-        samples = np.array([np.cos(angles), np.sin(angles), np.zeros(n_curves)]).T
+    ) -> Vect3Array:
+        n_points = 2 * n_components + 1
+        angles = np.linspace(start_angle, start_angle + angle, n_points)
+        points = np.array([np.cos(angles), np.sin(angles), np.zeros(n_points)]).T
+        # Adjust handles
         theta = angle / n_components
-        samples[1::2] /= np.cos(theta / 2)
-
-        points = np.zeros((3 * n_components, 3))
-        points[0::3] = samples[0:-1:2]
-        points[1::3] = samples[1::2]
-        points[2::3] = samples[2::2]
+        points[1::2] /= np.cos(theta / 2)
         return points
 
     def get_arc_center(self) -> Vect3:
@@ -411,9 +408,9 @@ class AnnularSector(VMobject):
             )
             for radius in (inner_radius, outer_radius)
         ]
-        self.append_points(inner_arc.get_points()[::-1])  # Reverse
+        self.set_points(inner_arc.get_points()[::-1])  # Reverse
         self.add_line_to(outer_arc.get_points()[0])
-        self.append_points(outer_arc.get_points())
+        self.add_subpath(outer_arc.get_points())
         self.add_line_to(inner_arc.get_points()[-1])
 
 
@@ -454,8 +451,8 @@ class Annulus(VMobject):
         outer_circle = Circle(radius=outer_radius)
         inner_circle = Circle(radius=inner_radius)
         inner_circle.reverse_points()
-        self.append_points(outer_circle.get_points())
-        self.append_points(inner_circle.get_points())
+        self.append_vectorized_mobject(outer_circle)
+        self.append_vectorized_mobject(inner_circle)
         self.shift(center)
 
 
@@ -715,6 +712,7 @@ class Arrow(Line):
         else:
             alpha = tip_len / arc_len
         self.pointwise_become_partial(self, 0, 1 - alpha)
+        self.start_new_path(self.get_points()[-1])
         self.add_line_to(prev_end)
         return self
 
@@ -726,12 +724,9 @@ class Arrow(Line):
             self.max_width_to_length_ratio * self.get_length(),
         )
         widths_array = np.full(self.get_num_points(), width)
-        nppc = self.n_points_per_curve
-        if len(widths_array) > nppc:
-            widths_array[-nppc:] = [
-                a * self.tip_width_ratio * width
-                for a in np.linspace(1, 0, nppc)
-            ]
+        if len(widths_array) > 3:
+            tip_width = self.tip_width_ratio * width
+            widths_array[-3:] = tip_width * np.linspace(1, 0, 3)
             self.set_stroke(width=widths_array)
         return self
 
@@ -842,7 +837,7 @@ class FillArrow(Line):
         self.add_line_to(tip_width * DOWN / 2)
         self.add_line_to(points2[0])
         # Close it out
-        self.append_points(points2)
+        self.add_subpath(points2)
         self.add_line_to(points1[0])
 
         if length > 0 and self.get_length() > 0:
@@ -855,18 +850,18 @@ class FillArrow(Line):
             axis=rotate_vector(self.get_unit_vector(), -PI / 2),
         )
         self.shift(start - self.get_start())
-        self.refresh_triangulation()
 
     def reset_points_around_ends(self):
         self.set_points_by_ends(
-            self.get_start().copy(), self.get_end().copy(), path_arc=self.path_arc
+            self.get_start().copy(),
+            self.get_end().copy(),
+            path_arc=self.path_arc
         )
         return self
 
     def get_start(self) -> Vect3:
-        nppc = self.n_points_per_curve
         points = self.get_points()
-        return (points[0] + points[-nppc]) / 2
+        return 0.5 * (points[0] + points[-3])
 
     def get_end(self) -> Vect3:
         return self.get_points()[self.tip_index]
@@ -917,8 +912,13 @@ class CubicBezier(VMobject):
 
 
 class Polygon(VMobject):
-    def __init__(self, *vertices: Vect3, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        *vertices: Vect3,
+        flat_stroke: bool = True,
+        **kwargs
+    ):
+        super().__init__(flat_stroke=flat_stroke, **kwargs)
         self.set_points_as_corners([*vertices, vertices[0]])
 
     def get_vertices(self) -> Vect3Array:
@@ -936,20 +936,16 @@ class Polygon(VMobject):
         vertices = self.get_vertices()
         arcs = []
         for v1, v2, v3 in adjacent_n_tuples(vertices, 3):
-            vect1 = v2 - v1
-            vect2 = v3 - v2
-            unit_vect1 = normalize(vect1)
-            unit_vect2 = normalize(vect2)
+            vect1 = normalize(v2 - v1)
+            vect2 = normalize(v3 - v2)
             angle = angle_between_vectors(vect1, vect2)
-            # Negative radius gives concave curves
-            angle *= np.sign(radius)
             # Distance between vertex and start of the arc
             cut_off_length = radius * np.tan(angle / 2)
-            # Determines counterclockwise vs. clockwise
-            sign = np.sign(np.cross(vect1, vect2)[2])
+            # Negative radius gives concave curves
+            sign = float(np.sign(radius * cross2d(vect1, vect2)))
             arc = ArcBetweenPoints(
-                v2 - unit_vect1 * cut_off_length,
-                v2 + unit_vect2 * cut_off_length,
+                v2 - vect1 * cut_off_length,
+                v2 + vect2 * cut_off_length,
                 angle=sign * angle,
                 n_components=2,
             )
@@ -959,20 +955,19 @@ class Polygon(VMobject):
         # To ensure that we loop through starting with last
         arcs = [arcs[-1], *arcs[:-1]]
         for arc1, arc2 in adjacent_pairs(arcs):
-            self.append_points(arc1.get_points())
-            line = Line(arc1.get_end(), arc2.get_start())
-            # Make sure anchors are evenly distributed
-            len_ratio = line.get_length() / arc1.get_arc_length()
-            line.insert_n_curves(
-                int(arc1.get_num_curves() * len_ratio)
-            )
-            self.append_points(line.get_points())
+            self.add_subpath(arc1.get_points())
+            self.add_line_to(arc2.get_start())
         return self
 
 
 class Polyline(VMobject):
-    def __init__(self, *vertices: Vect3, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        *vertices: Vect3,
+        flat_stroke: bool = True,
+        **kwargs
+    ):
+        super().__init__(flat_stroke=flat_stroke, **kwargs)
         self.set_points_as_corners(vertices)
 
 

@@ -127,7 +127,7 @@ void main(){
 
     vec3[3] verts = vec3[3](bp[0], bp[1], bp[2]);
     unit_normal = get_unit_normal(verts);
-    orientation = v_orientation[0];
+    orientation = v_orientation[1];
 
     emit_pentagon(verts, unit_normal);
 }

@@ -49,10 +49,6 @@ class StringMobject(SVGMobject, ABC):
         fill_color: ManimColor = WHITE,
         stroke_color: ManimColor = WHITE,
         stroke_width: float = 0,
-        path_string_config: dict = dict(
-            should_subdivide_sharp_curves=True,
-            should_remove_null_curves=True,
-        ),
         base_color: ManimColor = WHITE,
         isolate: Selector = (),
         protect: Selector = (),
@@ -73,7 +69,6 @@ class StringMobject(SVGMobject, ABC):
             stroke_color=stroke_color,
             fill_color=fill_color,
             stroke_width=stroke_width,
-            path_string_config=path_string_config,
             **kwargs
         )
         self.labels = [submob.label for submob in self.submobjects]

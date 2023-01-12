@@ -23,11 +23,13 @@ from manimlib.utils.simple_functions import hash_string
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from manimlib.typing import ManimColor
+    from typing import Tuple
+    from manimlib.typing import ManimColor, Vect3Array
 
 
 
 SVG_HASH_TO_MOB_MAP: dict[int, list[VMobject]] = {}
+PATH_TO_POINTS: dict[str, Tuple[Vect3Array, np.ndarray]] = {}
 
 
 def _convert_point_to_3d(x: float, y: float) -> np.ndarray:
@@ -305,15 +307,10 @@ class VMobjectFromSVGPath(VMobject):
 
     def init_points(self) -> None:
         # After a given svg_path has been converted into points, the result
-        # will be saved to a file so that future calls for the same path
-        # don't need to retrace the same computation.
+        # will be saved so that future calls for the same pathdon't need to
+        # retrace the same computation.
         path_string = self.path_obj.d()
-        path_hash = hash_string(path_string)
-        points_filepath = os.path.join(get_mobject_data_dir(), f"{path_hash}_points.npy")
-
-        if os.path.exists(points_filepath):
-            self.set_points(np.load(points_filepath))
-        else:
+        if path_string not in PATH_TO_POINTS:
             self.handle_commands()
             if self.should_subdivide_sharp_curves:
                 # For a healthy triangulation later
@@ -321,8 +318,17 @@ class VMobjectFromSVGPath(VMobject):
             if self.should_remove_null_curves:
                 # Get rid of any null curves
                 self.set_points(self.get_points_without_null_curves())
-            # Save to a file for future use
-            np.save(points_filepath, self.get_points())
+            # Save for future use
+            PATH_TO_POINTS[path_string] = (
+                self.get_points().copy(),
+                self.get_triangulation().copy()
+            )
+        else:
+            points, triangulation = PATH_TO_POINTS[path_string]
+            self.set_points(points)
+            self.triangulation = triangulation
+            self.needs_new_triangulation = False
+
 
     def handle_commands(self) -> None:
         segment_class_to_func_map = {
