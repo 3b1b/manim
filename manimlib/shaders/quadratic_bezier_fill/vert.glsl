@@ -5,6 +5,7 @@
 in vec3 point;
 in float orientation;
 in vec4 color;
+in float vert_index;
 
 out vec3 bp;  // Bezier control point
 out float v_orientation;
@@ -18,6 +19,5 @@ void main(){
     bp = position_point_into_frame(point);
     v_orientation = orientation;
     v_color = color;
-    // Implicit conversion from int to float
-    v_vert_index = gl_VertexID;
+    v_vert_index = vert_index;
 }
