@@ -1,7 +1,7 @@
 #version 330
 
 layout (triangles) in;
-layout (triangle_strip, max_vertices = 5) out;
+layout (triangle_strip, max_vertices = 6) out;
 
 // Needed for get_gl_Position
 uniform vec2 frame_shape;
@@ -79,14 +79,16 @@ void create_joint(float angle, vec2 unit_tan, float buff,
 
 // This function is responsible for finding the corners of
 // a bounding region around the bezier curve, which can be
-// emitted as a triangle fan
-int get_corners(
+// emitted as a triangle fan, with vertices vaguely close
+// to control points so that the passage of vert data to
+// frag shaders is most natural.
+void get_corners(
     vec2 controls[3],
     float stroke_widths[3],
     float aaw,  // Anti-alias width
     float angle_from_prev,
     float angle_to_next,
-    out vec2 corners[5]
+    out vec2 corners[6]
 ){
     vec2 p0 = controls[0];
     vec2 p1 = controls[1];
@@ -104,25 +106,20 @@ int get_corners(
     float buff0 = 0.5 * stroke_widths[0] + aaw;
     float buff2 = 0.5 * stroke_widths[2] + aaw;
 
+    // The order of corners should be for a triangle_strip.
     vec2 c0 = p0 - buff0 * p0_perp;
     vec2 c1 = p0 + buff0 * p0_perp;
-    vec2 c2 = p2 + buff2 * p2_perp;
-    vec2 c3 = p2 - buff2 * p2_perp;
+    vec2 c2 = p1 - 0.5 * (buff0 * p0_perp + buff2 * p2_perp);
+    // c3 needs to be defined after c5
+    vec2 c4 = p2 - buff2 * p2_perp;
+    vec2 c5 = p2 + buff2 * p2_perp;
+    vec2 c3 = 0.5 * (c1 + c5);
 
     // Account for previous and next control points
     create_joint(angle_from_prev, v01, buff0, c0, c0, c1, c1);
-    create_joint(angle_to_next, -v12, buff2, c3, c3, c2, c2);
+    create_joint(angle_to_next, -v12, buff2, c4, c4, c5, c5);
 
-    // Linear case is the simplest
-    if(bool(is_linear)){
-        // The order of corners should be for a triangle_strip.  Last entry is a dummy
-        corners = vec2[5](c0, c1, c3, c2, vec2(0.0));
-        return 4;
-    }
-    // Otherwise, form a pentagon around the curve
-    corners = vec2[5](c0, c1, p1, c2, c3);
-    corners[2] -= buff0 * p0_perp + buff2 * p2_perp;
-    return 5;
+    corners = vec2[6](c0, c1, c2, c3, c4, c5);
 }
 
 
@@ -177,24 +174,22 @@ void main() {
     uv_anti_alias_width = uv_scale_factor * scaled_aaw;
 
     // Corners of a bounding region around curve
-    vec2 corners[5];
-    int n_corners = get_corners(
+    vec2 corners[6];
+    get_corners(
         flat_verts, scaled_strokes, scaled_aaw,
         angle_from_prev, angle_to_next,
         corners
     );
 
-    int index_map[5] = int[5](0, 0, 1, 2, 2);
-    if(n_corners == 4) index_map[2] = 2;
-
     // Emit each corner
-    for(int i = 0; i < n_corners; i++){
+    for(int i = 0; i < 6; i++){
+        int vert_index = i / 2;
         uv_coords = (xy_to_uv * vec3(corners[i], 1.0)).xy;
-        uv_stroke_width = uv_scale_factor * scaled_strokes[index_map[i]];
+        uv_stroke_width = uv_scale_factor * scaled_strokes[vert_index];
         // Apply some lighting to the color before sending out.
-        vec3 xyz_coords = vec3(corners[i], verts[index_map[i]].z);
+        vec3 xyz_coords = vec3(corners[i], verts[vert_index].z);
         color = finalize_color(
-            v_color[index_map[i]],
+            v_color[vert_index],
             xyz_coords,
             unit_normal,
             light_source_position,
@@ -203,7 +198,7 @@ void main() {
             gloss,
             shadow
         );
-        gl_Position = get_gl_Position(vec3(corners[i], verts[index_map[i]].z));
+        gl_Position = get_gl_Position(vec3(corners[i], verts[vert_index].z));
         EmitVertex();
     }
     EndPrimitive();
