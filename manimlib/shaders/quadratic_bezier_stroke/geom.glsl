@@ -98,26 +98,36 @@ void get_corners(
     vec2 v01 = normalize(p1 - p0);
     vec2 v12 = normalize(p2 - p1);
 
-    float cross_prod = cross2d(v01, v12);
-    float sgn = (cross_prod >= 0.0 || bool(is_linear)) ? 1.0 : -1.0;
-    vec2 p0_perp = sgn * vec2(-v01.y, v01.x);  // Pointing to the inside of the curve from p0
-    vec2 p2_perp = sgn * vec2(-v12.y, v12.x);  // Pointing to the inside of the curve from p2
-
     float buff0 = 0.5 * stroke_widths[0] + aaw;
     float buff2 = 0.5 * stroke_widths[2] + aaw;
 
+    // Add correction for sharp angles to prevent weird bevel effects
+    float thresh = 0.8 * PI;
+    if(angle_from_prev > thresh) buff0 *= sin(angle_from_prev) / sin(thresh);
+    if(angle_to_next > thresh) buff2 *= sin(angle_to_next) / sin(thresh);
+
+    // Peperndicular vectors to the left of the curve
+    vec2 p0_perp = buff0 * vec2(-v01.y, v01.x);  
+    vec2 p2_perp = buff2 * vec2(-v12.y, v12.x);
+    vec2 p1_perp = 0.5 * (p0_perp + p2_perp);
+
     // The order of corners should be for a triangle_strip.
-    vec2 c0 = p0 - buff0 * p0_perp;
-    vec2 c1 = p0 + buff0 * p0_perp;
-    vec2 c2 = p1 - 0.5 * (buff0 * p0_perp + buff2 * p2_perp);
-    // c3 needs to be defined after c5
-    vec2 c4 = p2 - buff2 * p2_perp;
-    vec2 c5 = p2 + buff2 * p2_perp;
-    vec2 c3 = 0.5 * (c1 + c5);
+    vec2 c0 = p0 + p0_perp;
+    vec2 c1 = p0 - p0_perp;
+    vec2 c2 = p1 + p1_perp;
+    vec2 c3 = p1 - p1_perp;
+    vec2 c4 = p2 + p2_perp;
+    vec2 c5 = p2 - p2_perp;
+    float cross_prod = cross2d(v01, v12);
+    if(cross_prod > 0.0){ // Positive orientation
+        c2 = 0.5 * (c0 + c4);
+    }else if(cross_prod < 0.0){
+        c3 = 0.5 * (c1 + c5);
+    }
 
     // Account for previous and next control points
-    create_joint(angle_from_prev, v01, buff0, c0, c0, c1, c1);
-    create_joint(angle_to_next, -v12, buff2, c4, c4, c5, c5);
+    create_joint(angle_from_prev, v01, buff0, c1, c1, c0, c0);
+    create_joint(angle_to_next, -v12, buff2, c5, c5, c4, c4);
 
     corners = vec2[6](c0, c1, c2, c3, c4, c5);
 }
