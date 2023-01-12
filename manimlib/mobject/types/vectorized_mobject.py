@@ -1134,7 +1134,6 @@ class VMobject(Mobject):
         self.stroke_data = np.zeros(0, dtype=self.stroke_dtype)
         self.fill_shader_wrapper = ShaderWrapper(
             vert_data=self.fill_data,
-            vert_indices=np.zeros(0, dtype='i4'),
             uniforms=self.uniforms,
             shader_folder=self.fill_shader_folder,
             render_primitive=self.render_primitive,
@@ -1153,8 +1152,7 @@ class VMobject(Mobject):
         return self
 
     def get_fill_shader_wrapper(self) -> ShaderWrapper:
-        self.fill_shader_wrapper.vert_indices = self.get_fill_shader_vert_indices()
-        self.fill_shader_wrapper.vert_data = self.get_fill_shader_data()
+        self.fill_shader_wrapper.vert_indices = self.get_fill_shader_vert_indices()[self.get_triangulation()]
         self.fill_shader_wrapper.uniforms = self.get_shader_uniforms()
         self.fill_shader_wrapper.depth_test = self.depth_test
         return self.fill_shader_wrapper
