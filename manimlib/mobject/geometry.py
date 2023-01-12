@@ -911,8 +911,13 @@ class CubicBezier(VMobject):
 
 
 class Polygon(VMobject):
-    def __init__(self, *vertices: Vect3, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        *vertices: Vect3,
+        flat_stroke: bool = True,
+        **kwargs
+    ):
+        super().__init__(flat_stroke=flat_stroke, **kwargs)
         self.set_points_as_corners([*vertices, vertices[0]])
 
     def get_vertices(self) -> Vect3Array:
