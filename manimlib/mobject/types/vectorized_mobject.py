@@ -656,10 +656,9 @@ class VMobject(Mobject):
 
     def get_subpath_end_indices_from_points(self, points: Vect3Array):
         # Find internal end points
-        a0_to_h = points[1::2] - points[0:-1:2]
-        h_to_a1 = points[2::2] - points[1::2]
+        a0, h, a1 = points[0:-1:2], points[1::2], points[2::2]
         atol = self.tolerance_for_point_equality
-        is_end = (np.linalg.norm(a0_to_h, axis=1) < atol) & (np.linalg.norm(h_to_a1, axis=1) > atol)
+        is_end = (a0 == h).all(1) & (np.linalg.norm(h - a1, axis=1) > atol)
         # Mark the final point as an end
         is_end = np.hstack([is_end, [True]])
         return np.arange(0, len(points), 2)[is_end]
@@ -982,7 +981,6 @@ class VMobject(Mobject):
             return self.triangulation
 
         normal_vector = self.get_unit_normal()
-        indices = np.arange(len(points), dtype=int)
 
         # Rotate points such that unit normal vector is OUT
         if not np.isclose(normal_vector, OUT).all():
@@ -1002,6 +1000,7 @@ class VMobject(Mobject):
         concave_parts = curve_orientations < 0
 
         # These are the vertices to which we'll apply a polygon triangulation
+        indices = np.arange(len(points), dtype=int)
         inner_vert_indices = np.hstack([
             indices[0::2],
             indices[1::2][concave_parts],
