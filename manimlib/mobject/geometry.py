@@ -836,7 +836,7 @@ class FillArrow(Line):
         self.add_line_to(tip_width * DOWN / 2)
         self.add_line_to(points2[0])
         # Close it out
-        self.append_points(points2)
+        self.add_subpath(points2)
         self.add_line_to(points1[0])
 
         if length > 0 and self.get_length() > 0:
@@ -849,11 +849,12 @@ class FillArrow(Line):
             axis=rotate_vector(self.get_unit_vector(), -PI / 2),
         )
         self.shift(start - self.get_start())
-        self.refresh_triangulation()
 
     def reset_points_around_ends(self):
         self.set_points_by_ends(
-            self.get_start().copy(), self.get_end().copy(), path_arc=self.path_arc
+            self.get_start().copy(),
+            self.get_end().copy(),
+            path_arc=self.path_arc
         )
         return self
 
