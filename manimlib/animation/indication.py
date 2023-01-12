@@ -198,7 +198,7 @@ class VShowPassingFlash(Animation):
         self,
         vmobject: VMobject,
         time_width: float = 0.3,
-        taper_width: float = 0.02,
+        taper_width: float = 0.05,
         remover: bool = True,
         **kwargs
     ):
@@ -240,7 +240,6 @@ class VShowPassingFlash(Animation):
         tw = self.time_width
         sigma = tw / 6
         mu = interpolate(-tw / 2, 1 + tw / 2, alpha)
-
         xs = np.linspace(0, 1, len(widths))
         zs = (xs - mu) / sigma
         gaussian = np.exp(-0.5 * zs * zs)
