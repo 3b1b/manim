@@ -66,7 +66,6 @@ void create_joint(float angle, vec2 unit_tan, float buff,
     if(abs(angle) < ANGLE_THRESHOLD || abs(angle) > 0.99 * PI || int(joint_type) == NO_JOINT){
         // No joint
         shift = 0;
-    // }else if(int(joint_type) == MITER_JOINT || (int(joint_type) == AUTO_JOINT && abs(angle) > 0.95 * PI)){
     }else if(int(joint_type) == MITER_JOINT){
         shift = buff * (-1.0 - cos(angle)) / sin(angle);
     }else{
@@ -101,16 +100,6 @@ int get_corners(
     float sgn = (cross_prod >= 0.0 || bool(is_linear)) ? 1.0 : -1.0;
     vec2 p0_perp = sgn * vec2(-v01.y, v01.x);  // Pointing to the inside of the curve from p0
     vec2 p2_perp = sgn * vec2(-v12.y, v12.x);  // Pointing to the inside of the curve from p2
-
-    // This is to prevent weird bevel artifacts for sharp angles
-    if(abs(angle_from_prev) > 0.5 * PI){
-        stroke_widths[0] *= sin(angle_from_prev);
-        stroke_widths[1] = 0.5 * (stroke_widths[0] + stroke_widths[2]);
-    }
-    if(abs(angle_to_next) > 0.5 * PI){
-        stroke_widths[2] *= sin(angle_to_next);
-        stroke_widths[1] = 0.5 * (stroke_widths[0] + stroke_widths[2]);
-    }
 
     float buff0 = 0.5 * stroke_widths[0] + aaw;
     float buff2 = 0.5 * stroke_widths[2] + aaw;
