@@ -711,6 +711,7 @@ class Arrow(Line):
         else:
             alpha = tip_len / arc_len
         self.pointwise_become_partial(self, 0, 1 - alpha)
+        self.start_new_path(self.get_points()[-1])
         self.add_line_to(prev_end)
         return self
 
@@ -722,12 +723,9 @@ class Arrow(Line):
             self.max_width_to_length_ratio * self.get_length(),
         )
         widths_array = np.full(self.get_num_points(), width)
-        nppc = self.n_points_per_curve
-        if len(widths_array) > nppc:
-            widths_array[-nppc:] = [
-                a * self.tip_width_ratio * width
-                for a in np.linspace(1, 0, nppc)
-            ]
+        if len(widths_array) > 3:
+            tip_width = self.tip_width_ratio * width
+            widths_array[-3:] = tip_width * np.linspace(1, 0, 3)
             self.set_stroke(width=widths_array)
         return self
 
