@@ -444,12 +444,9 @@ class VMobject(Mobject):
         handle2: Vect3,
         anchor2: Vect3
     ):
-        new_points = get_quadratic_approximation_of_cubic(
+        self.add_subpath(get_quadratic_approximation_of_cubic(
             anchor1, handle1, handle2, anchor2
-        )
-        if not self.consider_points_equal(self.get_last_point(), new_points[0]):
-            self.start_new_path(new_points[0])
-        self.append_points(new_points[1:])
+        ))
         return self
 
     def add_cubic_bezier_curve_to(
