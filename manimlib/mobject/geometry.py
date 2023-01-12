@@ -407,9 +407,9 @@ class AnnularSector(VMobject):
             )
             for radius in (inner_radius, outer_radius)
         ]
-        self.append_points(inner_arc.get_points()[::-1])  # Reverse
+        self.set_points(inner_arc.get_points()[::-1])  # Reverse
         self.add_line_to(outer_arc.get_points()[0])
-        self.append_points(outer_arc.get_points())
+        self.add_subpath(outer_arc.get_points())
         self.add_line_to(inner_arc.get_points()[-1])
 
 
@@ -450,8 +450,8 @@ class Annulus(VMobject):
         outer_circle = Circle(radius=outer_radius)
         inner_circle = Circle(radius=inner_radius)
         inner_circle.reverse_points()
-        self.append_points(outer_circle.get_points())
-        self.append_points(inner_circle.get_points())
+        self.append_vectorized_mobject(outer_circle)
+        self.append_vectorized_mobject(inner_circle)
         self.shift(center)
 
 
