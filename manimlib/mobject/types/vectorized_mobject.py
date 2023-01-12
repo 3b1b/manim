@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-from functools import reduce
 from functools import wraps
-import itertools as it
-import operator as op
 
 import moderngl
 import numpy as np
