@@ -51,7 +51,6 @@ DEFAULT_FILL_COLOR = GREY_C
 DISJOINT_CONST = 404
 
 class VMobject(Mobject):
-    n_points_per_curve: int = 3
     stroke_shader_folder: str = "quadratic_bezier_stroke"
     fill_shader_folder: str = "quadratic_bezier_fill"
     fill_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
