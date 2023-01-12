@@ -36,7 +36,6 @@ class SurfaceMesh(VGroup):
         stroke_width: float = 1,
         stroke_color: ManimColor = GREY_A,
         normal_nudge: float = 1e-2,
-        flat_stroke: bool = False,
         depth_test: bool = True,
         joint_type: str = 'no_joint',
         **kwargs
@@ -44,7 +43,6 @@ class SurfaceMesh(VGroup):
         self.uv_surface = uv_surface
         self.resolution = resolution
         self.normal_nudge = normal_nudge
-        self.flat_stroke = flat_stroke
 
         super().__init__(
             stroke_color=stroke_color,
