@@ -53,9 +53,8 @@ const float ANGLE_THRESHOLD = 1e-3;
 
 
 float angle_between(vec2 v1, vec2 v2){
-    float abs_angle = acos(clamp(dot(normalize(v1), normalize(v2)), -1.0, 1.0));
-    float sgn = sign(cross2d(v1, v2));
-    return sgn * abs_angle;
+    vec2 quot = complex_div(v2, v1);  // Defined in get_xy_to_uv
+    return sign(quot.x) * atan(quot.y, quot.x);
 }
 
 
@@ -168,7 +167,8 @@ void main() {
     vec2 flat_verts[3] = vec2[3](verts[0].xy, verts[1].xy, verts[2].xy);
 
     // If the curve is flat, put the middle control in the midpoint
-    is_linear = float(abs(v_joint_angle[1]) < ANGLE_THRESHOLD);
+    float angle = angle_between(flat_verts[1] - flat_verts[0], flat_verts[2] - flat_verts[1]);
+    is_linear = float(abs(angle) < ANGLE_THRESHOLD);
     if (bool(is_linear)){
         flat_verts[1] = 0.5 * (flat_verts[0] + flat_verts[2]);
     }
