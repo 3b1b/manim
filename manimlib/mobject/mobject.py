@@ -103,6 +103,7 @@ class Mobject(object):
         self._is_animating: bool = False
         self.saved_state = None
         self.target = None
+        self.bounding_box: Vect3Array = np.zeros((3, 3))
 
         self.init_data()
         self.init_uniforms()
@@ -129,7 +130,6 @@ class Mobject(object):
     def init_data(self):
         self.data: dict[str, np.ndarray] = {
             "points": np.zeros((0, 3)),
-            "bounding_box": np.zeros((3, 3)),
             "rgbas": np.zeros((1, 4)),
         }
 
@@ -251,9 +251,9 @@ class Mobject(object):
 
     def get_bounding_box(self) -> Vect3Array:
         if self.needs_new_bounding_box:
-            self.data["bounding_box"] = self.compute_bounding_box()
+            self.bounding_box[:] = self.compute_bounding_box()
             self.needs_new_bounding_box = False
-        return self.data["bounding_box"]
+        return self.bounding_box
 
     def compute_bounding_box(self) -> Vect3Array:
         all_points = np.vstack([
@@ -1689,10 +1689,7 @@ class Mobject(object):
             if key not in mobject1.data or key not in mobject2.data:
                 continue
 
-            if key in ("points", "bounding_box"):
-                func = path_func
-            else:
-                func = interpolate
+            func = path_func if key == "points" else interpolate
 
             self.data[key][:] = func(
                 mobject1.data[key],
@@ -1705,6 +1702,9 @@ class Mobject(object):
                 mobject2.uniforms[key],
                 alpha
             )
+        self.bounding_box[:] = path_func(
+            mobject1.bounding_box, mobject2.bounding_box, alpha
+        )
         return self
 
     def pointwise_become_partial(self, mobject, a, b):
