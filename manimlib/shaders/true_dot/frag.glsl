@@ -13,6 +13,7 @@ in vec4 color;
 in float radius;
 in vec2 center;
 in vec2 point;
+in float scaled_aaw;
 
 out vec4 frag_color;
 
@@ -22,7 +23,7 @@ void main() {
     vec2 diff = point - center;
     float dist = length(diff);
     float signed_dist = dist - radius;
-    if (signed_dist > 0.5 * anti_alias_width){
+    if (signed_dist > 0.5 * scaled_aaw){
         discard;
     }
     frag_color = color;
@@ -43,5 +44,5 @@ void main() {
         frag_color.a *= pow(1 - dist / radius, glow_factor);
     }
 
-    frag_color.a *= smoothstep(0.5, -0.5, signed_dist / anti_alias_width);
+    frag_color.a *= smoothstep(0.5, -0.5, signed_dist / scaled_aaw);
 }
