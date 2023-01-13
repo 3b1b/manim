@@ -67,6 +67,7 @@ class VMobject(Mobject):
     ]
     fill_render_primitive: int = moderngl.TRIANGLES
     stroke_render_primitive: int = moderngl.TRIANGLE_STRIP
+    aligned_data_keys = ["points", "orientation", "joint_angle"]
 
     pre_function_handle_to_anchor_scale_factor: float = 0.01
     make_smooth_after_applying_functions: bool = False
@@ -831,8 +832,6 @@ class VMobject(Mobject):
             # needlessly throughout an animation
             if self.has_fill() and vmobject.has_fill() and self.has_same_shape_as(vmobject):
                 vmobject.triangulation = self.triangulation
-            for mob in (self, vmobject):
-                mob.get_joint_angles()
             return self
 
         for mob in self, vmobject:
@@ -871,8 +870,6 @@ class VMobject(Mobject):
             new_subpaths2.append(sp2)
         self.set_points(np.vstack(new_subpaths1))
         vmobject.set_points(np.vstack(new_subpaths2))
-        for mob in (self, vmobject):
-            mob.get_joint_angles()
         return self
 
     def insert_n_curves(self, n: int, recurse: bool = True):
@@ -928,9 +925,6 @@ class VMobject(Mobject):
             tri2 = mobject2.get_triangulation()
             if len(tri1) != len(tri2) or not (tri1 == tri2).all():
                 self.refresh_triangulation()
-        if self.has_stroke():
-            for mob in (self, mobject1, mobject2):
-                mob.get_joint_angles()
         return self
 
     def pointwise_become_partial(self, vmobject: VMobject, a: float, b: float):
@@ -1083,30 +1077,25 @@ class VMobject(Mobject):
         vect_to_vert = np.zeros(points.shape)
         vect_from_vert = np.zeros(points.shape)
 
-        vect_to_vert[0] = h_to_a1[-1]
         vect_to_vert[1::2] = a0_to_h
         vect_to_vert[2::2] = h_to_a1
-
         vect_from_vert[0:-1:2] = a0_to_h
         vect_from_vert[1::2] = h_to_a1
-        vect_from_vert[-1] = a0_to_h[0]
+
+        ends = self.get_subpath_end_indices()
+        starts = [0, *(e + 2 for e in ends[:-1])]
+        for start, end in zip(starts, ends):
+            if self.consider_points_equal(points[start], points[end]):
+                vect_to_vert[start] = h_to_a1[end // 2 - 1]
+                vect_from_vert[end] = a0_to_h[start // 2]
 
         # Compute angles
         dots = (vect_to_vert * vect_from_vert).sum(1)
         angle = np.arccos(arr_clip(dots, -1, 1))
+        # Assumes unit normal of (0, 0, 1), but if stroke shader
+        # ever stops making that assumption, this should too
         sgn = np.sign(cross2d(vect_to_vert, vect_from_vert))
         self.data["joint_angle"][:, 0] = sgn * angle
-
-        # If a given anchor point sits at the end of a curve,
-        # we set its angle equal to 0
-        atol = self.tolerance_for_point_equality
-        if get_norm(a1[-1] - a0[0]) > atol:
-            self.data["joint_angle"][0] = 0
-            self.data["joint_angle"][-1] = 0
-
-        inner_ends = np.linalg.norm(a0_to_h, axis=1) < atol
-        self.data["joint_angle"][0:-1:2][inner_ends] = 0
-        self.data["joint_angle"][2::2][inner_ends] = 0
 
         return self.data["joint_angle"]
 
@@ -1117,7 +1106,6 @@ class VMobject(Mobject):
             if refresh:
                 self.refresh_triangulation()
                 self.refresh_joint_angles()
-                self.get_joint_angles()
         return wrapper
 
     @triggers_refreshed_triangulation
@@ -1245,7 +1233,7 @@ class VMobject(Mobject):
         self.read_data_to_shader(self.stroke_data[:n], "point", "points")
         self.read_data_to_shader(self.stroke_data[:n], "color", "stroke_rgba")
         self.read_data_to_shader(self.stroke_data[:n], "stroke_width", "stroke_width")
-        self.get_joint_angles()  # Potentially refreshes
+        self.get_joint_angles()  # Recomputes, only if refresh is needed
         self.read_data_to_shader(self.stroke_data[:n], "joint_angle", "joint_angle")
 
         self.stroke_data[-1] = self.stroke_data[-2]
