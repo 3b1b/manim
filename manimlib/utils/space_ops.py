@@ -309,6 +309,29 @@ def find_intersection(
     return result
 
 
+def line_intersects_path(
+    start: Vect2 | Vect3,
+    end: Vect2 | Vect3,
+    path: Vect2Array | Vect3Array,
+) -> bool:
+    """
+    Tests whether the line (start, end) intersects
+    a polygonal path defined by its vertices
+    """
+    n = len(path)
+    p1 = np.tile(start[:2], n).reshape((n, 2))
+    q1 = np.tile(end[:2], n).reshape((n, 2))
+    p2 = path[:, :2]
+    q2 = np.vstack([path[1:, :2], path[:1, :2]])
+
+    v1 = q1 - p1
+    v2 = q2 - p2
+
+    mis1 = cross2d(v1, p2 - p1) * cross2d(v1, q2 - p1) < 0
+    mis2 = cross2d(v2, p1 - p2) * cross2d(v2, q1 - p2) < 0
+    return bool((mis1 * mis2).any())
+
+
 def get_closest_point_on_line(a: VectN, b: VectN, p: VectN) -> VectN:
     """
         It returns point x such that
