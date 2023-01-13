@@ -303,8 +303,8 @@ class InteractiveScene(Scene):
         ))
         if len(mobs) == 0:
             return
-        self.selection.set_animating_status(True)
         self.selection.add(*mobs)
+        self.selection.set_animating_status(True)
 
     def toggle_from_selection(self, *mobjects: Mobject):
         for mob in mobjects:
