@@ -51,11 +51,18 @@ const float ANGLE_THRESHOLD = 1e-3;
 #INSERT finalize_color.glsl
 
 
-void create_joint(float angle, vec3 unit_tan, float buff,
-                  vec3 static_c0, out vec3 changing_c0,
-                  vec3 static_c1, out vec3 changing_c1){
+void create_joint(
+    float angle,
+    vec3 unit_tan,
+    float buff,
+    vec3 static_c0,
+    out vec3 changing_c0,
+    vec3 static_c1,
+    out vec3 changing_c1
+){
     float shift;
-    if(abs(angle) < ANGLE_THRESHOLD || abs(angle) > 0.99 * PI || int(joint_type) == NO_JOINT){
+    // if(abs(angle) < ANGLE_THRESHOLD || abs(angle) > 0.99 * PI || int(joint_type) == NO_JOINT){
+    if(abs(angle) < ANGLE_THRESHOLD || int(joint_type) == NO_JOINT){
         // No joint
         shift = 0;
     }else if(int(joint_type) == MITER_JOINT){
@@ -96,9 +103,9 @@ void get_corners(
     float buff2 = 0.5 * stroke_width2 + aaw;
 
     // Add correction for sharp angles to prevent weird bevel effects (Needed?)
-    float thresh = 0.5 * PI;
-    if(angle_from_prev > thresh) buff0 *= sin(angle_from_prev);
-    if(angle_to_next > thresh) buff2 *= sin(angle_to_next);
+    float thresh = 5 * PI / 6;
+    if(angle_from_prev > thresh) buff0 *= 2 * sin(angle_from_prev);
+    if(angle_to_next > thresh) buff2 *= 2 * sin(angle_to_next);
 
     // Perpendicular vectors to the left of the curve
     vec3 p0_perp = buff0 * normalize(cross(normal, v01));
