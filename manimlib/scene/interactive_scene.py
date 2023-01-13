@@ -304,13 +304,15 @@ class InteractiveScene(Scene):
         if len(mobs) == 0:
             return
         self.selection.add(*mobs)
-        self.selection.set_animating_status(True)
+        for mob in mobs:
+            mob.set_animating_status(True)
 
     def toggle_from_selection(self, *mobjects: Mobject):
         for mob in mobjects:
             if mob in self.selection:
                 self.selection.remove(mob)
                 mob.set_animating_status(False)
+                mob.refresh_bounding_box()
             else:
                 self.add_to_selection(mob)
         self.refresh_static_mobjects()
@@ -318,6 +320,7 @@ class InteractiveScene(Scene):
     def clear_selection(self):
         for mob in self.selection:
             mob.set_animating_status(False)
+            mob.refresh_bounding_box()
         self.selection.set_submobjects([])
         self.refresh_static_mobjects()
 
