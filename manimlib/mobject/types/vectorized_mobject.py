@@ -50,8 +50,6 @@ if TYPE_CHECKING:
 DEFAULT_STROKE_COLOR = GREY_A
 DEFAULT_FILL_COLOR = GREY_C
 
-DISJOINT_CONST = 404
-
 class VMobject(Mobject):
     fill_shader_folder: str = "quadratic_bezier_fill"
     stroke_shader_folder: str = "quadratic_bezier_stroke"
