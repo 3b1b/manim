@@ -448,11 +448,14 @@ class Annulus(VMobject):
         )
 
         self.radius = outer_radius
-        outer_circle = Circle(radius=outer_radius)
-        inner_circle = Circle(radius=inner_radius)
-        inner_circle.reverse_points()
-        self.append_vectorized_mobject(outer_circle)
-        self.append_vectorized_mobject(inner_circle)
+        # Make sure to add enough components that triangulation doesn't fail
+        kw = dict(
+            n_components=int(max(8, np.ceil(TAU / math.acos(inner_radius / outer_radius))))
+        )
+        outer_path = outer_radius * Arc.create_quadratic_bezier_points(TAU, 0, **kw)
+        inner_path = inner_radius * Arc.create_quadratic_bezier_points(-TAU, 0, **kw)
+        self.add_subpath(outer_path)
+        self.add_subpath(inner_path)
         self.shift(center)
 
 
