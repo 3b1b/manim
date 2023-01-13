@@ -417,9 +417,7 @@ class Text(MarkupText):
         # For backward compatibility
         isolate: Selector = (re.compile(r"\w+", re.U), re.compile(r"\S+", re.U)),
         use_labelled_svg: bool = True,
-        path_string_config: dict = dict(
-            use_simple_quadratic_approx=True,
-        ),
+        path_string_config: dict = dict(),
         **kwargs
     ):
         super().__init__(
