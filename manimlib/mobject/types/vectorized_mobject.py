@@ -89,7 +89,7 @@ class VMobject(Mobject):
         # Could also be "no_joint", "bevel", "miter"
         joint_type: str = "auto",
         flat_stroke: bool = False,
-        allow_cubic_to_quad_approx: bool = True,
+        use_simple_quadratic_approx: bool = False,
         # Measured in pixel widths
         anti_alias_width: float = 1.0,
         **kwargs
@@ -104,7 +104,7 @@ class VMobject(Mobject):
         self.long_lines = long_lines
         self.joint_type = joint_type
         self.flat_stroke = flat_stroke
-        self.allow_cubic_to_quad_approx = allow_cubic_to_quad_approx
+        self.use_simple_quadratic_approx = use_simple_quadratic_approx
         self.anti_alias_width = anti_alias_width
 
         self.needs_new_triangulation = True
@@ -471,8 +471,7 @@ class VMobject(Mobject):
         # Otherwise, approximate with two
         v1 = handle1 - last
         v2 = anchor - handle2
-        angle = angle_between_vectors(v1, v2)
-        if self.allow_cubic_to_quad_approx and angle < 30 * DEGREES:
+        if self.use_simple_quadratic_approx:
             quadratic_approx = [last, find_intersection(last, v1, anchor, -v2), anchor]
         else:
             quadratic_approx = get_quadratic_approximation_of_cubic(
@@ -544,9 +543,9 @@ class VMobject(Mobject):
         points = self.get_points()
         return self.consider_points_equal(points[0], points[-1])
 
-    def subdivide_sharp_curves(
+    def subdivide_curves_by_condition(
         self,
-        angle_threshold: float = 30 * DEGREES,
+        tuple_to_subdivisions: Callable,
         recurse: bool = True
     ):
         for vmob in self.get_family(recurse):
@@ -554,10 +553,9 @@ class VMobject(Mobject):
                 continue
             new_points = [vmob.get_points()[0]]
             for tup in vmob.get_bezier_tuples():
-                angle = angle_between_vectors(tup[1] - tup[0], tup[2] - tup[1])
-                if angle > angle_threshold:
-                    n = int(np.ceil(angle / angle_threshold))
-                    alphas = np.linspace(0, 1, n + 1)
+                n_divisions = tuple_to_subdivisions(*tup)
+                if n_divisions > 0:
+                    alphas = np.linspace(0, 1, n_divisions + 2)
                     new_points.extend([
                         partial_quadratic_bezier_points(tup, a1, a2)[1:]
                         for a1, a2 in zip(alphas, alphas[1:])
