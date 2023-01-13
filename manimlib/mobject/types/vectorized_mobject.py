@@ -34,6 +34,7 @@ from manimlib.utils.space_ops import cross2d
 from manimlib.utils.space_ops import earclip_triangulation
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import get_unit_normal
+from manimlib.utils.space_ops import line_intersects_path
 from manimlib.utils.space_ops import midpoint
 from manimlib.utils.space_ops import normalize_along_axis
 from manimlib.utils.space_ops import z_to_vector
@@ -564,6 +565,28 @@ class VMobject(Mobject):
                 else:
                     new_points.append(tup[1:])
             vmob.set_points(np.vstack(new_points))
+        return self
+
+    def subdivide_sharp_curves(
+        self,
+        angle_threshold: float = 30 * DEGREES,
+        recurse: bool = True
+    ):
+        def tuple_to_subdivisions(b0, b1, b2):
+            angle = angle_between_vectors(b1 - b0, b2 - b1)
+            return int(angle / angle_threshold)
+
+        self.subdivide_curves_by_condition(tuple_to_subdivisions, recurse)
+        return self
+
+    def subdivide_intersections(self, recurse: bool = True):
+        path = self.get_anchors()
+        def tuple_to_subdivisions(b0, b1, b2):
+            if line_intersects_path(b0, b1, path):
+                return 1
+            return 0
+
+        self.subdivide_curves_by_condition(tuple_to_subdivisions, recurse)
         return self
 
     def add_points_as_corners(self, points: Iterable[Vect3]):
