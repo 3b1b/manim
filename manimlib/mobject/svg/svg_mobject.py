@@ -303,9 +303,7 @@ class VMobjectFromSVGPath(VMobject):
         self.path_obj = path_obj
         self.should_subdivide_sharp_curves = should_subdivide_sharp_curves
         self.should_remove_null_curves = should_remove_null_curves
-        super().__init__(
-            **kwargs
-        )
+        super().__init__(**kwargs)
 
     def init_points(self) -> None:
         # After a given svg_path has been converted into points, the result
@@ -321,7 +319,8 @@ class VMobjectFromSVGPath(VMobject):
                 # Get rid of any null curves
                 self.set_points(self.get_points_without_null_curves())
             # So triangulation doesn't get messed up
-            self.subdivide_intersections()
+            if self.use_simple_quadratic_approx:
+                self.subdivide_intersections()
             # Save for future use
             PATH_TO_POINTS[path_string] = (
                 self.get_points().copy(),
