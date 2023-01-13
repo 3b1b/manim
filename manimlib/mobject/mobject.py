@@ -67,6 +67,7 @@ class Mobject(object):
     shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ('point', np.float32, (3,)),
     ]
+    aligned_data_keys = ['points']
 
     def __init__(
         self,
@@ -171,8 +172,8 @@ class Mobject(object):
         new_length: int,
         resize_func: Callable[[np.ndarray, int], np.ndarray] = resize_array
     ):
-        if new_length != len(self.data["points"]):
-            self.data["points"] = resize_func(self.data["points"], new_length)
+        for key in self.aligned_data_keys:
+            self.data[key] = resize_func(self.data[key], new_length)
         self.refresh_bounding_box()
         return self
 
