@@ -471,7 +471,8 @@ class VMobject(Mobject):
         # Otherwise, approximate with two
         v1 = handle1 - last
         v2 = anchor - handle2
-        if self.use_simple_quadratic_approx:
+        angle = angle_between_vectors(v1, v2)
+        if self.use_simple_quadratic_approx and angle < 45 * DEGREES:
             quadratic_approx = [last, find_intersection(last, v1, anchor, -v2), anchor]
         else:
             quadratic_approx = get_quadratic_approximation_of_cubic(
