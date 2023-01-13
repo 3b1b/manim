@@ -20,6 +20,7 @@ from manimlib.utils.bezier import get_smooth_quadratic_bezier_handle_points
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.bezier import inverse_interpolate
+from manimlib.utils.bezier import find_intersection
 from manimlib.utils.bezier import partial_quadratic_bezier_points
 from manimlib.utils.bezier import outer_interpolate
 from manimlib.utils.color import color_gradient
@@ -87,6 +88,7 @@ class VMobject(Mobject):
         # Could also be "no_joint", "bevel", "miter"
         joint_type: str = "auto",
         flat_stroke: bool = False,
+        allow_cubic_to_quad_approx: bool = True,
         # Measured in pixel widths
         anti_alias_width: float = 1.0,
         **kwargs
@@ -101,6 +103,7 @@ class VMobject(Mobject):
         self.long_lines = long_lines
         self.joint_type = joint_type
         self.flat_stroke = flat_stroke
+        self.allow_cubic_to_quad_approx = allow_cubic_to_quad_approx
         self.anti_alias_width = anti_alias_width
 
         self.needs_new_triangulation = True
@@ -455,15 +458,25 @@ class VMobject(Mobject):
         self,
         handle1: Vect3,
         handle2: Vect3,
-        anchor: Vect3
+        anchor: Vect3,
     ):
         """
         Add cubic bezier curve to the path.
         """
         self.throw_error_if_no_points()
-        quadratic_approx = get_quadratic_approximation_of_cubic(
-            self.get_last_point(), handle1, handle2, anchor
-        )
+        last = self.get_last_point()
+        # If the two relevant tangents are close in angle to each other,
+        # then just approximate with a single quadratic bezier curve.
+        # Otherwise, approximate with two
+        v1 = handle1 - last
+        v2 = anchor - handle2
+        angle = angle_between_vectors(v1, v2)
+        if self.allow_cubic_to_quad_approx and angle < 45 * DEGREES:
+            quadratic_approx = [last, find_intersection(last, v1, anchor, -v2), anchor]
+        else:
+            quadratic_approx = get_quadratic_approximation_of_cubic(
+                last, handle1, handle2, anchor
+            )
         if self.consider_points_equal(quadratic_approx[1], self.get_last_point()):
             # This is to prevent subpaths from accidentally being marked closed
             quadratic_approx[1] = midpoint(*quadratic_approx[1:3])
