@@ -329,7 +329,6 @@ class VMobjectFromSVGPath(VMobject):
             self.triangulation = triangulation
             self.needs_new_triangulation = False
 
-
     def handle_commands(self) -> None:
         segment_class_to_func_map = {
             se.Move: (self.start_new_path, ("end",)),
@@ -346,7 +345,3 @@ class VMobjectFromSVGPath(VMobject):
                 for attr_name in attr_names
             ]
             func(*points)
-
-        # Get rid of the side effect of trailing "Z M" commands.
-        if self.has_new_path_started():
-            self.resize_points(self.get_num_points() - 1)
