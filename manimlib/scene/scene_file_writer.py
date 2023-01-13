@@ -8,7 +8,7 @@ import sys
 
 import numpy as np
 from pydub import AudioSegment
-from tqdm import tqdm as ProgressDisplay
+from tqdm.auto import tqdm as ProgressDisplay
 
 from manimlib.constants import FFMPEG_BIN
 from manimlib.logger import log
