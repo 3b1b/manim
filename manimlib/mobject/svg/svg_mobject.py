@@ -296,7 +296,6 @@ class VMobjectFromSVGPath(VMobject):
         path_obj: se.Path,
         should_subdivide_sharp_curves: bool = False,
         should_remove_null_curves: bool = True,
-        use_simple_quadratic_approx: bool = True,
         **kwargs
     ):
         # Get rid of arcs
@@ -305,7 +304,6 @@ class VMobjectFromSVGPath(VMobject):
         self.should_subdivide_sharp_curves = should_subdivide_sharp_curves
         self.should_remove_null_curves = should_remove_null_curves
         super().__init__(
-            use_simple_quadratic_approx=use_simple_quadratic_approx,
             **kwargs
         )
 
