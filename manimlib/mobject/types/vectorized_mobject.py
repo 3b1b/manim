@@ -577,13 +577,10 @@ class VMobject(Mobject):
         self.subdivide_curves_by_condition(tuple_to_subdivisions, recurse)
         return self
 
-    def subdivide_intersections(self, recurse: bool = True, n_subdivisions: int = 2):
+    def subdivide_intersections(self, recurse: bool = True, n_subdivisions: int = 1):
         path = self.get_anchors()
         def tuple_to_subdivisions(b0, b1, b2):
             if line_intersects_path(b0, b1, path):
-                return n_subdivisions
-            alt_b1 = b0 + b2 - b1
-            if line_intersects_path(b0, alt_b1, path):
                 return n_subdivisions
             return 0
 
