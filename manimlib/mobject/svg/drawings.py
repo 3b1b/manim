@@ -486,17 +486,29 @@ class VectorizedEarth(SVGMobject):
 
 
 class Piano(VGroup):
-    n_white_keys = 52
-    black_pattern = [0, 2, 3, 5, 6]
-    white_keys_per_octave = 7
-    white_key_dims = (0.15, 1.0)
-    black_key_dims = (0.1, 0.66)
-    key_buff = 0.02
-    white_key_color = WHITE
-    black_key_color = GREY_E
-    total_width = 13
+    def __init__(
+        self,
+        n_white_keys = 52,
+        black_pattern = [0, 2, 3, 5, 6],
+        white_keys_per_octave = 7,
+        white_key_dims = (0.15, 1.0),
+        black_key_dims = (0.1, 0.66),
+        key_buff = 0.02,
+        white_key_color = WHITE,
+        black_key_color = GREY_E,
+        total_width = 13,
+        **kwargs
+    ):
+        self.n_white_keys = n_white_keys
+        self.black_pattern = black_pattern
+        self.white_keys_per_octave = white_keys_per_octave
+        self.white_key_dims = white_key_dims
+        self.black_key_dims = black_key_dims
+        self.key_buff = key_buff
+        self.white_key_color = white_key_color
+        self.black_key_color = black_key_color
+        self.total_width = total_width
 
-    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.add_white_keys()
         self.add_black_keys()
@@ -563,3 +575,4 @@ class Piano3D(VGroup):
         for i, key in enumerate(self):
             if piano_2d[i] in piano_2d.black_keys:
                 key.shift(black_key_shift * OUT)
+                key.set_color(BLACK)
