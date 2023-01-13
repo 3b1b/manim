@@ -1102,16 +1102,14 @@ class VMobject(Mobject):
 
     @triggers_refreshed_triangulation
     def set_points(self, points: Vect3Array):
-        if len(points) > 0 and len(points) % 2 == 0:
-            raise Exception("Bad points")
+        assert(len(points) == 0 or len(points) % 2 == 1)
         super().set_points(points)
         return self
 
     @triggers_refreshed_triangulation
     def append_points(self, points: Vect3Array):
+        assert(len(points) % 2 == 0)
         super().append_points(points)
-        if len(points) % 2 != 0:
-            raise Exception("Bad points")
         return self
 
     @triggers_refreshed_triangulation
