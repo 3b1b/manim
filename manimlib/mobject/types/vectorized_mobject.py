@@ -1122,6 +1122,12 @@ class VMobject(Mobject):
 
     @triggers_refreshed_triangulation
     def reverse_points(self):
+        # This will reset which anchors are
+        # considered path ends
+        if not self.has_points():
+            return self
+        inner_ends = self.get_subpath_end_indices()[:-1]
+        self.data["points"][inner_ends + 1] = self.data["points"][inner_ends + 2]
         super().reverse_points()
         return self
 
