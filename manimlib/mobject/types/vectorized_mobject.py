@@ -477,7 +477,7 @@ class VMobject(Mobject):
             quadratic_approx = get_quadratic_approximation_of_cubic(
                 last, handle1, handle2, anchor
             )
-        if self.consider_points_equal(quadratic_approx[1], self.get_last_point()):
+        if self.consider_points_equal(quadratic_approx[1], last):
             # This is to prevent subpaths from accidentally being marked closed
             quadratic_approx[1] = midpoint(*quadratic_approx[1:3])
         self.append_points(quadratic_approx[1:])
