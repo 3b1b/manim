@@ -8,7 +8,7 @@ vec2 complex_div(vec2 v, vec2 w){
 }
 
 
-vec2 xs_on_clean_parabola(vec2 controls[3]){
+vec2 xs_on_clean_parabola(vec2 b0, vec2 b1, vec2 b2){
     /*
     Given three control points for a quadratic bezier,
     this returns the two values (x0, x2) such that the
@@ -17,10 +17,6 @@ vec2 xs_on_clean_parabola(vec2 controls[3]){
 
     Adapated from https://github.com/raphlinus/raphlinus.github.io/blob/master/_posts/2019-12-23-flatten-quadbez.md
     */
-    vec2 b0 = controls[0];
-    vec2 b1 = controls[1];
-    vec2 b2 = controls[2];
-
     vec2 dd = normalize(2 * b1 - b0 - b2);
 
     float u0 = dot(b1 - b0, dd);
@@ -59,35 +55,34 @@ mat3 map_point_pairs(vec2 src0, vec2 src1, vec2 dest0, vec2 dest1){
 }
 
 
-mat3 get_xy_to_uv(vec2 controls[3], float temp_is_linear, out float is_linear){
+mat3 get_xy_to_uv(vec2 b0, vec2 b1, vec2 b2, float temp_is_linear, out float is_linear){
     /*
     Returns a matrix for an affine transformation which maps a set of quadratic
     bezier controls points into a new coordinate system such that the bezier curve
     coincides with y = x^2, or in the case of a linear curve, it's mapped to the x-axis.
     */
-    vec2[2] dest;
+    vec2 dest0;
+    vec2 dest1;
     is_linear = temp_is_linear;
     // Portions of the parabola y = x^2 where abs(x) exceeds
     // this value are treated as straight lines.
     float thresh = 2.0;
     if (!bool(is_linear)){
-        vec2 xs = xs_on_clean_parabola(controls);
+        vec2 xs = xs_on_clean_parabola(b0, b1, b2);
         float x0 = xs.x;
         float x2 = xs.y;
         if((x0 > thresh && x2 > thresh) || (x0 < -thresh && x2 < -thresh)){
             is_linear = 1.0;
         }else{
-            dest[0] = vec2(x0, x0 * x0);
-            dest[1] = vec2(x2, x2 * x2);
+            dest0 = vec2(x0, x0 * x0);
+            dest1 = vec2(x2, x2 * x2);
         }
     }
     // Check if is_linear status changed above
     if (bool(is_linear)){
-        dest[0] = vec2(0, 0);
-        dest[1] = vec2(1, 0);
+        dest0 = vec2(0, 0);
+        dest1 = vec2(1, 0);
     }
 
-    return map_point_pairs(
-        controls[0], controls[2], dest[0], dest[1]
-    );
+    return map_point_pairs(b0, b2, dest0, dest1);
 }

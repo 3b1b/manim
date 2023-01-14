@@ -96,7 +96,7 @@ void emit_pentagon(vec3 p0, vec3 p1, vec3 p2, vec3 normal){
     }
 
     // Compute xy_to_uv matrix, and potentially re-evaluate bezier degree
-    mat3 xy_to_uv = get_xy_to_uv(vec2[3](p0.xy, p1.xy, p2.xy), is_linear, is_linear);
+    mat3 xy_to_uv = get_xy_to_uv(p0.xy, p1.xy, p2.xy, is_linear, is_linear);
     uv_anti_alias_width = aaw * length(xy_to_uv[0].xy);
 
     for(int i = 0; i < 5; i++){
