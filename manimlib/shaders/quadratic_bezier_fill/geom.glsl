@@ -5,11 +5,6 @@ layout (triangle_strip, max_vertices = 5) out;
 
 uniform float anti_alias_width;
 
-// Needed for get_gl_Position
-uniform vec2 frame_shape;
-uniform vec2 pixel_shape;
-uniform float focal_distance;
-uniform float is_fixed_in_frame;
 // Needed for finalize_color
 uniform vec3 light_source_position;
 uniform vec3 camera_position;
@@ -37,8 +32,8 @@ const float ANGLE_THRESHOLD = 1e-3;
 
 
 // Analog of import for manim only
-#INSERT get_xy_to_uv.glsl
 #INSERT get_gl_Position.glsl
+#INSERT get_xy_to_uv.glsl
 #INSERT finalize_color.glsl
 
 

@@ -3,15 +3,8 @@
 layout (triangles) in;
 layout (triangle_strip, max_vertices = 6) out;
 
-// Needed for get_gl_Position
-uniform vec2 frame_shape;
-uniform vec2 pixel_shape;
-uniform float focal_distance;
-uniform float is_fixed_in_frame;
-
 uniform float anti_alias_width;
 uniform float flat_stroke;
-uniform mat3 camera_rotation;
 
 //Needed for lighting
 uniform vec3 light_source_position;
@@ -46,8 +39,8 @@ const float PI = 3.141592653;
 const float ANGLE_THRESHOLD = 1e-3;
 
 
-#INSERT get_xy_to_uv.glsl
 #INSERT get_gl_Position.glsl
+#INSERT get_xy_to_uv.glsl
 #INSERT finalize_color.glsl
 
 

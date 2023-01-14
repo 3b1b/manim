@@ -1,7 +1,5 @@
 #version 330
 
-#INSERT camera_uniform_declarations.glsl
-
 in vec3 point;
 in float orientation;
 in vec4 color;
@@ -13,7 +11,7 @@ out vec4 v_color;
 out float v_vert_index;
 
 // Analog of import for manim only
-#INSERT position_point_into_frame.glsl
+#INSERT get_gl_Position.glsl
 
 void main(){
     verts = position_point_into_frame(point);

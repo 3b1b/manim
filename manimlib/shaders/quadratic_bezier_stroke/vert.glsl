@@ -1,7 +1,5 @@
 #version 330
 
-#INSERT camera_uniform_declarations.glsl
-
 in vec3 point;
 
 in float joint_angle;
@@ -18,7 +16,7 @@ out float v_vert_index;
 
 const float STROKE_WIDTH_CONVERSION = 0.01;
 
-#INSERT position_point_into_frame.glsl
+#INSERT get_gl_Position.glsl
 
 void main(){
     verts = position_point_into_frame(point);

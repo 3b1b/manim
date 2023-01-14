@@ -3,11 +3,6 @@
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
 
-// Needed for get_gl_Position
-uniform vec2 frame_shape;
-uniform vec2 pixel_shape;
-uniform float focal_distance;
-uniform float is_fixed_in_frame;
 uniform float anti_alias_width;
 
 in vec3 v_point[1];

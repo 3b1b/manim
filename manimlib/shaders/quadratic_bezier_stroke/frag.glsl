@@ -1,7 +1,5 @@
 #version 330
 
-#INSERT camera_uniform_declarations.glsl
-
 in vec2 uv_coords;
 
 in float uv_stroke_width;

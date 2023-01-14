@@ -1,7 +1,5 @@
 #version 330
 
-#INSERT camera_uniform_declarations.glsl
-
 in vec4 color;
 in float fill_all;  // Either 0 or 1
 in float uv_anti_alias_width;
