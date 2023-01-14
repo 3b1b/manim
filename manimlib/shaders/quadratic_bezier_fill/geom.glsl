@@ -17,7 +17,7 @@ uniform float reflectiveness;
 uniform float gloss;
 uniform float shadow;
 
-in vec3 bp[3];
+in vec3 verts[3];
 in float v_orientation[3];
 in vec4 v_color[3];
 in float v_vert_index[3];
@@ -61,17 +61,13 @@ void emit_vertex_wrapper(vec3 point, int index){
 
 void emit_simple_triangle(){
     for(int i = 0; i < 3; i++){
-        emit_vertex_wrapper(bp[i], i);
+        emit_vertex_wrapper(verts[i], i);
     }
     EndPrimitive();
 }
 
 
-void emit_pentagon(vec3[3] points, vec3 normal){
-    vec3 p0 = points[0];
-    vec3 p1 = points[1];
-    vec3 p2 = points[2];
-
+void emit_pentagon(vec3 p0, vec3 p1, vec3 p2, vec3 normal){
     // Tangent vectors
     vec3 t01 = normalize(p1 - p0);
     vec3 t12 = normalize(p2 - p1);
@@ -125,10 +121,12 @@ void main(){
         return;
     }
 
-    vec3[3] verts = vec3[3](bp[0], bp[1], bp[2]);
-    unit_normal = get_unit_normal(verts);
+    vec3 p0 = verts[0];
+    vec3 p1 = verts[1];
+    vec3 p2 = verts[2];
+    unit_normal = get_unit_normal(p0, p1, p2);
     orientation = v_orientation[1];
 
-    emit_pentagon(verts, unit_normal);
+    emit_pentagon(p0, p1, p2, unit_normal);
 }
 
