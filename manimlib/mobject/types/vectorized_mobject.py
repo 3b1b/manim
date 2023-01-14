@@ -1045,6 +1045,11 @@ class VMobject(Mobject):
         inner_tri_indices = inner_vert_indices[
             earclip_triangulation(inner_verts, rings)
         ]
+        # Remove null triangles, coming from adjascent points
+        iti = inner_tri_indices
+        null1 = (iti[0::3] + 1 == iti[1::3]) & (iti[0::3] + 2 == iti[2::3])
+        null2 = (iti[0::3] - 1 == iti[1::3]) & (iti[0::3] - 2 == iti[2::3])
+        inner_tri_indices = iti[~(null1 | null2).repeat(3)]
 
         outer_tri_indices = self.get_outer_vert_indices()
         tri_indices = np.hstack([outer_tri_indices, inner_tri_indices])
