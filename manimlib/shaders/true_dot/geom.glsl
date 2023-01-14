@@ -4,6 +4,7 @@ layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
 
 uniform float anti_alias_width;
+uniform vec2 pixel_shape;
 
 in vec3 v_point[1];
 in float v_radius[1];

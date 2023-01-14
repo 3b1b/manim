@@ -4,6 +4,7 @@ layout (triangles) in;
 layout (triangle_strip, max_vertices = 5) out;
 
 uniform float anti_alias_width;
+uniform vec2 pixel_shape;
 
 // Needed for finalize_color
 uniform vec3 light_source_position;

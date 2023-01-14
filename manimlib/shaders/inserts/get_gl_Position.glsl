@@ -2,7 +2,6 @@ uniform float is_fixed_in_frame;
 uniform vec3 camera_offset;
 uniform mat3 camera_rotation;
 uniform vec2 frame_shape;
-uniform vec2 pixel_shape;  // Move this
 uniform float focal_distance;
 
 const vec2 DEFAULT_FRAME_SHAPE = vec2(8.0 * 16.0 / 9.0, 8.0);
