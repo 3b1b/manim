@@ -39,7 +39,6 @@ const float ANGLE_THRESHOLD = 1e-3;
 // Analog of import for manim only
 #INSERT get_xy_to_uv.glsl
 #INSERT get_gl_Position.glsl
-#INSERT get_unit_normal.glsl
 #INSERT finalize_color.glsl
 
 
@@ -67,12 +66,19 @@ void emit_simple_triangle(){
 }
 
 
-void emit_pentagon(vec3 p0, vec3 p1, vec3 p2, vec3 normal){
-    // Tangent vectors
-    vec3 t01 = normalize(p1 - p0);
-    vec3 t12 = normalize(p2 - p1);
-
-    // Vectors perpendicular to the curve in the plane of the curve pointing outside the curve
+void emit_pentagon(
+    // Triangle vertices
+    vec3 p0,
+    vec3 p1,
+    vec3 p2,
+    // Unit tangent vector
+    vec3 t01,
+    vec3 t12,
+    // Unit normal
+    vec3 normal
+){
+    // Vectors perpendicular to the curve in the plane of the curve
+    // pointing outside the curve
     vec3 p0_perp = cross(t01, normal);
     vec3 p2_perp = cross(t12, normal);
 
@@ -124,9 +130,11 @@ void main(){
     vec3 p0 = verts[0];
     vec3 p1 = verts[1];
     vec3 p2 = verts[2];
-    unit_normal = get_unit_normal(p0, p1, p2);
+    vec3 t01 = normalize(p1 - p0);
+    vec3 t12 = normalize(p2 - p1);
+    unit_normal = normalize(cross(t01, t12));
     orientation = v_orientation[1];
 
-    emit_pentagon(p0, p1, p2, unit_normal);
+    emit_pentagon(p0, p1, p2, t01, t12, unit_normal);
 }
 
