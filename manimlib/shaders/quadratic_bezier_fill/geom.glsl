@@ -6,13 +6,6 @@ layout (triangle_strip, max_vertices = 5) out;
 uniform float anti_alias_width;
 uniform vec2 pixel_shape;
 
-// Needed for finalize_color
-uniform vec3 light_source_position;
-uniform vec3 camera_position;
-uniform float reflectiveness;
-uniform float gloss;
-uniform float shadow;
-
 in vec3 verts[3];
 in float v_orientation[3];
 in vec4 v_color[3];

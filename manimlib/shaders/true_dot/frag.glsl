@@ -1,12 +1,6 @@
 #version 330
 
-uniform vec3 light_source_position;
-uniform vec3 camera_position;
-uniform float reflectiveness;
-uniform float gloss;
-uniform float shadow;
 uniform float anti_alias_width;
-uniform float focal_distance;
 uniform float glow_factor;
 
 in vec4 color;

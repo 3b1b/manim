@@ -1,10 +1,5 @@
 #version 330
 
-uniform vec3 light_source_position;
-uniform vec3 camera_position;
-uniform float reflectiveness;
-uniform float gloss;
-uniform float shadow;
 uniform vec4 clip_plane;
 
 in vec3 point;

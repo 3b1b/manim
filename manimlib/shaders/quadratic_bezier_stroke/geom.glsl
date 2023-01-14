@@ -6,14 +6,7 @@ layout (triangle_strip, max_vertices = 6) out;
 uniform float anti_alias_width;
 uniform float flat_stroke;
 uniform vec2 pixel_shape;
-
-//Needed for lighting
-uniform vec3 light_source_position;
-uniform vec3 camera_position;
 uniform float joint_type;
-uniform float reflectiveness;
-uniform float gloss;
-uniform float shadow;
 
 in vec3 verts[3];
 
