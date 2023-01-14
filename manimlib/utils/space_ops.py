@@ -321,11 +321,13 @@ def line_intersects_path(
     Tests whether the line (start, end) intersects
     a polygonal path defined by its vertices
     """
-    n = len(path)
-    p1 = np.tile(start[:2], n).reshape((n, 2))
-    q1 = np.tile(end[:2], n).reshape((n, 2))
-    p2 = path[:, :2]
-    q2 = np.vstack([path[1:, :2], path[:1, :2]])
+    n = len(path) - 1
+    p1 = np.empty((n, 2))
+    q1 = np.empty((n, 2))
+    p1[:] = start[:2]
+    q1[:] = end[:2]
+    p2 = path[:-1, :2]
+    q2 = path[1:, :2]
 
     v1 = q1 - p1
     v2 = q2 - p2
