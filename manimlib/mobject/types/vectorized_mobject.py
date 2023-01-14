@@ -1094,15 +1094,15 @@ class VMobject(Mobject):
                 vect_to_vert[start] = h_to_a1[end // 2 - 1]
                 vect_from_vert[end] = a0_to_h[start // 2]
 
-        # Compute angles
+        # Compute angles, and read them into
+        # the joint_angles array
+        result = self.data["joint_angle"][:, 0]
         dots = (vect_to_vert * vect_from_vert).sum(1)
-        angle = np.arccos(arr_clip(dots, -1, 1))
-        # Assumes unit normal of (0, 0, 1), but if stroke shader
-        # ever stops making that assumption, this should too
-        sgn = np.sign(cross2d(vect_to_vert, vect_from_vert))
-        self.data["joint_angle"][:, 0] = sgn * angle
-
-        return self.data["joint_angle"]
+        np.arccos(dots, out=result)
+        result[np.isnan(result)] = 0
+        # Assumes unit normal in the positive z direction
+        result *= np.sign(cross2d(vect_to_vert, vect_from_vert))
+        return result
 
     def triggers_refreshed_triangulation(func: Callable):
         @wraps(func)
