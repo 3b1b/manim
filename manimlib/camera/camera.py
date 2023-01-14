@@ -250,6 +250,12 @@ class Camera(object):
         else:
             self.ctx.disable(moderngl.DEPTH_TEST)
 
+    def set_ctx_clip_distance(self, enable: bool = True) -> None:
+        if enable:
+            gl.glEnable(gl.GL_CLIP_DISTANCE0)
+        else:
+            gl.glDisable(gl.GL_CLIP_DISTANCE0)
+
     def init_light_source(self) -> None:
         self.light_source = Point(self.light_source_position)
 
@@ -377,6 +383,7 @@ class Camera(object):
         shader_program = render_group["prog"]
         self.set_shader_uniforms(shader_program, shader_wrapper)
         self.set_ctx_depth_test(shader_wrapper.depth_test)
+        self.set_ctx_clip_distance(shader_wrapper.use_clip_plane)
         render_group["vao"].render(int(shader_wrapper.render_primitive))
         if render_group["single_use"]:
             self.release_render_group(render_group)

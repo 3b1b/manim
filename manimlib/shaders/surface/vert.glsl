@@ -7,6 +7,7 @@ uniform vec3 camera_position;
 uniform float reflectiveness;
 uniform float gloss;
 uniform float shadow;
+uniform vec4 clip_plane;
 
 in vec3 point;
 in vec3 du_point;
@@ -27,6 +28,10 @@ void main(){
     v_normal = get_rotated_surface_unit_normal_vector(point, du_point, dv_point);
     v_color = color;
     gl_Position = get_gl_Position(xyz_coords);
+
+    if(clip_plane.xyz != vec3(0.0, 0.0, 0.0)){
+        gl_ClipDistance[0] = dot(vec4(point, 1.0), clip_plane);
+    }
 
     v_color = finalize_color(
         color,
