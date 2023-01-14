@@ -160,15 +160,10 @@ class ShaderWrapper(object):
         return self
 
 
-# For caching
-filename_to_code_map: dict[str, str] = {}
-
 @lru_cache(maxsize=12)
 def get_shader_code_from_file(filename: str) -> str | None:
     if not filename:
         return None
-    if filename in filename_to_code_map:
-        return filename_to_code_map[filename]
 
     try:
         filepath = find_file(
@@ -192,7 +187,6 @@ def get_shader_code_from_file(filename: str) -> str | None:
             os.path.join("inserts", line.replace("#INSERT ", ""))
         )
         result = result.replace(line, inserted_code)
-    filename_to_code_map[filename] = result
     return result
 
 
