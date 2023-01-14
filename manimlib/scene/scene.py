@@ -13,7 +13,7 @@ from IPython.terminal.embed import InteractiveShellEmbed
 from IPython.core.getipython import get_ipython
 
 import numpy as np
-from tqdm import tqdm as ProgressDisplay
+from tqdm.auto import tqdm as ProgressDisplay
 
 from manimlib.animation.animation import prepare_animation
 from manimlib.animation.fading import VFadeInThenOut
