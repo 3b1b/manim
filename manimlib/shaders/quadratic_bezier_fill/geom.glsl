@@ -20,8 +20,6 @@ out float orientation;
 out vec2 uv_coords;
 out float is_linear;
 
-vec3 unit_normal;
-
 const float ANGLE_THRESHOLD = 1e-3;
 
 
@@ -31,7 +29,7 @@ const float ANGLE_THRESHOLD = 1e-3;
 #INSERT finalize_color.glsl
 
 
-void emit_vertex_wrapper(vec3 point, int index){
+void emit_vertex_wrapper(vec3 point, int index, vec3 unit_normal){
     color = finalize_color(
         v_color[index],
         point,
@@ -47,9 +45,9 @@ void emit_vertex_wrapper(vec3 point, int index){
 }
 
 
-void emit_simple_triangle(){
+void emit_simple_triangle(vec3 unit_normal){
     for(int i = 0; i < 3; i++){
-        emit_vertex_wrapper(verts[i], i);
+        emit_vertex_wrapper(verts[i], i, unit_normal);
     }
     EndPrimitive();
 }
@@ -63,13 +61,12 @@ void emit_pentagon(
     // Unit tangent vector
     vec3 t01,
     vec3 t12,
-    // Unit normal
-    vec3 normal
+    vec3 unit_normal
 ){
     // Vectors perpendicular to the curve in the plane of the curve
     // pointing outside the curve
-    vec3 p0_perp = cross(t01, normal);
-    vec3 p2_perp = cross(t12, normal);
+    vec3 p0_perp = cross(t01, unit_normal);
+    vec3 p2_perp = cross(t12, unit_normal);
 
     float angle = acos(clamp(dot(t01, t12), -1, 1));
     is_linear = float(angle < ANGLE_THRESHOLD);
@@ -98,7 +95,7 @@ void emit_pentagon(
         int j = int(sign(i - 1) + 1);  // Maps i = [0, 1, 2, 3, 4] onto j = [0, 0, 1, 2, 2]
         vec3 corner = corners[i];
         uv_coords = (xy_to_uv * vec3(corner.xy, 1.0)).xy;
-        emit_vertex_wrapper(corner, j);
+        emit_vertex_wrapper(corner, j, unit_normal);
     }
     EndPrimitive();
 }
@@ -111,19 +108,24 @@ void main(){
         (v_vert_index[2] - v_vert_index[1]) != 1.0
     );
 
-    if(bool(fill_all)){
-        emit_simple_triangle();
-        return;
-    }
-
     vec3 p0 = verts[0];
     vec3 p1 = verts[1];
     vec3 p2 = verts[2];
-    vec3 t01 = normalize(p1 - p0);
-    vec3 t12 = normalize(p2 - p1);
-    unit_normal = normalize(cross(t01, t12));
+    vec3 t01 = p1 - p0;
+    vec3 t12 = p2 - p1;
+    vec3 unit_normal = normalize(cross(t01, t12));
+
+    if(bool(fill_all)){
+        emit_simple_triangle(unit_normal);
+        return;
+    }
     orientation = v_orientation[1];
 
-    emit_pentagon(p0, p1, p2, t01, t12, unit_normal);
+    emit_pentagon(
+        p0, p1, p2,
+        normalize(t01),
+        normalize(t12),
+        unit_normal
+    );
 }
 
