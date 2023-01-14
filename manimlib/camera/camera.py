@@ -414,7 +414,7 @@ class Camera(object):
         indices = shader_wrapper.vert_indices
         if indices is not None:
             vert_data = vert_data[indices]
-        vbo = self.ctx.buffer(vert_data.tobytes())
+        vbo = self.ctx.buffer(vert_data)
         # For the moment, the index buffer is actually not used,
         # since it seems to make the actual render calls meaninfully slower
         ibo = None
