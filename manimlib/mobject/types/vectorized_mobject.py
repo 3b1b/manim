@@ -1101,8 +1101,7 @@ class VMobject(Mobject):
         # the joint_angles array
         result = self.data["joint_angle"][:, 0]
         dots = (vect_to_vert * vect_from_vert).sum(1)
-        np.arccos(dots, out=result)
-        result[np.isnan(result)] = 0
+        np.arccos(dots, out=result, where=((dots <= 1) & (dots >= -1)))
         # Assumes unit normal in the positive z direction
         result *= np.sign(cross2d(vect_to_vert, vect_from_vert))
         return result
