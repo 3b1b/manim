@@ -15,6 +15,7 @@ vec4 get_gl_Position(vec3 point){
     result.y *= 2.0 / shape.y;
     result.z /= focal_distance;
     result.w = 1.0 - result.z;
-    result.z *= -0.1;  // Flip and prevent premature clipping
+    // Flip and scale to prevent premature clipping
+    result.z *= -0.1;
     return result;
 }
