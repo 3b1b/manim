@@ -92,7 +92,7 @@ class ImplicitFunction(VMobject):
         y_range: Tuple[float, float] = (-FRAME_Y_RADIUS, FRAME_Y_RADIUS),
         min_depth: int = 5,
         max_quads: int = 1500,
-        use_smoothing: bool = True,
+        use_smoothing: bool = False,
         joint_type: str = 'no_joint',
         **kwargs
     ):
@@ -110,7 +110,9 @@ class ImplicitFunction(VMobject):
             max_quads=max_quads,
         )  # returns a list of lists of 2D points
         curves = [
-            np.pad(curve, [(0, 0), (0, 1)]) for curve in curves if curve != []
+            np.pad(curve, [(0, 0), (0, 1)])
+            for curve in curves
+            if curve != []
         ]  # add z coord as 0
         for curve in curves:
             self.start_new_path(curve[0])
