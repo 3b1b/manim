@@ -194,13 +194,10 @@ class Surface(Mobject):
 
     def sort_faces_back_to_front(self, vect: Vect3 = OUT):
         tri_is = self.triangle_indices
-        indices = list(range(len(tri_is) // 3))
         points = self.get_points()
 
-        def index_dot(index):
-            return np.dot(points[tri_is[3 * index]], vect)
-
-        indices.sort(key=index_dot)
+        dots = (points[tri_is[::3]] * vect).sum(1)
+        indices = np.argsort(dots)
         for k in range(3):
             tri_is[k::3] = tri_is[k::3][indices]
         return self
