@@ -238,7 +238,7 @@ class Mobject(object):
         self.resize_points(0)
 
     def get_num_points(self) -> int:
-        return len(self.data["points"])
+        return len(self.get_points())
 
     def get_all_points(self) -> Vect3Array:
         if self.submobjects:
@@ -247,7 +247,7 @@ class Mobject(object):
             return self.get_points()
 
     def has_points(self) -> bool:
-        return self.data["points"].size > 0
+        return len(self.get_points()) > 0
 
     def get_bounding_box(self) -> Vect3Array:
         if self.needs_new_bounding_box:
