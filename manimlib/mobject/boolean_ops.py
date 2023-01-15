@@ -18,7 +18,7 @@ def _convert_vmobject_to_skia_path(vmobject: VMobject) -> pathops.Path:
         path.moveTo(*start[:2])
         for p0, p1, p2 in quads:
             path.quadTo(*p1[:2], *p2[:2])
-        if vmobject.consider_points_equals(subpath[0], subpath[-1]):
+        if vmobject.consider_points_equal(subpath[0], subpath[-1]):
             path.close()
     return path
 

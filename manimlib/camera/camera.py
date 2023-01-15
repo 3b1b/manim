@@ -250,6 +250,12 @@ class Camera(object):
         else:
             self.ctx.disable(moderngl.DEPTH_TEST)
 
+    def set_ctx_clip_distance(self, enable: bool = True) -> None:
+        if enable:
+            gl.glEnable(gl.GL_CLIP_DISTANCE0)
+        else:
+            gl.glDisable(gl.GL_CLIP_DISTANCE0)
+
     def init_light_source(self) -> None:
         self.light_source = Point(self.light_source_position)
 
@@ -377,6 +383,7 @@ class Camera(object):
         shader_program = render_group["prog"]
         self.set_shader_uniforms(shader_program, shader_wrapper)
         self.set_ctx_depth_test(shader_wrapper.depth_test)
+        self.set_ctx_clip_distance(shader_wrapper.use_clip_plane)
         render_group["vao"].render(int(shader_wrapper.render_primitive))
         if render_group["single_use"]:
             self.release_render_group(render_group)
@@ -402,16 +409,23 @@ class Camera(object):
         shader_wrapper: ShaderWrapper,
         single_use: bool = True
     ) -> dict[str, Any]:
-        # Data buffers
-        vbo = self.ctx.buffer(shader_wrapper.vert_data.tobytes())
-        if shader_wrapper.vert_indices is None:
+        # Data buffer
+        vert_data = shader_wrapper.vert_data
+        indices = shader_wrapper.vert_indices
+        if indices is None:
             ibo = None
+        elif single_use:
+            ibo = self.ctx.buffer(indices)
         else:
-            vert_index_data = shader_wrapper.vert_indices.astype('i4').tobytes()
-            if vert_index_data:
-                ibo = self.ctx.buffer(vert_index_data)
-            else:
-                ibo = None
+            # The vao.render call is strangely longer
+            # when an index buffer is used, so if the
+            # mobject is not changing, meaning only its
+            # uniforms are being updated, just create
+            # a larger data array based on the indices
+            # and don't bother with the ibo
+            vert_data = vert_data[indices]
+            ibo = None
+        vbo = self.ctx.buffer(vert_data)
 
         # Program and vertex array
         shader_program, vert_format = self.get_shader_program(shader_wrapper)

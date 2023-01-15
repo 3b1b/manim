@@ -22,12 +22,20 @@ if TYPE_CHECKING:
     from manimlib.typing import Vect2, Vect3, Vect4, VectN, Matrix3x3, Vect3Array, Vect2Array
 
 
-def cross(v1: Vect3 | List[float], v2: Vect3 | List[float]) -> Vect3:
-    return np.array([
-        v1[1] * v2[2] - v1[2] * v2[1],
-        v1[2] * v2[0] - v1[0] * v2[2],
-        v1[0] * v2[1] - v1[1] * v2[0]
+def cross(v1: Vect3 | List[float], v2: Vect3 | List[float]) -> Vect3 | Vect3Array:
+    is2d = isinstance(v1, np.ndarray) and len(v1.shape) == 2
+    if is2d:
+        x1, y1, z1 = v1[:, 0], v1[:, 1], v1[:, 2]
+        x2, y2, z2 = v2[:, 0], v2[:, 1], v2[:, 2]
+    else:
+        x1, y1, z1 = v1
+        x2, y2, z2 = v2
+    result = np.array([
+        y1 * z2 - z1 * y2,
+        z1 * x2 - x1 * z2,
+        x1 * y2 - y1 * x2,
     ])
+    return result.T if is2d else result
 
 
 def get_norm(vect: VectN | List[float]) -> float:
@@ -134,15 +142,16 @@ def rotation_about_z(angle: float) -> Matrix3x3:
 
 
 def rotation_between_vectors(v1: Vect3, v2: Vect3) -> Matrix3x3:
-    if np.isclose(v1, v2).all():
+    atol = 1e-8
+    if get_norm(v1 - v2) < atol:
         return np.identity(3)
-    axis = np.cross(v1, v2)
-    if np.isclose(axis, [0, 0, 0]).all():
+    axis = cross(v1, v2)
+    if get_norm(axis) < atol:
         # v1 and v2 align
-        axis = np.cross(v1, RIGHT)
-    if np.isclose(axis, [0, 0, 0]).all():
+        axis = cross(v1, RIGHT)
+    if get_norm(axis) < atol:
         # v1 and v2 _and_ RIGHT all align
-        axis = np.cross(v1, UP)
+        axis = cross(v1, UP)
     return rotation_matrix(
         angle=angle_between_vectors(v1, v2),
         axis=axis,
@@ -157,7 +166,7 @@ def angle_of_vector(vector: Vect2 | Vect3) -> float:
     """
     Returns polar coordinate theta when vector is project on xy plane
     """
-    return np.angle(complex(*vector[:2]))
+    return math.atan2(vector[1], vector[0])
 
 
 def angle_between_vectors(v1: VectN, v2: VectN) -> float:
@@ -184,8 +193,7 @@ def normalize_along_axis(
 ) -> np.ndarray:
     norms = np.sqrt((array * array).sum(axis))
     norms[norms == 0] = 1
-    buffed_norms = np.repeat(norms, array.shape[axis]).reshape(array.shape)
-    return array / buffed_norms
+    return (array.T / norms).T
 
 
 def get_unit_normal(
@@ -271,41 +279,61 @@ def line_intersection(
 
 
 def find_intersection(
-    p0: Vect3,
-    v0: Vect3,
-    p1: Vect3,
-    v1: Vect3,
-    threshold: float = 1e-5
+    p0: Vect3 | Vect3Array,
+    v0: Vect3 | Vect3Array,
+    p1: Vect3 | Vect3Array,
+    v1: Vect3 | Vect3Array,
+    threshold: float = 1e-5,
 ) -> Vect3:
     """
     Return the intersection of a line passing through p0 in direction v0
     with one passing through p1 in direction v1.  (Or array of intersections
     from arrays of such points/directions).
+
     For 3d values, it returns the point on the ray p0 + v0 * t closest to the
     ray p1 + v1 * t
     """
-    p0 = np.array(p0, ndmin=2)
-    v0 = np.array(v0, ndmin=2)
-    p1 = np.array(p1, ndmin=2)
-    v1 = np.array(v1, ndmin=2)
-    m, n = np.shape(p0)
-    assert(n in [2, 3])
-
-    numer = np.cross(v1, p1 - p0)
-    denom = np.cross(v1, v0)
-    if n == 3:
-        d = len(np.shape(numer))
-        new_numer = np.multiply(numer, numer).sum(d - 1)
-        new_denom = np.multiply(denom, numer).sum(d - 1)
-        numer, denom = new_numer, new_denom
-
-    denom[abs(denom) < threshold] = np.inf  # So that ratio goes to 0 there
+    d = len(p0.shape)
+    if d == 1:
+        is_3d = any(arr[2] for arr in (p0, v0, p1, v1))
+    else:
+        is_3d = any(z for arr in (p0, v0, p1, v1) for z in arr.T[2])
+    if not is_3d:
+        numer = np.array(cross2d(v1, p1 - p0))
+        denom = np.array(cross2d(v1, v0))
+    else:
+        cp1 = cross(v1, p1 - p0)
+        cp2 = cross(v1, v0)
+        numer = np.array((cp1 * cp1).sum(d - 1))
+        denom = np.array((cp1 * cp2).sum(d - 1))
+    denom[abs(denom) < threshold] = np.inf
     ratio = numer / denom
-    ratio = np.repeat(ratio, n).reshape((m, n))
-    result = p0 + ratio * v0
-    if m == 1:
-        return result[0]
-    return result
+    return p0 + (ratio * v0.T).T
+
+
+def line_intersects_path(
+    start: Vect2 | Vect3,
+    end: Vect2 | Vect3,
+    path: Vect2Array | Vect3Array,
+) -> bool:
+    """
+    Tests whether the line (start, end) intersects
+    a polygonal path defined by its vertices
+    """
+    n = len(path) - 1
+    p1 = np.empty((n, 2))
+    q1 = np.empty((n, 2))
+    p1[:] = start[:2]
+    q1[:] = end[:2]
+    p2 = path[:-1, :2]
+    q2 = path[1:, :2]
+
+    v1 = q1 - p1
+    v2 = q2 - p2
+
+    mis1 = cross2d(v1, p2 - p1) * cross2d(v1, q2 - p1) < 0
+    mis2 = cross2d(v2, p1 - p2) * cross2d(v2, q1 - p2) < 0
+    return bool((mis1 * mis2).any())
 
 
 def get_closest_point_on_line(a: VectN, b: VectN, p: VectN) -> VectN:

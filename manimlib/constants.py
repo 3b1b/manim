@@ -65,8 +65,8 @@ RADIANS: float = 1
 FFMPEG_BIN: str = "ffmpeg"
 
 JOINT_TYPE_MAP: dict = {
-    "auto": 0,
-    "round": 1,
+    "no_joint": 0,
+    "auto": 1,
     "bevel": 2,
     "miter": 3,
 }

@@ -29,6 +29,7 @@ from manimlib.utils.color import color_gradient
 from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import get_colormap_list
 from manimlib.utils.color import rgb_to_hex
+from manimlib.utils.iterables import arrays_match
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.iterables import list_update
 from manimlib.utils.iterables import listify
@@ -66,6 +67,7 @@ class Mobject(object):
     shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ('point', np.float32, (3,)),
     ]
+    aligned_data_keys = ['points']
 
     def __init__(
         self,
@@ -101,6 +103,7 @@ class Mobject(object):
         self._is_animating: bool = False
         self.saved_state = None
         self.target = None
+        self.bounding_box: Vect3Array = np.zeros((3, 3))
 
         self.init_data()
         self.init_uniforms()
@@ -127,12 +130,11 @@ class Mobject(object):
     def init_data(self):
         self.data: dict[str, np.ndarray] = {
             "points": np.zeros((0, 3)),
-            "bounding_box": np.zeros((3, 3)),
             "rgbas": np.zeros((1, 4)),
         }
 
     def init_uniforms(self):
-        self.uniforms: dict[str, float] = {
+        self.uniforms: dict[str, float | np.ndarray] = {
             "is_fixed_in_frame": float(self.is_fixed_in_frame),
             "gloss": self.gloss,
             "shadow": self.shadow,
@@ -170,8 +172,8 @@ class Mobject(object):
         new_length: int,
         resize_func: Callable[[np.ndarray, int], np.ndarray] = resize_array
     ):
-        if new_length != len(self.data["points"]):
-            self.data["points"] = resize_func(self.data["points"], new_length)
+        for key in self.aligned_data_keys:
+            self.data[key] = resize_func(self.data[key], new_length)
         self.refresh_bounding_box()
         return self
 
@@ -249,9 +251,9 @@ class Mobject(object):
 
     def get_bounding_box(self) -> Vect3Array:
         if self.needs_new_bounding_box:
-            self.data["bounding_box"] = self.compute_bounding_box()
+            self.bounding_box[:] = self.compute_bounding_box()
             self.needs_new_bounding_box = False
-        return self.data["bounding_box"]
+        return self.bounding_box
 
     def compute_bounding_box(self) -> Vect3Array:
         all_points = np.vstack([
@@ -826,7 +828,7 @@ class Mobject(object):
         return self._is_animating or self.has_updaters
 
     def set_animating_status(self, is_animating: bool, recurse: bool = True):
-        for mob in (*self.get_family(recurse), *self.get_ancestors(extended=True)):
+        for mob in (*self.get_family(recurse), *self.get_ancestors()):
             mob._is_animating = is_animating
         return self
 
@@ -1593,14 +1595,16 @@ class Mobject(object):
         self.align_data(mobject)
 
     def align_data(self, mobject: Mobject) -> None:
-        # In case any data arrays get resized when aligned to shader data
-        self.refresh_shader_data()
         for mob1, mob2 in zip(self.get_family(), mobject.get_family()):
-            # Separate out how points are treated so that subclasses
-            # can handle that case differently if they choose
+            # In case any data arrays get resized when aligned to shader data
+            mob1.refresh_shader_data()
+            mob2.refresh_shader_data()
+
             mob1.align_points(mob2)
             for key in mob1.data.keys() & mob2.data.keys():
                 if key == "points":
+                    # Separate out how points are treated so that subclasses
+                    # can handle that case differently if they choose
                     continue
                 arr1 = mob1.data[key]
                 arr2 = mob2.data[key]
@@ -1685,10 +1689,7 @@ class Mobject(object):
             if key not in mobject1.data or key not in mobject2.data:
                 continue
 
-            if key in ("points", "bounding_box"):
-                func = path_func
-            else:
-                func = interpolate
+            func = path_func if key == "points" else interpolate
 
             self.data[key][:] = func(
                 mobject1.data[key],
@@ -1701,6 +1702,9 @@ class Mobject(object):
                 mobject2.uniforms[key],
                 alpha
             )
+        self.bounding_box[:] = path_func(
+            mobject1.bounding_box, mobject2.bounding_box, alpha
+        )
         return self
 
     def pointwise_become_partial(self, mobject, a, b):
@@ -1732,7 +1736,7 @@ class Mobject(object):
         for sm, sm1, sm2 in zip(self.get_family(), mobject1.get_family(), mobject2.get_family()):
             keys = sm.data.keys() & sm1.data.keys() & sm2.data.keys()
             sm.lock_data(list(filter(
-                lambda key: (sm1.data[key] == sm2.data[key]).all(),
+                lambda key: arrays_match(sm1.data[key], sm2.data[key]),
                 keys,
             )))
         return self

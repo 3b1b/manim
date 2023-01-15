@@ -1,22 +1,20 @@
-vec3 get_unit_normal(in vec3[3] points){
+vec3 get_unit_normal(vec3 p0, vec3 p1, vec3 p2){
     float tol = 1e-6;
-    vec3 v1 = normalize(points[1] - points[0]);
-    vec3 v2 = normalize(points[2] - points[1]);
+    vec3 v1 = normalize(p1 - p0);
+    vec3 v2 = normalize(p2 - p1);
     vec3 cp = cross(v1, v2);
     float cp_norm = length(cp);
-    if(cp_norm < tol){
-        // Three points form a line, so find a normal vector
-        // to that line in the plane shared with the z-axis
-        vec3 k_hat = vec3(0.0, 0.0, 1.0);
-        vec3 comb = v1 + v2;
-        vec3 new_cp = cross(cross(comb, k_hat), comb);
-        float new_cp_norm = length(new_cp);
-        if(new_cp_norm < tol){
-            // We only come here if all three points line up
-            // on the z-axis.
-            return vec3(0.0, -1.0, 0.0);
-        }
-        return new_cp / new_cp_norm;
-    }
-    return cp / cp_norm;
+
+    if(cp_norm > tol) return cp / cp_norm;
+
+    // Otherwise, three pionts form a line, so find
+    // a normal vector to that line in the plane shared
+    // with the z-axis
+    vec3 comb = v1 + v2;
+    cp = cross(cross(comb, vec3(0.0, 0.0, 1.0)), comb);
+    cp_norm = length(cp);
+    if(cp_norm > tol) return cp / cp_norm;
+
+    // Otherwise, the points line up with the z-axis.
+    return vec3(0.0, -1.0, 0.0);
 }

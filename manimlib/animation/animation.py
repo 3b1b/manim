@@ -65,6 +65,7 @@ class Animation(object):
             self.rate_func = squish_rate_func(
                 self.rate_func, start / self.run_time, end / self.run_time,
             )
+        self.mobject.refresh_shader_data()
         self.mobject.set_animating_status(True)
         self.starting_mobject = self.create_starting_mobject()
         if self.suspend_mobject_updating:

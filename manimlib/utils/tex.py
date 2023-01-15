@@ -18,8 +18,7 @@ def num_tex_symbols(tex: str) -> int:
         rf"(\\{s})" + r"(\{\w+\})?(\{\w+\})?(\[\w+\])?"
         for s in ["begin", "end", "phantom"]
     )
-    for tup in re.findall(pattern, tex):
-        tex = tex.replace("".join(tup), " ")
+    tex = re.sub(pattern, "", tex)
 
     # Progressively count the symbols associated with certain tex commands,
     # and remove those commands from the string, adding the number of symbols

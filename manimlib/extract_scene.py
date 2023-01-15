@@ -60,18 +60,17 @@ def get_scene_config(config):
         for key in set(scene_parameters).intersection(config.keys())
     }
 
+
 def compute_total_frames(scene_class, scene_config):
     """
     When a scene is being written to file, a copy of the scene is run with
     skip_animations set to true so as to count how many frames it will require.
     This allows for a total progress bar on rendering, and also allows runtime
-    errors to be exposed preemptively for long running scenes. The final frame
-    is saved by default, so that one can more quickly check that the last frame
-    looks as expected.
+    errors to be exposed preemptively for long running scenes.
     """
     pre_config = copy.deepcopy(scene_config)
     pre_config["file_writer_config"]["write_to_movie"] = False
-    pre_config["file_writer_config"]["save_last_frame"] = True
+    pre_config["file_writer_config"]["save_last_frame"] = False
     pre_config["file_writer_config"]["quiet"] = True
     pre_config["skip_animations"] = True
     pre_scene = scene_class(**pre_config)

@@ -486,7 +486,7 @@ class GraphExample(Scene):
         self.wait()
 
 
-class TexAndNumbersExample(InteractiveScene):
+class TexAndNumbersExample(Scene):
     def construct(self):
         axes = Axes((-3, 3), (-3, 3), unit_size=1)
         axes.to_edge(DOWN)

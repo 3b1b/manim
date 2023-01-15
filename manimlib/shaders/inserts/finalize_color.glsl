@@ -1,3 +1,9 @@
+uniform vec3 light_source_position;
+uniform vec3 camera_position;
+uniform float reflectiveness;
+uniform float gloss;
+uniform float shadow;
+
 vec3 float_to_color(float value, float min_val, float max_val, vec3[9] colormap_data){
     float alpha = clamp((value - min_val) / (max_val - min_val), 0.0, 1.0);
     int disc_alpha = min(int(alpha * 8), 7);
@@ -9,14 +15,16 @@ vec3 float_to_color(float value, float min_val, float max_val, vec3[9] colormap_
 }
 
 
-vec4 add_light(vec4 color,
-               vec3 point,
-               vec3 unit_normal,
-               vec3 light_coords,
-               vec3 cam_coords,
-               float reflectiveness,
-               float gloss,
-               float shadow){
+vec4 add_light(
+    vec4 color,
+    vec3 point,
+    vec3 unit_normal,
+    vec3 light_coords,
+    vec3 cam_coords,
+    float reflectiveness,
+    float gloss,
+    float shadow
+){
     if(reflectiveness == 0.0 && gloss == 0.0 && shadow == 0.0) return color;
 
     vec4 result = color;
@@ -42,22 +50,19 @@ vec4 add_light(vec4 color,
         // Darken
         result.rgb = mix(result.rgb, vec3(0.0), -light_to_normal * shadow);
     }
-    // float darkening = mix(1, max(light_to_normal, 0), shadow);
-    // return vec4(
-    //     darkening * mix(color.rgb, vec3(1.0), shine),
-    //     color.a
-    // );
     return result;
 }
 
-vec4 finalize_color(vec4 color,
-                    vec3 point,
-                    vec3 unit_normal,
-                    vec3 light_coords,
-                    vec3 cam_coords,
-                    float reflectiveness,
-                    float gloss,
-                    float shadow){
+vec4 finalize_color(
+    vec4 color,
+    vec3 point,
+    vec3 unit_normal,
+    vec3 light_coords,
+    vec3 cam_coords,
+    float reflectiveness,
+    float gloss,
+    float shadow
+){
     ///// INSERT COLOR FUNCTION HERE /////
     // The line above may be replaced by arbitrary code snippets, as per
     // the method Mobject.set_color_by_code

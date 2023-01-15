@@ -1,104 +1,58 @@
 #version 330
 
 layout (triangles) in;
-layout (triangle_strip, max_vertices = 5) out;
-
-// Needed for get_gl_Position
-uniform vec2 frame_shape;
-uniform vec2 pixel_shape;
-uniform float focal_distance;
-uniform float is_fixed_in_frame;
+layout (triangle_strip, max_vertices = 6) out;
 
 uniform float anti_alias_width;
 uniform float flat_stroke;
-
-//Needed for lighting
-uniform vec3 light_source_position;
-uniform vec3 camera_position;
+uniform vec2 pixel_shape;
 uniform float joint_type;
-uniform float reflectiveness;
-uniform float gloss;
-uniform float shadow;
 
-in vec3 bp[3];
-in vec3 prev_bp[3];
-in vec3 next_bp[3];
+in vec3 verts[3];
 
-in vec4 v_color[3];
+in float v_joint_angle[3];
 in float v_stroke_width[3];
+in vec4 v_color[3];
+in float v_vert_index[3];
 
 out vec4 color;
 out float uv_stroke_width;
 out float uv_anti_alias_width;
 
-out float has_prev;
-out float has_next;
-out float bevel_start;
-out float bevel_end;
-out float angle_from_prev;
-out float angle_to_next;
-
-out float bezier_degree;
+out float is_linear;
 
 out vec2 uv_coords;
-out vec2 uv_b2;
-
-vec3 unit_normal;
 
 // Codes for joint types
-const float AUTO_JOINT = 0;
-const float ROUND_JOINT = 1;
-const float BEVEL_JOINT = 2;
-const float MITER_JOINT = 3;
+const int NO_JOINT = 0;
+const int AUTO_JOINT = 1;
+const int BEVEL_JOINT = 2;
+const int MITER_JOINT = 3;
+
 const float PI = 3.141592653;
+const float ANGLE_THRESHOLD = 1e-3;
 
 
-#INSERT quadratic_bezier_geometry_functions.glsl
 #INSERT get_gl_Position.glsl
-#INSERT get_unit_normal.glsl
+#INSERT get_xy_to_uv.glsl
 #INSERT finalize_color.glsl
 
 
-void flatten_points(in vec3[3] points, out vec2[3] flat_points){
-    for(int i = 0; i < 3; i++){
-        float sf = perspective_scale_factor(points[i].z, focal_distance);
-        flat_points[i] = sf * points[i].xy;
-    }
-}
-
-
-float angle_between_vectors(vec2 v1, vec2 v2){
-    float v1_norm = length(v1);
-    float v2_norm = length(v2);
-    if(v1_norm == 0 || v2_norm == 0) return 0.0;
-    float dp = dot(v1, v2) / (v1_norm * v2_norm);
-    float angle = acos(clamp(dp, -1.0, 1.0));
-    float sn = sign(cross2d(v1, v2));
-    return sn * angle;
-}
-
-
-bool find_intersection(vec2 p0, vec2 v0, vec2 p1, vec2 v1, out vec2 intersection){
-    // Find the intersection of a line passing through
-    // p0 in the direction v0 and one passing through p1 in
-    // the direction p1.
-    // That is, find a solutoin to p0 + v0 * t = p1 + v1 * s
-    float det = -v0.x * v1.y + v1.x * v0.y;
-    if(det == 0) return false;
-    float t = cross2d(p0 - p1, v1) / det;
-    intersection = p0 + v0 * t;
-    return true;
-}
-
-
-void create_joint(float angle, vec2 unit_tan, float buff,
-                  vec2 static_c0, out vec2 changing_c0,
-                  vec2 static_c1, out vec2 changing_c1){
+void create_joint(
+    float angle,
+    vec3 unit_tan,
+    float buff,
+    vec3 static_c0,
+    out vec3 changing_c0,
+    vec3 static_c1,
+    out vec3 changing_c1
+){
     float shift;
-    if(abs(angle) < 1e-3){
+    // if(abs(angle) < ANGLE_THRESHOLD || abs(angle) > 0.99 * PI || int(joint_type) == NO_JOINT){
+    if(abs(angle) < ANGLE_THRESHOLD || int(joint_type) == NO_JOINT){
         // No joint
         shift = 0;
-    }else if(joint_type == MITER_JOINT){
+    }else if(int(joint_type) == MITER_JOINT){
         shift = buff * (-1.0 - cos(angle)) / sin(angle);
     }else{
         // For a Bevel joint
@@ -108,160 +62,121 @@ void create_joint(float angle, vec2 unit_tan, float buff,
     changing_c1 = static_c1 + shift * unit_tan;
 }
 
-
 // This function is responsible for finding the corners of
 // a bounding region around the bezier curve, which can be
-// emitted as a triangle fan
-int get_corners(vec2 controls[3], int degree, float stroke_widths[3], out vec2 corners[5]){
-    vec2 p0 = controls[0];
-    vec2 p1 = controls[1];
-    vec2 p2 = controls[2];
+// emitted as a triangle fan, with vertices vaguely close
+// to control points so that the passage of vert data to
+// frag shaders is most natural.
+void get_corners(
+    // Control points for a bezier curve
+    vec3 p0,
+    vec3 p1,
+    vec3 p2,
+    // Unit tangent vectors at p0 and p2
+    vec3 v01,
+    vec3 v12,
+    float stroke_width0,
+    float stroke_width2,
+    // Unit normal to the whole curve
+    vec3 normal,
+    // Anti-alias width
+    float aaw,
+    float angle_from_prev,
+    float angle_to_next,
+    out vec3 corners[6]
+){
 
-    // Unit vectors for directions between control points
-    vec2 v10 = normalize(p0 - p1);
-    vec2 v12 = normalize(p2 - p1);
-    vec2 v01 = -v10;
-    vec2 v21 = -v12;
+    float buff0 = 0.5 * stroke_width0 + aaw;
+    float buff2 = 0.5 * stroke_width2 + aaw;
 
-    vec2 p0_perp = vec2(-v01.y, v01.x);  // Pointing to the left of the curve from p0
-    vec2 p2_perp = vec2(-v12.y, v12.x);  // Pointing to the left of the curve from p2
+    // Add correction for sharp angles to prevent weird bevel effects (Needed?)
+    float thresh = 5 * PI / 6;
+    if(angle_from_prev > thresh) buff0 *= 2 * sin(angle_from_prev);
+    if(angle_to_next > thresh) buff2 *= 2 * sin(angle_to_next);
 
-    // aaw is the added width given around the polygon for antialiasing.
-    // In case the normal is faced away from (0, 0, 1), the vector to the
-    // camera, this is scaled up.
-    float aaw = anti_alias_width * frame_shape.y / pixel_shape.y;
-    float buff0 = 0.5 * stroke_widths[0] + aaw;
-    float buff2 = 0.5 * stroke_widths[2] + aaw;
-    float aaw0 = (1 - has_prev) * aaw;
-    float aaw2 = (1 - has_next) * aaw;
+    // Perpendicular vectors to the left of the curve
+    vec3 p0_perp = buff0 * normalize(cross(normal, v01));
+    vec3 p2_perp = buff2 * normalize(cross(normal, v12));
+    vec3 p1_perp = 0.5 * (p0_perp + p2_perp);
 
-    vec2 c0 = p0 - buff0 * p0_perp + aaw0 * v10;
-    vec2 c1 = p0 + buff0 * p0_perp + aaw0 * v10;
-    vec2 c2 = p2 + buff2 * p2_perp + aaw2 * v12;
-    vec2 c3 = p2 - buff2 * p2_perp + aaw2 * v12;
+    // The order of corners should be for a triangle_strip.
+    vec3 c0 = p0 + p0_perp;
+    vec3 c1 = p0 - p0_perp;
+    vec3 c2 = p1 + p1_perp;
+    vec3 c3 = p1 - p1_perp;
+    vec3 c4 = p2 + p2_perp;
+    vec3 c5 = p2 - p2_perp;
+    float orientation = dot(normal, cross(v01, v12));
+    // Move the inner middle control point to make
+    // room for the curve
+    if(orientation > 0.0)      c2 = 0.5 * (c0 + c4);  
+    else if(orientation < 0.0) c3 = 0.5 * (c1 + c5);
 
     // Account for previous and next control points
-    if(has_prev > 0) create_joint(angle_from_prev, v01, buff0, c0, c0, c1, c1);
-    if(has_next > 0) create_joint(angle_to_next, v21, buff2, c3, c3, c2, c2);
+    create_joint(angle_from_prev, v01, buff0, c1, c1, c0, c0);
+    create_joint(angle_to_next, -v12, buff2, c5, c5, c4, c4);
 
-    // Linear case is the simplest
-    if(degree == 1){
-        // The order of corners should be for a triangle_strip.  Last entry is a dummy
-        corners = vec2[5](c0, c1, c3, c2, vec2(0.0));
-        return 4;
-    }
-    // Otherwise, form a pentagon around the curve
-    float orientation = sign(cross2d(v01, v12));  // Positive for ccw curves
-    if(orientation > 0) corners = vec2[5](c0, c1, p1, c2, c3);
-    else                corners = vec2[5](c1, c0, p1, c3, c2);
-    // Replace corner[2] with convex hull point accounting for stroke width
-    find_intersection(corners[0], v01, corners[4], v21, corners[2]);
-    return 5;
-}
-
-
-void set_adjascent_info(vec2 c0, vec2 tangent,
-                        int degree,
-                        vec2 adj[3],
-                        out float bevel,
-                        out float angle
-                        ){
-    bool linear_adj = (angle_between_vectors(adj[1] - adj[0], adj[2] - adj[1]) < 1e-3);
-    angle = angle_between_vectors(c0 - adj[1], tangent);
-    // Decide on joint type
-    bool one_linear = (degree == 1 || linear_adj);
-    bool should_bevel = (
-        (joint_type == AUTO_JOINT && one_linear) ||
-        joint_type == BEVEL_JOINT
-    );
-    bevel = should_bevel ? 1.0 : 0.0;
-}
-
-
-void find_joint_info(vec2 controls[3], vec2 prev[3], vec2 next[3], int degree){
-    float tol = 1e-6;
-
-    // Made as floats not bools so they can be passed to the frag shader
-    has_prev = float(distance(prev[2], controls[0]) < tol);
-    has_next = float(distance(next[0], controls[2]) < tol);
-
-    if(bool(has_prev)){
-        vec2 tangent = controls[1] - controls[0];
-        set_adjascent_info(
-            controls[0], tangent, degree, prev,
-            bevel_start, angle_from_prev
-        );
-    }
-    if(bool(has_next)){
-        vec2 tangent = controls[1] - controls[2];
-        set_adjascent_info(
-            controls[2], tangent, degree, next,
-            bevel_end, angle_to_next
-        );
-        angle_to_next *= -1;
-    }
+    corners = vec3[6](c0, c1, c2, c3, c4, c5);
 }
 
 
 void main() {
-    // Convert control points to a standard form if they are linear or null
-    vec3 controls[3];
-    vec3 prev[3];
-    vec3 next[3];
-    unit_normal = get_unit_normal(controls);
-    bezier_degree = get_reduced_control_points(vec3[3](bp[0], bp[1], bp[2]), controls);
-    if(bezier_degree == 0.0) return;  // Null curve
-    int degree = int(bezier_degree);
-    get_reduced_control_points(vec3[3](prev_bp[0], prev_bp[1], prev_bp[2]), prev);
-    get_reduced_control_points(vec3[3](next_bp[0], next_bp[1], next_bp[2]), next);
+    // We use the triangle strip primative, but
+    // actually only need every other strip element
+    if (int(v_vert_index[0]) % 2 == 1) return;
 
+    // Curves are marked as eneded when the handle after
+    // the first anchor is set equal to that anchor
+    if (verts[0] == verts[1]) return;
 
-    // Adjust stroke width based on distance from the camera
-    float scaled_strokes[3];
-    for(int i = 0; i < 3; i++){
-        float sf = perspective_scale_factor(controls[i].z, focal_distance);
-        if(bool(flat_stroke)){
-            vec3 to_cam = normalize(vec3(0.0, 0.0, focal_distance) - controls[i]);
-            sf *= abs(dot(unit_normal, to_cam));
-        }
-        scaled_strokes[i] = v_stroke_width[i] * sf;
+    // TODO, track true unit normal globally (probably as a uniform)
+    vec3 unit_normal = vec3(0.0, 0.0, 1.0);
+    if(bool(flat_stroke)){
+        unit_normal = camera_rotation * vec3(0.0, 0.0, 1.0);
     }
 
-    // Control points are projected to the xy plane before drawing, which in turn
-    // gets tranlated to a uv plane.  The z-coordinate information will be remembered
-    // by what's sent out to gl_Position, and by how it affects the lighting and stroke width
-    vec2 flat_controls[3];
-    vec2 flat_prev[3];
-    vec2 flat_next[3];
-    flatten_points(controls, flat_controls);
-    flatten_points(prev, flat_prev);
-    flatten_points(next, flat_next);
+    vec3 p0 = verts[0];
+    vec3 p1 = verts[1];
+    vec3 p2 = verts[2];
+    vec3 v01 = normalize(p1 - p0);
+    vec3 v12 = normalize(p2 - p1);
 
-    find_joint_info(flat_controls, flat_prev, flat_next, degree);
+    float angle = acos(clamp(dot(v01, v12), -1, 1));
+    is_linear = float(abs(angle) < ANGLE_THRESHOLD);
 
-    // Corners of a bounding region around curve
-    vec2 corners[5];
-    int n_corners = get_corners(flat_controls, degree, scaled_strokes, corners);
+    // If the curve is flat, put the middle control in the midpoint
+    if (bool(is_linear)) p1 = 0.5 * (p0 + p2);
 
-    int index_map[5] = int[5](0, 0, 1, 2, 2);
-    if(n_corners == 4) index_map[2] = 2;
+    // We want to change the coordinates to a space where the curve
+    // coincides with y = x^2, between some values x0 and x2. Or, in
+    // the case of a linear curve (bezier degree 1), just put it on
+    // the segment from (0, 0) to (1, 0)
+    mat3 xy_to_uv = get_xy_to_uv(p0.xy, p1.xy, p2.xy, is_linear, is_linear);
 
-    // Find uv conversion matrix
-    mat3 xy_to_uv = get_xy_to_uv(flat_controls[0], flat_controls[1]);
-    float scale_factor = length(flat_controls[1] - flat_controls[0]);
-    uv_anti_alias_width = anti_alias_width * frame_shape.y / pixel_shape.y / scale_factor;
-    uv_b2 = (xy_to_uv * vec3(flat_controls[2], 1.0)).xy;
+    float uv_scale_factor = length(xy_to_uv[0].xy);
+    float scaled_aaw = anti_alias_width * (frame_shape.y / pixel_shape.y);
+    uv_anti_alias_width = uv_scale_factor * scaled_aaw;
+
+    vec3 corners[6];
+    get_corners(
+        p0, p1, p2, v01, v12,
+        v_stroke_width[0],
+        v_stroke_width[2],
+        unit_normal,
+        scaled_aaw,
+        v_joint_angle[0],
+        v_joint_angle[2],
+        corners
+    );
 
     // Emit each corner
-    for(int i = 0; i < n_corners; i++){
-        uv_coords = (xy_to_uv * vec3(corners[i], 1.0)).xy;
-        uv_stroke_width = scaled_strokes[index_map[i]] / scale_factor;
-        // Apply some lighting to the color before sending out.
-        // vec3 xyz_coords = vec3(corners[i], controls[index_map[i]].z);
-        vec3 xyz_coords = vec3(corners[i], controls[index_map[i]].z);
+    for(int i = 0; i < 6; i++){
+        int vert_index = i / 2;
+        uv_coords = (xy_to_uv * vec3(corners[i].xy, 1)).xy;
+        uv_stroke_width = uv_scale_factor * v_stroke_width[vert_index];
         color = finalize_color(
-            v_color[index_map[i]],
-            xyz_coords,
+            v_color[vert_index],
+            corners[i],
             unit_normal,
             light_source_position,
             camera_position,
@@ -269,10 +184,7 @@ void main() {
             gloss,
             shadow
         );
-        gl_Position = vec4(
-            get_gl_Position(vec3(corners[i], 0.0)).xy,
-            get_gl_Position(controls[index_map[i]]).zw
-        );
+        gl_Position = get_gl_Position(corners[i]);
         EmitVertex();
     }
     EndPrimitive();

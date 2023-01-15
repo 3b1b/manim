@@ -159,14 +159,14 @@ class InteractiveScene(Scene):
             pass
 
     def get_crosshair(self):
-        line = Line(LEFT, RIGHT)
-        line.insert_n_curves(1)
-        lines = line.replicate(2)
-        lines[1].rotate(PI / 2)
-        crosshair = VMobject()
-        crosshair.set_points([*lines[0].get_points(), *lines[1].get_points()])
+        lines = VMobject().replicate(2)
+        lines[0].set_points([LEFT, ORIGIN, RIGHT])
+        lines[1].set_points([UP, ORIGIN, DOWN])
+        crosshair = VGroup(*lines)
+
         crosshair.set_width(self.crosshair_width)
-        crosshair.set_stroke(self.crosshair_color, width=[2, 0, 2, 2, 0, 2])
+        crosshair.set_stroke(self.crosshair_color, width=[2, 0, 2])
+        crosshair.insert_n_curves(1)
         crosshair.set_animating_status(True)
         crosshair.fix_in_frame()
         return crosshair
@@ -303,14 +303,16 @@ class InteractiveScene(Scene):
         ))
         if len(mobs) == 0:
             return
-        self.selection.set_animating_status(True)
         self.selection.add(*mobs)
+        for mob in mobs:
+            mob.set_animating_status(True)
 
     def toggle_from_selection(self, *mobjects: Mobject):
         for mob in mobjects:
             if mob in self.selection:
                 self.selection.remove(mob)
                 mob.set_animating_status(False)
+                mob.refresh_bounding_box()
             else:
                 self.add_to_selection(mob)
         self.refresh_static_mobjects()
@@ -318,6 +320,7 @@ class InteractiveScene(Scene):
     def clear_selection(self):
         for mob in self.selection:
             mob.set_animating_status(False)
+            mob.refresh_bounding_box()
         self.selection.set_submobjects([])
         self.refresh_static_mobjects()
 
