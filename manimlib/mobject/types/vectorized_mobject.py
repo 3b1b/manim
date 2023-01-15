@@ -29,6 +29,7 @@ from manimlib.utils.iterables import listify
 from manimlib.utils.iterables import make_even
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_with_interpolation
+from manimlib.utils.iterables import arrays_match
 from manimlib.utils.space_ops import angle_between_vectors
 from manimlib.utils.space_ops import cross2d
 from manimlib.utils.space_ops import earclip_triangulation
@@ -209,11 +210,11 @@ class VMobject(Mobject):
 
         if width is not None:
             for mob in self.get_family(recurse):
-                if isinstance(width, np.ndarray):
-                    arr = width.reshape((len(width), 1))
-                else:
-                    arr = np.array([[w] for w in listify(width)], dtype=float)
-                mob.data['stroke_width'] = arr
+                data = mob.data if mob.get_num_points() > 0 else mob._data_defaults
+                data['stroke_width'][:, 0] = resize_with_interpolation(
+                    np.array(listify(width)).flatten(),
+                    len(data['stroke_width'])
+                )
 
         if background is not None:
             for mob in self.get_family(recurse):
@@ -252,7 +253,7 @@ class VMobject(Mobject):
     ):
         for mob in self.get_family(recurse):
             if fill_rgba is not None:
-                mob.data['fill_rgba'] = resize_with_interpolation(fill_rgba, len(fill_rgba))
+                mob.data['fill_rgba'][:] = resize_with_interpolation(fill_rgba, len(mob.data['fill_rgba']))
             else:
                 mob.set_fill(
                     color=fill_color,
@@ -261,7 +262,7 @@ class VMobject(Mobject):
                 )
 
             if stroke_rgba is not None:
-                mob.data['stroke_rgba'] = resize_with_interpolation(stroke_rgba, len(stroke_rgba))
+                mob.data['stroke_rgba'][:] = resize_with_interpolation(stroke_rgba, len(mob.data['stroke_rgba']))
                 mob.set_stroke(
                     width=stroke_width,
                     background=stroke_background,
@@ -926,7 +927,7 @@ class VMobject(Mobject):
         if self.has_fill():
             tri1 = mobject1.get_triangulation()
             tri2 = mobject2.get_triangulation()
-            if len(tri1) != len(tri2) or not (tri1 == tri2).all():
+            if not arrays_match(tri1, tri2):
                 self.refresh_triangulation()
         return self
 
@@ -991,10 +992,6 @@ class VMobject(Mobject):
     def refresh_triangulation(self):
         for mob in self.get_family():
             mob.needs_new_triangulation = True
-            mob.data["orientation"] = resize_array(
-                mob.data["orientation"],
-                mob.get_num_points()
-            )
         return self
 
     def get_triangulation(self):
@@ -1023,7 +1020,6 @@ class VMobject(Mobject):
         curve_orientations = np.sign(cross2d(v01s, v12s))
 
         # Reset orientation data
-        self.data["orientation"] = resize_array(self.data["orientation"], len(points))
         self.data["orientation"][1::2, 0] = curve_orientations
         if "orientation" in self.locked_data_keys:
             self.locked_data_keys.remove("orientation")
@@ -1072,7 +1068,6 @@ class VMobject(Mobject):
         self.needs_new_joint_angles = False
 
         points = self.get_points()
-        self.data["joint_angle"] = resize_array(self.data["joint_angle"], len(points))
 
         if(len(points) < 3):
             return self.data["joint_angle"]

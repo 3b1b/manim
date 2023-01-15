@@ -10,6 +10,7 @@ from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.images import get_full_raster_image_path
 from manimlib.utils.iterables import listify
+from manimlib.utils.iterables import resize_with_interpolation
 from manimlib.utils.space_ops import normalize_along_axis
 
 from typing import TYPE_CHECKING
@@ -336,8 +337,9 @@ class TexturedSurface(Surface):
         self.data["opacity"] = np.array([self.uv_surface.data["rgbas"][:, 3]])
 
     def set_opacity(self, opacity: float, recurse: bool = True):
+        op_arr = np.array([[o] for o in listify(opacity)])
         for mob in self.get_family(recurse):
-            mob.data["opacity"] = np.array([[o] for o in listify(opacity)])
+            mob.data["opacity"][:] = resize_with_interpolation(op_arr, len(mob.data["opacity"]))
         return self
 
     def pointwise_become_partial(

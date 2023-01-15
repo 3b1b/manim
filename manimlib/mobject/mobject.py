@@ -106,6 +106,10 @@ class Mobject(object):
         self.bounding_box: Vect3Array = np.zeros((3, 3))
 
         self.init_data()
+        self._data_defaults = {
+            key: np.zeros((1, self.data[key].shape[1]))
+            for key in self.data
+        }
         self.init_uniforms()
         self.init_updaters()
         self.init_event_listners()
@@ -130,7 +134,7 @@ class Mobject(object):
     def init_data(self):
         self.data: dict[str, np.ndarray] = {
             "points": np.zeros((0, 3)),
-            "rgbas": np.zeros((1, 4)),
+            "rgbas": np.zeros((0, 4)),
         }
 
     def init_uniforms(self):
@@ -172,7 +176,15 @@ class Mobject(object):
         new_length: int,
         resize_func: Callable[[np.ndarray, int], np.ndarray] = resize_array
     ):
-        for key in self.aligned_data_keys:
+        if new_length == 0:
+            for key in self.data:
+                if len(self.data[key]) > 0:
+                    self._data_defaults[key][:1] = self.data[key][:1]
+        elif self.get_num_points() == 0:
+            for key in self.data:
+                self.data[key] = self._data_defaults[key].copy()
+
+        for key in self.data:
             self.data[key] = resize_func(self.data[key], new_length)
         self.refresh_bounding_box()
         return self
@@ -1215,7 +1227,8 @@ class Mobject(object):
         recurse: bool = False
     ):
         for mob in self.get_family(recurse):
-            mob.data[name] = np.array(rgba_array)
+            data = mob.data if mob.get_num_points() > 0 else mob._data_defaults
+            data[name][:] = rgba_array
         return self
 
     def set_color_by_rgba_func(
@@ -1252,22 +1265,14 @@ class Mobject(object):
         name: str = "rgbas",
         recurse: bool = True
     ):
-        max_len = 0
-        if color is not None:
-            rgbs = np.array([color_to_rgb(c) for c in listify(color)])
-            max_len = len(rgbs)
-        if opacity is not None:
-            opacities = np.array(listify(opacity))
-            max_len = max(max_len, len(opacities))
-
         for mob in self.get_family(recurse):
-            if max_len > len(mob.data[name]):
-                mob.data[name] = resize_array(mob.data[name], max_len)
-            size = len(mob.data[name])
+            data = mob.data if mob.has_points() > 0 else mob._data_defaults
             if color is not None:
-                mob.data[name][:, :3] = resize_array(rgbs, size)
+                rgbs = np.array([color_to_rgb(c) for c in listify(color)])
+                data[name][:, :3] = resize_with_interpolation(rgbs, len(data[name]))
             if opacity is not None:
-                mob.data[name][:, 3] = resize_array(opacities, size)
+                opacities = np.array(listify(opacity))
+                data[name][:, 3] = resize_with_interpolation(opacities, len(data[name]))
         return self
 
     def set_color(
@@ -1869,7 +1874,7 @@ class Mobject(object):
                 result.append(shader_wrapper)
         return result
 
-    def check_data_alignment(self, array: Iterable, data_key: str):
+    def check_data_alignment(self, array: np.ndarray, data_key: str):
         # Makes sure that self.data[key] can be broadcast into
         # the given array, meaning its length has to be either 1
         # or the length of the array
@@ -1895,7 +1900,7 @@ class Mobject(object):
     ):
         if data_key in self.locked_data_keys:
             return
-        self.check_data_alignment(shader_data, data_key)
+        self.check_data_alignment(shader_data, data_key)  # TODO, make sure this can be removed
         shader_data[shader_data_key] = self.data[data_key]
 
     def get_shader_data(self):

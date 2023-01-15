@@ -16,17 +16,6 @@ if TYPE_CHECKING:
 
 
 class PMobject(Mobject):
-    def resize_points(
-        self,
-        size: int,
-        resize_func: Callable[[np.ndarray, int], np.ndarray] = resize_array
-    ):
-        # TODO
-        for key in self.data:
-            if len(self.data[key]) != size:
-                self.data[key] = resize_func(self.data[key], size)
-        return self
-
     def set_points(self, points: Vect3Array):
         if len(points) == 0:
             points = np.zeros((0, 3))
@@ -64,7 +53,7 @@ class PMobject(Mobject):
         return self
 
     def set_color_by_gradient(self, *colors: ManimColor):
-        self.data["rgbas"] = np.array(list(map(
+        self.data["rgbas"][:] = np.array(list(map(
             color_to_rgba,
             color_gradient(colors, self.get_num_points())
         )))
@@ -92,7 +81,7 @@ class PMobject(Mobject):
                 np.apply_along_axis(function, 1, mob.get_points())
             )
             for key in mob.data:
-                mob.data[key] = mob.data[key][indices]
+                mob.data[key][:] = mob.data[key][indices]
         return self
 
     def ingest_submobjects(self):

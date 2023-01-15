@@ -6,7 +6,7 @@ import numpy as np
 from manimlib.constants import GREY_C, YELLOW
 from manimlib.constants import ORIGIN, NULL_POINTS
 from manimlib.mobject.types.point_cloud_mobject import PMobject
-from manimlib.utils.iterables import resize_preserving_order
+from manimlib.utils.iterables import resize_with_interpolation
 
 from typing import TYPE_CHECKING
 
@@ -101,7 +101,7 @@ class DotCloud(PMobject):
     def set_radii(self, radii: npt.ArrayLike):
         n_points = len(self.get_points())
         radii = np.array(radii).reshape((len(radii), 1))
-        self.data["radii"] = resize_preserving_order(radii, n_points)
+        self.data["radii"][:] = resize_with_interpolation(radii, n_points)
         self.refresh_bounding_box()
         return self
 
