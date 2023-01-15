@@ -111,12 +111,12 @@ class DecimalNumber(VMobject):
         num_string = num_string.replace("-", "–")
         return num_string
 
-    def init_data(self) -> None:
-        super().init_data()
-        self.data["font_size"] = np.array([self.font_size], dtype=float)
+    def init_uniforms(self) -> None:
+        super().init_uniforms()
+        self.uniforms["font_size"] = self.font_size
 
     def get_font_size(self) -> int:
-        return int(self.data["font_size"][0])
+        return int(self.uniforms["font_size"])
 
     def get_formatter(self, **kwargs) -> str:
         """
@@ -167,7 +167,7 @@ class DecimalNumber(VMobject):
         return self
 
     def _handle_scale_side_effects(self, scale_factor: float) -> None:
-        self.data["font_size"] *= scale_factor
+        self.uniforms["font_size"] *= scale_factor
 
     def get_value(self) -> float | complex:
         return self.number
