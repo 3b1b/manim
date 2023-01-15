@@ -412,12 +412,20 @@ class Camera(object):
         # Data buffer
         vert_data = shader_wrapper.vert_data
         indices = shader_wrapper.vert_indices
-        if indices is not None:
+        if indices is None:
+            ibo = None
+        elif single_use:
+            ibo = self.ctx.buffer(indices)
+        else:
+            # The vao.render call is strangely longer
+            # when an index buffer is used, so if the
+            # mobject is not changing, meaning only its
+            # uniforms are being updated, just create
+            # a larger data array based on the indices
+            # and don't bother with the ibo
             vert_data = vert_data[indices]
+            ibo = None
         vbo = self.ctx.buffer(vert_data)
-        # For the moment, the index buffer is actually not used,
-        # since it seems to make the actual render calls meaninfully slower
-        ibo = None
 
         # Program and vertex array
         shader_program, vert_format = self.get_shader_program(shader_wrapper)
