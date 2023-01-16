@@ -192,6 +192,9 @@ class Mobject(object):
     def append_points(self, new_points: Vect3Array):
         n = self.get_num_points()
         self.resize_points(n + len(new_points))
+        # Have most data default to the last value
+        self.data[n:] = self.data[n - 1]
+        # Then read in new points
         self.data["point"][n:] = new_points
         self.refresh_bounding_box()
         return self
