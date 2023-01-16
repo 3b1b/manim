@@ -83,7 +83,7 @@ class VMobject(Mobject):
         stroke_color: ManimColor = None,
         stroke_opacity: float | Iterable[float] | None = 1.0,
         stroke_width: float | Iterable[float] | None = DEFAULT_STROKE_WIDTH,
-        draw_stroke_behind_fill: bool = False,
+        stroke_behind: bool = False,
         background_image_file: str | None = None,
         long_lines: bool = False,
         # Could also be "no_joint", "bevel", "miter"
@@ -99,7 +99,7 @@ class VMobject(Mobject):
         self.stroke_color = stroke_color or color or DEFAULT_STROKE_COLOR
         self.stroke_opacity = stroke_opacity
         self.stroke_width = stroke_width
-        self.draw_stroke_behind_fill = draw_stroke_behind_fill
+        self.stroke_behind = stroke_behind
         self.background_image_file = background_image_file
         self.long_lines = long_lines
         self.joint_type = joint_type
@@ -156,7 +156,7 @@ class VMobject(Mobject):
             color=self.stroke_color,
             width=self.stroke_width,
             opacity=self.stroke_opacity,
-            background=self.draw_stroke_behind_fill,
+            background=self.stroke_behind,
         )
         self.set_gloss(self.gloss)
         self.set_flat_stroke(self.flat_stroke)
@@ -207,7 +207,7 @@ class VMobject(Mobject):
 
         if background is not None:
             for mob in self.get_family(recurse):
-                mob.draw_stroke_behind_fill = background
+                mob.stroke_behind = background
         return self
 
     def set_backstroke(
@@ -274,7 +274,7 @@ class VMobject(Mobject):
             "fill_rgba": data['fill_rgba'].copy(),
             "stroke_rgba": data['stroke_rgba'].copy(),
             "stroke_width": data['stroke_width'].copy(),
-            "stroke_background": self.draw_stroke_behind_fill,
+            "stroke_background": self.stroke_behind,
             "reflectiveness": self.get_reflectiveness(),
             "gloss": self.get_gloss(),
             "shadow": self.get_shadow(),
@@ -1210,7 +1210,7 @@ class VMobject(Mobject):
                 fill_datas.append(submob.data[fill_names])
                 fill_indices.append(submob.get_triangulation())
             if submob.has_stroke():
-                if submob.draw_stroke_behind_fill:
+                if submob.stroke_behind:
                     lst = back_stroke_data
                 else:
                     lst = stroke_datas
