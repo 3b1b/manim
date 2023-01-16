@@ -1090,6 +1090,8 @@ class VMobject(Mobject):
         ends = self.get_subpath_end_indices()
         starts = [0, *(e + 2 for e in ends[:-1])]
         for start, end in zip(starts, ends):
+            if start > len(a0_to_h):
+                continue
             if self.consider_points_equal(points[start], points[end]):
                 vect_to_vert[start] = h_to_a1[end // 2 - 1]
                 vect_from_vert[end] = a0_to_h[start // 2]
