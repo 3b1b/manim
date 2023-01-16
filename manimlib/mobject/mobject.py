@@ -64,11 +64,7 @@ class Mobject(object):
     shader_folder: str = ""
     render_primitive: int = moderngl.TRIANGLE_STRIP
     # Must match in attributes of vert shader
-    shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
-        ('point', np.float32, (3,)),
-        ('rgba', np.float32, (4,)),
-    ]
-    data_dtype: np.dtype = np.dtype([
+    shader_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
         ('rgba', np.float32, (4,)),
     ])
@@ -135,7 +131,7 @@ class Mobject(object):
         return self.replicate(other)
 
     def init_data(self, length: int = 0):
-        self.data = np.zeros(length, dtype=self.data_dtype)
+        self.data = np.zeros(length, dtype=self.shader_dtype)
 
     def init_uniforms(self):
         self.uniforms: dict[str, float | np.ndarray] = {

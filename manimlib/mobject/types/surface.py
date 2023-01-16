@@ -30,12 +30,6 @@ class Surface(Mobject):
         ('point', np.float32, (3,)),
         ('du_point', np.float32, (3,)),
         ('dv_point', np.float32, (3,)),
-        ('color', np.float32, (4,)),
-    ]
-    data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
-        ('point', np.float32, (3,)),
-        ('du_point', np.float32, (3,)),
-        ('dv_point', np.float32, (3,)),
         ('rgba', np.float32, (4,)),
     ]
     pointlike_data_keys = ['point', 'du_point', 'dv_point']
@@ -249,7 +243,7 @@ class Surface(Mobject):
         return shader_data
 
     def fill_in_shader_color_info(self, shader_data: np.ndarray) -> np.ndarray:
-        self.read_data_to_shader(shader_data, "color", "rgba")
+        self.read_data_to_shader(shader_data, "rgba", "rgba")
         return shader_data
 
     def get_shader_vert_indices(self) -> np.ndarray:
@@ -287,13 +281,6 @@ class SGroup(Surface):
 class TexturedSurface(Surface):
     shader_folder: str = "textured_surface"
     shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
-        ('point', np.float32, (3,)),
-        ('du_point', np.float32, (3,)),
-        ('dv_point', np.float32, (3,)),
-        ('im_coords', np.float32, (2,)),
-        ('opacity', np.float32, (1,)),
-    ]
-    data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ('point', np.float32, (3,)),
         ('du_point', np.float32, (3,)),
         ('dv_point', np.float32, (3,)),

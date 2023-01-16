@@ -27,13 +27,9 @@ class DotCloud(PMobject):
     shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ('point', np.float32, (3,)),
         ('radius', np.float32, (1,)),
-        ('color', np.float32, (4,)),
-    ]
-    data_dtype: np.dtype = np.dtype([
-        ('point', np.float32, (3,)),
-        ('radius', np.float32, (1,)),
         ('rgba', np.float32, (4,)),
-    ])
+    ]
+
     def __init__(
         self,
         points: Vect3Array = NULL_POINTS,
@@ -150,7 +146,7 @@ class DotCloud(PMobject):
     def get_shader_data(self) -> np.ndarray:
         shader_data = super().get_shader_data()
         self.read_data_to_shader(shader_data, "radius", "radius")
-        self.read_data_to_shader(shader_data, "color", "rgba")
+        self.read_data_to_shader(shader_data, "rgba", "rgba")
         return shader_data
 
 

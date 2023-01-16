@@ -24,11 +24,6 @@ class ImageMobject(Mobject):
         ('im_coords', np.float32, (2,)),
         ('opacity', np.float32, (1,)),
     ]
-    data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
-        ('point', np.float32, (3,)),
-        ('im_coords', np.float32, (2,)),
-        ('opacity', np.float32, (1,)),
-    ]
 
     def __init__(        
         self,

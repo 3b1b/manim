@@ -54,26 +54,28 @@ DEFAULT_FILL_COLOR = GREY_C
 class VMobject(Mobject):
     fill_shader_folder: str = "quadratic_bezier_fill"
     stroke_shader_folder: str = "quadratic_bezier_stroke"
-    fill_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
+    shader_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
-        ('orientation', np.float32, (1,)),
-        ('color', np.float32, (4,)),
-        ('vert_index', np.float32, (1,)),
-    ]
-    stroke_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
-        ("point", np.float32, (3,)),
-        ("joint_angle", np.float32, (1,)),
-        ("stroke_width", np.float32, (1,)),
-        ("color", np.float32, (4,)),
-    ]
-    data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
-        ("point", np.float32, (3,)),
+        ('stroke_rgba', np.float32, (4,)),
+        ('stroke_width', np.float32, (1,)),
+        ('joint_angle', np.float32, (1,)),
         ('fill_rgba', np.float32, (4,)),
-        ("stroke_rgba", np.float32, (4,)),
-        ("joint_angle", np.float32, (1,)),
-        ("stroke_width", np.float32, (1,)),
         ('orientation', np.float32, (1,)),
-    ]
+        ('vert_index', np.float32, (1,)),
+    ])
+    fill_dtype: np.dtype = np.dtype([
+        ('point', np.float32, (3,)),
+        ('fill_rgba', np.float32, (4,)),
+        ('orientation', np.float32, (1,)),
+        ('vert_index', np.float32, (1,)),
+    ])
+    stroke_dtype: np.dtype = np.dtype([
+        ('point', np.float32, (3,)),
+        ('stroke_rgba', np.float32, (4,)),
+        ('stroke_width', np.float32, (1,)),
+        ('joint_angle', np.float32, (1,)),
+    ])
+
     fill_render_primitive: int = moderngl.TRIANGLES
     stroke_render_primitive: int = moderngl.TRIANGLE_STRIP
 
@@ -1146,6 +1148,14 @@ class VMobject(Mobject):
         super().set_data(data)
         return self
 
+    def resize_points(
+        self,
+        new_length: int,
+        resize_func: Callable[[np.ndarray, int], np.ndarray] = resize_array
+    ):
+        super().resize_points(new_length, resize_func)
+        self.data["vert_index"][:, 0] = np.arange(new_length)
+
     # TODO, how to be smart about tangents here?
     @triggers_refreshed_triangulation
     def apply_function(
@@ -1247,7 +1257,7 @@ class VMobject(Mobject):
             return self.stroke_data
 
         self.read_data_to_shader(self.stroke_data[:n], "point", "point")
-        self.read_data_to_shader(self.stroke_data[:n], "color", "stroke_rgba")
+        self.read_data_to_shader(self.stroke_data[:n], "stroke_rgba", "stroke_rgba")
         self.read_data_to_shader(self.stroke_data[:n], "stroke_width", "stroke_width")
         self.get_joint_angles()  # Recomputes, only if refresh is needed
         self.read_data_to_shader(self.stroke_data[:n], "joint_angle", "joint_angle")
@@ -1262,7 +1272,7 @@ class VMobject(Mobject):
             self.fill_data["vert_index"][:, 0] = range(len(points))
 
         self.read_data_to_shader(self.fill_data, "point", "point")
-        self.read_data_to_shader(self.fill_data, "color", "fill_rgba")
+        self.read_data_to_shader(self.fill_data, "fill_rgba", "fill_rgba")
         self.read_data_to_shader(self.fill_data, "orientation", "orientation")
 
         return self.fill_data
