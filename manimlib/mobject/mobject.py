@@ -30,6 +30,7 @@ from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import get_colormap_list
 from manimlib.utils.color import rgb_to_hex
 from manimlib.utils.iterables import arrays_match
+from manimlib.utils.iterables import array_is_constant
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.iterables import list_update
 from manimlib.utils.iterables import listify
@@ -101,6 +102,7 @@ class Mobject(object):
         self.parents: list[Mobject] = []
         self.family: list[Mobject] = [self]
         self.locked_data_keys: set[str] = set()
+        self.const_data_keys: set[str] = set()
         self.needs_new_bounding_box: bool = True
         self._is_animating: bool = False
         self.saved_state = None
@@ -1674,11 +1676,12 @@ class Mobject(object):
         keys = [k for k in self.data.dtype.names if k not in self.locked_data_keys]
         for key in keys:
             func = path_func if key in self.pointlike_data_keys else interpolate
-            self.data[key] = func(
-                mobject1.data[key],
-                mobject2.data[key],
-                alpha
-            )
+            md1 = mobject1.data[key]
+            md2 = mobject2.data[key]
+            if key in self.const_data_keys:
+                md1 = md1[0]
+                md2 = md2[0]
+            self.data[key] = func(md1, md2, alpha)
 
         for key in self.uniforms:
             self.uniforms[key] = interpolate(
@@ -1719,15 +1722,25 @@ class Mobject(object):
     def lock_matching_data(self, mobject1: Mobject, mobject2: Mobject):
         for sm, sm1, sm2 in zip(self.get_family(), mobject1.get_family(), mobject2.get_family()):
             if sm.data.dtype == sm1.data.dtype == sm2.data.dtype:
-                sm.lock_data([
-                    key for key in sm.data.dtype.names
-                    if arrays_match(sm1.data[key], sm2.data[key])
-                ])
+                names = sm.data.dtype.names
+                sm.lock_data(filter(
+                    lambda name: arrays_match(sm1.data[name], sm2.data[name]),
+                    names,
+                ))
+                sm.const_data_keys = set(filter(
+                    lambda name: all(
+                        array_is_constant(mob.data[name])
+                        for mob in (sm, sm1, sm2)
+                    ),
+                    names
+                ))
+
         return self
 
     def unlock_data(self):
         for mob in self.get_family():
             mob.locked_data_keys = set()
+            mob.const_data_keys = set()
 
     # Operations touching shader uniforms
 
