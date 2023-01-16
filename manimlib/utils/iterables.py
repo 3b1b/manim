@@ -91,7 +91,7 @@ def resize_array(nparray: np.ndarray, length: int) -> np.ndarray:
 
 def resize_preserving_order(nparray: np.ndarray, length: int) -> np.ndarray:
     if len(nparray) == 0:
-        return np.zeros((length, *nparray.shape[1:]))
+        return np.resize(nparray, length)
     if len(nparray) == length:
         return nparray
     indices = np.arange(length) * len(nparray) // length
@@ -129,6 +129,9 @@ def make_even(
 def arrays_match(arr1: np.ndarray, arr2: np.ndarray) -> bool:
     return arr1.shape == arr2.shape and (arr1 == arr2).all()
 
+
+def array_is_constant(arr: np.ndarray) -> bool:
+    return len(arr) > 0 and not (arr - arr[0]).any()
 
 def hash_obj(obj: object) -> int:
     if isinstance(obj, dict):

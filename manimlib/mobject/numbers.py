@@ -32,7 +32,7 @@ class DecimalNumber(VMobject):
         unit: str | None = None,  # Aligned to bottom unless it starts with "^"
         include_background_rectangle: bool = False,
         edge_to_fix: Vect3 = LEFT,
-        font_size: int = 48,
+        font_size: float = 48,
         text_config: dict = dict(),  # Do not pass in font_size here
         **kwargs
     ):
@@ -115,8 +115,8 @@ class DecimalNumber(VMobject):
         super().init_uniforms()
         self.uniforms["font_size"] = self.font_size
 
-    def get_font_size(self) -> int:
-        return int(self.uniforms["font_size"])
+    def get_font_size(self) -> float:
+        return float(self.uniforms["font_size"])
 
     def get_formatter(self, **kwargs) -> str:
         """
@@ -167,7 +167,7 @@ class DecimalNumber(VMobject):
         return self
 
     def _handle_scale_side_effects(self, scale_factor: float) -> None:
-        self.uniforms["font_size"] *= scale_factor
+        self.uniforms["font_size"] = scale_factor * self.uniforms["font_size"]
 
     def get_value(self) -> float | complex:
         return self.number

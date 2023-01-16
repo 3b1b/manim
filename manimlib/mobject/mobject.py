@@ -30,6 +30,7 @@ from manimlib.utils.color import color_to_rgb
 from manimlib.utils.color import get_colormap_list
 from manimlib.utils.color import rgb_to_hex
 from manimlib.utils.iterables import arrays_match
+from manimlib.utils.iterables import array_is_constant
 from manimlib.utils.iterables import batch_by_property
 from manimlib.utils.iterables import list_update
 from manimlib.utils.iterables import listify
@@ -64,10 +65,12 @@ class Mobject(object):
     shader_folder: str = ""
     render_primitive: int = moderngl.TRIANGLE_STRIP
     # Must match in attributes of vert shader
-    shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
+    shader_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
-    ]
-    aligned_data_keys = ['points']
+        ('rgba', np.float32, (4,)),
+    ])
+    aligned_data_keys = ['point']
+    pointlike_data_keys = ['point']
 
     def __init__(
         self,
@@ -99,6 +102,7 @@ class Mobject(object):
         self.parents: list[Mobject] = []
         self.family: list[Mobject] = [self]
         self.locked_data_keys: set[str] = set()
+        self.const_data_keys: set[str] = set()
         self.needs_new_bounding_box: bool = True
         self._is_animating: bool = False
         self.saved_state = None
@@ -106,6 +110,7 @@ class Mobject(object):
         self.bounding_box: Vect3Array = np.zeros((3, 3))
 
         self.init_data()
+        self._data_defaults = np.ones(1, dtype=self.data.dtype)
         self.init_uniforms()
         self.init_updaters()
         self.init_event_listners()
@@ -127,11 +132,8 @@ class Mobject(object):
         assert(isinstance(other, int))
         return self.replicate(other)
 
-    def init_data(self):
-        self.data: dict[str, np.ndarray] = {
-            "points": np.zeros((0, 3)),
-            "rgbas": np.zeros((1, 4)),
-        }
+    def init_data(self, length: int = 0):
+        self.data = np.zeros(length, dtype=self.shader_dtype)
 
     def init_uniforms(self):
         self.uniforms: dict[str, float | np.ndarray] = {
@@ -148,9 +150,9 @@ class Mobject(object):
         # Typically implemented in subclass, unlpess purposefully left blank
         pass
 
-    def set_data(self, data: dict):
-        for key in data:
-            self.data[key] = data[key].copy()
+    def set_data(self, data: np.ndarray):
+        assert(data.dtype == self.data.dtype)
+        self.data = data
         return self
 
     def set_uniforms(self, uniforms: dict):
@@ -172,33 +174,40 @@ class Mobject(object):
         new_length: int,
         resize_func: Callable[[np.ndarray, int], np.ndarray] = resize_array
     ):
-        for key in self.aligned_data_keys:
-            self.data[key] = resize_func(self.data[key], new_length)
+        if new_length == 0:
+            if len(self.data) > 0:
+                self._data_defaults[:1] = self.data[:1]
+        elif self.get_num_points() == 0:
+            self.data = self._data_defaults.copy()
+
+        self.data = resize_func(self.data, new_length)
         self.refresh_bounding_box()
         return self
 
     def set_points(self, points: Vect3Array):
-        self.resize_points(len(points))
-        self.data["points"][:] = points
+        self.resize_points(len(points), resize_func=resize_preserving_order)
+        self.data["point"][:] = points
         return self
 
     def append_points(self, new_points: Vect3Array):
         n = self.get_num_points()
         self.resize_points(n + len(new_points))
-        self.data["points"][n:] = new_points
+        # Have most data default to the last value
+        self.data[n:] = self.data[n - 1]
+        # Then read in new points
+        self.data["point"][n:] = new_points
         self.refresh_bounding_box()
         return self
 
     def reverse_points(self):
         for mob in self.get_family():
-            for key in mob.data:
-                mob.data[key] = mob.data[key][::-1]
+            mob.data = mob.data[::-1]
         return self
 
     def apply_points_function(
         self,
         func: Callable[[np.ndarray], np.ndarray],
-        about_point: Vect3 = None,
+        about_point: Vect3 | None = None,
         about_edge: Vect3 = ORIGIN,
         works_on_bounding_box: bool = False
     ):
@@ -208,7 +217,8 @@ class Mobject(object):
         for mob in self.get_family():
             arrs = []
             if mob.has_points():
-                arrs.append(mob.get_points())
+                for key in mob.pointlike_data_keys:
+                    arrs.append(mob.data[key])
             if works_on_bounding_box:
                 arrs.append(mob.get_bounding_box())
 
@@ -232,7 +242,7 @@ class Mobject(object):
         return self
 
     def get_points(self) -> Vect3Array:
-        return self.data["points"]
+        return self.data["point"]
 
     def clear_points(self) -> None:
         self.resize_points(0)
@@ -572,10 +582,7 @@ class Mobject(object):
         # The line above is only a shallow copy, so the internal
         # data which are numpyu arrays or other mobjects still
         # need to be further copied.
-        result.data = {
-            key: np.array(value)
-            for key, value in self.data.items()
-        }
+        result.data = self.data.copy()
         result.uniforms = {
             key: np.array(value)
             for key, value in self.uniforms.items()
@@ -647,6 +654,7 @@ class Mobject(object):
         for sm1, sm2 in zip(family1, family2):
             sm1.set_data(sm2.data)
             sm1.set_uniforms(sm2.uniforms)
+            sm1.bounding_box[:] = sm2.bounding_box
             sm1.shader_folder = sm2.shader_folder
             sm1.texture_paths = sm2.texture_paths
             sm1.depth_test = sm2.depth_test
@@ -666,15 +674,22 @@ class Mobject(object):
         if len(fam1) != len(fam2):
             return False
         for m1, m2 in zip(fam1, fam2):
-            for d1, d2 in [(m1.data, m2.data), (m1.uniforms, m2.uniforms)]:
-                if set(d1).difference(d2):
+            if m1.get_num_points() != m2.get_num_points():
+                return False
+            if not m1.data.dtype == m2.data.dtype:
+                return False
+            for key in m1.data.dtype.names:
+                if not np.isclose(m1.data[key], m2.data[key]).all():
                     return False
-                for key in d1:
-                    if isinstance(d1[key], np.ndarray) and isinstance(d2[key], np.ndarray):
-                        if not d1[key].size == d2[key].size:
-                            return False
-                    if not np.isclose(d1[key], d2[key]).all():
-                        return False
+            if set(m1.uniforms).difference(m2.uniforms):
+                return False
+            for key in m1.uniforms:
+                value1 = m1.uniforms[key]
+                value2 = m2.uniforms[key]
+                if isinstance(value1, np.ndarray) and isinstance(value2, np.ndarray) and not value1.size == value2.size:
+                    return False
+                if not np.isclose(value1, value2).all():
+                    return False
         return True
 
     def has_same_shape_as(self, mobject: Mobject) -> bool:
@@ -1211,11 +1226,12 @@ class Mobject(object):
     def set_rgba_array(
         self,
         rgba_array: npt.ArrayLike,
-        name: str = "rgbas",
+        name: str = "rgba",
         recurse: bool = False
     ):
         for mob in self.get_family(recurse):
-            mob.data[name] = np.array(rgba_array)
+            data = mob.data if mob.get_num_points() > 0 else mob._data_defaults
+            data[name][:] = rgba_array
         return self
 
     def set_color_by_rgba_func(
@@ -1249,25 +1265,17 @@ class Mobject(object):
         self,
         color: ManimColor | Iterable[ManimColor] | None = None,
         opacity: float | Iterable[float] | None = None,
-        name: str = "rgbas",
+        name: str = "rgba",
         recurse: bool = True
     ):
-        max_len = 0
-        if color is not None:
-            rgbs = np.array([color_to_rgb(c) for c in listify(color)])
-            max_len = len(rgbs)
-        if opacity is not None:
-            opacities = np.array(listify(opacity))
-            max_len = max(max_len, len(opacities))
-
         for mob in self.get_family(recurse):
-            if max_len > len(mob.data[name]):
-                mob.data[name] = resize_array(mob.data[name], max_len)
-            size = len(mob.data[name])
+            data = mob.data if mob.has_points() > 0 else mob._data_defaults
             if color is not None:
-                mob.data[name][:, :3] = resize_array(rgbs, size)
+                rgbs = np.array([color_to_rgb(c) for c in listify(color)])
+                data[name][:, :3] = resize_with_interpolation(rgbs, len(data[name]))
             if opacity is not None:
-                mob.data[name][:, 3] = resize_array(opacities, size)
+                opacities = np.array(listify(opacity))
+                data[name][:, 3] = resize_with_interpolation(opacities, len(data[name]))
         return self
 
     def set_color(
@@ -1296,10 +1304,10 @@ class Mobject(object):
         return self
 
     def get_color(self) -> str:
-        return rgb_to_hex(self.data["rgbas"][0, :3])
+        return rgb_to_hex(self.data["rgba"][0, :3])
 
     def get_opacity(self) -> float:
-        return self.data["rgbas"][0, 3]
+        return self.data["rgba"][0, 3]
 
     def set_color_by_gradient(self, *colors: ManimColor):
         if self.has_points():
@@ -1599,19 +1607,7 @@ class Mobject(object):
             # In case any data arrays get resized when aligned to shader data
             mob1.refresh_shader_data()
             mob2.refresh_shader_data()
-
             mob1.align_points(mob2)
-            for key in mob1.data.keys() & mob2.data.keys():
-                if key == "points":
-                    # Separate out how points are treated so that subclasses
-                    # can handle that case differently if they choose
-                    continue
-                arr1 = mob1.data[key]
-                arr2 = mob2.data[key]
-                if len(arr2) > len(arr1):
-                    mob1.data[key] = resize_preserving_order(arr1, len(arr2))
-                elif len(arr1) > len(arr2):
-                    mob2.data[key] = resize_preserving_order(arr2, len(arr1))
 
     def align_points(self, mobject: Mobject):
         max_len = max(self.get_num_points(), mobject.get_num_points())
@@ -1681,21 +1677,16 @@ class Mobject(object):
         alpha: float,
         path_func: Callable[[np.ndarray, np.ndarray, float], np.ndarray] = straight_path
     ):
-        for key in self.data:
-            if key in self.locked_data_keys:
-                continue
-            if len(self.data[key]) == 0:
-                continue
-            if key not in mobject1.data or key not in mobject2.data:
-                continue
+        keys = [k for k in self.data.dtype.names if k not in self.locked_data_keys]
+        for key in keys:
+            func = path_func if key in self.pointlike_data_keys else interpolate
+            md1 = mobject1.data[key]
+            md2 = mobject2.data[key]
+            if key in self.const_data_keys:
+                md1 = md1[0]
+                md2 = md2[0]
+            self.data[key] = func(md1, md2, alpha)
 
-            func = path_func if key == "points" else interpolate
-
-            self.data[key][:] = func(
-                mobject1.data[key],
-                mobject2.data[key],
-                alpha
-            )
         for key in self.uniforms:
             self.uniforms[key] = interpolate(
                 mobject1.uniforms[key],
@@ -1734,16 +1725,26 @@ class Mobject(object):
 
     def lock_matching_data(self, mobject1: Mobject, mobject2: Mobject):
         for sm, sm1, sm2 in zip(self.get_family(), mobject1.get_family(), mobject2.get_family()):
-            keys = sm.data.keys() & sm1.data.keys() & sm2.data.keys()
-            sm.lock_data(list(filter(
-                lambda key: arrays_match(sm1.data[key], sm2.data[key]),
-                keys,
-            )))
+            if sm.data.dtype == sm1.data.dtype == sm2.data.dtype:
+                names = sm.data.dtype.names
+                sm.lock_data(filter(
+                    lambda name: arrays_match(sm1.data[name], sm2.data[name]),
+                    names,
+                ))
+                sm.const_data_keys = set(filter(
+                    lambda name: all(
+                        array_is_constant(mob.data[name])
+                        for mob in (sm, sm1, sm2)
+                    ),
+                    names
+                ))
+
         return self
 
     def unlock_data(self):
         for mob in self.get_family():
             mob.locked_data_keys = set()
+            mob.const_data_keys = set()
 
     # Operations touching shader uniforms
 
@@ -1831,10 +1832,9 @@ class Mobject(object):
 
     def init_shader_data(self):
         # TODO, only call this when needed?
-        self.shader_data = np.zeros(len(self.get_points()), dtype=self.shader_dtype)
         self.shader_indices = None
         self.shader_wrapper = ShaderWrapper(
-            vert_data=self.shader_data,
+            vert_data=self.data,
             shader_folder=self.shader_folder,
             texture_paths=self.texture_paths,
             depth_test=self.depth_test,
@@ -1848,7 +1848,7 @@ class Mobject(object):
     def get_shader_wrapper(self) -> ShaderWrapper:
         self.shader_wrapper.vert_data = self.get_shader_data()
         self.shader_wrapper.vert_indices = self.get_shader_vert_indices()
-        self.shader_wrapper.uniforms = self.get_shader_uniforms()
+        self.shader_wrapper.uniforms = self.get_uniforms()
         self.shader_wrapper.depth_test = self.depth_test
         return self.shader_wrapper
 
@@ -1869,44 +1869,13 @@ class Mobject(object):
                 result.append(shader_wrapper)
         return result
 
-    def check_data_alignment(self, array: Iterable, data_key: str):
-        # Makes sure that self.data[key] can be broadcast into
-        # the given array, meaning its length has to be either 1
-        # or the length of the array
-        d_len = len(self.data[data_key])
-        if d_len != 1 and d_len != len(array):
-            self.data[data_key] = resize_with_interpolation(
-                self.data[data_key], len(array)
-            )
-        return self
-
-    def get_resized_shader_data_array(self, length: int) -> np.ndarray:
-        # If possible, try to populate an existing array, rather
-        # than recreating it each frame
-        if len(self.shader_data) != length:
-            self.shader_data = resize_array(self.shader_data, length)
-        return self.shader_data
-
-    def read_data_to_shader(
-        self,
-        shader_data: np.ndarray,
-        shader_data_key: str,
-        data_key: str
-    ):
-        if data_key in self.locked_data_keys:
-            return
-        self.check_data_alignment(shader_data, data_key)
-        shader_data[shader_data_key] = self.data[data_key]
-
     def get_shader_data(self):
-        shader_data = self.get_resized_shader_data_array(self.get_num_points())
-        self.read_data_to_shader(shader_data, "point", "points")
-        return shader_data
+        return self.data
 
     def refresh_shader_data(self):
-        self.get_shader_data()
+        pass
 
-    def get_shader_uniforms(self):
+    def get_uniforms(self):
         return self.uniforms
 
     def get_shader_vert_indices(self):

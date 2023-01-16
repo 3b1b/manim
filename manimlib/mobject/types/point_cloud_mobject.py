@@ -16,17 +16,6 @@ if TYPE_CHECKING:
 
 
 class PMobject(Mobject):
-    def resize_points(
-        self,
-        size: int,
-        resize_func: Callable[[np.ndarray, int], np.ndarray] = resize_array
-    ):
-        # TODO
-        for key in self.data:
-            if len(self.data[key]) != size:
-                self.data[key] = resize_func(self.data[key], size)
-        return self
-
     def set_points(self, points: Vect3Array):
         if len(points) == 0:
             points = np.zeros((0, 3))
@@ -48,14 +37,14 @@ class PMobject(Mobject):
         # rgbas array will have been resized with points
         if color is not None:
             if opacity is None:
-                opacity = self.data["rgbas"][-1, 3]
+                opacity = self.data["rgba"][-1, 3]
             rgbas = np.repeat(
                 [color_to_rgba(color, opacity)],
                 len(points),
                 axis=0
             )
         if rgbas is not None:
-            self.data["rgbas"][-len(rgbas):] = rgbas
+            self.data["rgba"][-len(rgbas):] = rgbas
         return self
 
     def add_point(self, point: Vect3, rgba=None, color=None, opacity=None):
@@ -64,23 +53,21 @@ class PMobject(Mobject):
         return self
 
     def set_color_by_gradient(self, *colors: ManimColor):
-        self.data["rgbas"] = np.array(list(map(
+        self.data["rgba"][:] = np.array(list(map(
             color_to_rgba,
             color_gradient(colors, self.get_num_points())
         )))
         return self
 
     def match_colors(self, pmobject: PMobject):
-        self.data["rgbas"][:] = resize_with_interpolation(
-            pmobject.data["rgbas"], self.get_num_points()
+        self.data["rgba"][:] = resize_with_interpolation(
+            pmobject.data["rgba"], self.get_num_points()
         )
         return self
 
     def filter_out(self, condition: Callable[[np.ndarray], bool]):
         for mob in self.family_members_with_points():
-            to_keep = ~np.apply_along_axis(condition, 1, mob.get_points())
-            for key in mob.data:
-                mob.data[key] = mob.data[key][to_keep]
+            mob.data = mob.data[~np.apply_along_axis(condition, 1, mob.get_points())]
         return self
 
     def sort_points(self, function: Callable[[Vect3], None] = lambda p: p[0]):
@@ -91,16 +78,13 @@ class PMobject(Mobject):
             indices = np.argsort(
                 np.apply_along_axis(function, 1, mob.get_points())
             )
-            for key in mob.data:
-                mob.data[key] = mob.data[key][indices]
+            mob.data[:] = mob.data[indices]
         return self
 
     def ingest_submobjects(self):
-        for key in self.data:
-            self.data[key] = np.vstack([
-                sm.data[key]
-                for sm in self.get_family()
-            ])
+        self.data = np.vstack([
+            sm.data for sm in self.get_family()
+        ])
         return self
 
     def point_from_proportion(self, alpha: float) -> np.ndarray:
@@ -110,8 +94,7 @@ class PMobject(Mobject):
     def pointwise_become_partial(self, pmobject: PMobject, a: float, b: float):
         lower_index = int(a * pmobject.get_num_points())
         upper_index = int(b * pmobject.get_num_points())
-        for key in self.data:
-            self.data[key] = pmobject.data[key][lower_index:upper_index].copy()
+        self.data = pmobject.data[lower_index:upper_index].copy()
         return self
 
 

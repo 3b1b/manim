@@ -2,7 +2,7 @@
 
 in vec3 point;
 in float radius;
-in vec4 color;
+in vec4 rgba;
 
 out vec3 v_point;
 out float v_radius;
@@ -13,5 +13,5 @@ out vec4 v_color;
 void main(){
     v_point = position_point_into_frame(point);
     v_radius = radius;
-    v_color = color;
+    v_color = rgba;
 }

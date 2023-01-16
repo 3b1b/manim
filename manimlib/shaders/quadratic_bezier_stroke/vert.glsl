@@ -1,10 +1,9 @@
 #version 330
 
 in vec3 point;
-
-in float joint_angle;
+in vec4 stroke_rgba;
 in float stroke_width;
-in vec4 color;
+in float joint_angle;
 
 // Bezier control point
 out vec3 verts;
@@ -23,6 +22,6 @@ void main(){
 
     v_stroke_width = STROKE_WIDTH_CONVERSION * stroke_width * frame_shape[1] / 8.0;
     v_joint_angle = joint_angle;
-    v_color = color;
+    v_color = stroke_rgba;
     v_vert_index = gl_VertexID;
 }

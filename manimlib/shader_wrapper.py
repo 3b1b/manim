@@ -16,7 +16,7 @@ from manimlib.utils.iterables import resize_array
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Iterable
+    from typing import Iterable, List
 
 
 # Mobjects that should be rendered with
@@ -32,7 +32,7 @@ class ShaderWrapper(object):
         vert_data: np.ndarray,
         vert_indices: np.ndarray | None = None,
         shader_folder: str | None = None,
-        uniforms: dict[str, float] | None = None,  # A dictionary mapping names of uniform variables
+        uniforms: dict[str, float | np.ndarray] | None = None,  # A dictionary mapping names of uniform variables
         texture_paths: dict[str, str] | None = None,  # A dictionary mapping names to filepaths for textures.
         depth_test: bool = False,
         use_clip_plane: bool = False,
@@ -136,27 +136,43 @@ class ShaderWrapper(object):
 
     def combine_with(self, *shader_wrappers: ShaderWrapper) -> ShaderWrapper:
         if len(shader_wrappers) > 0:
-            self.read_in(self.copy(), *shader_wrappers)
+            data_list = [self.vert_data, *(sw.vert_data for sw in shader_wrappers)]
+            if self.vert_indices is not None:
+                indices_list = [self.vert_indices, *(sw.vert_indices for sw in shader_wrappers)]
+            else:
+                indices_list = None
+            self.read_in(data_list, indices_list)
         return self
 
-    def read_in(self, *shader_wrappers: ShaderWrapper) -> ShaderWrapper:
+    def read_in(
+        self,
+        data_list: List[np.ndarray],
+        indices_list: List[np.ndarray] | None = None
+    ) -> ShaderWrapper:
         # Assume all are of the same type
-        total_len = sum(len(sw.vert_data) for sw in shader_wrappers)
+        total_len = sum(len(data) for data in data_list)
         self.vert_data = resize_array(self.vert_data, total_len)
-        if self.vert_indices is not None:
-            total_verts = sum(len(sw.vert_indices) for sw in shader_wrappers)
-            self.vert_indices = resize_array(self.vert_indices, total_verts)
+        if total_len == 0:
+            return self
 
+        # Stack the data
+        np.concatenate(data_list, out=self.vert_data)
+
+        if indices_list is None or self.vert_indices is None:
+            return self
+
+        total_verts = sum(len(vi) for vi in indices_list)
+        self.vert_indices = resize_array(self.vert_indices, total_verts)
+
+        # Stack vert_indices, but adding the appropriate offset
+        # alogn the way
         n_points = 0
         n_verts = 0
-        for sw in shader_wrappers:
-            new_n_points = n_points + len(sw.vert_data)
-            self.vert_data[n_points:new_n_points] = sw.vert_data
-            if self.vert_indices is not None and sw.vert_indices is not None:
-                new_n_verts = n_verts + len(sw.vert_indices)
-                self.vert_indices[n_verts:new_n_verts] = sw.vert_indices + n_points
-                n_verts = new_n_verts
-            n_points = new_n_points
+        for data, indices in zip(data_list, indices_list):
+            new_n_verts = n_verts + len(indices)
+            self.vert_indices[n_verts:new_n_verts] = indices + n_points
+            n_verts = new_n_verts
+            n_points += len(data)
         return self
 
 

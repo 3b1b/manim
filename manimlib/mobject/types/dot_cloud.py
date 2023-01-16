@@ -6,7 +6,7 @@ import numpy as np
 from manimlib.constants import GREY_C, YELLOW
 from manimlib.constants import ORIGIN, NULL_POINTS
 from manimlib.mobject.types.point_cloud_mobject import PMobject
-from manimlib.utils.iterables import resize_preserving_order
+from manimlib.utils.iterables import resize_with_interpolation
 
 from typing import TYPE_CHECKING
 
@@ -27,7 +27,7 @@ class DotCloud(PMobject):
     shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
         ('point', np.float32, (3,)),
         ('radius', np.float32, (1,)),
-        ('color', np.float32, (4,)),
+        ('rgba', np.float32, (4,)),
     ]
 
     def __init__(
@@ -49,14 +49,10 @@ class DotCloud(PMobject):
             opacity=opacity,
             **kwargs
         )
+        self.set_radius(self.radius)
 
         if points is not None:
             self.set_points(points)
-
-    def init_data(self) -> None:
-        super().init_data()
-        self.data["radii"] = np.zeros((1, 1))
-        self.set_radius(self.radius)
 
     def init_uniforms(self) -> None:
         super().init_uniforms()
@@ -99,17 +95,18 @@ class DotCloud(PMobject):
         return self
 
     def set_radii(self, radii: npt.ArrayLike):
-        n_points = len(self.get_points())
+        n_points = self.get_num_points()
         radii = np.array(radii).reshape((len(radii), 1))
-        self.data["radii"] = resize_preserving_order(radii, n_points)
+        self.data["radius"][:] = resize_with_interpolation(radii, n_points)
         self.refresh_bounding_box()
         return self
 
     def get_radii(self) -> np.ndarray:
-        return self.data["radii"]
+        return self.data["radius"]
 
     def set_radius(self, radius: float):
-        self.data["radii"][:] = radius
+        data = self.data if self.get_num_points() > 0 else self._data_defaults
+        data["radius"][:] = radius
         self.refresh_bounding_box()
         return self
 
@@ -145,12 +142,6 @@ class DotCloud(PMobject):
         self.set_shadow(shadow)
         self.apply_depth_test()
         return self
-
-    def get_shader_data(self) -> np.ndarray:
-        shader_data = super().get_shader_data()
-        self.read_data_to_shader(shader_data, "radius", "radii")
-        self.read_data_to_shader(shader_data, "color", "rgbas")
-        return shader_data
 
 
 class TrueDot(DotCloud):

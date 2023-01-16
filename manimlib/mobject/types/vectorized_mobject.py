@@ -29,6 +29,8 @@ from manimlib.utils.iterables import listify
 from manimlib.utils.iterables import make_even
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_with_interpolation
+from manimlib.utils.iterables import resize_preserving_order
+from manimlib.utils.iterables import arrays_match
 from manimlib.utils.space_ops import angle_between_vectors
 from manimlib.utils.space_ops import cross2d
 from manimlib.utils.space_ops import earclip_triangulation
@@ -53,21 +55,20 @@ DEFAULT_FILL_COLOR = GREY_C
 class VMobject(Mobject):
     fill_shader_folder: str = "quadratic_bezier_fill"
     stroke_shader_folder: str = "quadratic_bezier_stroke"
-    fill_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
+    shader_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
+        ('stroke_rgba', np.float32, (4,)),
+        ('stroke_width', np.float32, (1,)),
+        ('joint_angle', np.float32, (1,)),
+        ('fill_rgba', np.float32, (4,)),
         ('orientation', np.float32, (1,)),
-        ('color', np.float32, (4,)),
         ('vert_index', np.float32, (1,)),
-    ]
-    stroke_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
-        ("point", np.float32, (3,)),
-        ("joint_angle", np.float32, (1,)),
-        ("stroke_width", np.float32, (1,)),
-        ("color", np.float32, (4,)),
-    ]
+    ])
+    fill_data_names = ['point', 'fill_rgba', 'orientation', 'vert_index']
+    stroke_data_names = ['point', 'stroke_rgba', 'stroke_width', 'joint_angle']
+
     fill_render_primitive: int = moderngl.TRIANGLES
     stroke_render_primitive: int = moderngl.TRIANGLE_STRIP
-    aligned_data_keys = ["points", "orientation", "joint_angle"]
 
     pre_function_handle_to_anchor_scale_factor: float = 0.01
     make_smooth_after_applying_functions: bool = False
@@ -82,7 +83,7 @@ class VMobject(Mobject):
         stroke_color: ManimColor = None,
         stroke_opacity: float | Iterable[float] | None = 1.0,
         stroke_width: float | Iterable[float] | None = DEFAULT_STROKE_WIDTH,
-        draw_stroke_behind_fill: bool = False,
+        stroke_behind: bool = False,
         background_image_file: str | None = None,
         long_lines: bool = False,
         # Could also be "no_joint", "bevel", "miter"
@@ -98,7 +99,7 @@ class VMobject(Mobject):
         self.stroke_color = stroke_color or color or DEFAULT_STROKE_COLOR
         self.stroke_opacity = stroke_opacity
         self.stroke_width = stroke_width
-        self.draw_stroke_behind_fill = draw_stroke_behind_fill
+        self.stroke_behind = stroke_behind
         self.background_image_file = background_image_file
         self.long_lines = long_lines
         self.joint_type = joint_type
@@ -115,17 +116,6 @@ class VMobject(Mobject):
 
     def get_group_class(self):
         return VGroup
-
-    def init_data(self):
-        super().init_data()
-        self.data.pop("rgbas")
-        self.data.update({
-            "fill_rgba": np.zeros((1, 4)),
-            "stroke_rgba": np.zeros((1, 4)),
-            "stroke_width": np.zeros((1, 1)),
-            "orientation": np.ones((1, 1)),
-            "joint_angle": np.zeros((0, 1)),
-        })
 
     def init_uniforms(self):
         super().init_uniforms()
@@ -166,7 +156,7 @@ class VMobject(Mobject):
             color=self.stroke_color,
             width=self.stroke_width,
             opacity=self.stroke_opacity,
-            background=self.draw_stroke_behind_fill,
+            background=self.stroke_behind,
         )
         self.set_gloss(self.gloss)
         self.set_flat_stroke(self.flat_stroke)
@@ -209,15 +199,15 @@ class VMobject(Mobject):
 
         if width is not None:
             for mob in self.get_family(recurse):
-                if isinstance(width, np.ndarray):
-                    arr = width.reshape((len(width), 1))
-                else:
-                    arr = np.array([[w] for w in listify(width)], dtype=float)
-                mob.data['stroke_width'] = arr
+                data = mob.data if mob.get_num_points() > 0 else mob._data_defaults
+                width_arr = np.array(listify(width)).flatten()
+                if len(width_arr) == 0:
+                    continue
+                data['stroke_width'][:, 0] = resize_with_interpolation(width_arr, len(data))
 
         if background is not None:
             for mob in self.get_family(recurse):
-                mob.draw_stroke_behind_fill = background
+                mob.stroke_behind = background
         return self
 
     def set_backstroke(
@@ -228,12 +218,6 @@ class VMobject(Mobject):
     ):
         self.set_stroke(color, width, background=background)
         return self
-
-    def align_stroke_width_data_to_points(self, recurse: bool = True) -> None:
-        for mob in self.get_family(recurse):
-            mob.data["stroke_width"] = resize_with_interpolation(
-                mob.data["stroke_width"], len(mob.get_points())
-            )
 
     def set_style(
         self,
@@ -252,7 +236,7 @@ class VMobject(Mobject):
     ):
         for mob in self.get_family(recurse):
             if fill_rgba is not None:
-                mob.data['fill_rgba'] = resize_with_interpolation(fill_rgba, len(fill_rgba))
+                mob.data['fill_rgba'][:] = resize_with_interpolation(fill_rgba, len(mob.data['fill_rgba']))
             else:
                 mob.set_fill(
                     color=fill_color,
@@ -261,7 +245,7 @@ class VMobject(Mobject):
                 )
 
             if stroke_rgba is not None:
-                mob.data['stroke_rgba'] = resize_with_interpolation(stroke_rgba, len(stroke_rgba))
+                mob.data['stroke_rgba'][:] = resize_with_interpolation(stroke_rgba, len(mob.data['stroke_rgba']))
                 mob.set_stroke(
                     width=stroke_width,
                     background=stroke_background,
@@ -285,11 +269,12 @@ class VMobject(Mobject):
         return self
 
     def get_style(self):
+        data = self.data if self.get_num_points() > 0 else self._data_defaults
         return {
-            "fill_rgba": self.data['fill_rgba'].copy(),
-            "stroke_rgba": self.data['stroke_rgba'].copy(),
-            "stroke_width": self.data['stroke_width'].copy(),
-            "stroke_background": self.draw_stroke_behind_fill,
+            "fill_rgba": data['fill_rgba'].copy(),
+            "stroke_rgba": data['stroke_rgba'].copy(),
+            "stroke_width": data['stroke_width'].copy(),
+            "stroke_background": self.stroke_behind,
             "reflectiveness": self.get_reflectiveness(),
             "gloss": self.get_gloss(),
             "shadow": self.get_shadow(),
@@ -370,23 +355,28 @@ class VMobject(Mobject):
         If there are multiple colors (for gradient)
         this returns the first one
         """
-        return self.get_fill_colors()[0]
+        data = self.data if self.has_points() else self._data_defaults
+        return rgb_to_hex(data["fill_rgba"][0, :3])
 
     def get_fill_opacity(self) -> float:
         """
         If there are multiple opacities, this returns the
         first
         """
-        return self.get_fill_opacities()[0]
+        data = self.data if self.has_points() else self._data_defaults
+        return data["fill_rgba"][0, 3]
 
     def get_stroke_color(self) -> str:
-        return self.get_stroke_colors()[0]
+        data = self.data if self.has_points() else self._data_defaults
+        return rgb_to_hex(data["stroke_rgba"][0, :3])
 
     def get_stroke_width(self) -> float | np.ndarray:
-        return self.get_stroke_widths()[0]
+        data = self.data if self.has_points() else self._data_defaults
+        return data["stroke_width"][0, 0]
 
     def get_stroke_opacity(self) -> float:
-        return self.get_stroke_opacities()[0]
+        data = self.data if self.has_points() else self._data_defaults
+        return data["stroke_rgba"][0, 3]
 
     def get_color(self) -> str:
         if self.has_fill():
@@ -697,9 +687,13 @@ class VMobject(Mobject):
         # To disambiguate this from cases with many null
         # curves in a row, we also check that the following
         # anchor is genuinely distinct
-        is_end = (a0 == h).all(1) & (abs(h - a1) > atol).any(1)
-        inner_ends = (2 * n for n, end in enumerate(is_end) if end)
-        return np.array([*inner_ends, len(points) - 1])
+        is_end = np.empty(len(points) // 2 + 1, dtype=bool)
+        is_end[:-1] = (a0 == h).all(1) & (abs(h - a1) > atol).any(1)
+        is_end[-1] = True
+        # If the curve immediately after an end marker is also an
+        # end marker, don't mark the second one
+        is_end[:-1] = is_end[:-1] & ~is_end[1:]
+        return np.array([2 * n for n, end in enumerate(is_end) if end])
 
     def get_subpath_end_indices(self):
         return self.get_subpath_end_indices_from_points(self.get_points())
@@ -871,8 +865,11 @@ class VMobject(Mobject):
                 new_subpaths2.append(new_subpaths2[0][-1])
             new_subpaths1.append(sp1)
             new_subpaths2.append(sp2)
-        self.set_points(np.vstack(new_subpaths1))
-        vmobject.set_points(np.vstack(new_subpaths2))
+
+        for mob, paths in [(self, new_subpaths1), (vmobject, new_subpaths2)]:
+            new_points = np.vstack(paths)
+            mob.resize_points(len(new_points), resize_func=resize_preserving_order)
+            mob.set_points(new_points)
         return self
 
     def insert_n_curves(self, n: int, recurse: bool = True):
@@ -926,7 +923,7 @@ class VMobject(Mobject):
         if self.has_fill():
             tri1 = mobject1.get_triangulation()
             tri2 = mobject2.get_triangulation()
-            if len(tri1) != len(tri2) or not (tri1 == tri2).all():
+            if not arrays_match(tri1, tri2):
                 self.refresh_triangulation()
         return self
 
@@ -991,10 +988,6 @@ class VMobject(Mobject):
     def refresh_triangulation(self):
         for mob in self.get_family():
             mob.needs_new_triangulation = True
-            mob.data["orientation"] = resize_array(
-                mob.data["orientation"],
-                mob.get_num_points()
-            )
         return self
 
     def get_triangulation(self):
@@ -1023,7 +1016,6 @@ class VMobject(Mobject):
         curve_orientations = np.sign(cross2d(v01s, v12s))
 
         # Reset orientation data
-        self.data["orientation"] = resize_array(self.data["orientation"], len(points))
         self.data["orientation"][1::2, 0] = curve_orientations
         if "orientation" in self.locked_data_keys:
             self.locked_data_keys.remove("orientation")
@@ -1068,11 +1060,12 @@ class VMobject(Mobject):
     def get_joint_angles(self, refresh: bool = False):
         if not self.needs_new_joint_angles and not refresh:
             return self.data["joint_angle"]
+        if "joint_angle" in self.locked_data_keys:
+            return self.data["joint_angle"]
 
         self.needs_new_joint_angles = False
 
         points = self.get_points()
-        self.data["joint_angle"] = resize_array(self.data["joint_angle"], len(points))
 
         if(len(points) < 3):
             return self.data["joint_angle"]
@@ -1093,6 +1086,8 @@ class VMobject(Mobject):
         ends = self.get_subpath_end_indices()
         starts = [0, *(e + 2 for e in ends[:-1])]
         for start, end in zip(starts, ends):
+            if start > len(a0_to_h):
+                continue
             if self.consider_points_equal(points[start], points[end]):
                 vect_to_vert[start] = h_to_a1[end // 2 - 1]
                 vect_from_vert[end] = a0_to_h[start // 2]
@@ -1134,14 +1129,22 @@ class VMobject(Mobject):
         if not self.has_points():
             return self
         inner_ends = self.get_subpath_end_indices()[:-1]
-        self.data["points"][inner_ends + 1] = self.data["points"][inner_ends + 2]
+        self.data["point"][inner_ends + 1] = self.data["point"][inner_ends + 2]
         super().reverse_points()
         return self
 
     @triggers_refreshed_triangulation
-    def set_data(self, data: dict):
+    def set_data(self, data: np.ndarray):
         super().set_data(data)
         return self
+
+    def resize_points(
+        self,
+        new_length: int,
+        resize_func: Callable[[np.ndarray, int], np.ndarray] = resize_array
+    ):
+        super().resize_points(new_length, resize_func)
+        self.data["vert_index"][:, 0] = np.arange(new_length)
 
     # TODO, how to be smart about tangents here?
     @triggers_refreshed_triangulation
@@ -1162,17 +1165,25 @@ class VMobject(Mobject):
 
     # For shaders
     def init_shader_data(self):
-        self.fill_data = np.zeros(0, dtype=self.fill_dtype)
-        self.stroke_data = np.zeros(0, dtype=self.stroke_dtype)
+        dtype = self.shader_dtype
+        fill_dtype, stroke_dtype = (
+            np.dtype([
+                (name, dtype[name].base, dtype[name].shape)
+                for name in names
+            ])
+            for names in [self.fill_data_names, self.stroke_data_names]
+        )
+        fill_data = np.zeros(0, dtype=fill_dtype)
+        stroke_data = np.zeros(0, dtype=stroke_dtype)
         self.fill_shader_wrapper = ShaderWrapper(
-            vert_data=self.fill_data,
+            vert_data=fill_data,
             vert_indices=np.zeros(0, dtype='i4'),
             uniforms=self.uniforms,
             shader_folder=self.fill_shader_folder,
             render_primitive=self.fill_render_primitive,
         )
         self.stroke_shader_wrapper = ShaderWrapper(
-            vert_data=self.stroke_data,
+            vert_data=stroke_data,
             uniforms=self.uniforms,
             shader_folder=self.stroke_shader_folder,
             render_primitive=self.stroke_render_primitive,
@@ -1180,96 +1191,53 @@ class VMobject(Mobject):
         self.back_stroke_shader_wrapper = self.stroke_shader_wrapper.copy()
 
     def refresh_shader_wrapper_id(self):
-        for wrapper in [self.fill_shader_wrapper, self.stroke_shader_wrapper]:
+        for wrapper in self.get_shader_wrapper_list():
             wrapper.refresh_id()
         return self
 
-    def get_fill_shader_wrapper(self) -> ShaderWrapper:
-        self.fill_shader_wrapper.vert_indices = self.get_triangulation()
-        self.fill_shader_wrapper.vert_data = self.get_fill_shader_data()
-        self.fill_shader_wrapper.uniforms = self.get_shader_uniforms()
-        self.fill_shader_wrapper.depth_test = self.depth_test
-        return self.fill_shader_wrapper
-
-    def get_stroke_shader_wrapper(self) -> ShaderWrapper:
-        self.stroke_shader_wrapper.vert_data = self.get_stroke_shader_data()
-        self.stroke_shader_wrapper.uniforms = self.get_shader_uniforms()
-        self.stroke_shader_wrapper.depth_test = self.depth_test
-        return self.stroke_shader_wrapper
-
     def get_shader_wrapper_list(self) -> list[ShaderWrapper]:
+        family = self.family_members_with_points()
+        if not family:
+            return []
+        fill_names = self.fill_data_names
+        stroke_names = self.stroke_data_names
+
         # Build up data lists
-        fill_sws = []
-        stroke_sws = []
-        bstroke_sws = []
-        for submob in self.family_members_with_points():
+        fill_datas = []
+        fill_indices = []
+        stroke_datas = []
+        back_stroke_data = []
+        for submob in family:
             if submob.has_fill():
-                fill_sws.append(submob.get_fill_shader_wrapper())
+                fill_datas.append(submob.data[fill_names])
+                fill_indices.append(submob.get_triangulation())
             if submob.has_stroke():
-                lst = bstroke_sws if submob.draw_stroke_behind_fill else stroke_sws
-                lst.append(submob.get_stroke_shader_wrapper())
+                if submob.stroke_behind:
+                    lst = back_stroke_data
+                else:
+                    lst = stroke_datas
+                lst.append(submob.data[stroke_names])
+                # Set data array to be one longer than number of points,
+                # with a dummy vertex added at the end. This is to ensure
+                # it can be safely stacked onto other stroke data arrays.
+                lst.append(submob.data[stroke_names][-1:])
 
-        self_sws = [
-            self.back_stroke_shader_wrapper,
-            self.fill_shader_wrapper,
-            self.stroke_shader_wrapper
+        shader_wrappers = [
+            self.back_stroke_shader_wrapper.read_in(back_stroke_data),
+            self.fill_shader_wrapper.read_in(fill_datas, fill_indices),
+            self.stroke_shader_wrapper.read_in(stroke_datas),
         ]
-        sw_lists = [
-            bstroke_sws,
-            fill_sws,
-            stroke_sws
-        ]
-        for sw, sw_list in zip(self_sws, sw_lists):
-            if not sw_list:
-                sw.vert_data = resize_array(sw.vert_data, 0)
-                continue
-            if sw is sw_list[0]:
-                sw.combine_with(*sw_list[1:])
-            else:
-                sw.read_in(*sw_list)
-            sw.depth_test = any(sw.depth_test for sw in sw_list)
-            sw.uniforms.update(sw_list[0].uniforms)
-        return [sw for sw in self_sws if len(sw.vert_data) > 0]
 
-    def get_stroke_shader_data(self) -> np.ndarray:
-        # Set data array to be one longer than number of points,
-        # with a dummy vertex added at the end. This is to ensure
-        # it can be safely stacked onto other stroke data arrays.
-        points = self.get_points()
-        n = len(points)
-        size = n + 1 if n > 0 else 0
-        if len(self.stroke_data) != size:
-            self.stroke_data = resize_array(self.stroke_data, size)
-        if n == 0:
-            return self.stroke_data
-
-        self.read_data_to_shader(self.stroke_data[:n], "point", "points")
-        self.read_data_to_shader(self.stroke_data[:n], "color", "stroke_rgba")
-        self.read_data_to_shader(self.stroke_data[:n], "stroke_width", "stroke_width")
-        self.get_joint_angles()  # Recomputes, only if refresh is needed
-        self.read_data_to_shader(self.stroke_data[:n], "joint_angle", "joint_angle")
-
-        self.stroke_data[-1] = self.stroke_data[-2]
-        return self.stroke_data
-
-    def get_fill_shader_data(self) -> np.ndarray:
-        points = self.get_points()
-        if len(self.fill_data) != len(points):
-            self.fill_data = resize_array(self.fill_data, len(points))
-            self.fill_data["vert_index"][:, 0] = range(len(points))
-
-        self.read_data_to_shader(self.fill_data, "point", "points")
-        self.read_data_to_shader(self.fill_data, "color", "fill_rgba")
-        self.read_data_to_shader(self.fill_data, "orientation", "orientation")
-
-        return self.fill_data
+        for sw in shader_wrappers:
+            # Assume uniforms of the first family member
+            sw.uniforms = family[0].get_uniforms()
+            sw.depth_test = family[0].depth_test
+        return [sw for sw in shader_wrappers if len(sw.vert_data) > 0]
 
     def refresh_shader_data(self):
-        self.get_fill_shader_data()
-        self.get_stroke_shader_data()
-
-    def get_fill_shader_vert_indices(self) -> np.ndarray:
-        return self.get_triangulation()
+        for submob in self.get_family():
+            submob.get_joint_angles()
+        self.get_shader_wrapper_list()
 
 
 class VGroup(VMobject):
