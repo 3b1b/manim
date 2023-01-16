@@ -32,7 +32,7 @@ class ShaderWrapper(object):
         vert_data: np.ndarray,
         vert_indices: np.ndarray | None = None,
         shader_folder: str | None = None,
-        uniforms: dict[str, float] | None = None,  # A dictionary mapping names of uniform variables
+        uniforms: dict[str, float | np.ndarray] | None = None,  # A dictionary mapping names of uniform variables
         texture_paths: dict[str, str] | None = None,  # A dictionary mapping names to filepaths for textures.
         depth_test: bool = False,
         use_clip_plane: bool = False,
