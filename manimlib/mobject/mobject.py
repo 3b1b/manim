@@ -69,11 +69,11 @@ class Mobject(object):
         ('rgba', np.float32, (4,)),
     ]
     data_dtype: np.dtype = np.dtype([
-        ('points', '<f4', (3,)),
-        ('rgba', '<f4', (4,)),
+        ('point', np.float32, (3,)),
+        ('rgba', np.float32, (4,)),
     ])
-    aligned_data_keys = ['points']
-    pointlike_data_keys = ['points']
+    aligned_data_keys = ['point']
+    pointlike_data_keys = ['point']
 
     def __init__(
         self,
@@ -188,13 +188,13 @@ class Mobject(object):
 
     def set_points(self, points: Vect3Array):
         self.resize_points(len(points))
-        self.data["points"][:] = points
+        self.data["point"][:] = points
         return self
 
     def append_points(self, new_points: Vect3Array):
         n = self.get_num_points()
         self.resize_points(n + len(new_points))
-        self.data["points"][n:] = new_points
+        self.data["point"][n:] = new_points
         self.refresh_bounding_box()
         return self
 
@@ -241,7 +241,7 @@ class Mobject(object):
         return self
 
     def get_points(self) -> Vect3Array:
-        return self.data["points"]
+        return self.data["point"]
 
     def clear_points(self) -> None:
         self.resize_points(0)
@@ -1876,7 +1876,7 @@ class Mobject(object):
 
     def get_shader_data(self):
         shader_data = self.get_resized_shader_data_array(self.get_num_points())
-        self.read_data_to_shader(shader_data, "point", "points")
+        self.read_data_to_shader(shader_data, "point", "point")
         return shader_data
 
     def refresh_shader_data(self):

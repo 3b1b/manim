@@ -30,7 +30,7 @@ class DotCloud(PMobject):
         ('color', np.float32, (4,)),
     ]
     data_dtype: np.dtype = np.dtype([
-        ('points', np.float32, (3,)),
+        ('point', np.float32, (3,)),
         ('radius', np.float32, (1,)),
         ('rgba', np.float32, (4,)),
     ])

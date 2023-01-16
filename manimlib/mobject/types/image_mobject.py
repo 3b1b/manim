@@ -25,7 +25,7 @@ class ImageMobject(Mobject):
         ('opacity', np.float32, (1,)),
     ]
     data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
-        ('points', np.float32, (3,)),
+        ('point', np.float32, (3,)),
         ('im_coords', np.float32, (2,)),
         ('opacity', np.float32, (1,)),
     ]
@@ -43,7 +43,7 @@ class ImageMobject(Mobject):
 
     def init_data(self) -> None:
         super().init_data(length=4)
-        self.data["points"][:] = [UL, DL, UR, DR]
+        self.data["point"][:] = [UL, DL, UR, DR]
         self.data["im_coords"][:] = [(0, 0), (0, 1), (1, 0), (1, 1)]
         self.data["opacity"][:] = self.opacity
 

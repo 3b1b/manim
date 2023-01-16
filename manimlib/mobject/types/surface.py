@@ -33,12 +33,12 @@ class Surface(Mobject):
         ('color', np.float32, (4,)),
     ]
     data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
-        ('points', np.float32, (3,)),
+        ('point', np.float32, (3,)),
         ('du_point', np.float32, (3,)),
         ('dv_point', np.float32, (3,)),
         ('rgba', np.float32, (4,)),
     ]
-    pointlike_data_keys = ['points', 'du_point', 'dv_point']
+    pointlike_data_keys = ['point', 'du_point', 'dv_point']
 
     def __init__(
         self,
@@ -131,7 +131,7 @@ class Surface(Mobject):
         return self.triangle_indices
 
     def get_surface_points_and_nudged_points(self) -> tuple[Vect3Array, Vect3Array, Vect3Array]:
-        return (self.data['points'], self.data['du_point'], self.data['dv_point'])
+        return (self.data['point'], self.data['du_point'], self.data['dv_point'])
 
     def get_unit_normals(self) -> Vect3Array:
         s_points, du_points, dv_points = self.get_surface_points_and_nudged_points()
@@ -156,7 +156,7 @@ class Surface(Mobject):
             return self
 
         nu, nv = smobject.resolution
-        for key in ['points', 'du_point', 'dv_point']:
+        for key in ['point', 'du_point', 'dv_point']:
             self.data[key][:] = self.get_partial_points_array(
                 self.data[key], a, b,
                 (nu, nv, 3),
@@ -241,7 +241,7 @@ class Surface(Mobject):
     def get_shader_data(self) -> np.ndarray:
         s_points, du_points, dv_points = self.get_surface_points_and_nudged_points()
         shader_data = self.get_resized_shader_data_array(len(s_points))
-        if "points" not in self.locked_data_keys:
+        if "point" not in self.locked_data_keys:
             shader_data["point"] = s_points
             shader_data["du_point"] = du_points
             shader_data["dv_point"] = dv_points
@@ -294,7 +294,7 @@ class TexturedSurface(Surface):
         ('opacity', np.float32, (1,)),
     ]
     data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
-        ('points', np.float32, (3,)),
+        ('point', np.float32, (3,)),
         ('du_point', np.float32, (3,)),
         ('dv_point', np.float32, (3,)),
         ('im_coords', np.float32, (2,)),
@@ -337,7 +337,7 @@ class TexturedSurface(Surface):
         surf = self.uv_surface
         nu, nv = surf.resolution
         self.resize_points(surf.get_num_points())
-        for key in ['points', 'du_point', 'dv_point']:
+        for key in ['point', 'du_point', 'dv_point']:
             self.data[key][:] = surf.data[key]
         self.data['opacity'][:, 0] = surf.data["rgba"][:, 3]
         self.data["im_coords"] = np.array([

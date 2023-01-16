@@ -67,7 +67,7 @@ class VMobject(Mobject):
         ("color", np.float32, (4,)),
     ]
     data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
-        ("points", np.float32, (3,)),
+        ("point", np.float32, (3,)),
         ('fill_rgba', np.float32, (4,)),
         ("stroke_rgba", np.float32, (4,)),
         ("joint_angle", np.float32, (1,)),
@@ -1133,7 +1133,7 @@ class VMobject(Mobject):
         if not self.has_points():
             return self
         inner_ends = self.get_subpath_end_indices()[:-1]
-        self.data["points"][inner_ends + 1] = self.data["points"][inner_ends + 2]
+        self.data["point"][inner_ends + 1] = self.data["point"][inner_ends + 2]
         super().reverse_points()
         return self
 
@@ -1242,7 +1242,7 @@ class VMobject(Mobject):
         if n == 0:
             return self.stroke_data
 
-        self.read_data_to_shader(self.stroke_data[:n], "point", "points")
+        self.read_data_to_shader(self.stroke_data[:n], "point", "point")
         self.read_data_to_shader(self.stroke_data[:n], "color", "stroke_rgba")
         self.read_data_to_shader(self.stroke_data[:n], "stroke_width", "stroke_width")
         self.get_joint_angles()  # Recomputes, only if refresh is needed
@@ -1257,7 +1257,7 @@ class VMobject(Mobject):
             self.fill_data = resize_array(self.fill_data, len(points))
             self.fill_data["vert_index"][:, 0] = range(len(points))
 
-        self.read_data_to_shader(self.fill_data, "point", "points")
+        self.read_data_to_shader(self.fill_data, "point", "point")
         self.read_data_to_shader(self.fill_data, "color", "fill_rgba")
         self.read_data_to_shader(self.fill_data, "orientation", "orientation")
 
