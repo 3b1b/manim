@@ -293,6 +293,13 @@ class TexturedSurface(Surface):
         ('im_coords', np.float32, (2,)),
         ('opacity', np.float32, (1,)),
     ]
+    data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
+        ('points', np.float32, (3,)),
+        ('du_point', np.float32, (3,)),
+        ('dv_point', np.float32, (3,)),
+        ('im_coords', np.float32, (2,)),
+        ('opacity', np.float32, (1,)),
+    ]
 
     def __init__(
         self,
@@ -326,14 +333,13 @@ class TexturedSurface(Surface):
             **kwargs
         )
 
-    def init_data(self):
-        super().init_data()
-        self.data["im_coords"] = np.zeros((0, 2))
-        self.data["opacity"] = np.zeros((0, 1))
-
     def init_points(self):
-        nu, nv = self.uv_surface.resolution
-        self.set_points(self.uv_surface.get_points())
+        surf = self.uv_surface
+        nu, nv = surf.resolution
+        self.resize_points(surf.get_num_points())
+        for key in ['points', 'du_point', 'dv_point']:
+            self.data[key][:] = surf.data[key]
+        self.data['opacity'][:, 0] = surf.data["rgba"][:, 3]
         self.data["im_coords"] = np.array([
             [u, v]
             for u in np.linspace(0, 1, nu)
@@ -344,13 +350,19 @@ class TexturedSurface(Surface):
         super().init_uniforms()
         self.uniforms["num_textures"] = self.num_textures
 
-    def init_colors(self):
-        self.data["opacity"] = np.array([self.uv_surface.data["rgbas"][:, 3]])
+    def set_opacity(self, opacity: float | Iterable[float]):
+        op_arr = np.array(listify(opacity))
+        self.data["opacity"][:, 0] = resize_with_interpolation(op_arr, len(self.data))
+        return self
 
-    def set_opacity(self, opacity: float, recurse: bool = True):
-        op_arr = np.array([[o] for o in listify(opacity)])
-        for mob in self.get_family(recurse):
-            mob.data["opacity"][:] = resize_with_interpolation(op_arr, len(mob.data["opacity"]))
+    def set_color(
+        self,
+        color: ManimColor | Iterable[ManimColor] | None,
+        opacity: float | Iterable[float] | None = None,
+        recurse: bool = True
+    ):
+        if opacity is not None:
+            self.set_opacity(opacity)
         return self
 
     def pointwise_become_partial(
