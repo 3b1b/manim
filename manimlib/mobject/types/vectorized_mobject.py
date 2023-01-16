@@ -1072,6 +1072,8 @@ class VMobject(Mobject):
     def get_joint_angles(self, refresh: bool = False):
         if not self.needs_new_joint_angles and not refresh:
             return self.data["joint_angle"]
+        if "joint_angle" in self.locked_data_keys:
+            return self.data["joint_angle"]
 
         self.needs_new_joint_angles = False
 
