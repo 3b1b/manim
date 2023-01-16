@@ -23,7 +23,6 @@ from manimlib.event_handler import EVENT_DISPATCHER
 from manimlib.event_handler.event_listner import EventListner
 from manimlib.event_handler.event_type import EventType
 from manimlib.logger import log
-from manimlib.shader_wrapper import get_colormap_code
 from manimlib.shader_wrapper import ShaderWrapper
 from manimlib.utils.color import color_gradient
 from manimlib.utils.color import color_to_rgb
@@ -41,6 +40,7 @@ from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
 from manimlib.utils.paths import straight_path
 from manimlib.utils.simple_functions import get_parameters
+from manimlib.utils.shaders import get_colormap_code
 from manimlib.utils.space_ops import angle_of_vector
 from manimlib.utils.space_ops import get_norm
 from manimlib.utils.space_ops import rotation_matrix_transpose
