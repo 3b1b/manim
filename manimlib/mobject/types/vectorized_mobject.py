@@ -1095,6 +1095,7 @@ class VMobject(Mobject):
         # Compute angles, and read them into
         # the joint_angles array
         result = self.data["joint_angle"][:, 0]
+        result[:] = 0
         dots = (vect_to_vert * vect_from_vert).sum(1)
         np.arccos(dots, out=result, where=((dots <= 1) & (dots >= -1)))
         # Assumes unit normal in the positive z direction
@@ -1212,6 +1213,7 @@ class VMobject(Mobject):
                 fill_datas.append(submob.data[fill_names])
                 fill_indices.append(submob.get_triangulation())
             if submob.has_stroke():
+                submob.get_joint_angles()
                 if submob.stroke_behind:
                     lst = back_stroke_data
                 else:
@@ -1235,8 +1237,6 @@ class VMobject(Mobject):
         return [sw for sw in shader_wrappers if len(sw.vert_data) > 0]
 
     def refresh_shader_data(self):
-        for submob in self.get_family():
-            submob.get_joint_angles()
         self.get_shader_wrapper_list()
 
 
