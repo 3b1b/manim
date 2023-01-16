@@ -146,26 +146,26 @@ class ShaderWrapper(object):
 
     def read_in(
         self,
-        vert_data_list: List[np.ndarray],
-        vert_indices_list: List[np.ndarray] | None = None
+        data_list: List[np.ndarray],
+        indices_list: List[np.ndarray] | None = None
     ) -> ShaderWrapper:
         # Assume all are of the same type
-        total_len = sum(len(data) for data in vert_data_list)
+        total_len = sum(len(data) for data in data_list)
         self.vert_data = resize_array(self.vert_data, total_len)
         if total_len == 0:
             return self
 
-        if vert_indices_list is not None and self.vert_indices is not None:
-            total_verts = sum(len(vi) for vi in vert_indices_list)
+        if indices_list is not None and self.vert_indices is not None:
+            total_verts = sum(len(vi) for vi in indices_list)
             self.vert_indices = resize_array(self.vert_indices, total_verts)
 
         n_points = 0
         n_verts = 0
-        for k, data in enumerate(vert_data_list):
+        for k, data in enumerate(data_list):
             new_n_points = n_points + len(data)
             self.vert_data[n_points:new_n_points] = data
-            if self.vert_indices is not None and vert_indices_list is not None:
-                vert_indices = vert_indices_list[k]
+            if self.vert_indices is not None and indices_list is not None:
+                vert_indices = indices_list[k]
                 new_n_verts = n_verts + len(vert_indices)
                 self.vert_indices[n_verts:new_n_verts] = vert_indices + n_points
                 n_verts = new_n_verts
