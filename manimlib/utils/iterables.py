@@ -130,6 +130,9 @@ def arrays_match(arr1: np.ndarray, arr2: np.ndarray) -> bool:
     return arr1.shape == arr2.shape and (arr1 == arr2).all()
 
 
+def array_is_constant(arr: np.ndarray) -> bool:
+    return len(arr) > 0 and not (arr - arr[0]).any()
+
 def hash_obj(obj: object) -> int:
     if isinstance(obj, dict):
         return hash(tuple(sorted([
