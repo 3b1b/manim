@@ -282,10 +282,11 @@ class VMobject(Mobject):
         return self
 
     def get_style(self):
+        data = self.data if self.get_num_points() > 0 else self._data_defaults
         return {
-            "fill_rgba": self.data['fill_rgba'].copy(),
-            "stroke_rgba": self.data['stroke_rgba'].copy(),
-            "stroke_width": self.data['stroke_width'].copy(),
+            "fill_rgba": data['fill_rgba'].copy(),
+            "stroke_rgba": data['stroke_rgba'].copy(),
+            "stroke_width": data['stroke_width'].copy(),
             "stroke_background": self.draw_stroke_behind_fill,
             "reflectiveness": self.get_reflectiveness(),
             "gloss": self.get_gloss(),
