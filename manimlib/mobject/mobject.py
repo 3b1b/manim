@@ -1673,19 +1673,21 @@ class Mobject(object):
         alpha: float,
         path_func: Callable[[np.ndarray, np.ndarray, float], np.ndarray] = straight_path
     ):
-        for key in self.data.dtype.names:
-            if key in self.locked_data_keys:
-                continue
-            if len(self.data[key]) == 0:
-                continue
-
-            func = path_func if key == "points" else interpolate
-
-            self.data[key][:] = func(
+        keys = [k for k in self.data.dtype.names if k not in self.locked_data_keys]
+        if 'points' in keys and path_func not in [straight_path, interpolate]:
+            keys.remove('points')
+            self.data['points'] = path_func(
+                mobject1.data['points'],
+                mobject2.data['points'],
+                alpha
+            )
+        for key in keys:
+            self.data[key] = interpolate(
                 mobject1.data[key],
                 mobject2.data[key],
                 alpha
             )
+
         for key in self.uniforms:
             self.uniforms[key] = interpolate(
                 mobject1.uniforms[key],
