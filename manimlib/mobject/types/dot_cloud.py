@@ -53,13 +53,10 @@ class DotCloud(PMobject):
             opacity=opacity,
             **kwargs
         )
+        self.set_radius(self.radius)
 
         if points is not None:
             self.set_points(points)
-
-    def init_data(self) -> None:
-        super().init_data()
-        self.set_radius(self.radius)
 
     def init_uniforms(self) -> None:
         super().init_uniforms()
@@ -102,7 +99,7 @@ class DotCloud(PMobject):
         return self
 
     def set_radii(self, radii: npt.ArrayLike):
-        n_points = len(self.get_points())
+        n_points = self.get_num_points()
         radii = np.array(radii).reshape((len(radii), 1))
         self.data["radius"][:] = resize_with_interpolation(radii, n_points)
         self.refresh_bounding_box()
@@ -112,7 +109,8 @@ class DotCloud(PMobject):
         return self.data["radius"]
 
     def set_radius(self, radius: float):
-        self.data["radius"][:] = radius
+        data = self.data if self.get_num_points() > 0 else self._data_defaults
+        data["radius"][:] = radius
         self.refresh_bounding_box()
         return self
 
