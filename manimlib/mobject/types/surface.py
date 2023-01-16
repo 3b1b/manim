@@ -5,7 +5,6 @@ import numpy as np
 
 from manimlib.constants import GREY
 from manimlib.constants import OUT
-from manimlib.constants import ORIGIN
 from manimlib.mobject.mobject import Mobject
 from manimlib.utils.bezier import integer_interpolate
 from manimlib.utils.bezier import interpolate
@@ -26,12 +25,12 @@ if TYPE_CHECKING:
 class Surface(Mobject):
     render_primitive: int = moderngl.TRIANGLES
     shader_folder: str = "surface"
-    shader_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
+    shader_dtype: np.dtype = np.dtype([
         ('point', np.float32, (3,)),
         ('du_point', np.float32, (3,)),
         ('dv_point', np.float32, (3,)),
         ('rgba', np.float32, (4,)),
-    ]
+    ])
     pointlike_data_keys = ['point', 'du_point', 'dv_point']
 
     def __init__(
