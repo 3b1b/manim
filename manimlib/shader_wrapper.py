@@ -155,21 +155,24 @@ class ShaderWrapper(object):
         if total_len == 0:
             return self
 
-        if indices_list is not None and self.vert_indices is not None:
-            total_verts = sum(len(vi) for vi in indices_list)
-            self.vert_indices = resize_array(self.vert_indices, total_verts)
+        # Stack the data
+        np.concatenate(data_list, out=self.vert_data)
 
+        if indices_list is None or self.vert_indices is None:
+            return self
+
+        total_verts = sum(len(vi) for vi in indices_list)
+        self.vert_indices = resize_array(self.vert_indices, total_verts)
+
+        # Stack vert_indices, but adding the appropriate offset
+        # alogn the way
         n_points = 0
         n_verts = 0
-        for k, data in enumerate(data_list):
-            new_n_points = n_points + len(data)
-            self.vert_data[n_points:new_n_points] = data
-            if self.vert_indices is not None and indices_list is not None:
-                vert_indices = indices_list[k]
-                new_n_verts = n_verts + len(vert_indices)
-                self.vert_indices[n_verts:new_n_verts] = vert_indices + n_points
-                n_verts = new_n_verts
-            n_points = new_n_points
+        for data, indices in zip(data_list, indices_list):
+            new_n_verts = n_verts + len(indices)
+            self.vert_indices[n_verts:new_n_verts] = indices + n_points
+            n_verts = new_n_verts
+            n_points += len(data)
         return self
 
 
