@@ -700,9 +700,13 @@ class VMobject(Mobject):
         # To disambiguate this from cases with many null
         # curves in a row, we also check that the following
         # anchor is genuinely distinct
-        is_end = (a0 == h).all(1) & (abs(h - a1) > atol).any(1)
-        inner_ends = (2 * n for n, end in enumerate(is_end) if end)
-        return np.array([*inner_ends, len(points) - 1])
+        is_end = np.empty(len(points) // 2 + 1, dtype=bool)
+        is_end[:-1] = (a0 == h).all(1) & (abs(h - a1) > atol).any(1)
+        is_end[-1] = True
+        # If the curve immediately after an end marker is also an
+        # end marker, don't mark the second one
+        is_end[:-1] = is_end[:-1] & ~is_end[1:]
+        return np.array([2 * n for n, end in enumerate(is_end) if end])
 
     def get_subpath_end_indices(self):
         return self.get_subpath_end_indices_from_points(self.get_points())
