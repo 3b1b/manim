@@ -45,7 +45,8 @@ class Rotating(Animation):
             self.starting_mobject.family_members_with_points(),
         )
         for sm1, sm2 in pairs:
-            sm1.data["points"][:] = sm2.data["points"]
+            for key in sm1.pointlike_data_keys:
+                sm1.data[key][:] = sm2.data[key]
         self.mobject.rotate(
             self.rate_func(alpha) * self.angle,
             axis=self.axis,
