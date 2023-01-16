@@ -415,7 +415,7 @@ class Camera(object):
         if indices is None:
             ibo = None
         elif single_use:
-            ibo = self.ctx.buffer(indices)
+            ibo = self.ctx.buffer(indices.astype(np.uint32))
         else:
             # The vao.render call is strangely longer
             # when an index buffer is used, so if the
