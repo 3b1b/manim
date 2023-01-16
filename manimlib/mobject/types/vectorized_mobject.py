@@ -66,9 +66,16 @@ class VMobject(Mobject):
         ("stroke_width", np.float32, (1,)),
         ("color", np.float32, (4,)),
     ]
+    data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
+        ("points", np.float32, (3,)),
+        ('fill_rgba', np.float32, (4,)),
+        ("stroke_rgba", np.float32, (4,)),
+        ("joint_angle", np.float32, (1,)),
+        ("stroke_width", np.float32, (1,)),
+        ('orientation', np.float32, (1,)),
+    ]
     fill_render_primitive: int = moderngl.TRIANGLES
     stroke_render_primitive: int = moderngl.TRIANGLE_STRIP
-    aligned_data_keys = ["points", "orientation", "joint_angle"]
 
     pre_function_handle_to_anchor_scale_factor: float = 0.01
     make_smooth_after_applying_functions: bool = False
@@ -116,17 +123,6 @@ class VMobject(Mobject):
 
     def get_group_class(self):
         return VGroup
-
-    def init_data(self):
-        super().init_data()
-        self.data.pop("rgbas")
-        self.data.update({
-            "fill_rgba": np.zeros((1, 4)),
-            "stroke_rgba": np.zeros((1, 4)),
-            "stroke_width": np.zeros((1, 1)),
-            "orientation": np.ones((1, 1)),
-            "joint_angle": np.zeros((0, 1)),
-        })
 
     def init_uniforms(self):
         super().init_uniforms()
@@ -371,23 +367,28 @@ class VMobject(Mobject):
         If there are multiple colors (for gradient)
         this returns the first one
         """
-        return self.get_fill_colors()[0]
+        data = self.data if self.has_points() else self._data_defaults
+        return rgb_to_hex(data["fill_rgba"][0, :3])
 
     def get_fill_opacity(self) -> float:
         """
         If there are multiple opacities, this returns the
         first
         """
-        return self.get_fill_opacities()[0]
+        data = self.data if self.has_points() else self._data_defaults
+        return data["fill_rgba"][0, 3]
 
     def get_stroke_color(self) -> str:
-        return self.get_stroke_colors()[0]
+        data = self.data if self.has_points() else self._data_defaults
+        return rgb_to_hex(data["stroke_rgba"][0, :3])
 
     def get_stroke_width(self) -> float | np.ndarray:
-        return self.get_stroke_widths()[0]
+        data = self.data if self.has_points() else self._data_defaults
+        return data["stroke_width"][0, 0]
 
     def get_stroke_opacity(self) -> float:
-        return self.get_stroke_opacities()[0]
+        data = self.data if self.has_points() else self._data_defaults
+        return data["stroke_rgba"][0, 3]
 
     def get_color(self) -> str:
         if self.has_fill():
@@ -1134,7 +1135,7 @@ class VMobject(Mobject):
         return self
 
     @triggers_refreshed_triangulation
-    def set_data(self, data: dict):
+    def set_data(self, data: np.ndarray):
         super().set_data(data)
         return self
 

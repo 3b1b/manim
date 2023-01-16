@@ -24,6 +24,11 @@ class ImageMobject(Mobject):
         ('im_coords', np.float32, (2,)),
         ('opacity', np.float32, (1,)),
     ]
+    data_dtype: Sequence[Tuple[str, type, Tuple[int]]] = [
+        ('points', np.float32, (3,)),
+        ('im_coords', np.float32, (2,)),
+        ('opacity', np.float32, (1,)),
+    ]
 
     def __init__(        
         self,
@@ -37,11 +42,10 @@ class ImageMobject(Mobject):
         super().__init__(texture_paths={"Texture": self.image_path}, **kwargs)
 
     def init_data(self) -> None:
-        self.data = {
-            "points": np.array([UL, DL, UR, DR]),
-            "im_coords": np.array([(0, 0), (0, 1), (1, 0), (1, 1)]),
-            "opacity": self.opacity * np.ones((4, 1)),
-        }
+        super().init_data(length=4)
+        self.data["points"][:] = [UL, DL, UR, DR]
+        self.data["im_coords"][:] = [(0, 0), (0, 1), (1, 0), (1, 1)]
+        self.data["opacity"][:] = self.opacity
 
     def init_points(self) -> None:
         size = self.image.size
@@ -49,9 +53,10 @@ class ImageMobject(Mobject):
         self.set_height(self.height)
 
     def set_opacity(self, opacity: float, recurse: bool = True):
-        op_arr = np.array([[o] for o in listify(opacity)])
-        for mob in self.get_family(recurse):
-            mob.data["opacity"][:] = resize_with_interpolation(op_arr, mob.get_num_points())
+        self.data["opacity"][:, 0] = resize_with_interpolation(
+            np.array(listify(opacity)),
+            self.get_num_points()
+        )
         return self
 
     def set_color(self, color, opacity=None, recurse=None):

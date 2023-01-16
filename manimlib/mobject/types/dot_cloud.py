@@ -29,7 +29,11 @@ class DotCloud(PMobject):
         ('radius', np.float32, (1,)),
         ('color', np.float32, (4,)),
     ]
-
+    data_dtype: np.dtype = np.dtype([
+        ('points', np.float32, (3,)),
+        ('radii', np.float32, (1,)),
+        ('rgbas', np.float32, (4,)),
+    ])
     def __init__(
         self,
         points: Vect3Array = NULL_POINTS,
@@ -55,7 +59,6 @@ class DotCloud(PMobject):
 
     def init_data(self) -> None:
         super().init_data()
-        self.data["radii"] = np.zeros((1, 1))
         self.set_radius(self.radius)
 
     def init_uniforms(self) -> None:

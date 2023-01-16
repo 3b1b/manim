@@ -67,9 +67,7 @@ class PMobject(Mobject):
 
     def filter_out(self, condition: Callable[[np.ndarray], bool]):
         for mob in self.family_members_with_points():
-            to_keep = ~np.apply_along_axis(condition, 1, mob.get_points())
-            for key in mob.data:
-                mob.data[key] = mob.data[key][to_keep]
+            mob.data = mob.data[~np.apply_along_axis(condition, 1, mob.get_points())]
         return self
 
     def sort_points(self, function: Callable[[Vect3], None] = lambda p: p[0]):
@@ -80,16 +78,13 @@ class PMobject(Mobject):
             indices = np.argsort(
                 np.apply_along_axis(function, 1, mob.get_points())
             )
-            for key in mob.data:
-                mob.data[key][:] = mob.data[key][indices]
+            mob.data[:] = mob.data[indices]
         return self
 
     def ingest_submobjects(self):
-        for key in self.data:
-            self.data[key] = np.vstack([
-                sm.data[key]
-                for sm in self.get_family()
-            ])
+        self.data = np.vstack([
+            sm.data for sm in self.get_family()
+        ])
         return self
 
     def point_from_proportion(self, alpha: float) -> np.ndarray:
@@ -99,8 +94,7 @@ class PMobject(Mobject):
     def pointwise_become_partial(self, pmobject: PMobject, a: float, b: float):
         lower_index = int(a * pmobject.get_num_points())
         upper_index = int(b * pmobject.get_num_points())
-        for key in self.data:
-            self.data[key] = pmobject.data[key][lower_index:upper_index].copy()
+        self.data = pmobject.data[lower_index:upper_index].copy()
         return self
 
 
