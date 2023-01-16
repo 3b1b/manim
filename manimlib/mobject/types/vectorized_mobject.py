@@ -229,12 +229,6 @@ class VMobject(Mobject):
         self.set_stroke(color, width, background=background)
         return self
 
-    def align_stroke_width_data_to_points(self, recurse: bool = True) -> None:
-        for mob in self.get_family(recurse):
-            mob.data["stroke_width"] = resize_with_interpolation(
-                mob.data["stroke_width"], len(mob.get_points())
-            )
-
     def set_style(
         self,
         fill_color: ManimColor | Iterable[ManimColor] | None = None,

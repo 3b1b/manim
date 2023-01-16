@@ -215,7 +215,6 @@ class VShowPassingFlash(Animation):
         return 1.0
 
     def begin(self) -> None:
-        self.mobject.align_stroke_width_data_to_points()
         # Compute an array of stroke widths for each submobject
         # which tapers out at either end
         self.submob_to_widths = dict()
@@ -262,7 +261,7 @@ class FlashAround(VShowPassingFlash):
         stroke_width: float = 4.0,
         color: ManimColor = YELLOW,
         buff: float = SMALL_BUFF,
-        n_inserted_curves: int = 20,
+        n_inserted_curves: int = 100,
         **kwargs
     ):
         path = self.get_path(mobject, buff)
