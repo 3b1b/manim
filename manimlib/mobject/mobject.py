@@ -73,6 +73,7 @@ class Mobject(object):
         ('rgba', '<f4', (4,)),
     ])
     aligned_data_keys = ['points']
+    pointlike_data_keys = ['points']
 
     def __init__(
         self,
@@ -205,7 +206,7 @@ class Mobject(object):
     def apply_points_function(
         self,
         func: Callable[[np.ndarray], np.ndarray],
-        about_point: Vect3 = None,
+        about_point: Vect3 | None = None,
         about_edge: Vect3 = ORIGIN,
         works_on_bounding_box: bool = False
     ):
@@ -215,7 +216,8 @@ class Mobject(object):
         for mob in self.get_family():
             arrs = []
             if mob.has_points():
-                arrs.append(mob.get_points())
+                for key in mob.pointlike_data_keys:
+                    arrs.append(mob.data[key])
             if works_on_bounding_box:
                 arrs.append(mob.get_bounding_box())
 
