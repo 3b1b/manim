@@ -654,6 +654,7 @@ class Mobject(object):
         for sm1, sm2 in zip(family1, family2):
             sm1.set_data(sm2.data)
             sm1.set_uniforms(sm2.uniforms)
+            sm1.bounding_box[:] = sm2.bounding_box
             sm1.shader_folder = sm2.shader_folder
             sm1.texture_paths = sm2.texture_paths
             sm1.depth_test = sm2.depth_test
