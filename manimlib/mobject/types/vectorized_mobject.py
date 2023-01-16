@@ -207,10 +207,10 @@ class VMobject(Mobject):
         if width is not None:
             for mob in self.get_family(recurse):
                 data = mob.data if mob.get_num_points() > 0 else mob._data_defaults
-                data['stroke_width'][:, 0] = resize_with_interpolation(
-                    np.array(listify(width)).flatten(),
-                    len(data['stroke_width'])
-                )
+                width_arr = np.array(listify(width)).flatten()
+                if len(width_arr) == 0:
+                    continue
+                data['stroke_width'][:, 0] = resize_with_interpolation(width_arr, len(data))
 
         if background is not None:
             for mob in self.get_family(recurse):
