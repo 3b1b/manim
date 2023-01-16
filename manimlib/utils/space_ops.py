@@ -432,6 +432,8 @@ def earclip_triangulation(verts: Vect3Array | Vect2Array, ring_ends: list[int]) 
 
     # Points at the same position may cause problems
     for i in rings:
+        if len(i) < 2:
+            continue
         verts[i[0]] += (verts[i[1]] - verts[i[0]]) * epsilon
         verts[i[-1]] += (verts[i[-2]] - verts[i[-1]]) * epsilon
 
