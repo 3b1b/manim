@@ -1815,10 +1815,9 @@ class Mobject(object):
 
     def init_shader_data(self):
         # TODO, only call this when needed?
-        self.shader_data = np.zeros(len(self.get_points()), dtype=self.shader_dtype)
         self.shader_indices = None
         self.shader_wrapper = ShaderWrapper(
-            vert_data=self.shader_data,
+            vert_data=self.data,
             shader_folder=self.shader_folder,
             texture_paths=self.texture_paths,
             depth_test=self.depth_test,
@@ -1832,7 +1831,7 @@ class Mobject(object):
     def get_shader_wrapper(self) -> ShaderWrapper:
         self.shader_wrapper.vert_data = self.get_shader_data()
         self.shader_wrapper.vert_indices = self.get_shader_vert_indices()
-        self.shader_wrapper.uniforms = self.get_shader_uniforms()
+        self.shader_wrapper.uniforms = self.get_uniforms()
         self.shader_wrapper.depth_test = self.depth_test
         return self.shader_wrapper
 
@@ -1853,32 +1852,13 @@ class Mobject(object):
                 result.append(shader_wrapper)
         return result
 
-    def get_resized_shader_data_array(self, length: int) -> np.ndarray:
-        # If possible, try to populate an existing array, rather
-        # than recreating it each frame
-        if len(self.shader_data) != length:
-            self.shader_data = resize_array(self.shader_data, length)
-        return self.shader_data
-
-    def read_data_to_shader(
-        self,
-        shader_data: np.ndarray,
-        shader_data_key: str,
-        data_key: str
-    ):
-        if data_key in self.locked_data_keys:
-            return
-        shader_data[shader_data_key] = self.data[data_key]
-
     def get_shader_data(self):
-        shader_data = self.get_resized_shader_data_array(self.get_num_points())
-        self.read_data_to_shader(shader_data, "point", "point")
-        return shader_data
+        return self.data
 
     def refresh_shader_data(self):
-        self.get_shader_data()
+        pass
 
-    def get_shader_uniforms(self):
+    def get_uniforms(self):
         return self.uniforms
 
     def get_shader_vert_indices(self):

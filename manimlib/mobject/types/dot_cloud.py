@@ -143,12 +143,6 @@ class DotCloud(PMobject):
         self.apply_depth_test()
         return self
 
-    def get_shader_data(self) -> np.ndarray:
-        shader_data = super().get_shader_data()
-        self.read_data_to_shader(shader_data, "radius", "radius")
-        self.read_data_to_shader(shader_data, "rgba", "rgba")
-        return shader_data
-
 
 class TrueDot(DotCloud):
     def __init__(self, center: Vect3 = ORIGIN, **kwargs):

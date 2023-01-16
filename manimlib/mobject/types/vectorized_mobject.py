@@ -1200,13 +1200,13 @@ class VMobject(Mobject):
     def get_fill_shader_wrapper(self) -> ShaderWrapper:
         self.fill_shader_wrapper.vert_indices = self.get_triangulation()
         self.fill_shader_wrapper.vert_data = self.get_fill_shader_data()
-        self.fill_shader_wrapper.uniforms = self.get_shader_uniforms()
+        self.fill_shader_wrapper.uniforms = self.get_uniforms()
         self.fill_shader_wrapper.depth_test = self.depth_test
         return self.fill_shader_wrapper
 
     def get_stroke_shader_wrapper(self) -> ShaderWrapper:
         self.stroke_shader_wrapper.vert_data = self.get_stroke_shader_data()
-        self.stroke_shader_wrapper.uniforms = self.get_shader_uniforms()
+        self.stroke_shader_wrapper.uniforms = self.get_uniforms()
         self.stroke_shader_wrapper.depth_test = self.depth_test
         return self.stroke_shader_wrapper
 
@@ -1248,33 +1248,22 @@ class VMobject(Mobject):
         # Set data array to be one longer than number of points,
         # with a dummy vertex added at the end. This is to ensure
         # it can be safely stacked onto other stroke data arrays.
-        points = self.get_points()
-        n = len(points)
+        n = len(self.data)
         size = n + 1 if n > 0 else 0
-        if len(self.stroke_data) != size:
-            self.stroke_data = resize_array(self.stroke_data, size)
+        self.stroke_data = resize_array(self.stroke_data, size)
         if n == 0:
             return self.stroke_data
 
-        self.read_data_to_shader(self.stroke_data[:n], "point", "point")
-        self.read_data_to_shader(self.stroke_data[:n], "stroke_rgba", "stroke_rgba")
-        self.read_data_to_shader(self.stroke_data[:n], "stroke_width", "stroke_width")
         self.get_joint_angles()  # Recomputes, only if refresh is needed
-        self.read_data_to_shader(self.stroke_data[:n], "joint_angle", "joint_angle")
-
+        for key in self.stroke_data.dtype.names:
+            self.stroke_data[key][:n] = self.data[key]
         self.stroke_data[-1] = self.stroke_data[-2]
         return self.stroke_data
 
     def get_fill_shader_data(self) -> np.ndarray:
-        points = self.get_points()
-        if len(self.fill_data) != len(points):
-            self.fill_data = resize_array(self.fill_data, len(points))
-            self.fill_data["vert_index"][:, 0] = range(len(points))
-
-        self.read_data_to_shader(self.fill_data, "point", "point")
-        self.read_data_to_shader(self.fill_data, "fill_rgba", "fill_rgba")
-        self.read_data_to_shader(self.fill_data, "orientation", "orientation")
-
+        self.fill_data = resize_array(self.fill_data, len(self.data))
+        for key in self.fill_data.dtype.names:
+            self.fill_data[key][:] = self.data[key]
         return self.fill_data
 
     def refresh_shader_data(self):

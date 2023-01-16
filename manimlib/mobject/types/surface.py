@@ -231,21 +231,6 @@ class Surface(Mobject):
         self.shader_wrapper.use_clip_plane = False
         return self
 
-    # For shaders
-    def get_shader_data(self) -> np.ndarray:
-        s_points, du_points, dv_points = self.get_surface_points_and_nudged_points()
-        shader_data = self.get_resized_shader_data_array(len(s_points))
-        if "point" not in self.locked_data_keys:
-            shader_data["point"] = s_points
-            shader_data["du_point"] = du_points
-            shader_data["dv_point"] = dv_points
-        self.fill_in_shader_color_info(shader_data)
-        return shader_data
-
-    def fill_in_shader_color_info(self, shader_data: np.ndarray) -> np.ndarray:
-        self.read_data_to_shader(shader_data, "rgba", "rgba")
-        return shader_data
-
     def get_shader_vert_indices(self) -> np.ndarray:
         return self.get_triangle_indices()
 
@@ -369,8 +354,3 @@ class TexturedSurface(Surface):
             im_coords, a, b, (nu, nv, 2), axis
         )
         return self
-
-    def fill_in_shader_color_info(self, shader_data: np.ndarray) -> np.ndarray:
-        self.read_data_to_shader(shader_data, "opacity", "opacity")
-        self.read_data_to_shader(shader_data, "im_coords", "im_coords")
-        return shader_data
