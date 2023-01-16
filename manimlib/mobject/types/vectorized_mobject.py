@@ -1197,6 +1197,8 @@ class VMobject(Mobject):
 
     def get_shader_wrapper_list(self) -> list[ShaderWrapper]:
         family = self.family_members_with_points()
+        if not family:
+            return []
         fill_names = self.fill_data_names
         stroke_names = self.stroke_data_names
 
