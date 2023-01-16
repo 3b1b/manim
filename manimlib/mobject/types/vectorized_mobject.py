@@ -1212,37 +1212,40 @@ class VMobject(Mobject):
 
     def get_shader_wrapper_list(self) -> list[ShaderWrapper]:
         # Build up data lists
-        fill_sws = []
-        stroke_sws = []
-        bstroke_sws = []
+        fill_submobs = []
+        stroke_submobs = []
+        bstroke_submobs = []
         for submob in self.family_members_with_points():
             if submob.has_fill():
-                fill_sws.append(submob.get_fill_shader_wrapper())
+                fill_submobs.append(submob)
             if submob.has_stroke():
-                lst = bstroke_sws if submob.draw_stroke_behind_fill else stroke_sws
-                lst.append(submob.get_stroke_shader_wrapper())
+                if submob.draw_stroke_behind_fill:
+                    bstroke_submobs.append(submob)
+                else:
+                    stroke_submobs.append(submob)
 
-        self_sws = [
+        fill_names = list(self.fill_data.dtype.names)
+        self.fill_shader_wrapper.read_in(
+            [sm.data[fill_names] for sm in fill_submobs],
+            [sm.get_fill_shader_vert_indices() for sm in fill_submobs],
+        )
+        self.stroke_shader_wrapper.read_in(
+            [sm.get_stroke_shader_data() for sm in stroke_submobs],
+        )
+        self.back_stroke_shader_wrapper.read_in(
+            [sm.get_stroke_shader_data() for sm in bstroke_submobs],
+        )
+
+
+        shader_wrappers = [
             self.back_stroke_shader_wrapper,
             self.fill_shader_wrapper,
             self.stroke_shader_wrapper
         ]
-        sw_lists = [
-            bstroke_sws,
-            fill_sws,
-            stroke_sws
-        ]
-        for sw, sw_list in zip(self_sws, sw_lists):
-            if not sw_list:
-                sw.vert_data = resize_array(sw.vert_data, 0)
-                continue
-            if sw is sw_list[0]:
-                sw.combine_with(*sw_list[1:])
-            else:
-                sw.read_in(*sw_list)
-            sw.depth_test = any(sw.depth_test for sw in sw_list)
-            sw.uniforms.update(sw_list[0].uniforms)
-        return [sw for sw in self_sws if len(sw.vert_data) > 0]
+        for sw in shader_wrappers:
+            # TODO, handle depth test and uniforms...
+            pass
+        return [sw for sw in shader_wrappers if len(sw.vert_data) > 0]
 
     def get_stroke_shader_data(self) -> np.ndarray:
         # Set data array to be one longer than number of points,
@@ -1255,6 +1258,7 @@ class VMobject(Mobject):
             return self.stroke_data
 
         self.get_joint_angles()  # Recomputes, only if refresh is needed
+
         for key in self.stroke_data.dtype.names:
             self.stroke_data[key][:n] = self.data[key]
         self.stroke_data[-1] = self.stroke_data[-2]
