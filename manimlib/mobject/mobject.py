@@ -1859,17 +1859,6 @@ class Mobject(object):
                 result.append(shader_wrapper)
         return result
 
-    def check_data_alignment(self, array: np.ndarray, data_key: str):
-        # Makes sure that self.data[key] can be broadcast into
-        # the given array, meaning its length has to be either 1
-        # or the length of the array
-        d_len = len(self.data[data_key])
-        if d_len != 1 and d_len != len(array):
-            self.data[data_key] = resize_with_interpolation(
-                self.data[data_key], len(array)
-            )
-        return self
-
     def get_resized_shader_data_array(self, length: int) -> np.ndarray:
         # If possible, try to populate an existing array, rather
         # than recreating it each frame
@@ -1885,7 +1874,6 @@ class Mobject(object):
     ):
         if data_key in self.locked_data_keys:
             return
-        self.check_data_alignment(shader_data, data_key)  # TODO, make sure this can be removed
         shader_data[shader_data_key] = self.data[data_key]
 
     def get_shader_data(self):
