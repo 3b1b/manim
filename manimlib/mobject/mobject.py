@@ -185,7 +185,7 @@ class Mobject(object):
         return self
 
     def set_points(self, points: Vect3Array):
-        self.resize_points(len(points))
+        self.resize_points(len(points), resize_func=resize_preserving_order)
         self.data["point"][:] = points
         return self
 
