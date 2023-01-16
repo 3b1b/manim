@@ -29,6 +29,7 @@ from manimlib.utils.iterables import listify
 from manimlib.utils.iterables import make_even
 from manimlib.utils.iterables import resize_array
 from manimlib.utils.iterables import resize_with_interpolation
+from manimlib.utils.iterables import resize_preserving_order
 from manimlib.utils.iterables import arrays_match
 from manimlib.utils.space_ops import angle_between_vectors
 from manimlib.utils.space_ops import cross2d
@@ -880,8 +881,11 @@ class VMobject(Mobject):
                 new_subpaths2.append(new_subpaths2[0][-1])
             new_subpaths1.append(sp1)
             new_subpaths2.append(sp2)
-        self.set_points(np.vstack(new_subpaths1))
-        vmobject.set_points(np.vstack(new_subpaths2))
+
+        for mob, paths in [(self, new_subpaths1), (vmobject, new_subpaths2)]:
+            new_points = np.vstack(paths)
+            mob.resize_points(len(new_points), resize_func=resize_preserving_order)
+            mob.set_points(new_points)
         return self
 
     def insert_n_curves(self, n: int, recurse: bool = True):
