@@ -1724,7 +1724,7 @@ class Mobject(object):
 
     def lock_matching_data(self, mobject1: Mobject, mobject2: Mobject):
         for sm, sm1, sm2 in zip(self.get_family(), mobject1.get_family(), mobject2.get_family()):
-            if not (sm.data.dtype == sm1.data.dtype == sm2.data.dtype):
+            if sm.data.dtype == sm1.data.dtype == sm2.data.dtype:
                 sm.lock_data([
                     key for key in sm.data.dtype.names
                     if arrays_match(sm1.data[key], sm2.data[key])
