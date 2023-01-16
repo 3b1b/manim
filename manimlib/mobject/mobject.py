@@ -70,7 +70,7 @@ class Mobject(object):
     ]
     data_dtype: np.dtype = np.dtype([
         ('points', '<f4', (3,)),
-        ('rgbas', '<f4', (4,)),
+        ('rgba', '<f4', (4,)),
     ])
     aligned_data_keys = ['points']
 
@@ -1222,7 +1222,7 @@ class Mobject(object):
     def set_rgba_array(
         self,
         rgba_array: npt.ArrayLike,
-        name: str = "rgbas",
+        name: str = "rgba",
         recurse: bool = False
     ):
         for mob in self.get_family(recurse):
@@ -1261,7 +1261,7 @@ class Mobject(object):
         self,
         color: ManimColor | Iterable[ManimColor] | None = None,
         opacity: float | Iterable[float] | None = None,
-        name: str = "rgbas",
+        name: str = "rgba",
         recurse: bool = True
     ):
         for mob in self.get_family(recurse):
@@ -1300,10 +1300,10 @@ class Mobject(object):
         return self
 
     def get_color(self) -> str:
-        return rgb_to_hex(self.data["rgbas"][0, :3])
+        return rgb_to_hex(self.data["rgba"][0, :3])
 
     def get_opacity(self) -> float:
-        return self.data["rgbas"][0, 3]
+        return self.data["rgba"][0, 3]
 
     def set_color_by_gradient(self, *colors: ManimColor):
         if self.has_points():

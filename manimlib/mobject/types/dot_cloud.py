@@ -31,8 +31,8 @@ class DotCloud(PMobject):
     ]
     data_dtype: np.dtype = np.dtype([
         ('points', np.float32, (3,)),
-        ('radii', np.float32, (1,)),
-        ('rgbas', np.float32, (4,)),
+        ('radius', np.float32, (1,)),
+        ('rgba', np.float32, (4,)),
     ])
     def __init__(
         self,
@@ -104,15 +104,15 @@ class DotCloud(PMobject):
     def set_radii(self, radii: npt.ArrayLike):
         n_points = len(self.get_points())
         radii = np.array(radii).reshape((len(radii), 1))
-        self.data["radii"][:] = resize_with_interpolation(radii, n_points)
+        self.data["radius"][:] = resize_with_interpolation(radii, n_points)
         self.refresh_bounding_box()
         return self
 
     def get_radii(self) -> np.ndarray:
-        return self.data["radii"]
+        return self.data["radius"]
 
     def set_radius(self, radius: float):
-        self.data["radii"][:] = radius
+        self.data["radius"][:] = radius
         self.refresh_bounding_box()
         return self
 
@@ -151,8 +151,8 @@ class DotCloud(PMobject):
 
     def get_shader_data(self) -> np.ndarray:
         shader_data = super().get_shader_data()
-        self.read_data_to_shader(shader_data, "radius", "radii")
-        self.read_data_to_shader(shader_data, "color", "rgbas")
+        self.read_data_to_shader(shader_data, "radius", "radius")
+        self.read_data_to_shader(shader_data, "color", "rgba")
         return shader_data
 
 

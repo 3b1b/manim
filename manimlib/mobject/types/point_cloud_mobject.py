@@ -37,14 +37,14 @@ class PMobject(Mobject):
         # rgbas array will have been resized with points
         if color is not None:
             if opacity is None:
-                opacity = self.data["rgbas"][-1, 3]
+                opacity = self.data["rgba"][-1, 3]
             rgbas = np.repeat(
                 [color_to_rgba(color, opacity)],
                 len(points),
                 axis=0
             )
         if rgbas is not None:
-            self.data["rgbas"][-len(rgbas):] = rgbas
+            self.data["rgba"][-len(rgbas):] = rgbas
         return self
 
     def add_point(self, point: Vect3, rgba=None, color=None, opacity=None):
@@ -53,15 +53,15 @@ class PMobject(Mobject):
         return self
 
     def set_color_by_gradient(self, *colors: ManimColor):
-        self.data["rgbas"][:] = np.array(list(map(
+        self.data["rgba"][:] = np.array(list(map(
             color_to_rgba,
             color_gradient(colors, self.get_num_points())
         )))
         return self
 
     def match_colors(self, pmobject: PMobject):
-        self.data["rgbas"][:] = resize_with_interpolation(
-            pmobject.data["rgbas"], self.get_num_points()
+        self.data["rgba"][:] = resize_with_interpolation(
+            pmobject.data["rgba"], self.get_num_points()
         )
         return self
 
