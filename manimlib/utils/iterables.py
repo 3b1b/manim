@@ -91,7 +91,7 @@ def resize_array(nparray: np.ndarray, length: int) -> np.ndarray:
 
 def resize_preserving_order(nparray: np.ndarray, length: int) -> np.ndarray:
     if len(nparray) == 0:
-        return np.zeros((length, *nparray.shape[1:]))
+        return np.resize(nparray, length)
     if len(nparray) == length:
         return nparray
     indices = np.arange(length) * len(nparray) // length
